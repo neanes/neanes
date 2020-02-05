@@ -1,0 +1,70 @@
+@font-face {
+    font-family: Psaltica;
+    src: url('Fonts/EZ Psaltica.TTF');
+  }
+
+@font-face {
+    font-family: Omega;
+    src: url('Fonts/EZ Omega.TTF');
+}
+
+@font-face {
+    font-family: EzSpecial2;
+    src: url('Fonts/EZ\ Special-II.TTF');
+}
+
+body {
+    font-size: 16px;
+}
+
+.lyrics {
+    font-family: Omega;
+}
+
+.psaltica {
+    font-family: Psaltica;
+    font-size: 1.6rem;
+}
+
+.red {
+    color: #ED0000;
+}
+
+.high {
+    position: relative;
+    top: -0.25rem;
+}
+
+.flex-row {
+    display: flex;
+    flex-direction: row;
+}
+
+.syllable-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    margin-right: 0.25rem;
+}
+
+.page {
+    padding: 2rem 4rem;
+}
+
+.martyria {
+    font-family: EzSpecial2;
+}
+
+.text-align-center {
+    text-align: center;
+}
+
+.mode-header {
+    font-size: 1.75rem;
+}
+
+input.lyrics {
+    outline: none;
+}

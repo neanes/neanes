@@ -1,0 +1,443 @@
+<template>
+  <div class="editor">
+    <div class="page">
+        <div class="mode-header red martyria">hWt</div>
+
+        <div class="line">
+            <div 
+              v-for="(element, index) in elements" 
+              :key="`element-${index}`" 
+              class="neume-box">
+              <template v-if="isSyllableElement(element)">
+                <SyllableNeumeBox 
+                  class="syllable-box"
+                  :neume="element.neume" 
+                  :class="[{ selected: element == selectedElement }]"
+                  @click.native="selectedElement = element"
+                  ></SyllableNeumeBox>
+                <ContentEditable 
+                    class="lyrics"
+                    :content="element.lyrics"
+                    @click.native="selectedElement = null"
+                    @blur="updateLyrics(element, $event)"></ContentEditable>
+              </template>
+              <template v-if="isMartyriaElement(element)">
+                <MartyriaNeumeBox 
+                  class="marytria-neume-box"
+                  :neume="element.neume" 
+                  :class="[{ selected: element == selectedElement }]"
+                  @click.native="selectedElement = element"
+                  ></MartyriaNeumeBox>
+                <div class="lyrics"></div>
+              </template>
+              <template v-if="isEmptyElement(element)">
+                <div
+                  class="empty-neume-box"
+                  :class="[{ selected: element == selectedElement }]"
+                  @click="selectedElement = element"
+                  ></div>
+                <div class="lyrics"></div>
+              </template>
+            </div>
+        </div>
+    </div>
+    <NeumeSelector class="neume-selector"
+     @selectQuantitativeNeume="updateQuantitativeNeume" 
+     @selectTimeNeume="updateTimeNeume"
+     @selectVocalExpressionNeume="updateVocalExpressionNeume"
+     @selectMartyriaNote="updateMartyriaNote"
+     @selectMartyriaRootSign="updateMartyriaRootSign"></NeumeSelector>
+     <NeumeKeyboard></NeumeKeyboard>
+  </div>
+</template>
+
+<script lang="ts">
+import { Component, Prop, Vue } from 'vue-property-decorator';
+import { Element, MartyriaElement, SyllableElement, ElementType, EmptyElement } from '@/models/Element';
+import { QuantitativeNeume, TimeNeume, Note, RootSign, VocalExpressionNeume } from '@/models/Neumes';
+import { KeyboardMap } from '@/models/NeumeMappings';
+import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
+import MartyriaNeumeBox from '@/components/NeumeBoxMartyria.vue';
+import NeumeSelector from '@/components/NeumeSelector.vue';
+import NeumeKeyboard from '@/components/NeumeKeyboard.vue';
+import ContentEditable from '@/components/ContentEditable.vue';
+
+@Component({
+  components: {
+    SyllableNeumeBox,
+    MartyriaNeumeBox,
+    NeumeSelector,
+    NeumeKeyboard,
+    ContentEditable,
+  }
+})
+export default class Editor extends Vue {
+  selectedElement: Element | null = null;
+
+  elements: Element[] = [
+    {
+      type: ElementType.Syllable,
+      neume: {
+        quantitativeNeume: QuantitativeNeume.Ison,
+        timeNeume: null,
+        vocalExpressionNeume: null,
+      },
+      lyrics: 'The',
+    } as SyllableElement,
+    {
+      type: ElementType.Syllable,
+      neume: {
+        quantitativeNeume: QuantitativeNeume.Elaphron,
+        timeNeume: null,
+        vocalExpressionNeume: null,
+      },
+      lyrics: 'sha',
+    } as SyllableElement,
+    {
+      type: ElementType.Syllable,
+      neume: {
+        quantitativeNeume: QuantitativeNeume.KentemataPlusOligon,
+        timeNeume: null,
+        vocalExpressionNeume: null,
+      },
+      lyrics: '-',
+    } as SyllableElement,
+    {
+      type: ElementType.Syllable,
+      neume: {
+        quantitativeNeume: QuantitativeNeume.OligonPlusKentemata,
+        timeNeume: TimeNeume.Gorgon,
+        vocalExpressionNeume: null,
+      },
+      lyrics: '-',
+    } as SyllableElement,
+    {
+      type: ElementType.Syllable,
+      neume: {
+        quantitativeNeume: QuantitativeNeume.Elaphron,
+        timeNeume: TimeNeume.Klasma,
+        vocalExpressionNeume: null,
+      },
+      lyrics: 'dow',
+    } as SyllableElement,
+    {
+      type: ElementType.Martyria,
+      neume: {
+        note: Note.Thi,
+        rootSign: RootSign.SoftChromaticSquiggle,
+      },
+    } as MartyriaElement,
+    {
+      type: ElementType.Empty,
+    } as EmptyElement,
+  ];
+
+  created() {
+    this.load();
+  }
+
+  mounted() {
+    window.addEventListener('keydown', this.onKeydown);
+  }
+
+  destroyed() {
+    window.removeEventListener('keydown', this.onKeydown);
+  }
+
+  updateQuantitativeNeume(neume: QuantitativeNeume) {
+    if(this.selectedElement) {
+      if (this.selectedElement.type == ElementType.Empty) {
+        this.addEmptyElement();
+      }
+
+      if (this.selectedElement.type != ElementType.Syllable) {
+        this.selectedElement = this.switchToSyllable(this.selectedElement);
+      }
+      
+      (this.selectedElement as SyllableElement).neume.quantitativeNeume = neume;
+
+      //this.moveRight();
+
+      this.save();
+    }
+  }
+
+  updateTimeNeume(neume: TimeNeume | null) {
+    if(this.selectedElement) {
+      if (this.selectedElement.type == ElementType.Empty) {
+        this.addEmptyElement();
+      }
+
+      if (this.selectedElement.type != ElementType.Syllable) {
+        this.selectedElement = this.switchToSyllable(this.selectedElement);
+      }
+
+      (this.selectedElement as SyllableElement).neume.timeNeume = neume;
+      //this.moveRight();
+
+      this.save();
+    }
+  }
+
+  updateVocalExpressionNeume(neume: VocalExpressionNeume) {
+    if(this.selectedElement) {
+      if (this.selectedElement.type == ElementType.Empty) {
+        this.addEmptyElement();
+      }
+
+      if (this.selectedElement.type != ElementType.Syllable) {
+        this.selectedElement = this.switchToSyllable(this.selectedElement);
+      }
+
+      (this.selectedElement as SyllableElement).neume.vocalExpressionNeume = neume;
+
+      this.moveRight();
+
+      this.save();
+    }
+  }
+
+  updateMartyriaNote(neume: Note) {
+    if(this.selectedElement) {
+      if (this.selectedElement.type == ElementType.Empty) {
+        this.addEmptyElement();
+      }
+
+      if (this.selectedElement.type != ElementType.Martyria) {
+        this.selectedElement = this.switchToMartyria(this.selectedElement);
+      }
+
+      (this.selectedElement as MartyriaElement).neume.note = neume;
+
+      this.save();
+    }
+  }
+
+  updateMartyriaRootSign(neume: RootSign) {
+    if(this.selectedElement) {
+      if (this.selectedElement.type == ElementType.Empty) {
+        this.addEmptyElement();
+      }
+
+      if (this.selectedElement.type != ElementType.Martyria) {
+        this.selectedElement = this.switchToMartyria(this.selectedElement);
+      }
+
+      (this.selectedElement as MartyriaElement).neume.rootSign = neume;
+
+      this.save();
+    }
+  }
+
+  switchToMartyria(element: Element) {
+      const index = this.elements.indexOf(element);
+
+      this.elements[index] = {
+        type: ElementType.Martyria,
+        neume: {
+          note: Note.Pa,
+          rootSign: RootSign.Alpha
+        },
+      } as MartyriaElement;
+
+      return this.elements[index];
+  }
+
+  switchToSyllable(element: Element) {
+      const index = this.elements.indexOf(element);
+
+      this.elements[index] = {
+        type: ElementType.Syllable,
+        neume: {
+          quantitativeNeume: QuantitativeNeume.Ison,
+          timeNeume: null,
+          vocalExpressionNeume: null,
+        },
+        lyrics: ''
+      } as SyllableElement;
+
+      return this.elements[index];
+  }
+
+  switchToEmptyElement(element: Element) {
+      const index = this.elements.indexOf(element);
+
+      this.elements[index] = {
+        type: ElementType.Empty,
+      } as EmptyElement;
+
+      return this.elements[index];
+  }
+
+  addEmptyElement() {
+    this.elements.push({
+      type: ElementType.Empty,
+    } as EmptyElement);
+  }
+
+  isSyllableElement(element: Element) {
+    return element.type == ElementType.Syllable;
+  }
+
+  isMartyriaElement(element: Element) {
+    return element.type == ElementType.Martyria;
+  }
+
+  isEmptyElement(element: Element) {
+    return element.type == ElementType.Empty;
+  }
+
+  onKeydown(event: KeyboardEvent) {
+    if (this.selectedElement == null) {
+      return;
+    }
+
+    event.preventDefault();
+
+    if (event.code == 'ArrowLeft') {
+      this.moveLeft();
+      return;
+    }
+    else if (event.code == 'ArrowRight' || event.code == 'Space') {
+      this.moveRight();
+      return;
+    }
+    else if (event.code == 'Backspace') {
+      if (this.isSyllableElement(this.selectedElement)) {
+        let syllableElement = this.selectedElement as SyllableElement;
+        if (syllableElement.neume.timeNeume) {
+          syllableElement.neume.timeNeume = null
+        }
+        else {
+          this.selectedElement = this.switchToEmptyElement(this.selectedElement);
+          this.moveLeft();
+        }
+      }
+      else {
+        this.selectedElement = this.switchToEmptyElement(this.selectedElement);
+        this.moveLeft();
+      }
+    }
+
+    if (event.shiftKey) {
+      const quantitativeNeume = KeyboardMap.quantitativeNeumeKeyboardMap_Shift.get(event.code);
+
+      if (quantitativeNeume) {
+        this.updateQuantitativeNeume(quantitativeNeume);
+        return;
+      }
+    }
+    else {
+      const quantitativeNeume = KeyboardMap.quantitativeNeumeKeyboardMap.get(event.code);
+
+      if (quantitativeNeume) {
+        this.updateQuantitativeNeume(quantitativeNeume);
+        return;
+      }
+
+      const timeNeume = KeyboardMap.timeNeumeKeyboardMap.get(event.code);
+
+      if (timeNeume) {
+        this.updateTimeNeume(timeNeume);
+        return;
+      }
+    }
+  }
+
+  moveLeft() {
+    if (this.selectedElement) {
+      const index = this.elements.indexOf(this.selectedElement);
+
+      if (index - 1 >= 0) {
+        this.selectedElement = this.elements[index - 1];
+      }
+    }
+  }
+
+  moveRight() {
+    if (this.selectedElement) {
+      const index = this.elements.indexOf(this.selectedElement);
+
+      if (index >= 0 && index + 1 < this.elements.length) {
+        this.selectedElement = this.elements[index + 1];
+      }
+    }
+  }
+
+  save() {
+    localStorage.setItem('score', JSON.stringify(this.elements));
+  }
+
+  load() {
+    const score = localStorage.getItem('score');
+
+    if (score) {
+      this.elements = JSON.parse(score);
+    }
+  }
+
+  updateLyrics(element: SyllableElement, lyrics: string) {
+    element.lyrics = lyrics;
+    this.save();
+  }
+}
+</script>
+
+<!-- Add "scoped" attribute to limit CSS to this component only -->
+<style scoped>
+.lyrics {
+    font-family: Omega;
+    min-height: 1.6rem;
+    min-width: 1rem;
+    text-align: center;
+}
+
+.red {
+    color: #ED0000;
+}
+
+.selected {
+  background-color: palegoldenrod;
+}
+
+.line {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.neume-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    margin-right: 0.25rem;
+}
+
+.empty-neume-box {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px dotted black;
+}
+
+.page {
+    padding: 2rem 4rem;
+}
+
+.martyria {
+    font-family: EzSpecial2;
+}
+
+.mode-header {
+    font-size: 1.75rem;
+    text-align: center;
+}
+
+@media print {
+  .neume-selector, .empty-neume-box {
+    display: none;
+  }
+}
+</style>

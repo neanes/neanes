@@ -1,5 +1,5 @@
 <template>
-  <span class="neume" :style="style">{{text}}</span>
+  <span :style="style">{{text}}</span>
 </template>
 
 <script lang="ts">

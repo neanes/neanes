@@ -1,41 +1,46 @@
 <template>
   <div class="neume-selector-panel">
     <div class="row">
-      <div 
+      <Neume 
         class="neume" 
         v-for="(neume, index) in ascendingNeumes" 
         :key="`ascendingNeumes-${index}`"
-        @click="$emit('selectQuantitativeNeume', neume)">{{getMapping(neume).text}}</div>
+        :neume="neume"
+        @click="$emit('selectQuantitativeNeume', neume)"></Neume>
     </div>
     <div class="row">
-      <div 
+      <Neume 
         class="neume" 
         v-for="(neume, index) in ascendingNeumesWithPetasti" 
         :key="`ascendingNeumesWithPetasti-${index}`"
-        @click="$emit('selectQuantitativeNeume', neume)">{{getMapping(neume).text}}</div>
+        :neume="neume"
+        @click="$emit('selectQuantitativeNeume', neume)"></Neume>
     </div>
     <div class="row">
       <div class="neume"></div>
-      <div 
+      <Neume 
         class="neume" 
         v-for="(neume, index) in descendingNeumes" 
         :key="`descendingNeumes-${index}`"
-        @click="$emit('selectQuantitativeNeume', neume)">{{getMapping(neume).text}}</div>
+        :neume="neume"
+        @click="$emit('selectQuantitativeNeume', neume)"></Neume>
     </div>
     <div class="row">
       <div class="neume"></div>
-      <div 
+      <Neume 
         class="neume" 
         v-for="(neume, index) in descendingNeumesWithPetasti" 
         :key="`descendingNeumesWithPetasti-${index}`"
-        @click="$emit('selectQuantitativeNeume', neume)">{{getMapping(neume).text}}</div>
+        :neume="neume"
+        @click="$emit('selectQuantitativeNeume', neume)"></Neume>
     </div>
     <div class="row">
-      <div 
+      <Neume 
         class="neume" 
         v-for="(neume, index) in combinationNeumes" 
         :key="`combinationNeumes-${index}`"
-        @click="$emit('selectQuantitativeNeume', neume)">{{getMapping(neume).text}}</div>
+        :neume="neume"
+        @click="$emit('selectQuantitativeNeume', neume)"></Neume>
     </div>
     <div class="row">
       <div 
@@ -43,11 +48,12 @@
         v-for="(tile, index) in timeNeumes" 
         :key="`timeNeumes-${index}`"
         @click="$emit('selectTimeNeume', tile.neume)">
-        <span
+        <Neume
           v-for="(element, index) in tile.elements"
             :key="`timeNeumes-elements-${index}`"
+            :neume="element.neume"
             :style="element.style"
-            >{{getMapping(element.neume).text}}</span>
+            ></Neume>
       </div>
     </div>
     <div class="row">
@@ -56,26 +62,42 @@
         v-for="(tile, index) in vocalExpressionNeumes" 
         :key="`vocalExpressionNeumes-${index}`"
         @click="$emit('selectVocalExpressionNeume', tile.neume)">
-          <span
+          <Neume
             v-for="(element, index) in tile.elements"
              :key="`vocalExpressionNeumes-elements-${index}`"
              :style="element.style"
-            >{{getMapping(element.neume).text}}</span>
+             :neume="element.neume"
+            ></Neume>
         </div>
     </div>
     <div class="row">
-      <div 
+      <Neume 
         class="neume" 
         v-for="(neume, index) in notes" 
         :key="`notes-${index}`"
-        @click="$emit('selectMartyriaNote', neume)">{{getMapping(neume).text}}</div>
+        :neume="neume"
+        @click="$emit('selectMartyriaNote', neume)"></Neume>
     </div>
     <div class="row">
       <div 
         class="neume" 
         v-for="(neume, index) in rootSigns" 
         :key="`rootSigns-${index}`"
-        @click="$emit('selectMartyriaRootSign', neume)"><span class="root-sign">{{getMapping(neume).text}}</span></div>
+        @click="$emit('selectMartyriaRootSign', neume)"><Neume class="root-sign" :neume="neume"></Neume></div>
+    </div>
+    <div class="row">
+      <div 
+        class="neume" 
+        v-for="(tile, index) in fthoras" 
+        :key="`fthoras-${index}`"
+        @click="$emit('selectFthora', tile.neume)">
+        <Neume
+          v-for="(element, index) in tile.elements"
+            :key="`fthoras-elements-${index}`"
+            :style="element.style"
+            :neume="element.neume"
+            ></Neume>
+      </div>
     </div>
   </div>
 </template>
@@ -83,13 +105,15 @@
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { Element, SyllableElement, SyllableNeume } from '@/models/Element';
-import { QuantitativeNeume, TimeNeume, VocalExpressionNeume, isHighNeume, isRedNeume, Note, RootSign, Neume } from '../models/Neumes';
+import { QuantitativeNeume, TimeNeume, VocalExpressionNeume, isHighNeume, isRedNeume, Note, RootSign, Fthora, Neume as NeumeType } from '@/models/Neumes';
 import { neumeMap } from '@/models/NeumeMappings';
 import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
+import Neume from '@/components/Neume.vue';
 
 @Component({
   components: {
     SyllableNeumeBox,
+    Neume,
   }
 })
 export default class NeumeSelector extends Vue {
@@ -318,9 +342,29 @@ export default class NeumeSelector extends Vue {
     RootSign.SoftChromaticSquiggle,
   ];
 
-  getMapping(neume: Neume) {
-    return neumeMap.get(neume)!;
-  }
+  fthoras: NeumeTile[] = [
+    {
+       neume: Fthora.DiatonicNiLow_TopCenter,
+       elements: [
+         {
+          neume: QuantitativeNeume.Ison,
+          style: {
+            opacity: 0.5
+          }
+         },
+         {
+           neume: Fthora.DiatonicNiLow_TopCenter,
+           style: {
+             color: '#ED0000',
+           }
+         }         
+       ]
+    },
+    {
+       neume: null,
+       elements: []
+    },
+  ];
 
   isHighNeume(neume: QuantitativeNeume) {
     return isHighNeume(neume);
@@ -332,12 +376,12 @@ export default class NeumeSelector extends Vue {
 }
 
 interface NeumeElement {
-  neume: Neume;
+  neume: NeumeType;
   style?: object;
 }
 
 interface NeumeTile {
-  neume: Neume | null;
+  neume: NeumeType | null;
   elements: NeumeElement[];
 }
 </script>
@@ -356,7 +400,6 @@ interface NeumeTile {
 }
 
 .neume {
-    font-family: Psaltica;
     font-size: 1.6rem;
 
     text-align: center;

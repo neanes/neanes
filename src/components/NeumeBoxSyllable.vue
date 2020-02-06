@@ -11,6 +11,10 @@
         { high: isHighNeume(neume.quantitativeNeume) }, 
         { red: isRedNeume(neume.timeNeume) } ]"></Neume>
     <Neume 
+      v-if="hasFthora"
+      :neume="neume.fthora"
+      class="red"></Neume>
+    <Neume 
       v-if="hasVocalExpressionNeume && !isVareia(neume.vocalExpressionNeume)"
       :neume="neume.vocalExpressionNeume"
       :class="[{ red: isRedNeume(neume.vocalExpressionNeume) } ]"></Neume>
@@ -38,6 +42,10 @@ export default class NeumeBoxSyllable extends Vue {
 
   get hasTimeNeume() {
     return this.neume.timeNeume != null;
+  }
+
+  get hasFthora() {
+    return this.neume.fthora != null;
   }
 
   get quantitativeNeumeMapping() {

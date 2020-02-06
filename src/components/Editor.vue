@@ -45,6 +45,7 @@
      @selectQuantitativeNeume="updateQuantitativeNeume" 
      @selectTimeNeume="updateTimeNeume"
      @selectVocalExpressionNeume="updateVocalExpressionNeume"
+     @selectFthora="updateFthora"
      @selectMartyriaNote="updateMartyriaNote"
      @selectMartyriaRootSign="updateMartyriaRootSign"></NeumeSelector>
      <NeumeKeyboard></NeumeKeyboard>
@@ -54,7 +55,7 @@
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { Element, MartyriaElement, SyllableElement, ElementType, EmptyElement } from '@/models/Element';
-import { QuantitativeNeume, TimeNeume, Note, RootSign, VocalExpressionNeume } from '@/models/Neumes';
+import { QuantitativeNeume, TimeNeume, Note, RootSign, VocalExpressionNeume, Fthora } from '@/models/Neumes';
 import { KeyboardMap } from '@/models/NeumeMappings';
 import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
 import MartyriaNeumeBox from '@/components/NeumeBoxMartyria.vue';
@@ -173,6 +174,23 @@ export default class Editor extends Vue {
       }
 
       (this.selectedElement as SyllableElement).neume.timeNeume = neume;
+      //this.moveRight();
+
+      this.save();
+    }
+  }
+
+  updateFthora(neume: Fthora | null) {
+    if(this.selectedElement) {
+      if (this.selectedElement.type == ElementType.Empty) {
+        this.addEmptyElement();
+      }
+
+      if (this.selectedElement.type != ElementType.Syllable) {
+        this.selectedElement = this.switchToSyllable(this.selectedElement);
+      }
+
+      (this.selectedElement as SyllableElement).neume.fthora = neume;
       //this.moveRight();
 
       this.save();

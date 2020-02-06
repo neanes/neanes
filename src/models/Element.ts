@@ -1,4 +1,4 @@
-import { TimeNeume, QuantitativeNeume, Note, RootSign, VocalExpressionNeume } from '@/models/Neumes';
+import { TimeNeume, QuantitativeNeume, Note, RootSign, VocalExpressionNeume, Fthora } from '@/models/Neumes';
 
 export enum ElementType {
     Syllable = 'Syllable',
@@ -27,7 +27,7 @@ export interface SyllableNeume {
     quantitativeNeume: QuantitativeNeume; 
     timeNeume: TimeNeume | null;
     vocalExpressionNeume: VocalExpressionNeume | null;
-    //fthora: Fthora | null;
+    fthora: Fthora | null;
     //ison: Ison | null;
 }
 

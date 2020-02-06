@@ -152,7 +152,7 @@ export default class NeumeSelector extends Vue {
 
   timeNeumes: NeumeTile[] = [
     {
-       neume: TimeNeume.Gorgon,
+       neume: TimeNeume.Gorgon_Top,
        elements: [
          {
           neume: QuantitativeNeume.Ison,
@@ -161,7 +161,7 @@ export default class NeumeSelector extends Vue {
           }
          },
          {
-           neume: TimeNeume.Gorgon,
+           neume: TimeNeume.Gorgon_Top,
            style: {
              color: '#ED0000',
            }
@@ -169,7 +169,7 @@ export default class NeumeSelector extends Vue {
        ]
     },
     {
-       neume: TimeNeume.Klasma,
+       neume: TimeNeume.Klasma_Top,
        elements: [
          {
           neume: QuantitativeNeume.Ison,
@@ -178,7 +178,7 @@ export default class NeumeSelector extends Vue {
           }
          },
          {
-           neume: TimeNeume.Klasma,
+           neume: TimeNeume.Klasma_Top,
          }         
        ]
     },

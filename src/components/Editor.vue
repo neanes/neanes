@@ -106,7 +106,7 @@ export default class Editor extends Vue {
       type: ElementType.Syllable,
       neume: {
         quantitativeNeume: QuantitativeNeume.OligonPlusKentemata,
-        timeNeume: TimeNeume.Gorgon,
+        timeNeume: TimeNeume.Gorgon_Top,
         vocalExpressionNeume: null,
       },
       lyrics: '-',
@@ -115,7 +115,7 @@ export default class Editor extends Vue {
       type: ElementType.Syllable,
       neume: {
         quantitativeNeume: QuantitativeNeume.Elaphron,
-        timeNeume: TimeNeume.Klasma,
+        timeNeume: TimeNeume.Klasma_Top,
         vocalExpressionNeume: null,
       },
       lyrics: 'dow',

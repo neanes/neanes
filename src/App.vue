@@ -20,8 +20,18 @@
 }
 
 @font-face {
+    font-family: EzSpecial1;
+    src: url('~@/assets/EZ Special-I.ttf');
+}
+
+@font-face {
     font-family: EzSpecial2;
     src: url('~@/assets/EZ Special-II.ttf');
+}
+
+@font-face {
+    font-family: EzFthora;
+    src: url('~@/assets/EZ Fthora.ttf');
 }
 
 body {

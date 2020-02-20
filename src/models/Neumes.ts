@@ -57,7 +57,7 @@ export enum TimeNeume {
     GorgonDottedLeft = "GorgonDottedLeft",
     GorgonDottedRight = "GorgonDottedRight",
 
-    Klasma_Top = 'KlasKlasma_Topma',
+    Klasma_Top = 'Klasma_Top',
     Klasma_Bottom = 'Klasma_Bottom',
     
     Hapli = 'Hapli',

@@ -1,6 +1,7 @@
 <template>
   <div class="editor">
-    <div class="page">
+    <div class="page-background">
+      <div class="page">
         <div class="mode-header red martyria">hWt</div>
 
         <div class="line">
@@ -41,6 +42,7 @@
             </div>
         </div>
     </div>
+    </div>
     <NeumeSelector class="neume-selector"
      @selectQuantitativeNeume="updateQuantitativeNeume" 
      @selectTimeNeume="updateTimeNeume"
@@ -48,13 +50,12 @@
      @selectFthora="updateFthora"
      @selectMartyriaNote="updateMartyriaNote"
      @selectMartyriaRootSign="updateMartyriaRootSign"></NeumeSelector>
-     <NeumeKeyboard></NeumeKeyboard>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
-import { Element, MartyriaElement, SyllableElement, ElementType, EmptyElement } from '@/models/Element';
+import { Element, MartyriaElement, SyllableElement, ElementType, EmptyElement, SyllableNeume } from '@/models/Element';
 import { QuantitativeNeume, TimeNeume, Note, RootSign, VocalExpressionNeume, Fthora } from '@/models/Neumes';
 import { KeyboardMap } from '@/models/NeumeMappings';
 import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
@@ -393,11 +394,56 @@ export default class Editor extends Vue {
     if (score) {
       this.elements = JSON.parse(score);
     }
+
+    //this.elements = this.generateTestFile();
   }
 
   updateLyrics(element: SyllableElement, lyrics: string) {
     element.lyrics = lyrics;
     this.save();
+  }
+
+  generateTestFile() {
+    const elements: Element[] = [];
+
+    let counter = 1;
+
+    for (let quantitativeNeume in QuantitativeNeume) {
+      const syllableElement: SyllableElement = {
+        neume: {
+          quantitativeNeume: quantitativeNeume as QuantitativeNeume,
+          timeNeume: null,
+          vocalExpressionNeume: null,
+          fthora: null,
+        },
+        lyrics: (counter++).toString(),
+        type: ElementType.Syllable,
+      }
+
+      elements.push(syllableElement);
+
+      for (let fthora in Fthora) {
+        const syllableElement: SyllableElement = {
+          neume: {
+            quantitativeNeume: quantitativeNeume as QuantitativeNeume,
+            timeNeume: null,
+            vocalExpressionNeume: null,
+            fthora: fthora as Fthora,
+          },
+          lyrics: (counter++).toString(),
+          type: ElementType.Syllable,
+        }
+
+        elements.push(syllableElement);
+      }
+
+      // for (let neume in Fthora) {
+        
+      // }
+
+    }
+
+    return elements;
   }
 }
 </script>
@@ -441,8 +487,36 @@ export default class Editor extends Vue {
   border: 1px dotted black;
 }
 
+.page-background {
+  display: flex;
+  justify-content: center;
+  padding: 2rem 4rem;
+  background-color: #ddd;
+
+  overflow: hidden;
+  height: 50vh;
+}
+
 .page {
-    padding: 2rem 4rem;
+    background-color: white;
+    min-width: 816px;
+    max-width: 816px;
+    width: 816px;
+    /* height: 1056px; */
+    padding: 96px;
+    overflow: auto;
+}
+
+.editor {
+  display: flex;
+  flex-direction: column;
+
+  flex: 1;
+}
+
+.neume-selector {
+  overflow: auto;
+  height: 50vh;
 }
 
 .martyria {
@@ -453,10 +527,31 @@ export default class Editor extends Vue {
     font-size: 1.75rem;
     text-align: center;
 }
-
+  /* body * {
+    visibility: hidden;
+  }
+  .page, .page * {
+    visibility: visible;
+  }
+  .page {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100vh;
+  } */
 @media print {
-  .neume-selector, .empty-neume-box {
-    display: none;
+  body * {
+    visibility: hidden;
+  }
+  .page, .page * {
+    visibility: visible;
+  }
+  .page {
+    position: absolute;
+    left: 0;
+    top: 0;
+    /* width: 100vw;
+    height: 100vh; */
   }
 }
 </style>

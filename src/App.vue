@@ -34,7 +34,26 @@
     src: url('~@/assets/EZ Fthora.ttf');
 }
 
-body {
-    font-size: 16px;
+html {
+  height: 100vh;
 }
+
+body {
+   margin: 0;
+   padding: 0;
+   display: flex;
+   flex-direction: column;
+   height: 100vh;
+   overflow: hidden;
+
+   font-size: 16px;
+}
+</style>
+
+<style scoped>
+  #app {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
 </style>

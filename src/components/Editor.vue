@@ -11,7 +11,7 @@
               <template v-if="isSyllableElement(element)">
                 <SyllableNeumeBox 
                   class="syllable-box"
-                  :neume="element.neume" 
+                  :neume="element.neume"
                   :class="[{ selected: element == selectedElement }]"
                   @click.native="selectedElement = element"
                   ></SyllableNeumeBox>
@@ -270,6 +270,7 @@ export default class Editor extends Vue {
           quantitativeNeume: QuantitativeNeume.Ison,
           timeNeume: null,
           vocalExpressionNeume: null,
+          fthora: null,
         },
         lyrics: ''
       } as SyllableElement;

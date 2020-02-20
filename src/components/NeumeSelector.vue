@@ -6,7 +6,7 @@
         v-for="(neume, index) in ascendingNeumes" 
         :key="`ascendingNeumes-${index}`"
         :neume="neume"
-        @click="$emit('selectQuantitativeNeume', neume)"></Neume>
+        @click.native="$emit('selectQuantitativeNeume', neume)"></Neume>
     </div>
     <div class="row">
       <Neume 
@@ -14,7 +14,7 @@
         v-for="(neume, index) in ascendingNeumesWithPetasti" 
         :key="`ascendingNeumesWithPetasti-${index}`"
         :neume="neume"
-        @click="$emit('selectQuantitativeNeume', neume)"></Neume>
+        @click.native="$emit('selectQuantitativeNeume', neume)"></Neume>
     </div>
     <div class="row">
       <div class="neume"></div>
@@ -23,7 +23,7 @@
         v-for="(neume, index) in descendingNeumes" 
         :key="`descendingNeumes-${index}`"
         :neume="neume"
-        @click="$emit('selectQuantitativeNeume', neume)"></Neume>
+        @click.native="$emit('selectQuantitativeNeume', neume)"></Neume>
     </div>
     <div class="row">
       <div class="neume"></div>
@@ -32,7 +32,7 @@
         v-for="(neume, index) in descendingNeumesWithPetasti" 
         :key="`descendingNeumesWithPetasti-${index}`"
         :neume="neume"
-        @click="$emit('selectQuantitativeNeume', neume)"></Neume>
+        @click.native="$emit('selectQuantitativeNeume', neume)"></Neume>
     </div>
     <div class="row">
       <Neume 
@@ -40,7 +40,7 @@
         v-for="(neume, index) in combinationNeumes" 
         :key="`combinationNeumes-${index}`"
         :neume="neume"
-        @click="$emit('selectQuantitativeNeume', neume)"></Neume>
+        @click.native="$emit('selectQuantitativeNeume', neume)"></Neume>
     </div>
     <div class="row">
       <div 
@@ -76,7 +76,7 @@
         v-for="(neume, index) in notes" 
         :key="`notes-${index}`"
         :neume="neume"
-        @click="$emit('selectMartyriaNote', neume)"></Neume>
+        @click.native="$emit('selectMartyriaNote', neume)"></Neume>
     </div>
     <div class="row">
       <div 

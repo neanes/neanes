@@ -79,6 +79,40 @@
     </div>
     <div class="tab" v-if="selectedTab == 'Martytria'">
       <div class="row">
+        <div 
+          class="neume" 
+          v-for="(neume, index) in commonMartyriaDiatonic" 
+          :key="`commonMartyriaDiatonic-${index}`"
+          @click="$emit('selectMartyriaNoteAndRootSign', neume.note, neume.rootSign, neume.apostrophe)">
+            <Neume :neume="neume.note"></Neume>
+            <Neume :neume="neume.rootSign"></Neume>
+            <Neume v-if="neume.apostrophe" neume="Apostrophe"></Neume>
+            </div>
+      </div>
+      <div class="row">
+        <div class="neume"></div>
+        <div 
+          class="neume" 
+          v-for="(neume, index) in commonMartyriaHardChromatic" 
+          :key="`commonMartyriaHardChromatic-${index}`"
+          @click="$emit('selectMartyriaNoteAndRootSign', neume.note, neume.rootSign, neume.apostrophe)">
+            <Neume :neume="neume.note"></Neume>
+            <Neume :neume="neume.rootSign"></Neume>
+            <Neume v-if="neume.apostrophe" neume="Apostrophe"></Neume>
+        </div>
+      </div>
+      <div class="row">
+        <div 
+          class="neume" 
+          v-for="(neume, index) in commonMartyriaSoftChromatic" 
+          :key="`commonMartyriaSoftChromatic-${index}`"
+          @click="$emit('selectMartyriaNoteAndRootSign', neume.note, neume.rootSign, neume.apostrophe)">
+            <Neume :neume="neume.note"></Neume>
+            <Neume :neume="neume.rootSign"></Neume>
+            <Neume v-if="neume.apostrophe" neume="Apostrophe"></Neume>
+            </div>
+      </div>
+      <div class="row">
         <Neume 
           class="neume" 
           v-for="(neume, index) in notes" 
@@ -98,8 +132,8 @@
       <div class="row">
         <div 
           class="neume" 
-          v-for="(tile, index) in fthoras" 
-          :key="`fthoras-${index}`"
+          v-for="(tile, index) in fthorasRowOne" 
+          :key="`fthorasRowOne-${index}`"
           @click="$emit('selectFthora', tile.neume)">
           <Neume
             v-for="(element, index) in tile.elements"
@@ -108,9 +142,35 @@
               :neume="element.neume"
               ></Neume>
         </div>
-      
-      
-    </div>
+      </div>
+      <div class="row">
+        <div 
+          class="neume" 
+          v-for="(tile, index) in fthorasRowTwo" 
+          :key="`fthorasRowTwo-${index}`"
+          @click="$emit('selectFthora', tile.neume)">
+          <Neume
+            v-for="(element, index) in tile.elements"
+              :key="`fthoras-elements-${index}`"
+              :style="element.style"
+              :neume="element.neume"
+              ></Neume>
+        </div>
+      </div>
+      <div class="row">
+        <div 
+          class="neume" 
+          v-for="(tile, index) in fthorasRowThree" 
+          :key="`fthorasRowThree-${index}`"
+          @click="$emit('selectFthora', tile.neume)">
+          <Neume
+            v-for="(element, index) in tile.elements"
+              :key="`fthoras-elements-${index}`"
+              :style="element.style"
+              :neume="element.neume"
+              ></Neume>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -207,6 +267,57 @@ export default class NeumeSelector extends Vue {
        ]
     },
     {
+       neume: TimeNeume.Gorgon_Bottom,
+       elements: [
+         {
+          neume: QuantitativeNeume.Ison,
+          style: {
+            opacity: 0.5
+          }
+         },
+         {
+           neume: TimeNeume.Gorgon_Bottom,
+           style: {
+             color: '#ED0000',
+           }
+         }         
+       ]
+    },
+    {
+       neume: TimeNeume.Digorgon,
+       elements: [
+         {
+          neume: QuantitativeNeume.Ison,
+          style: {
+            opacity: 0.5
+          }
+         },
+         {
+           neume: TimeNeume.Digorgon,
+           style: {
+             color: '#ED0000',
+           }
+         }         
+       ]
+    },
+    {
+       neume: TimeNeume.Trigorgon,
+       elements: [
+         {
+          neume: QuantitativeNeume.Ison,
+          style: {
+            opacity: 0.5
+          }
+         },
+         {
+           neume: TimeNeume.Trigorgon,
+           style: {
+             color: '#ED0000',
+           }
+         }         
+       ]
+    },
+    {
        neume: TimeNeume.Klasma_Top,
        elements: [
          {
@@ -217,6 +328,96 @@ export default class NeumeSelector extends Vue {
          },
          {
            neume: TimeNeume.Klasma_Top,
+         }         
+       ]
+    },
+    {
+       neume: TimeNeume.Klasma_Bottom,
+       elements: [
+         {
+          neume: QuantitativeNeume.Ison,
+          style: {
+            opacity: 0.5
+          }
+         },
+         {
+           neume: TimeNeume.Klasma_Bottom,
+         }         
+       ]
+    },
+    {
+       neume: TimeNeume.Hapli,
+       elements: [
+         {
+          neume: QuantitativeNeume.Ison,
+          style: {
+            opacity: 0.5
+          }
+         },
+         {
+           neume: TimeNeume.Hapli,
+         }         
+       ]
+    },
+    {
+       neume: TimeNeume.Dipli,
+       elements: [
+         {
+          neume: QuantitativeNeume.Ison,
+          style: {
+            opacity: 0.5
+          }
+         },
+         {
+           neume: TimeNeume.Dipli,
+         }         
+       ]
+    },
+    {
+       neume: TimeNeume.Tripli,
+       elements: [
+         {
+          neume: QuantitativeNeume.Ison,
+          style: {
+            opacity: 0.5
+          }
+         },
+         {
+           neume: TimeNeume.Tripli,
+         }         
+       ]
+    },
+    {
+       neume: TimeNeume.GorgonDottedLeft,
+       elements: [
+         {
+          neume: QuantitativeNeume.Ison,
+          style: {
+            opacity: 0.5
+          }
+         },
+         {
+           neume: TimeNeume.GorgonDottedLeft,
+           style: {
+             color: '#ED0000',
+           }
+         }         
+       ]
+    },
+    {
+       neume: TimeNeume.GorgonDottedRight,
+       elements: [
+         {
+          neume: QuantitativeNeume.Ison,
+          style: {
+            opacity: 0.5
+          }
+         },
+         {
+           neume: TimeNeume.GorgonDottedRight,
+           style: {
+             color: '#ED0000',
+           }
          }         
        ]
     },
@@ -356,28 +557,157 @@ export default class NeumeSelector extends Vue {
     RootSign.SoftChromaticSquiggle,
   ];
 
-  fthoras: NeumeTile[] = [
+  commonMartyriaDiatonic: NeumeTileMartyria[] = [
     {
-       neume: Fthora.DiatonicNiLow_TopCenter,
-       elements: [
-         {
-          neume: QuantitativeNeume.Ison,
-          style: {
-            opacity: 0.5
-          }
-         },
-         {
-           neume: Fthora.DiatonicNiLow_TopCenter,
-           style: {
-             color: '#ED0000',
-           }
-         }         
-       ]
+       note: Note.Ni,
+       rootSign: RootSign.Delta,
     },
+    {
+       note: Note.Pa,
+       rootSign: RootSign.Alpha,
+    },
+    {
+       note: Note.Vou,
+       rootSign: RootSign.Legetos,
+    },
+    {
+       note: Note.Ga,
+       rootSign: RootSign.Nana,
+    },
+    {
+       note: Note.Thi,
+       rootSign: RootSign.DeltaDotted,
+    },
+    {
+       note: Note.Ke,
+       rootSign: RootSign.AlphaDotted,
+    },
+    {
+       note: Note.Zo,
+       rootSign: RootSign.Legetos,
+       apostrophe: true,
+    },
+    {
+       note: Note.Ni,
+       rootSign: RootSign.Delta,
+       apostrophe: true,
+    },
+  ];
+
+  commonMartyriaHardChromatic: NeumeTileMartyria[] = [
+    {
+       note: Note.Pa,
+       rootSign: RootSign.Squiggle,
+    },
+    {
+       note: Note.Vou,
+       rootSign: RootSign.Tilt,
+    },
+    {
+       note: Note.Ga,
+       rootSign: RootSign.Squiggle,
+    },
+    {
+       note: Note.Thi,
+       rootSign: RootSign.Tilt,
+    },
+    {
+       note: Note.Ke,
+       rootSign: RootSign.Squiggle,
+    },
+    {
+       note: Note.Zo,
+       rootSign: RootSign.Tilt,
+       apostrophe: true,
+    },
+    {
+       note: Note.Ni,
+       rootSign: RootSign.Squiggle,
+       apostrophe: true,
+    },
+    {
+       note: Note.Pa,
+       rootSign: RootSign.Tilt,
+       apostrophe: true,
+    },
+  ];
+
+  commonMartyriaSoftChromatic: NeumeTileMartyria[] = [
+    {
+       note: Note.Ni,
+       rootSign: RootSign.SoftChromaticSquiggle,
+    },
+    {
+       note: Note.Pa,
+       rootSign: RootSign.SoftChromaticPaRootSign,
+    },
+    {
+       note: Note.Vou,
+       rootSign: RootSign.SoftChromaticSquiggle,
+    },
+    {
+       note: Note.Ga,
+       rootSign: RootSign.SoftChromaticPaRootSign,
+    },
+    {
+       note: Note.Thi,
+       rootSign: RootSign.SoftChromaticSquiggle,
+    },
+    {
+       note: Note.Ke,
+       rootSign: RootSign.SoftChromaticPaRootSign,
+    },
+    {
+       note: Note.Zo,
+       rootSign: RootSign.SoftChromaticSquiggle,
+       apostrophe: true,
+    },
+    {
+       note: Note.Ni,
+       rootSign: RootSign.SoftChromaticPaRootSign,
+       apostrophe: true,
+    },
+  ];
+
+  fthorasRowOne: NeumeTile[] = [
+    this.generateFthoraTile(Fthora.DiatonicNiLow_TopCenter),
+    this.generateFthoraTile(Fthora.DiatonicNiLow_BottomCenter),
+    this.generateFthoraTile(Fthora.DiatonicPa_TopCenter),
+    this.generateFthoraTile(Fthora.DiatonicPa_BottomCenter),
+    this.generateFthoraTile(Fthora.DiatonicVou_TopCenter),
+    this.generateFthoraTile(Fthora.DiatonicGa_TopCenter),
+    this.generateFthoraTile(Fthora.DiatonicThi_TopCenter),
+    this.generateFthoraTile(Fthora.DiatonicThi_BottomCenter),
+    this.generateFthoraTile(Fthora.DiatonicKe_TopCenter),
+    this.generateFthoraTile(Fthora.DiatonicKe_BottomCenter),
+    this.generateFthoraTile(Fthora.DiatonicZo_TopCenter),
+    this.generateFthoraTile(Fthora.DiatonicNiHigh_TopCenter),
+    this.generateFthoraTile(Fthora.DiatonicNiHigh_BottomCenter),
     {
        neume: null,
        elements: []
     },
+  ];
+
+fthorasRowTwo: NeumeTile[] = [
+    this.generateFthoraTile(Fthora.SoftChromaticPa_TopCenter),
+    this.generateFthoraTile(Fthora.SoftChromaticPa_BottomCenter),
+    this.generateFthoraTile(Fthora.SoftChromaticThi_TopCenter),
+    this.generateFthoraTile(Fthora.SoftChromaticThi_BottomCenter),
+    this.generateFthoraTile(Fthora.HardChromaticPa_TopCenter),
+    this.generateFthoraTile(Fthora.HardChromaticPa_BottomCenter),
+    this.generateFthoraTile(Fthora.HardChromaticThi_TopCenter),
+    this.generateFthoraTile(Fthora.HardChromaticThi_BottomCenter),
+    this.generateFthoraTile(Fthora.Enharmonic_TopCenter),
+    this.generateFthoraTile(Fthora.Enharmonic_BottomCenter),
+  ];
+
+fthorasRowThree: NeumeTile[] = [
+    this.generateFthoraTile(Fthora.Zygos_TopCenter),
+    this.generateFthoraTile(Fthora.Zygos_BottomCenter),
+    this.generateFthoraTile(Fthora.Kliton_TopCenter),
+    this.generateFthoraTile(Fthora.Kliton_BottomCenter),
+    this.generateFthoraTile(Fthora.Spathi_TopCenter),
   ];
 
   isHighNeume(neume: QuantitativeNeume) {
@@ -386,6 +716,26 @@ export default class NeumeSelector extends Vue {
 
   isRedNeume(neume: TimeNeume) {
     return isRedNeume(neume);
+  }
+
+  generateFthoraTile(fthora: Fthora) {
+    return {
+       neume: fthora,
+       elements: [
+         {
+          neume: QuantitativeNeume.Ison,
+          style: {
+            opacity: 0.5
+          }
+         },
+         {
+           neume: fthora,
+           style: {
+             color: '#ED0000',
+           }
+         }         
+       ]
+    }
   }
 }
 
@@ -397,6 +747,12 @@ interface NeumeElement {
 interface NeumeTile {
   neume: NeumeType | null;
   elements: NeumeElement[];
+}
+
+interface NeumeTileMartyria {
+  note: Note | null;
+  rootSign: RootSign | null;
+  apostrophe?: boolean;
 }
 </script>
 

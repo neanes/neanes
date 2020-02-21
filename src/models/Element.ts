@@ -34,4 +34,5 @@ export interface SyllableNeume {
 export interface MartyriaNeume {
     note: Note;
     rootSign: RootSign;
+    apostrophe: boolean;
 }

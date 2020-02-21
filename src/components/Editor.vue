@@ -49,7 +49,8 @@
      @selectVocalExpressionNeume="updateVocalExpressionNeume"
      @selectFthora="updateFthora"
      @selectMartyriaNote="updateMartyriaNote"
-     @selectMartyriaRootSign="updateMartyriaRootSign"></NeumeSelector>
+     @selectMartyriaRootSign="updateMartyriaRootSign"
+     @selectMartyriaNoteAndRootSign="updateMartyriaNoteAndRootSign"></NeumeSelector>
   </div>
 </template>
 
@@ -243,6 +244,24 @@ export default class Editor extends Vue {
       }
 
       (this.selectedElement as MartyriaElement).neume.rootSign = neume;
+
+      this.save();
+    }
+  }
+
+  updateMartyriaNoteAndRootSign(note: Note, rootSign: RootSign, apostrophe: boolean | undefined) {
+    if(this.selectedElement) {
+      if (this.selectedElement.type == ElementType.Empty) {
+        this.addEmptyElement();
+      }
+
+      if (this.selectedElement.type != ElementType.Martyria) {
+        this.selectedElement = this.switchToMartyria(this.selectedElement);
+      }
+
+      (this.selectedElement as MartyriaElement).neume.note = note;
+      (this.selectedElement as MartyriaElement).neume.rootSign = rootSign;
+      (this.selectedElement as MartyriaElement).neume.apostrophe = apostrophe || false;
 
       this.save();
     }
@@ -489,7 +508,8 @@ export default class Editor extends Vue {
 
 .page-background {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
   padding: 2rem 4rem;
   background-color: #ddd;
 

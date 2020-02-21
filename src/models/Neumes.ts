@@ -86,9 +86,12 @@ export enum RootSign {
     Nana = 'Nana',
     Tilt = 'Tilt',
     Dots = 'Dots',
-    Zo = 'Zo',
+    Zo = 'Varys',
     Squiggle = 'Squiggle',
     SoftChromaticSquiggle = 'SoftChromaticSquiggle',
+    DeltaDotted = 'DeltaDotted',
+    AlphaDotted = 'AlphaDotted',
+    SoftChromaticPaRootSign = 'SoftChromaticPaRootSign',
 }
 
 export enum Note {

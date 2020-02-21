@@ -55,5 +55,7 @@ body {
     display: flex;
     flex-direction: column;
     flex: 1;
+
+    height: 100%;
   }
 </style>

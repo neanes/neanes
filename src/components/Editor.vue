@@ -1,26 +1,33 @@
 <template>
   <div class="editor">
     <div class="page-background">
-      <div class="page">
+      <div class="page" ref="page">
         <div class="mode-header red martyria">hWt</div>
 
         <div class="line">
             <div 
               v-for="(element, index) in elements" 
               :key="`element-${index}`" 
+              :ref="`element-${index}`"
               class="neume-box">
               <template v-if="isSyllableElement(element)">
                 <SyllableNeumeBox 
                   class="syllable-box"
                   :neume="element.neume"
+                  :ref="`syllable-box-${index}`"
                   :class="[{ selected: element == selectedElement }]"
                   @click.native="selectedElement = element"
                   ></SyllableNeumeBox>
-                <ContentEditable 
-                    class="lyrics"
-                    :content="element.lyrics"
-                    @click.native="selectedElement = null"
-                    @blur="updateLyrics(element, $event)"></ContentEditable>
+                  <div class=lyrics-container
+                    @click="selectedElement = null">
+                    <ContentEditable 
+                        class="lyrics"
+                        :ref="`lyrics-${index}`"
+                        :content="element.lyrics"
+                        @click.native="selectedElement = null"
+                        @blur="updateLyrics(element, $event)"></ContentEditable>
+                    <div class="melisma" v-if="isMelisma(element)" :ref="`melisma-${index}`"></div>
+                  </div>
               </template>
               <template v-if="isMartyriaElement(element)">
                 <MartyriaNeumeBox 
@@ -141,10 +148,82 @@ export default class Editor extends Vue {
 
   mounted() {
     window.addEventListener('keydown', this.onKeydown);
+
+    Vue.nextTick(() => {
+      setTimeout(this.addMelismas, 50);
+    });
   }
 
   destroyed() {
     window.removeEventListener('keydown', this.onKeydown);
+  }
+
+  updated() {
+    Vue.nextTick(this.addMelismas);
+  }
+
+  // addMelismas() {
+  //   document.querySelectorAll('.melisma').forEach(e => e.remove());
+
+  //   for (let i = 0; i < this.elements.length; i++) {
+  //     let element = this.elements[i];
+
+  //     if (element.type === ElementType.Syllable) {
+  //       let syllableElement = element as SyllableElement;
+
+  //       if (syllableElement.lyrics.charAt(syllableElement.lyrics.length - 1) === '_') {
+  //         let nextElement = this.elements[i+1];
+  //         if (nextElement.type === ElementType.Syllable) {
+  //           let nextSyllableElement = nextElement as SyllableElement;
+
+  //           if (nextSyllableElement.lyrics === '_') {
+  //             let box1 = (this.$refs[`element-${i}`]as HTMLElement[])[0];
+  //             let box2 = (this.$refs[`element-${i+1}`]as HTMLElement[])[0];
+
+  //             let melisma = document.createElement('div');
+  //             melisma.className = 'melisma';
+  //             melisma.style.width = (box2.offsetLeft + - box1.offsetLeft + 1) + 'px'; 
+  //             melisma.style.position = 'absolute';
+  //             melisma.style.left = (box1.offsetLeft + box1.offsetWidth - 1) + 'px';
+  //             melisma.style.top = (box1.offsetTop + box1.offsetHeight - 8) + 'px';
+  //             melisma.style.borderBottom = '1px solid black';
+  //             (this.$refs.page as HTMLElement).appendChild(melisma);
+  //           }            
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
+
+  isMelisma(element: SyllableElement) {
+    const index = this.elements.indexOf(element);
+
+    if(element.lyrics.charAt(element.lyrics.length - 1) === '_') {
+      let nextElement = this.elements[index + 1] as SyllableElement;
+
+      return nextElement && nextElement.lyrics === '_';
+    }
+
+    return false;
+  }
+
+  addMelismas() {
+    const syllableElements = this.elements.filter(x => x.type === ElementType.Syllable) as SyllableElement[];
+
+    for (let element of syllableElements) {
+      if (this.isMelisma(element)) {
+        const index = this.elements.indexOf(element);
+      
+        let box1 = (this.$refs[`element-${index}`] as HTMLElement[])[0];
+        let box2 = (this.$refs[`element-${index+1}`] as HTMLElement[])[0];
+        let melisma = (this.$refs[`melisma-${index}`] as HTMLElement[])[0];
+        let lyrics = (this.$refs[`lyrics-${index}`] as Vue[])[0].$el as HTMLElement;
+
+        melisma.style.top = (box1.offsetTop + box1.offsetHeight - 8) + 'px';
+        melisma.style.width = (box2.offsetLeft + box2.offsetWidth - lyrics.offsetLeft - lyrics.offsetWidth + 1) + 'px';
+        melisma.style.left = (lyrics.offsetLeft + lyrics.offsetWidth - 1) + 'px';
+      }
+    }
   }
 
   updateQuantitativeNeume(neume: QuantitativeNeume) {
@@ -474,6 +553,7 @@ export default class Editor extends Vue {
     min-height: 1.6rem;
     min-width: 1rem;
     text-align: center;
+    position: relative;
 }
 
 .red {
@@ -525,6 +605,8 @@ export default class Editor extends Vue {
     /* height: 1056px; */
     padding: 96px;
     overflow: auto;
+
+    position: relative;
 }
 
 .editor {
@@ -549,31 +631,41 @@ export default class Editor extends Vue {
     font-size: 1.75rem;
     text-align: center;
 }
-  /* body * {
-    visibility: hidden;
-  }
-  .page, .page * {
-    visibility: visible;
-  }
-  .page {
-    position: absolute;
-    left: 0;
-    top: 0;
-    height: 100vh;
-  } */
+
+.lyrics-container {
+  min-height: 1.6rem;
+  min-width: 1rem;
+}
+
+.melisma {
+  position: absolute;
+  top: 18px;
+  border-bottom: 1px solid black;
+}
+
+.neume {
+  height: 3.5rem;  
+ }
+
 @media print {
   body * {
     visibility: hidden;
   }
+
   .page, .page * {
     visibility: visible;
   }
+
   .page {
     position: absolute;
     left: 0;
     top: 0;
     /* width: 100vw;
     height: 100vh; */
+  }
+
+  .empty-neume-box {
+    visibility: hidden;
   }
 }
 </style>

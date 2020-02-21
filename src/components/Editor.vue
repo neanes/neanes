@@ -395,7 +395,7 @@ export default class Editor extends Vue {
       this.elements = JSON.parse(score);
     }
 
-    //this.elements = this.generateTestFile();
+    // this.elements = this.generateTestFile();
   }
 
   updateLyrics(element: SyllableElement, lyrics: string) {
@@ -494,7 +494,7 @@ export default class Editor extends Vue {
   background-color: #ddd;
 
   overflow: hidden;
-  height: 50vh;
+  flex: 1;
 }
 
 .page {
@@ -512,6 +512,8 @@ export default class Editor extends Vue {
   flex-direction: column;
 
   flex: 1;
+
+  height: 100%;
 }
 
 .neume-selector {

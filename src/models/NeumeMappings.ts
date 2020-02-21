@@ -184,6 +184,9 @@ export const neumeMap = new Map<Neume, NeumeMapping>([
     [RootSign.Zo, { fontFamily: 'Psaltica', text: '>'}],
     [RootSign.Squiggle, { fontFamily: 'Psaltica', text: '?'}],
     [RootSign.SoftChromaticSquiggle, { fontFamily: 'Psaltica', text: '<?'}],
+    [RootSign.DeltaDotted, { fontFamily: 'Psaltica', text: 'C<'}],
+    [RootSign.AlphaDotted, { fontFamily: 'Psaltica', text: 'V<'}],
+    [RootSign.SoftChromaticPaRootSign, { fontFamily: 'EzFthora', text: 'R'}],
 
     [Note.Ni, { fontFamily: 'Psaltica', text: 'c'}],
     [Note.Pa, { fontFamily: 'Psaltica', text: 'v'}],

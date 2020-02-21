@@ -12,7 +12,17 @@ export default class Neume extends Vue {
   @Prop() neume!: NeumeType;
 
   get mapping() {
-    return neumeMap.get(this.neume)!;
+    let mapping = neumeMap.get(this.neume);
+
+    if (!mapping) {
+      console.warn('Could not find mapping for neume ' + this.neume);
+      mapping =  {
+        fontFamily: 'Omega',
+        text: '?'
+      }
+    }
+
+    return mapping!;
   }
 
   get text() {

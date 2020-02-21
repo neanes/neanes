@@ -2,6 +2,7 @@
   <div class="neume">
     <Neume :neume="neume.note"></Neume>
     <Neume :neume="neume.rootSign"></Neume>
+    <Neume v-if="neume.apostrophe" neume="Apostrophe"></Neume>
   </div>
 </template>
 

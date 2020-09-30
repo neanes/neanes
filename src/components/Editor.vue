@@ -68,10 +68,11 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator';
+import { Component, Prop, Watch, Vue } from 'vue-property-decorator';
 import { Element, MartyriaElement, SyllableElement, ElementType, EmptyElement, SyllableNeume } from '@/models/Element';
 import { QuantitativeNeume, TimeNeume, Note, RootSign, VocalExpressionNeume, Fthora } from '@/models/Neumes';
 import { Page, Line } from '@/models/Page';
+import { Score } from '@/models/Score';
 import { KeyboardMap } from '@/models/NeumeMappings';
 import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
 import MartyriaNeumeBox from '@/components/NeumeBoxMartyria.vue';
@@ -91,64 +92,7 @@ import ContentEditable from '@/components/ContentEditable.vue';
 export default class Editor extends Vue {
   pages: Page[] = [];
   selectedElement: Element | null = null;
-
-  elements: Element[] = [
-    {
-      type: ElementType.Syllable,
-      neume: {
-        quantitativeNeume: QuantitativeNeume.Ison,
-        timeNeume: null,
-        vocalExpressionNeume: null,
-      },
-      lyrics: 'The',
-    } as SyllableElement,
-    {
-      type: ElementType.Syllable,
-      neume: {
-        quantitativeNeume: QuantitativeNeume.Elaphron,
-        timeNeume: null,
-        vocalExpressionNeume: null,
-      },
-      lyrics: 'sha',
-    } as SyllableElement,
-    {
-      type: ElementType.Syllable,
-      neume: {
-        quantitativeNeume: QuantitativeNeume.KentemataPlusOligon,
-        timeNeume: null,
-        vocalExpressionNeume: null,
-      },
-      lyrics: '-',
-    } as SyllableElement,
-    {
-      type: ElementType.Syllable,
-      neume: {
-        quantitativeNeume: QuantitativeNeume.OligonPlusKentemata,
-        timeNeume: TimeNeume.Gorgon_Top,
-        vocalExpressionNeume: null,
-      },
-      lyrics: '-',
-    } as SyllableElement,
-    {
-      type: ElementType.Syllable,
-      neume: {
-        quantitativeNeume: QuantitativeNeume.Elaphron,
-        timeNeume: TimeNeume.Klasma_Top,
-        vocalExpressionNeume: null,
-      },
-      lyrics: 'dow',
-    } as SyllableElement,
-    {
-      type: ElementType.Martyria,
-      neume: {
-        note: Note.Thi,
-        rootSign: RootSign.SoftChromaticSquiggle,
-      },
-    } as MartyriaElement,
-    {
-      type: ElementType.Empty,
-    } as EmptyElement,
-  ];
+  score: Score = new Score();
 
   created() {
     this.load();
@@ -173,14 +117,14 @@ export default class Editor extends Vue {
   // addMelismas() {
   //   document.querySelectorAll('.melisma').forEach(e => e.remove());
 
-  //   for (let i = 0; i < this.elements.length; i++) {
-  //     let element = this.elements[i];
+  //   for (let i = 0; i < this.score.elements.length; i++) {
+  //     let element = this.score.elements[i];
 
   //     if (element.type === ElementType.Syllable) {
   //       let syllableElement = element as SyllableElement;
 
   //       if (syllableElement.lyrics.charAt(syllableElement.lyrics.length - 1) === '_') {
-  //         let nextElement = this.elements[i+1];
+  //         let nextElement = this.score.elements[i+1];
   //         if (nextElement.type === ElementType.Syllable) {
   //           let nextSyllableElement = nextElement as SyllableElement;
 
@@ -204,10 +148,10 @@ export default class Editor extends Vue {
   // }
 
   isMelisma(element: SyllableElement) {
-    const index = this.elements.indexOf(element);
+    const index = this.score.elements.indexOf(element);
 
     if(element.lyrics.charAt(element.lyrics.length - 1) === '_') {
-      let nextElement = this.elements[index + 1] as SyllableElement;
+      let nextElement = this.score.elements[index + 1] as SyllableElement;
 
       return nextElement && nextElement.lyrics === '_';
     }
@@ -216,11 +160,11 @@ export default class Editor extends Vue {
   }
 
   addMelismas() {
-    const syllableElements = this.elements.filter(x => x.type === ElementType.Syllable) as SyllableElement[];
+    const syllableElements = this.score.elements.filter(x => x.type === ElementType.Syllable) as SyllableElement[];
 
     for (let element of syllableElements) {
       if (this.isMelisma(element)) {
-        const index = this.elements.indexOf(element);
+        const index = this.score.elements.indexOf(element);
       
         let box1 = (this.$refs[`element-${index}`] as HTMLElement[])[0];
         let box2 = (this.$refs[`element-${index+1}`] as HTMLElement[])[0];
@@ -355,9 +299,9 @@ export default class Editor extends Vue {
   }
 
   switchToMartyria(element: Element) {
-      const index = this.elements.indexOf(element);
+      const index = this.score.elements.indexOf(element);
 
-      this.elements[index] = {
+      this.score.elements[index] = {
         type: ElementType.Martyria,
         neume: {
           note: Note.Pa,
@@ -365,13 +309,15 @@ export default class Editor extends Vue {
         },
       } as MartyriaElement;
 
-      return this.elements[index];
+      this.pages = this.processPages();
+
+      return this.score.elements[index];
   }
 
   switchToSyllable(element: Element) {
-      const index = this.elements.indexOf(element);
+      const index = this.score.elements.indexOf(element);
 
-      this.elements[index] = {
+      this.score.elements[index] = {
         type: ElementType.Syllable,
         neume: {
           quantitativeNeume: QuantitativeNeume.Ison,
@@ -382,21 +328,21 @@ export default class Editor extends Vue {
         lyrics: ''
       } as SyllableElement;
 
-      return this.elements[index];
+      return this.score.elements[index];
   }
 
   switchToEmptyElement(element: Element) {
-      const index = this.elements.indexOf(element);
+      const index = this.score.elements.indexOf(element);
 
-      this.elements[index] = {
+      this.score.elements[index] = {
         type: ElementType.Empty,
       } as EmptyElement;
 
-      return this.elements[index];
+      return this.score.elements[index];
   }
 
   addEmptyElement() {
-    this.elements.push({
+    this.score.elements.push({
       type: ElementType.Empty,
     } as EmptyElement);
   }
@@ -444,6 +390,18 @@ export default class Editor extends Vue {
         this.moveLeft();
       }
     }
+    else if (event.code == 'Delete') {
+      if (this.selectedElement && this.selectedElement.type !== ElementType.Empty) {
+        const index = this.score.elements.indexOf(this.selectedElement);
+
+        this.moveLeft();
+
+        if (index > -1) {
+          this.score.elements.splice(index, 1);
+          this.save();
+        }
+      }
+    }
 
     if (event.shiftKey) {
       const quantitativeNeume = KeyboardMap.quantitativeNeumeKeyboardMap_Shift.get(event.code);
@@ -472,36 +430,95 @@ export default class Editor extends Vue {
 
   moveLeft() {
     if (this.selectedElement) {
-      const index = this.elements.indexOf(this.selectedElement);
+      const index = this.score.elements.indexOf(this.selectedElement);
 
       if (index - 1 >= 0) {
-        this.selectedElement = this.elements[index - 1];
+        this.selectedElement = this.score.elements[index - 1];
       }
     }
   }
 
   moveRight() {
     if (this.selectedElement) {
-      const index = this.elements.indexOf(this.selectedElement);
+      const index = this.score.elements.indexOf(this.selectedElement);
 
-      if (index >= 0 && index + 1 < this.elements.length) {
-        this.selectedElement = this.elements[index + 1];
+      if (index >= 0 && index + 1 < this.score.elements.length) {
+        this.selectedElement = this.score.elements[index + 1];
       }
     }
   }
 
   save() {
-    localStorage.setItem('score', JSON.stringify(this.elements));
+    localStorage.setItem('score', JSON.stringify(this.score.elements));
   }
 
   load() {
     const score = localStorage.getItem('score');
 
     if (score) {
-      this.elements = JSON.parse(score);
+      this.score.elements = JSON.parse(score);
+    }
+    else {
+       this.score.elements = [
+        {
+          type: ElementType.Syllable,
+          neume: {
+            quantitativeNeume: QuantitativeNeume.Ison,
+            timeNeume: null,
+            vocalExpressionNeume: null,
+          },
+          lyrics: 'The',
+        } as SyllableElement,
+        {
+          type: ElementType.Syllable,
+          neume: {
+            quantitativeNeume: QuantitativeNeume.Elaphron,
+            timeNeume: null,
+            vocalExpressionNeume: null,
+          },
+          lyrics: 'sha',
+        } as SyllableElement,
+        {
+          type: ElementType.Syllable,
+          neume: {
+            quantitativeNeume: QuantitativeNeume.KentemataPlusOligon,
+            timeNeume: null,
+            vocalExpressionNeume: null,
+          },
+          lyrics: '-',
+        } as SyllableElement,
+        {
+          type: ElementType.Syllable,
+          neume: {
+            quantitativeNeume: QuantitativeNeume.OligonPlusKentemata,
+            timeNeume: TimeNeume.Gorgon_Top,
+            vocalExpressionNeume: null,
+          },
+          lyrics: '-',
+        } as SyllableElement,
+        {
+          type: ElementType.Syllable,
+          neume: {
+            quantitativeNeume: QuantitativeNeume.Elaphron,
+            timeNeume: TimeNeume.Klasma_Top,
+            vocalExpressionNeume: null,
+          },
+          lyrics: 'dow',
+        } as SyllableElement,
+        {
+          type: ElementType.Martyria,
+          neume: {
+            note: Note.Thi,
+            rootSign: RootSign.SoftChromaticSquiggle,
+          },
+        } as MartyriaElement,
+        {
+          type: ElementType.Empty,
+        } as EmptyElement,
+      ];
     }
 
-    //this.elements = this.generateTestFile();
+    //this.score.elements = this.generateTestFile();
 
     this.pages = this.processPages();
   }
@@ -538,11 +555,10 @@ export default class Editor extends Vue {
 
     let index = 0;
 
-    for (let element of this.elements) {
-      index++;
+    for (let element of this.score.elements) {
       currentLineWidthPx += elementWidthPx;
 
-      if (currentLineWidthPx >= lineWidthPx) {
+      if (currentLineWidthPx >= lineWidthPx || this.score.lineBreaks.some(x => x === index)) {
         line = { 
           elements: [],
         };
@@ -553,21 +569,34 @@ export default class Editor extends Vue {
         page.lines.push(line);
       }
       
-      if (currentPageHeightPx >= pageHeightPx) {
+      if (currentPageHeightPx >= pageHeightPx || this.score.pageBreaks.some(x => x === index)) {        
         page = { 
           lines: [],
         };
 
+        line = { 
+          elements: [],
+        };
+        
+        page.lines.push(line);
         pages.push(page);
 
         lineCount = 1;
         currentPageHeightPx = 0;
+        currentLineWidthPx = 0;
       }
 
       line.elements.push(element);
+
+      index++;
     }
 
     return pages;
+  }
+
+  @Watch('elements') 
+  onElementsUpdated() {
+    this.pages = this.processPages();
   }
 
   generateTestFile() {

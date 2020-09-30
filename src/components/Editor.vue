@@ -543,8 +543,6 @@ export default class Editor extends Vue {
       currentLineWidthPx += elementWidthPx;
 
       if (currentLineWidthPx >= lineWidthPx) {
-        console.log('lineWidthPx', lineWidthPx);
-        console.log('currentLineWidthPx', currentLineWidthPx);
         line = { 
           elements: [],
         };

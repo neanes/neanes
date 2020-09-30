@@ -1,12 +1,18 @@
 <template>
   <div class="editor">
     <div class="page-background">
-      <div class="page" ref="page">
-        <div class="mode-header red martyria">hWt</div>
+      <div class="page"  
+          v-for="(page, index) in pages" 
+          :key="`page-${index}`" 
+          :ref="`page-${index}`">
+        <!-- <div class="mode-header red martyria">hWt</div> -->
 
-        <div class="line">
+        <div class="line"
+          v-for="(line, index) in page.lines" 
+          :key="`line-${index}`" 
+          :ref="`line-${index}`">
             <div 
-              v-for="(element, index) in elements" 
+              v-for="(element, index) in line.elements" 
               :key="`element-${index}`" 
               :ref="`element-${index}`"
               class="neume-box">
@@ -65,6 +71,7 @@
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { Element, MartyriaElement, SyllableElement, ElementType, EmptyElement, SyllableNeume } from '@/models/Element';
 import { QuantitativeNeume, TimeNeume, Note, RootSign, VocalExpressionNeume, Fthora } from '@/models/Neumes';
+import { Page, Line } from '@/models/Page';
 import { KeyboardMap } from '@/models/NeumeMappings';
 import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
 import MartyriaNeumeBox from '@/components/NeumeBoxMartyria.vue';
@@ -82,6 +89,7 @@ import ContentEditable from '@/components/ContentEditable.vue';
   }
 })
 export default class Editor extends Vue {
+  pages: Page[] = [];
   selectedElement: Element | null = null;
 
   elements: Element[] = [
@@ -493,12 +501,75 @@ export default class Editor extends Vue {
       this.elements = JSON.parse(score);
     }
 
-    // this.elements = this.generateTestFile();
+    //this.elements = this.generateTestFile();
+
+    this.pages = this.processPages();
   }
 
   updateLyrics(element: SyllableElement, lyrics: string) {
     element.lyrics = lyrics;
     this.save();
+  }
+
+  processPages() {
+    const pageHeightPx = 1056 - 96 - 96;
+
+    const lineHeightPx = 82;
+    const lineWidthPx = 816 - 96 - 96;
+
+    const elementWidthPx = 39;
+    const elementHeightPx = 82;
+    const pages: Page[] = [];
+
+    let page: Page = { 
+      lines: [],
+    };
+
+    let line: Line = {
+      elements: []
+    };
+
+    page.lines.push(line);
+    pages.push(page);
+
+    let currentPageHeightPx = 0;
+    let currentLineWidthPx = 0;
+    let lineCount = 1;
+
+    let index = 0;
+
+    for (let element of this.elements) {
+      index++;
+      currentLineWidthPx += elementWidthPx;
+
+      if (currentLineWidthPx >= lineWidthPx) {
+        console.log('lineWidthPx', lineWidthPx);
+        console.log('currentLineWidthPx', currentLineWidthPx);
+        line = { 
+          elements: [],
+        };
+
+        lineCount++;
+        currentPageHeightPx = lineHeightPx * lineCount;
+        currentLineWidthPx = 0;
+        page.lines.push(line);
+      }
+      
+      if (currentPageHeightPx >= pageHeightPx) {
+        page = { 
+          lines: [],
+        };
+
+        pages.push(page);
+
+        lineCount = 1;
+        currentPageHeightPx = 0;
+      }
+
+      line.elements.push(element);
+    }
+
+    return pages;
   }
 
   generateTestFile() {
@@ -577,7 +648,9 @@ export default class Editor extends Vue {
     align-items: center;
     justify-content: center;
 
-    margin-right: 0.25rem;
+    width: 39px;
+
+    /* margin-right: 0.25rem; */
 }
 
 .empty-neume-box {
@@ -593,18 +666,22 @@ export default class Editor extends Vue {
   padding: 2rem 4rem;
   background-color: #ddd;
 
-  overflow: hidden;
+  overflow: auto;
   flex: 1;
 }
 
 .page {
+    margin-bottom: 20px;
+
     background-color: white;
-    min-width: 816px;
-    max-width: 816px;
-    width: 816px;
-    /* height: 1056px; */
+    min-width: 624px;
+    max-width: 624px;
+    width: 624px;
+    height: 864px;
+    min-height: 864px;
+    max-height: 864px;
     padding: 96px;
-    overflow: auto;
+    overflow: hidden;
 
     position: relative;
 }
@@ -656,12 +733,21 @@ export default class Editor extends Vue {
     visibility: visible;
   }
 
-  .page {
+  .page-background {
+    display: block;
     position: absolute;
     left: 0;
     top: 0;
-    /* width: 100vw;
-    height: 100vh; */
+    padding: 0;
+  }
+
+  .page {
+    width: auto;
+    height: auto;
+    margin-bottom: 0;
+    padding: 0;
+    width: 816px;
+    height: 864px;
   }
 
   .empty-neume-box {

@@ -1,5 +1,6 @@
 <template>
   <div class="editor">
+    <FileMenuBar />
     <div class="page-background">
       <div class="page"  
           v-for="(page, index) in pages" 
@@ -79,6 +80,8 @@ import MartyriaNeumeBox from '@/components/NeumeBoxMartyria.vue';
 import NeumeSelector from '@/components/NeumeSelector.vue';
 import NeumeKeyboard from '@/components/NeumeKeyboard.vue';
 import ContentEditable from '@/components/ContentEditable.vue';
+import FileMenuBar from '@/components/FileMenuBar.vue';
+import { store, mutations } from '@/store';
 
 @Component({
   components: {
@@ -87,12 +90,16 @@ import ContentEditable from '@/components/ContentEditable.vue';
     NeumeSelector,
     NeumeKeyboard,
     ContentEditable,
+    FileMenuBar,
   }
 })
 export default class Editor extends Vue {
   pages: Page[] = [];
   selectedElement: Element | null = null;
-  score: Score = new Score();
+  
+  private get score() {
+    return store.score;
+  }
 
   created() {
     this.load();
@@ -594,8 +601,8 @@ export default class Editor extends Vue {
     return pages;
   }
 
-  @Watch('elements') 
-  onElementsUpdated() {
+  @Watch('score') 
+  onScoreUpdated() {
     this.pages = this.processPages();
   }
 

@@ -6,13 +6,13 @@
 
 <script>
 // @ is an alias to /src
-import Editor from '@/components/Editor.vue'
+import Editor from '@/components/Editor.vue';
 
 export default {
   name: 'home',
   components: {
-    Editor
-  }
+    Editor,
+  },
 }
 </script>
 

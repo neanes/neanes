@@ -23,7 +23,7 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
-import { SyllableNeume } from '@/models/Element';
+import { NoteElement } from '@/models/Element';
 import { QuantitativeNeume, TimeNeume, isHighNeume, isRedNeume, VocalExpressionNeume } from '../models/Neumes';
 import { neumeMap } from '@/models/NeumeMappings';
 import Neume from '@/components/Neume.vue';
@@ -34,7 +34,7 @@ import Neume from '@/components/Neume.vue';
   }
 })
 export default class NeumeBoxSyllable extends Vue {
-  @Prop() neume!: SyllableNeume;
+  @Prop() neume!: NoteElement;
 
   get hasVocalExpressionNeume() {
     return this.neume.vocalExpressionNeume != null;

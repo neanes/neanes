@@ -8,7 +8,7 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
-import { MartyriaNeume } from '@/models/Element';
+import { MartyriaElement } from '@/models/Element';
 import { neumeMap } from '@/models/NeumeMappings';
 import Neume  from '@/components/Neume.vue'
 
@@ -18,7 +18,7 @@ import Neume  from '@/components/Neume.vue'
   }
 })
 export default class NeumeBoxMartyria extends Vue {
-  @Prop() neume!: MartyriaNeume;
+  @Prop() neume!: MartyriaElement;
 
   get noteMapping() {
     return neumeMap.get(this.neume.note!)!;

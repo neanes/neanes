@@ -1,7 +1,9 @@
-import { Element } from '@/models/Element';
+import { Element, EmptyElement } from '@/models/Element';
 
 export class Score {
-    public elements: Element[] = [];
-    public pageBreaks: number[] = [];
-    public lineBreaks: number[] =[];
+    public staff: Staff = new Staff();
+}
+
+export class Staff {
+    public elements: Element[] = [new EmptyElement()];
 }

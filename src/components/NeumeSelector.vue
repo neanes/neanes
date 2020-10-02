@@ -177,6 +177,7 @@
       <div class="row">
         <div @click="$emit('select-page-break')">Page Break</div>
         <div @click="$emit('select-line-break')">Line Break</div>
+        <div @click="$emit('select-empty')">Empty</div>
       </div>
     </div>
   </div>

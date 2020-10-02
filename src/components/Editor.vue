@@ -18,9 +18,11 @@
               :ref="`element-${index}`"
               class="neume-box">
               <template v-if="isSyllableElement(element)">
+                <span v-if="element.pageBreak" style="position:absolute; top: -10px;">P</span>
+                <span v-if="element.lineBreak" style="position:absolute; top: -10px;">L</span>
                 <SyllableNeumeBox 
                   class="syllable-box"
-                  :neume="element.neume"
+                  :neume="element"
                   :ref="`syllable-box-${index}`"
                   :class="[{ selected: element == selectedElement }]"
                   @click.native="selectedElement = element"
@@ -37,15 +39,19 @@
                   </div>
               </template>
               <template v-if="isMartyriaElement(element)">
+                <span v-if="element.pageBreak" style="position:absolute; top: -10px;">P</span>
+                <span v-if="element.lineBreak" style="position:absolute; top: -10px;">L</span>
                 <MartyriaNeumeBox 
                   class="marytria-neume-box"
-                  :neume="element.neume" 
+                  :neume="element" 
                   :class="[{ selected: element == selectedElement }]"
                   @click.native="selectedElement = element"
                   ></MartyriaNeumeBox>
                 <div class="lyrics"></div>
               </template>
               <template v-if="isEmptyElement(element)">
+                <span v-if="element.pageBreak" style="position:absolute; top: -10px;">P</span>
+                <span v-if="element.lineBreak" style="position:absolute; top: -10px;">L</span>
                 <div
                   class="empty-neume-box"
                   :class="[{ selected: element == selectedElement }]"
@@ -58,19 +64,21 @@
     </div>
     </div>
     <NeumeSelector class="neume-selector"
-     @selectQuantitativeNeume="updateQuantitativeNeume" 
-     @selectTimeNeume="updateTimeNeume"
-     @selectVocalExpressionNeume="updateVocalExpressionNeume"
-     @selectFthora="updateFthora"
-     @selectMartyriaNote="updateMartyriaNote"
-     @selectMartyriaRootSign="updateMartyriaRootSign"
-     @selectMartyriaNoteAndRootSign="updateMartyriaNoteAndRootSign"></NeumeSelector>
+     @select-quantitative-neume="updateQuantitativeNeume" 
+     @select-time-neume="updateTimeNeume"
+     @select-vocal-expression-neume="updateVocalExpressionNeume"
+     @select-fthora="updateFthora"
+     @select-martyria-note="updateMartyriaNote"
+     @select-martyria-root-sign="updateMartyriaRootSign"
+     @select-martyria-note-and-root-sign="updateMartyriaNoteAndRootSign"
+     @select-page-break="updatePageBreak"
+     @select-line-break="updateLineBreak"></NeumeSelector>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Prop, Watch, Vue } from 'vue-property-decorator';
-import { Element, MartyriaElement, SyllableElement, ElementType, EmptyElement, SyllableNeume } from '@/models/Element';
+import { Element, MartyriaElement, NoteElement, ElementType, EmptyElement } from '@/models/Element';
 import { QuantitativeNeume, TimeNeume, Note, RootSign, VocalExpressionNeume, Fthora } from '@/models/Neumes';
 import { Page, Line } from '@/models/Page';
 import { Score } from '@/models/Score';
@@ -99,6 +107,10 @@ export default class Editor extends Vue {
   
   private get score() {
     return store.score;
+  }
+
+  private get elements() {
+    return this.score != null ? this.score.staff.elements : [];
   }
 
   created() {
@@ -154,11 +166,11 @@ export default class Editor extends Vue {
   //   }
   // }
 
-  isMelisma(element: SyllableElement) {
-    const index = this.score.elements.indexOf(element);
+  isMelisma(element: NoteElement) {
+    const index = this.elements.indexOf(element);
 
     if(element.lyrics.charAt(element.lyrics.length - 1) === '_') {
-      let nextElement = this.score.elements[index + 1] as SyllableElement;
+      let nextElement = this.elements[index + 1] as NoteElement;
 
       return nextElement && nextElement.lyrics === '_';
     }
@@ -167,11 +179,11 @@ export default class Editor extends Vue {
   }
 
   addMelismas() {
-    const syllableElements = this.score.elements.filter(x => x.type === ElementType.Syllable) as SyllableElement[];
+    const syllableElements = this.elements.filter(x => x.elementType === ElementType.Note) as NoteElement[];
 
     for (let element of syllableElements) {
       if (this.isMelisma(element)) {
-        const index = this.score.elements.indexOf(element);
+        const index = this.elements.indexOf(element);
       
         let box1 = (this.$refs[`element-${index}`] as HTMLElement[])[0];
         let box2 = (this.$refs[`element-${index+1}`] as HTMLElement[])[0];
@@ -187,15 +199,15 @@ export default class Editor extends Vue {
 
   updateQuantitativeNeume(neume: QuantitativeNeume) {
     if(this.selectedElement) {
-      if (this.selectedElement.type == ElementType.Empty) {
+      if (this.selectedElement.elementType == ElementType.Empty) {
         this.addEmptyElement();
       }
 
-      if (this.selectedElement.type != ElementType.Syllable) {
+      if (this.selectedElement.elementType != ElementType.Note) {
         this.selectedElement = this.switchToSyllable(this.selectedElement);
       }
       
-      (this.selectedElement as SyllableElement).neume.quantitativeNeume = neume;
+      (this.selectedElement as NoteElement).quantitativeNeume = neume;
 
       //this.moveRight();
 
@@ -205,15 +217,15 @@ export default class Editor extends Vue {
 
   updateTimeNeume(neume: TimeNeume | null) {
     if(this.selectedElement) {
-      if (this.selectedElement.type == ElementType.Empty) {
+      if (this.selectedElement.elementType == ElementType.Empty) {
         this.addEmptyElement();
       }
 
-      if (this.selectedElement.type != ElementType.Syllable) {
+      if (this.selectedElement.elementType != ElementType.Note) {
         this.selectedElement = this.switchToSyllable(this.selectedElement);
       }
 
-      (this.selectedElement as SyllableElement).neume.timeNeume = neume;
+      (this.selectedElement as NoteElement).timeNeume = neume;
       //this.moveRight();
 
       this.save();
@@ -222,15 +234,15 @@ export default class Editor extends Vue {
 
   updateFthora(neume: Fthora | null) {
     if(this.selectedElement) {
-      if (this.selectedElement.type == ElementType.Empty) {
+      if (this.selectedElement.elementType == ElementType.Empty) {
         this.addEmptyElement();
       }
 
-      if (this.selectedElement.type != ElementType.Syllable) {
+      if (this.selectedElement.elementType != ElementType.Note) {
         this.selectedElement = this.switchToSyllable(this.selectedElement);
       }
 
-      (this.selectedElement as SyllableElement).neume.fthora = neume;
+      (this.selectedElement as NoteElement).fthora = neume;
       //this.moveRight();
 
       this.save();
@@ -239,15 +251,15 @@ export default class Editor extends Vue {
 
   updateVocalExpressionNeume(neume: VocalExpressionNeume) {
     if(this.selectedElement) {
-      if (this.selectedElement.type == ElementType.Empty) {
+      if (this.selectedElement.elementType == ElementType.Empty) {
         this.addEmptyElement();
       }
 
-      if (this.selectedElement.type != ElementType.Syllable) {
+      if (this.selectedElement.elementType != ElementType.Note) {
         this.selectedElement = this.switchToSyllable(this.selectedElement);
       }
 
-      (this.selectedElement as SyllableElement).neume.vocalExpressionNeume = neume;
+      (this.selectedElement as NoteElement).vocalExpressionNeume = neume;
 
       this.moveRight();
 
@@ -257,15 +269,15 @@ export default class Editor extends Vue {
 
   updateMartyriaNote(neume: Note) {
     if(this.selectedElement) {
-      if (this.selectedElement.type == ElementType.Empty) {
+      if (this.selectedElement.elementType == ElementType.Empty) {
         this.addEmptyElement();
       }
 
-      if (this.selectedElement.type != ElementType.Martyria) {
+      if (this.selectedElement.elementType != ElementType.Martyria) {
         this.selectedElement = this.switchToMartyria(this.selectedElement);
       }
 
-      (this.selectedElement as MartyriaElement).neume.note = neume;
+      (this.selectedElement as MartyriaElement).note = neume;
 
       this.save();
     }
@@ -273,15 +285,15 @@ export default class Editor extends Vue {
 
   updateMartyriaRootSign(neume: RootSign) {
     if(this.selectedElement) {
-      if (this.selectedElement.type == ElementType.Empty) {
+      if (this.selectedElement.elementType == ElementType.Empty) {
         this.addEmptyElement();
       }
 
-      if (this.selectedElement.type != ElementType.Martyria) {
+      if (this.selectedElement.elementType != ElementType.Martyria) {
         this.selectedElement = this.switchToMartyria(this.selectedElement);
       }
 
-      (this.selectedElement as MartyriaElement).neume.rootSign = neume;
+      (this.selectedElement as MartyriaElement).rootSign = neume;
 
       this.save();
     }
@@ -289,81 +301,77 @@ export default class Editor extends Vue {
 
   updateMartyriaNoteAndRootSign(note: Note, rootSign: RootSign, apostrophe: boolean | undefined) {
     if(this.selectedElement) {
-      if (this.selectedElement.type == ElementType.Empty) {
+      if (this.selectedElement.elementType == ElementType.Empty) {
         this.addEmptyElement();
       }
 
-      if (this.selectedElement.type != ElementType.Martyria) {
+      if (this.selectedElement.elementType != ElementType.Martyria) {
         this.selectedElement = this.switchToMartyria(this.selectedElement);
       }
 
-      (this.selectedElement as MartyriaElement).neume.note = note;
-      (this.selectedElement as MartyriaElement).neume.rootSign = rootSign;
-      (this.selectedElement as MartyriaElement).neume.apostrophe = apostrophe || false;
+      (this.selectedElement as MartyriaElement).note = note;
+      (this.selectedElement as MartyriaElement).rootSign = rootSign;
+      (this.selectedElement as MartyriaElement).apostrophe = apostrophe || false;
 
       this.save();
     }
   }
 
+  updatePageBreak() {
+    if(this.selectedElement) {
+      this.selectedElement.pageBreak = !this.selectedElement.pageBreak;
+      this.save();
+    }
+  }
+
+  updateLineBreak() {
+    if(this.selectedElement) {
+      this.selectedElement.lineBreak = !this.selectedElement.lineBreak;
+      this.save();
+    }
+  }
+
   switchToMartyria(element: Element) {
-      const index = this.score.elements.indexOf(element);
+      const index = this.elements.indexOf(element);
 
-      this.score.elements[index] = {
-        type: ElementType.Martyria,
-        neume: {
-          note: Note.Pa,
-          rootSign: RootSign.Alpha
-        },
-      } as MartyriaElement;
+      const newElement = new MartyriaElement();
+      this.elements.splice(index, 1, newElement);
 
-      this.pages = this.processPages();
-
-      return this.score.elements[index];
+      return newElement;
   }
 
   switchToSyllable(element: Element) {
-      const index = this.score.elements.indexOf(element);
+      const index = this.elements.indexOf(element);
 
-      this.score.elements[index] = {
-        type: ElementType.Syllable,
-        neume: {
-          quantitativeNeume: QuantitativeNeume.Ison,
-          timeNeume: null,
-          vocalExpressionNeume: null,
-          fthora: null,
-        },
-        lyrics: ''
-      } as SyllableElement;
-
-      return this.score.elements[index];
+      const newElement = new NoteElement();
+      this.elements.splice(index, 1, newElement);
+      
+      return newElement;
   }
 
   switchToEmptyElement(element: Element) {
-      const index = this.score.elements.indexOf(element);
+      const index = this.elements.indexOf(element);
 
-      this.score.elements[index] = {
-        type: ElementType.Empty,
-      } as EmptyElement;
+      const newElement = new EmptyElement();
+      this.elements.splice(index, 1, newElement);
 
-      return this.score.elements[index];
+      return newElement;
   }
 
   addEmptyElement() {
-    this.score.elements.push({
-      type: ElementType.Empty,
-    } as EmptyElement);
+    this.elements.push(new EmptyElement());
   }
 
   isSyllableElement(element: Element) {
-    return element.type == ElementType.Syllable;
+    return element.elementType == ElementType.Note;
   }
 
   isMartyriaElement(element: Element) {
-    return element.type == ElementType.Martyria;
+    return element.elementType == ElementType.Martyria;
   }
 
   isEmptyElement(element: Element) {
-    return element.type == ElementType.Empty;
+    return element.elementType == ElementType.Empty;
   }
 
   onKeydown(event: KeyboardEvent) {
@@ -383,9 +391,9 @@ export default class Editor extends Vue {
     }
     else if (event.code == 'Backspace') {
       if (this.isSyllableElement(this.selectedElement)) {
-        let syllableElement = this.selectedElement as SyllableElement;
-        if (syllableElement.neume.timeNeume) {
-          syllableElement.neume.timeNeume = null
+        let syllableElement = this.selectedElement as NoteElement;
+        if (syllableElement.timeNeume) {
+          syllableElement.timeNeume = null
         }
         else {
           this.selectedElement = this.switchToEmptyElement(this.selectedElement);
@@ -398,13 +406,13 @@ export default class Editor extends Vue {
       }
     }
     else if (event.code == 'Delete') {
-      if (this.selectedElement && this.selectedElement.type !== ElementType.Empty) {
-        const index = this.score.elements.indexOf(this.selectedElement);
+      if (this.selectedElement && this.selectedElement.elementType !== ElementType.Empty) {
+        const index = this.elements.indexOf(this.selectedElement);
 
         this.moveLeft();
 
         if (index > -1) {
-          this.score.elements.splice(index, 1);
+          this.elements.splice(index, 1);
           this.save();
         }
       }
@@ -437,92 +445,37 @@ export default class Editor extends Vue {
 
   moveLeft() {
     if (this.selectedElement) {
-      const index = this.score.elements.indexOf(this.selectedElement);
+      const index = this.elements.indexOf(this.selectedElement);
 
       if (index - 1 >= 0) {
-        this.selectedElement = this.score.elements[index - 1];
+        this.selectedElement = this.elements[index - 1];
       }
     }
   }
 
   moveRight() {
     if (this.selectedElement) {
-      const index = this.score.elements.indexOf(this.selectedElement);
+      const index = this.elements.indexOf(this.selectedElement);
 
-      if (index >= 0 && index + 1 < this.score.elements.length) {
-        this.selectedElement = this.score.elements[index + 1];
+      if (index >= 0 && index + 1 < this.elements.length) {
+        this.selectedElement = this.elements[index + 1];
       }
     }
   }
 
   save() {
-    localStorage.setItem('score', JSON.stringify(this.score.elements));
+    localStorage.setItem('score', JSON.stringify(this.score));
+    this.pages = this.processPages();
   }
 
   load() {
     const score = localStorage.getItem('score');
 
     if (score) {
-      this.score.elements = JSON.parse(score);
-    }
+      mutations.setScore(JSON.parse(score));
+    } 
     else {
-       this.score.elements = [
-        {
-          type: ElementType.Syllable,
-          neume: {
-            quantitativeNeume: QuantitativeNeume.Ison,
-            timeNeume: null,
-            vocalExpressionNeume: null,
-          },
-          lyrics: 'The',
-        } as SyllableElement,
-        {
-          type: ElementType.Syllable,
-          neume: {
-            quantitativeNeume: QuantitativeNeume.Elaphron,
-            timeNeume: null,
-            vocalExpressionNeume: null,
-          },
-          lyrics: 'sha',
-        } as SyllableElement,
-        {
-          type: ElementType.Syllable,
-          neume: {
-            quantitativeNeume: QuantitativeNeume.KentemataPlusOligon,
-            timeNeume: null,
-            vocalExpressionNeume: null,
-          },
-          lyrics: '-',
-        } as SyllableElement,
-        {
-          type: ElementType.Syllable,
-          neume: {
-            quantitativeNeume: QuantitativeNeume.OligonPlusKentemata,
-            timeNeume: TimeNeume.Gorgon_Top,
-            vocalExpressionNeume: null,
-          },
-          lyrics: '-',
-        } as SyllableElement,
-        {
-          type: ElementType.Syllable,
-          neume: {
-            quantitativeNeume: QuantitativeNeume.Elaphron,
-            timeNeume: TimeNeume.Klasma_Top,
-            vocalExpressionNeume: null,
-          },
-          lyrics: 'dow',
-        } as SyllableElement,
-        {
-          type: ElementType.Martyria,
-          neume: {
-            note: Note.Thi,
-            rootSign: RootSign.SoftChromaticSquiggle,
-          },
-        } as MartyriaElement,
-        {
-          type: ElementType.Empty,
-        } as EmptyElement,
-      ];
+      mutations.setScore(new Score());
     }
 
     //this.score.elements = this.generateTestFile();
@@ -530,7 +483,7 @@ export default class Editor extends Vue {
     this.pages = this.processPages();
   }
 
-  updateLyrics(element: SyllableElement, lyrics: string) {
+  updateLyrics(element: NoteElement, lyrics: string) {
     element.lyrics = lyrics;
     this.save();
   }
@@ -561,11 +514,13 @@ export default class Editor extends Vue {
     let lineCount = 1;
 
     let index = 0;
+    let lastElementWasLineBreak = false;
+    let lastElementWasPageBreak = false;
 
-    for (let element of this.score.elements) {
+    for (let element of this.elements) {
       currentLineWidthPx += elementWidthPx;
 
-      if (currentLineWidthPx >= lineWidthPx || this.score.lineBreaks.some(x => x === index)) {
+      if (currentLineWidthPx >= lineWidthPx || lastElementWasLineBreak) {
         line = { 
           elements: [],
         };
@@ -576,7 +531,7 @@ export default class Editor extends Vue {
         page.lines.push(line);
       }
       
-      if (currentPageHeightPx >= pageHeightPx || this.score.pageBreaks.some(x => x === index)) {        
+      if (currentPageHeightPx >= pageHeightPx || lastElementWasPageBreak) {        
         page = { 
           lines: [],
         };
@@ -595,59 +550,62 @@ export default class Editor extends Vue {
 
       line.elements.push(element);
 
+      lastElementWasLineBreak = element.lineBreak;
+      lastElementWasPageBreak = element.pageBreak;
+
       index++;
     }
 
     return pages;
   }
 
-  @Watch('score') 
-  onScoreUpdated() {
-    this.pages = this.processPages();
-  }
+  // @Watch('elements', {deep: true}) 
+  // onScoreUpdated() {
+  //   this.pages = this.processPages();
+  // }
 
-  generateTestFile() {
-    const elements: Element[] = [];
+  // generateTestFile() {
+  //   const elements: Element[] = [];
 
-    let counter = 1;
+  //   let counter = 1;
 
-    for (let quantitativeNeume in QuantitativeNeume) {
-      const syllableElement: SyllableElement = {
-        neume: {
-          quantitativeNeume: quantitativeNeume as QuantitativeNeume,
-          timeNeume: null,
-          vocalExpressionNeume: null,
-          fthora: null,
-        },
-        lyrics: (counter++).toString(),
-        type: ElementType.Syllable,
-      }
+  //   for (let quantitativeNeume in QuantitativeNeume) {
+  //     const syllableElement: SyllableElement = {
+  //       neume: {
+  //         quantitativeNeume: quantitativeNeume as QuantitativeNeume,
+  //         timeNeume: null,
+  //         vocalExpressionNeume: null,
+  //         fthora: null,
+  //       },
+  //       lyrics: (counter++).toString(),
+  //       type: ElementType.Syllable,
+  //     }
 
-      elements.push(syllableElement);
+  //     elements.push(syllableElement);
 
-      for (let fthora in Fthora) {
-        const syllableElement: SyllableElement = {
-          neume: {
-            quantitativeNeume: quantitativeNeume as QuantitativeNeume,
-            timeNeume: null,
-            vocalExpressionNeume: null,
-            fthora: fthora as Fthora,
-          },
-          lyrics: (counter++).toString(),
-          type: ElementType.Syllable,
-        }
+  //     for (let fthora in Fthora) {
+  //       const syllableElement: SyllableElement = {
+  //         neume: {
+  //           quantitativeNeume: quantitativeNeume as QuantitativeNeume,
+  //           timeNeume: null,
+  //           vocalExpressionNeume: null,
+  //           fthora: fthora as Fthora,
+  //         },
+  //         lyrics: (counter++).toString(),
+  //         type: ElementType.Syllable,
+  //       }
 
-        elements.push(syllableElement);
-      }
+  //       elements.push(syllableElement);
+  //     }
 
-      // for (let neume in Fthora) {
+  //     // for (let neume in Fthora) {
         
-      // }
+  //     // }
 
-    }
+  //   }
 
-    return elements;
-  }
+  //   return elements;
+  // }
 }
 </script>
 
@@ -683,6 +641,8 @@ export default class Editor extends Vue {
     justify-content: center;
 
     width: 39px;
+
+    position: relative;
 
     /* margin-right: 0.25rem; */
 }

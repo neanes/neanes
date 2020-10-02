@@ -4,6 +4,7 @@
       <li @click="selectedTab='Basic'">Basic</li>
       <li @click="selectedTab='Fthora'">Phthorai</li>
       <li @click="selectedTab='Martytria'">Martyria</li>
+      <li @click="selectedTab='Layout'">Layout</li>
     </ul>
     <div class="tab" v-if="selectedTab == 'Basic'">
       <div class="row">
@@ -12,7 +13,7 @@
           v-for="(neume, index) in ascendingNeumes" 
           :key="`ascendingNeumes-${index}`"
           :neume="neume"
-          @click.native="$emit('selectQuantitativeNeume', neume)"></Neume>
+          @click.native="$emit('select-quantitative-neume', neume)"></Neume>
       </div>
       <div class="row">
         <Neume 
@@ -20,7 +21,7 @@
           v-for="(neume, index) in ascendingNeumesWithPetasti" 
           :key="`ascendingNeumesWithPetasti-${index}`"
           :neume="neume"
-          @click.native="$emit('selectQuantitativeNeume', neume)"></Neume>
+          @click.native="$emit('select-quantitative-neume', neume)"></Neume>
       </div>
       <div class="row">
         <div class="neume"></div>
@@ -29,7 +30,7 @@
           v-for="(neume, index) in descendingNeumes" 
           :key="`descendingNeumes-${index}`"
           :neume="neume"
-          @click.native="$emit('selectQuantitativeNeume', neume)"></Neume>
+          @click.native="$emit('select-quantitative-neume', neume)"></Neume>
       </div>
       <div class="row">
         <div class="neume"></div>
@@ -38,7 +39,7 @@
           v-for="(neume, index) in descendingNeumesWithPetasti" 
           :key="`descendingNeumesWithPetasti-${index}`"
           :neume="neume"
-          @click.native="$emit('selectQuantitativeNeume', neume)"></Neume>
+          @click.native="$emit('select-quantitative-neume', neume)"></Neume>
       </div>
       <div class="row">
         <Neume 
@@ -46,14 +47,14 @@
           v-for="(neume, index) in combinationNeumes" 
           :key="`combinationNeumes-${index}`"
           :neume="neume"
-          @click.native="$emit('selectQuantitativeNeume', neume)"></Neume>
+          @click.native="$emit('select-quantitative-neume', neume)"></Neume>
       </div>
       <div class="row">
         <div 
           class="neume" 
           v-for="(tile, index) in timeNeumes" 
           :key="`timeNeumes-${index}`"
-          @click="$emit('selectTimeNeume', tile.neume)">
+          @click="$emit('select-time-neume', tile.neume)">
           <Neume
             v-for="(element, index) in tile.elements"
               :key="`timeNeumes-elements-${index}`"
@@ -67,7 +68,7 @@
           class="neume" 
           v-for="(tile, index) in vocalExpressionNeumes" 
           :key="`vocalExpressionNeumes-${index}`"
-          @click="$emit('selectVocalExpressionNeume', tile.neume)">
+          @click="$emit('select-vocal-expression-neume', tile.neume)">
             <Neume
               v-for="(element, index) in tile.elements"
               :key="`vocalExpressionNeumes-elements-${index}`"
@@ -83,7 +84,7 @@
           class="neume" 
           v-for="(neume, index) in commonMartyriaDiatonic" 
           :key="`commonMartyriaDiatonic-${index}`"
-          @click="$emit('selectMartyriaNoteAndRootSign', neume.note, neume.rootSign, neume.apostrophe)">
+          @click="$emit('select-martyria-note-and-root-sign', neume.note, neume.rootSign, neume.apostrophe)">
             <Neume :neume="neume.note"></Neume>
             <Neume :neume="neume.rootSign"></Neume>
             <Neume v-if="neume.apostrophe" neume="Apostrophe"></Neume>
@@ -95,7 +96,7 @@
           class="neume" 
           v-for="(neume, index) in commonMartyriaHardChromatic" 
           :key="`commonMartyriaHardChromatic-${index}`"
-          @click="$emit('selectMartyriaNoteAndRootSign', neume.note, neume.rootSign, neume.apostrophe)">
+          @click="$emit('select-martyria-note-and-root-sign', neume.note, neume.rootSign, neume.apostrophe)">
             <Neume :neume="neume.note"></Neume>
             <Neume :neume="neume.rootSign"></Neume>
             <Neume v-if="neume.apostrophe" neume="Apostrophe"></Neume>
@@ -106,7 +107,7 @@
           class="neume" 
           v-for="(neume, index) in commonMartyriaSoftChromatic" 
           :key="`commonMartyriaSoftChromatic-${index}`"
-          @click="$emit('selectMartyriaNoteAndRootSign', neume.note, neume.rootSign, neume.apostrophe)">
+          @click="$emit('select-martyria-note-and-root-sign', neume.note, neume.rootSign, neume.apostrophe)">
             <Neume :neume="neume.note"></Neume>
             <Neume :neume="neume.rootSign"></Neume>
             <Neume v-if="neume.apostrophe" neume="Apostrophe"></Neume>
@@ -118,14 +119,14 @@
           v-for="(neume, index) in notes" 
           :key="`notes-${index}`"
           :neume="neume"
-          @click.native="$emit('selectMartyriaNote', neume)"></Neume>
+          @click.native="$emit('select-martyria-note', neume)"></Neume>
       </div>
       <div class="row">
         <div 
           class="neume" 
           v-for="(neume, index) in rootSigns" 
           :key="`rootSigns-${index}`"
-          @click="$emit('selectMartyriaRootSign', neume)"><Neume class="root-sign" :neume="neume"></Neume></div>
+          @click="$emit('select-martyria-root-sign', neume)"><Neume class="root-sign" :neume="neume"></Neume></div>
       </div>
     </div>
     <div class="tab" v-if="selectedTab == 'Fthora'">
@@ -134,7 +135,7 @@
           class="neume" 
           v-for="(tile, index) in fthorasRowOne" 
           :key="`fthorasRowOne-${index}`"
-          @click="$emit('selectFthora', tile.neume)">
+          @click="$emit('select-fthora', tile.neume)">
           <Neume
             v-for="(element, index) in tile.elements"
               :key="`fthoras-elements-${index}`"
@@ -148,7 +149,7 @@
           class="neume" 
           v-for="(tile, index) in fthorasRowTwo" 
           :key="`fthorasRowTwo-${index}`"
-          @click="$emit('selectFthora', tile.neume)">
+          @click="$emit('select-fthora', tile.neume)">
           <Neume
             v-for="(element, index) in tile.elements"
               :key="`fthoras-elements-${index}`"
@@ -162,7 +163,7 @@
           class="neume" 
           v-for="(tile, index) in fthorasRowThree" 
           :key="`fthorasRowThree-${index}`"
-          @click="$emit('selectFthora', tile.neume)">
+          @click="$emit('select-fthora', tile.neume)">
           <Neume
             v-for="(element, index) in tile.elements"
               :key="`fthoras-elements-${index}`"
@@ -172,12 +173,18 @@
         </div>
       </div>
     </div>
+    <div class="tab" v-if="selectedTab == 'Layout'">
+      <div class="row">
+        <div @click="$emit('select-page-break')">Page Break</div>
+        <div @click="$emit('select-line-break')">Line Break</div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
-import { Element, SyllableElement, SyllableNeume } from '@/models/Element';
+import { Element, NoteElement } from '@/models/Element';
 import { QuantitativeNeume, TimeNeume, VocalExpressionNeume, isHighNeume, isRedNeume, Note, RootSign, Fthora, Neume as NeumeType } from '@/models/Neumes';
 import { neumeMap } from '@/models/NeumeMappings';
 import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';

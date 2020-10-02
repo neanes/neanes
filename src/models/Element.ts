@@ -1,38 +1,34 @@
 import { TimeNeume, QuantitativeNeume, Note, RootSign, VocalExpressionNeume, Fthora } from '@/models/Neumes';
 
 export enum ElementType {
-    Syllable = 'Syllable',
+    Note = 'Note',
     Martyria = 'Martyria',
     Empty = 'Empty',
 }
 
-export interface Element {
-    type: ElementType;
+export abstract class Element {
+    abstract elementType: ElementType;
+    public lineBreak: boolean = false;
+    public pageBreak: boolean = false;
 }
 
-export interface SyllableElement extends Element {
-    neume: SyllableNeume; 
-    lyrics: string;
-}
-
-export interface MartyriaElement extends Element  {    
-    neume: MartyriaNeume;
-}
-
-export interface EmptyElement extends Element {
+export class NoteElement extends Element {
+    public readonly elementType: ElementType = ElementType.Note; 
+    public quantitativeNeume: QuantitativeNeume = QuantitativeNeume.Ison; 
+    public timeNeume: TimeNeume | null = null;
+    public vocalExpressionNeume: VocalExpressionNeume | null = null;
+    public fthora: Fthora | null = null;
+    public lyrics: string = '';
 
 }
 
-export interface SyllableNeume {
-    quantitativeNeume: QuantitativeNeume; 
-    timeNeume: TimeNeume | null;
-    vocalExpressionNeume: VocalExpressionNeume | null;
-    fthora: Fthora | null;
-    //ison: Ison | null;
+export class MartyriaElement extends Element  {  
+    public readonly elementType: ElementType = ElementType.Martyria; 
+    public note: Note = Note.Pa;
+    public rootSign: RootSign = RootSign.Alpha;
+    public apostrophe: boolean = false;
 }
 
-export interface MartyriaNeume {
-    note: Note;
-    rootSign: RootSign;
-    apostrophe: boolean;
+export class EmptyElement extends Element {
+    public readonly elementType: ElementType = ElementType.Empty; 
 }

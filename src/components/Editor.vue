@@ -72,7 +72,8 @@
      @select-martyria-root-sign="updateMartyriaRootSign"
      @select-martyria-note-and-root-sign="updateMartyriaNoteAndRootSign"
      @select-page-break="updatePageBreak"
-     @select-line-break="updateLineBreak"></NeumeSelector>
+     @select-line-break="updateLineBreak"
+     @select-empty="updateEmpty"></NeumeSelector>
   </div>
 </template>
 
@@ -199,7 +200,9 @@ export default class Editor extends Vue {
 
   updateQuantitativeNeume(neume: QuantitativeNeume) {
     if(this.selectedElement) {
-      if (this.selectedElement.elementType == ElementType.Empty) {
+      const index = this.elements.indexOf(this.selectedElement);
+
+      if (index === this.elements.length - 1) {
         this.addEmptyElement();
       }
 
@@ -217,7 +220,9 @@ export default class Editor extends Vue {
 
   updateTimeNeume(neume: TimeNeume | null) {
     if(this.selectedElement) {
-      if (this.selectedElement.elementType == ElementType.Empty) {
+      const index = this.elements.indexOf(this.selectedElement);
+
+      if (index === this.elements.length - 1) {
         this.addEmptyElement();
       }
 
@@ -234,7 +239,9 @@ export default class Editor extends Vue {
 
   updateFthora(neume: Fthora | null) {
     if(this.selectedElement) {
-      if (this.selectedElement.elementType == ElementType.Empty) {
+      const index = this.elements.indexOf(this.selectedElement);
+
+      if (index === this.elements.length - 1) {
         this.addEmptyElement();
       }
 
@@ -251,7 +258,9 @@ export default class Editor extends Vue {
 
   updateVocalExpressionNeume(neume: VocalExpressionNeume) {
     if(this.selectedElement) {
-      if (this.selectedElement.elementType == ElementType.Empty) {
+      const index = this.elements.indexOf(this.selectedElement);
+
+      if (index === this.elements.length - 1) {
         this.addEmptyElement();
       }
 
@@ -269,7 +278,9 @@ export default class Editor extends Vue {
 
   updateMartyriaNote(neume: Note) {
     if(this.selectedElement) {
-      if (this.selectedElement.elementType == ElementType.Empty) {
+      const index = this.elements.indexOf(this.selectedElement);
+
+      if (index === this.elements.length - 1) {
         this.addEmptyElement();
       }
 
@@ -285,7 +296,9 @@ export default class Editor extends Vue {
 
   updateMartyriaRootSign(neume: RootSign) {
     if(this.selectedElement) {
-      if (this.selectedElement.elementType == ElementType.Empty) {
+      const index = this.elements.indexOf(this.selectedElement);
+
+      if (index === this.elements.length - 1) {
         this.addEmptyElement();
       }
 
@@ -301,7 +314,9 @@ export default class Editor extends Vue {
 
   updateMartyriaNoteAndRootSign(note: Note, rootSign: RootSign, apostrophe: boolean | undefined) {
     if(this.selectedElement) {
-      if (this.selectedElement.elementType == ElementType.Empty) {
+      const index = this.elements.indexOf(this.selectedElement);
+
+      if (index === this.elements.length - 1) {
         this.addEmptyElement();
       }
 
@@ -319,14 +334,38 @@ export default class Editor extends Vue {
 
   updatePageBreak() {
     if(this.selectedElement) {
-      this.selectedElement.pageBreak = !this.selectedElement.pageBreak;
-      this.save();
+      const index = this.elements.indexOf(this.selectedElement);
+
+      if (index !== this.elements.length - 1) {
+        this.selectedElement.pageBreak = !this.selectedElement.pageBreak;
+        this.save();
+      }
     }
   }
 
   updateLineBreak() {
     if(this.selectedElement) {
-      this.selectedElement.lineBreak = !this.selectedElement.lineBreak;
+      const index = this.elements.indexOf(this.selectedElement);
+
+      if (index !== this.elements.length - 1) {
+        this.selectedElement.lineBreak = !this.selectedElement.lineBreak;
+        this.save();
+      }
+    }
+  }
+
+  updateEmpty() {
+    if(this.selectedElement) {
+      const index = this.elements.indexOf(this.selectedElement);
+
+      if (index === this.elements.length - 1) {
+        this.addEmptyElement();
+      }
+
+      if (this.selectedElement.elementType != ElementType.Empty) {
+        this.selectedElement = this.switchToEmptyElement(this.selectedElement);
+      }
+
       this.save();
     }
   }
@@ -335,6 +374,9 @@ export default class Editor extends Vue {
       const index = this.elements.indexOf(element);
 
       const newElement = new MartyriaElement();
+      newElement.pageBreak = element.pageBreak;
+      newElement.lineBreak = element.lineBreak;
+
       this.elements.splice(index, 1, newElement);
 
       return newElement;
@@ -344,6 +386,9 @@ export default class Editor extends Vue {
       const index = this.elements.indexOf(element);
 
       const newElement = new NoteElement();
+      newElement.pageBreak = element.pageBreak;
+      newElement.lineBreak = element.lineBreak;
+
       this.elements.splice(index, 1, newElement);
       
       return newElement;
@@ -353,6 +398,9 @@ export default class Editor extends Vue {
       const index = this.elements.indexOf(element);
 
       const newElement = new EmptyElement();
+      newElement.pageBreak = element.pageBreak;
+      newElement.lineBreak = element.lineBreak;
+
       this.elements.splice(index, 1, newElement);
 
       return newElement;
@@ -406,9 +454,9 @@ export default class Editor extends Vue {
       }
     }
     else if (event.code == 'Delete') {
-      if (this.selectedElement && this.selectedElement.elementType !== ElementType.Empty) {
-        const index = this.elements.indexOf(this.selectedElement);
+      const index = this.elements.indexOf(this.selectedElement);
 
+      if (this.selectedElement && index !== this.elements.length - 1) {
         this.moveLeft();
 
         if (index > -1) {
@@ -509,7 +557,7 @@ export default class Editor extends Vue {
     page.lines.push(line);
     pages.push(page);
 
-    let currentPageHeightPx = 0;
+    let currentPageHeightPx = lineHeightPx;
     let currentLineWidthPx = 0;
     let lineCount = 1;
 
@@ -518,9 +566,7 @@ export default class Editor extends Vue {
     let lastElementWasPageBreak = false;
 
     for (let element of this.elements) {
-      currentLineWidthPx += elementWidthPx;
-
-      if (currentLineWidthPx >= lineWidthPx || lastElementWasLineBreak) {
+      if (currentLineWidthPx + elementWidthPx > lineWidthPx || lastElementWasLineBreak) {
         line = { 
           elements: [],
         };
@@ -531,7 +577,7 @@ export default class Editor extends Vue {
         page.lines.push(line);
       }
       
-      if (currentPageHeightPx >= pageHeightPx || lastElementWasPageBreak) {        
+      if (currentPageHeightPx > pageHeightPx || lastElementWasPageBreak) {    
         page = { 
           lines: [],
         };
@@ -544,14 +590,17 @@ export default class Editor extends Vue {
         pages.push(page);
 
         lineCount = 1;
-        currentPageHeightPx = 0;
+        currentPageHeightPx = lineHeightPx;
         currentLineWidthPx = 0;
       }
 
+      currentLineWidthPx += elementWidthPx;
       line.elements.push(element);
 
       lastElementWasLineBreak = element.lineBreak;
       lastElementWasPageBreak = element.pageBreak;
+
+      console.log(index, currentLineWidthPx);
 
       index++;
     }
@@ -641,6 +690,7 @@ export default class Editor extends Vue {
     justify-content: center;
 
     width: 39px;
+    height: 82px;
 
     position: relative;
 
@@ -648,9 +698,10 @@ export default class Editor extends Vue {
 }
 
 .empty-neume-box {
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 39px;
+  height: 82px;
   border: 1px dotted black;
+  box-sizing: border-box;
 }
 
 .page-background {

@@ -1,9 +1,9 @@
-import { Element } from '@/models/Element';
+import { ScoreElement } from '@/models/Element';
 
 export interface Page {
     lines: Line[];
 }
 
 export interface Line {
-    elements: Element[];
+    elements: ScoreElement[];
 }

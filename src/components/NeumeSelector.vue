@@ -185,7 +185,7 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
-import { Element, NoteElement } from '@/models/Element';
+import { ScoreElement, NoteElement } from '@/models/Element';
 import { QuantitativeNeume, TimeNeume, VocalExpressionNeume, isHighNeume, isRedNeume, Note, RootSign, Fthora, Neume as NeumeType } from '@/models/Neumes';
 import { neumeMap } from '@/models/NeumeMappings';
 import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';

@@ -12,54 +12,75 @@
           v-for="(line, index) in page.lines" 
           :key="`line-${index}`" 
           :ref="`line-${index}`">
-            <div 
-              v-for="(element, index) in line.elements" 
-              :key="`element-${index}`" 
-              :ref="`element-${index}`"
-              class="neume-box">
+            <template v-for="(element, index) in line.elements">
               <template v-if="isSyllableElement(element)">
-                <span v-if="element.pageBreak" style="position:absolute; top: -10px;">P</span>
-                <span v-if="element.lineBreak" style="position:absolute; top: -10px;">L</span>
-                <SyllableNeumeBox 
-                  class="syllable-box"
-                  :neume="element"
-                  :ref="`syllable-box-${index}`"
-                  :class="[{ selected: element == selectedElement }]"
-                  @click.native="selectedElement = element"
-                  ></SyllableNeumeBox>
-                  <div class=lyrics-container
-                    @click="selectedElement = null">
-                    <ContentEditable 
-                        class="lyrics"
-                        :ref="`lyrics-${index}`"
-                        :content="element.lyrics"
-                        @click.native="selectedElement = null"
-                        @blur="updateLyrics(element, $event)"></ContentEditable>
-                    <div class="melisma" v-if="isMelisma(element)" :ref="`melisma-${index}`"></div>
-                  </div>
+                <div :key="`element-${index}`" 
+                  :ref="`element-${index}`"
+                  class="neume-box">
+                  <span v-if="element.pageBreak" style="position:absolute; top: -10px;">P</span>
+                  <span v-if="element.lineBreak" style="position:absolute; top: -10px;">L</span>
+                  <SyllableNeumeBox 
+                    class="syllable-box"
+                    :neume="element"
+                    :ref="`syllable-box-${index}`"
+                    :class="[{ selected: element == selectedElement }]"
+                    @click.native="selectedElement = element"
+                    ></SyllableNeumeBox>
+                    <div class=lyrics-container
+                      @click="selectedElement = null">
+                      <ContentEditable 
+                          class="lyrics"
+                          :ref="`lyrics-${index}`"
+                          :content="element.lyrics"
+                          @click.native="selectedElement = null"
+                          @blur="updateLyrics(element, $event)"></ContentEditable>
+                      <div class="melisma" v-if="isMelisma(element)" :ref="`melisma-${index}`"></div>
+                    </div>
+                </div>
               </template>
               <template v-if="isMartyriaElement(element)">
-                <span v-if="element.pageBreak" style="position:absolute; top: -10px;">P</span>
-                <span v-if="element.lineBreak" style="position:absolute; top: -10px;">L</span>
-                <MartyriaNeumeBox 
-                  class="marytria-neume-box"
-                  :neume="element" 
-                  :class="[{ selected: element == selectedElement }]"
-                  @click.native="selectedElement = element"
-                  ></MartyriaNeumeBox>
-                <div class="lyrics"></div>
+                <div :key="`element-${index}`" 
+                  :ref="`element-${index}`"
+                  class="neume-box">
+                  <span v-if="element.pageBreak" style="position:absolute; top: -10px;">P</span>
+                  <span v-if="element.lineBreak" style="position:absolute; top: -10px;">L</span>
+                  <MartyriaNeumeBox 
+                    class="marytria-neume-box"
+                    :neume="element" 
+                    :class="[{ selected: element == selectedElement }]"
+                    @click.native="selectedElement = element"
+                    ></MartyriaNeumeBox>
+                  <div class="lyrics"></div>
+                </div>
               </template>
               <template v-if="isEmptyElement(element)">
-                <span v-if="element.pageBreak" style="position:absolute; top: -10px;">P</span>
-                <span v-if="element.lineBreak" style="position:absolute; top: -10px;">L</span>
-                <div
-                  class="empty-neume-box"
-                  :class="[{ selected: element == selectedElement }]"
-                  @click="selectedElement = element"
-                  ></div>
-                <div class="lyrics"></div>
+                <div :key="`element-${index}`" 
+                  :ref="`element-${index}`"
+                  class="neume-box">
+                  <span v-if="element.pageBreak" style="position:absolute; top: -10px;">P</span>
+                  <span v-if="element.lineBreak" style="position:absolute; top: -10px;">L</span>
+                  <div
+                    class="empty-neume-box"
+                    :class="[{ selected: element == selectedElement }]"
+                    @click="selectedElement = element"
+                    ></div>
+                  <div class="lyrics"></div>
+                </div>
               </template>
-            </div>
+              <template v-if="isTextBoxElement(element)">
+                  <div :key="`element-${index}`" 
+                  :ref="`element-${index}`"
+                  class="text-box"
+                      @click="selectedElement = null">
+                      <ContentEditable 
+                          class="text-box-content"
+                          :ref="`textbox-${index}`"
+                          :content="element.content"
+                          @click.native="selectedElement = null"
+                          @blur="updateTextBox(element, $event)"></ContentEditable>
+                    </div>
+              </template>
+            </template>
         </div>
     </div>
     </div>
@@ -79,7 +100,7 @@
 
 <script lang="ts">
 import { Component, Prop, Watch, Vue } from 'vue-property-decorator';
-import { Element, MartyriaElement, NoteElement, ElementType, EmptyElement } from '@/models/Element';
+import { ScoreElement, MartyriaElement, NoteElement, ElementType, EmptyElement, TextBoxElement } from '@/models/Element';
 import { QuantitativeNeume, TimeNeume, Note, RootSign, VocalExpressionNeume, Fthora } from '@/models/Neumes';
 import { Page, Line } from '@/models/Page';
 import { Score, ScoreVersion } from '@/models/Score';
@@ -90,7 +111,7 @@ import NeumeSelector from '@/components/NeumeSelector.vue';
 import NeumeKeyboard from '@/components/NeumeKeyboard.vue';
 import ContentEditable from '@/components/ContentEditable.vue';
 import FileMenuBar from '@/components/FileMenuBar.vue';
-import { store, mutations } from '@/store';
+import { store } from '@/store';
 
 @Component({
   components: {
@@ -104,14 +125,21 @@ import { store, mutations } from '@/store';
 })
 export default class Editor extends Vue {
   pages: Page[] = [];
-  selectedElement: Element | null = null;
   
-  private get score() {
-    return store.score;
+  get score() {
+    return store.state.score;
   }
 
-  private get elements() {
-    return this.score != null ? this.score.staff.elements : [];
+  get elements() {
+    return store.getters.elements;
+  }
+
+  get selectedElement() {
+    return store.state.selectedElement;
+  }
+
+  set selectedElement(element: ScoreElement | null) {
+    store.mutations.setSelectedElement(element);
   }
 
   created() {
@@ -370,7 +398,7 @@ export default class Editor extends Vue {
     }
   }
 
-  switchToMartyria(element: Element) {
+  switchToMartyria(element: ScoreElement) {
       const index = this.elements.indexOf(element);
 
       const newElement = new MartyriaElement();
@@ -382,7 +410,7 @@ export default class Editor extends Vue {
       return newElement;
   }
 
-  switchToSyllable(element: Element) {
+  switchToSyllable(element: ScoreElement) {
       const index = this.elements.indexOf(element);
 
       const newElement = new NoteElement();
@@ -394,7 +422,7 @@ export default class Editor extends Vue {
       return newElement;
   }
 
-  switchToEmptyElement(element: Element) {
+  switchToEmptyElement(element: ScoreElement) {
       const index = this.elements.indexOf(element);
 
       const newElement = new EmptyElement();
@@ -410,16 +438,20 @@ export default class Editor extends Vue {
     this.elements.push(new EmptyElement());
   }
 
-  isSyllableElement(element: Element) {
+  isSyllableElement(element: ScoreElement) {
     return element.elementType == ElementType.Note;
   }
 
-  isMartyriaElement(element: Element) {
+  isMartyriaElement(element: ScoreElement) {
     return element.elementType == ElementType.Martyria;
   }
 
-  isEmptyElement(element: Element) {
+  isEmptyElement(element: ScoreElement) {
     return element.elementType == ElementType.Empty;
+  }
+
+  isTextBoxElement(element: ScoreElement) {
+    return element.elementType == ElementType.TextBox;
   }
 
   onKeydown(event: KeyboardEvent) {
@@ -523,14 +555,14 @@ export default class Editor extends Vue {
       const score: Score = JSON.parse(scoreString);
 
       if (score.version === ScoreVersion) {
-        mutations.setScore(score);
+        store.mutations.setScore(score);
       }
       else {
-        mutations.setScore(new Score());
+        store.mutations.setScore(new Score());
       }
     } 
     else {
-      mutations.setScore(new Score());
+      store.mutations.setScore(new Score());
     }
 
     //this.score.elements = this.generateTestFile();
@@ -543,13 +575,18 @@ export default class Editor extends Vue {
     this.save();
   }
 
+  updateTextBox(element: TextBoxElement, content: string) {
+    element.content = content;
+    this.save();
+  }
+
   processPages() {
     const pageHeightPx = 1056 - 96 - 96;
 
     const lineHeightPx = 82;
     const lineWidthPx = 816 - 96 - 96;
 
-    const elementWidthPx = 39;
+    const neumeElementWidthPx = 39;
     const elementHeightPx = 82;
     const pages: Page[] = [];
 
@@ -573,6 +610,12 @@ export default class Editor extends Vue {
     let lastElementWasPageBreak = false;
 
     for (let element of this.elements) {
+      let elementWidthPx = neumeElementWidthPx;
+
+      if (element.elementType === ElementType.TextBox) {
+        elementWidthPx = lineWidthPx;
+      }
+
       if (currentLineWidthPx + elementWidthPx > lineWidthPx || lastElementWasLineBreak) {
         line = { 
           elements: [],
@@ -774,6 +817,18 @@ export default class Editor extends Vue {
 
 .neume {
   height: 3.5rem;  
+ }
+
+ .text-box {
+   width: 624px;
+   height: 82px;
+   border: 1px dotted black;
+   box-sizing: border-box;
+ }
+
+ .text-box-content {
+   height: 100%;
+   width: 100%;
  }
 
 @media print {

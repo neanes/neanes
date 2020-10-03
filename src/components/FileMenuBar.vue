@@ -80,7 +80,7 @@ export default class FileMenuBar extends Vue {
   }
 
   onClickAddTextBox() {
-    store.getters.elements.splice(store.getters.selectedElementIndex, 0, new TextBox());
+    store.getters.elements.splice(store.getters.selectedElementIndex, 0, new TextBoxElement());
   }
 }
 </script>

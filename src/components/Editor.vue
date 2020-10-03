@@ -580,6 +580,16 @@ export default class Editor extends Vue {
     this.save();
   }
 
+  getElementStyle(element: ScoreElement) {
+    if (element.elementType === ElementType.TextBox) {
+      const textbox = element as TextBoxElement;
+
+      return {
+        height: textbox.height + 'px'
+      };
+    }
+  }
+
   processPages() {
     const pageHeightPx = 1056 - 96 - 96;
 
@@ -649,8 +659,6 @@ export default class Editor extends Vue {
 
       lastElementWasLineBreak = element.lineBreak;
       lastElementWasPageBreak = element.pageBreak;
-
-      console.log(index, currentLineWidthPx);
 
       index++;
     }
@@ -829,6 +837,7 @@ export default class Editor extends Vue {
  .text-box-content {
    height: 100%;
    width: 100%;
+   display: block;
  }
 
 @media print {

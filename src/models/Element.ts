@@ -36,4 +36,5 @@ export class EmptyElement extends ScoreElement {
 export class TextBoxElement extends ScoreElement {
     public readonly elementType: ElementType = ElementType.TextBox;
     public content: string = '';
+    public height: number = 20;
 }

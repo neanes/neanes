@@ -82,7 +82,7 @@ import { Component, Prop, Watch, Vue } from 'vue-property-decorator';
 import { Element, MartyriaElement, NoteElement, ElementType, EmptyElement } from '@/models/Element';
 import { QuantitativeNeume, TimeNeume, Note, RootSign, VocalExpressionNeume, Fthora } from '@/models/Neumes';
 import { Page, Line } from '@/models/Page';
-import { Score } from '@/models/Score';
+import { Score, ScoreVersion } from '@/models/Score';
 import { KeyboardMap } from '@/models/NeumeMappings';
 import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
 import MartyriaNeumeBox from '@/components/NeumeBoxMartyria.vue';
@@ -517,10 +517,17 @@ export default class Editor extends Vue {
   }
 
   load() {
-    const score = localStorage.getItem('score');
+    const scoreString = localStorage.getItem('score');
 
-    if (score) {
-      mutations.setScore(JSON.parse(score));
+    if (scoreString) {
+      const score: Score = JSON.parse(scoreString);
+
+      if (score.version === ScoreVersion) {
+        mutations.setScore(score);
+      }
+      else {
+        mutations.setScore(new Score());
+      }
     } 
     else {
       mutations.setScore(new Score());
@@ -608,10 +615,10 @@ export default class Editor extends Vue {
     return pages;
   }
 
-  // @Watch('elements', {deep: true}) 
-  // onScoreUpdated() {
-  //   this.pages = this.processPages();
-  // }
+  @Watch('score', {deep: true}) 
+  onScoreUpdated() {
+    this.pages = this.processPages();
+  }
 
   // generateTestFile() {
   //   const elements: Element[] = [];

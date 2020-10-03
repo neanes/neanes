@@ -14,7 +14,7 @@
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import FileMenuBarItem from '@/components/FileMenuBarItem.vue';
 import FileMenuItem from '@/components/FileMenuItem.vue';
-import { Score } from '@/models/Score';
+import { Score, ScoreVersion } from '@/models/Score';
 import { store, mutations } from '@/store';
 
 @Component({
@@ -62,7 +62,12 @@ export default class FileMenuBar extends Vue {
       
       reader.onload = () => {
         // TODO validate file contents
-        const score = JSON.parse(reader.result as string);
+        const score:Score = JSON.parse(reader.result as string);
+
+        if (score.version !== ScoreVersion) {
+          alert('This score was created by an older version of the application. It may not work properly');
+        }
+
         mutations.setScore(score);
       };
 

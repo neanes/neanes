@@ -6,6 +6,9 @@
       <FileMenuItem label="Save" @click="onClickSave" />
     </FileMenuBarItem>
     <FileMenuBarItem label="Edit"></FileMenuBarItem>
+    <FileMenuBarItem label="Add">
+      <FileMenuItem label="Text Box" @click="onClickAddTextBox" />
+    </FileMenuBarItem>
     <input ref="file" type="file" v-show="false" @change="onSelectFile">
   </div>
 </template>
@@ -15,7 +18,8 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 import FileMenuBarItem from '@/components/FileMenuBarItem.vue';
 import FileMenuItem from '@/components/FileMenuItem.vue';
 import { Score, ScoreVersion } from '@/models/Score';
-import { store, mutations } from '@/store';
+import { TextBoxElement } from '@/models/Element';
+import { store } from '@/store';
 
 @Component({
   components: {
@@ -25,7 +29,7 @@ import { store, mutations } from '@/store';
 })
 export default class FileMenuBar extends Vue {
   private get score() {
-    return store.score;
+    return store.state.score;
   }
 
   private get fileSelector() {
@@ -34,7 +38,7 @@ export default class FileMenuBar extends Vue {
 
   onClickNew() {
     if (confirm('This will discard your current score. Make sure you have saved before doing this. Are you sure you wish to continue?')) {
-      mutations.setScore(new Score());
+      store.mutations.setScore(new Score());
     }
   }
 
@@ -68,11 +72,15 @@ export default class FileMenuBar extends Vue {
           alert('This score was created by an older version of the application. It may not work properly');
         }
 
-        mutations.setScore(score);
+        store.mutations.setScore(score);
       };
 
       reader.readAsText(file);
     }
+  }
+
+  onClickAddTextBox() {
+    store.getters.elements.splice(store.getters.selectedElementIndex, 0, new TextBox());
   }
 }
 </script>

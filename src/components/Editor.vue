@@ -76,6 +76,7 @@
                           class="text-box-content"
                           :ref="`textbox-${index}`"
                           :content="element.content"
+                          :style="getElementStyle(element)"
                           @click.native="selectedElement = null"
                           @blur="updateTextBox(element, $event)"></ContentEditable>
                     </div>
@@ -611,7 +612,7 @@ export default class Editor extends Vue {
     page.lines.push(line);
     pages.push(page);
 
-    let currentPageHeightPx = lineHeightPx;
+    let currentPageHeightPx = 0;
     let currentLineWidthPx = 0;
     let lineCount = 1;
 
@@ -631,10 +632,23 @@ export default class Editor extends Vue {
           elements: [],
         };
 
-        lineCount++;
-        currentPageHeightPx = lineHeightPx * lineCount;
-        currentLineWidthPx = 0;
         page.lines.push(line);
+        lineCount++;
+
+        // Calculate the current page height
+        currentPageHeightPx = 0;
+        
+        for (let line of page.lines) {
+          if (line.elements.some(x => x.elementType === ElementType.TextBox)) {
+            const textbox = line.elements.find(x => x.elementType === ElementType.TextBox) as TextBoxElement;
+            currentPageHeightPx += textbox.height;
+          }
+          else {
+            currentPageHeightPx += lineHeightPx;
+          }
+        }
+
+        currentLineWidthPx = 0;
       }
       
       if (currentPageHeightPx > pageHeightPx || lastElementWasPageBreak) {    
@@ -650,7 +664,7 @@ export default class Editor extends Vue {
         pages.push(page);
 
         lineCount = 1;
-        currentPageHeightPx = lineHeightPx;
+        currentPageHeightPx = 0;
         currentLineWidthPx = 0;
       }
 
@@ -829,7 +843,6 @@ export default class Editor extends Vue {
 
  .text-box {
    width: 624px;
-   height: 82px;
    border: 1px dotted black;
    box-sizing: border-box;
  }

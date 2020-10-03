@@ -1,4 +1,4 @@
-import { Element, EmptyElement } from '@/models/Element';
+import { ScoreElement, EmptyElement } from '@/models/Element';
 
 const ScoreVersion: string = '0.1';
 
@@ -10,5 +10,5 @@ export class Score {
 }
 
 export class Staff {
-    public elements: Element[] = [new EmptyElement()];
+    public elements: ScoreElement[] = [new EmptyElement()];
 }

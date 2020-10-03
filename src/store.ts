@@ -1,16 +1,41 @@
 import Vue from 'vue';
 import { Score } from '@/models/Score';
+import { ScoreElement } from '@/models/Element';
 
-interface IStore {
+interface IState {
   score: Score;
+  selectedElement: ScoreElement | null;
 }
 
-export const store: IStore = Vue.observable({
-  score: new Score()
+const state: IState = Vue.observable({
+  score: new Score(),
+  selectedElement: null,
 });
 
-export const mutations = {
+const getters = {
+  get elements() {
+    return state.score != null ? state.score.staff.elements : [];
+  },
+
+  get selectedElementIndex() {
+    return state.selectedElement != null ? this.elements.indexOf(state.selectedElement): -1;
+  },
+};
+
+const mutations = {
   setScore(score: Score) {
-    store.score = score;
+    state.score = score;
+  },
+
+  setSelectedElement(element: ScoreElement | null) {
+    state.selectedElement = element;
   }
 };
+
+const store = {
+  state,
+  getters,
+  mutations
+};
+
+export { store };

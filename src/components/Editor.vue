@@ -72,7 +72,7 @@
                   :ref="`element-${index}`"
                   :style="getElementStyle(element)"
                   class="text-box"
-                      @click="selectedElement = null">
+                  @click="selectedElement = null">
                       <ContentEditable 
                           class="text-box-content"
                           :ref="`textbox-${index}`"
@@ -84,8 +84,7 @@
               <template v-if="isStaffTextElement(element)">
                   <StaffText :key="`element-${index}`" 
                     :ref="`element-${index}`"
-                    :element="element"
-                    class="staff-text">
+                    :element="element">
                   </StaffText>
               </template>
             </template>
@@ -469,7 +468,9 @@ export default class Editor extends Vue {
   }
 
   onKeydown(event: KeyboardEvent) {
-    if (this.selectedElement == null) {
+    if (this.selectedElement == null 
+      || this.selectedElement.elementType === ElementType.StaffText
+      || this.selectedElement.elementType === ElementType.TextBox) {
       return;
     }
 

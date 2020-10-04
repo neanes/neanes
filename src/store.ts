@@ -29,6 +29,11 @@ const mutations = {
 
   setSelectedElement(element: ScoreElement | null) {
     state.selectedElement = element;
+  },
+
+  removeElement(element: ScoreElement) {
+    const index = state.score.staff.elements.indexOf(element);
+    state.score.staff.elements.splice(index, 1);
   }
 };
 

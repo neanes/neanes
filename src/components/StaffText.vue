@@ -54,18 +54,29 @@ export default class StaffText extends Vue {
     }
   }
 
+  mounted() {
+    document.addEventListener('keydown', this.handleKeyDown);
+  }
+
   beforeDestroy() {
-    document.removeEventListener('click', this.handleClick);
+    document.removeEventListener('mousedown', this.checkForOutsideClick);
     document.removeEventListener('mouseup', this.handleMouseUp);
     document.removeEventListener('mousemove', this.handleMouseMove);
+    document.removeEventListener('keydown', this.handleKeyDown);
+  }
+
+  focus() {
+    this.editable = true;
+    Vue.nextTick(this.textElement.focus);
+    document.addEventListener('mousedown', this.checkForOutsideClick);
   }
 
   handleDoubleClick() {
     this.editable = true;
-    Vue.nextTick(this.textElement.focus)
+    Vue.nextTick(this.textElement.focus);
   }
 
-  handleClick(e: MouseEvent) {
+  checkForOutsideClick(e: MouseEvent) {
     const container = this.$el as HTMLElement;
 
     if (container !== e.target && !container.contains(e.target as Element)) {    
@@ -83,14 +94,14 @@ export default class StaffText extends Vue {
         }
       })
       
-      document.removeEventListener('click', this.handleClick);
+      document.removeEventListener('mousedown', this.checkForOutsideClick);
     }
   }
 
   handleMouseDown(e: MouseEvent) {
     if (this.selectedElement !== this.element) {
       this.selectedElement = this.element;
-      document.addEventListener('click', this.handleClick);
+      document.addEventListener('mousedown', this.checkForOutsideClick);
     }
 
     if (this.editable) {
@@ -116,6 +127,17 @@ export default class StaffText extends Vue {
   handleMouseUp() {
     document.removeEventListener('mouseup', this.handleMouseUp);
     document.removeEventListener('mousemove', this.handleMouseMove);
+  }
+
+  handleKeyDown(e: KeyboardEvent) {
+    if (this.selectedElement !== this.element) {
+      return;
+    }
+
+    if (e.code == 'Delete' && !this.editable) {
+      store.mutations.removeElement(this.element);
+      e.preventDefault();
+    }
   }
 
   updateText(text: string) {

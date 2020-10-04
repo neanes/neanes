@@ -3,26 +3,26 @@
     <FileMenuBar />
     <div class="page-background">
       <div class="page"  
-          v-for="(page, index) in pages" 
-          :key="`page-${index}`" 
-          :ref="`page-${index}`">
+          v-for="(page, pageIndex) in pages" 
+          :key="`page-${pageIndex}`" 
+          :ref="`page-${pageIndex}`">
         <!-- <div class="mode-header red martyria">hWt</div> -->
 
         <div class="line"
-          v-for="(line, index) in page.lines" 
-          :key="`line-${index}`" 
-          :ref="`line-${index}`">
-            <template v-for="(element, index) in line.elements">
+          v-for="(line, lineIndex) in page.lines" 
+          :key="`line-${lineIndex}`" 
+          :ref="`line-${lineIndex}`">
+            <template v-for="element in line.elements">
               <template v-if="isSyllableElement(element)">
-                <div :key="`element-${index}`" 
-                  :ref="`element-${index}`"
+                <div :key="`element-${getElementIndex(element) }`" 
+                  :ref="`element-${getElementIndex(element)}`"
                   class="neume-box">
                   <span v-if="element.pageBreak" style="position:absolute; top: -10px;">P</span>
                   <span v-if="element.lineBreak" style="position:absolute; top: -10px;">L</span>
                   <SyllableNeumeBox 
                     class="syllable-box"
                     :neume="element"
-                    :ref="`syllable-box-${index}`"
+                    :ref="`syllable-box-${getElementIndex(element)}`"
                     :class="[{ selected: element == selectedElement }]"
                     @click.native="selectedElement = element"
                     ></SyllableNeumeBox>
@@ -30,17 +30,17 @@
                       @click="selectedElement = null">
                       <ContentEditable 
                           class="lyrics"
-                          :ref="`lyrics-${index}`"
+                          :ref="`lyrics-${getElementIndex(element)}`"
                           :content="element.lyrics"
                           @click.native="selectedElement = null"
                           @blur="updateLyrics(element, $event)"></ContentEditable>
-                      <div class="melisma" v-if="isMelisma(element)" :ref="`melisma-${index}`"></div>
+                      <div class="melisma" v-if="isMelisma(element)" :ref="`melisma-${getElementIndex(element)}`"></div>
                     </div>
                 </div>
               </template>
               <template v-if="isMartyriaElement(element)">
-                <div :key="`element-${index}`" 
-                  :ref="`element-${index}`"
+                <div :key="`element-${getElementIndex(element)}`" 
+                  :ref="`element-${getElementIndex(element)}`"
                   class="neume-box">
                   <span v-if="element.pageBreak" style="position:absolute; top: -10px;">P</span>
                   <span v-if="element.lineBreak" style="position:absolute; top: -10px;">L</span>
@@ -54,8 +54,8 @@
                 </div>
               </template>
               <template v-if="isEmptyElement(element)">
-                <div :key="`element-${index}`" 
-                  :ref="`element-${index}`"
+                <div :key="`element-${getElementIndex(element)}`" 
+                  :ref="`element-${getElementIndex(element)}`"
                   class="neume-box">
                   <span v-if="element.pageBreak" style="position:absolute; top: -10px;">P</span>
                   <span v-if="element.lineBreak" style="position:absolute; top: -10px;">L</span>
@@ -68,22 +68,22 @@
                 </div>
               </template>
               <template v-if="isTextBoxElement(element)">
-                  <div :key="`element-${index}`" 
-                  :ref="`element-${index}`"
+                  <div :key="`element-${getElementIndex(element)}`" 
+                  :ref="`element-${getElementIndex(element)}`"
                   :style="getElementStyle(element)"
                   class="text-box"
                   @click="selectedElement = null">
                       <ContentEditable 
                           class="text-box-content"
-                          :ref="`textbox-${index}`"
+                          :ref="`textbox-${getElementIndex(element)}`"
                           :content="element.content"
                           @click.native="selectedElement = null"
                           @blur="updateTextBox(element, $event)"></ContentEditable>
                     </div>
               </template>
               <template v-if="isStaffTextElement(element)">
-                  <StaffText :key="`element-${index}`" 
-                    :ref="`element-${index}`"
+                  <StaffText :key="`element-${getElementIndex(element)}`" 
+                    :ref="`element-${getElementIndex(element)}`"
                     :element="element">
                   </StaffText>
               </template>
@@ -169,6 +169,17 @@ export default class Editor extends Vue {
 
   updated() {
     Vue.nextTick(this.addMelismas);
+    Vue.nextTick(() => {
+      if (store.state.elementToFocus != null) {
+        const index = this.elements.indexOf(store.state.elementToFocus);
+        (this.$refs[`element-${index}`] as any)[0].focus();
+        store.mutations.setElementToFocus(null);
+      }
+    });
+  }
+
+  getElementIndex(element: ScoreElement) {
+    return this.elements.indexOf(element);
   }
 
   // addMelismas() {

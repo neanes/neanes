@@ -70,16 +70,23 @@
               <template v-if="isTextBoxElement(element)">
                   <div :key="`element-${index}`" 
                   :ref="`element-${index}`"
+                  :style="getElementStyle(element)"
                   class="text-box"
                       @click="selectedElement = null">
                       <ContentEditable 
                           class="text-box-content"
                           :ref="`textbox-${index}`"
                           :content="element.content"
-                          :style="getElementStyle(element)"
                           @click.native="selectedElement = null"
                           @blur="updateTextBox(element, $event)"></ContentEditable>
                     </div>
+              </template>
+              <template v-if="isStaffTextElement(element)">
+                  <StaffText :key="`element-${index}`" 
+                    :ref="`element-${index}`"
+                    :element="element"
+                    class="staff-text">
+                  </StaffText>
               </template>
             </template>
         </div>
@@ -112,6 +119,7 @@ import NeumeSelector from '@/components/NeumeSelector.vue';
 import NeumeKeyboard from '@/components/NeumeKeyboard.vue';
 import ContentEditable from '@/components/ContentEditable.vue';
 import FileMenuBar from '@/components/FileMenuBar.vue';
+import StaffText from '@/components/StaffText.vue';
 import { store } from '@/store';
 
 @Component({
@@ -122,6 +130,7 @@ import { store } from '@/store';
     NeumeKeyboard,
     ContentEditable,
     FileMenuBar,
+    StaffText,
   }
 })
 export default class Editor extends Vue {
@@ -454,6 +463,10 @@ export default class Editor extends Vue {
   isTextBoxElement(element: ScoreElement) {
     return element.elementType == ElementType.TextBox;
   }
+  
+  isStaffTextElement(element: ScoreElement) {
+    return element.elementType == ElementType.StaffText;
+  }
 
   onKeydown(event: KeyboardEvent) {
     if (this.selectedElement == null) {
@@ -625,6 +638,11 @@ export default class Editor extends Vue {
 
       if (element.elementType === ElementType.TextBox) {
         elementWidthPx = lineWidthPx;
+      }
+
+      if (element.elementType === ElementType.StaffText) {
+        line.elements.push(element);
+        continue;
       }
 
       if (currentLineWidthPx + elementWidthPx > lineWidthPx || lastElementWasLineBreak) {

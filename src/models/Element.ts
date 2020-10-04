@@ -5,6 +5,7 @@ export enum ElementType {
     Martyria = 'Martyria',
     Empty = 'Empty',
     TextBox = 'TextBox',
+    StaffText = 'StaffText',
 }
 
 export abstract class ScoreElement {
@@ -37,4 +38,15 @@ export class TextBoxElement extends ScoreElement {
     public readonly elementType: ElementType = ElementType.TextBox;
     public content: string = '';
     public height: number = 20;
+}
+
+export class StaffTextElement extends ScoreElement {
+    public readonly elementType: ElementType = ElementType.StaffText;
+    public offset: ScoreElementOffset = new ScoreElementOffset;
+    public text: string = '';
+}
+
+export class ScoreElementOffset {
+    public x: number = 0;
+    public y: number = 0;
 }

@@ -88,6 +88,7 @@ export default class FileMenuBar extends Vue {
     const element =  new StaffTextElement();
     store.getters.elements.splice(store.getters.selectedElementIndex, 0, element);
     store.mutations.setSelectedElement(element);
+    store.mutations.setElementToFocus(element);
   }
 }
 </script>

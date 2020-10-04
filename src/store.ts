@@ -5,11 +5,13 @@ import { ScoreElement } from '@/models/Element';
 interface IState {
   score: Score;
   selectedElement: ScoreElement | null;
+  elementToFocus: ScoreElement | null;
 }
 
 const state: IState = Vue.observable({
   score: new Score(),
   selectedElement: null,
+  elementToFocus: null,
 });
 
 const getters = {
@@ -29,6 +31,10 @@ const mutations = {
 
   setSelectedElement(element: ScoreElement | null) {
     state.selectedElement = element;
+  },
+
+  setElementToFocus(element: ScoreElement | null) {
+    state.elementToFocus = element;
   },
 
   removeElement(element: ScoreElement) {

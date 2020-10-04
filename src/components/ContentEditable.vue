@@ -21,6 +21,10 @@ export default class ContentEditable extends Vue {
       }, 0);
     }
   }
+
+  focus() {
+    (this.$el as HTMLElement).focus();
+  }
 }
 </script>
 

@@ -164,7 +164,7 @@ export default class Editor extends Vue {
     });
   }
 
-  destroyed() {
+  beforeDestroy() {
     window.removeEventListener('keydown', this.onKeydown);
   }
 

@@ -8,6 +8,7 @@
     <FileMenuBarItem label="Edit"></FileMenuBarItem>
     <FileMenuBarItem label="Add">
       <FileMenuItem label="Text Box" @click="onClickAddTextBox" />
+      <FileMenuItem label="Staff Text" @click="onClickAddStaffText" />
     </FileMenuBarItem>
     <input ref="file" type="file" v-show="false" @change="onSelectFile">
   </div>
@@ -18,7 +19,7 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 import FileMenuBarItem from '@/components/FileMenuBarItem.vue';
 import FileMenuItem from '@/components/FileMenuItem.vue';
 import { Score, ScoreVersion } from '@/models/Score';
-import { TextBoxElement } from '@/models/Element';
+import { TextBoxElement, StaffTextElement } from '@/models/Element';
 import { store } from '@/store';
 
 @Component({
@@ -81,6 +82,10 @@ export default class FileMenuBar extends Vue {
 
   onClickAddTextBox() {
     store.getters.elements.splice(store.getters.selectedElementIndex, 0, new TextBoxElement());
+  }
+
+  onClickAddStaffText() {
+    store.getters.elements.splice(store.getters.selectedElementIndex, 0, new StaffTextElement());
   }
 }
 </script>

@@ -43,7 +43,7 @@ export class TextBoxElement extends ScoreElement {
 export class StaffTextElement extends ScoreElement {
     public readonly elementType: ElementType = ElementType.StaffText;
     public offset: ScoreElementOffset = new ScoreElementOffset;
-    public text: string = '';
+    public text: string = 'text';
 }
 
 export class ScoreElementOffset {

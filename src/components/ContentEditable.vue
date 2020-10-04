@@ -1,5 +1,5 @@
 <template>
-  <span contenteditable="true" @blur="onBlur" v-html="content" @focus="onFocus"></span>
+  <span :contenteditable="editable" @blur="onBlur" v-html="content" @focus="onFocus"></span>
 </template>
 
 <script lang="ts">
@@ -9,6 +9,7 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 export default class ContentEditable extends Vue {
   @Prop() content!: string;
   @Prop({default: true}) selectAllOnFocus!: boolean;
+  @Prop({default: true}) editable!: boolean;
 
   onBlur() {
     this.$emit('blur', (this.$el as HTMLElement).innerText);

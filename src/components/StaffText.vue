@@ -174,10 +174,4 @@ export default class StaffText extends Vue {
 
     top: -20px;
   }
-
-  /* .staff-text-content {
-    width: 100%;
-    height: 100%;
-    display: block;
-  } */
 </style>

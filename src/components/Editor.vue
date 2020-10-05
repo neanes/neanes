@@ -21,7 +21,7 @@
                   <span v-if="element.lineBreak" style="position:absolute; top: -10px;">L</span>
                   <SyllableNeumeBox 
                     class="syllable-box"
-                    :neume="element"
+                    :note="element"
                     :ref="`syllable-box-${getElementIndex(element)}`"
                     :class="[{ selected: element == selectedElement }]"
                     @click.native="selectedElement = element"
@@ -107,7 +107,7 @@
 
 <script lang="ts">
 import { Component, Prop, Watch, Vue } from 'vue-property-decorator';
-import { ScoreElement, MartyriaElement, NoteElement, ElementType, EmptyElement, TextBoxElement } from '@/models/Element';
+import { ScoreElement, MartyriaElement, NoteElement, ElementType, EmptyElement, TextBoxElement, VocalExpressionNeumeElement, QuantitativeNeumeElement, TimeNeumeElement, FthoraElement } from '@/models/Element';
 import { QuantitativeNeume, TimeNeume, Note, RootSign, VocalExpressionNeume, Fthora } from '@/models/Neumes';
 import { Page, Line } from '@/models/Page';
 import { Score, ScoreVersion } from '@/models/Score';
@@ -258,7 +258,7 @@ export default class Editor extends Vue {
         this.selectedElement = this.switchToSyllable(this.selectedElement);
       }
       
-      (this.selectedElement as NoteElement).quantitativeNeume = neume;
+      (this.selectedElement as NoteElement).quantitativeNeume = new QuantitativeNeumeElement(neume);
 
       //this.moveRight();
 
@@ -278,7 +278,7 @@ export default class Editor extends Vue {
         this.selectedElement = this.switchToSyllable(this.selectedElement);
       }
 
-      (this.selectedElement as NoteElement).timeNeume = neume;
+      (this.selectedElement as NoteElement).timeNeume = neume != null ? new TimeNeumeElement(neume) : neume;
       //this.moveRight();
 
       this.save();
@@ -297,7 +297,7 @@ export default class Editor extends Vue {
         this.selectedElement = this.switchToSyllable(this.selectedElement);
       }
 
-      (this.selectedElement as NoteElement).fthora = neume;
+      (this.selectedElement as NoteElement).fthora = neume != null ? new FthoraElement(neume) : null;
       //this.moveRight();
 
       this.save();
@@ -316,7 +316,7 @@ export default class Editor extends Vue {
         this.selectedElement = this.switchToSyllable(this.selectedElement);
       }
 
-      (this.selectedElement as NoteElement).vocalExpressionNeume = neume;
+      (this.selectedElement as NoteElement).vocalExpressionNeume = new VocalExpressionNeumeElement(neume);
 
       this.moveRight();
 

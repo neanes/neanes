@@ -16,10 +16,10 @@ export abstract class ScoreElement {
 
 export class NoteElement extends ScoreElement {
     public readonly elementType: ElementType = ElementType.Note; 
-    public quantitativeNeume: QuantitativeNeume = QuantitativeNeume.Ison; 
-    public timeNeume: TimeNeume | null = null;
-    public vocalExpressionNeume: VocalExpressionNeume | null = null;
-    public fthora: Fthora | null = null;
+    public quantitativeNeume: QuantitativeNeumeElement = new QuantitativeNeumeElement(QuantitativeNeume.Ison); 
+    public timeNeume: TimeNeumeElement | null = null;
+    public vocalExpressionNeume: VocalExpressionNeumeElement | null = null;
+    public fthora: FthoraElement | null = null;
     public lyrics: string = '';
 }
 
@@ -44,6 +44,42 @@ export class StaffTextElement extends ScoreElement {
     public readonly elementType: ElementType = ElementType.StaffText;
     public offset: ScoreElementOffset = new ScoreElementOffset;
     public text: string = 'text';
+}
+
+export class QuantitativeNeumeElement {
+    public offset: ScoreElementOffset = new ScoreElementOffset;
+    public neume: QuantitativeNeume;
+
+    constructor(neume: QuantitativeNeume) {
+        this.neume = neume;
+    }
+}
+
+export class TimeNeumeElement {
+    public offset: ScoreElementOffset = new ScoreElementOffset;
+    public neume: TimeNeume;
+
+    constructor(neume: TimeNeume) {
+        this.neume = neume;
+    }
+}
+
+export class FthoraElement {
+    public offset: ScoreElementOffset = new ScoreElementOffset;
+    public neume: Fthora;
+
+    constructor(neume: Fthora) {
+        this.neume = neume;
+    }
+}
+
+export class VocalExpressionNeumeElement {
+    public offset: ScoreElementOffset = new ScoreElementOffset;
+    public neume: VocalExpressionNeume;
+
+    constructor(neume: VocalExpressionNeume) {
+        this.neume = neume;
+    }
 }
 
 export class ScoreElementOffset {

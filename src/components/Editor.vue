@@ -158,7 +158,17 @@ export default class Editor extends Vue {
   }
 
   async created() {
-    await (document as any).fonts.ready;
+    const fontLoader = (document as any).fonts;
+
+    await Promise.all([
+      fontLoader.load('1rem Omega'), 
+      fontLoader.load('1rem Psaltica'),
+      fontLoader.load('1rem EzSpecial1'),
+      fontLoader.load('1rem EzSpecial2'),
+      fontLoader.load('1rem EzFthora'),
+      fontLoader.ready
+    ]);
+
     this.load();
   }
 
@@ -707,7 +717,7 @@ export default class Editor extends Vue {
         elementWidthPx = Math.max(
           Math.floor(this.getTextWidth(text, `1.6rem ${mapping.fontFamily}`)),
           Math.floor(this.getTextWidth(noteElement.lyrics, `1rem Omega`))
-        );
+        );        
       }
       else if (element.elementType === ElementType.Martyria) {
         let martyriaElement = element as MartyriaElement;

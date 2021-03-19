@@ -1,6 +1,6 @@
 <template>
   <div class="editor">
-    <FileMenuBar />
+    <FileMenuBar @scoreUpdated="onScoreUpdated"/>
     <div class="page-background">
       <div class="page"  
           v-for="(page, pageIndex) in pages" 
@@ -12,7 +12,12 @@
           v-for="(line, lineIndex) in page.lines" 
           :key="`line-${lineIndex}`" 
           :ref="`line-${lineIndex}`">
-            <template v-for="element in line.elements">
+            <div 
+              v-for="(element, index) in line.elements" 
+              :key="`element-${index}`" 
+              :ref="`element-${index}`"
+              class="element-box"
+              :style="{left: element.x + 'px', top: element.y + 'px'}">
               <template v-if="isSyllableElement(element)">
                 <div :key="`element-${getElementIndex(element) }`" 
                   :ref="`element-${getElementIndex(element)}`"
@@ -72,12 +77,12 @@
                   :ref="`element-${getElementIndex(element)}`"
                   :style="getElementStyle(element)"
                   class="text-box"
-                  @click="selectedElement = null">
+                  @click="selectedElement = element">
                       <ContentEditable 
                           class="text-box-content"
                           :ref="`textbox-${getElementIndex(element)}`"
                           :content="element.content"
-                          @click.native="selectedElement = null"
+                          @click.native="selectedElement = element"
                           @blur="updateTextBox(element, $event)"></ContentEditable>
                     </div>
               </template>
@@ -87,7 +92,7 @@
                     :element="element">
                   </StaffText>
               </template>
-            </template>
+           </div>
         </div>
     </div>
     </div>
@@ -111,7 +116,7 @@ import { ScoreElement, MartyriaElement, NoteElement, ElementType, EmptyElement, 
 import { QuantitativeNeume, TimeNeume, Note, RootSign, VocalExpressionNeume, Fthora } from '@/models/Neumes';
 import { Page, Line } from '@/models/Page';
 import { Score, ScoreVersion } from '@/models/Score';
-import { KeyboardMap } from '@/models/NeumeMappings';
+import { KeyboardMap, neumeMap } from '@/models/NeumeMappings';
 import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
 import MartyriaNeumeBox from '@/components/NeumeBoxMartyria.vue';
 import NeumeSelector from '@/components/NeumeSelector.vue';
@@ -151,7 +156,8 @@ export default class Editor extends Vue {
     store.mutations.setSelectedElement(element);
   }
 
-  created() {
+  async created() {
+    await (document as any).fonts.ready;
     this.load();
   }
 
@@ -278,7 +284,7 @@ export default class Editor extends Vue {
         this.selectedElement = this.switchToSyllable(this.selectedElement);
       }
 
-      (this.selectedElement as NoteElement).timeNeume = neume != null ? new TimeNeumeElement(neume) : neume;
+      (this.selectedElement as NoteElement).timeNeume = neume != null ? new TimeNeumeElement(neume) : null;
       //this.moveRight();
 
       this.save();
@@ -316,7 +322,7 @@ export default class Editor extends Vue {
         this.selectedElement = this.switchToSyllable(this.selectedElement);
       }
 
-      (this.selectedElement as NoteElement).vocalExpressionNeume = new VocalExpressionNeumeElement(neume);
+      (this.selectedElement as NoteElement).vocalExpressionNeume = neume != null ? new VocalExpressionNeumeElement(neume) : null;
 
       this.moveRight();
 
@@ -403,6 +409,7 @@ export default class Editor extends Vue {
   }
 
   updateEmpty() {
+    console.log('updateEmpty', this.selectedElement)
     if(this.selectedElement) {
       const index = this.elements.indexOf(this.selectedElement);
 
@@ -504,11 +511,13 @@ export default class Editor extends Vue {
         else {
           this.selectedElement = this.switchToEmptyElement(this.selectedElement);
           this.moveLeft();
+          this.save();
         }
       }
       else {
         this.selectedElement = this.switchToEmptyElement(this.selectedElement);
         this.moveLeft();
+        this.save();
       }
     }
     else if (event.code == 'Delete') {
@@ -615,15 +624,25 @@ export default class Editor extends Vue {
       };
     }
   }
+  private canvas: HTMLCanvasElement | null = null;
+
+  getTextWidth(text: string, font: string) {
+    let canvas = this.canvas || document.createElement("canvas");
+    let context = canvas.getContext("2d")!;
+    context.font = font;
+    let metrics = context.measureText(text);
+    return metrics.width;
+}
 
   processPages() {
     const pageHeightPx = 1056 - 96 - 96;
 
-    const lineHeightPx = 82;
+    const lineHeightPx = 73;
     const lineWidthPx = 816 - 96 - 96;
 
-    const neumeElementWidthPx = 39;
+    const defaultNeumeElementWidthPx = 39;
     const elementHeightPx = 82;
+    const defaultNeumeSpacingPx = 3;
     const pages: Page[] = [];
 
     let page: Page = { 
@@ -637,7 +656,7 @@ export default class Editor extends Vue {
     page.lines.push(line);
     pages.push(page);
 
-    let currentPageHeightPx = 0;
+    let currentPageHeightPx = lineHeightPx;
     let currentLineWidthPx = 0;
     let lineCount = 1;
 
@@ -646,7 +665,7 @@ export default class Editor extends Vue {
     let lastElementWasPageBreak = false;
 
     for (let element of this.elements) {
-      let elementWidthPx = neumeElementWidthPx;
+      let elementWidthPx = defaultNeumeElementWidthPx;
 
       if (element.elementType === ElementType.TextBox) {
         elementWidthPx = lineWidthPx;
@@ -655,6 +674,28 @@ export default class Editor extends Vue {
       if (element.elementType === ElementType.StaffText) {
         line.elements.push(element);
         continue;
+      }
+
+      if (element.elementType === ElementType.Note) {
+        let noteElement = element as NoteElement;
+        let mapping = neumeMap.get(noteElement.quantitativeNeume.neume)!;
+
+        let text = mapping.text;
+
+        if (noteElement.vocalExpressionNeume != null && noteElement.vocalExpressionNeume.neume === VocalExpressionNeume.Vareia) {
+          let vareiaMapping = neumeMap.get(VocalExpressionNeume.Vareia)!;
+          text = vareiaMapping.text + text;
+        } 
+
+        elementWidthPx = Math.max(
+          Math.floor(this.getTextWidth(text, `1.6rem ${mapping.fontFamily}`)),
+          Math.floor(this.getTextWidth(noteElement.lyrics, `1rem Omega`))
+        );
+      }
+      else if (element.elementType === ElementType.Martyria) {
+        let martyriaElement = element as MartyriaElement;
+        let mapping = neumeMap.get(martyriaElement.note)!;
+        elementWidthPx = Math.floor(this.getTextWidth(mapping.text, `1.6rem ${mapping.fontFamily}`));
       }
 
       if (currentLineWidthPx + elementWidthPx > lineWidthPx || lastElementWasLineBreak) {
@@ -671,7 +712,7 @@ export default class Editor extends Vue {
         for (let line of page.lines) {
           if (line.elements.some(x => x.elementType === ElementType.TextBox)) {
             const textbox = line.elements.find(x => x.elementType === ElementType.TextBox) as TextBoxElement;
-            currentPageHeightPx += textbox.height;
+            currentPageHeightPx += Math.max(lineHeightPx, textbox.height);
           }
           else {
             currentPageHeightPx += lineHeightPx;
@@ -694,11 +735,15 @@ export default class Editor extends Vue {
         pages.push(page);
 
         lineCount = 1;
-        currentPageHeightPx = 0;
+        currentPageHeightPx = lineHeightPx;
         currentLineWidthPx = 0;
       }
 
-      currentLineWidthPx += elementWidthPx;
+      element.x = 96 + currentLineWidthPx;
+      element.y = 96 + currentPageHeightPx - lineHeightPx;
+      element.width = elementWidthPx + defaultNeumeSpacingPx;
+
+      currentLineWidthPx += elementWidthPx + defaultNeumeSpacingPx;
       line.elements.push(element);
 
       lastElementWasLineBreak = element.lineBreak;
@@ -707,12 +752,45 @@ export default class Editor extends Vue {
       index++;
     }
 
+    this.justifyLines(pages);
+
     return pages;
   }
 
-  @Watch('score', {deep: true}) 
+  justifyLines(pages: Page[]) {
+    const lineWidthPx = 816 - 96 - 96;
+
+    for (let page of pages) {
+      for (let line of page.lines) {
+        if (pages.indexOf(page) === pages.length - 1 && page.lines.indexOf(line) === page.lines.length - 1) {
+          continue;
+        }
+
+        if (line.elements.some(x => x.lineBreak == true)) {
+          continue;
+        }
+
+        if (line.elements.some(x => x.pageBreak == true)) {
+          continue;
+        }
+
+        let currentWidthPx = line.elements.map(x => x.width).reduce((sum, x) => sum + x , 0);
+
+        let extraSpace = lineWidthPx - currentWidthPx;
+
+        let spaceToAdd = extraSpace / line.elements.length;
+
+        for (let [elementIndex, element] of line.elements.entries()) {
+          element.x += spaceToAdd * (elementIndex + 1);
+        }
+      }
+    }
+  }
+
+  //@Watch('score', {deep: true}) 
   onScoreUpdated() {
     this.pages = this.processPages();
+    this.save();
   }
 
   // generateTestFile() {
@@ -785,14 +863,18 @@ export default class Editor extends Vue {
     width: 100%;
 }
 
+.element-box {
+    position: absolute;
+}
+
 .neume-box {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
 
-    width: 39px;
-    height: 82px;
+    /* width: 39px;  */
+    /* height: 82px; */
 
     position: relative;
 
@@ -859,6 +941,7 @@ export default class Editor extends Vue {
 .lyrics-container {
   min-height: 1.6rem;
   min-width: 1rem;
+  text-align: center;
 }
 
 .melisma {
@@ -868,7 +951,8 @@ export default class Editor extends Vue {
 }
 
 .neume {
-  height: 3.5rem;  
+  display: flex;
+  height: 2.5rem;
  }
 
  .text-box {
@@ -906,7 +990,11 @@ export default class Editor extends Vue {
     margin-bottom: 0;
     padding: 0;
     width: 816px;
-    height: 864px;
+    height: 1056px;
+    min-width: 816px;
+    max-width: 816px;
+    min-height: 1056px;
+    max-height: 1056px;
   }
 
   .empty-neume-box {

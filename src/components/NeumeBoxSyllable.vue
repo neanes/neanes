@@ -53,21 +53,21 @@ export default class NeumeBoxSyllable extends Vue {
   get timeNeumeStyle() {
     const style = {} as CSSStyleDeclaration;
     
-    switch(this.note.timeNeume!.neume) {
-      case TimeNeume.Gorgon_Top:
-        if (this.note.quantitativeNeume.neume === QuantitativeNeume.Apostrophos) {
-          style.position = 'relative';
-          style.left = '0.6rem';
-        }
-        break;
-      case TimeNeume.Klasma_Top:
-        if (this.note.quantitativeNeume.neume === QuantitativeNeume.Apostrophos) {
-          style.position = 'relative';
-          style.left = '0.5rem';
-        }
-        break;
-    }
-    
+    // switch(this.note.timeNeume!.neume) {
+    //   case TimeNeume.Gorgon_Top:
+    //     if (this.note.quantitativeNeume.neume === QuantitativeNeume.Apostrophos) {
+    //       style.position = 'relative';
+    //       style.left = '0.6rem';
+    //     }
+    //     break;
+    //   case TimeNeume.Klasma_Top:
+    //     if (this.note.quantitativeNeume.neume === QuantitativeNeume.Apostrophos) {
+    //       style.position = 'relative';
+    //       style.left = '0.5rem';
+    //     }
+    //     break;
+    // }
+
     return style;
   }
 

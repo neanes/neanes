@@ -285,7 +285,7 @@ export default class Editor extends Vue {
         this.selectedElement = this.switchToSyllable(this.selectedElement);
       }
 
-      (this.selectedElement as NoteElement).timeNeume = neume != null ? new TimeNeumeElement(neume) : null;
+      (this.selectedElement as NoteElement).setTimeNeume(neume);
       //this.moveRight();
 
       this.save();

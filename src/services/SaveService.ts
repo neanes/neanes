@@ -197,10 +197,10 @@ export class SaveService {
         element.quantitativeNeume.offset.y = e.quantitativeNeume.offset.y;
 
         if(e.timeNeume != null) {
-            element.timeNeume = new TimeNeumeElement(e.timeNeume.neume);
-            element.timeNeume.offset = new ScoreElementOffset();
-            element.timeNeume.offset.x = e.timeNeume.offset.x;
-            element.timeNeume.offset.y = e.timeNeume.offset.y;
+            element.setTimeNeume(e.timeNeume.neume);
+            element.timeNeume!.offset = new ScoreElementOffset();
+            element.timeNeume!.offset.x = e.timeNeume.offset.x;
+            element.timeNeume!.offset.y = e.timeNeume.offset.y;
         }
 
         if(e.fthora != null) {
@@ -211,10 +211,10 @@ export class SaveService {
         }
 
         if(e.vocalExpressionNeume != null) {
-            element.vocalExpressionNeume = new VocalExpressionNeumeElement(e.vocalExpressionNeume.neume);
-            element.vocalExpressionNeume.offset = new ScoreElementOffset();
-            element.vocalExpressionNeume.offset.x = e.vocalExpressionNeume.offset.x;
-            element.vocalExpressionNeume.offset.y = e.vocalExpressionNeume.offset.y;
+            element.setVocalExpressionNeume(e.vocalExpressionNeume.neume);
+            element.vocalExpressionNeume!.offset = new ScoreElementOffset();
+            element.vocalExpressionNeume!.offset.x = e.vocalExpressionNeume.offset.x;
+            element.vocalExpressionNeume!.offset.y = e.vocalExpressionNeume.offset.y;
         }
 
         element.lyrics = e.lyrics;

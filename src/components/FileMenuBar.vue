@@ -7,6 +7,7 @@
     </FileMenuBarItem>
     <FileMenuBarItem label="Edit"></FileMenuBarItem>
     <FileMenuBarItem label="Add">
+      <FileMenuItem label="Neume" @click="onClickAddNeume" />
       <FileMenuItem label="Text Box" @click="onClickAddTextBox" />
       <FileMenuItem label="Staff Text" @click="onClickAddStaffText" />
     </FileMenuBarItem>
@@ -19,7 +20,7 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 import FileMenuBarItem from '@/components/FileMenuBarItem.vue';
 import FileMenuItem from '@/components/FileMenuItem.vue';
 import { Score, ScoreVersion } from '@/models/Score';
-import { TextBoxElement, StaffTextElement } from '@/models/Element';
+import { TextBoxElement, StaffTextElement, EmptyElement } from '@/models/Element';
 import { store } from '@/store';
 
 @Component({
@@ -80,8 +81,14 @@ export default class FileMenuBar extends Vue {
     }
   }
 
+  onClickAddNeume() {
+    store.getters.elements.splice(store.getters.selectedElementIndex, 0, new EmptyElement());
+    this.$emit('scoreUpdated');
+  }
+
   onClickAddTextBox() {
     store.getters.elements.splice(store.getters.selectedElementIndex, 0, new TextBoxElement());
+    this.$emit('scoreUpdated');
   }
 
   onClickAddStaffText() {
@@ -89,6 +96,7 @@ export default class FileMenuBar extends Vue {
     store.getters.elements.splice(store.getters.selectedElementIndex, 0, element);
     store.mutations.setSelectedElement(element);
     store.mutations.setElementToFocus(element);
+    this.$emit('scoreUpdated');
   }
 }
 </script>

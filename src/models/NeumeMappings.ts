@@ -55,6 +55,9 @@ export const neumeMap = new Map<Neume, NeumeMapping>([
     [QuantitativeNeume.Kentima, { fontFamily: 'Psaltica', text: '~'}],
     [QuantitativeNeume.OligonPlusKentima, { fontFamily: 'Psaltica', text: '1~'}],
     [QuantitativeNeume.Kentemata, { fontFamily: 'Psaltica', text: '`'}],
+    
+    [QuantitativeNeume.Cross, { fontFamily: 'Psaltica', text: '+'}],
+    [QuantitativeNeume.VareiaDotted, { fontFamily: 'Psaltica', text: '|'}],
 
     [TimeNeume.Gorgon_Top, { fontFamily: 'Psaltica', text: 's' }],
     [TimeNeume.Gorgon_Bottom, { fontFamily: 'Psaltica', text: 'x' }],
@@ -173,7 +176,6 @@ export const neumeMap = new Map<Neume, NeumeMapping>([
     [VocalExpressionNeume.Antikenoma, { fontFamily: 'Psaltica', text: '"'}],
     [VocalExpressionNeume.Psifiston, { fontFamily: 'Psaltica', text: '\''}],
     [VocalExpressionNeume.Heteron, { fontFamily: 'Psaltica', text: ']'}],
-    [VocalExpressionNeume.Cross, { fontFamily: 'Psaltica', text: '+'}],
 
     [RootSign.Delta, { fontFamily: 'Psaltica', text: 'C'}],
     [RootSign.Alpha, { fontFamily: 'Psaltica', text: 'V'}],

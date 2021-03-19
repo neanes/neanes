@@ -46,6 +46,9 @@ export enum QuantitativeNeume {
     Kentima = 'Kentima',
     OligonPlusKentima = 'OligonPlusKentima',
     Kentemata = 'Kentemata',
+    
+    VareiaDotted = 'VareiaDotted',
+    Cross = 'Cross',
 }
 
 export enum TimeNeume {
@@ -76,7 +79,6 @@ export enum VocalExpressionNeume {
     Antikenoma = 'Antikenoma',
     Psifiston = 'Psifiston',
     Heteron = 'Heteron',
-    Cross = 'Cross',
 }
 
 export enum RootSign {

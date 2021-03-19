@@ -57,15 +57,30 @@ export enum TimeNeume {
     Digorgon = 'Digorgon',
     Trigorgon = 'Trigorgon',
 
+    Gorgon_TopRight = 'Gorgon_TopRight',
+    Gorgon_BottomRight = 'Gorgon_BottomRight',
+    Digorgon_Right = 'Digorgon_Right',
+    Trigorgon_Right = 'Trigorgon_Right',
+
     GorgonDottedLeft = "GorgonDottedLeft",
     GorgonDottedRight = "GorgonDottedRight",
 
+    GorgonDottedLeft_Right = "GorgonDottedLeft_Right",
+    GorgonDottedRight_Right = "GorgonDottedRight_Right",
+
     Klasma_Top = 'Klasma_Top',
     Klasma_Bottom = 'Klasma_Bottom',
+
+    Klasma_TopRight = 'Klasma_TopRight',
+    Klasma_TopLeft = 'Klasma_TopLeft',
     
     Hapli = 'Hapli',
     Dipli = 'Dipli',
     Tripli = 'Tripli',
+
+    Hapli_Right = 'Hapli_Right',
+    Dipli_Right = 'Dipli_Right',
+    Tripli_Right = 'Tripli_Right',
 
     Argon = 'Argon',
     Hemiolion = 'Hemiolion',
@@ -212,7 +227,25 @@ const highNeumes: QuantitativeNeume[] = [
 const redNeumes: Neume[] = [
     TimeNeume.Gorgon_Top,
     TimeNeume.Gorgon_Bottom,
+    TimeNeume.Gorgon_TopRight,
+    TimeNeume.Gorgon_BottomRight,
+    TimeNeume.GorgonDottedLeft,
+    TimeNeume.GorgonDottedRight,
+    TimeNeume.GorgonDottedLeft_Right,
+    TimeNeume.GorgonDottedRight_Right,
+    TimeNeume.Digorgon,
+    TimeNeume.Digorgon_Right,
+    TimeNeume.Trigorgon,
+    TimeNeume.Trigorgon_Right,
     VocalExpressionNeume.Heteron,
+];
+
+// Neumes that must be paired with special "_Right" neumes
+const rightNeumes: Neume[] = [
+    QuantitativeNeume.Apostrophos,
+    QuantitativeNeume.Hyporoe,
+    QuantitativeNeume.OligonPlusElaphronPlusKentemata,
+    QuantitativeNeume.OligonPlusIsonPlusKentemata,
 ];
 
 export function isHighNeume(neume: QuantitativeNeume) {
@@ -221,4 +254,9 @@ export function isHighNeume(neume: QuantitativeNeume) {
 
 export function isRedNeume(neume: Neume) {
     return redNeumes.includes(neume);
+}
+
+export function isRightNeume(neume: Neume) {
+    return rightNeumes.includes(neume);
+
 }

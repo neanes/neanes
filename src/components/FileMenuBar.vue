@@ -42,6 +42,7 @@ export default class FileMenuBar extends Vue {
   onClickNew() {
     if (confirm('This will discard your current score. Make sure you have saved before doing this. Are you sure you wish to continue?')) {
       store.mutations.setScore(new Score());
+      this.$emit('scoreUpdated');
     }
   }
 

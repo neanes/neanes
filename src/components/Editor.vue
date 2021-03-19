@@ -189,40 +189,11 @@ export default class Editor extends Vue {
     return this.elements.indexOf(element);
   }
 
-  // addMelismas() {
-  //   document.querySelectorAll('.melisma').forEach(e => e.remove());
-
-  //   for (let i = 0; i < this.score.elements.length; i++) {
-  //     let element = this.score.elements[i];
-
-  //     if (element.type === ElementType.Syllable) {
-  //       let syllableElement = element as SyllableElement;
-
-  //       if (syllableElement.lyrics.charAt(syllableElement.lyrics.length - 1) === '_') {
-  //         let nextElement = this.score.elements[i+1];
-  //         if (nextElement.type === ElementType.Syllable) {
-  //           let nextSyllableElement = nextElement as SyllableElement;
-
-  //           if (nextSyllableElement.lyrics === '_') {
-  //             let box1 = (this.$refs[`element-${i}`]as HTMLElement[])[0];
-  //             let box2 = (this.$refs[`element-${i+1}`]as HTMLElement[])[0];
-
-  //             let melisma = document.createElement('div');
-  //             melisma.className = 'melisma';
-  //             melisma.style.width = (box2.offsetLeft + - box1.offsetLeft + 1) + 'px'; 
-  //             melisma.style.position = 'absolute';
-  //             melisma.style.left = (box1.offsetLeft + box1.offsetWidth - 1) + 'px';
-  //             melisma.style.top = (box1.offsetTop + box1.offsetHeight - 8) + 'px';
-  //             melisma.style.borderBottom = '1px solid black';
-  //             (this.$refs.page as HTMLElement).appendChild(melisma);
-  //           }            
-  //         }
-  //       }
-  //     }
-  //   }
-  // }
-
   isMelisma(element: NoteElement) {
+    return this.isIntermediateMelisma(element) || this.isFinalMelisma(element);
+  }
+
+  isIntermediateMelisma(element: NoteElement) {
     const index = this.elements.indexOf(element);
 
     if(element.lyrics.charAt(element.lyrics.length - 1) === '_') {
@@ -234,21 +205,71 @@ export default class Editor extends Vue {
     return false;
   }
 
+  // Checks whether the element is the final melisma in a sequence
+  isFinalMelisma(element: NoteElement) {
+    const index = this.elements.indexOf(element);
+
+    if(element.lyrics.charAt(element.lyrics.length - 1) === '_') {
+      let nextElement = this.elements[index + 1] as NoteElement;
+
+      return nextElement && nextElement.lyrics !== '_';
+    }
+
+    return false;
+  }
+
+  private widthOfUnderscore: number | null = null;
+
   addMelismas() {
     const syllableElements = this.elements.filter(x => x.elementType === ElementType.Note) as NoteElement[];
 
     for (let element of syllableElements) {
-      if (this.isMelisma(element)) {
+      if (this.isIntermediateMelisma(element)) {
         const index = this.elements.indexOf(element);
-      
-        let box1 = (this.$refs[`element-${index}`] as HTMLElement[])[0];
-        let box2 = (this.$refs[`element-${index+1}`] as HTMLElement[])[0];
+
         let melisma = (this.$refs[`melisma-${index}`] as HTMLElement[])[0];
+        let lyrics1 = (this.$refs[`lyrics-${index}`] as Vue[])[0].$el as HTMLElement;
+        let lyrics2 = (this.$refs[`lyrics-${index+1}`] as Vue[])[0].$el as HTMLElement;
+
+        let widthOfUnderscore = this.widthOfUnderscore || this.getTextWidth('_', '1rem Omega');
+
+        let lyrics1Rect = lyrics1.getBoundingClientRect();
+        let lyrics2Rect = lyrics2.getBoundingClientRect();
+
+        // Stretch from the end of the lyrics in the current element 
+        // to the end of the lyrics in the next element
+        let width = lyrics2Rect.left - lyrics1Rect.right;
+
+        let numberOfUnderScoresNeeded = Math.ceil(width / widthOfUnderscore);
+
+        melisma.innerText = '';
+
+        for (let i = 0; i < numberOfUnderScoresNeeded; i++) {
+          melisma.innerText += '_';
+        }
+      }
+      else if (this.isFinalMelisma(element)) {
+        const index = this.elements.indexOf(element);
+
+        let melisma = (this.$refs[`melisma-${index}`] as HTMLElement[])[0];
+        let box = (this.$refs[`element-${index}`] as HTMLElement[])[0];
         let lyrics = (this.$refs[`lyrics-${index}`] as Vue[])[0].$el as HTMLElement;
 
-        melisma.style.top = (box1.offsetTop + box1.offsetHeight - 8) + 'px';
-        melisma.style.width = (box2.offsetLeft + box2.offsetWidth - lyrics.offsetLeft - lyrics.offsetWidth + 1) + 'px';
-        melisma.style.left = (lyrics.offsetLeft + lyrics.offsetWidth - 1) + 'px';
+        let widthOfUnderscore = this.widthOfUnderscore || this.getTextWidth('_', '1rem Omega');
+
+        let boxRect = box.getBoundingClientRect();
+        let lyricsRect = lyrics.getBoundingClientRect();
+
+        // Stretch from the end of the lyrics to the end of the neume
+        let width = boxRect.right - lyricsRect.right;
+
+        let numberOfUnderScoresNeeded = Math.floor(width / widthOfUnderscore);
+
+        melisma.innerText = '';
+
+        for (let i = 0; i < numberOfUnderScoresNeeded; i++) {
+          melisma.innerText += '_';
+        }
       }
     }
   }
@@ -619,6 +640,7 @@ export default class Editor extends Vue {
       };
     }
   }
+
   private canvas: HTMLCanvasElement | null = null;
 
   getTextWidth(text: string, font: string) {
@@ -940,9 +962,9 @@ export default class Editor extends Vue {
 }
 
 .melisma {
+  font-family: Omega;
   position: absolute;
-  top: 18px;
-  border-bottom: 1px solid black;
+  display: inline;
 }
 
 .neume {

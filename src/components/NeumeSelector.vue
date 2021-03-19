@@ -77,6 +77,14 @@
               ></Neume>
           </div>
       </div>
+      <div class="row">
+        <Neume 
+          class="neume" 
+          v-for="(neume, index) in breathNeumes" 
+          :key="`breathNeumes-${index}`"
+          :neume="neume"
+          @click.native="$emit('select-quantitative-neume', neume)"></Neume>
+      </div>
     </div>
     <div class="tab" v-if="selectedTab == 'Martytria'">
       <div class="row">
@@ -254,6 +262,11 @@ export default class NeumeSelector extends Vue {
     QuantitativeNeume.OligonPlusHamiliPlusKentemata,
     QuantitativeNeume.OligonPlusKentima,
     QuantitativeNeume.Kentemata,
+  ];
+
+  breathNeumes: QuantitativeNeume[] = [
+    QuantitativeNeume.VareiaDotted,
+    QuantitativeNeume.Cross,
   ];
 
   timeNeumes: NeumeTile[] = [
@@ -528,15 +541,7 @@ export default class NeumeSelector extends Vue {
            }
          }         
        ]
-    },
-    {
-       neume: VocalExpressionNeume.Cross,
-       elements: [
-         {
-           neume: VocalExpressionNeume.Cross,
-         }         
-       ]
-    },
+    },    
     {
        neume: null,
        elements: []

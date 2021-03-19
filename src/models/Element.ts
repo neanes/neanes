@@ -12,6 +12,9 @@ export abstract class ScoreElement {
     abstract elementType: ElementType;
     public lineBreak: boolean = false;
     public pageBreak: boolean = false;
+
+    public x: number = 0;
+    public y: number = 0;
 }
 
 export class NoteElement extends ScoreElement {

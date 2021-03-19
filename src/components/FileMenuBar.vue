@@ -19,8 +19,9 @@
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import FileMenuBarItem from '@/components/FileMenuBarItem.vue';
 import FileMenuItem from '@/components/FileMenuItem.vue';
-import { Score, ScoreVersion } from '@/models/Score';
+import { Score } from '@/models/Score';
 import { TextBoxElement, StaffTextElement, EmptyElement } from '@/models/Element';
+import { SaveService } from '@/services/SaveService';
 import { store } from '@/store';
 
 @Component({
@@ -49,7 +50,7 @@ export default class FileMenuBar extends Vue {
   }
   
   onClickSave() {
-    const content = JSON.stringify(this.score, null, 2);
+    const content = JSON.stringify(SaveService.SaveScoreToJson(this.score), null, 2);
     const contentType = 'text/plain';
 
     var a = document.createElement("a");
@@ -68,13 +69,14 @@ export default class FileMenuBar extends Vue {
       
       reader.onload = () => {
         // TODO validate file contents
-        const score:Score = JSON.parse(reader.result as string);
+        const score: Score = SaveService.LoadScoreFromJson(JSON.parse(reader.result as string));
 
-        if (score.version !== ScoreVersion) {
-          alert('This score was created by an older version of the application. It may not work properly');
-        }
+        // if (score.version !== ScoreVersion) {
+        //   alert('This score was created by an older version of the application. It may not work properly');
+        // }
 
         store.mutations.setScore(score);
+        this.$emit('scoreUpdated');
       };
 
       reader.readAsText(file);

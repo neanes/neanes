@@ -37,7 +37,6 @@ export default class TimeNeume extends Vue {
   }
 
   handleMouseDown(e: MouseEvent) {
-    console.log('check');
     e.preventDefault();
 
     this.startX = e.clientX - this.element.offset.x;

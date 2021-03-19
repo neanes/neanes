@@ -204,21 +204,3 @@ export enum Fthora {
 }
 
 export type Neume = QuantitativeNeume | TimeNeume | VocalExpressionNeume | Fthora | TempoSign | Note | RootSign;
-
-const highNeumes: QuantitativeNeume[] = [
-    QuantitativeNeume.OligonPlusKentemata,
-];
-
-const redNeumes: Neume[] = [
-    TimeNeume.Gorgon_Top,
-    TimeNeume.Gorgon_Bottom,
-    VocalExpressionNeume.Heteron,
-];
-
-export function isHighNeume(neume: QuantitativeNeume) {
-    return highNeumes.includes(neume);
-}
-
-export function isRedNeume(neume: Neume) {
-    return redNeumes.includes(neume);
-}

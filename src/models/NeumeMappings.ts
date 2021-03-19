@@ -174,6 +174,7 @@ export const neumeMap = new Map<Neume, NeumeMapping>([
     [VocalExpressionNeume.HomalonConnecting, { fontFamily: 'Psaltica', text: '['}],
     [VocalExpressionNeume.Homalon, { fontFamily: 'Psaltica', text: '{'}],
     [VocalExpressionNeume.Antikenoma, { fontFamily: 'Psaltica', text: '"'}],
+    [VocalExpressionNeume.AntikenomaShort, { fontFamily: 'Psaltica', text: '}'}],
     [VocalExpressionNeume.Psifiston, { fontFamily: 'Psaltica', text: '\''}],
     [VocalExpressionNeume.Heteron, { fontFamily: 'Psaltica', text: ']'}],
 

@@ -67,7 +67,7 @@ export default class NeumeBoxSyllable extends Vue {
         }
         break;
     }
-    console.log(style);
+    
     return style;
   }
 

@@ -115,8 +115,9 @@ import { Component, Prop, Watch, Vue } from 'vue-property-decorator';
 import { ScoreElement, MartyriaElement, NoteElement, ElementType, EmptyElement, TextBoxElement, VocalExpressionNeumeElement, QuantitativeNeumeElement, TimeNeumeElement, FthoraElement } from '@/models/Element';
 import { QuantitativeNeume, TimeNeume, Note, RootSign, VocalExpressionNeume, Fthora } from '@/models/Neumes';
 import { Page, Line } from '@/models/Page';
-import { Score, ScoreVersion } from '@/models/Score';
+import { Score } from '@/models/Score';
 import { KeyboardMap, neumeMap } from '@/models/NeumeMappings';
+import { SaveService } from '@/services/SaveService';
 import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
 import MartyriaNeumeBox from '@/components/NeumeBoxMartyria.vue';
 import NeumeSelector from '@/components/NeumeSelector.vue';
@@ -322,7 +323,7 @@ export default class Editor extends Vue {
         this.selectedElement = this.switchToSyllable(this.selectedElement);
       }
 
-      (this.selectedElement as NoteElement).vocalExpressionNeume = neume != null ? new VocalExpressionNeumeElement(neume) : null;
+      (this.selectedElement as NoteElement).setVocalExpressionNeume(neume);
 
       this.moveRight();
 
@@ -409,7 +410,6 @@ export default class Editor extends Vue {
   }
 
   updateEmpty() {
-    console.log('updateEmpty', this.selectedElement)
     if(this.selectedElement) {
       const index = this.elements.indexOf(this.selectedElement);
 
@@ -579,7 +579,7 @@ export default class Editor extends Vue {
   }
 
   save() {
-    localStorage.setItem('score', JSON.stringify(this.score));
+    localStorage.setItem('score', JSON.stringify(SaveService.SaveScoreToJson(this.score)));
     this.pages = this.processPages();
   }
 
@@ -587,14 +587,9 @@ export default class Editor extends Vue {
     const scoreString = localStorage.getItem('score');
 
     if (scoreString) {
-      const score: Score = JSON.parse(scoreString);
+      const score: Score = SaveService.LoadScoreFromJson(JSON.parse(scoreString));
 
-      if (score.version === ScoreVersion) {
-        store.mutations.setScore(score);
-      }
-      else {
-        store.mutations.setScore(new Score());
-      }
+      store.mutations.setScore(score);
     } 
     else {
       store.mutations.setScore(new Score());

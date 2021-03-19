@@ -1,4 +1,4 @@
-import { TimeNeume, QuantitativeNeume, Note, RootSign, VocalExpressionNeume, Fthora } from '@/models/Neumes';
+import { TimeNeume, QuantitativeNeume, Note, RootSign, VocalExpressionNeume, Fthora } from '@/models/save/v1/Neumes';
 
 export enum ElementType {
     Note = 'Note',
@@ -12,10 +12,6 @@ export abstract class ScoreElement {
     abstract elementType: ElementType;
     public lineBreak: boolean = false;
     public pageBreak: boolean = false;
-
-    public x: number = 0;
-    public y: number = 0;
-    public width: number = 0;
 }
 
 export class NoteElement extends ScoreElement {
@@ -25,17 +21,6 @@ export class NoteElement extends ScoreElement {
     public vocalExpressionNeume: VocalExpressionNeumeElement | null = null;
     public fthora: FthoraElement | null = null;
     public lyrics: string = '';
-
-    public setVocalExpressionNeume(neume: VocalExpressionNeume | null) {
-         // Correct antikenoma
-         if (neume === VocalExpressionNeume.Antikenoma) {
-            if (this.quantitativeNeume.neume === QuantitativeNeume.Apostrophos) {
-                neume = VocalExpressionNeume.AntikenomaShort;
-            }
-        }
-
-        this.vocalExpressionNeume = neume != null ? new VocalExpressionNeumeElement(neume) : null;
-    }
 }
 
 export class MartyriaElement extends ScoreElement  {  

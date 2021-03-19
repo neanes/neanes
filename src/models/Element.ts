@@ -1,4 +1,5 @@
 import { TimeNeume, QuantitativeNeume, Note, RootSign, VocalExpressionNeume, Fthora } from '@/models/Neumes';
+import { isRightNeume } from '@/models/Neumes';
 
 export enum ElementType {
     Note = 'Note',
@@ -26,9 +27,58 @@ export class NoteElement extends ScoreElement {
     public fthora: FthoraElement | null = null;
     public lyrics: string = '';
 
+    public setTimeNeume(neume: TimeNeume | null) {
+        if (isRightNeume(this.quantitativeNeume.neume)) {
+            // Correct hapli, dipli,and tripli 
+            if (neume === TimeNeume.Hapli) {
+                neume = TimeNeume.Hapli_Right;
+            }
+
+            else if (neume === TimeNeume.Dipli) {
+                neume = TimeNeume.Dipli_Right;
+            }
+
+            else if (neume === TimeNeume.Tripli) {
+                neume = TimeNeume.Tripli_Right;
+            }
+
+            // Correct gorgons
+            else if (neume === TimeNeume.Gorgon_Top) {
+                neume = TimeNeume.Gorgon_TopRight;
+            }
+
+            else if (neume === TimeNeume.Gorgon_Bottom) {
+                neume = TimeNeume.Gorgon_BottomRight;
+            }
+
+            else if (neume === TimeNeume.GorgonDottedLeft) {
+                neume = TimeNeume.GorgonDottedLeft_Right;
+            }
+
+            else if (neume === TimeNeume.GorgonDottedRight) {
+                neume = TimeNeume.GorgonDottedRight_Right;
+            }
+
+            else if (neume === TimeNeume.Digorgon) {
+                neume = TimeNeume.Digorgon_Right;
+            }
+
+            else if (neume === TimeNeume.Trigorgon) {
+                neume = TimeNeume.Trigorgon_Right;
+            }
+
+            // Correct klasmas
+            else if (neume === TimeNeume.Klasma_Top) {
+                neume = TimeNeume.Klasma_TopRight;
+            }
+        }
+
+        this.timeNeume = neume != null ? new TimeNeumeElement(neume) : null;
+    }
+
     public setVocalExpressionNeume(neume: VocalExpressionNeume | null) {
-         // Correct antikenoma
-         if (neume === VocalExpressionNeume.Antikenoma) {
+        // Correct antikenoma
+        if (neume === VocalExpressionNeume.Antikenoma) {
             if (this.quantitativeNeume.neume === QuantitativeNeume.Apostrophos) {
                 neume = VocalExpressionNeume.AntikenomaShort;
             }

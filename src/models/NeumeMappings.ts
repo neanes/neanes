@@ -62,18 +62,34 @@ export const neumeMap = new Map<Neume, NeumeMapping>([
     [TimeNeume.Gorgon_Top, { fontFamily: 'Psaltica', text: 's' }],
     [TimeNeume.Gorgon_Bottom, { fontFamily: 'Psaltica', text: 'x' }],
 
+    [TimeNeume.Gorgon_TopRight, { fontFamily: 'Psaltica', text: 'S' }],
+    [TimeNeume.Gorgon_BottomRight, { fontFamily: 'Psaltica', text: 'X' }],
+
     [TimeNeume.Digorgon, { fontFamily: 'Psaltica', text: 'd' }],
     [TimeNeume.Trigorgon, { fontFamily: 'Psaltica', text: 'f' }],
+
+    [TimeNeume.Digorgon_Right, { fontFamily: 'Psaltica', text: 'D' }],
+    [TimeNeume.Trigorgon_Right, { fontFamily: 'Psaltica', text: 'F' }],
 
     [TimeNeume.GorgonDottedLeft, { fontFamily: 'Psaltica', text: 'h' }],
     [TimeNeume.GorgonDottedRight, { fontFamily: 'EzSpecial1', text: 'h' }],
 
+    [TimeNeume.GorgonDottedLeft_Right, { fontFamily: 'Psaltica', text: 'H' }],
+    [TimeNeume.GorgonDottedRight_Right, { fontFamily: 'EzSpecial1', text: 'H' }],
+
     [TimeNeume.Klasma_Top, { fontFamily: 'Psaltica', text: 'a' }],
     [TimeNeume.Klasma_Bottom, { fontFamily: 'Psaltica', text: 'z' }],
+
+    [TimeNeume.Klasma_TopRight, { fontFamily: 'Psaltica', text: 'A' }],
+    [TimeNeume.Klasma_TopLeft, { fontFamily: 'Psaltica', text: 'Z' }],
 
     [TimeNeume.Hapli, { fontFamily: 'Psaltica', text: ';' }],
     [TimeNeume.Dipli, { fontFamily: 'Psaltica', text: 'k' }],
     [TimeNeume.Tripli, { fontFamily: 'EzSpecial1', text: ';' }],
+
+    [TimeNeume.Hapli_Right, { fontFamily: 'Psaltica', text: ':' }],
+    [TimeNeume.Dipli_Right, { fontFamily: 'Psaltica', text: 'K' }],
+    [TimeNeume.Tripli_Right, { fontFamily: 'EzSpecial1', text: ':' }],
 
     [TimeNeume.Argon, { fontFamily: 'Psaltica', text: 'g' }],
     [TimeNeume.Hemiolion, { fontFamily: 'Psaltica', text: 'G' }],

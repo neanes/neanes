@@ -62,22 +62,22 @@ export class SaveService {
 
             switch (e.elementType) {
                 case ElementType.Empty:
-                    element = new EmptyElement();
+                    element = new EmptyElement_v1();
                     break;
                 case ElementType.Martyria:
-                    element = new MartyriaElement();
+                    element = new MartyriaElement_v1();
                     this.SaveMartyria(element as MartyriaElement_v1, e as MartyriaElement);
                     break;
                 case ElementType.Note:
-                    element = new NoteElement();
+                    element = new NoteElement_v1();
                     this.SaveNote(element as NoteElement_v1, e as NoteElement);
                     break;
                 case ElementType.StaffText:
-                    element = new StaffTextElement();
+                    element = new StaffTextElement_v1();
                     this.SaveStaffText(element as StaffTextElement_v1, e as StaffTextElement);
                     break;
                 case ElementType.TextBox:
-                    element = new TextBoxElement();
+                    element = new TextBoxElement_v1();
                     this.SaveTextBox(element as TextBoxElement_v1, e as TextBoxElement);
                     break;
                 default:

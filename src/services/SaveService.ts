@@ -128,6 +128,8 @@ export class SaveService {
         }
 
         element.lyrics = e.lyrics;
+        element.isMelisma = e.isMelisma;
+        element.isMelismaStart = e.isMelismaStart;
     }
 
     public static SaveStaffText(element: StaffTextElement_v1, e: StaffTextElement) {
@@ -222,6 +224,8 @@ export class SaveService {
         }
 
         element.lyrics = e.lyrics;
+        element.isMelisma = e.isMelisma;
+        element.isMelismaStart = e.isMelismaStart;
     }
 
     public static LoadStaffText_v1(element: StaffTextElement, e: StaffTextElement_v1) {

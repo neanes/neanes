@@ -26,6 +26,8 @@ export class NoteElement extends ScoreElement {
     public vocalExpressionNeume: VocalExpressionNeumeElement | null = null;
     public fthora: FthoraElement | null = null;
     public lyrics: string = '';
+    public isMelisma: boolean = false;
+    public isMelismaStart: boolean = false;
 
     public setTimeNeume(neume: TimeNeume | null) {
         if (isRightNeume(this.quantitativeNeume.neume)) {

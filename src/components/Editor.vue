@@ -203,10 +203,10 @@ export default class Editor extends Vue {
   isIntermediateMelisma(element: NoteElement) {
     const index = this.elements.indexOf(element);
 
-    if(element.lyrics.charAt(element.lyrics.length - 1) === '_') {
+    if(element.isMelisma) {
       let nextElement = this.elements[index + 1] as NoteElement;
 
-      return nextElement && nextElement.lyrics === '_';
+      return nextElement && nextElement.isMelisma && !nextElement.isMelismaStart;
     }
 
     return false;
@@ -216,10 +216,10 @@ export default class Editor extends Vue {
   isFinalMelisma(element: NoteElement) {
     const index = this.elements.indexOf(element);
 
-    if(element.lyrics.charAt(element.lyrics.length - 1) === '_') {
+    if(element.isMelisma) {
       let nextElement = this.elements[index + 1] as NoteElement;
 
-      return nextElement && nextElement.lyrics !== '_';
+      return nextElement && (!nextElement.isMelisma || nextElement.isMelismaStart);
     }
 
     return false;
@@ -246,8 +246,8 @@ export default class Editor extends Vue {
         // Stretch from the end of the lyrics in the current element 
         // to the end of the lyrics in the next element
         let width = lyrics2Rect.left - lyrics1Rect.right;
-
-        let numberOfUnderScoresNeeded = Math.ceil(width / widthOfUnderscore);
+        
+        let numberOfUnderScoresNeeded = width > 0 ? Math.ceil(width / widthOfUnderscore) : 1;
 
         melisma.innerText = '';
 
@@ -629,7 +629,27 @@ export default class Editor extends Vue {
   }
 
   updateLyrics(element: NoteElement, lyrics: string) {
-    element.lyrics = lyrics;
+    // Nothing changed. No further processing is necessary.
+    if (element.lyrics === lyrics) {
+      return;
+    }
+
+    if (lyrics === '_') {
+      element.isMelisma = true;
+      element.isMelismaStart = false;
+      element.lyrics = '';
+    }
+    else if (lyrics.endsWith('_')) {
+      element.isMelisma = true;
+      element.isMelismaStart = true;
+      element.lyrics = lyrics.slice(0, -1);
+    }
+    else {
+      element.isMelisma = false;
+      element.isMelismaStart = false;
+      element.lyrics = lyrics;
+    }
+
     this.save();
   }
 
@@ -1015,6 +1035,10 @@ export default class Editor extends Vue {
 
   .empty-neume-box {
     visibility: hidden;
+  }
+
+  .text-box-container {
+    border: none;
   }
 }
 </style>

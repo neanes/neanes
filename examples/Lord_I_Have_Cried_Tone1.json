@@ -9,9 +9,9 @@
         "alignment": "center",
         "color": "blue",
         "content": "Lord, I Have Cried",
-        "fontFamily": "Omega",
         "fontSize": "1.5rem",
-        "height": 20
+        "fontFamily": "Omega",
+        "height": 23
       },
       {
         "lineBreak": false,
@@ -20,9 +20,9 @@
         "alignment": "center",
         "color": "red",
         "content": "hqT",
-        "fontFamily": "EzSpecial2",
         "fontSize": "1.5rem",
-        "height": 20
+        "fontFamily": "EzSpecial2",
+        "height": 29
       },
       {
         "lineBreak": false,
@@ -44,7 +44,9 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "Lord,_"
+        "lyrics": "Lord,",
+        "isMelisma": true,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -60,7 +62,9 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "_"
+        "lyrics": "",
+        "isMelisma": true,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -76,7 +80,8 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "I"
+        "lyrics": "I",
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -92,7 +97,8 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "have"
+        "lyrics": "have",
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -114,7 +120,9 @@
           "neume": "Psifiston"
         },
         "fthora": null,
-        "lyrics": "cried_"
+        "lyrics": "cried",
+        "isMelisma": true,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -130,7 +138,9 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "_"
+        "lyrics": "",
+        "isMelisma": true,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -158,7 +168,8 @@
           "neume": "AntikenomaShort"
         },
         "fthora": null,
-        "lyrics": "un -"
+        "lyrics": "un -",
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -180,7 +191,8 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "-"
+        "lyrics": "-",
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -202,7 +214,9 @@
           "neume": "Vareia"
         },
         "fthora": null,
-        "lyrics": "to_"
+        "lyrics": "to",
+        "isMelisma": true,
+        "isMelismaStart": true
       },
       {
         "lineBreak": false,
@@ -224,7 +238,9 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "_"
+        "lyrics": "",
+        "isMelisma": true,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -240,7 +256,9 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "_"
+        "lyrics": "",
+        "isMelisma": true,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -256,7 +274,9 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "Thee,_"
+        "lyrics": "Thee,",
+        "isMelisma": true,
+        "isMelismaStart": true
       },
       {
         "lineBreak": false,
@@ -278,7 +298,9 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "_"
+        "lyrics": "",
+        "isMelisma": true,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -294,7 +316,8 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": ""
+        "lyrics": "",
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -324,7 +347,9 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "heark -"
+        "lyrics": "heark -",
+        "isMelisma": false,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -340,7 +365,8 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "en"
+        "lyrics": "en",
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -362,7 +388,8 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "un -"
+        "lyrics": "un -",
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -378,7 +405,8 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "-"
+        "lyrics": "-",
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -394,7 +422,9 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "- to_"
+        "lyrics": "- to",
+        "isMelisma": true,
+        "isMelismaStart": true
       },
       {
         "lineBreak": false,
@@ -422,7 +452,9 @@
           "neume": "Antikenoma"
         },
         "fthora": null,
-        "lyrics": "_"
+        "lyrics": "",
+        "isMelisma": true,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -438,7 +470,9 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "_"
+        "lyrics": "",
+        "isMelisma": true,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -460,7 +494,9 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "me;"
+        "lyrics": "me;",
+        "isMelisma": false,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -484,7 +520,9 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "heark -"
+        "lyrics": "heark -",
+        "isMelisma": false,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -506,7 +544,9 @@
           "neume": "Psifiston"
         },
         "fthora": null,
-        "lyrics": "-"
+        "lyrics": "-",
+        "isMelisma": false,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -522,7 +562,9 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "- en_"
+        "lyrics": "- en",
+        "isMelisma": true,
+        "isMelismaStart": true
       },
       {
         "lineBreak": false,
@@ -544,7 +586,9 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "_"
+        "lyrics": "",
+        "isMelisma": true,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -566,7 +610,9 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "un -"
+        "lyrics": "un -",
+        "isMelisma": false,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -582,7 +628,8 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "-"
+        "lyrics": "-",
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -604,7 +651,9 @@
           "neume": "Vareia"
         },
         "fthora": null,
-        "lyrics": "to_"
+        "lyrics": "to",
+        "isMelisma": true,
+        "isMelismaStart": true
       },
       {
         "lineBreak": false,
@@ -620,7 +669,9 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "_"
+        "lyrics": "",
+        "isMelisma": true,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -636,7 +687,9 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "me,_"
+        "lyrics": "me,",
+        "isMelisma": true,
+        "isMelismaStart": true
       },
       {
         "lineBreak": false,
@@ -652,7 +705,9 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "_"
+        "lyrics": "",
+        "isMelisma": true,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -674,7 +729,9 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "_"
+        "lyrics": "",
+        "isMelisma": true,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -702,7 +759,9 @@
           "neume": "Vareia"
         },
         "fthora": null,
-        "lyrics": "O_"
+        "lyrics": "O",
+        "isMelisma": true,
+        "isMelismaStart": true
       },
       {
         "lineBreak": false,
@@ -724,7 +783,9 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "_"
+        "lyrics": "",
+        "isMelisma": true,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -752,7 +813,9 @@
           "neume": "Antikenoma"
         },
         "fthora": null,
-        "lyrics": "_"
+        "lyrics": "",
+        "isMelisma": true,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -768,7 +831,9 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "_"
+        "lyrics": "",
+        "isMelisma": true,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -790,7 +855,9 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "Lord."
+        "lyrics": "Lord.",
+        "isMelisma": false,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -814,7 +881,9 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "Lord,_"
+        "lyrics": "Lord,",
+        "isMelisma": true,
+        "isMelismaStart": true
       },
       {
         "lineBreak": false,
@@ -836,7 +905,9 @@
           "neume": "HomalonConnecting"
         },
         "fthora": null,
-        "lyrics": "_"
+        "lyrics": "",
+        "isMelisma": true,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -852,7 +923,9 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "I"
+        "lyrics": "I",
+        "isMelisma": false,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -868,7 +941,8 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "have"
+        "lyrics": "have",
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -890,7 +964,9 @@
           "neume": "Psifiston"
         },
         "fthora": null,
-        "lyrics": "cried_"
+        "lyrics": "cried",
+        "isMelisma": true,
+        "isMelismaStart": true
       },
       {
         "lineBreak": false,
@@ -906,7 +982,9 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "_"
+        "lyrics": "",
+        "isMelisma": true,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -922,7 +1000,9 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "_"
+        "lyrics": "",
+        "isMelisma": true,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -944,7 +1024,9 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "un -"
+        "lyrics": "un -",
+        "isMelisma": false,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -960,7 +1042,9 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "- to_"
+        "lyrics": "- to",
+        "isMelisma": true,
+        "isMelismaStart": true
       },
       {
         "lineBreak": false,
@@ -976,7 +1060,9 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "_"
+        "lyrics": "",
+        "isMelisma": true,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -998,7 +1084,9 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "Thee,_"
+        "lyrics": "Thee,",
+        "isMelisma": true,
+        "isMelismaStart": true
       },
       {
         "lineBreak": false,
@@ -1020,7 +1108,9 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "_"
+        "lyrics": "",
+        "isMelisma": true,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -1036,7 +1126,9 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": ""
+        "lyrics": "",
+        "isMelisma": false,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -1066,7 +1158,8 @@
           "neume": "Psifiston"
         },
         "fthora": null,
-        "lyrics": "heark -"
+        "lyrics": "heark -",
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -1082,7 +1175,9 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "en_"
+        "lyrics": "en",
+        "isMelisma": true,
+        "isMelismaStart": true
       },
       {
         "lineBreak": false,
@@ -1098,7 +1193,9 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "_"
+        "lyrics": "",
+        "isMelisma": true,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -1120,7 +1217,9 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "un -"
+        "lyrics": "un -",
+        "isMelisma": false,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -1148,7 +1247,9 @@
           "neume": "AntikenomaShort"
         },
         "fthora": null,
-        "lyrics": "to_"
+        "lyrics": "to",
+        "isMelisma": true,
+        "isMelismaStart": true
       },
       {
         "lineBreak": false,
@@ -1170,7 +1271,9 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "_"
+        "lyrics": "",
+        "isMelisma": true,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -1192,7 +1295,9 @@
           "neume": "Vareia"
         },
         "fthora": null,
-        "lyrics": "me;_"
+        "lyrics": "me;",
+        "isMelisma": true,
+        "isMelismaStart": true
       },
       {
         "lineBreak": false,
@@ -1214,7 +1319,9 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "_"
+        "lyrics": "",
+        "isMelisma": true,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -1236,7 +1343,9 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "_"
+        "lyrics": "",
+        "isMelisma": true,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -1260,7 +1369,9 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "at -"
+        "lyrics": "at -",
+        "isMelisma": false,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -1282,7 +1393,9 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "tend"
+        "lyrics": "tend",
+        "isMelisma": false,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -1298,7 +1411,9 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "to"
+        "lyrics": "to",
+        "isMelisma": false,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -1314,7 +1429,9 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "the"
+        "lyrics": "the",
+        "isMelisma": false,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -1330,7 +1447,9 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "voice_"
+        "lyrics": "voice",
+        "isMelisma": true,
+        "isMelismaStart": true
       },
       {
         "lineBreak": false,
@@ -1352,7 +1471,9 @@
           "neume": "Antikenoma"
         },
         "fthora": null,
-        "lyrics": "_"
+        "lyrics": "",
+        "isMelisma": true,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -1374,7 +1495,9 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "_"
+        "lyrics": "",
+        "isMelisma": true,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -1390,7 +1513,9 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "_"
+        "lyrics": "",
+        "isMelisma": true,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -1412,7 +1537,9 @@
           "neume": "Vareia"
         },
         "fthora": null,
-        "lyrics": "of_"
+        "lyrics": "of",
+        "isMelisma": true,
+        "isMelismaStart": true
       },
       {
         "lineBreak": false,
@@ -1434,7 +1561,9 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "_"
+        "lyrics": "",
+        "isMelisma": true,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -1450,7 +1579,9 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "____"
+        "lyrics": "",
+        "isMelisma": true,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -1472,7 +1603,9 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "my"
+        "lyrics": "my",
+        "isMelisma": false,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -1494,7 +1627,9 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "sup"
+        "lyrics": "sup",
+        "isMelisma": false,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -1510,7 +1645,9 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "-"
+        "lyrics": "-",
+        "isMelisma": false,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -1526,7 +1663,9 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "pli"
+        "lyrics": "pli",
+        "isMelisma": false,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -1554,7 +1693,9 @@
           "neume": "Vareia"
         },
         "fthora": null,
-        "lyrics": "- ca"
+        "lyrics": "- ca",
+        "isMelisma": false,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -1576,7 +1717,9 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "-"
+        "lyrics": "-",
+        "isMelisma": false,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -1604,7 +1747,9 @@
           "neume": "Antikenoma"
         },
         "fthora": null,
-        "lyrics": "-"
+        "lyrics": "-",
+        "isMelisma": false,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -1620,7 +1765,9 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "-"
+        "lyrics": "-",
+        "isMelisma": false,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -1642,7 +1789,9 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "tion"
+        "lyrics": "tion",
+        "isMelisma": false,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -1666,7 +1815,9 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "when"
+        "lyrics": "when",
+        "isMelisma": false,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -1682,7 +1833,9 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "I"
+        "lyrics": "I",
+        "isMelisma": false,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -1704,7 +1857,9 @@
           "neume": "Psifiston"
         },
         "fthora": null,
-        "lyrics": "cry_"
+        "lyrics": "cry_",
+        "isMelisma": true,
+        "isMelismaStart": true
       },
       {
         "lineBreak": false,
@@ -1720,7 +1875,9 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "_"
+        "lyrics": "",
+        "isMelisma": true,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -1742,7 +1899,9 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "un -"
+        "lyrics": "un -",
+        "isMelisma": false,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -1770,7 +1929,9 @@
           "neume": "AntikenomaShort"
         },
         "fthora": null,
-        "lyrics": "to_"
+        "lyrics": "to",
+        "isMelisma": true,
+        "isMelismaStart": true
       },
       {
         "lineBreak": false,
@@ -1792,7 +1953,9 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "_"
+        "lyrics": "",
+        "isMelisma": true,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -1814,7 +1977,9 @@
           "neume": "Vareia"
         },
         "fthora": null,
-        "lyrics": "Thee:_"
+        "lyrics": "Thee:",
+        "isMelisma": true,
+        "isMelismaStart": true
       },
       {
         "lineBreak": false,
@@ -1836,7 +2001,9 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "_"
+        "lyrics": "",
+        "isMelisma": true,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -1852,7 +2019,9 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "_"
+        "lyrics": "",
+        "isMelisma": true,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -1874,7 +2043,9 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "_"
+        "lyrics": "",
+        "isMelisma": true,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -1896,7 +2067,9 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "_"
+        "lyrics": "",
+        "isMelisma": true,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -1920,7 +2093,9 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "Heark"
+        "lyrics": "Heark",
+        "isMelisma": false,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -1936,7 +2111,8 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "-"
+        "lyrics": "-",
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -1958,7 +2134,8 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "en"
+        "lyrics": "en",
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -1980,7 +2157,8 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "un"
+        "lyrics": "un",
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -1996,7 +2174,8 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "-"
+        "lyrics": "-",
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -2018,7 +2197,8 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "to"
+        "lyrics": "to",
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -2034,7 +2214,9 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "me_"
+        "lyrics": "me",
+        "isMelisma": true,
+        "isMelismaStart": true
       },
       {
         "lineBreak": false,
@@ -2050,7 +2232,9 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "_"
+        "lyrics": "",
+        "isMelisma": true,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -2078,7 +2262,9 @@
           "neume": "Psifiston"
         },
         "fthora": null,
-        "lyrics": "_"
+        "lyrics": "",
+        "isMelisma": true,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -2100,7 +2286,9 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "_"
+        "lyrics": "",
+        "isMelisma": true,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -2128,7 +2316,9 @@
           "neume": "Vareia"
         },
         "fthora": null,
-        "lyrics": "O_"
+        "lyrics": "O",
+        "isMelisma": true,
+        "isMelismaStart": true
       },
       {
         "lineBreak": false,
@@ -2150,7 +2340,9 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "_"
+        "lyrics": "",
+        "isMelisma": true,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -2178,7 +2370,9 @@
           "neume": "Antikenoma"
         },
         "fthora": null,
-        "lyrics": "_"
+        "lyrics": "",
+        "isMelisma": true,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -2194,7 +2388,9 @@
         "timeNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "_"
+        "lyrics": "",
+        "isMelisma": true,
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,
@@ -2216,7 +2412,8 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "Lord."
+        "lyrics": "Lord.",
+        "isMelismaStart": false
       },
       {
         "lineBreak": false,

@@ -138,7 +138,11 @@ export class SaveService {
     }
 
     public static SaveTextBox(element: TextBoxElement_v1, e: TextBoxElement) {
+        element.alignment = e.alignment;
+        element.color = e.color;
         element.content = e.content;
+        element.fontFamily = e.fontFamily;
+        element.fontSize = e.fontSize;
         element.height = e.height;
     }
 
@@ -228,7 +232,11 @@ export class SaveService {
     }
 
     public static LoadTextBox_v1(element: TextBoxElement, e: TextBoxElement_v1) {
+        element.alignment = e.alignment;
+        element.color = e.color;
         element.content = e.content;
+        element.fontFamily = e.fontFamily;
+        element.fontSize = e.fontSize;
         element.height = e.height;
     }
 }

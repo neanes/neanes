@@ -73,18 +73,13 @@
                 </div>
               </template>
               <template v-if="isTextBoxElement(element)">
-                  <div :key="`element-${getElementIndex(element)}`" 
-                  :ref="`element-${getElementIndex(element)}`"
-                  :style="getElementStyle(element)"
-                  class="text-box"
-                  @click="selectedElement = element">
-                      <ContentEditable 
-                          class="text-box-content"
-                          :ref="`textbox-${getElementIndex(element)}`"
-                          :content="element.content"
-                          @click.native="selectedElement = element"
-                          @blur="updateTextBox(element, $event)"></ContentEditable>
-                    </div>
+                  <TextBox 
+                    :key="`element-${getElementIndex(element)}`" 
+                    :ref="`textbox-${getElementIndex(element)}`"
+                    :element="element"
+                    @click.native="selectedElement = element"
+                    @scoreUpdated="onScoreUpdated">
+                  </TextBox>
               </template>
               <template v-if="isStaffTextElement(element)">
                   <StaffText :key="`element-${getElementIndex(element)}`" 
@@ -125,6 +120,7 @@ import NeumeKeyboard from '@/components/NeumeKeyboard.vue';
 import ContentEditable from '@/components/ContentEditable.vue';
 import FileMenuBar from '@/components/FileMenuBar.vue';
 import StaffText from '@/components/StaffText.vue';
+import TextBox from '@/components/TextBox.vue';
 import { store } from '@/store';
 
 @Component({
@@ -136,6 +132,7 @@ import { store } from '@/store';
     ContentEditable,
     FileMenuBar,
     StaffText,
+    TextBox,
   }
 })
 export default class Editor extends Vue {
@@ -641,16 +638,6 @@ export default class Editor extends Vue {
     this.save();
   }
 
-  getElementStyle(element: ScoreElement) {
-    if (element.elementType === ElementType.TextBox) {
-      const textbox = element as TextBoxElement;
-
-      return {
-        height: textbox.height + 'px'
-      };
-    }
-  }
-
   private canvas: HTMLCanvasElement | null = null;
 
   getTextWidth(text: string, font: string) {
@@ -661,6 +648,14 @@ export default class Editor extends Vue {
     return metrics.width;
 }
 
+  getTextHeight(text: string, font: string) {
+    let canvas = this.canvas || document.createElement("canvas");
+    let context = canvas.getContext("2d")!;
+    context.font = font;
+    let metrics = context.measureText(text);
+    return metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
+}
+
   processPages() {
     const pageHeightPx = 1056 - 96 - 96;
 
@@ -668,8 +663,8 @@ export default class Editor extends Vue {
     const lineWidthPx = 816 - 96 - 96;
 
     const defaultNeumeElementWidthPx = 39;
-    const elementHeightPx = 82;
     const defaultNeumeSpacingPx = 3;
+
     const pages: Page[] = [];
 
     let page: Page = { 
@@ -683,11 +678,11 @@ export default class Editor extends Vue {
     page.lines.push(line);
     pages.push(page);
 
-    let currentPageHeightPx = lineHeightPx;
+    let currentPageHeightPx = 0;
     let currentLineWidthPx = 0;
-    let lineCount = 1;
 
-    let index = 0;
+    let lastLineHeightPx = 0;
+
     let lastElementWasLineBreak = false;
     let lastElementWasPageBreak = false;
 
@@ -695,7 +690,10 @@ export default class Editor extends Vue {
       let elementWidthPx = defaultNeumeElementWidthPx;
 
       if (element.elementType === ElementType.TextBox) {
+        let textBoxElement = element as TextBoxElement;
+
         elementWidthPx = lineWidthPx;
+        textBoxElement.height = Math.ceil(this.getTextHeight(textBoxElement.content, `${textBoxElement.fontSize} ${textBoxElement.fontFamily}`));
       }
 
       if (element.elementType === ElementType.StaffText) {
@@ -731,18 +729,25 @@ export default class Editor extends Vue {
         };
 
         page.lines.push(line);
-        lineCount++;
 
         // Calculate the current page height
         currentPageHeightPx = 0;
         
         for (let line of page.lines) {
+          let height = 0;
+
           if (line.elements.some(x => x.elementType === ElementType.TextBox)) {
             const textbox = line.elements.find(x => x.elementType === ElementType.TextBox) as TextBoxElement;
-            currentPageHeightPx += Math.max(lineHeightPx, textbox.height);
+            height = Math.max(10, textbox.height * 2);
           }
           else {
-            currentPageHeightPx += lineHeightPx;
+            height = lineHeightPx;
+          }
+
+          currentPageHeightPx += height;
+
+          if (page.lines.indexOf(line) === page.lines.length - 1) {
+            lastLineHeightPx = height;
           }
         }
 
@@ -761,13 +766,13 @@ export default class Editor extends Vue {
         page.lines.push(line);
         pages.push(page);
 
-        lineCount = 1;
-        currentPageHeightPx = lineHeightPx;
+        currentPageHeightPx = 0;
         currentLineWidthPx = 0;
+        lastLineHeightPx = 0;
       }
 
       element.x = 96 + currentLineWidthPx;
-      element.y = 96 + currentPageHeightPx - lineHeightPx;
+      element.y = 96 + currentPageHeightPx - lastLineHeightPx;
       element.width = elementWidthPx + defaultNeumeSpacingPx;
 
       currentLineWidthPx += elementWidthPx + defaultNeumeSpacingPx;
@@ -775,8 +780,6 @@ export default class Editor extends Vue {
 
       lastElementWasLineBreak = element.lineBreak;
       lastElementWasPageBreak = element.pageBreak;
-
-      index++;
     }
 
     this.justifyLines(pages);
@@ -814,9 +817,7 @@ export default class Editor extends Vue {
     }
   }
 
-  //@Watch('score', {deep: true}) 
   onScoreUpdated() {
-    this.pages = this.processPages();
     this.save();
   }
 
@@ -980,18 +981,6 @@ export default class Editor extends Vue {
 .neume {
   display: flex;
   height: 2.5rem;
- }
-
- .text-box {
-   width: 624px;
-   border: 1px dotted black;
-   box-sizing: border-box;
- }
-
- .text-box-content {
-   height: 100%;
-   width: 100%;
-   display: block;
  }
 
 @media print {

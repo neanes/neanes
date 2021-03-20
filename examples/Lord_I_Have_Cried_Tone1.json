@@ -1,0 +1,2227 @@
+{
+  "version": "1.0",
+  "staff": {
+    "elements": [
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "TextBox",
+        "content": "First Mode",
+        "height": 20
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "TextBox",
+        "content": "Lord, I Have Cried",
+        "height": 20
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "TextBox",
+        "content": "Tone 1",
+        "height": 20
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "OligonPlusKentemata"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Gorgon_Top"
+        },
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "Lord,_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Apostrophos"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Apostrophos"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "I"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Oligon"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "have"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Oligon"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Psifiston"
+        },
+        "fthora": null,
+        "lyrics": "cried_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Apostrophos"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Apostrophos"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Hapli_Right"
+        },
+        "vocalExpressionNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "AntikenomaShort"
+        },
+        "fthora": null,
+        "lyrics": "un -"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Apostrophos"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Gorgon_TopRight"
+        },
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "-"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Ison"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Vareia"
+        },
+        "fthora": null,
+        "lyrics": "to_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Apostrophos"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Gorgon_TopRight"
+        },
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Oligon"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "PetastiPlusKentimaBelow"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "Thee,_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Apostrophos"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Klasma_TopRight"
+        },
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "VareiaDotted"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": ""
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Martyria",
+        "note": "Pa",
+        "rootSign": "Alpha",
+        "apostrophe": false
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "OligonPlusKentimaAbove"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Klasma_Bottom"
+        },
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "heark -"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "OligonPlusElaphronPlusKentemata"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "en"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "OligonPlusElaphronPlusKentemata"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Gorgon_TopRight"
+        },
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "un -"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Apostrophos"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "-"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "RunningElaphron"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "- to_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Oligon"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Gorgon_Top"
+        },
+        "vocalExpressionNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Antikenoma"
+        },
+        "fthora": null,
+        "lyrics": "_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Apostrophos"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Ison"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Klasma_Top"
+        },
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "me;"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Martyria",
+        "note": "Pa",
+        "rootSign": "Alpha",
+        "apostrophe": false
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "OligonPlusKentimaBelow"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "heark -"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Oligon"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Psifiston"
+        },
+        "fthora": null,
+        "lyrics": "-"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "RunningElaphron"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "- en_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Apostrophos"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Gorgon_TopRight"
+        },
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "OligonPlusIsonPlusKentemata"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Gorgon_TopRight"
+        },
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "un -"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Apostrophos"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "-"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Apostrophos"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Vareia"
+        },
+        "fthora": null,
+        "lyrics": "to_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Apostrophos"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Oligon"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "me,_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "KentemataPlusOligon"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "OligonPlusKentemata"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Gorgon_Top"
+        },
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Apostrophos"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Klasma_TopRight"
+        },
+        "vocalExpressionNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Vareia"
+        },
+        "fthora": null,
+        "lyrics": "O_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Hyporoe"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Gorgon_TopRight"
+        },
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Oligon"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Gorgon_Top"
+        },
+        "vocalExpressionNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Antikenoma"
+        },
+        "fthora": null,
+        "lyrics": "_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Apostrophos"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Ison"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Klasma_Top"
+        },
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "Lord."
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Martyria",
+        "note": "Pa",
+        "rootSign": "Alpha",
+        "apostrophe": false
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "OligonPlusKentimaAbove"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "Lord,_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Ison"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "HomalonConnecting"
+        },
+        "fthora": null,
+        "lyrics": "_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Apostrophos"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "I"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Oligon"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "have"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "OligonPlusKentemata"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Psifiston"
+        },
+        "fthora": null,
+        "lyrics": "cried_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Apostrophos"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Apostrophos"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "PetastiPlusApostrophos"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Klasma_Bottom"
+        },
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "un -"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "RunningElaphron"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "- to_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Kentemata"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "OligonPlusKentemata"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Gorgon_Top"
+        },
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "Thee,_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Apostrophos"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Klasma_TopRight"
+        },
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "VareiaDotted"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": ""
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Martyria",
+        "note": "Ga",
+        "rootSign": "Nana",
+        "apostrophe": false
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "OligonPlusIsonPlusKentemata"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Psifiston"
+        },
+        "fthora": null,
+        "lyrics": "heark -"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Apostrophos"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "en_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Apostrophos"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Apostrophos"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Klasma_TopRight"
+        },
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "un -"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Apostrophos"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Hapli_Right"
+        },
+        "vocalExpressionNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "AntikenomaShort"
+        },
+        "fthora": null,
+        "lyrics": "to_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Apostrophos"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Gorgon_TopRight"
+        },
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Oligon"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Vareia"
+        },
+        "fthora": null,
+        "lyrics": "me;_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Hyporoe"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Digorgon_Right"
+        },
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Oligon"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Klasma_Top"
+        },
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Martyria",
+        "note": "Zo",
+        "rootSign": "Varys",
+        "apostrophe": false
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "OligonPlusKentima"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "at -"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "PetastiPlusKentimaAbove"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Klasma_Bottom"
+        },
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "tend"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Apostrophos"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "to"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Apostrophos"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "the"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Oligon"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "voice_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Oligon"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Antikenoma"
+        },
+        "fthora": null,
+        "lyrics": "_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Hyporoe"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Gorgon_TopRight"
+        },
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Apostrophos"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Apostrophos"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Vareia"
+        },
+        "fthora": null,
+        "lyrics": "of_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Apostrophos"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Gorgon_TopRight"
+        },
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Oligon"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "____"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Oligon"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Klasma_Top"
+        },
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "my"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "OligonPlusKentemata"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Gorgon_Top"
+        },
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "sup"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Apostrophos"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "-"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "OligonPlusKentemata"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "pli"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Apostrophos"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Klasma_TopRight"
+        },
+        "vocalExpressionNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Vareia"
+        },
+        "fthora": null,
+        "lyrics": "- ca"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Hyporoe"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Gorgon_TopRight"
+        },
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "-"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Oligon"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Gorgon_Top"
+        },
+        "vocalExpressionNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Antikenoma"
+        },
+        "fthora": null,
+        "lyrics": "-"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Apostrophos"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "-"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Ison"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Klasma_Top"
+        },
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "tion"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Martyria",
+        "note": "Pa",
+        "rootSign": "Alpha",
+        "apostrophe": false
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "OligonPlusKentima"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "when"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Ison"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "I"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "OligonPlusHypsiliRight"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Psifiston"
+        },
+        "fthora": null,
+        "lyrics": "cry_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Apostrophos"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Apostrophos"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Klasma_TopRight"
+        },
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "un -"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "PetastiWithIson"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Hapli_Right"
+        },
+        "vocalExpressionNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "AntikenomaShort"
+        },
+        "fthora": null,
+        "lyrics": "to_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Apostrophos"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Gorgon_TopRight"
+        },
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "OligonPlusKentimaBelow"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Vareia"
+        },
+        "fthora": null,
+        "lyrics": "Thee:_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Hyporoe"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Trigorgon_Right"
+        },
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Apostrophos"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "OligonPlusKentemata"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Gorgon_Top"
+        },
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Apostrophos"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Klasma_TopRight"
+        },
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Martyria",
+        "note": "Ga",
+        "rootSign": "Nana",
+        "apostrophe": false
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Ison"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "Heark"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Kentemata"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "-"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Ison"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Klasma_Top"
+        },
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "en"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "OligonPlusElaphronPlusKentemata"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Gorgon_TopRight"
+        },
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "un"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Apostrophos"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "-"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "RunningElaphron"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Klasma_Top"
+        },
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "to"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Oligon"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "me_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Kentemata"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Petasti"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Klasma_Bottom"
+        },
+        "vocalExpressionNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Psifiston"
+        },
+        "fthora": null,
+        "lyrics": "_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Apostrophos"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Gorgon_TopRight"
+        },
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Ison"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Klasma_Top"
+        },
+        "vocalExpressionNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Vareia"
+        },
+        "fthora": null,
+        "lyrics": "O_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Hyporoe"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Gorgon_TopRight"
+        },
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Oligon"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Gorgon_Top"
+        },
+        "vocalExpressionNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Antikenoma"
+        },
+        "fthora": null,
+        "lyrics": "_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Apostrophos"
+        },
+        "timeNeume": null,
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "_"
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Note",
+        "quantitativeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Ison"
+        },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Dipli"
+        },
+        "vocalExpressionNeume": null,
+        "fthora": null,
+        "lyrics": "Lord."
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "Empty"
+      }
+    ]
+  }
+}

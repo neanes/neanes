@@ -6,21 +6,22 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "TextBox",
-        "content": "First Mode",
-        "height": 20
-      },
-      {
-        "lineBreak": false,
-        "pageBreak": false,
-        "elementType": "TextBox",
+        "alignment": "center",
+        "color": "blue",
         "content": "Lord, I Have Cried",
+        "fontFamily": "Omega",
+        "fontSize": "1.5rem",
         "height": 20
       },
       {
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "TextBox",
-        "content": "Tone 1",
+        "alignment": "center",
+        "color": "red",
+        "content": "hqT",
+        "fontFamily": "EzSpecial2",
+        "fontSize": "1.5rem",
         "height": 20
       },
       {

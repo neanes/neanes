@@ -99,9 +99,19 @@ export class EmptyElement extends ScoreElement {
     public readonly elementType: ElementType = ElementType.Empty; 
 }
 
+export enum TextBoxAlignment {
+    Center = 'center',
+    Left = 'left',
+    Right = 'right',
+}
+
 export class TextBoxElement extends ScoreElement {
     public readonly elementType: ElementType = ElementType.TextBox;
+    public alignment: TextBoxAlignment = TextBoxAlignment.Left;
+    public color: string = 'black';
     public content: string = '';
+    public fontSize: string = '1rem';
+    public fontFamily: string = 'Omega';
     public height: number = 20;
 }
 

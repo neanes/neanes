@@ -113,6 +113,7 @@ import { Page, Line } from '@/models/Page';
 import { Score } from '@/models/Score';
 import { KeyboardMap, neumeMap } from '@/models/NeumeMappings';
 import { SaveService } from '@/services/SaveService';
+import { LayoutService } from '@/services/LayoutService';
 import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
 import MartyriaNeumeBox from '@/components/NeumeBoxMartyria.vue';
 import NeumeSelector from '@/components/NeumeSelector.vue';
@@ -122,6 +123,7 @@ import FileMenuBar from '@/components/FileMenuBar.vue';
 import StaffText from '@/components/StaffText.vue';
 import TextBox from '@/components/TextBox.vue';
 import { store } from '@/store';
+import { TextMeasurementService } from '@/services/TextMeasurementService';
 
 @Component({
   components: {
@@ -140,6 +142,10 @@ export default class Editor extends Vue {
   
   get score() {
     return store.state.score;
+  }
+
+  get pageSetup() {
+    return store.state.pageSetup;
   }
 
   get elements() {
@@ -238,7 +244,7 @@ export default class Editor extends Vue {
         let lyrics1 = (this.$refs[`lyrics-${index}`] as Vue[])[0].$el as HTMLElement;
         let lyrics2 = (this.$refs[`lyrics-${index+1}`] as Vue[])[0].$el as HTMLElement;
 
-        let widthOfUnderscore = this.widthOfUnderscore || this.getTextWidth('_', '1rem Omega');
+        let widthOfUnderscore = this.widthOfUnderscore || TextMeasurementService.getTextWidth('_', '1rem Omega');
 
         let lyrics1Rect = lyrics1.getBoundingClientRect();
         let lyrics2Rect = lyrics2.getBoundingClientRect();
@@ -262,7 +268,7 @@ export default class Editor extends Vue {
         let box = (this.$refs[`element-${index}`] as HTMLElement[])[0];
         let lyrics = (this.$refs[`lyrics-${index}`] as Vue[])[0].$el as HTMLElement;
 
-        let widthOfUnderscore = this.widthOfUnderscore || this.getTextWidth('_', '1rem Omega');
+        let widthOfUnderscore = this.widthOfUnderscore || TextMeasurementService.getTextWidth('_', '1rem Omega');
 
         let boxRect = box.getBoundingClientRect();
         let lyricsRect = lyrics.getBoundingClientRect();
@@ -608,7 +614,7 @@ export default class Editor extends Vue {
 
   save() {
     localStorage.setItem('score', JSON.stringify(SaveService.SaveScoreToJson(this.score)));
-    this.pages = this.processPages();
+    this.pages = LayoutService.processPages(this.elements, this.pageSetup);
   }
 
   load() {
@@ -625,7 +631,7 @@ export default class Editor extends Vue {
 
     //this.score.elements = this.generateTestFile();
 
-    this.pages = this.processPages();
+    this.pages = LayoutService.processPages(this.elements, this.pageSetup);
   }
 
   updateLyrics(element: NoteElement, lyrics: string) {
@@ -656,185 +662,6 @@ export default class Editor extends Vue {
   updateTextBox(element: TextBoxElement, content: string) {
     element.content = content;
     this.save();
-  }
-
-  private canvas: HTMLCanvasElement | null = null;
-
-  getTextWidth(text: string, font: string) {
-    let canvas = this.canvas || document.createElement("canvas");
-    let context = canvas.getContext("2d")!;
-    context.font = font;
-    let metrics = context.measureText(text);
-    return metrics.width;
-}
-
-  getTextHeight(text: string, font: string) {
-    let canvas = this.canvas || document.createElement("canvas");
-    let context = canvas.getContext("2d")!;
-    context.font = font;
-    let metrics = context.measureText(text);
-    return metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
-}
-
-  processPages() {
-    const pageHeightPx = 1056 - 96 - 96;
-
-    const lineHeightPx = 73;
-    const lineWidthPx = 816 - 96 - 96;
-
-    const defaultNeumeElementWidthPx = 39;
-    const defaultNeumeSpacingPx = 3;
-
-    const pages: Page[] = [];
-
-    let page: Page = { 
-      lines: [],
-    };
-
-    let line: Line = {
-      elements: []
-    };
-
-    page.lines.push(line);
-    pages.push(page);
-
-    let currentPageHeightPx = 0;
-    let currentLineWidthPx = 0;
-
-    let lastLineHeightPx = 0;
-
-    let lastElementWasLineBreak = false;
-    let lastElementWasPageBreak = false;
-
-    for (let element of this.elements) {
-      let elementWidthPx = defaultNeumeElementWidthPx;
-
-      if (element.elementType === ElementType.TextBox) {
-        let textBoxElement = element as TextBoxElement;
-
-        elementWidthPx = lineWidthPx;
-        textBoxElement.height = Math.ceil(this.getTextHeight(textBoxElement.content, `${textBoxElement.fontSize} ${textBoxElement.fontFamily}`));
-      }
-
-      if (element.elementType === ElementType.StaffText) {
-        line.elements.push(element);
-        continue;
-      }
-
-      if (element.elementType === ElementType.Note) {
-        let noteElement = element as NoteElement;
-        let mapping = neumeMap.get(noteElement.quantitativeNeume.neume)!;
-
-        let text = mapping.text;
-
-        if (noteElement.vocalExpressionNeume != null && noteElement.vocalExpressionNeume.neume === VocalExpressionNeume.Vareia) {
-          let vareiaMapping = neumeMap.get(VocalExpressionNeume.Vareia)!;
-          text = vareiaMapping.text + text;
-        } 
-
-        elementWidthPx = Math.max(
-          Math.floor(this.getTextWidth(text, `1.6rem ${mapping.fontFamily}`)),
-          Math.floor(this.getTextWidth(noteElement.lyrics, `1rem Omega`))
-        );        
-      }
-      else if (element.elementType === ElementType.Martyria) {
-        let martyriaElement = element as MartyriaElement;
-        let mapping = neumeMap.get(martyriaElement.note)!;
-        elementWidthPx = Math.floor(this.getTextWidth(mapping.text, `1.6rem ${mapping.fontFamily}`));
-      }
-
-      if (currentLineWidthPx + elementWidthPx > lineWidthPx || lastElementWasLineBreak) {
-        line = { 
-          elements: [],
-        };
-
-        page.lines.push(line);
-
-        // Calculate the current page height
-        currentPageHeightPx = 0;
-        
-        for (let line of page.lines) {
-          let height = 0;
-
-          if (line.elements.some(x => x.elementType === ElementType.TextBox)) {
-            const textbox = line.elements.find(x => x.elementType === ElementType.TextBox) as TextBoxElement;
-            height = Math.max(10, textbox.height * 2);
-          }
-          else {
-            height = lineHeightPx;
-          }
-
-          currentPageHeightPx += height;
-
-          if (page.lines.indexOf(line) === page.lines.length - 1) {
-            lastLineHeightPx = height;
-          }
-        }
-
-        currentLineWidthPx = 0;
-      }
-      
-      if (currentPageHeightPx > pageHeightPx || lastElementWasPageBreak) {    
-        page = { 
-          lines: [],
-        };
-
-        line = { 
-          elements: [],
-        };
-        
-        page.lines.push(line);
-        pages.push(page);
-
-        currentPageHeightPx = 0;
-        currentLineWidthPx = 0;
-        lastLineHeightPx = 0;
-      }
-
-      element.x = 96 + currentLineWidthPx;
-      element.y = 96 + currentPageHeightPx - lastLineHeightPx;
-      element.width = elementWidthPx + defaultNeumeSpacingPx;
-
-      currentLineWidthPx += elementWidthPx + defaultNeumeSpacingPx;
-      line.elements.push(element);
-
-      lastElementWasLineBreak = element.lineBreak;
-      lastElementWasPageBreak = element.pageBreak;
-    }
-
-    this.justifyLines(pages);
-
-    return pages;
-  }
-
-  justifyLines(pages: Page[]) {
-    const lineWidthPx = 816 - 96 - 96;
-
-    for (let page of pages) {
-      for (let line of page.lines) {
-        if (pages.indexOf(page) === pages.length - 1 && page.lines.indexOf(line) === page.lines.length - 1) {
-          continue;
-        }
-
-        if (line.elements.some(x => x.lineBreak == true)) {
-          continue;
-        }
-
-        if (line.elements.some(x => x.pageBreak == true)) {
-          continue;
-        }
-
-        let currentWidthPx = line.elements.map(x => x.width).reduce((sum, x) => sum + x , 0);
-
-        let extraSpace = lineWidthPx - currentWidthPx;
-
-        let spaceToAdd = extraSpace / line.elements.length;
-
-        for (let [elementIndex, element] of line.elements.entries()) {
-          element.x += spaceToAdd * (elementIndex + 1);
-        }
-      }
-    }
   }
 
   onScoreUpdated() {

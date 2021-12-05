@@ -1,7 +1,19 @@
 <template>
   <div class="editor">
     <FileMenuBar @scoreUpdated="onScoreUpdated"/>
-    <div class="page-background">
+    <div style="display: flex; flex:1; height: 100%">
+        <NeumeSelector class="neume-selector"
+     @select-quantitative-neume="updateQuantitativeNeume" 
+     @select-time-neume="updateTimeNeume"
+     @select-vocal-expression-neume="updateVocalExpressionNeume"
+     @select-fthora="updateFthora"
+     @select-martyria-note="updateMartyriaNote"
+     @select-martyria-root-sign="updateMartyriaRootSign"
+     @select-martyria-note-and-root-sign="updateMartyriaNoteAndRootSign"
+     @select-page-break="updatePageBreak"
+     @select-line-break="updateLineBreak"
+     @select-empty="updateEmpty"></NeumeSelector>
+    <div class="page-background" style="flex: 1">
       <div class="page"  
           v-for="(page, pageIndex) in pages" 
           :key="`page-${pageIndex}`" 
@@ -91,17 +103,7 @@
         </div>
     </div>
     </div>
-    <NeumeSelector class="neume-selector"
-     @select-quantitative-neume="updateQuantitativeNeume" 
-     @select-time-neume="updateTimeNeume"
-     @select-vocal-expression-neume="updateVocalExpressionNeume"
-     @select-fthora="updateFthora"
-     @select-martyria-note="updateMartyriaNote"
-     @select-martyria-root-sign="updateMartyriaRootSign"
-     @select-martyria-note-and-root-sign="updateMartyriaNoteAndRootSign"
-     @select-page-break="updatePageBreak"
-     @select-line-break="updateLineBreak"
-     @select-empty="updateEmpty"></NeumeSelector>
+    </div>
   </div>
 </template>
 
@@ -801,7 +803,6 @@ export default class Editor extends Vue {
 
 .neume-selector {
   overflow: auto;
-  height: 50vh;
 }
 
 .martyria {

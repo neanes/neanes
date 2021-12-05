@@ -788,9 +788,13 @@ interface NeumeTileMartyria {
     cursor: pointer;
   }
 
+.tab {
+  display: flex;
+}
+
 .row {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
 }
 
 .neume {

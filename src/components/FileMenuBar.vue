@@ -1,12 +1,12 @@
 <template>
   <div class="file-menu-bar">
-    <FileMenuBarItem label="File">
+    <FileMenuBarItem label="File" @click="toggleFileMenu" @focusout="closeFileMenu" :isOpen="isFileMenuOpen" >
       <FileMenuItem label="New" @click="onClickNew" />
       <FileMenuItem label="Open" @click="onClickOpen" />
       <FileMenuItem label="Save" @click="onClickSave" />
     </FileMenuBarItem>
     <FileMenuBarItem label="Edit"></FileMenuBarItem>
-    <FileMenuBarItem label="Add">
+    <FileMenuBarItem label="Add" @click="toggleAddMenu" @focusout="closeAddMenu" :isOpen="isAddMenuOpen">
       <FileMenuItem label="Neume" @click="onClickAddNeume" />
       <FileMenuItem label="Text Box" @click="onClickAddTextBox" />
       <FileMenuItem label="Staff Text" @click="onClickAddStaffText" />
@@ -31,12 +31,32 @@ import { store } from '@/store';
   }
 })
 export default class FileMenuBar extends Vue {
+  private isFileMenuOpen = false;
+  private isAddMenuOpen = false;
+
   private get score() {
     return store.state.score;
   }
 
   private get fileSelector() {
     return this.$refs.file as HTMLInputElement;
+  }
+
+  toggleFileMenu() {
+    this.isFileMenuOpen = !this.isFileMenuOpen;
+  }
+
+  closeFileMenu() {
+    this.isFileMenuOpen = false;
+  }
+
+  
+  toggleAddMenu() {
+    this.isAddMenuOpen = !this.isAddMenuOpen;
+  }
+
+  closeAddMenu() {
+    this.isAddMenuOpen = false;
   }
 
   onClickNew() {
@@ -108,5 +128,7 @@ export default class FileMenuBar extends Vue {
 <style scoped>
   .file-menu-bar {
     display: flex;
+    background-color: lightgray;
   }
-</style>
+
+  </style>

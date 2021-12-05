@@ -15,5 +15,12 @@ export default class FileMenuItem extends Vue {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+  .file-menu-item {
+    cursor: pointer;
+    padding: 0.5rem 1rem;
+  }
 
+  .file-menu-item:hover {
+    background-color: darkgray;
+  }
 </style>

@@ -10,6 +10,15 @@ export class PageSetup {
 
     public lineHeight = Unit.FromInch(0.75);
 
+    public lyricsDefaultFontFamily = 'Omega';
+    public lyricsDefaultFontSize = 16;
+    
+    public neumeDefaultFontSize = 40;
+
+    public dropCapDefaultFontFamily = 'Athonite';
+    public dropCapDefaultFontSize = 80;
+    public dropCapDefaultColor = 'black';
+
     public get innerPageWidth() {
         return this.pageWidth - this.leftMargin - this.rightMargin;
     }

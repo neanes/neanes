@@ -21,6 +21,11 @@
 }
 
 @font-face {
+    font-family: Athonite;
+    src: url('~@/assets/Athonite.ttf');
+}
+
+@font-face {
     font-family: EzSpecial1;
     src: url('~@/assets/EZ Special-I.ttf');
 }

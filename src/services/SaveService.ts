@@ -1,5 +1,6 @@
 import { Score, Staff } from '@/models/Score'
 import { 
+    DropCapElement,
     ElementType,
     EmptyElement,
     FthoraElement,
@@ -15,6 +16,7 @@ import {
 
 import { Score as Score_v1, Staff as Staff_v1 } from '@/models/save/v1/Score';
 import { 
+    DropCapElement as DropCapElement_v1, 
     ElementType as ElementType_v1, 
     EmptyElement as EmptyElement_v1,
     MartyriaElement as MartyriaElement_v1,
@@ -61,6 +63,10 @@ export class SaveService {
             let element: ScoreElement_v1 = new EmptyElement_v1();
 
             switch (e.elementType) {
+                case ElementType.DropCap:
+                    element = new DropCapElement_v1();
+                    this.SaveDropCap(element as DropCapElement_v1, e as DropCapElement);
+                    break;
                 case ElementType.Empty:
                     element = new EmptyElement_v1();
                     break;
@@ -92,7 +98,13 @@ export class SaveService {
 
         return score;
     }
-
+    
+    public static SaveDropCap(element: DropCapElement_v1, e: DropCapElement) {
+        element.color = e.color;
+        element.content = e.content;
+        element.fontFamily = e.fontFamily;
+        element.fontSize = e.fontSize;
+    }
 
     public static SaveMartyria(element: MartyriaElement_v1, e: MartyriaElement) {
         element.apostrophe = e.apostrophe;
@@ -158,6 +170,10 @@ export class SaveService {
             let element: ScoreElement = new EmptyElement();
 
             switch (e.elementType) {
+                case ElementType_v1.DropCap:
+                    element = new DropCapElement();
+                    this.LoadDropCap_v1(element as DropCapElement, e as DropCapElement_v1);
+                    break;
                 case ElementType_v1.Empty:
                     element = new EmptyElement();
                     break;
@@ -188,6 +204,13 @@ export class SaveService {
         }
 
         return score;
+    }
+
+    public static LoadDropCap_v1(element: DropCapElement, e: DropCapElement_v1) {
+        element.color = e.color;
+        element.content = e.content;
+        element.fontFamily = e.fontFamily;
+        element.fontSize = e.fontSize;
     }
 
     public static LoadMartyria_v1(element: MartyriaElement, e: MartyriaElement_v1) {

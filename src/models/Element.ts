@@ -7,6 +7,7 @@ export enum ElementType {
     Empty = 'Empty',
     TextBox = 'TextBox',
     StaffText = 'StaffText',
+    DropCap = 'DropCap',
 }
 
 export abstract class ScoreElement {
@@ -121,6 +122,14 @@ export class StaffTextElement extends ScoreElement {
     public readonly elementType: ElementType = ElementType.StaffText;
     public offset: ScoreElementOffset = new ScoreElementOffset;
     public text: string = 'text';
+}
+
+export class DropCapElement extends ScoreElement {
+    public readonly elementType: ElementType = ElementType.DropCap;
+    public content: string = 'A';
+    public fontFamily: string | null = null;
+    public fontSize: number | null = null;
+    public color: string | null = null;
 }
 
 export class QuantitativeNeumeElement {

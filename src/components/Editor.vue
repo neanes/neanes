@@ -99,6 +99,14 @@
                     :element="element">
                   </StaffText>
               </template>
+              <template v-if="isDropCapElement(element)">
+                  <DropCap :key="`element-${getElementIndex(element)}`" 
+                    :ref="`element-${getElementIndex(element)}`"
+                    :element="element"
+                    @click.native="selectedElement = element"
+                    @scoreUpdated="onScoreUpdated">
+                  </DropCap>
+              </template>
            </div>
         </div>
     </div>
@@ -126,6 +134,7 @@ import StaffText from '@/components/StaffText.vue';
 import TextBox from '@/components/TextBox.vue';
 import { store } from '@/store';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
+import DropCap from './DropCap.vue';
 
 @Component({
   components: {
@@ -137,6 +146,7 @@ import { TextMeasurementService } from '@/services/TextMeasurementService';
     FileMenuBar,
     StaffText,
     TextBox,
+    DropCap,
   }
 })
 export default class Editor extends Vue {
@@ -166,6 +176,7 @@ export default class Editor extends Vue {
     const fontLoader = (document as any).fonts;
 
     await Promise.all([
+      fontLoader.load('1rem Athonite'), 
       fontLoader.load('1rem Omega'), 
       fontLoader.load('1rem Psaltica'),
       fontLoader.load('1rem EzSpecial1'),
@@ -521,10 +532,15 @@ export default class Editor extends Vue {
     return element.elementType == ElementType.StaffText;
   }
 
+  isDropCapElement(element: ScoreElement) {
+    return element.elementType == ElementType.DropCap;
+  }
+
   onKeydown(event: KeyboardEvent) {
     if (this.selectedElement == null 
       || this.selectedElement.elementType === ElementType.StaffText
-      || this.selectedElement.elementType === ElementType.TextBox) {
+      || this.selectedElement.elementType === ElementType.TextBox
+      || this.selectedElement.elementType === ElementType.DropCap) {
       return;
     }
 

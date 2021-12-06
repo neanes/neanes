@@ -1,4 +1,4 @@
-import { ElementType, MartyriaElement, NoteElement, ScoreElement, TextBoxElement } from "@/models/Element";
+import { DropCapElement, ElementType, MartyriaElement, NoteElement, ScoreElement, TextBoxElement } from "@/models/Element";
 import { neumeMap } from "@/models/NeumeMappings";
 import { VocalExpressionNeume } from "@/models/Neumes";
 import { Line, Page } from "@/models/Page";
@@ -47,13 +47,13 @@ export class LayoutService {
             }
 
             if (element.elementType === ElementType.Note) {
-                let noteElement = element as NoteElement;
-                let mapping = neumeMap.get(noteElement.quantitativeNeume.neume)!;
+                const noteElement = element as NoteElement;
+                const mapping = neumeMap.get(noteElement.quantitativeNeume.neume)!;
 
                 let text = mapping.text;
 
                 if (noteElement.vocalExpressionNeume != null && noteElement.vocalExpressionNeume.neume === VocalExpressionNeume.Vareia) {
-                    let vareiaMapping = neumeMap.get(VocalExpressionNeume.Vareia)!;
+                    const vareiaMapping = neumeMap.get(VocalExpressionNeume.Vareia)!;
                     text = vareiaMapping.text + text;
                 }
 
@@ -63,9 +63,15 @@ export class LayoutService {
                 );
             }
             else if (element.elementType === ElementType.Martyria) {
-                let martyriaElement = element as MartyriaElement;
-                let mapping = neumeMap.get(martyriaElement.note)!;
+                const martyriaElement = element as MartyriaElement;
+                const mapping = neumeMap.get(martyriaElement.note)!;
                 elementWidthPx = Math.floor(TextMeasurementService.getTextWidth(mapping.text, `1.6rem ${mapping.fontFamily}`));
+            }
+            else if (element.elementType === ElementType.DropCap) {
+                const dropCapElement = element as DropCapElement;
+                const dropCapFontFamily = dropCapElement.fontFamily || pageSetup.dropCapDefaultFontFamily;
+                const dropCapFontSize = dropCapElement.fontSize || pageSetup.dropCapDefaultFontSize;
+                elementWidthPx = Math.floor(TextMeasurementService.getTextWidth(dropCapElement.content, `${dropCapFontSize}px ${dropCapFontFamily}`));
             }
 
             if (currentLineWidthPx + elementWidthPx > pageSetup.innerPageWidth || lastElementWasLineBreak) {
@@ -119,6 +125,20 @@ export class LayoutService {
             element.x = pageSetup.leftMargin + currentLineWidthPx;
             element.y = pageSetup.topMargin + currentPageHeightPx - lastLineHeightPx;
             element.width = elementWidthPx + defaultNeumeSpacingPx;
+
+            // Special logic to adjust drop caps
+            if (element.elementType === ElementType.DropCap) {
+                const neumeHeight = pageSetup.neumeDefaultFontSize + pageSetup.lyricsDefaultFontSize;
+                const dropCapElement = element as DropCapElement;
+                const dropCapFontFamily = dropCapElement.fontFamily || pageSetup.dropCapDefaultFontFamily;
+                const dropCapFontSize = dropCapElement.fontSize || pageSetup.dropCapDefaultFontSize;
+                const font = `${dropCapFontSize}px ${dropCapFontFamily}`
+                const fontHeight = TextMeasurementService.getFontHeight(font)
+                const fountBoundingBoxDescent = TextMeasurementService.getFontBoundingBoxDescent(dropCapElement.content, font);
+                const adjustment = Math.floor(fontHeight - neumeHeight - fountBoundingBoxDescent);
+
+                element.y -= adjustment;
+            }
 
             currentLineWidthPx += elementWidthPx + defaultNeumeSpacingPx;
             line.elements.push(element);

@@ -10,6 +10,7 @@
       <FileMenuItem label="Neume" @click="onClickAddNeume" />
       <FileMenuItem label="Text Box" @click="onClickAddTextBox" />
       <FileMenuItem label="Staff Text" @click="onClickAddStaffText" />
+      <FileMenuItem label="Drop Cap" @click="onClickAddDropCap" />
     </FileMenuBarItem>
     <input ref="file" type="file" v-show="false" @change="onSelectFile">
   </div>
@@ -20,7 +21,7 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 import FileMenuBarItem from '@/components/FileMenuBarItem.vue';
 import FileMenuItem from '@/components/FileMenuItem.vue';
 import { Score } from '@/models/Score';
-import { TextBoxElement, StaffTextElement, EmptyElement } from '@/models/Element';
+import { TextBoxElement, StaffTextElement, EmptyElement, DropCapElement } from '@/models/Element';
 import { SaveService } from '@/services/SaveService';
 import { store } from '@/store';
 
@@ -116,6 +117,14 @@ export default class FileMenuBar extends Vue {
 
   onClickAddStaffText() {
     const element =  new StaffTextElement();
+    store.getters.elements.splice(store.getters.selectedElementIndex, 0, element);
+    store.mutations.setSelectedElement(element);
+    store.mutations.setElementToFocus(element);
+    this.$emit('scoreUpdated');
+  }
+
+  onClickAddDropCap() {
+    const element =  new DropCapElement();
     store.getters.elements.splice(store.getters.selectedElementIndex, 0, element);
     store.mutations.setSelectedElement(element);
     store.mutations.setElementToFocus(element);

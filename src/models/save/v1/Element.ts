@@ -63,7 +63,7 @@ export class DropCapElement extends ScoreElement {
     public readonly elementType: ElementType = ElementType.DropCap;
     public content: string = 'A';
     public fontFamily: string | null = null;
-    public fontSize: string | null = null;
+    public fontSize: number | null = null;
     public color: string | null = null;
 }
 

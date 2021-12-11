@@ -1,4 +1,4 @@
-import { TimeNeume, QuantitativeNeume, Note, RootSign, VocalExpressionNeume, Fthora, Accidental } from '@/models/save/v1/Neumes';
+import { TimeNeume, GorgonNeume, QuantitativeNeume, Note, RootSign, VocalExpressionNeume, Fthora, Accidental } from '@/models/save/v1/Neumes';
 
 export enum ElementType {
     Note = 'Note',
@@ -19,6 +19,7 @@ export class NoteElement extends ScoreElement {
     public readonly elementType: ElementType = ElementType.Note; 
     public quantitativeNeume: QuantitativeNeumeElement = new QuantitativeNeumeElement(QuantitativeNeume.Ison); 
     public timeNeume: TimeNeumeElement | null = null;
+    public gorgonNeume: GorgonNeumeElement | null = null;
     public vocalExpressionNeume: VocalExpressionNeumeElement | null = null;
     public fthora: FthoraElement | null = null;
     public accidental: AccidentalElement | null = null;
@@ -82,6 +83,15 @@ export class TimeNeumeElement {
     public neume: TimeNeume;
 
     constructor(neume: TimeNeume) {
+        this.neume = neume;
+    }
+}
+
+export class GorgonNeumeElement {
+    public offset: ScoreElementOffset = new ScoreElementOffset;
+    public neume: GorgonNeume;
+
+    constructor(neume: GorgonNeume) {
         this.neume = neume;
     }
 }

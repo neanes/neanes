@@ -1,4 +1,4 @@
-import { TimeNeume, QuantitativeNeume, Note, RootSign, VocalExpressionNeume, Fthora, Accidental } from '@/models/Neumes';
+import { TimeNeume, QuantitativeNeume, Note, RootSign, VocalExpressionNeume, Fthora, Accidental, GorgonNeume } from '@/models/Neumes';
 import { isRightNeume } from '@/models/Neumes';
 
 export enum ElementType {
@@ -21,9 +21,10 @@ export abstract class ScoreElement {
 }
 
 export class NoteElement extends ScoreElement {
-    public readonly elementType: ElementType = ElementType.Note; 
-    public quantitativeNeume: QuantitativeNeumeElement = new QuantitativeNeumeElement(QuantitativeNeume.Ison); 
+    public readonly elementType: ElementType = ElementType.Note;
+    public quantitativeNeume: QuantitativeNeumeElement = new QuantitativeNeumeElement(QuantitativeNeume.Ison);
     public timeNeume: TimeNeumeElement | null = null;
+    public gorgonNeume: GorgonNeumeElement | null = null;
     public vocalExpressionNeume: VocalExpressionNeumeElement | null = null;
     public fthora: FthoraElement | null = null;
     public accidental: AccidentalElement | null = null;
@@ -46,31 +47,6 @@ export class NoteElement extends ScoreElement {
                 neume = TimeNeume.Tripli_Right;
             }
 
-            // Correct gorgons
-            else if (neume === TimeNeume.Gorgon_Top) {
-                neume = TimeNeume.Gorgon_TopRight;
-            }
-
-            else if (neume === TimeNeume.Gorgon_Bottom) {
-                neume = TimeNeume.Gorgon_BottomRight;
-            }
-
-            else if (neume === TimeNeume.GorgonDottedLeft) {
-                neume = TimeNeume.GorgonDottedLeft_Right;
-            }
-
-            else if (neume === TimeNeume.GorgonDottedRight) {
-                neume = TimeNeume.GorgonDottedRight_Right;
-            }
-
-            else if (neume === TimeNeume.Digorgon) {
-                neume = TimeNeume.Digorgon_Right;
-            }
-
-            else if (neume === TimeNeume.Trigorgon) {
-                neume = TimeNeume.Trigorgon_Right;
-            }
-
             // Correct klasmas
             else if (neume === TimeNeume.Klasma_Top) {
                 neume = TimeNeume.Klasma_TopRight;
@@ -78,6 +54,36 @@ export class NoteElement extends ScoreElement {
         }
 
         this.timeNeume = neume != null ? new TimeNeumeElement(neume) : null;
+    }
+
+    public setGorgonNeume(neume: GorgonNeume | null) {
+        if (isRightNeume(this.quantitativeNeume.neume)) {
+            // Correct gorgons
+            if (neume === GorgonNeume.Gorgon_Top) {
+                neume = GorgonNeume.Gorgon_TopRight;
+            }
+
+            else if (neume === GorgonNeume.Gorgon_Bottom) {
+                neume = GorgonNeume.Gorgon_BottomRight;
+            }
+
+            else if (neume === GorgonNeume.GorgonDottedLeft) {
+                neume = GorgonNeume.GorgonDottedLeft_Right;
+            }
+
+            else if (neume === GorgonNeume.GorgonDottedRight) {
+                neume = GorgonNeume.GorgonDottedRight_Right;
+            }
+
+            else if (neume === GorgonNeume.Digorgon) {
+                neume = GorgonNeume.Digorgon_Right;
+            }
+
+            else if (neume === GorgonNeume.Trigorgon) {
+                neume = GorgonNeume.Trigorgon_Right;
+            }
+        }
+        this.gorgonNeume = neume != null ? new GorgonNeumeElement(neume) : null;
     }
 
     public setVocalExpressionNeume(neume: VocalExpressionNeume | null) {
@@ -92,15 +98,15 @@ export class NoteElement extends ScoreElement {
     }
 }
 
-export class MartyriaElement extends ScoreElement  {  
-    public readonly elementType: ElementType = ElementType.Martyria; 
+export class MartyriaElement extends ScoreElement {
+    public readonly elementType: ElementType = ElementType.Martyria;
     public note: Note = Note.Pa;
     public rootSign: RootSign = RootSign.Alpha;
     public apostrophe: boolean = false;
 }
 
 export class EmptyElement extends ScoreElement {
-    public readonly elementType: ElementType = ElementType.Empty; 
+    public readonly elementType: ElementType = ElementType.Empty;
 }
 
 export enum TextBoxAlignment {
@@ -147,6 +153,15 @@ export class TimeNeumeElement {
     public neume: TimeNeume;
 
     constructor(neume: TimeNeume) {
+        this.neume = neume;
+    }
+}
+
+export class GorgonNeumeElement {
+    public offset: ScoreElementOffset = new ScoreElementOffset;
+    public neume: GorgonNeume;
+
+    constructor(neume: GorgonNeume) {
         this.neume = neume;
     }
 }

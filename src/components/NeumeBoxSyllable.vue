@@ -10,6 +10,13 @@
       :class="[ 
         { high: isHighNeume(note.quantitativeNeume.neume) }, 
         { red: isRedNeume(note.timeNeume.neume) } ]"></TimeNeumeBox>
+    <TimeNeumeBox
+      v-if="hasGorgonNeume"
+      :element="note.gorgonNeume"
+      :style="timeNeumeStyle"
+      :class="[ 
+        { high: isHighNeume(note.quantitativeNeume.neume) }, 
+        { red: isRedNeume(note.gorgonNeume.neume) } ]"></TimeNeumeBox>
     <Neume 
       v-if="hasFthora"
       :neume="note.fthora.neume"
@@ -47,6 +54,10 @@ export default class NeumeBoxSyllable extends Vue {
 
   get hasTimeNeume() {
     return this.note.timeNeume != null;
+  }
+
+  get hasGorgonNeume() {
+    return this.note.gorgonNeume != null;
   }
 
   get hasFthora() {

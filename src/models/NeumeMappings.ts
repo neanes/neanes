@@ -1,4 +1,4 @@
-import { Neume, TimeNeume, QuantitativeNeume, Fthora, Accidental, TempoSign, VocalExpressionNeume, RootSign, Note } from '@/models/Neumes';
+import { Neume, TimeNeume, QuantitativeNeume, Fthora, Accidental, TempoSign, VocalExpressionNeume, RootSign, Note, GorgonNeume } from '@/models/Neumes';
 
 export type NeumeFont = 'Psaltica' | 'Omega' | 'EzSpecial1' | 'EzSpecial2' | 'EzFthora';
 
@@ -59,23 +59,23 @@ export const neumeMap = new Map<Neume, NeumeMapping>([
     [QuantitativeNeume.Cross, { fontFamily: 'Psaltica', text: '+'}],
     [QuantitativeNeume.VareiaDotted, { fontFamily: 'Psaltica', text: '|'}],
 
-    [TimeNeume.Gorgon_Top, { fontFamily: 'Psaltica', text: 's' }],
-    [TimeNeume.Gorgon_Bottom, { fontFamily: 'Psaltica', text: 'x' }],
+    [GorgonNeume.Gorgon_Top, { fontFamily: 'Psaltica', text: 's' }],
+    [GorgonNeume.Gorgon_Bottom, { fontFamily: 'Psaltica', text: 'x' }],
 
-    [TimeNeume.Gorgon_TopRight, { fontFamily: 'Psaltica', text: 'S' }],
-    [TimeNeume.Gorgon_BottomRight, { fontFamily: 'Psaltica', text: 'X' }],
+    [GorgonNeume.Gorgon_TopRight, { fontFamily: 'Psaltica', text: 'S' }],
+    [GorgonNeume.Gorgon_BottomRight, { fontFamily: 'Psaltica', text: 'X' }],
 
-    [TimeNeume.Digorgon, { fontFamily: 'Psaltica', text: 'd' }],
-    [TimeNeume.Trigorgon, { fontFamily: 'Psaltica', text: 'f' }],
+    [GorgonNeume.Digorgon, { fontFamily: 'Psaltica', text: 'd' }],
+    [GorgonNeume.Trigorgon, { fontFamily: 'Psaltica', text: 'f' }],
 
-    [TimeNeume.Digorgon_Right, { fontFamily: 'Psaltica', text: 'D' }],
-    [TimeNeume.Trigorgon_Right, { fontFamily: 'Psaltica', text: 'F' }],
+    [GorgonNeume.Digorgon_Right, { fontFamily: 'Psaltica', text: 'D' }],
+    [GorgonNeume.Trigorgon_Right, { fontFamily: 'Psaltica', text: 'F' }],
 
-    [TimeNeume.GorgonDottedLeft, { fontFamily: 'Psaltica', text: 'h' }],
-    [TimeNeume.GorgonDottedRight, { fontFamily: 'EzSpecial1', text: 'h' }],
+    [GorgonNeume.GorgonDottedLeft, { fontFamily: 'Psaltica', text: 'h' }],
+    [GorgonNeume.GorgonDottedRight, { fontFamily: 'EzSpecial1', text: 'h' }],
 
-    [TimeNeume.GorgonDottedLeft_Right, { fontFamily: 'Psaltica', text: 'H' }],
-    [TimeNeume.GorgonDottedRight_Right, { fontFamily: 'EzSpecial1', text: 'H' }],
+    [GorgonNeume.GorgonDottedLeft_Right, { fontFamily: 'Psaltica', text: 'H' }],
+    [GorgonNeume.GorgonDottedRight_Right, { fontFamily: 'EzSpecial1', text: 'H' }],
 
     [TimeNeume.Klasma_Top, { fontFamily: 'Psaltica', text: 'a' }],
     [TimeNeume.Klasma_Bottom, { fontFamily: 'Psaltica', text: 'z' }],
@@ -256,8 +256,11 @@ const quantitativeNeumeKeyboardMap_Shift = new Map<string, QuantitativeNeume>([
 ]);
 
 const timeNeumeKeyboardMap = new Map<string, TimeNeume>([
-    ["Semicolon", TimeNeume.Gorgon_Top],
     ["Comma", TimeNeume.Klasma_Top],
+]);
+
+const gorgonNeumeKeyboardMap = new Map<string, GorgonNeume>([
+    ["Semicolon", GorgonNeume.Gorgon_Top],
 ]);
 
 export const KeyboardMap = {
@@ -265,4 +268,5 @@ export const KeyboardMap = {
     quantitativeNeumeKeyboardMap_Shift,
 
     timeNeumeKeyboardMap,
+    gorgonNeumeKeyboardMap,
 };

@@ -1,4 +1,4 @@
-import { TimeNeume, QuantitativeNeume, Note, RootSign, VocalExpressionNeume, Fthora } from '@/models/save/v1/Neumes';
+import { TimeNeume, QuantitativeNeume, Note, RootSign, VocalExpressionNeume, Fthora, Accidental } from '@/models/save/v1/Neumes';
 
 export enum ElementType {
     Note = 'Note',
@@ -21,6 +21,7 @@ export class NoteElement extends ScoreElement {
     public timeNeume: TimeNeumeElement | null = null;
     public vocalExpressionNeume: VocalExpressionNeumeElement | null = null;
     public fthora: FthoraElement | null = null;
+    public accidental: AccidentalElement | null = null;
     public lyrics: string = '';
     public isMelisma: boolean = false;
     public isMelismaStart: boolean = false;
@@ -90,6 +91,15 @@ export class FthoraElement {
     public neume: Fthora;
 
     constructor(neume: Fthora) {
+        this.neume = neume;
+    }
+}
+
+export class AccidentalElement {
+    public offset: ScoreElementOffset = new ScoreElementOffset;
+    public neume: Accidental;
+
+    constructor(neume: Accidental) {
         this.neume = neume;
     }
 }

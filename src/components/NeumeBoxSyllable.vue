@@ -15,6 +15,10 @@
       :neume="note.fthora.neume"
       class="red"></Neume>
     <Neume 
+      v-if="hasAccidental"
+      :neume="note.accidental.neume"
+      class="red"></Neume>
+    <Neume 
       v-if="hasVocalExpressionNeume && !isVareia(note.vocalExpressionNeume.neume)"
       :neume="note.vocalExpressionNeume.neume"
       :class="[{ red: isRedNeume(note.vocalExpressionNeume.neume) } ]"></Neume>
@@ -24,8 +28,7 @@
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { NoteElement } from '@/models/Element';
-import { QuantitativeNeume, TimeNeume, isHighNeume, isRedNeume, VocalExpressionNeume } from '@/models/Neumes';
-import { neumeMap } from '@/models/NeumeMappings';
+import { QuantitativeNeume, isHighNeume, isRedNeume, VocalExpressionNeume } from '@/models/Neumes';
 import Neume from '@/components/Neume.vue';
 import TimeNeumeBox from '@/components/TimeNeume.vue';
 
@@ -48,6 +51,10 @@ export default class NeumeBoxSyllable extends Vue {
 
   get hasFthora() {
     return this.note.fthora != null;
+  }
+
+  get hasAccidental() {
+    return this.note.accidental != null;
   }
 
   get timeNeumeStyle() {

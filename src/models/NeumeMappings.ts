@@ -1,4 +1,4 @@
-import { Neume, TimeNeume, QuantitativeNeume, Fthora, TempoSign, VocalExpressionNeume, RootSign, Note } from '@/models/Neumes';
+import { Neume, TimeNeume, QuantitativeNeume, Fthora, Accidental, TempoSign, VocalExpressionNeume, RootSign, Note } from '@/models/Neumes';
 
 export type NeumeFont = 'Psaltica' | 'Omega' | 'EzSpecial1' | 'EzSpecial2' | 'EzFthora';
 
@@ -155,20 +155,6 @@ export const neumeMap = new Map<Neume, NeumeMapping>([
     [Fthora.Zygos_BottomRight, { fontFamily: 'EzFthora', text: 'I' }],
     [Fthora.Kliton_BottomRight, { fontFamily: 'EzFthora', text: 'O' }],
 
-    [Fthora.Sharp_2_Right, { fontFamily: 'EzFthora', text: '+' }],
-    [Fthora.Sharp_2_Left, { fontFamily: 'EzFthora', text: '=' }],
-    [Fthora.Sharp_4_Right, { fontFamily: 'EzFthora', text: '}' }],
-    [Fthora.Sharp_4_Left, { fontFamily: 'EzFthora', text: ']' }],
-    [Fthora.Sharp_6_Right, { fontFamily: 'EzFthora', text: ':' }],
-    [Fthora.Sharp_6_Left, { fontFamily: 'EzFthora', text: ';' }],
-
-    [Fthora.Flat_2_Right, { fontFamily: 'EzFthora', text: '_' }],
-    [Fthora.Flat_2_Left, { fontFamily: 'EzFthora', text: '-' }],
-    [Fthora.Flat_4_Right, { fontFamily: 'EzFthora', text: '{' }],
-    [Fthora.Flat_4_Left, { fontFamily: 'EzFthora', text: '[' }],
-    [Fthora.Flat_6_Right, { fontFamily: 'EzFthora', text: '"' }],
-    [Fthora.Flat_6_Left, { fontFamily: 'EzFthora', text: '\'' }],
-
     [Fthora.GeneralSharp_TopCenter, { fontFamily: 'EzFthora', text: '3' }],
     [Fthora.GeneralSharp_TopRight, { fontFamily: 'EzFthora', text: '#' }],
     [Fthora.GeneralSharp_BottomCenter, { fontFamily: 'EzFthora', text: 'e' }],
@@ -178,6 +164,21 @@ export const neumeMap = new Map<Neume, NeumeMapping>([
     [Fthora.GeneralFlat_TopRight, { fontFamily: 'EzFthora', text: '%' }],
     [Fthora.GeneralFlat_BottomCenter, { fontFamily: 'EzFthora', text: 't' }],
     [Fthora.GeneralFlat_BottomRight, { fontFamily: 'EzFthora', text: 'T' }],
+
+    [Accidental.Sharp_2_Right, { fontFamily: 'EzFthora', text: '+' }],
+    [Accidental.Sharp_2_Left, { fontFamily: 'EzFthora', text: '=' }],
+    [Accidental.Sharp_4_Right, { fontFamily: 'EzFthora', text: '}' }],
+    [Accidental.Sharp_4_Left, { fontFamily: 'EzFthora', text: ']' }],
+    [Accidental.Sharp_6_Right, { fontFamily: 'EzFthora', text: ':' }],
+    [Accidental.Sharp_6_Left, { fontFamily: 'EzFthora', text: ';' }],
+
+    [Accidental.Flat_2_Right, { fontFamily: 'EzFthora', text: '_' }],
+    [Accidental.Flat_2_Left, { fontFamily: 'EzFthora', text: '-' }],
+    [Accidental.Flat_4_Right, { fontFamily: 'EzFthora', text: '{' }],
+    [Accidental.Flat_4_Left, { fontFamily: 'EzFthora', text: '[' }],
+    [Accidental.Flat_6_Right, { fontFamily: 'EzFthora', text: '"' }],
+    [Accidental.Flat_6_Left, { fontFamily: 'EzFthora', text: '\'' }],
+
 
     [TempoSign.VerySlow, { fontFamily: 'EzSpecial1', text: 'S' }],
     [TempoSign.Slow, { fontFamily: 'EzSpecial1', text: 'a' }],

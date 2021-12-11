@@ -5,6 +5,7 @@
         <NeumeSelector class="neume-selector"
      @select-quantitative-neume="updateQuantitativeNeume" 
      @select-time-neume="updateTimeNeume"
+     @select-gorgon-neume="updateGorgonNeume"
      @select-vocal-expression-neume="updateVocalExpressionNeume"
      @select-fthora="updateFthora"
      @select-martyria-note="updateMartyriaNote"
@@ -125,7 +126,7 @@
 <script lang="ts">
 import { Component, Prop, Watch, Vue } from 'vue-property-decorator';
 import { ScoreElement, MartyriaElement, NoteElement, ElementType, EmptyElement, TextBoxElement, VocalExpressionNeumeElement, QuantitativeNeumeElement, TimeNeumeElement, FthoraElement } from '@/models/Element';
-import { QuantitativeNeume, TimeNeume, Note, RootSign, VocalExpressionNeume, Fthora } from '@/models/Neumes';
+import { QuantitativeNeume, TimeNeume, Note, RootSign, VocalExpressionNeume, Fthora, GorgonNeume } from '@/models/Neumes';
 import { Page, Line } from '@/models/Page';
 import { Score } from '@/models/Score';
 import { KeyboardMap, neumeMap } from '@/models/NeumeMappings';
@@ -344,6 +345,25 @@ export default class Editor extends Vue {
       }
 
       (this.selectedElement as NoteElement).setTimeNeume(neume);
+      //this.moveRight();
+
+      this.save();
+    }
+  }
+
+  updateGorgonNeume(neume: GorgonNeume | null) {
+    if(this.selectedElement) {
+      const index = this.elements.indexOf(this.selectedElement);
+
+      if (index === this.elements.length - 1) {
+        this.addEmptyElement();
+      }
+
+      if (this.selectedElement.elementType != ElementType.Note) {
+        this.selectedElement = this.switchToSyllable(this.selectedElement);
+      }
+
+      (this.selectedElement as NoteElement).setGorgonNeume(neume);
       //this.moveRight();
 
       this.save();

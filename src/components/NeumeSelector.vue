@@ -62,6 +62,18 @@
               :style="element.style"
               ></Neume>
         </div>
+        <div 
+          class="neume" 
+          v-for="(tile, index) in gorgonNeumes" 
+          :key="`gorgonNeumes-${index}`"
+          @click="$emit('select-gorgon-neume', tile.neume)">
+          <Neume
+            v-for="(element, index) in tile.elements"
+              :key="`gorgonNeumes-elements-${index}`"
+              :neume="element.neume"
+              :style="element.style"
+              ></Neume>
+        </div>
       </div>
       <div class="row">
         <div
@@ -194,7 +206,7 @@
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { ScoreElement, NoteElement } from '@/models/Element';
-import { QuantitativeNeume, TimeNeume, VocalExpressionNeume, isHighNeume, isRedNeume, Note, RootSign, Fthora, Neume as NeumeType } from '@/models/Neumes';
+import { QuantitativeNeume, TimeNeume, VocalExpressionNeume, isHighNeume, isRedNeume, Note, RootSign, Fthora, Neume as NeumeType, GorgonNeume } from '@/models/Neumes';
 import { neumeMap } from '@/models/NeumeMappings';
 import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
 import Neume from '@/components/Neume.vue';
@@ -271,74 +283,6 @@ export default class NeumeSelector extends Vue {
 
   timeNeumes: NeumeTile[] = [
     {
-       neume: TimeNeume.Gorgon_Top,
-       elements: [
-         {
-          neume: QuantitativeNeume.Ison,
-          style: {
-            opacity: 0.5
-          }
-         },
-         {
-           neume: TimeNeume.Gorgon_Top,
-           style: {
-             color: '#ED0000',
-           }
-         }         
-       ]
-    },
-    {
-       neume: TimeNeume.Gorgon_Bottom,
-       elements: [
-         {
-          neume: QuantitativeNeume.Ison,
-          style: {
-            opacity: 0.5
-          }
-         },
-         {
-           neume: TimeNeume.Gorgon_Bottom,
-           style: {
-             color: '#ED0000',
-           }
-         }         
-       ]
-    },
-    {
-       neume: TimeNeume.Digorgon,
-       elements: [
-         {
-          neume: QuantitativeNeume.Ison,
-          style: {
-            opacity: 0.5
-          }
-         },
-         {
-           neume: TimeNeume.Digorgon,
-           style: {
-             color: '#ED0000',
-           }
-         }         
-       ]
-    },
-    {
-       neume: TimeNeume.Trigorgon,
-       elements: [
-         {
-          neume: QuantitativeNeume.Ison,
-          style: {
-            opacity: 0.5
-          }
-         },
-         {
-           neume: TimeNeume.Trigorgon,
-           style: {
-             color: '#ED0000',
-           }
-         }         
-       ]
-    },
-    {
        neume: TimeNeume.Klasma_Top,
        elements: [
          {
@@ -409,7 +353,14 @@ export default class NeumeSelector extends Vue {
        ]
     },
     {
-       neume: TimeNeume.GorgonDottedLeft,
+       neume: null,
+       elements: []
+    },
+  ];
+
+  gorgonNeumes: NeumeTile[] = [
+    {
+       neume: GorgonNeume.Gorgon_Top,
        elements: [
          {
           neume: QuantitativeNeume.Ison,
@@ -418,7 +369,7 @@ export default class NeumeSelector extends Vue {
           }
          },
          {
-           neume: TimeNeume.GorgonDottedLeft,
+           neume: GorgonNeume.Gorgon_Top,
            style: {
              color: '#ED0000',
            }
@@ -426,7 +377,7 @@ export default class NeumeSelector extends Vue {
        ]
     },
     {
-       neume: TimeNeume.GorgonDottedRight,
+       neume: GorgonNeume.Gorgon_Bottom,
        elements: [
          {
           neume: QuantitativeNeume.Ison,
@@ -435,7 +386,75 @@ export default class NeumeSelector extends Vue {
           }
          },
          {
-           neume: TimeNeume.GorgonDottedRight,
+           neume: GorgonNeume.Gorgon_Bottom,
+           style: {
+             color: '#ED0000',
+           }
+         }         
+       ]
+    },
+    {
+       neume: GorgonNeume.Digorgon,
+       elements: [
+         {
+          neume: QuantitativeNeume.Ison,
+          style: {
+            opacity: 0.5
+          }
+         },
+         {
+           neume: GorgonNeume.Digorgon,
+           style: {
+             color: '#ED0000',
+           }
+         }         
+       ]
+    },
+    {
+       neume: GorgonNeume.Trigorgon,
+       elements: [
+         {
+          neume: QuantitativeNeume.Ison,
+          style: {
+            opacity: 0.5
+          }
+         },
+         {
+           neume: GorgonNeume.Trigorgon,
+           style: {
+             color: '#ED0000',
+           }
+         }         
+       ]
+    },
+    {
+       neume: GorgonNeume.GorgonDottedLeft,
+       elements: [
+         {
+          neume: QuantitativeNeume.Ison,
+          style: {
+            opacity: 0.5
+          }
+         },
+         {
+           neume: GorgonNeume.GorgonDottedLeft,
+           style: {
+             color: '#ED0000',
+           }
+         }         
+       ]
+    },
+    {
+       neume: GorgonNeume.GorgonDottedRight,
+       elements: [
+         {
+          neume: QuantitativeNeume.Ison,
+          style: {
+            opacity: 0.5
+          }
+         },
+         {
+           neume: GorgonNeume.GorgonDottedRight,
            style: {
              color: '#ED0000',
            }

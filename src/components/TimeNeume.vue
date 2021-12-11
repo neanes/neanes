@@ -7,9 +7,7 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
-import { Neume as NeumeType } from '@/models/Neumes';
-import { neumeMap } from '@/models/NeumeMappings';
-import { TimeNeumeElement } from '@/models/Element';
+import { GorgonNeumeElement, TimeNeumeElement } from '@/models/Element';
 import Neume from '@/components/Neume.vue';
 
 @Component({
@@ -18,7 +16,7 @@ import Neume from '@/components/Neume.vue';
   }
 })
 export default class TimeNeume extends Vue {
-  @Prop() element!: TimeNeumeElement;
+  @Prop() element!: TimeNeumeElement | GorgonNeumeElement;
 
   startX: number = 0;
   startY: number = 0;

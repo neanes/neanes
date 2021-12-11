@@ -52,22 +52,6 @@ export enum QuantitativeNeume {
 }
 
 export enum TimeNeume {
-    Gorgon_Top = 'Gorgon_Top',
-    Gorgon_Bottom = 'Gorgon_Bottom',
-    Digorgon = 'Digorgon',
-    Trigorgon = 'Trigorgon',
-
-    Gorgon_TopRight = 'Gorgon_TopRight',
-    Gorgon_BottomRight = 'Gorgon_BottomRight',
-    Digorgon_Right = 'Digorgon_Right',
-    Trigorgon_Right = 'Trigorgon_Right',
-
-    GorgonDottedLeft = "GorgonDottedLeft",
-    GorgonDottedRight = "GorgonDottedRight",
-
-    GorgonDottedLeft_Right = "GorgonDottedLeft_Right",
-    GorgonDottedRight_Right = "GorgonDottedRight_Right",
-
     Klasma_Top = 'Klasma_Top',
     Klasma_Bottom = 'Klasma_Bottom',
 
@@ -85,6 +69,24 @@ export enum TimeNeume {
     Argon = 'Argon',
     Hemiolion = 'Hemiolion',
     Diargon = 'Diargon',
+}
+
+export enum GorgonNeume {
+    Gorgon_Top = 'Gorgon_Top',
+    Gorgon_Bottom = 'Gorgon_Bottom',
+    Digorgon = 'Digorgon',
+    Trigorgon = 'Trigorgon',
+
+    Gorgon_TopRight = 'Gorgon_TopRight',
+    Gorgon_BottomRight = 'Gorgon_BottomRight',
+    Digorgon_Right = 'Digorgon_Right',
+    Trigorgon_Right = 'Trigorgon_Right',
+
+    GorgonDottedLeft = "GorgonDottedLeft",
+    GorgonDottedRight = "GorgonDottedRight",
+
+    GorgonDottedLeft_Right = "GorgonDottedLeft_Right",
+    GorgonDottedRight_Right = "GorgonDottedRight_Right",
 }
 
 export enum VocalExpressionNeume {
@@ -220,25 +222,25 @@ export enum Accidental {
     Flat_6_Left = "Flat_6_Left",
 }
 
-export type Neume = QuantitativeNeume | TimeNeume | VocalExpressionNeume | Fthora | Accidental | TempoSign | Note | RootSign;
+export type Neume = QuantitativeNeume | TimeNeume | GorgonNeume | VocalExpressionNeume | Fthora | Accidental | TempoSign | Note | RootSign;
 
 const highNeumes: QuantitativeNeume[] = [
     QuantitativeNeume.OligonPlusKentemata,
 ];
 
 const redNeumes: Neume[] = [
-    TimeNeume.Gorgon_Top,
-    TimeNeume.Gorgon_Bottom,
-    TimeNeume.Gorgon_TopRight,
-    TimeNeume.Gorgon_BottomRight,
-    TimeNeume.GorgonDottedLeft,
-    TimeNeume.GorgonDottedRight,
-    TimeNeume.GorgonDottedLeft_Right,
-    TimeNeume.GorgonDottedRight_Right,
-    TimeNeume.Digorgon,
-    TimeNeume.Digorgon_Right,
-    TimeNeume.Trigorgon,
-    TimeNeume.Trigorgon_Right,
+    GorgonNeume.Gorgon_Top,
+    GorgonNeume.Gorgon_Bottom,
+    GorgonNeume.Gorgon_TopRight,
+    GorgonNeume.Gorgon_BottomRight,
+    GorgonNeume.GorgonDottedLeft,
+    GorgonNeume.GorgonDottedRight,
+    GorgonNeume.GorgonDottedLeft_Right,
+    GorgonNeume.GorgonDottedRight_Right,
+    GorgonNeume.Digorgon,
+    GorgonNeume.Digorgon_Right,
+    GorgonNeume.Trigorgon,
+    GorgonNeume.Trigorgon_Right,
     VocalExpressionNeume.Heteron,
 ];
 

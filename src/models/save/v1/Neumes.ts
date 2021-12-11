@@ -193,6 +193,18 @@ export enum Fthora {
     Zygos_BottomRight = "Zygos_BottomRight",
     Kliton_BottomRight = "Kliton_BottomRight",
 
+    GeneralSharp_TopCenter = "GeneralSharp_TopCenter",
+    GeneralSharp_TopRight = "GeneralSharp_TopRight",
+    GeneralSharp_BottomCenter = "GeneralSharp_BottomCenter",
+    GeneralSharp_BottomRight = "GeneralSharp_BottomRight",
+
+    GeneralFlat_TopCenter = "GeneralFlat_TopCenter",
+    GeneralFlat_TopRight = "GeneralFlat_TopRight",
+    GeneralFlat_BottomCenter = "GeneralFlat_BottomCenter",
+    GeneralFlat_BottomRight = "GeneralFlat_BottomRight",
+}
+
+export enum Accidental {
     Sharp_2_Right = "Sharp_2_Right",
     Sharp_2_Left = "Sharp_2_Left",
     Sharp_4_Right = "Sharp_4_Right",
@@ -206,16 +218,6 @@ export enum Fthora {
     Flat_4_Left = "Flat_4_Left",
     Flat_6_Right = "Flat_6_Right",
     Flat_6_Left = "Flat_6_Left",
-
-    GeneralSharp_TopCenter = "GeneralSharp_TopCenter",
-    GeneralSharp_TopRight = "GeneralSharp_TopRight",
-    GeneralSharp_BottomCenter = "GeneralSharp_BottomCenter",
-    GeneralSharp_BottomRight = "GeneralSharp_BottomRight",
-
-    GeneralFlat_TopCenter = "GeneralFlat_TopCenter",
-    GeneralFlat_TopRight = "GeneralFlat_TopRight",
-    GeneralFlat_BottomCenter = "GeneralFlat_BottomCenter",
-    GeneralFlat_BottomRight = "GeneralFlat_BottomRight",
 }
 
-export type Neume = QuantitativeNeume | TimeNeume | VocalExpressionNeume | Fthora | TempoSign | Note | RootSign;
+export type Neume = QuantitativeNeume | TimeNeume | VocalExpressionNeume | Fthora | Accidental | TempoSign | Note | RootSign;

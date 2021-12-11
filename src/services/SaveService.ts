@@ -4,6 +4,7 @@ import {
     ElementType,
     EmptyElement,
     FthoraElement,
+    AccidentalElement,
     MartyriaElement, 
     NoteElement, 
     QuantitativeNeumeElement, 
@@ -132,6 +133,13 @@ export class SaveService {
             element.fthora.offset.y = e.fthora.offset.y;
         }
 
+        if(e.accidental != null) {
+            element.accidental = new AccidentalElement(e.accidental.neume);
+            element.accidental.offset = new ScoreElementOffset_v1();
+            element.accidental.offset.x = e.accidental.offset.x;
+            element.accidental.offset.y = e.accidental.offset.y;
+        }
+
         if(e.vocalExpressionNeume != null) {
             element.vocalExpressionNeume = new VocalExpressionNeumeElement_v1(e.vocalExpressionNeume.neume);
             element.vocalExpressionNeume.offset = new ScoreElementOffset_v1();
@@ -237,6 +245,13 @@ export class SaveService {
             element.fthora.offset = new ScoreElementOffset();
             element.fthora.offset.x = e.fthora.offset.x;
             element.fthora.offset.y = e.fthora.offset.y;
+        }
+
+        if(e.accidental != null) {
+            element.accidental = new AccidentalElement(e.accidental.neume);
+            element.accidental.offset = new ScoreElementOffset();
+            element.accidental.offset.x = e.accidental.offset.x;
+            element.accidental.offset.y = e.accidental.offset.y;
         }
 
         if(e.vocalExpressionNeume != null) {

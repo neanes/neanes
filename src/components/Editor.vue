@@ -116,6 +116,9 @@
     <template v-if="selectedElement != null && isTextBoxElement(selectedElement)">
       <TextToolbar :element="selectedElement" @scoreUpdated="onScoreUpdated" />
     </template>
+    <template v-if="selectedElement != null && isSyllableElement(selectedElement)">
+      <NeumeToolbar :element="selectedElement" @scoreUpdated="onScoreUpdated" />
+    </template>
   </div>
 </template>
 
@@ -140,6 +143,7 @@ import { store } from '@/store';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
 import DropCap from '@/components/DropCap.vue';
 import TextToolbar from '@/components/TextToolbar.vue';
+import NeumeToolbar from '@/components/NeumeToolbar.vue';
 
 @Component({
   components: {
@@ -153,6 +157,7 @@ import TextToolbar from '@/components/TextToolbar.vue';
     TextBox,
     DropCap,
     TextToolbar,
+    NeumeToolbar,
   }
 })
 export default class Editor extends Vue {

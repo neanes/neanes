@@ -44,6 +44,7 @@
           },
           "neume": "OligonPlusKentemata"
         },
+        "timeNeume": null,
         "gorgonNeume": {
           "offset": {
             "x": 0,
@@ -53,6 +54,7 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "ord,",
         "isMelisma": true,
         "isMelismaStart": true
@@ -69,8 +71,10 @@
           "neume": "Apostrophos"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "",
         "isMelisma": true,
         "isMelismaStart": false
@@ -87,8 +91,10 @@
           "neume": "Apostrophos"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "I",
         "isMelisma": false,
         "isMelismaStart": false
@@ -105,8 +111,10 @@
           "neume": "Oligon"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "have",
         "isMelisma": false,
         "isMelismaStart": false
@@ -123,6 +131,7 @@
           "neume": "Oligon"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": {
           "offset": {
             "x": 0,
@@ -131,6 +140,7 @@
           "neume": "Psifiston"
         },
         "fthora": null,
+        "accidental": null,
         "lyrics": "cried",
         "isMelisma": true,
         "isMelismaStart": false
@@ -147,8 +157,10 @@
           "neume": "Apostrophos"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "",
         "isMelisma": true,
         "isMelismaStart": false
@@ -171,6 +183,7 @@
           },
           "neume": "Hapli_Right"
         },
+        "gorgonNeume": null,
         "vocalExpressionNeume": {
           "offset": {
             "x": 0,
@@ -179,6 +192,7 @@
           "neume": "AntikenomaShort"
         },
         "fthora": null,
+        "accidental": null,
         "lyrics": "un -",
         "isMelismaStart": false
       },
@@ -193,6 +207,7 @@
           },
           "neume": "Apostrophos"
         },
+        "timeNeume": null,
         "gorgonNeume": {
           "offset": {
             "x": 0,
@@ -202,6 +217,7 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "-",
         "isMelismaStart": false
       },
@@ -217,6 +233,7 @@
           "neume": "Ison"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": {
           "offset": {
             "x": 0,
@@ -225,6 +242,7 @@
           "neume": "Vareia"
         },
         "fthora": null,
+        "accidental": null,
         "lyrics": "to",
         "isMelisma": true,
         "isMelismaStart": true
@@ -240,6 +258,7 @@
           },
           "neume": "Apostrophos"
         },
+        "timeNeume": null,
         "gorgonNeume": {
           "offset": {
             "x": 0,
@@ -249,6 +268,7 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "",
         "isMelisma": true,
         "isMelismaStart": false
@@ -265,8 +285,10 @@
           "neume": "Oligon"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "",
         "isMelisma": true,
         "isMelismaStart": false
@@ -283,8 +305,10 @@
           "neume": "PetastiPlusKentimaBelow"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "Thee,",
         "isMelisma": true,
         "isMelismaStart": true
@@ -307,8 +331,10 @@
           },
           "neume": "Klasma_TopRight"
         },
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "",
         "isMelisma": true,
         "isMelismaStart": false
@@ -325,8 +351,10 @@
           "neume": "VareiaDotted"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "",
         "isMelismaStart": false
       },
@@ -356,8 +384,10 @@
           },
           "neume": "Klasma_Bottom"
         },
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "heark -",
         "isMelisma": false,
         "isMelismaStart": false
@@ -374,8 +404,10 @@
           "neume": "OligonPlusElaphronPlusKentemata"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "en",
         "isMelismaStart": false
       },
@@ -390,6 +422,7 @@
           },
           "neume": "OligonPlusElaphronPlusKentemata"
         },
+        "timeNeume": null,
         "gorgonNeume": {
           "offset": {
             "x": 0,
@@ -399,6 +432,7 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "un -",
         "isMelismaStart": false
       },
@@ -414,8 +448,10 @@
           "neume": "Apostrophos"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "-",
         "isMelismaStart": false
       },
@@ -431,8 +467,10 @@
           "neume": "RunningElaphron"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "- to",
         "isMelisma": true,
         "isMelismaStart": true
@@ -448,6 +486,7 @@
           },
           "neume": "Oligon"
         },
+        "timeNeume": null,
         "gorgonNeume": {
           "offset": {
             "x": 0,
@@ -463,6 +502,7 @@
           "neume": "Antikenoma"
         },
         "fthora": null,
+        "accidental": null,
         "lyrics": "",
         "isMelisma": true,
         "isMelismaStart": false
@@ -479,8 +519,10 @@
           "neume": "Apostrophos"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "",
         "isMelisma": true,
         "isMelismaStart": false
@@ -503,8 +545,10 @@
           },
           "neume": "Klasma_Top"
         },
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "me;",
         "isMelisma": false,
         "isMelismaStart": false
@@ -529,8 +573,10 @@
           "neume": "OligonPlusKentimaBelow"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "heark -",
         "isMelisma": false,
         "isMelismaStart": false
@@ -547,6 +593,7 @@
           "neume": "Oligon"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": {
           "offset": {
             "x": 0,
@@ -555,6 +602,13 @@
           "neume": "Psifiston"
         },
         "fthora": null,
+        "accidental": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Flat_2_Right"
+        },
         "lyrics": "-",
         "isMelisma": false,
         "isMelismaStart": false
@@ -571,8 +625,10 @@
           "neume": "RunningElaphron"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "- en",
         "isMelisma": true,
         "isMelismaStart": true
@@ -588,6 +644,13 @@
           },
           "neume": "Apostrophos"
         },
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Hapli_Right"
+        },
         "gorgonNeume": {
           "offset": {
             "x": 0,
@@ -597,6 +660,7 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "",
         "isMelisma": true,
         "isMelismaStart": false
@@ -612,6 +676,7 @@
           },
           "neume": "OligonPlusIsonPlusKentemata"
         },
+        "timeNeume": null,
         "gorgonNeume": {
           "offset": {
             "x": 0,
@@ -621,6 +686,7 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "un -",
         "isMelisma": false,
         "isMelismaStart": false
@@ -637,8 +703,10 @@
           "neume": "Apostrophos"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "-",
         "isMelismaStart": false
       },
@@ -654,6 +722,7 @@
           "neume": "Apostrophos"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": {
           "offset": {
             "x": 0,
@@ -662,6 +731,7 @@
           "neume": "Vareia"
         },
         "fthora": null,
+        "accidental": null,
         "lyrics": "to",
         "isMelisma": true,
         "isMelismaStart": true
@@ -678,8 +748,10 @@
           "neume": "Apostrophos"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "",
         "isMelisma": true,
         "isMelismaStart": false
@@ -696,8 +768,10 @@
           "neume": "Oligon"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "me,",
         "isMelisma": true,
         "isMelismaStart": true
@@ -714,8 +788,10 @@
           "neume": "KentemataPlusOligon"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "",
         "isMelisma": true,
         "isMelismaStart": false
@@ -731,6 +807,7 @@
           },
           "neume": "OligonPlusKentemata"
         },
+        "timeNeume": null,
         "gorgonNeume": {
           "offset": {
             "x": 0,
@@ -740,6 +817,7 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "",
         "isMelisma": true,
         "isMelismaStart": false
@@ -762,6 +840,7 @@
           },
           "neume": "Klasma_TopRight"
         },
+        "gorgonNeume": null,
         "vocalExpressionNeume": {
           "offset": {
             "x": 0,
@@ -770,6 +849,7 @@
           "neume": "Vareia"
         },
         "fthora": null,
+        "accidental": null,
         "lyrics": "O",
         "isMelisma": true,
         "isMelismaStart": true
@@ -785,6 +865,7 @@
           },
           "neume": "Hyporoe"
         },
+        "timeNeume": null,
         "gorgonNeume": {
           "offset": {
             "x": 0,
@@ -794,6 +875,7 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "",
         "isMelisma": true,
         "isMelismaStart": false
@@ -809,6 +891,7 @@
           },
           "neume": "Oligon"
         },
+        "timeNeume": null,
         "gorgonNeume": {
           "offset": {
             "x": 0,
@@ -824,6 +907,7 @@
           "neume": "Antikenoma"
         },
         "fthora": null,
+        "accidental": null,
         "lyrics": "",
         "isMelisma": true,
         "isMelismaStart": false
@@ -840,8 +924,10 @@
           "neume": "Apostrophos"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "",
         "isMelisma": true,
         "isMelismaStart": false
@@ -864,8 +950,10 @@
           },
           "neume": "Klasma_Top"
         },
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "Lord.",
         "isMelisma": false,
         "isMelismaStart": false
@@ -890,8 +978,10 @@
           "neume": "OligonPlusKentimaAbove"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "Lord,",
         "isMelisma": true,
         "isMelismaStart": true
@@ -908,6 +998,7 @@
           "neume": "Ison"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": {
           "offset": {
             "x": 0,
@@ -916,6 +1007,7 @@
           "neume": "HomalonConnecting"
         },
         "fthora": null,
+        "accidental": null,
         "lyrics": "",
         "isMelisma": true,
         "isMelismaStart": false
@@ -932,8 +1024,10 @@
           "neume": "Apostrophos"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "I",
         "isMelisma": false,
         "isMelismaStart": false
@@ -950,8 +1044,10 @@
           "neume": "Oligon"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "have",
         "isMelismaStart": false
       },
@@ -967,6 +1063,7 @@
           "neume": "OligonPlusKentemata"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": {
           "offset": {
             "x": 0,
@@ -975,6 +1072,13 @@
           "neume": "Psifiston"
         },
         "fthora": null,
+        "accidental": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Flat_2_Right"
+        },
         "lyrics": "cried",
         "isMelisma": true,
         "isMelismaStart": true
@@ -991,8 +1095,10 @@
           "neume": "Apostrophos"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "",
         "isMelisma": true,
         "isMelismaStart": false
@@ -1009,8 +1115,10 @@
           "neume": "Apostrophos"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "",
         "isMelisma": true,
         "isMelismaStart": false
@@ -1033,8 +1141,10 @@
           },
           "neume": "Klasma_Bottom"
         },
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "un -",
         "isMelisma": false,
         "isMelismaStart": false
@@ -1051,8 +1161,10 @@
           "neume": "RunningElaphron"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "- to",
         "isMelisma": true,
         "isMelismaStart": true
@@ -1069,8 +1181,10 @@
           "neume": "Kentemata"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "",
         "isMelisma": true,
         "isMelismaStart": false
@@ -1086,6 +1200,7 @@
           },
           "neume": "OligonPlusKentemata"
         },
+        "timeNeume": null,
         "gorgonNeume": {
           "offset": {
             "x": 0,
@@ -1095,6 +1210,7 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "Thee,",
         "isMelisma": true,
         "isMelismaStart": true
@@ -1117,8 +1233,10 @@
           },
           "neume": "Klasma_TopRight"
         },
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "",
         "isMelisma": true,
         "isMelismaStart": false
@@ -1135,8 +1253,10 @@
           "neume": "VareiaDotted"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "",
         "isMelisma": false,
         "isMelismaStart": false
@@ -1161,6 +1281,7 @@
           "neume": "OligonPlusIsonPlusKentemata"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": {
           "offset": {
             "x": 0,
@@ -1169,6 +1290,7 @@
           "neume": "Psifiston"
         },
         "fthora": null,
+        "accidental": null,
         "lyrics": "heark -",
         "isMelismaStart": false
       },
@@ -1184,8 +1306,10 @@
           "neume": "Apostrophos"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "en",
         "isMelisma": true,
         "isMelismaStart": true
@@ -1202,8 +1326,10 @@
           "neume": "Apostrophos"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "",
         "isMelisma": true,
         "isMelismaStart": false
@@ -1226,8 +1352,10 @@
           },
           "neume": "Klasma_TopRight"
         },
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "un -",
         "isMelisma": false,
         "isMelismaStart": false
@@ -1250,6 +1378,7 @@
           },
           "neume": "Hapli_Right"
         },
+        "gorgonNeume": null,
         "vocalExpressionNeume": {
           "offset": {
             "x": 0,
@@ -1258,6 +1387,7 @@
           "neume": "AntikenomaShort"
         },
         "fthora": null,
+        "accidental": null,
         "lyrics": "to",
         "isMelisma": true,
         "isMelismaStart": true
@@ -1273,6 +1403,7 @@
           },
           "neume": "Apostrophos"
         },
+        "timeNeume": null,
         "gorgonNeume": {
           "offset": {
             "x": 0,
@@ -1282,6 +1413,7 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "",
         "isMelisma": true,
         "isMelismaStart": false
@@ -1298,6 +1430,7 @@
           "neume": "Oligon"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": {
           "offset": {
             "x": 0,
@@ -1306,6 +1439,7 @@
           "neume": "Vareia"
         },
         "fthora": null,
+        "accidental": null,
         "lyrics": "me;",
         "isMelisma": true,
         "isMelismaStart": true
@@ -1321,6 +1455,7 @@
           },
           "neume": "Hyporoe"
         },
+        "timeNeume": null,
         "gorgonNeume": {
           "offset": {
             "x": 0,
@@ -1330,6 +1465,7 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "",
         "isMelisma": true,
         "isMelismaStart": false
@@ -1352,8 +1488,10 @@
           },
           "neume": "Klasma_Top"
         },
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "",
         "isMelisma": true,
         "isMelismaStart": false
@@ -1378,8 +1516,10 @@
           "neume": "OligonPlusKentima"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "at -",
         "isMelisma": false,
         "isMelismaStart": false
@@ -1402,8 +1542,10 @@
           },
           "neume": "Klasma_Bottom"
         },
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "tend",
         "isMelisma": false,
         "isMelismaStart": false
@@ -1420,8 +1562,10 @@
           "neume": "Apostrophos"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "to",
         "isMelisma": false,
         "isMelismaStart": false
@@ -1438,8 +1582,10 @@
           "neume": "Apostrophos"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "the",
         "isMelisma": false,
         "isMelismaStart": false
@@ -1456,8 +1602,10 @@
           "neume": "Oligon"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "voice",
         "isMelisma": true,
         "isMelismaStart": true
@@ -1474,6 +1622,7 @@
           "neume": "Oligon"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": {
           "offset": {
             "x": 0,
@@ -1482,6 +1631,7 @@
           "neume": "Antikenoma"
         },
         "fthora": null,
+        "accidental": null,
         "lyrics": "",
         "isMelisma": true,
         "isMelismaStart": false
@@ -1497,6 +1647,7 @@
           },
           "neume": "Hyporoe"
         },
+        "timeNeume": null,
         "gorgonNeume": {
           "offset": {
             "x": 0,
@@ -1506,6 +1657,7 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "",
         "isMelisma": true,
         "isMelismaStart": false
@@ -1522,8 +1674,10 @@
           "neume": "Apostrophos"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "",
         "isMelisma": true,
         "isMelismaStart": false
@@ -1540,6 +1694,7 @@
           "neume": "Apostrophos"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": {
           "offset": {
             "x": 0,
@@ -1548,6 +1703,7 @@
           "neume": "Vareia"
         },
         "fthora": null,
+        "accidental": null,
         "lyrics": "of",
         "isMelisma": true,
         "isMelismaStart": true
@@ -1563,6 +1719,7 @@
           },
           "neume": "Apostrophos"
         },
+        "timeNeume": null,
         "gorgonNeume": {
           "offset": {
             "x": 0,
@@ -1572,6 +1729,7 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "",
         "isMelisma": true,
         "isMelismaStart": false
@@ -1588,8 +1746,10 @@
           "neume": "Oligon"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "",
         "isMelisma": true,
         "isMelismaStart": false
@@ -1612,8 +1772,10 @@
           },
           "neume": "Klasma_Top"
         },
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "my",
         "isMelisma": false,
         "isMelismaStart": false
@@ -1629,6 +1791,7 @@
           },
           "neume": "OligonPlusKentemata"
         },
+        "timeNeume": null,
         "gorgonNeume": {
           "offset": {
             "x": 0,
@@ -1638,6 +1801,7 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "sup",
         "isMelisma": false,
         "isMelismaStart": false
@@ -1654,8 +1818,10 @@
           "neume": "Apostrophos"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "-",
         "isMelisma": false,
         "isMelismaStart": false
@@ -1672,8 +1838,10 @@
           "neume": "OligonPlusKentemata"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "pli",
         "isMelisma": false,
         "isMelismaStart": false
@@ -1696,6 +1864,7 @@
           },
           "neume": "Klasma_TopRight"
         },
+        "gorgonNeume": null,
         "vocalExpressionNeume": {
           "offset": {
             "x": 0,
@@ -1704,6 +1873,7 @@
           "neume": "Vareia"
         },
         "fthora": null,
+        "accidental": null,
         "lyrics": "- ca",
         "isMelisma": false,
         "isMelismaStart": false
@@ -1719,6 +1889,7 @@
           },
           "neume": "Hyporoe"
         },
+        "timeNeume": null,
         "gorgonNeume": {
           "offset": {
             "x": 0,
@@ -1728,6 +1899,7 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "-",
         "isMelisma": false,
         "isMelismaStart": false
@@ -1743,6 +1915,7 @@
           },
           "neume": "Oligon"
         },
+        "timeNeume": null,
         "gorgonNeume": {
           "offset": {
             "x": 0,
@@ -1758,6 +1931,7 @@
           "neume": "Antikenoma"
         },
         "fthora": null,
+        "accidental": null,
         "lyrics": "-",
         "isMelisma": false,
         "isMelismaStart": false
@@ -1774,8 +1948,10 @@
           "neume": "Apostrophos"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "-",
         "isMelisma": false,
         "isMelismaStart": false
@@ -1798,8 +1974,10 @@
           },
           "neume": "Klasma_Top"
         },
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "tion",
         "isMelisma": false,
         "isMelismaStart": false
@@ -1824,8 +2002,10 @@
           "neume": "OligonPlusKentima"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "when",
         "isMelisma": false,
         "isMelismaStart": false
@@ -1842,8 +2022,10 @@
           "neume": "Ison"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "I",
         "isMelisma": false,
         "isMelismaStart": false
@@ -1860,6 +2042,7 @@
           "neume": "OligonPlusHypsiliRight"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": {
           "offset": {
             "x": 0,
@@ -1868,6 +2051,7 @@
           "neume": "Psifiston"
         },
         "fthora": null,
+        "accidental": null,
         "lyrics": "cry_",
         "isMelisma": true,
         "isMelismaStart": true
@@ -1884,8 +2068,10 @@
           "neume": "Apostrophos"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "",
         "isMelisma": true,
         "isMelismaStart": false
@@ -1908,8 +2094,10 @@
           },
           "neume": "Klasma_TopRight"
         },
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "un -",
         "isMelisma": false,
         "isMelismaStart": false
@@ -1932,6 +2120,7 @@
           },
           "neume": "Hapli_Right"
         },
+        "gorgonNeume": null,
         "vocalExpressionNeume": {
           "offset": {
             "x": 0,
@@ -1940,6 +2129,7 @@
           "neume": "AntikenomaShort"
         },
         "fthora": null,
+        "accidental": null,
         "lyrics": "to",
         "isMelisma": true,
         "isMelismaStart": true
@@ -1955,6 +2145,7 @@
           },
           "neume": "Apostrophos"
         },
+        "timeNeume": null,
         "gorgonNeume": {
           "offset": {
             "x": 0,
@@ -1964,6 +2155,7 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "",
         "isMelisma": true,
         "isMelismaStart": false
@@ -1980,6 +2172,7 @@
           "neume": "OligonPlusKentimaBelow"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": {
           "offset": {
             "x": 0,
@@ -1988,6 +2181,7 @@
           "neume": "Vareia"
         },
         "fthora": null,
+        "accidental": null,
         "lyrics": "Thee:",
         "isMelisma": true,
         "isMelismaStart": true
@@ -2003,6 +2197,7 @@
           },
           "neume": "Hyporoe"
         },
+        "timeNeume": null,
         "gorgonNeume": {
           "offset": {
             "x": 0,
@@ -2012,6 +2207,7 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "",
         "isMelisma": true,
         "isMelismaStart": false
@@ -2028,8 +2224,10 @@
           "neume": "Apostrophos"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "",
         "isMelisma": true,
         "isMelismaStart": false
@@ -2045,6 +2243,7 @@
           },
           "neume": "OligonPlusKentemata"
         },
+        "timeNeume": null,
         "gorgonNeume": {
           "offset": {
             "x": 0,
@@ -2054,6 +2253,7 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "",
         "isMelisma": true,
         "isMelismaStart": false
@@ -2076,8 +2276,10 @@
           },
           "neume": "Klasma_TopRight"
         },
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "",
         "isMelisma": true,
         "isMelismaStart": false
@@ -2102,8 +2304,10 @@
           "neume": "Ison"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "Heark",
         "isMelisma": false,
         "isMelismaStart": false
@@ -2120,8 +2324,10 @@
           "neume": "Kentemata"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "-",
         "isMelismaStart": false
       },
@@ -2143,8 +2349,10 @@
           },
           "neume": "Klasma_Top"
         },
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "en",
         "isMelismaStart": false
       },
@@ -2159,6 +2367,7 @@
           },
           "neume": "OligonPlusElaphronPlusKentemata"
         },
+        "timeNeume": null,
         "gorgonNeume": {
           "offset": {
             "x": 0,
@@ -2168,6 +2377,7 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "un",
         "isMelismaStart": false
       },
@@ -2183,8 +2393,10 @@
           "neume": "Apostrophos"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "-",
         "isMelismaStart": false
       },
@@ -2206,8 +2418,10 @@
           },
           "neume": "Klasma_Top"
         },
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "to",
         "isMelismaStart": false
       },
@@ -2223,8 +2437,10 @@
           "neume": "Oligon"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "me",
         "isMelisma": true,
         "isMelismaStart": true
@@ -2241,8 +2457,10 @@
           "neume": "Kentemata"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "",
         "isMelisma": true,
         "isMelismaStart": false
@@ -2265,6 +2483,7 @@
           },
           "neume": "Klasma_Bottom"
         },
+        "gorgonNeume": null,
         "vocalExpressionNeume": {
           "offset": {
             "x": 0,
@@ -2273,6 +2492,7 @@
           "neume": "Psifiston"
         },
         "fthora": null,
+        "accidental": null,
         "lyrics": "",
         "isMelisma": true,
         "isMelismaStart": false
@@ -2288,6 +2508,7 @@
           },
           "neume": "Apostrophos"
         },
+        "timeNeume": null,
         "gorgonNeume": {
           "offset": {
             "x": 0,
@@ -2297,6 +2518,7 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "",
         "isMelisma": true,
         "isMelismaStart": false
@@ -2319,6 +2541,7 @@
           },
           "neume": "Klasma_Top"
         },
+        "gorgonNeume": null,
         "vocalExpressionNeume": {
           "offset": {
             "x": 0,
@@ -2327,6 +2550,7 @@
           "neume": "Vareia"
         },
         "fthora": null,
+        "accidental": null,
         "lyrics": "O",
         "isMelisma": true,
         "isMelismaStart": true
@@ -2342,6 +2566,7 @@
           },
           "neume": "Hyporoe"
         },
+        "timeNeume": null,
         "gorgonNeume": {
           "offset": {
             "x": 0,
@@ -2351,6 +2576,7 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "",
         "isMelisma": true,
         "isMelismaStart": false
@@ -2366,6 +2592,7 @@
           },
           "neume": "Oligon"
         },
+        "timeNeume": null,
         "gorgonNeume": {
           "offset": {
             "x": 0,
@@ -2381,6 +2608,7 @@
           "neume": "Antikenoma"
         },
         "fthora": null,
+        "accidental": null,
         "lyrics": "",
         "isMelisma": true,
         "isMelismaStart": false
@@ -2397,8 +2625,10 @@
           "neume": "Apostrophos"
         },
         "timeNeume": null,
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "",
         "isMelisma": true,
         "isMelismaStart": false
@@ -2421,8 +2651,10 @@
           },
           "neume": "Dipli"
         },
+        "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
+        "accidental": null,
         "lyrics": "Lord.",
         "isMelismaStart": false
       },

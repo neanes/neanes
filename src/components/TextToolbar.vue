@@ -31,7 +31,7 @@ import { TextBoxAlignment, TextBoxElement } from '@/models/Element';
   components: {
   }
 })
-export default class TextToolBar extends Vue {
+export default class TextToolbar extends Vue {
   @Prop() element!: TextBoxElement;
 
   private get fontSize() {

@@ -28,6 +28,7 @@ import {
     ScoreElement as ScoreElement_v1, 
     ScoreElementOffset as ScoreElementOffset_v1,
     TimeNeumeElement as TimeNeumeElement_v1,
+    GorgonNeumeElement as GorgonNeumeElement_v1,
     VocalExpressionNeumeElement as VocalExpressionNeumeElement_v1,
 } from '@/models/save/v1/Element';
 
@@ -124,6 +125,13 @@ export class SaveService {
             element.timeNeume.offset = new ScoreElementOffset_v1();
             element.timeNeume.offset.x = e.timeNeume.offset.x;
             element.timeNeume.offset.y = e.timeNeume.offset.y;
+        }
+
+        if(e.gorgonNeume != null) {
+            element.gorgonNeume = new GorgonNeumeElement_v1(e.gorgonNeume.neume);
+            element.gorgonNeume.offset = new ScoreElementOffset_v1();
+            element.gorgonNeume.offset.x = e.gorgonNeume.offset.x;
+            element.gorgonNeume.offset.y = e.gorgonNeume.offset.y;
         }
 
         if(e.fthora != null) {
@@ -238,6 +246,13 @@ export class SaveService {
             element.timeNeume!.offset = new ScoreElementOffset();
             element.timeNeume!.offset.x = e.timeNeume.offset.x;
             element.timeNeume!.offset.y = e.timeNeume.offset.y;
+        }
+
+        if(e.gorgonNeume != null) {
+            element.setGorgonNeume(e.gorgonNeume.neume);
+            element.gorgonNeume!.offset = new ScoreElementOffset();
+            element.gorgonNeume!.offset.x = e.gorgonNeume.offset.x;
+            element.gorgonNeume!.offset.y = e.gorgonNeume.offset.y;
         }
 
         if(e.fthora != null) {

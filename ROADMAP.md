@@ -20,7 +20,7 @@
 
 ## Lord I Have Cried, Tone 1
 - [ ] Missing Neumes
-- [ ] Dot + Goron together
+- [X] Dot + Goron together
 - [X] Smart Neume Choice (Dots, Antikenoma, Gorgons)
 - [X] Melismas
 - [ ] Textbox Gap Analysis

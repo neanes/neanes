@@ -48,7 +48,7 @@ export class TextBoxElement extends ScoreElement {
     public alignment: TextBoxAlignment = TextBoxAlignment.Left;
     public color: string = 'black';
     public content: string = '';
-    public fontSize: string = '1rem';
+    public fontSize: number = 16;
     public fontFamily: string = 'Omega';
     public height: number = 20;
 }

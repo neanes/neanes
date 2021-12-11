@@ -38,7 +38,7 @@ export class LayoutService {
                 let textBoxElement = element as TextBoxElement;
 
                 elementWidthPx = pageSetup.innerPageWidth;
-                textBoxElement.height = Math.ceil(TextMeasurementService.getTextHeight(textBoxElement.content, `${textBoxElement.fontSize} ${textBoxElement.fontFamily}`));
+                textBoxElement.height = Math.ceil(TextMeasurementService.getTextHeight(textBoxElement.content, `${textBoxElement.fontSize}px ${textBoxElement.fontFamily}`));
             }
 
             if (element.elementType === ElementType.StaffText) {

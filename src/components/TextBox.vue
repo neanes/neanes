@@ -45,7 +45,7 @@ export default class TextBox extends Vue {
     const style: any =  {
       color: this.element.color,
       fontFamily: this.element.fontFamily,
-      fontSize: this.element.fontSize,
+      fontSize: this.element.fontSize + 'px',
       textAlign: this.element.alignment,
     };
 

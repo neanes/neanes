@@ -1,7 +1,7 @@
 <template>
   <div class="editor">
     <FileMenuBar @scoreUpdated="onScoreUpdated"/>
-    <div style="display: flex; flex:1; height: 100%">
+    <div class="content">
         <NeumeSelector class="neume-selector"
      @select-quantitative-neume="updateQuantitativeNeume" 
      @select-time-neume="updateTimeNeume"
@@ -89,6 +89,7 @@
                     :key="`element-${getElementIndex(element)}`" 
                     :ref="`textbox-${getElementIndex(element)}`"
                     :element="element"
+                    :class="[{ selectedTextbox: element == selectedElement }]"
                     @click.native="selectedElement = element"
                     @scoreUpdated="onScoreUpdated">
                   </TextBox>
@@ -112,6 +113,9 @@
     </div>
     </div>
     </div>
+    <template v-if="selectedElement != null && isTextBoxElement(selectedElement)">
+      <TextToolbar :element="selectedElement" @scoreUpdated="onScoreUpdated" />
+    </template>
   </div>
 </template>
 
@@ -134,7 +138,8 @@ import StaffText from '@/components/StaffText.vue';
 import TextBox from '@/components/TextBox.vue';
 import { store } from '@/store';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
-import DropCap from './DropCap.vue';
+import DropCap from '@/components/DropCap.vue';
+import TextToolbar from '@/components/TextToolbar.vue';
 
 @Component({
   components: {
@@ -147,6 +152,7 @@ import DropCap from './DropCap.vue';
     StaffText,
     TextBox,
     DropCap,
+    TextToolbar,
   }
 })
 export default class Editor extends Vue {
@@ -749,6 +755,10 @@ export default class Editor extends Vue {
   background-color: palegoldenrod;
 }
 
+.selectedTextbox {
+  border: 1px solid goldenrod;
+}
+
 .line {
     display: flex;
     flex-direction: row;
@@ -815,6 +825,12 @@ export default class Editor extends Vue {
   flex: 1;
 
   height: 100%;
+}
+
+.content {
+  display: flex; 
+  flex:1; 
+  overflow: auto;
 }
 
 .neume-selector {

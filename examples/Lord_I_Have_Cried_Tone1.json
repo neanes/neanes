@@ -7,22 +7,31 @@
         "pageBreak": false,
         "elementType": "TextBox",
         "alignment": "center",
-        "color": "blue",
+        "color": "#0000ff",
         "content": "Lord, I Have Cried",
-        "fontSize": "1.5rem",
+        "fontSize": 21,
         "fontFamily": "Omega",
-        "height": 23
+        "height": 20
       },
       {
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "TextBox",
         "alignment": "center",
-        "color": "red",
+        "color": "#ff0000",
         "content": "hqT",
-        "fontSize": "1.5rem",
+        "fontSize": 22.5,
         "fontFamily": "EzSpecial2",
-        "height": 29
+        "height": 27
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "DropCap",
+        "content": "L",
+        "fontFamily": null,
+        "fontSize": null,
+        "color": null
       },
       {
         "lineBreak": false,
@@ -44,9 +53,9 @@
         },
         "vocalExpressionNeume": null,
         "fthora": null,
-        "lyrics": "Lord,",
+        "lyrics": "ord,",
         "isMelisma": true,
-        "isMelismaStart": false
+        "isMelismaStart": true
       },
       {
         "lineBreak": false,
@@ -81,6 +90,7 @@
         "vocalExpressionNeume": null,
         "fthora": null,
         "lyrics": "I",
+        "isMelisma": false,
         "isMelismaStart": false
       },
       {
@@ -98,6 +108,7 @@
         "vocalExpressionNeume": null,
         "fthora": null,
         "lyrics": "have",
+        "isMelisma": false,
         "isMelismaStart": false
       },
       {

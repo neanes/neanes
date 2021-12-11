@@ -10,11 +10,11 @@
 - [X] Make sure Textbox position works
 
 ### Document Settings
-- [ ] Abstract Document Settings
+- [X] Abstract Document Settings
 - [ ] Document Settings Dialog
  
 ### Neumes
-- [ ] Sharps and Flats
+- [X] Sharps and Flats
 - [ ] Note Indicators
 - [ ] Ison
 
@@ -22,10 +22,10 @@
 - [ ] Missing Neumes
 - [ ] Dot + Goron together
 - [X] Smart Neume Choice (Dots, Antikenoma, Gorgons)
-- [ ] Melismas
+- [X] Melismas
 - [ ] Textbox Gap Analysis
 - [ ] Header Images
-- [ ] Drop Caps
+- [X] Drop Caps
 
 ## Tech Debt
 - [ ] Need to explicitly map between save file neumes and view model neumes. This will prevent errors due to mismatched or missing neumes in the save model.

@@ -56,14 +56,12 @@ export default class NeumeToolbar extends Vue {
   }
 
   .sharp {
-    display: inline-block;
     top: -23px;
     left: 24px;
     position: relative;
   }
 
   .flat {
-    display: inline-block;
     top: 2px;
     left: 2px;
     position: relative;

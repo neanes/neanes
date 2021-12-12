@@ -1,7 +1,7 @@
 <template>
-  <div class="file-menu-bar-item" @click="$emit('click')" @focusout="$emit('focusout')" tabindex="-1">
+  <div class="file-menu-bar-item" @click="$emit('click')" @mouseenter="$emit('mouseenter')">
     {{label}}
-    <div class="file-menu-item-container" v-show="isOpen">
+    <div class="file-menu-item-container" v-if="isOpen">
       <slot/>
     </div>
   </div>
@@ -22,8 +22,10 @@ export default class FileMenuBarItem extends Vue {
   .file-menu-item-container {
     position:absolute;
     left: 0;
+    margin-top: 0.25rem;
 
     background-color: lightgray;
+    
     width: 16rem;
 
     z-index: 9999;
@@ -38,9 +40,4 @@ export default class FileMenuBarItem extends Vue {
   .file-menu-bar-item:hover {
     background-color: darkgray;
   }
-
-  /* .file-menu-bar-item:hover .file-menu-item-container {
-    display: block;
-  } */
-
 </style>

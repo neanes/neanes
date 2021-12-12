@@ -1,12 +1,12 @@
 <template>
-  <div class="file-menu-bar">
-    <FileMenuBarItem label="File" @click="toggleFileMenu" @focusout="closeFileMenu" :isOpen="isFileMenuOpen" >
+  <div class="file-menu-bar" @focusout="isMenuOpen = false" tabindex="-1">
+    <FileMenuBarItem label="File" @click="toggleMenu" @mouseenter="selectedMenu = 'File'" :isOpen="isMenuOpen && selectedMenu === 'File'">
       <FileMenuItem label="New" @click="onClickNew" />
       <FileMenuItem label="Open" @click="onClickOpen" />
       <FileMenuItem label="Save" @click="onClickSave" />
     </FileMenuBarItem>
     <FileMenuBarItem label="Edit"></FileMenuBarItem>
-    <FileMenuBarItem label="Add" @click="toggleAddMenu" @focusout="closeAddMenu" :isOpen="isAddMenuOpen">
+    <FileMenuBarItem label="Add" @click="toggleMenu" @mouseenter="selectedMenu = 'Add'" :isOpen="isMenuOpen && selectedMenu === 'Add'">
       <FileMenuItem label="Neume" @click="onClickAddNeume" />
       <FileMenuItem label="Text Box" @click="onClickAddTextBox" />
       <FileMenuItem label="Staff Text" @click="onClickAddStaffText" />
@@ -32,8 +32,8 @@ import { store } from '@/store';
   }
 })
 export default class FileMenuBar extends Vue {
-  private isFileMenuOpen = false;
-  private isAddMenuOpen = false;
+  private isMenuOpen = false;
+  private selectedMenu = '';
 
   private get score() {
     return store.state.score;
@@ -43,21 +43,8 @@ export default class FileMenuBar extends Vue {
     return this.$refs.file as HTMLInputElement;
   }
 
-  toggleFileMenu() {
-    this.isFileMenuOpen = !this.isFileMenuOpen;
-  }
-
-  closeFileMenu() {
-    this.isFileMenuOpen = false;
-  }
-
-  
-  toggleAddMenu() {
-    this.isAddMenuOpen = !this.isAddMenuOpen;
-  }
-
-  closeAddMenu() {
-    this.isAddMenuOpen = false;
+  toggleMenu() {
+    this.isMenuOpen = !this.isMenuOpen;
   }
 
   onClickNew() {

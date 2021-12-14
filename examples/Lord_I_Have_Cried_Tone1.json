@@ -1,5 +1,22 @@
 {
   "version": "1.0",
+  "pageSetup": {
+    "pageWidth": 816,
+    "pageHeight": 1056,
+    "topMargin": 96,
+    "bottomMargin": 96,
+    "leftMargin": 96,
+    "rightMargin": 96,
+    "lineHeight": 72,
+    "lyricsDefaultFontFamily": "Omega",
+    "lyricsDefaultFontSize": 16,
+    "lyricsVerticalOffset": 40,
+    "neumeDefaultFontSize": 26.666666666666668,
+    "martyriaDefaultColor": "#ED0000",
+    "dropCapDefaultFontFamily": "Athonite",
+    "dropCapDefaultFontSize": 80,
+    "dropCapDefaultColor": "black"
+  },
   "staff": {
     "elements": [
       {

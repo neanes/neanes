@@ -1,5 +1,5 @@
 <template>
-  <div class="neume">
+  <div class="neume" :style="style">
     <Neume 
       v-if="hasVocalExpressionNeume && isVareia(note.vocalExpressionNeume.neume)" :neume="note.vocalExpressionNeume.neume"></Neume>
     <Neume :neume="note.quantitativeNeume.neume"></Neume>
@@ -38,6 +38,7 @@ import { NoteElement } from '@/models/Element';
 import { QuantitativeNeume, isHighNeume, isRedNeume, VocalExpressionNeume } from '@/models/Neumes';
 import Neume from '@/components/Neume.vue';
 import TimeNeumeBox from '@/components/TimeNeume.vue';
+import { store } from '@/store';
 
 @Component({
   components: {
@@ -47,6 +48,10 @@ import TimeNeumeBox from '@/components/TimeNeume.vue';
 })
 export default class NeumeBoxSyllable extends Vue {
   @Prop() note!: NoteElement;
+
+  get pageSetup() {
+    return store.state.pageSetup;
+  }
 
   get hasVocalExpressionNeume() {
     return this.note.vocalExpressionNeume != null;
@@ -66,6 +71,12 @@ export default class NeumeBoxSyllable extends Vue {
 
   get hasAccidental() {
     return this.note.accidental != null;
+  }
+
+  get style() {
+    return {
+      fontSize: this.pageSetup.neumeDefaultFontSize + 'px',
+    } as CSSStyleDeclaration;
   }
 
   get timeNeumeStyle() {
@@ -107,7 +118,6 @@ export default class NeumeBoxSyllable extends Vue {
 <style scoped>
 
 .neume {
-    font-size: 1.6rem;
     cursor: default;
 }
 

@@ -45,7 +45,7 @@
                     @click.native="selectedElement = element"
                     ></SyllableNeumeBox>
                     <div class="lyrics-container"
-                      :style="{ top: pageSetup.lyricsVerticalOffset + 'px' }"
+                      :style="{ top: score.pageSetup.lyricsVerticalOffset + 'px' }"
                       @click="selectedElement = null">
                       <ContentEditable 
                           class="lyrics"
@@ -167,10 +167,6 @@ export default class Editor extends Vue {
   
   get score() {
     return store.state.score;
-  }
-
-  get pageSetup() {
-    return store.state.pageSetup;
   }
 
   get elements() {
@@ -664,7 +660,7 @@ export default class Editor extends Vue {
 
   save() {
     localStorage.setItem('score', JSON.stringify(SaveService.SaveScoreToJson(this.score)));
-    this.pages = LayoutService.processPages(this.elements, this.pageSetup);
+    this.pages = LayoutService.processPages(this.elements, this.score.pageSetup);
   }
 
   load() {
@@ -681,7 +677,7 @@ export default class Editor extends Vue {
 
     //this.score.elements = this.generateTestFile();
 
-    this.pages = LayoutService.processPages(this.elements, this.pageSetup);
+    this.pages = LayoutService.processPages(this.elements, this.score.pageSetup);
   }
 
   updateLyrics(element: NoteElement, lyrics: string) {

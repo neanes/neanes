@@ -5,14 +5,12 @@ import { PageSetup } from './models/PageSetup';
 
 interface IState {
   score: Score;
-  pageSetup: PageSetup;
   selectedElement: ScoreElement | null;
   elementToFocus: ScoreElement | null;
 }
 
 const state: IState = Vue.observable({
   score: new Score(),
-  pageSetup: new PageSetup(),
   selectedElement: null,
   elementToFocus: null,
 });

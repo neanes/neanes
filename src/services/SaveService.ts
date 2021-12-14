@@ -31,6 +31,8 @@ import {
     GorgonNeumeElement as GorgonNeumeElement_v1,
     VocalExpressionNeumeElement as VocalExpressionNeumeElement_v1,
 } from '@/models/save/v1/Element';
+import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
+import { PageSetup } from '@/models/PageSetup';
 
 interface IScore  {
     version: string;
@@ -60,6 +62,23 @@ export class SaveService {
         
         score.staff = new Staff_v1();
         score.staff.elements = [];
+
+        score.pageSetup = new PageSetup_v1();
+        score.pageSetup.bottomMargin = s.pageSetup.bottomMargin;
+        score.pageSetup.dropCapDefaultColor = s.pageSetup.dropCapDefaultColor;
+        score.pageSetup.dropCapDefaultFontFamily = s.pageSetup.dropCapDefaultFontFamily;
+        score.pageSetup.dropCapDefaultFontSize = s.pageSetup.dropCapDefaultFontSize;
+        score.pageSetup.leftMargin = s.pageSetup.leftMargin;
+        score.pageSetup.lineHeight = s.pageSetup.lineHeight;
+        score.pageSetup.lyricsDefaultFontFamily = s.pageSetup.lyricsDefaultFontFamily;
+        score.pageSetup.lyricsDefaultFontSize = s.pageSetup.lyricsDefaultFontSize;
+        score.pageSetup.lyricsVerticalOffset = s.pageSetup.lyricsVerticalOffset;
+        score.pageSetup.martyriaDefaultColor = s.pageSetup.martyriaDefaultColor;
+        score.pageSetup.neumeDefaultFontSize = s.pageSetup.neumeDefaultFontSize;
+        score.pageSetup.pageHeight = s.pageSetup.pageHeight;
+        score.pageSetup.pageWidth = s.pageSetup.pageWidth;
+        score.pageSetup.rightMargin = s.pageSetup.rightMargin;
+        score.pageSetup.topMargin = s.pageSetup.topMargin;
 
         for (let e of s.staff.elements) {
             let element: ScoreElement_v1 = new EmptyElement_v1();
@@ -181,6 +200,23 @@ export class SaveService {
         
         score.staff = new Staff();
         score.staff.elements = [];
+
+        score.pageSetup = new PageSetup();
+        score.pageSetup.bottomMargin = s.pageSetup.bottomMargin;
+        score.pageSetup.dropCapDefaultColor = s.pageSetup.dropCapDefaultColor;
+        score.pageSetup.dropCapDefaultFontFamily = s.pageSetup.dropCapDefaultFontFamily;
+        score.pageSetup.dropCapDefaultFontSize = s.pageSetup.dropCapDefaultFontSize;
+        score.pageSetup.leftMargin = s.pageSetup.leftMargin;
+        score.pageSetup.lineHeight = s.pageSetup.lineHeight;
+        score.pageSetup.lyricsDefaultFontFamily = s.pageSetup.lyricsDefaultFontFamily;
+        score.pageSetup.lyricsDefaultFontSize = s.pageSetup.lyricsDefaultFontSize;
+        score.pageSetup.lyricsVerticalOffset = s.pageSetup.lyricsVerticalOffset;
+        score.pageSetup.martyriaDefaultColor = s.pageSetup.martyriaDefaultColor;
+        score.pageSetup.neumeDefaultFontSize = s.pageSetup.neumeDefaultFontSize;
+        score.pageSetup.pageHeight = s.pageSetup.pageHeight;
+        score.pageSetup.pageWidth = s.pageSetup.pageWidth;
+        score.pageSetup.rightMargin = s.pageSetup.rightMargin;
+        score.pageSetup.topMargin = s.pageSetup.topMargin;
 
         for (let e of s.staff.elements) {
             let element: ScoreElement = new EmptyElement();

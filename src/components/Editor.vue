@@ -873,6 +873,7 @@ export default class Editor extends Vue {
   min-width: 1rem;
   text-align: center;
   position: absolute;
+  white-space: nowrap;
 }
 
 .melisma {

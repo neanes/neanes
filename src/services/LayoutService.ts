@@ -58,14 +58,14 @@ export class LayoutService {
                 }
 
                 elementWidthPx = Math.max(
-                    Math.floor(TextMeasurementService.getTextWidth(text, `1.6rem ${mapping.fontFamily}`)),
-                    Math.floor(TextMeasurementService.getTextWidth(noteElement.lyrics, `1rem Omega`))
+                    Math.floor(TextMeasurementService.getTextWidth(text, `${pageSetup.neumeDefaultFontSize}px ${mapping.fontFamily}`)),
+                    Math.floor(TextMeasurementService.getTextWidth(noteElement.lyrics, `${pageSetup.lyricsDefaultFontSize}px ${pageSetup.lyricsDefaultFontFamily}`))
                 );
             }
             else if (element.elementType === ElementType.Martyria) {
                 const martyriaElement = element as MartyriaElement;
                 const mapping = neumeMap.get(martyriaElement.note)!;
-                elementWidthPx = Math.floor(TextMeasurementService.getTextWidth(mapping.text, `1.6rem ${mapping.fontFamily}`));
+                elementWidthPx = Math.floor(TextMeasurementService.getTextWidth(mapping.text, `${pageSetup.neumeDefaultFontSize}px ${mapping.fontFamily}`));
             }
             else if (element.elementType === ElementType.DropCap) {
                 const dropCapElement = element as DropCapElement;
@@ -128,14 +128,14 @@ export class LayoutService {
 
             // Special logic to adjust drop caps
             if (element.elementType === ElementType.DropCap) {
-                const neumeHeight = pageSetup.neumeDefaultFontSize + pageSetup.lyricsDefaultFontSize;
+                const distanceFromTopToBottomOfLyrics = pageSetup.lyricsVerticalOffset + pageSetup.lyricsDefaultFontSize;
                 const dropCapElement = element as DropCapElement;
                 const dropCapFontFamily = dropCapElement.fontFamily || pageSetup.dropCapDefaultFontFamily;
                 const dropCapFontSize = dropCapElement.fontSize || pageSetup.dropCapDefaultFontSize;
-                const font = `${dropCapFontSize}px ${dropCapFontFamily}`
-                const fontHeight = TextMeasurementService.getFontHeight(font)
-                const fountBoundingBoxDescent = TextMeasurementService.getFontBoundingBoxDescent(dropCapElement.content, font);
-                const adjustment = Math.floor(fontHeight - neumeHeight - fountBoundingBoxDescent);
+                const dropCapFont = `${dropCapFontSize}px ${dropCapFontFamily}`;
+                const fontHeight = TextMeasurementService.getFontHeight(dropCapFont);
+                const fountBoundingBoxDescent = TextMeasurementService.getFontBoundingBoxDescent(dropCapElement.content, dropCapFont);
+                const adjustment = Math.floor(fontHeight - distanceFromTopToBottomOfLyrics - fountBoundingBoxDescent);
 
                 element.y -= adjustment;
             }

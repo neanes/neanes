@@ -44,7 +44,8 @@
                     :class="[{ selected: element == selectedElement }]"
                     @click.native="selectedElement = element"
                     ></SyllableNeumeBox>
-                    <div class=lyrics-container
+                    <div class="lyrics-container"
+                      :style="{ top: pageSetup.lyricsVerticalOffset + 'px' }"
                       @click="selectedElement = null">
                       <ContentEditable 
                           class="lyrics"
@@ -875,6 +876,7 @@ export default class Editor extends Vue {
   min-height: 1.6rem;
   min-width: 1rem;
   text-align: center;
+  position: absolute;
 }
 
 .melisma {
@@ -885,7 +887,6 @@ export default class Editor extends Vue {
 
 .neume {
   display: flex;
-  height: 2.5rem;
  }
 
 @media print {

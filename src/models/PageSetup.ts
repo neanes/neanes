@@ -1,4 +1,4 @@
-import { Unit } from "./Unit";
+import { Unit } from "../utils/Unit";
 
 export class PageSetup {
     public pageWidth = Unit.FromInch(8.5);
@@ -11,12 +11,15 @@ export class PageSetup {
     public lineHeight = Unit.FromInch(0.75);
 
     public lyricsDefaultFontFamily = 'Omega';
-    public lyricsDefaultFontSize = 16;
-    
-    public neumeDefaultFontSize = 40;
+    public lyricsDefaultFontSize = Unit.FromPt(12);
+    public lyricsVerticalOffset = Unit.FromPt(30);
+
+    public neumeDefaultFontSize = Unit.FromPt(20);
+
+    public martyriaDefaultColor = '#ED0000';
 
     public dropCapDefaultFontFamily = 'Athonite';
-    public dropCapDefaultFontSize = 80;
+    public dropCapDefaultFontSize = Unit.FromPt(60);
     public dropCapDefaultColor = 'black';
 
     public get innerPageWidth() {

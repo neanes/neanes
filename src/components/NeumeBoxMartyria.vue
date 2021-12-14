@@ -22,7 +22,7 @@ export default class NeumeBoxMartyria extends Vue {
   @Prop() neume!: MartyriaElement;
 
   get pageSetup() {
-    return store.state.pageSetup;
+    return store.state.score.pageSetup;
   }
 
   get noteMapping() {

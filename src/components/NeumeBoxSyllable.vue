@@ -50,7 +50,7 @@ export default class NeumeBoxSyllable extends Vue {
   @Prop() note!: NoteElement;
 
   get pageSetup() {
-    return store.state.pageSetup;
+    return store.state.score.pageSetup;
   }
 
   get hasVocalExpressionNeume() {

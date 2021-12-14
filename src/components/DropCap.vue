@@ -27,7 +27,7 @@ export default class DropCap extends Vue {
   editable: boolean = false;
 
   get pageSetup() {
-    return store.state.pageSetup;
+    return store.state.score.pageSetup;
   }
 
   get selectedElement() {

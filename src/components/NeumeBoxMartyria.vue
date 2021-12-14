@@ -1,5 +1,5 @@
 <template>
-  <div class="neume">
+  <div class="neume" :style="style">
     <Neume :neume="neume.note"></Neume>
     <Neume :neume="neume.rootSign"></Neume>
     <Neume v-if="neume.apostrophe" neume="Apostrophe"></Neume>
@@ -11,6 +11,7 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 import { MartyriaElement } from '@/models/Element';
 import { neumeMap } from '@/models/NeumeMappings';
 import Neume  from '@/components/Neume.vue'
+import { store } from '@/store';
 
 @Component({
   components: {
@@ -20,6 +21,10 @@ import Neume  from '@/components/Neume.vue'
 export default class NeumeBoxMartyria extends Vue {
   @Prop() neume!: MartyriaElement;
 
+  get pageSetup() {
+    return store.state.pageSetup;
+  }
+
   get noteMapping() {
     return neumeMap.get(this.neume.note!)!;
   }
@@ -27,13 +32,16 @@ export default class NeumeBoxMartyria extends Vue {
   get rootSignMapping() {
     return neumeMap.get(this.neume.rootSign!)!;
   }
+
+  get style() {
+    return {
+      color: this.pageSetup.martyriaDefaultColor,
+      fontSize: this.pageSetup.neumeDefaultFontSize + 'px',
+    } as CSSStyleDeclaration;
+  }
 }
 </script>
 
 <style scoped>
-.neume {
-    font-size: 1.6rem;
 
-    color: #ED0000;
-}
 </style>

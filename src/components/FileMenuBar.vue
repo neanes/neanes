@@ -9,6 +9,7 @@
     <FileMenuBarItem label="Add" @click="toggleMenu" @mouseenter="selectedMenu = 'Add'" :isOpen="isMenuOpen && selectedMenu === 'Add'">
       <FileMenuItem label="Neume" @click="onClickAddNeume" />
       <FileMenuItem label="Text Box" @click="onClickAddTextBox" />
+      <FileMenuItem label="Paragraph" @click="onClickAddParagraph" />
       <FileMenuItem label="Staff Text" @click="onClickAddStaffText" />
       <FileMenuItem label="Drop Cap" @click="onClickAddDropCap" />
     </FileMenuBarItem>
@@ -21,7 +22,7 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 import FileMenuBarItem from '@/components/FileMenuBarItem.vue';
 import FileMenuItem from '@/components/FileMenuItem.vue';
 import { Score } from '@/models/Score';
-import { TextBoxElement, StaffTextElement, EmptyElement, DropCapElement } from '@/models/Element';
+import { TextBoxElement, StaffTextElement, EmptyElement, DropCapElement, ModeKeyElement } from '@/models/Element';
 import { SaveService } from '@/services/SaveService';
 import { store } from '@/store';
 
@@ -99,6 +100,11 @@ export default class FileMenuBar extends Vue {
 
   onClickAddTextBox() {
     store.getters.elements.splice(store.getters.selectedElementIndex, 0, new TextBoxElement());
+    this.$emit('scoreUpdated');
+  }
+
+  onClickAddParagraph() {
+    store.getters.elements.splice(store.getters.selectedElementIndex, 0, new ModeKeyElement());
     this.$emit('scoreUpdated');
   }
 

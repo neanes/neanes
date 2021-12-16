@@ -31,15 +31,18 @@
         "height": 20
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
-        "elementType": "TextBox",
+        "elementType": "ModeKey",
         "alignment": "center",
+        "neumes": [
+          "ModeSign.Ekhos",
+          "ModeSign.Alpha",
+          "ModeSign.DeltaHat",
+          "ModeSign.Pa",
+          "DiatonicPa_TopCenter"
+        ],
+        "fontSize": 21,
         "color": "#ff0000",
-        "content": "hqT",
-        "fontSize": 22.5,
-        "fontFamily": "EzSpecial2",
-        "height": 27
+        "height": 20
       },
       {
         "lineBreak": false,

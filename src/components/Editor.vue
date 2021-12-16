@@ -96,6 +96,16 @@
                     @scoreUpdated="onScoreUpdated">
                   </TextBox>
               </template>
+              <template v-if="isModeKeyElement(element)">
+                  <ModeKey 
+                    :key="`element-${getElementIndex(element)}`" 
+                    :ref="`paragraph-${getElementIndex(element)}`"
+                    :element="element"
+                    :class="[{ selectedTextbox: element == selectedElement }]"
+                    @click.native="selectedElement = element"
+                    @scoreUpdated="onScoreUpdated">
+                  </ModeKey>
+              </template>
               <template v-if="isStaffTextElement(element)">
                   <StaffText :key="`element-${getElementIndex(element)}`" 
                     :ref="`element-${getElementIndex(element)}`"
@@ -126,7 +136,7 @@
 
 <script lang="ts">
 import { Component, Prop, Watch, Vue } from 'vue-property-decorator';
-import { ScoreElement, MartyriaElement, NoteElement, ElementType, EmptyElement, TextBoxElement, VocalExpressionNeumeElement, QuantitativeNeumeElement, TimeNeumeElement, FthoraElement } from '@/models/Element';
+import { ScoreElement, MartyriaElement, NoteElement, ElementType, EmptyElement, TextBoxElement, VocalExpressionNeumeElement, QuantitativeNeumeElement, TimeNeumeElement, FthoraElement, ModeKeyElement } from '@/models/Element';
 import { QuantitativeNeume, TimeNeume, Note, RootSign, VocalExpressionNeume, Fthora, GorgonNeume } from '@/models/Neumes';
 import { Page, Line } from '@/models/Page';
 import { Score } from '@/models/Score';
@@ -144,8 +154,10 @@ import TextBox from '@/components/TextBox.vue';
 import { store } from '@/store';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
 import DropCap from '@/components/DropCap.vue';
+import ModeKey from '@/components/ModeKey.vue';
 import TextToolbar from '@/components/TextToolbar.vue';
 import NeumeToolbar from '@/components/NeumeToolbar.vue';
+import Neume from './Neume.vue';
 
 @Component({
   components: {
@@ -158,6 +170,7 @@ import NeumeToolbar from '@/components/NeumeToolbar.vue';
     StaffText,
     TextBox,
     DropCap,
+    ModeKey,
     TextToolbar,
     NeumeToolbar,
   }
@@ -191,6 +204,7 @@ export default class Editor extends Vue {
       fontLoader.load('1rem EzSpecial1'),
       fontLoader.load('1rem EzSpecial2'),
       fontLoader.load('1rem EzFthora'),
+      fontLoader.load('1rem Oxeia'),
       fontLoader.ready
     ]);
 
@@ -311,20 +325,19 @@ export default class Editor extends Vue {
 
   updateQuantitativeNeume(neume: QuantitativeNeume) {
     if(this.selectedElement) {
-      const index = this.elements.indexOf(this.selectedElement);
+        const index = this.elements.indexOf(this.selectedElement);
 
-      if (index === this.elements.length - 1) {
-        this.addEmptyElement();
-      }
+        if (index === this.elements.length - 1) {
+          this.addEmptyElement();
+        }
 
-      if (this.selectedElement.elementType != ElementType.Note) {
-        this.selectedElement = this.switchToSyllable(this.selectedElement);
-      }
-      
-      (this.selectedElement as NoteElement).quantitativeNeume = new QuantitativeNeumeElement(neume);
+        if (this.selectedElement.elementType != ElementType.Note) {
+          this.selectedElement = this.switchToSyllable(this.selectedElement);
+        }
+        
+        (this.selectedElement as NoteElement).quantitativeNeume = new QuantitativeNeumeElement(neume);
 
-      //this.moveRight();
-
+        //this.moveRight();
       this.save();
     }
   }
@@ -562,6 +575,11 @@ export default class Editor extends Vue {
 
   isDropCapElement(element: ScoreElement) {
     return element.elementType == ElementType.DropCap;
+  }
+
+  isModeKeyElement(element: ScoreElement) {
+    return element.elementType == ElementType.ModeKey;
+  
   }
 
   onKeydown(event: KeyboardEvent) {

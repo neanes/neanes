@@ -1,4 +1,4 @@
-import { TimeNeume, GorgonNeume, QuantitativeNeume, Note, RootSign, VocalExpressionNeume, Fthora, Accidental } from '@/models/save/v1/Neumes';
+import { TimeNeume, GorgonNeume, QuantitativeNeume, Note, RootSign, VocalExpressionNeume, Fthora, Accidental, ModeSign } from '@/models/save/v1/Neumes';
 
 export enum ElementType {
     Note = 'Note',
@@ -6,7 +6,8 @@ export enum ElementType {
     Empty = 'Empty',
     TextBox = 'TextBox',
     StaffText = 'StaffText',
-    DropCap = 'DropCap'
+    DropCap = 'DropCap',
+    ModeKey = 'ModeKey',
 }
 
 export abstract class ScoreElement {
@@ -52,6 +53,15 @@ export class TextBoxElement extends ScoreElement {
     public content: string = '';
     public fontSize: number = 16;
     public fontFamily: string = 'Omega';
+    public height: number = 20;
+}
+
+export class ModeKeyElement extends ScoreElement {
+    public readonly elementType: ElementType = ElementType.ModeKey;
+    public alignment: TextBoxAlignment = TextBoxAlignment.Center;
+    public neumes: (ModeSign | Fthora)[] = [];
+    public color: string = 'black';
+    public fontSize: number = 16;
     public height: number = 20;
 }
 

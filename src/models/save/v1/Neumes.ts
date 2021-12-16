@@ -134,6 +134,46 @@ export enum TempoSign {
     VeryQuick = 'VeryQuick',
 }
 
+export enum ModeSign {
+    Ni = 'ModeSign.Ni',
+    Pa = 'ModeSign.Pa',
+    Vou = 'ModeSign.Vou',
+    Ga = 'ModeSign.Ga',
+    Thi = 'ModeSign.Thi',
+    Ke = 'ModeSign.Ke',
+    Zo = 'ModeSign.Zo',
+    Ekhos = 'ModeSign.Ekhos',
+    Plagal = 'ModeSign.Plagal',
+    First = 'ModeSign.First',
+    FirstCapital = 'ModeSign.FirstCapital',
+    Second = 'ModeSign.Second',
+    SecondCapital = 'ModeSign.SecondCapital',
+    Third = 'ModeSign.Third',
+    ThirdCapital = 'ModeSign.ThirdCapital',
+    Fourth = 'ModeSign.Fourth',
+    FourthCapital = 'ModeSign.FourthCapital',
+    Varys = 'ModeSign.Varys',
+    Tos = 'ModeSign.Tos',
+    Alpha = 'ModeSign.Alpha',
+    AlphaWithHypsili = 'ModeSign.AlphaWithHypsili',
+    SoftChromatic2 = 'ModeSign.SoftChromatic2',
+    SoftChromatic6 = 'ModeSign.SoftChromatic6',
+    Nana = 'ModeSign.Nana',
+    VarysZo = 'ModeSign.VarysZo',
+    Delta = 'ModeSign.Delta',
+    DeltaWithHypsili = 'ModeSign.DeltaWithHypsili',
+    OligonPlusKentemata = 'ModeSign.OligonPlusKentemata',
+    DeltaHat = 'ModeSign.DeltaHat',
+    NanaOld = 'ModeSign.NanaOld',
+    ElaphronPlusApostrophos = 'ModeSign.ElaphronPlusApostrophos',
+    Elaphron = 'ModeSign.Elaphron',
+    OligonPlusKentima = 'ModeSign.OligonPlusKentima',
+    OligonPlusHypsili = 'ModeSign.OligonPlusHypsili',
+    PaHardChromatic = 'ModeSign.PaHardChromatic',
+    VouSoftChromatic = 'ModeSign.VouSoftChromatic',
+    ThiSoftChromatic = 'ModeSign.ThiSoftChromatic',
+}
+
 export enum Fthora {
     DiatonicNiLow_TopCenter = "DiatonicNiLow_TopCenter",
     DiatonicPa_TopCenter = "DiatonicPa_TopCenter",
@@ -222,4 +262,4 @@ export enum Accidental {
     Flat_6_Left = "Flat_6_Left",
 }
 
-export type Neume = QuantitativeNeume | TimeNeume | GorgonNeume | VocalExpressionNeume | Fthora | Accidental | TempoSign | Note | RootSign;
+export type Neume = QuantitativeNeume | TimeNeume | GorgonNeume | VocalExpressionNeume | Fthora | Accidental | TempoSign | Note | RootSign | ModeSign;

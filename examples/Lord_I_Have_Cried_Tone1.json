@@ -12,6 +12,7 @@
     "lyricsDefaultFontSize": 16,
     "lyricsVerticalOffset": 40,
     "neumeDefaultFontSize": 26.666666666666668,
+    "neumeDefaultSpacing": 3,
     "martyriaDefaultColor": "#ED0000",
     "dropCapDefaultFontFamily": "Athonite",
     "dropCapDefaultFontSize": 80,

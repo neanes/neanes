@@ -176,7 +176,7 @@ export class LayoutService {
 
         this.justifyLines(pages, pageSetup);
 
-        this.addMelismas(elements, pageSetup);
+        this.addMelismas(pages, pageSetup);
 
         return pages;
     }
@@ -209,60 +209,67 @@ export class LayoutService {
         }
     }
 
-    public static addMelismas(elements: ScoreElement[], pageSetup: PageSetup) {
-        const syllableElements = elements.filter(x => x.elementType === ElementType.Note) as NoteElement[];
-    
+    public static addMelismas(pages: Page[], pageSetup: PageSetup) {
         let widthOfUnderscore = TextMeasurementService.getTextWidth('_', `${pageSetup.lyricsDefaultFontSize}px ${pageSetup.lyricsDefaultFontFamily}`);
+        
+        for (let page of pages) {
+            for (let line of page.lines) {
+                const noteElements = line.elements.filter(x => x.elementType === ElementType.Note) as NoteElement[];
 
-        for (let element of syllableElements) {
-          if (this.isIntermediateMelisma(element, elements)) {
-            const index = elements.indexOf(element);
-            
-            const nextElement = elements[index + 1] as NoteElement;
+                for (let element of noteElements) {
+                    const index = line.elements.indexOf(element);
 
-            let lyrics1Right = 0;
-            let lyrics2Left = 0;
+                    if (this.isIntermediateMelisma(element, line.elements)) {
+                        const nextElement = line.elements[index + 1] as NoteElement;
 
-            if (element.lyricsWidth > element.neumeWidth) {
-                lyrics1Right = element.x + element.neumeWidth + (element.lyricsWidth - element.neumeWidth) / 2;
-            }
-            else {
-                lyrics1Right = element.x + element.neumeWidth / 2 + element.lyricsWidth / 2;
-            }
+                        let lyrics1Right = 0;
+                        let lyrics2Left = 0;
 
-            if (nextElement.lyricsWidth > nextElement.neumeWidth) {
-                lyrics2Left = nextElement.x - (nextElement.lyricsWidth - nextElement.neumeWidth) / 2;
-            }
-            else {
-                lyrics2Left = nextElement.x + nextElement.neumeWidth / 2 - nextElement.lyricsWidth / 2;
-            }
+                        if (element.lyricsWidth > element.neumeWidth) {
+                            lyrics1Right = element.x + element.neumeWidth + (element.lyricsWidth - element.neumeWidth) / 2;
+                        }
+                        else {
+                            lyrics1Right = element.x + element.neumeWidth / 2 + element.lyricsWidth / 2;
+                        }
 
-            // Stretch from the end of the lyrics in the current element 
-            // to the beginning of the lyrics in the next element
-            let width = lyrics2Left - lyrics1Right;
-            
-            let numberOfUnderScoresNeeded = width > 0 ? Math.ceil(width / widthOfUnderscore) : 1;
-    
-            element.melismaText = '';
-    
-            for (let i = 0; i < numberOfUnderScoresNeeded; i++) {
-                element.melismaText += '_';
+                        if (nextElement.lyricsWidth > nextElement.neumeWidth) {
+                            lyrics2Left = nextElement.x - (nextElement.lyricsWidth - nextElement.neumeWidth) / 2;
+                        }
+                        else {
+                            lyrics2Left = nextElement.x + nextElement.neumeWidth / 2 - nextElement.lyricsWidth / 2;
+                        }
+
+                        // Stretch from the end of the lyrics in the current element 
+                        // to the beginning of the lyrics in the next element
+                        let width = lyrics2Left - lyrics1Right;
+
+                        let numberOfUnderScoresNeeded = width > 0 ? Math.ceil(width / widthOfUnderscore) : 1;
+
+                        element.melismaText = '';
+
+                        for (let i = 0; i < numberOfUnderScoresNeeded; i++) {
+                            element.melismaText += '_';
+                        }
+                    }
+                    else if (this.isFinalMelisma(element, line.elements)) {
+                        const lyricsLeft = element.x + element.neumeWidth / 2 - element.lyricsWidth / 2;
+                        const neumeRight = element.x + element.neumeWidth;
+
+                        // Stretch from the start of the lyrics to the end of the neume
+                        let width = element.neumeWidth / 2 - element.lyricsWidth / 2;
+
+                        let numberOfUnderScoresNeeded = Math.floor(width / widthOfUnderscore);
+
+                        element.melismaText = '';
+
+                        for (let i = 0; i < numberOfUnderScoresNeeded; i++) {
+                            element.melismaText += '_';
+                        }
+                    }
+                }
             }
-          }
-          else if (this.isFinalMelisma(element, elements)) {
-            // Stretch from the end of the lyrics to the end of the neume
-            let width = element.neumeWidth / 2 - element.lyricsWidth / 2;
-    
-            let numberOfUnderScoresNeeded = Math.floor(width / widthOfUnderscore);
-    
-            element.melismaText = '';
-    
-            for (let i = 0; i < numberOfUnderScoresNeeded; i++) {
-              element.melismaText += '_';
-            }
-          }
         }
-      }
+    }
 
     public static isIntermediateMelisma(element: NoteElement, elements: ScoreElement[]) {
         const index = elements.indexOf(element);
@@ -276,14 +283,13 @@ export class LayoutService {
         return false;
       }
     
-      // Checks whether the element is the final melisma in a sequence
     public static isFinalMelisma(element: NoteElement, elements: ScoreElement[]) {
         const index = elements.indexOf(element);
     
-        if(element.isMelisma) {
+        if(element.isMelisma) {  
           let nextElement = elements[index + 1] as NoteElement;
     
-          return nextElement && (!nextElement.isMelisma || nextElement.isMelismaStart);
+          return !nextElement || !nextElement.isMelisma || nextElement.isMelismaStart;
         }
     
         return false;

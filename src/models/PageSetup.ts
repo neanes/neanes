@@ -15,6 +15,7 @@ export class PageSetup {
     public lyricsVerticalOffset = Unit.FromPt(30);
 
     public neumeDefaultFontSize = Unit.FromPt(20);
+    public neumeDefaultSpacing = 3;
 
     public martyriaDefaultColor = '#ED0000';
 

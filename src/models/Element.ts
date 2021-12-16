@@ -34,6 +34,7 @@ export class NoteElement extends ScoreElement {
     public isMelismaStart: boolean = false;
     
     // Used for display
+    public melismaText: string = '';
     public neumeWidth: number = 0;
     public lyricsWidth: number = 0;
 

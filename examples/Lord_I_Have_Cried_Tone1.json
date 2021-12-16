@@ -26,9 +26,9 @@
         "alignment": "center",
         "color": "#0000ff",
         "content": "Lord, I Have Cried",
-        "fontSize": 21,
+        "fontSize": 21.333333333333332,
         "fontFamily": "Omega",
-        "height": 20
+        "height": 21
       },
       {
         "elementType": "ModeKey",
@@ -40,9 +40,9 @@
           "ModeSign.Pa",
           "DiatonicPa_TopCenter"
         ],
-        "fontSize": 21,
         "color": "#ff0000",
-        "height": 20
+        "fontSize": 26.666666666666668,
+        "height": 63
       },
       {
         "lineBreak": false,

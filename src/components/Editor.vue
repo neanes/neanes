@@ -128,6 +128,9 @@
     <template v-if="selectedElement != null && isTextBoxElement(selectedElement)">
       <TextToolbar :element="selectedElement" @scoreUpdated="onScoreUpdated" />
     </template>
+    <template v-if="selectedElement != null && isModeKeyElement(selectedElement)">
+      <ModeKeyToolbar :element="selectedElement" @scoreUpdated="onScoreUpdated" />
+    </template>
     <template v-if="selectedElement != null && isSyllableElement(selectedElement)">
       <NeumeToolbar :element="selectedElement" @scoreUpdated="onScoreUpdated" />
     </template>
@@ -156,6 +159,7 @@ import { TextMeasurementService } from '@/services/TextMeasurementService';
 import DropCap from '@/components/DropCap.vue';
 import ModeKey from '@/components/ModeKey.vue';
 import TextToolbar from '@/components/TextToolbar.vue';
+import ModeKeyToolbar from '@/components/ModeKeyToolbar.vue';
 import NeumeToolbar from '@/components/NeumeToolbar.vue';
 import Neume from './Neume.vue';
 
@@ -172,6 +176,7 @@ import Neume from './Neume.vue';
     DropCap,
     ModeKey,
     TextToolbar,
+    ModeKeyToolbar,
     NeumeToolbar,
   }
 })
@@ -939,6 +944,10 @@ export default class Editor extends Vue {
   }
 
   .text-box-container {
+    border: none;
+  }
+
+  .mode-key-container {
     border: none;
   }
 }

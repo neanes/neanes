@@ -32,6 +32,10 @@ export class NoteElement extends ScoreElement {
     public lyrics: string = '';
     public isMelisma: boolean = false;
     public isMelismaStart: boolean = false;
+    
+    // Used for display
+    public neumeWidth: number = 0;
+    public lyricsWidth: number = 0;
 
     public setTimeNeume(neume: TimeNeume | null) {
         if (isRightNeume(this.quantitativeNeume.neume)) {

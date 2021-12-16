@@ -1,9 +1,5 @@
 <template>
-  <div class="text-toolbar">
-    <select v-model="element.fontFamily" @change="$emit('scoreUpdated')">
-      <option>Athonite</option>
-      <option>Omega</option>
-    </select>
+  <div class="mode-key-toolbar">
     <input 
       type="number" 
       min="4" 
@@ -25,15 +21,15 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
-import { TextBoxAlignment, TextBoxElement } from '@/models/Element';
+import { TextBoxAlignment, ModeKeyElement } from '@/models/Element';
 import { Unit } from '@/utils/Unit';
 
 @Component({
   components: {
   }
 })
-export default class TextToolbar extends Vue {
-  @Prop() element!: TextBoxElement;
+export default class ModeKeyToolbar extends Vue {
+  @Prop() element!: ModeKeyElement;
 
   private get fontSize() {
     return this.element.fontSize * 72 / 96; 
@@ -52,7 +48,7 @@ export default class TextToolbar extends Vue {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-  .text-toolbar {
+  .mode-key-toolbar {
     display: flex;
     background-color: lightgray;
 

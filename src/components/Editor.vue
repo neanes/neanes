@@ -51,7 +51,14 @@
                           :content="element.lyrics"
                           @click.native="selectedElement = null"
                           @blur="updateLyrics(element, $event)"></ContentEditable>
-                      <div class="melisma" v-if="isMelisma(element)">{{element.melismaText}}</div>
+                      <template v-if="isMelisma(element)">
+                        <template v-if="element.melismaOffsetLeft">
+                          <div class="melisma full" :style="{ left: element.melismaOffsetLeft + 'px' }">{{element.melismaText}}</div>
+                        </template>
+                        <template v-else>
+                          <div class="melisma" v-if="isMelisma(element)">{{element.melismaText}}</div>
+                        </template>
+                      </template>
                     </div>
                 </div>
               </template>
@@ -813,6 +820,10 @@ export default class Editor extends Vue {
   font-family: Omega;
   position: absolute;
   display: inline;
+}
+
+.melisma.full {
+  position: relative;
 }
 
 .neume {

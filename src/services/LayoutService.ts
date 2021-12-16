@@ -160,9 +160,9 @@ export class LayoutService {
             // Thus, the lyrics start at the (previous) x position instead of the neume.
             if (element.elementType === ElementType.Note) {
                 const noteElement = element as NoteElement;
-                
+
                 if (noteElement.lyricsWidth > noteElement.neumeWidth) {
-                    const adjustment = (noteElement.lyricsWidth - noteElement.neumeWidth) / 2;                    
+                    const adjustment = (noteElement.lyricsWidth - noteElement.neumeWidth) / 2;
                     element.x += adjustment;
                 }
             }
@@ -211,7 +211,7 @@ export class LayoutService {
 
     public static addMelismas(pages: Page[], pageSetup: PageSetup) {
         let widthOfUnderscore = TextMeasurementService.getTextWidth('_', `${pageSetup.lyricsDefaultFontSize}px ${pageSetup.lyricsDefaultFontFamily}`);
-        
+
         for (let page of pages) {
             for (let line of page.lines) {
                 const noteElements = line.elements.filter(x => x.elementType === ElementType.Note) as NoteElement[];
@@ -219,51 +219,94 @@ export class LayoutService {
                 for (let element of noteElements) {
                     const index = line.elements.indexOf(element);
 
-                    if (this.isIntermediateMelisma(element, line.elements)) {
-                        const nextElement = line.elements[index + 1] as NoteElement;
+                    // Special logic when this is the first intermediate melisma on a line
+                    if (index === 0 && element.isMelisma && !element.isMelismaStart) {
+                        if (this.isIntermediateMelisma(element, line.elements)) {
+                            const nextElement = line.elements[index + 1] as NoteElement;
 
-                        let lyrics1Right = 0;
-                        let lyrics2Left = 0;
+                            let lyrics2Left = 0;
 
-                        if (element.lyricsWidth > element.neumeWidth) {
-                            lyrics1Right = element.x + element.neumeWidth + (element.lyricsWidth - element.neumeWidth) / 2;
+                            if (nextElement.lyricsWidth > nextElement.neumeWidth) {
+                                lyrics2Left = nextElement.x - (nextElement.lyricsWidth - nextElement.neumeWidth) / 2;
+                            }
+                            else {
+                                lyrics2Left = nextElement.x + nextElement.neumeWidth / 2 - nextElement.lyricsWidth / 2;
+                            }
+
+                            const width = lyrics2Left - element.x;
+                            const numberOfUnderScoresNeeded = width > 0 ? Math.ceil(width / widthOfUnderscore) : 1;
+
+                            element.melismaOffsetLeft = (numberOfUnderScoresNeeded * widthOfUnderscore - element.neumeWidth) / 2;
+                            
+                            element.melismaText = '';
+
+                            for (let i = 0; i < numberOfUnderScoresNeeded; i++) {
+                                element.melismaText += '_';
+                            }
+
                         }
-                        else {
-                            lyrics1Right = element.x + element.neumeWidth / 2 + element.lyricsWidth / 2;
-                        }
+                        else if (this.isFinalMelisma(element, line.elements)) {
+                            const width = element.neumeWidth;
+                            const numberOfUnderScoresNeeded = width > 0 ? Math.ceil(width / widthOfUnderscore) : 1;
 
-                        if (nextElement.lyricsWidth > nextElement.neumeWidth) {
-                            lyrics2Left = nextElement.x - (nextElement.lyricsWidth - nextElement.neumeWidth) / 2;
-                        }
-                        else {
-                            lyrics2Left = nextElement.x + nextElement.neumeWidth / 2 - nextElement.lyricsWidth / 2;
-                        }
+                            element.melismaOffsetLeft = (numberOfUnderScoresNeeded * widthOfUnderscore - element.neumeWidth) / 2;
+                            
+                            element.melismaText = '';
 
-                        // Stretch from the end of the lyrics in the current element 
-                        // to the beginning of the lyrics in the next element
-                        let width = lyrics2Left - lyrics1Right;
-
-                        let numberOfUnderScoresNeeded = width > 0 ? Math.ceil(width / widthOfUnderscore) : 1;
-
-                        element.melismaText = '';
-
-                        for (let i = 0; i < numberOfUnderScoresNeeded; i++) {
-                            element.melismaText += '_';
+                            for (let i = 0; i < numberOfUnderScoresNeeded; i++) {
+                                element.melismaText += '_';
+                            }
                         }
                     }
-                    else if (this.isFinalMelisma(element, line.elements)) {
-                        const lyricsLeft = element.x + element.neumeWidth / 2 - element.lyricsWidth / 2;
-                        const neumeRight = element.x + element.neumeWidth;
+                    else {
+                        element.melismaOffsetLeft = null;
 
-                        // Stretch from the start of the lyrics to the end of the neume
-                        let width = element.neumeWidth / 2 - element.lyricsWidth / 2;
+                        if (this.isIntermediateMelisma(element, line.elements)) {
+                            const nextElement = line.elements[index + 1] as NoteElement;
 
-                        let numberOfUnderScoresNeeded = Math.floor(width / widthOfUnderscore);
+                            let lyrics1Right = 0;
+                            let lyrics2Left = 0;
 
-                        element.melismaText = '';
+                            if (element.lyricsWidth > element.neumeWidth) {
+                                lyrics1Right = element.x + element.neumeWidth + (element.lyricsWidth - element.neumeWidth) / 2;
+                            }
+                            else {
+                                lyrics1Right = element.x + element.neumeWidth / 2 + element.lyricsWidth / 2;
+                            }
 
-                        for (let i = 0; i < numberOfUnderScoresNeeded; i++) {
-                            element.melismaText += '_';
+                            if (nextElement.lyricsWidth > nextElement.neumeWidth) {
+                                lyrics2Left = nextElement.x - (nextElement.lyricsWidth - nextElement.neumeWidth) / 2;
+                            }
+                            else {
+                                lyrics2Left = nextElement.x + nextElement.neumeWidth / 2 - nextElement.lyricsWidth / 2;
+                            }
+
+                            // Stretch from the end of the lyrics in the current element 
+                            // to the beginning of the lyrics in the next element
+                            let width = lyrics2Left - lyrics1Right;
+
+                            let numberOfUnderScoresNeeded = width > 0 ? Math.ceil(width / widthOfUnderscore) : 1;
+
+                            element.melismaText = '';
+
+                            for (let i = 0; i < numberOfUnderScoresNeeded; i++) {
+                                element.melismaText += '_';
+                            }
+                        }
+                        else if (this.isFinalMelisma(element, line.elements)) {
+                            const lyricsLeft = element.x + element.neumeWidth / 2 - element.lyricsWidth / 2;
+                            const neumeRight = element.x + element.neumeWidth;
+
+                            // Stretch from the start of the lyrics to the end of the neume
+                            let width = element.neumeWidth / 2 - element.lyricsWidth / 2;
+
+                            let numberOfUnderScoresNeeded = Math.floor(width / widthOfUnderscore);
+
+                            element.melismaText = '';
+
+                            for (let i = 0; i < numberOfUnderScoresNeeded; i++) {
+                                element.melismaText += '_';
+                            }
                         }
                     }
                 }
@@ -273,25 +316,25 @@ export class LayoutService {
 
     public static isIntermediateMelisma(element: NoteElement, elements: ScoreElement[]) {
         const index = elements.indexOf(element);
-    
-        if(element.isMelisma) {
-          let nextElement = elements[index + 1] as NoteElement;
-    
-          return nextElement && nextElement.isMelisma && !nextElement.isMelismaStart;
+
+        if (element.isMelisma) {
+            let nextElement = elements[index + 1] as NoteElement;
+
+            return nextElement && nextElement.isMelisma && !nextElement.isMelismaStart;
         }
-    
+
         return false;
-      }
-    
+    }
+
     public static isFinalMelisma(element: NoteElement, elements: ScoreElement[]) {
         const index = elements.indexOf(element);
-    
-        if(element.isMelisma) {  
-          let nextElement = elements[index + 1] as NoteElement;
-    
-          return !nextElement || !nextElement.isMelisma || nextElement.isMelismaStart;
+
+        if (element.isMelisma) {
+            let nextElement = elements[index + 1] as NoteElement;
+
+            return !nextElement || !nextElement.isMelisma || nextElement.isMelismaStart;
         }
-    
+
         return false;
-      }
+    }
 }

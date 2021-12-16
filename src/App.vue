@@ -40,6 +40,11 @@
     src: url('~@/assets/EZ Fthora.ttf');
 }
 
+@font-face {
+    font-family: Oxeia;
+    src: url('~@/assets/EZ Oxeia.ttf');
+}
+
 html {
   height: 100vh;
 }

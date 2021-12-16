@@ -1,6 +1,6 @@
-import { Neume, TimeNeume, QuantitativeNeume, Fthora, Accidental, TempoSign, VocalExpressionNeume, RootSign, Note, GorgonNeume } from '@/models/Neumes';
+import { Neume, TimeNeume, QuantitativeNeume, Fthora, Accidental, TempoSign, VocalExpressionNeume, RootSign, Note, GorgonNeume, ModeSign } from '@/models/Neumes';
 
-export type NeumeFont = 'Psaltica' | 'Omega' | 'EzSpecial1' | 'EzSpecial2' | 'EzFthora';
+export type NeumeFont = 'Psaltica' | 'Omega' | 'EzSpecial1' | 'EzSpecial2' | 'EzFthora' | 'Oxeia';
 
 export interface NeumeMapping {
     fontFamily: NeumeFont,
@@ -179,7 +179,6 @@ export const neumeMap = new Map<Neume, NeumeMapping>([
     [Accidental.Flat_6_Right, { fontFamily: 'EzFthora', text: '"' }],
     [Accidental.Flat_6_Left, { fontFamily: 'EzFthora', text: '\'' }],
 
-
     [TempoSign.VerySlow, { fontFamily: 'EzSpecial1', text: 'S' }],
     [TempoSign.Slow, { fontFamily: 'EzSpecial1', text: 'a' }],
     [TempoSign.Medium, { fontFamily: 'EzSpecial1', text: 's' }],
@@ -216,7 +215,46 @@ export const neumeMap = new Map<Neume, NeumeMapping>([
     [Note.Ke, { fontFamily: 'Psaltica', text: ','}],
     [Note.Zo, { fontFamily: 'Psaltica', text: '.'}],
     [Note.Apostrophe, { fontFamily: 'Psaltica', text: '/'}],
-]);
+
+    [ModeSign.Ekhos, { fontFamily: 'EzSpecial2', text: 'h' }],
+    [ModeSign.Plagal, { fontFamily: 'EzSpecial2', text: 'H' }],
+    [ModeSign.First, { fontFamily: 'EzSpecial2', text: 'a' }],
+    [ModeSign.FirstCapital, { fontFamily: 'EzSpecial2', text: 'A' }],
+    [ModeSign.Second, { fontFamily: 'EzSpecial2', text: 's' }],
+    [ModeSign.SecondCapital, { fontFamily: 'EzSpecial2', text: 'S' }],
+    [ModeSign.Third, { fontFamily: 'EzSpecial2', text: 'd' }],
+    [ModeSign.ThirdCapital, { fontFamily: 'EzSpecial2', text: 'D' }],
+    [ModeSign.Fourth, { fontFamily: 'EzSpecial2', text: 'f' }],
+    [ModeSign.FourthCapital, { fontFamily: 'EzSpecial2', text: 'F' }],
+    [ModeSign.Varys, { fontFamily: 'EzSpecial2', text: 'u' }],
+    [ModeSign.Tos, { fontFamily: 'EzSpecial2', text: '|' }],
+    [ModeSign.Alpha, { fontFamily: 'EzSpecial2', text: 'q' }],
+    [ModeSign.AlphaWithHypsili, { fontFamily: 'EzSpecial2', text: 'Q' }],
+    [ModeSign.SoftChromatic6, { fontFamily: 'EzSpecial2', text: 'w' }],
+    [ModeSign.SoftChromatic2, { fontFamily: 'EzSpecial2', text: 'W' }],
+    [ModeSign.Nana, { fontFamily: 'EzSpecial2', text: 'e' }],
+    [ModeSign.VarysZo, { fontFamily: 'EzSpecial2', text: 'E' }],
+    [ModeSign.Delta, { fontFamily: 'EzSpecial2', text: 'r' }],
+    [ModeSign.DeltaWithHypsili, { fontFamily: 'EzSpecial2', text: 'R' }],
+    [ModeSign.OligonPlusKentemata, { fontFamily: 'EzSpecial2', text: 'y' }],
+    [ModeSign.DeltaHat, { fontFamily: 'EzSpecial2', text: 'T' }],
+    [ModeSign.NanaOld, { fontFamily: 'EzSpecial2', text: 'p' }],
+    [ModeSign.ElaphronPlusApostrophos, { fontFamily: 'EzSpecial2', text: 'i' }],
+    [ModeSign.Elaphron, { fontFamily: 'EzSpecial2', text: 'Y' }],
+    [ModeSign.OligonPlusKentima, { fontFamily: 'EzSpecial2', text: 'U' }],
+    [ModeSign.OligonPlusHypsili, { fontFamily: 'EzSpecial2', text: 'I' }],
+    [ModeSign.PaHardChromatic, { fontFamily: 'EzSpecial2', text: 'g' }],
+    [ModeSign.VouSoftChromatic, { fontFamily: 'EzSpecial2', text: 'G' }],
+    [ModeSign.ThiSoftChromatic, { fontFamily: 'EzSpecial2', text: 't' }],
+
+    [ModeSign.Ni, { fontFamily: 'Oxeia', text: 'C'}],
+    [ModeSign.Pa, { fontFamily: 'Oxeia', text: 'V'}],
+    [ModeSign.Vou, { fontFamily: 'Oxeia', text: 'B'}],
+    [ModeSign.Ga, { fontFamily: 'Oxeia', text: 'N'}],
+    [ModeSign.Thi, { fontFamily: 'Oxeia', text: 'M'}],
+    [ModeSign.Ke, { fontFamily: 'Oxeia', text: '<'}],
+    [ModeSign.Zo, { fontFamily: 'Oxeia', text: '>'}],
+   ]);
 
 const quantitativeNeumeKeyboardMap = new Map<string, QuantitativeNeume>([
     ["KeyH", QuantitativeNeume.Ison],

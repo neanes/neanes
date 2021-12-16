@@ -1,4 +1,4 @@
-import { DropCapElement, ElementType, MartyriaElement, NoteElement, ScoreElement, TextBoxElement } from "@/models/Element";
+import { DropCapElement, ElementType, MartyriaElement, NoteElement, ModeKeyElement, ScoreElement, TextBoxElement } from "@/models/Element";
 import { neumeMap } from "@/models/NeumeMappings";
 import { VocalExpressionNeume } from "@/models/Neumes";
 import { Line, Page } from "@/models/Page";
@@ -39,6 +39,15 @@ export class LayoutService {
 
                 elementWidthPx = pageSetup.innerPageWidth;
                 textBoxElement.height = Math.ceil(TextMeasurementService.getTextHeight(textBoxElement.content, `${textBoxElement.fontSize}px ${textBoxElement.fontFamily}`));
+            }
+
+            if (element.elementType === ElementType.ModeKey) {
+                let modeKeyElement = element as ModeKeyElement;
+
+                elementWidthPx = pageSetup.innerPageWidth;
+                modeKeyElement.height = Math.ceil(Math.max(
+                    TextMeasurementService.getFontHeight(`${modeKeyElement.fontSize}px Oxeia`),
+                    TextMeasurementService.getFontHeight(`${modeKeyElement.fontSize}px EzSpecial2`)));
             }
 
             if (element.elementType === ElementType.StaffText) {
@@ -90,6 +99,10 @@ export class LayoutService {
                     if (line.elements.some(x => x.elementType === ElementType.TextBox)) {
                         const textbox = line.elements.find(x => x.elementType === ElementType.TextBox) as TextBoxElement;
                         height = Math.max(10, textbox.height * 2);
+                    }
+                    else if (line.elements.some(x => x.elementType === ElementType.ModeKey)) {
+                        const textbox = line.elements.find(x => x.elementType === ElementType.ModeKey) as ModeKeyElement;
+                        height = Math.max(10, textbox.height);
                     }
                     else {
                         height = pageSetup.lineHeight;

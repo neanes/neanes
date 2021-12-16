@@ -13,7 +13,9 @@ import {
     StaffTextElement,
     TextBoxElement,
     TimeNeumeElement,
-    VocalExpressionNeumeElement} from '@/models/Element';
+    VocalExpressionNeumeElement,
+    ModeKeyElement
+} from '@/models/Element';
 
 import { Score as Score_v1, Staff as Staff_v1 } from '@/models/save/v1/Score';
 import { 
@@ -30,6 +32,7 @@ import {
     TimeNeumeElement as TimeNeumeElement_v1,
     GorgonNeumeElement as GorgonNeumeElement_v1,
     VocalExpressionNeumeElement as VocalExpressionNeumeElement_v1,
+    ModeKeyElement as ModeKeyElement_v1,
 } from '@/models/save/v1/Element';
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
 import { PageSetup } from '@/models/PageSetup';
@@ -106,6 +109,10 @@ export class SaveService {
                 case ElementType.TextBox:
                     element = new TextBoxElement_v1();
                     this.SaveTextBox(element as TextBoxElement_v1, e as TextBoxElement);
+                    break;
+                case ElementType.ModeKey:
+                    element = new ModeKeyElement_v1();
+                    this.SaveModeKey(element as ModeKeyElement_v1, e as ModeKeyElement);
                     break;
                 default:
                     console.warn('Unrecognized element in score', e.elementType);
@@ -195,6 +202,14 @@ export class SaveService {
         element.height = e.height;
     }
 
+    public static SaveModeKey(element: ModeKeyElement_v1, e: ModeKeyElement) {
+        element.alignment = e.alignment;
+        element.neumes = e.neumes.map(x => x);
+        element.color = e.color;
+        element.fontSize = e.fontSize;
+        element.height = e.height;
+    }
+
     public static LoadScore_v1(s: Score_v1) {
         const score = new Score();
         
@@ -244,6 +259,10 @@ export class SaveService {
                 case ElementType_v1.TextBox:
                     element = new TextBoxElement();
                     this.LoadTextBox_v1(element as TextBoxElement, e as TextBoxElement_v1);
+                    break;
+                case ElementType_v1.ModeKey:
+                    element = new ModeKeyElement();
+                    this.LoadModeKey_v1(element as ModeKeyElement, e as ModeKeyElement_v1);
                     break;
                 default:
                     console.warn('Unrecognized element in score file', 'v1', e.elementType);
@@ -329,6 +348,14 @@ export class SaveService {
         element.color = e.color;
         element.content = e.content;
         element.fontFamily = e.fontFamily;
+        element.fontSize = e.fontSize;
+        element.height = e.height;
+    }
+
+    public static LoadModeKey_v1(element: ModeKeyElement, e: ModeKeyElement_v1) {
+        element.alignment = e.alignment;
+        element.neumes = e.neumes.map(x => x);
+        element.color = e.color;
         element.fontSize = e.fontSize;
         element.height = e.height;
     }

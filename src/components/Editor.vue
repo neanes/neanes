@@ -40,7 +40,6 @@
                   <SyllableNeumeBox 
                     class="syllable-box"
                     :note="element"
-                    :ref="`syllable-box-${getElementIndex(element)}`"
                     :class="[{ selected: element == selectedElement }]"
                     @click.native="selectedElement = element"
                     ></SyllableNeumeBox>
@@ -49,11 +48,10 @@
                       @click="selectedElement = null">
                       <ContentEditable 
                           class="lyrics"
-                          :ref="`lyrics-${getElementIndex(element)}`"
                           :content="element.lyrics"
                           @click.native="selectedElement = null"
                           @blur="updateLyrics(element, $event)"></ContentEditable>
-                      <div class="melisma" v-if="isMelisma(element)" :ref="`melisma-${getElementIndex(element)}`">{{element.melismaText}}</div>
+                      <div class="melisma" v-if="isMelisma(element)">{{element.melismaText}}</div>
                     </div>
                 </div>
               </template>
@@ -89,7 +87,6 @@
               <template v-if="isTextBoxElement(element)">
                   <TextBox 
                     :key="`element-${getElementIndex(element)}`" 
-                    :ref="`textbox-${getElementIndex(element)}`"
                     :element="element"
                     :class="[{ selectedTextbox: element == selectedElement }]"
                     @click.native="selectedElement = element"
@@ -99,7 +96,6 @@
               <template v-if="isModeKeyElement(element)">
                   <ModeKey 
                     :key="`element-${getElementIndex(element)}`" 
-                    :ref="`paragraph-${getElementIndex(element)}`"
                     :element="element"
                     :class="[{ selectedTextbox: element == selectedElement }]"
                     @click.native="selectedElement = element"

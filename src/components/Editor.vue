@@ -53,7 +53,7 @@
                           :content="element.lyrics"
                           @click.native="selectedElement = null"
                           @blur="updateLyrics(element, $event)"></ContentEditable>
-                      <div class="melisma" v-if="isMelisma(element)" :ref="`melisma-${getElementIndex(element)}`"></div>
+                      <div class="melisma" v-if="isMelisma(element)" :ref="`melisma-${getElementIndex(element)}`">{{element.melismaText}}</div>
                     </div>
                 </div>
               </template>
@@ -218,10 +218,6 @@ export default class Editor extends Vue {
 
   mounted() {
     window.addEventListener('keydown', this.onKeydown);
-
-    Vue.nextTick(() => {
-      setTimeout(this.addMelismas, 50);
-    });
   }
 
   beforeDestroy() {
@@ -229,7 +225,6 @@ export default class Editor extends Vue {
   }
 
   updated() {
-    Vue.nextTick(this.addMelismas);
     Vue.nextTick(() => {
       if (store.state.elementToFocus != null) {
         const index = this.elements.indexOf(store.state.elementToFocus);
@@ -244,88 +239,7 @@ export default class Editor extends Vue {
   }
 
   isMelisma(element: NoteElement) {
-    return this.isIntermediateMelisma(element) || this.isFinalMelisma(element);
-  }
-
-  isIntermediateMelisma(element: NoteElement) {
-    const index = this.elements.indexOf(element);
-
-    if(element.isMelisma) {
-      let nextElement = this.elements[index + 1] as NoteElement;
-
-      return nextElement && nextElement.isMelisma && !nextElement.isMelismaStart;
-    }
-
-    return false;
-  }
-
-  // Checks whether the element is the final melisma in a sequence
-  isFinalMelisma(element: NoteElement) {
-    const index = this.elements.indexOf(element);
-
-    if(element.isMelisma) {
-      let nextElement = this.elements[index + 1] as NoteElement;
-
-      return nextElement && (!nextElement.isMelisma || nextElement.isMelismaStart);
-    }
-
-    return false;
-  }
-
-  private widthOfUnderscore: number | null = null;
-
-  addMelismas() {
-    const syllableElements = this.elements.filter(x => x.elementType === ElementType.Note) as NoteElement[];
-
-    for (let element of syllableElements) {
-      if (this.isIntermediateMelisma(element)) {
-        const index = this.elements.indexOf(element);
-
-        let melisma = (this.$refs[`melisma-${index}`] as HTMLElement[])[0];
-        let lyrics1 = (this.$refs[`lyrics-${index}`] as Vue[])[0].$el as HTMLElement;
-        let lyrics2 = (this.$refs[`lyrics-${index+1}`] as Vue[])[0].$el as HTMLElement;
-
-        let widthOfUnderscore = this.widthOfUnderscore || TextMeasurementService.getTextWidth('_', '1rem Omega');
-
-        let lyrics1Rect = lyrics1.getBoundingClientRect();
-        let lyrics2Rect = lyrics2.getBoundingClientRect();
-
-        // Stretch from the end of the lyrics in the current element 
-        // to the end of the lyrics in the next element
-        let width = lyrics2Rect.left - lyrics1Rect.right;
-        
-        let numberOfUnderScoresNeeded = width > 0 ? Math.ceil(width / widthOfUnderscore) : 1;
-
-        melisma.innerText = '';
-
-        for (let i = 0; i < numberOfUnderScoresNeeded; i++) {
-          melisma.innerText += '_';
-        }
-      }
-      else if (this.isFinalMelisma(element)) {
-        const index = this.elements.indexOf(element);
-
-        let melisma = (this.$refs[`melisma-${index}`] as HTMLElement[])[0];
-        let box = (this.$refs[`element-${index}`] as HTMLElement[])[0];
-        let lyrics = (this.$refs[`lyrics-${index}`] as Vue[])[0].$el as HTMLElement;
-
-        let widthOfUnderscore = this.widthOfUnderscore || TextMeasurementService.getTextWidth('_', '1rem Omega');
-
-        let boxRect = box.getBoundingClientRect();
-        let lyricsRect = lyrics.getBoundingClientRect();
-
-        // Stretch from the end of the lyrics to the end of the neume
-        let width = boxRect.right - lyricsRect.right;
-
-        let numberOfUnderScoresNeeded = Math.floor(width / widthOfUnderscore);
-
-        melisma.innerText = '';
-
-        for (let i = 0; i < numberOfUnderScoresNeeded; i++) {
-          melisma.innerText += '_';
-        }
-      }
-    }
+    return LayoutService.isIntermediateMelisma(element, this.elements) || LayoutService.isFinalMelisma(element, this.elements);
   }
 
   updateQuantitativeNeume(neume: QuantitativeNeume) {

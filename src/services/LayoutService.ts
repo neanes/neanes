@@ -66,10 +66,10 @@ export class LayoutService {
                     text = vareiaMapping.text + text;
                 }
 
-                elementWidthPx = Math.max(
-                    Math.floor(TextMeasurementService.getTextWidth(text, `${pageSetup.neumeDefaultFontSize}px ${mapping.fontFamily}`)),
-                    Math.floor(TextMeasurementService.getTextWidth(noteElement.lyrics, `${pageSetup.lyricsDefaultFontSize}px ${pageSetup.lyricsDefaultFontFamily}`))
-                );
+                noteElement.neumeWidth = Math.floor(TextMeasurementService.getTextWidth(text, `${pageSetup.neumeDefaultFontSize}px ${mapping.fontFamily}`));
+                noteElement.lyricsWidth = Math.floor(TextMeasurementService.getTextWidth(noteElement.lyrics, `${pageSetup.lyricsDefaultFontSize}px ${pageSetup.lyricsDefaultFontFamily}`));
+
+                elementWidthPx = Math.max(noteElement.neumeWidth, noteElement.lyricsWidth);
             }
             else if (element.elementType === ElementType.Martyria) {
                 const martyriaElement = element as MartyriaElement;
@@ -139,7 +139,9 @@ export class LayoutService {
             element.y = pageSetup.topMargin + currentPageHeightPx - lastLineHeightPx;
             element.width = elementWidthPx + defaultNeumeSpacingPx;
 
-            // Special logic to adjust drop caps
+            // Special logic to adjust drop caps.
+            // This aligns the bottom of the drop cap with 
+            // the bottom of the lyrics.
             if (element.elementType === ElementType.DropCap) {
                 const distanceFromTopToBottomOfLyrics = pageSetup.lyricsVerticalOffset + pageSetup.lyricsDefaultFontSize;
                 const dropCapElement = element as DropCapElement;
@@ -151,6 +153,19 @@ export class LayoutService {
                 const adjustment = Math.floor(fontHeight - distanceFromTopToBottomOfLyrics - fountBoundingBoxDescent);
 
                 element.y -= adjustment;
+            }
+
+            // Special case when lyrics are longer than the neume.
+            // This shifts the note element to the right to account for the 
+            // extra length of the lyrics to the left of the neume.
+            // Thus, the lyrics start at the (previous) x position instead of the neume.
+            if (element.elementType === ElementType.Note) {
+                const noteElement = element as NoteElement;
+                
+                if (noteElement.lyricsWidth > noteElement.neumeWidth) {
+                    const adjustment = (noteElement.lyricsWidth - noteElement.neumeWidth) / 2;                    
+                    element.x += adjustment;
+                }
             }
 
             currentLineWidthPx += elementWidthPx + defaultNeumeSpacingPx;

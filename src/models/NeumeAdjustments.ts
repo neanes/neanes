@@ -16,9 +16,10 @@ export const gorgonAdjustmentMap = new Map<GorgonNeume, NeumeAdjustment[]>([
     ]],
 
     [GorgonNeume.Gorgon_TopRight, [ 
-        { isPairedWith: QuantitativeNeume.Hyporoe, offset: { x: 8, y: 5 }},
+        { isPairedWith: QuantitativeNeume.Hyporoe, offset: { x: 8, y: 4 }},
         { isPairedWith: QuantitativeNeume.Apostrophos, offset: { x: 0, y: 4 }},
         { isPairedWith: QuantitativeNeume.OligonPlusIsonPlusKentemata, offset: { x: -3, y: 0 }},
+        { isPairedWith: QuantitativeNeume.OligonPlusElaphronPlusKentemata, offset: { x: -3, y: 0 }},
     ]],
 
     [GorgonNeume.Digorgon_Right, [ 

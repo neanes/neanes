@@ -1,6 +1,6 @@
 <template>
   <div class="neume-toolbar">
-    <button @click="setAccidental(Accidental.Flat_2_Right)"><Neume class="red neume flat" :neume=" Accidental.Flat_2_Right" /></button>
+    <button @click="setAccidental(Accidental.Flat_2_Left)"><Neume class="red neume flat" :neume=" Accidental.Flat_2_Right" /></button>
     <button @click="setAccidental(Accidental.Sharp_2_Left)"><Neume class="red neume sharp" :neume="Accidental.Sharp_2_Left" /></button>
   </div>
 </template>

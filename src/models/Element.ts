@@ -135,10 +135,22 @@ export class TextBoxElement extends ScoreElement {
 export class ModeKeyElement extends ScoreElement {
     public readonly elementType: ElementType = ElementType.ModeKey;
     public alignment: TextBoxAlignment = TextBoxAlignment.Center;
-    public neumes: (ModeSign | Fthora)[] = [];
+    public mode: number = 1;
+    public martyrias: ModeSign[] = []  
+    public note: ModeSign | null = null;
+    public fthora: Fthora | null = null;
+    public quantativeNeume: ModeSign | null = null;
     public color: string = 'black';
     public fontSize: number = 16;
     public height: number = 20;
+
+    public get isPlagal() {
+        return this.mode > 4 && this.mode !== 7;
+    }
+
+    public get isVarys() {
+        return this.mode === 7;
+    }
 }
 
 export class StaffTextElement extends ScoreElement {

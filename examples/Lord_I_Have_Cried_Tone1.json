@@ -34,16 +34,27 @@
       {
         "elementType": "ModeKey",
         "alignment": "center",
-        "neumes": [
-          "ModeSign.Ekhos",
+        "mode": 1,
+        "martyrias": [
           "ModeSign.Alpha",
-          "ModeSign.DeltaHat",
-          "ModeSign.Pa",
-          "DiatonicPa_TopCenter"
+          "ModeSign.DeltaHat"
         ],
+        "note": "ModeSign.Pa",
+        "fthora": "DiatonicPa_TopRight",
         "color": "#ff0000",
         "fontSize": 26.666666666666668,
         "height": 63
+      },
+      {
+        "lineBreak": false,
+        "pageBreak": false,
+        "elementType": "TextBox",
+        "alignment": "right",
+        "color": "#0000ff",
+        "content": "Κύριε εκέκραξα",
+        "fontSize": 16,
+        "fontFamily": "Omega",
+        "height": 14
       },
       {
         "lineBreak": false,

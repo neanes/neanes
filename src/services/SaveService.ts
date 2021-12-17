@@ -205,7 +205,11 @@ export class SaveService {
 
     public static SaveModeKey(element: ModeKeyElement_v1, e: ModeKeyElement) {
         element.alignment = e.alignment;
-        element.neumes = e.neumes.map(x => x);
+        element.mode = e.mode;
+        element.note = e.note;
+        element.fthora = e.fthora;
+        element.quantativeNeume = e.quantativeNeume;
+        element.martyrias = e.martyrias.map(x => x);
         element.color = e.color;
         element.fontSize = e.fontSize;
         element.height = e.height;
@@ -356,7 +360,11 @@ export class SaveService {
 
     public static LoadModeKey_v1(element: ModeKeyElement, e: ModeKeyElement_v1) {
         element.alignment = e.alignment;
-        element.neumes = e.neumes.map(x => x);
+        element.mode = e.mode;
+        element.note = e.note;
+        element.fthora = e.fthora;
+        element.quantativeNeume = e.quantativeNeume;
+        element.martyrias = e.martyrias.map(x => x);
         element.color = e.color;
         element.fontSize = e.fontSize;
         element.height = e.height;

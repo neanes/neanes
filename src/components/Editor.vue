@@ -135,7 +135,11 @@
       <ModeKeyToolbar :element="selectedElement" @scoreUpdated="onScoreUpdated" />
     </template>
     <template v-if="selectedElement != null && isSyllableElement(selectedElement)">
-      <NeumeToolbar :element="selectedElement" @scoreUpdated="onScoreUpdated" />
+      <NeumeToolbar 
+        :element="selectedElement" 
+        :entryMode="entryMode"
+        @scoreUpdated="onScoreUpdated"
+        @toggleEntryMode="toggleEntryMode" />
     </template>
   </div>
 </template>
@@ -158,7 +162,6 @@ import FileMenuBar from '@/components/FileMenuBar.vue';
 import StaffText from '@/components/StaffText.vue';
 import TextBox from '@/components/TextBox.vue';
 import { store } from '@/store';
-import { TextMeasurementService } from '@/services/TextMeasurementService';
 import DropCap from '@/components/DropCap.vue';
 import ModeKey from '@/components/ModeKey.vue';
 import TextToolbar from '@/components/TextToolbar.vue';
@@ -185,6 +188,8 @@ import Neume from './Neume.vue';
 })
 export default class Editor extends Vue {
   pages: Page[] = [];
+
+  entryMode: boolean = true;
   
   get score() {
     return store.state.score;
@@ -247,6 +252,10 @@ export default class Editor extends Vue {
 
   updateQuantitativeNeume(neume: QuantitativeNeume) {
     if(this.selectedElement) {
+        if (this.entryMode && this.selectedElement.elementType !== ElementType.Empty) {
+          this.moveRight();
+        }
+
         const index = this.elements.indexOf(this.selectedElement);
 
         if (index === this.elements.length - 1) {
@@ -259,7 +268,6 @@ export default class Editor extends Vue {
         
         (this.selectedElement as NoteElement).quantitativeNeume = new QuantitativeNeumeElement(neume);
 
-        //this.moveRight();
       this.save();
     }
   }
@@ -648,6 +656,10 @@ export default class Editor extends Vue {
   updateTextBox(element: TextBoxElement, content: string) {
     element.content = content;
     this.save();
+  }
+
+  toggleEntryMode() {
+    this.entryMode = !this.entryMode;
   }
 
   onScoreUpdated() {

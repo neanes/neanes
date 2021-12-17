@@ -19,11 +19,11 @@
 - [ ] Ison
 
 ## Lord I Have Cried, Tone 1
-- [ ] Missing Neumes
+- [X] Missing Neumes
 - [X] Dot + Goron together
 - [X] Smart Neume Choice (Dots, Antikenoma, Gorgons)
 - [X] Melismas
-- [ ] Textbox Gap Analysis
+- [X] Textbox Gap Analysis
 - [ ] Header Images
 - [X] Drop Caps
 

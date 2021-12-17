@@ -1,7 +1,8 @@
 <template>
   <div class="neume-toolbar">
-    <button @click="setAccidental(Accidental.Flat_2_Left)"><Neume class="red neume flat" :neume=" Accidental.Flat_2_Right" /></button>
-    <button @click="setAccidental(Accidental.Sharp_2_Left)"><Neume class="red neume sharp" :neume="Accidental.Sharp_2_Left" /></button>
+    <button class="entry-mode-btn" @click="$emit('toggleEntryMode')" :class="{ on: entryMode === true }">Entry Mode</button>
+    <button class="neume-button" @click="setAccidental(Accidental.Flat_2_Left)"><Neume class="red neume flat" :neume=" Accidental.Flat_2_Right" /></button>
+    <button class="neume-button" @click="setAccidental(Accidental.Sharp_2_Left)"><Neume class="red neume sharp" :neume="Accidental.Sharp_2_Left" /></button>
   </div>
 </template>
 
@@ -18,6 +19,7 @@ import Neume from './Neume.vue';
 })
 export default class NeumeToolbar extends Vue {
   @Prop() element!: NoteElement;
+  @Prop() entryMode!: boolean;
   Accidental = Accidental;
   
   private setAccidental(neume: Accidental) {
@@ -42,6 +44,10 @@ export default class NeumeToolbar extends Vue {
     padding: 0.25rem;
   }
 
+  .entry-mode-btn.on {
+    background-color: lightsteelblue;
+  }
+
   .red {
     color: red;
   }
@@ -50,7 +56,7 @@ export default class NeumeToolbar extends Vue {
     font-size: 25px;
   }
 
-  button {
+  .neume-button {
     height: 32px;
     width: 32px;
   }

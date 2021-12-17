@@ -52,10 +52,35 @@ export const gorgonAdjustmentMap = new Map<GorgonNeume, NeumeAdjustment[]>([
     ]],
    ]);
 
+   export const vocalExpressionAdjustmentMap = new Map<VocalExpressionNeume, NeumeAdjustment[]>([
+    [VocalExpressionNeume.Psifiston, [ 
+        { 
+            isPairedWith: [
+                QuantitativeNeume.Petasti,
+                QuantitativeNeume.PetastiPlusApostrophos,
+                QuantitativeNeume.PetastiPlusDoubleHypsili,
+                QuantitativeNeume.PetastiPlusElaphron,
+                QuantitativeNeume.PetastiPlusElaphronPlusApostrophos,
+                QuantitativeNeume.PetastiPlusHypsiliLeft,
+                QuantitativeNeume.PetastiPlusHypsiliRight,
+                QuantitativeNeume.PetastiPlusHypsiliPlusKentimaHorizontal,
+                QuantitativeNeume.PetastiPlusHypsiliPlusKentimaVertical,
+                QuantitativeNeume.PetastiWithIson,
+                QuantitativeNeume.PetastiPlusKentimaAbove,
+                QuantitativeNeume.PetastiPlusKentimaBelow,
+            ], 
+        offset: { x: 7, y: 0 }},
+    ]],
+   ]);
+
 export const getGorgonAdjustments = (neume: GorgonNeume) => {
     return gorgonAdjustmentMap.get(neume);
 }
 
 export const getTimeAdjustments = (neume: TimeNeume) => {
     return timeAdjustmentMap.get(neume);
+}
+
+export const getVocalExpressionAdjustments = (neume: VocalExpressionNeume) => {
+    return vocalExpressionAdjustmentMap.get(neume);
 }

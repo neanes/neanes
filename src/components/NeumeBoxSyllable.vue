@@ -26,6 +26,7 @@
     <Neume 
       v-if="hasVocalExpressionNeume && !isVareia(note.vocalExpressionNeume.neume)"
       :neume="note.vocalExpressionNeume.neume"
+      :offset="vocalExpressionNeumeOffset"
       :class="[{ red: isRedNeume(note.vocalExpressionNeume.neume) } ]"></Neume>
   </div>
 </template>
@@ -34,7 +35,7 @@
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { NoteElement, ScoreElementOffset } from '@/models/Element';
 import { QuantitativeNeume, isRedNeume, VocalExpressionNeume } from '@/models/Neumes';
-import { getGorgonAdjustments, getTimeAdjustments, NeumeAdjustmentOffset } from '@/models/NeumeAdjustments';
+import { getGorgonAdjustments, getTimeAdjustments, getVocalExpressionAdjustments, NeumeAdjustmentOffset } from '@/models/NeumeAdjustments';
 import Neume from '@/components/Neume.vue';
 import TimeNeumeBox from '@/components/TimeNeume.vue';
 import { store } from '@/store';
@@ -98,6 +99,22 @@ export default class NeumeBoxSyllable extends Vue {
     let offset: NeumeAdjustmentOffset | null = null;
 
       const adjustments = getGorgonAdjustments(this.note.gorgonNeume!.neume);
+
+      if (adjustments) {
+        const adjustment = adjustments.find(x => x.isPairedWith.includes(this.note.quantitativeNeume.neume));
+
+        if (adjustment) {
+          offset = adjustment.offset;
+        }
+      }
+
+    return offset;
+  }
+
+  get vocalExpressionNeumeOffset() {
+    let offset: NeumeAdjustmentOffset | null = null;
+
+      const adjustments = getVocalExpressionAdjustments(this.note.vocalExpressionNeume!.neume);
 
       if (adjustments) {
         const adjustment = adjustments.find(x => x.isPairedWith.includes(this.note.quantitativeNeume.neume));

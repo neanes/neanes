@@ -76,20 +76,6 @@
         </div>
       </div>
       <div class="row">
-        <div
-          class="neume" 
-          v-for="(tile, index) in vocalExpressionNeumes" 
-          :key="`vocalExpressionNeumes-${index}`"
-          @click="$emit('select-vocal-expression-neume', tile.neume)">
-            <Neume
-              v-for="(element, index) in tile.elements"
-              :key="`vocalExpressionNeumes-elements-${index}`"
-              :style="element.style"
-              :neume="element.neume"
-              ></Neume>
-          </div>
-      </div>
-      <div class="row">
         <Neume 
           class="neume" 
           v-for="(neume, index) in breathNeumes" 
@@ -461,106 +447,6 @@ export default class NeumeSelector extends Vue {
          }         
        ]
     },
-    {
-       neume: null,
-       elements: []
-    },
-  ];
-
-  vocalExpressionNeumes: NeumeTile[] = [
-    {
-       neume: VocalExpressionNeume.Vareia,
-       elements: [
-         {
-          neume: VocalExpressionNeume.Vareia,
-         },
-       ]
-    },
-    {
-       neume: VocalExpressionNeume.Homalon,
-       elements: [
-         {
-          neume: QuantitativeNeume.Ison,
-          style: {
-            opacity: 0.5
-          }
-         },
-         {
-           neume: VocalExpressionNeume.Homalon,
-         }         
-       ]
-    },
-    {
-       neume: VocalExpressionNeume.HomalonConnecting,
-       elements: [
-         {
-          neume: QuantitativeNeume.Ison,
-          style: {
-            opacity: 0.5
-          }
-         },
-         {
-          neume: QuantitativeNeume.Ison,
-          style: {
-            opacity: 0.5
-          }
-         },
-         {
-           neume: VocalExpressionNeume.HomalonConnecting,
-         }         
-       ]
-    },
-    {
-       neume: VocalExpressionNeume.Antikenoma,
-       elements: [
-         {
-          neume: QuantitativeNeume.Ison,
-          style: {
-            opacity: 0.5
-          }
-         },
-         {
-           neume: VocalExpressionNeume.Antikenoma,
-         }         
-       ]
-    },
-    {
-       neume: VocalExpressionNeume.Psifiston,
-       elements: [
-         {
-          neume: QuantitativeNeume.Ison,
-          style: {
-            opacity: 0.5
-          }
-         },
-         {
-           neume: VocalExpressionNeume.Psifiston,
-         }         
-       ]
-    },
-    {
-       neume: VocalExpressionNeume.Heteron,
-       elements: [
-         {
-          neume: QuantitativeNeume.Ison,
-          style: {
-            opacity: 0.5,
-          }
-         },
-         {
-          neume: QuantitativeNeume.Ison,
-          style: {
-            opacity: 0.5
-          }
-         },
-         {
-           neume: VocalExpressionNeume.Heteron,
-           style: {
-             color: '#ED0000',
-           }
-         }         
-       ]
-    },    
     {
        neume: null,
        elements: []

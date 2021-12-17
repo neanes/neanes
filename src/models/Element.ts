@@ -103,6 +103,10 @@ export class NoteElement extends ScoreElement {
 
         this.vocalExpressionNeume = neume != null ? new VocalExpressionNeumeElement(neume) : null;
     }
+
+    public setAccidental(neume: Accidental | null) {
+        this.accidental = neume != null ? new AccidentalElement(neume) : null;
+    }
 }
 
 export class MartyriaElement extends ScoreElement {

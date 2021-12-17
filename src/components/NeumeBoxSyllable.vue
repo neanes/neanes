@@ -3,12 +3,12 @@
     <Neume 
       v-if="hasVocalExpressionNeume && isVareia(note.vocalExpressionNeume.neume)" :neume="note.vocalExpressionNeume.neume"></Neume>
     <Neume :neume="note.quantitativeNeume.neume"></Neume>
-    <TimeNeumeBox
+    <Neume
       v-if="hasTimeNeume"
-      :element="note.timeNeume"
-      :style="timeNeumeStyle"
+      :neume="note.timeNeume.neume"
+      :offset="timeNeumeOffset"
       :class="[ 
-        { red: isRedNeume(note.timeNeume.neume) } ]"></TimeNeumeBox>
+        { red: isRedNeume(note.timeNeume.neume) } ]"></Neume>
     <Neume
       v-if="hasGorgonNeume"
       :neume="note.gorgonNeume.neume"
@@ -34,7 +34,7 @@
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { NoteElement, ScoreElementOffset } from '@/models/Element';
 import { QuantitativeNeume, isRedNeume, VocalExpressionNeume } from '@/models/Neumes';
-import { getGorgonAdjustments, NeumeAdjustmentOffset } from '@/models/NeumeAdjustments';
+import { getGorgonAdjustments, getTimeAdjustments, NeumeAdjustmentOffset } from '@/models/NeumeAdjustments';
 import Neume from '@/components/Neume.vue';
 import TimeNeumeBox from '@/components/TimeNeume.vue';
 import { store } from '@/store';
@@ -78,25 +78,20 @@ export default class NeumeBoxSyllable extends Vue {
     } as CSSStyleDeclaration;
   }
 
-  get timeNeumeStyle() {
-    const style = {} as CSSStyleDeclaration;
-    
-    // switch(this.note.timeNeume!.neume) {
-    //   case TimeNeume.Gorgon_Top:
-    //     if (this.note.quantitativeNeume.neume === QuantitativeNeume.Apostrophos) {
-    //       style.position = 'relative';
-    //       style.left = '0.6rem';
-    //     }
-    //     break;
-    //   case TimeNeume.Klasma_Top:
-    //     if (this.note.quantitativeNeume.neume === QuantitativeNeume.Apostrophos) {
-    //       style.position = 'relative';
-    //       style.left = '0.5rem';
-    //     }
-    //     break;
-    // }
+  get timeNeumeOffset() {
+    let offset: NeumeAdjustmentOffset | null = null;
 
-    return style;
+      const adjustments = getTimeAdjustments(this.note.timeNeume!.neume);
+
+      if (adjustments) {
+        const adjustment = adjustments.find(x => x.isPairedWith.includes(this.note.quantitativeNeume.neume));
+
+        if (adjustment) {
+          offset = adjustment.offset;
+        }
+      }
+
+    return offset;
   }
 
   get gorgonNeumeOffset() {
@@ -105,7 +100,7 @@ export default class NeumeBoxSyllable extends Vue {
       const adjustments = getGorgonAdjustments(this.note.gorgonNeume!.neume);
 
       if (adjustments) {
-        const adjustment = adjustments.find(x => x.isPairedWith === this.note.quantitativeNeume.neume);
+        const adjustment = adjustments.find(x => x.isPairedWith.includes(this.note.quantitativeNeume.neume));
 
         if (adjustment) {
           offset = adjustment.offset;

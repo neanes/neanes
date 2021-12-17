@@ -264,10 +264,6 @@ export enum Accidental {
 
 export type Neume = QuantitativeNeume | TimeNeume | GorgonNeume | VocalExpressionNeume | Fthora | Accidental | TempoSign | Note | RootSign | ModeSign;
 
-const highNeumes: QuantitativeNeume[] = [
-    QuantitativeNeume.OligonPlusKentemata,
-];
-
 const redNeumes: Neume[] = [
     GorgonNeume.Gorgon_Top,
     GorgonNeume.Gorgon_Bottom,
@@ -291,10 +287,6 @@ const rightNeumes: Neume[] = [
     QuantitativeNeume.OligonPlusElaphronPlusKentemata,
     QuantitativeNeume.OligonPlusIsonPlusKentemata,
 ];
-
-export function isHighNeume(neume: QuantitativeNeume) {
-    return highNeumes.includes(neume);
-}
 
 export function isRedNeume(neume: Neume) {
     return redNeumes.includes(neume);

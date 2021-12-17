@@ -87,6 +87,10 @@ export default class FileMenuBar extends Vue {
 
         store.mutations.setScore(score);
         this.$emit('scoreUpdated');
+
+        // Reset the selector so that if the user selects
+        // the same file twice, it will load
+        this.fileSelector.value = '';
       };
 
       reader.readAsText(file);

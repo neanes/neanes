@@ -11,29 +11,29 @@ export interface NeumeAdjustment {
 }
 
 export const gorgonAdjustmentMap = new Map<GorgonNeume, NeumeAdjustment[]>([
-    [GorgonNeume.Gorgon_Top, [ 
-        { isPairedWith: [QuantitativeNeume.OligonPlusKentemata], offset: { x: 0, y: -5 }},
+    [GorgonNeume.Gorgon_Top, [
+        { isPairedWith: [QuantitativeNeume.OligonPlusKentemata], offset: { x: 0, y: -5 } },
     ]],
 
-    [GorgonNeume.Gorgon_TopRight, [ 
-        { isPairedWith: [QuantitativeNeume.Hyporoe], offset: { x: 8, y: 4 }},
-        { isPairedWith: [QuantitativeNeume.Apostrophos], offset: { x: 0, y: 4 }},
-        { isPairedWith: [QuantitativeNeume.OligonPlusIsonPlusKentemata], offset: { x: -3, y: 0 }},
-        { isPairedWith: [QuantitativeNeume.OligonPlusElaphronPlusKentemata], offset: { x: -3, y: 0 }},
+    [GorgonNeume.Gorgon_TopRight, [
+        { isPairedWith: [QuantitativeNeume.Hyporoe], offset: { x: 8, y: 4 } },
+        { isPairedWith: [QuantitativeNeume.Apostrophos], offset: { x: 0, y: 4 } },
+        { isPairedWith: [QuantitativeNeume.OligonPlusIsonPlusKentemata], offset: { x: -3, y: 0 } },
+        { isPairedWith: [QuantitativeNeume.OligonPlusElaphronPlusKentemata], offset: { x: -3, y: 0 } },
     ]],
 
-    [GorgonNeume.Digorgon_Right, [ 
-        { isPairedWith: [QuantitativeNeume.Hyporoe], offset: { x: 5, y: 6 }},
+    [GorgonNeume.Digorgon_Right, [
+        { isPairedWith: [QuantitativeNeume.Hyporoe], offset: { x: 5, y: 6 } },
     ]],
 
-    [GorgonNeume.Trigorgon_Right, [ 
-        { isPairedWith: [QuantitativeNeume.Hyporoe], offset: { x: 3, y: 6 }},
+    [GorgonNeume.Trigorgon_Right, [
+        { isPairedWith: [QuantitativeNeume.Hyporoe], offset: { x: 3, y: 6 } },
     ]],
-   ]);
+]);
 
-   export const timeAdjustmentMap = new Map<TimeNeume, NeumeAdjustment[]>([
-    [TimeNeume.Klasma_Bottom, [ 
-        { 
+export const timeAdjustmentMap = new Map<TimeNeume, NeumeAdjustment[]>([
+    [TimeNeume.Klasma_Bottom, [
+        {
             isPairedWith: [
                 QuantitativeNeume.Petasti,
                 QuantitativeNeume.PetastiPlusApostrophos,
@@ -47,14 +47,15 @@ export const gorgonAdjustmentMap = new Map<GorgonNeume, NeumeAdjustment[]>([
                 QuantitativeNeume.PetastiWithIson,
                 QuantitativeNeume.PetastiPlusKentimaAbove,
                 QuantitativeNeume.PetastiPlusKentimaBelow,
-            ], 
-        offset: { x: 9, y: 2 }},
+            ],
+            offset: { x: 9, y: 2 }
+        },
     ]],
-   ]);
+]);
 
-   export const vocalExpressionAdjustmentMap = new Map<VocalExpressionNeume, NeumeAdjustment[]>([
-    [VocalExpressionNeume.Psifiston, [ 
-        { 
+export const vocalExpressionAdjustmentMap = new Map<VocalExpressionNeume, NeumeAdjustment[]>([
+    [VocalExpressionNeume.Psifiston, [
+        {
             isPairedWith: [
                 QuantitativeNeume.Petasti,
                 QuantitativeNeume.PetastiPlusApostrophos,
@@ -68,8 +69,15 @@ export const gorgonAdjustmentMap = new Map<GorgonNeume, NeumeAdjustment[]>([
                 QuantitativeNeume.PetastiWithIson,
                 QuantitativeNeume.PetastiPlusKentimaAbove,
                 QuantitativeNeume.PetastiPlusKentimaBelow,
-            ], 
-        offset: { x: 7, y: 0 }},
+            ],
+            offset: { x: 7, y: 0 }
+        },
+    ]],
+]);
+
+export const fthoraAdjustmentMap = new Map<Fthora, NeumeAdjustment[]>([
+    [Fthora.DiatonicPa_TopRight, [ 
+        { isPairedWith: [ModeSign.Pa], offset: { x: 2, y: -9 }},
     ]],
    ]);
 
@@ -83,4 +91,8 @@ export const getTimeAdjustments = (neume: TimeNeume) => {
 
 export const getVocalExpressionAdjustments = (neume: VocalExpressionNeume) => {
     return vocalExpressionAdjustmentMap.get(neume);
+}
+
+export const getFthoraAdjustments = (neume: Fthora) => {
+    return fthoraAdjustmentMap.get(neume);
 }

@@ -2134,21 +2134,9 @@
           },
           "neume": "PetastiWithIson"
         },
-        "timeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Hapli_Right"
-        },
+        "timeNeume": null,
         "gorgonNeume": null,
-        "vocalExpressionNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "AntikenomaShort"
-        },
+        "vocalExpressionNeume": null,
         "fthora": null,
         "accidental": null,
         "lyrics": "to",
@@ -2166,7 +2154,13 @@
           },
           "neume": "Apostrophos"
         },
-        "timeNeume": null,
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Hapli_Right"
+        },
         "gorgonNeume": {
           "offset": {
             "x": 0,
@@ -2174,7 +2168,13 @@
           },
           "neume": "Gorgon_TopRight"
         },
-        "vocalExpressionNeume": null,
+        "vocalExpressionNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "AntikenomaShort"
+        },
         "fthora": null,
         "accidental": null,
         "lyrics": "",

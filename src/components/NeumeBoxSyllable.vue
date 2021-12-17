@@ -8,15 +8,13 @@
       :element="note.timeNeume"
       :style="timeNeumeStyle"
       :class="[ 
-        { high: isHighNeume(note.quantitativeNeume.neume) }, 
         { red: isRedNeume(note.timeNeume.neume) } ]"></TimeNeumeBox>
-    <TimeNeumeBox
+    <Neume
       v-if="hasGorgonNeume"
-      :element="note.gorgonNeume"
-      :style="timeNeumeStyle"
+      :neume="note.gorgonNeume.neume"
+      :offset="gorgonNeumeOffset"
       :class="[ 
-        { high: isHighNeume(note.quantitativeNeume.neume) }, 
-        { red: isRedNeume(note.gorgonNeume.neume) } ]"></TimeNeumeBox>
+        { red: isRedNeume(note.gorgonNeume.neume) } ]"></Neume>
     <Neume 
       v-if="hasFthora"
       :neume="note.fthora.neume"
@@ -34,8 +32,9 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
-import { NoteElement } from '@/models/Element';
-import { QuantitativeNeume, isHighNeume, isRedNeume, VocalExpressionNeume } from '@/models/Neumes';
+import { NoteElement, ScoreElementOffset } from '@/models/Element';
+import { QuantitativeNeume, isRedNeume, VocalExpressionNeume } from '@/models/Neumes';
+import { getGorgonAdjustments, NeumeAdjustmentOffset } from '@/models/NeumeAdjustments';
 import Neume from '@/components/Neume.vue';
 import TimeNeumeBox from '@/components/TimeNeume.vue';
 import { store } from '@/store';
@@ -100,8 +99,20 @@ export default class NeumeBoxSyllable extends Vue {
     return style;
   }
 
-  isHighNeume(neume: QuantitativeNeume) {
-    return isHighNeume(neume);
+  get gorgonNeumeOffset() {
+    let offset: NeumeAdjustmentOffset | null = null;
+
+      const adjustments = getGorgonAdjustments(this.note.gorgonNeume!.neume);
+
+      if (adjustments) {
+        const adjustment = adjustments.find(x => x.isPairedWith === this.note.quantitativeNeume.neume);
+
+        if (adjustment) {
+          offset = adjustment.offset;
+        }
+      }
+
+    return offset;
   }
 
   isRedNeume(neume: VocalExpressionNeume) {

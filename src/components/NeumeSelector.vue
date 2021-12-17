@@ -206,7 +206,7 @@
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { ScoreElement, NoteElement } from '@/models/Element';
-import { QuantitativeNeume, TimeNeume, VocalExpressionNeume, isHighNeume, isRedNeume, Note, RootSign, Fthora, Neume as NeumeType, GorgonNeume } from '@/models/Neumes';
+import { QuantitativeNeume, TimeNeume, VocalExpressionNeume, isRedNeume, Note, RootSign, Fthora, Neume as NeumeType, GorgonNeume } from '@/models/Neumes';
 import { neumeMap } from '@/models/NeumeMappings';
 import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
 import Neume from '@/components/Neume.vue';
@@ -741,10 +741,6 @@ fthorasRowThree: NeumeTile[] = [
     this.generateFthoraTile(Fthora.Kliton_BottomCenter),
     this.generateFthoraTile(Fthora.Spathi_TopCenter),
   ];
-
-  isHighNeume(neume: QuantitativeNeume) {
-    return isHighNeume(neume);
-  }
 
   isRedNeume(neume: TimeNeume) {
     return isRedNeume(neume);

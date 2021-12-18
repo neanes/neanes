@@ -52,18 +52,6 @@
       <div class="row">
         <div 
           class="neume" 
-          v-for="(tile, index) in timeNeumes" 
-          :key="`timeNeumes-${index}`"
-          @click="$emit('select-time-neume', tile.neume)">
-          <Neume
-            v-for="(element, index) in tile.elements"
-              :key="`timeNeumes-elements-${index}`"
-              :neume="element.neume"
-              :style="element.style"
-              ></Neume>
-        </div>
-        <div 
-          class="neume" 
           v-for="(tile, index) in gorgonNeumes" 
           :key="`gorgonNeumes-${index}`"
           @click="$emit('select-gorgon-neume', tile.neume)">
@@ -265,83 +253,6 @@ export default class NeumeSelector extends Vue {
   breathNeumes: QuantitativeNeume[] = [
     QuantitativeNeume.VareiaDotted,
     QuantitativeNeume.Cross,
-  ];
-
-  timeNeumes: NeumeTile[] = [
-    {
-       neume: TimeNeume.Klasma_Top,
-       elements: [
-         {
-          neume: QuantitativeNeume.Ison,
-          style: {
-            opacity: 0.5
-          }
-         },
-         {
-           neume: TimeNeume.Klasma_Top,
-         }         
-       ]
-    },
-    {
-       neume: TimeNeume.Klasma_Bottom,
-       elements: [
-         {
-          neume: QuantitativeNeume.Ison,
-          style: {
-            opacity: 0.5
-          }
-         },
-         {
-           neume: TimeNeume.Klasma_Bottom,
-         }         
-       ]
-    },
-    {
-       neume: TimeNeume.Hapli,
-       elements: [
-         {
-          neume: QuantitativeNeume.Ison,
-          style: {
-            opacity: 0.5
-          }
-         },
-         {
-           neume: TimeNeume.Hapli,
-         }         
-       ]
-    },
-    {
-       neume: TimeNeume.Dipli,
-       elements: [
-         {
-          neume: QuantitativeNeume.Ison,
-          style: {
-            opacity: 0.5
-          }
-         },
-         {
-           neume: TimeNeume.Dipli,
-         }         
-       ]
-    },
-    {
-       neume: TimeNeume.Tripli,
-       elements: [
-         {
-          neume: QuantitativeNeume.Ison,
-          style: {
-            opacity: 0.5
-          }
-         },
-         {
-           neume: TimeNeume.Tripli,
-         }         
-       ]
-    },
-    {
-       neume: null,
-       elements: []
-    },
   ];
 
   gorgonNeumes: NeumeTile[] = [

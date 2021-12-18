@@ -1,11 +1,19 @@
 <template>
   <div class="neume-toolbar">
     <button class="auto-mode-btn" @click="$emit('toggleAutoMode')" :class="{ on: autoMode === true }">Auto</button>
+    <span class="space"></span>
     <button class="neume-button" @click="setAccidental(Accidental.Flat_2_Left)"><Neume class="red neume flat" :neume=" Accidental.Flat_2_Right" /></button>
     <button class="neume-button" @click="setAccidental(Accidental.Sharp_2_Left)"><Neume class="red neume sharp" :neume="Accidental.Sharp_2_Left" /></button>
     <span class="space"></span>
+    <button class="neume-button" @click="setTimeNeume(TimeNeume.Klasma_Top)"><Neume class="neume klasma-top" :neume="TimeNeume.Klasma_Top" /></button>
+    <button class="neume-button" @click="setTimeNeume(TimeNeume.Klasma_Bottom)"><Neume class="neume klasma-bottom" :neume="TimeNeume.Klasma_Bottom" /></button>
+    <button class="neume-button" @click="setTimeNeume(TimeNeume.Hapli)"><Neume class="neume hapli" :neume="TimeNeume.Hapli" /></button>
+    <button class="neume-button" @click="setTimeNeume(TimeNeume.Dipli)"><Neume class="neume dipli" :neume="TimeNeume.Dipli" /></button>
+    <button class="neume-button" @click="setTimeNeume(TimeNeume.Tripli)"><Neume class="neume tripli" :neume="TimeNeume.Tripli" /></button>
+    <span class="space"></span>
     <button class="neume-button" @click="setVocalExpression(VocalExpressionNeume.Vareia)"><Neume class="neume vareia" :neume="VocalExpressionNeume.Vareia" /></button>
-    <button class="neume-button" @click="setVocalExpression(VocalExpressionNeume.Homalon)"><Neume class="neume homalon" :neume="VocalExpressionNeume.Homalon" /></button>
+    <button class="neume-button" @click="setVocalExpression(VocalExpressionNeume.Homalon)"><Neume class="neume homalon" :neume="VocalExpressionNeume.Homalon" /><span class="homalon-1">1</span></button>
+    <button class="neume-button" @click="setVocalExpression(VocalExpressionNeume.HomalonConnecting)"><Neume class="neume homalon" :neume="VocalExpressionNeume.Homalon" /><span class="homalon-2">2</span></button>
     <button class="neume-button" @click="setVocalExpression(VocalExpressionNeume.Antikenoma)"><Neume class="neume antikenoma" :neume="VocalExpressionNeume.Antikenoma" /></button>
     <button class="neume-button" @click="setVocalExpression(VocalExpressionNeume.Psifiston)"><Neume class="neume psifiston" :neume="VocalExpressionNeume.Psifiston" /></button>
     <button class="neume-button" @click="setVocalExpression(VocalExpressionNeume.Heteron)"><Neume class="red neume heteron" :neume="VocalExpressionNeume.Heteron" /></button>
@@ -15,7 +23,7 @@
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { NoteElement } from '@/models/Element';
-import { Accidental, VocalExpressionNeume } from '@/models/Neumes';
+import { Accidental, TimeNeume, VocalExpressionNeume } from '@/models/Neumes';
 import Neume from './Neume.vue';
 
 @Component({
@@ -28,6 +36,7 @@ export default class NeumeToolbar extends Vue {
   @Prop() autoMode!: boolean;
   Accidental = Accidental;
   VocalExpressionNeume = VocalExpressionNeume;
+  TimeNeume = TimeNeume;
   
   private setAccidental(neume: Accidental) {
     if (this.element.accidental != null && this.element.accidental.neume === neume) {
@@ -40,22 +49,19 @@ export default class NeumeToolbar extends Vue {
     this.$emit('scoreUpdated');
   }
 
+  private setTimeNeume(neume: TimeNeume) {
+    if (this.element.timeNeume != null && this.element.timeNeume.neume === neume) {
+      this.element.setTimeNeume(null);
+    }
+    else {
+      this.element.setTimeNeume(neume);
+    }
+
+    this.$emit('scoreUpdated');
+  }
+
     private setVocalExpression(neume: VocalExpressionNeume) {
-      // Clicking the homalon once will set a normal homalon.
-      // Clicking again switches to the connecting homalon.
-      // Clicking again removes the homalon.
-      if (neume === VocalExpressionNeume.Homalon && this.element.vocalExpressionNeume != null) {
-        if (this.element.vocalExpressionNeume.neume === VocalExpressionNeume.Homalon) {
-          this.element.setVocalExpressionNeume(VocalExpressionNeume.HomalonConnecting);
-        }
-        else if (this.element.vocalExpressionNeume.neume === VocalExpressionNeume.HomalonConnecting) {
-          this.element.setVocalExpressionNeume(null);
-        }
-        else {  
-          this.element.setVocalExpressionNeume(neume);
-        }
-      }
-      else if (this.element.vocalExpressionNeume != null && this.element.vocalExpressionNeume.neume === neume) {
+      if (this.element.vocalExpressionNeume != null && this.element.vocalExpressionNeume.neume === neume) {
         this.element.setVocalExpressionNeume(null);
       }
       else {
@@ -119,6 +125,14 @@ export default class NeumeToolbar extends Vue {
     font-size: 22px;
   }
 
+  .homalon-1,
+  .homalon-2 {
+    position: absolute;
+    top: 17px;
+    left: 10px;
+    font-size: 12px;
+  }
+
   .antikenoma {
     top: -12px;
     left: 14px;
@@ -135,5 +149,30 @@ export default class NeumeToolbar extends Vue {
     top: -15px;
     left: 35px;
     font-size: 20px;
+  }
+
+  .klasma-top {
+    top: -6px;
+    left: 18px;
+  }
+
+  .klasma-bottom {
+    top: -12px;
+    left: 18px;
+  }
+
+  .hapli {
+    top: -18px;
+    left: 20px;
+  }
+
+  .dipli {
+    top: -18px;
+    left: 16px;
+  }
+
+  .tripli {
+    top: -20px;
+    left: 18px;
   }
   </style>

@@ -1,6 +1,6 @@
 <template>
   <div class="neume-toolbar">
-    <button class="entry-mode-btn" @click="$emit('toggleEntryMode')" :class="{ on: entryMode === true }">Entry Mode</button>
+    <button class="auto-mode-btn" @click="$emit('toggleAutoMode')" :class="{ on: autoMode === true }">Auto</button>
     <button class="neume-button" @click="setAccidental(Accidental.Flat_2_Left)"><Neume class="red neume flat" :neume=" Accidental.Flat_2_Right" /></button>
     <button class="neume-button" @click="setAccidental(Accidental.Sharp_2_Left)"><Neume class="red neume sharp" :neume="Accidental.Sharp_2_Left" /></button>
     <span class="space"></span>
@@ -25,7 +25,7 @@ import Neume from './Neume.vue';
 })
 export default class NeumeToolbar extends Vue {
   @Prop() element!: NoteElement;
-  @Prop() entryMode!: boolean;
+  @Prop() autoMode!: boolean;
   Accidental = Accidental;
   VocalExpressionNeume = VocalExpressionNeume;
   
@@ -76,7 +76,7 @@ export default class NeumeToolbar extends Vue {
     padding: 0.25rem;
   }
 
-  .entry-mode-btn.on {
+  .auto-mode-btn.on {
     background-color: lightsteelblue;
   }
 

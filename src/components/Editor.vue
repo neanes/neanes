@@ -137,9 +137,9 @@
     <template v-if="selectedElement != null && isSyllableElement(selectedElement)">
       <NeumeToolbar 
         :element="selectedElement" 
-        :entryMode="entryMode"
+        :autoMode="autoMode"
         @scoreUpdated="onScoreUpdated"
-        @toggleEntryMode="toggleEntryMode" />
+        @toggleAutoMode="toggleAutoMode" />
     </template>
   </div>
 </template>
@@ -189,7 +189,8 @@ import Neume from './Neume.vue';
 export default class Editor extends Vue {
   pages: Page[] = [];
 
-  entryMode: boolean = true;
+  autoMode: boolean = true;
+  keyboardMode: boolean = true;
   
   get score() {
     return store.state.score;
@@ -252,7 +253,7 @@ export default class Editor extends Vue {
 
   updateQuantitativeNeume(neume: QuantitativeNeume) {
     if(this.selectedElement) {
-        if (this.entryMode && this.selectedElement.elementType !== ElementType.Empty) {
+        if (this.autoMode && this.selectedElement.elementType !== ElementType.Empty) {
           this.moveRight();
         }
 
@@ -520,17 +521,19 @@ export default class Editor extends Vue {
       return;
     }
 
-    event.preventDefault();
+    let handled = false;
 
     if (event.code == 'ArrowLeft') {
       this.moveLeft();
-      return;
+      handled = true;
     }
     else if (event.code == 'ArrowRight' || event.code == 'Space') {
       this.moveRight();
-      return;
+      handled = true;
     }
     else if (event.code == 'Backspace') {
+      handled = true;
+
       if (this.isSyllableElement(this.selectedElement)) {
         let syllableElement = this.selectedElement as NoteElement;
         if (syllableElement.timeNeume) {
@@ -549,6 +552,8 @@ export default class Editor extends Vue {
       }
     }
     else if (event.code == 'Delete') {
+      handled = true;
+
       const index = this.elements.indexOf(this.selectedElement);
 
       if (this.selectedElement && index !== this.elements.length - 1) {
@@ -561,28 +566,35 @@ export default class Editor extends Vue {
       }
     }
 
-    if (event.shiftKey) {
-      const quantitativeNeume = KeyboardMap.quantitativeNeumeKeyboardMap_Shift.get(event.code);
+    if (this.keyboardMode && !event.ctrlKey) {
+      if (event.shiftKey) {
+        const quantitativeNeume = KeyboardMap.quantitativeNeumeKeyboardMap_Shift.get(event.code);
 
-      if (quantitativeNeume) {
-        this.updateQuantitativeNeume(quantitativeNeume);
-        return;
+        if (quantitativeNeume) {
+          this.updateQuantitativeNeume(quantitativeNeume);
+          handled = true;
+        }
+      }
+      else {
+        const quantitativeNeume = KeyboardMap.quantitativeNeumeKeyboardMap.get(event.code);
+
+        if (quantitativeNeume) {
+          this.updateQuantitativeNeume(quantitativeNeume);
+          handled = true;
+        }
+        else {
+          const timeNeume = KeyboardMap.timeNeumeKeyboardMap.get(event.code);
+
+          if (timeNeume) {
+            this.updateTimeNeume(timeNeume);
+            handled = true;
+          }
+        }
       }
     }
-    else {
-      const quantitativeNeume = KeyboardMap.quantitativeNeumeKeyboardMap.get(event.code);
 
-      if (quantitativeNeume) {
-        this.updateQuantitativeNeume(quantitativeNeume);
-        return;
-      }
-
-      const timeNeume = KeyboardMap.timeNeumeKeyboardMap.get(event.code);
-
-      if (timeNeume) {
-        this.updateTimeNeume(timeNeume);
-        return;
-      }
+    if (handled) {
+      event.preventDefault();
     }
   }
 
@@ -658,8 +670,8 @@ export default class Editor extends Vue {
     this.save();
   }
 
-  toggleEntryMode() {
-    this.entryMode = !this.entryMode;
+  toggleAutoMode() {
+    this.autoMode = !this.autoMode;
   }
 
   onScoreUpdated() {

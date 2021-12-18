@@ -1,6 +1,12 @@
 <template>
   <div class="editor">
     <FileMenuBar @scoreUpdated="onScoreUpdated"/>
+    <MainToolbar 
+      :autoMode="autoMode"
+      @addAutoMartyria="addAutoMartyria"
+      @toggleAutoMode="toggleAutoMode"
+      @updatePageBreak="updatePageBreak"
+      @updateLineBreak="updateLineBreak" />
     <div class="content">
         <NeumeSelector class="neume-selector"
      @select-quantitative-neume="updateQuantitativeNeume" 
@@ -33,8 +39,8 @@
                 <div :key="`element-${getElementIndex(element) }`" 
                   :ref="`element-${getElementIndex(element)}`"
                   class="neume-box">
-                  <span v-if="element.pageBreak" style="position:absolute; top: -10px;">P</span>
-                  <span v-if="element.lineBreak" style="position:absolute; top: -10px;">L</span>
+                  <span class="page-break" v-if="element.pageBreak" style="position:absolute; top: -10px;">P</span>
+                  <span class="line-break" v-if="element.lineBreak" style="position:absolute; top: -10px;">L</span>
                   <SyllableNeumeBox 
                     class="syllable-box"
                     :note="element"
@@ -164,6 +170,7 @@ import DropCap from '@/components/DropCap.vue';
 import ModeKey from '@/components/ModeKey.vue';
 import TextToolbar from '@/components/TextToolbar.vue';
 import ModeKeyToolbar from '@/components/ModeKeyToolbar.vue';
+import MainToolbar from '@/components/MainToolbar.vue';
 import NeumeToolbar from '@/components/NeumeToolbar.vue';
 import Neume from './Neume.vue';
 
@@ -182,6 +189,7 @@ import Neume from './Neume.vue';
     TextToolbar,
     ModeKeyToolbar,
     NeumeToolbar,
+    MainToolbar,
   }
 })
 export default class Editor extends Vue {
@@ -394,6 +402,26 @@ export default class Editor extends Vue {
       (this.selectedElement as MartyriaElement).note = note;
       (this.selectedElement as MartyriaElement).rootSign = rootSign;
       (this.selectedElement as MartyriaElement).apostrophe = apostrophe || false;
+
+      this.save();
+    }
+  }
+
+addAutoMartyria() {
+    if(this.selectedElement) {
+      if (this.autoMode && this.selectedElement.elementType !== ElementType.Empty) {
+        this.moveRight();
+      }
+
+      const index = this.elements.indexOf(this.selectedElement);
+
+      if (index === this.elements.length - 1) {
+        this.addEmptyElement();
+      }
+
+      if (this.selectedElement.elementType != ElementType.Martyria) {
+        this.selectedElement = this.switchToMartyria(this.selectedElement);
+      }
 
       this.save();
     }
@@ -890,8 +918,10 @@ export default class Editor extends Vue {
   }
 
   .neume-toolbar,
-  .text-toolbar {
+  .text-toolbar,
+  .page-break,
+  .line-break {
     display: none !important;
-  }
+  } 
 }
 </style>

@@ -1,7 +1,5 @@
 <template>
   <div class="neume-toolbar">
-    <button class="auto-mode-btn" @click="$emit('toggleAutoMode')" :class="{ on: autoMode === true }">Auto</button>
-    <span class="space"></span>
     <button class="neume-button" @click="setAccidental(Accidental.Flat_2_Left)"><Neume class="red neume flat" :neume=" Accidental.Flat_2_Right" /></button>
     <button class="neume-button" @click="setAccidental(Accidental.Sharp_2_Left)"><Neume class="red neume sharp" :neume="Accidental.Sharp_2_Left" /></button>
     <span class="space"></span>
@@ -41,7 +39,6 @@ import { areGorgonsEquivalent, areTimeNeumesEquivalent, areVocalExpressionsEquiv
 })
 export default class NeumeToolbar extends Vue {
   @Prop() element!: NoteElement;
-  @Prop() autoMode!: boolean;
   Accidental = Accidental;
   VocalExpressionNeume = VocalExpressionNeume;
   TimeNeume = TimeNeume;
@@ -100,10 +97,6 @@ export default class NeumeToolbar extends Vue {
     background-color: lightgray;
 
     padding: 0.25rem;
-  }
-
-  .auto-mode-btn.on {
-    background-color: lightsteelblue;
   }
 
   .red {

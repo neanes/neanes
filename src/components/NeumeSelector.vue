@@ -3,8 +3,7 @@
     <ul class="nav">
       <li @click="selectedTab='Basic'">Basic</li>
       <li @click="selectedTab='Fthora'">Phthorai</li>
-      <li @click="selectedTab='Martytria'">Martyria</li>
-      <li @click="selectedTab='Layout'">Layout</li>
+      <!-- <li @click="selectedTab='Martytria'">Martyria</li> -->
     </ul>
     <div class="tab" v-if="selectedTab == 'Basic'">
       <div class="row">
@@ -151,13 +150,6 @@
               :neume="element.neume"
               ></Neume>
         </div>
-      </div>
-    </div>
-    <div class="tab" v-if="selectedTab == 'Layout'">
-      <div class="row">
-        <div @click="$emit('select-page-break')">Page Break</div>
-        <div @click="$emit('select-line-break')">Line Break</div>
-        <div @click="$emit('select-empty')">Empty</div>
       </div>
     </div>
   </div>
@@ -605,12 +597,6 @@ interface NeumeTileMartyria {
 
     min-width: 2.5rem;
 }
-
-/* .root-sign {
-    position: relative;
-    left: 1.6rem;
-    top: -1.0rem;
-} */
 
 .red {
     color: #ED0000;

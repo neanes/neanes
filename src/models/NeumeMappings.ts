@@ -21,7 +21,7 @@ export const neumeMap = new Map<Neume, NeumeMapping>([
 
     [QuantitativeNeume.PetastiWithIson, { fontFamily: 'Psaltica', text: 'p'}],
     [QuantitativeNeume.Petasti, { fontFamily: 'Psaltica', text: 'q'}],
-    [QuantitativeNeume.PetastiPlusKentimaBelow, { fontFamily: 'Psaltica', text: 'w'}],
+    [QuantitativeNeume.PetastiPlusOligon, { fontFamily: 'Psaltica', text: 'w'}],
     [QuantitativeNeume.PetastiPlusKentimaAbove, { fontFamily: 'Psaltica', text: 'e'}],
     [QuantitativeNeume.PetastiPlusHypsiliRight, { fontFamily: 'Psaltica', text: 'r'}],
     [QuantitativeNeume.PetastiPlusHypsiliLeft, { fontFamily: 'Psaltica', text: 't'}],
@@ -45,10 +45,11 @@ export const neumeMap = new Map<Neume, NeumeMapping>([
     [QuantitativeNeume.OligonPlusKentemata, { fontFamily: 'Psaltica', text: 'O'}],
     [QuantitativeNeume.KentemataPlusOligon, { fontFamily: 'Psaltica', text: 'o'}],
     [QuantitativeNeume.OligonPlusIsonPlusKentemata, { fontFamily: 'Psaltica', text: 'P'}],
-    [QuantitativeNeume.OligonPlusApostrophosPlusKentemata, { fontFamily: 'Psaltica', text: 'I'}],
-    [QuantitativeNeume.OligonPlusElaphronPlusKentemata, { fontFamily: 'Psaltica', text: 'U'}],
-    [QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata, { fontFamily: 'Psaltica', text: 'Y'}],
-    [QuantitativeNeume.OligonPlusHamiliPlusKentemata, { fontFamily: 'Psaltica', text: 'T'}],
+    [QuantitativeNeume.OligonPlusApostrophos, { fontFamily: 'Psaltica', text: 'I'}],
+    [QuantitativeNeume.OligonPlusApostrophosPlusKentemata, { fontFamily: 'Psaltica', text: 'U'}],
+    [QuantitativeNeume.OligonPlusElaphronPlusKentemata, { fontFamily: 'Psaltica', text: 'Y'}],
+    [QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata, { fontFamily: 'Psaltica', text: 'T'}],
+    [QuantitativeNeume.OligonPlusHamiliPlusKentemata, { fontFamily: 'Psaltica', text: 'R'}],
     [QuantitativeNeume.RunningElaphron, { fontFamily: 'Psaltica', text: '_'}],
     [QuantitativeNeume.Hyporoe, { fontFamily: 'Psaltica', text: ')'}],
 
@@ -284,7 +285,7 @@ const quantitativeNeumeKeyboardMap = new Map<string, QuantitativeNeume>([
 const quantitativeNeumeKeyboardMap_Shift = new Map<string, QuantitativeNeume>([
     ["KeyH", QuantitativeNeume.PetastiWithIson],
     ["KeyJ", QuantitativeNeume.Petasti],
-    ["KeyK", QuantitativeNeume.PetastiPlusKentimaBelow],
+    ["KeyK", QuantitativeNeume.PetastiPlusOligon],
     ["KeyL", QuantitativeNeume.PetastiPlusKentimaAbove],
     ["KeyU", QuantitativeNeume.PetastiPlusHypsiliRight],
     ["KeyI", QuantitativeNeume.PetastiPlusHypsiliLeft],

@@ -12,6 +12,7 @@ const rightNeumes: Neume[] = [
     QuantitativeNeume.Hyporoe,
     QuantitativeNeume.OligonPlusElaphronPlusKentemata,
     QuantitativeNeume.OligonPlusIsonPlusKentemata,
+    QuantitativeNeume.OligonPlusApostrophosPlusKentemata,
 ];
 
 export const gorgonReplacementMap = new Map<GorgonNeume, NeumeReplacement<GorgonNeume>[]>([

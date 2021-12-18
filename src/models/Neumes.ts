@@ -12,7 +12,7 @@ export enum QuantitativeNeume {
 
     PetastiWithIson = 'PetastiWithIson',
     Petasti = 'Petasti',
-    PetastiPlusKentimaBelow = 'PetastiPlusKentimaBelow',
+    PetastiPlusOligon = 'PetastiPlusOligon',
     PetastiPlusKentimaAbove = 'PetastiPlusKentimaAbove',
     PetastiPlusHypsiliRight = 'PetastiPlusHypsiliRight',
     PetastiPlusHypsiliLeft = 'PetastiPlusHypsiliLeft',
@@ -36,6 +36,7 @@ export enum QuantitativeNeume {
     OligonPlusKentemata = 'OligonPlusKentemata',
     KentemataPlusOligon = 'KentemataPlusOligon',
     OligonPlusIsonPlusKentemata = 'OligonPlusIsonPlusKentemata',
+    OligonPlusApostrophos = 'OligonPlusApostrophos',
     OligonPlusApostrophosPlusKentemata = 'OligonPlusApostrophosPlusKentemata',
     OligonPlusElaphronPlusKentemata = 'OligonPlusElaphronPlusKentemata',
     OligonPlusElaphronPlusApostrophosPlusKentemata = 'OligonPlusElaphronPlusApostrophosPlusKentemata',

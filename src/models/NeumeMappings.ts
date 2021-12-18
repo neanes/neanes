@@ -207,6 +207,9 @@ export const neumeMap = new Map<Neume, NeumeMapping>([
     [RootSign.DeltaDotted, { fontFamily: 'Psaltica', text: 'C<'}],
     [RootSign.AlphaDotted, { fontFamily: 'Psaltica', text: 'V<'}],
     [RootSign.SoftChromaticPaRootSign, { fontFamily: 'EzFthora', text: 'R'}],
+    [RootSign.NanaLow, { fontFamily: 'EzSpecial1', text: 'N'}],
+    [RootSign.DeltaLow, { fontFamily: 'EzSpecial1', text: 'M'}],
+    [RootSign.AlphaLow, { fontFamily: 'EzSpecial1', text: '<'}],
 
     [Note.Ni, { fontFamily: 'Psaltica', text: 'c'}],
     [Note.Pa, { fontFamily: 'Psaltica', text: 'v'}],
@@ -215,6 +218,9 @@ export const neumeMap = new Map<Neume, NeumeMapping>([
     [Note.Thi, { fontFamily: 'Psaltica', text: 'm'}],
     [Note.Ke, { fontFamily: 'Psaltica', text: ','}],
     [Note.Zo, { fontFamily: 'Psaltica', text: '.'}],
+    [Note.GaLow, { fontFamily: 'EzSpecial1', text: 'n'}],
+    [Note.ThiLow, { fontFamily: 'EzSpecial1', text: 'm'}],
+    [Note.KeLow, { fontFamily: 'EzSpecial1', text: ','}],
     [Note.Apostrophe, { fontFamily: 'Psaltica', text: '/'}],
 
     [ModeSign.Ekhos, { fontFamily: 'EzSpecial2', text: 'h' }],

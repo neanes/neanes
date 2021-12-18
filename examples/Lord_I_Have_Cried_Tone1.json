@@ -35,6 +35,8 @@
         "elementType": "ModeKey",
         "alignment": "center",
         "mode": 1,
+        "scale": "Diatonic",
+        "scaleNote": "Pa",
         "martyrias": [
           "ModeSign.Alpha",
           "ModeSign.DeltaHat"
@@ -396,7 +398,8 @@
         "elementType": "Martyria",
         "note": "Pa",
         "rootSign": "Alpha",
-        "apostrophe": false
+        "apostrophe": false,
+        "auto": true
       },
       {
         "lineBreak": false,
@@ -591,7 +594,8 @@
         "elementType": "Martyria",
         "note": "Pa",
         "rootSign": "Alpha",
-        "apostrophe": false
+        "apostrophe": false,
+        "auto": true
       },
       {
         "lineBreak": false,
@@ -996,7 +1000,8 @@
         "elementType": "Martyria",
         "note": "Pa",
         "rootSign": "Alpha",
-        "apostrophe": false
+        "apostrophe": false,
+        "auto": true
       },
       {
         "lineBreak": false,
@@ -1299,7 +1304,8 @@
         "elementType": "Martyria",
         "note": "Ga",
         "rootSign": "Nana",
-        "apostrophe": false
+        "apostrophe": false,
+        "auto": true
       },
       {
         "lineBreak": false,
@@ -1534,7 +1540,8 @@
         "elementType": "Martyria",
         "note": "Zo",
         "rootSign": "Varys",
-        "apostrophe": false
+        "apostrophe": false,
+        "auto": true
       },
       {
         "lineBreak": false,
@@ -2020,7 +2027,8 @@
         "elementType": "Martyria",
         "note": "Pa",
         "rootSign": "Alpha",
-        "apostrophe": false
+        "apostrophe": false,
+        "auto": true
       },
       {
         "lineBreak": false,
@@ -2322,7 +2330,8 @@
         "elementType": "Martyria",
         "note": "Ga",
         "rootSign": "Nana",
-        "apostrophe": false
+        "apostrophe": false,
+        "auto": true
       },
       {
         "lineBreak": false,

@@ -1,8 +1,13 @@
 <template>
   <div class="neume" :style="style">
-    <Neume :neume="neume.note"></Neume>
-    <Neume :neume="neume.rootSign"></Neume>
-    <Neume v-if="neume.apostrophe" neume="Apostrophe"></Neume>
+    <template v-if="neume.error">
+      ?
+    </template>
+    <template v-else>
+      <Neume :neume="neume.note"></Neume>
+      <Neume :neume="neume.rootSign"></Neume>
+      <Neume v-if="neume.apostrophe" neume="Apostrophe"></Neume>
+    </template>
   </div>
 </template>
 

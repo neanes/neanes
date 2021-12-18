@@ -1,4 +1,5 @@
 import { TimeNeume, GorgonNeume, QuantitativeNeume, Note, RootSign, VocalExpressionNeume, Fthora, Accidental, ModeSign } from '@/models/save/v1/Neumes';
+import { Scale, ScaleNote } from './Scales';
 
 export enum ElementType {
     Note = 'Note',
@@ -31,6 +32,7 @@ export class NoteElement extends ScoreElement {
 
 export class MartyriaElement extends ScoreElement  {  
     public readonly elementType: ElementType = ElementType.Martyria; 
+    public auto: boolean = true;
     public note: Note = Note.Pa;
     public rootSign: RootSign = RootSign.Alpha;
     public apostrophe: boolean = false;
@@ -60,6 +62,8 @@ export class ModeKeyElement extends ScoreElement {
     public readonly elementType: ElementType = ElementType.ModeKey;
     public alignment: TextBoxAlignment = TextBoxAlignment.Center;
     public mode: number = 1;
+    public scale: Scale = Scale.Diatonic;
+    public scaleNote: ScaleNote = ScaleNote.Pa;
     public martyrias: ModeSign[] = []  
     public note: ModeSign | null = null;
     public fthora: Fthora | null = null;

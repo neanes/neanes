@@ -50,20 +50,6 @@
           @click.native="$emit('select-quantitative-neume', neume)"></Neume>
       </div>
       <div class="row">
-        <div 
-          class="neume" 
-          v-for="(tile, index) in gorgonNeumes" 
-          :key="`gorgonNeumes-${index}`"
-          @click="$emit('select-gorgon-neume', tile.neume)">
-          <Neume
-            v-for="(element, index) in tile.elements"
-              :key="`gorgonNeumes-elements-${index}`"
-              :neume="element.neume"
-              :style="element.style"
-              ></Neume>
-        </div>
-      </div>
-      <div class="row">
         <Neume 
           class="neume" 
           v-for="(neume, index) in breathNeumes" 

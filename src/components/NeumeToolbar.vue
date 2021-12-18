@@ -11,6 +11,13 @@
     <button class="neume-button" @click="setTimeNeume(TimeNeume.Dipli)"><Neume class="neume dipli" :neume="TimeNeume.Dipli" /></button>
     <button class="neume-button" @click="setTimeNeume(TimeNeume.Tripli)"><Neume class="neume tripli" :neume="TimeNeume.Tripli" /></button>
     <span class="space"></span>
+    <button class="neume-button" @click="setGorgonNeume(GorgonNeume.Gorgon_Top)"><Neume class="red neume gorgon-top" :neume="GorgonNeume.Gorgon_Top" /></button>
+    <button class="neume-button" @click="setGorgonNeume(GorgonNeume.Gorgon_Bottom)"><Neume class="red neume gorgon-bottom" :neume="GorgonNeume.Gorgon_Bottom" /></button>
+    <button class="neume-button" @click="setGorgonNeume(GorgonNeume.GorgonDottedLeft)"><Neume class="red neume gorgon-dotted-left" :neume="GorgonNeume.GorgonDottedLeft" /></button>
+    <button class="neume-button" @click="setGorgonNeume(GorgonNeume.GorgonDottedRight)"><Neume class="red neume gorgon-dotted-right" :neume="GorgonNeume.GorgonDottedRight" /></button>
+    <button class="neume-button" @click="setGorgonNeume(GorgonNeume.Digorgon)"><Neume class="red neume digorgon" :neume="GorgonNeume.Digorgon" /></button>
+    <button class="neume-button" @click="setGorgonNeume(GorgonNeume.Trigorgon)"><Neume class="red neume trigorgon" :neume="GorgonNeume.Trigorgon" /></button>
+    <span class="space"></span>
     <button class="neume-button" @click="setVocalExpression(VocalExpressionNeume.Vareia)"><Neume class="neume vareia" :neume="VocalExpressionNeume.Vareia" /></button>
     <button class="neume-button" @click="setVocalExpression(VocalExpressionNeume.Homalon)"><Neume class="neume homalon" :neume="VocalExpressionNeume.Homalon" /><span class="homalon-1">1</span></button>
     <button class="neume-button" @click="setVocalExpression(VocalExpressionNeume.HomalonConnecting)"><Neume class="neume homalon" :neume="VocalExpressionNeume.Homalon" /><span class="homalon-2">2</span></button>
@@ -23,7 +30,7 @@
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { NoteElement } from '@/models/Element';
-import { Accidental, TimeNeume, VocalExpressionNeume } from '@/models/Neumes';
+import { Accidental, GorgonNeume, TimeNeume, VocalExpressionNeume } from '@/models/Neumes';
 import Neume from './Neume.vue';
 
 @Component({
@@ -37,6 +44,7 @@ export default class NeumeToolbar extends Vue {
   Accidental = Accidental;
   VocalExpressionNeume = VocalExpressionNeume;
   TimeNeume = TimeNeume;
+  GorgonNeume = GorgonNeume;
   
   private setAccidental(neume: Accidental) {
     if (this.element.accidental != null && this.element.accidental.neume === neume) {
@@ -55,6 +63,17 @@ export default class NeumeToolbar extends Vue {
     }
     else {
       this.element.setTimeNeume(neume);
+    }
+
+    this.$emit('scoreUpdated');
+  }
+
+  private setGorgonNeume(neume: GorgonNeume) {
+    if (this.element.gorgonNeume != null && this.element.gorgonNeume.neume === neume) {
+      this.element.setGorgonNeume(null);
+    }
+    else {
+      this.element.setGorgonNeume(neume);
     }
 
     this.$emit('scoreUpdated');
@@ -162,17 +181,44 @@ export default class NeumeToolbar extends Vue {
   }
 
   .hapli {
-    top: -18px;
-    left: 20px;
+    top: -19px;
+    left: 19px;
   }
 
   .dipli {
-    top: -18px;
+    top: -19px;
     left: 16px;
   }
 
   .tripli {
-    top: -20px;
+    top: -22px;
     left: 18px;
+  }
+
+  .gorgon-top {
+    top: -5px;
+    left: 18px;
+  }
+
+  .gorgon-bottom {
+    top: -14px;
+    left: 18px;
+  }
+
+  .gorgon-dotted-left {
+    left: 18px;
+  }
+
+  .gorgon-dotted-right {
+    top: -2.5px;
+    left: 18px;
+  }
+
+  .digorgon {
+    left: 13px;
+  }
+
+  .trigorgon {
+    left: 10px;
   }
   </style>

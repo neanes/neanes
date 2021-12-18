@@ -1,5 +1,5 @@
 import { TimeNeume, QuantitativeNeume, Note, RootSign, VocalExpressionNeume, Fthora, Accidental, GorgonNeume, TempoSign, Neume, ModeSign } from '@/models/Neumes';
-import { isRightNeume } from '@/models/Neumes';
+import { getGorgonReplacements } from './NeumeReplacements';
 
 export enum ElementType {
     Note = 'Note',
@@ -39,58 +39,39 @@ export class NoteElement extends ScoreElement {
     public neumeWidth: number = 0;
     public lyricsWidth: number = 0;
 
-    public setTimeNeume(neume: TimeNeume | null) {
-        if (isRightNeume(this.quantitativeNeume.neume)) {
-            // Correct hapli, dipli,and tripli 
-            if (neume === TimeNeume.Hapli) {
-                neume = TimeNeume.Hapli_Right;
-            }
-
-            else if (neume === TimeNeume.Dipli) {
-                neume = TimeNeume.Dipli_Right;
-            }
-
-            else if (neume === TimeNeume.Tripli) {
-                neume = TimeNeume.Tripli_Right;
-            }
-
-            // Correct klasmas
-            else if (neume === TimeNeume.Klasma_Top) {
-                neume = TimeNeume.Klasma_TopRight;
-            }
-        }
-
-        this.timeNeume = neume != null ? new TimeNeumeElement(neume) : null;
+    public setQuantitativeNeume(neume: QuantitativeNeume) {
+        this.quantitativeNeume =new QuantitativeNeumeElement(neume);
+        this.replaceNeumes();
     }
 
-    public setGorgonNeume(neume: GorgonNeume | null) {
-        if (isRightNeume(this.quantitativeNeume.neume)) {
-            // Correct gorgons
-            if (neume === GorgonNeume.Gorgon_Top) {
-                neume = GorgonNeume.Gorgon_TopRight;
-            }
+    public setTimeNeume(neume: TimeNeume | null) {
+        // if (isRightNeume(this.quantitativeNeume.neume)) {
+        //     // Correct hapli, dipli,and tripli 
+        //     if (neume === TimeNeume.Hapli) {
+        //         neume = TimeNeume.Hapli_Right;
+        //     }
 
-            else if (neume === GorgonNeume.Gorgon_Bottom) {
-                neume = GorgonNeume.Gorgon_BottomRight;
-            }
+        //     else if (neume === TimeNeume.Dipli) {
+        //         neume = TimeNeume.Dipli_Right;
+        //     }
 
-            else if (neume === GorgonNeume.GorgonDottedLeft) {
-                neume = GorgonNeume.GorgonDottedLeft_Right;
-            }
+        //     else if (neume === TimeNeume.Tripli) {
+        //         neume = TimeNeume.Tripli_Right;
+        //     }
 
-            else if (neume === GorgonNeume.GorgonDottedRight) {
-                neume = GorgonNeume.GorgonDottedRight_Right;
-            }
+        //     // Correct klasmas
+        //     else if (neume === TimeNeume.Klasma_Top) {
+        //         neume = TimeNeume.Klasma_TopRight;
+        //     }
+        // }
 
-            else if (neume === GorgonNeume.Digorgon) {
-                neume = GorgonNeume.Digorgon_Right;
-            }
+        this.timeNeume = neume != null ? new TimeNeumeElement(neume) : null;
+        this.replaceNeumes();
+    }
 
-            else if (neume === GorgonNeume.Trigorgon) {
-                neume = GorgonNeume.Trigorgon_Right;
-            }
-        }
+    public setGorgonNeume(neume: GorgonNeume | null) {        
         this.gorgonNeume = neume != null ? new GorgonNeumeElement(neume) : null;
+        this.replaceNeumes();
     }
 
     public setVocalExpressionNeume(neume: VocalExpressionNeume | null) {
@@ -102,10 +83,36 @@ export class NoteElement extends ScoreElement {
         }
 
         this.vocalExpressionNeume = neume != null ? new VocalExpressionNeumeElement(neume) : null;
+        this.replaceNeumes();
     }
 
     public setAccidental(neume: Accidental | null) {
         this.accidental = neume != null ? new AccidentalElement(neume) : null;
+        this.replaceNeumes();
+    }
+
+    public setFthora(neume: Fthora | null) {
+        this.fthora = neume != null ? new FthoraElement(neume) : null;
+        this.replaceNeumes();
+    }
+
+    private replaceNeumes() {
+        this.replaceGorgons();
+    }
+
+    private replaceGorgons() {
+        if (this.gorgonNeume) {
+            const replacements = getGorgonReplacements(this.gorgonNeume!.neume);
+
+            if (replacements) {
+              const replacement = replacements.find(x => x.isPairedWith && x.isPairedWith.includes(this.quantitativeNeume.neume)) ||
+                replacements.find(x => x.isNotPairedWith && !x.isNotPairedWith.includes(this.quantitativeNeume.neume));
+              
+                if (replacement) {
+                this.setGorgonNeume(replacement.replaceWith);
+              }
+            }
+        }        
     }
 }
 

@@ -267,7 +267,7 @@ export default class Editor extends Vue {
           this.selectedElement = this.switchToSyllable(this.selectedElement);
         }
         
-        (this.selectedElement as NoteElement).quantitativeNeume = new QuantitativeNeumeElement(neume);
+        (this.selectedElement as NoteElement).setQuantitativeNeume(neume);
 
       this.save();
     }
@@ -286,7 +286,6 @@ export default class Editor extends Vue {
       }
 
       (this.selectedElement as NoteElement).setTimeNeume(neume);
-      //this.moveRight();
 
       this.save();
     }
@@ -305,7 +304,6 @@ export default class Editor extends Vue {
       }
 
       (this.selectedElement as NoteElement).setGorgonNeume(neume);
-      //this.moveRight();
 
       this.save();
     }
@@ -323,8 +321,7 @@ export default class Editor extends Vue {
         this.selectedElement = this.switchToSyllable(this.selectedElement);
       }
 
-      (this.selectedElement as NoteElement).fthora = neume != null ? new FthoraElement(neume) : null;
-      //this.moveRight();
+      (this.selectedElement as NoteElement).setFthora(neume);
 
       this.save();
     }
@@ -343,8 +340,6 @@ export default class Editor extends Vue {
       }
 
       (this.selectedElement as NoteElement).setVocalExpressionNeume(neume);
-
-      this.moveRight();
 
       this.save();
     }

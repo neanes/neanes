@@ -4,9 +4,7 @@
     <div class="content">
         <NeumeSelector class="neume-selector"
      @select-quantitative-neume="updateQuantitativeNeume" 
-     @select-time-neume="updateTimeNeume"
      @select-gorgon-neume="updateGorgonNeume"
-     @select-vocal-expression-neume="updateVocalExpressionNeume"
      @select-fthora="updateFthora"
      @select-martyria-note="updateMartyriaNote"
      @select-martyria-root-sign="updateMartyriaRootSign"

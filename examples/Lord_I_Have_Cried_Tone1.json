@@ -334,7 +334,7 @@
             "x": 0,
             "y": 0
           },
-          "neume": "PetastiPlusKentimaBelow"
+          "neume": "PetastiPlusOligon"
         },
         "timeNeume": null,
         "gorgonNeume": null,
@@ -433,7 +433,7 @@
             "x": 0,
             "y": 0
           },
-          "neume": "OligonPlusElaphronPlusKentemata"
+          "neume": "OligonPlusApostrophosPlusKentemata"
         },
         "timeNeume": null,
         "gorgonNeume": null,
@@ -452,7 +452,7 @@
             "x": 0,
             "y": 0
           },
-          "neume": "OligonPlusElaphronPlusKentemata"
+          "neume": "OligonPlusApostrophosPlusKentemata"
         },
         "timeNeume": null,
         "gorgonNeume": {
@@ -2143,11 +2143,23 @@
             "x": 0,
             "y": 0
           },
-          "neume": "PetastiWithIson"
+          "neume": "Apostrophos"
         },
-        "timeNeume": null,
+        "timeNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "Hapli_Right"
+        },
         "gorgonNeume": null,
-        "vocalExpressionNeume": null,
+        "vocalExpressionNeume": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "neume": "AntikenomaShort"
+        },
         "fthora": null,
         "accidental": null,
         "lyrics": "to",
@@ -2165,13 +2177,7 @@
           },
           "neume": "Apostrophos"
         },
-        "timeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Hapli_Right"
-        },
+        "timeNeume": null,
         "gorgonNeume": {
           "offset": {
             "x": 0,
@@ -2179,13 +2185,7 @@
           },
           "neume": "Gorgon_TopRight"
         },
-        "vocalExpressionNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "AntikenomaShort"
-        },
+        "vocalExpressionNeume": null,
         "fthora": null,
         "accidental": null,
         "lyrics": "",
@@ -2397,7 +2397,7 @@
             "x": 0,
             "y": 0
           },
-          "neume": "OligonPlusElaphronPlusKentemata"
+          "neume": "OligonPlusApostrophosPlusKentemata"
         },
         "timeNeume": null,
         "gorgonNeume": {

@@ -137,6 +137,7 @@ export class SaveService {
 
     public static SaveMartyria(element: MartyriaElement_v1, e: MartyriaElement) {
         element.apostrophe = e.apostrophe;
+        element.auto = e.auto;
         element.note = e.note;
         element.rootSign = e.rootSign;
     }
@@ -206,6 +207,8 @@ export class SaveService {
     public static SaveModeKey(element: ModeKeyElement_v1, e: ModeKeyElement) {
         element.alignment = e.alignment;
         element.mode = e.mode;
+        element.scale = e.scale;
+        element.scaleNote = e.scaleNote;
         element.note = e.note;
         element.fthora = e.fthora;
         element.quantativeNeume = e.quantativeNeume;
@@ -292,6 +295,7 @@ export class SaveService {
 
     public static LoadMartyria_v1(element: MartyriaElement, e: MartyriaElement_v1) {
         element.apostrophe = e.apostrophe;
+        element.auto = e.auto;
         element.note = e.note;
         element.rootSign = e.rootSign;
     }
@@ -361,6 +365,8 @@ export class SaveService {
     public static LoadModeKey_v1(element: ModeKeyElement, e: ModeKeyElement_v1) {
         element.alignment = e.alignment;
         element.mode = e.mode;
+        element.scale = e.scale;
+        element.scaleNote = e.scaleNote;
         element.note = e.note;
         element.fthora = e.fthora;
         element.quantativeNeume = e.quantativeNeume;

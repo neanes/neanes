@@ -1,12 +1,16 @@
 import { DropCapElement, ElementType, MartyriaElement, NoteElement, ModeKeyElement, ScoreElement, TextBoxElement } from "@/models/Element";
 import { neumeMap } from "@/models/NeumeMappings";
-import { VocalExpressionNeume } from "@/models/Neumes";
+import { Fthora, Note, RootSign, VocalExpressionNeume } from "@/models/Neumes";
+import { getNeumeValue } from "@/models/NeumeValues";
 import { Line, Page } from "@/models/Page";
 import { PageSetup } from "@/models/PageSetup";
+import { getScaleNoteValue, Scale } from "@/models/Scales";
 import { TextMeasurementService } from "./TextMeasurementService";
 
 export class LayoutService {
     public static processPages(elements: ScoreElement[], pageSetup: PageSetup) {
+        this.calculateMartyrias(elements);
+
         const defaultNeumeElementWidthPx = 39;
 
         const pages: Page[] = [];
@@ -72,8 +76,20 @@ export class LayoutService {
             }
             else if (element.elementType === ElementType.Martyria) {
                 const martyriaElement = element as MartyriaElement;
-                const mapping = neumeMap.get(martyriaElement.note)!;
-                elementWidthPx = Math.floor(TextMeasurementService.getTextWidth(mapping.text, `${pageSetup.neumeDefaultFontSize}px ${mapping.fontFamily}`));
+                const mappingNote = neumeMap.get(martyriaElement.note)!;
+                const mappingRoot = neumeMap.get(martyriaElement.rootSign)!;
+                const mappingApostrophe = neumeMap.get(Note.Apostrophe)!;
+
+                let text = mappingNote.text + mappingRoot.text;
+
+                if (martyriaElement.apostrophe) {
+                    text += mappingApostrophe.text;
+                }
+
+                elementWidthPx = Math.floor(
+                    TextMeasurementService.getTextWidth(mappingNote.text, `${pageSetup.neumeDefaultFontSize}px ${mappingNote.fontFamily}`) +
+                    TextMeasurementService.getTextWidth(mappingRoot.text, `${pageSetup.neumeDefaultFontSize}px ${mappingRoot.fontFamily}`) +
+                    (martyriaElement.apostrophe ? TextMeasurementService.getTextWidth(mappingApostrophe.text, `${pageSetup.neumeDefaultFontSize}px ${mappingApostrophe.fontFamily}`) : 0));
             }
             else if (element.elementType === ElementType.DropCap) {
                 const dropCapElement = element as DropCapElement;
@@ -237,7 +253,7 @@ export class LayoutService {
                             const numberOfUnderScoresNeeded = width > 0 ? Math.ceil(width / widthOfUnderscore) : 1;
 
                             element.melismaOffsetLeft = (numberOfUnderScoresNeeded * widthOfUnderscore - element.neumeWidth) / 2;
-                            
+
                             element.melismaText = '';
 
                             for (let i = 0; i < numberOfUnderScoresNeeded; i++) {
@@ -250,7 +266,7 @@ export class LayoutService {
                             const numberOfUnderScoresNeeded = width > 0 ? Math.ceil(width / widthOfUnderscore) : 1;
 
                             element.melismaOffsetLeft = (numberOfUnderScoresNeeded * widthOfUnderscore - element.neumeWidth) / 2;
-                            
+
                             element.melismaText = '';
 
                             for (let i = 0; i < numberOfUnderScoresNeeded; i++) {
@@ -314,6 +330,57 @@ export class LayoutService {
         }
     }
 
+    public static calculateMartyrias(elements: ScoreElement[]) {
+        let currentNote = 0;
+        let currentScale = Scale.Diatonic;
+        let currentShift = 0;
+
+        for (let element of elements) {
+            if (element.elementType === ElementType.Note) {
+                const note = element as NoteElement;
+                currentNote += getNeumeValue(note.quantitativeNeume.neume)!;
+
+                if (note.fthora) {
+                    currentScale = this.getScaleFromFthora(note.fthora.neume) || currentScale;
+                    currentShift = this.getShift(currentNote, currentScale, note.fthora.neume)
+                }
+            }
+            else if (element.elementType === ElementType.ModeKey) {
+                const modeKey = element as ModeKeyElement;
+                currentNote = getScaleNoteValue(modeKey.scaleNote);
+                currentScale = modeKey.scale;
+            }
+            else if (element.elementType === ElementType.Martyria) {
+                const martyria = element as MartyriaElement;
+
+                if (martyria.auto) {
+                    if (currentNote < -5 || currentNote > 11) {
+                        martyria.error = true;
+                    }
+                    else {
+                        martyria.error = false;
+
+                        martyria.note = this.noteMap.get(currentNote)!;
+
+                        const currentScaleNote = currentNote + currentShift;
+
+                        if (currentScale === Scale.HardChromatic) {
+                            martyria.rootSign = currentScaleNote % 2 === 0 ? RootSign.Squiggle : RootSign.Tilt;
+                        }
+                        else if (currentScale === Scale.SoftChromatic) {
+                            martyria.rootSign = currentScaleNote % 2 === 0 ? RootSign.SoftChromaticPaRootSign : RootSign.SoftChromaticSquiggle;
+                        }
+                        else if (currentScale === Scale.Diatonic) {
+                            martyria.rootSign = this.diatonicRootSignMap.get(currentScaleNote)!;
+                        }
+
+                        martyria.apostrophe = currentNote > 4;
+                    }
+                }
+            }
+        }
+    }
+
     public static isIntermediateMelisma(element: NoteElement, elements: ScoreElement[]) {
         const index = elements.indexOf(element);
 
@@ -336,5 +403,115 @@ export class LayoutService {
         }
 
         return false;
+    }
+
+    private static noteMap = new Map<number, Note>([
+        [-5, Note.GaLow],
+        [-4, Note.ThiLow],
+        [-3, Note.KeLow],
+        [-2, Note.Zo],
+        [-1, Note.Ni],
+        [0, Note.Pa],
+        [1, Note.Vou],
+        [2, Note.Ga],
+        [3, Note.Thi],
+        [4, Note.Ke],
+        [5, Note.Zo],
+        [6, Note.Ni],
+        [7, Note.Pa],
+        [8, Note.Vou],
+        [9, Note.Ga],
+        [10, Note.Thi],
+        [11, Note.Ke],
+    ]);
+
+    private static diatonicRootSignMap = new Map<number, RootSign>([
+        [-5, RootSign.NanaLow],
+        [-4, RootSign.DeltaLow],
+        [-3, RootSign.AlphaLow],
+        [-2, RootSign.Zo],
+        [-1, RootSign.Delta],
+        [0, RootSign.Alpha],
+        [1, RootSign.Legetos],
+        [2, RootSign.Nana],
+        [3, RootSign.DeltaDotted],
+        [4, RootSign.AlphaDotted],
+        [5, RootSign.Legetos],
+        [6, RootSign.Nana],
+        [7, RootSign.Alpha],
+        [8, RootSign.Legetos],
+        [9, RootSign.Nana],
+        [10, RootSign.DeltaDotted],
+        [11, RootSign.AlphaDotted],
+    ]);
+
+    private static getScaleFromFthora(fthora: Fthora) {
+        if(fthora.startsWith('Diatonic')) {
+            return Scale.Diatonic;
+        }
+
+        if (fthora.startsWith('HardChromatic')) {
+            return Scale.HardChromatic;
+        }
+
+        if (fthora.startsWith('SoftChromatic')) {
+            return Scale.SoftChromatic;
+        }
+
+        return null;
+    }
+
+    private static getShift(currentNote: number, currentScale: Scale, fthora: Fthora) {
+        let shift = 0;
+
+        if (currentScale === Scale.HardChromatic) {
+            if(currentNote % 2 === 0) {
+                shift = fthora.startsWith('HardChromaticPa') ? 0 : 1;
+            }
+            else {
+                shift = fthora.startsWith('HardChromaticThi') ? 0 : 1; 
+            }
+            
+        }
+        else if (currentScale === Scale.SoftChromatic) {
+            if (currentNote % 2 === 0) {
+                shift = fthora.startsWith('SoftChromaticPa') ? 0 : 1;
+            }
+            else {
+                shift = fthora.startsWith('SoftChromaticThi') ? 0 : 1;
+            }
+        }
+        else if (currentScale === Scale.Diatonic) {
+            let fthoraNote = 0;
+
+            if (fthora.startsWith('DiatonicNiLow')) {
+                fthoraNote = -1;
+            }
+            else if (fthora.startsWith('DiatonicPa')) {
+                fthoraNote = 0;
+            }
+            else if (fthora.startsWith('DiatonicVou')) {
+                fthoraNote = 1;
+            }
+            else if (fthora.startsWith('DiatonicGa')) {
+                fthoraNote = 2;
+            }
+            else if (fthora.startsWith('DiatonicThi')) {
+                fthoraNote = 3;
+            }
+            else if (fthora.startsWith('DiatonicKe')) {
+                fthoraNote = 4;
+            }
+            else if (fthora.startsWith('DiatonicZo')) {
+                fthoraNote = 5;
+            }
+            else if (fthora.startsWith('DiatonicNiHigh')) {
+                fthoraNote = 6;
+            }
+
+            shift = fthoraNote - currentNote;
+        }
+
+        return shift;
     }
 }

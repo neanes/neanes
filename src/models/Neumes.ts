@@ -280,19 +280,6 @@ const redNeumes: Neume[] = [
     VocalExpressionNeume.Heteron,
 ];
 
-// Neumes that must be paired with special "_Right" neumes
-const rightNeumes: Neume[] = [
-    QuantitativeNeume.Apostrophos,
-    QuantitativeNeume.Hyporoe,
-    QuantitativeNeume.OligonPlusElaphronPlusKentemata,
-    QuantitativeNeume.OligonPlusIsonPlusKentemata,
-];
-
 export function isRedNeume(neume: Neume) {
     return redNeumes.includes(neume);
-}
-
-export function isRightNeume(neume: Neume) {
-    return rightNeumes.includes(neume);
-
 }

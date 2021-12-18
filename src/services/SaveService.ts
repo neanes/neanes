@@ -297,7 +297,7 @@ export class SaveService {
     }
 
     public static LoadNote_v1(element: NoteElement, e: NoteElement_v1) {
-        element.quantitativeNeume = new QuantitativeNeumeElement(e.quantitativeNeume.neume);
+        element.setQuantitativeNeume(e.quantitativeNeume.neume);
         element.quantitativeNeume.offset = new ScoreElementOffset();
         element.quantitativeNeume.offset.x = e.quantitativeNeume.offset.x;
         element.quantitativeNeume.offset.y = e.quantitativeNeume.offset.y;
@@ -317,17 +317,17 @@ export class SaveService {
         }
 
         if(e.fthora != null) {
-            element.fthora = new FthoraElement(e.fthora.neume);
-            element.fthora.offset = new ScoreElementOffset();
-            element.fthora.offset.x = e.fthora.offset.x;
-            element.fthora.offset.y = e.fthora.offset.y;
+            element.setFthora(e.fthora.neume);
+            element.fthora!.offset = new ScoreElementOffset();
+            element.fthora!.offset.x = e.fthora.offset.x;
+            element.fthora!.offset.y = e.fthora.offset.y;
         }
 
         if(e.accidental != null) {
-            element.accidental = new AccidentalElement(e.accidental.neume);
-            element.accidental.offset = new ScoreElementOffset();
-            element.accidental.offset.x = e.accidental.offset.x;
-            element.accidental.offset.y = e.accidental.offset.y;
+            element.setAccidental(e.accidental.neume);
+            element.accidental!.offset = new ScoreElementOffset();
+            element.accidental!.offset.x = e.accidental.offset.x;
+            element.accidental!.offset.y = e.accidental.offset.y;
         }
 
         if(e.vocalExpressionNeume != null) {

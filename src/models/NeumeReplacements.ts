@@ -64,18 +64,57 @@ export const gorgonReplacementMap = new Map<GorgonNeume, NeumeReplacement<Gorgon
     ]],
 ]);
 
+export const timeReplacementMap = new Map<TimeNeume, NeumeReplacement<TimeNeume>[]>([
+    [TimeNeume.Hapli, [
+        { isPairedWith: rightNeumes, replaceWith: TimeNeume.Hapli_Right },
+    ]],
+
+    [TimeNeume.Dipli, [
+        { isPairedWith: rightNeumes, replaceWith: TimeNeume.Dipli_Right },
+    ]],
+
+    [TimeNeume.Tripli, [
+        { isPairedWith: rightNeumes, replaceWith: TimeNeume.Tripli_Right },
+    ]],
+
+    [TimeNeume.Klasma_Top, [
+        { isPairedWith: rightNeumes, replaceWith: TimeNeume.Klasma_TopRight },
+    ]],
+
+    [TimeNeume.Hapli_Right, [
+        { isNotPairedWith: rightNeumes, replaceWith: TimeNeume.Hapli },
+    ]],
+
+    [TimeNeume.Dipli_Right, [
+        { isNotPairedWith: rightNeumes, replaceWith: TimeNeume.Dipli },
+    ]],
+
+    [TimeNeume.Tripli_Right, [
+        { isNotPairedWith: rightNeumes, replaceWith: TimeNeume.Tripli },
+    ]],
+
+    [TimeNeume.Klasma_TopRight, [
+        { isNotPairedWith: rightNeumes, replaceWith: TimeNeume.Klasma_Top },
+    ]],
+]);
+
+export const vocalExpressionReplacementMap = new Map<VocalExpressionNeume, NeumeReplacement<VocalExpressionNeume>[]>([
+    [VocalExpressionNeume.Antikenoma, [
+        { isPairedWith: [QuantitativeNeume.Apostrophos], replaceWith: VocalExpressionNeume.AntikenomaShort },
+    ]],
+]);
 
 export const getGorgonReplacements = (neume: GorgonNeume) => {
     return gorgonReplacementMap.get(neume);
 }
 
-// export const getTimeReplacements = (neume: TimeNeume) => {
-//     return timeReplacementMap.get(neume);
-// }
+export const getTimeReplacements = (neume: TimeNeume) => {
+    return timeReplacementMap.get(neume);
+}
 
-// export const getVocalExpressionReplacements = (neume: VocalExpressionNeume) => {
-//     return vocalExpressionReplacementMap.get(neume);
-// }
+export const getVocalExpressionReplacements = (neume: VocalExpressionNeume) => {
+    return vocalExpressionReplacementMap.get(neume);
+}
 
 // export const getFthoraReplacements = (neume: Fthora) => {
 //     return fthoraReplacementMap.get(neume);

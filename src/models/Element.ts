@@ -1,5 +1,5 @@
 import { TimeNeume, QuantitativeNeume, Note, RootSign, VocalExpressionNeume, Fthora, Accidental, GorgonNeume, TempoSign, Neume, ModeSign } from '@/models/Neumes';
-import { getGorgonReplacements } from './NeumeReplacements';
+import { getGorgonReplacements, getTimeReplacements, getVocalExpressionReplacements } from './NeumeReplacements';
 
 export enum ElementType {
     Note = 'Note',
@@ -45,26 +45,6 @@ export class NoteElement extends ScoreElement {
     }
 
     public setTimeNeume(neume: TimeNeume | null) {
-        // if (isRightNeume(this.quantitativeNeume.neume)) {
-        //     // Correct hapli, dipli,and tripli 
-        //     if (neume === TimeNeume.Hapli) {
-        //         neume = TimeNeume.Hapli_Right;
-        //     }
-
-        //     else if (neume === TimeNeume.Dipli) {
-        //         neume = TimeNeume.Dipli_Right;
-        //     }
-
-        //     else if (neume === TimeNeume.Tripli) {
-        //         neume = TimeNeume.Tripli_Right;
-        //     }
-
-        //     // Correct klasmas
-        //     else if (neume === TimeNeume.Klasma_Top) {
-        //         neume = TimeNeume.Klasma_TopRight;
-        //     }
-        // }
-
         this.timeNeume = neume != null ? new TimeNeumeElement(neume) : null;
         this.replaceNeumes();
     }
@@ -75,13 +55,6 @@ export class NoteElement extends ScoreElement {
     }
 
     public setVocalExpressionNeume(neume: VocalExpressionNeume | null) {
-        // Correct antikenoma
-        if (neume === VocalExpressionNeume.Antikenoma) {
-            if (this.quantitativeNeume.neume === QuantitativeNeume.Apostrophos) {
-                neume = VocalExpressionNeume.AntikenomaShort;
-            }
-        }
-
         this.vocalExpressionNeume = neume != null ? new VocalExpressionNeumeElement(neume) : null;
         this.replaceNeumes();
     }
@@ -98,6 +71,8 @@ export class NoteElement extends ScoreElement {
 
     private replaceNeumes() {
         this.replaceGorgons();
+        this.replaceTimeNeumes();
+        this.replaceVocalExpressions();
     }
 
     private replaceGorgons() {
@@ -110,6 +85,36 @@ export class NoteElement extends ScoreElement {
               
                 if (replacement) {
                 this.setGorgonNeume(replacement.replaceWith);
+              }
+            }
+        }        
+    }
+
+    private replaceTimeNeumes() {
+        if (this.timeNeume) {
+            const replacements = getTimeReplacements(this.timeNeume!.neume);
+
+            if (replacements) {
+              const replacement = replacements.find(x => x.isPairedWith && x.isPairedWith.includes(this.quantitativeNeume.neume)) ||
+                replacements.find(x => x.isNotPairedWith && !x.isNotPairedWith.includes(this.quantitativeNeume.neume));
+              
+                if (replacement) {
+                this.setTimeNeume(replacement.replaceWith);
+              }
+            }
+        }        
+    }
+
+    private replaceVocalExpressions() {
+        if (this.vocalExpressionNeume) {
+            const replacements = getVocalExpressionReplacements(this.vocalExpressionNeume!.neume);
+
+            if (replacements) {
+              const replacement = replacements.find(x => x.isPairedWith && x.isPairedWith.includes(this.quantitativeNeume.neume)) ||
+                replacements.find(x => x.isNotPairedWith && !x.isNotPairedWith.includes(this.quantitativeNeume.neume));
+              
+                if (replacement) {
+                    this.setVocalExpressionNeume(replacement.replaceWith);
               }
             }
         }        

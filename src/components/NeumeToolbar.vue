@@ -32,6 +32,7 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 import { NoteElement } from '@/models/Element';
 import { Accidental, GorgonNeume, TimeNeume, VocalExpressionNeume } from '@/models/Neumes';
 import Neume from './Neume.vue';
+import { areGorgonsEquivalent, areTimeNeumesEquivalent, areVocalExpressionsEquivalent } from '@/models/NeumeReplacements';
 
 @Component({
   components: {
@@ -58,7 +59,7 @@ export default class NeumeToolbar extends Vue {
   }
 
   private setTimeNeume(neume: TimeNeume) {
-    if (this.element.timeNeume != null && this.element.timeNeume.neume === neume) {
+    if (this.element.timeNeume != null && areTimeNeumesEquivalent(neume, this.element.timeNeume.neume)) {
       this.element.setTimeNeume(null);
     }
     else {
@@ -69,7 +70,7 @@ export default class NeumeToolbar extends Vue {
   }
 
   private setGorgonNeume(neume: GorgonNeume) {
-    if (this.element.gorgonNeume != null && this.element.gorgonNeume.neume === neume) {
+    if (this.element.gorgonNeume != null && areGorgonsEquivalent(neume, this.element.gorgonNeume.neume)) {
       this.element.setGorgonNeume(null);
     }
     else {
@@ -79,13 +80,13 @@ export default class NeumeToolbar extends Vue {
     this.$emit('scoreUpdated');
   }
 
-    private setVocalExpression(neume: VocalExpressionNeume) {
-      if (this.element.vocalExpressionNeume != null && this.element.vocalExpressionNeume.neume === neume) {
-        this.element.setVocalExpressionNeume(null);
-      }
-      else {
-        this.element.setVocalExpressionNeume(neume);
-      }
+  private setVocalExpression(neume: VocalExpressionNeume) {
+    if (this.element.vocalExpressionNeume != null && areVocalExpressionsEquivalent(neume, this.element.vocalExpressionNeume.neume)) {
+      this.element.setVocalExpressionNeume(null);
+    }
+    else {
+      this.element.setVocalExpressionNeume(neume);
+    }
 
     this.$emit('scoreUpdated');
   }

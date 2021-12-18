@@ -120,3 +120,34 @@ export const getVocalExpressionReplacements = (neume: VocalExpressionNeume) => {
 // export const getFthoraReplacements = (neume: Fthora) => {
 //     return fthoraReplacementMap.get(neume);
 // }
+
+export const areTimeNeumesEquivalent = (neume1: TimeNeume, neume2: TimeNeume) => {
+    return areNeumesEquivalent(neume1, neume2, getTimeReplacements(neume1), getTimeReplacements(neume2));
+}
+
+export const areGorgonsEquivalent = (neume1: GorgonNeume, neume2: GorgonNeume) => {
+    return areNeumesEquivalent(neume1, neume2, getGorgonReplacements(neume1), getGorgonReplacements(neume2));
+}
+
+export const areVocalExpressionsEquivalent = (neume1: VocalExpressionNeume, neume2: VocalExpressionNeume) => {
+    return areNeumesEquivalent(neume1, neume2, getVocalExpressionReplacements(neume1), getVocalExpressionReplacements(neume2));
+}
+
+const areNeumesEquivalent = (neume1: Neume, neume2: Neume, replacements1: NeumeReplacement<Neume>[] | undefined, replacements2: NeumeReplacement<Neume>[] | undefined) => {
+    if (neume1 === neume2) {
+        return true;
+    }
+    if (replacements1) {
+        if (replacements1.find(x => x.replaceWith == neume2)) {
+            return true;
+        }
+    }
+
+    if (replacements2) {
+        if (replacements2.find(x => x.replaceWith == neume1)) {
+            return true;
+        }
+    }
+
+    return false;
+}

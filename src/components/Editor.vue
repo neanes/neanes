@@ -895,5 +895,10 @@ export default class Editor extends Vue {
   .mode-key-container {
     border: none;
   }
+
+  .neume-toolbar,
+  .text-toolbar {
+    display: none !important;
+  }
 }
 </style>

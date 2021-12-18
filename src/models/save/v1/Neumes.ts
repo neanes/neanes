@@ -113,6 +113,9 @@ export enum RootSign {
     DeltaDotted = 'DeltaDotted',
     AlphaDotted = 'AlphaDotted',
     SoftChromaticPaRootSign = 'SoftChromaticPaRootSign',
+    NanaLow = 'NanaLow',
+    DeltaLow = 'DeltaLow',
+    AlphaLow = 'AlphaLow',
 }
 
 export enum Note {
@@ -123,6 +126,9 @@ export enum Note {
     Thi = 'Thi',
     Ke = 'Ke',
     Zo = 'Zo',
+    KeLow = 'KeLow',
+    ThiLow = 'ThiLow',
+    GaLow = 'GaLow',
     Apostrophe = 'Apostrophe',
 }
 

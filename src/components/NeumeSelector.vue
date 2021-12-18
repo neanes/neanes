@@ -196,7 +196,7 @@ export default class NeumeSelector extends Vue {
   ascendingNeumesWithPetasti: QuantitativeNeume[] = [
       QuantitativeNeume.PetastiWithIson,
       QuantitativeNeume.Petasti,
-      QuantitativeNeume.PetastiPlusKentimaBelow,
+      QuantitativeNeume.PetastiPlusOligon,
       QuantitativeNeume.PetastiPlusKentimaAbove,
       QuantitativeNeume.PetastiPlusHypsiliRight,
       QuantitativeNeume.PetastiPlusHypsiliLeft,

@@ -19,6 +19,7 @@ export const gorgonAdjustmentMap = new Map<GorgonNeume, NeumeAdjustment[]>([
         { isPairedWith: [QuantitativeNeume.Hyporoe], offset: { x: 8, y: 4 } },
         { isPairedWith: [QuantitativeNeume.Apostrophos], offset: { x: 0, y: 4 } },
         { isPairedWith: [QuantitativeNeume.OligonPlusIsonPlusKentemata], offset: { x: -3, y: 0 } },
+        { isPairedWith: [QuantitativeNeume.OligonPlusApostrophosPlusKentemata], offset: { x: -3, y: 0 } },
         { isPairedWith: [QuantitativeNeume.OligonPlusElaphronPlusKentemata], offset: { x: -3, y: 0 } },
     ]],
 
@@ -46,7 +47,7 @@ export const timeAdjustmentMap = new Map<TimeNeume, NeumeAdjustment[]>([
                 QuantitativeNeume.PetastiPlusHypsiliPlusKentimaVertical,
                 QuantitativeNeume.PetastiWithIson,
                 QuantitativeNeume.PetastiPlusKentimaAbove,
-                QuantitativeNeume.PetastiPlusKentimaBelow,
+                QuantitativeNeume.PetastiPlusOligon,
             ],
             offset: { x: 9, y: 2 }
         },
@@ -68,7 +69,7 @@ export const vocalExpressionAdjustmentMap = new Map<VocalExpressionNeume, NeumeA
                 QuantitativeNeume.PetastiPlusHypsiliPlusKentimaVertical,
                 QuantitativeNeume.PetastiWithIson,
                 QuantitativeNeume.PetastiPlusKentimaAbove,
-                QuantitativeNeume.PetastiPlusKentimaBelow,
+                QuantitativeNeume.PetastiPlusOligon,
             ],
             offset: { x: 7, y: 0 }
         },

@@ -41,12 +41,26 @@ export default class NeumeToolbar extends Vue {
   }
 
     private setVocalExpression(neume: VocalExpressionNeume) {
-    if (this.element.vocalExpressionNeume != null && this.element.vocalExpressionNeume.neume === neume) {
-      this.element.setVocalExpressionNeume(null);
-    }
-    else {
-      this.element.setVocalExpressionNeume(neume);
-    }
+      // Clicking the homalon once will set a normal homalon.
+      // Clicking again switches to the connecting homalon.
+      // Clicking again removes the homalon.
+      if (neume === VocalExpressionNeume.Homalon && this.element.vocalExpressionNeume != null) {
+        if (this.element.vocalExpressionNeume.neume === VocalExpressionNeume.Homalon) {
+          this.element.setVocalExpressionNeume(VocalExpressionNeume.HomalonConnecting);
+        }
+        else if (this.element.vocalExpressionNeume.neume === VocalExpressionNeume.HomalonConnecting) {
+          this.element.setVocalExpressionNeume(null);
+        }
+        else {  
+          this.element.setVocalExpressionNeume(neume);
+        }
+      }
+      else if (this.element.vocalExpressionNeume != null && this.element.vocalExpressionNeume.neume === neume) {
+        this.element.setVocalExpressionNeume(null);
+      }
+      else {
+        this.element.setVocalExpressionNeume(neume);
+      }
 
     this.$emit('scoreUpdated');
   }

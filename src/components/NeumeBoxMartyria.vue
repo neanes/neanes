@@ -6,6 +6,7 @@
     <template v-else>
       <Neume :neume="neume.note"></Neume>
       <Neume :neume="neume.rootSign"></Neume>
+      <Neume v-if="hasFthora" :neume="neume.fthora"></Neume>
       <Neume v-if="neume.apostrophe" neume="Apostrophe"></Neume>
     </template>
   </div>
@@ -36,6 +37,10 @@ export default class NeumeBoxMartyria extends Vue {
 
   get rootSignMapping() {
     return neumeMap.get(this.neume.rootSign!)!;
+  }
+
+  get hasFthora() {
+    return this.neume.fthora != null;
   }
 
   get style() {

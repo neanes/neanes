@@ -125,10 +125,12 @@ export class NoteElement extends ScoreElement {
 export class MartyriaElement extends ScoreElement {
     public readonly elementType: ElementType = ElementType.Martyria;
     public auto: boolean = true;
-    public error: boolean = false;
     public note: Note = Note.Pa;
     public rootSign: RootSign = RootSign.Alpha;
     public apostrophe: boolean = false;
+    public fthora: Fthora | null = null;
+    
+    public error: boolean = false;
 }
 
 export class EmptyElement extends ScoreElement {

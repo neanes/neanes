@@ -141,9 +141,12 @@
     <template v-if="selectedElement != null && isSyllableElement(selectedElement)">
       <NeumeToolbar 
         :element="selectedElement" 
-        :autoMode="autoMode"
-        @scoreUpdated="onScoreUpdated"
-        @toggleAutoMode="toggleAutoMode" />
+        @scoreUpdated="onScoreUpdated" />
+    </template>
+    <template v-if="selectedElement != null && isMartyriaElement(selectedElement)">
+      <MartyriaToolbar 
+        :element="selectedElement" 
+        @scoreUpdated="onScoreUpdated" />
     </template>
   </div>
 </template>
@@ -172,6 +175,7 @@ import TextToolbar from '@/components/TextToolbar.vue';
 import ModeKeyToolbar from '@/components/ModeKeyToolbar.vue';
 import MainToolbar from '@/components/MainToolbar.vue';
 import NeumeToolbar from '@/components/NeumeToolbar.vue';
+import MartyriaToolbar from '@/components/MartyriaToolbar.vue';
 import Neume from './Neume.vue';
 
 @Component({
@@ -189,6 +193,7 @@ import Neume from './Neume.vue';
     TextToolbar,
     ModeKeyToolbar,
     NeumeToolbar,
+    MartyriaToolbar,
     MainToolbar,
   }
 })
@@ -918,6 +923,7 @@ addAutoMartyria() {
   }
 
   .neume-toolbar,
+  .martyria-toolbar,
   .text-toolbar,
   .page-break,
   .line-break {

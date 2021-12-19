@@ -662,7 +662,7 @@ addAutoMartyria() {
     else {
       store.mutations.setScore(new Score());
     }
-
+    
     //this.score.elements = this.generateTestFile();
 
     this.pages = LayoutService.processPages(this.elements, this.score.pageSetup);

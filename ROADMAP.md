@@ -6,8 +6,8 @@
 - [X] Bottom fthoras
 - [ ] Right-align option for martyria
 - [ ] Tempo markings
-- [ ] Measure neumes
-- [ ] Arga neumes
+- [X] Measure neumes
+- [X] Arga neumes
 - [ ] More adjustments and replacements
 - [X] Empty drop caps should be deleted
 - [ ] Move to Electron

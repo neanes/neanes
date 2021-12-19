@@ -110,8 +110,8 @@ export class SaveService {
                     console.warn('Unrecognized element in score', e.elementType);
             }
 
-            element.lineBreak = e.lineBreak;
-            element.pageBreak = e.pageBreak;
+            element.lineBreak = e.lineBreak || undefined;
+            element.pageBreak = e.pageBreak || undefined;
 
             score.staff.elements.push(element);
         }
@@ -120,18 +120,18 @@ export class SaveService {
     }
     
     public static SaveDropCap(element: DropCapElement_v1, e: DropCapElement) {
-        element.color = e.color;
+        element.color = e.color || undefined;
         element.content = e.content;
-        element.fontFamily = e.fontFamily;
-        element.fontSize = e.fontSize;
+        element.fontFamily = e.fontFamily || undefined;
+        element.fontSize = e.fontSize || undefined;
     }
 
     public static SaveMartyria(element: MartyriaElement_v1, e: MartyriaElement) {
-        element.apostrophe = e.apostrophe;
-        element.auto = e.auto;
+        element.apostrophe = e.apostrophe || undefined;
+        element.auto = e.auto || undefined;
         element.note = e.note;
         element.rootSign = e.rootSign;
-        element.fthora = e.fthora;
+        element.fthora = e.fthora || undefined;
     }
 
     public static SaveNote(element: NoteElement_v1, e: NoteElement) {
@@ -157,9 +157,9 @@ export class SaveService {
             element.vocalExpressionNeume = e.vocalExpressionNeume;
         }
 
-        element.lyrics = e.lyrics;
-        element.isMelisma = e.isMelisma;
-        element.isMelismaStart = e.isMelismaStart;
+        element.lyrics = e.lyrics !== '' ? e.lyrics : undefined;
+        element.isMelisma = e.isMelisma || undefined;
+        element.isMelismaStart = e.isMelismaStart || undefined;
     }
 
     public static SaveStaffText(element: StaffTextElement_v1, e: StaffTextElement) {
@@ -183,9 +183,9 @@ export class SaveService {
         element.mode = e.mode;
         element.scale = e.scale;
         element.scaleNote = e.scaleNote;
-        element.note = e.note;
-        element.fthora = e.fthora;
-        element.quantativeNeume = e.quantativeNeume;
+        element.note = e.note || undefined;
+        element.fthora = e.fthora || undefined;
+        element.quantativeNeume = e.quantativeNeume || undefined;
         element.martyrias = e.martyrias.map(x => x);
         element.color = e.color;
         element.fontSize = e.fontSize;
@@ -261,10 +261,10 @@ export class SaveService {
     }
 
     public static LoadDropCap_v1(element: DropCapElement, e: DropCapElement_v1) {
-        element.color = e.color;
+        element.color = e.color || null;
         element.content = e.content;
-        element.fontFamily = e.fontFamily;
-        element.fontSize = e.fontSize;
+        element.fontFamily = e.fontFamily || null;
+        element.fontSize = e.fontSize || null;
     }
 
     public static LoadMartyria_v1(element: MartyriaElement, e: MartyriaElement_v1) {
@@ -273,7 +273,7 @@ export class SaveService {
         element.note = e.note;
         element.rootSign = e.rootSign;
 
-        if (element.fthora != null) {
+        if (e.fthora != null) {
             element.fthora = e.fthora;
         }
     }
@@ -330,9 +330,9 @@ export class SaveService {
         element.mode = e.mode;
         element.scale = e.scale;
         element.scaleNote = e.scaleNote;
-        element.note = e.note;
-        element.fthora = e.fthora;
-        element.quantativeNeume = e.quantativeNeume;
+        element.note = e.note || null;
+        element.fthora = e.fthora || null;
+        element.quantativeNeume = e.quantativeNeume || null;
         element.martyrias = e.martyrias.map(x => x);
         element.color = e.color;
         element.fontSize = e.fontSize;

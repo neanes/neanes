@@ -72,7 +72,7 @@ export default class NeumeToolbar extends Vue {
   Fthora = Fthora;
   
   private setAccidental(neume: Accidental) {
-    if (this.element.accidental != null && this.element.accidental.neume === neume) {
+    if (this.element.accidental != null && this.element.accidental === neume) {
       this.element.setAccidental(null);
     }
     else {
@@ -83,7 +83,7 @@ export default class NeumeToolbar extends Vue {
   }
 
   private setTimeNeume(neume: TimeNeume) {
-    if (this.element.timeNeume != null && areTimeNeumesEquivalent(neume, this.element.timeNeume.neume)) {
+    if (this.element.timeNeume != null && areTimeNeumesEquivalent(neume, this.element.timeNeume)) {
       this.element.setTimeNeume(null);
     }
     else {
@@ -94,7 +94,7 @@ export default class NeumeToolbar extends Vue {
   }
 
   private setGorgonNeume(neume: GorgonNeume) {
-    if (this.element.gorgonNeume != null && areGorgonsEquivalent(neume, this.element.gorgonNeume.neume)) {
+    if (this.element.gorgonNeume != null && areGorgonsEquivalent(neume, this.element.gorgonNeume)) {
       this.element.setGorgonNeume(null);
     }
     else {
@@ -105,7 +105,7 @@ export default class NeumeToolbar extends Vue {
   }
 
   private setVocalExpression(neume: VocalExpressionNeume) {
-    if (this.element.vocalExpressionNeume != null && areVocalExpressionsEquivalent(neume, this.element.vocalExpressionNeume.neume)) {
+    if (this.element.vocalExpressionNeume != null && areVocalExpressionsEquivalent(neume, this.element.vocalExpressionNeume)) {
       this.element.setVocalExpressionNeume(null);
     }
     else {
@@ -116,7 +116,7 @@ export default class NeumeToolbar extends Vue {
   }
 
   private setFthora(neume: Fthora) {
-    if (this.element.fthora != null && areFthorasEquivalent(neume, this.element.fthora.neume)) {
+    if (this.element.fthora != null && areFthorasEquivalent(neume, this.element.fthora)) {
       this.element.setFthora(null);
     }
     else {

@@ -60,11 +60,11 @@ export class LayoutService {
 
             if (element.elementType === ElementType.Note) {
                 const noteElement = element as NoteElement;
-                const mapping = neumeMap.get(noteElement.quantitativeNeume.neume)!;
+                const mapping = neumeMap.get(noteElement.quantitativeNeume)!;
 
                 let text = mapping.text;
 
-                if (noteElement.vocalExpressionNeume != null && noteElement.vocalExpressionNeume.neume === VocalExpressionNeume.Vareia) {
+                if (noteElement.vocalExpressionNeume != null && noteElement.vocalExpressionNeume === VocalExpressionNeume.Vareia) {
                     const vareiaMapping = neumeMap.get(VocalExpressionNeume.Vareia)!;
                     text = vareiaMapping.text + text;
                 }
@@ -338,11 +338,11 @@ export class LayoutService {
         for (let element of elements) {
             if (element.elementType === ElementType.Note) {
                 const note = element as NoteElement;
-                currentNote += getNeumeValue(note.quantitativeNeume.neume)!;
+                currentNote += getNeumeValue(note.quantitativeNeume)!;
 
                 if (note.fthora) {
-                    currentScale = this.getScaleFromFthora(note.fthora.neume) || currentScale;
-                    currentShift = this.getShift(currentNote, currentScale, note.fthora.neume)
+                    currentScale = this.getScaleFromFthora(note.fthora) || currentScale;
+                    currentShift = this.getShift(currentNote, currentScale, note.fthora)
                 }
             }
             else if (element.elementType === ElementType.ModeKey) {

@@ -153,7 +153,7 @@
 
 <script lang="ts">
 import { Component, Prop, Watch, Vue } from 'vue-property-decorator';
-import { ScoreElement, MartyriaElement, NoteElement, ElementType, EmptyElement, TextBoxElement, VocalExpressionNeumeElement, QuantitativeNeumeElement, TimeNeumeElement, FthoraElement, ModeKeyElement } from '@/models/Element';
+import { ScoreElement, MartyriaElement, NoteElement, ElementType, EmptyElement, TextBoxElement } from '@/models/Element';
 import { QuantitativeNeume, TimeNeume, Note, RootSign, VocalExpressionNeume, Fthora, GorgonNeume } from '@/models/Neumes';
 import { Page, Line } from '@/models/Page';
 import { Score } from '@/models/Score';

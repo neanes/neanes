@@ -24,12 +24,12 @@ export abstract class ScoreElement {
 
 export class NoteElement extends ScoreElement {
     public readonly elementType: ElementType = ElementType.Note;
-    public quantitativeNeume: QuantitativeNeumeElement = new QuantitativeNeumeElement(QuantitativeNeume.Ison);
-    public timeNeume: TimeNeumeElement | null = null;
-    public gorgonNeume: GorgonNeumeElement | null = null;
-    public vocalExpressionNeume: VocalExpressionNeumeElement | null = null;
-    public fthora: FthoraElement | null = null;
-    public accidental: AccidentalElement | null = null;
+    public quantitativeNeume: QuantitativeNeume = QuantitativeNeume.Ison;
+    public timeNeume: TimeNeume | null = null;
+    public gorgonNeume: GorgonNeume | null = null;
+    public vocalExpressionNeume: VocalExpressionNeume | null = null;
+    public fthora: Fthora | null = null;
+    public accidental: Accidental | null = null;
     public lyrics: string = '';
     public isMelisma: boolean = false;
     public isMelismaStart: boolean = false;
@@ -41,32 +41,32 @@ export class NoteElement extends ScoreElement {
     public lyricsWidth: number = 0;
 
     public setQuantitativeNeume(neume: QuantitativeNeume) {
-        this.quantitativeNeume =new QuantitativeNeumeElement(neume);
+        this.quantitativeNeume = neume;
         this.replaceNeumes();
     }
 
     public setTimeNeume(neume: TimeNeume | null) {
-        this.timeNeume = neume != null ? new TimeNeumeElement(neume) : null;
+        this.timeNeume = neume;
         this.replaceNeumes();
     }
 
     public setGorgonNeume(neume: GorgonNeume | null) {        
-        this.gorgonNeume = neume != null ? new GorgonNeumeElement(neume) : null;
+        this.gorgonNeume = neume;
         this.replaceNeumes();
     }
 
     public setVocalExpressionNeume(neume: VocalExpressionNeume | null) {
-        this.vocalExpressionNeume = neume != null ? new VocalExpressionNeumeElement(neume) : null;
+        this.vocalExpressionNeume = neume;
         this.replaceNeumes();
     }
 
     public setAccidental(neume: Accidental | null) {
-        this.accidental = neume != null ? new AccidentalElement(neume) : null;
+        this.accidental = neume;
         this.replaceNeumes();
     }
 
     public setFthora(neume: Fthora | null) {
-        this.fthora = neume != null ? new FthoraElement(neume) : null;
+        this.fthora = neume;
         this.replaceNeumes();
     }
 
@@ -78,11 +78,11 @@ export class NoteElement extends ScoreElement {
 
     private replaceGorgons() {
         if (this.gorgonNeume) {
-            const replacements = getGorgonReplacements(this.gorgonNeume!.neume);
+            const replacements = getGorgonReplacements(this.gorgonNeume);
 
             if (replacements) {
-              const replacement = replacements.find(x => x.isPairedWith && x.isPairedWith.includes(this.quantitativeNeume.neume)) ||
-                replacements.find(x => x.isNotPairedWith && !x.isNotPairedWith.includes(this.quantitativeNeume.neume));
+              const replacement = replacements.find(x => x.isPairedWith && x.isPairedWith.includes(this.quantitativeNeume)) ||
+                replacements.find(x => x.isNotPairedWith && !x.isNotPairedWith.includes(this.quantitativeNeume));
               
                 if (replacement) {
                 this.setGorgonNeume(replacement.replaceWith);
@@ -93,11 +93,11 @@ export class NoteElement extends ScoreElement {
 
     private replaceTimeNeumes() {
         if (this.timeNeume) {
-            const replacements = getTimeReplacements(this.timeNeume!.neume);
+            const replacements = getTimeReplacements(this.timeNeume);
 
             if (replacements) {
-              const replacement = replacements.find(x => x.isPairedWith && x.isPairedWith.includes(this.quantitativeNeume.neume)) ||
-                replacements.find(x => x.isNotPairedWith && !x.isNotPairedWith.includes(this.quantitativeNeume.neume));
+              const replacement = replacements.find(x => x.isPairedWith && x.isPairedWith.includes(this.quantitativeNeume)) ||
+                replacements.find(x => x.isNotPairedWith && !x.isNotPairedWith.includes(this.quantitativeNeume));
               
                 if (replacement) {
                 this.setTimeNeume(replacement.replaceWith);
@@ -108,11 +108,11 @@ export class NoteElement extends ScoreElement {
 
     private replaceVocalExpressions() {
         if (this.vocalExpressionNeume) {
-            const replacements = getVocalExpressionReplacements(this.vocalExpressionNeume!.neume);
+            const replacements = getVocalExpressionReplacements(this.vocalExpressionNeume);
 
             if (replacements) {
-              const replacement = replacements.find(x => x.isPairedWith && x.isPairedWith.includes(this.quantitativeNeume.neume)) ||
-                replacements.find(x => x.isNotPairedWith && !x.isNotPairedWith.includes(this.quantitativeNeume.neume));
+              const replacement = replacements.find(x => x.isPairedWith && x.isPairedWith.includes(this.quantitativeNeume)) ||
+                replacements.find(x => x.isNotPairedWith && !x.isNotPairedWith.includes(this.quantitativeNeume));
               
                 if (replacement) {
                     this.setVocalExpressionNeume(replacement.replaceWith);
@@ -188,60 +188,6 @@ export class DropCapElement extends ScoreElement {
     public fontFamily: string | null = null;
     public fontSize: number | null = null;
     public color: string | null = null;
-}
-
-export class QuantitativeNeumeElement {
-    public offset: ScoreElementOffset = new ScoreElementOffset;
-    public neume: QuantitativeNeume;
-
-    constructor(neume: QuantitativeNeume) {
-        this.neume = neume;
-    }
-}
-
-export class TimeNeumeElement {
-    public offset: ScoreElementOffset = new ScoreElementOffset;
-    public neume: TimeNeume;
-
-    constructor(neume: TimeNeume) {
-        this.neume = neume;
-    }
-}
-
-export class GorgonNeumeElement {
-    public offset: ScoreElementOffset = new ScoreElementOffset;
-    public neume: GorgonNeume;
-
-    constructor(neume: GorgonNeume) {
-        this.neume = neume;
-    }
-}
-
-export class FthoraElement {
-    public offset: ScoreElementOffset = new ScoreElementOffset;
-    public neume: Fthora;
-
-    constructor(neume: Fthora) {
-        this.neume = neume;
-    }
-}
-
-export class AccidentalElement {
-    public offset: ScoreElementOffset = new ScoreElementOffset;
-    public neume: Accidental;
-
-    constructor(neume: Accidental) {
-        this.neume = neume;
-    }
-}
-
-export class VocalExpressionNeumeElement {
-    public offset: ScoreElementOffset = new ScoreElementOffset;
-    public neume: VocalExpressionNeume;
-
-    constructor(neume: VocalExpressionNeume) {
-        this.neume = neume;
-    }
 }
 
 export class ScoreElementOffset {

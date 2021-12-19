@@ -1,33 +1,33 @@
 <template>
   <div class="neume" :style="style">
     <Neume 
-      v-if="hasVocalExpressionNeume && isVareia(note.vocalExpressionNeume.neume)" :neume="note.vocalExpressionNeume.neume"></Neume>
-    <Neume :neume="note.quantitativeNeume.neume"></Neume>
+      v-if="hasVocalExpressionNeume && isVareia(note.vocalExpressionNeume)" :neume="note.vocalExpressionNeume"></Neume>
+    <Neume :neume="note.quantitativeNeume"></Neume>
     <Neume
       v-if="hasTimeNeume"
-      :neume="note.timeNeume.neume"
+      :neume="note.timeNeume"
       :offset="timeNeumeOffset"
       :class="[ 
-        { red: isRedNeume(note.timeNeume.neume) } ]"></Neume>
+        { red: isRedNeume(note.timeNeume) } ]"></Neume>
     <Neume
       v-if="hasGorgonNeume"
-      :neume="note.gorgonNeume.neume"
+      :neume="note.gorgonNeume"
       :offset="gorgonNeumeOffset"
       :class="[ 
-        { red: isRedNeume(note.gorgonNeume.neume) } ]"></Neume>
+        { red: isRedNeume(note.gorgonNeume) } ]"></Neume>
     <Neume 
       v-if="hasFthora"
-      :neume="note.fthora.neume"
+      :neume="note.fthora"
       class="red"></Neume>
     <Neume 
       v-if="hasAccidental"
-      :neume="note.accidental.neume"
+      :neume="note.accidental"
       class="red"></Neume>
     <Neume 
-      v-if="hasVocalExpressionNeume && !isVareia(note.vocalExpressionNeume.neume)"
-      :neume="note.vocalExpressionNeume.neume"
+      v-if="hasVocalExpressionNeume && !isVareia(note.vocalExpressionNeume)"
+      :neume="note.vocalExpressionNeume"
       :offset="vocalExpressionNeumeOffset"
-      :class="[{ red: isRedNeume(note.vocalExpressionNeume.neume) } ]"></Neume>
+      :class="[{ red: isRedNeume(note.vocalExpressionNeume) } ]"></Neume>
   </div>
 </template>
 
@@ -37,13 +37,11 @@ import { NoteElement, ScoreElementOffset } from '@/models/Element';
 import { QuantitativeNeume, isRedNeume, VocalExpressionNeume } from '@/models/Neumes';
 import { getGorgonAdjustments, getTimeAdjustments, getVocalExpressionAdjustments, NeumeAdjustmentOffset } from '@/models/NeumeAdjustments';
 import Neume from '@/components/Neume.vue';
-import TimeNeumeBox from '@/components/TimeNeume.vue';
 import { store } from '@/store';
 
 @Component({
   components: {
     Neume,
-    TimeNeumeBox,
   }
 })
 export default class NeumeBoxSyllable extends Vue {
@@ -82,10 +80,10 @@ export default class NeumeBoxSyllable extends Vue {
   get timeNeumeOffset() {
     let offset: NeumeAdjustmentOffset | null = null;
 
-      const adjustments = getTimeAdjustments(this.note.timeNeume!.neume);
+      const adjustments = getTimeAdjustments(this.note.timeNeume!);
 
       if (adjustments) {
-        const adjustment = adjustments.find(x => x.isPairedWith.includes(this.note.quantitativeNeume.neume));
+        const adjustment = adjustments.find(x => x.isPairedWith.includes(this.note.quantitativeNeume));
 
         if (adjustment) {
           offset = adjustment.offset;
@@ -98,10 +96,10 @@ export default class NeumeBoxSyllable extends Vue {
   get gorgonNeumeOffset() {
     let offset: NeumeAdjustmentOffset | null = null;
 
-      const adjustments = getGorgonAdjustments(this.note.gorgonNeume!.neume);
+      const adjustments = getGorgonAdjustments(this.note.gorgonNeume!);
 
       if (adjustments) {
-        const adjustment = adjustments.find(x => x.isPairedWith.includes(this.note.quantitativeNeume.neume));
+        const adjustment = adjustments.find(x => x.isPairedWith.includes(this.note.quantitativeNeume));
 
         if (adjustment) {
           offset = adjustment.offset;
@@ -114,10 +112,10 @@ export default class NeumeBoxSyllable extends Vue {
   get vocalExpressionNeumeOffset() {
     let offset: NeumeAdjustmentOffset | null = null;
 
-      const adjustments = getVocalExpressionAdjustments(this.note.vocalExpressionNeume!.neume);
+      const adjustments = getVocalExpressionAdjustments(this.note.vocalExpressionNeume!);
 
       if (adjustments) {
-        const adjustment = adjustments.find(x => x.isPairedWith.includes(this.note.quantitativeNeume.neume));
+        const adjustment = adjustments.find(x => x.isPairedWith.includes(this.note.quantitativeNeume));
 
         if (adjustment) {
           offset = adjustment.offset;

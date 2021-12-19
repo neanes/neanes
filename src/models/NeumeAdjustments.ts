@@ -54,27 +54,47 @@ export const timeAdjustmentMap = new Map<TimeNeume, NeumeAdjustment[]>([
     ]],
 ]);
 
-export const vocalExpressionAdjustmentMap = new Map<VocalExpressionNeume, NeumeAdjustment[]>([
-    [VocalExpressionNeume.Psifiston, [
-        {
-            isPairedWith: [
-                QuantitativeNeume.Petasti,
-                QuantitativeNeume.PetastiPlusApostrophos,
-                QuantitativeNeume.PetastiPlusDoubleHypsili,
-                QuantitativeNeume.PetastiPlusElaphron,
-                QuantitativeNeume.PetastiPlusElaphronPlusApostrophos,
-                QuantitativeNeume.PetastiPlusHypsiliLeft,
-                QuantitativeNeume.PetastiPlusHypsiliRight,
-                QuantitativeNeume.PetastiPlusHypsiliPlusKentimaHorizontal,
-                QuantitativeNeume.PetastiPlusHypsiliPlusKentimaVertical,
-                QuantitativeNeume.PetastiWithIson,
-                QuantitativeNeume.PetastiPlusKentimaAbove,
-                QuantitativeNeume.PetastiPlusOligon,
-            ],
-            offset: { x: 7, y: 0 }
-        },
-    ]],
-]);
+export const vocalExpressionAdjustmentMap = new Map<
+         VocalExpressionNeume,
+         NeumeAdjustment[]
+       >([
+         [
+           VocalExpressionNeume.Psifiston,
+           [
+             {
+               isPairedWith: [
+                 QuantitativeNeume.Petasti,
+                 QuantitativeNeume.PetastiPlusApostrophos,
+                 QuantitativeNeume.PetastiPlusDoubleHypsili,
+                 QuantitativeNeume.PetastiPlusElaphron,
+                 QuantitativeNeume.PetastiPlusElaphronPlusApostrophos,
+                 QuantitativeNeume.PetastiPlusHypsiliLeft,
+                 QuantitativeNeume.PetastiPlusHypsiliRight,
+                 QuantitativeNeume.PetastiPlusHypsiliPlusKentimaHorizontal,
+                 QuantitativeNeume.PetastiPlusHypsiliPlusKentimaVertical,
+                 QuantitativeNeume.PetastiWithIson,
+                 QuantitativeNeume.PetastiPlusKentimaAbove,
+                 QuantitativeNeume.PetastiPlusOligon,
+               ],
+               offset: { x: 7, y: 0 },
+             },
+             {
+               isPairedWith: [
+                 QuantitativeNeume.OligonPlusIsonPlusKentemata,
+                 QuantitativeNeume.OligonPlusElaphronPlusKentemata,
+                 QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
+                 QuantitativeNeume.OligonPlusHamiliPlusKentemata,
+                 QuantitativeNeume.OligonPlusKentima,
+               ],
+               offset: { x: -6, y: 0 },
+             },
+             {
+               isPairedWith: [QuantitativeNeume.KentemataPlusOligon],
+               offset: { x: 0, y: 5 },
+             },
+           ],
+         ],
+       ]);
 
 export const fthoraAdjustmentMap = new Map<Fthora, NeumeAdjustment[]>([
     [Fthora.DiatonicPa_TopRight, [ 

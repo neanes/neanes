@@ -6,7 +6,8 @@
       @addAutoMartyria="addAutoMartyria"
       @toggleAutoMode="toggleAutoMode"
       @updatePageBreak="updatePageBreak"
-      @updateLineBreak="updateLineBreak" />
+      @updateLineBreak="updateLineBreak"
+      @deleteSelectedElement="deleteSelectedElement" />
     <div class="content">
         <NeumeSelector class="neume-selector"
      @select-quantitative-neume="updateQuantitativeNeume" 
@@ -588,16 +589,7 @@ addAutoMartyria() {
     else if (event.code == 'Delete') {
       handled = true;
 
-      const index = this.elements.indexOf(this.selectedElement);
-
-      if (this.selectedElement && index !== this.elements.length - 1) {
-        this.moveLeft();
-
-        if (index > -1) {
-          this.elements.splice(index, 1);
-          this.save();
-        }
-      }
+      this.deleteSelectedElement();
     }
 
     if (this.keyboardMode && !event.ctrlKey) {
@@ -710,11 +702,25 @@ addAutoMartyria() {
         }
 
         this.elements.splice(index, 1);
-        this.save();
       }
     }
 
     this.save();
+  }
+
+deleteSelectedElement() {
+    if (this.selectedElement) {
+      const index = this.elements.indexOf(this.selectedElement);
+
+        if (this.selectedElement && index !== this.elements.length - 1) {
+          this.moveLeft();
+
+          if (index > -1) {
+            this.elements.splice(index, 1);
+            this.save();
+          }
+        }
+    }
   }
 
   toggleAutoMode() {

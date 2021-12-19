@@ -36,6 +36,7 @@ export class MartyriaElement extends ScoreElement  {
     public note: Note = Note.Pa;
     public rootSign: RootSign = RootSign.Alpha;
     public apostrophe: boolean = false;
+    public fthora: Fthora | null = null;
 }
 
 export class EmptyElement extends ScoreElement {

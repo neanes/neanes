@@ -3,11 +3,11 @@
 ## Must-haves
 - [ ] Auto martyria calc must handle chroa scales
 - [ ] Mode Key selector with default mode keys
-- [ ] Bottom fthoras
+- [X] Bottom fthoras
 - [ ] Right-align option for martyria
 - [ ] Tempo markings
 - [ ] More adjustments and replacements
-- [ ] Empty drop caps should be deleted
+- [X] Empty drop caps should be deleted
 - [ ] Move to Electron
 
 ## Nice-to-haves

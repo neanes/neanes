@@ -6,7 +6,7 @@
         :style="style"
         :content="element.content" 
         :class="[{ selected: element == selectedElement }]"
-        @blur="updateText($event)"></ContentEditable>
+      @blur="updateText($event)"></ContentEditable>
       </div>
 </template>
 
@@ -54,7 +54,7 @@ export default class DropCap extends Vue {
 
   updateText(text: string) {
     this.element.content = text;
-    this.$emit('scoreUpdated');
+    this.$emit('dropCapUpdated', this.element);
   }
 }
 </script>

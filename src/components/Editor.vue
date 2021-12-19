@@ -124,7 +124,7 @@
                     :ref="`element-${getElementIndex(element)}`"
                     :element="element"
                     @click.native="selectedElement = element"
-                    @scoreUpdated="onScoreUpdated">
+                    @dropCapUpdated="onDropCapUpdated">
                   </DropCap>
               </template>
            </div>
@@ -153,7 +153,7 @@
 
 <script lang="ts">
 import { Component, Prop, Watch, Vue } from 'vue-property-decorator';
-import { ScoreElement, MartyriaElement, NoteElement, ElementType, EmptyElement, TextBoxElement } from '@/models/Element';
+import { ScoreElement, MartyriaElement, NoteElement, ElementType, EmptyElement, TextBoxElement, DropCapElement } from '@/models/Element';
 import { QuantitativeNeume, TimeNeume, Note, RootSign, VocalExpressionNeume, Fthora, GorgonNeume } from '@/models/Neumes';
 import { Page, Line } from '@/models/Page';
 import { Score } from '@/models/Score';
@@ -506,6 +506,8 @@ addAutoMartyria() {
       return newElement;
   }
 
+  
+
   addEmptyElement() {
     this.elements.push(new EmptyElement());
   }
@@ -628,7 +630,7 @@ addAutoMartyria() {
     if (this.selectedElement) {
       const index = this.elements.indexOf(this.selectedElement);
 
-      if (index - 1 >= 0) {
+      if (index - 1 >= 0 && [ElementType.Note, ElementType.Martyria].includes(this.elements[index - 1].elementType)) {
         this.selectedElement = this.elements[index - 1];
       }
     }
@@ -691,8 +693,20 @@ addAutoMartyria() {
     this.save();
   }
 
-  updateTextBox(element: TextBoxElement, content: string) {
-    element.content = content;
+  onDropCapUpdated(element: DropCapElement) {
+    if(element.content === '') {
+      const index = this.elements.indexOf(element);
+
+      if (index > -1) {
+        if (this.selectedElement === element) {
+          this.selectedElement = null;
+        }
+
+        this.elements.splice(index, 1);
+        this.save();
+      }
+    }
+
     this.save();
   }
 

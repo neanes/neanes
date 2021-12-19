@@ -1,4 +1,4 @@
-import { TimeNeume, QuantitativeNeume, Note, RootSign, VocalExpressionNeume, Fthora, Accidental, GorgonNeume, TempoSign, Neume, ModeSign } from '@/models/Neumes';
+import { TimeNeume, QuantitativeNeume, Note, RootSign, VocalExpressionNeume, Fthora, Accidental, GorgonNeume, TempoSign, Neume, ModeSign, MeasureBar } from '@/models/Neumes';
 import { getGorgonReplacements, getTimeReplacements, getVocalExpressionReplacements } from './NeumeReplacements';
 import { Scale, ScaleNote } from './Scales';
 
@@ -30,6 +30,7 @@ export class NoteElement extends ScoreElement {
     public vocalExpressionNeume: VocalExpressionNeume | null = null;
     public fthora: Fthora | null = null;
     public accidental: Accidental | null = null;
+    public measureBar: MeasureBar | null = null;
     public lyrics: string = '';
     public isMelisma: boolean = false;
     public isMelismaStart: boolean = false;
@@ -129,6 +130,7 @@ export class MartyriaElement extends ScoreElement {
     public rootSign: RootSign = RootSign.Alpha;
     public apostrophe: boolean = false;
     public fthora: Fthora | null = null;
+    public measureBar: MeasureBar | null = null;
     
     public error: boolean = false;
 }

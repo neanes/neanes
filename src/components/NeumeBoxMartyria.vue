@@ -7,7 +7,8 @@
       <Neume :neume="neume.note"></Neume>
       <Neume :neume="neume.rootSign"></Neume>
       <Neume v-if="hasFthora" :neume="neume.fthora"></Neume>
-      <Neume v-if="neume.apostrophe" neume="Apostrophe"></Neume>
+      <Neume v-if="neume.apostrophe" :neume="Note.Apostrophe"></Neume>
+      <Neume v-if="hasMeasureBar" :neume="neume.measureBar" class="red"></Neume>
     </template>
   </div>
 </template>
@@ -18,6 +19,7 @@ import { MartyriaElement } from '@/models/Element';
 import { neumeMap } from '@/models/NeumeMappings';
 import Neume  from '@/components/Neume.vue'
 import { store } from '@/store';
+import { Note } from '@/models/Neumes';
 
 @Component({
   components: {
@@ -26,6 +28,7 @@ import { store } from '@/store';
 })
 export default class NeumeBoxMartyria extends Vue {
   @Prop() neume!: MartyriaElement;
+  Note = Note;
 
   get pageSetup() {
     return store.state.score.pageSetup;
@@ -41,6 +44,10 @@ export default class NeumeBoxMartyria extends Vue {
 
   get hasFthora() {
     return this.neume.fthora != null;
+  }
+
+  get hasMeasureBar() {
+    return this.neume.measureBar != null;
   }
 
   get style() {

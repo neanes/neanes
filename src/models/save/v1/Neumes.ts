@@ -66,28 +66,28 @@ export enum TimeNeume {
     Hapli_Right = 'Hapli_Right',
     Dipli_Right = 'Dipli_Right',
     Tripli_Right = 'Tripli_Right',
-
-    Argon = 'Argon',
-    Hemiolion = 'Hemiolion',
-    Diargon = 'Diargon',
 }
 
 export enum GorgonNeume {
-    Gorgon_Top = 'Gorgon_Top',
-    Gorgon_Bottom = 'Gorgon_Bottom',
-    Digorgon = 'Digorgon',
-    Trigorgon = 'Trigorgon',
+  Gorgon_Top = "Gorgon_Top",
+  Gorgon_Bottom = "Gorgon_Bottom",
+  Digorgon = "Digorgon",
+  Trigorgon = "Trigorgon",
 
-    Gorgon_TopRight = 'Gorgon_TopRight',
-    Gorgon_BottomRight = 'Gorgon_BottomRight',
-    Digorgon_Right = 'Digorgon_Right',
-    Trigorgon_Right = 'Trigorgon_Right',
+  Gorgon_TopRight = "Gorgon_TopRight",
+  Gorgon_BottomRight = "Gorgon_BottomRight",
+  Digorgon_Right = "Digorgon_Right",
+  Trigorgon_Right = "Trigorgon_Right",
 
-    GorgonDottedLeft = "GorgonDottedLeft",
-    GorgonDottedRight = "GorgonDottedRight",
+  GorgonDottedLeft = "GorgonDottedLeft",
+  GorgonDottedRight = "GorgonDottedRight",
 
-    GorgonDottedLeft_Right = "GorgonDottedLeft_Right",
-    GorgonDottedRight_Right = "GorgonDottedRight_Right",
+  GorgonDottedLeft_Right = "GorgonDottedLeft_Right",
+  GorgonDottedRight_Right = "GorgonDottedRight_Right",
+
+  Argon = "Argon",
+  Hemiolion = "Hemiolion",
+  Diargon = "Diargon",
 }
 
 export enum VocalExpressionNeume {

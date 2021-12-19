@@ -28,6 +28,10 @@
       :neume="note.vocalExpressionNeume"
       :offset="vocalExpressionNeumeOffset"
       :class="[{ red: isRedNeume(note.vocalExpressionNeume) } ]"></Neume>
+    <Neume 
+      v-if="hasMeasureBar"
+      :neume="note.measureBar"
+      class="red"></Neume>
   </div>
 </template>
 
@@ -69,6 +73,10 @@ export default class NeumeBoxSyllable extends Vue {
 
   get hasAccidental() {
     return this.note.accidental != null;
+  }
+
+  get hasMeasureBar() {
+    return this.note.measureBar != null;
   }
 
   get style() {

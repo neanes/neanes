@@ -1,6 +1,6 @@
 import { DropCapElement, ElementType, MartyriaElement, NoteElement, ModeKeyElement, ScoreElement, TextBoxElement } from "@/models/Element";
 import { neumeMap } from "@/models/NeumeMappings";
-import { Fthora, Note, RootSign, VocalExpressionNeume } from "@/models/Neumes";
+import { Fthora, MeasureBar, Note, RootSign, VocalExpressionNeume } from "@/models/Neumes";
 import { getNeumeValue } from "@/models/NeumeValues";
 import { Line, Page } from "@/models/Page";
 import { PageSetup } from "@/models/PageSetup";
@@ -61,15 +61,22 @@ export class LayoutService {
             if (element.elementType === ElementType.Note) {
                 const noteElement = element as NoteElement;
                 const mapping = neumeMap.get(noteElement.quantitativeNeume)!;
-
-                let text = mapping.text;
+                let vareiaWidth = 0;
+                let measureBarWidth = 0;
 
                 if (noteElement.vocalExpressionNeume != null && noteElement.vocalExpressionNeume === VocalExpressionNeume.Vareia) {
                     const vareiaMapping = neumeMap.get(VocalExpressionNeume.Vareia)!;
-                    text = vareiaMapping.text + text;
+                    vareiaWidth = Math.floor(TextMeasurementService.getTextWidth(vareiaMapping.text, `${pageSetup.neumeDefaultFontSize}px ${vareiaMapping.fontFamily}`));
                 }
 
-                noteElement.neumeWidth = Math.floor(TextMeasurementService.getTextWidth(text, `${pageSetup.neumeDefaultFontSize}px ${mapping.fontFamily}`));
+                if (noteElement.measureBar != null) {
+                    const measureBarMapping = neumeMap.get(noteElement.measureBar)!;
+                    measureBarWidth = Math.floor(TextMeasurementService.getTextWidth(measureBarMapping.text, `${pageSetup.neumeDefaultFontSize}px ${measureBarMapping.fontFamily}`));
+                }
+
+                const neumeWidth = TextMeasurementService.getTextWidth(mapping.text, `${pageSetup.neumeDefaultFontSize}px ${mapping.fontFamily}`)
+
+                noteElement.neumeWidth = Math.floor(neumeWidth + vareiaWidth + measureBarWidth);
                 noteElement.lyricsWidth = Math.floor(TextMeasurementService.getTextWidth(noteElement.lyrics, `${pageSetup.lyricsDefaultFontSize}px ${pageSetup.lyricsDefaultFontFamily}`));
 
                 elementWidthPx = Math.max(noteElement.neumeWidth, noteElement.lyricsWidth);
@@ -79,17 +86,13 @@ export class LayoutService {
                 const mappingNote = neumeMap.get(martyriaElement.note)!;
                 const mappingRoot = neumeMap.get(martyriaElement.rootSign)!;
                 const mappingApostrophe = neumeMap.get(Note.Apostrophe)!;
-
-                let text = mappingNote.text + mappingRoot.text;
-
-                if (martyriaElement.apostrophe) {
-                    text += mappingApostrophe.text;
-                }
+                const mappingMeasureBar = martyriaElement.measureBar ? neumeMap.get(martyriaElement.measureBar)! : null;
 
                 elementWidthPx = Math.floor(
                     TextMeasurementService.getTextWidth(mappingNote.text, `${pageSetup.neumeDefaultFontSize}px ${mappingNote.fontFamily}`) +
                     TextMeasurementService.getTextWidth(mappingRoot.text, `${pageSetup.neumeDefaultFontSize}px ${mappingRoot.fontFamily}`) +
-                    (martyriaElement.apostrophe ? TextMeasurementService.getTextWidth(mappingApostrophe.text, `${pageSetup.neumeDefaultFontSize}px ${mappingApostrophe.fontFamily}`) : 0));
+                    (martyriaElement.apostrophe ? TextMeasurementService.getTextWidth(mappingApostrophe.text, `${pageSetup.neumeDefaultFontSize}px ${mappingApostrophe.fontFamily}`) : 0) +
+                    (martyriaElement.measureBar ? TextMeasurementService.getTextWidth(mappingMeasureBar!.text, `${pageSetup.neumeDefaultFontSize}px ${mappingMeasureBar!.fontFamily}`) : 0));
             }
             else if (element.elementType === ElementType.DropCap) {
                 const dropCapElement = element as DropCapElement;

@@ -66,28 +66,28 @@ export enum TimeNeume {
     Hapli_Right = 'Hapli_Right',
     Dipli_Right = 'Dipli_Right',
     Tripli_Right = 'Tripli_Right',
-
-    Argon = 'Argon',
-    Hemiolion = 'Hemiolion',
-    Diargon = 'Diargon',
 }
 
 export enum GorgonNeume {
-    Gorgon_Top = 'Gorgon_Top',
-    Gorgon_Bottom = 'Gorgon_Bottom',
-    Digorgon = 'Digorgon',
-    Trigorgon = 'Trigorgon',
+  Gorgon_Top = "Gorgon_Top",
+  Gorgon_Bottom = "Gorgon_Bottom",
+  Digorgon = "Digorgon",
+  Trigorgon = "Trigorgon",
 
-    Gorgon_TopRight = 'Gorgon_TopRight',
-    Gorgon_BottomRight = 'Gorgon_BottomRight',
-    Digorgon_Right = 'Digorgon_Right',
-    Trigorgon_Right = 'Trigorgon_Right',
+  Gorgon_TopRight = "Gorgon_TopRight",
+  Gorgon_BottomRight = "Gorgon_BottomRight",
+  Digorgon_Right = "Digorgon_Right",
+  Trigorgon_Right = "Trigorgon_Right",
 
-    GorgonDottedLeft = "GorgonDottedLeft",
-    GorgonDottedRight = "GorgonDottedRight",
+  GorgonDottedLeft = "GorgonDottedLeft",
+  GorgonDottedRight = "GorgonDottedRight",
 
-    GorgonDottedLeft_Right = "GorgonDottedLeft_Right",
-    GorgonDottedRight_Right = "GorgonDottedRight_Right",
+  GorgonDottedLeft_Right = "GorgonDottedLeft_Right",
+  GorgonDottedRight_Right = "GorgonDottedRight_Right",
+
+  Argon = "Argon",
+  Hemiolion = "Hemiolion",
+  Diargon = "Diargon",
 }
 
 export enum VocalExpressionNeume {
@@ -269,22 +269,32 @@ export enum Accidental {
     Flat_6_Left = "Flat_6_Left",
 }
 
-export type Neume = QuantitativeNeume | TimeNeume | GorgonNeume | VocalExpressionNeume | Fthora | Accidental | TempoSign | Note | RootSign | ModeSign;
+export enum MeasureBar {
+  MeasureBarRight = "MeasureBarRight",
+  MeasureBarTop = "MeasureBarTop",
+}
+
+export type Neume = QuantitativeNeume | TimeNeume | GorgonNeume | VocalExpressionNeume | Fthora | Accidental | TempoSign | Note | RootSign | ModeSign | MeasureBar;
 
 const redNeumes: Neume[] = [
-    GorgonNeume.Gorgon_Top,
-    GorgonNeume.Gorgon_Bottom,
-    GorgonNeume.Gorgon_TopRight,
-    GorgonNeume.Gorgon_BottomRight,
-    GorgonNeume.GorgonDottedLeft,
-    GorgonNeume.GorgonDottedRight,
-    GorgonNeume.GorgonDottedLeft_Right,
-    GorgonNeume.GorgonDottedRight_Right,
-    GorgonNeume.Digorgon,
-    GorgonNeume.Digorgon_Right,
-    GorgonNeume.Trigorgon,
-    GorgonNeume.Trigorgon_Right,
-    VocalExpressionNeume.Heteron,
+  GorgonNeume.Gorgon_Top,
+  GorgonNeume.Gorgon_Bottom,
+  GorgonNeume.Gorgon_TopRight,
+  GorgonNeume.Gorgon_BottomRight,
+  GorgonNeume.GorgonDottedLeft,
+  GorgonNeume.GorgonDottedRight,
+  GorgonNeume.GorgonDottedLeft_Right,
+  GorgonNeume.GorgonDottedRight_Right,
+  GorgonNeume.Digorgon,
+  GorgonNeume.Digorgon_Right,
+  GorgonNeume.Trigorgon,
+  GorgonNeume.Trigorgon_Right,
+  GorgonNeume.Argon,
+  GorgonNeume.Hemiolion,
+  GorgonNeume.Diargon,
+  VocalExpressionNeume.Heteron,
+  MeasureBar.MeasureBarRight,
+  MeasureBar.MeasureBarTop,
 ];
 
 export function isRedNeume(neume: Neume) {

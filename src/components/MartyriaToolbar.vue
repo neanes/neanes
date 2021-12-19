@@ -23,6 +23,9 @@
       <button class="neume-button" @click="setFthora(Fthora.Zygos_TopRight)"><Neume class="red neume fthora" :neume="Fthora.Zygos_TopCenter" /></button>
       <button class="neume-button" @click="setFthora(Fthora.Kliton_TopRight)"><Neume class="red neume fthora" :neume="Fthora.Kliton_TopCenter" /></button>
       <button class="neume-button" @click="setFthora(Fthora.Spathi_TopRight)"><Neume class="red neume fthora" :neume="Fthora.Spathi_TopCenter" /></button>
+      <span class="space"></span>
+      <button class="neume-button" @click="setMeasureBar(MeasureBar.MeasureBarRight)"><Neume class="red neume measure-bar-right" :neume="MeasureBar.MeasureBarRight" /></button>
+      <button class="neume-button" @click="setMeasureBar(MeasureBar.MeasureBarTop)"><Neume class="red neume measure-bar-top" :neume="MeasureBar.MeasureBarTop" /></button>
     </div>
   </div>
 </template>
@@ -30,7 +33,7 @@
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { MartyriaElement } from '@/models/Element';
-import { Fthora } from '@/models/Neumes';
+import { Fthora, MeasureBar } from '@/models/Neumes';
 import Neume from './Neume.vue';
 import { areFthorasEquivalent } from '@/models/NeumeReplacements';
 
@@ -42,6 +45,7 @@ import { areFthorasEquivalent } from '@/models/NeumeReplacements';
 export default class MartyriaToolbar extends Vue {
   @Prop() element!: MartyriaElement;
   Fthora = Fthora;
+  MeasureBar = MeasureBar;
   
   private setFthora(neume: Fthora) {
     if (this.element.fthora != null && areFthorasEquivalent(neume, this.element.fthora)) {
@@ -49,6 +53,17 @@ export default class MartyriaToolbar extends Vue {
     }
     else {
       this.element.fthora = neume;
+    }
+
+    this.$emit('scoreUpdated');
+  }
+
+private setMeasureBar(neume: MeasureBar) {
+    if (neume === this.element.measureBar) {
+      this.element.measureBar = null;
+    }
+    else {
+      this.element.measureBar = neume;
     }
 
     this.$emit('scoreUpdated');
@@ -89,5 +104,14 @@ export default class MartyriaToolbar extends Vue {
 
   .fthora {
     left: 18px;
+  }
+
+  .measure-bar-right {
+    top: -10px;
+  }
+
+  .measure-bar-top {
+    top: -5px;
+    left: 17px;
   }
   </style>

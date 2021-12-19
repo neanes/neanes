@@ -3,37 +3,28 @@ import {
     DropCapElement,
     ElementType,
     EmptyElement,
-    FthoraElement,
-    AccidentalElement,
     MartyriaElement, 
     NoteElement, 
-    QuantitativeNeumeElement, 
     ScoreElement, 
     ScoreElementOffset,
     StaffTextElement,
     TextBoxElement,
-    TimeNeumeElement,
-    VocalExpressionNeumeElement,
     ModeKeyElement
 } from '@/models/Element';
 
 import { Score as Score_v1, Staff as Staff_v1 } from '@/models/save/v1/Score';
-import { 
-    DropCapElement as DropCapElement_v1, 
-    ElementType as ElementType_v1, 
-    EmptyElement as EmptyElement_v1,
-    MartyriaElement as MartyriaElement_v1,
-    NoteElement as NoteElement_v1, 
-    StaffTextElement as StaffTextElement_v1,
-    TextBoxElement as TextBoxElement_v1,
-    QuantitativeNeumeElement as QuantitativeNeumeElement_v1,
-    ScoreElement as ScoreElement_v1, 
-    ScoreElementOffset as ScoreElementOffset_v1,
-    TimeNeumeElement as TimeNeumeElement_v1,
-    GorgonNeumeElement as GorgonNeumeElement_v1,
-    VocalExpressionNeumeElement as VocalExpressionNeumeElement_v1,
-    ModeKeyElement as ModeKeyElement_v1,
-} from '@/models/save/v1/Element';
+import {
+  DropCapElement as DropCapElement_v1,
+  ElementType as ElementType_v1,
+  EmptyElement as EmptyElement_v1,
+  MartyriaElement as MartyriaElement_v1,
+  NoteElement as NoteElement_v1,
+  StaffTextElement as StaffTextElement_v1,
+  TextBoxElement as TextBoxElement_v1,
+  ScoreElement as ScoreElement_v1,
+  ScoreElementOffset as ScoreElementOffset_v1,
+  ModeKeyElement as ModeKeyElement_v1,
+} from "@/models/save/v1/Element";
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
 import { PageSetup } from '@/models/PageSetup';
 
@@ -144,44 +135,26 @@ export class SaveService {
     }
 
     public static SaveNote(element: NoteElement_v1, e: NoteElement) {
-        element.quantitativeNeume = new QuantitativeNeumeElement_v1(e.quantitativeNeume.neume);
-        element.quantitativeNeume.offset = new ScoreElementOffset_v1();
-        element.quantitativeNeume.offset.x = e.quantitativeNeume.offset.x;
-        element.quantitativeNeume.offset.y = e.quantitativeNeume.offset.y;
+        element.quantitativeNeume = e.quantitativeNeume;
 
         if(e.timeNeume != null) {
-            element.timeNeume = new TimeNeumeElement_v1(e.timeNeume.neume);
-            element.timeNeume.offset = new ScoreElementOffset_v1();
-            element.timeNeume.offset.x = e.timeNeume.offset.x;
-            element.timeNeume.offset.y = e.timeNeume.offset.y;
+            element.timeNeume = e.timeNeume;
         }
 
         if(e.gorgonNeume != null) {
-            element.gorgonNeume = new GorgonNeumeElement_v1(e.gorgonNeume.neume);
-            element.gorgonNeume.offset = new ScoreElementOffset_v1();
-            element.gorgonNeume.offset.x = e.gorgonNeume.offset.x;
-            element.gorgonNeume.offset.y = e.gorgonNeume.offset.y;
+            element.gorgonNeume = e.gorgonNeume;
         }
 
         if(e.fthora != null) {
-            element.fthora = new FthoraElement(e.fthora.neume);
-            element.fthora.offset = new ScoreElementOffset_v1();
-            element.fthora.offset.x = e.fthora.offset.x;
-            element.fthora.offset.y = e.fthora.offset.y;
+            element.fthora = e.fthora;
         }
 
         if(e.accidental != null) {
-            element.accidental = new AccidentalElement(e.accidental.neume);
-            element.accidental.offset = new ScoreElementOffset_v1();
-            element.accidental.offset.x = e.accidental.offset.x;
-            element.accidental.offset.y = e.accidental.offset.y;
+            element.accidental = e.accidental;
         }
 
         if(e.vocalExpressionNeume != null) {
-            element.vocalExpressionNeume = new VocalExpressionNeumeElement_v1(e.vocalExpressionNeume.neume);
-            element.vocalExpressionNeume.offset = new ScoreElementOffset_v1();
-            element.vocalExpressionNeume.offset.x = e.vocalExpressionNeume.offset.x;
-            element.vocalExpressionNeume.offset.y = e.vocalExpressionNeume.offset.y;
+            element.vocalExpressionNeume = e.vocalExpressionNeume;
         }
 
         element.lyrics = e.lyrics;
@@ -303,44 +276,26 @@ export class SaveService {
     }
 
     public static LoadNote_v1(element: NoteElement, e: NoteElement_v1) {
-        element.setQuantitativeNeume(e.quantitativeNeume.neume);
-        element.quantitativeNeume.offset = new ScoreElementOffset();
-        element.quantitativeNeume.offset.x = e.quantitativeNeume.offset.x;
-        element.quantitativeNeume.offset.y = e.quantitativeNeume.offset.y;
+        element.setQuantitativeNeume(e.quantitativeNeume);
 
         if(e.timeNeume != null) {
-            element.setTimeNeume(e.timeNeume.neume);
-            element.timeNeume!.offset = new ScoreElementOffset();
-            element.timeNeume!.offset.x = e.timeNeume.offset.x;
-            element.timeNeume!.offset.y = e.timeNeume.offset.y;
+            element.setTimeNeume(e.timeNeume);
         }
 
         if(e.gorgonNeume != null) {
-            element.setGorgonNeume(e.gorgonNeume.neume);
-            element.gorgonNeume!.offset = new ScoreElementOffset();
-            element.gorgonNeume!.offset.x = e.gorgonNeume.offset.x;
-            element.gorgonNeume!.offset.y = e.gorgonNeume.offset.y;
+            element.setGorgonNeume(e.gorgonNeume);
         }
 
         if(e.fthora != null) {
-            element.setFthora(e.fthora.neume);
-            element.fthora!.offset = new ScoreElementOffset();
-            element.fthora!.offset.x = e.fthora.offset.x;
-            element.fthora!.offset.y = e.fthora.offset.y;
+            element.setFthora(e.fthora);
         }
 
         if(e.accidental != null) {
-            element.setAccidental(e.accidental.neume);
-            element.accidental!.offset = new ScoreElementOffset();
-            element.accidental!.offset.x = e.accidental.offset.x;
-            element.accidental!.offset.y = e.accidental.offset.y;
+            element.setAccidental(e.accidental);
         }
 
         if(e.vocalExpressionNeume != null) {
-            element.setVocalExpressionNeume(e.vocalExpressionNeume.neume);
-            element.vocalExpressionNeume!.offset = new ScoreElementOffset();
-            element.vocalExpressionNeume!.offset.x = e.vocalExpressionNeume.offset.x;
-            element.vocalExpressionNeume!.offset.y = e.vocalExpressionNeume.offset.y;
+            element.setVocalExpressionNeume(e.vocalExpressionNeume);
         }
 
         element.lyrics = e.lyrics;

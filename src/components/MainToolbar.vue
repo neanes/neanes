@@ -2,15 +2,17 @@
   <div class="main-toolbar">
     <button class="auto-mode-btn" @click="$emit('toggleAutoMode')" :class="{ on: autoMode === true }">Auto</button>
     <span class="space"></span>
-    <button class="neume-button" @click="$emit('addAutoMartyria')">
+    <button title="Insert Martyria" class="neume-button" @click="$emit('addAutoMartyria')">
         <span class="martyria">
           <Neume class="red neume" :neume="Note.Pa" />
           <Neume class="red neume" :neume="RootSign.Alpha" />
         </span>
     </button>
     <span class="space"></span>
-    <button @click="$emit('updateLineBreak')">Line Break</button>
-    <button @click="$emit('updatePageBreak')">Page Break</button>
+    <button title="Insert Line Break After Selected Element" @click="$emit('updateLineBreak')">Line Break</button>
+    <button title="Insert Page Break After Selected Element" @click="$emit('updatePageBreak')">Page Break</button>
+    <span class="space"></span>
+    <button class="red" title="Delete Selected Element" @click="$emit('deleteSelectedElement')">X</button>
   </div>
 </template>
 

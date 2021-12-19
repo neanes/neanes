@@ -376,6 +376,11 @@ export class LayoutService {
 
                         martyria.apostrophe = currentNote > 4;
                     }
+
+                    if (martyria.fthora) {
+                        currentScale = this.getScaleFromFthora(martyria.fthora) || currentScale;
+                        currentShift = this.getShift(currentNote, currentScale, martyria.fthora)
+                    }
                 }
             }
         }

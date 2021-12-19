@@ -71,21 +71,9 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "OligonPlusKentemata"
-        },
+        "quantitativeNeume": "OligonPlusKentemata",
         "timeNeume": null,
-        "gorgonNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Gorgon_Top"
-        },
+        "gorgonNeume": "Gorgon_Top",
         "vocalExpressionNeume": null,
         "fthora": null,
         "accidental": null,
@@ -97,13 +85,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Apostrophos"
-        },
+        "quantitativeNeume": "Apostrophos",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -117,13 +99,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Apostrophos"
-        },
+        "quantitativeNeume": "Apostrophos",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -137,13 +113,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Oligon"
-        },
+        "quantitativeNeume": "Oligon",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -157,22 +127,10 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Oligon"
-        },
+        "quantitativeNeume": "Oligon",
         "timeNeume": null,
         "gorgonNeume": null,
-        "vocalExpressionNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Psifiston"
-        },
+        "vocalExpressionNeume": "Psifiston",
         "fthora": null,
         "accidental": null,
         "lyrics": "cried",
@@ -183,13 +141,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Apostrophos"
-        },
+        "quantitativeNeume": "Apostrophos",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -203,28 +155,10 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Apostrophos"
-        },
-        "timeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Hapli_Right"
-        },
+        "quantitativeNeume": "Apostrophos",
+        "timeNeume": "Hapli_Right",
         "gorgonNeume": null,
-        "vocalExpressionNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "AntikenomaShort"
-        },
+        "vocalExpressionNeume": "AntikenomaShort",
         "fthora": null,
         "accidental": null,
         "lyrics": "un -",
@@ -234,21 +168,9 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Apostrophos"
-        },
+        "quantitativeNeume": "Apostrophos",
         "timeNeume": null,
-        "gorgonNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Gorgon_TopRight"
-        },
+        "gorgonNeume": "Gorgon_TopRight",
         "vocalExpressionNeume": null,
         "fthora": null,
         "accidental": null,
@@ -259,22 +181,10 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Ison"
-        },
+        "quantitativeNeume": "Ison",
         "timeNeume": null,
         "gorgonNeume": null,
-        "vocalExpressionNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Vareia"
-        },
+        "vocalExpressionNeume": "Vareia",
         "fthora": null,
         "accidental": null,
         "lyrics": "to",
@@ -285,21 +195,9 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Apostrophos"
-        },
+        "quantitativeNeume": "Apostrophos",
         "timeNeume": null,
-        "gorgonNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Gorgon_TopRight"
-        },
+        "gorgonNeume": "Gorgon_TopRight",
         "vocalExpressionNeume": null,
         "fthora": null,
         "accidental": null,
@@ -311,13 +209,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Oligon"
-        },
+        "quantitativeNeume": "Oligon",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -331,13 +223,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "PetastiPlusOligon"
-        },
+        "quantitativeNeume": "PetastiPlusOligon",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -351,20 +237,8 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Apostrophos"
-        },
-        "timeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Klasma_TopRight"
-        },
+        "quantitativeNeume": "Apostrophos",
+        "timeNeume": "Klasma_TopRight",
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
@@ -377,13 +251,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "VareiaDotted"
-        },
+        "quantitativeNeume": "VareiaDotted",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -406,20 +274,8 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "OligonPlusKentimaAbove"
-        },
-        "timeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Klasma_Bottom"
-        },
+        "quantitativeNeume": "OligonPlusKentimaAbove",
+        "timeNeume": "Klasma_Bottom",
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
@@ -432,13 +288,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "OligonPlusApostrophosPlusKentemata"
-        },
+        "quantitativeNeume": "OligonPlusApostrophosPlusKentemata",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -451,21 +301,9 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "OligonPlusApostrophosPlusKentemata"
-        },
+        "quantitativeNeume": "OligonPlusApostrophosPlusKentemata",
         "timeNeume": null,
-        "gorgonNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Gorgon_TopRight"
-        },
+        "gorgonNeume": "Gorgon_TopRight",
         "vocalExpressionNeume": null,
         "fthora": null,
         "accidental": null,
@@ -476,13 +314,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Apostrophos"
-        },
+        "quantitativeNeume": "Apostrophos",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -495,13 +327,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "RunningElaphron"
-        },
+        "quantitativeNeume": "RunningElaphron",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -515,28 +341,10 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Oligon"
-        },
+        "quantitativeNeume": "Oligon",
         "timeNeume": null,
-        "gorgonNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Gorgon_Top"
-        },
-        "vocalExpressionNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Antikenoma"
-        },
+        "gorgonNeume": "Gorgon_Top",
+        "vocalExpressionNeume": "Antikenoma",
         "fthora": null,
         "accidental": null,
         "lyrics": "",
@@ -547,13 +355,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Apostrophos"
-        },
+        "quantitativeNeume": "Apostrophos",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -567,20 +369,8 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Ison"
-        },
-        "timeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Klasma_Top"
-        },
+        "quantitativeNeume": "Ison",
+        "timeNeume": "Klasma_Top",
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
@@ -603,13 +393,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "OligonPlusKentimaBelow"
-        },
+        "quantitativeNeume": "OligonPlusKentimaBelow",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -623,30 +407,12 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Oligon"
-        },
+        "quantitativeNeume": "Oligon",
         "timeNeume": null,
         "gorgonNeume": null,
-        "vocalExpressionNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Psifiston"
-        },
+        "vocalExpressionNeume": "Psifiston",
         "fthora": null,
-        "accidental": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Flat_2_Left"
-        },
+        "accidental": "Flat_2_Left",
         "lyrics": "-",
         "isMelisma": false,
         "isMelismaStart": false
@@ -655,13 +421,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "RunningElaphron"
-        },
+        "quantitativeNeume": "RunningElaphron",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -675,27 +435,9 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Apostrophos"
-        },
-        "timeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Hapli_Right"
-        },
-        "gorgonNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Gorgon_TopRight"
-        },
+        "quantitativeNeume": "Apostrophos",
+        "timeNeume": "Hapli_Right",
+        "gorgonNeume": "Gorgon_TopRight",
         "vocalExpressionNeume": null,
         "fthora": null,
         "accidental": null,
@@ -707,21 +449,9 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "OligonPlusIsonPlusKentemata"
-        },
+        "quantitativeNeume": "OligonPlusIsonPlusKentemata",
         "timeNeume": null,
-        "gorgonNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Gorgon_TopRight"
-        },
+        "gorgonNeume": "Gorgon_TopRight",
         "vocalExpressionNeume": null,
         "fthora": null,
         "accidental": null,
@@ -733,13 +463,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Apostrophos"
-        },
+        "quantitativeNeume": "Apostrophos",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -752,22 +476,10 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Apostrophos"
-        },
+        "quantitativeNeume": "Apostrophos",
         "timeNeume": null,
         "gorgonNeume": null,
-        "vocalExpressionNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Vareia"
-        },
+        "vocalExpressionNeume": "Vareia",
         "fthora": null,
         "accidental": null,
         "lyrics": "to",
@@ -778,13 +490,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Apostrophos"
-        },
+        "quantitativeNeume": "Apostrophos",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -798,13 +504,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Oligon"
-        },
+        "quantitativeNeume": "Oligon",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -818,13 +518,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "KentemataPlusOligon"
-        },
+        "quantitativeNeume": "KentemataPlusOligon",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -838,21 +532,9 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "OligonPlusKentemata"
-        },
+        "quantitativeNeume": "OligonPlusKentemata",
         "timeNeume": null,
-        "gorgonNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Gorgon_Top"
-        },
+        "gorgonNeume": "Gorgon_Top",
         "vocalExpressionNeume": null,
         "fthora": null,
         "accidental": null,
@@ -864,28 +546,10 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Apostrophos"
-        },
-        "timeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Klasma_TopRight"
-        },
+        "quantitativeNeume": "Apostrophos",
+        "timeNeume": "Klasma_TopRight",
         "gorgonNeume": null,
-        "vocalExpressionNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Vareia"
-        },
+        "vocalExpressionNeume": "Vareia",
         "fthora": null,
         "accidental": null,
         "lyrics": "O",
@@ -896,21 +560,9 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Hyporoe"
-        },
+        "quantitativeNeume": "Hyporoe",
         "timeNeume": null,
-        "gorgonNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Gorgon_TopRight"
-        },
+        "gorgonNeume": "Gorgon_TopRight",
         "vocalExpressionNeume": null,
         "fthora": null,
         "accidental": null,
@@ -922,28 +574,10 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Oligon"
-        },
+        "quantitativeNeume": "Oligon",
         "timeNeume": null,
-        "gorgonNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Gorgon_Top"
-        },
-        "vocalExpressionNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Antikenoma"
-        },
+        "gorgonNeume": "Gorgon_Top",
+        "vocalExpressionNeume": "Antikenoma",
         "fthora": null,
         "accidental": null,
         "lyrics": "",
@@ -954,13 +588,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Apostrophos"
-        },
+        "quantitativeNeume": "Apostrophos",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -974,20 +602,8 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Ison"
-        },
-        "timeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Klasma_Top"
-        },
+        "quantitativeNeume": "Ison",
+        "timeNeume": "Klasma_Top",
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
@@ -1010,13 +626,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "OligonPlusKentimaAbove"
-        },
+        "quantitativeNeume": "OligonPlusKentimaAbove",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -1030,22 +640,10 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Ison"
-        },
+        "quantitativeNeume": "Ison",
         "timeNeume": null,
         "gorgonNeume": null,
-        "vocalExpressionNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "HomalonConnecting"
-        },
+        "vocalExpressionNeume": "HomalonConnecting",
         "fthora": null,
         "accidental": null,
         "lyrics": "",
@@ -1056,13 +654,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Apostrophos"
-        },
+        "quantitativeNeume": "Apostrophos",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -1076,13 +668,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Oligon"
-        },
+        "quantitativeNeume": "Oligon",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -1095,30 +681,12 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "OligonPlusKentemata"
-        },
+        "quantitativeNeume": "OligonPlusKentemata",
         "timeNeume": null,
         "gorgonNeume": null,
-        "vocalExpressionNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Psifiston"
-        },
+        "vocalExpressionNeume": "Psifiston",
         "fthora": null,
-        "accidental": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Flat_2_Right"
-        },
+        "accidental": "Flat_2_Right",
         "lyrics": "cried",
         "isMelisma": true,
         "isMelismaStart": true
@@ -1127,13 +695,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Apostrophos"
-        },
+        "quantitativeNeume": "Apostrophos",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -1147,13 +709,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Apostrophos"
-        },
+        "quantitativeNeume": "Apostrophos",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -1167,20 +723,8 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "PetastiPlusApostrophos"
-        },
-        "timeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Klasma_Bottom"
-        },
+        "quantitativeNeume": "PetastiPlusApostrophos",
+        "timeNeume": "Klasma_Bottom",
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
@@ -1193,13 +737,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "RunningElaphron"
-        },
+        "quantitativeNeume": "RunningElaphron",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -1213,13 +751,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Kentemata"
-        },
+        "quantitativeNeume": "Kentemata",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -1233,21 +765,9 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "OligonPlusKentemata"
-        },
+        "quantitativeNeume": "OligonPlusKentemata",
         "timeNeume": null,
-        "gorgonNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Gorgon_Top"
-        },
+        "gorgonNeume": "Gorgon_Top",
         "vocalExpressionNeume": null,
         "fthora": null,
         "accidental": null,
@@ -1259,20 +779,8 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Apostrophos"
-        },
-        "timeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Klasma_TopRight"
-        },
+        "quantitativeNeume": "Apostrophos",
+        "timeNeume": "Klasma_TopRight",
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
@@ -1285,13 +793,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "VareiaDotted"
-        },
+        "quantitativeNeume": "VareiaDotted",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -1315,22 +817,10 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "OligonPlusIsonPlusKentemata"
-        },
+        "quantitativeNeume": "OligonPlusIsonPlusKentemata",
         "timeNeume": null,
         "gorgonNeume": null,
-        "vocalExpressionNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Psifiston"
-        },
+        "vocalExpressionNeume": "Psifiston",
         "fthora": null,
         "accidental": null,
         "lyrics": "heark -",
@@ -1340,13 +830,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Apostrophos"
-        },
+        "quantitativeNeume": "Apostrophos",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -1360,13 +844,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Apostrophos"
-        },
+        "quantitativeNeume": "Apostrophos",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -1380,20 +858,8 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Apostrophos"
-        },
-        "timeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Klasma_TopRight"
-        },
+        "quantitativeNeume": "Apostrophos",
+        "timeNeume": "Klasma_TopRight",
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
@@ -1406,28 +872,10 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Apostrophos"
-        },
-        "timeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Hapli_Right"
-        },
+        "quantitativeNeume": "Apostrophos",
+        "timeNeume": "Hapli_Right",
         "gorgonNeume": null,
-        "vocalExpressionNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "AntikenomaShort"
-        },
+        "vocalExpressionNeume": "AntikenomaShort",
         "fthora": null,
         "accidental": null,
         "lyrics": "to",
@@ -1438,21 +886,9 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Apostrophos"
-        },
+        "quantitativeNeume": "Apostrophos",
         "timeNeume": null,
-        "gorgonNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Gorgon_TopRight"
-        },
+        "gorgonNeume": "Gorgon_TopRight",
         "vocalExpressionNeume": null,
         "fthora": null,
         "accidental": null,
@@ -1464,22 +900,10 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Oligon"
-        },
+        "quantitativeNeume": "Oligon",
         "timeNeume": null,
         "gorgonNeume": null,
-        "vocalExpressionNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Vareia"
-        },
+        "vocalExpressionNeume": "Vareia",
         "fthora": null,
         "accidental": null,
         "lyrics": "me;",
@@ -1490,21 +914,9 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Hyporoe"
-        },
+        "quantitativeNeume": "Hyporoe",
         "timeNeume": null,
-        "gorgonNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Digorgon_Right"
-        },
+        "gorgonNeume": "Digorgon_Right",
         "vocalExpressionNeume": null,
         "fthora": null,
         "accidental": null,
@@ -1516,20 +928,8 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Oligon"
-        },
-        "timeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Klasma_Top"
-        },
+        "quantitativeNeume": "Oligon",
+        "timeNeume": "Klasma_Top",
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
@@ -1552,13 +952,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "OligonPlusKentima"
-        },
+        "quantitativeNeume": "OligonPlusKentima",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -1572,20 +966,8 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "PetastiPlusKentimaAbove"
-        },
-        "timeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Klasma_Bottom"
-        },
+        "quantitativeNeume": "PetastiPlusKentimaAbove",
+        "timeNeume": "Klasma_Bottom",
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
@@ -1598,13 +980,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Apostrophos"
-        },
+        "quantitativeNeume": "Apostrophos",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -1618,13 +994,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Apostrophos"
-        },
+        "quantitativeNeume": "Apostrophos",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -1638,13 +1008,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Oligon"
-        },
+        "quantitativeNeume": "Oligon",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -1658,22 +1022,10 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Oligon"
-        },
+        "quantitativeNeume": "Oligon",
         "timeNeume": null,
         "gorgonNeume": null,
-        "vocalExpressionNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Antikenoma"
-        },
+        "vocalExpressionNeume": "Antikenoma",
         "fthora": null,
         "accidental": null,
         "lyrics": "",
@@ -1684,21 +1036,9 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Hyporoe"
-        },
+        "quantitativeNeume": "Hyporoe",
         "timeNeume": null,
-        "gorgonNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Gorgon_TopRight"
-        },
+        "gorgonNeume": "Gorgon_TopRight",
         "vocalExpressionNeume": null,
         "fthora": null,
         "accidental": null,
@@ -1710,13 +1050,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Apostrophos"
-        },
+        "quantitativeNeume": "Apostrophos",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -1730,22 +1064,10 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Apostrophos"
-        },
+        "quantitativeNeume": "Apostrophos",
         "timeNeume": null,
         "gorgonNeume": null,
-        "vocalExpressionNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Vareia"
-        },
+        "vocalExpressionNeume": "Vareia",
         "fthora": null,
         "accidental": null,
         "lyrics": "of",
@@ -1756,21 +1078,9 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Apostrophos"
-        },
+        "quantitativeNeume": "Apostrophos",
         "timeNeume": null,
-        "gorgonNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Gorgon_TopRight"
-        },
+        "gorgonNeume": "Gorgon_TopRight",
         "vocalExpressionNeume": null,
         "fthora": null,
         "accidental": null,
@@ -1782,13 +1092,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Oligon"
-        },
+        "quantitativeNeume": "Oligon",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -1802,20 +1106,8 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Oligon"
-        },
-        "timeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Klasma_Top"
-        },
+        "quantitativeNeume": "Oligon",
+        "timeNeume": "Klasma_Top",
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
@@ -1828,21 +1120,9 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "OligonPlusKentemata"
-        },
+        "quantitativeNeume": "OligonPlusKentemata",
         "timeNeume": null,
-        "gorgonNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Gorgon_Top"
-        },
+        "gorgonNeume": "Gorgon_Top",
         "vocalExpressionNeume": null,
         "fthora": null,
         "accidental": null,
@@ -1854,13 +1134,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Apostrophos"
-        },
+        "quantitativeNeume": "Apostrophos",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -1874,13 +1148,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "OligonPlusKentemata"
-        },
+        "quantitativeNeume": "OligonPlusKentemata",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -1894,28 +1162,10 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Apostrophos"
-        },
-        "timeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Klasma_TopRight"
-        },
+        "quantitativeNeume": "Apostrophos",
+        "timeNeume": "Klasma_TopRight",
         "gorgonNeume": null,
-        "vocalExpressionNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Vareia"
-        },
+        "vocalExpressionNeume": "Vareia",
         "fthora": null,
         "accidental": null,
         "lyrics": "- ca",
@@ -1926,21 +1176,9 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Hyporoe"
-        },
+        "quantitativeNeume": "Hyporoe",
         "timeNeume": null,
-        "gorgonNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Gorgon_TopRight"
-        },
+        "gorgonNeume": "Gorgon_TopRight",
         "vocalExpressionNeume": null,
         "fthora": null,
         "accidental": null,
@@ -1952,28 +1190,10 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Oligon"
-        },
+        "quantitativeNeume": "Oligon",
         "timeNeume": null,
-        "gorgonNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Gorgon_Top"
-        },
-        "vocalExpressionNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Antikenoma"
-        },
+        "gorgonNeume": "Gorgon_Top",
+        "vocalExpressionNeume": "Antikenoma",
         "fthora": null,
         "accidental": null,
         "lyrics": "-",
@@ -1984,13 +1204,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Apostrophos"
-        },
+        "quantitativeNeume": "Apostrophos",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -2004,20 +1218,8 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Ison"
-        },
-        "timeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Klasma_Top"
-        },
+        "quantitativeNeume": "Ison",
+        "timeNeume": "Klasma_Top",
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
@@ -2040,13 +1242,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "OligonPlusKentima"
-        },
+        "quantitativeNeume": "OligonPlusKentima",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -2060,13 +1256,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Ison"
-        },
+        "quantitativeNeume": "Ison",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -2080,22 +1270,10 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "OligonPlusHypsiliRight"
-        },
+        "quantitativeNeume": "OligonPlusHypsiliRight",
         "timeNeume": null,
         "gorgonNeume": null,
-        "vocalExpressionNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Psifiston"
-        },
+        "vocalExpressionNeume": "Psifiston",
         "fthora": null,
         "accidental": null,
         "lyrics": "cry_",
@@ -2106,13 +1284,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Apostrophos"
-        },
+        "quantitativeNeume": "Apostrophos",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -2126,20 +1298,8 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Apostrophos"
-        },
-        "timeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Klasma_TopRight"
-        },
+        "quantitativeNeume": "Apostrophos",
+        "timeNeume": "Klasma_TopRight",
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
@@ -2152,28 +1312,10 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Apostrophos"
-        },
-        "timeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Hapli_Right"
-        },
+        "quantitativeNeume": "Apostrophos",
+        "timeNeume": "Hapli_Right",
         "gorgonNeume": null,
-        "vocalExpressionNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "AntikenomaShort"
-        },
+        "vocalExpressionNeume": "AntikenomaShort",
         "fthora": null,
         "accidental": null,
         "lyrics": "to",
@@ -2184,21 +1326,9 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Apostrophos"
-        },
+        "quantitativeNeume": "Apostrophos",
         "timeNeume": null,
-        "gorgonNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Gorgon_TopRight"
-        },
+        "gorgonNeume": "Gorgon_TopRight",
         "vocalExpressionNeume": null,
         "fthora": null,
         "accidental": null,
@@ -2210,22 +1340,10 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "OligonPlusKentimaBelow"
-        },
+        "quantitativeNeume": "OligonPlusKentimaBelow",
         "timeNeume": null,
         "gorgonNeume": null,
-        "vocalExpressionNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Vareia"
-        },
+        "vocalExpressionNeume": "Vareia",
         "fthora": null,
         "accidental": null,
         "lyrics": "Thee:",
@@ -2236,21 +1354,9 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Hyporoe"
-        },
+        "quantitativeNeume": "Hyporoe",
         "timeNeume": null,
-        "gorgonNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Trigorgon_Right"
-        },
+        "gorgonNeume": "Trigorgon_Right",
         "vocalExpressionNeume": null,
         "fthora": null,
         "accidental": null,
@@ -2262,13 +1368,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Apostrophos"
-        },
+        "quantitativeNeume": "Apostrophos",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -2282,21 +1382,9 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "OligonPlusKentemata"
-        },
+        "quantitativeNeume": "OligonPlusKentemata",
         "timeNeume": null,
-        "gorgonNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Gorgon_Top"
-        },
+        "gorgonNeume": "Gorgon_Top",
         "vocalExpressionNeume": null,
         "fthora": null,
         "accidental": null,
@@ -2308,20 +1396,8 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Apostrophos"
-        },
-        "timeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Klasma_TopRight"
-        },
+        "quantitativeNeume": "Apostrophos",
+        "timeNeume": "Klasma_TopRight",
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
@@ -2344,13 +1420,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Ison"
-        },
+        "quantitativeNeume": "Ison",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -2364,13 +1434,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Kentemata"
-        },
+        "quantitativeNeume": "Kentemata",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -2383,20 +1447,8 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Ison"
-        },
-        "timeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Klasma_Top"
-        },
+        "quantitativeNeume": "Ison",
+        "timeNeume": "Klasma_Top",
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
@@ -2408,21 +1460,9 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "OligonPlusApostrophosPlusKentemata"
-        },
+        "quantitativeNeume": "OligonPlusApostrophosPlusKentemata",
         "timeNeume": null,
-        "gorgonNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Gorgon_TopRight"
-        },
+        "gorgonNeume": "Gorgon_TopRight",
         "vocalExpressionNeume": null,
         "fthora": null,
         "accidental": null,
@@ -2433,13 +1473,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Apostrophos"
-        },
+        "quantitativeNeume": "Apostrophos",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -2452,20 +1486,8 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "RunningElaphron"
-        },
-        "timeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Klasma_Top"
-        },
+        "quantitativeNeume": "RunningElaphron",
+        "timeNeume": "Klasma_Top",
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,
@@ -2477,13 +1499,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Oligon"
-        },
+        "quantitativeNeume": "Oligon",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -2497,13 +1513,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Kentemata"
-        },
+        "quantitativeNeume": "Kentemata",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -2517,28 +1527,10 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Petasti"
-        },
-        "timeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Klasma_Bottom"
-        },
+        "quantitativeNeume": "Petasti",
+        "timeNeume": "Klasma_Bottom",
         "gorgonNeume": null,
-        "vocalExpressionNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Psifiston"
-        },
+        "vocalExpressionNeume": "Psifiston",
         "fthora": null,
         "accidental": null,
         "lyrics": "",
@@ -2549,21 +1541,9 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Apostrophos"
-        },
+        "quantitativeNeume": "Apostrophos",
         "timeNeume": null,
-        "gorgonNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Gorgon_TopRight"
-        },
+        "gorgonNeume": "Gorgon_TopRight",
         "vocalExpressionNeume": null,
         "fthora": null,
         "accidental": null,
@@ -2575,28 +1555,10 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Ison"
-        },
-        "timeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Klasma_Top"
-        },
+        "quantitativeNeume": "Ison",
+        "timeNeume": "Klasma_Top",
         "gorgonNeume": null,
-        "vocalExpressionNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Vareia"
-        },
+        "vocalExpressionNeume": "Vareia",
         "fthora": null,
         "accidental": null,
         "lyrics": "O",
@@ -2607,21 +1569,9 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Hyporoe"
-        },
+        "quantitativeNeume": "Hyporoe",
         "timeNeume": null,
-        "gorgonNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Gorgon_TopRight"
-        },
+        "gorgonNeume": "Gorgon_TopRight",
         "vocalExpressionNeume": null,
         "fthora": null,
         "accidental": null,
@@ -2633,28 +1583,10 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Oligon"
-        },
+        "quantitativeNeume": "Oligon",
         "timeNeume": null,
-        "gorgonNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Gorgon_Top"
-        },
-        "vocalExpressionNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Antikenoma"
-        },
+        "gorgonNeume": "Gorgon_Top",
+        "vocalExpressionNeume": "Antikenoma",
         "fthora": null,
         "accidental": null,
         "lyrics": "",
@@ -2665,13 +1597,7 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Apostrophos"
-        },
+        "quantitativeNeume": "Apostrophos",
         "timeNeume": null,
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
@@ -2685,20 +1611,8 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Ison"
-        },
-        "timeNeume": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "neume": "Dipli"
-        },
+        "quantitativeNeume": "Ison",
+        "timeNeume": "Dipli",
         "gorgonNeume": null,
         "vocalExpressionNeume": null,
         "fthora": null,

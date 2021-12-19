@@ -13,30 +13,30 @@ export enum ElementType {
 
 export abstract class ScoreElement {
     abstract elementType: ElementType;
-    public lineBreak: boolean = false;
-    public pageBreak: boolean = false;
+    public lineBreak: boolean | undefined = undefined;
+    public pageBreak: boolean | undefined = undefined;
 }
 
 export class NoteElement extends ScoreElement {
     public readonly elementType: ElementType = ElementType.Note; 
     public quantitativeNeume: QuantitativeNeume = QuantitativeNeume.Ison; 
-    public timeNeume: TimeNeume | null = null;
-    public gorgonNeume: GorgonNeume | null = null;
-    public vocalExpressionNeume: VocalExpressionNeume | null = null;
-    public fthora: Fthora | null = null;
-    public accidental: Accidental | null = null;
-    public lyrics: string = '';
-    public isMelisma: boolean = false;
-    public isMelismaStart: boolean = false;
+    public timeNeume: TimeNeume | undefined = undefined;
+    public gorgonNeume: GorgonNeume | undefined = undefined;
+    public vocalExpressionNeume: VocalExpressionNeume | undefined = undefined;
+    public fthora: Fthora | undefined = undefined;
+    public accidental: Accidental | undefined = undefined;
+    public lyrics: string | undefined = undefined;
+    public isMelisma: boolean | undefined = undefined;
+    public isMelismaStart: boolean | undefined = undefined;
 }
 
 export class MartyriaElement extends ScoreElement  {  
     public readonly elementType: ElementType = ElementType.Martyria; 
-    public auto: boolean = true;
+    public auto: boolean | undefined = undefined;
     public note: Note = Note.Pa;
     public rootSign: RootSign = RootSign.Alpha;
-    public apostrophe: boolean = false;
-    public fthora: Fthora | null = null;
+    public apostrophe: boolean | undefined = undefined;
+    public fthora: Fthora | undefined = undefined;
 }
 
 export class EmptyElement extends ScoreElement {
@@ -66,9 +66,9 @@ export class ModeKeyElement extends ScoreElement {
     public scale: Scale = Scale.Diatonic;
     public scaleNote: ScaleNote = ScaleNote.Pa;
     public martyrias: ModeSign[] = []  
-    public note: ModeSign | null = null;
-    public fthora: Fthora | null = null;
-    public quantativeNeume: ModeSign | null = null;
+    public note: ModeSign | undefined = undefined;
+    public fthora: Fthora | undefined = undefined;
+    public quantativeNeume: ModeSign | undefined = undefined;
     public color: string = 'black';
     public fontSize: number = 16;
     public height: number = 20;
@@ -83,9 +83,9 @@ export class StaffTextElement extends ScoreElement {
 export class DropCapElement extends ScoreElement {
     public readonly elementType: ElementType = ElementType.DropCap;
     public content: string = 'A';
-    public fontFamily: string | null = null;
-    public fontSize: number | null = null;
-    public color: string | null = null;
+    public fontFamily: string | undefined = undefined;
+    public fontSize: number | undefined = undefined;
+    public color: string | undefined = undefined;
 }
 
 export class ScoreElementOffset {

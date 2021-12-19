@@ -1,31 +1,26 @@
 # Roadmap
 
-## General
+## Must-haves
+- [ ] Auto martyria calc must handle chroa scales
+- [ ] Mode Key selector with default mode keys
+- [ ] Bottom fthoras
+- [ ] Right-align option for martyria
+- [ ] Tempo markings
+- [ ] More adjustments and replacements
+- [ ] Empty drop caps should be deleted
+- [ ] Move to Electron
 
-### Data Model
-- [X] Separate Save Model from View Model
-
-### Positioning
-- [ ] Fix Staff Text
-- [X] Make sure Textbox position works
-
-### Document Settings
-- [X] Abstract Document Settings
+## Nice-to-haves
+- [ ] Delete button in toolbar
 - [ ] Document Settings Dialog
- 
-### Neumes
-- [X] Sharps and Flats
+- [ ] Microtonal Sharps and Flats
+- [ ] Custom Martyrias
 - [ ] Note Indicators
-- [ ] Ison
-
-## Lord I Have Cried, Tone 1
-- [X] Missing Neumes
-- [X] Dot + Goron together
-- [X] Smart Neume Choice (Dots, Antikenoma, Gorgons)
-- [X] Melismas
-- [X] Textbox Gap Analysis
+- [ ] Ison Neumes
 - [ ] Header Images
-- [X] Drop Caps
+- [ ] Headers/Footers/Page Numbers
+- [ ] Add empty neume box at end of score if missing (e.g. due to corrupted save file)
+- [ ] Undo / redo
 
 ## Tech Debt
 - [ ] Need to explicitly map between save file neumes and view model neumes. This will prevent errors due to mismatched or missing neumes in the save model.

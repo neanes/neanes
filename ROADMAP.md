@@ -21,6 +21,7 @@
 - [ ] Headers/Footers/Page Numbers
 - [ ] Add empty neume box at end of score if missing (e.g. due to corrupted save file)
 - [ ] Undo / redo
+- [ ] Configurable Neume Keyboard
 
 ## Tech Debt
 - [ ] Need to explicitly map between save file neumes and view model neumes. This will prevent errors due to mismatched or missing neumes in the save model.

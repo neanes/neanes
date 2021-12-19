@@ -53,7 +53,7 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
-import { NoteElement } from '@/models/Element';
+import { MartyriaElement, NoteElement } from '@/models/Element';
 import { Accidental, Fthora, GorgonNeume, TimeNeume, VocalExpressionNeume } from '@/models/Neumes';
 import Neume from './Neume.vue';
 import { areFthorasEquivalent, areGorgonsEquivalent, areTimeNeumesEquivalent, areVocalExpressionsEquivalent } from '@/models/NeumeReplacements';

@@ -140,6 +140,7 @@ export class SaveService {
         element.auto = e.auto;
         element.note = e.note;
         element.rootSign = e.rootSign;
+        element.fthora = e.fthora;
     }
 
     public static SaveNote(element: NoteElement_v1, e: NoteElement) {
@@ -298,6 +299,7 @@ export class SaveService {
         element.auto = e.auto;
         element.note = e.note;
         element.rootSign = e.rootSign;
+        element.fthora = e.fthora;
     }
 
     public static LoadNote_v1(element: NoteElement, e: NoteElement_v1) {

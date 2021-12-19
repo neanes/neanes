@@ -21,8 +21,6 @@
   "staff": {
     "elements": [
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "TextBox",
         "alignment": "center",
         "color": "#0000ff",
@@ -48,8 +46,6 @@
         "height": 63
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "TextBox",
         "alignment": "right",
         "color": "#0000ff",
@@ -59,1570 +55,704 @@
         "height": 14
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "DropCap",
-        "content": "L",
-        "fontFamily": null,
-        "fontSize": null,
-        "color": null
+        "content": "L"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusKentemata",
-        "timeNeume": null,
         "gorgonNeume": "Gorgon_Top",
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
         "lyrics": "ord,",
         "isMelisma": true,
         "isMelismaStart": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "",
-        "isMelisma": true,
-        "isMelismaStart": false
+        "isMelisma": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "I",
-        "isMelisma": false,
-        "isMelismaStart": false
+        "lyrics": "I"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Oligon",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "have",
-        "isMelisma": false,
-        "isMelismaStart": false
+        "lyrics": "have"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Oligon",
-        "timeNeume": null,
-        "gorgonNeume": null,
         "vocalExpressionNeume": "Psifiston",
-        "fthora": null,
-        "accidental": null,
         "lyrics": "cried",
-        "isMelisma": true,
-        "isMelismaStart": false
+        "isMelisma": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "",
-        "isMelisma": true,
-        "isMelismaStart": false
+        "isMelisma": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
         "timeNeume": "Hapli_Right",
-        "gorgonNeume": null,
         "vocalExpressionNeume": "AntikenomaShort",
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "un -",
-        "isMelismaStart": false
+        "lyrics": "un -"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": null,
         "gorgonNeume": "Gorgon_TopRight",
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "-",
-        "isMelismaStart": false
+        "lyrics": "-"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Ison",
-        "timeNeume": null,
-        "gorgonNeume": null,
         "vocalExpressionNeume": "Vareia",
-        "fthora": null,
-        "accidental": null,
         "lyrics": "to",
         "isMelisma": true,
         "isMelismaStart": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": null,
         "gorgonNeume": "Gorgon_TopRight",
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "",
-        "isMelisma": true,
-        "isMelismaStart": false
+        "isMelisma": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Oligon",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "",
-        "isMelisma": true,
-        "isMelismaStart": false
+        "isMelisma": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "PetastiPlusOligon",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
         "lyrics": "Thee,",
         "isMelisma": true,
         "isMelismaStart": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
         "timeNeume": "Klasma_TopRight",
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "",
-        "isMelisma": true,
-        "isMelismaStart": false
+        "isMelisma": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": "VareiaDotted",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "",
-        "isMelismaStart": false
+        "quantitativeNeume": "VareiaDotted"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Martyria",
         "auto": true,
         "note": "Pa",
-        "rootSign": "Alpha",
-        "apostrophe": false,
-        "fthora": null
+        "rootSign": "Alpha"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusKentimaAbove",
         "timeNeume": "Klasma_Bottom",
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "heark -",
-        "isMelisma": false,
-        "isMelismaStart": false
+        "lyrics": "heark -"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusApostrophosPlusKentemata",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "en",
-        "isMelismaStart": false
+        "lyrics": "en"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusApostrophosPlusKentemata",
-        "timeNeume": null,
         "gorgonNeume": "Gorgon_TopRight",
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "un -",
-        "isMelismaStart": false
+        "lyrics": "un -"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "-",
-        "isMelismaStart": false
+        "lyrics": "-"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "RunningElaphron",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
         "lyrics": "- to",
         "isMelisma": true,
         "isMelismaStart": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Oligon",
-        "timeNeume": null,
         "gorgonNeume": "Gorgon_Top",
         "vocalExpressionNeume": "Antikenoma",
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "",
-        "isMelisma": true,
-        "isMelismaStart": false
+        "isMelisma": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "",
-        "isMelisma": true,
-        "isMelismaStart": false
+        "isMelisma": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Ison",
         "timeNeume": "Klasma_Top",
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "me;",
-        "isMelisma": false,
-        "isMelismaStart": false
+        "lyrics": "me;"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Martyria",
         "auto": true,
         "note": "Pa",
-        "rootSign": "Alpha",
-        "apostrophe": false,
-        "fthora": null
+        "rootSign": "Alpha"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusKentimaBelow",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "heark -",
-        "isMelisma": false,
-        "isMelismaStart": false
+        "lyrics": "heark -"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Oligon",
-        "timeNeume": null,
-        "gorgonNeume": null,
         "vocalExpressionNeume": "Psifiston",
-        "fthora": null,
         "accidental": "Flat_2_Left",
-        "lyrics": "-",
-        "isMelisma": false,
-        "isMelismaStart": false
+        "lyrics": "-"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "RunningElaphron",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
         "lyrics": "- en",
         "isMelisma": true,
         "isMelismaStart": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
         "timeNeume": "Hapli_Right",
         "gorgonNeume": "Gorgon_TopRight",
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "",
-        "isMelisma": true,
-        "isMelismaStart": false
+        "isMelisma": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusIsonPlusKentemata",
-        "timeNeume": null,
         "gorgonNeume": "Gorgon_TopRight",
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "un -",
-        "isMelisma": false,
-        "isMelismaStart": false
+        "lyrics": "un -"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "-",
-        "isMelismaStart": false
+        "lyrics": "-"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": null,
-        "gorgonNeume": null,
         "vocalExpressionNeume": "Vareia",
-        "fthora": null,
-        "accidental": null,
         "lyrics": "to",
         "isMelisma": true,
         "isMelismaStart": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "",
-        "isMelisma": true,
-        "isMelismaStart": false
+        "isMelisma": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Oligon",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
         "lyrics": "me,",
         "isMelisma": true,
         "isMelismaStart": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "KentemataPlusOligon",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "",
-        "isMelisma": true,
-        "isMelismaStart": false
+        "isMelisma": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusKentemata",
-        "timeNeume": null,
         "gorgonNeume": "Gorgon_Top",
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "",
-        "isMelisma": true,
-        "isMelismaStart": false
+        "isMelisma": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
         "timeNeume": "Klasma_TopRight",
-        "gorgonNeume": null,
         "vocalExpressionNeume": "Vareia",
-        "fthora": null,
-        "accidental": null,
         "lyrics": "O",
         "isMelisma": true,
         "isMelismaStart": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Hyporoe",
-        "timeNeume": null,
         "gorgonNeume": "Gorgon_TopRight",
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "",
-        "isMelisma": true,
-        "isMelismaStart": false
+        "isMelisma": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Oligon",
-        "timeNeume": null,
         "gorgonNeume": "Gorgon_Top",
         "vocalExpressionNeume": "Antikenoma",
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "",
-        "isMelisma": true,
-        "isMelismaStart": false
+        "isMelisma": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "",
-        "isMelisma": true,
-        "isMelismaStart": false
+        "isMelisma": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Ison",
         "timeNeume": "Klasma_Top",
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "Lord.",
-        "isMelisma": false,
-        "isMelismaStart": false
+        "lyrics": "Lord."
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Martyria",
         "auto": true,
         "note": "Pa",
-        "rootSign": "Alpha",
-        "apostrophe": false,
-        "fthora": null
+        "rootSign": "Alpha"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusKentimaAbove",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
         "lyrics": "Lord,",
         "isMelisma": true,
         "isMelismaStart": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Ison",
-        "timeNeume": null,
-        "gorgonNeume": null,
         "vocalExpressionNeume": "HomalonConnecting",
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "",
-        "isMelisma": true,
-        "isMelismaStart": false
+        "isMelisma": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "I",
-        "isMelisma": false,
-        "isMelismaStart": false
+        "lyrics": "I"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Oligon",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "have",
-        "isMelismaStart": false
+        "lyrics": "have"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusKentemata",
-        "timeNeume": null,
-        "gorgonNeume": null,
         "vocalExpressionNeume": "Psifiston",
-        "fthora": null,
         "accidental": "Flat_2_Right",
         "lyrics": "cried",
         "isMelisma": true,
         "isMelismaStart": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "",
-        "isMelisma": true,
-        "isMelismaStart": false
+        "isMelisma": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "",
-        "isMelisma": true,
-        "isMelismaStart": false
+        "isMelisma": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "PetastiPlusApostrophos",
         "timeNeume": "Klasma_Bottom",
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "un -",
-        "isMelisma": false,
-        "isMelismaStart": false
+        "lyrics": "un -"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "RunningElaphron",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
         "lyrics": "- to",
         "isMelisma": true,
         "isMelismaStart": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Kentemata",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "",
-        "isMelisma": true,
-        "isMelismaStart": false
+        "isMelisma": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusKentemata",
-        "timeNeume": null,
         "gorgonNeume": "Gorgon_Top",
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
         "lyrics": "Thee,",
         "isMelisma": true,
         "isMelismaStart": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
         "timeNeume": "Klasma_TopRight",
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "",
-        "isMelisma": true,
-        "isMelismaStart": false
+        "isMelisma": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
-        "quantitativeNeume": "VareiaDotted",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "",
-        "isMelisma": false,
-        "isMelismaStart": false
+        "quantitativeNeume": "VareiaDotted"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Martyria",
         "auto": true,
         "note": "Ga",
-        "rootSign": "Nana",
-        "apostrophe": false,
-        "fthora": null
+        "rootSign": "Nana"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusIsonPlusKentemata",
-        "timeNeume": null,
-        "gorgonNeume": null,
         "vocalExpressionNeume": "Psifiston",
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "heark -",
-        "isMelismaStart": false
+        "lyrics": "heark -"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
         "lyrics": "en",
         "isMelisma": true,
         "isMelismaStart": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "",
-        "isMelisma": true,
-        "isMelismaStart": false
+        "isMelisma": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
         "timeNeume": "Klasma_TopRight",
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "un -",
-        "isMelisma": false,
-        "isMelismaStart": false
+        "lyrics": "un -"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
         "timeNeume": "Hapli_Right",
-        "gorgonNeume": null,
         "vocalExpressionNeume": "AntikenomaShort",
-        "fthora": null,
-        "accidental": null,
         "lyrics": "to",
         "isMelisma": true,
         "isMelismaStart": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": null,
         "gorgonNeume": "Gorgon_TopRight",
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "",
-        "isMelisma": true,
-        "isMelismaStart": false
+        "isMelisma": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Oligon",
-        "timeNeume": null,
-        "gorgonNeume": null,
         "vocalExpressionNeume": "Vareia",
-        "fthora": null,
-        "accidental": null,
         "lyrics": "me;",
         "isMelisma": true,
         "isMelismaStart": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Hyporoe",
-        "timeNeume": null,
         "gorgonNeume": "Digorgon_Right",
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "",
-        "isMelisma": true,
-        "isMelismaStart": false
+        "isMelisma": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Oligon",
         "timeNeume": "Klasma_Top",
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "",
-        "isMelisma": true,
-        "isMelismaStart": false
+        "isMelisma": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Martyria",
         "auto": true,
         "note": "Zo",
-        "rootSign": "Varys",
-        "apostrophe": false,
-        "fthora": null
+        "rootSign": "Varys"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusKentima",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "at -",
-        "isMelisma": false,
-        "isMelismaStart": false
+        "lyrics": "at -"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "PetastiPlusKentimaAbove",
         "timeNeume": "Klasma_Bottom",
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "tend",
-        "isMelisma": false,
-        "isMelismaStart": false
+        "lyrics": "tend"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "to",
-        "isMelisma": false,
-        "isMelismaStart": false
+        "lyrics": "to"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "the",
-        "isMelisma": false,
-        "isMelismaStart": false
+        "lyrics": "the"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Oligon",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
         "lyrics": "voice",
         "isMelisma": true,
         "isMelismaStart": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Oligon",
-        "timeNeume": null,
-        "gorgonNeume": null,
         "vocalExpressionNeume": "Antikenoma",
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "",
-        "isMelisma": true,
-        "isMelismaStart": false
+        "isMelisma": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Hyporoe",
-        "timeNeume": null,
         "gorgonNeume": "Gorgon_TopRight",
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "",
-        "isMelisma": true,
-        "isMelismaStart": false
+        "isMelisma": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "",
-        "isMelisma": true,
-        "isMelismaStart": false
+        "isMelisma": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": null,
-        "gorgonNeume": null,
         "vocalExpressionNeume": "Vareia",
-        "fthora": null,
-        "accidental": null,
         "lyrics": "of",
         "isMelisma": true,
         "isMelismaStart": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": null,
         "gorgonNeume": "Gorgon_TopRight",
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "",
-        "isMelisma": true,
-        "isMelismaStart": false
+        "isMelisma": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Oligon",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "",
-        "isMelisma": true,
-        "isMelismaStart": false
+        "isMelisma": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Oligon",
         "timeNeume": "Klasma_Top",
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "my",
-        "isMelisma": false,
-        "isMelismaStart": false
+        "lyrics": "my"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusKentemata",
-        "timeNeume": null,
         "gorgonNeume": "Gorgon_Top",
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "sup",
-        "isMelisma": false,
-        "isMelismaStart": false
+        "lyrics": "sup"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "-",
-        "isMelisma": false,
-        "isMelismaStart": false
+        "lyrics": "-"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusKentemata",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "pli",
-        "isMelisma": false,
-        "isMelismaStart": false
+        "lyrics": "pli"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
         "timeNeume": "Klasma_TopRight",
-        "gorgonNeume": null,
         "vocalExpressionNeume": "Vareia",
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "- ca",
-        "isMelisma": false,
-        "isMelismaStart": false
+        "lyrics": "- ca"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Hyporoe",
-        "timeNeume": null,
         "gorgonNeume": "Gorgon_TopRight",
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "-",
-        "isMelisma": false,
-        "isMelismaStart": false
+        "lyrics": "-"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Oligon",
-        "timeNeume": null,
         "gorgonNeume": "Gorgon_Top",
         "vocalExpressionNeume": "Antikenoma",
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "-",
-        "isMelisma": false,
-        "isMelismaStart": false
+        "lyrics": "-"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "-",
-        "isMelisma": false,
-        "isMelismaStart": false
+        "lyrics": "-"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Ison",
         "timeNeume": "Klasma_Top",
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "tion",
-        "isMelisma": false,
-        "isMelismaStart": false
+        "lyrics": "tion"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Martyria",
         "auto": true,
         "note": "Pa",
-        "rootSign": "Alpha",
-        "apostrophe": false,
-        "fthora": null
+        "rootSign": "Alpha"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusKentima",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "when",
-        "isMelisma": false,
-        "isMelismaStart": false
+        "lyrics": "when"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Ison",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "I",
-        "isMelisma": false,
-        "isMelismaStart": false
+        "lyrics": "I"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusHypsiliRight",
-        "timeNeume": null,
-        "gorgonNeume": null,
         "vocalExpressionNeume": "Psifiston",
-        "fthora": null,
-        "accidental": null,
         "lyrics": "cry_",
         "isMelisma": true,
         "isMelismaStart": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "",
-        "isMelisma": true,
-        "isMelismaStart": false
+        "isMelisma": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
         "timeNeume": "Klasma_TopRight",
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "un -",
-        "isMelisma": false,
-        "isMelismaStart": false
+        "lyrics": "un -"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
         "timeNeume": "Hapli_Right",
-        "gorgonNeume": null,
         "vocalExpressionNeume": "AntikenomaShort",
-        "fthora": null,
-        "accidental": null,
         "lyrics": "to",
         "isMelisma": true,
         "isMelismaStart": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": null,
         "gorgonNeume": "Gorgon_TopRight",
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "",
-        "isMelisma": true,
-        "isMelismaStart": false
+        "isMelisma": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusKentimaBelow",
-        "timeNeume": null,
-        "gorgonNeume": null,
         "vocalExpressionNeume": "Vareia",
-        "fthora": null,
-        "accidental": null,
         "lyrics": "Thee:",
         "isMelisma": true,
         "isMelismaStart": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Hyporoe",
-        "timeNeume": null,
         "gorgonNeume": "Trigorgon_Right",
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "",
-        "isMelisma": true,
-        "isMelismaStart": false
+        "isMelisma": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "",
-        "isMelisma": true,
-        "isMelismaStart": false
+        "isMelisma": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusKentemata",
-        "timeNeume": null,
         "gorgonNeume": "Gorgon_Top",
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "",
-        "isMelisma": true,
-        "isMelismaStart": false
+        "isMelisma": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
         "timeNeume": "Klasma_TopRight",
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "",
-        "isMelisma": true,
-        "isMelismaStart": false
+        "isMelisma": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Martyria",
         "auto": true,
         "note": "Ga",
-        "rootSign": "Nana",
-        "apostrophe": false,
-        "fthora": null
+        "rootSign": "Nana"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Ison",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "Heark",
-        "isMelisma": false,
-        "isMelismaStart": false
+        "lyrics": "Heark"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Kentemata",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "-",
-        "isMelismaStart": false
+        "lyrics": "-"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Ison",
         "timeNeume": "Klasma_Top",
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "en",
-        "isMelismaStart": false
+        "lyrics": "en"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusApostrophosPlusKentemata",
-        "timeNeume": null,
         "gorgonNeume": "Gorgon_TopRight",
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "un",
-        "isMelismaStart": false
+        "lyrics": "un"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "-",
-        "isMelismaStart": false
+        "lyrics": "-"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "RunningElaphron",
         "timeNeume": "Klasma_Top",
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "to",
-        "isMelismaStart": false
+        "lyrics": "to"
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Oligon",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
         "lyrics": "me",
         "isMelisma": true,
         "isMelismaStart": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Kentemata",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "",
-        "isMelisma": true,
-        "isMelismaStart": false
+        "isMelisma": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Petasti",
         "timeNeume": "Klasma_Bottom",
-        "gorgonNeume": null,
         "vocalExpressionNeume": "Psifiston",
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "",
-        "isMelisma": true,
-        "isMelismaStart": false
+        "isMelisma": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": null,
         "gorgonNeume": "Gorgon_TopRight",
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "",
-        "isMelisma": true,
-        "isMelismaStart": false
+        "isMelisma": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Ison",
         "timeNeume": "Klasma_Top",
-        "gorgonNeume": null,
         "vocalExpressionNeume": "Vareia",
-        "fthora": null,
-        "accidental": null,
         "lyrics": "O",
         "isMelisma": true,
         "isMelismaStart": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Hyporoe",
-        "timeNeume": null,
         "gorgonNeume": "Gorgon_TopRight",
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "",
-        "isMelisma": true,
-        "isMelismaStart": false
+        "isMelisma": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Oligon",
-        "timeNeume": null,
         "gorgonNeume": "Gorgon_Top",
         "vocalExpressionNeume": "Antikenoma",
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "",
-        "isMelisma": true,
-        "isMelismaStart": false
+        "isMelisma": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": null,
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "",
-        "isMelisma": true,
-        "isMelismaStart": false
+        "isMelisma": true
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Note",
         "quantitativeNeume": "Ison",
         "timeNeume": "Dipli",
-        "gorgonNeume": null,
-        "vocalExpressionNeume": null,
-        "fthora": null,
-        "accidental": null,
-        "lyrics": "Lord.",
-        "isMelismaStart": false
+        "lyrics": "Lord."
       },
       {
-        "lineBreak": false,
-        "pageBreak": false,
         "elementType": "Empty"
       }
     ]

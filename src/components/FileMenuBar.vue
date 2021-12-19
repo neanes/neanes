@@ -59,11 +59,27 @@ export default class FileMenuBar extends Vue {
     this.fileSelector.click();
   }
   
+  saveTransform(key: string, value: any) {
+    if (value == null) {
+      return undefined;
+    }
+
+    if (value === false) {
+      return undefined;
+    }
+
+    if (key === 'lyrics' && value === '') {
+      return undefined;
+    }
+
+    return value;
+  }
+
   onClickSave() {
-    const content = JSON.stringify(SaveService.SaveScoreToJson(this.score), null, 2);
+    const content = JSON.stringify(SaveService.SaveScoreToJson(this.score), this.saveTransform, 2);
     const contentType = 'text/plain';
 
-    var a = document.createElement("a");
+    var a = document.createElement('a');
     var file = new Blob([content], {type: contentType});
     a.href = URL.createObjectURL(file);
     a.download = 'score.json';

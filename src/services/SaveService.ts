@@ -251,8 +251,8 @@ export class SaveService {
                     console.warn('Unrecognized element in score file', 'v1', e.elementType);
             }
 
-            element.lineBreak = e.lineBreak;
-            element.pageBreak = e.pageBreak;
+            element.lineBreak = e.lineBreak === true;
+            element.pageBreak = e.pageBreak === true;
 
             score.staff.elements.push(element);
         }
@@ -268,11 +268,14 @@ export class SaveService {
     }
 
     public static LoadMartyria_v1(element: MartyriaElement, e: MartyriaElement_v1) {
-        element.apostrophe = e.apostrophe;
-        element.auto = e.auto;
+        element.apostrophe = e.apostrophe === true;
+        element.auto = e.auto === true;
         element.note = e.note;
         element.rootSign = e.rootSign;
-        element.fthora = e.fthora;
+
+        if (element.fthora != null) {
+            element.fthora = e.fthora;
+        }
     }
 
     public static LoadNote_v1(element: NoteElement, e: NoteElement_v1) {
@@ -298,9 +301,12 @@ export class SaveService {
             element.setVocalExpressionNeume(e.vocalExpressionNeume);
         }
 
-        element.lyrics = e.lyrics;
-        element.isMelisma = e.isMelisma;
-        element.isMelismaStart = e.isMelismaStart;
+        if (e.lyrics != null) {
+            element.lyrics = e.lyrics;
+        }
+
+        element.isMelisma = e.isMelisma === true;
+        element.isMelismaStart = e.isMelismaStart === true;
     }
 
     public static LoadStaffText_v1(element: StaffTextElement, e: StaffTextElement_v1) {

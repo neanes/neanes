@@ -132,6 +132,7 @@ export class SaveService {
         element.note = e.note;
         element.rootSign = e.rootSign;
         element.fthora = e.fthora || undefined;
+        element.measureBar = e.measureBar || undefined;
     }
 
     public static SaveNote(element: NoteElement_v1, e: NoteElement) {
@@ -155,6 +156,10 @@ export class SaveService {
 
         if(e.vocalExpressionNeume != null) {
             element.vocalExpressionNeume = e.vocalExpressionNeume;
+        }
+
+        if (e.measureBar != null) {
+            element.measureBar = e.measureBar;
         }
 
         element.lyrics = e.lyrics !== '' ? e.lyrics : undefined;
@@ -276,6 +281,10 @@ export class SaveService {
         if (e.fthora != null) {
             element.fthora = e.fthora;
         }
+
+        if (e.measureBar != null) {
+            element.measureBar = e.measureBar;
+        }
     }
 
     public static LoadNote_v1(element: NoteElement, e: NoteElement_v1) {
@@ -299,6 +308,10 @@ export class SaveService {
 
         if(e.vocalExpressionNeume != null) {
             element.setVocalExpressionNeume(e.vocalExpressionNeume);
+        }
+
+        if (e.measureBar != null) {
+          element.measureBar = e.measureBar;
         }
 
         if (e.lyrics != null) {

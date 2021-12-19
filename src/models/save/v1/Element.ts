@@ -1,3 +1,4 @@
+import { MeasureBar } from '@/models/Neumes';
 import { TimeNeume, GorgonNeume, QuantitativeNeume, Note, RootSign, VocalExpressionNeume, Fthora, Accidental, ModeSign } from '@/models/save/v1/Neumes';
 import { Scale, ScaleNote } from './Scales';
 
@@ -25,6 +26,7 @@ export class NoteElement extends ScoreElement {
     public vocalExpressionNeume: VocalExpressionNeume | undefined = undefined;
     public fthora: Fthora | undefined = undefined;
     public accidental: Accidental | undefined = undefined;
+    public measureBar: MeasureBar | undefined = undefined;
     public lyrics: string | undefined = undefined;
     public isMelisma: boolean | undefined = undefined;
     public isMelismaStart: boolean | undefined = undefined;
@@ -37,6 +39,7 @@ export class MartyriaElement extends ScoreElement  {
     public rootSign: RootSign = RootSign.Alpha;
     public apostrophe: boolean | undefined = undefined;
     public fthora: Fthora | undefined = undefined;
+    public measureBar: MeasureBar | undefined = undefined;
 }
 
 export class EmptyElement extends ScoreElement {

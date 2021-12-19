@@ -396,10 +396,11 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Martyria",
+        "auto": true,
         "note": "Pa",
         "rootSign": "Alpha",
         "apostrophe": false,
-        "auto": true
+        "fthora": null
       },
       {
         "lineBreak": false,
@@ -592,10 +593,11 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Martyria",
+        "auto": true,
         "note": "Pa",
         "rootSign": "Alpha",
         "apostrophe": false,
-        "auto": true
+        "fthora": null
       },
       {
         "lineBreak": false,
@@ -998,10 +1000,11 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Martyria",
+        "auto": true,
         "note": "Pa",
         "rootSign": "Alpha",
         "apostrophe": false,
-        "auto": true
+        "fthora": null
       },
       {
         "lineBreak": false,
@@ -1302,10 +1305,11 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Martyria",
+        "auto": true,
         "note": "Ga",
         "rootSign": "Nana",
         "apostrophe": false,
-        "auto": true
+        "fthora": null
       },
       {
         "lineBreak": false,
@@ -1538,10 +1542,11 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Martyria",
+        "auto": true,
         "note": "Zo",
         "rootSign": "Varys",
         "apostrophe": false,
-        "auto": true
+        "fthora": null
       },
       {
         "lineBreak": false,
@@ -2025,10 +2030,11 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Martyria",
+        "auto": true,
         "note": "Pa",
         "rootSign": "Alpha",
         "apostrophe": false,
-        "auto": true
+        "fthora": null
       },
       {
         "lineBreak": false,
@@ -2328,10 +2334,11 @@
         "lineBreak": false,
         "pageBreak": false,
         "elementType": "Martyria",
+        "auto": true,
         "note": "Ga",
         "rootSign": "Nana",
         "apostrophe": false,
-        "auto": true
+        "fthora": null
       },
       {
         "lineBreak": false,

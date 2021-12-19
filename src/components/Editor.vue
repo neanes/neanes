@@ -541,11 +541,17 @@ addAutoMartyria() {
   
   }
 
+  keydownLastHandleTime: number = +new Date(); 
+  keydownThrottleIntervalMs: number = 100;
+
   onKeydown(event: KeyboardEvent) {
+    const now = +new Date();
+
     if (this.selectedElement == null 
       || this.selectedElement.elementType === ElementType.StaffText
       || this.selectedElement.elementType === ElementType.TextBox
-      || this.selectedElement.elementType === ElementType.DropCap) {
+      || this.selectedElement.elementType === ElementType.DropCap
+      || now - this.keydownLastHandleTime < this.keydownThrottleIntervalMs) {
       return;
     }
 
@@ -623,6 +629,7 @@ addAutoMartyria() {
 
     if (handled) {
       event.preventDefault();
+      this.keydownLastHandleTime = +new Date(); 
     }
   }
 

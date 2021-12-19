@@ -105,6 +105,12 @@ export const vocalExpressionReplacementMap = new Map<VocalExpressionNeume, Neume
     ]],
 ]);
 
+export const fthoraReplacementMap = new Map<Fthora, NeumeReplacement<Fthora>[]>([
+    [Fthora.DiatonicNiLow_TopCenter, [
+        { isPairedWith: rightNeumes, replaceWith: Fthora.DiatonicNiLow_TopRight },
+    ]],
+]);
+
 export const getGorgonReplacements = (neume: GorgonNeume) => {
     return gorgonReplacementMap.get(neume);
 }
@@ -117,9 +123,9 @@ export const getVocalExpressionReplacements = (neume: VocalExpressionNeume) => {
     return vocalExpressionReplacementMap.get(neume);
 }
 
-// export const getFthoraReplacements = (neume: Fthora) => {
-//     return fthoraReplacementMap.get(neume);
-// }
+export const getFthoraReplacements = (neume: Fthora) => {
+    return fthoraReplacementMap.get(neume);
+}
 
 export const areTimeNeumesEquivalent = (neume1: TimeNeume, neume2: TimeNeume) => {
     return areNeumesEquivalent(neume1, neume2, getTimeReplacements(neume1), getTimeReplacements(neume2));
@@ -131,6 +137,10 @@ export const areGorgonsEquivalent = (neume1: GorgonNeume, neume2: GorgonNeume) =
 
 export const areVocalExpressionsEquivalent = (neume1: VocalExpressionNeume, neume2: VocalExpressionNeume) => {
     return areNeumesEquivalent(neume1, neume2, getVocalExpressionReplacements(neume1), getVocalExpressionReplacements(neume2));
+}
+
+export const areFthorasEquivalent = (neume1: Fthora, neume2: Fthora) => {
+    return areNeumesEquivalent(neume1, neume2, getFthoraReplacements(neume1), getFthoraReplacements(neume2));
 }
 
 const areNeumesEquivalent = (neume1: Neume, neume2: Neume, replacements1: NeumeReplacement<Neume>[] | undefined, replacements2: NeumeReplacement<Neume>[] | undefined) => {

@@ -1,36 +1,62 @@
 <template>
   <div class="neume-toolbar">
-    <button class="neume-button" @click="setAccidental(Accidental.Flat_2_Left)"><Neume class="red neume flat" :neume=" Accidental.Flat_2_Right" /></button>
-    <button class="neume-button" @click="setAccidental(Accidental.Sharp_2_Left)"><Neume class="red neume sharp" :neume="Accidental.Sharp_2_Left" /></button>
-    <span class="space"></span>
-    <button class="neume-button" @click="setTimeNeume(TimeNeume.Klasma_Top)"><Neume class="neume klasma-top" :neume="TimeNeume.Klasma_Top" /></button>
-    <button class="neume-button" @click="setTimeNeume(TimeNeume.Klasma_Bottom)"><Neume class="neume klasma-bottom" :neume="TimeNeume.Klasma_Bottom" /></button>
-    <button class="neume-button" @click="setTimeNeume(TimeNeume.Hapli)"><Neume class="neume hapli" :neume="TimeNeume.Hapli" /></button>
-    <button class="neume-button" @click="setTimeNeume(TimeNeume.Dipli)"><Neume class="neume dipli" :neume="TimeNeume.Dipli" /></button>
-    <button class="neume-button" @click="setTimeNeume(TimeNeume.Tripli)"><Neume class="neume tripli" :neume="TimeNeume.Tripli" /></button>
-    <span class="space"></span>
-    <button class="neume-button" @click="setGorgonNeume(GorgonNeume.Gorgon_Top)"><Neume class="red neume gorgon-top" :neume="GorgonNeume.Gorgon_Top" /></button>
-    <button class="neume-button" @click="setGorgonNeume(GorgonNeume.Gorgon_Bottom)"><Neume class="red neume gorgon-bottom" :neume="GorgonNeume.Gorgon_Bottom" /></button>
-    <button class="neume-button" @click="setGorgonNeume(GorgonNeume.GorgonDottedLeft)"><Neume class="red neume gorgon-dotted-left" :neume="GorgonNeume.GorgonDottedLeft" /></button>
-    <button class="neume-button" @click="setGorgonNeume(GorgonNeume.GorgonDottedRight)"><Neume class="red neume gorgon-dotted-right" :neume="GorgonNeume.GorgonDottedRight" /></button>
-    <button class="neume-button" @click="setGorgonNeume(GorgonNeume.Digorgon)"><Neume class="red neume digorgon" :neume="GorgonNeume.Digorgon" /></button>
-    <button class="neume-button" @click="setGorgonNeume(GorgonNeume.Trigorgon)"><Neume class="red neume trigorgon" :neume="GorgonNeume.Trigorgon" /></button>
-    <span class="space"></span>
-    <button class="neume-button" @click="setVocalExpression(VocalExpressionNeume.Vareia)"><Neume class="neume vareia" :neume="VocalExpressionNeume.Vareia" /></button>
-    <button class="neume-button" @click="setVocalExpression(VocalExpressionNeume.Homalon)"><Neume class="neume homalon" :neume="VocalExpressionNeume.Homalon" /><span class="homalon-1">1</span></button>
-    <button class="neume-button" @click="setVocalExpression(VocalExpressionNeume.HomalonConnecting)"><Neume class="neume homalon" :neume="VocalExpressionNeume.Homalon" /><span class="homalon-2">2</span></button>
-    <button class="neume-button" @click="setVocalExpression(VocalExpressionNeume.Antikenoma)"><Neume class="neume antikenoma" :neume="VocalExpressionNeume.Antikenoma" /></button>
-    <button class="neume-button" @click="setVocalExpression(VocalExpressionNeume.Psifiston)"><Neume class="neume psifiston" :neume="VocalExpressionNeume.Psifiston" /></button>
-    <button class="neume-button" @click="setVocalExpression(VocalExpressionNeume.Heteron)"><Neume class="red neume heteron" :neume="VocalExpressionNeume.Heteron" /></button>
+    <div class="row">
+      <button class="neume-button" @click="setAccidental(Accidental.Flat_2_Left)"><Neume class="red neume flat" :neume=" Accidental.Flat_2_Right" /></button>
+      <button class="neume-button" @click="setAccidental(Accidental.Sharp_2_Left)"><Neume class="red neume sharp" :neume="Accidental.Sharp_2_Left" /></button>
+      <span class="space"></span>
+      <button class="neume-button" @click="setTimeNeume(TimeNeume.Klasma_Top)"><Neume class="neume klasma-top" :neume="TimeNeume.Klasma_Top" /></button>
+      <button class="neume-button" @click="setTimeNeume(TimeNeume.Klasma_Bottom)"><Neume class="neume klasma-bottom" :neume="TimeNeume.Klasma_Bottom" /></button>
+      <button class="neume-button" @click="setTimeNeume(TimeNeume.Hapli)"><Neume class="neume hapli" :neume="TimeNeume.Hapli" /></button>
+      <button class="neume-button" @click="setTimeNeume(TimeNeume.Dipli)"><Neume class="neume dipli" :neume="TimeNeume.Dipli" /></button>
+      <button class="neume-button" @click="setTimeNeume(TimeNeume.Tripli)"><Neume class="neume tripli" :neume="TimeNeume.Tripli" /></button>
+      <span class="space"></span>
+      <button class="neume-button" @click="setGorgonNeume(GorgonNeume.Gorgon_Top)"><Neume class="red neume gorgon-top" :neume="GorgonNeume.Gorgon_Top" /></button>
+      <button class="neume-button" @click="setGorgonNeume(GorgonNeume.Gorgon_Bottom)"><Neume class="red neume gorgon-bottom" :neume="GorgonNeume.Gorgon_Bottom" /></button>
+      <button class="neume-button" @click="setGorgonNeume(GorgonNeume.GorgonDottedLeft)"><Neume class="red neume gorgon-dotted-left" :neume="GorgonNeume.GorgonDottedLeft" /></button>
+      <button class="neume-button" @click="setGorgonNeume(GorgonNeume.GorgonDottedRight)"><Neume class="red neume gorgon-dotted-right" :neume="GorgonNeume.GorgonDottedRight" /></button>
+      <button class="neume-button" @click="setGorgonNeume(GorgonNeume.Digorgon)"><Neume class="red neume digorgon" :neume="GorgonNeume.Digorgon" /></button>
+      <button class="neume-button" @click="setGorgonNeume(GorgonNeume.Trigorgon)"><Neume class="red neume trigorgon" :neume="GorgonNeume.Trigorgon" /></button>
+      <span class="space"></span>
+      <button class="neume-button" @click="setVocalExpression(VocalExpressionNeume.Vareia)"><Neume class="neume vareia" :neume="VocalExpressionNeume.Vareia" /></button>
+      <button class="neume-button" @click="setVocalExpression(VocalExpressionNeume.Homalon)"><Neume class="neume homalon" :neume="VocalExpressionNeume.Homalon" /><span class="homalon-1">1</span></button>
+      <button class="neume-button" @click="setVocalExpression(VocalExpressionNeume.HomalonConnecting)"><Neume class="neume homalon" :neume="VocalExpressionNeume.Homalon" /><span class="homalon-2">2</span></button>
+      <button class="neume-button" @click="setVocalExpression(VocalExpressionNeume.Antikenoma)"><Neume class="neume antikenoma" :neume="VocalExpressionNeume.Antikenoma" /></button>
+      <button class="neume-button" @click="setVocalExpression(VocalExpressionNeume.Psifiston)"><Neume class="neume psifiston" :neume="VocalExpressionNeume.Psifiston" /></button>
+      <button class="neume-button" @click="setVocalExpression(VocalExpressionNeume.Heteron)"><Neume class="red neume heteron" :neume="VocalExpressionNeume.Heteron" /></button>
+    </div>
+    <div class="row">
+      <button class="neume-button" @click="setFthora(Fthora.DiatonicNiLow_TopCenter)"><Neume class="red neume fthora" :neume="Fthora.DiatonicNiLow_TopCenter" /></button>
+      <button class="neume-button" @click="setFthora(Fthora.DiatonicPa_TopCenter)"><Neume class="red neume fthora" :neume="Fthora.DiatonicPa_TopCenter" /></button>
+      <button class="neume-button" @click="setFthora(Fthora.DiatonicVou_TopCenter)"><Neume class="red neume fthora" :neume="Fthora.DiatonicVou_TopCenter" /></button>
+      <button class="neume-button" @click="setFthora(Fthora.DiatonicGa_TopCenter)"><Neume class="red neume fthora" :neume="Fthora.DiatonicGa_TopCenter" /></button>
+      <button class="neume-button" @click="setFthora(Fthora.DiatonicThi_TopCenter)"><Neume class="red neume fthora" :neume="Fthora.DiatonicThi_TopCenter" /></button>
+      <button class="neume-button" @click="setFthora(Fthora.DiatonicKe_TopCenter)"><Neume class="red neume fthora" :neume="Fthora.DiatonicKe_TopCenter" /></button>
+      <button class="neume-button" @click="setFthora(Fthora.DiatonicZo_TopCenter)"><Neume class="red neume fthora" :neume="Fthora.DiatonicZo_TopCenter" /></button>
+      <button class="neume-button" @click="setFthora(Fthora.DiatonicNiHigh_TopCenter)"><Neume class="red neume fthora" :neume="Fthora.DiatonicNiHigh_TopCenter" /></button>
+      <span class="space"></span>
+      <button class="neume-button" @click="setFthora(Fthora.SoftChromaticPa_TopCenter)"><Neume class="red neume fthora" :neume="Fthora.SoftChromaticPa_TopCenter" /></button>
+      <button class="neume-button" @click="setFthora(Fthora.SoftChromaticThi_TopCenter)"><Neume class="red neume fthora" :neume="Fthora.SoftChromaticThi_TopCenter" /></button>
+      <span class="space"></span>
+      <button class="neume-button" @click="setFthora(Fthora.HardChromaticPa_TopCenter)"><Neume class="red neume fthora" :neume="Fthora.HardChromaticPa_TopCenter" /></button>
+      <button class="neume-button" @click="setFthora(Fthora.HardChromaticThi_TopCenter)"><Neume class="red neume fthora" :neume="Fthora.HardChromaticThi_TopCenter" /></button>
+      <span class="space"></span>
+      <button class="neume-button" @click="setFthora(Fthora.GeneralFlat_TopCenter)"><Neume class="red neume fthora" :neume="Fthora.GeneralFlat_TopCenter" /></button>
+      <button class="neume-button" @click="setFthora(Fthora.GeneralSharp_TopCenter)"><Neume class="red neume fthora" :neume="Fthora.GeneralSharp_TopCenter" /></button>
+      <button class="neume-button" @click="setFthora(Fthora.Enharmonic_TopCenter)"><Neume class="red neume fthora" :neume="Fthora.Enharmonic_TopCenter" /></button>
+      <span class="space"></span>
+      <button class="neume-button" @click="setFthora(Fthora.Zygos_TopCenter)"><Neume class="red neume fthora" :neume="Fthora.Zygos_TopCenter" /></button>
+      <button class="neume-button" @click="setFthora(Fthora.Kliton_TopCenter)"><Neume class="red neume fthora" :neume="Fthora.Kliton_TopCenter" /></button>
+      <button class="neume-button" @click="setFthora(Fthora.Spathi_TopCenter)"><Neume class="red neume fthora" :neume="Fthora.Spathi_TopCenter" /></button>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { NoteElement } from '@/models/Element';
-import { Accidental, GorgonNeume, TimeNeume, VocalExpressionNeume } from '@/models/Neumes';
+import { Accidental, Fthora, GorgonNeume, TimeNeume, VocalExpressionNeume } from '@/models/Neumes';
 import Neume from './Neume.vue';
-import { areGorgonsEquivalent, areTimeNeumesEquivalent, areVocalExpressionsEquivalent } from '@/models/NeumeReplacements';
+import { areFthorasEquivalent, areGorgonsEquivalent, areTimeNeumesEquivalent, areVocalExpressionsEquivalent } from '@/models/NeumeReplacements';
 
 @Component({
   components: {
@@ -43,6 +69,7 @@ export default class NeumeToolbar extends Vue {
   VocalExpressionNeume = VocalExpressionNeume;
   TimeNeume = TimeNeume;
   GorgonNeume = GorgonNeume;
+  Fthora = Fthora;
   
   private setAccidental(neume: Accidental) {
     if (this.element.accidental != null && this.element.accidental.neume === neume) {
@@ -87,16 +114,30 @@ export default class NeumeToolbar extends Vue {
 
     this.$emit('scoreUpdated');
   }
+
+  private setFthora(neume: Fthora) {
+    if (this.element.fthora != null && areFthorasEquivalent(neume, this.element.fthora.neume)) {
+      this.element.setFthora(null);
+    }
+    else {
+      this.element.setFthora(neume);
+    }
+
+    this.$emit('scoreUpdated');
+  }
 }
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
   .neume-toolbar {
-    display: flex;
     background-color: lightgray;
 
     padding: 0.25rem;
+  }
+
+  .row {
+    display: flex;
   }
 
   .red {
@@ -214,5 +255,9 @@ export default class NeumeToolbar extends Vue {
 
   .trigorgon {
     left: 10px;
+  }
+
+  .fthora {
+    left: 18px;
   }
   </style>

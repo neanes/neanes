@@ -1,19 +1,29 @@
 <template>
   <div class="file-menu-bar" @focusout="isMenuOpen = false" tabindex="-1">
-    <FileMenuBarItem label="File" @click="toggleMenu" @mouseenter="selectedMenu = 'File'" :isOpen="isMenuOpen && selectedMenu === 'File'">
+    <FileMenuBarItem
+      label="File"
+      @click="toggleMenu"
+      @mouseenter="selectedMenu = 'File'"
+      :isOpen="isMenuOpen && selectedMenu === 'File'"
+    >
       <FileMenuItem label="New" @click="onClickNew" />
       <FileMenuItem label="Open" @click="onClickOpen" />
       <FileMenuItem label="Save" @click="onClickSave" />
     </FileMenuBarItem>
     <FileMenuBarItem label="Edit"></FileMenuBarItem>
-    <FileMenuBarItem label="Add" @click="toggleMenu" @mouseenter="selectedMenu = 'Add'" :isOpen="isMenuOpen && selectedMenu === 'Add'">
+    <FileMenuBarItem
+      label="Add"
+      @click="toggleMenu"
+      @mouseenter="selectedMenu = 'Add'"
+      :isOpen="isMenuOpen && selectedMenu === 'Add'"
+    >
       <FileMenuItem label="Neume" @click="onClickAddNeume" />
       <FileMenuItem label="Text Box" @click="onClickAddTextBox" />
       <FileMenuItem label="Mode Key" @click="onClickAddModeKey" />
       <!-- <FileMenuItem label="Staff Text" @click="onClickAddStaffText" /> -->
       <FileMenuItem label="Drop Cap" @click="onClickAddDropCap" />
     </FileMenuBarItem>
-    <input ref="file" type="file" v-show="false" @change="onSelectFile">
+    <input ref="file" type="file" v-show="false" @change="onSelectFile" />
   </div>
 </template>
 
@@ -22,7 +32,13 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 import FileMenuBarItem from '@/components/FileMenuBarItem.vue';
 import FileMenuItem from '@/components/FileMenuItem.vue';
 import { Score } from '@/models/Score';
-import { TextBoxElement, StaffTextElement, EmptyElement, DropCapElement, ModeKeyElement } from '@/models/Element';
+import {
+  TextBoxElement,
+  StaffTextElement,
+  EmptyElement,
+  DropCapElement,
+  ModeKeyElement,
+} from '@/models/Element';
 import { SaveService } from '@/services/SaveService';
 import { store } from '@/store';
 
@@ -30,7 +46,7 @@ import { store } from '@/store';
   components: {
     FileMenuBarItem,
     FileMenuItem,
-  }
+  },
 })
 export default class FileMenuBar extends Vue {
   private isMenuOpen = false;
@@ -49,7 +65,11 @@ export default class FileMenuBar extends Vue {
   }
 
   onClickNew() {
-    if (confirm('This will discard your current score. Make sure you have saved before doing this. Are you sure you wish to continue?')) {
+    if (
+      confirm(
+        'This will discard your current score. Make sure you have saved before doing this. Are you sure you wish to continue?',
+      )
+    ) {
       store.mutations.setScore(new Score());
       store.mutations.setSelectedElement(null);
       this.$emit('scoreUpdated');
@@ -59,13 +79,17 @@ export default class FileMenuBar extends Vue {
   onClickOpen() {
     this.fileSelector.click();
   }
-  
+
   onClickSave() {
-    const content = JSON.stringify(SaveService.SaveScoreToJson(this.score), null, 2);
+    const content = JSON.stringify(
+      SaveService.SaveScoreToJson(this.score),
+      null,
+      2,
+    );
     const contentType = 'text/plain';
 
     var a = document.createElement('a');
-    var file = new Blob([content], {type: contentType});
+    var file = new Blob([content], { type: contentType });
     a.href = URL.createObjectURL(file);
     a.download = 'score.json';
     a.click();
@@ -77,10 +101,12 @@ export default class FileMenuBar extends Vue {
     if (files.length > 0) {
       var file = files[0];
       var reader = new FileReader();
-      
+
       reader.onload = () => {
         // TODO validate file contents
-        const score: Score = SaveService.LoadScoreFromJson(JSON.parse(reader.result as string));
+        const score: Score = SaveService.LoadScoreFromJson(
+          JSON.parse(reader.result as string),
+        );
 
         // if (score.version !== ScoreVersion) {
         //   alert('This score was created by an older version of the application. It may not work properly');
@@ -101,31 +127,51 @@ export default class FileMenuBar extends Vue {
   }
 
   onClickAddNeume() {
-    store.getters.elements.splice(store.getters.selectedElementIndex, 0, new EmptyElement());
+    store.getters.elements.splice(
+      store.getters.selectedElementIndex,
+      0,
+      new EmptyElement(),
+    );
     this.$emit('scoreUpdated');
   }
 
   onClickAddTextBox() {
-    store.getters.elements.splice(store.getters.selectedElementIndex, 0, new TextBoxElement());
+    store.getters.elements.splice(
+      store.getters.selectedElementIndex,
+      0,
+      new TextBoxElement(),
+    );
     this.$emit('scoreUpdated');
   }
 
   onClickAddModeKey() {
-    store.getters.elements.splice(store.getters.selectedElementIndex, 0, new ModeKeyElement());
+    store.getters.elements.splice(
+      store.getters.selectedElementIndex,
+      0,
+      new ModeKeyElement(),
+    );
     this.$emit('scoreUpdated');
   }
 
   onClickAddStaffText() {
-    const element =  new StaffTextElement();
-    store.getters.elements.splice(store.getters.selectedElementIndex, 0, element);
+    const element = new StaffTextElement();
+    store.getters.elements.splice(
+      store.getters.selectedElementIndex,
+      0,
+      element,
+    );
     store.mutations.setSelectedElement(element);
     store.mutations.setElementToFocus(element);
     this.$emit('scoreUpdated');
   }
 
   onClickAddDropCap() {
-    const element =  new DropCapElement();
-    store.getters.elements.splice(store.getters.selectedElementIndex, 0, element);
+    const element = new DropCapElement();
+    store.getters.elements.splice(
+      store.getters.selectedElementIndex,
+      0,
+      element,
+    );
     store.mutations.setSelectedElement(element);
     store.mutations.setElementToFocus(element);
     this.$emit('scoreUpdated');
@@ -135,9 +181,8 @@ export default class FileMenuBar extends Vue {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-  .file-menu-bar {
-    display: flex;
-    background-color: #AAA;
-  }
-
-  </style>
+.file-menu-bar {
+  display: flex;
+  background-color: #aaa;
+}
+</style>

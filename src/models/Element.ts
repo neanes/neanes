@@ -3,13 +3,14 @@ import { getGorgonReplacements, getTimeReplacements, getVocalExpressionReplaceme
 import { Scale, ScaleNote } from './Scales';
 
 export enum ElementType {
-    Note = 'Note',
-    Martyria = 'Martyria',
-    Empty = 'Empty',
-    TextBox = 'TextBox',
-    StaffText = 'StaffText',
-    DropCap = 'DropCap',
-    ModeKey = 'ModeKey',
+  Note = 'Note',
+  Martyria = 'Martyria',
+  Tempo = 'Tempo',
+  Empty = 'Empty',
+  TextBox = 'TextBox',
+  StaffText = 'StaffText',
+  DropCap = 'DropCap',
+  ModeKey = 'ModeKey',
 }
 
 export abstract class ScoreElement {
@@ -133,6 +134,11 @@ export class MartyriaElement extends ScoreElement {
     public measureBar: MeasureBar | null = null;
     
     public error: boolean = false;
+}
+
+export class TempoElement extends ScoreElement {
+  public readonly elementType: ElementType = ElementType.Tempo;
+  public neume: TempoSign = TempoSign.Moderate;
 }
 
 export class EmptyElement extends ScoreElement {

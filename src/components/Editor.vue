@@ -7,6 +7,7 @@
       @toggleAutoMode="toggleAutoMode"
       @updatePageBreak="updatePageBreak"
       @updateLineBreak="updateLineBreak"
+      @updateTempo="updateTempo"
       @deleteSelectedElement="deleteSelectedElement" />
     <div class="content">
         <NeumeSelector class="neume-selector"
@@ -82,6 +83,21 @@
                   <div class="lyrics"></div>
                 </div>
               </template>
+              <template v-if="isTempoElement(element)">
+                <div :key="`element-${getElementIndex(element)}`" 
+                  :ref="`element-${getElementIndex(element)}`"
+                  class="neume-box">
+                  <span v-if="element.pageBreak" style="position:absolute; top: -10px;">P</span>
+                  <span v-if="element.lineBreak" style="position:absolute; top: -10px;">L</span>
+                  <TempoNeumeBox 
+                    class="tempo-neume-box"
+                    :neume="element" 
+                    :class="[{ selected: element == selectedElement }]"
+                    @click.native="selectedElement = element"
+                    ></TempoNeumeBox>
+                  <div class="lyrics"></div>
+                </div>
+              </template>
               <template v-if="isEmptyElement(element)">
                 <div :key="`element-${getElementIndex(element)}`" 
                   :ref="`element-${getElementIndex(element)}`"
@@ -154,8 +170,8 @@
 
 <script lang="ts">
 import { Component, Prop, Watch, Vue } from 'vue-property-decorator';
-import { ScoreElement, MartyriaElement, NoteElement, ElementType, EmptyElement, TextBoxElement, DropCapElement } from '@/models/Element';
-import { QuantitativeNeume, TimeNeume, Note, RootSign, VocalExpressionNeume, Fthora, GorgonNeume } from '@/models/Neumes';
+import { ScoreElement, MartyriaElement, NoteElement, ElementType, EmptyElement, TextBoxElement, DropCapElement, TempoElement } from '@/models/Element';
+import { QuantitativeNeume, TimeNeume, Note, RootSign, VocalExpressionNeume, Fthora, GorgonNeume, TempoSign } from '@/models/Neumes';
 import { Page, Line } from '@/models/Page';
 import { Score } from '@/models/Score';
 import { KeyboardMap, neumeMap } from '@/models/NeumeMappings';
@@ -163,6 +179,7 @@ import { SaveService } from '@/services/SaveService';
 import { LayoutService } from '@/services/LayoutService';
 import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
 import MartyriaNeumeBox from '@/components/NeumeBoxMartyria.vue';
+import TempoNeumeBox from '@/components/NeumeBoxTempo.vue';
 import NeumeSelector from '@/components/NeumeSelector.vue';
 import NeumeKeyboard from '@/components/NeumeKeyboard.vue';
 import ContentEditable from '@/components/ContentEditable.vue';
@@ -183,6 +200,7 @@ import Neume from './Neume.vue';
   components: {
     SyllableNeumeBox,
     MartyriaNeumeBox,
+    TempoNeumeBox,
     NeumeSelector,
     NeumeKeyboard,
     ContentEditable,
@@ -433,6 +451,28 @@ addAutoMartyria() {
     }
   }
 
+updateTempo(neume: TempoSign) {
+    if(this.selectedElement) {
+      if (this.autoMode && this.selectedElement.elementType !== ElementType.Empty) {
+        this.moveRight();
+      }
+      
+      const index = this.elements.indexOf(this.selectedElement);
+
+      if (index === this.elements.length - 1) {
+        this.addEmptyElement();
+      }
+
+      if (this.selectedElement.elementType != ElementType.Tempo) {
+        this.selectedElement = this.switchToTempo(this.selectedElement);
+      }
+
+      (this.selectedElement as TempoElement).neume = neume;
+
+      this.save();
+    }
+  }
+
   updatePageBreak() {
     if(this.selectedElement) {
       const index = this.elements.indexOf(this.selectedElement);
@@ -483,6 +523,18 @@ addAutoMartyria() {
       return newElement;
   }
 
+  switchToTempo(element: ScoreElement) {
+      const index = this.elements.indexOf(element);
+
+      const newElement = new TempoElement();
+      newElement.pageBreak = element.pageBreak;
+      newElement.lineBreak = element.lineBreak;
+
+      this.elements.splice(index, 1, newElement);
+
+      return newElement;
+  }
+
   switchToSyllable(element: ScoreElement) {
       const index = this.elements.indexOf(element);
 
@@ -519,6 +571,10 @@ addAutoMartyria() {
 
   isMartyriaElement(element: ScoreElement) {
     return element.elementType == ElementType.Martyria;
+  }
+
+  isTempoElement(element: ScoreElement) {
+    return element.elementType == ElementType.Tempo;
   }
 
   isEmptyElement(element: ScoreElement) {
@@ -625,11 +681,13 @@ addAutoMartyria() {
     }
   }
 
+  navigableElements = [ElementType.Note, ElementType.Martyria, ElementType.Tempo, ElementType.Empty];
+
   moveLeft() {
     if (this.selectedElement) {
       const index = this.elements.indexOf(this.selectedElement);
 
-      if (index - 1 >= 0 && [ElementType.Note, ElementType.Martyria].includes(this.elements[index - 1].elementType)) {
+      if (index - 1 >= 0 && this.navigableElements.includes(this.elements[index - 1].elementType)) {
         this.selectedElement = this.elements[index - 1];
       }
     }
@@ -639,7 +697,7 @@ addAutoMartyria() {
     if (this.selectedElement) {
       const index = this.elements.indexOf(this.selectedElement);
 
-      if (index >= 0 && index + 1 < this.elements.length) {
+      if (index >= 0 && index + 1 < this.elements.length && this.navigableElements.includes(this.elements[index + 1].elementType)) {
         this.selectedElement = this.elements[index + 1];
       }
     }
@@ -874,10 +932,6 @@ deleteSelectedElement() {
 
 .neume-selector {
   overflow: auto;
-}
-
-.martyria {
-    font-family: EzSpecial2;
 }
 
 .mode-header {

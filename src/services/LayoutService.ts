@@ -1,4 +1,4 @@
-import { DropCapElement, ElementType, MartyriaElement, NoteElement, ModeKeyElement, ScoreElement, TextBoxElement } from "@/models/Element";
+import { DropCapElement, ElementType, MartyriaElement, NoteElement, ModeKeyElement, ScoreElement, TextBoxElement, TempoElement } from "@/models/Element";
 import { neumeMap } from "@/models/NeumeMappings";
 import { Fthora, MeasureBar, Note, RootSign, VocalExpressionNeume } from "@/models/Neumes";
 import { getNeumeValue } from "@/models/NeumeValues";
@@ -93,6 +93,12 @@ export class LayoutService {
                     TextMeasurementService.getTextWidth(mappingRoot.text, `${pageSetup.neumeDefaultFontSize}px ${mappingRoot.fontFamily}`) +
                     (martyriaElement.apostrophe ? TextMeasurementService.getTextWidth(mappingApostrophe.text, `${pageSetup.neumeDefaultFontSize}px ${mappingApostrophe.fontFamily}`) : 0) +
                     (martyriaElement.measureBar ? TextMeasurementService.getTextWidth(mappingMeasureBar!.text, `${pageSetup.neumeDefaultFontSize}px ${mappingMeasureBar!.fontFamily}`) : 0));
+            }
+            else if (element.elementType === ElementType.Tempo) {
+                const tempoElement = element as TempoElement;
+                const mapping = neumeMap.get(tempoElement.neume)!;
+
+                elementWidthPx = Math.floor(TextMeasurementService.getTextWidth(mapping.text, `${pageSetup.neumeDefaultFontSize}px ${mapping.fontFamily}`));
             }
             else if (element.elementType === ElementType.DropCap) {
                 const dropCapElement = element as DropCapElement;

@@ -9,7 +9,8 @@ import {
     ScoreElementOffset,
     StaffTextElement,
     TextBoxElement,
-    ModeKeyElement
+    ModeKeyElement,
+    TempoElement
 } from '@/models/Element';
 
 import { Score as Score_v1, Staff as Staff_v1 } from '@/models/save/v1/Score';
@@ -18,6 +19,7 @@ import {
   ElementType as ElementType_v1,
   EmptyElement as EmptyElement_v1,
   MartyriaElement as MartyriaElement_v1,
+  TempoElement as TempoElement_v1,
   NoteElement as NoteElement_v1,
   StaffTextElement as StaffTextElement_v1,
   TextBoxElement as TextBoxElement_v1,
@@ -90,6 +92,10 @@ export class SaveService {
                     element = new MartyriaElement_v1();
                     this.SaveMartyria(element as MartyriaElement_v1, e as MartyriaElement);
                     break;
+                case ElementType.Tempo:
+                    element = new TempoElement_v1();
+                    this.SaveTempo(element as TempoElement_v1, e as TempoElement);
+                    break;
                 case ElementType.Note:
                     element = new NoteElement_v1();
                     this.SaveNote(element as NoteElement_v1, e as NoteElement);
@@ -133,6 +139,10 @@ export class SaveService {
         element.rootSign = e.rootSign;
         element.fthora = e.fthora || undefined;
         element.measureBar = e.measureBar || undefined;
+    }
+
+    public static SaveTempo(element: TempoElement_v1, e: TempoElement) {
+        element.neume = e.neume;
     }
 
     public static SaveNote(element: NoteElement_v1, e: NoteElement) {
@@ -236,6 +246,10 @@ export class SaveService {
                     element = new MartyriaElement();
                     this.LoadMartyria_v1(element as MartyriaElement, e as MartyriaElement_v1);
                     break;
+                case ElementType_v1.Tempo:
+                    element = new TempoElement();
+                    this.LoadTempo_v1(element as TempoElement, e as TempoElement_v1);
+                    break;
                 case ElementType_v1.Note:
                     element = new NoteElement();
                     this.LoadNote_v1(element as NoteElement, e as NoteElement_v1);
@@ -285,6 +299,10 @@ export class SaveService {
         if (e.measureBar != null) {
             element.measureBar = e.measureBar;
         }
+    }
+
+    public static LoadTempo_v1(element: TempoElement, e: TempoElement_v1) {
+        element.neume = e.neume;
     }
 
     public static LoadNote_v1(element: NoteElement, e: NoteElement_v1) {

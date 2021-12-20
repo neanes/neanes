@@ -3,17 +3,11 @@
 ## Must-haves
 - [ ] Auto martyria calc must handle chroa scales
 - [ ] Mode Key selector with default mode keys
-- [X] Bottom fthoras
-- [ ] Right-align option for martyria
-- [ ] Tempo markings
-- [X] Measure neumes
-- [X] Arga neumes
+- [ ] Right-align option for martyria and tempos
 - [ ] More adjustments and replacements
-- [X] Empty drop caps should be deleted
 - [ ] Move to Electron
 
 ## Nice-to-haves
-- [X] Delete button in toolbar
 - [ ] Document Settings Dialog
 - [ ] Microtonal Sharps and Flats
 - [ ] Custom Martyrias

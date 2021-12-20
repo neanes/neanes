@@ -21,7 +21,9 @@ const getters = {
   },
 
   get selectedElementIndex() {
-    return state.selectedElement != null ? this.elements.indexOf(state.selectedElement): -1;
+    return state.selectedElement != null
+      ? this.elements.indexOf(state.selectedElement)
+      : -1;
   },
 };
 
@@ -41,13 +43,13 @@ const mutations = {
   removeElement(element: ScoreElement) {
     const index = state.score.staff.elements.indexOf(element);
     state.score.staff.elements.splice(index, 1);
-  }
+  },
 };
 
 const store = {
   state,
   getters,
-  mutations
+  mutations,
 };
 
 export { store };

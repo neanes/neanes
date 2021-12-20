@@ -1,5 +1,5 @@
 import { MeasureBar } from '@/models/Neumes';
-import { TimeNeume, GorgonNeume, QuantitativeNeume, Note, RootSign, VocalExpressionNeume, Fthora, Accidental, ModeSign } from '@/models/save/v1/Neumes';
+import { TimeNeume, GorgonNeume, QuantitativeNeume, Note, RootSign, VocalExpressionNeume, Fthora, Accidental, ModeSign, TempoSign } from '@/models/save/v1/Neumes';
 import { Scale, ScaleNote } from './Scales';
 
 export enum ElementType {
@@ -10,6 +10,7 @@ export enum ElementType {
     StaffText = 'StaffText',
     DropCap = 'DropCap',
     ModeKey = 'ModeKey',
+    Tempo = 'Tempo',
 }
 
 export abstract class ScoreElement {
@@ -40,6 +41,13 @@ export class MartyriaElement extends ScoreElement  {
     public apostrophe: boolean | undefined = undefined;
     public fthora: Fthora | undefined = undefined;
     public measureBar: MeasureBar | undefined = undefined;
+}
+
+export class TempoElement extends ScoreElement {
+  public readonly elementType: ElementType = ElementType.Tempo;
+  public neume: TempoSign = TempoSign.Moderate;
+
+  public error: boolean = false;
 }
 
 export class EmptyElement extends ScoreElement {

@@ -19,6 +19,8 @@ export class PageSetup {
 
     public martyriaDefaultColor = '#ED0000';
 
+    public tempoDefaultColor = '#ED0000';
+
     public dropCapDefaultFontFamily = 'Athonite';
     public dropCapDefaultFontSize = Unit.FromPt(60);
     public dropCapDefaultColor = 'black';

@@ -23,6 +23,7 @@
     "@vue/eslint-config-typescript": "^4.0.0",
     "eslint": "^5.16.0",
     "eslint-plugin-vue": "^5.0.0",
+    "prettier": "2.5.1",
     "typescript": "~3.5.3",
     "vue-template-compiler": "^2.6.10"
   }

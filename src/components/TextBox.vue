@@ -1,13 +1,14 @@
 <template>
   <div class="text-box-container">
-      <ContentEditable 
-        ref="text"
-        class="text-box" 
-        :style="style"
-        :content="element.content" 
-        :class="[{ selected: element == selectedElement }]"
-        @blur="updateText($event)"></ContentEditable>
-      </div>
+    <ContentEditable
+      ref="text"
+      class="text-box"
+      :style="style"
+      :content="element.content"
+      :class="[{ selected: element == selectedElement }]"
+      @blur="updateText($event)"
+    ></ContentEditable>
+  </div>
 </template>
 
 <script lang="ts">
@@ -42,7 +43,7 @@ export default class TextBox extends Vue {
   }
 
   get style() {
-    const style: any =  {
+    const style: any = {
       color: this.element.color,
       fontFamily: this.element.fontFamily,
       fontSize: this.element.fontSize + 'px',
@@ -60,17 +61,17 @@ export default class TextBox extends Vue {
 </script>
 
 <style scoped>
- .text-box-container {
-   width: 624px;
-   border: 1px dotted black;
-   box-sizing: border-box;
- }
+.text-box-container {
+  width: 624px;
+  border: 1px dotted black;
+  box-sizing: border-box;
+}
 
- .text-box {
-   height: 100%;
-   width: 100%;
-   display: block;
+.text-box {
+  height: 100%;
+  width: 100%;
+  display: block;
 
-   min-height: 10px;
- }
+  min-height: 10px;
+}
 </style>

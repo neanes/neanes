@@ -1,5 +1,5 @@
 <template>
-  <span class="neume" :style="style">{{text}}</span>
+  <span class="neume" :style="style">{{ text }}</span>
 </template>
 
 <script lang="ts">
@@ -18,10 +18,10 @@ export default class Neume extends Vue {
 
     if (!mapping) {
       console.warn('Could not find mapping for neume ' + this.neume);
-      mapping =  {
+      mapping = {
         fontFamily: 'Omega',
-        text: '?'
-      }
+        text: '?',
+      };
     }
 
     return mapping!;
@@ -35,11 +35,11 @@ export default class Neume extends Vue {
     const style = {} as CSSStyleDeclaration;
 
     style.fontFamily = this.mapping.fontFamily;
-     
-     if (this.offset) {
-        style.left = this.offset.x + 'px';
-        style.top = this.offset.y + 'px';
-     }
+
+    if (this.offset) {
+      style.left = this.offset.x + 'px';
+      style.top = this.offset.y + 'px';
+    }
 
     return style;
   }
@@ -47,7 +47,7 @@ export default class Neume extends Vue {
 </script>
 
 <style scoped>
-  .neume {
-    position: relative;
-  }
+.neume {
+  position: relative;
+}
 </style>

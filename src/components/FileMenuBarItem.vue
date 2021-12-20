@@ -1,8 +1,12 @@
 <template>
-  <div class="file-menu-bar-item" @click="$emit('click')" @mouseenter="$emit('mouseenter')">
-    {{label}}
+  <div
+    class="file-menu-bar-item"
+    @click="$emit('click')"
+    @mouseenter="$emit('mouseenter')"
+  >
+    {{ label }}
     <div class="file-menu-item-container" v-if="isOpen">
-      <slot/>
+      <slot />
     </div>
   </div>
 </template>
@@ -19,25 +23,25 @@ export default class FileMenuBarItem extends Vue {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-  .file-menu-item-container {
-    position:absolute;
-    left: 0;
-    margin-top: 0.25rem;
+.file-menu-item-container {
+  position: absolute;
+  left: 0;
+  margin-top: 0.25rem;
 
-    background-color: lightgray;
-    
-    width: 16rem;
+  background-color: lightgray;
 
-    z-index: 9999;
-  }
+  width: 16rem;
 
-  .file-menu-bar-item {
-    padding: 0.25rem 1rem;
-    position: relative;
-    cursor: pointer;
-  }
+  z-index: 9999;
+}
 
-  .file-menu-bar-item:hover {
-    background-color: darkgray;
-  }
+.file-menu-bar-item {
+  padding: 0.25rem 1rem;
+  position: relative;
+  cursor: pointer;
+}
+
+.file-menu-bar-item:hover {
+  background-color: darkgray;
+}
 </style>

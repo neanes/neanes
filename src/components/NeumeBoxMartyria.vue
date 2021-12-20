@@ -17,14 +17,14 @@
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { MartyriaElement } from '@/models/Element';
 import { neumeMap } from '@/models/NeumeMappings';
-import Neume  from '@/components/Neume.vue'
+import Neume from '@/components/Neume.vue';
 import { store } from '@/store';
 import { Note } from '@/models/Neumes';
 
 @Component({
   components: {
-    Neume
-  }
+    Neume,
+  },
 })
 export default class NeumeBoxMartyria extends Vue {
   @Prop() neume!: MartyriaElement;
@@ -59,6 +59,4 @@ export default class NeumeBoxMartyria extends Vue {
 }
 </script>
 
-<style scoped>
-
-</style>
+<style scoped></style>

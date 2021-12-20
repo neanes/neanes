@@ -1,21 +1,48 @@
 <template>
   <div class="mode-key-toolbar">
-    <input 
-      type="number" 
-      min="4" 
-      max="100" 
+    <input
+      type="number"
+      min="4"
+      max="100"
       step="1"
-      v-model="fontSize" 
-      @change="$emit('scoreUpdated')"/> 
-    <input type="color" list="presetColors" v-model="element.color" @change="$emit('scoreUpdated')" />
+      v-model="fontSize"
+      @change="$emit('scoreUpdated')"
+    />
+    <input
+      type="color"
+      list="presetColors"
+      v-model="element.color"
+      @change="$emit('scoreUpdated')"
+    />
     <datalist id="presetColors">
       <option>#000000</option>
       <option>#ff0000</option>
       <option>#0000ff</option>
     </datalist>
-    <button @click="align('left')"><img src="@/assets/alignleft.svg" width="32" height="32" title="Align Left" /></button>
-    <button @click="align('center')"><img src="@/assets/aligncenter.svg" width="32" height="32" title="Align Center" /></button>
-    <button @click="align('right')"><img src="@/assets/alignright.svg" width="32" height="32" title="Align Right" /></button>
+    <button @click="align('left')">
+      <img
+        src="@/assets/alignleft.svg"
+        width="32"
+        height="32"
+        title="Align Left"
+      />
+    </button>
+    <button @click="align('center')">
+      <img
+        src="@/assets/aligncenter.svg"
+        width="32"
+        height="32"
+        title="Align Center"
+      />
+    </button>
+    <button @click="align('right')">
+      <img
+        src="@/assets/alignright.svg"
+        width="32"
+        height="32"
+        title="Align Right"
+      />
+    </button>
   </div>
 </template>
 
@@ -25,18 +52,17 @@ import { TextBoxAlignment, ModeKeyElement } from '@/models/Element';
 import { Unit } from '@/utils/Unit';
 
 @Component({
-  components: {
-  }
+  components: {},
 })
 export default class ModeKeyToolbar extends Vue {
   @Prop() element!: ModeKeyElement;
 
   private get fontSize() {
-    return this.element.fontSize * 72 / 96; 
+    return (this.element.fontSize * 72) / 96;
   }
 
   private set fontSize(value: number) {
-      this.element.fontSize = Unit.FromPt(value); 
+    this.element.fontSize = Unit.FromPt(value);
   }
 
   private align(alignment: TextBoxAlignment) {
@@ -48,10 +74,10 @@ export default class ModeKeyToolbar extends Vue {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-  .mode-key-toolbar {
-    display: flex;
-    background-color: lightgray;
+.mode-key-toolbar {
+  display: flex;
+  background-color: lightgray;
 
-    padding: 0.25rem;
-  }
-  </style>
+  padding: 0.25rem;
+}
+</style>

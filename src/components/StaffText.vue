@@ -1,16 +1,17 @@
 <template>
   <div class="staff-text-container">
-      <ContentEditable 
-        ref="text"
-        class="staff-text" 
-        :style="style"
-        :content="element.text" 
-        :class="[{ selected: element == selectedElement }]"
-        :editable="editable"
-        @dblclick.native="handleDoubleClick"
-        @mousedown.native="handleMouseDown"
-        @blur="updateText($event)"></ContentEditable>
-      </div>
+    <ContentEditable
+      ref="text"
+      class="staff-text"
+      :style="style"
+      :content="element.text"
+      :class="[{ selected: element == selectedElement }]"
+      :editable="editable"
+      @dblclick.native="handleDoubleClick"
+      @mousedown.native="handleMouseDown"
+      @blur="updateText($event)"
+    ></ContentEditable>
+  </div>
 </template>
 
 <script lang="ts">
@@ -51,7 +52,7 @@ export default class StaffText extends Vue {
     return {
       left: this.element.offset.x + 'px',
       top: this.element.offset.y + 'px',
-    }
+    };
   }
 
   mounted() {
@@ -79,7 +80,7 @@ export default class StaffText extends Vue {
   checkForOutsideClick(e: MouseEvent) {
     const container = this.$el as HTMLElement;
 
-    if (container !== e.target && !container.contains(e.target as Element)) {    
+    if (container !== e.target && !container.contains(e.target as Element)) {
       this.editable = false;
 
       // Clear any text selection that the user may have made
@@ -90,10 +91,10 @@ export default class StaffText extends Vue {
       // TODO do we really want to clear the selected element?
       Vue.nextTick(() => {
         if (this.selectedElement === this.element) {
-              this.selectedElement = null;
+          this.selectedElement = null;
         }
-      })
-      
+      });
+
       document.removeEventListener('mousedown', this.checkForOutsideClick);
     }
   }
@@ -112,7 +113,7 @@ export default class StaffText extends Vue {
 
     this.startX = e.clientX - this.element.offset.x;
     this.startY = e.clientY - this.element.offset.y;
-    
+
     document.addEventListener('mouseup', this.handleMouseUp);
     document.addEventListener('mousemove', this.handleMouseMove);
   }
@@ -151,27 +152,27 @@ export default class StaffText extends Vue {
 </script>
 
 <style scoped>
-  .staff-text {
-    position: relative;
-    min-width: 10px;
-    border: 1px dotted transparent;
-  }
+.staff-text {
+  position: relative;
+  min-width: 10px;
+  border: 1px dotted transparent;
+}
 
-  .staff-text.selected {
-    border: 1px dotted rgb(8, 8, 8);
-  }
+.staff-text.selected {
+  border: 1px dotted rgb(8, 8, 8);
+}
 
-  .staff-text-container {
-    position: relative;
+.staff-text-container {
+  position: relative;
 
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    white-space: nowrap;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  white-space: nowrap;
 
-    width: 0;
-    max-width: 0;
+  width: 0;
+  max-width: 0;
 
-    top: -20px;
-  }
+  top: -20px;
+}
 </style>

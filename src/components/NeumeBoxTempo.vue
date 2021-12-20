@@ -7,13 +7,13 @@
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { TempoElement } from '@/models/Element';
-import Neume  from '@/components/Neume.vue'
+import Neume from '@/components/Neume.vue';
 import { store } from '@/store';
 
 @Component({
   components: {
-    Neume
-  }
+    Neume,
+  },
 })
 export default class NeumeBoxMartyria extends Vue {
   @Prop() neume!: TempoElement;
@@ -31,6 +31,4 @@ export default class NeumeBoxMartyria extends Vue {
 }
 </script>
 
-<style scoped>
-
-</style>
+<style scoped></style>

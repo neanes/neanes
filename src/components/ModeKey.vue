@@ -6,16 +6,13 @@
     <template v-for="(neume, index) in element.martyrias">
       <Neume :neume="neume" :key="index" />
     </template>
+    <Neume v-if="hasNote" :neume="element.note"></Neume>
     <Neume
-      v-if="hasNote"
-      :neume="element.note"></Neume>
-    <Neume 
       v-if="hasFthora"
       :neume="element.fthora"
-      :offset="fthoraOffset"></Neume>
-    <Neume
-      v-if="hasQuantativeNeume"
-      :neume="element.quantativeNeume"></Neume>
+      :offset="fthoraOffset"
+    ></Neume>
+    <Neume v-if="hasQuantativeNeume" :neume="element.quantativeNeume"></Neume>
   </div>
 </template>
 
@@ -24,7 +21,10 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 import { ModeKeyElement } from '@/models/Element';
 import Neume from '@/components/Neume.vue';
 import { Fthora, ModeSign } from '@/models/Neumes';
-import { getFthoraAdjustments, NeumeAdjustmentOffset } from '@/models/NeumeAdjustments';
+import {
+  getFthoraAdjustments,
+  NeumeAdjustmentOffset,
+} from '@/models/NeumeAdjustments';
 
 @Component({
   components: {
@@ -38,7 +38,7 @@ export default class ModeKey extends Vue {
   get hasFthora() {
     return this.element.fthora != null;
   }
-  
+
   get hasNote() {
     return this.element.note != null;
   }
@@ -48,7 +48,7 @@ export default class ModeKey extends Vue {
   }
 
   get style() {
-    return  {
+    return {
       color: this.element.color,
       fontSize: this.element.fontSize + 'px',
       textAlign: this.element.alignment,
@@ -61,7 +61,9 @@ export default class ModeKey extends Vue {
     const adjustments = getFthoraAdjustments(this.element.fthora!);
 
     if (adjustments) {
-      const adjustment = adjustments.find(x => x.isPairedWith.includes(this.element.note!));
+      const adjustment = adjustments.find(x =>
+        x.isPairedWith.includes(this.element.note!),
+      );
 
       if (adjustment) {
         offset = adjustment.offset;
@@ -74,9 +76,9 @@ export default class ModeKey extends Vue {
 </script>
 
 <style scoped>
- .mode-key-container {
-   width: 624px;
-   border: 1px dotted black;
-   box-sizing: border-box;
- }
+.mode-key-container {
+  width: 624px;
+  border: 1px dotted black;
+  box-sizing: border-box;
+}
 </style>

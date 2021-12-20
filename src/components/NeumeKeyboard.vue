@@ -63,23 +63,23 @@ export default class NeumeKeyboard extends Vue {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-  .row {
-    display: flex;
-    margin-bottom: 1rem;
-  }
+.row {
+  display: flex;
+  margin-bottom: 1rem;
+}
 
-  .key {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.key {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-    margin-right: 1rem;
-    width: 3rem;
-    height: 3rem;
-    border: 1px solid grey;
-  }
+  margin-right: 1rem;
+  width: 3rem;
+  height: 3rem;
+  border: 1px solid grey;
+}
 
-  .spacer {
-    width: 1rem;
-  }
+.spacer {
+  width: 1rem;
+}
 </style>

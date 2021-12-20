@@ -1,13 +1,14 @@
 <template>
   <div class="drop-cap-container">
-      <ContentEditable 
-        ref="text"
-        class="drop-cap" 
-        :style="style"
-        :content="element.content" 
-        :class="[{ selected: element == selectedElement }]"
-      @blur="updateText($event)"></ContentEditable>
-      </div>
+    <ContentEditable
+      ref="text"
+      class="drop-cap"
+      :style="style"
+      :content="element.content"
+      :class="[{ selected: element == selectedElement }]"
+      @blur="updateText($event)"
+    ></ContentEditable>
+  </div>
 </template>
 
 <script lang="ts">
@@ -43,11 +44,13 @@ export default class DropCap extends Vue {
   }
 
   get style() {
-    const style: any =  {
+    const style = {
       color: this.element.color || this.pageSetup.dropCapDefaultColor,
-      fontFamily: this.element.fontFamily || this.pageSetup.dropCapDefaultFontFamily,
-      fontSize: (this.element.fontSize || this.pageSetup.dropCapDefaultFontSize) + 'px',
-    };
+      fontFamily:
+        this.element.fontFamily || this.pageSetup.dropCapDefaultFontFamily,
+      fontSize:
+        (this.element.fontSize || this.pageSetup.dropCapDefaultFontSize) + 'px',
+    } as CSSStyleDeclaration;
 
     return style;
   }
@@ -59,6 +62,4 @@ export default class DropCap extends Vue {
 }
 </script>
 
-<style scoped>
-
-</style>
+<style scoped></style>

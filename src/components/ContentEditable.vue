@@ -1,5 +1,10 @@
 <template>
-  <span :contenteditable="editable" @blur="onBlur" v-html="content" @focus="onFocus"></span>
+  <span
+    :contenteditable="editable"
+    @blur="onBlur"
+    v-html="content"
+    @focus="onFocus"
+  ></span>
 </template>
 
 <script lang="ts">
@@ -8,8 +13,8 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 @Component
 export default class ContentEditable extends Vue {
   @Prop() content!: string;
-  @Prop({default: true}) selectAllOnFocus!: boolean;
-  @Prop({default: true}) editable!: boolean;
+  @Prop({ default: true }) selectAllOnFocus!: boolean;
+  @Prop({ default: true }) editable!: boolean;
 
   onBlur() {
     this.$emit('blur', (this.$el as HTMLElement).innerText);
@@ -18,7 +23,7 @@ export default class ContentEditable extends Vue {
   onFocus() {
     if (this.selectAllOnFocus) {
       setTimeout(() => {
-        document.execCommand('selectAll', false)
+        document.execCommand('selectAll', false);
       }, 0);
     }
   }
@@ -30,6 +35,4 @@ export default class ContentEditable extends Vue {
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
-
-</style>
+<style scoped></style>

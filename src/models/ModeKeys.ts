@@ -9,6 +9,7 @@ export interface ModeKeyTemplate {
   note?: ModeSign;
   note2?: ModeSign;
   fthora?: Fthora;
+  fthora2?: Fthora;
   quantitativeNeumeTop?: ModeSign;
   quantitativeNeumeRight?: QuantitativeNeume;
 }
@@ -144,7 +145,7 @@ export const modeKeyTemplates: ModeKeyTemplate[] = [
   {
     mode: 5,
     scale: Scale.Diatonic,
-    scaleNote: ScaleNote.Pa,
+    scaleNote: ScaleNote.Ke,
     martyrias: [ModeSign.Alpha],
     note: ModeSign.Ke,
     quantitativeNeumeTop: ModeSign.OligonPlusHypsili,
@@ -208,16 +209,15 @@ export const modeKeyTemplates: ModeKeyTemplate[] = [
   {
     mode: 8,
     scale: Scale.Diatonic,
-    scaleNote: ScaleNote.Ni,
+    scaleNote: ScaleNote.Ga,
     martyrias: [ModeSign.Delta],
-    note: ModeSign.Ni,
-    note2: ModeSign.Ga,
-    quantitativeNeumeTop: ModeSign.OligonPlusKentima,
+    quantitativeNeumeRight: QuantitativeNeume.OligonPlusKentimaAbove,
+    fthora2: Fthora.DiatonicNiLow_TopRight,
   },
   {
     mode: 8,
     scale: Scale.Diatonic,
-    scaleNote: ScaleNote.Ni,
+    scaleNote: ScaleNote.Vou,
     martyrias: [ModeSign.Delta],
     note: ModeSign.Ni,
     quantitativeNeumeRight: QuantitativeNeume.KentemataPlusOligon,

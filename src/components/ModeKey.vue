@@ -10,7 +10,7 @@
     <Neume
       v-if="hasFthora"
       :neume="element.fthora"
-      :offset="fthoraOffset"
+      :offset="getFthoraOffset(element.fthora)"
     ></Neume>
     <Neume v-if="hasNote2" :neume="element.note2"></Neume>
     <Neume
@@ -21,6 +21,11 @@
       v-if="hasQuantitativeNeumeRight"
       :neume="element.quantitativeNeumeRight"
       :offset="quantitativeNeumeRightOffset"
+    ></Neume>
+    <Neume
+      v-if="hasFthora2"
+      :neume="element.fthora2"
+      :offset="getFthoraOffset(element.fthora2)"
     ></Neume>
   </div>
 </template>
@@ -58,6 +63,10 @@ export default class ModeKey extends Vue {
     return this.element.note2 != null;
   }
 
+  get hasFthora2() {
+    return this.element.fthora2 != null;
+  }
+
   get hasQuantitativeNeumeTop() {
     return this.element.quantitativeNeumeTop != null;
   }
@@ -74,10 +83,10 @@ export default class ModeKey extends Vue {
     } as CSSStyleDeclaration;
   }
 
-  get fthoraOffset() {
+  getFthoraOffset(fthora: Fthora) {
     let offset: NeumeAdjustmentOffset | null = null;
 
-    const adjustments = getFthoraAdjustments(this.element.fthora!);
+    const adjustments = getFthoraAdjustments(fthora);
 
     if (adjustments) {
       const adjustment = adjustments.find((x) =>

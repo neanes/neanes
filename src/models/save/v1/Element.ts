@@ -91,6 +91,7 @@ export class ModeKeyElement extends ScoreElement {
   public note: ModeSign | undefined = undefined;
   public note2: ModeSign | undefined = undefined;
   public fthora: Fthora | undefined = undefined;
+  public fthora2: Fthora | undefined = undefined;
   public quantitativeNeumeTop: ModeSign | undefined = undefined;
   public quantitativeNeumeRight: QuantitativeNeume | undefined = undefined;
   public color: string = 'black';

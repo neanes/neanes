@@ -89,8 +89,10 @@ export class ModeKeyElement extends ScoreElement {
   public scaleNote: ScaleNote = ScaleNote.Pa;
   public martyrias: ModeSign[] = [];
   public note: ModeSign | undefined = undefined;
+  public note2: ModeSign | undefined = undefined;
   public fthora: Fthora | undefined = undefined;
-  public quantativeNeume: ModeSign | undefined = undefined;
+  public quantitativeNeumeTop: ModeSign | undefined = undefined;
+  public quantitativeNeumeRight: QuantitativeNeume | undefined = undefined;
   public color: string = 'black';
   public fontSize: number = 16;
   public height: number = 20;

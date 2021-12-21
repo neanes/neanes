@@ -36,11 +36,9 @@
         "scale": "Diatonic",
         "scaleNote": "Pa",
         "martyrias": [
-          "ModeSign.Alpha",
-          "ModeSign.DeltaHat"
+          "ModeSign.AlphaWithDeltaHat"
         ],
         "note": "ModeSign.Pa",
-        "fthora": "DiatonicPa_TopRight",
         "color": "#ff0000",
         "fontSize": 26.666666666666668,
         "height": 63

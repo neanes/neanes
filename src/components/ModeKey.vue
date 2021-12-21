@@ -4,7 +4,7 @@
     <Neume v-if="element.isPlagal" :neume="ModeSign.Plagal"></Neume>
     <Neume v-if="element.isVarys" :neume="ModeSign.Varys"></Neume>
     <template v-for="(neume, index) in element.martyrias">
-      <Neume :neume="neume" :key="index" />
+      <Neume :neume="neume" :key="index" :offset="getModeSignOffset(neume)" />
     </template>
     <Neume v-if="hasNote" :neume="element.note"></Neume>
     <Neume
@@ -12,7 +12,16 @@
       :neume="element.fthora"
       :offset="fthoraOffset"
     ></Neume>
-    <Neume v-if="hasQuantativeNeume" :neume="element.quantativeNeume"></Neume>
+    <Neume v-if="hasNote2" :neume="element.note2"></Neume>
+    <Neume
+      v-if="hasQuantitativeNeumeTop"
+      :neume="element.quantitativeNeumeTop"
+    ></Neume>
+    <Neume
+      v-if="hasQuantitativeNeumeRight"
+      :neume="element.quantitativeNeumeRight"
+      :offset="quantitativeNeumeRightOffset"
+    ></Neume>
   </div>
 </template>
 
@@ -23,6 +32,8 @@ import Neume from '@/components/Neume.vue';
 import { Fthora, ModeSign } from '@/models/Neumes';
 import {
   getFthoraAdjustments,
+  getModeSignAdjustments,
+  getQuantitativeNeumeAdjustments,
   NeumeAdjustmentOffset,
 } from '@/models/NeumeAdjustments';
 
@@ -43,8 +54,16 @@ export default class ModeKey extends Vue {
     return this.element.note != null;
   }
 
-  get hasQuantativeNeume() {
-    return this.element.quantativeNeume != null;
+  get hasNote2() {
+    return this.element.note2 != null;
+  }
+
+  get hasQuantitativeNeumeTop() {
+    return this.element.quantitativeNeumeTop != null;
+  }
+
+  get hasQuantitativeNeumeRight() {
+    return this.element.quantitativeNeumeRight != null;
   }
 
   get style() {
@@ -61,7 +80,47 @@ export default class ModeKey extends Vue {
     const adjustments = getFthoraAdjustments(this.element.fthora!);
 
     if (adjustments) {
-      const adjustment = adjustments.find(x =>
+      const adjustment = adjustments.find((x) =>
+        x.isPairedWith.includes(this.element.note!),
+      );
+
+      if (adjustment) {
+        offset = adjustment.offset;
+      }
+    }
+
+    return offset;
+  }
+
+  get quantitativeNeumeRightOffset() {
+    let offset: NeumeAdjustmentOffset | null = null;
+
+    const adjustments = getQuantitativeNeumeAdjustments(
+      this.element.quantitativeNeumeRight!,
+    );
+
+    if (adjustments) {
+      const adjustment = adjustments.find(
+        (x) =>
+          x.isPairedWith.includes(this.element.note!) ||
+          this.element.martyrias.some((y) => x.isPairedWith.includes(y)),
+      );
+
+      if (adjustment) {
+        offset = adjustment.offset;
+      }
+    }
+
+    return offset;
+  }
+
+  getModeSignOffset(neume: ModeSign) {
+    let offset: NeumeAdjustmentOffset | null = null;
+
+    const adjustments = getModeSignAdjustments(neume);
+
+    if (adjustments) {
+      const adjustment = adjustments.find((x) =>
         x.isPairedWith.includes(this.element.note!),
       );
 

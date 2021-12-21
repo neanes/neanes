@@ -43,6 +43,8 @@
         title="Align Right"
       />
     </button>
+    <span class="space" />
+    <button @click="$emit('openModeKeyDialog')">Change Key</button>
   </div>
 </template>
 
@@ -79,5 +81,9 @@ export default class ModeKeyToolbar extends Vue {
   background-color: lightgray;
 
   padding: 0.25rem;
+}
+
+.space {
+  width: 16px;
 }
 </style>

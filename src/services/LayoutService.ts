@@ -206,16 +206,18 @@ export class LayoutService {
         for (let line of page.lines) {
           let height = 0;
 
-          if (line.elements.some(x => x.elementType === ElementType.TextBox)) {
+          if (
+            line.elements.some((x) => x.elementType === ElementType.TextBox)
+          ) {
             const textbox = line.elements.find(
-              x => x.elementType === ElementType.TextBox,
+              (x) => x.elementType === ElementType.TextBox,
             ) as TextBoxElement;
             height = Math.max(10, textbox.height * 2);
           } else if (
-            line.elements.some(x => x.elementType === ElementType.ModeKey)
+            line.elements.some((x) => x.elementType === ElementType.ModeKey)
           ) {
             const textbox = line.elements.find(
-              x => x.elementType === ElementType.ModeKey,
+              (x) => x.elementType === ElementType.ModeKey,
             ) as ModeKeyElement;
             height = Math.max(10, textbox.height);
           } else {
@@ -269,10 +271,11 @@ export class LayoutService {
           dropCapElement.fontSize || pageSetup.dropCapDefaultFontSize;
         const dropCapFont = `${dropCapFontSize}px ${dropCapFontFamily}`;
         const fontHeight = TextMeasurementService.getFontHeight(dropCapFont);
-        const fountBoundingBoxDescent = TextMeasurementService.getFontBoundingBoxDescent(
-          dropCapElement.content,
-          dropCapFont,
-        );
+        const fountBoundingBoxDescent =
+          TextMeasurementService.getFontBoundingBoxDescent(
+            dropCapElement.content,
+            dropCapFont,
+          );
         const adjustment = Math.floor(
           fontHeight -
             distanceFromTopToBottomOfLyrics -
@@ -320,16 +323,16 @@ export class LayoutService {
           continue;
         }
 
-        if (line.elements.some(x => x.lineBreak == true)) {
+        if (line.elements.some((x) => x.lineBreak == true)) {
           continue;
         }
 
-        if (line.elements.some(x => x.pageBreak == true)) {
+        if (line.elements.some((x) => x.pageBreak == true)) {
           continue;
         }
 
         let currentWidthPx = line.elements
-          .map(x => x.width)
+          .map((x) => x.width)
           .reduce((sum, x) => sum + x, 0);
 
         let extraSpace = pageSetup.innerPageWidth - currentWidthPx;
@@ -352,7 +355,7 @@ export class LayoutService {
     for (let page of pages) {
       for (let line of page.lines) {
         const noteElements = line.elements.filter(
-          x => x.elementType === ElementType.Note,
+          (x) => x.elementType === ElementType.Note,
         ) as NoteElement[];
 
         for (let element of noteElements) {
@@ -490,6 +493,13 @@ export class LayoutService {
         const modeKey = element as ModeKeyElement;
         currentNote = getScaleNoteValue(modeKey.scaleNote);
         currentScale = modeKey.scale;
+        if (modeKey.fthora) {
+          currentShift = this.getShift(
+            currentNote,
+            currentScale,
+            modeKey.fthora,
+          );
+        }
       } else if (element.elementType === ElementType.Martyria) {
         const martyria = element as MartyriaElement;
 
@@ -512,9 +522,8 @@ export class LayoutService {
                   ? RootSign.SoftChromaticPaRootSign
                   : RootSign.SoftChromaticSquiggle;
             } else if (currentScale === Scale.Diatonic) {
-              martyria.rootSign = this.diatonicRootSignMap.get(
-                currentScaleNote,
-              )!;
+              martyria.rootSign =
+                this.diatonicRootSignMap.get(currentScaleNote)!;
             }
 
             martyria.apostrophe = currentNote > 4;

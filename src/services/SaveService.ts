@@ -209,9 +209,11 @@ export class SaveService {
     element.scale = e.scale;
     element.scaleNote = e.scaleNote;
     element.note = e.note || undefined;
+    element.note2 = e.note2 || undefined;
     element.fthora = e.fthora || undefined;
-    element.quantativeNeume = e.quantativeNeume || undefined;
-    element.martyrias = e.martyrias.map(x => x);
+    element.quantitativeNeumeTop = e.quantitativeNeumeTop || undefined;
+    element.quantitativeNeumeRight = e.quantitativeNeumeRight || undefined;
+    element.martyrias = e.martyrias.map((x) => x);
     element.color = e.color;
     element.fontSize = e.fontSize;
     element.height = e.height;
@@ -399,9 +401,11 @@ export class SaveService {
     element.scale = e.scale;
     element.scaleNote = e.scaleNote;
     element.note = e.note || null;
+    element.note2 = e.note2 || null;
     element.fthora = e.fthora || null;
-    element.quantativeNeume = e.quantativeNeume || null;
-    element.martyrias = e.martyrias.map(x => x);
+    element.quantitativeNeumeTop = e.quantitativeNeumeTop || null;
+    element.quantitativeNeumeRight = e.quantitativeNeumeRight || null;
+    element.martyrias = e.martyrias.map((x) => x);
     element.color = e.color;
     element.fontSize = e.fontSize;
     element.height = e.height;

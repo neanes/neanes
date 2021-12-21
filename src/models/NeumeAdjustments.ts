@@ -136,6 +136,54 @@ export const fthoraAdjustmentMap = new Map<Fthora, NeumeAdjustment[]>([
     Fthora.DiatonicPa_TopRight,
     [{ isPairedWith: [ModeSign.Pa], offset: { x: 2, y: -9 } }],
   ],
+  [
+    Fthora.SoftChromaticThi_TopRight,
+    [
+      { isPairedWith: [ModeSign.Vou], offset: { x: 0, y: -7 } },
+      { isPairedWith: [ModeSign.Thi], offset: { x: 0, y: -7 } },
+      { isPairedWith: [ModeSign.Ke], offset: { x: 0, y: -7 } },
+    ],
+  ],
+  [
+    Fthora.HardChromaticPa_TopRight,
+    [{ isPairedWith: [ModeSign.Pa], offset: { x: -3, y: -7 } }],
+  ],
+  [
+    Fthora.DiatonicNiLow_TopRight,
+    [{ isPairedWith: [ModeSign.Ga], offset: { x: -3, y: -9 } }],
+  ],
+]);
+
+export const quantitativeNeumeAdjustmentMap = new Map<
+  QuantitativeNeume,
+  NeumeAdjustment[]
+>([
+  [
+    QuantitativeNeume.RunningElaphron,
+    [
+      { isPairedWith: [ModeSign.Ga], offset: { x: 0, y: -7 } },
+      { isPairedWith: [ModeSign.DeltaWithDeltaHat], offset: { x: 0, y: -7 } },
+    ],
+  ],
+  [
+    QuantitativeNeume.KentemataPlusOligon,
+    [
+      { isPairedWith: [ModeSign.Vou], offset: { x: 0, y: -7 } },
+      { isPairedWith: [ModeSign.Ni], offset: { x: 0, y: -7 } },
+    ],
+  ],
+  [
+    QuantitativeNeume.OligonPlusHypsiliRight,
+    [{ isPairedWith: [ModeSign.Pa], offset: { x: 0, y: -7 } }],
+  ],
+]);
+
+export const modeSignAdjustmentMap = new Map<ModeSign, NeumeAdjustment[]>([
+  [
+    ModeSign.Legetos,
+    [{ isPairedWith: [ModeSign.Vou], offset: { x: 0, y: -13 } }],
+  ],
+  [ModeSign.Tos, [{ isPairedWith: [ModeSign.Vou], offset: { x: 0, y: -13 } }]],
 ]);
 
 export const getGorgonAdjustments = (neume: GorgonNeume) => {
@@ -152,4 +200,12 @@ export const getVocalExpressionAdjustments = (neume: VocalExpressionNeume) => {
 
 export const getFthoraAdjustments = (neume: Fthora) => {
   return fthoraAdjustmentMap.get(neume);
+};
+
+export const getQuantitativeNeumeAdjustments = (neume: QuantitativeNeume) => {
+  return quantitativeNeumeAdjustmentMap.get(neume);
+};
+
+export const getModeSignAdjustments = (neume: ModeSign) => {
+  return modeSignAdjustmentMap.get(neume);
 };

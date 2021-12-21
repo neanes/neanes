@@ -12,6 +12,8 @@ import {
   ModeSign,
   MeasureBar,
 } from '@/models/Neumes';
+import { Unit } from '@/utils/Unit';
+import { ModeKeyTemplate } from './ModeKeys';
 import {
   getGorgonReplacements,
   getTimeReplacements,
@@ -102,11 +104,11 @@ export class NoteElement extends ScoreElement {
       if (replacements) {
         const replacement =
           replacements.find(
-            x =>
+            (x) =>
               x.isPairedWith && x.isPairedWith.includes(this.quantitativeNeume),
           ) ||
           replacements.find(
-            x =>
+            (x) =>
               x.isNotPairedWith &&
               !x.isNotPairedWith.includes(this.quantitativeNeume),
           );
@@ -125,11 +127,11 @@ export class NoteElement extends ScoreElement {
       if (replacements) {
         const replacement =
           replacements.find(
-            x =>
+            (x) =>
               x.isPairedWith && x.isPairedWith.includes(this.quantitativeNeume),
           ) ||
           replacements.find(
-            x =>
+            (x) =>
               x.isNotPairedWith &&
               !x.isNotPairedWith.includes(this.quantitativeNeume),
           );
@@ -150,11 +152,11 @@ export class NoteElement extends ScoreElement {
       if (replacements) {
         const replacement =
           replacements.find(
-            x =>
+            (x) =>
               x.isPairedWith && x.isPairedWith.includes(this.quantitativeNeume),
           ) ||
           replacements.find(
-            x =>
+            (x) =>
               x.isNotPairedWith &&
               !x.isNotPairedWith.includes(this.quantitativeNeume),
           );
@@ -212,10 +214,12 @@ export class ModeKeyElement extends ScoreElement {
   public scaleNote: ScaleNote = ScaleNote.Pa;
   public martyrias: ModeSign[] = [];
   public note: ModeSign | null = null;
+  public note2: ModeSign | null = null;
   public fthora: Fthora | null = null;
-  public quantativeNeume: ModeSign | null = null;
+  public quantitativeNeumeRight: QuantitativeNeume | null = null;
+  public quantitativeNeumeTop: ModeSign | null = null;
   public color: string = 'black';
-  public fontSize: number = 16;
+  public fontSize: number = Unit.FromPt(20);
   public height: number = 20;
 
   public get isPlagal() {
@@ -224,6 +228,34 @@ export class ModeKeyElement extends ScoreElement {
 
   public get isVarys() {
     return this.mode === 7;
+  }
+
+  public updateFrom(element: ModeKeyElement) {
+    this.mode = element.mode;
+    this.scale = element.scale;
+    this.scaleNote = element.scaleNote;
+    this.martyrias = element.martyrias.map((x) => x);
+    this.fthora = element.fthora;
+    this.note = element.note;
+    this.quantitativeNeumeTop = element.quantitativeNeumeTop;
+    this.quantitativeNeumeRight = element.quantitativeNeumeRight;
+  }
+
+  public static createFromTemplate(template: ModeKeyTemplate) {
+    const element = new ModeKeyElement();
+
+    element.mode = template.mode;
+    element.scale = template.scale;
+    element.scaleNote = template.scaleNote;
+    element.martyrias = template.martyrias.map((x) => x);
+    element.fthora = template.fthora || null;
+    element.note = template.note || null;
+    element.note2 = template.note2 || null;
+    element.quantitativeNeumeTop = template.quantitativeNeumeTop || null;
+    element.quantitativeNeumeRight = template.quantitativeNeumeRight || null;
+    element.alignment = TextBoxAlignment.Left;
+
+    return element;
   }
 }
 

@@ -54,13 +54,13 @@
                   <span
                     class="page-break"
                     v-if="element.pageBreak"
-                    style="position:absolute; top: -10px;"
+                    style="position: absolute; top: -10px"
                     >P</span
                   >
                   <span
                     class="line-break"
                     v-if="element.lineBreak"
-                    style="position:absolute; top: -10px;"
+                    style="position: absolute; top: -10px"
                     >L</span
                   >
                   <SyllableNeumeBox
@@ -108,12 +108,12 @@
                 >
                   <span
                     v-if="element.pageBreak"
-                    style="position:absolute; top: -10px;"
+                    style="position: absolute; top: -10px"
                     >P</span
                   >
                   <span
                     v-if="element.lineBreak"
-                    style="position:absolute; top: -10px;"
+                    style="position: absolute; top: -10px"
                     >L</span
                   >
                   <MartyriaNeumeBox
@@ -133,12 +133,12 @@
                 >
                   <span
                     v-if="element.pageBreak"
-                    style="position:absolute; top: -10px;"
+                    style="position: absolute; top: -10px"
                     >P</span
                   >
                   <span
                     v-if="element.lineBreak"
-                    style="position:absolute; top: -10px;"
+                    style="position: absolute; top: -10px"
                     >L</span
                   >
                   <TempoNeumeBox
@@ -158,12 +158,12 @@
                 >
                   <span
                     v-if="element.pageBreak"
-                    style="position:absolute; top: -10px;"
+                    style="position: absolute; top: -10px"
                     >P</span
                   >
                   <span
                     v-if="element.lineBreak"
-                    style="position:absolute; top: -10px;"
+                    style="position: absolute; top: -10px"
                     >L</span
                   >
                   <div
@@ -228,6 +228,7 @@
       <ModeKeyToolbar
         :element="selectedElement"
         @scoreUpdated="onScoreUpdated"
+        @openModeKeyDialog="openModeKeyDialog"
       />
     </template>
     <template
@@ -243,6 +244,12 @@
         @scoreUpdated="onScoreUpdated"
       />
     </template>
+    <ModeKeyDialog
+      v-if="modeKeyDialogIsOpen"
+      @scoreUpdated="onScoreUpdated"
+      @close="modeKeyDialogIsOpen = false"
+      :element="selectedElement"
+    />
   </div>
 </template>
 
@@ -290,6 +297,7 @@ import ModeKeyToolbar from '@/components/ModeKeyToolbar.vue';
 import MainToolbar from '@/components/MainToolbar.vue';
 import NeumeToolbar from '@/components/NeumeToolbar.vue';
 import MartyriaToolbar from '@/components/MartyriaToolbar.vue';
+import ModeKeyDialog from '@/components/ModeKeyDialog.vue';
 import Neume from './Neume.vue';
 
 @Component({
@@ -310,13 +318,16 @@ import Neume from './Neume.vue';
     NeumeToolbar,
     MartyriaToolbar,
     MainToolbar,
+    ModeKeyDialog,
   },
 })
 export default class Editor extends Vue {
   pages: Page[] = [];
 
   autoMode: boolean = true;
-  keyboardMode: boolean = true;
+  keyboardMode: boolean = false;
+
+  modeKeyDialogIsOpen: boolean = false;
 
   get score() {
     return store.state.score;
@@ -378,6 +389,10 @@ export default class Editor extends Vue {
       LayoutService.isIntermediateMelisma(element, this.elements) ||
       LayoutService.isFinalMelisma(element, this.elements)
     );
+  }
+
+  openModeKeyDialog() {
+    this.modeKeyDialogIsOpen = true;
   }
 
   updateQuantitativeNeume(neume: QuantitativeNeume) {
@@ -759,9 +774,8 @@ export default class Editor extends Vue {
 
     if (this.keyboardMode && !event.ctrlKey) {
       if (event.shiftKey) {
-        const quantitativeNeume = KeyboardMap.quantitativeNeumeKeyboardMap_Shift.get(
-          event.code,
-        );
+        const quantitativeNeume =
+          KeyboardMap.quantitativeNeumeKeyboardMap_Shift.get(event.code);
 
         if (quantitativeNeume) {
           this.updateQuantitativeNeume(quantitativeNeume);

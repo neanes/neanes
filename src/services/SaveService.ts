@@ -211,6 +211,7 @@ export class SaveService {
     element.note = e.note || undefined;
     element.note2 = e.note2 || undefined;
     element.fthora = e.fthora || undefined;
+    element.fthora2 = e.fthora2 || undefined;
     element.quantitativeNeumeTop = e.quantitativeNeumeTop || undefined;
     element.quantitativeNeumeRight = e.quantitativeNeumeRight || undefined;
     element.martyrias = e.martyrias.map((x) => x);
@@ -403,6 +404,7 @@ export class SaveService {
     element.note = e.note || null;
     element.note2 = e.note2 || null;
     element.fthora = e.fthora || null;
+    element.fthora2 = e.fthora2 || null;
     element.quantitativeNeumeTop = e.quantitativeNeumeTop || null;
     element.quantitativeNeumeRight = e.quantitativeNeumeRight || null;
     element.martyrias = e.martyrias.map((x) => x);

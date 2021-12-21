@@ -135,8 +135,13 @@ export class LayoutService {
         );
       } else if (element.elementType === ElementType.Martyria) {
         const martyriaElement = element as MartyriaElement;
-        const mappingNote = neumeMap.get(martyriaElement.note)!;
-        const mappingRoot = neumeMap.get(martyriaElement.rootSign)!;
+
+        const mappingNote = !martyriaElement.error
+          ? neumeMap.get(martyriaElement.note)!
+          : neumeMap.get(Note.Pa)!;
+        const mappingRoot = !martyriaElement.error
+          ? neumeMap.get(martyriaElement.rootSign)!
+          : neumeMap.get(RootSign.Alpha)!;
         const mappingApostrophe = neumeMap.get(Note.Apostrophe)!;
         const mappingMeasureBar = martyriaElement.measureBar
           ? neumeMap.get(martyriaElement.measureBar)!
@@ -498,6 +503,13 @@ export class LayoutService {
             currentNote,
             currentScale,
             modeKey.fthora,
+          );
+        }
+        if (modeKey.fthora2) {
+          currentShift = this.getShift(
+            currentNote,
+            currentScale,
+            modeKey.fthora2,
           );
         }
       } else if (element.elementType === ElementType.Martyria) {

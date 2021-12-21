@@ -94,8 +94,12 @@ import ModeKey from '@/components/ModeKey.vue';
 })
 export default class ModeKeyDialog extends Vue {
   @Prop() element!: ModeKeyElement;
-  selectedMode: number = this.element.mode;
-  selectedModeKey: ModeKeyElement | null = null;
+  private selectedMode: number | null = null;
+  private selectedModeKey: ModeKeyElement | null = null;
+
+  created() {
+    this.selectedMode = this.element.mode;
+  }
 
   get modeKeyTemplatesForSelectedMode() {
     return modeKeyTemplates

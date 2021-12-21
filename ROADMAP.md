@@ -1,13 +1,14 @@
 # Roadmap
 
 ## Must-haves
+
 - [ ] Auto martyria calc must handle chroa scales
-- [ ] Mode Key selector with default mode keys
 - [ ] Right-align option for martyria and tempos
 - [ ] More adjustments and replacements
 - [ ] Move to Electron
 
 ## Nice-to-haves
+
 - [ ] Document Settings Dialog
 - [ ] Microtonal Sharps and Flats
 - [ ] Custom Martyrias
@@ -22,4 +23,5 @@
 - [ ] Icons (e.g. for page break and line break)
 
 ## Tech Debt
+
 - [ ] Need to explicitly map between save file neumes and view model neumes. This will prevent errors due to mismatched or missing neumes in the save model.

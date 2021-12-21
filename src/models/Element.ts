@@ -216,6 +216,7 @@ export class ModeKeyElement extends ScoreElement {
   public note: ModeSign | null = null;
   public note2: ModeSign | null = null;
   public fthora: Fthora | null = null;
+  public fthora2: Fthora | null = null;
   public quantitativeNeumeRight: QuantitativeNeume | null = null;
   public quantitativeNeumeTop: ModeSign | null = null;
   public color: string = 'black';
@@ -236,7 +237,9 @@ export class ModeKeyElement extends ScoreElement {
     this.scaleNote = element.scaleNote;
     this.martyrias = element.martyrias.map((x) => x);
     this.fthora = element.fthora;
+    this.fthora2 = element.fthora2;
     this.note = element.note;
+    this.note2 = element.note2;
     this.quantitativeNeumeTop = element.quantitativeNeumeTop;
     this.quantitativeNeumeRight = element.quantitativeNeumeRight;
   }
@@ -249,6 +252,7 @@ export class ModeKeyElement extends ScoreElement {
     element.scaleNote = template.scaleNote;
     element.martyrias = template.martyrias.map((x) => x);
     element.fthora = template.fthora || null;
+    element.fthora2 = template.fthora2 || null;
     element.note = template.note || null;
     element.note2 = template.note2 || null;
     element.quantitativeNeumeTop = template.quantitativeNeumeTop || null;

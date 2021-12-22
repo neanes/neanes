@@ -21,14 +21,14 @@ function createMenu(win: BrowserWindow) {
       submenu: [
         {
           label: '&New Score',
-          accelerator: process.platform === 'darwin' ? 'Cmd+N' : 'Ctrl+N',
+          accelerator: 'CmdOrCtrl+N',
           click() {
             win.webContents.send(IpcMainChannels.FileMenuNewScore);
           },
         },
         {
           label: '&Open Score',
-          accelerator: process.platform === 'darwin' ? 'Cmd+O' : 'Ctrl+O',
+          accelerator: 'CmdOrCtrl+O',
           async click() {
             try {
               const dialogResult = await dialog.showOpenDialog(win, {
@@ -52,15 +52,14 @@ function createMenu(win: BrowserWindow) {
         },
         {
           label: '&Save',
-          accelerator: process.platform === 'darwin' ? 'Cmd+S' : 'Ctrl+S',
+          accelerator: 'CmdOrCtrl+S',
           click() {
             win.webContents.send(IpcMainChannels.FileMenuSave);
           },
         },
         {
           label: 'Save &As',
-          accelerator:
-            process.platform === 'darwin' ? 'Cmd+Shift+S' : 'Ctrl+Shift+S',
+          accelerator: 'CmdOrCtrl+Shift+S',
           async click() {
             try {
               const dialogResult = await dialog.showSaveDialog(win, {
@@ -85,16 +84,10 @@ function createMenu(win: BrowserWindow) {
             }
           },
         },
-        {
-          label: '&Print',
-          accelerator: process.platform === 'darwin' ? 'Cmd+P' : 'Ctrl+P',
-          click() {
-            win.webContents.print();
-          },
-        },
+        { type: 'separator' },
         {
           label: '&Export Score as PDF',
-          accelerator: process.platform === 'darwin' ? 'Cmd+E' : 'Ctrl+E',
+          accelerator: 'CmdOrCtrl+E',
           async click() {
             try {
               const dialogResult = await dialog.showSaveDialog(win, {
@@ -114,7 +107,16 @@ function createMenu(win: BrowserWindow) {
           },
         },
         {
+          label: '&Print',
+          accelerator: 'CmdOrCtrl+P',
+          click() {
+            win.webContents.print();
+          },
+        },
+        { type: 'separator' },
+        {
           label: 'E&xit',
+          accelerator: 'Alt+F4',
           click() {
             app.quit();
           },
@@ -148,6 +150,21 @@ function createMenu(win: BrowserWindow) {
             win.webContents.send(IpcMainChannels.FileMenuInsertModeKey);
           },
         },
+      ],
+    },
+    {
+      label: 'Debug',
+      visible: isDevelopment,
+      submenu: [
+        { role: 'reload' },
+        { role: 'forceReload' },
+        { role: 'toggleDevTools' },
+        { type: 'separator' },
+        { role: 'resetZoom' },
+        { role: 'zoomIn' },
+        { role: 'zoomOut' },
+        { type: 'separator' },
+        { role: 'togglefullscreen' },
       ],
     },
   ]);

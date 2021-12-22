@@ -1,14 +1,159 @@
 'use strict';
 
-import { app, protocol, BrowserWindow } from 'electron';
+import { app, protocol, BrowserWindow, Menu, dialog, ipcMain } from 'electron';
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib';
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer';
+import { IpcMainChannels, IpcRendererChannels } from './ipc/ipcChannels';
+import path from 'path';
+import { promises as fs } from 'fs';
+import os from 'os';
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, standard: true } },
 ]);
+
+function createMenu(win: BrowserWindow) {
+  var menu = Menu.buildFromTemplate([
+    {
+      label: '&File',
+      submenu: [
+        {
+          label: '&New Score',
+          accelerator: process.platform === 'darwin' ? 'Cmd+N' : 'Ctrl+N',
+          click() {
+            win.webContents.send(IpcMainChannels.FileMenuNewScore);
+          },
+        },
+        {
+          label: '&Open Score',
+          accelerator: process.platform === 'darwin' ? 'Cmd+O' : 'Ctrl+O',
+          async click() {
+            try {
+              const dialogResult = await dialog.showOpenDialog(win, {
+                properties: ['openFile'],
+                title: 'Open Score',
+                filters: [{ name: 'Score File', extensions: ['json'] }],
+              });
+
+              if (!dialogResult.canceled) {
+                const data = await fs.readFile(
+                  dialogResult.filePaths[0],
+                  'utf8',
+                );
+
+                win.webContents.send(IpcMainChannels.FileMenuOpenScore, data);
+              }
+            } catch (error) {
+              console.error(error);
+            }
+          },
+        },
+        {
+          label: '&Save',
+          accelerator: process.platform === 'darwin' ? 'Cmd+S' : 'Ctrl+S',
+          click() {
+            win.webContents.send(IpcMainChannels.FileMenuSave);
+          },
+        },
+        {
+          label: 'Save &As',
+          accelerator:
+            process.platform === 'darwin' ? 'Cmd+Shift+S' : 'Ctrl+Shift+S',
+          async click() {
+            try {
+              const dialogResult = await dialog.showSaveDialog(win, {
+                title: 'Save Score',
+                filters: [{ name: 'Score File', extensions: ['json'] }],
+              });
+
+              if (!dialogResult.canceled) {
+                // Ask the front-end for the data
+                win.webContents.send(IpcMainChannels.FileMenuSaveAs);
+
+                // Wait for the reply and write the data to the file path
+                ipcMain.once(
+                  IpcRendererChannels.FileMenuSaveAsReply,
+                  async (event, data) => {
+                    await fs.writeFile(dialogResult.filePath!, data);
+                  },
+                );
+              }
+            } catch (error) {
+              console.error(error);
+            }
+          },
+        },
+        {
+          label: '&Print',
+          accelerator: process.platform === 'darwin' ? 'Cmd+P' : 'Ctrl+P',
+          click() {
+            win.webContents.print();
+          },
+        },
+        {
+          label: '&Export Score as PDF',
+          accelerator: process.platform === 'darwin' ? 'Cmd+E' : 'Ctrl+E',
+          async click() {
+            try {
+              const dialogResult = await dialog.showSaveDialog(win, {
+                title: 'Export Score as PDF',
+                filters: [{ name: 'PDF File', extensions: ['pdf'] }],
+              });
+
+              if (!dialogResult.canceled) {
+                const data = await win.webContents.printToPDF({
+                  marginsType: 1,
+                });
+                await fs.writeFile(dialogResult.filePath!, data);
+              }
+            } catch (error) {
+              console.error(error);
+            }
+          },
+        },
+        {
+          label: 'E&xit',
+          click() {
+            app.quit();
+          },
+        },
+      ],
+    },
+    {
+      label: '&Insert',
+      submenu: [
+        {
+          label: '&Neume',
+          click() {
+            win.webContents.send(IpcMainChannels.FileMenuInsertNeume);
+          },
+        },
+        {
+          label: '&Drop Cap',
+          click() {
+            win.webContents.send(IpcMainChannels.FileMenuInsertDropCap);
+          },
+        },
+        {
+          label: '&Text Box',
+          click() {
+            win.webContents.send(IpcMainChannels.FileMenuInsertTextBox);
+          },
+        },
+        {
+          label: '&Mode Key',
+          click() {
+            win.webContents.send(IpcMainChannels.FileMenuInsertModeKey);
+          },
+        },
+      ],
+    },
+  ]);
+
+  Menu.setApplicationMenu(menu);
+}
 
 async function createWindow() {
   // Create the browser window.
@@ -21,8 +166,11 @@ async function createWindow() {
       nodeIntegration: process.env
         .ELECTRON_NODE_INTEGRATION as unknown as boolean,
       contextIsolation: !process.env.ELECTRON_NODE_INTEGRATION,
+      preload: path.join(__dirname, 'preload.js'),
     },
   });
+
+  createMenu(win);
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode

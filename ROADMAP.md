@@ -2,7 +2,6 @@
 
 ## Must-haves
 
-- Auto martyria calc must handle chroa scales. Only allow chroa on valid notes.
 - Right-align option for martyria and tempos. Does this maybe become a "paragraph option", where a paragraph can consist of neumes, small text-boxes that fit to the width of their contents, and have an alignment?
 - More adjustments and replacements. Generate test files with every quantitative neume and different combinations of other neumes. Should we support ridiculous combinations?
 - Save file menu item (only Save As works right now)

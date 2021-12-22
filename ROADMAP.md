@@ -5,11 +5,11 @@
 - Auto martyria calc must handle chroa scales. Only allow chroa on valid notes.
 - Right-align option for martyria and tempos. Does this maybe become a "paragraph option", where a paragraph can consist of neumes, small text-boxes that fit to the width of their contents, and have an alignment?
 - More adjustments and replacements. Generate test files with every quantitative neume and different combinations of other neumes. Should we support ridiculous combinations?
-- Native File Menu
+- Save file menu item (only Save As works right now)
 - App Icon
 - App Name?
 - Better error handling
-- Detect unsaved changes as warn user before opening or clicking new
+- Detect unsaved changes and warn user before opening or clicking new
 - Text boxes and mode keys should not be able to be replaced by a neume. They should be deleted. This means logic needs to be updated both for auto entry mode and non-auto entry mode.
 - Documentation
 - Contribution guide / style guide (use prettier)

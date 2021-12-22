@@ -154,6 +154,13 @@ export const fthoraAdjustmentMap = new Map<Fthora, NeumeAdjustment[]>([
   ],
 ]);
 
+export const rootSignAdjustmentMap = new Map<RootSign, NeumeAdjustment[]>([
+  [
+    RootSign.Zygos,
+    [{ isPairedWith: [Note.Vou, Note.Thi], offset: { x: 0, y: 3 } }],
+  ],
+]);
+
 export const quantitativeNeumeAdjustmentMap = new Map<
   QuantitativeNeume,
   NeumeAdjustment[]
@@ -200,6 +207,10 @@ export const getVocalExpressionAdjustments = (neume: VocalExpressionNeume) => {
 
 export const getFthoraAdjustments = (neume: Fthora) => {
   return fthoraAdjustmentMap.get(neume);
+};
+
+export const getRootSignAdjustments = (neume: RootSign) => {
+  return rootSignAdjustmentMap.get(neume);
 };
 
 export const getQuantitativeNeumeAdjustments = (neume: QuantitativeNeume) => {

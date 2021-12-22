@@ -19,7 +19,7 @@ import {
 import { getNeumeValue } from '@/models/NeumeValues';
 import { Line, Page } from '@/models/Page';
 import { PageSetup } from '@/models/PageSetup';
-import { getScaleNoteValue, Scale } from '@/models/Scales';
+import { getScaleNoteValue, Scale, ScaleNote } from '@/models/Scales';
 import { TextMeasurementService } from './TextMeasurementService';
 
 export class LayoutService {
@@ -491,8 +491,20 @@ export class LayoutService {
         currentNote += getNeumeValue(note.quantitativeNeume)!;
 
         if (note.fthora) {
-          currentScale = this.getScaleFromFthora(note.fthora) || currentScale;
-          currentShift = this.getShift(currentNote, currentScale, note.fthora);
+          // Make sure chroa are on the correct notes
+          if (
+            note.fthora.startsWith('Zygos') &&
+            currentNote !== getScaleNoteValue(ScaleNote.Thi)
+          ) {
+            note.setFthora(null);
+          } else {
+            currentScale = this.getScaleFromFthora(note.fthora) || currentScale;
+            currentShift = this.getShift(
+              currentNote,
+              currentScale,
+              note.fthora,
+            );
+          }
         }
       } else if (element.elementType === ElementType.ModeKey) {
         const modeKey = element as ModeKeyElement;
@@ -536,6 +548,8 @@ export class LayoutService {
             } else if (currentScale === Scale.Diatonic) {
               martyria.rootSign =
                 this.diatonicRootSignMap.get(currentScaleNote)!;
+            } else if (currentScale === Scale.Zygos) {
+              martyria.rootSign = this.zygosRootSignMap.get(currentScaleNote)!;
             }
 
             martyria.apostrophe = currentNote > 4;
@@ -626,6 +640,26 @@ export class LayoutService {
     [11, RootSign.AlphaDotted],
   ]);
 
+  private static zygosRootSignMap = new Map<number, RootSign>([
+    [-5, RootSign.NanaLow],
+    [-4, RootSign.DeltaLow],
+    [-3, RootSign.AlphaLow],
+    [-2, RootSign.Zo],
+    [-1, RootSign.Delta],
+    [0, RootSign.Squiggle],
+    [1, RootSign.Zygos],
+    [2, RootSign.Squiggle],
+    [3, RootSign.Zygos],
+    [4, RootSign.AlphaDotted],
+    [5, RootSign.Legetos],
+    [6, RootSign.Nana],
+    [7, RootSign.Alpha],
+    [8, RootSign.Legetos],
+    [9, RootSign.Nana],
+    [10, RootSign.DeltaDotted],
+    [11, RootSign.AlphaDotted],
+  ]);
+
   private static getScaleFromFthora(fthora: Fthora) {
     if (fthora.startsWith('Diatonic')) {
       return Scale.Diatonic;
@@ -637,6 +671,22 @@ export class LayoutService {
 
     if (fthora.startsWith('SoftChromatic')) {
       return Scale.SoftChromatic;
+    }
+
+    if (fthora.startsWith('Enharmonic')) {
+      return Scale.Enharmonic;
+    }
+
+    if (fthora.startsWith('Zygos')) {
+      return Scale.Zygos;
+    }
+
+    if (fthora.startsWith('Spathi')) {
+      return Scale.Spathi;
+    }
+
+    if (fthora.startsWith('Kliton')) {
+      return Scale.Kliton;
     }
 
     return null;

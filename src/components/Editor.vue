@@ -1,6 +1,5 @@
 <template>
   <div class="editor">
-    <FileMenuBar @scoreUpdated="onScoreUpdated" />
     <MainToolbar
       :autoMode="autoMode"
       @addAutoMartyria="addAutoMartyria"
@@ -14,14 +13,6 @@
       <NeumeSelector
         class="neume-selector"
         @select-quantitative-neume="updateQuantitativeNeume"
-        @select-gorgon-neume="updateGorgonNeume"
-        @select-fthora="updateFthora"
-        @select-martyria-note="updateMartyriaNote"
-        @select-martyria-root-sign="updateMartyriaRootSign"
-        @select-martyria-note-and-root-sign="updateMartyriaNoteAndRootSign"
-        @select-page-break="updatePageBreak"
-        @select-line-break="updateLineBreak"
-        @select-empty="updateEmpty"
       ></NeumeSelector>
       <div class="page-background" style="flex: 1">
         <div
@@ -264,6 +255,7 @@ import {
   TextBoxElement,
   DropCapElement,
   TempoElement,
+  ModeKeyElement,
 } from '@/models/Element';
 import {
   QuantitativeNeume,
@@ -299,6 +291,9 @@ import NeumeToolbar from '@/components/NeumeToolbar.vue';
 import MartyriaToolbar from '@/components/MartyriaToolbar.vue';
 import ModeKeyDialog from '@/components/ModeKeyDialog.vue';
 import Neume from './Neume.vue';
+import { IpcMainChannels, IpcRendererChannels } from '@/ipc/ipcChannels';
+import { EventBus } from '@/eventBus';
+import { modeKeyTemplates } from '@/models/ModeKeys';
 
 @Component({
   components: {
@@ -364,10 +359,35 @@ export default class Editor extends Vue {
 
   mounted() {
     window.addEventListener('keydown', this.onKeydown);
+
+    EventBus.$on(IpcMainChannels.FileMenuNewScore, this.onClickNew);
+    EventBus.$on(IpcMainChannels.FileMenuOpenScore, this.onClickOpen);
+    EventBus.$on(IpcMainChannels.FileMenuSaveAs, this.onSaveAs);
+    EventBus.$on(IpcMainChannels.FileMenuInsertNeume, this.onClickAddNeume);
+    EventBus.$on(IpcMainChannels.FileMenuInsertTextBox, this.onClickAddTextBox);
+    EventBus.$on(IpcMainChannels.FileMenuInsertModeKey, this.onClickAddModeKey);
+    EventBus.$on(IpcMainChannels.FileMenuInsertDropCap, this.onClickAddDropCap);
   }
 
   beforeDestroy() {
     window.removeEventListener('keydown', this.onKeydown);
+
+    EventBus.$off(IpcMainChannels.FileMenuNewScore, this.onClickNew);
+    EventBus.$off(IpcMainChannels.FileMenuOpenScore, this.onClickOpen);
+    EventBus.$off(IpcMainChannels.FileMenuSaveAs, this.onSaveAs);
+    EventBus.$off(IpcMainChannels.FileMenuInsertNeume, this.onClickAddNeume);
+    EventBus.$off(
+      IpcMainChannels.FileMenuInsertTextBox,
+      this.onClickAddTextBox,
+    );
+    EventBus.$off(
+      IpcMainChannels.FileMenuInsertModeKey,
+      this.onClickAddModeKey,
+    );
+    EventBus.$off(
+      IpcMainChannels.FileMenuInsertDropCap,
+      this.onClickAddDropCap,
+    );
   }
 
   updated() {
@@ -928,6 +948,99 @@ export default class Editor extends Vue {
 
   toggleAutoMode() {
     this.autoMode = !this.autoMode;
+  }
+
+  onClickNew() {
+    // TODO warn about unsaved changes and let the user save the current document first.
+    if (
+      confirm(
+        'This will discard your current score. Make sure you have saved before doing this. Are you sure you wish to continue?',
+      )
+    ) {
+      store.mutations.setScore(new Score());
+      store.mutations.setSelectedElement(null);
+      this.save();
+    }
+  }
+
+  onClickOpen(data: string) {
+    const score: Score = SaveService.LoadScoreFromJson(JSON.parse(data));
+
+    // if (score.version !== ScoreVersion) {
+    //   alert('This score was created by an older version of the application. It may not work properly');
+    // }
+
+    store.mutations.setScore(score);
+    store.mutations.setSelectedElement(null);
+
+    this.save();
+  }
+
+  onClickAddNeume() {
+    store.getters.elements.splice(
+      store.getters.selectedElementIndex,
+      0,
+      new EmptyElement(),
+    );
+    this.save();
+  }
+
+  onClickAddTextBox() {
+    const element = new TextBoxElement();
+
+    store.getters.elements.splice(
+      store.getters.selectedElementIndex,
+      0,
+      element,
+    );
+
+    store.mutations.setSelectedElement(element);
+    store.mutations.setElementToFocus(element);
+
+    this.save();
+  }
+
+  onClickAddModeKey() {
+    const defaultTemplate = ModeKeyElement.createFromTemplate(
+      modeKeyTemplates[0],
+    );
+    const element = new ModeKeyElement();
+    element.updateFrom(defaultTemplate);
+    element.color = this.score.pageSetup.modeKeyDefaultColor;
+
+    store.getters.elements.splice(
+      store.getters.selectedElementIndex,
+      0,
+      element,
+    );
+
+    this.selectedElement = element;
+
+    this.openModeKeyDialog();
+
+    this.save();
+  }
+
+  onClickAddDropCap() {
+    const element = new DropCapElement();
+
+    store.getters.elements.splice(
+      store.getters.selectedElementIndex,
+      0,
+      element,
+    );
+
+    store.mutations.setSelectedElement(element);
+    store.mutations.setElementToFocus(element);
+    this.save();
+  }
+
+  getSaveFile() {
+    return JSON.stringify(SaveService.SaveScoreToJson(this.score), null, 2);
+  }
+
+  onSaveAs() {
+    EventBus.$emit(IpcRendererChannels.FileMenuSaveAsReply, this.getSaveFile());
   }
 
   onScoreUpdated() {

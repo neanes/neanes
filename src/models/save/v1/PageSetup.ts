@@ -17,7 +17,11 @@ export class PageSetup {
   public neumeDefaultFontSize = Unit.FromPt(20);
   public neumeDefaultSpacing = 3;
 
+  public tempoDefaultColor = '#ED0000';
+
   public martyriaDefaultColor = '#ED0000';
+
+  public modeKeyDefaultColor = '#ED0000';
 
   public dropCapDefaultFontFamily = 'Athonite';
   public dropCapDefaultFontSize = Unit.FromPt(60);

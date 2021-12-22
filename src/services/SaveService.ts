@@ -71,6 +71,8 @@ export class SaveService {
     score.pageSetup.lyricsDefaultFontSize = s.pageSetup.lyricsDefaultFontSize;
     score.pageSetup.lyricsVerticalOffset = s.pageSetup.lyricsVerticalOffset;
     score.pageSetup.martyriaDefaultColor = s.pageSetup.martyriaDefaultColor;
+    score.pageSetup.tempoDefaultColor = s.pageSetup.tempoDefaultColor;
+    score.pageSetup.modeKeyDefaultColor = s.pageSetup.modeKeyDefaultColor;
     score.pageSetup.neumeDefaultFontSize = s.pageSetup.neumeDefaultFontSize;
     score.pageSetup.neumeDefaultSpacing = s.pageSetup.neumeDefaultSpacing;
     score.pageSetup.pageHeight = s.pageSetup.pageHeight;
@@ -239,6 +241,8 @@ export class SaveService {
     score.pageSetup.lyricsDefaultFontSize = s.pageSetup.lyricsDefaultFontSize;
     score.pageSetup.lyricsVerticalOffset = s.pageSetup.lyricsVerticalOffset;
     score.pageSetup.martyriaDefaultColor = s.pageSetup.martyriaDefaultColor;
+    score.pageSetup.tempoDefaultColor = s.pageSetup.tempoDefaultColor;
+    score.pageSetup.modeKeyDefaultColor = s.pageSetup.modeKeyDefaultColor;
     score.pageSetup.neumeDefaultFontSize = s.pageSetup.neumeDefaultFontSize;
     score.pageSetup.neumeDefaultSpacing = s.pageSetup.neumeDefaultSpacing;
     score.pageSetup.pageHeight = s.pageSetup.pageHeight;

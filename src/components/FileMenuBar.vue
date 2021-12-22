@@ -20,7 +20,6 @@
       <FileMenuItem label="Neume" @click="onClickAddNeume" />
       <FileMenuItem label="Text Box" @click="onClickAddTextBox" />
       <FileMenuItem label="Mode Key" @click="onClickAddModeKey" />
-      <!-- <FileMenuItem label="Staff Text" @click="onClickAddStaffText" /> -->
       <FileMenuItem label="Drop Cap" @click="onClickAddDropCap" />
     </FileMenuBarItem>
     <input ref="file" type="file" v-show="false" @change="onSelectFile" />
@@ -41,6 +40,8 @@ import {
 } from '@/models/Element';
 import { SaveService } from '@/services/SaveService';
 import { store } from '@/store';
+import { EventBus } from '@/eventBus';
+import { IpcMainChannels, IpcRendererChannels } from '@/ipc/ipcChannels';
 
 @Component({
   components: {
@@ -65,15 +66,7 @@ export default class FileMenuBar extends Vue {
   }
 
   onClickNew() {
-    if (
-      confirm(
-        'This will discard your current score. Make sure you have saved before doing this. Are you sure you wish to continue?',
-      )
-    ) {
-      store.mutations.setScore(new Score());
-      store.mutations.setSelectedElement(null);
-      this.$emit('scoreUpdated');
-    }
+    EventBus.$emit(IpcMainChannels.FileMenuNewScore);
   }
 
   onClickOpen() {
@@ -81,18 +74,17 @@ export default class FileMenuBar extends Vue {
   }
 
   onClickSave() {
-    const content = JSON.stringify(
-      SaveService.SaveScoreToJson(this.score),
-      null,
-      2,
-    );
-    const contentType = 'text/plain';
+    EventBus.$emit(IpcMainChannels.FileMenuSaveAs);
 
-    var a = document.createElement('a');
-    var file = new Blob([content], { type: contentType });
-    a.href = URL.createObjectURL(file);
-    a.download = 'score.json';
-    a.click();
+    EventBus.$once(IpcRendererChannels.FileMenuSaveAsReply, (data: string) => {
+      const contentType = 'text/plain';
+
+      var a = document.createElement('a');
+      var file = new Blob([data], { type: contentType });
+      a.href = URL.createObjectURL(file);
+      a.download = 'score.json';
+      a.click();
+    });
   }
 
   onSelectFile() {
@@ -103,19 +95,10 @@ export default class FileMenuBar extends Vue {
       var reader = new FileReader();
 
       reader.onload = () => {
-        // TODO validate file contents
-        const score: Score = SaveService.LoadScoreFromJson(
-          JSON.parse(reader.result as string),
+        EventBus.$emit(
+          IpcMainChannels.FileMenuOpenScore,
+          reader.result as string,
         );
-
-        // if (score.version !== ScoreVersion) {
-        //   alert('This score was created by an older version of the application. It may not work properly');
-        // }
-
-        store.mutations.setScore(score);
-        store.mutations.setSelectedElement(null);
-
-        this.$emit('scoreUpdated');
 
         // Reset the selector so that if the user selects
         // the same file twice, it will load
@@ -127,54 +110,19 @@ export default class FileMenuBar extends Vue {
   }
 
   onClickAddNeume() {
-    store.getters.elements.splice(
-      store.getters.selectedElementIndex,
-      0,
-      new EmptyElement(),
-    );
-    this.$emit('scoreUpdated');
+    EventBus.$emit(IpcMainChannels.FileMenuInsertNeume);
   }
 
   onClickAddTextBox() {
-    store.getters.elements.splice(
-      store.getters.selectedElementIndex,
-      0,
-      new TextBoxElement(),
-    );
-    this.$emit('scoreUpdated');
+    EventBus.$emit(IpcMainChannels.FileMenuInsertTextBox);
   }
 
   onClickAddModeKey() {
-    store.getters.elements.splice(
-      store.getters.selectedElementIndex,
-      0,
-      new ModeKeyElement(),
-    );
-    this.$emit('scoreUpdated');
-  }
-
-  onClickAddStaffText() {
-    const element = new StaffTextElement();
-    store.getters.elements.splice(
-      store.getters.selectedElementIndex,
-      0,
-      element,
-    );
-    store.mutations.setSelectedElement(element);
-    store.mutations.setElementToFocus(element);
-    this.$emit('scoreUpdated');
+    EventBus.$emit(IpcMainChannels.FileMenuInsertModeKey);
   }
 
   onClickAddDropCap() {
-    const element = new DropCapElement();
-    store.getters.elements.splice(
-      store.getters.selectedElementIndex,
-      0,
-      element,
-    );
-    store.mutations.setSelectedElement(element);
-    store.mutations.setElementToFocus(element);
-    this.$emit('scoreUpdated');
+    EventBus.$emit(IpcMainChannels.FileMenuInsertDropCap);
   }
 }
 </script>

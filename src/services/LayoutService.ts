@@ -491,9 +491,9 @@ export class LayoutService {
         currentNote += getNeumeValue(note.quantitativeNeume)!;
 
         if (note.fthora) {
-          // Make sure chroa are on the correct notes
           if (this.fthoraIsValid(note.fthora, currentNote)) {
-            currentScale = this.getScaleFromFthora(note.fthora) || currentScale;
+            currentScale =
+              this.getScaleFromFthora(note.fthora, currentNote) || currentScale;
             currentShift = this.getShift(
               currentNote,
               currentScale,
@@ -550,6 +550,18 @@ export class LayoutService {
               martyria.rootSign = klitonRootSignMap.get(currentScaleNote)!;
             } else if (currentScale === Scale.Spathi) {
               martyria.rootSign = spathiRootSignMap.get(currentScaleNote)!;
+            } else if (currentScale === Scale.EnharmonicGa) {
+              martyria.rootSign =
+                enharmonicGaRootSignMap.get(currentScaleNote)!;
+            } else if (currentScale === Scale.EnharmonicVou) {
+              martyria.rootSign =
+                enharmonicVouRootSignMap.get(currentScaleNote)!;
+            } else if (currentScale === Scale.EnharmonicVouHigh) {
+              martyria.rootSign =
+                enharmonicVouHighRootSignMap.get(currentScaleNote)!;
+            } else if (currentScale === Scale.EnharmonicZoHigh) {
+              martyria.rootSign =
+                enharmonicZoRootSignMap.get(currentScaleNote)!;
             }
 
             martyria.apostrophe = currentNote > 4;
@@ -558,7 +570,8 @@ export class LayoutService {
           if (martyria.fthora) {
             if (this.fthoraIsValid(martyria.fthora, currentNote)) {
               currentScale =
-                this.getScaleFromFthora(martyria.fthora) || currentScale;
+                this.getScaleFromFthora(martyria.fthora, currentNote) ||
+                currentScale;
               currentShift = this.getShift(
                 currentNote,
                 currentScale,
@@ -604,7 +617,7 @@ export class LayoutService {
     return false;
   }
 
-  private static getScaleFromFthora(fthora: Fthora) {
+  private static getScaleFromFthora(fthora: Fthora, currentNote: number) {
     if (fthora.startsWith('Diatonic')) {
       return Scale.Diatonic;
     }
@@ -618,7 +631,18 @@ export class LayoutService {
     }
 
     if (fthora.startsWith('Enharmonic')) {
-      return Scale.Enharmonic;
+      if (currentNote === getScaleNoteValue(ScaleNote.Ga)) {
+        return Scale.EnharmonicGa;
+      }
+      if (currentNote === getScaleNoteValue(ScaleNote.ZoHigh)) {
+        return Scale.EnharmonicZoHigh;
+      }
+      if (currentNote === getScaleNoteValue(ScaleNote.Vou)) {
+        return Scale.EnharmonicVou;
+      }
+      if (currentNote === getScaleNoteValue(ScaleNote.VouHigh)) {
+        return Scale.EnharmonicVouHigh;
+      }
     }
 
     if (fthora.startsWith('Zygos')) {
@@ -705,6 +729,16 @@ export class LayoutService {
       return false;
     }
 
+    if (
+      fthora.startsWith('Enharmonic') &&
+      currentNote !== getScaleNoteValue(ScaleNote.Ga) &&
+      currentNote !== getScaleNoteValue(ScaleNote.ZoHigh) &&
+      currentNote !== getScaleNoteValue(ScaleNote.Vou) &&
+      currentNote !== getScaleNoteValue(ScaleNote.VouHigh)
+    ) {
+      return false;
+    }
+
     return true;
   }
 }
@@ -765,3 +799,21 @@ const spathiRootSignMap = new Map<number, RootSign>(diatonicRootSignMap);
 spathiRootSignMap.set(3, RootSign.Squiggle);
 spathiRootSignMap.set(5, RootSign.Nana);
 spathiRootSignMap.set(6, RootSign.DeltaDotted);
+
+const enharmonicGaRootSignMap = new Map<number, RootSign>(diatonicRootSignMap);
+enharmonicGaRootSignMap.set(-1, RootSign.Nana);
+enharmonicGaRootSignMap.set(0, RootSign.Delta);
+enharmonicGaRootSignMap.set(1, RootSign.Alpha);
+
+const enharmonicZoRootSignMap = new Map<number, RootSign>(diatonicRootSignMap);
+enharmonicZoRootSignMap.set(5, RootSign.Nana);
+
+const enharmonicVouRootSignMap = new Map<number, RootSign>(diatonicRootSignMap);
+enharmonicVouRootSignMap.set(1, RootSign.Nana);
+
+const enharmonicVouHighRootSignMap = new Map<number, RootSign>(
+  diatonicRootSignMap,
+);
+enharmonicVouHighRootSignMap.set(6, RootSign.DeltaDotted);
+enharmonicVouHighRootSignMap.set(7, RootSign.Alpha);
+enharmonicVouHighRootSignMap.set(8, RootSign.Nana);

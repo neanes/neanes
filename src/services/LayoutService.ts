@@ -530,7 +530,7 @@ export class LayoutService {
           } else {
             martyria.error = false;
 
-            martyria.note = this.noteMap.get(currentNote)!;
+            martyria.note = noteMap.get(currentNote)!;
 
             const currentScaleNote = currentNote + currentShift;
 
@@ -543,12 +543,13 @@ export class LayoutService {
                   ? RootSign.SoftChromaticPaRootSign
                   : RootSign.SoftChromaticSquiggle;
             } else if (currentScale === Scale.Diatonic) {
-              martyria.rootSign =
-                this.diatonicRootSignMap.get(currentScaleNote)!;
+              martyria.rootSign = diatonicRootSignMap.get(currentScaleNote)!;
             } else if (currentScale === Scale.Zygos) {
-              martyria.rootSign = this.zygosRootSignMap.get(currentScaleNote)!;
+              martyria.rootSign = zygosRootSignMap.get(currentScaleNote)!;
             } else if (currentScale === Scale.Kliton) {
-              martyria.rootSign = this.klitonRootSignMap.get(currentScaleNote)!;
+              martyria.rootSign = klitonRootSignMap.get(currentScaleNote)!;
+            } else if (currentScale === Scale.Spathi) {
+              martyria.rootSign = spathiRootSignMap.get(currentScaleNote)!;
             }
 
             martyria.apostrophe = currentNote > 4;
@@ -602,86 +603,6 @@ export class LayoutService {
 
     return false;
   }
-
-  private static noteMap = new Map<number, Note>([
-    [-5, Note.GaLow],
-    [-4, Note.ThiLow],
-    [-3, Note.KeLow],
-    [-2, Note.Zo],
-    [-1, Note.Ni],
-    [0, Note.Pa],
-    [1, Note.Vou],
-    [2, Note.Ga],
-    [3, Note.Thi],
-    [4, Note.Ke],
-    [5, Note.Zo],
-    [6, Note.Ni],
-    [7, Note.Pa],
-    [8, Note.Vou],
-    [9, Note.Ga],
-    [10, Note.Thi],
-    [11, Note.Ke],
-  ]);
-
-  private static diatonicRootSignMap = new Map<number, RootSign>([
-    [-5, RootSign.NanaLow],
-    [-4, RootSign.DeltaLow],
-    [-3, RootSign.AlphaLow],
-    [-2, RootSign.Zo],
-    [-1, RootSign.Delta],
-    [0, RootSign.Alpha],
-    [1, RootSign.Legetos],
-    [2, RootSign.Nana],
-    [3, RootSign.DeltaDotted],
-    [4, RootSign.AlphaDotted],
-    [5, RootSign.Legetos],
-    [6, RootSign.Nana],
-    [7, RootSign.Alpha],
-    [8, RootSign.Legetos],
-    [9, RootSign.Nana],
-    [10, RootSign.DeltaDotted],
-    [11, RootSign.AlphaDotted],
-  ]);
-
-  private static zygosRootSignMap = new Map<number, RootSign>([
-    [-5, RootSign.NanaLow],
-    [-4, RootSign.DeltaLow],
-    [-3, RootSign.AlphaLow],
-    [-2, RootSign.Zo],
-    [-1, RootSign.Delta],
-    [0, RootSign.Squiggle],
-    [1, RootSign.Zygos],
-    [2, RootSign.Squiggle],
-    [3, RootSign.Zygos],
-    [4, RootSign.AlphaDotted],
-    [5, RootSign.Legetos],
-    [6, RootSign.Nana],
-    [7, RootSign.Alpha],
-    [8, RootSign.Legetos],
-    [9, RootSign.Nana],
-    [10, RootSign.DeltaDotted],
-    [11, RootSign.AlphaDotted],
-  ]);
-
-  private static klitonRootSignMap = new Map<number, RootSign>([
-    [-5, RootSign.NanaLow],
-    [-4, RootSign.DeltaLow],
-    [-3, RootSign.AlphaLow],
-    [-2, RootSign.Zo],
-    [-1, RootSign.Delta],
-    [0, RootSign.Delta],
-    [1, RootSign.Alpha],
-    [2, RootSign.Legetos],
-    [3, RootSign.Nana],
-    [4, RootSign.AlphaDotted],
-    [5, RootSign.Legetos],
-    [6, RootSign.Nana],
-    [7, RootSign.Alpha],
-    [8, RootSign.Legetos],
-    [9, RootSign.Nana],
-    [10, RootSign.DeltaDotted],
-    [11, RootSign.AlphaDotted],
-  ]);
 
   private static getScaleFromFthora(fthora: Fthora) {
     if (fthora.startsWith('Diatonic')) {
@@ -777,6 +698,70 @@ export class LayoutService {
       return false;
     }
 
+    if (
+      fthora.startsWith('Spathi') &&
+      currentNote !== getScaleNoteValue(ScaleNote.Ke)
+    ) {
+      return false;
+    }
+
     return true;
   }
 }
+
+const noteMap = new Map<number, Note>([
+  [-5, Note.GaLow],
+  [-4, Note.ThiLow],
+  [-3, Note.KeLow],
+  [-2, Note.Zo],
+  [-1, Note.Ni],
+  [0, Note.Pa],
+  [1, Note.Vou],
+  [2, Note.Ga],
+  [3, Note.Thi],
+  [4, Note.Ke],
+  [5, Note.Zo],
+  [6, Note.Ni],
+  [7, Note.Pa],
+  [8, Note.Vou],
+  [9, Note.Ga],
+  [10, Note.Thi],
+  [11, Note.Ke],
+]);
+
+const diatonicRootSignMap = new Map<number, RootSign>([
+  [-5, RootSign.NanaLow],
+  [-4, RootSign.DeltaLow],
+  [-3, RootSign.AlphaLow],
+  [-2, RootSign.Zo],
+  [-1, RootSign.Delta],
+  [0, RootSign.Alpha],
+  [1, RootSign.Legetos],
+  [2, RootSign.Nana],
+  [3, RootSign.DeltaDotted],
+  [4, RootSign.AlphaDotted],
+  [5, RootSign.Legetos],
+  [6, RootSign.Nana],
+  [7, RootSign.Alpha],
+  [8, RootSign.Legetos],
+  [9, RootSign.Nana],
+  [10, RootSign.DeltaDotted],
+  [11, RootSign.AlphaDotted],
+]);
+
+const zygosRootSignMap = new Map<number, RootSign>(diatonicRootSignMap);
+zygosRootSignMap.set(0, RootSign.Squiggle);
+zygosRootSignMap.set(1, RootSign.Zygos);
+zygosRootSignMap.set(2, RootSign.Squiggle);
+zygosRootSignMap.set(3, RootSign.Zygos);
+
+const klitonRootSignMap = new Map<number, RootSign>(diatonicRootSignMap);
+klitonRootSignMap.set(0, RootSign.Delta);
+klitonRootSignMap.set(1, RootSign.Alpha);
+klitonRootSignMap.set(2, RootSign.Legetos);
+klitonRootSignMap.set(3, RootSign.Nana);
+
+const spathiRootSignMap = new Map<number, RootSign>(diatonicRootSignMap);
+spathiRootSignMap.set(3, RootSign.Squiggle);
+spathiRootSignMap.set(5, RootSign.Nana);
+spathiRootSignMap.set(6, RootSign.DeltaDotted);

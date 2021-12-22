@@ -139,9 +139,10 @@ export const fthoraAdjustmentMap = new Map<Fthora, NeumeAdjustment[]>([
   [
     Fthora.SoftChromaticThi_TopRight,
     [
-      { isPairedWith: [ModeSign.Vou], offset: { x: 0, y: -7 } },
-      { isPairedWith: [ModeSign.Thi], offset: { x: 0, y: -7 } },
-      { isPairedWith: [ModeSign.Ke], offset: { x: 0, y: -7 } },
+      {
+        isPairedWith: [ModeSign.Vou, ModeSign.Thi, ModeSign.Ke],
+        offset: { x: 0, y: -7 },
+      },
     ],
   ],
   [
@@ -151,6 +152,10 @@ export const fthoraAdjustmentMap = new Map<Fthora, NeumeAdjustment[]>([
   [
     Fthora.DiatonicNiLow_TopRight,
     [{ isPairedWith: [ModeSign.Ga], offset: { x: -3, y: -9 } }],
+  ],
+  [
+    Fthora.Spathi_TopRight,
+    [{ isPairedWith: [Note.Ke], offset: { x: 4, y: 0 } }],
   ],
 ]);
 

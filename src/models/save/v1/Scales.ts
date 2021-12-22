@@ -2,6 +2,10 @@ export enum Scale {
   Diatonic = 'Diatonic',
   SoftChromatic = 'SoftChromatic',
   HardChromatic = 'HardChromatic',
+  Enharmonic = 'Enharmonic',
+  Zygos = 'Zygos',
+  Spathi = 'Spathi',
+  Kliton = 'Kliton',
 }
 
 export enum ScaleNote {

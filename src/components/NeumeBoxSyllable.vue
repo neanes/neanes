@@ -94,7 +94,7 @@ export default class NeumeBoxSyllable extends Vue {
     const adjustments = getTimeAdjustments(this.note.timeNeume!);
 
     if (adjustments) {
-      const adjustment = adjustments.find(x =>
+      const adjustment = adjustments.find((x) =>
         x.isPairedWith.includes(this.note.quantitativeNeume),
       );
 
@@ -112,7 +112,7 @@ export default class NeumeBoxSyllable extends Vue {
     const adjustments = getGorgonAdjustments(this.note.gorgonNeume!);
 
     if (adjustments) {
-      const adjustment = adjustments.find(x =>
+      const adjustment = adjustments.find((x) =>
         x.isPairedWith.includes(this.note.quantitativeNeume),
       );
 
@@ -132,7 +132,7 @@ export default class NeumeBoxSyllable extends Vue {
     );
 
     if (adjustments) {
-      const adjustment = adjustments.find(x =>
+      const adjustment = adjustments.find((x) =>
         x.isPairedWith.includes(this.note.quantitativeNeume),
       );
 

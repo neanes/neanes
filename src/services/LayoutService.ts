@@ -556,13 +556,21 @@ export class LayoutService {
           }
 
           if (martyria.fthora) {
-            currentScale =
-              this.getScaleFromFthora(martyria.fthora) || currentScale;
-            currentShift = this.getShift(
-              currentNote,
-              currentScale,
-              martyria.fthora,
-            );
+            // Make sure chroa are on the correct notes
+            if (
+              martyria.fthora.startsWith('Zygos') &&
+              currentNote !== getScaleNoteValue(ScaleNote.Thi)
+            ) {
+              martyria.fthora = null;
+            } else {
+              currentScale =
+                this.getScaleFromFthora(martyria.fthora) || currentScale;
+              currentShift = this.getShift(
+                currentNote,
+                currentScale,
+                martyria.fthora,
+              );
+            }
           }
         }
       }

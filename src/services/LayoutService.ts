@@ -492,18 +492,15 @@ export class LayoutService {
 
         if (note.fthora) {
           // Make sure chroa are on the correct notes
-          if (
-            note.fthora.startsWith('Zygos') &&
-            currentNote !== getScaleNoteValue(ScaleNote.Thi)
-          ) {
-            note.setFthora(null);
-          } else {
+          if (this.fthoraIsValid(note.fthora, currentNote)) {
             currentScale = this.getScaleFromFthora(note.fthora) || currentScale;
             currentShift = this.getShift(
               currentNote,
               currentScale,
               note.fthora,
             );
+          } else {
+            note.setFthora(null);
           }
         }
       } else if (element.elementType === ElementType.ModeKey) {
@@ -550,19 +547,15 @@ export class LayoutService {
                 this.diatonicRootSignMap.get(currentScaleNote)!;
             } else if (currentScale === Scale.Zygos) {
               martyria.rootSign = this.zygosRootSignMap.get(currentScaleNote)!;
+            } else if (currentScale === Scale.Kliton) {
+              martyria.rootSign = this.klitonRootSignMap.get(currentScaleNote)!;
             }
 
             martyria.apostrophe = currentNote > 4;
           }
 
           if (martyria.fthora) {
-            // Make sure chroa are on the correct notes
-            if (
-              martyria.fthora.startsWith('Zygos') &&
-              currentNote !== getScaleNoteValue(ScaleNote.Thi)
-            ) {
-              martyria.fthora = null;
-            } else {
+            if (this.fthoraIsValid(martyria.fthora, currentNote)) {
               currentScale =
                 this.getScaleFromFthora(martyria.fthora) || currentScale;
               currentShift = this.getShift(
@@ -570,6 +563,8 @@ export class LayoutService {
                 currentScale,
                 martyria.fthora,
               );
+            } else {
+              martyria.fthora = null;
             }
           }
         }
@@ -668,6 +663,26 @@ export class LayoutService {
     [11, RootSign.AlphaDotted],
   ]);
 
+  private static klitonRootSignMap = new Map<number, RootSign>([
+    [-5, RootSign.NanaLow],
+    [-4, RootSign.DeltaLow],
+    [-3, RootSign.AlphaLow],
+    [-2, RootSign.Zo],
+    [-1, RootSign.Delta],
+    [0, RootSign.Delta],
+    [1, RootSign.Alpha],
+    [2, RootSign.Legetos],
+    [3, RootSign.Nana],
+    [4, RootSign.AlphaDotted],
+    [5, RootSign.Legetos],
+    [6, RootSign.Nana],
+    [7, RootSign.Alpha],
+    [8, RootSign.Legetos],
+    [9, RootSign.Nana],
+    [10, RootSign.DeltaDotted],
+    [11, RootSign.AlphaDotted],
+  ]);
+
   private static getScaleFromFthora(fthora: Fthora) {
     if (fthora.startsWith('Diatonic')) {
       return Scale.Diatonic;
@@ -744,5 +759,24 @@ export class LayoutService {
     }
 
     return shift;
+  }
+
+  private static fthoraIsValid(fthora: Fthora, currentNote: number) {
+    // Make sure chroa are on the correct notes
+    if (
+      fthora.startsWith('Zygos') &&
+      currentNote !== getScaleNoteValue(ScaleNote.Thi)
+    ) {
+      return false;
+    }
+
+    if (
+      fthora.startsWith('Kliton') &&
+      currentNote !== getScaleNoteValue(ScaleNote.Thi)
+    ) {
+      return false;
+    }
+
+    return true;
   }
 }

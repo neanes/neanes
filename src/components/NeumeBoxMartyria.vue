@@ -1,12 +1,14 @@
 <template>
   <div class="neume" :style="style">
-    <template v-if="neume.error">
-      ?
-    </template>
+    <template v-if="neume.error"> ? </template>
     <template v-else>
       <Neume :neume="neume.note"></Neume>
-      <Neume :neume="neume.rootSign"></Neume>
-      <Neume v-if="hasFthora" :neume="neume.fthora"></Neume>
+      <Neume :neume="neume.rootSign" :offset="rootSignOffset"></Neume>
+      <Neume
+        v-if="hasFthora"
+        :neume="neume.fthora"
+        :offset="fthoraOffset"
+      ></Neume>
       <Neume v-if="neume.apostrophe" :neume="Note.Apostrophe"></Neume>
       <Neume v-if="hasMeasureBar" :neume="neume.measureBar" class="red"></Neume>
     </template>
@@ -20,6 +22,11 @@ import { neumeMap } from '@/models/NeumeMappings';
 import Neume from '@/components/Neume.vue';
 import { store } from '@/store';
 import { Note } from '@/models/Neumes';
+import {
+  getFthoraAdjustments,
+  getRootSignAdjustments,
+  NeumeAdjustmentOffset,
+} from '@/models/NeumeAdjustments';
 
 @Component({
   components: {
@@ -55,6 +62,44 @@ export default class NeumeBoxMartyria extends Vue {
       color: this.pageSetup.martyriaDefaultColor,
       fontSize: this.pageSetup.neumeDefaultFontSize + 'px',
     } as CSSStyleDeclaration;
+  }
+
+  get rootSignOffset() {
+    let offset: NeumeAdjustmentOffset | null = null;
+
+    const adjustments = getRootSignAdjustments(this.neume.rootSign!);
+
+    if (adjustments) {
+      const adjustment = adjustments.find((x) =>
+        x.isPairedWith.includes(this.neume.note),
+      );
+
+      if (adjustment) {
+        offset = adjustment.offset;
+      }
+    }
+
+    return offset;
+  }
+
+  get fthoraOffset() {
+    let offset: NeumeAdjustmentOffset | null = null;
+
+    const adjustments = getFthoraAdjustments(this.neume.fthora!);
+
+    if (adjustments) {
+      const adjustment = adjustments.find(
+        (x) =>
+          x.isPairedWith.includes(this.neume.rootSign) ||
+          x.isPairedWith.includes(this.neume.note),
+      );
+
+      if (adjustment) {
+        offset = adjustment.offset;
+      }
+    }
+
+    return offset;
   }
 }
 </script>

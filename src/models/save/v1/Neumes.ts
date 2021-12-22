@@ -109,6 +109,7 @@ export enum RootSign {
   Dots = 'Dots',
   Zo = 'Varys',
   Squiggle = 'Squiggle',
+  Zygos = 'Zygos',
   SoftChromaticSquiggle = 'SoftChromaticSquiggle',
   DeltaDotted = 'DeltaDotted',
   AlphaDotted = 'AlphaDotted',

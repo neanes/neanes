@@ -3,5 +3,7 @@ export enum TestFileType {
   FthoraBottom = 'FthoraBottom',
   Gorgon = 'Gorgon',
   Klasma = 'Klasma',
+  Hapli = 'Hapli',
   Accidentals = 'Accidentals',
+  Expressions = 'Expressions',
 }

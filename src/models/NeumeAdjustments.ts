@@ -40,14 +40,6 @@ export const gorgonAdjustmentMap = new Map<GorgonNeume, NeumeAdjustment[]>([
         offset: { x: 0, y: -7 },
       },
       {
-        isPairedWith: [QuantitativeNeume.OligonPlusHypsiliPlusKentimaVertical],
-        offset: { x: -12, y: 0 },
-      },
-      {
-        isPairedWith: [QuantitativeNeume.PetastiPlusHypsiliPlusKentimaVertical],
-        offset: { x: -8, y: 0 },
-      },
-      {
         isPairedWith: [QuantitativeNeume.PetastiPlusDoubleHypsili],
         offset: { x: 2, y: 0 },
       },
@@ -121,6 +113,10 @@ export const gorgonAdjustmentMap = new Map<GorgonNeume, NeumeAdjustment[]>([
         offset: { x: -3, y: 0 },
       },
       {
+        isPairedWith: [QuantitativeNeume.PetastiPlusHypsiliPlusKentimaVertical],
+        offset: { x: 4, y: 0 },
+      },
+      {
         isPairedWith: [QuantitativeNeume.DoubleHamili],
         offset: { x: 0, y: -4 },
       },
@@ -146,6 +142,58 @@ export const gorgonAdjustmentMap = new Map<GorgonNeume, NeumeAdjustment[]>([
 ]);
 
 export const timeAdjustmentMap = new Map<TimeNeume, NeumeAdjustment[]>([
+  [
+    TimeNeume.Klasma_Top,
+    [
+      {
+        isPairedWith: [
+          QuantitativeNeume.OligonPlusKentimaAbove,
+          QuantitativeNeume.OligonPlusHypsiliPlusKentimaHorizontal,
+          QuantitativeNeume.OligonPlusHypsiliPlusKentimaVertical,
+        ],
+        offset: { x: -13, y: 0 },
+      },
+      {
+        isPairedWith: [QuantitativeNeume.OligonPlusHypsiliRight],
+        offset: { x: -7, y: 0 },
+      },
+      {
+        isPairedWith: [QuantitativeNeume.OligonPlusHypsiliLeft],
+        offset: { x: 4, y: 0 },
+      },
+      {
+        isPairedWith: [QuantitativeNeume.OligonPlusApostrophos],
+        offset: { x: -4, y: -9 },
+      },
+      {
+        isPairedWith: [QuantitativeNeume.OligonPlusKentima],
+        offset: { x: -8, y: 0 },
+      },
+      {
+        isPairedWith: [
+          QuantitativeNeume.HamiliPlusApostrophos,
+          QuantitativeNeume.HamiliPlusElaphronPlusApostrophos,
+        ],
+        offset: { x: 0, y: -4 },
+      },
+    ],
+  ],
+  [
+    TimeNeume.Klasma_TopRight,
+    [
+      {
+        isPairedWith: [
+          QuantitativeNeume.HamiliPlusElaphron,
+          QuantitativeNeume.HamiliPlusElaphronPlusApostrophos,
+        ],
+        offset: { x: 0, y: -6 },
+      },
+      {
+        isPairedWith: [QuantitativeNeume.DoubleHamili],
+        offset: { x: 0, y: -8 },
+      },
+    ],
+  ],
   [
     TimeNeume.Klasma_Bottom,
     [
@@ -249,6 +297,11 @@ for (let fthora of Object.values(Fthora)) {
     adjustments.push({
       isPairedWith: [QuantitativeNeume.OligonPlusHypsiliRight],
       offset: { x: -10, y: 0 },
+    });
+
+    adjustments.push({
+      isPairedWith: [QuantitativeNeume.OligonPlusKentima],
+      offset: { x: -6, y: 0 },
     });
 
     adjustments.push({
@@ -367,6 +420,10 @@ for (let fthora of Object.values(Fthora)) {
     adjustments.push({
       isPairedWith: [QuantitativeNeume.OligonPlusKentimaBelow],
       offset: { x: -5, y: 0 },
+    });
+    adjustments.push({
+      isPairedWith: [QuantitativeNeume.OligonPlusKentima],
+      offset: { x: -6, y: 0 },
     });
     adjustments.push({
       isPairedWith: [

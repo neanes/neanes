@@ -16,6 +16,8 @@ export abstract class TestFileGenerator {
         return this.generateTestFile_Fthora('BottomCenter');
       case TestFileType.Gorgon:
         return this.generateTestFile_Gorgon();
+      case TestFileType.Klasma:
+        return this.generateTestFile_Klasma();
       default:
         console.error(`Unknown test file type: ${type}`);
         return null;
@@ -101,6 +103,50 @@ export abstract class TestFileGenerator {
       const note = new NoteElement();
       note.setQuantitativeNeume(quantitativeNeume);
       note.setGorgonNeume(GorgonNeume.Gorgon_Bottom);
+      (note.lyrics = (counter++).toString()), elements.push(note);
+    }
+
+    return elements;
+  }
+
+  private static generateTestFile_Klasma() {
+    const elements: ScoreElement[] = [];
+
+    let counter = 1;
+
+    for (let q in QuantitativeNeume) {
+      const quantitativeNeume = q as QuantitativeNeume;
+      if (
+        [
+          QuantitativeNeume.VareiaDotted,
+          QuantitativeNeume.Cross,
+          QuantitativeNeume.Kentima,
+        ].includes(quantitativeNeume)
+      ) {
+        continue;
+      }
+
+      const note = new NoteElement();
+      note.setQuantitativeNeume(quantitativeNeume);
+      note.setTimeNeume(TimeNeume.Klasma_Top);
+      (note.lyrics = (counter++).toString()), elements.push(note);
+    }
+
+    for (let q in QuantitativeNeume) {
+      const quantitativeNeume = q as QuantitativeNeume;
+      if (
+        [
+          QuantitativeNeume.VareiaDotted,
+          QuantitativeNeume.Cross,
+          QuantitativeNeume.Kentima,
+        ].includes(quantitativeNeume)
+      ) {
+        continue;
+      }
+
+      const note = new NoteElement();
+      note.setQuantitativeNeume(quantitativeNeume);
+      note.setTimeNeume(TimeNeume.Klasma_Bottom);
       (note.lyrics = (counter++).toString()), elements.push(note);
     }
 

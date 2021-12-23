@@ -222,6 +222,33 @@ export const timeAdjustmentMap = new Map<TimeNeume, NeumeAdjustment[]>([
       },
     ],
   ],
+  [
+    TimeNeume.Hapli,
+    [
+      {
+        isPairedWith: [QuantitativeNeume.Kentemata],
+        offset: { x: 9, y: 0 },
+      },
+    ],
+  ],
+  [
+    TimeNeume.Dipli,
+    [
+      {
+        isPairedWith: [QuantitativeNeume.Kentemata],
+        offset: { x: 9, y: 0 },
+      },
+    ],
+  ],
+  [
+    TimeNeume.Tripli,
+    [
+      {
+        isPairedWith: [QuantitativeNeume.Kentemata],
+        offset: { x: 9, y: 0 },
+      },
+    ],
+  ],
 ]);
 
 export const vocalExpressionAdjustmentMap = new Map<
@@ -261,6 +288,41 @@ export const vocalExpressionAdjustmentMap = new Map<
       {
         isPairedWith: [QuantitativeNeume.KentemataPlusOligon],
         offset: { x: 0, y: 5 },
+      },
+    ],
+  ],
+  [
+    VocalExpressionNeume.Antikenoma,
+    [
+      {
+        isPairedWith: [QuantitativeNeume.OligonPlusKentima],
+        offset: { x: -8, y: 0 },
+      },
+      {
+        isPairedWith: [
+          QuantitativeNeume.OligonPlusKentimaBelow,
+          QuantitativeNeume.ElaphronPlusApostrophos,
+          QuantitativeNeume.HamiliPlusElaphronPlusApostrophos,
+        ],
+        offset: { x: 0, y: 4 },
+      },
+      {
+        isPairedWith: [QuantitativeNeume.KentemataPlusOligon],
+        offset: { x: 0, y: 6 },
+      },
+      {
+        isPairedWith: [QuantitativeNeume.HamiliPlusApostrophos],
+        offset: { x: 0, y: 6 },
+      },
+      {
+        isPairedWith: [
+          QuantitativeNeume.OligonPlusIsonPlusKentemata,
+          QuantitativeNeume.OligonPlusElaphronPlusKentemata,
+          QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
+          QuantitativeNeume.OligonPlusHamiliPlusKentemata,
+          QuantitativeNeume.OligonPlusKentima,
+        ],
+        offset: { x: -6, y: 0 },
       },
     ],
   ],

@@ -1,8 +1,13 @@
 # Orthographic Rules
 
+## Apostrophos
+
+- The apostrophos cannot accept a psefiston.
+
 ## Kentemata
 
-Kentemata may never hold more than one beat, and thus cannot take a klasma, hapli, etc. If a kentemata needs to be held for more than one beat, an ison must placed after it and given the appropriate duration. This also applies to compound neumes that end in kentemata.
+- Kentemata may never hold more than one beat, and thus cannot take a klasma, hapli, etc. If a kentemata needs to be held for more than one beat, an ison must placed after it and given the appropriate duration. This also applies to compound neumes that end in kentemata.
+- Kentemata may never take vocal expression neumes.
 
 ## Gorgon
 
@@ -74,6 +79,26 @@ QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
 
 - The petasti can never be held for more than one beat.
 - The petasti can never take a gorgon.
+
+## Psefiston
+
+### Psefiston not allowed
+
+The following neumes cannot accpet a psefiston.
+
+```
+QuantitativeNeume.Apostrophos,
+QuantitativeNeume.Kentemata,
+QuantitativeNeume.Hyporoe,
+QuantitativeNeume.Hamili,
+QuantitativeNeume.HamiliPlusApostrophos,
+QuantitativeNeume.HamiliPlusElaphron,
+QuantitativeNeume.HamiliPlusElaphronPlusApostrophos,
+QuantitativeNeume.DoubleHamili,
+QuantitativeNeume.Elaphron,
+QuantitativeNeume.ElaphronPlusApostrophos,
+QuantitativeNeume.RunningElaphron,
+```
 
 ## Hyporoe
 

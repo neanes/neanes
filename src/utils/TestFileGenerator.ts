@@ -1,5 +1,10 @@
 import { NoteElement, ScoreElement } from '@/models/Element';
-import { Fthora, QuantitativeNeume, TimeNeume } from '@/models/Neumes';
+import {
+  Fthora,
+  QuantitativeNeume,
+  TimeNeume,
+  GorgonNeume,
+} from '@/models/Neumes';
 import { TestFileType } from './TestFileType';
 
 export abstract class TestFileGenerator {
@@ -9,6 +14,8 @@ export abstract class TestFileGenerator {
         return this.generateTestFile_Fthora('TopCenter');
       case TestFileType.FthoraBottom:
         return this.generateTestFile_Fthora('BottomCenter');
+      case TestFileType.Gorgon:
+        return this.generateTestFile_Gorgon();
       default:
         console.error(`Unknown test file type: ${type}`);
         return null;
@@ -48,9 +55,53 @@ export abstract class TestFileGenerator {
 
         const note = new NoteElement();
         note.setQuantitativeNeume(quantitativeNeume);
-        note.setFthora(fthora as Fthora);
+        note.setFthora(fthora);
         (note.lyrics = (counter++).toString()), elements.push(note);
       }
+    }
+
+    return elements;
+  }
+
+  private static generateTestFile_Gorgon() {
+    const elements: ScoreElement[] = [];
+
+    let counter = 1;
+
+    for (let q in QuantitativeNeume) {
+      const quantitativeNeume = q as QuantitativeNeume;
+      if (
+        [
+          QuantitativeNeume.VareiaDotted,
+          QuantitativeNeume.Cross,
+          QuantitativeNeume.Kentima,
+        ].includes(quantitativeNeume)
+      ) {
+        continue;
+      }
+
+      const note = new NoteElement();
+      note.setQuantitativeNeume(quantitativeNeume);
+      note.setGorgonNeume(GorgonNeume.Gorgon_Top);
+      (note.lyrics = (counter++).toString()), elements.push(note);
+    }
+
+    for (let q in QuantitativeNeume) {
+      const quantitativeNeume = q as QuantitativeNeume;
+      if (
+        [
+          QuantitativeNeume.VareiaDotted,
+          QuantitativeNeume.Cross,
+          QuantitativeNeume.Kentima,
+        ].includes(quantitativeNeume)
+      ) {
+        continue;
+      }
+
+      const note = new NoteElement();
+      note.setQuantitativeNeume(quantitativeNeume);
+      note.setGorgonNeume(GorgonNeume.Gorgon_Bottom);
+      (note.lyrics = (counter++).toString()), elements.push(note);
     }
 
     return elements;

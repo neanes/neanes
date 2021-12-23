@@ -256,6 +256,7 @@ import {
   DropCapElement,
   TempoElement,
   ModeKeyElement,
+  TextBoxAlignment,
 } from '@/models/Element';
 import {
   QuantitativeNeume,
@@ -295,6 +296,7 @@ import { IpcMainChannels, IpcRendererChannels } from '@/ipc/ipcChannels';
 import { EventBus } from '@/eventBus';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import { TestFileGenerator } from '@/utils/TestFileGenerator';
+import { Unit } from '@/utils/Unit';
 
 @Component({
   components: {
@@ -327,6 +329,10 @@ export default class Editor extends Vue {
 
   get score() {
     return store.state.score;
+  }
+
+  set score(score: Score) {
+    store.mutations.setScore(score);
   }
 
   get elements() {
@@ -880,9 +886,11 @@ export default class Editor extends Vue {
         JSON.parse(scoreString),
       );
 
-      store.mutations.setScore(score);
+      this.score = score;
     } else {
-      store.mutations.setScore(new Score());
+      this.score = this.createDefaultScore();
+      this.selectedElement =
+        this.score.staff.elements[this.score.staff.elements.length - 1];
     }
 
     this.score.staff.elements = TestFileGenerator.generateTestFile_Fthora_Top();
@@ -961,8 +969,9 @@ export default class Editor extends Vue {
         'This will discard your current score. Make sure you have saved before doing this. Are you sure you wish to continue?',
       )
     ) {
-      store.mutations.setScore(new Score());
-      store.mutations.setSelectedElement(null);
+      this.score = this.createDefaultScore();
+      this.selectedElement =
+        this.score.staff.elements[this.score.staff.elements.length - 1];
       this.save();
     }
   }
@@ -974,8 +983,8 @@ export default class Editor extends Vue {
     //   alert('This score was created by an older version of the application. It may not work properly');
     // }
 
-    store.mutations.setScore(score);
-    store.mutations.setSelectedElement(null);
+    this.score = score;
+    this.selectedElement = null;
 
     this.save();
   }
@@ -998,19 +1007,14 @@ export default class Editor extends Vue {
       element,
     );
 
-    store.mutations.setSelectedElement(element);
+    this.selectedElement = element;
     store.mutations.setElementToFocus(element);
 
     this.save();
   }
 
   onClickAddModeKey() {
-    const defaultTemplate = ModeKeyElement.createFromTemplate(
-      modeKeyTemplates[0],
-    );
-    const element = new ModeKeyElement();
-    element.updateFrom(defaultTemplate);
-    element.color = this.score.pageSetup.modeKeyDefaultColor;
+    const element = this.createDefaultModeKey();
 
     store.getters.elements.splice(
       store.getters.selectedElementIndex,
@@ -1034,7 +1038,7 @@ export default class Editor extends Vue {
       element,
     );
 
-    store.mutations.setSelectedElement(element);
+    this.selectedElement = element;
     store.mutations.setElementToFocus(element);
     this.save();
   }
@@ -1049,6 +1053,30 @@ export default class Editor extends Vue {
 
   onScoreUpdated() {
     this.save();
+  }
+
+  createDefaultModeKey() {
+    const defaultTemplate = ModeKeyElement.createFromTemplate(
+      modeKeyTemplates[0],
+    );
+    const element = new ModeKeyElement();
+    element.updateFrom(defaultTemplate);
+    element.color = this.score.pageSetup.modeKeyDefaultColor;
+
+    return element;
+  }
+
+  createDefaultScore() {
+    const score = new Score();
+
+    const title = new TextBoxElement();
+    title.content = 'Title';
+    title.alignment = TextBoxAlignment.Center;
+    title.fontSize = Unit.FromPt(16);
+
+    score.staff.elements.unshift(title, this.createDefaultModeKey());
+
+    return score;
   }
 }
 </script>

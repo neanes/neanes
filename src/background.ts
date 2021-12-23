@@ -7,6 +7,7 @@ import { IpcMainChannels, IpcRendererChannels } from './ipc/ipcChannels';
 import path from 'path';
 import { promises as fs } from 'fs';
 import os from 'os';
+import { TestFileType } from './utils/TestFileType';
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
 // Scheme must be registered before the app is ready
@@ -153,7 +154,7 @@ function createMenu(win: BrowserWindow) {
       ],
     },
     {
-      label: 'Debug',
+      label: 'View (Debug)',
       visible: isDevelopment,
       submenu: [
         { role: 'reload' },
@@ -166,6 +167,16 @@ function createMenu(win: BrowserWindow) {
         { type: 'separator' },
         { role: 'togglefullscreen' },
       ],
+    },
+    {
+      label: 'Generate Test Files (Debug)',
+      visible: isDevelopment,
+      submenu: Object.values(TestFileType).map((testFileType) => ({
+        label: testFileType,
+        click() {
+          win.webContents.send(IpcMainChannels.GenerateTestFile, testFileType);
+        },
+      })),
     },
   ]);
 

@@ -8,6 +8,8 @@ export enum IpcMainChannels {
   FileMenuInsertTextBox = 'FileMenuInsertTextBox',
   FileMenuInsertModeKey = 'FileMenuInsertModeKey',
   FileMenuInsertDropCap = 'FileMenuInsertDropCap',
+
+  GenerateTestFile = 'GenerateTestFile',
 }
 
 export enum IpcRendererChannels {

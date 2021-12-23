@@ -296,6 +296,7 @@ import { IpcMainChannels, IpcRendererChannels } from '@/ipc/ipcChannels';
 import { EventBus } from '@/eventBus';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import { TestFileGenerator } from '@/utils/TestFileGenerator';
+import { TestFileType } from '@/utils/TestFileType';
 import { Unit } from '@/utils/Unit';
 
 @Component({
@@ -374,6 +375,10 @@ export default class Editor extends Vue {
     EventBus.$on(IpcMainChannels.FileMenuInsertTextBox, this.onClickAddTextBox);
     EventBus.$on(IpcMainChannels.FileMenuInsertModeKey, this.onClickAddModeKey);
     EventBus.$on(IpcMainChannels.FileMenuInsertDropCap, this.onClickAddDropCap);
+    EventBus.$on(
+      IpcMainChannels.GenerateTestFile,
+      this.onClickGenerateTestFile,
+    );
   }
 
   beforeDestroy() {
@@ -394,6 +399,10 @@ export default class Editor extends Vue {
     EventBus.$off(
       IpcMainChannels.FileMenuInsertDropCap,
       this.onClickAddDropCap,
+    );
+    EventBus.$off(
+      IpcMainChannels.GenerateTestFile,
+      this.onClickGenerateTestFile,
     );
   }
 
@@ -893,11 +902,6 @@ export default class Editor extends Vue {
         this.score.staff.elements[this.score.staff.elements.length - 1];
     }
 
-    this.score.staff.elements = TestFileGenerator.generateTestFile_Fthora_Top();
-
-    // this.score.staff.elements =
-    //   TestFileGenerator.generateTestFile_Fthora_Top_Klasma();
-
     this.pages = LayoutService.processPages(
       this.elements,
       this.score.pageSetup,
@@ -1049,6 +1053,20 @@ export default class Editor extends Vue {
 
   onSaveAs() {
     EventBus.$emit(IpcRendererChannels.FileMenuSaveAsReply, this.getSaveFile());
+  }
+
+  onClickGenerateTestFile(testFileType: TestFileType) {
+    if (
+      confirm(
+        'This will discard your current score. Make sure you have saved before doing this. Are you sure you wish to continue?',
+      )
+    ) {
+      this.score = new Score();
+      this.score.staff.elements.unshift(
+        ...(TestFileGenerator.generateTestFile(testFileType) || []),
+      );
+      this.save();
+    }
   }
 
   onScoreUpdated() {

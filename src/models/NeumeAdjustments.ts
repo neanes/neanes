@@ -488,6 +488,57 @@ export const modeSignAdjustmentMap = new Map<ModeSign, NeumeAdjustment[]>([
   [ModeSign.Tos, [{ isPairedWith: [ModeSign.Vou], offset: { x: 0, y: -13 } }]],
 ]);
 
+export const accidentalAdjustmentMap = new Map<Accidental, NeumeAdjustment[]>([
+  [
+    Accidental.Flat_2_Right,
+    [
+      {
+        isPairedWith: [
+          QuantitativeNeume.PetastiWithIson,
+          QuantitativeNeume.PetastiPlusOligon,
+          QuantitativeNeume.HamiliPlusElaphron,
+          QuantitativeNeume.HamiliPlusElaphronPlusApostrophos,
+          QuantitativeNeume.PetastiPlusElaphron,
+          QuantitativeNeume.PetastiPlusElaphronPlusApostrophos,
+        ],
+        offset: { x: 0, y: -6 },
+      },
+      {
+        isPairedWith: [
+          QuantitativeNeume.OligonPlusHypsiliRight,
+          QuantitativeNeume.PetastiPlusHypsiliRight,
+          QuantitativeNeume.OligonPlusHypsiliPlusKentimaHorizontal,
+          QuantitativeNeume.PetastiPlusHypsiliPlusKentimaHorizontal,
+          QuantitativeNeume.PetastiPlusDoubleHypsili,
+        ],
+        offset: { x: 2, y: 0 },
+      },
+      {
+        isPairedWith: [QuantitativeNeume.DoubleHamili],
+        offset: { x: 0, y: -8 },
+      },
+    ],
+  ],
+  [
+    Accidental.Sharp_2_Left,
+    [
+      {
+        isPairedWith: [
+          QuantitativeNeume.OligonPlusIsonPlusKentemata,
+          QuantitativeNeume.OligonPlusElaphronPlusKentemata,
+          QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
+          QuantitativeNeume.OligonPlusHamiliPlusKentemata,
+        ],
+        offset: { x: -12, y: 0 },
+      },
+      {
+        isPairedWith: [QuantitativeNeume.Hyporoe, QuantitativeNeume.Kentemata],
+        offset: { x: 16, y: 0 },
+      },
+    ],
+  ],
+]);
+
 export const getGorgonAdjustments = (neume: GorgonNeume) => {
   return gorgonAdjustmentMap.get(neume);
 };
@@ -514,4 +565,8 @@ export const getQuantitativeNeumeAdjustments = (neume: QuantitativeNeume) => {
 
 export const getModeSignAdjustments = (neume: ModeSign) => {
   return modeSignAdjustmentMap.get(neume);
+};
+
+export const getAccidentalAdjustments = (neume: Accidental) => {
+  return accidentalAdjustmentMap.get(neume);
 };

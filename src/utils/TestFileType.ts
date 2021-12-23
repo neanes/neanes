@@ -3,4 +3,5 @@ export enum TestFileType {
   FthoraBottom = 'FthoraBottom',
   Gorgon = 'Gorgon',
   Klasma = 'Klasma',
+  Accidentals = 'Accidentals',
 }

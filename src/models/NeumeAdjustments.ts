@@ -30,6 +30,78 @@ export const gorgonAdjustmentMap = new Map<GorgonNeume, NeumeAdjustment[]>([
         isPairedWith: [QuantitativeNeume.OligonPlusKentemata],
         offset: { x: 0, y: -5 },
       },
+      {
+        isPairedWith: [
+          QuantitativeNeume.OligonPlusKentimaAbove,
+          QuantitativeNeume.OligonPlusHypsiliPlusKentimaHorizontal,
+          QuantitativeNeume.PetastiPlusOligon,
+          QuantitativeNeume.PetastiWithIson,
+        ],
+        offset: { x: 0, y: -7 },
+      },
+      {
+        isPairedWith: [QuantitativeNeume.OligonPlusHypsiliPlusKentimaVertical],
+        offset: { x: -12, y: 0 },
+      },
+      {
+        isPairedWith: [QuantitativeNeume.PetastiPlusHypsiliPlusKentimaVertical],
+        offset: { x: -8, y: 0 },
+      },
+      {
+        isPairedWith: [QuantitativeNeume.PetastiPlusDoubleHypsili],
+        offset: { x: 2, y: 0 },
+      },
+      {
+        isPairedWith: [
+          QuantitativeNeume.PetastiPlusKentimaAbove,
+          QuantitativeNeume.PetastiPlusHypsiliPlusKentimaHorizontal,
+        ],
+        offset: { x: 0, y: -9 },
+      },
+      {
+        isPairedWith: [QuantitativeNeume.PetastiPlusHypsiliLeft],
+        offset: { x: 5, y: 0 },
+      },
+      {
+        isPairedWith: [QuantitativeNeume.PetastiPlusApostrophos],
+        offset: { x: 0, y: -8 },
+      },
+      {
+        isPairedWith: [QuantitativeNeume.OligonPlusApostrophos],
+        offset: { x: 0, y: -8 },
+      },
+      {
+        isPairedWith: [QuantitativeNeume.OligonPlusKentima],
+        offset: { x: -7, y: 0 },
+      },
+      {
+        isPairedWith: [
+          QuantitativeNeume.PetastiPlusElaphron,
+          QuantitativeNeume.PetastiPlusElaphronPlusApostrophos,
+        ],
+        offset: { x: 0, y: -12 },
+      },
+    ],
+  ],
+
+  [
+    GorgonNeume.Gorgon_Bottom,
+    [
+      {
+        isPairedWith: [QuantitativeNeume.OligonPlusKentima],
+        offset: { x: -7, y: 0 },
+      },
+      {
+        isPairedWith: [
+          QuantitativeNeume.OligonPlusKentimaBelow,
+          QuantitativeNeume.KentemataPlusOligon,
+        ],
+        offset: { x: -5, y: 0 },
+      },
+      {
+        isPairedWith: [QuantitativeNeume.ElaphronPlusApostrophos],
+        offset: { x: 0, y: 4 },
+      },
     ],
   ],
 
@@ -39,16 +111,25 @@ export const gorgonAdjustmentMap = new Map<GorgonNeume, NeumeAdjustment[]>([
       { isPairedWith: [QuantitativeNeume.Hyporoe], offset: { x: 8, y: 4 } },
       { isPairedWith: [QuantitativeNeume.Apostrophos], offset: { x: 0, y: 4 } },
       {
-        isPairedWith: [QuantitativeNeume.OligonPlusIsonPlusKentemata],
+        isPairedWith: [
+          QuantitativeNeume.OligonPlusIsonPlusKentemata,
+          QuantitativeNeume.OligonPlusApostrophosPlusKentemata,
+          QuantitativeNeume.OligonPlusElaphronPlusKentemata,
+          QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
+          QuantitativeNeume.OligonPlusHamiliPlusKentemata,
+        ],
         offset: { x: -3, y: 0 },
       },
       {
-        isPairedWith: [QuantitativeNeume.OligonPlusApostrophosPlusKentemata],
-        offset: { x: -3, y: 0 },
+        isPairedWith: [QuantitativeNeume.DoubleHamili],
+        offset: { x: 0, y: -4 },
       },
       {
-        isPairedWith: [QuantitativeNeume.OligonPlusElaphronPlusKentemata],
-        offset: { x: -3, y: 0 },
+        isPairedWith: [
+          QuantitativeNeume.HamiliPlusElaphron,
+          QuantitativeNeume.HamiliPlusElaphronPlusApostrophos,
+        ],
+        offset: { x: 0, y: -4 },
       },
     ],
   ],
@@ -302,11 +383,6 @@ for (let fthora of Object.values(Fthora)) {
       isPairedWith: [QuantitativeNeume.KentemataPlusOligon],
       offset: { x: -8, y: 0 },
     });
-  } else if (fthora.endsWith('BottomRight')) {
-    // adjustments.push({
-    //   isPairedWith: [QuantitativeNeume.OligonPlusHypsiliRight],
-    //   offset: { x: -10, y: 0 },
-    // });
   }
 }
 

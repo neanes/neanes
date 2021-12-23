@@ -282,6 +282,31 @@ for (let fthora of Object.values(Fthora)) {
       isPairedWith: [QuantitativeNeume.DoubleHamili],
       offset: { x: 0, y: -10 },
     });
+  } else if (fthora.endsWith('BottomCenter')) {
+    adjustments.push({
+      isPairedWith: [QuantitativeNeume.OligonPlusKentimaBelow],
+      offset: { x: -5, y: 0 },
+    });
+    adjustments.push({
+      isPairedWith: [
+        QuantitativeNeume.ElaphronPlusApostrophos,
+        QuantitativeNeume.HamiliPlusElaphronPlusApostrophos,
+      ],
+      offset: { x: 0, y: 1 },
+    });
+    adjustments.push({
+      isPairedWith: [QuantitativeNeume.HamiliPlusApostrophos],
+      offset: { x: -5, y: 0 },
+    });
+    adjustments.push({
+      isPairedWith: [QuantitativeNeume.KentemataPlusOligon],
+      offset: { x: -8, y: 0 },
+    });
+  } else if (fthora.endsWith('BottomRight')) {
+    // adjustments.push({
+    //   isPairedWith: [QuantitativeNeume.OligonPlusHypsiliRight],
+    //   offset: { x: -10, y: 0 },
+    // });
   }
 }
 

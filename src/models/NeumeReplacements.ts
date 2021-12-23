@@ -51,6 +51,11 @@ const rightFthoraNeumes: Neume[] = [
   QuantitativeNeume.PetastiPlusHypsiliLeft,
 ];
 
+const bottomRightFthoraNeumes: Neume[] = [
+  QuantitativeNeume.Hyporoe,
+  QuantitativeNeume.Kentemata,
+];
+
 export const gorgonReplacementMap = new Map<
   GorgonNeume,
   NeumeReplacement<GorgonNeume>[]
@@ -237,17 +242,30 @@ export const fthoraReplacementMap = new Map<Fthora, NeumeReplacement<Fthora>[]>(
 
 for (let fthora of Object.values(Fthora)) {
   const topRightFthora = fthora.replace('TopCenter', 'TopRight') as Fthora;
+  const bottomRightFthora = fthora.replace(
+    'BottomCenter',
+    'BottomRight',
+  ) as Fthora;
+
+  const replacements = fthoraReplacementMap.get(fthora) || [];
+  fthoraReplacementMap.set(fthora, replacements);
 
   if (
     fthora.endsWith('TopCenter') &&
     Object.values(Fthora).includes(topRightFthora)
   ) {
-    fthoraReplacementMap.set(fthora, [
-      {
-        isPairedWith: rightFthoraNeumes,
-        replaceWith: topRightFthora,
-      },
-    ]);
+    replacements.push({
+      isPairedWith: rightFthoraNeumes,
+      replaceWith: topRightFthora,
+    });
+  } else if (
+    fthora.endsWith('BottomCenter') &&
+    Object.values(Fthora).includes(bottomRightFthora)
+  ) {
+    replacements.push({
+      isPairedWith: bottomRightFthoraNeumes,
+      replaceWith: bottomRightFthora,
+    });
   }
 }
 

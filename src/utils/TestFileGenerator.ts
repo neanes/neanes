@@ -114,6 +114,42 @@ export abstract class TestFileGenerator {
       (note.lyrics = (counter++).toString()), elements.push(note);
     }
 
+    for (let q in QuantitativeNeume) {
+      const quantitativeNeume = q as QuantitativeNeume;
+      if (
+        [
+          QuantitativeNeume.VareiaDotted,
+          QuantitativeNeume.Cross,
+          QuantitativeNeume.Kentima,
+        ].includes(quantitativeNeume)
+      ) {
+        continue;
+      }
+
+      const note = new NoteElement();
+      note.setQuantitativeNeume(quantitativeNeume);
+      note.setGorgonNeume(GorgonNeume.GorgonDottedLeft);
+      (note.lyrics = (counter++).toString()), elements.push(note);
+    }
+
+    for (let q in QuantitativeNeume) {
+      const quantitativeNeume = q as QuantitativeNeume;
+      if (
+        [
+          QuantitativeNeume.VareiaDotted,
+          QuantitativeNeume.Cross,
+          QuantitativeNeume.Kentima,
+        ].includes(quantitativeNeume)
+      ) {
+        continue;
+      }
+
+      const note = new NoteElement();
+      note.setQuantitativeNeume(quantitativeNeume);
+      note.setGorgonNeume(GorgonNeume.GorgonDottedRight);
+      (note.lyrics = (counter++).toString()), elements.push(note);
+    }
+
     return elements;
   }
 

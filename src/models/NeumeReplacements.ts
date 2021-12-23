@@ -342,8 +342,36 @@ export const vocalExpressionReplacementMap = new Map<
     VocalExpressionNeume.Antikenoma,
     [
       {
-        isPairedWith: [QuantitativeNeume.Apostrophos],
+        isPairedWith: [QuantitativeNeume.Kentemata],
+        replaceWith: null,
+      },
+      {
+        isPairedWith: [
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.Hyporoe,
+        ],
         replaceWith: VocalExpressionNeume.AntikenomaShort,
+      },
+    ],
+  ],
+  [
+    VocalExpressionNeume.Psifiston,
+    [
+      {
+        isPairedWith: [
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.Kentemata,
+          QuantitativeNeume.Hyporoe,
+          QuantitativeNeume.Hamili,
+          QuantitativeNeume.HamiliPlusApostrophos,
+          QuantitativeNeume.HamiliPlusElaphron,
+          QuantitativeNeume.HamiliPlusElaphronPlusApostrophos,
+          QuantitativeNeume.DoubleHamili,
+          QuantitativeNeume.Elaphron,
+          QuantitativeNeume.ElaphronPlusApostrophos,
+          QuantitativeNeume.RunningElaphron,
+        ],
+        replaceWith: null,
       },
     ],
   ],

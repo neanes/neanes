@@ -5,6 +5,7 @@ import {
   TimeNeume,
   GorgonNeume,
   Accidental,
+  VocalExpressionNeume,
 } from '@/models/Neumes';
 import { TestFileType } from './TestFileType';
 
@@ -19,8 +20,12 @@ export abstract class TestFileGenerator {
         return this.generateTestFile_Gorgon();
       case TestFileType.Klasma:
         return this.generateTestFile_Klasma();
+      case TestFileType.Hapli:
+        return this.generateTestFile_Hapli();
       case TestFileType.Accidentals:
         return this.generateTestFile_Accidentals();
+      case TestFileType.Expressions:
+        return this.generateTestFile_Expressions();
       default:
         console.error(`Unknown test file type: ${type}`);
         return null;
@@ -156,6 +161,68 @@ export abstract class TestFileGenerator {
     return elements;
   }
 
+  private static generateTestFile_Hapli() {
+    const elements: ScoreElement[] = [];
+
+    let counter = 1;
+
+    for (let q in QuantitativeNeume) {
+      const quantitativeNeume = q as QuantitativeNeume;
+      if (
+        [
+          QuantitativeNeume.VareiaDotted,
+          QuantitativeNeume.Cross,
+          QuantitativeNeume.Kentima,
+        ].includes(quantitativeNeume)
+      ) {
+        continue;
+      }
+
+      const note = new NoteElement();
+      note.setQuantitativeNeume(quantitativeNeume);
+      note.setTimeNeume(TimeNeume.Hapli);
+      (note.lyrics = (counter++).toString()), elements.push(note);
+    }
+
+    for (let q in QuantitativeNeume) {
+      const quantitativeNeume = q as QuantitativeNeume;
+      if (
+        [
+          QuantitativeNeume.VareiaDotted,
+          QuantitativeNeume.Cross,
+          QuantitativeNeume.Kentima,
+        ].includes(quantitativeNeume)
+      ) {
+        continue;
+      }
+
+      const note = new NoteElement();
+      note.setQuantitativeNeume(quantitativeNeume);
+      note.setTimeNeume(TimeNeume.Dipli);
+      (note.lyrics = (counter++).toString()), elements.push(note);
+    }
+
+    for (let q in QuantitativeNeume) {
+      const quantitativeNeume = q as QuantitativeNeume;
+      if (
+        [
+          QuantitativeNeume.VareiaDotted,
+          QuantitativeNeume.Cross,
+          QuantitativeNeume.Kentima,
+        ].includes(quantitativeNeume)
+      ) {
+        continue;
+      }
+
+      const note = new NoteElement();
+      note.setQuantitativeNeume(quantitativeNeume);
+      note.setTimeNeume(TimeNeume.Tripli);
+      (note.lyrics = (counter++).toString()), elements.push(note);
+    }
+
+    return elements;
+  }
+
   private static generateTestFile_Accidentals() {
     const elements: ScoreElement[] = [];
 
@@ -194,6 +261,50 @@ export abstract class TestFileGenerator {
       const note = new NoteElement();
       note.setQuantitativeNeume(quantitativeNeume);
       note.setAccidental(Accidental.Sharp_2_Left);
+      (note.lyrics = (counter++).toString()), elements.push(note);
+    }
+
+    return elements;
+  }
+
+  private static generateTestFile_Expressions() {
+    const elements: ScoreElement[] = [];
+
+    let counter = 1;
+
+    for (let q in QuantitativeNeume) {
+      const quantitativeNeume = q as QuantitativeNeume;
+      if (
+        [
+          QuantitativeNeume.VareiaDotted,
+          QuantitativeNeume.Cross,
+          QuantitativeNeume.Kentima,
+        ].includes(quantitativeNeume)
+      ) {
+        continue;
+      }
+
+      const note = new NoteElement();
+      note.setQuantitativeNeume(quantitativeNeume);
+      note.setVocalExpressionNeume(VocalExpressionNeume.Psifiston);
+      (note.lyrics = (counter++).toString()), elements.push(note);
+    }
+
+    for (let q in QuantitativeNeume) {
+      const quantitativeNeume = q as QuantitativeNeume;
+      if (
+        [
+          QuantitativeNeume.VareiaDotted,
+          QuantitativeNeume.Cross,
+          QuantitativeNeume.Kentima,
+        ].includes(quantitativeNeume)
+      ) {
+        continue;
+      }
+
+      const note = new NoteElement();
+      note.setQuantitativeNeume(quantitativeNeume);
+      note.setVocalExpressionNeume(VocalExpressionNeume.Antikenoma);
       (note.lyrics = (counter++).toString()), elements.push(note);
     }
 

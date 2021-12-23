@@ -4,6 +4,13 @@
 
 Kentemata may never hold more than one beat, and thus cannot take a klasma, hapli, etc. If a kentemata needs to be held for more than one beat, an ison must placed after it and given the appropriate duration. This also applies to compound neumes that end in kentemata.
 
+## Gorgon
+
+- Compound neumes may only accept a gorgon on the top.
+- Hyporoe only accepts a gorgon on the top.
+- Neumes containing a petasti cannot accept a gorgon.
+- Neumes containg a psefiston cannot accept a gorgon, except for the oligon with a kentemata below it.
+
 ## Klasmas
 
 ### Bottom-only
@@ -65,7 +72,8 @@ QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
 
 ## Petasti
 
-The petasti can never be held for more than one beat.
+- The petasti can never be held for more than one beat.
+- The petasti can never take a gorgon.
 
 ## Hyporoe
 

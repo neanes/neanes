@@ -32,12 +32,18 @@ export const gorgonAdjustmentMap = new Map<GorgonNeume, NeumeAdjustment[]>([
       },
       {
         isPairedWith: [
-          QuantitativeNeume.OligonPlusKentimaAbove,
           QuantitativeNeume.OligonPlusHypsiliPlusKentimaHorizontal,
           QuantitativeNeume.PetastiPlusOligon,
           QuantitativeNeume.PetastiWithIson,
         ],
         offset: { x: 0, y: -7 },
+      },
+      {
+        isPairedWith: [
+          QuantitativeNeume.OligonPlusKentimaAbove,
+          QuantitativeNeume.OligonPlusHypsiliPlusKentimaVertical,
+        ],
+        offset: { x: 8, y: 0 },
       },
       {
         isPairedWith: [QuantitativeNeume.PetastiPlusDoubleHypsili],

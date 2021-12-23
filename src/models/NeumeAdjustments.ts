@@ -147,6 +147,24 @@ export const gorgonAdjustmentMap = new Map<GorgonNeume, NeumeAdjustment[]>([
   ],
 ]);
 
+gorgonAdjustmentMap.set(
+  GorgonNeume.GorgonDottedLeft,
+  gorgonAdjustmentMap.get(GorgonNeume.Gorgon_Top)!,
+);
+gorgonAdjustmentMap.set(
+  GorgonNeume.GorgonDottedRight,
+  gorgonAdjustmentMap.get(GorgonNeume.Gorgon_Top)!,
+);
+
+gorgonAdjustmentMap.set(
+  GorgonNeume.GorgonDottedLeft_Right,
+  gorgonAdjustmentMap.get(GorgonNeume.Gorgon_TopRight)!,
+);
+gorgonAdjustmentMap.set(
+  GorgonNeume.GorgonDottedRight_Right,
+  gorgonAdjustmentMap.get(GorgonNeume.Gorgon_TopRight)!,
+);
+
 export const timeAdjustmentMap = new Map<TimeNeume, NeumeAdjustment[]>([
   [
     TimeNeume.Klasma_Top,

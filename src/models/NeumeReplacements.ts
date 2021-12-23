@@ -15,7 +15,7 @@ import {
 export interface NeumeReplacement<T> {
   isPairedWith?: Neume[];
   isNotPairedWith?: Neume[];
-  replaceWith: T;
+  replaceWith: T | null;
 }
 
 // Neumes that must be paired with special "_Right" neumes
@@ -33,6 +33,8 @@ const rightGorgonNeumes: Neume[] = [
   QuantitativeNeume.HamiliPlusElaphron,
   QuantitativeNeume.HamiliPlusElaphronPlusApostrophos,
   QuantitativeNeume.DoubleHamili,
+  QuantitativeNeume.OligonPlusHypsiliPlusKentimaVertical,
+  QuantitativeNeume.PetastiPlusHypsiliPlusKentimaVertical,
 ];
 
 const bottomRightGorgonNeumes: Neume[] = [
@@ -41,7 +43,15 @@ const bottomRightGorgonNeumes: Neume[] = [
   QuantitativeNeume.Kentemata,
 ];
 
-const rightTimeNeumes = rightGorgonNeumes;
+const rightTimeNeumes: Neume[] = [
+  QuantitativeNeume.Apostrophos,
+  QuantitativeNeume.Hyporoe,
+  QuantitativeNeume.Hamili,
+  QuantitativeNeume.HamiliPlusApostrophos,
+  QuantitativeNeume.HamiliPlusElaphron,
+  QuantitativeNeume.HamiliPlusElaphronPlusApostrophos,
+  QuantitativeNeume.DoubleHamili,
+];
 
 const rightFthoraNeumes: Neume[] = [
   QuantitativeNeume.Apostrophos,
@@ -65,6 +75,41 @@ const bottomRightFthoraNeumes: Neume[] = [
   QuantitativeNeume.Hyporoe,
   QuantitativeNeume.Kentemata,
   QuantitativeNeume.Apostrophos,
+];
+
+const bottomOnlyKlasmaNeumes: Neume[] = [
+  QuantitativeNeume.PetastiWithIson,
+  QuantitativeNeume.Petasti,
+  QuantitativeNeume.PetastiPlusOligon,
+  QuantitativeNeume.PetastiPlusKentimaAbove,
+  QuantitativeNeume.PetastiPlusHypsiliRight,
+  QuantitativeNeume.PetastiPlusHypsiliLeft,
+  QuantitativeNeume.PetastiPlusHypsiliPlusKentimaHorizontal,
+  QuantitativeNeume.PetastiPlusHypsiliPlusKentimaVertical,
+  QuantitativeNeume.PetastiPlusDoubleHypsili,
+  QuantitativeNeume.PetastiPlusApostrophos,
+  QuantitativeNeume.PetastiPlusElaphron,
+  QuantitativeNeume.PetastiPlusElaphronPlusApostrophos,
+
+  QuantitativeNeume.OligonPlusDoubleHypsili,
+];
+
+const topOnlyKlasmaNeumes: Neume[] = [
+  QuantitativeNeume.Ison,
+  QuantitativeNeume.KentemataPlusOligon,
+  QuantitativeNeume.Oligon,
+  QuantitativeNeume.OligonPlusKentimaBelow,
+  QuantitativeNeume.OligonPlusKentima,
+  QuantitativeNeume.OligonPlusHypsiliRight,
+  QuantitativeNeume.Hamili,
+  QuantitativeNeume.HamiliPlusApostrophos,
+  QuantitativeNeume.HamiliPlusElaphron,
+  QuantitativeNeume.HamiliPlusElaphronPlusApostrophos,
+  QuantitativeNeume.DoubleHamili,
+  QuantitativeNeume.Apostrophos,
+  QuantitativeNeume.Elaphron,
+  QuantitativeNeume.ElaphronPlusApostrophos,
+  QuantitativeNeume.RunningElaphron,
 ];
 
 export const gorgonReplacementMap = new Map<
@@ -208,7 +253,50 @@ export const timeReplacementMap = new Map<
 
   [
     TimeNeume.Klasma_Top,
-    [{ isPairedWith: rightTimeNeumes, replaceWith: TimeNeume.Klasma_TopRight }],
+    [
+      { isPairedWith: rightTimeNeumes, replaceWith: TimeNeume.Klasma_TopRight },
+      {
+        isPairedWith: bottomOnlyKlasmaNeumes,
+        replaceWith: null,
+      },
+      {
+        isPairedWith: [
+          QuantitativeNeume.Hyporoe,
+          QuantitativeNeume.Kentemata,
+          QuantitativeNeume.OligonPlusKentemata,
+          QuantitativeNeume.OligonPlusHamiliPlusKentemata,
+          QuantitativeNeume.OligonPlusIsonPlusKentemata,
+          QuantitativeNeume.OligonPlusElaphronPlusKentemata,
+          QuantitativeNeume.OligonPlusApostrophosPlusKentemata,
+          QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
+        ],
+        replaceWith: null,
+      },
+    ],
+  ],
+
+  [
+    TimeNeume.Klasma_Bottom,
+    [
+      {
+        isPairedWith: topOnlyKlasmaNeumes,
+        replaceWith: null,
+      },
+      {
+        isPairedWith: [
+          QuantitativeNeume.Hyporoe,
+          QuantitativeNeume.Kentemata,
+          QuantitativeNeume.OligonPlusKentemata,
+          QuantitativeNeume.OligonPlusKentemata,
+          QuantitativeNeume.OligonPlusHamiliPlusKentemata,
+          QuantitativeNeume.OligonPlusIsonPlusKentemata,
+          QuantitativeNeume.OligonPlusElaphronPlusKentemata,
+          QuantitativeNeume.OligonPlusApostrophosPlusKentemata,
+          QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
+        ],
+        replaceWith: null,
+      },
+    ],
   ],
 
   [
@@ -228,7 +316,10 @@ export const timeReplacementMap = new Map<
 
   [
     TimeNeume.Klasma_TopRight,
-    [{ isNotPairedWith: rightTimeNeumes, replaceWith: TimeNeume.Klasma_Top }],
+    [
+      { isNotPairedWith: rightTimeNeumes, replaceWith: TimeNeume.Klasma_Top },
+      { isPairedWith: [QuantitativeNeume.Hyporoe], replaceWith: null },
+    ],
   ],
 ]);
 
@@ -269,6 +360,14 @@ for (let fthora of Object.values(Fthora)) {
       isPairedWith: rightFthoraNeumes,
       replaceWith: topRightFthora,
     });
+
+    // Add the opposite
+    const replacementsTopRight = fthoraReplacementMap.get(topRightFthora) || [];
+    fthoraReplacementMap.set(topRightFthora, replacementsTopRight);
+    replacementsTopRight.push({
+      isNotPairedWith: rightFthoraNeumes,
+      replaceWith: fthora,
+    });
   } else if (
     fthora.endsWith('BottomCenter') &&
     Object.values(Fthora).includes(bottomRightFthora)
@@ -276,6 +375,15 @@ for (let fthora of Object.values(Fthora)) {
     replacements.push({
       isPairedWith: bottomRightFthoraNeumes,
       replaceWith: bottomRightFthora,
+    });
+
+    // Add the opposite
+    const replacementsBottomRight =
+      fthoraReplacementMap.get(bottomRightFthora) || [];
+    fthoraReplacementMap.set(bottomRightFthora, replacementsBottomRight);
+    replacementsBottomRight.push({
+      isNotPairedWith: bottomRightFthoraNeumes,
+      replaceWith: fthora,
     });
   }
 }

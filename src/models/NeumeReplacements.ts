@@ -33,14 +33,21 @@ const rightGorgonNeumes: Neume[] = [
   QuantitativeNeume.HamiliPlusElaphron,
   QuantitativeNeume.HamiliPlusElaphronPlusApostrophos,
   QuantitativeNeume.DoubleHamili,
-  QuantitativeNeume.OligonPlusHypsiliPlusKentimaVertical,
   QuantitativeNeume.PetastiPlusHypsiliPlusKentimaVertical,
 ];
 
 const bottomRightGorgonNeumes: Neume[] = [
   QuantitativeNeume.Apostrophos,
-  QuantitativeNeume.Hyporoe,
   QuantitativeNeume.Kentemata,
+];
+
+const bottomAllowedGorgonNeumes: Neume[] = [
+  QuantitativeNeume.Apostrophos,
+  QuantitativeNeume.Ison,
+  QuantitativeNeume.Oligon,
+  QuantitativeNeume.Kentemata,
+  QuantitativeNeume.Elaphron,
+  QuantitativeNeume.Hamili,
 ];
 
 const rightTimeNeumes: Neume[] = [
@@ -132,6 +139,10 @@ export const gorgonReplacementMap = new Map<
       {
         isPairedWith: bottomRightGorgonNeumes,
         replaceWith: GorgonNeume.Gorgon_BottomRight,
+      },
+      {
+        isNotPairedWith: bottomAllowedGorgonNeumes,
+        replaceWith: null,
       },
     ],
   ],

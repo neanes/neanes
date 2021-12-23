@@ -739,6 +739,20 @@ export class LayoutService {
       return false;
     }
 
+    if (
+      fthora.startsWith('GeneralSharp') &&
+      currentNote !== getScaleNoteValue(ScaleNote.Ga)
+    ) {
+      return false;
+    }
+
+    if (
+      fthora.startsWith('GeneralFlat') &&
+      currentNote !== getScaleNoteValue(ScaleNote.Ke)
+    ) {
+      return false;
+    }
+
     return true;
   }
 }

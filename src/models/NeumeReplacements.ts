@@ -22,9 +22,23 @@ export interface NeumeReplacement<T> {
 const rightGorgonNeumes: Neume[] = [
   QuantitativeNeume.Apostrophos,
   QuantitativeNeume.Hyporoe,
+  QuantitativeNeume.Kentemata,
   QuantitativeNeume.OligonPlusElaphronPlusKentemata,
   QuantitativeNeume.OligonPlusIsonPlusKentemata,
   QuantitativeNeume.OligonPlusApostrophosPlusKentemata,
+  QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
+  QuantitativeNeume.OligonPlusHamiliPlusKentemata,
+  QuantitativeNeume.Hamili,
+  QuantitativeNeume.HamiliPlusApostrophos,
+  QuantitativeNeume.HamiliPlusElaphron,
+  QuantitativeNeume.HamiliPlusElaphronPlusApostrophos,
+  QuantitativeNeume.DoubleHamili,
+];
+
+const bottomRightGorgonNeumes: Neume[] = [
+  QuantitativeNeume.Apostrophos,
+  QuantitativeNeume.Hyporoe,
+  QuantitativeNeume.Kentemata,
 ];
 
 const rightTimeNeumes = rightGorgonNeumes;
@@ -38,10 +52,6 @@ const rightFthoraNeumes: Neume[] = [
   QuantitativeNeume.HamiliPlusElaphronPlusApostrophos,
   QuantitativeNeume.HamiliPlusElaphron,
   QuantitativeNeume.Kentemata,
-  QuantitativeNeume.KentemataPlusOligon,
-  QuantitativeNeume.Ison,
-  QuantitativeNeume.Oligon,
-  QuantitativeNeume.OligonPlusKentimaBelow,
   QuantitativeNeume.OligonPlusKentimaAbove,
   QuantitativeNeume.OligonPlusKentemata,
   QuantitativeNeume.OligonPlusHypsiliLeft,
@@ -54,6 +64,7 @@ const rightFthoraNeumes: Neume[] = [
 const bottomRightFthoraNeumes: Neume[] = [
   QuantitativeNeume.Hyporoe,
   QuantitativeNeume.Kentemata,
+  QuantitativeNeume.Apostrophos,
 ];
 
 export const gorgonReplacementMap = new Map<
@@ -74,7 +85,7 @@ export const gorgonReplacementMap = new Map<
     GorgonNeume.Gorgon_Bottom,
     [
       {
-        isPairedWith: rightGorgonNeumes,
+        isPairedWith: bottomRightGorgonNeumes,
         replaceWith: GorgonNeume.Gorgon_BottomRight,
       },
     ],

@@ -18,6 +18,7 @@ import {
   getGorgonReplacements,
   getTimeReplacements,
   getVocalExpressionReplacements,
+  getFthoraReplacements,
 } from './NeumeReplacements';
 import { Scale, ScaleNote } from './Scales';
 
@@ -95,6 +96,7 @@ export class NoteElement extends ScoreElement {
     this.replaceGorgons();
     this.replaceTimeNeumes();
     this.replaceVocalExpressions();
+    this.replaceFthora();
   }
 
   private replaceGorgons() {
@@ -138,6 +140,34 @@ export class NoteElement extends ScoreElement {
 
         if (replacement) {
           this.setTimeNeume(replacement.replaceWith);
+        }
+      }
+    }
+  }
+
+  private replaceFthora() {
+    if (this.fthora) {
+      const replacements = getFthoraReplacements(this.fthora);
+
+      if (replacements) {
+        const replacement =
+          replacements.find(
+            (x) =>
+              x.isPairedWith && x.isPairedWith.includes(this.quantitativeNeume),
+          ) ||
+          replacements.find(
+            (x) =>
+              x.isNotPairedWith &&
+              !x.isNotPairedWith.includes(this.quantitativeNeume),
+          );
+
+        if (replacement) {
+          console.log(
+            this.quantitativeNeume,
+            this.fthora,
+            replacement.replaceWith,
+          );
+          this.setFthora(replacement.replaceWith);
         }
       }
     }

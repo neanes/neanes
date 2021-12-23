@@ -159,6 +159,132 @@ export const fthoraAdjustmentMap = new Map<Fthora, NeumeAdjustment[]>([
   ],
 ]);
 
+// Shortcut to enter adjustments for many fthora at once
+for (let fthora of Object.values(Fthora)) {
+  const adjustments = fthoraAdjustmentMap.get(fthora) || [];
+  fthoraAdjustmentMap.set(fthora, adjustments);
+
+  if (fthora.endsWith('TopCenter')) {
+    adjustments.push({
+      isPairedWith: [QuantitativeNeume.OligonPlusHypsiliRight],
+      offset: { x: -10, y: 0 },
+    });
+
+    adjustments.push({
+      isPairedWith: [
+        QuantitativeNeume.OligonPlusHypsiliPlusKentimaHorizontal,
+        QuantitativeNeume.PetastiWithIson,
+        QuantitativeNeume.PetastiPlusOligon,
+        QuantitativeNeume.PetastiPlusHypsiliPlusKentimaHorizontal,
+        QuantitativeNeume.PetastiPlusHypsiliPlusKentimaHorizontal,
+        QuantitativeNeume.PetastiPlusApostrophos,
+      ],
+      offset: { x: 0, y: -10 },
+    });
+
+    adjustments.push({
+      isPairedWith: [QuantitativeNeume.OligonPlusIsonPlusKentemata],
+      offset: { x: -15, y: -5 },
+    });
+
+    adjustments.push({
+      isPairedWith: [
+        QuantitativeNeume.OligonPlusApostrophosPlusKentemata,
+        QuantitativeNeume.OligonPlusHamiliPlusKentemata,
+      ],
+      offset: { x: -15, y: -10 },
+    });
+
+    adjustments.push({
+      isPairedWith: [
+        QuantitativeNeume.OligonPlusElaphronPlusKentemata,
+        QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
+      ],
+      offset: { x: -22, y: -13 },
+    });
+
+    adjustments.push({
+      isPairedWith: [
+        QuantitativeNeume.PetastiPlusElaphron,
+        QuantitativeNeume.PetastiPlusElaphronPlusApostrophos,
+      ],
+      offset: { x: 0, y: -14 },
+    });
+
+    adjustments.push({
+      isPairedWith: [
+        QuantitativeNeume.Elaphron,
+        QuantitativeNeume.ElaphronPlusApostrophos,
+        QuantitativeNeume.RunningElaphron,
+      ],
+      offset: { x: 0, y: -3 },
+    });
+
+    adjustments.push({
+      isPairedWith: [QuantitativeNeume.PetastiPlusHypsiliRight],
+      offset: { x: 0, y: -7 },
+    });
+
+    adjustments.push({
+      isPairedWith: [QuantitativeNeume.PetastiPlusHypsiliPlusKentimaVertical],
+      offset: { x: -9, y: -8 },
+    });
+
+    adjustments.push({
+      isPairedWith: [QuantitativeNeume.OligonPlusDoubleHypsili],
+      offset: { x: 4, y: -17 },
+    });
+
+    adjustments.push({
+      isPairedWith: [QuantitativeNeume.PetastiPlusDoubleHypsili],
+      offset: { x: 4, y: -20 },
+    });
+  } else if (fthora.endsWith('TopRight')) {
+    adjustments.push({
+      isPairedWith: [QuantitativeNeume.OligonPlusKentemata],
+      offset: { x: 5, y: 0 },
+    });
+
+    adjustments.push({
+      isPairedWith: [QuantitativeNeume.OligonPlusKentimaAbove],
+      offset: { x: 2, y: 0 },
+    });
+
+    adjustments.push({
+      isPairedWith: [QuantitativeNeume.OligonPlusApostrophos],
+      offset: { x: 3, y: 0 },
+    });
+
+    adjustments.push({
+      isPairedWith: [QuantitativeNeume.OligonPlusHypsiliPlusKentimaVertical],
+      offset: { x: 4, y: 0 },
+    });
+
+    adjustments.push({
+      isPairedWith: [QuantitativeNeume.PetastiPlusKentimaAbove],
+      offset: { x: 0, y: -5 },
+    });
+
+    adjustments.push({
+      isPairedWith: [QuantitativeNeume.PetastiPlusHypsiliLeft],
+      offset: { x: 5, y: 0 },
+    });
+
+    adjustments.push({
+      isPairedWith: [
+        QuantitativeNeume.HamiliPlusElaphron,
+        QuantitativeNeume.HamiliPlusElaphronPlusApostrophos,
+      ],
+      offset: { x: 0, y: -7 },
+    });
+
+    adjustments.push({
+      isPairedWith: [QuantitativeNeume.DoubleHamili],
+      offset: { x: 0, y: -10 },
+    });
+  }
+}
+
 export const rootSignAdjustmentMap = new Map<RootSign, NeumeAdjustment[]>([
   [
     RootSign.Zygos,

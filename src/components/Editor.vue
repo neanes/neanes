@@ -294,6 +294,7 @@ import Neume from './Neume.vue';
 import { IpcMainChannels, IpcRendererChannels } from '@/ipc/ipcChannels';
 import { EventBus } from '@/eventBus';
 import { modeKeyTemplates } from '@/models/ModeKeys';
+import { TestFileGenerator } from '@/utils/TestFileGenerator';
 
 @Component({
   components: {
@@ -884,7 +885,10 @@ export default class Editor extends Vue {
       store.mutations.setScore(new Score());
     }
 
-    //this.score.elements = this.generateTestFile();
+    this.score.staff.elements = TestFileGenerator.generateTestFile_Fthora_Top();
+
+    // this.score.staff.elements =
+    //   TestFileGenerator.generateTestFile_Fthora_Top_Klasma();
 
     this.pages = LayoutService.processPages(
       this.elements,
@@ -1046,49 +1050,6 @@ export default class Editor extends Vue {
   onScoreUpdated() {
     this.save();
   }
-
-  // generateTestFile() {
-  //   const elements: Element[] = [];
-
-  //   let counter = 1;
-
-  //   for (let quantitativeNeume in QuantitativeNeume) {
-  //     const syllableElement: SyllableElement = {
-  //       neume: {
-  //         quantitativeNeume: quantitativeNeume as QuantitativeNeume,
-  //         timeNeume: null,
-  //         vocalExpressionNeume: null,
-  //         fthora: null,
-  //       },
-  //       lyrics: (counter++).toString(),
-  //       type: ElementType.Syllable,
-  //     }
-
-  //     elements.push(syllableElement);
-
-  //     for (let fthora in Fthora) {
-  //       const syllableElement: SyllableElement = {
-  //         neume: {
-  //           quantitativeNeume: quantitativeNeume as QuantitativeNeume,
-  //           timeNeume: null,
-  //           vocalExpressionNeume: null,
-  //           fthora: fthora as Fthora,
-  //         },
-  //         lyrics: (counter++).toString(),
-  //         type: ElementType.Syllable,
-  //       }
-
-  //       elements.push(syllableElement);
-  //     }
-
-  //     // for (let neume in Fthora) {
-
-  //     // }
-
-  //   }
-
-  //   return elements;
-  // }
 }
 </script>
 

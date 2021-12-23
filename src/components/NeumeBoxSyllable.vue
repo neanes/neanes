@@ -17,7 +17,12 @@
       :offset="gorgonNeumeOffset"
       :class="[{ red: isRedNeume(note.gorgonNeume) }]"
     ></Neume>
-    <Neume v-if="hasFthora" :neume="note.fthora" class="red"></Neume>
+    <Neume
+      v-if="hasFthora"
+      :neume="note.fthora"
+      :offset="fthoraOffset"
+      class="red"
+    ></Neume>
     <Neume v-if="hasAccidental" :neume="note.accidental" class="red"></Neume>
     <Neume
       v-if="hasVocalExpressionNeume && !isVareia(note.vocalExpressionNeume)"
@@ -38,6 +43,7 @@ import {
   VocalExpressionNeume,
 } from '@/models/Neumes';
 import {
+  getFthoraAdjustments,
   getGorgonAdjustments,
   getTimeAdjustments,
   getVocalExpressionAdjustments,
@@ -110,6 +116,24 @@ export default class NeumeBoxSyllable extends Vue {
     let offset: NeumeAdjustmentOffset | null = null;
 
     const adjustments = getGorgonAdjustments(this.note.gorgonNeume!);
+
+    if (adjustments) {
+      const adjustment = adjustments.find((x) =>
+        x.isPairedWith.includes(this.note.quantitativeNeume),
+      );
+
+      if (adjustment) {
+        offset = adjustment.offset;
+      }
+    }
+
+    return offset;
+  }
+
+  get fthoraOffset() {
+    let offset: NeumeAdjustmentOffset | null = null;
+
+    const adjustments = getFthoraAdjustments(this.note.fthora!);
 
     if (adjustments) {
       const adjustment = adjustments.find((x) =>

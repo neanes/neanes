@@ -24,6 +24,80 @@ protocol.registerSchemesAsPrivileged([
 
 let saving = false;
 
+interface State {
+  hasUnsavedChanges: boolean;
+  filePath: string | null;
+}
+
+const state: State = {
+  hasUnsavedChanges: false,
+  filePath: null,
+};
+
+async function showUnsavedChangesWarning(win: BrowserWindow) {
+  const fileName =
+    state.filePath != null ? path.basename(state.filePath) : 'Untitled 1';
+
+  return await dialog.showMessageBox(win, {
+    title: process.env.VUE_APP_TITLE,
+    message: `Do you want to save the changes you made to ${fileName}?`,
+    detail: "Your changes will be lost if you don't save them.",
+    type: 'warning',
+    buttons: ['Save', "Don't Save", 'Cancel'],
+  });
+}
+
+async function checkForUnsavedChanges(win: BrowserWindow) {
+  if (state.hasUnsavedChanges) {
+    const dialogResult = await showUnsavedChangesWarning(win);
+
+    if (dialogResult.response === 0) {
+      // User wants to save
+      if (!(await handleSave(win, state.filePath))) {
+        // If the user cancels the save dialog
+        // then don't do anything.
+        return false;
+      }
+    } else if (dialogResult.response === 2) {
+      // User wants to cancel
+      return false;
+    }
+  }
+
+  return true;
+}
+
+async function handleSave(win: BrowserWindow, filePath: string | null) {
+  try {
+    if (saving) {
+      return false;
+    }
+
+    saving = true;
+
+    if (filePath != null) {
+      win.webContents.send(IpcMainChannels.FileMenuSave);
+
+      // Wait for the reply and write the data to the file path
+      ipcMain.once(
+        IpcRendererChannels.FileMenuSaveReply,
+        async (event, args: FileMenuSaveReplyArgs) => {
+          saving = false;
+          await fs.writeFile(filePath!, args.data);
+          win.webContents.send(IpcMainChannels.SaveComplete);
+        },
+      );
+
+      return true;
+    } else {
+      return await handleSaveAs(win);
+    }
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
+}
+
 async function handleSaveAs(win: BrowserWindow) {
   try {
     const dialogResult = await dialog.showSaveDialog(win, {
@@ -45,16 +119,19 @@ async function handleSaveAs(win: BrowserWindow) {
         async (event, args: FileMenuSaveAsReplyArgs) => {
           saving = false;
           await fs.writeFile(dialogResult.filePath!, args.data);
-          console.log('hey');
           win.webContents.send(IpcMainChannels.SaveComplete);
         },
       );
+
+      return true;
     } else {
       saving = false;
+      return false;
     }
   } catch (error) {
     saving = false;
     console.error(error);
+    return false;
   }
 }
 
@@ -66,69 +143,49 @@ function createMenu(win: BrowserWindow) {
         {
           label: '&New',
           accelerator: 'CmdOrCtrl+N',
-          click() {
-            win.webContents.send(IpcMainChannels.FileMenuNewScore);
+          async click() {
+            if (await checkForUnsavedChanges(win)) {
+              win.webContents.send(IpcMainChannels.FileMenuNewScore);
+            }
           },
         },
         {
           label: '&Open',
           accelerator: 'CmdOrCtrl+O',
           async click() {
-            try {
-              const dialogResult = await dialog.showOpenDialog(win, {
-                properties: ['openFile'],
-                title: 'Open Score',
-                filters: [{ name: 'Score File', extensions: ['json'] }],
-              });
+            if (await checkForUnsavedChanges(win)) {
+              try {
+                const dialogResult = await dialog.showOpenDialog(win, {
+                  properties: ['openFile'],
+                  title: 'Open Score',
+                  filters: [{ name: 'Score File', extensions: ['json'] }],
+                });
 
-              const filePath = dialogResult.filePaths[0];
+                const filePath = dialogResult.filePaths[0];
 
-              if (!dialogResult.canceled) {
-                const data = await fs.readFile(filePath, 'utf8');
+                if (!dialogResult.canceled) {
+                  const data = await fs.readFile(filePath, 'utf8');
 
-                win.webContents.send(IpcMainChannels.FileMenuOpenScore, {
-                  data,
-                  filePath,
-                } as FileMenuOpenScoreArgs);
-              } else {
+                  win.webContents.send(IpcMainChannels.FileMenuOpenScore, {
+                    data,
+                    filePath,
+                  } as FileMenuOpenScoreArgs);
+                } else {
+                  saving = false;
+                }
+              } catch (error) {
+                console.error(error);
+              } finally {
                 saving = false;
               }
-            } catch (error) {
-              console.error(error);
-            } finally {
-              saving = false;
             }
           },
         },
         {
           label: '&Save',
           accelerator: 'CmdOrCtrl+S',
-          click() {
-            try {
-              if (saving) {
-                return;
-              }
-
-              saving = true;
-
-              win.webContents.send(IpcMainChannels.FileMenuSave);
-
-              // Wait for the reply and write the data to the file path
-              ipcMain.once(
-                IpcRendererChannels.FileMenuSaveReply,
-                async (event, args: FileMenuSaveReplyArgs) => {
-                  if (args.filePath) {
-                    saving = false;
-                    await fs.writeFile(args.filePath, args.data);
-                    win.webContents.send(IpcMainChannels.SaveComplete);
-                  } else {
-                    handleSaveAs(win);
-                  }
-                },
-              );
-            } catch (error) {
-              console.error(error);
-            }
+          async click() {
+            handleSaveAs(win);
           },
         },
         {
@@ -313,3 +370,11 @@ if (isDevelopment) {
     });
   }
 }
+
+ipcMain.on(IpcRendererChannels.SetHasUnsavedChanges, async (event, data) => {
+  state.hasUnsavedChanges = data;
+});
+
+ipcMain.on(IpcRendererChannels.SetFilePath, async (event, data) => {
+  state.filePath = data;
+});

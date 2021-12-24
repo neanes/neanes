@@ -8,6 +8,7 @@ interface IState {
   selectedElement: ScoreElement | null;
   elementToFocus: ScoreElement | null;
   currentFilePath: string | null;
+  hasUnsavedChanges: boolean;
 }
 
 const state: IState = Vue.observable({
@@ -15,6 +16,7 @@ const state: IState = Vue.observable({
   selectedElement: null,
   elementToFocus: null,
   currentFilePath: null,
+  hasUnsavedChanges: false,
 });
 
 const getters = {
@@ -26,6 +28,17 @@ const getters = {
     return state.selectedElement != null
       ? this.elements.indexOf(state.selectedElement)
       : -1;
+  },
+
+  get windowTitle() {
+    const unsavedChangesMarker = state.hasUnsavedChanges ? '*' : '';
+
+    if (state.currentFilePath != null) {
+      const fileName = state.currentFilePath.replace(/^.*[\\/]/, '');
+      return `${unsavedChangesMarker}${fileName} - ${process.env.VUE_APP_TITLE}`;
+    } else {
+      return `${unsavedChangesMarker}Untitled 1 - ${process.env.VUE_APP_TITLE}`;
+    }
   },
 };
 
@@ -43,15 +56,21 @@ const mutations = {
   },
 
   setCurrentFilepath(path: string | null) {
+    state.currentFilePath = path;
+
     if (path != null) {
       localStorage.setItem('filePath', path);
-      const fileName = path.replace(/^.*[\\/]/, '');
-      window.document.title = `${fileName} - ${process.env.VUE_APP_TITLE}`;
     } else {
       localStorage.removeItem('filePath');
-      window.document.title = `Untitled 1 - ${process.env.VUE_APP_TITLE}`;
     }
-    state.currentFilePath = path;
+
+    window.document.title = getters.windowTitle;
+  },
+
+  setHasUnsavedChanges(hasUnsavedChanges: boolean) {
+    state.hasUnsavedChanges = hasUnsavedChanges;
+    localStorage.setItem('hasUnsavedChanges', hasUnsavedChanges.toString());
+    window.document.title = getters.windowTitle;
   },
 
   removeElement(element: ScoreElement) {

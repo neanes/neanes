@@ -10,6 +10,8 @@ export enum IpcMainChannels {
   FileMenuInsertDropCap = 'FileMenuInsertDropCap',
 
   FileMenuGenerateTestFile = 'GenerateTestFile',
+
+  SaveComplete = 'SaveComplete',
 }
 
 export enum IpcRendererChannels {

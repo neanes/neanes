@@ -45,6 +45,8 @@ async function handleSaveAs(win: BrowserWindow) {
         async (event, args: FileMenuSaveAsReplyArgs) => {
           saving = false;
           await fs.writeFile(dialogResult.filePath!, args.data);
+          console.log('hey');
+          win.webContents.send(IpcMainChannels.SaveComplete);
         },
       );
     } else {
@@ -118,6 +120,7 @@ function createMenu(win: BrowserWindow) {
                   if (args.filePath) {
                     saving = false;
                     await fs.writeFile(args.filePath, args.data);
+                    win.webContents.send(IpcMainChannels.SaveComplete);
                   } else {
                     handleSaveAs(win);
                   }

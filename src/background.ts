@@ -1,6 +1,14 @@
 'use strict';
 
-import { app, protocol, BrowserWindow, Menu, dialog, ipcMain } from 'electron';
+import {
+  app,
+  protocol,
+  BrowserWindow,
+  Menu,
+  dialog,
+  ipcMain,
+  MenuItemConstructorOptions,
+} from 'electron';
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib';
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer';
 import {
@@ -265,34 +273,36 @@ function createMenu(win: BrowserWindow) {
         },
       ],
     },
-    {
-      label: 'View (Debug)',
-      visible: isDevelopment,
-      submenu: [
-        { role: 'reload' },
-        { role: 'forceReload' },
-        { role: 'toggleDevTools' },
-        { type: 'separator' },
-        { role: 'resetZoom' },
-        { role: 'zoomIn' },
-        { role: 'zoomOut' },
-        { type: 'separator' },
-        { role: 'togglefullscreen' },
-      ],
-    },
-    {
-      label: 'Generate Test Files (Debug)',
-      visible: isDevelopment,
-      submenu: Object.values(TestFileType).map((testFileType) => ({
-        label: testFileType,
-        click() {
-          win.webContents.send(
-            IpcMainChannels.FileMenuGenerateTestFile,
-            testFileType,
-          );
-        },
-      })),
-    },
+    ...(isDevelopment
+      ? [
+          {
+            label: 'View (Debug)',
+            submenu: [
+              { role: 'reload' },
+              { role: 'forceReload' },
+              { role: 'toggleDevTools' },
+              { type: 'separator' },
+              { role: 'resetZoom' },
+              { role: 'zoomIn' },
+              { role: 'zoomOut' },
+              { type: 'separator' },
+              { role: 'togglefullscreen' },
+            ],
+          } as MenuItemConstructorOptions,
+          {
+            label: 'Generate Test Files (Debug)',
+            submenu: Object.values(TestFileType).map((testFileType) => ({
+              label: testFileType,
+              click() {
+                win.webContents.send(
+                  IpcMainChannels.FileMenuGenerateTestFile,
+                  testFileType,
+                );
+              },
+            })),
+          },
+        ]
+      : []),
   ]);
 
   Menu.setApplicationMenu(menu);
@@ -301,8 +311,8 @@ function createMenu(win: BrowserWindow) {
 async function createWindow() {
   // Create the browser window.
   const win = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 1280,
+    height: 1024,
     webPreferences: {
       // Use pluginOptions.nodeIntegration, leave this alone
       // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
@@ -312,6 +322,13 @@ async function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
     },
     icon: path.join(__static, 'favicon-32.png'),
+    show: false,
+  });
+
+  win.maximize();
+
+  win.once('ready-to-show', () => {
+    win.show();
   });
 
   createMenu(win);

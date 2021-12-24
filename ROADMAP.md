@@ -2,11 +2,10 @@
 
 ## Must-haves
 
-- More adjustments and replacements. Generate test files with every quantitative neume and different combinations of other neumes. Should we support ridiculous combinations?
-- App Icon
+- More adjustments and replacements. Generate test files with every quantitative neume and different combinations of other neumes. Should we support ridiculous combinations? (partly done)
+- App Icon (proposed "neanes" symbol, change official app title to "Neanes")
 - Better error handling
 - Detect unsaved changes and warn user before opening or clicking new
-- Text boxes and mode keys should not be able to be replaced by a neume. They should be deleted. This means logic needs to be updated both for auto entry mode and non-auto entry mode.
 - Documentation
 - Contribution guide / style guide (use prettier)
 - Decide on a license
@@ -17,6 +16,7 @@
 
 ## Nice-to-haves
 
+- Insert entry mode
 - Right-align option for martyria and tempos. Does this maybe become a "paragraph option", where a paragraph can consist of neumes, small text-boxes that fit to the width of their contents, and have an alignment?
 - Document Settings Dialog
 - Microtonal Sharps and Flats
@@ -24,6 +24,7 @@
 - Note Indicators
 - Ison Neumes
 - Dotted digorgon neumes et al
+- Advanced neumes (connecting heteron, ties, et al)
 - Header Images
 - Headers/Footers/Page Numbers
 - Add empty neume box at end of score if missing (e.g. due to corrupted save file)
@@ -34,7 +35,8 @@
 - Icons (e.g. for page break and line break)
 - Better styling
 - Graceful handling of bad martyrias
-- Score checker that points out potential issues by using Fr. Ephraim's style rules.
+- Score checker that points out potential issues by using Fr. Ephraim's style rules (and other sources).
+- Investigate the feasibility of image recognition, allowing users to upload an image of a score that would be transformed into a file in our program.
 
 ## Tech Debt
 

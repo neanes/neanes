@@ -19,7 +19,6 @@
       ></Neume>
     </div>
     <div class="row">
-      <div class="neume"></div>
       <Neume
         class="neume"
         v-for="(neume, index) in descendingNeumes"
@@ -29,29 +28,10 @@
       ></Neume>
     </div>
     <div class="row">
-      <div class="neume"></div>
-      <Neume
-        class="neume"
-        v-for="(neume, index) in descendingNeumesWithPetasti"
-        :key="`descendingNeumesWithPetasti-${index}`"
-        :neume="neume"
-        @click.native="$emit('select-quantitative-neume', neume)"
-      ></Neume>
-    </div>
-    <div class="row">
       <Neume
         class="neume"
         v-for="(neume, index) in combinationNeumes"
         :key="`combinationNeumes-${index}`"
-        :neume="neume"
-        @click.native="$emit('select-quantitative-neume', neume)"
-      ></Neume>
-    </div>
-    <div class="row">
-      <Neume
-        class="neume"
-        v-for="(neume, index) in breathNeumes"
-        :key="`breathNeumes-${index}`"
         :neume="neume"
         @click.native="$emit('select-quantitative-neume', neume)"
       ></Neume>
@@ -77,6 +57,7 @@ export default class NeumeSelector extends Vue {
   ascendingNeumes: QuantitativeNeume[] = [
     QuantitativeNeume.Ison,
     QuantitativeNeume.Oligon,
+    QuantitativeNeume.OligonPlusKentima,
     QuantitativeNeume.OligonPlusKentimaBelow,
     QuantitativeNeume.OligonPlusKentimaAbove,
     QuantitativeNeume.OligonPlusHypsiliRight,
@@ -84,6 +65,8 @@ export default class NeumeSelector extends Vue {
     QuantitativeNeume.OligonPlusHypsiliPlusKentimaHorizontal,
     QuantitativeNeume.OligonPlusHypsiliPlusKentimaVertical,
     QuantitativeNeume.OligonPlusDoubleHypsili,
+    QuantitativeNeume.VareiaDotted,
+    QuantitativeNeume.Cross,
   ];
 
   ascendingNeumesWithPetasti: QuantitativeNeume[] = [
@@ -96,10 +79,17 @@ export default class NeumeSelector extends Vue {
     QuantitativeNeume.PetastiPlusHypsiliPlusKentimaHorizontal,
     QuantitativeNeume.PetastiPlusHypsiliPlusKentimaVertical,
     QuantitativeNeume.PetastiPlusDoubleHypsili,
+    QuantitativeNeume.PetastiPlusApostrophos,
+    QuantitativeNeume.PetastiPlusElaphron,
+    QuantitativeNeume.PetastiPlusElaphronPlusApostrophos,
   ];
 
   descendingNeumes: QuantitativeNeume[] = [
+    QuantitativeNeume.IsonPlusApostrophos,
     QuantitativeNeume.Apostrophos,
+    QuantitativeNeume.DoubleApostrophos,
+    QuantitativeNeume.RunningElaphron,
+    QuantitativeNeume.Hyporoe,
     QuantitativeNeume.Elaphron,
     QuantitativeNeume.ElaphronPlusApostrophos,
     QuantitativeNeume.Hamili,
@@ -109,29 +99,18 @@ export default class NeumeSelector extends Vue {
     QuantitativeNeume.DoubleHamili,
   ];
 
-  descendingNeumesWithPetasti: QuantitativeNeume[] = [
-    QuantitativeNeume.PetastiPlusApostrophos,
-    QuantitativeNeume.PetastiPlusElaphron,
-    QuantitativeNeume.PetastiPlusElaphronPlusApostrophos,
-    QuantitativeNeume.RunningElaphron,
-    QuantitativeNeume.Hyporoe,
-  ];
-
   combinationNeumes: QuantitativeNeume[] = [
+    QuantitativeNeume.Kentemata,
     QuantitativeNeume.OligonPlusKentemata,
     QuantitativeNeume.KentemataPlusOligon,
     QuantitativeNeume.OligonPlusIsonPlusKentemata,
+    QuantitativeNeume.OligonPlusKentemataPlusHypsiliRight,
+    QuantitativeNeume.OligonPlusKentemataPlusHypsiliLeft,
     QuantitativeNeume.OligonPlusApostrophosPlusKentemata,
     QuantitativeNeume.OligonPlusElaphronPlusKentemata,
+    QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
     QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
     QuantitativeNeume.OligonPlusHamiliPlusKentemata,
-    QuantitativeNeume.OligonPlusKentima,
-    QuantitativeNeume.Kentemata,
-  ];
-
-  breathNeumes: QuantitativeNeume[] = [
-    QuantitativeNeume.VareiaDotted,
-    QuantitativeNeume.Cross,
   ];
 }
 </script>
@@ -152,9 +131,13 @@ export default class NeumeSelector extends Vue {
 
   text-align: center;
 
-  border: 0.5px solid black;
   cursor: default;
 
   min-width: 2.5rem;
+  height: 2.5rem;
+}
+
+.neume:hover {
+  background-color: aliceblue;
 }
 </style>

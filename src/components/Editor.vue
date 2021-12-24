@@ -14,7 +14,7 @@
         class="neume-selector"
         @select-quantitative-neume="updateQuantitativeNeume"
       ></NeumeSelector>
-      <div class="page-background" style="flex: 1">
+      <div class="page-background">
         <div
           class="page"
           v-for="(page, pageIndex) in pages"

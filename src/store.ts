@@ -2,6 +2,8 @@ import Vue from 'vue';
 import { Score } from '@/models/Score';
 import { ScoreElement } from '@/models/Element';
 import { PageSetup } from './models/PageSetup';
+import { EventBus } from './eventBus';
+import { IpcRendererChannels } from './ipc/ipcChannels';
 
 interface IState {
   score: Score;
@@ -65,12 +67,15 @@ const mutations = {
     }
 
     window.document.title = getters.windowTitle;
+
+    EventBus.$emit(IpcRendererChannels.SetFilePath, path);
   },
 
   setHasUnsavedChanges(hasUnsavedChanges: boolean) {
     state.hasUnsavedChanges = hasUnsavedChanges;
     localStorage.setItem('hasUnsavedChanges', hasUnsavedChanges.toString());
     window.document.title = getters.windowTitle;
+    EventBus.$emit(IpcRendererChannels.SetHasUnsavedChanges, hasUnsavedChanges);
   },
 
   removeElement(element: ScoreElement) {

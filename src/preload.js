@@ -3,14 +3,14 @@ import { IpcRendererChannels, IpcMainChannels } from './ipc/ipcChannels';
 
 // Expose ipcRenderer to the client
 contextBridge.exposeInMainWorld('ipcRenderer', {
-  send: (channel, data) => {
-    let validChannels = Object.values(IpcRendererChannels); // <-- Array of all ipcRenderer Channels used in the client
+  send: (channel, ...args) => {
+    let validChannels = Object.values(IpcRendererChannels);
     if (validChannels.includes(channel)) {
-      ipcRenderer.send(channel, data);
+      ipcRenderer.send(channel, ...args);
     }
   },
   on: (channel, func) => {
-    let validChannels = Object.values(IpcMainChannels); // <-- Array of all ipcMain Channels used in the electron
+    let validChannels = Object.values(IpcMainChannels);
     if (validChannels.includes(channel)) {
       // Deliberately strip event as it includes `sender`
       ipcRenderer.on(channel, (event, ...args) => func(...args));

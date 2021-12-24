@@ -3,9 +3,7 @@
 ## Must-haves
 
 - More adjustments and replacements. Generate test files with every quantitative neume and different combinations of other neumes. Should we support ridiculous combinations?
-- Save file menu item (only Save As works right now)
 - App Icon
-- App Name?
 - Better error handling
 - Detect unsaved changes and warn user before opening or clicking new
 - Text boxes and mode keys should not be able to be replaced by a neume. They should be deleted. This means logic needs to be updated both for auto entry mode and non-auto entry mode.

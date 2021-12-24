@@ -292,7 +292,12 @@ import NeumeToolbar from '@/components/NeumeToolbar.vue';
 import MartyriaToolbar from '@/components/MartyriaToolbar.vue';
 import ModeKeyDialog from '@/components/ModeKeyDialog.vue';
 import Neume from './Neume.vue';
-import { IpcMainChannels, IpcRendererChannels } from '@/ipc/ipcChannels';
+import {
+  FileMenuOpenScoreArgs,
+  FileMenuSaveAsArgs,
+  IpcMainChannels,
+  IpcRendererChannels,
+} from '@/ipc/ipcChannels';
 import { EventBus } from '@/eventBus';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import { TestFileGenerator } from '@/utils/TestFileGenerator';
@@ -348,6 +353,14 @@ export default class Editor extends Vue {
     store.mutations.setSelectedElement(element);
   }
 
+  set currentFilePath(path: string | null) {
+    store.mutations.setCurrentFilepath(path);
+  }
+
+  get currentFilePath() {
+    return store.state.currentFilePath;
+  }
+
   async created() {
     const fontLoader = (document as any).fonts;
 
@@ -368,41 +381,58 @@ export default class Editor extends Vue {
   mounted() {
     window.addEventListener('keydown', this.onKeydown);
 
-    EventBus.$on(IpcMainChannels.FileMenuNewScore, this.onClickNew);
-    EventBus.$on(IpcMainChannels.FileMenuOpenScore, this.onClickOpen);
-    EventBus.$on(IpcMainChannels.FileMenuSaveAs, this.onSaveAs);
-    EventBus.$on(IpcMainChannels.FileMenuInsertNeume, this.onClickAddNeume);
-    EventBus.$on(IpcMainChannels.FileMenuInsertTextBox, this.onClickAddTextBox);
-    EventBus.$on(IpcMainChannels.FileMenuInsertModeKey, this.onClickAddModeKey);
-    EventBus.$on(IpcMainChannels.FileMenuInsertDropCap, this.onClickAddDropCap);
+    EventBus.$on(IpcMainChannels.FileMenuNewScore, this.onFileMenuNewScore);
+    EventBus.$on(IpcMainChannels.FileMenuOpenScore, this.onFileMenuOpenScore);
+    EventBus.$on(IpcMainChannels.FileMenuSave, this.onFileMenuSave);
+    EventBus.$on(IpcMainChannels.FileMenuSaveAs, this.onFileMenuSaveAs);
     EventBus.$on(
-      IpcMainChannels.GenerateTestFile,
-      this.onClickGenerateTestFile,
+      IpcMainChannels.FileMenuInsertNeume,
+      this.onFileMenuInsertNeume,
+    );
+    EventBus.$on(
+      IpcMainChannels.FileMenuInsertTextBox,
+      this.onFileMenuInsertTextBox,
+    );
+    EventBus.$on(
+      IpcMainChannels.FileMenuInsertModeKey,
+      this.onFileMenuInsertModeKey,
+    );
+    EventBus.$on(
+      IpcMainChannels.FileMenuInsertDropCap,
+      this.onFileMenuInsertDropCap,
+    );
+    EventBus.$on(
+      IpcMainChannels.FileMenuGenerateTestFile,
+      this.onFileMenuGenerateTestFile,
     );
   }
 
   beforeDestroy() {
     window.removeEventListener('keydown', this.onKeydown);
 
-    EventBus.$off(IpcMainChannels.FileMenuNewScore, this.onClickNew);
-    EventBus.$off(IpcMainChannels.FileMenuOpenScore, this.onClickOpen);
-    EventBus.$off(IpcMainChannels.FileMenuSaveAs, this.onSaveAs);
-    EventBus.$off(IpcMainChannels.FileMenuInsertNeume, this.onClickAddNeume);
+    EventBus.$off(IpcMainChannels.FileMenuNewScore, this.onFileMenuNewScore);
+    EventBus.$off(IpcMainChannels.FileMenuOpenScore, this.onFileMenuOpenScore);
+    EventBus.$off(IpcMainChannels.FileMenuSave, this.onFileMenuSave);
+    EventBus.$off(IpcMainChannels.FileMenuSaveAs, this.onFileMenuSaveAs);
+    EventBus.$off(
+      IpcMainChannels.FileMenuInsertNeume,
+      this.onFileMenuInsertNeume,
+    );
     EventBus.$off(
       IpcMainChannels.FileMenuInsertTextBox,
-      this.onClickAddTextBox,
+      this.onFileMenuInsertTextBox,
     );
     EventBus.$off(
       IpcMainChannels.FileMenuInsertModeKey,
-      this.onClickAddModeKey,
+      this.onFileMenuInsertModeKey,
     );
     EventBus.$off(
       IpcMainChannels.FileMenuInsertDropCap,
-      this.onClickAddDropCap,
+      this.onFileMenuInsertDropCap,
     );
     EventBus.$off(
-      IpcMainChannels.GenerateTestFile,
-      this.onClickGenerateTestFile,
+      IpcMainChannels.FileMenuGenerateTestFile,
+      this.onFileMenuGenerateTestFile,
     );
   }
 
@@ -881,6 +911,7 @@ export default class Editor extends Vue {
       'score',
       JSON.stringify(SaveService.SaveScoreToJson(this.score)),
     );
+
     this.pages = LayoutService.processPages(
       this.elements,
       this.score.pageSetup,
@@ -889,6 +920,7 @@ export default class Editor extends Vue {
 
   load() {
     const scoreString = localStorage.getItem('score');
+    this.currentFilePath = localStorage.getItem('filePath');
 
     if (scoreString) {
       const score: Score = SaveService.LoadScoreFromJson(
@@ -966,13 +998,14 @@ export default class Editor extends Vue {
     this.autoMode = !this.autoMode;
   }
 
-  onClickNew() {
+  onFileMenuNewScore() {
     // TODO warn about unsaved changes and let the user save the current document first.
     if (
       confirm(
         'This will discard your current score. Make sure you have saved before doing this. Are you sure you wish to continue?',
       )
     ) {
+      this.currentFilePath = null;
       this.score = this.createDefaultScore();
       this.selectedElement =
         this.score.staff.elements[this.score.staff.elements.length - 1];
@@ -980,8 +1013,9 @@ export default class Editor extends Vue {
     }
   }
 
-  onClickOpen(data: string) {
-    const score: Score = SaveService.LoadScoreFromJson(JSON.parse(data));
+  onFileMenuOpenScore(args: FileMenuOpenScoreArgs) {
+    const score: Score = SaveService.LoadScoreFromJson(JSON.parse(args.data));
+    this.currentFilePath = args.filePath;
 
     // if (score.version !== ScoreVersion) {
     //   alert('This score was created by an older version of the application. It may not work properly');
@@ -993,7 +1027,7 @@ export default class Editor extends Vue {
     this.save();
   }
 
-  onClickAddNeume() {
+  onFileMenuInsertNeume() {
     store.getters.elements.splice(
       store.getters.selectedElementIndex,
       0,
@@ -1002,7 +1036,7 @@ export default class Editor extends Vue {
     this.save();
   }
 
-  onClickAddTextBox() {
+  onFileMenuInsertTextBox() {
     const element = new TextBoxElement();
 
     store.getters.elements.splice(
@@ -1017,7 +1051,7 @@ export default class Editor extends Vue {
     this.save();
   }
 
-  onClickAddModeKey() {
+  onFileMenuInsertModeKey() {
     const element = this.createDefaultModeKey();
 
     store.getters.elements.splice(
@@ -1033,7 +1067,7 @@ export default class Editor extends Vue {
     this.save();
   }
 
-  onClickAddDropCap() {
+  onFileMenuInsertDropCap() {
     const element = new DropCapElement();
 
     store.getters.elements.splice(
@@ -1051,16 +1085,29 @@ export default class Editor extends Vue {
     return JSON.stringify(SaveService.SaveScoreToJson(this.score), null, 2);
   }
 
-  onSaveAs() {
+  onFileMenuSave() {
+    // If there is no file path, the file has not been saved yet,
+    // so we must do a Save As. In that case, there is no point
+    // in calling getSaveFile, since it will be called during
+    // the Save As process.
+    EventBus.$emit(IpcRendererChannels.FileMenuSaveReply, {
+      data: this.currentFilePath ? this.getSaveFile() : null,
+      filePath: this.currentFilePath,
+    });
+  }
+
+  onFileMenuSaveAs(args: FileMenuSaveAsArgs) {
+    this.currentFilePath = args.filePath;
     EventBus.$emit(IpcRendererChannels.FileMenuSaveAsReply, this.getSaveFile());
   }
 
-  onClickGenerateTestFile(testFileType: TestFileType) {
+  onFileMenuGenerateTestFile(testFileType: TestFileType) {
     if (
       confirm(
         'This will discard your current score. Make sure you have saved before doing this. Are you sure you wish to continue?',
       )
     ) {
+      this.currentFilePath = null;
       this.score = new Score();
       this.score.staff.elements.unshift(
         ...(TestFileGenerator.generateTestFile(testFileType) || []),

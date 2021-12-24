@@ -295,6 +295,8 @@ import Neume from './Neume.vue';
 import {
   FileMenuOpenScoreArgs,
   FileMenuSaveAsArgs,
+  FileMenuSaveAsReplyArgs,
+  FileMenuSaveReplyArgs,
   IpcMainChannels,
   IpcRendererChannels,
 } from '@/ipc/ipcChannels';
@@ -1015,20 +1017,12 @@ export default class Editor extends Vue {
   }
 
   onFileMenuNewScore() {
-    // TODO warn about unsaved changes and let the user save the current document first.
-    if (
-      !this.hasUnsavedChanges ||
-      confirm(
-        'The current score has unsaved changes. If you continue, the changes will be lost. Are you sure you wish to continue?',
-      )
-    ) {
-      this.hasUnsavedChanges = false;
-      this.currentFilePath = null;
-      this.score = this.createDefaultScore();
-      this.selectedElement =
-        this.score.staff.elements[this.score.staff.elements.length - 1];
-      this.save(false);
-    }
+    this.hasUnsavedChanges = false;
+    this.currentFilePath = null;
+    this.score = this.createDefaultScore();
+    this.selectedElement =
+      this.score.staff.elements[this.score.staff.elements.length - 1];
+    this.save(false);
   }
 
   onFileMenuOpenScore(args: FileMenuOpenScoreArgs) {
@@ -1105,14 +1099,9 @@ export default class Editor extends Vue {
   }
 
   onFileMenuSave() {
-    // If there is no file path, the file has not been saved yet,
-    // so we must do a Save As. In that case, there is no point
-    // in calling getSaveFile, since it will be called during
-    // the Save As process.
     EventBus.$emit(IpcRendererChannels.FileMenuSaveReply, {
-      data: this.currentFilePath ? this.getSaveFile() : null,
-      filePath: this.currentFilePath,
-    });
+      data: this.getSaveFile(),
+    } as FileMenuSaveReplyArgs);
   }
 
   onFileMenuSaveAs(args: FileMenuSaveAsArgs) {
@@ -1120,7 +1109,7 @@ export default class Editor extends Vue {
 
     EventBus.$emit(IpcRendererChannels.FileMenuSaveAsReply, {
       data: this.getSaveFile(),
-    });
+    } as FileMenuSaveAsReplyArgs);
   }
 
   onSaveComplete() {

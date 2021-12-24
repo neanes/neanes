@@ -17,6 +17,9 @@ export enum IpcMainChannels {
 export enum IpcRendererChannels {
   FileMenuSaveReply = 'FileMenuSaveReply',
   FileMenuSaveAsReply = 'FileMenuSaveAsReply',
+
+  SetHasUnsavedChanges = 'SetHasUnsavedChanges',
+  SetFilePath = 'SetFilePath',
 }
 
 export interface FileMenuOpenScoreArgs {
@@ -34,5 +37,4 @@ export interface FileMenuSaveAsReplyArgs {
 
 export interface FileMenuSaveReplyArgs {
   data: string;
-  filePath: string;
 }

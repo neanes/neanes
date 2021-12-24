@@ -1,11 +1,28 @@
 <template>
   <div class="main-toolbar">
     <button
-      class="auto-mode-btn"
-      @click="$emit('toggleAutoMode')"
-      :class="{ on: autoMode === true }"
+      class="entry-mode-btn"
+      @click="
+        $emit(
+          'updateEntryMode',
+          entryMode === EntryMode.Auto ? EntryMode.Edit : EntryMode.Auto,
+        )
+      "
+      :class="{ on: entryMode === EntryMode.Auto }"
     >
       Auto
+    </button>
+    <button
+      class="entry-mode-btn"
+      @click="
+        $emit(
+          'updateEntryMode',
+          entryMode === EntryMode.Insert ? EntryMode.Edit : EntryMode.Insert,
+        )
+      "
+      :class="{ on: entryMode === EntryMode.Insert }"
+    >
+      Insert
     </button>
     <span class="space"></span>
     <button
@@ -86,6 +103,7 @@ import {
   VocalExpressionNeume,
 } from '@/models/Neumes';
 import Neume from './Neume.vue';
+import { EntryMode } from './Editor.vue';
 
 @Component({
   components: {
@@ -94,10 +112,11 @@ import Neume from './Neume.vue';
 })
 export default class NeumeToolbar extends Vue {
   @Prop() element!: NoteElement;
-  @Prop() autoMode!: boolean;
+  @Prop() entryMode!: EntryMode;
   Note = Note;
   RootSign = RootSign;
   TempoSign = TempoSign;
+  EntryMode = EntryMode;
 }
 </script>
 
@@ -110,7 +129,7 @@ export default class NeumeToolbar extends Vue {
   padding: 0.25rem;
 }
 
-.auto-mode-btn.on {
+.entry-mode-btn.on {
   background-color: lightsteelblue;
 }
 

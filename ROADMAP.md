@@ -4,7 +4,6 @@
 
 - More adjustments and replacements. Generate test files with every quantitative neume and different combinations of other neumes. Should we support ridiculous combinations? (partly done)
 - Better error handling
-- Detect unsaved changes and warn user before opening or clicking new
 - Documentation
 - Contribution guide / style guide (use prettier)
 - Decide on a license

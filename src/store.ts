@@ -7,12 +7,14 @@ interface IState {
   score: Score;
   selectedElement: ScoreElement | null;
   elementToFocus: ScoreElement | null;
+  currentFilePath: string | null;
 }
 
 const state: IState = Vue.observable({
   score: new Score(),
   selectedElement: null,
   elementToFocus: null,
+  currentFilePath: null,
 });
 
 const getters = {
@@ -38,6 +40,18 @@ const mutations = {
 
   setElementToFocus(element: ScoreElement | null) {
     state.elementToFocus = element;
+  },
+
+  setCurrentFilepath(path: string | null) {
+    if (path != null) {
+      localStorage.setItem('filePath', path);
+      const fileName = path.replace(/^.*[\\/]/, '');
+      window.document.title = `${fileName} - ${process.env.VUE_APP_TITLE}`;
+    } else {
+      localStorage.removeItem('filePath');
+      window.document.title = `Untitled 1 - ${process.env.VUE_APP_TITLE}`;
+    }
+    state.currentFilePath = path;
   },
 
   removeElement(element: ScoreElement) {

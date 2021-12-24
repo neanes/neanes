@@ -9,9 +9,28 @@ export enum IpcMainChannels {
   FileMenuInsertModeKey = 'FileMenuInsertModeKey',
   FileMenuInsertDropCap = 'FileMenuInsertDropCap',
 
-  GenerateTestFile = 'GenerateTestFile',
+  FileMenuGenerateTestFile = 'GenerateTestFile',
 }
 
 export enum IpcRendererChannels {
+  FileMenuSaveReply = 'FileMenuSaveReply',
   FileMenuSaveAsReply = 'FileMenuSaveAsReply',
+}
+
+export interface FileMenuOpenScoreArgs {
+  data: string;
+  filePath: string;
+}
+
+export interface FileMenuSaveAsArgs {
+  filePath: string;
+}
+
+export interface FileMenuSaveAsReplyArgs {
+  data: string;
+}
+
+export interface FileMenuSaveReplyArgs {
+  data: string;
+  filePath: string;
 }

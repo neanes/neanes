@@ -26,19 +26,17 @@
           <div
             class="line"
             v-for="(line, lineIndex) in page.lines"
-            :key="`line-${lineIndex}`"
+            :key="`line-${pageIndex}-${lineIndex}`"
             :ref="`line-${lineIndex}`"
           >
             <div
               v-for="(element, index) in line.elements"
-              :key="`element-${index}`"
-              :ref="`element-${index}`"
+              :key="`lineElement-${pageIndex}-${lineIndex}-${index}`"
               class="element-box"
               :style="{ left: element.x + 'px', top: element.y + 'px' }"
             >
               <template v-if="isSyllableElement(element)">
                 <div
-                  :key="`element-${getElementIndex(element)}`"
                   :ref="`element-${getElementIndex(element)}`"
                   class="neume-box"
                 >
@@ -92,11 +90,7 @@
                 </div>
               </template>
               <template v-if="isMartyriaElement(element)">
-                <div
-                  :key="`element-${getElementIndex(element)}`"
-                  :ref="`element-${getElementIndex(element)}`"
-                  class="neume-box"
-                >
+                <div class="neume-box">
                   <span
                     v-if="element.pageBreak"
                     style="position: absolute; top: -10px"
@@ -108,6 +102,7 @@
                     >L</span
                   >
                   <MartyriaNeumeBox
+                    :ref="`element-${getElementIndex(element)}`"
                     class="marytria-neume-box"
                     :neume="element"
                     :class="[{ selected: element == selectedElement }]"
@@ -118,7 +113,6 @@
               </template>
               <template v-if="isTempoElement(element)">
                 <div
-                  :key="`element-${getElementIndex(element)}`"
                   :ref="`element-${getElementIndex(element)}`"
                   class="neume-box"
                 >
@@ -143,7 +137,6 @@
               </template>
               <template v-if="isEmptyElement(element)">
                 <div
-                  :key="`element-${getElementIndex(element)}`"
                   :ref="`element-${getElementIndex(element)}`"
                   class="neume-box"
                 >
@@ -167,7 +160,7 @@
               </template>
               <template v-if="isTextBoxElement(element)">
                 <TextBox
-                  :key="`element-${getElementIndex(element)}`"
+                  :ref="`element-${getElementIndex(element)}`"
                   :element="element"
                   :class="[{ selectedTextbox: element == selectedElement }]"
                   @click.native="selectedElement = element"
@@ -177,7 +170,7 @@
               </template>
               <template v-if="isModeKeyElement(element)">
                 <ModeKey
-                  :key="`element-${getElementIndex(element)}`"
+                  :ref="`element-${getElementIndex(element)}`"
                   :element="element"
                   :class="[{ selectedTextbox: element == selectedElement }]"
                   @click.native="selectedElement = element"
@@ -187,7 +180,6 @@
               </template>
               <template v-if="isStaffTextElement(element)">
                 <StaffText
-                  :key="`element-${getElementIndex(element)}`"
                   :ref="`element-${getElementIndex(element)}`"
                   :element="element"
                 >
@@ -195,7 +187,6 @@
               </template>
               <template v-if="isDropCapElement(element)">
                 <DropCap
-                  :key="`element-${getElementIndex(element)}`"
                   :ref="`element-${getElementIndex(element)}`"
                   :element="element"
                   @click.native="selectedElement = element"
@@ -452,8 +443,9 @@ export default class Editor extends Vue {
     Vue.nextTick(() => {
       if (store.state.elementToFocus != null) {
         const index = this.elements.indexOf(store.state.elementToFocus);
-        (this.$refs[`element-${index}`] as any)[0].focus();
         store.mutations.setElementToFocus(null);
+
+        (this.$refs[`element-${index}`] as any)[0].focus();
       }
     });
   }

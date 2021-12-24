@@ -57,6 +57,10 @@ export default class TextBox extends Vue {
     this.element.content = text;
     this.$emit('scoreUpdated');
   }
+
+  focus() {
+    this.textElement.focus();
+  }
 }
 </script>
 

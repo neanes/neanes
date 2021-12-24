@@ -17,6 +17,8 @@ import os from 'os';
 import { TestFileType } from './utils/TestFileType';
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
+declare const __static: string;
+
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, standard: true } },
@@ -309,6 +311,7 @@ async function createWindow() {
       contextIsolation: !process.env.ELECTRON_NODE_INTEGRATION,
       preload: path.join(__dirname, 'preload.js'),
     },
+    icon: path.join(__static, 'favicon-32.png'),
   });
 
   createMenu(win);

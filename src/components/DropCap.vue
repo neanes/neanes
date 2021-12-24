@@ -61,7 +61,6 @@ export default class DropCap extends Vue {
   }
 
   focus() {
-    console.log('dropcap focus');
     this.textElement.focus();
   }
 }

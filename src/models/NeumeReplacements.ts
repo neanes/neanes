@@ -28,6 +28,7 @@ const rightGorgonNeumes: Neume[] = [
   QuantitativeNeume.OligonPlusApostrophosPlusKentemata,
   QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
   QuantitativeNeume.OligonPlusHamiliPlusKentemata,
+  QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
   QuantitativeNeume.Hamili,
   QuantitativeNeume.HamiliPlusApostrophos,
   QuantitativeNeume.HamiliPlusElaphron,
@@ -249,17 +250,44 @@ export const timeReplacementMap = new Map<
 >([
   [
     TimeNeume.Hapli,
-    [{ isPairedWith: rightTimeNeumes, replaceWith: TimeNeume.Hapli_Right }],
+    [
+      { isPairedWith: rightTimeNeumes, replaceWith: TimeNeume.Hapli_Right },
+      {
+        isPairedWith: [
+          QuantitativeNeume.IsonPlusApostrophos,
+          QuantitativeNeume.DoubleApostrophos,
+        ],
+        replaceWith: null,
+      },
+    ],
   ],
 
   [
     TimeNeume.Dipli,
-    [{ isPairedWith: rightTimeNeumes, replaceWith: TimeNeume.Dipli_Right }],
+    [
+      { isPairedWith: rightTimeNeumes, replaceWith: TimeNeume.Dipli_Right },
+      {
+        isPairedWith: [
+          QuantitativeNeume.IsonPlusApostrophos,
+          QuantitativeNeume.DoubleApostrophos,
+        ],
+        replaceWith: null,
+      },
+    ],
   ],
 
   [
     TimeNeume.Tripli,
-    [{ isPairedWith: rightTimeNeumes, replaceWith: TimeNeume.Tripli_Right }],
+    [
+      { isPairedWith: rightTimeNeumes, replaceWith: TimeNeume.Tripli_Right },
+      {
+        isPairedWith: [
+          QuantitativeNeume.IsonPlusApostrophos,
+          QuantitativeNeume.DoubleApostrophos,
+        ],
+        replaceWith: null,
+      },
+    ],
   ],
 
   [
@@ -274,12 +302,17 @@ export const timeReplacementMap = new Map<
         isPairedWith: [
           QuantitativeNeume.Hyporoe,
           QuantitativeNeume.Kentemata,
+          QuantitativeNeume.IsonPlusApostrophos,
+          QuantitativeNeume.DoubleApostrophos,
           QuantitativeNeume.OligonPlusKentemata,
           QuantitativeNeume.OligonPlusHamiliPlusKentemata,
           QuantitativeNeume.OligonPlusIsonPlusKentemata,
           QuantitativeNeume.OligonPlusElaphronPlusKentemata,
           QuantitativeNeume.OligonPlusApostrophosPlusKentemata,
           QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
+          QuantitativeNeume.OligonPlusKentemataPlusHypsiliLeft,
+          QuantitativeNeume.OligonPlusKentemataPlusHypsiliRight,
+          QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
         ],
         replaceWith: null,
       },
@@ -297,6 +330,8 @@ export const timeReplacementMap = new Map<
         isPairedWith: [
           QuantitativeNeume.Hyporoe,
           QuantitativeNeume.Kentemata,
+          QuantitativeNeume.IsonPlusApostrophos,
+          QuantitativeNeume.DoubleApostrophos,
           QuantitativeNeume.OligonPlusKentemata,
           QuantitativeNeume.OligonPlusKentemata,
           QuantitativeNeume.OligonPlusHamiliPlusKentemata,
@@ -304,6 +339,9 @@ export const timeReplacementMap = new Map<
           QuantitativeNeume.OligonPlusElaphronPlusKentemata,
           QuantitativeNeume.OligonPlusApostrophosPlusKentemata,
           QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
+          QuantitativeNeume.OligonPlusKentemataPlusHypsiliLeft,
+          QuantitativeNeume.OligonPlusKentemataPlusHypsiliRight,
+          QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
         ],
         replaceWith: null,
       },
@@ -342,7 +380,11 @@ export const vocalExpressionReplacementMap = new Map<
     VocalExpressionNeume.Antikenoma,
     [
       {
-        isPairedWith: [QuantitativeNeume.Kentemata],
+        isPairedWith: [
+          QuantitativeNeume.Kentemata,
+          QuantitativeNeume.IsonPlusApostrophos,
+          QuantitativeNeume.DoubleApostrophos,
+        ],
         replaceWith: null,
       },
       {
@@ -370,6 +412,8 @@ export const vocalExpressionReplacementMap = new Map<
           QuantitativeNeume.Elaphron,
           QuantitativeNeume.ElaphronPlusApostrophos,
           QuantitativeNeume.RunningElaphron,
+          QuantitativeNeume.IsonPlusApostrophos,
+          QuantitativeNeume.DoubleApostrophos,
         ],
         replaceWith: null,
       },

@@ -48,6 +48,12 @@ export enum QuantitativeNeume {
   OligonPlusKentima = 'OligonPlusKentima',
   Kentemata = 'Kentemata',
 
+  DoubleApostrophos = 'DoubleApostrophos',
+  OligonPlusRunningElaphronPlusKentemata = 'OligonPlusRunningElaphronPlusKentemata',
+  IsonPlusApostrophos = 'IsonPlusApostrophos',
+  OligonPlusKentemataPlusHypsiliLeft = 'OligonPlusKentemataPlusHypsiliLeft',
+  OligonPlusKentemataPlusHypsiliRight = 'OligonPlusKentemataPlusHypsiliRight',
+
   VareiaDotted = 'VareiaDotted',
   Cross = 'Cross',
 }

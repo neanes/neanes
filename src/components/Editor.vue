@@ -361,6 +361,14 @@ export default class Editor extends Vue {
     return store.state.currentFilePath;
   }
 
+  get hasUnsavedChanges() {
+    return store.state.hasUnsavedChanges;
+  }
+
+  set hasUnsavedChanges(hasUnsavedChanges: boolean) {
+    store.mutations.setHasUnsavedChanges(hasUnsavedChanges);
+  }
+
   async created() {
     const fontLoader = (document as any).fonts;
 
@@ -385,6 +393,7 @@ export default class Editor extends Vue {
     EventBus.$on(IpcMainChannels.FileMenuOpenScore, this.onFileMenuOpenScore);
     EventBus.$on(IpcMainChannels.FileMenuSave, this.onFileMenuSave);
     EventBus.$on(IpcMainChannels.FileMenuSaveAs, this.onFileMenuSaveAs);
+    EventBus.$on(IpcMainChannels.SaveComplete, this.onSaveComplete);
     EventBus.$on(
       IpcMainChannels.FileMenuInsertNeume,
       this.onFileMenuInsertNeume,
@@ -414,6 +423,7 @@ export default class Editor extends Vue {
     EventBus.$off(IpcMainChannels.FileMenuOpenScore, this.onFileMenuOpenScore);
     EventBus.$off(IpcMainChannels.FileMenuSave, this.onFileMenuSave);
     EventBus.$off(IpcMainChannels.FileMenuSaveAs, this.onFileMenuSaveAs);
+    EventBus.$off(IpcMainChannels.SaveComplete, this.onSaveComplete);
     EventBus.$off(
       IpcMainChannels.FileMenuInsertNeume,
       this.onFileMenuInsertNeume,
@@ -906,11 +916,15 @@ export default class Editor extends Vue {
     }
   }
 
-  save() {
+  save(markUnsavedChanges: boolean = true) {
     localStorage.setItem(
       'score',
       JSON.stringify(SaveService.SaveScoreToJson(this.score)),
     );
+
+    if (markUnsavedChanges) {
+      this.hasUnsavedChanges = true;
+    }
 
     this.pages = LayoutService.processPages(
       this.elements,
@@ -921,6 +935,8 @@ export default class Editor extends Vue {
   load() {
     const scoreString = localStorage.getItem('score');
     this.currentFilePath = localStorage.getItem('filePath');
+    this.hasUnsavedChanges =
+      localStorage.getItem('hasUnsavedChanges') === 'true';
 
     if (scoreString) {
       const score: Score = SaveService.LoadScoreFromJson(
@@ -1001,21 +1017,24 @@ export default class Editor extends Vue {
   onFileMenuNewScore() {
     // TODO warn about unsaved changes and let the user save the current document first.
     if (
+      !this.hasUnsavedChanges ||
       confirm(
-        'This will discard your current score. Make sure you have saved before doing this. Are you sure you wish to continue?',
+        'The current score has unsaved changes. If you continue, the changes will be lost. Are you sure you wish to continue?',
       )
     ) {
+      this.hasUnsavedChanges = false;
       this.currentFilePath = null;
       this.score = this.createDefaultScore();
       this.selectedElement =
         this.score.staff.elements[this.score.staff.elements.length - 1];
-      this.save();
+      this.save(false);
     }
   }
 
   onFileMenuOpenScore(args: FileMenuOpenScoreArgs) {
     const score: Score = SaveService.LoadScoreFromJson(JSON.parse(args.data));
     this.currentFilePath = args.filePath;
+    this.hasUnsavedChanges = false;
 
     // if (score.version !== ScoreVersion) {
     //   alert('This score was created by an older version of the application. It may not work properly');
@@ -1024,7 +1043,7 @@ export default class Editor extends Vue {
     this.score = score;
     this.selectedElement = null;
 
-    this.save();
+    this.save(false);
   }
 
   onFileMenuInsertNeume() {
@@ -1098,7 +1117,14 @@ export default class Editor extends Vue {
 
   onFileMenuSaveAs(args: FileMenuSaveAsArgs) {
     this.currentFilePath = args.filePath;
-    EventBus.$emit(IpcRendererChannels.FileMenuSaveAsReply, this.getSaveFile());
+
+    EventBus.$emit(IpcRendererChannels.FileMenuSaveAsReply, {
+      data: this.getSaveFile(),
+    });
+  }
+
+  onSaveComplete() {
+    this.hasUnsavedChanges = false;
   }
 
   onFileMenuGenerateTestFile(testFileType: TestFileType) {

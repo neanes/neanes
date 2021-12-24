@@ -479,22 +479,30 @@ export default class Editor extends Vue {
         this.autoMode &&
         this.selectedElement.elementType !== ElementType.Empty
       ) {
-        this.moveRight();
+        if (!this.moveRight()) {
+          return;
+        }
       }
 
-      const index = this.elements.indexOf(this.selectedElement);
-
-      if (index === this.elements.length - 1) {
-        this.addEmptyElement();
-      }
-
-      if (this.selectedElement.elementType != ElementType.Note) {
+      if (
+        [ElementType.Empty, ElementType.Martyria].includes(
+          this.selectedElement.elementType,
+        )
+      ) {
         this.selectedElement = this.switchToSyllable(this.selectedElement);
       }
 
-      (this.selectedElement as NoteElement).setQuantitativeNeume(neume);
+      if (this.selectedElement.elementType === ElementType.Note) {
+        (this.selectedElement as NoteElement).setQuantitativeNeume(neume);
 
-      this.save();
+        const index = this.elements.indexOf(this.selectedElement);
+
+        if (index === this.elements.length - 1) {
+          this.addEmptyElement();
+        }
+
+        this.save();
+      }
     }
   }
 
@@ -914,8 +922,11 @@ export default class Editor extends Vue {
         this.navigableElements.includes(this.elements[index + 1].elementType)
       ) {
         this.selectedElement = this.elements[index + 1];
+        return true;
       }
     }
+
+    return false;
   }
 
   save(markUnsavedChanges: boolean = true) {

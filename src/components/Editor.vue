@@ -1,9 +1,9 @@
 <template>
   <div class="editor">
     <MainToolbar
-      :autoMode="autoMode"
+      :entryMode="entryMode"
       @addAutoMartyria="addAutoMartyria"
-      @toggleAutoMode="toggleAutoMode"
+      @updateEntryMode="updateEntryMode"
       @updatePageBreak="updatePageBreak"
       @updateLineBreak="updateLineBreak"
       @updateTempo="updateTempo"
@@ -297,6 +297,12 @@ import { TestFileGenerator } from '@/utils/TestFileGenerator';
 import { TestFileType } from '@/utils/TestFileType';
 import { Unit } from '@/utils/Unit';
 
+export enum EntryMode {
+  Auto = 'Auto',
+  Insert = 'Insert',
+  Edit = 'Edit',
+}
+
 @Component({
   components: {
     SyllableNeumeBox,
@@ -321,7 +327,7 @@ import { Unit } from '@/utils/Unit';
 export default class Editor extends Vue {
   pages: Page[] = [];
 
-  autoMode: boolean = true;
+  entryMode: EntryMode = EntryMode.Auto;
   keyboardMode: boolean = false;
 
   modeKeyDialogIsOpen: boolean = false;
@@ -465,15 +471,36 @@ export default class Editor extends Vue {
     this.modeKeyDialogIsOpen = true;
   }
 
+  isLastElement(element: ScoreElement) {
+    return this.elements.indexOf(element) === this.elements.length - 1;
+  }
+
   updateQuantitativeNeume(neume: QuantitativeNeume) {
     if (this.selectedElement) {
+      // Handle auto entry mode
       if (
-        this.autoMode &&
-        this.selectedElement.elementType !== ElementType.Empty
+        this.entryMode === EntryMode.Auto &&
+        !this.isLastElement(this.selectedElement)
       ) {
         if (!this.moveRight()) {
           return;
         }
+      }
+
+      // Handle insert mode
+      if (
+        this.entryMode === EntryMode.Insert &&
+        !this.isLastElement(this.selectedElement)
+      ) {
+        const emptyElement = new EmptyElement();
+
+        store.getters.elements.splice(
+          store.getters.selectedElementIndex + 1,
+          0,
+          emptyElement,
+        );
+
+        this.selectedElement = emptyElement;
       }
 
       if (
@@ -487,9 +514,7 @@ export default class Editor extends Vue {
       if (this.selectedElement.elementType === ElementType.Note) {
         (this.selectedElement as NoteElement).setQuantitativeNeume(neume);
 
-        const index = this.elements.indexOf(this.selectedElement);
-
-        if (index === this.elements.length - 1) {
+        if (this.isLastElement(this.selectedElement)) {
           this.addEmptyElement();
         }
 
@@ -633,16 +658,31 @@ export default class Editor extends Vue {
 
   addAutoMartyria() {
     if (this.selectedElement) {
+      // Handle auto mode
       if (
-        this.autoMode &&
-        this.selectedElement.elementType !== ElementType.Empty
+        this.entryMode === EntryMode.Auto &&
+        !this.isLastElement(this.selectedElement)
       ) {
         this.moveRight();
       }
 
-      const index = this.elements.indexOf(this.selectedElement);
+      // Handle insert mode
+      if (
+        this.entryMode === EntryMode.Insert &&
+        !this.isLastElement(this.selectedElement)
+      ) {
+        const emptyElement = new EmptyElement();
 
-      if (index === this.elements.length - 1) {
+        store.getters.elements.splice(
+          store.getters.selectedElementIndex + 1,
+          0,
+          emptyElement,
+        );
+
+        this.selectedElement = emptyElement;
+      }
+
+      if (this.isLastElement(this.selectedElement)) {
         this.addEmptyElement();
       }
 
@@ -657,7 +697,7 @@ export default class Editor extends Vue {
   updateTempo(neume: TempoSign) {
     if (this.selectedElement) {
       if (
-        this.autoMode &&
+        this.entryMode === EntryMode.Auto &&
         this.selectedElement.elementType !== ElementType.Empty
       ) {
         this.moveRight();
@@ -1015,13 +1055,14 @@ export default class Editor extends Vue {
     }
   }
 
-  toggleAutoMode() {
-    this.autoMode = !this.autoMode;
+  updateEntryMode(mode: EntryMode) {
+    this.entryMode = mode;
   }
 
   onFileMenuNewScore() {
     this.hasUnsavedChanges = false;
     this.currentFilePath = null;
+    this.entryMode = EntryMode.Auto;
     this.score = this.createDefaultScore();
     this.selectedElement =
       this.score.staff.elements[this.score.staff.elements.length - 1];
@@ -1032,6 +1073,7 @@ export default class Editor extends Vue {
     const score: Score = SaveService.LoadScoreFromJson(JSON.parse(args.data));
     this.currentFilePath = args.filePath;
     this.hasUnsavedChanges = false;
+    this.entryMode = EntryMode.Edit;
 
     // if (score.version !== ScoreVersion) {
     //   alert('This score was created by an older version of the application. It may not work properly');

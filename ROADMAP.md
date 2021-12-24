@@ -16,7 +16,6 @@
 
 ## Nice-to-haves
 
-- Insert entry mode
 - Right-align option for martyria and tempos. Does this maybe become a "paragraph option", where a paragraph can consist of neumes, small text-boxes that fit to the width of their contents, and have an alignment?
 - Document Settings Dialog
 - Microtonal Sharps and Flats

@@ -162,11 +162,6 @@ export class NoteElement extends ScoreElement {
           );
 
         if (replacement) {
-          console.log(
-            this.quantitativeNeume,
-            this.fthora,
-            replacement.replaceWith,
-          );
           this.setFthora(replacement.replaceWith);
         }
       }

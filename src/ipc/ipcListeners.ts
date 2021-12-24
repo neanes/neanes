@@ -14,8 +14,8 @@ export const initializeIpcListeners = () => {
   }
 
   for (let channel of Object.values(IpcRendererChannels)) {
-    EventBus.$on(IpcRendererChannels.FileMenuSaveAsReply, (data: any) => {
-      window.ipcRenderer.send(channel, data);
+    EventBus.$on(channel, (...args: any[]) => {
+      window.ipcRenderer.send(channel, ...args);
     });
   }
 };

@@ -3,7 +3,14 @@
 import { app, protocol, BrowserWindow, Menu, dialog, ipcMain } from 'electron';
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib';
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer';
-import { IpcMainChannels, IpcRendererChannels } from './ipc/ipcChannels';
+import {
+  FileMenuOpenScoreArgs,
+  FileMenuSaveAsArgs,
+  FileMenuSaveAsReplyArgs,
+  FileMenuSaveReplyArgs,
+  IpcMainChannels,
+  IpcRendererChannels,
+} from './ipc/ipcChannels';
 import path from 'path';
 import { promises as fs } from 'fs';
 import os from 'os';
@@ -15,20 +22,54 @@ protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, standard: true } },
 ]);
 
+let saving = false;
+
+async function handleSaveAs(win: BrowserWindow) {
+  try {
+    const dialogResult = await dialog.showSaveDialog(win, {
+      title: 'Save Score',
+      filters: [{ name: 'Score File', extensions: ['json'] }],
+    });
+
+    if (!dialogResult.canceled) {
+      const filePath = dialogResult.filePath!;
+
+      // Ask the front-end for the data
+      win.webContents.send(IpcMainChannels.FileMenuSaveAs, {
+        filePath,
+      } as FileMenuSaveAsArgs);
+
+      // Wait for the reply and write the data to the file path
+      ipcMain.once(
+        IpcRendererChannels.FileMenuSaveAsReply,
+        async (event, args: FileMenuSaveAsReplyArgs) => {
+          saving = false;
+          await fs.writeFile(dialogResult.filePath!, args.data);
+        },
+      );
+    } else {
+      saving = false;
+    }
+  } catch (error) {
+    saving = false;
+    console.error(error);
+  }
+}
+
 function createMenu(win: BrowserWindow) {
   var menu = Menu.buildFromTemplate([
     {
       label: '&File',
       submenu: [
         {
-          label: '&New Score',
+          label: '&New',
           accelerator: 'CmdOrCtrl+N',
           click() {
             win.webContents.send(IpcMainChannels.FileMenuNewScore);
           },
         },
         {
-          label: '&Open Score',
+          label: '&Open',
           accelerator: 'CmdOrCtrl+O',
           async click() {
             try {
@@ -38,16 +79,22 @@ function createMenu(win: BrowserWindow) {
                 filters: [{ name: 'Score File', extensions: ['json'] }],
               });
 
-              if (!dialogResult.canceled) {
-                const data = await fs.readFile(
-                  dialogResult.filePaths[0],
-                  'utf8',
-                );
+              const filePath = dialogResult.filePaths[0];
 
-                win.webContents.send(IpcMainChannels.FileMenuOpenScore, data);
+              if (!dialogResult.canceled) {
+                const data = await fs.readFile(filePath, 'utf8');
+
+                win.webContents.send(IpcMainChannels.FileMenuOpenScore, {
+                  data,
+                  filePath,
+                } as FileMenuOpenScoreArgs);
+              } else {
+                saving = false;
               }
             } catch (error) {
               console.error(error);
+            } finally {
+              saving = false;
             }
           },
         },
@@ -55,39 +102,42 @@ function createMenu(win: BrowserWindow) {
           label: '&Save',
           accelerator: 'CmdOrCtrl+S',
           click() {
-            win.webContents.send(IpcMainChannels.FileMenuSave);
+            try {
+              if (saving) {
+                return;
+              }
+
+              saving = true;
+
+              win.webContents.send(IpcMainChannels.FileMenuSave);
+
+              // Wait for the reply and write the data to the file path
+              ipcMain.once(
+                IpcRendererChannels.FileMenuSaveReply,
+                async (event, args: FileMenuSaveReplyArgs) => {
+                  if (args.filePath) {
+                    saving = false;
+                    await fs.writeFile(args.filePath, args.data);
+                  } else {
+                    handleSaveAs(win);
+                  }
+                },
+              );
+            } catch (error) {
+              console.error(error);
+            }
           },
         },
         {
           label: 'Save &As',
           accelerator: 'CmdOrCtrl+Shift+S',
           async click() {
-            try {
-              const dialogResult = await dialog.showSaveDialog(win, {
-                title: 'Save Score',
-                filters: [{ name: 'Score File', extensions: ['json'] }],
-              });
-
-              if (!dialogResult.canceled) {
-                // Ask the front-end for the data
-                win.webContents.send(IpcMainChannels.FileMenuSaveAs);
-
-                // Wait for the reply and write the data to the file path
-                ipcMain.once(
-                  IpcRendererChannels.FileMenuSaveAsReply,
-                  async (event, data) => {
-                    await fs.writeFile(dialogResult.filePath!, data);
-                  },
-                );
-              }
-            } catch (error) {
-              console.error(error);
-            }
+            handleSaveAs(win);
           },
         },
         { type: 'separator' },
         {
-          label: '&Export Score as PDF',
+          label: '&Export as PDF',
           accelerator: 'CmdOrCtrl+E',
           async click() {
             try {
@@ -174,7 +224,10 @@ function createMenu(win: BrowserWindow) {
       submenu: Object.values(TestFileType).map((testFileType) => ({
         label: testFileType,
         click() {
-          win.webContents.send(IpcMainChannels.GenerateTestFile, testFileType);
+          win.webContents.send(
+            IpcMainChannels.FileMenuGenerateTestFile,
+            testFileType,
+          );
         },
       })),
     },

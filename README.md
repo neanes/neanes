@@ -10,9 +10,9 @@ Neanes (pronounced neh-ah-ness) is a free and open source scorewriter for notati
 - Automatic calculation of martyria
 - Print or export to PDF
 
-## About
+## Purpose
 
-This software is designed to create simple scores that contain:
+This software is intended to create simple scores that contain:
 
 - A title
 - A mode signature

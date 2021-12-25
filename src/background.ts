@@ -195,7 +195,7 @@ function createMenu(win: BrowserWindow) {
           label: '&Save',
           accelerator: 'CmdOrCtrl+S',
           async click() {
-            handleSaveAs(win);
+            handleSave(win, state.filePath);
           },
         },
         {

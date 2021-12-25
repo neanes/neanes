@@ -1,5 +1,6 @@
 {
   "name": "neanes",
+  "author": "danielgarthur",
   "description": "A Byzantine Chant Scorewriter",
   "version": "0.1.0",
   "private": true,

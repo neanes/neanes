@@ -11,7 +11,8 @@
     "electron:serve": "vue-cli-service electron:serve",
     "postinstall": "electron-builder install-app-deps",
     "postuninstall": "electron-builder install-app-deps",
-    "icons:build": "electron-icon-builder --flatten --input=./icons/1024x1024.png --output=./build"
+    "icons:build": "electron-icon-builder --flatten --input=./icons/1024x1024.png --output=./build",
+    "prettier": "prettier --write \"./**/*.{ts,js,vue}\""
   },
   "main": "background.js",
   "dependencies": {

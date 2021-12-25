@@ -2,27 +2,24 @@
   <div class="main-toolbar">
     <button
       class="entry-mode-btn"
-      @click="
-        $emit(
-          'updateEntryMode',
-          entryMode === EntryMode.Auto ? EntryMode.Edit : EntryMode.Auto,
-        )
-      "
+      @click="$emit('updateEntryMode', EntryMode.Auto)"
       :class="{ on: entryMode === EntryMode.Auto }"
     >
       Auto
     </button>
     <button
       class="entry-mode-btn"
-      @click="
-        $emit(
-          'updateEntryMode',
-          entryMode === EntryMode.Insert ? EntryMode.Edit : EntryMode.Insert,
-        )
-      "
+      @click="$emit('updateEntryMode', EntryMode.Insert)"
       :class="{ on: entryMode === EntryMode.Insert }"
     >
       Insert
+    </button>
+    <button
+      class="entry-mode-btn"
+      @click="$emit('updateEntryMode', EntryMode.Edit)"
+      :class="{ on: entryMode === EntryMode.Edit }"
+    >
+      Single
     </button>
     <span class="space"></span>
     <button

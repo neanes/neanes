@@ -11,11 +11,13 @@
 ## Must-haves but lower priority
 
 - The app is currently very slow when there are many pages. Add a way to view one page at a time with backwards/forwards buttons. Also figure out how to improve the speed for many pages.
+- Fix neume justification routine when a text box is entered in the middle of a line
 
 ## Nice-to-haves
 
 - Right-align option for martyria and tempos. Does this maybe become a "paragraph option", where a paragraph can consist of neumes, small text-boxes that fit to the width of their contents, and have an alignment?
 - Document Settings Dialog
+- Better Drop Cap support (more fonts, change color and size)
 - Microtonal Sharps and Flats
 - Custom Martyrias
 - Note Indicators

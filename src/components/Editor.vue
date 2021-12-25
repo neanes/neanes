@@ -174,6 +174,7 @@
                   :element="element"
                   :class="[{ selectedTextbox: element == selectedElement }]"
                   @click.native="selectedElement = element"
+                  @dblclick.native="openModeKeyDialog"
                   @scoreUpdated="onScoreUpdated"
                 >
                 </ModeKey>

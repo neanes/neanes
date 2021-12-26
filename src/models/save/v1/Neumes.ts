@@ -54,6 +54,8 @@ export enum QuantitativeNeume {
   OligonPlusKentemataPlusHypsiliLeft = 'OligonPlusKentemataPlusHypsiliLeft',
   OligonPlusKentemataPlusHypsiliRight = 'OligonPlusKentemataPlusHypsiliRight',
 
+  KentemataPlusOligonSpecial = 'KentemataPlusOligonSpecial',
+
   VareiaDotted = 'VareiaDotted',
   Cross = 'Cross',
 }

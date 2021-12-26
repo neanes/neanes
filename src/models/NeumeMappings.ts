@@ -178,6 +178,11 @@ export const neumeMap = new Map<Neume, NeumeMapping>([
     { fontFamily: 'EzSpecial1', text: 'u' },
   ],
 
+  [
+    QuantitativeNeume.KentemataPlusOligonSpecial,
+    { fontFamily: 'Psaltica', text: '\u00CE' },
+  ],
+
   [QuantitativeNeume.Cross, { fontFamily: 'Psaltica', text: '+' }],
   [QuantitativeNeume.VareiaDotted, { fontFamily: 'Psaltica', text: '|' }],
 

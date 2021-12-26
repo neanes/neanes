@@ -3,7 +3,7 @@
     <div class="row">
       <button
         class="neume-button"
-        @click="setAccidental(Accidental.Flat_2_Left)"
+        @click="setAccidental(Accidental.Flat_2_Right)"
       >
         <Neume class="red neume flat" :neume="Accidental.Flat_2_Right" />
       </button>

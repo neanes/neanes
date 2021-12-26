@@ -101,6 +101,7 @@ export const gorgonAdjustmentMap = new Map<GorgonNeume, NeumeAdjustment[]>([
         isPairedWith: [
           QuantitativeNeume.OligonPlusKentimaBelow,
           QuantitativeNeume.KentemataPlusOligon,
+          QuantitativeNeume.KentemataPlusOligonSpecial,
         ],
         offset: { x: -5, y: 0 },
       },
@@ -314,8 +315,11 @@ export const vocalExpressionAdjustmentMap = new Map<
         offset: { x: -6, y: 0 },
       },
       {
-        isPairedWith: [QuantitativeNeume.KentemataPlusOligon],
-        offset: { x: 0, y: 5 },
+        isPairedWith: [
+          QuantitativeNeume.KentemataPlusOligon,
+          QuantitativeNeume.KentemataPlusOligonSpecial,
+        ],
+        offset: { x: 0, y: 0 },
       },
     ],
   ],
@@ -335,7 +339,10 @@ export const vocalExpressionAdjustmentMap = new Map<
         offset: { x: 0, y: 4 },
       },
       {
-        isPairedWith: [QuantitativeNeume.KentemataPlusOligon],
+        isPairedWith: [
+          QuantitativeNeume.KentemataPlusOligon,
+          QuantitativeNeume.KentemataPlusOligonSpecial,
+        ],
         offset: { x: 0, y: 6 },
       },
       {
@@ -534,7 +541,10 @@ for (let fthora of Object.values(Fthora)) {
       offset: { x: -5, y: 0 },
     });
     adjustments.push({
-      isPairedWith: [QuantitativeNeume.KentemataPlusOligon],
+      isPairedWith: [
+        QuantitativeNeume.KentemataPlusOligon,
+        QuantitativeNeume.KentemataPlusOligonSpecial,
+      ],
       offset: { x: -8, y: 0 },
     });
   }

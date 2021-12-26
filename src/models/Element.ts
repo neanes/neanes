@@ -19,6 +19,7 @@ import {
   getTimeReplacements,
   getVocalExpressionReplacements,
   getFthoraReplacements,
+  getQuantitativeReplacements,
 } from './NeumeReplacements';
 import { Scale, ScaleNote } from './Scales';
 
@@ -93,6 +94,7 @@ export class NoteElement extends ScoreElement {
   }
 
   private replaceNeumes() {
+    this.replaceQuantitativeNeumes();
     this.replaceGorgons();
     this.replaceTimeNeumes();
     this.replaceVocalExpressions();
@@ -188,6 +190,34 @@ export class NoteElement extends ScoreElement {
 
         if (replacement) {
           this.setVocalExpressionNeume(replacement.replaceWith);
+        }
+      }
+    }
+  }
+
+  private replaceQuantitativeNeumes() {
+    const replacements = getQuantitativeReplacements(this.quantitativeNeume);
+
+    if (replacements) {
+      if (this.vocalExpressionNeume) {
+        const replacement =
+          replacements.find(
+            (x) =>
+              x.isPairedWithVocalExpression &&
+              x.isPairedWithVocalExpression.includes(
+                this.vocalExpressionNeume!,
+              ),
+          ) ||
+          replacements.find(
+            (x) =>
+              x.isNotPairedWithVocalExpression &&
+              !x.isNotPairedWithVocalExpression.includes(
+                this.vocalExpressionNeume!,
+              ),
+          );
+
+        if (replacement) {
+          this.setQuantitativeNeume(replacement.replaceWith!);
         }
       }
     }

@@ -18,6 +18,12 @@ export interface NeumeReplacement<T> {
   replaceWith: T | null;
 }
 
+export interface QuantitativeNeumeReplacement<T> {
+  isPairedWithVocalExpression?: VocalExpressionNeume[];
+  isNotPairedWithVocalExpression?: VocalExpressionNeume[];
+  replaceWith: T;
+}
+
 // Neumes that must be paired with special "_Right" neumes
 const rightGorgonNeumes: Neume[] = [
   QuantitativeNeume.Apostrophos,
@@ -105,6 +111,7 @@ const bottomOnlyKlasmaNeumes: Neume[] = [
 const topOnlyKlasmaNeumes: Neume[] = [
   QuantitativeNeume.Ison,
   QuantitativeNeume.KentemataPlusOligon,
+  QuantitativeNeume.KentemataPlusOligonSpecial,
   QuantitativeNeume.Oligon,
   QuantitativeNeume.OligonPlusKentimaBelow,
   QuantitativeNeume.OligonPlusKentima,
@@ -425,6 +432,31 @@ export const fthoraReplacementMap = new Map<Fthora, NeumeReplacement<Fthora>[]>(
   [],
 );
 
+export const quantitativeNeumeReplacementMap = new Map<
+  QuantitativeNeume,
+  QuantitativeNeumeReplacement<QuantitativeNeume>[]
+>([
+  [
+    QuantitativeNeume.KentemataPlusOligon,
+    [
+      {
+        isPairedWithVocalExpression: [VocalExpressionNeume.Psifiston],
+        replaceWith: QuantitativeNeume.KentemataPlusOligonSpecial,
+      },
+    ],
+  ],
+
+  [
+    QuantitativeNeume.KentemataPlusOligonSpecial,
+    [
+      {
+        isNotPairedWithVocalExpression: [VocalExpressionNeume.Psifiston],
+        replaceWith: QuantitativeNeume.KentemataPlusOligon,
+      },
+    ],
+  ],
+]);
+
 for (let fthora of Object.values(Fthora)) {
   const topRightFthora = fthora.replace('TopCenter', 'TopRight') as Fthora;
   const bottomRightFthora = fthora.replace(
@@ -485,6 +517,10 @@ export const getVocalExpressionReplacements = (neume: VocalExpressionNeume) => {
 
 export const getFthoraReplacements = (neume: Fthora) => {
   return fthoraReplacementMap.get(neume);
+};
+
+export const getQuantitativeReplacements = (neume: QuantitativeNeume) => {
+  return quantitativeNeumeReplacementMap.get(neume);
 };
 
 export const areTimeNeumesEquivalent = (

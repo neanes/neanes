@@ -20,7 +20,7 @@ This software is intended to create simple scores that contain:
 - A mode signature
 - Neumes and lyrics
 
-## Guide
+## How-to Guide
 
 ### Create a new score
 
@@ -143,6 +143,10 @@ To format the code before committing, type:
 ```
 npm run prettier
 ```
+
+## Examples
+
+Sample files can be found in the `examples` folder.
 
 ## Acknowledgements
 

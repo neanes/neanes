@@ -226,7 +226,7 @@ function createMenu(win: BrowserWindow) {
 
               if (!dialogResult.canceled) {
                 const data = await win.webContents.printToPDF({
-                  marginsType: 1,
+                  pageSize: 'Letter',
                 });
                 await fs.writeFile(dialogResult.filePath!, data);
               }

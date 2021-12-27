@@ -215,6 +215,13 @@ function createMenu(win: BrowserWindow) {
               const dialogResult = await dialog.showSaveDialog(win, {
                 title: 'Export Score as PDF',
                 filters: [{ name: 'PDF File', extensions: ['pdf'] }],
+                defaultPath:
+                  state.filePath != null
+                    ? path.basename(
+                        state.filePath,
+                        path.extname(state.filePath),
+                      )
+                    : 'Untitled 1',
               });
 
               if (!dialogResult.canceled) {

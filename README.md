@@ -86,7 +86,7 @@ To create a melisma, end your lyrics with an underscore (`_`). To continue the m
 
 ### Page Breaks and Line Breaks
 
-To insert a page break or a line break, click the neume that you want the break to occur after, and press the `Page Break` or `Line Break` button in the toolbar at the top of the window.
+To insert a page break or a line break, click the neume that you want the break to occur after, and press the `Page Break` or `Line Break` button in the toolbar at the top of the window. To remove the page or line break, highlight the element with the break, and press the button page or line break button again.
 
 ### Drop Caps
 

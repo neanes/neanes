@@ -28,7 +28,6 @@
 - Allow multiple elements to be selected (and copy/cut/pasted)
 - Undo / redo
 - Configurable Neume Keyboard
-- Icons (e.g. for page break and line break)
 - Better styling
 - Graceful handling of bad martyrias
 - Score checker that points out potential issues by using Fr. Ephraim's style rules (and other sources).

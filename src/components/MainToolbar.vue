@@ -65,16 +65,17 @@
     </button>
     <span class="space"></span>
     <button
-      title="Insert Line Break After Selected Element"
+      title="Insert/Remove Line Break After Selected Element"
       @click="$emit('updateLineBreak')"
     >
-      Line Break
+      &#182;
     </button>
     <button
-      title="Insert Page Break After Selected Element"
+      class="page-break-btn"
+      title="Insert/Remove Page Break After Selected Element"
       @click="$emit('updatePageBreak')"
     >
-      Page Break
+      <img src="@/assets/pagebreak.svg" width="16" height="16" />
     </button>
     <span class="space"></span>
     <button
@@ -126,6 +127,11 @@ export default class NeumeToolbar extends Vue {
   padding: 0.25rem;
 }
 
+button {
+  min-width: 32px;
+  min-height: 32px;
+}
+
 .entry-mode-btn.on {
   background-color: lightsteelblue;
 }
@@ -143,6 +149,11 @@ export default class NeumeToolbar extends Vue {
   width: 32px;
 
   position: relative;
+}
+
+.page-break-btn {
+  display: flex;
+  align-items: center;
 }
 
 .space {

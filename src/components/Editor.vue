@@ -44,13 +44,13 @@
                     class="page-break"
                     v-if="element.pageBreak"
                     style="position: absolute; top: -10px"
-                    >P</span
-                  >
+                    ><img src="@/assets/pagebreak.svg" width="16" height="16"
+                  /></span>
                   <span
                     class="line-break"
                     v-if="element.lineBreak"
                     style="position: absolute; top: -10px"
-                    >L</span
+                    >&#182;</span
                   >
                   <SyllableNeumeBox
                     class="syllable-box"
@@ -99,7 +99,7 @@
                   <span
                     v-if="element.lineBreak"
                     style="position: absolute; top: -10px"
-                    >L</span
+                    >&#182;</span
                   >
                   <MartyriaNeumeBox
                     :ref="`element-${getElementIndex(element)}`"
@@ -124,7 +124,7 @@
                   <span
                     v-if="element.lineBreak"
                     style="position: absolute; top: -10px"
-                    >L</span
+                    >&#182;</span
                   >
                   <TempoNeumeBox
                     class="tempo-neume-box"
@@ -148,7 +148,7 @@
                   <span
                     v-if="element.lineBreak"
                     style="position: absolute; top: -10px"
-                    >L</span
+                    >&#182;</span
                   >
                   <div
                     class="empty-neume-box"

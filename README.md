@@ -72,9 +72,17 @@ If you need to insert neumes in the middle of the score, then you should use Ins
 
 In Single Edit Mode, clicking a quantitative neume updates the currently selected neume without advancing the cursor. This can be used to correct a single mistake by clicking directly on the neume and changing it.
 
-### Removing Characters
+### Removing Neumes and Other Elements
 
 To remove a neume, text box, or mode key, select it and press the delete button in the main toolbar.
+
+### Inserting Lyrics
+
+To insert lyrics, click on the space just below a neume and begin typing. Press the `tab` key to move to the next lyric box.
+
+#### Melismas
+
+To create a melisma, end your lyrics with an underscore (`_`). To continue the melisma, set the lyrics for each neume in the melisma to a single underscore. The full melisma will be drawn for you.
 
 ### Page Breaks and Line Breaks
 

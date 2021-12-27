@@ -1,0 +1,657 @@
+{
+  "version": "1.0",
+  "pageSetup": {
+    "pageWidth": 816,
+    "pageHeight": 1056,
+    "topMargin": 96,
+    "bottomMargin": 96,
+    "leftMargin": 96,
+    "rightMargin": 96,
+    "lineHeight": 72,
+    "lyricsDefaultFontFamily": "Omega",
+    "lyricsDefaultFontSize": 16,
+    "lyricsVerticalOffset": 40,
+    "neumeDefaultFontSize": 26.666666666666668,
+    "neumeDefaultSpacing": 3,
+    "tempoDefaultColor": "#ED0000",
+    "martyriaDefaultColor": "#ED0000",
+    "modeKeyDefaultColor": "#ED0000",
+    "dropCapDefaultFontFamily": "Athonite",
+    "dropCapDefaultFontSize": 80,
+    "dropCapDefaultColor": "black"
+  },
+  "staff": {
+    "elements": [
+      {
+        "elementType": "TextBox",
+        "alignment": "center",
+        "color": "black",
+        "content": "Αναστάσιμον Απολυτίκιον, Ήχος Αʹ",
+        "fontSize": 25.333333333333332,
+        "fontFamily": "Omega",
+        "height": 23
+      },
+      {
+        "elementType": "TextBox",
+        "alignment": "center",
+        "color": "black",
+        "content": "Του λίθου σφραγισθέντος",
+        "fontSize": 16,
+        "fontFamily": "Omega",
+        "height": 14
+      },
+      {
+        "elementType": "ModeKey",
+        "alignment": "center",
+        "mode": 1,
+        "scale": "Diatonic",
+        "scaleNote": "Pa",
+        "martyrias": [
+          "ModeSign.AlphaWithDeltaHat"
+        ],
+        "note": "ModeSign.Pa",
+        "color": "#ED0000",
+        "fontSize": 26.666666666666668,
+        "height": 63
+      },
+      {
+        "elementType": "DropCap",
+        "content": "t"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "lyrics": "ου"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "OligonPlusKentimaAbove",
+        "lyrics": "λι"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "lyrics": "θου"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "lyrics": "σφρα"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Oligon",
+        "lyrics": "γι"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Petasti",
+        "lyrics": "σθεν"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "lyrics": "τος"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "lyrics": "υ"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "PetastiWithIson",
+        "lyrics": "πο"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "lyrics": "των"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "lyrics": "Ι"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "lyrics": "ου"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "OligonPlusKentemata",
+        "lyrics": "δαι"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "timeNeume": "Klasma_Top",
+        "lyrics": "ων"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "lyrics": "και"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "lyrics": "στρα"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Oligon",
+        "lyrics": "τι"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Oligon",
+        "lyrics": "ω"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Oligon",
+        "lyrics": "των"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "lyrics": "φυ"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "lyrics": "λασ"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Petasti",
+        "timeNeume": "Klasma_Bottom",
+        "lyrics": "σον"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "lyrics": "των"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "lyrics": "το"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Oligon",
+        "vocalExpressionNeume": "Psifiston",
+        "lyrics": "α"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "lyrics": "χραν"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "lyrics": "τον"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Oligon",
+        "lyrics": "σου"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "lyrics": "Σω"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Kentemata",
+        "lyrics": "ω"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "timeNeume": "Klasma_Top",
+        "lyrics": "μα"
+      },
+      {
+        "elementType": "Martyria",
+        "auto": true,
+        "note": "Thi",
+        "rootSign": "DeltaDotted"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "lyrics": "α"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "OligonPlusKentimaAbove",
+        "vocalExpressionNeume": "Psifiston",
+        "lyrics": "νε"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "lyrics": "ε"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "lyrics": "στης"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "lyrics": "τρι"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "vocalExpressionNeume": "Psifiston",
+        "lyrics": "η"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "lyrics": "με"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "lyrics": "ρος"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Oligon",
+        "lyrics": "Σω"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Oligon",
+        "timeNeume": "Klasma_Top",
+        "lyrics": "τηρ"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "lyrics": "δω"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Oligon",
+        "lyrics": "ρου"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "lyrics": "με"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "lyrics": "νος"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "RunningElaphron",
+        "lyrics": "   τω"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "OligonPlusKentima",
+        "lyrics": "κο"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "lyrics": "σμω"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "lyrics": "την"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "lyrics": "ζω"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "timeNeume": "Klasma_TopRight",
+        "lyrics": "ην"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "OligonPlusKentima",
+        "lyrics": "δι"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Oligon",
+        "lyrics": "α"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Petasti",
+        "lyrics": "του"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "lyrics": "το"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "lyrics": "αι"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "lyrics": "Δυ"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Oligon",
+        "lyrics": "να"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "KentemataPlusOligonSpecial",
+        "gorgonNeume": "Gorgon_Top",
+        "vocalExpressionNeume": "Psifiston",
+        "lyrics": "α"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "lyrics": "μεις"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "lyrics": "των"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "lyrics": "Ου"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "lyrics": "ρα"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Oligon",
+        "timeNeume": "Klasma_Top",
+        "lyrics": "νων"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Hamili",
+        "lyrics": "ε"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "OligonPlusHypsiliRight",
+        "lyrics": "βο"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "lyrics": "ων"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "lyrics": "σοι"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "lyrics": "Ζω"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "lyrics": "ο"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "vocalExpressionNeume": "Psifiston",
+        "lyrics": "δο"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "lyrics": "ο"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "timeNeume": "Klasma_TopRight",
+        "lyrics": "τα"
+      },
+      {
+        "elementType": "Martyria",
+        "auto": true,
+        "note": "Pa",
+        "rootSign": "Alpha"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "OligonPlusHypsiliRight",
+        "lyrics": "δο"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "vocalExpressionNeume": "HomalonConnecting",
+        "lyrics": "ο"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "lyrics": "ξα"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "lyrics": "τη"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "lyrics": "Α"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "lyrics": "να"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Oligon",
+        "vocalExpressionNeume": "Psifiston",
+        "lyrics": "στα"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "lyrics": "σει"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "lyrics": "σου"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Oligon",
+        "lyrics": "Χρι"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Oligon",
+        "timeNeume": "Klasma_Top",
+        "lyrics": "στε"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "lyrics": "δο"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Kentemata",
+        "lyrics": "ο"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "lyrics": "ξα"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "lyrics": "τη"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Oligon",
+        "lyrics": "Βα"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "lyrics": "σι"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Oligon",
+        "vocalExpressionNeume": "Psifiston",
+        "lyrics": "λει"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "lyrics": "α"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "timeNeume": "Klasma_TopRight",
+        "lyrics": "σου"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Petasti",
+        "lyrics": "δο"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "lyrics": "ξα"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "lyrics": "τη"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "lyrics": "οι"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Oligon",
+        "lyrics": "κο"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Oligon",
+        "lyrics": "νο"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Oligon",
+        "vocalExpressionNeume": "Psifiston",
+        "lyrics": "μι"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "lyrics": "α"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "lyrics": "σου"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "vocalExpressionNeume": "Psifiston",
+        "lyrics": "μο"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "lyrics": "νε"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "lyrics": "φι"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "OligonPlusKentimaBelow",
+        "vocalExpressionNeume": "Psifiston",
+        "lyrics": "λα"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "lyrics": "αν"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "vocalExpressionNeume": "Vareia",
+        "lyrics": "θρω"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Apostrophos",
+        "lyrics": "ω"
+      },
+      {
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "timeNeume": "Dipli",
+        "lyrics": "πε"
+      },
+      {
+        "elementType": "Martyria",
+        "auto": true,
+        "note": "Pa",
+        "rootSign": "Alpha"
+      },
+      {
+        "elementType": "Empty"
+      }
+    ]
+  }
+}

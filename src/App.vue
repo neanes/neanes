@@ -9,6 +9,10 @@
 </template>
 
 <style>
+@page {
+  margin: 0;
+}
+
 @font-face {
   font-family: Psaltica;
   src: url('~@/assets/EZ Psaltica.ttf');

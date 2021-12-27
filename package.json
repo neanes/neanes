@@ -2,7 +2,7 @@
   "name": "neanes",
   "author": "danielgarthur",
   "description": "A Byzantine Chant Scorewriter",
-  "version": "0.1.0-alpha.1",
+  "version": "0.1.0-alpha.3",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
@@ -37,6 +37,7 @@
     "electron": "^16.0.5",
     "electron-devtools-installer": "^3.1.0",
     "electron-icon-builder": "^2.0.1",
+    "electron-updater": "^4.6.1",
     "eslint": "^5.16.0",
     "eslint-plugin-vue": "^5.0.0",
     "prettier": "2.5.1",

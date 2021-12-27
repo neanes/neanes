@@ -37,6 +37,7 @@ export const neumeValueMap = new Map<QuantitativeNeume, number>([
 
   [QuantitativeNeume.OligonPlusKentemata, 2],
   [QuantitativeNeume.KentemataPlusOligon, 2],
+  [QuantitativeNeume.KentemataPlusOligonSpecial, 2],
   [QuantitativeNeume.OligonPlusIsonPlusKentemata, 1],
   [QuantitativeNeume.OligonPlusApostrophos, -1],
   [QuantitativeNeume.OligonPlusApostrophosPlusKentemata, 0],

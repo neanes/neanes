@@ -2,7 +2,7 @@
   "name": "neanes",
   "author": "danielgarthur",
   "description": "A Byzantine Chant Scorewriter",
-  "version": "0.1.0-alpha.3",
+  "version": "0.1.0-alpha.4",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",

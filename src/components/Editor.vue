@@ -17,6 +17,7 @@
       <div class="page-background">
         <div
           class="page"
+          :style="pageStyle"
           v-for="(page, pageIndex) in pages"
           :key="`page-${pageIndex}`"
           :ref="`page-${pageIndex}`"
@@ -367,6 +368,17 @@ export default class Editor extends Vue {
 
   set hasUnsavedChanges(hasUnsavedChanges: boolean) {
     store.mutations.setHasUnsavedChanges(hasUnsavedChanges);
+  }
+
+  get pageStyle() {
+    return {
+      minWidth: this.score.pageSetup.pageWidth + 'px',
+      maxWidth: this.score.pageSetup.pageWidth + 'px',
+      width: this.score.pageSetup.pageWidth + 'px',
+      height: this.score.pageSetup.pageHeight + 'px',
+      minHeight: this.score.pageSetup.pageHeight + 'px',
+      maxHeight: this.score.pageSetup.pageHeight + 'px',
+    } as CSSStyleDeclaration;
   }
 
   async created() {
@@ -1278,13 +1290,6 @@ export default class Editor extends Vue {
   margin-right: auto;
 
   background-color: white;
-  min-width: 624px;
-  max-width: 624px;
-  width: 624px;
-  height: 864px;
-  min-height: 864px;
-  max-height: 864px;
-  padding: 96px;
   overflow: hidden;
 
   position: relative;
@@ -1359,12 +1364,6 @@ export default class Editor extends Vue {
     height: auto;
     margin-bottom: 0;
     padding: 0;
-    width: 816px;
-    height: 1056px;
-    min-width: 816px;
-    max-width: 816px;
-    min-height: 1056px;
-    max-height: 1056px;
   }
 
   .empty-neume-box {

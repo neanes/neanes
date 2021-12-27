@@ -30,6 +30,10 @@ export default class TextBox extends Vue {
 
   editable: boolean = false;
 
+  get pageSetup() {
+    return store.state.score.pageSetup;
+  }
+
   get selectedElement() {
     return store.state.selectedElement;
   }
@@ -48,6 +52,7 @@ export default class TextBox extends Vue {
       fontFamily: this.element.fontFamily,
       fontSize: this.element.fontSize + 'px',
       textAlign: this.element.alignment,
+      width: this.pageSetup.innerPageWidth + 'px',
     };
 
     return style;
@@ -66,7 +71,6 @@ export default class TextBox extends Vue {
 
 <style scoped>
 .text-box-container {
-  width: 624px;
   border: 1px dotted black;
   box-sizing: border-box;
 }

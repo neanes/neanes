@@ -41,6 +41,7 @@ import {
   getQuantitativeNeumeAdjustments,
   NeumeAdjustmentOffset,
 } from '@/models/NeumeAdjustments';
+import { store } from '@/store';
 
 @Component({
   components: {
@@ -50,6 +51,10 @@ import {
 export default class ModeKey extends Vue {
   @Prop() element!: ModeKeyElement;
   ModeSign = ModeSign;
+
+  get pageSetup() {
+    return store.state.score.pageSetup;
+  }
 
   get hasFthora() {
     return this.element.fthora != null;
@@ -80,6 +85,7 @@ export default class ModeKey extends Vue {
       color: this.element.color,
       fontSize: this.element.fontSize + 'px',
       textAlign: this.element.alignment,
+      width: this.pageSetup.innerPageWidth + 'px',
     } as CSSStyleDeclaration;
   }
 
@@ -145,7 +151,6 @@ export default class ModeKey extends Vue {
 
 <style scoped>
 .mode-key-container {
-  width: 624px;
   border: 1px dotted black;
   box-sizing: border-box;
 }

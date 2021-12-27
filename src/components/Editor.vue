@@ -1264,7 +1264,6 @@ export default class Editor extends Vue {
 .page-background {
   display: flex;
   flex-direction: column;
-  align-items: center;
   padding: 2rem 4rem;
   background-color: #ddd;
 
@@ -1274,6 +1273,9 @@ export default class Editor extends Vue {
 
 .page {
   margin-bottom: 20px;
+
+  margin-left: auto;
+  margin-right: auto;
 
   background-color: white;
   min-width: 624px;

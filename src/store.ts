@@ -1,13 +1,13 @@
 import Vue from 'vue';
 import { Score } from '@/models/Score';
-import { ScoreElement } from '@/models/Element';
-import { PageSetup } from './models/PageSetup';
+import { NoteElement, ScoreElement } from '@/models/Element';
 import { EventBus } from './eventBus';
 import { IpcRendererChannels } from './ipc/ipcChannels';
 
 interface IState {
   score: Score;
   selectedElement: ScoreElement | null;
+  selectedLyrics: NoteElement | null;
   elementToFocus: ScoreElement | null;
   zoom: number;
   currentFilePath: string | null;
@@ -17,6 +17,7 @@ interface IState {
 const state: IState = Vue.observable({
   score: new Score(),
   selectedElement: null,
+  selectedLyrics: null,
   elementToFocus: null,
   zoom: 1,
   currentFilePath: null,
@@ -52,7 +53,19 @@ const mutations = {
   },
 
   setSelectedElement(element: ScoreElement | null) {
+    if (element != null) {
+      this.setSelectedLyrics(null);
+    }
+
     state.selectedElement = element;
+  },
+
+  setSelectedLyrics(element: NoteElement | null) {
+    if (element != null) {
+      this.setSelectedElement(null);
+    }
+
+    state.selectedLyrics = element;
   },
 
   setElementToFocus(element: ScoreElement | null) {

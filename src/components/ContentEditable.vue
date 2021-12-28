@@ -16,8 +16,12 @@ export default class ContentEditable extends Vue {
   @Prop({ default: true }) selectAllOnFocus!: boolean;
   @Prop({ default: true }) editable!: boolean;
 
+  get htmlElement() {
+    return this.$el as HTMLElement;
+  }
+
   onBlur() {
-    this.$emit('blur', (this.$el as HTMLElement).innerText);
+    this.$emit('blur', this.htmlElement.innerText);
   }
 
   onFocus() {
@@ -29,7 +33,7 @@ export default class ContentEditable extends Vue {
   }
 
   focus() {
-    (this.$el as HTMLElement).focus();
+    this.htmlElement.focus();
   }
 }
 </script>

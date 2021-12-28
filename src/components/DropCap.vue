@@ -16,6 +16,7 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 import { DropCapElement, ScoreElement } from '@/models/Element';
 import ContentEditable from '@/components/ContentEditable.vue';
 import { store } from '@/store';
+import { withZoom } from '@/utils/withZoom';
 
 @Component({
   components: {
@@ -48,8 +49,9 @@ export default class DropCap extends Vue {
       color: this.element.color || this.pageSetup.dropCapDefaultColor,
       fontFamily:
         this.element.fontFamily || this.pageSetup.dropCapDefaultFontFamily,
-      fontSize:
-        (this.element.fontSize || this.pageSetup.dropCapDefaultFontSize) + 'px',
+      fontSize: withZoom(
+        this.element.fontSize || this.pageSetup.dropCapDefaultFontSize,
+      ),
     } as CSSStyleDeclaration;
 
     return style;

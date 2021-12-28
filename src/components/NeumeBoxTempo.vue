@@ -9,6 +9,7 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 import { TempoElement } from '@/models/Element';
 import Neume from '@/components/Neume.vue';
 import { store } from '@/store';
+import { withZoom } from '@/utils/withZoom';
 
 @Component({
   components: {
@@ -25,7 +26,7 @@ export default class NeumeBoxMartyria extends Vue {
   get style() {
     return {
       color: this.pageSetup.tempoDefaultColor,
-      fontSize: this.pageSetup.neumeDefaultFontSize + 'px',
+      fontSize: withZoom(this.pageSetup.neumeDefaultFontSize),
     } as CSSStyleDeclaration;
   }
 }

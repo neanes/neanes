@@ -27,6 +27,7 @@ import {
   getRootSignAdjustments,
   NeumeAdjustmentOffset,
 } from '@/models/NeumeAdjustments';
+import { withZoom } from '@/utils/withZoom';
 
 @Component({
   components: {
@@ -60,7 +61,7 @@ export default class NeumeBoxMartyria extends Vue {
   get style() {
     return {
       color: this.pageSetup.martyriaDefaultColor,
-      fontSize: this.pageSetup.neumeDefaultFontSize + 'px',
+      fontSize: withZoom(this.pageSetup.neumeDefaultFontSize),
     } as CSSStyleDeclaration;
   }
 

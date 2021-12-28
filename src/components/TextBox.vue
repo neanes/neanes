@@ -1,9 +1,8 @@
 <template>
-  <div class="text-box-container">
+  <div class="text-box-container" :style="style">
     <ContentEditable
       ref="text"
       class="text-box"
-      :style="style"
       :content="element.content"
       :class="[{ selected: element == selectedElement }]"
       @blur="updateText($event)"
@@ -19,6 +18,7 @@ import { neumeMap } from '@/models/NeumeMappings';
 import { TextBoxElement } from '@/models/Element';
 import ContentEditable from '@/components/ContentEditable.vue';
 import { store } from '@/store';
+import { withZoom } from '@/utils/withZoom';
 
 @Component({
   components: {
@@ -50,9 +50,9 @@ export default class TextBox extends Vue {
     const style: any = {
       color: this.element.color,
       fontFamily: this.element.fontFamily,
-      fontSize: this.element.fontSize + 'px',
+      fontSize: withZoom(this.element.fontSize),
       textAlign: this.element.alignment,
-      width: this.pageSetup.innerPageWidth + 'px',
+      width: withZoom(this.pageSetup.innerPageWidth),
     };
 
     return style;

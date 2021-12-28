@@ -65,13 +65,14 @@
     </button>
     <span class="space"></span>
     <button
+      class="icon-btn"
       title="Insert/Remove Line Break After Selected Element"
       @click="$emit('updateLineBreak')"
     >
       &#182;
     </button>
     <button
-      class="page-break-btn"
+      class="page-break-btn icon-btn"
       title="Insert/Remove Page Break After Selected Element"
       @click="$emit('updatePageBreak')"
     >
@@ -79,29 +80,39 @@
     </button>
     <span class="space"></span>
     <button
-      class="red"
+      class="red icon-btn"
       title="Delete Selected Element"
       @click="$emit('deleteSelectedElement')"
     >
       X
     </button>
     <span class="space"></span>
-    <input class="zoom" v-model.lazy="zoomDisplay" />
+    <div class="zoom-container" @focusout="showZoomMenu = false" tabindex="-1">
+      <input class="zoom" v-model.lazy="zoomDisplay" />
+      <span class="zoom-arrow" @click="showZoomMenu = !showZoomMenu"
+        >&#x25BE;</span
+      >
+      <div class="zoom-menu" v-if="showZoomMenu">
+        <div
+          v-for="option in zoomOptions"
+          :key="option"
+          class="zoom-menu-item"
+          @click="
+            zoomDisplay = option;
+            showZoomMenu = false;
+          "
+        >
+          {{ option }}%
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { NoteElement } from '@/models/Element';
-import {
-  Accidental,
-  GorgonNeume,
-  Note,
-  RootSign,
-  TempoSign,
-  TimeNeume,
-  VocalExpressionNeume,
-} from '@/models/Neumes';
+import { Note, RootSign, TempoSign } from '@/models/Neumes';
 import Neume from './Neume.vue';
 import { EntryMode } from './Editor.vue';
 
@@ -118,6 +129,10 @@ export default class NeumeToolbar extends Vue {
   RootSign = RootSign;
   TempoSign = TempoSign;
   EntryMode = EntryMode;
+
+  showZoomMenu: boolean = false;
+
+  zoomOptions: number[] = [50, 75, 90, 100, 125, 150, 200];
 
   get zoomDisplay() {
     return this.zoom * 100 + '%';
@@ -145,14 +160,12 @@ export default class NeumeToolbar extends Vue {
 <style scoped>
 .main-toolbar {
   display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+
   background-color: lightgray;
 
   padding: 0.25rem;
-}
-
-button {
-  min-width: 32px;
-  min-height: 32px;
 }
 
 .entry-mode-btn.on {
@@ -165,6 +178,11 @@ button {
 
 .neume {
   font-size: 25px;
+}
+
+.icon-btn {
+  height: 32px;
+  width: 32px;
 }
 
 .neume-button {
@@ -197,6 +215,38 @@ button {
 }
 
 .zoom {
-  width: 2.5rem;
+  width: 40px;
+  padding: 1px 2px;
+  font-family: 'Arial';
+  font-size: 13px;
+}
+
+.zoom-container {
+  position: relative;
+}
+
+.zoom-arrow {
+  display: inline-block;
+  cursor: default;
+  height: 21px;
+}
+
+.zoom-menu {
+  position: absolute;
+  z-index: 999;
+  background-color: white;
+  border: 1px solid black;
+}
+
+.zoom-menu-item {
+  padding: 1px 4px;
+  font-family: 'Arial';
+  font-size: 13px;
+  cursor: default;
+  width: 38px;
+}
+
+.zoom-menu-item:hover {
+  background-color: aliceblue;
 }
 </style>

@@ -1279,7 +1279,7 @@ export default class Editor extends Vue {
 .page-background {
   display: flex;
   flex-direction: column;
-  padding: 2rem 4rem;
+  padding: 2rem 1rem;
   background-color: #ddd;
 
   overflow: auto;

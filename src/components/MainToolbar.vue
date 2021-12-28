@@ -85,6 +85,8 @@
     >
       X
     </button>
+    <span class="space"></span>
+    <input class="zoom" v-model.lazy="zoomDisplay" />
   </div>
 </template>
 
@@ -111,10 +113,31 @@ import { EntryMode } from './Editor.vue';
 export default class NeumeToolbar extends Vue {
   @Prop() element!: NoteElement;
   @Prop() entryMode!: EntryMode;
+  @Prop() zoom!: number;
   Note = Note;
   RootSign = RootSign;
   TempoSign = TempoSign;
   EntryMode = EntryMode;
+
+  get zoomDisplay() {
+    return this.zoom * 100 + '%';
+  }
+
+  set zoomDisplay(value) {
+    let valueAsNumber = Math.round(parseInt(value));
+
+    if (Number.isNaN(valueAsNumber)) {
+      valueAsNumber = 100;
+    }
+
+    if (valueAsNumber < 50) {
+      valueAsNumber = 50;
+    } else if (valueAsNumber > 200) {
+      valueAsNumber = 200;
+    }
+
+    this.$emit('updateZoom', valueAsNumber / 100);
+  }
 }
 </script>
 
@@ -171,5 +194,9 @@ button {
   top: -12px;
   left: -1px;
   font-size: 20px;
+}
+
+.zoom {
+  width: 2.5rem;
 }
 </style>

@@ -42,6 +42,7 @@ import {
   NeumeAdjustmentOffset,
 } from '@/models/NeumeAdjustments';
 import { store } from '@/store';
+import { withZoom } from '@/utils/withZoom';
 
 @Component({
   components: {
@@ -83,9 +84,10 @@ export default class ModeKey extends Vue {
   get style() {
     return {
       color: this.element.color,
-      fontSize: this.element.fontSize + 'px',
+      fontSize: withZoom(this.element.fontSize),
       textAlign: this.element.alignment,
-      width: this.pageSetup.innerPageWidth + 'px',
+      width: withZoom(this.pageSetup.innerPageWidth),
+      height: withZoom(this.element.height),
     } as CSSStyleDeclaration;
   }
 

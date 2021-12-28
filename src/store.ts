@@ -9,6 +9,7 @@ interface IState {
   score: Score;
   selectedElement: ScoreElement | null;
   elementToFocus: ScoreElement | null;
+  zoom: number;
   currentFilePath: string | null;
   hasUnsavedChanges: boolean;
 }
@@ -17,6 +18,7 @@ const state: IState = Vue.observable({
   score: new Score(),
   selectedElement: null,
   elementToFocus: null,
+  zoom: 1,
   currentFilePath: null,
   hasUnsavedChanges: false,
 });
@@ -55,6 +57,11 @@ const mutations = {
 
   setElementToFocus(element: ScoreElement | null) {
     state.elementToFocus = element;
+  },
+
+  setZoom(zoom: number) {
+    state.zoom = zoom;
+    document.documentElement.style.setProperty('--zoom', zoom.toString());
   },
 
   setCurrentFilepath(path: string | null) {

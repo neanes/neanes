@@ -9,6 +9,16 @@
 </template>
 
 <style>
+:root {
+  --zoom: 1;
+}
+
+@media print {
+  :root {
+    --zoom: 1 !important;
+  }
+}
+
 @page {
   margin: 0;
 }

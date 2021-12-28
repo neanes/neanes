@@ -7,6 +7,8 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 import { Neume as NeumeType } from '@/models/Neumes';
 import { neumeMap } from '@/models/NeumeMappings';
 import { ScoreElementOffset } from '@/models/Element';
+import { store } from '@/store';
+import { withZoom } from '@/utils/withZoom';
 
 @Component
 export default class Neume extends Vue {
@@ -37,8 +39,8 @@ export default class Neume extends Vue {
     style.fontFamily = this.mapping.fontFamily;
 
     if (this.offset) {
-      style.left = this.offset.x + 'px';
-      style.top = this.offset.y + 'px';
+      style.left = withZoom(this.offset.x);
+      style.top = withZoom(this.offset.y);
     }
 
     return style;

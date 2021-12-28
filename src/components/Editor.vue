@@ -2,6 +2,8 @@
   <div class="editor">
     <MainToolbar
       :entryMode="entryMode"
+      :zoom="zoom"
+      @updateZoom="updateZoom"
       @addAutoMartyria="addAutoMartyria"
       @updateEntryMode="updateEntryMode"
       @updatePageBreak="updatePageBreak"
@@ -14,7 +16,7 @@
         class="neume-selector"
         @select-quantitative-neume="updateQuantitativeNeume"
       ></NeumeSelector>
-      <div class="page-background">
+      <div class="page-background" @keydown="onKeydown" tabindex="-1">
         <div
           class="page"
           :style="pageStyle"
@@ -22,8 +24,6 @@
           :key="`page-${pageIndex}`"
           :ref="`page-${pageIndex}`"
         >
-          <!-- <div class="mode-header red martyria">hWt</div> -->
-
           <div
             class="line"
             v-for="(line, lineIndex) in page.lines"
@@ -34,23 +34,17 @@
               v-for="(element, index) in line.elements"
               :key="`lineElement-${pageIndex}-${lineIndex}-${index}`"
               class="element-box"
-              :style="{ left: element.x + 'px', top: element.y + 'px' }"
+              :style="getElementStyle(element)"
             >
               <template v-if="isSyllableElement(element)">
                 <div
                   :ref="`element-${getElementIndex(element)}`"
                   class="neume-box"
                 >
-                  <span
-                    class="page-break"
-                    v-if="element.pageBreak"
-                    style="position: absolute; top: -10px"
-                    ><img src="@/assets/pagebreak.svg" width="16" height="16"
+                  <span class="page-break" v-if="element.pageBreak"
+                    ><img src="@/assets/pagebreak.svg"
                   /></span>
-                  <span
-                    class="line-break"
-                    v-if="element.lineBreak"
-                    style="position: absolute; top: -10px"
+                  <span class="line-break" v-if="element.lineBreak"
                     >&#182;</span
                   >
                   <SyllableNeumeBox
@@ -61,9 +55,7 @@
                   ></SyllableNeumeBox>
                   <div
                     class="lyrics-container"
-                    :style="{
-                      top: score.pageSetup.lyricsVerticalOffset + 'px',
-                    }"
+                    :style="lyricStyle"
                     @click="selectedElement = null"
                   >
                     <ContentEditable
@@ -76,7 +68,7 @@
                       <template v-if="element.melismaOffsetLeft">
                         <div
                           class="melisma full"
-                          :style="{ left: element.melismaOffsetLeft + 'px' }"
+                          :style="getFullMelismaStyle(element)"
                         >
                           {{ element.melismaText }}
                         </div>
@@ -92,16 +84,10 @@
               </template>
               <template v-if="isMartyriaElement(element)">
                 <div class="neume-box">
-                  <span
-                    v-if="element.pageBreak"
-                    style="position: absolute; top: -10px"
-                    >P</span
-                  >
-                  <span
-                    v-if="element.lineBreak"
-                    style="position: absolute; top: -10px"
-                    >&#182;</span
-                  >
+                  <span v-if="element.pageBreak">
+                    ><img src="@/assets/pagebreak.svg"
+                  /></span>
+                  <span v-if="element.lineBreak">&#182;</span>
                   <MartyriaNeumeBox
                     :ref="`element-${getElementIndex(element)}`"
                     class="marytria-neume-box"
@@ -117,16 +103,10 @@
                   :ref="`element-${getElementIndex(element)}`"
                   class="neume-box"
                 >
-                  <span
-                    v-if="element.pageBreak"
-                    style="position: absolute; top: -10px"
-                    >P</span
-                  >
-                  <span
-                    v-if="element.lineBreak"
-                    style="position: absolute; top: -10px"
-                    >&#182;</span
-                  >
+                  <span v-if="element.pageBreak">
+                    ><img src="@/assets/pagebreak.svg"
+                  /></span>
+                  <span v-if="element.lineBreak">&#182;</span>
                   <TempoNeumeBox
                     class="tempo-neume-box"
                     :neume="element"
@@ -141,16 +121,10 @@
                   :ref="`element-${getElementIndex(element)}`"
                   class="neume-box"
                 >
-                  <span
-                    v-if="element.pageBreak"
-                    style="position: absolute; top: -10px"
-                    >P</span
-                  >
-                  <span
-                    v-if="element.lineBreak"
-                    style="position: absolute; top: -10px"
-                    >&#182;</span
-                  >
+                  <span v-if="element.pageBreak">
+                    ><img src="@/assets/pagebreak.svg"
+                  /></span>
+                  <span v-if="element.lineBreak">&#182;</span>
                   <div
                     class="empty-neume-box"
                     :class="[{ selected: element == selectedElement }]"
@@ -298,6 +272,7 @@ import { modeKeyTemplates } from '@/models/ModeKeys';
 import { TestFileGenerator } from '@/utils/TestFileGenerator';
 import { TestFileType } from '@/utils/TestFileType';
 import { Unit } from '@/utils/Unit';
+import { withZoom } from '@/utils/withZoom';
 
 export enum EntryMode {
   Auto = 'Auto',
@@ -354,6 +329,14 @@ export default class Editor extends Vue {
     store.mutations.setSelectedElement(element);
   }
 
+  get zoom() {
+    return store.state.zoom;
+  }
+
+  set zoom(zoom: number) {
+    store.mutations.setZoom(zoom);
+  }
+
   set currentFilePath(path: string | null) {
     store.mutations.setCurrentFilepath(path);
   }
@@ -372,12 +355,32 @@ export default class Editor extends Vue {
 
   get pageStyle() {
     return {
-      minWidth: this.score.pageSetup.pageWidth + 'px',
-      maxWidth: this.score.pageSetup.pageWidth + 'px',
-      width: this.score.pageSetup.pageWidth + 'px',
-      height: this.score.pageSetup.pageHeight + 'px',
-      minHeight: this.score.pageSetup.pageHeight + 'px',
-      maxHeight: this.score.pageSetup.pageHeight + 'px',
+      minWidth: withZoom(this.score.pageSetup.pageWidth),
+      maxWidth: withZoom(this.score.pageSetup.pageWidth),
+      width: withZoom(this.score.pageSetup.pageWidth),
+      height: withZoom(this.score.pageSetup.pageHeight),
+      minHeight: withZoom(this.score.pageSetup.pageHeight),
+      maxHeight: withZoom(this.score.pageSetup.pageHeight),
+    } as CSSStyleDeclaration;
+  }
+
+  get lyricStyle() {
+    return {
+      top: withZoom(this.score.pageSetup.lyricsVerticalOffset),
+      fontSize: withZoom(this.score.pageSetup.lyricsDefaultFontSize),
+    } as CSSStyleDeclaration;
+  }
+
+  getElementStyle(element: ScoreElement) {
+    return {
+      left: withZoom(element.x),
+      top: withZoom(element.y),
+    } as CSSStyleDeclaration;
+  }
+
+  getFullMelismaStyle(element: NoteElement) {
+    return {
+      left: withZoom(element.melismaOffsetLeft!),
     } as CSSStyleDeclaration;
   }
 
@@ -399,8 +402,6 @@ export default class Editor extends Vue {
   }
 
   mounted() {
-    window.addEventListener('keydown', this.onKeydown);
-
     EventBus.$on(IpcMainChannels.FileMenuNewScore, this.onFileMenuNewScore);
     EventBus.$on(IpcMainChannels.FileMenuOpenScore, this.onFileMenuOpenScore);
     EventBus.$on(IpcMainChannels.FileMenuSave, this.onFileMenuSave);
@@ -429,8 +430,6 @@ export default class Editor extends Vue {
   }
 
   beforeDestroy() {
-    window.removeEventListener('keydown', this.onKeydown);
-
     EventBus.$off(IpcMainChannels.FileMenuNewScore, this.onFileMenuNewScore);
     EventBus.$off(IpcMainChannels.FileMenuOpenScore, this.onFileMenuOpenScore);
     EventBus.$off(IpcMainChannels.FileMenuSave, this.onFileMenuSave);
@@ -1072,6 +1071,10 @@ export default class Editor extends Vue {
     this.entryMode = mode;
   }
 
+  updateZoom(zoom: number) {
+    this.zoom = zoom;
+  }
+
   onFileMenuNewScore() {
     this.hasUnsavedChanges = false;
     this.currentFilePath = null;
@@ -1339,6 +1342,27 @@ export default class Editor extends Vue {
 
 .neume {
   display: flex;
+}
+
+.page-break {
+  position: absolute;
+  top: calc(-10px * var(--zoom, 1));
+}
+
+.page-break img {
+  height: calc(16px * var(--zoom, 1));
+  width: calc(16px * var(--zoom, 1));
+}
+
+.line-break {
+  position: absolute;
+  font-size: calc(16px * var(--zoom, 1));
+  top: calc(-10px * var(--zoom, 1));
+}
+
+.line-break img {
+  height: calc(16px * var(--zoom, 1));
+  width: calc(16px * var(--zoom, 1));
 }
 
 @media print {

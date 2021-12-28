@@ -53,15 +53,12 @@
                     :class="[{ selected: element == selectedElement }]"
                     @click.native="selectedElement = element"
                   ></SyllableNeumeBox>
-                  <div
-                    class="lyrics-container"
-                    :style="lyricStyle"
-                    @click="selectedElement = null"
-                  >
+                  <div class="lyrics-container" :style="lyricStyle">
                     <ContentEditable
                       class="lyrics"
                       :content="element.lyrics"
-                      @click.native="selectedElement = null"
+                      :ref="`lyrics-${getElementIndex(element)}`"
+                      @focus.native="selectedLyrics = element"
                       @blur="updateLyrics(element, $event)"
                     ></ContentEditable>
                     <template v-if="isMelisma(element)">
@@ -258,7 +255,6 @@ import MainToolbar from '@/components/MainToolbar.vue';
 import NeumeToolbar from '@/components/NeumeToolbar.vue';
 import MartyriaToolbar from '@/components/MartyriaToolbar.vue';
 import ModeKeyDialog from '@/components/ModeKeyDialog.vue';
-import Neume from './Neume.vue';
 import {
   FileMenuOpenScoreArgs,
   FileMenuSaveAsArgs,
@@ -273,6 +269,7 @@ import { TestFileGenerator } from '@/utils/TestFileGenerator';
 import { TestFileType } from '@/utils/TestFileType';
 import { Unit } from '@/utils/Unit';
 import { withZoom } from '@/utils/withZoom';
+import { throttle } from 'throttle-debounce';
 
 export enum EntryMode {
   Auto = 'Auto',
@@ -309,6 +306,28 @@ export default class Editor extends Vue {
 
   modeKeyDialogIsOpen: boolean = false;
 
+  // Throttled Methods
+  keydownThrottleIntervalMs: number = 100;
+
+  moveToPreviousLyricBoxThrottled = throttle(
+    this.keydownThrottleIntervalMs,
+    this.moveToPreviousLyricBox,
+  );
+
+  moveToNextLyricBoxThrottled = throttle(
+    this.keydownThrottleIntervalMs,
+    this.moveToNextLyricBox,
+  );
+
+  moveLeftThrottled = throttle(this.keydownThrottleIntervalMs, this.moveLeft);
+
+  moveRightThrottled = throttle(this.keydownThrottleIntervalMs, this.moveRight);
+
+  deleteSelectedElementThrottled = throttle(
+    this.keydownThrottleIntervalMs,
+    this.deleteSelectedElement,
+  );
+
   get score() {
     return store.state.score;
   }
@@ -327,6 +346,15 @@ export default class Editor extends Vue {
 
   set selectedElement(element: ScoreElement | null) {
     store.mutations.setSelectedElement(element);
+  }
+
+  get selectedLyrics() {
+    return store.state.selectedLyrics;
+  }
+
+  set selectedLyrics(element: NoteElement | null) {
+    console.log('set selectedLyrics');
+    store.mutations.setSelectedLyrics(element);
   }
 
   get zoom() {
@@ -854,52 +882,37 @@ export default class Editor extends Vue {
   }
 
   keydownLastHandleTime: number = +new Date();
-  keydownThrottleIntervalMs: number = 100;
 
   onKeydown(event: KeyboardEvent) {
-    const now = +new Date();
-
     if (
-      this.selectedElement == null ||
-      this.selectedElement.elementType === ElementType.StaffText ||
-      this.selectedElement.elementType === ElementType.TextBox ||
-      this.selectedElement.elementType === ElementType.DropCap ||
-      now - this.keydownLastHandleTime < this.keydownThrottleIntervalMs
+      this.selectedElement != null &&
+      this.navigableElements.includes(this.selectedElement.elementType)
     ) {
-      return;
+      return this.onKeydownNeume(event);
+    } else if (this.selectedLyrics != null) {
+      return this.onKeydownLyrics(event);
     }
+  }
 
+  onKeydownNeume(event: KeyboardEvent) {
     let handled = false;
 
-    if (event.code == 'ArrowLeft') {
-      this.moveLeft();
-      handled = true;
-    } else if (event.code == 'ArrowRight' || event.code == 'Space') {
-      this.moveRight();
-      handled = true;
-    } else if (event.code == 'Backspace') {
-      handled = true;
+    switch (event.code) {
+      case 'ArrowLeft':
+        this.moveLeftThrottled();
+        handled = true;
+        break;
+      case 'ArrowRight':
+      case 'Space':
+        this.moveRightThrottled();
+        handled = true;
+        break;
+      case 'Delete':
+      case 'Backspace':
+        handled = true;
 
-      if (this.isSyllableElement(this.selectedElement)) {
-        let syllableElement = this.selectedElement as NoteElement;
-        if (syllableElement.timeNeume) {
-          syllableElement.timeNeume = null;
-        } else {
-          this.selectedElement = this.switchToEmptyElement(
-            this.selectedElement,
-          );
-          this.moveLeft();
-          this.save();
-        }
-      } else {
-        this.selectedElement = this.switchToEmptyElement(this.selectedElement);
-        this.moveLeft();
-        this.save();
-      }
-    } else if (event.code == 'Delete') {
-      handled = true;
-
-      this.deleteSelectedElement();
+        this.deleteSelectedElementThrottled();
+        break;
     }
 
     if (this.keyboardMode && !event.ctrlKey) {
@@ -932,8 +945,70 @@ export default class Editor extends Vue {
 
     if (handled) {
       event.preventDefault();
-      this.keydownLastHandleTime = +new Date();
     }
+  }
+
+  onKeydownLyrics(event: KeyboardEvent) {
+    let handled = false;
+
+    // We don't handle the shift key
+    if (event.shiftKey) {
+      return;
+    }
+
+    if (event.ctrlKey) {
+      switch (event.code) {
+        case 'ArrowRight':
+          this.moveToNextLyricBoxThrottled();
+          handled = true;
+          break;
+        case 'ArrowLeft':
+          this.moveToPreviousLyricBoxThrottled();
+          handled = true;
+          break;
+        case 'Space':
+          // Ctrl + Space should add a normal space character
+          document.execCommand('insertText', false, ' ');
+          handled = true;
+          break;
+      }
+    } else {
+      switch (event.code) {
+        case 'Space':
+          this.moveToNextLyricBoxThrottled();
+          handled = true;
+          break;
+        case 'ArrowLeft':
+          if (this.getCursorPosition() === 0) {
+            this.moveToPreviousLyricBoxThrottled();
+            handled = true;
+          }
+          break;
+        case 'ArrowRight':
+          if (this.getCursorPosition() === this.selectedLyrics!.lyrics.length) {
+            this.moveToNextLyricBoxThrottled();
+            handled = true;
+          }
+          break;
+      }
+    }
+
+    if (handled) {
+      event.preventDefault();
+    }
+  }
+
+  getCursorPosition() {
+    const selection = window.getSelection();
+
+    if (selection != null) {
+      const range = selection.getRangeAt(0);
+      if (range.startOffset === range.endOffset) {
+        return selection.getRangeAt(0).startOffset;
+      }
+    }
+
+    return null;
   }
 
   navigableElements = [
@@ -954,6 +1029,50 @@ export default class Editor extends Vue {
         this.selectedElement = this.elements[index - 1];
       }
     }
+  }
+
+  moveToNextLyricBox() {
+    if (this.selectedLyrics) {
+      const currentIndex = this.elements.indexOf(this.selectedLyrics);
+      let nextIndex = -1;
+
+      // Find the index of the next note
+      for (let i = currentIndex + 1; i < this.elements.length; i++) {
+        if (this.elements[i].elementType === ElementType.Note) {
+          nextIndex = i;
+          break;
+        }
+      }
+
+      if (nextIndex >= 0) {
+        (this.$refs[`lyrics-${nextIndex}`] as any)[0].focus();
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  moveToPreviousLyricBox() {
+    if (this.selectedLyrics) {
+      const currentIndex = this.elements.indexOf(this.selectedLyrics);
+      let nextIndex = -1;
+
+      // Find the index of the previous note
+      for (let i = currentIndex - 1; i >= 0; i--) {
+        if (this.elements[i].elementType === ElementType.Note) {
+          nextIndex = i;
+          break;
+        }
+      }
+
+      if (nextIndex >= 0) {
+        (this.$refs[`lyrics-${nextIndex}`] as any)[0].focus();
+        return true;
+      }
+    }
+
+    return false;
   }
 
   moveRight() {

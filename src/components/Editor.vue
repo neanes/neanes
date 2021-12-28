@@ -353,7 +353,6 @@ export default class Editor extends Vue {
   }
 
   set selectedLyrics(element: NoteElement | null) {
-    console.log('set selectedLyrics');
     store.mutations.setSelectedLyrics(element);
   }
 

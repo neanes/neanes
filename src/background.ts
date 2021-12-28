@@ -105,6 +105,11 @@ async function handleSave(win: BrowserWindow, filePath: string | null) {
     }
   } catch (error) {
     console.error(error);
+
+    if (error instanceof Error) {
+      dialog.showErrorBox('Save failed', error.message);
+    }
+
     return false;
   }
 }
@@ -142,6 +147,11 @@ async function handleSaveAs(win: BrowserWindow) {
   } catch (error) {
     saving = false;
     console.error(error);
+
+    if (error instanceof Error) {
+      dialog.showErrorBox('Save As failed', error.message);
+    }
+
     return false;
   }
 }
@@ -186,6 +196,10 @@ function createMenu(win: BrowserWindow) {
                 }
               } catch (error) {
                 console.error(error);
+
+                if (error instanceof Error) {
+                  dialog.showErrorBox('Open failed', error.message);
+                }
               } finally {
                 saving = false;
               }
@@ -232,6 +246,10 @@ function createMenu(win: BrowserWindow) {
               }
             } catch (error) {
               console.error(error);
+
+              if (error instanceof Error) {
+                dialog.showErrorBox('Export to PDF failed', error.message);
+              }
             }
           },
         },
@@ -239,7 +257,15 @@ function createMenu(win: BrowserWindow) {
           label: '&Print',
           accelerator: 'CmdOrCtrl+P',
           click() {
-            win.webContents.print();
+            try {
+              win.webContents.print();
+            } catch (error) {
+              console.error(error);
+
+              if (error instanceof Error) {
+                dialog.showErrorBox('Print failed', error.message);
+              }
+            }
           },
         },
         { type: 'separator' },

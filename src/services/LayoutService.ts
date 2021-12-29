@@ -530,7 +530,7 @@ export class LayoutService {
           } else {
             martyria.error = false;
 
-            martyria.note = noteMap.get(currentNote)!;
+            martyria.note = noteMap.get(currentNote) || Note.Pa;
 
             const currentScaleNote = currentNote + currentShift;
 
@@ -543,25 +543,31 @@ export class LayoutService {
                   ? RootSign.SoftChromaticPaRootSign
                   : RootSign.SoftChromaticSquiggle;
             } else if (currentScale === Scale.Diatonic) {
-              martyria.rootSign = diatonicRootSignMap.get(currentScaleNote)!;
+              martyria.rootSign =
+                diatonicRootSignMap.get(currentScaleNote) || RootSign.Alpha;
             } else if (currentScale === Scale.Zygos) {
-              martyria.rootSign = zygosRootSignMap.get(currentScaleNote)!;
+              martyria.rootSign =
+                zygosRootSignMap.get(currentScaleNote) || RootSign.Alpha;
             } else if (currentScale === Scale.Kliton) {
-              martyria.rootSign = klitonRootSignMap.get(currentScaleNote)!;
+              martyria.rootSign =
+                klitonRootSignMap.get(currentScaleNote) || RootSign.Alpha;
             } else if (currentScale === Scale.Spathi) {
-              martyria.rootSign = spathiRootSignMap.get(currentScaleNote)!;
+              martyria.rootSign =
+                spathiRootSignMap.get(currentScaleNote) || RootSign.Alpha;
             } else if (currentScale === Scale.EnharmonicGa) {
               martyria.rootSign =
-                enharmonicGaRootSignMap.get(currentScaleNote)!;
+                enharmonicGaRootSignMap.get(currentScaleNote) || RootSign.Alpha;
             } else if (currentScale === Scale.EnharmonicVou) {
               martyria.rootSign =
-                enharmonicVouRootSignMap.get(currentScaleNote)!;
+                enharmonicVouRootSignMap.get(currentScaleNote) ||
+                RootSign.Alpha;
             } else if (currentScale === Scale.EnharmonicVouHigh) {
               martyria.rootSign =
-                enharmonicVouHighRootSignMap.get(currentScaleNote)!;
+                enharmonicVouHighRootSignMap.get(currentScaleNote) ||
+                RootSign.Alpha;
             } else if (currentScale === Scale.EnharmonicZoHigh) {
               martyria.rootSign =
-                enharmonicZoRootSignMap.get(currentScaleNote)!;
+                enharmonicZoRootSignMap.get(currentScaleNote) || RootSign.Alpha;
             }
 
             martyria.apostrophe = currentNote > 4;

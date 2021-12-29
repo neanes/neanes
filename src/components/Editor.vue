@@ -10,6 +10,7 @@
       @updateLineBreak="updateLineBreak"
       @add-tempo="addTempo"
       @deleteSelectedElement="deleteSelectedElement"
+      @click.native="selectedLyrics = null"
     />
     <div class="content">
       <NeumeSelector

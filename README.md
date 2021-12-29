@@ -26,6 +26,10 @@ It is not intended to be a fully-featured word processor.
 
 Example files can be found in the [examples](examples/) folder.
 
+## How to Download
+
+Go to the [releases page](https://github.com/danielgarthur/neanes/releases) and download the setup EXE from the latest release.
+
 ## How-to Guide
 
 ### Create a new score

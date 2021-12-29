@@ -7,6 +7,8 @@ export interface AddToCollectionCommandArgs<T> {
 }
 
 export class AddToCollectionCommand<T> implements Command {
+  private added: boolean = false;
+
   constructor(private args: AddToCollectionCommandArgs<T>) {}
 
   public execute() {
@@ -19,14 +21,21 @@ export class AddToCollectionCommand<T> implements Command {
     } else {
       this.args.collection.push(this.args.element);
     }
+
+    this.added = true;
   }
 
   public undo() {
-    const index = this.args.collection.indexOf(this.args.element);
-    this.args.collection.splice(index, 1);
+    if (this.added) {
+      const index = this.args.collection.indexOf(this.args.element);
+      this.args.collection.splice(index, 1);
+      this.added = false;
+    }
   }
 
   public redo() {
-    this.execute();
+    if (!this.added) {
+      this.execute();
+    }
   }
 }

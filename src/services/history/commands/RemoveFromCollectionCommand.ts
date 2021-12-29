@@ -19,6 +19,7 @@ export class RemoveFromCollectionCommand<T> implements Command {
   public undo() {
     if (this.index) {
       this.args.collection.splice(this.index, 0, this.args.element);
+      this.index = undefined;
     }
   }
 

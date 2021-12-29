@@ -1,4 +1,16 @@
 import {
+  AddToCollectionCommand,
+  AddToCollectionCommandArgs,
+} from './commands/AddToCollectionCommand';
+import {
+  RemoveFromCollectionCommand,
+  RemoveFromCollectionCommandArgs,
+} from './commands/RemoveFromCollectionCommand';
+import {
+  ReplaceElementInCollectionCommand,
+  ReplaceElementInCollectionCommandArgs,
+} from './commands/ReplaceElementInCollectionCommand';
+import {
   UpdatePropertiesCommandArgs,
   UpdatePropertiesCommand,
 } from './commands/UpdatePropertiesCommand';
@@ -11,6 +23,9 @@ export interface Command {
 
 interface CommandMap<T> {
   'update-properties': UpdatePropertiesCommandArgs<T>;
+  'add-to-collection': AddToCollectionCommandArgs<T>;
+  'replace-element-in-collection': ReplaceElementInCollectionCommandArgs<T>;
+  'remove-from-collection': RemoveFromCollectionCommandArgs<T>;
 }
 
 export class CommandFactory<T> {
@@ -22,6 +37,18 @@ export class CommandFactory<T> {
       case 'update-properties':
         return new UpdatePropertiesCommand(
           args as UpdatePropertiesCommandArgs<T>,
+        );
+      case 'add-to-collection':
+        return new AddToCollectionCommand(
+          args as AddToCollectionCommandArgs<T>,
+        );
+      case 'replace-element-in-collection':
+        return new ReplaceElementInCollectionCommand(
+          args as ReplaceElementInCollectionCommandArgs<T>,
+        );
+      case 'remove-from-collection':
+        return new RemoveFromCollectionCommand(
+          args as RemoveFromCollectionCommandArgs<T>,
         );
       default:
         throw `Unknown command key: ${key}`;

@@ -65,19 +65,7 @@ export class LayoutService {
       }
 
       if (element.elementType === ElementType.ModeKey) {
-        let modeKeyElement = element as ModeKeyElement;
-
         elementWidthPx = pageSetup.innerPageWidth;
-        modeKeyElement.height = Math.ceil(
-          Math.max(
-            TextMeasurementService.getFontHeight(
-              `${modeKeyElement.fontSize}px Oxeia`,
-            ),
-            TextMeasurementService.getFontHeight(
-              `${modeKeyElement.fontSize}px EzSpecial2`,
-            ),
-          ),
-        );
       }
 
       if (element.elementType === ElementType.StaffText) {

@@ -207,9 +207,9 @@
     </template>
     <ModeKeyDialog
       v-if="modeKeyDialogIsOpen"
-      @scoreUpdated="onScoreUpdated"
-      @close="modeKeyDialogIsOpen = false"
       :element="selectedElement"
+      @update="updateModeKey(selectedElement, $event)"
+      @close="modeKeyDialogIsOpen = false"
     />
   </div>
 </template>
@@ -270,7 +270,7 @@ import {
   IpcRendererChannels,
 } from '@/ipc/ipcChannels';
 import { EventBus } from '@/eventBus';
-import { modeKeyTemplates } from '@/models/ModeKeys';
+import { ModeKeyTemplate, modeKeyTemplates } from '@/models/ModeKeys';
 import { TestFileGenerator } from '@/utils/TestFileGenerator';
 import { TestFileType } from '@/utils/TestFileType';
 import { Unit } from '@/utils/Unit';
@@ -321,7 +321,7 @@ export default class Editor extends Vue {
     new CommandFactory<NoteElement>();
   textBoxCommandFactory: CommandFactory<TextBoxElement> =
     new CommandFactory<TextBoxElement>();
-  modeKeyCommandFactory: CommandFactory<TextBoxElement> =
+  modeKeyCommandFactory: CommandFactory<ModeKeyElement> =
     new CommandFactory<ModeKeyElement>();
 
   // Throttled Methods
@@ -1245,6 +1245,44 @@ export default class Editor extends Vue {
     this.updateTextBox(element, { alignment });
   }
 
+  updateModeKey(element: ModeKeyElement, template: ModeKeyElement) {
+    const {
+      mode,
+      scale,
+      scaleNote,
+      fthora,
+      fthora2,
+      note,
+      note2,
+      quantitativeNeumeTop,
+      quantitativeNeumeRight,
+    } = template;
+
+    const newValues = {
+      mode,
+      scale,
+      scaleNote,
+      fthora,
+      fthora2,
+      note,
+      note2,
+      quantitativeNeumeTop,
+      quantitativeNeumeRight,
+      martyrias: template.martyrias.map((x) => x),
+    };
+
+    this.commandService.execute(
+      this.modeKeyCommandFactory.create('update-properties', {
+        target: element,
+        newValues,
+      }),
+    );
+
+    this.save();
+
+    console.log(document.activeElement);
+  }
+
   onDropCapUpdated(element: DropCapElement) {
     if (element.content === '') {
       const index = this.elements.indexOf(element);
@@ -1419,11 +1457,10 @@ export default class Editor extends Vue {
     const defaultTemplate = ModeKeyElement.createFromTemplate(
       modeKeyTemplates[0],
     );
-    const element = new ModeKeyElement();
-    element.updateFrom(defaultTemplate);
-    element.color = this.score.pageSetup.modeKeyDefaultColor;
 
-    return element;
+    defaultTemplate.color = this.score.pageSetup.modeKeyDefaultColor;
+
+    return defaultTemplate;
   }
 
   createDefaultScore() {

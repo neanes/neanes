@@ -84,7 +84,7 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
-import { ModeKeyElement } from '@/models/Element';
+import { ModeKeyElement, TextBoxAlignment } from '@/models/Element';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import ModalDialog from '@/components/ModalDialog.vue';
 import ModeKey from '@/components/ModeKey.vue';
@@ -104,7 +104,7 @@ export default class ModeKeyDialog extends Vue {
   get modeKeyTemplatesForSelectedMode() {
     return modeKeyTemplates
       .filter((x) => x.mode === this.selectedMode)
-      .map((x) => ModeKeyElement.createFromTemplate(x));
+      .map((x) => ModeKeyElement.createFromTemplate(x, TextBoxAlignment.Left));
   }
 
   selectMode(mode: number) {
@@ -113,8 +113,7 @@ export default class ModeKeyDialog extends Vue {
   }
 
   updateModeKey() {
-    this.element.updateFrom(this.selectedModeKey!);
-    this.$emit('scoreUpdated');
+    this.$emit('update', this.selectedModeKey);
     this.$emit('close');
   }
 }

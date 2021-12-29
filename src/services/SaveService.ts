@@ -414,6 +414,5 @@ export class SaveService {
     element.martyrias = e.martyrias.map((x) => x);
     element.color = e.color;
     element.fontSize = e.fontSize;
-    element.height = e.height;
   }
 }

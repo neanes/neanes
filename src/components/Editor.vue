@@ -187,7 +187,9 @@
     >
       <ModeKeyToolbar
         :element="selectedElement"
-        @scoreUpdated="onScoreUpdated"
+        @update:fontSize="updateModeKeyFontSize(selectedElement, $event)"
+        @update:alignment="updateModeKeyAlignment(selectedElement, $event)"
+        @update:color="updateModeKeyColor(selectedElement, $event)"
         @openModeKeyDialog="openModeKeyDialog"
       />
     </template>
@@ -1254,7 +1256,30 @@ export default class Editor extends Vue {
     this.updateTextBox(element, { alignment });
   }
 
-  updateModeKey(element: ModeKeyElement, template: ModeKeyElement) {
+  updateModeKey(element: ModeKeyElement, newValues: Partial<ModeKeyElement>) {
+    this.commandService.execute(
+      this.modeKeyCommandFactory.create('update-properties', {
+        target: element,
+        newValues: newValues,
+      }),
+    );
+
+    this.save();
+  }
+
+  updateModeKeyFontSize(element: ModeKeyElement, fontSize: number) {
+    this.updateModeKey(element, { fontSize });
+  }
+
+  updateModeKeyColor(element: ModeKeyElement, color: string) {
+    this.updateModeKey(element, { color });
+  }
+
+  updateModeKeyAlignment(element: ModeKeyElement, alignment: TextBoxAlignment) {
+    this.updateModeKey(element, { alignment });
+  }
+
+  updateModeKeyFromTemplate(element: ModeKeyElement, template: ModeKeyElement) {
     const {
       mode,
       scale,
@@ -1280,12 +1305,7 @@ export default class Editor extends Vue {
       martyrias: template.martyrias.map((x) => x),
     };
 
-    this.commandService.execute(
-      this.modeKeyCommandFactory.create('update-properties', {
-        target: element,
-        newValues,
-      }),
-    );
+    this.updateModeKey(element, newValues);
 
     this.save();
   }

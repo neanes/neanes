@@ -147,7 +147,6 @@
                   :class="[{ selectedTextbox: element == selectedElement }]"
                   @click.native="selectedElement = element"
                   @dblclick.native="openModeKeyDialog"
-                  @scoreUpdated="onScoreUpdated"
                 >
                 </ModeKey>
               </template>
@@ -209,7 +208,7 @@
       v-if="modeKeyDialogIsOpen"
       :element="selectedElement"
       @update="updateModeKey(selectedElement, $event)"
-      @close="modeKeyDialogIsOpen = false"
+      @close="closeModeKeyDialog"
     />
   </div>
 </template>
@@ -456,6 +455,8 @@ export default class Editor extends Vue {
   }
 
   mounted() {
+    window.addEventListener('keydown', this.onGlobalKeydown);
+
     EventBus.$on(IpcMainChannels.FileMenuNewScore, this.onFileMenuNewScore);
     EventBus.$on(IpcMainChannels.FileMenuOpenScore, this.onFileMenuOpenScore);
     EventBus.$on(IpcMainChannels.FileMenuSave, this.onFileMenuSave);
@@ -486,6 +487,8 @@ export default class Editor extends Vue {
   }
 
   beforeDestroy() {
+    window.removeEventListener('keydown', this.onGlobalKeydown);
+
     EventBus.$off(IpcMainChannels.FileMenuNewScore, this.onFileMenuNewScore);
     EventBus.$off(IpcMainChannels.FileMenuOpenScore, this.onFileMenuOpenScore);
     EventBus.$off(IpcMainChannels.FileMenuSave, this.onFileMenuSave);
@@ -537,6 +540,10 @@ export default class Editor extends Vue {
 
   openModeKeyDialog() {
     this.modeKeyDialogIsOpen = true;
+  }
+
+  closeModeKeyDialog() {
+    this.modeKeyDialogIsOpen = false;
   }
 
   isLastElement(element: ScoreElement) {
@@ -918,7 +925,7 @@ export default class Editor extends Vue {
     );
   }
 
-  onKeydown(event: KeyboardEvent) {
+  onGlobalKeydown(event: KeyboardEvent) {
     // Handle undo / redo
     // See https://github.com/electron/electron/issues/3682.
     if (event.ctrlKey && !this.isTextInputFocused()) {
@@ -932,7 +939,9 @@ export default class Editor extends Vue {
         return;
       }
     }
+  }
 
+  onKeydown(event: KeyboardEvent) {
     if (
       this.selectedElement != null &&
       this.navigableElements.includes(this.selectedElement.elementType)
@@ -1279,8 +1288,6 @@ export default class Editor extends Vue {
     );
 
     this.save();
-
-    console.log(document.activeElement);
   }
 
   onDropCapUpdated(element: DropCapElement) {

@@ -12,6 +12,7 @@ import {
   ModeSign,
   MeasureBar,
 } from '@/models/Neumes';
+import { TextMeasurementService } from '@/services/TextMeasurementService';
 import { Unit } from '@/utils/Unit';
 import { ModeKeyTemplate } from './ModeKeys';
 import {
@@ -276,7 +277,6 @@ export class ModeKeyElement extends ScoreElement {
   public quantitativeNeumeTop: ModeSign | null = null;
   public color: string = '#000000';
   public fontSize: number = Unit.FromPt(20);
-  public height: number = 20;
 
   public get isPlagal() {
     return this.mode > 4 && this.mode !== 7;
@@ -286,20 +286,19 @@ export class ModeKeyElement extends ScoreElement {
     return this.mode === 7;
   }
 
-  public updateFrom(element: ModeKeyElement) {
-    this.mode = element.mode;
-    this.scale = element.scale;
-    this.scaleNote = element.scaleNote;
-    this.martyrias = element.martyrias.map((x) => x);
-    this.fthora = element.fthora;
-    this.fthora2 = element.fthora2;
-    this.note = element.note;
-    this.note2 = element.note2;
-    this.quantitativeNeumeTop = element.quantitativeNeumeTop;
-    this.quantitativeNeumeRight = element.quantitativeNeumeRight;
+  public get height() {
+    return Math.ceil(
+      Math.max(
+        TextMeasurementService.getFontHeight(`${this.fontSize}px Oxeia`),
+        TextMeasurementService.getFontHeight(`${this.fontSize}px EzSpecial2`),
+      ),
+    );
   }
 
-  public static createFromTemplate(template: ModeKeyTemplate) {
+  public static createFromTemplate(
+    template: ModeKeyTemplate,
+    alignment?: TextBoxAlignment,
+  ) {
     const element = new ModeKeyElement();
 
     element.mode = template.mode;
@@ -312,7 +311,7 @@ export class ModeKeyElement extends ScoreElement {
     element.note2 = template.note2 || null;
     element.quantitativeNeumeTop = template.quantitativeNeumeTop || null;
     element.quantitativeNeumeRight = template.quantitativeNeumeRight || null;
-    element.alignment = TextBoxAlignment.Left;
+    element.alignment = alignment || TextBoxAlignment.Center;
 
     return element;
   }

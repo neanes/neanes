@@ -17,7 +17,6 @@
       @mouseenter="selectedMenu = 'Add'"
       :isOpen="isMenuOpen && selectedMenu === 'Add'"
     >
-      <FileMenuItem label="Neume" @click="onClickAddNeume" />
       <FileMenuItem label="Text Box" @click="onClickAddTextBox" />
       <FileMenuItem label="Mode Key" @click="onClickAddModeKey" />
       <FileMenuItem label="Drop Cap" @click="onClickAddDropCap" />
@@ -107,10 +106,6 @@ export default class FileMenuBar extends Vue {
 
       reader.readAsText(file);
     }
-  }
-
-  onClickAddNeume() {
-    EventBus.$emit(IpcMainChannels.FileMenuInsertNeume);
   }
 
   onClickAddTextBox() {

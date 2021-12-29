@@ -309,12 +309,6 @@ function createMenu(win: BrowserWindow) {
       label: '&Insert',
       submenu: [
         {
-          label: '&Neume',
-          click() {
-            win.webContents.send(IpcMainChannels.FileMenuInsertNeume);
-          },
-        },
-        {
           label: '&Drop Cap',
           click() {
             win.webContents.send(IpcMainChannels.FileMenuInsertDropCap);

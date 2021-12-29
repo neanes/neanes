@@ -499,10 +499,6 @@ export default class Editor extends Vue {
     EventBus.$on(IpcMainChannels.FileMenuUndo, this.onFileMenuUndo);
     EventBus.$on(IpcMainChannels.FileMenuRedo, this.onFileMenuRedo);
     EventBus.$on(
-      IpcMainChannels.FileMenuInsertNeume,
-      this.onFileMenuInsertNeume,
-    );
-    EventBus.$on(
       IpcMainChannels.FileMenuInsertTextBox,
       this.onFileMenuInsertTextBox,
     );
@@ -528,10 +524,6 @@ export default class Editor extends Vue {
     EventBus.$off(IpcMainChannels.FileMenuSave, this.onFileMenuSave);
     EventBus.$off(IpcMainChannels.FileMenuSaveAs, this.onFileMenuSaveAs);
     EventBus.$off(IpcMainChannels.SaveComplete, this.onSaveComplete);
-    EventBus.$off(
-      IpcMainChannels.FileMenuInsertNeume,
-      this.onFileMenuInsertNeume,
-    );
     EventBus.$off(
       IpcMainChannels.FileMenuInsertTextBox,
       this.onFileMenuInsertTextBox,
@@ -1373,15 +1365,6 @@ export default class Editor extends Vue {
     this.selectedElement = null;
 
     this.save(false);
-  }
-
-  onFileMenuInsertNeume() {
-    store.getters.elements.splice(
-      store.getters.selectedElementIndex,
-      0,
-      new EmptyElement(),
-    );
-    this.save();
   }
 
   onFileMenuInsertTextBox() {

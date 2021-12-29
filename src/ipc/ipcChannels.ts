@@ -7,7 +7,6 @@ export enum IpcMainChannels {
   FileMenuUndo = 'FileMenuUndo',
   FileMenuRedo = 'FileMenuRedo',
 
-  FileMenuInsertNeume = 'FileMenuInsertNeume',
   FileMenuInsertTextBox = 'FileMenuInsertTextBox',
   FileMenuInsertModeKey = 'FileMenuInsertModeKey',
   FileMenuInsertDropCap = 'FileMenuInsertDropCap',

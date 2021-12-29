@@ -86,5 +86,6 @@ export class CommandService {
 
   public clearHistory() {
     this.commandHistory.splice(0, this.commandHistory.length);
+    this.index = -1;
   }
 }

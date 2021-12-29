@@ -14,7 +14,7 @@
     <div class="content">
       <NeumeSelector
         class="neume-selector"
-        @select-quantitative-neume="updateQuantitativeNeume"
+        @select-quantitative-neume="addQuantitativeNeume"
       ></NeumeSelector>
       <div class="page-background" @keydown="onKeydown" tabindex="-1">
         <div
@@ -317,7 +317,6 @@ export default class Editor extends Vue {
   pages: Page[] = [];
 
   entryMode: EntryMode = EntryMode.Auto;
-  keyboardMode: boolean = false;
 
   modeKeyDialogIsOpen: boolean = false;
 
@@ -569,218 +568,88 @@ export default class Editor extends Vue {
     return this.elements.indexOf(element) === this.elements.length - 1;
   }
 
-  updateQuantitativeNeume(neume: QuantitativeNeume) {
-    if (this.selectedElement) {
-      // Handle auto entry mode
-      if (
-        this.entryMode === EntryMode.Auto &&
-        !this.isLastElement(this.selectedElement)
-      ) {
-        if (!this.moveRight()) {
-          return;
+  addQuantitativeNeume(quantitativeNeume: QuantitativeNeume) {
+    if (this.selectedElement == null) {
+      return;
+    }
+
+    const element = new NoteElement();
+    element.setQuantitativeNeume(quantitativeNeume);
+
+    if (this.entryMode === EntryMode.Auto) {
+      this.moveRight();
+
+      if (this.isLastElement(this.selectedElement)) {
+        this.addScoreElement(element, store.getters.selectedElementIndex);
+        this.selectedElement = element;
+      } else {
+        if (this.selectedElement.elementType === ElementType.Note) {
+          this.updateNote(this.selectedElement as NoteElement, {
+            quantitativeNeume,
+          });
+        } else {
+          this.selectedElement = this.switchToSyllable(
+            this.selectedElement,
+            element,
+          );
         }
       }
-
-      // Handle insert mode
-      if (
-        this.entryMode === EntryMode.Insert &&
-        !this.isLastElement(this.selectedElement)
-      ) {
-        const emptyElement = new EmptyElement();
-
-        store.getters.elements.splice(
-          store.getters.selectedElementIndex + 1,
-          0,
-          emptyElement,
-        );
-
-        this.selectedElement = emptyElement;
+    } else if (this.entryMode === EntryMode.Insert) {
+      if (this.isLastElement(this.selectedElement)) {
+        this.addScoreElement(element, store.getters.selectedElementIndex);
+        this.selectedElement = element;
+      } else {
+        this.addScoreElement(element, store.getters.selectedElementIndex + 1);
+        this.selectedElement = element;
       }
-
-      if (
-        [ElementType.Empty, ElementType.Martyria].includes(
-          this.selectedElement.elementType,
-        )
-      ) {
-        this.selectedElement = this.switchToSyllable(this.selectedElement);
-      }
-
+    } else if (this.entryMode === EntryMode.Edit) {
       if (this.selectedElement.elementType === ElementType.Note) {
-        (this.selectedElement as NoteElement).setQuantitativeNeume(neume);
-
-        if (this.isLastElement(this.selectedElement)) {
-          this.addEmptyElement();
-        }
-
-        this.save();
+        this.updateNote(this.selectedElement as NoteElement, {
+          quantitativeNeume,
+        });
+      } else {
+        this.selectedElement = this.switchToSyllable(
+          this.selectedElement,
+          element,
+        );
       }
     }
-  }
 
-  updateTimeNeume(neume: TimeNeume | null) {
-    if (this.selectedElement) {
-      const index = this.elements.indexOf(this.selectedElement);
-
-      if (index === this.elements.length - 1) {
-        this.addEmptyElement();
-      }
-
-      if (this.selectedElement.elementType != ElementType.Note) {
-        this.selectedElement = this.switchToSyllable(this.selectedElement);
-      }
-
-      (this.selectedElement as NoteElement).setTimeNeume(neume);
-
-      this.save();
-    }
-  }
-
-  updateGorgonNeume(neume: GorgonNeume | null) {
-    if (this.selectedElement) {
-      const index = this.elements.indexOf(this.selectedElement);
-
-      if (index === this.elements.length - 1) {
-        this.addEmptyElement();
-      }
-
-      if (this.selectedElement.elementType != ElementType.Note) {
-        this.selectedElement = this.switchToSyllable(this.selectedElement);
-      }
-
-      (this.selectedElement as NoteElement).setGorgonNeume(neume);
-
-      this.save();
-    }
-  }
-
-  updateFthora(neume: Fthora | null) {
-    if (this.selectedElement) {
-      const index = this.elements.indexOf(this.selectedElement);
-
-      if (index === this.elements.length - 1) {
-        this.addEmptyElement();
-      }
-
-      if (this.selectedElement.elementType != ElementType.Note) {
-        this.selectedElement = this.switchToSyllable(this.selectedElement);
-      }
-
-      (this.selectedElement as NoteElement).setFthora(neume);
-
-      this.save();
-    }
-  }
-
-  updateVocalExpressionNeume(neume: VocalExpressionNeume) {
-    if (this.selectedElement) {
-      const index = this.elements.indexOf(this.selectedElement);
-
-      if (index === this.elements.length - 1) {
-        this.addEmptyElement();
-      }
-
-      if (this.selectedElement.elementType != ElementType.Note) {
-        this.selectedElement = this.switchToSyllable(this.selectedElement);
-      }
-
-      (this.selectedElement as NoteElement).setVocalExpressionNeume(neume);
-
-      this.save();
-    }
-  }
-
-  updateMartyriaNote(neume: Note) {
-    if (this.selectedElement) {
-      const index = this.elements.indexOf(this.selectedElement);
-
-      if (index === this.elements.length - 1) {
-        this.addEmptyElement();
-      }
-
-      if (this.selectedElement.elementType != ElementType.Martyria) {
-        this.selectedElement = this.switchToMartyria(this.selectedElement);
-      }
-
-      (this.selectedElement as MartyriaElement).note = neume;
-
-      this.save();
-    }
-  }
-
-  updateMartyriaRootSign(neume: RootSign) {
-    if (this.selectedElement) {
-      const index = this.elements.indexOf(this.selectedElement);
-
-      if (index === this.elements.length - 1) {
-        this.addEmptyElement();
-      }
-
-      if (this.selectedElement.elementType != ElementType.Martyria) {
-        this.selectedElement = this.switchToMartyria(this.selectedElement);
-      }
-
-      (this.selectedElement as MartyriaElement).rootSign = neume;
-
-      this.save();
-    }
-  }
-
-  updateMartyriaNoteAndRootSign(
-    note: Note,
-    rootSign: RootSign,
-    apostrophe: boolean | undefined,
-  ) {
-    if (this.selectedElement) {
-      const index = this.elements.indexOf(this.selectedElement);
-
-      if (index === this.elements.length - 1) {
-        this.addEmptyElement();
-      }
-
-      if (this.selectedElement.elementType != ElementType.Martyria) {
-        this.selectedElement = this.switchToMartyria(this.selectedElement);
-      }
-
-      (this.selectedElement as MartyriaElement).note = note;
-      (this.selectedElement as MartyriaElement).rootSign = rootSign;
-      (this.selectedElement as MartyriaElement).apostrophe =
-        apostrophe || false;
-
-      this.save();
-    }
+    this.save();
   }
 
   addAutoMartyria() {
-    if (this.selectedElement) {
-      const element = new MartyriaElement();
+    if (this.selectedElement == null) {
+      return;
+    }
 
-      // Handle auto mode
-      if (this.entryMode === EntryMode.Auto) {
-        this.moveRight();
+    const element = new MartyriaElement();
 
-        if (this.isLastElement(this.selectedElement)) {
-          this.addScoreElement(element, store.getters.selectedElementIndex);
-          this.selectedElement = element;
-        } else {
-          if (this.selectedElement.elementType != ElementType.Martyria) {
-            this.selectedElement = this.switchToMartyria(this.selectedElement);
-          }
-        }
-      } else if (this.entryMode === EntryMode.Insert) {
-        if (this.isLastElement(this.selectedElement)) {
-          this.addScoreElement(element, store.getters.selectedElementIndex);
-        } else {
-          this.addScoreElement(element, store.getters.selectedElementIndex + 1);
-        }
+    if (this.entryMode === EntryMode.Auto) {
+      this.moveRight();
+
+      if (this.isLastElement(this.selectedElement)) {
+        this.addScoreElement(element, store.getters.selectedElementIndex);
         this.selectedElement = element;
       } else {
         if (this.selectedElement.elementType != ElementType.Martyria) {
           this.selectedElement = this.switchToMartyria(this.selectedElement);
         }
       }
-
-      this.save();
+    } else if (this.entryMode === EntryMode.Insert) {
+      if (this.isLastElement(this.selectedElement)) {
+        this.addScoreElement(element, store.getters.selectedElementIndex);
+      } else {
+        this.addScoreElement(element, store.getters.selectedElementIndex + 1);
+      }
+      this.selectedElement = element;
+    } else if (this.entryMode === EntryMode.Edit) {
+      if (this.selectedElement.elementType != ElementType.Martyria) {
+        this.selectedElement = this.switchToMartyria(this.selectedElement);
+      }
     }
+
+    this.save();
   }
 
   updateTempo(neume: TempoSign) {
@@ -870,14 +739,13 @@ export default class Editor extends Vue {
     return newElement;
   }
 
-  switchToSyllable(element: ScoreElement) {
-    const index = this.elements.indexOf(element);
+  switchToSyllable(oldElement: ScoreElement, newElement: NoteElement) {
+    const index = this.elements.indexOf(oldElement);
 
-    const newElement = new NoteElement();
-    newElement.pageBreak = element.pageBreak;
-    newElement.lineBreak = element.lineBreak;
+    newElement.pageBreak = oldElement.pageBreak;
+    newElement.lineBreak = oldElement.lineBreak;
 
-    this.elements.splice(index, 1, newElement);
+    this.replaceScoreElement(oldElement, index);
 
     return newElement;
   }
@@ -985,34 +853,6 @@ export default class Editor extends Vue {
 
         this.deleteSelectedElementThrottled();
         break;
-    }
-
-    if (this.keyboardMode && !event.ctrlKey) {
-      if (event.shiftKey) {
-        const quantitativeNeume =
-          KeyboardMap.quantitativeNeumeKeyboardMap_Shift.get(event.code);
-
-        if (quantitativeNeume) {
-          this.updateQuantitativeNeume(quantitativeNeume);
-          handled = true;
-        }
-      } else {
-        const quantitativeNeume = KeyboardMap.quantitativeNeumeKeyboardMap.get(
-          event.code,
-        );
-
-        if (quantitativeNeume) {
-          this.updateQuantitativeNeume(quantitativeNeume);
-          handled = true;
-        } else {
-          const timeNeume = KeyboardMap.timeNeumeKeyboardMap.get(event.code);
-
-          if (timeNeume) {
-            this.updateTimeNeume(timeNeume);
-            handled = true;
-          }
-        }
-      }
     }
 
     if (handled) {
@@ -1231,6 +1071,17 @@ export default class Editor extends Vue {
         collection: this.elements,
       }),
     );
+  }
+
+  updateNote(element: NoteElement, newValues: Partial<NoteElement>) {
+    this.commandService.execute(
+      this.noteElementCommandFactory.create('update-properties', {
+        target: element,
+        newValues: newValues,
+      }),
+    );
+
+    this.save();
   }
 
   updateLyrics(element: NoteElement, lyrics: string) {

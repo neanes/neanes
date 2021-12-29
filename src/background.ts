@@ -279,6 +279,33 @@ function createMenu(win: BrowserWindow) {
       ],
     },
     {
+      label: '&Edit',
+      submenu: [
+        {
+          label: '&Undo',
+          accelerator: 'CmdOrCtrl+Z',
+          click(menuItem, browserWindow, event) {
+            // The accelerator is handled in the renderer process because of
+            // https://github.com/electron/electron/issues/3682.
+            if (!event.triggeredByAccelerator) {
+              win.webContents.send(IpcMainChannels.FileMenuUndo);
+            }
+          },
+        },
+        {
+          label: '&Redo',
+          accelerator: 'CmdOrCtrl+Y',
+          click(menuItem, browserWindow, event) {
+            // The accelerator is handled in the renderer process because of
+            // https://github.com/electron/electron/issues/3682.
+            if (!event.triggeredByAccelerator) {
+              win.webContents.send(IpcMainChannels.FileMenuRedo);
+            }
+          },
+        },
+      ],
+    },
+    {
       label: '&Insert',
       submenu: [
         {

@@ -4,6 +4,9 @@ export enum IpcMainChannels {
   FileMenuSave = 'FileMenuSave',
   FileMenuSaveAs = 'FileMenuSaveAs',
 
+  FileMenuUndo = 'FileMenuUndo',
+  FileMenuRedo = 'FileMenuRedo',
+
   FileMenuInsertNeume = 'FileMenuInsertNeume',
   FileMenuInsertTextBox = 'FileMenuInsertTextBox',
   FileMenuInsertModeKey = 'FileMenuInsertModeKey',

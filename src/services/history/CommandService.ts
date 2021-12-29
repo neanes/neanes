@@ -83,4 +83,8 @@ export class CommandService {
       this.commandHistory[this.index].redo();
     }
   }
+
+  public clearHistory() {
+    this.commandHistory.splice(0, this.commandHistory.length);
+  }
 }

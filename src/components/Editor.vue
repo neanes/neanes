@@ -203,7 +203,8 @@
     >
       <MartyriaToolbar
         :element="selectedElement"
-        @scoreUpdated="onScoreUpdated"
+        @update:fthora="updateMartyriaFthora(selectedElement, $event)"
+        @update:measureBar="updateMartyriaMeasureBar(selectedElement, $event)"
       />
     </template>
     <ModeKeyDialog
@@ -238,6 +239,7 @@ import {
   Fthora,
   GorgonNeume,
   TempoSign,
+  MeasureBar,
 } from '@/models/Neumes';
 import { Page, Line } from '@/models/Page';
 import { Score } from '@/models/Score';
@@ -317,11 +319,18 @@ export default class Editor extends Vue {
 
   modeKeyDialogIsOpen: boolean = false;
 
+  // Commands
   commandService: CommandService = new CommandService();
+
   noteElementCommandFactory: CommandFactory<NoteElement> =
     new CommandFactory<NoteElement>();
+
+  martyriaCommandFactory: CommandFactory<MartyriaElement> =
+    new CommandFactory<MartyriaElement>();
+
   textBoxCommandFactory: CommandFactory<TextBoxElement> =
     new CommandFactory<TextBoxElement>();
+
   modeKeyCommandFactory: CommandFactory<ModeKeyElement> =
     new CommandFactory<ModeKeyElement>();
 
@@ -1308,6 +1317,28 @@ export default class Editor extends Vue {
     this.updateModeKey(element, newValues);
 
     this.save();
+  }
+
+  updateMartyria(
+    element: MartyriaElement,
+    newValues: Partial<MartyriaElement>,
+  ) {
+    this.commandService.execute(
+      this.martyriaCommandFactory.create('update-properties', {
+        target: element,
+        newValues: newValues,
+      }),
+    );
+
+    this.save();
+  }
+
+  updateMartyriaFthora(element: MartyriaElement, fthora: Fthora) {
+    this.updateMartyria(element, { fthora });
+  }
+
+  updateMartyriaMeasureBar(element: MartyriaElement, measureBar: MeasureBar) {
+    this.updateMartyria(element, { measureBar });
   }
 
   onDropCapUpdated(element: DropCapElement) {

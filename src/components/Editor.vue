@@ -8,7 +8,7 @@
       @updateEntryMode="updateEntryMode"
       @updatePageBreak="updatePageBreak"
       @updateLineBreak="updateLineBreak"
-      @updateTempo="updateTempo"
+      @add-tempo="addTempo"
       @deleteSelectedElement="deleteSelectedElement"
     />
     <div class="content">
@@ -198,7 +198,18 @@
     <template
       v-if="selectedElement != null && isSyllableElement(selectedElement)"
     >
-      <NeumeToolbar :element="selectedElement" @scoreUpdated="onScoreUpdated" />
+      <NeumeToolbar
+        :element="selectedElement"
+        @update:accidental="updateNoteAccidental(selectedElement, $event)"
+        @update:fthora="updateNoteFthora(selectedElement, $event)"
+        @update:gorgon="updateNoteGorgon(selectedElement, $event)"
+        @update:time="updateNoteTime(selectedElement, $event)"
+        @update:expression="updateNoteExpression(selectedElement, $event)"
+        @update:measureBar="updateNoteMeasureBar(selectedElement, $event)"
+        @update:vocalExpression="
+          updateNoteVocalExpression(selectedElement, $event)
+        "
+      />
     </template>
     <template
       v-if="selectedElement != null && isMartyriaElement(selectedElement)"
@@ -242,6 +253,7 @@ import {
   GorgonNeume,
   TempoSign,
   MeasureBar,
+  Accidental,
 } from '@/models/Neumes';
 import { Page, Line } from '@/models/Page';
 import { Score } from '@/models/Score';
@@ -328,6 +340,9 @@ export default class Editor extends Vue {
 
   martyriaCommandFactory: CommandFactory<MartyriaElement> =
     new CommandFactory<MartyriaElement>();
+
+  tempoCommandFactory: CommandFactory<TempoElement> =
+    new CommandFactory<TempoElement>();
 
   textBoxCommandFactory: CommandFactory<TextBoxElement> =
     new CommandFactory<TextBoxElement>();
@@ -573,6 +588,14 @@ export default class Editor extends Vue {
       return;
     }
 
+    // Replacing the last element is not allowed
+    if (
+      this.entryMode === EntryMode.Edit &&
+      this.isLastElement(this.selectedElement)
+    ) {
+      return;
+    }
+
     const element = new NoteElement();
     element.setQuantitativeNeume(quantitativeNeume);
 
@@ -597,11 +620,10 @@ export default class Editor extends Vue {
     } else if (this.entryMode === EntryMode.Insert) {
       if (this.isLastElement(this.selectedElement)) {
         this.addScoreElement(element, store.getters.selectedElementIndex);
-        this.selectedElement = element;
       } else {
         this.addScoreElement(element, store.getters.selectedElementIndex + 1);
-        this.selectedElement = element;
       }
+      this.selectedElement = element;
     } else if (this.entryMode === EntryMode.Edit) {
       if (this.selectedElement.elementType === ElementType.Note) {
         this.updateNote(this.selectedElement as NoteElement, {
@@ -620,6 +642,14 @@ export default class Editor extends Vue {
 
   addAutoMartyria() {
     if (this.selectedElement == null) {
+      return;
+    }
+
+    // Replacing the last element is not allowed
+    if (
+      this.entryMode === EntryMode.Edit &&
+      this.isLastElement(this.selectedElement)
+    ) {
       return;
     }
 
@@ -652,29 +682,61 @@ export default class Editor extends Vue {
     this.save();
   }
 
-  updateTempo(neume: TempoSign) {
-    if (this.selectedElement) {
-      if (
-        this.entryMode === EntryMode.Auto &&
-        this.selectedElement.elementType !== ElementType.Empty
-      ) {
-        this.moveRight();
-      }
-
-      const index = this.elements.indexOf(this.selectedElement);
-
-      if (index === this.elements.length - 1) {
-        this.addEmptyElement();
-      }
-
-      if (this.selectedElement.elementType != ElementType.Tempo) {
-        this.selectedElement = this.switchToTempo(this.selectedElement);
-      }
-
-      (this.selectedElement as TempoElement).neume = neume;
-
-      this.save();
+  addTempo(neume: TempoSign) {
+    if (this.selectedElement == null) {
+      return;
     }
+
+    // Replacing the last element is not allowed
+    if (
+      this.entryMode === EntryMode.Edit &&
+      this.isLastElement(this.selectedElement)
+    ) {
+      return;
+    }
+
+    const element = new TempoElement();
+    element.neume = neume;
+
+    if (this.entryMode === EntryMode.Auto) {
+      this.moveRight();
+
+      if (this.isLastElement(this.selectedElement)) {
+        this.addScoreElement(element, store.getters.selectedElementIndex);
+        this.selectedElement = element;
+      } else {
+        if (this.selectedElement.elementType === ElementType.Tempo) {
+          this.updateTempo(this.selectedElement as TempoElement, {
+            neume,
+          });
+        } else {
+          this.selectedElement = this.switchToTempo(
+            this.selectedElement,
+            element,
+          );
+        }
+      }
+    } else if (this.entryMode === EntryMode.Insert) {
+      if (this.isLastElement(this.selectedElement)) {
+        this.addScoreElement(element, store.getters.selectedElementIndex);
+      } else {
+        this.addScoreElement(element, store.getters.selectedElementIndex + 1);
+      }
+      this.selectedElement = element;
+    } else if (this.entryMode === EntryMode.Edit) {
+      if (this.selectedElement.elementType === ElementType.Tempo) {
+        this.updateTempo(this.selectedElement as TempoElement, {
+          neume,
+        });
+      } else {
+        this.selectedElement = this.switchToTempo(
+          this.selectedElement,
+          element,
+        );
+      }
+    }
+
+    this.save();
   }
 
   updatePageBreak() {
@@ -699,22 +761,6 @@ export default class Editor extends Vue {
     }
   }
 
-  updateEmpty() {
-    if (this.selectedElement) {
-      const index = this.elements.indexOf(this.selectedElement);
-
-      if (index === this.elements.length - 1) {
-        this.addEmptyElement();
-      }
-
-      if (this.selectedElement.elementType != ElementType.Empty) {
-        this.selectedElement = this.switchToEmptyElement(this.selectedElement);
-      }
-
-      this.save();
-    }
-  }
-
   switchToMartyria(element: ScoreElement) {
     const index = this.elements.indexOf(element);
 
@@ -727,14 +773,13 @@ export default class Editor extends Vue {
     return newElement;
   }
 
-  switchToTempo(element: ScoreElement) {
-    const index = this.elements.indexOf(element);
+  switchToTempo(oldElement: ScoreElement, newElement: TempoElement) {
+    const index = this.elements.indexOf(oldElement);
 
-    const newElement = new TempoElement();
-    newElement.pageBreak = element.pageBreak;
-    newElement.lineBreak = element.lineBreak;
+    newElement.pageBreak = oldElement.pageBreak;
+    newElement.lineBreak = oldElement.lineBreak;
 
-    this.elements.splice(index, 1, newElement);
+    this.replaceScoreElement(newElement, index);
 
     return newElement;
   }
@@ -745,19 +790,7 @@ export default class Editor extends Vue {
     newElement.pageBreak = oldElement.pageBreak;
     newElement.lineBreak = oldElement.lineBreak;
 
-    this.replaceScoreElement(oldElement, index);
-
-    return newElement;
-  }
-
-  switchToEmptyElement(element: ScoreElement) {
-    const index = this.elements.indexOf(element);
-
-    const newElement = new EmptyElement();
-    newElement.pageBreak = element.pageBreak;
-    newElement.lineBreak = element.lineBreak;
-
-    this.elements.splice(index, 1, newElement);
+    this.replaceScoreElement(newElement, index);
 
     return newElement;
   }
@@ -943,6 +976,23 @@ export default class Editor extends Vue {
     }
   }
 
+  moveRight() {
+    if (this.selectedElement) {
+      const index = this.elements.indexOf(this.selectedElement);
+
+      if (
+        index >= 0 &&
+        index + 1 < this.elements.length &&
+        this.navigableElements.includes(this.elements[index + 1].elementType)
+      ) {
+        this.selectedElement = this.elements[index + 1];
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   moveToNextLyricBox() {
     if (this.selectedLyrics) {
       const currentIndex = this.elements.indexOf(this.selectedLyrics);
@@ -980,23 +1030,6 @@ export default class Editor extends Vue {
 
       if (nextIndex >= 0) {
         (this.$refs[`lyrics-${nextIndex}`] as any)[0].focus();
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  moveRight() {
-    if (this.selectedElement) {
-      const index = this.elements.indexOf(this.selectedElement);
-
-      if (
-        index >= 0 &&
-        index + 1 < this.elements.length &&
-        this.navigableElements.includes(this.elements[index + 1].elementType)
-      ) {
-        this.selectedElement = this.elements[index + 1];
         return true;
       }
     }
@@ -1082,6 +1115,33 @@ export default class Editor extends Vue {
     );
 
     this.save();
+  }
+
+  updateNoteAccidental(element: NoteElement, accidental: Accidental) {
+    this.updateNote(element, { accidental });
+  }
+
+  updateNoteFthora(element: NoteElement, fthora: Fthora) {
+    this.updateNote(element, { fthora });
+  }
+
+  updateNoteExpression(
+    element: NoteElement,
+    vocalExpressionNeume: VocalExpressionNeume,
+  ) {
+    this.updateNote(element, { vocalExpressionNeume });
+  }
+
+  updateNoteTime(element: NoteElement, timeNeume: TimeNeume) {
+    this.updateNote(element, { timeNeume });
+  }
+
+  updateNoteGorgon(element: NoteElement, gorgonNeume: GorgonNeume) {
+    this.updateNote(element, { gorgonNeume });
+  }
+
+  updateNoteMeasureBar(element: NoteElement, measureBar: MeasureBar) {
+    this.updateNote(element, { measureBar });
   }
 
   updateLyrics(element: NoteElement, lyrics: string) {
@@ -1222,6 +1282,17 @@ export default class Editor extends Vue {
 
   updateMartyriaMeasureBar(element: MartyriaElement, measureBar: MeasureBar) {
     this.updateMartyria(element, { measureBar });
+  }
+
+  updateTempo(element: TempoElement, newValues: Partial<TempoElement>) {
+    this.commandService.execute(
+      this.tempoCommandFactory.create('update-properties', {
+        target: element,
+        newValues: newValues,
+      }),
+    );
+
+    this.save();
   }
 
   updateDropCapContent(element: DropCapElement, content: string) {
@@ -1395,10 +1466,6 @@ export default class Editor extends Vue {
       );
       this.save();
     }
-  }
-
-  onScoreUpdated() {
-    this.save();
   }
 
   createDefaultModeKey() {

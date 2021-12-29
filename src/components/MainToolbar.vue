@@ -35,31 +35,28 @@
     <span class="space"></span>
     <button
       class="neume-button"
-      @click="$emit('updateTempo', TempoSign.VerySlow)"
+      @click="$emit('add-tempo', TempoSign.VerySlow)"
     >
       <Neume class="red neume tempo" :neume="TempoSign.VerySlow" />
     </button>
-    <button class="neume-button" @click="$emit('updateTempo', TempoSign.Slow)">
+    <button class="neume-button" @click="$emit('add-tempo', TempoSign.Slow)">
       <Neume class="red neume tempo" :neume="TempoSign.Slow" />
     </button>
-    <button
-      class="neume-button"
-      @click="$emit('updateTempo', TempoSign.Medium)"
-    >
+    <button class="neume-button" @click="$emit('add-tempo', TempoSign.Medium)">
       <Neume class="red neume tempo" :neume="TempoSign.Medium" />
     </button>
     <button
       class="neume-button"
-      @click="$emit('updateTempo', TempoSign.Moderate)"
+      @click="$emit('add-tempo', TempoSign.Moderate)"
     >
       <Neume class="red neume tempo" :neume="TempoSign.Moderate" />
     </button>
-    <button class="neume-button" @click="$emit('updateTempo', TempoSign.Quick)">
+    <button class="neume-button" @click="$emit('add-tempo', TempoSign.Quick)">
       <Neume class="red neume tempo" :neume="TempoSign.Quick" />
     </button>
     <button
       class="neume-button"
-      @click="$emit('updateTempo', TempoSign.VeryQuick)"
+      @click="$emit('add-tempo', TempoSign.VeryQuick)"
     >
       <Neume class="red neume tempo" :neume="TempoSign.VeryQuick" />
     </button>

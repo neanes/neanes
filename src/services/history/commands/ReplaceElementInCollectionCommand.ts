@@ -24,6 +24,8 @@ export class ReplaceElementInCollectionCommand<T> implements Command {
         1,
         this.replacedElement,
       );
+
+      this.replacedElement = undefined;
     }
   }
 

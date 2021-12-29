@@ -162,7 +162,9 @@
                   :ref="`element-${getElementIndex(element)}`"
                   :element="element"
                   @click.native="selectedElement = element"
-                  @dropCapUpdated="onDropCapUpdated"
+                  @update:content="
+                    updateDropCapContent(selectedElement, $event)
+                  "
                 >
                 </DropCap>
               </template>
@@ -333,6 +335,12 @@ export default class Editor extends Vue {
 
   modeKeyCommandFactory: CommandFactory<ModeKeyElement> =
     new CommandFactory<ModeKeyElement>();
+
+  dropCapCommandFactory: CommandFactory<DropCapElement> =
+    new CommandFactory<DropCapElement>();
+
+  scoreElementCommandFactory: CommandFactory<ScoreElement> =
+    new CommandFactory<ScoreElement>();
 
   // Throttled Methods
   keydownThrottleIntervalMs: number = 100;
@@ -744,36 +752,31 @@ export default class Editor extends Vue {
 
   addAutoMartyria() {
     if (this.selectedElement) {
+      const element = new MartyriaElement();
+
       // Handle auto mode
-      if (
-        this.entryMode === EntryMode.Auto &&
-        !this.isLastElement(this.selectedElement)
-      ) {
+      if (this.entryMode === EntryMode.Auto) {
         this.moveRight();
-      }
 
-      // Handle insert mode
-      if (
-        this.entryMode === EntryMode.Insert &&
-        !this.isLastElement(this.selectedElement)
-      ) {
-        const emptyElement = new EmptyElement();
-
-        store.getters.elements.splice(
-          store.getters.selectedElementIndex + 1,
-          0,
-          emptyElement,
-        );
-
-        this.selectedElement = emptyElement;
-      }
-
-      if (this.isLastElement(this.selectedElement)) {
-        this.addEmptyElement();
-      }
-
-      if (this.selectedElement.elementType != ElementType.Martyria) {
-        this.selectedElement = this.switchToMartyria(this.selectedElement);
+        if (this.isLastElement(this.selectedElement)) {
+          this.addScoreElement(element, store.getters.selectedElementIndex);
+          this.selectedElement = element;
+        } else {
+          if (this.selectedElement.elementType != ElementType.Martyria) {
+            this.selectedElement = this.switchToMartyria(this.selectedElement);
+          }
+        }
+      } else if (this.entryMode === EntryMode.Insert) {
+        if (this.isLastElement(this.selectedElement)) {
+          this.addScoreElement(element, store.getters.selectedElementIndex);
+        } else {
+          this.addScoreElement(element, store.getters.selectedElementIndex + 1);
+        }
+        this.selectedElement = element;
+      } else {
+        if (this.selectedElement.elementType != ElementType.Martyria) {
+          this.selectedElement = this.switchToMartyria(this.selectedElement);
+        }
       }
 
       this.save();
@@ -850,7 +853,7 @@ export default class Editor extends Vue {
     newElement.pageBreak = element.pageBreak;
     newElement.lineBreak = element.lineBreak;
 
-    this.elements.splice(index, 1, newElement);
+    this.replaceScoreElement(newElement, index);
 
     return newElement;
   }
@@ -1201,6 +1204,35 @@ export default class Editor extends Vue {
     );
   }
 
+  addScoreElement(element: ScoreElement, insertAtIndex?: number) {
+    this.commandService.execute(
+      this.scoreElementCommandFactory.create('add-to-collection', {
+        element,
+        collection: this.elements,
+        insertAtIndex,
+      }),
+    );
+  }
+
+  replaceScoreElement(element: ScoreElement, replaceAtIndex: number) {
+    this.commandService.execute(
+      this.scoreElementCommandFactory.create('replace-element-in-collection', {
+        element,
+        collection: this.elements,
+        replaceAtIndex,
+      }),
+    );
+  }
+
+  removeScoreElement(element: ScoreElement) {
+    this.commandService.execute(
+      this.scoreElementCommandFactory.create('remove-from-collection', {
+        element,
+        collection: this.elements,
+      }),
+    );
+  }
+
   updateLyrics(element: NoteElement, lyrics: string) {
     // Nothing changed. No further processing is necessary.
     if (element.lyrics === lyrics) {
@@ -1341,8 +1373,8 @@ export default class Editor extends Vue {
     this.updateMartyria(element, { measureBar });
   }
 
-  onDropCapUpdated(element: DropCapElement) {
-    if (element.content === '') {
+  updateDropCapContent(element: DropCapElement, content: string) {
+    if (content === '') {
       const index = this.elements.indexOf(element);
 
       if (index > -1) {
@@ -1350,8 +1382,15 @@ export default class Editor extends Vue {
           this.selectedElement = null;
         }
 
-        this.elements.splice(index, 1);
+        this.removeScoreElement(element);
       }
+    } else {
+      this.commandService.execute(
+        this.dropCapCommandFactory.create('update-properties', {
+          target: element,
+          newValues: { content },
+        }),
+      );
     }
 
     this.save();

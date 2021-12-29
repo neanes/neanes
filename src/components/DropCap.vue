@@ -6,7 +6,7 @@
       :style="style"
       :content="element.content"
       :class="[{ selected: element == selectedElement }]"
-      @blur="updateText($event)"
+      @blur="updateContent"
     ></ContentEditable>
   </div>
 </template>
@@ -57,13 +57,17 @@ export default class DropCap extends Vue {
     return style;
   }
 
-  updateText(text: string) {
-    this.element.content = text;
-    this.$emit('dropCapUpdated', this.element);
-  }
-
   focus() {
     this.textElement.focus();
+  }
+
+  updateContent(content: string) {
+    // Nothing actually changed, so do nothing
+    if (this.element.content === content) {
+      return;
+    }
+
+    this.$emit('update:content', content);
   }
 }
 </script>

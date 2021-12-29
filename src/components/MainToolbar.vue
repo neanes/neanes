@@ -111,7 +111,6 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
-import { NoteElement } from '@/models/Element';
 import { Note, RootSign, TempoSign } from '@/models/Neumes';
 import Neume from './Neume.vue';
 import { EntryMode } from './Editor.vue';
@@ -121,8 +120,7 @@ import { EntryMode } from './Editor.vue';
     Neume,
   },
 })
-export default class NeumeToolbar extends Vue {
-  @Prop() element!: NoteElement;
+export default class MainToolbar extends Vue {
   @Prop() entryMode!: EntryMode;
   @Prop() zoom!: number;
   Note = Note;

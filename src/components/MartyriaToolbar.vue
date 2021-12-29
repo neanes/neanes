@@ -170,22 +170,18 @@ export default class MartyriaToolbar extends Vue {
       this.element.fthora != null &&
       areFthorasEquivalent(neume, this.element.fthora)
     ) {
-      this.element.fthora = null;
+      this.$emit('update:fthora', null);
     } else {
-      this.element.fthora = neume;
+      this.$emit('update:fthora', neume);
     }
-
-    this.$emit('scoreUpdated');
   }
 
   private setMeasureBar(neume: MeasureBar) {
     if (neume === this.element.measureBar) {
-      this.element.measureBar = null;
+      this.$emit('update:measureBar', null);
     } else {
-      this.element.measureBar = neume;
+      this.$emit('update:measureBar', neume);
     }
-
-    this.$emit('scoreUpdated');
   }
 }
 </script>

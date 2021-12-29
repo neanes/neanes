@@ -1,29 +1,25 @@
 <template>
   <div class="text-toolbar">
-    <select v-model="element.fontFamily" @change="$emit('scoreUpdated')">
+    <select
+      :value="element.fontFamily"
+      @change="$emit('update:fontFamily', $event.target.value)"
+    >
       <option>Athonite</option>
       <option>Omega</option>
     </select>
-    <input
-      type="number"
-      min="4"
-      max="100"
-      step="1"
-      v-model="fontSize"
-      @change="$emit('scoreUpdated')"
-    />
+    <input type="number" min="4" max="100" step="1" v-model="fontSize" />
     <input
       type="color"
       list="presetColors"
-      v-model="element.color"
-      @change="$emit('scoreUpdated')"
+      :value="element.color"
+      @change="$emit('update:color', $event.target.value)"
     />
     <datalist id="presetColors">
       <option>#000000</option>
       <option>#ff0000</option>
       <option>#0000ff</option>
     </datalist>
-    <button @click="align('left')">
+    <button @click="$emit('update:alignment', TextBoxAlignment.Left)">
       <img
         src="@/assets/alignleft.svg"
         width="32"
@@ -31,7 +27,7 @@
         title="Align Left"
       />
     </button>
-    <button @click="align('center')">
+    <button @click="$emit('update:alignment', TextBoxAlignment.Center)">
       <img
         src="@/assets/aligncenter.svg"
         width="32"
@@ -39,7 +35,7 @@
         title="Align Center"
       />
     </button>
-    <button @click="align('right')">
+    <button @click="$emit('update:alignment', TextBoxAlignment.Right)">
       <img
         src="@/assets/alignright.svg"
         width="32"
@@ -61,17 +57,14 @@ import { Unit } from '@/utils/Unit';
 export default class TextToolbar extends Vue {
   @Prop() element!: TextBoxElement;
 
+  TextBoxAlignment = TextBoxAlignment;
+
   private get fontSize() {
     return (this.element.fontSize * 72) / 96;
   }
 
   private set fontSize(value: number) {
-    this.element.fontSize = Unit.FromPt(value);
-  }
-
-  private align(alignment: TextBoxAlignment) {
-    this.element.alignment = alignment;
-    this.$emit('scoreUpdated');
+    this.$emit('update:fontSize', Unit.FromPt(value));
   }
 }
 </script>

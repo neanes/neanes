@@ -136,7 +136,7 @@
                   :element="element"
                   :class="[{ selectedTextbox: element == selectedElement }]"
                   @click.native="selectedElement = element"
-                  @scoreUpdated="onScoreUpdated"
+                  @update:content="updateTextBoxContent(element, $event)"
                 >
                 </TextBox>
               </template>
@@ -175,7 +175,13 @@
     <template
       v-if="selectedElement != null && isTextBoxElement(selectedElement)"
     >
-      <TextToolbar :element="selectedElement" @scoreUpdated="onScoreUpdated" />
+      <TextToolbar
+        :element="selectedElement"
+        @update:fontSize="updateTextBoxFontSize(selectedElement, $event)"
+        @update:fontFamily="updateTextBoxFontFamily(selectedElement, $event)"
+        @update:alignment="updateTextBoxAlignment(selectedElement, $event)"
+        @update:color="updateTextBoxColor(selectedElement, $event)"
+      />
     </template>
     <template
       v-if="selectedElement != null && isModeKeyElement(selectedElement)"
@@ -270,6 +276,10 @@ import { TestFileType } from '@/utils/TestFileType';
 import { Unit } from '@/utils/Unit';
 import { withZoom } from '@/utils/withZoom';
 import { throttle } from 'throttle-debounce';
+import {
+  CommandFactory,
+  CommandService,
+} from '@/services/history/CommandService';
 
 export enum EntryMode {
   Auto = 'Auto',
@@ -306,6 +316,14 @@ export default class Editor extends Vue {
 
   modeKeyDialogIsOpen: boolean = false;
 
+  commandService: CommandService = new CommandService();
+  noteElementCommandFactory: CommandFactory<NoteElement> =
+    new CommandFactory<NoteElement>();
+  textBoxCommandFactory: CommandFactory<TextBoxElement> =
+    new CommandFactory<TextBoxElement>();
+  modeKeyCommandFactory: CommandFactory<TextBoxElement> =
+    new CommandFactory<ModeKeyElement>();
+
   // Throttled Methods
   keydownThrottleIntervalMs: number = 100;
 
@@ -326,6 +344,15 @@ export default class Editor extends Vue {
   deleteSelectedElementThrottled = throttle(
     this.keydownThrottleIntervalMs,
     this.deleteSelectedElement,
+  );
+
+  onFileMenuUndoThrottled = throttle(
+    this.keydownThrottleIntervalMs,
+    this.onFileMenuUndo,
+  );
+  onFileMenuRedoThrottled = throttle(
+    this.keydownThrottleIntervalMs,
+    this.onFileMenuRedo,
   );
 
   get score() {
@@ -434,6 +461,8 @@ export default class Editor extends Vue {
     EventBus.$on(IpcMainChannels.FileMenuSave, this.onFileMenuSave);
     EventBus.$on(IpcMainChannels.FileMenuSaveAs, this.onFileMenuSaveAs);
     EventBus.$on(IpcMainChannels.SaveComplete, this.onSaveComplete);
+    EventBus.$on(IpcMainChannels.FileMenuUndo, this.onFileMenuUndo);
+    EventBus.$on(IpcMainChannels.FileMenuRedo, this.onFileMenuRedo);
     EventBus.$on(
       IpcMainChannels.FileMenuInsertNeume,
       this.onFileMenuInsertNeume,
@@ -880,9 +909,30 @@ export default class Editor extends Vue {
     return element.elementType == ElementType.ModeKey;
   }
 
-  keydownLastHandleTime: number = +new Date();
+  isTextInputFocused() {
+    return (
+      document.activeElement instanceof HTMLInputElement ||
+      document.activeElement instanceof HTMLTextAreaElement ||
+      (document.activeElement instanceof HTMLElement &&
+        document.activeElement.contentEditable === 'true')
+    );
+  }
 
   onKeydown(event: KeyboardEvent) {
+    // Handle undo / redo
+    // See https://github.com/electron/electron/issues/3682.
+    if (event.ctrlKey && !this.isTextInputFocused()) {
+      if (event.code === 'KeyZ') {
+        this.onFileMenuUndoThrottled();
+        event.preventDefault();
+        return;
+      } else if (event.code === 'KeyY') {
+        this.onFileMenuRedoThrottled();
+        event.preventDefault();
+        return;
+      }
+    }
+
     if (
       this.selectedElement != null &&
       this.navigableElements.includes(this.selectedElement.elementType)
@@ -1092,11 +1142,6 @@ export default class Editor extends Vue {
   }
 
   save(markUnsavedChanges: boolean = true) {
-    localStorage.setItem(
-      'score',
-      JSON.stringify(SaveService.SaveScoreToJson(this.score)),
-    );
-
     if (markUnsavedChanges) {
       this.hasUnsavedChanges = true;
     }
@@ -1104,6 +1149,11 @@ export default class Editor extends Vue {
     this.pages = LayoutService.processPages(
       this.elements,
       this.score.pageSetup,
+    );
+
+    localStorage.setItem(
+      'score',
+      JSON.stringify(SaveService.SaveScoreToJson(this.score)),
     );
   }
 
@@ -1137,21 +1187,62 @@ export default class Editor extends Vue {
       return;
     }
 
+    // Calculate melisma properties
+    let isMelisma: boolean;
+    let isMelismaStart: boolean;
+
     if (lyrics === '_') {
-      element.isMelisma = true;
-      element.isMelismaStart = false;
-      element.lyrics = '';
+      isMelisma = true;
+      isMelismaStart = false;
+      lyrics = '';
     } else if (lyrics.endsWith('_')) {
-      element.isMelisma = true;
-      element.isMelismaStart = true;
-      element.lyrics = lyrics.slice(0, -1);
+      isMelisma = true;
+      isMelismaStart = true;
+      lyrics = lyrics.slice(0, -1);
     } else {
-      element.isMelisma = false;
-      element.isMelismaStart = false;
-      element.lyrics = lyrics;
+      isMelisma = false;
+      isMelismaStart = false;
     }
 
+    this.commandService.execute(
+      this.noteElementCommandFactory.create('update-properties', {
+        target: element,
+        newValues: { lyrics, isMelisma, isMelismaStart },
+      }),
+    );
+
     this.save();
+  }
+
+  updateTextBox(element: TextBoxElement, newValues: Partial<TextBoxElement>) {
+    this.commandService.execute(
+      this.textBoxCommandFactory.create('update-properties', {
+        target: element,
+        newValues: newValues,
+      }),
+    );
+
+    this.save();
+  }
+
+  updateTextBoxContent(element: TextBoxElement, content: string) {
+    this.updateTextBox(element, { content });
+  }
+
+  updateTextBoxFontSize(element: TextBoxElement, fontSize: number) {
+    this.updateTextBox(element, { fontSize });
+  }
+
+  updateTextBoxFontFamily(element: TextBoxElement, fontFamily: string) {
+    this.updateTextBox(element, { fontFamily });
+  }
+
+  updateTextBoxColor(element: TextBoxElement, color: string) {
+    this.updateTextBox(element, { color });
+  }
+
+  updateTextBoxAlignment(element: TextBoxElement, alignment: TextBoxAlignment) {
+    this.updateTextBox(element, { alignment });
   }
 
   onDropCapUpdated(element: DropCapElement) {
@@ -1293,6 +1384,16 @@ export default class Editor extends Vue {
 
   onSaveComplete() {
     this.hasUnsavedChanges = false;
+  }
+
+  onFileMenuUndo() {
+    this.commandService.undo();
+    this.save();
+  }
+
+  onFileMenuRedo() {
+    this.commandService.redo();
+    this.save();
   }
 
   onFileMenuGenerateTestFile(testFileType: TestFileType) {

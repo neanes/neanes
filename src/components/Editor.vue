@@ -741,24 +741,28 @@ export default class Editor extends Vue {
   }
 
   updatePageBreak() {
-    if (this.selectedElement) {
-      const index = this.elements.indexOf(this.selectedElement);
+    if (this.selectedElement && !this.isLastElement(this.selectedElement)) {
+      this.commandService.execute(
+        this.scoreElementCommandFactory.create('update-properties', {
+          target: this.selectedElement,
+          newValues: { pageBreak: !this.selectedElement.pageBreak },
+        }),
+      );
 
-      if (index !== this.elements.length - 1) {
-        this.selectedElement.pageBreak = !this.selectedElement.pageBreak;
-        this.save();
-      }
+      this.save();
     }
   }
 
   updateLineBreak() {
-    if (this.selectedElement) {
-      const index = this.elements.indexOf(this.selectedElement);
+    if (this.selectedElement && !this.isLastElement(this.selectedElement)) {
+      this.commandService.execute(
+        this.scoreElementCommandFactory.create('update-properties', {
+          target: this.selectedElement,
+          newValues: { lineBreak: !this.selectedElement.lineBreak },
+        }),
+      );
 
-      if (index !== this.elements.length - 1) {
-        this.selectedElement.lineBreak = !this.selectedElement.lineBreak;
-        this.save();
-      }
+      this.save();
     }
   }
 
@@ -794,10 +798,6 @@ export default class Editor extends Vue {
     this.replaceScoreElement(newElement, index);
 
     return newElement;
-  }
-
-  addEmptyElement() {
-    this.elements.push(new EmptyElement());
   }
 
   isSyllableElement(element: ScoreElement) {

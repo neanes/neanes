@@ -7,6 +7,7 @@ import {
   ScoreElement,
   TextBoxElement,
   TempoElement,
+  EmptyElement,
 } from '@/models/Element';
 import { neumeMap } from '@/models/NeumeMappings';
 import {
@@ -25,6 +26,13 @@ import { TextMeasurementService } from './TextMeasurementService';
 export class LayoutService {
   public static processPages(elements: ScoreElement[], pageSetup: PageSetup) {
     this.calculateMartyrias(elements);
+
+    // Always make sure this is an empty element at the end of the score.
+    // If this case is true, we have a bug, but this will prevent
+    // users corrupting their score.
+    if (elements[elements.length - 1].elementType !== ElementType.Empty) {
+      elements.push(new EmptyElement());
+    }
 
     const defaultNeumeElementWidthPx = 39;
 

@@ -16,7 +16,7 @@
         class="neume-selector"
         @select-quantitative-neume="addQuantitativeNeume"
       ></NeumeSelector>
-      <div class="page-background" @keydown="onKeydown" tabindex="-1">
+      <div class="page-background">
         <div
           class="page"
           :style="pageStyle"
@@ -488,7 +488,7 @@ export default class Editor extends Vue {
   }
 
   mounted() {
-    window.addEventListener('keydown', this.onGlobalKeydown);
+    window.addEventListener('keydown', this.onKeydown);
 
     EventBus.$on(IpcMainChannels.FileMenuNewScore, this.onFileMenuNewScore);
     EventBus.$on(IpcMainChannels.FileMenuOpenScore, this.onFileMenuOpenScore);
@@ -520,7 +520,7 @@ export default class Editor extends Vue {
   }
 
   beforeDestroy() {
-    window.removeEventListener('keydown', this.onGlobalKeydown);
+    window.removeEventListener('keydown', this.onKeydown);
 
     EventBus.$off(IpcMainChannels.FileMenuNewScore, this.onFileMenuNewScore);
     EventBus.$off(IpcMainChannels.FileMenuOpenScore, this.onFileMenuOpenScore);
@@ -840,7 +840,7 @@ export default class Editor extends Vue {
     );
   }
 
-  onGlobalKeydown(event: KeyboardEvent) {
+  onKeydown(event: KeyboardEvent) {
     // Handle undo / redo
     // See https://github.com/electron/electron/issues/3682.
     if (event.ctrlKey && !this.isTextInputFocused()) {
@@ -854,12 +854,11 @@ export default class Editor extends Vue {
         return;
       }
     }
-  }
 
-  onKeydown(event: KeyboardEvent) {
     if (
       this.selectedElement != null &&
-      this.navigableElements.includes(this.selectedElement.elementType)
+      this.navigableElements.includes(this.selectedElement.elementType) &&
+      !this.isTextInputFocused()
     ) {
       return this.onKeydownNeume(event);
     } else if (this.selectedLyrics != null) {
@@ -880,8 +879,12 @@ export default class Editor extends Vue {
         this.moveRightThrottled();
         handled = true;
         break;
-      case 'Delete':
       case 'Backspace':
+        handled = true;
+        // TODO fix this so it deletes the previous element
+        this.deleteSelectedElementThrottled();
+        break;
+      case 'Delete':
         handled = true;
 
         this.deleteSelectedElementThrottled();
@@ -1342,6 +1345,8 @@ export default class Editor extends Vue {
   }
 
   onFileMenuNewScore() {
+    this.commandService.clearHistory();
+
     this.hasUnsavedChanges = false;
     this.currentFilePath = null;
     this.entryMode = EntryMode.Auto;
@@ -1352,6 +1357,8 @@ export default class Editor extends Vue {
   }
 
   onFileMenuOpenScore(args: FileMenuOpenScoreArgs) {
+    this.commandService.clearHistory();
+
     const score: Score = SaveService.LoadScoreFromJson(JSON.parse(args.data));
     this.currentFilePath = args.filePath;
     this.hasUnsavedChanges = false;

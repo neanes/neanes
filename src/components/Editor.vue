@@ -224,7 +224,7 @@
     <ModeKeyDialog
       v-if="modeKeyDialogIsOpen"
       :element="selectedElement"
-      @update="updateModeKey(selectedElement, $event)"
+      @update="updateModeKeyFromTemplate(selectedElement, $event)"
       @close="closeModeKeyDialog"
     />
   </div>

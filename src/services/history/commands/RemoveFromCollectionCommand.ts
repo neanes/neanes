@@ -17,14 +17,14 @@ export class RemoveFromCollectionCommand<T> implements Command {
   }
 
   public undo() {
-    if (this.index) {
+    if (this.index !== undefined) {
       this.args.collection.splice(this.index, 0, this.args.element);
       this.index = undefined;
     }
   }
 
   public redo() {
-    if (!this.index) {
+    if (this.index === undefined) {
       this.execute();
     }
   }

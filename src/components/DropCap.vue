@@ -5,18 +5,17 @@
       class="drop-cap"
       :style="style"
       :content="element.content"
-      :class="[{ selected: element == selectedElement }]"
-      @blur="updateText($event)"
+      @blur="updateContent"
     ></ContentEditable>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
-import { DropCapElement, ScoreElement } from '@/models/Element';
+import { DropCapElement } from '@/models/Element';
 import ContentEditable from '@/components/ContentEditable.vue';
-import { store } from '@/store';
 import { withZoom } from '@/utils/withZoom';
+import { PageSetup } from '@/models/PageSetup';
 
 @Component({
   components: {
@@ -25,20 +24,9 @@ import { withZoom } from '@/utils/withZoom';
 })
 export default class DropCap extends Vue {
   @Prop() element!: DropCapElement;
+  @Prop() pageSetup!: PageSetup;
 
   editable: boolean = false;
-
-  get pageSetup() {
-    return store.state.score.pageSetup;
-  }
-
-  get selectedElement() {
-    return store.state.selectedElement;
-  }
-
-  set selectedElement(element: ScoreElement | null) {
-    store.mutations.setSelectedElement(element);
-  }
 
   get textElement() {
     return this.$refs.text as ContentEditable;
@@ -57,13 +45,17 @@ export default class DropCap extends Vue {
     return style;
   }
 
-  updateText(text: string) {
-    this.element.content = text;
-    this.$emit('dropCapUpdated', this.element);
-  }
-
   focus() {
     this.textElement.focus();
+  }
+
+  updateContent(content: string) {
+    // Nothing actually changed, so do nothing
+    if (this.element.content === content) {
+      return;
+    }
+
+    this.$emit('update:content', content);
   }
 }
 </script>

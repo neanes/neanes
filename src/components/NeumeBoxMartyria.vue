@@ -20,7 +20,6 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 import { MartyriaElement } from '@/models/Element';
 import { neumeMap } from '@/models/NeumeMappings';
 import Neume from '@/components/Neume.vue';
-import { store } from '@/store';
 import { Note } from '@/models/Neumes';
 import {
   getFthoraAdjustments,
@@ -28,6 +27,7 @@ import {
   NeumeAdjustmentOffset,
 } from '@/models/NeumeAdjustments';
 import { withZoom } from '@/utils/withZoom';
+import { PageSetup } from '@/models/PageSetup';
 
 @Component({
   components: {
@@ -36,11 +36,9 @@ import { withZoom } from '@/utils/withZoom';
 })
 export default class NeumeBoxMartyria extends Vue {
   @Prop() neume!: MartyriaElement;
-  Note = Note;
+  @Prop() pageSetup!: PageSetup;
 
-  get pageSetup() {
-    return store.state.score.pageSetup;
-  }
+  Note = Note;
 
   get noteMapping() {
     return neumeMap.get(this.neume.note!)!;

@@ -17,7 +17,6 @@
       @mouseenter="selectedMenu = 'Add'"
       :isOpen="isMenuOpen && selectedMenu === 'Add'"
     >
-      <FileMenuItem label="Neume" @click="onClickAddNeume" />
       <FileMenuItem label="Text Box" @click="onClickAddTextBox" />
       <FileMenuItem label="Mode Key" @click="onClickAddModeKey" />
       <FileMenuItem label="Drop Cap" @click="onClickAddDropCap" />
@@ -30,16 +29,6 @@
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import FileMenuBarItem from '@/components/FileMenuBarItem.vue';
 import FileMenuItem from '@/components/FileMenuItem.vue';
-import { Score } from '@/models/Score';
-import {
-  TextBoxElement,
-  StaffTextElement,
-  EmptyElement,
-  DropCapElement,
-  ModeKeyElement,
-} from '@/models/Element';
-import { SaveService } from '@/services/SaveService';
-import { store } from '@/store';
 import { EventBus } from '@/eventBus';
 import { IpcMainChannels, IpcRendererChannels } from '@/ipc/ipcChannels';
 
@@ -52,10 +41,6 @@ import { IpcMainChannels, IpcRendererChannels } from '@/ipc/ipcChannels';
 export default class FileMenuBar extends Vue {
   private isMenuOpen = false;
   private selectedMenu = '';
-
-  private get score() {
-    return store.state.score;
-  }
 
   private get fileSelector() {
     return this.$refs.file as HTMLInputElement;
@@ -107,10 +92,6 @@ export default class FileMenuBar extends Vue {
 
       reader.readAsText(file);
     }
-  }
-
-  onClickAddNeume() {
-    EventBus.$emit(IpcMainChannels.FileMenuInsertNeume);
   }
 
   onClickAddTextBox() {

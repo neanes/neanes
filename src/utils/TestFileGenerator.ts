@@ -64,8 +64,8 @@ export abstract class TestFileGenerator {
         }
 
         const note = new NoteElement();
-        note.setQuantitativeNeume(quantitativeNeume);
-        note.setFthora(fthora);
+        note.quantitativeNeume = quantitativeNeume;
+        note.fthora = fthora;
         (note.lyrics = (counter++).toString()), elements.push(note);
       }
     }
@@ -91,8 +91,8 @@ export abstract class TestFileGenerator {
       }
 
       const note = new NoteElement();
-      note.setQuantitativeNeume(quantitativeNeume);
-      note.setGorgonNeume(GorgonNeume.Gorgon_Top);
+      note.quantitativeNeume = quantitativeNeume;
+      note.gorgonNeume = GorgonNeume.Gorgon_Top;
       (note.lyrics = (counter++).toString()), elements.push(note);
     }
 
@@ -109,8 +109,8 @@ export abstract class TestFileGenerator {
       }
 
       const note = new NoteElement();
-      note.setQuantitativeNeume(quantitativeNeume);
-      note.setGorgonNeume(GorgonNeume.Gorgon_Bottom);
+      note.quantitativeNeume = quantitativeNeume;
+      note.gorgonNeume = GorgonNeume.Gorgon_Bottom;
       (note.lyrics = (counter++).toString()), elements.push(note);
     }
 
@@ -127,8 +127,8 @@ export abstract class TestFileGenerator {
       }
 
       const note = new NoteElement();
-      note.setQuantitativeNeume(quantitativeNeume);
-      note.setGorgonNeume(GorgonNeume.GorgonDottedLeft);
+      note.quantitativeNeume = quantitativeNeume;
+      note.gorgonNeume = GorgonNeume.GorgonDottedLeft;
       (note.lyrics = (counter++).toString()), elements.push(note);
     }
 
@@ -145,8 +145,8 @@ export abstract class TestFileGenerator {
       }
 
       const note = new NoteElement();
-      note.setQuantitativeNeume(quantitativeNeume);
-      note.setGorgonNeume(GorgonNeume.GorgonDottedRight);
+      note.quantitativeNeume = quantitativeNeume;
+      note.gorgonNeume = GorgonNeume.GorgonDottedRight;
       (note.lyrics = (counter++).toString()), elements.push(note);
     }
 
@@ -171,8 +171,8 @@ export abstract class TestFileGenerator {
       }
 
       const note = new NoteElement();
-      note.setQuantitativeNeume(quantitativeNeume);
-      note.setTimeNeume(TimeNeume.Klasma_Top);
+      note.quantitativeNeume = quantitativeNeume;
+      note.timeNeume = TimeNeume.Klasma_Top;
       (note.lyrics = (counter++).toString()), elements.push(note);
     }
 
@@ -189,8 +189,8 @@ export abstract class TestFileGenerator {
       }
 
       const note = new NoteElement();
-      note.setQuantitativeNeume(quantitativeNeume);
-      note.setTimeNeume(TimeNeume.Klasma_Bottom);
+      note.quantitativeNeume = quantitativeNeume;
+      note.timeNeume = TimeNeume.Klasma_Bottom;
       (note.lyrics = (counter++).toString()), elements.push(note);
     }
 
@@ -215,8 +215,8 @@ export abstract class TestFileGenerator {
       }
 
       const note = new NoteElement();
-      note.setQuantitativeNeume(quantitativeNeume);
-      note.setTimeNeume(TimeNeume.Hapli);
+      note.quantitativeNeume = quantitativeNeume;
+      note.timeNeume = TimeNeume.Hapli;
       (note.lyrics = (counter++).toString()), elements.push(note);
     }
 
@@ -233,8 +233,8 @@ export abstract class TestFileGenerator {
       }
 
       const note = new NoteElement();
-      note.setQuantitativeNeume(quantitativeNeume);
-      note.setTimeNeume(TimeNeume.Dipli);
+      note.quantitativeNeume = quantitativeNeume;
+      note.timeNeume = TimeNeume.Dipli;
       (note.lyrics = (counter++).toString()), elements.push(note);
     }
 
@@ -251,8 +251,8 @@ export abstract class TestFileGenerator {
       }
 
       const note = new NoteElement();
-      note.setQuantitativeNeume(quantitativeNeume);
-      note.setTimeNeume(TimeNeume.Tripli);
+      note.quantitativeNeume = quantitativeNeume;
+      note.timeNeume = TimeNeume.Tripli;
       (note.lyrics = (counter++).toString()), elements.push(note);
     }
 
@@ -277,8 +277,8 @@ export abstract class TestFileGenerator {
       }
 
       const note = new NoteElement();
-      note.setQuantitativeNeume(quantitativeNeume);
-      note.setAccidental(Accidental.Flat_2_Right);
+      note.quantitativeNeume = quantitativeNeume;
+      note.accidental = Accidental.Flat_2_Right;
       (note.lyrics = (counter++).toString()), elements.push(note);
     }
 
@@ -295,8 +295,8 @@ export abstract class TestFileGenerator {
       }
 
       const note = new NoteElement();
-      note.setQuantitativeNeume(quantitativeNeume);
-      note.setAccidental(Accidental.Sharp_2_Left);
+      note.quantitativeNeume = quantitativeNeume;
+      note.accidental = Accidental.Sharp_2_Left;
       (note.lyrics = (counter++).toString()), elements.push(note);
     }
 
@@ -321,8 +321,8 @@ export abstract class TestFileGenerator {
       }
 
       const note = new NoteElement();
-      note.setQuantitativeNeume(quantitativeNeume);
-      note.setVocalExpressionNeume(VocalExpressionNeume.Psifiston);
+      note.quantitativeNeume = quantitativeNeume;
+      note.vocalExpressionNeume = VocalExpressionNeume.Psifiston;
       (note.lyrics = (counter++).toString()), elements.push(note);
     }
 
@@ -339,8 +339,8 @@ export abstract class TestFileGenerator {
       }
 
       const note = new NoteElement();
-      note.setQuantitativeNeume(quantitativeNeume);
-      note.setVocalExpressionNeume(VocalExpressionNeume.Antikenoma);
+      note.quantitativeNeume = quantitativeNeume;
+      note.vocalExpressionNeume = VocalExpressionNeume.Antikenoma;
       (note.lyrics = (counter++).toString()), elements.push(note);
     }
 

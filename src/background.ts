@@ -279,14 +279,37 @@ function createMenu(win: BrowserWindow) {
       ],
     },
     {
-      label: '&Insert',
+      label: '&Edit',
       submenu: [
         {
-          label: '&Neume',
-          click() {
-            win.webContents.send(IpcMainChannels.FileMenuInsertNeume);
+          id: 'undo',
+          label: '&Undo',
+          accelerator: 'CmdOrCtrl+Z',
+          click(menuItem, browserWindow, event) {
+            // The accelerator is handled in the renderer process because of
+            // https://github.com/electron/electron/issues/3682.
+            if (!event.triggeredByAccelerator) {
+              win.webContents.send(IpcMainChannels.FileMenuUndo);
+            }
           },
         },
+        {
+          id: 'redo',
+          label: '&Redo',
+          accelerator: 'CmdOrCtrl+Y',
+          click(menuItem, browserWindow, event) {
+            // The accelerator is handled in the renderer process because of
+            // https://github.com/electron/electron/issues/3682.
+            if (!event.triggeredByAccelerator) {
+              win.webContents.send(IpcMainChannels.FileMenuRedo);
+            }
+          },
+        },
+      ],
+    },
+    {
+      label: '&Insert',
+      submenu: [
         {
           label: '&Drop Cap',
           click() {
@@ -432,4 +455,12 @@ ipcMain.on(IpcRendererChannels.SetHasUnsavedChanges, async (event, data) => {
 
 ipcMain.on(IpcRendererChannels.SetFilePath, async (event, data) => {
   state.filePath = data;
+});
+
+ipcMain.on(IpcRendererChannels.SetCanUndo, async (event, data) => {
+  Menu.getApplicationMenu()!.getMenuItemById('undo')!.enabled = data;
+});
+
+ipcMain.on(IpcRendererChannels.SetCanRedo, async (event, data) => {
+  Menu.getApplicationMenu()!.getMenuItemById('redo')!.enabled = data;
 });

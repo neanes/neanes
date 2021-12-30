@@ -8,8 +8,8 @@
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { TempoElement } from '@/models/Element';
 import Neume from '@/components/Neume.vue';
-import { store } from '@/store';
 import { withZoom } from '@/utils/withZoom';
+import { PageSetup } from '@/models/PageSetup';
 
 @Component({
   components: {
@@ -18,10 +18,7 @@ import { withZoom } from '@/utils/withZoom';
 })
 export default class NeumeBoxMartyria extends Vue {
   @Prop() neume!: TempoElement;
-
-  get pageSetup() {
-    return store.state.score.pageSetup;
-  }
+  @Prop() pageSetup!: PageSetup;
 
   get style() {
     return {

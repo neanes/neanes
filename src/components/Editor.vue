@@ -1442,6 +1442,7 @@ export default class Editor extends Vue {
         'This will discard your current score. Make sure you have saved before doing this. Are you sure you wish to continue?',
       )
     ) {
+      this.commandService.clearHistory();
       this.currentFilePath = null;
       this.score = new Score();
       this.score.staff.elements.unshift(

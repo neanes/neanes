@@ -22,6 +22,9 @@ export enum IpcRendererChannels {
 
   SetHasUnsavedChanges = 'SetHasUnsavedChanges',
   SetFilePath = 'SetFilePath',
+
+  SetCanUndo = 'SetCanUndo',
+  SetCanRedo = 'SetCanRedo',
 }
 
 export interface FileMenuOpenScoreArgs {

@@ -97,11 +97,6 @@ const mutations = {
     window.document.title = getters.windowTitle;
     EventBus.$emit(IpcRendererChannels.SetHasUnsavedChanges, hasUnsavedChanges);
   },
-
-  removeElement(element: ScoreElement) {
-    const index = state.score.staff.elements.indexOf(element);
-    state.score.staff.elements.splice(index, 1);
-  },
 };
 
 const store = {

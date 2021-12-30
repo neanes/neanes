@@ -26,7 +26,6 @@
 - Add empty neume box at end of score if missing (e.g. due to corrupted save file)
 - Copy/Cut/Paste elements
 - Allow multiple elements to be selected (and copy/cut/pasted)
-- Undo / redo
 - Configurable Neume Keyboard
 - Better styling
 - Graceful handling of bad martyrias

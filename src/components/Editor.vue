@@ -59,6 +59,9 @@
                       class="lyrics"
                       :content="element.lyrics"
                       :ref="`lyrics-${getElementIndex(element)}`"
+                      :key="`lyrics-${getElementIndex(element)}-${
+                        element.keyHelper
+                      }`"
                       @focus.native="selectedLyrics = element"
                       @blur="updateLyrics(element, $event)"
                     ></ContentEditable>
@@ -1159,10 +1162,16 @@ export default class Editor extends Vue {
       isMelisma = true;
       isMelismaStart = false;
       lyrics = '';
+
+      // Force the lyrics to re-render
+      element.keyHelper++;
     } else if (lyrics.endsWith('_')) {
       isMelisma = true;
       isMelismaStart = true;
       lyrics = lyrics.slice(0, -1);
+
+      // Force the lyrics to re-render
+      element.keyHelper++;
     } else {
       isMelisma = false;
       isMelismaStart = false;

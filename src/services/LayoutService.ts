@@ -76,11 +76,6 @@ export class LayoutService {
         elementWidthPx = pageSetup.innerPageWidth;
       }
 
-      if (element.elementType === ElementType.StaffText) {
-        line.elements.push(element);
-        continue;
-      }
-
       if (element.elementType === ElementType.Note) {
         const noteElement = element as NoteElement;
         const mapping = neumeMap.get(noteElement.quantitativeNeume)!;

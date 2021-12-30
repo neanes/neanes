@@ -7,7 +7,6 @@ import {
   NoteElement,
   ScoreElement,
   ScoreElementOffset,
-  StaffTextElement,
   TextBoxElement,
   ModeKeyElement,
   TempoElement,
@@ -21,7 +20,6 @@ import {
   MartyriaElement as MartyriaElement_v1,
   TempoElement as TempoElement_v1,
   NoteElement as NoteElement_v1,
-  StaffTextElement as StaffTextElement_v1,
   TextBoxElement as TextBoxElement_v1,
   ScoreElement as ScoreElement_v1,
   ScoreElementOffset as ScoreElementOffset_v1,
@@ -106,13 +104,6 @@ export class SaveService {
           element = new NoteElement_v1();
           this.SaveNote(element as NoteElement_v1, e as NoteElement);
           break;
-        case ElementType.StaffText:
-          element = new StaffTextElement_v1();
-          this.SaveStaffText(
-            element as StaffTextElement_v1,
-            e as StaffTextElement,
-          );
-          break;
         case ElementType.TextBox:
           element = new TextBoxElement_v1();
           this.SaveTextBox(element as TextBoxElement_v1, e as TextBoxElement);
@@ -184,16 +175,6 @@ export class SaveService {
     element.lyrics = e.lyrics !== '' ? e.lyrics : undefined;
     element.isMelisma = e.isMelisma || undefined;
     element.isMelismaStart = e.isMelismaStart || undefined;
-  }
-
-  public static SaveStaffText(
-    element: StaffTextElement_v1,
-    e: StaffTextElement,
-  ) {
-    element.text = e.text;
-    element.offset = new ScoreElementOffset_v1();
-    element.offset.x = e.offset.x;
-    element.offset.y = e.offset.y;
   }
 
   public static SaveTextBox(element: TextBoxElement_v1, e: TextBoxElement) {
@@ -278,13 +259,6 @@ export class SaveService {
         case ElementType_v1.Note:
           element = new NoteElement();
           this.LoadNote_v1(element as NoteElement, e as NoteElement_v1);
-          break;
-        case ElementType_v1.StaffText:
-          element = new StaffTextElement();
-          this.LoadStaffText_v1(
-            element as StaffTextElement,
-            e as StaffTextElement_v1,
-          );
           break;
         case ElementType_v1.TextBox:
           element = new TextBoxElement();
@@ -379,16 +353,6 @@ export class SaveService {
 
     element.isMelisma = e.isMelisma === true;
     element.isMelismaStart = e.isMelismaStart === true;
-  }
-
-  public static LoadStaffText_v1(
-    element: StaffTextElement,
-    e: StaffTextElement_v1,
-  ) {
-    element.text = e.text;
-    element.offset = new ScoreElementOffset();
-    element.offset.x = e.offset.x;
-    element.offset.y = e.offset.y;
   }
 
   public static LoadTextBox_v1(element: TextBoxElement, e: TextBoxElement_v1) {

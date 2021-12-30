@@ -271,9 +271,7 @@ import NeumeSelector from '@/components/NeumeSelector.vue';
 import NeumeKeyboard from '@/components/NeumeKeyboard.vue';
 import ContentEditable from '@/components/ContentEditable.vue';
 import FileMenuBar from '@/components/FileMenuBar.vue';
-import StaffText from '@/components/StaffText.vue';
 import TextBox from '@/components/TextBox.vue';
-import { store } from '@/store';
 import DropCap from '@/components/DropCap.vue';
 import ModeKey from '@/components/ModeKey.vue';
 import TextToolbar from '@/components/TextToolbar.vue';
@@ -291,7 +289,7 @@ import {
   IpcRendererChannels,
 } from '@/ipc/ipcChannels';
 import { EventBus } from '@/eventBus';
-import { ModeKeyTemplate, modeKeyTemplates } from '@/models/ModeKeys';
+import { modeKeyTemplates } from '@/models/ModeKeys';
 import { TestFileGenerator } from '@/utils/TestFileGenerator';
 import { TestFileType } from '@/utils/TestFileType';
 import { Unit } from '@/utils/Unit';
@@ -317,7 +315,6 @@ export enum EntryMode {
     NeumeKeyboard,
     ContentEditable,
     FileMenuBar,
-    StaffText,
     TextBox,
     DropCap,
     ModeKey,
@@ -330,9 +327,18 @@ export enum EntryMode {
   },
 })
 export default class Editor extends Vue {
+  score: Score = new Score();
   pages: Page[] = [];
 
   entryMode: EntryMode = EntryMode.Auto;
+
+  private _selectedElement: ScoreElement | null = null;
+  private _selectedLyrics: NoteElement | null = null;
+  elementToFocus: ScoreElement | null = null;
+
+  private _zoom: number = 1;
+  private _currentFilePath: string | null = null;
+  private _hasUnsavedChanges: boolean = false;
 
   modeKeyDialogIsOpen: boolean = false;
 
@@ -396,56 +402,87 @@ export default class Editor extends Vue {
     this.onFileMenuRedo,
   );
 
-  get score() {
-    return store.state.score;
-  }
-
-  set score(score: Score) {
-    store.mutations.setScore(score);
-  }
-
   get elements() {
-    return store.getters.elements;
+    return this.score != null ? this.score.staff.elements : [];
+  }
+
+  get selectedElementIndex() {
+    return this.selectedElement != null
+      ? this.elements.indexOf(this.selectedElement)
+      : -1;
+  }
+
+  get windowTitle() {
+    const unsavedChangesMarker = this.hasUnsavedChanges ? '*' : '';
+
+    if (this.currentFilePath != null) {
+      const fileName = this.currentFilePath.replace(/^.*[\\/]/, '');
+      return `${unsavedChangesMarker}${fileName} - ${process.env.VUE_APP_TITLE}`;
+    } else {
+      return `${unsavedChangesMarker}Untitled 1 - ${process.env.VUE_APP_TITLE}`;
+    }
   }
 
   get selectedElement() {
-    return store.state.selectedElement;
+    return this._selectedElement;
   }
 
   set selectedElement(element: ScoreElement | null) {
-    store.mutations.setSelectedElement(element);
+    if (element != null) {
+      this.selectedLyrics = null;
+    }
+
+    this._selectedElement = element;
   }
 
   get selectedLyrics() {
-    return store.state.selectedLyrics;
+    return this._selectedLyrics;
   }
 
   set selectedLyrics(element: NoteElement | null) {
-    store.mutations.setSelectedLyrics(element);
+    if (element != null) {
+      this._selectedElement = null;
+    }
+
+    this._selectedLyrics = element;
   }
 
   get zoom() {
-    return store.state.zoom;
+    return this._zoom;
   }
 
   set zoom(zoom: number) {
-    store.mutations.setZoom(zoom);
-  }
-
-  set currentFilePath(path: string | null) {
-    store.mutations.setCurrentFilepath(path);
+    this._zoom = zoom;
+    document.documentElement.style.setProperty('--zoom', zoom.toString());
   }
 
   get currentFilePath() {
-    return store.state.currentFilePath;
+    return this._currentFilePath;
+  }
+
+  set currentFilePath(path: string | null) {
+    this._currentFilePath = path;
+
+    if (path != null) {
+      localStorage.setItem('filePath', path);
+    } else {
+      localStorage.removeItem('filePath');
+    }
+
+    window.document.title = this.windowTitle;
+
+    EventBus.$emit(IpcRendererChannels.SetFilePath, path);
   }
 
   get hasUnsavedChanges() {
-    return store.state.hasUnsavedChanges;
+    return this._hasUnsavedChanges;
   }
 
   set hasUnsavedChanges(hasUnsavedChanges: boolean) {
-    store.mutations.setHasUnsavedChanges(hasUnsavedChanges);
+    this._hasUnsavedChanges = hasUnsavedChanges;
+    localStorage.setItem('hasUnsavedChanges', hasUnsavedChanges.toString());
+    window.document.title = this.windowTitle;
+    EventBus.$emit(IpcRendererChannels.SetHasUnsavedChanges, hasUnsavedChanges);
   }
 
   get pageStyle() {
@@ -552,9 +589,9 @@ export default class Editor extends Vue {
 
   updated() {
     Vue.nextTick(() => {
-      if (store.state.elementToFocus != null) {
-        const index = this.elements.indexOf(store.state.elementToFocus);
-        store.mutations.setElementToFocus(null);
+      if (this.elementToFocus != null) {
+        const index = this.elements.indexOf(this.elementToFocus);
+        this.elementToFocus = null;
 
         (this.$refs[`element-${index}`] as any)[0].focus();
       }
@@ -599,7 +636,7 @@ export default class Editor extends Vue {
         }
 
         if (this.isLastElement(this.selectedElement)) {
-          this.addScoreElement(element, store.getters.selectedElementIndex);
+          this.addScoreElement(element, this.selectedElementIndex);
           this.selectedElement = element;
         } else {
           if (this.selectedElement.elementType === ElementType.Note) {
@@ -621,16 +658,16 @@ export default class Editor extends Vue {
         break;
       case EntryMode.Insert:
         if (this.isLastElement(this.selectedElement)) {
-          this.addScoreElement(element, store.getters.selectedElementIndex);
+          this.addScoreElement(element, this.selectedElementIndex);
         } else {
-          this.addScoreElement(element, store.getters.selectedElementIndex + 1);
+          this.addScoreElement(element, this.selectedElementIndex + 1);
         }
         this.selectedElement = element;
         break;
 
       case EntryMode.Edit:
         if (this.isLastElement(this.selectedElement)) {
-          this.addScoreElement(element, store.getters.selectedElementIndex);
+          this.addScoreElement(element, this.selectedElementIndex);
         } else if (this.selectedElement.elementType === ElementType.Note) {
           if (
             (this.selectedElement as NoteElement).quantitativeNeume !==
@@ -666,7 +703,7 @@ export default class Editor extends Vue {
         this.moveRight();
 
         if (this.isLastElement(this.selectedElement)) {
-          this.addScoreElement(element, store.getters.selectedElementIndex);
+          this.addScoreElement(element, this.selectedElementIndex);
           this.selectedElement = element;
         } else {
           if (this.selectedElement.elementType != ElementType.Martyria) {
@@ -676,15 +713,15 @@ export default class Editor extends Vue {
         break;
       case EntryMode.Insert:
         if (this.isLastElement(this.selectedElement)) {
-          this.addScoreElement(element, store.getters.selectedElementIndex);
+          this.addScoreElement(element, this.selectedElementIndex);
         } else {
-          this.addScoreElement(element, store.getters.selectedElementIndex + 1);
+          this.addScoreElement(element, this.selectedElementIndex + 1);
         }
         this.selectedElement = element;
         break;
       case EntryMode.Edit:
         if (this.isLastElement(this.selectedElement)) {
-          this.addScoreElement(element, store.getters.selectedElementIndex);
+          this.addScoreElement(element, this.selectedElementIndex);
         } else if (this.selectedElement.elementType != ElementType.Martyria) {
           this.selectedElement = this.switchToMartyria(this.selectedElement);
         }
@@ -707,7 +744,7 @@ export default class Editor extends Vue {
         this.moveRight();
 
         if (this.isLastElement(this.selectedElement)) {
-          this.addScoreElement(element, store.getters.selectedElementIndex);
+          this.addScoreElement(element, this.selectedElementIndex);
           this.selectedElement = element;
         } else {
           if (this.selectedElement.elementType === ElementType.Tempo) {
@@ -726,15 +763,15 @@ export default class Editor extends Vue {
         break;
       case EntryMode.Insert:
         if (this.isLastElement(this.selectedElement)) {
-          this.addScoreElement(element, store.getters.selectedElementIndex);
+          this.addScoreElement(element, this.selectedElementIndex);
         } else {
-          this.addScoreElement(element, store.getters.selectedElementIndex + 1);
+          this.addScoreElement(element, this.selectedElementIndex + 1);
         }
         this.selectedElement = element;
         break;
       case EntryMode.Edit:
         if (this.isLastElement(this.selectedElement)) {
-          this.addScoreElement(element, store.getters.selectedElementIndex);
+          this.addScoreElement(element, this.selectedElementIndex);
         } else if (this.selectedElement.elementType === ElementType.Tempo) {
           if ((this.selectedElement as TempoElement).neume !== neume) {
             this.updateTempo(this.selectedElement as TempoElement, {
@@ -1348,7 +1385,7 @@ export default class Editor extends Vue {
 
   deleteSelectedElement() {
     if (this.selectedElement && !this.isLastElement(this.selectedElement)) {
-      const index = store.getters.selectedElementIndex;
+      const index = this.selectedElementIndex;
 
       this.removeScoreElement(this.selectedElement);
 
@@ -1361,14 +1398,12 @@ export default class Editor extends Vue {
   deletePreviousElement() {
     if (
       this.selectedElement &&
-      store.getters.selectedElementIndex > 0 &&
+      this.selectedElementIndex > 0 &&
       this.navigableElements.includes(
-        this.elements[store.getters.selectedElementIndex - 1].elementType,
+        this.elements[this.selectedElementIndex - 1].elementType,
       )
     ) {
-      this.removeScoreElement(
-        this.elements[store.getters.selectedElementIndex - 1],
-      );
+      this.removeScoreElement(this.elements[this.selectedElementIndex - 1]);
 
       this.save();
     }
@@ -1415,10 +1450,10 @@ export default class Editor extends Vue {
   onFileMenuInsertTextBox() {
     const element = new TextBoxElement();
 
-    this.addScoreElement(element, store.getters.selectedElementIndex);
+    this.addScoreElement(element, this.selectedElementIndex);
 
     this.selectedElement = element;
-    store.mutations.setElementToFocus(element);
+    this.elementToFocus = element;
 
     this.save();
   }
@@ -1426,7 +1461,7 @@ export default class Editor extends Vue {
   onFileMenuInsertModeKey() {
     const element = this.createDefaultModeKey();
 
-    this.addScoreElement(element, store.getters.selectedElementIndex);
+    this.addScoreElement(element, this.selectedElementIndex);
 
     this.selectedElement = element;
 
@@ -1438,10 +1473,10 @@ export default class Editor extends Vue {
   onFileMenuInsertDropCap() {
     const element = new DropCapElement();
 
-    this.addScoreElement(element, store.getters.selectedElementIndex);
+    this.addScoreElement(element, this.selectedElementIndex);
 
     this.selectedElement = element;
-    store.mutations.setElementToFocus(element);
+    this.elementToFocus = element;
     this.save();
   }
 

@@ -30,7 +30,6 @@ export enum ElementType {
   Tempo = 'Tempo',
   Empty = 'Empty',
   TextBox = 'TextBox',
-  StaffText = 'StaffText',
   DropCap = 'DropCap',
   ModeKey = 'ModeKey',
 }
@@ -50,68 +49,62 @@ export abstract class ScoreElement {
 
 export class NoteElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.Note;
-  public quantitativeNeumeValue: QuantitativeNeume = QuantitativeNeume.Ison;
-  public timeNeumeValue: TimeNeume | null = null;
-  public gorgonNeumeValue: GorgonNeume | null = null;
-  public vocalExpressionNeumeValue: VocalExpressionNeume | null = null;
-  public fthoraValue: Fthora | null = null;
-  public accidentalValue: Accidental | null = null;
   public measureBar: MeasureBar | null = null;
   public lyrics: string = '';
   public isMelisma: boolean = false;
   public isMelismaStart: boolean = false;
 
   public get quantitativeNeume() {
-    return this.quantitativeNeumeValue;
+    return this._quantitativeNeume;
   }
 
   public get timeNeume() {
-    return this.timeNeumeValue;
+    return this._timeNeume;
   }
 
   public get gorgonNeume() {
-    return this.gorgonNeumeValue;
+    return this._gorgonNeume;
   }
 
   public get vocalExpressionNeume() {
-    return this.vocalExpressionNeumeValue;
+    return this._vocalExpressionNeume;
   }
 
   public get accidental() {
-    return this.accidentalValue;
+    return this._accidental;
   }
 
   public get fthora() {
-    return this.fthoraValue;
+    return this._fthora;
   }
 
   public set quantitativeNeume(neume: QuantitativeNeume) {
-    this.quantitativeNeumeValue = neume;
+    this._quantitativeNeume = neume;
     this.replaceNeumes();
   }
 
   public set timeNeume(neume: TimeNeume | null) {
-    this.timeNeumeValue = neume;
+    this._timeNeume = neume;
     this.replaceNeumes();
   }
 
   public set gorgonNeume(neume: GorgonNeume | null) {
-    this.gorgonNeumeValue = neume;
+    this._gorgonNeume = neume;
     this.replaceNeumes();
   }
 
   public set vocalExpressionNeume(neume: VocalExpressionNeume | null) {
-    this.vocalExpressionNeumeValue = neume;
+    this._vocalExpressionNeume = neume;
     this.replaceNeumes();
   }
 
   public set accidental(neume: Accidental | null) {
-    this.accidentalValue = neume;
+    this._accidental = neume;
     this.replaceNeumes();
   }
 
   public set fthora(neume: Fthora | null) {
-    this.fthoraValue = neume;
+    this._fthora = neume;
     this.replaceNeumes();
   }
 
@@ -120,6 +113,13 @@ export class NoteElement extends ScoreElement {
   public melismaOffsetLeft: number | null = null;
   public neumeWidth: number = 0;
   public lyricsWidth: number = 0;
+
+  private _quantitativeNeume: QuantitativeNeume = QuantitativeNeume.Ison;
+  private _timeNeume: TimeNeume | null = null;
+  private _gorgonNeume: GorgonNeume | null = null;
+  private _vocalExpressionNeume: VocalExpressionNeume | null = null;
+  private _fthora: Fthora | null = null;
+  private _accidental: Accidental | null = null;
 
   private replaceNeumes() {
     this.replaceQuantitativeNeumes();
@@ -342,12 +342,6 @@ export class ModeKeyElement extends ScoreElement {
 
     return element;
   }
-}
-
-export class StaffTextElement extends ScoreElement {
-  public readonly elementType: ElementType = ElementType.StaffText;
-  public offset: ScoreElementOffset = new ScoreElementOffset();
-  public text: string = 'text';
 }
 
 export class DropCapElement extends ScoreElement {

@@ -18,7 +18,6 @@ export enum ElementType {
   Martyria = 'Martyria',
   Empty = 'Empty',
   TextBox = 'TextBox',
-  StaffText = 'StaffText',
   DropCap = 'DropCap',
   ModeKey = 'ModeKey',
   Tempo = 'Tempo',
@@ -97,12 +96,6 @@ export class ModeKeyElement extends ScoreElement {
   public color: string = 'black';
   public fontSize: number = 16;
   public height: number = 20;
-}
-
-export class StaffTextElement extends ScoreElement {
-  public readonly elementType: ElementType = ElementType.StaffText;
-  public offset: ScoreElementOffset = new ScoreElementOffset();
-  public text: string = 'text';
 }
 
 export class DropCapElement extends ScoreElement {

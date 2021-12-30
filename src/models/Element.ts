@@ -43,6 +43,9 @@ export abstract class ScoreElement {
   public x: number = 0;
   public y: number = 0;
   public width: number = 0;
+
+  // This is used to help force components to re-render
+  public keyHelper: number = 0;
 }
 
 export class NoteElement extends ScoreElement {

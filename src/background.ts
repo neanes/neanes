@@ -282,6 +282,7 @@ function createMenu(win: BrowserWindow) {
       label: '&Edit',
       submenu: [
         {
+          id: 'undo',
           label: '&Undo',
           accelerator: 'CmdOrCtrl+Z',
           click(menuItem, browserWindow, event) {
@@ -293,6 +294,7 @@ function createMenu(win: BrowserWindow) {
           },
         },
         {
+          id: 'redo',
           label: '&Redo',
           accelerator: 'CmdOrCtrl+Y',
           click(menuItem, browserWindow, event) {
@@ -453,4 +455,12 @@ ipcMain.on(IpcRendererChannels.SetHasUnsavedChanges, async (event, data) => {
 
 ipcMain.on(IpcRendererChannels.SetFilePath, async (event, data) => {
   state.filePath = data;
+});
+
+ipcMain.on(IpcRendererChannels.SetCanUndo, async (event, data) => {
+  Menu.getApplicationMenu()!.getMenuItemById('undo')!.enabled = data;
+});
+
+ipcMain.on(IpcRendererChannels.SetCanRedo, async (event, data) => {
+  Menu.getApplicationMenu()!.getMenuItemById('redo')!.enabled = data;
 });

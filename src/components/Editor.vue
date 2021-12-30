@@ -1370,11 +1370,7 @@ export default class Editor extends Vue {
   onFileMenuInsertTextBox() {
     const element = new TextBoxElement();
 
-    store.getters.elements.splice(
-      store.getters.selectedElementIndex,
-      0,
-      element,
-    );
+    this.addScoreElement(element, store.getters.selectedElementIndex);
 
     this.selectedElement = element;
     store.mutations.setElementToFocus(element);
@@ -1385,11 +1381,7 @@ export default class Editor extends Vue {
   onFileMenuInsertModeKey() {
     const element = this.createDefaultModeKey();
 
-    store.getters.elements.splice(
-      store.getters.selectedElementIndex,
-      0,
-      element,
-    );
+    this.addScoreElement(element, store.getters.selectedElementIndex);
 
     this.selectedElement = element;
 
@@ -1401,11 +1393,7 @@ export default class Editor extends Vue {
   onFileMenuInsertDropCap() {
     const element = new DropCapElement();
 
-    store.getters.elements.splice(
-      store.getters.selectedElementIndex,
-      0,
-      element,
-    );
+    this.addScoreElement(element, store.getters.selectedElementIndex);
 
     this.selectedElement = element;
     store.mutations.setElementToFocus(element);

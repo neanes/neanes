@@ -347,26 +347,26 @@ export class SaveService {
   }
 
   public static LoadNote_v1(element: NoteElement, e: NoteElement_v1) {
-    element.setQuantitativeNeume(e.quantitativeNeume);
+    element.quantitativeNeume = e.quantitativeNeume;
 
     if (e.timeNeume != null) {
-      element.setTimeNeume(e.timeNeume);
+      element.timeNeume = e.timeNeume;
     }
 
     if (e.gorgonNeume != null) {
-      element.setGorgonNeume(e.gorgonNeume);
+      element.gorgonNeume = e.gorgonNeume;
     }
 
     if (e.fthora != null) {
-      element.setFthora(e.fthora);
+      element.fthora = e.fthora;
     }
 
     if (e.accidental != null) {
-      element.setAccidental(e.accidental);
+      element.accidental = e.accidental;
     }
 
     if (e.vocalExpressionNeume != null) {
-      element.setVocalExpressionNeume(e.vocalExpressionNeume);
+      element.vocalExpressionNeume = e.vocalExpressionNeume;
     }
 
     if (e.measureBar != null) {

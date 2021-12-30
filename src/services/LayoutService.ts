@@ -496,7 +496,7 @@ export class LayoutService {
               note.fthora,
             );
           } else {
-            note.setFthora(null);
+            note.fthora = null;
           }
         }
       } else if (element.elementType === ElementType.ModeKey) {

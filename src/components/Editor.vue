@@ -590,7 +590,7 @@ export default class Editor extends Vue {
     }
 
     const element = new NoteElement();
-    element.setQuantitativeNeume(quantitativeNeume);
+    element.quantitativeNeume = quantitativeNeume;
 
     if (this.entryMode === EntryMode.Auto) {
       this.moveRight();

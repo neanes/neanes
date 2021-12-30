@@ -47,52 +47,76 @@ export abstract class ScoreElement {
 
 export class NoteElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.Note;
-  public quantitativeNeume: QuantitativeNeume = QuantitativeNeume.Ison;
-  public timeNeume: TimeNeume | null = null;
-  public gorgonNeume: GorgonNeume | null = null;
-  public vocalExpressionNeume: VocalExpressionNeume | null = null;
-  public fthora: Fthora | null = null;
-  public accidental: Accidental | null = null;
+  public quantitativeNeumeValue: QuantitativeNeume = QuantitativeNeume.Ison;
+  public timeNeumeValue: TimeNeume | null = null;
+  public gorgonNeumeValue: GorgonNeume | null = null;
+  public vocalExpressionNeumeValue: VocalExpressionNeume | null = null;
+  public fthoraValue: Fthora | null = null;
+  public accidentalValue: Accidental | null = null;
   public measureBar: MeasureBar | null = null;
   public lyrics: string = '';
   public isMelisma: boolean = false;
   public isMelismaStart: boolean = false;
+
+  public get quantitativeNeume() {
+    return this.quantitativeNeumeValue;
+  }
+
+  public get timeNeume() {
+    return this.timeNeumeValue;
+  }
+
+  public get gorgonNeume() {
+    return this.gorgonNeumeValue;
+  }
+
+  public get vocalExpressionNeume() {
+    return this.vocalExpressionNeumeValue;
+  }
+
+  public get accidental() {
+    return this.accidentalValue;
+  }
+
+  public get fthora() {
+    return this.fthoraValue;
+  }
+
+  public set quantitativeNeume(neume: QuantitativeNeume) {
+    this.quantitativeNeumeValue = neume;
+    this.replaceNeumes();
+  }
+
+  public set timeNeume(neume: TimeNeume | null) {
+    this.timeNeumeValue = neume;
+    this.replaceNeumes();
+  }
+
+  public set gorgonNeume(neume: GorgonNeume | null) {
+    this.gorgonNeumeValue = neume;
+    this.replaceNeumes();
+  }
+
+  public set vocalExpressionNeume(neume: VocalExpressionNeume | null) {
+    this.vocalExpressionNeumeValue = neume;
+    this.replaceNeumes();
+  }
+
+  public set accidental(neume: Accidental | null) {
+    this.accidentalValue = neume;
+    this.replaceNeumes();
+  }
+
+  public set fthora(neume: Fthora | null) {
+    this.fthoraValue = neume;
+    this.replaceNeumes();
+  }
 
   // Used for display
   public melismaText: string = '';
   public melismaOffsetLeft: number | null = null;
   public neumeWidth: number = 0;
   public lyricsWidth: number = 0;
-
-  public setQuantitativeNeume(neume: QuantitativeNeume) {
-    this.quantitativeNeume = neume;
-    this.replaceNeumes();
-  }
-
-  public setTimeNeume(neume: TimeNeume | null) {
-    this.timeNeume = neume;
-    this.replaceNeumes();
-  }
-
-  public setGorgonNeume(neume: GorgonNeume | null) {
-    this.gorgonNeume = neume;
-    this.replaceNeumes();
-  }
-
-  public setVocalExpressionNeume(neume: VocalExpressionNeume | null) {
-    this.vocalExpressionNeume = neume;
-    this.replaceNeumes();
-  }
-
-  public setAccidental(neume: Accidental | null) {
-    this.accidental = neume;
-    this.replaceNeumes();
-  }
-
-  public setFthora(neume: Fthora | null) {
-    this.fthora = neume;
-    this.replaceNeumes();
-  }
 
   private replaceNeumes() {
     this.replaceQuantitativeNeumes();
@@ -119,7 +143,7 @@ export class NoteElement extends ScoreElement {
           );
 
         if (replacement) {
-          this.setGorgonNeume(replacement.replaceWith);
+          this.gorgonNeume = replacement.replaceWith;
         }
       }
     }
@@ -142,7 +166,7 @@ export class NoteElement extends ScoreElement {
           );
 
         if (replacement) {
-          this.setTimeNeume(replacement.replaceWith);
+          this.timeNeume = replacement.replaceWith;
         }
       }
     }
@@ -165,7 +189,7 @@ export class NoteElement extends ScoreElement {
           );
 
         if (replacement) {
-          this.setFthora(replacement.replaceWith);
+          this.fthora = replacement.replaceWith;
         }
       }
     }
@@ -190,7 +214,7 @@ export class NoteElement extends ScoreElement {
           );
 
         if (replacement) {
-          this.setVocalExpressionNeume(replacement.replaceWith);
+          this.vocalExpressionNeume = replacement.replaceWith;
         }
       }
     }
@@ -218,7 +242,7 @@ export class NoteElement extends ScoreElement {
           );
 
         if (replacement) {
-          this.setQuantitativeNeume(replacement.replaceWith!);
+          this.quantitativeNeume = replacement.replaceWith!;
         }
       }
     }

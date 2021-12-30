@@ -7,7 +7,6 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 import { Neume as NeumeType } from '@/models/Neumes';
 import { neumeMap } from '@/models/NeumeMappings';
 import { ScoreElementOffset } from '@/models/Element';
-import { store } from '@/store';
 import { withZoom } from '@/utils/withZoom';
 
 @Component

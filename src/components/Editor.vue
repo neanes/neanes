@@ -51,6 +51,7 @@
                   <SyllableNeumeBox
                     class="syllable-box"
                     :note="element"
+                    :pageSetup="score.pageSetup"
                     :class="[{ selected: element == selectedElement }]"
                     @click.native="selectedElement = element"
                   ></SyllableNeumeBox>
@@ -93,6 +94,7 @@
                     :ref="`element-${getElementIndex(element)}`"
                     class="marytria-neume-box"
                     :neume="element"
+                    :pageSetup="score.pageSetup"
                     :class="[{ selected: element == selectedElement }]"
                     @click.native="selectedElement = element"
                   ></MartyriaNeumeBox>
@@ -111,6 +113,7 @@
                   <TempoNeumeBox
                     class="tempo-neume-box"
                     :neume="element"
+                    :pageSetup="score.pageSetup"
                     :class="[{ selected: element == selectedElement }]"
                     @click.native="selectedElement = element"
                   ></TempoNeumeBox>
@@ -138,6 +141,7 @@
                 <TextBox
                   :ref="`element-${getElementIndex(element)}`"
                   :element="element"
+                  :pageSetup="score.pageSetup"
                   :class="[{ selectedTextbox: element == selectedElement }]"
                   @click.native="selectedElement = element"
                   @update:content="updateTextBoxContent(element, $event)"
@@ -148,6 +152,7 @@
                 <ModeKey
                   :ref="`element-${getElementIndex(element)}`"
                   :element="element"
+                  :pageSetup="score.pageSetup"
                   :class="[{ selectedTextbox: element == selectedElement }]"
                   @click.native="selectedElement = element"
                   @dblclick.native="openModeKeyDialog"
@@ -158,6 +163,7 @@
                 <DropCap
                   :ref="`element-${getElementIndex(element)}`"
                   :element="element"
+                  :pageSetup="score.pageSetup"
                   @click.native="selectedElement = element"
                   @update:content="
                     updateDropCapContent(selectedElement, $event)

@@ -136,7 +136,7 @@ export default class StaffText extends Vue {
     }
 
     if (e.code == 'Delete' && !this.editable) {
-      store.mutations.removeElement(this.element);
+      //store.mutations.removeElement(this.element);
       e.preventDefault();
     }
   }
@@ -145,7 +145,7 @@ export default class StaffText extends Vue {
     this.element.text = text;
 
     if (text.trim() === '') {
-      store.mutations.removeElement(this.element);
+      //store.mutations.removeElement(this.element);
     }
   }
 }

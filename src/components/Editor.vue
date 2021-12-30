@@ -151,13 +151,6 @@
                 >
                 </ModeKey>
               </template>
-              <template v-if="isStaffTextElement(element)">
-                <StaffText
-                  :ref="`element-${getElementIndex(element)}`"
-                  :element="element"
-                >
-                </StaffText>
-              </template>
               <template v-if="isDropCapElement(element)">
                 <DropCap
                   :ref="`element-${getElementIndex(element)}`"
@@ -379,6 +372,11 @@ export default class Editor extends Vue {
     this.deleteSelectedElement,
   );
 
+  deletePreviousElementThrottled = throttle(
+    this.keydownThrottleIntervalMs,
+    this.deletePreviousElement,
+  );
+
   onFileMenuUndoThrottled = throttle(
     this.keydownThrottleIntervalMs,
     this.onFileMenuUndo,
@@ -581,53 +579,56 @@ export default class Editor extends Vue {
       return;
     }
 
-    // Replacing the last element is not allowed
-    if (
-      this.entryMode === EntryMode.Edit &&
-      this.isLastElement(this.selectedElement)
-    ) {
-      return;
-    }
-
     const element = new NoteElement();
     element.quantitativeNeume = quantitativeNeume;
 
-    if (this.entryMode === EntryMode.Auto) {
-      this.moveRight();
+    switch (this.entryMode) {
+      case EntryMode.Auto:
+        if (!this.isLastElement(this.selectedElement) && !this.moveRight()) {
+          return;
+        }
 
-      if (this.isLastElement(this.selectedElement)) {
-        this.addScoreElement(element, store.getters.selectedElementIndex);
+        if (this.isLastElement(this.selectedElement)) {
+          this.addScoreElement(element, store.getters.selectedElementIndex);
+          this.selectedElement = element;
+        } else {
+          if (this.selectedElement.elementType === ElementType.Note) {
+            this.updateNote(this.selectedElement as NoteElement, {
+              quantitativeNeume,
+            });
+          } else {
+            this.selectedElement = this.switchToSyllable(
+              this.selectedElement,
+              element,
+            );
+          }
+        }
+        break;
+      case EntryMode.Insert:
+        if (this.isLastElement(this.selectedElement)) {
+          this.addScoreElement(element, store.getters.selectedElementIndex);
+        } else {
+          this.addScoreElement(element, store.getters.selectedElementIndex + 1);
+        }
         this.selectedElement = element;
-      } else {
-        if (this.selectedElement.elementType === ElementType.Note) {
+        break;
+
+      case EntryMode.Edit:
+        if (this.isLastElement(this.selectedElement)) {
+          this.addScoreElement(element, store.getters.selectedElementIndex);
+        } else if (this.selectedElement.elementType === ElementType.Note) {
           this.updateNote(this.selectedElement as NoteElement, {
             quantitativeNeume,
           });
-        } else {
+        } else if (
+          this.navigableElements.includes(this.selectedElement.elementType)
+        ) {
           this.selectedElement = this.switchToSyllable(
             this.selectedElement,
             element,
           );
         }
-      }
-    } else if (this.entryMode === EntryMode.Insert) {
-      if (this.isLastElement(this.selectedElement)) {
-        this.addScoreElement(element, store.getters.selectedElementIndex);
-      } else {
-        this.addScoreElement(element, store.getters.selectedElementIndex + 1);
-      }
-      this.selectedElement = element;
-    } else if (this.entryMode === EntryMode.Edit) {
-      if (this.selectedElement.elementType === ElementType.Note) {
-        this.updateNote(this.selectedElement as NoteElement, {
-          quantitativeNeume,
-        });
-      } else {
-        this.selectedElement = this.switchToSyllable(
-          this.selectedElement,
-          element,
-        );
-      }
+        break;
     }
 
     this.save();
@@ -638,38 +639,36 @@ export default class Editor extends Vue {
       return;
     }
 
-    // Replacing the last element is not allowed
-    if (
-      this.entryMode === EntryMode.Edit &&
-      this.isLastElement(this.selectedElement)
-    ) {
-      return;
-    }
-
     const element = new MartyriaElement();
 
-    if (this.entryMode === EntryMode.Auto) {
-      this.moveRight();
+    switch (this.entryMode) {
+      case EntryMode.Auto:
+        this.moveRight();
 
-      if (this.isLastElement(this.selectedElement)) {
-        this.addScoreElement(element, store.getters.selectedElementIndex);
+        if (this.isLastElement(this.selectedElement)) {
+          this.addScoreElement(element, store.getters.selectedElementIndex);
+          this.selectedElement = element;
+        } else {
+          if (this.selectedElement.elementType != ElementType.Martyria) {
+            this.selectedElement = this.switchToMartyria(this.selectedElement);
+          }
+        }
+        break;
+      case EntryMode.Insert:
+        if (this.isLastElement(this.selectedElement)) {
+          this.addScoreElement(element, store.getters.selectedElementIndex);
+        } else {
+          this.addScoreElement(element, store.getters.selectedElementIndex + 1);
+        }
         this.selectedElement = element;
-      } else {
-        if (this.selectedElement.elementType != ElementType.Martyria) {
+        break;
+      case EntryMode.Edit:
+        if (this.isLastElement(this.selectedElement)) {
+          this.addScoreElement(element, store.getters.selectedElementIndex);
+        } else if (this.selectedElement.elementType != ElementType.Martyria) {
           this.selectedElement = this.switchToMartyria(this.selectedElement);
         }
-      }
-    } else if (this.entryMode === EntryMode.Insert) {
-      if (this.isLastElement(this.selectedElement)) {
-        this.addScoreElement(element, store.getters.selectedElementIndex);
-      } else {
-        this.addScoreElement(element, store.getters.selectedElementIndex + 1);
-      }
-      this.selectedElement = element;
-    } else if (this.entryMode === EntryMode.Edit) {
-      if (this.selectedElement.elementType != ElementType.Martyria) {
-        this.selectedElement = this.switchToMartyria(this.selectedElement);
-      }
+        break;
     }
 
     this.save();
@@ -680,25 +679,41 @@ export default class Editor extends Vue {
       return;
     }
 
-    // Replacing the last element is not allowed
-    if (
-      this.entryMode === EntryMode.Edit &&
-      this.isLastElement(this.selectedElement)
-    ) {
-      return;
-    }
-
     const element = new TempoElement();
     element.neume = neume;
 
-    if (this.entryMode === EntryMode.Auto) {
-      this.moveRight();
+    switch (this.entryMode) {
+      case EntryMode.Auto:
+        this.moveRight();
 
-      if (this.isLastElement(this.selectedElement)) {
-        this.addScoreElement(element, store.getters.selectedElementIndex);
+        if (this.isLastElement(this.selectedElement)) {
+          this.addScoreElement(element, store.getters.selectedElementIndex);
+          this.selectedElement = element;
+        } else {
+          if (this.selectedElement.elementType === ElementType.Tempo) {
+            this.updateTempo(this.selectedElement as TempoElement, {
+              neume,
+            });
+          } else {
+            this.selectedElement = this.switchToTempo(
+              this.selectedElement,
+              element,
+            );
+          }
+        }
+        break;
+      case EntryMode.Insert:
+        if (this.isLastElement(this.selectedElement)) {
+          this.addScoreElement(element, store.getters.selectedElementIndex);
+        } else {
+          this.addScoreElement(element, store.getters.selectedElementIndex + 1);
+        }
         this.selectedElement = element;
-      } else {
-        if (this.selectedElement.elementType === ElementType.Tempo) {
+        break;
+      case EntryMode.Edit:
+        if (this.isLastElement(this.selectedElement)) {
+          this.addScoreElement(element, store.getters.selectedElementIndex);
+        } else if (this.selectedElement.elementType === ElementType.Tempo) {
           this.updateTempo(this.selectedElement as TempoElement, {
             neume,
           });
@@ -708,25 +723,7 @@ export default class Editor extends Vue {
             element,
           );
         }
-      }
-    } else if (this.entryMode === EntryMode.Insert) {
-      if (this.isLastElement(this.selectedElement)) {
-        this.addScoreElement(element, store.getters.selectedElementIndex);
-      } else {
-        this.addScoreElement(element, store.getters.selectedElementIndex + 1);
-      }
-      this.selectedElement = element;
-    } else if (this.entryMode === EntryMode.Edit) {
-      if (this.selectedElement.elementType === ElementType.Tempo) {
-        this.updateTempo(this.selectedElement as TempoElement, {
-          neume,
-        });
-      } else {
-        this.selectedElement = this.switchToTempo(
-          this.selectedElement,
-          element,
-        );
-      }
+        break;
     }
 
     this.save();
@@ -812,10 +809,6 @@ export default class Editor extends Vue {
     return element.elementType == ElementType.TextBox;
   }
 
-  isStaffTextElement(element: ScoreElement) {
-    return element.elementType == ElementType.StaffText;
-  }
-
   isDropCapElement(element: ScoreElement) {
     return element.elementType == ElementType.DropCap;
   }
@@ -874,12 +867,10 @@ export default class Editor extends Vue {
         break;
       case 'Backspace':
         handled = true;
-        // TODO fix this so it deletes the previous element
-        this.deleteSelectedElementThrottled();
+        this.deletePreviousElementThrottled();
         break;
       case 'Delete':
         handled = true;
-
         this.deleteSelectedElementThrottled();
         break;
     }
@@ -1315,17 +1306,30 @@ export default class Editor extends Vue {
   }
 
   deleteSelectedElement() {
-    if (this.selectedElement) {
-      const index = this.elements.indexOf(this.selectedElement);
+    if (this.selectedElement && !this.isLastElement(this.selectedElement)) {
+      const index = store.getters.selectedElementIndex;
 
-      if (this.selectedElement && index !== this.elements.length - 1) {
-        this.moveLeft();
+      this.removeScoreElement(this.selectedElement);
 
-        if (index > -1) {
-          this.elements.splice(index, 1);
-          this.save();
-        }
-      }
+      this.selectedElement = this.elements[index];
+
+      this.save();
+    }
+  }
+
+  deletePreviousElement() {
+    if (
+      this.selectedElement &&
+      store.getters.selectedElementIndex > 0 &&
+      this.navigableElements.includes(
+        this.elements[store.getters.selectedElementIndex - 1].elementType,
+      )
+    ) {
+      this.removeScoreElement(
+        this.elements[store.getters.selectedElementIndex - 1],
+      );
+
+      this.save();
     }
   }
 

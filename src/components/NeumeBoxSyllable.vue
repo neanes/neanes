@@ -56,8 +56,8 @@ import {
   NeumeAdjustmentOffset,
 } from '@/models/NeumeAdjustments';
 import Neume from '@/components/Neume.vue';
-import { store } from '@/store';
 import { withZoom } from '@/utils/withZoom';
+import { PageSetup } from '@/models/PageSetup';
 
 @Component({
   components: {
@@ -66,10 +66,7 @@ import { withZoom } from '@/utils/withZoom';
 })
 export default class NeumeBoxSyllable extends Vue {
   @Prop() note!: NoteElement;
-
-  get pageSetup() {
-    return store.state.score.pageSetup;
-  }
+  @Prop() pageSetup!: PageSetup;
 
   get hasVocalExpressionNeume() {
     return this.note.vocalExpressionNeume != null;

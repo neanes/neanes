@@ -398,12 +398,10 @@ export default class NeumeToolbar extends Vue {
 
   private setAccidental(neume: Accidental) {
     if (this.element.accidental != null && this.element.accidental === neume) {
-      this.element.setAccidental(null);
+      this.$emit('update:accidental', null);
     } else {
-      this.element.setAccidental(neume);
+      this.$emit('update:accidental', neume);
     }
-
-    this.$emit('scoreUpdated');
   }
 
   private setTimeNeume(neume: TimeNeume) {
@@ -411,12 +409,10 @@ export default class NeumeToolbar extends Vue {
       this.element.timeNeume != null &&
       areTimeNeumesEquivalent(neume, this.element.timeNeume)
     ) {
-      this.element.setTimeNeume(null);
+      this.$emit('update:time', null);
     } else {
-      this.element.setTimeNeume(neume);
+      this.$emit('update:time', neume);
     }
-
-    this.$emit('scoreUpdated');
   }
 
   private setGorgonNeume(neume: GorgonNeume) {
@@ -424,12 +420,10 @@ export default class NeumeToolbar extends Vue {
       this.element.gorgonNeume != null &&
       areGorgonsEquivalent(neume, this.element.gorgonNeume)
     ) {
-      this.element.setGorgonNeume(null);
+      this.$emit('update:gorgon', null);
     } else {
-      this.element.setGorgonNeume(neume);
+      this.$emit('update:gorgon', neume);
     }
-
-    this.$emit('scoreUpdated');
   }
 
   private setVocalExpression(neume: VocalExpressionNeume) {
@@ -437,22 +431,18 @@ export default class NeumeToolbar extends Vue {
       this.element.vocalExpressionNeume != null &&
       areVocalExpressionsEquivalent(neume, this.element.vocalExpressionNeume)
     ) {
-      this.element.setVocalExpressionNeume(null);
+      this.$emit('update:expression', null);
     } else {
-      this.element.setVocalExpressionNeume(neume);
+      this.$emit('update:expression', neume);
     }
-
-    this.$emit('scoreUpdated');
   }
 
   private setMeasureBar(neume: MeasureBar) {
     if (neume === this.element.measureBar) {
-      this.element.measureBar = null;
+      this.$emit('update:measureBar', null);
     } else {
-      this.element.measureBar = neume;
+      this.$emit('update:measureBar', neume);
     }
-
-    this.$emit('scoreUpdated');
   }
 
   private setFthora(neumes: Fthora[]) {
@@ -461,7 +451,7 @@ export default class NeumeToolbar extends Vue {
     for (let neume of neumes) {
       // If previous neume was matched, set to the next neume in the cycle
       if (equivalent) {
-        this.element.setFthora(neume);
+        this.$emit('update:fthora', neume);
         return;
       }
 
@@ -475,12 +465,10 @@ export default class NeumeToolbar extends Vue {
     // fthora neumes. Otherwise set fthora to the first neume
     // in the cycle.
     if (equivalent) {
-      this.element.setFthora(null);
+      this.$emit('update:fthora', null);
     } else {
-      this.element.setFthora(neumes[0]);
+      this.$emit('update:fthora', neumes[0]);
     }
-
-    this.$emit('scoreUpdated');
   }
 }
 </script>

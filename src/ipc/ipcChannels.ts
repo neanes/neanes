@@ -4,7 +4,9 @@ export enum IpcMainChannels {
   FileMenuSave = 'FileMenuSave',
   FileMenuSaveAs = 'FileMenuSaveAs',
 
-  FileMenuInsertNeume = 'FileMenuInsertNeume',
+  FileMenuUndo = 'FileMenuUndo',
+  FileMenuRedo = 'FileMenuRedo',
+
   FileMenuInsertTextBox = 'FileMenuInsertTextBox',
   FileMenuInsertModeKey = 'FileMenuInsertModeKey',
   FileMenuInsertDropCap = 'FileMenuInsertDropCap',
@@ -20,6 +22,9 @@ export enum IpcRendererChannels {
 
   SetHasUnsavedChanges = 'SetHasUnsavedChanges',
   SetFilePath = 'SetFilePath',
+
+  SetCanUndo = 'SetCanUndo',
+  SetCanRedo = 'SetCanRedo',
 }
 
 export interface FileMenuOpenScoreArgs {

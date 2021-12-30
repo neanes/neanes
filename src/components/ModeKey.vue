@@ -41,8 +41,8 @@ import {
   getQuantitativeNeumeAdjustments,
   NeumeAdjustmentOffset,
 } from '@/models/NeumeAdjustments';
-import { store } from '@/store';
 import { withZoom } from '@/utils/withZoom';
+import { PageSetup } from '@/models/PageSetup';
 
 @Component({
   components: {
@@ -51,11 +51,8 @@ import { withZoom } from '@/utils/withZoom';
 })
 export default class ModeKey extends Vue {
   @Prop() element!: ModeKeyElement;
+  @Prop() pageSetup!: PageSetup;
   ModeSign = ModeSign;
-
-  get pageSetup() {
-    return store.state.score.pageSetup;
-  }
 
   get hasFthora() {
     return this.element.fthora != null;

@@ -4,21 +4,17 @@
       ref="text"
       class="text-box"
       :content="element.content"
-      :class="[{ selected: element == selectedElement }]"
-      @blur="updateText($event)"
+      @blur="updateContent($event)"
     ></ContentEditable>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
-import { Neume as NeumeType } from '@/models/Neumes';
-import { ScoreElement, TextBoxAlignment } from '@/models/Element';
-import { neumeMap } from '@/models/NeumeMappings';
 import { TextBoxElement } from '@/models/Element';
 import ContentEditable from '@/components/ContentEditable.vue';
-import { store } from '@/store';
 import { withZoom } from '@/utils/withZoom';
+import { PageSetup } from '@/models/PageSetup';
 
 @Component({
   components: {
@@ -27,20 +23,7 @@ import { withZoom } from '@/utils/withZoom';
 })
 export default class TextBox extends Vue {
   @Prop() element!: TextBoxElement;
-
-  editable: boolean = false;
-
-  get pageSetup() {
-    return store.state.score.pageSetup;
-  }
-
-  get selectedElement() {
-    return store.state.selectedElement;
-  }
-
-  set selectedElement(element: ScoreElement | null) {
-    store.mutations.setSelectedElement(element);
-  }
+  @Prop() pageSetup!: PageSetup;
 
   get textElement() {
     return this.$refs.text as ContentEditable;
@@ -58,9 +41,13 @@ export default class TextBox extends Vue {
     return style;
   }
 
-  updateText(text: string) {
-    this.element.content = text;
-    this.$emit('scoreUpdated');
+  updateContent(content: string) {
+    // Nothing actually changed, so do nothing
+    if (this.element.content === content) {
+      return;
+    }
+
+    this.$emit('update:content', content);
   }
 
   focus() {

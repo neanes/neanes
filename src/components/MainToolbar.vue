@@ -35,31 +35,28 @@
     <span class="space"></span>
     <button
       class="neume-button"
-      @click="$emit('updateTempo', TempoSign.VerySlow)"
+      @click="$emit('add-tempo', TempoSign.VerySlow)"
     >
       <Neume class="red neume tempo" :neume="TempoSign.VerySlow" />
     </button>
-    <button class="neume-button" @click="$emit('updateTempo', TempoSign.Slow)">
+    <button class="neume-button" @click="$emit('add-tempo', TempoSign.Slow)">
       <Neume class="red neume tempo" :neume="TempoSign.Slow" />
     </button>
-    <button
-      class="neume-button"
-      @click="$emit('updateTempo', TempoSign.Medium)"
-    >
+    <button class="neume-button" @click="$emit('add-tempo', TempoSign.Medium)">
       <Neume class="red neume tempo" :neume="TempoSign.Medium" />
     </button>
     <button
       class="neume-button"
-      @click="$emit('updateTempo', TempoSign.Moderate)"
+      @click="$emit('add-tempo', TempoSign.Moderate)"
     >
       <Neume class="red neume tempo" :neume="TempoSign.Moderate" />
     </button>
-    <button class="neume-button" @click="$emit('updateTempo', TempoSign.Quick)">
+    <button class="neume-button" @click="$emit('add-tempo', TempoSign.Quick)">
       <Neume class="red neume tempo" :neume="TempoSign.Quick" />
     </button>
     <button
       class="neume-button"
-      @click="$emit('updateTempo', TempoSign.VeryQuick)"
+      @click="$emit('add-tempo', TempoSign.VeryQuick)"
     >
       <Neume class="red neume tempo" :neume="TempoSign.VeryQuick" />
     </button>
@@ -111,7 +108,6 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
-import { NoteElement } from '@/models/Element';
 import { Note, RootSign, TempoSign } from '@/models/Neumes';
 import Neume from './Neume.vue';
 import { EntryMode } from './Editor.vue';
@@ -121,8 +117,7 @@ import { EntryMode } from './Editor.vue';
     Neume,
   },
 })
-export default class NeumeToolbar extends Vue {
-  @Prop() element!: NoteElement;
+export default class MainToolbar extends Vue {
   @Prop() entryMode!: EntryMode;
   @Prop() zoom!: number;
   Note = Note;

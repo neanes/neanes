@@ -63,7 +63,7 @@
               :class="{ selected: selectedModeKey === template }"
               :key="index"
             >
-              <ModeKey :element="template" />
+              <ModeKey :element="template" :pageSetup="pageSetup" />
             </li>
           </ul>
         </div>
@@ -88,17 +88,19 @@ import { ModeKeyElement, TextBoxAlignment } from '@/models/Element';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import ModalDialog from '@/components/ModalDialog.vue';
 import ModeKey from '@/components/ModeKey.vue';
+import { PageSetup } from '@/models/PageSetup';
 
 @Component({
   components: { ModalDialog, ModeKey },
 })
 export default class ModeKeyDialog extends Vue {
   @Prop() element!: ModeKeyElement;
+  @Prop() pageSetup!: PageSetup;
   private selectedMode: number | null = null;
   private selectedModeKey: ModeKeyElement | null = null;
 
   created() {
-    this.selectedMode = this.element.mode;
+    this.selectMode(this.element.mode);
   }
 
   get modeKeyTemplatesForSelectedMode() {

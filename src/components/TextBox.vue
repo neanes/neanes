@@ -4,7 +4,6 @@
       ref="text"
       class="text-box"
       :content="element.content"
-      :class="[{ selected: element == selectedElement }]"
       @blur="updateContent($event)"
     ></ContentEditable>
   </div>
@@ -14,8 +13,8 @@
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { TextBoxElement } from '@/models/Element';
 import ContentEditable from '@/components/ContentEditable.vue';
-import { store } from '@/store';
 import { withZoom } from '@/utils/withZoom';
+import { PageSetup } from '@/models/PageSetup';
 
 @Component({
   components: {
@@ -24,16 +23,7 @@ import { withZoom } from '@/utils/withZoom';
 })
 export default class TextBox extends Vue {
   @Prop() element!: TextBoxElement;
-
-  editable: boolean = false;
-
-  get pageSetup() {
-    return store.state.score.pageSetup;
-  }
-
-  get selectedElement() {
-    return store.state.selectedElement;
-  }
+  @Prop() pageSetup!: PageSetup;
 
   get textElement() {
     return this.$refs.text as ContentEditable;

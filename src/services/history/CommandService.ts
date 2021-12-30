@@ -1,3 +1,5 @@
+import { EventBus } from '@/eventBus';
+import { IpcRendererChannels } from '@/ipc/ipcChannels';
 import {
   AddToCollectionCommand,
   AddToCollectionCommandArgs,
@@ -60,6 +62,23 @@ export class CommandService {
   private commandHistory: Command[] = [];
   private index: number = -1;
 
+  constructor() {
+    this.notify();
+  }
+
+  private get canUndo() {
+    return this.index > -1;
+  }
+
+  private get canRedo() {
+    return this.index < this.commandHistory.length - 1;
+  }
+
+  private notify() {
+    EventBus.$emit(IpcRendererChannels.SetCanUndo, this.canUndo);
+    EventBus.$emit(IpcRendererChannels.SetCanRedo, this.canRedo);
+  }
+
   public execute(command: Command) {
     command!.execute();
 
@@ -68,12 +87,16 @@ export class CommandService {
     this.commandHistory = this.commandHistory.slice(0, this.index + 1);
     this.commandHistory.push(command!);
     this.index++;
+
+    this.notify();
   }
 
   public undo() {
     if (this.index >= 0) {
       this.commandHistory[this.index].undo();
       this.index--;
+
+      this.notify();
     }
   }
 
@@ -81,11 +104,15 @@ export class CommandService {
     if (this.index < this.commandHistory.length - 1) {
       this.index++;
       this.commandHistory[this.index].redo();
+
+      this.notify();
     }
   }
 
   public clearHistory() {
     this.commandHistory.splice(0, this.commandHistory.length);
     this.index = -1;
+
+    this.notify();
   }
 }

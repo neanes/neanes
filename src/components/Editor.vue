@@ -593,9 +593,14 @@ export default class Editor extends Vue {
           this.selectedElement = element;
         } else {
           if (this.selectedElement.elementType === ElementType.Note) {
-            this.updateNote(this.selectedElement as NoteElement, {
-              quantitativeNeume,
-            });
+            if (
+              (this.selectedElement as NoteElement).quantitativeNeume !==
+              quantitativeNeume
+            ) {
+              this.updateNote(this.selectedElement as NoteElement, {
+                quantitativeNeume,
+              });
+            }
           } else {
             this.selectedElement = this.switchToSyllable(
               this.selectedElement,
@@ -617,9 +622,14 @@ export default class Editor extends Vue {
         if (this.isLastElement(this.selectedElement)) {
           this.addScoreElement(element, store.getters.selectedElementIndex);
         } else if (this.selectedElement.elementType === ElementType.Note) {
-          this.updateNote(this.selectedElement as NoteElement, {
-            quantitativeNeume,
-          });
+          if (
+            (this.selectedElement as NoteElement).quantitativeNeume !==
+            quantitativeNeume
+          ) {
+            this.updateNote(this.selectedElement as NoteElement, {
+              quantitativeNeume,
+            });
+          }
         } else if (
           this.navigableElements.includes(this.selectedElement.elementType)
         ) {
@@ -691,9 +701,11 @@ export default class Editor extends Vue {
           this.selectedElement = element;
         } else {
           if (this.selectedElement.elementType === ElementType.Tempo) {
-            this.updateTempo(this.selectedElement as TempoElement, {
-              neume,
-            });
+            if ((this.selectedElement as TempoElement).neume !== neume) {
+              this.updateTempo(this.selectedElement as TempoElement, {
+                neume,
+              });
+            }
           } else {
             this.selectedElement = this.switchToTempo(
               this.selectedElement,
@@ -714,9 +726,11 @@ export default class Editor extends Vue {
         if (this.isLastElement(this.selectedElement)) {
           this.addScoreElement(element, store.getters.selectedElementIndex);
         } else if (this.selectedElement.elementType === ElementType.Tempo) {
-          this.updateTempo(this.selectedElement as TempoElement, {
-            neume,
-          });
+          if ((this.selectedElement as TempoElement).neume !== neume) {
+            this.updateTempo(this.selectedElement as TempoElement, {
+              neume,
+            });
+          }
         } else {
           this.selectedElement = this.switchToTempo(
             this.selectedElement,
@@ -1152,6 +1166,17 @@ export default class Editor extends Vue {
     } else {
       isMelisma = false;
       isMelismaStart = false;
+    }
+
+    // If nothing changed, return. This could happen if
+    // the user types in an underscore wen the element is
+    // already a melisma
+    if (
+      element.lyrics === lyrics &&
+      element.isMelismaStart === isMelismaStart &&
+      element.isMelisma === isMelisma
+    ) {
+      return;
     }
 
     this.commandService.execute(

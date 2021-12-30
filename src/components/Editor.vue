@@ -226,6 +226,7 @@
     <ModeKeyDialog
       v-if="modeKeyDialogIsOpen"
       :element="selectedElement"
+      :pageSetup="score.pageSetup"
       @update="updateModeKeyFromTemplate(selectedElement, $event)"
       @close="closeModeKeyDialog"
     />

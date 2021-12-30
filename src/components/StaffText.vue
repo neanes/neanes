@@ -5,7 +5,6 @@
       class="staff-text"
       :style="style"
       :content="element.text"
-      :class="[{ selected: element == selectedElement }]"
       :editable="editable"
       @dblclick.native="handleDoubleClick"
       @mousedown.native="handleMouseDown"
@@ -16,9 +15,7 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
-import { Neume as NeumeType } from '@/models/Neumes';
 import { ScoreElement } from '@/models/Element';
-import { neumeMap } from '@/models/NeumeMappings';
 import { StaffTextElement } from '@/models/Element';
 import ContentEditable from '@/components/ContentEditable.vue';
 import { store } from '@/store';

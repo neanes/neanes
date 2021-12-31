@@ -1,8 +1,9 @@
 <template>
-  <div class="text-box-container" :style="style">
+  <div class="text-box-container" :style="containerStyle">
     <ContentEditable
       ref="text"
       class="text-box"
+      :style="textBoxStyle"
       :content="element.content"
       @blur="updateContent($event)"
     ></ContentEditable>
@@ -29,13 +30,23 @@ export default class TextBox extends Vue {
     return this.$refs.text as ContentEditable;
   }
 
-  get style() {
+  get containerStyle() {
     const style: any = {
       color: this.element.color,
       fontFamily: this.element.fontFamily,
       fontSize: withZoom(this.element.fontSize),
       textAlign: this.element.alignment,
       width: withZoom(this.pageSetup.innerPageWidth),
+      height: withZoom(this.element.height),
+    };
+
+    return style;
+  }
+
+  get textBoxStyle() {
+    const style: any = {
+      width: withZoom(this.pageSetup.innerPageWidth),
+      height: withZoom(this.element.height),
     };
 
     return style;
@@ -60,11 +71,10 @@ export default class TextBox extends Vue {
 .text-box-container {
   border: 1px dotted black;
   box-sizing: border-box;
+  padding: 1px;
 }
 
 .text-box {
-  height: 100%;
-  width: 100%;
   display: block;
 
   min-height: 10px;

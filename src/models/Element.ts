@@ -316,11 +316,9 @@ export class ModeKeyElement extends ScoreElement {
   }
 
   public get height() {
-    return Math.ceil(
-      Math.max(
-        TextMeasurementService.getFontHeight(`${this.fontSize}px Oxeia`),
-        TextMeasurementService.getFontHeight(`${this.fontSize}px EzSpecial2`),
-      ),
+    return Math.max(
+      TextMeasurementService.getFontHeight(`${this.fontSize}px Oxeia`),
+      TextMeasurementService.getFontHeight(`${this.fontSize}px EzSpecial2`),
     );
   }
 

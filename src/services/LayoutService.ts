@@ -93,7 +93,7 @@ export class LayoutService {
         }
 
         // Height should be at least the font height
-        textBoxElement.height = Math.max(Math.ceil(height), fontHeight);
+        textBoxElement.height = Math.max(height, fontHeight);
       }
 
       if (element.elementType === ElementType.ModeKey) {
@@ -111,21 +111,17 @@ export class LayoutService {
           noteElement.vocalExpressionNeume === VocalExpressionNeume.Vareia
         ) {
           const vareiaMapping = neumeMap.get(VocalExpressionNeume.Vareia)!;
-          vareiaWidth = Math.ceil(
-            TextMeasurementService.getTextWidth(
-              vareiaMapping.text,
-              `${pageSetup.neumeDefaultFontSize}px ${vareiaMapping.fontFamily}`,
-            ),
+          vareiaWidth = TextMeasurementService.getTextWidth(
+            vareiaMapping.text,
+            `${pageSetup.neumeDefaultFontSize}px ${vareiaMapping.fontFamily}`,
           );
         }
 
         if (noteElement.measureBar != null) {
           const measureBarMapping = neumeMap.get(noteElement.measureBar)!;
-          measureBarWidth = Math.ceil(
-            TextMeasurementService.getTextWidth(
-              measureBarMapping.text,
-              `${pageSetup.neumeDefaultFontSize}px ${measureBarMapping.fontFamily}`,
-            ),
+          measureBarWidth = TextMeasurementService.getTextWidth(
+            measureBarMapping.text,
+            `${pageSetup.neumeDefaultFontSize}px ${measureBarMapping.fontFamily}`,
           );
         }
 
@@ -134,14 +130,10 @@ export class LayoutService {
           `${pageSetup.neumeDefaultFontSize}px ${mapping.fontFamily}`,
         );
 
-        noteElement.neumeWidth = Math.ceil(
-          neumeWidth + vareiaWidth + measureBarWidth,
-        );
-        noteElement.lyricsWidth = Math.ceil(
-          TextMeasurementService.getTextWidth(
-            noteElement.lyrics,
-            `${pageSetup.lyricsDefaultFontSize}px ${pageSetup.lyricsDefaultFontFamily}`,
-          ),
+        noteElement.neumeWidth = neumeWidth + vareiaWidth + measureBarWidth;
+        noteElement.lyricsWidth = TextMeasurementService.getTextWidth(
+          noteElement.lyrics,
+          `${pageSetup.lyricsDefaultFontSize}px ${pageSetup.lyricsDefaultFontFamily}`,
         );
 
         elementWidthPx = Math.max(
@@ -162,39 +154,36 @@ export class LayoutService {
           ? neumeMap.get(martyriaElement.measureBar)!
           : null;
 
-        elementWidthPx = Math.ceil(
+        elementWidthPx =
           TextMeasurementService.getTextWidth(
             mappingNote.text,
             `${pageSetup.neumeDefaultFontSize}px ${mappingNote.fontFamily}`,
           ) +
-            TextMeasurementService.getTextWidth(
-              mappingRoot.text,
-              `${pageSetup.neumeDefaultFontSize}px ${mappingRoot.fontFamily}`,
-            ) +
-            (martyriaElement.apostrophe
-              ? TextMeasurementService.getTextWidth(
-                  mappingApostrophe.text,
-                  `${pageSetup.neumeDefaultFontSize}px ${mappingApostrophe.fontFamily}`,
-                )
-              : 0) +
-            (martyriaElement.measureBar
-              ? TextMeasurementService.getTextWidth(
-                  mappingMeasureBar!.text,
-                  `${pageSetup.neumeDefaultFontSize}px ${
-                    mappingMeasureBar!.fontFamily
-                  }`,
-                )
-              : 0),
-        );
+          TextMeasurementService.getTextWidth(
+            mappingRoot.text,
+            `${pageSetup.neumeDefaultFontSize}px ${mappingRoot.fontFamily}`,
+          ) +
+          (martyriaElement.apostrophe
+            ? TextMeasurementService.getTextWidth(
+                mappingApostrophe.text,
+                `${pageSetup.neumeDefaultFontSize}px ${mappingApostrophe.fontFamily}`,
+              )
+            : 0) +
+          (martyriaElement.measureBar
+            ? TextMeasurementService.getTextWidth(
+                mappingMeasureBar!.text,
+                `${pageSetup.neumeDefaultFontSize}px ${
+                  mappingMeasureBar!.fontFamily
+                }`,
+              )
+            : 0);
       } else if (element.elementType === ElementType.Tempo) {
         const tempoElement = element as TempoElement;
         const mapping = neumeMap.get(tempoElement.neume)!;
 
-        elementWidthPx = Math.ceil(
-          TextMeasurementService.getTextWidth(
-            mapping.text,
-            `${pageSetup.neumeDefaultFontSize}px ${mapping.fontFamily}`,
-          ),
+        elementWidthPx = TextMeasurementService.getTextWidth(
+          mapping.text,
+          `${pageSetup.neumeDefaultFontSize}px ${mapping.fontFamily}`,
         );
       } else if (element.elementType === ElementType.DropCap) {
         const dropCapElement = element as DropCapElement;
@@ -202,11 +191,9 @@ export class LayoutService {
           dropCapElement.fontFamily || pageSetup.dropCapDefaultFontFamily;
         const dropCapFontSize =
           dropCapElement.fontSize || pageSetup.dropCapDefaultFontSize;
-        elementWidthPx = Math.ceil(
-          TextMeasurementService.getTextWidth(
-            dropCapElement.content,
-            `${dropCapFontSize}px ${dropCapFontFamily}`,
-          ),
+        elementWidthPx = TextMeasurementService.getTextWidth(
+          dropCapElement.content,
+          `${dropCapFontSize}px ${dropCapFontFamily}`,
         );
       }
 
@@ -296,11 +283,10 @@ export class LayoutService {
             dropCapElement.content,
             dropCapFont,
           );
-        const adjustment = Math.ceil(
+        const adjustment =
           fontHeight -
-            distanceFromTopToBottomOfLyrics -
-            fountBoundingBoxDescent,
-        );
+          distanceFromTopToBottomOfLyrics -
+          fountBoundingBoxDescent;
 
         element.y -= adjustment;
       }

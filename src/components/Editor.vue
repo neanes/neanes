@@ -831,7 +831,10 @@ export default class Editor extends Vue {
       this.commandService.execute(
         this.scoreElementCommandFactory.create('update-properties', {
           target: this.selectedElement,
-          newValues: { pageBreak: !this.selectedElement.pageBreak },
+          newValues: {
+            pageBreak: !this.selectedElement.pageBreak,
+            lineBreak: false,
+          },
         }),
       );
 
@@ -844,7 +847,10 @@ export default class Editor extends Vue {
       this.commandService.execute(
         this.scoreElementCommandFactory.create('update-properties', {
           target: this.selectedElement,
-          newValues: { lineBreak: !this.selectedElement.lineBreak },
+          newValues: {
+            lineBreak: !this.selectedElement.lineBreak,
+            pageBreak: false,
+          },
         }),
       );
 

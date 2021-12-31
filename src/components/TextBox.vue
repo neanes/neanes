@@ -71,7 +71,8 @@ export default class TextBox extends Vue {
 .text-box-container {
   border: 1px dotted black;
   box-sizing: border-box;
-  padding: 1px;
+  padding-left: 1px;
+  min-height: 10px;
 }
 
 .text-box {

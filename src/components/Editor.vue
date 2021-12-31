@@ -332,13 +332,14 @@ export default class Editor extends Vue {
 
   entryMode: EntryMode = EntryMode.Auto;
 
-  private _selectedElement: ScoreElement | null = null;
-  private _selectedLyrics: NoteElement | null = null;
-  elementToFocus: ScoreElement | null = null;
+  selectedElementValue: ScoreElement | null = null;
+  selectedLyricsValue: NoteElement | null = null;
 
-  private _zoom: number = 1;
-  private _currentFilePath: string | null = null;
-  private _hasUnsavedChanges: boolean = false;
+  zoomValue: number = 1;
+  currentFilePathValue: string | null = null;
+  hasUnsavedChangesValue: boolean = false;
+
+  elementToFocus: ScoreElement | null = null;
 
   modeKeyDialogIsOpen: boolean = false;
 
@@ -424,7 +425,7 @@ export default class Editor extends Vue {
   }
 
   get selectedElement() {
-    return this._selectedElement;
+    return this.selectedElementValue;
   }
 
   set selectedElement(element: ScoreElement | null) {
@@ -432,36 +433,38 @@ export default class Editor extends Vue {
       this.selectedLyrics = null;
     }
 
-    this._selectedElement = element;
+    this.selectedElementValue = element;
   }
 
   get selectedLyrics() {
-    return this._selectedLyrics;
+    return this.selectedLyricsValue;
   }
 
   set selectedLyrics(element: NoteElement | null) {
     if (element != null) {
-      this._selectedElement = null;
+      this.selectedElementValue = null;
     }
 
-    this._selectedLyrics = element;
+    this.selectedLyricsValue = element;
   }
 
   get zoom() {
-    return this._zoom;
+    console.log(this.zoomValue);
+    return this.zoomValue;
   }
 
   set zoom(zoom: number) {
-    this._zoom = zoom;
+    console.log('set zoom', zoom);
+    this.zoomValue = zoom;
     document.documentElement.style.setProperty('--zoom', zoom.toString());
   }
 
   get currentFilePath() {
-    return this._currentFilePath;
+    return this.currentFilePathValue;
   }
 
   set currentFilePath(path: string | null) {
-    this._currentFilePath = path;
+    this.currentFilePathValue = path;
 
     if (path != null) {
       localStorage.setItem('filePath', path);
@@ -475,11 +478,11 @@ export default class Editor extends Vue {
   }
 
   get hasUnsavedChanges() {
-    return this._hasUnsavedChanges;
+    return this.hasUnsavedChangesValue;
   }
 
   set hasUnsavedChanges(hasUnsavedChanges: boolean) {
-    this._hasUnsavedChanges = hasUnsavedChanges;
+    this.hasUnsavedChangesValue = hasUnsavedChanges;
     localStorage.setItem('hasUnsavedChanges', hasUnsavedChanges.toString());
     window.document.title = this.windowTitle;
     EventBus.$emit(IpcRendererChannels.SetHasUnsavedChanges, hasUnsavedChanges);

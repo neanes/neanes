@@ -221,6 +221,7 @@
         :element="selectedElement"
         @update:fthora="updateMartyriaFthora(selectedElement, $event)"
         @update:measureBar="updateMartyriaMeasureBar(selectedElement, $event)"
+        @update:alignRight="updateMartyriaAlignRight(selectedElement, $event)"
       />
     </template>
     <ModeKeyDialog
@@ -1350,6 +1351,10 @@ export default class Editor extends Vue {
 
   updateMartyriaMeasureBar(element: MartyriaElement, measureBar: MeasureBar) {
     this.updateMartyria(element, { measureBar });
+  }
+
+  updateMartyriaAlignRight(element: MartyriaElement, alignRight: boolean) {
+    this.updateMartyria(element, { alignRight });
   }
 
   updateTempo(element: TempoElement, newValues: Partial<TempoElement>) {

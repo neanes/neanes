@@ -51,6 +51,7 @@ export class MartyriaElement extends ScoreElement {
   public apostrophe: boolean | undefined = undefined;
   public fthora: Fthora | undefined = undefined;
   public measureBar: MeasureBar | undefined = undefined;
+  public alignRight: boolean | undefined = undefined;
 }
 
 export class TempoElement extends ScoreElement {

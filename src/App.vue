@@ -11,6 +11,8 @@
 <style>
 :root {
   --zoom: 1;
+
+  --btn-color-selected: lightsteelblue;
 }
 
 @media print {

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="32" height="32" version="1.1" viewBox="0 0 8.4667 8.4667" xmlns="http://www.w3.org/2000/svg">
+ <style>.cls-1 { 
+    stroke:#000;
+}</style>
+ <g transform="translate(-8.5773 -57.516)">
+  <g stroke-linecap="round">
+   <rect class="cls-1" x="16.197" y="58.856" width=".023838" height="5.7861" stroke-width="1.0583" style="paint-order:markers fill stroke"/>
+   <g>
+    <rect class="cls-1" x="9.4001" y="61.241" width="3.0349" height="1.0168" stroke-width="1.0583" style="paint-order:markers fill stroke"/>
+    <path class="cls-1" transform="matrix(.0074973 0 0 .0091993 9.6218 57.907)" d="m434.63 550.03v-264.63l229.18 132.32z" stroke-width="127.44" style="paint-order:markers fill stroke"/>
+   </g>
+  </g>
+ </g>
+</svg>

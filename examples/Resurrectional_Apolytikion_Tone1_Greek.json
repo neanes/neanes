@@ -647,7 +647,8 @@
         "elementType": "Martyria",
         "auto": true,
         "note": "Pa",
-        "rootSign": "Alpha"
+        "rootSign": "Alpha",
+        "alignRight": true
       },
       {
         "elementType": "Empty"

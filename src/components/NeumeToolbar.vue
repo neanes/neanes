@@ -483,6 +483,7 @@ export default class NeumeToolbar extends Vue {
 
 .row {
   display: flex;
+  flex-wrap: wrap;
 }
 
 .red {

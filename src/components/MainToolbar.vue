@@ -85,19 +85,22 @@
     </button>
     <span class="space"></span>
     <div class="zoom-container" @focusout="showZoomMenu = false" tabindex="-1">
-      <input class="zoom" v-model.lazy="zoomDisplay" />
+      <input
+        class="zoom"
+        :value="zoomDisplay"
+        @change="updateZoom($event.target.value)"
+      />
       <span class="zoom-arrow" @click="showZoomMenu = !showZoomMenu"
         >&#x25BE;</span
       >
       <div class="zoom-menu" v-if="showZoomMenu">
+        <div class="zoom-menu-item" @click="updateZoom('Fit')">Fit</div>
+        <div class="zoom-menu-separator"></div>
         <div
           v-for="option in zoomOptions"
           :key="option"
           class="zoom-menu-item"
-          @click="
-            zoomDisplay = option;
-            showZoomMenu = false;
-          "
+          @click="updateZoom(option)"
         >
           {{ option }}%
         </div>
@@ -120,6 +123,7 @@ import { EntryMode } from './Editor.vue';
 export default class MainToolbar extends Vue {
   @Prop() entryMode!: EntryMode;
   @Prop() zoom!: number;
+  @Prop() zoomToFit!: boolean;
   Note = Note;
   RootSign = RootSign;
   TempoSign = TempoSign;
@@ -130,23 +134,26 @@ export default class MainToolbar extends Vue {
   zoomOptions: number[] = [50, 75, 90, 100, 125, 150, 200];
 
   get zoomDisplay() {
-    return this.zoom * 100 + '%';
+    return this.zoomToFit ? 'Fit' : this.zoom * 100 + '%';
   }
 
-  set zoomDisplay(value) {
+  updateZoom(value: string) {
+    this.showZoomMenu = false;
+
+    if (value === 'Fit') {
+      this.$emit('update:zoomToFit', true);
+      return;
+    }
+
     let valueAsNumber = Math.round(parseInt(value));
 
     if (Number.isNaN(valueAsNumber)) {
       valueAsNumber = 100;
     }
 
-    if (valueAsNumber < 50) {
-      valueAsNumber = 50;
-    } else if (valueAsNumber > 200) {
-      valueAsNumber = 200;
-    }
+    this.$emit('update:zoom', valueAsNumber / 100);
 
-    this.$emit('updateZoom', valueAsNumber / 100);
+    this.showZoomMenu = false;
   }
 }
 </script>
@@ -245,5 +252,9 @@ export default class MainToolbar extends Vue {
 
 .zoom-menu-item:hover {
   background-color: aliceblue;
+}
+
+.zoom-menu-separator {
+  border-top: 1px solid #666;
 }
 </style>

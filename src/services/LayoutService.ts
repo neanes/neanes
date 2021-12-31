@@ -94,7 +94,8 @@ export class LayoutService {
           height += Math.max(lineCount, 1) * fontHeight;
         }
 
-        textBoxElement.height = Math.ceil(height);
+        // Height should be at least the font height
+        textBoxElement.height = Math.max(Math.ceil(height), fontHeight);
       }
 
       if (element.elementType === ElementType.ModeKey) {
@@ -233,14 +234,14 @@ export class LayoutService {
             const textbox = line.elements.find(
               (x) => x.elementType === ElementType.TextBox,
             ) as TextBoxElement;
-            height = Math.max(10, textbox.height);
+            height = textbox.height;
           } else if (
             line.elements.some((x) => x.elementType === ElementType.ModeKey)
           ) {
             const textbox = line.elements.find(
               (x) => x.elementType === ElementType.ModeKey,
             ) as ModeKeyElement;
-            height = Math.max(10, textbox.height);
+            height = textbox.height;
           } else {
             height = pageSetup.lineHeight;
           }

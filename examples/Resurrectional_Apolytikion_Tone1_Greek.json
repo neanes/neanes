@@ -29,7 +29,7 @@
         "content": "Αναστάσιμον Απολυτίκιον, Ήχος Α'",
         "fontSize": 26.666666666666668,
         "fontFamily": "Omega",
-        "height": 25
+        "height": 32
       },
       {
         "elementType": "TextBox",
@@ -38,7 +38,7 @@
         "content": "Του λίθου σφραγισθέντος",
         "fontSize": 16,
         "fontFamily": "Omega",
-        "height": 14
+        "height": 19
       },
       {
         "elementType": "ModeKey",

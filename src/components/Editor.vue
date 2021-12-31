@@ -541,7 +541,7 @@ export default class Editor extends Vue {
   getEmptyBoxStyle(element: EmptyElement) {
     return {
       width: withZoom(element.width),
-      height: withZoom(82),
+      height: withZoom(this.score.pageSetup.lineHeight),
     } as CSSStyleDeclaration;
   }
 

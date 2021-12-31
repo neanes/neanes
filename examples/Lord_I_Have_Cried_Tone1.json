@@ -18,7 +18,7 @@
     "modeKeyDefaultColor": "#ED0000",
     "dropCapDefaultFontFamily": "Athonite",
     "dropCapDefaultFontSize": 80,
-    "dropCapDefaultColor": "black"
+    "dropCapDefaultColor": "#000000"
   },
   "staff": {
     "elements": [

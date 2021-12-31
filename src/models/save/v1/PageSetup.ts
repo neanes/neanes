@@ -25,5 +25,5 @@ export class PageSetup {
 
   public dropCapDefaultFontFamily = 'Athonite';
   public dropCapDefaultFontSize = Unit.FromPt(60);
-  public dropCapDefaultColor = 'black';
+  public dropCapDefaultColor = '#000000';
 }

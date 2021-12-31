@@ -18,14 +18,14 @@
     "modeKeyDefaultColor": "#ED0000",
     "dropCapDefaultFontFamily": "Athonite",
     "dropCapDefaultFontSize": 80,
-    "dropCapDefaultColor": "black"
+    "dropCapDefaultColor": "#000000"
   },
   "staff": {
     "elements": [
       {
         "elementType": "TextBox",
         "alignment": "center",
-        "color": "black",
+        "color": "#000000",
         "content": "Αναστάσιμον Απολυτίκιον, Ήχος Β'",
         "fontSize": 26.666666666666668,
         "fontFamily": "Omega",
@@ -34,7 +34,7 @@
       {
         "elementType": "TextBox",
         "alignment": "center",
-        "color": "black",
+        "color": "#000000",
         "content": "Ότε κατήλθες",
         "fontSize": 16,
         "fontFamily": "Omega",

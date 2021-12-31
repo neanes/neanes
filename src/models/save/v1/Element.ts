@@ -74,7 +74,7 @@ export enum TextBoxAlignment {
 export class TextBoxElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.TextBox;
   public alignment: TextBoxAlignment = TextBoxAlignment.Left;
-  public color: string = 'black';
+  public color: string = '#000000';
   public content: string = '';
   public fontSize: number = 16;
   public fontFamily: string = 'Omega';
@@ -95,7 +95,7 @@ export class ModeKeyElement extends ScoreElement {
   public fthora2: Fthora | undefined = undefined;
   public quantitativeNeumeTop: ModeSign | undefined = undefined;
   public quantitativeNeumeRight: QuantitativeNeume | undefined = undefined;
-  public color: string = 'black';
+  public color: string = '#000000';
   public fontSize: number = 16;
   public height: number = 20;
 }

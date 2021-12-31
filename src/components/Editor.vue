@@ -1300,6 +1300,7 @@ export default class Editor extends Vue {
 
   updateModeKeyFromTemplate(element: ModeKeyElement, template: ModeKeyElement) {
     const {
+      templateId,
       mode,
       scale,
       scaleNote,
@@ -1312,6 +1313,7 @@ export default class Editor extends Vue {
     } = template;
 
     const newValues = {
+      templateId,
       mode,
       scale,
       scaleNote,

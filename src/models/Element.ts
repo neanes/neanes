@@ -292,6 +292,7 @@ export class TextBoxElement extends ScoreElement {
 
 export class ModeKeyElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.ModeKey;
+  public templateId: number | null = null;
   public alignment: TextBoxAlignment = TextBoxAlignment.Center;
   public mode: number = 1;
   public scale: Scale = Scale.Diatonic;
@@ -329,6 +330,7 @@ export class ModeKeyElement extends ScoreElement {
   ) {
     const element = new ModeKeyElement();
 
+    element.templateId = template.id;
     element.mode = template.mode;
     element.scale = template.scale;
     element.scaleNote = template.scaleNote;

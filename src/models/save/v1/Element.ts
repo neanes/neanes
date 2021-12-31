@@ -83,6 +83,7 @@ export class TextBoxElement extends ScoreElement {
 
 export class ModeKeyElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.ModeKey;
+  public templateId: number | undefined = undefined;
   public alignment: TextBoxAlignment = TextBoxAlignment.Center;
   public mode: number = 1;
   public scale: Scale = Scale.Diatonic;

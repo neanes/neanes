@@ -139,6 +139,7 @@ export class SaveService {
     element.rootSign = e.rootSign;
     element.fthora = e.fthora || undefined;
     element.measureBar = e.measureBar || undefined;
+    element.alignRight = e.alignRight || undefined;
   }
 
   public static SaveTempo(element: TempoElement_v1, e: TempoElement) {
@@ -304,6 +305,7 @@ export class SaveService {
   ) {
     element.apostrophe = e.apostrophe === true;
     element.auto = e.auto === true;
+    element.alignRight = e.alignRight === true;
     element.note = e.note;
     element.rootSign = e.rootSign;
 

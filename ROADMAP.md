@@ -12,7 +12,6 @@
 
 ## Nice-to-haves
 
-- Right-align option for martyria and tempos. Does this maybe become a "paragraph option", where a paragraph can consist of neumes, small text-boxes that fit to the width of their contents, and have an alignment?
 - Document Settings Dialog
 - Better Drop Cap support (more fonts, change color and size)
 - Microtonal Sharps and Flats
@@ -29,6 +28,8 @@
 - Configurable Neume Keyboard
 - Better styling
 - Graceful handling of bad martyrias
+- Right-align option for tempo
+- Right align for multiple elements grouped together (e.g. tempo followed by martyria). Does this maybe become a "paragraph option", where a paragraph can consist of neumes, small text-boxes that fit to the width of their contents, and have an alignment?
 - Score checker that points out potential issues by using Fr. Ephraim's style rules (and other sources).
 - Investigate the feasibility of image recognition, allowing users to upload an image of a score that would be transformed into a file in our program.
 

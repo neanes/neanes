@@ -7,7 +7,9 @@
       <option>Athonite</option>
       <option>Omega</option>
     </select>
+    <span class="space"></span>
     <input type="number" min="4" max="100" step="1" v-model="fontSize" />
+    <span class="space"></span>
     <input
       type="color"
       list="presetColors"
@@ -19,7 +21,12 @@
       <option>#ff0000</option>
       <option>#0000ff</option>
     </datalist>
-    <button @click="$emit('update:alignment', TextBoxAlignment.Left)">
+    <span class="space"></span>
+    <button
+      class="icon-btn"
+      :class="{ selected: element.alignment === TextBoxAlignment.Left }"
+      @click="$emit('update:alignment', TextBoxAlignment.Left)"
+    >
       <img
         src="@/assets/alignleft.svg"
         width="32"
@@ -27,7 +34,11 @@
         title="Align Left"
       />
     </button>
-    <button @click="$emit('update:alignment', TextBoxAlignment.Center)">
+    <button
+      class="icon-btn"
+      :class="{ selected: element.alignment === TextBoxAlignment.Center }"
+      @click="$emit('update:alignment', TextBoxAlignment.Center)"
+    >
       <img
         src="@/assets/aligncenter.svg"
         width="32"
@@ -35,7 +46,11 @@
         title="Align Center"
       />
     </button>
-    <button @click="$emit('update:alignment', TextBoxAlignment.Right)">
+    <button
+      class="icon-btn"
+      :class="{ selected: element.alignment === TextBoxAlignment.Right }"
+      @click="$emit('update:alignment', TextBoxAlignment.Right)"
+    >
       <img
         src="@/assets/alignright.svg"
         width="32"
@@ -73,8 +88,27 @@ export default class TextToolbar extends Vue {
 <style scoped>
 .text-toolbar {
   display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+
   background-color: lightgray;
 
   padding: 0.25rem;
+}
+
+.icon-btn {
+  height: 32px;
+  width: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-btn.selected {
+  background-color: var(--btn-color-selected);
+}
+
+.space {
+  width: 16px;
 }
 </style>

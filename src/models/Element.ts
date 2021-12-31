@@ -260,6 +260,7 @@ export class MartyriaElement extends ScoreElement {
   public apostrophe: boolean = false;
   public fthora: Fthora | null = null;
   public measureBar: MeasureBar | null = null;
+  public alignRight: boolean = false;
 
   public error: boolean = false;
 }

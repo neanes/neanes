@@ -23,7 +23,7 @@
     </button>
     <span class="space"></span>
     <button
-      title="Insert Martyria"
+      title="Insert martyria"
       class="neume-button"
       @click="$emit('addAutoMartyria')"
     >
@@ -62,23 +62,23 @@
     </button>
     <span class="space"></span>
     <button
-      class="icon-btn"
-      title="Insert/Remove Line Break After Selected Element"
+      class="icon-btn line-break-btn"
+      title="Insert or remove line break after selected element"
       @click="$emit('updateLineBreak')"
     >
       &#182;
     </button>
     <button
-      class="page-break-btn icon-btn"
-      title="Insert/Remove Page Break After Selected Element"
+      class="icon-btn"
+      title="Insert or remove page break after selected element"
       @click="$emit('updatePageBreak')"
     >
-      <img src="@/assets/pagebreak.svg" width="16" height="16" />
+      <img src="@/assets/pagebreak.svg" width="24" height="24" />
     </button>
     <span class="space"></span>
     <button
       class="red icon-btn"
-      title="Delete Selected Element"
+      title="Delete selected element"
       @click="$emit('deleteSelectedElement')"
     >
       X
@@ -164,7 +164,7 @@ export default class MainToolbar extends Vue {
 }
 
 .entry-mode-btn.on {
-  background-color: lightsteelblue;
+  background-color: var(--btn-color-selected);
 }
 
 .red {
@@ -178,6 +178,13 @@ export default class MainToolbar extends Vue {
 .icon-btn {
   height: 32px;
   width: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.line-break-btn {
+  font-size: 20px;
 }
 
 .neume-button {
@@ -185,11 +192,6 @@ export default class MainToolbar extends Vue {
   width: 32px;
 
   position: relative;
-}
-
-.page-break-btn {
-  display: flex;
-  align-items: center;
 }
 
 .space {

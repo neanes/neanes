@@ -559,7 +559,8 @@
         "elementType": "Martyria",
         "auto": true,
         "note": "Thi",
-        "rootSign": "SoftChromaticSquiggle"
+        "rootSign": "SoftChromaticSquiggle",
+        "alignRight": true
       },
       {
         "elementType": "Empty"

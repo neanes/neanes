@@ -144,6 +144,20 @@
           :neume="MeasureBar.MeasureBarTop"
         />
       </button>
+      <span class="space"></span>
+      <button
+        class="icon-btn"
+        :class="{ selected: element.alignRight }"
+        @click="$emit('update:alignRight', !element.alignRight)"
+      >
+        <img
+          title="Align martyria to the end of the line"
+          src="@/assets/alignright2.svg"
+          height="24"
+          width="24"
+          class="icon-btn-img"
+        />
+      </button>
     </div>
   </div>
 </template>
@@ -196,6 +210,7 @@ export default class MartyriaToolbar extends Vue {
 
 .row {
   display: flex;
+  flex-wrap: wrap;
 }
 
 .red {
@@ -228,5 +243,19 @@ export default class MartyriaToolbar extends Vue {
 .measure-bar-top {
   top: -5px;
   left: 17px;
+}
+
+.icon-btn {
+  height: 32px;
+  width: 32px;
+  padding: 0;
+}
+
+.icon-btn.selected {
+  background-color: var(--btn-color-selected);
+}
+
+.icon-btn-img {
+  vertical-align: middle;
 }
 </style>

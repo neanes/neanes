@@ -300,6 +300,16 @@ export class LayoutService {
 
       lastElementWasLineBreak = element.lineBreak;
       lastElementWasPageBreak = element.pageBreak;
+
+      // Handle special case for right-aligned martyria
+      if (
+        element.elementType === ElementType.Martyria &&
+        (element as MartyriaElement).alignRight
+      ) {
+        lastElementWasLineBreak = true;
+
+        element.x = pageSetup.pageWidth - pageSetup.rightMargin - element.width;
+      }
     }
 
     this.justifyLines(pages, pageSetup);
@@ -324,6 +334,16 @@ export class LayoutService {
         }
 
         if (line.elements.some((x) => x.pageBreak == true)) {
+          continue;
+        }
+
+        if (
+          line.elements.some(
+            (x) =>
+              x.elementType === ElementType.Martyria &&
+              (x as MartyriaElement).alignRight == true,
+          )
+        ) {
           continue;
         }
 

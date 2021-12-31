@@ -2,7 +2,7 @@
 
 Neanes (pronounced neh-ah-ness) is a free and open source scorewriter for notating Byzantine Chant.
 
-<img src="images/demo.png" alt="Demo Screen" width="100%"/>
+<img src="images/demo.png?raw=true" alt="Demo Screen" width="100%"/>
 
 ## Features
 

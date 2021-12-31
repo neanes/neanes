@@ -134,6 +134,7 @@
                   <div
                     class="empty-neume-box"
                     :class="[{ selected: element == selectedElement }]"
+                    :style="getEmptyBoxStyle(element)"
                     @click="selectedElement = element"
                   ></div>
                   <div class="lyrics"></div>
@@ -534,6 +535,13 @@ export default class Editor extends Vue {
     return {
       top: withZoom(this.score.pageSetup.lyricsVerticalOffset),
       fontSize: withZoom(this.score.pageSetup.lyricsDefaultFontSize),
+    } as CSSStyleDeclaration;
+  }
+
+  getEmptyBoxStyle(element: EmptyElement) {
+    return {
+      width: withZoom(element.width),
+      height: withZoom(82),
     } as CSSStyleDeclaration;
   }
 
@@ -1709,8 +1717,6 @@ export default class Editor extends Vue {
 }
 
 .empty-neume-box {
-  width: 39px;
-  height: 82px;
   border: 1px dotted black;
   box-sizing: border-box;
 }

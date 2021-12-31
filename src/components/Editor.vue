@@ -164,6 +164,9 @@
               <template v-if="isDropCapElement(element)">
                 <DropCap
                   :ref="`element-${getElementIndex(element)}`"
+                  :key="`drop-cap-${getElementIndex(element)}-${
+                    element.keyHelper
+                  }`"
                   :element="element"
                   :pageSetup="score.pageSetup"
                   @click.native="selectedElement = element"
@@ -925,12 +928,15 @@ export default class Editor extends Vue {
       }
     }
 
-    if (
-      this.selectedElement != null &&
-      this.navigableElements.includes(this.selectedElement.elementType) &&
-      !this.isTextInputFocused()
-    ) {
-      return this.onKeydownNeume(event);
+    if (this.selectedElement != null) {
+      if (
+        this.navigableElements.includes(this.selectedElement.elementType) &&
+        !this.isTextInputFocused()
+      ) {
+        return this.onKeydownNeume(event);
+      } else if (this.selectedElement.elementType === ElementType.DropCap) {
+        return this.onKeydownDropCap(event);
+      }
     } else if (this.selectedLyrics != null) {
       return this.onKeydownLyrics(event);
     }
@@ -967,7 +973,13 @@ export default class Editor extends Vue {
   onKeydownLyrics(event: KeyboardEvent) {
     let handled = false;
 
-    // We don't handle the shift key
+    // Do not allow enter key in lyrics
+    if (event.code === 'Enter') {
+      event.preventDefault();
+      return;
+    }
+
+    // We don't handle the shift key unless it's for enter
     if (event.shiftKey) {
       return;
     }
@@ -1011,6 +1023,14 @@ export default class Editor extends Vue {
 
     if (handled) {
       event.preventDefault();
+    }
+  }
+
+  onKeydownDropCap(event: KeyboardEvent) {
+    // Do not allow enter key in drop caps
+    if (event.code === 'Enter') {
+      event.preventDefault();
+      return;
     }
   }
 
@@ -1216,9 +1236,14 @@ export default class Editor extends Vue {
   }
 
   updateLyrics(element: NoteElement, lyrics: string) {
-    // Nothing changed. No further processing is necessary.
-    if (element.lyrics === lyrics) {
-      return;
+    // Replace newlines. This should only happen if the user pastes
+    // text containing new lines.
+    const sanitizedLyrics = lyrics.replace(/(?:\r\n|\r|\n)/g, ' ');
+    if (sanitizedLyrics !== lyrics) {
+      lyrics = sanitizedLyrics;
+
+      // Force the lyrics to re-render
+      element.keyHelper++;
     }
 
     // Calculate melisma properties
@@ -1390,6 +1415,16 @@ export default class Editor extends Vue {
   }
 
   updateDropCapContent(element: DropCapElement, content: string) {
+    // Replace newlines. This should only happen if the user pastes
+    // text containing new lines.
+    const sanitizedContent = content.replace(/(?:\r\n|\r|\n)/g, ' ');
+    if (sanitizedContent !== content) {
+      content = sanitizedContent;
+
+      // Force the lyrics to re-render
+      element.keyHelper++;
+    }
+
     if (content === '') {
       const index = this.elements.indexOf(element);
 
@@ -1400,7 +1435,7 @@ export default class Editor extends Vue {
 
         this.removeScoreElement(element);
       }
-    } else {
+    } else if (element.content !== content) {
       this.commandService.execute(
         this.dropCapCommandFactory.create('update-properties', {
           target: element,

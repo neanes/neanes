@@ -140,6 +140,12 @@
                 </div>
               </template>
               <template v-if="isTextBoxElement(element)">
+                <span class="page-break-2" v-if="element.pageBreak"
+                  ><img src="@/assets/pagebreak.svg"
+                /></span>
+                <span class="line-break-2" v-if="element.lineBreak"
+                  >&#182;</span
+                >
                 <TextBox
                   :ref="`element-${getElementIndex(element)}`"
                   :element="element"
@@ -151,6 +157,12 @@
                 </TextBox>
               </template>
               <template v-if="isModeKeyElement(element)">
+                <span class="page-break-2" v-if="element.pageBreak"
+                  ><img src="@/assets/pagebreak.svg"
+                /></span>
+                <span class="line-break-2" v-if="element.lineBreak"
+                  >&#182;</span
+                >
                 <ModeKey
                   :ref="`element-${getElementIndex(element)}`"
                   :element="element"
@@ -162,6 +174,10 @@
                 </ModeKey>
               </template>
               <template v-if="isDropCapElement(element)">
+                <span class="page-break" v-if="element.pageBreak"
+                  ><img src="@/assets/pagebreak.svg"
+                /></span>
+                <span class="line-break" v-if="element.lineBreak">&#182;</span>
                 <DropCap
                   :ref="`element-${getElementIndex(element)}`"
                   :key="`drop-cap-${getElementIndex(element)}-${
@@ -1777,9 +1793,20 @@ export default class Editor extends Vue {
   top: calc(-10px * var(--zoom, 1));
 }
 
-.line-break img {
+.page-break-2 {
+  position: absolute;
+  top: calc(-16px * var(--zoom, 1));
+}
+
+.page-break-2 img {
   height: calc(16px * var(--zoom, 1));
   width: calc(16px * var(--zoom, 1));
+}
+
+.line-break-2 {
+  position: absolute;
+  font-size: calc(16px * var(--zoom, 1));
+  top: calc(-18px * var(--zoom, 1));
 }
 
 @media print {
@@ -1823,7 +1850,9 @@ export default class Editor extends Vue {
   .martyria-toolbar,
   .text-toolbar,
   .page-break,
-  .line-break {
+  .line-break,
+  .page-break-2,
+  .line-break-2 {
     display: none !important;
   }
 }

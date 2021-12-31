@@ -33,6 +33,7 @@
       },
       {
         "elementType": "ModeKey",
+        "templateId": 100,
         "alignment": "center",
         "mode": 1,
         "scale": "Diatonic",

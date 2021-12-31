@@ -42,6 +42,7 @@
       },
       {
         "elementType": "ModeKey",
+        "templateId": 200,
         "alignment": "center",
         "mode": 2,
         "scale": "SoftChromatic",

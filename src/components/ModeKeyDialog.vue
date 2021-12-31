@@ -111,7 +111,10 @@ export default class ModeKeyDialog extends Vue {
 
   selectMode(mode: number) {
     this.selectedMode = mode;
-    this.selectedModeKey = this.modeKeyTemplatesForSelectedMode[0];
+    this.selectedModeKey =
+      this.modeKeyTemplatesForSelectedMode.find(
+        (x) => x.templateId === this.element.templateId,
+      ) || this.modeKeyTemplatesForSelectedMode[0];
   }
 
   updateModeKey() {

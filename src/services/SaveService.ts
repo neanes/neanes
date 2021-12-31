@@ -188,6 +188,7 @@ export class SaveService {
   }
 
   public static SaveModeKey(element: ModeKeyElement_v1, e: ModeKeyElement) {
+    element.templateId = e.templateId || undefined;
     element.alignment = e.alignment;
     element.mode = e.mode;
     element.scale = e.scale;
@@ -367,6 +368,7 @@ export class SaveService {
   }
 
   public static LoadModeKey_v1(element: ModeKeyElement, e: ModeKeyElement_v1) {
+    element.templateId = e.templateId || null;
     element.alignment = e.alignment;
     element.mode = e.mode;
     element.scale = e.scale;

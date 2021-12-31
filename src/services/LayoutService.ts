@@ -112,7 +112,7 @@ export class LayoutService {
           noteElement.vocalExpressionNeume === VocalExpressionNeume.Vareia
         ) {
           const vareiaMapping = neumeMap.get(VocalExpressionNeume.Vareia)!;
-          vareiaWidth = Math.floor(
+          vareiaWidth = Math.ceil(
             TextMeasurementService.getTextWidth(
               vareiaMapping.text,
               `${pageSetup.neumeDefaultFontSize}px ${vareiaMapping.fontFamily}`,
@@ -122,7 +122,7 @@ export class LayoutService {
 
         if (noteElement.measureBar != null) {
           const measureBarMapping = neumeMap.get(noteElement.measureBar)!;
-          measureBarWidth = Math.floor(
+          measureBarWidth = Math.ceil(
             TextMeasurementService.getTextWidth(
               measureBarMapping.text,
               `${pageSetup.neumeDefaultFontSize}px ${measureBarMapping.fontFamily}`,
@@ -135,10 +135,10 @@ export class LayoutService {
           `${pageSetup.neumeDefaultFontSize}px ${mapping.fontFamily}`,
         );
 
-        noteElement.neumeWidth = Math.floor(
+        noteElement.neumeWidth = Math.ceil(
           neumeWidth + vareiaWidth + measureBarWidth,
         );
-        noteElement.lyricsWidth = Math.floor(
+        noteElement.lyricsWidth = Math.ceil(
           TextMeasurementService.getTextWidth(
             noteElement.lyrics,
             `${pageSetup.lyricsDefaultFontSize}px ${pageSetup.lyricsDefaultFontFamily}`,
@@ -163,7 +163,7 @@ export class LayoutService {
           ? neumeMap.get(martyriaElement.measureBar)!
           : null;
 
-        elementWidthPx = Math.floor(
+        elementWidthPx = Math.ceil(
           TextMeasurementService.getTextWidth(
             mappingNote.text,
             `${pageSetup.neumeDefaultFontSize}px ${mappingNote.fontFamily}`,
@@ -191,7 +191,7 @@ export class LayoutService {
         const tempoElement = element as TempoElement;
         const mapping = neumeMap.get(tempoElement.neume)!;
 
-        elementWidthPx = Math.floor(
+        elementWidthPx = Math.ceil(
           TextMeasurementService.getTextWidth(
             mapping.text,
             `${pageSetup.neumeDefaultFontSize}px ${mapping.fontFamily}`,
@@ -203,7 +203,7 @@ export class LayoutService {
           dropCapElement.fontFamily || pageSetup.dropCapDefaultFontFamily;
         const dropCapFontSize =
           dropCapElement.fontSize || pageSetup.dropCapDefaultFontSize;
-        elementWidthPx = Math.floor(
+        elementWidthPx = Math.ceil(
           TextMeasurementService.getTextWidth(
             dropCapElement.content,
             `${dropCapFontSize}px ${dropCapFontFamily}`,
@@ -297,7 +297,7 @@ export class LayoutService {
             dropCapElement.content,
             dropCapFont,
           );
-        const adjustment = Math.floor(
+        const adjustment = Math.ceil(
           fontHeight -
             distanceFromTopToBottomOfLyrics -
             fountBoundingBoxDescent,

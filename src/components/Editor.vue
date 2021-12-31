@@ -3,7 +3,9 @@
     <MainToolbar
       :entryMode="entryMode"
       :zoom="zoom"
-      @updateZoom="updateZoom"
+      :zoomToFit="zoomToFit"
+      @update:zoom="updateZoom"
+      @update:zoomToFit="updateZoomToFit"
       @addAutoMartyria="addAutoMartyria"
       @updateEntryMode="updateEntryMode"
       @updatePageBreak="updatePageBreak"
@@ -17,7 +19,7 @@
         class="neume-selector"
         @select-quantitative-neume="addQuantitativeNeume"
       ></NeumeSelector>
-      <div class="page-background">
+      <div class="page-background" ref="page-background">
         <div
           class="page"
           :style="pageStyle"
@@ -337,6 +339,8 @@ export default class Editor extends Vue {
   selectedLyricsValue: NoteElement | null = null;
 
   zoomValue: number = 1;
+  zoomToFit: boolean = false;
+
   currentFilePathValue: string | null = null;
   hasUnsavedChangesValue: boolean = false;
 
@@ -399,10 +403,13 @@ export default class Editor extends Vue {
     this.keydownThrottleIntervalMs,
     this.onFileMenuUndo,
   );
+
   onFileMenuRedoThrottled = throttle(
     this.keydownThrottleIntervalMs,
     this.onFileMenuRedo,
   );
+
+  onWindowResizeThrottled = throttle(250, this.onWindowResize);
 
   get elements() {
     return this.score != null ? this.score.staff.elements : [];
@@ -454,6 +461,12 @@ export default class Editor extends Vue {
   }
 
   set zoom(zoom: number) {
+    if (zoom < 0.5) {
+      zoom = 0.5;
+    } else if (zoom > 2) {
+      zoom = 2;
+    }
+
     this.zoomValue = zoom;
     document.documentElement.style.setProperty('--zoom', zoom.toString());
   }
@@ -537,6 +550,7 @@ export default class Editor extends Vue {
 
   mounted() {
     window.addEventListener('keydown', this.onKeydown);
+    window.addEventListener('resize', this.onWindowResizeThrottled);
 
     EventBus.$on(IpcMainChannels.FileMenuNewScore, this.onFileMenuNewScore);
     EventBus.$on(IpcMainChannels.FileMenuOpenScore, this.onFileMenuOpenScore);
@@ -565,6 +579,7 @@ export default class Editor extends Vue {
 
   beforeDestroy() {
     window.removeEventListener('keydown', this.onKeydown);
+    window.removeEventListener('resize', this.onWindowResizeThrottled);
 
     EventBus.$off(IpcMainChannels.FileMenuNewScore, this.onFileMenuNewScore);
     EventBus.$off(IpcMainChannels.FileMenuOpenScore, this.onFileMenuOpenScore);
@@ -887,6 +902,12 @@ export default class Editor extends Vue {
       (document.activeElement instanceof HTMLElement &&
         document.activeElement.contentEditable === 'true')
     );
+  }
+
+  onWindowResize() {
+    if (this.zoomToFit) {
+      this.performZoomToFit();
+    }
   }
 
   onKeydown(event: KeyboardEvent) {
@@ -1423,6 +1444,28 @@ export default class Editor extends Vue {
 
   updateZoom(zoom: number) {
     this.zoom = zoom;
+    this.zoomToFit = false;
+  }
+
+  updateZoomToFit(zoomToFit: boolean) {
+    this.zoomToFit = zoomToFit;
+
+    if (zoomToFit) {
+      this.performZoomToFit();
+    }
+  }
+
+  performZoomToFit() {
+    const pageBackgroundElement = this.$refs['page-background'] as HTMLElement;
+
+    const computedStyle = getComputedStyle(pageBackgroundElement);
+
+    const availableWidth =
+      pageBackgroundElement.clientWidth -
+      parseFloat(computedStyle.paddingLeft) -
+      parseFloat(computedStyle.paddingRight);
+
+    this.zoom = availableWidth / this.score.pageSetup.pageWidth;
   }
 
   onFileMenuNewScore() {

@@ -450,12 +450,10 @@ export default class Editor extends Vue {
   }
 
   get zoom() {
-    console.log(this.zoomValue);
     return this.zoomValue;
   }
 
   set zoom(zoom: number) {
-    console.log('set zoom', zoom);
     this.zoomValue = zoom;
     document.documentElement.style.setProperty('--zoom', zoom.toString());
   }

@@ -34,8 +34,6 @@ export class LayoutService {
       elements.push(new EmptyElement());
     }
 
-    const defaultNeumeElementWidthPx = 39;
-
     const pages: Page[] = [];
 
     let page: Page = {
@@ -58,7 +56,7 @@ export class LayoutService {
     let lastElementWasPageBreak = false;
 
     for (let element of elements) {
-      let elementWidthPx = defaultNeumeElementWidthPx;
+      let elementWidthPx = 0;
 
       if (element.elementType === ElementType.TextBox) {
         let textBoxElement = element as TextBoxElement;
@@ -278,7 +276,7 @@ export class LayoutService {
 
       element.x = pageSetup.leftMargin + currentLineWidthPx;
       element.y = pageSetup.topMargin + currentPageHeightPx - lastLineHeightPx;
-      element.width = elementWidthPx + pageSetup.neumeDefaultSpacing;
+      element.width = elementWidthPx;
 
       // Special logic to adjust drop caps.
       // This aligns the bottom of the drop cap with
@@ -321,7 +319,21 @@ export class LayoutService {
         }
       }
 
-      currentLineWidthPx += elementWidthPx + pageSetup.neumeDefaultSpacing;
+      currentLineWidthPx += elementWidthPx;
+
+      // Add extra space between neumes
+      if (
+        [
+          ElementType.Martyria,
+          ElementType.Note,
+          ElementType.Tempo,
+          ElementType.DropCap,
+        ].includes(element.elementType)
+      ) {
+        currentLineWidthPx += pageSetup.neumeDefaultSpacing;
+        element.width += pageSetup.neumeDefaultSpacing;
+      }
+
       line.elements.push(element);
 
       lastElementWasLineBreak = element.lineBreak;

@@ -1,6 +1,49 @@
 import { Unit } from '../utils/Unit';
 
+export type PageSize = 'A3' | 'A4' | 'A5' | 'Legal' | 'Letter' | 'Tabloid';
+
+export interface PageSizeOption {
+  name: PageSize;
+  height: number;
+  width: number;
+}
+
+export const pageSizes: PageSizeOption[] = [
+  {
+    name: 'Letter',
+    width: Unit.fromInch(8.5),
+    height: Unit.fromInch(11),
+  },
+  {
+    name: 'Tabloid',
+    width: Unit.fromInch(11),
+    height: Unit.fromInch(17),
+  },
+  {
+    name: 'Legal',
+    width: Unit.fromInch(8.5),
+    height: Unit.fromInch(14),
+  },
+  {
+    name: 'A3',
+    width: Unit.fromInch(11.69),
+    height: Unit.fromInch(16.54),
+  },
+  {
+    name: 'A4',
+    width: Unit.fromInch(8.29),
+    height: Unit.fromInch(11.69),
+  },
+  {
+    name: 'A5',
+    width: Unit.fromInch(5.83),
+    height: Unit.fromInch(8.27),
+  },
+];
+
 export class PageSetup {
+  public pageSize: PageSize = 'Letter';
+
   public pageWidth = Unit.fromInch(8.5);
   public pageHeight = Unit.fromInch(11);
 

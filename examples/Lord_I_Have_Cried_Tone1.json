@@ -1,6 +1,7 @@
 {
   "version": "1.0",
   "pageSetup": {
+    "pageSize": "Letter",
     "pageWidth": 816,
     "pageHeight": 1056,
     "topMargin": 96,

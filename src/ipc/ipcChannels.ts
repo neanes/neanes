@@ -1,6 +1,9 @@
+import { PageSize } from '@/models/PageSetup';
+
 export enum IpcMainChannels {
   FileMenuNewScore = 'FileMenuNewScore',
   FileMenuOpenScore = 'FileMenuOpenScore',
+  FileMenuPrint = 'FileMenuPrint',
   FileMenuSave = 'FileMenuSave',
   FileMenuSaveAs = 'FileMenuSaveAs',
 
@@ -19,6 +22,8 @@ export enum IpcMainChannels {
 }
 
 export enum IpcRendererChannels {
+  FileMenuPrintReply = 'FileMenuPrintReply',
+
   FileMenuSaveReply = 'FileMenuSaveReply',
   FileMenuSaveAsReply = 'FileMenuSaveAsReply',
 
@@ -32,6 +37,10 @@ export enum IpcRendererChannels {
 export interface FileMenuOpenScoreArgs {
   data: string;
   filePath: string;
+}
+
+export interface FileMenuPrintReplyArgs {
+  pageSize: PageSize;
 }
 
 export interface FileMenuSaveAsArgs {

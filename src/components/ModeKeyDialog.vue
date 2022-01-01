@@ -74,7 +74,7 @@
           :disabled="selectedModeKey == null"
           @click="updateModeKey"
         >
-          Select
+          Update
         </button>
         <button @click="$emit('close')">Cancel</button>
       </div>
@@ -101,12 +101,24 @@ export default class ModeKeyDialog extends Vue {
 
   created() {
     this.selectMode(this.element.mode);
+
+    window.addEventListener('keydown', this.onKeyDown);
+  }
+
+  destroyed() {
+    window.removeEventListener('keydown', this.onKeyDown);
   }
 
   get modeKeyTemplatesForSelectedMode() {
     return modeKeyTemplates
       .filter((x) => x.mode === this.selectedMode)
       .map((x) => ModeKeyElement.createFromTemplate(x, TextBoxAlignment.Left));
+  }
+
+  onKeyDown(event: KeyboardEvent) {
+    if (event.code === 'Escape') {
+      this.$emit('close');
+    }
   }
 
   selectMode(mode: number) {

@@ -181,6 +181,12 @@ export default class PageSetupDialog extends Vue {
 
   created() {
     Object.assign(this.form, this.pageSetup);
+
+    window.addEventListener('keydown', this.onKeyDown);
+  }
+
+  destroyed() {
+    window.removeEventListener('keydown', this.onKeyDown);
   }
 
   get topMargin() {
@@ -245,6 +251,12 @@ export default class PageSetupDialog extends Vue {
       Unit.fromPt(100),
     );
     this.$forceUpdate();
+  }
+
+  onKeyDown(event: KeyboardEvent) {
+    if (event.code === 'Escape') {
+      this.$emit('close');
+    }
   }
 
   updatePageSetup() {

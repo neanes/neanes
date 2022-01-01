@@ -5,6 +5,8 @@ export type PageSize = 'A3' | 'A4' | 'A5' | 'Legal' | 'Letter' | 'Tabloid';
 export class PageSetup {
   public pageSize: PageSize = 'Letter';
 
+  public landscape: boolean | undefined = undefined;
+
   public pageWidth = Unit.fromInch(8.5);
   public pageHeight = Unit.fromInch(11);
   public topMargin = Unit.fromInch(1);

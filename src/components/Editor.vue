@@ -1594,6 +1594,7 @@ export default class Editor extends Vue {
   onFileMenuPrint() {
     EventBus.$emit(IpcRendererChannels.FileMenuPrintReply, {
       pageSize: this.score.pageSetup.pageSize,
+      landscape: this.score.pageSetup.landscape,
     } as FileMenuPrintReplyArgs);
   }
 

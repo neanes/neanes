@@ -101,6 +101,22 @@
             />
             <label for="page-setup-dialog-unit-mm">mm</label>
           </div>
+          <div class="subheader">
+            Neume Spacing <span class="units">({{ marginUnitLabel }})</span>
+          </div>
+          <div class="form-group">
+            <input
+              class="margin-input"
+              type="number"
+              min="0"
+              :step="spacingStep"
+              :value="neumeSpacing"
+              @change="updateNeumeSpacing($event.target.value)"
+            />
+          </div>
+          <div class="form-group">
+            <button @click="resetToDefaults">Reset to Defaults</button>
+          </div>
         </div>
         <div class="right-pane">
           <div class="subheader">Drop Caps</div>
@@ -290,6 +306,18 @@ export default class PageSetupDialog extends Vue {
     }
   }
 
+  get spacingStep() {
+    switch (this.form.pageSizeUnit) {
+      case 'mm':
+        return 0.1;
+      case 'in':
+        return 0.005;
+      default:
+        console.warn(`Unknown page size unit: ${this.form.pageSizeUnit}`);
+        return 1;
+    }
+  }
+
   toDisplayUnit(value: number) {
     switch (this.form.pageSizeUnit) {
       case 'mm':
@@ -366,6 +394,19 @@ export default class PageSetupDialog extends Vue {
     this.$forceUpdate();
   }
 
+  get neumeSpacing() {
+    return this.toDisplayUnit(this.form!.neumeDefaultSpacing).toFixed(3);
+  }
+
+  updateNeumeSpacing(value: number) {
+    this.form!.neumeDefaultSpacing = Math.min(
+      Math.max(this.toStorageUnit(value), 0),
+      this.form!.pageWidth,
+    );
+
+    this.$forceUpdate();
+  }
+
   private get dropCapDefaultFontSize() {
     return Unit.toPt(this.form!.dropCapDefaultFontSize);
   }
@@ -405,6 +446,10 @@ export default class PageSetupDialog extends Vue {
     this.$emit('update', this.form);
     this.$emit('close');
   }
+
+  resetToDefaults() {
+    this.form = new PageSetup();
+  }
 }
 </script>
 
@@ -416,19 +461,20 @@ export default class PageSetupDialog extends Vue {
 
 .pane-container {
   display: flex;
-  width: 420px;
+  width: 500px;
   margin-bottom: 1.5rem;
 }
 
 .left-pane {
   flex: 1;
-  height: 290px;
+  overflow: auto;
+  height: 400px;
 }
 
 .right-pane {
   flex: 1;
   overflow: auto;
-  height: 290px;
+  height: 400px;
 }
 
 .header {

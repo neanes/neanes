@@ -234,7 +234,6 @@ export default class PageSetupDialog extends Vue {
 
   set landscape(value: boolean) {
     this.form.landscape = value;
-    console.log(value);
     this.updatePageSize();
   }
 

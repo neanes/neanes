@@ -305,7 +305,7 @@ export class ModeKeyElement extends ScoreElement {
   public quantitativeNeumeRight: QuantitativeNeume | null = null;
   public quantitativeNeumeTop: ModeSign | null = null;
   public color: string = '#000000';
-  public fontSize: number = Unit.FromPt(20);
+  public fontSize: number = Unit.fromPt(20);
 
   public get isPlagal() {
     return this.mode > 4 && this.mode !== 7;

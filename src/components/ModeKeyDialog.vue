@@ -126,6 +126,10 @@ export default class ModeKeyDialog extends Vue {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+.container {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
 .pane-container {
   display: flex;
   width: 420px;
@@ -133,13 +137,13 @@ export default class ModeKeyDialog extends Vue {
 }
 
 .left-pane {
-  height: 275px;
+  height: 290px;
 }
 
 .right-pane {
   flex: 1;
   overflow: auto;
-  height: 275px;
+  height: 290px;
 }
 
 .mode-key-container {

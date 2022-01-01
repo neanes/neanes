@@ -79,9 +79,15 @@ export default class TextToolbar extends Vue {
   }
 
   private set fontSize(value: number) {
+    // Round to nearest 0.5
+    const valueRounded = Math.round(value * 2) / 2;
+
     this.$emit(
       'update:fontSize',
-      Math.min(Math.max(Unit.fromPt(value), Unit.fromPt(4)), Unit.fromPt(100)),
+      Math.min(
+        Math.max(Unit.fromPt(valueRounded), Unit.fromPt(4)),
+        Unit.fromPt(100),
+      ),
     );
 
     this.$forceUpdate();

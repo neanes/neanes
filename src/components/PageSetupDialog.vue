@@ -294,10 +294,14 @@ export default class PageSetupDialog extends Vue {
   }
 
   private set dropCapDefaultFontSize(value: number) {
+    // Round to nearest 0.5
+    const valueRounded = Math.round(value * 2) / 2;
+
     this.form!.dropCapDefaultFontSize = Math.min(
-      Math.max(Unit.fromPt(value), Unit.fromPt(4)),
+      Math.max(Unit.fromPt(valueRounded), Unit.fromPt(4)),
       Unit.fromPt(100),
     );
+
     this.$forceUpdate();
   }
 

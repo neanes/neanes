@@ -298,28 +298,3 @@ export type Neume =
   | RootSign
   | ModeSign
   | MeasureBar;
-
-const redNeumes: Neume[] = [
-  GorgonNeume.Gorgon_Top,
-  GorgonNeume.Gorgon_Bottom,
-  GorgonNeume.Gorgon_TopRight,
-  GorgonNeume.Gorgon_BottomRight,
-  GorgonNeume.GorgonDottedLeft,
-  GorgonNeume.GorgonDottedRight,
-  GorgonNeume.GorgonDottedLeft_Right,
-  GorgonNeume.GorgonDottedRight_Right,
-  GorgonNeume.Digorgon,
-  GorgonNeume.Digorgon_Right,
-  GorgonNeume.Trigorgon,
-  GorgonNeume.Trigorgon_Right,
-  GorgonNeume.Argon,
-  GorgonNeume.Hemiolion,
-  GorgonNeume.Diargon,
-  VocalExpressionNeume.Heteron,
-  MeasureBar.MeasureBarRight,
-  MeasureBar.MeasureBarTop,
-];
-
-export function isRedNeume(neume: Neume) {
-  return redNeumes.includes(neume);
-}

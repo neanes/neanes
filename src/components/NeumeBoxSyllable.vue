@@ -9,44 +9,43 @@
       v-if="hasTimeNeume"
       :neume="note.timeNeume"
       :offset="timeNeumeOffset"
-      :class="[{ red: isRedNeume(note.timeNeume) }]"
     ></Neume>
     <Neume
       v-if="hasGorgonNeume"
       :neume="note.gorgonNeume"
       :offset="gorgonNeumeOffset"
-      :class="[{ red: isRedNeume(note.gorgonNeume) }]"
+      :style="gorgonStyle"
     ></Neume>
     <Neume
       v-if="hasFthora"
       :neume="note.fthora"
       :offset="fthoraOffset"
-      class="red"
+      :style="fthoraStyle"
     ></Neume>
     <Neume
       v-if="hasAccidental"
       :neume="note.accidental"
       :offset="accidentalOffset"
-      class="red"
+      :style="accidentalStyle"
     ></Neume>
     <Neume
       v-if="hasVocalExpressionNeume && !isVareia(note.vocalExpressionNeume)"
       :neume="note.vocalExpressionNeume"
       :offset="vocalExpressionNeumeOffset"
-      :class="[{ red: isRedNeume(note.vocalExpressionNeume) }]"
+      :style="vocalExpressionStyle"
     ></Neume>
-    <Neume v-if="hasMeasureBar" :neume="note.measureBar" class="red"></Neume>
+    <Neume
+      v-if="hasMeasureBar"
+      :neume="note.measureBar"
+      :style="measureBarStyle"
+    ></Neume>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { NoteElement, ScoreElementOffset } from '@/models/Element';
-import {
-  QuantitativeNeume,
-  isRedNeume,
-  VocalExpressionNeume,
-} from '@/models/Neumes';
+import { VocalExpressionNeume } from '@/models/Neumes';
 import {
   getFthoraAdjustments,
   getGorgonAdjustments,
@@ -96,6 +95,40 @@ export default class NeumeBoxSyllable extends Vue {
     return {
       fontSize: withZoom(this.pageSetup.neumeDefaultFontSize),
     } as CSSStyleDeclaration;
+  }
+
+  get gorgonStyle() {
+    return {
+      color: this.pageSetup.gorgonDefaultColor,
+    } as CSSStyleDeclaration;
+  }
+
+  get fthoraStyle() {
+    return {
+      color: this.pageSetup.fthoraDefaultColor,
+    } as CSSStyleDeclaration;
+  }
+
+  get accidentalStyle() {
+    return {
+      color: this.pageSetup.accidentalDefaultColor,
+    } as CSSStyleDeclaration;
+  }
+
+  get measureBarStyle() {
+    return {
+      color: this.pageSetup.measureBarDefaultColor,
+    } as CSSStyleDeclaration;
+  }
+
+  get vocalExpressionStyle() {
+    if (this.note.vocalExpressionNeume === VocalExpressionNeume.Heteron) {
+      return {
+        color: this.pageSetup.heteronDefaultColor,
+      } as CSSStyleDeclaration;
+    }
+
+    return null;
   }
 
   get timeNeumeOffset() {
@@ -188,10 +221,6 @@ export default class NeumeBoxSyllable extends Vue {
     }
 
     return offset;
-  }
-
-  isRedNeume(neume: VocalExpressionNeume) {
-    return isRedNeume(neume);
   }
 
   isVareia(neume: VocalExpressionNeume) {

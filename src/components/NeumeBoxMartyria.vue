@@ -8,9 +8,14 @@
         v-if="hasFthora"
         :neume="neume.fthora"
         :offset="fthoraOffset"
+        :style="fthoraStyle"
       ></Neume>
       <Neume v-if="neume.apostrophe" :neume="Note.Apostrophe"></Neume>
-      <Neume v-if="hasMeasureBar" :neume="neume.measureBar" class="red"></Neume>
+      <Neume
+        v-if="hasMeasureBar"
+        :neume="neume.measureBar"
+        :style="measureBarStyle"
+      ></Neume>
     </template>
   </div>
 </template>
@@ -60,6 +65,18 @@ export default class NeumeBoxMartyria extends Vue {
     return {
       color: this.pageSetup.martyriaDefaultColor,
       fontSize: withZoom(this.pageSetup.neumeDefaultFontSize),
+    } as CSSStyleDeclaration;
+  }
+
+  get fthoraStyle() {
+    return {
+      color: this.pageSetup.fthoraDefaultColor,
+    } as CSSStyleDeclaration;
+  }
+
+  get measureBarStyle() {
+    return {
+      color: this.pageSetup.measureBarDefaultColor,
     } as CSSStyleDeclaration;
   }
 

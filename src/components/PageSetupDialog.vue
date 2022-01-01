@@ -84,12 +84,57 @@
           </div>
           <div class="subheader">Neume Colors</div>
           <div class="form-group">
+            <label class="neume-colors-label">Accidentals</label>
+            <input
+              class="neume-colors-input"
+              type="color"
+              list="presetNeumeColors"
+              v-model.lazy="form.accidentalDefaultColor"
+            />
+          </div>
+          <div class="form-group">
+            <label class="neume-colors-label">Fthoras</label>
+            <input
+              class="neume-colors-input"
+              type="color"
+              list="presetNeumeColors"
+              v-model.lazy="form.fthoraDefaultColor"
+            />
+          </div>
+          <div class="form-group">
+            <label class="neume-colors-label">Gorgons</label>
+            <input
+              class="neume-colors-input"
+              type="color"
+              list="presetNeumeColors"
+              v-model.lazy="form.gorgonDefaultColor"
+            />
+          </div>
+          <div class="form-group">
+            <label class="neume-colors-label">Heterons</label>
+            <input
+              class="neume-colors-input"
+              type="color"
+              list="presetNeumeColors"
+              v-model.lazy="form.heteronDefaultColor"
+            />
+          </div>
+          <div class="form-group">
             <label class="neume-colors-label">Martyrias</label>
             <input
               class="neume-colors-input"
               type="color"
               list="presetNeumeColors"
               v-model.lazy="form.martyriaDefaultColor"
+            />
+          </div>
+          <div class="form-group">
+            <label class="neume-colors-label">Measures</label>
+            <input
+              class="neume-colors-input"
+              type="color"
+              list="presetNeumeColors"
+              v-model.lazy="form.measureBarDefaultColor"
             />
           </div>
           <div class="form-group">
@@ -280,7 +325,7 @@ export default class PageSetupDialog extends Vue {
 
 .neume-colors-label {
   display: inline-block;
-  width: 4.5rem;
+  width: 5.5rem;
 }
 
 .neume-colors-input {

@@ -17,6 +17,12 @@ export class PageSetup {
   public neumeDefaultFontSize = Unit.fromPt(20);
   public neumeDefaultSpacing = 3;
 
+  public accidentalDefaultColor = '#ED0000';
+  public fthoraDefaultColor = '#ED0000';
+  public gorgonDefaultColor = '#ED0000';
+  public heteronDefaultColor = 'ED0000';
+  public measureBarDefaultColor = '#ED0000';
+
   public tempoDefaultColor = '#ED0000';
 
   public martyriaDefaultColor = '#ED0000';

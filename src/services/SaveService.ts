@@ -78,6 +78,12 @@ export class SaveService {
     score.pageSetup.rightMargin = s.pageSetup.rightMargin;
     score.pageSetup.topMargin = s.pageSetup.topMargin;
 
+    score.pageSetup.accidentalDefaultColor = s.pageSetup.accidentalDefaultColor;
+    score.pageSetup.fthoraDefaultColor = s.pageSetup.fthoraDefaultColor;
+    score.pageSetup.heteronDefaultColor = s.pageSetup.heteronDefaultColor;
+    score.pageSetup.gorgonDefaultColor = s.pageSetup.gorgonDefaultColor;
+    score.pageSetup.measureBarDefaultColor = s.pageSetup.measureBarDefaultColor;
+
     for (let e of s.staff.elements) {
       let element: ScoreElement_v1 = new EmptyElement_v1();
 
@@ -232,6 +238,12 @@ export class SaveService {
     score.pageSetup.pageWidth = s.pageSetup.pageWidth;
     score.pageSetup.rightMargin = s.pageSetup.rightMargin;
     score.pageSetup.topMargin = s.pageSetup.topMargin;
+
+    score.pageSetup.accidentalDefaultColor = s.pageSetup.accidentalDefaultColor;
+    score.pageSetup.fthoraDefaultColor = s.pageSetup.fthoraDefaultColor;
+    score.pageSetup.heteronDefaultColor = s.pageSetup.heteronDefaultColor;
+    score.pageSetup.gorgonDefaultColor = s.pageSetup.gorgonDefaultColor;
+    score.pageSetup.measureBarDefaultColor = s.pageSetup.measureBarDefaultColor;
 
     for (let e of s.staff.elements) {
       let element: ScoreElement = new EmptyElement();

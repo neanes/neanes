@@ -85,6 +85,7 @@ export class SaveService {
     score.pageSetup.measureBarDefaultColor = s.pageSetup.measureBarDefaultColor;
 
     score.pageSetup.pageSize = s.pageSetup.pageSize;
+    score.pageSetup.pageSizeUnit = s.pageSetup.pageSizeUnit;
     score.pageSetup.landscape = s.pageSetup.landscape || undefined;
 
     for (let e of s.staff.elements) {
@@ -249,6 +250,7 @@ export class SaveService {
     score.pageSetup.measureBarDefaultColor = s.pageSetup.measureBarDefaultColor;
 
     score.pageSetup.pageSize = s.pageSetup.pageSize;
+    score.pageSetup.pageSizeUnit = s.pageSetup.pageSizeUnit;
     score.pageSetup.landscape = s.pageSetup.landscape === true;
 
     for (let e of s.staff.elements) {

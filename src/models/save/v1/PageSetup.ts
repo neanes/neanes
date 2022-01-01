@@ -1,9 +1,11 @@
 import { Unit } from '@/utils/Unit';
 
 export type PageSize = 'A3' | 'A4' | 'A5' | 'Legal' | 'Letter' | 'Tabloid';
+export type PageSizeUnit = 'mm' | 'in';
 
 export class PageSetup {
   public pageSize: PageSize = 'Letter';
+  public pageSizeUnit: PageSizeUnit = 'in';
 
   public landscape: boolean | undefined = undefined;
 

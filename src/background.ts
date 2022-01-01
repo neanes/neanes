@@ -222,6 +222,12 @@ function createMenu(win: BrowserWindow) {
         },
         { type: 'separator' },
         {
+          label: 'Page Setup',
+          click() {
+            win.webContents.send(IpcMainChannels.FileMenuPageSetup);
+          },
+        },
+        {
           label: '&Export as PDF',
           accelerator: 'CmdOrCtrl+E',
           async click() {

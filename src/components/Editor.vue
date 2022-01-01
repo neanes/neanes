@@ -253,6 +253,12 @@
       @update="updateModeKeyFromTemplate(selectedElement, $event)"
       @close="closeModeKeyDialog"
     />
+    <PageSetupDialog
+      v-if="pageSetupDialogIsOpen"
+      :pageSetup="score.pageSetup"
+      @update="updatePageSetup($event)"
+      @close="closePageSetupDialog"
+    />
   </div>
 </template>
 
@@ -303,6 +309,7 @@ import MainToolbar from '@/components/MainToolbar.vue';
 import NeumeToolbar from '@/components/NeumeToolbar.vue';
 import MartyriaToolbar from '@/components/MartyriaToolbar.vue';
 import ModeKeyDialog from '@/components/ModeKeyDialog.vue';
+import PageSetupDialog from '@/components/PageSetupDialog.vue';
 import {
   FileMenuOpenScoreArgs,
   FileMenuSaveAsArgs,
@@ -322,6 +329,7 @@ import {
   CommandFactory,
   CommandService,
 } from '@/services/history/CommandService';
+import { PageSetup } from '@/models/PageSetup';
 
 export enum EntryMode {
   Auto = 'Auto',
@@ -347,6 +355,7 @@ export enum EntryMode {
     MartyriaToolbar,
     MainToolbar,
     ModeKeyDialog,
+    PageSetupDialog,
   },
 })
 export default class Editor extends Vue {
@@ -367,6 +376,7 @@ export default class Editor extends Vue {
   elementToFocus: ScoreElement | null = null;
 
   modeKeyDialogIsOpen: boolean = false;
+  pageSetupDialogIsOpen: boolean = false;
 
   // Commands
   commandService: CommandService = new CommandService();
@@ -583,6 +593,7 @@ export default class Editor extends Vue {
     EventBus.$on(IpcMainChannels.FileMenuOpenScore, this.onFileMenuOpenScore);
     EventBus.$on(IpcMainChannels.FileMenuSave, this.onFileMenuSave);
     EventBus.$on(IpcMainChannels.FileMenuSaveAs, this.onFileMenuSaveAs);
+    EventBus.$on(IpcMainChannels.FileMenuPageSetup, this.onFileMenuPageSetup);
     EventBus.$on(IpcMainChannels.SaveComplete, this.onSaveComplete);
     EventBus.$on(IpcMainChannels.FileMenuUndo, this.onFileMenuUndo);
     EventBus.$on(IpcMainChannels.FileMenuRedo, this.onFileMenuRedo);
@@ -612,6 +623,7 @@ export default class Editor extends Vue {
     EventBus.$off(IpcMainChannels.FileMenuOpenScore, this.onFileMenuOpenScore);
     EventBus.$off(IpcMainChannels.FileMenuSave, this.onFileMenuSave);
     EventBus.$off(IpcMainChannels.FileMenuSaveAs, this.onFileMenuSaveAs);
+    EventBus.$off(IpcMainChannels.FileMenuPageSetup, this.onFileMenuPageSetup);
     EventBus.$off(IpcMainChannels.SaveComplete, this.onSaveComplete);
     EventBus.$off(
       IpcMainChannels.FileMenuInsertTextBox,
@@ -659,6 +671,10 @@ export default class Editor extends Vue {
 
   closeModeKeyDialog() {
     this.modeKeyDialogIsOpen = false;
+  }
+
+  closePageSetupDialog() {
+    this.pageSetupDialogIsOpen = false;
   }
 
   isLastElement(element: ScoreElement) {
@@ -1503,6 +1519,11 @@ export default class Editor extends Vue {
     }
   }
 
+  updatePageSetup(pageSetup: PageSetup) {
+    Object.assign(this.score.pageSetup, pageSetup);
+    this.save();
+  }
+
   updateEntryMode(mode: EntryMode) {
     this.entryMode = mode;
   }
@@ -1561,6 +1582,10 @@ export default class Editor extends Vue {
     this.selectedElement = null;
 
     this.save(false);
+  }
+
+  onFileMenuPageSetup() {
+    this.pageSetupDialogIsOpen = true;
   }
 
   onFileMenuInsertTextBox() {
@@ -1660,7 +1685,7 @@ export default class Editor extends Vue {
     const title = new TextBoxElement();
     title.content = 'Title';
     title.alignment = TextBoxAlignment.Center;
-    title.fontSize = Unit.FromPt(16);
+    title.fontSize = Unit.fromPt(16);
 
     score.staff.elements.unshift(title, this.createDefaultModeKey());
 

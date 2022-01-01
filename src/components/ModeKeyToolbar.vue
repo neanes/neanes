@@ -1,6 +1,6 @@
 <template>
   <div class="mode-key-toolbar">
-    <input type="number" min="4" max="100" step="1" v-model="fontSize" />
+    <input type="number" min="4" max="100" step="1" v-model.lazy="fontSize" />
     <span class="space"></span>
     <input
       type="color"
@@ -10,8 +10,8 @@
     />
     <datalist id="presetColors">
       <option>#000000</option>
-      <option>#ff0000</option>
-      <option>#0000ff</option>
+      <option>#ED0000</option>
+      <option>#0000FF</option>
     </datalist>
     <span class="space"></span>
     <button
@@ -71,11 +71,16 @@ export default class ModeKeyToolbar extends Vue {
   TextBoxAlignment = TextBoxAlignment;
 
   private get fontSize() {
-    return (this.element.fontSize * 72) / 96;
+    return Unit.toPt(this.element.fontSize);
   }
 
   private set fontSize(value: number) {
-    this.$emit('update:fontSize', Unit.FromPt(value));
+    this.$emit(
+      'update:fontSize',
+      Math.min(Math.max(Unit.fromPt(value), Unit.fromPt(4)), Unit.fromPt(100)),
+    );
+
+    this.$forceUpdate();
   }
 }
 </script>

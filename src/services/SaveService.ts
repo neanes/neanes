@@ -84,6 +84,8 @@ export class SaveService {
     score.pageSetup.gorgonDefaultColor = s.pageSetup.gorgonDefaultColor;
     score.pageSetup.measureBarDefaultColor = s.pageSetup.measureBarDefaultColor;
 
+    score.pageSetup.pageSize = s.pageSetup.pageSize;
+
     for (let e of s.staff.elements) {
       let element: ScoreElement_v1 = new EmptyElement_v1();
 
@@ -244,6 +246,8 @@ export class SaveService {
     score.pageSetup.heteronDefaultColor = s.pageSetup.heteronDefaultColor;
     score.pageSetup.gorgonDefaultColor = s.pageSetup.gorgonDefaultColor;
     score.pageSetup.measureBarDefaultColor = s.pageSetup.measureBarDefaultColor;
+
+    score.pageSetup.pageSize = s.pageSetup.pageSize;
 
     for (let e of s.staff.elements) {
       let element: ScoreElement = new EmptyElement();

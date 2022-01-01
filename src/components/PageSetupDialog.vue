@@ -47,6 +47,12 @@
               v-model.lazy="rightMargin"
             />
           </div>
+          <div class="subheader">Paper Size</div>
+          <select class="paper-size-select" v-model="pageSize">
+            <option v-for="size in pageSizes" :key="size.name">
+              {{ size.name }}
+            </option>
+          </select>
         </div>
         <div class="right-pane">
           <div class="subheader">Drop Caps</div>
@@ -168,7 +174,7 @@
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import ModalDialog from '@/components/ModalDialog.vue';
-import { PageSetup } from '@/models/PageSetup';
+import { PageSetup, PageSize, pageSizes } from '@/models/PageSetup';
 import { Unit } from '@/utils/Unit';
 
 @Component({
@@ -187,6 +193,24 @@ export default class PageSetupDialog extends Vue {
 
   destroyed() {
     window.removeEventListener('keydown', this.onKeyDown);
+  }
+
+  get pageSizes() {
+    return pageSizes;
+  }
+
+  get pageSize() {
+    return this.form.pageSize;
+  }
+
+  set pageSize(value: PageSize) {
+    this.form.pageSize = value;
+
+    const pageSize = pageSizes.find((x) => x.name === value);
+    if (pageSize) {
+      this.form.pageWidth = pageSize.width;
+      this.form.pageHeight = pageSize.height;
+    }
   }
 
   get topMargin() {

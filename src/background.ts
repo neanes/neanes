@@ -14,6 +14,7 @@ import { createProtocol } from 'vue-cli-plugin-electron-builder/lib';
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer';
 import {
   FileMenuOpenScoreArgs,
+  FileMenuPrintReplyArgs,
   FileMenuSaveAsArgs,
   FileMenuSaveAsReplyArgs,
   FileMenuSaveReplyArgs,
@@ -245,10 +246,18 @@ function createMenu(win: BrowserWindow) {
               });
 
               if (!dialogResult.canceled) {
-                const data = await win.webContents.printToPDF({
-                  pageSize: 'Letter',
-                });
-                await fs.writeFile(dialogResult.filePath!, data);
+                win.webContents.send(IpcMainChannels.FileMenuPrint);
+
+                // Wait for the reply and print
+                ipcMain.once(
+                  IpcRendererChannels.FileMenuPrintReply,
+                  async (event, args: FileMenuPrintReplyArgs) => {
+                    const data = await win.webContents.printToPDF({
+                      pageSize: args.pageSize,
+                    });
+                    await fs.writeFile(dialogResult.filePath!, data);
+                  },
+                );
               }
             } catch (error) {
               console.error(error);
@@ -264,7 +273,17 @@ function createMenu(win: BrowserWindow) {
           accelerator: 'CmdOrCtrl+P',
           click() {
             try {
-              win.webContents.print();
+              win.webContents.send(IpcMainChannels.FileMenuPrint);
+
+              // Wait for the reply and print
+              ipcMain.once(
+                IpcRendererChannels.FileMenuPrintReply,
+                async (event, args: FileMenuPrintReplyArgs) => {
+                  win.webContents.print({
+                    pageSize: args.pageSize,
+                  });
+                },
+              );
             } catch (error) {
               console.error(error);
 

@@ -312,6 +312,7 @@ import ModeKeyDialog from '@/components/ModeKeyDialog.vue';
 import PageSetupDialog from '@/components/PageSetupDialog.vue';
 import {
   FileMenuOpenScoreArgs,
+  FileMenuPrintReplyArgs,
   FileMenuSaveAsArgs,
   FileMenuSaveAsReplyArgs,
   FileMenuSaveReplyArgs,
@@ -591,6 +592,7 @@ export default class Editor extends Vue {
 
     EventBus.$on(IpcMainChannels.FileMenuNewScore, this.onFileMenuNewScore);
     EventBus.$on(IpcMainChannels.FileMenuOpenScore, this.onFileMenuOpenScore);
+    EventBus.$on(IpcMainChannels.FileMenuPrint, this.onFileMenuPrint);
     EventBus.$on(IpcMainChannels.FileMenuSave, this.onFileMenuSave);
     EventBus.$on(IpcMainChannels.FileMenuSaveAs, this.onFileMenuSaveAs);
     EventBus.$on(IpcMainChannels.FileMenuPageSetup, this.onFileMenuPageSetup);
@@ -621,6 +623,7 @@ export default class Editor extends Vue {
 
     EventBus.$off(IpcMainChannels.FileMenuNewScore, this.onFileMenuNewScore);
     EventBus.$off(IpcMainChannels.FileMenuOpenScore, this.onFileMenuOpenScore);
+    EventBus.$off(IpcMainChannels.FileMenuPrint, this.onFileMenuPrint);
     EventBus.$off(IpcMainChannels.FileMenuSave, this.onFileMenuSave);
     EventBus.$off(IpcMainChannels.FileMenuSaveAs, this.onFileMenuSaveAs);
     EventBus.$off(IpcMainChannels.FileMenuPageSetup, this.onFileMenuPageSetup);
@@ -1586,6 +1589,12 @@ export default class Editor extends Vue {
 
   onFileMenuPageSetup() {
     this.pageSetupDialogIsOpen = true;
+  }
+
+  onFileMenuPrint() {
+    EventBus.$emit(IpcRendererChannels.FileMenuPrintReply, {
+      pageSize: this.score.pageSetup.pageSize,
+    } as FileMenuPrintReplyArgs);
   }
 
   onFileMenuInsertTextBox() {

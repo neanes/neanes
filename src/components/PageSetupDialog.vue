@@ -5,7 +5,7 @@
       <div class="pane-container">
         <div class="left-pane">
           <div class="subheader">
-            Margins <span class="units">(inches)</span>
+            Margins <span class="units">({{ marginUnitLabel }})</span>
           </div>
           <div class="form-group">
             <label class="margin-label">Top</label>
@@ -13,8 +13,9 @@
               class="margin-input"
               type="number"
               min="0"
-              step="0.1"
-              v-model.lazy="topMargin"
+              :step="marginStep"
+              :value="topMargin"
+              @change="updateTopMargin($event.target.value)"
             />
           </div>
           <div class="form-group">
@@ -23,8 +24,9 @@
               class="margin-input"
               type="number"
               min="0"
-              step="0.1"
-              v-model.lazy="bottomMargin"
+              :step="marginStep"
+              :value="bottomMargin"
+              @change="updateBottomMargin($event.target.value)"
             />
           </div>
           <div class="form-group">
@@ -33,8 +35,9 @@
               class="margin-input"
               type="number"
               min="0"
-              step="0.1"
-              v-model.lazy="leftMargin"
+              :step="marginStep"
+              :value="leftMargin"
+              @change="updateLeftMargin($event.target.value)"
             />
           </div>
           <div class="form-group">
@@ -43,35 +46,61 @@
               class="margin-input"
               type="number"
               min="0"
-              step="0.1"
-              v-model.lazy="rightMargin"
+              :step="marginStep"
+              :value="rightMargin"
+              @change="updateRightMargin($event.target.value)"
             />
           </div>
-          <div class="subheader">Orientation</div>
-          <input
-            id="page-setup-dialog-landscape-false"
-            type="radio"
-            name="landscape"
-            v-model="landscape"
-            :value="false"
-            :checked="!landscape"
-          />
-          <label for="page-setup-dialog-landscape-false">Portrait</label>
-          <input
-            id="page-setup-dialog-landscape-true"
-            type="radio"
-            name="landscape"
-            v-model="landscape"
-            :value="true"
-            :checked="landscape"
-          />
-          <label for="page-setup-dialog-landscape-true">Landscape</label>
-          <div class="subheader">Paper Size</div>
-          <select class="paper-size-select" v-model="pageSize">
-            <option v-for="size in pageSizes" :key="size.name">
-              {{ size.name }}
-            </option>
-          </select>
+          <div class="form-group">
+            <div class="subheader">Orientation</div>
+            <input
+              id="page-setup-dialog-landscape-false"
+              type="radio"
+              name="landscape"
+              v-model="landscape"
+              :value="false"
+              :checked="!landscape"
+            />
+            <label for="page-setup-dialog-landscape-false">Portrait</label>
+            <input
+              id="page-setup-dialog-landscape-true"
+              type="radio"
+              name="landscape"
+              v-model="landscape"
+              :value="true"
+              :checked="landscape"
+            />
+            <label for="page-setup-dialog-landscape-true">Landscape</label>
+          </div>
+          <div class="form-group">
+            <div class="subheader">Paper Size</div>
+            <select class="paper-size-select" v-model="pageSize">
+              <option v-for="size in pageSizes" :key="size.name">
+                {{ size.name }}
+              </option>
+            </select>
+          </div>
+          <div class="form-group">
+            <div class="subheader">Unit</div>
+            <input
+              id="page-setup-dialog-unit-in"
+              type="radio"
+              name="pageSizeUnit"
+              v-model="form.pageSizeUnit"
+              value="in"
+              :checked="form.pageSizeUnit === 'in'"
+            />
+            <label for="page-setup-dialog-unit-in">inch</label>
+            <input
+              id="page-setup-dialog-unit-mm"
+              type="radio"
+              name="pageSizeUnit"
+              v-model="form.pageSizeUnit"
+              value="mm"
+              :checked="form.pageSizeUnit === 'mm'"
+            />
+            <label for="page-setup-dialog-unit-mm">mm</label>
+          </div>
         </div>
         <div class="right-pane">
           <div class="subheader">Drop Caps</div>
@@ -237,13 +266,61 @@ export default class PageSetupDialog extends Vue {
     this.updatePageSize();
   }
 
-  get topMargin() {
-    return Unit.toInch(this.form!.topMargin);
+  get marginUnitLabel() {
+    switch (this.form.pageSizeUnit) {
+      case 'mm':
+        return 'mm';
+      case 'in':
+        return 'inches';
+      default:
+        console.warn(`Unknown page size unit: ${this.form.pageSizeUnit}`);
+        return null;
+    }
   }
 
-  set topMargin(value: number) {
+  get marginStep() {
+    switch (this.form.pageSizeUnit) {
+      case 'mm':
+        return 1;
+      case 'in':
+        return 0.5;
+      default:
+        console.warn(`Unknown page size unit: ${this.form.pageSizeUnit}`);
+        return 1;
+    }
+  }
+
+  toDisplayUnit(value: number) {
+    switch (this.form.pageSizeUnit) {
+      case 'mm':
+        return Unit.toMm(value);
+      case 'in':
+        return Unit.toInch(value);
+      default:
+        console.warn(`Unknown page size unit: ${this.form.pageSizeUnit}`);
+        return 0;
+    }
+  }
+
+  toStorageUnit(value: number) {
+    switch (this.form.pageSizeUnit) {
+      case 'mm':
+        return Unit.fromMm(value);
+      case 'in':
+        return Unit.fromInch(value);
+      default:
+        console.warn(`Unknown page size unit: ${this.form.pageSizeUnit}`);
+        return 0;
+    }
+  }
+
+  get topMargin() {
+    return this.toDisplayUnit(this.form!.topMargin).toFixed(2);
+  }
+
+  updateTopMargin(value: number) {
     this.form!.topMargin = Math.min(
-      Math.max(Unit.fromInch(value), 0),
+      Math.max(this.toStorageUnit(value), 0),
       this.form!.pageHeight - this.form!.bottomMargin - Unit.fromInch(0.5),
     );
 
@@ -251,12 +328,12 @@ export default class PageSetupDialog extends Vue {
   }
 
   get bottomMargin() {
-    return Unit.toInch(this.form!.bottomMargin);
+    return this.toDisplayUnit(this.form!.bottomMargin).toFixed(2);
   }
 
-  set bottomMargin(value: number) {
+  updateBottomMargin(value: number) {
     this.form!.bottomMargin = Math.min(
-      Math.max(Unit.fromInch(value), 0),
+      Math.max(this.toStorageUnit(value), 0),
       this.form!.pageHeight - this.form!.topMargin - Unit.fromInch(0.5),
     );
 
@@ -264,12 +341,12 @@ export default class PageSetupDialog extends Vue {
   }
 
   get leftMargin() {
-    return Unit.toInch(this.form!.leftMargin);
+    return this.toDisplayUnit(this.form!.leftMargin).toFixed(2);
   }
 
-  set leftMargin(value: number) {
+  updateLeftMargin(value: number) {
     this.form!.leftMargin = Math.min(
-      Math.max(Unit.fromInch(value), 0),
+      Math.max(this.toStorageUnit(value), 0),
       this.form!.pageWidth - this.form!.rightMargin - Unit.fromInch(0.5),
     );
 
@@ -277,12 +354,12 @@ export default class PageSetupDialog extends Vue {
   }
 
   get rightMargin() {
-    return Unit.toInch(this.form!.rightMargin);
+    return this.toDisplayUnit(this.form!.rightMargin).toFixed(2);
   }
 
-  set rightMargin(value: number) {
+  updateRightMargin(value: number) {
     this.form!.rightMargin = Math.min(
-      Math.max(Unit.fromInch(value), 0),
+      Math.max(this.toStorageUnit(value), 0),
       this.form!.pageWidth - this.form!.leftMargin - Unit.fromInch(0.5),
     );
 
@@ -345,13 +422,13 @@ export default class PageSetupDialog extends Vue {
 
 .left-pane {
   flex: 1;
-  height: 275px;
+  height: 290px;
 }
 
 .right-pane {
   flex: 1;
   overflow: auto;
-  height: 275px;
+  height: 290px;
 }
 
 .header {

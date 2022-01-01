@@ -134,7 +134,7 @@ export default class MainToolbar extends Vue {
   zoomOptions: number[] = [50, 75, 90, 100, 125, 150, 200];
 
   get zoomDisplay() {
-    return this.zoomToFit ? 'Fit' : this.zoom * 100 + '%';
+    return this.zoomToFit ? 'Fit' : (this.zoom * 100).toFixed(0) + '%';
   }
 
   updateZoom(value: string) {
@@ -145,7 +145,7 @@ export default class MainToolbar extends Vue {
       return;
     }
 
-    let valueAsNumber = Math.round(parseInt(value));
+    let valueAsNumber = parseInt(value);
 
     if (Number.isNaN(valueAsNumber)) {
       valueAsNumber = 100;
@@ -154,6 +154,8 @@ export default class MainToolbar extends Vue {
     this.$emit('update:zoom', valueAsNumber / 100);
 
     this.showZoomMenu = false;
+
+    this.$forceUpdate();
   }
 }
 </script>

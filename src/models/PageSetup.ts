@@ -63,7 +63,7 @@ export class PageSetup {
 
   public accidentalDefaultColor = '#ED0000';
   public fthoraDefaultColor = '#ED0000';
-  public heteronDefaultColor = 'ED0000';
+  public heteronDefaultColor = '#ED0000';
   public gorgonDefaultColor = '#ED0000';
   public measureBarDefaultColor = '#ED0000';
 

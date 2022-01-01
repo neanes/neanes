@@ -71,7 +71,6 @@ export default class TextBox extends Vue {
 .text-box-container {
   border: 1px dotted black;
   box-sizing: border-box;
-  padding-left: 1px;
   min-height: 10px;
 }
 
@@ -79,5 +78,9 @@ export default class TextBox extends Vue {
   display: block;
 
   min-height: 10px;
+}
+
+.text-box:focus {
+  outline: none;
 }
 </style>

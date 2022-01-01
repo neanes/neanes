@@ -254,6 +254,7 @@ function createMenu(win: BrowserWindow) {
                   async (event, args: FileMenuPrintReplyArgs) => {
                     const data = await win.webContents.printToPDF({
                       pageSize: args.pageSize,
+                      landscape: args.landscape,
                     });
                     await fs.writeFile(dialogResult.filePath!, data);
                   },
@@ -281,6 +282,7 @@ function createMenu(win: BrowserWindow) {
                 async (event, args: FileMenuPrintReplyArgs) => {
                   win.webContents.print({
                     pageSize: args.pageSize,
+                    landscape: args.landscape,
                   });
                 },
               );

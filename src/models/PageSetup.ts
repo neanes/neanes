@@ -44,6 +44,8 @@ export const pageSizes: PageSizeOption[] = [
 export class PageSetup {
   public pageSize: PageSize = 'Letter';
 
+  public landscape: boolean = false;
+
   public pageWidth = Unit.fromInch(8.5);
   public pageHeight = Unit.fromInch(11);
 

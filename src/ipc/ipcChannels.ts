@@ -41,6 +41,7 @@ export interface FileMenuOpenScoreArgs {
 
 export interface FileMenuPrintReplyArgs {
   pageSize: PageSize;
+  landscape: boolean;
 }
 
 export interface FileMenuSaveAsArgs {

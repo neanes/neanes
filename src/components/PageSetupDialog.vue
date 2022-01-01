@@ -47,6 +47,25 @@
               v-model.lazy="rightMargin"
             />
           </div>
+          <div class="subheader">Orientation</div>
+          <input
+            id="page-setup-dialog-landscape-false"
+            type="radio"
+            name="landscape"
+            v-model="landscape"
+            :value="false"
+            :checked="!landscape"
+          />
+          <label for="page-setup-dialog-landscape-false">Portrait</label>
+          <input
+            id="page-setup-dialog-landscape-true"
+            type="radio"
+            name="landscape"
+            v-model="landscape"
+            :value="true"
+            :checked="landscape"
+          />
+          <label for="page-setup-dialog-landscape-true">Landscape</label>
           <div class="subheader">Paper Size</div>
           <select class="paper-size-select" v-model="pageSize">
             <option v-for="size in pageSizes" :key="size.name">
@@ -206,11 +225,17 @@ export default class PageSetupDialog extends Vue {
   set pageSize(value: PageSize) {
     this.form.pageSize = value;
 
-    const pageSize = pageSizes.find((x) => x.name === value);
-    if (pageSize) {
-      this.form.pageWidth = pageSize.width;
-      this.form.pageHeight = pageSize.height;
-    }
+    this.updatePageSize();
+  }
+
+  get landscape() {
+    return this.form.landscape;
+  }
+
+  set landscape(value: boolean) {
+    this.form.landscape = value;
+    console.log(value);
+    this.updatePageSize();
   }
 
   get topMargin() {
@@ -280,6 +305,19 @@ export default class PageSetupDialog extends Vue {
   onKeyDown(event: KeyboardEvent) {
     if (event.code === 'Escape') {
       this.$emit('close');
+    }
+  }
+
+  updatePageSize() {
+    const pageSize = pageSizes.find((x) => x.name === this.form.pageSize);
+    if (pageSize) {
+      if (this.form.landscape) {
+        this.form.pageWidth = pageSize.height;
+        this.form.pageHeight = pageSize.width;
+      } else {
+        this.form.pageWidth = pageSize.width;
+        this.form.pageHeight = pageSize.height;
+      }
     }
   }
 

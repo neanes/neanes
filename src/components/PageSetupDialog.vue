@@ -120,7 +120,6 @@
             <input
               class="margin-input"
               type="number"
-              min="0"
               :step="spacingStep"
               :value="lyricsVerticalOffset"
               @change="updateLyricsVerticalOffset($event.target.value)"
@@ -494,8 +493,10 @@ export default class PageSetupDialog extends Vue {
 
   updateLyricsVerticalOffset(value: number) {
     this.form!.lyricsVerticalOffset = Math.min(
-      Math.max(this.toStorageUnit(value), 0),
-      this.form!.pageWidth,
+      this.toStorageUnit(value),
+      this.form!.innerPageHeight -
+        this.form.lyricsDefaultFontSize -
+        this.form.neumeDefaultFontSize,
     );
 
     this.$forceUpdate();
@@ -508,7 +509,7 @@ export default class PageSetupDialog extends Vue {
   updateLineHeight(value: number) {
     this.form!.lineHeight = Math.min(
       Math.max(this.toStorageUnit(value), 0),
-      this.form!.pageWidth,
+      this.form!.innerPageHeight,
     );
 
     this.$forceUpdate();

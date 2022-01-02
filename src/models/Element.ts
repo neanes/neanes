@@ -111,6 +111,7 @@ export class NoteElement extends ScoreElement {
   // Used for display
   public melismaText: string = '';
   public melismaOffsetLeft: number | null = null;
+  public lyricsVerticalOffset: number = 0;
   public neumeWidth: number = 0;
   public lyricsWidth: number = 0;
 
@@ -272,6 +273,8 @@ export class TempoElement extends ScoreElement {
 
 export class EmptyElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.Empty;
+
+  public height: number = 0;
 }
 
 export enum TextBoxAlignment {

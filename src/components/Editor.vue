@@ -57,7 +57,7 @@
                     :class="[{ selected: element == selectedElement }]"
                     @click.native="selectedElement = element"
                   ></SyllableNeumeBox>
-                  <div class="lyrics-container" :style="lyricStyle">
+                  <div class="lyrics-container" :style="getLyricStyle(element)">
                     <ContentEditable
                       class="lyrics"
                       :content="element.lyrics"
@@ -88,10 +88,12 @@
               </template>
               <template v-if="isMartyriaElement(element)">
                 <div class="neume-box">
-                  <span v-if="element.pageBreak">
+                  <span class="page-break" v-if="element.pageBreak">
                     ><img src="@/assets/pagebreak.svg"
                   /></span>
-                  <span v-if="element.lineBreak">&#182;</span>
+                  <span class="line-break" v-if="element.lineBreak"
+                    >&#182;</span
+                  >
                   <MartyriaNeumeBox
                     :ref="`element-${getElementIndex(element)}`"
                     class="marytria-neume-box"
@@ -108,10 +110,12 @@
                   :ref="`element-${getElementIndex(element)}`"
                   class="neume-box"
                 >
-                  <span v-if="element.pageBreak">
+                  <span class="page-break" v-if="element.pageBreak">
                     ><img src="@/assets/pagebreak.svg"
                   /></span>
-                  <span v-if="element.lineBreak">&#182;</span>
+                  <span class="line-break" v-if="element.lineBreak"
+                    >&#182;</span
+                  >
                   <TempoNeumeBox
                     class="tempo-neume-box"
                     :neume="element"
@@ -127,10 +131,12 @@
                   :ref="`element-${getElementIndex(element)}`"
                   class="neume-box"
                 >
-                  <span v-if="element.pageBreak">
+                  <span class="page-break" v-if="element.pageBreak">
                     ><img src="@/assets/pagebreak.svg"
                   /></span>
-                  <span v-if="element.lineBreak">&#182;</span>
+                  <span class="line-break" v-if="element.lineBreak"
+                    >&#182;</span
+                  >
                   <div
                     class="empty-neume-box"
                     :class="[{ selected: element == selectedElement }]"
@@ -279,8 +285,6 @@ import {
 import {
   QuantitativeNeume,
   TimeNeume,
-  Note,
-  RootSign,
   VocalExpressionNeume,
   Fthora,
   GorgonNeume,
@@ -288,9 +292,8 @@ import {
   MeasureBar,
   Accidental,
 } from '@/models/Neumes';
-import { Page, Line } from '@/models/Page';
+import { Page } from '@/models/Page';
 import { Score } from '@/models/Score';
-import { KeyboardMap, neumeMap } from '@/models/NeumeMappings';
 import { SaveService } from '@/services/SaveService';
 import { LayoutService } from '@/services/LayoutService';
 import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
@@ -545,9 +548,9 @@ export default class Editor extends Vue {
     } as CSSStyleDeclaration;
   }
 
-  get lyricStyle() {
+  getLyricStyle(element: NoteElement) {
     return {
-      top: withZoom(this.score.pageSetup.lyricsVerticalOffset),
+      top: withZoom(element.lyricsVerticalOffset),
       fontSize: withZoom(this.score.pageSetup.lyricsDefaultFontSize),
       fontFamily: this.score.pageSetup.lyricsDefaultFontFamily,
       color: this.score.pageSetup.lyricsDefaultColor,
@@ -557,7 +560,7 @@ export default class Editor extends Vue {
   getEmptyBoxStyle(element: EmptyElement) {
     return {
       width: withZoom(element.width),
-      height: withZoom(this.score.pageSetup.lineHeight),
+      height: withZoom(element.height),
     } as CSSStyleDeclaration;
   }
 
@@ -1779,12 +1782,7 @@ export default class Editor extends Vue {
   align-items: center;
   justify-content: center;
 
-  /* width: 39px;  */
-  /* height: 82px; */
-
   position: relative;
-
-  /* margin-right: 0.25rem; */
 }
 
 .empty-neume-box {

@@ -964,6 +964,10 @@ export default class Editor extends Vue {
     );
   }
 
+  dialogOpen() {
+    return this.modeKeyDialogIsOpen || this.pageSetupDialogIsOpen;
+  }
+
   onWindowResize() {
     if (this.zoomToFit) {
       this.performZoomToFit();
@@ -973,7 +977,7 @@ export default class Editor extends Vue {
   onKeydown(event: KeyboardEvent) {
     // Handle undo / redo
     // See https://github.com/electron/electron/issues/3682.
-    if (event.ctrlKey && !this.isTextInputFocused()) {
+    if (event.ctrlKey && !this.isTextInputFocused() && !this.dialogOpen()) {
       if (event.code === 'KeyZ') {
         this.onFileMenuUndoThrottled();
         event.preventDefault();
@@ -988,7 +992,8 @@ export default class Editor extends Vue {
     if (this.selectedElement != null) {
       if (
         this.navigableElements.includes(this.selectedElement.elementType) &&
-        !this.isTextInputFocused()
+        !this.isTextInputFocused() &&
+        !this.dialogOpen()
       ) {
         return this.onKeydownNeume(event);
       } else if (this.selectedElement.elementType === ElementType.DropCap) {

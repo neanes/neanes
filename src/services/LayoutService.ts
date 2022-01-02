@@ -537,6 +537,18 @@ export class LayoutService {
                 width / widthOfUnderscore,
               );
 
+              // Special case for when this is the first and final melisma. This
+              // is for when the user types the beginning of the melisma, before
+              // the next syllable is typed. We want to always show at least one
+              // underscore to indicate to the user that the note is the start of a
+              // melisma
+              if (element.isMelismaStart) {
+                numberOfUnderScoresNeeded = Math.max(
+                  1,
+                  numberOfUnderScoresNeeded,
+                );
+              }
+
               element.melismaText = '';
 
               for (let i = 0; i < numberOfUnderScoresNeeded; i++) {

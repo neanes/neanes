@@ -28,7 +28,6 @@
 @font-face {
   font-family: Psaltica;
   src: url('~@/assets/EZ Psaltica.ttf');
-  /* src: url('~@/assets/KANewStathisMain-Regular.ttf'); */
 }
 
 @font-face {

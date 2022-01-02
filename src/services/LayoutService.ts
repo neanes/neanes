@@ -10,13 +10,7 @@ import {
   EmptyElement,
 } from '@/models/Element';
 import { neumeMap } from '@/models/NeumeMappings';
-import {
-  Fthora,
-  MeasureBar,
-  Note,
-  RootSign,
-  VocalExpressionNeume,
-} from '@/models/Neumes';
+import { Fthora, Note, RootSign, VocalExpressionNeume } from '@/models/Neumes';
 import { getNeumeValue } from '@/models/NeumeValues';
 import { Line, Page } from '@/models/Page';
 import { PageSetup } from '@/models/PageSetup';
@@ -54,6 +48,16 @@ export class LayoutService {
 
     let lastElementWasLineBreak = false;
     let lastElementWasPageBreak = false;
+
+    const neumeHeight = TextMeasurementService.getFontHeight(
+      `${pageSetup.neumeDefaultFontSize}px Psaltica`,
+    );
+
+    const lyricsVerticalOffset = neumeHeight + pageSetup.lyricsVerticalOffset;
+
+    const lyricHeight = TextMeasurementService.getFontHeight(
+      `${pageSetup.lyricsDefaultFontSize}px ${pageSetup.lyricsDefaultFontFamily}`,
+    );
 
     for (let element of elements) {
       let elementWidthPx = 0;
@@ -103,6 +107,7 @@ export class LayoutService {
         }
         case ElementType.Note: {
           const noteElement = element as NoteElement;
+          noteElement.lyricsVerticalOffset = lyricsVerticalOffset;
           const quantitativeNeumeMapping = neumeMap.get(
             noteElement.quantitativeNeume,
           )!;
@@ -207,7 +212,9 @@ export class LayoutService {
           break;
         }
         case ElementType.Empty: {
+          const emptyElement = element as EmptyElement;
           elementWidthPx = 39;
+          emptyElement.height = neumeHeight;
           break;
         }
         default:
@@ -247,18 +254,18 @@ export class LayoutService {
             ) as ModeKeyElement;
             height = textbox.height;
           } else if (
-            line.elements.some((x) => x.elementType === ElementType.Note)
+            line.elements.some((x) =>
+              [
+                ElementType.Martyria,
+                ElementType.Note,
+                ElementType.Tempo,
+                ElementType.DropCap,
+                ElementType.Empty,
+              ].includes(x.elementType),
+            )
           ) {
-            const neumeHeight = TextMeasurementService.getFontHeight(
-              `${pageSetup.neumeDefaultFontSize}px Psaltica`,
-            );
-
-            const lyricHeight = TextMeasurementService.getFontHeight(
-              `${pageSetup.lyricsDefaultFontSize}px ${pageSetup.lyricsDefaultFontFamily}`,
-            );
-
             height = Math.max(
-              pageSetup.lyricsVerticalOffset + pageSetup.lyricsDefaultFontSize,
+              lyricsVerticalOffset + lyricHeight,
               pageSetup.lineHeight,
             );
           } else {
@@ -304,7 +311,7 @@ export class LayoutService {
       // the bottom of the lyrics.
       if (element.elementType === ElementType.DropCap) {
         const distanceFromTopToBottomOfLyrics =
-          pageSetup.lyricsVerticalOffset + pageSetup.lyricsDefaultFontSize;
+          lyricsVerticalOffset + pageSetup.lyricsDefaultFontSize;
         const dropCapElement = element as DropCapElement;
         const dropCapFontFamily =
           dropCapElement.fontFamily || pageSetup.dropCapDefaultFontFamily;

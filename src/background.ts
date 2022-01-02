@@ -387,6 +387,27 @@ function createMenu(win: BrowserWindow) {
           },
         ]
       : []),
+    {
+      role: 'help',
+      submenu: [
+        {
+          label: 'About',
+          click() {
+            let detail = `Version: ${app.getVersion()}\n`;
+            detail += `Electron: ${process.versions.electron}\n`;
+            detail += `Chromium: ${process.versions.chrome}\n`;
+            detail += `Node.js: ${process.version}`;
+
+            dialog.showMessageBox(win, {
+              title: process.env.VUE_APP_TITLE,
+              message: process.env.VUE_APP_TITLE!,
+              detail: detail,
+              type: 'info',
+            });
+          },
+        },
+      ],
+    },
   ]);
 
   Menu.setApplicationMenu(menu);
@@ -428,6 +449,11 @@ async function createWindow() {
     autoUpdater.checkForUpdatesAndNotify();
   }
 }
+
+app.setAboutPanelOptions({
+  applicationName: app.getName(),
+  applicationVersion: app.getVersion(),
+});
 
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {

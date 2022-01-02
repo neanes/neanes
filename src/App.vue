@@ -75,6 +75,31 @@ body {
 
   font-size: 16px;
 }
+
+.ok-btn {
+  padding: 0.5rem;
+  border: none;
+  background-color: rgb(66, 139, 202);
+  color: white;
+  border-radius: 4px;
+}
+
+.ok-btn:hover {
+  background-color: rgb(81, 157, 223);
+}
+
+.neutral-btn,
+.cancel-btn {
+  padding: 0.5rem;
+  border: 1px solid black;
+  background-color: white;
+  border-radius: 4px;
+}
+
+.neutral-btn:hover,
+.cancel-btn:hover {
+  background-color: #f8fbff;
+}
 </style>
 
 <style scoped>

@@ -403,6 +403,9 @@ export default class Editor extends Vue {
   scoreElementCommandFactory: CommandFactory<ScoreElement> =
     new CommandFactory<ScoreElement>();
 
+  pageSetupCommandFactory: CommandFactory<PageSetup> =
+    new CommandFactory<PageSetup>();
+
   // Throttled Methods
   keydownThrottleIntervalMs: number = 100;
 
@@ -1551,7 +1554,13 @@ export default class Editor extends Vue {
   }
 
   updatePageSetup(pageSetup: PageSetup) {
-    Object.assign(this.score.pageSetup, pageSetup);
+    this.commandService.execute(
+      this.pageSetupCommandFactory.create('update-properties', {
+        target: this.score.pageSetup,
+        newValues: pageSetup,
+      }),
+    );
+
     this.save();
   }
 

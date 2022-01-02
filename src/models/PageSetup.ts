@@ -60,9 +60,11 @@ export class PageSetup {
 
   public lyricsDefaultFontFamily = 'Omega';
   public lyricsDefaultFontSize = Unit.fromPt(12);
+  public lyricsDefaultColor = '#000000';
   public lyricsVerticalOffset = Unit.fromPt(30);
 
   public neumeDefaultFontSize = Unit.fromPt(20);
+  public neumeDefaultColor = '#000000';
   public neumeDefaultSpacing = 3;
 
   public accidentalDefaultColor = '#ED0000';

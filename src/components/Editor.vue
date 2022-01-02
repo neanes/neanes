@@ -78,7 +78,7 @@
                         </div>
                       </template>
                       <template v-else>
-                        <div class="melisma" v-if="isMelisma(element)">
+                        <div class="melisma">
                           {{ element.melismaText }}
                         </div>
                       </template>
@@ -546,6 +546,8 @@ export default class Editor extends Vue {
     return {
       top: withZoom(this.score.pageSetup.lyricsVerticalOffset),
       fontSize: withZoom(this.score.pageSetup.lyricsDefaultFontSize),
+      fontFamily: this.score.pageSetup.lyricsDefaultFontFamily,
+      color: this.score.pageSetup.lyricsDefaultColor,
     } as CSSStyleDeclaration;
   }
 
@@ -1707,7 +1709,6 @@ export default class Editor extends Vue {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 .lyrics {
-  font-family: Omega;
   min-height: 1.6rem;
   min-width: 1rem;
   text-align: center;
@@ -1811,7 +1812,6 @@ export default class Editor extends Vue {
 }
 
 .melisma {
-  font-family: Omega;
   position: absolute;
   display: inline;
 }

@@ -64,6 +64,7 @@ export class SaveService {
     score.pageSetup.dropCapDefaultFontSize = s.pageSetup.dropCapDefaultFontSize;
     score.pageSetup.leftMargin = s.pageSetup.leftMargin;
     score.pageSetup.lineHeight = s.pageSetup.lineHeight;
+    score.pageSetup.lyricsDefaultColor = s.pageSetup.lyricsDefaultColor;
     score.pageSetup.lyricsDefaultFontFamily =
       s.pageSetup.lyricsDefaultFontFamily;
     score.pageSetup.lyricsDefaultFontSize = s.pageSetup.lyricsDefaultFontSize;
@@ -71,6 +72,7 @@ export class SaveService {
     score.pageSetup.martyriaDefaultColor = s.pageSetup.martyriaDefaultColor;
     score.pageSetup.tempoDefaultColor = s.pageSetup.tempoDefaultColor;
     score.pageSetup.modeKeyDefaultColor = s.pageSetup.modeKeyDefaultColor;
+    score.pageSetup.neumeDefaultColor = s.pageSetup.neumeDefaultColor;
     score.pageSetup.neumeDefaultFontSize = s.pageSetup.neumeDefaultFontSize;
     score.pageSetup.neumeDefaultSpacing = s.pageSetup.neumeDefaultSpacing;
     score.pageSetup.pageHeight = s.pageSetup.pageHeight;
@@ -229,6 +231,7 @@ export class SaveService {
     score.pageSetup.dropCapDefaultFontSize = s.pageSetup.dropCapDefaultFontSize;
     score.pageSetup.leftMargin = s.pageSetup.leftMargin;
     score.pageSetup.lineHeight = s.pageSetup.lineHeight;
+    score.pageSetup.lyricsDefaultColor = s.pageSetup.lyricsDefaultColor;
     score.pageSetup.lyricsDefaultFontFamily =
       s.pageSetup.lyricsDefaultFontFamily;
     score.pageSetup.lyricsDefaultFontSize = s.pageSetup.lyricsDefaultFontSize;
@@ -236,6 +239,7 @@ export class SaveService {
     score.pageSetup.martyriaDefaultColor = s.pageSetup.martyriaDefaultColor;
     score.pageSetup.tempoDefaultColor = s.pageSetup.tempoDefaultColor;
     score.pageSetup.modeKeyDefaultColor = s.pageSetup.modeKeyDefaultColor;
+    score.pageSetup.neumeDefaultColor = s.pageSetup.neumeDefaultColor;
     score.pageSetup.neumeDefaultFontSize = s.pageSetup.neumeDefaultFontSize;
     score.pageSetup.neumeDefaultSpacing = s.pageSetup.neumeDefaultSpacing;
     score.pageSetup.pageHeight = s.pageSetup.pageHeight;

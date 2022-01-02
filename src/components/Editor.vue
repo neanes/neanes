@@ -1735,7 +1735,7 @@ export default class Editor extends Vue {
     const title = new TextBoxElement();
     title.content = 'Title';
     title.alignment = TextBoxAlignment.Center;
-    title.fontSize = Unit.fromPt(16);
+    title.fontSize = Unit.fromPt(20);
 
     score.staff.elements.unshift(title, this.createDefaultModeKey());
 

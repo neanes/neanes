@@ -94,6 +94,7 @@ export default class NeumeBoxSyllable extends Vue {
   get style() {
     return {
       fontSize: withZoom(this.pageSetup.neumeDefaultFontSize),
+      color: this.pageSetup.neumeDefaultColor,
     } as CSSStyleDeclaration;
   }
 

@@ -246,6 +246,21 @@ export class LayoutService {
               (x) => x.elementType === ElementType.ModeKey,
             ) as ModeKeyElement;
             height = textbox.height;
+          } else if (
+            line.elements.some((x) => x.elementType === ElementType.Note)
+          ) {
+            const neumeHeight = TextMeasurementService.getFontHeight(
+              `${pageSetup.neumeDefaultFontSize}px Psaltica`,
+            );
+
+            const lyricHeight = TextMeasurementService.getFontHeight(
+              `${pageSetup.lyricsDefaultFontSize}px ${pageSetup.lyricsDefaultFontFamily}`,
+            );
+
+            height = Math.max(
+              pageSetup.lyricsVerticalOffset + pageSetup.lyricsDefaultFontSize,
+              pageSetup.lineHeight,
+            );
           } else {
             height = pageSetup.lineHeight;
           }

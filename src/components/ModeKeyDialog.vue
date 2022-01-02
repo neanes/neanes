@@ -76,7 +76,7 @@
         >
           Update
         </button>
-        <button @click="$emit('close')">Cancel</button>
+        <button class="cancel-btn" @click="$emit('close')">Cancel</button>
       </div>
     </div>
   </ModalDialog>

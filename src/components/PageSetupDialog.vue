@@ -102,9 +102,10 @@
             <label for="page-setup-dialog-unit-mm">mm</label>
           </div>
           <div class="subheader">
-            Neume Spacing <span class="units">({{ marginUnitLabel }})</span>
+            Spacing <span class="units">({{ marginUnitLabel }})</span>
           </div>
           <div class="form-group">
+            <label class="margin-label">Neumes</label>
             <input
               class="margin-input"
               type="number"
@@ -115,7 +116,26 @@
             />
           </div>
           <div class="form-group">
-            <button @click="resetToDefaults">Reset to Defaults</button>
+            <label class="margin-label">Lyrics</label>
+            <input
+              class="margin-input"
+              type="number"
+              min="0"
+              :step="spacingStep"
+              :value="lyricsVerticalOffset"
+              @change="updateLyricsVerticalOffset($event.target.value)"
+            />
+          </div>
+          <div class="form-group">
+            <label class="margin-label">Line</label>
+            <input
+              class="margin-input"
+              type="number"
+              min="0"
+              :step="spacingStep"
+              :value="lineHeight"
+              @change="updateLineHeight($event.target.value)"
+            />
           </div>
         </div>
         <div class="right-pane">
@@ -151,6 +171,60 @@
                 {{ family }}
               </option>
             </select>
+          </div>
+          <div class="subheader">Lyrics</div>
+          <div class="form-group">
+            <label class="drop-caps-label">Color</label>
+            <input
+              class="drop-caps-input"
+              type="color"
+              list="presetLyricsColors"
+              v-model.lazy="form.lyricsDefaultColor"
+            />
+          </div>
+          <div class="form-group">
+            <label class="drop-caps-label">Size</label>
+            <input
+              class="drop-caps-input"
+              type="number"
+              min="4"
+              max="100"
+              step="1"
+              v-model.lazy="lyricsDefaultFontSize"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="drop-caps-label">Font</label>
+            <select
+              class="drop-caps-select"
+              v-model="form.lyricsDefaultFontFamily"
+            >
+              <option v-for="family in lyricsFontFamilies" :key="family">
+                {{ family }}
+              </option>
+            </select>
+          </div>
+          <div class="subheader">Neumes</div>
+          <div class="form-group">
+            <label class="drop-caps-label">Color</label>
+            <input
+              class="drop-caps-input"
+              type="color"
+              list="presetLyricsColors"
+              v-model.lazy="form.neumeDefaultColor"
+            />
+          </div>
+          <div class="form-group">
+            <label class="drop-caps-label">Size</label>
+            <input
+              class="drop-caps-input"
+              type="number"
+              min="4"
+              max="100"
+              step="1"
+              v-model.lazy="neumeDefaultFontSize"
+            />
           </div>
           <div class="subheader">Neume Colors</div>
           <div class="form-group">
@@ -220,7 +294,10 @@
       </div>
       <div class="button-container">
         <button class="ok-btn" @click="updatePageSetup">Update</button>
-        <button @click="$emit('close')">Cancel</button>
+        <button class="reset-btn neutral-btn" @click="resetToDefaults">
+          Reset to Defaults
+        </button>
+        <button class="cancel-btn" @click="$emit('close')">Cancel</button>
       </div>
       <datalist id="presetDropCapsColors">
         <option>#000000</option>
@@ -230,6 +307,9 @@
       <datalist id="presetNeumeColors">
         <option>#000000</option>
         <option>#ED0000</option>
+      </datalist>
+      <datalist id="presetLyricsColors">
+        <option>#000000</option>
       </datalist>
     </div>
   </ModalDialog>
@@ -248,6 +328,7 @@ export default class PageSetupDialog extends Vue {
   @Prop() pageSetup!: PageSetup;
   private form: PageSetup = new PageSetup();
   private dropCapFontFamilies: string[] = ['Athonite', 'Omega'];
+  private lyricsFontFamilies: string[] = ['Omega'];
 
   created() {
     Object.assign(this.form, this.pageSetup);
@@ -407,6 +488,32 @@ export default class PageSetupDialog extends Vue {
     this.$forceUpdate();
   }
 
+  get lyricsVerticalOffset() {
+    return this.toDisplayUnit(this.form!.lyricsVerticalOffset).toFixed(3);
+  }
+
+  updateLyricsVerticalOffset(value: number) {
+    this.form!.lyricsVerticalOffset = Math.min(
+      Math.max(this.toStorageUnit(value), 0),
+      this.form!.pageWidth,
+    );
+
+    this.$forceUpdate();
+  }
+
+  get lineHeight() {
+    return this.toDisplayUnit(this.form!.lineHeight).toFixed(3);
+  }
+
+  updateLineHeight(value: number) {
+    this.form!.lineHeight = Math.min(
+      Math.max(this.toStorageUnit(value), 0),
+      this.form!.pageWidth,
+    );
+
+    this.$forceUpdate();
+  }
+
   private get dropCapDefaultFontSize() {
     return Unit.toPt(this.form!.dropCapDefaultFontSize);
   }
@@ -416,6 +523,38 @@ export default class PageSetupDialog extends Vue {
     const valueRounded = Math.round(value * 2) / 2;
 
     this.form!.dropCapDefaultFontSize = Math.min(
+      Math.max(Unit.fromPt(valueRounded), Unit.fromPt(4)),
+      Unit.fromPt(100),
+    );
+
+    this.$forceUpdate();
+  }
+
+  private get lyricsDefaultFontSize() {
+    return Unit.toPt(this.form!.lyricsDefaultFontSize);
+  }
+
+  private set lyricsDefaultFontSize(value: number) {
+    // Round to nearest 0.5
+    const valueRounded = Math.round(value * 2) / 2;
+
+    this.form!.lyricsDefaultFontSize = Math.min(
+      Math.max(Unit.fromPt(valueRounded), Unit.fromPt(4)),
+      Unit.fromPt(100),
+    );
+
+    this.$forceUpdate();
+  }
+
+  private get neumeDefaultFontSize() {
+    return Unit.toPt(this.form!.neumeDefaultFontSize);
+  }
+
+  private set neumeDefaultFontSize(value: number) {
+    // Round to nearest 0.5
+    const valueRounded = Math.round(value * 2) / 2;
+
+    this.form!.neumeDefaultFontSize = Math.min(
       Math.max(Unit.fromPt(valueRounded), Unit.fromPt(4)),
       Unit.fromPt(100),
     );
@@ -455,26 +594,30 @@ export default class PageSetupDialog extends Vue {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+.dialog-content {
+  display: flex;
+}
+
 .container {
   font-family: Arial, Helvetica, sans-serif;
+  display: flex;
+  flex-direction: column;
+  height: 80vh;
 }
 
 .pane-container {
   display: flex;
   width: 500px;
   margin-bottom: 1.5rem;
+  overflow: auto;
 }
 
 .left-pane {
   flex: 1;
-  overflow: auto;
-  height: 400px;
 }
 
 .right-pane {
   flex: 1;
-  overflow: auto;
-  height: 400px;
 }
 
 .header {
@@ -537,7 +680,8 @@ export default class PageSetupDialog extends Vue {
   justify-content: center;
 }
 
-.ok-btn {
+.ok-btn,
+.reset-btn {
   margin-right: 2rem;
 }
 </style>

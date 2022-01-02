@@ -954,7 +954,7 @@ export default class Editor extends Vue {
       document.activeElement instanceof HTMLInputElement ||
       document.activeElement instanceof HTMLTextAreaElement ||
       (document.activeElement instanceof HTMLElement &&
-        document.activeElement.contentEditable === 'true')
+        document.activeElement.isContentEditable)
     );
   }
 
@@ -1032,10 +1032,21 @@ export default class Editor extends Vue {
 
     // We don't handle the shift key unless it's for enter
     if (event.shiftKey) {
-      return;
-    }
+      switch (event.code) {
+        case 'Minus':
+          document.execCommand('insertText', false, '_');
 
-    if (event.ctrlKey) {
+          if (
+            this.getCursorPosition() ===
+            this.getLyricLength(this.selectedLyrics!)
+          ) {
+            this.moveToNextLyricBoxThrottled();
+            handled = true;
+          }
+
+          break;
+      }
+    } else if (event.ctrlKey) {
       switch (event.code) {
         case 'ArrowRight':
           this.moveToNextLyricBoxThrottled();
@@ -1064,7 +1075,10 @@ export default class Editor extends Vue {
           }
           break;
         case 'ArrowRight':
-          if (this.getCursorPosition() === this.selectedLyrics!.lyrics.length) {
+          if (
+            this.getCursorPosition() ===
+            this.getLyricLength(this.selectedLyrics!)
+          ) {
             this.moveToNextLyricBoxThrottled();
             handled = true;
           }
@@ -1083,6 +1097,14 @@ export default class Editor extends Vue {
       event.preventDefault();
       return;
     }
+  }
+
+  getLyricLength(element: NoteElement) {
+    return (
+      this.$refs[
+        `lyrics-${this.elements.indexOf(element)}`
+      ] as ContentEditable[]
+    )[0].getInnerText().length;
   }
 
   getCursorPosition() {
@@ -1295,6 +1317,10 @@ export default class Editor extends Vue {
 
       // Force the lyrics to re-render
       element.keyHelper++;
+    }
+
+    if (element.lyrics === lyrics) {
+      return;
     }
 
     // Calculate melisma properties

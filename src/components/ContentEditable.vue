@@ -29,6 +29,10 @@ export default class ContentEditable extends Vue {
     return this.$el as HTMLElement;
   }
 
+  getInnerText() {
+    return this.htmlElement.innerText;
+  }
+
   onBlur() {
     this.$emit('blur', this.htmlElement.innerText);
   }

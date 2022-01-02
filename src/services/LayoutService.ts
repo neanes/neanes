@@ -470,7 +470,7 @@ export class LayoutService {
             } else if (this.isFinalMelisma(element, line.elements)) {
               const width = element.neumeWidth;
               const numberOfUnderScoresNeeded =
-                width > 0 ? Math.ceil(width / widthOfUnderscore) : 1;
+                width > 0 ? Math.floor(width / widthOfUnderscore) : 1;
 
               element.melismaOffsetLeft =
                 (numberOfUnderScoresNeeded * widthOfUnderscore -
@@ -526,10 +526,6 @@ export class LayoutService {
                 element.melismaText += '_';
               }
             } else if (this.isFinalMelisma(element, line.elements)) {
-              const lyricsLeft =
-                element.x + element.neumeWidth / 2 - element.lyricsWidth / 2;
-              const neumeRight = element.x + element.neumeWidth;
-
               // Stretch from the start of the lyrics to the end of the neume
               let width = element.neumeWidth / 2 - element.lyricsWidth / 2;
 

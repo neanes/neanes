@@ -160,7 +160,7 @@ export default class ModeKeyDialog extends Vue {
 
 .mode-key-container {
   border: none;
-  width: auto;
+  width: auto !important;
 }
 
 .header {

@@ -1229,19 +1229,36 @@ export default class Editor extends Vue {
   }
 
   load() {
-    const scoreString = localStorage.getItem('score');
-    this.currentFilePath = localStorage.getItem('filePath');
-    this.hasUnsavedChanges =
-      localStorage.getItem('hasUnsavedChanges') === 'true';
+    let scoreLoaded = false;
 
-    if (scoreString) {
-      const score: Score = SaveService.LoadScoreFromJson(
-        JSON.parse(scoreString),
+    try {
+      const scoreString = localStorage.getItem('score');
+
+      if (scoreString) {
+        const score: Score = SaveService.LoadScoreFromJson(
+          JSON.parse(scoreString),
+        );
+
+        this.currentFilePath = localStorage.getItem('filePath');
+        this.hasUnsavedChanges =
+          localStorage.getItem('hasUnsavedChanges') === 'true';
+
+        this.score = score;
+        scoreLoaded = true;
+      }
+    } catch (error) {
+      console.warn(
+        'An error occurred while loading the score from local storage:',
+        error,
       );
 
-      this.score = score;
-    } else {
+      localStorage.removeItem('score');
+    }
+
+    if (!scoreLoaded) {
       this.score = this.createDefaultScore();
+      this.hasUnsavedChanges = false;
+      this.currentFilePath = null;
       this.selectedElement =
         this.score.staff.elements[this.score.staff.elements.length - 1];
     }
@@ -1615,21 +1632,32 @@ export default class Editor extends Vue {
   }
 
   onFileMenuOpenScore(args: FileMenuOpenScoreArgs) {
-    this.commandService.clearHistory();
+    try {
+      this.commandService.clearHistory();
 
-    const score: Score = SaveService.LoadScoreFromJson(JSON.parse(args.data));
-    this.currentFilePath = args.filePath;
-    this.hasUnsavedChanges = false;
-    this.entryMode = EntryMode.Edit;
+      const score: Score = SaveService.LoadScoreFromJson(JSON.parse(args.data));
+      this.currentFilePath = args.filePath;
+      this.hasUnsavedChanges = false;
+      this.entryMode = EntryMode.Edit;
 
-    // if (score.version !== ScoreVersion) {
-    //   alert('This score was created by an older version of the application. It may not work properly');
-    // }
+      // if (score.version !== ScoreVersion) {
+      //   alert('This score was created by an older version of the application. It may not work properly');
+      // }
 
-    this.score = score;
-    this.selectedElement = null;
+      this.score = score;
+      this.selectedElement = null;
 
-    this.save(false);
+      this.save(false);
+    } catch (error) {
+      console.error(error);
+
+      if (error instanceof Error) {
+        EventBus.$emit(IpcRendererChannels.ShowErrorBox, {
+          title: 'Open failed',
+          content: error.message,
+        });
+      }
+    }
   }
 
   onFileMenuPageSetup() {

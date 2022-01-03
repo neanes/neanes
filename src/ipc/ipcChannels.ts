@@ -32,6 +32,8 @@ export enum IpcRendererChannels {
 
   SetCanUndo = 'SetCanUndo',
   SetCanRedo = 'SetCanRedo',
+
+  ShowErrorBox = 'ShowErrorBox',
 }
 
 export interface FileMenuOpenScoreArgs {
@@ -54,4 +56,9 @@ export interface FileMenuSaveAsReplyArgs {
 
 export interface FileMenuSaveReplyArgs {
   data: string;
+}
+
+export interface ShowErrorBoxArgs {
+  title: string;
+  content: string;
 }

@@ -23,8 +23,9 @@ import {
 } from './ipc/ipcChannels';
 import path from 'path';
 import { promises as fs } from 'fs';
-import os from 'os';
 import { TestFileType } from './utils/TestFileType';
+import AdmZip from 'adm-zip';
+
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
 declare const __static: string;
@@ -79,6 +80,35 @@ async function checkForUnsavedChanges(win: BrowserWindow) {
   return true;
 }
 
+async function writeScoreFile(filePath: string, data: string) {
+  // If using the compressed file format, zip first
+  if (path.extname(filePath) === '.byz') {
+    const zip = new AdmZip();
+
+    const unzippedFileName = `${path.basename(filePath, '.byz')}.byzx`;
+
+    zip.addFile(unzippedFileName, Buffer.from(data));
+    // Missing typescript definition
+    await (zip as any).writeZipPromise(filePath);
+  } else {
+    await fs.writeFile(filePath, data);
+  }
+}
+
+async function readScoreFile(filePath: string) {
+  let data: string;
+
+  // If using the compressed file format, zip first
+  if (path.extname(filePath) === '.byz') {
+    const zip = new AdmZip(filePath);
+    data = zip.getEntries()[0].getData().toString('utf8');
+  } else {
+    data = await fs.readFile(filePath, 'utf8');
+  }
+
+  return data;
+}
+
 async function handleSave(win: BrowserWindow, filePath: string | null) {
   try {
     if (saving) {
@@ -95,7 +125,7 @@ async function handleSave(win: BrowserWindow, filePath: string | null) {
         IpcRendererChannels.FileMenuSaveReply,
         async (event, args: FileMenuSaveReplyArgs) => {
           saving = false;
-          await fs.writeFile(filePath!, args.data);
+          await writeScoreFile(filePath!, args.data);
           win.webContents.send(IpcMainChannels.SaveComplete);
         },
       );
@@ -119,7 +149,16 @@ async function handleSaveAs(win: BrowserWindow) {
   try {
     const dialogResult = await dialog.showSaveDialog(win, {
       title: 'Save Score',
-      filters: [{ name: 'Score File', extensions: ['json'] }],
+      filters: [
+        {
+          name: `${process.env.VUE_APP_TITLE} Score File`,
+          extensions: ['byz'],
+        },
+        {
+          name: `Uncompressed ${process.env.VUE_APP_TITLE} Score File`,
+          extensions: ['byzx'],
+        },
+      ],
     });
 
     if (!dialogResult.canceled) {
@@ -135,7 +174,9 @@ async function handleSaveAs(win: BrowserWindow) {
         IpcRendererChannels.FileMenuSaveAsReply,
         async (event, args: FileMenuSaveAsReplyArgs) => {
           saving = false;
-          await fs.writeFile(dialogResult.filePath!, args.data);
+
+          await writeScoreFile(dialogResult.filePath!, args.data);
+
           win.webContents.send(IpcMainChannels.SaveComplete);
         },
       );
@@ -180,13 +221,18 @@ function createMenu(win: BrowserWindow) {
                 const dialogResult = await dialog.showOpenDialog(win, {
                   properties: ['openFile'],
                   title: 'Open Score',
-                  filters: [{ name: 'Score File', extensions: ['json'] }],
+                  filters: [
+                    {
+                      name: `${process.env.VUE_APP_TITLE} Files`,
+                      extensions: ['byz', 'byzx'],
+                    },
+                  ],
                 });
 
                 const filePath = dialogResult.filePaths[0];
 
                 if (!dialogResult.canceled) {
-                  const data = await fs.readFile(filePath, 'utf8');
+                  const data = await readScoreFile(filePath);
 
                   win.webContents.send(IpcMainChannels.FileMenuOpenScore, {
                     data,

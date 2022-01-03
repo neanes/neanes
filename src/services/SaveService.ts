@@ -36,15 +36,14 @@ export class SaveService {
   public static LoadScoreFromJson(s: IScore) {
     let score: Score = new Score();
 
-    if (s.version == null) {
-      console.warn('File is missing file version');
-      return score;
+    if (s.version == null || typeof s.version !== 'string') {
+      throw new Error('File is missing file version.');
     }
 
     if (s.version.startsWith('1.')) {
       score = this.LoadScore_v1(s as Score_v1);
     } else {
-      console.warn('Unrecognized file version', s.version);
+      throw new Error(`Unrecognized file version: ${s.version}`);
     }
 
     return score;

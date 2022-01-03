@@ -20,6 +20,7 @@ import {
   FileMenuSaveReplyArgs,
   IpcMainChannels,
   IpcRendererChannels,
+  ShowErrorBoxArgs,
 } from './ipc/ipcChannels';
 import path from 'path';
 import { promises as fs } from 'fs';
@@ -563,3 +564,10 @@ ipcMain.on(IpcRendererChannels.SetCanUndo, async (event, data) => {
 ipcMain.on(IpcRendererChannels.SetCanRedo, async (event, data) => {
   Menu.getApplicationMenu()!.getMenuItemById('redo')!.enabled = data;
 });
+
+ipcMain.on(
+  IpcRendererChannels.ShowErrorBox,
+  async (event, args: ShowErrorBoxArgs) => {
+    dialog.showErrorBox(args.title, args.content);
+  },
+);

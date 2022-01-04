@@ -10,6 +10,17 @@ module.exports = {
         productName: 'Neanes',
         copyright: 'Copyright © 2021 danielgarthur',
         publish: ['github'],
+        fileAssociations: [
+          {
+            ext: 'byz',
+            name: 'Neanes File',
+            role: 'Editor',
+          },
+          {
+            ext: 'byzx',
+            name: 'Uncompressed Neanes File',
+          },
+        ],
       },
     },
   },

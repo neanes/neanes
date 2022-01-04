@@ -22,6 +22,8 @@ export enum IpcMainChannels {
 }
 
 export enum IpcRendererChannels {
+  EditorFinishedLoading = 'EditorFinishedLoading',
+
   FileMenuPrintReply = 'FileMenuPrintReply',
 
   FileMenuSaveReply = 'FileMenuSaveReply',

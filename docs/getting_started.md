@@ -78,7 +78,7 @@ Drop Caps may be inserted through the main menu by clicking `Insert -> Drop Cap`
 
 ## Saving the score
 
-To save your file to the disk, click `File -> Save` or `File -> Save As` in the main menu.
+To save your file to the disk, click `File -> Save` or `File -> Save As` in the main menu. The main file extension is `.byz`. It is a compressed format that reduces the file size. There is another extension, `.byzx`, which is an uncompressed file. It is mainly used for development and debugging.
 
 ## Export to PDF
 

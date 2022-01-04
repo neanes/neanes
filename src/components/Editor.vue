@@ -363,6 +363,8 @@ export enum EntryMode {
   },
 })
 export default class Editor extends Vue {
+  isDevelopment: boolean = process.env.NODE_ENV !== 'production';
+
   score: Score = new Score();
   pages: Page[] = [];
 
@@ -1214,12 +1216,44 @@ export default class Editor extends Vue {
       this.elements,
       this.score.pageSetup,
     );
+
+    if (this.isDevelopment) {
+      localStorage.setItem(
+        'score',
+        JSON.stringify(SaveService.SaveScoreToJson(this.score)),
+      );
+
+      if (this.currentFilePath != null) {
+        localStorage.setItem('filePath', this.currentFilePath);
+      } else {
+        localStorage.removeItem('filePath');
+      }
+
+      localStorage.setItem(
+        'hasUnsavedChanges',
+        this.hasUnsavedChanges.toString(),
+      );
+    }
   }
 
   load() {
     this.score = this.createDefaultScore();
     this.hasUnsavedChanges = false;
     this.currentFilePath = null;
+
+    if (this.isDevelopment) {
+      const scoreString = localStorage.getItem('score');
+      if (scoreString) {
+        const score: Score = SaveService.LoadScoreFromJson(
+          JSON.parse(scoreString),
+        );
+        this.currentFilePath = localStorage.getItem('filePath');
+        this.hasUnsavedChanges =
+          localStorage.getItem('hasUnsavedChanges') === 'true';
+        this.score = score;
+      }
+    }
+
     this.selectedElement =
       this.score.staff.elements[this.score.staff.elements.length - 1];
 

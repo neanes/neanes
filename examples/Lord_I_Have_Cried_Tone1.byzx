@@ -16,7 +16,7 @@
     "lyricsVerticalOffset": -12,
     "neumeDefaultFontSize": 26.666666666666668,
     "neumeDefaultColor": "#000000",
-    "neumeDefaultSpacing": 3,
+    "neumeDefaultSpacing": 2.88,
     "accidentalDefaultColor": "#ED0000",
     "fthoraDefaultColor": "#ED0000",
     "gorgonDefaultColor": "#ED0000",
@@ -213,7 +213,7 @@
       },
       {
         "elementType": "Note",
-        "quantitativeNeume": "OligonPlusKentimaBelow",
+        "quantitativeNeume": "OligonPlusKentima",
         "lyrics": "heark -"
       },
       {

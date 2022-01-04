@@ -65,7 +65,7 @@ export class PageSetup {
 
   public neumeDefaultFontSize = Unit.fromPt(20);
   public neumeDefaultColor = '#000000';
-  public neumeDefaultSpacing = 3;
+  public neumeDefaultSpacing = Unit.fromInch(0.03);
 
   public accidentalDefaultColor = '#ED0000';
   public fthoraDefaultColor = '#ED0000';

@@ -26,10 +26,13 @@ import path from 'path';
 import { promises as fs } from 'fs';
 import { TestFileType } from './utils/TestFileType';
 import AdmZip from 'adm-zip';
+import { errorMonitor } from 'events';
 
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
 declare const __static: string;
+
+let win!: BrowserWindow;
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
@@ -48,7 +51,7 @@ const state: State = {
   filePath: null,
 };
 
-async function showUnsavedChangesWarning(win: BrowserWindow) {
+async function showUnsavedChangesWarning() {
   const fileName =
     state.filePath != null ? path.basename(state.filePath) : 'Untitled 1';
 
@@ -61,13 +64,13 @@ async function showUnsavedChangesWarning(win: BrowserWindow) {
   });
 }
 
-async function checkForUnsavedChanges(win: BrowserWindow) {
+async function checkForUnsavedChanges() {
   if (state.hasUnsavedChanges) {
-    const dialogResult = await showUnsavedChangesWarning(win);
+    const dialogResult = await showUnsavedChangesWarning();
 
     if (dialogResult.response === 0) {
       // User wants to save
-      if (!(await handleSave(win, state.filePath))) {
+      if (!(await handleSave(state.filePath))) {
         // If the user cancels the save dialog
         // then don't do anything.
         return false;
@@ -110,7 +113,16 @@ async function readScoreFile(filePath: string) {
   return data;
 }
 
-async function handleSave(win: BrowserWindow, filePath: string | null) {
+async function openFile(filePath: string) {
+  const data = await readScoreFile(filePath);
+
+  win.webContents.send(IpcMainChannels.FileMenuOpenScore, {
+    data,
+    filePath,
+  } as FileMenuOpenScoreArgs);
+}
+
+async function handleSave(filePath: string | null) {
   try {
     if (saving) {
       return false;
@@ -122,18 +134,25 @@ async function handleSave(win: BrowserWindow, filePath: string | null) {
       win.webContents.send(IpcMainChannels.FileMenuSave);
 
       // Wait for the reply and write the data to the file path
-      ipcMain.once(
-        IpcRendererChannels.FileMenuSaveReply,
-        async (event, args: FileMenuSaveReplyArgs) => {
-          saving = false;
-          await writeScoreFile(filePath!, args.data);
-          win.webContents.send(IpcMainChannels.SaveComplete);
-        },
+      await new Promise<void>((resolve, reject) =>
+        ipcMain.once(
+          IpcRendererChannels.FileMenuSaveReply,
+          async (event, args: FileMenuSaveReplyArgs) => {
+            try {
+              saving = false;
+              await writeScoreFile(filePath!, args.data);
+              win.webContents.send(IpcMainChannels.SaveComplete);
+              resolve();
+            } catch (error) {
+              reject(error);
+            }
+          },
+        ),
       );
 
       return true;
     } else {
-      return await handleSaveAs(win);
+      return await handleSaveAs();
     }
   } catch (error) {
     console.error(error);
@@ -146,17 +165,18 @@ async function handleSave(win: BrowserWindow, filePath: string | null) {
   }
 }
 
-async function handleSaveAs(win: BrowserWindow) {
+async function handleSaveAs() {
   try {
     const dialogResult = await dialog.showSaveDialog(win, {
       title: 'Save Score',
+      defaultPath: state.filePath || 'Untitled 1',
       filters: [
         {
-          name: `${process.env.VUE_APP_TITLE} Score File`,
+          name: `${process.env.VUE_APP_TITLE} File`,
           extensions: ['byz'],
         },
         {
-          name: `Uncompressed ${process.env.VUE_APP_TITLE} Score File`,
+          name: `Uncompressed ${process.env.VUE_APP_TITLE} File`,
           extensions: ['byzx'],
         },
       ],
@@ -171,15 +191,23 @@ async function handleSaveAs(win: BrowserWindow) {
       } as FileMenuSaveAsArgs);
 
       // Wait for the reply and write the data to the file path
-      ipcMain.once(
-        IpcRendererChannels.FileMenuSaveAsReply,
-        async (event, args: FileMenuSaveAsReplyArgs) => {
-          saving = false;
+      await new Promise<void>((resolve, reject) =>
+        ipcMain.once(
+          IpcRendererChannels.FileMenuSaveAsReply,
+          async (event, args: FileMenuSaveAsReplyArgs) => {
+            try {
+              saving = false;
 
-          await writeScoreFile(dialogResult.filePath!, args.data);
+              await writeScoreFile(dialogResult.filePath!, args.data);
 
-          win.webContents.send(IpcMainChannels.SaveComplete);
-        },
+              win.webContents.send(IpcMainChannels.SaveComplete);
+
+              resolve();
+            } catch (error) {
+              reject(error);
+            }
+          },
+        ),
       );
 
       return true;
@@ -199,7 +227,7 @@ async function handleSaveAs(win: BrowserWindow) {
   }
 }
 
-function createMenu(win: BrowserWindow) {
+function createMenu() {
   var menu = Menu.buildFromTemplate([
     {
       label: '&File',
@@ -208,7 +236,7 @@ function createMenu(win: BrowserWindow) {
           label: '&New',
           accelerator: 'CmdOrCtrl+N',
           async click() {
-            if (await checkForUnsavedChanges(win)) {
+            if (await checkForUnsavedChanges()) {
               win.webContents.send(IpcMainChannels.FileMenuNewScore);
             }
           },
@@ -217,7 +245,7 @@ function createMenu(win: BrowserWindow) {
           label: '&Open',
           accelerator: 'CmdOrCtrl+O',
           async click() {
-            if (await checkForUnsavedChanges(win)) {
+            if (await checkForUnsavedChanges()) {
               try {
                 const dialogResult = await dialog.showOpenDialog(win, {
                   properties: ['openFile'],
@@ -233,12 +261,7 @@ function createMenu(win: BrowserWindow) {
                 const filePath = dialogResult.filePaths[0];
 
                 if (!dialogResult.canceled) {
-                  const data = await readScoreFile(filePath);
-
-                  win.webContents.send(IpcMainChannels.FileMenuOpenScore, {
-                    data,
-                    filePath,
-                  } as FileMenuOpenScoreArgs);
+                  await openFile(filePath);
                 } else {
                   saving = false;
                 }
@@ -258,14 +281,14 @@ function createMenu(win: BrowserWindow) {
           label: '&Save',
           accelerator: 'CmdOrCtrl+S',
           async click() {
-            handleSave(win, state.filePath);
+            handleSave(state.filePath);
           },
         },
         {
           label: 'Save &As',
           accelerator: 'CmdOrCtrl+Shift+S',
           async click() {
-            handleSaveAs(win);
+            handleSaveAs();
           },
         },
         { type: 'separator' },
@@ -296,15 +319,22 @@ function createMenu(win: BrowserWindow) {
                 win.webContents.send(IpcMainChannels.FileMenuPrint);
 
                 // Wait for the reply and print
-                ipcMain.once(
-                  IpcRendererChannels.FileMenuPrintReply,
-                  async (event, args: FileMenuPrintReplyArgs) => {
-                    const data = await win.webContents.printToPDF({
-                      pageSize: args.pageSize,
-                      landscape: args.landscape,
-                    });
-                    await fs.writeFile(dialogResult.filePath!, data);
-                  },
+                await new Promise<void>((resolve, reject) =>
+                  ipcMain.once(
+                    IpcRendererChannels.FileMenuPrintReply,
+                    async (event, args: FileMenuPrintReplyArgs) => {
+                      try {
+                        const data = await win.webContents.printToPDF({
+                          pageSize: args.pageSize,
+                          landscape: args.landscape,
+                        });
+                        await fs.writeFile(dialogResult.filePath!, data);
+                        resolve();
+                      } catch (error) {
+                        reject(error);
+                      }
+                    },
+                  ),
                 );
               }
             } catch (error) {
@@ -319,19 +349,27 @@ function createMenu(win: BrowserWindow) {
         {
           label: '&Print',
           accelerator: 'CmdOrCtrl+P',
-          click() {
+          async click() {
             try {
               win.webContents.send(IpcMainChannels.FileMenuPrint);
 
               // Wait for the reply and print
-              ipcMain.once(
-                IpcRendererChannels.FileMenuPrintReply,
-                async (event, args: FileMenuPrintReplyArgs) => {
-                  win.webContents.print({
-                    pageSize: args.pageSize,
-                    landscape: args.landscape,
-                  });
-                },
+              await new Promise<void>((resolve, reject) =>
+                ipcMain.once(
+                  IpcRendererChannels.FileMenuPrintReply,
+                  async (event, args: FileMenuPrintReplyArgs) => {
+                    try {
+                      win.webContents.print({
+                        pageSize: args.pageSize,
+                        landscape: args.landscape,
+                      });
+
+                      resolve();
+                    } catch (error) {
+                      reject(error);
+                    }
+                  },
+                ),
               );
             } catch (error) {
               console.error(error);
@@ -462,7 +500,7 @@ function createMenu(win: BrowserWindow) {
 
 async function createWindow() {
   // Create the browser window.
-  const win = new BrowserWindow({
+  win = new BrowserWindow({
     width: 1280,
     height: 1024,
     webPreferences: {
@@ -483,7 +521,19 @@ async function createWindow() {
     win.show();
   });
 
-  createMenu(win);
+  // Prevent the user from accidentally
+  // closing the app with unsaved changes
+  win.on('close', async (event) => {
+    if (state.hasUnsavedChanges) {
+      event.preventDefault();
+
+      if (await checkForUnsavedChanges()) {
+        app.exit();
+      }
+    }
+  });
+
+  createMenu();
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
@@ -492,8 +542,8 @@ async function createWindow() {
   } else {
     createProtocol('app');
     // Load the index.html when not in development
-    win.loadURL('app://./index.html');
     autoUpdater.checkForUpdatesAndNotify();
+    await win.loadURL('app://./index.html');
   }
 }
 
@@ -571,3 +621,28 @@ ipcMain.on(
     dialog.showErrorBox(args.title, args.content);
   },
 );
+
+ipcMain.on(IpcRendererChannels.EditorFinishedLoading, async () => {
+  // Check if there a file was passed to the app.
+  // See https://github.com/electron/electron/issues/4690#issuecomment-422617581
+  // for why the special case for isPackaged is needed.
+  if (app.isPackaged) {
+    // workaround for missing executable argument)
+    process.argv.unshift('');
+  }
+
+  // parameters is now an array containing any files/folders that your OS will pass to your application
+  const parameters = process.argv.slice(2);
+
+  if (parameters.length > 0) {
+    try {
+      await openFile(parameters[0]);
+    } catch (error) {
+      console.error(error);
+
+      if (error instanceof Error) {
+        dialog.showErrorBox('Open failed', error.message);
+      }
+    }
+  }
+});

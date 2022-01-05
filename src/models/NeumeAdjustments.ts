@@ -638,6 +638,10 @@ export const accidentalAdjustmentMap = new Map<Accidental, NeumeAdjustment[]>([
         isPairedWith: [QuantitativeNeume.Hyporoe, QuantitativeNeume.Kentemata],
         offset: { x: 16, y: 0 },
       },
+      {
+        isPairedWith: [QuantitativeNeume.Apostrophos],
+        offset: { x: 12, y: 0 },
+      },
     ],
   ],
 ]);

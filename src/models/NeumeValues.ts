@@ -1,6 +1,6 @@
 import { QuantitativeNeume } from '@/models/Neumes';
 
-export const neumeValueMap = new Map<QuantitativeNeume, number>([
+const neumeValueMap = new Map<QuantitativeNeume, number>([
   [QuantitativeNeume.Ison, 0],
 
   [QuantitativeNeume.Oligon, 1],

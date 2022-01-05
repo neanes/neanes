@@ -52,7 +52,7 @@ To create a release build, type:
 npm run electron:build
 ```
 
-The build artifacts are found in `dist_electron/`. For Windows, the installer will be called `neanes Setup [version].exe`. The raw files can be found in `dist_electron/win_unpacked`.
+The build artifacts are found in `dist_electron/`. For Windows, the installer will be called `Neanes Setup [version].exe`. The raw files can be found in `dist_electron/win_unpacked`.
 
 ### Development
 
@@ -64,12 +64,20 @@ npm run electron:serve
 
 This will launch the application in development mode. As changes are made to the source code, the app will reload automatically.
 
-## Code Formatting
+### Code Formatting
 
 To format the code before committing, type:
 
 ```
 npm run prettier
+```
+
+### Tests
+
+To run tests before committing, type:
+
+```
+npm test
 ```
 
 ## Acknowledgements

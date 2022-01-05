@@ -770,7 +770,7 @@ export class LayoutService {
         shift = fthora.startsWith('SoftChromaticThi') ? 0 : 1;
       }
     } else if (currentScale === Scale.Diatonic) {
-      let fthoraNote = 0;
+      let fthoraNote = currentNote;
 
       if (fthora.startsWith('DiatonicNiLow')) {
         fthoraNote = -1;

@@ -161,6 +161,8 @@ export default class ModeKeyDialog extends Vue {
 .mode-key-container {
   border: none;
   width: auto !important;
+
+  --zoom: 1;
 }
 
 .header {

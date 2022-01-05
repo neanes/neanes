@@ -41,7 +41,10 @@ export const neumeValueMap = new Map<QuantitativeNeume, number>([
   [QuantitativeNeume.OligonPlusIsonPlusKentemata, 1],
   [QuantitativeNeume.OligonPlusApostrophos, -1],
   [QuantitativeNeume.OligonPlusApostrophosPlusKentemata, 0],
+  [QuantitativeNeume.OligonPlusKentemataPlusHypsiliLeft, 6],
+  [QuantitativeNeume.OligonPlusKentemataPlusHypsiliRight, 5],
   [QuantitativeNeume.OligonPlusElaphronPlusKentemata, -1],
+  [QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata, -2],
   [QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata, -2],
   [QuantitativeNeume.OligonPlusHamiliPlusKentemata, -3],
   [QuantitativeNeume.RunningElaphron, -2],
@@ -50,6 +53,9 @@ export const neumeValueMap = new Map<QuantitativeNeume, number>([
   [QuantitativeNeume.Kentima, 2],
   [QuantitativeNeume.OligonPlusKentima, 2],
   [QuantitativeNeume.Kentemata, 1],
+
+  [QuantitativeNeume.DoubleApostrophos, -2],
+  [QuantitativeNeume.IsonPlusApostrophos, -1],
 
   [QuantitativeNeume.Cross, 0],
   [QuantitativeNeume.VareiaDotted, 0],

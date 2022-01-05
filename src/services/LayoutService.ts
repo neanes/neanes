@@ -164,7 +164,15 @@ export class LayoutService {
             ? neumeMap.get(martyriaElement.measureBar)!
             : null;
 
+          const apostropheWidth = TextMeasurementService.getTextWidth(
+            mappingApostrophe.text,
+            `${pageSetup.neumeDefaultFontSize}px ${mappingApostrophe.fontFamily}`,
+          );
+
+          // Add in an extra apostrophe width to give some extra space between
+          // the martyria and the next neume
           elementWidthPx =
+            apostropheWidth +
             TextMeasurementService.getTextWidth(
               mappingNote.text,
               `${pageSetup.neumeDefaultFontSize}px ${mappingNote.fontFamily}`,
@@ -173,12 +181,7 @@ export class LayoutService {
               mappingRoot.text,
               `${pageSetup.neumeDefaultFontSize}px ${mappingRoot.fontFamily}`,
             ) +
-            (martyriaElement.apostrophe
-              ? TextMeasurementService.getTextWidth(
-                  mappingApostrophe.text,
-                  `${pageSetup.neumeDefaultFontSize}px ${mappingApostrophe.fontFamily}`,
-                )
-              : 0) +
+            (martyriaElement.apostrophe ? apostropheWidth : 0) +
             (martyriaElement.measureBar
               ? TextMeasurementService.getTextWidth(
                   mappingMeasureBar!.text,

@@ -226,6 +226,8 @@ export default class MartyriaToolbar extends Vue {
   width: 32px;
 
   position: relative;
+
+  overflow: hidden;
 }
 
 .space {

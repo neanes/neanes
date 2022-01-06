@@ -112,6 +112,7 @@ export class NoteElement extends ScoreElement {
   public melismaText: string = '';
   public melismaOffsetLeft: number | null = null;
   public lyricsVerticalOffset: number = 0;
+  public lyricsHorizontalOffset: number | null = null;
   public neumeWidth: number = 0;
   public lyricsWidth: number = 0;
 

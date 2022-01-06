@@ -48,6 +48,10 @@ export default class ContentEditable extends Vue {
   focus() {
     this.htmlElement.focus();
   }
+
+  blur() {
+    this.htmlElement.blur();
+  }
 }
 </script>
 

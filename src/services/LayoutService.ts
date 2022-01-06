@@ -10,7 +10,13 @@ import {
   EmptyElement,
 } from '@/models/Element';
 import { neumeMap } from '@/models/NeumeMappings';
-import { Fthora, Note, RootSign, VocalExpressionNeume } from '@/models/Neumes';
+import {
+  Fthora,
+  Note,
+  QuantitativeNeume,
+  RootSign,
+  VocalExpressionNeume,
+} from '@/models/Neumes';
 import { getNeumeValue } from '@/models/NeumeValues';
 import { Line, Page } from '@/models/Page';
 import { PageSetup } from '@/models/PageSetup';
@@ -49,6 +55,10 @@ export class LayoutService {
     let lastElementWasLineBreak = false;
     let lastElementWasPageBreak = false;
 
+    // First, calculate some constants that will
+    // be used later. This is so we don't unnecessarily
+    // calculate them more than once during the loop.
+
     const neumeHeight = TextMeasurementService.getFontHeight(
       `${pageSetup.neumeDefaultFontSize}px Psaltica`,
     );
@@ -57,6 +67,26 @@ export class LayoutService {
 
     const lyricHeight = TextMeasurementService.getFontHeight(
       `${pageSetup.lyricsDefaultFontSize}px ${pageSetup.lyricsDefaultFontFamily}`,
+    );
+
+    const vareiaMapping = neumeMap.get(VocalExpressionNeume.Vareia)!;
+    const vareiaWidth = TextMeasurementService.getTextWidth(
+      vareiaMapping.text,
+      `${pageSetup.neumeDefaultFontSize}px ${vareiaMapping.fontFamily}`,
+    );
+
+    const elaphronMapping = neumeMap.get(QuantitativeNeume.Elaphron)!;
+    const elaphronWidth = TextMeasurementService.getTextWidth(
+      elaphronMapping.text,
+      `${pageSetup.neumeDefaultFontSize}px ${elaphronMapping.fontFamily}`,
+    );
+
+    const runningElaphronMapping = neumeMap.get(
+      QuantitativeNeume.RunningElaphron,
+    )!;
+    const runningElaphronWidth = TextMeasurementService.getTextWidth(
+      runningElaphronMapping.text,
+      `${pageSetup.neumeDefaultFontSize}px ${runningElaphronMapping.fontFamily}`,
     );
 
     for (let element of elements) {
@@ -107,42 +137,59 @@ export class LayoutService {
         }
         case ElementType.Note: {
           const noteElement = element as NoteElement;
+
           noteElement.lyricsVerticalOffset = lyricsVerticalOffset;
+
           const quantitativeNeumeMapping = neumeMap.get(
             noteElement.quantitativeNeume,
           )!;
-          let vareiaWidth = 0;
-          let measureBarWidth = 0;
 
-          if (
-            noteElement.vocalExpressionNeume != null &&
-            noteElement.vocalExpressionNeume === VocalExpressionNeume.Vareia
-          ) {
-            const vareiaMapping = neumeMap.get(VocalExpressionNeume.Vareia)!;
-            vareiaWidth = TextMeasurementService.getTextWidth(
-              vareiaMapping.text,
-              `${pageSetup.neumeDefaultFontSize}px ${vareiaMapping.fontFamily}`,
-            );
-          }
-
-          if (noteElement.measureBar != null) {
-            const measureBarMapping = neumeMap.get(noteElement.measureBar)!;
-            measureBarWidth = TextMeasurementService.getTextWidth(
-              measureBarMapping.text,
-              `${pageSetup.neumeDefaultFontSize}px ${measureBarMapping.fontFamily}`,
-            );
-          }
-
-          const neumeWidth = TextMeasurementService.getTextWidth(
+          noteElement.neumeWidth = TextMeasurementService.getTextWidth(
             quantitativeNeumeMapping.text,
             `${pageSetup.neumeDefaultFontSize}px ${quantitativeNeumeMapping.fontFamily}`,
           );
 
-          noteElement.neumeWidth = neumeWidth + vareiaWidth + measureBarWidth;
           noteElement.lyricsWidth = TextMeasurementService.getTextWidth(
             noteElement.lyrics,
             `${pageSetup.lyricsDefaultFontSize}px ${pageSetup.lyricsDefaultFontFamily}`,
           );
+
+          noteElement.lyricsHorizontalOffset = null;
+
+          // Handle special case for vareia:
+          // Shift the lyrics to the right so that they
+          // are centered under the main neume
+          if (
+            noteElement.vocalExpressionNeume != null &&
+            noteElement.vocalExpressionNeume === VocalExpressionNeume.Vareia
+          ) {
+            noteElement.lyricsHorizontalOffset = vareiaWidth;
+            noteElement.lyricsWidth += vareiaWidth;
+            noteElement.neumeWidth += vareiaWidth;
+          }
+
+          // Handle special case for running elaphron:
+          // Shift the lyrics to the right so that they
+          // are centered under the elaphron
+          if (
+            noteElement.quantitativeNeume === QuantitativeNeume.RunningElaphron
+          ) {
+            // The stand-alone apostrophos is not the same width
+            // as the apostrophros in the running elaphron, but
+            // the elaphrons are the same width in both neumes.
+            const offset = runningElaphronWidth - elaphronWidth;
+            noteElement.lyricsHorizontalOffset = offset;
+            noteElement.lyricsWidth += offset;
+          }
+
+          if (noteElement.measureBar != null) {
+            const measureBarMapping = neumeMap.get(noteElement.measureBar)!;
+
+            noteElement.neumeWidth += TextMeasurementService.getTextWidth(
+              measureBarMapping.text,
+              `${pageSetup.neumeDefaultFontSize}px ${measureBarMapping.fontFamily}`,
+            );
+          }
 
           elementWidthPx = Math.max(
             noteElement.neumeWidth,
@@ -431,9 +478,24 @@ export class LayoutService {
   }
 
   public static addMelismas(pages: Page[], pageSetup: PageSetup) {
-    let widthOfUnderscore = TextMeasurementService.getTextWidth(
+    // First calculate some constants
+    const widthOfUnderscore = TextMeasurementService.getTextWidth(
       '_',
       `${pageSetup.lyricsDefaultFontSize}px ${pageSetup.lyricsDefaultFontFamily}`,
+    );
+
+    const elaphronMapping = neumeMap.get(QuantitativeNeume.Elaphron)!;
+    const elaphronWidth = TextMeasurementService.getTextWidth(
+      elaphronMapping.text,
+      `${pageSetup.neumeDefaultFontSize}px ${elaphronMapping.fontFamily}`,
+    );
+
+    const runningElaphronMapping = neumeMap.get(
+      QuantitativeNeume.RunningElaphron,
+    )!;
+    const runningElaphronWidth = TextMeasurementService.getTextWidth(
+      runningElaphronMapping.text,
+      `${pageSetup.neumeDefaultFontSize}px ${runningElaphronMapping.fontFamily}`,
     );
 
     for (let page of pages) {
@@ -537,7 +599,29 @@ export class LayoutService {
               }
             } else if (this.isFinalMelisma(element, line.elements)) {
               // Stretch from the start of the lyrics to the end of the neume
-              let width = element.neumeWidth / 2 - element.lyricsWidth / 2;
+              let width = Math.max(
+                element.neumeWidth / 2 - element.lyricsWidth / 2,
+                0,
+              );
+
+              // Special case for when the next neume is a
+              // running elaphron. The melisma, which by
+              // convention must always be a final melisma,
+              // should run all the way to the elaphron,
+              // instead of stopping at the apostrophos
+              const nextElement = line.elements[index + 1];
+
+              if (
+                nextElement &&
+                nextElement.elementType === ElementType.Note &&
+                (nextElement as NoteElement).quantitativeNeume ===
+                  QuantitativeNeume.RunningElaphron
+              ) {
+                // The stand-alone apostrophos is not the same width
+                // as the apostrophros in the running elaphron, but
+                // the elaphrons are the same width in both neumes.
+                width += runningElaphronWidth - elaphronWidth;
+              }
 
               let numberOfUnderScoresNeeded = Math.floor(
                 width / widthOfUnderscore,

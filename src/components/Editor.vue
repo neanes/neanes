@@ -57,14 +57,17 @@
                     :class="[{ selected: element == selectedElement }]"
                     @click.native="selectedElement = element"
                   ></SyllableNeumeBox>
-                  <div class="lyrics-container" :style="getLyricStyle(element)">
+                  <div
+                    class="lyrics-container"
+                    :key="`lyrics-${getElementIndex(element)}-${
+                      element.keyHelper
+                    }`"
+                    :style="getLyricStyle(element)"
+                  >
                     <ContentEditable
                       class="lyrics"
                       :content="element.lyrics"
                       :ref="`lyrics-${getElementIndex(element)}`"
-                      :key="`lyrics-${getElementIndex(element)}-${
-                        element.keyHelper
-                      }`"
                       @focus.native="selectedLyrics = element"
                       @blur="updateLyrics(element, $event)"
                     ></ContentEditable>
@@ -546,6 +549,10 @@ export default class Editor extends Vue {
   getLyricStyle(element: NoteElement) {
     return {
       top: withZoom(element.lyricsVerticalOffset),
+      paddingLeft:
+        element.lyricsHorizontalOffset != null
+          ? withZoom(element.lyricsHorizontalOffset)
+          : undefined,
       fontSize: withZoom(this.score.pageSetup.lyricsDefaultFontSize),
       fontFamily: this.score.pageSetup.lyricsDefaultFontFamily,
       color: this.score.pageSetup.lyricsDefaultColor,

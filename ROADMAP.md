@@ -23,6 +23,7 @@
 - Allow multiple elements to be selected (and copy/cut/pasted)
 - Configurable Neume Keyboard
 - Better styling
+- Open Recent file menu option
 - Graceful handling of bad martyrias
 - Right-align option for tempo
 - Right align for multiple elements grouped together (e.g. tempo followed by martyria). Does this maybe become a "paragraph option", where a paragraph can consist of neumes, small text-boxes that fit to the width of their contents, and have an alignment?
@@ -33,10 +34,6 @@
 ## Tech Debt
 
 - Need to explicitly map between save file neumes and view model neumes. This will prevent errors due to mismatched or missing neumes in the save model.
-
-- Lyrics should be absolutely aligned.
-
-- Not all lyrics should be center-aligned. For example, lyrics under neumes with a vareia or a running elaphron should be shifted to the right.
 
 - Neume Adjustments should happen in the model layer, instead of the presentation layer.
 

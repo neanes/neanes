@@ -1050,13 +1050,23 @@ export default class Editor extends Vue {
           document.execCommand('insertText', false, '_');
 
           if (
+            !event.ctrlKey &&
             this.getCursorPosition() ===
-            this.getLyricLength(this.selectedLyrics!)
+              this.getLyricLength(this.selectedLyrics!)
           ) {
-            this.moveToNextLyricBoxThrottled();
-            handled = true;
+            if (this.getNextLyricBoxIndex() >= 0) {
+              this.moveToNextLyricBoxThrottled();
+            } else {
+              // If this is the last lyric box, blur
+              // so that the melisma is registered and
+              // the user doesn't accidentally type more
+              // characters into box
+              const index = this.elements.indexOf(this.selectedLyrics!);
+              (this.$refs[`lyrics-${index}`] as ContentEditable[])[0].blur();
+            }
           }
 
+          handled = true;
           break;
       }
     } else if (event.ctrlKey) {
@@ -1170,23 +1180,27 @@ export default class Editor extends Vue {
     return false;
   }
 
-  moveToNextLyricBox() {
+  getNextLyricBoxIndex() {
     if (this.selectedLyrics) {
       const currentIndex = this.elements.indexOf(this.selectedLyrics);
-      let nextIndex = -1;
 
       // Find the index of the next note
       for (let i = currentIndex + 1; i < this.elements.length; i++) {
         if (this.elements[i].elementType === ElementType.Note) {
-          nextIndex = i;
-          break;
+          return i;
         }
       }
+    }
 
-      if (nextIndex >= 0) {
-        (this.$refs[`lyrics-${nextIndex}`] as any)[0].focus();
-        return true;
-      }
+    return -1;
+  }
+
+  moveToNextLyricBox() {
+    const nextIndex = this.getNextLyricBoxIndex();
+
+    if (nextIndex >= 0) {
+      (this.$refs[`lyrics-${nextIndex}`] as ContentEditable[])[0].focus();
+      return true;
     }
 
     return false;
@@ -1206,7 +1220,7 @@ export default class Editor extends Vue {
       }
 
       if (nextIndex >= 0) {
-        (this.$refs[`lyrics-${nextIndex}`] as any)[0].focus();
+        (this.$refs[`lyrics-${nextIndex}`] as ContentEditable[])[0].focus();
         return true;
       }
     }

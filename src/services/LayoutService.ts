@@ -507,143 +507,94 @@ export class LayoutService {
         for (let element of noteElements) {
           const index = line.elements.indexOf(element);
 
-          // Special logic when this is the first intermediate melisma on a line
-          if (index === 0 && element.isMelisma && !element.isMelismaStart) {
-            if (this.isIntermediateMelisma(element, line.elements)) {
-              const nextElement = line.elements[index + 1] as NoteElement;
+          const isIntermediateMelismaAtStartOfLine =
+            index === 0 && element.isMelisma && !element.isMelismaStart;
 
-              let lyrics2Left = 0;
+          // First, clear melisma fields, since
+          // they may be stale
+          element.melismaText = '';
+          element.melismaWidth = 0;
+          element.isFullMelisma = isIntermediateMelismaAtStartOfLine;
 
-              if (nextElement.lyricsWidth > nextElement.neumeWidth) {
-                lyrics2Left =
-                  nextElement.x -
-                  (nextElement.lyricsWidth - nextElement.neumeWidth) / 2;
+          if (element.isMelismaStart || isIntermediateMelismaAtStartOfLine) {
+            // The final element in the melisma, or the final
+            // element in the line
+            let finalElement: NoteElement | null = null;
+
+            // The next element in the line after the final element,
+            // if there is one.
+            let nextElement: ScoreElement | null = null;
+
+            for (let i = index + 1; i < line.elements.length; i++) {
+              if (
+                line.elements[i].elementType === ElementType.Note &&
+                (line.elements[i] as NoteElement).isMelisma &&
+                !(line.elements[i] as NoteElement).isMelismaStart
+              ) {
+                finalElement = line.elements[i] as NoteElement;
               } else {
-                lyrics2Left =
-                  nextElement.x +
-                  nextElement.neumeWidth / 2 -
-                  nextElement.lyricsWidth / 2;
-              }
-
-              const width = lyrics2Left - element.x;
-              const numberOfUnderScoresNeeded =
-                width > 0 ? Math.ceil(width / widthOfUnderscore) : 1;
-
-              element.melismaOffsetLeft =
-                (numberOfUnderScoresNeeded * widthOfUnderscore -
-                  element.neumeWidth) /
-                2;
-
-              element.melismaText = '';
-
-              for (let i = 0; i < numberOfUnderScoresNeeded; i++) {
-                element.melismaText += '_';
-              }
-            } else if (this.isFinalMelisma(element, line.elements)) {
-              const width = element.neumeWidth;
-              const numberOfUnderScoresNeeded =
-                width > 0 ? Math.floor(width / widthOfUnderscore) : 1;
-
-              element.melismaOffsetLeft =
-                (numberOfUnderScoresNeeded * widthOfUnderscore -
-                  element.neumeWidth) /
-                2;
-
-              element.melismaText = '';
-
-              for (let i = 0; i < numberOfUnderScoresNeeded; i++) {
-                element.melismaText += '_';
+                nextElement = line.elements[i];
+                break;
               }
             }
-          } else {
-            element.melismaOffsetLeft = null;
 
-            if (this.isIntermediateMelisma(element, line.elements)) {
-              const nextElement = line.elements[index + 1] as NoteElement;
+            let start = 0;
+            let end = 0;
 
-              let lyrics1Right = 0;
-              let lyrics2Left = 0;
+            if (isIntermediateMelismaAtStartOfLine) {
+              // Special case. No lyrics, so start at the
+              // beginning of the neume.
+              start = element.x;
+            } else if (element.lyricsWidth > element.neumeWidth) {
+              start =
+                element.x +
+                element.neumeWidth +
+                (element.lyricsWidth - element.neumeWidth) / 2;
+            } else {
+              start =
+                element.x + element.neumeWidth / 2 + element.lyricsWidth / 2;
+            }
 
-              if (element.lyricsWidth > element.neumeWidth) {
-                lyrics1Right =
-                  element.x +
-                  element.neumeWidth +
-                  (element.lyricsWidth - element.neumeWidth) / 2;
-              } else {
-                lyrics1Right =
-                  element.x + element.neumeWidth / 2 + element.lyricsWidth / 2;
-              }
+            const nextElementIsRunningElaphron =
+              nextElement &&
+              nextElement.elementType === ElementType.Note &&
+              (nextElement as NoteElement).quantitativeNeume ===
+                QuantitativeNeume.RunningElaphron;
 
-              if (nextElement.lyricsWidth > nextElement.neumeWidth) {
-                lyrics2Left =
-                  nextElement.x -
-                  (nextElement.lyricsWidth - nextElement.neumeWidth) / 2;
-              } else {
-                lyrics2Left =
-                  nextElement.x +
-                  nextElement.neumeWidth / 2 -
-                  nextElement.lyricsWidth / 2;
-              }
+            // Special case for when the next neume is a running elaphron.
+            // The melisma, which by convention must always be a final melisma,
+            // should run all the way to the elaphron, instead of stopping at
+            // the apostrophos. To handle this, set the final element to the
+            // next element (the elaphron), later we will substract out the width
+            // of the initial apostrophos in the running elaphron.
+            if (nextElementIsRunningElaphron) {
+              finalElement = nextElement as NoteElement;
+            }
 
-              // Stretch from the end of the lyrics in the current element
-              // to the beginning of the lyrics in the next element
-              let width = lyrics2Left - lyrics1Right;
+            if (finalElement == null) {
+              end = element.x + element.neumeWidth;
+            } else if (finalElement.lyricsWidth > finalElement.neumeWidth) {
+              end =
+                finalElement.x -
+                (finalElement.lyricsWidth - finalElement.neumeWidth) / 2;
+            } else if (nextElementIsRunningElaphron) {
+              // The stand-alone apostrophos is not the same width
+              // as the apostrophros in the running elaphron, but
+              // the elaphrons are the same width in both neumes.
+              end = finalElement.x + (runningElaphronWidth - elaphronWidth);
+            } else {
+              end = finalElement.x + finalElement.neumeWidth;
+            }
 
-              let numberOfUnderScoresNeeded =
-                width > 0 ? Math.ceil(width / widthOfUnderscore) : 1;
+            // Always show at least one underscore to indicate it's a melisma.
+            element.melismaWidth = Math.max(end - start, widthOfUnderscore);
 
-              element.melismaText = '';
+            let numberOfUnderScoresNeeded = Math.ceil(
+              element.melismaWidth / widthOfUnderscore,
+            );
 
-              for (let i = 0; i < numberOfUnderScoresNeeded; i++) {
-                element.melismaText += '_';
-              }
-            } else if (this.isFinalMelisma(element, line.elements)) {
-              // Stretch from the start of the lyrics to the end of the neume
-              let width = Math.max(
-                element.neumeWidth / 2 - element.lyricsWidth / 2,
-                0,
-              );
-
-              // Special case for when the next neume is a
-              // running elaphron. The melisma, which by
-              // convention must always be a final melisma,
-              // should run all the way to the elaphron,
-              // instead of stopping at the apostrophos
-              const nextElement = line.elements[index + 1];
-
-              if (
-                nextElement &&
-                nextElement.elementType === ElementType.Note &&
-                (nextElement as NoteElement).quantitativeNeume ===
-                  QuantitativeNeume.RunningElaphron
-              ) {
-                // The stand-alone apostrophos is not the same width
-                // as the apostrophros in the running elaphron, but
-                // the elaphrons are the same width in both neumes.
-                width += runningElaphronWidth - elaphronWidth;
-              }
-
-              let numberOfUnderScoresNeeded = Math.floor(
-                width / widthOfUnderscore,
-              );
-
-              // Special case for when this is the first and final melisma. This
-              // is for when the user types the beginning of the melisma, before
-              // the next syllable is typed. We want to always show at least one
-              // underscore to indicate to the user that the note is the start of a
-              // melisma
-              if (element.isMelismaStart) {
-                numberOfUnderScoresNeeded = Math.max(
-                  1,
-                  numberOfUnderScoresNeeded,
-                );
-              }
-
-              element.melismaText = '';
-
-              for (let i = 0; i < numberOfUnderScoresNeeded; i++) {
-                element.melismaText += '_';
-              }
+            for (let i = 0; i < numberOfUnderScoresNeeded; i++) {
+              element.melismaText += '_';
             }
           }
         }
@@ -761,37 +712,6 @@ export class LayoutService {
         }
       }
     }
-  }
-
-  public static isIntermediateMelisma(
-    element: NoteElement,
-    elements: ScoreElement[],
-  ) {
-    const index = elements.indexOf(element);
-
-    if (element.isMelisma) {
-      let nextElement = elements[index + 1] as NoteElement;
-
-      return (
-        nextElement && nextElement.isMelisma && !nextElement.isMelismaStart
-      );
-    }
-
-    return false;
-  }
-
-  public static isFinalMelisma(element: NoteElement, elements: ScoreElement[]) {
-    const index = elements.indexOf(element);
-
-    if (element.isMelisma) {
-      let nextElement = elements[index + 1] as NoteElement;
-
-      return (
-        !nextElement || !nextElement.isMelisma || nextElement.isMelismaStart
-      );
-    }
-
-    return false;
   }
 
   private static getScaleFromFthora(fthora: Fthora, currentNote: number) {

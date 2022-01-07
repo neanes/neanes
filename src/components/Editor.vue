@@ -63,6 +63,7 @@
                       element.keyHelper
                     }`"
                     :style="getLyricStyle(element)"
+                    @click="focusLyrics(getElementIndex(element))"
                   >
                     <ContentEditable
                       class="lyrics"
@@ -72,19 +73,13 @@
                       @blur="updateLyrics(element, $event)"
                     ></ContentEditable>
                     <template v-if="isMelisma(element)">
-                      <template v-if="element.melismaOffsetLeft">
-                        <div
-                          class="melisma full"
-                          :style="getFullMelismaStyle(element)"
-                        >
-                          {{ element.melismaText }}
-                        </div>
-                      </template>
-                      <template v-else>
-                        <div class="melisma">
-                          {{ element.melismaText }}
-                        </div>
-                      </template>
+                      <div
+                        class="melisma"
+                        :class="{ full: element.isFullMelisma }"
+                        :style="getMelismaStyle(element)"
+                      >
+                        {{ element.melismaText }}
+                      </div>
                     </template>
                   </div>
                 </div>
@@ -573,9 +568,9 @@ export default class Editor extends Vue {
     } as CSSStyleDeclaration;
   }
 
-  getFullMelismaStyle(element: NoteElement) {
+  getMelismaStyle(element: NoteElement) {
     return {
-      left: withZoom(element.melismaOffsetLeft!),
+      width: withZoom(element.melismaWidth!),
     } as CSSStyleDeclaration;
   }
 
@@ -672,10 +667,7 @@ export default class Editor extends Vue {
   }
 
   isMelisma(element: NoteElement) {
-    return (
-      LayoutService.isIntermediateMelisma(element, this.elements) ||
-      LayoutService.isFinalMelisma(element, this.elements)
-    );
+    return element.melismaWidth > 0;
   }
 
   openModeKeyDialog() {
@@ -927,6 +919,10 @@ export default class Editor extends Vue {
     this.replaceScoreElement(newElement, index);
 
     return newElement;
+  }
+
+  focusLyrics(index: number) {
+    (this.$refs[`lyrics-${index}`] as ContentEditable[])[0].focus();
   }
 
   isSyllableElement(element: ScoreElement) {
@@ -1199,7 +1195,7 @@ export default class Editor extends Vue {
     const nextIndex = this.getNextLyricBoxIndex();
 
     if (nextIndex >= 0) {
-      (this.$refs[`lyrics-${nextIndex}`] as ContentEditable[])[0].focus();
+      this.focusLyrics(nextIndex);
       return true;
     }
 
@@ -1220,7 +1216,7 @@ export default class Editor extends Vue {
       }
 
       if (nextIndex >= 0) {
-        (this.$refs[`lyrics-${nextIndex}`] as ContentEditable[])[0].focus();
+        this.focusLyrics(nextIndex);
         return true;
       }
     }
@@ -1888,7 +1884,7 @@ export default class Editor extends Vue {
 
 .lyrics-container {
   min-height: 1.6rem;
-  min-width: 1rem;
+  min-width: 100%;
   text-align: center;
   position: absolute;
   white-space: nowrap;
@@ -1897,10 +1893,11 @@ export default class Editor extends Vue {
 .melisma {
   position: absolute;
   display: inline;
+  overflow: hidden;
 }
 
 .melisma.full {
-  position: relative;
+  left: 0;
 }
 
 .neume {

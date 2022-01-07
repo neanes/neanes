@@ -213,7 +213,11 @@ async function handleSave(filePath: string | null) {
     console.error(error);
 
     if (error instanceof Error) {
-      dialog.showErrorBox('Save failed', error.message);
+      dialog.showMessageBox(win, {
+        type: 'error',
+        title: 'Save failed',
+        message: error.message,
+      });
     }
 
     return false;
@@ -275,7 +279,11 @@ async function handleSaveAs() {
     console.error(error);
 
     if (error instanceof Error) {
-      dialog.showErrorBox('Save As failed', error.message);
+      dialog.showMessageBox(win, {
+        type: 'error',
+        title: 'Save As failed',
+        message: error.message,
+      });
     }
 
     return false;
@@ -324,7 +332,11 @@ function createMenu() {
                 console.error(error);
 
                 if (error instanceof Error) {
-                  dialog.showErrorBox('Open failed', error.message);
+                  dialog.showMessageBox(win, {
+                    type: 'error',
+                    title: 'Open failed',
+                    message: error.message,
+                  });
                 }
               } finally {
                 saving = false;
@@ -345,7 +357,11 @@ function createMenu() {
                   console.error(error);
 
                   if (error instanceof Error) {
-                    dialog.showErrorBox('Open failed', error.message);
+                    dialog.showMessageBox(win, {
+                      type: 'error',
+                      title: 'Open failed',
+                      message: error.message,
+                    });
                   }
                 }
               }
@@ -416,7 +432,11 @@ function createMenu() {
               console.error(error);
 
               if (error instanceof Error) {
-                dialog.showErrorBox('Export to PDF failed', error.message);
+                dialog.showMessageBox(win, {
+                  type: 'error',
+                  title: 'Export to PDF failed',
+                  message: error.message,
+                });
               }
             }
           },
@@ -450,7 +470,11 @@ function createMenu() {
               console.error(error);
 
               if (error instanceof Error) {
-                dialog.showErrorBox('Print failed', error.message);
+                dialog.showMessageBox(win, {
+                  type: 'error',
+                  title: 'Print failed',
+                  message: error.message,
+                });
               }
             }
           },
@@ -696,7 +720,11 @@ ipcMain.on(IpcRendererChannels.SetCanRedo, async (event, data) => {
 ipcMain.on(
   IpcRendererChannels.ShowErrorBox,
   async (event, args: ShowErrorBoxArgs) => {
-    dialog.showErrorBox(args.title, args.content);
+    dialog.showMessageBox(win, {
+      type: 'error',
+      title: args.title,
+      message: args.content,
+    });
   },
 );
 
@@ -719,7 +747,11 @@ ipcMain.on(IpcRendererChannels.EditorFinishedLoading, async () => {
       console.error(error);
 
       if (error instanceof Error) {
-        dialog.showErrorBox('Open failed', error.message);
+        dialog.showMessageBox(win, {
+          type: 'error',
+          title: 'Open failed',
+          message: error.message,
+        });
       }
     }
   }

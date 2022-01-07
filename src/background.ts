@@ -30,14 +30,22 @@ import { errorMonitor } from 'events';
 
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
+const userDataPath = app.getPath('userData');
+
+const maxRecentFiles = 20;
+const storeFilePath = path.join(userDataPath, 'settings.json');
+
 declare const __static: string;
 
 let win!: BrowserWindow;
 
-// Scheme must be registered before the app is ready
-protocol.registerSchemesAsPrivileged([
-  { scheme: 'app', privileges: { secure: true, standard: true } },
-]);
+interface Store {
+  recentFiles: string[];
+}
+
+let store: Store = {
+  recentFiles: [],
+};
 
 let saving = false;
 
@@ -50,6 +58,49 @@ const state: State = {
   hasUnsavedChanges: false,
   filePath: null,
 };
+
+// Scheme must be registered before the app is ready
+protocol.registerSchemesAsPrivileged([
+  { scheme: 'app', privileges: { secure: true, standard: true } },
+]);
+
+async function loadStore() {
+  try {
+    store = JSON.parse(await fs.readFile(storeFilePath, 'utf8'));
+  } catch (error) {
+    // Return default file
+    return {
+      recentFiles: [],
+    } as Store;
+  }
+}
+
+async function saveStore() {
+  try {
+    await fs.writeFile(storeFilePath, JSON.stringify(store));
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+async function addToRecentFiles(filePath: string) {
+  // This is probably overkill, but we'll load the store first
+  // to get the most recent store, just in case there are multiple
+  // instances of the app running. This will keep the recent files
+  // in sync across all the apps.
+  // Concurrency should probably be handled better, but it's
+  // an edge case.
+  await loadStore();
+
+  // Remove the file from the list if it already exists
+  store.recentFiles = store.recentFiles.filter((x) => x !== filePath);
+  // Add the file to the beginning of the list
+  store.recentFiles.unshift(filePath);
+  // Trim off files at the end if there are too many
+  store.recentFiles = store.recentFiles.slice(0, maxRecentFiles);
+
+  await saveStore();
+}
 
 async function showUnsavedChangesWarning() {
   const fileName =
@@ -120,6 +171,10 @@ async function openFile(filePath: string) {
     data,
     filePath,
   } as FileMenuOpenScoreArgs);
+
+  await addToRecentFiles(filePath);
+
+  createMenu();
 }
 
 async function handleSave(filePath: string | null) {
@@ -276,6 +331,26 @@ function createMenu() {
               }
             }
           },
+        },
+        {
+          id: 'recentfiles',
+          label: 'Open Recent',
+          submenu: store.recentFiles.map((x, index) => ({
+            label: `${index + 1}: ${x}`,
+            async click() {
+              if (await checkForUnsavedChanges()) {
+                try {
+                  await openFile(x);
+                } catch (error) {
+                  console.error(error);
+
+                  if (error instanceof Error) {
+                    dialog.showErrorBox('Open failed', error.message);
+                  }
+                }
+              }
+            },
+          })),
         },
         {
           label: '&Save',
@@ -533,6 +608,9 @@ async function createWindow() {
     }
   });
 
+  // Load store before we create the menu, since
+  // the store contains the list of recent files
+  await loadStore();
   createMenu();
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {

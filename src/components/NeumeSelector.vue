@@ -87,8 +87,8 @@ export default class NeumeSelector extends Vue {
   descendingNeumes: QuantitativeNeume[] = [
     QuantitativeNeume.IsonPlusApostrophos,
     QuantitativeNeume.Apostrophos,
-    QuantitativeNeume.DoubleApostrophos,
     QuantitativeNeume.RunningElaphron,
+    QuantitativeNeume.DoubleApostrophos,
     QuantitativeNeume.Hyporoe,
     QuantitativeNeume.Elaphron,
     QuantitativeNeume.ElaphronPlusApostrophos,

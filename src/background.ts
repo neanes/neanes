@@ -258,9 +258,10 @@ async function handleSaveAs() {
               saving = false;
 
               await writeScoreFile(dialogResult.filePath!, args.data);
-
               win.webContents.send(IpcMainChannels.SaveComplete);
 
+              await addToRecentFiles(dialogResult.filePath!);
+              createMenu();
               resolve();
             } catch (error) {
               reject(error);

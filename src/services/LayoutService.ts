@@ -567,11 +567,16 @@ export class LayoutService {
 
             if (element.isHyphen) {
               const nextNoteElement = nextElement as NoteElement;
+
               if (
                 nextElement == null ||
                 nextElement.elementType !== ElementType.Note
               ) {
-                end = element.x + element.neumeWidth;
+                if (finalElement) {
+                  end = finalElement.x + finalElement.neumeWidth;
+                } else {
+                  end = element.x + element.neumeWidth;
+                }
               } else if (
                 nextNoteElement.lyricsWidth > nextNoteElement.neumeWidth
               ) {

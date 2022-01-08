@@ -136,6 +136,17 @@
               @change="updateLineHeight($event.target.value)"
             />
           </div>
+          <div class="form-group">
+            <label class="margin-label">Hyphens</label>
+            <input
+              class="margin-input"
+              type="number"
+              min="0"
+              :step="spacingStep"
+              :value="hyphenSpacing"
+              @change="updateHyphenSpacing($event.target.value)"
+            />
+          </div>
         </div>
         <div class="right-pane">
           <div class="subheader">Drop Caps</div>
@@ -506,10 +517,23 @@ export default class PageSetupDialog extends Vue {
     return this.toDisplayUnit(this.form!.lineHeight).toFixed(3);
   }
 
+  get hyphenSpacing() {
+    return this.toDisplayUnit(this.form!.hyphenSpacing).toFixed(3);
+  }
+
   updateLineHeight(value: number) {
     this.form!.lineHeight = Math.min(
       Math.max(this.toStorageUnit(value), 0),
       this.form!.innerPageHeight,
+    );
+
+    this.$forceUpdate();
+  }
+
+  updateHyphenSpacing(value: number) {
+    this.form!.hyphenSpacing = Math.min(
+      Math.max(this.toStorageUnit(value), 0),
+      this.form!.innerPageWidth,
     );
 
     this.$forceUpdate();

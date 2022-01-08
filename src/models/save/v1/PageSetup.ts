@@ -42,4 +42,6 @@ export class PageSetup {
   public dropCapDefaultFontFamily = 'Athonite';
   public dropCapDefaultFontSize = Unit.fromPt(60);
   public dropCapDefaultColor = '#000000';
+
+  public hyphenSpacing: number = Unit.fromInch(0.75);
 }

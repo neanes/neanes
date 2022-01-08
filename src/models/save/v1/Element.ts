@@ -41,6 +41,7 @@ export class NoteElement extends ScoreElement {
   public lyrics: string | undefined = undefined;
   public isMelisma: boolean | undefined = undefined;
   public isMelismaStart: boolean | undefined = undefined;
+  public isHyphen: boolean | undefined = undefined;
 }
 
 export class MartyriaElement extends ScoreElement {

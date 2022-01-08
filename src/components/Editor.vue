@@ -77,9 +77,8 @@
                         class="melisma"
                         :class="{ full: element.isFullMelisma }"
                         :style="getMelismaStyle(element)"
-                      >
-                        {{ element.melismaText }}
-                      </div>
+                        v-text="element.melismaText"
+                      ></div>
                     </template>
                   </div>
                 </div>
@@ -1039,33 +1038,11 @@ export default class Editor extends Vue {
       return;
     }
 
-    // We don't handle the shift key unless it's for enter
-    if (event.shiftKey) {
-      switch (event.code) {
-        case 'Minus':
-          document.execCommand('insertText', false, '_');
+    if (event.shiftKey && event.code !== 'Minus') {
+      return;
+    }
 
-          if (
-            !event.ctrlKey &&
-            this.getCursorPosition() ===
-              this.getLyricLength(this.selectedLyrics!)
-          ) {
-            if (this.getNextLyricBoxIndex() >= 0) {
-              this.moveToNextLyricBoxThrottled();
-            } else {
-              // If this is the last lyric box, blur
-              // so that the melisma is registered and
-              // the user doesn't accidentally type more
-              // characters into box
-              const index = this.elements.indexOf(this.selectedLyrics!);
-              (this.$refs[`lyrics-${index}`] as ContentEditable[])[0].blur();
-            }
-          }
-
-          handled = true;
-          break;
-      }
-    } else if (event.ctrlKey) {
+    if (event.ctrlKey) {
       switch (event.code) {
         case 'ArrowRight':
           this.moveToNextLyricBoxThrottled();
@@ -1101,6 +1078,31 @@ export default class Editor extends Vue {
             this.moveToNextLyricBoxThrottled();
             handled = true;
           }
+          break;
+        case 'Minus':
+          if (event.shiftKey) {
+            document.execCommand('insertText', false, '_');
+          } else {
+            document.execCommand('insertText', false, '-');
+          }
+
+          if (
+            this.getCursorPosition() ===
+            this.getLyricLength(this.selectedLyrics!)
+          ) {
+            if (this.getNextLyricBoxIndex() >= 0) {
+              this.moveToNextLyricBoxThrottled();
+            } else {
+              // If this is the last lyric box, blur
+              // so that the melisma is registered and
+              // the user doesn't accidentally type more
+              // characters into box
+              const index = this.elements.indexOf(this.selectedLyrics!);
+              (this.$refs[`lyrics-${index}`] as ContentEditable[])[0].blur();
+            }
+          }
+
+          handled = true;
           break;
       }
     }
@@ -1367,17 +1369,20 @@ export default class Editor extends Vue {
     // Calculate melisma properties
     let isMelisma: boolean;
     let isMelismaStart: boolean;
+    let isHyphen: boolean;
 
-    if (lyrics === '_') {
+    if (lyrics === '_' || lyrics === '-') {
       isMelisma = true;
       isMelismaStart = false;
+      isHyphen = lyrics === '-';
       lyrics = '';
 
       // Force the lyrics to re-render
       element.keyHelper++;
-    } else if (lyrics.endsWith('_')) {
+    } else if (lyrics.endsWith('_') || lyrics.endsWith('-')) {
       isMelisma = true;
       isMelismaStart = true;
+      isHyphen = lyrics.endsWith('-');
       lyrics = lyrics.slice(0, -1);
 
       // Force the lyrics to re-render
@@ -1385,15 +1390,17 @@ export default class Editor extends Vue {
     } else {
       isMelisma = false;
       isMelismaStart = false;
+      isHyphen = false;
     }
 
     // If nothing changed, return. This could happen if
-    // the user types in an underscore wen the element is
-    // already a melisma
+    // the user types in an underscore when the element is
+    // already a melisma.
     if (
       element.lyrics === lyrics &&
       element.isMelismaStart === isMelismaStart &&
-      element.isMelisma === isMelisma
+      element.isMelisma === isMelisma &&
+      element.isHyphen === isHyphen
     ) {
       return;
     }
@@ -1401,7 +1408,12 @@ export default class Editor extends Vue {
     this.commandService.execute(
       this.noteElementCommandFactory.create('update-properties', {
         target: element,
-        newValues: { lyrics, isMelisma, isMelismaStart },
+        newValues: {
+          lyrics,
+          isMelisma,
+          isMelismaStart,
+          isHyphen,
+        },
       }),
     );
 
@@ -1894,6 +1906,7 @@ export default class Editor extends Vue {
   position: absolute;
   display: inline;
   overflow: hidden;
+  white-space: pre;
 }
 
 .melisma.full {

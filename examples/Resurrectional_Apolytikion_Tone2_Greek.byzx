@@ -27,7 +27,8 @@
     "modeKeyDefaultColor": "#ED0000",
     "dropCapDefaultFontFamily": "Athonite",
     "dropCapDefaultFontSize": 80,
-    "dropCapDefaultColor": "#000000"
+    "dropCapDefaultColor": "#000000",
+    "hyphenSpacing": 72
   },
   "staff": {
     "elements": [

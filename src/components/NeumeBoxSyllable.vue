@@ -234,6 +234,7 @@ export default class NeumeBoxSyllable extends Vue {
 <style scoped>
 .neume {
   cursor: default;
+  user-select: none;
 }
 
 .red {

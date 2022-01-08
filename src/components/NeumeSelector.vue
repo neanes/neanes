@@ -132,6 +132,7 @@ export default class NeumeSelector extends Vue {
   text-align: center;
 
   cursor: default;
+  user-select: none;
 
   min-width: 2.5rem;
   height: 2.5rem;

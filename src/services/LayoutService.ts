@@ -484,6 +484,16 @@ export class LayoutService {
       `${pageSetup.lyricsDefaultFontSize}px ${pageSetup.lyricsDefaultFontFamily}`,
     );
 
+    const widthOfHyphen = TextMeasurementService.getTextWidth(
+      '-',
+      `${pageSetup.lyricsDefaultFontSize}px ${pageSetup.lyricsDefaultFontFamily}`,
+    );
+
+    const widthOfSpace = TextMeasurementService.getTextWidth(
+      ' ',
+      `${pageSetup.lyricsDefaultFontSize}px ${pageSetup.lyricsDefaultFontFamily}`,
+    );
+
     const elaphronMapping = neumeMap.get(QuantitativeNeume.Elaphron)!;
     const elaphronWidth = TextMeasurementService.getTextWidth(
       elaphronMapping.text,
@@ -555,46 +565,101 @@ export class LayoutService {
                 element.x + element.neumeWidth / 2 + element.lyricsWidth / 2;
             }
 
-            const nextElementIsRunningElaphron =
-              nextElement &&
-              nextElement.elementType === ElementType.Note &&
-              (nextElement as NoteElement).quantitativeNeume ===
-                QuantitativeNeume.RunningElaphron;
+            if (element.isHyphen) {
+              const nextNoteElement = nextElement as NoteElement;
+              if (
+                nextElement == null ||
+                nextElement.elementType !== ElementType.Note
+              ) {
+                end = element.x + element.neumeWidth;
+              } else if (
+                nextNoteElement.lyricsWidth > nextNoteElement.neumeWidth
+              ) {
+                end =
+                  nextNoteElement.x -
+                  (nextNoteElement.lyricsWidth - nextNoteElement.neumeWidth) /
+                    2;
+              } else {
+                end =
+                  nextNoteElement.x +
+                  nextNoteElement.neumeWidth / 2 -
+                  nextNoteElement.lyricsWidth / 2 +
+                  (nextNoteElement.lyricsHorizontalOffset || 0);
+              }
 
-            // Special case for when the next neume is a running elaphron.
-            // The melisma, which by convention must always be a final melisma,
-            // should run all the way to the elaphron, instead of stopping at
-            // the apostrophos. To handle this, set the final element to the
-            // next element (the elaphron), later we will substract out the width
-            // of the initial apostrophos in the running elaphron.
-            if (nextElementIsRunningElaphron) {
-              finalElement = nextElement as NoteElement;
-            }
+              element.melismaWidth = end - start;
 
-            if (finalElement == null) {
-              end = element.x + element.neumeWidth;
-            } else if (finalElement.lyricsWidth > finalElement.neumeWidth) {
-              end =
-                finalElement.x -
-                (finalElement.lyricsWidth - finalElement.neumeWidth) / 2;
-            } else if (nextElementIsRunningElaphron) {
-              // The stand-alone apostrophos is not the same width
-              // as the apostrophros in the running elaphron, but
-              // the elaphrons are the same width in both neumes.
-              end = finalElement.x + (runningElaphronWidth - elaphronWidth);
+              let numberOfHyphensNeeded = Math.floor(
+                element.melismaWidth / pageSetup.hyphenSpacing,
+              );
+
+              if (
+                numberOfHyphensNeeded == 0 &&
+                element.melismaWidth >= widthOfHyphen
+              ) {
+                numberOfHyphensNeeded = 1;
+              }
+
+              const numberOfSpacesNeeded = Math.ceil(
+                (element.melismaWidth - numberOfHyphensNeeded * widthOfHyphen) /
+                  widthOfSpace,
+              );
+
+              const numberOfSpacesBetweenHyphens = Math.floor(
+                numberOfSpacesNeeded / (numberOfHyphensNeeded + 1),
+              );
+
+              for (let i = 0; i < numberOfHyphensNeeded + 1; i++) {
+                for (let j = 0; j < numberOfSpacesBetweenHyphens; j++) {
+                  element.melismaText += ' ';
+                }
+
+                if (i < numberOfHyphensNeeded) {
+                  element.melismaText += '-';
+                }
+              }
             } else {
-              end = finalElement.x + finalElement.neumeWidth;
-            }
+              const nextElementIsRunningElaphron =
+                nextElement &&
+                nextElement.elementType === ElementType.Note &&
+                (nextElement as NoteElement).quantitativeNeume ===
+                  QuantitativeNeume.RunningElaphron;
 
-            // Always show at least one underscore to indicate it's a melisma.
-            element.melismaWidth = Math.max(end - start, widthOfUnderscore);
+              // Special case for when the next neume is a running elaphron.
+              // The melisma, which by convention must always be a final melisma,
+              // should run all the way to the elaphron, instead of stopping at
+              // the apostrophos. To handle this, set the final element to the
+              // next element (the elaphron), later we will substract out the width
+              // of the initial apostrophos in the running elaphron.
+              if (nextElementIsRunningElaphron) {
+                finalElement = nextElement as NoteElement;
+              }
 
-            let numberOfUnderScoresNeeded = Math.ceil(
-              element.melismaWidth / widthOfUnderscore,
-            );
+              if (finalElement == null) {
+                end = element.x + element.neumeWidth;
+              } else if (finalElement.lyricsWidth > finalElement.neumeWidth) {
+                end =
+                  finalElement.x -
+                  (finalElement.lyricsWidth - finalElement.neumeWidth) / 2;
+              } else if (nextElementIsRunningElaphron) {
+                // The stand-alone apostrophos is not the same width
+                // as the apostrophros in the running elaphron, but
+                // the elaphrons are the same width in both neumes.
+                end = finalElement.x + (runningElaphronWidth - elaphronWidth);
+              } else {
+                end = finalElement.x + finalElement.neumeWidth;
+              }
 
-            for (let i = 0; i < numberOfUnderScoresNeeded; i++) {
-              element.melismaText += '_';
+              // Always show at least one underscore to indicate it's a melisma.
+              element.melismaWidth = Math.max(end - start, widthOfUnderscore);
+
+              const numberOfUnderScoresNeeded = Math.ceil(
+                element.melismaWidth / widthOfUnderscore,
+              );
+
+              for (let i = 0; i < numberOfUnderScoresNeeded; i++) {
+                element.melismaText += '_';
+              }
             }
           }
         }

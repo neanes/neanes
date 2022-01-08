@@ -66,7 +66,7 @@ To insert lyrics, click on the space just below a neume and begin typing.
 
 ### Melismas
 
-To create a melisma, end your lyrics with an underscore (`_`). To continue the melisma, set the lyrics for each neume in the melisma to a single underscore. The full melisma will be drawn for you.
+To create a melisma, end your lyrics with an underscore or hyphen (`_` or `-`). To continue the melisma, set the lyrics for each neume in the melisma to a single underscore or hyphen. The full melisma will be drawn for you.
 
 ## Page Breaks and Line Breaks
 
@@ -101,3 +101,5 @@ Most of the options are self-explanatory, but a few are not.
 **Lyrics**: The distance between the neumes and lyrics. This number can be negative, in which case the lyrics will be drawn closer to the neumes than they would be by default.
 
 **Line**: Increasing this number will increase the space between lines.
+
+**Hyphens**: The amount of space between the hyphens that are automatically drawn between melismatic syllables.

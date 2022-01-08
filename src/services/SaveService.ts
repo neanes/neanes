@@ -89,6 +89,8 @@ export class SaveService {
     score.pageSetup.pageSizeUnit = s.pageSetup.pageSizeUnit;
     score.pageSetup.landscape = s.pageSetup.landscape || undefined;
 
+    score.pageSetup.hyphenSpacing = s.pageSetup.hyphenSpacing;
+
     for (let e of s.staff.elements) {
       let element: ScoreElement_v1 = new EmptyElement_v1();
 
@@ -187,6 +189,7 @@ export class SaveService {
     element.lyrics = e.lyrics !== '' ? e.lyrics : undefined;
     element.isMelisma = e.isMelisma || undefined;
     element.isMelismaStart = e.isMelismaStart || undefined;
+    element.isHyphen = e.isHyphen || undefined;
   }
 
   public static SaveTextBox(element: TextBoxElement_v1, e: TextBoxElement) {
@@ -255,6 +258,8 @@ export class SaveService {
     score.pageSetup.pageSize = s.pageSetup.pageSize;
     score.pageSetup.pageSizeUnit = s.pageSetup.pageSizeUnit;
     score.pageSetup.landscape = s.pageSetup.landscape === true;
+
+    score.pageSetup.hyphenSpacing = s.pageSetup.hyphenSpacing;
 
     for (let e of s.staff.elements) {
       let element: ScoreElement = new EmptyElement();
@@ -379,6 +384,7 @@ export class SaveService {
 
     element.isMelisma = e.isMelisma === true;
     element.isMelismaStart = e.isMelismaStart === true;
+    element.isHyphen = e.isHyphen === true;
   }
 
   public static LoadTextBox_v1(element: TextBoxElement, e: TextBoxElement_v1) {

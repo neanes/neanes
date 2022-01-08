@@ -83,6 +83,8 @@ export class PageSetup {
   public dropCapDefaultFontSize = Unit.fromPt(60);
   public dropCapDefaultColor = '#000000';
 
+  public hyphenSpacing: number = Unit.fromInch(0.75);
+
   public get innerPageWidth() {
     return this.pageWidth - this.leftMargin - this.rightMargin;
   }

@@ -53,6 +53,7 @@ export class NoteElement extends ScoreElement {
   public lyrics: string = '';
   public isMelisma: boolean = false;
   public isMelismaStart: boolean = false;
+  public isHyphen: boolean = false;
 
   public get quantitativeNeume() {
     return this._quantitativeNeume;

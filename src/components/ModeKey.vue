@@ -152,5 +152,6 @@ export default class ModeKey extends Vue {
 .mode-key-container {
   border: 1px dotted black;
   box-sizing: border-box;
+  user-select: none;
 }
 </style>

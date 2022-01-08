@@ -191,7 +191,7 @@ export const modeKeyTemplates: ModeKeyTemplate[] = [
     id: 602,
     mode: 6,
     scale: Scale.SoftChromatic,
-    scaleNote: ScaleNote.Vou,
+    scaleNote: ScaleNote.Thi,
     martyrias: [ModeSign.SoftChromatic6],
     note: ModeSign.Vou,
     fthora: Fthora.SoftChromaticThi_TopRight,

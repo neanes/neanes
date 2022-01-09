@@ -346,7 +346,7 @@ export default class PageSetupDialog extends Vue {
     window.addEventListener('keydown', this.onKeyDown);
   }
 
-  destroyed() {
+  beforeDestroy() {
     window.removeEventListener('keydown', this.onKeyDown);
   }
 

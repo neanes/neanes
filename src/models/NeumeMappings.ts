@@ -207,6 +207,14 @@ export const neumeMap = new Map<Neume, NeumeMapping>([
     { fontFamily: 'EzSpecial1', text: 'H' },
   ],
 
+  [GorgonNeume.DigorgonDottedLeft1, { fontFamily: 'EzSpecial1', text: 'd' }],
+  [GorgonNeume.DigorgonDottedLeft2, { fontFamily: 'EzSpecial1', text: 'k' }],
+  [GorgonNeume.DigorgonDottedRight, { fontFamily: 'EzSpecial1', text: 'c' }],
+
+  [GorgonNeume.TrigorgonDottedLeft1, { fontFamily: 'EzSpecial1', text: 'f' }],
+  [GorgonNeume.TrigorgonDottedLeft2, { fontFamily: 'EzSpecial1', text: 'b' }],
+  [GorgonNeume.TrigorgonDottedRight, { fontFamily: 'EzSpecial1', text: 'v' }],
+
   [GorgonNeume.Argon, { fontFamily: 'Psaltica', text: 'g' }],
   [GorgonNeume.Hemiolion, { fontFamily: 'Psaltica', text: 'G' }],
   [GorgonNeume.Diargon, { fontFamily: 'EzSpecial1', text: 'J' }],

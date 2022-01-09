@@ -33,33 +33,26 @@
       </span>
     </button>
     <span class="space"></span>
-    <button
-      class="neume-button"
-      @click="$emit('add-tempo', TempoSign.VerySlow)"
+    <div
+      class="tempo-container"
+      @mousedown="openTempoMenu"
+      @mouseup="onTempoMouseUp"
+      @mouseleave="selectedTempoNeume = null"
     >
-      <Neume class="red neume tempo" :neume="TempoSign.VerySlow" />
-    </button>
-    <button class="neume-button" @click="$emit('add-tempo', TempoSign.Slow)">
-      <Neume class="red neume tempo" :neume="TempoSign.Slow" />
-    </button>
-    <button class="neume-button" @click="$emit('add-tempo', TempoSign.Medium)">
-      <Neume class="red neume tempo" :neume="TempoSign.Medium" />
-    </button>
-    <button
-      class="neume-button"
-      @click="$emit('add-tempo', TempoSign.Moderate)"
-    >
-      <Neume class="red neume tempo" :neume="TempoSign.Moderate" />
-    </button>
-    <button class="neume-button" @click="$emit('add-tempo', TempoSign.Quick)">
-      <Neume class="red neume tempo" :neume="TempoSign.Quick" />
-    </button>
-    <button
-      class="neume-button"
-      @click="$emit('add-tempo', TempoSign.VeryQuick)"
-    >
-      <Neume class="red neume tempo" :neume="TempoSign.VeryQuick" />
-    </button>
+      <button class="neume-button">
+        <Neume class="red neume tempo" :neume="TempoSign.VerySlow" />
+      </button>
+      <div class="tempo-menu" v-if="showTempoMenu">
+        <div
+          class="tempo-menu-item"
+          v-for="tempo in tempos"
+          :key="tempo"
+          @mouseenter="selectedTempoNeume = tempo"
+        >
+          <Neume class="red neume tempo" :neume="tempo" />
+        </div>
+      </div>
+    </div>
     <span class="space"></span>
     <button
       class="icon-btn line-break-btn"
@@ -130,8 +123,20 @@ export default class MainToolbar extends Vue {
   EntryMode = EntryMode;
 
   showZoomMenu: boolean = false;
+  showTempoMenu: boolean = false;
+
+  selectedTempoNeume: TempoSign | null = null;
 
   zoomOptions: number[] = [50, 75, 90, 100, 125, 150, 200];
+
+  tempos: TempoSign[] = [
+    TempoSign.VerySlow,
+    TempoSign.Slow,
+    TempoSign.Medium,
+    TempoSign.Moderate,
+    TempoSign.Quick,
+    TempoSign.VeryQuick,
+  ];
 
   get zoomDisplay() {
     return this.zoomToFit ? 'Fit' : (this.zoom * 100).toFixed(0) + '%';
@@ -157,6 +162,21 @@ export default class MainToolbar extends Vue {
 
     this.$forceUpdate();
   }
+
+  openTempoMenu() {
+    this.showTempoMenu = true;
+    window.addEventListener('mouseup', this.onTempoMouseUp);
+  }
+
+  onTempoMouseUp() {
+    if (this.selectedTempoNeume) {
+      this.$emit('add-tempo', this.selectedTempoNeume);
+    }
+
+    this.showTempoMenu = false;
+
+    window.removeEventListener('mouseup', this.onTempoMouseUp);
+  }
 }
 </script>
 
@@ -170,6 +190,8 @@ export default class MainToolbar extends Vue {
   background-color: lightgray;
 
   padding: 0.25rem;
+
+  --btn-size: 32px;
 }
 
 .entry-mode-btn.on {
@@ -185,8 +207,8 @@ export default class MainToolbar extends Vue {
 }
 
 .icon-btn {
-  height: 32px;
-  width: 32px;
+  height: var(--btn-size);
+  width: var(--btn-size);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -197,8 +219,8 @@ export default class MainToolbar extends Vue {
 }
 
 .neume-button {
-  height: 32px;
-  width: 32px;
+  height: var(--btn-size);
+  width: var(--btn-size);
 
   position: relative;
 
@@ -260,5 +282,31 @@ export default class MainToolbar extends Vue {
 
 .zoom-menu-separator {
   border-top: 1px solid #666;
+}
+
+.tempo-container {
+  display: flex;
+}
+
+.tempo-menu {
+  position: absolute;
+  z-index: 999;
+  background-color: white;
+  border: 1px solid black;
+  box-sizing: border-box;
+  width: var(--btn-size);
+}
+
+.tempo-menu-item {
+  height: var(--btn-size);
+  width: 100%;
+  text-align: center;
+  user-select: none;
+  overflow: hidden;
+  position: relative;
+}
+
+.tempo-menu-item:hover {
+  background-color: aliceblue;
 }
 </style>

@@ -11,6 +11,7 @@
       @updatePageBreak="updatePageBreak"
       @updateLineBreak="updateLineBreak"
       @add-tempo="addTempo"
+      @add-drop-cap="addDropCap"
       @deleteSelectedElement="deleteSelectedElement"
       @click.native="selectedLyrics = null"
     />
@@ -851,6 +852,16 @@ export default class Editor extends Vue {
         break;
     }
 
+    this.save();
+  }
+
+  addDropCap() {
+    const element = new DropCapElement();
+
+    this.addScoreElement(element, this.selectedElementIndex);
+
+    this.selectedElement = element;
+    this.elementToFocus = element;
     this.save();
   }
 
@@ -1720,13 +1731,7 @@ export default class Editor extends Vue {
   }
 
   onFileMenuInsertDropCap() {
-    const element = new DropCapElement();
-
-    this.addScoreElement(element, this.selectedElementIndex);
-
-    this.selectedElement = element;
-    this.elementToFocus = element;
-    this.save();
+    this.addDropCap();
   }
 
   getSaveFile() {

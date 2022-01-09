@@ -54,6 +54,14 @@
     </div>
     <span class="space"></span>
     <button
+      title="Insert drop cap"
+      class="icon-btn"
+      @click="$emit('add-drop-cap')"
+    >
+      <img src="@/assets/dropcap.svg" width="24" height="24" />
+    </button>
+    <span class="space"></span>
+    <button
       class="icon-btn line-break-btn"
       title="Insert or remove line break after selected element"
       @click="$emit('updateLineBreak')"

@@ -54,18 +54,53 @@
           </div>
         </div>
       </div>
-      <button
-        class="neume-button"
-        @click="setGorgonNeume([GorgonNeume.Digorgon])"
+      <div
+        class="menu-container"
+        @mousedown="openDigorgonMenu"
+        @mouseleave="selectedGorgon = null"
       >
-        <Neume class="red neume digorgon" :neume="GorgonNeume.Digorgon" />
-      </button>
-      <button
-        class="neume-button"
-        @click="setGorgonNeume([GorgonNeume.Trigorgon])"
+        <button class="neume-button">
+          <Neume class="red neume digorgon" :neume="GorgonNeume.Digorgon" />
+        </button>
+        <div class="menu" v-if="showDigorgonMenu">
+          <div
+            class="menu-item"
+            v-for="gorgon in digorgonMenuItems"
+            :key="gorgon.neumes[0]"
+            @mouseenter="selectedGorgon = gorgon.neumes"
+          >
+            <Neume
+              class="red neume"
+              :class="gorgon.className"
+              :neume="gorgon.neumes[0]"
+            />
+          </div>
+        </div>
+      </div>
+      <div
+        class="menu-container"
+        @mousedown="openTrigorgonMenu"
+        @mouseleave="selectedGorgon = null"
       >
-        <Neume class="red neume trigorgon" :neume="GorgonNeume.Trigorgon" />
-      </button>
+        <button class="neume-button">
+          <Neume class="red neume trigorgon" :neume="GorgonNeume.Trigorgon" />
+        </button>
+        <div class="menu" v-if="showTrigorgonMenu">
+          <div
+            class="menu-item"
+            v-for="gorgon in trigorgonMenuItems"
+            :key="gorgon.neumes[0]"
+            @mouseenter="selectedGorgon = gorgon.neumes"
+          >
+            <Neume
+              class="red neume"
+              :class="gorgon.className"
+              :neume="gorgon.neumes[0]"
+            />
+          </div>
+        </div>
+      </div>
+
       <span class="space"></span>
       <button
         class="neume-button"
@@ -158,16 +193,19 @@
         </div>
       </div>
       <span class="space"></span>
-      <button class="neume-button" @click="setGorgonNeume(GorgonNeume.Argon)">
+      <button class="neume-button" @click="setGorgonNeume([GorgonNeume.Argon])">
         <Neume class="red neume argon" :neume="GorgonNeume.Argon" />
       </button>
       <button
         class="neume-button"
-        @click="setGorgonNeume(GorgonNeume.Hemiolion)"
+        @click="setGorgonNeume([GorgonNeume.Hemiolion])"
       >
         <Neume class="red neume hemiolion" :neume="GorgonNeume.Hemiolion" />
       </button>
-      <button class="neume-button" @click="setGorgonNeume(GorgonNeume.Diargon)">
+      <button
+        class="neume-button"
+        @click="setGorgonNeume([GorgonNeume.Diargon])"
+      >
         <Neume class="red neume diargon" :neume="GorgonNeume.Diargon" />
       </button>
     </div>
@@ -439,6 +477,8 @@ export default class NeumeToolbar extends Vue {
   showFlatMenu: boolean = false;
   showSharpMenu: boolean = false;
   showGorgonMenu: boolean = false;
+  showDigorgonMenu: boolean = false;
+  showTrigorgonMenu: boolean = false;
   showTimeMenu: boolean = false;
 
   selectedFlat: Accidental | null = null;
@@ -470,6 +510,44 @@ export default class NeumeToolbar extends Vue {
     {
       neumes: [GorgonNeume.Gorgon_Top, GorgonNeume.Gorgon_Bottom],
       className: 'gorgon-top',
+    },
+  ];
+
+  digorgonMenuItems: GorgonMenuItem[] = [
+    {
+      neumes: [GorgonNeume.DigorgonDottedRight],
+      className: 'digorgon',
+    },
+    {
+      neumes: [GorgonNeume.DigorgonDottedLeft2],
+      className: 'digorgon',
+    },
+    {
+      neumes: [GorgonNeume.DigorgonDottedLeft1],
+      className: 'digorgon',
+    },
+    {
+      neumes: [GorgonNeume.Digorgon],
+      className: 'digorgon',
+    },
+  ];
+
+  trigorgonMenuItems: GorgonMenuItem[] = [
+    {
+      neumes: [GorgonNeume.TrigorgonDottedRight],
+      className: 'trigorgon',
+    },
+    {
+      neumes: [GorgonNeume.TrigorgonDottedLeft2],
+      className: 'trigorgon',
+    },
+    {
+      neumes: [GorgonNeume.TrigorgonDottedLeft1],
+      className: 'trigorgon',
+    },
+    {
+      neumes: [GorgonNeume.Trigorgon],
+      className: 'trigorgon',
     },
   ];
 
@@ -662,6 +740,36 @@ export default class NeumeToolbar extends Vue {
     this.showGorgonMenu = false;
 
     window.removeEventListener('mouseup', this.onGorgonMouseUp);
+  }
+
+  openDigorgonMenu() {
+    this.showDigorgonMenu = true;
+    window.addEventListener('mouseup', this.onDigorgonMouseUp);
+  }
+
+  onDigorgonMouseUp() {
+    if (this.selectedGorgon) {
+      this.setGorgonNeume(this.selectedGorgon);
+    }
+
+    this.showDigorgonMenu = false;
+
+    window.removeEventListener('mouseup', this.onDigorgonMouseUp);
+  }
+
+  openTrigorgonMenu() {
+    this.showTrigorgonMenu = true;
+    window.addEventListener('mouseup', this.onTrigorgonMouseUp);
+  }
+
+  onTrigorgonMouseUp() {
+    if (this.selectedGorgon) {
+      this.setGorgonNeume(this.selectedGorgon);
+    }
+
+    this.showTrigorgonMenu = false;
+
+    window.removeEventListener('mouseup', this.onTrigorgonMouseUp);
   }
 
   openTimeMenu() {

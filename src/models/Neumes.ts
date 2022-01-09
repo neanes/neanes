@@ -93,6 +93,14 @@ export enum GorgonNeume {
   GorgonDottedLeft_Right = 'GorgonDottedLeft_Right',
   GorgonDottedRight_Right = 'GorgonDottedRight_Right',
 
+  DigorgonDottedLeft1 = 'DigorgonDottedLeft1',
+  DigorgonDottedLeft2 = 'DigorgonDottedLeft2',
+  DigorgonDottedRight = 'DigorgonDottedRight',
+
+  TrigorgonDottedLeft1 = 'TrigorgonDottedLeft1',
+  TrigorgonDottedLeft2 = 'TrigorgonDottedLeft2',
+  TrigorgonDottedRight = 'TrigorgonDottedRight',
+
   Argon = 'Argon',
   Hemiolion = 'Hemiolion',
   Diargon = 'Diargon',

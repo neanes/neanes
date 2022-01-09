@@ -303,7 +303,7 @@ export const timeReplacementMap = new Map<
       { isPairedWith: rightTimeNeumes, replaceWith: TimeNeume.Klasma_TopRight },
       {
         isPairedWith: bottomOnlyKlasmaNeumes,
-        replaceWith: null,
+        replaceWith: TimeNeume.Klasma_Bottom,
       },
       {
         isPairedWith: [
@@ -331,7 +331,7 @@ export const timeReplacementMap = new Map<
     [
       {
         isPairedWith: topOnlyKlasmaNeumes,
-        replaceWith: null,
+        replaceWith: TimeNeume.Klasma_Top,
       },
       {
         isPairedWith: [
@@ -591,3 +591,12 @@ const areNeumesEquivalent = (
 
   return false;
 };
+
+export const onlyTakesTopKlasma = (neume: QuantitativeNeume) =>
+  topOnlyKlasmaNeumes.includes(neume);
+
+export const onlyTakesBottomKlasma = (neume: QuantitativeNeume) =>
+  bottomOnlyKlasmaNeumes.includes(neume);
+
+export const onlyTakesTopGorgon = (neume: QuantitativeNeume) =>
+  !bottomAllowedGorgonNeumes.includes(neume);

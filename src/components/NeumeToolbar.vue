@@ -14,43 +14,33 @@
         <Neume class="red neume sharp" :neume="Accidental.Sharp_2_Left" />
       </button>
       <span class="space"></span>
-      <button class="neume-button" @click="setTimeNeume(TimeNeume.Klasma_Top)">
-        <Neume class="neume klasma-top" :neume="TimeNeume.Klasma_Top" />
-      </button>
       <button
         class="neume-button"
-        @click="setTimeNeume(TimeNeume.Klasma_Bottom)"
+        @click="setTimeNeume([TimeNeume.Klasma_Top, TimeNeume.Klasma_Bottom])"
       >
-        <Neume class="neume klasma-bottom" :neume="TimeNeume.Klasma_Bottom" />
+        <Neume class="neume klasma-top" :neume="TimeNeume.Klasma_Top" />
       </button>
-      <button class="neume-button" @click="setTimeNeume(TimeNeume.Hapli)">
+      <button class="neume-button" @click="setTimeNeume([TimeNeume.Hapli])">
         <Neume class="neume hapli" :neume="TimeNeume.Hapli" />
       </button>
-      <button class="neume-button" @click="setTimeNeume(TimeNeume.Dipli)">
+      <button class="neume-button" @click="setTimeNeume([TimeNeume.Dipli])">
         <Neume class="neume dipli" :neume="TimeNeume.Dipli" />
       </button>
-      <button class="neume-button" @click="setTimeNeume(TimeNeume.Tripli)">
+      <button class="neume-button" @click="setTimeNeume([TimeNeume.Tripli])">
         <Neume class="neume tripli" :neume="TimeNeume.Tripli" />
       </button>
       <span class="space"></span>
       <button
         class="neume-button"
-        @click="setGorgonNeume(GorgonNeume.Gorgon_Top)"
+        @click="
+          setGorgonNeume([GorgonNeume.Gorgon_Top, GorgonNeume.Gorgon_Bottom])
+        "
       >
         <Neume class="red neume gorgon-top" :neume="GorgonNeume.Gorgon_Top" />
       </button>
       <button
         class="neume-button"
-        @click="setGorgonNeume(GorgonNeume.Gorgon_Bottom)"
-      >
-        <Neume
-          class="red neume gorgon-bottom"
-          :neume="GorgonNeume.Gorgon_Bottom"
-        />
-      </button>
-      <button
-        class="neume-button"
-        @click="setGorgonNeume(GorgonNeume.GorgonDottedLeft)"
+        @click="setGorgonNeume([GorgonNeume.GorgonDottedLeft])"
       >
         <Neume
           class="red neume gorgon-dotted-left"
@@ -59,7 +49,7 @@
       </button>
       <button
         class="neume-button"
-        @click="setGorgonNeume(GorgonNeume.GorgonDottedRight)"
+        @click="setGorgonNeume([GorgonNeume.GorgonDottedRight])"
       >
         <Neume
           class="red neume gorgon-dotted-right"
@@ -68,13 +58,13 @@
       </button>
       <button
         class="neume-button"
-        @click="setGorgonNeume(GorgonNeume.Digorgon)"
+        @click="setGorgonNeume([GorgonNeume.Digorgon])"
       >
         <Neume class="red neume digorgon" :neume="GorgonNeume.Digorgon" />
       </button>
       <button
         class="neume-button"
-        @click="setGorgonNeume(GorgonNeume.Trigorgon)"
+        @click="setGorgonNeume([GorgonNeume.Trigorgon])"
       >
         <Neume class="red neume trigorgon" :neume="GorgonNeume.Trigorgon" />
       </button>
@@ -380,6 +370,9 @@ import {
   areGorgonsEquivalent,
   areTimeNeumesEquivalent,
   areVocalExpressionsEquivalent,
+  onlyTakesTopKlasma,
+  onlyTakesBottomKlasma,
+  onlyTakesTopGorgon,
 } from '@/models/NeumeReplacements';
 
 @Component({
@@ -404,25 +397,76 @@ export default class NeumeToolbar extends Vue {
     }
   }
 
-  private setTimeNeume(neume: TimeNeume) {
-    if (
-      this.element.timeNeume != null &&
-      areTimeNeumesEquivalent(neume, this.element.timeNeume)
-    ) {
+  private setTimeNeume(neumes: TimeNeume[]) {
+    let equivalent = false;
+
+    for (let neume of neumes) {
+      if (
+        neume === TimeNeume.Klasma_Top &&
+        onlyTakesBottomKlasma(this.element.quantitativeNeume)
+      ) {
+        continue;
+      }
+
+      if (
+        neume === TimeNeume.Klasma_Bottom &&
+        onlyTakesTopKlasma(this.element.quantitativeNeume)
+      ) {
+        continue;
+      }
+
+      // If previous neume was matched, set to the next neume in the cycle
+      if (equivalent) {
+        this.$emit('update:time', neume);
+        return;
+      }
+
+      equivalent =
+        this.element.timeNeume != null &&
+        areTimeNeumesEquivalent(neume, this.element.timeNeume);
+    }
+
+    // We've cycled through all the neumes.
+    // If we got to the end of the cycle, remove all
+    // time neumes. Otherwise set time neume to the first neume
+    // in the cycle.
+    if (equivalent) {
       this.$emit('update:time', null);
     } else {
-      this.$emit('update:time', neume);
+      this.$emit('update:time', neumes[0]);
     }
   }
 
-  private setGorgonNeume(neume: GorgonNeume) {
-    if (
-      this.element.gorgonNeume != null &&
-      areGorgonsEquivalent(neume, this.element.gorgonNeume)
-    ) {
+  private setGorgonNeume(neumes: GorgonNeume[]) {
+    let equivalent = false;
+
+    for (let neume of neumes) {
+      if (
+        neume === GorgonNeume.Gorgon_Bottom &&
+        onlyTakesTopGorgon(this.element.quantitativeNeume)
+      ) {
+        continue;
+      }
+
+      // If previous neume was matched, set to the next neume in the cycle
+      if (equivalent) {
+        this.$emit('update:gorgon', neume);
+        return;
+      }
+
+      equivalent =
+        this.element.gorgonNeume != null &&
+        areGorgonsEquivalent(neume, this.element.gorgonNeume);
+    }
+
+    // We've cycled through all the neumes.
+    // If we got to the end of the cycle, remove all
+    // gorgon neumes. Otherwise set gorgon to the first neume
+    // in the cycle.
+    if (equivalent) {
       this.$emit('update:gorgon', null);
     } else {
-      this.$emit('update:gorgon', neume);
+      this.$emit('update:gorgon', neumes[0]);
     }
   }
 
@@ -554,12 +598,7 @@ export default class NeumeToolbar extends Vue {
 }
 
 .klasma-top {
-  top: -6px;
-  left: 18px;
-}
-
-.klasma-bottom {
-  top: -12px;
+  top: -2px;
   left: 18px;
 }
 
@@ -579,21 +618,17 @@ export default class NeumeToolbar extends Vue {
 }
 
 .gorgon-top {
-  top: -5px;
-  left: 18px;
-}
-
-.gorgon-bottom {
-  top: -14px;
+  top: -2px;
   left: 18px;
 }
 
 .gorgon-dotted-left {
+  top: -2px;
   left: 18px;
 }
 
 .gorgon-dotted-right {
-  top: -2.5px;
+  top: -4px;
   left: 18px;
 }
 

@@ -276,9 +276,19 @@ export abstract class TestFileGenerator {
         continue;
       }
 
-      const note = new NoteElement();
+      let note = new NoteElement();
       note.quantitativeNeume = quantitativeNeume;
       note.accidental = Accidental.Flat_2_Right;
+      (note.lyrics = (counter++).toString()), elements.push(note);
+
+      note = new NoteElement();
+      note.quantitativeNeume = quantitativeNeume;
+      note.accidental = Accidental.Flat_4_Right;
+      (note.lyrics = (counter++).toString()), elements.push(note);
+
+      note = new NoteElement();
+      note.quantitativeNeume = quantitativeNeume;
+      note.accidental = Accidental.Flat_6_Right;
       (note.lyrics = (counter++).toString()), elements.push(note);
     }
 
@@ -294,9 +304,19 @@ export abstract class TestFileGenerator {
         continue;
       }
 
-      const note = new NoteElement();
+      let note = new NoteElement();
       note.quantitativeNeume = quantitativeNeume;
       note.accidental = Accidental.Sharp_2_Left;
+      (note.lyrics = (counter++).toString()), elements.push(note);
+
+      note = new NoteElement();
+      note.quantitativeNeume = quantitativeNeume;
+      note.accidental = Accidental.Sharp_4_Left;
+      (note.lyrics = (counter++).toString()), elements.push(note);
+
+      note = new NoteElement();
+      note.quantitativeNeume = quantitativeNeume;
+      note.accidental = Accidental.Sharp_6_Left;
       (note.lyrics = (counter++).toString()), elements.push(note);
     }
 

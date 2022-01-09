@@ -2,21 +2,21 @@
   <div class="main-toolbar">
     <button
       class="entry-mode-btn"
-      @click="$emit('updateEntryMode', EntryMode.Auto)"
+      @click="$emit('update:entryMode', EntryMode.Auto)"
       :class="{ on: entryMode === EntryMode.Auto }"
     >
       Auto
     </button>
     <button
       class="entry-mode-btn"
-      @click="$emit('updateEntryMode', EntryMode.Insert)"
+      @click="$emit('update:entryMode', EntryMode.Insert)"
       :class="{ on: entryMode === EntryMode.Insert }"
     >
       Insert
     </button>
     <button
       class="entry-mode-btn"
-      @click="$emit('updateEntryMode', EntryMode.Edit)"
+      @click="$emit('update:entryMode', EntryMode.Edit)"
       :class="{ on: entryMode === EntryMode.Edit }"
     >
       Single
@@ -25,7 +25,7 @@
     <button
       title="Insert martyria"
       class="neume-button"
-      @click="$emit('addAutoMartyria')"
+      @click="$emit('add-auto-martyria')"
     >
       <span class="martyria">
         <Neume class="red neume" :neume="Note.Pa" />
@@ -64,14 +64,14 @@
     <button
       class="icon-btn line-break-btn"
       title="Insert or remove line break after selected element"
-      @click="$emit('updateLineBreak')"
+      @click="$emit('toggle-line-break')"
     >
       &#182;
     </button>
     <button
       class="icon-btn"
       title="Insert or remove page break after selected element"
-      @click="$emit('updatePageBreak')"
+      @click="$emit('toggle-page-break')"
     >
       <img src="@/assets/pagebreak.svg" width="24" height="24" />
     </button>
@@ -79,7 +79,7 @@
     <button
       class="red icon-btn"
       title="Delete selected element"
-      @click="$emit('deleteSelectedElement')"
+      @click="$emit('delete-selected-element')"
     >
       X
     </button>

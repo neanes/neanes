@@ -6,13 +6,13 @@
       :zoomToFit="zoomToFit"
       @update:zoom="updateZoom"
       @update:zoomToFit="updateZoomToFit"
-      @addAutoMartyria="addAutoMartyria"
-      @updateEntryMode="updateEntryMode"
-      @updatePageBreak="updatePageBreak"
-      @updateLineBreak="updateLineBreak"
+      @add-auto-martyria="addAutoMartyria"
+      @update:entryMode="updateEntryMode"
+      @toggle-page-break="togglePageBreak"
+      @toggle-line-break="toggleLineBreak"
       @add-tempo="addTempo"
       @add-drop-cap="addDropCap"
-      @deleteSelectedElement="deleteSelectedElement"
+      @delete-selected-element="deleteSelectedElement"
       @click.native="selectedLyrics = null"
     />
     <div class="content">
@@ -865,7 +865,7 @@ export default class Editor extends Vue {
     this.save();
   }
 
-  updatePageBreak() {
+  togglePageBreak() {
     if (this.selectedElement && !this.isLastElement(this.selectedElement)) {
       this.commandService.execute(
         this.scoreElementCommandFactory.create('update-properties', {
@@ -881,7 +881,7 @@ export default class Editor extends Vue {
     }
   }
 
-  updateLineBreak() {
+  toggleLineBreak() {
     if (this.selectedElement && !this.isLastElement(this.selectedElement)) {
       this.commandService.execute(
         this.scoreElementCommandFactory.create('update-properties', {

@@ -300,6 +300,8 @@ export default class MainToolbar extends Vue {
 .tempo-menu-item {
   height: var(--btn-size);
   width: 100%;
+  padding: 2px 0;
+  box-sizing: border-box;
   text-align: center;
   user-select: none;
   overflow: hidden;

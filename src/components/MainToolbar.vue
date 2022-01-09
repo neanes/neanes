@@ -36,7 +36,6 @@
     <div
       class="tempo-container"
       @mousedown="openTempoMenu"
-      @mouseup="onTempoMouseUp"
       @mouseleave="selectedTempoNeume = null"
     >
       <button class="neume-button">
@@ -45,7 +44,7 @@
       <div class="tempo-menu" v-if="showTempoMenu">
         <div
           class="tempo-menu-item"
-          v-for="tempo in tempos"
+          v-for="tempo in tempoMenuItems"
           :key="tempo"
           @mouseenter="selectedTempoNeume = tempo"
         >
@@ -129,7 +128,7 @@ export default class MainToolbar extends Vue {
 
   zoomOptions: number[] = [50, 75, 90, 100, 125, 150, 200];
 
-  tempos: TempoSign[] = [
+  tempoMenuItems: TempoSign[] = [
     TempoSign.VerySlow,
     TempoSign.Slow,
     TempoSign.Medium,
@@ -140,6 +139,10 @@ export default class MainToolbar extends Vue {
 
   get zoomDisplay() {
     return this.zoomToFit ? 'Fit' : (this.zoom * 100).toFixed(0) + '%';
+  }
+
+  beforeDestroy() {
+    window.removeEventListener('mouseup', this.onTempoMouseUp);
   }
 
   updateZoom(value: string) {

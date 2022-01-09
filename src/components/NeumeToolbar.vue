@@ -3,59 +3,57 @@
     <div class="row">
       <button
         class="neume-button"
-        @click="setAccidental(Accidental.Flat_2_Right)"
-      >
-        <Neume class="red neume flat" :neume="Accidental.Flat_2_Right" />
-      </button>
-      <button
-        class="neume-button"
-        @click="setAccidental(Accidental.Sharp_2_Left)"
-      >
-        <Neume class="red neume sharp" :neume="Accidental.Sharp_2_Left" />
-      </button>
-      <span class="space"></span>
-      <button
-        class="neume-button"
         @click="setTimeNeume([TimeNeume.Klasma_Top, TimeNeume.Klasma_Bottom])"
       >
         <Neume class="neume klasma-top" :neume="TimeNeume.Klasma_Top" />
       </button>
-      <button class="neume-button" @click="setTimeNeume([TimeNeume.Hapli])">
-        <Neume class="neume hapli" :neume="TimeNeume.Hapli" />
-      </button>
-      <button class="neume-button" @click="setTimeNeume([TimeNeume.Dipli])">
-        <Neume class="neume dipli" :neume="TimeNeume.Dipli" />
-      </button>
-      <button class="neume-button" @click="setTimeNeume([TimeNeume.Tripli])">
-        <Neume class="neume tripli" :neume="TimeNeume.Tripli" />
-      </button>
+      <div
+        class="menu-container"
+        @mousedown="openTimeMenu"
+        @mouseleave="selectedTimeNeume = null"
+      >
+        <button class="neume-button">
+          <Neume class="neume hapli" :neume="TimeNeume.Hapli" />
+        </button>
+        <div class="menu" v-if="showTimeMenu">
+          <div
+            class="menu-item"
+            v-for="time in timeMenuItems"
+            :key="time.neumes[0]"
+            @mouseenter="selectedTimeNeume = time.neumes"
+          >
+            <Neume
+              class="neume"
+              :class="time.className"
+              :neume="time.neumes[0]"
+            />
+          </div>
+        </div>
+      </div>
       <span class="space"></span>
-      <button
-        class="neume-button"
-        @click="
-          setGorgonNeume([GorgonNeume.Gorgon_Top, GorgonNeume.Gorgon_Bottom])
-        "
+      <div
+        class="menu-container"
+        @mousedown="openGorgonMenu"
+        @mouseleave="selectedGorgon = null"
       >
-        <Neume class="red neume gorgon-top" :neume="GorgonNeume.Gorgon_Top" />
-      </button>
-      <button
-        class="neume-button"
-        @click="setGorgonNeume([GorgonNeume.GorgonDottedLeft])"
-      >
-        <Neume
-          class="red neume gorgon-dotted-left"
-          :neume="GorgonNeume.GorgonDottedLeft"
-        />
-      </button>
-      <button
-        class="neume-button"
-        @click="setGorgonNeume([GorgonNeume.GorgonDottedRight])"
-      >
-        <Neume
-          class="red neume gorgon-dotted-right"
-          :neume="GorgonNeume.GorgonDottedRight"
-        />
-      </button>
+        <button class="neume-button">
+          <Neume class="red neume gorgon-top" :neume="GorgonNeume.Gorgon_Top" />
+        </button>
+        <div class="menu" v-if="showGorgonMenu">
+          <div
+            class="menu-item"
+            v-for="gorgon in gorgonMenuItems"
+            :key="gorgon.neumes[0]"
+            @mouseenter="selectedGorgon = gorgon.neumes"
+          >
+            <Neume
+              class="red neume"
+              :class="gorgon.className"
+              :neume="gorgon.neumes[0]"
+            />
+          </div>
+        </div>
+      </div>
       <button
         class="neume-button"
         @click="setGorgonNeume([GorgonNeume.Digorgon])"
@@ -120,6 +118,45 @@
           :neume="VocalExpressionNeume.Heteron"
         />
       </button>
+      <span class="space"></span>
+      <div
+        class="menu-container"
+        @mousedown="openFlatMenu"
+        @mouseleave="selectedFlat = null"
+      >
+        <button class="neume-button">
+          <Neume class="red neume flat" :neume="Accidental.Flat_2_Right" />
+        </button>
+        <div class="menu" v-if="showFlatMenu">
+          <div
+            class="menu-item"
+            v-for="flat in flatMenuItems"
+            :key="flat"
+            @mouseenter="selectedFlat = flat"
+          >
+            <Neume class="red neume flat" :neume="flat" />
+          </div>
+        </div>
+      </div>
+      <div
+        class="menu-container"
+        @mousedown="openSharpMenu"
+        @mouseleave="selectedSharp = null"
+      >
+        <button class="neume-button">
+          <Neume class="red neume sharp" :neume="Accidental.Sharp_2_Left" />
+        </button>
+        <div class="menu" v-if="showSharpMenu">
+          <div
+            class="menu-item"
+            v-for="sharp in sharpMenuItems"
+            :key="sharp"
+            @mouseenter="selectedSharp = sharp"
+          >
+            <Neume class="red neume sharp" :neume="sharp" />
+          </div>
+        </div>
+      </div>
       <span class="space"></span>
       <button class="neume-button" @click="setGorgonNeume(GorgonNeume.Argon)">
         <Neume class="red neume argon" :neume="GorgonNeume.Argon" />
@@ -355,7 +392,7 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
-import { MartyriaElement, NoteElement } from '@/models/Element';
+import { NoteElement } from '@/models/Element';
 import {
   Accidental,
   Fthora,
@@ -375,6 +412,16 @@ import {
   onlyTakesTopGorgon,
 } from '@/models/NeumeReplacements';
 
+interface GorgonMenuItem {
+  neumes: GorgonNeume[];
+  className: string;
+}
+
+interface TimeMenuItem {
+  neumes: TimeNeume[];
+  className: string;
+}
+
 @Component({
   components: {
     Neume,
@@ -388,6 +435,63 @@ export default class NeumeToolbar extends Vue {
   GorgonNeume = GorgonNeume;
   Fthora = Fthora;
   MeasureBar = MeasureBar;
+
+  showFlatMenu: boolean = false;
+  showSharpMenu: boolean = false;
+  showGorgonMenu: boolean = false;
+  showTimeMenu: boolean = false;
+
+  selectedFlat: Accidental | null = null;
+  selectedSharp: Accidental | null = null;
+  selectedGorgon: GorgonNeume[] | null = null;
+  selectedTimeNeume: TimeNeume[] | null = null;
+
+  flatMenuItems: Accidental[] = [
+    Accidental.Flat_6_Right,
+    Accidental.Flat_4_Right,
+    Accidental.Flat_2_Right,
+  ];
+
+  sharpMenuItems: Accidental[] = [
+    Accidental.Sharp_6_Left,
+    Accidental.Sharp_4_Left,
+    Accidental.Sharp_2_Left,
+  ];
+
+  gorgonMenuItems: GorgonMenuItem[] = [
+    {
+      neumes: [GorgonNeume.GorgonDottedLeft_Right],
+      className: 'gorgon-dotted-left',
+    },
+    {
+      neumes: [GorgonNeume.GorgonDottedRight_Right],
+      className: 'gorgon-dotted-right',
+    },
+    {
+      neumes: [GorgonNeume.Gorgon_Top, GorgonNeume.Gorgon_Bottom],
+      className: 'gorgon-top',
+    },
+  ];
+
+  timeMenuItems: TimeMenuItem[] = [
+    {
+      neumes: [TimeNeume.Tripli],
+      className: 'tripli',
+    },
+    {
+      neumes: [TimeNeume.Dipli],
+      className: 'dipli',
+    },
+    {
+      neumes: [TimeNeume.Hapli],
+      className: 'hapli',
+    },
+  ];
+
+  beforeDestroy() {
+    window.removeEventListener('mouseup', this.onFlatMouseUp);
+    window.removeEventListener('mouseup', this.onSharpMouseUp);
+  }
 
   private setAccidental(neume: Accidental) {
     if (this.element.accidental != null && this.element.accidental === neume) {
@@ -514,6 +618,66 @@ export default class NeumeToolbar extends Vue {
       this.$emit('update:fthora', neumes[0]);
     }
   }
+
+  openFlatMenu() {
+    this.showFlatMenu = true;
+    window.addEventListener('mouseup', this.onFlatMouseUp);
+  }
+
+  onFlatMouseUp() {
+    if (this.selectedFlat) {
+      this.setAccidental(this.selectedFlat);
+    }
+
+    this.showFlatMenu = false;
+
+    window.removeEventListener('mouseup', this.onFlatMouseUp);
+  }
+
+  openSharpMenu() {
+    this.showSharpMenu = true;
+    window.addEventListener('mouseup', this.onSharpMouseUp);
+  }
+
+  onSharpMouseUp() {
+    if (this.selectedSharp) {
+      this.setAccidental(this.selectedSharp);
+    }
+
+    this.showSharpMenu = false;
+
+    window.removeEventListener('mouseup', this.onSharpMouseUp);
+  }
+
+  openGorgonMenu() {
+    this.showGorgonMenu = true;
+    window.addEventListener('mouseup', this.onGorgonMouseUp);
+  }
+
+  onGorgonMouseUp() {
+    if (this.selectedGorgon) {
+      this.setGorgonNeume(this.selectedGorgon);
+    }
+
+    this.showGorgonMenu = false;
+
+    window.removeEventListener('mouseup', this.onGorgonMouseUp);
+  }
+
+  openTimeMenu() {
+    this.showTimeMenu = true;
+    window.addEventListener('mouseup', this.onTimeMouseUp);
+  }
+
+  onTimeMouseUp() {
+    if (this.selectedTimeNeume) {
+      this.setTimeNeume(this.selectedTimeNeume);
+    }
+
+    this.showTimeMenu = false;
+
+    window.removeEventListener('mouseup', this.onTimeMouseUp);
+  }
 }
 </script>
 
@@ -523,6 +687,8 @@ export default class NeumeToolbar extends Vue {
   background-color: lightgray;
 
   padding: 0.25rem;
+
+  --btn-size: 32px;
 }
 
 .row {
@@ -539,8 +705,8 @@ export default class NeumeToolbar extends Vue {
 }
 
 .neume-button {
-  height: 32px;
-  width: 32px;
+  height: var(--btn-size);
+  width: var(--btn-size);
 
   position: relative;
 
@@ -624,12 +790,12 @@ export default class NeumeToolbar extends Vue {
 
 .gorgon-dotted-left {
   top: -2px;
-  left: 18px;
+  left: 11px;
 }
 
 .gorgon-dotted-right {
   top: -4px;
-  left: 18px;
+  left: 10px;
 }
 
 .digorgon {
@@ -657,5 +823,36 @@ export default class NeumeToolbar extends Vue {
 .measure-bar-top {
   top: -5px;
   left: 17px;
+}
+
+.menu-container {
+  display: flex;
+  position: relative;
+  height: var(--btn-size);
+}
+
+.menu {
+  position: absolute;
+  z-index: 999;
+  background-color: white;
+  border: 1px solid black;
+  box-sizing: border-box;
+  width: var(--btn-size);
+  bottom: 0;
+}
+
+.menu-item {
+  height: var(--btn-size);
+  width: 100%;
+  padding: 3px 0;
+  box-sizing: border-box;
+  text-align: center;
+  user-select: none;
+  overflow: hidden;
+  position: relative;
+}
+
+.menu-item:hover {
+  background-color: aliceblue;
 }
 </style>

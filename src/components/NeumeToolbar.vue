@@ -18,14 +18,14 @@
         <div class="menu" v-if="showTimeMenu">
           <div
             class="menu-item"
-            v-for="time in timeMenuItems"
-            :key="time.neumes[0]"
-            @mouseenter="selectedTimeNeume = time.neumes"
+            v-for="menuItem in timeMenuItems"
+            :key="menuItem.neumes[0]"
+            @mouseenter="selectedTimeNeume = menuItem.neumes"
           >
             <Neume
               class="neume"
-              :class="time.className"
-              :neume="time.neumes[0]"
+              :class="menuItem.className"
+              :neume="menuItem.neumes[0]"
             />
           </div>
         </div>
@@ -42,14 +42,14 @@
         <div class="menu" v-if="showGorgonMenu">
           <div
             class="menu-item"
-            v-for="gorgon in gorgonMenuItems"
-            :key="gorgon.neumes[0]"
-            @mouseenter="selectedGorgon = gorgon.neumes"
+            v-for="menuItem in gorgonMenuItems"
+            :key="menuItem.neumes[0]"
+            @mouseenter="selectedGorgon = menuItem.neumes"
           >
             <Neume
               class="red neume"
-              :class="gorgon.className"
-              :neume="gorgon.neumes[0]"
+              :class="menuItem.className"
+              :neume="menuItem.neumes[0]"
             />
           </div>
         </div>
@@ -65,14 +65,14 @@
         <div class="menu" v-if="showDigorgonMenu">
           <div
             class="menu-item"
-            v-for="gorgon in digorgonMenuItems"
-            :key="gorgon.neumes[0]"
-            @mouseenter="selectedGorgon = gorgon.neumes"
+            v-for="menuItem in digorgonMenuItems"
+            :key="menuItem.neumes[0]"
+            @mouseenter="selectedGorgon = menuItem.neumes"
           >
             <Neume
               class="red neume"
-              :class="gorgon.className"
-              :neume="gorgon.neumes[0]"
+              :class="menuItem.className"
+              :neume="menuItem.neumes[0]"
             />
           </div>
         </div>
@@ -88,14 +88,14 @@
         <div class="menu" v-if="showTrigorgonMenu">
           <div
             class="menu-item"
-            v-for="gorgon in trigorgonMenuItems"
-            :key="gorgon.neumes[0]"
-            @mouseenter="selectedGorgon = gorgon.neumes"
+            v-for="menuItem in trigorgonMenuItems"
+            :key="menuItem.neumes[0]"
+            @mouseenter="selectedGorgon = menuItem.neumes"
           >
             <Neume
               class="red neume"
-              :class="gorgon.className"
-              :neume="gorgon.neumes[0]"
+              :class="menuItem.className"
+              :neume="menuItem.neumes[0]"
             />
           </div>
         </div>
@@ -165,11 +165,11 @@
         <div class="menu" v-if="showFlatMenu">
           <div
             class="menu-item"
-            v-for="flat in flatMenuItems"
-            :key="flat"
-            @mouseenter="selectedFlat = flat"
+            v-for="menuItem in flatMenuItems"
+            :key="menuItem"
+            @mouseenter="selectedFlat = menuItem"
           >
-            <Neume class="red neume flat" :neume="flat" />
+            <Neume class="red neume flat" :neume="menuItem" />
           </div>
         </div>
       </div>
@@ -184,11 +184,11 @@
         <div class="menu" v-if="showSharpMenu">
           <div
             class="menu-item"
-            v-for="sharp in sharpMenuItems"
-            :key="sharp"
-            @mouseenter="selectedSharp = sharp"
+            v-for="menuItem in sharpMenuItems"
+            :key="menuItem"
+            @mouseenter="selectedSharp = menuItem"
           >
-            <Neume class="red neume sharp" :neume="sharp" />
+            <Neume class="red neume sharp" :neume="menuItem" />
           </div>
         </div>
       </div>
@@ -208,6 +208,33 @@
       >
         <Neume class="red neume diargon" :neume="GorgonNeume.Diargon" />
       </button>
+      <span class="space"></span>
+      <div
+        class="menu-container"
+        @mousedown="openBarLineMenu"
+        @mouseleave="selectedBarLine = null"
+      >
+        <button class="neume-button">
+          <Neume
+            class="red neume measure-bar-right"
+            :neume="MeasureBar.MeasureBarRight"
+          />
+        </button>
+        <div class="menu" v-if="showBarLineMenu">
+          <div
+            class="menu-item"
+            v-for="menuItem in barLineMenuItems"
+            :key="menuItem.neume"
+            @mouseenter="selectedBarLine = menuItem.neume"
+          >
+            <Neume
+              class="red neume"
+              :class="menuItem.className"
+              :neume="menuItem.neume"
+            />
+          </div>
+        </div>
+      </div>
     </div>
     <div class="row">
       <button
@@ -405,25 +432,6 @@
       >
         <Neume class="red neume fthora" :neume="Fthora.Spathi_TopCenter" />
       </button>
-      <span class="space"></span>
-      <button
-        class="neume-button"
-        @click="setMeasureBar(MeasureBar.MeasureBarRight)"
-      >
-        <Neume
-          class="red neume measure-bar-right"
-          :neume="MeasureBar.MeasureBarRight"
-        />
-      </button>
-      <button
-        class="neume-button"
-        @click="setMeasureBar(MeasureBar.MeasureBarTop)"
-      >
-        <Neume
-          class="red neume measure-bar-top"
-          :neume="MeasureBar.MeasureBarTop"
-        />
-      </button>
     </div>
   </div>
 </template>
@@ -460,6 +468,11 @@ interface TimeMenuItem {
   className: string;
 }
 
+interface BarLineMenuItem {
+  neume: MeasureBar;
+  className: string;
+}
+
 @Component({
   components: {
     Neume,
@@ -480,11 +493,13 @@ export default class NeumeToolbar extends Vue {
   showDigorgonMenu: boolean = false;
   showTrigorgonMenu: boolean = false;
   showTimeMenu: boolean = false;
+  showBarLineMenu: boolean = false;
 
   selectedFlat: Accidental | null = null;
   selectedSharp: Accidental | null = null;
   selectedGorgon: GorgonNeume[] | null = null;
   selectedTimeNeume: TimeNeume[] | null = null;
+  selectedBarLine: MeasureBar | null = null;
 
   flatMenuItems: Accidental[] = [
     Accidental.Flat_6_Right,
@@ -566,9 +581,25 @@ export default class NeumeToolbar extends Vue {
     },
   ];
 
+  barLineMenuItems: BarLineMenuItem[] = [
+    {
+      neume: MeasureBar.MeasureBarTop,
+      className: 'measure-bar-top',
+    },
+    {
+      neume: MeasureBar.MeasureBarRight,
+      className: 'measure-bar-right',
+    },
+  ];
+
   beforeDestroy() {
     window.removeEventListener('mouseup', this.onFlatMouseUp);
     window.removeEventListener('mouseup', this.onSharpMouseUp);
+    window.removeEventListener('mouseup', this.onGorgonMouseUp);
+    window.removeEventListener('mouseup', this.onDigorgonMouseUp);
+    window.removeEventListener('mouseup', this.onTrigorgonMouseUp);
+    window.removeEventListener('mouseup', this.onTimeMouseUp);
+    window.removeEventListener('mouseup', this.onBarLineMouseUp);
   }
 
   private setAccidental(neume: Accidental) {
@@ -785,6 +816,21 @@ export default class NeumeToolbar extends Vue {
     this.showTimeMenu = false;
 
     window.removeEventListener('mouseup', this.onTimeMouseUp);
+  }
+
+  openBarLineMenu() {
+    this.showBarLineMenu = true;
+    window.addEventListener('mouseup', this.onBarLineMouseUp);
+  }
+
+  onBarLineMouseUp() {
+    if (this.selectedBarLine) {
+      this.setMeasureBar(this.selectedBarLine);
+    }
+
+    this.showBarLineMenu = false;
+
+    window.removeEventListener('mouseup', this.onBarLineMouseUp);
   }
 }
 </script>

@@ -111,6 +111,7 @@ export default class NeumeSelector extends Vue {
     QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
     QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
     QuantitativeNeume.OligonPlusHamiliPlusKentemata,
+    QuantitativeNeume.OligonPlusApostrophos,
   ];
 }
 </script>

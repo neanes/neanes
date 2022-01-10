@@ -4,7 +4,6 @@ import {
   QuantitativeNeume,
   Fthora,
   Accidental,
-  TempoSign,
   VocalExpressionNeume,
   RootSign,
   Note,
@@ -284,26 +283,12 @@ export const timeAdjustmentMap = new Map<TimeNeume, NeumeAdjustment[]>([
     TimeNeume.Hapli,
     [
       {
-        isPairedWith: [QuantitativeNeume.Kentemata],
-        offset: { x: 9, y: 0 },
+        isPairedWith: [QuantitativeNeume.KentemataPlusOligon],
+        offset: { x: 0, y: 6 },
       },
-    ],
-  ],
-  [
-    TimeNeume.Dipli,
-    [
       {
-        isPairedWith: [QuantitativeNeume.Kentemata],
-        offset: { x: 9, y: 0 },
-      },
-    ],
-  ],
-  [
-    TimeNeume.Tripli,
-    [
-      {
-        isPairedWith: [QuantitativeNeume.Kentemata],
-        offset: { x: 9, y: 0 },
+        isPairedWith: [QuantitativeNeume.OligonPlusKentimaBelow],
+        offset: { x: 0, y: 4 },
       },
     ],
   ],

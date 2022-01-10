@@ -11,11 +11,9 @@
 
 ## Nice-to-haves
 
-- Microtonal Sharps and Flats
 - Custom Martyrias (is this really necessary?)
 - Note Indicators
 - Ison Neumes
-- Dotted digorgon neumes et al
 - Advanced neumes (connecting heteron, ties, et al)
 - Header Images
 - Headers/Footers/Page Numbers
@@ -23,7 +21,6 @@
 - Allow multiple elements to be selected (and copy/cut/pasted)
 - Configurable Neume Keyboard
 - Better styling
-- Graceful handling of bad martyrias
 - Right-align option for tempo
 - Right align for multiple elements grouped together (e.g. tempo followed by martyria). Does this maybe become a "paragraph option", where a paragraph can consist of neumes, small text-boxes that fit to the width of their contents, and have an alignment?
 - Fix neume justification routine when a text box is entered in the middle of a line

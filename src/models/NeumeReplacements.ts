@@ -249,6 +249,33 @@ export const gorgonReplacementMap = new Map<
       },
     ],
   ],
+  [
+    GorgonNeume.Argon,
+    [
+      {
+        isNotPairedWith: [QuantitativeNeume.KentemataPlusOligon],
+        replaceWith: null,
+      },
+    ],
+  ],
+  [
+    GorgonNeume.Hemiolion,
+    [
+      {
+        isNotPairedWith: [QuantitativeNeume.KentemataPlusOligon],
+        replaceWith: null,
+      },
+    ],
+  ],
+  [
+    GorgonNeume.Diargon,
+    [
+      {
+        isNotPairedWith: [QuantitativeNeume.KentemataPlusOligon],
+        replaceWith: null,
+      },
+    ],
+  ],
 ]);
 
 export const timeReplacementMap = new Map<

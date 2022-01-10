@@ -54,7 +54,7 @@
       />
     </button>
     <span class="space" />
-    <button @click="$emit('openModeKeyDialog')">Change Key</button>
+    <button @click="$emit('open-mode-key-dialog')">Change Key</button>
   </div>
 </template>
 

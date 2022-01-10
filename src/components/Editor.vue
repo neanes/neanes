@@ -221,7 +221,7 @@
         @update:fontSize="updateModeKeyFontSize(selectedElement, $event)"
         @update:alignment="updateModeKeyAlignment(selectedElement, $event)"
         @update:color="updateModeKeyColor(selectedElement, $event)"
-        @openModeKeyDialog="openModeKeyDialog"
+        @open-mode-key-dialog="openModeKeyDialog"
       />
     </template>
     <template

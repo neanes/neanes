@@ -211,9 +211,35 @@ export const neumeMap = new Map<Neume, NeumeMapping>([
   [GorgonNeume.DigorgonDottedLeft2, { fontFamily: 'EzSpecial1', text: 'k' }],
   [GorgonNeume.DigorgonDottedRight, { fontFamily: 'EzSpecial1', text: 'c' }],
 
+  [
+    GorgonNeume.DigorgonDottedLeft1_Right,
+    { fontFamily: 'EzSpecial1', text: 'D' },
+  ],
+  [
+    GorgonNeume.DigorgonDottedLeft2_Right,
+    { fontFamily: 'EzSpecial1', text: 'K' },
+  ],
+  [
+    GorgonNeume.DigorgonDottedRight_Right,
+    { fontFamily: 'EzSpecial1', text: 'C' },
+  ],
+
   [GorgonNeume.TrigorgonDottedLeft1, { fontFamily: 'EzSpecial1', text: 'f' }],
   [GorgonNeume.TrigorgonDottedLeft2, { fontFamily: 'EzSpecial1', text: 'b' }],
   [GorgonNeume.TrigorgonDottedRight, { fontFamily: 'EzSpecial1', text: 'v' }],
+
+  [
+    GorgonNeume.TrigorgonDottedLeft1_Right,
+    { fontFamily: 'EzSpecial1', text: 'F' },
+  ],
+  [
+    GorgonNeume.TrigorgonDottedLeft2_Right,
+    { fontFamily: 'EzSpecial1', text: 'B' },
+  ],
+  [
+    GorgonNeume.TrigorgonDottedRight_Right,
+    { fontFamily: 'EzSpecial1', text: 'V' },
+  ],
 
   [GorgonNeume.Argon, { fontFamily: 'Psaltica', text: 'g' }],
   [GorgonNeume.Hemiolion, { fontFamily: 'Psaltica', text: 'G' }],

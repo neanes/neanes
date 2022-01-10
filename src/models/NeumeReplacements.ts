@@ -186,11 +186,71 @@ export const gorgonReplacementMap = new Map<
   ],
 
   [
+    GorgonNeume.DigorgonDottedLeft1,
+    [
+      {
+        isPairedWith: rightGorgonNeumes,
+        replaceWith: GorgonNeume.DigorgonDottedLeft1_Right,
+      },
+    ],
+  ],
+
+  [
+    GorgonNeume.DigorgonDottedLeft2,
+    [
+      {
+        isPairedWith: rightGorgonNeumes,
+        replaceWith: GorgonNeume.DigorgonDottedLeft2_Right,
+      },
+    ],
+  ],
+
+  [
+    GorgonNeume.DigorgonDottedRight,
+    [
+      {
+        isPairedWith: rightGorgonNeumes,
+        replaceWith: GorgonNeume.DigorgonDottedRight_Right,
+      },
+    ],
+  ],
+
+  [
     GorgonNeume.Trigorgon,
     [
       {
         isPairedWith: rightGorgonNeumes,
         replaceWith: GorgonNeume.Trigorgon_Right,
+      },
+    ],
+  ],
+
+  [
+    GorgonNeume.TrigorgonDottedLeft1,
+    [
+      {
+        isPairedWith: rightGorgonNeumes,
+        replaceWith: GorgonNeume.TrigorgonDottedLeft1_Right,
+      },
+    ],
+  ],
+
+  [
+    GorgonNeume.TrigorgonDottedLeft2,
+    [
+      {
+        isPairedWith: rightGorgonNeumes,
+        replaceWith: GorgonNeume.TrigorgonDottedLeft2_Right,
+      },
+    ],
+  ],
+
+  [
+    GorgonNeume.TrigorgonDottedRight,
+    [
+      {
+        isPairedWith: rightGorgonNeumes,
+        replaceWith: GorgonNeume.TrigorgonDottedRight_Right,
       },
     ],
   ],
@@ -241,6 +301,36 @@ export const gorgonReplacementMap = new Map<
   ],
 
   [
+    GorgonNeume.DigorgonDottedLeft1_Right,
+    [
+      {
+        isNotPairedWith: rightGorgonNeumes,
+        replaceWith: GorgonNeume.DigorgonDottedLeft1,
+      },
+    ],
+  ],
+
+  [
+    GorgonNeume.DigorgonDottedLeft2_Right,
+    [
+      {
+        isNotPairedWith: rightGorgonNeumes,
+        replaceWith: GorgonNeume.DigorgonDottedLeft2,
+      },
+    ],
+  ],
+
+  [
+    GorgonNeume.DigorgonDottedRight_Right,
+    [
+      {
+        isNotPairedWith: rightGorgonNeumes,
+        replaceWith: GorgonNeume.DigorgonDottedRight,
+      },
+    ],
+  ],
+
+  [
     GorgonNeume.Trigorgon_Right,
     [
       {
@@ -249,6 +339,37 @@ export const gorgonReplacementMap = new Map<
       },
     ],
   ],
+
+  [
+    GorgonNeume.TrigorgonDottedLeft1_Right,
+    [
+      {
+        isNotPairedWith: rightGorgonNeumes,
+        replaceWith: GorgonNeume.TrigorgonDottedLeft1,
+      },
+    ],
+  ],
+
+  [
+    GorgonNeume.TrigorgonDottedLeft2_Right,
+    [
+      {
+        isNotPairedWith: rightGorgonNeumes,
+        replaceWith: GorgonNeume.TrigorgonDottedLeft2,
+      },
+    ],
+  ],
+
+  [
+    GorgonNeume.TrigorgonDottedRight_Right,
+    [
+      {
+        isNotPairedWith: rightGorgonNeumes,
+        replaceWith: GorgonNeume.TrigorgonDottedRight,
+      },
+    ],
+  ],
+
   [
     GorgonNeume.Argon,
     [

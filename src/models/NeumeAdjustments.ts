@@ -152,7 +152,37 @@ export const gorgonAdjustmentMap = new Map<GorgonNeume, NeumeAdjustment[]>([
   ],
 
   [
+    GorgonNeume.DigorgonDottedLeft1_Right,
+    [{ isPairedWith: [QuantitativeNeume.Hyporoe], offset: { x: 5, y: 6 } }],
+  ],
+
+  [
+    GorgonNeume.DigorgonDottedLeft2_Right,
+    [{ isPairedWith: [QuantitativeNeume.Hyporoe], offset: { x: 5, y: 6 } }],
+  ],
+
+  [
+    GorgonNeume.DigorgonDottedRight_Right,
+    [{ isPairedWith: [QuantitativeNeume.Hyporoe], offset: { x: 5, y: 6 } }],
+  ],
+
+  [
     GorgonNeume.Trigorgon_Right,
+    [{ isPairedWith: [QuantitativeNeume.Hyporoe], offset: { x: 3, y: 6 } }],
+  ],
+
+  [
+    GorgonNeume.TrigorgonDottedLeft1_Right,
+    [{ isPairedWith: [QuantitativeNeume.Hyporoe], offset: { x: 3, y: 6 } }],
+  ],
+
+  [
+    GorgonNeume.TrigorgonDottedLeft2_Right,
+    [{ isPairedWith: [QuantitativeNeume.Hyporoe], offset: { x: 3, y: 6 } }],
+  ],
+
+  [
+    GorgonNeume.TrigorgonDottedRight_Right,
     [{ isPairedWith: [QuantitativeNeume.Hyporoe], offset: { x: 3, y: 6 } }],
   ],
 ]);

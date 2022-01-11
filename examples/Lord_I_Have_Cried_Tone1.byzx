@@ -145,6 +145,7 @@
       {
         "elementType": "Note",
         "quantitativeNeume": "PetastiPlusOligon",
+        "measureNumber": "Four",
         "lyrics": "Thee,",
         "isMelisma": true,
         "isMelismaStart": true
@@ -163,7 +164,8 @@
         "elementType": "Martyria",
         "auto": true,
         "note": "Pa",
-        "rootSign": "Alpha"
+        "rootSign": "Alpha",
+        "measureBar": "MeasureBarRight"
       },
       {
         "elementType": "Note",
@@ -407,6 +409,7 @@
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusKentemata",
         "gorgonNeume": "Gorgon_Top",
+        "measureNumber": "Four",
         "lyrics": "Thee,",
         "isMelisma": true,
         "isMelismaStart": true
@@ -425,7 +428,8 @@
         "elementType": "Martyria",
         "auto": true,
         "note": "Ga",
-        "rootSign": "Nana"
+        "rootSign": "Nana",
+        "measureBar": "MeasureBarRight"
       },
       {
         "elementType": "Note",
@@ -501,6 +505,7 @@
       {
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusKentima",
+        "measureBar": "MeasureBarRight",
         "lyrics": "at",
         "isMelisma": true,
         "isMelismaStart": true,

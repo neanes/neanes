@@ -41,6 +41,11 @@
 }
 
 @font-face {
+  font-family: PFGoudyInitials;
+  src: url('~@/assets/PFGoudyInitials.ttf');
+}
+
+@font-face {
   font-family: EzSpecial1;
   src: url('~@/assets/EZ Special-I.ttf');
 }

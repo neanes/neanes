@@ -579,6 +579,8 @@ export default class Editor extends Vue {
   async created() {
     const fontLoader = (document as any).fonts;
 
+    // Must load all fonts before loading any documents,
+    // otherwise the text measurements will be wrong
     await Promise.all([
       fontLoader.load('1rem Athonite'),
       fontLoader.load('1rem Omega'),
@@ -587,6 +589,7 @@ export default class Editor extends Vue {
       fontLoader.load('1rem EzSpecial2'),
       fontLoader.load('1rem EzFthora'),
       fontLoader.load('1rem Oxeia'),
+      fontLoader.load('1rem PFGoudyInitials'),
       fontLoader.ready,
     ]);
 

@@ -6,6 +6,7 @@ import {
   GorgonNeume,
   Accidental,
   VocalExpressionNeume,
+  MeasureNumber,
 } from '@/models/Neumes';
 import { TestFileType } from './TestFileType';
 
@@ -26,6 +27,8 @@ export abstract class TestFileGenerator {
         return this.generateTestFile_Accidentals();
       case TestFileType.Expressions:
         return this.generateTestFile_Expressions();
+      case TestFileType.Measures:
+        return this.generateTestFile_Measures();
       default:
         console.error(`Unknown test file type: ${type}`);
         return null;
@@ -361,6 +364,50 @@ export abstract class TestFileGenerator {
       const note = new NoteElement();
       note.quantitativeNeume = quantitativeNeume;
       note.vocalExpressionNeume = VocalExpressionNeume.Antikenoma;
+      (note.lyrics = (counter++).toString()), elements.push(note);
+    }
+
+    return elements;
+  }
+
+  private static generateTestFile_Measures() {
+    const elements: ScoreElement[] = [];
+
+    let counter = 1;
+
+    for (let q in QuantitativeNeume) {
+      const quantitativeNeume = q as QuantitativeNeume;
+      if (
+        [
+          QuantitativeNeume.VareiaDotted,
+          QuantitativeNeume.Cross,
+          QuantitativeNeume.Kentima,
+        ].includes(quantitativeNeume)
+      ) {
+        continue;
+      }
+
+      const note = new NoteElement();
+      note.quantitativeNeume = quantitativeNeume;
+      note.measureNumber = MeasureNumber.Two;
+      (note.lyrics = (counter++).toString()), elements.push(note);
+    }
+
+    for (let q in QuantitativeNeume) {
+      const quantitativeNeume = q as QuantitativeNeume;
+      if (
+        [
+          QuantitativeNeume.VareiaDotted,
+          QuantitativeNeume.Cross,
+          QuantitativeNeume.Kentima,
+        ].includes(quantitativeNeume)
+      ) {
+        continue;
+      }
+
+      const note = new NoteElement();
+      note.quantitativeNeume = quantitativeNeume;
+      note.measureNumber = MeasureNumber.Eight;
       (note.lyrics = (counter++).toString()), elements.push(note);
     }
 

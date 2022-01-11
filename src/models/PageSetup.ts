@@ -72,6 +72,7 @@ export class PageSetup {
   public heteronDefaultColor = '#ED0000';
   public gorgonDefaultColor = '#ED0000';
   public measureBarDefaultColor = '#ED0000';
+  public measureNumberDefaultColor = '#000000';
 
   public martyriaDefaultColor = '#ED0000';
 

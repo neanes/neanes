@@ -6,4 +6,5 @@ export enum TestFileType {
   Hapli = 'Hapli',
   Accidentals = 'Accidentals',
   Expressions = 'Expressions',
+  Measures = 'Measures',
 }

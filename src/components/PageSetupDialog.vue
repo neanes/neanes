@@ -283,12 +283,21 @@
             />
           </div>
           <div class="form-group">
-            <label class="neume-colors-label">Measures</label>
+            <label class="neume-colors-label">Measure Bars</label>
             <input
               class="neume-colors-input"
               type="color"
               list="presetNeumeColors"
               v-model.lazy="form.measureBarDefaultColor"
+            />
+          </div>
+          <div class="form-group">
+            <label class="neume-colors-label">Measure No.</label>
+            <input
+              class="neume-colors-input"
+              type="color"
+              list="presetNeumeColors"
+              v-model.lazy="form.measureNumberDefaultColor"
             />
           </div>
           <div class="form-group">
@@ -693,7 +702,7 @@ export default class PageSetupDialog extends Vue {
 
 .neume-colors-label {
   display: inline-block;
-  width: 5.5rem;
+  width: 7rem;
 }
 
 .neume-colors-input {

@@ -32,6 +32,7 @@ export class PageSetup {
   public gorgonDefaultColor = '#ED0000';
   public heteronDefaultColor = '#ED0000';
   public measureBarDefaultColor = '#ED0000';
+  public measureNumberDefaultColor = '#000000';
 
   public tempoDefaultColor = '#ED0000';
 

@@ -297,6 +297,21 @@ export enum Accidental {
   Flat_6_Left = 'Flat_6_Left',
 }
 
+export enum MeasureBar {
+  MeasureBarRight = 'MeasureBarRight',
+  MeasureBarTop = 'MeasureBarTop',
+}
+
+export enum MeasureNumber {
+  Two = 'Two',
+  Three = 'Three',
+  Four = 'Four',
+  Five = 'Five',
+  Six = 'Six',
+  Seven = 'Seven',
+  Eight = 'Eight',
+}
+
 export type Neume =
   | QuantitativeNeume
   | TimeNeume
@@ -307,4 +322,6 @@ export type Neume =
   | TempoSign
   | Note
   | RootSign
-  | ModeSign;
+  | ModeSign
+  | MeasureBar
+  | MeasureNumber;

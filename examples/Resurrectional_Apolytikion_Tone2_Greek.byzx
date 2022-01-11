@@ -22,6 +22,7 @@
     "gorgonDefaultColor": "#ED0000",
     "heteronDefaultColor": "#ED0000",
     "measureBarDefaultColor": "#ED0000",
+    "measureNumberDefaultColor": "#000000",
     "tempoDefaultColor": "#ED0000",
     "martyriaDefaultColor": "#ED0000",
     "modeKeyDefaultColor": "#ED0000",

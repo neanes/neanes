@@ -1,4 +1,3 @@
-import { MeasureBar } from '@/models/Neumes';
 import {
   TimeNeume,
   GorgonNeume,
@@ -10,6 +9,8 @@ import {
   Accidental,
   ModeSign,
   TempoSign,
+  MeasureBar,
+  MeasureNumber,
 } from '@/models/save/v1/Neumes';
 import { Scale, ScaleNote } from './Scales';
 
@@ -38,6 +39,7 @@ export class NoteElement extends ScoreElement {
   public fthora: Fthora | undefined = undefined;
   public accidental: Accidental | undefined = undefined;
   public measureBar: MeasureBar | undefined = undefined;
+  public measureNumber: MeasureNumber | undefined = undefined;
   public lyrics: string | undefined = undefined;
   public isMelisma: boolean | undefined = undefined;
   public isMelismaStart: boolean | undefined = undefined;

@@ -9,6 +9,8 @@ import {
   Note,
   GorgonNeume,
   ModeSign,
+  MeasureNumber,
+  petastiNeumes,
 } from '@/models/Neumes';
 
 export interface NeumeAdjustmentOffset {
@@ -663,6 +665,171 @@ export const accidentalAdjustmentMap = new Map<Accidental, NeumeAdjustment[]>([
   [Accidental.Sharp_6_Left, sharpAdjustments],
 ]);
 
+const measureNumberAdjustments: NeumeAdjustment[] = [
+  {
+    isPairedWith: [
+      QuantitativeNeume.Petasti,
+      QuantitativeNeume.PetastiPlusKentimaAbove,
+      QuantitativeNeume.PetastiPlusHypsiliRight,
+      QuantitativeNeume.PetastiPlusHypsiliPlusKentimaHorizontal,
+      QuantitativeNeume.PetastiPlusHypsiliPlusKentimaVertical,
+    ],
+    offset: { x: 0, y: -8 },
+  },
+  {
+    isPairedWith: [QuantitativeNeume.PetastiWithIson],
+    offset: { x: 0, y: -18 },
+  },
+  {
+    isPairedWith: [QuantitativeNeume.PetastiPlusOligon],
+    offset: { x: 0, y: -14 },
+  },
+  {
+    isPairedWith: [
+      QuantitativeNeume.PetastiPlusHypsiliLeft,
+      QuantitativeNeume.PetastiPlusDoubleHypsili,
+    ],
+    offset: { x: 0, y: -12 },
+  },
+  {
+    isPairedWith: [
+      QuantitativeNeume.Ison,
+      QuantitativeNeume.Oligon,
+      QuantitativeNeume.OligonPlusHypsiliPlusKentimaHorizontal,
+      QuantitativeNeume.OligonPlusHypsiliPlusKentimaVertical,
+      QuantitativeNeume.OligonPlusHypsiliRight,
+      QuantitativeNeume.OligonPlusKentimaAbove,
+      QuantitativeNeume.OligonPlusKentimaBelow,
+      QuantitativeNeume.KentemataPlusOligon,
+      QuantitativeNeume.KentemataPlusOligonSpecial,
+    ],
+    offset: { x: 0, y: -8 },
+  },
+  {
+    isPairedWith: [QuantitativeNeume.OligonPlusKentemata],
+    offset: { x: 0, y: -10 },
+  },
+  {
+    isPairedWith: [QuantitativeNeume.OligonPlusApostrophos],
+    offset: { x: -8, y: -6 },
+  },
+  {
+    isPairedWith: [
+      QuantitativeNeume.OligonPlusHypsiliLeft,
+      QuantitativeNeume.OligonPlusDoubleHypsili,
+    ],
+    offset: { x: -4, y: -14 },
+  },
+  {
+    isPairedWith: [QuantitativeNeume.Apostrophos],
+    offset: { x: 13, y: -8 },
+  },
+  {
+    isPairedWith: [QuantitativeNeume.PetastiPlusApostrophos],
+    offset: { x: 4, y: -14 },
+  },
+  {
+    isPairedWith: [
+      QuantitativeNeume.Elaphron,
+      QuantitativeNeume.ElaphronPlusApostrophos,
+      QuantitativeNeume.RunningElaphron,
+    ],
+    offset: { x: 0, y: -7 },
+  },
+  {
+    isPairedWith: [
+      QuantitativeNeume.PetastiPlusElaphron,
+      QuantitativeNeume.PetastiPlusElaphronPlusApostrophos,
+    ],
+    offset: { x: 0, y: -18 },
+  },
+  {
+    isPairedWith: [
+      QuantitativeNeume.Hamili,
+      QuantitativeNeume.HamiliPlusApostrophos,
+    ],
+    offset: { x: 4, y: -16 },
+  },
+  {
+    isPairedWith: [
+      QuantitativeNeume.HamiliPlusElaphron,
+      QuantitativeNeume.HamiliPlusElaphronPlusApostrophos,
+      QuantitativeNeume.DoubleHamili,
+    ],
+    offset: { x: 2, y: -24 },
+  },
+  {
+    isPairedWith: [QuantitativeNeume.OligonPlusIsonPlusKentemata],
+    offset: { x: -8, y: -10 },
+  },
+  {
+    isPairedWith: [QuantitativeNeume.OligonPlusApostrophosPlusKentemata],
+    offset: { x: -8, y: -14 },
+  },
+  {
+    isPairedWith: [
+      QuantitativeNeume.OligonPlusElaphronPlusKentemata,
+      QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
+    ],
+    offset: { x: -18, y: -16 },
+  },
+  {
+    isPairedWith: [QuantitativeNeume.OligonPlusHamiliPlusKentemata],
+    offset: { x: -18, y: -20 },
+  },
+  {
+    isPairedWith: [QuantitativeNeume.Hyporoe],
+    offset: { x: 20, y: -4 },
+  },
+  {
+    isPairedWith: [QuantitativeNeume.Kentemata],
+    offset: { x: 14, y: -4 },
+  },
+  {
+    isPairedWith: [QuantitativeNeume.OligonPlusKentima],
+    offset: { x: -8, y: -5 },
+  },
+  {
+    isPairedWith: [QuantitativeNeume.DoubleApostrophos],
+    offset: { x: 2, y: -5 },
+  },
+  {
+    isPairedWith: [QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata],
+    offset: { x: -10, y: -12 },
+  },
+  {
+    isPairedWith: [QuantitativeNeume.IsonPlusApostrophos],
+    offset: { x: 6, y: -4 },
+  },
+  {
+    isPairedWith: [QuantitativeNeume.OligonPlusKentemataPlusHypsiliLeft],
+    offset: { x: -5, y: -10 },
+  },
+  {
+    isPairedWith: [QuantitativeNeume.OligonPlusKentemataPlusHypsiliRight],
+    offset: { x: -5, y: -10 },
+  },
+];
+
+const measureNumberAdjustmentsCenter: NeumeAdjustment[] =
+  measureNumberAdjustments.map((a) => ({
+    isPairedWith: [...a.isPairedWith],
+    offset: { x: a.offset.x - 12, y: a.offset.y },
+  }));
+
+export const measureNumberAdjustmentMap = new Map<
+  MeasureNumber,
+  NeumeAdjustment[]
+>([
+  [MeasureNumber.Two, measureNumberAdjustments],
+  [MeasureNumber.Three, measureNumberAdjustments],
+  [MeasureNumber.Four, measureNumberAdjustments],
+  [MeasureNumber.Five, measureNumberAdjustments],
+  [MeasureNumber.Six, measureNumberAdjustmentsCenter],
+  [MeasureNumber.Seven, measureNumberAdjustmentsCenter],
+  [MeasureNumber.Eight, measureNumberAdjustmentsCenter],
+]);
+
 export const getGorgonAdjustments = (neume: GorgonNeume) => {
   return gorgonAdjustmentMap.get(neume);
 };
@@ -693,4 +860,8 @@ export const getModeSignAdjustments = (neume: ModeSign) => {
 
 export const getAccidentalAdjustments = (neume: Accidental) => {
   return accidentalAdjustmentMap.get(neume);
+};
+
+export const getMeasureNumberAdjustments = (neume: MeasureNumber) => {
+  return measureNumberAdjustmentMap.get(neume);
 };

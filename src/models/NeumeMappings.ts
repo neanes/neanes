@@ -11,6 +11,7 @@ import {
   GorgonNeume,
   ModeSign,
   MeasureBar,
+  MeasureNumber,
 } from '@/models/Neumes';
 
 export type NeumeFont =
@@ -434,6 +435,14 @@ export const neumeMap = new Map<Neume, NeumeMapping>([
 
   [MeasureBar.MeasureBarRight, { fontFamily: 'Psaltica', text: 'J' }],
   [MeasureBar.MeasureBarTop, { fontFamily: 'Psaltica', text: 'j' }],
+
+  [MeasureNumber.Two, { fontFamily: 'EzSpecial2', text: '2' }],
+  [MeasureNumber.Three, { fontFamily: 'EzSpecial2', text: '3' }],
+  [MeasureNumber.Four, { fontFamily: 'EzSpecial2', text: '4' }],
+  [MeasureNumber.Five, { fontFamily: 'EzSpecial2', text: '5' }],
+  [MeasureNumber.Six, { fontFamily: 'EzSpecial2', text: '6' }],
+  [MeasureNumber.Seven, { fontFamily: 'EzSpecial2', text: '7' }],
+  [MeasureNumber.Eight, { fontFamily: 'EzSpecial2', text: '8' }],
 ]);
 
 const quantitativeNeumeKeyboardMap = new Map<string, QuantitativeNeume>([

@@ -235,6 +235,7 @@
         @update:time="updateNoteTime(selectedElement, $event)"
         @update:expression="updateNoteExpression(selectedElement, $event)"
         @update:measureBar="updateNoteMeasureBar(selectedElement, $event)"
+        @update:measureNumber="updateNoteMeasureNumber(selectedElement, $event)"
         @update:vocalExpression="
           updateNoteVocalExpression(selectedElement, $event)
         "
@@ -289,6 +290,7 @@ import {
   TempoSign,
   MeasureBar,
   Accidental,
+  MeasureNumber,
 } from '@/models/Neumes';
 import { Page } from '@/models/Page';
 import { Score } from '@/models/Score';
@@ -1360,6 +1362,10 @@ export default class Editor extends Vue {
 
   updateNoteMeasureBar(element: NoteElement, measureBar: MeasureBar) {
     this.updateNote(element, { measureBar });
+  }
+
+  updateNoteMeasureNumber(element: NoteElement, measureNumber: MeasureNumber) {
+    this.updateNote(element, { measureNumber });
   }
 
   updateLyrics(element: NoteElement, lyrics: string) {

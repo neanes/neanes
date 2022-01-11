@@ -235,6 +235,29 @@
           </div>
         </div>
       </div>
+      <div
+        class="menu-container"
+        @mousedown="openMeasureNumberMenu"
+        @mouseleave="selectedMeasureNumber = null"
+      >
+        <button class="neume-button">
+          <Neume class="neume measure-number" :neume="MeasureNumber.Two" />
+        </button>
+        <div class="menu" v-if="showMeasureNumberMenu">
+          <div
+            class="menu-item"
+            v-for="menuItem in measureNumberMenuItems"
+            :key="menuItem.neume"
+            @mouseenter="selectedMeasureNumber = menuItem.neume"
+          >
+            <Neume
+              class="neume"
+              :class="menuItem.className"
+              :neume="menuItem.neume"
+            />
+          </div>
+        </div>
+      </div>
     </div>
     <div class="row">
       <button
@@ -444,6 +467,7 @@ import {
   Fthora,
   GorgonNeume,
   MeasureBar,
+  MeasureNumber,
   TimeNeume,
   VocalExpressionNeume,
 } from '@/models/Neumes';
@@ -473,6 +497,11 @@ interface BarLineMenuItem {
   className: string;
 }
 
+interface MeasureNumberMenuItem {
+  neume: MeasureNumber;
+  className: string;
+}
+
 @Component({
   components: {
     Neume,
@@ -486,6 +515,7 @@ export default class NeumeToolbar extends Vue {
   GorgonNeume = GorgonNeume;
   Fthora = Fthora;
   MeasureBar = MeasureBar;
+  MeasureNumber = MeasureNumber;
 
   showFlatMenu: boolean = false;
   showSharpMenu: boolean = false;
@@ -494,12 +524,14 @@ export default class NeumeToolbar extends Vue {
   showTrigorgonMenu: boolean = false;
   showTimeMenu: boolean = false;
   showBarLineMenu: boolean = false;
+  showMeasureNumberMenu: boolean = false;
 
   selectedFlat: Accidental | null = null;
   selectedSharp: Accidental | null = null;
   selectedGorgon: GorgonNeume[] | null = null;
   selectedTimeNeume: TimeNeume[] | null = null;
   selectedBarLine: MeasureBar | null = null;
+  selectedMeasureNumber: MeasureNumber | null = null;
 
   flatMenuItems: Accidental[] = [
     Accidental.Flat_6_Right,
@@ -511,6 +543,16 @@ export default class NeumeToolbar extends Vue {
     Accidental.Sharp_6_Left,
     Accidental.Sharp_4_Left,
     Accidental.Sharp_2_Left,
+  ];
+
+  measureNumberMenuItems: MeasureNumberMenuItem[] = [
+    { neume: MeasureNumber.Eight, className: 'measure-number-center' },
+    { neume: MeasureNumber.Seven, className: 'measure-number-center' },
+    { neume: MeasureNumber.Six, className: 'measure-number-center' },
+    { neume: MeasureNumber.Five, className: 'measure-number' },
+    { neume: MeasureNumber.Four, className: 'measure-number' },
+    { neume: MeasureNumber.Three, className: 'measure-number' },
+    { neume: MeasureNumber.Two, className: 'measure-number' },
   ];
 
   gorgonMenuItems: GorgonMenuItem[] = [
@@ -702,6 +744,14 @@ export default class NeumeToolbar extends Vue {
     }
   }
 
+  private setMeasureNumber(neume: MeasureNumber) {
+    if (neume === this.element.measureNumber) {
+      this.$emit('update:measureNumber', null);
+    } else {
+      this.$emit('update:measureNumber', neume);
+    }
+  }
+
   private setFthora(neumes: Fthora[]) {
     let equivalent = false;
 
@@ -831,6 +881,21 @@ export default class NeumeToolbar extends Vue {
     this.showBarLineMenu = false;
 
     window.removeEventListener('mouseup', this.onBarLineMouseUp);
+  }
+
+  openMeasureNumberMenu() {
+    this.showMeasureNumberMenu = true;
+    window.addEventListener('mouseup', this.onMeasureNumberMouseUp);
+  }
+
+  onMeasureNumberMouseUp() {
+    if (this.selectedMeasureNumber) {
+      this.setMeasureNumber(this.selectedMeasureNumber);
+    }
+
+    this.showMeasureNumberMenu = false;
+
+    window.removeEventListener('mouseup', this.onMeasureNumberMouseUp);
   }
 }
 </script>
@@ -977,6 +1042,16 @@ export default class NeumeToolbar extends Vue {
 .measure-bar-top {
   top: -5px;
   left: 17px;
+}
+
+.measure-number {
+  top: -7px;
+  left: 28px;
+}
+
+.measure-number-center {
+  top: -7px;
+  left: 16px;
 }
 
 .menu-container {

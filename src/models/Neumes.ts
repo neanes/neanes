@@ -302,6 +302,16 @@ export enum MeasureBar {
   MeasureBarTop = 'MeasureBarTop',
 }
 
+export enum MeasureNumber {
+  Two = 'Two',
+  Three = 'Three',
+  Four = 'Four',
+  Five = 'Five',
+  Six = 'Six',
+  Seven = 'Seven',
+  Eight = 'Eight',
+}
+
 export type Neume =
   | QuantitativeNeume
   | TimeNeume
@@ -313,4 +323,45 @@ export type Neume =
   | Note
   | RootSign
   | ModeSign
-  | MeasureBar;
+  | MeasureBar
+  | MeasureNumber;
+
+export const petastiNeumes: ReadonlyArray<QuantitativeNeume> = [
+  QuantitativeNeume.PetastiWithIson,
+  QuantitativeNeume.Petasti,
+  QuantitativeNeume.PetastiPlusOligon,
+  QuantitativeNeume.PetastiPlusKentimaAbove,
+  QuantitativeNeume.PetastiPlusHypsiliRight,
+  QuantitativeNeume.PetastiPlusHypsiliLeft,
+  QuantitativeNeume.PetastiPlusHypsiliPlusKentimaHorizontal,
+  QuantitativeNeume.PetastiPlusHypsiliPlusKentimaVertical,
+  QuantitativeNeume.PetastiPlusDoubleHypsili,
+  QuantitativeNeume.PetastiPlusApostrophos,
+  QuantitativeNeume.PetastiPlusElaphron,
+  QuantitativeNeume.PetastiPlusElaphronPlusApostrophos,
+];
+
+export const oligonNeumes: ReadonlyArray<QuantitativeNeume> = [
+  QuantitativeNeume.Oligon,
+  QuantitativeNeume.OligonPlusApostrophos,
+  QuantitativeNeume.OligonPlusApostrophosPlusKentemata,
+  QuantitativeNeume.OligonPlusDoubleHypsili,
+  QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
+  QuantitativeNeume.OligonPlusElaphronPlusKentemata,
+  QuantitativeNeume.OligonPlusHamiliPlusKentemata,
+  QuantitativeNeume.OligonPlusHypsiliLeft,
+  QuantitativeNeume.OligonPlusHypsiliPlusKentimaHorizontal,
+  QuantitativeNeume.OligonPlusHypsiliPlusKentimaVertical,
+  QuantitativeNeume.OligonPlusHypsiliRight,
+  QuantitativeNeume.OligonPlusIsonPlusKentemata,
+  QuantitativeNeume.OligonPlusKentemata,
+  QuantitativeNeume.OligonPlusKentemataPlusHypsiliLeft,
+  QuantitativeNeume.OligonPlusKentemataPlusHypsiliRight,
+  QuantitativeNeume.OligonPlusKentima,
+  QuantitativeNeume.OligonPlusKentimaAbove,
+  QuantitativeNeume.OligonPlusKentimaBelow,
+  QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
+  QuantitativeNeume.KentemataPlusOligon,
+  QuantitativeNeume.KentemataPlusOligonSpecial,
+  QuantitativeNeume.PetastiPlusOligon,
+];

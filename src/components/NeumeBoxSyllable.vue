@@ -35,6 +35,12 @@
       :style="vocalExpressionStyle"
     ></Neume>
     <Neume
+      v-if="hasMeasureNumber"
+      :neume="note.measureNumber"
+      :offset="measureNumberOffset"
+      :style="measureNumberStyle"
+    ></Neume>
+    <Neume
       v-if="hasMeasureBar"
       :neume="note.measureBar"
       :style="measureBarStyle"
@@ -53,6 +59,7 @@ import {
   getVocalExpressionAdjustments,
   getAccidentalAdjustments,
   NeumeAdjustmentOffset,
+  getMeasureNumberAdjustments,
 } from '@/models/NeumeAdjustments';
 import Neume from '@/components/Neume.vue';
 import { withZoom } from '@/utils/withZoom';
@@ -91,6 +98,10 @@ export default class NeumeBoxSyllable extends Vue {
     return this.note.measureBar != null;
   }
 
+  get hasMeasureNumber() {
+    return this.note.measureNumber != null;
+  }
+
   get style() {
     return {
       fontSize: withZoom(this.pageSetup.neumeDefaultFontSize),
@@ -119,6 +130,12 @@ export default class NeumeBoxSyllable extends Vue {
   get measureBarStyle() {
     return {
       color: this.pageSetup.measureBarDefaultColor,
+    } as CSSStyleDeclaration;
+  }
+
+  get measureNumberStyle() {
+    return {
+      color: this.pageSetup.measureNumberDefaultColor,
     } as CSSStyleDeclaration;
   }
 
@@ -210,6 +227,24 @@ export default class NeumeBoxSyllable extends Vue {
     let offset: NeumeAdjustmentOffset | null = null;
 
     const adjustments = getAccidentalAdjustments(this.note.accidental!);
+
+    if (adjustments) {
+      const adjustment = adjustments.find((x) =>
+        x.isPairedWith.includes(this.note.quantitativeNeume),
+      );
+
+      if (adjustment) {
+        offset = adjustment.offset;
+      }
+    }
+
+    return offset;
+  }
+
+  get measureNumberOffset() {
+    let offset: NeumeAdjustmentOffset | null = null;
+
+    const adjustments = getMeasureNumberAdjustments(this.note.measureNumber!);
 
     if (adjustments) {
       const adjustment = adjustments.find((x) =>

@@ -369,7 +369,7 @@
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusKentemata",
         "vocalExpressionNeume": "Psifiston",
-        "accidental": "Flat_2_Right",
+        "accidental": "Flat_4_Right",
         "lyrics": "cried",
         "isMelisma": true,
         "isMelismaStart": true
@@ -480,6 +480,7 @@
         "elementType": "Note",
         "quantitativeNeume": "Oligon",
         "vocalExpressionNeume": "Vareia",
+        "measureNumber": "Four",
         "lyrics": "me;",
         "isMelisma": true,
         "isMelismaStart": true

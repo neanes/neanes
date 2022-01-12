@@ -237,6 +237,7 @@
         @update:measureBar="updateNoteMeasureBar(selectedElement, $event)"
         @update:measureNumber="updateNoteMeasureNumber(selectedElement, $event)"
         @update:noteIndicator="updateNoteNoteIndicator(selectedElement, $event)"
+        @update:ison="updateNoteIson(selectedElement, $event)"
         @update:vocalExpression="
           updateNoteVocalExpression(selectedElement, $event)
         "
@@ -293,6 +294,7 @@ import {
   Accidental,
   MeasureNumber,
   NoteIndicator,
+  Ison,
 } from '@/models/Neumes';
 import { Page } from '@/models/Page';
 import { Score } from '@/models/Score';
@@ -1375,6 +1377,10 @@ export default class Editor extends Vue {
 
   updateNoteNoteIndicator(element: NoteElement, noteIndicator: NoteIndicator) {
     this.updateNote(element, { noteIndicator });
+  }
+
+  updateNoteIson(element: NoteElement, ison: Ison) {
+    this.updateNote(element, { ison });
   }
 
   updateLyrics(element: NoteElement, lyrics: string) {

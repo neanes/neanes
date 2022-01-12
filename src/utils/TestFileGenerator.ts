@@ -8,6 +8,7 @@ import {
   VocalExpressionNeume,
   MeasureNumber,
   NoteIndicator,
+  Ison,
 } from '@/models/Neumes';
 import { TestFileType } from './TestFileType';
 
@@ -32,6 +33,8 @@ export abstract class TestFileGenerator {
         return this.generateTestFile_Measures();
       case TestFileType.NoteIndicators:
         return this.generateTestFile_NoteIndicators();
+      case TestFileType.Ison:
+        return this.generateTestFile_Isons();
       default:
         console.error(`Unknown test file type: ${type}`);
         return null;
@@ -437,6 +440,32 @@ export abstract class TestFileGenerator {
       const note = new NoteElement();
       note.quantitativeNeume = quantitativeNeume;
       note.noteIndicator = NoteIndicator.Ni;
+      (note.lyrics = (counter++).toString()), elements.push(note);
+    }
+
+    return elements;
+  }
+
+  private static generateTestFile_Isons() {
+    const elements: ScoreElement[] = [];
+
+    let counter = 1;
+
+    for (let q in QuantitativeNeume) {
+      const quantitativeNeume = q as QuantitativeNeume;
+      if (
+        [
+          QuantitativeNeume.VareiaDotted,
+          QuantitativeNeume.Cross,
+          QuantitativeNeume.Kentima,
+        ].includes(quantitativeNeume)
+      ) {
+        continue;
+      }
+
+      const note = new NoteElement();
+      note.quantitativeNeume = quantitativeNeume;
+      note.ison = Ison.Unison;
       (note.lyrics = (counter++).toString()), elements.push(note);
     }
 

@@ -1,4 +1,3 @@
-import { NoteIndicator } from '@/models/Neumes';
 import {
   TimeNeume,
   GorgonNeume,
@@ -12,6 +11,8 @@ import {
   TempoSign,
   MeasureBar,
   MeasureNumber,
+  NoteIndicator,
+  Ison,
 } from '@/models/save/v1/Neumes';
 import { Scale, ScaleNote } from './Scales';
 
@@ -42,6 +43,7 @@ export class NoteElement extends ScoreElement {
   public measureBar: MeasureBar | undefined = undefined;
   public measureNumber: MeasureNumber | undefined = undefined;
   public noteIndicator: NoteIndicator | undefined = undefined;
+  public ison: Ison | undefined = undefined;
   public lyrics: string | undefined = undefined;
   public isMelisma: boolean | undefined = undefined;
   public isMelismaStart: boolean | undefined = undefined;

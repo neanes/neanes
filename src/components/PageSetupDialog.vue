@@ -274,6 +274,15 @@
             />
           </div>
           <div class="form-group">
+            <label class="neume-colors-label">Ison</label>
+            <input
+              class="neume-colors-input"
+              type="color"
+              list="presetNeumeColors"
+              v-model.lazy="form.isonDefaultColor"
+            />
+          </div>
+          <div class="form-group">
             <label class="neume-colors-label">Martyrias</label>
             <input
               class="neume-colors-input"

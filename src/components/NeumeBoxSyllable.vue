@@ -41,6 +41,12 @@
       :style="noteIndicatorStyle"
     ></Neume>
     <Neume
+      v-if="hasIson"
+      :neume="note.ison"
+      :offset="isonOffset"
+      :style="isonStyle"
+    ></Neume>
+    <Neume
       v-if="hasMeasureNumber"
       :neume="note.measureNumber"
       :offset="measureNumberOffset"
@@ -67,10 +73,12 @@ import {
   NeumeAdjustmentOffset,
   getMeasureNumberAdjustments,
   getNoteIndicatorAdjustments,
+  getIsonAdjustments,
 } from '@/models/NeumeAdjustments';
 import Neume from '@/components/Neume.vue';
 import { withZoom } from '@/utils/withZoom';
 import { PageSetup } from '@/models/PageSetup';
+import { TextMeasurementService } from '@/services/TextMeasurementService';
 
 @Component({
   components: {
@@ -113,6 +121,10 @@ export default class NeumeBoxSyllable extends Vue {
     return this.note.noteIndicator != null;
   }
 
+  get hasIson() {
+    return this.note.ison != null;
+  }
+
   get style() {
     return {
       fontSize: withZoom(this.pageSetup.neumeDefaultFontSize),
@@ -153,6 +165,12 @@ export default class NeumeBoxSyllable extends Vue {
   get noteIndicatorStyle() {
     return {
       color: this.pageSetup.noteIndicatorDefaultColor,
+    } as CSSStyleDeclaration;
+  }
+
+  get isonStyle() {
+    return {
+      color: this.pageSetup.isonDefaultColor,
     } as CSSStyleDeclaration;
   }
 
@@ -280,6 +298,24 @@ export default class NeumeBoxSyllable extends Vue {
     let offset: NeumeAdjustmentOffset | null = null;
 
     const adjustments = getNoteIndicatorAdjustments(this.note.noteIndicator!);
+
+    if (adjustments) {
+      const adjustment = adjustments.find((x) =>
+        x.isPairedWith.includes(this.note.quantitativeNeume),
+      );
+
+      if (adjustment) {
+        offset = adjustment.offset;
+      }
+    }
+
+    return offset;
+  }
+
+  get isonOffset() {
+    let offset: NeumeAdjustmentOffset | null = null;
+
+    const adjustments = getIsonAdjustments(this.note.ison!);
 
     if (adjustments) {
       const adjustment = adjustments.find((x) =>

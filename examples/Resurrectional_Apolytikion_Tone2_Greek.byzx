@@ -23,6 +23,8 @@
     "heteronDefaultColor": "#ED0000",
     "measureBarDefaultColor": "#ED0000",
     "measureNumberDefaultColor": "#000000",
+    "noteIndicatorDefaultColor": "#ED0000",
+    "isonDefaultColor": "#ED0000",
     "tempoDefaultColor": "#ED0000",
     "martyriaDefaultColor": "#ED0000",
     "modeKeyDefaultColor": "#ED0000",
@@ -328,7 +330,7 @@
       {
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "lyrics": "τασ"
+        "lyrics": "τας"
       },
       {
         "elementType": "Note",

@@ -73,6 +73,7 @@ export class PageSetup {
   public gorgonDefaultColor = '#ED0000';
   public measureBarDefaultColor = '#ED0000';
   public measureNumberDefaultColor = '#000000';
+  public noteIndicatorDefaultColor = '#ED0000';
 
   public martyriaDefaultColor = '#ED0000';
 

@@ -312,6 +312,16 @@ export enum MeasureNumber {
   Eight = 'Eight',
 }
 
+export enum NoteIndicator {
+  Ni = 'NoteIndicator.Ni',
+  Pa = 'NoteIndicator.Pa',
+  Vou = 'NoteIndicator.Vou',
+  Ga = 'NoteIndicator.Ga',
+  Thi = 'NoteIndicator.Thi',
+  Ke = 'NoteIndicator.Ke',
+  Zo = 'NoteIndicator.Zo',
+}
+
 export type Neume =
   | QuantitativeNeume
   | TimeNeume
@@ -324,4 +334,5 @@ export type Neume =
   | RootSign
   | ModeSign
   | MeasureBar
-  | MeasureNumber;
+  | MeasureNumber
+  | NoteIndicator;

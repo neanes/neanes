@@ -1,3 +1,4 @@
+import { NoteIndicator } from '@/models/Neumes';
 import {
   TimeNeume,
   GorgonNeume,
@@ -40,6 +41,7 @@ export class NoteElement extends ScoreElement {
   public accidental: Accidental | undefined = undefined;
   public measureBar: MeasureBar | undefined = undefined;
   public measureNumber: MeasureNumber | undefined = undefined;
+  public noteIndicator: NoteIndicator | undefined = undefined;
   public lyrics: string | undefined = undefined;
   public isMelisma: boolean | undefined = undefined;
   public isMelismaStart: boolean | undefined = undefined;

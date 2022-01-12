@@ -86,6 +86,8 @@ export class SaveService {
     score.pageSetup.measureBarDefaultColor = s.pageSetup.measureBarDefaultColor;
     score.pageSetup.measureNumberDefaultColor =
       s.pageSetup.measureNumberDefaultColor;
+    score.pageSetup.noteIndicatorDefaultColor =
+      s.pageSetup.noteIndicatorDefaultColor;
 
     score.pageSetup.pageSize = s.pageSetup.pageSize;
     score.pageSetup.pageSizeUnit = s.pageSetup.pageSizeUnit;
@@ -190,6 +192,10 @@ export class SaveService {
 
     if (e.measureNumber != null) {
       element.measureNumber = e.measureNumber;
+    }
+
+    if (e.noteIndicator != null) {
+      element.noteIndicator = e.noteIndicator;
     }
 
     element.lyrics = e.lyrics !== '' ? e.lyrics : undefined;
@@ -340,6 +346,8 @@ export class SaveService {
       p.measureBarDefaultColor || pageSetup.measureBarDefaultColor;
     pageSetup.measureNumberDefaultColor =
       p.measureNumberDefaultColor || pageSetup.measureNumberDefaultColor;
+    pageSetup.noteIndicatorDefaultColor =
+      p.noteIndicatorDefaultColor || pageSetup.noteIndicatorDefaultColor;
 
     pageSetup.pageSize = p.pageSize || pageSetup.pageSize;
     pageSetup.pageSizeUnit = p.pageSizeUnit || pageSetup.pageSizeUnit;
@@ -407,6 +415,10 @@ export class SaveService {
 
     if (e.measureNumber != null) {
       element.measureNumber = e.measureNumber;
+    }
+
+    if (e.noteIndicator != null) {
+      element.noteIndicator = e.noteIndicator;
     }
 
     if (e.lyrics != null) {

@@ -35,6 +35,12 @@
       :style="vocalExpressionStyle"
     ></Neume>
     <Neume
+      v-if="hasNoteIndicator"
+      :neume="note.noteIndicator"
+      :offset="noteIndicatorOffset"
+      :style="noteIndicatorStyle"
+    ></Neume>
+    <Neume
       v-if="hasMeasureNumber"
       :neume="note.measureNumber"
       :offset="measureNumberOffset"
@@ -50,7 +56,7 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
-import { NoteElement, ScoreElementOffset } from '@/models/Element';
+import { NoteElement } from '@/models/Element';
 import { VocalExpressionNeume } from '@/models/Neumes';
 import {
   getFthoraAdjustments,
@@ -60,6 +66,7 @@ import {
   getAccidentalAdjustments,
   NeumeAdjustmentOffset,
   getMeasureNumberAdjustments,
+  getNoteIndicatorAdjustments,
 } from '@/models/NeumeAdjustments';
 import Neume from '@/components/Neume.vue';
 import { withZoom } from '@/utils/withZoom';
@@ -102,6 +109,10 @@ export default class NeumeBoxSyllable extends Vue {
     return this.note.measureNumber != null;
   }
 
+  get hasNoteIndicator() {
+    return this.note.noteIndicator != null;
+  }
+
   get style() {
     return {
       fontSize: withZoom(this.pageSetup.neumeDefaultFontSize),
@@ -136,6 +147,12 @@ export default class NeumeBoxSyllable extends Vue {
   get measureNumberStyle() {
     return {
       color: this.pageSetup.measureNumberDefaultColor,
+    } as CSSStyleDeclaration;
+  }
+
+  get noteIndicatorStyle() {
+    return {
+      color: this.pageSetup.noteIndicatorDefaultColor,
     } as CSSStyleDeclaration;
   }
 
@@ -245,6 +262,24 @@ export default class NeumeBoxSyllable extends Vue {
     let offset: NeumeAdjustmentOffset | null = null;
 
     const adjustments = getMeasureNumberAdjustments(this.note.measureNumber!);
+
+    if (adjustments) {
+      const adjustment = adjustments.find((x) =>
+        x.isPairedWith.includes(this.note.quantitativeNeume),
+      );
+
+      if (adjustment) {
+        offset = adjustment.offset;
+      }
+    }
+
+    return offset;
+  }
+
+  get noteIndicatorOffset() {
+    let offset: NeumeAdjustmentOffset | null = null;
+
+    const adjustments = getNoteIndicatorAdjustments(this.note.noteIndicator!);
 
     if (adjustments) {
       const adjustment = adjustments.find((x) =>

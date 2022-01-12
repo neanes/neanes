@@ -12,6 +12,7 @@ import {
   ModeSign,
   MeasureBar,
   MeasureNumber,
+  NoteIndicator,
 } from '@/models/Neumes';
 
 export type NeumeFont =
@@ -443,6 +444,14 @@ export const neumeMap = new Map<Neume, NeumeMapping>([
   [MeasureNumber.Six, { fontFamily: 'EzSpecial2', text: '6' }],
   [MeasureNumber.Seven, { fontFamily: 'EzSpecial2', text: '7' }],
   [MeasureNumber.Eight, { fontFamily: 'EzSpecial2', text: '8' }],
+
+  [NoteIndicator.Ni, { fontFamily: 'EzFthora', text: 'c' }],
+  [NoteIndicator.Pa, { fontFamily: 'EzFthora', text: 'v' }],
+  [NoteIndicator.Vou, { fontFamily: 'EzFthora', text: 'b' }],
+  [NoteIndicator.Ga, { fontFamily: 'EzFthora', text: 'n' }],
+  [NoteIndicator.Thi, { fontFamily: 'EzFthora', text: 'm' }],
+  [NoteIndicator.Ke, { fontFamily: 'EzFthora', text: ',' }],
+  [NoteIndicator.Zo, { fontFamily: 'EzFthora', text: '.' }],
 ]);
 
 const quantitativeNeumeKeyboardMap = new Map<string, QuantitativeNeume>([

@@ -33,6 +33,7 @@ export class PageSetup {
   public heteronDefaultColor = '#ED0000';
   public measureBarDefaultColor = '#ED0000';
   public measureNumberDefaultColor = '#000000';
+  public noteIndicatorDefaultColor = '#ED0000';
 
   public tempoDefaultColor = '#ED0000';
 

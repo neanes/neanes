@@ -7,4 +7,5 @@ export enum TestFileType {
   Accidentals = 'Accidentals',
   Expressions = 'Expressions',
   Measures = 'Measures',
+  NoteIndicators = 'NoteIndicators',
 }

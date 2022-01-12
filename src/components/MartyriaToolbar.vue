@@ -126,24 +126,32 @@
         <Neume class="red neume fthora" :neume="Fthora.Spathi_TopCenter" />
       </button>
       <span class="space"></span>
-      <button
-        class="neume-button"
-        @click="setMeasureBar(MeasureBar.MeasureBarRight)"
+      <div
+        class="menu-container"
+        @mousedown="openBarLineMenu"
+        @mouseleave="selectedBarLine = null"
       >
-        <Neume
-          class="red neume measure-bar-right"
-          :neume="MeasureBar.MeasureBarRight"
-        />
-      </button>
-      <button
-        class="neume-button"
-        @click="setMeasureBar(MeasureBar.MeasureBarTop)"
-      >
-        <Neume
-          class="red neume measure-bar-top"
-          :neume="MeasureBar.MeasureBarTop"
-        />
-      </button>
+        <button class="neume-button">
+          <Neume
+            class="red neume measure-bar-right"
+            :neume="MeasureBar.MeasureBarRight"
+          />
+        </button>
+        <div class="menu" v-if="showBarLineMenu">
+          <div
+            class="menu-item"
+            v-for="menuItem in barLineMenuItems"
+            :key="menuItem.neume"
+            @mouseenter="selectedBarLine = menuItem.neume"
+          >
+            <Neume
+              class="red neume"
+              :class="menuItem.className"
+              :neume="menuItem.neume"
+            />
+          </div>
+        </div>
+      </div>
       <span class="space"></span>
       <button
         class="icon-btn"
@@ -169,6 +177,11 @@ import { Fthora, MeasureBar } from '@/models/Neumes';
 import Neume from './Neume.vue';
 import { areFthorasEquivalent } from '@/models/NeumeReplacements';
 
+interface BarLineMenuItem {
+  neume: MeasureBar;
+  className: string;
+}
+
 @Component({
   components: {
     Neume,
@@ -178,6 +191,21 @@ export default class MartyriaToolbar extends Vue {
   @Prop() element!: MartyriaElement;
   Fthora = Fthora;
   MeasureBar = MeasureBar;
+
+  showBarLineMenu: boolean = false;
+
+  selectedBarLine: MeasureBar | null = null;
+
+  barLineMenuItems: BarLineMenuItem[] = [
+    {
+      neume: MeasureBar.MeasureBarTop,
+      className: 'measure-bar-top',
+    },
+    {
+      neume: MeasureBar.MeasureBarRight,
+      className: 'measure-bar-right',
+    },
+  ];
 
   private setFthora(neume: Fthora) {
     if (
@@ -197,6 +225,21 @@ export default class MartyriaToolbar extends Vue {
       this.$emit('update:measureBar', neume);
     }
   }
+
+  openBarLineMenu() {
+    this.showBarLineMenu = true;
+    window.addEventListener('mouseup', this.onBarLineMouseUp);
+  }
+
+  onBarLineMouseUp() {
+    if (this.selectedBarLine) {
+      this.setMeasureBar(this.selectedBarLine);
+    }
+
+    this.showBarLineMenu = false;
+
+    window.removeEventListener('mouseup', this.onBarLineMouseUp);
+  }
 }
 </script>
 
@@ -206,6 +249,8 @@ export default class MartyriaToolbar extends Vue {
   background-color: lightgray;
 
   padding: 0.25rem;
+
+  --btn-size: 32px;
 }
 
 .row {
@@ -222,8 +267,8 @@ export default class MartyriaToolbar extends Vue {
 }
 
 .neume-button {
-  height: 32px;
-  width: 32px;
+  height: var(--btn-size);
+  width: var(--btn-size);
 
   position: relative;
 
@@ -248,8 +293,8 @@ export default class MartyriaToolbar extends Vue {
 }
 
 .icon-btn {
-  height: 32px;
-  width: 32px;
+  height: var(--btn-size);
+  width: var(--btn-size);
   padding: 0;
 }
 
@@ -259,5 +304,36 @@ export default class MartyriaToolbar extends Vue {
 
 .icon-btn-img {
   vertical-align: middle;
+}
+
+.menu-container {
+  display: flex;
+  position: relative;
+  height: var(--btn-size);
+}
+
+.menu {
+  position: absolute;
+  z-index: 999;
+  background-color: white;
+  border: 1px solid black;
+  box-sizing: border-box;
+  width: var(--btn-size);
+  bottom: 0;
+}
+
+.menu-item {
+  height: var(--btn-size);
+  width: 100%;
+  padding: 3px 0;
+  box-sizing: border-box;
+  text-align: center;
+  user-select: none;
+  overflow: hidden;
+  position: relative;
+}
+
+.menu-item:hover {
+  background-color: aliceblue;
 }
 </style>

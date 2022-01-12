@@ -11,6 +11,7 @@ import {
   ModeSign,
   MeasureBar,
   MeasureNumber,
+  NoteIndicator,
 } from '@/models/Neumes';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
 import { Unit } from '@/utils/Unit';
@@ -51,6 +52,7 @@ export class NoteElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.Note;
   public measureBar: MeasureBar | null = null;
   public measureNumber: MeasureNumber | null = null;
+  public noteIndicator: NoteIndicator | null = null;
   public lyrics: string = '';
   public isMelisma: boolean = false;
   public isMelismaStart: boolean = false;

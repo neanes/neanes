@@ -258,6 +258,25 @@
           </div>
         </div>
       </div>
+      <div
+        class="menu-container"
+        @mousedown="openNoteIndicatorMenu"
+        @mouseleave="selectedNoteIndicator = null"
+      >
+        <button class="neume-button">
+          <Neume class="neume note-indicator" :neume="NoteIndicator.Ni" />
+        </button>
+        <div class="menu" v-if="showNoteIndicatorMenu">
+          <div
+            class="menu-item"
+            v-for="menuItem in noteIndicatorMenuItems"
+            :key="menuItem"
+            @mouseenter="selectedNoteIndicator = menuItem"
+          >
+            <Neume class="neume note-indicator" :neume="menuItem" />
+          </div>
+        </div>
+      </div>
     </div>
     <div class="row">
       <button
@@ -468,6 +487,7 @@ import {
   GorgonNeume,
   MeasureBar,
   MeasureNumber,
+  NoteIndicator,
   TimeNeume,
   VocalExpressionNeume,
 } from '@/models/Neumes';
@@ -516,6 +536,7 @@ export default class NeumeToolbar extends Vue {
   Fthora = Fthora;
   MeasureBar = MeasureBar;
   MeasureNumber = MeasureNumber;
+  NoteIndicator = NoteIndicator;
 
   showFlatMenu: boolean = false;
   showSharpMenu: boolean = false;
@@ -525,6 +546,7 @@ export default class NeumeToolbar extends Vue {
   showTimeMenu: boolean = false;
   showBarLineMenu: boolean = false;
   showMeasureNumberMenu: boolean = false;
+  showNoteIndicatorMenu: boolean = false;
 
   selectedFlat: Accidental | null = null;
   selectedSharp: Accidental | null = null;
@@ -532,6 +554,7 @@ export default class NeumeToolbar extends Vue {
   selectedTimeNeume: TimeNeume[] | null = null;
   selectedBarLine: MeasureBar | null = null;
   selectedMeasureNumber: MeasureNumber | null = null;
+  selectedNoteIndicator: NoteIndicator | null = null;
 
   flatMenuItems: Accidental[] = [
     Accidental.Flat_6_Right,
@@ -553,6 +576,16 @@ export default class NeumeToolbar extends Vue {
     { neume: MeasureNumber.Four, className: 'measure-number' },
     { neume: MeasureNumber.Three, className: 'measure-number' },
     { neume: MeasureNumber.Two, className: 'measure-number' },
+  ];
+
+  noteIndicatorMenuItems: NoteIndicator[] = [
+    NoteIndicator.Zo,
+    NoteIndicator.Ke,
+    NoteIndicator.Thi,
+    NoteIndicator.Ga,
+    NoteIndicator.Vou,
+    NoteIndicator.Pa,
+    NoteIndicator.Ni,
   ];
 
   gorgonMenuItems: GorgonMenuItem[] = [
@@ -752,6 +785,14 @@ export default class NeumeToolbar extends Vue {
     }
   }
 
+  private setNoteIndicator(neume: NoteIndicator) {
+    if (neume === this.element.noteIndicator) {
+      this.$emit('update:noteIndicator', null);
+    } else {
+      this.$emit('update:noteIndicator', neume);
+    }
+  }
+
   private setFthora(neumes: Fthora[]) {
     let equivalent = false;
 
@@ -896,6 +937,21 @@ export default class NeumeToolbar extends Vue {
     this.showMeasureNumberMenu = false;
 
     window.removeEventListener('mouseup', this.onMeasureNumberMouseUp);
+  }
+
+  openNoteIndicatorMenu() {
+    this.showNoteIndicatorMenu = true;
+    window.addEventListener('mouseup', this.onNoteIndicatorMouseUp);
+  }
+
+  onNoteIndicatorMouseUp() {
+    if (this.selectedNoteIndicator) {
+      this.setNoteIndicator(this.selectedNoteIndicator);
+    }
+
+    this.showNoteIndicatorMenu = false;
+
+    window.removeEventListener('mouseup', this.onNoteIndicatorMouseUp);
   }
 }
 </script>
@@ -1052,6 +1108,11 @@ export default class NeumeToolbar extends Vue {
 .measure-number-center {
   top: -7px;
   left: 16px;
+}
+
+.note-indicator {
+  top: 0px;
+  left: 28px;
 }
 
 .menu-container {

@@ -11,6 +11,7 @@ import {
   ModeSign,
   MeasureNumber,
   petastiNeumes,
+  NoteIndicator,
 } from '@/models/Neumes';
 
 export interface NeumeAdjustmentOffset {
@@ -849,6 +850,27 @@ export const measureNumberAdjustmentMap = new Map<
   [MeasureNumber.Eight, measureNumberAdjustmentsCenter],
 ]);
 
+// Note indicators are similarly positioned to
+// measure numbers, so we can re-use those adjustments
+const noteIndicatorAdjustments: NeumeAdjustment[] =
+  measureNumberAdjustments.map((a) => ({
+    isPairedWith: [...a.isPairedWith],
+    offset: { x: a.offset.x, y: a.offset.y + 6 },
+  }));
+
+export const noteIndicatorAdjustmentMap = new Map<
+  NoteIndicator,
+  NeumeAdjustment[]
+>([
+  [NoteIndicator.Ni, noteIndicatorAdjustments],
+  [NoteIndicator.Pa, noteIndicatorAdjustments],
+  [NoteIndicator.Vou, noteIndicatorAdjustments],
+  [NoteIndicator.Ga, noteIndicatorAdjustments],
+  [NoteIndicator.Thi, noteIndicatorAdjustments],
+  [NoteIndicator.Ke, noteIndicatorAdjustments],
+  [NoteIndicator.Zo, noteIndicatorAdjustments],
+]);
+
 export const getGorgonAdjustments = (neume: GorgonNeume) => {
   return gorgonAdjustmentMap.get(neume);
 };
@@ -883,4 +905,8 @@ export const getAccidentalAdjustments = (neume: Accidental) => {
 
 export const getMeasureNumberAdjustments = (neume: MeasureNumber) => {
   return measureNumberAdjustmentMap.get(neume);
+};
+
+export const getNoteIndicatorAdjustments = (neume: NoteIndicator) => {
+  return noteIndicatorAdjustmentMap.get(neume);
 };

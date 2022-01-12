@@ -301,6 +301,15 @@
             />
           </div>
           <div class="form-group">
+            <label class="neume-colors-label">Note Indicators</label>
+            <input
+              class="neume-colors-input"
+              type="color"
+              list="presetNeumeColors"
+              v-model.lazy="form.noteIndicatorDefaultColor"
+            />
+          </div>
+          <div class="form-group">
             <label class="neume-colors-label">Tempos</label>
             <input
               class="neume-colors-input"

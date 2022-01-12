@@ -192,10 +192,21 @@ gorgonAdjustmentMap.set(
   GorgonNeume.GorgonDottedLeft,
   gorgonAdjustmentMap.get(GorgonNeume.Gorgon_Top)!,
 );
-gorgonAdjustmentMap.set(
-  GorgonNeume.GorgonDottedRight,
-  gorgonAdjustmentMap.get(GorgonNeume.Gorgon_Top)!,
-);
+
+gorgonAdjustmentMap.set(GorgonNeume.GorgonDottedRight, [
+  ...gorgonAdjustmentMap.get(GorgonNeume.Gorgon_Top)!.map((a) => ({
+    isPairedWith: [...a.isPairedWith],
+    offset: { x: a.offset.x, y: a.offset.y - 4 },
+  })),
+  {
+    isPairedWith: [
+      QuantitativeNeume.Elaphron,
+      QuantitativeNeume.ElaphronPlusApostrophos,
+      QuantitativeNeume.RunningElaphron,
+    ],
+    offset: { x: 0, y: -4 },
+  },
+]);
 
 gorgonAdjustmentMap.set(
   GorgonNeume.GorgonDottedLeft_Right,
@@ -204,6 +215,14 @@ gorgonAdjustmentMap.set(
 gorgonAdjustmentMap.set(
   GorgonNeume.GorgonDottedRight_Right,
   gorgonAdjustmentMap.get(GorgonNeume.Gorgon_TopRight)!,
+);
+
+gorgonAdjustmentMap.set(
+  GorgonNeume.GorgonDottedRight_Right,
+  gorgonAdjustmentMap.get(GorgonNeume.Gorgon_TopRight)!.map((a) => ({
+    isPairedWith: [...a.isPairedWith],
+    offset: { x: a.offset.x, y: a.offset.y - 4 },
+  })),
 );
 
 export const timeAdjustmentMap = new Map<TimeNeume, NeumeAdjustment[]>([

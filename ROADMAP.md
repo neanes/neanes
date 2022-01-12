@@ -13,7 +13,6 @@
 
 - Gorthmikon and pelastikon (part of Oxeia fonts, but need to figure out best way to insert into lyrics box)
 - Custom Martyrias (is this really necessary?)
-- Note Indicators
 - Ison Neumes
 - Advanced neumes (connecting heteron, ties, et al)
 - Header Images

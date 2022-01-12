@@ -277,6 +277,25 @@
           </div>
         </div>
       </div>
+      <div
+        class="menu-container"
+        @mousedown="openIsonMenu"
+        @mouseleave="selectedIson = null"
+      >
+        <button class="neume-button">
+          <Neume class="neume red ison" :neume="Ison.Unison" />
+        </button>
+        <div class="menu" v-if="showIsonMenu">
+          <div
+            class="menu-item"
+            v-for="menuItem in isonMenuItems"
+            :key="menuItem"
+            @mouseenter="selectedIson = menuItem"
+          >
+            <Neume class="neume red ison" :neume="menuItem" />
+          </div>
+        </div>
+      </div>
     </div>
     <div class="row">
       <button
@@ -485,6 +504,7 @@ import {
   Accidental,
   Fthora,
   GorgonNeume,
+  Ison,
   MeasureBar,
   MeasureNumber,
   NoteIndicator,
@@ -537,6 +557,7 @@ export default class NeumeToolbar extends Vue {
   MeasureBar = MeasureBar;
   MeasureNumber = MeasureNumber;
   NoteIndicator = NoteIndicator;
+  Ison = Ison;
 
   showFlatMenu: boolean = false;
   showSharpMenu: boolean = false;
@@ -547,6 +568,7 @@ export default class NeumeToolbar extends Vue {
   showBarLineMenu: boolean = false;
   showMeasureNumberMenu: boolean = false;
   showNoteIndicatorMenu: boolean = false;
+  showIsonMenu: boolean = false;
 
   selectedFlat: Accidental | null = null;
   selectedSharp: Accidental | null = null;
@@ -555,6 +577,7 @@ export default class NeumeToolbar extends Vue {
   selectedBarLine: MeasureBar | null = null;
   selectedMeasureNumber: MeasureNumber | null = null;
   selectedNoteIndicator: NoteIndicator | null = null;
+  selectedIson: Ison | null = null;
 
   flatMenuItems: Accidental[] = [
     Accidental.Flat_6_Right,
@@ -586,6 +609,21 @@ export default class NeumeToolbar extends Vue {
     NoteIndicator.Vou,
     NoteIndicator.Pa,
     NoteIndicator.Ni,
+  ];
+
+  isonMenuItems: Ison[] = [
+    // The font appears to have a bug in it. ZoHigh doesn't work
+    //Ison.ZoHigh,
+    Ison.Ke,
+    Ison.Thi,
+    Ison.Ga,
+    Ison.Vou,
+    Ison.Pa,
+    Ison.Ni,
+    Ison.Zo,
+    Ison.KeLow,
+    Ison.ThiLow,
+    Ison.Unison,
   ];
 
   gorgonMenuItems: GorgonMenuItem[] = [
@@ -675,6 +713,9 @@ export default class NeumeToolbar extends Vue {
     window.removeEventListener('mouseup', this.onTrigorgonMouseUp);
     window.removeEventListener('mouseup', this.onTimeMouseUp);
     window.removeEventListener('mouseup', this.onBarLineMouseUp);
+    window.removeEventListener('mouseup', this.onMeasureNumberMouseUp);
+    window.removeEventListener('mouseup', this.onNoteIndicatorMouseUp);
+    window.removeEventListener('mouseup', this.onIsonMouseUp);
   }
 
   private setAccidental(neume: Accidental) {
@@ -790,6 +831,14 @@ export default class NeumeToolbar extends Vue {
       this.$emit('update:noteIndicator', null);
     } else {
       this.$emit('update:noteIndicator', neume);
+    }
+  }
+
+  private setIson(neume: Ison) {
+    if (neume === this.element.ison) {
+      this.$emit('update:ison', null);
+    } else {
+      this.$emit('update:ison', neume);
     }
   }
 
@@ -953,6 +1002,21 @@ export default class NeumeToolbar extends Vue {
 
     window.removeEventListener('mouseup', this.onNoteIndicatorMouseUp);
   }
+
+  openIsonMenu() {
+    this.showIsonMenu = true;
+    window.addEventListener('mouseup', this.onIsonMouseUp);
+  }
+
+  onIsonMouseUp() {
+    if (this.selectedIson) {
+      this.setIson(this.selectedIson);
+    }
+
+    this.showIsonMenu = false;
+
+    window.removeEventListener('mouseup', this.onIsonMouseUp);
+  }
 }
 </script>
 
@@ -1111,8 +1175,11 @@ export default class NeumeToolbar extends Vue {
 }
 
 .note-indicator {
-  top: 0px;
   left: 28px;
+}
+
+.ison {
+  left: 19px;
 }
 
 .menu-container {

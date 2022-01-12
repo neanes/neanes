@@ -8,4 +8,5 @@ export enum TestFileType {
   Expressions = 'Expressions',
   Measures = 'Measures',
   NoteIndicators = 'NoteIndicators',
+  Ison = 'Ison',
 }

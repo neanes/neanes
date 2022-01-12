@@ -74,6 +74,7 @@ export class PageSetup {
   public measureBarDefaultColor = '#ED0000';
   public measureNumberDefaultColor = '#000000';
   public noteIndicatorDefaultColor = '#ED0000';
+  public isonDefaultColor = '#ED0000';
 
   public martyriaDefaultColor = '#ED0000';
 

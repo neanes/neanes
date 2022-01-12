@@ -88,6 +88,7 @@ export class SaveService {
       s.pageSetup.measureNumberDefaultColor;
     score.pageSetup.noteIndicatorDefaultColor =
       s.pageSetup.noteIndicatorDefaultColor;
+    score.pageSetup.isonDefaultColor = s.pageSetup.isonDefaultColor;
 
     score.pageSetup.pageSize = s.pageSetup.pageSize;
     score.pageSetup.pageSizeUnit = s.pageSetup.pageSizeUnit;
@@ -196,6 +197,10 @@ export class SaveService {
 
     if (e.noteIndicator != null) {
       element.noteIndicator = e.noteIndicator;
+    }
+
+    if (e.ison != null) {
+      element.ison = e.ison;
     }
 
     element.lyrics = e.lyrics !== '' ? e.lyrics : undefined;
@@ -348,6 +353,8 @@ export class SaveService {
       p.measureNumberDefaultColor || pageSetup.measureNumberDefaultColor;
     pageSetup.noteIndicatorDefaultColor =
       p.noteIndicatorDefaultColor || pageSetup.noteIndicatorDefaultColor;
+    pageSetup.isonDefaultColor =
+      p.isonDefaultColor || pageSetup.isonDefaultColor;
 
     pageSetup.pageSize = p.pageSize || pageSetup.pageSize;
     pageSetup.pageSizeUnit = p.pageSizeUnit || pageSetup.pageSizeUnit;
@@ -419,6 +426,10 @@ export class SaveService {
 
     if (e.noteIndicator != null) {
       element.noteIndicator = e.noteIndicator;
+    }
+
+    if (e.ison != null) {
+      element.ison = e.ison;
     }
 
     if (e.lyrics != null) {

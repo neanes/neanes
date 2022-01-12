@@ -13,6 +13,7 @@ import {
   MeasureBar,
   MeasureNumber,
   NoteIndicator,
+  Ison,
 } from '@/models/Neumes';
 
 export type NeumeFont =
@@ -452,6 +453,18 @@ export const neumeMap = new Map<Neume, NeumeMapping>([
   [NoteIndicator.Thi, { fontFamily: 'EzFthora', text: 'm' }],
   [NoteIndicator.Ke, { fontFamily: 'EzFthora', text: ',' }],
   [NoteIndicator.Zo, { fontFamily: 'EzFthora', text: '.' }],
+
+  [Ison.Unison, { fontFamily: 'EzSpecial2', text: '?' }],
+  [Ison.ThiLow, { fontFamily: 'EzSpecial2', text: '~' }],
+  [Ison.KeLow, { fontFamily: 'EzSpecial2', text: '!' }],
+  [Ison.Zo, { fontFamily: 'EzSpecial2', text: '>' }],
+  [Ison.Ni, { fontFamily: 'EzSpecial2', text: 'C' }],
+  [Ison.Pa, { fontFamily: 'EzSpecial2', text: 'V' }],
+  [Ison.Vou, { fontFamily: 'EzSpecial2', text: 'B' }],
+  [Ison.Ga, { fontFamily: 'EzSpecial2', text: 'N' }],
+  [Ison.Thi, { fontFamily: 'EzSpecial2', text: 'M' }],
+  [Ison.Ke, { fontFamily: 'EzSpecial2', text: '<' }],
+  [Ison.ZoHigh, { fontFamily: 'EzSpecial2', text: 'Z' }], // The font appears to have a bug in it. This mapping does not work
 ]);
 
 const quantitativeNeumeKeyboardMap = new Map<string, QuantitativeNeume>([

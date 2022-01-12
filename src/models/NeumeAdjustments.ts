@@ -12,6 +12,7 @@ import {
   MeasureNumber,
   petastiNeumes,
   NoteIndicator,
+  Ison,
 } from '@/models/Neumes';
 
 export interface NeumeAdjustmentOffset {
@@ -861,15 +862,39 @@ const noteIndicatorAdjustments: NeumeAdjustment[] =
 export const noteIndicatorAdjustmentMap = new Map<
   NoteIndicator,
   NeumeAdjustment[]
->([
-  [NoteIndicator.Ni, noteIndicatorAdjustments],
-  [NoteIndicator.Pa, noteIndicatorAdjustments],
-  [NoteIndicator.Vou, noteIndicatorAdjustments],
-  [NoteIndicator.Ga, noteIndicatorAdjustments],
-  [NoteIndicator.Thi, noteIndicatorAdjustments],
-  [NoteIndicator.Ke, noteIndicatorAdjustments],
-  [NoteIndicator.Zo, noteIndicatorAdjustments],
-]);
+>();
+
+Object.values(NoteIndicator).forEach((x) =>
+  noteIndicatorAdjustmentMap.set(x, noteIndicatorAdjustments),
+);
+
+const isonAdjustments: NeumeAdjustment[] = [
+  { isPairedWith: [QuantitativeNeume.Hyporoe], offset: { x: 16, y: -14 } },
+  {
+    isPairedWith: [QuantitativeNeume.Kentemata, QuantitativeNeume.Apostrophos],
+    offset: { x: 8, y: -14 },
+  },
+  {
+    isPairedWith: [
+      QuantitativeNeume.OligonPlusDoubleHypsili,
+      QuantitativeNeume.PetastiPlusDoubleHypsili,
+      QuantitativeNeume.PetastiPlusHypsiliLeft,
+    ],
+    offset: { x: 0, y: -16 },
+  },
+  {
+    isPairedWith: [
+      QuantitativeNeume.OligonPlusHypsiliPlusKentimaVertical,
+      QuantitativeNeume.PetastiPlusHypsiliPlusKentimaVertical,
+    ],
+    offset: { x: 0, y: -18 },
+  },
+  { isPairedWith: Object.values(QuantitativeNeume), offset: { x: 0, y: -14 } },
+];
+
+export const isonAdjustmentMap = new Map<Ison, NeumeAdjustment[]>();
+
+Object.values(Ison).forEach((x) => isonAdjustmentMap.set(x, isonAdjustments));
 
 export const getGorgonAdjustments = (neume: GorgonNeume) => {
   return gorgonAdjustmentMap.get(neume);
@@ -909,4 +934,8 @@ export const getMeasureNumberAdjustments = (neume: MeasureNumber) => {
 
 export const getNoteIndicatorAdjustments = (neume: NoteIndicator) => {
   return noteIndicatorAdjustmentMap.get(neume);
+};
+
+export const getIsonAdjustments = (neume: Ison) => {
+  return isonAdjustmentMap.get(neume);
 };

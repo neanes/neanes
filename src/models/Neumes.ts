@@ -322,6 +322,20 @@ export enum NoteIndicator {
   Zo = 'NoteIndicator.Zo',
 }
 
+export enum Ison {
+  Unison = 'Ison.Unison',
+  ThiLow = 'Ison.ThiLow',
+  KeLow = 'Ison.KeLow',
+  Zo = 'Ison.Zo',
+  Ni = 'Ison.Ni',
+  Pa = 'Ison.Pa',
+  Vou = 'Ison.Vou',
+  Ga = 'Ison.Ga',
+  Thi = 'Ison.Thi',
+  Ke = 'Ison.Ke',
+  ZoHigh = 'Ison.ZoHigh',
+}
+
 export type Neume =
   | QuantitativeNeume
   | TimeNeume
@@ -335,7 +349,8 @@ export type Neume =
   | ModeSign
   | MeasureBar
   | MeasureNumber
-  | NoteIndicator;
+  | NoteIndicator
+  | Ison;
 
 export const petastiNeumes: ReadonlyArray<QuantitativeNeume> = [
   QuantitativeNeume.PetastiWithIson,

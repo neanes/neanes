@@ -4,7 +4,10 @@
       v-if="hasVocalExpressionNeume && isVareia(note.vocalExpressionNeume)"
       :neume="note.vocalExpressionNeume"
     ></Neume>
-    <Neume :neume="note.quantitativeNeume"></Neume>
+    <Neume
+      :neume="note.quantitativeNeume"
+      :offset="quantitativeNeumeOffset"
+    ></Neume>
     <Neume
       v-if="hasTimeNeume"
       :neume="note.timeNeume"
@@ -14,6 +17,12 @@
       v-if="hasGorgonNeume"
       :neume="note.gorgonNeume"
       :offset="gorgonNeumeOffset"
+      :style="gorgonStyle"
+    ></Neume>
+    <Neume
+      v-if="hasHyporoeGorgonNeume"
+      :neume="note.hyporoeGorgonNeume"
+      :offset="hyporoeGorgonNeumeOffset"
       :style="gorgonStyle"
     ></Neume>
     <Neume
@@ -63,7 +72,7 @@
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { NoteElement } from '@/models/Element';
-import { VocalExpressionNeume } from '@/models/Neumes';
+import { QuantitativeNeume, VocalExpressionNeume } from '@/models/Neumes';
 import {
   getFthoraAdjustments,
   getGorgonAdjustments,
@@ -74,6 +83,7 @@ import {
   getMeasureNumberAdjustments,
   getNoteIndicatorAdjustments,
   getIsonAdjustments,
+  hyporoeGorgonOffset,
 } from '@/models/NeumeAdjustments';
 import Neume from '@/components/Neume.vue';
 import { withZoom } from '@/utils/withZoom';
@@ -99,6 +109,10 @@ export default class NeumeBoxSyllable extends Vue {
 
   get hasGorgonNeume() {
     return this.note.gorgonNeume != null;
+  }
+
+  get hasHyporoeGorgonNeume() {
+    return this.note.hyporoeGorgonNeume != null;
   }
 
   get hasFthora() {
@@ -174,6 +188,20 @@ export default class NeumeBoxSyllable extends Vue {
     } as CSSStyleDeclaration;
   }
 
+  get quantitativeNeumeOffset() {
+    let offset: NeumeAdjustmentOffset | null = null;
+
+    // This is a special case to handle the hyporoe+kentemata neume
+    if (
+      this.note.quantitativeNeume ===
+      QuantitativeNeume.OligonPlusHyporoePlusKentemata
+    ) {
+      offset = { x: 0, y: -2.5 };
+    }
+
+    return offset;
+  }
+
   get vocalExpressionStyle() {
     if (this.note.vocalExpressionNeume === VocalExpressionNeume.Heteron) {
       return {
@@ -218,6 +246,10 @@ export default class NeumeBoxSyllable extends Vue {
     }
 
     return offset;
+  }
+
+  get hyporoeGorgonNeumeOffset() {
+    return hyporoeGorgonOffset;
   }
 
   get fthoraOffset() {

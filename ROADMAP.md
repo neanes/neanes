@@ -14,7 +14,6 @@
 - Gorthmikon and pelastikon (part of Oxeia fonts, but need to figure out best way to insert into lyrics box)
 - Custom Martyrias (is this really necessary?)
 - Advanced neumes (connecting heteron, ties, et al)
-- Oligon + Hyporoe + Kentemata Neume (requires supporting two gorgon on the same neume)
 - Header Images
 - Headers/Footers/Page Numbers
 - Copy/Cut/Paste elements

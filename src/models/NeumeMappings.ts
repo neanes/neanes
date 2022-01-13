@@ -142,6 +142,10 @@ export const neumeMap = new Map<Neume, NeumeMapping>([
     { fontFamily: 'Psaltica', text: 'U' },
   ],
   [
+    QuantitativeNeume.OligonPlusHyporoePlusKentemata,
+    { fontFamily: 'EzSpecial1', text: 't' },
+  ],
+  [
     QuantitativeNeume.OligonPlusElaphronPlusKentemata,
     { fontFamily: 'Psaltica', text: 'Y' },
   ],

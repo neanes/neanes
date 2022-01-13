@@ -124,6 +124,7 @@ export const gorgonAdjustmentMap = new Map<GorgonNeume, NeumeAdjustment[]>([
         isPairedWith: [
           QuantitativeNeume.OligonPlusIsonPlusKentemata,
           QuantitativeNeume.OligonPlusApostrophosPlusKentemata,
+          QuantitativeNeume.OligonPlusHyporoePlusKentemata,
           QuantitativeNeume.OligonPlusElaphronPlusKentemata,
           QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
           QuantitativeNeume.OligonPlusHamiliPlusKentemata,
@@ -466,6 +467,7 @@ for (let fthora of Object.values(Fthora)) {
     adjustments.push({
       isPairedWith: [
         QuantitativeNeume.OligonPlusApostrophosPlusKentemata,
+        QuantitativeNeume.OligonPlusHyporoePlusKentemata,
         QuantitativeNeume.OligonPlusHamiliPlusKentemata,
       ],
       offset: { x: -15, y: -10 },
@@ -939,3 +941,5 @@ export const getNoteIndicatorAdjustments = (neume: NoteIndicator) => {
 export const getIsonAdjustments = (neume: Ison) => {
   return isonAdjustmentMap.get(neume);
 };
+
+export const hyporoeGorgonOffset: NeumeAdjustmentOffset = { x: -10, y: -8 };

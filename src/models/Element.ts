@@ -72,6 +72,10 @@ export class NoteElement extends ScoreElement {
     return this._gorgonNeume;
   }
 
+  public get hyporoeGorgonNeume() {
+    return this._hyporoeGorgonNeume;
+  }
+
   public get vocalExpressionNeume() {
     return this._vocalExpressionNeume;
   }
@@ -87,6 +91,13 @@ export class NoteElement extends ScoreElement {
   public set quantitativeNeume(neume: QuantitativeNeume) {
     this._quantitativeNeume = neume;
     this.replaceNeumes();
+
+    if (
+      this.quantitativeNeume !==
+      QuantitativeNeume.OligonPlusHyporoePlusKentemata
+    ) {
+      this._hyporoeGorgonNeume = null;
+    }
   }
 
   public set timeNeume(neume: TimeNeume | null) {
@@ -96,6 +107,11 @@ export class NoteElement extends ScoreElement {
 
   public set gorgonNeume(neume: GorgonNeume | null) {
     this._gorgonNeume = neume;
+    this.replaceNeumes();
+  }
+
+  public set hyporoeGorgonNeume(neume: GorgonNeume | null) {
+    this._hyporoeGorgonNeume = neume;
     this.replaceNeumes();
   }
 
@@ -126,6 +142,7 @@ export class NoteElement extends ScoreElement {
   private _quantitativeNeume: QuantitativeNeume = QuantitativeNeume.Ison;
   private _timeNeume: TimeNeume | null = null;
   private _gorgonNeume: GorgonNeume | null = null;
+  private _hyporoeGorgonNeume: GorgonNeume | null = null;
   private _vocalExpressionNeume: VocalExpressionNeume | null = null;
   private _fthora: Fthora | null = null;
   private _accidental: Accidental | null = null;

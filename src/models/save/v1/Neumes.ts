@@ -38,6 +38,7 @@ export enum QuantitativeNeume {
   OligonPlusIsonPlusKentemata = 'OligonPlusIsonPlusKentemata',
   OligonPlusApostrophos = 'OligonPlusApostrophos',
   OligonPlusApostrophosPlusKentemata = 'OligonPlusApostrophosPlusKentemata',
+  OligonPlusHyporoePlusKentemata = 'OligonPlusHyporoePlusKentemata',
   OligonPlusElaphronPlusKentemata = 'OligonPlusElaphronPlusKentemata',
   OligonPlusElaphronPlusApostrophosPlusKentemata = 'OligonPlusElaphronPlusApostrophosPlusKentemata',
   OligonPlusHamiliPlusKentemata = 'OligonPlusHamiliPlusKentemata',

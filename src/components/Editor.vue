@@ -695,13 +695,22 @@ export default class Editor extends Vue {
     return this.elements.indexOf(element) === this.elements.length - 1;
   }
 
-  addQuantitativeNeume(quantitativeNeume: QuantitativeNeume) {
+  addQuantitativeNeume(
+    quantitativeNeume: QuantitativeNeume,
+    hyporoeGorgonNeume: GorgonNeume | null = null,
+  ) {
     if (this.selectedElement == null) {
       return;
     }
 
     const element = new NoteElement();
     element.quantitativeNeume = quantitativeNeume;
+    // Special case for OligonPlusHyporoePlusKentemata
+    if (
+      quantitativeNeume === QuantitativeNeume.OligonPlusHyporoePlusKentemata
+    ) {
+      element.hyporoeGorgonNeume = hyporoeGorgonNeume;
+    }
 
     switch (this.entryMode) {
       case EntryMode.Auto:
@@ -720,6 +729,15 @@ export default class Editor extends Vue {
             ) {
               this.updateNote(this.selectedElement as NoteElement, {
                 quantitativeNeume,
+                hyporoeGorgonNeume,
+              });
+            } else if (
+              (this.selectedElement as NoteElement).hyporoeGorgonNeume !==
+              hyporoeGorgonNeume
+            ) {
+              // Special case for hyporoe gorgon
+              this.updateNote(this.selectedElement as NoteElement, {
+                hyporoeGorgonNeume,
               });
             }
           } else {
@@ -749,6 +767,15 @@ export default class Editor extends Vue {
           ) {
             this.updateNote(this.selectedElement as NoteElement, {
               quantitativeNeume,
+              hyporoeGorgonNeume,
+            });
+          } else if (
+            (this.selectedElement as NoteElement).hyporoeGorgonNeume !==
+            hyporoeGorgonNeume
+          ) {
+            // Special case for hyporoe gorgon
+            this.updateNote(this.selectedElement as NoteElement, {
+              hyporoeGorgonNeume,
             });
           }
         } else if (

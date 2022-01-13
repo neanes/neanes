@@ -28,22 +28,65 @@
       ></Neume>
     </div>
     <div class="row">
-      <Neume
-        class="neume"
-        v-for="(neume, index) in combinationNeumes"
-        :key="`combinationNeumes-${index}`"
-        :neume="neume"
-        @click.native="$emit('select-quantitative-neume', neume)"
-      ></Neume>
+      <template v-for="(neume, index) in combinationNeumes">
+        <template
+          v-if="neume === QuantitativeNeume.OligonPlusHyporoePlusKentemata"
+        >
+          <div
+            :key="`combinationNeumes-${index}`"
+            class="menu-container"
+            @mousedown="openHyporoeMenu"
+            @mouseleave="selectedHyporoe = null"
+          >
+            <Neume
+              class="neume"
+              :neume="QuantitativeNeume.OligonPlusHyporoePlusKentemata"
+            />
+
+            <div class="menu" v-if="showHyporoeMenu">
+              <div
+                class="menu-item"
+                v-for="menuItem in hyporoeMenuItems"
+                :key="menuItem.gorgon"
+                @mouseenter="selectedHyporoe = menuItem"
+              >
+                <Neume
+                  class="neume"
+                  :neume="QuantitativeNeume.OligonPlusHyporoePlusKentemata"
+                />
+                <Neume
+                  class="red neume"
+                  :neume="menuItem.gorgon"
+                  :offset="hyporoeGorgonOffset"
+                  v-if="menuItem.gorgon != null"
+                />
+              </div>
+            </div>
+          </div>
+        </template>
+        <template v-else>
+          <Neume
+            class="neume"
+            :key="`combinationNeumes-${index}`"
+            :neume="neume"
+            @click.native="$emit('select-quantitative-neume', neume)"
+          ></Neume>
+        </template>
+      </template>
     </div>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
-import { QuantitativeNeume } from '@/models/Neumes';
+import { GorgonNeume, QuantitativeNeume } from '@/models/Neumes';
 import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
 import Neume from '@/components/Neume.vue';
+import { NeumeAdjustmentOffset } from '@/models/NeumeAdjustments';
+
+interface HyporoeMenuItem {
+  gorgon: GorgonNeume | null;
+}
 
 @Component({
   components: {
@@ -52,7 +95,7 @@ import Neume from '@/components/Neume.vue';
   },
 })
 export default class NeumeSelector extends Vue {
-  ison: QuantitativeNeume = QuantitativeNeume.Ison;
+  QuantitativeNeume = QuantitativeNeume;
 
   ascendingNeumes: QuantitativeNeume[] = [
     QuantitativeNeume.Ison,
@@ -109,10 +152,48 @@ export default class NeumeSelector extends Vue {
     QuantitativeNeume.OligonPlusApostrophosPlusKentemata,
     QuantitativeNeume.OligonPlusElaphronPlusKentemata,
     QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
+    QuantitativeNeume.OligonPlusHyporoePlusKentemata,
     QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
     QuantitativeNeume.OligonPlusHamiliPlusKentemata,
     QuantitativeNeume.OligonPlusApostrophos,
   ];
+
+  hyporoeMenuItems: HyporoeMenuItem[] = [
+    { gorgon: GorgonNeume.TrigorgonDottedLeft1 },
+    { gorgon: GorgonNeume.Trigorgon },
+    { gorgon: GorgonNeume.DigorgonDottedLeft1 },
+    { gorgon: GorgonNeume.Digorgon },
+    { gorgon: GorgonNeume.GorgonDottedRight },
+    { gorgon: GorgonNeume.GorgonDottedLeft },
+    { gorgon: GorgonNeume.Gorgon_Top },
+    { gorgon: null },
+  ];
+
+  showHyporoeMenu: boolean = false;
+  selectedHyporoe: HyporoeMenuItem | null = null;
+
+  get hyporoeGorgonOffset() {
+    return { x: -10, y: -6 } as NeumeAdjustmentOffset;
+  }
+
+  openHyporoeMenu() {
+    this.showHyporoeMenu = true;
+    window.addEventListener('mouseup', this.onHyporoeMouseUp);
+  }
+
+  onHyporoeMouseUp() {
+    if (this.selectedHyporoe) {
+      this.$emit(
+        'select-quantitative-neume',
+        QuantitativeNeume.OligonPlusHyporoePlusKentemata,
+        this.selectedHyporoe.gorgon,
+      );
+    }
+
+    this.showHyporoeMenu = false;
+
+    window.removeEventListener('mouseup', this.onHyporoeMouseUp);
+  }
 }
 </script>
 
@@ -120,6 +201,8 @@ export default class NeumeSelector extends Vue {
 <style scoped>
 .neume-selector-panel {
   display: flex;
+
+  --neume-height: 2.5rem;
 }
 
 .row {
@@ -135,11 +218,41 @@ export default class NeumeSelector extends Vue {
   cursor: default;
   user-select: none;
 
-  min-width: 2.5rem;
-  height: 2.5rem;
+  min-width: var(--neume-height);
+  height: var(--neume-height);
 }
 
 .neume:hover {
+  background-color: aliceblue;
+}
+
+.menu-container {
+  display: flex;
+  position: relative;
+  height: var(--neume-height);
+}
+
+.menu {
+  position: absolute;
+  z-index: 999;
+  background-color: white;
+  border: 1px solid black;
+  box-sizing: border-box;
+  bottom: 0;
+}
+
+.menu-item {
+  height: var(--neume-height);
+  width: 100%;
+  padding: 3px 0;
+  box-sizing: border-box;
+  text-align: center;
+  user-select: none;
+  overflow: hidden;
+  position: relative;
+}
+
+.menu-item:hover {
   background-color: aliceblue;
 }
 </style>

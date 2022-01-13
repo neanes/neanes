@@ -175,6 +175,10 @@ export class SaveService {
       element.gorgonNeume = e.gorgonNeume;
     }
 
+    if (e.hyporoeGorgonNeume != null) {
+      element.hyporoeGorgonNeume = e.hyporoeGorgonNeume;
+    }
+
     if (e.fthora != null) {
       element.fthora = e.fthora;
     }
@@ -402,6 +406,10 @@ export class SaveService {
 
     if (e.gorgonNeume != null) {
       element.gorgonNeume = e.gorgonNeume;
+    }
+
+    if (e.hyporoeGorgonNeume != null) {
+      element.hyporoeGorgonNeume = e.hyporoeGorgonNeume;
     }
 
     if (e.fthora != null) {

@@ -1,10 +1,7 @@
 <template>
   <div class="neume-toolbar">
     <div class="row">
-      <button
-        class="neume-button"
-        @click="setTimeNeume([TimeNeume.Klasma_Top, TimeNeume.Klasma_Bottom])"
-      >
+      <button class="neume-button" @click="setKlasma()">
         <Neume class="neume klasma-top" :neume="TimeNeume.Klasma_Top" />
       </button>
       <div
@@ -19,13 +16,13 @@
           <div
             class="menu-item"
             v-for="menuItem in timeMenuItems"
-            :key="menuItem.neumes[0]"
-            @mouseenter="selectedTimeNeume = menuItem.neumes"
+            :key="menuItem.neume"
+            @mouseenter="selectedTimeNeume = menuItem.neume"
           >
             <Neume
               class="neume"
               :class="menuItem.className"
-              :neume="menuItem.neumes[0]"
+              :neume="menuItem.neume"
             />
           </div>
         </div>
@@ -528,7 +525,7 @@ interface GorgonMenuItem {
 }
 
 interface TimeMenuItem {
-  neumes: TimeNeume[];
+  neume: TimeNeume;
   className: string;
 }
 
@@ -573,7 +570,7 @@ export default class NeumeToolbar extends Vue {
   selectedFlat: Accidental | null = null;
   selectedSharp: Accidental | null = null;
   selectedGorgon: GorgonNeume[] | null = null;
-  selectedTimeNeume: TimeNeume[] | null = null;
+  selectedTimeNeume: TimeNeume | null = null;
   selectedBarLine: MeasureBar | null = null;
   selectedMeasureNumber: MeasureNumber | null = null;
   selectedNoteIndicator: NoteIndicator | null = null;
@@ -681,15 +678,15 @@ export default class NeumeToolbar extends Vue {
 
   timeMenuItems: TimeMenuItem[] = [
     {
-      neumes: [TimeNeume.Tripli],
+      neume: TimeNeume.Tripli,
       className: 'tripli',
     },
     {
-      neumes: [TimeNeume.Dipli],
+      neume: TimeNeume.Dipli,
       className: 'dipli',
     },
     {
-      neumes: [TimeNeume.Hapli],
+      neume: TimeNeume.Hapli,
       className: 'hapli',
     },
   ];
@@ -726,43 +723,35 @@ export default class NeumeToolbar extends Vue {
     }
   }
 
-  private setTimeNeume(neumes: TimeNeume[]) {
-    let equivalent = false;
-
-    for (let neume of neumes) {
-      if (
-        neume === TimeNeume.Klasma_Top &&
-        onlyTakesBottomKlasma(this.element.quantitativeNeume)
-      ) {
-        continue;
+  private setKlasma() {
+    if (onlyTakesBottomKlasma(this.element.quantitativeNeume)) {
+      if (this.element.timeNeume === TimeNeume.Klasma_Bottom) {
+        this.$emit('update:time', null);
+      } else {
+        this.$emit('update:time', TimeNeume.Klasma_Bottom);
       }
-
-      if (
-        neume === TimeNeume.Klasma_Bottom &&
-        onlyTakesTopKlasma(this.element.quantitativeNeume)
-      ) {
-        continue;
+      return;
+    } else if (onlyTakesTopKlasma(this.element.quantitativeNeume)) {
+      if (this.element.timeNeume === TimeNeume.Klasma_Top) {
+        this.$emit('update:time', null);
+      } else {
+        this.$emit('update:time', TimeNeume.Klasma_Top);
       }
-
-      // If previous neume was matched, set to the next neume in the cycle
-      if (equivalent) {
-        this.$emit('update:time', neume);
-        return;
-      }
-
-      equivalent =
-        this.element.timeNeume != null &&
-        areTimeNeumesEquivalent(neume, this.element.timeNeume);
+      return;
+    } else if (this.element.timeNeume == null) {
+      this.$emit('update:time', TimeNeume.Klasma_Top);
+    } else if (this.element.timeNeume === TimeNeume.Klasma_Top) {
+      this.$emit('update:time', TimeNeume.Klasma_Bottom);
+    } else if (this.element.timeNeume === TimeNeume.Klasma_Bottom) {
+      this.$emit('update:time', null);
     }
+  }
 
-    // We've cycled through all the neumes.
-    // If we got to the end of the cycle, remove all
-    // time neumes. Otherwise set time neume to the first neume
-    // in the cycle.
-    if (equivalent || this.element.timeNeume != null) {
+  private setTimeNeume(neume: TimeNeume) {
+    if (this.element.timeNeume === neume) {
       this.$emit('update:time', null);
     } else {
-      this.$emit('update:time', neumes[0]);
+      this.$emit('update:time', neume);
     }
   }
 

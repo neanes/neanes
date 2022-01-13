@@ -125,6 +125,7 @@ const topOnlyKlasmaNeumes: Neume[] = [
   QuantitativeNeume.Elaphron,
   QuantitativeNeume.ElaphronPlusApostrophos,
   QuantitativeNeume.RunningElaphron,
+  QuantitativeNeume.PetastiPlusRunningElaphron,
 ];
 
 export const gorgonReplacementMap = new Map<
@@ -589,6 +590,7 @@ export const vocalExpressionReplacementMap = new Map<
           QuantitativeNeume.Elaphron,
           QuantitativeNeume.ElaphronPlusApostrophos,
           QuantitativeNeume.RunningElaphron,
+          QuantitativeNeume.PetastiPlusRunningElaphron,
           QuantitativeNeume.IsonPlusApostrophos,
           QuantitativeNeume.DoubleApostrophos,
         ],

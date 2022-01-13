@@ -134,10 +134,6 @@ export const neumeMap = new Map<Neume, NeumeMapping>([
     { fontFamily: 'Psaltica', text: 'P' },
   ],
   [
-    QuantitativeNeume.OligonPlusApostrophos,
-    { fontFamily: 'Psaltica', text: 'I' },
-  ],
-  [
     QuantitativeNeume.OligonPlusApostrophosPlusKentemata,
     { fontFamily: 'Psaltica', text: 'U' },
   ],
@@ -157,8 +153,35 @@ export const neumeMap = new Map<Neume, NeumeMapping>([
     QuantitativeNeume.OligonPlusHamiliPlusKentemata,
     { fontFamily: 'Psaltica', text: 'R' },
   ],
+
   [QuantitativeNeume.RunningElaphron, { fontFamily: 'Psaltica', text: '_' }],
   [QuantitativeNeume.Hyporoe, { fontFamily: 'Psaltica', text: ')' }],
+  [
+    QuantitativeNeume.PetastiPlusRunningElaphron,
+    { fontFamily: 'EzSpecial2', text: '_' },
+  ],
+  [
+    QuantitativeNeume.PetastiPlusHyporoe,
+    { fontFamily: 'EzSpecial2', text: '-' },
+  ],
+
+  [QuantitativeNeume.OligonPlusIson, { fontFamily: 'EzSpecial2', text: '9' }],
+  [
+    QuantitativeNeume.OligonPlusApostrophos,
+    { fontFamily: 'Psaltica', text: 'I' },
+  ],
+  [
+    QuantitativeNeume.OligonPlusElaphron,
+    { fontFamily: 'EzSpecial2', text: '0' },
+  ],
+  [
+    QuantitativeNeume.OligonPlusElaphronPlusApostrophos,
+    { fontFamily: 'EzSpecial2', text: ')' },
+  ],
+  [
+    QuantitativeNeume.OligonPlusHypsili,
+    { fontFamily: 'EzSpecial2', text: ']' },
+  ],
 
   [QuantitativeNeume.Kentima, { fontFamily: 'Psaltica', text: '~' }],
   [QuantitativeNeume.OligonPlusKentima, { fontFamily: 'Psaltica', text: '1~' }],

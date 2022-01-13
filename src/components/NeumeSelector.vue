@@ -125,6 +125,8 @@ export default class NeumeSelector extends Vue {
     QuantitativeNeume.PetastiPlusApostrophos,
     QuantitativeNeume.PetastiPlusElaphron,
     QuantitativeNeume.PetastiPlusElaphronPlusApostrophos,
+    QuantitativeNeume.PetastiPlusRunningElaphron,
+    QuantitativeNeume.PetastiPlusHyporoe,
   ];
 
   descendingNeumes: QuantitativeNeume[] = [
@@ -155,7 +157,11 @@ export default class NeumeSelector extends Vue {
     QuantitativeNeume.OligonPlusHyporoePlusKentemata,
     QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
     QuantitativeNeume.OligonPlusHamiliPlusKentemata,
+    QuantitativeNeume.OligonPlusIson,
     QuantitativeNeume.OligonPlusApostrophos,
+    QuantitativeNeume.OligonPlusElaphron,
+    QuantitativeNeume.OligonPlusElaphronPlusApostrophos,
+    QuantitativeNeume.OligonPlusHypsili,
   ];
 
   hyporoeMenuItems: HyporoeMenuItem[] = [

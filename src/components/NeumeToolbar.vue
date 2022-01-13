@@ -759,7 +759,7 @@ export default class NeumeToolbar extends Vue {
     // If we got to the end of the cycle, remove all
     // time neumes. Otherwise set time neume to the first neume
     // in the cycle.
-    if (equivalent) {
+    if (equivalent || this.element.timeNeume != null) {
       this.$emit('update:time', null);
     } else {
       this.$emit('update:time', neumes[0]);

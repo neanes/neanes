@@ -499,10 +499,6 @@ export const timeReplacementMap = new Map<
     [
       { isPairedWith: rightTimeNeumes, replaceWith: TimeNeume.Klasma_TopRight },
       {
-        isPairedWith: bottomOnlyKlasmaNeumes,
-        replaceWith: TimeNeume.Klasma_Bottom,
-      },
-      {
         isPairedWith: [
           ...kentemataNeumes,
           QuantitativeNeume.Hyporoe,
@@ -517,10 +513,6 @@ export const timeReplacementMap = new Map<
   [
     TimeNeume.Klasma_Bottom,
     [
-      {
-        isPairedWith: topOnlyKlasmaNeumes,
-        replaceWith: TimeNeume.Klasma_Top,
-      },
       {
         isPairedWith: [
           ...kentemataNeumes,

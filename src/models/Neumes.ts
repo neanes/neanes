@@ -36,14 +36,22 @@ export enum QuantitativeNeume {
   OligonPlusKentemata = 'OligonPlusKentemata',
   KentemataPlusOligon = 'KentemataPlusOligon',
   OligonPlusIsonPlusKentemata = 'OligonPlusIsonPlusKentemata',
-  OligonPlusApostrophos = 'OligonPlusApostrophos',
   OligonPlusApostrophosPlusKentemata = 'OligonPlusApostrophosPlusKentemata',
   OligonPlusHyporoePlusKentemata = 'OligonPlusHyporoePlusKentemata',
   OligonPlusElaphronPlusKentemata = 'OligonPlusElaphronPlusKentemata',
   OligonPlusElaphronPlusApostrophosPlusKentemata = 'OligonPlusElaphronPlusApostrophosPlusKentemata',
   OligonPlusHamiliPlusKentemata = 'OligonPlusHamiliPlusKentemata',
+
   RunningElaphron = 'RunningElaphron',
   Hyporoe = 'Hyporoe',
+  PetastiPlusRunningElaphron = 'PetastiPlusRunningElaphron',
+  PetastiPlusHyporoe = 'PetastiPlusHyporoe',
+
+  OligonPlusIson = 'OligonPlusIson',
+  OligonPlusApostrophos = 'OligonPlusApostrophos',
+  OligonPlusElaphron = 'OligonPlusElaphron',
+  OligonPlusElaphronPlusApostrophos = 'OligonPlusElaphronPlusApostrophos',
+  OligonPlusHypsili = 'OligonPlusHypsili',
 
   Kentima = 'Kentima',
   OligonPlusKentima = 'OligonPlusKentima',
@@ -366,6 +374,7 @@ export const petastiNeumes: ReadonlyArray<QuantitativeNeume> = [
   QuantitativeNeume.PetastiPlusApostrophos,
   QuantitativeNeume.PetastiPlusElaphron,
   QuantitativeNeume.PetastiPlusElaphronPlusApostrophos,
+  QuantitativeNeume.PetastiPlusHyporoe,
 ];
 
 export const oligonNeumes: ReadonlyArray<QuantitativeNeume> = [

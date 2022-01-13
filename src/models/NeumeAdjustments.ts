@@ -90,6 +90,24 @@ export const gorgonAdjustmentMap = new Map<GorgonNeume, NeumeAdjustment[]>([
         ],
         offset: { x: 0, y: -12 },
       },
+      {
+        isPairedWith: [
+          QuantitativeNeume.OligonPlusIson,
+          QuantitativeNeume.OligonPlusHypsili,
+        ],
+        offset: { x: 0, y: -4 },
+      },
+      {
+        isPairedWith: [
+          QuantitativeNeume.OligonPlusElaphron,
+          QuantitativeNeume.OligonPlusElaphronPlusApostrophos,
+        ],
+        offset: { x: -4, y: -9 },
+      },
+      {
+        isPairedWith: [QuantitativeNeume.PetastiPlusRunningElaphron],
+        offset: { x: 4, y: 0 },
+      },
     ],
   ],
 
@@ -249,8 +267,19 @@ export const timeAdjustmentMap = new Map<TimeNeume, NeumeAdjustment[]>([
         offset: { x: 4, y: 0 },
       },
       {
-        isPairedWith: [QuantitativeNeume.OligonPlusApostrophos],
+        isPairedWith: [
+          QuantitativeNeume.OligonPlusApostrophos,
+          QuantitativeNeume.OligonPlusElaphron,
+          QuantitativeNeume.OligonPlusElaphronPlusApostrophos,
+        ],
         offset: { x: -4, y: -9 },
+      },
+      {
+        isPairedWith: [
+          QuantitativeNeume.OligonPlusIson,
+          QuantitativeNeume.OligonPlusHypsili,
+        ],
+        offset: { x: 0, y: -4 },
       },
       {
         isPairedWith: [QuantitativeNeume.OligonPlusKentima],
@@ -298,6 +327,7 @@ export const timeAdjustmentMap = new Map<TimeNeume, NeumeAdjustment[]>([
           QuantitativeNeume.PetastiWithIson,
           QuantitativeNeume.PetastiPlusKentimaAbove,
           QuantitativeNeume.PetastiPlusOligon,
+          QuantitativeNeume.PetastiPlusHyporoe,
         ],
         offset: { x: 9, y: 2 },
       },
@@ -517,6 +547,16 @@ for (let fthora of Object.values(Fthora)) {
       isPairedWith: [QuantitativeNeume.PetastiPlusDoubleHypsili],
       offset: { x: 4, y: -20 },
     });
+
+    adjustments.push({
+      isPairedWith: [
+        QuantitativeNeume.OligonPlusIson,
+        QuantitativeNeume.OligonPlusElaphron,
+        QuantitativeNeume.OligonPlusElaphronPlusApostrophos,
+        QuantitativeNeume.OligonPlusHypsili,
+      ],
+      offset: { x: 0, y: -8 },
+    });
   } else if (fthora.endsWith('TopRight')) {
     adjustments.push({
       isPairedWith: [QuantitativeNeume.OligonPlusKentemata],
@@ -586,6 +626,10 @@ for (let fthora of Object.values(Fthora)) {
         QuantitativeNeume.KentemataPlusOligonSpecial,
       ],
       offset: { x: -8, y: 0 },
+    });
+    adjustments.push({
+      isPairedWith: [QuantitativeNeume.PetastiPlusRunningElaphron],
+      offset: { x: -7, y: 0 },
     });
   }
 }

@@ -199,6 +199,18 @@ export default class NeumeBoxSyllable extends Vue {
       offset = { x: 0, y: -2.5 };
     }
 
+    if (
+      [
+        QuantitativeNeume.OligonPlusIson,
+        QuantitativeNeume.OligonPlusElaphron,
+        QuantitativeNeume.OligonPlusElaphronPlusApostrophos,
+        QuantitativeNeume.OligonPlusHypsili,
+        QuantitativeNeume.PetastiPlusHyporoe,
+      ].includes(this.note.quantitativeNeume)
+    ) {
+      offset = { x: 0, y: -8 };
+    }
+
     return offset;
   }
 

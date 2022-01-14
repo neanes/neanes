@@ -725,14 +725,20 @@ export default class NeumeToolbar extends Vue {
 
   private setKlasma() {
     if (onlyTakesBottomKlasma(this.element.quantitativeNeume)) {
-      if (this.element.timeNeume === TimeNeume.Klasma_Bottom) {
+      if (
+        this.element.timeNeume != null &&
+        areTimeNeumesEquivalent(this.element.timeNeume, TimeNeume.Klasma_Bottom)
+      ) {
         this.$emit('update:time', null);
       } else {
         this.$emit('update:time', TimeNeume.Klasma_Bottom);
       }
       return;
     } else if (onlyTakesTopKlasma(this.element.quantitativeNeume)) {
-      if (this.element.timeNeume === TimeNeume.Klasma_Top) {
+      if (
+        this.element.timeNeume != null &&
+        areTimeNeumesEquivalent(this.element.timeNeume, TimeNeume.Klasma_Top)
+      ) {
         this.$emit('update:time', null);
       } else {
         this.$emit('update:time', TimeNeume.Klasma_Top);
@@ -740,15 +746,22 @@ export default class NeumeToolbar extends Vue {
       return;
     } else if (this.element.timeNeume == null) {
       this.$emit('update:time', TimeNeume.Klasma_Top);
-    } else if (this.element.timeNeume === TimeNeume.Klasma_Top) {
+    } else if (
+      areTimeNeumesEquivalent(this.element.timeNeume, TimeNeume.Klasma_Top)
+    ) {
       this.$emit('update:time', TimeNeume.Klasma_Bottom);
-    } else if (this.element.timeNeume === TimeNeume.Klasma_Bottom) {
+    } else if (
+      areTimeNeumesEquivalent(this.element.timeNeume, TimeNeume.Klasma_Bottom)
+    ) {
       this.$emit('update:time', null);
     }
   }
 
   private setTimeNeume(neume: TimeNeume) {
-    if (this.element.timeNeume === neume) {
+    if (
+      this.element.timeNeume != null &&
+      areTimeNeumesEquivalent(neume, this.element.timeNeume)
+    ) {
       this.$emit('update:time', null);
     } else {
       this.$emit('update:time', neume);

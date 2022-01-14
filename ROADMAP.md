@@ -35,3 +35,5 @@
 - We'll probably never support alternate fonts, but if we did, the internal Neume enum needs to be separate from the EZ Font neume list. In general the map will be App Neumes => Font Neumes => Keyboard Code.
 
 - All editor elements should probably be their own components.
+
+- The right-aligned versions of neumes seems like an over-complication. Consider using adjustments instead of replacements.

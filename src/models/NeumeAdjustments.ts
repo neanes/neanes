@@ -348,6 +348,18 @@ export const timeAdjustmentMap = new Map<TimeNeume, NeumeAdjustment[]>([
   ],
 ]);
 
+const homalonAdjustments: NeumeAdjustment[] = [
+  {
+    isPairedWith: [
+      QuantitativeNeume.OligonPlusKentimaBelow,
+      QuantitativeNeume.KentemataPlusOligon,
+      QuantitativeNeume.KentemataPlusOligonSpecial,
+      QuantitativeNeume.HamiliPlusApostrophos,
+    ],
+    offset: { x: 0, y: 4 },
+  },
+];
+
 export const vocalExpressionAdjustmentMap = new Map<
   VocalExpressionNeume,
   NeumeAdjustment[]
@@ -431,6 +443,7 @@ export const vocalExpressionAdjustmentMap = new Map<
       },
     ],
   ],
+  [VocalExpressionNeume.Homalon, homalonAdjustments],
 ]);
 
 export const fthoraAdjustmentMap = new Map<Fthora, NeumeAdjustment[]>([

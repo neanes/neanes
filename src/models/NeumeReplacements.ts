@@ -34,31 +34,6 @@ const kentemataNeumes: Neume[] = [
   QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
 ];
 
-// Neumes that must be paired with special "_Right" neumes
-const rightGorgonNeumes: Neume[] = [
-  QuantitativeNeume.Apostrophos,
-  QuantitativeNeume.Hyporoe,
-  QuantitativeNeume.Kentemata,
-  QuantitativeNeume.OligonPlusHyporoePlusKentemata,
-  QuantitativeNeume.OligonPlusElaphronPlusKentemata,
-  QuantitativeNeume.OligonPlusIsonPlusKentemata,
-  QuantitativeNeume.OligonPlusApostrophosPlusKentemata,
-  QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
-  QuantitativeNeume.OligonPlusHamiliPlusKentemata,
-  QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
-  QuantitativeNeume.Hamili,
-  QuantitativeNeume.HamiliPlusApostrophos,
-  QuantitativeNeume.HamiliPlusElaphron,
-  QuantitativeNeume.HamiliPlusElaphronPlusApostrophos,
-  QuantitativeNeume.DoubleHamili,
-  QuantitativeNeume.PetastiPlusHypsiliPlusKentimaVertical,
-];
-
-const bottomRightGorgonNeumes: Neume[] = [
-  QuantitativeNeume.Apostrophos,
-  QuantitativeNeume.Kentemata,
-];
-
 const bottomAllowedGorgonNeumes: Neume[] = [
   QuantitativeNeume.Apostrophos,
   QuantitativeNeume.Ison,
@@ -136,10 +111,6 @@ export const gorgonReplacementMap = new Map<
     GorgonNeume.Gorgon_Top,
     [
       {
-        isPairedWith: rightGorgonNeumes,
-        replaceWith: GorgonNeume.Gorgon_TopRight,
-      },
-      {
         isPairedWith: [...petastiNeumes],
         replaceWith: null,
       },
@@ -149,10 +120,6 @@ export const gorgonReplacementMap = new Map<
   [
     GorgonNeume.Gorgon_Bottom,
     [
-      {
-        isPairedWith: bottomRightGorgonNeumes,
-        replaceWith: GorgonNeume.Gorgon_BottomRight,
-      },
       {
         isNotPairedWith: bottomAllowedGorgonNeumes,
         replaceWith: null,
@@ -164,10 +131,6 @@ export const gorgonReplacementMap = new Map<
     GorgonNeume.GorgonDottedLeft,
     [
       {
-        isPairedWith: rightGorgonNeumes,
-        replaceWith: GorgonNeume.GorgonDottedLeft_Right,
-      },
-      {
         isPairedWith: [...petastiNeumes],
         replaceWith: null,
       },
@@ -177,10 +140,6 @@ export const gorgonReplacementMap = new Map<
   [
     GorgonNeume.GorgonDottedRight,
     [
-      {
-        isPairedWith: rightGorgonNeumes,
-        replaceWith: GorgonNeume.GorgonDottedRight_Right,
-      },
       {
         isPairedWith: [...petastiNeumes],
         replaceWith: null,
@@ -192,10 +151,6 @@ export const gorgonReplacementMap = new Map<
     GorgonNeume.Digorgon,
     [
       {
-        isPairedWith: rightGorgonNeumes,
-        replaceWith: GorgonNeume.Digorgon_Right,
-      },
-      {
         isPairedWith: [...petastiNeumes],
         replaceWith: null,
       },
@@ -205,10 +160,6 @@ export const gorgonReplacementMap = new Map<
   [
     GorgonNeume.DigorgonDottedLeft1,
     [
-      {
-        isPairedWith: rightGorgonNeumes,
-        replaceWith: GorgonNeume.DigorgonDottedLeft1_Right,
-      },
       {
         isPairedWith: [...petastiNeumes],
         replaceWith: null,
@@ -220,10 +171,6 @@ export const gorgonReplacementMap = new Map<
     GorgonNeume.DigorgonDottedLeft2,
     [
       {
-        isPairedWith: rightGorgonNeumes,
-        replaceWith: GorgonNeume.DigorgonDottedLeft2_Right,
-      },
-      {
         isPairedWith: [...petastiNeumes],
         replaceWith: null,
       },
@@ -233,10 +180,6 @@ export const gorgonReplacementMap = new Map<
   [
     GorgonNeume.DigorgonDottedRight,
     [
-      {
-        isPairedWith: rightGorgonNeumes,
-        replaceWith: GorgonNeume.DigorgonDottedRight_Right,
-      },
       {
         isPairedWith: [...petastiNeumes],
         replaceWith: null,
@@ -248,10 +191,6 @@ export const gorgonReplacementMap = new Map<
     GorgonNeume.Trigorgon,
     [
       {
-        isPairedWith: rightGorgonNeumes,
-        replaceWith: GorgonNeume.Trigorgon_Right,
-      },
-      {
         isPairedWith: [...petastiNeumes],
         replaceWith: null,
       },
@@ -261,10 +200,6 @@ export const gorgonReplacementMap = new Map<
   [
     GorgonNeume.TrigorgonDottedLeft1,
     [
-      {
-        isPairedWith: rightGorgonNeumes,
-        replaceWith: GorgonNeume.TrigorgonDottedLeft1_Right,
-      },
       {
         isPairedWith: [...petastiNeumes],
         replaceWith: null,
@@ -276,10 +211,6 @@ export const gorgonReplacementMap = new Map<
     GorgonNeume.TrigorgonDottedLeft2,
     [
       {
-        isPairedWith: rightGorgonNeumes,
-        replaceWith: GorgonNeume.TrigorgonDottedLeft2_Right,
-      },
-      {
         isPairedWith: [...petastiNeumes],
         replaceWith: null,
       },
@@ -290,131 +221,11 @@ export const gorgonReplacementMap = new Map<
     GorgonNeume.TrigorgonDottedRight,
     [
       {
-        isPairedWith: rightGorgonNeumes,
-        replaceWith: GorgonNeume.TrigorgonDottedRight_Right,
-      },
-      {
         isPairedWith: [...petastiNeumes],
         replaceWith: null,
       },
     ],
   ],
-
-  [
-    GorgonNeume.Gorgon_TopRight,
-    [
-      {
-        isNotPairedWith: rightGorgonNeumes,
-        replaceWith: GorgonNeume.Gorgon_Top,
-      },
-    ],
-  ],
-
-  [
-    GorgonNeume.Gorgon_BottomRight,
-    [
-      {
-        isNotPairedWith: rightGorgonNeumes,
-        replaceWith: GorgonNeume.Gorgon_Bottom,
-      },
-    ],
-  ],
-
-  [
-    GorgonNeume.GorgonDottedLeft_Right,
-    [
-      {
-        isNotPairedWith: rightGorgonNeumes,
-        replaceWith: GorgonNeume.GorgonDottedLeft,
-      },
-    ],
-  ],
-
-  [
-    GorgonNeume.GorgonDottedRight_Right,
-    [
-      {
-        isNotPairedWith: rightGorgonNeumes,
-        replaceWith: GorgonNeume.GorgonDottedRight,
-      },
-    ],
-  ],
-
-  [
-    GorgonNeume.Digorgon_Right,
-    [{ isNotPairedWith: rightGorgonNeumes, replaceWith: GorgonNeume.Digorgon }],
-  ],
-
-  [
-    GorgonNeume.DigorgonDottedLeft1_Right,
-    [
-      {
-        isNotPairedWith: rightGorgonNeumes,
-        replaceWith: GorgonNeume.DigorgonDottedLeft1,
-      },
-    ],
-  ],
-
-  [
-    GorgonNeume.DigorgonDottedLeft2_Right,
-    [
-      {
-        isNotPairedWith: rightGorgonNeumes,
-        replaceWith: GorgonNeume.DigorgonDottedLeft2,
-      },
-    ],
-  ],
-
-  [
-    GorgonNeume.DigorgonDottedRight_Right,
-    [
-      {
-        isNotPairedWith: rightGorgonNeumes,
-        replaceWith: GorgonNeume.DigorgonDottedRight,
-      },
-    ],
-  ],
-
-  [
-    GorgonNeume.Trigorgon_Right,
-    [
-      {
-        isNotPairedWith: rightGorgonNeumes,
-        replaceWith: GorgonNeume.Trigorgon,
-      },
-    ],
-  ],
-
-  [
-    GorgonNeume.TrigorgonDottedLeft1_Right,
-    [
-      {
-        isNotPairedWith: rightGorgonNeumes,
-        replaceWith: GorgonNeume.TrigorgonDottedLeft1,
-      },
-    ],
-  ],
-
-  [
-    GorgonNeume.TrigorgonDottedLeft2_Right,
-    [
-      {
-        isNotPairedWith: rightGorgonNeumes,
-        replaceWith: GorgonNeume.TrigorgonDottedLeft2,
-      },
-    ],
-  ],
-
-  [
-    GorgonNeume.TrigorgonDottedRight_Right,
-    [
-      {
-        isNotPairedWith: rightGorgonNeumes,
-        replaceWith: GorgonNeume.TrigorgonDottedRight,
-      },
-    ],
-  ],
-
   [
     GorgonNeume.Argon,
     [
@@ -755,18 +566,6 @@ export const areTimeNeumesEquivalent = (
     neume2,
     getTimeReplacements(neume1),
     getTimeReplacements(neume2),
-  );
-};
-
-export const areGorgonsEquivalent = (
-  neume1: GorgonNeume,
-  neume2: GorgonNeume,
-) => {
-  return areNeumesEquivalent(
-    neume1,
-    neume2,
-    getGorgonReplacements(neume1),
-    getGorgonReplacements(neume2),
   );
 };
 

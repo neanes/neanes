@@ -511,7 +511,6 @@ import {
 import Neume from './Neume.vue';
 import {
   areFthorasEquivalent,
-  areGorgonsEquivalent,
   areTimeNeumesEquivalent,
   areVocalExpressionsEquivalent,
   onlyTakesTopKlasma,
@@ -625,11 +624,11 @@ export default class NeumeToolbar extends Vue {
 
   gorgonMenuItems: GorgonMenuItem[] = [
     {
-      neumes: [GorgonNeume.GorgonDottedLeft_Right],
+      neumes: [GorgonNeume.GorgonDottedLeft],
       className: 'gorgon-dotted-left',
     },
     {
-      neumes: [GorgonNeume.GorgonDottedRight_Right],
+      neumes: [GorgonNeume.GorgonDottedRight],
       className: 'gorgon-dotted-right',
     },
     {
@@ -785,9 +784,7 @@ export default class NeumeToolbar extends Vue {
         return;
       }
 
-      equivalent =
-        this.element.gorgonNeume != null &&
-        areGorgonsEquivalent(neume, this.element.gorgonNeume);
+      equivalent = this.element.gorgonNeume === neume;
     }
 
     // We've cycled through all the neumes.
@@ -1131,12 +1128,12 @@ export default class NeumeToolbar extends Vue {
 
 .gorgon-dotted-left {
   top: -2px;
-  left: 11px;
+  left: 18px;
 }
 
 .gorgon-dotted-right {
   top: -4px;
-  left: 10px;
+  left: 18px;
 }
 
 .digorgon {

@@ -219,57 +219,19 @@ export const neumeMap = new Map<Neume, NeumeMapping>([
   [GorgonNeume.Gorgon_Top, { fontFamily: 'Psaltica', text: 's' }],
   [GorgonNeume.Gorgon_Bottom, { fontFamily: 'Psaltica', text: 'x' }],
 
-  [GorgonNeume.Gorgon_TopRight, { fontFamily: 'Psaltica', text: 'S' }],
-  [GorgonNeume.Gorgon_BottomRight, { fontFamily: 'Psaltica', text: 'X' }],
-
   [GorgonNeume.Digorgon, { fontFamily: 'Psaltica', text: 'd' }],
   [GorgonNeume.Trigorgon, { fontFamily: 'Psaltica', text: 'f' }],
 
-  [GorgonNeume.Digorgon_Right, { fontFamily: 'Psaltica', text: 'D' }],
-  [GorgonNeume.Trigorgon_Right, { fontFamily: 'Psaltica', text: 'F' }],
-
   [GorgonNeume.GorgonDottedLeft, { fontFamily: 'Psaltica', text: 'h' }],
   [GorgonNeume.GorgonDottedRight, { fontFamily: 'EzSpecial1', text: 'h' }],
-
-  [GorgonNeume.GorgonDottedLeft_Right, { fontFamily: 'Psaltica', text: 'H' }],
-  [
-    GorgonNeume.GorgonDottedRight_Right,
-    { fontFamily: 'EzSpecial1', text: 'H' },
-  ],
 
   [GorgonNeume.DigorgonDottedLeft1, { fontFamily: 'EzSpecial1', text: 'd' }],
   [GorgonNeume.DigorgonDottedLeft2, { fontFamily: 'EzSpecial1', text: 'k' }],
   [GorgonNeume.DigorgonDottedRight, { fontFamily: 'EzSpecial1', text: 'c' }],
 
-  [
-    GorgonNeume.DigorgonDottedLeft1_Right,
-    { fontFamily: 'EzSpecial1', text: 'D' },
-  ],
-  [
-    GorgonNeume.DigorgonDottedLeft2_Right,
-    { fontFamily: 'EzSpecial1', text: 'K' },
-  ],
-  [
-    GorgonNeume.DigorgonDottedRight_Right,
-    { fontFamily: 'EzSpecial1', text: 'C' },
-  ],
-
   [GorgonNeume.TrigorgonDottedLeft1, { fontFamily: 'EzSpecial1', text: 'f' }],
   [GorgonNeume.TrigorgonDottedLeft2, { fontFamily: 'EzSpecial1', text: 'b' }],
   [GorgonNeume.TrigorgonDottedRight, { fontFamily: 'EzSpecial1', text: 'v' }],
-
-  [
-    GorgonNeume.TrigorgonDottedLeft1_Right,
-    { fontFamily: 'EzSpecial1', text: 'F' },
-  ],
-  [
-    GorgonNeume.TrigorgonDottedLeft2_Right,
-    { fontFamily: 'EzSpecial1', text: 'B' },
-  ],
-  [
-    GorgonNeume.TrigorgonDottedRight_Right,
-    { fontFamily: 'EzSpecial1', text: 'V' },
-  ],
 
   [GorgonNeume.Argon, { fontFamily: 'Psaltica', text: 'g' }],
   [GorgonNeume.Hemiolion, { fontFamily: 'Psaltica', text: 'G' }],

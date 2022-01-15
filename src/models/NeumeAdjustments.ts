@@ -389,6 +389,8 @@ const rightTimeNeumes: Neume[] = [
 ];
 
 const defaultHapliRightOffset: NeumeAdjustmentOffset = { x: 14, y: 0 };
+const defaultDipliRightOffset: NeumeAdjustmentOffset = { x: 13, y: 0 };
+const defaultTripliRightOffset: NeumeAdjustmentOffset = { x: 13, y: 0 };
 const defaultKlasmaTopRightOffset: NeumeAdjustmentOffset = { x: 9, y: -2 };
 
 export const timeAdjustmentMap = new Map<TimeNeume, NeumeAdjustment[]>([
@@ -490,11 +492,11 @@ export const timeAdjustmentMap = new Map<TimeNeume, NeumeAdjustment[]>([
   ],
   [
     TimeNeume.Dipli,
-    [{ isPairedWith: rightTimeNeumes, offset: defaultHapliRightOffset }],
+    [{ isPairedWith: rightTimeNeumes, offset: defaultDipliRightOffset }],
   ],
   [
     TimeNeume.Tripli,
-    [{ isPairedWith: rightTimeNeumes, offset: defaultHapliRightOffset }],
+    [{ isPairedWith: rightTimeNeumes, offset: defaultTripliRightOffset }],
   ],
 ]);
 

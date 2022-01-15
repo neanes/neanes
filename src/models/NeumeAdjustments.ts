@@ -652,7 +652,6 @@ export const fthoraAdjustmentMap = new Map<Fthora, NeumeAdjustment[]>([
       },
     ],
   ],
-  [Fthora.Spathi_Top, [{ isPairedWith: [Note.Ke], offset: { x: 17, y: 0 } }]],
 ]);
 
 // Shortcut to enter adjustments for many fthora at once
@@ -827,6 +826,12 @@ for (let fthora of Object.values(Fthora)) {
 
     adjustments.push({
       isPairedWith: rightFthoraNeumes,
+      offset: defaultTopRightFthoraAdjustment,
+    });
+
+    // All martyria should be right aligned
+    adjustments.push({
+      isPairedWith: Object.values(RootSign),
       offset: defaultTopRightFthoraAdjustment,
     });
   } else if (fthora.endsWith('Bottom')) {

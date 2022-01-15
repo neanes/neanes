@@ -10,7 +10,6 @@ import {
   GorgonNeume,
   ModeSign,
   MeasureNumber,
-  petastiNeumes,
   NoteIndicator,
   Ison,
 } from '@/models/Neumes';
@@ -24,6 +23,28 @@ export interface NeumeAdjustment {
   isPairedWith: Neume[];
   offset: NeumeAdjustmentOffset;
 }
+
+// Neumes that must be paired with special "_Right" neumes
+export const rightGorgonNeumes: Neume[] = [
+  QuantitativeNeume.Apostrophos,
+  QuantitativeNeume.Hyporoe,
+  QuantitativeNeume.Kentemata,
+  QuantitativeNeume.OligonPlusHyporoePlusKentemata,
+  QuantitativeNeume.OligonPlusElaphronPlusKentemata,
+  QuantitativeNeume.OligonPlusIsonPlusKentemata,
+  QuantitativeNeume.OligonPlusApostrophosPlusKentemata,
+  QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
+  QuantitativeNeume.OligonPlusHamiliPlusKentemata,
+  QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
+  QuantitativeNeume.Hamili,
+  QuantitativeNeume.HamiliPlusApostrophos,
+  QuantitativeNeume.HamiliPlusElaphron,
+  QuantitativeNeume.HamiliPlusElaphronPlusApostrophos,
+  QuantitativeNeume.DoubleHamili,
+  QuantitativeNeume.PetastiPlusHypsiliPlusKentimaVertical,
+];
+
+const defaultGorgonRightOffset: NeumeAdjustmentOffset = { x: 9, y: -4 };
 
 export const gorgonAdjustmentMap = new Map<GorgonNeume, NeumeAdjustment[]>([
   [
@@ -108,6 +129,55 @@ export const gorgonAdjustmentMap = new Map<GorgonNeume, NeumeAdjustment[]>([
         isPairedWith: [QuantitativeNeume.PetastiPlusRunningElaphron],
         offset: { x: 4, y: 0 },
       },
+      // Right aligned
+      {
+        isPairedWith: [QuantitativeNeume.Hyporoe],
+        offset: {
+          x: defaultGorgonRightOffset.x + 8,
+          y: defaultGorgonRightOffset.y + 4,
+        },
+      },
+      {
+        isPairedWith: [QuantitativeNeume.Apostrophos],
+        offset: {
+          x: defaultGorgonRightOffset.x,
+          y: defaultGorgonRightOffset.y + 4,
+        },
+      },
+      {
+        isPairedWith: [
+          QuantitativeNeume.OligonPlusIsonPlusKentemata,
+          QuantitativeNeume.OligonPlusApostrophosPlusKentemata,
+          QuantitativeNeume.OligonPlusHyporoePlusKentemata,
+          QuantitativeNeume.OligonPlusElaphronPlusKentemata,
+          QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
+          QuantitativeNeume.OligonPlusHamiliPlusKentemata,
+          QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
+        ],
+        offset: {
+          x: defaultGorgonRightOffset.x - 3,
+          y: defaultGorgonRightOffset.y,
+        },
+      },
+      {
+        isPairedWith: [QuantitativeNeume.PetastiPlusHypsiliPlusKentimaVertical],
+        offset: {
+          x: defaultGorgonRightOffset.x + 4,
+          y: defaultGorgonRightOffset.y,
+        },
+      },
+      {
+        isPairedWith: [
+          QuantitativeNeume.DoubleHamili,
+          QuantitativeNeume.HamiliPlusElaphron,
+          QuantitativeNeume.HamiliPlusElaphronPlusApostrophos,
+        ],
+        offset: {
+          x: defaultGorgonRightOffset.x,
+          y: defaultGorgonRightOffset.y - 4,
+        },
+      },
+      { isPairedWith: rightGorgonNeumes, offset: defaultGorgonRightOffset },
     ],
   ],
 
@@ -130,82 +200,162 @@ export const gorgonAdjustmentMap = new Map<GorgonNeume, NeumeAdjustment[]>([
         isPairedWith: [QuantitativeNeume.ElaphronPlusApostrophos],
         offset: { x: 0, y: 4 },
       },
+      {
+        isPairedWith: [
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.Kentemata,
+        ],
+        offset: { x: 10, y: 4 },
+      },
     ],
   ],
 
   [
-    GorgonNeume.Gorgon_TopRight,
+    GorgonNeume.Digorgon,
     [
-      { isPairedWith: [QuantitativeNeume.Hyporoe], offset: { x: 8, y: 4 } },
-      { isPairedWith: [QuantitativeNeume.Apostrophos], offset: { x: 0, y: 4 } },
       {
-        isPairedWith: [
-          QuantitativeNeume.OligonPlusIsonPlusKentemata,
-          QuantitativeNeume.OligonPlusApostrophosPlusKentemata,
-          QuantitativeNeume.OligonPlusHyporoePlusKentemata,
-          QuantitativeNeume.OligonPlusElaphronPlusKentemata,
-          QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
-          QuantitativeNeume.OligonPlusHamiliPlusKentemata,
-          QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
-        ],
-        offset: { x: -3, y: 0 },
+        isPairedWith: [QuantitativeNeume.Hyporoe],
+        offset: {
+          x: defaultGorgonRightOffset.x + 5,
+          y: defaultGorgonRightOffset.y + 6,
+        },
+      },
+      { isPairedWith: rightGorgonNeumes, offset: defaultGorgonRightOffset },
+    ],
+  ],
+
+  [
+    GorgonNeume.DigorgonDottedLeft1,
+    [
+      {
+        isPairedWith: [QuantitativeNeume.Hyporoe],
+        offset: {
+          x: defaultGorgonRightOffset.x + 5,
+          y: defaultGorgonRightOffset.y + 6,
+        },
       },
       {
-        isPairedWith: [QuantitativeNeume.PetastiPlusHypsiliPlusKentimaVertical],
-        offset: { x: 4, y: 0 },
-      },
-      {
-        isPairedWith: [QuantitativeNeume.DoubleHamili],
-        offset: { x: 0, y: -4 },
-      },
-      {
-        isPairedWith: [
-          QuantitativeNeume.HamiliPlusElaphron,
-          QuantitativeNeume.HamiliPlusElaphronPlusApostrophos,
-        ],
-        offset: { x: 0, y: -4 },
+        isPairedWith: rightGorgonNeumes,
+        offset: {
+          x: defaultGorgonRightOffset.x,
+          y: defaultGorgonRightOffset.y - 4,
+        },
       },
     ],
   ],
 
   [
-    GorgonNeume.Digorgon_Right,
-    [{ isPairedWith: [QuantitativeNeume.Hyporoe], offset: { x: 5, y: 6 } }],
+    GorgonNeume.DigorgonDottedLeft2,
+    [
+      {
+        isPairedWith: [QuantitativeNeume.Hyporoe],
+        offset: {
+          x: defaultGorgonRightOffset.x + 5,
+          y: defaultGorgonRightOffset.y + 6,
+        },
+      },
+      {
+        isPairedWith: rightGorgonNeumes,
+        offset: {
+          x: defaultGorgonRightOffset.x,
+          y: defaultGorgonRightOffset.y - 4,
+        },
+      },
+    ],
   ],
 
   [
-    GorgonNeume.DigorgonDottedLeft1_Right,
-    [{ isPairedWith: [QuantitativeNeume.Hyporoe], offset: { x: 5, y: 6 } }],
+    GorgonNeume.DigorgonDottedRight,
+    [
+      {
+        isPairedWith: [QuantitativeNeume.Hyporoe],
+        offset: {
+          x: defaultGorgonRightOffset.x + 5,
+          y: defaultGorgonRightOffset.y + 6,
+        },
+      },
+      {
+        isPairedWith: rightGorgonNeumes,
+        offset: {
+          x: defaultGorgonRightOffset.x,
+          y: defaultGorgonRightOffset.y - 4,
+        },
+      },
+    ],
   ],
 
   [
-    GorgonNeume.DigorgonDottedLeft2_Right,
-    [{ isPairedWith: [QuantitativeNeume.Hyporoe], offset: { x: 5, y: 6 } }],
+    GorgonNeume.Trigorgon,
+    [
+      {
+        isPairedWith: [QuantitativeNeume.Hyporoe],
+        offset: {
+          x: defaultGorgonRightOffset.x + 3,
+          y: defaultGorgonRightOffset.y + 6,
+        },
+      },
+      { isPairedWith: rightGorgonNeumes, offset: defaultGorgonRightOffset },
+    ],
   ],
 
   [
-    GorgonNeume.DigorgonDottedRight_Right,
-    [{ isPairedWith: [QuantitativeNeume.Hyporoe], offset: { x: 5, y: 6 } }],
+    GorgonNeume.TrigorgonDottedLeft1,
+    [
+      {
+        isPairedWith: [QuantitativeNeume.Hyporoe],
+        offset: {
+          x: defaultGorgonRightOffset.x + 3,
+          y: defaultGorgonRightOffset.y + 6,
+        },
+      },
+      {
+        isPairedWith: rightGorgonNeumes,
+        offset: {
+          x: defaultGorgonRightOffset.x,
+          y: defaultGorgonRightOffset.y - 4,
+        },
+      },
+    ],
   ],
 
   [
-    GorgonNeume.Trigorgon_Right,
-    [{ isPairedWith: [QuantitativeNeume.Hyporoe], offset: { x: 3, y: 6 } }],
+    GorgonNeume.TrigorgonDottedLeft2,
+    [
+      {
+        isPairedWith: [QuantitativeNeume.Hyporoe],
+        offset: {
+          x: defaultGorgonRightOffset.x + 3,
+          y: defaultGorgonRightOffset.y + 6,
+        },
+      },
+      {
+        isPairedWith: rightGorgonNeumes,
+        offset: {
+          x: defaultGorgonRightOffset.x,
+          y: defaultGorgonRightOffset.y - 4,
+        },
+      },
+    ],
   ],
 
   [
-    GorgonNeume.TrigorgonDottedLeft1_Right,
-    [{ isPairedWith: [QuantitativeNeume.Hyporoe], offset: { x: 3, y: 6 } }],
-  ],
-
-  [
-    GorgonNeume.TrigorgonDottedLeft2_Right,
-    [{ isPairedWith: [QuantitativeNeume.Hyporoe], offset: { x: 3, y: 6 } }],
-  ],
-
-  [
-    GorgonNeume.TrigorgonDottedRight_Right,
-    [{ isPairedWith: [QuantitativeNeume.Hyporoe], offset: { x: 3, y: 6 } }],
+    GorgonNeume.TrigorgonDottedRight,
+    [
+      {
+        isPairedWith: [QuantitativeNeume.Hyporoe],
+        offset: {
+          x: defaultGorgonRightOffset.x + 3,
+          y: defaultGorgonRightOffset.y + 6,
+        },
+      },
+      {
+        isPairedWith: rightGorgonNeumes,
+        offset: {
+          x: defaultGorgonRightOffset.x,
+          y: defaultGorgonRightOffset.y - 4,
+        },
+      },
+    ],
   ],
 ]);
 
@@ -228,23 +378,6 @@ gorgonAdjustmentMap.set(GorgonNeume.GorgonDottedRight, [
     offset: { x: 0, y: -4 },
   },
 ]);
-
-gorgonAdjustmentMap.set(
-  GorgonNeume.GorgonDottedLeft_Right,
-  gorgonAdjustmentMap.get(GorgonNeume.Gorgon_TopRight)!,
-);
-gorgonAdjustmentMap.set(
-  GorgonNeume.GorgonDottedRight_Right,
-  gorgonAdjustmentMap.get(GorgonNeume.Gorgon_TopRight)!,
-);
-
-gorgonAdjustmentMap.set(
-  GorgonNeume.GorgonDottedRight_Right,
-  gorgonAdjustmentMap.get(GorgonNeume.Gorgon_TopRight)!.map((a) => ({
-    isPairedWith: [...a.isPairedWith],
-    offset: { x: a.offset.x, y: a.offset.y - 4 },
-  })),
-);
 
 export const timeAdjustmentMap = new Map<TimeNeume, NeumeAdjustment[]>([
   [

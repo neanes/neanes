@@ -91,32 +91,16 @@ export enum GorgonNeume {
   Digorgon = 'Digorgon',
   Trigorgon = 'Trigorgon',
 
-  Gorgon_TopRight = 'Gorgon_TopRight',
-  Gorgon_BottomRight = 'Gorgon_BottomRight',
-  Digorgon_Right = 'Digorgon_Right',
-  Trigorgon_Right = 'Trigorgon_Right',
-
   GorgonDottedLeft = 'GorgonDottedLeft',
   GorgonDottedRight = 'GorgonDottedRight',
-
-  GorgonDottedLeft_Right = 'GorgonDottedLeft_Right',
-  GorgonDottedRight_Right = 'GorgonDottedRight_Right',
 
   DigorgonDottedLeft1 = 'DigorgonDottedLeft1',
   DigorgonDottedLeft2 = 'DigorgonDottedLeft2',
   DigorgonDottedRight = 'DigorgonDottedRight',
 
-  DigorgonDottedLeft1_Right = 'DigorgonDottedLeft1_Right',
-  DigorgonDottedLeft2_Right = 'DigorgonDottedLeft2_Right',
-  DigorgonDottedRight_Right = 'DigorgonDottedRight_Right',
-
   TrigorgonDottedLeft1 = 'TrigorgonDottedLeft1',
   TrigorgonDottedLeft2 = 'TrigorgonDottedLeft2',
   TrigorgonDottedRight = 'TrigorgonDottedRight',
-
-  TrigorgonDottedLeft1_Right = 'TrigorgonDottedLeft1_Right',
-  TrigorgonDottedLeft2_Right = 'TrigorgonDottedLeft2_Right',
-  TrigorgonDottedRight_Right = 'TrigorgonDottedRight_Right',
 
   Argon = 'Argon',
   Hemiolion = 'Hemiolion',

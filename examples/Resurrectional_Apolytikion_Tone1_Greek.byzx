@@ -338,7 +338,7 @@
       {
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": "Klasma_TopRight",
+        "timeNeume": "Klasma_Top",
         "lyrics": "ην"
       },
       {
@@ -453,7 +453,7 @@
       {
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": "Klasma_TopRight",
+        "timeNeume": "Klasma_Top",
         "lyrics": "τα"
       },
       {
@@ -564,7 +564,7 @@
       {
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": "Klasma_TopRight",
+        "timeNeume": "Klasma_Top",
         "lyrics": "σου"
       },
       {

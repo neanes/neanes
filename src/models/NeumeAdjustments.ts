@@ -24,7 +24,6 @@ export interface NeumeAdjustment {
   offset: NeumeAdjustmentOffset;
 }
 
-// Neumes that must be paired with special "_Right" neumes
 export const rightGorgonNeumes: Neume[] = [
   QuantitativeNeume.Apostrophos,
   QuantitativeNeume.Hyporoe,
@@ -379,6 +378,19 @@ gorgonAdjustmentMap.set(GorgonNeume.GorgonDottedRight, [
   },
 ]);
 
+const rightTimeNeumes: Neume[] = [
+  QuantitativeNeume.Apostrophos,
+  QuantitativeNeume.Hyporoe,
+  QuantitativeNeume.Hamili,
+  QuantitativeNeume.HamiliPlusApostrophos,
+  QuantitativeNeume.HamiliPlusElaphron,
+  QuantitativeNeume.HamiliPlusElaphronPlusApostrophos,
+  QuantitativeNeume.DoubleHamili,
+];
+
+const defaultHapliRightOffset: NeumeAdjustmentOffset = { x: 14, y: 0 };
+const defaultKlasmaTopRightOffset: NeumeAdjustmentOffset = { x: 9, y: -2 };
+
 export const timeAdjustmentMap = new Map<TimeNeume, NeumeAdjustment[]>([
   [
     TimeNeume.Klasma_Top,
@@ -418,29 +430,25 @@ export const timeAdjustmentMap = new Map<TimeNeume, NeumeAdjustment[]>([
         isPairedWith: [QuantitativeNeume.OligonPlusKentima],
         offset: { x: -8, y: 0 },
       },
-      {
-        isPairedWith: [
-          QuantitativeNeume.HamiliPlusApostrophos,
-          QuantitativeNeume.HamiliPlusElaphronPlusApostrophos,
-        ],
-        offset: { x: 0, y: -4 },
-      },
-    ],
-  ],
-  [
-    TimeNeume.Klasma_TopRight,
-    [
+      // Right aligned
       {
         isPairedWith: [
           QuantitativeNeume.HamiliPlusElaphron,
           QuantitativeNeume.HamiliPlusElaphronPlusApostrophos,
         ],
-        offset: { x: 0, y: -6 },
+        offset: {
+          x: defaultKlasmaTopRightOffset.x,
+          y: defaultKlasmaTopRightOffset.y - 6,
+        },
       },
       {
         isPairedWith: [QuantitativeNeume.DoubleHamili],
-        offset: { x: 0, y: -8 },
+        offset: {
+          x: defaultKlasmaTopRightOffset.x,
+          y: defaultKlasmaTopRightOffset.y - 8,
+        },
       },
+      { isPairedWith: rightTimeNeumes, offset: defaultKlasmaTopRightOffset },
     ],
   ],
   [
@@ -477,7 +485,16 @@ export const timeAdjustmentMap = new Map<TimeNeume, NeumeAdjustment[]>([
         isPairedWith: [QuantitativeNeume.OligonPlusKentimaBelow],
         offset: { x: 0, y: 4 },
       },
+      { isPairedWith: rightTimeNeumes, offset: defaultHapliRightOffset },
     ],
+  ],
+  [
+    TimeNeume.Dipli,
+    [{ isPairedWith: rightTimeNeumes, offset: defaultHapliRightOffset }],
+  ],
+  [
+    TimeNeume.Tripli,
+    [{ isPairedWith: rightTimeNeumes, offset: defaultHapliRightOffset }],
   ],
 ]);
 

@@ -126,7 +126,7 @@
       {
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": "Klasma_TopRight",
+        "timeNeume": "Klasma_Top",
         "lyrics": "τον"
       },
       {
@@ -278,7 +278,7 @@
       {
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": "Klasma_TopRight",
+        "timeNeume": "Klasma_Top",
         "lyrics": "τος"
       },
       {
@@ -391,7 +391,7 @@
       {
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": "Klasma_TopRight",
+        "timeNeume": "Klasma_Top",
         "lyrics": "σας"
       },
       {
@@ -479,7 +479,7 @@
       {
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": "Klasma_TopRight",
+        "timeNeume": "Klasma_Top",
         "lyrics": "ζον"
       },
       {

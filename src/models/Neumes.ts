@@ -73,16 +73,9 @@ export enum TimeNeume {
   Klasma_Top = 'Klasma_Top',
   Klasma_Bottom = 'Klasma_Bottom',
 
-  Klasma_TopRight = 'Klasma_TopRight',
-  Klasma_TopLeft = 'Klasma_TopLeft',
-
   Hapli = 'Hapli',
   Dipli = 'Dipli',
   Tripli = 'Tripli',
-
-  Hapli_Right = 'Hapli_Right',
-  Dipli_Right = 'Dipli_Right',
-  Tripli_Right = 'Tripli_Right',
 }
 
 export enum GorgonNeume {

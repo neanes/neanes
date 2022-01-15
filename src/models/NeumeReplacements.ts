@@ -262,7 +262,6 @@ export const timeReplacementMap = new Map<
   [
     TimeNeume.Hapli,
     [
-      { isPairedWith: rightTimeNeumes, replaceWith: TimeNeume.Hapli_Right },
       {
         isPairedWith: [
           QuantitativeNeume.IsonPlusApostrophos,
@@ -277,7 +276,6 @@ export const timeReplacementMap = new Map<
   [
     TimeNeume.Dipli,
     [
-      { isPairedWith: rightTimeNeumes, replaceWith: TimeNeume.Dipli_Right },
       {
         isPairedWith: [
           QuantitativeNeume.IsonPlusApostrophos,
@@ -293,7 +291,6 @@ export const timeReplacementMap = new Map<
   [
     TimeNeume.Tripli,
     [
-      { isPairedWith: rightTimeNeumes, replaceWith: TimeNeume.Tripli_Right },
       {
         isPairedWith: [
           QuantitativeNeume.IsonPlusApostrophos,
@@ -309,10 +306,10 @@ export const timeReplacementMap = new Map<
   [
     TimeNeume.Klasma_Top,
     [
-      { isPairedWith: rightTimeNeumes, replaceWith: TimeNeume.Klasma_TopRight },
       {
         isPairedWith: [
           ...kentemataNeumes,
+          ...bottomOnlyKlasmaNeumes,
           QuantitativeNeume.Hyporoe,
           QuantitativeNeume.IsonPlusApostrophos,
           QuantitativeNeume.DoubleApostrophos,
@@ -328,35 +325,13 @@ export const timeReplacementMap = new Map<
       {
         isPairedWith: [
           ...kentemataNeumes,
+          ...topOnlyKlasmaNeumes,
           QuantitativeNeume.Hyporoe,
           QuantitativeNeume.IsonPlusApostrophos,
           QuantitativeNeume.DoubleApostrophos,
         ],
         replaceWith: null,
       },
-    ],
-  ],
-
-  [
-    TimeNeume.Hapli_Right,
-    [{ isNotPairedWith: rightTimeNeumes, replaceWith: TimeNeume.Hapli }],
-  ],
-
-  [
-    TimeNeume.Dipli_Right,
-    [{ isNotPairedWith: rightTimeNeumes, replaceWith: TimeNeume.Dipli }],
-  ],
-
-  [
-    TimeNeume.Tripli_Right,
-    [{ isNotPairedWith: rightTimeNeumes, replaceWith: TimeNeume.Tripli }],
-  ],
-
-  [
-    TimeNeume.Klasma_TopRight,
-    [
-      { isNotPairedWith: rightTimeNeumes, replaceWith: TimeNeume.Klasma_Top },
-      { isPairedWith: [QuantitativeNeume.Hyporoe], replaceWith: null },
     ],
   ],
 ]);
@@ -555,18 +530,6 @@ export const getFthoraReplacements = (neume: Fthora) => {
 
 export const getQuantitativeReplacements = (neume: QuantitativeNeume) => {
   return quantitativeNeumeReplacementMap.get(neume);
-};
-
-export const areTimeNeumesEquivalent = (
-  neume1: TimeNeume,
-  neume2: TimeNeume,
-) => {
-  return areNeumesEquivalent(
-    neume1,
-    neume2,
-    getTimeReplacements(neume1),
-    getTimeReplacements(neume2),
-  );
 };
 
 export const areVocalExpressionsEquivalent = (

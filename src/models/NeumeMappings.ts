@@ -240,16 +240,9 @@ export const neumeMap = new Map<Neume, NeumeMapping>([
   [TimeNeume.Klasma_Top, { fontFamily: 'Psaltica', text: 'a' }],
   [TimeNeume.Klasma_Bottom, { fontFamily: 'Psaltica', text: 'z' }],
 
-  [TimeNeume.Klasma_TopRight, { fontFamily: 'Psaltica', text: 'A' }],
-  [TimeNeume.Klasma_TopLeft, { fontFamily: 'Psaltica', text: 'Z' }],
-
   [TimeNeume.Hapli, { fontFamily: 'Psaltica', text: ';' }],
   [TimeNeume.Dipli, { fontFamily: 'Psaltica', text: 'k' }],
   [TimeNeume.Tripli, { fontFamily: 'EzSpecial1', text: ';' }],
-
-  [TimeNeume.Hapli_Right, { fontFamily: 'Psaltica', text: ':' }],
-  [TimeNeume.Dipli_Right, { fontFamily: 'Psaltica', text: 'K' }],
-  [TimeNeume.Tripli_Right, { fontFamily: 'EzSpecial1', text: ':' }],
 
   [Fthora.DiatonicNiLow_TopCenter, { fontFamily: 'EzFthora', text: 'd' }],
   [Fthora.DiatonicPa_TopCenter, { fontFamily: 'EzFthora', text: 'f' }],

@@ -596,32 +596,63 @@ export const vocalExpressionAdjustmentMap = new Map<
   [VocalExpressionNeume.Homalon, homalonAdjustments],
 ]);
 
+const rightFthoraNeumes: Neume[] = [
+  QuantitativeNeume.Apostrophos,
+  QuantitativeNeume.DoubleHamili,
+  QuantitativeNeume.Hyporoe,
+  QuantitativeNeume.Hamili,
+  QuantitativeNeume.HamiliPlusApostrophos,
+  QuantitativeNeume.HamiliPlusElaphronPlusApostrophos,
+  QuantitativeNeume.HamiliPlusElaphron,
+  QuantitativeNeume.Kentemata,
+  QuantitativeNeume.OligonPlusKentimaAbove,
+  QuantitativeNeume.OligonPlusKentemata,
+  QuantitativeNeume.OligonPlusHypsiliLeft,
+  QuantitativeNeume.OligonPlusApostrophos,
+  QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
+  QuantitativeNeume.OligonPlusKentemataPlusHypsiliLeft,
+  QuantitativeNeume.OligonPlusHypsiliPlusKentimaVertical,
+  QuantitativeNeume.PetastiPlusKentimaAbove,
+  QuantitativeNeume.PetastiPlusHypsiliLeft,
+];
+
+const bottomRightFthoraNeumes: Neume[] = [
+  QuantitativeNeume.Hyporoe,
+  QuantitativeNeume.Kentemata,
+  QuantitativeNeume.Apostrophos,
+];
+
+const defaultTopRightFthoraAdjustment: NeumeAdjustmentOffset = { x: 13, y: 0 };
+
 export const fthoraAdjustmentMap = new Map<Fthora, NeumeAdjustment[]>([
   [
-    Fthora.DiatonicPa_TopRight,
-    [{ isPairedWith: [ModeSign.Pa], offset: { x: 2, y: -9 } }],
+    Fthora.DiatonicPa_Top,
+    [{ isPairedWith: [ModeSign.Pa], offset: { x: 15, y: -9 } }],
   ],
   [
-    Fthora.SoftChromaticThi_TopRight,
+    Fthora.SoftChromaticThi_Top,
     [
       {
         isPairedWith: [ModeSign.Vou, ModeSign.Thi, ModeSign.Ke],
-        offset: { x: 0, y: -7 },
+        offset: { x: 13, y: -7 },
       },
     ],
   ],
   [
-    Fthora.HardChromaticPa_TopRight,
-    [{ isPairedWith: [ModeSign.Pa], offset: { x: -3, y: -7 } }],
+    Fthora.HardChromaticPa_Top,
+    [{ isPairedWith: [ModeSign.Pa], offset: { x: 6, y: -10 } }],
   ],
   [
-    Fthora.DiatonicNiLow_TopRight,
-    [{ isPairedWith: [ModeSign.Ga], offset: { x: -3, y: -9 } }],
+    Fthora.DiatonicNiLow_Top,
+    [
+      { isPairedWith: [ModeSign.Ga], offset: { x: 10, y: -9 } },
+      {
+        isPairedWith: [QuantitativeNeume.OligonPlusKentimaAbove],
+        offset: { x: 13, y: 0 },
+      },
+    ],
   ],
-  [
-    Fthora.Spathi_TopRight,
-    [{ isPairedWith: [Note.Ke], offset: { x: 4, y: 0 } }],
-  ],
+  [Fthora.Spathi_Top, [{ isPairedWith: [Note.Ke], offset: { x: 17, y: 0 } }]],
 ]);
 
 // Shortcut to enter adjustments for many fthora at once
@@ -629,7 +660,7 @@ for (let fthora of Object.values(Fthora)) {
   const adjustments = fthoraAdjustmentMap.get(fthora) || [];
   fthoraAdjustmentMap.set(fthora, adjustments);
 
-  if (fthora.endsWith('TopCenter')) {
+  if (fthora.endsWith('Top')) {
     adjustments.push({
       isPairedWith: [QuantitativeNeume.OligonPlusHypsiliRight],
       offset: { x: -10, y: 0 },
@@ -638,6 +669,11 @@ for (let fthora of Object.values(Fthora)) {
     adjustments.push({
       isPairedWith: [QuantitativeNeume.OligonPlusKentima],
       offset: { x: -6, y: 0 },
+    });
+
+    adjustments.push({
+      isPairedWith: [QuantitativeNeume.OligonPlusKentemataPlusHypsiliRight],
+      offset: { x: 0, y: -5 },
     });
 
     adjustments.push({
@@ -687,6 +723,7 @@ for (let fthora of Object.values(Fthora)) {
         QuantitativeNeume.Elaphron,
         QuantitativeNeume.ElaphronPlusApostrophos,
         QuantitativeNeume.RunningElaphron,
+        QuantitativeNeume.PetastiPlusRunningElaphron,
       ],
       offset: { x: 0, y: -3 },
     });
@@ -720,35 +757,53 @@ for (let fthora of Object.values(Fthora)) {
       ],
       offset: { x: 0, y: -8 },
     });
-  } else if (fthora.endsWith('TopRight')) {
+
     adjustments.push({
       isPairedWith: [QuantitativeNeume.OligonPlusKentemata],
-      offset: { x: 5, y: 0 },
+      offset: {
+        x: defaultTopRightFthoraAdjustment.x + 5,
+        y: defaultTopRightFthoraAdjustment.y,
+      },
     });
 
     adjustments.push({
       isPairedWith: [QuantitativeNeume.OligonPlusKentimaAbove],
-      offset: { x: 2, y: 0 },
+      offset: {
+        x: defaultTopRightFthoraAdjustment.x + 2,
+        y: defaultTopRightFthoraAdjustment.y,
+      },
     });
 
     adjustments.push({
       isPairedWith: [QuantitativeNeume.OligonPlusApostrophos],
-      offset: { x: 3, y: 0 },
+      offset: {
+        x: defaultTopRightFthoraAdjustment.x + 3,
+        y: defaultTopRightFthoraAdjustment.y,
+      },
     });
 
     adjustments.push({
       isPairedWith: [QuantitativeNeume.OligonPlusHypsiliPlusKentimaVertical],
-      offset: { x: 4, y: 0 },
+      offset: {
+        x: defaultTopRightFthoraAdjustment.x + 4,
+        y: defaultTopRightFthoraAdjustment.y,
+      },
     });
 
     adjustments.push({
       isPairedWith: [QuantitativeNeume.PetastiPlusKentimaAbove],
-      offset: { x: 0, y: -5 },
+      offset: {
+        x: defaultTopRightFthoraAdjustment.x,
+        y: defaultTopRightFthoraAdjustment.y - 5,
+      },
     });
 
     adjustments.push({
       isPairedWith: [QuantitativeNeume.PetastiPlusHypsiliLeft],
-      offset: { x: 5, y: 0 },
+      offset: {
+        x: defaultTopRightFthoraAdjustment.x + 5,
+        y: defaultTopRightFthoraAdjustment.y,
+      },
     });
 
     adjustments.push({
@@ -756,14 +811,25 @@ for (let fthora of Object.values(Fthora)) {
         QuantitativeNeume.HamiliPlusElaphron,
         QuantitativeNeume.HamiliPlusElaphronPlusApostrophos,
       ],
-      offset: { x: 0, y: -7 },
+      offset: {
+        x: defaultTopRightFthoraAdjustment.x,
+        y: defaultTopRightFthoraAdjustment.y - 7,
+      },
     });
 
     adjustments.push({
       isPairedWith: [QuantitativeNeume.DoubleHamili],
-      offset: { x: 0, y: -10 },
+      offset: {
+        x: defaultTopRightFthoraAdjustment.x,
+        y: defaultTopRightFthoraAdjustment.y - 10,
+      },
     });
-  } else if (fthora.endsWith('BottomCenter')) {
+
+    adjustments.push({
+      isPairedWith: rightFthoraNeumes,
+      offset: defaultTopRightFthoraAdjustment,
+    });
+  } else if (fthora.endsWith('Bottom')) {
     adjustments.push({
       isPairedWith: [QuantitativeNeume.OligonPlusKentimaBelow],
       offset: { x: -5, y: 0 },
@@ -793,6 +859,11 @@ for (let fthora of Object.values(Fthora)) {
     adjustments.push({
       isPairedWith: [QuantitativeNeume.PetastiPlusRunningElaphron],
       offset: { x: -7, y: 0 },
+    });
+
+    adjustments.push({
+      isPairedWith: bottomRightFthoraNeumes,
+      offset: defaultTopRightFthoraAdjustment,
     });
   }
 }

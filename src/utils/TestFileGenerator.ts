@@ -373,6 +373,24 @@ export abstract class TestFileGenerator {
       (note.lyrics = (counter++).toString()), elements.push(note);
     }
 
+    for (let q in QuantitativeNeume) {
+      const quantitativeNeume = q as QuantitativeNeume;
+      if (
+        [
+          QuantitativeNeume.VareiaDotted,
+          QuantitativeNeume.Cross,
+          QuantitativeNeume.Kentima,
+        ].includes(quantitativeNeume)
+      ) {
+        continue;
+      }
+
+      const note = new NoteElement();
+      note.quantitativeNeume = quantitativeNeume;
+      note.vocalExpressionNeume = VocalExpressionNeume.Homalon;
+      (note.lyrics = (counter++).toString()), elements.push(note);
+    }
+
     return elements;
   }
 

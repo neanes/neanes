@@ -562,6 +562,7 @@ export const vocalExpressionReplacementMap = new Map<
           QuantitativeNeume.Kentemata,
           QuantitativeNeume.IsonPlusApostrophos,
           QuantitativeNeume.DoubleApostrophos,
+          QuantitativeNeume.PetastiPlusRunningElaphron,
         ],
         replaceWith: null,
       },
@@ -611,7 +612,14 @@ export const vocalExpressionReplacementMap = new Map<
     VocalExpressionNeume.Homalon,
     [
       {
-        isPairedWith: [...petastiNeumes, ...kentemataNeumes],
+        isPairedWith: [
+          ...petastiNeumes,
+          ...kentemataNeumes,
+          QuantitativeNeume.PetastiPlusRunningElaphron,
+          QuantitativeNeume.DoubleApostrophos,
+          QuantitativeNeume.IsonPlusApostrophos,
+          QuantitativeNeume.Hyporoe,
+        ],
         replaceWith: null,
       },
     ],
@@ -620,7 +628,14 @@ export const vocalExpressionReplacementMap = new Map<
     VocalExpressionNeume.HomalonConnecting,
     [
       {
-        isPairedWith: [...petastiNeumes, ...kentemataNeumes],
+        isPairedWith: [
+          ...petastiNeumes,
+          ...kentemataNeumes,
+          QuantitativeNeume.PetastiPlusRunningElaphron,
+          QuantitativeNeume.DoubleApostrophos,
+          QuantitativeNeume.IsonPlusApostrophos,
+          QuantitativeNeume.Hyporoe,
+        ],
         replaceWith: null,
       },
     ],

@@ -16,9 +16,9 @@ export abstract class TestFileGenerator {
   public static generateTestFile(type: TestFileType) {
     switch (type) {
       case TestFileType.FthoraTop:
-        return this.generateTestFile_Fthora('TopCenter');
+        return this.generateTestFile_Fthora('Top');
       case TestFileType.FthoraBottom:
-        return this.generateTestFile_Fthora('BottomCenter');
+        return this.generateTestFile_Fthora('Bottom');
       case TestFileType.Gorgon:
         return this.generateTestFile_Gorgon();
       case TestFileType.Klasma:

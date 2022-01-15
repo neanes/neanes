@@ -298,197 +298,122 @@
       <button
         class="neume-button"
         @click="
-          setFthora([
-            Fthora.DiatonicNiLow_TopCenter,
-            Fthora.DiatonicNiLow_BottomCenter,
-          ])
+          setFthora([Fthora.DiatonicNiLow_Top, Fthora.DiatonicNiLow_Bottom])
         "
       >
-        <Neume
-          class="red neume fthora"
-          :neume="Fthora.DiatonicNiLow_TopCenter"
-        />
+        <Neume class="red neume fthora" :neume="Fthora.DiatonicNiLow_Top" />
+      </button>
+      <button
+        class="neume-button"
+        @click="setFthora([Fthora.DiatonicPa_Top, Fthora.DiatonicPa_Bottom])"
+      >
+        <Neume class="red neume fthora" :neume="Fthora.DiatonicPa_Top" />
+      </button>
+      <button class="neume-button" @click="setFthora([Fthora.DiatonicVou_Top])">
+        <Neume class="red neume fthora" :neume="Fthora.DiatonicVou_Top" />
+      </button>
+      <button class="neume-button" @click="setFthora([Fthora.DiatonicGa_Top])">
+        <Neume class="red neume fthora" :neume="Fthora.DiatonicGa_Top" />
+      </button>
+      <button
+        class="neume-button"
+        @click="setFthora([Fthora.DiatonicThi_Top, Fthora.DiatonicThi_Bottom])"
+      >
+        <Neume class="red neume fthora" :neume="Fthora.DiatonicThi_Top" />
+      </button>
+      <button
+        class="neume-button"
+        @click="setFthora([Fthora.DiatonicKe_Top, Fthora.DiatonicKe_Bottom])"
+      >
+        <Neume class="red neume fthora" :neume="Fthora.DiatonicKe_Top" />
+      </button>
+      <button class="neume-button" @click="setFthora([Fthora.DiatonicZo_Top])">
+        <Neume class="red neume fthora" :neume="Fthora.DiatonicZo_Top" />
       </button>
       <button
         class="neume-button"
         @click="
-          setFthora([
-            Fthora.DiatonicPa_TopCenter,
-            Fthora.DiatonicPa_BottomCenter,
-          ])
+          setFthora([Fthora.DiatonicNiHigh_Top, Fthora.DiatonicNiHigh_Bottom])
         "
       >
-        <Neume class="red neume fthora" :neume="Fthora.DiatonicPa_TopCenter" />
-      </button>
-      <button
-        class="neume-button"
-        @click="setFthora([Fthora.DiatonicVou_TopCenter])"
-      >
-        <Neume class="red neume fthora" :neume="Fthora.DiatonicVou_TopCenter" />
-      </button>
-      <button
-        class="neume-button"
-        @click="setFthora([Fthora.DiatonicGa_TopCenter])"
-      >
-        <Neume class="red neume fthora" :neume="Fthora.DiatonicGa_TopCenter" />
-      </button>
-      <button
-        class="neume-button"
-        @click="
-          setFthora([
-            Fthora.DiatonicThi_TopCenter,
-            Fthora.DiatonicThi_BottomCenter,
-          ])
-        "
-      >
-        <Neume class="red neume fthora" :neume="Fthora.DiatonicThi_TopCenter" />
-      </button>
-      <button
-        class="neume-button"
-        @click="
-          setFthora([
-            Fthora.DiatonicKe_TopCenter,
-            Fthora.DiatonicKe_BottomCenter,
-          ])
-        "
-      >
-        <Neume class="red neume fthora" :neume="Fthora.DiatonicKe_TopCenter" />
-      </button>
-      <button
-        class="neume-button"
-        @click="setFthora([Fthora.DiatonicZo_TopCenter])"
-      >
-        <Neume class="red neume fthora" :neume="Fthora.DiatonicZo_TopCenter" />
-      </button>
-      <button
-        class="neume-button"
-        @click="
-          setFthora([
-            Fthora.DiatonicNiHigh_TopCenter,
-            Fthora.DiatonicNiHigh_BottomCenter,
-          ])
-        "
-      >
-        <Neume
-          class="red neume fthora"
-          :neume="Fthora.DiatonicNiHigh_TopCenter"
-        />
+        <Neume class="red neume fthora" :neume="Fthora.DiatonicNiHigh_Top" />
       </button>
       <span class="space"></span>
       <button
         class="neume-button"
         @click="
-          setFthora([
-            Fthora.SoftChromaticPa_TopCenter,
-            Fthora.SoftChromaticPa_BottomCenter,
-          ])
+          setFthora([Fthora.SoftChromaticPa_Top, Fthora.SoftChromaticPa_Bottom])
         "
       >
-        <Neume
-          class="red neume fthora"
-          :neume="Fthora.SoftChromaticPa_TopCenter"
-        />
+        <Neume class="red neume fthora" :neume="Fthora.SoftChromaticPa_Top" />
       </button>
       <button
         class="neume-button"
         @click="
           setFthora([
-            Fthora.SoftChromaticThi_TopCenter,
-            Fthora.SoftChromaticThi_BottomCenter,
+            Fthora.SoftChromaticThi_Top,
+            Fthora.SoftChromaticThi_Bottom,
           ])
         "
       >
-        <Neume
-          class="red neume fthora"
-          :neume="Fthora.SoftChromaticThi_TopCenter"
-        />
+        <Neume class="red neume fthora" :neume="Fthora.SoftChromaticThi_Top" />
       </button>
       <span class="space"></span>
       <button
         class="neume-button"
         @click="
-          setFthora([
-            Fthora.HardChromaticPa_TopCenter,
-            Fthora.HardChromaticPa_BottomCenter,
-          ])
+          setFthora([Fthora.HardChromaticPa_Top, Fthora.HardChromaticPa_Bottom])
         "
       >
-        <Neume
-          class="red neume fthora"
-          :neume="Fthora.HardChromaticPa_TopCenter"
-        />
+        <Neume class="red neume fthora" :neume="Fthora.HardChromaticPa_Top" />
       </button>
       <button
         class="neume-button"
         @click="
           setFthora([
-            Fthora.HardChromaticThi_TopCenter,
-            Fthora.HardChromaticThi_BottomCenter,
+            Fthora.HardChromaticThi_Top,
+            Fthora.HardChromaticThi_Bottom,
           ])
         "
       >
-        <Neume
-          class="red neume fthora"
-          :neume="Fthora.HardChromaticThi_TopCenter"
-        />
+        <Neume class="red neume fthora" :neume="Fthora.HardChromaticThi_Top" />
       </button>
       <span class="space"></span>
       <button
         class="neume-button"
-        @click="
-          setFthora([
-            Fthora.GeneralFlat_TopCenter,
-            Fthora.GeneralFlat_BottomCenter,
-          ])
-        "
+        @click="setFthora([Fthora.GeneralFlat_Top, Fthora.GeneralFlat_Bottom])"
       >
-        <Neume class="red neume fthora" :neume="Fthora.GeneralFlat_TopCenter" />
+        <Neume class="red neume fthora" :neume="Fthora.GeneralFlat_Top" />
       </button>
       <button
         class="neume-button"
         @click="
-          setFthora([
-            Fthora.GeneralSharp_TopCenter,
-            Fthora.GeneralSharp_BottomCenter,
-          ])
+          setFthora([Fthora.GeneralSharp_Top, Fthora.GeneralSharp_Bottom])
         "
       >
-        <Neume
-          class="red neume fthora"
-          :neume="Fthora.GeneralSharp_TopCenter"
-        />
+        <Neume class="red neume fthora" :neume="Fthora.GeneralSharp_Top" />
       </button>
       <button
         class="neume-button"
-        @click="
-          setFthora([
-            Fthora.Enharmonic_TopCenter,
-            Fthora.Enharmonic_BottomCenter,
-          ])
-        "
+        @click="setFthora([Fthora.Enharmonic_Top, Fthora.Enharmonic_Bottom])"
       >
-        <Neume class="red neume fthora" :neume="Fthora.Enharmonic_TopCenter" />
+        <Neume class="red neume fthora" :neume="Fthora.Enharmonic_Top" />
       </button>
       <span class="space"></span>
       <button
         class="neume-button"
-        @click="setFthora([Fthora.Zygos_TopCenter, Fthora.Zygos_BottomCenter])"
+        @click="setFthora([Fthora.Zygos_Top, Fthora.Zygos_Bottom])"
       >
-        <Neume class="red neume fthora" :neume="Fthora.Zygos_TopCenter" />
+        <Neume class="red neume fthora" :neume="Fthora.Zygos_Top" />
       </button>
       <button
         class="neume-button"
-        @click="
-          setFthora([Fthora.Kliton_TopCenter, Fthora.Kliton_BottomCenter])
-        "
+        @click="setFthora([Fthora.Kliton_Top, Fthora.Kliton_Bottom])"
       >
-        <Neume class="red neume fthora" :neume="Fthora.Kliton_TopCenter" />
+        <Neume class="red neume fthora" :neume="Fthora.Kliton_Top" />
       </button>
-      <button
-        class="neume-button"
-        @click="setFthora([Fthora.Spathi_TopCenter])"
-      >
-        <Neume class="red neume fthora" :neume="Fthora.Spathi_TopCenter" />
+      <button class="neume-button" @click="setFthora([Fthora.Spathi_Top])">
+        <Neume class="red neume fthora" :neume="Fthora.Spathi_Top" />
       </button>
     </div>
   </div>
@@ -510,7 +435,6 @@ import {
 } from '@/models/Neumes';
 import Neume from './Neume.vue';
 import {
-  areFthorasEquivalent,
   areVocalExpressionsEquivalent,
   onlyTakesTopKlasma,
   onlyTakesBottomKlasma,
@@ -837,9 +761,7 @@ export default class NeumeToolbar extends Vue {
         return;
       }
 
-      equivalent =
-        this.element.fthora != null &&
-        areFthorasEquivalent(neume, this.element.fthora);
+      equivalent = this.element.fthora === neume;
     }
 
     // We've cycled through all the neumes.

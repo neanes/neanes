@@ -94,8 +94,10 @@ export default class ModeKey extends Vue {
     const adjustments = getFthoraAdjustments(fthora);
 
     if (adjustments) {
-      const adjustment = adjustments.find((x) =>
-        x.isPairedWith.includes(this.element.note!),
+      const adjustment = adjustments.find(
+        (x) =>
+          x.isPairedWith.includes(this.element.note!) ||
+          x.isPairedWith.includes(this.element.quantitativeNeumeRight!),
       );
 
       if (adjustment) {

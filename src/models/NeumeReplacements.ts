@@ -53,30 +53,6 @@ const rightTimeNeumes: Neume[] = [
   QuantitativeNeume.DoubleHamili,
 ];
 
-const rightFthoraNeumes: Neume[] = [
-  QuantitativeNeume.Apostrophos,
-  QuantitativeNeume.DoubleHamili,
-  QuantitativeNeume.Hyporoe,
-  QuantitativeNeume.Hamili,
-  QuantitativeNeume.HamiliPlusApostrophos,
-  QuantitativeNeume.HamiliPlusElaphronPlusApostrophos,
-  QuantitativeNeume.HamiliPlusElaphron,
-  QuantitativeNeume.Kentemata,
-  QuantitativeNeume.OligonPlusKentimaAbove,
-  QuantitativeNeume.OligonPlusKentemata,
-  QuantitativeNeume.OligonPlusHypsiliLeft,
-  QuantitativeNeume.OligonPlusApostrophos,
-  QuantitativeNeume.OligonPlusHypsiliPlusKentimaVertical,
-  QuantitativeNeume.PetastiPlusKentimaAbove,
-  QuantitativeNeume.PetastiPlusHypsiliLeft,
-];
-
-const bottomRightFthoraNeumes: Neume[] = [
-  QuantitativeNeume.Hyporoe,
-  QuantitativeNeume.Kentemata,
-  QuantitativeNeume.Apostrophos,
-];
-
 const bottomOnlyKlasmaNeumes: Neume[] = [
   ...petastiNeumes,
 
@@ -466,52 +442,6 @@ export const quantitativeNeumeReplacementMap = new Map<
   ],
 ]);
 
-for (let fthora of Object.values(Fthora)) {
-  const topRightFthora = fthora.replace('TopCenter', 'TopRight') as Fthora;
-  const bottomRightFthora = fthora.replace(
-    'BottomCenter',
-    'BottomRight',
-  ) as Fthora;
-
-  const replacements = fthoraReplacementMap.get(fthora) || [];
-  fthoraReplacementMap.set(fthora, replacements);
-
-  if (
-    fthora.endsWith('TopCenter') &&
-    Object.values(Fthora).includes(topRightFthora)
-  ) {
-    replacements.push({
-      isPairedWith: rightFthoraNeumes,
-      replaceWith: topRightFthora,
-    });
-
-    // Add the opposite
-    const replacementsTopRight = fthoraReplacementMap.get(topRightFthora) || [];
-    fthoraReplacementMap.set(topRightFthora, replacementsTopRight);
-    replacementsTopRight.push({
-      isNotPairedWith: rightFthoraNeumes,
-      replaceWith: fthora,
-    });
-  } else if (
-    fthora.endsWith('BottomCenter') &&
-    Object.values(Fthora).includes(bottomRightFthora)
-  ) {
-    replacements.push({
-      isPairedWith: bottomRightFthoraNeumes,
-      replaceWith: bottomRightFthora,
-    });
-
-    // Add the opposite
-    const replacementsBottomRight =
-      fthoraReplacementMap.get(bottomRightFthora) || [];
-    fthoraReplacementMap.set(bottomRightFthora, replacementsBottomRight);
-    replacementsBottomRight.push({
-      isNotPairedWith: bottomRightFthoraNeumes,
-      replaceWith: fthora,
-    });
-  }
-}
-
 export const getGorgonReplacements = (neume: GorgonNeume) => {
   return gorgonReplacementMap.get(neume);
 };
@@ -541,15 +471,6 @@ export const areVocalExpressionsEquivalent = (
     neume2,
     getVocalExpressionReplacements(neume1),
     getVocalExpressionReplacements(neume2),
-  );
-};
-
-export const areFthorasEquivalent = (neume1: Fthora, neume2: Fthora) => {
-  return areNeumesEquivalent(
-    neume1,
-    neume2,
-    getFthoraReplacements(neume1),
-    getFthoraReplacements(neume2),
   );
 };
 

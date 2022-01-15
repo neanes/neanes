@@ -111,7 +111,7 @@
       {
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": "Hapli_Right",
+        "timeNeume": "Hapli",
         "vocalExpressionNeume": "AntikenomaShort",
         "lyrics": "un",
         "isMelisma": true,
@@ -155,7 +155,7 @@
       {
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": "Klasma_TopRight",
+        "timeNeume": "Klasma_Top",
         "isMelisma": true
       },
       {
@@ -255,7 +255,7 @@
       {
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": "Hapli_Right",
+        "timeNeume": "Hapli",
         "gorgonNeume": "Gorgon_Top",
         "isMelisma": true
       },
@@ -308,7 +308,7 @@
       {
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": "Klasma_TopRight",
+        "timeNeume": "Klasma_Top",
         "vocalExpressionNeume": "Vareia",
         "lyrics": "O",
         "isMelisma": true,
@@ -419,7 +419,7 @@
       {
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": "Klasma_TopRight",
+        "timeNeume": "Klasma_Top",
         "isMelisma": true
       },
       {
@@ -457,7 +457,7 @@
       {
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": "Klasma_TopRight",
+        "timeNeume": "Klasma_Top",
         "lyrics": "un",
         "isMelisma": true,
         "isMelismaStart": true,
@@ -466,7 +466,7 @@
       {
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": "Hapli_Right",
+        "timeNeume": "Hapli",
         "vocalExpressionNeume": "AntikenomaShort",
         "lyrics": "to",
         "isMelisma": true,
@@ -605,7 +605,7 @@
       {
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": "Klasma_TopRight",
+        "timeNeume": "Klasma_Top",
         "vocalExpressionNeume": "Vareia",
         "lyrics": "ca",
         "isMelisma": true,
@@ -671,7 +671,7 @@
       {
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": "Klasma_TopRight",
+        "timeNeume": "Klasma_Top",
         "lyrics": "un",
         "isMelisma": true,
         "isMelismaStart": true,
@@ -680,7 +680,7 @@
       {
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": "Hapli_Right",
+        "timeNeume": "Hapli",
         "vocalExpressionNeume": "AntikenomaShort",
         "lyrics": "to",
         "isMelisma": true,
@@ -720,7 +720,7 @@
       {
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "timeNeume": "Klasma_TopRight",
+        "timeNeume": "Klasma_Top",
         "isMelisma": true
       },
       {

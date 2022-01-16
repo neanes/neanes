@@ -17,7 +17,7 @@ import {
 } from './Neumes';
 
 describe('NeumeMappings', () => {
-  it('should have a value for every neume', () => {
+  it('should have a mapping for every neume', () => {
     expect(
       Object.values(QuantitativeNeume).every(
         (x) => neumeMap.get(x) !== undefined,

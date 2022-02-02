@@ -517,6 +517,40 @@ function createMenu() {
             }
           },
         },
+        { type: 'separator' },
+        {
+          label: 'Cu&t',
+          accelerator: 'CmdOrCtrl+X',
+          click(menuItem, browserWindow, event) {
+            // The accelerator is handled in the renderer process because of
+            // https://github.com/electron/electron/issues/3682.
+            if (!event.triggeredByAccelerator) {
+              win.webContents.send(IpcMainChannels.FileMenuCut);
+            }
+          },
+        },
+        {
+          label: '&Copy',
+          accelerator: 'CmdOrCtrl+C',
+          click(menuItem, browserWindow, event) {
+            // The accelerator is handled in the renderer process because of
+            // https://github.com/electron/electron/issues/3682.
+            if (!event.triggeredByAccelerator) {
+              win.webContents.send(IpcMainChannels.FileMenuCopy);
+            }
+          },
+        },
+        {
+          label: '&Paste',
+          accelerator: 'CmdOrCtrl+V',
+          click(menuItem, browserWindow, event) {
+            // The accelerator is handled in the renderer process because of
+            // https://github.com/electron/electron/issues/3682.
+            if (!event.triggeredByAccelerator) {
+              win.webContents.send(IpcMainChannels.FileMenuPaste);
+            }
+          },
+        },
       ],
     },
     {

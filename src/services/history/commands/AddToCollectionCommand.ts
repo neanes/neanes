@@ -2,7 +2,7 @@ import { Command } from '../CommandService';
 
 export interface AddToCollectionCommandArgs<T> {
   collection: T[];
-  element: T;
+  elements: T[];
   insertAtIndex?: number;
 }
 
@@ -16,19 +16,19 @@ export class AddToCollectionCommand<T> implements Command {
       this.args.collection.splice(
         this.args.insertAtIndex,
         0,
-        this.args.element,
+        ...this.args.elements,
       );
     } else {
-      this.args.collection.push(this.args.element);
+      this.args.collection.push(...this.args.elements);
     }
 
     this.added = true;
   }
 
   public undo() {
-    if (this.added) {
-      const index = this.args.collection.indexOf(this.args.element);
-      this.args.collection.splice(index, 1);
+    if (this.added && this.args.elements.length > 0) {
+      const index = this.args.collection.indexOf(this.args.elements[0]);
+      this.args.collection.splice(index, this.args.elements.length);
       this.added = false;
     }
   }

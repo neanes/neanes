@@ -38,6 +38,7 @@ export enum ElementType {
 
 export abstract class ScoreElement {
   abstract elementType: ElementType;
+  abstract clone(): ScoreElement;
   public lineBreak: boolean = false;
   public pageBreak: boolean = false;
 
@@ -59,6 +60,30 @@ export class NoteElement extends ScoreElement {
   public isMelisma: boolean = false;
   public isMelismaStart: boolean = false;
   public isHyphen: boolean = false;
+
+  public clone() {
+    const clone = new NoteElement();
+
+    Object.assign(clone, this.getClipboardProperties());
+
+    return clone;
+  }
+
+  public getClipboardProperties() {
+    return {
+      measureBar: this.measureBar,
+      measureNumber: this.measureNumber,
+      noteIndicator: this.noteIndicator,
+      ison: this.ison,
+      accidental: this.accidental,
+      fthora: this.fthora,
+      gorgonNeume: this.gorgonNeume,
+      hyporoeGorgonNeume: this.hyporoeGorgonNeume,
+      quantitativeNeume: this.quantitativeNeume,
+      timeNeume: this.timeNeume,
+      vocalExpressionNeume: this.vocalExpressionNeume,
+    } as Partial<NoteElement>;
+  }
 
   public get quantitativeNeume() {
     return this._quantitativeNeume;
@@ -289,17 +314,55 @@ export class MartyriaElement extends ScoreElement {
   public alignRight: boolean = false;
 
   public error: boolean = false;
+
+  public clone() {
+    const clone = new MartyriaElement();
+
+    Object.assign(clone, this.getClipboardProperties());
+
+    return clone;
+  }
+
+  public getClipboardProperties() {
+    return {
+      auto: this.auto,
+      note: this.note,
+      rootSign: this.rootSign,
+      apostrophe: this.apostrophe,
+      alignRight: this.alignRight,
+      measureBar: this.measureBar,
+      fthora: this.fthora,
+    } as Partial<MartyriaElement>;
+  }
 }
 
 export class TempoElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.Tempo;
   public neume: TempoSign = TempoSign.Moderate;
+
+  public clone() {
+    const clone = new TempoElement();
+
+    Object.assign(clone, this.getClipboardProperties());
+
+    return clone;
+  }
+
+  public getClipboardProperties() {
+    return {
+      neume: this.neume,
+    } as Partial<TempoElement>;
+  }
 }
 
 export class EmptyElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.Empty;
 
   public height: number = 0;
+
+  public clone() {
+    return new EmptyElement();
+  }
 }
 
 export enum TextBoxAlignment {
@@ -316,6 +379,24 @@ export class TextBoxElement extends ScoreElement {
   public fontSize: number = 16;
   public fontFamily: string = 'Omega';
   public height: number = 20;
+
+  public clone() {
+    const clone = new TextBoxElement();
+
+    Object.assign(clone, this.getClipboardProperties());
+
+    return clone;
+  }
+
+  public getClipboardProperties() {
+    return {
+      alignment: this.alignment,
+      color: this.color,
+      content: this.content,
+      fontSize: this.fontSize,
+      fontFamily: this.fontFamily,
+    } as Partial<TextBoxElement>;
+  }
 }
 
 export class ModeKeyElement extends ScoreElement {
@@ -371,6 +452,33 @@ export class ModeKeyElement extends ScoreElement {
 
     return element;
   }
+
+  public clone() {
+    const clone = new ModeKeyElement();
+
+    Object.assign(clone, this.getClipboardProperties());
+
+    return clone;
+  }
+
+  public getClipboardProperties() {
+    return {
+      alignment: this.alignment,
+      color: this.color,
+      templateId: this.templateId,
+      mode: this.mode,
+      scale: this.scale,
+      scaleNote: this.scaleNote,
+      martyrias: this.martyrias.map((x) => x),
+      fthora: this.fthora,
+      fthora2: this.fthora2,
+      note: this.note,
+      note2: this.note2,
+      quantitativeNeumeTop: this.quantitativeNeumeTop,
+      quantitativeNeumeRight: this.quantitativeNeumeRight,
+      fontSize: this.fontSize,
+    } as Partial<ModeKeyElement>;
+  }
 }
 
 export class DropCapElement extends ScoreElement {
@@ -379,6 +487,23 @@ export class DropCapElement extends ScoreElement {
   public fontFamily: string | null = null;
   public fontSize: number | null = null;
   public color: string | null = null;
+
+  public clone() {
+    const clone = new DropCapElement();
+
+    Object.assign(clone, this.getClipboardProperties());
+
+    return clone;
+  }
+
+  public getClipboardProperties() {
+    return {
+      color: this.color,
+      content: this.content,
+      fontSize: this.fontSize,
+      fontFamily: this.fontFamily,
+    } as Partial<DropCapElement>;
+  }
 }
 
 export class ScoreElementOffset {

@@ -332,8 +332,10 @@ import { TestFileGenerator } from '@/utils/TestFileGenerator';
 import { TestFileType } from '@/utils/TestFileType';
 import { Unit } from '@/utils/Unit';
 import { withZoom } from '@/utils/withZoom';
+import { shallowEquals } from '@/utils/shallowEquals';
 import { throttle } from 'throttle-debounce';
 import {
+  Command,
   CommandFactory,
   CommandService,
 } from '@/services/history/CommandService';
@@ -387,6 +389,8 @@ export default class Editor extends Vue {
 
   modeKeyDialogIsOpen: boolean = false;
   pageSetupDialogIsOpen: boolean = false;
+
+  clipboard: ScoreElement[] = [];
 
   // Commands
   commandService: CommandService = new CommandService();
@@ -450,6 +454,21 @@ export default class Editor extends Vue {
   onFileMenuRedoThrottled = throttle(
     this.keydownThrottleIntervalMs,
     this.onFileMenuRedo,
+  );
+
+  onCutScoreElementsThrottled = throttle(
+    this.keydownThrottleIntervalMs,
+    this.onCutScoreElements,
+  );
+
+  onCopyScoreElementsThrottled = throttle(
+    this.keydownThrottleIntervalMs,
+    this.onCopyScoreElements,
+  );
+
+  onPasteScoreElementsThrottled = throttle(
+    this.keydownThrottleIntervalMs,
+    this.onPasteScoreElements,
   );
 
   onWindowResizeThrottled = throttle(250, this.onWindowResize);
@@ -613,6 +632,9 @@ export default class Editor extends Vue {
     EventBus.$on(IpcMainChannels.SaveComplete, this.onSaveComplete);
     EventBus.$on(IpcMainChannels.FileMenuUndo, this.onFileMenuUndo);
     EventBus.$on(IpcMainChannels.FileMenuRedo, this.onFileMenuRedo);
+    EventBus.$on(IpcMainChannels.FileMenuCut, this.onFileMenuCut);
+    EventBus.$on(IpcMainChannels.FileMenuCopy, this.onFileMenuCopy);
+    EventBus.$on(IpcMainChannels.FileMenuPaste, this.onFileMenuPaste);
     EventBus.$on(
       IpcMainChannels.FileMenuInsertTextBox,
       this.onFileMenuInsertTextBox,
@@ -642,6 +664,11 @@ export default class Editor extends Vue {
     EventBus.$off(IpcMainChannels.FileMenuSaveAs, this.onFileMenuSaveAs);
     EventBus.$off(IpcMainChannels.FileMenuPageSetup, this.onFileMenuPageSetup);
     EventBus.$off(IpcMainChannels.SaveComplete, this.onSaveComplete);
+    EventBus.$off(IpcMainChannels.FileMenuUndo, this.onFileMenuUndo);
+    EventBus.$off(IpcMainChannels.FileMenuRedo, this.onFileMenuRedo);
+    EventBus.$off(IpcMainChannels.FileMenuCut, this.onFileMenuCut);
+    EventBus.$off(IpcMainChannels.FileMenuCopy, this.onFileMenuCopy);
+    EventBus.$off(IpcMainChannels.FileMenuPaste, this.onFileMenuPaste);
     EventBus.$off(
       IpcMainChannels.FileMenuInsertTextBox,
       this.onFileMenuInsertTextBox,
@@ -1030,6 +1057,18 @@ export default class Editor extends Vue {
         this.onFileMenuRedoThrottled();
         event.preventDefault();
         return;
+      } else if (event.code === 'KeyX') {
+        this.onCutScoreElementsThrottled();
+        event.preventDefault();
+        return;
+      } else if (event.code === 'KeyC') {
+        this.onCopyScoreElementsThrottled();
+        event.preventDefault();
+        return;
+      } else if (event.code === 'KeyV') {
+        this.onPasteScoreElementsThrottled();
+        event.preventDefault();
+        return;
       }
     }
 
@@ -1165,6 +1204,235 @@ export default class Editor extends Vue {
       event.preventDefault();
       return;
     }
+  }
+
+  onCutScoreElements() {
+    if (
+      this.selectedElement != null &&
+      this.selectedElement.elementType !== ElementType.Empty
+    ) {
+      const currentIndex = this.selectedElementIndex;
+
+      this.clipboard = [this.selectedElement.clone()];
+
+      this.removeScoreElement(this.selectedElement);
+
+      this.selectedElement =
+        this.elements[Math.min(currentIndex, this.elements.length - 1)];
+
+      this.save();
+    }
+  }
+
+  onCopyScoreElements() {
+    if (
+      this.selectedElement != null &&
+      this.selectedElement.elementType !== ElementType.Empty
+    ) {
+      this.clipboard = [this.selectedElement.clone()];
+    }
+  }
+
+  onPasteScoreElements() {
+    if (this.clipboard.length > 0 && this.selectedElement != null) {
+      switch (this.entryMode) {
+        case EntryMode.Insert:
+          this.onPasteScoreElementsInsert();
+          break;
+        case EntryMode.Auto:
+          this.onPasteScoreElementsAuto();
+          break;
+        case EntryMode.Edit:
+          this.onPasteScoreElementsEdit();
+          break;
+      }
+    }
+  }
+
+  onPasteScoreElementsInsert() {
+    if (this.selectedElement == null || this.clipboard.length === 0) {
+      return;
+    }
+
+    const insertAtIndex = this.isLastElement(this.selectedElement)
+      ? this.selectedElementIndex
+      : this.selectedElementIndex + 1;
+
+    const newElements = this.clipboard.map((x) => x.clone());
+
+    this.addScoreElements(newElements, insertAtIndex);
+
+    this.selectedElement = newElements.at(-1)!;
+    this.save();
+  }
+
+  onPasteScoreElementsEdit() {
+    if (this.selectedElement == null || this.clipboard.length === 0) {
+      return;
+    }
+
+    const commands: Command[] = [];
+
+    let currentIndex = this.selectedElementIndex;
+
+    for (let clipboardElement of this.clipboard) {
+      const currentElement = this.elements[currentIndex];
+
+      if (this.isLastElement(currentElement)) {
+        commands.push(
+          this.scoreElementCommandFactory.create('add-to-collection', {
+            elements: [clipboardElement.clone()],
+            collection: this.elements,
+            insertAtIndex: currentIndex,
+          }),
+        );
+      } else {
+        if (currentElement.elementType === clipboardElement.elementType) {
+          switch (currentElement.elementType) {
+            case ElementType.Note:
+              if (
+                !shallowEquals(
+                  (currentElement as NoteElement).getClipboardProperties(),
+                  (clipboardElement as NoteElement).getClipboardProperties(),
+                )
+              ) {
+                commands.push(
+                  this.noteElementCommandFactory.create('update-properties', {
+                    target: currentElement as NoteElement,
+                    newValues: (
+                      clipboardElement as NoteElement
+                    ).getClipboardProperties(),
+                  }),
+                );
+              }
+              break;
+            case ElementType.Tempo:
+              if (
+                !shallowEquals(
+                  (currentElement as TempoElement).getClipboardProperties(),
+                  (clipboardElement as TempoElement).getClipboardProperties(),
+                )
+              ) {
+                commands.push(
+                  this.tempoCommandFactory.create('update-properties', {
+                    target: currentElement as TempoElement,
+                    newValues: (
+                      clipboardElement as TempoElement
+                    ).getClipboardProperties(),
+                  }),
+                );
+              }
+              break;
+            case ElementType.Martyria:
+              if (
+                !shallowEquals(
+                  (currentElement as MartyriaElement).getClipboardProperties(),
+                  (
+                    clipboardElement as MartyriaElement
+                  ).getClipboardProperties(),
+                )
+              ) {
+                commands.push(
+                  this.martyriaCommandFactory.create('update-properties', {
+                    target: currentElement as MartyriaElement,
+                    newValues: (
+                      clipboardElement as MartyriaElement
+                    ).getClipboardProperties(),
+                  }),
+                );
+              }
+              break;
+            case ElementType.DropCap:
+              if (
+                !shallowEquals(
+                  (currentElement as DropCapElement).getClipboardProperties(),
+                  (clipboardElement as DropCapElement).getClipboardProperties(),
+                )
+              ) {
+                commands.push(
+                  this.dropCapCommandFactory.create('update-properties', {
+                    target: currentElement as DropCapElement,
+                    newValues: (
+                      clipboardElement as DropCapElement
+                    ).getClipboardProperties(),
+                  }),
+                );
+              }
+              break;
+            case ElementType.ModeKey:
+              if (
+                !shallowEquals(
+                  (currentElement as ModeKeyElement).getClipboardProperties(),
+                  (clipboardElement as ModeKeyElement).getClipboardProperties(),
+                )
+              ) {
+                commands.push(
+                  this.modeKeyCommandFactory.create('update-properties', {
+                    target: currentElement as ModeKeyElement,
+                    newValues: (
+                      clipboardElement as ModeKeyElement
+                    ).getClipboardProperties(),
+                  }),
+                );
+              }
+              break;
+            case ElementType.TextBox:
+              if (
+                !shallowEquals(
+                  (currentElement as TextBoxElement).getClipboardProperties(),
+                  (clipboardElement as TextBoxElement).getClipboardProperties(),
+                )
+              ) {
+                commands.push(
+                  this.textBoxCommandFactory.create('update-properties', {
+                    target: currentElement as TextBoxElement,
+                    newValues: (
+                      clipboardElement as TextBoxElement
+                    ).getClipboardProperties(),
+                  }),
+                );
+              }
+              break;
+          }
+        } else {
+          commands.push(
+            this.scoreElementCommandFactory.create(
+              'replace-element-in-collection',
+              {
+                element: clipboardElement.clone(),
+                collection: this.elements,
+                replaceAtIndex: currentIndex,
+              },
+            ),
+          );
+        }
+      }
+
+      if (currentIndex < this.elements.length - 1) {
+        currentIndex++;
+      }
+    }
+
+    if (commands.length > 1) {
+      this.commandService.executeAsBatch(commands);
+    } else if (commands.length === 1) {
+      this.commandService.execute(commands[0]);
+    }
+
+    this.save();
+
+    return currentIndex;
+  }
+
+  onPasteScoreElementsAuto() {
+    this.moveRight();
+    const currentIndex = this.selectedElementIndex;
+
+    this.onPasteScoreElementsEdit();
+
+    // Set the selected element to the last element that was pasted
+    this.selectedElement =
+      this.elements[currentIndex + this.clipboard.length - 1];
   }
 
   getLyricLength(element: NoteElement) {
@@ -1334,7 +1602,17 @@ export default class Editor extends Vue {
   addScoreElement(element: ScoreElement, insertAtIndex?: number) {
     this.commandService.execute(
       this.scoreElementCommandFactory.create('add-to-collection', {
-        element,
+        elements: [element],
+        collection: this.elements,
+        insertAtIndex,
+      }),
+    );
+  }
+
+  addScoreElements(elements: ScoreElement[], insertAtIndex?: number) {
+    this.commandService.execute(
+      this.scoreElementCommandFactory.create('add-to-collection', {
+        elements,
         collection: this.elements,
         insertAtIndex,
       }),
@@ -1805,13 +2083,51 @@ export default class Editor extends Vue {
   }
 
   onFileMenuUndo() {
+    const currentIndex = this.selectedElementIndex;
+
     this.commandService.undo();
+
+    // If the selected element was removed during the undo process, choose a new one
+    this.selectedElement =
+      this.elements[Math.min(currentIndex, this.elements.length - 1)];
+
     this.save();
   }
 
   onFileMenuRedo() {
+    const currentIndex = this.selectedElementIndex;
+
     this.commandService.redo();
+
+    // If the selected element was removed during the redo process, choose a new one
+    this.selectedElement =
+      this.elements[Math.min(currentIndex, this.elements.length - 1)];
+
     this.save();
+  }
+
+  onFileMenuCut() {
+    if (!this.isTextInputFocused() && !this.dialogOpen()) {
+      this.onCutScoreElements();
+    } else {
+      document.execCommand('cut');
+    }
+  }
+
+  onFileMenuCopy() {
+    if (!this.isTextInputFocused() && !this.dialogOpen()) {
+      this.onCopyScoreElements();
+    } else {
+      document.execCommand('copy');
+    }
+  }
+
+  onFileMenuPaste() {
+    if (!this.isTextInputFocused() && !this.dialogOpen()) {
+      this.onPasteScoreElements();
+    } else {
+      document.execCommand('paste');
+    }
   }
 
   onFileMenuGenerateTestFile(testFileType: TestFileType) {

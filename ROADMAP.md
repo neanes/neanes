@@ -16,7 +16,6 @@
 - Advanced neumes (connecting heteron, ties, et al)
 - Header Images
 - Headers/Footers/Page Numbers
-- Copy/Cut/Paste elements
 - Allow multiple elements to be selected (and copy/cut/pasted)
 - Configurable Neume Keyboard
 - Better styling

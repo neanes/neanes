@@ -21,6 +21,8 @@ export interface Command {
   execute(): void;
   undo(): void;
   redo(): void;
+
+  batchId?: number;
 }
 
 interface CommandMap<T> {
@@ -61,6 +63,7 @@ export class CommandFactory<T> {
 export class CommandService {
   private commandHistory: Command[] = [];
   private index: number = -1;
+  private nextBatchId: number = 1;
 
   constructor() {
     this.notify();
@@ -91,10 +94,27 @@ export class CommandService {
     this.notify();
   }
 
+  public executeAsBatch(batch: Command[]) {
+    for (let command of batch) {
+      command.batchId = this.nextBatchId;
+      this.execute(command);
+    }
+
+    this.nextBatchId++;
+  }
+
   public undo() {
     if (this.index >= 0) {
-      this.commandHistory[this.index].undo();
-      this.index--;
+      let batchId = this.commandHistory[this.index].batchId;
+
+      do {
+        this.commandHistory[this.index].undo();
+        this.index--;
+      } while (
+        this.index >= 0 &&
+        batchId != null &&
+        this.commandHistory[this.index].batchId === batchId
+      );
 
       this.notify();
     }
@@ -102,8 +122,16 @@ export class CommandService {
 
   public redo() {
     if (this.index < this.commandHistory.length - 1) {
-      this.index++;
-      this.commandHistory[this.index].redo();
+      let batchId = this.commandHistory[this.index + 1].batchId;
+
+      do {
+        this.index++;
+        this.commandHistory[this.index].redo();
+      } while (
+        this.index < this.commandHistory.length - 1 &&
+        batchId != null &&
+        this.commandHistory[this.index + 1].batchId === batchId
+      );
 
       this.notify();
     }

@@ -261,7 +261,7 @@
         @mouseleave="selectedNoteIndicator = null"
       >
         <button class="neume-button">
-          <Neume class="neume note-indicator" :neume="NoteIndicator.Ni" />
+          <Neume class="red neume note-indicator" :neume="NoteIndicator.Ni" />
         </button>
         <div class="menu" v-if="showNoteIndicatorMenu">
           <div
@@ -270,7 +270,7 @@
             :key="menuItem"
             @mouseenter="selectedNoteIndicator = menuItem"
           >
-            <Neume class="neume note-indicator" :neume="menuItem" />
+            <Neume class="red neume note-indicator" :neume="menuItem" />
           </div>
         </div>
       </div>

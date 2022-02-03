@@ -223,6 +223,7 @@ export default class MainToolbar extends Vue {
   display: flex;
   align-items: center;
   justify-content: center;
+  user-select: none;
 }
 
 .line-break-btn {
@@ -236,6 +237,8 @@ export default class MainToolbar extends Vue {
   position: relative;
 
   overflow: hidden;
+
+  user-select: none;
 }
 
 .space {

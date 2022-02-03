@@ -55,8 +55,9 @@
                     class="syllable-box"
                     :note="element"
                     :pageSetup="score.pageSetup"
-                    :class="[{ selected: element == selectedElement }]"
-                    @click.native="selectedElement = element"
+                    :class="[{ selected: isSelected(element) }]"
+                    @click.native.exact="selectedElement = element"
+                    @click.native.shift.exact="setSelectionRange(element)"
                   ></SyllableNeumeBox>
                   <div
                     class="lyrics-container"
@@ -347,6 +348,11 @@ export enum EntryMode {
   Edit = 'Edit',
 }
 
+interface ScoreElementSelectionRange {
+  start: number;
+  end: number;
+}
+
 @Component({
   components: {
     SyllableNeumeBox,
@@ -392,6 +398,8 @@ export default class Editor extends Vue {
 
   clipboard: ScoreElement[] = [];
 
+  selectionRange: ScoreElementSelectionRange | null = null;
+
   // Commands
   commandService: CommandService = new CommandService();
 
@@ -435,6 +443,16 @@ export default class Editor extends Vue {
   moveLeftThrottled = throttle(this.keydownThrottleIntervalMs, this.moveLeft);
 
   moveRightThrottled = throttle(this.keydownThrottleIntervalMs, this.moveRight);
+
+  moveSelectionLeftThrottled = throttle(
+    this.keydownThrottleIntervalMs,
+    this.moveSelectionLeft,
+  );
+
+  moveSelectionRightThrottled = throttle(
+    this.keydownThrottleIntervalMs,
+    this.moveSelectionRight,
+  );
 
   deleteSelectedElementThrottled = throttle(
     this.keydownThrottleIntervalMs,
@@ -501,6 +519,7 @@ export default class Editor extends Vue {
   set selectedElement(element: ScoreElement | null) {
     if (element != null) {
       this.selectedLyrics = null;
+      this.selectionRange = null;
     }
 
     this.selectedElementValue = element;
@@ -513,6 +532,7 @@ export default class Editor extends Vue {
   set selectedLyrics(element: NoteElement | null) {
     if (element != null) {
       this.selectedElementValue = null;
+      this.selectionRange = null;
     }
 
     this.selectedLyricsValue = element;
@@ -700,6 +720,41 @@ export default class Editor extends Vue {
 
   getElementIndex(element: ScoreElement) {
     return this.elements.indexOf(element);
+  }
+
+  setSelectionRange(element: ScoreElement) {
+    const elementIndex = this.getElementIndex(element);
+
+    if (this.selectedElement != null) {
+      this.selectionRange = {
+        start: this.selectedElementIndex,
+        end: elementIndex,
+      };
+
+      this.selectedElement = null;
+    } else if (this.selectionRange != null) {
+      this.selectionRange.end = elementIndex;
+    }
+  }
+
+  isSelected(element: ScoreElement) {
+    if (this.selectedElement === element) {
+      return true;
+    }
+    if (this.selectionRange != null) {
+      const start = Math.min(
+        this.selectionRange.start,
+        this.selectionRange.end,
+      );
+      const end = Math.max(this.selectionRange.start, this.selectionRange.end);
+
+      return (
+        start <= this.getElementIndex(element) &&
+        this.getElementIndex(element) <= end
+      );
+    }
+
+    return false;
   }
 
   isMelisma(element: NoteElement) {
@@ -1072,42 +1127,56 @@ export default class Editor extends Vue {
       }
     }
 
-    if (this.selectedElement != null) {
-      if (
-        this.navigableElements.includes(this.selectedElement.elementType) &&
-        !this.isTextInputFocused() &&
-        !this.dialogOpen()
-      ) {
-        return this.onKeydownNeume(event);
-      } else if (this.selectedElement.elementType === ElementType.DropCap) {
-        return this.onKeydownDropCap(event);
-      }
-    } else if (this.selectedLyrics != null) {
+    if (this.selectedLyrics != null) {
       return this.onKeydownLyrics(event);
+    }
+
+    if (
+      this.selectedElement != null &&
+      this.selectedElement.elementType === ElementType.DropCap
+    ) {
+      return this.onKeydownDropCap(event);
+    }
+
+    if (!this.isTextInputFocused() && !this.dialogOpen()) {
+      return this.onKeydownNeume(event);
     }
   }
 
   onKeydownNeume(event: KeyboardEvent) {
     let handled = false;
 
-    switch (event.code) {
-      case 'ArrowLeft':
-        this.moveLeftThrottled();
-        handled = true;
-        break;
-      case 'ArrowRight':
-      case 'Space':
-        this.moveRightThrottled();
-        handled = true;
-        break;
-      case 'Backspace':
-        handled = true;
-        this.deletePreviousElementThrottled();
-        break;
-      case 'Delete':
-        handled = true;
-        this.deleteSelectedElementThrottled();
-        break;
+    if (event.shiftKey) {
+      switch (event.code) {
+        case 'ArrowLeft':
+          this.moveSelectionLeftThrottled();
+          handled = true;
+          break;
+        case 'ArrowRight':
+          this.moveSelectionRightThrottled();
+          handled = true;
+          break;
+      }
+    } else {
+      switch (event.code) {
+        case 'ArrowLeft':
+          this.moveLeftThrottled();
+          handled = true;
+          break;
+        case 'ArrowRight':
+        case 'Space':
+          this.moveRightThrottled();
+          handled = true;
+          break;
+        case 'Backspace':
+          handled = true;
+          this.deletePreviousElementThrottled();
+          break;
+        case 'Delete':
+          handled = true;
+          this.deleteSelectedElementThrottled();
+          break;
+      }
     }
 
     if (handled) {
@@ -1207,7 +1276,32 @@ export default class Editor extends Vue {
   }
 
   onCutScoreElements() {
-    if (
+    if (this.selectionRange != null) {
+      const start = Math.min(
+        this.selectionRange.start,
+        this.selectionRange.end,
+      );
+
+      const elementsToCut = this.elements.filter(
+        (x) => x.elementType != ElementType.Empty && this.isSelected(x),
+      );
+
+      this.clipboard = elementsToCut.map((x) => x.clone());
+
+      this.commandService.executeAsBatch(
+        elementsToCut.map((element) =>
+          this.scoreElementCommandFactory.create('remove-from-collection', {
+            element,
+            collection: this.elements,
+          }),
+        ),
+      );
+
+      this.selectedElement =
+        this.elements[Math.min(start, this.elements.length - 1)];
+
+      this.save();
+    } else if (
       this.selectedElement != null &&
       this.selectedElement.elementType !== ElementType.Empty
     ) {
@@ -1225,7 +1319,11 @@ export default class Editor extends Vue {
   }
 
   onCopyScoreElements() {
-    if (
+    if (this.selectionRange != null) {
+      this.clipboard = this.elements
+        .filter((x) => x.elementType != ElementType.Empty && this.isSelected(x))
+        .map((x) => x.clone());
+    } else if (
       this.selectedElement != null &&
       this.selectedElement.elementType !== ElementType.Empty
     ) {
@@ -1278,7 +1376,7 @@ export default class Editor extends Vue {
     for (let clipboardElement of this.clipboard) {
       const currentElement = this.elements[currentIndex];
 
-      if (this.isLastElement(currentElement)) {
+      if (currentIndex >= this.elements.length - 1) {
         commands.push(
           this.scoreElementCommandFactory.create('add-to-collection', {
             elements: [clipboardElement.clone()],
@@ -1408,9 +1506,7 @@ export default class Editor extends Vue {
         }
       }
 
-      if (currentIndex < this.elements.length - 1) {
-        currentIndex++;
-      }
+      currentIndex++;
     }
 
     if (commands.length > 1) {
@@ -1420,8 +1516,6 @@ export default class Editor extends Vue {
     }
 
     this.save();
-
-    return currentIndex;
   }
 
   onPasteScoreElementsAuto() {
@@ -1464,33 +1558,83 @@ export default class Editor extends Vue {
   ];
 
   moveLeft() {
-    if (this.selectedElement) {
-      const index = this.elements.indexOf(this.selectedElement);
+    let index = -1;
 
-      if (
-        index - 1 >= 0 &&
-        this.navigableElements.includes(this.elements[index - 1].elementType)
-      ) {
-        this.selectedElement = this.elements[index - 1];
-      }
+    if (this.selectedElement) {
+      index = this.elements.indexOf(this.selectedElement);
+    } else if (this.selectionRange) {
+      index = this.selectionRange.end;
+    }
+
+    if (
+      index - 1 >= 0 &&
+      this.navigableElements.includes(this.elements[index - 1].elementType)
+    ) {
+      this.selectedElement = this.elements[index - 1];
     }
   }
 
   moveRight() {
-    if (this.selectedElement) {
-      const index = this.elements.indexOf(this.selectedElement);
+    let index = -1;
 
-      if (
-        index >= 0 &&
-        index + 1 < this.elements.length &&
-        this.navigableElements.includes(this.elements[index + 1].elementType)
-      ) {
-        this.selectedElement = this.elements[index + 1];
-        return true;
-      }
+    if (this.selectedElement) {
+      index = this.elements.indexOf(this.selectedElement);
+    } else if (this.selectionRange) {
+      index = this.selectionRange.end;
+    }
+
+    if (
+      index >= 0 &&
+      index + 1 < this.elements.length &&
+      this.navigableElements.includes(this.elements[index + 1].elementType)
+    ) {
+      this.selectedElement = this.elements[index + 1];
+      return true;
     }
 
     return false;
+  }
+
+  moveSelectionLeft() {
+    if (this.selectionRange != null) {
+      if (
+        this.selectionRange.end > 0 &&
+        this.navigableElements.includes(
+          this.elements[this.selectionRange.end - 1].elementType,
+        )
+      ) {
+        this.setSelectionRange(this.elements[this.selectionRange.end - 1]);
+      }
+    } else if (
+      this.selectedElement != null &&
+      this.selectedElementIndex > 0 &&
+      this.navigableElements.includes(
+        this.elements[this.selectedElementIndex - 1].elementType,
+      )
+    ) {
+      this.setSelectionRange(this.elements[this.selectedElementIndex - 1]);
+    }
+  }
+
+  moveSelectionRight() {
+    if (this.selectionRange != null) {
+      if (
+        this.selectionRange.end + 1 < this.elements.length - 1 &&
+        this.navigableElements.includes(
+          this.elements[this.selectionRange.end + 1].elementType,
+        )
+      ) {
+        this.setSelectionRange(this.elements[this.selectionRange.end + 1]);
+      }
+    } else if (
+      this.selectedElement != null &&
+      this.selectedElementIndex + 1 < this.elements.length - 1 &&
+      this.navigableElements.includes(
+        this.elements[this.selectedElementIndex + 1].elementType,
+      )
+    ) {
+      this.setSelectionRange(this.elements[this.selectedElementIndex + 1]);
+    }
   }
 
   getNextLyricBoxIndex() {
@@ -1915,12 +2059,30 @@ export default class Editor extends Vue {
   }
 
   deleteSelectedElement() {
-    if (this.selectedElement && !this.isLastElement(this.selectedElement)) {
+    if (
+      this.selectedElement != null &&
+      !this.isLastElement(this.selectedElement)
+    ) {
       const index = this.selectedElementIndex;
 
       this.removeScoreElement(this.selectedElement);
 
       this.selectedElement = this.elements[index];
+
+      this.save();
+    } else if (this.selectionRange != null) {
+      const elementsToDelete = this.elements.filter(
+        (x) => x.elementType != ElementType.Empty && this.isSelected(x),
+      );
+
+      this.commandService.executeAsBatch(
+        elementsToDelete.map((element) =>
+          this.scoreElementCommandFactory.create('remove-from-collection', {
+            element,
+            collection: this.elements,
+          }),
+        ),
+      );
 
       this.save();
     }

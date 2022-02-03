@@ -957,6 +957,8 @@ export default class NeumeToolbar extends Vue {
   position: relative;
 
   overflow: hidden;
+
+  user-select: none;
 }
 
 .space {

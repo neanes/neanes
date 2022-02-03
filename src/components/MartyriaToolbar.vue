@@ -218,6 +218,8 @@ export default class MartyriaToolbar extends Vue {
   position: relative;
 
   overflow: hidden;
+
+  user-select: none;
 }
 
 .space {
@@ -241,6 +243,8 @@ export default class MartyriaToolbar extends Vue {
   height: var(--btn-size);
   width: var(--btn-size);
   padding: 0;
+
+  user-select: none;
 }
 
 .icon-btn.selected {

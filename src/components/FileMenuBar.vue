@@ -61,15 +61,15 @@ export default class FileMenuBar extends Vue {
   onClickSave() {
     EventBus.$emit(IpcMainChannels.FileMenuSaveAs);
 
-    EventBus.$once(IpcRendererChannels.FileMenuSaveAsReply, (data: string) => {
-      const contentType = 'text/plain';
+    // EventBus.$once(IpcRendererChannels.FileMenuSaveAsReply, (data: string) => {
+    //   const contentType = 'text/plain';
 
-      var a = document.createElement('a');
-      var file = new Blob([data], { type: contentType });
-      a.href = URL.createObjectURL(file);
-      a.download = 'score.json';
-      a.click();
-    });
+    //   var a = document.createElement('a');
+    //   var file = new Blob([data], { type: contentType });
+    //   a.href = URL.createObjectURL(file);
+    //   a.download = 'score.json';
+    //   a.click();
+    // });
   }
 
   onSelectFile() {

@@ -16,4 +16,10 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
       ipcRenderer.on(channel, (event, ...args) => func(...args));
     }
   },
+  invoke: (channel, ...args) => {
+    let validChannels = Object.values(IpcRendererChannels);
+    if (validChannels.includes(channel)) {
+      return ipcRenderer.invoke(channel, ...args);
+    }
+  },
 });

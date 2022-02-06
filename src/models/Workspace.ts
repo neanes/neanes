@@ -16,4 +16,6 @@ export class Workspace {
   public zoom: number = 1;
   public zoomToFit: boolean = false;
   public entryMode: EntryMode = EntryMode.Auto;
+  public scrollLeft: number = 0;
+  public scrollTop: number = 0;
 }

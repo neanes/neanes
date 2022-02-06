@@ -618,6 +618,10 @@ export default class Editor extends Vue {
     } as CSSStyleDeclaration;
   }
 
+  get dialogOpen() {
+    return this.modeKeyDialogIsOpen || this.pageSetupDialogIsOpen;
+  }
+
   @Watch('zoom')
   onZoomUpdated() {
     document.documentElement.style.setProperty('--zoom', this.zoom.toString());
@@ -1158,10 +1162,6 @@ export default class Editor extends Vue {
     );
   }
 
-  dialogOpen() {
-    return this.modeKeyDialogIsOpen || this.pageSetupDialogIsOpen;
-  }
-
   onWindowResize() {
     if (this.zoomToFit) {
       this.performZoomToFit();
@@ -1171,7 +1171,7 @@ export default class Editor extends Vue {
   onKeydown(event: KeyboardEvent) {
     // Handle undo / redo
     // See https://github.com/electron/electron/issues/3682.
-    if (event.ctrlKey && !this.isTextInputFocused() && !this.dialogOpen()) {
+    if (event.ctrlKey && !this.isTextInputFocused() && !this.dialogOpen) {
       if (event.code === 'KeyZ') {
         this.onFileMenuUndoThrottled();
         event.preventDefault();
@@ -1206,7 +1206,7 @@ export default class Editor extends Vue {
       return this.onKeydownDropCap(event);
     }
 
-    if (!this.isTextInputFocused() && !this.dialogOpen()) {
+    if (!this.isTextInputFocused() && !this.dialogOpen) {
       return this.onKeydownNeume(event);
     }
   }
@@ -2307,7 +2307,9 @@ export default class Editor extends Vue {
   }
 
   async onFileMenuOpenScore(args: FileMenuOpenScoreArgs) {
-    this.openScore(args);
+    if (!this.dialogOpen) {
+      this.openScore(args);
+    }
   }
 
   onFileMenuPageSetup() {
@@ -2406,7 +2408,7 @@ export default class Editor extends Vue {
   }
 
   onFileMenuCut() {
-    if (!this.isTextInputFocused() && !this.dialogOpen()) {
+    if (!this.isTextInputFocused() && !this.dialogOpen) {
       this.onCutScoreElements();
     } else {
       document.execCommand('cut');
@@ -2414,7 +2416,7 @@ export default class Editor extends Vue {
   }
 
   onFileMenuCopy() {
-    if (!this.isTextInputFocused() && !this.dialogOpen()) {
+    if (!this.isTextInputFocused() && !this.dialogOpen) {
       this.onCopyScoreElements();
     } else {
       document.execCommand('copy');
@@ -2422,7 +2424,7 @@ export default class Editor extends Vue {
   }
 
   onFileMenuPaste() {
-    if (!this.isTextInputFocused() && !this.dialogOpen()) {
+    if (!this.isTextInputFocused() && !this.dialogOpen) {
       this.onPasteScoreElements();
     } else {
       document.execCommand('paste');

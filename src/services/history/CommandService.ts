@@ -77,7 +77,7 @@ export class CommandService {
     return this.index < this.commandHistory.length - 1;
   }
 
-  private notify() {
+  public notify() {
     EventBus.$emit(IpcRendererChannels.SetCanUndo, this.canUndo);
     EventBus.$emit(IpcRendererChannels.SetCanRedo, this.canRedo);
   }

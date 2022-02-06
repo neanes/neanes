@@ -20,184 +20,207 @@
         class="neume-selector"
         @select-quantitative-neume="addQuantitativeNeume"
       ></NeumeSelector>
-      <div class="page-background" ref="page-background">
-        <div
-          class="page"
-          :style="pageStyle"
-          v-for="(page, pageIndex) in pages"
-          :key="`page-${pageIndex}`"
-          :ref="`page-${pageIndex}`"
-        >
+      <div class="page-container">
+        <div class="workspace-tab-container">
           <div
-            class="line"
-            v-for="(line, lineIndex) in page.lines"
-            :key="`line-${pageIndex}-${lineIndex}`"
-            :ref="`line-${lineIndex}`"
+            class="workspace-tab"
+            :class="{ selected: workspace == selectedWorkspace }"
+            v-for="(workspace, index) in workspaces"
+            :key="`${index}-${workspace.filePath}`"
+            @click="selectedWorkspace = workspace"
+          >
+            <div class="workspace-tab-label">
+              {{ getFileName(workspace) }}
+            </div>
+            <div
+              class="workspace-tab-close-btn"
+              @click.stop="closeWorkspace(workspace)"
+            >
+              X
+            </div>
+          </div>
+        </div>
+        <div class="page-background" ref="page-background">
+          <div
+            class="page"
+            :style="pageStyle"
+            v-for="(page, pageIndex) in pages"
+            :key="`page-${pageIndex}`"
+            :ref="`page-${pageIndex}`"
           >
             <div
-              v-for="(element, index) in line.elements"
-              :key="`lineElement-${pageIndex}-${lineIndex}-${index}`"
-              class="element-box"
-              :style="getElementStyle(element)"
+              class="line"
+              v-for="(line, lineIndex) in page.lines"
+              :key="`line-${pageIndex}-${lineIndex}`"
+              :ref="`line-${lineIndex}`"
             >
-              <template v-if="isSyllableElement(element)">
-                <div
-                  :ref="`element-${getElementIndex(element)}`"
-                  class="neume-box"
-                >
+              <div
+                v-for="(element, index) in line.elements"
+                :key="`lineElement-${pageIndex}-${lineIndex}-${index}`"
+                class="element-box"
+                :style="getElementStyle(element)"
+              >
+                <template v-if="isSyllableElement(element)">
+                  <div
+                    :ref="`element-${getElementIndex(element)}`"
+                    class="neume-box"
+                  >
+                    <span class="page-break" v-if="element.pageBreak"
+                      ><img src="@/assets/pagebreak.svg"
+                    /></span>
+                    <span class="line-break" v-if="element.lineBreak"
+                      >&#182;</span
+                    >
+                    <SyllableNeumeBox
+                      class="syllable-box"
+                      :note="element"
+                      :pageSetup="score.pageSetup"
+                      :class="[{ selected: isSelected(element) }]"
+                      @click.native.exact="selectedElement = element"
+                      @click.native.shift.exact="setSelectionRange(element)"
+                    ></SyllableNeumeBox>
+                    <div
+                      class="lyrics-container"
+                      :key="`lyrics-${getElementIndex(element)}-${
+                        element.keyHelper
+                      }`"
+                      :style="getLyricStyle(element)"
+                      @click="focusLyrics(getElementIndex(element))"
+                    >
+                      <ContentEditable
+                        class="lyrics"
+                        :content="element.lyrics"
+                        :ref="`lyrics-${getElementIndex(element)}`"
+                        @focus.native="selectedLyrics = element"
+                        @blur="updateLyrics(element, $event)"
+                      ></ContentEditable>
+                      <template v-if="isMelisma(element)">
+                        <div
+                          class="melisma"
+                          :class="{ full: element.isFullMelisma }"
+                          :style="getMelismaStyle(element)"
+                          v-text="element.melismaText"
+                        ></div>
+                      </template>
+                    </div>
+                  </div>
+                </template>
+                <template v-if="isMartyriaElement(element)">
+                  <div class="neume-box">
+                    <span class="page-break" v-if="element.pageBreak">
+                      ><img src="@/assets/pagebreak.svg"
+                    /></span>
+                    <span class="line-break" v-if="element.lineBreak"
+                      >&#182;</span
+                    >
+                    <MartyriaNeumeBox
+                      :ref="`element-${getElementIndex(element)}`"
+                      class="marytria-neume-box"
+                      :neume="element"
+                      :pageSetup="score.pageSetup"
+                      :class="[{ selected: element == selectedElement }]"
+                      @click.native="selectedElement = element"
+                    ></MartyriaNeumeBox>
+                    <div class="lyrics"></div>
+                  </div>
+                </template>
+                <template v-if="isTempoElement(element)">
+                  <div
+                    :ref="`element-${getElementIndex(element)}`"
+                    class="neume-box"
+                  >
+                    <span class="page-break" v-if="element.pageBreak">
+                      ><img src="@/assets/pagebreak.svg"
+                    /></span>
+                    <span class="line-break" v-if="element.lineBreak"
+                      >&#182;</span
+                    >
+                    <TempoNeumeBox
+                      class="tempo-neume-box"
+                      :neume="element"
+                      :pageSetup="score.pageSetup"
+                      :class="[{ selected: element == selectedElement }]"
+                      @click.native="selectedElement = element"
+                    ></TempoNeumeBox>
+                    <div class="lyrics"></div>
+                  </div>
+                </template>
+                <template v-if="isEmptyElement(element)">
+                  <div
+                    :ref="`element-${getElementIndex(element)}`"
+                    class="neume-box"
+                  >
+                    <span class="page-break" v-if="element.pageBreak">
+                      ><img src="@/assets/pagebreak.svg"
+                    /></span>
+                    <span class="line-break" v-if="element.lineBreak"
+                      >&#182;</span
+                    >
+                    <div
+                      class="empty-neume-box"
+                      :class="[{ selected: element == selectedElement }]"
+                      :style="getEmptyBoxStyle(element)"
+                      @click="selectedElement = element"
+                    ></div>
+                    <div class="lyrics"></div>
+                  </div>
+                </template>
+                <template v-if="isTextBoxElement(element)">
+                  <span class="page-break-2" v-if="element.pageBreak"
+                    ><img src="@/assets/pagebreak.svg"
+                  /></span>
+                  <span class="line-break-2" v-if="element.lineBreak"
+                    >&#182;</span
+                  >
+                  <TextBox
+                    :ref="`element-${getElementIndex(element)}`"
+                    :element="element"
+                    :pageSetup="score.pageSetup"
+                    :class="[{ selectedTextbox: element == selectedElement }]"
+                    @click.native="selectedElement = element"
+                    @update:content="updateTextBoxContent(element, $event)"
+                  >
+                  </TextBox>
+                </template>
+                <template v-if="isModeKeyElement(element)">
+                  <span class="page-break-2" v-if="element.pageBreak"
+                    ><img src="@/assets/pagebreak.svg"
+                  /></span>
+                  <span class="line-break-2" v-if="element.lineBreak"
+                    >&#182;</span
+                  >
+                  <ModeKey
+                    :ref="`element-${getElementIndex(element)}`"
+                    :element="element"
+                    :pageSetup="score.pageSetup"
+                    :class="[{ selectedTextbox: element == selectedElement }]"
+                    @click.native="selectedElement = element"
+                    @dblclick.native="openModeKeyDialog"
+                  >
+                  </ModeKey>
+                </template>
+                <template v-if="isDropCapElement(element)">
                   <span class="page-break" v-if="element.pageBreak"
                     ><img src="@/assets/pagebreak.svg"
                   /></span>
                   <span class="line-break" v-if="element.lineBreak"
                     >&#182;</span
                   >
-                  <SyllableNeumeBox
-                    class="syllable-box"
-                    :note="element"
-                    :pageSetup="score.pageSetup"
-                    :class="[{ selected: isSelected(element) }]"
-                    @click.native.exact="selectedElement = element"
-                    @click.native.shift.exact="setSelectionRange(element)"
-                  ></SyllableNeumeBox>
-                  <div
-                    class="lyrics-container"
-                    :key="`lyrics-${getElementIndex(element)}-${
+                  <DropCap
+                    :ref="`element-${getElementIndex(element)}`"
+                    :key="`drop-cap-${getElementIndex(element)}-${
                       element.keyHelper
                     }`"
-                    :style="getLyricStyle(element)"
-                    @click="focusLyrics(getElementIndex(element))"
-                  >
-                    <ContentEditable
-                      class="lyrics"
-                      :content="element.lyrics"
-                      :ref="`lyrics-${getElementIndex(element)}`"
-                      @focus.native="selectedLyrics = element"
-                      @blur="updateLyrics(element, $event)"
-                    ></ContentEditable>
-                    <template v-if="isMelisma(element)">
-                      <div
-                        class="melisma"
-                        :class="{ full: element.isFullMelisma }"
-                        :style="getMelismaStyle(element)"
-                        v-text="element.melismaText"
-                      ></div>
-                    </template>
-                  </div>
-                </div>
-              </template>
-              <template v-if="isMartyriaElement(element)">
-                <div class="neume-box">
-                  <span class="page-break" v-if="element.pageBreak">
-                    ><img src="@/assets/pagebreak.svg"
-                  /></span>
-                  <span class="line-break" v-if="element.lineBreak"
-                    >&#182;</span
-                  >
-                  <MartyriaNeumeBox
-                    :ref="`element-${getElementIndex(element)}`"
-                    class="marytria-neume-box"
-                    :neume="element"
+                    :element="element"
                     :pageSetup="score.pageSetup"
-                    :class="[{ selected: element == selectedElement }]"
                     @click.native="selectedElement = element"
-                  ></MartyriaNeumeBox>
-                  <div class="lyrics"></div>
-                </div>
-              </template>
-              <template v-if="isTempoElement(element)">
-                <div
-                  :ref="`element-${getElementIndex(element)}`"
-                  class="neume-box"
-                >
-                  <span class="page-break" v-if="element.pageBreak">
-                    ><img src="@/assets/pagebreak.svg"
-                  /></span>
-                  <span class="line-break" v-if="element.lineBreak"
-                    >&#182;</span
+                    @update:content="
+                      updateDropCapContent(selectedElement, $event)
+                    "
                   >
-                  <TempoNeumeBox
-                    class="tempo-neume-box"
-                    :neume="element"
-                    :pageSetup="score.pageSetup"
-                    :class="[{ selected: element == selectedElement }]"
-                    @click.native="selectedElement = element"
-                  ></TempoNeumeBox>
-                  <div class="lyrics"></div>
-                </div>
-              </template>
-              <template v-if="isEmptyElement(element)">
-                <div
-                  :ref="`element-${getElementIndex(element)}`"
-                  class="neume-box"
-                >
-                  <span class="page-break" v-if="element.pageBreak">
-                    ><img src="@/assets/pagebreak.svg"
-                  /></span>
-                  <span class="line-break" v-if="element.lineBreak"
-                    >&#182;</span
-                  >
-                  <div
-                    class="empty-neume-box"
-                    :class="[{ selected: element == selectedElement }]"
-                    :style="getEmptyBoxStyle(element)"
-                    @click="selectedElement = element"
-                  ></div>
-                  <div class="lyrics"></div>
-                </div>
-              </template>
-              <template v-if="isTextBoxElement(element)">
-                <span class="page-break-2" v-if="element.pageBreak"
-                  ><img src="@/assets/pagebreak.svg"
-                /></span>
-                <span class="line-break-2" v-if="element.lineBreak"
-                  >&#182;</span
-                >
-                <TextBox
-                  :ref="`element-${getElementIndex(element)}`"
-                  :element="element"
-                  :pageSetup="score.pageSetup"
-                  :class="[{ selectedTextbox: element == selectedElement }]"
-                  @click.native="selectedElement = element"
-                  @update:content="updateTextBoxContent(element, $event)"
-                >
-                </TextBox>
-              </template>
-              <template v-if="isModeKeyElement(element)">
-                <span class="page-break-2" v-if="element.pageBreak"
-                  ><img src="@/assets/pagebreak.svg"
-                /></span>
-                <span class="line-break-2" v-if="element.lineBreak"
-                  >&#182;</span
-                >
-                <ModeKey
-                  :ref="`element-${getElementIndex(element)}`"
-                  :element="element"
-                  :pageSetup="score.pageSetup"
-                  :class="[{ selectedTextbox: element == selectedElement }]"
-                  @click.native="selectedElement = element"
-                  @dblclick.native="openModeKeyDialog"
-                >
-                </ModeKey>
-              </template>
-              <template v-if="isDropCapElement(element)">
-                <span class="page-break" v-if="element.pageBreak"
-                  ><img src="@/assets/pagebreak.svg"
-                /></span>
-                <span class="line-break" v-if="element.lineBreak">&#182;</span>
-                <DropCap
-                  :ref="`element-${getElementIndex(element)}`"
-                  :key="`drop-cap-${getElementIndex(element)}-${
-                    element.keyHelper
-                  }`"
-                  :element="element"
-                  :pageSetup="score.pageSetup"
-                  @click.native="selectedElement = element"
-                  @update:content="
-                    updateDropCapContent(selectedElement, $event)
-                  "
-                >
-                </DropCap>
-              </template>
+                  </DropCap>
+                </template>
+              </div>
             </div>
           </div>
         </div>
@@ -299,15 +322,18 @@ import {
 } from '@/models/Neumes';
 import { Page } from '@/models/Page';
 import { Score } from '@/models/Score';
+import { Workspace } from '@/models/Workspace';
+import { EntryMode } from '@/models/EntryMode';
+import { ScoreElementSelectionRange } from '@/models/ScoreElementSelectionRange';
 import { SaveService } from '@/services/SaveService';
 import { LayoutService } from '@/services/LayoutService';
+import { IpcService } from '@/services/IpcService';
 import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
 import MartyriaNeumeBox from '@/components/NeumeBoxMartyria.vue';
 import TempoNeumeBox from '@/components/NeumeBoxTempo.vue';
 import NeumeSelector from '@/components/NeumeSelector.vue';
 import NeumeKeyboard from '@/components/NeumeKeyboard.vue';
 import ContentEditable from '@/components/ContentEditable.vue';
-import FileMenuBar from '@/components/FileMenuBar.vue';
 import TextBox from '@/components/TextBox.vue';
 import DropCap from '@/components/DropCap.vue';
 import ModeKey from '@/components/ModeKey.vue';
@@ -318,15 +344,7 @@ import NeumeToolbar from '@/components/NeumeToolbar.vue';
 import MartyriaToolbar from '@/components/MartyriaToolbar.vue';
 import ModeKeyDialog from '@/components/ModeKeyDialog.vue';
 import PageSetupDialog from '@/components/PageSetupDialog.vue';
-import {
-  FileMenuOpenScoreArgs,
-  FileMenuPrintReplyArgs,
-  FileMenuSaveAsArgs,
-  FileMenuSaveAsReplyArgs,
-  FileMenuSaveReplyArgs,
-  IpcMainChannels,
-  IpcRendererChannels,
-} from '@/ipc/ipcChannels';
+import { IpcMainChannels, FileMenuOpenScoreArgs } from '@/ipc/ipcChannels';
 import { EventBus } from '@/eventBus';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import { TestFileGenerator } from '@/utils/TestFileGenerator';
@@ -334,24 +352,10 @@ import { TestFileType } from '@/utils/TestFileType';
 import { Unit } from '@/utils/Unit';
 import { withZoom } from '@/utils/withZoom';
 import { shallowEquals } from '@/utils/shallowEquals';
+import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
 import { throttle } from 'throttle-debounce';
-import {
-  Command,
-  CommandFactory,
-  CommandService,
-} from '@/services/history/CommandService';
+import { Command, CommandFactory } from '@/services/history/CommandService';
 import { PageSetup } from '@/models/PageSetup';
-
-export enum EntryMode {
-  Auto = 'Auto',
-  Insert = 'Insert',
-  Edit = 'Edit',
-}
-
-interface ScoreElementSelectionRange {
-  start: number;
-  end: number;
-}
 
 @Component({
   components: {
@@ -361,7 +365,6 @@ interface ScoreElementSelectionRange {
     NeumeSelector,
     NeumeKeyboard,
     ContentEditable,
-    FileMenuBar,
     TextBox,
     DropCap,
     ModeKey,
@@ -377,19 +380,10 @@ interface ScoreElementSelectionRange {
 export default class Editor extends Vue {
   isDevelopment: boolean = process.env.NODE_ENV !== 'production';
 
-  score: Score = new Score();
+  workspaces: Workspace[] = [];
+  selectedWorkspaceValue: Workspace = new Workspace();
+
   pages: Page[] = [];
-
-  entryMode: EntryMode = EntryMode.Auto;
-
-  selectedElementValue: ScoreElement | null = null;
-  selectedLyricsValue: NoteElement | null = null;
-
-  zoomValue: number = 1;
-  zoomToFit: boolean = false;
-
-  currentFilePathValue: string | null = null;
-  hasUnsavedChangesValue: boolean = false;
 
   elementToFocus: ScoreElement | null = null;
 
@@ -398,11 +392,7 @@ export default class Editor extends Vue {
 
   clipboard: ScoreElement[] = [];
 
-  selectionRange: ScoreElementSelectionRange | null = null;
-
   // Commands
-  commandService: CommandService = new CommandService();
-
   noteElementCommandFactory: CommandFactory<NoteElement> =
     new CommandFactory<NoteElement>();
 
@@ -491,8 +481,26 @@ export default class Editor extends Vue {
 
   onWindowResizeThrottled = throttle(250, this.onWindowResize);
 
+  get selectedWorkspace() {
+    return this.selectedWorkspaceValue;
+  }
+
+  set selectedWorkspace(value: Workspace) {
+    this.selectedWorkspaceValue = value;
+    this.selectedWorkspace.commandService.notify();
+    this.save(false);
+  }
+
+  get score() {
+    return this.selectedWorkspace.score;
+  }
+
   get elements() {
     return this.score != null ? this.score.staff.elements : [];
+  }
+
+  get commandService() {
+    return this.selectedWorkspace.commandService;
   }
 
   get selectedElementIndex() {
@@ -502,18 +510,13 @@ export default class Editor extends Vue {
   }
 
   get windowTitle() {
-    const unsavedChangesMarker = this.hasUnsavedChanges ? '*' : '';
-
-    if (this.currentFilePath != null) {
-      const fileName = this.currentFilePath.replace(/^.*[\\/]/, '');
-      return `${unsavedChangesMarker}${fileName} - ${process.env.VUE_APP_TITLE}`;
-    } else {
-      return `${unsavedChangesMarker}Untitled 1 - ${process.env.VUE_APP_TITLE}`;
-    }
+    return `${this.getFileName(this.selectedWorkspace)} - ${
+      process.env.VUE_APP_TITLE
+    }`;
   }
 
   get selectedElement() {
-    return this.selectedElementValue;
+    return this.selectedWorkspace.selectedElement;
   }
 
   set selectedElement(element: ScoreElement | null) {
@@ -522,24 +525,32 @@ export default class Editor extends Vue {
       this.selectionRange = null;
     }
 
-    this.selectedElementValue = element;
+    this.selectedWorkspace.selectedElement = element;
   }
 
   get selectedLyrics() {
-    return this.selectedLyricsValue;
+    return this.selectedWorkspace.selectedLyrics;
   }
 
   set selectedLyrics(element: NoteElement | null) {
     if (element != null) {
-      this.selectedElementValue = null;
+      this.selectedElement = null;
       this.selectionRange = null;
     }
 
-    this.selectedLyricsValue = element;
+    this.selectedWorkspace.selectedLyrics = element;
+  }
+
+  get selectionRange() {
+    return this.selectedWorkspace.selectionRange;
+  }
+
+  set selectionRange(value: ScoreElementSelectionRange | null) {
+    this.selectedWorkspace.selectionRange = value;
   }
 
   get zoom() {
-    return this.zoomValue;
+    return this.selectedWorkspace.zoom;
   }
 
   set zoom(zoom: number) {
@@ -549,30 +560,39 @@ export default class Editor extends Vue {
       zoom = 2;
     }
 
-    this.zoomValue = zoom;
-    document.documentElement.style.setProperty('--zoom', zoom.toString());
+    this.selectedWorkspace.zoom = zoom;
+  }
+
+  get zoomToFit() {
+    return this.selectedWorkspace.zoomToFit;
+  }
+
+  set zoomToFit(value: boolean) {
+    this.selectedWorkspace.zoomToFit = value;
+  }
+
+  get entryMode() {
+    return this.selectedWorkspace.entryMode;
+  }
+
+  set entryMode(value: EntryMode) {
+    this.selectedWorkspace.entryMode = value;
   }
 
   get currentFilePath() {
-    return this.currentFilePathValue;
+    return this.selectedWorkspace.filePath;
   }
 
   set currentFilePath(path: string | null) {
-    this.currentFilePathValue = path;
-
-    window.document.title = this.windowTitle;
-
-    EventBus.$emit(IpcRendererChannels.SetFilePath, path);
+    this.selectedWorkspace.filePath = path;
   }
 
   get hasUnsavedChanges() {
-    return this.hasUnsavedChangesValue;
+    return this.selectedWorkspace.hasUnsavedChanges;
   }
 
   set hasUnsavedChanges(hasUnsavedChanges: boolean) {
-    this.hasUnsavedChangesValue = hasUnsavedChanges;
-    window.document.title = this.windowTitle;
-    EventBus.$emit(IpcRendererChannels.SetHasUnsavedChanges, hasUnsavedChanges);
+    this.selectedWorkspace.hasUnsavedChanges = hasUnsavedChanges;
   }
 
   get pageStyle() {
@@ -584,6 +604,21 @@ export default class Editor extends Vue {
       minHeight: withZoom(this.score.pageSetup.pageHeight),
       maxHeight: withZoom(this.score.pageSetup.pageHeight),
     } as CSSStyleDeclaration;
+  }
+
+  @Watch('zoom')
+  onZoomUpdated() {
+    document.documentElement.style.setProperty('--zoom', this.zoom.toString());
+  }
+
+  @Watch('currentFilePath')
+  onFilePathUpdated() {
+    window.document.title = this.windowTitle;
+  }
+
+  @Watch('hasUnsavedChanges')
+  onUnsavedChangesUpdated() {
+    window.document.title = this.windowTitle;
   }
 
   getLyricStyle(element: NoteElement) {
@@ -619,6 +654,23 @@ export default class Editor extends Vue {
     } as CSSStyleDeclaration;
   }
 
+  untitledIndex: number = 1;
+
+  getTempFilename() {
+    return `Untitled-${this.untitledIndex++}`;
+  }
+
+  getFileName(workspace: Workspace) {
+    const unsavedChangesMarker = workspace.hasUnsavedChanges ? '*' : '';
+
+    if (workspace.filePath != null) {
+      const fileName = getFileNameFromPath(workspace.filePath);
+      return `${unsavedChangesMarker}${fileName}`;
+    } else {
+      return `${unsavedChangesMarker}${workspace.tempFileName}`;
+    }
+  }
+
   async created() {
     const fontLoader = (document as any).fonts;
 
@@ -636,12 +688,14 @@ export default class Editor extends Vue {
       fontLoader.ready,
     ]);
 
-    this.load();
+    await this.load();
   }
 
   mounted() {
     window.addEventListener('keydown', this.onKeydown);
     window.addEventListener('resize', this.onWindowResizeThrottled);
+
+    EventBus.$on(IpcMainChannels.CloseApplication, this.onCloseApplication);
 
     EventBus.$on(IpcMainChannels.FileMenuNewScore, this.onFileMenuNewScore);
     EventBus.$on(IpcMainChannels.FileMenuOpenScore, this.onFileMenuOpenScore);
@@ -649,7 +703,10 @@ export default class Editor extends Vue {
     EventBus.$on(IpcMainChannels.FileMenuSave, this.onFileMenuSave);
     EventBus.$on(IpcMainChannels.FileMenuSaveAs, this.onFileMenuSaveAs);
     EventBus.$on(IpcMainChannels.FileMenuPageSetup, this.onFileMenuPageSetup);
-    EventBus.$on(IpcMainChannels.SaveComplete, this.onSaveComplete);
+    EventBus.$on(
+      IpcMainChannels.FileMenuExportAsPdf,
+      this.onFileMenuExportAsPdf,
+    );
     EventBus.$on(IpcMainChannels.FileMenuUndo, this.onFileMenuUndo);
     EventBus.$on(IpcMainChannels.FileMenuRedo, this.onFileMenuRedo);
     EventBus.$on(IpcMainChannels.FileMenuCut, this.onFileMenuCut);
@@ -677,13 +734,18 @@ export default class Editor extends Vue {
     window.removeEventListener('keydown', this.onKeydown);
     window.removeEventListener('resize', this.onWindowResizeThrottled);
 
+    EventBus.$off(IpcMainChannels.CloseApplication, this.onCloseApplication);
+
     EventBus.$off(IpcMainChannels.FileMenuNewScore, this.onFileMenuNewScore);
     EventBus.$off(IpcMainChannels.FileMenuOpenScore, this.onFileMenuOpenScore);
     EventBus.$off(IpcMainChannels.FileMenuPrint, this.onFileMenuPrint);
     EventBus.$off(IpcMainChannels.FileMenuSave, this.onFileMenuSave);
     EventBus.$off(IpcMainChannels.FileMenuSaveAs, this.onFileMenuSaveAs);
     EventBus.$off(IpcMainChannels.FileMenuPageSetup, this.onFileMenuPageSetup);
-    EventBus.$off(IpcMainChannels.SaveComplete, this.onSaveComplete);
+    EventBus.$off(
+      IpcMainChannels.FileMenuExportAsPdf,
+      this.onFileMenuExportAsPdf,
+    );
     EventBus.$off(IpcMainChannels.FileMenuUndo, this.onFileMenuUndo);
     EventBus.$off(IpcMainChannels.FileMenuRedo, this.onFileMenuRedo);
     EventBus.$off(IpcMainChannels.FileMenuCut, this.onFileMenuCut);
@@ -1714,10 +1776,26 @@ export default class Editor extends Vue {
     }
   }
 
-  load() {
-    this.score = this.createDefaultScore();
-    this.hasUnsavedChanges = false;
-    this.currentFilePath = null;
+  async load() {
+    // First, try to load files passed in on the command line.
+    // If there are none, then create a default workspace.
+    const openWorkspaceResults = await IpcService.openWorkspaceFromArgv();
+
+    openWorkspaceResults
+      .filter((x) => x.success)
+      .forEach((x) => this.openScore(x));
+
+    if (openWorkspaceResults.some((x) => x.success)) {
+      return;
+    }
+
+    const workspace = new Workspace();
+    workspace.tempFileName = this.getTempFilename();
+    workspace.score = this.createDefaultScore();
+
+    this.workspaces.push(workspace);
+
+    this.selectedWorkspace = workspace;
 
     if (this.isDevelopment) {
       const scoreString = localStorage.getItem('score');
@@ -1728,7 +1806,8 @@ export default class Editor extends Vue {
         this.currentFilePath = localStorage.getItem('filePath');
         this.hasUnsavedChanges =
           localStorage.getItem('hasUnsavedChanges') === 'true';
-        this.score = score;
+
+        this.selectedWorkspace.score = score;
       }
     }
 
@@ -1739,8 +1818,72 @@ export default class Editor extends Vue {
       this.elements,
       this.score.pageSetup,
     );
+  }
 
-    EventBus.$emit(IpcRendererChannels.EditorFinishedLoading);
+  async closeWorkspace(workspace: Workspace) {
+    let shouldClose = true;
+
+    if (workspace.hasUnsavedChanges) {
+      const fileName =
+        workspace.filePath != null
+          ? getFileNameFromPath(workspace.filePath)
+          : workspace.tempFileName;
+
+      const dialogResult = await IpcService.showMessageBox({
+        title: process.env.VUE_APP_TITLE,
+        message: `Do you want to save the changes you made to ${fileName}?`,
+        detail: "Your changes will be lost if you don't save them.",
+        type: 'warning',
+        buttons: ['Save', "Don't Save", 'Cancel'],
+      });
+
+      if (dialogResult.response === 0) {
+        // User chose "Save"
+        const saveResult =
+          workspace.filePath != null
+            ? await IpcService.saveWorkspace(workspace)
+            : await IpcService.saveWorkspaceAs(workspace);
+
+        // If they successfully saved, then we can close the workspacce
+        shouldClose = saveResult.success;
+      } else if (dialogResult.response === 2) {
+        // User chose "Cancel", so don't close the workspace.
+        shouldClose = false;
+      }
+    }
+
+    if (shouldClose) {
+      // If the last tab has closed, then exit
+      if (this.workspaces.length == 1) {
+        IpcService.exitApplication();
+      }
+
+      const index = this.workspaces.indexOf(workspace);
+
+      this.workspaces.splice(index, 1);
+
+      if (this.selectedWorkspace === workspace) {
+        this.selectedWorkspace =
+          this.workspaces[Math.min(index, this.workspaces.length - 1)];
+      }
+    }
+
+    return shouldClose;
+  }
+
+  async onCloseApplication() {
+    // Give the user a chance to save their changes before exiting
+    const unsavedWorkspaces = this.workspaces.filter(
+      (x) => x.hasUnsavedChanges,
+    );
+
+    for (let workspace of unsavedWorkspaces) {
+      if (!(await this.closeWorkspace(workspace))) {
+        return false;
+      }
+    }
+
+    await IpcService.exitApplication();
   }
 
   addScoreElement(element: ScoreElement, insertAtIndex?: number) {
@@ -2144,55 +2287,33 @@ export default class Editor extends Vue {
   }
 
   onFileMenuNewScore() {
-    this.commandService.clearHistory();
+    const workspace = new Workspace();
+    workspace.tempFileName = this.getTempFilename();
+    workspace.score = this.createDefaultScore();
 
-    this.hasUnsavedChanges = false;
-    this.currentFilePath = null;
-    this.entryMode = EntryMode.Auto;
-    this.score = this.createDefaultScore();
+    this.workspaces.push(workspace);
+
+    this.selectedWorkspace = workspace;
+
     this.selectedElement =
       this.score.staff.elements[this.score.staff.elements.length - 1];
     this.save(false);
   }
 
-  onFileMenuOpenScore(args: FileMenuOpenScoreArgs) {
-    try {
-      this.commandService.clearHistory();
-
-      const score: Score = SaveService.LoadScoreFromJson(JSON.parse(args.data));
-      this.currentFilePath = args.filePath;
-      this.hasUnsavedChanges = false;
-      this.entryMode = EntryMode.Edit;
-
-      // if (score.version !== ScoreVersion) {
-      //   alert('This score was created by an older version of the application. It may not work properly');
-      // }
-
-      this.score = score;
-      this.selectedElement = null;
-
-      this.save(false);
-    } catch (error) {
-      console.error(error);
-
-      if (error instanceof Error) {
-        EventBus.$emit(IpcRendererChannels.ShowErrorBox, {
-          title: 'Open failed',
-          content: error.message,
-        });
-      }
-    }
+  async onFileMenuOpenScore(args: FileMenuOpenScoreArgs) {
+    this.openScore(args);
   }
 
   onFileMenuPageSetup() {
     this.pageSetupDialogIsOpen = true;
   }
 
-  onFileMenuPrint() {
-    EventBus.$emit(IpcRendererChannels.FileMenuPrintReply, {
-      pageSize: this.score.pageSetup.pageSize,
-      landscape: this.score.pageSetup.landscape,
-    } as FileMenuPrintReplyArgs);
+  async onFileMenuPrint() {
+    await IpcService.printWorkspace(this.selectedWorkspace);
+  }
+
+  async onFileMenuExportAsPdf() {
+    await IpcService.exportWorkspaceAsPdf(this.selectedWorkspace);
   }
 
   onFileMenuInsertTextBox() {
@@ -2222,26 +2343,31 @@ export default class Editor extends Vue {
     this.addDropCap();
   }
 
-  getSaveFile() {
-    return JSON.stringify(SaveService.SaveScoreToJson(this.score), null, 2);
+  async onFileMenuSave() {
+    const workspace = this.selectedWorkspace;
+
+    if (workspace.filePath != null) {
+      const result = await IpcService.saveWorkspace(workspace);
+      if (result.success) {
+        workspace.hasUnsavedChanges = false;
+      }
+    } else {
+      const result = await IpcService.saveWorkspaceAs(workspace);
+      if (result.success) {
+        workspace.filePath = result.filePath;
+        workspace.hasUnsavedChanges = false;
+      }
+    }
   }
 
-  onFileMenuSave() {
-    EventBus.$emit(IpcRendererChannels.FileMenuSaveReply, {
-      data: this.getSaveFile(),
-    } as FileMenuSaveReplyArgs);
-  }
+  async onFileMenuSaveAs() {
+    const workspace = this.selectedWorkspace;
 
-  onFileMenuSaveAs(args: FileMenuSaveAsArgs) {
-    this.currentFilePath = args.filePath;
-
-    EventBus.$emit(IpcRendererChannels.FileMenuSaveAsReply, {
-      data: this.getSaveFile(),
-    } as FileMenuSaveAsReplyArgs);
-  }
-
-  onSaveComplete() {
-    this.hasUnsavedChanges = false;
+    const result = await IpcService.saveWorkspaceAs(workspace);
+    if (result.success) {
+      workspace.filePath = result.filePath;
+      workspace.hasUnsavedChanges = false;
+    }
   }
 
   onFileMenuUndo() {
@@ -2293,19 +2419,19 @@ export default class Editor extends Vue {
   }
 
   onFileMenuGenerateTestFile(testFileType: TestFileType) {
-    if (
-      confirm(
-        'This will discard your current score. Make sure you have saved before doing this. Are you sure you wish to continue?',
-      )
-    ) {
-      this.commandService.clearHistory();
-      this.currentFilePath = null;
-      this.score = new Score();
-      this.score.staff.elements.unshift(
-        ...(TestFileGenerator.generateTestFile(testFileType) || []),
-      );
-      this.save();
-    }
+    const workspace = new Workspace();
+    workspace.tempFileName = this.getTempFilename();
+    workspace.score = new Score();
+
+    this.workspaces.push(workspace);
+
+    this.selectedWorkspace = workspace;
+
+    this.currentFilePath = null;
+    this.score.staff.elements.unshift(
+      ...(TestFileGenerator.generateTestFile(testFileType) || []),
+    );
+    this.save();
   }
 
   createDefaultModeKey() {
@@ -2330,6 +2456,49 @@ export default class Editor extends Vue {
 
     return score;
   }
+
+  openScore(args: FileMenuOpenScoreArgs) {
+    // First make sure we don't already have the score open
+    const existingWorkspace = this.workspaces.find(
+      (x) => x.filePath === args.filePath,
+    );
+    if (existingWorkspace != null) {
+      this.selectedWorkspace = existingWorkspace;
+      return;
+    }
+
+    try {
+      const score: Score = SaveService.LoadScoreFromJson(JSON.parse(args.data));
+
+      // if (score.version !== ScoreVersion) {
+      //   alert('This score was created by an older version of the application. It may not work properly');
+      // }
+
+      const workspace = new Workspace();
+      workspace.filePath = args.filePath;
+      workspace.tempFileName = this.getTempFilename();
+      workspace.score = score;
+      workspace.entryMode = EntryMode.Edit;
+
+      this.workspaces.push(workspace);
+
+      this.selectedWorkspace = workspace;
+
+      this.selectedElement = null;
+
+      this.save(false);
+    } catch (error) {
+      console.error(error);
+
+      if (error instanceof Error) {
+        IpcService.showMessageBox({
+          type: 'error',
+          title: 'Open failed',
+          message: error.message,
+        });
+      }
+    }
+  }
 }
 </script>
 
@@ -2346,7 +2515,7 @@ export default class Editor extends Vue {
   color: #ed0000;
 }
 
-.selected {
+.neume-box .selected {
   background-color: palegoldenrod;
 }
 
@@ -2377,6 +2546,51 @@ export default class Editor extends Vue {
 .empty-neume-box {
   border: 1px dotted black;
   box-sizing: border-box;
+}
+
+.page-container {
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  flex: 1;
+}
+
+.workspace-tab-container {
+  display: flex;
+  overflow: hidden;
+  background-color: #b5b5b5;
+}
+
+.workspace-tab-container:hover {
+  overflow-x: auto;
+}
+
+.workspace-tab {
+  display: flex;
+  align-items: center;
+  cursor: default;
+  border-right: 1px solid black;
+  padding: 0.5rem 1rem;
+  padding-right: 0.5rem;
+  background-color: #c0c0c0;
+}
+
+.workspace-tab:last-child {
+  border-right: none;
+}
+
+.workspace-tab.selected {
+  background-color: lightgray;
+}
+
+.workspace-tab-label {
+  margin-right: 0.75rem;
+}
+
+.workspace-tab-close-btn {
+  margin-left: auto;
+  font-family: Arial;
+  font-size: 0.75rem;
 }
 
 .page-background {

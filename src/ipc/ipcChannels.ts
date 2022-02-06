@@ -6,6 +6,7 @@ export enum IpcMainChannels {
   FileMenuPrint = 'FileMenuPrint',
   FileMenuSave = 'FileMenuSave',
   FileMenuSaveAs = 'FileMenuSaveAs',
+  FileMenuExportAsPdf = 'FileMenuExportAsPdf',
 
   FileMenuPageSetup = 'FileMenuPageSetup',
 
@@ -22,49 +23,66 @@ export enum IpcMainChannels {
 
   FileMenuGenerateTestFile = 'GenerateTestFile',
 
-  SaveComplete = 'SaveComplete',
+  CloseApplication = 'CloseApplication',
 }
 
 export enum IpcRendererChannels {
-  EditorFinishedLoading = 'EditorFinishedLoading',
-
-  FileMenuPrintReply = 'FileMenuPrintReply',
-
-  FileMenuSaveReply = 'FileMenuSaveReply',
-  FileMenuSaveAsReply = 'FileMenuSaveAsReply',
-
-  SetHasUnsavedChanges = 'SetHasUnsavedChanges',
-  SetFilePath = 'SetFilePath',
-
   SetCanUndo = 'SetCanUndo',
   SetCanRedo = 'SetCanRedo',
 
-  ShowErrorBox = 'ShowErrorBox',
+  ShowMessageBox = 'ShowMessageBox',
+
+  SaveWorkspace = 'SaveWorkspace',
+  SaveWorkspaceAs = 'SaveWorkspaceAs',
+  ExportWorkspaceAsPdf = 'ExportWorkspaceAsPdf',
+  PrintWorkspace = 'PrintWorkspace',
+  OpenWorkspaceFromArgv = 'OpenWorkspaceFromArgv',
+
+  ExitApplication = 'ExitApplication',
 }
 
 export interface FileMenuOpenScoreArgs {
   data: string;
   filePath: string;
+  success: boolean;
 }
 
-export interface FileMenuPrintReplyArgs {
+export interface ShowMessageBoxArgs {
+  type?: 'none' | 'info' | 'error' | 'question' | 'warning';
+  title?: string;
+  message: string;
+  detail?: string;
+  buttons?: string[];
+}
+
+export interface SaveWorkspaceArgs {
+  filePath: string;
+  data: string;
+}
+
+export interface SaveWorkspaceAsArgs {
+  filePath: string | null;
+  tempFileName: string;
+  data: string;
+}
+
+export interface SaveWorkspaceAsReplyArgs {
+  filePath: string;
+  success: boolean;
+}
+
+export interface SaveWorkspaceReplyArgs {
+  success: boolean;
+}
+
+export interface ExportWorkspaceAsPdfArgs {
+  filePath: string | null;
+  tempFileName: string;
   pageSize: PageSize;
   landscape: boolean;
 }
 
-export interface FileMenuSaveAsArgs {
-  filePath: string;
-}
-
-export interface FileMenuSaveAsReplyArgs {
-  data: string;
-}
-
-export interface FileMenuSaveReplyArgs {
-  data: string;
-}
-
-export interface ShowErrorBoxArgs {
-  title: string;
-  content: string;
+export interface PrintWorkspaceArgs {
+  pageSize: PageSize;
+  landscape: boolean;
 }

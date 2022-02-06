@@ -385,8 +385,6 @@ export default class Editor extends Vue {
 
   pages: Page[] = [];
 
-  elementToFocus: ScoreElement | null = null;
-
   modeKeyDialogIsOpen: boolean = false;
   pageSetupDialogIsOpen: boolean = false;
 
@@ -486,9 +484,23 @@ export default class Editor extends Vue {
   }
 
   set selectedWorkspace(value: Workspace) {
+    // Save the scroll position
+    const pageBackgroundElement = this.$refs['page-background'] as HTMLElement;
+    this.selectedWorkspace.scrollLeft = pageBackgroundElement.scrollLeft;
+    this.selectedWorkspace.scrollTop = pageBackgroundElement.scrollTop;
+
     this.selectedWorkspaceValue = value;
     this.selectedWorkspace.commandService.notify();
     this.save(false);
+
+    // Scroll to the new workspace's saved scroll position
+    // Use nextTick to scroll after the DOM has refreshed
+    Vue.nextTick(() => {
+      pageBackgroundElement.scrollTo(
+        this.selectedWorkspace.scrollLeft,
+        this.selectedWorkspace.scrollTop,
+      );
+    });
   }
 
   get score() {
@@ -769,17 +781,6 @@ export default class Editor extends Vue {
     );
   }
 
-  updated() {
-    Vue.nextTick(() => {
-      if (this.elementToFocus != null) {
-        const index = this.elements.indexOf(this.elementToFocus);
-        this.elementToFocus = null;
-
-        (this.$refs[`element-${index}`] as any)[0].focus();
-      }
-    });
-  }
-
   getElementIndex(element: ScoreElement) {
     return this.elements.indexOf(element);
   }
@@ -1041,8 +1042,13 @@ export default class Editor extends Vue {
     this.addScoreElement(element, this.selectedElementIndex);
 
     this.selectedElement = element;
-    this.elementToFocus = element;
     this.save();
+
+    Vue.nextTick(() => {
+      const index = this.elements.indexOf(element);
+
+      (this.$refs[`element-${index}`] as any)[0].focus();
+    });
   }
 
   togglePageBreak() {
@@ -2322,9 +2328,14 @@ export default class Editor extends Vue {
     this.addScoreElement(element, this.selectedElementIndex);
 
     this.selectedElement = element;
-    this.elementToFocus = element;
 
     this.save();
+
+    Vue.nextTick(() => {
+      const index = this.elements.indexOf(element);
+
+      (this.$refs[`element-${index}`] as any)[0].focus();
+    });
   }
 
   onFileMenuInsertModeKey() {

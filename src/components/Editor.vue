@@ -21,7 +21,7 @@
         @select-quantitative-neume="addQuantitativeNeume"
       ></NeumeSelector>
       <div class="page-container">
-        <div class="workspace-tab-container">
+        <div class="workspace-tab-container" ref="workspace-tab-container">
           <div
             class="workspace-tab"
             :class="{ selected: workspace == selectedWorkspace }"
@@ -501,6 +501,8 @@ export default class Editor extends Vue {
         this.selectedWorkspace.scrollLeft,
         this.selectedWorkspace.scrollTop,
       );
+
+      pageBackgroundElement.scrollTo;
     });
   }
 
@@ -2305,6 +2307,14 @@ export default class Editor extends Vue {
     this.selectedElement =
       this.score.staff.elements[this.score.staff.elements.length - 1];
     this.save(false);
+
+    Vue.nextTick(() => {
+      const tabContainerElement = this.$refs[
+        'workspace-tab-container'
+      ] as HTMLElement;
+
+      tabContainerElement.scrollTo(tabContainerElement.scrollWidth, 0);
+    });
   }
 
   async onFileMenuOpenScore(args: FileMenuOpenScoreArgs) {
@@ -2501,6 +2511,14 @@ export default class Editor extends Vue {
       this.selectedElement = null;
 
       this.save(false);
+
+      Vue.nextTick(() => {
+        const tabContainerElement = this.$refs[
+          'workspace-tab-container'
+        ] as HTMLElement;
+
+        tabContainerElement.scrollTo(tabContainerElement.scrollWidth, 0);
+      });
     } catch (error) {
       console.error(error);
 

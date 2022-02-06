@@ -501,8 +501,6 @@ export default class Editor extends Vue {
         this.selectedWorkspace.scrollLeft,
         this.selectedWorkspace.scrollTop,
       );
-
-      pageBackgroundElement.scrollTo;
     });
   }
 

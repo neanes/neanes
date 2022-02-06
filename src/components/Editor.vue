@@ -27,6 +27,7 @@
             :class="{ selected: workspace == selectedWorkspace }"
             v-for="(workspace, index) in workspaces"
             :key="`${index}-${workspace.filePath}`"
+            :title="workspace.filePath"
             @click="selectedWorkspace = workspace"
           >
             <div class="workspace-tab-label">
@@ -2582,6 +2583,7 @@ export default class Editor extends Vue {
   display: flex;
   align-items: center;
   cursor: default;
+  white-space: nowrap;
   border-right: 1px solid black;
   padding: 0.5rem 1rem;
   padding-right: 0.5rem;

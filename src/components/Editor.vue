@@ -119,7 +119,7 @@
                       class="marytria-neume-box"
                       :neume="element"
                       :pageSetup="score.pageSetup"
-                      :class="[{ selected: element == selectedElement }]"
+                      :class="[{ selected: isSelected(element) }]"
                       @click.native="selectedElement = element"
                     ></MartyriaNeumeBox>
                     <div class="lyrics"></div>
@@ -140,7 +140,7 @@
                       class="tempo-neume-box"
                       :neume="element"
                       :pageSetup="score.pageSetup"
-                      :class="[{ selected: element == selectedElement }]"
+                      :class="[{ selected: isSelected(element) }]"
                       @click.native="selectedElement = element"
                     ></TempoNeumeBox>
                     <div class="lyrics"></div>
@@ -159,7 +159,7 @@
                     >
                     <div
                       class="empty-neume-box"
-                      :class="[{ selected: element == selectedElement }]"
+                      :class="[{ selected: isSelected(element) }]"
                       :style="getEmptyBoxStyle(element)"
                       @click="selectedElement = element"
                     ></div>

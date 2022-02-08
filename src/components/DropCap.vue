@@ -46,7 +46,7 @@ export default class DropCap extends Vue {
   }
 
   focus() {
-    this.textElement.focus();
+    this.textElement.focus(true);
   }
 
   updateContent(content: string) {

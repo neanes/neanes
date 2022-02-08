@@ -3,7 +3,6 @@
     :contenteditable="contentEditable"
     @blur="onBlur"
     v-html="content"
-    @focus="onFocus"
   ></span>
 </template>
 
@@ -37,16 +36,12 @@ export default class ContentEditable extends Vue {
     this.$emit('blur', this.htmlElement.innerText);
   }
 
-  onFocus() {
-    if (this.selectAllOnFocus) {
-      setTimeout(() => {
-        document.execCommand('selectAll', false);
-      }, 0);
-    }
-  }
-
-  focus() {
+  focus(selectAll: boolean) {
     this.htmlElement.focus();
+
+    if (selectAll) {
+      document.execCommand('selectAll', false);
+    }
   }
 
   blur() {

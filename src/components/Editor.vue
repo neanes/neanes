@@ -1122,8 +1122,8 @@ export default class Editor extends Vue {
     return newElement;
   }
 
-  focusLyrics(index: number) {
-    (this.$refs[`lyrics-${index}`] as ContentEditable[])[0].focus();
+  focusLyrics(index: number, selectAll: boolean = false) {
+    (this.$refs[`lyrics-${index}`] as ContentEditable[])[0].focus(selectAll);
   }
 
   isSyllableElement(element: ScoreElement) {
@@ -1725,7 +1725,7 @@ export default class Editor extends Vue {
     const nextIndex = this.getNextLyricBoxIndex();
 
     if (nextIndex >= 0) {
-      this.focusLyrics(nextIndex);
+      this.focusLyrics(nextIndex, true);
       return true;
     }
 
@@ -1746,7 +1746,7 @@ export default class Editor extends Vue {
       }
 
       if (nextIndex >= 0) {
-        this.focusLyrics(nextIndex);
+        this.focusLyrics(nextIndex, true);
         return true;
       }
     }

@@ -62,7 +62,7 @@ export default class TextBox extends Vue {
   }
 
   focus() {
-    this.textElement.focus();
+    this.textElement.focus(true);
   }
 }
 </script>

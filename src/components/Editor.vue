@@ -2316,7 +2316,7 @@ export default class Editor extends Vue {
   }
 
   async onFileMenuOpenScore(args: FileMenuOpenScoreArgs) {
-    if (!this.dialogOpen) {
+    if (!this.dialogOpen && args.success) {
       this.openScore(args);
     }
   }
@@ -2480,6 +2480,10 @@ export default class Editor extends Vue {
   }
 
   openScore(args: FileMenuOpenScoreArgs) {
+    if (!args.success) {
+      return;
+    }
+
     // First make sure we don't already have the score open
     const existingWorkspace = this.workspaces.find(
       (x) => x.filePath === args.filePath,

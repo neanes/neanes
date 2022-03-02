@@ -1172,7 +1172,7 @@ export default class Editor extends Vue {
   onKeydown(event: KeyboardEvent) {
     // Handle undo / redo
     // See https://github.com/electron/electron/issues/3682.
-    if (event.ctrlKey && !this.isTextInputFocused() && !this.dialogOpen) {
+    if ((event.ctrlKey || event.metaKey) && !this.isTextInputFocused() && !this.dialogOpen) {
       if (event.code === 'KeyZ') {
         this.onFileMenuUndoThrottled();
         event.preventDefault();

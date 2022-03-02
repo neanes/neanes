@@ -58,6 +58,8 @@ let saving = false;
 let exporting = false;
 let loaded = false;
 
+let darwinPath: string | null = null;
+
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, standard: true } },
@@ -711,7 +713,51 @@ ipcMain.handle(
 );
 
 ipcMain.handle(IpcRendererChannels.OpenWorkspaceFromArgv, async () => {
-  return await openFileFromArgs(process.argv);
+  if (process.platform === 'darwin' && darwinPath != null) {
+    const result = {
+      data: await openFile(darwinPath),
+      filePath: darwinPath,
+      success: true,
+    };
+
+    return [result];
+  } else {
+    return await openFileFromArgs(process.argv);
+  }
+});
+
+// macOS-only
+// This is called in two cases:
+// 1. The app is already running and the user opens a file
+// 2. The app is not running and the user opens a file.
+// If the app isn't loaded yet, then save the path and wait for the web app
+// to tell us it's ready to load the file via the OpenWorkspaceFromArgv channel
+app.on('open-file', async (event, path) => {
+  darwinPath = path;
+
+  try {
+    if (loaded) {
+      const result = {
+        data: await openFile(path),
+        filePath: path,
+        success: true,
+      };
+
+      win.webContents.send(IpcMainChannels.FileMenuOpenScore, result);
+
+      win.show();
+    }
+  } catch (error) {
+    console.error(error);
+
+    if (error instanceof Error) {
+      dialog.showMessageBox(win, {
+        type: 'error',
+        title: 'Open failed',
+        message: error.message,
+      });
+    }
+  }
 });
 
 app.on(

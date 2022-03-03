@@ -30,6 +30,7 @@ import { promises as fs } from 'fs';
 import { TestFileType } from './utils/TestFileType';
 import AdmZip from 'adm-zip';
 import { errorMonitor } from 'events';
+import { Score } from './models/save/v1/Score';
 
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
@@ -109,17 +110,22 @@ async function addToRecentFiles(filePath: string) {
   await saveStore();
 }
 
-async function writeScoreFile(filePath: string, data: string) {
+async function writeScoreFile(filePath: string, score: Score) {
   // If using the compressed file format, zip first
   if (path.extname(filePath) === '.byz') {
     const zip = new AdmZip();
 
     const unzippedFileName = `${path.basename(filePath, '.byz')}.byzx`;
 
+    const data = JSON.stringify(score);
+
     zip.addFile(unzippedFileName, Buffer.from(data));
     // Missing typescript definition
     await (zip as any).writeZipPromise(filePath);
   } else {
+    // For uncompressed files, and white space and indentation
+    // to make the file easier to read
+    const data = JSON.stringify(score, null, 2);
     await fs.writeFile(filePath, data);
   }
 }

@@ -1,4 +1,5 @@
 import { PageSize } from '@/models/PageSetup';
+import { Score } from '@/models/save/v1/Score';
 
 export enum IpcMainChannels {
   FileMenuNewScore = 'FileMenuNewScore',
@@ -57,13 +58,13 @@ export interface ShowMessageBoxArgs {
 
 export interface SaveWorkspaceArgs {
   filePath: string;
-  data: string;
+  data: Score;
 }
 
 export interface SaveWorkspaceAsArgs {
   filePath: string | null;
   tempFileName: string;
-  data: string;
+  data: Score;
 }
 
 export interface SaveWorkspaceAsReplyArgs {

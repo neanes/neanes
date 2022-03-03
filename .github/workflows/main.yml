@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+    inputs:
+      release:
+        description: 'Create Release'
+        required: true
+        default: 'false'
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Use Node.js 16.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+      
+      - run: npm ci
+      - run: npm test      
+      - run: npm run electron:build
+      - run: |
+          mkdir artifacts
+          mv "dist/(*.exe,*.deb,*.AppImage,*.dmg,*.blockmap)" artifacts
+      
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{matrix.os}}
+          path: artifacts
+      
+      - uses: nyaa8/package-version@v1.0.3
+        if: ${{ github.event.inputs.release }}
+
+      - uses: softprops/action-gh-release@v1
+        if: ${{ github.event.inputs.release }}
+        with:
+          files: "artifacts/**"
+          draft: true
+          name: ${{ env.PACKAGE_VERSION }}
+          tag_name: v${{ env.PACKAGE_VERSION }}
+          
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}

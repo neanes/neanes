@@ -1172,7 +1172,11 @@ export default class Editor extends Vue {
   onKeydown(event: KeyboardEvent) {
     // Handle undo / redo
     // See https://github.com/electron/electron/issues/3682.
-    if ((event.ctrlKey || event.metaKey) && !this.isTextInputFocused() && !this.dialogOpen) {
+    if (
+      (event.ctrlKey || event.metaKey) &&
+      !this.isTextInputFocused() &&
+      !this.dialogOpen
+    ) {
       if (event.code === 'KeyZ') {
         this.onFileMenuUndoThrottled();
         event.preventDefault();
@@ -1802,10 +1806,9 @@ export default class Editor extends Vue {
 
     this.workspaces.push(workspace);
 
-    this.selectedWorkspace = workspace;
-
     if (this.isDevelopment) {
       const scoreString = localStorage.getItem('score');
+
       if (scoreString) {
         const score: Score = SaveService.LoadScoreFromJson(
           JSON.parse(scoreString),
@@ -1814,9 +1817,11 @@ export default class Editor extends Vue {
         this.hasUnsavedChanges =
           localStorage.getItem('hasUnsavedChanges') === 'true';
 
-        this.selectedWorkspace.score = score;
+        workspace.score = score;
       }
     }
+
+    this.selectedWorkspace = workspace;
 
     this.selectedElement =
       this.score.staff.elements[this.score.staff.elements.length - 1];

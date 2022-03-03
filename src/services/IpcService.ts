@@ -19,7 +19,7 @@ export class IpcService {
     return await window.ipcRenderer.invoke(IpcRendererChannels.SaveWorkspace, {
       filePath: workspace.filePath,
       tempFileName: workspace.tempFileName,
-      data: JSON.stringify(SaveService.SaveScoreToJson(workspace.score)),
+      data: SaveService.SaveScoreToJson(workspace.score),
     } as SaveWorkspaceArgs);
   }
 
@@ -31,7 +31,7 @@ export class IpcService {
       {
         filePath: workspace.filePath,
         tempFileName: workspace.tempFileName,
-        data: JSON.stringify(SaveService.SaveScoreToJson(workspace.score)),
+        data: SaveService.SaveScoreToJson(workspace.score),
       } as SaveWorkspaceAsArgs,
     );
   }

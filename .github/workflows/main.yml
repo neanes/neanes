@@ -37,24 +37,3 @@ jobs:
       - run: npm run electron:build
         env:
           GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
-      - run: |
-          mkdir artifacts
-          mv "dist/(*.exe,*.deb,*.AppImage,*.dmg,*.blockmap)" artifacts
-      
-      - uses: actions/upload-artifact@v2
-        with:
-          name: ${{matrix.os}}
-          path: artifacts
-      
-      - uses: nyaa8/package-version@v1.0.3
-        if: ${{ github.event.inputs.release }}
-
-      - uses: softprops/action-gh-release@v1
-        if: ${{ github.event.inputs.release }}
-        with:
-          files: "artifacts/**"
-          draft: true
-          name: ${{ env.PACKAGE_VERSION }}
-          tag_name: v${{ env.PACKAGE_VERSION }}  
-        env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}

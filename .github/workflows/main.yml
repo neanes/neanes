@@ -2,17 +2,17 @@ name: CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
     inputs:
-      release:
-        description: 'Create Release'
+      publish:
+        description: 'Publish? (always or never)'
         required: true
-        default: 'false'
+        default: 'never'
 
 defaults:
   run:
@@ -26,14 +26,14 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - uses: actions/checkout@v2
-      
+
       - name: Use Node.js 16.x
         uses: actions/setup-node@v3
         with:
           node-version: 16.x
-      
+
       - run: npm ci
-      - run: npm test      
-      - run: npm run electron:build
+      - run: npm test
+      - run: npm run electron:build -p ${{ github.event.inputs.publish }}
         env:
           GH_TOKEN: ${{secrets.GITHUB_TOKEN}}

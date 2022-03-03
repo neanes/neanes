@@ -21,6 +21,9 @@ module.exports = {
             name: 'Uncompressed Neanes File',
           },
         ],
+        snap: {
+          publish: ['github'],
+        },
       },
     },
   },

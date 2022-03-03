@@ -1,5 +1,6 @@
 # Neanes - A Byzantine Chant Scorewriter
-[![CI](https://github.com/danielgarthur/neanes/actions/workflows/main.yml/badge.svg)](https://github.com/danielgarthur/neanes/actions/workflows/main.yml)
+
+[![CI](https://github.com/danielgarthur/neanes/actions/workflows/ci.yml/badge.svg)](https://github.com/danielgarthur/neanes/actions/workflows/ci.yml)
 
 Neanes (pronounced neh-ah-ness) is a free and open source scorewriter for notating Byzantine Chant.
 

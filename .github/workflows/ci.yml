@@ -26,6 +26,6 @@ jobs:
 
       - run: npm ci
       - run: npm test
-      - run: npm run electron:build -p never
+      - run: npm run electron:build
         env:
           GH_TOKEN: ${{secrets.GITHUB_TOKEN}}

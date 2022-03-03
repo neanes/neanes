@@ -35,6 +35,8 @@ jobs:
       - run: npm ci
       - run: npm test      
       - run: npm run electron:build
+        env:
+          GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
       - run: |
           mkdir artifacts
           mv "dist/(*.exe,*.deb,*.AppImage,*.dmg,*.blockmap)" artifacts
@@ -53,7 +55,6 @@ jobs:
           files: "artifacts/**"
           draft: true
           name: ${{ env.PACKAGE_VERSION }}
-          tag_name: v${{ env.PACKAGE_VERSION }}
-          
+          tag_name: v${{ env.PACKAGE_VERSION }}  
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}

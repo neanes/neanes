@@ -109,7 +109,7 @@
                 <template v-if="isMartyriaElement(element)">
                   <div class="neume-box">
                     <span class="page-break" v-if="element.pageBreak">
-                      ><img src="@/assets/pagebreak.svg"
+                      <img src="@/assets/pagebreak.svg"
                     /></span>
                     <span class="line-break" v-if="element.lineBreak"
                       >&#182;</span
@@ -131,7 +131,7 @@
                     class="neume-box"
                   >
                     <span class="page-break" v-if="element.pageBreak">
-                      ><img src="@/assets/pagebreak.svg"
+                      <img src="@/assets/pagebreak.svg"
                     /></span>
                     <span class="line-break" v-if="element.lineBreak"
                       >&#182;</span
@@ -152,7 +152,7 @@
                     class="neume-box"
                   >
                     <span class="page-break" v-if="element.pageBreak">
-                      ><img src="@/assets/pagebreak.svg"
+                      <img src="@/assets/pagebreak.svg"
                     /></span>
                     <span class="line-break" v-if="element.lineBreak"
                       >&#182;</span

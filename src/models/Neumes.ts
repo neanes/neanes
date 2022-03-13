@@ -51,7 +51,7 @@ export enum QuantitativeNeume {
   OligonPlusApostrophos = 'OligonPlusApostrophos',
   OligonPlusElaphron = 'OligonPlusElaphron',
   OligonPlusElaphronPlusApostrophos = 'OligonPlusElaphronPlusApostrophos',
-  OligonPlusHypsili = 'OligonPlusHypsili',
+  OligonPlusHamili = 'OligonPlusHamili',
 
   Kentima = 'Kentima',
   OligonPlusKentima = 'OligonPlusKentima',
@@ -62,8 +62,6 @@ export enum QuantitativeNeume {
   IsonPlusApostrophos = 'IsonPlusApostrophos',
   OligonPlusKentemataPlusHypsiliLeft = 'OligonPlusKentemataPlusHypsiliLeft',
   OligonPlusKentemataPlusHypsiliRight = 'OligonPlusKentemataPlusHypsiliRight',
-
-  KentemataPlusOligonSpecial = 'KentemataPlusOligonSpecial',
 
   VareiaDotted = 'VareiaDotted',
   Cross = 'Cross',
@@ -81,6 +79,7 @@ export enum TimeNeume {
 export enum GorgonNeume {
   Gorgon_Top = 'Gorgon_Top',
   Gorgon_Bottom = 'Gorgon_Bottom',
+  Gorgon_Hyporoe = 'Gorgon_Hyporoe',
   Digorgon = 'Digorgon',
   Trigorgon = 'Trigorgon',
 
@@ -234,19 +233,13 @@ export enum Fthora {
 }
 
 export enum Accidental {
-  Sharp_2_Right = 'Sharp_2_Right',
   Sharp_2_Left = 'Sharp_2_Left',
-  Sharp_4_Right = 'Sharp_4_Right',
   Sharp_4_Left = 'Sharp_4_Left',
-  Sharp_6_Right = 'Sharp_6_Right',
   Sharp_6_Left = 'Sharp_6_Left',
 
   Flat_2_Right = 'Flat_2_Right',
-  Flat_2_Left = 'Flat_2_Left',
   Flat_4_Right = 'Flat_4_Right',
-  Flat_4_Left = 'Flat_4_Left',
   Flat_6_Right = 'Flat_6_Right',
-  Flat_6_Left = 'Flat_6_Left',
 }
 
 export enum MeasureBar {
@@ -318,6 +311,7 @@ export const petastiNeumes: ReadonlyArray<QuantitativeNeume> = [
   QuantitativeNeume.PetastiPlusElaphron,
   QuantitativeNeume.PetastiPlusElaphronPlusApostrophos,
   QuantitativeNeume.PetastiPlusHyporoe,
+  QuantitativeNeume.PetastiPlusRunningElaphron,
 ];
 
 export const oligonNeumes: ReadonlyArray<QuantitativeNeume> = [
@@ -342,6 +336,5 @@ export const oligonNeumes: ReadonlyArray<QuantitativeNeume> = [
   QuantitativeNeume.OligonPlusKentimaBelow,
   QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
   QuantitativeNeume.KentemataPlusOligon,
-  QuantitativeNeume.KentemataPlusOligonSpecial,
   QuantitativeNeume.PetastiPlusOligon,
 ];

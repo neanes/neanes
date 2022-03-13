@@ -5,7 +5,8 @@
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { Neume as NeumeType } from '@/models/Neumes';
-import { neumeMap } from '@/models/NeumeMappings';
+import { neumeMap } from '@/models/NeumeMappings.Unicode';
+//import { neumeMap } from '@/models/NeumeMappings';
 import { ScoreElementOffset } from '@/models/Element';
 import { withZoom } from '@/utils/withZoom';
 

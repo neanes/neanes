@@ -161,7 +161,7 @@ export default class NeumeSelector extends Vue {
     QuantitativeNeume.OligonPlusApostrophos,
     QuantitativeNeume.OligonPlusElaphron,
     QuantitativeNeume.OligonPlusElaphronPlusApostrophos,
-    QuantitativeNeume.OligonPlusHypsili,
+    QuantitativeNeume.OligonPlusHamili,
   ];
 
   hyporoeMenuItems: HyporoeMenuItem[] = [
@@ -171,7 +171,7 @@ export default class NeumeSelector extends Vue {
     { gorgon: GorgonNeume.Digorgon },
     { gorgon: GorgonNeume.GorgonDottedRight },
     { gorgon: GorgonNeume.GorgonDottedLeft },
-    { gorgon: GorgonNeume.Gorgon_Top },
+    { gorgon: GorgonNeume.Gorgon_Hyporoe },
     { gorgon: null },
   ];
 

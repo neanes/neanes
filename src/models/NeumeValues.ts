@@ -37,7 +37,6 @@ const neumeValueMap = new Map<QuantitativeNeume, number>([
 
   [QuantitativeNeume.OligonPlusKentemata, 2],
   [QuantitativeNeume.KentemataPlusOligon, 2],
-  [QuantitativeNeume.KentemataPlusOligonSpecial, 2],
   [QuantitativeNeume.OligonPlusIsonPlusKentemata, 1],
   [QuantitativeNeume.OligonPlusApostrophosPlusKentemata, 0],
   [QuantitativeNeume.OligonPlusHyporoePlusKentemata, -1],
@@ -57,7 +56,7 @@ const neumeValueMap = new Map<QuantitativeNeume, number>([
   [QuantitativeNeume.OligonPlusApostrophos, -1],
   [QuantitativeNeume.OligonPlusElaphron, -2],
   [QuantitativeNeume.OligonPlusElaphronPlusApostrophos, -3],
-  [QuantitativeNeume.OligonPlusHypsili, -4],
+  [QuantitativeNeume.OligonPlusHamili, -4],
 
   [QuantitativeNeume.Kentima, 2],
   [QuantitativeNeume.OligonPlusKentima, 2],

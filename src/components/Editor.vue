@@ -702,6 +702,7 @@ export default class Editor extends Vue {
       fontLoader.load('1rem EzFthora'),
       fontLoader.load('1rem Oxeia'),
       fontLoader.load('1rem PFGoudyInitials'),
+      fontLoader.load('1rem Neanes'),
       fontLoader.ready,
     ]);
 
@@ -2698,9 +2699,9 @@ export default class Editor extends Vue {
   left: 0;
 }
 
-.neume {
+/* .neume {
   display: flex;
-}
+} */
 
 .page-break {
   position: absolute;

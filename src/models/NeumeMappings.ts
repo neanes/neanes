@@ -178,10 +178,7 @@ export const neumeMap = new Map<Neume, NeumeMapping>([
     QuantitativeNeume.OligonPlusElaphronPlusApostrophos,
     { fontFamily: 'EzSpecial2', text: ')' },
   ],
-  [
-    QuantitativeNeume.OligonPlusHypsili,
-    { fontFamily: 'EzSpecial2', text: ']' },
-  ],
+  [QuantitativeNeume.OligonPlusHamili, { fontFamily: 'EzSpecial2', text: ']' }],
 
   [QuantitativeNeume.Kentima, { fontFamily: 'Psaltica', text: '~' }],
   [QuantitativeNeume.OligonPlusKentima, { fontFamily: 'Psaltica', text: '1~' }],
@@ -206,11 +203,6 @@ export const neumeMap = new Map<Neume, NeumeMapping>([
   [
     QuantitativeNeume.OligonPlusKentemataPlusHypsiliRight,
     { fontFamily: 'EzSpecial1', text: 'u' },
-  ],
-
-  [
-    QuantitativeNeume.KentemataPlusOligonSpecial,
-    { fontFamily: 'Psaltica', text: '\u00CE' },
   ],
 
   [QuantitativeNeume.Cross, { fontFamily: 'Psaltica', text: '+' }],
@@ -280,19 +272,13 @@ export const neumeMap = new Map<Neume, NeumeMapping>([
   [Fthora.GeneralFlat_Top, { fontFamily: 'EzFthora', text: '5' }],
   [Fthora.GeneralFlat_Bottom, { fontFamily: 'EzFthora', text: 't' }],
 
-  [Accidental.Sharp_2_Right, { fontFamily: 'EzFthora', text: '+' }],
   [Accidental.Sharp_2_Left, { fontFamily: 'EzFthora', text: '=' }],
-  [Accidental.Sharp_4_Right, { fontFamily: 'EzFthora', text: '}' }],
   [Accidental.Sharp_4_Left, { fontFamily: 'EzFthora', text: ']' }],
-  [Accidental.Sharp_6_Right, { fontFamily: 'EzFthora', text: ':' }],
   [Accidental.Sharp_6_Left, { fontFamily: 'EzFthora', text: ';' }],
 
   [Accidental.Flat_2_Right, { fontFamily: 'EzFthora', text: '_' }],
-  [Accidental.Flat_2_Left, { fontFamily: 'EzFthora', text: '-' }],
   [Accidental.Flat_4_Right, { fontFamily: 'EzFthora', text: '{' }],
-  [Accidental.Flat_4_Left, { fontFamily: 'EzFthora', text: '[' }],
   [Accidental.Flat_6_Right, { fontFamily: 'EzFthora', text: '"' }],
-  [Accidental.Flat_6_Left, { fontFamily: 'EzFthora', text: "'" }],
 
   [TempoSign.VerySlow, { fontFamily: 'EzSpecial1', text: 'S' }],
   [TempoSign.Slow, { fontFamily: 'EzSpecial1', text: 'a' }],

@@ -26,6 +26,11 @@
 }
 
 @font-face {
+  font-family: Neanes;
+  src: url('~@/assets/Neanes.otf');
+}
+
+@font-face {
   font-family: Psaltica;
   src: url('~@/assets/EZ Psaltica.ttf');
 }

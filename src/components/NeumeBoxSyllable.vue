@@ -9,6 +9,12 @@
       :offset="quantitativeNeumeOffset"
     ></Neume>
     <Neume
+      v-if="hasVocalExpressionNeume && !isVareia(note.vocalExpressionNeume)"
+      :neume="note.vocalExpressionNeume"
+      :offset="vocalExpressionNeumeOffset"
+      :style="vocalExpressionStyle"
+    ></Neume>
+    <Neume
       v-if="hasTimeNeume"
       :neume="note.timeNeume"
       :offset="timeNeumeOffset"
@@ -36,12 +42,6 @@
       :neume="note.accidental"
       :offset="accidentalOffset"
       :style="accidentalStyle"
-    ></Neume>
-    <Neume
-      v-if="hasVocalExpressionNeume && !isVareia(note.vocalExpressionNeume)"
-      :neume="note.vocalExpressionNeume"
-      :offset="vocalExpressionNeumeOffset"
-      :style="vocalExpressionStyle"
     ></Neume>
     <Neume
       v-if="hasNoteIndicator"
@@ -192,24 +192,24 @@ export default class NeumeBoxSyllable extends Vue {
     let offset: NeumeAdjustmentOffset | null = null;
 
     // This is a special case to handle the hyporoe+kentemata neume
-    if (
-      this.note.quantitativeNeume ===
-      QuantitativeNeume.OligonPlusHyporoePlusKentemata
-    ) {
-      offset = { x: 0, y: -2.5 };
-    }
+    // if (
+    //   this.note.quantitativeNeume ===
+    //   QuantitativeNeume.OligonPlusHyporoePlusKentemata
+    // ) {
+    //   offset = { x: 0, y: -2.5 };
+    // }
 
-    if (
-      [
-        QuantitativeNeume.OligonPlusIson,
-        QuantitativeNeume.OligonPlusElaphron,
-        QuantitativeNeume.OligonPlusElaphronPlusApostrophos,
-        QuantitativeNeume.OligonPlusHypsili,
-        QuantitativeNeume.PetastiPlusHyporoe,
-      ].includes(this.note.quantitativeNeume)
-    ) {
-      offset = { x: 0, y: -8 };
-    }
+    // if (
+    //   [
+    //     QuantitativeNeume.OligonPlusIson,
+    //     QuantitativeNeume.OligonPlusElaphron,
+    //     QuantitativeNeume.OligonPlusElaphronPlusApostrophos,
+    //     QuantitativeNeume.OligonPlusHypsili,
+    //     QuantitativeNeume.PetastiPlusHyporoe,
+    //   ].includes(this.note.quantitativeNeume)
+    // ) {
+    //   offset = { x: 0, y: -8 };
+    // }
 
     return offset;
   }
@@ -385,14 +385,5 @@ export default class NeumeBoxSyllable extends Vue {
 .neume {
   cursor: default;
   user-select: none;
-}
-
-.red {
-  color: #ed0000;
-}
-
-.high {
-  position: relative;
-  top: -0.3rem;
 }
 </style>

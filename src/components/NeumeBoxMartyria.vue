@@ -23,7 +23,6 @@
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { MartyriaElement } from '@/models/Element';
-import { neumeMap } from '@/models/NeumeMappings';
 import Neume from '@/components/Neume.vue';
 import { Note } from '@/models/Neumes';
 import {
@@ -44,14 +43,6 @@ export default class NeumeBoxMartyria extends Vue {
   @Prop() pageSetup!: PageSetup;
 
   Note = Note;
-
-  get noteMapping() {
-    return neumeMap.get(this.neume.note!)!;
-  }
-
-  get rootSignMapping() {
-    return neumeMap.get(this.neume.rootSign!)!;
-  }
 
   get hasFthora() {
     return this.neume.fthora != null;

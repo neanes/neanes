@@ -113,7 +113,7 @@ export const gorgonAdjustmentMap = new Map<GorgonNeume, NeumeAdjustment[]>([
       {
         isPairedWith: [
           QuantitativeNeume.OligonPlusIson,
-          QuantitativeNeume.OligonPlusHypsili,
+          QuantitativeNeume.OligonPlusHamili,
         ],
         offset: { x: 0, y: -4 },
       },
@@ -191,7 +191,6 @@ export const gorgonAdjustmentMap = new Map<GorgonNeume, NeumeAdjustment[]>([
         isPairedWith: [
           QuantitativeNeume.OligonPlusKentimaBelow,
           QuantitativeNeume.KentemataPlusOligon,
-          QuantitativeNeume.KentemataPlusOligonSpecial,
         ],
         offset: { x: -5, y: 0 },
       },
@@ -424,7 +423,7 @@ export const timeAdjustmentMap = new Map<TimeNeume, NeumeAdjustment[]>([
       {
         isPairedWith: [
           QuantitativeNeume.OligonPlusIson,
-          QuantitativeNeume.OligonPlusHypsili,
+          QuantitativeNeume.OligonPlusHamili,
         ],
         offset: { x: 0, y: -4 },
       },
@@ -505,7 +504,6 @@ const homalonAdjustments: NeumeAdjustment[] = [
     isPairedWith: [
       QuantitativeNeume.OligonPlusKentimaBelow,
       QuantitativeNeume.KentemataPlusOligon,
-      QuantitativeNeume.KentemataPlusOligonSpecial,
       QuantitativeNeume.HamiliPlusApostrophos,
     ],
     offset: { x: 0, y: 4 },
@@ -548,10 +546,7 @@ export const vocalExpressionAdjustmentMap = new Map<
         offset: { x: -6, y: 0 },
       },
       {
-        isPairedWith: [
-          QuantitativeNeume.KentemataPlusOligon,
-          QuantitativeNeume.KentemataPlusOligonSpecial,
-        ],
+        isPairedWith: [QuantitativeNeume.KentemataPlusOligon],
         offset: { x: 0, y: 0 },
       },
     ],
@@ -572,10 +567,7 @@ export const vocalExpressionAdjustmentMap = new Map<
         offset: { x: 0, y: 4 },
       },
       {
-        isPairedWith: [
-          QuantitativeNeume.KentemataPlusOligon,
-          QuantitativeNeume.KentemataPlusOligonSpecial,
-        ],
+        isPairedWith: [QuantitativeNeume.KentemataPlusOligon],
         offset: { x: 0, y: 6 },
       },
       {
@@ -754,7 +746,7 @@ for (let fthora of Object.values(Fthora)) {
         QuantitativeNeume.OligonPlusIson,
         QuantitativeNeume.OligonPlusElaphron,
         QuantitativeNeume.OligonPlusElaphronPlusApostrophos,
-        QuantitativeNeume.OligonPlusHypsili,
+        QuantitativeNeume.OligonPlusHamili,
       ],
       offset: { x: 0, y: -8 },
     });
@@ -857,10 +849,7 @@ for (let fthora of Object.values(Fthora)) {
       offset: { x: -5, y: 0 },
     });
     adjustments.push({
-      isPairedWith: [
-        QuantitativeNeume.KentemataPlusOligon,
-        QuantitativeNeume.KentemataPlusOligonSpecial,
-      ],
+      isPairedWith: [QuantitativeNeume.KentemataPlusOligon],
       offset: { x: -8, y: 0 },
     });
     adjustments.push({
@@ -1009,7 +998,6 @@ const measureNumberAdjustments: NeumeAdjustment[] = [
       QuantitativeNeume.OligonPlusKentimaAbove,
       QuantitativeNeume.OligonPlusKentimaBelow,
       QuantitativeNeume.KentemataPlusOligon,
-      QuantitativeNeume.KentemataPlusOligonSpecial,
     ],
     offset: { x: 0, y: -8 },
   },
@@ -1183,48 +1171,58 @@ export const isonAdjustmentMap = new Map<Ison, NeumeAdjustment[]>();
 
 Object.values(Ison).forEach((x) => isonAdjustmentMap.set(x, isonAdjustments));
 
-export const getGorgonAdjustments = (neume: GorgonNeume) => {
-  return gorgonAdjustmentMap.get(neume);
+export const getGorgonAdjustments = (neume: GorgonNeume): NeumeAdjustment[] => {
+  return []; //return gorgonAdjustmentMap.get(neume);
 };
 
-export const getTimeAdjustments = (neume: TimeNeume) => {
-  return timeAdjustmentMap.get(neume);
+export const getTimeAdjustments = (neume: TimeNeume): NeumeAdjustment[] => {
+  return []; //return timeAdjustmentMap.get(neume);
 };
 
-export const getVocalExpressionAdjustments = (neume: VocalExpressionNeume) => {
-  return vocalExpressionAdjustmentMap.get(neume);
+export const getVocalExpressionAdjustments = (
+  neume: VocalExpressionNeume,
+): NeumeAdjustment[] => {
+  return []; //return vocalExpressionAdjustmentMap.get(neume);
 };
 
-export const getFthoraAdjustments = (neume: Fthora) => {
-  return fthoraAdjustmentMap.get(neume);
+export const getFthoraAdjustments = (neume: Fthora): NeumeAdjustment[] => {
+  return []; //return fthoraAdjustmentMap.get(neume);
 };
 
-export const getRootSignAdjustments = (neume: RootSign) => {
-  return rootSignAdjustmentMap.get(neume);
+export const getRootSignAdjustments = (neume: RootSign): NeumeAdjustment[] => {
+  return []; //return rootSignAdjustmentMap.get(neume);
 };
 
-export const getQuantitativeNeumeAdjustments = (neume: QuantitativeNeume) => {
-  return quantitativeNeumeAdjustmentMap.get(neume);
+export const getQuantitativeNeumeAdjustments = (
+  neume: QuantitativeNeume,
+): NeumeAdjustment[] => {
+  return []; //return quantitativeNeumeAdjustmentMap.get(neume);
 };
 
-export const getModeSignAdjustments = (neume: ModeSign) => {
-  return modeSignAdjustmentMap.get(neume);
+export const getModeSignAdjustments = (neume: ModeSign): NeumeAdjustment[] => {
+  return []; //return modeSignAdjustmentMap.get(neume);
 };
 
-export const getAccidentalAdjustments = (neume: Accidental) => {
-  return accidentalAdjustmentMap.get(neume);
+export const getAccidentalAdjustments = (
+  neume: Accidental,
+): NeumeAdjustment[] => {
+  return []; //return accidentalAdjustmentMap.get(neume);
 };
 
-export const getMeasureNumberAdjustments = (neume: MeasureNumber) => {
-  return measureNumberAdjustmentMap.get(neume);
+export const getMeasureNumberAdjustments = (
+  neume: MeasureNumber,
+): NeumeAdjustment[] => {
+  return []; //return measureNumberAdjustmentMap.get(neume);
 };
 
-export const getNoteIndicatorAdjustments = (neume: NoteIndicator) => {
-  return noteIndicatorAdjustmentMap.get(neume);
+export const getNoteIndicatorAdjustments = (
+  neume: NoteIndicator,
+): NeumeAdjustment[] => {
+  return []; //return noteIndicatorAdjustmentMap.get(neume);
 };
 
-export const getIsonAdjustments = (neume: Ison) => {
-  return isonAdjustmentMap.get(neume);
+export const getIsonAdjustments = (neume: Ison): NeumeAdjustment[] => {
+  return []; //return isonAdjustmentMap.get(neume);
 };
 
 export const hyporoeGorgonOffset: NeumeAdjustmentOffset = { x: -10, y: -8 };

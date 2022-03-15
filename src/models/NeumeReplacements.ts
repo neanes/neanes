@@ -321,13 +321,6 @@ export const vocalExpressionReplacementMap = new Map<
         ],
         replaceWith: null,
       },
-      {
-        isPairedWith: [
-          QuantitativeNeume.Apostrophos,
-          QuantitativeNeume.Hyporoe,
-        ],
-        replaceWith: VocalExpressionNeume.AntikenomaShort,
-      },
     ],
   ],
   [

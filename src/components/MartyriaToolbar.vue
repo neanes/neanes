@@ -226,10 +226,6 @@ export default class MartyriaToolbar extends Vue {
   width: 16px;
 }
 
-.fthora {
-  left: 18px;
-}
-
 .measure-bar-right {
   top: -10px;
 }

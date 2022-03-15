@@ -959,13 +959,16 @@ export default class NeumeToolbar extends Vue {
   overflow: hidden;
 
   user-select: none;
+
+  display: flex;
+  justify-content: center;
 }
 
 .space {
   width: 16px;
 }
 
-.sharp {
+/* .sharp {
   top: -23px;
   left: 24px;
 }
@@ -1089,7 +1092,7 @@ export default class NeumeToolbar extends Vue {
 
 .ison {
   left: 19px;
-}
+} */
 
 .menu-container {
   display: flex;

@@ -104,7 +104,6 @@ export enum VocalExpressionNeume {
   HomalonConnecting = 'HomalonConnecting',
   Homalon = 'Homalon',
   Antikenoma = 'Antikenoma',
-  AntikenomaShort = 'AntikenomaShort',
   Psifiston = 'Psifiston',
   Heteron = 'Heteron',
 }
@@ -115,7 +114,6 @@ export enum RootSign {
   Legetos = 'Legetos',
   Nana = 'Nana',
   Tilt = 'Tilt',
-  Dots = 'Dots',
   Zo = 'Varys',
   Squiggle = 'Squiggle',
   Zygos = 'Zygos',

@@ -294,7 +294,6 @@ export const neumeMap = new Map<Neume, NeumeMapping>([
   ],
   [VocalExpressionNeume.Homalon, { fontFamily: 'Psaltica', text: '{' }],
   [VocalExpressionNeume.Antikenoma, { fontFamily: 'Psaltica', text: '"' }],
-  [VocalExpressionNeume.AntikenomaShort, { fontFamily: 'Psaltica', text: '}' }],
   [VocalExpressionNeume.Psifiston, { fontFamily: 'Psaltica', text: "'" }],
   [VocalExpressionNeume.Heteron, { fontFamily: 'Psaltica', text: ']' }],
 
@@ -303,7 +302,6 @@ export const neumeMap = new Map<Neume, NeumeMapping>([
   [RootSign.Legetos, { fontFamily: 'Psaltica', text: 'B' }],
   [RootSign.Nana, { fontFamily: 'Psaltica', text: 'N' }],
   [RootSign.Tilt, { fontFamily: 'Psaltica', text: 'M' }],
-  [RootSign.Dots, { fontFamily: 'Psaltica', text: '<' }],
   [RootSign.Zo, { fontFamily: 'Psaltica', text: '>' }],
   [RootSign.Squiggle, { fontFamily: 'Psaltica', text: '?' }],
   [RootSign.Zygos, { fontFamily: 'EzFthora', text: 'I' }],

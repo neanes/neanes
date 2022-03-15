@@ -112,7 +112,7 @@
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
         "timeNeume": "Hapli",
-        "vocalExpressionNeume": "AntikenomaShort",
+        "vocalExpressionNeume": "Antikenoma",
         "lyrics": "un",
         "isMelisma": true,
         "isMelismaStart": true,
@@ -467,7 +467,7 @@
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
         "timeNeume": "Hapli",
-        "vocalExpressionNeume": "AntikenomaShort",
+        "vocalExpressionNeume": "Antikenoma",
         "lyrics": "to",
         "isMelisma": true,
         "isMelismaStart": true
@@ -681,7 +681,7 @@
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
         "timeNeume": "Hapli",
-        "vocalExpressionNeume": "AntikenomaShort",
+        "vocalExpressionNeume": "Antikenoma",
         "lyrics": "to",
         "isMelisma": true,
         "isMelismaStart": true

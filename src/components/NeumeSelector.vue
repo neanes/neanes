@@ -57,7 +57,6 @@
                 <Neume
                   class="red neume"
                   :neume="menuItem.gorgon"
-                  :offset="hyporoeGorgonOffset"
                   v-if="menuItem.gorgon != null"
                 />
               </div>
@@ -82,7 +81,6 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 import { GorgonNeume, QuantitativeNeume } from '@/models/Neumes';
 import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
 import Neume from '@/components/Neume.vue';
-import { NeumeAdjustmentOffset } from '@/models/NeumeAdjustments';
 
 interface HyporoeMenuItem {
   gorgon: GorgonNeume | null;
@@ -177,10 +175,6 @@ export default class NeumeSelector extends Vue {
 
   showHyporoeMenu: boolean = false;
   selectedHyporoe: HyporoeMenuItem | null = null;
-
-  get hyporoeGorgonOffset() {
-    return { x: -10, y: -6 } as NeumeAdjustmentOffset;
-  }
 
   openHyporoeMenu() {
     this.showHyporoeMenu = true;

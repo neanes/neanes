@@ -425,10 +425,8 @@ export class ModeKeyElement extends ScoreElement {
   }
 
   public get height() {
-    return Math.max(
-      TextMeasurementService.getFontHeight(`${this.fontSize}px Oxeia`),
-      TextMeasurementService.getFontHeight(`${this.fontSize}px EzSpecial2`),
-    );
+    // TODO unicode - remove this hard coded font name
+    return TextMeasurementService.getFontHeight(`${this.fontSize}px Neanes`);
   }
 
   public static createFromTemplate(

@@ -59,8 +59,9 @@ export class LayoutService {
     // be used later. This is so we don't unnecessarily
     // calculate them more than once during the loop.
 
+    // TODO unicode - remove this hard-coded font name
     const neumeHeight = TextMeasurementService.getFontHeight(
-      `${pageSetup.neumeDefaultFontSize}px Psaltica`,
+      `${pageSetup.neumeDefaultFontSize}px Neanes`,
     );
 
     const lyricsVerticalOffset = neumeHeight + pageSetup.lyricsVerticalOffset;

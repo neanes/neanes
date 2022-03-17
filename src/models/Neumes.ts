@@ -180,16 +180,12 @@ export enum ModeSign {
   DeltaWithDeltaHat = 'ModeSign.DeltaWithDeltaHat',
   DeltaWithHypsili = 'ModeSign.DeltaWithHypsili',
   OligonPlusKentemata = 'ModeSign.OligonPlusKentemata',
-  DeltaHat = 'ModeSign.DeltaHat',
   NanaOld = 'ModeSign.NanaOld',
   Legetos = 'ModeSign.Legetos',
   ElaphronPlusApostrophos = 'ModeSign.ElaphronPlusApostrophos',
   Elaphron = 'ModeSign.Elaphron',
   OligonPlusKentima = 'ModeSign.OligonPlusKentima',
   OligonPlusHypsili = 'ModeSign.OligonPlusHypsili',
-  PaHardChromatic = 'ModeSign.PaHardChromatic',
-  VouSoftChromatic = 'ModeSign.VouSoftChromatic',
-  ThiSoftChromatic = 'ModeSign.ThiSoftChromatic',
 }
 
 export enum Fthora {

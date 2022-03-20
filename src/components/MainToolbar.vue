@@ -24,13 +24,10 @@
     <span class="space"></span>
     <button
       title="Insert martyria"
-      class="neume-button"
+      class="neume-button martyria"
       @click="$emit('add-auto-martyria')"
     >
-      <span class="martyria">
-        <Neume class="red neume" :neume="Note.Pa" />
-        <Neume class="red neume" :neume="RootSign.Alpha" />
-      </span>
+      <img src="@/assets/icons/martyria.svg" />
     </button>
     <span class="space"></span>
     <div
@@ -39,16 +36,57 @@
       @mouseleave="selectedTempoNeume = null"
     >
       <button class="neume-button">
-        <Neume class="red neume tempo" :neume="TempoSign.VerySlow" />
+        <img draggable="false" src="@/assets/icons/agogi-poli-argi.svg" />
       </button>
       <div class="tempo-menu" v-if="showTempoMenu">
         <div
           class="tempo-menu-item"
-          v-for="tempo in tempoMenuItems"
-          :key="tempo"
-          @mouseenter="selectedTempoNeume = tempo"
+          @mouseenter="selectedTempoNeume = TempoSign.VerySlow"
         >
-          <Neume class="red neume tempo" :neume="tempo" />
+          <img draggable="false" src="@/assets/icons/agogi-poli-argi.svg" />
+        </div>
+        <div
+          class="tempo-menu-item"
+          @mouseenter="selectedTempoNeume = TempoSign.Slower"
+        >
+          <img draggable="false" src="@/assets/icons/agogi-argoteri.svg" />
+        </div>
+        <div
+          class="tempo-menu-item"
+          @mouseenter="selectedTempoNeume = TempoSign.Slow"
+        >
+          <img draggable="false" src="@/assets/icons/agogi-argi.svg" />
+        </div>
+        <div
+          class="tempo-menu-item"
+          @mouseenter="selectedTempoNeume = TempoSign.Moderate"
+        >
+          <img draggable="false" src="@/assets/icons/agogi-metria.svg" />
+        </div>
+        <div
+          class="tempo-menu-item"
+          @mouseenter="selectedTempoNeume = TempoSign.Medium"
+        >
+          <img draggable="false" src="@/assets/icons/agogi-mesi.svg" />
+        </div>
+        <div
+          class="tempo-menu-item"
+          @mouseenter="selectedTempoNeume = TempoSign.Quick"
+        >
+          <img draggable="false" src="@/assets/icons/agogi-gorgi.svg" />
+        </div>
+
+        <div
+          class="tempo-menu-item"
+          @mouseenter="selectedTempoNeume = TempoSign.Quicker"
+        >
+          <img draggable="false" src="@/assets/icons/agogi-gorgoteri.svg" />
+        </div>
+        <div
+          class="tempo-menu-item"
+          @mouseenter="selectedTempoNeume = TempoSign.VeryQuick"
+        >
+          <img draggable="false" src="@/assets/icons/agogi-poli-gorgi.svg" />
         </div>
       </div>
     </div>
@@ -58,7 +96,7 @@
       class="icon-btn"
       @click="$emit('add-drop-cap')"
     >
-      <img src="@/assets/dropcap.svg" width="24" height="24" />
+      <img src="@/assets/icons/drop-cap.svg" width="24" height="24" />
     </button>
     <span class="space"></span>
     <button
@@ -135,15 +173,6 @@ export default class MainToolbar extends Vue {
   selectedTempoNeume: TempoSign | null = null;
 
   zoomOptions: number[] = [50, 75, 90, 100, 125, 150, 200];
-
-  tempoMenuItems: TempoSign[] = [
-    TempoSign.VerySlow,
-    TempoSign.Slow,
-    TempoSign.Medium,
-    TempoSign.Moderate,
-    TempoSign.Quick,
-    TempoSign.VeryQuick,
-  ];
 
   get zoomDisplay() {
     return this.zoomToFit ? 'Fit' : (this.zoom * 100).toFixed(0) + '%';
@@ -235,6 +264,9 @@ export default class MainToolbar extends Vue {
   width: var(--btn-size);
 
   position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 
   overflow: hidden;
 
@@ -243,19 +275,6 @@ export default class MainToolbar extends Vue {
 
 .space {
   width: 16px;
-}
-
-.martyria {
-  position: relative;
-
-  top: -21px;
-  left: -4px;
-}
-
-.tempo {
-  top: -12px;
-  left: -1px;
-  font-size: 20px;
 }
 
 .zoom {
@@ -300,6 +319,11 @@ export default class MainToolbar extends Vue {
 
 .tempo-container {
   display: flex;
+}
+
+.tempo-container img {
+  height: 28px;
+  width: 28px;
 }
 
 .tempo-menu {

@@ -304,11 +304,13 @@ export const neumeMap = new Map<Neume, NeumeMapping>([
   [Accidental.Flat_6_Right, { fontFamily: fontFamily, text: '\ue202' }],
 
   [TempoSign.VerySlow, { fontFamily: fontFamily, text: '\ue120' }],
-  [TempoSign.Slow, { fontFamily: fontFamily, text: '\ue121' }],
-  [TempoSign.Medium, { fontFamily: fontFamily, text: '\ue123' }],
-  [TempoSign.Moderate, { fontFamily: fontFamily, text: '\ue124' }],
+  [TempoSign.Slower, { fontFamily: fontFamily, text: '\ue121' }],
+  [TempoSign.Slow, { fontFamily: fontFamily, text: '\ue122' }],
+  [TempoSign.Moderate, { fontFamily: fontFamily, text: '\ue123' }],
+  [TempoSign.Medium, { fontFamily: fontFamily, text: '\ue124' }],
   [TempoSign.Quick, { fontFamily: fontFamily, text: '\ue125' }],
-  [TempoSign.VeryQuick, { fontFamily: fontFamily, text: '\ue126' }],
+  [TempoSign.Quicker, { fontFamily: fontFamily, text: '\ue126' }],
+  [TempoSign.VeryQuick, { fontFamily: fontFamily, text: '\ue127' }],
 
   [VocalExpressionNeume.Vareia, { fontFamily: fontFamily, text: '\ue0a0' }],
   [

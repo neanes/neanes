@@ -142,10 +142,12 @@ export enum Note {
 
 export enum TempoSign {
   VerySlow = 'VerySlow',
+  Slower = 'Slower',
   Slow = 'Slow',
   Medium = 'Medium',
   Moderate = 'Moderate',
   Quick = 'Quick',
+  Quicker = 'Quicker',
   VeryQuick = 'VeryQuick',
 }
 

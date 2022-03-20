@@ -379,16 +379,50 @@
         @mouseleave="selectedNoteIndicator = null"
       >
         <button class="neume-button">
-          <Neume class="red neume note-indicator" :neume="NoteIndicator.Ni" />
+          <img draggable="false" src="@/assets/icons/note-ni.svg" />
         </button>
         <div class="menu" v-if="showNoteIndicatorMenu">
           <div
             class="menu-item"
-            v-for="menuItem in noteIndicatorMenuItems"
-            :key="menuItem"
-            @mouseenter="selectedNoteIndicator = menuItem"
+            @mouseenter="selectedNoteIndicator = NoteIndicator.Zo"
           >
-            <Neume class="red neume note-indicator" :neume="menuItem" />
+            <img draggable="false" src="@/assets/icons/note-zo.svg" />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedNoteIndicator = NoteIndicator.Ke"
+          >
+            <img draggable="false" src="@/assets/icons/note-ke.svg" />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedNoteIndicator = NoteIndicator.Thi"
+          >
+            <img draggable="false" src="@/assets/icons/note-di.svg" />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedNoteIndicator = NoteIndicator.Ga"
+          >
+            <img draggable="false" src="@/assets/icons/note-ga.svg" />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedNoteIndicator = NoteIndicator.Vou"
+          >
+            <img draggable="false" src="@/assets/icons/note-vou.svg" />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedNoteIndicator = NoteIndicator.Pa"
+          >
+            <img draggable="false" src="@/assets/icons/note-pa.svg" />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedNoteIndicator = NoteIndicator.Ni"
+          >
+            <img draggable="false" src="@/assets/icons/note-ni.svg" />
           </div>
         </div>
       </div>
@@ -620,16 +654,6 @@ export default class NeumeToolbar extends Vue {
   selectedMeasureNumber: MeasureNumber | null = null;
   selectedNoteIndicator: NoteIndicator | null = null;
   selectedIson: Ison | null = null;
-
-  noteIndicatorMenuItems: NoteIndicator[] = [
-    NoteIndicator.Zo,
-    NoteIndicator.Ke,
-    NoteIndicator.Thi,
-    NoteIndicator.Ga,
-    NoteIndicator.Vou,
-    NoteIndicator.Pa,
-    NoteIndicator.Ni,
-  ];
 
   beforeDestroy() {
     window.removeEventListener('mouseup', this.onFlatMouseUp);

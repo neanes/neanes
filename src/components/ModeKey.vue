@@ -1,31 +1,59 @@
 <template>
   <div class="mode-key-container" :style="style">
-    <Neume :neume="ModeSign.Ekhos"></Neume>
-    <Neume v-if="element.isPlagal" :neume="ModeSign.Plagal"></Neume>
-    <Neume v-if="element.isVarys" :neume="ModeSign.Varys"></Neume>
+    <Neume
+      :neume="ModeSign.Ekhos"
+      :fontFamily="pageSetup.neumeDefaultFontFamily"
+    ></Neume>
+    <Neume
+      v-if="element.isPlagal"
+      :neume="ModeSign.Plagal"
+      :fontFamily="pageSetup.neumeDefaultFontFamily"
+    ></Neume>
+    <Neume
+      v-if="element.isVarys"
+      :neume="ModeSign.Varys"
+      :fontFamily="pageSetup.neumeDefaultFontFamily"
+    ></Neume>
     <template v-for="(neume, index) in element.martyrias">
-      <Neume :neume="neume" :key="index" :offset="getModeSignOffset(neume)" />
+      <Neume
+        :neume="neume"
+        :key="index"
+        :offset="getModeSignOffset(neume)"
+        :fontFamily="pageSetup.neumeDefaultFontFamily"
+      />
     </template>
-    <Neume v-if="hasNote" :neume="element.note"></Neume>
+    <Neume
+      v-if="hasNote"
+      :neume="element.note"
+      :fontFamily="pageSetup.neumeDefaultFontFamily"
+    ></Neume>
     <Neume
       v-if="hasFthora"
       :neume="element.fthora"
       :offset="getFthoraOffset(element.fthora)"
+      :fontFamily="pageSetup.neumeDefaultFontFamily"
     ></Neume>
-    <Neume v-if="hasNote2" :neume="element.note2"></Neume>
+    <Neume
+      v-if="hasNote2"
+      :neume="element.note2"
+      :fontFamily="pageSetup.neumeDefaultFontFamily"
+    ></Neume>
     <Neume
       v-if="hasQuantitativeNeumeTop"
       :neume="element.quantitativeNeumeTop"
+      :fontFamily="pageSetup.neumeDefaultFontFamily"
     ></Neume>
     <Neume
       v-if="hasQuantitativeNeumeRight"
       :neume="element.quantitativeNeumeRight"
       :offset="quantitativeNeumeRightOffset"
+      :fontFamily="pageSetup.neumeDefaultFontFamily"
     ></Neume>
     <Neume
       v-if="hasFthora2"
       :neume="element.fthora2"
       :offset="getFthoraOffset(element.fthora2)"
+      :fontFamily="pageSetup.neumeDefaultFontFamily"
     ></Neume>
   </div>
 </template>

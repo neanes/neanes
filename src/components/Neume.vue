@@ -13,6 +13,7 @@ import { withZoom } from '@/utils/withZoom';
 export default class Neume extends Vue {
   @Prop() neume!: NeumeType;
   @Prop() offset!: ScoreElementOffset;
+  @Prop() fontFamily!: string;
 
   get mapping() {
     let mapping = neumeMap.get(this.neume);
@@ -20,7 +21,6 @@ export default class Neume extends Vue {
     if (!mapping) {
       console.warn('Could not find mapping for neume ' + this.neume);
       mapping = {
-        fontFamily: 'Omega',
         text: '?',
       };
     }
@@ -35,7 +35,7 @@ export default class Neume extends Vue {
   get style() {
     const style = {} as CSSStyleDeclaration;
 
-    style.fontFamily = this.mapping.fontFamily;
+    style.fontFamily = this.fontFamily;
 
     if (this.offset) {
       style.left = withZoom(this.offset.x);

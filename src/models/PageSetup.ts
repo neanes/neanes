@@ -63,6 +63,7 @@ export class PageSetup {
   public lyricsDefaultColor = '#000000';
   public lyricsVerticalOffset = -Unit.fromInch(0.06);
 
+  public neumeDefaultFontFamily = 'Neanes';
   public neumeDefaultFontSize = Unit.fromPt(20);
   public neumeDefaultColor = '#000000';
   public neumeDefaultSpacing = Unit.fromInch(0.03);

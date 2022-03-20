@@ -73,13 +73,13 @@ export class LayoutService {
     const vareiaMapping = neumeMap.get(VocalExpressionNeume.Vareia)!;
     const vareiaWidth = TextMeasurementService.getTextWidth(
       vareiaMapping.text,
-      `${pageSetup.neumeDefaultFontSize}px ${vareiaMapping.fontFamily}`,
+      `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
     );
 
     const elaphronMapping = neumeMap.get(QuantitativeNeume.Elaphron)!;
     const elaphronWidth = TextMeasurementService.getTextWidth(
       elaphronMapping.text,
-      `${pageSetup.neumeDefaultFontSize}px ${elaphronMapping.fontFamily}`,
+      `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
     );
 
     const runningElaphronMapping = neumeMap.get(
@@ -87,7 +87,7 @@ export class LayoutService {
     )!;
     const runningElaphronWidth = TextMeasurementService.getTextWidth(
       runningElaphronMapping.text,
-      `${pageSetup.neumeDefaultFontSize}px ${runningElaphronMapping.fontFamily}`,
+      `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
     );
 
     for (let element of elements) {
@@ -147,7 +147,7 @@ export class LayoutService {
 
           noteElement.neumeWidth = TextMeasurementService.getTextWidth(
             quantitativeNeumeMapping.text,
-            `${pageSetup.neumeDefaultFontSize}px ${quantitativeNeumeMapping.fontFamily}`,
+            `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
           );
 
           noteElement.lyricsWidth = TextMeasurementService.getTextWidth(
@@ -188,7 +188,7 @@ export class LayoutService {
 
             noteElement.neumeWidth += TextMeasurementService.getTextWidth(
               measureBarMapping.text,
-              `${pageSetup.neumeDefaultFontSize}px ${measureBarMapping.fontFamily}`,
+              `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
             );
           }
 
@@ -214,7 +214,7 @@ export class LayoutService {
 
           const apostropheWidth = TextMeasurementService.getTextWidth(
             mappingApostrophe.text,
-            `${pageSetup.neumeDefaultFontSize}px ${mappingApostrophe.fontFamily}`,
+            `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
           );
 
           // Add in an extra apostrophe width to give some extra space between
@@ -223,19 +223,17 @@ export class LayoutService {
             apostropheWidth +
             TextMeasurementService.getTextWidth(
               mappingNote.text,
-              `${pageSetup.neumeDefaultFontSize}px ${mappingNote.fontFamily}`,
+              `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
             ) +
             TextMeasurementService.getTextWidth(
               mappingRoot.text,
-              `${pageSetup.neumeDefaultFontSize}px ${mappingRoot.fontFamily}`,
+              `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
             ) +
             (martyriaElement.apostrophe ? apostropheWidth : 0) +
             (martyriaElement.measureBar
               ? TextMeasurementService.getTextWidth(
                   mappingMeasureBar!.text,
-                  `${pageSetup.neumeDefaultFontSize}px ${
-                    mappingMeasureBar!.fontFamily
-                  }`,
+                  `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
                 )
               : 0);
           break;
@@ -246,7 +244,7 @@ export class LayoutService {
 
           elementWidthPx = TextMeasurementService.getTextWidth(
             temoMapping.text,
-            `${pageSetup.neumeDefaultFontSize}px ${temoMapping.fontFamily}`,
+            `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
           );
           break;
         }
@@ -498,7 +496,7 @@ export class LayoutService {
     const elaphronMapping = neumeMap.get(QuantitativeNeume.Elaphron)!;
     const elaphronWidth = TextMeasurementService.getTextWidth(
       elaphronMapping.text,
-      `${pageSetup.neumeDefaultFontSize}px ${elaphronMapping.fontFamily}`,
+      `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
     );
 
     const runningElaphronMapping = neumeMap.get(
@@ -506,7 +504,7 @@ export class LayoutService {
     )!;
     const runningElaphronWidth = TextMeasurementService.getTextWidth(
       runningElaphronMapping.text,
-      `${pageSetup.neumeDefaultFontSize}px ${runningElaphronMapping.fontFamily}`,
+      `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
     );
 
     for (let page of pages) {

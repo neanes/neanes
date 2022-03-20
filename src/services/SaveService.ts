@@ -72,6 +72,7 @@ export class SaveService {
     score.pageSetup.tempoDefaultColor = s.pageSetup.tempoDefaultColor;
     score.pageSetup.modeKeyDefaultColor = s.pageSetup.modeKeyDefaultColor;
     score.pageSetup.neumeDefaultColor = s.pageSetup.neumeDefaultColor;
+    score.pageSetup.neumeDefaultFontFamily = s.pageSetup.neumeDefaultFontFamily;
     score.pageSetup.neumeDefaultFontSize = s.pageSetup.neumeDefaultFontSize;
     score.pageSetup.neumeDefaultSpacing = s.pageSetup.neumeDefaultSpacing;
     score.pageSetup.pageHeight = s.pageSetup.pageHeight;
@@ -340,6 +341,8 @@ export class SaveService {
     pageSetup.neumeDefaultColor =
       p.neumeDefaultColor || pageSetup.neumeDefaultColor;
 
+    pageSetup.neumeDefaultFontFamily =
+      p.neumeDefaultFontFamily || pageSetup.neumeDefaultFontFamily;
     pageSetup.neumeDefaultFontSize = p.neumeDefaultFontSize;
     pageSetup.neumeDefaultSpacing = p.neumeDefaultSpacing;
 

@@ -14,6 +14,7 @@
     "lyricsDefaultFontSize": 16,
     "lyricsDefaultColor": "#000000",
     "lyricsVerticalOffset": -5.76,
+    "neumeDefaultFontFamily": "Neanes",
     "neumeDefaultFontSize": 26.666666666666668,
     "neumeDefaultColor": "#000000",
     "neumeDefaultSpacing": 2.88,

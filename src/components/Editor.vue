@@ -18,6 +18,7 @@
     <div class="content">
       <NeumeSelector
         class="neume-selector"
+        :pageSetup="score.pageSetup"
         @select-quantitative-neume="addQuantitativeNeume"
       ></NeumeSelector>
       <div class="page-container">

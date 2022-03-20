@@ -13,7 +13,8 @@
     "lyricsDefaultFontFamily": "Omega",
     "lyricsDefaultFontSize": 16,
     "lyricsDefaultColor": "#000000",
-    "lyricsVerticalOffset": -5.76
+    "lyricsVerticalOffset": -5.76,
+    "neumeDefaultFontFamily": "Neanes",
     "neumeDefaultFontSize": 26.666666666666668,
     "neumeDefaultColor": "#000000",
     "neumeDefaultSpacing": 0,
@@ -67,7 +68,7 @@
         "fthora": "SoftChromaticThi_Top",
         "color": "#ED0000",
         "fontSize": 26.666666666666668,
-        "height": 63
+        "height": 49
       },
       {
         "elementType": "DropCap",

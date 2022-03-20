@@ -119,7 +119,7 @@
       title="Delete selected element"
       @click="$emit('delete-selected-element')"
     >
-      X
+      <img src="@/assets/icons/delete.svg" width="24" height="24" />
     </button>
     <span class="space"></span>
     <div class="zoom-container" @focusout="showZoomMenu = false" tabindex="-1">

@@ -333,7 +333,6 @@ import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
 import MartyriaNeumeBox from '@/components/NeumeBoxMartyria.vue';
 import TempoNeumeBox from '@/components/NeumeBoxTempo.vue';
 import NeumeSelector from '@/components/NeumeSelector.vue';
-import NeumeKeyboard from '@/components/NeumeKeyboard.vue';
 import ContentEditable from '@/components/ContentEditable.vue';
 import TextBox from '@/components/TextBox.vue';
 import DropCap from '@/components/DropCap.vue';
@@ -364,7 +363,6 @@ import { PageSetup } from '@/models/PageSetup';
     MartyriaNeumeBox,
     TempoNeumeBox,
     NeumeSelector,
-    NeumeKeyboard,
     ContentEditable,
     TextBox,
     DropCap,
@@ -696,11 +694,6 @@ export default class Editor extends Vue {
     await Promise.all([
       fontLoader.load('1rem Athonite'),
       fontLoader.load('1rem Omega'),
-      fontLoader.load('1rem Psaltica'),
-      fontLoader.load('1rem EzSpecial1'),
-      fontLoader.load('1rem EzSpecial2'),
-      fontLoader.load('1rem EzFthora'),
-      fontLoader.load('1rem Oxeia'),
       fontLoader.load('1rem PFGoudyInitials'),
       fontLoader.load('1rem Neanes'),
       fontLoader.ready,

@@ -9,7 +9,7 @@ import {
   TempoElement,
   EmptyElement,
 } from '@/models/Element';
-import { neumeMap } from '@/models/NeumeMappings.Unicode';
+import { neumeMap } from '@/models/NeumeMappings';
 import {
   Fthora,
   Note,

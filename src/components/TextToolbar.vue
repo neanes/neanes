@@ -28,7 +28,7 @@
       @click="$emit('update:alignment', TextBoxAlignment.Left)"
     >
       <img
-        src="@/assets/alignleft.svg"
+        src="@/assets/icons/alignleft.svg"
         width="32"
         height="32"
         title="Align Left"
@@ -40,7 +40,7 @@
       @click="$emit('update:alignment', TextBoxAlignment.Center)"
     >
       <img
-        src="@/assets/aligncenter.svg"
+        src="@/assets/icons/aligncenter.svg"
         width="32"
         height="32"
         title="Align Center"
@@ -52,7 +52,7 @@
       @click="$emit('update:alignment', TextBoxAlignment.Right)"
     >
       <img
-        src="@/assets/alignright.svg"
+        src="@/assets/icons/alignright.svg"
         width="32"
         height="32"
         title="Align Right"

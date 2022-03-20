@@ -109,7 +109,7 @@
       >
         <img
           title="Align martyria to the end of the line"
-          src="@/assets/alignright2.svg"
+          src="@/assets/icons/alignright2.svg"
           height="24"
           width="24"
           class="icon-btn-img"

@@ -27,47 +27,22 @@
 
 @font-face {
   font-family: Neanes;
-  src: url('~@/assets/Neanes.otf');
-}
-
-@font-face {
-  font-family: Psaltica;
-  src: url('~@/assets/EZ Psaltica.ttf');
+  src: url('~@/assets/fonts/Neanes.otf');
 }
 
 @font-face {
   font-family: Omega;
-  src: url('~@/assets/EZ Omega.ttf');
+  src: url('~@/assets/fonts/EZ Omega.ttf');
 }
 
 @font-face {
   font-family: Athonite;
-  src: url('~@/assets/Athonite.ttf');
+  src: url('~@/assets/fonts/Athonite.ttf');
 }
 
 @font-face {
   font-family: PFGoudyInitials;
-  src: url('~@/assets/PFGoudyInitials.ttf');
-}
-
-@font-face {
-  font-family: EzSpecial1;
-  src: url('~@/assets/EZ Special-I.ttf');
-}
-
-@font-face {
-  font-family: EzSpecial2;
-  src: url('~@/assets/EZ Special-II.ttf');
-}
-
-@font-face {
-  font-family: EzFthora;
-  src: url('~@/assets/EZ Fthora.ttf');
-}
-
-@font-face {
-  font-family: Oxeia;
-  src: url('~@/assets/EZ Oxeia.ttf');
+  src: url('~@/assets/fonts/PFGoudyInitials.ttf');
 }
 
 html {

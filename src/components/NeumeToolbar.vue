@@ -207,16 +207,35 @@
         @mouseleave="selectedFlat = null"
       >
         <button class="neume-button">
-          <Neume class="red neume flat" :neume="Accidental.Flat_2_Right" />
+          <img draggable="false" src="@/assets/icons/alteration-yfesis2.svg" />
         </button>
         <div class="menu" v-if="showFlatMenu">
           <div
             class="menu-item"
-            v-for="menuItem in flatMenuItems"
-            :key="menuItem"
-            @mouseenter="selectedFlat = menuItem"
+            @mouseenter="selectedFlat = Accidental.Flat_6_Right"
           >
-            <Neume class="red neume flat" :neume="menuItem" />
+            <img
+              draggable="false"
+              src="@/assets/icons/alteration-yfesis6.svg"
+            />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedFlat = Accidental.Flat_4_Right"
+          >
+            <img
+              draggable="false"
+              src="@/assets/icons/alteration-yfesis4.svg"
+            />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedFlat = Accidental.Flat_2_Right"
+          >
+            <img
+              draggable="false"
+              src="@/assets/icons/alteration-yfesis2.svg"
+            />
           </div>
         </div>
       </div>
@@ -226,16 +245,35 @@
         @mouseleave="selectedSharp = null"
       >
         <button class="neume-button">
-          <Neume class="red neume sharp" :neume="Accidental.Sharp_2_Left" />
+          <img draggable="false" src="@/assets/icons/alteration-diesis2.svg" />
         </button>
         <div class="menu" v-if="showSharpMenu">
           <div
             class="menu-item"
-            v-for="menuItem in sharpMenuItems"
-            :key="menuItem"
-            @mouseenter="selectedSharp = menuItem"
+            @mouseenter="selectedSharp = Accidental.Sharp_6_Left"
           >
-            <Neume class="red neume sharp" :neume="menuItem" />
+            <img
+              draggable="false"
+              src="@/assets/icons/alteration-diesis6.svg"
+            />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedSharp = Accidental.Sharp_4_Left"
+          >
+            <img
+              draggable="false"
+              src="@/assets/icons/alteration-diesis4.svg"
+            />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedSharp = Accidental.Sharp_2_Left"
+          >
+            <img
+              draggable="false"
+              src="@/assets/icons/alteration-diesis2.svg"
+            />
           </div>
         </div>
       </div>
@@ -542,12 +580,6 @@ export default class NeumeToolbar extends Vue {
     Accidental.Flat_6_Right,
     Accidental.Flat_4_Right,
     Accidental.Flat_2_Right,
-  ];
-
-  sharpMenuItems: Accidental[] = [
-    Accidental.Sharp_6_Left,
-    Accidental.Sharp_4_Left,
-    Accidental.Sharp_2_Left,
   ];
 
   measureNumberMenuItems: MeasureNumberMenuItem[] = [
@@ -931,6 +963,11 @@ export default class NeumeToolbar extends Vue {
   overflow: hidden;
 
   user-select: none;
+}
+
+.neume-button img {
+  height: var(--btn-size);
+  width: var(--btn-size);
 }
 
 .space {

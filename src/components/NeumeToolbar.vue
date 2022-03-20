@@ -326,20 +326,50 @@
         @mouseleave="selectedMeasureNumber = null"
       >
         <button class="neume-button">
-          <Neume class="neume measure-number" :neume="MeasureNumber.Two" />
+          <img draggable="false" src="@/assets/icons/measure-number-2.svg" />
         </button>
         <div class="menu" v-if="showMeasureNumberMenu">
           <div
             class="menu-item"
-            v-for="menuItem in measureNumberMenuItems"
-            :key="menuItem.neume"
-            @mouseenter="selectedMeasureNumber = menuItem.neume"
+            @mouseenter="selectedMeasureNumber = MeasureNumber.Eight"
           >
-            <Neume
-              class="neume"
-              :class="menuItem.className"
-              :neume="menuItem.neume"
-            />
+            <img draggable="false" src="@/assets/icons/measure-number-8.svg" />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedMeasureNumber = MeasureNumber.Seven"
+          >
+            <img draggable="false" src="@/assets/icons/measure-number-7.svg" />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedMeasureNumber = MeasureNumber.Six"
+          >
+            <img draggable="false" src="@/assets/icons/measure-number-6.svg" />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedMeasureNumber = MeasureNumber.Five"
+          >
+            <img draggable="false" src="@/assets/icons/measure-number-5.svg" />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedMeasureNumber = MeasureNumber.Four"
+          >
+            <img draggable="false" src="@/assets/icons/measure-number-4.svg" />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedMeasureNumber = MeasureNumber.Three"
+          >
+            <img draggable="false" src="@/assets/icons/measure-number-3.svg" />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedMeasureNumber = MeasureNumber.Two"
+          >
+            <img draggable="false" src="@/assets/icons/measure-number-2.svg" />
           </div>
         </div>
       </div>
@@ -580,16 +610,6 @@ export default class NeumeToolbar extends Vue {
     Accidental.Flat_6_Right,
     Accidental.Flat_4_Right,
     Accidental.Flat_2_Right,
-  ];
-
-  measureNumberMenuItems: MeasureNumberMenuItem[] = [
-    { neume: MeasureNumber.Eight, className: 'measure-number-center' },
-    { neume: MeasureNumber.Seven, className: 'measure-number-center' },
-    { neume: MeasureNumber.Six, className: 'measure-number-center' },
-    { neume: MeasureNumber.Five, className: 'measure-number' },
-    { neume: MeasureNumber.Four, className: 'measure-number' },
-    { neume: MeasureNumber.Three, className: 'measure-number' },
-    { neume: MeasureNumber.Two, className: 'measure-number' },
   ];
 
   noteIndicatorMenuItems: NoteIndicator[] = [

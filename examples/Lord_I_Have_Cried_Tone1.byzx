@@ -57,7 +57,7 @@
         "note": "ModeSign.Pa",
         "color": "#ED0000",
         "fontSize": 26.666666666666668,
-        "height": 63
+        "height": 49
       },
       {
         "elementType": "TextBox",
@@ -347,6 +347,7 @@
       {
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusKentimaAbove",
+        "vocalExpressionNeume": "HomalonConnecting",
         "lyrics": "Lord,",
         "isMelisma": true,
         "isMelismaStart": true
@@ -354,7 +355,6 @@
       {
         "elementType": "Note",
         "quantitativeNeume": "Ison",
-        "vocalExpressionNeume": "HomalonConnecting",
         "isMelisma": true
       },
       {

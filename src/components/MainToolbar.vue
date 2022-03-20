@@ -104,14 +104,14 @@
       title="Insert or remove line break after selected element"
       @click="$emit('toggle-line-break')"
     >
-      &#182;
+      <img src="@/assets/icons/line-break.svg" width="24" height="24" />
     </button>
     <button
       class="icon-btn"
       title="Insert or remove page break after selected element"
       @click="$emit('toggle-page-break')"
     >
-      <img src="@/assets/pagebreak.svg" width="24" height="24" />
+      <img src="@/assets/icons/page-break.svg" width="24" height="24" />
     </button>
     <span class="space"></span>
     <button
@@ -253,10 +253,6 @@ export default class MainToolbar extends Vue {
   align-items: center;
   justify-content: center;
   user-select: none;
-}
-
-.line-break-btn {
-  font-size: 20px;
 }
 
 .neume-button {

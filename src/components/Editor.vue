@@ -67,11 +67,11 @@
                     class="neume-box"
                   >
                     <span class="page-break" v-if="element.pageBreak"
-                      ><img src="@/assets/pagebreak.svg"
+                      ><img src="@/assets/icons/page-break.svg"
                     /></span>
                     <span class="line-break" v-if="element.lineBreak"
-                      >&#182;</span
-                    >
+                      ><img src="@/assets/icons/line-break.svg"
+                    /></span>
                     <SyllableNeumeBox
                       class="syllable-box"
                       :note="element"
@@ -109,11 +109,11 @@
                 <template v-if="isMartyriaElement(element)">
                   <div class="neume-box">
                     <span class="page-break" v-if="element.pageBreak">
-                      <img src="@/assets/pagebreak.svg"
+                      <img src="@/assets/icons/page-break.svg"
                     /></span>
                     <span class="line-break" v-if="element.lineBreak"
-                      >&#182;</span
-                    >
+                      ><img src="@/assets/icons/line-break.svg"
+                    /></span>
                     <MartyriaNeumeBox
                       :ref="`element-${getElementIndex(element)}`"
                       class="marytria-neume-box"
@@ -131,11 +131,11 @@
                     class="neume-box"
                   >
                     <span class="page-break" v-if="element.pageBreak">
-                      <img src="@/assets/pagebreak.svg"
+                      <img src="@/assets/icons/page-break.svg"
                     /></span>
                     <span class="line-break" v-if="element.lineBreak"
-                      >&#182;</span
-                    >
+                      ><img src="@/assets/icons/line-break.svg"
+                    /></span>
                     <TempoNeumeBox
                       class="tempo-neume-box"
                       :neume="element"
@@ -152,11 +152,11 @@
                     class="neume-box"
                   >
                     <span class="page-break" v-if="element.pageBreak">
-                      <img src="@/assets/pagebreak.svg"
+                      <img src="@/assets/icons/page-break.svg"
                     /></span>
                     <span class="line-break" v-if="element.lineBreak"
-                      >&#182;</span
-                    >
+                      ><img src="@/assets/icons/line-break.svg"
+                    /></span>
                     <div
                       class="empty-neume-box"
                       :class="[{ selected: isSelected(element) }]"
@@ -168,11 +168,11 @@
                 </template>
                 <template v-if="isTextBoxElement(element)">
                   <span class="page-break-2" v-if="element.pageBreak"
-                    ><img src="@/assets/pagebreak.svg"
+                    ><img src="@/assets/icons/page-break.svg"
                   /></span>
                   <span class="line-break-2" v-if="element.lineBreak"
-                    >&#182;</span
-                  >
+                    ><img src="@/assets/icons/line-break.svg"
+                  /></span>
                   <TextBox
                     :ref="`element-${getElementIndex(element)}`"
                     :element="element"
@@ -185,11 +185,11 @@
                 </template>
                 <template v-if="isModeKeyElement(element)">
                   <span class="page-break-2" v-if="element.pageBreak"
-                    ><img src="@/assets/pagebreak.svg"
+                    ><img src="@/assets/icons/page-break.svg"
                   /></span>
                   <span class="line-break-2" v-if="element.lineBreak"
-                    >&#182;</span
-                  >
+                    ><img src="@/assets/icons/line-break.svg"
+                  /></span>
                   <ModeKey
                     :ref="`element-${getElementIndex(element)}`"
                     :element="element"
@@ -202,11 +202,11 @@
                 </template>
                 <template v-if="isDropCapElement(element)">
                   <span class="page-break" v-if="element.pageBreak"
-                    ><img src="@/assets/pagebreak.svg"
+                    ><img src="@/assets/icons/page-break.svg"
                   /></span>
                   <span class="line-break" v-if="element.lineBreak"
-                    >&#182;</span
-                  >
+                    ><img src="@/assets/icons/line-break.svg"
+                  /></span>
                   <DropCap
                     :ref="`element-${getElementIndex(element)}`"
                     :key="`drop-cap-${getElementIndex(element)}-${
@@ -2715,8 +2715,12 @@ export default class Editor extends Vue {
 
 .line-break {
   position: absolute;
-  font-size: calc(16px * var(--zoom, 1));
   top: calc(-10px * var(--zoom, 1));
+}
+
+.line-break img {
+  height: calc(16px * var(--zoom, 1));
+  width: calc(16px * var(--zoom, 1));
 }
 
 .page-break-2 {
@@ -2731,8 +2735,12 @@ export default class Editor extends Vue {
 
 .line-break-2 {
   position: absolute;
-  font-size: calc(16px * var(--zoom, 1));
   top: calc(-18px * var(--zoom, 1));
+}
+
+.line-break-2 img {
+  height: calc(16px * var(--zoom, 1));
+  width: calc(16px * var(--zoom, 1));
 }
 
 @media print {

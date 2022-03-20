@@ -466,12 +466,12 @@
       {
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusHypsiliRight",
+        "vocalExpressionNeume": "HomalonConnecting",
         "lyrics": "δο"
       },
       {
         "elementType": "Note",
         "quantitativeNeume": "Ison",
-        "vocalExpressionNeume": "HomalonConnecting",
         "lyrics": "ο"
       },
       {

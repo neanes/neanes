@@ -398,16 +398,41 @@
         @mouseleave="selectedIson = null"
       >
         <button class="neume-button">
-          <Neume class="neume red ison" :neume="Ison.Unison" />
+          <img draggable="false" src="@/assets/icons/ison-unison.svg" />
         </button>
         <div class="menu" v-if="showIsonMenu">
-          <div
-            class="menu-item"
-            v-for="menuItem in isonMenuItems"
-            :key="menuItem"
-            @mouseenter="selectedIson = menuItem"
-          >
-            <Neume class="neume red ison" :neume="menuItem" />
+          <div class="menu-item" @mouseenter="selectedIson = Ison.ZoHigh">
+            <img draggable="false" src="@/assets/icons/ison-zo-high.svg" />
+          </div>
+          <div class="menu-item" @mouseenter="selectedIson = Ison.Ke">
+            <img draggable="false" src="@/assets/icons/ison-ke.svg" />
+          </div>
+          <div class="menu-item" @mouseenter="selectedIson = Ison.Thi">
+            <img draggable="false" src="@/assets/icons/ison-di.svg" />
+          </div>
+          <div class="menu-item" @mouseenter="selectedIson = Ison.Ga">
+            <img draggable="false" src="@/assets/icons/ison-ga.svg" />
+          </div>
+          <div class="menu-item" @mouseenter="selectedIson = Ison.Vou">
+            <img draggable="false" src="@/assets/icons/ison-vou.svg" />
+          </div>
+          <div class="menu-item" @mouseenter="selectedIson = Ison.Pa">
+            <img draggable="false" src="@/assets/icons/ison-pa.svg" />
+          </div>
+          <div class="menu-item" @mouseenter="selectedIson = Ison.Ni">
+            <img draggable="false" src="@/assets/icons/ison-ni.svg" />
+          </div>
+          <div class="menu-item" @mouseenter="selectedIson = Ison.Zo">
+            <img draggable="false" src="@/assets/icons/ison-zo.svg" />
+          </div>
+          <div class="menu-item" @mouseenter="selectedIson = Ison.KeLow">
+            <img draggable="false" src="@/assets/icons/ison-ke-low.svg" />
+          </div>
+          <div class="menu-item" @mouseenter="selectedIson = Ison.ThiLow">
+            <img draggable="false" src="@/assets/icons/ison-di-low.svg" />
+          </div>
+          <div class="menu-item" @mouseenter="selectedIson = Ison.Unison">
+            <img draggable="false" src="@/assets/icons/ison-unison.svg" />
           </div>
         </div>
       </div>
@@ -559,16 +584,6 @@ import {
   onlyTakesTopGorgon,
 } from '@/models/NeumeReplacements';
 
-interface TimeMenuItem {
-  neume: TimeNeume;
-  className: string;
-}
-
-interface MeasureNumberMenuItem {
-  neume: MeasureNumber;
-  className: string;
-}
-
 @Component({
   components: {
     Neume,
@@ -606,12 +621,6 @@ export default class NeumeToolbar extends Vue {
   selectedNoteIndicator: NoteIndicator | null = null;
   selectedIson: Ison | null = null;
 
-  flatMenuItems: Accidental[] = [
-    Accidental.Flat_6_Right,
-    Accidental.Flat_4_Right,
-    Accidental.Flat_2_Right,
-  ];
-
   noteIndicatorMenuItems: NoteIndicator[] = [
     NoteIndicator.Zo,
     NoteIndicator.Ke,
@@ -620,36 +629,6 @@ export default class NeumeToolbar extends Vue {
     NoteIndicator.Vou,
     NoteIndicator.Pa,
     NoteIndicator.Ni,
-  ];
-
-  isonMenuItems: Ison[] = [
-    // The font appears to have a bug in it. ZoHigh doesn't work
-    //Ison.ZoHigh,
-    Ison.Ke,
-    Ison.Thi,
-    Ison.Ga,
-    Ison.Vou,
-    Ison.Pa,
-    Ison.Ni,
-    Ison.Zo,
-    Ison.KeLow,
-    Ison.ThiLow,
-    Ison.Unison,
-  ];
-
-  timeMenuItems: TimeMenuItem[] = [
-    {
-      neume: TimeNeume.Tripli,
-      className: 'tripli',
-    },
-    {
-      neume: TimeNeume.Dipli,
-      className: 'dipli',
-    },
-    {
-      neume: TimeNeume.Hapli,
-      className: 'hapli',
-    },
   ];
 
   beforeDestroy() {

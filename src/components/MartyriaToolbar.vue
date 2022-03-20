@@ -125,11 +125,6 @@ import { MartyriaElement } from '@/models/Element';
 import { Fthora, MeasureBar } from '@/models/Neumes';
 import Neume from './Neume.vue';
 
-interface BarLineMenuItem {
-  neume: MeasureBar;
-  className: string;
-}
-
 @Component({
   components: {
     Neume,

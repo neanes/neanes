@@ -239,7 +239,6 @@ export const neumeMap = new Map<Neume, NeumeMapping>([
   [ModeSign.Delta, { text: '\ue2d8' }],
   [ModeSign.DeltaWithDeltaHat, { text: '\ue2b8' }],
   [ModeSign.DeltaWithHypsili, { text: '\ue2b9' }],
-  [ModeSign.OligonPlusKentemata, { text: '\ue2eb' }],
   [ModeSign.NanaOld, { text: '\ue2b0' }],
   [ModeSign.Legetos, { text: '\ue2ba' }],
   [ModeSign.ElaphronPlusApostrophos, { text: '\ue2eb' }],

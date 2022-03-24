@@ -181,7 +181,6 @@ export enum ModeSign {
   Delta = 'ModeSign.Delta',
   DeltaWithDeltaHat = 'ModeSign.DeltaWithDeltaHat',
   DeltaWithHypsili = 'ModeSign.DeltaWithHypsili',
-  OligonPlusKentemata = 'ModeSign.OligonPlusKentemata',
   NanaOld = 'ModeSign.NanaOld',
   Legetos = 'ModeSign.Legetos',
   ElaphronPlusApostrophos = 'ModeSign.ElaphronPlusApostrophos',

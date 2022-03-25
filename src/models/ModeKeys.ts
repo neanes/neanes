@@ -149,7 +149,7 @@ export const modeKeyTemplates: ModeKeyTemplate[] = [
     mode: 4,
     scale: Scale.Diatonic,
     scaleNote: ScaleNote.Vou,
-    martyrias: [ModeSign.Legetos, ModeSign.Tos],
+    martyrias: [ModeSign.Legetos],
     note: ModeSign.Vou,
   },
   {

@@ -38,6 +38,10 @@ export default class Neume extends Vue {
 
     style.fontFamily = this.fontFamily;
 
+    if (this.mapping.salt != null) {
+      style.fontFeatureSettings = `"salt" ${this.mapping.salt}`;
+    }
+
     if (this.offset) {
       style.left = withZoom(this.offset.x);
       style.top = withZoom(this.offset.y);

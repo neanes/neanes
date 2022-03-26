@@ -1,0 +1,914 @@
+{
+    "ison": {
+        "alternateCodepoint": "U+1D046",
+        "codepoint": "U+E000"
+    },
+    "oligon": {
+        "alternateCodepoint": "U+1D047",
+        "codepoint": "U+E001"
+    },
+    "oligonKentimaMiddle": {
+        "codepoint": "U+E002"
+    },
+    "oligonKentimaBelow": {
+        "codepoint": "U+E003"
+    },
+    "oligonKentimaAbove": {
+        "codepoint": "U+E004"
+    },
+    "oligonYpsiliRight": {
+        "codepoint": "U+E005"
+    },
+    "oligonYpsiliLeft": {
+        "codepoint": "U+E006"
+    },
+    "oligonYpsiliKentimaRight": {
+        "codepoint": "U+E007"
+    },
+    "oligonYpsiliKentimaMiddle": {
+        "codepoint": "U+E008"
+    },
+    "oligonDoubleYpsili": {
+        "codepoint": "U+E009"
+    },
+    "oligonDoubleYpsiliKentimata": {
+        "codepoint": "U+E00A"
+    },
+    "oligonDoubleYpsiliKentimaRight": {
+        "codepoint": "U+E00B"
+    },
+    "oligonDoubleYpsiliKentimaLeft": {
+        "codepoint": "U+E00C"
+    },
+    "oligonTripleYpsili": {
+        "codepoint": "U+E00D"
+    },
+    "oligonTripleYpsiliKentimata": {
+        "codepoint": "U+E00E"
+    },
+    "oligonTripleYpsiliKentima": {
+        "codepoint": "U+E00F"
+    },
+    "oligonIson": {
+        "codepoint": "U+E010"
+    },
+    "oligonApostrofos": {
+        "codepoint": "U+E011"
+    },
+    "oligonYporroi": {
+        "codepoint": "U+E012"
+    },
+    "oligonElafron": {
+        "codepoint": "U+E013"
+    },
+    "oligonElafronApostrofos": {
+        "codepoint": "U+E014"
+    },
+    "oligonChamili": {
+        "codepoint": "U+E015"
+    },
+    "isonApostrofos": {
+        "codepoint": "U+E020"
+    },
+    "apostrofos": {
+        "alternateCodepoint": "U+1D051",
+        "codepoint": "U+E021"
+    },
+    "apostrofosSyndesmos": {
+        "alternateCodepoint": "U+1D052",
+        "codepoint": "U+E022"
+    },
+    "yporroi": {
+        "alternateCodepoint": "U+1D053",
+        "codepoint": "U+E023"
+    },
+    "elafron": {
+        "alternateCodepoint": "U+1D055",
+        "codepoint": "U+E024"
+    },
+    "runningElafron": {
+        "codepoint": "U+E025"
+    },
+    "elafronApostrofos": {
+        "codepoint": "U+E026"
+    },
+    "chamili": {
+        "alternateCodepoint": "U+1D056",
+        "codepoint": "U+E027"
+    },
+    "chamiliApostrofos": {
+        "codepoint": "U+E028"
+    },
+    "chamiliElafron": {
+        "codepoint": "U+E029"
+    },
+    "chamiliElafronApostrofos": {
+        "codepoint": "U+E02A"
+    },
+    "doubleChamili": {
+        "codepoint": "U+E02B"
+    },
+    "doubleChamiliApostrofos": {
+        "codepoint": "U+E02C"
+    },
+    "doubleChamiliElafron": {
+        "codepoint": "U+E02D"
+    },
+    "doubleChamiliElafronApostrofos": {
+        "codepoint": "U+E02E"
+    },
+    "tripleChamili": {
+        "codepoint": "U+E02F"
+    },
+    "petastiIson": {
+        "codepoint": "U+E040"
+    },
+    "petasti": {
+        "alternateCodepoint": "U+1D049",
+        "codepoint": "U+E041"
+    },
+    "petastiOligon": {
+        "codepoint": "U+E042"
+    },
+    "petastiKentima": {
+        "codepoint": "U+E043"
+    },
+    "petastiYpsiliRight": {
+        "codepoint": "U+E044"
+    },
+    "petastiYpsiliLeft": {
+        "codepoint": "U+E045"
+    },
+    "petastiYpsiliKentimaRight": {
+        "codepoint": "U+E046"
+    },
+    "petastiYpsiliKentimaMiddle": {
+        "codepoint": "U+E047"
+    },
+    "petastiDoubleYpsili": {
+        "codepoint": "U+E048"
+    },
+    "petastiDoubleYpsiliKentimata": {
+        "codepoint": "U+E049"
+    },
+    "petastiDoubleYpsiliKentimaRight": {
+        "codepoint": "U+E04A"
+    },
+    "petastiDoubleYpsiliKentimaLeft": {
+        "codepoint": "U+E04B"
+    },
+    "petastiTripleYpsili": {
+        "codepoint": "U+E04C"
+    },
+    "petastiTripleYpsiliKentimata": {
+        "codepoint": "U+E04D"
+    },
+    "petastiTripleYpsiliKentima": {
+        "codepoint": "U+E04E"
+    },
+    "petastiApostrofos": {
+        "codepoint": "U+E060"
+    },
+    "petastiYporroi": {
+        "codepoint": "U+E061"
+    },
+    "petastiElafron": {
+        "codepoint": "U+E062"
+    },
+    "petastiRunningElafron": {
+        "codepoint": "U+E063"
+    },
+    "petastiElafronApostrofos": {
+        "codepoint": "U+E064"
+    },
+    "petastiChamili": {
+        "codepoint": "U+E065"
+    },
+    "petastiChamiliApostrofos": {
+        "codepoint": "U+E066"
+    },
+    "petastiChamiliElafron": {
+        "codepoint": "U+E067"
+    },
+    "petastiChamiliElafronApostrofos": {
+        "codepoint": "U+E068"
+    },
+    "petastiDoubleChamili": {
+        "codepoint": "U+E069"
+    },
+    "petastiDoubleChamiliApostrofos": {
+        "codepoint": "U+E06A"
+    },
+    "kentima": {
+        "alternateCodepoint": "U+1D04F",
+        "codepoint": "U+E080"
+    },
+    "kentimata": {
+        "alternateCodepoint": "U+1D04E",
+        "codepoint": "U+E081"
+    },
+    "oligonKentimataBelow": {
+        "codepoint": "U+E082"
+    },
+    "oligonKentimataAbove": {
+        "codepoint": "U+E083"
+    },
+    "oligonIsonKentimata": {
+        "codepoint": "U+E084"
+    },
+    "oligonKentimataYpsiliLeft": {
+        "codepoint": "U+E085"
+    },
+    "oligonKentimataYpsiliRight": {
+        "codepoint": "U+E086"
+    },
+    "oligonApostrofosKentimata": {
+        "codepoint": "U+E087"
+    },
+    "oligonYporroiKentimata": {
+        "codepoint": "U+E088"
+    },
+    "oligonElafronKentimata": {
+        "codepoint": "U+E089"
+    },
+    "oligonRunningElafronKentimata": {
+        "codepoint": "U+E08A"
+    },
+    "oligonElafronApostrofosKentimata": {
+        "codepoint": "U+E08B"
+    },
+    "oligonChamiliKentimata": {
+        "codepoint": "U+E08C"
+    },
+    "vareia": {
+        "alternateCodepoint": "U+1D058",
+        "codepoint": "U+E0A0"
+    },
+    "psifiston": {
+        "alternateCodepoint": "U+1D05A",
+        "codepoint": "U+E0A1"
+    },
+    "antikenoma": {
+        "alternateCodepoint": "U+1D05C",
+        "codepoint": "U+E0A2"
+    },
+    "omalon": {
+        "alternateCodepoint": "U+1D05B",
+        "codepoint": "U+E0A3"
+    },
+    "omalonConnecting": {
+        "codepoint": "U+E0A4"
+    },
+    "heteron": {
+        "alternateCodepoint": "U+1D060",
+        "codepoint": "U+E0A5"
+    },
+    "heteronConnecting": {
+        "codepoint": "U+E0A6"
+    },
+    "endofonon": {
+        "alternateCodepoint": "U+1D07B",
+        "codepoint": "U+E0A7"
+    },
+    "yfenAbove": {
+        "alternateCodepoint": "U+1D07D",
+        "codepoint": "U+E0B0"
+    },
+    "yfenBelow": {
+        "alternateCodepoint": "U+1D07C",
+        "codepoint": "U+E0B1"
+    },
+    "stavros": {
+        "alternateCodepoint": "U+1D07E",
+        "codepoint": "U+E0C0"
+    },
+    "breath": {
+        "alternateCodepoint": "U+1D112",
+        "codepoint": "U+E0C1"
+    },
+    "klasmaAbove": {
+        "alternateCodepoint": "U+1D07F",
+        "codepoint": "U+E0D0"
+    },
+    "klasmaBelow": {
+        "alternateCodepoint": "U+1D0F4",
+        "codepoint": "U+E0D1"
+    },
+    "apli": {
+        "alternateCodepoint": "U+1D085",
+        "codepoint": "U+E0D2"
+    },
+    "dipli": {
+        "alternateCodepoint": "U+1D086",
+        "codepoint": "U+E0D3"
+    },
+    "tripli": {
+        "alternateCodepoint": "U+1D087",
+        "codepoint": "U+E0D4"
+    },
+    "tetrapli": {
+        "alternateCodepoint": "U+1D088",
+        "codepoint": "U+E0D5"
+    },
+    "koronis": {
+        "alternateCodepoint": "U+1D089",
+        "codepoint": "U+E0D6"
+    },
+    "leimma1": {
+        "alternateCodepoint": "U+1D08A",
+        "codepoint": "U+E0E0"
+    },
+    "leimma2": {
+        "alternateCodepoint": "U+1D08B",
+        "codepoint": "U+E0E1"
+    },
+    "leimma3": {
+        "alternateCodepoint": "U+1D08C",
+        "codepoint": "U+E0E2"
+    },
+    "leimma4": {
+        "alternateCodepoint": "U+1D08D",
+        "codepoint": "U+E0E3"
+    },
+    "leimmaDot": {
+        "codepoint": "U+E0E4"
+    },
+    "gorgonAbove": {
+        "alternateCodepoint": "U+1D08F",
+        "codepoint": "U+E0F0"
+    },
+    "gorgonBelow": {
+        "alternateCodepoint": "U+1D0F5",
+        "codepoint": "U+E0F1"
+    },
+    "gorgonDottedLeft": {
+        "alternateCodepoint": "U+1D090",
+        "codepoint": "U+E0F2"
+    },
+    "gorgonDottedRight": {
+        "alternateCodepoint": "U+1D091",
+        "codepoint": "U+E0F3"
+    },
+    "digorgon": {
+        "alternateCodepoint": "U+1D092",
+        "codepoint": "U+E0F4"
+    },
+    "digorgonDottedLeftBelow": {
+        "alternateCodepoint": "U+1D093",
+        "codepoint": "U+E0F5"
+    },
+    "digorgonDottedLeftAbove": {
+        "alternateCodepoint": "U+1D094",
+        "codepoint": "U+E0F6"
+    },
+    "digorgonDottedRight": {
+        "alternateCodepoint": "U+1D095",
+        "codepoint": "U+E0F7"
+    },
+    "trigorgon": {
+        "alternateCodepoint": "U+1D096",
+        "codepoint": "U+E0F8"
+    },
+    "trigorgonDottedLeftBelow": {
+        "codepoint": "U+E0F9"
+    },
+    "trigorgonDottedLeftAbove": {
+        "codepoint": "U+E0FA"
+    },
+    "trigorgonDottedRight": {
+        "codepoint": "U+E0FB"
+    },
+    "argon": {
+        "alternateCodepoint": "U+1D097",
+        "codepoint": "U+E0FC"
+    },
+    "diargon": {
+        "alternateCodepoint": "U+1D098",
+        "codepoint": "U+E0FD"
+    },
+    "triargon": {
+        "alternateCodepoint": "U+1D099",
+        "codepoint": "U+E0FE"
+    },
+    "gorgonYporroi": {
+        "codepoint": "U+E100"
+    },
+    "agogiPoliArgi": {
+        "alternateCodepoint": "U+1D09A",
+        "codepoint": "U+E120"
+    },
+    "agogiArgoteri": {
+        "alternateCodepoint": "U+1D09B",
+        "codepoint": "U+E121"
+    },
+    "agogiArgi": {
+        "alternateCodepoint": "U+1D09C",
+        "codepoint": "U+E122"
+    },
+    "agogiMetria": {
+        "alternateCodepoint": "U+1D09D",
+        "codepoint": "U+E123"
+    },
+    "agogiMesi": {
+        "alternateCodepoint": "U+1D09E",
+        "codepoint": "U+E124"
+    },
+    "agogiGorgi": {
+        "alternateCodepoint": "U+1D09F",
+        "codepoint": "U+E125"
+    },
+    "agogiGorgoteri": {
+        "alternateCodepoint": "U+1D0A0",
+        "codepoint": "U+E126"
+    },
+    "agogiPoliGorgi": {
+        "alternateCodepoint": "U+1D0A1",
+        "codepoint": "U+E127"
+    },
+    "martyriaNoteZoLow": {
+        "codepoint": "U+E130"
+    },
+    "martyriaNoteNiLow": {
+        "codepoint": "U+E131"
+    },
+    "martyriaNotePaLow": {
+        "codepoint": "U+E132"
+    },
+    "martyriaNoteVouLow": {
+        "codepoint": "U+E133"
+    },
+    "martyriaNoteGaLow": {
+        "codepoint": "U+E134"
+    },
+    "martyriaNoteDiLow": {
+        "codepoint": "U+E135"
+    },
+    "martyriaNoteKeLow": {
+        "codepoint": "U+E136"
+    },
+    "martyriaNoteZo": {
+        "codepoint": "U+E137"
+    },
+    "martyriaNoteNi": {
+        "codepoint": "U+E138"
+    },
+    "martyriaNotePa": {
+        "codepoint": "U+E139"
+    },
+    "martyriaNoteVou": {
+        "codepoint": "U+E13A"
+    },
+    "martyriaNoteGa": {
+        "codepoint": "U+E13B"
+    },
+    "martyriaNoteDi": {
+        "codepoint": "U+E13C"
+    },
+    "martyriaNoteKe": {
+        "codepoint": "U+E13D"
+    },
+    "martyriaNoteZoHigh": {
+        "codepoint": "U+E13E"
+    },
+    "martyriaNoteNiHigh": {
+        "codepoint": "U+E13F"
+    },
+    "martyriaNotePaHigh": {
+        "codepoint": "U+E140"
+    },
+    "martyriaNoteVouHigh": {
+        "codepoint": "U+E141"
+    },
+    "martyriaNoteGaHigh": {
+        "codepoint": "U+E142"
+    },
+    "martyriaNoteDiHigh": {
+        "codepoint": "U+E143"
+    },
+    "martyriaNoteKeHigh": {
+        "codepoint": "U+E144"
+    },
+    "martyriaTick": {
+        "codepoint": "U+E145"
+    },
+    "martyriaZoBelow": {
+        "codepoint": "U+E150"
+    },
+    "martyriaDeltaBelow": {
+        "codepoint": "U+E151"
+    },
+    "martyriaAlphaBelow": {
+        "codepoint": "U+E152"
+    },
+    "martyriaLegetosBelow": {
+        "codepoint": "U+E153"
+    },
+    "martyriaNanaBelow": {
+        "codepoint": "U+E154"
+    },
+    "martyriaDeltaDottedBelow": {
+        "codepoint": "U+E155"
+    },
+    "martyriaAlphaDottedBelow": {
+        "codepoint": "U+E156"
+    },
+    "martyriaHardChromaticPaBelow": {
+        "codepoint": "U+E157"
+    },
+    "martyriaHardChromaticDiBelow": {
+        "codepoint": "U+E158"
+    },
+    "martyriaSoftChromaticDiBelow": {
+        "codepoint": "U+E159"
+    },
+    "martyriaSoftChromaticKeBelow": {
+        "codepoint": "U+E15A"
+    },
+    "martyriaZygosBelow": {
+        "codepoint": "U+E15B"
+    },
+    "martyriaZoAbove": {
+        "codepoint": "U+E170"
+    },
+    "martyriaDeltaAbove": {
+        "codepoint": "U+E171"
+    },
+    "martyriaAlphaAbove": {
+        "codepoint": "U+E172"
+    },
+    "martyriaLegetosAbove": {
+        "codepoint": "U+E173"
+    },
+    "martyriaNanaAbove": {
+        "codepoint": "U+E174"
+    },
+    "martyriaDeltaDottedAbove": {
+        "codepoint": "U+E175"
+    },
+    "martyriaAlphaDottedAbove": {
+        "codepoint": "U+E176"
+    },
+    "martyriaHardChromaticPaAbove": {
+        "codepoint": "U+E177"
+    },
+    "martyriaHardChromaticDiAbove": {
+        "codepoint": "U+E178"
+    },
+    "martyriaSoftChromaticDiAbove": {
+        "codepoint": "U+E179"
+    },
+    "martyriaHardChromaticKeAbove": {
+        "codepoint": "U+E17A"
+    },
+    "martyriaZygosAbove": {
+        "codepoint": "U+E17B"
+    },
+    "fthoraDiatonicNiLowAbove": {
+        "codepoint": "U+E190"
+    },
+    "fthoraDiatonicPaAbove": {
+        "codepoint": "U+E191"
+    },
+    "fthoraDiatonicVouAbove": {
+        "codepoint": "U+E192"
+    },
+    "fthoraDiatonicGaAbove": {
+        "codepoint": "U+E193"
+    },
+    "fthoraDiatonicDiAbove": {
+        "codepoint": "U+E194"
+    },
+    "fthoraDiatonicKeAbove": {
+        "codepoint": "U+E195"
+    },
+    "fthoraDiatonicZoAbove": {
+        "codepoint": "U+E196"
+    },
+    "fthoraDiatonicNiHighAbove": {
+        "codepoint": "U+E197"
+    },
+    "fthoraHardChromaticPaAbove": {
+        "codepoint": "U+E198"
+    },
+    "fthoraHardChromaticDiAbove": {
+        "codepoint": "U+E199"
+    },
+    "fthoraSoftChromaticDiAbove": {
+        "codepoint": "U+E19A"
+    },
+    "fthoraSoftChromaticKeAbove": {
+        "codepoint": "U+E19B"
+    },
+    "fthoraEnharmonicAbove": {
+        "codepoint": "U+E19C"
+    },
+    "chroaZygosAbove": {
+        "codepoint": "U+E19D"
+    },
+    "chroaKlitonAbove": {
+        "codepoint": "U+E19E"
+    },
+    "chroaSpathiAbove": {
+        "codepoint": "U+E19F"
+    },
+    "fthoraDiatonicNiLowBelow": {
+        "codepoint": "U+E1C0"
+    },
+    "fthoraDiatonicPaBelow": {
+        "codepoint": "U+E1C1"
+    },
+    "fthoraDiatonicVouBelow": {
+        "codepoint": "U+E1C2"
+    },
+    "fthoraDiatonicGaBelow": {
+        "codepoint": "U+E1C3"
+    },
+    "fthoraDiatonicDiBelow": {
+        "codepoint": "U+E1C4"
+    },
+    "fthoraDiatonicKeBelow": {
+        "codepoint": "U+E1C5"
+    },
+    "fthoraDiatonicZoBelow": {
+        "codepoint": "U+E1C6"
+    },
+    "fthoraDiatonicNiHighBelow": {
+        "codepoint": "U+E1C7"
+    },
+    "fthoraHardChromaticPaBelow": {
+        "codepoint": "U+E1C8"
+    },
+    "fthoraHardChromaticDiBelow": {
+        "codepoint": "U+E1C9"
+    },
+    "fthoraSoftChromaticDiBelow": {
+        "codepoint": "U+E1CA"
+    },
+    "fthoraSoftChromaticKeBelow": {
+        "codepoint": "U+E1CB"
+    },
+    "fthoraEnharmonicBelow": {
+        "codepoint": "U+E1CC"
+    },
+    "chroaZygosBelow": {
+        "codepoint": "U+E1CD"
+    },
+    "chroaKlitonBelow": {
+        "codepoint": "U+E1CE"
+    },
+    "chroaSpathiBelow": {
+        "codepoint": "U+E1CF"
+    },
+    "diesis2": {
+        "alternateCodepoint": "U+1D0D0",
+        "codepoint": "U+E1F0"
+    },
+    "diesis4": {
+        "alternateCodepoint": "U+1D0D1",
+        "codepoint": "U+E1F1"
+    },
+    "diesis6": {
+        "alternateCodepoint": "U+1D0D2",
+        "codepoint": "U+E1F2"
+    },
+    "diesis8": {
+        "alternateCodepoint": "U+1D0D3",
+        "codepoint": "U+E1F3"
+    },
+    "diesisGenikiAbove": {
+        "codepoint": "U+E1F4"
+    },
+    "diesisGenikiBelow": {
+        "codepoint": "U+E1F5"
+    },
+    "yfesis2": {
+        "alternateCodepoint": "U+1D0D4",
+        "codepoint": "U+E200"
+    },
+    "yfesis4": {
+        "alternateCodepoint": "U+1D0D5",
+        "codepoint": "U+E201"
+    },
+    "yfesis6": {
+        "alternateCodepoint": "U+1D0D6",
+        "codepoint": "U+E202"
+    },
+    "yfesis8": {
+        "alternateCodepoint": "U+1D0D7",
+        "codepoint": "U+E203"
+    },
+    "yfesisGenikiAbove": {
+        "codepoint": "U+E204"
+    },
+    "yfesisGenikiBelow": {
+        "codepoint": "U+E205"
+    },
+    "barlineSingle": {
+        "alternateCodepoint": "U+1D0DB",
+        "codepoint": "U+E210"
+    },
+    "barlineDouble": {
+        "codepoint": "U+E211"
+    },
+    "barlineTheseos": {
+        "codepoint": "U+E212"
+    },
+    "barlineShortSingle": {
+        "alternateCodepoint": "U+1D0DA",
+        "codepoint": "U+E213"
+    },
+    "barlineShortDouble": {
+        "alternateCodepoint": "U+1D0DC",
+        "codepoint": "U+E214"
+    },
+    "barlineShortTheseos": {
+        "alternateCodepoint": "U+1D0DD",
+        "codepoint": "U+E215"
+    },
+    "measureNumber2": {
+        "codepoint": "U+E220"
+    },
+    "measureNumber3": {
+        "codepoint": "U+E221"
+    },
+    "measureNumber4": {
+        "codepoint": "U+E222"
+    },
+    "measureNumber5": {
+        "codepoint": "U+E223"
+    },
+    "measureNumber6": {
+        "codepoint": "U+E224"
+    },
+    "measureNumber7": {
+        "codepoint": "U+E225"
+    },
+    "measureNumber8": {
+        "codepoint": "U+E226"
+    },
+    "noteIndicatorNi": {
+        "codepoint": "U+E250"
+    },
+    "noteIndicatorPa": {
+        "codepoint": "U+E251"
+    },
+    "noteIndicatorVou": {
+        "codepoint": "U+E252"
+    },
+    "noteIndicatorGa": {
+        "codepoint": "U+E253"
+    },
+    "noteIndicatorDi": {
+        "codepoint": "U+E254"
+    },
+    "noteIndicatorKe": {
+        "codepoint": "U+E255"
+    },
+    "noteIndicatorZo": {
+        "codepoint": "U+E256"
+    },
+    "isonIndicatorUnison": {
+        "codepoint": "U+E260"
+    },
+    "isonIndicatorDiLow": {
+        "codepoint": "U+E261"
+    },
+    "isonIndicatorKeLow": {
+        "codepoint": "U+E262"
+    },
+    "isonIndicatorZo": {
+        "codepoint": "U+E263"
+    },
+    "isonIndicatorNi": {
+        "codepoint": "U+E264"
+    },
+    "isonIndicatorPa": {
+        "codepoint": "U+E265"
+    },
+    "isonIndicatorVou": {
+        "codepoint": "U+E266"
+    },
+    "isonIndicatorGa": {
+        "codepoint": "U+E267"
+    },
+    "isonIndicatorDi": {
+        "codepoint": "U+E268"
+    },
+    "isonIndicatorKe": {
+        "codepoint": "U+E269"
+    },
+    "isonIndicatorZoHigh": {
+        "codepoint": "U+E26A"
+    },
+    "gorthmikon": {
+        "alternateCodepoint": "U+1D0B5",
+        "codepoint": "U+E280"
+    },
+    "pelastikon": {
+        "alternateCodepoint": "U+1D0B4",
+        "codepoint": "U+E281"
+    },
+    "modeFirst": {
+        "codepoint": "U+E2A0"
+    },
+    "modeSecond": {
+        "codepoint": "U+E2A8"
+    },
+    "modeThird": {
+        "codepoint": "U+E2B0"
+    },
+    "modeThirdNana": {
+        "alternateCodepoint": "U+1D0A7",
+        "codepoint": "U+E2B1"
+    },
+    "modeFourth": {
+        "codepoint": "U+E2B8"
+    },
+    "modeLegetos": {
+        "alternateCodepoint": "U+1D0AA",
+        "codepoint": "U+E2BA"
+    },
+    "modePlagalFirst": {
+        "codepoint": "U+E2C0"
+    },
+    "modePlagalSecond": {
+        "codepoint": "U+E2C8"
+    },
+    "modeVarys": {
+        "alternateCodepoint": "U+1D0B1",
+        "codepoint": "U+E2D0"
+    },
+    "modeVarys2": {
+        "codepoint": "U+E2D1"
+    },
+    "modePlagalFourth": {
+        "codepoint": "U+E2D8"
+    },
+    "modeNi": {
+        "codepoint": "U+E2E0"
+    },
+    "modePa": {
+        "codepoint": "U+E2E1"
+    },
+    "modeVou": {
+        "codepoint": "U+E2E2"
+    },
+    "modeGa": {
+        "codepoint": "U+E2E3"
+    },
+    "modeDi": {
+        "codepoint": "U+E2E4"
+    },
+    "modeKe": {
+        "codepoint": "U+E2E5"
+    },
+    "modeZo": {
+        "codepoint": "U+E2E6"
+    },
+    "modeOligonKentimaAbove": {
+        "codepoint": "U+E2E7"
+    },
+    "modeOligonYpsili": {
+        "codepoint": "U+E2E8"
+    },
+    "modeElafron": {
+        "codepoint": "U+E2E9"
+    },
+    "modeRunningElafron": {
+        "codepoint": "U+E2EA"
+    },
+    "modePlagal": {
+        "alternateCodepoint": "U+1D0AB",
+        "codepoint": "U+E2F0"
+    },
+    "modeWordEchos": {
+        "codepoint": "U+E2F1"
+    },
+    "modeWordVarys": {
+        "codepoint": "U+E2F2"
+    },
+    "modeAlpha": {
+        "codepoint": "U+E2F3"
+    },
+    "modeBeta": {
+        "codepoint": "U+E2F4"
+    },
+    "modeGamma": {
+        "codepoint": "U+E2F5"
+    },
+    "modeDelta": {
+        "codepoint": "U+E2F6"
+    },
+    "modeAlphaCapital": {
+        "codepoint": "U+E2F7"
+    },
+    "modeBetaCapital": {
+        "codepoint": "U+E2F8"
+    },
+    "modeGammaCapital": {
+        "codepoint": "U+E2F9"
+    },
+    "modeDeltaCapital": {
+        "codepoint": "U+E2FA"
+    }
+}

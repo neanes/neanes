@@ -170,7 +170,6 @@ export enum ModeSign {
   Fourth = 'ModeSign.Fourth',
   FourthCapital = 'ModeSign.FourthCapital',
   Varys = 'ModeSign.Varys',
-  Tos = 'ModeSign.Tos',
   Alpha = 'ModeSign.Alpha',
   AlphaWithDeltaHat = 'ModeSign.AlphaWithDeltaHat',
   AlphaWithHypsili = 'ModeSign.AlphaWithHypsili',

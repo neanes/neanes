@@ -900,7 +900,6 @@ export const modeSignAdjustmentMap = new Map<ModeSign, NeumeAdjustment[]>([
     ModeSign.Legetos,
     [{ isPairedWith: [ModeSign.Vou], offset: { x: 0, y: -13 } }],
   ],
-  [ModeSign.Tos, [{ isPairedWith: [ModeSign.Vou], offset: { x: 0, y: -13 } }]],
 ]);
 
 const flatAdjustments: NeumeAdjustment[] = [

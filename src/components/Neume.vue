@@ -5,7 +5,7 @@
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { Neume as NeumeType } from '@/models/Neumes';
-import { neumeMap } from '@/models/NeumeMappings';
+import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { ScoreElementOffset } from '@/models/Element';
 import { withZoom } from '@/utils/withZoom';
 
@@ -16,12 +16,13 @@ export default class Neume extends Vue {
   @Prop() fontFamily!: string;
 
   get mapping() {
-    let mapping = neumeMap.get(this.neume);
+    let mapping = NeumeMappingService.getMapping(this.neume);
 
     if (!mapping) {
       console.warn('Could not find mapping for neume ' + this.neume);
       mapping = {
         text: '?',
+        glyphName: 'ison',
       };
     }
 

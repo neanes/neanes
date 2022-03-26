@@ -9,7 +9,7 @@ import {
   TempoElement,
   EmptyElement,
 } from '@/models/Element';
-import { neumeMap } from '@/models/NeumeMappings';
+import { NeumeMappingService } from '@/services/NeumeMappingService';
 import {
   Fthora,
   Note,
@@ -70,19 +70,23 @@ export class LayoutService {
       `${pageSetup.lyricsDefaultFontSize}px ${pageSetup.lyricsDefaultFontFamily}`,
     );
 
-    const vareiaMapping = neumeMap.get(VocalExpressionNeume.Vareia)!;
+    const vareiaMapping = NeumeMappingService.getMapping(
+      VocalExpressionNeume.Vareia,
+    )!;
     const vareiaWidth = TextMeasurementService.getTextWidth(
       vareiaMapping.text,
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
     );
 
-    const elaphronMapping = neumeMap.get(QuantitativeNeume.Elaphron)!;
+    const elaphronMapping = NeumeMappingService.getMapping(
+      QuantitativeNeume.Elaphron,
+    )!;
     const elaphronWidth = TextMeasurementService.getTextWidth(
       elaphronMapping.text,
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
     );
 
-    const runningElaphronMapping = neumeMap.get(
+    const runningElaphronMapping = NeumeMappingService.getMapping(
       QuantitativeNeume.RunningElaphron,
     )!;
     const runningElaphronWidth = TextMeasurementService.getTextWidth(
@@ -141,7 +145,7 @@ export class LayoutService {
 
           noteElement.lyricsVerticalOffset = lyricsVerticalOffset;
 
-          const quantitativeNeumeMapping = neumeMap.get(
+          const quantitativeNeumeMapping = NeumeMappingService.getMapping(
             noteElement.quantitativeNeume,
           )!;
 
@@ -184,7 +188,9 @@ export class LayoutService {
           }
 
           if (noteElement.measureBar != null) {
-            const measureBarMapping = neumeMap.get(noteElement.measureBar)!;
+            const measureBarMapping = NeumeMappingService.getMapping(
+              noteElement.measureBar,
+            )!;
 
             noteElement.neumeWidth += TextMeasurementService.getTextWidth(
               measureBarMapping.text,
@@ -202,14 +208,16 @@ export class LayoutService {
           const martyriaElement = element as MartyriaElement;
 
           const mappingNote = !martyriaElement.error
-            ? neumeMap.get(martyriaElement.note)!
-            : neumeMap.get(Note.Pa)!;
+            ? NeumeMappingService.getMapping(martyriaElement.note)!
+            : NeumeMappingService.getMapping(Note.Pa)!;
           const mappingRoot = !martyriaElement.error
-            ? neumeMap.get(martyriaElement.rootSign)!
-            : neumeMap.get(RootSign.Alpha)!;
-          const mappingApostrophe = neumeMap.get(Note.Apostrophe)!;
+            ? NeumeMappingService.getMapping(martyriaElement.rootSign)!
+            : NeumeMappingService.getMapping(RootSign.Alpha)!;
+          const mappingApostrophe = NeumeMappingService.getMapping(
+            Note.Apostrophe,
+          )!;
           const mappingMeasureBar = martyriaElement.measureBar
-            ? neumeMap.get(martyriaElement.measureBar)!
+            ? NeumeMappingService.getMapping(martyriaElement.measureBar)!
             : null;
 
           const apostropheWidth = TextMeasurementService.getTextWidth(
@@ -240,7 +248,9 @@ export class LayoutService {
         }
         case ElementType.Tempo: {
           const tempoElement = element as TempoElement;
-          const temoMapping = neumeMap.get(tempoElement.neume)!;
+          const temoMapping = NeumeMappingService.getMapping(
+            tempoElement.neume,
+          )!;
 
           elementWidthPx = TextMeasurementService.getTextWidth(
             temoMapping.text,
@@ -493,13 +503,15 @@ export class LayoutService {
       `${pageSetup.lyricsDefaultFontSize}px ${pageSetup.lyricsDefaultFontFamily}`,
     );
 
-    const elaphronMapping = neumeMap.get(QuantitativeNeume.Elaphron)!;
+    const elaphronMapping = NeumeMappingService.getMapping(
+      QuantitativeNeume.Elaphron,
+    )!;
     const elaphronWidth = TextMeasurementService.getTextWidth(
       elaphronMapping.text,
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
     );
 
-    const runningElaphronMapping = neumeMap.get(
+    const runningElaphronMapping = NeumeMappingService.getMapping(
       QuantitativeNeume.RunningElaphron,
     )!;
     const runningElaphronWidth = TextMeasurementService.getTextWidth(

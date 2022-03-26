@@ -18,7 +18,6 @@
       <Neume
         :neume="neume"
         :key="index"
-        :offset="getModeSignOffset(neume)"
         :fontFamily="pageSetup.neumeDefaultFontFamily"
       />
     </template>
@@ -30,7 +29,6 @@
     <Neume
       v-if="hasFthora"
       :neume="element.fthora"
-      :offset="getFthoraOffset(element.fthora)"
       :fontFamily="pageSetup.neumeDefaultFontFamily"
     ></Neume>
     <Neume
@@ -46,13 +44,11 @@
     <Neume
       v-if="hasQuantitativeNeumeRight"
       :neume="element.quantitativeNeumeRight"
-      :offset="quantitativeNeumeRightOffset"
       :fontFamily="pageSetup.neumeDefaultFontFamily"
     ></Neume>
     <Neume
       v-if="hasFthora2"
       :neume="element.fthora2"
-      :offset="getFthoraOffset(element.fthora2)"
       :fontFamily="pageSetup.neumeDefaultFontFamily"
     ></Neume>
   </div>
@@ -63,12 +59,6 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 import { ModeKeyElement } from '@/models/Element';
 import Neume from '@/components/Neume.vue';
 import { Fthora, ModeSign } from '@/models/Neumes';
-import {
-  getFthoraAdjustments,
-  getModeSignAdjustments,
-  getQuantitativeNeumeAdjustments,
-  NeumeAdjustmentOffset,
-} from '@/models/NeumeAdjustments';
 import { withZoom } from '@/utils/withZoom';
 import { PageSetup } from '@/models/PageSetup';
 
@@ -114,66 +104,6 @@ export default class ModeKey extends Vue {
       width: withZoom(this.pageSetup.innerPageWidth),
       height: withZoom(this.element.height),
     } as CSSStyleDeclaration;
-  }
-
-  getFthoraOffset(fthora: Fthora) {
-    let offset: NeumeAdjustmentOffset | null = null;
-
-    const adjustments = getFthoraAdjustments(fthora);
-
-    if (adjustments) {
-      const adjustment = adjustments.find(
-        (x) =>
-          x.isPairedWith.includes(this.element.note!) ||
-          x.isPairedWith.includes(this.element.quantitativeNeumeRight!),
-      );
-
-      if (adjustment) {
-        offset = adjustment.offset;
-      }
-    }
-
-    return offset;
-  }
-
-  get quantitativeNeumeRightOffset() {
-    let offset: NeumeAdjustmentOffset | null = null;
-
-    const adjustments = getQuantitativeNeumeAdjustments(
-      this.element.quantitativeNeumeRight!,
-    );
-
-    if (adjustments) {
-      const adjustment = adjustments.find(
-        (x) =>
-          x.isPairedWith.includes(this.element.note!) ||
-          this.element.martyrias.some((y) => x.isPairedWith.includes(y)),
-      );
-
-      if (adjustment) {
-        offset = adjustment.offset;
-      }
-    }
-
-    return offset;
-  }
-
-  getModeSignOffset(neume: ModeSign) {
-    let offset: NeumeAdjustmentOffset | null = null;
-
-    const adjustments = getModeSignAdjustments(neume);
-
-    if (adjustments) {
-      const adjustment = adjustments.find((x) =>
-        x.isPairedWith.includes(this.element.note!),
-      );
-
-      if (adjustment) {
-        offset = adjustment.offset;
-      }
-    }
-
-    return offset;
   }
 }
 </script>

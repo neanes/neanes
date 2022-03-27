@@ -390,7 +390,7 @@
         0.113
       ]
     },
-    "oligonYpsiliKentimaRight": {
+    "oligonKentimaYpsiliRight": {
       "measureNumber": [
         0.172,
         0.753
@@ -456,7 +456,7 @@
         0.113
       ]
     },
-    "oligonYpsiliKentimaMiddle": {
+    "oligonKentimaYpsiliMiddle": {
       "klasmaTop": [
         0.353,
         0.487
@@ -584,7 +584,7 @@
         0.113
       ]
     },
-    "oligonDoubleYpsiliKentimata": {
+    "oligonKentimataDoubleYpsili": {
       "measureNumber": [
         0.172,
         0.875
@@ -1400,7 +1400,7 @@
         0.083
       ]
     },
-    "petastiYpsiliKentimaRight": {
+    "petastiKentimaYpsiliRight": {
       "psifiston": [
         0.795,
         0.14
@@ -1442,7 +1442,7 @@
         0.083
       ]
     },
-    "petastiYpsiliKentimaMiddle": {
+    "petastiKentimaYpsiliMiddle": {
       "psifiston": [
         0.795,
         0.14
@@ -2020,7 +2020,7 @@
         0.113
       ]
     },
-    "oligonTripleYpsiliKentima": {
+    "oligonKentimaTripleYpsili": {
       "measureNumber": [
         0.172,
         1.213
@@ -2666,7 +2666,7 @@
         0.567
       ]
     },
-    "oligonTripleYpsiliKentimata": {
+    "oligonKentimataTripleYpsili": {
       "measureNumber": [
         0.172,
         1.213
@@ -2874,7 +2874,7 @@
         0.933
       ]
     },
-    "petastiDoubleYpsiliKentimata": {
+    "petastiKentimataDoubleYpsili": {
       "psifiston": [
         0.795,
         0.14
@@ -2916,7 +2916,7 @@
         0.083
       ]
     },
-    "petastiDoubleYpsiliKentimaRight": {
+    "petastiKentimaDoubleYpsiliRight": {
       "psifiston": [
         0.795,
         0.14
@@ -2958,7 +2958,7 @@
         0.083
       ]
     },
-    "petastiDoubleYpsiliKentimaLeft": {
+    "petastiKentimaDoubleYpsiliLeft": {
       "psifiston": [
         0.795,
         0.14
@@ -3000,7 +3000,7 @@
         0.083
       ]
     },
-    "petastiTripleYpsiliKentimata": {
+    "petastiKentimataTripleYpsili": {
       "psifiston": [
         0.795,
         0.14
@@ -3084,7 +3084,7 @@
         0.083
       ]
     },
-    "oligonDoubleYpsiliKentimaRight": {
+    "oligonKentimaDoubleYpsiliRight": {
       "measureNumber": [
         0.172,
         0.853
@@ -3142,7 +3142,7 @@
         0.113
       ]
     },
-    "oligonDoubleYpsiliKentimaLeft": {
+    "oligonKentimaDoubleYpsiliLeft": {
       "measureNumber": [
         0.172,
         1.213
@@ -3964,7 +3964,7 @@
         -0.027
       ]
     },
-    "petastiTripleYpsiliKentima": {
+    "petastiKentimaTripleYpsili": {
       "psifiston": [
         0.795,
         0.14
@@ -4868,10 +4868,10 @@
     "oligonKentimaAbove": 1.515,
     "oligonYpsiliRight": 1.515,
     "oligonYpsiliLeft": 1.515,
-    "oligonYpsiliKentimaRight": 1.515,
-    "oligonYpsiliKentimaMiddle": 1.515,
+    "oligonKentimaYpsiliRight": 1.515,
+    "oligonKentimaYpsiliMiddle": 1.515,
     "oligonDoubleYpsili": 1.515,
-    "oligonDoubleYpsiliKentimata": 1.596,
+    "oligonKentimataDoubleYpsili": 1.596,
     "isonApostrofos": 1.277,
     "apostrofosSyndesmos": 1.177,
     "yporroi": 0.4,
@@ -4889,8 +4889,8 @@
     "petastiKentima": 1.236,
     "petastiYpsiliRight": 1.236,
     "petastiYpsiliLeft": 1.236,
-    "petastiYpsiliKentimaRight": 1.234,
-    "petastiYpsiliKentimaMiddle": 1.236,
+    "petastiKentimaYpsiliRight": 1.234,
+    "petastiKentimaYpsiliMiddle": 1.236,
     "petastiApostrofos": 1.236,
     "petastiElafron": 1.242,
     "petastiElafronApostrofos": 1.243,
@@ -4904,7 +4904,7 @@
     "oligonRunningElafronKentimata": 2.201,
     "oligonElafronKentimata": 2.077,
     "oligonKentimataBelow": 1.515,
-    "oligonTripleYpsiliKentima": 1.58,
+    "oligonKentimaTripleYpsili": 1.58,
     "oligonIson": 1.515,
     "oligonElafron": 1.519,
     "petastiRunningElafron": 1.514,
@@ -4917,17 +4917,17 @@
     "oligonKentimataYpsiliRight": 1.515,
     "petastiChamiliApostrofos": 1.236,
     "apostrofos": 0.703,
-    "oligonTripleYpsiliKentimata": 1.58,
+    "oligonKentimataTripleYpsili": 1.58,
     "doubleChamiliElafronApostrofos": 1.174,
     "doubleChamiliElafron": 1.174,
     "doubleChamiliApostrofos": 1.107,
-    "petastiDoubleYpsiliKentimata": 1.439,
-    "petastiDoubleYpsiliKentimaRight": 1.313,
-    "petastiDoubleYpsiliKentimaLeft": 1.236,
-    "petastiTripleYpsiliKentimata": 1.439,
+    "petastiKentimataDoubleYpsili": 1.439,
+    "petastiKentimaDoubleYpsiliRight": 1.313,
+    "petastiKentimaDoubleYpsiliLeft": 1.236,
+    "petastiKentimataTripleYpsili": 1.439,
     "petastiTripleYpsili": 1.36,
-    "oligonDoubleYpsiliKentimaRight": 1.577,
-    "oligonDoubleYpsiliKentimaLeft": 1.517,
+    "oligonKentimaDoubleYpsiliRight": 1.577,
+    "oligonKentimaDoubleYpsiliLeft": 1.517,
     "oligonTripleYpsili": 1.58,
     "oligonElafronApostrofos": 1.515,
     "petastiDoubleYpsili": 1.232,
@@ -4976,7 +4976,7 @@
     "martyriaNoteDiHigh": 0.886,
     "martyriaNoteKeHigh": 0.894,
     "martyriaTick": 0.148,
-    "petastiTripleYpsiliKentima": 1.439,
+    "petastiKentimaTripleYpsili": 1.439,
     "vareia": 0.534,
     "psifiston": 0.0,
     "antikenoma": 0.0,
@@ -5214,7 +5214,7 @@
         0.22242105263118006
       ]
     },
-    "oligonYpsiliKentimaRight": {
+    "oligonKentimaYpsiliRight": {
       "bBoxNE": [
         1.4412222222214541,
         1.163
@@ -5224,7 +5224,7 @@
         0.22242105263118006
       ]
     },
-    "oligonYpsiliKentimaMiddle": {
+    "oligonKentimaYpsiliMiddle": {
       "bBoxNE": [
         1.4189767441845793,
         1.27
@@ -5244,7 +5244,7 @@
         0.22242105263118006
       ]
     },
-    "oligonDoubleYpsiliKentimata": {
+    "oligonKentimataDoubleYpsili": {
       "bBoxNE": [
         1.4952222222214542,
         1.272
@@ -5424,7 +5424,7 @@
         0.1334782608696068
       ]
     },
-    "petastiYpsiliKentimaRight": {
+    "petastiKentimaYpsiliRight": {
       "bBoxNE": [
         1.262222222221454,
         1.225
@@ -5434,7 +5434,7 @@
         0.1334782608696068
       ]
     },
-    "petastiYpsiliKentimaMiddle": {
+    "petastiKentimaYpsiliMiddle": {
       "bBoxNE": [
         1.1762499999985936,
         1.27
@@ -5574,7 +5574,7 @@
         -0.060538461538376324
       ]
     },
-    "oligonTripleYpsiliKentima": {
+    "oligonKentimaTripleYpsili": {
       "bBoxNE": [
         1.500222222221454,
         1.338
@@ -5704,7 +5704,7 @@
         0.145
       ]
     },
-    "oligonTripleYpsiliKentimata": {
+    "oligonKentimataTripleYpsili": {
       "bBoxNE": [
         1.500222222221454,
         1.338
@@ -5744,7 +5744,7 @@
         -0.093
       ]
     },
-    "petastiDoubleYpsiliKentimata": {
+    "petastiKentimataDoubleYpsili": {
       "bBoxNE": [
         1.3682222222214542,
         1.348
@@ -5754,7 +5754,7 @@
         0.1334782608696068
       ]
     },
-    "petastiDoubleYpsiliKentimaRight": {
+    "petastiKentimaDoubleYpsiliRight": {
       "bBoxNE": [
         1.2512222222214542,
         1.343
@@ -5764,7 +5764,7 @@
         0.1334782608696068
       ]
     },
-    "petastiDoubleYpsiliKentimaLeft": {
+    "petastiKentimaDoubleYpsiliLeft": {
       "bBoxNE": [
         1.1762499999985936,
         1.343
@@ -5774,7 +5774,7 @@
         0.1334782608696068
       ]
     },
-    "petastiTripleYpsiliKentimata": {
+    "petastiKentimataTripleYpsili": {
       "bBoxNE": [
         1.3682222222214542,
         1.348
@@ -5794,7 +5794,7 @@
         0.1334782608696068
       ]
     },
-    "oligonDoubleYpsiliKentimaRight": {
+    "oligonKentimaDoubleYpsiliRight": {
       "bBoxNE": [
         1.500222222221454,
         1.338
@@ -5804,7 +5804,7 @@
         0.22242105263118006
       ]
     },
-    "oligonDoubleYpsiliKentimaLeft": {
+    "oligonKentimaDoubleYpsiliLeft": {
       "bBoxNE": [
         1.4189767441845793,
         1.338
@@ -6294,7 +6294,7 @@
         0.344
       ]
     },
-    "petastiTripleYpsiliKentima": {
+    "petastiKentimaTripleYpsili": {
       "bBoxNE": [
         1.3682222222214542,
         1.348

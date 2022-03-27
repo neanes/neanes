@@ -22,31 +22,31 @@
   "oligonYpsiliLeft": {
     "codepoint": "U+E006"
   },
-  "oligonYpsiliKentimaRight": {
+  "oligonKentimaYpsiliRight": {
     "codepoint": "U+E007"
   },
-  "oligonYpsiliKentimaMiddle": {
+  "oligonKentimaYpsiliMiddle": {
     "codepoint": "U+E008"
   },
   "oligonDoubleYpsili": {
     "codepoint": "U+E009"
   },
-  "oligonDoubleYpsiliKentimata": {
+  "oligonKentimataDoubleYpsili": {
     "codepoint": "U+E00A"
   },
-  "oligonDoubleYpsiliKentimaRight": {
+  "oligonKentimaDoubleYpsiliRight": {
     "codepoint": "U+E00B"
   },
-  "oligonDoubleYpsiliKentimaLeft": {
+  "oligonKentimaDoubleYpsiliLeft": {
     "codepoint": "U+E00C"
   },
   "oligonTripleYpsili": {
     "codepoint": "U+E00D"
   },
-  "oligonTripleYpsiliKentimata": {
+  "oligonKentimataTripleYpsili": {
     "codepoint": "U+E00E"
   },
-  "oligonTripleYpsiliKentima": {
+  "oligonKentimaTripleYpsili": {
     "codepoint": "U+E00F"
   },
   "oligonIson": {
@@ -139,31 +139,31 @@
   "petastiYpsiliLeft": {
     "codepoint": "U+E045"
   },
-  "petastiYpsiliKentimaRight": {
+  "petastiKentimaYpsiliRight": {
     "codepoint": "U+E046"
   },
-  "petastiYpsiliKentimaMiddle": {
+  "petastiKentimaYpsiliMiddle": {
     "codepoint": "U+E047"
   },
   "petastiDoubleYpsili": {
     "codepoint": "U+E048"
   },
-  "petastiDoubleYpsiliKentimata": {
+  "petastiKentimataDoubleYpsili": {
     "codepoint": "U+E049"
   },
-  "petastiDoubleYpsiliKentimaRight": {
+  "petastiKentimaDoubleYpsiliRight": {
     "codepoint": "U+E04A"
   },
-  "petastiDoubleYpsiliKentimaLeft": {
+  "petastiKentimaDoubleYpsiliLeft": {
     "codepoint": "U+E04B"
   },
   "petastiTripleYpsili": {
     "codepoint": "U+E04C"
   },
-  "petastiTripleYpsiliKentimata": {
+  "petastiKentimataTripleYpsili": {
     "codepoint": "U+E04D"
   },
-  "petastiTripleYpsiliKentima": {
+  "petastiKentimaTripleYpsili": {
     "codepoint": "U+E04E"
   },
   "petastiApostrofos": {
@@ -393,7 +393,7 @@
   "gorgonSecondary": {
     "codepoint": "U+E100"
   },
- "gorgonDottedLeftSecondary": {
+  "gorgonDottedLeftSecondary": {
     "codepoint": "U+E101"
   },
   "gorgonDottedRightSecondary": {

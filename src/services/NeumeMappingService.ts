@@ -63,11 +63,11 @@ mapNeumeToSbmufl(QuantitativeNeume.OligonPlusHypsiliRight, 'oligonYpsiliRight');
 mapNeumeToSbmufl(QuantitativeNeume.OligonPlusHypsiliLeft, 'oligonYpsiliLeft');
 mapNeumeToSbmufl(
   QuantitativeNeume.OligonPlusHypsiliPlusKentimaHorizontal,
-  'oligonYpsiliKentimaRight',
+  'oligonKentimaYpsiliRight',
 );
 mapNeumeToSbmufl(
   QuantitativeNeume.OligonPlusHypsiliPlusKentimaVertical,
-  'oligonYpsiliKentimaMiddle',
+  'oligonKentimaYpsiliMiddle',
 );
 mapNeumeToSbmufl(
   QuantitativeNeume.OligonPlusDoubleHypsili,
@@ -84,11 +84,11 @@ mapNeumeToSbmufl(
 mapNeumeToSbmufl(QuantitativeNeume.PetastiPlusHypsiliLeft, 'petastiYpsiliLeft');
 mapNeumeToSbmufl(
   QuantitativeNeume.PetastiPlusHypsiliPlusKentimaHorizontal,
-  'petastiYpsiliKentimaRight',
+  'petastiKentimaYpsiliRight',
 );
 mapNeumeToSbmufl(
   QuantitativeNeume.PetastiPlusHypsiliPlusKentimaVertical,
-  'petastiYpsiliKentimaMiddle',
+  'petastiKentimaYpsiliMiddle',
 );
 mapNeumeToSbmufl(
   QuantitativeNeume.PetastiPlusDoubleHypsili,

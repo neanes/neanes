@@ -36,7 +36,9 @@ export default class Neume extends Vue {
   get style() {
     const style = {} as CSSStyleDeclaration;
 
-    style.fontFamily = this.fontFamily;
+    if (this.fontFamily != null) {
+      style.fontFamily = this.fontFamily;
+    }
 
     if (this.mapping.salt != null) {
       style.fontFeatureSettings = `"salt" ${this.mapping.salt}`;

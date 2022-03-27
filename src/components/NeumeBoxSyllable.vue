@@ -3,70 +3,45 @@
     <Neume
       v-if="hasVocalExpressionNeume && isVareia(note.vocalExpressionNeume)"
       :neume="note.vocalExpressionNeume"
-      :fontFamily="pageSetup.neumeDefaultFontFamily"
     ></Neume>
-    <Neume
-      :neume="note.quantitativeNeume"
-      :fontFamily="pageSetup.neumeDefaultFontFamily"
-    ></Neume>
+    <Neume :neume="note.quantitativeNeume"></Neume>
     <Neume
       v-if="hasVocalExpressionNeume && !isVareia(note.vocalExpressionNeume)"
       :neume="note.vocalExpressionNeume"
       :style="vocalExpressionStyle"
-      :fontFamily="pageSetup.neumeDefaultFontFamily"
     ></Neume>
-    <Neume
-      v-if="hasTimeNeume"
-      :neume="note.timeNeume"
-      :fontFamily="pageSetup.neumeDefaultFontFamily"
-    ></Neume>
+    <Neume v-if="hasTimeNeume" :neume="note.timeNeume"></Neume>
     <Neume
       v-if="hasGorgonNeume"
       :neume="note.gorgonNeume"
       :style="gorgonStyle"
-      :fontFamily="pageSetup.neumeDefaultFontFamily"
     ></Neume>
     <Neume
       v-if="hasHyporoeGorgonNeume"
       :neume="note.hyporoeGorgonNeume"
       :style="gorgonStyle"
-      :fontFamily="pageSetup.neumeDefaultFontFamily"
     ></Neume>
-    <Neume
-      v-if="hasFthora"
-      :neume="note.fthora"
-      :style="fthoraStyle"
-      :fontFamily="pageSetup.neumeDefaultFontFamily"
-    ></Neume>
+    <Neume v-if="hasFthora" :neume="note.fthora" :style="fthoraStyle"></Neume>
     <Neume
       v-if="hasAccidental"
       :neume="note.accidental"
       :style="accidentalStyle"
-      :fontFamily="pageSetup.neumeDefaultFontFamily"
     ></Neume>
     <Neume
       v-if="hasNoteIndicator"
       :neume="note.noteIndicator"
       :style="noteIndicatorStyle"
-      :fontFamily="pageSetup.neumeDefaultFontFamily"
     ></Neume>
-    <Neume
-      v-if="hasIson"
-      :neume="note.ison"
-      :style="isonStyle"
-      :fontFamily="pageSetup.neumeDefaultFontFamily"
-    ></Neume>
+    <Neume v-if="hasIson" :neume="note.ison" :style="isonStyle"></Neume>
     <Neume
       v-if="hasMeasureNumber"
       :neume="note.measureNumber"
       :style="measureNumberStyle"
-      :fontFamily="pageSetup.neumeDefaultFontFamily"
     ></Neume>
     <Neume
       v-if="hasMeasureBar"
       :neume="note.measureBar"
       :style="measureBarStyle"
-      :fontFamily="pageSetup.neumeDefaultFontFamily"
     ></Neume>
   </div>
 </template>
@@ -130,6 +105,7 @@ export default class NeumeBoxSyllable extends Vue {
 
   get style() {
     return {
+      fontFamily: this.pageSetup.neumeDefaultFontFamily,
       fontSize: withZoom(this.pageSetup.neumeDefaultFontSize),
       color: this.pageSetup.neumeDefaultColor,
     } as CSSStyleDeclaration;

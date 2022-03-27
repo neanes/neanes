@@ -37,7 +37,7 @@ export class NoteElement extends ScoreElement {
   public quantitativeNeume: QuantitativeNeume = QuantitativeNeume.Ison;
   public timeNeume: TimeNeume | undefined = undefined;
   public gorgonNeume: GorgonNeume | undefined = undefined;
-  public hyporoeGorgonNeume: GorgonNeume | undefined = undefined;
+  public secondaryGorgonNeume: GorgonNeume | undefined = undefined;
   public vocalExpressionNeume: VocalExpressionNeume | undefined = undefined;
   public fthora: Fthora | undefined = undefined;
   public accidental: Accidental | undefined = undefined;

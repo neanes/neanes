@@ -177,7 +177,6 @@ mapNeumeToSbmufl(QuantitativeNeume.Cross, 'stavros');
 mapNeumeToSbmufl(QuantitativeNeume.VareiaDotted, 'leimma1');
 mapNeumeToSbmufl(GorgonNeume.Gorgon_Top, 'gorgonAbove');
 mapNeumeToSbmufl(GorgonNeume.Gorgon_Bottom, 'gorgonBelow');
-mapNeumeToSbmufl(GorgonNeume.Gorgon_Hyporoe, 'gorgonYporroi');
 mapNeumeToSbmufl(GorgonNeume.Digorgon, 'digorgon');
 mapNeumeToSbmufl(GorgonNeume.Trigorgon, 'trigorgon');
 mapNeumeToSbmufl(GorgonNeume.GorgonDottedLeft, 'gorgonDottedLeft');
@@ -191,6 +190,33 @@ mapNeumeToSbmufl(GorgonNeume.TrigorgonDottedRight, 'trigorgonDottedRight');
 mapNeumeToSbmufl(GorgonNeume.Argon, 'argon');
 mapNeumeToSbmufl(GorgonNeume.Hemiolion, 'diargon');
 mapNeumeToSbmufl(GorgonNeume.Diargon, 'triargon');
+mapNeumeToSbmufl(GorgonNeume.GorgonSecondary, 'gorgonSecondary');
+mapNeumeToSbmufl(GorgonNeume.DigorgonSecondary, 'digorgonSecondary');
+mapNeumeToSbmufl(GorgonNeume.TrigorgonSecondary, 'trigorgonSecondary');
+mapNeumeToSbmufl(
+  GorgonNeume.GorgonDottedLeftSecondary,
+  'gorgonDottedLeftSecondary',
+);
+mapNeumeToSbmufl(
+  GorgonNeume.GorgonDottedRightSecondary,
+  'gorgonDottedRightSecondary',
+);
+mapNeumeToSbmufl(
+  GorgonNeume.DigorgonDottedLeft1Secondary,
+  'digorgonDottedLeftBelowSecondary',
+);
+mapNeumeToSbmufl(
+  GorgonNeume.DigorgonDottedRightSecondary,
+  'digorgonDottedRightSecondary',
+);
+mapNeumeToSbmufl(
+  GorgonNeume.TrigorgonDottedLeft1Secondary,
+  'trigorgonDottedLeftBelowSecondary',
+);
+mapNeumeToSbmufl(
+  GorgonNeume.TrigorgonDottedRightSecondary,
+  'trigorgonDottedRightSecondary',
+);
 mapNeumeToSbmufl(TimeNeume.Klasma_Top, 'klasmaAbove');
 mapNeumeToSbmufl(TimeNeume.Klasma_Bottom, 'klasmaBelow');
 mapNeumeToSbmufl(TimeNeume.Hapli, 'apli');

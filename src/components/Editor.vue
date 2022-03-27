@@ -875,7 +875,7 @@ export default class Editor extends Vue {
 
   addQuantitativeNeume(
     quantitativeNeume: QuantitativeNeume,
-    hyporoeGorgonNeume: GorgonNeume | null = null,
+    secondaryGorgonNeume: GorgonNeume | null = null,
   ) {
     if (this.selectedElement == null) {
       return;
@@ -887,7 +887,7 @@ export default class Editor extends Vue {
     if (
       quantitativeNeume === QuantitativeNeume.OligonPlusHyporoePlusKentemata
     ) {
-      element.hyporoeGorgonNeume = hyporoeGorgonNeume;
+      element.secondaryGorgonNeume = secondaryGorgonNeume;
     }
 
     switch (this.entryMode) {
@@ -907,15 +907,15 @@ export default class Editor extends Vue {
             ) {
               this.updateNote(this.selectedElement as NoteElement, {
                 quantitativeNeume,
-                hyporoeGorgonNeume,
+                secondaryGorgonNeume,
               });
             } else if (
-              (this.selectedElement as NoteElement).hyporoeGorgonNeume !==
-              hyporoeGorgonNeume
+              (this.selectedElement as NoteElement).secondaryGorgonNeume !==
+              secondaryGorgonNeume
             ) {
               // Special case for hyporoe gorgon
               this.updateNote(this.selectedElement as NoteElement, {
-                hyporoeGorgonNeume,
+                secondaryGorgonNeume,
               });
             }
           } else {
@@ -945,15 +945,15 @@ export default class Editor extends Vue {
           ) {
             this.updateNote(this.selectedElement as NoteElement, {
               quantitativeNeume,
-              hyporoeGorgonNeume,
+              secondaryGorgonNeume,
             });
           } else if (
-            (this.selectedElement as NoteElement).hyporoeGorgonNeume !==
-            hyporoeGorgonNeume
+            (this.selectedElement as NoteElement).secondaryGorgonNeume !==
+            secondaryGorgonNeume
           ) {
             // Special case for hyporoe gorgon
             this.updateNote(this.selectedElement as NoteElement, {
-              hyporoeGorgonNeume,
+              secondaryGorgonNeume,
             });
           }
         } else if (

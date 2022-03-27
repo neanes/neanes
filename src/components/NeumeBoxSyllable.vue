@@ -17,8 +17,8 @@
       :style="gorgonStyle"
     ></Neume>
     <Neume
-      v-if="hasHyporoeGorgonNeume"
-      :neume="note.hyporoeGorgonNeume"
+      v-if="hasSecondaryGorgonNeume"
+      :neume="note.secondaryGorgonNeume"
       :style="gorgonStyle"
     ></Neume>
     <Neume v-if="hasFthora" :neume="note.fthora" :style="fthoraStyle"></Neume>
@@ -75,8 +75,8 @@ export default class NeumeBoxSyllable extends Vue {
     return this.note.gorgonNeume != null;
   }
 
-  get hasHyporoeGorgonNeume() {
-    return this.note.hyporoeGorgonNeume != null;
+  get hasSecondaryGorgonNeume() {
+    return this.note.secondaryGorgonNeume != null;
   }
 
   get hasFthora() {

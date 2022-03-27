@@ -78,7 +78,7 @@ export class NoteElement extends ScoreElement {
       accidental: this.accidental,
       fthora: this.fthora,
       gorgonNeume: this.gorgonNeume,
-      hyporoeGorgonNeume: this.hyporoeGorgonNeume,
+      secondaryGorgonNeume: this.secondaryGorgonNeume,
       quantitativeNeume: this.quantitativeNeume,
       timeNeume: this.timeNeume,
       vocalExpressionNeume: this.vocalExpressionNeume,
@@ -97,8 +97,8 @@ export class NoteElement extends ScoreElement {
     return this._gorgonNeume;
   }
 
-  public get hyporoeGorgonNeume() {
-    return this._hyporoeGorgonNeume;
+  public get secondaryGorgonNeume() {
+    return this._secondaryGorgonNeume;
   }
 
   public get vocalExpressionNeume() {
@@ -121,7 +121,7 @@ export class NoteElement extends ScoreElement {
       this.quantitativeNeume !==
       QuantitativeNeume.OligonPlusHyporoePlusKentemata
     ) {
-      this._hyporoeGorgonNeume = null;
+      this._secondaryGorgonNeume = null;
     }
   }
 
@@ -135,8 +135,8 @@ export class NoteElement extends ScoreElement {
     this.replaceNeumes();
   }
 
-  public set hyporoeGorgonNeume(neume: GorgonNeume | null) {
-    this._hyporoeGorgonNeume = neume;
+  public set secondaryGorgonNeume(neume: GorgonNeume | null) {
+    this._secondaryGorgonNeume = neume;
     this.replaceNeumes();
   }
 
@@ -167,7 +167,7 @@ export class NoteElement extends ScoreElement {
   private _quantitativeNeume: QuantitativeNeume = QuantitativeNeume.Ison;
   private _timeNeume: TimeNeume | null = null;
   private _gorgonNeume: GorgonNeume | null = null;
-  private _hyporoeGorgonNeume: GorgonNeume | null = null;
+  private _secondaryGorgonNeume: GorgonNeume | null = null;
   private _vocalExpressionNeume: VocalExpressionNeume | null = null;
   private _fthora: Fthora | null = null;
   private _accidental: Accidental | null = null;

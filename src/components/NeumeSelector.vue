@@ -173,13 +173,13 @@ export default class NeumeSelector extends Vue {
   ];
 
   hyporoeMenuItems: HyporoeMenuItem[] = [
-    { gorgon: GorgonNeume.TrigorgonDottedLeft1 },
-    { gorgon: GorgonNeume.Trigorgon },
-    { gorgon: GorgonNeume.DigorgonDottedLeft1 },
-    { gorgon: GorgonNeume.Digorgon },
-    { gorgon: GorgonNeume.GorgonDottedRight },
-    { gorgon: GorgonNeume.GorgonDottedLeft },
-    { gorgon: GorgonNeume.Gorgon_Hyporoe },
+    { gorgon: GorgonNeume.TrigorgonDottedLeft1Secondary },
+    { gorgon: GorgonNeume.TrigorgonSecondary },
+    { gorgon: GorgonNeume.DigorgonDottedLeft1Secondary },
+    { gorgon: GorgonNeume.DigorgonSecondary },
+    { gorgon: GorgonNeume.GorgonDottedRightSecondary },
+    { gorgon: GorgonNeume.GorgonDottedLeftSecondary },
+    { gorgon: GorgonNeume.GorgonSecondary },
     { gorgon: null },
   ];
 

@@ -1869,7 +1869,7 @@
         0.87,
         0.113
       ],
-      "gorgonYporroi": [
+      "gorgonSecondary": [
         0.61,
         0.793
       ],
@@ -4782,8 +4782,8 @@
         0.8
       ]
     },
-    "gorgonYporroi": {
-      "gorgonYporroi": [
+    "gorgonSecondary": {
+      "gorgonSecondary": [
         0.0,
         0.8
       ]
@@ -4792,6 +4792,54 @@
       "heteron": [
         0.001,
         -0.02
+      ]
+    },
+    "gorgonDottedLeftSecondary": {
+      "gorgonSecondary": [
+        0.0,
+        0.8
+      ]
+    },
+    "gorgonDottedRightSecondary": {
+      "gorgonSecondary": [
+        0.0,
+        0.8
+      ]
+    },
+    "digorgonSecondary": {
+      "gorgonSecondary": [
+        0.0,
+        0.8
+      ]
+    },
+    "digorgonDottedLeftBelowSecondary": {
+      "gorgonSecondary": [
+        0.0,
+        0.8
+      ]
+    },
+    "digorgonDottedRightSecondary": {
+      "gorgonSecondary": [
+        0.0,
+        0.8
+      ]
+    },
+    "trigorgonSecondary": {
+      "gorgonSecondary": [
+        0.0,
+        0.8
+      ]
+    },
+    "trigorgonDottedLeftBelowSecondary": {
+      "gorgonSecondary": [
+        0.0,
+        0.8
+      ]
+    },
+    "trigorgonDottedRightSecondary": {
+      "gorgonSecondary": [
+        0.0,
+        0.8
       ]
     }
   },
@@ -5092,10 +5140,18 @@
     "breath": 0.0,
     "koronis": 0.0,
     "leimmaDot": 0.233,
-    "gorgonYporroi": 0.0,
+    "gorgonSecondary": 0.0,
     "endofonon": 0.0,
     "yfenAbove": 0.0,
-    "yfenBelow": 0.0
+    "yfenBelow": 0.0,
+    "gorgonDottedLeftSecondary": 0.0,
+    "gorgonDottedRightSecondary": 0.0,
+    "digorgonSecondary": 0.0,
+    "digorgonDottedLeftBelowSecondary": 0.0,
+    "digorgonDottedRightSecondary": 0.0,
+    "trigorgonSecondary": 0.0,
+    "trigorgonDottedLeftBelowSecondary": 0.0,
+    "trigorgonDottedRightSecondary": 0.0
   },
   "glyphBBoxes": {
     "ison": {
@@ -7878,7 +7934,7 @@
         0.366
       ]
     },
-    "gorgonYporroi": {
+    "gorgonSecondary": {
       "bBoxNE": [
         0.16266675709036268,
         1.0175
@@ -7916,6 +7972,86 @@
       "bBoxSW": [
         -0.6,
         -0.40603789687608005
+      ]
+    },
+    "gorgonDottedLeftSecondary": {
+      "bBoxNE": [
+        0.1661667570903627,
+        1.039
+      ],
+      "bBoxSW": [
+        -0.303,
+        0.8143334056669915
+      ]
+    },
+    "gorgonDottedRightSecondary": {
+      "bBoxNE": [
+        0.3196432386601042,
+        1.039
+      ],
+      "bBoxSW": [
+        -0.147642578125,
+        0.8143334056669915
+      ]
+    },
+    "digorgonSecondary": {
+      "bBoxNE": [
+        0.3117645770791375,
+        1.188
+      ],
+      "bBoxSW": [
+        -0.251,
+        0.820666594325061
+      ]
+    },
+    "digorgonDottedLeftBelowSecondary": {
+      "bBoxNE": [
+        0.3117645770791375,
+        1.188
+      ],
+      "bBoxSW": [
+        -0.413,
+        0.820666594325061
+      ]
+    },
+    "digorgonDottedRightSecondary": {
+      "bBoxNE": [
+        0.46472704674874554,
+        1.177
+      ],
+      "bBoxSW": [
+        -0.25,
+        0.8363334056669915
+      ]
+    },
+    "trigorgonSecondary": {
+      "bBoxNE": [
+        0.42616675709036267,
+        1.203
+      ],
+      "bBoxSW": [
+        -0.381,
+        0.8106665943250609
+      ]
+    },
+    "trigorgonDottedLeftBelowSecondary": {
+      "bBoxNE": [
+        0.42416675709036267,
+        1.202
+      ],
+      "bBoxSW": [
+        -0.546,
+        0.8096665943250609
+      ]
+    },
+    "trigorgonDottedRightSecondary": {
+      "bBoxNE": [
+        0.5737270467487455,
+        1.201
+      ],
+      "bBoxSW": [
+        -0.387,
+        0.8086665943250609
       ]
     }
   },

@@ -79,7 +79,6 @@ export enum TimeNeume {
 export enum GorgonNeume {
   Gorgon_Top = 'Gorgon_Top',
   Gorgon_Bottom = 'Gorgon_Bottom',
-  Gorgon_Hyporoe = 'Gorgon_Hyporoe',
   Digorgon = 'Digorgon',
   Trigorgon = 'Trigorgon',
 
@@ -93,6 +92,18 @@ export enum GorgonNeume {
   TrigorgonDottedLeft1 = 'TrigorgonDottedLeft1',
   TrigorgonDottedLeft2 = 'TrigorgonDottedLeft2',
   TrigorgonDottedRight = 'TrigorgonDottedRight',
+
+  GorgonSecondary = 'GorgonSecondary',
+  GorgonDottedLeftSecondary = 'GorgonDottedLeftSecondary',
+  GorgonDottedRightSecondary = 'GorgonDottedRightSecondary',
+
+  DigorgonSecondary = 'DigorgonSecondary',
+  DigorgonDottedLeft1Secondary = 'DigorgonDottedLeft1Secondary',
+  DigorgonDottedRightSecondary = 'DigorgonDottedRightSecondary',
+
+  TrigorgonSecondary = 'TrigorgonSecondary',
+  TrigorgonDottedLeft1Secondary = 'TrigorgonDottedLeft1Secondary',
+  TrigorgonDottedRightSecondary = 'TrigorgonDottedRightSecondary',
 
   Argon = 'Argon',
   Hemiolion = 'Hemiolion',

@@ -20,9 +20,9 @@
       :style="gorgonStyle"
     ></Neume>
     <Neume
-      v-if="hasHyporoeGorgonNeume"
-      :neume="note.hyporoeGorgonNeume"
-      :style="hyporoeGorgonStyle"
+      v-if="hasSecondaryGorgonNeume"
+      :neume="note.secondaryGorgonNeume"
+      :style="secondaryGorgonStyle"
     ></Neume>
     <Neume v-if="hasFthora" :neume="note.fthora" :style="fthoraStyle"></Neume>
     <Neume
@@ -80,8 +80,8 @@ export default class NeumeBoxSyllablePrint extends Vue {
     return this.note.gorgonNeume != null;
   }
 
-  get hasHyporoeGorgonNeume() {
-    return this.note.hyporoeGorgonNeume != null;
+  get hasSecondaryGorgonNeume() {
+    return this.note.secondaryGorgonNeume != null;
   }
 
   get hasFthora() {
@@ -127,8 +127,8 @@ export default class NeumeBoxSyllablePrint extends Vue {
     } as CSSStyleDeclaration;
   }
 
-  get hyporoeGorgonStyle() {
-    const offset = this.getOffset(this.note.hyporoeGorgonNeume!);
+  get secondaryGorgonStyle() {
+    const offset = this.getOffset(this.note.secondaryGorgonNeume!);
 
     return {
       position: 'absolute',

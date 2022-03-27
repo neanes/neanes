@@ -60,6 +60,7 @@ export default class NeumeBoxMartyria extends Vue {
     const offset = this.getOffset(this.neume.fthora!);
 
     return {
+      position: 'absolute',
       color: this.pageSetup.fthoraDefaultColor,
       left: withZoom(offset.x, 'em'),
       top: withZoom(offset.y, 'em'),

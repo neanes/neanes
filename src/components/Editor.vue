@@ -74,7 +74,7 @@
                       ><img src="@/assets/icons/line-break.svg"
                     /></span>
                     <SyllableNeumeBox
-                      class="syllable-box"
+                      class="syllable-box no-print"
                       :note="element"
                       :pageSetup="score.pageSetup"
                       :class="[{ selected: isSelected(element) }]"
@@ -82,7 +82,7 @@
                       @click.native.shift.exact="setSelectionRange(element)"
                     ></SyllableNeumeBox>
                     <SyllableNeumeBoxPrint
-                      class="syllable-box print"
+                      class="syllable-box print-only"
                       :note="element"
                       :pageSetup="score.pageSetup"
                       :class="[{ selected: isSelected(element) }]"
@@ -125,12 +125,20 @@
                     /></span>
                     <MartyriaNeumeBox
                       :ref="`element-${getElementIndex(element)}`"
-                      class="marytria-neume-box"
+                      class="marytria-neume-box no-print"
                       :neume="element"
                       :pageSetup="score.pageSetup"
                       :class="[{ selected: isSelected(element) }]"
                       @click.native="selectedElement = element"
                     ></MartyriaNeumeBox>
+                    <MartyriaNeumeBoxPrint
+                      :ref="`element-${getElementIndex(element)}`"
+                      class="marytria-neume-box print-only"
+                      :neume="element"
+                      :pageSetup="score.pageSetup"
+                      :class="[{ selected: isSelected(element) }]"
+                      @click.native="selectedElement = element"
+                    ></MartyriaNeumeBoxPrint>
                     <div class="lyrics"></div>
                   </div>
                 </template>
@@ -341,6 +349,7 @@ import { IpcService } from '@/services/IpcService';
 import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
 import SyllableNeumeBoxPrint from '@/components/NeumeBoxSyllablePrint.vue';
 import MartyriaNeumeBox from '@/components/NeumeBoxMartyria.vue';
+import MartyriaNeumeBoxPrint from '@/components/NeumeBoxMartyriaPrint.vue';
 import TempoNeumeBox from '@/components/NeumeBoxTempo.vue';
 import NeumeSelector from '@/components/NeumeSelector.vue';
 import ContentEditable from '@/components/ContentEditable.vue';
@@ -372,6 +381,7 @@ import { PageSetup } from '@/models/PageSetup';
     SyllableNeumeBox,
     SyllableNeumeBoxPrint,
     MartyriaNeumeBox,
+    MartyriaNeumeBoxPrint,
     TempoNeumeBox,
     NeumeSelector,
     ContentEditable,
@@ -2747,7 +2757,7 @@ export default class Editor extends Vue {
   width: calc(16px * var(--zoom, 1));
 }
 
-.syllable-box.print {
+.print-only {
   display: none;
 }
 
@@ -2798,11 +2808,11 @@ export default class Editor extends Vue {
     display: none !important;
   }
 
-  .syllable-box:not(.print) {
+  .no-print {
     display: none !important;
   }
 
-  .syllable-box.print {
+  .print-only {
     display: block;
   }
 }

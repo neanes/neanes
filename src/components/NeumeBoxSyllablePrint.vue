@@ -152,6 +152,7 @@ export default class NeumeBoxSyllablePrint extends Vue {
     const offset = this.getOffset(this.note.fthora!);
 
     return {
+      position: 'absolute',
       left: withZoom(offset.x, 'em'),
       top: withZoom(offset.y, 'em'),
       color: this.pageSetup.fthoraDefaultColor,
@@ -162,6 +163,7 @@ export default class NeumeBoxSyllablePrint extends Vue {
     const offset = this.getOffset(this.note.accidental!);
 
     return {
+      position: 'absolute',
       left: withZoom(offset.x, 'em'),
       top: withZoom(offset.y, 'em'),
       color: this.pageSetup.accidentalDefaultColor,
@@ -169,11 +171,7 @@ export default class NeumeBoxSyllablePrint extends Vue {
   }
 
   get measureBarStyle() {
-    const offset = this.getOffset(this.note.measureBar!);
-
     return {
-      left: withZoom(offset.x, 'em'),
-      top: withZoom(offset.y, 'em'),
       color: this.pageSetup.measureBarDefaultColor,
     } as CSSStyleDeclaration;
   }
@@ -182,6 +180,7 @@ export default class NeumeBoxSyllablePrint extends Vue {
     const offset = this.getOffset(this.note.measureNumber!);
 
     return {
+      position: 'absolute',
       left: withZoom(offset.x, 'em'),
       top: withZoom(offset.y, 'em'),
       color: this.pageSetup.measureNumberDefaultColor,
@@ -192,6 +191,7 @@ export default class NeumeBoxSyllablePrint extends Vue {
     const offset = this.getOffset(this.note.noteIndicator!);
 
     return {
+      position: 'absolute',
       left: withZoom(offset.x, 'em'),
       top: withZoom(offset.y, 'em'),
       color: this.pageSetup.noteIndicatorDefaultColor,
@@ -202,6 +202,7 @@ export default class NeumeBoxSyllablePrint extends Vue {
     const offset = this.getOffset(this.note.ison!);
 
     return {
+      position: 'absolute',
       left: withZoom(offset.x, 'em'),
       top: withZoom(offset.y, 'em'),
       color: this.pageSetup.isonDefaultColor,

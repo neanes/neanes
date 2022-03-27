@@ -208,6 +208,7 @@
                     ><img src="@/assets/icons/line-break.svg"
                   /></span>
                   <ModeKey
+                    class="no-print"
                     :ref="`element-${getElementIndex(element)}`"
                     :element="element"
                     :pageSetup="score.pageSetup"
@@ -216,6 +217,16 @@
                     @dblclick.native="openModeKeyDialog"
                   >
                   </ModeKey>
+                  <ModeKeyPrint
+                    class="print-only"
+                    :ref="`element-${getElementIndex(element)}`"
+                    :element="element"
+                    :pageSetup="score.pageSetup"
+                    :class="[{ selectedTextbox: element == selectedElement }]"
+                    @click.native="selectedElement = element"
+                    @dblclick.native="openModeKeyDialog"
+                  >
+                  </ModeKeyPrint>
                 </template>
                 <template v-if="isDropCapElement(element)">
                   <span class="page-break" v-if="element.pageBreak"
@@ -356,6 +367,7 @@ import ContentEditable from '@/components/ContentEditable.vue';
 import TextBox from '@/components/TextBox.vue';
 import DropCap from '@/components/DropCap.vue';
 import ModeKey from '@/components/ModeKey.vue';
+import ModeKeyPrint from '@/components/ModeKeyPrint.vue';
 import TextToolbar from '@/components/TextToolbar.vue';
 import ModeKeyToolbar from '@/components/ModeKeyToolbar.vue';
 import MainToolbar from '@/components/MainToolbar.vue';
@@ -388,6 +400,7 @@ import { PageSetup } from '@/models/PageSetup';
     TextBox,
     DropCap,
     ModeKey,
+    ModeKeyPrint,
     TextToolbar,
     ModeKeyToolbar,
     NeumeToolbar,
@@ -2131,11 +2144,14 @@ export default class Editor extends Vue {
       mode,
       scale,
       scaleNote,
-      fthora,
-      fthora2,
+      martyria,
+      fthoraAboveNote,
+      fthoraAboveNote2,
+      fthoraAboveQuantitativeNeumeRight,
       note,
       note2,
-      quantitativeNeumeTop,
+      quantitativeNeumeAboveNote,
+      quantitativeNeumeAboveNote2,
       quantitativeNeumeRight,
     } = template;
 
@@ -2144,13 +2160,15 @@ export default class Editor extends Vue {
       mode,
       scale,
       scaleNote,
-      fthora,
-      fthora2,
+      martyria,
+      fthoraAboveNote,
+      fthoraAboveNote2,
+      fthoraAboveQuantitativeNeumeRight,
       note,
       note2,
-      quantitativeNeumeTop,
+      quantitativeNeumeAboveNote,
+      quantitativeNeumeAboveNote2,
       quantitativeNeumeRight,
-      martyrias: template.martyrias.map((x) => x),
     };
 
     this.updateModeKey(element, newValues);

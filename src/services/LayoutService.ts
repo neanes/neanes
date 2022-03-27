@@ -710,18 +710,25 @@ export class LayoutService {
         const modeKey = element as ModeKeyElement;
         currentNote = getScaleNoteValue(modeKey.scaleNote);
         currentScale = modeKey.scale;
-        if (modeKey.fthora) {
+        if (modeKey.fthoraAboveNote) {
           currentShift = this.getShift(
             currentNote,
             currentScale,
-            modeKey.fthora,
+            modeKey.fthoraAboveNote,
           );
         }
-        if (modeKey.fthora2) {
+        if (modeKey.fthoraAboveNote2) {
           currentShift = this.getShift(
             currentNote,
             currentScale,
-            modeKey.fthora2,
+            modeKey.fthoraAboveNote2,
+          );
+        }
+        if (modeKey.fthoraAboveQuantitativeNeumeRight) {
+          currentShift = this.getShift(
+            currentNote,
+            currentScale,
+            modeKey.fthoraAboveQuantitativeNeumeRight,
           );
         }
       } else if (element.elementType === ElementType.Martyria) {

@@ -231,11 +231,16 @@ export class SaveService {
     element.scaleNote = e.scaleNote;
     element.note = e.note || undefined;
     element.note2 = e.note2 || undefined;
-    element.fthora = e.fthora || undefined;
-    element.fthora2 = e.fthora2 || undefined;
-    element.quantitativeNeumeTop = e.quantitativeNeumeTop || undefined;
+    element.fthoraAboveNote = e.fthoraAboveNote || undefined;
+    element.fthoraAboveNote2 = e.fthoraAboveNote2 || undefined;
+    element.fthoraAboveQuantitativeNeumeRight =
+      e.fthoraAboveQuantitativeNeumeRight || undefined;
+    element.quantitativeNeumeAboveNote =
+      e.quantitativeNeumeAboveNote || undefined;
+    element.quantitativeNeumeAboveNote2 =
+      e.quantitativeNeumeAboveNote2 || undefined;
     element.quantitativeNeumeRight = e.quantitativeNeumeRight || undefined;
-    element.martyrias = e.martyrias.map((x) => x);
+    element.martyria = e.martyria;
     element.color = e.color;
     element.fontSize = e.fontSize;
     element.height = e.height;
@@ -469,11 +474,14 @@ export class SaveService {
     element.scaleNote = e.scaleNote;
     element.note = e.note || null;
     element.note2 = e.note2 || null;
-    element.fthora = e.fthora || null;
-    element.fthora2 = e.fthora2 || null;
-    element.quantitativeNeumeTop = e.quantitativeNeumeTop || null;
+    element.fthoraAboveNote = e.fthoraAboveNote || null;
+    element.fthoraAboveNote2 = e.fthoraAboveNote2 || null;
+    element.fthoraAboveQuantitativeNeumeRight =
+      e.fthoraAboveQuantitativeNeumeRight || null;
+    element.quantitativeNeumeAboveNote = e.quantitativeNeumeAboveNote || null;
+    element.quantitativeNeumeAboveNote2 = e.quantitativeNeumeAboveNote2 || null;
     element.quantitativeNeumeRight = e.quantitativeNeumeRight || null;
-    element.martyrias = e.martyrias.map((x) => x);
+    element.martyria = e.martyria;
     element.color = e.color;
     element.fontSize = e.fontSize;
   }

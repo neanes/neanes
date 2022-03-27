@@ -2,30 +2,18 @@
   <div class="neume" :style="style">
     <template v-if="neume.error"> ? </template>
     <template v-else>
-      <Neume
-        :neume="neume.note"
-        :fontFamily="pageSetup.neumeDefaultFontFamily"
-      ></Neume>
-      <Neume
-        :neume="neume.rootSign"
-        :fontFamily="pageSetup.neumeDefaultFontFamily"
-      ></Neume>
+      <Neume :neume="neume.note"></Neume>
+      <Neume :neume="neume.rootSign"></Neume>
       <Neume
         v-if="hasFthora"
         :neume="neume.fthora"
         :style="fthoraStyle"
-        :fontFamily="pageSetup.neumeDefaultFontFamily"
       ></Neume>
-      <Neume
-        v-if="neume.apostrophe"
-        :neume="Note.Apostrophe"
-        :fontFamily="pageSetup.neumeDefaultFontFamily"
-      ></Neume>
+      <Neume v-if="neume.apostrophe" :neume="Note.Apostrophe"></Neume>
       <Neume
         v-if="hasMeasureBar"
         :neume="neume.measureBar"
         :style="measureBarStyle"
-        :fontFamily="pageSetup.neumeDefaultFontFamily"
       ></Neume>
     </template>
   </div>
@@ -61,6 +49,7 @@ export default class NeumeBoxMartyria extends Vue {
   get style() {
     return {
       color: this.pageSetup.martyriaDefaultColor,
+      fontFamily: this.pageSetup.neumeDefaultFontFamily,
       fontSize: withZoom(this.pageSetup.neumeDefaultFontSize),
     } as CSSStyleDeclaration;
   }

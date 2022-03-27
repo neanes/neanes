@@ -406,13 +406,15 @@ export class ModeKeyElement extends ScoreElement {
   public mode: number = 1;
   public scale: Scale = Scale.Diatonic;
   public scaleNote: ScaleNote = ScaleNote.Pa;
-  public martyrias: ModeSign[] = [];
+  public martyria: ModeSign = ModeSign.Alpha;
   public note: ModeSign | null = null;
   public note2: ModeSign | null = null;
-  public fthora: Fthora | null = null;
-  public fthora2: Fthora | null = null;
+  public fthoraAboveNote: Fthora | null = null;
+  public fthoraAboveNote2: Fthora | null = null;
+  public fthoraAboveQuantitativeNeumeRight: Fthora | null = null;
   public quantitativeNeumeRight: QuantitativeNeume | null = null;
-  public quantitativeNeumeTop: ModeSign | null = null;
+  public quantitativeNeumeAboveNote: ModeSign | null = null;
+  public quantitativeNeumeAboveNote2: ModeSign | null = null;
   public color: string = '#000000';
   public fontSize: number = Unit.fromPt(20);
 
@@ -439,12 +441,17 @@ export class ModeKeyElement extends ScoreElement {
     element.mode = template.mode;
     element.scale = template.scale;
     element.scaleNote = template.scaleNote;
-    element.martyrias = template.martyrias.map((x) => x);
-    element.fthora = template.fthora || null;
-    element.fthora2 = template.fthora2 || null;
+    element.martyria = template.martyria;
+    element.fthoraAboveNote = template.fthoraAboveNote || null;
+    element.fthoraAboveNote2 = template.fthoraAboveNote2 || null;
+    element.fthoraAboveQuantitativeNeumeRight =
+      template.fthoraAboveQuantitativeNeumeRight || null;
     element.note = template.note || null;
     element.note2 = template.note2 || null;
-    element.quantitativeNeumeTop = template.quantitativeNeumeTop || null;
+    element.quantitativeNeumeAboveNote =
+      template.quantitativeNeumeAboveNote || null;
+    element.quantitativeNeumeAboveNote2 =
+      template.quantitativeNeumeAboveNote2 || null;
     element.quantitativeNeumeRight = template.quantitativeNeumeRight || null;
     element.alignment = alignment || TextBoxAlignment.Center;
 
@@ -467,12 +474,14 @@ export class ModeKeyElement extends ScoreElement {
       mode: this.mode,
       scale: this.scale,
       scaleNote: this.scaleNote,
-      martyrias: this.martyrias.map((x) => x),
-      fthora: this.fthora,
-      fthora2: this.fthora2,
+      martyria: this.martyria,
+      fthora: this.fthoraAboveNote,
+      fthora2: this.fthoraAboveNote2,
+      fthoraAboveQuantitativeNeumeRight: this.fthoraAboveQuantitativeNeumeRight,
       note: this.note,
       note2: this.note2,
-      quantitativeNeumeTop: this.quantitativeNeumeTop,
+      quantitativeNeumeAboveNote: this.quantitativeNeumeAboveNote,
+      quantitativeNeumeAboveNote2: this.quantitativeNeumeAboveNote2,
       quantitativeNeumeRight: this.quantitativeNeumeRight,
       fontSize: this.fontSize,
     } as Partial<ModeKeyElement>;

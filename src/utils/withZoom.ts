@@ -1,1 +1,2 @@
-export const withZoom = (x: number) => `calc(${x}px * var(--zoom, 1))`;
+export const withZoom = (x: number, unit: string = 'px') =>
+  `calc(${x}${unit} * var(--zoom, 1))`;

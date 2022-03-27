@@ -81,6 +81,14 @@
                       @click.native.exact="selectedElement = element"
                       @click.native.shift.exact="setSelectionRange(element)"
                     ></SyllableNeumeBox>
+                    <SyllableNeumeBoxPrint
+                      class="syllable-box print"
+                      :note="element"
+                      :pageSetup="score.pageSetup"
+                      :class="[{ selected: isSelected(element) }]"
+                      @click.native.exact="selectedElement = element"
+                      @click.native.shift.exact="setSelectionRange(element)"
+                    ></SyllableNeumeBoxPrint>
                     <div
                       class="lyrics-container"
                       :key="`lyrics-${getElementIndex(element)}-${
@@ -331,6 +339,7 @@ import { SaveService } from '@/services/SaveService';
 import { LayoutService } from '@/services/LayoutService';
 import { IpcService } from '@/services/IpcService';
 import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
+import SyllableNeumeBoxPrint from '@/components/NeumeBoxSyllablePrint.vue';
 import MartyriaNeumeBox from '@/components/NeumeBoxMartyria.vue';
 import TempoNeumeBox from '@/components/NeumeBoxTempo.vue';
 import NeumeSelector from '@/components/NeumeSelector.vue';
@@ -361,6 +370,7 @@ import { PageSetup } from '@/models/PageSetup';
 @Component({
   components: {
     SyllableNeumeBox,
+    SyllableNeumeBoxPrint,
     MartyriaNeumeBox,
     TempoNeumeBox,
     NeumeSelector,
@@ -2737,6 +2747,10 @@ export default class Editor extends Vue {
   width: calc(16px * var(--zoom, 1));
 }
 
+.syllable-box.print {
+  display: none;
+}
+
 @media print {
   body * {
     visibility: hidden;
@@ -2782,6 +2796,14 @@ export default class Editor extends Vue {
   .page-break-2,
   .line-break-2 {
     display: none !important;
+  }
+
+  .syllable-box:not(.print) {
+    display: none !important;
+  }
+
+  .syllable-box.print {
+    display: block;
   }
 }
 </style>

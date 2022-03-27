@@ -1,12 +1,9 @@
 <template>
   <div class="neume" :style="style">
-    <Neume
-      v-if="hasVocalExpressionNeume && isVareia(note.vocalExpressionNeume)"
-      :neume="note.vocalExpressionNeume"
-    ></Neume>
+    <Neume v-if="note.vareia" :neume="VocalExpressionNeume.Vareia"></Neume>
     <Neume :neume="note.quantitativeNeume"></Neume>
     <Neume
-      v-if="hasVocalExpressionNeume && !isVareia(note.vocalExpressionNeume)"
+      v-if="hasVocalExpressionNeume"
       :neume="note.vocalExpressionNeume"
       :style="vocalExpressionStyle"
     ></Neume>
@@ -62,6 +59,8 @@ import { PageSetup } from '@/models/PageSetup';
 export default class NeumeBoxSyllable extends Vue {
   @Prop() note!: NoteElement;
   @Prop() pageSetup!: PageSetup;
+
+  VocalExpressionNeume = VocalExpressionNeume;
 
   get hasVocalExpressionNeume() {
     return this.note.vocalExpressionNeume != null;
@@ -161,10 +160,6 @@ export default class NeumeBoxSyllable extends Vue {
     }
 
     return null;
-  }
-
-  isVareia(neume: VocalExpressionNeume) {
-    return neume == VocalExpressionNeume.Vareia;
   }
 }
 </script>

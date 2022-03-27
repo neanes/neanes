@@ -164,10 +164,7 @@ export class LayoutService {
           // Handle special case for vareia:
           // Shift the lyrics to the right so that they
           // are centered under the main neume
-          if (
-            noteElement.vocalExpressionNeume != null &&
-            noteElement.vocalExpressionNeume === VocalExpressionNeume.Vareia
-          ) {
+          if (noteElement.vareia) {
             noteElement.lyricsHorizontalOffset = vareiaWidth;
             noteElement.lyricsWidth += vareiaWidth;
             noteElement.neumeWidth += vareiaWidth;

@@ -1,14 +1,12 @@
 <template>
   <div class="neume" :style="style">
-    <template
-      v-if="hasVocalExpressionNeume && isVareia(note.vocalExpressionNeume)"
-      >{{ getMapping(note.vocalExpressionNeume).text }}</template
-    >
+    <template v-if="note.vareia">{{
+      getMapping(VocalExpressionNeume.Vareia).text
+    }}</template>
     <template>{{ getMapping(note.quantitativeNeume).text }}</template>
-    <template
-      v-if="hasVocalExpressionNeume && !isVareia(note.vocalExpressionNeume)"
-      >{{ getMapping(note.vocalExpressionNeume).text }}</template
-    >
+    <template v-if="hasVocalExpressionNeume">{{
+      getMapping(note.vocalExpressionNeume).text
+    }}</template>
     <Neume
       v-if="hasTimeNeume"
       :neume="note.timeNeume"
@@ -67,6 +65,8 @@ import { fontService } from '@/services/FontService';
 export default class NeumeBoxSyllablePrint extends Vue {
   @Prop() note!: NoteElement;
   @Prop() pageSetup!: PageSetup;
+
+  VocalExpressionNeume = VocalExpressionNeume;
 
   get hasVocalExpressionNeume() {
     return this.note.vocalExpressionNeume != null;
@@ -207,10 +207,6 @@ export default class NeumeBoxSyllablePrint extends Vue {
       top: withZoom(offset.y, 'em'),
       color: this.pageSetup.isonDefaultColor,
     } as CSSStyleDeclaration;
-  }
-
-  isVareia(neume: VocalExpressionNeume) {
-    return neume == VocalExpressionNeume.Vareia;
   }
 
   getMapping(neume: GenericNeume) {

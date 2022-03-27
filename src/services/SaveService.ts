@@ -208,6 +208,8 @@ export class SaveService {
       element.ison = e.ison;
     }
 
+    element.vareia = e.vareia || undefined;
+
     element.lyrics = e.lyrics !== '' ? e.lyrics : undefined;
     element.isMelisma = e.isMelisma || undefined;
     element.isMelismaStart = e.isMelismaStart || undefined;
@@ -451,6 +453,8 @@ export class SaveService {
     if (e.lyrics != null) {
       element.lyrics = e.lyrics;
     }
+
+    element.vareia = e.vareia === true;
 
     element.isMelisma = e.isMelisma === true;
     element.isMelismaStart = e.isMelismaStart === true;

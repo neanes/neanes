@@ -166,7 +166,7 @@
       <span class="space"></span>
       <button
         class="neume-button"
-        @click="setVocalExpression(VocalExpressionNeume.Vareia)"
+        @click="$emit('update:vareia', !element.vareia)"
       >
         <img src="@/assets/icons/quality-vareia.svg" />
       </button>

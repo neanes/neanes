@@ -45,6 +45,7 @@ export class NoteElement extends ScoreElement {
   public measureNumber: MeasureNumber | undefined = undefined;
   public noteIndicator: NoteIndicator | undefined = undefined;
   public ison: Ison | undefined = undefined;
+  public vareia: boolean | undefined = undefined;
   public lyrics: string | undefined = undefined;
   public isMelisma: boolean | undefined = undefined;
   public isMelismaStart: boolean | undefined = undefined;

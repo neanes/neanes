@@ -291,6 +291,7 @@
         @update:measureNumber="updateNoteMeasureNumber(selectedElement, $event)"
         @update:noteIndicator="updateNoteNoteIndicator(selectedElement, $event)"
         @update:ison="updateNoteIson(selectedElement, $event)"
+        @update:vareia="updateNoteVareia(selectedElement, $event)"
         @update:vocalExpression="
           updateNoteVocalExpression(selectedElement, $event)
         "
@@ -2013,6 +2014,10 @@ export default class Editor extends Vue {
 
   updateNoteIson(element: NoteElement, ison: Ison) {
     this.updateNote(element, { ison });
+  }
+
+  updateNoteVareia(element: NoteElement, vareia: boolean) {
+    this.updateNote(element, { vareia });
   }
 
   updateLyrics(element: NoteElement, lyrics: string) {

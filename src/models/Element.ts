@@ -56,6 +56,7 @@ export class NoteElement extends ScoreElement {
   public measureNumber: MeasureNumber | null = null;
   public noteIndicator: NoteIndicator | null = null;
   public ison: Ison | null = null;
+  public vareia: boolean = false;
   public lyrics: string = '';
   public isMelisma: boolean = false;
   public isMelismaStart: boolean = false;
@@ -82,6 +83,7 @@ export class NoteElement extends ScoreElement {
       quantitativeNeume: this.quantitativeNeume,
       timeNeume: this.timeNeume,
       vocalExpressionNeume: this.vocalExpressionNeume,
+      vareia: this.vareia,
     } as Partial<NoteElement>;
   }
 

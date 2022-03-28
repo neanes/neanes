@@ -27,6 +27,7 @@ import {
 } from '@/models/save/v1/Element';
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
 import { PageSetup } from '@/models/PageSetup';
+import { QuantitativeNeume } from '@/models/Neumes';
 
 interface IScore {
   version: string;
@@ -408,7 +409,11 @@ export class SaveService {
   }
 
   public static LoadNote_v1(element: NoteElement, e: NoteElement_v1) {
-    element.quantitativeNeume = e.quantitativeNeume;
+    element.quantitativeNeume = Object.values(QuantitativeNeume).includes(
+      e.quantitativeNeume,
+    )
+      ? e.quantitativeNeume
+      : QuantitativeNeume.Ison;
 
     if (e.timeNeume != null) {
       element.timeNeume = e.timeNeume;

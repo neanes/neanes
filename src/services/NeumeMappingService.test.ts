@@ -19,7 +19,6 @@ import {
 describe('NeumeMappings', () => {
   it('should have a mapping for every neume', () => {
     Object.values(QuantitativeNeume).forEach((x) => {
-      console.log(x);
       expect(NeumeMappingService.getMapping(x)).toBeDefined();
     });
 

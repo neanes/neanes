@@ -1,5 +1,5 @@
 <template>
-  <div class="text-toolbar">
+  <div class="text-box-toolbar">
     <select
       :value="element.fontFamily"
       @change="$emit('update:fontFamily', $event.target.value)"
@@ -58,6 +58,23 @@
         title="Align Right"
       />
     </button>
+    <span class="space"></span>
+    <button class="icon-btn" @mousedown.prevent="$emit('insert:pelastikon')">
+      <img
+        src="@/assets/icons/letterPelastikon.svg"
+        width="32"
+        height="32"
+        title="Insert Pelastikon"
+      />
+    </button>
+    <button class="icon-btn" @mousedown.prevent="$emit('insert:gorthmikon')">
+      <img
+        src="@/assets/icons/letterGorthmikon.svg"
+        width="32"
+        height="32"
+        title="Insert Gorthmikon"
+      />
+    </button>
   </div>
 </template>
 
@@ -69,7 +86,7 @@ import { Unit } from '@/utils/Unit';
 @Component({
   components: {},
 })
-export default class TextToolbar extends Vue {
+export default class TextBoxToolbar extends Vue {
   @Prop() element!: TextBoxElement;
 
   TextBoxAlignment = TextBoxAlignment;
@@ -97,7 +114,7 @@ export default class TextToolbar extends Vue {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-.text-toolbar {
+.text-box-toolbar {
   display: flex;
   align-items: center;
   flex-wrap: wrap;

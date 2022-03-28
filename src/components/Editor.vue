@@ -102,7 +102,10 @@
                         :content="element.lyrics"
                         :ref="`lyrics-${getElementIndex(element)}`"
                         @focus.native="selectedLyrics = element"
-                        @blur="updateLyrics(element, $event)"
+                        @blur="
+                          updateLyrics(element, $event);
+                          selectedLyrics = null;
+                        "
                       ></ContentEditable>
                       <template v-if="isMelisma(element)">
                         <div
@@ -258,12 +261,25 @@
     <template
       v-if="selectedElement != null && isTextBoxElement(selectedElement)"
     >
-      <TextToolbar
+      <TextBoxToolbar
         :element="selectedElement"
         @update:fontSize="updateTextBoxFontSize(selectedElement, $event)"
         @update:fontFamily="updateTextBoxFontFamily(selectedElement, $event)"
         @update:alignment="updateTextBoxAlignment(selectedElement, $event)"
         @update:color="updateTextBoxColor(selectedElement, $event)"
+        @insert:gorthmikon="insertGorthmikon"
+        @insert:pelastikon="insertPelastikon"
+      />
+    </template>
+    <template v-if="selectedLyrics != null">
+      <LyricsToolbar
+        :element="selectedLyrics"
+        @update:fontSize="updateTextBoxFontSize(selectedElement, $event)"
+        @update:fontFamily="updateTextBoxFontFamily(selectedElement, $event)"
+        @update:alignment="updateTextBoxAlignment(selectedElement, $event)"
+        @update:color="updateTextBoxColor(selectedElement, $event)"
+        @insert:gorthmikon="insertGorthmikon"
+        @insert:pelastikon="insertPelastikon"
       />
     </template>
     <template
@@ -369,7 +385,8 @@ import TextBox from '@/components/TextBox.vue';
 import DropCap from '@/components/DropCap.vue';
 import ModeKey from '@/components/ModeKey.vue';
 import ModeKeyPrint from '@/components/ModeKeyPrint.vue';
-import TextToolbar from '@/components/TextToolbar.vue';
+import TextBoxToolbar from '@/components/TextBoxToolbar.vue';
+import LyricsToolbar from '@/components/LyricsToolbar.vue';
 import ModeKeyToolbar from '@/components/ModeKeyToolbar.vue';
 import MainToolbar from '@/components/MainToolbar.vue';
 import NeumeToolbar from '@/components/NeumeToolbar.vue';
@@ -402,7 +419,8 @@ import { PageSetup } from '@/models/PageSetup';
     DropCap,
     ModeKey,
     ModeKeyPrint,
-    TextToolbar,
+    TextBoxToolbar,
+    LyricsToolbar,
     ModeKeyToolbar,
     NeumeToolbar,
     MartyriaToolbar,
@@ -872,6 +890,14 @@ export default class Editor extends Vue {
 
   isLastElement(element: ScoreElement) {
     return this.elements.indexOf(element) === this.elements.length - 1;
+  }
+
+  insertPelastikon() {
+    document.execCommand('insertText', false, '\u{1d0b4}');
+  }
+
+  insertGorthmikon() {
+    document.execCommand('insertText', false, '\u{1d0b5}');
   }
 
   addQuantitativeNeume(

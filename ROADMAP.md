@@ -2,7 +2,6 @@
 
 ## Must-haves
 
-- More adjustments and replacements. Generate test files with every quantitative neume and different combinations of other neumes. Should we support ridiculous combinations? (partly done)
 - Better error handling
 
 ## Must-haves but lower priority
@@ -11,7 +10,6 @@
 
 ## Nice-to-haves
 
-- Gorthmikon and pelastikon (part of Oxeia fonts, but need to figure out best way to insert into lyrics box)
 - Custom Martyrias (is this really necessary?)
 - Advanced neumes (connecting heteron, ties, et al)
 - Header Images
@@ -27,9 +25,5 @@
 ## Tech Debt
 
 - Need to explicitly map between save file neumes and view model neumes. This will prevent errors due to mismatched or missing neumes in the save model.
-
-- Neume Adjustments should happen in the model layer, instead of the presentation layer.
-
-- We'll probably never support alternate fonts, but if we did, the internal Neume enum needs to be separate from the EZ Font neume list. In general the map will be App Neumes => Font Neumes => Keyboard Code.
 
 - All editor elements should probably be their own components.

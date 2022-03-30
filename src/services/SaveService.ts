@@ -27,6 +27,7 @@ import {
 } from '@/models/save/v1/Element';
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
 import { PageSetup } from '@/models/PageSetup';
+import { QuantitativeNeume } from '@/models/Neumes';
 
 interface IScore {
   version: string;
@@ -72,6 +73,7 @@ export class SaveService {
     score.pageSetup.tempoDefaultColor = s.pageSetup.tempoDefaultColor;
     score.pageSetup.modeKeyDefaultColor = s.pageSetup.modeKeyDefaultColor;
     score.pageSetup.neumeDefaultColor = s.pageSetup.neumeDefaultColor;
+    score.pageSetup.neumeDefaultFontFamily = s.pageSetup.neumeDefaultFontFamily;
     score.pageSetup.neumeDefaultFontSize = s.pageSetup.neumeDefaultFontSize;
     score.pageSetup.neumeDefaultSpacing = s.pageSetup.neumeDefaultSpacing;
     score.pageSetup.pageHeight = s.pageSetup.pageHeight;
@@ -175,8 +177,8 @@ export class SaveService {
       element.gorgonNeume = e.gorgonNeume;
     }
 
-    if (e.hyporoeGorgonNeume != null) {
-      element.hyporoeGorgonNeume = e.hyporoeGorgonNeume;
+    if (e.secondaryGorgonNeume != null) {
+      element.secondaryGorgonNeume = e.secondaryGorgonNeume;
     }
 
     if (e.fthora != null) {
@@ -207,6 +209,8 @@ export class SaveService {
       element.ison = e.ison;
     }
 
+    element.vareia = e.vareia || undefined;
+
     element.lyrics = e.lyrics !== '' ? e.lyrics : undefined;
     element.isMelisma = e.isMelisma || undefined;
     element.isMelismaStart = e.isMelismaStart || undefined;
@@ -230,11 +234,16 @@ export class SaveService {
     element.scaleNote = e.scaleNote;
     element.note = e.note || undefined;
     element.note2 = e.note2 || undefined;
-    element.fthora = e.fthora || undefined;
-    element.fthora2 = e.fthora2 || undefined;
-    element.quantitativeNeumeTop = e.quantitativeNeumeTop || undefined;
+    element.fthoraAboveNote = e.fthoraAboveNote || undefined;
+    element.fthoraAboveNote2 = e.fthoraAboveNote2 || undefined;
+    element.fthoraAboveQuantitativeNeumeRight =
+      e.fthoraAboveQuantitativeNeumeRight || undefined;
+    element.quantitativeNeumeAboveNote =
+      e.quantitativeNeumeAboveNote || undefined;
+    element.quantitativeNeumeAboveNote2 =
+      e.quantitativeNeumeAboveNote2 || undefined;
     element.quantitativeNeumeRight = e.quantitativeNeumeRight || undefined;
-    element.martyrias = e.martyrias.map((x) => x);
+    element.martyria = e.martyria;
     element.color = e.color;
     element.fontSize = e.fontSize;
     element.height = e.height;
@@ -340,6 +349,8 @@ export class SaveService {
     pageSetup.neumeDefaultColor =
       p.neumeDefaultColor || pageSetup.neumeDefaultColor;
 
+    pageSetup.neumeDefaultFontFamily =
+      p.neumeDefaultFontFamily || pageSetup.neumeDefaultFontFamily;
     pageSetup.neumeDefaultFontSize = p.neumeDefaultFontSize;
     pageSetup.neumeDefaultSpacing = p.neumeDefaultSpacing;
 
@@ -398,7 +409,11 @@ export class SaveService {
   }
 
   public static LoadNote_v1(element: NoteElement, e: NoteElement_v1) {
-    element.quantitativeNeume = e.quantitativeNeume;
+    element.quantitativeNeume = Object.values(QuantitativeNeume).includes(
+      e.quantitativeNeume,
+    )
+      ? e.quantitativeNeume
+      : QuantitativeNeume.Ison;
 
     if (e.timeNeume != null) {
       element.timeNeume = e.timeNeume;
@@ -408,8 +423,8 @@ export class SaveService {
       element.gorgonNeume = e.gorgonNeume;
     }
 
-    if (e.hyporoeGorgonNeume != null) {
-      element.hyporoeGorgonNeume = e.hyporoeGorgonNeume;
+    if (e.secondaryGorgonNeume != null) {
+      element.secondaryGorgonNeume = e.secondaryGorgonNeume;
     }
 
     if (e.fthora != null) {
@@ -444,6 +459,8 @@ export class SaveService {
       element.lyrics = e.lyrics;
     }
 
+    element.vareia = e.vareia === true;
+
     element.isMelisma = e.isMelisma === true;
     element.isMelismaStart = e.isMelismaStart === true;
     element.isHyphen = e.isHyphen === true;
@@ -466,11 +483,14 @@ export class SaveService {
     element.scaleNote = e.scaleNote;
     element.note = e.note || null;
     element.note2 = e.note2 || null;
-    element.fthora = e.fthora || null;
-    element.fthora2 = e.fthora2 || null;
-    element.quantitativeNeumeTop = e.quantitativeNeumeTop || null;
+    element.fthoraAboveNote = e.fthoraAboveNote || null;
+    element.fthoraAboveNote2 = e.fthoraAboveNote2 || null;
+    element.fthoraAboveQuantitativeNeumeRight =
+      e.fthoraAboveQuantitativeNeumeRight || null;
+    element.quantitativeNeumeAboveNote = e.quantitativeNeumeAboveNote || null;
+    element.quantitativeNeumeAboveNote2 = e.quantitativeNeumeAboveNote2 || null;
     element.quantitativeNeumeRight = e.quantitativeNeumeRight || null;
-    element.martyrias = e.martyrias.map((x) => x);
+    element.martyria = e.martyria;
     element.color = e.color;
     element.fontSize = e.fontSize;
   }

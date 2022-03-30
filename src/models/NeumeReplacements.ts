@@ -43,26 +43,20 @@ const bottomAllowedGorgonNeumes: Neume[] = [
   QuantitativeNeume.Hamili,
 ];
 
-const rightTimeNeumes: Neume[] = [
-  QuantitativeNeume.Apostrophos,
-  QuantitativeNeume.Hyporoe,
-  QuantitativeNeume.Hamili,
-  QuantitativeNeume.HamiliPlusApostrophos,
-  QuantitativeNeume.HamiliPlusElaphron,
-  QuantitativeNeume.HamiliPlusElaphronPlusApostrophos,
-  QuantitativeNeume.DoubleHamili,
-];
-
 const bottomOnlyKlasmaNeumes: Neume[] = [
   ...petastiNeumes,
 
   QuantitativeNeume.OligonPlusDoubleHypsili,
+  QuantitativeNeume.OligonPlusApostrophos,
+  QuantitativeNeume.OligonPlusElaphron,
+  QuantitativeNeume.OligonPlusElaphronPlusApostrophos,
+  QuantitativeNeume.OligonPlusHamili,
+  QuantitativeNeume.OligonPlusIson,
 ];
 
 const topOnlyKlasmaNeumes: Neume[] = [
   QuantitativeNeume.Ison,
   QuantitativeNeume.KentemataPlusOligon,
-  QuantitativeNeume.KentemataPlusOligonSpecial,
   QuantitativeNeume.Oligon,
   QuantitativeNeume.OligonPlusKentimaBelow,
   QuantitativeNeume.OligonPlusKentima,
@@ -328,13 +322,6 @@ export const vocalExpressionReplacementMap = new Map<
         ],
         replaceWith: null,
       },
-      {
-        isPairedWith: [
-          QuantitativeNeume.Apostrophos,
-          QuantitativeNeume.Hyporoe,
-        ],
-        replaceWith: VocalExpressionNeume.AntikenomaShort,
-      },
     ],
   ],
   [
@@ -421,25 +408,24 @@ export const quantitativeNeumeReplacementMap = new Map<
   QuantitativeNeume,
   QuantitativeNeumeReplacement<QuantitativeNeume>[]
 >([
-  [
-    QuantitativeNeume.KentemataPlusOligon,
-    [
-      {
-        isPairedWithVocalExpression: [VocalExpressionNeume.Psifiston],
-        replaceWith: QuantitativeNeume.KentemataPlusOligonSpecial,
-      },
-    ],
-  ],
-
-  [
-    QuantitativeNeume.KentemataPlusOligonSpecial,
-    [
-      {
-        isNotPairedWithVocalExpression: [VocalExpressionNeume.Psifiston],
-        replaceWith: QuantitativeNeume.KentemataPlusOligon,
-      },
-    ],
-  ],
+  // [
+  //   QuantitativeNeume.KentemataPlusOligon,
+  //   [
+  //     {
+  //       isPairedWithVocalExpression: [VocalExpressionNeume.Psifiston],
+  //       replaceWith: QuantitativeNeume.KentemataPlusOligonSpecial,
+  //     },
+  //   ],
+  // ],
+  // [
+  //   QuantitativeNeume.KentemataPlusOligonSpecial,
+  //   [
+  //     {
+  //       isNotPairedWithVocalExpression: [VocalExpressionNeume.Psifiston],
+  //       replaceWith: QuantitativeNeume.KentemataPlusOligon,
+  //     },
+  //   ],
+  // ],
 ]);
 
 export const getGorgonReplacements = (neume: GorgonNeume) => {

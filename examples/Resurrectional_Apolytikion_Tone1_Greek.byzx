@@ -13,7 +13,8 @@
     "lyricsDefaultFontFamily": "Omega",
     "lyricsDefaultFontSize": 16,
     "lyricsDefaultColor": "#000000",
-    "lyricsVerticalOffset": -12,
+    "lyricsVerticalOffset": -5.76,
+    "neumeDefaultFontFamily": "Neanes",
     "neumeDefaultFontSize": 26.666666666666668,
     "neumeDefaultColor": "#000000",
     "neumeDefaultSpacing": 0.96,
@@ -66,7 +67,7 @@
         "note": "ModeSign.Pa",
         "color": "#ED0000",
         "fontSize": 26.666666666666668,
-        "height": 63
+        "height": 49
       },
       {
         "elementType": "DropCap",
@@ -378,7 +379,7 @@
       },
       {
         "elementType": "Note",
-        "quantitativeNeume": "KentemataPlusOligonSpecial",
+        "quantitativeNeume": "KentemataPlusOligon",
         "gorgonNeume": "Gorgon_Top",
         "vocalExpressionNeume": "Psifiston",
         "lyrics": "α"
@@ -465,12 +466,12 @@
       {
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusHypsiliRight",
+        "vocalExpressionNeume": "HomalonConnecting",
         "lyrics": "δο"
       },
       {
         "elementType": "Note",
         "quantitativeNeume": "Ison",
-        "vocalExpressionNeume": "HomalonConnecting",
         "lyrics": "ο"
       },
       {

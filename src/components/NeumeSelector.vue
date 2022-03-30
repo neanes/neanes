@@ -6,6 +6,7 @@
         v-for="(neume, index) in ascendingNeumes"
         :key="`ascendingNeumes-${index}`"
         :neume="neume"
+        :fontFamily="pageSetup.neumeDefaultFontFamily"
         @click.native="$emit('select-quantitative-neume', neume)"
       ></Neume>
     </div>
@@ -15,6 +16,7 @@
         v-for="(neume, index) in ascendingNeumesWithPetasti"
         :key="`ascendingNeumesWithPetasti-${index}`"
         :neume="neume"
+        :fontFamily="pageSetup.neumeDefaultFontFamily"
         @click.native="$emit('select-quantitative-neume', neume)"
       ></Neume>
     </div>
@@ -24,6 +26,7 @@
         v-for="(neume, index) in descendingNeumes"
         :key="`descendingNeumes-${index}`"
         :neume="neume"
+        :fontFamily="pageSetup.neumeDefaultFontFamily"
         @click.native="$emit('select-quantitative-neume', neume)"
       ></Neume>
     </div>
@@ -41,6 +44,7 @@
             <Neume
               class="neume"
               :neume="QuantitativeNeume.OligonPlusHyporoePlusKentemata"
+              :fontFamily="pageSetup.neumeDefaultFontFamily"
             />
 
             <div class="menu" v-if="showHyporoeMenu">
@@ -53,11 +57,12 @@
                 <Neume
                   class="neume"
                   :neume="QuantitativeNeume.OligonPlusHyporoePlusKentemata"
+                  :fontFamily="pageSetup.neumeDefaultFontFamily"
                 />
                 <Neume
                   class="red neume"
                   :neume="menuItem.gorgon"
-                  :offset="hyporoeGorgonOffset"
+                  :fontFamily="pageSetup.neumeDefaultFontFamily"
                   v-if="menuItem.gorgon != null"
                 />
               </div>
@@ -69,6 +74,7 @@
             class="neume"
             :key="`combinationNeumes-${index}`"
             :neume="neume"
+            :fontFamily="pageSetup.neumeDefaultFontFamily"
             @click.native="$emit('select-quantitative-neume', neume)"
           ></Neume>
         </template>
@@ -82,7 +88,7 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 import { GorgonNeume, QuantitativeNeume } from '@/models/Neumes';
 import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
 import Neume from '@/components/Neume.vue';
-import { NeumeAdjustmentOffset } from '@/models/NeumeAdjustments';
+import { PageSetup } from '@/models/PageSetup';
 
 interface HyporoeMenuItem {
   gorgon: GorgonNeume | null;
@@ -95,6 +101,8 @@ interface HyporoeMenuItem {
   },
 })
 export default class NeumeSelector extends Vue {
+  @Prop() pageSetup!: PageSetup;
+
   QuantitativeNeume = QuantitativeNeume;
 
   ascendingNeumes: QuantitativeNeume[] = [
@@ -161,26 +169,22 @@ export default class NeumeSelector extends Vue {
     QuantitativeNeume.OligonPlusApostrophos,
     QuantitativeNeume.OligonPlusElaphron,
     QuantitativeNeume.OligonPlusElaphronPlusApostrophos,
-    QuantitativeNeume.OligonPlusHypsili,
+    QuantitativeNeume.OligonPlusHamili,
   ];
 
   hyporoeMenuItems: HyporoeMenuItem[] = [
-    { gorgon: GorgonNeume.TrigorgonDottedLeft1 },
-    { gorgon: GorgonNeume.Trigorgon },
-    { gorgon: GorgonNeume.DigorgonDottedLeft1 },
-    { gorgon: GorgonNeume.Digorgon },
-    { gorgon: GorgonNeume.GorgonDottedRight },
-    { gorgon: GorgonNeume.GorgonDottedLeft },
-    { gorgon: GorgonNeume.Gorgon_Top },
+    { gorgon: GorgonNeume.TrigorgonDottedLeft1Secondary },
+    { gorgon: GorgonNeume.TrigorgonSecondary },
+    { gorgon: GorgonNeume.DigorgonDottedLeft1Secondary },
+    { gorgon: GorgonNeume.DigorgonSecondary },
+    { gorgon: GorgonNeume.GorgonDottedRightSecondary },
+    { gorgon: GorgonNeume.GorgonDottedLeftSecondary },
+    { gorgon: GorgonNeume.GorgonSecondary },
     { gorgon: null },
   ];
 
   showHyporoeMenu: boolean = false;
   selectedHyporoe: HyporoeMenuItem | null = null;
-
-  get hyporoeGorgonOffset() {
-    return { x: -10, y: -6 } as NeumeAdjustmentOffset;
-  }
 
   openHyporoeMenu() {
     this.showHyporoeMenu = true;

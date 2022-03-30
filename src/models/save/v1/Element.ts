@@ -37,7 +37,7 @@ export class NoteElement extends ScoreElement {
   public quantitativeNeume: QuantitativeNeume = QuantitativeNeume.Ison;
   public timeNeume: TimeNeume | undefined = undefined;
   public gorgonNeume: GorgonNeume | undefined = undefined;
-  public hyporoeGorgonNeume: GorgonNeume | undefined = undefined;
+  public secondaryGorgonNeume: GorgonNeume | undefined = undefined;
   public vocalExpressionNeume: VocalExpressionNeume | undefined = undefined;
   public fthora: Fthora | undefined = undefined;
   public accidental: Accidental | undefined = undefined;
@@ -45,6 +45,7 @@ export class NoteElement extends ScoreElement {
   public measureNumber: MeasureNumber | undefined = undefined;
   public noteIndicator: NoteIndicator | undefined = undefined;
   public ison: Ison | undefined = undefined;
+  public vareia: boolean | undefined = undefined;
   public lyrics: string | undefined = undefined;
   public isMelisma: boolean | undefined = undefined;
   public isMelismaStart: boolean | undefined = undefined;
@@ -96,13 +97,15 @@ export class ModeKeyElement extends ScoreElement {
   public mode: number = 1;
   public scale: Scale = Scale.Diatonic;
   public scaleNote: ScaleNote = ScaleNote.Pa;
-  public martyrias: ModeSign[] = [];
+  public martyria: ModeSign = ModeSign.Alpha;
   public note: ModeSign | undefined = undefined;
   public note2: ModeSign | undefined = undefined;
-  public fthora: Fthora | undefined = undefined;
-  public fthora2: Fthora | undefined = undefined;
-  public quantitativeNeumeTop: ModeSign | undefined = undefined;
+  public fthoraAboveNote: Fthora | undefined = undefined;
+  public fthoraAboveNote2: Fthora | undefined = undefined;
+  public fthoraAboveQuantitativeNeumeRight: Fthora | undefined = undefined;
   public quantitativeNeumeRight: QuantitativeNeume | undefined = undefined;
+  public quantitativeNeumeAboveNote: ModeSign | undefined = undefined;
+  public quantitativeNeumeAboveNote2: ModeSign | undefined = undefined;
   public color: string = '#000000';
   public fontSize: number = 16;
   public height: number = 20;

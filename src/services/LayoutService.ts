@@ -9,7 +9,7 @@ import {
   TempoElement,
   EmptyElement,
 } from '@/models/Element';
-import { neumeMap } from '@/models/NeumeMappings';
+import { NeumeMappingService } from '@/services/NeumeMappingService';
 import {
   Fthora,
   Note,
@@ -59,8 +59,9 @@ export class LayoutService {
     // be used later. This is so we don't unnecessarily
     // calculate them more than once during the loop.
 
+    // TODO unicode - remove this hard-coded font name
     const neumeHeight = TextMeasurementService.getFontHeight(
-      `${pageSetup.neumeDefaultFontSize}px Psaltica`,
+      `${pageSetup.neumeDefaultFontSize}px Neanes`,
     );
 
     const lyricsVerticalOffset = neumeHeight + pageSetup.lyricsVerticalOffset;
@@ -69,24 +70,28 @@ export class LayoutService {
       `${pageSetup.lyricsDefaultFontSize}px ${pageSetup.lyricsDefaultFontFamily}`,
     );
 
-    const vareiaMapping = neumeMap.get(VocalExpressionNeume.Vareia)!;
+    const vareiaMapping = NeumeMappingService.getMapping(
+      VocalExpressionNeume.Vareia,
+    )!;
     const vareiaWidth = TextMeasurementService.getTextWidth(
       vareiaMapping.text,
-      `${pageSetup.neumeDefaultFontSize}px ${vareiaMapping.fontFamily}`,
+      `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
     );
 
-    const elaphronMapping = neumeMap.get(QuantitativeNeume.Elaphron)!;
+    const elaphronMapping = NeumeMappingService.getMapping(
+      QuantitativeNeume.Elaphron,
+    )!;
     const elaphronWidth = TextMeasurementService.getTextWidth(
       elaphronMapping.text,
-      `${pageSetup.neumeDefaultFontSize}px ${elaphronMapping.fontFamily}`,
+      `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
     );
 
-    const runningElaphronMapping = neumeMap.get(
+    const runningElaphronMapping = NeumeMappingService.getMapping(
       QuantitativeNeume.RunningElaphron,
     )!;
     const runningElaphronWidth = TextMeasurementService.getTextWidth(
       runningElaphronMapping.text,
-      `${pageSetup.neumeDefaultFontSize}px ${runningElaphronMapping.fontFamily}`,
+      `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
     );
 
     for (let element of elements) {
@@ -140,13 +145,13 @@ export class LayoutService {
 
           noteElement.lyricsVerticalOffset = lyricsVerticalOffset;
 
-          const quantitativeNeumeMapping = neumeMap.get(
+          const quantitativeNeumeMapping = NeumeMappingService.getMapping(
             noteElement.quantitativeNeume,
           )!;
 
           noteElement.neumeWidth = TextMeasurementService.getTextWidth(
             quantitativeNeumeMapping.text,
-            `${pageSetup.neumeDefaultFontSize}px ${quantitativeNeumeMapping.fontFamily}`,
+            `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
           );
 
           noteElement.lyricsWidth = TextMeasurementService.getTextWidth(
@@ -159,10 +164,7 @@ export class LayoutService {
           // Handle special case for vareia:
           // Shift the lyrics to the right so that they
           // are centered under the main neume
-          if (
-            noteElement.vocalExpressionNeume != null &&
-            noteElement.vocalExpressionNeume === VocalExpressionNeume.Vareia
-          ) {
+          if (noteElement.vareia) {
             noteElement.lyricsHorizontalOffset = vareiaWidth;
             noteElement.lyricsWidth += vareiaWidth;
             noteElement.neumeWidth += vareiaWidth;
@@ -183,11 +185,13 @@ export class LayoutService {
           }
 
           if (noteElement.measureBar != null) {
-            const measureBarMapping = neumeMap.get(noteElement.measureBar)!;
+            const measureBarMapping = NeumeMappingService.getMapping(
+              noteElement.measureBar,
+            )!;
 
             noteElement.neumeWidth += TextMeasurementService.getTextWidth(
               measureBarMapping.text,
-              `${pageSetup.neumeDefaultFontSize}px ${measureBarMapping.fontFamily}`,
+              `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
             );
           }
 
@@ -201,19 +205,21 @@ export class LayoutService {
           const martyriaElement = element as MartyriaElement;
 
           const mappingNote = !martyriaElement.error
-            ? neumeMap.get(martyriaElement.note)!
-            : neumeMap.get(Note.Pa)!;
+            ? NeumeMappingService.getMapping(martyriaElement.note)!
+            : NeumeMappingService.getMapping(Note.Pa)!;
           const mappingRoot = !martyriaElement.error
-            ? neumeMap.get(martyriaElement.rootSign)!
-            : neumeMap.get(RootSign.Alpha)!;
-          const mappingApostrophe = neumeMap.get(Note.Apostrophe)!;
+            ? NeumeMappingService.getMapping(martyriaElement.rootSign)!
+            : NeumeMappingService.getMapping(RootSign.Alpha)!;
+          const mappingApostrophe = NeumeMappingService.getMapping(
+            Note.Apostrophe,
+          )!;
           const mappingMeasureBar = martyriaElement.measureBar
-            ? neumeMap.get(martyriaElement.measureBar)!
+            ? NeumeMappingService.getMapping(martyriaElement.measureBar)!
             : null;
 
           const apostropheWidth = TextMeasurementService.getTextWidth(
             mappingApostrophe.text,
-            `${pageSetup.neumeDefaultFontSize}px ${mappingApostrophe.fontFamily}`,
+            `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
           );
 
           // Add in an extra apostrophe width to give some extra space between
@@ -222,30 +228,30 @@ export class LayoutService {
             apostropheWidth +
             TextMeasurementService.getTextWidth(
               mappingNote.text,
-              `${pageSetup.neumeDefaultFontSize}px ${mappingNote.fontFamily}`,
+              `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
             ) +
             TextMeasurementService.getTextWidth(
               mappingRoot.text,
-              `${pageSetup.neumeDefaultFontSize}px ${mappingRoot.fontFamily}`,
+              `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
             ) +
             (martyriaElement.apostrophe ? apostropheWidth : 0) +
             (martyriaElement.measureBar
               ? TextMeasurementService.getTextWidth(
                   mappingMeasureBar!.text,
-                  `${pageSetup.neumeDefaultFontSize}px ${
-                    mappingMeasureBar!.fontFamily
-                  }`,
+                  `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
                 )
               : 0);
           break;
         }
         case ElementType.Tempo: {
           const tempoElement = element as TempoElement;
-          const temoMapping = neumeMap.get(tempoElement.neume)!;
+          const temoMapping = NeumeMappingService.getMapping(
+            tempoElement.neume,
+          )!;
 
           elementWidthPx = TextMeasurementService.getTextWidth(
             temoMapping.text,
-            `${pageSetup.neumeDefaultFontSize}px ${temoMapping.fontFamily}`,
+            `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
           );
           break;
         }
@@ -494,18 +500,20 @@ export class LayoutService {
       `${pageSetup.lyricsDefaultFontSize}px ${pageSetup.lyricsDefaultFontFamily}`,
     );
 
-    const elaphronMapping = neumeMap.get(QuantitativeNeume.Elaphron)!;
+    const elaphronMapping = NeumeMappingService.getMapping(
+      QuantitativeNeume.Elaphron,
+    )!;
     const elaphronWidth = TextMeasurementService.getTextWidth(
       elaphronMapping.text,
-      `${pageSetup.neumeDefaultFontSize}px ${elaphronMapping.fontFamily}`,
+      `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
     );
 
-    const runningElaphronMapping = neumeMap.get(
+    const runningElaphronMapping = NeumeMappingService.getMapping(
       QuantitativeNeume.RunningElaphron,
     )!;
     const runningElaphronWidth = TextMeasurementService.getTextWidth(
       runningElaphronMapping.text,
-      `${pageSetup.neumeDefaultFontSize}px ${runningElaphronMapping.fontFamily}`,
+      `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
     );
 
     for (let page of pages) {
@@ -592,11 +600,17 @@ export class LayoutService {
                   (nextNoteElement.lyricsHorizontalOffset || 0);
               }
 
-              element.melismaWidth = end - start;
+              element.melismaWidth = Math.max(end - start, 0);
 
               let numberOfHyphensNeeded = Math.floor(
                 element.melismaWidth / pageSetup.hyphenSpacing,
               );
+
+              // If this is the last note on the page, always show the hyphen
+              if (numberOfHyphensNeeded == 0 && nextElement == null) {
+                numberOfHyphensNeeded = 1;
+                element.melismaWidth = widthOfHyphen;
+              }
 
               if (
                 numberOfHyphensNeeded == 0 &&
@@ -699,18 +713,25 @@ export class LayoutService {
         const modeKey = element as ModeKeyElement;
         currentNote = getScaleNoteValue(modeKey.scaleNote);
         currentScale = modeKey.scale;
-        if (modeKey.fthora) {
+        if (modeKey.fthoraAboveNote) {
           currentShift = this.getShift(
             currentNote,
             currentScale,
-            modeKey.fthora,
+            modeKey.fthoraAboveNote,
           );
         }
-        if (modeKey.fthora2) {
+        if (modeKey.fthoraAboveNote2) {
           currentShift = this.getShift(
             currentNote,
             currentScale,
-            modeKey.fthora2,
+            modeKey.fthoraAboveNote2,
+          );
+        }
+        if (modeKey.fthoraAboveQuantitativeNeumeRight) {
+          currentShift = this.getShift(
+            currentNote,
+            currentScale,
+            modeKey.fthoraAboveQuantitativeNeumeRight,
           );
         }
       } else if (element.elementType === ElementType.Martyria) {

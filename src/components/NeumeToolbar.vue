@@ -2,7 +2,7 @@
   <div class="neume-toolbar">
     <div class="row">
       <button class="neume-button" @click="setKlasma()">
-        <Neume class="neume klasma-top" :neume="TimeNeume.Klasma_Top" />
+        <img src="@/assets/icons/time-klasma.svg" />
       </button>
       <div
         class="menu-container"
@@ -10,20 +10,26 @@
         @mouseleave="selectedTimeNeume = null"
       >
         <button class="neume-button">
-          <Neume class="neume hapli" :neume="TimeNeume.Hapli" />
+          <img draggable="false" src="@/assets/icons/time-apli.svg" />
         </button>
         <div class="menu" v-if="showTimeMenu">
           <div
             class="menu-item"
-            v-for="menuItem in timeMenuItems"
-            :key="menuItem.neume"
-            @mouseenter="selectedTimeNeume = menuItem.neume"
+            @mouseenter="selectedTimeNeume = TimeNeume.Tripli"
           >
-            <Neume
-              class="neume"
-              :class="menuItem.className"
-              :neume="menuItem.neume"
-            />
+            <img draggable="false" src="@/assets/icons/time-tripli.svg" />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedTimeNeume = TimeNeume.Dipli"
+          >
+            <img draggable="false" src="@/assets/icons/time-dipli.svg" />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedTimeNeume = TimeNeume.Hapli"
+          >
+            <img draggable="false" src="@/assets/icons/time-apli.svg" />
           </div>
         </div>
       </div>
@@ -34,20 +40,37 @@
         @mouseleave="selectedGorgon = null"
       >
         <button class="neume-button">
-          <Neume class="red neume gorgon-top" :neume="GorgonNeume.Gorgon_Top" />
+          <img draggable="false" src="@/assets/icons/time-gorgon.svg" />
         </button>
         <div class="menu" v-if="showGorgonMenu">
           <div
             class="menu-item"
-            v-for="menuItem in gorgonMenuItems"
-            :key="menuItem.neumes[0]"
-            @mouseenter="selectedGorgon = menuItem.neumes"
+            @mouseenter="selectedGorgon = [GorgonNeume.GorgonDottedRight]"
           >
-            <Neume
-              class="red neume"
-              :class="menuItem.className"
-              :neume="menuItem.neumes[0]"
+            <img
+              draggable="false"
+              src="@/assets/icons/time-gorgon-dotted-right.svg"
             />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedGorgon = [GorgonNeume.GorgonDottedLeft]"
+          >
+            <img
+              draggable="false"
+              src="@/assets/icons/time-gorgon-dotted-left.svg"
+            />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="
+              selectedGorgon = [
+                GorgonNeume.Gorgon_Top,
+                GorgonNeume.Gorgon_Bottom,
+              ]
+            "
+          >
+            <img draggable="false" src="@/assets/icons/time-gorgon.svg" />
           </div>
         </div>
       </div>
@@ -57,20 +80,41 @@
         @mouseleave="selectedGorgon = null"
       >
         <button class="neume-button">
-          <Neume class="red neume digorgon" :neume="GorgonNeume.Digorgon" />
+          <img draggable="false" src="@/assets/icons/time-digorgon.svg" />
         </button>
         <div class="menu" v-if="showDigorgonMenu">
           <div
             class="menu-item"
-            v-for="menuItem in digorgonMenuItems"
-            :key="menuItem.neumes[0]"
-            @mouseenter="selectedGorgon = menuItem.neumes"
+            @mouseenter="selectedGorgon = [GorgonNeume.DigorgonDottedRight]"
           >
-            <Neume
-              class="red neume"
-              :class="menuItem.className"
-              :neume="menuItem.neumes[0]"
+            <img
+              draggable="false"
+              src="@/assets/icons/time-digorgon-dotted-right.svg"
             />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedGorgon = [GorgonNeume.DigorgonDottedLeft2]"
+          >
+            <img
+              draggable="false"
+              src="@/assets/icons/time-digorgon-dotted-left-above.svg"
+            />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedGorgon = [GorgonNeume.DigorgonDottedLeft1]"
+          >
+            <img
+              draggable="false"
+              src="@/assets/icons/time-digorgon-dotted-left-below.svg"
+            />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedGorgon = [GorgonNeume.Digorgon]"
+          >
+            <img draggable="false" src="@/assets/icons/time-digorgon.svg" />
           </div>
         </div>
       </div>
@@ -80,20 +124,41 @@
         @mouseleave="selectedGorgon = null"
       >
         <button class="neume-button">
-          <Neume class="red neume trigorgon" :neume="GorgonNeume.Trigorgon" />
+          <img draggable="false" src="@/assets/icons/time-trigorgon.svg" />
         </button>
         <div class="menu" v-if="showTrigorgonMenu">
           <div
             class="menu-item"
-            v-for="menuItem in trigorgonMenuItems"
-            :key="menuItem.neumes[0]"
-            @mouseenter="selectedGorgon = menuItem.neumes"
+            @mouseenter="selectedGorgon = [GorgonNeume.TrigorgonDottedRight]"
           >
-            <Neume
-              class="red neume"
-              :class="menuItem.className"
-              :neume="menuItem.neumes[0]"
+            <img
+              draggable="false"
+              src="@/assets/icons/time-trigorgon-dotted-right.svg"
             />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedGorgon = [GorgonNeume.TrigorgonDottedLeft2]"
+          >
+            <img
+              draggable="false"
+              src="@/assets/icons/time-trigorgon-dotted-left-above.svg"
+            />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedGorgon = [GorgonNeume.TrigorgonDottedLeft1]"
+          >
+            <img
+              draggable="false"
+              src="@/assets/icons/time-trigorgon-dotted-left-below.svg"
+            />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedGorgon = [GorgonNeume.Trigorgon]"
+          >
+            <img draggable="false" src="@/assets/icons/time-trigorgon.svg" />
           </div>
         </div>
       </div>
@@ -101,54 +166,39 @@
       <span class="space"></span>
       <button
         class="neume-button"
-        @click="setVocalExpression(VocalExpressionNeume.Vareia)"
+        @click="$emit('update:vareia', !element.vareia)"
       >
-        <Neume class="neume vareia" :neume="VocalExpressionNeume.Vareia" />
+        <img src="@/assets/icons/quality-vareia.svg" />
       </button>
       <button
         class="neume-button"
         @click="setVocalExpression(VocalExpressionNeume.Homalon)"
       >
-        <Neume
-          class="neume homalon"
-          :neume="VocalExpressionNeume.Homalon"
-        /><span class="homalon-1">1</span>
+        <img src="@/assets/icons/quality-omalon.svg" />
       </button>
       <button
         class="neume-button"
         @click="setVocalExpression(VocalExpressionNeume.HomalonConnecting)"
       >
-        <Neume
-          class="neume homalon"
-          :neume="VocalExpressionNeume.Homalon"
-        /><span class="homalon-2">2</span>
+        <img src="@/assets/icons/quality-omalon-connecting.svg" />
       </button>
       <button
         class="neume-button"
         @click="setVocalExpression(VocalExpressionNeume.Antikenoma)"
       >
-        <Neume
-          class="neume antikenoma"
-          :neume="VocalExpressionNeume.Antikenoma"
-        />
+        <img src="@/assets/icons/quality-antikenoma.svg" />
       </button>
       <button
         class="neume-button"
         @click="setVocalExpression(VocalExpressionNeume.Psifiston)"
       >
-        <Neume
-          class="neume psifiston"
-          :neume="VocalExpressionNeume.Psifiston"
-        />
+        <img src="@/assets/icons/quality-psifiston.svg" />
       </button>
       <button
         class="neume-button"
         @click="setVocalExpression(VocalExpressionNeume.Heteron)"
       >
-        <Neume
-          class="red neume heteron"
-          :neume="VocalExpressionNeume.Heteron"
-        />
+        <img src="@/assets/icons/quality-heteron.svg" />
       </button>
       <span class="space"></span>
       <div
@@ -157,16 +207,35 @@
         @mouseleave="selectedFlat = null"
       >
         <button class="neume-button">
-          <Neume class="red neume flat" :neume="Accidental.Flat_2_Right" />
+          <img draggable="false" src="@/assets/icons/alteration-yfesis2.svg" />
         </button>
         <div class="menu" v-if="showFlatMenu">
           <div
             class="menu-item"
-            v-for="menuItem in flatMenuItems"
-            :key="menuItem"
-            @mouseenter="selectedFlat = menuItem"
+            @mouseenter="selectedFlat = Accidental.Flat_6_Right"
           >
-            <Neume class="red neume flat" :neume="menuItem" />
+            <img
+              draggable="false"
+              src="@/assets/icons/alteration-yfesis6.svg"
+            />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedFlat = Accidental.Flat_4_Right"
+          >
+            <img
+              draggable="false"
+              src="@/assets/icons/alteration-yfesis4.svg"
+            />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedFlat = Accidental.Flat_2_Right"
+          >
+            <img
+              draggable="false"
+              src="@/assets/icons/alteration-yfesis2.svg"
+            />
           </div>
         </div>
       </div>
@@ -176,34 +245,53 @@
         @mouseleave="selectedSharp = null"
       >
         <button class="neume-button">
-          <Neume class="red neume sharp" :neume="Accidental.Sharp_2_Left" />
+          <img draggable="false" src="@/assets/icons/alteration-diesis2.svg" />
         </button>
         <div class="menu" v-if="showSharpMenu">
           <div
             class="menu-item"
-            v-for="menuItem in sharpMenuItems"
-            :key="menuItem"
-            @mouseenter="selectedSharp = menuItem"
+            @mouseenter="selectedSharp = Accidental.Sharp_6_Left"
           >
-            <Neume class="red neume sharp" :neume="menuItem" />
+            <img
+              draggable="false"
+              src="@/assets/icons/alteration-diesis6.svg"
+            />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedSharp = Accidental.Sharp_4_Left"
+          >
+            <img
+              draggable="false"
+              src="@/assets/icons/alteration-diesis4.svg"
+            />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedSharp = Accidental.Sharp_2_Left"
+          >
+            <img
+              draggable="false"
+              src="@/assets/icons/alteration-diesis2.svg"
+            />
           </div>
         </div>
       </div>
       <span class="space"></span>
       <button class="neume-button" @click="setGorgonNeume([GorgonNeume.Argon])">
-        <Neume class="red neume argon" :neume="GorgonNeume.Argon" />
+        <img src="@/assets/icons/time-argon.svg" />
       </button>
       <button
         class="neume-button"
         @click="setGorgonNeume([GorgonNeume.Hemiolion])"
       >
-        <Neume class="red neume hemiolion" :neume="GorgonNeume.Hemiolion" />
+        <img src="@/assets/icons/time-diargon.svg" />
       </button>
       <button
         class="neume-button"
         @click="setGorgonNeume([GorgonNeume.Diargon])"
       >
-        <Neume class="red neume diargon" :neume="GorgonNeume.Diargon" />
+        <img src="@/assets/icons/time-triargon.svg" />
       </button>
       <span class="space"></span>
       <div
@@ -212,23 +300,23 @@
         @mouseleave="selectedBarLine = null"
       >
         <button class="neume-button">
-          <Neume
-            class="red neume measure-bar-right"
-            :neume="MeasureBar.MeasureBarRight"
-          />
+          <img draggable="false" src="@/assets/icons/barline-single.svg" />
         </button>
         <div class="menu" v-if="showBarLineMenu">
           <div
             class="menu-item"
-            v-for="menuItem in barLineMenuItems"
-            :key="menuItem.neume"
-            @mouseenter="selectedBarLine = menuItem.neume"
+            @mouseenter="selectedBarLine = MeasureBar.MeasureBarTop"
           >
-            <Neume
-              class="red neume"
-              :class="menuItem.className"
-              :neume="menuItem.neume"
+            <img
+              draggable="false"
+              src="@/assets/icons/barline-short-single.svg"
             />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedBarLine = MeasureBar.MeasureBarRight"
+          >
+            <img draggable="false" src="@/assets/icons/barline-single.svg" />
           </div>
         </div>
       </div>
@@ -238,20 +326,50 @@
         @mouseleave="selectedMeasureNumber = null"
       >
         <button class="neume-button">
-          <Neume class="neume measure-number" :neume="MeasureNumber.Two" />
+          <img draggable="false" src="@/assets/icons/measure-number-2.svg" />
         </button>
         <div class="menu" v-if="showMeasureNumberMenu">
           <div
             class="menu-item"
-            v-for="menuItem in measureNumberMenuItems"
-            :key="menuItem.neume"
-            @mouseenter="selectedMeasureNumber = menuItem.neume"
+            @mouseenter="selectedMeasureNumber = MeasureNumber.Eight"
           >
-            <Neume
-              class="neume"
-              :class="menuItem.className"
-              :neume="menuItem.neume"
-            />
+            <img draggable="false" src="@/assets/icons/measure-number-8.svg" />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedMeasureNumber = MeasureNumber.Seven"
+          >
+            <img draggable="false" src="@/assets/icons/measure-number-7.svg" />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedMeasureNumber = MeasureNumber.Six"
+          >
+            <img draggable="false" src="@/assets/icons/measure-number-6.svg" />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedMeasureNumber = MeasureNumber.Five"
+          >
+            <img draggable="false" src="@/assets/icons/measure-number-5.svg" />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedMeasureNumber = MeasureNumber.Four"
+          >
+            <img draggable="false" src="@/assets/icons/measure-number-4.svg" />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedMeasureNumber = MeasureNumber.Three"
+          >
+            <img draggable="false" src="@/assets/icons/measure-number-3.svg" />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedMeasureNumber = MeasureNumber.Two"
+          >
+            <img draggable="false" src="@/assets/icons/measure-number-2.svg" />
           </div>
         </div>
       </div>
@@ -261,16 +379,50 @@
         @mouseleave="selectedNoteIndicator = null"
       >
         <button class="neume-button">
-          <Neume class="red neume note-indicator" :neume="NoteIndicator.Ni" />
+          <img draggable="false" src="@/assets/icons/note-ni.svg" />
         </button>
         <div class="menu" v-if="showNoteIndicatorMenu">
           <div
             class="menu-item"
-            v-for="menuItem in noteIndicatorMenuItems"
-            :key="menuItem"
-            @mouseenter="selectedNoteIndicator = menuItem"
+            @mouseenter="selectedNoteIndicator = NoteIndicator.Zo"
           >
-            <Neume class="red neume note-indicator" :neume="menuItem" />
+            <img draggable="false" src="@/assets/icons/note-zo.svg" />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedNoteIndicator = NoteIndicator.Ke"
+          >
+            <img draggable="false" src="@/assets/icons/note-ke.svg" />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedNoteIndicator = NoteIndicator.Thi"
+          >
+            <img draggable="false" src="@/assets/icons/note-di.svg" />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedNoteIndicator = NoteIndicator.Ga"
+          >
+            <img draggable="false" src="@/assets/icons/note-ga.svg" />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedNoteIndicator = NoteIndicator.Vou"
+          >
+            <img draggable="false" src="@/assets/icons/note-vou.svg" />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedNoteIndicator = NoteIndicator.Pa"
+          >
+            <img draggable="false" src="@/assets/icons/note-pa.svg" />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedNoteIndicator = NoteIndicator.Ni"
+          >
+            <img draggable="false" src="@/assets/icons/note-ni.svg" />
           </div>
         </div>
       </div>
@@ -280,16 +432,41 @@
         @mouseleave="selectedIson = null"
       >
         <button class="neume-button">
-          <Neume class="neume red ison" :neume="Ison.Unison" />
+          <img draggable="false" src="@/assets/icons/ison-unison.svg" />
         </button>
         <div class="menu" v-if="showIsonMenu">
-          <div
-            class="menu-item"
-            v-for="menuItem in isonMenuItems"
-            :key="menuItem"
-            @mouseenter="selectedIson = menuItem"
-          >
-            <Neume class="neume red ison" :neume="menuItem" />
+          <div class="menu-item" @mouseenter="selectedIson = Ison.ZoHigh">
+            <img draggable="false" src="@/assets/icons/ison-zo-high.svg" />
+          </div>
+          <div class="menu-item" @mouseenter="selectedIson = Ison.Ke">
+            <img draggable="false" src="@/assets/icons/ison-ke.svg" />
+          </div>
+          <div class="menu-item" @mouseenter="selectedIson = Ison.Thi">
+            <img draggable="false" src="@/assets/icons/ison-di.svg" />
+          </div>
+          <div class="menu-item" @mouseenter="selectedIson = Ison.Ga">
+            <img draggable="false" src="@/assets/icons/ison-ga.svg" />
+          </div>
+          <div class="menu-item" @mouseenter="selectedIson = Ison.Vou">
+            <img draggable="false" src="@/assets/icons/ison-vou.svg" />
+          </div>
+          <div class="menu-item" @mouseenter="selectedIson = Ison.Pa">
+            <img draggable="false" src="@/assets/icons/ison-pa.svg" />
+          </div>
+          <div class="menu-item" @mouseenter="selectedIson = Ison.Ni">
+            <img draggable="false" src="@/assets/icons/ison-ni.svg" />
+          </div>
+          <div class="menu-item" @mouseenter="selectedIson = Ison.Zo">
+            <img draggable="false" src="@/assets/icons/ison-zo.svg" />
+          </div>
+          <div class="menu-item" @mouseenter="selectedIson = Ison.KeLow">
+            <img draggable="false" src="@/assets/icons/ison-ke-low.svg" />
+          </div>
+          <div class="menu-item" @mouseenter="selectedIson = Ison.ThiLow">
+            <img draggable="false" src="@/assets/icons/ison-di-low.svg" />
+          </div>
+          <div class="menu-item" @mouseenter="selectedIson = Ison.Unison">
+            <img draggable="false" src="@/assets/icons/ison-unison.svg" />
           </div>
         </div>
       </div>
@@ -301,34 +478,34 @@
           setFthora([Fthora.DiatonicNiLow_Top, Fthora.DiatonicNiLow_Bottom])
         "
       >
-        <Neume class="red neume fthora" :neume="Fthora.DiatonicNiLow_Top" />
+        <img src="@/assets/icons/fthora-diatonic-ni-low.svg" />
       </button>
       <button
         class="neume-button"
         @click="setFthora([Fthora.DiatonicPa_Top, Fthora.DiatonicPa_Bottom])"
       >
-        <Neume class="red neume fthora" :neume="Fthora.DiatonicPa_Top" />
+        <img src="@/assets/icons/fthora-diatonic-pa.svg" />
       </button>
       <button class="neume-button" @click="setFthora([Fthora.DiatonicVou_Top])">
-        <Neume class="red neume fthora" :neume="Fthora.DiatonicVou_Top" />
+        <img src="@/assets/icons/fthora-diatonic-vou.svg" />
       </button>
       <button class="neume-button" @click="setFthora([Fthora.DiatonicGa_Top])">
-        <Neume class="red neume fthora" :neume="Fthora.DiatonicGa_Top" />
+        <img src="@/assets/icons/fthora-diatonic-ga.svg" />
       </button>
       <button
         class="neume-button"
         @click="setFthora([Fthora.DiatonicThi_Top, Fthora.DiatonicThi_Bottom])"
       >
-        <Neume class="red neume fthora" :neume="Fthora.DiatonicThi_Top" />
+        <img src="@/assets/icons/fthora-diatonic-di.svg" />
       </button>
       <button
         class="neume-button"
         @click="setFthora([Fthora.DiatonicKe_Top, Fthora.DiatonicKe_Bottom])"
       >
-        <Neume class="red neume fthora" :neume="Fthora.DiatonicKe_Top" />
+        <img src="@/assets/icons/fthora-diatonic-ke.svg" />
       </button>
       <button class="neume-button" @click="setFthora([Fthora.DiatonicZo_Top])">
-        <Neume class="red neume fthora" :neume="Fthora.DiatonicZo_Top" />
+        <img src="@/assets/icons/fthora-diatonic-zo.svg" />
       </button>
       <button
         class="neume-button"
@@ -336,17 +513,9 @@
           setFthora([Fthora.DiatonicNiHigh_Top, Fthora.DiatonicNiHigh_Bottom])
         "
       >
-        <Neume class="red neume fthora" :neume="Fthora.DiatonicNiHigh_Top" />
+        <img src="@/assets/icons/fthora-diatonic-ni-high.svg" />
       </button>
       <span class="space"></span>
-      <button
-        class="neume-button"
-        @click="
-          setFthora([Fthora.SoftChromaticPa_Top, Fthora.SoftChromaticPa_Bottom])
-        "
-      >
-        <Neume class="red neume fthora" :neume="Fthora.SoftChromaticPa_Top" />
-      </button>
       <button
         class="neume-button"
         @click="
@@ -356,7 +525,15 @@
           ])
         "
       >
-        <Neume class="red neume fthora" :neume="Fthora.SoftChromaticThi_Top" />
+        <img src="@/assets/icons/fthora-soft-chromatic-di.svg" />
+      </button>
+      <button
+        class="neume-button"
+        @click="
+          setFthora([Fthora.SoftChromaticPa_Top, Fthora.SoftChromaticPa_Bottom])
+        "
+      >
+        <img src="@/assets/icons/fthora-soft-chromatic-ke.svg" />
       </button>
       <span class="space"></span>
       <button
@@ -365,7 +542,7 @@
           setFthora([Fthora.HardChromaticPa_Top, Fthora.HardChromaticPa_Bottom])
         "
       >
-        <Neume class="red neume fthora" :neume="Fthora.HardChromaticPa_Top" />
+        <img src="@/assets/icons/fthora-hard-chromatic-pa.svg" />
       </button>
       <button
         class="neume-button"
@@ -376,14 +553,20 @@
           ])
         "
       >
-        <Neume class="red neume fthora" :neume="Fthora.HardChromaticThi_Top" />
+        <img src="@/assets/icons/fthora-hard-chromatic-di.svg" />
       </button>
       <span class="space"></span>
       <button
         class="neume-button"
+        @click="setFthora([Fthora.Enharmonic_Top, Fthora.Enharmonic_Bottom])"
+      >
+        <img src="@/assets/icons/fthora-enharmonic.svg" />
+      </button>
+      <button
+        class="neume-button"
         @click="setFthora([Fthora.GeneralFlat_Top, Fthora.GeneralFlat_Bottom])"
       >
-        <Neume class="red neume fthora" :neume="Fthora.GeneralFlat_Top" />
+        <img src="@/assets/icons/fthora-general-flat.svg" />
       </button>
       <button
         class="neume-button"
@@ -391,29 +574,23 @@
           setFthora([Fthora.GeneralSharp_Top, Fthora.GeneralSharp_Bottom])
         "
       >
-        <Neume class="red neume fthora" :neume="Fthora.GeneralSharp_Top" />
-      </button>
-      <button
-        class="neume-button"
-        @click="setFthora([Fthora.Enharmonic_Top, Fthora.Enharmonic_Bottom])"
-      >
-        <Neume class="red neume fthora" :neume="Fthora.Enharmonic_Top" />
+        <img src="@/assets/icons/fthora-general-sharp.svg" />
       </button>
       <span class="space"></span>
       <button
         class="neume-button"
         @click="setFthora([Fthora.Zygos_Top, Fthora.Zygos_Bottom])"
       >
-        <Neume class="red neume fthora" :neume="Fthora.Zygos_Top" />
+        <img src="@/assets/icons/fthora-zygos.svg" />
       </button>
       <button
         class="neume-button"
         @click="setFthora([Fthora.Kliton_Top, Fthora.Kliton_Bottom])"
       >
-        <Neume class="red neume fthora" :neume="Fthora.Kliton_Top" />
+        <img src="@/assets/icons/fthora-kliton.svg" />
       </button>
       <button class="neume-button" @click="setFthora([Fthora.Spathi_Top])">
-        <Neume class="red neume fthora" :neume="Fthora.Spathi_Top" />
+        <img src="@/assets/icons/fthora-spathi.svg" />
       </button>
     </div>
   </div>
@@ -440,26 +617,6 @@ import {
   onlyTakesBottomKlasma,
   onlyTakesTopGorgon,
 } from '@/models/NeumeReplacements';
-
-interface GorgonMenuItem {
-  neumes: GorgonNeume[];
-  className: string;
-}
-
-interface TimeMenuItem {
-  neume: TimeNeume;
-  className: string;
-}
-
-interface BarLineMenuItem {
-  neume: MeasureBar;
-  className: string;
-}
-
-interface MeasureNumberMenuItem {
-  neume: MeasureNumber;
-  className: string;
-}
 
 @Component({
   components: {
@@ -497,132 +654,6 @@ export default class NeumeToolbar extends Vue {
   selectedMeasureNumber: MeasureNumber | null = null;
   selectedNoteIndicator: NoteIndicator | null = null;
   selectedIson: Ison | null = null;
-
-  flatMenuItems: Accidental[] = [
-    Accidental.Flat_6_Right,
-    Accidental.Flat_4_Right,
-    Accidental.Flat_2_Right,
-  ];
-
-  sharpMenuItems: Accidental[] = [
-    Accidental.Sharp_6_Left,
-    Accidental.Sharp_4_Left,
-    Accidental.Sharp_2_Left,
-  ];
-
-  measureNumberMenuItems: MeasureNumberMenuItem[] = [
-    { neume: MeasureNumber.Eight, className: 'measure-number-center' },
-    { neume: MeasureNumber.Seven, className: 'measure-number-center' },
-    { neume: MeasureNumber.Six, className: 'measure-number-center' },
-    { neume: MeasureNumber.Five, className: 'measure-number' },
-    { neume: MeasureNumber.Four, className: 'measure-number' },
-    { neume: MeasureNumber.Three, className: 'measure-number' },
-    { neume: MeasureNumber.Two, className: 'measure-number' },
-  ];
-
-  noteIndicatorMenuItems: NoteIndicator[] = [
-    NoteIndicator.Zo,
-    NoteIndicator.Ke,
-    NoteIndicator.Thi,
-    NoteIndicator.Ga,
-    NoteIndicator.Vou,
-    NoteIndicator.Pa,
-    NoteIndicator.Ni,
-  ];
-
-  isonMenuItems: Ison[] = [
-    // The font appears to have a bug in it. ZoHigh doesn't work
-    //Ison.ZoHigh,
-    Ison.Ke,
-    Ison.Thi,
-    Ison.Ga,
-    Ison.Vou,
-    Ison.Pa,
-    Ison.Ni,
-    Ison.Zo,
-    Ison.KeLow,
-    Ison.ThiLow,
-    Ison.Unison,
-  ];
-
-  gorgonMenuItems: GorgonMenuItem[] = [
-    {
-      neumes: [GorgonNeume.GorgonDottedLeft],
-      className: 'gorgon-dotted-left',
-    },
-    {
-      neumes: [GorgonNeume.GorgonDottedRight],
-      className: 'gorgon-dotted-right',
-    },
-    {
-      neumes: [GorgonNeume.Gorgon_Top, GorgonNeume.Gorgon_Bottom],
-      className: 'gorgon-top',
-    },
-  ];
-
-  digorgonMenuItems: GorgonMenuItem[] = [
-    {
-      neumes: [GorgonNeume.DigorgonDottedRight],
-      className: 'digorgon',
-    },
-    {
-      neumes: [GorgonNeume.DigorgonDottedLeft2],
-      className: 'digorgon',
-    },
-    {
-      neumes: [GorgonNeume.DigorgonDottedLeft1],
-      className: 'digorgon',
-    },
-    {
-      neumes: [GorgonNeume.Digorgon],
-      className: 'digorgon',
-    },
-  ];
-
-  trigorgonMenuItems: GorgonMenuItem[] = [
-    {
-      neumes: [GorgonNeume.TrigorgonDottedRight],
-      className: 'trigorgon',
-    },
-    {
-      neumes: [GorgonNeume.TrigorgonDottedLeft2],
-      className: 'trigorgon',
-    },
-    {
-      neumes: [GorgonNeume.TrigorgonDottedLeft1],
-      className: 'trigorgon',
-    },
-    {
-      neumes: [GorgonNeume.Trigorgon],
-      className: 'trigorgon',
-    },
-  ];
-
-  timeMenuItems: TimeMenuItem[] = [
-    {
-      neume: TimeNeume.Tripli,
-      className: 'tripli',
-    },
-    {
-      neume: TimeNeume.Dipli,
-      className: 'dipli',
-    },
-    {
-      neume: TimeNeume.Hapli,
-      className: 'hapli',
-    },
-  ];
-
-  barLineMenuItems: BarLineMenuItem[] = [
-    {
-      neume: MeasureBar.MeasureBarTop,
-      className: 'measure-bar-top',
-    },
-    {
-      neume: MeasureBar.MeasureBarRight,
-      className: 'measure-bar-right',
-    },
-  ];
 
   beforeDestroy() {
     window.removeEventListener('mouseup', this.onFlatMouseUp);
@@ -942,153 +973,28 @@ export default class NeumeToolbar extends Vue {
   flex-wrap: wrap;
 }
 
-.red {
-  color: red;
-}
-
-.neume {
-  font-size: 25px;
-}
-
 .neume-button {
   height: var(--btn-size);
   width: var(--btn-size);
 
   position: relative;
 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
   overflow: hidden;
 
   user-select: none;
 }
 
+.neume-button img {
+  height: var(--btn-size);
+  width: var(--btn-size);
+}
+
 .space {
   width: 16px;
-}
-
-.sharp {
-  top: -23px;
-  left: 24px;
-}
-
-.flat {
-  top: 2px;
-  left: 2px;
-}
-
-.vareia {
-  top: -10px;
-}
-
-.homalon {
-  top: -15px;
-  left: 10px;
-  font-size: 22px;
-}
-
-.homalon-1,
-.homalon-2 {
-  position: absolute;
-  top: 17px;
-  left: 10px;
-  font-size: 12px;
-}
-
-.antikenoma {
-  top: -12px;
-  left: 14px;
-  font-size: 20px;
-}
-
-.psifiston {
-  top: -10px;
-  left: 13px;
-  font-size: 18px;
-}
-
-.heteron {
-  top: -15px;
-  left: 35px;
-  font-size: 20px;
-}
-
-.klasma-top {
-  top: -2px;
-  left: 18px;
-}
-
-.hapli {
-  top: -19px;
-  left: 19px;
-}
-
-.dipli {
-  top: -19px;
-  left: 16px;
-}
-
-.tripli {
-  top: -22px;
-  left: 18px;
-}
-
-.gorgon-top {
-  top: -2px;
-  left: 18px;
-}
-
-.gorgon-dotted-left {
-  top: -2px;
-  left: 18px;
-}
-
-.gorgon-dotted-right {
-  top: -4px;
-  left: 18px;
-}
-
-.digorgon {
-  left: 13px;
-}
-
-.trigorgon {
-  left: 10px;
-}
-
-.fthora {
-  left: 18px;
-}
-
-.argon,
-.hemiolion,
-.diargon {
-  left: 20px;
-}
-
-.measure-bar-right {
-  top: -10px;
-}
-
-.measure-bar-top {
-  top: -5px;
-  left: 17px;
-}
-
-.measure-number {
-  top: -7px;
-  left: 28px;
-}
-
-.measure-number-center {
-  top: -7px;
-  left: 16px;
-}
-
-.note-indicator {
-  left: 28px;
-}
-
-.ison {
-  left: 19px;
 }
 
 .menu-container {

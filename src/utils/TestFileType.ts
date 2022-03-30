@@ -9,4 +9,5 @@ export enum TestFileType {
   Measures = 'Measures',
   NoteIndicators = 'NoteIndicators',
   Ison = 'Ison',
+  ModeKey = 'ModeKey',
 }

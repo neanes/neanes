@@ -18,6 +18,7 @@
     <div class="content">
       <NeumeSelector
         class="neume-selector"
+        :pageSetup="score.pageSetup"
         @select-quantitative-neume="addQuantitativeNeume"
       ></NeumeSelector>
       <div class="page-container">
@@ -67,19 +68,27 @@
                     class="neume-box"
                   >
                     <span class="page-break" v-if="element.pageBreak"
-                      ><img src="@/assets/pagebreak.svg"
+                      ><img src="@/assets/icons/page-break.svg"
                     /></span>
                     <span class="line-break" v-if="element.lineBreak"
-                      >&#182;</span
-                    >
+                      ><img src="@/assets/icons/line-break.svg"
+                    /></span>
                     <SyllableNeumeBox
-                      class="syllable-box"
+                      class="syllable-box no-print"
                       :note="element"
                       :pageSetup="score.pageSetup"
                       :class="[{ selected: isSelected(element) }]"
                       @click.native.exact="selectedElement = element"
                       @click.native.shift.exact="setSelectionRange(element)"
                     ></SyllableNeumeBox>
+                    <SyllableNeumeBoxPrint
+                      class="syllable-box print-only"
+                      :note="element"
+                      :pageSetup="score.pageSetup"
+                      :class="[{ selected: isSelected(element) }]"
+                      @click.native.exact="selectedElement = element"
+                      @click.native.shift.exact="setSelectionRange(element)"
+                    ></SyllableNeumeBoxPrint>
                     <div
                       class="lyrics-container"
                       :key="`lyrics-${getElementIndex(element)}-${
@@ -93,7 +102,10 @@
                         :content="element.lyrics"
                         :ref="`lyrics-${getElementIndex(element)}`"
                         @focus.native="selectedLyrics = element"
-                        @blur="updateLyrics(element, $event)"
+                        @blur="
+                          updateLyrics(element, $event);
+                          selectedLyrics = null;
+                        "
                       ></ContentEditable>
                       <template v-if="isMelisma(element)">
                         <div
@@ -109,19 +121,27 @@
                 <template v-if="isMartyriaElement(element)">
                   <div class="neume-box">
                     <span class="page-break" v-if="element.pageBreak">
-                      <img src="@/assets/pagebreak.svg"
+                      <img src="@/assets/icons/page-break.svg"
                     /></span>
                     <span class="line-break" v-if="element.lineBreak"
-                      >&#182;</span
-                    >
+                      ><img src="@/assets/icons/line-break.svg"
+                    /></span>
                     <MartyriaNeumeBox
                       :ref="`element-${getElementIndex(element)}`"
-                      class="marytria-neume-box"
+                      class="marytria-neume-box no-print"
                       :neume="element"
                       :pageSetup="score.pageSetup"
                       :class="[{ selected: isSelected(element) }]"
                       @click.native="selectedElement = element"
                     ></MartyriaNeumeBox>
+                    <MartyriaNeumeBoxPrint
+                      :ref="`element-${getElementIndex(element)}`"
+                      class="marytria-neume-box print-only"
+                      :neume="element"
+                      :pageSetup="score.pageSetup"
+                      :class="[{ selected: isSelected(element) }]"
+                      @click.native="selectedElement = element"
+                    ></MartyriaNeumeBoxPrint>
                     <div class="lyrics"></div>
                   </div>
                 </template>
@@ -131,11 +151,11 @@
                     class="neume-box"
                   >
                     <span class="page-break" v-if="element.pageBreak">
-                      <img src="@/assets/pagebreak.svg"
+                      <img src="@/assets/icons/page-break.svg"
                     /></span>
                     <span class="line-break" v-if="element.lineBreak"
-                      >&#182;</span
-                    >
+                      ><img src="@/assets/icons/line-break.svg"
+                    /></span>
                     <TempoNeumeBox
                       class="tempo-neume-box"
                       :neume="element"
@@ -152,11 +172,11 @@
                     class="neume-box"
                   >
                     <span class="page-break" v-if="element.pageBreak">
-                      <img src="@/assets/pagebreak.svg"
+                      <img src="@/assets/icons/page-break.svg"
                     /></span>
                     <span class="line-break" v-if="element.lineBreak"
-                      >&#182;</span
-                    >
+                      ><img src="@/assets/icons/line-break.svg"
+                    /></span>
                     <div
                       class="empty-neume-box"
                       :class="[{ selected: isSelected(element) }]"
@@ -168,11 +188,11 @@
                 </template>
                 <template v-if="isTextBoxElement(element)">
                   <span class="page-break-2" v-if="element.pageBreak"
-                    ><img src="@/assets/pagebreak.svg"
+                    ><img src="@/assets/icons/page-break.svg"
                   /></span>
                   <span class="line-break-2" v-if="element.lineBreak"
-                    >&#182;</span
-                  >
+                    ><img src="@/assets/icons/line-break.svg"
+                  /></span>
                   <TextBox
                     :ref="`element-${getElementIndex(element)}`"
                     :element="element"
@@ -185,12 +205,13 @@
                 </template>
                 <template v-if="isModeKeyElement(element)">
                   <span class="page-break-2" v-if="element.pageBreak"
-                    ><img src="@/assets/pagebreak.svg"
+                    ><img src="@/assets/icons/page-break.svg"
                   /></span>
                   <span class="line-break-2" v-if="element.lineBreak"
-                    >&#182;</span
-                  >
+                    ><img src="@/assets/icons/line-break.svg"
+                  /></span>
                   <ModeKey
+                    class="no-print"
                     :ref="`element-${getElementIndex(element)}`"
                     :element="element"
                     :pageSetup="score.pageSetup"
@@ -199,14 +220,24 @@
                     @dblclick.native="openModeKeyDialog"
                   >
                   </ModeKey>
+                  <ModeKeyPrint
+                    class="print-only"
+                    :ref="`element-${getElementIndex(element)}`"
+                    :element="element"
+                    :pageSetup="score.pageSetup"
+                    :class="[{ selectedTextbox: element == selectedElement }]"
+                    @click.native="selectedElement = element"
+                    @dblclick.native="openModeKeyDialog"
+                  >
+                  </ModeKeyPrint>
                 </template>
                 <template v-if="isDropCapElement(element)">
                   <span class="page-break" v-if="element.pageBreak"
-                    ><img src="@/assets/pagebreak.svg"
+                    ><img src="@/assets/icons/page-break.svg"
                   /></span>
                   <span class="line-break" v-if="element.lineBreak"
-                    >&#182;</span
-                  >
+                    ><img src="@/assets/icons/line-break.svg"
+                  /></span>
                   <DropCap
                     :ref="`element-${getElementIndex(element)}`"
                     :key="`drop-cap-${getElementIndex(element)}-${
@@ -230,12 +261,25 @@
     <template
       v-if="selectedElement != null && isTextBoxElement(selectedElement)"
     >
-      <TextToolbar
+      <TextBoxToolbar
         :element="selectedElement"
         @update:fontSize="updateTextBoxFontSize(selectedElement, $event)"
         @update:fontFamily="updateTextBoxFontFamily(selectedElement, $event)"
         @update:alignment="updateTextBoxAlignment(selectedElement, $event)"
         @update:color="updateTextBoxColor(selectedElement, $event)"
+        @insert:gorthmikon="insertGorthmikon"
+        @insert:pelastikon="insertPelastikon"
+      />
+    </template>
+    <template v-if="selectedLyrics != null">
+      <LyricsToolbar
+        :element="selectedLyrics"
+        @update:fontSize="updateTextBoxFontSize(selectedElement, $event)"
+        @update:fontFamily="updateTextBoxFontFamily(selectedElement, $event)"
+        @update:alignment="updateTextBoxAlignment(selectedElement, $event)"
+        @update:color="updateTextBoxColor(selectedElement, $event)"
+        @insert:gorthmikon="insertGorthmikon"
+        @insert:pelastikon="insertPelastikon"
       />
     </template>
     <template
@@ -263,6 +307,7 @@
         @update:measureNumber="updateNoteMeasureNumber(selectedElement, $event)"
         @update:noteIndicator="updateNoteNoteIndicator(selectedElement, $event)"
         @update:ison="updateNoteIson(selectedElement, $event)"
+        @update:vareia="updateNoteVareia(selectedElement, $event)"
         @update:vocalExpression="
           updateNoteVocalExpression(selectedElement, $event)
         "
@@ -330,15 +375,18 @@ import { SaveService } from '@/services/SaveService';
 import { LayoutService } from '@/services/LayoutService';
 import { IpcService } from '@/services/IpcService';
 import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
+import SyllableNeumeBoxPrint from '@/components/NeumeBoxSyllablePrint.vue';
 import MartyriaNeumeBox from '@/components/NeumeBoxMartyria.vue';
+import MartyriaNeumeBoxPrint from '@/components/NeumeBoxMartyriaPrint.vue';
 import TempoNeumeBox from '@/components/NeumeBoxTempo.vue';
 import NeumeSelector from '@/components/NeumeSelector.vue';
-import NeumeKeyboard from '@/components/NeumeKeyboard.vue';
 import ContentEditable from '@/components/ContentEditable.vue';
 import TextBox from '@/components/TextBox.vue';
 import DropCap from '@/components/DropCap.vue';
 import ModeKey from '@/components/ModeKey.vue';
-import TextToolbar from '@/components/TextToolbar.vue';
+import ModeKeyPrint from '@/components/ModeKeyPrint.vue';
+import TextBoxToolbar from '@/components/TextBoxToolbar.vue';
+import LyricsToolbar from '@/components/LyricsToolbar.vue';
 import ModeKeyToolbar from '@/components/ModeKeyToolbar.vue';
 import MainToolbar from '@/components/MainToolbar.vue';
 import NeumeToolbar from '@/components/NeumeToolbar.vue';
@@ -361,15 +409,18 @@ import { PageSetup } from '@/models/PageSetup';
 @Component({
   components: {
     SyllableNeumeBox,
+    SyllableNeumeBoxPrint,
     MartyriaNeumeBox,
+    MartyriaNeumeBoxPrint,
     TempoNeumeBox,
     NeumeSelector,
-    NeumeKeyboard,
     ContentEditable,
     TextBox,
     DropCap,
     ModeKey,
-    TextToolbar,
+    ModeKeyPrint,
+    TextBoxToolbar,
+    LyricsToolbar,
     ModeKeyToolbar,
     NeumeToolbar,
     MartyriaToolbar,
@@ -696,12 +747,8 @@ export default class Editor extends Vue {
     await Promise.all([
       fontLoader.load('1rem Athonite'),
       fontLoader.load('1rem Omega'),
-      fontLoader.load('1rem Psaltica'),
-      fontLoader.load('1rem EzSpecial1'),
-      fontLoader.load('1rem EzSpecial2'),
-      fontLoader.load('1rem EzFthora'),
-      fontLoader.load('1rem Oxeia'),
       fontLoader.load('1rem PFGoudyInitials'),
+      fontLoader.load('1rem Neanes'),
       fontLoader.ready,
     ]);
 
@@ -845,9 +892,17 @@ export default class Editor extends Vue {
     return this.elements.indexOf(element) === this.elements.length - 1;
   }
 
+  insertPelastikon() {
+    document.execCommand('insertText', false, '\u{1d0b4}');
+  }
+
+  insertGorthmikon() {
+    document.execCommand('insertText', false, '\u{1d0b5}');
+  }
+
   addQuantitativeNeume(
     quantitativeNeume: QuantitativeNeume,
-    hyporoeGorgonNeume: GorgonNeume | null = null,
+    secondaryGorgonNeume: GorgonNeume | null = null,
   ) {
     if (this.selectedElement == null) {
       return;
@@ -859,7 +914,7 @@ export default class Editor extends Vue {
     if (
       quantitativeNeume === QuantitativeNeume.OligonPlusHyporoePlusKentemata
     ) {
-      element.hyporoeGorgonNeume = hyporoeGorgonNeume;
+      element.secondaryGorgonNeume = secondaryGorgonNeume;
     }
 
     switch (this.entryMode) {
@@ -879,15 +934,15 @@ export default class Editor extends Vue {
             ) {
               this.updateNote(this.selectedElement as NoteElement, {
                 quantitativeNeume,
-                hyporoeGorgonNeume,
+                secondaryGorgonNeume,
               });
             } else if (
-              (this.selectedElement as NoteElement).hyporoeGorgonNeume !==
-              hyporoeGorgonNeume
+              (this.selectedElement as NoteElement).secondaryGorgonNeume !==
+              secondaryGorgonNeume
             ) {
               // Special case for hyporoe gorgon
               this.updateNote(this.selectedElement as NoteElement, {
-                hyporoeGorgonNeume,
+                secondaryGorgonNeume,
               });
             }
           } else {
@@ -917,15 +972,15 @@ export default class Editor extends Vue {
           ) {
             this.updateNote(this.selectedElement as NoteElement, {
               quantitativeNeume,
-              hyporoeGorgonNeume,
+              secondaryGorgonNeume,
             });
           } else if (
-            (this.selectedElement as NoteElement).hyporoeGorgonNeume !==
-            hyporoeGorgonNeume
+            (this.selectedElement as NoteElement).secondaryGorgonNeume !==
+            secondaryGorgonNeume
           ) {
             // Special case for hyporoe gorgon
             this.updateNote(this.selectedElement as NoteElement, {
-              hyporoeGorgonNeume,
+              secondaryGorgonNeume,
             });
           }
         } else if (
@@ -1987,6 +2042,10 @@ export default class Editor extends Vue {
     this.updateNote(element, { ison });
   }
 
+  updateNoteVareia(element: NoteElement, vareia: boolean) {
+    this.updateNote(element, { vareia });
+  }
+
   updateLyrics(element: NoteElement, lyrics: string) {
     // Replace newlines. This should only happen if the user pastes
     // text containing new lines.
@@ -2116,11 +2175,14 @@ export default class Editor extends Vue {
       mode,
       scale,
       scaleNote,
-      fthora,
-      fthora2,
+      martyria,
+      fthoraAboveNote,
+      fthoraAboveNote2,
+      fthoraAboveQuantitativeNeumeRight,
       note,
       note2,
-      quantitativeNeumeTop,
+      quantitativeNeumeAboveNote,
+      quantitativeNeumeAboveNote2,
       quantitativeNeumeRight,
     } = template;
 
@@ -2129,13 +2191,15 @@ export default class Editor extends Vue {
       mode,
       scale,
       scaleNote,
-      fthora,
-      fthora2,
+      martyria,
+      fthoraAboveNote,
+      fthoraAboveNote2,
+      fthoraAboveQuantitativeNeumeRight,
       note,
       note2,
-      quantitativeNeumeTop,
+      quantitativeNeumeAboveNote,
+      quantitativeNeumeAboveNote2,
       quantitativeNeumeRight,
-      martyrias: template.martyrias.map((x) => x),
     };
 
     this.updateModeKey(element, newValues);
@@ -2698,9 +2762,9 @@ export default class Editor extends Vue {
   left: 0;
 }
 
-.neume {
+/* .neume {
   display: flex;
-}
+} */
 
 .page-break {
   position: absolute;
@@ -2714,8 +2778,12 @@ export default class Editor extends Vue {
 
 .line-break {
   position: absolute;
-  font-size: calc(16px * var(--zoom, 1));
   top: calc(-10px * var(--zoom, 1));
+}
+
+.line-break img {
+  height: calc(16px * var(--zoom, 1));
+  width: calc(16px * var(--zoom, 1));
 }
 
 .page-break-2 {
@@ -2730,8 +2798,16 @@ export default class Editor extends Vue {
 
 .line-break-2 {
   position: absolute;
-  font-size: calc(16px * var(--zoom, 1));
   top: calc(-18px * var(--zoom, 1));
+}
+
+.line-break-2 img {
+  height: calc(16px * var(--zoom, 1));
+  width: calc(16px * var(--zoom, 1));
+}
+
+.print-only {
+  display: none;
 }
 
 @media print {
@@ -2779,6 +2855,14 @@ export default class Editor extends Vue {
   .page-break-2,
   .line-break-2 {
     display: none !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block;
   }
 }
 </style>

@@ -587,6 +587,8 @@ function createMenu() {
     {
       role: 'help',
       submenu: [
+        { role: 'toggleDevTools' },
+        { type: 'separator' },
         {
           label: 'About',
           click() {

@@ -21,7 +21,7 @@
     >
       <img
         class="icon-btn-img"
-        src="@/assets/alignleft.svg"
+        src="@/assets/icons/alignleft.svg"
         width="32"
         height="32"
         title="Align Left"
@@ -34,7 +34,7 @@
     >
       <img
         class="icon-btn-img"
-        src="@/assets/aligncenter.svg"
+        src="@/assets/icons/aligncenter.svg"
         width="32"
         height="32"
         title="Align Center"
@@ -47,7 +47,7 @@
     >
       <img
         class="icon-btn-img"
-        src="@/assets/alignright.svg"
+        src="@/assets/icons/alignright.svg"
         width="32"
         height="32"
         title="Align Right"

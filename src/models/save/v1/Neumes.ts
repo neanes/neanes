@@ -51,7 +51,7 @@ export enum QuantitativeNeume {
   OligonPlusApostrophos = 'OligonPlusApostrophos',
   OligonPlusElaphron = 'OligonPlusElaphron',
   OligonPlusElaphronPlusApostrophos = 'OligonPlusElaphronPlusApostrophos',
-  OligonPlusHypsili = 'OligonPlusHypsili',
+  OligonPlusHamili = 'OligonPlusHamili',
 
   Kentima = 'Kentima',
   OligonPlusKentima = 'OligonPlusKentima',
@@ -62,8 +62,6 @@ export enum QuantitativeNeume {
   IsonPlusApostrophos = 'IsonPlusApostrophos',
   OligonPlusKentemataPlusHypsiliLeft = 'OligonPlusKentemataPlusHypsiliLeft',
   OligonPlusKentemataPlusHypsiliRight = 'OligonPlusKentemataPlusHypsiliRight',
-
-  KentemataPlusOligonSpecial = 'KentemataPlusOligonSpecial',
 
   VareiaDotted = 'VareiaDotted',
   Cross = 'Cross',
@@ -95,6 +93,18 @@ export enum GorgonNeume {
   TrigorgonDottedLeft2 = 'TrigorgonDottedLeft2',
   TrigorgonDottedRight = 'TrigorgonDottedRight',
 
+  GorgonSecondary = 'GorgonSecondary',
+  GorgonDottedLeftSecondary = 'GorgonDottedLeftSecondary',
+  GorgonDottedRightSecondary = 'GorgonDottedRightSecondary',
+
+  DigorgonSecondary = 'DigorgonSecondary',
+  DigorgonDottedLeft1Secondary = 'DigorgonDottedLeft1Secondary',
+  DigorgonDottedRightSecondary = 'DigorgonDottedRightSecondary',
+
+  TrigorgonSecondary = 'TrigorgonSecondary',
+  TrigorgonDottedLeft1Secondary = 'TrigorgonDottedLeft1Secondary',
+  TrigorgonDottedRightSecondary = 'TrigorgonDottedRightSecondary',
+
   Argon = 'Argon',
   Hemiolion = 'Hemiolion',
   Diargon = 'Diargon',
@@ -105,7 +115,6 @@ export enum VocalExpressionNeume {
   HomalonConnecting = 'HomalonConnecting',
   Homalon = 'Homalon',
   Antikenoma = 'Antikenoma',
-  AntikenomaShort = 'AntikenomaShort',
   Psifiston = 'Psifiston',
   Heteron = 'Heteron',
 }
@@ -116,7 +125,6 @@ export enum RootSign {
   Legetos = 'Legetos',
   Nana = 'Nana',
   Tilt = 'Tilt',
-  Dots = 'Dots',
   Zo = 'Varys',
   Squiggle = 'Squiggle',
   Zygos = 'Zygos',
@@ -145,10 +153,12 @@ export enum Note {
 
 export enum TempoSign {
   VerySlow = 'VerySlow',
+  Slower = 'Slower',
   Slow = 'Slow',
   Medium = 'Medium',
   Moderate = 'Moderate',
   Quick = 'Quick',
+  Quicker = 'Quicker',
   VeryQuick = 'VeryQuick',
 }
 
@@ -171,7 +181,6 @@ export enum ModeSign {
   Fourth = 'ModeSign.Fourth',
   FourthCapital = 'ModeSign.FourthCapital',
   Varys = 'ModeSign.Varys',
-  Tos = 'ModeSign.Tos',
   Alpha = 'ModeSign.Alpha',
   AlphaWithDeltaHat = 'ModeSign.AlphaWithDeltaHat',
   AlphaWithHypsili = 'ModeSign.AlphaWithHypsili',
@@ -182,17 +191,12 @@ export enum ModeSign {
   Delta = 'ModeSign.Delta',
   DeltaWithDeltaHat = 'ModeSign.DeltaWithDeltaHat',
   DeltaWithHypsili = 'ModeSign.DeltaWithHypsili',
-  OligonPlusKentemata = 'ModeSign.OligonPlusKentemata',
-  DeltaHat = 'ModeSign.DeltaHat',
   NanaOld = 'ModeSign.NanaOld',
   Legetos = 'ModeSign.Legetos',
   ElaphronPlusApostrophos = 'ModeSign.ElaphronPlusApostrophos',
   Elaphron = 'ModeSign.Elaphron',
   OligonPlusKentima = 'ModeSign.OligonPlusKentima',
   OligonPlusHypsili = 'ModeSign.OligonPlusHypsili',
-  PaHardChromatic = 'ModeSign.PaHardChromatic',
-  VouSoftChromatic = 'ModeSign.VouSoftChromatic',
-  ThiSoftChromatic = 'ModeSign.ThiSoftChromatic',
 }
 
 export enum Fthora {
@@ -234,19 +238,13 @@ export enum Fthora {
 }
 
 export enum Accidental {
-  Sharp_2_Right = 'Sharp_2_Right',
   Sharp_2_Left = 'Sharp_2_Left',
-  Sharp_4_Right = 'Sharp_4_Right',
   Sharp_4_Left = 'Sharp_4_Left',
-  Sharp_6_Right = 'Sharp_6_Right',
   Sharp_6_Left = 'Sharp_6_Left',
 
   Flat_2_Right = 'Flat_2_Right',
-  Flat_2_Left = 'Flat_2_Left',
   Flat_4_Right = 'Flat_4_Right',
-  Flat_4_Left = 'Flat_4_Left',
   Flat_6_Right = 'Flat_6_Right',
-  Flat_6_Left = 'Flat_6_Left',
 }
 
 export enum MeasureBar {

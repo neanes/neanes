@@ -13,7 +13,8 @@
     "lyricsDefaultFontFamily": "Omega",
     "lyricsDefaultFontSize": 16,
     "lyricsDefaultColor": "#000000",
-    "lyricsVerticalOffset": -12,
+    "lyricsVerticalOffset": -5.76,
+    "neumeDefaultFontFamily": "Neanes",
     "neumeDefaultFontSize": 26.666666666666668,
     "neumeDefaultColor": "#000000",
     "neumeDefaultSpacing": 2.88,
@@ -57,7 +58,7 @@
         "note": "ModeSign.Pa",
         "color": "#ED0000",
         "fontSize": 26.666666666666668,
-        "height": 63
+        "height": 49
       },
       {
         "elementType": "TextBox",
@@ -112,7 +113,7 @@
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
         "timeNeume": "Hapli",
-        "vocalExpressionNeume": "AntikenomaShort",
+        "vocalExpressionNeume": "Antikenoma",
         "lyrics": "un",
         "isMelisma": true,
         "isMelismaStart": true,
@@ -347,6 +348,7 @@
       {
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusKentimaAbove",
+        "vocalExpressionNeume": "HomalonConnecting",
         "lyrics": "Lord,",
         "isMelisma": true,
         "isMelismaStart": true
@@ -354,7 +356,6 @@
       {
         "elementType": "Note",
         "quantitativeNeume": "Ison",
-        "vocalExpressionNeume": "HomalonConnecting",
         "isMelisma": true
       },
       {
@@ -467,7 +468,7 @@
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
         "timeNeume": "Hapli",
-        "vocalExpressionNeume": "AntikenomaShort",
+        "vocalExpressionNeume": "Antikenoma",
         "lyrics": "to",
         "isMelisma": true,
         "isMelismaStart": true
@@ -681,7 +682,7 @@
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
         "timeNeume": "Hapli",
-        "vocalExpressionNeume": "AntikenomaShort",
+        "vocalExpressionNeume": "Antikenoma",
         "lyrics": "to",
         "isMelisma": true,
         "isMelismaStart": true

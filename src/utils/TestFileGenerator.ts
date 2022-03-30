@@ -1,4 +1,5 @@
-import { NoteElement, ScoreElement } from '@/models/Element';
+import { ModeKeyElement, NoteElement, ScoreElement } from '@/models/Element';
+import { modeKeyTemplates } from '@/models/ModeKeys';
 import {
   Fthora,
   QuantitativeNeume,
@@ -35,6 +36,8 @@ export abstract class TestFileGenerator {
         return this.generateTestFile_NoteIndicators();
       case TestFileType.Ison:
         return this.generateTestFile_Isons();
+      case TestFileType.ModeKey:
+        return this.generateTestFile_ModeKey();
       default:
         console.error(`Unknown test file type: ${type}`);
         return null;
@@ -485,6 +488,16 @@ export abstract class TestFileGenerator {
       note.quantitativeNeume = quantitativeNeume;
       note.ison = Ison.Unison;
       (note.lyrics = (counter++).toString()), elements.push(note);
+    }
+
+    return elements;
+  }
+
+  private static generateTestFile_ModeKey() {
+    const elements: ScoreElement[] = [];
+
+    for (let template of modeKeyTemplates) {
+      elements.push(ModeKeyElement.createFromTemplate(template));
     }
 
     return elements;

@@ -56,6 +56,7 @@ export class NoteElement extends ScoreElement {
   public measureNumber: MeasureNumber | null = null;
   public noteIndicator: NoteIndicator | null = null;
   public ison: Ison | null = null;
+  public vareia: boolean = false;
   public lyrics: string = '';
   public isMelisma: boolean = false;
   public isMelismaStart: boolean = false;
@@ -78,10 +79,11 @@ export class NoteElement extends ScoreElement {
       accidental: this.accidental,
       fthora: this.fthora,
       gorgonNeume: this.gorgonNeume,
-      hyporoeGorgonNeume: this.hyporoeGorgonNeume,
+      secondaryGorgonNeume: this.secondaryGorgonNeume,
       quantitativeNeume: this.quantitativeNeume,
       timeNeume: this.timeNeume,
       vocalExpressionNeume: this.vocalExpressionNeume,
+      vareia: this.vareia,
     } as Partial<NoteElement>;
   }
 
@@ -97,8 +99,8 @@ export class NoteElement extends ScoreElement {
     return this._gorgonNeume;
   }
 
-  public get hyporoeGorgonNeume() {
-    return this._hyporoeGorgonNeume;
+  public get secondaryGorgonNeume() {
+    return this._secondaryGorgonNeume;
   }
 
   public get vocalExpressionNeume() {
@@ -121,7 +123,7 @@ export class NoteElement extends ScoreElement {
       this.quantitativeNeume !==
       QuantitativeNeume.OligonPlusHyporoePlusKentemata
     ) {
-      this._hyporoeGorgonNeume = null;
+      this._secondaryGorgonNeume = null;
     }
   }
 
@@ -135,8 +137,8 @@ export class NoteElement extends ScoreElement {
     this.replaceNeumes();
   }
 
-  public set hyporoeGorgonNeume(neume: GorgonNeume | null) {
-    this._hyporoeGorgonNeume = neume;
+  public set secondaryGorgonNeume(neume: GorgonNeume | null) {
+    this._secondaryGorgonNeume = neume;
     this.replaceNeumes();
   }
 
@@ -167,7 +169,7 @@ export class NoteElement extends ScoreElement {
   private _quantitativeNeume: QuantitativeNeume = QuantitativeNeume.Ison;
   private _timeNeume: TimeNeume | null = null;
   private _gorgonNeume: GorgonNeume | null = null;
-  private _hyporoeGorgonNeume: GorgonNeume | null = null;
+  private _secondaryGorgonNeume: GorgonNeume | null = null;
   private _vocalExpressionNeume: VocalExpressionNeume | null = null;
   private _fthora: Fthora | null = null;
   private _accidental: Accidental | null = null;
@@ -406,13 +408,15 @@ export class ModeKeyElement extends ScoreElement {
   public mode: number = 1;
   public scale: Scale = Scale.Diatonic;
   public scaleNote: ScaleNote = ScaleNote.Pa;
-  public martyrias: ModeSign[] = [];
+  public martyria: ModeSign = ModeSign.Alpha;
   public note: ModeSign | null = null;
   public note2: ModeSign | null = null;
-  public fthora: Fthora | null = null;
-  public fthora2: Fthora | null = null;
+  public fthoraAboveNote: Fthora | null = null;
+  public fthoraAboveNote2: Fthora | null = null;
+  public fthoraAboveQuantitativeNeumeRight: Fthora | null = null;
   public quantitativeNeumeRight: QuantitativeNeume | null = null;
-  public quantitativeNeumeTop: ModeSign | null = null;
+  public quantitativeNeumeAboveNote: ModeSign | null = null;
+  public quantitativeNeumeAboveNote2: ModeSign | null = null;
   public color: string = '#000000';
   public fontSize: number = Unit.fromPt(20);
 
@@ -425,10 +429,8 @@ export class ModeKeyElement extends ScoreElement {
   }
 
   public get height() {
-    return Math.max(
-      TextMeasurementService.getFontHeight(`${this.fontSize}px Oxeia`),
-      TextMeasurementService.getFontHeight(`${this.fontSize}px EzSpecial2`),
-    );
+    // TODO unicode - remove this hard coded font name
+    return TextMeasurementService.getFontHeight(`${this.fontSize}px Neanes`);
   }
 
   public static createFromTemplate(
@@ -441,12 +443,17 @@ export class ModeKeyElement extends ScoreElement {
     element.mode = template.mode;
     element.scale = template.scale;
     element.scaleNote = template.scaleNote;
-    element.martyrias = template.martyrias.map((x) => x);
-    element.fthora = template.fthora || null;
-    element.fthora2 = template.fthora2 || null;
+    element.martyria = template.martyria;
+    element.fthoraAboveNote = template.fthoraAboveNote || null;
+    element.fthoraAboveNote2 = template.fthoraAboveNote2 || null;
+    element.fthoraAboveQuantitativeNeumeRight =
+      template.fthoraAboveQuantitativeNeumeRight || null;
     element.note = template.note || null;
     element.note2 = template.note2 || null;
-    element.quantitativeNeumeTop = template.quantitativeNeumeTop || null;
+    element.quantitativeNeumeAboveNote =
+      template.quantitativeNeumeAboveNote || null;
+    element.quantitativeNeumeAboveNote2 =
+      template.quantitativeNeumeAboveNote2 || null;
     element.quantitativeNeumeRight = template.quantitativeNeumeRight || null;
     element.alignment = alignment || TextBoxAlignment.Center;
 
@@ -469,12 +476,14 @@ export class ModeKeyElement extends ScoreElement {
       mode: this.mode,
       scale: this.scale,
       scaleNote: this.scaleNote,
-      martyrias: this.martyrias.map((x) => x),
-      fthora: this.fthora,
-      fthora2: this.fthora2,
+      martyria: this.martyria,
+      fthora: this.fthoraAboveNote,
+      fthora2: this.fthoraAboveNote2,
+      fthoraAboveQuantitativeNeumeRight: this.fthoraAboveQuantitativeNeumeRight,
       note: this.note,
       note2: this.note2,
-      quantitativeNeumeTop: this.quantitativeNeumeTop,
+      quantitativeNeumeAboveNote: this.quantitativeNeumeAboveNote,
+      quantitativeNeumeAboveNote2: this.quantitativeNeumeAboveNote2,
       quantitativeNeumeRight: this.quantitativeNeumeRight,
       fontSize: this.fontSize,
     } as Partial<ModeKeyElement>;

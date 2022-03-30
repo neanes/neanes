@@ -5,7 +5,7 @@
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { Neume as NeumeType } from '@/models/Neumes';
-import { neumeMap } from '@/models/NeumeMappings';
+import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { ScoreElementOffset } from '@/models/Element';
 import { withZoom } from '@/utils/withZoom';
 
@@ -13,15 +13,16 @@ import { withZoom } from '@/utils/withZoom';
 export default class Neume extends Vue {
   @Prop() neume!: NeumeType;
   @Prop() offset!: ScoreElementOffset;
+  @Prop() fontFamily!: string;
 
   get mapping() {
-    let mapping = neumeMap.get(this.neume);
+    let mapping = NeumeMappingService.getMapping(this.neume);
 
     if (!mapping) {
       console.warn('Could not find mapping for neume ' + this.neume);
       mapping = {
-        fontFamily: 'Omega',
         text: '?',
+        glyphName: 'ison',
       };
     }
 
@@ -35,7 +36,13 @@ export default class Neume extends Vue {
   get style() {
     const style = {} as CSSStyleDeclaration;
 
-    style.fontFamily = this.mapping.fontFamily;
+    if (this.fontFamily != null) {
+      style.fontFamily = this.fontFamily;
+    }
+
+    if (this.mapping.salt != null) {
+      style.fontFeatureSettings = `"salt" ${this.mapping.salt}`;
+    }
 
     if (this.offset) {
       style.left = withZoom(this.offset.x);

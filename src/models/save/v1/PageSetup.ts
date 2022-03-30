@@ -23,6 +23,7 @@ export class PageSetup {
   public lyricsDefaultColor = '#000000';
   public lyricsVerticalOffset = Unit.fromPt(30);
 
+  public neumeDefaultFontFamily = 'Neanes';
   public neumeDefaultFontSize = Unit.fromPt(20);
   public neumeDefaultColor = '#000000';
   public neumeDefaultSpacing = 3;

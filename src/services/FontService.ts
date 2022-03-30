@@ -15,6 +15,11 @@ class FontService {
       markAnchorName
     ] as number[];
 
+    if (baseAnchor == null) {
+      console.warn(`Missing base anchor for base: ${base} mark: ${mark}`);
+      return { x: 0, y: 0 };
+    }
+
     return {
       x: baseAnchor[0] - markAnchor[0],
       y: -(baseAnchor[1] - markAnchor[1]),

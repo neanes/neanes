@@ -600,11 +600,17 @@ export class LayoutService {
                   (nextNoteElement.lyricsHorizontalOffset || 0);
               }
 
-              element.melismaWidth = end - start;
+              element.melismaWidth = Math.max(end - start, 0);
 
               let numberOfHyphensNeeded = Math.floor(
                 element.melismaWidth / pageSetup.hyphenSpacing,
               );
+
+              // If this is the last note on the page, always show the hyphen
+              if (numberOfHyphensNeeded == 0 && nextElement == null) {
+                numberOfHyphensNeeded = 1;
+                element.melismaWidth = widthOfHyphen;
+              }
 
               if (
                 numberOfHyphensNeeded == 0 &&

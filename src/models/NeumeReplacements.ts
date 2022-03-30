@@ -51,6 +51,7 @@ const bottomOnlyKlasmaNeumes: Neume[] = [
   QuantitativeNeume.OligonPlusElaphron,
   QuantitativeNeume.OligonPlusElaphronPlusApostrophos,
   QuantitativeNeume.OligonPlusHamili,
+  QuantitativeNeume.OligonPlusIson,
 ];
 
 const topOnlyKlasmaNeumes: Neume[] = [

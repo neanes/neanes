@@ -85,9 +85,6 @@
                       class="syllable-box print-only"
                       :note="element"
                       :pageSetup="score.pageSetup"
-                      :class="[{ selected: isSelected(element) }]"
-                      @click.native.exact="selectedElement = element"
-                      @click.native.shift.exact="setSelectionRange(element)"
                     ></SyllableNeumeBoxPrint>
                     <div
                       class="lyrics-container"
@@ -139,8 +136,6 @@
                       class="marytria-neume-box print-only"
                       :neume="element"
                       :pageSetup="score.pageSetup"
-                      :class="[{ selected: isSelected(element) }]"
-                      @click.native="selectedElement = element"
                     ></MartyriaNeumeBoxPrint>
                     <div class="lyrics"></div>
                   </div>
@@ -225,9 +220,6 @@
                     :ref="`element-${getElementIndex(element)}`"
                     :element="element"
                     :pageSetup="score.pageSetup"
-                    :class="[{ selectedTextbox: element == selectedElement }]"
-                    @click.native="selectedElement = element"
-                    @dblclick.native="openModeKeyDialog"
                   >
                   </ModeKeyPrint>
                 </template>
@@ -590,6 +582,10 @@ export default class Editor extends Vue {
     }
 
     this.selectedWorkspace.selectedElement = element;
+  }
+
+  setSelectedElement(element: ScoreElement | null) {
+    this.selectedWorkspaceValue.selectedElement = element;
   }
 
   get selectedLyrics() {

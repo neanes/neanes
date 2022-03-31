@@ -584,10 +584,6 @@ export default class Editor extends Vue {
     this.selectedWorkspace.selectedElement = element;
   }
 
-  setSelectedElement(element: ScoreElement | null) {
-    this.selectedWorkspaceValue.selectedElement = element;
-  }
-
   get selectedLyrics() {
     return this.selectedWorkspace.selectedLyrics;
   }

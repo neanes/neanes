@@ -1,7 +1,9 @@
 import Vue from 'vue';
 import VueRouter from 'vue-router';
 import Home from '../views/Home.vue';
+import VueObserveVisibility from 'vue-observe-visibility';
 
+Vue.use(VueObserveVisibility);
 Vue.use(VueRouter);
 
 const routes = [

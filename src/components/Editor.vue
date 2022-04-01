@@ -46,206 +46,213 @@
           <div
             class="page"
             :style="pageStyle"
+            v-observe-visibility="{
+              callback: (isVisible) => updatePageVisibility(page, isVisible),
+              intersection: pageVisibilityIntersection,
+            }"
             v-for="(page, pageIndex) in pages"
             :key="`page-${pageIndex}`"
             :ref="`page-${pageIndex}`"
           >
-            <div
-              class="line"
-              v-for="(line, lineIndex) in page.lines"
-              :key="`line-${pageIndex}-${lineIndex}`"
-              :ref="`line-${lineIndex}`"
-            >
+            <template v-if="page.isVisible || printMode">
               <div
-                v-for="(element, index) in line.elements"
-                :key="`lineElement-${pageIndex}-${lineIndex}-${index}`"
-                class="element-box"
-                :style="getElementStyle(element)"
+                class="line"
+                v-for="(line, lineIndex) in page.lines"
+                :key="`line-${pageIndex}-${lineIndex}`"
+                :ref="`line-${lineIndex}`"
               >
-                <template v-if="isSyllableElement(element)">
-                  <div
-                    :ref="`element-${getElementIndex(element)}`"
-                    class="neume-box"
-                  >
+                <div
+                  v-for="(element, index) in line.elements"
+                  :key="`lineElement-${pageIndex}-${lineIndex}-${index}`"
+                  class="element-box"
+                  :style="getElementStyle(element)"
+                >
+                  <template v-if="isSyllableElement(element)">
+                    <div
+                      :ref="`element-${getElementIndex(element)}`"
+                      class="neume-box"
+                    >
+                      <span class="page-break" v-if="element.pageBreak"
+                        ><img src="@/assets/icons/page-break.svg"
+                      /></span>
+                      <span class="line-break" v-if="element.lineBreak"
+                        ><img src="@/assets/icons/line-break.svg"
+                      /></span>
+                      <SyllableNeumeBox
+                        class="syllable-box no-print"
+                        :note="element"
+                        :pageSetup="score.pageSetup"
+                        :class="[{ selected: isSelected(element) }]"
+                        @click.native.exact="selectedElement = element"
+                        @click.native.shift.exact="setSelectionRange(element)"
+                      ></SyllableNeumeBox>
+                      <SyllableNeumeBoxPrint
+                        v-if="printMode"
+                        class="syllable-box print-only"
+                        :note="element"
+                        :pageSetup="score.pageSetup"
+                      ></SyllableNeumeBoxPrint>
+                      <div
+                        class="lyrics-container"
+                        :key="`lyrics-${getElementIndex(element)}-${
+                          element.keyHelper
+                        }`"
+                        :style="getLyricStyle(element)"
+                        @click="focusLyrics(getElementIndex(element))"
+                      >
+                        <ContentEditable
+                          class="lyrics"
+                          :content="element.lyrics"
+                          :ref="`lyrics-${getElementIndex(element)}`"
+                          @focus.native="selectedLyrics = element"
+                          @blur="
+                            updateLyrics(element, $event);
+                            selectedLyrics = null;
+                          "
+                        ></ContentEditable>
+                        <template v-if="isMelisma(element)">
+                          <div
+                            class="melisma"
+                            :class="{ full: element.isFullMelisma }"
+                            :style="getMelismaStyle(element)"
+                            v-text="element.melismaText"
+                          ></div>
+                        </template>
+                      </div>
+                    </div>
+                  </template>
+                  <template v-if="isMartyriaElement(element)">
+                    <div class="neume-box">
+                      <span class="page-break" v-if="element.pageBreak">
+                        <img src="@/assets/icons/page-break.svg"
+                      /></span>
+                      <span class="line-break" v-if="element.lineBreak"
+                        ><img src="@/assets/icons/line-break.svg"
+                      /></span>
+                      <MartyriaNeumeBox
+                        :ref="`element-${getElementIndex(element)}`"
+                        class="marytria-neume-box no-print"
+                        :neume="element"
+                        :pageSetup="score.pageSetup"
+                        :class="[{ selected: isSelected(element) }]"
+                        @click.native="selectedElement = element"
+                      ></MartyriaNeumeBox>
+                      <MartyriaNeumeBoxPrint
+                        v-if="printMode"
+                        class="marytria-neume-box print-only"
+                        :neume="element"
+                        :pageSetup="score.pageSetup"
+                      ></MartyriaNeumeBoxPrint>
+                      <div class="lyrics"></div>
+                    </div>
+                  </template>
+                  <template v-if="isTempoElement(element)">
+                    <div
+                      :ref="`element-${getElementIndex(element)}`"
+                      class="neume-box"
+                    >
+                      <span class="page-break" v-if="element.pageBreak">
+                        <img src="@/assets/icons/page-break.svg"
+                      /></span>
+                      <span class="line-break" v-if="element.lineBreak"
+                        ><img src="@/assets/icons/line-break.svg"
+                      /></span>
+                      <TempoNeumeBox
+                        class="tempo-neume-box"
+                        :neume="element"
+                        :pageSetup="score.pageSetup"
+                        :class="[{ selected: isSelected(element) }]"
+                        @click.native="selectedElement = element"
+                      ></TempoNeumeBox>
+                      <div class="lyrics"></div>
+                    </div>
+                  </template>
+                  <template v-if="isEmptyElement(element)">
+                    <div
+                      :ref="`element-${getElementIndex(element)}`"
+                      class="neume-box"
+                    >
+                      <span class="page-break" v-if="element.pageBreak">
+                        <img src="@/assets/icons/page-break.svg"
+                      /></span>
+                      <span class="line-break" v-if="element.lineBreak"
+                        ><img src="@/assets/icons/line-break.svg"
+                      /></span>
+                      <div
+                        class="empty-neume-box"
+                        :class="[{ selected: isSelected(element) }]"
+                        :style="getEmptyBoxStyle(element)"
+                        @click="selectedElement = element"
+                      ></div>
+                      <div class="lyrics"></div>
+                    </div>
+                  </template>
+                  <template v-if="isTextBoxElement(element)">
+                    <span class="page-break-2" v-if="element.pageBreak"
+                      ><img src="@/assets/icons/page-break.svg"
+                    /></span>
+                    <span class="line-break-2" v-if="element.lineBreak"
+                      ><img src="@/assets/icons/line-break.svg"
+                    /></span>
+                    <TextBox
+                      :ref="`element-${getElementIndex(element)}`"
+                      :element="element"
+                      :pageSetup="score.pageSetup"
+                      :class="[{ selectedTextbox: element == selectedElement }]"
+                      @click.native="selectedElement = element"
+                      @update:content="updateTextBoxContent(element, $event)"
+                    >
+                    </TextBox>
+                  </template>
+                  <template v-if="isModeKeyElement(element)">
+                    <span class="page-break-2" v-if="element.pageBreak"
+                      ><img src="@/assets/icons/page-break.svg"
+                    /></span>
+                    <span class="line-break-2" v-if="element.lineBreak"
+                      ><img src="@/assets/icons/line-break.svg"
+                    /></span>
+                    <ModeKey
+                      class="no-print"
+                      :ref="`element-${getElementIndex(element)}`"
+                      :element="element"
+                      :pageSetup="score.pageSetup"
+                      :class="[{ selectedTextbox: element == selectedElement }]"
+                      @click.native="selectedElement = element"
+                      @dblclick.native="openModeKeyDialog"
+                    >
+                    </ModeKey>
+                    <ModeKeyPrint
+                      v-if="printMode"
+                      class="print-only"
+                      :element="element"
+                      :pageSetup="score.pageSetup"
+                    >
+                    </ModeKeyPrint>
+                  </template>
+                  <template v-if="isDropCapElement(element)">
                     <span class="page-break" v-if="element.pageBreak"
                       ><img src="@/assets/icons/page-break.svg"
                     /></span>
                     <span class="line-break" v-if="element.lineBreak"
                       ><img src="@/assets/icons/line-break.svg"
                     /></span>
-                    <SyllableNeumeBox
-                      class="syllable-box no-print"
-                      :note="element"
-                      :pageSetup="score.pageSetup"
-                      :class="[{ selected: isSelected(element) }]"
-                      @click.native.exact="selectedElement = element"
-                      @click.native.shift.exact="setSelectionRange(element)"
-                    ></SyllableNeumeBox>
-                    <SyllableNeumeBoxPrint
-                      class="syllable-box print-only"
-                      :note="element"
-                      :pageSetup="score.pageSetup"
-                    ></SyllableNeumeBoxPrint>
-                    <div
-                      class="lyrics-container"
-                      :key="`lyrics-${getElementIndex(element)}-${
+                    <DropCap
+                      :ref="`element-${getElementIndex(element)}`"
+                      :key="`drop-cap-${getElementIndex(element)}-${
                         element.keyHelper
                       }`"
-                      :style="getLyricStyle(element)"
-                      @click="focusLyrics(getElementIndex(element))"
+                      :element="element"
+                      :pageSetup="score.pageSetup"
+                      @click.native="selectedElement = element"
+                      @update:content="
+                        updateDropCapContent(selectedElement, $event)
+                      "
                     >
-                      <ContentEditable
-                        class="lyrics"
-                        :content="element.lyrics"
-                        :ref="`lyrics-${getElementIndex(element)}`"
-                        @focus.native="selectedLyrics = element"
-                        @blur="
-                          updateLyrics(element, $event);
-                          selectedLyrics = null;
-                        "
-                      ></ContentEditable>
-                      <template v-if="isMelisma(element)">
-                        <div
-                          class="melisma"
-                          :class="{ full: element.isFullMelisma }"
-                          :style="getMelismaStyle(element)"
-                          v-text="element.melismaText"
-                        ></div>
-                      </template>
-                    </div>
-                  </div>
-                </template>
-                <template v-if="isMartyriaElement(element)">
-                  <div class="neume-box">
-                    <span class="page-break" v-if="element.pageBreak">
-                      <img src="@/assets/icons/page-break.svg"
-                    /></span>
-                    <span class="line-break" v-if="element.lineBreak"
-                      ><img src="@/assets/icons/line-break.svg"
-                    /></span>
-                    <MartyriaNeumeBox
-                      :ref="`element-${getElementIndex(element)}`"
-                      class="marytria-neume-box no-print"
-                      :neume="element"
-                      :pageSetup="score.pageSetup"
-                      :class="[{ selected: isSelected(element) }]"
-                      @click.native="selectedElement = element"
-                    ></MartyriaNeumeBox>
-                    <MartyriaNeumeBoxPrint
-                      :ref="`element-${getElementIndex(element)}`"
-                      class="marytria-neume-box print-only"
-                      :neume="element"
-                      :pageSetup="score.pageSetup"
-                    ></MartyriaNeumeBoxPrint>
-                    <div class="lyrics"></div>
-                  </div>
-                </template>
-                <template v-if="isTempoElement(element)">
-                  <div
-                    :ref="`element-${getElementIndex(element)}`"
-                    class="neume-box"
-                  >
-                    <span class="page-break" v-if="element.pageBreak">
-                      <img src="@/assets/icons/page-break.svg"
-                    /></span>
-                    <span class="line-break" v-if="element.lineBreak"
-                      ><img src="@/assets/icons/line-break.svg"
-                    /></span>
-                    <TempoNeumeBox
-                      class="tempo-neume-box"
-                      :neume="element"
-                      :pageSetup="score.pageSetup"
-                      :class="[{ selected: isSelected(element) }]"
-                      @click.native="selectedElement = element"
-                    ></TempoNeumeBox>
-                    <div class="lyrics"></div>
-                  </div>
-                </template>
-                <template v-if="isEmptyElement(element)">
-                  <div
-                    :ref="`element-${getElementIndex(element)}`"
-                    class="neume-box"
-                  >
-                    <span class="page-break" v-if="element.pageBreak">
-                      <img src="@/assets/icons/page-break.svg"
-                    /></span>
-                    <span class="line-break" v-if="element.lineBreak"
-                      ><img src="@/assets/icons/line-break.svg"
-                    /></span>
-                    <div
-                      class="empty-neume-box"
-                      :class="[{ selected: isSelected(element) }]"
-                      :style="getEmptyBoxStyle(element)"
-                      @click="selectedElement = element"
-                    ></div>
-                    <div class="lyrics"></div>
-                  </div>
-                </template>
-                <template v-if="isTextBoxElement(element)">
-                  <span class="page-break-2" v-if="element.pageBreak"
-                    ><img src="@/assets/icons/page-break.svg"
-                  /></span>
-                  <span class="line-break-2" v-if="element.lineBreak"
-                    ><img src="@/assets/icons/line-break.svg"
-                  /></span>
-                  <TextBox
-                    :ref="`element-${getElementIndex(element)}`"
-                    :element="element"
-                    :pageSetup="score.pageSetup"
-                    :class="[{ selectedTextbox: element == selectedElement }]"
-                    @click.native="selectedElement = element"
-                    @update:content="updateTextBoxContent(element, $event)"
-                  >
-                  </TextBox>
-                </template>
-                <template v-if="isModeKeyElement(element)">
-                  <span class="page-break-2" v-if="element.pageBreak"
-                    ><img src="@/assets/icons/page-break.svg"
-                  /></span>
-                  <span class="line-break-2" v-if="element.lineBreak"
-                    ><img src="@/assets/icons/line-break.svg"
-                  /></span>
-                  <ModeKey
-                    class="no-print"
-                    :ref="`element-${getElementIndex(element)}`"
-                    :element="element"
-                    :pageSetup="score.pageSetup"
-                    :class="[{ selectedTextbox: element == selectedElement }]"
-                    @click.native="selectedElement = element"
-                    @dblclick.native="openModeKeyDialog"
-                  >
-                  </ModeKey>
-                  <ModeKeyPrint
-                    class="print-only"
-                    :ref="`element-${getElementIndex(element)}`"
-                    :element="element"
-                    :pageSetup="score.pageSetup"
-                  >
-                  </ModeKeyPrint>
-                </template>
-                <template v-if="isDropCapElement(element)">
-                  <span class="page-break" v-if="element.pageBreak"
-                    ><img src="@/assets/icons/page-break.svg"
-                  /></span>
-                  <span class="line-break" v-if="element.lineBreak"
-                    ><img src="@/assets/icons/line-break.svg"
-                  /></span>
-                  <DropCap
-                    :ref="`element-${getElementIndex(element)}`"
-                    :key="`drop-cap-${getElementIndex(element)}-${
-                      element.keyHelper
-                    }`"
-                    :element="element"
-                    :pageSetup="score.pageSetup"
-                    @click.native="selectedElement = element"
-                    @update:content="
-                      updateDropCapContent(selectedElement, $event)
-                    "
-                  >
-                  </DropCap>
-                </template>
+                    </DropCap>
+                  </template>
+                </div>
               </div>
-            </div>
+            </template>
           </div>
         </div>
       </div>
@@ -423,6 +430,8 @@ import { PageSetup } from '@/models/PageSetup';
 })
 export default class Editor extends Vue {
   isDevelopment: boolean = process.env.NODE_ENV !== 'production';
+
+  printMode: boolean = false;
 
   workspaces: Workspace[] = [];
   selectedWorkspaceValue: Workspace = new Workspace();
@@ -662,6 +671,16 @@ export default class Editor extends Vue {
     } as CSSStyleDeclaration;
   }
 
+  get pageVisibilityIntersection() {
+    // look ahead/behind 1 page
+    const margin = this.score.pageSetup.pageHeight * this.zoom;
+
+    return {
+      root: this.$refs['page-background'],
+      rootMargin: `${margin}px 0px ${margin}px 0px`,
+    } as IntersectionObserver;
+  }
+
   get dialogOpen() {
     return this.modeKeyDialogIsOpen || this.pageSetupDialogIsOpen;
   }
@@ -826,7 +845,7 @@ export default class Editor extends Vue {
   }
 
   getElementIndex(element: ScoreElement) {
-    return this.elements.indexOf(element);
+    return element.index;
   }
 
   setSelectionRange(element: ScoreElement) {
@@ -1810,10 +1829,20 @@ export default class Editor extends Vue {
       this.hasUnsavedChanges = true;
     }
 
-    this.pages = LayoutService.processPages(
+    // Save the indexes of the visible pages
+    const visiblePages = this.pages
+      .map((_, i) => i)
+      .filter((i) => this.pages[i].isVisible);
+
+    const pages = LayoutService.processPages(
       this.elements,
       this.score.pageSetup,
     );
+
+    // Set page visibility for the newly processed pages
+    pages.forEach((x, index) => (x.isVisible = visiblePages.includes(index)));
+
+    this.pages = pages;
 
     if (this.isDevelopment) {
       localStorage.setItem(
@@ -1984,6 +2013,10 @@ export default class Editor extends Vue {
     );
   }
 
+  updatePageVisibility(page: Page, isVisible: boolean) {
+    page.isVisible = isVisible;
+  }
+
   updateNote(element: NoteElement, newValues: Partial<NoteElement>) {
     this.commandService.execute(
       this.noteElementCommandFactory.create('update-properties', {
@@ -1991,16 +2024,16 @@ export default class Editor extends Vue {
         newValues: newValues,
       }),
     );
-
-    this.save();
   }
 
   updateNoteAccidental(element: NoteElement, accidental: Accidental) {
     this.updateNote(element, { accidental });
+    this.save();
   }
 
   updateNoteFthora(element: NoteElement, fthora: Fthora) {
     this.updateNote(element, { fthora });
+    this.save();
   }
 
   updateNoteExpression(
@@ -2008,34 +2041,42 @@ export default class Editor extends Vue {
     vocalExpressionNeume: VocalExpressionNeume,
   ) {
     this.updateNote(element, { vocalExpressionNeume });
+    this.save();
   }
 
   updateNoteTime(element: NoteElement, timeNeume: TimeNeume) {
     this.updateNote(element, { timeNeume });
+    this.save();
   }
 
   updateNoteGorgon(element: NoteElement, gorgonNeume: GorgonNeume) {
     this.updateNote(element, { gorgonNeume });
+    this.save();
   }
 
   updateNoteMeasureBar(element: NoteElement, measureBar: MeasureBar) {
     this.updateNote(element, { measureBar });
+    this.save();
   }
 
   updateNoteMeasureNumber(element: NoteElement, measureNumber: MeasureNumber) {
     this.updateNote(element, { measureNumber });
+    this.save();
   }
 
   updateNoteNoteIndicator(element: NoteElement, noteIndicator: NoteIndicator) {
     this.updateNote(element, { noteIndicator });
+    this.save();
   }
 
   updateNoteIson(element: NoteElement, ison: Ison) {
     this.updateNote(element, { ison });
+    this.save();
   }
 
   updateNoteVareia(element: NoteElement, vareia: boolean) {
     this.updateNote(element, { vareia });
+    this.save();
   }
 
   updateLyrics(element: NoteElement, lyrics: string) {
@@ -2387,11 +2428,21 @@ export default class Editor extends Vue {
   }
 
   async onFileMenuPrint() {
-    await IpcService.printWorkspace(this.selectedWorkspace);
+    this.printMode = true;
+
+    Vue.nextTick(async () => {
+      await IpcService.printWorkspace(this.selectedWorkspace);
+      this.printMode = false;
+    });
   }
 
   async onFileMenuExportAsPdf() {
-    await IpcService.exportWorkspaceAsPdf(this.selectedWorkspace);
+    this.printMode = true;
+
+    Vue.nextTick(async () => {
+      await IpcService.exportWorkspaceAsPdf(this.selectedWorkspace);
+      this.printMode = false;
+    });
   }
 
   onFileMenuInsertTextBox() {

@@ -12,6 +12,7 @@ import {
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import {
   Fthora,
+  Neume,
   Note,
   QuantitativeNeume,
   RootSign,
@@ -25,6 +26,10 @@ import { TextMeasurementService } from './TextMeasurementService';
 
 export class LayoutService {
   public static processPages(elements: ScoreElement[], pageSetup: PageSetup) {
+    const textWidthCache = new Map<Neume, number>();
+
+    elements.forEach((x, index) => (x.index = index));
+
     this.calculateMartyrias(elements);
 
     // Always make sure this is an empty element at the end of the score.
@@ -38,6 +43,7 @@ export class LayoutService {
 
     let page: Page = {
       lines: [],
+      isVisible: false,
     };
 
     let line: Line = {
@@ -145,19 +151,20 @@ export class LayoutService {
 
           noteElement.lyricsVerticalOffset = lyricsVerticalOffset;
 
-          const quantitativeNeumeMapping = NeumeMappingService.getMapping(
+          noteElement.neumeWidth = this.getNeumeWidthFromCache(
+            textWidthCache,
             noteElement.quantitativeNeume,
-          )!;
-
-          noteElement.neumeWidth = TextMeasurementService.getTextWidth(
-            quantitativeNeumeMapping.text,
-            `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
+            pageSetup,
           );
 
-          noteElement.lyricsWidth = TextMeasurementService.getTextWidth(
-            noteElement.lyrics,
-            `${pageSetup.lyricsDefaultFontSize}px ${pageSetup.lyricsDefaultFontFamily}`,
-          );
+          if (noteElement.lyrics.length > 0) {
+            noteElement.lyricsWidth = TextMeasurementService.getTextWidth(
+              noteElement.lyrics,
+              `${pageSetup.lyricsDefaultFontSize}px ${pageSetup.lyricsDefaultFontFamily}`,
+            );
+          } else {
+            noteElement.lyricsWidth = 0;
+          }
 
           noteElement.lyricsHorizontalOffset = null;
 
@@ -344,6 +351,7 @@ export class LayoutService {
       ) {
         page = {
           lines: [],
+          isVisible: false,
         };
 
         line = {
@@ -942,6 +950,27 @@ export class LayoutService {
     }
 
     return true;
+  }
+
+  private static getNeumeWidthFromCache(
+    cache: Map<Neume, number>,
+    neume: Neume,
+    pageSetup: PageSetup,
+  ) {
+    let width = cache.get(neume);
+
+    if (width == null) {
+      const neumeMapping = NeumeMappingService.getMapping(neume)!;
+
+      width = TextMeasurementService.getTextWidth(
+        neumeMapping.text,
+        `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
+      );
+
+      cache.set(neume, width);
+    }
+
+    return width;
   }
 }
 

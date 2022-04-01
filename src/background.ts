@@ -315,22 +315,38 @@ async function exportWorkspaceAsPdf(args: ExportWorkspaceAsPdfArgs) {
 }
 
 async function printWorkspace(args: PrintWorkspaceArgs) {
-  try {
-    win.webContents.print({
-      pageSize: args.pageSize,
-      landscape: args.landscape,
-    });
-  } catch (error) {
-    console.error(error);
+  return new Promise((resolve) => {
+    try {
+      win.webContents.print(
+        {
+          pageSize: args.pageSize,
+          landscape: args.landscape,
+        },
+        (success, failureReason) => {
+          if (!success) {
+            dialog.showMessageBox(win, {
+              type: 'error',
+              title: 'Print failed',
+              message: failureReason,
+            });
+          }
+          resolve({ success, failureReason });
+        },
+      );
+    } catch (error) {
+      console.error(error);
 
-    if (error instanceof Error) {
-      dialog.showMessageBox(win, {
-        type: 'error',
-        title: 'Print failed',
-        message: error.message,
-      });
+      if (error instanceof Error) {
+        dialog.showMessageBox(win, {
+          type: 'error',
+          title: 'Print failed',
+          message: error.message,
+        });
+      }
+
+      resolve({ success: false });
     }
-  }
+  });
 }
 
 async function openWorkspace() {

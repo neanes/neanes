@@ -465,6 +465,7 @@
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusHypsiliRight",
         "vocalExpressionNeume": "HomalonConnecting",
+        "vareia": true,
         "lyrics": "δο"
       },
       {
@@ -642,8 +643,8 @@
       {
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "lyrics": "θρω",
-        "vareia": true
+        "vareia": true,
+        "lyrics": "θρω"
       },
       {
         "elementType": "Note",

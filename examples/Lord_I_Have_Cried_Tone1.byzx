@@ -52,9 +52,7 @@
         "mode": 1,
         "scale": "Diatonic",
         "scaleNote": "Pa",
-        "martyrias": [
-          "ModeSign.AlphaWithDeltaHat"
-        ],
+        "martyria": "ModeSign.AlphaWithDeltaHat",
         "note": "ModeSign.Pa",
         "color": "#ED0000",
         "fontSize": 26.666666666666668,
@@ -129,10 +127,10 @@
       {
         "elementType": "Note",
         "quantitativeNeume": "Ison",
-        "vocalExpressionNeume": "Vareia",
         "lyrics": "to",
         "isMelisma": true,
-        "isMelismaStart": true
+        "isMelismaStart": true,
+        "vareia": true
       },
       {
         "elementType": "Note",
@@ -278,10 +276,10 @@
       {
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "vocalExpressionNeume": "Vareia",
         "lyrics": "to",
         "isMelisma": true,
-        "isMelismaStart": true
+        "isMelismaStart": true,
+        "vareia": true
       },
       {
         "elementType": "Note",
@@ -310,10 +308,10 @@
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
         "timeNeume": "Klasma_Top",
-        "vocalExpressionNeume": "Vareia",
         "lyrics": "O",
         "isMelisma": true,
-        "isMelismaStart": true
+        "isMelismaStart": true,
+        "vareia": true
       },
       {
         "elementType": "Note",
@@ -482,11 +480,11 @@
       {
         "elementType": "Note",
         "quantitativeNeume": "Oligon",
-        "vocalExpressionNeume": "Vareia",
         "measureNumber": "Four",
         "lyrics": "me;",
         "isMelisma": true,
-        "isMelismaStart": true
+        "isMelismaStart": true,
+        "vareia": true
       },
       {
         "elementType": "Note",
@@ -558,10 +556,10 @@
       {
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "vocalExpressionNeume": "Vareia",
         "lyrics": "of",
         "isMelisma": true,
-        "isMelismaStart": true
+        "isMelismaStart": true,
+        "vareia": true
       },
       {
         "elementType": "Note",
@@ -607,11 +605,11 @@
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
         "timeNeume": "Klasma_Top",
-        "vocalExpressionNeume": "Vareia",
         "lyrics": "ca",
         "isMelisma": true,
         "isMelismaStart": true,
-        "isHyphen": true
+        "isHyphen": true,
+        "vareia": true
       },
       {
         "elementType": "Note",
@@ -696,10 +694,10 @@
       {
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusKentimaBelow",
-        "vocalExpressionNeume": "Vareia",
         "lyrics": "Thee:",
         "isMelisma": true,
-        "isMelismaStart": true
+        "isMelismaStart": true,
+        "variea": true
       },
       {
         "elementType": "Note",
@@ -800,10 +798,10 @@
         "elementType": "Note",
         "quantitativeNeume": "Ison",
         "timeNeume": "Klasma_Top",
-        "vocalExpressionNeume": "Vareia",
         "lyrics": "O",
         "isMelisma": true,
-        "isMelismaStart": true
+        "isMelismaStart": true,
+        "vareia": true
       },
       {
         "elementType": "Note",

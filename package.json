@@ -2,7 +2,7 @@
   "name": "neanes",
   "author": "danielgarthur",
   "description": "A Byzantine Chant Scorewriter",
-  "version": "0.2.0-alpha.1",
+  "version": "0.2.0-alpha.2",
   "license": "GPL-3.0",
   "private": true,
   "scripts": {

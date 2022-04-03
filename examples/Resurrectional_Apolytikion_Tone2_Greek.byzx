@@ -61,11 +61,9 @@
         "mode": 2,
         "scale": "SoftChromatic",
         "scaleNote": "Thi",
-        "martyrias": [
-          "ModeSign.SoftChromatic2"
-        ],
+        "martyria": "ModeSign.SoftChromatic2",
         "note": "ModeSign.Thi",
-        "fthora": "SoftChromaticThi_Top",
+        "fthoraAboveNote": "SoftChromaticThi_Top",
         "color": "#ED0000",
         "fontSize": 26.666666666666668,
         "height": 49

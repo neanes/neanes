@@ -61,9 +61,7 @@
         "mode": 1,
         "scale": "Diatonic",
         "scaleNote": "Pa",
-        "martyrias": [
-          "ModeSign.AlphaWithDeltaHat"
-        ],
+        "martyria": "ModeSign.AlphaWithDeltaHat",
         "note": "ModeSign.Pa",
         "color": "#ED0000",
         "fontSize": 26.666666666666668,
@@ -644,8 +642,8 @@
       {
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "vocalExpressionNeume": "Vareia",
-        "lyrics": "θρω"
+        "lyrics": "θρω",
+        "vareia": true
       },
       {
         "elementType": "Note",

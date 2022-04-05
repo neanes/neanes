@@ -349,15 +349,6 @@ export const vocalExpressionReplacementMap = new Map<
     ],
   ],
   [
-    VocalExpressionNeume.Heteron,
-    [
-      {
-        isPairedWith: [...petastiNeumes],
-        replaceWith: null,
-      },
-    ],
-  ],
-  [
     VocalExpressionNeume.Homalon,
     [
       {

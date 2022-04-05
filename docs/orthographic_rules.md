@@ -7,7 +7,7 @@
 ## Kentemata
 
 - Kentemata may never hold more than one beat, and thus cannot take a klasma, hapli, etc. If a kentemata needs to be held for more than one beat, an ison must placed after it and given the appropriate duration. This also applies to compound neumes that end in kentemata.
-- Kentemata may never take vocal expression neumes.
+- Kentemata may never take vocal expression neumes (except for the heteron).
 
 ## Gorgon
 

@@ -2336,6 +2336,14 @@ export default class Editor extends Vue {
         ),
       );
 
+      const start = Math.min(
+        this.selectionRange.start,
+        this.selectionRange.end,
+      );
+
+      this.selectedElement =
+        this.elements[Math.min(start, this.elements.length - 1)];
+
       this.save();
     }
   }

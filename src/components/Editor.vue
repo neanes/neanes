@@ -968,6 +968,13 @@ export default class Editor extends Vue {
         if (this.isLastElement(this.selectedElement)) {
           this.addScoreElement(element, this.selectedElementIndex);
         } else {
+          if (this.selectedElement.elementType === ElementType.Note) {
+            const selectedElementAsNote = this.selectedElement as NoteElement;
+
+            element.isMelisma = selectedElementAsNote.isMelisma;
+            element.isHyphen = selectedElementAsNote.isHyphen;
+          }
+
           this.addScoreElement(element, this.selectedElementIndex + 1);
         }
         this.selectedElement = element;

@@ -2445,19 +2445,49 @@ export default class Editor extends Vue {
   async onFileMenuPrint() {
     this.printMode = true;
 
+    // Blur the active element so that focus outlines and
+    // blinking cursors don't show up in the printed page
+    const activeElement = this.blurActiveElement();
+
     Vue.nextTick(async () => {
       await IpcService.printWorkspace(this.selectedWorkspace);
       this.printMode = false;
+
+      // Re-focus the active element
+      this.focusElement(activeElement);
     });
   }
 
   async onFileMenuExportAsPdf() {
     this.printMode = true;
 
+    // Blur the active element so that focus outlines and
+    // blinking cursors don't show up in the printed page
+    const activeElement = this.blurActiveElement();
+
     Vue.nextTick(async () => {
       await IpcService.exportWorkspaceAsPdf(this.selectedWorkspace);
       this.printMode = false;
+
+      // Re-focus the active element
+      this.focusElement(activeElement);
     });
+  }
+
+  blurActiveElement() {
+    const activeElement = document.activeElement;
+
+    if (activeElement instanceof HTMLElement) {
+      activeElement.blur();
+    }
+
+    return activeElement;
+  }
+
+  focusElement(element: Element | null) {
+    if (element instanceof HTMLElement) {
+      element.focus();
+    }
   }
 
   onFileMenuInsertTextBox() {

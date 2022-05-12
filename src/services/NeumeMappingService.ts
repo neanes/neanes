@@ -275,6 +275,7 @@ mapNeumeToSbmufl(VocalExpressionNeume.Homalon, 'omalon');
 mapNeumeToSbmufl(VocalExpressionNeume.Antikenoma, 'antikenoma');
 mapNeumeToSbmufl(VocalExpressionNeume.Psifiston, 'psifiston');
 mapNeumeToSbmufl(VocalExpressionNeume.Heteron, 'heteron');
+mapNeumeToSbmufl(VocalExpressionNeume.HeteronConnecting, 'heteronConnecting');
 mapNeumeToSbmufl(RootSign.Delta, 'martyriaDeltaBelow');
 mapNeumeToSbmufl(RootSign.Alpha, 'martyriaAlphaBelow');
 mapNeumeToSbmufl(RootSign.Legetos, 'martyriaLegetosBelow');

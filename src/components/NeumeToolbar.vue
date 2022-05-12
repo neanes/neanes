@@ -200,6 +200,12 @@
       >
         <img src="@/assets/icons/quality-heteron.svg" />
       </button>
+      <button
+        class="neume-button"
+        @click="setVocalExpression(VocalExpressionNeume.HeteronConnecting)"
+      >
+        <img src="@/assets/icons/quality-heteron-connecting.svg" />
+      </button>
       <span class="space"></span>
       <div
         class="menu-container"

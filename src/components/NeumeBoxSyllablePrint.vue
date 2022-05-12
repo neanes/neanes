@@ -4,9 +4,14 @@
       getMapping(VocalExpressionNeume.Vareia).text
     }}</template>
     <template>{{ getMapping(note.quantitativeNeume).text }}</template>
-    <template v-if="hasVocalExpressionNeume">{{
+    <template v-if="hasVocalExpressionNeume && !hasHeteron">{{
       getMapping(note.vocalExpressionNeume).text
     }}</template>
+    <Neume
+      v-if="hasHeteron"
+      :neume="note.vocalExpressionNeume"
+      :style="heteronStyle"
+    ></Neume>
     <Neume
       v-if="hasTimeNeume"
       :neume="note.timeNeume"
@@ -70,6 +75,10 @@ export default class NeumeBoxSyllablePrint extends Vue {
 
   get hasVocalExpressionNeume() {
     return this.note.vocalExpressionNeume != null;
+  }
+
+  get hasHeteron() {
+    return this.note.vocalExpressionNeume == VocalExpressionNeume.Heteron;
   }
 
   get hasTimeNeume() {
@@ -209,6 +218,17 @@ export default class NeumeBoxSyllablePrint extends Vue {
     } as CSSStyleDeclaration;
   }
 
+  get heteronStyle() {
+    const offset = this.getOffset(this.note.vocalExpressionNeume!);
+
+    return {
+      position: 'absolute',
+      left: withZoom(offset.x, 'em'),
+      top: withZoom(offset.y, 'em'),
+      color: this.pageSetup.heteronDefaultColor,
+    } as CSSStyleDeclaration;
+  }
+
   getMapping(neume: GenericNeume) {
     return NeumeMappingService.getMapping(neume);
   }
@@ -216,7 +236,20 @@ export default class NeumeBoxSyllablePrint extends Vue {
   getOffset(neume: GenericNeume) {
     const mark = this.getMapping(neume).glyphName;
     const base = this.getMapping(this.note.quantitativeNeume).glyphName;
-    return fontService.getMarkOffset(base, mark);
+
+    const offset = fontService.getMarkOffset(base, mark);
+
+    // Shift offset for vareia
+    if (this.note.vareia) {
+      const vareiaGlyphName = this.getMapping(
+        VocalExpressionNeume.Vareia,
+      ).glyphName;
+
+      const vareiaWidth = fontService.getAdvanceWidth(vareiaGlyphName);
+      offset.x += vareiaWidth;
+    }
+
+    return offset;
   }
 }
 </script>

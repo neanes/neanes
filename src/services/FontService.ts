@@ -2,6 +2,10 @@ import metadata from '@/assets/fonts/neanes.metadata.json';
 import { SbmuflGlyphName } from '@/services/NeumeMappingService';
 
 class FontService {
+  getAdvanceWidth(glyph: SbmuflGlyphName) {
+    return metadata.glyphAdvanceWidths[glyph];
+  }
+
   getMarkOffset(base: SbmuflGlyphName, mark: SbmuflGlyphName) {
     const markAnchorName = Object.keys(
       (metadata.glyphsWithAnchors as any)[mark],

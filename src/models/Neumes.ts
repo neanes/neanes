@@ -117,6 +117,7 @@ export enum VocalExpressionNeume {
   Antikenoma = 'Antikenoma',
   Psifiston = 'Psifiston',
   Heteron = 'Heteron',
+  HeteronConnecting = 'HeteronConnecting',
 }
 
 export enum RootSign {

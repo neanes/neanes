@@ -30,11 +30,11 @@ Example files can be found in the [examples](examples/) folder.
 
 ## How to Download
 
-Go to the [releases page](https://github.com/danielgarthur/neanes/releases) and download the setup EXE from the latest release.
+Download the latest release on [releases page](https://github.com/danielgarthur/neanes/releases). The latest release can also be found [here](https://danielgarthur.github.io/neanes/download).
 
 ## How-to Guide
 
-To learn how to use the software, read the [Getting Started Guide](docs/getting_started.md).
+To learn how to use the software, read the [Guide](https://danielgarthur.github.io/neanes/guide).
 
 ## Building
 

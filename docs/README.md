@@ -2,7 +2,7 @@
 home: true
 heroImage: /hero.png
 heroText: Neanes
-tagline: A Byzantine Notation Scorewriter
+tagline: A Byzantine Chant Scorewriter
 actions:
   - actionText: Get Started
     actionLink: /guide/

@@ -1,5 +1,5 @@
 module.exports = {
-  title: 'Neanes Byzantine Notation Scorewriter',
+  title: 'Neanes Byzantine Chant Scorewriter',
   description:
     'Neanes is a free and open source scorewriter for notating Byzantine chant in Byzantine notation.',
   base: '/neanes/',

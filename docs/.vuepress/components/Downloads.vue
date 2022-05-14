@@ -2,12 +2,23 @@
   <div>
     <div>
       Download the latest release from
-      <a href="https://github.com/danielgarthur/neanes/releases" target="_blank"
+      <a
+        href="https://github.com/danielgarthur/neanes/releases"
+        target="_blank"
+        rel="noopener noreferrer"
         >Github</a
       >.
     </div>
     <template v-if="!error && rows.length > 0">
       <h2>{{ latestRelease.name }}</h2>
+      <div>
+        <a
+          :href="latestRelease.html_url"
+          target="_blank"
+          rel="noopener noreferrer"
+          >Release Notes</a
+        >
+      </div>
       <table>
         <thead>
           <tr>

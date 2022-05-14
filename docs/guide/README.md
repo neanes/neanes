@@ -36,9 +36,17 @@ While the mode key is selected, a toolbar at the bottom the screen will be visib
 
 ## Entering Neumes
 
-Quantitative neumes are inserted by clicking the desired neume in the panel on the left side of the window. Supporting such as fthoras, gorgons, accidentals, etc. can be inserted by using the toolbar that appears on the bottom of the screen when a neume is selected.
+Quantitative neumes are inserted by clicking the desired neume in the panel on the left side of the window.
 
 ![Neume Entry Panel](./images/guide-neume-entry-panel.png)
+
+Supporting neumes such as fthoras, gorgons, accidentals, etc. can be inserted by using the toolbar that appears on the bottom of the screen when a neume is selected.
+
+![Neume Toolbar](./images/guide-neume-toolbar.png)
+
+Some buttons in this toolbar will open a menu containing more options. To operate this menu, click and hold the mouse button, select the desired neume, and then release the mouse button.
+
+![Neume Toolbar Gorgon Example](./images/guide-neume-toolbar-gorgon-expanded.png)
 
 ### Martyria
 

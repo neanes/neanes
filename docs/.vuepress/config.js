@@ -2,6 +2,7 @@ module.exports = {
   title: 'Neanes Byzantine Notation Scorewriter',
   description:
     'Neanes is a free and open source scorewriter for notating Byzantine chant in Byzantine notation.',
+  base: '/neanes/',
   head: [['link', { rel: 'shortcut icon', href: '/favicon.ico' }]],
   themeConfig: {
     nav: [

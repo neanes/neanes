@@ -3,8 +3,11 @@ home: true
 heroImage: /hero.png
 heroText: Neanes
 tagline: A Byzantine Notation Scorewriter
-actionText: Get Started →
-actionLink: /guide/
+actions:
+  - actionText: Get Started
+    actionLink: /guide/
+  - actionText: Download
+    actionLink: /download/
 features:
   - title: WYSIWYG Design
     details: Point and click to add neumes and see how they will appear on the page.

@@ -16,7 +16,9 @@
     "postuninstall": "electron-builder install-app-deps",
     "icons:build": "electron-icon-builder --flatten --input=./icons/1024x1024.png --output=./build",
     "prettier": "prettier --write \"./**/*.{ts,js,vue}\"",
-    "test": "jest"
+    "test": "jest",
+    "docs:dev": "vuepress dev docs",
+    "docs:build": "vuepress build docs"
   },
   "main": "background.js",
   "dependencies": {
@@ -54,6 +56,7 @@
     "ts-jest": "^27.1.2",
     "typescript": "^4.5.4",
     "vue-cli-plugin-electron-builder": "^2.1.1",
-    "vue-template-compiler": "^2.6.10"
+    "vue-template-compiler": "^2.6.10",
+    "vuepress": "^1.9.7"
   }
 }

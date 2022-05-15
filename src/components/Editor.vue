@@ -24,6 +24,9 @@
       ></NeumeSelector>
       <div class="page-container">
         <div class="workspace-tab-container" ref="workspace-tab-container">
+          <div class="workspace-tab-new-button" @click="onFileMenuNewScore">
+            +
+          </div>
           <div
             class="workspace-tab"
             :class="{ selected: workspace == selectedWorkspace }"
@@ -2760,6 +2763,18 @@ export default class Editor extends Vue {
 
 .workspace-tab-container:hover {
   overflow-x: auto;
+}
+
+.workspace-tab-new-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+
+  font-size: 1.25rem;
+  font-weight: bold;
+
+  cursor: default;
 }
 
 .workspace-tab {

@@ -47,7 +47,6 @@ export class BrowserIpcService implements IIpcService {
   }
 
   public async openWorkspaceFromArgv(): Promise<FileMenuOpenScoreArgs[]> {
-    // TODO read from indexedDB
     return [];
   }
 

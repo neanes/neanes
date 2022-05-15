@@ -30,7 +30,11 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 import FileMenuBarItem from '@/components/FileMenuBarItem.vue';
 import FileMenuItem from '@/components/FileMenuItem.vue';
 import { EventBus } from '@/eventBus';
-import { IpcMainChannels, IpcRendererChannels } from '@/ipc/ipcChannels';
+import {
+  FileMenuOpenScoreArgs,
+  IpcMainChannels,
+  IpcRendererChannels,
+} from '@/ipc/ipcChannels';
 
 @Component({
   components: {
@@ -60,16 +64,6 @@ export default class FileMenuBar extends Vue {
 
   onClickSave() {
     EventBus.$emit(IpcMainChannels.FileMenuSaveAs);
-
-    // EventBus.$once(IpcRendererChannels.FileMenuSaveAsReply, (data: string) => {
-    //   const contentType = 'text/plain';
-
-    //   var a = document.createElement('a');
-    //   var file = new Blob([data], { type: contentType });
-    //   a.href = URL.createObjectURL(file);
-    //   a.download = 'score.json';
-    //   a.click();
-    // });
   }
 
   onSelectFile() {
@@ -80,10 +74,11 @@ export default class FileMenuBar extends Vue {
       var reader = new FileReader();
 
       reader.onload = () => {
-        EventBus.$emit(
-          IpcMainChannels.FileMenuOpenScore,
-          reader.result as string,
-        );
+        EventBus.$emit(IpcMainChannels.FileMenuOpenScore, {
+          data: reader.result as string,
+          filePath: file.name,
+          success: true,
+        } as FileMenuOpenScoreArgs);
 
         // Reset the selector so that if the user selects
         // the same file twice, it will load

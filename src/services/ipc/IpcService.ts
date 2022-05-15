@@ -8,12 +8,13 @@ import {
   SaveWorkspaceAsReplyArgs,
   SaveWorkspaceReplyArgs,
   ShowMessageBoxArgs,
+  ShowMessageBoxReplyArgs,
 } from '@/ipc/ipcChannels';
 import { Workspace } from '@/models/Workspace';
-import { SaveService } from './SaveService';
+import { SaveService } from '../SaveService';
 
 export class IpcService {
-  public static async saveWorkspace(
+  public async saveWorkspace(
     workspace: Workspace,
   ): Promise<SaveWorkspaceReplyArgs> {
     return await window.ipcRenderer.invoke(IpcRendererChannels.SaveWorkspace, {
@@ -23,7 +24,7 @@ export class IpcService {
     } as SaveWorkspaceArgs);
   }
 
-  public static async saveWorkspaceAs(
+  public async saveWorkspaceAs(
     workspace: Workspace,
   ): Promise<SaveWorkspaceAsReplyArgs> {
     return await window.ipcRenderer.invoke(
@@ -36,7 +37,7 @@ export class IpcService {
     );
   }
 
-  public static async exportWorkspaceAsPdf(workspace: Workspace) {
+  public async exportWorkspaceAsPdf(workspace: Workspace) {
     return await window.ipcRenderer.invoke(
       IpcRendererChannels.ExportWorkspaceAsPdf,
       {
@@ -48,31 +49,29 @@ export class IpcService {
     );
   }
 
-  public static async printWorkspace(workspace: Workspace) {
+  public async printWorkspace(workspace: Workspace) {
     return await window.ipcRenderer.invoke(IpcRendererChannels.PrintWorkspace, {
       landscape: workspace.score.pageSetup.landscape,
       pageSize: workspace.score.pageSetup.pageSize,
     } as PrintWorkspaceArgs);
   }
 
-  public static async openWorkspaceFromArgv(): Promise<
-    FileMenuOpenScoreArgs[]
-  > {
+  public async openWorkspaceFromArgv(): Promise<FileMenuOpenScoreArgs[]> {
     return await window.ipcRenderer.invoke(
       IpcRendererChannels.OpenWorkspaceFromArgv,
     );
   }
 
-  public static async showMessageBox(
+  public async showMessageBox(
     args: ShowMessageBoxArgs,
-  ): Promise<Electron.MessageBoxReturnValue> {
+  ): Promise<ShowMessageBoxReplyArgs> {
     return await window.ipcRenderer.invoke(
       IpcRendererChannels.ShowMessageBox,
       args,
     );
   }
 
-  public static async exitApplication() {
+  public async exitApplication() {
     return await window.ipcRenderer.invoke(IpcRendererChannels.ExitApplication);
   }
 }

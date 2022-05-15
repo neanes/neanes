@@ -5,7 +5,9 @@ import router from './router';
 
 Vue.config.productionTip = false;
 
-initializeIpcListeners();
+if (process.env.IS_ELECTRON) {
+  initializeIpcListeners();
+}
 
 new Vue({
   router,

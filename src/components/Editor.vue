@@ -1,5 +1,6 @@
 <template>
   <div class="editor">
+    <FileMenuBar v-if="showFileMenuBar" />
     <MainToolbar
       :entryMode="entryMode"
       :zoom="zoom"
@@ -372,7 +373,6 @@ import { EntryMode } from '@/models/EntryMode';
 import { ScoreElementSelectionRange } from '@/models/ScoreElementSelectionRange';
 import { SaveService } from '@/services/SaveService';
 import { LayoutService } from '@/services/LayoutService';
-import { IpcService } from '@/services/IpcService';
 import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
 import SyllableNeumeBoxPrint from '@/components/NeumeBoxSyllablePrint.vue';
 import MartyriaNeumeBox from '@/components/NeumeBoxMartyria.vue';
@@ -392,6 +392,7 @@ import NeumeToolbar from '@/components/NeumeToolbar.vue';
 import MartyriaToolbar from '@/components/MartyriaToolbar.vue';
 import ModeKeyDialog from '@/components/ModeKeyDialog.vue';
 import PageSetupDialog from '@/components/PageSetupDialog.vue';
+import FileMenuBar from '@/components/FileMenuBar.vue';
 import { IpcMainChannels, FileMenuOpenScoreArgs } from '@/ipc/ipcChannels';
 import { EventBus } from '@/eventBus';
 import { modeKeyTemplates } from '@/models/ModeKeys';
@@ -403,6 +404,7 @@ import { shallowEquals } from '@/utils/shallowEquals';
 import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
 import { throttle } from 'throttle-debounce';
 import { Command, CommandFactory } from '@/services/history/CommandService';
+import { IIpcService } from '@/services/ipc/IIpcService';
 import { PageSetup } from '@/models/PageSetup';
 
 @Component({
@@ -426,9 +428,13 @@ import { PageSetup } from '@/models/PageSetup';
     MainToolbar,
     ModeKeyDialog,
     PageSetupDialog,
+    FileMenuBar,
   },
 })
 export default class Editor extends Vue {
+  @Prop() ipcService!: IIpcService;
+  @Prop() showFileMenuBar!: boolean;
+
   isDevelopment: boolean = process.env.NODE_ENV !== 'production';
 
   printMode: boolean = false;
@@ -1873,7 +1879,7 @@ export default class Editor extends Vue {
   async load() {
     // First, try to load files passed in on the command line.
     // If there are none, then create a default workspace.
-    const openWorkspaceResults = await IpcService.openWorkspaceFromArgv();
+    const openWorkspaceResults = await this.ipcService.openWorkspaceFromArgv();
 
     openWorkspaceResults
       .filter((x) => x.success)
@@ -1924,7 +1930,7 @@ export default class Editor extends Vue {
           ? getFileNameFromPath(workspace.filePath)
           : workspace.tempFileName;
 
-      const dialogResult = await IpcService.showMessageBox({
+      const dialogResult = await this.ipcService.showMessageBox({
         title: process.env.VUE_APP_TITLE,
         message: `Do you want to save the changes you made to ${fileName}?`,
         detail: "Your changes will be lost if you don't save them.",
@@ -1936,8 +1942,8 @@ export default class Editor extends Vue {
         // User chose "Save"
         const saveResult =
           workspace.filePath != null
-            ? await IpcService.saveWorkspace(workspace)
-            : await IpcService.saveWorkspaceAs(workspace);
+            ? await this.ipcService.saveWorkspace(workspace)
+            : await this.ipcService.saveWorkspaceAs(workspace);
 
         // If they successfully saved, then we can close the workspacce
         shouldClose = saveResult.success;
@@ -1950,7 +1956,7 @@ export default class Editor extends Vue {
     if (shouldClose) {
       // If the last tab has closed, then exit
       if (this.workspaces.length == 1) {
-        IpcService.exitApplication();
+        this.ipcService.exitApplication();
       }
 
       const index = this.workspaces.indexOf(workspace);
@@ -1978,7 +1984,7 @@ export default class Editor extends Vue {
       }
     }
 
-    await IpcService.exitApplication();
+    await this.ipcService.exitApplication();
   }
 
   addScoreElement(element: ScoreElement, insertAtIndex?: number) {
@@ -2450,7 +2456,7 @@ export default class Editor extends Vue {
     const activeElement = this.blurActiveElement();
 
     Vue.nextTick(async () => {
-      await IpcService.printWorkspace(this.selectedWorkspace);
+      await this.ipcService.printWorkspace(this.selectedWorkspace);
       this.printMode = false;
 
       // Re-focus the active element
@@ -2466,7 +2472,7 @@ export default class Editor extends Vue {
     const activeElement = this.blurActiveElement();
 
     Vue.nextTick(async () => {
-      await IpcService.exportWorkspaceAsPdf(this.selectedWorkspace);
+      await this.ipcService.exportWorkspaceAsPdf(this.selectedWorkspace);
       this.printMode = false;
 
       // Re-focus the active element
@@ -2526,12 +2532,12 @@ export default class Editor extends Vue {
     const workspace = this.selectedWorkspace;
 
     if (workspace.filePath != null) {
-      const result = await IpcService.saveWorkspace(workspace);
+      const result = await this.ipcService.saveWorkspace(workspace);
       if (result.success) {
         workspace.hasUnsavedChanges = false;
       }
     } else {
-      const result = await IpcService.saveWorkspaceAs(workspace);
+      const result = await this.ipcService.saveWorkspaceAs(workspace);
       if (result.success) {
         workspace.filePath = result.filePath;
         workspace.hasUnsavedChanges = false;
@@ -2542,7 +2548,7 @@ export default class Editor extends Vue {
   async onFileMenuSaveAs() {
     const workspace = this.selectedWorkspace;
 
-    const result = await IpcService.saveWorkspaceAs(workspace);
+    const result = await this.ipcService.saveWorkspaceAs(workspace);
     if (result.success) {
       workspace.filePath = result.filePath;
       workspace.hasUnsavedChanges = false;
@@ -2682,7 +2688,7 @@ export default class Editor extends Vue {
       console.error(error);
 
       if (error instanceof Error) {
-        IpcService.showMessageBox({
+        this.ipcService.showMessageBox({
           type: 'error',
           title: 'Open failed',
           message: error.message,

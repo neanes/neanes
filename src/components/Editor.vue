@@ -396,7 +396,11 @@ import MartyriaToolbar from '@/components/MartyriaToolbar.vue';
 import ModeKeyDialog from '@/components/ModeKeyDialog.vue';
 import PageSetupDialog from '@/components/PageSetupDialog.vue';
 import FileMenuBar from '@/components/FileMenuBar.vue';
-import { IpcMainChannels, FileMenuOpenScoreArgs } from '@/ipc/ipcChannels';
+import {
+  IpcMainChannels,
+  FileMenuOpenScoreArgs,
+  ShowMessageBoxReplyArgs,
+} from '@/ipc/ipcChannels';
 import { EventBus } from '@/eventBus';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import { TestFileGenerator } from '@/utils/TestFileGenerator';
@@ -439,6 +443,7 @@ export default class Editor extends Vue {
   @Prop() showFileMenuBar!: boolean;
 
   isDevelopment: boolean = process.env.NODE_ENV !== 'production';
+  isBrowser: boolean = process.env.IS_ELECTRON == null;
 
   printMode: boolean = false;
 
@@ -1933,13 +1938,26 @@ export default class Editor extends Vue {
           ? getFileNameFromPath(workspace.filePath)
           : workspace.tempFileName;
 
-      const dialogResult = await this.ipcService.showMessageBox({
-        title: process.env.VUE_APP_TITLE,
-        message: `Do you want to save the changes you made to ${fileName}?`,
-        detail: "Your changes will be lost if you don't save them.",
-        type: 'warning',
-        buttons: ['Save', "Don't Save", 'Cancel'],
-      });
+      let dialogResult: ShowMessageBoxReplyArgs;
+
+      if (this.ipcService.isShowMessageBoxSupported()) {
+        dialogResult = await this.ipcService.showMessageBox({
+          title: process.env.VUE_APP_TITLE,
+          message: `Do you want to save the changes you made to ${fileName}?`,
+          detail: "Your changes will be lost if you don't save them.",
+          type: 'warning',
+          buttons: ['Save', "Don't Save", 'Cancel'],
+        });
+      } else {
+        dialogResult = {
+          response: confirm(
+            `${fileName} has unsaved changes. Are you sure you want to close it?`,
+          )
+            ? 1
+            : 2,
+          checkboxChecked: false,
+        };
+      }
 
       if (dialogResult.response === 0) {
         // User chose "Save"

@@ -35,7 +35,15 @@ export class BrowserIpcService implements IIpcService {
   }
 
   public async printWorkspace(workspace: Workspace): Promise<void> {
-    return Promise.resolve();
+    return new Promise((resolve) => {
+      window.addEventListener(
+        'afterprint',
+        () => {
+          resolve();
+        },
+        { once: true },
+      );
+    });
   }
 
   public async openWorkspaceFromArgv(): Promise<FileMenuOpenScoreArgs[]> {

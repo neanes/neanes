@@ -71,6 +71,10 @@ export class IpcService {
     );
   }
 
+  public isShowMessageBoxSupported() {
+    return true;
+  }
+
   public async exitApplication(): Promise<void> {
     return await window.ipcRenderer.invoke(IpcRendererChannels.ExitApplication);
   }

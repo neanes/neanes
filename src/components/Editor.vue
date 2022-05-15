@@ -2696,11 +2696,15 @@ export default class Editor extends Vue {
       console.error(error);
 
       if (error instanceof Error) {
-        this.ipcService.showMessageBox({
-          type: 'error',
-          title: 'Open failed',
-          message: error.message,
-        });
+        if (this.ipcService.isShowMessageBoxSupported()) {
+          this.ipcService.showMessageBox({
+            type: 'error',
+            title: 'Open failed',
+            message: error.message,
+          });
+        } else {
+          alert(error.message);
+        }
       }
     }
   }

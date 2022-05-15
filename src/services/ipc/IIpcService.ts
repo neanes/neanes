@@ -20,5 +20,7 @@ export interface IIpcService {
 
   showMessageBox(args: ShowMessageBoxArgs): Promise<ShowMessageBoxReplyArgs>;
 
+  isShowMessageBoxSupported(): boolean;
+
   exitApplication(): Promise<void>;
 }

@@ -57,6 +57,10 @@ export class BrowserIpcService implements IIpcService {
     return Promise.resolve({ response: 0, checkboxChecked: false });
   }
 
+  public isShowMessageBoxSupported() {
+    return false;
+  }
+
   public async exitApplication(): Promise<void> {
     return Promise.resolve();
   }

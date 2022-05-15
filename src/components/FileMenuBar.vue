@@ -63,14 +63,17 @@ export default class FileMenuBar extends Vue {
 
   onClickNew() {
     EventBus.$emit(IpcMainChannels.FileMenuNewScore);
+    this.isMenuOpen = false;
   }
 
   onClickOpen() {
     this.fileSelector.click();
+    this.isMenuOpen = false;
   }
 
   onClickSave() {
     EventBus.$emit(IpcMainChannels.FileMenuSaveAs);
+    this.isMenuOpen = false;
   }
 
   onSelectFile() {
@@ -98,14 +101,17 @@ export default class FileMenuBar extends Vue {
 
   onClickAddTextBox() {
     EventBus.$emit(IpcMainChannels.FileMenuInsertTextBox);
+    this.isMenuOpen = false;
   }
 
   onClickAddModeKey() {
     EventBus.$emit(IpcMainChannels.FileMenuInsertModeKey);
+    this.isMenuOpen = false;
   }
 
   onClickAddDropCap() {
     EventBus.$emit(IpcMainChannels.FileMenuInsertDropCap);
+    this.isMenuOpen = false;
   }
 }
 </script>
@@ -115,5 +121,7 @@ export default class FileMenuBar extends Vue {
 .file-menu-bar {
   display: flex;
   background-color: #aaa;
+
+  user-select: none;
 }
 </style>

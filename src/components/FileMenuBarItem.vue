@@ -1,7 +1,7 @@
 <template>
   <div
     class="file-menu-bar-item"
-    @click="$emit('click')"
+    @click.self="$emit('click')"
     @mouseenter="$emit('mouseenter')"
   >
     {{ label }}

@@ -10,7 +10,19 @@
       <FileMenuItem label="Open" @click="onClickOpen" />
       <FileMenuItem label="Save" @click="onClickSave" />
     </FileMenuBarItem>
-    <FileMenuBarItem label="Edit"></FileMenuBarItem>
+    <FileMenuBarItem
+      label="Edit"
+      @click="toggleMenu"
+      @mouseenter="selectedMenu = 'Edit'"
+      :isOpen="isMenuOpen && selectedMenu === 'Edit'"
+    >
+      <FileMenuItem label="Undo" @click="onClickUndo" />
+      <FileMenuItem label="Redo" @click="onClickRedo" />
+      <div class="separator" />
+      <FileMenuItem label="Cut" @click="onClickCut" />
+      <FileMenuItem label="Copy" @click="onClickCopy" />
+      <FileMenuItem label="Paste" @click="onClickPaste" />
+    </FileMenuBarItem>
     <FileMenuBarItem
       label="Insert"
       @click="toggleMenu"
@@ -138,6 +150,31 @@ export default class FileMenuBar extends Vue {
     }
   }
 
+  onClickCut() {
+    EventBus.$emit(IpcMainChannels.FileMenuCut);
+    this.isMenuOpen = false;
+  }
+
+  onClickCopy() {
+    EventBus.$emit(IpcMainChannels.FileMenuCopy);
+    this.isMenuOpen = false;
+  }
+
+  onClickPaste() {
+    EventBus.$emit(IpcMainChannels.FileMenuPaste);
+    this.isMenuOpen = false;
+  }
+
+  onClickUndo() {
+    EventBus.$emit(IpcMainChannels.FileMenuUndo);
+    this.isMenuOpen = false;
+  }
+
+  onClickRedo() {
+    EventBus.$emit(IpcMainChannels.FileMenuRedo);
+    this.isMenuOpen = false;
+  }
+
   onClickAddTextBox() {
     EventBus.$emit(IpcMainChannels.FileMenuInsertTextBox);
     this.isMenuOpen = false;
@@ -174,5 +211,10 @@ export default class FileMenuBar extends Vue {
   font-family: sans-serif;
 
   user-select: none;
+}
+
+.separator {
+  margin: 0 10px;
+  border-top: 1px solid #999;
 }
 </style>

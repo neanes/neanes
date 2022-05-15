@@ -21,6 +21,15 @@
       <FileMenuItem label="Text Box" @click="onClickAddTextBox" />
       <FileMenuItem label="Mode Key" @click="onClickAddModeKey" />
     </FileMenuBarItem>
+    <FileMenuBarItem
+      label="Help"
+      @click="toggleMenu"
+      @mouseenter="selectedMenu = 'Help'"
+      :isOpen="isMenuOpen && selectedMenu === 'Help'"
+    >
+      <FileMenuItem label="Guide" @click="onClickGuide" />
+      <FileMenuItem label="About" @click="onClickAbout" />
+    </FileMenuBarItem>
     <input
       ref="file"
       type="file"
@@ -143,6 +152,16 @@ export default class FileMenuBar extends Vue {
     EventBus.$emit(IpcMainChannels.FileMenuInsertDropCap);
     this.isMenuOpen = false;
   }
+
+  onClickAbout() {
+    alert(`Neanes\nVersion: ${process.env.VUE_APP_VERSION}`);
+    this.isMenuOpen = false;
+  }
+
+  onClickGuide() {
+    window.open(process.env.VUE_APP_GUIDE_URL, '_blank');
+    this.isMenuOpen = false;
+  }
 }
 </script>
 
@@ -151,6 +170,8 @@ export default class FileMenuBar extends Vue {
 .file-menu-bar {
   display: flex;
   background-color: #aaa;
+
+  font-family: sans-serif;
 
   user-select: none;
 }

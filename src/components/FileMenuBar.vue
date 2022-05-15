@@ -12,16 +12,22 @@
     </FileMenuBarItem>
     <FileMenuBarItem label="Edit"></FileMenuBarItem>
     <FileMenuBarItem
-      label="Add"
+      label="Insert"
       @click="toggleMenu"
-      @mouseenter="selectedMenu = 'Add'"
-      :isOpen="isMenuOpen && selectedMenu === 'Add'"
+      @mouseenter="selectedMenu = 'Insert'"
+      :isOpen="isMenuOpen && selectedMenu === 'Insert'"
     >
+      <FileMenuItem label="Drop Cap" @click="onClickAddDropCap" />
       <FileMenuItem label="Text Box" @click="onClickAddTextBox" />
       <FileMenuItem label="Mode Key" @click="onClickAddModeKey" />
-      <FileMenuItem label="Drop Cap" @click="onClickAddDropCap" />
     </FileMenuBarItem>
-    <input ref="file" type="file" v-show="false" @change="onSelectFile" />
+    <input
+      ref="file"
+      type="file"
+      :accept="accept"
+      v-show="false"
+      @change="onSelectFile"
+    />
   </div>
 </template>
 
@@ -45,6 +51,7 @@ import {
 export default class FileMenuBar extends Vue {
   private isMenuOpen = false;
   private selectedMenu = '';
+  private accept = '.byzx';
 
   private get fileSelector() {
     return this.$refs.file as HTMLInputElement;

@@ -603,6 +603,13 @@ function createMenu() {
     {
       role: 'help',
       submenu: [
+        {
+          label: 'Guide',
+          click() {
+            shell.openExternal(process.env.VUE_APP_GUIDE_URL!);
+          },
+        },
+        { type: 'separator' },
         { role: 'toggleDevTools' },
         { type: 'separator' },
         {

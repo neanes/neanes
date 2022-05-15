@@ -1349,7 +1349,7 @@ export default class Editor extends Vue {
       return;
     }
 
-    if (event.ctrlKey) {
+    if (event.ctrlKey || event.metaKey) {
       switch (event.code) {
         case 'ArrowRight':
           this.moveToNextLyricBoxThrottled();

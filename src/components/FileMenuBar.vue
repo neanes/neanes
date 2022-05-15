@@ -57,6 +57,36 @@ export default class FileMenuBar extends Vue {
     return this.$refs.file as HTMLInputElement;
   }
 
+  mounted() {
+    // If using the browser, then we need to hook into the key down
+    // to listen for Ctrl+O for oven, Ctrl+S for save, etc.
+    window.addEventListener('keydown', this.onKeyDown);
+  }
+
+  beforeDestroy() {
+    window.removeEventListener('keydown', this.onKeyDown);
+  }
+
+  onKeyDown(event: KeyboardEvent) {
+    if (event.ctrlKey || event.metaKey) {
+      if (event.code === 'KeyO') {
+        this.onClickOpen();
+        event.preventDefault();
+        return;
+      } else if (event.code === 'KeyS') {
+        this.onClickSave();
+        event.preventDefault();
+        return;
+      } else if (event.code === 'KeyN') {
+        // Note: this doesn't actually work in Chrome.
+        // Chrome prevents you from capturing Ctrl+N.
+        this.onClickNew();
+        event.preventDefault();
+        return;
+      }
+    }
+  }
+
   toggleMenu() {
     this.isMenuOpen = !this.isMenuOpen;
   }

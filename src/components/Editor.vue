@@ -1967,8 +1967,13 @@ export default class Editor extends Vue {
       this.workspaces.splice(index, 1);
 
       if (this.selectedWorkspace === workspace) {
-        this.selectedWorkspace =
-          this.workspaces[Math.min(index, this.workspaces.length - 1)];
+        if (this.workspaces.length > 0) {
+          this.selectedWorkspace =
+            this.workspaces[Math.min(index, this.workspaces.length - 1)];
+        } else {
+          // TODO support closing all workspaces
+          this.onFileMenuNewScore();
+        }
       }
     }
 

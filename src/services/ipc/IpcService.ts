@@ -71,7 +71,7 @@ export class IpcService {
     );
   }
 
-  public async exitApplication() {
+  public async exitApplication(): Promise<void> {
     return await window.ipcRenderer.invoke(IpcRendererChannels.ExitApplication);
   }
 }

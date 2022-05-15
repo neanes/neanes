@@ -57,8 +57,8 @@ export class BrowserIpcService implements IIpcService {
     return Promise.resolve({ response: 0, checkboxChecked: false });
   }
 
-  public async exitApplication() {
-    throw 'exitApplication is not available in the browser.';
+  public async exitApplication(): Promise<void> {
+    return Promise.resolve();
   }
 
   private doSave(workspace: Workspace) {

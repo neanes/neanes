@@ -21,6 +21,7 @@ module.exports = {
         text: 'Download',
         link: '/download/',
       },
+      { text: 'Web App', link: '/web-app/' },
       {
         text: 'Changelog',
         link: 'https://github.com/danielgarthur/neanes/releases',
@@ -29,6 +30,7 @@ module.exports = {
     sidebar: {
       '/guide/': [''],
       '/download/': [''],
+      '/web-app/': [''],
     },
     repo: 'danielgarthur/neanes',
     docsDir: 'docs',

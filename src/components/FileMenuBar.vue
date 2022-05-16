@@ -42,6 +42,10 @@
       <FileMenuItem label="Guide" @click="onClickGuide" />
       <FileMenuItem label="About" @click="onClickAbout" />
     </FileMenuBarItem>
+    <div class="browser-warning" v-if="!isChrome">
+      Warning: This application works best in Chromium-based browsers. You may
+      experience reduced functionality or errors in non-Chromium-based browsers.
+    </div>
     <input
       ref="file"
       type="file"
@@ -74,6 +78,7 @@ export default class FileMenuBar extends Vue {
   private isMenuOpen = false;
   private selectedMenu = '';
   private accept = '.byz,.byzx';
+  private isChrome = (window as any).chrome != null;
 
   private get fileSelector() {
     return this.$refs.file as HTMLInputElement;
@@ -228,10 +233,16 @@ export default class FileMenuBar extends Vue {
   font-family: sans-serif;
 
   user-select: none;
+
+  align-items: center;
 }
 
 .separator {
   margin: 0 10px;
   border-top: 1px solid #999;
+}
+
+.browser-warning {
+  color: red;
 }
 </style>

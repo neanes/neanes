@@ -1,3 +1,5 @@
+process.env.VUE_APP_VERSION = process.env.npm_package_version;
+
 module.exports = {
   configureWebpack: {
     devtool: 'source-map',
@@ -27,4 +29,8 @@ module.exports = {
       },
     },
   },
+  publicPath:
+    process.env.NODE_ENV === 'production' && !process.env.IS_ELECTRON
+      ? '/neanes-web-app/'
+      : '/',
 };

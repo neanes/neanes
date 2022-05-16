@@ -371,7 +371,7 @@ import {
 } from '@/models/Neumes';
 import { Page } from '@/models/Page';
 import { Score } from '@/models/Score';
-import { Workspace } from '@/models/Workspace';
+import { Workspace, WorkspaceLocalStorage } from '@/models/Workspace';
 import { EntryMode } from '@/models/EntryMode';
 import { ScoreElementSelectionRange } from '@/models/ScoreElementSelectionRange';
 import { SaveService } from '@/services/SaveService';
@@ -1865,7 +1865,21 @@ export default class Editor extends Vue {
 
     this.pages = pages;
 
-    if (this.isDevelopment) {
+    // If using the browser, save the workspace to local storage
+    if (this.isBrowser) {
+      const workspaceLocalStorage = {
+        id: this.selectedWorkspace.id,
+        score: JSON.stringify(SaveService.SaveScoreToJson(this.score)),
+        filePath: this.currentFilePath,
+        tempFileName: this.selectedWorkspace.tempFileName,
+        hasUnsavedChanges: this.hasUnsavedChanges,
+      } as WorkspaceLocalStorage;
+
+      localStorage.setItem(
+        `workspace-${this.selectedWorkspace.id}`,
+        JSON.stringify(workspaceLocalStorage),
+      );
+    } else if (this.isDevelopment) {
       localStorage.setItem(
         'score',
         JSON.stringify(SaveService.SaveScoreToJson(this.score)),
@@ -1885,6 +1899,38 @@ export default class Editor extends Vue {
   }
 
   async load() {
+    if (this.isBrowser) {
+      Object.keys(localStorage).forEach((key) => {
+        if (key.startsWith('workspace-')) {
+          try {
+            const localStorageWorkspace: WorkspaceLocalStorage = JSON.parse(
+              localStorage.getItem(key)!,
+            );
+            let workspace = new Workspace();
+            workspace.id = localStorageWorkspace.id;
+            workspace.hasUnsavedChanges =
+              localStorageWorkspace.hasUnsavedChanges;
+            workspace.filePath = localStorageWorkspace.filePath;
+            workspace.tempFileName = localStorageWorkspace.tempFileName;
+            workspace.score = SaveService.LoadScoreFromJson(
+              JSON.parse(localStorageWorkspace.score),
+            );
+
+            this.workspaces.push(workspace);
+          } catch (error) {
+            // We couldn't load this workspace for some reason. Remove it from storage.
+            localStorage.removeItem(key);
+            console.log(error);
+          }
+        }
+      });
+
+      if (this.workspaces.length > 0) {
+        this.selectedWorkspace = this.workspaces[0];
+        return;
+      }
+    }
+
     // First, try to load files passed in on the command line.
     // If there are none, then create a default workspace.
     const openWorkspaceResults = await this.ipcService.openWorkspaceFromArgv();
@@ -1975,6 +2021,11 @@ export default class Editor extends Vue {
     }
 
     if (shouldClose) {
+      // If using the browser, remove the item from local storage
+      if (this.isBrowser) {
+        localStorage.removeItem(`workspace-${workspace.id}`);
+      }
+
       // If the last tab has closed, then exit
       if (this.workspaces.length == 1) {
         this.ipcService.exitApplication();

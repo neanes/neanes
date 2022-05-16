@@ -38,10 +38,9 @@ export default class FileMenuBarItem extends Vue {
 .file-menu-bar-item {
   padding: 0.25rem 1rem;
   position: relative;
-  cursor: pointer;
 }
 
 .file-menu-bar-item:hover {
-  background-color: darkgray;
+  background-color: #999;
 }
 </style>

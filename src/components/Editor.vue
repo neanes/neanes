@@ -1,5 +1,6 @@
 <template>
   <div class="editor">
+    <FileMenuBar v-if="showFileMenuBar" />
     <MainToolbar
       :entryMode="entryMode"
       :zoom="zoom"
@@ -23,6 +24,9 @@
       ></NeumeSelector>
       <div class="page-container">
         <div class="workspace-tab-container" ref="workspace-tab-container">
+          <div class="workspace-tab-new-button" @click="onFileMenuNewScore">
+            +
+          </div>
           <div
             class="workspace-tab"
             :class="{ selected: workspace == selectedWorkspace }"
@@ -367,12 +371,11 @@ import {
 } from '@/models/Neumes';
 import { Page } from '@/models/Page';
 import { Score } from '@/models/Score';
-import { Workspace } from '@/models/Workspace';
+import { Workspace, WorkspaceLocalStorage } from '@/models/Workspace';
 import { EntryMode } from '@/models/EntryMode';
 import { ScoreElementSelectionRange } from '@/models/ScoreElementSelectionRange';
 import { SaveService } from '@/services/SaveService';
 import { LayoutService } from '@/services/LayoutService';
-import { IpcService } from '@/services/IpcService';
 import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
 import SyllableNeumeBoxPrint from '@/components/NeumeBoxSyllablePrint.vue';
 import MartyriaNeumeBox from '@/components/NeumeBoxMartyria.vue';
@@ -392,7 +395,12 @@ import NeumeToolbar from '@/components/NeumeToolbar.vue';
 import MartyriaToolbar from '@/components/MartyriaToolbar.vue';
 import ModeKeyDialog from '@/components/ModeKeyDialog.vue';
 import PageSetupDialog from '@/components/PageSetupDialog.vue';
-import { IpcMainChannels, FileMenuOpenScoreArgs } from '@/ipc/ipcChannels';
+import FileMenuBar from '@/components/FileMenuBar.vue';
+import {
+  IpcMainChannels,
+  FileMenuOpenScoreArgs,
+  ShowMessageBoxReplyArgs,
+} from '@/ipc/ipcChannels';
 import { EventBus } from '@/eventBus';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import { TestFileGenerator } from '@/utils/TestFileGenerator';
@@ -403,6 +411,7 @@ import { shallowEquals } from '@/utils/shallowEquals';
 import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
 import { throttle } from 'throttle-debounce';
 import { Command, CommandFactory } from '@/services/history/CommandService';
+import { IIpcService } from '@/services/ipc/IIpcService';
 import { PageSetup } from '@/models/PageSetup';
 
 @Component({
@@ -426,10 +435,15 @@ import { PageSetup } from '@/models/PageSetup';
     MainToolbar,
     ModeKeyDialog,
     PageSetupDialog,
+    FileMenuBar,
   },
 })
 export default class Editor extends Vue {
+  @Prop() ipcService!: IIpcService;
+  @Prop() showFileMenuBar!: boolean;
+
   isDevelopment: boolean = process.env.NODE_ENV !== 'production';
+  isBrowser: boolean = process.env.IS_ELECTRON == null;
 
   printMode: boolean = false;
 
@@ -1343,7 +1357,7 @@ export default class Editor extends Vue {
       return;
     }
 
-    if (event.ctrlKey) {
+    if (event.ctrlKey || event.metaKey) {
       switch (event.code) {
         case 'ArrowRight':
           this.moveToNextLyricBoxThrottled();
@@ -1851,7 +1865,21 @@ export default class Editor extends Vue {
 
     this.pages = pages;
 
-    if (this.isDevelopment) {
+    // If using the browser, save the workspace to local storage
+    if (this.isBrowser) {
+      const workspaceLocalStorage = {
+        id: this.selectedWorkspace.id,
+        score: JSON.stringify(SaveService.SaveScoreToJson(this.score)),
+        filePath: this.currentFilePath,
+        tempFileName: this.selectedWorkspace.tempFileName,
+        hasUnsavedChanges: this.hasUnsavedChanges,
+      } as WorkspaceLocalStorage;
+
+      localStorage.setItem(
+        `workspace-${this.selectedWorkspace.id}`,
+        JSON.stringify(workspaceLocalStorage),
+      );
+    } else if (this.isDevelopment) {
       localStorage.setItem(
         'score',
         JSON.stringify(SaveService.SaveScoreToJson(this.score)),
@@ -1871,9 +1899,41 @@ export default class Editor extends Vue {
   }
 
   async load() {
+    if (this.isBrowser) {
+      Object.keys(localStorage).forEach((key) => {
+        if (key.startsWith('workspace-')) {
+          try {
+            const localStorageWorkspace: WorkspaceLocalStorage = JSON.parse(
+              localStorage.getItem(key)!,
+            );
+            const workspace = new Workspace();
+            workspace.id = localStorageWorkspace.id;
+            workspace.hasUnsavedChanges =
+              localStorageWorkspace.hasUnsavedChanges;
+            workspace.filePath = localStorageWorkspace.filePath;
+            workspace.tempFileName = localStorageWorkspace.tempFileName;
+            workspace.score = SaveService.LoadScoreFromJson(
+              JSON.parse(localStorageWorkspace.score),
+            );
+
+            this.workspaces.push(workspace);
+          } catch (error) {
+            // We couldn't load this workspace for some reason. Remove it from storage.
+            localStorage.removeItem(key);
+            console.error(error);
+          }
+        }
+      });
+
+      if (this.workspaces.length > 0) {
+        this.selectedWorkspace = this.workspaces[0];
+        return;
+      }
+    }
+
     // First, try to load files passed in on the command line.
     // If there are none, then create a default workspace.
-    const openWorkspaceResults = await IpcService.openWorkspaceFromArgv();
+    const openWorkspaceResults = await this.ipcService.openWorkspaceFromArgv();
 
     openWorkspaceResults
       .filter((x) => x.success)
@@ -1924,20 +1984,33 @@ export default class Editor extends Vue {
           ? getFileNameFromPath(workspace.filePath)
           : workspace.tempFileName;
 
-      const dialogResult = await IpcService.showMessageBox({
-        title: process.env.VUE_APP_TITLE,
-        message: `Do you want to save the changes you made to ${fileName}?`,
-        detail: "Your changes will be lost if you don't save them.",
-        type: 'warning',
-        buttons: ['Save', "Don't Save", 'Cancel'],
-      });
+      let dialogResult: ShowMessageBoxReplyArgs;
+
+      if (this.ipcService.isShowMessageBoxSupported()) {
+        dialogResult = await this.ipcService.showMessageBox({
+          title: process.env.VUE_APP_TITLE,
+          message: `Do you want to save the changes you made to ${fileName}?`,
+          detail: "Your changes will be lost if you don't save them.",
+          type: 'warning',
+          buttons: ['Save', "Don't Save", 'Cancel'],
+        });
+      } else {
+        dialogResult = {
+          response: confirm(
+            `${fileName} has unsaved changes. Are you sure you want to close it?`,
+          )
+            ? 1
+            : 2,
+          checkboxChecked: false,
+        };
+      }
 
       if (dialogResult.response === 0) {
         // User chose "Save"
         const saveResult =
           workspace.filePath != null
-            ? await IpcService.saveWorkspace(workspace)
-            : await IpcService.saveWorkspaceAs(workspace);
+            ? await this.ipcService.saveWorkspace(workspace)
+            : await this.ipcService.saveWorkspaceAs(workspace);
 
         // If they successfully saved, then we can close the workspacce
         shouldClose = saveResult.success;
@@ -1948,9 +2021,14 @@ export default class Editor extends Vue {
     }
 
     if (shouldClose) {
+      // If using the browser, remove the item from local storage
+      if (this.isBrowser) {
+        localStorage.removeItem(`workspace-${workspace.id}`);
+      }
+
       // If the last tab has closed, then exit
       if (this.workspaces.length == 1) {
-        IpcService.exitApplication();
+        this.ipcService.exitApplication();
       }
 
       const index = this.workspaces.indexOf(workspace);
@@ -1958,8 +2036,13 @@ export default class Editor extends Vue {
       this.workspaces.splice(index, 1);
 
       if (this.selectedWorkspace === workspace) {
-        this.selectedWorkspace =
-          this.workspaces[Math.min(index, this.workspaces.length - 1)];
+        if (this.workspaces.length > 0) {
+          this.selectedWorkspace =
+            this.workspaces[Math.min(index, this.workspaces.length - 1)];
+        } else {
+          // TODO support closing all workspaces
+          this.onFileMenuNewScore();
+        }
       }
     }
 
@@ -1978,7 +2061,7 @@ export default class Editor extends Vue {
       }
     }
 
-    await IpcService.exitApplication();
+    await this.ipcService.exitApplication();
   }
 
   addScoreElement(element: ScoreElement, insertAtIndex?: number) {
@@ -2450,7 +2533,7 @@ export default class Editor extends Vue {
     const activeElement = this.blurActiveElement();
 
     Vue.nextTick(async () => {
-      await IpcService.printWorkspace(this.selectedWorkspace);
+      await this.ipcService.printWorkspace(this.selectedWorkspace);
       this.printMode = false;
 
       // Re-focus the active element
@@ -2466,7 +2549,7 @@ export default class Editor extends Vue {
     const activeElement = this.blurActiveElement();
 
     Vue.nextTick(async () => {
-      await IpcService.exportWorkspaceAsPdf(this.selectedWorkspace);
+      await this.ipcService.exportWorkspaceAsPdf(this.selectedWorkspace);
       this.printMode = false;
 
       // Re-focus the active element
@@ -2526,12 +2609,12 @@ export default class Editor extends Vue {
     const workspace = this.selectedWorkspace;
 
     if (workspace.filePath != null) {
-      const result = await IpcService.saveWorkspace(workspace);
+      const result = await this.ipcService.saveWorkspace(workspace);
       if (result.success) {
         workspace.hasUnsavedChanges = false;
       }
     } else {
-      const result = await IpcService.saveWorkspaceAs(workspace);
+      const result = await this.ipcService.saveWorkspaceAs(workspace);
       if (result.success) {
         workspace.filePath = result.filePath;
         workspace.hasUnsavedChanges = false;
@@ -2542,7 +2625,7 @@ export default class Editor extends Vue {
   async onFileMenuSaveAs() {
     const workspace = this.selectedWorkspace;
 
-    const result = await IpcService.saveWorkspaceAs(workspace);
+    const result = await this.ipcService.saveWorkspaceAs(workspace);
     if (result.success) {
       workspace.filePath = result.filePath;
       workspace.hasUnsavedChanges = false;
@@ -2679,14 +2762,19 @@ export default class Editor extends Vue {
         tabContainerElement.scrollTo(tabContainerElement.scrollWidth, 0);
       });
     } catch (error) {
+      args.success = false;
       console.error(error);
 
       if (error instanceof Error) {
-        IpcService.showMessageBox({
-          type: 'error',
-          title: 'Open failed',
-          message: error.message,
-        });
+        if (this.ipcService.isShowMessageBoxSupported()) {
+          this.ipcService.showMessageBox({
+            type: 'error',
+            title: 'Open failed',
+            message: error.message,
+          });
+        } else {
+          alert(error.message);
+        }
       }
     }
   }
@@ -2754,6 +2842,18 @@ export default class Editor extends Vue {
 
 .workspace-tab-container:hover {
   overflow-x: auto;
+}
+
+.workspace-tab-new-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+
+  font-size: 1.25rem;
+  font-weight: bold;
+
+  cursor: default;
 }
 
 .workspace-tab {

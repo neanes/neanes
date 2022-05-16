@@ -56,6 +56,17 @@ export interface ShowMessageBoxArgs {
   buttons?: string[];
 }
 
+export interface ShowMessageBoxReplyArgs {
+  /**
+   * The index of the clicked button.
+   */
+  response: number;
+  /**
+   * The checked state of the checkbox if `checkboxLabel` was set. Otherwise `false`.
+   */
+  checkboxChecked: boolean;
+}
+
 export interface SaveWorkspaceArgs {
   filePath: string;
   data: Score;

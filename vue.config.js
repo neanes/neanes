@@ -31,6 +31,6 @@ module.exports = {
   },
   publicPath:
     process.env.NODE_ENV === 'production' && !process.env.IS_ELECTRON
-      ? '/neanes-web/'
+      ? '/neanes-web-app/'
       : '/',
 };

@@ -8,6 +8,8 @@ actions:
     actionLink: /guide/
   - actionText: Download
     actionLink: /download/
+  - actionText: Web App
+    actionLink: /web-app/
 features:
   - title: WYSIWYG Design
     details: Point and click to add neumes and see how they will appear on the page.

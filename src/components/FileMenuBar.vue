@@ -62,6 +62,7 @@ import {
   IpcMainChannels,
   IpcRendererChannels,
 } from '@/ipc/ipcChannels';
+import JSZip from 'jszip';
 
 @Component({
   components: {
@@ -72,7 +73,7 @@ import {
 export default class FileMenuBar extends Vue {
   private isMenuOpen = false;
   private selectedMenu = '';
-  private accept = '.byzx';
+  private accept = '.byz,.byzx';
 
   private get fileSelector() {
     return this.$refs.file as HTMLInputElement;
@@ -127,16 +128,18 @@ export default class FileMenuBar extends Vue {
     this.isMenuOpen = false;
   }
 
-  onSelectFile() {
+  async onSelectFile() {
     const files = this.fileSelector.files!;
 
     if (files.length > 0) {
       var file = files[0];
-      var reader = new FileReader();
 
-      reader.onload = () => {
+      if (file.name.endsWith('.byz')) {
+        const zip = await JSZip.loadAsync(file);
+        const data = await zip.file(/\.(byzx)$/)[0].async('text');
+
         EventBus.$emit(IpcMainChannels.FileMenuOpenScore, {
-          data: reader.result as string,
+          data,
           filePath: file.name,
           success: true,
         } as FileMenuOpenScoreArgs);
@@ -144,9 +147,23 @@ export default class FileMenuBar extends Vue {
         // Reset the selector so that if the user selects
         // the same file twice, it will load
         this.fileSelector.value = '';
-      };
+      } else {
+        var reader = new FileReader();
 
-      reader.readAsText(file);
+        reader.onload = () => {
+          EventBus.$emit(IpcMainChannels.FileMenuOpenScore, {
+            data: reader.result as string,
+            filePath: file.name,
+            success: true,
+          } as FileMenuOpenScoreArgs);
+
+          // Reset the selector so that if the user selects
+          // the same file twice, it will load
+          this.fileSelector.value = '';
+        };
+
+        reader.readAsText(file);
+      }
     }
   }
 

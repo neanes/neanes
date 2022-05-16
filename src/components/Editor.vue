@@ -1906,7 +1906,7 @@ export default class Editor extends Vue {
             const localStorageWorkspace: WorkspaceLocalStorage = JSON.parse(
               localStorage.getItem(key)!,
             );
-            let workspace = new Workspace();
+            const workspace = new Workspace();
             workspace.id = localStorageWorkspace.id;
             workspace.hasUnsavedChanges =
               localStorageWorkspace.hasUnsavedChanges;

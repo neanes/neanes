@@ -24,6 +24,7 @@
   "dependencies": {
     "adm-zip": "^0.5.9",
     "core-js": "^3.4.3",
+    "jszip": "^3.9.1",
     "uuid": "^8.3.2",
     "vue": "^2.6.10",
     "vue-class-component": "^7.0.2",

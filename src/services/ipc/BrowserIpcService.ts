@@ -7,26 +7,27 @@ import {
 } from '@/ipc/ipcChannels';
 import { Workspace } from '@/models/Workspace';
 import { SaveService } from '@/services/SaveService';
+import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
+import JSZip from 'jszip';
 import { IIpcService } from './IIpcService';
 
 export class BrowserIpcService implements IIpcService {
   public async saveWorkspace(
     workspace: Workspace,
   ): Promise<SaveWorkspaceReplyArgs> {
-    this.doSave(workspace);
+    // Note: in the browser, this is probably never going
+    // to be called
+    await this.doSave(workspace);
     return Promise.resolve({ success: true });
   }
 
   public async saveWorkspaceAs(
     workspace: Workspace,
   ): Promise<SaveWorkspaceAsReplyArgs> {
-    this.doSave(workspace);
+    const filePath = await this.doSave(workspace);
     return Promise.resolve({
       success: true,
-      filePath:
-        workspace.filePath != null
-          ? workspace.filePath
-          : `${workspace.tempFileName}.byzx`,
+      filePath: filePath,
     });
   }
 
@@ -64,19 +65,38 @@ export class BrowserIpcService implements IIpcService {
     return Promise.resolve();
   }
 
-  private doSave(workspace: Workspace) {
-    const contentType = 'application/json';
-
+  private async doSave(workspace: Workspace) {
     var score = SaveService.SaveScoreToJson(workspace.score);
     const data = JSON.stringify(score, null, 2);
+    let file: Blob;
 
-    var a = document.createElement('a');
-    var file = new Blob([data], { type: contentType });
-    a.href = URL.createObjectURL(file);
-    a.download =
+    // In the browser, we cannot know what file extension the user chose,
+    // so we always save in .byz, unless the user has already opened
+    // .byzx file from the computer.
+    if (workspace.filePath == null || workspace.filePath.endsWith('.byz')) {
+      var zip = new JSZip();
+
+      const fileName =
+        workspace.filePath != null
+          ? getFileNameFromPath(workspace.filePath)
+          : workspace.tempFileName;
+
+      zip.file(`${fileName}.byzx`, data);
+      file = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
+    } else {
+      file = new Blob([data], { type: 'application/json' });
+    }
+
+    const downloadFileName =
       workspace.filePath != null
         ? workspace.filePath
-        : `${workspace.tempFileName}.byzx`;
+        : `${workspace.tempFileName}.byz`;
+
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(file);
+    a.download = downloadFileName;
     a.click();
+
+    return downloadFileName;
   }
 }

@@ -137,8 +137,10 @@ async function readScoreFile(filePath: string) {
   if (path.extname(filePath) === '.byz') {
     const zip = new AdmZip(filePath);
     data = zip.getEntries()[0].getData().toString('utf8');
-  } else {
+  } else if (path.extname(filePath) === '.byzx') {
     data = await fs.readFile(filePath, 'utf8');
+  } else {
+    throw `Unsupported file type: ${path.extname(filePath)}`;
   }
 
   return data;

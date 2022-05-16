@@ -1920,7 +1920,7 @@ export default class Editor extends Vue {
           } catch (error) {
             // We couldn't load this workspace for some reason. Remove it from storage.
             localStorage.removeItem(key);
-            console.log(error);
+            console.error(error);
           }
         }
       });
@@ -2762,6 +2762,7 @@ export default class Editor extends Vue {
         tabContainerElement.scrollTo(tabContainerElement.scrollWidth, 0);
       });
     } catch (error) {
+      args.success = false;
       console.error(error);
 
       if (error instanceof Error) {

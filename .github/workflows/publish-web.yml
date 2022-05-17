@@ -1,4 +1,4 @@
-name: publish-web
+name: Publish Web
 
 on: workflow_dispatch
 
@@ -7,7 +7,7 @@ defaults:
     shell: bash
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -22,8 +22,8 @@ jobs:
       - run: npm run build
       - name: Push
         run: |
-        cd dist
-        git init
-        git add -A
-        git commit -m "Deploy"
-        git push -f danielgarthur:${{secrets.PAT}}@https://github.com/danielgarthur/neanes-web-app master:gh-pages
+          cd dist
+          git init
+          git add -A
+          git commit -m "Deploy"
+          git push -f danielgarthur:${{secrets.PAT}}@https://github.com/danielgarthur/neanes-web-app master:gh-pages

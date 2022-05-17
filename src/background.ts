@@ -612,6 +612,19 @@ function createMenu() {
           },
         },
         { type: 'separator' },
+        {
+          label: 'Request a Feature',
+          click() {
+            shell.openExternal(process.env.VUE_APP_ISSUES_URL!);
+          },
+        },
+        {
+          label: 'Report an Issue',
+          click() {
+            shell.openExternal(process.env.VUE_APP_ISSUES_URL!);
+          },
+        },
+        { type: 'separator' },
         { role: 'toggleDevTools' },
         { type: 'separator' },
         {

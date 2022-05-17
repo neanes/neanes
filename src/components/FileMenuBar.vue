@@ -40,6 +40,10 @@
       :isOpen="isMenuOpen && selectedMenu === 'Help'"
     >
       <FileMenuItem label="Guide" @click="onClickGuide" />
+      <div class="separator" />
+      <FileMenuItem label="Request a Feature" @click="onClickRequestFeature" />
+      <FileMenuItem label="Report an Issue" @click="onClickReportIssue" />
+      <div class="separator" />
       <FileMenuItem label="About" @click="onClickAbout" />
     </FileMenuBarItem>
     <div class="browser-warning" v-if="!isChrome">
@@ -219,6 +223,16 @@ export default class FileMenuBar extends Vue {
 
   onClickGuide() {
     window.open(process.env.VUE_APP_GUIDE_URL, '_blank');
+    this.isMenuOpen = false;
+  }
+
+  onClickRequestFeature() {
+    window.open(process.env.VUE_APP_ISSUES_URL, '_blank');
+    this.isMenuOpen = false;
+  }
+
+  onClickReportIssue() {
+    window.open(process.env.VUE_APP_ISSUES_URL, '_blank');
     this.isMenuOpen = false;
   }
 }

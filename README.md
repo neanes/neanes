@@ -32,6 +32,8 @@ Example files can be found in the [examples](examples/) folder.
 
 Download the latest release on [releases page](https://github.com/danielgarthur/neanes/releases). The latest release can also be found [here](https://danielgarthur.github.io/neanes/download).
 
+A web version of the app with reduced functionality can be found [here](https://danielgarthur.github.io/neanes/web-app/).
+
 ## How-to Guide
 
 To learn how to use the software, read the [Guide](https://danielgarthur.github.io/neanes/guide).

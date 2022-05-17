@@ -27,7 +27,7 @@ jobs:
 
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true'
-        run: npm ci --ignore-scripts
+        run: npm ci
 
       # run build script
       - name: Build VuePress site

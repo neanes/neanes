@@ -17,13 +17,25 @@ jobs:
         with:
           node-version: 16.x
 
-      - run: npm ci
+      - name: Cache dependencies
+        id: cache
+        uses: actions/cache@v2
+        with:
+          path: ./node_modules
+          key: modules-${{ hashFiles('package-lock.json') }}
+
+      - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: npm ci --ignore-scripts
+
       - run: npm test
       - run: npm run build
       - name: Push
         run: |
           cd dist
-          git init
+          git config --global user.email "4132779+danielgarthur@users.noreply.github.com"
+          git config --global user.name "danielgarthur"
+          git init -b master
           git add -A
           git commit -m "Deploy"
           git push -f danielgarthur:${{secrets.PAT}}@https://github.com/danielgarthur/neanes-web-app master:gh-pages

@@ -1,0 +1,29 @@
+name: Publish Web
+
+on: workflow_dispatch
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Use Node.js 16.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - name: Push
+        run: |
+        cd dist
+        git init
+        git add -A
+        git commit -m "Deploy"
+        git push -f danielgarthur:${{secrets.PAT}}@https://github.com/danielgarthur/neanes-web-app master:gh-pages

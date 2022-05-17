@@ -29,7 +29,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ./node_modules
-          key: modules-${{ hashFiles('package-lock.json') }}
+          key: ${{ runner.os }}-modules-${{ hashFiles('package-lock.json') }}
 
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true'

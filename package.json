@@ -1,30 +1,30 @@
 {
   "name": "neanes",
-  "author": "danielgarthur",
-  "description": "A Byzantine Chant Scorewriter",
   "version": "0.2.0-alpha.5",
-  "license": "GPL-3.0",
   "private": true,
+  "description": "A Byzantine Chant Scorewriter",
+  "author": "danielgarthur",
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
+    "docs:build": "vuepress build docs",
+    "docs:dev": "vuepress dev docs",
     "electron:build": "vue-cli-service electron:build -p never",
     "electron:release": "vue-cli-service electron:build -p always",
     "electron:serve": "vue-cli-service electron:serve",
+    "icons:build": "electron-icon-builder --flatten --input=./icons/1024x1024.png --output=./build",
     "postinstall": "electron-builder install-app-deps",
     "postuninstall": "electron-builder install-app-deps",
-    "icons:build": "electron-icon-builder --flatten --input=./icons/1024x1024.png --output=./build",
     "prettier": "prettier --write \"./**/*.{ts,js,vue}\"",
-    "test": "jest",
-    "docs:dev": "vuepress dev docs",
-    "docs:build": "vuepress build docs"
+    "test": "jest"
   },
   "main": "background.js",
   "dependencies": {
     "adm-zip": "^0.5.9",
     "core-js": "^3.4.3",
     "jszip": "^3.9.1",
+    "register-service-worker": "^1.7.2",
     "uuid": "^8.3.2",
     "vue": "^2.6.10",
     "vue-class-component": "^7.0.2",
@@ -42,6 +42,7 @@
     "@types/webpack-env": "^1.16.3",
     "@vue/cli-plugin-babel": "^4.1.0",
     "@vue/cli-plugin-eslint": "^4.1.0",
+    "@vue/cli-plugin-pwa": "~4.1.0",
     "@vue/cli-plugin-router": "^4.1.0",
     "@vue/cli-plugin-typescript": "^4.1.0",
     "@vue/cli-service": "^4.1.0",
@@ -61,5 +62,6 @@
     "vue-cli-plugin-electron-builder": "^2.1.1",
     "vue-template-compiler": "^2.6.10",
     "vuepress": "^1.9.7"
-  }
+  },
+  "license": "GPL-3.0"
 }

@@ -5,6 +5,7 @@ import { IpcMainChannels } from './ipc/ipcChannels';
 import { initializeIpcListeners } from './ipc/ipcListeners';
 import { initalizeBrowserIpcListeners } from './ipc/browserIpcListeners';
 import router from './router';
+import './registerServiceWorker'
 
 Vue.config.productionTip = false;
 

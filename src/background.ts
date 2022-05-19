@@ -24,6 +24,7 @@ import {
   PrintWorkspaceArgs,
   FileMenuOpenScoreArgs,
   SaveWorkspaceAsReplyArgs,
+  FileMenuInsertTextboxArgs,
 } from './ipc/ipcChannels';
 import path from 'path';
 import { promises as fs } from 'fs';
@@ -561,7 +562,17 @@ function createMenu() {
         {
           label: '&Text Box',
           click() {
-            win.webContents.send(IpcMainChannels.FileMenuInsertTextBox);
+            win.webContents.send(IpcMainChannels.FileMenuInsertTextBox, {
+              inline: false,
+            } as FileMenuInsertTextboxArgs);
+          },
+        },
+        {
+          label: '&Inline Text Box',
+          click() {
+            win.webContents.send(IpcMainChannels.FileMenuInsertTextBox, {
+              inline: true,
+            } as FileMenuInsertTextboxArgs);
           },
         },
         {

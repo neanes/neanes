@@ -382,6 +382,7 @@ export class TextBoxElement extends ScoreElement {
   public content: string = '';
   public fontSize: number = 16;
   public fontFamily: string = 'Omega';
+  public inline: boolean = false;
   public height: number = 20;
 
   public clone() {

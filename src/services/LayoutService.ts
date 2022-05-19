@@ -24,10 +24,11 @@ import { PageSetup } from '@/models/PageSetup';
 import { getScaleNoteValue, Scale, ScaleNote } from '@/models/Scales';
 import { TextMeasurementService } from './TextMeasurementService';
 
+const textWidthCache = new Map<string, number>();
+const neumeWidthCache = new Map<string, number>();
+
 export class LayoutService {
   public static processPages(elements: ScoreElement[], pageSetup: PageSetup) {
-    const textWidthCache = new Map<Neume, number>();
-
     elements.forEach((x, index) => (x.index = index));
 
     this.calculateMartyrias(elements);
@@ -152,15 +153,16 @@ export class LayoutService {
           noteElement.lyricsVerticalOffset = lyricsVerticalOffset;
 
           noteElement.neumeWidth = this.getNeumeWidthFromCache(
-            textWidthCache,
+            neumeWidthCache,
             noteElement.quantitativeNeume,
             pageSetup,
           );
 
           if (noteElement.lyrics.length > 0) {
-            noteElement.lyricsWidth = TextMeasurementService.getTextWidth(
+            noteElement.lyricsWidth = this.getTextWidthFromCache(
+              textWidthCache,
               noteElement.lyrics,
-              `${pageSetup.lyricsDefaultFontSize}px ${pageSetup.lyricsDefaultFontFamily}`,
+              pageSetup,
             );
           } else {
             noteElement.lyricsWidth = 0;
@@ -953,11 +955,13 @@ export class LayoutService {
   }
 
   private static getNeumeWidthFromCache(
-    cache: Map<Neume, number>,
+    cache: Map<string, number>,
     neume: Neume,
     pageSetup: PageSetup,
   ) {
-    let width = cache.get(neume);
+    const key = `${neume} | ${pageSetup.neumeDefaultFontSize} | ${pageSetup.neumeDefaultFontFamily}`;
+
+    let width = cache.get(key);
 
     if (width == null) {
       const neumeMapping = NeumeMappingService.getMapping(neume)!;
@@ -967,7 +971,28 @@ export class LayoutService {
         `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
       );
 
-      cache.set(neume, width);
+      cache.set(key, width);
+    }
+
+    return width;
+  }
+
+  private static getTextWidthFromCache(
+    cache: Map<string, number>,
+    text: string,
+    pageSetup: PageSetup,
+  ) {
+    const key = `${text} | ${pageSetup.lyricsDefaultFontSize} | ${pageSetup.lyricsDefaultFontFamily}`;
+
+    let width = cache.get(key);
+
+    if (width == null) {
+      width = TextMeasurementService.getTextWidth(
+        text,
+        `${pageSetup.lyricsDefaultFontSize}px ${pageSetup.lyricsDefaultFontFamily}`,
+      );
+
+      cache.set(key, width);
     }
 
     return width;

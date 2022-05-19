@@ -271,6 +271,9 @@
         @update:alignment="updateTextBoxAlignment(selectedElement, $event)"
         @update:color="updateTextBoxColor(selectedElement, $event)"
         @update:inline="updateTextBoxInline(selectedElement, $event)"
+        @update:bold="updateTextBoxBold(selectedElement, $event)"
+        @update:italic="updateTextBoxItalic(selectedElement, $event)"
+        @update:underline="updateTextBoxUnderline(selectedElement, $event)"
         @insert:gorthmikon="insertGorthmikon"
         @insert:pelastikon="insertPelastikon"
       />
@@ -2273,6 +2276,18 @@ export default class Editor extends Vue {
 
   updateTextBoxInline(element: TextBoxElement, inline: boolean) {
     this.updateTextBox(element, { inline });
+  }
+
+  updateTextBoxBold(element: TextBoxElement, bold: boolean) {
+    this.updateTextBox(element, { bold });
+  }
+
+  updateTextBoxItalic(element: TextBoxElement, italic: boolean) {
+    this.updateTextBox(element, { italic });
+  }
+
+  updateTextBoxUnderline(element: TextBoxElement, underline: boolean) {
+    this.updateTextBox(element, { underline });
   }
 
   updateModeKey(element: ModeKeyElement, newValues: Partial<ModeKeyElement>) {

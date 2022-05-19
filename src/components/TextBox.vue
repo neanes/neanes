@@ -3,7 +3,7 @@
     <ContentEditable
       ref="text"
       class="text-box"
-      :class="{ inline: element.inline }"
+      :class="textBoxClass"
       :style="textBoxStyle"
       :content="element.content"
       @blur="updateContent($event)"
@@ -59,6 +59,15 @@ export default class TextBox extends Vue {
     return style;
   }
 
+  get textBoxClass() {
+    return {
+      inline: this.element.inline,
+      bold: this.element.bold,
+      italic: this.element.italic,
+      underline: this.element.underline,
+    };
+  }
+
   updateContent(content: string) {
     // Nothing actually changed, so do nothing
     if (this.element.content === content) {
@@ -95,5 +104,17 @@ export default class TextBox extends Vue {
   display: flex;
   align-items: center;
   white-space: nowrap;
+}
+
+.text-box.bold {
+  font-weight: bold;
+}
+
+.text-box.italic {
+  font-style: italic;
+}
+
+.text-box.underline {
+  text-decoration: underline;
 }
 </style>

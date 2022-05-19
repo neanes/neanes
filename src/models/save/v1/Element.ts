@@ -88,6 +88,9 @@ export class TextBoxElement extends ScoreElement {
   public fontSize: number = 16;
   public fontFamily: string = 'Omega';
   public inline: boolean | undefined = undefined;
+  public bold: boolean | undefined = undefined;
+  public italic: boolean | undefined = undefined;
+  public underline: boolean | undefined = undefined;
   public height: number = 20;
 }
 

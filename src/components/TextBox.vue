@@ -3,6 +3,7 @@
     <ContentEditable
       ref="text"
       class="text-box"
+      :class="{ inline: element.inline }"
       :style="textBoxStyle"
       :content="element.content"
       @blur="updateContent($event)"
@@ -30,13 +31,19 @@ export default class TextBox extends Vue {
     return this.$refs.text as ContentEditable;
   }
 
+  get width() {
+    return this.element.inline
+      ? withZoom(this.element.width)
+      : withZoom(this.pageSetup.innerPageWidth);
+  }
+
   get containerStyle() {
     const style: any = {
       color: this.element.color,
       fontFamily: this.element.fontFamily,
       fontSize: withZoom(this.element.fontSize),
       textAlign: this.element.alignment,
-      width: withZoom(this.pageSetup.innerPageWidth),
+      width: this.width,
       height: withZoom(this.element.height),
     };
 
@@ -45,7 +52,7 @@ export default class TextBox extends Vue {
 
   get textBoxStyle() {
     const style: any = {
-      width: withZoom(this.pageSetup.innerPageWidth),
+      width: this.width,
       height: withZoom(this.element.height),
     };
 
@@ -82,5 +89,11 @@ export default class TextBox extends Vue {
 
 .text-box:focus {
   outline: none;
+}
+
+.text-box.inline {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
 }
 </style>

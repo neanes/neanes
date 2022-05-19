@@ -75,6 +75,13 @@
         title="Insert Gorthmikon"
       />
     </button>
+    <span class="space"></span>
+    <input
+      type="checkbox"
+      :checked="element.inline"
+      @change="$emit('update:inline', !element.inline)"
+    />
+    <label>Inline</label>
   </div>
 </template>
 

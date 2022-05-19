@@ -31,6 +31,7 @@
     >
       <FileMenuItem label="Drop Cap" @click="onClickAddDropCap" />
       <FileMenuItem label="Text Box" @click="onClickAddTextBox" />
+      <FileMenuItem label="Inline Text Box" @click="onClickAddInlineTextBox" />
       <FileMenuItem label="Mode Key" @click="onClickAddModeKey" />
     </FileMenuBarItem>
     <FileMenuBarItem
@@ -66,6 +67,7 @@ import FileMenuBarItem from '@/components/FileMenuBarItem.vue';
 import FileMenuItem from '@/components/FileMenuItem.vue';
 import { EventBus } from '@/eventBus';
 import {
+  FileMenuInsertTextboxArgs,
   FileMenuOpenScoreArgs,
   IpcMainChannels,
   IpcRendererChannels,
@@ -202,7 +204,16 @@ export default class FileMenuBar extends Vue {
   }
 
   onClickAddTextBox() {
-    EventBus.$emit(IpcMainChannels.FileMenuInsertTextBox);
+    EventBus.$emit(IpcMainChannels.FileMenuInsertTextBox, {
+      inline: false,
+    } as FileMenuInsertTextboxArgs);
+    this.isMenuOpen = false;
+  }
+
+  onClickAddInlineTextBox() {
+    EventBus.$emit(IpcMainChannels.FileMenuInsertTextBox, {
+      inline: true,
+    } as FileMenuInsertTextboxArgs);
     this.isMenuOpen = false;
   }
 

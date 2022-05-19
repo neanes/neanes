@@ -67,6 +67,10 @@ export interface ShowMessageBoxReplyArgs {
   checkboxChecked: boolean;
 }
 
+export interface FileMenuInsertTextboxArgs {
+  inline: boolean;
+}
+
 export interface SaveWorkspaceArgs {
   filePath: string;
   data: Score;

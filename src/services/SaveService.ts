@@ -223,6 +223,7 @@ export class SaveService {
     element.content = e.content;
     element.fontFamily = e.fontFamily;
     element.fontSize = e.fontSize;
+    element.inline = e.inline || undefined;
     element.height = e.height;
   }
 
@@ -472,6 +473,7 @@ export class SaveService {
     element.content = e.content;
     element.fontFamily = e.fontFamily;
     element.fontSize = e.fontSize;
+    element.inline = e.inline === true;
     element.height = e.height;
   }
 

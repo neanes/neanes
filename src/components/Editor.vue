@@ -270,6 +270,7 @@
         @update:fontFamily="updateTextBoxFontFamily(selectedElement, $event)"
         @update:alignment="updateTextBoxAlignment(selectedElement, $event)"
         @update:color="updateTextBoxColor(selectedElement, $event)"
+        @update:inline="updateTextBoxInline(selectedElement, $event)"
         @insert:gorthmikon="insertGorthmikon"
         @insert:pelastikon="insertPelastikon"
       />
@@ -400,6 +401,7 @@ import {
   IpcMainChannels,
   FileMenuOpenScoreArgs,
   ShowMessageBoxReplyArgs,
+  FileMenuInsertTextboxArgs,
 } from '@/ipc/ipcChannels';
 import { EventBus } from '@/eventBus';
 import { modeKeyTemplates } from '@/models/ModeKeys';
@@ -2269,6 +2271,10 @@ export default class Editor extends Vue {
     this.updateTextBox(element, { alignment });
   }
 
+  updateTextBoxInline(element: TextBoxElement, inline: boolean) {
+    this.updateTextBox(element, { inline });
+  }
+
   updateModeKey(element: ModeKeyElement, newValues: Partial<ModeKeyElement>) {
     this.commandService.execute(
       this.modeKeyCommandFactory.create('update-properties', {
@@ -2573,8 +2579,9 @@ export default class Editor extends Vue {
     }
   }
 
-  onFileMenuInsertTextBox() {
+  onFileMenuInsertTextBox(args: FileMenuInsertTextboxArgs) {
     const element = new TextBoxElement();
+    element.inline = args.inline;
 
     this.addScoreElement(element, this.selectedElementIndex);
 

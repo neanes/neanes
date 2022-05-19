@@ -318,7 +318,11 @@ export class LayoutService {
           let height = 0;
 
           if (
-            line.elements.some((x) => x.elementType === ElementType.TextBox)
+            line.elements.some(
+              (x) =>
+                x.elementType === ElementType.TextBox &&
+                !(x as TextBoxElement).inline,
+            )
           ) {
             const textbox = line.elements.find(
               (x) => x.elementType === ElementType.TextBox,

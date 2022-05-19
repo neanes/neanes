@@ -10,4 +10,5 @@ export enum TestFileType {
   NoteIndicators = 'NoteIndicators',
   Ison = 'Ison',
   ModeKey = 'ModeKey',
+  Random = 'Random',
 }

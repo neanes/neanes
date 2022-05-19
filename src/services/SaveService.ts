@@ -224,6 +224,9 @@ export class SaveService {
     element.fontFamily = e.fontFamily;
     element.fontSize = e.fontSize;
     element.inline = e.inline || undefined;
+    element.bold = e.bold || undefined;
+    element.italic = e.italic || undefined;
+    element.underline = e.underline || undefined;
     element.height = e.height;
   }
 
@@ -474,6 +477,9 @@ export class SaveService {
     element.fontFamily = e.fontFamily;
     element.fontSize = e.fontSize;
     element.inline = e.inline === true;
+    element.bold = e.bold === true;
+    element.italic = e.italic === true;
+    element.underline = e.underline === true;
     element.height = e.height;
   }
 

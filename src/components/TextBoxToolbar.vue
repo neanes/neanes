@@ -24,6 +24,28 @@
     <span class="space"></span>
     <button
       class="icon-btn"
+      :class="{ selected: element.bold }"
+      @click="$emit('update:bold', !element.bold)"
+    >
+      <b>B</b>
+    </button>
+    <button
+      class="icon-btn"
+      :class="{ selected: element.italic }"
+      @click="$emit('update:italic', !element.italic)"
+    >
+      <i>I</i>
+    </button>
+    <button
+      class="icon-btn"
+      :class="{ selected: element.underline }"
+      @click="$emit('update:underline', !element.underline)"
+    >
+      <u>U</u>
+    </button>
+    <span class="space"></span>
+    <button
+      class="icon-btn"
       :class="{ selected: element.alignment === TextBoxAlignment.Left }"
       @click="$emit('update:alignment', TextBoxAlignment.Left)"
     >

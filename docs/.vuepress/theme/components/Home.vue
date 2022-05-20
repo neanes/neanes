@@ -96,6 +96,9 @@ export default {
       font-size 1.6rem
       line-height 1.3
       color lighten($textColor, 40%)
+    .action
+      display flex
+      justify-content center
     .action-button
       display inline-block
       font-size 1.2rem
@@ -106,7 +109,7 @@ export default {
       transition background-color .1s ease
       box-sizing border-box
       border-bottom 1px solid darken($accentColor, 10%)
-      margin 0 10px
+      margin auto 0.5rem
       &:hover
         background-color lighten($accentColor, 10%)
   .features
@@ -138,11 +141,14 @@ export default {
 
 @media (max-width: $MQMobile)
   .home
-    .features
+    .features, .action
       flex-direction column
     .feature
       max-width 100%
       padding 0 2.5rem
+    .hero
+      .action-button
+        margin 0.5rem auto
 
 @media (max-width: $MQMobileNarrow)
   .home
@@ -161,6 +167,7 @@ export default {
       .action-button
         font-size 1rem
         padding 0.6rem 1.2rem
+        margin 0.5rem auto
     .feature
       h2
         font-size 1.25rem

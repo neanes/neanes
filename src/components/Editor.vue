@@ -21,7 +21,7 @@
         class="neume-selector"
         :pageSetup="score.pageSetup"
         @select-quantitative-neume="addQuantitativeNeume"
-      ></NeumeSelector>
+      />
       <div class="page-container">
         <div class="workspace-tab-container" ref="workspace-tab-container">
           <div class="workspace-tab-new-button" @click="onFileMenuNewScore">
@@ -115,13 +115,13 @@
                         :class="[{ selected: isSelected(element) }]"
                         @click.native.exact="selectedElement = element"
                         @click.native.shift.exact="setSelectionRange(element)"
-                      ></SyllableNeumeBox>
+                      />
                       <SyllableNeumeBoxPrint
                         v-if="printMode"
                         class="syllable-box print-only"
                         :note="element"
                         :pageSetup="score.pageSetup"
-                      ></SyllableNeumeBoxPrint>
+                      />
                       <div
                         class="lyrics-container"
                         :key="`lyrics-${getElementIndex(element)}-${
@@ -139,7 +139,7 @@
                             updateLyrics(element, $event);
                             selectedLyrics = null;
                           "
-                        ></ContentEditable>
+                        />
                         <template v-if="isMelisma(element)">
                           <div
                             class="melisma"
@@ -166,13 +166,13 @@
                         :pageSetup="score.pageSetup"
                         :class="[{ selected: isSelected(element) }]"
                         @click.native="selectedElement = element"
-                      ></MartyriaNeumeBox>
+                      />
                       <MartyriaNeumeBoxPrint
                         v-if="printMode"
                         class="marytria-neume-box print-only"
                         :neume="element"
                         :pageSetup="score.pageSetup"
-                      ></MartyriaNeumeBoxPrint>
+                      />
                       <div class="lyrics"></div>
                     </div>
                   </template>
@@ -193,7 +193,7 @@
                         :pageSetup="score.pageSetup"
                         :class="[{ selected: isSelected(element) }]"
                         @click.native="selectedElement = element"
-                      ></TempoNeumeBox>
+                      />
                       <div class="lyrics"></div>
                     </div>
                   </template>
@@ -248,15 +248,13 @@
                       :class="[{ selectedTextbox: element == selectedElement }]"
                       @click.native="selectedElement = element"
                       @dblclick.native="openModeKeyDialog"
-                    >
-                    </ModeKey>
+                    />
                     <ModeKeyPrint
                       v-if="printMode"
                       class="print-only"
                       :element="element"
                       :pageSetup="score.pageSetup"
-                    >
-                    </ModeKeyPrint>
+                    />
                   </template>
                   <template v-if="isDropCapElement(element)">
                     <span class="page-break" v-if="element.pageBreak"
@@ -276,8 +274,7 @@
                       @update:content="
                         updateDropCapContent(selectedElement, $event)
                       "
-                    >
-                    </DropCap>
+                    />
                   </template>
                 </div>
               </div>

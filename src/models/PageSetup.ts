@@ -94,6 +94,6 @@ export class PageSetup {
   }
 
   public get innerPageHeight() {
-    return this.pageHeight - this.topMargin - this.topMargin;
+    return this.pageHeight - this.topMargin - this.bottomMargin;
   }
 }

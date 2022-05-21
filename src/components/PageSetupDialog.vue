@@ -173,6 +173,24 @@
 
           <div class="form-group">
             <input
+              id="page-setup-dialog-show-header"
+              type="checkbox"
+              v-model="form.showHeader"
+            />
+            <label for="page-setup-dialog-show-header">Include Header</label>
+          </div>
+
+          <div class="form-group">
+            <input
+              id="page-setup-dialog-show-footer"
+              type="checkbox"
+              v-model="form.showFooter"
+            />
+            <label for="page-setup-dialog-show-footer">Include Footer</label>
+          </div>
+
+          <div class="form-group">
+            <input
               id="page-setup-dialog-different-first-page"
               type="checkbox"
               v-model="form.headerDifferentFirstPage"

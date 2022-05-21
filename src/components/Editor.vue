@@ -59,6 +59,32 @@
             :ref="`page-${pageIndex}`"
           >
             <template v-if="page.isVisible || printMode">
+              <template v-if="score.headers.length > 0">
+                <TextBox
+                  class="element-box"
+                  :ref="`header-${pageIndex}`"
+                  :element="getHeaderForPageIndex(pageIndex)"
+                  :pageSetup="score.pageSetup"
+                  :class="[
+                    {
+                      selectedTextbox:
+                        getHeaderForPageIndex(pageIndex) ==
+                        selectedHeaderFooterElement,
+                    },
+                  ]"
+                  :style="headerStyle"
+                  @click.native="
+                    selectedHeaderFooterElement =
+                      getHeaderForPageIndex(pageIndex)
+                  "
+                  @update:content="
+                    updateTextBoxContent(
+                      getHeaderForPageIndex(pageIndex),
+                      $event,
+                    )
+                  "
+                />
+              </template>
               <div
                 class="line"
                 v-for="(line, lineIndex) in page.lines"
@@ -205,8 +231,7 @@
                       :class="[{ selectedTextbox: element == selectedElement }]"
                       @click.native="selectedElement = element"
                       @update:content="updateTextBoxContent(element, $event)"
-                    >
-                    </TextBox>
+                    />
                   </template>
                   <template v-if="isModeKeyElement(element)">
                     <span class="page-break-2" v-if="element.pageBreak"
@@ -418,6 +443,9 @@ import { throttle } from 'throttle-debounce';
 import { Command, CommandFactory } from '@/services/history/CommandService';
 import { IIpcService } from '@/services/ipc/IIpcService';
 import { PageSetup } from '@/models/PageSetup';
+import { HeaderFooterType } from '@/models/HeaderFooterType';
+import { Header } from '@/models/Header';
+import { Footer } from '@/models/Footer';
 
 @Component({
   components: {
@@ -486,6 +514,10 @@ export default class Editor extends Vue {
 
   pageSetupCommandFactory: CommandFactory<PageSetup> =
     new CommandFactory<PageSetup>();
+
+  headerCommandFactory: CommandFactory<Header> = new CommandFactory<Header>();
+
+  footerCommandFactory: CommandFactory<Footer> = new CommandFactory<Footer>();
 
   // Throttled Methods
   keydownThrottleIntervalMs: number = 100;
@@ -607,6 +639,7 @@ export default class Editor extends Vue {
     if (element != null) {
       this.selectedLyrics = null;
       this.selectionRange = null;
+      this.selectedHeaderFooterElement = null;
     }
 
     this.selectedWorkspace.selectedElement = element;
@@ -619,10 +652,25 @@ export default class Editor extends Vue {
   set selectedLyrics(element: NoteElement | null) {
     if (element != null) {
       this.selectedElement = null;
+      this.selectedHeaderFooterElement = null;
       this.selectionRange = null;
     }
 
     this.selectedWorkspace.selectedLyrics = element;
+  }
+
+  get selectedHeaderFooterElement() {
+    return this.selectedWorkspace.selectedHeaderFooterElement;
+  }
+
+  set selectedHeaderFooterElement(element: ScoreElement | null) {
+    if (element != null) {
+      this.selectedElement = null;
+      this.selectedLyrics = null;
+      this.selectionRange = null;
+    }
+
+    this.selectedWorkspace.selectedHeaderFooterElement = element;
   }
 
   get selectionRange() {
@@ -687,6 +735,13 @@ export default class Editor extends Vue {
       height: withZoom(this.score.pageSetup.pageHeight),
       minHeight: withZoom(this.score.pageSetup.pageHeight),
       maxHeight: withZoom(this.score.pageSetup.pageHeight),
+    } as CSSStyleDeclaration;
+  }
+
+  get headerStyle() {
+    return {
+      left: withZoom(this.score.pageSetup.leftMargin),
+      top: withZoom(this.score.pageSetup.headerMargin),
     } as CSSStyleDeclaration;
   }
 
@@ -769,6 +824,36 @@ export default class Editor extends Vue {
     }
   }
 
+  getHeaderForPageIndex(pageIndex: number) {
+    const pageNumber = pageIndex + 1;
+    let header: Header;
+
+    if (this.score.pageSetup.headerDifferentFirstPage && pageNumber === 1) {
+      header = this.score.headers.find(
+        (x) => x.type === HeaderFooterType.FirstPage,
+      )!;
+    } else if (
+      this.score.pageSetup.headerDifferentOddEven &&
+      pageNumber % 2 === 0
+    ) {
+      header = this.score.headers.find(
+        (x) => x.type === HeaderFooterType.Even,
+      )!;
+    } else if (
+      this.score.pageSetup.headerDifferentOddEven &&
+      pageNumber % 2 !== 0
+    ) {
+      header = this.score.headers.find((x) => x.type === HeaderFooterType.Odd)!;
+    } else {
+      header = this.score.headers.find(
+        (x) => x.type === HeaderFooterType.Default,
+      )!;
+    }
+
+    // Currently, headers only support a single text box element.
+    return header.elements[0];
+  }
+
   async created() {
     const fontLoader = (document as any).fonts;
 
@@ -817,6 +902,14 @@ export default class Editor extends Vue {
     EventBus.$on(
       IpcMainChannels.FileMenuInsertDropCap,
       this.onFileMenuInsertDropCap,
+    );
+    EventBus.$on(
+      IpcMainChannels.FileMenuInsertHeader,
+      this.onFileMenuInsertHeader,
+    );
+    EventBus.$on(
+      IpcMainChannels.FileMenuInsertFooter,
+      this.onFileMenuInsertFooter,
     );
     EventBus.$on(
       IpcMainChannels.FileMenuGenerateTestFile,
@@ -1860,10 +1953,7 @@ export default class Editor extends Vue {
       .map((_, i) => i)
       .filter((i) => this.pages[i].isVisible);
 
-    const pages = LayoutService.processPages(
-      this.elements,
-      this.score.pageSetup,
-    );
+    const pages = LayoutService.processPages(this.score);
 
     // Set page visibility for the newly processed pages
     pages.forEach((x, index) => (x.isVisible = visiblePages.includes(index)));
@@ -1974,10 +2064,7 @@ export default class Editor extends Vue {
     this.selectedElement =
       this.score.staff.elements[this.score.staff.elements.length - 1];
 
-    this.pages = LayoutService.processPages(
-      this.elements,
-      this.score.pageSetup,
-    );
+    this.pages = LayoutService.processPages(this.score);
   }
 
   async closeWorkspace(workspace: Workspace) {
@@ -2104,6 +2191,24 @@ export default class Editor extends Vue {
       this.scoreElementCommandFactory.create('remove-from-collection', {
         element,
         collection: this.elements,
+      }),
+    );
+  }
+
+  addScoreHeader(element: Header) {
+    this.commandService.execute(
+      this.headerCommandFactory.create('add-to-collection', {
+        elements: [element],
+        collection: this.score.headers,
+      }),
+    );
+  }
+
+  addScoreFooter(element: Footer) {
+    this.commandService.execute(
+      this.footerCommandFactory.create('add-to-collection', {
+        elements: [element],
+        collection: this.score.footers,
       }),
     );
   }
@@ -2625,6 +2730,34 @@ export default class Editor extends Vue {
 
   onFileMenuInsertDropCap() {
     this.addDropCap();
+  }
+
+  onFileMenuInsertHeader() {
+    if (this.score.headers.length > 0) {
+      return;
+    }
+
+    const header = new Header();
+
+    this.addScoreHeader(header);
+
+    this.selectedHeaderFooterElement = header.elements[0];
+
+    this.save();
+  }
+
+  onFileMenuInsertFooter() {
+    if (this.score.footers.length > 0) {
+      return;
+    }
+
+    const footer = new Footer();
+
+    this.addScoreFooter(footer);
+
+    this.selectedHeaderFooterElement = footer.elements[0];
+
+    this.save();
   }
 
   async onFileMenuSave() {

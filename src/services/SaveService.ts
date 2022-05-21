@@ -1,4 +1,5 @@
-import { Score, Staff } from '@/models/Score';
+import { Score } from '@/models/Score';
+import { Staff } from '@/models/Staff';
 import {
   DropCapElement,
   ElementType,
@@ -13,6 +14,8 @@ import {
 } from '@/models/Element';
 
 import { Score as Score_v1, Staff as Staff_v1 } from '@/models/save/v1/Score';
+import { Header as Header_v1 } from '@/models/save/v1/Header';
+import { Footer as Footer_v1 } from '@/models/save/v1/Footer';
 import {
   DropCapElement as DropCapElement_v1,
   ElementType as ElementType_v1,
@@ -28,6 +31,8 @@ import {
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
 import { PageSetup } from '@/models/PageSetup';
 import { QuantitativeNeume } from '@/models/Neumes';
+import { Header } from '@/models/Header';
+import { Footer } from '@/models/Footer';
 
 interface IScore {
   version: string;
@@ -81,6 +86,13 @@ export class SaveService {
     score.pageSetup.rightMargin = s.pageSetup.rightMargin;
     score.pageSetup.topMargin = s.pageSetup.topMargin;
 
+    score.pageSetup.headerMargin = s.pageSetup.headerMargin;
+    score.pageSetup.footerMargin = s.pageSetup.footerMargin;
+    score.pageSetup.headerDifferentFirstPage =
+      s.pageSetup.headerDifferentFirstPage || undefined;
+    score.pageSetup.headerDifferentOddEven =
+      s.pageSetup.headerDifferentOddEven || undefined;
+
     score.pageSetup.accidentalDefaultColor = s.pageSetup.accidentalDefaultColor;
     score.pageSetup.fthoraDefaultColor = s.pageSetup.fthoraDefaultColor;
     score.pageSetup.heteronDefaultColor = s.pageSetup.heteronDefaultColor;
@@ -97,6 +109,30 @@ export class SaveService {
     score.pageSetup.landscape = s.pageSetup.landscape || undefined;
 
     score.pageSetup.hyphenSpacing = s.pageSetup.hyphenSpacing;
+
+    for (let h of s.headers) {
+      const header = new Header_v1();
+      header.type = h.type;
+
+      // Currently, headers only support a single element
+      const e = h.elements[0];
+      const element = new TextBoxElement_v1();
+      this.SaveTextBox(element as TextBoxElement_v1, e as TextBoxElement);
+      header.elements.push(element);
+      score.headers.push(header);
+    }
+
+    for (let f of s.footers) {
+      const footer = new Footer_v1();
+      footer.type = f.type;
+
+      // Currently, footers only support a single element
+      const e = f.elements[0];
+      const element = new TextBoxElement_v1();
+      this.SaveTextBox(element as TextBoxElement_v1, e as TextBoxElement);
+      footer.elements.push(element);
+      score.footers.push(footer);
+    }
 
     for (let e of s.staff.elements) {
       let element: ScoreElement_v1 = new EmptyElement_v1();
@@ -263,6 +299,30 @@ export class SaveService {
 
     this.LoadPageSetup_v1(score.pageSetup, s.pageSetup);
 
+    for (let h of s.headers) {
+      const header = new Header();
+      header.type = h.type;
+
+      // Currently, headers only support a single element
+      const e = h.elements[0];
+      const element = header.elements[0];
+      this.LoadTextBox_v1(element as TextBoxElement, e as TextBoxElement_v1);
+      header.elements.push(element);
+      score.headers.push(header);
+    }
+
+    for (let f of s.footers) {
+      const footer = new Footer();
+      footer.type = f.type;
+
+      // Currently, footers only support a single element
+      const e = f.elements[0];
+      const element = footer.elements[0];
+      this.LoadTextBox_v1(element as TextBoxElement, e as TextBoxElement_v1);
+      footer.elements.push(element);
+      score.footers.push(footer);
+    }
+
     for (let e of s.staff.elements) {
       let element: ScoreElement = new EmptyElement();
 
@@ -330,6 +390,11 @@ export class SaveService {
     pageSetup.bottomMargin = p.bottomMargin;
     pageSetup.leftMargin = p.leftMargin;
     pageSetup.rightMargin = p.rightMargin;
+
+    pageSetup.headerMargin = p.headerMargin;
+    pageSetup.footerMargin = p.footerMargin;
+    pageSetup.headerDifferentFirstPage = p.headerDifferentFirstPage === true;
+    pageSetup.headerDifferentOddEven = p.headerDifferentOddEven === true;
 
     pageSetup.lineHeight = p.lineHeight;
 

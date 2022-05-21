@@ -13,6 +13,7 @@ export class Workspace {
   public hasUnsavedChanges: boolean = false;
   public commandService: CommandService = new CommandService();
   public selectedElement: ScoreElement | null = null;
+  public selectedHeaderFooterElement: ScoreElement | null = null;
   public selectedLyrics: NoteElement | null = null;
   public selectionRange: ScoreElementSelectionRange | null = null;
   public zoom: number = 1;

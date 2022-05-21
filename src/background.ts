@@ -581,6 +581,24 @@ function createMenu() {
             win.webContents.send(IpcMainChannels.FileMenuInsertModeKey);
           },
         },
+        { type: 'separator' },
+        {
+          label: 'Headers && Footers',
+          submenu: [
+            {
+              label: 'Header',
+              click() {
+                win.webContents.send(IpcMainChannels.FileMenuInsertHeader);
+              },
+            },
+            {
+              label: 'Footer',
+              click() {
+                win.webContents.send(IpcMainChannels.FileMenuInsertFooter);
+              },
+            },
+          ],
+        },
       ],
     },
     ...(isDevelopment

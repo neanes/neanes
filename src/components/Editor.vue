@@ -59,7 +59,7 @@
             :ref="`page-${pageIndex}`"
           >
             <template v-if="page.isVisible || printMode">
-              <template v-if="score.headers.length > 0">
+              <template v-if="getHeaderForPageIndex(pageIndex)">
                 <TextBox
                   class="element-box"
                   :ref="`header-${pageIndex}`"
@@ -281,7 +281,7 @@
                   </template>
                 </div>
               </div>
-              <template v-if="score.footers.length > 0">
+              <template v-if="getFooterForPageIndex(pageIndex)">
                 <TextBox
                   class="element-box"
                   :ref="`footer-${pageIndex}`"
@@ -859,62 +859,20 @@ export default class Editor extends Vue {
 
   getHeaderForPageIndex(pageIndex: number) {
     const pageNumber = pageIndex + 1;
-    let header: Header;
 
-    if (this.score.pageSetup.headerDifferentFirstPage && pageNumber === 1) {
-      header = this.score.headers.find(
-        (x) => x.type === HeaderFooterType.FirstPage,
-      )!;
-    } else if (
-      this.score.pageSetup.headerDifferentOddEven &&
-      pageNumber % 2 === 0
-    ) {
-      header = this.score.headers.find(
-        (x) => x.type === HeaderFooterType.Even,
-      )!;
-    } else if (
-      this.score.pageSetup.headerDifferentOddEven &&
-      pageNumber % 2 !== 0
-    ) {
-      header = this.score.headers.find((x) => x.type === HeaderFooterType.Odd)!;
-    } else {
-      header = this.score.headers.find(
-        (x) => x.type === HeaderFooterType.Default,
-      )!;
-    }
+    const header = this.score.getHeaderForPage(pageNumber);
 
     // Currently, headers only support a single text box element.
-    return header.elements[0];
+    return header != null ? header.elements[0] : null;
   }
 
   getFooterForPageIndex(pageIndex: number) {
     const pageNumber = pageIndex + 1;
-    let footer: Footer;
 
-    if (this.score.pageSetup.headerDifferentFirstPage && pageNumber === 1) {
-      footer = this.score.footers.find(
-        (x) => x.type === HeaderFooterType.FirstPage,
-      )!;
-    } else if (
-      this.score.pageSetup.headerDifferentOddEven &&
-      pageNumber % 2 === 0
-    ) {
-      footer = this.score.footers.find(
-        (x) => x.type === HeaderFooterType.Even,
-      )!;
-    } else if (
-      this.score.pageSetup.headerDifferentOddEven &&
-      pageNumber % 2 !== 0
-    ) {
-      footer = this.score.footers.find((x) => x.type === HeaderFooterType.Odd)!;
-    } else {
-      footer = this.score.footers.find(
-        (x) => x.type === HeaderFooterType.Default,
-      )!;
-    }
+    const footer = this.score.getFooterForPage(pageNumber);
 
     // Currently, footers only support a single text box element.
-    return footer.elements[0];
+    return footer != null ? footer.elements[0] : null;
   }
 
   async created() {

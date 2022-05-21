@@ -108,9 +108,6 @@ export class LayoutService {
     // Process Header and Footers
     // Only a single text box is supported right now
 
-    let headerHeightPx = 0;
-    let footerHeightPx = 0;
-
     for (let header of score.headers) {
       for (let element of header.elements) {
         if (element.elementType === ElementType.TextBox) {
@@ -119,8 +116,6 @@ export class LayoutService {
             pageSetup,
             neumeHeight,
           );
-
-          headerHeightPx += (element as TextBoxElement).height;
         }
       }
     }
@@ -133,31 +128,37 @@ export class LayoutService {
             pageSetup,
             neumeHeight,
           );
-
-          footerHeightPx += (element as TextBoxElement).height;
         }
       }
     }
 
-    const extraHeaderHeightPx = Math.max(
-      0,
-      headerHeightPx - (pageSetup.topMargin - pageSetup.headerMargin),
-    );
-
-    //console.log(footerHeightPx, pageSetup.bottomMargin, pageSetup.footerMargin);
-
-    const extraFooterHeightPx = Math.max(
-      0,
-      footerHeightPx - (pageSetup.bottomMargin - pageSetup.footerMargin),
-    );
-
-    const innerPageHeight =
-      pageSetup.innerPageHeight - extraHeaderHeightPx - extraFooterHeightPx;
-
-    console.log(innerPageHeight, extraHeaderHeightPx, extraFooterHeightPx);
-
     for (let element of elements) {
       let elementWidthPx = 0;
+
+      const currentPageNumber = pages.length;
+
+      const header = score.getHeaderForPage(currentPageNumber);
+      const footer = score.getFooterForPage(currentPageNumber);
+
+      // Currently, headers and footers may only contain a single
+      // text box.
+      const headerHeightPx =
+        header != null ? (header.elements[0] as TextBoxElement).height : 0;
+      const footerHeightPx =
+        footer != null ? (footer.elements[0] as TextBoxElement).height : 0;
+
+      const extraHeaderHeightPx = Math.max(
+        0,
+        headerHeightPx - (pageSetup.topMargin - pageSetup.headerMargin),
+      );
+
+      const extraFooterHeightPx = Math.max(
+        0,
+        footerHeightPx - (pageSetup.bottomMargin - pageSetup.footerMargin),
+      );
+
+      const innerPageHeight =
+        pageSetup.innerPageHeight - extraHeaderHeightPx - extraFooterHeightPx;
 
       switch (element.elementType) {
         case ElementType.TextBox:
@@ -312,6 +313,7 @@ export class LayoutService {
           );
       }
 
+      // Check if we need a new line
       if (
         currentLineWidthPx + elementWidthPx > pageSetup.innerPageWidth ||
         lastElementWasLineBreak
@@ -375,6 +377,7 @@ export class LayoutService {
         currentLineWidthPx = 0;
       }
 
+      // Check if we need a new page
       if (currentPageHeightPx > innerPageHeight || lastElementWasPageBreak) {
         page = {
           lines: [],

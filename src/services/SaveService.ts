@@ -110,28 +110,32 @@ export class SaveService {
 
     score.pageSetup.hyphenSpacing = s.pageSetup.hyphenSpacing;
 
-    for (let h of s.headers) {
-      const header = new Header_v1();
-      header.type = h.type;
+    if (s.headers) {
+      for (let h of s.headers) {
+        const header = new Header_v1();
+        header.type = h.type;
 
-      // Currently, headers only support a single element
-      const e = h.elements[0];
-      const element = new TextBoxElement_v1();
-      this.SaveTextBox(element as TextBoxElement_v1, e as TextBoxElement);
-      header.elements.push(element);
-      score.headers.push(header);
+        // Currently, headers only support a single element
+        const e = h.elements[0];
+        const element = new TextBoxElement_v1();
+        this.SaveTextBox(element as TextBoxElement_v1, e as TextBoxElement);
+        header.elements.push(element);
+        score.headers.push(header);
+      }
     }
 
-    for (let f of s.footers) {
-      const footer = new Footer_v1();
-      footer.type = f.type;
+    if (s.footers) {
+      for (let f of s.footers) {
+        const footer = new Footer_v1();
+        footer.type = f.type;
 
-      // Currently, footers only support a single element
-      const e = f.elements[0];
-      const element = new TextBoxElement_v1();
-      this.SaveTextBox(element as TextBoxElement_v1, e as TextBoxElement);
-      footer.elements.push(element);
-      score.footers.push(footer);
+        // Currently, footers only support a single element
+        const e = f.elements[0];
+        const element = new TextBoxElement_v1();
+        this.SaveTextBox(element as TextBoxElement_v1, e as TextBoxElement);
+        footer.elements.push(element);
+        score.footers.push(footer);
+      }
     }
 
     for (let e of s.staff.elements) {
@@ -299,26 +303,30 @@ export class SaveService {
 
     this.LoadPageSetup_v1(score.pageSetup, s.pageSetup);
 
-    for (let h of s.headers) {
-      const header = new Header();
-      header.type = h.type;
+    if (s.headers) {
+      for (let h of s.headers) {
+        const header = new Header();
+        header.type = h.type;
 
-      // Currently, headers only support a single element
-      const e = h.elements[0];
-      const element = header.elements[0];
-      this.LoadTextBox_v1(element as TextBoxElement, e as TextBoxElement_v1);
-      score.headers.push(header);
+        // Currently, headers only support a single element
+        const e = h.elements[0];
+        const element = header.elements[0];
+        this.LoadTextBox_v1(element as TextBoxElement, e as TextBoxElement_v1);
+        score.headers.push(header);
+      }
     }
 
-    for (let f of s.footers) {
-      const footer = new Footer();
-      footer.type = f.type;
+    if (s.footers) {
+      for (let f of s.footers) {
+        const footer = new Footer();
+        footer.type = f.type;
 
-      // Currently, footers only support a single element
-      const e = f.elements[0];
-      const element = footer.elements[0];
-      this.LoadTextBox_v1(element as TextBoxElement, e as TextBoxElement_v1);
-      score.footers.push(footer);
+        // Currently, footers only support a single element
+        const e = f.elements[0];
+        const element = footer.elements[0];
+        this.LoadTextBox_v1(element as TextBoxElement, e as TextBoxElement_v1);
+        score.footers.push(footer);
+      }
     }
 
     for (let e of s.staff.elements) {
@@ -389,8 +397,14 @@ export class SaveService {
     pageSetup.leftMargin = p.leftMargin;
     pageSetup.rightMargin = p.rightMargin;
 
-    pageSetup.headerMargin = p.headerMargin;
-    pageSetup.footerMargin = p.footerMargin;
+    if (p.headerMargin != null) {
+      pageSetup.headerMargin = p.headerMargin;
+    }
+
+    if (p.footerMargin) {
+      pageSetup.footerMargin = p.footerMargin;
+    }
+
     pageSetup.headerDifferentFirstPage = p.headerDifferentFirstPage === true;
     pageSetup.headerDifferentOddEven = p.headerDifferentOddEven === true;
 

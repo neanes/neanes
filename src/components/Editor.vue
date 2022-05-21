@@ -281,6 +281,32 @@
                   </template>
                 </div>
               </div>
+              <template v-if="score.footers.length > 0">
+                <TextBox
+                  class="element-box"
+                  :ref="`footer-${pageIndex}`"
+                  :element="getFooterForPageIndex(pageIndex)"
+                  :pageSetup="score.pageSetup"
+                  :class="[
+                    {
+                      selectedTextbox:
+                        getFooterForPageIndex(pageIndex) ==
+                        selectedHeaderFooterElement,
+                    },
+                  ]"
+                  :style="footerStyle"
+                  @click.native="
+                    selectedHeaderFooterElement =
+                      getFooterForPageIndex(pageIndex)
+                  "
+                  @update:content="
+                    updateTextBoxContent(
+                      getFooterForPageIndex(pageIndex),
+                      $event,
+                    )
+                  "
+                />
+              </template>
             </template>
           </div>
         </div>
@@ -745,6 +771,13 @@ export default class Editor extends Vue {
     } as CSSStyleDeclaration;
   }
 
+  get footerStyle() {
+    return {
+      left: withZoom(this.score.pageSetup.leftMargin),
+      bottom: withZoom(this.score.pageSetup.footerMargin),
+    } as CSSStyleDeclaration;
+  }
+
   get pageVisibilityIntersection() {
     // look ahead/behind 1 page
     const margin = this.score.pageSetup.pageHeight * this.zoom;
@@ -852,6 +885,36 @@ export default class Editor extends Vue {
 
     // Currently, headers only support a single text box element.
     return header.elements[0];
+  }
+
+  getFooterForPageIndex(pageIndex: number) {
+    const pageNumber = pageIndex + 1;
+    let footer: Footer;
+
+    if (this.score.pageSetup.headerDifferentFirstPage && pageNumber === 1) {
+      footer = this.score.footers.find(
+        (x) => x.type === HeaderFooterType.FirstPage,
+      )!;
+    } else if (
+      this.score.pageSetup.headerDifferentOddEven &&
+      pageNumber % 2 === 0
+    ) {
+      footer = this.score.footers.find(
+        (x) => x.type === HeaderFooterType.Even,
+      )!;
+    } else if (
+      this.score.pageSetup.headerDifferentOddEven &&
+      pageNumber % 2 !== 0
+    ) {
+      footer = this.score.footers.find((x) => x.type === HeaderFooterType.Odd)!;
+    } else {
+      footer = this.score.footers.find(
+        (x) => x.type === HeaderFooterType.Default,
+      )!;
+    }
+
+    // Currently, footers only support a single text box element.
+    return footer.elements[0];
   }
 
   async created() {

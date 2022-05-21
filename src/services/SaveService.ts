@@ -307,7 +307,6 @@ export class SaveService {
       const e = h.elements[0];
       const element = header.elements[0];
       this.LoadTextBox_v1(element as TextBoxElement, e as TextBoxElement_v1);
-      header.elements.push(element);
       score.headers.push(header);
     }
 
@@ -319,7 +318,6 @@ export class SaveService {
       const e = f.elements[0];
       const element = footer.elements[0];
       this.LoadTextBox_v1(element as TextBoxElement, e as TextBoxElement_v1);
-      footer.elements.push(element);
       score.footers.push(footer);
     }
 

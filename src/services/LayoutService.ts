@@ -109,6 +109,7 @@ export class LayoutService {
     // Only a single text box is supported right now
 
     let headerHeightPx = 0;
+    let footerHeightPx = 0;
 
     for (let header of score.headers) {
       for (let element of header.elements) {
@@ -124,12 +125,36 @@ export class LayoutService {
       }
     }
 
+    for (let footer of score.footers) {
+      for (let element of footer.elements) {
+        if (element.elementType === ElementType.TextBox) {
+          element.width = this.processTextBoxElement(
+            element as TextBoxElement,
+            pageSetup,
+            neumeHeight,
+          );
+
+          footerHeightPx += (element as TextBoxElement).height;
+        }
+      }
+    }
+
     const extraHeaderHeightPx = Math.max(
       0,
       headerHeightPx - (pageSetup.topMargin - pageSetup.headerMargin),
     );
 
-    const innerPageHeight = pageSetup.innerPageHeight - extraHeaderHeightPx;
+    //console.log(footerHeightPx, pageSetup.bottomMargin, pageSetup.footerMargin);
+
+    const extraFooterHeightPx = Math.max(
+      0,
+      footerHeightPx - (pageSetup.bottomMargin - pageSetup.footerMargin),
+    );
+
+    const innerPageHeight =
+      pageSetup.innerPageHeight - extraHeaderHeightPx - extraFooterHeightPx;
+
+    console.log(innerPageHeight, extraHeaderHeightPx, extraFooterHeightPx);
 
     for (let element of elements) {
       let elementWidthPx = 0;

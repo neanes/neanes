@@ -24,6 +24,8 @@ import { PageSetup } from '@/models/PageSetup';
 import { getScaleNoteValue, Scale, ScaleNote } from '@/models/Scales';
 import { TextMeasurementService } from './TextMeasurementService';
 import { Score } from '@/models/Score';
+import { Header } from '@/models/Header';
+import { Footer } from '@/models/Footer';
 
 const textWidthCache = new Map<string, number>();
 const neumeWidthCache = new Map<string, number>();
@@ -107,30 +109,15 @@ export class LayoutService {
 
     // Process Header and Footers
     // Only a single text box is supported right now
+    this.processHeader(score.headers.default, pageSetup, neumeHeight);
+    this.processHeader(score.headers.odd, pageSetup, neumeHeight);
+    this.processHeader(score.headers.even, pageSetup, neumeHeight);
+    this.processHeader(score.headers.firstPage, pageSetup, neumeHeight);
 
-    for (let header of score.headers) {
-      for (let element of header.elements) {
-        if (element.elementType === ElementType.TextBox) {
-          element.width = this.processTextBoxElement(
-            element as TextBoxElement,
-            pageSetup,
-            neumeHeight,
-          );
-        }
-      }
-    }
-
-    for (let footer of score.footers) {
-      for (let element of footer.elements) {
-        if (element.elementType === ElementType.TextBox) {
-          element.width = this.processTextBoxElement(
-            element as TextBoxElement,
-            pageSetup,
-            neumeHeight,
-          );
-        }
-      }
-    }
+    this.processFooter(score.footers.default, pageSetup, neumeHeight);
+    this.processFooter(score.footers.odd, pageSetup, neumeHeight);
+    this.processFooter(score.footers.even, pageSetup, neumeHeight);
+    this.processFooter(score.footers.firstPage, pageSetup, neumeHeight);
 
     for (let element of elements) {
       let elementWidthPx = 0;
@@ -480,6 +467,40 @@ export class LayoutService {
     this.addMelismas(pages, pageSetup);
 
     return pages;
+  }
+
+  private static processHeader(
+    header: Header,
+    pageSetup: PageSetup,
+    neumeHeight: number,
+  ) {
+    // Currently headers may only contain a single text box
+    if (header.elements.length > 0) {
+      const element = header.elements[0] as TextBoxElement;
+
+      element.width = this.processTextBoxElement(
+        element,
+        pageSetup,
+        neumeHeight,
+      );
+    }
+  }
+
+  private static processFooter(
+    footer: Footer,
+    pageSetup: PageSetup,
+    neumeHeight: number,
+  ) {
+    // Currently footers may only contain a single text box
+    if (footer.elements.length > 0) {
+      const element = footer.elements[0] as TextBoxElement;
+
+      element.width = this.processTextBoxElement(
+        element,
+        pageSetup,
+        neumeHeight,
+      );
+    }
   }
 
   private static processTextBoxElement(

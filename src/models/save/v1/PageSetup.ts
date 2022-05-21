@@ -18,8 +18,10 @@ export class PageSetup {
 
   public headerMargin = Unit.fromInch(0.5);
   public footerMargin = Unit.fromInch(0.5);
-  public headerDifferentFirstPage: boolean | undefined = false;
-  public headerDifferentOddEven: boolean | undefined = false;
+  public headerDifferentFirstPage: boolean | undefined = undefined;
+  public headerDifferentOddEven: boolean | undefined = undefined;
+  public showHeader: boolean | undefined = undefined;
+  public showFooter: boolean | undefined = undefined;
 
   public lineHeight = Unit.fromInch(0.75);
 

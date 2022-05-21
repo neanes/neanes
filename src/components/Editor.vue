@@ -59,7 +59,7 @@
             :ref="`page-${pageIndex}`"
           >
             <template v-if="page.isVisible || printMode">
-              <template v-if="getHeaderForPageIndex(pageIndex)">
+              <template v-if="score.pageSetup.showHeader">
                 <TextBox
                   class="element-box"
                   :ref="`header-${pageIndex}`"
@@ -278,7 +278,7 @@
                   </template>
                 </div>
               </div>
-              <template v-if="getFooterForPageIndex(pageIndex)">
+              <template v-if="score.pageSetup.showFooter">
                 <TextBox
                   class="element-box"
                   :ref="`footer-${pageIndex}`"
@@ -466,7 +466,6 @@ import { throttle } from 'throttle-debounce';
 import { Command, CommandFactory } from '@/services/history/CommandService';
 import { IIpcService } from '@/services/ipc/IIpcService';
 import { PageSetup } from '@/models/PageSetup';
-import { HeaderFooterType } from '@/models/HeaderFooterType';
 import { Header } from '@/models/Header';
 import { Footer } from '@/models/Footer';
 
@@ -2213,24 +2212,6 @@ export default class Editor extends Vue {
     );
   }
 
-  addScoreHeader(element: Header) {
-    this.commandService.execute(
-      this.headerCommandFactory.create('add-to-collection', {
-        elements: [element],
-        collection: this.score.headers,
-      }),
-    );
-  }
-
-  addScoreFooter(element: Footer) {
-    this.commandService.execute(
-      this.footerCommandFactory.create('add-to-collection', {
-        elements: [element],
-        collection: this.score.footers,
-      }),
-    );
-  }
-
   updatePageVisibility(page: Page, isVisible: boolean) {
     page.isVisible = isVisible;
   }
@@ -2751,31 +2732,23 @@ export default class Editor extends Vue {
   }
 
   onFileMenuInsertHeader() {
-    if (this.score.headers.length > 0) {
+    if (this.score.pageSetup.showHeader) {
       return;
     }
 
-    const header = new Header();
+    this.score.pageSetup.showHeader = true;
 
-    this.addScoreHeader(header);
-
-    this.selectedHeaderFooterElement = header.elements[0];
-
-    this.save();
+    this.updatePageSetup(this.score.pageSetup);
   }
 
   onFileMenuInsertFooter() {
-    if (this.score.footers.length > 0) {
+    if (this.score.pageSetup.showFooter) {
       return;
     }
 
-    const footer = new Footer();
+    this.score.pageSetup.showFooter = true;
 
-    this.addScoreFooter(footer);
-
-    this.selectedHeaderFooterElement = footer.elements[0];
-
-    this.save();
+    this.updatePageSetup(this.score.pageSetup);
   }
 
   async onFileMenuSave() {

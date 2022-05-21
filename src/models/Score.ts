@@ -1,26 +1,27 @@
 import { Footer } from './Footer';
 import { Header } from './Header';
-import { HeaderFooterType } from './HeaderFooterType';
+import { Headers } from './Headers';
 import { PageSetup } from './PageSetup';
 import { Staff } from './Staff';
+import { Footers } from './Footers';
 
 export class Score {
   public pageSetup: PageSetup = new PageSetup();
-  public headers: Header[] = [];
-  public footers: Footer[] = [];
+  public headers: Headers = new Headers();
+  public footers: Footers = new Footers();
   public staff: Staff = new Staff();
 
   getHeaderForPage(pageNumber: number) {
-    let header: Header | undefined;
+    let header: Header;
 
     if (this.pageSetup.headerDifferentFirstPage && pageNumber === 1) {
-      header = this.headers.find((x) => x.type === HeaderFooterType.FirstPage);
+      header = this.headers.firstPage;
     } else if (this.pageSetup.headerDifferentOddEven && pageNumber % 2 === 0) {
-      header = this.headers.find((x) => x.type === HeaderFooterType.Even);
+      header = this.headers.even;
     } else if (this.pageSetup.headerDifferentOddEven && pageNumber % 2 !== 0) {
-      header = this.headers.find((x) => x.type === HeaderFooterType.Odd);
+      header = this.headers.odd;
     } else {
-      header = this.headers.find((x) => x.type === HeaderFooterType.Default);
+      header = this.headers.default;
     }
 
     return header;
@@ -30,13 +31,13 @@ export class Score {
     let footer: Footer;
 
     if (this.pageSetup.headerDifferentFirstPage && pageNumber === 1) {
-      footer = this.footers.find((x) => x.type === HeaderFooterType.FirstPage)!;
+      footer = this.footers.firstPage;
     } else if (this.pageSetup.headerDifferentOddEven && pageNumber % 2 === 0) {
-      footer = this.footers.find((x) => x.type === HeaderFooterType.Even)!;
+      footer = this.footers.even;
     } else if (this.pageSetup.headerDifferentOddEven && pageNumber % 2 !== 0) {
-      footer = this.footers.find((x) => x.type === HeaderFooterType.Odd)!;
+      footer = this.footers.odd;
     } else {
-      footer = this.footers.find((x) => x.type === HeaderFooterType.Default)!;
+      footer = this.footers.default;
     }
 
     return footer;

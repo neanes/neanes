@@ -60,6 +60,8 @@ export class PageSetup {
   public footerMargin = Unit.fromInch(0.5);
   public headerDifferentFirstPage = false;
   public headerDifferentOddEven = false;
+  public showHeader = false;
+  public showFooter = false;
 
   public lineHeight = Unit.fromInch(0.75);
 

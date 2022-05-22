@@ -65,6 +65,11 @@
                   :ref="`header-${pageIndex}`"
                   :element="getHeaderForPageIndex(pageIndex)"
                   :pageSetup="score.pageSetup"
+                  :editMode="
+                    getHeaderForPageIndex(pageIndex) ==
+                    selectedHeaderFooterElement
+                  "
+                  :metadata="getTokenMetadata(pageIndex)"
                   :class="[
                     {
                       selectedTextbox:
@@ -228,7 +233,11 @@
                       :ref="`element-${getElementIndex(element)}`"
                       :element="element"
                       :pageSetup="score.pageSetup"
-                      :class="[{ selectedTextbox: element == selectedElement }]"
+                      :editMode="element === selectedElement"
+                      :metadata="getTokenMetadata(pageIndex)"
+                      :class="[
+                        { selectedTextbox: element === selectedElement },
+                      ]"
                       @click.native="selectedElement = element"
                       @update:content="updateTextBoxContent(element, $event)"
                     />
@@ -245,7 +254,9 @@
                       :ref="`element-${getElementIndex(element)}`"
                       :element="element"
                       :pageSetup="score.pageSetup"
-                      :class="[{ selectedTextbox: element == selectedElement }]"
+                      :class="[
+                        { selectedTextbox: element === selectedElement },
+                      ]"
                       @click.native="selectedElement = element"
                       @dblclick.native="openModeKeyDialog"
                     />
@@ -284,6 +295,11 @@
                   :ref="`footer-${pageIndex}`"
                   :element="getFooterForPageIndex(pageIndex)"
                   :pageSetup="score.pageSetup"
+                  :editMode="
+                    getFooterForPageIndex(pageIndex) ==
+                    selectedHeaderFooterElement
+                  "
+                  :metadata="getTokenMetadata(pageIndex)"
                   :class="[
                     {
                       selectedTextbox:
@@ -468,6 +484,7 @@ import { IIpcService } from '@/services/ipc/IIpcService';
 import { PageSetup } from '@/models/PageSetup';
 import { Header } from '@/models/Header';
 import { Footer } from '@/models/Footer';
+import { TokenMetadata } from '@/utils/replaceTokens';
 
 @Component({
   components: {
@@ -869,6 +886,18 @@ export default class Editor extends Vue {
 
     // Currently, footers only support a single text box element.
     return footer != null ? footer.elements[0] : null;
+  }
+
+  getTokenMetadata(pageIndex: number): TokenMetadata {
+    return {
+      pageNumber: pageIndex + 1,
+      numberOfPages: this.pages.length,
+      fileName:
+        this.selectedWorkspace.filePath != null
+          ? getFileNameFromPath(this.selectedWorkspace.filePath)
+          : this.selectedWorkspace.tempFileName,
+      filePath: this.currentFilePath || '',
+    };
   }
 
   async created() {

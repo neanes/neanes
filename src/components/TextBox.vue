@@ -5,7 +5,8 @@
       class="text-box"
       :class="textBoxClass"
       :style="textBoxStyle"
-      :content="element.content"
+      :content="content"
+      :editable="editMode"
       @blur="updateContent($event)"
     ></ContentEditable>
   </div>
@@ -17,6 +18,7 @@ import { TextBoxElement } from '@/models/Element';
 import ContentEditable from '@/components/ContentEditable.vue';
 import { withZoom } from '@/utils/withZoom';
 import { PageSetup } from '@/models/PageSetup';
+import { replaceTokens, TokenMetadata } from '@/utils/replaceTokens';
 
 @Component({
   components: {
@@ -26,9 +28,17 @@ import { PageSetup } from '@/models/PageSetup';
 export default class TextBox extends Vue {
   @Prop() element!: TextBoxElement;
   @Prop() pageSetup!: PageSetup;
+  @Prop({ default: true }) editMode!: boolean;
+  @Prop() metadata!: TokenMetadata;
 
   get textElement() {
     return this.$refs.text as ContentEditable;
+  }
+
+  get content() {
+    return this.editMode
+      ? this.element.content
+      : replaceTokens(this.element.content, this.metadata);
   }
 
   get width() {

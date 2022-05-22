@@ -233,7 +233,7 @@
                       :ref="`element-${getElementIndex(element)}`"
                       :element="element"
                       :pageSetup="score.pageSetup"
-                      :editMode="element === selectedElement"
+                      :editMode="true"
                       :metadata="getTokenMetadata(pageIndex)"
                       :class="[
                         { selectedTextbox: element === selectedElement },

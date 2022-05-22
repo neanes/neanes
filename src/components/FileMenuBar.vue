@@ -9,6 +9,8 @@
       <FileMenuItem label="New" @click="onClickNew" />
       <FileMenuItem label="Open" @click="onClickOpen" />
       <FileMenuItem label="Save" @click="onClickSave" />
+      <div class="separator" />
+      <FileMenuItem label="Page Setup" @click="onClickPageSetup" />
     </FileMenuBarItem>
     <FileMenuBarItem
       label="Edit"
@@ -73,7 +75,6 @@ import {
   FileMenuInsertTextboxArgs,
   FileMenuOpenScoreArgs,
   IpcMainChannels,
-  IpcRendererChannels,
 } from '@/ipc/ipcChannels';
 import JSZip from 'jszip';
 
@@ -139,6 +140,11 @@ export default class FileMenuBar extends Vue {
 
   onClickSave() {
     EventBus.$emit(IpcMainChannels.FileMenuSaveAs);
+    this.isMenuOpen = false;
+  }
+
+  onClickPageSetup() {
+    EventBus.$emit(IpcMainChannels.FileMenuPageSetup);
     this.isMenuOpen = false;
   }
 

@@ -52,6 +52,28 @@
             />
           </div>
           <div class="form-group">
+            <label class="margin-label">Header</label>
+            <input
+              class="margin-input"
+              type="number"
+              min="0"
+              :step="marginStep"
+              :value="headerMargin"
+              @change="updateHeaderMargin($event.target.value)"
+            />
+          </div>
+          <div class="form-group">
+            <label class="margin-label">Footer</label>
+            <input
+              class="margin-input"
+              type="number"
+              min="0"
+              :step="marginStep"
+              :value="footerMargin"
+              @change="updateFooterMargin($event.target.value)"
+            />
+          </div>
+          <div class="form-group">
             <div class="subheader">Orientation</div>
             <input
               id="page-setup-dialog-landscape-false"
@@ -146,6 +168,46 @@
               :value="hyphenSpacing"
               @change="updateHyphenSpacing($event.target.value)"
             />
+          </div>
+          <div class="subheader">Headers &amp; Footers</div>
+
+          <div class="form-group">
+            <input
+              id="page-setup-dialog-show-header"
+              type="checkbox"
+              v-model="form.showHeader"
+            />
+            <label for="page-setup-dialog-show-header">Include Header</label>
+          </div>
+
+          <div class="form-group">
+            <input
+              id="page-setup-dialog-show-footer"
+              type="checkbox"
+              v-model="form.showFooter"
+            />
+            <label for="page-setup-dialog-show-footer">Include Footer</label>
+          </div>
+
+          <div class="form-group">
+            <input
+              id="page-setup-dialog-different-first-page"
+              type="checkbox"
+              v-model="form.headerDifferentFirstPage"
+            />
+            <label for="page-setup-dialog-different-first-page"
+              >Different First Page</label
+            >
+          </div>
+          <div class="form-group">
+            <input
+              id="page-setup-dialog-different-odd-even"
+              type="checkbox"
+              v-model="form.headerDifferentOddEven"
+            />
+            <label for="page-setup-dialog-different-odd-even"
+              >Different Odd &amp; Even</label
+            >
           </div>
         </div>
         <div class="right-pane">
@@ -511,6 +573,32 @@ export default class PageSetupDialog extends Vue {
     this.form!.rightMargin = Math.min(
       Math.max(this.toStorageUnit(value), 0),
       this.form!.pageWidth - this.form!.leftMargin - Unit.fromInch(0.5),
+    );
+
+    this.$forceUpdate();
+  }
+
+  get headerMargin() {
+    return this.toDisplayUnit(this.form!.headerMargin).toFixed(2);
+  }
+
+  updateHeaderMargin(value: number) {
+    this.form!.headerMargin = Math.min(
+      Math.max(this.toStorageUnit(value), 0),
+      this.form!.innerPageHeight,
+    );
+
+    this.$forceUpdate();
+  }
+
+  get footerMargin() {
+    return this.toDisplayUnit(this.form!.footerMargin).toFixed(2);
+  }
+
+  updateFooterMargin(value: number) {
+    this.form!.footerMargin = Math.min(
+      Math.max(this.toStorageUnit(value), 0),
+      this.form!.innerPageHeight,
     );
 
     this.$forceUpdate();

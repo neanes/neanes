@@ -325,19 +325,23 @@
         </div>
       </div>
     </div>
-    <template
-      v-if="selectedElement != null && isTextBoxElement(selectedElement)"
-    >
+    <template v-if="selectedTextBoxElement">
       <TextBoxToolbar
-        :element="selectedElement"
-        @update:fontSize="updateTextBoxFontSize(selectedElement, $event)"
-        @update:fontFamily="updateTextBoxFontFamily(selectedElement, $event)"
-        @update:alignment="updateTextBoxAlignment(selectedElement, $event)"
-        @update:color="updateTextBoxColor(selectedElement, $event)"
-        @update:inline="updateTextBoxInline(selectedElement, $event)"
-        @update:bold="updateTextBoxBold(selectedElement, $event)"
-        @update:italic="updateTextBoxItalic(selectedElement, $event)"
-        @update:underline="updateTextBoxUnderline(selectedElement, $event)"
+        :element="selectedTextBoxElement"
+        @update:fontSize="updateTextBoxFontSize(selectedTextBoxElement, $event)"
+        @update:fontFamily="
+          updateTextBoxFontFamily(selectedTextBoxElement, $event)
+        "
+        @update:alignment="
+          updateTextBoxAlignment(selectedTextBoxElement, $event)
+        "
+        @update:color="updateTextBoxColor(selectedTextBoxElement, $event)"
+        @update:inline="updateTextBoxInline(selectedTextBoxElement, $event)"
+        @update:bold="updateTextBoxBold(selectedTextBoxElement, $event)"
+        @update:italic="updateTextBoxItalic(selectedTextBoxElement, $event)"
+        @update:underline="
+          updateTextBoxUnderline(selectedTextBoxElement, $event)
+        "
         @insert:gorthmikon="insertGorthmikon"
         @insert:pelastikon="insertPelastikon"
       />
@@ -711,6 +715,15 @@ export default class Editor extends Vue {
     }
 
     this.selectedWorkspace.selectedHeaderFooterElement = element;
+  }
+
+  get selectedTextBoxElement() {
+    const selectedElement =
+      this.selectedElement || this.selectedHeaderFooterElement;
+
+    return selectedElement != null && this.isTextBoxElement(selectedElement)
+      ? (selectedElement as TextBoxElement)
+      : null;
   }
 
   get selectionRange() {

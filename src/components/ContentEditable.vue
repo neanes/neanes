@@ -1,5 +1,6 @@
 <template>
   <span
+    class="contenteditable"
     :contenteditable="contentEditable"
     @blur="onBlur"
     v-html="content"
@@ -51,4 +52,9 @@ export default class ContentEditable extends Vue {
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped></style>
+<style scoped>
+.contenteditable {
+  overflow-wrap: break-word;
+  white-space: break-spaces;
+}
+</style>

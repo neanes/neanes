@@ -21,7 +21,7 @@
         class="neume-selector"
         :pageSetup="score.pageSetup"
         @select-quantitative-neume="addQuantitativeNeume"
-      ></NeumeSelector>
+      />
       <div class="page-container">
         <div class="workspace-tab-container" ref="workspace-tab-container">
           <div class="workspace-tab-new-button" @click="onFileMenuNewScore">
@@ -59,6 +59,37 @@
             :ref="`page-${pageIndex}`"
           >
             <template v-if="page.isVisible || printMode">
+              <template v-if="score.pageSetup.showHeader">
+                <TextBox
+                  class="element-box"
+                  :ref="`header-${pageIndex}`"
+                  :element="getHeaderForPageIndex(pageIndex)"
+                  :pageSetup="score.pageSetup"
+                  :editMode="
+                    getHeaderForPageIndex(pageIndex) ==
+                    selectedHeaderFooterElement
+                  "
+                  :metadata="getTokenMetadata(pageIndex)"
+                  :class="[
+                    {
+                      selectedTextbox:
+                        getHeaderForPageIndex(pageIndex) ==
+                        selectedHeaderFooterElement,
+                    },
+                  ]"
+                  :style="headerStyle"
+                  @click.native="
+                    selectedHeaderFooterElement =
+                      getHeaderForPageIndex(pageIndex)
+                  "
+                  @update:content="
+                    updateTextBoxContent(
+                      getHeaderForPageIndex(pageIndex),
+                      $event,
+                    )
+                  "
+                />
+              </template>
               <div
                 class="line"
                 v-for="(line, lineIndex) in page.lines"
@@ -89,13 +120,13 @@
                         :class="[{ selected: isSelected(element) }]"
                         @click.native.exact="selectedElement = element"
                         @click.native.shift.exact="setSelectionRange(element)"
-                      ></SyllableNeumeBox>
+                      />
                       <SyllableNeumeBoxPrint
                         v-if="printMode"
                         class="syllable-box print-only"
                         :note="element"
                         :pageSetup="score.pageSetup"
-                      ></SyllableNeumeBoxPrint>
+                      />
                       <div
                         class="lyrics-container"
                         :key="`lyrics-${getElementIndex(element)}-${
@@ -113,7 +144,7 @@
                             updateLyrics(element, $event);
                             selectedLyrics = null;
                           "
-                        ></ContentEditable>
+                        />
                         <template v-if="isMelisma(element)">
                           <div
                             class="melisma"
@@ -140,13 +171,13 @@
                         :pageSetup="score.pageSetup"
                         :class="[{ selected: isSelected(element) }]"
                         @click.native="selectedElement = element"
-                      ></MartyriaNeumeBox>
+                      />
                       <MartyriaNeumeBoxPrint
                         v-if="printMode"
                         class="marytria-neume-box print-only"
                         :neume="element"
                         :pageSetup="score.pageSetup"
-                      ></MartyriaNeumeBoxPrint>
+                      />
                       <div class="lyrics"></div>
                     </div>
                   </template>
@@ -167,7 +198,7 @@
                         :pageSetup="score.pageSetup"
                         :class="[{ selected: isSelected(element) }]"
                         @click.native="selectedElement = element"
-                      ></TempoNeumeBox>
+                      />
                       <div class="lyrics"></div>
                     </div>
                   </template>
@@ -202,11 +233,14 @@
                       :ref="`element-${getElementIndex(element)}`"
                       :element="element"
                       :pageSetup="score.pageSetup"
-                      :class="[{ selectedTextbox: element == selectedElement }]"
+                      :editMode="element === selectedElement"
+                      :metadata="getTokenMetadata(pageIndex)"
+                      :class="[
+                        { selectedTextbox: element === selectedElement },
+                      ]"
                       @click.native="selectedElement = element"
                       @update:content="updateTextBoxContent(element, $event)"
-                    >
-                    </TextBox>
+                    />
                   </template>
                   <template v-if="isModeKeyElement(element)">
                     <span class="page-break-2" v-if="element.pageBreak"
@@ -220,18 +254,18 @@
                       :ref="`element-${getElementIndex(element)}`"
                       :element="element"
                       :pageSetup="score.pageSetup"
-                      :class="[{ selectedTextbox: element == selectedElement }]"
+                      :class="[
+                        { selectedTextbox: element === selectedElement },
+                      ]"
                       @click.native="selectedElement = element"
                       @dblclick.native="openModeKeyDialog"
-                    >
-                    </ModeKey>
+                    />
                     <ModeKeyPrint
                       v-if="printMode"
                       class="print-only"
                       :element="element"
                       :pageSetup="score.pageSetup"
-                    >
-                    </ModeKeyPrint>
+                    />
                   </template>
                   <template v-if="isDropCapElement(element)">
                     <span class="page-break" v-if="element.pageBreak"
@@ -251,29 +285,63 @@
                       @update:content="
                         updateDropCapContent(selectedElement, $event)
                       "
-                    >
-                    </DropCap>
+                    />
                   </template>
                 </div>
               </div>
+              <template v-if="score.pageSetup.showFooter">
+                <TextBox
+                  class="element-box"
+                  :ref="`footer-${pageIndex}`"
+                  :element="getFooterForPageIndex(pageIndex)"
+                  :pageSetup="score.pageSetup"
+                  :editMode="
+                    getFooterForPageIndex(pageIndex) ==
+                    selectedHeaderFooterElement
+                  "
+                  :metadata="getTokenMetadata(pageIndex)"
+                  :class="[
+                    {
+                      selectedTextbox:
+                        getFooterForPageIndex(pageIndex) ==
+                        selectedHeaderFooterElement,
+                    },
+                  ]"
+                  :style="footerStyle"
+                  @click.native="
+                    selectedHeaderFooterElement =
+                      getFooterForPageIndex(pageIndex)
+                  "
+                  @update:content="
+                    updateTextBoxContent(
+                      getFooterForPageIndex(pageIndex),
+                      $event,
+                    )
+                  "
+                />
+              </template>
             </template>
           </div>
         </div>
       </div>
     </div>
-    <template
-      v-if="selectedElement != null && isTextBoxElement(selectedElement)"
-    >
+    <template v-if="selectedTextBoxElement">
       <TextBoxToolbar
-        :element="selectedElement"
-        @update:fontSize="updateTextBoxFontSize(selectedElement, $event)"
-        @update:fontFamily="updateTextBoxFontFamily(selectedElement, $event)"
-        @update:alignment="updateTextBoxAlignment(selectedElement, $event)"
-        @update:color="updateTextBoxColor(selectedElement, $event)"
-        @update:inline="updateTextBoxInline(selectedElement, $event)"
-        @update:bold="updateTextBoxBold(selectedElement, $event)"
-        @update:italic="updateTextBoxItalic(selectedElement, $event)"
-        @update:underline="updateTextBoxUnderline(selectedElement, $event)"
+        :element="selectedTextBoxElement"
+        @update:fontSize="updateTextBoxFontSize(selectedTextBoxElement, $event)"
+        @update:fontFamily="
+          updateTextBoxFontFamily(selectedTextBoxElement, $event)
+        "
+        @update:alignment="
+          updateTextBoxAlignment(selectedTextBoxElement, $event)
+        "
+        @update:color="updateTextBoxColor(selectedTextBoxElement, $event)"
+        @update:inline="updateTextBoxInline(selectedTextBoxElement, $event)"
+        @update:bold="updateTextBoxBold(selectedTextBoxElement, $event)"
+        @update:italic="updateTextBoxItalic(selectedTextBoxElement, $event)"
+        @update:underline="
+          updateTextBoxUnderline(selectedTextBoxElement, $event)
+        "
         @insert:gorthmikon="insertGorthmikon"
         @insert:pelastikon="insertPelastikon"
       />
@@ -414,10 +482,14 @@ import { Unit } from '@/utils/Unit';
 import { withZoom } from '@/utils/withZoom';
 import { shallowEquals } from '@/utils/shallowEquals';
 import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
+import { getCursorPosition } from '@/utils/getCursorPosition';
 import { throttle } from 'throttle-debounce';
 import { Command, CommandFactory } from '@/services/history/CommandService';
 import { IIpcService } from '@/services/ipc/IIpcService';
 import { PageSetup } from '@/models/PageSetup';
+import { Header } from '@/models/Header';
+import { Footer } from '@/models/Footer';
+import { TokenMetadata } from '@/utils/replaceTokens';
 
 @Component({
   components: {
@@ -486,6 +558,10 @@ export default class Editor extends Vue {
 
   pageSetupCommandFactory: CommandFactory<PageSetup> =
     new CommandFactory<PageSetup>();
+
+  headerCommandFactory: CommandFactory<Header> = new CommandFactory<Header>();
+
+  footerCommandFactory: CommandFactory<Footer> = new CommandFactory<Footer>();
 
   // Throttled Methods
   keydownThrottleIntervalMs: number = 100;
@@ -607,6 +683,7 @@ export default class Editor extends Vue {
     if (element != null) {
       this.selectedLyrics = null;
       this.selectionRange = null;
+      this.selectedHeaderFooterElement = null;
     }
 
     this.selectedWorkspace.selectedElement = element;
@@ -619,10 +696,34 @@ export default class Editor extends Vue {
   set selectedLyrics(element: NoteElement | null) {
     if (element != null) {
       this.selectedElement = null;
+      this.selectedHeaderFooterElement = null;
       this.selectionRange = null;
     }
 
     this.selectedWorkspace.selectedLyrics = element;
+  }
+
+  get selectedHeaderFooterElement() {
+    return this.selectedWorkspace.selectedHeaderFooterElement;
+  }
+
+  set selectedHeaderFooterElement(element: ScoreElement | null) {
+    if (element != null) {
+      this.selectedElement = null;
+      this.selectedLyrics = null;
+      this.selectionRange = null;
+    }
+
+    this.selectedWorkspace.selectedHeaderFooterElement = element;
+  }
+
+  get selectedTextBoxElement() {
+    const selectedElement =
+      this.selectedElement || this.selectedHeaderFooterElement;
+
+    return selectedElement != null && this.isTextBoxElement(selectedElement)
+      ? (selectedElement as TextBoxElement)
+      : null;
   }
 
   get selectionRange() {
@@ -687,6 +788,20 @@ export default class Editor extends Vue {
       height: withZoom(this.score.pageSetup.pageHeight),
       minHeight: withZoom(this.score.pageSetup.pageHeight),
       maxHeight: withZoom(this.score.pageSetup.pageHeight),
+    } as CSSStyleDeclaration;
+  }
+
+  get headerStyle() {
+    return {
+      left: withZoom(this.score.pageSetup.leftMargin),
+      top: withZoom(this.score.pageSetup.headerMargin),
+    } as CSSStyleDeclaration;
+  }
+
+  get footerStyle() {
+    return {
+      left: withZoom(this.score.pageSetup.leftMargin),
+      bottom: withZoom(this.score.pageSetup.footerMargin),
     } as CSSStyleDeclaration;
   }
 
@@ -769,6 +884,36 @@ export default class Editor extends Vue {
     }
   }
 
+  getHeaderForPageIndex(pageIndex: number) {
+    const pageNumber = pageIndex + 1;
+
+    const header = this.score.getHeaderForPage(pageNumber);
+
+    // Currently, headers only support a single text box element.
+    return header != null ? header.elements[0] : null;
+  }
+
+  getFooterForPageIndex(pageIndex: number) {
+    const pageNumber = pageIndex + 1;
+
+    const footer = this.score.getFooterForPage(pageNumber);
+
+    // Currently, footers only support a single text box element.
+    return footer != null ? footer.elements[0] : null;
+  }
+
+  getTokenMetadata(pageIndex: number): TokenMetadata {
+    return {
+      pageNumber: pageIndex + 1,
+      numberOfPages: this.pages.length,
+      fileName:
+        this.selectedWorkspace.filePath != null
+          ? getFileNameFromPath(this.selectedWorkspace.filePath)
+          : this.selectedWorkspace.tempFileName,
+      filePath: this.currentFilePath || '',
+    };
+  }
+
   async created() {
     const fontLoader = (document as any).fonts;
 
@@ -817,6 +962,14 @@ export default class Editor extends Vue {
     EventBus.$on(
       IpcMainChannels.FileMenuInsertDropCap,
       this.onFileMenuInsertDropCap,
+    );
+    EventBus.$on(
+      IpcMainChannels.FileMenuInsertHeader,
+      this.onFileMenuInsertHeader,
+    );
+    EventBus.$on(
+      IpcMainChannels.FileMenuInsertFooter,
+      this.onFileMenuInsertFooter,
     );
     EventBus.$on(
       IpcMainChannels.FileMenuGenerateTestFile,
@@ -1385,15 +1538,14 @@ export default class Editor extends Vue {
           handled = true;
           break;
         case 'ArrowLeft':
-          if (this.getCursorPosition() === 0) {
+          if (getCursorPosition() === 0) {
             this.moveToPreviousLyricBoxThrottled();
             handled = true;
           }
           break;
         case 'ArrowRight':
           if (
-            this.getCursorPosition() ===
-            this.getLyricLength(this.selectedLyrics!)
+            getCursorPosition() === this.getLyricLength(this.selectedLyrics!)
           ) {
             this.moveToNextLyricBoxThrottled();
             handled = true;
@@ -1407,8 +1559,7 @@ export default class Editor extends Vue {
           }
 
           if (
-            this.getCursorPosition() ===
-            this.getLyricLength(this.selectedLyrics!)
+            getCursorPosition() === this.getLyricLength(this.selectedLyrics!)
           ) {
             if (this.getNextLyricBoxIndex() >= 0) {
               this.moveToNextLyricBoxThrottled();
@@ -1702,19 +1853,6 @@ export default class Editor extends Vue {
     )[0].getInnerText().length;
   }
 
-  getCursorPosition() {
-    const selection = window.getSelection();
-
-    if (selection != null) {
-      const range = selection.getRangeAt(0);
-      if (range.startOffset === range.endOffset) {
-        return selection.getRangeAt(0).startOffset;
-      }
-    }
-
-    return null;
-  }
-
   navigableElements = [
     ElementType.Note,
     ElementType.Martyria,
@@ -1860,10 +1998,7 @@ export default class Editor extends Vue {
       .map((_, i) => i)
       .filter((i) => this.pages[i].isVisible);
 
-    const pages = LayoutService.processPages(
-      this.elements,
-      this.score.pageSetup,
-    );
+    const pages = LayoutService.processPages(this.score);
 
     // Set page visibility for the newly processed pages
     pages.forEach((x, index) => (x.isVisible = visiblePages.includes(index)));
@@ -1974,10 +2109,7 @@ export default class Editor extends Vue {
     this.selectedElement =
       this.score.staff.elements[this.score.staff.elements.length - 1];
 
-    this.pages = LayoutService.processPages(
-      this.elements,
-      this.score.pageSetup,
-    );
+    this.pages = LayoutService.processPages(this.score);
   }
 
   async closeWorkspace(workspace: Workspace) {
@@ -2625,6 +2757,26 @@ export default class Editor extends Vue {
 
   onFileMenuInsertDropCap() {
     this.addDropCap();
+  }
+
+  onFileMenuInsertHeader() {
+    if (this.score.pageSetup.showHeader) {
+      return;
+    }
+
+    this.score.pageSetup.showHeader = true;
+
+    this.updatePageSetup(this.score.pageSetup);
+  }
+
+  onFileMenuInsertFooter() {
+    if (this.score.pageSetup.showFooter) {
+      return;
+    }
+
+    this.score.pageSetup.showFooter = true;
+
+    this.updatePageSetup(this.score.pageSetup);
   }
 
   async onFileMenuSave() {

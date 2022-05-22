@@ -22,6 +22,9 @@ export enum IpcMainChannels {
   FileMenuInsertModeKey = 'FileMenuInsertModeKey',
   FileMenuInsertDropCap = 'FileMenuInsertDropCap',
 
+  FileMenuInsertHeader = 'FileMenuInsertHeader',
+  FileMenuInsertFooter = 'FileMenuInsertFooter',
+
   FileMenuGenerateTestFile = 'GenerateTestFile',
 
   CloseApplication = 'CloseApplication',

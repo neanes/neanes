@@ -16,6 +16,13 @@ export class PageSetup {
   public leftMargin = Unit.fromInch(1);
   public rightMargin = Unit.fromInch(1);
 
+  public headerMargin = Unit.fromInch(0.5);
+  public footerMargin = Unit.fromInch(0.5);
+  public headerDifferentFirstPage: boolean | undefined = undefined;
+  public headerDifferentOddEven: boolean | undefined = undefined;
+  public showHeader: boolean | undefined = undefined;
+  public showFooter: boolean | undefined = undefined;
+
   public lineHeight = Unit.fromInch(0.75);
 
   public lyricsDefaultFontFamily = 'Omega';

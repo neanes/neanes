@@ -1,4 +1,5 @@
-import { Score, Staff } from '@/models/Score';
+import { Score } from '@/models/Score';
+import { Staff } from '@/models/Staff';
 import {
   DropCapElement,
   ElementType,
@@ -13,6 +14,10 @@ import {
 } from '@/models/Element';
 
 import { Score as Score_v1, Staff as Staff_v1 } from '@/models/save/v1/Score';
+import { Header as Header_v1 } from '@/models/save/v1/Header';
+import { Footer as Footer_v1 } from '@/models/save/v1/Footer';
+import { Headers as Headers_v1 } from '@/models/save/v1/Headers';
+import { Footers as Footers_v1 } from '@/models/save/v1/Footers';
 import {
   DropCapElement as DropCapElement_v1,
   ElementType as ElementType_v1,
@@ -28,6 +33,8 @@ import {
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
 import { PageSetup } from '@/models/PageSetup';
 import { QuantitativeNeume } from '@/models/Neumes';
+import { Header } from '@/models/Header';
+import { Footer } from '@/models/Footer';
 
 interface IScore {
   version: string;
@@ -81,6 +88,16 @@ export class SaveService {
     score.pageSetup.rightMargin = s.pageSetup.rightMargin;
     score.pageSetup.topMargin = s.pageSetup.topMargin;
 
+    score.pageSetup.headerMargin = s.pageSetup.headerMargin;
+    score.pageSetup.footerMargin = s.pageSetup.footerMargin;
+    score.pageSetup.headerDifferentFirstPage =
+      s.pageSetup.headerDifferentFirstPage || undefined;
+    score.pageSetup.headerDifferentOddEven =
+      s.pageSetup.headerDifferentOddEven || undefined;
+
+    score.pageSetup.showHeader = s.pageSetup.showHeader || undefined;
+    score.pageSetup.showFooter = s.pageSetup.showFooter || undefined;
+
     score.pageSetup.accidentalDefaultColor = s.pageSetup.accidentalDefaultColor;
     score.pageSetup.fthoraDefaultColor = s.pageSetup.fthoraDefaultColor;
     score.pageSetup.heteronDefaultColor = s.pageSetup.heteronDefaultColor;
@@ -97,6 +114,16 @@ export class SaveService {
     score.pageSetup.landscape = s.pageSetup.landscape || undefined;
 
     score.pageSetup.hyphenSpacing = s.pageSetup.hyphenSpacing;
+
+    this.SaveHeader(score.headers.default, s.headers.default);
+    this.SaveHeader(score.headers.even, s.headers.even);
+    this.SaveHeader(score.headers.odd, s.headers.odd);
+    this.SaveHeader(score.headers.firstPage, s.headers.firstPage);
+
+    this.SaveFooter(score.footers.default, s.footers.default);
+    this.SaveFooter(score.footers.even, s.footers.even);
+    this.SaveFooter(score.footers.odd, s.footers.odd);
+    this.SaveFooter(score.footers.firstPage, s.footers.firstPage);
 
     for (let e of s.staff.elements) {
       let element: ScoreElement_v1 = new EmptyElement_v1();
@@ -143,6 +170,20 @@ export class SaveService {
     }
 
     return score;
+  }
+
+  public static SaveHeader(header: Header_v1, h: Header) {
+    // Currently, headers only support a single element
+    const e = h.elements[0];
+    const element = header.elements[0];
+    this.SaveTextBox(element as TextBoxElement_v1, e as TextBoxElement);
+  }
+
+  public static SaveFooter(footer: Footer_v1, f: Footer) {
+    // Currently, footers only support a single element
+    const e = f.elements[0];
+    const element = footer.elements[0];
+    this.SaveTextBox(element as TextBoxElement_v1, e as TextBoxElement);
   }
 
   public static SaveDropCap(element: DropCapElement_v1, e: DropCapElement) {
@@ -263,6 +304,20 @@ export class SaveService {
 
     this.LoadPageSetup_v1(score.pageSetup, s.pageSetup);
 
+    if (s.headers) {
+      this.LoadHeader_v1(score.headers.default, s.headers.default);
+      this.LoadHeader_v1(score.headers.even, s.headers.even);
+      this.LoadHeader_v1(score.headers.odd, s.headers.odd);
+      this.LoadHeader_v1(score.headers.firstPage, s.headers.firstPage);
+    }
+
+    if (s.footers) {
+      this.LoadFooter_v1(score.footers.default, s.footers.default);
+      this.LoadFooter_v1(score.footers.even, s.footers.even);
+      this.LoadFooter_v1(score.footers.odd, s.footers.odd);
+      this.LoadFooter_v1(score.footers.firstPage, s.footers.firstPage);
+    }
+
     for (let e of s.staff.elements) {
       let element: ScoreElement = new EmptyElement();
 
@@ -331,6 +386,19 @@ export class SaveService {
     pageSetup.leftMargin = p.leftMargin;
     pageSetup.rightMargin = p.rightMargin;
 
+    if (p.headerMargin != null) {
+      pageSetup.headerMargin = p.headerMargin;
+    }
+
+    if (p.footerMargin) {
+      pageSetup.footerMargin = p.footerMargin;
+    }
+
+    pageSetup.headerDifferentFirstPage = p.headerDifferentFirstPage === true;
+    pageSetup.headerDifferentOddEven = p.headerDifferentOddEven === true;
+    pageSetup.showHeader = p.showHeader === true;
+    pageSetup.showFooter = p.showFooter === true;
+
     pageSetup.lineHeight = p.lineHeight;
 
     pageSetup.dropCapDefaultColor =
@@ -380,6 +448,20 @@ export class SaveService {
     pageSetup.landscape = p.landscape === true;
 
     pageSetup.hyphenSpacing = p.hyphenSpacing;
+  }
+
+  public static LoadHeader_v1(header: Header, h: Header_v1) {
+    // Currently, headers only support a single element
+    const e = h.elements[0];
+    const element = header.elements[0];
+    this.LoadTextBox_v1(element as TextBoxElement, e as TextBoxElement_v1);
+  }
+
+  public static LoadFooter_v1(footer: Footer, f: Footer_v1) {
+    // Currently, footers only support a single element
+    const e = f.elements[0];
+    const element = footer.elements[0];
+    this.LoadTextBox_v1(element as TextBoxElement, e as TextBoxElement_v1);
   }
 
   public static LoadDropCap_v1(element: DropCapElement, e: DropCapElement_v1) {

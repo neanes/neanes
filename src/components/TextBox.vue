@@ -6,6 +6,7 @@
       :class="textBoxClass"
       :style="textBoxStyle"
       :content="content"
+      :editable="editMode"
       @blur="updateContent($event)"
     ></ContentEditable>
   </div>

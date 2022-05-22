@@ -478,6 +478,7 @@ import { Unit } from '@/utils/Unit';
 import { withZoom } from '@/utils/withZoom';
 import { shallowEquals } from '@/utils/shallowEquals';
 import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
+import { getCursorPosition } from '@/utils/getCursorPosition';
 import { throttle } from 'throttle-debounce';
 import { Command, CommandFactory } from '@/services/history/CommandService';
 import { IIpcService } from '@/services/ipc/IIpcService';
@@ -1524,15 +1525,14 @@ export default class Editor extends Vue {
           handled = true;
           break;
         case 'ArrowLeft':
-          if (this.getCursorPosition() === 0) {
+          if (getCursorPosition() === 0) {
             this.moveToPreviousLyricBoxThrottled();
             handled = true;
           }
           break;
         case 'ArrowRight':
           if (
-            this.getCursorPosition() ===
-            this.getLyricLength(this.selectedLyrics!)
+            getCursorPosition() === this.getLyricLength(this.selectedLyrics!)
           ) {
             this.moveToNextLyricBoxThrottled();
             handled = true;
@@ -1546,8 +1546,7 @@ export default class Editor extends Vue {
           }
 
           if (
-            this.getCursorPosition() ===
-            this.getLyricLength(this.selectedLyrics!)
+            getCursorPosition() === this.getLyricLength(this.selectedLyrics!)
           ) {
             if (this.getNextLyricBoxIndex() >= 0) {
               this.moveToNextLyricBoxThrottled();
@@ -1839,19 +1838,6 @@ export default class Editor extends Vue {
         `lyrics-${this.elements.indexOf(element)}`
       ] as ContentEditable[]
     )[0].getInnerText().length;
-  }
-
-  getCursorPosition() {
-    const selection = window.getSelection();
-
-    if (selection != null) {
-      const range = selection.getRangeAt(0);
-      if (range.startOffset === range.endOffset) {
-        return selection.getRangeAt(0).startOffset;
-      }
-    }
-
-    return null;
   }
 
   navigableElements = [

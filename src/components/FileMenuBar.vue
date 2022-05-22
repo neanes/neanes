@@ -33,6 +33,9 @@
       <FileMenuItem label="Text Box" @click="onClickAddTextBox" />
       <FileMenuItem label="Inline Text Box" @click="onClickAddInlineTextBox" />
       <FileMenuItem label="Mode Key" @click="onClickAddModeKey" />
+      <div class="separator" />
+      <FileMenuItem label="Header" @click="onClickAddHeader" />
+      <FileMenuItem label="Footer" @click="onClickAddFooter" />
     </FileMenuBarItem>
     <FileMenuBarItem
       label="Help"
@@ -224,6 +227,16 @@ export default class FileMenuBar extends Vue {
 
   onClickAddDropCap() {
     EventBus.$emit(IpcMainChannels.FileMenuInsertDropCap);
+    this.isMenuOpen = false;
+  }
+
+  onClickAddHeader() {
+    EventBus.$emit(IpcMainChannels.FileMenuInsertHeader);
+    this.isMenuOpen = false;
+  }
+
+  onClickAddFooter() {
+    EventBus.$emit(IpcMainChannels.FileMenuInsertFooter);
     this.isMenuOpen = false;
   }
 

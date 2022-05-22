@@ -38,7 +38,11 @@ export default class TextBox extends Vue {
   get content() {
     return this.editMode
       ? this.element.content
-      : replaceTokens(this.element.content, this.metadata);
+      : replaceTokens(
+          this.element.content,
+          this.metadata,
+          this.element.alignment,
+        );
   }
 
   get width() {

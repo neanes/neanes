@@ -54,6 +54,16 @@ To insert a martyria, use the martyria button in main toolbar. The note and root
 
 ![Main Toolbar Martyria](./images/guide-main-toolbar-martyria.png)
 
+#### Overrides
+
+In some cases, you may wish to override the note or scale of the martyria. For example, sticheraric hymns of the plagal of the first mode usually end in Δη, but the next hymn in the sequence will begin on Πα. In this case, a martyria of Πα may be written at the end of the first hymn, even though the last note is Δη.
+
+![Martyria Override Example](./images/guide-martyria-override-example-1.png)
+
+To override a martyria, uncheck the `Auto` checkbox in the martyria toolbar and choose the desired note or scale.
+
+![Martyria Toolbar Override](./images/guide-martyria-toolbar-override.png)
+
 ### Tempo
 
 To insert a tempo marker, click and hold the tempo button in the main tool bar.

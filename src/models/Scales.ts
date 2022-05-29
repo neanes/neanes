@@ -12,6 +12,7 @@ export enum Scale {
 }
 
 export enum ScaleNote {
+  VouLow = 'VouLow',
   GaLow = 'GaLow',
   ThiLow = 'ThiLow',
   KeLow = 'KeLow',
@@ -32,6 +33,7 @@ export enum ScaleNote {
 }
 
 const scaleNoteToNoteValueMap = new Map<ScaleNote, number>([
+  [ScaleNote.VouLow, -6],
   [ScaleNote.GaLow, -5],
   [ScaleNote.ThiLow, -4],
   [ScaleNote.KeLow, -3],

@@ -2,10 +2,8 @@
 
 ## Nice-to-haves
 
-- Custom Martyrias (is this really necessary?)
 - Advanced neumes (e.g. ties)
 - Header Images
-- Headers/Footers/Page Numbers
 - Configurable Neume Keyboard
 - Better styling
 - Right-align option for tempo

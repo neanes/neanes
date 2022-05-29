@@ -197,6 +197,7 @@ export class SaveService {
     element.auto = e.auto || undefined;
     element.note = e.note;
     element.rootSign = e.rootSign;
+    element.scale = e.scale;
     element.fthora = e.fthora || undefined;
     element.measureBar = e.measureBar || undefined;
     element.alignRight = e.alignRight || undefined;
@@ -477,6 +478,7 @@ export class SaveService {
     element.auto = e.auto === true;
     element.alignRight = e.alignRight === true;
     element.note = e.note;
+    element.scale = e.scale;
     element.rootSign = e.rootSign;
 
     if (e.fthora != null) {

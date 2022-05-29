@@ -398,6 +398,7 @@
         @update:alignRight="updateMartyriaAlignRight(selectedElement, $event)"
         @update:auto="updateMartyriaAuto(selectedElement, $event)"
         @update:note="updateMartyriaNote(selectedElement, $event)"
+        @update:scale="updateMartyriaScale(selectedElement, $event)"
       />
     </template>
     <ModeKeyDialog
@@ -442,6 +443,7 @@ import {
   MeasureNumber,
   NoteIndicator,
   Ison,
+  Note,
 } from '@/models/Neumes';
 import { Page } from '@/models/Page';
 import { Score } from '@/models/Score';
@@ -492,7 +494,7 @@ import { PageSetup } from '@/models/PageSetup';
 import { Header } from '@/models/Header';
 import { Footer } from '@/models/Footer';
 import { TokenMetadata } from '@/utils/replaceTokens';
-import { Note } from '@/models/save/v1/Neumes';
+import { Scale } from '@/models/Scales';
 
 @Component({
   components: {
@@ -2518,6 +2520,10 @@ export default class Editor extends Vue {
 
   updateMartyriaNote(element: MartyriaElement, note: Note) {
     this.updateMartyria(element, { note });
+  }
+
+  updateMartyriaScale(element: MartyriaElement, scale: Scale) {
+    this.updateMartyria(element, { scale });
   }
 
   updateTempo(element: TempoElement, newValues: Partial<TempoElement>) {

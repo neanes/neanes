@@ -852,6 +852,8 @@ export class LayoutService {
             ? reverseNoteMap.get(martyria.note)!
             : currentNote;
 
+          currentScale = martyria.scale;
+
           currentShift = 0;
         }
 
@@ -861,6 +863,7 @@ export class LayoutService {
           martyria.error = false;
 
           martyria.note = noteMap.get(currentNote) || Note.Pa;
+          martyria.scale = currentScale;
 
           const currentScaleNote = currentNote + currentShift;
 

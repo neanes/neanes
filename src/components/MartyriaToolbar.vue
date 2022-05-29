@@ -116,7 +116,7 @@
         />
       </button>
       <span class="space" />
-      <div style="display: flex">
+      <div style="display: flex; align-items: center">
         <input
           type="checkbox"
           :checked="element.auto"
@@ -126,13 +126,24 @@
       </div>
       <template v-if="!element.auto">
         <span class="space" />
-
+        <label class="right-space">Note</label>
         <select
           :value="element.note"
           @change="$emit('update:note', $event.target.value)"
         >
           <option v-for="note in notes" :key="note.key" :value="note.key">
             {{ note.displayName }}
+          </option>
+        </select>
+
+        <span class="space" />
+        <label class="right-space">Scale</label>
+        <select
+          :value="element.scale"
+          @change="$emit('update:scale', $event.target.value)"
+        >
+          <option v-for="scale in scales" :key="scale.key" :value="scale.key">
+            {{ scale.displayName }}
           </option>
         </select>
       </template>
@@ -145,6 +156,7 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 import { MartyriaElement } from '@/models/Element';
 import { Fthora, MeasureBar, Note } from '@/models/Neumes';
 import Neume from './Neume.vue';
+import { Scale } from '@/models/Scales';
 
 @Component({
   components: {
@@ -166,6 +178,11 @@ export default class MartyriaToolbar extends Vue {
     displayName: this.getNoteDisplayName(x),
   }));
 
+  scales = Object.values(Scale).map((x) => ({
+    key: x,
+    displayName: this.getScaleDisplayName(x),
+  }));
+
   private getNoteDisplayName(note: Note) {
     if (note.includes('High')) {
       return note.replace('High', ' (High)');
@@ -174,6 +191,25 @@ export default class MartyriaToolbar extends Vue {
     }
 
     return note;
+  }
+
+  private getScaleDisplayName(scale: Scale) {
+    switch (scale) {
+      case Scale.SoftChromatic:
+        return 'Soft Chromatic';
+      case Scale.HardChromatic:
+        return 'Hard Chromatic';
+      case Scale.EnharmonicGa:
+        return 'Enharmonic from Ga';
+      case Scale.EnharmonicZoHigh:
+        return 'Enharmonic from High Zo';
+      case Scale.EnharmonicVou:
+        return 'Enharmonic from Vou';
+      case Scale.EnharmonicVouHigh:
+        return 'Enharmonic from High Vou';
+      default:
+        return scale;
+    }
   }
 
   private setFthora(neume: Fthora) {
@@ -217,6 +253,10 @@ export default class MartyriaToolbar extends Vue {
   padding: 0.25rem;
 
   --btn-size: 32px;
+}
+
+label.right-space {
+  margin-right: 0.5rem;
 }
 
 .row {

@@ -194,7 +194,6 @@ export class SaveService {
   }
 
   public static SaveMartyria(element: MartyriaElement_v1, e: MartyriaElement) {
-    element.apostrophe = e.apostrophe || undefined;
     element.auto = e.auto || undefined;
     element.note = e.note;
     element.rootSign = e.rootSign;
@@ -475,7 +474,6 @@ export class SaveService {
     element: MartyriaElement,
     e: MartyriaElement_v1,
   ) {
-    element.apostrophe = e.apostrophe === true;
     element.auto = e.auto === true;
     element.alignRight = e.alignRight === true;
     element.note = e.note;

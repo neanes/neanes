@@ -312,7 +312,6 @@ export class MartyriaElement extends ScoreElement {
   public auto: boolean = true;
   public note: Note = Note.Pa;
   public rootSign: RootSign = RootSign.Alpha;
-  public apostrophe: boolean = false;
   public fthora: Fthora | null = null;
   public measureBar: MeasureBar | null = null;
   public alignRight: boolean = false;
@@ -332,7 +331,6 @@ export class MartyriaElement extends ScoreElement {
       auto: this.auto,
       note: this.note,
       rootSign: this.rootSign,
-      apostrophe: this.apostrophe,
       alignRight: this.alignRight,
       measureBar: this.measureBar,
       fthora: this.fthora,

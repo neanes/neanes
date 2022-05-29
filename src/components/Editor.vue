@@ -396,6 +396,8 @@
         @update:fthora="updateMartyriaFthora(selectedElement, $event)"
         @update:measureBar="updateMartyriaMeasureBar(selectedElement, $event)"
         @update:alignRight="updateMartyriaAlignRight(selectedElement, $event)"
+        @update:auto="updateMartyriaAuto(selectedElement, $event)"
+        @update:note="updateMartyriaNote(selectedElement, $event)"
       />
     </template>
     <ModeKeyDialog
@@ -490,6 +492,7 @@ import { PageSetup } from '@/models/PageSetup';
 import { Header } from '@/models/Header';
 import { Footer } from '@/models/Footer';
 import { TokenMetadata } from '@/utils/replaceTokens';
+import { Note } from '@/models/save/v1/Neumes';
 
 @Component({
   components: {
@@ -2507,6 +2510,14 @@ export default class Editor extends Vue {
 
   updateMartyriaAlignRight(element: MartyriaElement, alignRight: boolean) {
     this.updateMartyria(element, { alignRight });
+  }
+
+  updateMartyriaAuto(element: MartyriaElement, auto: boolean) {
+    this.updateMartyria(element, { auto });
+  }
+
+  updateMartyriaNote(element: MartyriaElement, note: Note) {
+    this.updateMartyria(element, { note });
   }
 
   updateTempo(element: TempoElement, newValues: Partial<TempoElement>) {

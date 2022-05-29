@@ -115,6 +115,27 @@
           class="icon-btn-img"
         />
       </button>
+      <span class="space" />
+      <div style="display: flex">
+        <input
+          type="checkbox"
+          :checked="element.auto"
+          @change="$emit('update:auto', $event.target.checked)"
+        />
+        <label>Auto</label>
+      </div>
+      <template v-if="!element.auto">
+        <span class="space" />
+
+        <select
+          :value="element.note"
+          @change="$emit('update:note', $event.target.value)"
+        >
+          <option v-for="note in notes" :key="note.key" :value="note.key">
+            {{ note.displayName }}
+          </option>
+        </select>
+      </template>
     </div>
   </div>
 </template>
@@ -122,7 +143,7 @@
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { MartyriaElement } from '@/models/Element';
-import { Fthora, MeasureBar } from '@/models/Neumes';
+import { Fthora, MeasureBar, Note } from '@/models/Neumes';
 import Neume from './Neume.vue';
 
 @Component({
@@ -134,10 +155,26 @@ export default class MartyriaToolbar extends Vue {
   @Prop() element!: MartyriaElement;
   Fthora = Fthora;
   MeasureBar = MeasureBar;
+  Note = Note;
 
   showBarLineMenu: boolean = false;
 
   selectedBarLine: MeasureBar | null = null;
+
+  notes = Object.values(Note).map((x) => ({
+    key: x,
+    displayName: this.getNoteDisplayName(x),
+  }));
+
+  private getNoteDisplayName(note: Note) {
+    if (note.includes('High')) {
+      return note.replace('High', ' (High)');
+    } else if (note.includes('Low')) {
+      return note.replace('Low', ' (Low)');
+    }
+
+    return note;
+  }
 
   private setFthora(neume: Fthora) {
     if (this.element.fthora === neume) {
@@ -185,6 +222,7 @@ export default class MartyriaToolbar extends Vue {
 .row {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .neume-button {

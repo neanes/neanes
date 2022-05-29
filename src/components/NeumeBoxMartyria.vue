@@ -9,7 +9,6 @@
         :neume="neume.fthora"
         :style="fthoraStyle"
       ></Neume>
-      <Neume v-if="neume.apostrophe" :neume="Note.Apostrophe"></Neume>
       <Neume
         v-if="hasMeasureBar"
         :neume="neume.measureBar"

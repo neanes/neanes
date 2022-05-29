@@ -312,6 +312,7 @@ export class MartyriaElement extends ScoreElement {
   public auto: boolean = true;
   public note: Note = Note.Pa;
   public rootSign: RootSign = RootSign.Alpha;
+  public scale: Scale = Scale.Diatonic;
   public fthora: Fthora | null = null;
   public measureBar: MeasureBar | null = null;
   public alignRight: boolean = false;

@@ -231,22 +231,13 @@ export class LayoutService {
           const mappingRoot = !martyriaElement.error
             ? NeumeMappingService.getMapping(martyriaElement.rootSign)!
             : NeumeMappingService.getMapping(RootSign.Alpha)!;
-          const mappingApostrophe = NeumeMappingService.getMapping(
-            Note.Apostrophe,
-          )!;
           const mappingMeasureBar = martyriaElement.measureBar
             ? NeumeMappingService.getMapping(martyriaElement.measureBar)!
             : null;
 
-          const apostropheWidth = TextMeasurementService.getTextWidth(
-            mappingApostrophe.text,
-            `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
-          );
-
           // Add in an extra apostrophe width to give some extra space between
           // the martyria and the next neume
           elementWidthPx =
-            apostropheWidth +
             TextMeasurementService.getTextWidth(
               mappingNote.text,
               `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
@@ -255,7 +246,6 @@ export class LayoutService {
               mappingRoot.text,
               `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
             ) +
-            (martyriaElement.apostrophe ? apostropheWidth : 0) +
             (martyriaElement.measureBar
               ? TextMeasurementService.getTextWidth(
                   mappingMeasureBar!.text,
@@ -857,53 +847,56 @@ export class LayoutService {
       } else if (element.elementType === ElementType.Martyria) {
         const martyria = element as MartyriaElement;
 
-        if (martyria.auto) {
-          if (currentNote < -5 || currentNote > 11) {
-            martyria.error = true;
-          } else {
-            martyria.error = false;
+        if (!martyria.auto) {
+          currentNote = reverseNoteMap.has(martyria.note)
+            ? reverseNoteMap.get(martyria.note)!
+            : currentNote;
 
-            martyria.note = noteMap.get(currentNote) || Note.Pa;
+          currentShift = 0;
+        }
 
-            const currentScaleNote = currentNote + currentShift;
+        if (currentNote < -6 || currentNote > 11) {
+          martyria.error = true;
+        } else {
+          martyria.error = false;
 
-            if (currentScale === Scale.HardChromatic) {
-              martyria.rootSign =
-                currentScaleNote % 2 === 0 ? RootSign.Squiggle : RootSign.Tilt;
-            } else if (currentScale === Scale.SoftChromatic) {
-              martyria.rootSign =
-                currentScaleNote % 2 === 0
-                  ? RootSign.SoftChromaticPaRootSign
-                  : RootSign.SoftChromaticSquiggle;
-            } else if (currentScale === Scale.Diatonic) {
-              martyria.rootSign =
-                diatonicRootSignMap.get(currentScaleNote) || RootSign.Alpha;
-            } else if (currentScale === Scale.Zygos) {
-              martyria.rootSign =
-                zygosRootSignMap.get(currentScaleNote) || RootSign.Alpha;
-            } else if (currentScale === Scale.Kliton) {
-              martyria.rootSign =
-                klitonRootSignMap.get(currentScaleNote) || RootSign.Alpha;
-            } else if (currentScale === Scale.Spathi) {
-              martyria.rootSign =
-                spathiRootSignMap.get(currentScaleNote) || RootSign.Alpha;
-            } else if (currentScale === Scale.EnharmonicGa) {
-              martyria.rootSign =
-                enharmonicGaRootSignMap.get(currentScaleNote) || RootSign.Alpha;
-            } else if (currentScale === Scale.EnharmonicVou) {
-              martyria.rootSign =
-                enharmonicVouRootSignMap.get(currentScaleNote) ||
-                RootSign.Alpha;
-            } else if (currentScale === Scale.EnharmonicVouHigh) {
-              martyria.rootSign =
-                enharmonicVouHighRootSignMap.get(currentScaleNote) ||
-                RootSign.Alpha;
-            } else if (currentScale === Scale.EnharmonicZoHigh) {
-              martyria.rootSign =
-                enharmonicZoRootSignMap.get(currentScaleNote) || RootSign.Alpha;
-            }
+          martyria.note = noteMap.get(currentNote) || Note.Pa;
 
-            martyria.apostrophe = currentNote > 4;
+          const currentScaleNote = currentNote + currentShift;
+
+          if (currentScale === Scale.HardChromatic) {
+            martyria.rootSign =
+              currentScaleNote % 2 === 0 ? RootSign.Squiggle : RootSign.Tilt;
+          } else if (currentScale === Scale.SoftChromatic) {
+            martyria.rootSign =
+              currentScaleNote % 2 === 0
+                ? RootSign.SoftChromaticPaRootSign
+                : RootSign.SoftChromaticSquiggle;
+          } else if (currentScale === Scale.Diatonic) {
+            martyria.rootSign =
+              diatonicRootSignMap.get(currentScaleNote) || RootSign.Alpha;
+          } else if (currentScale === Scale.Zygos) {
+            martyria.rootSign =
+              zygosRootSignMap.get(currentScaleNote) || RootSign.Alpha;
+          } else if (currentScale === Scale.Kliton) {
+            martyria.rootSign =
+              klitonRootSignMap.get(currentScaleNote) || RootSign.Alpha;
+          } else if (currentScale === Scale.Spathi) {
+            martyria.rootSign =
+              spathiRootSignMap.get(currentScaleNote) || RootSign.Alpha;
+          } else if (currentScale === Scale.EnharmonicGa) {
+            martyria.rootSign =
+              enharmonicGaRootSignMap.get(currentScaleNote) || RootSign.Alpha;
+          } else if (currentScale === Scale.EnharmonicVou) {
+            martyria.rootSign =
+              enharmonicVouRootSignMap.get(currentScaleNote) || RootSign.Alpha;
+          } else if (currentScale === Scale.EnharmonicVouHigh) {
+            martyria.rootSign =
+              enharmonicVouHighRootSignMap.get(currentScaleNote) ||
+              RootSign.Alpha;
+          } else if (currentScale === Scale.EnharmonicZoHigh) {
+            martyria.rootSign =
+              enharmonicZoRootSignMap.get(currentScaleNote) || RootSign.Alpha;
           }
 
           if (martyria.fthora) {
@@ -1110,6 +1103,7 @@ export class LayoutService {
 }
 
 const noteMap = new Map<number, Note>([
+  [-6, Note.VouLow],
   [-5, Note.GaLow],
   [-4, Note.ThiLow],
   [-3, Note.KeLow],
@@ -1120,16 +1114,23 @@ const noteMap = new Map<number, Note>([
   [2, Note.Ga],
   [3, Note.Thi],
   [4, Note.Ke],
-  [5, Note.Zo],
-  [6, Note.Ni],
-  [7, Note.Pa],
-  [8, Note.Vou],
-  [9, Note.Ga],
-  [10, Note.Thi],
-  [11, Note.Ke],
+  [5, Note.ZoHigh],
+  [6, Note.NiHigh],
+  [7, Note.PaHigh],
+  [8, Note.VouHigh],
+  [9, Note.GaHigh],
+  [10, Note.ThiHigh],
+  [11, Note.KeHigh],
 ]);
 
+const reverseNoteMap = new Map<Note, number>();
+
+for (let [key, value] of noteMap) {
+  reverseNoteMap.set(value, key);
+}
+
 const diatonicRootSignMap = new Map<number, RootSign>([
+  [-6, RootSign.LegetosLow],
   [-5, RootSign.NanaLow],
   [-4, RootSign.DeltaLow],
   [-3, RootSign.AlphaLow],

@@ -56,7 +56,7 @@ To insert a martyria, use the martyria button in main toolbar. The note and root
 
 #### Overrides
 
-In some cases, you may wish to override the note or scale of the martyria. For example, sticheraric hymns of the plagal of the first mode usually end in Δη, but the next hymn in the sequence will begin on Πα. In this case, a martyria of Πα may be written at the end of the first hymn, even though the last note is Δη.
+In some cases, you may wish to override the note or scale of the martyria. For example, sticheraric hymns of the plagal of the first mode usually end on Δη, but the next hymn in the sequence will begin on Πα. In this case, a martyria of Πα may be written at the end of the first hymn, even though the last note is Δη.
 
 ![Martyria Override Example](./images/guide-martyria-override-example-1.png)
 

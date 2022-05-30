@@ -145,7 +145,7 @@ body {
 
   background-color: darkslategray;
   color: white;
-  font-family: arial;
+  font-family: Arial;
 
   padding: 1rem;
 

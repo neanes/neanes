@@ -235,9 +235,12 @@ export class LayoutService {
             ? NeumeMappingService.getMapping(martyriaElement.measureBar)!
             : null;
 
-          // Add in an extra apostrophe width to give some extra space between
+          // Add in padding to give some extra space between
           // the martyria and the next neume
+          const padding = pageSetup.neumeDefaultFontSize * 0.148;
+
           elementWidthPx =
+            padding +
             TextMeasurementService.getTextWidth(
               mappingNote.text,
               `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,

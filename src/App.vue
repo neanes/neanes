@@ -1,12 +1,56 @@
 <template>
   <div id="app">
-    <!-- <div id="nav">
-      <router-link to="/">Home</router-link> |
-      <router-link to="/about">About</router-link>
-    </div> -->
     <router-view />
+    <div class="update-notification" v-if="updateExists">
+      An update is available.
+      <button class="ok" @click="refreshApp">Update</button>
+      <button class="cancel" @click="updateExists = false">Not now</button>
+    </div>
   </div>
 </template>
+
+<script lang="ts">
+import { Component, Vue } from 'vue-property-decorator';
+
+@Component
+export default class MartyriaToolbar extends Vue {
+  registration: ServiceWorkerRegistration | null = null;
+  updateExists: boolean = false;
+
+  created() {
+    if (navigator.serviceWorker) {
+      document.addEventListener(
+        'swUpdated',
+        this.onUpdateAvailable as EventListener,
+        {
+          once: true,
+        },
+      );
+
+      let refreshing = false;
+
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+          window.location.reload();
+          refreshing = true;
+        }
+      });
+    }
+  }
+
+  onUpdateAvailable(event: CustomEvent) {
+    this.registration = event.detail;
+    this.updateExists = true;
+  }
+
+  refreshApp() {
+    this.updateExists = false;
+    if (this.registration && this.registration.waiting) {
+      this.registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+    }
+  }
+}
+</script>
 
 <style>
 :root {
@@ -93,5 +137,28 @@ body {
   flex: 1;
 
   height: 100%;
+}
+
+.update-notification {
+  position: absolute;
+  bottom: 0;
+
+  background-color: darkslategray;
+  color: white;
+  font-family: arial;
+
+  padding: 1rem;
+
+  cursor: default;
+}
+
+.update-notification button {
+  padding: 0.5rem;
+}
+
+.update-notification button.ok {
+  background-color: #003366;
+  color: white;
+  margin: 0 0.75rem;
 }
 </style>

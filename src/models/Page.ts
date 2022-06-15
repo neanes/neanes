@@ -1,11 +1,25 @@
-import { ScoreElement } from '@/models/Element';
+import { ElementType, ScoreElement } from '@/models/Element';
 
-export interface Page {
-  lines: Line[];
+export class Page {
+  public lines: Line[] = [];
 
-  isVisible: boolean;
+  public isVisible: boolean = false;
+
+  // A page is empty if it contains only one line
+  // and the line is empty
+  public get isEmpty() {
+    return this.lines.length === 1 && this.lines[0].isEmpty;
+  }
 }
 
-export interface Line {
-  elements: ScoreElement[];
+export class Line {
+  public elements: ScoreElement[] = [];
+
+  // A line is empty if it contains only the empty element
+  public get isEmpty() {
+    return (
+      this.elements.length === 1 &&
+      this.elements[0].elementType === ElementType.Empty
+    );
+  }
 }

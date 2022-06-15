@@ -325,6 +325,27 @@ export const vocalExpressionReplacementMap = new Map<
     ],
   ],
   [
+    VocalExpressionNeume.Heteron,
+    [
+      {
+        isNotPairedWith: [
+          QuantitativeNeume.Ison,
+          QuantitativeNeume.Oligon,
+          QuantitativeNeume.OligonPlusApostrophos,
+          QuantitativeNeume.OligonPlusDoubleHypsili,
+          QuantitativeNeume.OligonPlusHypsiliLeft,
+          QuantitativeNeume.OligonPlusHypsiliPlusKentimaHorizontal,
+          QuantitativeNeume.OligonPlusHypsiliPlusKentimaVertical,
+          QuantitativeNeume.OligonPlusHypsiliRight,
+          QuantitativeNeume.OligonPlusKentima,
+          QuantitativeNeume.OligonPlusKentimaAbove,
+          QuantitativeNeume.OligonPlusKentimaBelow,
+        ],
+        replaceWith: null,
+      },
+    ],
+  ],
+  [
     VocalExpressionNeume.Psifiston,
     [
       {

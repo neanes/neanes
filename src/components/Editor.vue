@@ -54,7 +54,7 @@
               callback: (isVisible) => updatePageVisibility(page, isVisible),
               intersection: pageVisibilityIntersection,
             }"
-            v-for="(page, pageIndex) in pages"
+            v-for="(page, pageIndex) in filteredPages"
             :key="`page-${pageIndex}`"
             :ref="`page-${pageIndex}`"
           >
@@ -822,6 +822,10 @@ export default class Editor extends Vue {
 
   get dialogOpen() {
     return this.modeKeyDialogIsOpen || this.pageSetupDialogIsOpen;
+  }
+
+  get filteredPages() {
+    return this.printMode ? this.pages.filter((x) => !x.isEmpty) : this.pages;
   }
 
   @Watch('zoom')

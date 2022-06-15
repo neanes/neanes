@@ -48,14 +48,9 @@ export class LayoutService {
 
     const pages: Page[] = [];
 
-    let page: Page = {
-      lines: [],
-      isVisible: false,
-    };
+    let page: Page = new Page();
 
-    let line: Line = {
-      elements: [],
-    };
+    let line: Line = new Line();
 
     page.lines.push(line);
     pages.push(page);
@@ -298,9 +293,7 @@ export class LayoutService {
         currentLineWidthPx + elementWidthPx > pageSetup.innerPageWidth ||
         lastElementWasLineBreak
       ) {
-        line = {
-          elements: [],
-        };
+        line = new Line();
 
         page.lines.push(line);
 
@@ -359,14 +352,9 @@ export class LayoutService {
 
       // Check if we need a new page
       if (currentPageHeightPx > innerPageHeight || lastElementWasPageBreak) {
-        page = {
-          lines: [],
-          isVisible: false,
-        };
+        page = new Page();
 
-        line = {
-          elements: [],
-        };
+        line = new Line();
 
         page.lines.push(line);
         pages.push(page);

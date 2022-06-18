@@ -173,6 +173,15 @@ export const modeKeyTemplates: ModeKeyTemplate[] = [
     fthoraAboveNote: Fthora.HardChromaticThi_Top,
   },
   {
+    id: 406,
+    mode: 4,
+    scale: Scale.Kliton,
+    scaleNote: ScaleNote.Thi,
+    martyria: ModeSign.FourthCapital,
+    note: ModeSign.Thi,
+    fthoraAboveNote: Fthora.Kliton_Top,
+  },
+  {
     id: 500,
     mode: 5,
     scale: Scale.Diatonic,

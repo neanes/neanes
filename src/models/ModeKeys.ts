@@ -89,6 +89,15 @@ export const modeKeyTemplates: ModeKeyTemplate[] = [
     fthoraAboveNote: Fthora.HardChromaticPa_Top,
   },
   {
+    id: 203,
+    mode: 2,
+    scale: Scale.HardChromatic,
+    scaleNote: ScaleNote.Vou,
+    martyria: ModeSign.SoftChromatic2,
+    note: ModeSign.Vou,
+    fthoraAboveNote: Fthora.HardChromaticPa_Top,
+  },
+  {
     id: 300,
     mode: 3,
     scale: Scale.Diatonic,

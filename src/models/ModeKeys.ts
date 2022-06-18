@@ -164,6 +164,15 @@ export const modeKeyTemplates: ModeKeyTemplate[] = [
     note: ModeSign.Vou,
   },
   {
+    id: 405,
+    mode: 4,
+    scale: Scale.HardChromatic,
+    scaleNote: ScaleNote.Thi,
+    martyria: ModeSign.DeltaWithDeltaHat,
+    note: ModeSign.Thi,
+    fthoraAboveNote: Fthora.HardChromaticThi_Top,
+  },
+  {
     id: 500,
     mode: 5,
     scale: Scale.Diatonic,

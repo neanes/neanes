@@ -1968,7 +1968,31 @@ export default class Editor extends Vue {
     const nextIndex = this.getNextLyricBoxIndex();
 
     if (nextIndex >= 0) {
-      this.focusLyrics(nextIndex, true);
+      // If the lyrics for the last neume on the line have been updated to be so long
+      // that the neume is moved to the next line by processPages(), then focusLyrics()
+      // will fail if called on its own. This is because the order of events would
+      // be the following:
+      // focus next element => blur previous element => updateLyrics => processPages
+      // and finally the newly selected element would lose focus because processPages
+      // moves the element to the next line.
+
+      // To prevent this we, preemptively call updateLyrics and then use Vue.nextTick
+      // to only focus the next lyrics after the UI has been redrawn.
+
+      const noteElement = this.selectedLyrics!;
+
+      const text = (
+        this.$refs[
+          `lyrics-${this.elements.indexOf(noteElement)}`
+        ] as ContentEditable[]
+      )[0].getInnerText();
+
+      this.updateLyrics(noteElement, text);
+
+      Vue.nextTick(() => {
+        this.focusLyrics(nextIndex, true);
+      });
+
       return true;
     }
 

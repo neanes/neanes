@@ -893,6 +893,14 @@ export class LayoutService {
               enharmonicZoRootSignMap.get(currentScaleNote) || RootSign.Alpha;
           }
 
+          if (currentNote <= reverseNoteMap.get(Note.KeLow)!) {
+            martyria.rootSign =
+              lowRootSignMap.get(martyria.rootSign) || martyria.rootSign;
+          } else if (currentNote > reverseNoteMap.get(Note.KeLow)!) {
+            martyria.rootSign =
+              highRootSignMap.get(martyria.rootSign) || martyria.rootSign;
+          }
+
           if (martyria.fthora) {
             if (this.fthoraIsValid(martyria.fthora, currentNote)) {
               currentScale =
@@ -1124,6 +1132,9 @@ for (let [key, value] of noteMap) {
 }
 
 const diatonicRootSignMap = new Map<number, RootSign>([
+  [-9, RootSign.NanaLow],
+  [-8, RootSign.DeltaLow],
+  [-7, RootSign.AlphaLow],
   [-6, RootSign.LegetosLow],
   [-5, RootSign.NanaLow],
   [-4, RootSign.DeltaLow],
@@ -1178,3 +1189,20 @@ const enharmonicVouHighRootSignMap = new Map<number, RootSign>(
 enharmonicVouHighRootSignMap.set(6, RootSign.DeltaDotted);
 enharmonicVouHighRootSignMap.set(7, RootSign.Alpha);
 enharmonicVouHighRootSignMap.set(8, RootSign.Nana);
+
+const lowRootSignMap = new Map<RootSign, RootSign>([
+  [RootSign.Legetos, RootSign.LegetosLow],
+  [RootSign.Nana, RootSign.NanaLow],
+  [RootSign.Delta, RootSign.DeltaLow],
+  [RootSign.Alpha, RootSign.AlphaLow],
+  [RootSign.SoftChromaticPaRootSign, RootSign.SoftChromaticPaRootSignLow],
+  [RootSign.SoftChromaticSquiggle, RootSign.SoftChromaticSquiggleLow],
+  [RootSign.Tilt, RootSign.TiltLow],
+  [RootSign.Squiggle, RootSign.SquiggleLow],
+]);
+
+const highRootSignMap = new Map<RootSign, RootSign>();
+
+for (let [key, value] of lowRootSignMap) {
+  highRootSignMap.set(value, key);
+}

@@ -2618,7 +2618,7 @@
         0.74
       ]
     },
-    "oligonKentimataYpsiliLeft": {
+    "oligonKentimataYpsiliRight": {
       "measureNumber": [
         0.164,
         0.847
@@ -2660,7 +2660,7 @@
         0.753
       ]
     },
-    "oligonKentimataYpsiliRight": {
+    "oligonKentimataYpsiliLeft": {
       "measureNumber": [
         0.174,
         0.983
@@ -5127,8 +5127,8 @@
     "petastiYporroi": 1.164,
     "oligonElafronApostrofosKentimata": 2.077,
     "oligonChamiliKentimata": 1.995,
-    "oligonKentimataYpsiliLeft": 1.532,
-    "oligonKentimataYpsiliRight": 1.515,
+    "oligonKentimataYpsiliRight": 1.532,
+    "oligonKentimataYpsiliLeft": 1.515,
     "petastiChamiliApostrofos": 1.236,
     "apostrofos": 0.703,
     "oligonKentimataTripleYpsili": 1.58,
@@ -5878,7 +5878,7 @@
         0.22242105263118006
       ]
     },
-    "oligonKentimataYpsiliLeft": {
+    "oligonKentimataYpsiliRight": {
       "bBoxNE": [
         1.500222222221454,
         1.163
@@ -5888,7 +5888,7 @@
         0.22242105263118006
       ]
     },
-    "oligonKentimataYpsiliRight": {
+    "oligonKentimataYpsiliLeft": {
       "bBoxNE": [
         1.4189767441845793,
         1.163

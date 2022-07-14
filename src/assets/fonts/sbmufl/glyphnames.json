@@ -216,10 +216,10 @@
   "oligonIsonKentimata": {
     "codepoint": "U+E084"
   },
-  "oligonKentimataYpsiliLeft": {
+  "oligonKentimataYpsiliRight": {
     "codepoint": "U+E085"
   },
-  "oligonKentimataYpsiliRight": {
+  "oligonKentimataYpsiliLeft": {
     "codepoint": "U+E086"
   },
   "oligonApostrofosKentimata": {

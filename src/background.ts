@@ -29,10 +29,10 @@ import {
 import path from 'path';
 import { promises as fs } from 'fs';
 import { TestFileType } from './utils/TestFileType';
-import AdmZip from 'adm-zip';
 import { errorMonitor } from 'events';
 import { Score } from './models/save/v1/Score';
 import fontList from 'font-list';
+import JSZip from 'jszip';
 
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
@@ -115,15 +115,20 @@ async function addToRecentFiles(filePath: string) {
 async function writeScoreFile(filePath: string, score: Score) {
   // If using the compressed file format, zip first
   if (path.extname(filePath) === '.byz') {
-    const zip = new AdmZip();
+    const zip = new JSZip();
 
     const unzippedFileName = `${path.basename(filePath, '.byz')}.byzx`;
 
     const data = JSON.stringify(score);
 
-    zip.addFile(unzippedFileName, Buffer.from(data));
-    // Missing typescript definition
-    await (zip as any).writeZipPromise(filePath);
+    zip.file(unzippedFileName, data);
+
+    const file = await zip.generateAsync({
+      type: 'nodebuffer',
+      compression: 'DEFLATE',
+    });
+
+    await fs.writeFile(filePath, file);
   } else {
     // For uncompressed files, and white space and indentation
     // to make the file easier to read
@@ -137,8 +142,9 @@ async function readScoreFile(filePath: string) {
 
   // If using the compressed file format, zip first
   if (path.extname(filePath) === '.byz') {
-    const zip = new AdmZip(filePath);
-    data = zip.getEntries()[0].getData().toString('utf8');
+    const file = await fs.readFile(filePath);
+    const zip = await JSZip.loadAsync(file);
+    data = await zip.file(/\.(byzx)$/)[0].async('text');
   } else if (path.extname(filePath) === '.byzx') {
     data = await fs.readFile(filePath, 'utf8');
   } else {

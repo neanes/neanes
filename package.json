@@ -21,7 +21,6 @@
   },
   "main": "background.js",
   "dependencies": {
-    "adm-zip": "^0.5.9",
     "core-js": "^3.4.3",
     "font-list": "^1.4.5",
     "jszip": "^3.9.1",

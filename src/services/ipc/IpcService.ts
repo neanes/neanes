@@ -71,8 +71,12 @@ export class IpcService {
     );
   }
 
-  public isShowMessageBoxSupported() {
+  public isShowMessageBoxSupported(): boolean {
     return true;
+  }
+
+  public async getSystemFonts(): Promise<string[]> {
+    return await window.ipcRenderer.invoke(IpcRendererChannels.GetSystemFonts);
   }
 
   public async exitApplication(): Promise<void> {

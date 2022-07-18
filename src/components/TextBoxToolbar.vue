@@ -6,6 +6,10 @@
     >
       <option>Athonite</option>
       <option>Omega</option>
+
+      <option v-for="font in fonts" :key="font" :value="font">
+        {{ font }}
+      </option>
     </select>
     <span class="space"></span>
     <input type="number" min="4" max="100" step="1" v-model.lazy="fontSize" />
@@ -110,6 +114,7 @@ import { Unit } from '@/utils/Unit';
 })
 export default class TextBoxToolbar extends Vue {
   @Prop() element!: TextBoxElement;
+  @Prop() fonts!: string;
 
   TextBoxAlignment = TextBoxAlignment;
 

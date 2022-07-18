@@ -425,13 +425,16 @@ import { Unit } from '@/utils/Unit';
 })
 export default class PageSetupDialog extends Vue {
   @Prop() pageSetup!: PageSetup;
+  @Prop() fonts!: string[];
   private form: PageSetup = new PageSetup();
-  private dropCapFontFamilies: string[] = [
-    'Athonite',
-    'Omega',
-    'PFGoudyInitials',
-  ];
-  private lyricsFontFamilies: string[] = ['Omega'];
+
+  get dropCapFontFamilies() {
+    return ['Athonite', 'Omega', 'PFGoudyInitials', ...this.fonts];
+  }
+
+  get lyricsFontFamilies() {
+    return ['Omega', ...this.fonts];
+  }
 
   created() {
     Object.assign(this.form, this.pageSetup);

@@ -57,8 +57,12 @@ export class BrowserIpcService implements IIpcService {
     return Promise.resolve({ response: 0, checkboxChecked: false });
   }
 
-  public isShowMessageBoxSupported() {
-    return false;
+  public isShowMessageBoxSupported(): boolean {
+    return true;
+  }
+
+  public async getSystemFonts(): Promise<string[]> {
+    return Promise.resolve([]);
   }
 
   public async exitApplication(): Promise<void> {

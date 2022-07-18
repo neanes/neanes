@@ -42,6 +42,8 @@ export enum IpcRendererChannels {
   PrintWorkspace = 'PrintWorkspace',
   OpenWorkspaceFromArgv = 'OpenWorkspaceFromArgv',
 
+  GetSystemFonts = 'GetSystemFonts',
+
   ExitApplication = 'ExitApplication',
 }
 

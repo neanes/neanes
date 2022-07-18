@@ -328,6 +328,7 @@
     <template v-if="selectedTextBoxElement">
       <TextBoxToolbar
         :element="selectedTextBoxElement"
+        :fonts="fonts"
         @update:fontSize="updateTextBoxFontSize(selectedTextBoxElement, $event)"
         @update:fontFamily="
           updateTextBoxFontFamily(selectedTextBoxElement, $event)
@@ -411,6 +412,7 @@
     <PageSetupDialog
       v-if="pageSetupDialogIsOpen"
       :pageSetup="score.pageSetup"
+      :fonts="fonts"
       @update="updatePageSetup($event)"
       @close="closePageSetupDialog"
     />
@@ -495,6 +497,7 @@ import { Header } from '@/models/Header';
 import { Footer } from '@/models/Footer';
 import { TokenMetadata } from '@/utils/replaceTokens';
 import { Scale } from '@/models/Scales';
+import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 
 @Component({
   components: {
@@ -538,6 +541,8 @@ export default class Editor extends Vue {
   pageSetupDialogIsOpen: boolean = false;
 
   clipboard: ScoreElement[] = [];
+
+  fonts: string[] = [];
 
   // Commands
   noteElementCommandFactory: CommandFactory<NoteElement> =
@@ -851,7 +856,9 @@ export default class Editor extends Vue {
           ? withZoom(element.lyricsHorizontalOffset)
           : undefined,
       fontSize: withZoom(this.score.pageSetup.lyricsDefaultFontSize),
-      fontFamily: this.score.pageSetup.lyricsDefaultFontFamily,
+      fontFamily: getFontFamilyWithFallback(
+        this.score.pageSetup.lyricsDefaultFontFamily,
+      ),
       color: this.score.pageSetup.lyricsDefaultColor,
     } as CSSStyleDeclaration;
   }
@@ -926,9 +933,14 @@ export default class Editor extends Vue {
   async created() {
     const fontLoader = (document as any).fonts;
 
+    const loadSystemFontsPromise = this.ipcService
+      .getSystemFonts()
+      .then((fonts) => (this.fonts = fonts));
+
     // Must load all fonts before loading any documents,
     // otherwise the text measurements will be wrong
     await Promise.all([
+      loadSystemFontsPromise,
       fontLoader.load('1rem Athonite'),
       fontLoader.load('1rem Omega'),
       fontLoader.load('1rem PFGoudyInitials'),

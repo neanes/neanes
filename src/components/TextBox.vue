@@ -19,6 +19,7 @@ import ContentEditable from '@/components/ContentEditable.vue';
 import { withZoom } from '@/utils/withZoom';
 import { PageSetup } from '@/models/PageSetup';
 import { replaceTokens, TokenMetadata } from '@/utils/replaceTokens';
+import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 
 @Component({
   components: {
@@ -54,7 +55,7 @@ export default class TextBox extends Vue {
   get containerStyle() {
     const style: any = {
       color: this.element.color,
-      fontFamily: this.element.fontFamily,
+      fontFamily: getFontFamilyWithFallback(this.element.fontFamily),
       fontSize: withZoom(this.element.fontSize),
       textAlign: this.element.alignment,
       width: this.width,

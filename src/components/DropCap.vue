@@ -16,6 +16,7 @@ import { DropCapElement } from '@/models/Element';
 import ContentEditable from '@/components/ContentEditable.vue';
 import { withZoom } from '@/utils/withZoom';
 import { PageSetup } from '@/models/PageSetup';
+import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 
 @Component({
   components: {
@@ -35,8 +36,9 @@ export default class DropCap extends Vue {
   get style() {
     const style = {
       color: this.element.color || this.pageSetup.dropCapDefaultColor,
-      fontFamily:
+      fontFamily: getFontFamilyWithFallback(
         this.element.fontFamily || this.pageSetup.dropCapDefaultFontFamily,
+      ),
       fontSize: withZoom(
         this.element.fontSize || this.pageSetup.dropCapDefaultFontSize,
       ),

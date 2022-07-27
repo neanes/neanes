@@ -9,8 +9,10 @@
     "bottomMargin": 96,
     "leftMargin": 96,
     "rightMargin": 96,
+    "headerMargin": 48,
+    "footerMargin": 48,
     "lineHeight": 72,
-    "lyricsDefaultFontFamily": "Omega",
+    "lyricsDefaultFontFamily": "Times New Roman",
     "lyricsDefaultFontSize": 16,
     "lyricsDefaultColor": "#000000",
     "lyricsVerticalOffset": -5.76,
@@ -34,6 +36,114 @@
     "dropCapDefaultColor": "#000000",
     "hyphenSpacing": 72
   },
+  "headers": {
+    "default": {
+      "elements": [
+        {
+          "elementType": "TextBox",
+          "alignment": "left",
+          "color": "#000000",
+          "content": "",
+          "fontSize": 16,
+          "fontFamily": "Omega",
+          "height": 19
+        }
+      ]
+    },
+    "odd": {
+      "elements": [
+        {
+          "elementType": "TextBox",
+          "alignment": "left",
+          "color": "#000000",
+          "content": "",
+          "fontSize": 16,
+          "fontFamily": "Omega",
+          "height": 19
+        }
+      ]
+    },
+    "even": {
+      "elements": [
+        {
+          "elementType": "TextBox",
+          "alignment": "left",
+          "color": "#000000",
+          "content": "",
+          "fontSize": 16,
+          "fontFamily": "Omega",
+          "height": 19
+        }
+      ]
+    },
+    "firstPage": {
+      "elements": [
+        {
+          "elementType": "TextBox",
+          "alignment": "left",
+          "color": "#000000",
+          "content": "",
+          "fontSize": 16,
+          "fontFamily": "Omega",
+          "height": 19
+        }
+      ]
+    }
+  },
+  "footers": {
+    "default": {
+      "elements": [
+        {
+          "elementType": "TextBox",
+          "alignment": "left",
+          "color": "#000000",
+          "content": "",
+          "fontSize": 16,
+          "fontFamily": "Omega",
+          "height": 19
+        }
+      ]
+    },
+    "odd": {
+      "elements": [
+        {
+          "elementType": "TextBox",
+          "alignment": "left",
+          "color": "#000000",
+          "content": "",
+          "fontSize": 16,
+          "fontFamily": "Omega",
+          "height": 19
+        }
+      ]
+    },
+    "even": {
+      "elements": [
+        {
+          "elementType": "TextBox",
+          "alignment": "left",
+          "color": "#000000",
+          "content": "",
+          "fontSize": 16,
+          "fontFamily": "Omega",
+          "height": 19
+        }
+      ]
+    },
+    "firstPage": {
+      "elements": [
+        {
+          "elementType": "TextBox",
+          "alignment": "left",
+          "color": "#000000",
+          "content": "",
+          "fontSize": 16,
+          "fontFamily": "Omega",
+          "height": 19
+        }
+      ]
+    }
+  },
   "staff": {
     "elements": [
       {
@@ -42,8 +152,8 @@
         "color": "#000000",
         "content": "Αναστάσιμον Απολυτίκιον, Ήχος Α'",
         "fontSize": 26.666666666666668,
-        "fontFamily": "Omega",
-        "height": 32
+        "fontFamily": "Times New Roman",
+        "height": 30
       },
       {
         "elementType": "TextBox",
@@ -51,8 +161,8 @@
         "color": "#000000",
         "content": "Του λίθου σφραγισθέντος",
         "fontSize": 16,
-        "fontFamily": "Omega",
-        "height": 19
+        "fontFamily": "Times New Roman",
+        "height": 17
       },
       {
         "elementType": "ModeKey",
@@ -234,7 +344,8 @@
         "elementType": "Martyria",
         "auto": true,
         "note": "Thi",
-        "rootSign": "DeltaDotted"
+        "rootSign": "DeltaDotted",
+        "scale": "Diatonic"
       },
       {
         "elementType": "Note",
@@ -459,7 +570,8 @@
         "elementType": "Martyria",
         "auto": true,
         "note": "Pa",
-        "rootSign": "Alpha"
+        "rootSign": "Alpha",
+        "scale": "Diatonic"
       },
       {
         "elementType": "Note",
@@ -662,6 +774,7 @@
         "auto": true,
         "note": "Pa",
         "rootSign": "Alpha",
+        "scale": "Diatonic",
         "alignRight": true
       },
       {

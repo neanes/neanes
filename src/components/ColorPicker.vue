@@ -63,11 +63,11 @@ export default class ColorPicker extends Vue {
       '#000000',
     ];
 
-    // Position the popup underneath the swatch
+    // Fist, try to position the popup underneath the swatch
     this.popupPositionTop =
       this.swatch.getBoundingClientRect().top + this.swatch.offsetHeight;
 
-    // If the popover a
+    // If the popover goes off the bottom of the screen, position above the swatch
     const popoverHeightPx = 260;
 
     if (this.popupPositionTop + popoverHeightPx > window.innerHeight) {

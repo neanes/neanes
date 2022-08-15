@@ -96,7 +96,9 @@ export default class ColorPicker extends Vue {
 
     this.isOpen = false;
 
-    this.$emit('input', this.color);
+    if (this.color !== this.value) {
+      this.$emit('input', this.color);
+    }
   }
 }
 </script>

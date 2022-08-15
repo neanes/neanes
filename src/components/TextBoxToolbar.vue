@@ -14,11 +14,9 @@
     <span class="space"></span>
     <input type="number" min="4" max="100" step="1" v-model.lazy="fontSize" />
     <span class="space"></span>
-    <input
-      type="color"
-      list="presetColors"
+    <ColorPicker
       :value="element.color"
-      @change="$emit('update:color', $event.target.value)"
+      @input="$emit('update:color', $event)"
     />
     <datalist id="presetColors">
       <option>#000000</option>
@@ -108,9 +106,10 @@
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { TextBoxAlignment, TextBoxElement } from '@/models/Element';
 import { Unit } from '@/utils/Unit';
+import ColorPicker from '@/components/ColorPicker.vue';
 
 @Component({
-  components: {},
+  components: { ColorPicker },
 })
 export default class TextBoxToolbar extends Vue {
   @Prop() element!: TextBoxElement;

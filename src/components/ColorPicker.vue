@@ -38,8 +38,10 @@ export default class ColorPicker extends Vue {
 
   maxHistorySize = 8;
 
-  get color() {
-    return this.value;
+  color: string = '#000000';
+
+  created() {
+    this.color = this.value;
   }
 
   get swatch() {
@@ -78,7 +80,7 @@ export default class ColorPicker extends Vue {
   }
 
   onColorChanged(color: Color) {
-    this.$emit('input', color.hex);
+    this.color = color.hex;
   }
 
   close() {
@@ -93,6 +95,8 @@ export default class ColorPicker extends Vue {
     localStorage.setItem(this.historyKey, JSON.stringify(this.presetColors));
 
     this.isOpen = false;
+
+    this.$emit('input', this.color);
   }
 }
 </script>
@@ -103,7 +107,7 @@ export default class ColorPicker extends Vue {
   background: white;
   border-radius: 1px;
   box-shadow: rgb(0 0 0 / 10%) 0px 0px 0px 1px;
-  display: inline-block;
+  display: flex;
   cursor: pointer;
 }
 

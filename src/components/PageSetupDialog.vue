@@ -212,14 +212,9 @@
         </div>
         <div class="right-pane">
           <div class="subheader">Drop Caps</div>
-          <div class="form-group">
+          <div class="form-group row">
             <label class="drop-caps-label">Color</label>
-            <input
-              class="drop-caps-input"
-              type="color"
-              list="presetDropCapsColors"
-              v-model.lazy="form.dropCapDefaultColor"
-            />
+            <ColorPicker v-model="form.dropCapDefaultColor" />
           </div>
           <div class="form-group">
             <label class="drop-caps-label">Size</label>
@@ -245,14 +240,9 @@
             </select>
           </div>
           <div class="subheader">Lyrics</div>
-          <div class="form-group">
+          <div class="form-group row">
             <label class="drop-caps-label">Color</label>
-            <input
-              class="drop-caps-input"
-              type="color"
-              list="presetLyricsColors"
-              v-model.lazy="form.lyricsDefaultColor"
-            />
+            <ColorPicker v-model="form.lyricsDefaultColor" />
           </div>
           <div class="form-group">
             <label class="drop-caps-label">Size</label>
@@ -278,14 +268,9 @@
             </select>
           </div>
           <div class="subheader">Neumes</div>
-          <div class="form-group">
+          <div class="form-group row">
             <label class="drop-caps-label">Color</label>
-            <input
-              class="drop-caps-input"
-              type="color"
-              list="presetLyricsColors"
-              v-model.lazy="form.neumeDefaultColor"
-            />
+            <ColorPicker v-model="form.neumeDefaultColor" />
           </div>
           <div class="form-group">
             <label class="drop-caps-label">Size</label>
@@ -299,95 +284,45 @@
             />
           </div>
           <div class="subheader">Neume Colors</div>
-          <div class="form-group">
+          <div class="form-group row">
             <label class="neume-colors-label">Accidentals</label>
-            <input
-              class="neume-colors-input"
-              type="color"
-              list="presetNeumeColors"
-              v-model.lazy="form.accidentalDefaultColor"
-            />
+            <ColorPicker v-model="form.accidentalDefaultColor" />
           </div>
-          <div class="form-group">
+          <div class="form-group row">
             <label class="neume-colors-label">Fthoras</label>
-            <input
-              class="neume-colors-input"
-              type="color"
-              list="presetNeumeColors"
-              v-model.lazy="form.fthoraDefaultColor"
-            />
+            <ColorPicker v-model="form.fthoraDefaultColor" />
           </div>
-          <div class="form-group">
+          <div class="form-group row">
             <label class="neume-colors-label">Gorgons</label>
-            <input
-              class="neume-colors-input"
-              type="color"
-              list="presetNeumeColors"
-              v-model.lazy="form.gorgonDefaultColor"
-            />
+            <ColorPicker v-model="form.gorgonDefaultColor" />
           </div>
-          <div class="form-group">
+          <div class="form-group row">
             <label class="neume-colors-label">Heterons</label>
-            <input
-              class="neume-colors-input"
-              type="color"
-              list="presetNeumeColors"
-              v-model.lazy="form.heteronDefaultColor"
-            />
+            <ColorPicker v-model="form.heteronDefaultColor" />
           </div>
-          <div class="form-group">
+          <div class="form-group row">
             <label class="neume-colors-label">Ison</label>
-            <input
-              class="neume-colors-input"
-              type="color"
-              list="presetNeumeColors"
-              v-model.lazy="form.isonDefaultColor"
-            />
+            <ColorPicker v-model="form.isonDefaultColor" />
           </div>
-          <div class="form-group">
+          <div class="form-group row">
             <label class="neume-colors-label">Martyrias</label>
-            <input
-              class="neume-colors-input"
-              type="color"
-              list="presetNeumeColors"
-              v-model.lazy="form.martyriaDefaultColor"
-            />
+            <ColorPicker v-model="form.martyriaDefaultColor" />
           </div>
-          <div class="form-group">
+          <div class="form-group row">
             <label class="neume-colors-label">Measure Bars</label>
-            <input
-              class="neume-colors-input"
-              type="color"
-              list="presetNeumeColors"
-              v-model.lazy="form.measureBarDefaultColor"
-            />
+            <ColorPicker v-model="form.measureBarDefaultColor" />
           </div>
-          <div class="form-group">
+          <div class="form-group row">
             <label class="neume-colors-label">Measure No.</label>
-            <input
-              class="neume-colors-input"
-              type="color"
-              list="presetNeumeColors"
-              v-model.lazy="form.measureNumberDefaultColor"
-            />
+            <ColorPicker v-model="form.measureNumberDefaultColor" />
           </div>
-          <div class="form-group">
+          <div class="form-group row">
             <label class="neume-colors-label">Note Indicators</label>
-            <input
-              class="neume-colors-input"
-              type="color"
-              list="presetNeumeColors"
-              v-model.lazy="form.noteIndicatorDefaultColor"
-            />
+            <ColorPicker v-model="form.noteIndicatorDefaultColor" />
           </div>
-          <div class="form-group">
+          <div class="form-group row">
             <label class="neume-colors-label">Tempos</label>
-            <input
-              class="neume-colors-input"
-              type="color"
-              list="presetNeumeColors"
-              v-model.lazy="form.tempoDefaultColor"
-            />
+            <ColorPicker v-model="form.tempoDefaultColor" />
           </div>
         </div>
       </div>
@@ -408,7 +343,9 @@
         <option>#ED0000</option>
       </datalist>
       <datalist id="presetLyricsColors">
-        <option>#000000</option>
+        <option v-for="color in presetLyricsColors" :key="color">
+          {{ color }}
+        </option>
       </datalist>
     </div>
   </ModalDialog>
@@ -419,14 +356,17 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 import ModalDialog from '@/components/ModalDialog.vue';
 import { PageSetup, PageSize, pageSizes } from '@/models/PageSetup';
 import { Unit } from '@/utils/Unit';
+import ColorPicker from '@/components/ColorPicker.vue';
 
 @Component({
-  components: { ModalDialog },
+  components: { ModalDialog, ColorPicker },
 })
 export default class PageSetupDialog extends Vue {
   @Prop() pageSetup!: PageSetup;
   @Prop() fonts!: string[];
   private form: PageSetup = new PageSetup();
+
+  presetLyricsColors: string[] = ['#000000'];
 
   get dropCapFontFamilies() {
     return ['Athonite', 'Omega', 'PFGoudyInitials', ...this.fonts];
@@ -785,6 +725,10 @@ export default class PageSetupDialog extends Vue {
 
 .form-group {
   margin: 0.5rem 0;
+}
+
+.row {
+  display: flex;
 }
 
 .margin-label {

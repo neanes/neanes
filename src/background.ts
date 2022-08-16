@@ -32,6 +32,7 @@ import { TestFileType } from './utils/TestFileType';
 import { errorMonitor } from 'events';
 import { Score } from './models/save/v1/Score';
 import fontList from 'font-list';
+import { getSystemFonts } from './utils/getSystemFonts';
 import JSZip from 'jszip';
 
 const isDevelopment = process.env.NODE_ENV !== 'production';
@@ -812,7 +813,8 @@ ipcMain.handle(IpcRendererChannels.GetSystemFonts, async () => {
   let fonts: string[] = [];
 
   try {
-    fonts = await fontList.getFonts({ disableQuoting: true });
+    //fonts = await fontList.getFonts({ disableQuoting: true });
+    fonts = await getSystemFonts();
   } catch (error) {
     console.error(error);
   }

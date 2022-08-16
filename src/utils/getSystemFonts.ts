@@ -35,18 +35,18 @@ async function getWindowsSystemFonts(): Promise<string[]> {
 
 async function getDarwinSystemFonts() {
   const cmd =
-    'system_profiler SPFontsDataType | grep "Full Name:"| cut -d":" -f2 | cut -c 2-';
+    'system_profiler SPFontsDataType | grep "Full Name:"| cut -d":" -f2 | cut -c 2- | uniq | sort';
 
   const { stdout } = await pexec(cmd, { maxBuffer: 1024 * 1024 * 10 });
 
   return stdout
     .split('\n')
     .map((x) => x.trim())
-    .filter((x) => x !== '');
+    .filter((x) => x !== '' && !x.startsWith('.'));
 }
 
 async function getLinuxSystemFonts() {
-  const cmd = 'fc-list : family | sort';
+  const cmd = 'fc-list : family | uniq | sort';
 
   const { stdout } = await pexec(cmd, { maxBuffer: 1024 * 1024 * 10 });
 
@@ -75,5 +75,3 @@ async function getLinuxSystemFonts() {
 
   return fonts.map((x) => x.trim()).filter((x) => x !== '');
 }
-
-getLinuxSystemFonts().then((x) => x.forEach((name) => console.log(name)));

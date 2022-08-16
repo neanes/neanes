@@ -1,5 +1,8 @@
 <template>
   <div class="editor">
+    <div class="loading-overlay" v-if="isLoading">
+      <img src="@/assets/icons/spinner.svg" />
+    </div>
     <FileMenuBar v-if="showFileMenuBar" />
     <MainToolbar
       :entryMode="entryMode"
@@ -530,6 +533,8 @@ export default class Editor extends Vue {
   isDevelopment: boolean = process.env.NODE_ENV !== 'production';
   isBrowser: boolean = process.env.IS_ELECTRON == null;
 
+  isLoading: boolean = true;
+
   printMode: boolean = false;
 
   workspaces: Workspace[] = [];
@@ -931,24 +936,30 @@ export default class Editor extends Vue {
   }
 
   async created() {
-    const fontLoader = (document as any).fonts;
+    try {
+      const fontLoader = (document as any).fonts;
 
-    const loadSystemFontsPromise = this.ipcService
-      .getSystemFonts()
-      .then((fonts) => (this.fonts = fonts));
+      const loadSystemFontsPromise = this.ipcService
+        .getSystemFonts()
+        .then((fonts) => (this.fonts = fonts));
 
-    // Must load all fonts before loading any documents,
-    // otherwise the text measurements will be wrong
-    await Promise.all([
-      loadSystemFontsPromise,
-      fontLoader.load('1rem Athonite'),
-      fontLoader.load('1rem Omega'),
-      fontLoader.load('1rem PFGoudyInitials'),
-      fontLoader.load('1rem Neanes'),
-      fontLoader.ready,
-    ]);
+      // Must load all fonts before loading any documents,
+      // otherwise the text measurements will be wrong
+      await Promise.all([
+        loadSystemFontsPromise,
+        fontLoader.load('1rem Athonite'),
+        fontLoader.load('1rem Omega'),
+        fontLoader.load('1rem PFGoudyInitials'),
+        fontLoader.load('1rem Neanes'),
+        fontLoader.ready,
+      ]);
 
-    await this.load();
+      await this.load();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      this.isLoading = false;
+    }
   }
 
   mounted() {
@@ -3014,6 +3025,21 @@ export default class Editor extends Vue {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+.loading-overlay {
+  position: absolute;
+  z-index: 9999;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.3s ease;
+  color: white;
+}
+
 .lyrics {
   min-height: 1.6rem;
   min-width: 1rem;

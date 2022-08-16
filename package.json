@@ -22,7 +22,6 @@
   "main": "background.js",
   "dependencies": {
     "core-js": "^3.4.3",
-    "font-list": "^1.4.5",
     "jszip": "^3.9.1",
     "register-service-worker": "^1.7.2",
     "uuid": "^8.3.2",

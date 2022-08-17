@@ -5351,7 +5351,7 @@
     "barlineShortSingle": 0.0,
     "barlineShortDouble": 0.0,
     "barlineShortTheseos": 0.0,
-    "breath": 0.0,
+    "breath": 0.214,
     "koronis": 0.0,
     "leimmaDot": 0.233,
     "gorgonSecondary": 0.0,
@@ -8120,12 +8120,12 @@
     },
     "breath": {
       "bBoxNE": [
-        0.001,
-        1.153
+        0.169,
+        1.151
       ],
       "bBoxSW": [
-        -0.137,
-        0.909
+        0.031,
+        0.907
       ]
     },
     "koronis": {

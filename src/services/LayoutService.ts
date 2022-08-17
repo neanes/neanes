@@ -75,7 +75,7 @@ export class LayoutService {
     const lyricsVerticalOffset = neumeHeight + pageSetup.lyricsVerticalOffset;
 
     const lyricHeight = TextMeasurementService.getFontHeight(
-      `${pageSetup.lyricsDefaultFontSize}px ${pageSetup.lyricsDefaultFontFamily}`,
+      `${pageSetup.lyricsDefaultFontWeight} ${pageSetup.lyricsDefaultFontSize}px "${pageSetup.lyricsDefaultFontFamily}"`,
     );
 
     const vareiaMapping = NeumeMappingService.getMapping(
@@ -634,17 +634,17 @@ export class LayoutService {
     // First calculate some constants
     const widthOfUnderscore = TextMeasurementService.getTextWidth(
       '_',
-      `${pageSetup.lyricsDefaultFontSize}px ${pageSetup.lyricsDefaultFontFamily}`,
+      `${pageSetup.lyricsDefaultFontWeight} ${pageSetup.lyricsDefaultFontSize}px "${pageSetup.lyricsDefaultFontFamily}"`,
     );
 
     const widthOfHyphen = TextMeasurementService.getTextWidth(
       '-',
-      `${pageSetup.lyricsDefaultFontSize}px ${pageSetup.lyricsDefaultFontFamily}`,
+      `${pageSetup.lyricsDefaultFontWeight} ${pageSetup.lyricsDefaultFontSize}px "${pageSetup.lyricsDefaultFontFamily}"`,
     );
 
     const widthOfSpace = TextMeasurementService.getTextWidth(
       ' ',
-      `${pageSetup.lyricsDefaultFontSize}px ${pageSetup.lyricsDefaultFontFamily}`,
+      `${pageSetup.lyricsDefaultFontWeight} ${pageSetup.lyricsDefaultFontSize}px "${pageSetup.lyricsDefaultFontFamily}"`,
     );
 
     const elaphronMapping = NeumeMappingService.getMapping(
@@ -1133,14 +1133,14 @@ export class LayoutService {
     text: string,
     pageSetup: PageSetup,
   ) {
-    const key = `${text} | ${pageSetup.lyricsDefaultFontSize} | ${pageSetup.lyricsDefaultFontFamily}`;
+    const key = `${text} | ${pageSetup.lyricsDefaultFontWeight} | ${pageSetup.lyricsDefaultFontSize} | "${pageSetup.lyricsDefaultFontFamily}"`;
 
     let width = cache.get(key);
 
     if (width == null) {
       width = TextMeasurementService.getTextWidth(
         text,
-        `${pageSetup.lyricsDefaultFontSize}px ${pageSetup.lyricsDefaultFontFamily}`,
+        `${pageSetup.lyricsDefaultFontWeight} ${pageSetup.lyricsDefaultFontSize}px "${pageSetup.lyricsDefaultFontFamily}"`,
       );
 
       cache.set(key, width);

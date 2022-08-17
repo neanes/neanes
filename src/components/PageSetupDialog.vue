@@ -267,6 +267,21 @@
               </option>
             </select>
           </div>
+          <div class="form-group">
+            <label class="drop-caps-label">Weight</label>
+            <select
+              class="drop-caps-select"
+              v-model="form.lyricsDefaultFontWeight"
+            >
+              <option
+                v-for="weight in fontWeights"
+                :key="weight.value"
+                :value="weight.value"
+              >
+                {{ weight.name }}
+              </option>
+            </select>
+          </div>
           <div class="subheader">Neumes</div>
           <div class="form-group row">
             <label class="drop-caps-label">Color</label>
@@ -358,6 +373,11 @@ import { PageSetup, PageSize, pageSizes } from '@/models/PageSetup';
 import { Unit } from '@/utils/Unit';
 import ColorPicker from '@/components/ColorPicker.vue';
 
+interface FontWeight {
+  name: string;
+  value: string;
+}
+
 @Component({
   components: { ModalDialog, ColorPicker },
 })
@@ -367,6 +387,17 @@ export default class PageSetupDialog extends Vue {
   private form: PageSetup = new PageSetup();
 
   presetLyricsColors: string[] = ['#000000'];
+
+  fontWeights: FontWeight[] = [
+    {
+      name: 'Normal',
+      value: '400',
+    },
+    {
+      name: 'Bold',
+      value: '700',
+    },
+  ];
 
   get dropCapFontFamilies() {
     return ['Athonite', 'Omega', 'PFGoudyInitials', ...this.fonts];
@@ -694,13 +725,10 @@ export default class PageSetupDialog extends Vue {
 
 .pane-container {
   display: flex;
-  width: 500px;
+  min-width: 500px;
+  max-width: 95vw;
   margin-bottom: 1.5rem;
   overflow: auto;
-}
-
-.left-pane {
-  flex: 1;
 }
 
 .right-pane {

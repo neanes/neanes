@@ -75,6 +75,8 @@ export class SaveService {
     score.pageSetup.lyricsDefaultFontFamily =
       s.pageSetup.lyricsDefaultFontFamily;
     score.pageSetup.lyricsDefaultFontSize = s.pageSetup.lyricsDefaultFontSize;
+    score.pageSetup.lyricsDefaultFontWeight =
+      s.pageSetup.lyricsDefaultFontWeight;
     score.pageSetup.lyricsVerticalOffset = s.pageSetup.lyricsVerticalOffset;
     score.pageSetup.martyriaDefaultColor = s.pageSetup.martyriaDefaultColor;
     score.pageSetup.tempoDefaultColor = s.pageSetup.tempoDefaultColor;
@@ -415,6 +417,8 @@ export class SaveService {
       p.lyricsDefaultColor || pageSetup.lyricsDefaultColor;
     pageSetup.lyricsDefaultFontFamily = p.lyricsDefaultFontFamily;
     pageSetup.lyricsDefaultFontSize = p.lyricsDefaultFontSize;
+    pageSetup.lyricsDefaultFontWeight =
+      p.lyricsDefaultFontWeight || pageSetup.lyricsDefaultFontWeight;
     pageSetup.lyricsVerticalOffset = p.lyricsVerticalOffset;
 
     pageSetup.martyriaDefaultColor =

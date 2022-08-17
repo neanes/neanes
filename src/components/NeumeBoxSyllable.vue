@@ -4,47 +4,47 @@
       v-if="hasMeasureBarLeft"
       :neume="note.measureBarLeft"
       :style="measureBarStyle"
-    ></Neume>
-    <Neume v-if="note.vareia" :neume="VocalExpressionNeume.Vareia"></Neume>
-    <Neume :neume="note.quantitativeNeume"></Neume>
+    />
+    <Neume v-if="note.vareia" :neume="VocalExpressionNeume.Vareia" />
+    <Neume :neume="note.quantitativeNeume" />
     <Neume
       v-if="hasVocalExpressionNeume"
       :neume="note.vocalExpressionNeume"
       :style="vocalExpressionStyle"
-    ></Neume>
-    <Neume v-if="hasTimeNeume" :neume="note.timeNeume"></Neume>
+    />
+    <Neume v-if="hasTimeNeume" :neume="note.timeNeume" />
     <Neume
       v-if="hasGorgonNeume"
       :neume="note.gorgonNeume"
       :style="gorgonStyle"
-    ></Neume>
+    />
     <Neume
       v-if="hasSecondaryGorgonNeume"
       :neume="note.secondaryGorgonNeume"
       :style="gorgonStyle"
-    ></Neume>
-    <Neume v-if="hasFthora" :neume="note.fthora" :style="fthoraStyle"></Neume>
+    />
+    <Neume v-if="hasFthora" :neume="note.fthora" :style="fthoraStyle" />
     <Neume
       v-if="hasAccidental"
       :neume="note.accidental"
       :style="accidentalStyle"
-    ></Neume>
+    />
     <Neume
       v-if="hasNoteIndicator"
       :neume="note.noteIndicator"
       :style="noteIndicatorStyle"
-    ></Neume>
-    <Neume v-if="hasIson" :neume="note.ison" :style="isonStyle"></Neume>
+    />
+    <Neume v-if="hasIson" :neume="note.ison" :style="isonStyle" />
     <Neume
       v-if="hasMeasureNumber"
       :neume="note.measureNumber"
       :style="measureNumberStyle"
-    ></Neume>
+    />
     <Neume
       v-if="hasMeasureBarRight"
       :neume="note.measureBarRight"
       :style="measureBarStyle"
-    ></Neume>
+    />
   </div>
 </template>
 

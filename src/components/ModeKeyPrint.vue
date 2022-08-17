@@ -1,45 +1,45 @@
 <template>
   <div class="mode-key-container" :style="style">
-    <Neume :neume="ModeSign.Ekhos"></Neume>
-    <Neume v-if="element.isPlagal" :neume="ModeSign.Plagal"></Neume>
-    <Neume v-if="element.isVarys" :neume="ModeSign.Varys"></Neume>
+    <Neume :neume="ModeSign.Ekhos" />
+    <Neume v-if="element.isPlagal" :neume="ModeSign.Plagal" />
+    <Neume v-if="element.isVarys" :neume="ModeSign.Varys" />
     <Neume :neume="element.martyria" />
     <span style="position: relative">
-      <Neume v-if="hasNote" :neume="element.note"></Neume>
+      <Neume v-if="hasNote" :neume="element.note" />
       <Neume
         v-if="hasFthoraAboveNote"
         :neume="element.fthoraAboveNote"
         :style="fthoraAboveNoteStyle"
-      ></Neume>
+      />
       <Neume
         v-if="hasQuantitativeNeumeAboveNote"
         :neume="element.quantitativeNeumeAboveNote"
         :style="quantitativeNeumeAboveNoteStyle"
-      ></Neume>
+      />
     </span>
     <span style="position: relative">
-      <Neume v-if="hasNote2" :neume="element.note2"></Neume>
+      <Neume v-if="hasNote2" :neume="element.note2" />
       <Neume
         v-if="hasQuantitativeNeumeAboveNote2"
         :neume="element.quantitativeNeumeAboveNote2"
         :style="quantitativeNeumeAboveNote2Style"
-      ></Neume>
+      />
       <Neume
         v-if="hasFthoraAboveNote2"
         :neume="element.fthoraAboveNote2"
         :style="fthoraAboveNote2Style"
-      ></Neume>
+      />
     </span>
     <span style="position: relative">
       <Neume
         v-if="hasQuantitativeNeumeRight"
         :neume="element.quantitativeNeumeRight"
-      ></Neume>
+      />
       <Neume
         v-if="hasFthoraAboveQuantitativeNeumeRight"
         :neume="element.fthoraAboveQuantitativeNeumeRight"
         :style="fthoraAboveQuantitativeNeumeRightStyle"
-      ></Neume>
+      />
     </span>
   </div>
 </template>

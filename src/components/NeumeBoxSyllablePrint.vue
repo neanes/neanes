@@ -4,7 +4,7 @@
       v-if="hasMeasureBarLeft"
       :neume="note.measureBarLeft"
       :style="measureBarStyle"
-    ></Neume>
+    />
     <template v-if="note.vareia">{{
       getMapping(VocalExpressionNeume.Vareia).text
     }}</template>
@@ -16,44 +16,40 @@
       v-if="hasHeteron"
       :neume="note.vocalExpressionNeume"
       :style="heteronStyle"
-    ></Neume>
-    <Neume
-      v-if="hasTimeNeume"
-      :neume="note.timeNeume"
-      :style="timeStyle"
-    ></Neume>
+    />
+    <Neume v-if="hasTimeNeume" :neume="note.timeNeume" :style="timeStyle" />
     <Neume
       v-if="hasGorgonNeume"
       :neume="note.gorgonNeume"
       :style="gorgonStyle"
-    ></Neume>
+    />
     <Neume
       v-if="hasSecondaryGorgonNeume"
       :neume="note.secondaryGorgonNeume"
       :style="secondaryGorgonStyle"
-    ></Neume>
-    <Neume v-if="hasFthora" :neume="note.fthora" :style="fthoraStyle"></Neume>
+    />
+    <Neume v-if="hasFthora" :neume="note.fthora" :style="fthoraStyle" />
     <Neume
       v-if="hasAccidental"
       :neume="note.accidental"
       :style="accidentalStyle"
-    ></Neume>
+    />
     <Neume
       v-if="hasNoteIndicator"
       :neume="note.noteIndicator"
       :style="noteIndicatorStyle"
-    ></Neume>
-    <Neume v-if="hasIson" :neume="note.ison" :style="isonStyle"></Neume>
+    />
+    <Neume v-if="hasIson" :neume="note.ison" :style="isonStyle" />
     <Neume
       v-if="hasMeasureNumber"
       :neume="note.measureNumber"
       :style="measureNumberStyle"
-    ></Neume>
+    />
     <Neume
       v-if="hasMeasureBarRight"
       :neume="note.measureBarRight"
       :style="measureBarStyle"
-    ></Neume>
+    />
   </div>
 </template>
 

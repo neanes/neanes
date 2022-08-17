@@ -150,7 +150,12 @@ export class LayoutService {
           );
           break;
         case ElementType.ModeKey: {
+          const modeKeyElement = element as ModeKeyElement;
+
           elementWidthPx = pageSetup.innerPageWidth;
+          modeKeyElement.height = TextMeasurementService.getFontHeight(
+            `${modeKeyElement.fontSize}px ${pageSetup.neumeDefaultFontFamily}`,
+          );
           break;
         }
         case ElementType.Note: {

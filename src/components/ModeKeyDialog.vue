@@ -89,6 +89,7 @@ import { modeKeyTemplates } from '@/models/ModeKeys';
 import ModalDialog from '@/components/ModalDialog.vue';
 import ModeKey from '@/components/ModeKey.vue';
 import { PageSetup } from '@/models/PageSetup';
+import { TextMeasurementService } from '@/services/TextMeasurementService';
 
 @Component({
   components: { ModalDialog, ModeKey },
@@ -110,9 +111,17 @@ export default class ModeKeyDialog extends Vue {
   }
 
   get modeKeyTemplatesForSelectedMode() {
-    return modeKeyTemplates
+    const elements = modeKeyTemplates
       .filter((x) => x.mode === this.selectedMode)
       .map((x) => ModeKeyElement.createFromTemplate(x, TextBoxAlignment.Left));
+
+    const height = TextMeasurementService.getFontHeight(
+      `${elements[0].fontSize}px ${this.pageSetup.neumeDefaultFontFamily}`,
+    );
+
+    elements.forEach((x) => (x.height = height));
+
+    return elements;
   }
 
   onKeyDown(event: KeyboardEvent) {

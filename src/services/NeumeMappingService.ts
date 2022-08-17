@@ -174,6 +174,7 @@ mapNeumeToSbmufl(
   'oligonKentimataYpsiliRight',
 );
 mapNeumeToSbmufl(QuantitativeNeume.Cross, 'stavros');
+mapNeumeToSbmufl(QuantitativeNeume.Breath, 'breath');
 mapNeumeToSbmufl(QuantitativeNeume.VareiaDotted, 'leimma1');
 mapNeumeToSbmufl(GorgonNeume.Gorgon_Top, 'gorgonAbove');
 mapNeumeToSbmufl(GorgonNeume.Gorgon_Bottom, 'gorgonBelow');

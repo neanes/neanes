@@ -65,6 +65,7 @@ export enum QuantitativeNeume {
 
   VareiaDotted = 'VareiaDotted',
   Cross = 'Cross',
+  Breath = 'Breath',
 }
 
 export enum TimeNeume {

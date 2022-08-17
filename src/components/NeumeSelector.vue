@@ -118,6 +118,7 @@ export default class NeumeSelector extends Vue {
     QuantitativeNeume.OligonPlusDoubleHypsili,
     QuantitativeNeume.VareiaDotted,
     QuantitativeNeume.Cross,
+    QuantitativeNeume.Breath,
   ];
 
   ascendingNeumesWithPetasti: QuantitativeNeume[] = [

@@ -63,6 +63,8 @@ export default class ColorPicker extends Vue {
   open() {
     this.presetColors = JSON.parse(localStorage.getItem(this.historyKey)!) || [
       '#000000',
+      '#800000',
+      '#FF0000',
     ];
 
     // Fist, try to position the popup underneath the swatch

@@ -67,6 +67,7 @@ export class PageSetup {
 
   public lyricsDefaultFontFamily = 'Omega';
   public lyricsDefaultFontSize = Unit.fromPt(12);
+  public lyricsDefaultFontWeight = '400';
   public lyricsDefaultColor = '#000000';
   public lyricsVerticalOffset = -Unit.fromInch(0.06);
 

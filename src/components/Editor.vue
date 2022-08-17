@@ -878,6 +878,7 @@ export default class Editor extends Vue {
       fontFamily: getFontFamilyWithFallback(
         this.score.pageSetup.lyricsDefaultFontFamily,
       ),
+      fontWeight: this.score.pageSetup.lyricsDefaultFontWeight,
       color: this.score.pageSetup.lyricsDefaultColor,
     } as CSSStyleDeclaration;
   }

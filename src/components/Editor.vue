@@ -382,12 +382,7 @@
         @update:gorgon="updateNoteGorgon(selectedElement, $event)"
         @update:time="updateNoteTime(selectedElement, $event)"
         @update:expression="updateNoteExpression(selectedElement, $event)"
-        @update:measureBarLeft="
-          updateNoteMeasureBarLeft(selectedElement, $event)
-        "
-        @update:measureBarRight="
-          updateNoteMeasureBarRight(selectedElement, $event)
-        "
+        @update:measureBar="updateNoteMeasureBar(selectedElement, $event)"
         @update:measureNumber="updateNoteMeasureNumber(selectedElement, $event)"
         @update:noteIndicator="updateNoteNoteIndicator(selectedElement, $event)"
         @update:ison="updateNoteIson(selectedElement, $event)"
@@ -403,12 +398,7 @@
       <MartyriaToolbar
         :element="selectedElement"
         @update:fthora="updateMartyriaFthora(selectedElement, $event)"
-        @update:measureBarLeft="
-          updateMartyriaMeasureBarLeft(selectedElement, $event)
-        "
-        @update:measureBarRight="
-          updateMartyriaMeasureBarRight(selectedElement, $event)
-        "
+        @update:measureBar="updateMartyriaMeasureBar(selectedElement, $event)"
         @update:alignRight="updateMartyriaAlignRight(selectedElement, $event)"
         @update:auto="updateMartyriaAuto(selectedElement, $event)"
         @update:note="updateMartyriaNote(selectedElement, $event)"
@@ -2352,13 +2342,17 @@ export default class Editor extends Vue {
     this.save();
   }
 
-  updateNoteMeasureBarLeft(element: NoteElement, measureBarLeft: MeasureBar) {
-    this.updateNote(element, { measureBarLeft, measureBarRight: null });
-    this.save();
-  }
-
-  updateNoteMeasureBarRight(element: NoteElement, measureBarRight: MeasureBar) {
-    this.updateNote(element, { measureBarRight, measureBarLeft: null });
+  updateNoteMeasureBar(
+    element: NoteElement,
+    {
+      measureBarLeft,
+      measureBarRight,
+    }: { measureBarLeft: MeasureBar; measureBarRight: MeasureBar },
+  ) {
+    this.updateNote(element, {
+      measureBarLeft,
+      measureBarRight,
+    });
     this.save();
   }
 
@@ -2577,18 +2571,18 @@ export default class Editor extends Vue {
     this.updateMartyria(element, { fthora });
   }
 
-  updateMartyriaMeasureBarLeft(
+  updateMartyriaMeasureBar(
     element: MartyriaElement,
-    measureBarLeft: MeasureBar,
+    {
+      measureBarLeft,
+      measureBarRight,
+    }: { measureBarLeft: MeasureBar; measureBarRight: MeasureBar },
   ) {
-    this.updateMartyria(element, { measureBarLeft, measureBarRight: null });
-  }
-
-  updateMartyriaMeasureBarRight(
-    element: MartyriaElement,
-    measureBarRight: MeasureBar,
-  ) {
-    this.updateMartyria(element, { measureBarRight, measureBarLeft: null });
+    this.updateMartyria(element, {
+      measureBarLeft,
+      measureBarRight,
+    });
+    this.save();
   }
 
   updateMartyriaAlignRight(element: MartyriaElement, alignRight: boolean) {

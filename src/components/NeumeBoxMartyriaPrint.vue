@@ -2,6 +2,11 @@
   <div class="neume" :style="style">
     <template v-if="neume.error"> ? </template>
     <template v-else>
+      <Neume
+        v-if="hasMeasureBarLeft"
+        :neume="neume.measureBarLeft"
+        :style="measureBarStyle"
+      ></Neume>
       <Neume :neume="neume.note"></Neume>
       <Neume :neume="neume.rootSign" :style="rootSignStyle"></Neume>
       <Neume
@@ -10,8 +15,8 @@
         :style="fthoraStyle"
       ></Neume>
       <Neume
-        v-if="hasMeasureBar"
-        :neume="neume.measureBar"
+        v-if="hasMeasureBarRight"
+        :neume="neume.measureBarRight"
         :style="measureBarStyle"
       ></Neume>
     </template>
@@ -43,8 +48,12 @@ export default class NeumeBoxMartyria extends Vue {
     return this.neume.fthora != null;
   }
 
-  get hasMeasureBar() {
-    return this.neume.measureBar != null;
+  get hasMeasureBarLeft() {
+    return this.neume.measureBarLeft != null;
+  }
+
+  get hasMeasureBarRight() {
+    return this.neume.measureBarRight != null;
   }
 
   get style() {
@@ -89,7 +98,18 @@ export default class NeumeBoxMartyria extends Vue {
   getOffset(neume: GenericNeume) {
     const mark = this.getMapping(neume).glyphName;
     const base = this.getMapping(this.neume.note).glyphName;
-    return fontService.getMarkOffset(base, mark);
+
+    const offset = fontService.getMarkOffset(base, mark);
+
+    // Shift offset for measure bar
+    if (this.neume.measureBarLeft) {
+      const glyphName = this.getMapping(this.neume.measureBarLeft).glyphName;
+
+      const width = fontService.getAdvanceWidth(glyphName);
+      offset.x += width;
+    }
+
+    return offset;
   }
 }
 </script>

@@ -12,6 +12,7 @@ import {
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import {
   Fthora,
+  MeasureBar,
   Neume,
   Note,
   QuantitativeNeume,
@@ -82,6 +83,22 @@ export class LayoutService {
     )!;
     const vareiaWidth = TextMeasurementService.getTextWidth(
       vareiaMapping.text,
+      `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
+    );
+
+    const measureBarRightMapping = NeumeMappingService.getMapping(
+      MeasureBar.MeasureBarRight,
+    )!;
+    const measureBarRightWidth = TextMeasurementService.getTextWidth(
+      measureBarRightMapping.text,
+      `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
+    );
+
+    const measureBarTopMapping = NeumeMappingService.getMapping(
+      MeasureBar.MeasureBarTop,
+    )!;
+    const measureBarTopWidth = TextMeasurementService.getTextWidth(
+      measureBarTopMapping.text,
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
     );
 
@@ -179,15 +196,42 @@ export class LayoutService {
             noteElement.lyricsWidth = 0;
           }
 
-          noteElement.lyricsHorizontalOffset = null;
+          noteElement.lyricsHorizontalOffset = 0;
 
           // Handle special case for vareia:
           // Shift the lyrics to the right so that they
           // are centered under the main neume
           if (noteElement.vareia) {
-            noteElement.lyricsHorizontalOffset = vareiaWidth;
+            noteElement.lyricsHorizontalOffset += vareiaWidth;
             noteElement.lyricsWidth += vareiaWidth;
             noteElement.neumeWidth += vareiaWidth;
+          }
+
+          // Handle special case for measure bars:
+          // Shift the lyrics to the right so that they
+          // are centered under the main neume
+          if (noteElement.measureBarLeft === MeasureBar.MeasureBarRight) {
+            noteElement.lyricsHorizontalOffset += measureBarRightWidth;
+            noteElement.lyricsWidth += measureBarRightWidth;
+            noteElement.neumeWidth += measureBarRightWidth;
+          }
+
+          if (noteElement.measureBarLeft === MeasureBar.MeasureBarTop) {
+            noteElement.lyricsHorizontalOffset += measureBarTopWidth;
+            noteElement.lyricsWidth += measureBarTopWidth;
+            noteElement.neumeWidth += measureBarTopWidth;
+          }
+
+          if (noteElement.measureBarRight === MeasureBar.MeasureBarRight) {
+            noteElement.lyricsHorizontalOffset -= measureBarRightWidth;
+            noteElement.lyricsWidth += measureBarRightWidth;
+            noteElement.neumeWidth += measureBarRightWidth;
+          }
+
+          if (noteElement.measureBarRight === MeasureBar.MeasureBarTop) {
+            noteElement.lyricsHorizontalOffset -= measureBarTopWidth;
+            noteElement.lyricsWidth += measureBarTopWidth;
+            noteElement.neumeWidth += measureBarTopWidth;
           }
 
           // Handle special case for running elaphron:
@@ -200,19 +244,8 @@ export class LayoutService {
             // as the apostrophros in the running elaphron, but
             // the elaphrons are the same width in both neumes.
             const offset = runningElaphronWidth - elaphronWidth;
-            noteElement.lyricsHorizontalOffset = offset;
+            noteElement.lyricsHorizontalOffset += offset;
             noteElement.lyricsWidth += offset;
-          }
-
-          if (noteElement.measureBar != null) {
-            const measureBarMapping = NeumeMappingService.getMapping(
-              noteElement.measureBar,
-            )!;
-
-            noteElement.neumeWidth += TextMeasurementService.getTextWidth(
-              measureBarMapping.text,
-              `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
-            );
           }
 
           elementWidthPx = Math.max(
@@ -230,8 +263,11 @@ export class LayoutService {
           const mappingRoot = !martyriaElement.error
             ? NeumeMappingService.getMapping(martyriaElement.rootSign)!
             : NeumeMappingService.getMapping(RootSign.Alpha)!;
-          const mappingMeasureBar = martyriaElement.measureBar
-            ? NeumeMappingService.getMapping(martyriaElement.measureBar)!
+          const mappingMeasureBarLeft = martyriaElement.measureBarLeft
+            ? NeumeMappingService.getMapping(martyriaElement.measureBarLeft)!
+            : null;
+          const mappingMeasureBarRight = martyriaElement.measureBarRight
+            ? NeumeMappingService.getMapping(martyriaElement.measureBarRight)!
             : null;
 
           // Add in padding to give some extra space between
@@ -248,9 +284,15 @@ export class LayoutService {
               mappingRoot.text,
               `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
             ) +
-            (martyriaElement.measureBar
+            (martyriaElement.measureBarLeft
               ? TextMeasurementService.getTextWidth(
-                  mappingMeasureBar!.text,
+                  mappingMeasureBarLeft!.text,
+                  `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
+                )
+              : 0) +
+            (martyriaElement.measureBarRight
+              ? TextMeasurementService.getTextWidth(
+                  mappingMeasureBarRight!.text,
                   `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
                 )
               : 0);
@@ -702,7 +744,7 @@ export class LayoutService {
                   nextNoteElement.x +
                   nextNoteElement.neumeWidth / 2 -
                   nextNoteElement.lyricsWidth / 2 +
-                  (nextNoteElement.lyricsHorizontalOffset || 0);
+                  nextNoteElement.lyricsHorizontalOffset;
               }
 
               element.melismaWidth = Math.max(end - start, 0);

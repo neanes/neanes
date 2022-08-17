@@ -382,7 +382,12 @@
         @update:gorgon="updateNoteGorgon(selectedElement, $event)"
         @update:time="updateNoteTime(selectedElement, $event)"
         @update:expression="updateNoteExpression(selectedElement, $event)"
-        @update:measureBar="updateNoteMeasureBar(selectedElement, $event)"
+        @update:measureBarLeft="
+          updateNoteMeasureBarLeft(selectedElement, $event)
+        "
+        @update:measureBarRight="
+          updateNoteMeasureBarRight(selectedElement, $event)
+        "
         @update:measureNumber="updateNoteMeasureNumber(selectedElement, $event)"
         @update:noteIndicator="updateNoteNoteIndicator(selectedElement, $event)"
         @update:ison="updateNoteIson(selectedElement, $event)"
@@ -398,7 +403,12 @@
       <MartyriaToolbar
         :element="selectedElement"
         @update:fthora="updateMartyriaFthora(selectedElement, $event)"
-        @update:measureBar="updateMartyriaMeasureBar(selectedElement, $event)"
+        @update:measureBarLeft="
+          updateMartyriaMeasureBarLeft(selectedElement, $event)
+        "
+        @update:measureBarRight="
+          updateMartyriaMeasureBarRight(selectedElement, $event)
+        "
         @update:alignRight="updateMartyriaAlignRight(selectedElement, $event)"
         @update:auto="updateMartyriaAuto(selectedElement, $event)"
         @update:note="updateMartyriaNote(selectedElement, $event)"
@@ -857,8 +867,12 @@ export default class Editor extends Vue {
     return {
       top: withZoom(element.lyricsVerticalOffset),
       paddingLeft:
-        element.lyricsHorizontalOffset != null
+        element.lyricsHorizontalOffset > 0
           ? withZoom(element.lyricsHorizontalOffset)
+          : undefined,
+      paddingRight:
+        element.lyricsHorizontalOffset < 0
+          ? withZoom(-element.lyricsHorizontalOffset)
           : undefined,
       fontSize: withZoom(this.score.pageSetup.lyricsDefaultFontSize),
       fontFamily: getFontFamilyWithFallback(
@@ -2337,8 +2351,13 @@ export default class Editor extends Vue {
     this.save();
   }
 
-  updateNoteMeasureBar(element: NoteElement, measureBar: MeasureBar) {
-    this.updateNote(element, { measureBar });
+  updateNoteMeasureBarLeft(element: NoteElement, measureBarLeft: MeasureBar) {
+    this.updateNote(element, { measureBarLeft, measureBarRight: null });
+    this.save();
+  }
+
+  updateNoteMeasureBarRight(element: NoteElement, measureBarRight: MeasureBar) {
+    this.updateNote(element, { measureBarRight, measureBarLeft: null });
     this.save();
   }
 
@@ -2557,8 +2576,18 @@ export default class Editor extends Vue {
     this.updateMartyria(element, { fthora });
   }
 
-  updateMartyriaMeasureBar(element: MartyriaElement, measureBar: MeasureBar) {
-    this.updateMartyria(element, { measureBar });
+  updateMartyriaMeasureBarLeft(
+    element: MartyriaElement,
+    measureBarLeft: MeasureBar,
+  ) {
+    this.updateMartyria(element, { measureBarLeft, measureBarRight: null });
+  }
+
+  updateMartyriaMeasureBarRight(
+    element: MartyriaElement,
+    measureBarRight: MeasureBar,
+  ) {
+    this.updateMartyria(element, { measureBarRight, measureBarLeft: null });
   }
 
   updateMartyriaAlignRight(element: MartyriaElement, alignRight: boolean) {

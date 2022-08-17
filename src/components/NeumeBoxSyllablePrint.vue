@@ -1,5 +1,10 @@
 <template>
   <div class="neume" :style="style">
+    <Neume
+      v-if="hasMeasureBarLeft"
+      :neume="note.measureBarLeft"
+      :style="measureBarStyle"
+    ></Neume>
     <template v-if="note.vareia">{{
       getMapping(VocalExpressionNeume.Vareia).text
     }}</template>
@@ -45,8 +50,8 @@
       :style="measureNumberStyle"
     ></Neume>
     <Neume
-      v-if="hasMeasureBar"
-      :neume="note.measureBar"
+      v-if="hasMeasureBarRight"
+      :neume="note.measureBarRight"
       :style="measureBarStyle"
     ></Neume>
   </div>
@@ -61,6 +66,7 @@ import { withZoom } from '@/utils/withZoom';
 import { PageSetup } from '@/models/PageSetup';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { fontService } from '@/services/FontService';
+import { MeasureBar } from '@/models/save/v1/Neumes';
 
 @Component({
   components: {
@@ -104,8 +110,12 @@ export default class NeumeBoxSyllablePrint extends Vue {
     return this.note.accidental != null;
   }
 
-  get hasMeasureBar() {
-    return this.note.measureBar != null;
+  get hasMeasureBarLeft() {
+    return this.note.measureBarLeft != null;
+  }
+
+  get hasMeasureBarRight() {
+    return this.note.measureBarRight != null;
   }
 
   get hasMeasureNumber() {
@@ -250,6 +260,14 @@ export default class NeumeBoxSyllablePrint extends Vue {
 
       const vareiaWidth = fontService.getAdvanceWidth(vareiaGlyphName);
       offset.x += vareiaWidth;
+    }
+
+    // Shift offset for measure bar
+    if (this.note.measureBarLeft) {
+      const glyphName = this.getMapping(this.note.measureBarLeft).glyphName;
+
+      const width = fontService.getAdvanceWidth(glyphName);
+      offset.x += width;
     }
 
     return offset;

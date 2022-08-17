@@ -1,5 +1,10 @@
 <template>
   <div class="neume" :style="style">
+    <Neume
+      v-if="hasMeasureBarLeft"
+      :neume="note.measureBarLeft"
+      :style="measureBarStyle"
+    ></Neume>
     <Neume v-if="note.vareia" :neume="VocalExpressionNeume.Vareia"></Neume>
     <Neume :neume="note.quantitativeNeume"></Neume>
     <Neume
@@ -36,8 +41,8 @@
       :style="measureNumberStyle"
     ></Neume>
     <Neume
-      v-if="hasMeasureBar"
-      :neume="note.measureBar"
+      v-if="hasMeasureBarRight"
+      :neume="note.measureBarRight"
       :style="measureBarStyle"
     ></Neume>
   </div>
@@ -86,8 +91,12 @@ export default class NeumeBoxSyllable extends Vue {
     return this.note.accidental != null;
   }
 
-  get hasMeasureBar() {
-    return this.note.measureBar != null;
+  get hasMeasureBarLeft() {
+    return this.note.measureBarLeft != null;
+  }
+
+  get hasMeasureBarRight() {
+    return this.note.measureBarRight != null;
   }
 
   get hasMeasureNumber() {

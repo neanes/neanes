@@ -221,10 +221,12 @@ export default class MartyriaToolbar extends Vue {
   }
 
   private setMeasureBar(neume: MeasureBar) {
-    if (neume === this.element.measureBar) {
-      this.$emit('update:measureBar', null);
+    if (neume === this.element.measureBarLeft) {
+      this.$emit('update:measureBarRight', neume);
+    } else if (neume === this.element.measureBarRight) {
+      this.$emit('update:measureBarRight', null);
     } else {
-      this.$emit('update:measureBar', neume);
+      this.$emit('update:measureBarLeft', neume);
     }
   }
 

@@ -54,7 +54,8 @@ export abstract class ScoreElement {
 
 export class NoteElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.Note;
-  public measureBar: MeasureBar | null = null;
+  public measureBarLeft: MeasureBar | null = null;
+  public measureBarRight: MeasureBar | null = null;
   public measureNumber: MeasureNumber | null = null;
   public noteIndicator: NoteIndicator | null = null;
   public ison: Ison | null = null;
@@ -74,7 +75,8 @@ export class NoteElement extends ScoreElement {
 
   public getClipboardProperties() {
     return {
-      measureBar: this.measureBar,
+      measureBarLeft: this.measureBarLeft,
+      measureBarRight: this.measureBarRight,
       measureNumber: this.measureNumber,
       noteIndicator: this.noteIndicator,
       ison: this.ison,
@@ -164,7 +166,7 @@ export class NoteElement extends ScoreElement {
   public isFullMelisma: boolean = false;
   public melismaWidth: number = 0;
   public lyricsVerticalOffset: number = 0;
-  public lyricsHorizontalOffset: number | null = null;
+  public lyricsHorizontalOffset: number = 0;
   public neumeWidth: number = 0;
   public lyricsWidth: number = 0;
 
@@ -314,7 +316,8 @@ export class MartyriaElement extends ScoreElement {
   public rootSign: RootSign = RootSign.Alpha;
   public scale: Scale = Scale.Diatonic;
   public fthora: Fthora | null = null;
-  public measureBar: MeasureBar | null = null;
+  public measureBarLeft: MeasureBar | null = null;
+  public measureBarRight: MeasureBar | null = null;
   public alignRight: boolean = false;
 
   public error: boolean = false;
@@ -333,7 +336,8 @@ export class MartyriaElement extends ScoreElement {
       note: this.note,
       rootSign: this.rootSign,
       alignRight: this.alignRight,
-      measureBar: this.measureBar,
+      measureBarLeft: this.measureBarLeft,
+      measureBarRight: this.measureBarRight,
       fthora: this.fthora,
     } as Partial<MartyriaElement>;
   }

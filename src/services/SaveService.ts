@@ -199,7 +199,8 @@ export class SaveService {
     element.rootSign = e.rootSign;
     element.scale = e.scale;
     element.fthora = e.fthora || undefined;
-    element.measureBar = e.measureBar || undefined;
+    element.measureBarLeft = e.measureBarLeft || undefined;
+    element.measureBarRight = e.measureBarRight || undefined;
     element.alignRight = e.alignRight || undefined;
   }
 
@@ -234,8 +235,12 @@ export class SaveService {
       element.vocalExpressionNeume = e.vocalExpressionNeume;
     }
 
-    if (e.measureBar != null) {
-      element.measureBar = e.measureBar;
+    if (e.measureBarLeft != null) {
+      element.measureBarLeft = e.measureBarLeft;
+    }
+
+    if (e.measureBarRight != null) {
+      element.measureBarRight = e.measureBarRight;
     }
 
     if (e.measureNumber != null) {
@@ -485,8 +490,16 @@ export class SaveService {
       element.fthora = e.fthora;
     }
 
+    if (e.measureBarLeft != null) {
+      element.measureBarLeft = e.measureBarLeft;
+    }
+
     if (e.measureBar != null) {
-      element.measureBar = e.measureBar;
+      element.measureBarRight = e.measureBar;
+    }
+
+    if (e.measureBarRight != null) {
+      element.measureBarRight = e.measureBarRight || e.measureBar;
     }
   }
 
@@ -525,8 +538,16 @@ export class SaveService {
       element.vocalExpressionNeume = e.vocalExpressionNeume;
     }
 
+    if (e.measureBarLeft != null) {
+      element.measureBarLeft = e.measureBarLeft;
+    }
+
     if (e.measureBar != null) {
-      element.measureBar = e.measureBar;
+      element.measureBarRight = e.measureBar;
+    }
+
+    if (e.measureBarRight != null) {
+      element.measureBarRight = e.measureBarRight;
     }
 
     if (e.measureNumber != null) {

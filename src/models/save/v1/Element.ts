@@ -41,6 +41,10 @@ export class NoteElement extends ScoreElement {
   public vocalExpressionNeume: VocalExpressionNeume | undefined = undefined;
   public fthora: Fthora | undefined = undefined;
   public accidental: Accidental | undefined = undefined;
+  public measureBarLeft: MeasureBar | undefined = undefined;
+  public measureBarRight: MeasureBar | undefined = undefined;
+  // Deprecated
+  // New name: measureBarRight
   public measureBar: MeasureBar | undefined = undefined;
   public measureNumber: MeasureNumber | undefined = undefined;
   public noteIndicator: NoteIndicator | undefined = undefined;
@@ -59,6 +63,10 @@ export class MartyriaElement extends ScoreElement {
   public rootSign: RootSign = RootSign.Alpha;
   public scale: Scale = Scale.Diatonic;
   public fthora: Fthora | undefined = undefined;
+  public measureBarLeft: MeasureBar | undefined = undefined;
+  public measureBarRight: MeasureBar | undefined = undefined;
+  // Deprecated
+  // New name: measureBarRight
   public measureBar: MeasureBar | undefined = undefined;
   public alignRight: boolean | undefined = undefined;
 }

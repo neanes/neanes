@@ -66,6 +66,7 @@ const neumeValueMap = new Map<QuantitativeNeume, number>([
   [QuantitativeNeume.IsonPlusApostrophos, -1],
 
   [QuantitativeNeume.Cross, 0],
+  [QuantitativeNeume.Breath, 0],
   [QuantitativeNeume.VareiaDotted, 0],
 ]);
 

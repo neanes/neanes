@@ -3,7 +3,7 @@
     <Neume
       :neume="neume.neume"
       :fontFamily="pageSetup.neumeDefaultFontFamily"
-    ></Neume>
+    />
   </div>
 </template>
 

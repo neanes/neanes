@@ -8,7 +8,7 @@
         :neume="neume"
         :fontFamily="pageSetup.neumeDefaultFontFamily"
         @click.native="$emit('select-quantitative-neume', neume)"
-      ></Neume>
+      />
     </div>
     <div class="row">
       <Neume
@@ -18,7 +18,7 @@
         :neume="neume"
         :fontFamily="pageSetup.neumeDefaultFontFamily"
         @click.native="$emit('select-quantitative-neume', neume)"
-      ></Neume>
+      />
     </div>
     <div class="row">
       <Neume
@@ -28,7 +28,7 @@
         :neume="neume"
         :fontFamily="pageSetup.neumeDefaultFontFamily"
         @click.native="$emit('select-quantitative-neume', neume)"
-      ></Neume>
+      />
     </div>
     <div class="row">
       <template v-for="(neume, index) in combinationNeumes">
@@ -76,7 +76,7 @@
             :neume="neume"
             :fontFamily="pageSetup.neumeDefaultFontFamily"
             @click.native="$emit('select-quantitative-neume', neume)"
-          ></Neume>
+          />
         </template>
       </template>
     </div>

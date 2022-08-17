@@ -6,19 +6,15 @@
         v-if="hasMeasureBarLeft"
         :neume="neume.measureBarLeft"
         :style="measureBarStyle"
-      ></Neume>
-      <Neume :neume="neume.note"></Neume>
-      <Neume :neume="neume.rootSign"></Neume>
-      <Neume
-        v-if="hasFthora"
-        :neume="neume.fthora"
-        :style="fthoraStyle"
-      ></Neume>
+      />
+      <Neume :neume="neume.note" />
+      <Neume :neume="neume.rootSign" />
+      <Neume v-if="hasFthora" :neume="neume.fthora" :style="fthoraStyle" />
       <Neume
         v-if="hasMeasureBarRight"
         :neume="neume.measureBarRight"
         :style="measureBarStyle"
-      ></Neume>
+      />
     </template>
   </div>
 </template>

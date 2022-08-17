@@ -757,12 +757,34 @@ export default class NeumeToolbar extends Vue {
   }
 
   private setMeasureBar(neume: MeasureBar) {
-    if (neume === this.element.measureBarLeft) {
-      this.$emit('update:measureBarRight', neume);
+    // Cycle through
+    // Left
+    // Right
+    // Both Sides
+    // None
+    if (
+      neume === this.element.measureBarLeft &&
+      neume === this.element.measureBarRight
+    ) {
+      this.$emit('update:measureBar', {
+        measureBarLeft: null,
+        measureBarRight: null,
+      });
+    } else if (neume === this.element.measureBarLeft) {
+      this.$emit('update:measureBar', {
+        measureBarLeft: null,
+        measureBarRight: neume,
+      });
     } else if (neume === this.element.measureBarRight) {
-      this.$emit('update:measureBarRight', null);
+      this.$emit('update:measureBar', {
+        measureBarLeft: neume,
+        measureBarRight: neume,
+      });
     } else {
-      this.$emit('update:measureBarLeft', neume);
+      this.$emit('update:measureBar', {
+        measureBarLeft: neume,
+        measureBarRight: null,
+      });
     }
   }
 

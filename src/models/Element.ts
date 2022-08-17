@@ -424,6 +424,7 @@ export class ModeKeyElement extends ScoreElement {
   public quantitativeNeumeAboveNote2: ModeSign | null = null;
   public color: string = '#000000';
   public fontSize: number = Unit.fromPt(20);
+  public height: number = Unit.fromPt(37);
 
   public get isPlagal() {
     return this.mode > 4 && this.mode !== 7;
@@ -431,11 +432,6 @@ export class ModeKeyElement extends ScoreElement {
 
   public get isVarys() {
     return this.mode === 7;
-  }
-
-  public get height() {
-    // TODO unicode - remove this hard coded font name
-    return TextMeasurementService.getFontHeight(`${this.fontSize}px Neanes`);
   }
 
   public static createFromTemplate(

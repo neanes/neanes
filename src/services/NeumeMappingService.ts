@@ -166,12 +166,16 @@ mapNeumeToSbmufl(
 mapNeumeToSbmufl(QuantitativeNeume.DoubleApostrophos, 'apostrofosSyndesmos');
 mapNeumeToSbmufl(QuantitativeNeume.IsonPlusApostrophos, 'isonApostrofos');
 mapNeumeToSbmufl(
+  QuantitativeNeume.OligonKentimaMiddleKentimata,
+  'oligonKentimaMiddleKentimata',
+);
+mapNeumeToSbmufl(
   QuantitativeNeume.OligonPlusKentemataPlusHypsiliLeft,
-  'oligonKentimataYpsiliLeft',
+  'oligonYpsiliLeftKentimata',
 );
 mapNeumeToSbmufl(
   QuantitativeNeume.OligonPlusKentemataPlusHypsiliRight,
-  'oligonKentimataYpsiliRight',
+  'oligonYpsiliRightKentimata',
 );
 mapNeumeToSbmufl(QuantitativeNeume.Cross, 'stavros');
 mapNeumeToSbmufl(QuantitativeNeume.Breath, 'breath');

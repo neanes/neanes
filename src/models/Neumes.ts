@@ -60,6 +60,7 @@ export enum QuantitativeNeume {
   DoubleApostrophos = 'DoubleApostrophos',
   OligonPlusRunningElaphronPlusKentemata = 'OligonPlusRunningElaphronPlusKentemata',
   IsonPlusApostrophos = 'IsonPlusApostrophos',
+  OligonKentimaMiddleKentimata = 'OligonKentimaMiddleKentimata',
   OligonPlusKentemataPlusHypsiliLeft = 'OligonPlusKentemataPlusHypsiliLeft',
   OligonPlusKentemataPlusHypsiliRight = 'OligonPlusKentemataPlusHypsiliRight',
 
@@ -348,6 +349,7 @@ export const oligonNeumes: ReadonlyArray<QuantitativeNeume> = [
   QuantitativeNeume.OligonPlusHypsiliRight,
   QuantitativeNeume.OligonPlusIsonPlusKentemata,
   QuantitativeNeume.OligonPlusKentemata,
+  QuantitativeNeume.OligonKentimaMiddleKentimata,
   QuantitativeNeume.OligonPlusKentemataPlusHypsiliLeft,
   QuantitativeNeume.OligonPlusKentemataPlusHypsiliRight,
   QuantitativeNeume.OligonPlusKentima,

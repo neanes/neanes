@@ -60,6 +60,7 @@ export enum QuantitativeNeume {
   DoubleApostrophos = 'DoubleApostrophos',
   OligonPlusRunningElaphronPlusKentemata = 'OligonPlusRunningElaphronPlusKentemata',
   IsonPlusApostrophos = 'IsonPlusApostrophos',
+  OligonKentimaMiddleKentimata = 'OligonKentimaMiddleKentimata',
   OligonPlusKentemataPlusHypsiliLeft = 'OligonPlusKentemataPlusHypsiliLeft',
   OligonPlusKentemataPlusHypsiliRight = 'OligonPlusKentemataPlusHypsiliRight',
 

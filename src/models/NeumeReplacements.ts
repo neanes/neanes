@@ -29,6 +29,7 @@ const kentemataNeumes: Neume[] = [
   QuantitativeNeume.OligonPlusElaphronPlusKentemata,
   QuantitativeNeume.OligonPlusApostrophosPlusKentemata,
   QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
+  QuantitativeNeume.OligonKentimaMiddleKentimata,
   QuantitativeNeume.OligonPlusKentemataPlusHypsiliLeft,
   QuantitativeNeume.OligonPlusKentemataPlusHypsiliRight,
   QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,

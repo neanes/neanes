@@ -1902,6 +1902,48 @@
         0.76
       ]
     },
+    "oligonYpsiliLeftKentimata": {
+      "measureNumber": [
+        0.174,
+        0.983
+      ],
+      "isonIndicator": [
+        0.71,
+        1.207
+      ],
+      "antikenoma": [
+        0.82,
+        0.165
+      ],
+      "noteTop": [
+        0.172,
+        0.991
+      ],
+      "fthoraBottom": [
+        0.746,
+        0.194
+      ],
+      "fthoraTop": [
+        0.853,
+        0.889
+      ],
+      "diesis": [
+        0.4,
+        0.133
+      ],
+      "yfesis": [
+        1.316,
+        0.619
+      ],
+      "psifiston": [
+        0.84,
+        0.113
+      ],
+      "gorgonTop": [
+        1.0,
+        0.787
+      ]
+    },
     "oligonApostrofosKentimata": {
       "measureNumber": [
         0.172,
@@ -1942,6 +1984,48 @@
       "gorgonTop": [
         1.213,
         0.74
+      ]
+    },
+    "oligonElafronKentimata": {
+      "measureNumber": [
+        0.172,
+        1.043
+      ],
+      "isonIndicator": [
+        0.71,
+        1.057
+      ],
+      "antikenoma": [
+        1.093,
+        0.153
+      ],
+      "noteTop": [
+        0.242,
+        1.041
+      ],
+      "fthoraBottom": [
+        1.136,
+        0.194
+      ],
+      "fthoraTop": [
+        1.523,
+        0.825
+      ],
+      "diesis": [
+        0.4,
+        0.133
+      ],
+      "yfesis": [
+        1.829,
+        0.761
+      ],
+      "psifiston": [
+        1.14,
+        0.113
+      ],
+      "gorgonTop": [
+        1.519,
+        0.738
       ]
     },
     "oligonYporroiKentimata": {
@@ -1988,90 +2072,6 @@
       "gorgonTop": [
         1.207,
         0.733
-      ]
-    },
-    "oligonRunningElafronKentimata": {
-      "measureNumber": [
-        0.662,
-        0.913
-      ],
-      "isonIndicator": [
-        0.71,
-        1.077
-      ],
-      "antikenoma": [
-        1.253,
-        0.153
-      ],
-      "noteTop": [
-        0.732,
-        0.921
-      ],
-      "fthoraBottom": [
-        1.206,
-        0.194
-      ],
-      "fthoraTop": [
-        1.735,
-        0.743
-      ],
-      "diesis": [
-        0.4,
-        0.133
-      ],
-      "yfesis": [
-        2.033,
-        0.829
-      ],
-      "psifiston": [
-        1.22,
-        0.113
-      ],
-      "gorgonTop": [
-        1.86,
-        0.74
-      ]
-    },
-    "oligonElafronKentimata": {
-      "measureNumber": [
-        0.172,
-        1.043
-      ],
-      "isonIndicator": [
-        0.71,
-        1.057
-      ],
-      "antikenoma": [
-        1.093,
-        0.153
-      ],
-      "noteTop": [
-        0.242,
-        1.041
-      ],
-      "fthoraBottom": [
-        1.136,
-        0.194
-      ],
-      "fthoraTop": [
-        1.523,
-        0.825
-      ],
-      "diesis": [
-        0.4,
-        0.133
-      ],
-      "yfesis": [
-        1.829,
-        0.761
-      ],
-      "psifiston": [
-        1.14,
-        0.113
-      ],
-      "gorgonTop": [
-        1.519,
-        0.738
       ]
     },
     "oligonKentimataBelow": {
@@ -2534,6 +2534,48 @@
         0.083
       ]
     },
+    "oligonRunningElafronKentimata": {
+      "measureNumber": [
+        0.662,
+        0.913
+      ],
+      "isonIndicator": [
+        0.71,
+        1.077
+      ],
+      "antikenoma": [
+        1.253,
+        0.153
+      ],
+      "noteTop": [
+        0.732,
+        0.921
+      ],
+      "fthoraBottom": [
+        1.206,
+        0.194
+      ],
+      "fthoraTop": [
+        1.735,
+        0.743
+      ],
+      "diesis": [
+        0.4,
+        0.133
+      ],
+      "yfesis": [
+        2.033,
+        0.829
+      ],
+      "psifiston": [
+        1.22,
+        0.113
+      ],
+      "gorgonTop": [
+        1.86,
+        0.74
+      ]
+    },
     "oligonElafronApostrofosKentimata": {
       "measureNumber": [
         0.172,
@@ -2576,49 +2618,49 @@
         0.733
       ]
     },
-    "oligonChamiliKentimata": {
+    "oligonKentimaMiddleKentimata": {
       "measureNumber": [
         0.172,
-        0.993
+        0.753
       ],
       "isonIndicator": [
         0.71,
-        1.01
+        1.117
       ],
       "antikenoma": [
-        1.1,
-        0.173
+        0.82,
+        0.165
       ],
       "noteTop": [
-        0.372,
-        0.991
+        0.262,
+        0.561
       ],
       "fthoraBottom": [
-        1.116,
+        0.746,
         0.194
       ],
       "fthoraTop": [
-        1.459,
-        0.751
+        0.767,
+        0.791
       ],
       "diesis": [
         0.4,
         0.133
       ],
       "yfesis": [
-        1.828,
-        0.736
+        1.316,
+        0.619
       ],
       "psifiston": [
-        1.13,
+        0.84,
         0.113
       ],
       "gorgonTop": [
-        1.58,
-        0.74
+        0.842,
+        0.767
       ]
     },
-    "oligonKentimataYpsiliRight": {
+    "oligonYpsiliRightKentimata": {
       "measureNumber": [
         0.164,
         0.847
@@ -2658,48 +2700,6 @@
       "gorgonTop": [
         0.713,
         0.753
-      ]
-    },
-    "oligonKentimataYpsiliLeft": {
-      "measureNumber": [
-        0.174,
-        0.983
-      ],
-      "isonIndicator": [
-        0.71,
-        1.207
-      ],
-      "antikenoma": [
-        0.82,
-        0.165
-      ],
-      "noteTop": [
-        0.172,
-        0.991
-      ],
-      "fthoraBottom": [
-        0.746,
-        0.194
-      ],
-      "fthoraTop": [
-        0.853,
-        0.889
-      ],
-      "diesis": [
-        0.4,
-        0.133
-      ],
-      "yfesis": [
-        1.316,
-        0.619
-      ],
-      "psifiston": [
-        0.84,
-        0.113
-      ],
-      "gorgonTop": [
-        1.0,
-        0.787
       ]
     },
     "petastiChamiliApostrofos": {
@@ -5055,6 +5055,48 @@
         0.0,
         0.8
       ]
+    },
+    "oligonChamiliKentimata": {
+      "measureNumber": [
+        0.172,
+        0.993
+      ],
+      "isonIndicator": [
+        0.71,
+        1.01
+      ],
+      "antikenoma": [
+        1.1,
+        0.173
+      ],
+      "noteTop": [
+        0.372,
+        0.991
+      ],
+      "fthoraBottom": [
+        1.116,
+        0.194
+      ],
+      "fthoraTop": [
+        1.459,
+        0.751
+      ],
+      "diesis": [
+        0.4,
+        0.133
+      ],
+      "yfesis": [
+        1.828,
+        0.736
+      ],
+      "psifiston": [
+        1.13,
+        0.113
+      ],
+      "gorgonTop": [
+        1.58,
+        0.74
+      ]
     }
   },
   "glyphsWithAlternates": {
@@ -5113,10 +5155,10 @@
     "kentimata": 0.738,
     "oligonKentimataAbove": 1.465,
     "oligonIsonKentimata": 1.964,
+    "oligonYpsiliLeftKentimata": 1.515,
     "oligonApostrofosKentimata": 1.627,
-    "oligonYporroiKentimata": 1.627,
-    "oligonRunningElafronKentimata": 2.201,
     "oligonElafronKentimata": 2.077,
+    "oligonYporroiKentimata": 1.627,
     "oligonKentimataBelow": 1.515,
     "oligonKentimaTripleYpsili": 1.58,
     "oligonIson": 1.515,
@@ -5125,10 +5167,10 @@
     "oligonApostrofos": 1.515,
     "oligonYporroi": 1.515,
     "petastiYporroi": 1.164,
+    "oligonRunningElafronKentimata": 2.201,
     "oligonElafronApostrofosKentimata": 2.077,
-    "oligonChamiliKentimata": 1.995,
-    "oligonKentimataYpsiliRight": 1.532,
-    "oligonKentimataYpsiliLeft": 1.515,
+    "oligonKentimaMiddleKentimata": 1.744,
+    "oligonYpsiliRightKentimata": 1.532,
     "petastiChamiliApostrofos": 1.236,
     "apostrofos": 0.703,
     "oligonKentimataTripleYpsili": 1.58,
@@ -5365,7 +5407,8 @@
     "digorgonDottedRightSecondary": 0.0,
     "trigorgonSecondary": 0.0,
     "trigorgonDottedLeftBelowSecondary": 0.0,
-    "trigorgonDottedRightSecondary": 0.0
+    "trigorgonDottedRightSecondary": 0.0,
+    "oligonChamiliKentimata": 1.995
   },
   "glyphBBoxes": {
     "ison": {
@@ -5738,6 +5781,16 @@
         0.22242105263118006
       ]
     },
+    "oligonYpsiliLeftKentimata": {
+      "bBoxNE": [
+        1.4189767441845793,
+        1.163
+      ],
+      "bBoxSW": [
+        0.08222222222223703,
+        0.22242105263118006
+      ]
+    },
     "oligonApostrofosKentimata": {
       "bBoxNE": [
         1.5459767441845793,
@@ -5748,26 +5801,6 @@
         0.22242105263118006
       ]
     },
-    "oligonYporroiKentimata": {
-      "bBoxNE": [
-        1.5360476190470576,
-        0.72
-      ],
-      "bBoxSW": [
-        0.07722222222223704,
-        0.22242105263118006
-      ]
-    },
-    "oligonRunningElafronKentimata": {
-      "bBoxNE": [
-        2.0830476190470577,
-        0.791523809522041
-      ],
-      "bBoxSW": [
-        -0.008642857142861633,
-        0.22242105263118006
-      ]
-    },
     "oligonElafronKentimata": {
       "bBoxNE": [
         1.9709767441845794,
@@ -5775,6 +5808,16 @@
       ],
       "bBoxSW": [
         0.07975000000005625,
+        0.22242105263118006
+      ]
+    },
+    "oligonYporroiKentimata": {
+      "bBoxNE": [
+        1.5360476190470576,
+        0.72
+      ],
+      "bBoxSW": [
+        0.07722222222223704,
         0.22242105263118006
       ]
     },
@@ -5858,6 +5901,16 @@
         0.1344761904779591
       ]
     },
+    "oligonRunningElafronKentimata": {
+      "bBoxNE": [
+        2.0830476190470577,
+        0.791523809522041
+      ],
+      "bBoxSW": [
+        -0.008642857142861633,
+        0.22242105263118006
+      ]
+    },
     "oligonElafronApostrofosKentimata": {
       "bBoxNE": [
         1.9709767441845794,
@@ -5868,29 +5921,19 @@
         0.22242105263118006
       ]
     },
-    "oligonChamiliKentimata": {
+    "oligonKentimaMiddleKentimata": {
       "bBoxNE": [
-        1.8924500000022748,
-        0.9359090909091652
+        1.7272498626713175,
+        0.697
       ],
       "bBoxSW": [
-        0.06873437500002302,
-        0.22242105263118006
+        0.08222219542424306,
+        0.160461602450778
       ]
     },
-    "oligonKentimataYpsiliRight": {
+    "oligonYpsiliRightKentimata": {
       "bBoxNE": [
         1.500222222221454,
-        1.163
-      ],
-      "bBoxSW": [
-        0.08222222222223703,
-        0.22242105263118006
-      ]
-    },
-    "oligonKentimataYpsiliLeft": {
-      "bBoxNE": [
-        1.4189767441845793,
         1.163
       ],
       "bBoxSW": [
@@ -8267,9 +8310,26 @@
         -0.387,
         0.8086665943250609
       ]
+    },
+    "oligonChamiliKentimata": {
+      "bBoxNE": [
+        1.8924500000022748,
+        0.9359090909091652
+      ],
+      "bBoxSW": [
+        0.06873437500002302,
+        0.22242105263118006
+      ]
     }
   },
   "ligatures": {
+    "oligonKentimaMiddleKentimata": {
+      "codepoint": "U+E085",
+      "componentGlyphs": [
+        "oligonKentimataAbove",
+        "kentima"
+      ]
+    },
     "oligonKentimaMiddle": {
       "codepoint": "U+E002",
       "componentGlyphs": [

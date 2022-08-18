@@ -216,29 +216,32 @@
   "oligonIsonKentimata": {
     "codepoint": "U+E084"
   },
-  "oligonKentimataYpsiliRight": {
+  "oligonKentimaMiddleKentimata": {
     "codepoint": "U+E085"
   },
-  "oligonKentimataYpsiliLeft": {
+  "oligonYpsiliRightKentimata": {
     "codepoint": "U+E086"
   },
-  "oligonApostrofosKentimata": {
+  "oligonYpsiliLeftKentimata": {
     "codepoint": "U+E087"
   },
-  "oligonYporroiKentimata": {
+  "oligonApostrofosKentimata": {
     "codepoint": "U+E088"
   },
-  "oligonElafronKentimata": {
+  "oligonYporroiKentimata": {
     "codepoint": "U+E089"
   },
-  "oligonRunningElafronKentimata": {
+  "oligonElafronKentimata": {
     "codepoint": "U+E08A"
   },
-  "oligonElafronApostrofosKentimata": {
+  "oligonRunningElafronKentimata": {
     "codepoint": "U+E08B"
   },
-  "oligonChamiliKentimata": {
+  "oligonElafronApostrofosKentimata": {
     "codepoint": "U+E08C"
+  },
+  "oligonChamiliKentimata": {
+    "codepoint": "U+E08D"
   },
   "vareia": {
     "alternateCodepoint": "U+1D058",

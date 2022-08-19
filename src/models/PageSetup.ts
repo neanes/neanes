@@ -103,6 +103,7 @@ export class PageSetup {
 
   public dropCapDefaultFontFamily = 'Athonite';
   public dropCapDefaultFontSize = Unit.fromPt(60);
+  public dropCapDefaultFontWeight = '400';
   public dropCapDefaultColor = '#000000';
   public dropCapDefaultStrokeWidth = 0;
 

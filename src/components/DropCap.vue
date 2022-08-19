@@ -42,6 +42,8 @@ export default class DropCap extends Vue {
       fontSize: withZoom(
         this.element.fontSize || this.pageSetup.dropCapDefaultFontSize,
       ),
+      fontWeight:
+        this.element.fontWeight || this.pageSetup.dropCapDefaultFontWeight,
     } as CSSStyleDeclaration;
 
     return style;

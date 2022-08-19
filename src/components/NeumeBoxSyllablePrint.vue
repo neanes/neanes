@@ -56,17 +56,16 @@
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { NoteElement } from '@/models/Element';
-import { VocalExpressionNeume, Neume as GenericNeume } from '@/models/Neumes';
-import Neume from '@/components/Neume.vue';
+import { VocalExpressionNeume, Neume } from '@/models/Neumes';
+import NeumeVue from '@/components/Neume.vue';
 import { withZoom } from '@/utils/withZoom';
 import { PageSetup } from '@/models/PageSetup';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { fontService } from '@/services/FontService';
-import { MeasureBar } from '@/models/save/v1/Neumes';
 
 @Component({
   components: {
-    Neume,
+    Neume: NeumeVue,
   },
 })
 export default class NeumeBoxSyllablePrint extends Vue {
@@ -131,6 +130,7 @@ export default class NeumeBoxSyllablePrint extends Vue {
       fontFamily: this.pageSetup.neumeDefaultFontFamily,
       fontSize: withZoom(this.pageSetup.neumeDefaultFontSize),
       color: this.pageSetup.neumeDefaultColor,
+      webkitTextStrokeWidth: withZoom(this.pageSetup.neumeDefaultStrokeWidth),
     } as CSSStyleDeclaration;
   }
 
@@ -142,6 +142,7 @@ export default class NeumeBoxSyllablePrint extends Vue {
       left: withZoom(offset.x, 'em'),
       top: withZoom(offset.y, 'em'),
       color: this.pageSetup.gorgonDefaultColor,
+      webkitTextStrokeWidth: withZoom(this.pageSetup.gorgonDefaultStrokeWidth),
     } as CSSStyleDeclaration;
   }
 
@@ -153,6 +154,7 @@ export default class NeumeBoxSyllablePrint extends Vue {
       left: withZoom(offset.x, 'em'),
       top: withZoom(offset.y, 'em'),
       color: this.pageSetup.gorgonDefaultColor,
+      webkitTextStrokeWidth: withZoom(this.pageSetup.gorgonDefaultStrokeWidth),
     } as CSSStyleDeclaration;
   }
 
@@ -163,6 +165,7 @@ export default class NeumeBoxSyllablePrint extends Vue {
       position: 'absolute',
       left: withZoom(offset.x, 'em'),
       top: withZoom(offset.y, 'em'),
+      webkitTextStrokeWidth: withZoom(this.pageSetup.neumeDefaultStrokeWidth),
     } as CSSStyleDeclaration;
   }
 
@@ -174,6 +177,7 @@ export default class NeumeBoxSyllablePrint extends Vue {
       left: withZoom(offset.x, 'em'),
       top: withZoom(offset.y, 'em'),
       color: this.pageSetup.fthoraDefaultColor,
+      webkitTextStrokeWidth: withZoom(this.pageSetup.fthoraDefaultStrokeWidth),
     } as CSSStyleDeclaration;
   }
 
@@ -185,12 +189,18 @@ export default class NeumeBoxSyllablePrint extends Vue {
       left: withZoom(offset.x, 'em'),
       top: withZoom(offset.y, 'em'),
       color: this.pageSetup.accidentalDefaultColor,
+      webkitTextStrokeWidth: withZoom(
+        this.pageSetup.accidentalDefaultStrokeWidth,
+      ),
     } as CSSStyleDeclaration;
   }
 
   get measureBarStyle() {
     return {
       color: this.pageSetup.measureBarDefaultColor,
+      webkitTextStrokeWidth: withZoom(
+        this.pageSetup.measureBarDefaultStrokeWidth,
+      ),
     } as CSSStyleDeclaration;
   }
 
@@ -202,6 +212,9 @@ export default class NeumeBoxSyllablePrint extends Vue {
       left: withZoom(offset.x, 'em'),
       top: withZoom(offset.y, 'em'),
       color: this.pageSetup.measureNumberDefaultColor,
+      webkitTextStrokeWidth: withZoom(
+        this.pageSetup.measureNumberDefaultStrokeWidth,
+      ),
     } as CSSStyleDeclaration;
   }
 
@@ -213,6 +226,9 @@ export default class NeumeBoxSyllablePrint extends Vue {
       left: withZoom(offset.x, 'em'),
       top: withZoom(offset.y, 'em'),
       color: this.pageSetup.noteIndicatorDefaultColor,
+      webkitTextStrokeWidth: withZoom(
+        this.pageSetup.noteIndicatorDefaultStrokeWidth,
+      ),
     } as CSSStyleDeclaration;
   }
 
@@ -224,6 +240,7 @@ export default class NeumeBoxSyllablePrint extends Vue {
       left: withZoom(offset.x, 'em'),
       top: withZoom(offset.y, 'em'),
       color: this.pageSetup.isonDefaultColor,
+      webkitTextStrokeWidth: withZoom(this.pageSetup.isonDefaultStrokeWidth),
     } as CSSStyleDeclaration;
   }
 
@@ -235,14 +252,15 @@ export default class NeumeBoxSyllablePrint extends Vue {
       left: withZoom(offset.x, 'em'),
       top: withZoom(offset.y, 'em'),
       color: this.pageSetup.heteronDefaultColor,
+      webkitTextStrokeWidth: withZoom(this.pageSetup.heteronDefaultStrokeWidth),
     } as CSSStyleDeclaration;
   }
 
-  getMapping(neume: GenericNeume) {
+  getMapping(neume: Neume) {
     return NeumeMappingService.getMapping(neume);
   }
 
-  getOffset(neume: GenericNeume) {
+  getOffset(neume: Neume) {
     const mark = this.getMapping(neume).glyphName;
     const base = this.getMapping(this.note.quantitativeNeume).glyphName;
 

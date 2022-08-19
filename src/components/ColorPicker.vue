@@ -106,6 +106,12 @@ export default class ColorPicker extends Vue {
 </script>
 
 <style scoped>
+.color-picker-container {
+  display: flex;
+  width: 46px;
+  height: 24px;
+}
+
 .swatch {
   padding: 5px;
   background: white;
@@ -113,16 +119,17 @@ export default class ColorPicker extends Vue {
   box-shadow: rgb(0 0 0 / 10%) 0px 0px 0px 1px;
   display: flex;
   cursor: pointer;
+  flex: 1;
 }
 
 .swatch--color {
-  width: 36px;
-  height: 14px;
   border-radius: 2px;
+  flex: 1;
 }
 
 .popover {
   position: fixed;
+  z-index: 1;
 }
 
 .cover {

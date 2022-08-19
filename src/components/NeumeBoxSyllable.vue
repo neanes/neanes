@@ -116,48 +116,64 @@ export default class NeumeBoxSyllable extends Vue {
       fontFamily: this.pageSetup.neumeDefaultFontFamily,
       fontSize: withZoom(this.pageSetup.neumeDefaultFontSize),
       color: this.pageSetup.neumeDefaultColor,
+      webkitTextStrokeWidth: withZoom(this.pageSetup.neumeDefaultStrokeWidth),
     } as CSSStyleDeclaration;
   }
 
   get gorgonStyle() {
     return {
       color: this.pageSetup.gorgonDefaultColor,
+      webkitTextStrokeWidth: withZoom(this.pageSetup.gorgonDefaultStrokeWidth),
     } as CSSStyleDeclaration;
   }
 
   get fthoraStyle() {
     return {
       color: this.pageSetup.fthoraDefaultColor,
+      webkitTextStrokeWidth: withZoom(this.pageSetup.fthoraDefaultStrokeWidth),
     } as CSSStyleDeclaration;
   }
 
   get accidentalStyle() {
     return {
       color: this.pageSetup.accidentalDefaultColor,
+      webkitTextStrokeWidth: withZoom(
+        this.pageSetup.accidentalDefaultStrokeWidth,
+      ),
     } as CSSStyleDeclaration;
   }
 
   get measureBarStyle() {
     return {
       color: this.pageSetup.measureBarDefaultColor,
+      webkitTextStrokeWidth: withZoom(
+        this.pageSetup.measureBarDefaultStrokeWidth,
+      ),
     } as CSSStyleDeclaration;
   }
 
   get measureNumberStyle() {
     return {
       color: this.pageSetup.measureNumberDefaultColor,
+      webkitTextStrokeWidth: withZoom(
+        this.pageSetup.measureNumberDefaultStrokeWidth,
+      ),
     } as CSSStyleDeclaration;
   }
 
   get noteIndicatorStyle() {
     return {
       color: this.pageSetup.noteIndicatorDefaultColor,
+      webkitTextStrokeWidth: withZoom(
+        this.pageSetup.noteIndicatorDefaultStrokeWidth,
+      ),
     } as CSSStyleDeclaration;
   }
 
   get isonStyle() {
     return {
       color: this.pageSetup.isonDefaultColor,
+      webkitTextStrokeWidth: withZoom(this.pageSetup.isonDefaultStrokeWidth),
     } as CSSStyleDeclaration;
   }
 
@@ -168,6 +184,9 @@ export default class NeumeBoxSyllable extends Vue {
     ) {
       return {
         color: this.pageSetup.heteronDefaultColor,
+        webkitTextStrokeWidth: withZoom(
+          this.pageSetup.heteronDefaultStrokeWidth,
+        ),
       } as CSSStyleDeclaration;
     }
 

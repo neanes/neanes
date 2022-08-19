@@ -298,47 +298,215 @@
               v-model.lazy="neumeDefaultFontSize"
             />
           </div>
-          <div class="subheader">Neume Colors</div>
+          <div class="form-group">
+            <label class="drop-caps-label">Outline</label>
+            <InputUnit
+              class="drop-caps-input"
+              unit="pt"
+              :min="0"
+              :max="maxStrokeWidth"
+              :step="0.1"
+              :precision="2"
+              v-model="form.neumeDefaultStrokeWidth"
+            />
+          </div>
+          <div class="subheader">Neume Styles</div>
+          <div class="form-group row">
+            <label class="neume-colors-label small-header">Type</label>
+            <label class="neume-colors-input small-header">Color</label>
+            <label class="small-header">Outline</label>
+          </div>
           <div class="form-group row">
             <label class="neume-colors-label">Accidentals</label>
-            <ColorPicker v-model="form.accidentalDefaultColor" />
+            <ColorPicker
+              class="neume-colors-input"
+              v-model="form.accidentalDefaultColor"
+            />
+            <InputUnit
+              class="drop-caps-input"
+              unit="pt"
+              :min="0"
+              :max="maxStrokeWidth"
+              :step="0.1"
+              :precision="2"
+              v-model="form.accidentalDefaultStrokeWidth"
+            />
           </div>
           <div class="form-group row">
             <label class="neume-colors-label">Fthoras</label>
-            <ColorPicker v-model="form.fthoraDefaultColor" />
+            <ColorPicker
+              class="neume-colors-input"
+              v-model="form.fthoraDefaultColor"
+            />
+            <InputUnit
+              class="drop-caps-input"
+              unit="pt"
+              :min="0"
+              :max="maxStrokeWidth"
+              :step="0.1"
+              :precision="2"
+              v-model="form.fthoraDefaultStrokeWidth"
+            />
           </div>
           <div class="form-group row">
             <label class="neume-colors-label">Gorgons</label>
-            <ColorPicker v-model="form.gorgonDefaultColor" />
+            <ColorPicker
+              class="neume-colors-input"
+              v-model="form.gorgonDefaultColor"
+            />
+            <InputUnit
+              class="drop-caps-input"
+              unit="pt"
+              :min="0"
+              :max="maxStrokeWidth"
+              :step="0.1"
+              :precision="2"
+              v-model="form.gorgonDefaultStrokeWidth"
+            />
           </div>
           <div class="form-group row">
             <label class="neume-colors-label">Heterons</label>
-            <ColorPicker v-model="form.heteronDefaultColor" />
+            <ColorPicker
+              class="neume-colors-input"
+              v-model="form.heteronDefaultColor"
+            />
+            <InputUnit
+              class="drop-caps-input"
+              unit="pt"
+              :min="0"
+              :max="maxStrokeWidth"
+              :step="0.1"
+              :precision="2"
+              v-model="form.heteronDefaultStrokeWidth"
+            />
           </div>
           <div class="form-group row">
             <label class="neume-colors-label">Ison</label>
-            <ColorPicker v-model="form.isonDefaultColor" />
+            <ColorPicker
+              class="neume-colors-input"
+              v-model="form.isonDefaultColor"
+            />
+            <InputUnit
+              class="drop-caps-input"
+              unit="pt"
+              :min="0"
+              :max="maxStrokeWidth"
+              :step="0.1"
+              :precision="2"
+              v-model="form.isonDefaultStrokeWidth"
+            />
           </div>
           <div class="form-group row">
             <label class="neume-colors-label">Martyrias</label>
-            <ColorPicker v-model="form.martyriaDefaultColor" />
+            <ColorPicker
+              class="neume-colors-input"
+              v-model="form.martyriaDefaultColor"
+            />
+            <InputUnit
+              class="drop-caps-input"
+              unit="pt"
+              :min="0"
+              :max="maxStrokeWidth"
+              :step="0.1"
+              :precision="2"
+              v-model="form.martyriaDefaultStrokeWidth"
+            />
           </div>
           <div class="form-group row">
             <label class="neume-colors-label">Measure Bars</label>
-            <ColorPicker v-model="form.measureBarDefaultColor" />
+            <ColorPicker
+              class="neume-colors-input"
+              v-model="form.measureBarDefaultColor"
+            />
+            <InputUnit
+              class="drop-caps-input"
+              unit="pt"
+              :min="0"
+              :max="maxStrokeWidth"
+              :step="0.1"
+              :precision="2"
+              v-model="form.measureBarDefaultStrokeWidth"
+            />
           </div>
           <div class="form-group row">
             <label class="neume-colors-label">Measure No.</label>
-            <ColorPicker v-model="form.measureNumberDefaultColor" />
+            <ColorPicker
+              class="neume-colors-input"
+              v-model="form.measureNumberDefaultColor"
+            />
+            <InputUnit
+              class="drop-caps-input"
+              unit="pt"
+              :min="0"
+              :max="maxStrokeWidth"
+              :step="0.1"
+              :precision="2"
+              v-model="form.measureNumberDefaultStrokeWidth"
+            />
           </div>
           <div class="form-group row">
             <label class="neume-colors-label">Note Indicators</label>
-            <ColorPicker v-model="form.noteIndicatorDefaultColor" />
+            <ColorPicker
+              class="neume-colors-input"
+              v-model="form.noteIndicatorDefaultColor"
+            />
+            <InputUnit
+              class="drop-caps-input"
+              unit="pt"
+              :min="0"
+              :max="maxStrokeWidth"
+              :step="0.1"
+              :precision="2"
+              v-model="form.noteIndicatorDefaultStrokeWidth"
+            />
           </div>
           <div class="form-group row">
             <label class="neume-colors-label">Tempos</label>
-            <ColorPicker v-model="form.tempoDefaultColor" />
+            <ColorPicker
+              class="neume-colors-input"
+              v-model="form.tempoDefaultColor"
+            />
+            <InputUnit
+              class="drop-caps-input"
+              unit="pt"
+              :min="0"
+              :max="maxStrokeWidth"
+              :step="0.1"
+              :precision="2"
+              v-model="form.tempoDefaultStrokeWidth"
+            />
           </div>
+        </div>
+      </div>
+      <div class="preview-container">
+        <div class="small-header">Preview</div>
+        <div class="preview-elements">
+          <template v-for="(element, index) in previewNeumes">
+            <template v-if="isSyllableElement(element)">
+              <NeumeBoxSyllable
+                class="syllable-box"
+                :key="index"
+                :note="element"
+                :pageSetup="form"
+              />
+            </template>
+            <template v-if="isMartyriaElement(element)">
+              <NeumeBoxMartyria
+                class="marytria-neume-box"
+                :key="index"
+                :neume="element"
+                :pageSetup="form"
+              />
+            </template>
+            <template v-if="isTempoElement(element)">
+              <NeumeBoxTempo
+                class="tempo-neume-box"
+                :key="index"
+                :neume="element"
+                :pageSetup="form"
+              />
+            </template>
+          </template>
         </div>
       </div>
       <div class="button-container">
@@ -348,20 +516,6 @@
         </button>
         <button class="cancel-btn" @click="$emit('close')">Cancel</button>
       </div>
-      <datalist id="presetDropCapsColors">
-        <option>#000000</option>
-        <option>#ED0000</option>
-        <option>#0000FF</option>
-      </datalist>
-      <datalist id="presetNeumeColors">
-        <option>#000000</option>
-        <option>#ED0000</option>
-      </datalist>
-      <datalist id="presetLyricsColors">
-        <option v-for="color in presetLyricsColors" :key="color">
-          {{ color }}
-        </option>
-      </datalist>
     </div>
   </ModalDialog>
 </template>
@@ -369,9 +523,17 @@
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import ModalDialog from '@/components/ModalDialog.vue';
+import NeumeVue from '@/components/Neume.vue';
 import { PageSetup, PageSize, pageSizes } from '@/models/PageSetup';
 import { Unit } from '@/utils/Unit';
 import ColorPicker from '@/components/ColorPicker.vue';
+import InputUnit from '@/components/InputUnit.vue';
+import { QuantitativeNeume } from '@/models/Neumes';
+import { Accidental } from '@/models/save/v1/Neumes';
+import NeumeBoxSyllable from '@/components/NeumeBoxSyllable.vue';
+import NeumeBoxMartyria from '@/components/NeumeBoxMartyria.vue';
+import NeumeBoxTempo from '@/components/NeumeBoxTempo.vue';
+import { ElementType, ScoreElement } from '@/models/Element';
 
 interface FontWeight {
   name: string;
@@ -379,14 +541,25 @@ interface FontWeight {
 }
 
 @Component({
-  components: { ModalDialog, ColorPicker },
+  components: {
+    ModalDialog,
+    ColorPicker,
+    InputUnit,
+    Neume: NeumeVue,
+    NeumeBoxSyllable,
+    NeumeBoxMartyria,
+    NeumeBoxTempo,
+  },
 })
 export default class PageSetupDialog extends Vue {
   @Prop() pageSetup!: PageSetup;
   @Prop() fonts!: string[];
   private form: PageSetup = new PageSetup();
 
-  presetLyricsColors: string[] = ['#000000'];
+  QuantitativeNeume = QuantitativeNeume;
+  Accidental = Accidental;
+
+  maxStrokeWidth = 5;
 
   fontWeights: FontWeight[] = [
     {
@@ -396,6 +569,61 @@ export default class PageSetupDialog extends Vue {
     {
       name: 'Bold',
       value: '700',
+    },
+  ];
+
+  previewNeumes = [
+    {
+      elementType: 'Tempo',
+      neume: 'Moderate',
+    },
+    {
+      elementType: 'Note',
+      quantitativeNeume: 'Ison',
+      gorgonNeume: 'Gorgon_Bottom',
+      ison: 'Ison.Ga',
+    },
+    {
+      elementType: 'Note',
+      quantitativeNeume: 'Ison',
+      timeNeume: 'Dipli',
+      measureBarLeft: 'MeasureBarRight',
+      measureBarRight: 'MeasureBarRight',
+      measureNumber: 'Three',
+    },
+    {
+      elementType: 'Note',
+      quantitativeNeume: 'Oligon',
+      vocalExpressionNeume: 'Antikenoma',
+      ison: 'Ison.Ni',
+    },
+    {
+      elementType: 'Note',
+      quantitativeNeume: 'Apostrophos',
+    },
+    {
+      elementType: 'Note',
+      quantitativeNeume: 'Oligon',
+      timeNeume: 'Klasma_Top',
+    },
+    {
+      elementType: 'Note',
+      quantitativeNeume: 'Oligon',
+      gorgonNeume: 'Gorgon_Top',
+      vocalExpressionNeume: 'Psifiston',
+      accidental: 'Flat_2_Right',
+    },
+    {
+      elementType: 'Note',
+      quantitativeNeume: 'Apostrophos',
+    },
+    {
+      elementType: 'Martyria',
+      auto: true,
+      note: 'Thi',
+      rootSign: 'DeltaDotted',
+      scale: 'Diatonic',
+      fthora: 'HardChromaticPa_Top',
     },
   ];
 
@@ -680,6 +908,18 @@ export default class PageSetupDialog extends Vue {
     this.$forceUpdate();
   }
 
+  isSyllableElement(element: ScoreElement) {
+    return element.elementType == ElementType.Note;
+  }
+
+  isMartyriaElement(element: ScoreElement) {
+    return element.elementType == ElementType.Martyria;
+  }
+
+  isTempoElement(element: ScoreElement) {
+    return element.elementType == ElementType.Tempo;
+  }
+
   onKeyDown(event: KeyboardEvent) {
     if (event.code === 'Escape') {
       this.$emit('close');
@@ -723,6 +963,21 @@ export default class PageSetupDialog extends Vue {
   height: 80vh;
 }
 
+.preview-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-top: 1px solid lightgray;
+  border-bottom: 1px solid lightgray;
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.preview-elements {
+  display: flex;
+  justify-content: center;
+}
+
 .pane-container {
   display: flex;
   min-width: 500px;
@@ -744,6 +999,11 @@ export default class PageSetupDialog extends Vue {
 .subheader {
   font-weight: bold;
   margin-bottom: 0.5rem;
+}
+
+.small-header {
+  font-weight: bold;
+  font-size: 0.9rem;
 }
 
 .units {
@@ -791,7 +1051,9 @@ export default class PageSetupDialog extends Vue {
 }
 
 .neume-colors-input {
-  width: 4rem;
+  width: 2.85rem;
+  height: 1.5rem;
+  margin-right: 2rem;
 }
 
 .button-container {

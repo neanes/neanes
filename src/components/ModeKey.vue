@@ -85,6 +85,7 @@ export default class ModeKey extends Vue {
       textAlign: this.element.alignment,
       width: withZoom(this.pageSetup.innerPageWidth),
       height: withZoom(this.element.height),
+      webkitTextStrokeWidth: withZoom(this.pageSetup.modeKeyDefaultStrokeWidth),
     } as CSSStyleDeclaration;
   }
 }

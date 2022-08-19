@@ -57,6 +57,9 @@ export default class NeumeBoxMartyria extends Vue {
       color: this.pageSetup.martyriaDefaultColor,
       fontFamily: this.pageSetup.neumeDefaultFontFamily,
       fontSize: withZoom(this.pageSetup.neumeDefaultFontSize),
+      webkitTextStrokeWidth: withZoom(
+        this.pageSetup.martyriaDefaultStrokeWidth,
+      ),
     } as CSSStyleDeclaration;
   }
 
@@ -68,6 +71,7 @@ export default class NeumeBoxMartyria extends Vue {
       color: this.pageSetup.fthoraDefaultColor,
       left: withZoom(offset.x, 'em'),
       top: withZoom(offset.y, 'em'),
+      webkitTextStrokeWidth: withZoom(this.pageSetup.fthoraDefaultStrokeWidth),
     } as CSSStyleDeclaration;
   }
 
@@ -84,6 +88,9 @@ export default class NeumeBoxMartyria extends Vue {
   get measureBarStyle() {
     return {
       color: this.pageSetup.measureBarDefaultColor,
+      webkitTextStrokeWidth: withZoom(
+        this.pageSetup.measureBarDefaultStrokeWidth,
+      ),
     } as CSSStyleDeclaration;
   }
 

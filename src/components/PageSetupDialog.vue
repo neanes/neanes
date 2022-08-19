@@ -239,6 +239,21 @@
               </option>
             </select>
           </div>
+          <div class="form-group">
+            <label class="drop-caps-label">Weight</label>
+            <select
+              class="drop-caps-select"
+              v-model="form.dropCapDefaultFontWeight"
+            >
+              <option
+                v-for="weight in fontWeights"
+                :key="weight.value"
+                :value="weight.value"
+              >
+                {{ weight.name }}
+              </option>
+            </select>
+          </div>
           <div class="subheader">Lyrics</div>
           <div class="form-group row">
             <label class="drop-caps-label">Color</label>

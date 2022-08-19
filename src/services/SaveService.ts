@@ -69,6 +69,8 @@ export class SaveService {
     score.pageSetup.dropCapDefaultFontFamily =
       s.pageSetup.dropCapDefaultFontFamily;
     score.pageSetup.dropCapDefaultFontSize = s.pageSetup.dropCapDefaultFontSize;
+    score.pageSetup.dropCapDefaultFontWeight =
+      s.pageSetup.dropCapDefaultFontWeight;
     score.pageSetup.dropCapDefaultStrokeWidth =
       s.pageSetup.dropCapDefaultStrokeWidth;
     score.pageSetup.leftMargin = s.pageSetup.leftMargin;
@@ -221,6 +223,7 @@ export class SaveService {
     element.content = e.content;
     element.fontFamily = e.fontFamily || undefined;
     element.fontSize = e.fontSize || undefined;
+    element.fontWeight = e.fontWeight || undefined;
   }
 
   public static SaveMartyria(element: MartyriaElement_v1, e: MartyriaElement) {
@@ -440,6 +443,8 @@ export class SaveService {
       p.dropCapDefaultColor || pageSetup.dropCapDefaultColor;
     pageSetup.dropCapDefaultFontFamily = p.dropCapDefaultFontFamily;
     pageSetup.dropCapDefaultFontSize = p.dropCapDefaultFontSize;
+    pageSetup.dropCapDefaultFontWeight =
+      p.dropCapDefaultFontWeight || pageSetup.dropCapDefaultFontWeight;
     pageSetup.dropCapDefaultStrokeWidth =
       p.dropCapDefaultStrokeWidth || pageSetup.dropCapDefaultStrokeWidth;
 
@@ -536,6 +541,7 @@ export class SaveService {
     element.content = e.content;
     element.fontFamily = e.fontFamily || null;
     element.fontSize = e.fontSize || null;
+    element.fontWeight = e.fontWeight || null;
   }
 
   public static LoadMartyria_v1(

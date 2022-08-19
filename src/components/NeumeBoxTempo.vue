@@ -27,6 +27,7 @@ export default class NeumeBoxMartyria extends Vue {
     return {
       color: this.pageSetup.tempoDefaultColor,
       fontSize: withZoom(this.pageSetup.neumeDefaultFontSize),
+      webkitTextStrokeWidth: withZoom(this.pageSetup.tempoDefaultStrokeWidth),
     } as CSSStyleDeclaration;
   }
 }

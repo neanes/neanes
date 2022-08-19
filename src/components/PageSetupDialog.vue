@@ -128,13 +128,15 @@
           </div>
           <div class="form-group">
             <label class="margin-label">Neumes</label>
-            <input
+            <InputUnit
               class="margin-input"
               type="number"
-              min="0"
+              :unit="form.pageSizeUnit"
+              :min="toDisplayUnit(-form.pageWidth)"
+              :max="toDisplayUnit(form.pageWidth)"
               :step="spacingStep"
-              :value="neumeSpacing"
-              @change="updateNeumeSpacing($event.target.value)"
+              :precision="3"
+              v-model="form.neumeDefaultSpacing"
             />
           </div>
           <div class="form-group">
@@ -816,19 +818,6 @@ export default class PageSetupDialog extends Vue {
     this.form!.footerMargin = Math.min(
       Math.max(this.toStorageUnit(value), 0),
       this.form!.innerPageHeight,
-    );
-
-    this.$forceUpdate();
-  }
-
-  get neumeSpacing() {
-    return this.toDisplayUnit(this.form!.neumeDefaultSpacing).toFixed(3);
-  }
-
-  updateNeumeSpacing(value: number) {
-    this.form!.neumeDefaultSpacing = Math.min(
-      Math.max(this.toStorageUnit(value), 0),
-      this.form!.pageWidth,
     );
 
     this.$forceUpdate();

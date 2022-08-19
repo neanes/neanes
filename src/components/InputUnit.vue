@@ -17,9 +17,21 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 export default class InputUnit extends Vue {
   @Prop() value!: number;
   @Prop() unit!: 'pt' | 'in' | 'mm';
+  /**
+   * The minimum value allowed, in display units.
+   */
   @Prop() min!: number | undefined;
+  /**
+   * The maximum value allowed, in display units.
+   */
   @Prop() max!: number | undefined;
+  /**
+   * The step size, in display units.
+   */
   @Prop() step!: number | undefined;
+  /**
+   * The number of decimal places that will be displayed.
+   */
   @Prop() precision!: number | undefined;
 
   get displayValue() {
@@ -34,11 +46,11 @@ export default class InputUnit extends Vue {
     let storageValue = this.toStorage(newValue);
 
     if (this.min != null) {
-      storageValue = Math.max(this.min, storageValue);
+      storageValue = Math.max(this.toStorage(this.min), storageValue);
     }
 
     if (this.max != null) {
-      storageValue = Math.min(this.max, storageValue);
+      storageValue = Math.min(this.toStorage(this.max), storageValue);
     }
 
     this.$emit('input', storageValue);

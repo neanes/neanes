@@ -1987,6 +1987,10 @@
       ]
     },
     "oligonElafronKentimata": {
+      "gorgonTop": [
+        1.647,
+        0.733
+      ],
       "measureNumber": [
         0.172,
         1.043
@@ -2022,10 +2026,6 @@
       "psifiston": [
         1.14,
         0.113
-      ],
-      "gorgonTop": [
-        1.519,
-        0.738
       ]
     },
     "oligonYporroiKentimata": {

@@ -28,7 +28,7 @@ import { Unit } from '@/utils/Unit';
     InputUnit,
   },
 })
-export default class TempoToolbar extends Vue {
+export default class ToolbarTempo extends Vue {
   @Prop() element!: TempoElement;
   @Prop() pageSetup!: PageSetup;
 

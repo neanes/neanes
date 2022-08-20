@@ -178,7 +178,7 @@ import { Unit } from '@/utils/Unit';
     InputUnit,
   },
 })
-export default class MartyriaToolbar extends Vue {
+export default class ToolbarMartyria extends Vue {
   @Prop() element!: MartyriaElement;
   @Prop() pageSetup!: PageSetup;
   Fthora = Fthora;

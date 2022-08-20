@@ -4,7 +4,7 @@
       <img src="@/assets/icons/spinner.svg" />
     </div>
     <FileMenuBar v-if="showFileMenuBar" />
-    <MainToolbar
+    <ToolbarMain
       :entryMode="entryMode"
       :zoom="zoom"
       :zoomToFit="zoomToFit"
@@ -329,7 +329,7 @@
       </div>
     </div>
     <template v-if="selectedTextBoxElement">
-      <TextBoxToolbar
+      <ToolbarTextBox
         :element="selectedTextBoxElement"
         :fonts="fonts"
         @update:fontSize="updateTextBoxFontSize(selectedTextBoxElement, $event)"
@@ -351,7 +351,7 @@
       />
     </template>
     <template v-if="selectedLyrics != null">
-      <LyricsToolbar
+      <ToolbarLyrics
         :element="selectedLyrics"
         @update:fontSize="updateTextBoxFontSize(selectedElement, $event)"
         @update:fontFamily="updateTextBoxFontFamily(selectedElement, $event)"
@@ -364,7 +364,7 @@
     <template
       v-if="selectedElement != null && isModeKeyElement(selectedElement)"
     >
-      <ModeKeyToolbar
+      <ToolbarModeKey
         :element="selectedElement"
         @update:fontSize="updateModeKeyFontSize(selectedElement, $event)"
         @update:alignment="updateModeKeyAlignment(selectedElement, $event)"
@@ -375,7 +375,7 @@
     <template
       v-if="selectedElement != null && isSyllableElement(selectedElement)"
     >
-      <NeumeToolbar
+      <ToolbarNeume
         :element="selectedElement"
         :pageSetup="score.pageSetup"
         @update:accidental="updateNoteAccidental(selectedElement, $event)"
@@ -394,7 +394,7 @@
     <template
       v-if="selectedElement != null && isMartyriaElement(selectedElement)"
     >
-      <MartyriaToolbar
+      <ToolbarMartyria
         :element="selectedElement"
         :pageSetup="score.pageSetup"
         @update:fthora="updateMartyriaFthora(selectedElement, $event)"
@@ -407,7 +407,7 @@
       />
     </template>
     <template v-if="selectedElement != null && isTempoElement(selectedElement)">
-      <TempoToolbar
+      <ToolbarTempo
         :element="selectedElement"
         :pageSetup="score.pageSetup"
         @update:spaceAfter="updateTempoSpaceAfter(selectedElement, $event)"
@@ -476,13 +476,13 @@ import TextBox from '@/components/TextBox.vue';
 import DropCap from '@/components/DropCap.vue';
 import ModeKey from '@/components/ModeKey.vue';
 import ModeKeyPrint from '@/components/ModeKeyPrint.vue';
-import TextBoxToolbar from '@/components/TextBoxToolbar.vue';
-import LyricsToolbar from '@/components/LyricsToolbar.vue';
-import ModeKeyToolbar from '@/components/ModeKeyToolbar.vue';
-import MainToolbar from '@/components/MainToolbar.vue';
-import NeumeToolbar from '@/components/NeumeToolbar.vue';
-import MartyriaToolbar from '@/components/MartyriaToolbar.vue';
-import TempoToolbar from '@/components/TempoToolbar.vue';
+import ToolbarTextBox from '@/components/ToolbarTextBox.vue';
+import ToolbarLyrics from '@/components/ToolbarLyrics.vue';
+import ToolbarModeKey from '@/components/ToolbarModeKey.vue';
+import ToolbarMain from '@/components/ToolbarMain.vue';
+import ToolbarNeume from '@/components/ToolbarNeume.vue';
+import ToolbarMartyria from '@/components/ToolbarMartyria.vue';
+import ToolbarTempo from '@/components/ToolbarTempo.vue';
 import ModeKeyDialog from '@/components/ModeKeyDialog.vue';
 import PageSetupDialog from '@/components/PageSetupDialog.vue';
 import FileMenuBar from '@/components/FileMenuBar.vue';
@@ -524,13 +524,13 @@ import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
     DropCap,
     ModeKey,
     ModeKeyPrint,
-    TextBoxToolbar,
-    LyricsToolbar,
-    ModeKeyToolbar,
-    NeumeToolbar,
-    MartyriaToolbar,
-    TempoToolbar,
-    MainToolbar,
+    ToolbarTextBox,
+    ToolbarLyrics,
+    ToolbarModeKey,
+    ToolbarNeume,
+    ToolbarMartyria,
+    ToolbarTempo,
+    ToolbarMain,
     ModeKeyDialog,
     PageSetupDialog,
     FileMenuBar,

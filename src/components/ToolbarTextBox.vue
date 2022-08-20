@@ -1,5 +1,17 @@
 <template>
-  <div class="mode-key-toolbar">
+  <div class="text-box-toolbar">
+    <select
+      :value="element.fontFamily"
+      @change="$emit('update:fontFamily', $event.target.value)"
+    >
+      <option>Athonite</option>
+      <option>Omega</option>
+
+      <option v-for="font in fonts" :key="font" :value="font">
+        {{ font }}
+      </option>
+    </select>
+    <span class="space"></span>
     <input type="number" min="4" max="100" step="1" v-model.lazy="fontSize" />
     <span class="space"></span>
     <ColorPicker
@@ -9,8 +21,30 @@
     <datalist id="presetColors">
       <option>#000000</option>
       <option>#ED0000</option>
-      <option>#0000FF</option>
+      <option>#0000ff</option>
     </datalist>
+    <span class="space"></span>
+    <button
+      class="icon-btn"
+      :class="{ selected: element.bold }"
+      @click="$emit('update:bold', !element.bold)"
+    >
+      <b>B</b>
+    </button>
+    <button
+      class="icon-btn"
+      :class="{ selected: element.italic }"
+      @click="$emit('update:italic', !element.italic)"
+    >
+      <i>I</i>
+    </button>
+    <button
+      class="icon-btn"
+      :class="{ selected: element.underline }"
+      @click="$emit('update:underline', !element.underline)"
+    >
+      <u>U</u>
+    </button>
     <span class="space"></span>
     <button
       class="icon-btn"
@@ -18,7 +52,6 @@
       @click="$emit('update:alignment', TextBoxAlignment.Left)"
     >
       <img
-        class="icon-btn-img"
         src="@/assets/icons/alignleft.svg"
         width="32"
         height="32"
@@ -31,7 +64,6 @@
       @click="$emit('update:alignment', TextBoxAlignment.Center)"
     >
       <img
-        class="icon-btn-img"
         src="@/assets/icons/aligncenter.svg"
         width="32"
         height="32"
@@ -44,29 +76,45 @@
       @click="$emit('update:alignment', TextBoxAlignment.Right)"
     >
       <img
-        class="icon-btn-img"
         src="@/assets/icons/alignright.svg"
         width="32"
         height="32"
         title="Align Right"
       />
     </button>
-    <span class="space" />
-    <button @click="$emit('open-mode-key-dialog')">Change Key</button>
+    <span class="space"></span>
+    <button class="icon-btn" @mousedown.prevent="$emit('insert:pelastikon')">
+      <img
+        src="@/assets/icons/letterPelastikon.svg"
+        width="32"
+        height="32"
+        title="Insert Pelastikon"
+      />
+    </button>
+    <button class="icon-btn" @mousedown.prevent="$emit('insert:gorthmikon')">
+      <img
+        src="@/assets/icons/letterGorthmikon.svg"
+        width="32"
+        height="32"
+        title="Insert Gorthmikon"
+      />
+    </button>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
-import { TextBoxAlignment, ModeKeyElement } from '@/models/Element';
+import { TextBoxAlignment, TextBoxElement } from '@/models/Element';
 import { Unit } from '@/utils/Unit';
 import ColorPicker from '@/components/ColorPicker.vue';
 
 @Component({
   components: { ColorPicker },
 })
-export default class ModeKeyToolbar extends Vue {
-  @Prop() element!: ModeKeyElement;
+export default class ToolbarTextBox extends Vue {
+  @Prop() element!: TextBoxElement;
+  @Prop() fonts!: string;
+
   TextBoxAlignment = TextBoxAlignment;
 
   private get fontSize() {
@@ -92,7 +140,7 @@ export default class ModeKeyToolbar extends Vue {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-.mode-key-toolbar {
+.text-box-toolbar {
   display: flex;
   align-items: center;
   flex-wrap: wrap;

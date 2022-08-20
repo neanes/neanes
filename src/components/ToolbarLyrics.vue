@@ -27,7 +27,7 @@ import { Unit } from '@/utils/Unit';
 @Component({
   components: {},
 })
-export default class LyricsToolbar extends Vue {
+export default class ToolbarLyrics extends Vue {
   @Prop() element!: NoteElement;
 }
 </script>

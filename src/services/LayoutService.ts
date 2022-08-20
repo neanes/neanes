@@ -284,10 +284,11 @@ export class LayoutService {
             tempoElement.neume,
           )!;
 
-          elementWidthPx = TextMeasurementService.getTextWidth(
-            temoMapping.text,
-            `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
-          );
+          elementWidthPx =
+            TextMeasurementService.getTextWidth(
+              temoMapping.text,
+              `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
+            ) + tempoElement.spaceAfter;
           break;
         }
         case ElementType.DropCap: {

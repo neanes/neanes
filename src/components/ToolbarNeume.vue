@@ -644,7 +644,7 @@ import { Unit } from '@/utils/Unit';
     InputUnit,
   },
 })
-export default class NeumeToolbar extends Vue {
+export default class ToolbarNeume extends Vue {
   @Prop() element!: NoteElement;
   @Prop() pageSetup!: PageSetup;
   Accidental = Accidental;

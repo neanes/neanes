@@ -158,7 +158,7 @@ import { EntryMode } from '@/models/EntryMode';
     Neume,
   },
 })
-export default class MainToolbar extends Vue {
+export default class ToolbarMain extends Vue {
   @Prop() entryMode!: EntryMode;
   @Prop() zoom!: number;
   @Prop() zoomToFit!: boolean;

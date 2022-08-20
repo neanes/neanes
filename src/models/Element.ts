@@ -502,6 +502,7 @@ export class DropCapElement extends ScoreElement {
   public fontSize: number | null = null;
   public fontWeight: string | null = null;
   public fontStyle: string | null = null;
+  public strokeWidth: number | null = null;
   public color: string | null = null;
 
   public clone() {

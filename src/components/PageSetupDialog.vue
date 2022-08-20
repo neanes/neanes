@@ -259,6 +259,18 @@
             />
             <label>Italic</label>
           </div>
+          <div class="form-group">
+            <label class="drop-caps-label">Outline</label>
+            <InputUnit
+              class="drop-caps-input"
+              unit="pt"
+              :min="0"
+              :max="strokeWidthMax"
+              :step="strokeWidthStep"
+              :precision="strokeWidthPrecision"
+              v-model="form.dropCapDefaultStrokeWidth"
+            />
+          </div>
           <div class="subheader">Lyrics</div>
           <div class="form-group row">
             <label class="drop-caps-label">Color</label>
@@ -305,6 +317,18 @@
             />
             <label>Italic</label>
           </div>
+          <div class="form-group">
+            <label class="drop-caps-label">Outline</label>
+            <InputUnit
+              class="drop-caps-input"
+              unit="pt"
+              :min="0"
+              :max="strokeWidthMax"
+              :step="strokeWidthStep"
+              :precision="strokeWidthPrecision"
+              v-model="form.lyricsDefaultStrokeWidth"
+            />
+          </div>
           <div class="subheader">Neumes</div>
           <div class="form-group row">
             <label class="drop-caps-label">Color</label>
@@ -327,9 +351,9 @@
               class="drop-caps-input"
               unit="pt"
               :min="0"
-              :max="maxStrokeWidth"
-              :step="0.1"
-              :precision="2"
+              :max="strokeWidthMax"
+              :step="strokeWidthStep"
+              :precision="strokeWidthPrecision"
               v-model="form.neumeDefaultStrokeWidth"
             />
           </div>
@@ -349,9 +373,9 @@
               class="drop-caps-input"
               unit="pt"
               :min="0"
-              :max="maxStrokeWidth"
-              :step="0.1"
-              :precision="2"
+              :max="strokeWidthMax"
+              :step="strokeWidthStep"
+              :precision="strokeWidthPrecision"
               v-model="form.accidentalDefaultStrokeWidth"
             />
           </div>
@@ -365,9 +389,9 @@
               class="drop-caps-input"
               unit="pt"
               :min="0"
-              :max="maxStrokeWidth"
-              :step="0.1"
-              :precision="2"
+              :max="strokeWidthMax"
+              :step="strokeWidthStep"
+              :precision="strokeWidthPrecision"
               v-model="form.fthoraDefaultStrokeWidth"
             />
           </div>
@@ -381,9 +405,9 @@
               class="drop-caps-input"
               unit="pt"
               :min="0"
-              :max="maxStrokeWidth"
-              :step="0.1"
-              :precision="2"
+              :max="strokeWidthMax"
+              :step="strokeWidthStep"
+              :precision="strokeWidthPrecision"
               v-model="form.gorgonDefaultStrokeWidth"
             />
           </div>
@@ -397,9 +421,9 @@
               class="drop-caps-input"
               unit="pt"
               :min="0"
-              :max="maxStrokeWidth"
-              :step="0.1"
-              :precision="2"
+              :max="strokeWidthMax"
+              :step="strokeWidthStep"
+              :precision="strokeWidthPrecision"
               v-model="form.heteronDefaultStrokeWidth"
             />
           </div>
@@ -413,9 +437,9 @@
               class="drop-caps-input"
               unit="pt"
               :min="0"
-              :max="maxStrokeWidth"
-              :step="0.1"
-              :precision="2"
+              :max="strokeWidthMax"
+              :step="strokeWidthStep"
+              :precision="strokeWidthPrecision"
               v-model="form.isonDefaultStrokeWidth"
             />
           </div>
@@ -429,9 +453,9 @@
               class="drop-caps-input"
               unit="pt"
               :min="0"
-              :max="maxStrokeWidth"
-              :step="0.1"
-              :precision="2"
+              :max="strokeWidthMax"
+              :step="strokeWidthStep"
+              :precision="strokeWidthPrecision"
               v-model="form.martyriaDefaultStrokeWidth"
             />
           </div>
@@ -445,9 +469,9 @@
               class="drop-caps-input"
               unit="pt"
               :min="0"
-              :max="maxStrokeWidth"
-              :step="0.1"
-              :precision="2"
+              :max="strokeWidthMax"
+              :step="strokeWidthStep"
+              :precision="strokeWidthPrecision"
               v-model="form.measureBarDefaultStrokeWidth"
             />
           </div>
@@ -461,9 +485,9 @@
               class="drop-caps-input"
               unit="pt"
               :min="0"
-              :max="maxStrokeWidth"
-              :step="0.1"
-              :precision="2"
+              :max="strokeWidthMax"
+              :step="strokeWidthStep"
+              :precision="strokeWidthPrecision"
               v-model="form.measureNumberDefaultStrokeWidth"
             />
           </div>
@@ -477,9 +501,9 @@
               class="drop-caps-input"
               unit="pt"
               :min="0"
-              :max="maxStrokeWidth"
-              :step="0.1"
-              :precision="2"
+              :max="strokeWidthMax"
+              :step="strokeWidthStep"
+              :precision="strokeWidthPrecision"
               v-model="form.noteIndicatorDefaultStrokeWidth"
             />
           </div>
@@ -493,9 +517,9 @@
               class="drop-caps-input"
               unit="pt"
               :min="0"
-              :max="maxStrokeWidth"
-              :step="0.1"
-              :precision="2"
+              :max="strokeWidthMax"
+              :step="strokeWidthStep"
+              :precision="strokeWidthPrecision"
               v-model="form.tempoDefaultStrokeWidth"
             />
           </div>
@@ -577,7 +601,9 @@ export default class PageSetupDialog extends Vue {
   QuantitativeNeume = QuantitativeNeume;
   Accidental = Accidental;
 
-  maxStrokeWidth = 5;
+  strokeWidthMax = 5;
+  strokeWidthStep = 0.1;
+  strokeWidthPrecision = 2;
 
   previewNeumes = [
     {

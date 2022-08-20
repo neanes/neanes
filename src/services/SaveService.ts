@@ -228,6 +228,7 @@ export class SaveService {
     element.fontSize = e.fontSize || undefined;
     element.fontWeight = e.fontWeight || undefined;
     element.fontStyle = e.fontStyle || undefined;
+    element.strokeWidth = e.strokeWidth || undefined;
   }
 
   public static SaveMartyria(element: MartyriaElement_v1, e: MartyriaElement) {
@@ -551,6 +552,7 @@ export class SaveService {
     element.fontSize = e.fontSize || null;
     element.fontWeight = e.fontWeight || null;
     element.fontStyle = e.fontStyle || null;
+    element.strokeWidth = e.strokeWidth || null;
   }
 
   public static LoadMartyria_v1(

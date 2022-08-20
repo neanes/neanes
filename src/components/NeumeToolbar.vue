@@ -600,8 +600,7 @@
       </button>
     </div>
     <div class="row">
-      <label>Space After</label>
-      <span class="space"></span>
+      <label class="right-space">Space After</label>
 
       <InputUnit
         unit="pt"
@@ -631,7 +630,6 @@ import {
   TimeNeume,
   VocalExpressionNeume,
 } from '@/models/Neumes';
-import NeumeVue from './Neume.vue';
 import {
   areVocalExpressionsEquivalent,
   onlyTakesTopKlasma,
@@ -643,7 +641,6 @@ import { Unit } from '@/utils/Unit';
 
 @Component({
   components: {
-    Neume: NeumeVue,
     InputUnit,
   },
 })
@@ -1045,6 +1042,10 @@ export default class NeumeToolbar extends Vue {
 .neume-button img {
   height: var(--btn-size);
   width: var(--btn-size);
+}
+
+label.right-space {
+  margin-right: 0.5rem;
 }
 
 .space {

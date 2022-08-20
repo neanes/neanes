@@ -406,6 +406,13 @@
         @update:spaceAfter="updateMartyriaSpaceAfter(selectedElement, $event)"
       />
     </template>
+    <template v-if="selectedElement != null && isTempoElement(selectedElement)">
+      <TempoToolbar
+        :element="selectedElement"
+        :pageSetup="score.pageSetup"
+        @update:spaceAfter="updateTempoSpaceAfter(selectedElement, $event)"
+      />
+    </template>
     <ModeKeyDialog
       v-if="modeKeyDialogIsOpen"
       :element="selectedElement"
@@ -475,6 +482,7 @@ import ModeKeyToolbar from '@/components/ModeKeyToolbar.vue';
 import MainToolbar from '@/components/MainToolbar.vue';
 import NeumeToolbar from '@/components/NeumeToolbar.vue';
 import MartyriaToolbar from '@/components/MartyriaToolbar.vue';
+import TempoToolbar from '@/components/TempoToolbar.vue';
 import ModeKeyDialog from '@/components/ModeKeyDialog.vue';
 import PageSetupDialog from '@/components/PageSetupDialog.vue';
 import FileMenuBar from '@/components/FileMenuBar.vue';
@@ -521,6 +529,7 @@ import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
     ModeKeyToolbar,
     NeumeToolbar,
     MartyriaToolbar,
+    TempoToolbar,
     MainToolbar,
     ModeKeyDialog,
     PageSetupDialog,
@@ -2624,6 +2633,11 @@ export default class Editor extends Vue {
       }),
     );
 
+    this.save();
+  }
+
+  updateTempoSpaceAfter(element: TempoElement, spaceAfter: number) {
+    this.updateTempo(element, { spaceAfter });
     this.save();
   }
 

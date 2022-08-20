@@ -149,8 +149,7 @@
       </template>
     </div>
     <div class="row">
-      <label>Space After</label>
-      <span class="space"></span>
+      <label class="right-space">Space After</label>
 
       <InputUnit
         unit="pt"
@@ -169,7 +168,6 @@
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { MartyriaElement } from '@/models/Element';
 import { Fthora, MeasureBar, Note } from '@/models/Neumes';
-import NeumeVue from './Neume.vue';
 import InputUnit from './InputUnit.vue';
 import { Scale } from '@/models/Scales';
 import { PageSetup } from '@/models/PageSetup';
@@ -177,7 +175,6 @@ import { Unit } from '@/utils/Unit';
 
 @Component({
   components: {
-    Neume: NeumeVue,
     InputUnit,
   },
 })

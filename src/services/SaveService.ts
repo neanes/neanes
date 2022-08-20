@@ -245,6 +245,7 @@ export class SaveService {
 
   public static SaveTempo(element: TempoElement_v1, e: TempoElement) {
     element.neume = e.neume;
+    element.spaceAfter = e.spaceAfter;
   }
 
   public static SaveNote(element: NoteElement_v1, e: NoteElement) {
@@ -587,6 +588,7 @@ export class SaveService {
 
   public static LoadTempo_v1(element: TempoElement, e: TempoElement_v1) {
     element.neume = e.neume;
+    element.spaceAfter = e.spaceAfter || 0;
   }
 
   public static LoadNote_v1(element: NoteElement, e: NoteElement_v1) {

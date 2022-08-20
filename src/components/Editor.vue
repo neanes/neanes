@@ -377,6 +377,7 @@
     >
       <NeumeToolbar
         :element="selectedElement"
+        :pageSetup="score.pageSetup"
         @update:accidental="updateNoteAccidental(selectedElement, $event)"
         @update:fthora="updateNoteFthora(selectedElement, $event)"
         @update:gorgon="updateNoteGorgon(selectedElement, $event)"
@@ -387,9 +388,7 @@
         @update:noteIndicator="updateNoteNoteIndicator(selectedElement, $event)"
         @update:ison="updateNoteIson(selectedElement, $event)"
         @update:vareia="updateNoteVareia(selectedElement, $event)"
-        @update:vocalExpression="
-          updateNoteVocalExpression(selectedElement, $event)
-        "
+        @update:spaceAfter="updateNoteSpaceAfter(selectedElement, $event)"
       />
     </template>
     <template
@@ -397,12 +396,14 @@
     >
       <MartyriaToolbar
         :element="selectedElement"
+        :pageSetup="score.pageSetup"
         @update:fthora="updateMartyriaFthora(selectedElement, $event)"
         @update:measureBar="updateMartyriaMeasureBar(selectedElement, $event)"
         @update:alignRight="updateMartyriaAlignRight(selectedElement, $event)"
         @update:auto="updateMartyriaAuto(selectedElement, $event)"
         @update:note="updateMartyriaNote(selectedElement, $event)"
         @update:scale="updateMartyriaScale(selectedElement, $event)"
+        @update:spaceAfter="updateMartyriaSpaceAfter(selectedElement, $event)"
       />
     </template>
     <ModeKeyDialog
@@ -2380,6 +2381,11 @@ export default class Editor extends Vue {
     this.save();
   }
 
+  updateNoteSpaceAfter(element: NoteElement, spaceAfter: number) {
+    this.updateNote(element, { spaceAfter });
+    this.save();
+  }
+
   updateLyrics(element: NoteElement, lyrics: string) {
     // Replace newlines. This should only happen if the user pastes
     // text containing new lines.
@@ -2603,6 +2609,11 @@ export default class Editor extends Vue {
 
   updateMartyriaScale(element: MartyriaElement, scale: Scale) {
     this.updateMartyria(element, { scale });
+  }
+
+  updateMartyriaSpaceAfter(element: MartyriaElement, spaceAfter: number) {
+    this.updateMartyria(element, { spaceAfter });
+    this.save();
   }
 
   updateTempo(element: TempoElement, newValues: Partial<TempoElement>) {

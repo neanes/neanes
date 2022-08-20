@@ -148,6 +148,20 @@
         </select>
       </template>
     </div>
+    <div class="row">
+      <label>Space After</label>
+      <span class="space"></span>
+
+      <InputUnit
+        unit="pt"
+        :min="0"
+        :max="spaceAfterMax"
+        :step="0.5"
+        :precision="2"
+        :value="element.spaceAfter"
+        @input="$emit('update:spaceAfter', $event)"
+      />
+    </div>
   </div>
 </template>
 
@@ -155,16 +169,21 @@
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { MartyriaElement } from '@/models/Element';
 import { Fthora, MeasureBar, Note } from '@/models/Neumes';
-import Neume from './Neume.vue';
+import NeumeVue from './Neume.vue';
+import InputUnit from './InputUnit.vue';
 import { Scale } from '@/models/Scales';
+import { PageSetup } from '@/models/PageSetup';
+import { Unit } from '@/utils/Unit';
 
 @Component({
   components: {
-    Neume,
+    Neume: NeumeVue,
+    InputUnit,
   },
 })
 export default class MartyriaToolbar extends Vue {
   @Prop() element!: MartyriaElement;
+  @Prop() pageSetup!: PageSetup;
   Fthora = Fthora;
   MeasureBar = MeasureBar;
   Note = Note;
@@ -182,6 +201,10 @@ export default class MartyriaToolbar extends Vue {
     key: x,
     displayName: this.getScaleDisplayName(x),
   }));
+
+  get spaceAfterMax() {
+    return Unit.toPt(this.pageSetup.pageWidth);
+  }
 
   private getNoteDisplayName(note: Note) {
     if (note.includes('High')) {

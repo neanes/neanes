@@ -256,6 +256,8 @@ export class LayoutService {
             noteElement.lyricsWidth,
           );
 
+          elementWidthPx += noteElement.spaceAfter;
+
           const nextElement = elements[i + 1];
 
           // Keep note and martyria together
@@ -263,10 +265,9 @@ export class LayoutService {
             nextElement != null &&
             nextElement.elementType === ElementType.Martyria
           ) {
-            additionalWidth = this.getMartyriaWidth(
-              nextElement as MartyriaElement,
-              pageSetup,
-            );
+            additionalWidth =
+              this.getMartyriaWidth(nextElement as MartyriaElement, pageSetup) +
+              pageSetup.neumeDefaultSpacing;
           }
           break;
         }
@@ -605,27 +606,28 @@ export class LayoutService {
     const padding = pageSetup.neumeDefaultFontSize * 0.148;
 
     return (
-      padding +
-      TextMeasurementService.getTextWidth(
-        mappingNote.text,
-        `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
-      ) +
-      TextMeasurementService.getTextWidth(
-        mappingRoot.text,
-        `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
-      ) +
-      (martyriaElement.measureBarLeft
-        ? TextMeasurementService.getTextWidth(
-            mappingMeasureBarLeft!.text,
-            `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
-          )
-        : 0) +
-      (martyriaElement.measureBarRight
-        ? TextMeasurementService.getTextWidth(
-            mappingMeasureBarRight!.text,
-            `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
-          )
-        : 0)
+      martyriaElement.spaceAfter +
+      (padding +
+        TextMeasurementService.getTextWidth(
+          mappingNote.text,
+          `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
+        ) +
+        TextMeasurementService.getTextWidth(
+          mappingRoot.text,
+          `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
+        ) +
+        (martyriaElement.measureBarLeft
+          ? TextMeasurementService.getTextWidth(
+              mappingMeasureBarLeft!.text,
+              `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
+            )
+          : 0) +
+        (martyriaElement.measureBarRight
+          ? TextMeasurementService.getTextWidth(
+              mappingMeasureBarRight!.text,
+              `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
+            )
+          : 0))
     );
   }
 

@@ -599,12 +599,27 @@
         <img src="@/assets/icons/fthora-spathi.svg" />
       </button>
     </div>
+    <div class="row">
+      <label>Space After</label>
+      <span class="space"></span>
+
+      <InputUnit
+        unit="pt"
+        :min="-spaceAfterMax"
+        :max="spaceAfterMax"
+        :step="0.5"
+        :precision="2"
+        :value="element.spaceAfter"
+        @input="$emit('update:spaceAfter', $event)"
+      />
+    </div>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { NoteElement } from '@/models/Element';
+import InputUnit from '@/components/InputUnit.vue';
 import {
   Accidental,
   Fthora,
@@ -616,21 +631,25 @@ import {
   TimeNeume,
   VocalExpressionNeume,
 } from '@/models/Neumes';
-import Neume from './Neume.vue';
+import NeumeVue from './Neume.vue';
 import {
   areVocalExpressionsEquivalent,
   onlyTakesTopKlasma,
   onlyTakesBottomKlasma,
   onlyTakesTopGorgon,
 } from '@/models/NeumeReplacements';
+import { PageSetup } from '@/models/PageSetup';
+import { Unit } from '@/utils/Unit';
 
 @Component({
   components: {
-    Neume,
+    Neume: NeumeVue,
+    InputUnit,
   },
 })
 export default class NeumeToolbar extends Vue {
   @Prop() element!: NoteElement;
+  @Prop() pageSetup!: PageSetup;
   Accidental = Accidental;
   VocalExpressionNeume = VocalExpressionNeume;
   TimeNeume = TimeNeume;
@@ -672,6 +691,10 @@ export default class NeumeToolbar extends Vue {
     window.removeEventListener('mouseup', this.onMeasureNumberMouseUp);
     window.removeEventListener('mouseup', this.onNoteIndicatorMouseUp);
     window.removeEventListener('mouseup', this.onIsonMouseUp);
+  }
+
+  get spaceAfterMax() {
+    return Unit.toPt(this.pageSetup.pageWidth);
   }
 
   private setAccidental(neume: Accidental) {
@@ -1001,6 +1024,7 @@ export default class NeumeToolbar extends Vue {
 .row {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .neume-button {

@@ -5,7 +5,7 @@
 
       <InputUnit
         unit="pt"
-        :min="0"
+        :min="-spaceAfterMax"
         :max="spaceAfterMax"
         :step="0.5"
         :precision="2"
@@ -33,7 +33,7 @@ export default class ToolbarTempo extends Vue {
   @Prop() pageSetup!: PageSetup;
 
   get spaceAfterMax() {
-    return Unit.toPt(this.pageSetup.pageWidth);
+    return Math.round(Unit.toPt(this.pageSetup.pageWidth));
   }
 }
 </script>

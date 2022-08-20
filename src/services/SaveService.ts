@@ -338,6 +338,7 @@ export class SaveService {
     element.color = e.color;
     element.fontSize = e.fontSize;
     element.height = e.height;
+    element.heightAdjustment = e.heightAdjustment;
   }
 
   public static LoadScore_v1(s: Score_v1) {
@@ -689,5 +690,6 @@ export class SaveService {
     element.martyria = e.martyria;
     element.color = e.color;
     element.fontSize = e.fontSize;
+    element.heightAdjustment = e.heightAdjustment || 0;
   }
 }

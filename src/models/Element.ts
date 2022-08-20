@@ -432,6 +432,7 @@ export class ModeKeyElement extends ScoreElement {
   public color: string = '#000000';
   public fontSize: number = Unit.fromPt(20);
   public height: number = Unit.fromPt(37);
+  public heightAdjustment: number = 0;
 
   public get isPlagal() {
     return this.mode > 4 && this.mode !== 7;

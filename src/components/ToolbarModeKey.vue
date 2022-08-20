@@ -52,6 +52,20 @@
       />
     </button>
     <span class="space" />
+
+    <label class="right-space">Height Adjustment</label>
+
+    <InputUnit
+      class="short-input"
+      unit="pt"
+      :min="heightAdjustmentMin"
+      :max="heightAdjustmentMax"
+      :step="0.5"
+      :precision="2"
+      :value="element.heightAdjustment"
+      @input="$emit('update:heightAdjustment', $event)"
+    />
+    <span class="space" />
     <button @click="$emit('open-mode-key-dialog')">Change Key</button>
   </div>
 </template>
@@ -61,12 +75,15 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 import { TextBoxAlignment, ModeKeyElement } from '@/models/Element';
 import { Unit } from '@/utils/Unit';
 import ColorPicker from '@/components/ColorPicker.vue';
+import InputUnit from '@/components/InputUnit.vue';
+import { PageSetup } from '@/models/PageSetup';
 
 @Component({
-  components: { ColorPicker },
+  components: { ColorPicker, InputUnit },
 })
 export default class ToolbarModeKey extends Vue {
   @Prop() element!: ModeKeyElement;
+  @Prop() pageSetup!: PageSetup;
   TextBoxAlignment = TextBoxAlignment;
 
   private get fontSize() {
@@ -86,6 +103,14 @@ export default class ToolbarModeKey extends Vue {
     );
 
     this.$forceUpdate();
+  }
+
+  private get heightAdjustmentMin() {
+    return -Math.round(Unit.fromPt(this.element.height));
+  }
+
+  private get heightAdjustmentMax() {
+    return Unit.toPt(this.pageSetup.pageHeight);
   }
 }
 </script>
@@ -116,5 +141,13 @@ export default class ToolbarModeKey extends Vue {
 
 .space {
   width: 16px;
+}
+
+label.right-space {
+  margin-right: 0.5rem;
+}
+
+.short-input {
+  width: 4rem;
 }
 </style>

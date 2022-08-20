@@ -691,7 +691,7 @@ export default class ToolbarNeume extends Vue {
   }
 
   get spaceAfterMax() {
-    return Unit.toPt(this.pageSetup.pageWidth);
+    return Math.round(Unit.toPt(this.pageSetup.pageWidth));
   }
 
   private setAccidental(neume: Accidental) {

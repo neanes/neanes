@@ -129,6 +129,7 @@ export class DropCapElement extends ScoreElement {
   public fontFamily: string | undefined = undefined;
   public fontSize: number | undefined = undefined;
   public fontWeight: string | undefined = undefined;
+  public fontStyle: string | undefined = undefined;
   public color: string | undefined = undefined;
 }
 

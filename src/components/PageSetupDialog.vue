@@ -241,20 +241,23 @@
               </option>
             </select>
           </div>
-          <div class="form-group">
-            <label class="drop-caps-label">Weight</label>
-            <select
-              class="drop-caps-select"
+          <div class="form-group row">
+            <label class="drop-caps-label">Style</label>
+            <input
+              type="checkbox"
               v-model="form.dropCapDefaultFontWeight"
-            >
-              <option
-                v-for="weight in fontWeights"
-                :key="weight.value"
-                :value="weight.value"
-              >
-                {{ weight.name }}
-              </option>
-            </select>
+              true-value="700"
+              false-value="400"
+            />
+            <label>Bold</label>
+
+            <input
+              type="checkbox"
+              v-model="form.dropCapDefaultFontStyle"
+              true-value="italic"
+              false-value="normal"
+            />
+            <label>Italic</label>
           </div>
           <div class="subheader">Lyrics</div>
           <div class="form-group row">
@@ -284,20 +287,23 @@
               </option>
             </select>
           </div>
-          <div class="form-group">
-            <label class="drop-caps-label">Weight</label>
-            <select
-              class="drop-caps-select"
+          <div class="form-group row">
+            <label class="drop-caps-label">Style</label>
+            <input
+              type="checkbox"
               v-model="form.lyricsDefaultFontWeight"
-            >
-              <option
-                v-for="weight in fontWeights"
-                :key="weight.value"
-                :value="weight.value"
-              >
-                {{ weight.name }}
-              </option>
-            </select>
+              true-value="700"
+              false-value="400"
+            />
+            <label>Bold</label>
+
+            <input
+              type="checkbox"
+              v-model="form.lyricsDefaultFontStyle"
+              true-value="italic"
+              false-value="normal"
+            />
+            <label>Italic</label>
           </div>
           <div class="subheader">Neumes</div>
           <div class="form-group row">
@@ -552,11 +558,6 @@ import NeumeBoxMartyria from '@/components/NeumeBoxMartyria.vue';
 import NeumeBoxTempo from '@/components/NeumeBoxTempo.vue';
 import { ElementType, ScoreElement } from '@/models/Element';
 
-interface FontWeight {
-  name: string;
-  value: string;
-}
-
 @Component({
   components: {
     ModalDialog,
@@ -577,17 +578,6 @@ export default class PageSetupDialog extends Vue {
   Accidental = Accidental;
 
   maxStrokeWidth = 5;
-
-  fontWeights: FontWeight[] = [
-    {
-      name: 'Normal',
-      value: '400',
-    },
-    {
-      name: 'Bold',
-      value: '700',
-    },
-  ];
 
   previewNeumes = [
     {

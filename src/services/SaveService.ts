@@ -71,6 +71,8 @@ export class SaveService {
     score.pageSetup.dropCapDefaultFontSize = s.pageSetup.dropCapDefaultFontSize;
     score.pageSetup.dropCapDefaultFontWeight =
       s.pageSetup.dropCapDefaultFontWeight;
+    score.pageSetup.dropCapDefaultFontStyle =
+      s.pageSetup.dropCapDefaultFontStyle;
     score.pageSetup.dropCapDefaultStrokeWidth =
       s.pageSetup.dropCapDefaultStrokeWidth;
     score.pageSetup.leftMargin = s.pageSetup.leftMargin;
@@ -81,6 +83,7 @@ export class SaveService {
     score.pageSetup.lyricsDefaultFontSize = s.pageSetup.lyricsDefaultFontSize;
     score.pageSetup.lyricsDefaultFontWeight =
       s.pageSetup.lyricsDefaultFontWeight;
+    score.pageSetup.lyricsDefaultFontStyle = s.pageSetup.lyricsDefaultFontStyle;
     score.pageSetup.lyricsDefaultStrokeWidth =
       s.pageSetup.lyricsDefaultStrokeWidth;
     score.pageSetup.lyricsVerticalOffset = s.pageSetup.lyricsVerticalOffset;
@@ -224,6 +227,7 @@ export class SaveService {
     element.fontFamily = e.fontFamily || undefined;
     element.fontSize = e.fontSize || undefined;
     element.fontWeight = e.fontWeight || undefined;
+    element.fontStyle = e.fontStyle || undefined;
   }
 
   public static SaveMartyria(element: MartyriaElement_v1, e: MartyriaElement) {
@@ -445,6 +449,8 @@ export class SaveService {
     pageSetup.dropCapDefaultFontSize = p.dropCapDefaultFontSize;
     pageSetup.dropCapDefaultFontWeight =
       p.dropCapDefaultFontWeight || pageSetup.dropCapDefaultFontWeight;
+    pageSetup.dropCapDefaultFontStyle =
+      p.dropCapDefaultFontStyle || pageSetup.dropCapDefaultFontStyle;
     pageSetup.dropCapDefaultStrokeWidth =
       p.dropCapDefaultStrokeWidth || pageSetup.dropCapDefaultStrokeWidth;
 
@@ -454,6 +460,8 @@ export class SaveService {
     pageSetup.lyricsDefaultFontSize = p.lyricsDefaultFontSize;
     pageSetup.lyricsDefaultFontWeight =
       p.lyricsDefaultFontWeight || pageSetup.lyricsDefaultFontWeight;
+    pageSetup.lyricsDefaultFontStyle =
+      p.lyricsDefaultFontStyle || pageSetup.lyricsDefaultFontStyle;
     pageSetup.lyricsDefaultStrokeWidth =
       p.lyricsDefaultStrokeWidth || pageSetup.lyricsDefaultStrokeWidth;
     pageSetup.lyricsVerticalOffset = p.lyricsVerticalOffset;
@@ -542,6 +550,7 @@ export class SaveService {
     element.fontFamily = e.fontFamily || null;
     element.fontSize = e.fontSize || null;
     element.fontWeight = e.fontWeight || null;
+    element.fontStyle = e.fontStyle || null;
   }
 
   public static LoadMartyria_v1(

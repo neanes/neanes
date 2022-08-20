@@ -869,6 +869,7 @@ export default class Editor extends Vue {
         this.score.pageSetup.lyricsDefaultFontFamily,
       ),
       fontWeight: this.score.pageSetup.lyricsDefaultFontWeight,
+      fontStyle: this.score.pageSetup.lyricsDefaultFontStyle,
       color: this.score.pageSetup.lyricsDefaultColor,
     } as CSSStyleDeclaration;
   }

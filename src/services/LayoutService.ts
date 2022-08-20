@@ -75,7 +75,7 @@ export class LayoutService {
     const lyricsVerticalOffset = neumeHeight + pageSetup.lyricsVerticalOffset;
 
     const lyricHeight = TextMeasurementService.getFontHeight(
-      `${pageSetup.lyricsDefaultFontWeight} ${pageSetup.lyricsDefaultFontSize}px "${pageSetup.lyricsDefaultFontFamily}"`,
+      pageSetup.lyricsFont,
     );
 
     const vareiaMapping = NeumeMappingService.getMapping(
@@ -316,9 +316,13 @@ export class LayoutService {
             dropCapElement.fontFamily || pageSetup.dropCapDefaultFontFamily;
           const dropCapFontSize =
             dropCapElement.fontSize || pageSetup.dropCapDefaultFontSize;
+          const dropCapFontWeight =
+            dropCapElement.fontWeight || pageSetup.dropCapDefaultFontWeight;
+          const dropCapFontStyle =
+            dropCapElement.fontStyle || pageSetup.dropCapDefaultFontStyle;
           elementWidthPx = TextMeasurementService.getTextWidth(
             dropCapElement.content,
-            `${dropCapFontSize}px ${dropCapFontFamily}`,
+            `${dropCapFontStyle} normal ${dropCapFontWeight} ${dropCapFontSize}px "${dropCapFontFamily}"`,
           );
           break;
         }
@@ -424,12 +428,19 @@ export class LayoutService {
       if (element.elementType === ElementType.DropCap) {
         const distanceFromTopToBottomOfLyrics =
           lyricsVerticalOffset + pageSetup.lyricsDefaultFontSize;
+
         const dropCapElement = element as DropCapElement;
+
         const dropCapFontFamily =
           dropCapElement.fontFamily || pageSetup.dropCapDefaultFontFamily;
         const dropCapFontSize =
           dropCapElement.fontSize || pageSetup.dropCapDefaultFontSize;
-        const dropCapFont = `${dropCapFontSize}px ${dropCapFontFamily}`;
+        const dropCapFontWeight =
+          dropCapElement.fontWeight || pageSetup.dropCapDefaultFontWeight;
+        const dropCapFontStyle =
+          dropCapElement.fontStyle || pageSetup.dropCapDefaultFontStyle;
+
+        const dropCapFont = `${dropCapFontStyle} normal ${dropCapFontWeight} ${dropCapFontSize}px "${dropCapFontFamily}"`;
         const fontHeight = TextMeasurementService.getFontHeight(dropCapFont);
         const fountBoundingBoxDescent =
           TextMeasurementService.getFontBoundingBoxDescent(
@@ -634,17 +645,17 @@ export class LayoutService {
     // First calculate some constants
     const widthOfUnderscore = TextMeasurementService.getTextWidth(
       '_',
-      `${pageSetup.lyricsDefaultFontWeight} ${pageSetup.lyricsDefaultFontSize}px "${pageSetup.lyricsDefaultFontFamily}"`,
+      pageSetup.lyricsFont,
     );
 
     const widthOfHyphen = TextMeasurementService.getTextWidth(
       '-',
-      `${pageSetup.lyricsDefaultFontWeight} ${pageSetup.lyricsDefaultFontSize}px "${pageSetup.lyricsDefaultFontFamily}"`,
+      pageSetup.lyricsFont,
     );
 
     const widthOfSpace = TextMeasurementService.getTextWidth(
       ' ',
-      `${pageSetup.lyricsDefaultFontWeight} ${pageSetup.lyricsDefaultFontSize}px "${pageSetup.lyricsDefaultFontFamily}"`,
+      pageSetup.lyricsFont,
     );
 
     const elaphronMapping = NeumeMappingService.getMapping(
@@ -1133,15 +1144,12 @@ export class LayoutService {
     text: string,
     pageSetup: PageSetup,
   ) {
-    const key = `${text} | ${pageSetup.lyricsDefaultFontWeight} | ${pageSetup.lyricsDefaultFontSize} | "${pageSetup.lyricsDefaultFontFamily}"`;
+    const key = `${text} | ${pageSetup.lyricsFont}`;
 
     let width = cache.get(key);
 
     if (width == null) {
-      width = TextMeasurementService.getTextWidth(
-        text,
-        `${pageSetup.lyricsDefaultFontWeight} ${pageSetup.lyricsDefaultFontSize}px "${pageSetup.lyricsDefaultFontFamily}"`,
-      );
+      width = TextMeasurementService.getTextWidth(text, pageSetup.lyricsFont);
 
       cache.set(key, width);
     }

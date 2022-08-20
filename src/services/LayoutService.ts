@@ -554,7 +554,12 @@ export class LayoutService {
         `${textBoxElement.fontSize}px ${textBoxElement.fontFamily}`,
       );
 
-      elementWidthPx = Math.max(elementWidthPx, 10);
+      const minimumWidth = TextMeasurementService.getTextWidth(
+        ' ',
+        `${textBoxElement.fontSize}px ${textBoxElement.fontFamily}`,
+      );
+
+      elementWidthPx = Math.max(elementWidthPx, minimumWidth);
     } else {
       elementWidthPx = pageSetup.innerPageWidth;
     }

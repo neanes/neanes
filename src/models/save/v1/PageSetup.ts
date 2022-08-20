@@ -28,6 +28,7 @@ export class PageSetup {
   public lyricsDefaultFontFamily = 'Omega';
   public lyricsDefaultFontSize = Unit.fromPt(12);
   public lyricsDefaultFontWeight = '400';
+  public lyricsDefaultFontStyle = 'normal';
   public lyricsDefaultColor = '#000000';
   public lyricsDefaultStrokeWidth = 0;
   public lyricsVerticalOffset = -Unit.fromInch(0.06);
@@ -64,6 +65,7 @@ export class PageSetup {
   public dropCapDefaultFontFamily = 'Athonite';
   public dropCapDefaultFontSize = Unit.fromPt(60);
   public dropCapDefaultFontWeight = '400';
+  public dropCapDefaultFontStyle = 'normal';
   public dropCapDefaultColor = '#000000';
   public dropCapDefaultStrokeWidth = 0;
 

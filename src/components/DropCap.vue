@@ -44,6 +44,8 @@ export default class DropCap extends Vue {
       ),
       fontWeight:
         this.element.fontWeight || this.pageSetup.dropCapDefaultFontWeight,
+      fontStyle:
+        this.element.fontStyle || this.pageSetup.dropCapDefaultFontStyle,
     } as CSSStyleDeclaration;
 
     return style;

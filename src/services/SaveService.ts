@@ -240,6 +240,7 @@ export class SaveService {
     element.measureBarLeft = e.measureBarLeft || undefined;
     element.measureBarRight = e.measureBarRight || undefined;
     element.alignRight = e.alignRight || undefined;
+    element.spaceAfter = e.spaceAfter;
   }
 
   public static SaveTempo(element: TempoElement_v1, e: TempoElement) {
@@ -248,6 +249,7 @@ export class SaveService {
 
   public static SaveNote(element: NoteElement_v1, e: NoteElement) {
     element.quantitativeNeume = e.quantitativeNeume;
+    element.spaceAfter = e.spaceAfter;
 
     if (e.timeNeume != null) {
       element.timeNeume = e.timeNeume;
@@ -564,6 +566,7 @@ export class SaveService {
     element.note = e.note;
     element.scale = e.scale;
     element.rootSign = e.rootSign;
+    element.spaceAfter = e.spaceAfter || 0;
 
     if (e.fthora != null) {
       element.fthora = e.fthora;
@@ -650,6 +653,7 @@ export class SaveService {
     element.isMelisma = e.isMelisma === true;
     element.isMelismaStart = e.isMelismaStart === true;
     element.isHyphen = e.isHyphen === true;
+    element.spaceAfter = e.spaceAfter || 0;
   }
 
   public static LoadTextBox_v1(element: TextBoxElement, e: TextBoxElement_v1) {

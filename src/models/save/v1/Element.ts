@@ -54,6 +54,7 @@ export class NoteElement extends ScoreElement {
   public isMelisma: boolean | undefined = undefined;
   public isMelismaStart: boolean | undefined = undefined;
   public isHyphen: boolean | undefined = undefined;
+  public spaceAfter: number = 0;
 }
 
 export class MartyriaElement extends ScoreElement {
@@ -69,6 +70,7 @@ export class MartyriaElement extends ScoreElement {
   // New name: measureBarRight
   public measureBar: MeasureBar | undefined = undefined;
   public alignRight: boolean | undefined = undefined;
+  public spaceAfter: number = 0;
 }
 
 export class TempoElement extends ScoreElement {

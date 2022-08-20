@@ -64,6 +64,7 @@ export class NoteElement extends ScoreElement {
   public isMelisma: boolean = false;
   public isMelismaStart: boolean = false;
   public isHyphen: boolean = false;
+  public spaceAfter: number = 0;
 
   public clone() {
     const clone = new NoteElement();
@@ -319,6 +320,7 @@ export class MartyriaElement extends ScoreElement {
   public measureBarLeft: MeasureBar | null = null;
   public measureBarRight: MeasureBar | null = null;
   public alignRight: boolean = false;
+  public spaceAfter: number = 0;
 
   public error: boolean = false;
 

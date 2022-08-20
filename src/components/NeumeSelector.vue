@@ -1,14 +1,46 @@
 <template>
   <div class="neume-selector-panel">
     <div class="row">
-      <Neume
-        class="neume"
-        v-for="(neume, index) in ascendingNeumes"
-        :key="`ascendingNeumes-${index}`"
-        :neume="neume"
-        :fontFamily="pageSetup.neumeDefaultFontFamily"
-        @click.native="$emit('select-quantitative-neume', neume)"
-      />
+      <template v-for="(neume, index) in ascendingNeumes">
+        <template v-if="neume === QuantitativeNeume.VareiaDotted">
+          <div
+            :key="`ascendingNeumes-${index}`"
+            class="menu-container"
+            @mousedown="openVareiaDottedMenu"
+            @mouseleave="selectedVareiaDotted = null"
+          >
+            <Neume
+              class="neume"
+              :neume="QuantitativeNeume.VareiaDotted"
+              :fontFamily="pageSetup.neumeDefaultFontFamily"
+            />
+
+            <div class="menu" v-if="showVareiaDottedMenu">
+              <div
+                class="menu-item"
+                v-for="menuItem in vareiaDottedMenuItems"
+                :key="menuItem"
+                @mouseenter="selectedVareiaDotted = menuItem"
+              >
+                <Neume
+                  class="neume"
+                  :neume="menuItem"
+                  :fontFamily="pageSetup.neumeDefaultFontFamily"
+                />
+              </div>
+            </div>
+          </div>
+        </template>
+        <template v-else>
+          <Neume
+            class="neume"
+            :key="`ascendingNeumes-${index}`"
+            :neume="neume"
+            :fontFamily="pageSetup.neumeDefaultFontFamily"
+            @click.native="$emit('select-quantitative-neume', neume)"
+          />
+        </template>
+      </template>
     </div>
     <div class="row">
       <Neume
@@ -185,8 +217,17 @@ export default class NeumeSelector extends Vue {
     { gorgon: null },
   ];
 
+  vareiaDottedMenuItems: QuantitativeNeume[] = [
+    QuantitativeNeume.VareiaDotted4,
+    QuantitativeNeume.VareiaDotted3,
+    QuantitativeNeume.VareiaDotted2,
+    QuantitativeNeume.VareiaDotted,
+  ];
+
   showHyporoeMenu: boolean = false;
+  showVareiaDottedMenu: boolean = false;
   selectedHyporoe: HyporoeMenuItem | null = null;
+  selectedVareiaDotted: QuantitativeNeume | null = null;
 
   openHyporoeMenu() {
     this.showHyporoeMenu = true;
@@ -205,6 +246,21 @@ export default class NeumeSelector extends Vue {
     this.showHyporoeMenu = false;
 
     window.removeEventListener('mouseup', this.onHyporoeMouseUp);
+  }
+
+  openVareiaDottedMenu() {
+    this.showVareiaDottedMenu = true;
+    window.addEventListener('mouseup', this.onVareiaDottedMouseUp);
+  }
+
+  onVareiaDottedMouseUp() {
+    if (this.selectedVareiaDotted) {
+      this.$emit('select-quantitative-neume', this.selectedVareiaDotted);
+    }
+
+    this.showVareiaDottedMenu = false;
+
+    window.removeEventListener('mouseup', this.onVareiaDottedMouseUp);
   }
 }
 </script>

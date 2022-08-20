@@ -64,91 +64,8 @@ export class SaveService {
     score.staff.elements = [];
 
     score.pageSetup = new PageSetup_v1();
-    score.pageSetup.bottomMargin = s.pageSetup.bottomMargin;
-    score.pageSetup.dropCapDefaultColor = s.pageSetup.dropCapDefaultColor;
-    score.pageSetup.dropCapDefaultFontFamily =
-      s.pageSetup.dropCapDefaultFontFamily;
-    score.pageSetup.dropCapDefaultFontSize = s.pageSetup.dropCapDefaultFontSize;
-    score.pageSetup.dropCapDefaultFontWeight =
-      s.pageSetup.dropCapDefaultFontWeight;
-    score.pageSetup.dropCapDefaultFontStyle =
-      s.pageSetup.dropCapDefaultFontStyle;
-    score.pageSetup.dropCapDefaultStrokeWidth =
-      s.pageSetup.dropCapDefaultStrokeWidth;
-    score.pageSetup.leftMargin = s.pageSetup.leftMargin;
-    score.pageSetup.lineHeight = s.pageSetup.lineHeight;
-    score.pageSetup.lyricsDefaultColor = s.pageSetup.lyricsDefaultColor;
-    score.pageSetup.lyricsDefaultFontFamily =
-      s.pageSetup.lyricsDefaultFontFamily;
-    score.pageSetup.lyricsDefaultFontSize = s.pageSetup.lyricsDefaultFontSize;
-    score.pageSetup.lyricsDefaultFontWeight =
-      s.pageSetup.lyricsDefaultFontWeight;
-    score.pageSetup.lyricsDefaultFontStyle = s.pageSetup.lyricsDefaultFontStyle;
-    score.pageSetup.lyricsDefaultStrokeWidth =
-      s.pageSetup.lyricsDefaultStrokeWidth;
-    score.pageSetup.lyricsVerticalOffset = s.pageSetup.lyricsVerticalOffset;
 
-    score.pageSetup.martyriaDefaultColor = s.pageSetup.martyriaDefaultColor;
-    score.pageSetup.martyriaDefaultStrokeWidth =
-      s.pageSetup.martyriaDefaultStrokeWidth;
-    score.pageSetup.tempoDefaultColor = s.pageSetup.tempoDefaultColor;
-    score.pageSetup.tempoDefaultStrokeWidth =
-      s.pageSetup.tempoDefaultStrokeWidth;
-    score.pageSetup.modeKeyDefaultColor = s.pageSetup.modeKeyDefaultColor;
-    score.pageSetup.modeKeyDefaultStrokeWidth =
-      s.pageSetup.modeKeyDefaultStrokeWidth;
-    score.pageSetup.neumeDefaultColor = s.pageSetup.neumeDefaultColor;
-    score.pageSetup.neumeDefaultFontFamily = s.pageSetup.neumeDefaultFontFamily;
-    score.pageSetup.neumeDefaultStrokeWidth =
-      s.pageSetup.neumeDefaultStrokeWidth;
-    score.pageSetup.neumeDefaultFontSize = s.pageSetup.neumeDefaultFontSize;
-    score.pageSetup.neumeDefaultSpacing = s.pageSetup.neumeDefaultSpacing;
-    score.pageSetup.pageHeight = s.pageSetup.pageHeight;
-    score.pageSetup.pageWidth = s.pageSetup.pageWidth;
-    score.pageSetup.rightMargin = s.pageSetup.rightMargin;
-    score.pageSetup.topMargin = s.pageSetup.topMargin;
-
-    score.pageSetup.headerMargin = s.pageSetup.headerMargin;
-    score.pageSetup.footerMargin = s.pageSetup.footerMargin;
-    score.pageSetup.headerDifferentFirstPage =
-      s.pageSetup.headerDifferentFirstPage || undefined;
-    score.pageSetup.headerDifferentOddEven =
-      s.pageSetup.headerDifferentOddEven || undefined;
-
-    score.pageSetup.showHeader = s.pageSetup.showHeader || undefined;
-    score.pageSetup.showFooter = s.pageSetup.showFooter || undefined;
-
-    score.pageSetup.accidentalDefaultColor = s.pageSetup.accidentalDefaultColor;
-    score.pageSetup.accidentalDefaultStrokeWidth =
-      s.pageSetup.accidentalDefaultStrokeWidth;
-    score.pageSetup.fthoraDefaultColor = s.pageSetup.fthoraDefaultColor;
-    score.pageSetup.fthoraDefaultStrokeWidth =
-      s.pageSetup.fthoraDefaultStrokeWidth;
-    score.pageSetup.heteronDefaultColor = s.pageSetup.heteronDefaultColor;
-    score.pageSetup.heteronDefaultStrokeWidth =
-      s.pageSetup.heteronDefaultStrokeWidth;
-    score.pageSetup.gorgonDefaultColor = s.pageSetup.gorgonDefaultColor;
-    score.pageSetup.gorgonDefaultStrokeWidth =
-      s.pageSetup.gorgonDefaultStrokeWidth;
-    score.pageSetup.measureBarDefaultColor = s.pageSetup.measureBarDefaultColor;
-    score.pageSetup.measureBarDefaultStrokeWidth =
-      s.pageSetup.measureBarDefaultStrokeWidth;
-    score.pageSetup.measureNumberDefaultColor =
-      s.pageSetup.measureNumberDefaultColor;
-    score.pageSetup.measureNumberDefaultStrokeWidth =
-      s.pageSetup.measureNumberDefaultStrokeWidth;
-    score.pageSetup.noteIndicatorDefaultColor =
-      s.pageSetup.noteIndicatorDefaultColor;
-    score.pageSetup.noteIndicatorDefaultStrokeWidth =
-      s.pageSetup.noteIndicatorDefaultStrokeWidth;
-    score.pageSetup.isonDefaultColor = s.pageSetup.isonDefaultColor;
-    score.pageSetup.isonDefaultStrokeWidth = s.pageSetup.isonDefaultStrokeWidth;
-
-    score.pageSetup.pageSize = s.pageSetup.pageSize;
-    score.pageSetup.pageSizeUnit = s.pageSetup.pageSizeUnit;
-    score.pageSetup.landscape = s.pageSetup.landscape || undefined;
-
-    score.pageSetup.hyphenSpacing = s.pageSetup.hyphenSpacing;
+    this.SavePageSetup(score.pageSetup, s.pageSetup);
 
     this.SaveHeader(score.headers.default, s.headers.default);
     this.SaveHeader(score.headers.even, s.headers.even);
@@ -205,6 +122,75 @@ export class SaveService {
     }
 
     return score;
+  }
+
+  public static SavePageSetup(pageSetup: PageSetup_v1, p: PageSetup) {
+    pageSetup.bottomMargin = p.bottomMargin;
+    pageSetup.dropCapDefaultColor = p.dropCapDefaultColor;
+    pageSetup.dropCapDefaultFontFamily = p.dropCapDefaultFontFamily;
+    pageSetup.dropCapDefaultFontSize = p.dropCapDefaultFontSize;
+    pageSetup.dropCapDefaultFontWeight = p.dropCapDefaultFontWeight;
+    pageSetup.dropCapDefaultFontStyle = p.dropCapDefaultFontStyle;
+    pageSetup.dropCapDefaultStrokeWidth = p.dropCapDefaultStrokeWidth;
+    pageSetup.leftMargin = p.leftMargin;
+    pageSetup.lineHeight = p.lineHeight;
+    pageSetup.lyricsDefaultColor = p.lyricsDefaultColor;
+    pageSetup.lyricsDefaultFontFamily = p.lyricsDefaultFontFamily;
+    pageSetup.lyricsDefaultFontSize = p.lyricsDefaultFontSize;
+    pageSetup.lyricsDefaultFontWeight = p.lyricsDefaultFontWeight;
+    pageSetup.lyricsDefaultFontStyle = p.lyricsDefaultFontStyle;
+    pageSetup.lyricsDefaultStrokeWidth = p.lyricsDefaultStrokeWidth;
+    pageSetup.lyricsVerticalOffset = p.lyricsVerticalOffset;
+
+    pageSetup.martyriaDefaultColor = p.martyriaDefaultColor;
+    pageSetup.martyriaDefaultStrokeWidth = p.martyriaDefaultStrokeWidth;
+    pageSetup.tempoDefaultColor = p.tempoDefaultColor;
+    pageSetup.tempoDefaultStrokeWidth = p.tempoDefaultStrokeWidth;
+    pageSetup.modeKeyDefaultColor = p.modeKeyDefaultColor;
+    pageSetup.modeKeyDefaultStrokeWidth = p.modeKeyDefaultStrokeWidth;
+    pageSetup.neumeDefaultColor = p.neumeDefaultColor;
+    pageSetup.neumeDefaultFontFamily = p.neumeDefaultFontFamily;
+    pageSetup.neumeDefaultStrokeWidth = p.neumeDefaultStrokeWidth;
+    pageSetup.neumeDefaultFontSize = p.neumeDefaultFontSize;
+    pageSetup.neumeDefaultSpacing = p.neumeDefaultSpacing;
+    pageSetup.pageHeight = p.pageHeight;
+    pageSetup.pageWidth = p.pageWidth;
+    pageSetup.rightMargin = p.rightMargin;
+    pageSetup.topMargin = p.topMargin;
+
+    pageSetup.headerMargin = p.headerMargin;
+    pageSetup.footerMargin = p.footerMargin;
+    pageSetup.headerDifferentFirstPage =
+      p.headerDifferentFirstPage || undefined;
+    pageSetup.headerDifferentOddEven = p.headerDifferentOddEven || undefined;
+
+    pageSetup.showHeader = p.showHeader || undefined;
+    pageSetup.showFooter = p.showFooter || undefined;
+
+    pageSetup.accidentalDefaultColor = p.accidentalDefaultColor;
+    pageSetup.accidentalDefaultStrokeWidth = p.accidentalDefaultStrokeWidth;
+    pageSetup.fthoraDefaultColor = p.fthoraDefaultColor;
+    pageSetup.fthoraDefaultStrokeWidth = p.fthoraDefaultStrokeWidth;
+    pageSetup.heteronDefaultColor = p.heteronDefaultColor;
+    pageSetup.heteronDefaultStrokeWidth = p.heteronDefaultStrokeWidth;
+    pageSetup.gorgonDefaultColor = p.gorgonDefaultColor;
+    pageSetup.gorgonDefaultStrokeWidth = p.gorgonDefaultStrokeWidth;
+    pageSetup.measureBarDefaultColor = p.measureBarDefaultColor;
+    pageSetup.measureBarDefaultStrokeWidth = p.measureBarDefaultStrokeWidth;
+    pageSetup.measureNumberDefaultColor = p.measureNumberDefaultColor;
+    pageSetup.measureNumberDefaultStrokeWidth =
+      p.measureNumberDefaultStrokeWidth;
+    pageSetup.noteIndicatorDefaultColor = p.noteIndicatorDefaultColor;
+    pageSetup.noteIndicatorDefaultStrokeWidth =
+      p.noteIndicatorDefaultStrokeWidth;
+    pageSetup.isonDefaultColor = p.isonDefaultColor;
+    pageSetup.isonDefaultStrokeWidth = p.isonDefaultStrokeWidth;
+
+    pageSetup.pageSize = p.pageSize;
+    pageSetup.pageSizeUnit = p.pageSizeUnit;
+    pageSetup.landscape = p.landscape || undefined;
+
+    pageSetup.hyphenSpacing = p.hyphenSpacing;
   }
 
   public static SaveHeader(header: Header_v1, h: Header) {

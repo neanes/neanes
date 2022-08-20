@@ -69,6 +69,9 @@ const neumeValueMap = new Map<QuantitativeNeume, number>([
   [QuantitativeNeume.Cross, 0],
   [QuantitativeNeume.Breath, 0],
   [QuantitativeNeume.VareiaDotted, 0],
+  [QuantitativeNeume.VareiaDotted2, 0],
+  [QuantitativeNeume.VareiaDotted3, 0],
+  [QuantitativeNeume.VareiaDotted4, 0],
 ]);
 
 export const getNeumeValue = (neume: QuantitativeNeume) =>

@@ -180,6 +180,9 @@ mapNeumeToSbmufl(
 mapNeumeToSbmufl(QuantitativeNeume.Cross, 'stavros');
 mapNeumeToSbmufl(QuantitativeNeume.Breath, 'breath');
 mapNeumeToSbmufl(QuantitativeNeume.VareiaDotted, 'leimma1');
+mapNeumeToSbmufl(QuantitativeNeume.VareiaDotted2, 'leimma2');
+mapNeumeToSbmufl(QuantitativeNeume.VareiaDotted3, 'leimma3');
+mapNeumeToSbmufl(QuantitativeNeume.VareiaDotted4, 'leimma4');
 mapNeumeToSbmufl(GorgonNeume.Gorgon_Top, 'gorgonAbove');
 mapNeumeToSbmufl(GorgonNeume.Gorgon_Bottom, 'gorgonBelow');
 mapNeumeToSbmufl(GorgonNeume.Digorgon, 'digorgon');

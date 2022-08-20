@@ -3022,6 +3022,19 @@ export default class Editor extends Vue {
 
     score.staff.elements.unshift(title, this.createDefaultModeKey());
 
+    try {
+      const pageSetupDefault = localStorage.getItem('pageSetupDefault');
+
+      if (pageSetupDefault) {
+        SaveService.LoadPageSetup_v1(
+          score.pageSetup,
+          JSON.parse(pageSetupDefault),
+        );
+      }
+    } catch (error) {
+      console.log(error);
+    }
+
     return score;
   }
 

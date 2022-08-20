@@ -558,8 +558,11 @@
       </div>
       <div class="button-container">
         <button class="ok-btn" @click="updatePageSetup">Update</button>
-        <button class="reset-btn neutral-btn" @click="resetToDefaults">
-          Reset to Defaults
+        <button class="reset-btn neutral-btn" @click="saveAsDefault">
+          Set as Default
+        </button>
+        <button class="reset-btn neutral-btn" @click="resetToSystemDefaults">
+          Use System Default
         </button>
         <button class="cancel-btn" @click="$emit('close')">Cancel</button>
       </div>
@@ -572,6 +575,7 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 import ModalDialog from '@/components/ModalDialog.vue';
 import NeumeVue from '@/components/Neume.vue';
 import { PageSetup, PageSize, pageSizes } from '@/models/PageSetup';
+import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
 import { Unit } from '@/utils/Unit';
 import ColorPicker from '@/components/ColorPicker.vue';
 import InputUnit from '@/components/InputUnit.vue';
@@ -581,6 +585,7 @@ import NeumeBoxSyllable from '@/components/NeumeBoxSyllable.vue';
 import NeumeBoxMartyria from '@/components/NeumeBoxMartyria.vue';
 import NeumeBoxTempo from '@/components/NeumeBoxTempo.vue';
 import { ElementType, ScoreElement } from '@/models/Element';
+import { SaveService } from '@/services/SaveService';
 
 @Component({
   components: {
@@ -968,7 +973,14 @@ export default class PageSetupDialog extends Vue {
     this.$emit('close');
   }
 
-  resetToDefaults() {
+  saveAsDefault() {
+    const defaults = new PageSetup_v1();
+    SaveService.SavePageSetup(defaults, this.form);
+
+    localStorage.setItem('pageSetupDefault', JSON.stringify(defaults));
+  }
+
+  resetToSystemDefaults() {
     this.form = new PageSetup();
   }
 }
@@ -994,7 +1006,7 @@ export default class PageSetupDialog extends Vue {
   border-top: 1px solid lightgray;
   border-bottom: 1px solid lightgray;
   padding-bottom: 0.5rem;
-  margin-bottom: 0.25rem;
+  margin-bottom: 1rem;
 }
 
 .preview-elements {

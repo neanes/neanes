@@ -130,8 +130,11 @@ export class LayoutService {
     this.processFooter(score.footers.even, pageSetup, neumeHeight);
     this.processFooter(score.footers.firstPage, pageSetup, neumeHeight);
 
-    for (let element of elements) {
+    for (let i = 0; i < elements.length; i++) {
+      const element = elements[i];
+
       let elementWidthPx = 0;
+      let additionalWidth = 0;
 
       const currentPageNumber = pages.length;
 
@@ -252,50 +255,26 @@ export class LayoutService {
             noteElement.neumeWidth,
             noteElement.lyricsWidth,
           );
+
+          const nextElement = elements[i + 1];
+
+          // Keep note and martyria together
+          if (
+            nextElement != null &&
+            nextElement.elementType === ElementType.Martyria
+          ) {
+            additionalWidth = this.getMartyriaWidth(
+              nextElement as MartyriaElement,
+              pageSetup,
+            );
+          }
           break;
         }
         case ElementType.Martyria: {
           const martyriaElement = element as MartyriaElement;
 
-          const mappingNote = !martyriaElement.error
-            ? NeumeMappingService.getMapping(martyriaElement.note)!
-            : NeumeMappingService.getMapping(Note.Pa)!;
-          const mappingRoot = !martyriaElement.error
-            ? NeumeMappingService.getMapping(martyriaElement.rootSign)!
-            : NeumeMappingService.getMapping(RootSign.Alpha)!;
-          const mappingMeasureBarLeft = martyriaElement.measureBarLeft
-            ? NeumeMappingService.getMapping(martyriaElement.measureBarLeft)!
-            : null;
-          const mappingMeasureBarRight = martyriaElement.measureBarRight
-            ? NeumeMappingService.getMapping(martyriaElement.measureBarRight)!
-            : null;
+          elementWidthPx = this.getMartyriaWidth(martyriaElement, pageSetup);
 
-          // Add in padding to give some extra space between
-          // the martyria and the next neume
-          const padding = pageSetup.neumeDefaultFontSize * 0.148;
-
-          elementWidthPx =
-            padding +
-            TextMeasurementService.getTextWidth(
-              mappingNote.text,
-              `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
-            ) +
-            TextMeasurementService.getTextWidth(
-              mappingRoot.text,
-              `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
-            ) +
-            (martyriaElement.measureBarLeft
-              ? TextMeasurementService.getTextWidth(
-                  mappingMeasureBarLeft!.text,
-                  `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
-                )
-              : 0) +
-            (martyriaElement.measureBarRight
-              ? TextMeasurementService.getTextWidth(
-                  mappingMeasureBarRight!.text,
-                  `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
-                )
-              : 0);
           break;
         }
         case ElementType.Tempo: {
@@ -340,7 +319,8 @@ export class LayoutService {
 
       // Check if we need a new line
       if (
-        currentLineWidthPx + elementWidthPx > pageSetup.innerPageWidth ||
+        currentLineWidthPx + elementWidthPx + additionalWidth >
+          pageSetup.innerPageWidth ||
         lastElementWasLineBreak
       ) {
         line = new Line();
@@ -601,6 +581,52 @@ export class LayoutService {
     }
 
     return elementWidthPx;
+  }
+
+  public static getMartyriaWidth(
+    martyriaElement: MartyriaElement,
+    pageSetup: PageSetup,
+  ) {
+    const mappingNote = !martyriaElement.error
+      ? NeumeMappingService.getMapping(martyriaElement.note)!
+      : NeumeMappingService.getMapping(Note.Pa)!;
+    const mappingRoot = !martyriaElement.error
+      ? NeumeMappingService.getMapping(martyriaElement.rootSign)!
+      : NeumeMappingService.getMapping(RootSign.Alpha)!;
+    const mappingMeasureBarLeft = martyriaElement.measureBarLeft
+      ? NeumeMappingService.getMapping(martyriaElement.measureBarLeft)!
+      : null;
+    const mappingMeasureBarRight = martyriaElement.measureBarRight
+      ? NeumeMappingService.getMapping(martyriaElement.measureBarRight)!
+      : null;
+
+    // Add in padding to give some extra space between
+    // the martyria and the next neume
+    const padding = pageSetup.neumeDefaultFontSize * 0.148;
+
+    return (
+      padding +
+      TextMeasurementService.getTextWidth(
+        mappingNote.text,
+        `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
+      ) +
+      TextMeasurementService.getTextWidth(
+        mappingRoot.text,
+        `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
+      ) +
+      (martyriaElement.measureBarLeft
+        ? TextMeasurementService.getTextWidth(
+            mappingMeasureBarLeft!.text,
+            `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
+          )
+        : 0) +
+      (martyriaElement.measureBarRight
+        ? TextMeasurementService.getTextWidth(
+            mappingMeasureBarRight!.text,
+            `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
+          )
+        : 0)
+    );
   }
 
   public static justifyLines(pages: Page[], pageSetup: PageSetup) {

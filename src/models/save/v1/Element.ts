@@ -124,6 +124,7 @@ export class ModeKeyElement extends ScoreElement {
   public color: string = '#000000';
   public fontSize: number = 16;
   public height: number = 20;
+  public heightAdjustment: number = 0;
 }
 
 export class DropCapElement extends ScoreElement {

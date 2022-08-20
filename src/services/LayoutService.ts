@@ -173,9 +173,10 @@ export class LayoutService {
           const modeKeyElement = element as ModeKeyElement;
 
           elementWidthPx = pageSetup.innerPageWidth;
-          modeKeyElement.height = TextMeasurementService.getFontHeight(
-            `${modeKeyElement.fontSize}px ${pageSetup.neumeDefaultFontFamily}`,
-          );
+          modeKeyElement.height =
+            TextMeasurementService.getFontHeight(
+              `${modeKeyElement.fontSize}px ${pageSetup.neumeDefaultFontFamily}`,
+            ) + modeKeyElement.heightAdjustment;
           break;
         }
         case ElementType.Note: {

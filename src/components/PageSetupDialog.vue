@@ -132,8 +132,8 @@
               class="margin-input"
               type="number"
               :unit="form.pageSizeUnit"
-              :min="toDisplayUnit(-form.pageWidth)"
-              :max="toDisplayUnit(form.pageWidth)"
+              :min="-neumeSpacingMax"
+              :max="neumeSpacingMax"
               :step="spacingStep"
               :precision="3"
               v-model="form.neumeDefaultSpacing"
@@ -666,6 +666,10 @@ export default class PageSetupDialog extends Vue {
 
   get lyricsFontFamilies() {
     return ['Omega', ...this.fonts];
+  }
+
+  get neumeSpacingMax() {
+    return Math.round(this.toDisplayUnit(this.form.pageWidth));
   }
 
   created() {

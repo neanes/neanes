@@ -366,9 +366,13 @@
     >
       <ToolbarModeKey
         :element="selectedElement"
+        :pageSetup="score.pageSetup"
         @update:fontSize="updateModeKeyFontSize(selectedElement, $event)"
         @update:alignment="updateModeKeyAlignment(selectedElement, $event)"
         @update:color="updateModeKeyColor(selectedElement, $event)"
+        @update:heightAdjustment="
+          updateModeKeyHeightAdjustment(selectedElement, $event)
+        "
         @open-mode-key-dialog="openModeKeyDialog"
       />
     </template>
@@ -2532,6 +2536,13 @@ export default class Editor extends Vue {
 
   updateModeKeyAlignment(element: ModeKeyElement, alignment: TextBoxAlignment) {
     this.updateModeKey(element, { alignment });
+  }
+
+  updateModeKeyHeightAdjustment(
+    element: ModeKeyElement,
+    heightAdjustment: number,
+  ) {
+    this.updateModeKey(element, { heightAdjustment });
   }
 
   updateModeKeyFromTemplate(element: ModeKeyElement, template: ModeKeyElement) {

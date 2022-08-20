@@ -288,6 +288,7 @@ export default class NeumeSelector extends Vue {
 
   min-width: var(--neume-height);
   height: var(--neume-height);
+  width: 100%;
 }
 
 .neume:hover {
@@ -298,6 +299,7 @@ export default class NeumeSelector extends Vue {
   display: flex;
   position: relative;
   height: var(--neume-height);
+  width: 100%;
 }
 
 .menu {
@@ -307,6 +309,7 @@ export default class NeumeSelector extends Vue {
   border: 1px solid black;
   box-sizing: border-box;
   bottom: 0;
+  width: 100%;
 }
 
 .menu-item {

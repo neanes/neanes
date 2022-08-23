@@ -33,15 +33,26 @@ export default class InputUnit extends Vue {
    * The number of decimal places that will be displayed.
    */
   @Prop() precision!: number | undefined;
+  /**
+   * A special rounding function applied to the display value
+   * before it is converted to the stored value.
+   */
+  @Prop() round!: ((x: number) => number) | undefined;
 
   get displayValue() {
     let convertedValue = this.toDisplay(this.value);
 
-    return convertedValue.toFixed(this.precision || 0);
+    return this.precision != null
+      ? convertedValue.toFixed(this.precision || 0)
+      : convertedValue;
   }
 
   onValueChanged(input: string) {
     let newValue = parseFloat(input);
+
+    if (this.round != null) {
+      newValue = this.round(newValue);
+    }
 
     let storageValue = this.toStorage(newValue);
 

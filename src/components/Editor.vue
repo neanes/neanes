@@ -3012,6 +3012,9 @@ export default class Editor extends Vue {
     );
 
     defaultTemplate.color = this.score.pageSetup.modeKeyDefaultColor;
+    defaultTemplate.fontSize = this.score.pageSetup.modeKeyDefaultFontSize;
+    defaultTemplate.strokeWidth =
+      this.score.pageSetup.modeKeyDefaultStrokeWidth;
 
     return defaultTemplate;
   }

@@ -329,6 +329,35 @@
               v-model="form.lyricsDefaultStrokeWidth"
             />
           </div>
+          <div class="subheader">Mode Key</div>
+          <div class="form-group row">
+            <label class="drop-caps-label">Color</label>
+            <ColorPicker v-model="form.modeKeyDefaultColor" />
+          </div>
+          <div class="form-group">
+            <label class="drop-caps-label">Size</label>
+            <InputUnit
+              class="drop-caps-input"
+              unit="pt"
+              :min="4"
+              :max="100"
+              :step="1"
+              :round="roundToHalf"
+              v-model="form.modeKeyDefaultFontSize"
+            />
+          </div>
+          <div class="form-group">
+            <label class="drop-caps-label">Outline</label>
+            <InputUnit
+              class="drop-caps-input"
+              unit="pt"
+              :min="0"
+              :max="strokeWidthMax"
+              :step="strokeWidthStep"
+              :precision="strokeWidthPrecision"
+              v-model="form.modeKeyDefaultStrokeWidth"
+            />
+          </div>
           <div class="subheader">Neumes</div>
           <div class="form-group row">
             <label class="drop-caps-label">Color</label>
@@ -768,6 +797,10 @@ export default class PageSetupDialog extends Vue {
         console.warn(`Unknown page size unit: ${this.form.pageSizeUnit}`);
         return 0;
     }
+  }
+
+  roundToHalf(value: number) {
+    return Math.round(value * 2) / 2;
   }
 
   get topMargin() {

@@ -83,6 +83,10 @@ export class PageSetup {
   public neumeDefaultSpacing = Unit.fromInch(0.03);
   public neumeDefaultStrokeWidth = 0;
 
+  public modeKeyDefaultColor = '#ED0000';
+  public modeKeyDefaultStrokeWidth = 0;
+  public modeKeyDefaultFontSize = Unit.fromPt(20);
+
   public accidentalDefaultColor = '#ED0000';
   public accidentalDefaultStrokeWidth = 0;
   public fthoraDefaultColor = '#ED0000';
@@ -101,8 +105,6 @@ export class PageSetup {
   public isonDefaultStrokeWidth = 0;
   public martyriaDefaultColor = '#ED0000';
   public martyriaDefaultStrokeWidth = 0;
-  public modeKeyDefaultColor = '#ED0000';
-  public modeKeyDefaultStrokeWidth = 0;
   public tempoDefaultColor = '#ED0000';
   public tempoDefaultStrokeWidth = 0;
 

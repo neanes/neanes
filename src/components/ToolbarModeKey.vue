@@ -1,6 +1,10 @@
 <template>
   <div class="mode-key-toolbar">
-    <input type="number" min="4" max="100" step="1" v-model.lazy="fontSize" />
+    <InputFontSize
+      class="drop-caps-input"
+      :value="element.fontSize"
+      @input="$emit('update:fontSize', $event)"
+    />
     <span class="space"></span>
     <ColorPicker
       :value="element.color"
@@ -77,35 +81,17 @@ import { TextBoxAlignment, ModeKeyElement } from '@/models/Element';
 import { Unit } from '@/utils/Unit';
 import ColorPicker from '@/components/ColorPicker.vue';
 import InputUnit from '@/components/InputUnit.vue';
+import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import { PageSetup } from '@/models/PageSetup';
 
 @Component({
-  components: { ColorPicker, InputUnit, InputStrokeWidth },
+  components: { ColorPicker, InputUnit, InputFontSize, InputStrokeWidth },
 })
 export default class ToolbarModeKey extends Vue {
   @Prop() element!: ModeKeyElement;
   @Prop() pageSetup!: PageSetup;
   TextBoxAlignment = TextBoxAlignment;
-
-  private get fontSize() {
-    return Unit.toPt(this.element.fontSize);
-  }
-
-  private set fontSize(value: number) {
-    // Round to nearest 0.5
-    const valueRounded = Math.round(value * 2) / 2;
-
-    this.$emit(
-      'update:fontSize',
-      Math.min(
-        Math.max(Unit.fromPt(valueRounded), Unit.fromPt(4)),
-        Unit.fromPt(100),
-      ),
-    );
-
-    this.$forceUpdate();
-  }
 
   private get heightAdjustmentMin() {
     return -Math.round(Unit.fromPt(this.element.height));

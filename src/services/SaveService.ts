@@ -296,6 +296,7 @@ export class SaveService {
     element.content = e.content;
     element.fontFamily = e.fontFamily;
     element.fontSize = e.fontSize;
+    element.strokeWidth = e.strokeWidth;
     element.inline = e.inline || undefined;
     element.bold = e.bold || undefined;
     element.italic = e.italic || undefined;
@@ -656,6 +657,7 @@ export class SaveService {
     element.italic = e.italic === true;
     element.underline = e.underline === true;
     element.height = e.height;
+    element.strokeWidth = e.strokeWidth || element.strokeWidth;
   }
 
   public static LoadModeKey_v1(element: ModeKeyElement, e: ModeKeyElement_v1) {

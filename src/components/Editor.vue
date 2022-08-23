@@ -2862,6 +2862,15 @@ export default class Editor extends Vue {
     const element = new TextBoxElement();
     element.inline = args.inline;
 
+    if (element.inline) {
+      element.color = this.score.pageSetup.lyricsDefaultColor;
+      element.fontFamily = this.score.pageSetup.lyricsDefaultFontFamily;
+      element.fontSize = this.score.pageSetup.lyricsDefaultFontSize;
+      element.strokeWidth = this.score.pageSetup.lyricsDefaultStrokeWidth;
+      element.bold = this.score.pageSetup.lyricsDefaultFontWeight === '700';
+      element.italic = this.score.pageSetup.lyricsDefaultFontStyle === 'italic';
+    }
+
     this.addScoreElement(element, this.selectedElementIndex);
 
     this.selectedElement = element;

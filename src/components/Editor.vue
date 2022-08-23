@@ -2886,7 +2886,7 @@ export default class Editor extends Vue {
   }
 
   onFileMenuInsertModeKey() {
-    const element = this.createDefaultModeKey();
+    const element = this.createDefaultModeKey(this.score.pageSetup);
 
     this.addScoreElement(element, this.selectedElementIndex);
 
@@ -3012,30 +3012,20 @@ export default class Editor extends Vue {
     this.save();
   }
 
-  createDefaultModeKey() {
+  createDefaultModeKey(pageSetup: PageSetup) {
     const defaultTemplate = ModeKeyElement.createFromTemplate(
       modeKeyTemplates[0],
     );
 
-    defaultTemplate.color = this.score.pageSetup.modeKeyDefaultColor;
-    defaultTemplate.fontSize = this.score.pageSetup.modeKeyDefaultFontSize;
-    defaultTemplate.strokeWidth =
-      this.score.pageSetup.modeKeyDefaultStrokeWidth;
+    defaultTemplate.color = pageSetup.modeKeyDefaultColor;
+    defaultTemplate.fontSize = pageSetup.modeKeyDefaultFontSize;
+    defaultTemplate.strokeWidth = pageSetup.modeKeyDefaultStrokeWidth;
 
     return defaultTemplate;
   }
 
   createDefaultScore() {
     const score = new Score();
-
-    const title = new TextBoxElement();
-    title.content = 'Title';
-    title.fontFamily = this.score.pageSetup.lyricsDefaultFontFamily;
-    title.fontSize = Unit.fromPt(20);
-    title.strokeWidth = this.score.pageSetup.lyricsDefaultStrokeWidth;
-    title.alignment = TextBoxAlignment.Center;
-
-    score.staff.elements.unshift(title, this.createDefaultModeKey());
 
     try {
       const pageSetupDefault = localStorage.getItem('pageSetupDefault');
@@ -3049,6 +3039,18 @@ export default class Editor extends Vue {
     } catch (error) {
       console.error(error);
     }
+
+    const title = new TextBoxElement();
+    title.content = 'Title';
+    title.fontFamily = score.pageSetup.lyricsDefaultFontFamily;
+    title.fontSize = Unit.fromPt(20);
+    title.strokeWidth = score.pageSetup.lyricsDefaultStrokeWidth;
+    title.alignment = TextBoxAlignment.Center;
+
+    score.staff.elements.unshift(
+      title,
+      this.createDefaultModeKey(score.pageSetup),
+    );
 
     return score;
   }

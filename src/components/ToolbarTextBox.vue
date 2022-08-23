@@ -12,7 +12,11 @@
       </option>
     </select>
     <span class="space"></span>
-    <input type="number" min="4" max="100" step="1" v-model.lazy="fontSize" />
+    <InputFontSize
+      class="drop-caps-input"
+      :value="element.fontSize"
+      @input="$emit('update:fontSize', $event)"
+    />
     <span class="space"></span>
     <ColorPicker
       :value="element.color"
@@ -108,39 +112,17 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 import { TextBoxAlignment, TextBoxElement } from '@/models/Element';
 import { Unit } from '@/utils/Unit';
 import ColorPicker from '@/components/ColorPicker.vue';
+import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 
 @Component({
-  components: { ColorPicker, InputStrokeWidth },
+  components: { ColorPicker, InputFontSize, InputStrokeWidth },
 })
 export default class ToolbarTextBox extends Vue {
   @Prop() element!: TextBoxElement;
   @Prop() fonts!: string;
 
   TextBoxAlignment = TextBoxAlignment;
-
-  strokeWidthMax = 5;
-  strokeWidthStep = 0.1;
-  strokeWidthPrecision = 2;
-
-  private get fontSize() {
-    return Unit.toPt(this.element.fontSize);
-  }
-
-  private set fontSize(value: number) {
-    // Round to nearest 0.5
-    const valueRounded = Math.round(value * 2) / 2;
-
-    this.$emit(
-      'update:fontSize',
-      Math.min(
-        Math.max(Unit.fromPt(valueRounded), Unit.fromPt(4)),
-        Unit.fromPt(100),
-      ),
-    );
-
-    this.$forceUpdate();
-  }
 }
 </script>
 

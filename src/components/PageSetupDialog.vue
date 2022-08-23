@@ -220,13 +220,9 @@
           </div>
           <div class="form-group">
             <label class="drop-caps-label">Size</label>
-            <input
+            <InputFontSize
               class="drop-caps-input"
-              type="number"
-              min="4"
-              max="100"
-              step="1"
-              v-model.lazy="dropCapDefaultFontSize"
+              v-model="form.dropCapDefaultFontSize"
             />
           </div>
 
@@ -274,13 +270,9 @@
           </div>
           <div class="form-group">
             <label class="drop-caps-label">Size</label>
-            <input
+            <InputFontSize
               class="drop-caps-input"
-              type="number"
-              min="4"
-              max="100"
-              step="1"
-              v-model.lazy="lyricsDefaultFontSize"
+              v-model="form.lyricsDefaultFontSize"
             />
           </div>
 
@@ -327,13 +319,8 @@
           </div>
           <div class="form-group">
             <label class="drop-caps-label">Size</label>
-            <InputUnit
+            <InputFontSize
               class="drop-caps-input"
-              unit="pt"
-              :min="4"
-              :max="100"
-              :step="1"
-              :round="roundToHalf"
               v-model="form.modeKeyDefaultFontSize"
             />
           </div>
@@ -351,13 +338,9 @@
           </div>
           <div class="form-group">
             <label class="drop-caps-label">Size</label>
-            <input
+            <InputFontSize
               class="drop-caps-input"
-              type="number"
-              min="4"
-              max="100"
-              step="1"
-              v-model.lazy="neumeDefaultFontSize"
+              v-model="form.neumeDefaultFontSize"
             />
           </div>
           <div class="form-group">
@@ -540,6 +523,7 @@ import { Unit } from '@/utils/Unit';
 import ColorPicker from '@/components/ColorPicker.vue';
 import InputUnit from '@/components/InputUnit.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
+import InputFontSize from '@/components/InputFontSize.vue';
 import { QuantitativeNeume } from '@/models/Neumes';
 import { Accidental } from '@/models/save/v1/Neumes';
 import NeumeBoxSyllable from '@/components/NeumeBoxSyllable.vue';
@@ -554,6 +538,7 @@ import { SaveService } from '@/services/SaveService';
     ColorPicker,
     InputUnit,
     InputStrokeWidth,
+    InputFontSize,
     Neume: NeumeVue,
     NeumeBoxSyllable,
     NeumeBoxMartyria,
@@ -728,10 +713,6 @@ export default class PageSetupDialog extends Vue {
     }
   }
 
-  roundToHalf(value: number) {
-    return Math.round(value * 2) / 2;
-  }
-
   get topMargin() {
     return this.toDisplayUnit(this.form!.topMargin).toFixed(2);
   }
@@ -846,54 +827,6 @@ export default class PageSetupDialog extends Vue {
     this.form!.hyphenSpacing = Math.min(
       Math.max(this.toStorageUnit(value), 0),
       this.form!.innerPageWidth,
-    );
-
-    this.$forceUpdate();
-  }
-
-  private get dropCapDefaultFontSize() {
-    return Unit.toPt(this.form!.dropCapDefaultFontSize);
-  }
-
-  private set dropCapDefaultFontSize(value: number) {
-    // Round to nearest 0.5
-    const valueRounded = Math.round(value * 2) / 2;
-
-    this.form!.dropCapDefaultFontSize = Math.min(
-      Math.max(Unit.fromPt(valueRounded), Unit.fromPt(4)),
-      Unit.fromPt(100),
-    );
-
-    this.$forceUpdate();
-  }
-
-  private get lyricsDefaultFontSize() {
-    return Unit.toPt(this.form!.lyricsDefaultFontSize);
-  }
-
-  private set lyricsDefaultFontSize(value: number) {
-    // Round to nearest 0.5
-    const valueRounded = Math.round(value * 2) / 2;
-
-    this.form!.lyricsDefaultFontSize = Math.min(
-      Math.max(Unit.fromPt(valueRounded), Unit.fromPt(4)),
-      Unit.fromPt(100),
-    );
-
-    this.$forceUpdate();
-  }
-
-  private get neumeDefaultFontSize() {
-    return Unit.toPt(this.form!.neumeDefaultFontSize);
-  }
-
-  private set neumeDefaultFontSize(value: number) {
-    // Round to nearest 0.5
-    const valueRounded = Math.round(value * 2) / 2;
-
-    this.form!.neumeDefaultFontSize = Math.min(
-      Math.max(Unit.fromPt(valueRounded), Unit.fromPt(4)),
-      Unit.fromPt(100),
     );
 
     this.$forceUpdate();

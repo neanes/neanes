@@ -17,7 +17,6 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 import { TextBoxElement } from '@/models/Element';
 import ContentEditable from '@/components/ContentEditable.vue';
 import { withZoom } from '@/utils/withZoom';
-import { PageSetup } from '@/models/PageSetup';
 import { replaceTokens, TokenMetadata } from '@/utils/replaceTokens';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 
@@ -28,7 +27,6 @@ import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 })
 export default class TextBox extends Vue {
   @Prop() element!: TextBoxElement;
-  @Prop() pageSetup!: PageSetup;
   @Prop({ default: true }) editMode!: boolean;
   @Prop() metadata!: TokenMetadata;
 
@@ -47,9 +45,7 @@ export default class TextBox extends Vue {
   }
 
   get width() {
-    return this.element.inline
-      ? withZoom(this.element.width)
-      : withZoom(this.pageSetup.innerPageWidth);
+    return withZoom(this.element.width);
   }
 
   get containerStyle() {

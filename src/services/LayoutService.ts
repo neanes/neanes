@@ -177,6 +177,8 @@ export class LayoutService {
             TextMeasurementService.getFontHeight(
               `${modeKeyElement.fontSize}px ${pageSetup.neumeDefaultFontFamily}`,
             ) + modeKeyElement.heightAdjustment;
+
+          modeKeyElement.computedFontFamily = pageSetup.neumeDefaultFontFamily;
           break;
         }
         case ElementType.Note: {

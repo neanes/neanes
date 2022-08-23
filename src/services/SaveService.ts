@@ -146,13 +146,17 @@ export class SaveService {
     pageSetup.martyriaDefaultStrokeWidth = p.martyriaDefaultStrokeWidth;
     pageSetup.tempoDefaultColor = p.tempoDefaultColor;
     pageSetup.tempoDefaultStrokeWidth = p.tempoDefaultStrokeWidth;
-    pageSetup.modeKeyDefaultColor = p.modeKeyDefaultColor;
-    pageSetup.modeKeyDefaultStrokeWidth = p.modeKeyDefaultStrokeWidth;
+
     pageSetup.neumeDefaultColor = p.neumeDefaultColor;
     pageSetup.neumeDefaultFontFamily = p.neumeDefaultFontFamily;
     pageSetup.neumeDefaultStrokeWidth = p.neumeDefaultStrokeWidth;
     pageSetup.neumeDefaultFontSize = p.neumeDefaultFontSize;
     pageSetup.neumeDefaultSpacing = p.neumeDefaultSpacing;
+
+    pageSetup.modeKeyDefaultColor = p.modeKeyDefaultColor;
+    pageSetup.modeKeyDefaultStrokeWidth = p.modeKeyDefaultStrokeWidth;
+    pageSetup.modeKeyDefaultFontSize = p.modeKeyDefaultFontSize;
+
     pageSetup.pageHeight = p.pageHeight;
     pageSetup.pageWidth = p.pageWidth;
     pageSetup.rightMargin = p.rightMargin;
@@ -324,6 +328,7 @@ export class SaveService {
     element.martyria = e.martyria;
     element.color = e.color;
     element.fontSize = e.fontSize;
+    element.strokeWidth = e.strokeWidth;
     element.height = e.height;
     element.heightAdjustment = e.heightAdjustment;
   }
@@ -466,10 +471,6 @@ export class SaveService {
       p.tempoDefaultColor || pageSetup.tempoDefaultColor;
     pageSetup.tempoDefaultStrokeWidth =
       p.tempoDefaultStrokeWidth || pageSetup.tempoDefaultStrokeWidth;
-    pageSetup.modeKeyDefaultColor =
-      p.modeKeyDefaultColor || pageSetup.modeKeyDefaultColor;
-    pageSetup.modeKeyDefaultStrokeWidth =
-      p.modeKeyDefaultStrokeWidth || pageSetup.modeKeyDefaultStrokeWidth;
     pageSetup.neumeDefaultColor =
       p.neumeDefaultColor || pageSetup.neumeDefaultColor;
 
@@ -479,6 +480,13 @@ export class SaveService {
     pageSetup.neumeDefaultStrokeWidth =
       p.neumeDefaultStrokeWidth || pageSetup.neumeDefaultStrokeWidth;
     pageSetup.neumeDefaultSpacing = p.neumeDefaultSpacing;
+
+    pageSetup.modeKeyDefaultColor =
+      p.modeKeyDefaultColor || pageSetup.modeKeyDefaultColor;
+    pageSetup.modeKeyDefaultStrokeWidth =
+      p.modeKeyDefaultStrokeWidth || pageSetup.modeKeyDefaultStrokeWidth;
+    pageSetup.modeKeyDefaultFontSize =
+      p.modeKeyDefaultFontSize || pageSetup.modeKeyDefaultFontSize;
 
     pageSetup.accidentalDefaultColor =
       p.accidentalDefaultColor || pageSetup.accidentalDefaultColor;
@@ -678,6 +686,7 @@ export class SaveService {
     element.martyria = e.martyria;
     element.color = e.color;
     element.fontSize = e.fontSize;
+    element.strokeWidth = e.strokeWidth || element.strokeWidth;
     element.heightAdjustment = e.heightAdjustment || 0;
   }
 }

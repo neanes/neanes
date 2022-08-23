@@ -432,6 +432,7 @@ export class ModeKeyElement extends ScoreElement {
   public quantitativeNeumeAboveNote2: ModeSign | null = null;
   public color: string = '#000000';
   public fontSize: number = Unit.fromPt(20);
+  public strokeWidth: number = 0;
   public height: number = Unit.fromPt(37);
   public heightAdjustment: number = 0;
 

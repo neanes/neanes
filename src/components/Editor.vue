@@ -2859,14 +2859,12 @@ export default class Editor extends Vue {
     const element = new TextBoxElement();
     element.inline = args.inline;
 
-    if (element.inline) {
-      element.color = this.score.pageSetup.lyricsDefaultColor;
-      element.fontFamily = this.score.pageSetup.lyricsDefaultFontFamily;
-      element.fontSize = this.score.pageSetup.lyricsDefaultFontSize;
-      element.strokeWidth = this.score.pageSetup.lyricsDefaultStrokeWidth;
-      element.bold = this.score.pageSetup.lyricsDefaultFontWeight === '700';
-      element.italic = this.score.pageSetup.lyricsDefaultFontStyle === 'italic';
-    }
+    element.color = this.score.pageSetup.lyricsDefaultColor;
+    element.fontFamily = this.score.pageSetup.lyricsDefaultFontFamily;
+    element.fontSize = this.score.pageSetup.lyricsDefaultFontSize;
+    element.strokeWidth = this.score.pageSetup.lyricsDefaultStrokeWidth;
+    element.bold = this.score.pageSetup.lyricsDefaultFontWeight === '700';
+    element.italic = this.score.pageSetup.lyricsDefaultFontStyle === 'italic';
 
     this.addScoreElement(element, this.selectedElementIndex);
 
@@ -3023,8 +3021,10 @@ export default class Editor extends Vue {
 
     const title = new TextBoxElement();
     title.content = 'Title';
-    title.alignment = TextBoxAlignment.Center;
+    title.fontFamily = this.score.pageSetup.lyricsDefaultFontFamily;
     title.fontSize = Unit.fromPt(20);
+    title.strokeWidth = this.score.pageSetup.lyricsDefaultStrokeWidth;
+    title.alignment = TextBoxAlignment.Center;
 
     score.staff.elements.unshift(title, this.createDefaultModeKey());
 

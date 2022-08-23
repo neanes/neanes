@@ -254,7 +254,6 @@
                       class="no-print"
                       :ref="`element-${getElementIndex(element)}`"
                       :element="element"
-                      :pageSetup="score.pageSetup"
                       :class="[
                         { selectedTextbox: element === selectedElement },
                       ]"
@@ -265,7 +264,6 @@
                       v-if="printMode"
                       class="print-only"
                       :element="element"
-                      :pageSetup="score.pageSetup"
                     />
                   </template>
                   <template v-if="isDropCapElement(element)">
@@ -333,6 +331,9 @@
         @update:fontFamily="
           updateTextBoxFontFamily(selectedTextBoxElement, $event)
         "
+        @update:strokeWidth="
+          updateTextBoxStrokeWidth(selectedTextBoxElement, $event)
+        "
         @update:alignment="
           updateTextBoxAlignment(selectedTextBoxElement, $event)
         "
@@ -350,10 +351,6 @@
     <template v-if="selectedLyrics != null">
       <ToolbarLyrics
         :element="selectedLyrics"
-        @update:fontSize="updateTextBoxFontSize(selectedElement, $event)"
-        @update:fontFamily="updateTextBoxFontFamily(selectedElement, $event)"
-        @update:alignment="updateTextBoxAlignment(selectedElement, $event)"
-        @update:color="updateTextBoxColor(selectedElement, $event)"
         @insert:gorthmikon="insertGorthmikon"
         @insert:pelastikon="insertPelastikon"
       />
@@ -365,6 +362,7 @@
         :element="selectedElement"
         :pageSetup="score.pageSetup"
         @update:fontSize="updateModeKeyFontSize(selectedElement, $event)"
+        @update:strokeWidth="updateModeKeyStrokeWidth(selectedElement, $event)"
         @update:alignment="updateModeKeyAlignment(selectedElement, $event)"
         @update:color="updateModeKeyColor(selectedElement, $event)"
         @update:heightAdjustment="
@@ -2488,6 +2486,10 @@ export default class Editor extends Vue {
     this.updateTextBox(element, { fontFamily });
   }
 
+  updateTextBoxStrokeWidth(element: TextBoxElement, strokeWidth: number) {
+    this.updateTextBox(element, { strokeWidth });
+  }
+
   updateTextBoxColor(element: TextBoxElement, color: string) {
     this.updateTextBox(element, { color });
   }
@@ -2525,6 +2527,10 @@ export default class Editor extends Vue {
 
   updateModeKeyFontSize(element: ModeKeyElement, fontSize: number) {
     this.updateModeKey(element, { fontSize });
+  }
+
+  updateModeKeyStrokeWidth(element: ModeKeyElement, strokeWidth: number) {
+    this.updateModeKey(element, { strokeWidth });
   }
 
   updateModeKeyColor(element: ModeKeyElement, color: string) {

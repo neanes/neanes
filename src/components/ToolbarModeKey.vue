@@ -47,6 +47,12 @@
       />
     </button>
     <span class="space" />
+    <label class="right-space">Outline</label>
+    <InputStrokeWidth
+      :value="element.strokeWidth"
+      @input="$emit('update:strokeWidth', $event)"
+    />
+    <span class="space" />
 
     <label class="right-space">Height Adjustment</label>
 
@@ -71,10 +77,11 @@ import { TextBoxAlignment, ModeKeyElement } from '@/models/Element';
 import { Unit } from '@/utils/Unit';
 import ColorPicker from '@/components/ColorPicker.vue';
 import InputUnit from '@/components/InputUnit.vue';
+import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import { PageSetup } from '@/models/PageSetup';
 
 @Component({
-  components: { ColorPicker, InputUnit },
+  components: { ColorPicker, InputUnit, InputStrokeWidth },
 })
 export default class ToolbarModeKey extends Vue {
   @Prop() element!: ModeKeyElement;

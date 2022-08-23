@@ -33,7 +33,6 @@ import { ModeKeyElement } from '@/models/Element';
 import Neume from '@/components/Neume.vue';
 import { ModeSign } from '@/models/Neumes';
 import { withZoom } from '@/utils/withZoom';
-import { PageSetup } from '@/models/PageSetup';
 
 @Component({
   components: {
@@ -42,7 +41,6 @@ import { PageSetup } from '@/models/PageSetup';
 })
 export default class ModeKey extends Vue {
   @Prop() element!: ModeKeyElement;
-  @Prop() pageSetup!: PageSetup;
   ModeSign = ModeSign;
 
   get hasFthoraAboveNote() {
@@ -80,12 +78,12 @@ export default class ModeKey extends Vue {
   get style() {
     return {
       color: this.element.color,
-      fontFamily: this.pageSetup.neumeDefaultFontFamily,
+      fontFamily: this.element.computedFontFamily,
       fontSize: withZoom(this.element.fontSize),
       textAlign: this.element.alignment,
-      width: withZoom(this.pageSetup.innerPageWidth),
+      width: withZoom(this.element.width),
       height: withZoom(this.element.height),
-      webkitTextStrokeWidth: withZoom(this.pageSetup.modeKeyDefaultStrokeWidth),
+      webkitTextStrokeWidth: withZoom(this.element.strokeWidth),
     } as CSSStyleDeclaration;
   }
 }

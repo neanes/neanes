@@ -63,7 +63,7 @@
               :class="{ selected: selectedModeKey === template }"
               :key="index"
             >
-              <ModeKey :element="template" :pageSetup="pageSetup" />
+              <ModeKey :element="template" />
             </li>
           </ul>
         </div>
@@ -119,7 +119,10 @@ export default class ModeKeyDialog extends Vue {
       `${elements[0].fontSize}px ${this.pageSetup.neumeDefaultFontFamily}`,
     );
 
-    elements.forEach((x) => (x.height = height));
+    for (let element of elements) {
+      element.height = height;
+      element.computedFontFamily = this.pageSetup.neumeDefaultFontFamily;
+    }
 
     return elements;
   }

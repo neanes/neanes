@@ -77,7 +77,13 @@
         title="Align Right"
       />
     </button>
-    <span class="space"></span>
+    <span class="space" />
+    <label class="right-space">Outline</label>
+    <InputStrokeWidth
+      :value="element.strokeWidth"
+      @input="$emit('update:strokeWidth', $event)"
+    />
+    <span class="space" />
     <button class="icon-btn" @mousedown.prevent="$emit('insert:pelastikon')">
       <img
         src="@/assets/icons/letterPelastikon.svg"
@@ -102,15 +108,20 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 import { TextBoxAlignment, TextBoxElement } from '@/models/Element';
 import { Unit } from '@/utils/Unit';
 import ColorPicker from '@/components/ColorPicker.vue';
+import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 
 @Component({
-  components: { ColorPicker },
+  components: { ColorPicker, InputStrokeWidth },
 })
 export default class ToolbarTextBox extends Vue {
   @Prop() element!: TextBoxElement;
   @Prop() fonts!: string;
 
   TextBoxAlignment = TextBoxAlignment;
+
+  strokeWidthMax = 5;
+  strokeWidthStep = 0.1;
+  strokeWidthPrecision = 2;
 
   private get fontSize() {
     return Unit.toPt(this.element.fontSize);
@@ -155,6 +166,10 @@ export default class ToolbarTextBox extends Vue {
 
 .icon-btn.selected {
   background-color: var(--btn-color-selected);
+}
+
+label.right-space {
+  margin-right: 0.5rem;
 }
 
 .space {

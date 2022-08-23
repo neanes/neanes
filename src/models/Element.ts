@@ -436,6 +436,9 @@ export class ModeKeyElement extends ScoreElement {
   public height: number = Unit.fromPt(37);
   public heightAdjustment: number = 0;
 
+  // Values computed by the layout service
+  public computedFontFamily: string = '';
+
   public get isPlagal() {
     return this.mode > 4 && this.mode !== 7;
   }

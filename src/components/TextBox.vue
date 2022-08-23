@@ -53,14 +53,15 @@ export default class TextBox extends Vue {
   }
 
   get containerStyle() {
-    const style: any = {
+    const style = {
       color: this.element.color,
       fontFamily: getFontFamilyWithFallback(this.element.fontFamily),
       fontSize: withZoom(this.element.fontSize),
       textAlign: this.element.alignment,
       width: this.width,
       height: withZoom(this.element.height),
-    };
+      webkitTextStrokeWidth: withZoom(this.element.strokeWidth),
+    } as CSSStyleDeclaration;
 
     return style;
   }

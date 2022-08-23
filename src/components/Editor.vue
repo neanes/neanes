@@ -67,7 +67,6 @@
                   class="element-box"
                   :ref="`header-${pageIndex}`"
                   :element="getHeaderForPageIndex(pageIndex)"
-                  :pageSetup="score.pageSetup"
                   :editMode="
                     getHeaderForPageIndex(pageIndex) ==
                     selectedHeaderFooterElement
@@ -235,7 +234,6 @@
                     <TextBox
                       :ref="`element-${getElementIndex(element)}`"
                       :element="element"
-                      :pageSetup="score.pageSetup"
                       :editMode="true"
                       :metadata="getTokenMetadata(pageIndex)"
                       :class="[
@@ -297,7 +295,6 @@
                   class="element-box"
                   :ref="`footer-${pageIndex}`"
                   :element="getFooterForPageIndex(pageIndex)"
-                  :pageSetup="score.pageSetup"
                   :editMode="
                     getFooterForPageIndex(pageIndex) ==
                     selectedHeaderFooterElement

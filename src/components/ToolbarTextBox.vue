@@ -18,11 +18,6 @@
       :value="element.color"
       @input="$emit('update:color', $event)"
     />
-    <datalist id="presetColors">
-      <option>#000000</option>
-      <option>#ED0000</option>
-      <option>#0000ff</option>
-    </datalist>
     <span class="space"></span>
     <button
       class="icon-btn"

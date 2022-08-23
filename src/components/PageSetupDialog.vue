@@ -261,13 +261,9 @@
           </div>
           <div class="form-group">
             <label class="drop-caps-label">Outline</label>
-            <InputUnit
+
+            <InputStrokeWidth
               class="drop-caps-input"
-              unit="pt"
-              :min="0"
-              :max="strokeWidthMax"
-              :step="strokeWidthStep"
-              :precision="strokeWidthPrecision"
               v-model="form.dropCapDefaultStrokeWidth"
             />
           </div>
@@ -319,13 +315,8 @@
           </div>
           <div class="form-group">
             <label class="drop-caps-label">Outline</label>
-            <InputUnit
+            <InputStrokeWidth
               class="drop-caps-input"
-              unit="pt"
-              :min="0"
-              :max="strokeWidthMax"
-              :step="strokeWidthStep"
-              :precision="strokeWidthPrecision"
               v-model="form.lyricsDefaultStrokeWidth"
             />
           </div>
@@ -348,13 +339,8 @@
           </div>
           <div class="form-group">
             <label class="drop-caps-label">Outline</label>
-            <InputUnit
+            <InputStrokeWidth
               class="drop-caps-input"
-              unit="pt"
-              :min="0"
-              :max="strokeWidthMax"
-              :step="strokeWidthStep"
-              :precision="strokeWidthPrecision"
               v-model="form.modeKeyDefaultStrokeWidth"
             />
           </div>
@@ -376,13 +362,8 @@
           </div>
           <div class="form-group">
             <label class="drop-caps-label">Outline</label>
-            <InputUnit
+            <InputStrokeWidth
               class="drop-caps-input"
-              unit="pt"
-              :min="0"
-              :max="strokeWidthMax"
-              :step="strokeWidthStep"
-              :precision="strokeWidthPrecision"
               v-model="form.neumeDefaultStrokeWidth"
             />
           </div>
@@ -398,13 +379,8 @@
               class="neume-colors-input"
               v-model="form.accidentalDefaultColor"
             />
-            <InputUnit
+            <InputStrokeWidth
               class="drop-caps-input"
-              unit="pt"
-              :min="0"
-              :max="strokeWidthMax"
-              :step="strokeWidthStep"
-              :precision="strokeWidthPrecision"
               v-model="form.accidentalDefaultStrokeWidth"
             />
           </div>
@@ -414,13 +390,8 @@
               class="neume-colors-input"
               v-model="form.fthoraDefaultColor"
             />
-            <InputUnit
+            <InputStrokeWidth
               class="drop-caps-input"
-              unit="pt"
-              :min="0"
-              :max="strokeWidthMax"
-              :step="strokeWidthStep"
-              :precision="strokeWidthPrecision"
               v-model="form.fthoraDefaultStrokeWidth"
             />
           </div>
@@ -430,13 +401,8 @@
               class="neume-colors-input"
               v-model="form.gorgonDefaultColor"
             />
-            <InputUnit
+            <InputStrokeWidth
               class="drop-caps-input"
-              unit="pt"
-              :min="0"
-              :max="strokeWidthMax"
-              :step="strokeWidthStep"
-              :precision="strokeWidthPrecision"
               v-model="form.gorgonDefaultStrokeWidth"
             />
           </div>
@@ -446,13 +412,8 @@
               class="neume-colors-input"
               v-model="form.heteronDefaultColor"
             />
-            <InputUnit
+            <InputStrokeWidth
               class="drop-caps-input"
-              unit="pt"
-              :min="0"
-              :max="strokeWidthMax"
-              :step="strokeWidthStep"
-              :precision="strokeWidthPrecision"
               v-model="form.heteronDefaultStrokeWidth"
             />
           </div>
@@ -462,13 +423,8 @@
               class="neume-colors-input"
               v-model="form.isonDefaultColor"
             />
-            <InputUnit
+            <InputStrokeWidth
               class="drop-caps-input"
-              unit="pt"
-              :min="0"
-              :max="strokeWidthMax"
-              :step="strokeWidthStep"
-              :precision="strokeWidthPrecision"
               v-model="form.isonDefaultStrokeWidth"
             />
           </div>
@@ -478,13 +434,8 @@
               class="neume-colors-input"
               v-model="form.martyriaDefaultColor"
             />
-            <InputUnit
+            <InputStrokeWidth
               class="drop-caps-input"
-              unit="pt"
-              :min="0"
-              :max="strokeWidthMax"
-              :step="strokeWidthStep"
-              :precision="strokeWidthPrecision"
               v-model="form.martyriaDefaultStrokeWidth"
             />
           </div>
@@ -494,13 +445,8 @@
               class="neume-colors-input"
               v-model="form.measureBarDefaultColor"
             />
-            <InputUnit
+            <InputStrokeWidth
               class="drop-caps-input"
-              unit="pt"
-              :min="0"
-              :max="strokeWidthMax"
-              :step="strokeWidthStep"
-              :precision="strokeWidthPrecision"
               v-model="form.measureBarDefaultStrokeWidth"
             />
           </div>
@@ -510,13 +456,8 @@
               class="neume-colors-input"
               v-model="form.measureNumberDefaultColor"
             />
-            <InputUnit
+            <InputStrokeWidth
               class="drop-caps-input"
-              unit="pt"
-              :min="0"
-              :max="strokeWidthMax"
-              :step="strokeWidthStep"
-              :precision="strokeWidthPrecision"
               v-model="form.measureNumberDefaultStrokeWidth"
             />
           </div>
@@ -526,13 +467,8 @@
               class="neume-colors-input"
               v-model="form.noteIndicatorDefaultColor"
             />
-            <InputUnit
+            <InputStrokeWidth
               class="drop-caps-input"
-              unit="pt"
-              :min="0"
-              :max="strokeWidthMax"
-              :step="strokeWidthStep"
-              :precision="strokeWidthPrecision"
               v-model="form.noteIndicatorDefaultStrokeWidth"
             />
           </div>
@@ -542,13 +478,8 @@
               class="neume-colors-input"
               v-model="form.tempoDefaultColor"
             />
-            <InputUnit
+            <InputStrokeWidth
               class="drop-caps-input"
-              unit="pt"
-              :min="0"
-              :max="strokeWidthMax"
-              :step="strokeWidthStep"
-              :precision="strokeWidthPrecision"
               v-model="form.tempoDefaultStrokeWidth"
             />
           </div>
@@ -608,6 +539,7 @@ import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
 import { Unit } from '@/utils/Unit';
 import ColorPicker from '@/components/ColorPicker.vue';
 import InputUnit from '@/components/InputUnit.vue';
+import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import { QuantitativeNeume } from '@/models/Neumes';
 import { Accidental } from '@/models/save/v1/Neumes';
 import NeumeBoxSyllable from '@/components/NeumeBoxSyllable.vue';
@@ -621,6 +553,7 @@ import { SaveService } from '@/services/SaveService';
     ModalDialog,
     ColorPicker,
     InputUnit,
+    InputStrokeWidth,
     Neume: NeumeVue,
     NeumeBoxSyllable,
     NeumeBoxMartyria,
@@ -634,10 +567,6 @@ export default class PageSetupDialog extends Vue {
 
   QuantitativeNeume = QuantitativeNeume;
   Accidental = Accidental;
-
-  strokeWidthMax = 5;
-  strokeWidthStep = 0.1;
-  strokeWidthPrecision = 2;
 
   previewNeumes = [
     {

@@ -1,13 +1,14 @@
-import { exec } from 'child_process';
-
+import { exec, execFile } from 'child_process';
 import { promisify } from 'util';
 
-const pexec = promisify(exec);
+const execAsync = promisify(exec);
 
-export async function getSystemFonts(): Promise<string[]> {
+export async function getSystemFonts(
+  darwinBinaryFilePath: string,
+): Promise<string[]> {
   switch (process.platform) {
     case 'darwin':
-      return await getDarwinSystemFonts();
+      return await getDarwinSystemFonts(darwinBinaryFilePath);
     case 'win32':
       return await getWindowsSystemFonts();
     case 'linux':
@@ -25,7 +26,7 @@ async function getWindowsSystemFonts(): Promise<string[]> {
 
   const cmd = `powershell -command "${script}"`;
 
-  const { stdout } = await pexec(cmd, { maxBuffer: 1024 * 1024 * 10 });
+  const { stdout } = await execAsync(cmd, { maxBuffer: 1024 * 1024 * 10 });
 
   return stdout
     .split('\n')
@@ -33,22 +34,40 @@ async function getWindowsSystemFonts(): Promise<string[]> {
     .filter((x) => x !== '');
 }
 
-async function getDarwinSystemFonts() {
-  const cmd =
-    'system_profiler SPFontsDataType | grep "Full Name:"| cut -d":" -f2 | cut -c 2- | uniq | sort';
+async function getDarwinSystemFonts(
+  darwinBinaryFilePath: string,
+): Promise<string[]> {
+  return new Promise((resolve, reject) => {
+    execFile(
+      darwinBinaryFilePath,
+      { maxBuffer: 1024 * 1024 * 10 },
+      (error, stdout, stderr) => {
+        if (error) {
+          reject(error);
+          return;
+        }
 
-  const { stdout } = await pexec(cmd, { maxBuffer: 1024 * 1024 * 10 });
+        let fonts: string[] = [];
 
-  return stdout
-    .split('\n')
-    .map((x) => x.trim())
-    .filter((x) => x !== '' && !x.startsWith('.'));
+        if (stdout) {
+          fonts = fonts.concat(stdout.split('\n').map((i) => i.trim()));
+        }
+        if (stderr) {
+          fonts = fonts.concat(stderr.split('\n').map((i) => i.trim()));
+        }
+
+        fonts = Array.from(new Set(fonts)).filter((x) => !x.startsWith('.'));
+
+        resolve(fonts);
+      },
+    );
+  });
 }
 
 async function getLinuxSystemFonts() {
   const cmd = 'fc-list : family | uniq | sort';
 
-  const { stdout } = await pexec(cmd, { maxBuffer: 1024 * 1024 * 10 });
+  const { stdout } = await execAsync(cmd, { maxBuffer: 1024 * 1024 * 10 });
 
   const fonts: string[] = [];
 

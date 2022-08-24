@@ -86,6 +86,7 @@ export class PageSetup {
   public modeKeyDefaultColor = '#ED0000';
   public modeKeyDefaultStrokeWidth = 0;
   public modeKeyDefaultFontSize = Unit.fromPt(20);
+  public modeKeyDefaultHeightAdjustment = 0;
 
   public accidentalDefaultColor = '#ED0000';
   public accidentalDefaultStrokeWidth = 0;

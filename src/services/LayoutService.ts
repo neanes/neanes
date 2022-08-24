@@ -173,12 +173,31 @@ export class LayoutService {
           const modeKeyElement = element as ModeKeyElement;
 
           elementWidthPx = pageSetup.innerPageWidth;
+
+          // Compute properties
+          modeKeyElement.computedFontFamily = pageSetup.neumeDefaultFontFamily;
+
+          modeKeyElement.computedFontSize = modeKeyElement.useDefaultStyle
+            ? pageSetup.modeKeyDefaultFontSize
+            : modeKeyElement.fontSize;
+
+          modeKeyElement.computedColor = modeKeyElement.useDefaultStyle
+            ? pageSetup.modeKeyDefaultColor
+            : modeKeyElement.color;
+
+          modeKeyElement.computedStrokeWidth = modeKeyElement.useDefaultStyle
+            ? pageSetup.modeKeyDefaultStrokeWidth
+            : modeKeyElement.strokeWidth;
+
+          modeKeyElement.computedHeightAdjustment =
+            modeKeyElement.useDefaultStyle
+              ? pageSetup.modeKeyDefaultHeightAdjustment
+              : modeKeyElement.heightAdjustment;
+
           modeKeyElement.height =
             TextMeasurementService.getFontHeight(
-              `${modeKeyElement.fontSize}px ${pageSetup.neumeDefaultFontFamily}`,
-            ) + modeKeyElement.heightAdjustment;
-
-          modeKeyElement.computedFontFamily = pageSetup.neumeDefaultFontFamily;
+              `${modeKeyElement.computedFontSize}px ${modeKeyElement.computedFontFamily}`,
+            ) + modeKeyElement.computedHeightAdjustment;
           break;
         }
         case ElementType.Note: {
@@ -534,23 +553,60 @@ export class LayoutService {
     let elementWidthPx = 0;
 
     if (textBoxElement.inline) {
+      textBoxElement.computedFontFamily = textBoxElement.useDefaultStyle
+        ? pageSetup.lyricsDefaultFontFamily
+        : textBoxElement.fontFamily;
+
+      textBoxElement.computedFontSize = textBoxElement.useDefaultStyle
+        ? pageSetup.lyricsDefaultFontSize
+        : textBoxElement.fontSize;
+
+      textBoxElement.computedColor = textBoxElement.useDefaultStyle
+        ? pageSetup.lyricsDefaultColor
+        : textBoxElement.color;
+
+      textBoxElement.computedStrokeWidth = textBoxElement.useDefaultStyle
+        ? pageSetup.lyricsDefaultStrokeWidth
+        : textBoxElement.strokeWidth;
+
+      textBoxElement.computedFontWeight = textBoxElement.useDefaultStyle
+        ? pageSetup.lyricsDefaultFontWeight
+        : textBoxElement.bold
+        ? '700'
+        : '400';
+
+      textBoxElement.computedFontStyle = textBoxElement.useDefaultStyle
+        ? pageSetup.lyricsDefaultFontStyle
+        : textBoxElement.italic
+        ? 'italic'
+        : 'normal';
+
       elementWidthPx = TextMeasurementService.getTextWidth(
         textBoxElement.content,
-        `${textBoxElement.fontSize}px ${textBoxElement.fontFamily}`,
+        textBoxElement.computedFont,
       );
 
       const minimumWidth = TextMeasurementService.getTextWidth(
         ' ',
-        `${textBoxElement.fontSize}px ${textBoxElement.fontFamily}`,
+        textBoxElement.computedFont,
       );
 
       elementWidthPx = Math.max(elementWidthPx, minimumWidth);
     } else {
       elementWidthPx = pageSetup.innerPageWidth;
+
+      textBoxElement.computedFontFamily = textBoxElement.fontFamily;
+      textBoxElement.computedFontSize = textBoxElement.fontSize;
+      textBoxElement.computedColor = textBoxElement.color;
+      textBoxElement.computedStrokeWidth = textBoxElement.strokeWidth;
+      textBoxElement.computedFontWeight = textBoxElement.bold ? '700' : '400';
+      textBoxElement.computedFontStyle = textBoxElement.italic
+        ? 'italic'
+        : 'normal';
     }
 
     const fontHeight = TextMeasurementService.getFontHeight(
-      `${textBoxElement.fontSize}px ${textBoxElement.fontFamily}`,
+      textBoxElement.computedFont,
     );
 
     if (textBoxElement.inline) {
@@ -572,7 +628,7 @@ export class LayoutService {
         const lineCount = Math.ceil(
           TextMeasurementService.getTextWidth(
             lines[i],
-            `${textBoxElement.fontSize}px ${textBoxElement.fontFamily}`,
+            textBoxElement.computedFont,
           ) / elementWidthPx,
         );
 

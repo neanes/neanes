@@ -7,7 +7,6 @@ import {
   MartyriaElement,
   NoteElement,
   ScoreElement,
-  ScoreElementOffset,
   TextBoxElement,
   ModeKeyElement,
   TempoElement,
@@ -16,8 +15,6 @@ import {
 import { Score as Score_v1, Staff as Staff_v1 } from '@/models/save/v1/Score';
 import { Header as Header_v1 } from '@/models/save/v1/Header';
 import { Footer as Footer_v1 } from '@/models/save/v1/Footer';
-import { Headers as Headers_v1 } from '@/models/save/v1/Headers';
-import { Footers as Footers_v1 } from '@/models/save/v1/Footers';
 import {
   DropCapElement as DropCapElement_v1,
   ElementType as ElementType_v1,
@@ -156,6 +153,7 @@ export class SaveService {
     pageSetup.modeKeyDefaultColor = p.modeKeyDefaultColor;
     pageSetup.modeKeyDefaultStrokeWidth = p.modeKeyDefaultStrokeWidth;
     pageSetup.modeKeyDefaultFontSize = p.modeKeyDefaultFontSize;
+    pageSetup.modeKeyDefaultHeightAdjustment = p.modeKeyDefaultHeightAdjustment;
 
     pageSetup.pageHeight = p.pageHeight;
     pageSetup.pageWidth = p.pageWidth;
@@ -306,6 +304,7 @@ export class SaveService {
     element.italic = e.italic || undefined;
     element.underline = e.underline || undefined;
     element.height = e.height;
+    element.useDefaultStyle = e.useDefaultStyle || undefined;
   }
 
   public static SaveModeKey(element: ModeKeyElement_v1, e: ModeKeyElement) {
@@ -331,6 +330,7 @@ export class SaveService {
     element.strokeWidth = e.strokeWidth;
     element.height = e.height;
     element.heightAdjustment = e.heightAdjustment;
+    element.useDefaultStyle = e.useDefaultStyle || undefined;
   }
 
   public static LoadScore_v1(s: Score_v1) {
@@ -487,6 +487,9 @@ export class SaveService {
       p.modeKeyDefaultStrokeWidth || pageSetup.modeKeyDefaultStrokeWidth;
     pageSetup.modeKeyDefaultFontSize =
       p.modeKeyDefaultFontSize || pageSetup.modeKeyDefaultFontSize;
+    pageSetup.modeKeyDefaultHeightAdjustment =
+      p.modeKeyDefaultHeightAdjustment ||
+      pageSetup.modeKeyDefaultHeightAdjustment;
 
     pageSetup.accidentalDefaultColor =
       p.accidentalDefaultColor || pageSetup.accidentalDefaultColor;
@@ -666,6 +669,7 @@ export class SaveService {
     element.underline = e.underline === true;
     element.height = e.height;
     element.strokeWidth = e.strokeWidth || element.strokeWidth;
+    element.useDefaultStyle = e.useDefaultStyle === true;
   }
 
   public static LoadModeKey_v1(element: ModeKeyElement, e: ModeKeyElement_v1) {
@@ -688,5 +692,6 @@ export class SaveService {
     element.fontSize = e.fontSize;
     element.strokeWidth = e.strokeWidth || element.strokeWidth;
     element.heightAdjustment = e.heightAdjustment || 0;
+    element.useDefaultStyle = e.useDefaultStyle === true;
   }
 }

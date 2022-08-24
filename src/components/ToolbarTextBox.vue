@@ -1,42 +1,53 @@
 <template>
   <div class="text-box-toolbar">
-    <select
-      :value="element.fontFamily"
-      @change="$emit('update:fontFamily', $event.target.value)"
-    >
-      <option>Athonite</option>
-      <option>Omega</option>
+    <template v-if="element.inline">
+      <input
+        type="checkbox"
+        :checked="element.useDefaultStyle"
+        @change="$emit('update:useDefaultStyle', $event.target.checked)"
+      />
+      <label>Use default style</label>
+      <span class="divider" />
+    </template>
+    <template v-if="!element.inline || !element.useDefaultStyle">
+      <select
+        :value="element.fontFamily"
+        @change="$emit('update:fontFamily', $event.target.value)"
+      >
+        <option>Athonite</option>
+        <option>Omega</option>
 
-      <option v-for="font in fonts" :key="font" :value="font">
-        {{ font }}
-      </option>
-    </select>
-    <span class="space"></span>
-    <InputFontSize
-      class="drop-caps-input"
-      :value="element.fontSize"
-      @input="$emit('update:fontSize', $event)"
-    />
-    <span class="space"></span>
-    <ColorPicker
-      :value="element.color"
-      @input="$emit('update:color', $event)"
-    />
-    <span class="space"></span>
-    <button
-      class="icon-btn"
-      :class="{ selected: element.bold }"
-      @click="$emit('update:bold', !element.bold)"
-    >
-      <b>B</b>
-    </button>
-    <button
-      class="icon-btn"
-      :class="{ selected: element.italic }"
-      @click="$emit('update:italic', !element.italic)"
-    >
-      <i>I</i>
-    </button>
+        <option v-for="font in fonts" :key="font" :value="font">
+          {{ font }}
+        </option>
+      </select>
+      <span class="space"></span>
+      <InputFontSize
+        class="drop-caps-input"
+        :value="element.fontSize"
+        @input="$emit('update:fontSize', $event)"
+      />
+      <span class="space"></span>
+      <ColorPicker
+        :value="element.color"
+        @input="$emit('update:color', $event)"
+      />
+      <span class="space"></span>
+      <button
+        class="icon-btn"
+        :class="{ selected: element.bold }"
+        @click="$emit('update:bold', !element.bold)"
+      >
+        <b>B</b>
+      </button>
+      <button
+        class="icon-btn"
+        :class="{ selected: element.italic }"
+        @click="$emit('update:italic', !element.italic)"
+      >
+        <i>I</i>
+      </button>
+    </template>
     <button
       class="icon-btn"
       :class="{ selected: element.underline }"
@@ -81,12 +92,14 @@
         title="Align Right"
       />
     </button>
-    <span class="space" />
-    <label class="right-space">Outline</label>
-    <InputStrokeWidth
-      :value="element.strokeWidth"
-      @input="$emit('update:strokeWidth', $event)"
-    />
+    <template v-if="!element.inline || !element.useDefaultStyle">
+      <span class="space" />
+      <label class="right-space">Outline</label>
+      <InputStrokeWidth
+        :value="element.strokeWidth"
+        @input="$emit('update:strokeWidth', $event)"
+      />
+    </template>
     <span class="space" />
     <button class="icon-btn" @mousedown.prevent="$emit('insert:pelastikon')">
       <img
@@ -110,7 +123,6 @@
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { TextBoxAlignment, TextBoxElement } from '@/models/Element';
-import { Unit } from '@/utils/Unit';
 import ColorPicker from '@/components/ColorPicker.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
@@ -152,6 +164,12 @@ export default class ToolbarTextBox extends Vue {
 
 label.right-space {
   margin-right: 0.5rem;
+}
+
+.divider {
+  height: 32px;
+  border-right: 1px solid #666;
+  margin: 0 0.5rem;
 }
 
 .space {

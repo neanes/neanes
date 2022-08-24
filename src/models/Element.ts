@@ -393,8 +393,8 @@ export class TextBoxElement extends ScoreElement {
   public bold: boolean = false;
   public italic: boolean = false;
   public underline: boolean = false;
-  public height: number = 20;
   public useDefaultStyle: boolean = true;
+  public height: number = 20;
 
   // Values computed by the layout service
   public computedFontFamily: string = '';
@@ -423,6 +423,12 @@ export class TextBoxElement extends ScoreElement {
       content: this.content,
       fontSize: this.fontSize,
       fontFamily: this.fontFamily,
+      strokeWidth: this.strokeWidth,
+      inline: this.inline,
+      bold: this.bold,
+      italic: this.italic,
+      underline: this.underline,
+      useDefaultStyle: this.useDefaultStyle,
     } as Partial<TextBoxElement>;
   }
 }
@@ -446,9 +452,9 @@ export class ModeKeyElement extends ScoreElement {
   public color: string = '#000000';
   public fontSize: number = Unit.fromPt(20);
   public strokeWidth: number = 0;
-  public height: number = Unit.fromPt(37);
   public heightAdjustment: number = 0;
   public useDefaultStyle: boolean = true;
+  public height: number = Unit.fromPt(37);
 
   // Values computed by the layout service
   public computedFontFamily: string = '';
@@ -518,6 +524,9 @@ export class ModeKeyElement extends ScoreElement {
       quantitativeNeumeAboveNote2: this.quantitativeNeumeAboveNote2,
       quantitativeNeumeRight: this.quantitativeNeumeRight,
       fontSize: this.fontSize,
+      strokeWidth: this.strokeWidth,
+      heightAdjustment: this.heightAdjustment,
+      useDefaultStyle: this.useDefaultStyle,
     } as Partial<ModeKeyElement>;
   }
 }

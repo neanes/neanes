@@ -327,6 +327,9 @@
       <ToolbarTextBox
         :element="selectedTextBoxElement"
         :fonts="fonts"
+        @update:useDefaultStyle="
+          updateTextBoxUseDefaultStyle(selectedTextBoxElement, $event)
+        "
         @update:fontSize="updateTextBoxFontSize(selectedTextBoxElement, $event)"
         @update:fontFamily="
           updateTextBoxFontFamily(selectedTextBoxElement, $event)
@@ -361,6 +364,9 @@
       <ToolbarModeKey
         :element="selectedElement"
         :pageSetup="score.pageSetup"
+        @update:useDefaultStyle="
+          updateModeKeyUseDefaultStyle(selectedElement, $event)
+        "
         @update:fontSize="updateModeKeyFontSize(selectedElement, $event)"
         @update:strokeWidth="updateModeKeyStrokeWidth(selectedElement, $event)"
         @update:alignment="updateModeKeyAlignment(selectedElement, $event)"
@@ -2478,6 +2484,13 @@ export default class Editor extends Vue {
     this.updateTextBox(element, { content });
   }
 
+  updateTextBoxUseDefaultStyle(
+    element: TextBoxElement,
+    useDefaultStyle: boolean,
+  ) {
+    this.updateTextBox(element, { useDefaultStyle });
+  }
+
   updateTextBoxFontSize(element: TextBoxElement, fontSize: number) {
     this.updateTextBox(element, { fontSize });
   }
@@ -2523,6 +2536,13 @@ export default class Editor extends Vue {
     );
 
     this.save();
+  }
+
+  updateModeKeyUseDefaultStyle(
+    element: ModeKeyElement,
+    useDefaultStyle: boolean,
+  ) {
+    this.updateModeKey(element, { useDefaultStyle });
   }
 
   updateModeKeyFontSize(element: ModeKeyElement, fontSize: number) {

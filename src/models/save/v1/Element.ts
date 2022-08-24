@@ -104,6 +104,7 @@ export class TextBoxElement extends ScoreElement {
   public italic: boolean | undefined = undefined;
   public underline: boolean | undefined = undefined;
   public height: number = 20;
+  public useDefaultStyle: boolean | undefined = undefined;
 }
 
 export class ModeKeyElement extends ScoreElement {
@@ -127,6 +128,7 @@ export class ModeKeyElement extends ScoreElement {
   public strokeWidth: number = 0;
   public height: number = 20;
   public heightAdjustment: number = 0;
+  public useDefaultStyle: boolean | undefined = undefined;
 }
 
 export class DropCapElement extends ScoreElement {

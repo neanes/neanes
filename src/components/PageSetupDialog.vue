@@ -331,6 +331,19 @@
               v-model="form.modeKeyDefaultStrokeWidth"
             />
           </div>
+          <div class="form-group">
+            <label class="drop-caps-label">Height Adjust</label>
+
+            <InputUnit
+              class="drop-caps-input"
+              unit="pt"
+              :min="heightAdjustmentMin"
+              :max="heightAdjustmentMax"
+              :step="0.5"
+              :precision="2"
+              v-model="form.modeKeyDefaultHeightAdjustment"
+            />
+          </div>
           <div class="subheader">Neumes</div>
           <div class="form-group row">
             <label class="drop-caps-label">Color</label>
@@ -618,6 +631,14 @@ export default class PageSetupDialog extends Vue {
 
   get neumeSpacingMax() {
     return Math.round(this.toDisplayUnit(this.form.pageWidth));
+  }
+
+  get heightAdjustmentMin() {
+    return -Math.round(Unit.fromPt(this.pageSetup.pageHeight));
+  }
+
+  get heightAdjustmentMax() {
+    return Unit.toPt(this.pageSetup.pageHeight);
   }
 
   created() {

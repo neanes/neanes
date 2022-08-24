@@ -77,13 +77,13 @@ export default class ModeKey extends Vue {
 
   get style() {
     return {
-      color: this.element.color,
+      color: this.element.computedColor,
       fontFamily: this.element.computedFontFamily,
-      fontSize: withZoom(this.element.fontSize),
+      fontSize: withZoom(this.element.computedFontSize),
       textAlign: this.element.alignment,
       width: withZoom(this.element.width),
       height: withZoom(this.element.height),
-      webkitTextStrokeWidth: withZoom(this.element.strokeWidth),
+      webkitTextStrokeWidth: withZoom(this.element.computedStrokeWidth),
     } as CSSStyleDeclaration;
   }
 }

@@ -394,6 +394,19 @@ export class TextBoxElement extends ScoreElement {
   public italic: boolean = false;
   public underline: boolean = false;
   public height: number = 20;
+  public useDefaultStyle: boolean = true;
+
+  // Values computed by the layout service
+  public computedFontFamily: string = '';
+  public computedFontSize: number = Unit.fromPt(20);
+  public computedFontWeight: string = '400';
+  public computedFontStyle: string = 'normal';
+  public computedColor: string = '#000000';
+  public computedStrokeWidth: number = 0;
+
+  public get computedFont() {
+    return `${this.computedFontStyle} normal ${this.computedFontWeight} ${this.computedFontSize}px ${this.computedFontFamily}`;
+  }
 
   public clone() {
     const clone = new TextBoxElement();
@@ -435,9 +448,14 @@ export class ModeKeyElement extends ScoreElement {
   public strokeWidth: number = 0;
   public height: number = Unit.fromPt(37);
   public heightAdjustment: number = 0;
+  public useDefaultStyle: boolean = true;
 
   // Values computed by the layout service
   public computedFontFamily: string = '';
+  public computedFontSize: number = Unit.fromPt(20);
+  public computedColor: string = '#000000';
+  public computedStrokeWidth: number = 0;
+  public computedHeightAdjustment: number = 0;
 
   public get isPlagal() {
     return this.mode > 4 && this.mode !== 7;

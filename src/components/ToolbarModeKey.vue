@@ -1,16 +1,27 @@
 <template>
   <div class="mode-key-toolbar">
-    <InputFontSize
-      class="drop-caps-input"
-      :value="element.fontSize"
-      @input="$emit('update:fontSize', $event)"
+    <input
+      type="checkbox"
+      :checked="element.useDefaultStyle"
+      @change="$emit('update:useDefaultStyle', $event.target.checked)"
     />
-    <span class="space"></span>
-    <ColorPicker
-      :value="element.color"
-      @input="$emit('update:color', $event)"
-    />
-    <span class="space"></span>
+    <label>Use default style</label>
+    <span class="divider" />
+
+    <template v-if="!element.useDefaultStyle">
+      <label class="right-space">Size</label>
+      <InputFontSize
+        class="drop-caps-input"
+        :value="element.fontSize"
+        @input="$emit('update:fontSize', $event)"
+      />
+      <span class="space"></span>
+      <ColorPicker
+        :value="element.color"
+        @input="$emit('update:color', $event)"
+      />
+      <span class="space"></span>
+    </template>
     <button
       class="icon-btn"
       :class="{ selected: element.alignment === TextBoxAlignment.Left }"
@@ -51,26 +62,28 @@
       />
     </button>
     <span class="space" />
-    <label class="right-space">Outline</label>
-    <InputStrokeWidth
-      :value="element.strokeWidth"
-      @input="$emit('update:strokeWidth', $event)"
-    />
-    <span class="space" />
+    <template v-if="!element.useDefaultStyle">
+      <label class="right-space">Outline</label>
+      <InputStrokeWidth
+        :value="element.strokeWidth"
+        @input="$emit('update:strokeWidth', $event)"
+      />
+      <span class="space" />
 
-    <label class="right-space">Height Adjustment</label>
+      <label class="right-space">Height Adjustment</label>
 
-    <InputUnit
-      class="short-input"
-      unit="pt"
-      :min="heightAdjustmentMin"
-      :max="heightAdjustmentMax"
-      :step="0.5"
-      :precision="2"
-      :value="element.heightAdjustment"
-      @input="$emit('update:heightAdjustment', $event)"
-    />
-    <span class="space" />
+      <InputUnit
+        class="short-input"
+        unit="pt"
+        :min="heightAdjustmentMin"
+        :max="heightAdjustmentMax"
+        :step="0.5"
+        :precision="2"
+        :value="element.heightAdjustment"
+        @input="$emit('update:heightAdjustment', $event)"
+      />
+      <span class="space" />
+    </template>
     <button @click="$emit('open-mode-key-dialog')">Change Key</button>
   </div>
 </template>
@@ -133,6 +146,12 @@ export default class ToolbarModeKey extends Vue {
 
 label.right-space {
   margin-right: 0.5rem;
+}
+
+.divider {
+  height: 32px;
+  border-right: 1px solid #666;
+  margin: 0 0.5rem;
 }
 
 .short-input {

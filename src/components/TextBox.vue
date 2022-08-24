@@ -50,13 +50,15 @@ export default class TextBox extends Vue {
 
   get containerStyle() {
     const style = {
-      color: this.element.color,
-      fontFamily: getFontFamilyWithFallback(this.element.fontFamily),
-      fontSize: withZoom(this.element.fontSize),
+      color: this.element.computedColor,
+      fontFamily: getFontFamilyWithFallback(this.element.computedFontFamily),
+      fontSize: withZoom(this.element.computedFontSize),
+      fontWeight: this.element.computedFontWeight,
+      fontStyle: this.element.computedFontStyle,
       textAlign: this.element.alignment,
       width: this.width,
       height: withZoom(this.element.height),
-      webkitTextStrokeWidth: withZoom(this.element.strokeWidth),
+      webkitTextStrokeWidth: withZoom(this.element.computedStrokeWidth),
     } as CSSStyleDeclaration;
 
     return style;
@@ -74,8 +76,6 @@ export default class TextBox extends Vue {
   get textBoxClass() {
     return {
       inline: this.element.inline,
-      bold: this.element.bold,
-      italic: this.element.italic,
       underline: this.element.underline,
     };
   }
@@ -116,14 +116,6 @@ export default class TextBox extends Vue {
   display: flex;
   align-items: center;
   white-space: nowrap;
-}
-
-.text-box.bold {
-  font-weight: bold;
-}
-
-.text-box.italic {
-  font-style: italic;
 }
 
 .text-box.underline {

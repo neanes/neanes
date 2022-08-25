@@ -1,14 +1,12 @@
-import { exec, execFile } from 'child_process';
+import { exec } from 'child_process';
 import { promisify } from 'util';
 
 const execAsync = promisify(exec);
 
-export async function getSystemFonts(
-  darwinBinaryFilePath: string,
-): Promise<string[]> {
+export async function getSystemFonts(): Promise<string[]> {
   switch (process.platform) {
     case 'darwin':
-      return await getDarwinSystemFonts(darwinBinaryFilePath);
+      return await getDarwinSystemFonts();
     case 'win32':
       return await getWindowsSystemFonts();
     case 'linux':
@@ -34,34 +32,23 @@ async function getWindowsSystemFonts(): Promise<string[]> {
     .filter((x) => x !== '');
 }
 
-async function getDarwinSystemFonts(
-  darwinBinaryFilePath: string,
-): Promise<string[]> {
-  return new Promise((resolve, reject) => {
-    execFile(
-      darwinBinaryFilePath,
-      { maxBuffer: 1024 * 1024 * 10 },
-      (error, stdout, stderr) => {
-        if (error) {
-          reject(error);
-          return;
-        }
+async function getDarwinSystemFonts() {
+  const cmd = `<< SCPT osascript | uniq | sort 
+  use framework "AppKit" 
+  set fontNames to (current application's NSFontManager's sharedFontManager's availableFonts) as list 
+  set result to "" 
+  repeat with fontName in fontNames 
+    set result to result & fontName & "\\n" 
+  end repeat 
+  return result
+SCPT`;
 
-        let fonts: string[] = [];
+  const { stdout } = await execAsync(cmd, { maxBuffer: 1024 * 1024 * 10 });
 
-        if (stdout) {
-          fonts = fonts.concat(stdout.split('\n').map((i) => i.trim()));
-        }
-        if (stderr) {
-          fonts = fonts.concat(stderr.split('\n').map((i) => i.trim()));
-        }
-
-        fonts = Array.from(new Set(fonts)).filter((x) => !x.startsWith('.'));
-
-        resolve(fonts);
-      },
-    );
-  });
+  return stdout
+    .split('\n')
+    .map((x) => x.trim())
+    .filter((x) => x !== '' && !x.startsWith('.'));
 }
 
 async function getLinuxSystemFonts() {

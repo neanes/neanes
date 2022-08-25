@@ -43,8 +43,6 @@ const storeFilePath = path.join(userDataPath, 'settings.json');
 
 declare const __static: string;
 
-const darwinFontListBinaryFilePath = path.join(__static, 'bin/fontlist');
-
 let win!: BrowserWindow;
 
 interface Store {
@@ -814,7 +812,7 @@ ipcMain.handle(IpcRendererChannels.GetSystemFonts, async () => {
   let fonts: string[] = [];
 
   try {
-    fonts = await getSystemFonts(darwinFontListBinaryFilePath);
+    fonts = await getSystemFonts();
   } catch (error) {
     console.error(error);
   }

@@ -7,5 +7,6 @@ declare global {
       on: (channel: string, func: (...args: any[]) => void) => void;
       invoke: (channel: string, ...args: any[]) => Promise<any>;
     };
+    platform: string;
   }
 }

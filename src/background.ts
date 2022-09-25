@@ -512,7 +512,8 @@ function createMenu() {
         {
           id: 'redo',
           label: '&Redo',
-          accelerator: 'CmdOrCtrl+Y',
+          accelerator:
+            process.platform === 'darwin' ? 'CmdOrCtrl+Shift+Z' : 'CmdOrCtrl+Y',
           click(menuItem, browserWindow, event) {
             // The accelerator is handled in the renderer process because of
             // https://github.com/electron/electron/issues/3682.

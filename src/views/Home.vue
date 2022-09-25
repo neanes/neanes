@@ -1,6 +1,10 @@
 <template>
   <div class="home">
-    <Editor :ipcService="ipcService" :showFileMenuBar="showFileMenuBar" />
+    <Editor
+      :ipcService="ipcService"
+      :platformService="platformService"
+      :showFileMenuBar="showFileMenuBar"
+    />
   </div>
 </template>
 
@@ -9,6 +13,8 @@
 import Editor from '@/components/Editor.vue';
 import { IpcService } from '@/services/ipc/IpcService';
 import { BrowserIpcService } from '@/services/ipc/BrowserIpcService';
+import { PlatformService } from '@/services/platform/PlatformService';
+import { BrowserPlatformService } from '@/services/platform/BrowserPlatformService';
 
 export default {
   name: 'home',
@@ -18,14 +24,18 @@ export default {
   data() {
     return {
       ipcService: null,
+      platformService: null,
       showFileMenuBar: false,
     };
   },
   created() {
     if (process.env.IS_ELECTRON) {
       this.ipcService = new IpcService();
+      this.platformService = new PlatformService();
     } else {
       this.ipcService = new BrowserIpcService();
+      this.platformService = new BrowserPlatformService();
+
       this.showFileMenuBar = true;
     }
   },

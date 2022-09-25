@@ -515,6 +515,7 @@ import { Footer } from '@/models/Footer';
 import { TokenMetadata } from '@/utils/replaceTokens';
 import { Scale } from '@/models/Scales';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
+import { IPlatformService } from '@/services/platform/IPlatformService';
 
 @Component({
   components: {
@@ -543,6 +544,7 @@ import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 })
 export default class Editor extends Vue {
   @Prop() ipcService!: IIpcService;
+  @Prop() platformService!: IPlatformService;
   @Prop() showFileMenuBar!: boolean;
 
   isDevelopment: boolean = process.env.NODE_ENV !== 'production';
@@ -1479,7 +1481,11 @@ export default class Editor extends Vue {
       !this.dialogOpen
     ) {
       if (event.code === 'KeyZ') {
-        this.onFileMenuUndoThrottled();
+        if (this.platformService.isMac && event.shiftKey) {
+          this.onFileMenuRedoThrottled();
+        } else {
+          this.onFileMenuUndoThrottled();
+        }
         event.preventDefault();
         return;
       } else if (event.code === 'KeyY') {

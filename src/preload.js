@@ -23,3 +23,8 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
     }
   },
 });
+
+// Expose platform
+contextBridge.exposeInMainWorld('platform', {
+  platform: process.platform,
+});

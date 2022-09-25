@@ -12,8 +12,9 @@ import {
 } from '@/ipc/ipcChannels';
 import { Workspace } from '@/models/Workspace';
 import { SaveService } from '../SaveService';
+import { IIpcService } from './IIpcService';
 
-export class IpcService {
+export class IpcService implements IIpcService {
   public async saveWorkspace(
     workspace: Workspace,
   ): Promise<SaveWorkspaceReplyArgs> {

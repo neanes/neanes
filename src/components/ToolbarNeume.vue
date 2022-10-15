@@ -611,6 +611,11 @@
         :value="element.spaceAfter"
         @input="$emit('update:spaceAfter', $event)"
       />
+      <span class="space"></span>
+
+      <button @click="$emit('open-syllable-positioning-dialog')">
+        Positioning
+      </button>
     </div>
   </div>
 </template>

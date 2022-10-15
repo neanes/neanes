@@ -242,46 +242,77 @@ export class SaveService {
 
     if (e.timeNeume != null) {
       element.timeNeume = e.timeNeume;
+      element.timeNeumeOffsetX = e.timeNeumeOffsetX || undefined;
+      element.timeNeumeOffsetY = e.timeNeumeOffsetY || undefined;
     }
 
     if (e.gorgonNeume != null) {
       element.gorgonNeume = e.gorgonNeume;
+      element.gorgonNeumeOffsetX = e.gorgonNeumeOffsetX || undefined;
+      element.gorgonNeumeOffsetY = e.gorgonNeumeOffsetY || undefined;
     }
 
     if (e.secondaryGorgonNeume != null) {
       element.secondaryGorgonNeume = e.secondaryGorgonNeume;
+      element.secondaryGorgonNeumeOffsetX =
+        e.secondaryGorgonNeumeOffsetX || undefined;
+      element.secondaryGorgonNeumeOffsetY =
+        e.secondaryGorgonNeumeOffsetY || undefined;
     }
 
     if (e.fthora != null) {
       element.fthora = e.fthora;
+      element.fthoraOffsetX = e.fthoraOffsetX || undefined;
+      element.fthoraOffsetY = e.fthoraOffsetY || undefined;
     }
 
     if (e.accidental != null) {
       element.accidental = e.accidental;
+      element.accidentalOffsetX = e.accidentalOffsetX || undefined;
+      element.accidentalOffsetY = e.accidentalOffsetY || undefined;
     }
 
     if (e.vocalExpressionNeume != null) {
       element.vocalExpressionNeume = e.vocalExpressionNeume;
+      element.vocalExpressionNeumeOffsetX =
+        e.vocalExpressionNeumeOffsetX || undefined;
+      element.vocalExpressionNeumeOffsetY =
+        e.vocalExpressionNeumeOffsetY || undefined;
     }
 
     if (e.measureBarLeft != null) {
       element.measureBarLeft = e.measureBarLeft;
+      element.measureBarLeftOffsetX = e.measureBarLeftOffsetX || undefined;
+      element.measureBarLeftOffsetY = e.measureBarLeftOffsetY || undefined;
     }
 
     if (e.measureBarRight != null) {
       element.measureBarRight = e.measureBarRight;
+      element.measureBarRightOffsetX = e.measureBarRightOffsetX || undefined;
+      element.measureBarRightOffsetY = e.measureBarRightOffsetY || undefined;
     }
 
     if (e.measureNumber != null) {
       element.measureNumber = e.measureNumber;
+      element.measureNumberOffsetX = e.measureNumberOffsetX || undefined;
+      element.measureNumberOffsetY = e.measureNumberOffsetY || undefined;
     }
 
     if (e.noteIndicator != null) {
       element.noteIndicator = e.noteIndicator;
+      element.noteIndicatorOffsetX = e.noteIndicatorOffsetX || undefined;
+      element.noteIndicatorOffsetY = e.noteIndicatorOffsetY || undefined;
     }
 
     if (e.ison != null) {
       element.ison = e.ison;
+      element.isonOffsetX = e.isonOffsetX || undefined;
+      element.isonOffsetY = e.isonOffsetY || undefined;
+    }
+
+    if (e.vareia) {
+      element.vareiaOffsetX = e.vareiaOffsetX || undefined;
+      element.vareiaOffsetY = e.vareiaOffsetY || undefined;
     }
 
     element.vareia = e.vareia || undefined;
@@ -599,30 +630,48 @@ export class SaveService {
 
     if (e.timeNeume != null) {
       element.timeNeume = e.timeNeume;
+      element.timeNeumeOffsetX = e.timeNeumeOffsetX || null;
+      element.timeNeumeOffsetY = e.timeNeumeOffsetY || null;
     }
 
     if (e.gorgonNeume != null) {
       element.gorgonNeume = e.gorgonNeume;
+      element.gorgonNeumeOffsetX = e.gorgonNeumeOffsetX || null;
+      element.gorgonNeumeOffsetY = e.gorgonNeumeOffsetY || null;
     }
 
     if (e.secondaryGorgonNeume != null) {
       element.secondaryGorgonNeume = e.secondaryGorgonNeume;
+      element.secondaryGorgonNeumeOffsetX =
+        e.secondaryGorgonNeumeOffsetX || null;
+      element.secondaryGorgonNeumeOffsetY =
+        e.secondaryGorgonNeumeOffsetY || null;
     }
 
     if (e.fthora != null) {
       element.fthora = e.fthora;
+      element.fthoraOffsetX = e.fthoraOffsetX || null;
+      element.fthoraOffsetY = e.fthoraOffsetY || null;
     }
 
     if (e.accidental != null) {
       element.accidental = e.accidental;
+      element.accidentalOffsetX = e.accidentalOffsetX || null;
+      element.accidentalOffsetY = e.accidentalOffsetY || null;
     }
 
     if (e.vocalExpressionNeume != null) {
       element.vocalExpressionNeume = e.vocalExpressionNeume;
+      element.vocalExpressionNeumeOffsetX =
+        e.vocalExpressionNeumeOffsetX || null;
+      element.vocalExpressionNeumeOffsetY =
+        e.vocalExpressionNeumeOffsetY || null;
     }
 
     if (e.measureBarLeft != null) {
       element.measureBarLeft = e.measureBarLeft;
+      element.measureBarLeftOffsetX = e.measureBarLeftOffsetX || null;
+      element.measureBarLeftOffsetY = e.measureBarLeftOffsetY || null;
     }
 
     if (e.measureBar != null) {
@@ -631,22 +680,35 @@ export class SaveService {
 
     if (e.measureBarRight != null) {
       element.measureBarRight = e.measureBarRight;
+      element.measureBarRightOffsetX = e.measureBarRightOffsetX || null;
+      element.measureBarRightOffsetY = e.measureBarRightOffsetY || null;
     }
 
     if (e.measureNumber != null) {
       element.measureNumber = e.measureNumber;
+      element.measureNumberOffsetX = e.measureNumberOffsetX || null;
+      element.measureNumberOffsetY = e.measureNumberOffsetY || null;
     }
 
     if (e.noteIndicator != null) {
       element.noteIndicator = e.noteIndicator;
+      element.noteIndicatorOffsetX = e.noteIndicatorOffsetX || null;
+      element.noteIndicatorOffsetY = e.noteIndicatorOffsetY || null;
     }
 
     if (e.ison != null) {
       element.ison = e.ison;
+      element.isonOffsetX = e.isonOffsetX || null;
+      element.isonOffsetY = e.isonOffsetY || null;
     }
 
     if (e.lyrics != null) {
       element.lyrics = e.lyrics;
+    }
+
+    if (e.vareia === true) {
+      element.vareiaOffsetX = e.vareiaOffsetX || null;
+      element.vareiaOffsetY = e.vareiaOffsetY || null;
     }
 
     element.vareia = e.vareia === true;

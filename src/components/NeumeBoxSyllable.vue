@@ -3,16 +3,20 @@
     <Neume
       v-if="hasMeasureBarLeft"
       :neume="note.measureBarLeft"
-      :style="measureBarStyle"
+      :style="measureBarLeftStyle"
     />
-    <Neume v-if="note.vareia" :neume="VocalExpressionNeume.Vareia" />
+    <Neume
+      v-if="note.vareia"
+      :neume="VocalExpressionNeume.Vareia"
+      :style="vareiaStyle"
+    />
     <Neume :neume="note.quantitativeNeume" />
     <Neume
       v-if="hasVocalExpressionNeume"
       :neume="note.vocalExpressionNeume"
       :style="vocalExpressionStyle"
     />
-    <Neume v-if="hasTimeNeume" :neume="note.timeNeume" />
+    <Neume v-if="hasTimeNeume" :neume="note.timeNeume" :style="timeStyle" />
     <Neume
       v-if="hasGorgonNeume"
       :neume="note.gorgonNeume"
@@ -21,7 +25,7 @@
     <Neume
       v-if="hasSecondaryGorgonNeume"
       :neume="note.secondaryGorgonNeume"
-      :style="gorgonStyle"
+      :style="secondaryGorgonStyle"
     />
     <Neume v-if="hasFthora" :neume="note.fthora" :style="fthoraStyle" />
     <Neume
@@ -43,7 +47,7 @@
     <Neume
       v-if="hasMeasureBarRight"
       :neume="note.measureBarRight"
-      :style="measureBarStyle"
+      :style="measureBarRightStyle"
     />
   </div>
 </template>
@@ -124,6 +128,29 @@ export default class NeumeBoxSyllable extends Vue {
     return {
       color: this.pageSetup.gorgonDefaultColor,
       webkitTextStrokeWidth: withZoom(this.pageSetup.gorgonDefaultStrokeWidth),
+      left:
+        this.note.gorgonNeumeOffsetX != null
+          ? withZoom(this.note.gorgonNeumeOffsetX, 'em')
+          : undefined,
+      top:
+        this.note.gorgonNeumeOffsetY != null
+          ? withZoom(this.note.gorgonNeumeOffsetY, 'em')
+          : undefined,
+    } as CSSStyleDeclaration;
+  }
+
+  get secondaryGorgonStyle() {
+    return {
+      color: this.pageSetup.gorgonDefaultColor,
+      webkitTextStrokeWidth: withZoom(this.pageSetup.gorgonDefaultStrokeWidth),
+      left:
+        this.note.secondaryGorgonNeumeOffsetX != null
+          ? withZoom(this.note.secondaryGorgonNeumeOffsetX, 'em')
+          : undefined,
+      top:
+        this.note.secondaryGorgonNeumeOffsetY != null
+          ? withZoom(this.note.secondaryGorgonNeumeOffsetY, 'em')
+          : undefined,
     } as CSSStyleDeclaration;
   }
 
@@ -131,6 +158,14 @@ export default class NeumeBoxSyllable extends Vue {
     return {
       color: this.pageSetup.fthoraDefaultColor,
       webkitTextStrokeWidth: withZoom(this.pageSetup.fthoraDefaultStrokeWidth),
+      left:
+        this.note.fthoraOffsetX != null
+          ? withZoom(this.note.fthoraOffsetX, 'em')
+          : undefined,
+      top:
+        this.note.fthoraOffsetY != null
+          ? withZoom(this.note.fthoraOffsetY, 'em')
+          : undefined,
     } as CSSStyleDeclaration;
   }
 
@@ -140,15 +175,48 @@ export default class NeumeBoxSyllable extends Vue {
       webkitTextStrokeWidth: withZoom(
         this.pageSetup.accidentalDefaultStrokeWidth,
       ),
+      left:
+        this.note.accidentalOffsetX != null
+          ? withZoom(this.note.accidentalOffsetX, 'em')
+          : undefined,
+      top:
+        this.note.accidentalOffsetY != null
+          ? withZoom(this.note.accidentalOffsetY, 'em')
+          : undefined,
     } as CSSStyleDeclaration;
   }
 
-  get measureBarStyle() {
+  get measureBarLeftStyle() {
     return {
       color: this.pageSetup.measureBarDefaultColor,
       webkitTextStrokeWidth: withZoom(
         this.pageSetup.measureBarDefaultStrokeWidth,
       ),
+      left:
+        this.note.measureBarLeftOffsetX != null
+          ? withZoom(this.note.measureBarLeftOffsetX, 'em')
+          : undefined,
+      top:
+        this.note.measureBarLeftOffsetY != null
+          ? withZoom(this.note.measureBarLeftOffsetY, 'em')
+          : undefined,
+    } as CSSStyleDeclaration;
+  }
+
+  get measureBarRightStyle() {
+    return {
+      color: this.pageSetup.measureBarDefaultColor,
+      webkitTextStrokeWidth: withZoom(
+        this.pageSetup.measureBarDefaultStrokeWidth,
+      ),
+      left:
+        this.note.measureBarRightOffsetX != null
+          ? withZoom(this.note.measureBarRightOffsetX, 'em')
+          : undefined,
+      top:
+        this.note.measureBarRightOffsetY != null
+          ? withZoom(this.note.measureBarRightOffsetY, 'em')
+          : undefined,
     } as CSSStyleDeclaration;
   }
 
@@ -158,6 +226,14 @@ export default class NeumeBoxSyllable extends Vue {
       webkitTextStrokeWidth: withZoom(
         this.pageSetup.measureNumberDefaultStrokeWidth,
       ),
+      left:
+        this.note.measureNumberOffsetX != null
+          ? withZoom(this.note.measureNumberOffsetX, 'em')
+          : undefined,
+      top:
+        this.note.measureNumberOffsetY != null
+          ? withZoom(this.note.measureNumberOffsetY, 'em')
+          : undefined,
     } as CSSStyleDeclaration;
   }
 
@@ -167,6 +243,14 @@ export default class NeumeBoxSyllable extends Vue {
       webkitTextStrokeWidth: withZoom(
         this.pageSetup.noteIndicatorDefaultStrokeWidth,
       ),
+      left:
+        this.note.noteIndicatorOffsetX != null
+          ? withZoom(this.note.noteIndicatorOffsetX, 'em')
+          : undefined,
+      top:
+        this.note.noteIndicatorOffsetY != null
+          ? withZoom(this.note.noteIndicatorOffsetY, 'em')
+          : undefined,
     } as CSSStyleDeclaration;
   }
 
@@ -174,6 +258,40 @@ export default class NeumeBoxSyllable extends Vue {
     return {
       color: this.pageSetup.isonDefaultColor,
       webkitTextStrokeWidth: withZoom(this.pageSetup.isonDefaultStrokeWidth),
+      left:
+        this.note.isonOffsetX != null
+          ? withZoom(this.note.isonOffsetX, 'em')
+          : undefined,
+      top:
+        this.note.isonOffsetY != null
+          ? withZoom(this.note.isonOffsetY, 'em')
+          : undefined,
+    } as CSSStyleDeclaration;
+  }
+
+  get timeStyle() {
+    return {
+      left:
+        this.note.timeNeumeOffsetX != null
+          ? withZoom(this.note.timeNeumeOffsetX, 'em')
+          : undefined,
+      top:
+        this.note.timeNeumeOffsetY != null
+          ? withZoom(this.note.timeNeumeOffsetY, 'em')
+          : undefined,
+    } as CSSStyleDeclaration;
+  }
+
+  get vareiaStyle() {
+    return {
+      left:
+        this.note.vareiaOffsetX != null
+          ? withZoom(this.note.vareiaOffsetX, 'em')
+          : undefined,
+      top:
+        this.note.vareiaOffsetY != null
+          ? withZoom(this.note.vareiaOffsetY, 'em')
+          : undefined,
     } as CSSStyleDeclaration;
   }
 
@@ -187,6 +305,14 @@ export default class NeumeBoxSyllable extends Vue {
         webkitTextStrokeWidth: withZoom(
           this.pageSetup.heteronDefaultStrokeWidth,
         ),
+        left:
+          this.note.vocalExpressionNeumeOffsetX != null
+            ? withZoom(this.note.vocalExpressionNeumeOffsetX, 'em')
+            : undefined,
+        top:
+          this.note.vocalExpressionNeumeOffsetY != null
+            ? withZoom(this.note.vocalExpressionNeumeOffsetY, 'em')
+            : undefined,
       } as CSSStyleDeclaration;
     }
 

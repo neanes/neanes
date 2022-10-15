@@ -26,3 +26,22 @@ Several other tokens are available. Below is a list of currently supported token
 | `$n`  | Number of Pages               |
 | `$f`  | File Name (without extension) |
 | `$F`  | File Path                     |
+
+## Fine-tuning Neume Positions
+
+Sometimes the font is unable to properly position neumes when there are multiple supporting neumes. To fix collisions, click the neume and then click the `Positioning` button in the neume toolbar.
+
+![Neume Toolbar Positioning Button](./images/guide-neume-toolbar-positioning.png)
+
+This will open the neume positioning dialog.
+
+![Neume Toolbar Positioning Button](./images/guide-neume-positioning-dialog-1.png)
+
+- To move a neume **left**, **decrease** the `Left` number.
+- To move a neume **right**, **increase** the `Left` number.
+- To move a neume **up**, **decrease** the `Top` number.
+- To move a neume **down**, **increase** the `Top` number.
+
+In the below example, we have corrected the collision between the heteron and the dipli.
+
+![Neume Toolbar Positioning Button](./images/guide-neume-positioning-dialog-2.png)

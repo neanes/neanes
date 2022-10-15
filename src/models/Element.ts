@@ -14,7 +14,6 @@ import {
   NoteIndicator,
   Ison,
 } from '@/models/Neumes';
-import { TextMeasurementService } from '@/services/TextMeasurementService';
 import { Unit } from '@/utils/Unit';
 import { ModeKeyTemplate } from './ModeKeys';
 import {
@@ -66,6 +65,31 @@ export class NoteElement extends ScoreElement {
   public isHyphen: boolean = false;
   public spaceAfter: number = 0;
 
+  public accidentalOffsetX: number | null = null;
+  public accidentalOffsetY: number | null = null;
+  public fthoraOffsetX: number | null = null;
+  public fthoraOffsetY: number | null = null;
+  public gorgonNeumeOffsetX: number | null = null;
+  public gorgonNeumeOffsetY: number | null = null;
+  public isonOffsetX: number | null = null;
+  public isonOffsetY: number | null = null;
+  public measureBarLeftOffsetX: number | null = null;
+  public measureBarLeftOffsetY: number | null = null;
+  public measureBarRightOffsetX: number | null = null;
+  public measureBarRightOffsetY: number | null = null;
+  public measureNumberOffsetX: number | null = null;
+  public measureNumberOffsetY: number | null = null;
+  public noteIndicatorOffsetX: number | null = null;
+  public noteIndicatorOffsetY: number | null = null;
+  public secondaryGorgonNeumeOffsetX: number | null = null;
+  public secondaryGorgonNeumeOffsetY: number | null = null;
+  public timeNeumeOffsetX: number | null = null;
+  public timeNeumeOffsetY: number | null = null;
+  public vareiaOffsetX: number | null = null;
+  public vareiaOffsetY: number | null = null;
+  public vocalExpressionNeumeOffsetX: number | null = null;
+  public vocalExpressionNeumeOffsetY: number | null = null;
+
   public clone() {
     const clone = new NoteElement();
 
@@ -77,18 +101,42 @@ export class NoteElement extends ScoreElement {
   public getClipboardProperties() {
     return {
       measureBarLeft: this.measureBarLeft,
+      measureBarLeftOffsetX: this.measureBarLeftOffsetX,
+      measureBarLeftOffsetY: this.measureBarLeftOffsetY,
       measureBarRight: this.measureBarRight,
+      measureBarRightOffsetX: this.measureBarRightOffsetX,
+      measureBarRightOffsetY: this.measureBarRightOffsetY,
       measureNumber: this.measureNumber,
+      measureNumberOffsetX: this.measureNumberOffsetX,
+      measureNumberOffsetY: this.measureNumberOffsetY,
       noteIndicator: this.noteIndicator,
+      noteIndicatorOffsetX: this.noteIndicatorOffsetX,
+      noteIndicatorOffsetY: this.noteIndicatorOffsetY,
       ison: this.ison,
+      isonOffsetX: this.isonOffsetX,
+      isonOffsetY: this.isonOffsetY,
       accidental: this.accidental,
+      accidentalOffsetX: this.accidentalOffsetX,
+      accidentalOffsetY: this.accidentalOffsetY,
       fthora: this.fthora,
+      fthoraOffsetX: this.fthoraOffsetX,
+      fthoraOffsetY: this.fthoraOffsetY,
       gorgonNeume: this.gorgonNeume,
+      gorgonNeumeOffsetX: this.gorgonNeumeOffsetX,
+      gorgonNeumeOffsetY: this.gorgonNeumeOffsetY,
       secondaryGorgonNeume: this.secondaryGorgonNeume,
+      secondaryGorgonNeumeOffsetX: this.secondaryGorgonNeumeOffsetX,
+      secondaryGorgonNeumeOffsetY: this.secondaryGorgonNeumeOffsetY,
       quantitativeNeume: this.quantitativeNeume,
       timeNeume: this.timeNeume,
+      timeNeumeOffsetX: this.timeNeumeOffsetX,
+      timeNeumeOffsetY: this.timeNeumeOffsetY,
       vocalExpressionNeume: this.vocalExpressionNeume,
+      vocalExpressionNeumeOffsetX: this.vocalExpressionNeumeOffsetX,
+      vocalExpressionNeumeOffsetY: this.vocalExpressionNeumeOffsetY,
       vareia: this.vareia,
+      vareiaOffsetX: this.vareiaOffsetX,
+      vareiaOffsetY: this.vareiaOffsetY,
     } as Partial<NoteElement>;
   }
 

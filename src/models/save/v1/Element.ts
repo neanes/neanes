@@ -55,6 +55,31 @@ export class NoteElement extends ScoreElement {
   public isMelismaStart: boolean | undefined = undefined;
   public isHyphen: boolean | undefined = undefined;
   public spaceAfter: number = 0;
+
+  public accidentalOffsetX: number | undefined = undefined;
+  public accidentalOffsetY: number | undefined = undefined;
+  public fthoraOffsetX: number | undefined = undefined;
+  public fthoraOffsetY: number | undefined = undefined;
+  public gorgonNeumeOffsetX: number | undefined = undefined;
+  public gorgonNeumeOffsetY: number | undefined = undefined;
+  public isonOffsetX: number | undefined = undefined;
+  public isonOffsetY: number | undefined = undefined;
+  public measureBarLeftOffsetX: number | undefined = undefined;
+  public measureBarLeftOffsetY: number | undefined = undefined;
+  public measureBarRightOffsetX: number | undefined = undefined;
+  public measureBarRightOffsetY: number | undefined = undefined;
+  public measureNumberOffsetX: number | undefined = undefined;
+  public measureNumberOffsetY: number | undefined = undefined;
+  public noteIndicatorOffsetX: number | undefined = undefined;
+  public noteIndicatorOffsetY: number | undefined = undefined;
+  public secondaryGorgonNeumeOffsetX: number | undefined = undefined;
+  public secondaryGorgonNeumeOffsetY: number | undefined = undefined;
+  public timeNeumeOffsetX: number | undefined = undefined;
+  public timeNeumeOffsetY: number | undefined = undefined;
+  public vareiaOffsetX: number | undefined = undefined;
+  public vareiaOffsetY: number | undefined = undefined;
+  public vocalExpressionNeumeOffsetX: number | undefined = undefined;
+  public vocalExpressionNeumeOffsetY: number | undefined = undefined;
 }
 
 export class MartyriaElement extends ScoreElement {

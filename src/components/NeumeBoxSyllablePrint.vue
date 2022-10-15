@@ -3,11 +3,13 @@
     <Neume
       v-if="hasMeasureBarLeft"
       :neume="note.measureBarLeft"
-      :style="measureBarStyle"
+      :style="measureBarLeftStyle"
     />
-    <template v-if="note.vareia">{{
-      getMapping(VocalExpressionNeume.Vareia).text
-    }}</template>
+    <Neume
+      v-if="note.vareia"
+      :neume="VocalExpressionNeume.Vareia"
+      :style="vareiaStyle"
+    />
     <template>{{ getMapping(note.quantitativeNeume).text }}</template>
     <template v-if="hasVocalExpressionNeume && !hasHeteron">{{
       getMapping(note.vocalExpressionNeume).text
@@ -48,7 +50,7 @@
     <Neume
       v-if="hasMeasureBarRight"
       :neume="note.measureBarRight"
-      :style="measureBarStyle"
+      :style="measureBarRightStyle"
     />
   </div>
 </template>
@@ -137,6 +139,9 @@ export default class NeumeBoxSyllablePrint extends Vue {
   get gorgonStyle() {
     const offset = this.getOffset(this.note.gorgonNeume!);
 
+    offset.x += this.note.gorgonNeumeOffsetX || 0;
+    offset.y += this.note.gorgonNeumeOffsetY || 0;
+
     return {
       position: 'absolute',
       left: withZoom(offset.x, 'em'),
@@ -148,6 +153,9 @@ export default class NeumeBoxSyllablePrint extends Vue {
 
   get secondaryGorgonStyle() {
     const offset = this.getOffset(this.note.secondaryGorgonNeume!);
+
+    offset.x += this.note.secondaryGorgonNeumeOffsetX || 0;
+    offset.y += this.note.secondaryGorgonNeumeOffsetY || 0;
 
     return {
       position: 'absolute',
@@ -161,6 +169,9 @@ export default class NeumeBoxSyllablePrint extends Vue {
   get timeStyle() {
     const offset = this.getOffset(this.note.timeNeume!);
 
+    offset.x += this.note.timeNeumeOffsetX || 0;
+    offset.y += this.note.timeNeumeOffsetY || 0;
+
     return {
       position: 'absolute',
       left: withZoom(offset.x, 'em'),
@@ -169,8 +180,24 @@ export default class NeumeBoxSyllablePrint extends Vue {
     } as CSSStyleDeclaration;
   }
 
+  get vareiaStyle() {
+    return {
+      left:
+        this.note.vareiaOffsetX != null
+          ? withZoom(this.note.vareiaOffsetX, 'em')
+          : undefined,
+      top:
+        this.note.vareiaOffsetY != null
+          ? withZoom(this.note.vareiaOffsetY, 'em')
+          : undefined,
+    } as CSSStyleDeclaration;
+  }
+
   get fthoraStyle() {
     const offset = this.getOffset(this.note.fthora!);
+
+    offset.x += this.note.fthoraOffsetX || 0;
+    offset.y += this.note.fthoraOffsetY || 0;
 
     return {
       position: 'absolute',
@@ -184,6 +211,9 @@ export default class NeumeBoxSyllablePrint extends Vue {
   get accidentalStyle() {
     const offset = this.getOffset(this.note.accidental!);
 
+    offset.x += this.note.accidentalOffsetX || 0;
+    offset.y += this.note.accidentalOffsetY || 0;
+
     return {
       position: 'absolute',
       left: withZoom(offset.x, 'em'),
@@ -195,17 +225,45 @@ export default class NeumeBoxSyllablePrint extends Vue {
     } as CSSStyleDeclaration;
   }
 
-  get measureBarStyle() {
+  get measureBarLeftStyle() {
     return {
       color: this.pageSetup.measureBarDefaultColor,
       webkitTextStrokeWidth: withZoom(
         this.pageSetup.measureBarDefaultStrokeWidth,
       ),
+      left:
+        this.note.measureBarLeftOffsetX != null
+          ? withZoom(this.note.measureBarLeftOffsetX, 'em')
+          : undefined,
+      top:
+        this.note.measureBarLeftOffsetY != null
+          ? withZoom(this.note.measureBarLeftOffsetY, 'em')
+          : undefined,
+    } as CSSStyleDeclaration;
+  }
+
+  get measureBarRightStyle() {
+    return {
+      color: this.pageSetup.measureBarDefaultColor,
+      webkitTextStrokeWidth: withZoom(
+        this.pageSetup.measureBarDefaultStrokeWidth,
+      ),
+      left:
+        this.note.measureBarRightOffsetX != null
+          ? withZoom(this.note.measureBarRightOffsetX, 'em')
+          : undefined,
+      top:
+        this.note.measureBarRightOffsetY != null
+          ? withZoom(this.note.measureBarRightOffsetY, 'em')
+          : undefined,
     } as CSSStyleDeclaration;
   }
 
   get measureNumberStyle() {
     const offset = this.getOffset(this.note.measureNumber!);
+
+    offset.x += this.note.measureNumberOffsetX || 0;
+    offset.y += this.note.measureNumberOffsetY || 0;
 
     return {
       position: 'absolute',
@@ -221,6 +279,9 @@ export default class NeumeBoxSyllablePrint extends Vue {
   get noteIndicatorStyle() {
     const offset = this.getOffset(this.note.noteIndicator!);
 
+    offset.x += this.note.noteIndicatorOffsetX || 0;
+    offset.y += this.note.noteIndicatorOffsetY || 0;
+
     return {
       position: 'absolute',
       left: withZoom(offset.x, 'em'),
@@ -235,6 +296,9 @@ export default class NeumeBoxSyllablePrint extends Vue {
   get isonStyle() {
     const offset = this.getOffset(this.note.ison!);
 
+    offset.x += this.note.isonOffsetX || 0;
+    offset.y += this.note.isonOffsetY || 0;
+
     return {
       position: 'absolute',
       left: withZoom(offset.x, 'em'),
@@ -246,6 +310,9 @@ export default class NeumeBoxSyllablePrint extends Vue {
 
   get heteronStyle() {
     const offset = this.getOffset(this.note.vocalExpressionNeume!);
+
+    offset.x += this.note.vocalExpressionNeumeOffsetX || 0;
+    offset.y += this.note.vocalExpressionNeumeOffsetY || 0;
 
     return {
       position: 'absolute',

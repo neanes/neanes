@@ -394,6 +394,7 @@
         @update:ison="updateNoteIson(selectedElement, $event)"
         @update:vareia="updateNoteVareia(selectedElement, $event)"
         @update:spaceAfter="updateNoteSpaceAfter(selectedElement, $event)"
+        @open-syllable-positioning-dialog="openSyllablePositioningDialog"
       />
     </template>
     <template
@@ -424,6 +425,13 @@
       :pageSetup="score.pageSetup"
       @update="updateModeKeyFromTemplate(selectedElement, $event)"
       @close="closeModeKeyDialog"
+    />
+    <SyllablePositioningDialog
+      v-if="syllablePositioningDialogIsOpen"
+      :element="selectedElement"
+      :pageSetup="score.pageSetup"
+      @update="updateNoteAndSave(selectedElement, $event)"
+      @close="closeSyllablePositioningDialog"
     />
     <PageSetupDialog
       v-if="pageSetupDialogIsOpen"
@@ -489,6 +497,7 @@ import ToolbarNeume from '@/components/ToolbarNeume.vue';
 import ToolbarMartyria from '@/components/ToolbarMartyria.vue';
 import ToolbarTempo from '@/components/ToolbarTempo.vue';
 import ModeKeyDialog from '@/components/ModeKeyDialog.vue';
+import SyllablePositioningDialog from '@/components/SyllablePositioningDialog.vue';
 import PageSetupDialog from '@/components/PageSetupDialog.vue';
 import FileMenuBar from '@/components/FileMenuBar.vue';
 import {
@@ -538,6 +547,7 @@ import { IPlatformService } from '@/services/platform/IPlatformService';
     ToolbarTempo,
     ToolbarMain,
     ModeKeyDialog,
+    SyllablePositioningDialog,
     PageSetupDialog,
     FileMenuBar,
   },
@@ -560,6 +570,7 @@ export default class Editor extends Vue {
   pages: Page[] = [];
 
   modeKeyDialogIsOpen: boolean = false;
+  syllablePositioningDialogIsOpen: boolean = false;
   pageSetupDialogIsOpen: boolean = false;
 
   clipboard: ScoreElement[] = [];
@@ -1123,6 +1134,14 @@ export default class Editor extends Vue {
 
   closeModeKeyDialog() {
     this.modeKeyDialogIsOpen = false;
+  }
+
+  openSyllablePositioningDialog() {
+    this.syllablePositioningDialogIsOpen = true;
+  }
+
+  closeSyllablePositioningDialog() {
+    this.syllablePositioningDialogIsOpen = false;
   }
 
   closePageSetupDialog() {
@@ -2328,6 +2347,11 @@ export default class Editor extends Vue {
 
   updatePageVisibility(page: Page, isVisible: boolean) {
     page.isVisible = isVisible;
+  }
+
+  updateNoteAndSave(element: NoteElement, newValues: Partial<NoteElement>) {
+    this.updateNote(element, newValues);
+    this.save();
   }
 
   updateNote(element: NoteElement, newValues: Partial<NoteElement>) {

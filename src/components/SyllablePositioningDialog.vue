@@ -274,6 +274,18 @@ export default class SyllablePositioningDialog extends Vue {
 
   created() {
     Object.assign(this.form, this.element);
+
+    window.addEventListener('keydown', this.onKeyDown);
+  }
+
+  beforeDestroy() {
+    window.removeEventListener('keydown', this.onKeyDown);
+  }
+
+  onKeyDown(event: KeyboardEvent) {
+    if (event.code === 'Escape') {
+      this.$emit('close');
+    }
   }
 
   update() {

@@ -1170,9 +1170,11 @@ export default class Editor extends Vue {
 
     const element = new NoteElement();
     element.quantitativeNeume = quantitativeNeume;
-    // Special case for OligonPlusHyporoePlusKentemata
+    // Special case for neumes with secondary gorgon
     if (
-      quantitativeNeume === QuantitativeNeume.OligonPlusHyporoePlusKentemata
+      quantitativeNeume === QuantitativeNeume.OligonPlusHyporoePlusKentemata ||
+      quantitativeNeume === QuantitativeNeume.OligonPlusIsonPlusKentemata ||
+      quantitativeNeume === QuantitativeNeume.OligonPlusApostrophosPlusKentemata
     ) {
       element.secondaryGorgonNeume = secondaryGorgonNeume;
     }

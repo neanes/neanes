@@ -1861,6 +1861,10 @@
       ]
     },
     "oligonIsonKentimata": {
+      "gorgonSecondary": [
+        0.685,
+        0.866
+      ],
       "measureNumber": [
         0.194,
         0.961
@@ -1945,6 +1949,10 @@
       ]
     },
     "oligonApostrofosKentimata": {
+      "gorgonSecondary": [
+        0.41,
+        0.874
+      ],
       "measureNumber": [
         0.172,
         1.013

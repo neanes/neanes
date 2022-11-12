@@ -384,14 +384,15 @@
         :element="selectedElement"
         :pageSetup="score.pageSetup"
         @update:accidental="setAccidental(selectedElement, $event)"
-        @update:fthora="setFthora(selectedElement, $event)"
+        @update:fthora="setFthoraNote(selectedElement, $event)"
         @update:gorgon="setGorgon(selectedElement, $event)"
-        @update:time="setKlasma(selectedElement, $event)"
+        @update:klasma="setKlasma(selectedElement)"
+        @update:time="setTimeNeume(selectedElement, $event)"
         @update:expression="setVocalExpression(selectedElement, $event)"
-        @update:measureBar="updateNoteMeasureBar(selectedElement, $event)"
-        @update:measureNumber="updateNoteMeasureNumber(selectedElement, $event)"
-        @update:noteIndicator="updateNoteNoteIndicator(selectedElement, $event)"
-        @update:ison="updateNoteIson(selectedElement, $event)"
+        @update:measureBar="setMeasureBarNote(selectedElement, $event)"
+        @update:measureNumber="setMeasureNumber(selectedElement, $event)"
+        @update:noteIndicator="setNoteIndicator(selectedElement, $event)"
+        @update:ison="setIson(selectedElement, $event)"
         @update:vareia="updateNoteVareia(selectedElement, $event)"
         @update:spaceAfter="updateNoteSpaceAfter(selectedElement, $event)"
         @open-syllable-positioning-dialog="openSyllablePositioningDialog"
@@ -403,8 +404,8 @@
       <ToolbarMartyria
         :element="selectedElement"
         :pageSetup="score.pageSetup"
-        @update:fthora="updateMartyriaFthora(selectedElement, $event)"
-        @update:measureBar="updateMartyriaMeasureBar(selectedElement, $event)"
+        @update:fthora="setFthoraMartyria(selectedElement, $event)"
+        @update:measureBar="setMeasureBarMartyria(selectedElement, $event)"
         @update:alignRight="updateMartyriaAlignRight(selectedElement, $event)"
         @update:auto="updateMartyriaAuto(selectedElement, $event)"
         @update:note="updateMartyriaNote(selectedElement, $event)"
@@ -683,6 +684,8 @@ export default class Editor extends Vue {
     this.addQuantitativeNeume,
   );
 
+  addTempoThrottled = throttle(this.keydownThrottleIntervalMs, this.addTempo);
+
   addAutoMartyriaThrottled = throttle(
     this.keydownThrottleIntervalMs,
     this.addAutoMartyria,
@@ -690,19 +693,42 @@ export default class Editor extends Vue {
 
   setKlasmaThrottled = throttle(this.keydownThrottleIntervalMs, this.setKlasma);
   setGorgonThrottled = throttle(this.keydownThrottleIntervalMs, this.setGorgon);
-  setFthoraThrottled = throttle(this.keydownThrottleIntervalMs, this.setFthora);
+  setFthoraNoteThrottled = throttle(
+    this.keydownThrottleIntervalMs,
+    this.setFthoraNote,
+  );
+  setFthoraMartyriaThrottled = throttle(
+    this.keydownThrottleIntervalMs,
+    this.setFthoraMartyria,
+  );
   setAccidentalThrottled = throttle(
     this.keydownThrottleIntervalMs,
     this.setAccidental,
   );
+  setTimeNeumeThrottled = throttle(
+    this.keydownThrottleIntervalMs,
+    this.setTimeNeume,
+  );
+  setMeasureNumberThrottled = throttle(
+    this.keydownThrottleIntervalMs,
+    this.setMeasureNumber,
+  );
+  setMeasureBarNoteThrottled = throttle(
+    this.keydownThrottleIntervalMs,
+    this.setMeasureBarNote,
+  );
+  setMeasureBarMartyriaThrottled = throttle(
+    this.keydownThrottleIntervalMs,
+    this.setMeasureBarMartyria,
+  );
+  setIsonThrottled = throttle(this.keydownThrottleIntervalMs, this.setIson);
+  setNoteIndicatorThrottled = throttle(
+    this.keydownThrottleIntervalMs,
+    this.setNoteIndicator,
+  );
   setVocalExpressionThrottled = throttle(
     this.keydownThrottleIntervalMs,
     this.setVocalExpression,
-  );
-
-  updateNoteGorgonThrottled = throttle(
-    this.keydownThrottleIntervalMs,
-    this.updateNoteGorgon,
   );
 
   onWindowResizeThrottled = throttle(250, this.onWindowResize);
@@ -1621,107 +1647,209 @@ export default class Editor extends Vue {
     console.log(event.code);
 
     if (this.selectedElement != null && !event.ctrlKey) {
-      const noteElement = this.selectedElement as NoteElement;
-
       if (this.neumeKeyboard.isModifier(event.code)) {
         this.keyboardModifier = event.code;
         handled = true;
+      }
 
-        if (this.selectedElement.elementType === ElementType.Note) {
-          if (
-            this.selectedElement.elementType === ElementType.Note &&
-            this.neumeKeyboard.isGorgon(event.code) &&
-            !event.repeat
-          ) {
-            this.setGorgonThrottled(noteElement, [
-              GorgonNeume.Gorgon_Top,
-              GorgonNeume.Gorgon_Bottom,
-            ]);
-          }
-        }
-      } else {
-        const quantitativeMapping = this.neumeKeyboard.findQuantitativeMapping(
+      const quantitativeMapping = this.neumeKeyboard.findQuantitativeMapping(
+        event,
+        this.keyboardModifier,
+      );
+
+      if (quantitativeMapping != null) {
+        handled = true;
+        this.addQuantitativeNeumeThrottled(
+          quantitativeMapping.neume as QuantitativeNeume,
+        );
+      }
+
+      const tempoMapping = this.neumeKeyboard.findTempoMapping(
+        event,
+        this.keyboardModifier,
+      );
+
+      if (tempoMapping != null) {
+        handled = true;
+        this.addTempoThrottled(tempoMapping.neume as TempoSign);
+      }
+
+      if (
+        this.keyboardModifier == null &&
+        this.neumeKeyboard.isMartyria(event.code)
+      ) {
+        this.addAutoMartyriaThrottled();
+      }
+
+      if (
+        this.selectedElement.elementType === ElementType.Note &&
+        !event.repeat
+      ) {
+        const noteElement = this.selectedElement as NoteElement;
+
+        const gorgonMapping = this.neumeKeyboard.findGorgonMapping(
           event,
           this.keyboardModifier,
         );
 
-        if (quantitativeMapping != null) {
+        if (gorgonMapping != null) {
           handled = true;
-          this.addQuantitativeNeumeThrottled(
-            quantitativeMapping.neume as QuantitativeNeume,
+          this.setGorgonThrottled(
+            noteElement,
+            gorgonMapping.neumes as GorgonNeume[],
           );
         }
 
-        if (this.selectedElement.elementType === ElementType.Note) {
-          const gorgonMapping = this.neumeKeyboard.findGorgonMapping(
+        const vocalExpressionMapping =
+          this.neumeKeyboard.findVocalExpressionMapping(
             event,
             this.keyboardModifier,
           );
 
-          if (gorgonMapping != null) {
-            handled = true;
-            this.setGorgonThrottled(
+        if (vocalExpressionMapping != null) {
+          handled = true;
+
+          if (vocalExpressionMapping.neume === VocalExpressionNeume.Vareia) {
+            this.updateNoteVareia(noteElement, !noteElement.vareia);
+          } else {
+            this.setVocalExpression(
               noteElement,
-              gorgonMapping.neumes as GorgonNeume[],
+              vocalExpressionMapping.neume as VocalExpressionNeume,
             );
           }
+        }
 
-          const vocalExpressionMapping =
-            this.neumeKeyboard.findVocalExpressionMapping(
-              event,
-              this.keyboardModifier,
-            );
+        const fthoraMapping = this.neumeKeyboard.findFthoraMapping(
+          event,
+          this.keyboardModifier,
+        );
 
-          if (vocalExpressionMapping != null) {
-            handled = true;
+        if (fthoraMapping != null) {
+          handled = true;
+          this.setFthoraNoteThrottled(
+            noteElement,
+            fthoraMapping.neumes as Fthora[],
+          );
+        }
 
-            if (vocalExpressionMapping.neume === VocalExpressionNeume.Vareia) {
-              this.updateNoteVareia(noteElement, !noteElement.vareia);
-            } else {
-              this.setVocalExpression(
-                noteElement,
-                vocalExpressionMapping.neume as VocalExpressionNeume,
-              );
-            }
-          }
+        const accidentalMapping = this.neumeKeyboard.findAccidentalMapping(
+          event,
+          this.keyboardModifier,
+        );
 
-          const fthoraMapping = this.neumeKeyboard.findFthoraMapping(
+        if (accidentalMapping != null) {
+          handled = true;
+          this.setAccidentalThrottled(
+            noteElement,
+            accidentalMapping.neume as Accidental,
+          );
+        }
+
+        const hapliMapping = this.neumeKeyboard.findHapliMapping(
+          event,
+          this.keyboardModifier,
+        );
+
+        if (hapliMapping != null) {
+          handled = true;
+          this.setTimeNeumeThrottled(
+            noteElement,
+            hapliMapping.neume as TimeNeume,
+          );
+        }
+
+        const measureNumberMapping =
+          this.neumeKeyboard.findMeasureNumberMapping(
             event,
             this.keyboardModifier,
           );
 
-          if (fthoraMapping != null) {
-            handled = true;
-            this.setFthoraThrottled(
-              noteElement,
-              fthoraMapping.neumes as Fthora[],
-            );
-          }
+        if (measureNumberMapping != null) {
+          handled = true;
+          this.setMeasureNumberThrottled(
+            noteElement,
+            measureNumberMapping.neume as MeasureNumber,
+          );
+        }
 
-          const accidentalMapping = this.neumeKeyboard.findAccidentalMapping(
+        const measureBarMapping = this.neumeKeyboard.findMeasureBarMapping(
+          event,
+          this.keyboardModifier,
+        );
+
+        if (measureBarMapping != null) {
+          handled = true;
+          this.setMeasureBarNoteThrottled(
+            noteElement,
+            measureBarMapping.neume as MeasureBar,
+          );
+        }
+
+        const isonMapping = this.neumeKeyboard.findIsonMapping(
+          event,
+          this.keyboardModifier,
+        );
+
+        if (isonMapping != null) {
+          handled = true;
+          this.setIsonThrottled(noteElement, isonMapping.neume as Ison);
+        }
+
+        const noteIndicatorMapping =
+          this.neumeKeyboard.findNoteIndicatorMapping(
             event,
             this.keyboardModifier,
           );
 
-          if (accidentalMapping != null) {
-            handled = true;
-            this.setAccidentalThrottled(
-              noteElement,
-              accidentalMapping.neume as Accidental,
-            );
-          }
+        if (noteIndicatorMapping != null) {
+          handled = true;
+          this.setNoteIndicatorThrottled(
+            noteElement,
+            noteIndicatorMapping.neume as NoteIndicator,
+          );
+        }
 
-          if (
-            this.keyboardModifier == null &&
-            this.neumeKeyboard.isMartyria(event.code)
-          ) {
-            this.addAutoMartyriaThrottled();
-          } else if (
-            this.keyboardModifier == null &&
-            this.neumeKeyboard.isKlasma(event.code)
-          ) {
-            this.setKlasmaThrottled(noteElement);
-          }
+        if (
+          this.keyboardModifier == null &&
+          this.neumeKeyboard.isMartyria(event.code)
+        ) {
+          this.addAutoMartyriaThrottled();
+        } else if (
+          this.keyboardModifier == null &&
+          this.neumeKeyboard.isKlasma(event.code)
+        ) {
+          this.setKlasmaThrottled(noteElement);
+        }
+      } else if (
+        this.selectedElement.elementType === ElementType.Martyria &&
+        !event.repeat
+      ) {
+        const martyriaElement = this.selectedElement as MartyriaElement;
+
+        const fthoraMapping = this.neumeKeyboard.findFthoraMapping(
+          event,
+          this.keyboardModifier,
+        );
+
+        if (fthoraMapping != null) {
+          handled = true;
+          this.setFthoraMartyriaThrottled(
+            martyriaElement,
+            fthoraMapping.neumes![0] as Fthora,
+          );
+        }
+
+        const measureBarMapping = this.neumeKeyboard.findMeasureBarMapping(
+          event,
+          this.keyboardModifier,
+        );
+
+        if (measureBarMapping != null) {
+          handled = true;
+          this.setMeasureBarMartyriaThrottled(
+            martyriaElement,
+            measureBarMapping.neume as MeasureBar,
+          );
         }
       }
     }
@@ -2521,7 +2649,7 @@ export default class Editor extends Vue {
     }
   }
 
-  private setFthora(element: NoteElement, neumes: Fthora[]) {
+  private setFthoraNote(element: NoteElement, neumes: Fthora[]) {
     let equivalent = false;
 
     for (let neume of neumes) {
@@ -2545,11 +2673,109 @@ export default class Editor extends Vue {
     }
   }
 
+  private setFthoraMartyria(element: MartyriaElement, neume: Fthora) {
+    if (element.fthora === neume) {
+      this.updateMartyriaFthora(element, null);
+    } else {
+      this.updateMartyriaFthora(element, neume);
+    }
+  }
+
   private setAccidental(element: NoteElement, neume: Accidental) {
     if (element.accidental != null && element.accidental === neume) {
       this.updateNoteAccidental(element, null);
     } else {
       this.updateNoteAccidental(element, neume);
+    }
+  }
+
+  private setTimeNeume(element: NoteElement, neume: TimeNeume) {
+    if (element.timeNeume === neume) {
+      this.updateNoteTime(element, null);
+    } else {
+      this.updateNoteTime(element, neume);
+    }
+  }
+
+  private setMeasureNumber(element: NoteElement, neume: MeasureNumber) {
+    if (neume === element.measureNumber) {
+      this.updateNoteMeasureNumber(element, null);
+    } else {
+      this.updateNoteMeasureNumber(element, neume);
+    }
+  }
+
+  private setMeasureBarNote(element: NoteElement, neume: MeasureBar) {
+    // Cycle through
+    // Left
+    // Right
+    // Both Sides
+    // None
+    if (neume === element.measureBarLeft && neume === element.measureBarRight) {
+      this.updateNoteMeasureBar(element, {
+        measureBarLeft: null,
+        measureBarRight: null,
+      });
+    } else if (neume === element.measureBarLeft) {
+      this.updateNoteMeasureBar(element, {
+        measureBarLeft: null,
+        measureBarRight: neume,
+      });
+    } else if (neume === element.measureBarRight) {
+      this.updateNoteMeasureBar(element, {
+        measureBarLeft: neume,
+        measureBarRight: neume,
+      });
+    } else {
+      this.updateNoteMeasureBar(element, {
+        measureBarLeft: neume,
+        measureBarRight: null,
+      });
+    }
+  }
+
+  private setMeasureBarMartyria(element: MartyriaElement, neume: MeasureBar) {
+    // Cycle through
+    // Left
+    // Right
+    // Both Sides
+    // None
+    if (neume === element.measureBarLeft && neume === element.measureBarRight) {
+      this.updateMartyriaMeasureBar(element, {
+        measureBarLeft: null,
+        measureBarRight: null,
+      });
+    } else if (neume === element.measureBarLeft) {
+      this.updateMartyriaMeasureBar(element, {
+        measureBarLeft: null,
+        measureBarRight: neume,
+      });
+    } else if (neume === element.measureBarRight) {
+      this.updateMartyriaMeasureBar(element, {
+        measureBarLeft: neume,
+        measureBarRight: neume,
+      });
+    } else {
+      this.updateMartyriaMeasureBar(element, {
+        measureBarLeft: neume,
+        measureBarRight: null,
+      });
+    }
+  }
+
+  private setIson(element: NoteElement, neume: Ison) {
+    if (neume === element.ison) {
+      this.updateNoteIson(element, null);
+    } else {
+      this.updateNoteIson(element, neume);
+    }
+  }
+
+  private setNoteIndicator(element: NoteElement, neume: NoteIndicator) {
+    if (neume === element.noteIndicator) {
+      this.updateNoteNoteIndicator(element, null);
+    } else {
+      this.updateNoteNoteIndicator(element, neume);
     }
   }
 
@@ -2920,7 +3146,7 @@ export default class Editor extends Vue {
     this.save();
   }
 
-  updateMartyriaFthora(element: MartyriaElement, fthora: Fthora) {
+  updateMartyriaFthora(element: MartyriaElement, fthora: Fthora | null) {
     this.updateMartyria(element, { fthora });
   }
 
@@ -2929,7 +3155,10 @@ export default class Editor extends Vue {
     {
       measureBarLeft,
       measureBarRight,
-    }: { measureBarLeft: MeasureBar; measureBarRight: MeasureBar },
+    }: {
+      measureBarLeft: MeasureBar | null;
+      measureBarRight: MeasureBar | null;
+    },
   ) {
     this.updateMartyria(element, {
       measureBarLeft,

@@ -1,10 +1,16 @@
-import { QuantitativeNeume } from '@/models/save/v1/Neumes';
 import {
   Accidental,
   Fthora,
   GorgonNeume,
   Neume,
+  TimeNeume,
+  QuantitativeNeume,
   VocalExpressionNeume,
+  MeasureNumber,
+  Ison,
+  NoteIndicator,
+  TempoSign,
+  MeasureBar,
 } from '@/models/Neumes';
 
 interface KeyboardMapping {
@@ -16,16 +22,21 @@ interface KeyboardMapping {
 }
 
 export class NeumeKeyboard {
-  private readonly modifier1 = 'KeyF';
-  private readonly modifier2 = 'KeyR';
-  private readonly modifier3 = 'KeyT';
+  private readonly modifier1 = 'KeyS';
+  private readonly modifier2 = 'KeyD';
+  private readonly modifier3 = 'KeyF';
 
   private readonly martyriaKey = 'KeyY';
   private readonly gorgonKey = 'KeyG';
   private readonly klasmaKey = 'KeyH';
+  private readonly hapliKey = 'KeyB';
   private readonly vocalExpressionKey = 'KeyV';
-  private readonly fthoraKey = 'KeyC';
+  private readonly fthoraKey = 'KeyR';
   private readonly accidentalKey = 'KeyE';
+  private readonly isonKey = 'KeyA';
+  private readonly noteIndicatorKey = 'KeyQ';
+  private readonly tempoKey = 'KeyX';
+  private readonly measureBarKey = 'KeyW';
 
   private readonly neumeKeyboardModifiers = [
     this.modifier1,
@@ -35,6 +46,10 @@ export class NeumeKeyboard {
     this.vocalExpressionKey,
     this.fthoraKey,
     this.accidentalKey,
+    this.hapliKey,
+    this.isonKey,
+    this.noteIndicatorKey,
+    this.tempoKey,
   ];
 
   private quantitativeNeumeKeyboardMap: KeyboardMapping[] = [];
@@ -42,6 +57,12 @@ export class NeumeKeyboard {
   private fthoraKeyboardMap: KeyboardMapping[] = [];
   private vocaExpressionKeyboardMap: KeyboardMapping[] = [];
   private accidentalKeyboardMap: KeyboardMapping[] = [];
+  private hapliKeyboardMap: KeyboardMapping[] = [];
+  private measureNumberKeyboardMap: KeyboardMapping[] = [];
+  private isonKeyboardMap: KeyboardMapping[] = [];
+  private noteIndicatorKeyboardMap: KeyboardMapping[] = [];
+  private tempoKeyboardMap: KeyboardMapping[] = [];
+  private measureBarKeyboardMap: KeyboardMapping[] = [];
 
   constructor() {
     this.initQuantitativeNeumeKeyboardMap();
@@ -49,6 +70,12 @@ export class NeumeKeyboard {
     this.initFthoraKeyboardMap();
     this.initAccidentalKeyboardMap();
     this.initVocalExpressionKeyboardMap();
+    this.initHapliKeyboardMap();
+    this.initMeasureNumberKeyboardMap();
+    this.initIsonKeyboardMap();
+    this.initNoteIndicatorKeyboardMap();
+    this.initTempoKeyboardMap();
+    this.initMeasureBarKeyboardMap();
   }
 
   private initQuantitativeNeumeKeyboardMap() {
@@ -247,7 +274,8 @@ export class NeumeKeyboard {
   private initGorgonKeyboardMap() {
     this.gorgonKeyboardMap.push({
       code: this.gorgonKey,
-      neumes: [GorgonNeume.Gorgon_Top],
+      modifier: this.gorgonKey,
+      neumes: [GorgonNeume.Gorgon_Top, GorgonNeume.Gorgon_Bottom],
     });
 
     this.gorgonKeyboardMap.push({
@@ -503,6 +531,238 @@ export class NeumeKeyboard {
     });
   }
 
+  private initHapliKeyboardMap() {
+    this.hapliKeyboardMap.push({
+      code: this.hapliKey,
+      modifier: this.hapliKey,
+      neume: TimeNeume.Hapli,
+    });
+
+    this.hapliKeyboardMap.push({
+      code: 'KeyJ',
+      modifier: this.hapliKey,
+      neume: TimeNeume.Dipli,
+    });
+
+    this.hapliKeyboardMap.push({
+      code: 'KeyK',
+      modifier: this.hapliKey,
+      neume: TimeNeume.Tripli,
+    });
+  }
+
+  private initMeasureNumberKeyboardMap() {
+    this.measureNumberKeyboardMap.push({
+      code: 'Digit2',
+      neume: MeasureNumber.Two,
+    });
+
+    this.measureNumberKeyboardMap.push({
+      code: 'Digit3',
+      neume: MeasureNumber.Three,
+    });
+
+    this.measureNumberKeyboardMap.push({
+      code: 'Digit4',
+      neume: MeasureNumber.Four,
+    });
+
+    this.measureNumberKeyboardMap.push({
+      code: 'Digit5',
+      neume: MeasureNumber.Five,
+    });
+
+    this.measureNumberKeyboardMap.push({
+      code: 'Digit6',
+      neume: MeasureNumber.Six,
+    });
+
+    this.measureNumberKeyboardMap.push({
+      code: 'Digit7',
+      neume: MeasureNumber.Seven,
+    });
+
+    this.measureNumberKeyboardMap.push({
+      code: 'Digit8',
+      neume: MeasureNumber.Eight,
+    });
+  }
+
+  private initIsonKeyboardMap() {
+    this.isonKeyboardMap.push({
+      code: 'KeyJ',
+      modifier: this.isonKey,
+      neume: Ison.Ni,
+    });
+
+    this.isonKeyboardMap.push({
+      code: 'KeyK',
+      modifier: this.isonKey,
+      neume: Ison.Pa,
+    });
+
+    this.isonKeyboardMap.push({
+      code: 'KeyL',
+      modifier: this.isonKey,
+      neume: Ison.Vou,
+    });
+
+    this.isonKeyboardMap.push({
+      code: 'Semicolon',
+      modifier: this.isonKey,
+      neume: Ison.Ga,
+    });
+
+    this.isonKeyboardMap.push({
+      code: 'Quote',
+      modifier: this.isonKey,
+      neume: Ison.Thi,
+    });
+
+    this.isonKeyboardMap.push({
+      code: 'KeyU',
+      modifier: this.isonKey,
+      neume: Ison.Ke,
+    });
+
+    this.isonKeyboardMap.push({
+      code: 'KeyI',
+      modifier: this.isonKey,
+      neume: Ison.ZoHigh,
+    });
+
+    this.isonKeyboardMap.push({
+      code: 'KeyO',
+      modifier: this.isonKey,
+      neume: Ison.Unison,
+    });
+
+    this.isonKeyboardMap.push({
+      code: 'KeyN',
+      modifier: this.isonKey,
+      neume: Ison.Zo,
+    });
+
+    this.isonKeyboardMap.push({
+      code: 'KeyM',
+      modifier: this.isonKey,
+      neume: Ison.KeLow,
+    });
+
+    this.isonKeyboardMap.push({
+      code: 'Comma',
+      modifier: this.isonKey,
+      neume: Ison.ThiLow,
+    });
+  }
+
+  private initNoteIndicatorKeyboardMap() {
+    this.noteIndicatorKeyboardMap.push({
+      code: 'KeyJ',
+      modifier: this.noteIndicatorKey,
+      neume: NoteIndicator.Ni,
+    });
+
+    this.noteIndicatorKeyboardMap.push({
+      code: 'KeyK',
+      modifier: this.noteIndicatorKey,
+      neume: NoteIndicator.Pa,
+    });
+
+    this.noteIndicatorKeyboardMap.push({
+      code: 'KeyL',
+      modifier: this.noteIndicatorKey,
+      neume: NoteIndicator.Vou,
+    });
+
+    this.noteIndicatorKeyboardMap.push({
+      code: 'Semicolon',
+      modifier: this.noteIndicatorKey,
+      neume: NoteIndicator.Ga,
+    });
+
+    this.noteIndicatorKeyboardMap.push({
+      code: 'Quote',
+      modifier: this.noteIndicatorKey,
+      neume: NoteIndicator.Thi,
+    });
+
+    this.noteIndicatorKeyboardMap.push({
+      code: 'KeyU',
+      modifier: this.noteIndicatorKey,
+      neume: NoteIndicator.Ke,
+    });
+
+    this.noteIndicatorKeyboardMap.push({
+      code: 'KeyI',
+      modifier: this.noteIndicatorKey,
+      neume: NoteIndicator.Zo,
+    });
+  }
+
+  private initTempoKeyboardMap() {
+    this.tempoKeyboardMap.push({
+      code: 'KeyJ',
+      modifier: this.tempoKey,
+      neume: TempoSign.Medium,
+    });
+
+    this.tempoKeyboardMap.push({
+      code: 'KeyK',
+      modifier: this.tempoKey,
+      neume: TempoSign.Quick,
+    });
+
+    this.tempoKeyboardMap.push({
+      code: 'KeyL',
+      modifier: this.tempoKey,
+      neume: TempoSign.Quicker,
+    });
+
+    this.tempoKeyboardMap.push({
+      code: 'Semicolon',
+      modifier: this.tempoKey,
+      neume: TempoSign.VeryQuick,
+    });
+
+    this.tempoKeyboardMap.push({
+      code: 'KeyN',
+      modifier: this.tempoKey,
+      neume: TempoSign.Moderate,
+    });
+
+    this.tempoKeyboardMap.push({
+      code: 'KeyM',
+      modifier: this.tempoKey,
+      neume: TempoSign.Slow,
+    });
+
+    this.tempoKeyboardMap.push({
+      code: 'Comma',
+      modifier: this.tempoKey,
+      neume: TempoSign.Slower,
+    });
+
+    this.tempoKeyboardMap.push({
+      code: 'Period',
+      modifier: this.tempoKey,
+      neume: TempoSign.VerySlow,
+    });
+  }
+
+  private initMeasureBarKeyboardMap() {
+    this.measureBarKeyboardMap.push({
+      code: this.measureBarKey,
+      neume: MeasureBar.MeasureBarRight,
+    });
+
+    this.measureBarKeyboardMap.push({
+      code: this.measureBarKey,
+      shiftKey: true,
+      neume: MeasureBar.MeasureBarTop,
+    });
+  }
+
   private findMapping(
     mapping: KeyboardMapping[],
     event: KeyboardEvent,
@@ -573,5 +833,46 @@ export class NeumeKeyboard {
     activeModifier: string | null,
   ) {
     return this.findMapping(this.accidentalKeyboardMap, event, activeModifier);
+  }
+
+  public findHapliMapping(event: KeyboardEvent, activeModifier: string | null) {
+    return this.findMapping(this.hapliKeyboardMap, event, activeModifier);
+  }
+
+  public findMeasureNumberMapping(
+    event: KeyboardEvent,
+    activeModifier: string | null,
+  ) {
+    return this.findMapping(
+      this.measureNumberKeyboardMap,
+      event,
+      activeModifier,
+    );
+  }
+
+  public findIsonMapping(event: KeyboardEvent, activeModifier: string | null) {
+    return this.findMapping(this.isonKeyboardMap, event, activeModifier);
+  }
+
+  public findNoteIndicatorMapping(
+    event: KeyboardEvent,
+    activeModifier: string | null,
+  ) {
+    return this.findMapping(
+      this.noteIndicatorKeyboardMap,
+      event,
+      activeModifier,
+    );
+  }
+
+  public findTempoMapping(event: KeyboardEvent, activeModifier: string | null) {
+    return this.findMapping(this.tempoKeyboardMap, event, activeModifier);
+  }
+
+  public findMeasureBarMapping(
+    event: KeyboardEvent,
+    activeModifier: string | null,
+  ) {
+    return this.findMapping(this.measureBarKeyboardMap, event, activeModifier);
   }
 }

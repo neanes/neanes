@@ -1,7 +1,7 @@
 <template>
   <div class="neume-toolbar">
     <div class="row">
-      <button class="neume-button" @click="$emit('update:time')">
+      <button class="neume-button" @click="$emit('update:klasma')">
         <img src="@/assets/icons/time-klasma.svg" />
       </button>
       <div
@@ -696,12 +696,6 @@ import {
   TimeNeume,
   VocalExpressionNeume,
 } from '@/models/Neumes';
-import {
-  areVocalExpressionsEquivalent,
-  onlyTakesTopKlasma,
-  onlyTakesBottomKlasma,
-  onlyTakesTopGorgon,
-} from '@/models/NeumeReplacements';
 import { PageSetup } from '@/models/PageSetup';
 import { Unit } from '@/utils/Unit';
 
@@ -758,70 +752,6 @@ export default class ToolbarNeume extends Vue {
 
   get spaceAfterMax() {
     return Math.round(Unit.toPt(this.pageSetup.pageWidth));
-  }
-
-  private setTimeNeume(neume: TimeNeume) {
-    if (this.element.timeNeume === neume) {
-      this.$emit('update:time', null);
-    } else {
-      this.$emit('update:time', neume);
-    }
-  }
-
-  private setMeasureBar(neume: MeasureBar) {
-    // Cycle through
-    // Left
-    // Right
-    // Both Sides
-    // None
-    if (
-      neume === this.element.measureBarLeft &&
-      neume === this.element.measureBarRight
-    ) {
-      this.$emit('update:measureBar', {
-        measureBarLeft: null,
-        measureBarRight: null,
-      });
-    } else if (neume === this.element.measureBarLeft) {
-      this.$emit('update:measureBar', {
-        measureBarLeft: null,
-        measureBarRight: neume,
-      });
-    } else if (neume === this.element.measureBarRight) {
-      this.$emit('update:measureBar', {
-        measureBarLeft: neume,
-        measureBarRight: neume,
-      });
-    } else {
-      this.$emit('update:measureBar', {
-        measureBarLeft: neume,
-        measureBarRight: null,
-      });
-    }
-  }
-
-  private setMeasureNumber(neume: MeasureNumber) {
-    if (neume === this.element.measureNumber) {
-      this.$emit('update:measureNumber', null);
-    } else {
-      this.$emit('update:measureNumber', neume);
-    }
-  }
-
-  private setNoteIndicator(neume: NoteIndicator) {
-    if (neume === this.element.noteIndicator) {
-      this.$emit('update:noteIndicator', null);
-    } else {
-      this.$emit('update:noteIndicator', neume);
-    }
-  }
-
-  private setIson(neume: Ison) {
-    if (neume === this.element.ison) {
-      this.$emit('update:ison', null);
-    } else {
-      this.$emit('update:ison', neume);
-    }
   }
 
   openFlatMenu() {
@@ -906,7 +836,7 @@ export default class ToolbarNeume extends Vue {
 
   onTimeMouseUp() {
     if (this.selectedTimeNeume) {
-      this.setTimeNeume(this.selectedTimeNeume);
+      this.$emit('update:time', this.selectedTimeNeume);
     }
 
     this.showTimeMenu = false;
@@ -921,7 +851,7 @@ export default class ToolbarNeume extends Vue {
 
   onBarLineMouseUp() {
     if (this.selectedBarLine) {
-      this.setMeasureBar(this.selectedBarLine);
+      this.$emit('update:measureBar', this.selectedBarLine);
     }
 
     this.showBarLineMenu = false;
@@ -936,7 +866,7 @@ export default class ToolbarNeume extends Vue {
 
   onMeasureNumberMouseUp() {
     if (this.selectedMeasureNumber) {
-      this.setMeasureNumber(this.selectedMeasureNumber);
+      this.$emit('update:measureNumber', this.selectedMeasureNumber);
     }
 
     this.showMeasureNumberMenu = false;
@@ -951,7 +881,7 @@ export default class ToolbarNeume extends Vue {
 
   onNoteIndicatorMouseUp() {
     if (this.selectedNoteIndicator) {
-      this.setNoteIndicator(this.selectedNoteIndicator);
+      this.$emit('update:noteIndicator', this.selectedNoteIndicator);
     }
 
     this.showNoteIndicatorMenu = false;
@@ -966,7 +896,7 @@ export default class ToolbarNeume extends Vue {
 
   onIsonMouseUp() {
     if (this.selectedIson) {
-      this.setIson(this.selectedIson);
+      this.$emit('update:ison', this.selectedIson);
     }
 
     this.showIsonMenu = false;

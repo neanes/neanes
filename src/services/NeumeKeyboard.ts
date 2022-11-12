@@ -22,21 +22,25 @@ interface KeyboardMapping {
 }
 
 export class NeumeKeyboard {
+  private readonly isonKey = 'KeyA';
   private readonly modifier1 = 'KeyS';
   private readonly modifier2 = 'KeyD';
   private readonly modifier3 = 'KeyF';
 
-  private readonly martyriaKey = 'KeyY';
+  private readonly tempoKey = 'KeyX';
+  private readonly vocalExpressionKey = 'KeyV';
+
   private readonly gorgonKey = 'KeyG';
   private readonly klasmaKey = 'KeyH';
+
   private readonly hapliKey = 'KeyB';
-  private readonly vocalExpressionKey = 'KeyV';
-  private readonly fthoraKey = 'KeyR';
-  private readonly accidentalKey = 'KeyE';
-  private readonly isonKey = 'KeyA';
+
   private readonly noteIndicatorKey = 'KeyQ';
-  private readonly tempoKey = 'KeyX';
   private readonly measureBarKey = 'KeyW';
+  private readonly accidentalKey = 'KeyE';
+  private readonly fthoraKey = 'KeyR';
+  private readonly kentimataKey = 'KeyT';
+  private readonly martyriaKey = 'KeyY';
 
   private readonly neumeKeyboardModifiers = [
     this.modifier1,
@@ -50,6 +54,7 @@ export class NeumeKeyboard {
     this.isonKey,
     this.noteIndicatorKey,
     this.tempoKey,
+    this.kentimataKey,
   ];
 
   private quantitativeNeumeKeyboardMap: KeyboardMapping[] = [];
@@ -235,7 +240,7 @@ export class NeumeKeyboard {
 
     this.quantitativeNeumeKeyboardMap.push({
       code: 'KeyM',
-      modifier: this.modifier1,
+      modifier: this.modifier3,
       neume: QuantitativeNeume.RunningElaphron,
     });
 
@@ -247,7 +252,7 @@ export class NeumeKeyboard {
 
     this.quantitativeNeumeKeyboardMap.push({
       code: 'KeyM',
-      modifier: this.modifier3,
+      modifier: this.modifier1,
       neume: QuantitativeNeume.DoubleApostrophos,
     });
 
@@ -266,9 +271,208 @@ export class NeumeKeyboard {
       neume: QuantitativeNeume.HamiliPlusApostrophos,
     });
 
+    this.quantitativeNeumeKeyboardMap.push({
+      code: 'Slash',
+      modifier: this.modifier1,
+      neume: QuantitativeNeume.HamiliPlusElaphron,
+    });
+
+    this.quantitativeNeumeKeyboardMap.push({
+      code: 'Slash',
+      modifier: this.modifier2,
+      neume: QuantitativeNeume.HamiliPlusElaphronPlusApostrophos,
+    });
+
+    this.quantitativeNeumeKeyboardMap.push({
+      code: 'Slash',
+      modifier: this.modifier3,
+      neume: QuantitativeNeume.DoubleHamili,
+    });
+
     ///////////////////////////////////
     // Descending w/ petasti
     ///////////////////////////////////
+    this.quantitativeNeumeKeyboardMap.push({
+      code: 'KeyN',
+      shiftKey: true,
+      neume: QuantitativeNeume.PetastiPlusApostrophos,
+    });
+
+    this.quantitativeNeumeKeyboardMap.push({
+      code: 'KeyM',
+      shiftKey: true,
+      neume: QuantitativeNeume.PetastiPlusElaphron,
+    });
+
+    this.quantitativeNeumeKeyboardMap.push({
+      code: 'KeyM',
+      modifier: this.modifier1,
+      shiftKey: true,
+      neume: QuantitativeNeume.PetastiPlusRunningElaphron,
+    });
+
+    this.quantitativeNeumeKeyboardMap.push({
+      code: 'KeyM',
+      modifier: this.modifier2,
+      shiftKey: true,
+      neume: QuantitativeNeume.PetastiPlusHyporoe,
+    });
+
+    this.quantitativeNeumeKeyboardMap.push({
+      code: 'Comma',
+      shiftKey: true,
+      neume: QuantitativeNeume.PetastiPlusElaphronPlusApostrophos,
+    });
+
+    ///////////////////////////////////
+    // Kentimata
+    ///////////////////////////////////
+    this.quantitativeNeumeKeyboardMap.push({
+      code: 'Semicolon',
+      modifier: this.kentimataKey,
+      neume: QuantitativeNeume.Kentemata,
+    });
+
+    this.quantitativeNeumeKeyboardMap.push({
+      code: 'KeyJ',
+      modifier: this.kentimataKey,
+      neume: QuantitativeNeume.OligonPlusIsonPlusKentemata,
+    });
+
+    this.quantitativeNeumeKeyboardMap.push({
+      code: 'KeyK',
+      modifier: this.kentimataKey,
+      neume: QuantitativeNeume.KentemataPlusOligon,
+    });
+
+    this.quantitativeNeumeKeyboardMap.push({
+      code: 'KeyK',
+      modifier: this.kentimataKey,
+      shiftKey: true,
+      neume: QuantitativeNeume.OligonPlusKentemata,
+    });
+
+    this.quantitativeNeumeKeyboardMap.push({
+      code: 'KeyL',
+      modifier: this.kentimataKey,
+      neume: QuantitativeNeume.OligonKentimaMiddleKentimata,
+    });
+
+    this.quantitativeNeumeKeyboardMap.push({
+      code: 'Quote',
+      modifier: this.kentimataKey,
+      neume: QuantitativeNeume.OligonPlusKentemataPlusHypsiliRight,
+    });
+
+    this.quantitativeNeumeKeyboardMap.push({
+      code: 'KeyU',
+      modifier: this.kentimataKey,
+      neume: QuantitativeNeume.OligonPlusKentemataPlusHypsiliLeft,
+    });
+
+    this.quantitativeNeumeKeyboardMap.push({
+      code: 'KeyN',
+      modifier: this.kentimataKey,
+      neume: QuantitativeNeume.OligonPlusApostrophosPlusKentemata,
+    });
+
+    this.quantitativeNeumeKeyboardMap.push({
+      code: 'KeyM',
+      modifier: this.kentimataKey,
+      neume: QuantitativeNeume.OligonPlusElaphronPlusKentemata,
+    });
+
+    this.quantitativeNeumeKeyboardMap.push({
+      code: 'Comma',
+      modifier: this.kentimataKey,
+      neume: QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
+    });
+
+    this.quantitativeNeumeKeyboardMap.push({
+      code: 'Period',
+      modifier: this.kentimataKey,
+      neume: QuantitativeNeume.OligonPlusHamiliPlusKentemata,
+    });
+
+    ///////////////////////////////////
+    // Oligon
+    ///////////////////////////////////
+    this.quantitativeNeumeKeyboardMap.push({
+      code: 'KeyJ',
+      modifier: this.modifier3,
+      shiftKey: true,
+      neume: QuantitativeNeume.OligonPlusIson,
+    });
+
+    this.quantitativeNeumeKeyboardMap.push({
+      code: 'KeyN',
+      modifier: this.modifier3,
+      shiftKey: true,
+      neume: QuantitativeNeume.OligonPlusApostrophos,
+    });
+
+    this.quantitativeNeumeKeyboardMap.push({
+      code: 'KeyM',
+      modifier: this.modifier3,
+      shiftKey: true,
+      neume: QuantitativeNeume.OligonPlusElaphron,
+    });
+
+    this.quantitativeNeumeKeyboardMap.push({
+      code: 'Comma',
+      modifier: this.modifier3,
+      shiftKey: true,
+      neume: QuantitativeNeume.OligonPlusElaphronPlusApostrophos,
+    });
+
+    this.quantitativeNeumeKeyboardMap.push({
+      code: 'Period',
+      modifier: this.modifier3,
+      shiftKey: true,
+      neume: QuantitativeNeume.OligonPlusHamili,
+    });
+
+    ///////////////////////////////////
+    // Rests
+    ///////////////////////////////////
+    this.quantitativeNeumeKeyboardMap.push({
+      code: 'KeyJ',
+      modifier: this.vocalExpressionKey,
+      shiftKey: true,
+      neume: QuantitativeNeume.VareiaDotted,
+    });
+
+    this.quantitativeNeumeKeyboardMap.push({
+      code: 'KeyK',
+      modifier: this.vocalExpressionKey,
+      shiftKey: true,
+      neume: QuantitativeNeume.VareiaDotted2,
+    });
+
+    this.quantitativeNeumeKeyboardMap.push({
+      code: 'KeyL',
+      modifier: this.vocalExpressionKey,
+      shiftKey: true,
+      neume: QuantitativeNeume.VareiaDotted3,
+    });
+
+    this.quantitativeNeumeKeyboardMap.push({
+      code: 'Semicolon',
+      modifier: this.vocalExpressionKey,
+      shiftKey: true,
+      neume: QuantitativeNeume.VareiaDotted4,
+    });
+
+    this.quantitativeNeumeKeyboardMap.push({
+      code: 'Equal',
+      shiftKey: true,
+      neume: QuantitativeNeume.Cross,
+    });
+
+    this.quantitativeNeumeKeyboardMap.push({
+      code: 'Equal',
+      neume: QuantitativeNeume.Breath,
+    });
   }
 
   private initGorgonKeyboardMap() {

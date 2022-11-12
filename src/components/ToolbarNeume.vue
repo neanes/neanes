@@ -172,37 +172,41 @@
       </button>
       <button
         class="neume-button"
-        @click="setVocalExpression(VocalExpressionNeume.Homalon)"
+        @click="$emit('update:expression', VocalExpressionNeume.Homalon)"
       >
         <img src="@/assets/icons/quality-omalon.svg" />
       </button>
       <button
         class="neume-button"
-        @click="setVocalExpression(VocalExpressionNeume.HomalonConnecting)"
+        @click="
+          $emit('update:expression', VocalExpressionNeume.HomalonConnecting)
+        "
       >
         <img src="@/assets/icons/quality-omalon-connecting.svg" />
       </button>
       <button
         class="neume-button"
-        @click="setVocalExpression(VocalExpressionNeume.Antikenoma)"
+        @click="$emit('update:expression', VocalExpressionNeume.Antikenoma)"
       >
         <img src="@/assets/icons/quality-antikenoma.svg" />
       </button>
       <button
         class="neume-button"
-        @click="setVocalExpression(VocalExpressionNeume.Psifiston)"
+        @click="$emit('update:expression', VocalExpressionNeume.Psifiston)"
       >
         <img src="@/assets/icons/quality-psifiston.svg" />
       </button>
       <button
         class="neume-button"
-        @click="setVocalExpression(VocalExpressionNeume.Heteron)"
+        @click="$emit('update:expression', VocalExpressionNeume.Heteron)"
       >
         <img src="@/assets/icons/quality-heteron.svg" />
       </button>
       <button
         class="neume-button"
-        @click="setVocalExpression(VocalExpressionNeume.HeteronConnecting)"
+        @click="
+          $emit('update:expression', VocalExpressionNeume.HeteronConnecting)
+        "
       >
         <img src="@/assets/icons/quality-heteron-connecting.svg" />
       </button>
@@ -484,42 +488,72 @@
       <button
         class="neume-button"
         @click="
-          setFthora([Fthora.DiatonicNiLow_Top, Fthora.DiatonicNiLow_Bottom])
+          $emit('update:fthora', [
+            Fthora.DiatonicNiLow_Top,
+            Fthora.DiatonicNiLow_Bottom,
+          ])
         "
       >
         <img src="@/assets/icons/fthora-diatonic-ni-low.svg" />
       </button>
       <button
         class="neume-button"
-        @click="setFthora([Fthora.DiatonicPa_Top, Fthora.DiatonicPa_Bottom])"
+        @click="
+          $emit('update:fthora', [
+            Fthora.DiatonicPa_Top,
+            Fthora.DiatonicPa_Bottom,
+          ])
+        "
       >
         <img src="@/assets/icons/fthora-diatonic-pa.svg" />
       </button>
-      <button class="neume-button" @click="setFthora([Fthora.DiatonicVou_Top])">
+      <button
+        class="neume-button"
+        @click="$emit('update:fthora', [Fthora.DiatonicVou_Top])"
+      >
         <img src="@/assets/icons/fthora-diatonic-vou.svg" />
       </button>
-      <button class="neume-button" @click="setFthora([Fthora.DiatonicGa_Top])">
+      <button
+        class="neume-button"
+        @click="$emit('update:fthora', [Fthora.DiatonicGa_Top])"
+      >
         <img src="@/assets/icons/fthora-diatonic-ga.svg" />
       </button>
       <button
         class="neume-button"
-        @click="setFthora([Fthora.DiatonicThi_Top, Fthora.DiatonicThi_Bottom])"
+        @click="
+          $emit('update:fthora', [
+            Fthora.DiatonicThi_Top,
+            Fthora.DiatonicThi_Bottom,
+          ])
+        "
       >
         <img src="@/assets/icons/fthora-diatonic-di.svg" />
       </button>
       <button
         class="neume-button"
-        @click="setFthora([Fthora.DiatonicKe_Top, Fthora.DiatonicKe_Bottom])"
+        @click="
+          $emit('update:fthora', [
+            Fthora.DiatonicKe_Top,
+            Fthora.DiatonicKe_Bottom,
+          ])
+        "
       >
         <img src="@/assets/icons/fthora-diatonic-ke.svg" />
       </button>
-      <button class="neume-button" @click="setFthora([Fthora.DiatonicZo_Top])">
+      <button
+        class="neume-button"
+        @click="$emit('update:fthora', [Fthora.DiatonicZo_Top])"
+      >
         <img src="@/assets/icons/fthora-diatonic-zo.svg" />
       </button>
       <button
         class="neume-button"
         @click="
-          setFthora([Fthora.DiatonicNiHigh_Top, Fthora.DiatonicNiHigh_Bottom])
+          $emit('update:fthora', [
+            Fthora.DiatonicNiHigh_Top,
+            Fthora.DiatonicNiHigh_Bottom,
+          ])
         "
       >
         <img src="@/assets/icons/fthora-diatonic-ni-high.svg" />
@@ -528,7 +562,7 @@
       <button
         class="neume-button"
         @click="
-          setFthora([
+          $emit('update:fthora', [
             Fthora.SoftChromaticThi_Top,
             Fthora.SoftChromaticThi_Bottom,
           ])
@@ -539,7 +573,10 @@
       <button
         class="neume-button"
         @click="
-          setFthora([Fthora.SoftChromaticPa_Top, Fthora.SoftChromaticPa_Bottom])
+          $emit('update:fthora', [
+            Fthora.SoftChromaticPa_Top,
+            Fthora.SoftChromaticPa_Bottom,
+          ])
         "
       >
         <img src="@/assets/icons/fthora-soft-chromatic-ke.svg" />
@@ -548,7 +585,10 @@
       <button
         class="neume-button"
         @click="
-          setFthora([Fthora.HardChromaticPa_Top, Fthora.HardChromaticPa_Bottom])
+          $emit('update:fthora', [
+            Fthora.HardChromaticPa_Top,
+            Fthora.HardChromaticPa_Bottom,
+          ])
         "
       >
         <img src="@/assets/icons/fthora-hard-chromatic-pa.svg" />
@@ -556,7 +596,7 @@
       <button
         class="neume-button"
         @click="
-          setFthora([
+          $emit('update:fthora', [
             Fthora.HardChromaticThi_Top,
             Fthora.HardChromaticThi_Bottom,
           ])
@@ -567,20 +607,33 @@
       <span class="space"></span>
       <button
         class="neume-button"
-        @click="setFthora([Fthora.Enharmonic_Top, Fthora.Enharmonic_Bottom])"
+        @click="
+          $emit('update:fthora', [
+            Fthora.Enharmonic_Top,
+            Fthora.Enharmonic_Bottom,
+          ])
+        "
       >
         <img src="@/assets/icons/fthora-enharmonic.svg" />
       </button>
       <button
         class="neume-button"
-        @click="setFthora([Fthora.GeneralFlat_Top, Fthora.GeneralFlat_Bottom])"
+        @click="
+          $emit('update:fthora', [
+            Fthora.GeneralFlat_Top,
+            Fthora.GeneralFlat_Bottom,
+          ])
+        "
       >
         <img src="@/assets/icons/fthora-general-flat.svg" />
       </button>
       <button
         class="neume-button"
         @click="
-          setFthora([Fthora.GeneralSharp_Top, Fthora.GeneralSharp_Bottom])
+          $emit('update:fthora', [
+            Fthora.GeneralSharp_Top,
+            Fthora.GeneralSharp_Bottom,
+          ])
         "
       >
         <img src="@/assets/icons/fthora-general-sharp.svg" />
@@ -588,17 +641,22 @@
       <span class="space"></span>
       <button
         class="neume-button"
-        @click="setFthora([Fthora.Zygos_Top, Fthora.Zygos_Bottom])"
+        @click="$emit('update:fthora', [Fthora.Zygos_Top, Fthora.Zygos_Bottom])"
       >
         <img src="@/assets/icons/fthora-zygos.svg" />
       </button>
       <button
         class="neume-button"
-        @click="setFthora([Fthora.Kliton_Top, Fthora.Kliton_Bottom])"
+        @click="
+          $emit('update:fthora', [Fthora.Kliton_Top, Fthora.Kliton_Bottom])
+        "
       >
         <img src="@/assets/icons/fthora-kliton.svg" />
       </button>
-      <button class="neume-button" @click="setFthora([Fthora.Spathi_Top])">
+      <button
+        class="neume-button"
+        @click="$emit('update:fthora', [Fthora.Spathi_Top])"
+      >
         <img src="@/assets/icons/fthora-spathi.svg" />
       </button>
     </div>
@@ -718,17 +776,6 @@ export default class ToolbarNeume extends Vue {
     }
   }
 
-  private setVocalExpression(neume: VocalExpressionNeume) {
-    if (
-      this.element.vocalExpressionNeume != null &&
-      areVocalExpressionsEquivalent(neume, this.element.vocalExpressionNeume)
-    ) {
-      this.$emit('update:expression', null);
-    } else {
-      this.$emit('update:expression', neume);
-    }
-  }
-
   private setMeasureBar(neume: MeasureBar) {
     // Cycle through
     // Left
@@ -782,30 +829,6 @@ export default class ToolbarNeume extends Vue {
       this.$emit('update:ison', null);
     } else {
       this.$emit('update:ison', neume);
-    }
-  }
-
-  private setFthora(neumes: Fthora[]) {
-    let equivalent = false;
-
-    for (let neume of neumes) {
-      // If previous neume was matched, set to the next neume in the cycle
-      if (equivalent) {
-        this.$emit('update:fthora', neume);
-        return;
-      }
-
-      equivalent = this.element.fthora === neume;
-    }
-
-    // We've cycled through all the neumes.
-    // If we got to the end of the cycle, remove all
-    // fthora neumes. Otherwise set fthora to the first neume
-    // in the cycle.
-    if (equivalent) {
-      this.$emit('update:fthora', null);
-    } else {
-      this.$emit('update:fthora', neumes[0]);
     }
   }
 

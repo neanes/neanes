@@ -1,11 +1,17 @@
 import { QuantitativeNeume } from '@/models/save/v1/Neumes';
-import { GorgonNeume, Neume } from '@/models/Neumes';
+import {
+  Fthora,
+  GorgonNeume,
+  Neume,
+  VocalExpressionNeume,
+} from '@/models/Neumes';
 
 interface KeyboardMapping {
   code: string;
   modifier?: string;
   shiftKey?: boolean;
-  neume: Neume;
+  neume?: Neume;
+  neumes?: Neume[];
 }
 
 export class NeumeKeyboard {
@@ -16,20 +22,28 @@ export class NeumeKeyboard {
   private readonly martyriaKey = 'KeyY';
   private readonly gorgonKey = 'KeyG';
   private readonly klasmaKey = 'KeyH';
+  private readonly vocalExpressionKey = 'KeyV';
+  private readonly fthoraKey = 'KeyC';
 
   private readonly neumeKeyboardModifiers = [
     this.modifier1,
     this.modifier2,
     this.modifier3,
     this.gorgonKey,
+    this.vocalExpressionKey,
+    this.fthoraKey,
   ];
 
   private quantitativeNeumeKeyboardMap: KeyboardMapping[] = [];
   private gorgonKeyboardMap: KeyboardMapping[] = [];
+  private fthoraKeyboardMap: KeyboardMapping[] = [];
+  private vocaExpressionKeyboardMap: KeyboardMapping[] = [];
 
   constructor() {
     this.initQuantitativeNeumeKeyboardMap();
     this.initGorgonKeyboardMap();
+    this.initFthoraKeyboardMap();
+    this.initVocalExpressionKeyboardMap();
   }
 
   private initQuantitativeNeumeKeyboardMap() {
@@ -228,67 +242,221 @@ export class NeumeKeyboard {
   private initGorgonKeyboardMap() {
     this.gorgonKeyboardMap.push({
       code: this.gorgonKey,
-      neume: GorgonNeume.Gorgon_Top,
+      neumes: [GorgonNeume.Gorgon_Top],
     });
 
     this.gorgonKeyboardMap.push({
       code: 'KeyJ',
       modifier: this.gorgonKey,
-      neume: GorgonNeume.GorgonDottedLeft,
+      neumes: [GorgonNeume.GorgonDottedLeft],
     });
 
     this.gorgonKeyboardMap.push({
       code: 'KeyK',
       modifier: this.gorgonKey,
-      neume: GorgonNeume.GorgonDottedRight,
+      neumes: [GorgonNeume.GorgonDottedRight],
     });
 
     this.gorgonKeyboardMap.push({
       code: 'KeyL',
       modifier: this.gorgonKey,
-      neume: GorgonNeume.Digorgon,
+      neumes: [GorgonNeume.Digorgon],
     });
 
     this.gorgonKeyboardMap.push({
       code: 'Semicolon',
       modifier: this.gorgonKey,
-      neume: GorgonNeume.DigorgonDottedLeft1,
+      neumes: [GorgonNeume.DigorgonDottedLeft1],
     });
 
     this.gorgonKeyboardMap.push({
       code: 'Quote',
       modifier: this.gorgonKey,
-      neume: GorgonNeume.DigorgonDottedLeft2,
+      neumes: [GorgonNeume.DigorgonDottedLeft2],
     });
 
     this.gorgonKeyboardMap.push({
       code: 'KeyU',
       modifier: this.gorgonKey,
-      neume: GorgonNeume.DigorgonDottedRight,
+      neumes: [GorgonNeume.DigorgonDottedRight],
     });
 
     this.gorgonKeyboardMap.push({
       code: 'KeyI',
       modifier: this.gorgonKey,
-      neume: GorgonNeume.Trigorgon,
+      neumes: [GorgonNeume.Trigorgon],
     });
 
     this.gorgonKeyboardMap.push({
       code: 'KeyO',
       modifier: this.gorgonKey,
-      neume: GorgonNeume.TrigorgonDottedLeft1,
+      neumes: [GorgonNeume.TrigorgonDottedLeft1],
     });
 
     this.gorgonKeyboardMap.push({
       code: 'KeyP',
       modifier: this.gorgonKey,
-      neume: GorgonNeume.TrigorgonDottedLeft2,
+      neumes: [GorgonNeume.TrigorgonDottedLeft2],
     });
 
     this.gorgonKeyboardMap.push({
       code: 'BracketLeft',
       modifier: this.gorgonKey,
-      neume: GorgonNeume.TrigorgonDottedRight,
+      neumes: [GorgonNeume.TrigorgonDottedRight],
+    });
+
+    this.gorgonKeyboardMap.push({
+      code: 'KeyN',
+      modifier: this.gorgonKey,
+      neumes: [GorgonNeume.Argon],
+    });
+
+    this.gorgonKeyboardMap.push({
+      code: 'KeyM',
+      modifier: this.gorgonKey,
+      neumes: [GorgonNeume.Hemiolion],
+    });
+
+    this.gorgonKeyboardMap.push({
+      code: 'Comma',
+      modifier: this.gorgonKey,
+      neumes: [GorgonNeume.Diargon],
+    });
+  }
+
+  private initVocalExpressionKeyboardMap() {
+    this.vocaExpressionKeyboardMap.push({
+      code: 'KeyJ',
+      modifier: this.vocalExpressionKey,
+      neume: VocalExpressionNeume.Vareia,
+    });
+
+    this.vocaExpressionKeyboardMap.push({
+      code: 'KeyK',
+      modifier: this.vocalExpressionKey,
+      neume: VocalExpressionNeume.Psifiston,
+    });
+
+    this.vocaExpressionKeyboardMap.push({
+      code: 'KeyL',
+      modifier: this.vocalExpressionKey,
+      neume: VocalExpressionNeume.Antikenoma,
+    });
+
+    this.vocaExpressionKeyboardMap.push({
+      code: 'KeyU',
+      modifier: this.vocalExpressionKey,
+      neume: VocalExpressionNeume.Homalon,
+    });
+
+    this.vocaExpressionKeyboardMap.push({
+      code: 'KeyI',
+      modifier: this.vocalExpressionKey,
+      neume: VocalExpressionNeume.HomalonConnecting,
+    });
+
+    this.vocaExpressionKeyboardMap.push({
+      code: 'KeyN',
+      modifier: this.vocalExpressionKey,
+      neume: VocalExpressionNeume.Heteron,
+    });
+
+    this.vocaExpressionKeyboardMap.push({
+      code: 'KeyM',
+      modifier: this.vocalExpressionKey,
+      neume: VocalExpressionNeume.HeteronConnecting,
+    });
+  }
+
+  private initFthoraKeyboardMap() {
+    this.fthoraKeyboardMap.push({
+      code: 'KeyJ',
+      modifier: this.fthoraKey,
+      neumes: [Fthora.DiatonicNiLow_Top, Fthora.DiatonicNiLow_Bottom],
+    });
+
+    this.fthoraKeyboardMap.push({
+      code: 'KeyK',
+      modifier: this.fthoraKey,
+      neumes: [Fthora.DiatonicPa_Top, Fthora.DiatonicPa_Bottom],
+    });
+
+    this.fthoraKeyboardMap.push({
+      code: 'KeyL',
+      modifier: this.fthoraKey,
+      neumes: [Fthora.DiatonicVou_Top],
+    });
+
+    this.fthoraKeyboardMap.push({
+      code: 'Semicolon',
+      modifier: this.fthoraKey,
+      neumes: [Fthora.DiatonicGa_Top],
+    });
+
+    this.fthoraKeyboardMap.push({
+      code: 'Quote',
+      modifier: this.fthoraKey,
+      neumes: [Fthora.DiatonicThi_Top, Fthora.DiatonicThi_Bottom],
+    });
+
+    this.fthoraKeyboardMap.push({
+      code: 'KeyU',
+      modifier: this.fthoraKey,
+      neumes: [Fthora.DiatonicKe_Top, Fthora.DiatonicKe_Bottom],
+    });
+
+    this.fthoraKeyboardMap.push({
+      code: 'KeyI',
+      modifier: this.fthoraKey,
+      neumes: [Fthora.DiatonicZo_Top],
+    });
+
+    this.fthoraKeyboardMap.push({
+      code: 'KeyO',
+      modifier: this.fthoraKey,
+      neumes: [Fthora.DiatonicNiHigh_Top, Fthora.DiatonicNiHigh_Bottom],
+    });
+
+    this.fthoraKeyboardMap.push({
+      code: 'KeyN',
+      modifier: this.fthoraKey,
+      neumes: [Fthora.SoftChromaticThi_Top, Fthora.SoftChromaticThi_Bottom],
+    });
+
+    this.fthoraKeyboardMap.push({
+      code: 'KeyM',
+      modifier: this.fthoraKey,
+      neumes: [Fthora.SoftChromaticPa_Top, Fthora.SoftChromaticPa_Bottom],
+    });
+
+    this.fthoraKeyboardMap.push({
+      code: 'Comma',
+      modifier: this.fthoraKey,
+      neumes: [Fthora.HardChromaticPa_Top, Fthora.HardChromaticPa_Bottom],
+    });
+
+    this.fthoraKeyboardMap.push({
+      code: 'Period',
+      modifier: this.fthoraKey,
+      neumes: [Fthora.HardChromaticThi_Top, Fthora.HardChromaticThi_Bottom],
+    });
+
+    this.fthoraKeyboardMap.push({
+      code: 'KeyP',
+      modifier: this.fthoraKey,
+      neumes: [Fthora.Enharmonic_Top, Fthora.Enharmonic_Bottom],
+    });
+
+    this.fthoraKeyboardMap.push({
+      code: 'BracketLeft',
+      modifier: this.fthoraKey,
+      neumes: [Fthora.GeneralFlat_Top, Fthora.GeneralFlat_Bottom],
+    });
+
+    this.fthoraKeyboardMap.push({
+      code: 'BracketRight',
+      modifier: this.fthoraKey,
+      neumes: [Fthora.GeneralSharp_Top, Fthora.GeneralSharp_Bottom],
     });
   }
 
@@ -337,5 +505,23 @@ export class NeumeKeyboard {
     activeModifier: string | null,
   ) {
     return this.findMapping(this.gorgonKeyboardMap, event, activeModifier);
+  }
+
+  public findVocalExpressionMapping(
+    event: KeyboardEvent,
+    activeModifier: string | null,
+  ) {
+    return this.findMapping(
+      this.vocaExpressionKeyboardMap,
+      event,
+      activeModifier,
+    );
+  }
+
+  public findFthoraMapping(
+    event: KeyboardEvent,
+    activeModifier: string | null,
+  ) {
+    return this.findMapping(this.fthoraKeyboardMap, event, activeModifier);
   }
 }

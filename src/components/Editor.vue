@@ -387,7 +387,7 @@
         @update:fthora="updateNoteFthora(selectedElement, $event)"
         @update:gorgon="setGorgon(selectedElement, $event)"
         @update:time="setKlasma(selectedElement, $event)"
-        @update:expression="updateNoteExpression(selectedElement, $event)"
+        @update:expression="setVocalExpression(selectedElement, $event)"
         @update:measureBar="updateNoteMeasureBar(selectedElement, $event)"
         @update:measureNumber="updateNoteMeasureNumber(selectedElement, $event)"
         @update:noteIndicator="updateNoteNoteIndicator(selectedElement, $event)"
@@ -527,6 +527,7 @@ import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { IPlatformService } from '@/services/platform/IPlatformService';
 import { NeumeKeyboard } from '@/services/NeumeKeyboard';
 import {
+  areVocalExpressionsEquivalent,
   onlyTakesBottomKlasma,
   onlyTakesTopGorgon,
   onlyTakesTopKlasma,
@@ -689,6 +690,11 @@ export default class Editor extends Vue {
 
   setKlasmaThrottled = throttle(this.keydownThrottleIntervalMs, this.setKlasma);
   setGorgonThrottled = throttle(this.keydownThrottleIntervalMs, this.setGorgon);
+  setFthoraThrottled = throttle(this.keydownThrottleIntervalMs, this.setFthora);
+  setVocalExpressionThrottled = throttle(
+    this.keydownThrottleIntervalMs,
+    this.setVocalExpression,
+  );
 
   updateNoteGorgonThrottled = throttle(
     this.keydownThrottleIntervalMs,
@@ -1610,7 +1616,7 @@ export default class Editor extends Vue {
 
     console.log(event.code);
 
-    if (this.selectedElement != null) {
+    if (this.selectedElement != null && !event.ctrlKey) {
       const noteElement = this.selectedElement as NoteElement;
 
       if (this.neumeKeyboard.isModifier(event.code)) {
@@ -1650,32 +1656,54 @@ export default class Editor extends Vue {
 
           if (gorgonMapping != null) {
             handled = true;
-            this.setGorgonThrottled(noteElement, [
-              gorgonMapping.neume as GorgonNeume,
-            ]);
+            this.setGorgonThrottled(
+              noteElement,
+              gorgonMapping.neumes as GorgonNeume[],
+            );
           }
 
-          if (this.neumeKeyboard.isMartyria(event.code)) {
-            this.addAutoMartyriaThrottled();
-          } else if (this.neumeKeyboard.isKlasma(event.code)) {
-            this.setKlasmaThrottled(noteElement);
-          } else if (this.neumeKeyboard.isGorgon(event.code)) {
-            if (noteElement.gorgonNeume == null) {
-              this.updateNoteGorgonThrottled(
-                this.selectedElement as NoteElement,
-                GorgonNeume.Gorgon_Top,
-              );
-            } else if (noteElement.gorgonNeume === GorgonNeume.Gorgon_Top) {
-              this.updateNoteGorgonThrottled(
-                this.selectedElement as NoteElement,
-                GorgonNeume.Gorgon_Bottom,
-              );
+          const vocalExpressionMapping =
+            this.neumeKeyboard.findVocalExpressionMapping(
+              event,
+              this.keyboardModifier,
+            );
+
+          if (vocalExpressionMapping != null) {
+            handled = true;
+
+            if (vocalExpressionMapping.neume === VocalExpressionNeume.Vareia) {
+              this.updateNoteVareia(noteElement, !noteElement.vareia);
             } else {
-              this.updateNoteGorgonThrottled(
-                this.selectedElement as NoteElement,
-                null,
+              this.setVocalExpression(
+                noteElement,
+                vocalExpressionMapping.neume as VocalExpressionNeume,
               );
             }
+          }
+
+          const fthoraMapping = this.neumeKeyboard.findFthoraMapping(
+            event,
+            this.keyboardModifier,
+          );
+
+          if (fthoraMapping != null) {
+            handled = true;
+            this.setFthoraThrottled(
+              noteElement,
+              fthoraMapping.neumes as Fthora[],
+            );
+          }
+
+          if (
+            this.keyboardModifier == null &&
+            this.neumeKeyboard.isMartyria(event.code)
+          ) {
+            this.addAutoMartyriaThrottled();
+          } else if (
+            this.keyboardModifier == null &&
+            this.neumeKeyboard.isKlasma(event.code)
+          ) {
+            this.setKlasmaThrottled(noteElement);
           }
         }
       }
@@ -2476,6 +2504,44 @@ export default class Editor extends Vue {
     }
   }
 
+  private setFthora(element: NoteElement, neumes: Fthora[]) {
+    let equivalent = false;
+
+    for (let neume of neumes) {
+      // If previous neume was matched, set to the next neume in the cycle
+      if (equivalent) {
+        this.updateNoteFthora(element, neume);
+        return;
+      }
+
+      equivalent = element.fthora === neume;
+    }
+
+    // We've cycled through all the neumes.
+    // If we got to the end of the cycle, remove all
+    // fthora neumes. Otherwise set fthora to the first neume
+    // in the cycle.
+    if (equivalent) {
+      this.updateNoteFthora(element, null);
+    } else {
+      this.updateNoteFthora(element, neumes[0]);
+    }
+  }
+
+  private setVocalExpression(
+    element: NoteElement,
+    neume: VocalExpressionNeume,
+  ) {
+    if (
+      element.vocalExpressionNeume != null &&
+      areVocalExpressionsEquivalent(neume, element.vocalExpressionNeume)
+    ) {
+      this.updateNoteExpression(element, null);
+    } else {
+      this.updateNoteExpression(element, neume);
+    }
+  }
+
   addScoreElement(element: ScoreElement, insertAtIndex?: number) {
     this.commandService.execute(
       this.scoreElementCommandFactory.create('add-to-collection', {
@@ -2533,19 +2599,19 @@ export default class Editor extends Vue {
     );
   }
 
-  updateNoteAccidental(element: NoteElement, accidental: Accidental) {
+  updateNoteAccidental(element: NoteElement, accidental: Accidental | null) {
     this.updateNote(element, { accidental });
     this.save();
   }
 
-  updateNoteFthora(element: NoteElement, fthora: Fthora) {
+  updateNoteFthora(element: NoteElement, fthora: Fthora | null) {
     this.updateNote(element, { fthora });
     this.save();
   }
 
   updateNoteExpression(
     element: NoteElement,
-    vocalExpressionNeume: VocalExpressionNeume,
+    vocalExpressionNeume: VocalExpressionNeume | null,
   ) {
     this.updateNote(element, { vocalExpressionNeume });
     this.save();
@@ -2566,7 +2632,10 @@ export default class Editor extends Vue {
     {
       measureBarLeft,
       measureBarRight,
-    }: { measureBarLeft: MeasureBar; measureBarRight: MeasureBar },
+    }: {
+      measureBarLeft: MeasureBar | null;
+      measureBarRight: MeasureBar | null;
+    },
   ) {
     this.updateNote(element, {
       measureBarLeft,
@@ -2575,17 +2644,23 @@ export default class Editor extends Vue {
     this.save();
   }
 
-  updateNoteMeasureNumber(element: NoteElement, measureNumber: MeasureNumber) {
+  updateNoteMeasureNumber(
+    element: NoteElement,
+    measureNumber: MeasureNumber | null,
+  ) {
     this.updateNote(element, { measureNumber });
     this.save();
   }
 
-  updateNoteNoteIndicator(element: NoteElement, noteIndicator: NoteIndicator) {
+  updateNoteNoteIndicator(
+    element: NoteElement,
+    noteIndicator: NoteIndicator | null,
+  ) {
     this.updateNote(element, { noteIndicator });
     this.save();
   }
 
-  updateNoteIson(element: NoteElement, ison: Ison) {
+  updateNoteIson(element: NoteElement, ison: Ison | null) {
     this.updateNote(element, { ison });
     this.save();
   }

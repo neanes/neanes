@@ -1,7 +1,7 @@
 <template>
   <div class="neume-toolbar">
     <div class="row">
-      <button class="neume-button" @click="setKlasma()">
+      <button class="neume-button" @click="$emit('update:time')">
         <img src="@/assets/icons/time-klasma.svg" />
       </button>
       <div
@@ -284,18 +284,21 @@
         </div>
       </div>
       <span class="space"></span>
-      <button class="neume-button" @click="setGorgonNeume([GorgonNeume.Argon])">
+      <button
+        class="neume-button"
+        @click="$emit('update:gorgon', [GorgonNeume.Argon])"
+      >
         <img src="@/assets/icons/time-argon.svg" />
       </button>
       <button
         class="neume-button"
-        @click="setGorgonNeume([GorgonNeume.Hemiolion])"
+        @click="$emit('update:gorgon', [GorgonNeume.Hemiolion])"
       >
         <img src="@/assets/icons/time-diargon.svg" />
       </button>
       <button
         class="neume-button"
-        @click="setGorgonNeume([GorgonNeume.Diargon])"
+        @click="$emit('update:gorgon', [GorgonNeume.Diargon])"
       >
         <img src="@/assets/icons/time-triargon.svg" />
       </button>
@@ -707,66 +710,11 @@ export default class ToolbarNeume extends Vue {
     }
   }
 
-  private setKlasma() {
-    if (onlyTakesBottomKlasma(this.element.quantitativeNeume)) {
-      if (this.element.timeNeume === TimeNeume.Klasma_Bottom) {
-        this.$emit('update:time', null);
-      } else {
-        this.$emit('update:time', TimeNeume.Klasma_Bottom);
-      }
-      return;
-    } else if (onlyTakesTopKlasma(this.element.quantitativeNeume)) {
-      if (this.element.timeNeume === TimeNeume.Klasma_Top) {
-        this.$emit('update:time', null);
-      } else {
-        this.$emit('update:time', TimeNeume.Klasma_Top);
-      }
-      return;
-    } else if (this.element.timeNeume == null) {
-      this.$emit('update:time', TimeNeume.Klasma_Top);
-    } else if (this.element.timeNeume === TimeNeume.Klasma_Top) {
-      this.$emit('update:time', TimeNeume.Klasma_Bottom);
-    } else if (this.element.timeNeume === TimeNeume.Klasma_Bottom) {
-      this.$emit('update:time', null);
-    }
-  }
-
   private setTimeNeume(neume: TimeNeume) {
     if (this.element.timeNeume === neume) {
       this.$emit('update:time', null);
     } else {
       this.$emit('update:time', neume);
-    }
-  }
-
-  private setGorgonNeume(neumes: GorgonNeume[]) {
-    let equivalent = false;
-
-    for (let neume of neumes) {
-      if (
-        neume === GorgonNeume.Gorgon_Bottom &&
-        onlyTakesTopGorgon(this.element.quantitativeNeume)
-      ) {
-        continue;
-      }
-
-      // If previous neume was matched, set to the next neume in the cycle
-      if (equivalent) {
-        this.$emit('update:gorgon', neume);
-        return;
-      }
-
-      equivalent = this.element.gorgonNeume === neume;
-    }
-
-    // We've cycled through all the neumes.
-    // If we got to the end of the cycle, remove all
-    // gorgon neumes. Otherwise set gorgon to the first neume
-    // in the cycle.
-    if (equivalent) {
-      this.$emit('update:gorgon', null);
-    } else {
-      this.$emit('update:gorgon', neumes[0]);
     }
   }
 
@@ -898,7 +846,7 @@ export default class ToolbarNeume extends Vue {
 
   onGorgonMouseUp() {
     if (this.selectedGorgon) {
-      this.setGorgonNeume(this.selectedGorgon);
+      this.$emit('update:gorgon', this.selectedGorgon);
     }
 
     this.showGorgonMenu = false;
@@ -913,7 +861,7 @@ export default class ToolbarNeume extends Vue {
 
   onDigorgonMouseUp() {
     if (this.selectedGorgon) {
-      this.setGorgonNeume(this.selectedGorgon);
+      this.$emit('update:gorgon', this.selectedGorgon);
     }
 
     this.showDigorgonMenu = false;
@@ -928,7 +876,7 @@ export default class ToolbarNeume extends Vue {
 
   onTrigorgonMouseUp() {
     if (this.selectedGorgon) {
-      this.setGorgonNeume(this.selectedGorgon);
+      this.$emit('update:gorgon', this.selectedGorgon);
     }
 
     this.showTrigorgonMenu = false;

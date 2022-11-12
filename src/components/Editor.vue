@@ -385,8 +385,8 @@
         :pageSetup="score.pageSetup"
         @update:accidental="updateNoteAccidental(selectedElement, $event)"
         @update:fthora="updateNoteFthora(selectedElement, $event)"
-        @update:gorgon="updateNoteGorgon(selectedElement, $event)"
-        @update:time="updateNoteTime(selectedElement, $event)"
+        @update:gorgon="setGorgon(selectedElement, $event)"
+        @update:time="setKlasma(selectedElement, $event)"
         @update:expression="updateNoteExpression(selectedElement, $event)"
         @update:measureBar="updateNoteMeasureBar(selectedElement, $event)"
         @update:measureNumber="updateNoteMeasureNumber(selectedElement, $event)"
@@ -525,6 +525,12 @@ import { TokenMetadata } from '@/utils/replaceTokens';
 import { Scale } from '@/models/Scales';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { IPlatformService } from '@/services/platform/IPlatformService';
+import { NeumeKeyboard } from '@/services/NeumeKeyboard';
+import {
+  onlyTakesBottomKlasma,
+  onlyTakesTopGorgon,
+  onlyTakesTopKlasma,
+} from '@/models/NeumeReplacements';
 
 @Component({
   components: {
@@ -576,6 +582,9 @@ export default class Editor extends Vue {
   clipboard: ScoreElement[] = [];
 
   fonts: string[] = [];
+
+  neumeKeyboard: NeumeKeyboard = new NeumeKeyboard();
+  keyboardModifier: string | null = null;
 
   // Commands
   noteElementCommandFactory: CommandFactory<NoteElement> =
@@ -666,6 +675,24 @@ export default class Editor extends Vue {
   onPasteScoreElementsThrottled = throttle(
     this.keydownThrottleIntervalMs,
     this.onPasteScoreElements,
+  );
+
+  addQuantitativeNeumeThrottled = throttle(
+    this.keydownThrottleIntervalMs,
+    this.addQuantitativeNeume,
+  );
+
+  addAutoMartyriaThrottled = throttle(
+    this.keydownThrottleIntervalMs,
+    this.addAutoMartyria,
+  );
+
+  setKlasmaThrottled = throttle(this.keydownThrottleIntervalMs, this.setKlasma);
+  setGorgonThrottled = throttle(this.keydownThrottleIntervalMs, this.setGorgon);
+
+  updateNoteGorgonThrottled = throttle(
+    this.keydownThrottleIntervalMs,
+    this.updateNoteGorgon,
   );
 
   onWindowResizeThrottled = throttle(250, this.onWindowResize);
@@ -1001,6 +1028,7 @@ export default class Editor extends Vue {
 
   mounted() {
     window.addEventListener('keydown', this.onKeydown);
+    window.addEventListener('keyup', this.onKeyup);
     window.addEventListener('resize', this.onWindowResizeThrottled);
 
     EventBus.$on(IpcMainChannels.CloseApplication, this.onCloseApplication);
@@ -1580,6 +1608,78 @@ export default class Editor extends Vue {
       }
     }
 
+    console.log(event.code);
+
+    if (this.selectedElement != null) {
+      const noteElement = this.selectedElement as NoteElement;
+
+      if (this.neumeKeyboard.isModifier(event.code)) {
+        this.keyboardModifier = event.code;
+        handled = true;
+
+        if (this.selectedElement.elementType === ElementType.Note) {
+          if (
+            this.selectedElement.elementType === ElementType.Note &&
+            this.neumeKeyboard.isGorgon(event.code) &&
+            !event.repeat
+          ) {
+            this.setGorgonThrottled(noteElement, [
+              GorgonNeume.Gorgon_Top,
+              GorgonNeume.Gorgon_Bottom,
+            ]);
+          }
+        }
+      } else {
+        const quantitativeMapping = this.neumeKeyboard.findQuantitativeMapping(
+          event,
+          this.keyboardModifier,
+        );
+
+        if (quantitativeMapping != null) {
+          handled = true;
+          this.addQuantitativeNeumeThrottled(
+            quantitativeMapping.neume as QuantitativeNeume,
+          );
+        }
+
+        if (this.selectedElement.elementType === ElementType.Note) {
+          const gorgonMapping = this.neumeKeyboard.findGorgonMapping(
+            event,
+            this.keyboardModifier,
+          );
+
+          if (gorgonMapping != null) {
+            handled = true;
+            this.setGorgonThrottled(noteElement, [
+              gorgonMapping.neume as GorgonNeume,
+            ]);
+          }
+
+          if (this.neumeKeyboard.isMartyria(event.code)) {
+            this.addAutoMartyriaThrottled();
+          } else if (this.neumeKeyboard.isKlasma(event.code)) {
+            this.setKlasmaThrottled(noteElement);
+          } else if (this.neumeKeyboard.isGorgon(event.code)) {
+            if (noteElement.gorgonNeume == null) {
+              this.updateNoteGorgonThrottled(
+                this.selectedElement as NoteElement,
+                GorgonNeume.Gorgon_Top,
+              );
+            } else if (noteElement.gorgonNeume === GorgonNeume.Gorgon_Top) {
+              this.updateNoteGorgonThrottled(
+                this.selectedElement as NoteElement,
+                GorgonNeume.Gorgon_Bottom,
+              );
+            } else {
+              this.updateNoteGorgonThrottled(
+                this.selectedElement as NoteElement,
+                null,
+              );
+            }
+          }
+        }
+      }
+    }
     if (handled) {
       event.preventDefault();
     }
@@ -1671,6 +1771,19 @@ export default class Editor extends Vue {
     if (event.code === 'Enter') {
       event.preventDefault();
       return;
+    }
+  }
+
+  onKeyup(event: KeyboardEvent) {
+    let handled = false;
+
+    if (this.keyboardModifier === event.code) {
+      this.keyboardModifier = null;
+      handled = true;
+    }
+
+    if (handled) {
+      event.preventDefault();
     }
   }
 
@@ -2308,6 +2421,61 @@ export default class Editor extends Vue {
     await this.ipcService.exitApplication();
   }
 
+  setKlasma(element: NoteElement) {
+    if (onlyTakesBottomKlasma(element.quantitativeNeume)) {
+      if (element.timeNeume === TimeNeume.Klasma_Bottom) {
+        this.updateNoteTime(element, null);
+      } else {
+        this.updateNoteTime(element, TimeNeume.Klasma_Bottom);
+      }
+      return;
+    } else if (onlyTakesTopKlasma(element.quantitativeNeume)) {
+      if (element.timeNeume === TimeNeume.Klasma_Top) {
+        this.updateNoteTime(element, null);
+      } else {
+        this.updateNoteTime(element, TimeNeume.Klasma_Top);
+      }
+      return;
+    } else if (element.timeNeume == null) {
+      this.updateNoteTime(element, TimeNeume.Klasma_Top);
+    } else if (element.timeNeume === TimeNeume.Klasma_Top) {
+      this.updateNoteTime(element, TimeNeume.Klasma_Bottom);
+    } else if (element.timeNeume === TimeNeume.Klasma_Bottom) {
+      this.updateNoteTime(element, null);
+    }
+  }
+
+  setGorgon(element: NoteElement, neumes: GorgonNeume[]) {
+    let equivalent = false;
+
+    for (let neume of neumes) {
+      if (
+        neume === GorgonNeume.Gorgon_Bottom &&
+        onlyTakesTopGorgon(element.quantitativeNeume)
+      ) {
+        continue;
+      }
+
+      // If previous neume was matched, set to the next neume in the cycle
+      if (equivalent) {
+        this.updateNoteGorgon(element, neume);
+        return;
+      }
+
+      equivalent = element.gorgonNeume === neume;
+    }
+
+    // We've cycled through all the neumes.
+    // If we got to the end of the cycle, remove all
+    // gorgon neumes. Otherwise set gorgon to the first neume
+    // in the cycle.
+    if (equivalent) {
+      this.updateNoteGorgon(element, null);
+    } else {
+      this.updateNoteGorgon(element, neumes[0]);
+    }
+  }
+
   addScoreElement(element: ScoreElement, insertAtIndex?: number) {
     this.commandService.execute(
       this.scoreElementCommandFactory.create('add-to-collection', {
@@ -2383,12 +2551,12 @@ export default class Editor extends Vue {
     this.save();
   }
 
-  updateNoteTime(element: NoteElement, timeNeume: TimeNeume) {
+  updateNoteTime(element: NoteElement, timeNeume: TimeNeume | null) {
     this.updateNote(element, { timeNeume });
     this.save();
   }
 
-  updateNoteGorgon(element: NoteElement, gorgonNeume: GorgonNeume) {
+  updateNoteGorgon(element: NoteElement, gorgonNeume: GorgonNeume | null) {
     this.updateNote(element, { gorgonNeume });
     this.save();
   }

@@ -1,5 +1,6 @@
 import { QuantitativeNeume } from '@/models/save/v1/Neumes';
 import {
+  Accidental,
   Fthora,
   GorgonNeume,
   Neume,
@@ -24,6 +25,7 @@ export class NeumeKeyboard {
   private readonly klasmaKey = 'KeyH';
   private readonly vocalExpressionKey = 'KeyV';
   private readonly fthoraKey = 'KeyC';
+  private readonly accidentalKey = 'KeyE';
 
   private readonly neumeKeyboardModifiers = [
     this.modifier1,
@@ -32,17 +34,20 @@ export class NeumeKeyboard {
     this.gorgonKey,
     this.vocalExpressionKey,
     this.fthoraKey,
+    this.accidentalKey,
   ];
 
   private quantitativeNeumeKeyboardMap: KeyboardMapping[] = [];
   private gorgonKeyboardMap: KeyboardMapping[] = [];
   private fthoraKeyboardMap: KeyboardMapping[] = [];
   private vocaExpressionKeyboardMap: KeyboardMapping[] = [];
+  private accidentalKeyboardMap: KeyboardMapping[] = [];
 
   constructor() {
     this.initQuantitativeNeumeKeyboardMap();
     this.initGorgonKeyboardMap();
     this.initFthoraKeyboardMap();
+    this.initAccidentalKeyboardMap();
     this.initVocalExpressionKeyboardMap();
   }
 
@@ -460,6 +465,44 @@ export class NeumeKeyboard {
     });
   }
 
+  private initAccidentalKeyboardMap() {
+    this.accidentalKeyboardMap.push({
+      code: 'KeyJ',
+      modifier: this.accidentalKey,
+      neume: Accidental.Flat_2_Right,
+    });
+
+    this.accidentalKeyboardMap.push({
+      code: 'KeyK',
+      modifier: this.accidentalKey,
+      neume: Accidental.Flat_4_Right,
+    });
+
+    this.accidentalKeyboardMap.push({
+      code: 'KeyL',
+      modifier: this.accidentalKey,
+      neume: Accidental.Flat_6_Right,
+    });
+
+    this.accidentalKeyboardMap.push({
+      code: 'KeyU',
+      modifier: this.accidentalKey,
+      neume: Accidental.Sharp_2_Left,
+    });
+
+    this.accidentalKeyboardMap.push({
+      code: 'KeyI',
+      modifier: this.accidentalKey,
+      neume: Accidental.Sharp_4_Left,
+    });
+
+    this.accidentalKeyboardMap.push({
+      code: 'KeyO',
+      modifier: this.accidentalKey,
+      neume: Accidental.Sharp_6_Left,
+    });
+  }
+
   private findMapping(
     mapping: KeyboardMapping[],
     event: KeyboardEvent,
@@ -523,5 +566,12 @@ export class NeumeKeyboard {
     activeModifier: string | null,
   ) {
     return this.findMapping(this.fthoraKeyboardMap, event, activeModifier);
+  }
+
+  public findAccidentalMapping(
+    event: KeyboardEvent,
+    activeModifier: string | null,
+  ) {
+    return this.findMapping(this.accidentalKeyboardMap, event, activeModifier);
   }
 }

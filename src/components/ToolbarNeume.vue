@@ -760,14 +760,6 @@ export default class ToolbarNeume extends Vue {
     return Math.round(Unit.toPt(this.pageSetup.pageWidth));
   }
 
-  private setAccidental(neume: Accidental) {
-    if (this.element.accidental != null && this.element.accidental === neume) {
-      this.$emit('update:accidental', null);
-    } else {
-      this.$emit('update:accidental', neume);
-    }
-  }
-
   private setTimeNeume(neume: TimeNeume) {
     if (this.element.timeNeume === neume) {
       this.$emit('update:time', null);
@@ -839,7 +831,7 @@ export default class ToolbarNeume extends Vue {
 
   onFlatMouseUp() {
     if (this.selectedFlat) {
-      this.setAccidental(this.selectedFlat);
+      this.$emit('update:accidental', this.selectedFlat);
     }
 
     this.showFlatMenu = false;
@@ -854,7 +846,7 @@ export default class ToolbarNeume extends Vue {
 
   onSharpMouseUp() {
     if (this.selectedSharp) {
-      this.setAccidental(this.selectedSharp);
+      this.$emit('update:accidental', this.selectedSharp);
     }
 
     this.showSharpMenu = false;

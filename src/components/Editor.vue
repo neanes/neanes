@@ -383,8 +383,8 @@
       <ToolbarNeume
         :element="selectedElement"
         :pageSetup="score.pageSetup"
-        @update:accidental="updateNoteAccidental(selectedElement, $event)"
-        @update:fthora="updateNoteFthora(selectedElement, $event)"
+        @update:accidental="setAccidental(selectedElement, $event)"
+        @update:fthora="setFthora(selectedElement, $event)"
         @update:gorgon="setGorgon(selectedElement, $event)"
         @update:time="setKlasma(selectedElement, $event)"
         @update:expression="setVocalExpression(selectedElement, $event)"
@@ -691,6 +691,10 @@ export default class Editor extends Vue {
   setKlasmaThrottled = throttle(this.keydownThrottleIntervalMs, this.setKlasma);
   setGorgonThrottled = throttle(this.keydownThrottleIntervalMs, this.setGorgon);
   setFthoraThrottled = throttle(this.keydownThrottleIntervalMs, this.setFthora);
+  setAccidentalThrottled = throttle(
+    this.keydownThrottleIntervalMs,
+    this.setAccidental,
+  );
   setVocalExpressionThrottled = throttle(
     this.keydownThrottleIntervalMs,
     this.setVocalExpression,
@@ -1694,6 +1698,19 @@ export default class Editor extends Vue {
             );
           }
 
+          const accidentalMapping = this.neumeKeyboard.findAccidentalMapping(
+            event,
+            this.keyboardModifier,
+          );
+
+          if (accidentalMapping != null) {
+            handled = true;
+            this.setAccidentalThrottled(
+              noteElement,
+              accidentalMapping.neume as Accidental,
+            );
+          }
+
           if (
             this.keyboardModifier == null &&
             this.neumeKeyboard.isMartyria(event.code)
@@ -2525,6 +2542,14 @@ export default class Editor extends Vue {
       this.updateNoteFthora(element, null);
     } else {
       this.updateNoteFthora(element, neumes[0]);
+    }
+  }
+
+  private setAccidental(element: NoteElement, neume: Accidental) {
+    if (element.accidental != null && element.accidental === neume) {
+      this.updateNoteAccidental(element, null);
+    } else {
+      this.updateNoteAccidental(element, neume);
     }
   }
 

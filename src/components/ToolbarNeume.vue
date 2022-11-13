@@ -1,7 +1,7 @@
 <template>
   <div class="neume-toolbar">
     <div class="row">
-      <button class="neume-button" @click="setKlasma()">
+      <button class="neume-button" @click="$emit('update:klasma')">
         <img src="@/assets/icons/time-klasma.svg" />
       </button>
       <div
@@ -172,37 +172,41 @@
       </button>
       <button
         class="neume-button"
-        @click="setVocalExpression(VocalExpressionNeume.Homalon)"
+        @click="$emit('update:expression', VocalExpressionNeume.Homalon)"
       >
         <img src="@/assets/icons/quality-omalon.svg" />
       </button>
       <button
         class="neume-button"
-        @click="setVocalExpression(VocalExpressionNeume.HomalonConnecting)"
+        @click="
+          $emit('update:expression', VocalExpressionNeume.HomalonConnecting)
+        "
       >
         <img src="@/assets/icons/quality-omalon-connecting.svg" />
       </button>
       <button
         class="neume-button"
-        @click="setVocalExpression(VocalExpressionNeume.Antikenoma)"
+        @click="$emit('update:expression', VocalExpressionNeume.Antikenoma)"
       >
         <img src="@/assets/icons/quality-antikenoma.svg" />
       </button>
       <button
         class="neume-button"
-        @click="setVocalExpression(VocalExpressionNeume.Psifiston)"
+        @click="$emit('update:expression', VocalExpressionNeume.Psifiston)"
       >
         <img src="@/assets/icons/quality-psifiston.svg" />
       </button>
       <button
         class="neume-button"
-        @click="setVocalExpression(VocalExpressionNeume.Heteron)"
+        @click="$emit('update:expression', VocalExpressionNeume.Heteron)"
       >
         <img src="@/assets/icons/quality-heteron.svg" />
       </button>
       <button
         class="neume-button"
-        @click="setVocalExpression(VocalExpressionNeume.HeteronConnecting)"
+        @click="
+          $emit('update:expression', VocalExpressionNeume.HeteronConnecting)
+        "
       >
         <img src="@/assets/icons/quality-heteron-connecting.svg" />
       </button>
@@ -284,18 +288,21 @@
         </div>
       </div>
       <span class="space"></span>
-      <button class="neume-button" @click="setGorgonNeume([GorgonNeume.Argon])">
+      <button
+        class="neume-button"
+        @click="$emit('update:gorgon', [GorgonNeume.Argon])"
+      >
         <img src="@/assets/icons/time-argon.svg" />
       </button>
       <button
         class="neume-button"
-        @click="setGorgonNeume([GorgonNeume.Hemiolion])"
+        @click="$emit('update:gorgon', [GorgonNeume.Hemiolion])"
       >
         <img src="@/assets/icons/time-diargon.svg" />
       </button>
       <button
         class="neume-button"
-        @click="setGorgonNeume([GorgonNeume.Diargon])"
+        @click="$emit('update:gorgon', [GorgonNeume.Diargon])"
       >
         <img src="@/assets/icons/time-triargon.svg" />
       </button>
@@ -481,42 +488,72 @@
       <button
         class="neume-button"
         @click="
-          setFthora([Fthora.DiatonicNiLow_Top, Fthora.DiatonicNiLow_Bottom])
+          $emit('update:fthora', [
+            Fthora.DiatonicNiLow_Top,
+            Fthora.DiatonicNiLow_Bottom,
+          ])
         "
       >
         <img src="@/assets/icons/fthora-diatonic-ni-low.svg" />
       </button>
       <button
         class="neume-button"
-        @click="setFthora([Fthora.DiatonicPa_Top, Fthora.DiatonicPa_Bottom])"
+        @click="
+          $emit('update:fthora', [
+            Fthora.DiatonicPa_Top,
+            Fthora.DiatonicPa_Bottom,
+          ])
+        "
       >
         <img src="@/assets/icons/fthora-diatonic-pa.svg" />
       </button>
-      <button class="neume-button" @click="setFthora([Fthora.DiatonicVou_Top])">
+      <button
+        class="neume-button"
+        @click="$emit('update:fthora', [Fthora.DiatonicVou_Top])"
+      >
         <img src="@/assets/icons/fthora-diatonic-vou.svg" />
       </button>
-      <button class="neume-button" @click="setFthora([Fthora.DiatonicGa_Top])">
+      <button
+        class="neume-button"
+        @click="$emit('update:fthora', [Fthora.DiatonicGa_Top])"
+      >
         <img src="@/assets/icons/fthora-diatonic-ga.svg" />
       </button>
       <button
         class="neume-button"
-        @click="setFthora([Fthora.DiatonicThi_Top, Fthora.DiatonicThi_Bottom])"
+        @click="
+          $emit('update:fthora', [
+            Fthora.DiatonicThi_Top,
+            Fthora.DiatonicThi_Bottom,
+          ])
+        "
       >
         <img src="@/assets/icons/fthora-diatonic-di.svg" />
       </button>
       <button
         class="neume-button"
-        @click="setFthora([Fthora.DiatonicKe_Top, Fthora.DiatonicKe_Bottom])"
+        @click="
+          $emit('update:fthora', [
+            Fthora.DiatonicKe_Top,
+            Fthora.DiatonicKe_Bottom,
+          ])
+        "
       >
         <img src="@/assets/icons/fthora-diatonic-ke.svg" />
       </button>
-      <button class="neume-button" @click="setFthora([Fthora.DiatonicZo_Top])">
+      <button
+        class="neume-button"
+        @click="$emit('update:fthora', [Fthora.DiatonicZo_Top])"
+      >
         <img src="@/assets/icons/fthora-diatonic-zo.svg" />
       </button>
       <button
         class="neume-button"
         @click="
-          setFthora([Fthora.DiatonicNiHigh_Top, Fthora.DiatonicNiHigh_Bottom])
+          $emit('update:fthora', [
+            Fthora.DiatonicNiHigh_Top,
+            Fthora.DiatonicNiHigh_Bottom,
+          ])
         "
       >
         <img src="@/assets/icons/fthora-diatonic-ni-high.svg" />
@@ -525,7 +562,7 @@
       <button
         class="neume-button"
         @click="
-          setFthora([
+          $emit('update:fthora', [
             Fthora.SoftChromaticThi_Top,
             Fthora.SoftChromaticThi_Bottom,
           ])
@@ -536,7 +573,10 @@
       <button
         class="neume-button"
         @click="
-          setFthora([Fthora.SoftChromaticPa_Top, Fthora.SoftChromaticPa_Bottom])
+          $emit('update:fthora', [
+            Fthora.SoftChromaticPa_Top,
+            Fthora.SoftChromaticPa_Bottom,
+          ])
         "
       >
         <img src="@/assets/icons/fthora-soft-chromatic-ke.svg" />
@@ -545,7 +585,10 @@
       <button
         class="neume-button"
         @click="
-          setFthora([Fthora.HardChromaticPa_Top, Fthora.HardChromaticPa_Bottom])
+          $emit('update:fthora', [
+            Fthora.HardChromaticPa_Top,
+            Fthora.HardChromaticPa_Bottom,
+          ])
         "
       >
         <img src="@/assets/icons/fthora-hard-chromatic-pa.svg" />
@@ -553,7 +596,7 @@
       <button
         class="neume-button"
         @click="
-          setFthora([
+          $emit('update:fthora', [
             Fthora.HardChromaticThi_Top,
             Fthora.HardChromaticThi_Bottom,
           ])
@@ -564,20 +607,33 @@
       <span class="space"></span>
       <button
         class="neume-button"
-        @click="setFthora([Fthora.Enharmonic_Top, Fthora.Enharmonic_Bottom])"
+        @click="
+          $emit('update:fthora', [
+            Fthora.Enharmonic_Top,
+            Fthora.Enharmonic_Bottom,
+          ])
+        "
       >
         <img src="@/assets/icons/fthora-enharmonic.svg" />
       </button>
       <button
         class="neume-button"
-        @click="setFthora([Fthora.GeneralFlat_Top, Fthora.GeneralFlat_Bottom])"
+        @click="
+          $emit('update:fthora', [
+            Fthora.GeneralFlat_Top,
+            Fthora.GeneralFlat_Bottom,
+          ])
+        "
       >
         <img src="@/assets/icons/fthora-general-flat.svg" />
       </button>
       <button
         class="neume-button"
         @click="
-          setFthora([Fthora.GeneralSharp_Top, Fthora.GeneralSharp_Bottom])
+          $emit('update:fthora', [
+            Fthora.GeneralSharp_Top,
+            Fthora.GeneralSharp_Bottom,
+          ])
         "
       >
         <img src="@/assets/icons/fthora-general-sharp.svg" />
@@ -585,17 +641,22 @@
       <span class="space"></span>
       <button
         class="neume-button"
-        @click="setFthora([Fthora.Zygos_Top, Fthora.Zygos_Bottom])"
+        @click="$emit('update:fthora', [Fthora.Zygos_Top, Fthora.Zygos_Bottom])"
       >
         <img src="@/assets/icons/fthora-zygos.svg" />
       </button>
       <button
         class="neume-button"
-        @click="setFthora([Fthora.Kliton_Top, Fthora.Kliton_Bottom])"
+        @click="
+          $emit('update:fthora', [Fthora.Kliton_Top, Fthora.Kliton_Bottom])
+        "
       >
         <img src="@/assets/icons/fthora-kliton.svg" />
       </button>
-      <button class="neume-button" @click="setFthora([Fthora.Spathi_Top])">
+      <button
+        class="neume-button"
+        @click="$emit('update:fthora', [Fthora.Spathi_Top])"
+      >
         <img src="@/assets/icons/fthora-spathi.svg" />
       </button>
     </div>
@@ -635,12 +696,6 @@ import {
   TimeNeume,
   VocalExpressionNeume,
 } from '@/models/Neumes';
-import {
-  areVocalExpressionsEquivalent,
-  onlyTakesTopKlasma,
-  onlyTakesBottomKlasma,
-  onlyTakesTopGorgon,
-} from '@/models/NeumeReplacements';
 import { PageSetup } from '@/models/PageSetup';
 import { Unit } from '@/utils/Unit';
 
@@ -699,168 +754,6 @@ export default class ToolbarNeume extends Vue {
     return Math.round(Unit.toPt(this.pageSetup.pageWidth));
   }
 
-  private setAccidental(neume: Accidental) {
-    if (this.element.accidental != null && this.element.accidental === neume) {
-      this.$emit('update:accidental', null);
-    } else {
-      this.$emit('update:accidental', neume);
-    }
-  }
-
-  private setKlasma() {
-    if (onlyTakesBottomKlasma(this.element.quantitativeNeume)) {
-      if (this.element.timeNeume === TimeNeume.Klasma_Bottom) {
-        this.$emit('update:time', null);
-      } else {
-        this.$emit('update:time', TimeNeume.Klasma_Bottom);
-      }
-      return;
-    } else if (onlyTakesTopKlasma(this.element.quantitativeNeume)) {
-      if (this.element.timeNeume === TimeNeume.Klasma_Top) {
-        this.$emit('update:time', null);
-      } else {
-        this.$emit('update:time', TimeNeume.Klasma_Top);
-      }
-      return;
-    } else if (this.element.timeNeume == null) {
-      this.$emit('update:time', TimeNeume.Klasma_Top);
-    } else if (this.element.timeNeume === TimeNeume.Klasma_Top) {
-      this.$emit('update:time', TimeNeume.Klasma_Bottom);
-    } else if (this.element.timeNeume === TimeNeume.Klasma_Bottom) {
-      this.$emit('update:time', null);
-    }
-  }
-
-  private setTimeNeume(neume: TimeNeume) {
-    if (this.element.timeNeume === neume) {
-      this.$emit('update:time', null);
-    } else {
-      this.$emit('update:time', neume);
-    }
-  }
-
-  private setGorgonNeume(neumes: GorgonNeume[]) {
-    let equivalent = false;
-
-    for (let neume of neumes) {
-      if (
-        neume === GorgonNeume.Gorgon_Bottom &&
-        onlyTakesTopGorgon(this.element.quantitativeNeume)
-      ) {
-        continue;
-      }
-
-      // If previous neume was matched, set to the next neume in the cycle
-      if (equivalent) {
-        this.$emit('update:gorgon', neume);
-        return;
-      }
-
-      equivalent = this.element.gorgonNeume === neume;
-    }
-
-    // We've cycled through all the neumes.
-    // If we got to the end of the cycle, remove all
-    // gorgon neumes. Otherwise set gorgon to the first neume
-    // in the cycle.
-    if (equivalent) {
-      this.$emit('update:gorgon', null);
-    } else {
-      this.$emit('update:gorgon', neumes[0]);
-    }
-  }
-
-  private setVocalExpression(neume: VocalExpressionNeume) {
-    if (
-      this.element.vocalExpressionNeume != null &&
-      areVocalExpressionsEquivalent(neume, this.element.vocalExpressionNeume)
-    ) {
-      this.$emit('update:expression', null);
-    } else {
-      this.$emit('update:expression', neume);
-    }
-  }
-
-  private setMeasureBar(neume: MeasureBar) {
-    // Cycle through
-    // Left
-    // Right
-    // Both Sides
-    // None
-    if (
-      neume === this.element.measureBarLeft &&
-      neume === this.element.measureBarRight
-    ) {
-      this.$emit('update:measureBar', {
-        measureBarLeft: null,
-        measureBarRight: null,
-      });
-    } else if (neume === this.element.measureBarLeft) {
-      this.$emit('update:measureBar', {
-        measureBarLeft: null,
-        measureBarRight: neume,
-      });
-    } else if (neume === this.element.measureBarRight) {
-      this.$emit('update:measureBar', {
-        measureBarLeft: neume,
-        measureBarRight: neume,
-      });
-    } else {
-      this.$emit('update:measureBar', {
-        measureBarLeft: neume,
-        measureBarRight: null,
-      });
-    }
-  }
-
-  private setMeasureNumber(neume: MeasureNumber) {
-    if (neume === this.element.measureNumber) {
-      this.$emit('update:measureNumber', null);
-    } else {
-      this.$emit('update:measureNumber', neume);
-    }
-  }
-
-  private setNoteIndicator(neume: NoteIndicator) {
-    if (neume === this.element.noteIndicator) {
-      this.$emit('update:noteIndicator', null);
-    } else {
-      this.$emit('update:noteIndicator', neume);
-    }
-  }
-
-  private setIson(neume: Ison) {
-    if (neume === this.element.ison) {
-      this.$emit('update:ison', null);
-    } else {
-      this.$emit('update:ison', neume);
-    }
-  }
-
-  private setFthora(neumes: Fthora[]) {
-    let equivalent = false;
-
-    for (let neume of neumes) {
-      // If previous neume was matched, set to the next neume in the cycle
-      if (equivalent) {
-        this.$emit('update:fthora', neume);
-        return;
-      }
-
-      equivalent = this.element.fthora === neume;
-    }
-
-    // We've cycled through all the neumes.
-    // If we got to the end of the cycle, remove all
-    // fthora neumes. Otherwise set fthora to the first neume
-    // in the cycle.
-    if (equivalent) {
-      this.$emit('update:fthora', null);
-    } else {
-      this.$emit('update:fthora', neumes[0]);
-    }
-  }
-
   openFlatMenu() {
     this.showFlatMenu = true;
     window.addEventListener('mouseup', this.onFlatMouseUp);
@@ -868,7 +761,7 @@ export default class ToolbarNeume extends Vue {
 
   onFlatMouseUp() {
     if (this.selectedFlat) {
-      this.setAccidental(this.selectedFlat);
+      this.$emit('update:accidental', this.selectedFlat);
     }
 
     this.showFlatMenu = false;
@@ -883,7 +776,7 @@ export default class ToolbarNeume extends Vue {
 
   onSharpMouseUp() {
     if (this.selectedSharp) {
-      this.setAccidental(this.selectedSharp);
+      this.$emit('update:accidental', this.selectedSharp);
     }
 
     this.showSharpMenu = false;
@@ -898,7 +791,7 @@ export default class ToolbarNeume extends Vue {
 
   onGorgonMouseUp() {
     if (this.selectedGorgon) {
-      this.setGorgonNeume(this.selectedGorgon);
+      this.$emit('update:gorgon', this.selectedGorgon);
     }
 
     this.showGorgonMenu = false;
@@ -913,7 +806,7 @@ export default class ToolbarNeume extends Vue {
 
   onDigorgonMouseUp() {
     if (this.selectedGorgon) {
-      this.setGorgonNeume(this.selectedGorgon);
+      this.$emit('update:gorgon', this.selectedGorgon);
     }
 
     this.showDigorgonMenu = false;
@@ -928,7 +821,7 @@ export default class ToolbarNeume extends Vue {
 
   onTrigorgonMouseUp() {
     if (this.selectedGorgon) {
-      this.setGorgonNeume(this.selectedGorgon);
+      this.$emit('update:gorgon', this.selectedGorgon);
     }
 
     this.showTrigorgonMenu = false;
@@ -943,7 +836,7 @@ export default class ToolbarNeume extends Vue {
 
   onTimeMouseUp() {
     if (this.selectedTimeNeume) {
-      this.setTimeNeume(this.selectedTimeNeume);
+      this.$emit('update:time', this.selectedTimeNeume);
     }
 
     this.showTimeMenu = false;
@@ -958,7 +851,7 @@ export default class ToolbarNeume extends Vue {
 
   onBarLineMouseUp() {
     if (this.selectedBarLine) {
-      this.setMeasureBar(this.selectedBarLine);
+      this.$emit('update:measureBar', this.selectedBarLine);
     }
 
     this.showBarLineMenu = false;
@@ -973,7 +866,7 @@ export default class ToolbarNeume extends Vue {
 
   onMeasureNumberMouseUp() {
     if (this.selectedMeasureNumber) {
-      this.setMeasureNumber(this.selectedMeasureNumber);
+      this.$emit('update:measureNumber', this.selectedMeasureNumber);
     }
 
     this.showMeasureNumberMenu = false;
@@ -988,7 +881,7 @@ export default class ToolbarNeume extends Vue {
 
   onNoteIndicatorMouseUp() {
     if (this.selectedNoteIndicator) {
-      this.setNoteIndicator(this.selectedNoteIndicator);
+      this.$emit('update:noteIndicator', this.selectedNoteIndicator);
     }
 
     this.showNoteIndicatorMenu = false;
@@ -1003,7 +896,7 @@ export default class ToolbarNeume extends Vue {
 
   onIsonMouseUp() {
     if (this.selectedIson) {
-      this.setIson(this.selectedIson);
+      this.$emit('update:ison', this.selectedIson);
     }
 
     this.showIsonMenu = false;

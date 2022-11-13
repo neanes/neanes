@@ -1,77 +1,116 @@
 <template>
   <div class="martyria-toolbar">
     <div class="row">
-      <button class="neume-button" @click="setFthora(Fthora.DiatonicNiLow_Top)">
+      <button
+        class="neume-button"
+        @click="$emit('update:fthora', Fthora.DiatonicNiLow_Top)"
+      >
         <img src="@/assets/icons/fthora-diatonic-ni-low.svg" />
       </button>
-      <button class="neume-button" @click="setFthora(Fthora.DiatonicPa_Top)">
+      <button
+        class="neume-button"
+        @click="$emit('update:fthora', Fthora.DiatonicPa_Top)"
+      >
         <img src="@/assets/icons/fthora-diatonic-pa.svg" />
       </button>
-      <button class="neume-button" @click="setFthora(Fthora.DiatonicVou_Top)">
+      <button
+        class="neume-button"
+        @click="$emit('update:fthora', Fthora.DiatonicVou_Top)"
+      >
         <img src="@/assets/icons/fthora-diatonic-vou.svg" />
       </button>
-      <button class="neume-button" @click="setFthora(Fthora.DiatonicGa_Top)">
+      <button
+        class="neume-button"
+        @click="$emit('update:fthora', Fthora.DiatonicGa_Top)"
+      >
         <img src="@/assets/icons/fthora-diatonic-ga.svg" />
       </button>
-      <button class="neume-button" @click="setFthora(Fthora.DiatonicThi_Top)">
+      <button
+        class="neume-button"
+        @click="$emit('update:fthora', Fthora.DiatonicThi_Top)"
+      >
         <img src="@/assets/icons/fthora-diatonic-di.svg" />
       </button>
-      <button class="neume-button" @click="setFthora(Fthora.DiatonicKe_Top)">
+      <button
+        class="neume-button"
+        @click="$emit('update:fthora', Fthora.DiatonicKe_Top)"
+      >
         <img src="@/assets/icons/fthora-diatonic-ke.svg" />
       </button>
-      <button class="neume-button" @click="setFthora(Fthora.DiatonicZo_Top)">
+      <button
+        class="neume-button"
+        @click="$emit('update:fthora', Fthora.DiatonicZo_Top)"
+      >
         <img src="@/assets/icons/fthora-diatonic-zo.svg" />
       </button>
       <button
         class="neume-button"
-        @click="setFthora(Fthora.DiatonicNiHigh_Top)"
+        @click="$emit('update:fthora', Fthora.DiatonicNiHigh_Top)"
       >
         <img src="@/assets/icons/fthora-diatonic-ni-high.svg" />
       </button>
       <span class="space"></span>
       <button
         class="neume-button"
-        @click="setFthora(Fthora.SoftChromaticThi_Top)"
+        @click="$emit('update:fthora', Fthora.SoftChromaticThi_Top)"
       >
         <img src="@/assets/icons/fthora-soft-chromatic-di.svg" />
       </button>
       <button
         class="neume-button"
-        @click="setFthora(Fthora.SoftChromaticPa_Top)"
+        @click="$emit('update:fthora', Fthora.SoftChromaticPa_Top)"
       >
         <img src="@/assets/icons/fthora-soft-chromatic-ke.svg" />
       </button>
       <span class="space"></span>
       <button
         class="neume-button"
-        @click="setFthora(Fthora.HardChromaticPa_Top)"
+        @click="$emit('update:fthora', Fthora.HardChromaticPa_Top)"
       >
         <img src="@/assets/icons/fthora-hard-chromatic-pa.svg" />
       </button>
       <button
         class="neume-button"
-        @click="setFthora(Fthora.HardChromaticThi_Top)"
+        @click="$emit('update:fthora', Fthora.HardChromaticThi_Top)"
       >
         <img src="@/assets/icons/fthora-hard-chromatic-di.svg" />
       </button>
       <span class="space"></span>
-      <button class="neume-button" @click="setFthora(Fthora.Enharmonic_Top)">
+      <button
+        class="neume-button"
+        @click="$emit('update:fthora', Fthora.Enharmonic_Top)"
+      >
         <img src="@/assets/icons/fthora-enharmonic.svg" />
       </button>
-      <button class="neume-button" @click="setFthora(Fthora.GeneralFlat_Top)">
+      <button
+        class="neume-button"
+        @click="$emit('update:fthora', Fthora.GeneralFlat_Top)"
+      >
         <img src="@/assets/icons/fthora-general-flat.svg" />
       </button>
-      <button class="neume-button" @click="setFthora(Fthora.GeneralSharp_Top)">
+      <button
+        class="neume-button"
+        @click="$emit('update:fthora', Fthora.GeneralSharp_Top)"
+      >
         <img src="@/assets/icons/fthora-general-sharp.svg" />
       </button>
       <span class="space"></span>
-      <button class="neume-button" @click="setFthora(Fthora.Zygos_Top)">
+      <button
+        class="neume-button"
+        @click="$emit('update:fthora', Fthora.Zygos_Top)"
+      >
         <img src="@/assets/icons/fthora-zygos.svg" />
       </button>
-      <button class="neume-button" @click="setFthora(Fthora.Kliton_Top)">
+      <button
+        class="neume-button"
+        @click="$emit('update:fthora', Fthora.Kliton_Top)"
+      >
         <img src="@/assets/icons/fthora-kliton.svg" />
       </button>
-      <button class="neume-button" @click="setFthora(Fthora.Spathi_Top)">
+      <button
+        class="neume-button"
+        @click="$emit('update:fthora', Fthora.Spathi_Top)"
+      >
         <img src="@/assets/icons/fthora-spathi.svg" />
       </button>
       <span class="space"></span>
@@ -232,46 +271,6 @@ export default class ToolbarMartyria extends Vue {
     }
   }
 
-  private setFthora(neume: Fthora) {
-    if (this.element.fthora === neume) {
-      this.$emit('update:fthora', null);
-    } else {
-      this.$emit('update:fthora', neume);
-    }
-  }
-
-  private setMeasureBar(neume: MeasureBar) {
-    // Cycle through
-    // Left
-    // Right
-    // Both Sides
-    // None
-    if (
-      neume === this.element.measureBarLeft &&
-      neume === this.element.measureBarRight
-    ) {
-      this.$emit('update:measureBar', {
-        measureBarLeft: null,
-        measureBarRight: null,
-      });
-    } else if (neume === this.element.measureBarLeft) {
-      this.$emit('update:measureBar', {
-        measureBarLeft: null,
-        measureBarRight: neume,
-      });
-    } else if (neume === this.element.measureBarRight) {
-      this.$emit('update:measureBar', {
-        measureBarLeft: neume,
-        measureBarRight: neume,
-      });
-    } else {
-      this.$emit('update:measureBar', {
-        measureBarLeft: neume,
-        measureBarRight: null,
-      });
-    }
-  }
-
   openBarLineMenu() {
     this.showBarLineMenu = true;
     window.addEventListener('mouseup', this.onBarLineMouseUp);
@@ -279,7 +278,7 @@ export default class ToolbarMartyria extends Vue {
 
   onBarLineMouseUp() {
     if (this.selectedBarLine) {
-      this.setMeasureBar(this.selectedBarLine);
+      this.$emit('update:measureBar', this.selectedBarLine);
     }
 
     this.showBarLineMenu = false;

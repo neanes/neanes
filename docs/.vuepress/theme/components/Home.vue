@@ -75,6 +75,11 @@ export default {
 </script>
 
 <style lang="stylus">
+@font-face {
+    font-family: Neanes;
+    src: url('~@theme/assets/fonts/Neanes.otf');
+}
+
 .home
   padding $navbarHeight 2rem 0
   max-width $homePageWidth

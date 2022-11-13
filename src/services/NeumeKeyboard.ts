@@ -12,6 +12,7 @@ import {
   TempoSign,
   MeasureBar,
 } from '@/models/Neumes';
+import { NeumeMappingService } from './NeumeMappingService';
 
 interface KeyboardMapping {
   code: string;
@@ -38,8 +39,8 @@ export class NeumeKeyboard {
   private readonly noteIndicatorKey = 'KeyQ';
   private readonly measureBarKey = 'KeyW';
   private readonly accidentalKey = 'KeyE';
-  private readonly fthoraKey = 'KeyR';
-  private readonly kentimataKey = 'KeyT';
+  private readonly kentimataKey = 'KeyR';
+  private readonly fthoraKey = 'KeyT';
   private readonly martyriaKey = 'KeyY';
 
   private readonly neumeKeyboardModifiers = [
@@ -60,7 +61,7 @@ export class NeumeKeyboard {
   private quantitativeNeumeKeyboardMap: KeyboardMapping[] = [];
   private gorgonKeyboardMap: KeyboardMapping[] = [];
   private fthoraKeyboardMap: KeyboardMapping[] = [];
-  private vocaExpressionKeyboardMap: KeyboardMapping[] = [];
+  private vocalExpressionKeyboardMap: KeyboardMapping[] = [];
   private accidentalKeyboardMap: KeyboardMapping[] = [];
   private hapliKeyboardMap: KeyboardMapping[] = [];
   private measureNumberKeyboardMap: KeyboardMapping[] = [];
@@ -81,6 +82,8 @@ export class NeumeKeyboard {
     this.initNoteIndicatorKeyboardMap();
     this.initTempoKeyboardMap();
     this.initMeasureBarKeyboardMap();
+
+    // this.__generateDocumentation();
   }
 
   private initQuantitativeNeumeKeyboardMap() {
@@ -229,7 +232,7 @@ export class NeumeKeyboard {
 
     this.quantitativeNeumeKeyboardMap.push({
       code: 'KeyN',
-      modifier: this.modifier1,
+      modifier: this.modifier3,
       neume: QuantitativeNeume.IsonPlusApostrophos,
     });
 
@@ -342,14 +345,14 @@ export class NeumeKeyboard {
     this.quantitativeNeumeKeyboardMap.push({
       code: 'KeyK',
       modifier: this.kentimataKey,
-      neume: QuantitativeNeume.KentemataPlusOligon,
+      neume: QuantitativeNeume.OligonPlusKentemata,
     });
 
     this.quantitativeNeumeKeyboardMap.push({
       code: 'KeyK',
       modifier: this.kentimataKey,
       shiftKey: true,
-      neume: QuantitativeNeume.OligonPlusKentemata,
+      neume: QuantitativeNeume.KentemataPlusOligon,
     });
 
     this.quantitativeNeumeKeyboardMap.push({
@@ -562,43 +565,43 @@ export class NeumeKeyboard {
   }
 
   private initVocalExpressionKeyboardMap() {
-    this.vocaExpressionKeyboardMap.push({
+    this.vocalExpressionKeyboardMap.push({
       code: 'KeyJ',
       modifier: this.vocalExpressionKey,
       neume: VocalExpressionNeume.Vareia,
     });
 
-    this.vocaExpressionKeyboardMap.push({
+    this.vocalExpressionKeyboardMap.push({
       code: 'KeyK',
       modifier: this.vocalExpressionKey,
       neume: VocalExpressionNeume.Psifiston,
     });
 
-    this.vocaExpressionKeyboardMap.push({
+    this.vocalExpressionKeyboardMap.push({
       code: 'KeyL',
       modifier: this.vocalExpressionKey,
       neume: VocalExpressionNeume.Antikenoma,
     });
 
-    this.vocaExpressionKeyboardMap.push({
+    this.vocalExpressionKeyboardMap.push({
       code: 'KeyU',
       modifier: this.vocalExpressionKey,
       neume: VocalExpressionNeume.Homalon,
     });
 
-    this.vocaExpressionKeyboardMap.push({
+    this.vocalExpressionKeyboardMap.push({
       code: 'KeyI',
       modifier: this.vocalExpressionKey,
       neume: VocalExpressionNeume.HomalonConnecting,
     });
 
-    this.vocaExpressionKeyboardMap.push({
+    this.vocalExpressionKeyboardMap.push({
       code: 'KeyN',
       modifier: this.vocalExpressionKey,
       neume: VocalExpressionNeume.Heteron,
     });
 
-    this.vocaExpressionKeyboardMap.push({
+    this.vocalExpressionKeyboardMap.push({
       code: 'KeyM',
       modifier: this.vocalExpressionKey,
       neume: VocalExpressionNeume.HeteronConnecting,
@@ -980,6 +983,202 @@ export class NeumeKeyboard {
     );
   }
 
+  private __generateDocumentation() {
+    const result: string[] = [];
+
+    result.push('| Key | Description |\n');
+    result.push('| --- | ----------- |\n');
+    result.push(
+      `| <kbd> ${this.__formatKeyForDocs(
+        this.noteIndicatorKey,
+      )} </kbd> | Ison Indicators |\n`,
+    );
+    result.push(
+      `| <kbd> ${this.__formatKeyForDocs(
+        this.accidentalKey,
+      )} </kbd> | Signs of Alteration |\n`,
+    );
+    result.push(
+      `| <kbd> ${this.__formatKeyForDocs(
+        this.kentimataKey,
+      )} </kbd> | Kentimata |\n`,
+    );
+    result.push(
+      `| <kbd> ${this.__formatKeyForDocs(this.fthoraKey)} </kbd> | Fthores |\n`,
+    );
+
+    result.push(
+      `| <kbd> ${this.__formatKeyForDocs(
+        this.isonKey,
+      )} </kbd> | Ison Indicators |\n`,
+    );
+
+    result.push(
+      `| <kbd> ${this.__formatKeyForDocs(
+        this.modifier1,
+      )} </kbd> | Quantity Modifier 1 |\n`,
+    );
+
+    result.push(
+      `| <kbd> ${this.__formatKeyForDocs(
+        this.modifier2,
+      )} </kbd> | Quantity Modifier 2 |\n`,
+    );
+
+    result.push(
+      `| <kbd> ${this.__formatKeyForDocs(
+        this.modifier3,
+      )} </kbd> | Quantity Modifier 3 |\n`,
+    );
+
+    result.push(
+      `| <kbd> ${this.__formatKeyForDocs(this.gorgonKey)} </kbd> | Gorgons |\n`,
+    );
+
+    result.push(
+      `| <kbd> ${this.__formatKeyForDocs(this.tempoKey)} </kbd> | Tempo |\n`,
+    );
+
+    result.push(
+      `| <kbd> ${this.__formatKeyForDocs(
+        this.vocalExpressionKey,
+      )} </kbd> | Quality |\n`,
+    );
+
+    result.push(
+      `| <kbd> ${this.__formatKeyForDocs(this.hapliKey)} </kbd> | Apli |\n`,
+    );
+
+    result.push('\n');
+
+    this.__generateMappingTableForDocs(
+      result,
+      'Characters of Quantity',
+      this.quantitativeNeumeKeyboardMap,
+    );
+
+    this.__generateMappingTableForDocs(
+      result,
+      'Characters of Quality',
+      this.vocalExpressionKeyboardMap,
+    );
+
+    this.__generateMappingTableForDocs(
+      result,
+      'Characters of Temporal Augmentation',
+      this.hapliKeyboardMap,
+    );
+
+    // Add klasma to previous table
+    result.push(
+      `| <span class="neume"> ${
+        NeumeMappingService.getMapping(TimeNeume.Klasma_Top).text
+      } </span> | <kbd> ${this.__formatKeyForDocs(this.klasmaKey)} </kbd> |\n`,
+    );
+
+    this.__generateMappingTableForDocs(
+      result,
+      'Characters of Temporal Division',
+      this.gorgonKeyboardMap,
+    );
+
+    this.__generateMappingTableForDocs(
+      result,
+      'Characters of Tempo',
+      this.tempoKeyboardMap,
+    );
+
+    result.push('## Martyria of the Notes\n\n');
+    result.push('| Neume | Keyboard Shortcut |\n');
+    result.push('| ----- | ----------------- |\n');
+    result.push(
+      `| Auto-calculated Martyria | <kbd> ${this.__formatKeyForDocs(
+        this.martyriaKey,
+      )} </kbd> |\n`,
+    );
+
+    this.__generateMappingTableForDocs(
+      result,
+      'Fthores',
+      this.fthoraKeyboardMap,
+    );
+
+    this.__generateMappingTableForDocs(
+      result,
+      'Signs of Alteration',
+      this.accidentalKeyboardMap,
+    );
+
+    this.__generateMappingTableForDocs(
+      result,
+      'Ison Indicators',
+      this.isonKeyboardMap,
+    );
+
+    this.__generateMappingTableForDocs(
+      result,
+      'Note Indicators',
+      this.noteIndicatorKeyboardMap,
+    );
+
+    this.__generateMappingTableForDocs(
+      result,
+      'Measures',
+      this.measureNumberKeyboardMap.concat(this.measureBarKeyboardMap),
+    );
+
+    (window as any).keyboardDocs = result.join('');
+  }
+
+  private __generateMappingTableForDocs(
+    result: string[],
+    title: string,
+    mappings: KeyboardMapping[],
+  ) {
+    result.push(`## ${title}\n\n`);
+    result.push('| Neume | Keyboard Shortcut |\n');
+    result.push('| ----- | ----------------- |\n');
+
+    for (let mapping of mappings) {
+      result.push('|');
+
+      result.push(
+        `<span class="neume">${
+          NeumeMappingService.getMapping(mapping.neume || mapping.neumes![0])
+            .text
+        }</span>`,
+      );
+      result.push('|');
+
+      if (mapping.shiftKey) {
+        result.push('<kbd>Shift</kbd> +');
+      }
+
+      if (mapping.modifier != null && mapping.modifier !== mapping.code) {
+        result.push(
+          `<kbd>${this.__formatKeyForDocs(mapping.modifier)}</kbd> +`,
+        );
+      }
+
+      result.push(`<kbd>${this.__formatKeyForDocs(mapping.code)}</kbd>`);
+      result.push('|\n');
+    }
+  }
+
+  private __formatKeyForDocs(input: string) {
+    return input
+      .replace('Key', '')
+      .replace('Digit', '')
+      .replace('Comma', ',')
+      .replace('Period', '.')
+      .replace('Slash', '/')
+      .replace('Equal', '=')
+      .replace('Semicolon', ';')
+      .replace('Quote', "'")
+      .replace('BracketLeft', '[')
+      .replace('BracketRight', ']');
+  }
+
   public isModifier(code: string) {
     return this.neumeKeyboardModifiers.includes(code);
   }
@@ -1019,7 +1218,7 @@ export class NeumeKeyboard {
     activeModifier: string | null,
   ) {
     return this.findMapping(
-      this.vocaExpressionKeyboardMap,
+      this.vocalExpressionKeyboardMap,
       event,
       activeModifier,
     );

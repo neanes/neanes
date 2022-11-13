@@ -1644,8 +1644,6 @@ export default class Editor extends Vue {
       }
     }
 
-    console.log(event.code);
-
     if (this.selectedElement != null && !event.ctrlKey) {
       if (this.neumeKeyboard.isModifier(event.code)) {
         this.keyboardModifier = event.code;

@@ -28,7 +28,7 @@ module.exports = {
       },
     ],
     sidebar: {
-      '/guide/': ['', 'advanced'],
+      '/guide/': ['', 'keyboard', 'advanced'],
       '/download/': [''],
       '/web-app/': [''],
     },

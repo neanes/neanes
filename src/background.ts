@@ -250,11 +250,11 @@ async function saveWorkspaceAs(args: SaveWorkspaceAsArgs) {
       defaultPath: args.filePath || args.tempFileName,
       filters: [
         {
-          name: `${process.env.VUE_APP_TITLE} File`,
+          name: `${app.name} File`,
           extensions: ['byz'],
         },
         {
-          name: `Uncompressed ${process.env.VUE_APP_TITLE} File`,
+          name: `Uncompressed ${app.name} File`,
           extensions: ['byzx'],
         },
       ],
@@ -381,7 +381,7 @@ async function openWorkspace() {
       title: 'Open Score',
       filters: [
         {
-          name: `${process.env.VUE_APP_TITLE} Files`,
+          name: `${app.name} Files`,
           extensions: ['byz', 'byzx'],
         },
       ],
@@ -413,10 +413,10 @@ function createMenu() {
     ...(isMac
       ? ([
           {
-            label: process.env.VUE_APP_TITLE,
+            label: app.name,
             submenu: [
               {
-                label: `About ${process.env.VUE_APP_TITLE}`,
+                label: `About ${app.name}`,
                 click() {
                   let detail = `Version: ${app.getVersion()}\n`;
                   detail += `Electron: ${process.versions.electron}\n`;
@@ -424,8 +424,8 @@ function createMenu() {
                   detail += `Node.js: ${process.version}`;
 
                   dialog.showMessageBox(win!, {
-                    title: process.env.VUE_APP_TITLE,
-                    message: process.env.VUE_APP_TITLE!,
+                    title: app.name,
+                    message: app.name!,
                     detail: detail,
                     type: 'info',
                   });
@@ -727,8 +727,8 @@ function createMenu() {
                   detail += `Node.js: ${process.version}`;
 
                   dialog.showMessageBox(win!, {
-                    title: process.env.VUE_APP_TITLE,
-                    message: process.env.VUE_APP_TITLE!,
+                    title: app.name,
+                    message: app.name!,
                     detail: detail,
                     type: 'info',
                   });

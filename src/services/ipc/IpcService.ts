@@ -83,4 +83,8 @@ export class IpcService implements IIpcService {
   public async exitApplication(): Promise<void> {
     return await window.ipcRenderer.invoke(IpcRendererChannels.ExitApplication);
   }
+
+  public async cancelExit(): Promise<void> {
+    return await window.ipcRenderer.invoke(IpcRendererChannels.CancelExit);
+  }
 }

@@ -31,6 +31,22 @@ module.exports = {
         config.plugins.delete('workbox');
         config.plugins.delete('pwa');
       },
+      chainWebpackMainProcess(config) {
+        config.module
+          .rule('babel')
+          .before('ts')
+          .use('babel')
+          .loader('babel-loader')
+          .options({
+            presets: [
+              [
+                '@babel/preset-env',
+                { modules: false, targets: { electron: 16 } },
+              ],
+              '@babel/preset-typescript',
+            ],
+          });
+      },
     },
   },
   pwa: {

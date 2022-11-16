@@ -45,6 +45,7 @@ export enum IpcRendererChannels {
   GetSystemFonts = 'GetSystemFonts',
 
   ExitApplication = 'ExitApplication',
+  CancelExit = 'CancelExit',
 }
 
 export interface FileMenuOpenScoreArgs {

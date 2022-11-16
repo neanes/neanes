@@ -69,6 +69,10 @@ export class BrowserIpcService implements IIpcService {
     return Promise.resolve();
   }
 
+  public async cancelExit(): Promise<void> {
+    return Promise.resolve();
+  }
+
   private async doSave(workspace: Workspace) {
     var score = SaveService.SaveScoreToJson(workspace.score);
     const data = JSON.stringify(score, null, 2);

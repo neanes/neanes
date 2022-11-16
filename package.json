@@ -51,7 +51,6 @@
     "@vue/cli-service": "^4.1.0",
     "@vue/eslint-config-typescript": "^4.0.0",
     "electron": "^16.0.5",
-    "electron-builder": "^22.14.13",
     "electron-devtools-installer": "^3.1.0",
     "electron-icon-builder": "^2.0.1",
     "electron-updater": "^4.6.1",
@@ -65,6 +64,11 @@
     "vue-cli-plugin-electron-builder": "^2.1.1",
     "vue-template-compiler": "^2.6.10",
     "vuepress": "^1.9.7"
+  },
+  "overrides": {
+    "vue-cli-plugin-electron-builder": {
+      "electron-builder": "^22.14.13"
+    }
   },
   "license": "GPL-3.0"
 }

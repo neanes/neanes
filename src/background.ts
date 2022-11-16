@@ -41,9 +41,13 @@ const userDataPath = app.getPath('userData');
 const maxRecentFiles = 20;
 const storeFilePath = path.join(userDataPath, 'settings.json');
 
+const isMac = process.platform === 'darwin';
+
 declare const __static: string;
 
-let win!: BrowserWindow;
+let win: BrowserWindow | null = null;
+let readyToExit = false;
+let quitting = false;
 
 interface Store {
   recentFiles: string[];
@@ -189,7 +193,7 @@ async function openFileFromArgs(argv: string[]) {
       console.error(error);
 
       if (error instanceof Error) {
-        dialog.showMessageBox(win, {
+        dialog.showMessageBox(win!, {
           type: 'error',
           title: 'Open failed',
           message: error.message,
@@ -218,7 +222,7 @@ async function saveWorkspace(args: SaveWorkspaceArgs) {
     console.error(error);
 
     if (error instanceof Error) {
-      dialog.showMessageBox(win, {
+      dialog.showMessageBox(win!, {
         type: 'error',
         title: 'Save failed',
         message: error.message,
@@ -241,7 +245,7 @@ async function saveWorkspaceAs(args: SaveWorkspaceAsArgs) {
 
     saving = true;
 
-    const dialogResult = await dialog.showSaveDialog(win, {
+    const dialogResult = await dialog.showSaveDialog(win!, {
       title: 'Save Score',
       defaultPath: args.filePath || args.tempFileName,
       filters: [
@@ -270,7 +274,7 @@ async function saveWorkspaceAs(args: SaveWorkspaceAsArgs) {
     console.error(error);
 
     if (error instanceof Error) {
-      dialog.showMessageBox(win, {
+      dialog.showMessageBox(win!, {
         type: 'error',
         title: 'Save As failed',
         message: error.message,
@@ -285,13 +289,13 @@ async function saveWorkspaceAs(args: SaveWorkspaceAsArgs) {
 
 async function exportWorkspaceAsPdf(args: ExportWorkspaceAsPdfArgs) {
   try {
-    if (exporting) {
+    if (exporting || !win) {
       return;
     }
 
     exporting = true;
 
-    const dialogResult = await dialog.showSaveDialog(win, {
+    const dialogResult = await dialog.showSaveDialog(win!, {
       title: 'Export Score as PDF',
       filters: [{ name: 'PDF File', extensions: ['pdf'] }],
       defaultPath:
@@ -313,7 +317,7 @@ async function exportWorkspaceAsPdf(args: ExportWorkspaceAsPdfArgs) {
     console.error(error);
 
     if (error instanceof Error) {
-      dialog.showMessageBox(win, {
+      dialog.showMessageBox(win!, {
         type: 'error',
         title: 'Export to PDF failed',
         message: error.message,
@@ -327,6 +331,11 @@ async function exportWorkspaceAsPdf(args: ExportWorkspaceAsPdfArgs) {
 async function printWorkspace(args: PrintWorkspaceArgs) {
   return new Promise((resolve) => {
     try {
+      if (!win) {
+        resolve({ success: false });
+        return;
+      }
+
       win.webContents.print(
         {
           pageSize: args.pageSize,
@@ -334,7 +343,7 @@ async function printWorkspace(args: PrintWorkspaceArgs) {
         },
         (success, failureReason) => {
           if (!success && failureReason !== 'cancelled') {
-            dialog.showMessageBox(win, {
+            dialog.showMessageBox(win!, {
               type: 'error',
               title: 'Print failed',
               message: failureReason,
@@ -347,7 +356,7 @@ async function printWorkspace(args: PrintWorkspaceArgs) {
       console.error(error);
 
       if (error instanceof Error) {
-        dialog.showMessageBox(win, {
+        dialog.showMessageBox(win!, {
           type: 'error',
           title: 'Print failed',
           message: error.message,
@@ -367,7 +376,7 @@ async function openWorkspace() {
   };
 
   try {
-    const dialogResult = await dialog.showOpenDialog(win, {
+    const dialogResult = await dialog.showOpenDialog(win!, {
       properties: ['openFile'],
       title: 'Open Score',
       filters: [
@@ -388,7 +397,7 @@ async function openWorkspace() {
     console.error(error);
 
     if (error instanceof Error) {
-      dialog.showMessageBox(win, {
+      dialog.showMessageBox(win!, {
         type: 'error',
         title: 'Open failed',
         message: error.message,
@@ -401,6 +410,39 @@ async function openWorkspace() {
 
 function createMenu() {
   var menu = Menu.buildFromTemplate([
+    ...(isMac
+      ? ([
+          {
+            label: process.env.VUE_APP_TITLE,
+            submenu: [
+              {
+                label: `About ${process.env.VUE_APP_TITLE}`,
+                click() {
+                  let detail = `Version: ${app.getVersion()}\n`;
+                  detail += `Electron: ${process.versions.electron}\n`;
+                  detail += `Chromium: ${process.versions.chrome}\n`;
+                  detail += `Node.js: ${process.version}`;
+
+                  dialog.showMessageBox(win!, {
+                    title: process.env.VUE_APP_TITLE,
+                    message: process.env.VUE_APP_TITLE!,
+                    detail: detail,
+                    type: 'info',
+                  });
+                },
+              },
+              { type: 'separator' },
+              { role: 'services' },
+              { type: 'separator' },
+              { role: 'hide' },
+              { role: 'hideOthers' },
+              { role: 'unhide' },
+              { type: 'separator' },
+              { role: 'quit' },
+            ],
+          },
+        ] as MenuItemConstructorOptions[])
+      : []),
     {
       label: '&File',
       submenu: [
@@ -408,17 +450,25 @@ function createMenu() {
           label: '&New',
           accelerator: 'CmdOrCtrl+N',
           click() {
-            win.webContents.send(IpcMainChannels.FileMenuNewScore);
+            if (!win) {
+              createWindow();
+            }
+
+            win?.webContents.send(IpcMainChannels.FileMenuNewScore);
           },
         },
         {
           label: '&Open',
           accelerator: 'CmdOrCtrl+O',
           async click() {
-            win.webContents.send(
-              IpcMainChannels.FileMenuOpenScore,
-              await openWorkspace(),
-            );
+            const data = await openWorkspace();
+
+            if (!win && data.success) {
+              darwinPath = data.filePath;
+              createWindow();
+            } else {
+              win?.webContents.send(IpcMainChannels.FileMenuOpenScore, data);
+            }
           },
         },
         {
@@ -430,16 +480,21 @@ function createMenu() {
               try {
                 const data = await openFile(x);
 
-                win.webContents.send(IpcMainChannels.FileMenuOpenScore, {
-                  filePath: x,
-                  data,
-                  success: true,
-                } as FileMenuOpenScoreArgs);
+                if (!win) {
+                  darwinPath = x;
+                  createWindow();
+                } else {
+                  win?.webContents.send(IpcMainChannels.FileMenuOpenScore, {
+                    filePath: x,
+                    data,
+                    success: true,
+                  } as FileMenuOpenScoreArgs);
+                }
               } catch (error) {
                 console.error(error);
 
                 if (error instanceof Error) {
-                  dialog.showMessageBox(win, {
+                  dialog.showMessageBox(win!, {
                     type: 'error',
                     title: 'Open failed',
                     message: error.message,
@@ -453,45 +508,39 @@ function createMenu() {
           label: '&Save',
           accelerator: 'CmdOrCtrl+S',
           click() {
-            win.webContents.send(IpcMainChannels.FileMenuSave);
+            win?.webContents.send(IpcMainChannels.FileMenuSave);
           },
         },
         {
           label: 'Save &As',
           accelerator: 'CmdOrCtrl+Shift+S',
           click() {
-            win.webContents.send(IpcMainChannels.FileMenuSaveAs);
+            win?.webContents.send(IpcMainChannels.FileMenuSaveAs);
           },
         },
         { type: 'separator' },
         {
           label: 'Page Setup',
           click() {
-            win.webContents.send(IpcMainChannels.FileMenuPageSetup);
+            win?.webContents.send(IpcMainChannels.FileMenuPageSetup);
           },
         },
         {
           label: '&Export as PDF',
           accelerator: 'CmdOrCtrl+E',
           click() {
-            win.webContents.send(IpcMainChannels.FileMenuExportAsPdf);
+            win?.webContents.send(IpcMainChannels.FileMenuExportAsPdf);
           },
         },
         {
           label: '&Print',
           accelerator: 'CmdOrCtrl+P',
           click() {
-            win.webContents.send(IpcMainChannels.FileMenuPrint);
+            win?.webContents.send(IpcMainChannels.FileMenuPrint);
           },
         },
         { type: 'separator' },
-        {
-          label: 'E&xit',
-          accelerator: 'Alt+F4',
-          click() {
-            app.quit();
-          },
-        },
+        { role: isMac ? 'close' : 'quit' },
       ],
     },
     {
@@ -505,20 +554,19 @@ function createMenu() {
             // The accelerator is handled in the renderer process because of
             // https://github.com/electron/electron/issues/3682.
             if (!event.triggeredByAccelerator) {
-              win.webContents.send(IpcMainChannels.FileMenuUndo);
+              win?.webContents.send(IpcMainChannels.FileMenuUndo);
             }
           },
         },
         {
           id: 'redo',
           label: '&Redo',
-          accelerator:
-            process.platform === 'darwin' ? 'CmdOrCtrl+Shift+Z' : 'CmdOrCtrl+Y',
+          accelerator: isMac ? 'CmdOrCtrl+Shift+Z' : 'CmdOrCtrl+Y',
           click(menuItem, browserWindow, event) {
             // The accelerator is handled in the renderer process because of
             // https://github.com/electron/electron/issues/3682.
             if (!event.triggeredByAccelerator) {
-              win.webContents.send(IpcMainChannels.FileMenuRedo);
+              win?.webContents.send(IpcMainChannels.FileMenuRedo);
             }
           },
         },
@@ -530,7 +578,7 @@ function createMenu() {
             // The accelerator is handled in the renderer process because of
             // https://github.com/electron/electron/issues/3682.
             if (!event.triggeredByAccelerator) {
-              win.webContents.send(IpcMainChannels.FileMenuCut);
+              win?.webContents.send(IpcMainChannels.FileMenuCut);
             }
           },
         },
@@ -541,7 +589,7 @@ function createMenu() {
             // The accelerator is handled in the renderer process because of
             // https://github.com/electron/electron/issues/3682.
             if (!event.triggeredByAccelerator) {
-              win.webContents.send(IpcMainChannels.FileMenuCopy);
+              win?.webContents.send(IpcMainChannels.FileMenuCopy);
             }
           },
         },
@@ -552,7 +600,7 @@ function createMenu() {
             // The accelerator is handled in the renderer process because of
             // https://github.com/electron/electron/issues/3682.
             if (!event.triggeredByAccelerator) {
-              win.webContents.send(IpcMainChannels.FileMenuPaste);
+              win?.webContents.send(IpcMainChannels.FileMenuPaste);
             }
           },
         },
@@ -564,13 +612,13 @@ function createMenu() {
         {
           label: '&Drop Cap',
           click() {
-            win.webContents.send(IpcMainChannels.FileMenuInsertDropCap);
+            win?.webContents.send(IpcMainChannels.FileMenuInsertDropCap);
           },
         },
         {
           label: '&Text Box',
           click() {
-            win.webContents.send(IpcMainChannels.FileMenuInsertTextBox, {
+            win?.webContents.send(IpcMainChannels.FileMenuInsertTextBox, {
               inline: false,
             } as FileMenuInsertTextboxArgs);
           },
@@ -578,7 +626,7 @@ function createMenu() {
         {
           label: '&Inline Text Box',
           click() {
-            win.webContents.send(IpcMainChannels.FileMenuInsertTextBox, {
+            win?.webContents.send(IpcMainChannels.FileMenuInsertTextBox, {
               inline: true,
             } as FileMenuInsertTextboxArgs);
           },
@@ -586,7 +634,7 @@ function createMenu() {
         {
           label: '&Mode Key',
           click() {
-            win.webContents.send(IpcMainChannels.FileMenuInsertModeKey);
+            win?.webContents.send(IpcMainChannels.FileMenuInsertModeKey);
           },
         },
         { type: 'separator' },
@@ -596,13 +644,13 @@ function createMenu() {
             {
               label: 'Header',
               click() {
-                win.webContents.send(IpcMainChannels.FileMenuInsertHeader);
+                win?.webContents.send(IpcMainChannels.FileMenuInsertHeader);
               },
             },
             {
               label: 'Footer',
               click() {
-                win.webContents.send(IpcMainChannels.FileMenuInsertFooter);
+                win?.webContents.send(IpcMainChannels.FileMenuInsertFooter);
               },
             },
           ],
@@ -630,7 +678,11 @@ function createMenu() {
             submenu: Object.values(TestFileType).map((testFileType) => ({
               label: testFileType,
               click() {
-                win.webContents.send(
+                if (!win) {
+                  createWindow();
+                }
+
+                win?.webContents.send(
                   IpcMainChannels.FileMenuGenerateTestFile,
                   testFileType,
                 );
@@ -664,22 +716,26 @@ function createMenu() {
         { type: 'separator' },
         { role: 'toggleDevTools' },
         { type: 'separator' },
-        {
-          label: 'About',
-          click() {
-            let detail = `Version: ${app.getVersion()}\n`;
-            detail += `Electron: ${process.versions.electron}\n`;
-            detail += `Chromium: ${process.versions.chrome}\n`;
-            detail += `Node.js: ${process.version}`;
+        ...(!isMac
+          ? ([
+              {
+                label: 'About',
+                click() {
+                  let detail = `Version: ${app.getVersion()}\n`;
+                  detail += `Electron: ${process.versions.electron}\n`;
+                  detail += `Chromium: ${process.versions.chrome}\n`;
+                  detail += `Node.js: ${process.version}`;
 
-            dialog.showMessageBox(win, {
-              title: process.env.VUE_APP_TITLE,
-              message: process.env.VUE_APP_TITLE!,
-              detail: detail,
-              type: 'info',
-            });
-          },
-        },
+                  dialog.showMessageBox(win!, {
+                    title: process.env.VUE_APP_TITLE,
+                    message: process.env.VUE_APP_TITLE!,
+                    detail: detail,
+                    type: 'info',
+                  });
+                },
+              },
+            ] as MenuItemConstructorOptions[])
+          : []),
       ],
     },
   ]);
@@ -688,6 +744,8 @@ function createMenu() {
 }
 
 async function createWindow() {
+  readyToExit = false;
+
   // Create the browser window.
   win = new BrowserWindow({
     width: 1280,
@@ -708,16 +766,24 @@ async function createWindow() {
   win.maximize();
 
   win.once('ready-to-show', () => {
-    win.show();
+    win?.show();
   });
 
   win.webContents.once('did-finish-load', () => (loaded = true));
 
   // Prevent the user from accidentally
   // closing the app with unsaved changes
-  win.on('close', async (event) => {
-    win.webContents.send(IpcMainChannels.CloseApplication);
-    event.preventDefault();
+  win.on('close', (event) => {
+    if (!readyToExit) {
+      win?.webContents.send(IpcMainChannels.CloseApplication);
+      event.preventDefault();
+    }
+  });
+
+  win.on('closed', () => {
+    win = null;
+    loaded = false;
+    darwinPath = null;
   });
 
   // Load store before we create the menu, since
@@ -751,13 +817,24 @@ ipcMain.on(IpcRendererChannels.SetCanRedo, async (event, data) => {
 });
 
 ipcMain.handle(IpcRendererChannels.ExitApplication, async () => {
-  app.exit();
+  readyToExit = true;
+
+  // In macOS, there is a distinction between "close" and "quit".
+  if (quitting) {
+    app.exit();
+  } else {
+    win?.close();
+  }
+});
+
+ipcMain.handle(IpcRendererChannels.CancelExit, async () => {
+  quitting = false;
 });
 
 ipcMain.handle(
   IpcRendererChannels.ShowMessageBox,
   async (event, args: ShowMessageBoxArgs) => {
-    return await dialog.showMessageBox(win, {
+    return await dialog.showMessageBox(win!, {
       type: args.type,
       title: args.title,
       message: args.message,
@@ -796,7 +873,7 @@ ipcMain.handle(
 );
 
 ipcMain.handle(IpcRendererChannels.OpenWorkspaceFromArgv, async () => {
-  if (process.platform === 'darwin' && darwinPath != null) {
+  if (isMac && darwinPath != null) {
     const result = {
       data: await openFile(darwinPath),
       filePath: darwinPath,
@@ -831,22 +908,28 @@ app.on('open-file', async (event, path) => {
   darwinPath = path;
 
   try {
-    if (loaded) {
+    if (!win) {
+      createWindow();
+    } else if (loaded) {
       const result = {
         data: await openFile(path),
         filePath: path,
         success: true,
       };
 
-      win.webContents.send(IpcMainChannels.FileMenuOpenScore, result);
+      if (!win) {
+        createWindow();
+      }
 
-      win.show();
+      win?.webContents.send(IpcMainChannels.FileMenuOpenScore, result);
+
+      win?.show();
     }
   } catch (error) {
     console.error(error);
 
     if (error instanceof Error) {
-      dialog.showMessageBox(win, {
+      dialog.showMessageBox(win!, {
         type: 'error',
         title: 'Open failed',
         message: error.message,
@@ -866,16 +949,16 @@ app.on(
       results
         .filter((x) => x.success)
         .forEach((x) =>
-          win.webContents.send(IpcMainChannels.FileMenuOpenScore, x),
+          win?.webContents.send(IpcMainChannels.FileMenuOpenScore, x),
         );
 
-      win.show();
+      win?.show();
     } else {
-      win.webContents.once('did-finish-load', () => {
+      win?.webContents.once('did-finish-load', () => {
         results
           .filter((x) => x.success)
           .forEach((x) =>
-            win.webContents.send(IpcMainChannels.FileMenuOpenScore, x),
+            win?.webContents.send(IpcMainChannels.FileMenuOpenScore, x),
           );
       });
     }
@@ -886,9 +969,13 @@ app.on(
 app.on('window-all-closed', () => {
   // On macOS it is common for applications and their menu bar
   // to stay active until the user quits explicitly with Cmd + Q
-  if (process.platform !== 'darwin') {
+  if (!isMac) {
     app.quit();
   }
+});
+
+app.on('before-quit', () => {
+  quitting = true;
 });
 
 app.on('activate', () => {

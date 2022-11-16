@@ -1644,7 +1644,12 @@ export default class Editor extends Vue {
       }
     }
 
-    if (this.selectedElement != null && !event.ctrlKey) {
+    if (
+      this.selectedElement != null &&
+      !event.ctrlKey &&
+      !event.metaKey &&
+      !event.altKey
+    ) {
       if (this.neumeKeyboard.isModifier(event.code)) {
         this.keyboardModifier = event.code;
         handled = true;
@@ -2585,6 +2590,7 @@ export default class Editor extends Vue {
 
     for (let workspace of unsavedWorkspaces) {
       if (!(await this.closeWorkspace(workspace))) {
+        await this.ipcService.cancelExit();
         return false;
       }
     }

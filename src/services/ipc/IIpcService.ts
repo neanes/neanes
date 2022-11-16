@@ -25,4 +25,6 @@ export interface IIpcService {
   getSystemFonts(): Promise<string[]>;
 
   exitApplication(): Promise<void>;
+
+  cancelExit(): Promise<void>;
 }

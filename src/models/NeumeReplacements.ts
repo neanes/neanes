@@ -20,9 +20,8 @@ export interface QuantitativeNeumeReplacement<T> {
   replaceWith: T;
 }
 
-const kentemataNeumes: Neume[] = [
+const kentemataNeumesNoOmalon: Neume[] = [
   QuantitativeNeume.Kentemata,
-  QuantitativeNeume.OligonPlusKentemata,
   QuantitativeNeume.OligonPlusHamiliPlusKentemata,
   QuantitativeNeume.OligonPlusIsonPlusKentemata,
   QuantitativeNeume.OligonPlusHyporoePlusKentemata,
@@ -33,6 +32,11 @@ const kentemataNeumes: Neume[] = [
   QuantitativeNeume.OligonPlusKentemataPlusHypsiliLeft,
   QuantitativeNeume.OligonPlusKentemataPlusHypsiliRight,
   QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
+];
+
+const kentemataNeumes: Neume[] = [
+  ...kentemataNeumesNoOmalon,
+  QuantitativeNeume.OligonPlusKentemata,
 ];
 
 const bottomAllowedGorgonNeumes: Neume[] = [
@@ -392,7 +396,7 @@ export const vocalExpressionReplacementMap = new Map<
       {
         isPairedWith: [
           ...petastiNeumes,
-          ...kentemataNeumes,
+          ...kentemataNeumesNoOmalon,
           QuantitativeNeume.PetastiPlusRunningElaphron,
           QuantitativeNeume.DoubleApostrophos,
           QuantitativeNeume.IsonPlusApostrophos,

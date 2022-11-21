@@ -1819,6 +1819,10 @@
       ]
     },
     "oligonKentimataAbove": {
+      "omalonConnecting": [
+        1.59,
+        0.13
+      ],
       "measureNumber": [
         0.172,
         0.753

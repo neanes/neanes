@@ -276,7 +276,6 @@ export default class ToolbarMain extends Vue {
 .zoom {
   width: 40px;
   padding: 1px 2px;
-  font-family: 'Arial';
   font-size: 13px;
 }
 
@@ -299,7 +298,6 @@ export default class ToolbarMain extends Vue {
 
 .zoom-menu-item {
   padding: 1px 4px;
-  font-family: 'Arial';
   font-size: 13px;
   cursor: default;
   width: 38px;

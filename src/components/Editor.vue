@@ -3785,7 +3785,6 @@ export default class Editor extends Vue {
 
 .workspace-tab-close-btn {
   margin-left: auto;
-  font-family: Arial;
   font-size: 0.75rem;
 }
 

@@ -297,10 +297,6 @@ export default class SyllablePositioningDialog extends Vue {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-.container {
-  font-family: Arial, Helvetica, sans-serif;
-}
-
 .pane-container {
   display: flex;
   flex-direction: column;

@@ -138,16 +138,6 @@ export class NeumeKeyboard {
 
     this.quantitativeNeumeKeyboardMap.push({
       code: 'KeyP',
-      neume: QuantitativeNeume.OligonPlusHypsiliRight,
-    });
-
-    this.quantitativeNeumeKeyboardMap.push({
-      code: 'BracketLeft',
-      neume: QuantitativeNeume.OligonPlusHypsiliLeft,
-    });
-
-    this.quantitativeNeumeKeyboardMap.push({
-      code: 'BracketRight',
       neume: QuantitativeNeume.OligonPlusDoubleHypsili,
     });
 
@@ -205,18 +195,6 @@ export class NeumeKeyboard {
 
     this.quantitativeNeumeKeyboardMap.push({
       code: 'KeyP',
-      shiftKey: true,
-      neume: QuantitativeNeume.PetastiPlusHypsiliRight,
-    });
-
-    this.quantitativeNeumeKeyboardMap.push({
-      code: 'BracketLeft',
-      shiftKey: true,
-      neume: QuantitativeNeume.PetastiPlusHypsiliLeft,
-    });
-
-    this.quantitativeNeumeKeyboardMap.push({
-      code: 'BracketRight',
       shiftKey: true,
       neume: QuantitativeNeume.PetastiPlusDoubleHypsili,
     });

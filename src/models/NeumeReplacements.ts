@@ -78,6 +78,15 @@ const topOnlyKlasmaNeumes: Neume[] = [
   QuantitativeNeume.PetastiPlusRunningElaphron,
 ];
 
+const rests: Neume[] = [
+  QuantitativeNeume.VareiaDotted,
+  QuantitativeNeume.VareiaDotted2,
+  QuantitativeNeume.VareiaDotted3,
+  QuantitativeNeume.VareiaDotted4,
+  QuantitativeNeume.Breath,
+  QuantitativeNeume.Cross,
+];
+
 export const gorgonReplacementMap = new Map<
   GorgonNeume,
   NeumeReplacement<GorgonNeume>[]
@@ -320,6 +329,7 @@ export const vocalExpressionReplacementMap = new Map<
     [
       {
         isPairedWith: [
+          ...rests,
           QuantitativeNeume.Kentemata,
           QuantitativeNeume.IsonPlusApostrophos,
           QuantitativeNeume.DoubleApostrophos,
@@ -351,10 +361,20 @@ export const vocalExpressionReplacementMap = new Map<
     ],
   ],
   [
+    VocalExpressionNeume.HeteronConnecting,
+    [
+      {
+        isPairedWith: [...rests],
+        replaceWith: null,
+      },
+    ],
+  ],
+  [
     VocalExpressionNeume.Psifiston,
     [
       {
         isPairedWith: [
+          ...rests,
           QuantitativeNeume.Apostrophos,
           QuantitativeNeume.Kentemata,
           QuantitativeNeume.Hyporoe,
@@ -381,6 +401,7 @@ export const vocalExpressionReplacementMap = new Map<
         isPairedWith: [
           ...petastiNeumes,
           ...kentemataNeumes,
+          ...rests,
           QuantitativeNeume.PetastiPlusRunningElaphron,
           QuantitativeNeume.DoubleApostrophos,
           QuantitativeNeume.IsonPlusApostrophos,
@@ -397,6 +418,7 @@ export const vocalExpressionReplacementMap = new Map<
         isPairedWith: [
           ...petastiNeumes,
           ...kentemataNeumesNoOmalon,
+          ...rests,
           QuantitativeNeume.PetastiPlusRunningElaphron,
           QuantitativeNeume.DoubleApostrophos,
           QuantitativeNeume.IsonPlusApostrophos,
@@ -410,7 +432,7 @@ export const vocalExpressionReplacementMap = new Map<
     VocalExpressionNeume.Vareia,
     [
       {
-        isPairedWith: [...petastiNeumes, ...kentemataNeumes],
+        isPairedWith: [...petastiNeumes, ...kentemataNeumes, ...rests],
         replaceWith: null,
       },
     ],

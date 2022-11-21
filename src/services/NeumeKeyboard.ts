@@ -210,7 +210,7 @@ export class NeumeKeyboard {
 
     this.quantitativeNeumeKeyboardMap.push({
       code: 'KeyN',
-      modifier: this.modifier3,
+      modifier: this.modifier1,
       neume: QuantitativeNeume.IsonPlusApostrophos,
     });
 

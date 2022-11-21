@@ -102,6 +102,8 @@ body {
   overflow: hidden;
 
   font-size: 16px;
+
+  font-family: sans-serif;
 }
 
 .ok-btn {
@@ -145,7 +147,6 @@ body {
 
   background-color: darkslategray;
   color: white;
-  font-family: Arial;
 
   padding: 1rem;
 

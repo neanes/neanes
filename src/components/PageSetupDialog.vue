@@ -909,7 +909,6 @@ export default class PageSetupDialog extends Vue {
 }
 
 .container {
-  font-family: Arial, Helvetica, sans-serif;
   display: flex;
   flex-direction: column;
   height: 80vh;

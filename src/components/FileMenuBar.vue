@@ -274,8 +274,6 @@ export default class FileMenuBar extends Vue {
   display: flex;
   background-color: #aaa;
 
-  font-family: sans-serif;
-
   user-select: none;
 
   align-items: center;

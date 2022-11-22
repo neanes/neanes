@@ -376,6 +376,13 @@ export class NeumeKeyboard {
     });
 
     this.quantitativeNeumeKeyboardMap.push({
+      code: 'KeyM',
+      modifier: this.kentimataKey,
+      shiftKey: true,
+      neume: QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
+    });
+
+    this.quantitativeNeumeKeyboardMap.push({
       code: 'Comma',
       modifier: this.kentimataKey,
       neume: QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
@@ -385,6 +392,12 @@ export class NeumeKeyboard {
       code: 'Period',
       modifier: this.kentimataKey,
       neume: QuantitativeNeume.OligonPlusHamiliPlusKentemata,
+    });
+
+    this.quantitativeNeumeKeyboardMap.push({
+      code: 'Slash',
+      modifier: this.kentimataKey,
+      neume: QuantitativeNeume.OligonPlusHyporoePlusKentemata,
     });
 
     ///////////////////////////////////

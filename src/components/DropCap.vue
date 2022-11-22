@@ -58,6 +58,10 @@ export default class DropCap extends Vue {
     this.textElement.focus(true);
   }
 
+  blur() {
+    this.textElement.blur();
+  }
+
   updateContent(content: string) {
     // Nothing actually changed, so do nothing
     if (this.element.content === content) {

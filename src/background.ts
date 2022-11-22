@@ -611,6 +611,7 @@ function createMenu() {
       submenu: [
         {
           label: '&Drop Cap',
+          accelerator: 'CmdOrCtrl+D',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuInsertDropCap);
           },

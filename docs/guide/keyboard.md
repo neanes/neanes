@@ -7,6 +7,11 @@
     display: flex;
     justify-content: center;
 }
+
+.center {
+    display: flex;
+    justify-content: center;
+}
 </style>
 
 Most common neumes have a keyboard shortcut. The keyboard layout is such that you can rest your hands on the home row keys. The right hand is used to enter neumes, while the left hand is used to change the neumes available to the right hand.
@@ -46,9 +51,7 @@ Below is a list of modifiers.
 | <span class="neume"></span> | <kbd>U</kbd>                                 |
 | <span class="neume"></span> | <kbd>I</kbd>                                 |
 | <span class="neume"></span> | <kbd>O</kbd>                                 |
-| <span class="neume"></span> | <kbd>P</kbd>                                 |
-| <span class="neume"></span> | <kbd>[</kbd>                                 |
-| <span class="neume"></span> | <kbd>]</kbd>                                 |
+| <span class="neume"></span> | <kbd>P</kbd>                                 |
 | <span class="neume"></span> | <kbd>Shift</kbd> +<kbd>J</kbd>               |
 | <span class="neume"></span> | <kbd>Shift</kbd> +<kbd>K</kbd>               |
 | <span class="neume"></span> | <kbd>Shift</kbd> +<kbd>L</kbd>               |
@@ -57,11 +60,9 @@ Below is a list of modifiers.
 | <span class="neume"></span> | <kbd>Shift</kbd> +<kbd>U</kbd>               |
 | <span class="neume"></span> | <kbd>Shift</kbd> +<kbd>I</kbd>               |
 | <span class="neume"></span> | <kbd>Shift</kbd> +<kbd>O</kbd>               |
-| <span class="neume"></span> | <kbd>Shift</kbd> +<kbd>P</kbd>               |
-| <span class="neume"></span> | <kbd>Shift</kbd> +<kbd>[</kbd>               |
-| <span class="neume"></span> | <kbd>Shift</kbd> +<kbd>]</kbd>               |
+| <span class="neume"></span> | <kbd>Shift</kbd> +<kbd>P</kbd>               |
 | <span class="neume"></span> | <kbd>N</kbd>                                 |
-| <span class="neume"></span> | <kbd>F</kbd> +<kbd>N</kbd>                   |
+| <span class="neume"></span> | <kbd>S</kbd> +<kbd>N</kbd>                   |
 | <span class="neume"></span> | <kbd>M</kbd>                                 |
 | <span class="neume"></span> | <kbd>F</kbd> +<kbd>M</kbd>                   |
 | <span class="neume"></span> | <kbd>D</kbd> +<kbd>M</kbd>                   |
@@ -155,9 +156,51 @@ Below is a list of modifiers.
 
 ## Martyria of the Notes
 
-| Neume                    | Keyboard Shortcut |
-| ------------------------ | ----------------- |
-| Auto-calculated Martyria | <kbd> Y </kbd>    |
+Martyria may be inserted with the following shortcuts. To insert a right-aligned martyria, hold <kbd>Shift</kbd> while typing the shortcut.
+
+| Note                                        |        | Keyboard Shortcut          |
+| ------------------------------------------- | ------ | -------------------------- |
+| <span class="center">Auto-calculated</span> |        | <kbd>Y</kbd>               |
+| <span class="neume"></span>                |        | <kbd>C</kbd> +<kbd>J</kbd> |
+| <span class="neume"></span>                |        | <kbd>C</kbd> +<kbd>K</kbd> |
+| <span class="neume"></span>                |        | <kbd>C</kbd> +<kbd>L</kbd> |
+| <span class="neume"></span>                |        | <kbd>C</kbd> +<kbd>;</kbd> |
+| <span class="neume"></span>                |        | <kbd>C</kbd> +<kbd>'</kbd> |
+| <span class="neume"></span>                |        | <kbd>C</kbd> +<kbd>U</kbd> |
+| <span class="neume"></span>                |        | <kbd>C</kbd> +<kbd>I</kbd> |
+| <span class="neume"></span>                | (High) | <kbd>C</kbd> +<kbd>O</kbd> |
+| <span class="neume"></span>                | (High) | <kbd>C</kbd> +<kbd>P</kbd> |
+| <span class="neume"></span>                | (High) | <kbd>C</kbd> +<kbd>[</kbd> |
+| <span class="neume"></span>                | (High) | <kbd>C</kbd> +<kbd>]</kbd> |
+| <span class="neume"></span>                | (High) | <kbd>C</kbd> +<kbd>7</kbd> |
+| <span class="neume"></span>                | (High) | <kbd>C</kbd> +<kbd>8</kbd> |
+| <span class="neume"></span>                | (Low)  | <kbd>C</kbd> +<kbd>N</kbd> |
+| <span class="neume"></span>                | (Low)  | <kbd>C</kbd> +<kbd>M</kbd> |
+| <span class="neume"></span>                | (Low)  | <kbd>C</kbd> +<kbd>,</kbd> |
+| <span class="neume"></span>                | (Low)  | <kbd>C</kbd> +<kbd>.</kbd> |
+| <span class="neume"></span>                | (Low)  | <kbd>C</kbd> +<kbd>/</kbd> |
+
+The following toggles are available for existing martyria.
+
+| Toggles                | Keyboard Shortcut          |
+| ---------------------- | -------------------------- |
+| Toggle Right Align     | <kbd>C</kbd> +<kbd>Y</kbd> |
+| Toggle Auto-calculated | <kbd>C</kbd> +<kbd>H</kbd> |
+
+The scale on an existing martyria may be updated with the following shortcuts.
+
+| Scale                                                |     | Keyboard Shortcut          |
+| ---------------------------------------------------- | --- | -------------------------- |
+| <span class="center">Diatonic</span>                 |     | <kbd>Z</kbd> +<kbd>J</kbd> |
+| <span class="center">Soft Chromatic</span>           |     | <kbd>Z</kbd> +<kbd>K</kbd> |
+| <span class="center">Hard Chromatic</span>           |     | <kbd>Z</kbd> +<kbd>L</kbd> |
+| <span class="center">Enharmonic from Ga</span>       |     | <kbd>Z</kbd> +<kbd>;</kbd> |
+| <span class="center">Enharmonic from High Zo</span>  |     | <kbd>Z</kbd> +<kbd>'</kbd> |
+| <span class="center">Enharmonic from Vou</span>      |     | <kbd>Z</kbd> +<kbd>U</kbd> |
+| <span class="center">Enharmonic from High Vou</span> |     | <kbd>Z</kbd> +<kbd>I</kbd> |
+| <span class="center">Zygos</span>                    |     | <kbd>Z</kbd> +<kbd>O</kbd> |
+| <span class="center">Spathi</span>                   |     | <kbd>Z</kbd> +<kbd>P</kbd> |
+| <span class="center">Kliton</span>                   |     | <kbd>Z</kbd> +<kbd>[</kbd> |
 
 ## Fthores
 

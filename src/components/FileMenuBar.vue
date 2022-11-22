@@ -120,6 +120,10 @@ export default class FileMenuBar extends Vue {
         this.onClickNew();
         event.preventDefault();
         return;
+      } else if (event.code === 'KeyD') {
+        this.onClickAddDropCap();
+        event.preventDefault();
+        return;
       }
     }
   }

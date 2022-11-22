@@ -281,9 +281,7 @@
                       :element="element"
                       :pageSetup="score.pageSetup"
                       @click.native="selectedElement = element"
-                      @update:content="
-                        updateDropCapContent(selectedElement, $event)
-                      "
+                      @update:content="updateDropCapContent(element, $event)"
                     />
                   </template>
                 </div>
@@ -1458,7 +1456,7 @@ export default class Editor extends Vue {
   addDropCap() {
     const element = new DropCapElement();
 
-    this.addScoreElement(element, this.selectedElementIndex);
+    this.addScoreElement(element, this.selectedElementIndex + 1);
 
     this.selectedElement = element;
     this.save();
@@ -2023,10 +2021,38 @@ export default class Editor extends Vue {
   }
 
   onKeydownDropCap(event: KeyboardEvent) {
-    // Do not allow enter key in drop caps
-    if (event.code === 'Enter') {
+    let handled = false;
+
+    const index = this.elements.indexOf(this.selectedElement!);
+    const htmlElement = (this.$refs[`element-${index}`] as DropCap[])[0];
+
+    switch (event.code) {
+      case 'Enter':
+        // Do not allow enter key in drop caps
+        handled = true;
+        break;
+      case 'Tab':
+        this.moveRightThrottled();
+        handled = true;
+        break;
+      case 'ArrowLeft':
+        if (getCursorPosition() === 0) {
+          this.moveLeftThrottled();
+          handled = true;
+        }
+        break;
+      case 'ArrowRight':
+        if (
+          getCursorPosition() === htmlElement.textElement.getInnerText().length
+        ) {
+          this.moveRightThrottled();
+          handled = true;
+        }
+        break;
+    }
+
+    if (handled) {
       event.preventDefault();
-      return;
     }
   }
 
@@ -2310,6 +2336,7 @@ export default class Editor extends Vue {
     ElementType.Martyria,
     ElementType.Tempo,
     ElementType.Empty,
+    ElementType.DropCap,
   ];
 
   moveLeft() {
@@ -2325,8 +2352,22 @@ export default class Editor extends Vue {
       index - 1 >= 0 &&
       this.navigableElements.includes(this.elements[index - 1].elementType)
     ) {
+      // If the currently selected element is a drop cap, blur it first
+      if (this.selectedElement?.elementType === ElementType.DropCap) {
+        (this.$refs[`element-${index}`] as DropCap[])[0].blur();
+      }
+
       this.selectedElement = this.elements[index - 1];
+
+      // If the newly selected element is a drop cap, focus it
+      if (this.selectedElement.elementType === ElementType.DropCap) {
+        (this.$refs[`element-${index - 1}`] as DropCap[])[0].focus();
+      }
+
+      return true;
     }
+
+    return false;
   }
 
   moveRight() {
@@ -2343,7 +2384,18 @@ export default class Editor extends Vue {
       index + 1 < this.elements.length &&
       this.navigableElements.includes(this.elements[index + 1].elementType)
     ) {
+      // If the currently selected element is a drop cap, blur it first
+      if (this.selectedElement?.elementType === ElementType.DropCap) {
+        (this.$refs[`element-${index}`] as DropCap[])[0].blur();
+      }
+
       this.selectedElement = this.elements[index + 1];
+
+      // If the newly selected element is a drop cap, focus it
+      if (this.selectedElement.elementType === ElementType.DropCap) {
+        (this.$refs[`element-${index + 1}`] as DropCap[])[0].focus();
+      }
+
       return true;
     }
 

@@ -89,8 +89,10 @@ Below is a list of modifiers.
 | <span class="neume"></span> | <kbd>R</kbd> +<kbd>U</kbd>                   |
 | <span class="neume"></span> | <kbd>R</kbd> +<kbd>N</kbd>                   |
 | <span class="neume"></span> | <kbd>R</kbd> +<kbd>M</kbd>                   |
+| <span class="neume"></span> | <kbd>Shift</kbd> +<kbd>R</kbd> +<kbd>M</kbd> |
 | <span class="neume"></span> | <kbd>R</kbd> +<kbd>,</kbd>                   |
 | <span class="neume"></span> | <kbd>R</kbd> +<kbd>.</kbd>                   |
+| <span class="neume"></span> | <kbd>R</kbd> +<kbd>/</kbd>                   |
 | <span class="neume"></span> | <kbd>Shift</kbd> +<kbd>F</kbd> +<kbd>J</kbd> |
 | <span class="neume"></span> | <kbd>Shift</kbd> +<kbd>F</kbd> +<kbd>N</kbd> |
 | <span class="neume"></span> | <kbd>Shift</kbd> +<kbd>F</kbd> +<kbd>M</kbd> |

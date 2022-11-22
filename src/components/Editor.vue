@@ -731,6 +731,26 @@ export default class Editor extends Vue {
     this.setVocalExpression,
   );
 
+  updateMartyriaNoteThrottled = throttle(
+    this.keydownThrottleIntervalMs,
+    this.updateMartyriaNote,
+  );
+
+  updateMartyriaScaleThrottled = throttle(
+    this.keydownThrottleIntervalMs,
+    this.updateMartyriaScale,
+  );
+
+  updateMartyriaAutoThrottled = throttle(
+    this.keydownThrottleIntervalMs,
+    this.updateMartyriaAuto,
+  );
+
+  updateMartyriaAlignRightThrottled = throttle(
+    this.keydownThrottleIntervalMs,
+    this.updateMartyriaAlignRight,
+  );
+
   onWindowResizeThrottled = throttle(250, this.onWindowResize);
 
   get selectedWorkspace() {
@@ -1330,12 +1350,18 @@ export default class Editor extends Vue {
     this.save();
   }
 
-  addAutoMartyria() {
+  addAutoMartyria(alignRight?: boolean, note?: Note) {
     if (this.selectedElement == null) {
       return;
     }
 
     const element = new MartyriaElement();
+    element.alignRight = alignRight === true;
+
+    if (note != null) {
+      element.note = note;
+      element.auto = false;
+    }
 
     switch (this.entryMode) {
       case EntryMode.Auto:
@@ -1681,10 +1707,29 @@ export default class Editor extends Vue {
         this.keyboardModifier == null &&
         this.neumeKeyboard.isMartyria(event.code)
       ) {
-        this.addAutoMartyriaThrottled();
+        handled = true;
+        this.addAutoMartyriaThrottled(event.shiftKey);
+      }
+
+      const martyriaConfigMapping =
+        this.neumeKeyboard.findMartyriaConfigMapping(
+          event,
+          this.keyboardModifier,
+        );
+
+      if (martyriaConfigMapping != null) {
+        if (martyriaConfigMapping.note != null) {
+          handled = true;
+
+          this.addAutoMartyriaThrottled(
+            martyriaConfigMapping.martyriaAlignmentToggle,
+            martyriaConfigMapping.note,
+          );
+        }
       }
 
       if (
+        !handled &&
         this.selectedElement.elementType === ElementType.Note &&
         !event.repeat
       ) {
@@ -1824,6 +1869,7 @@ export default class Editor extends Vue {
           this.setKlasmaThrottled(noteElement);
         }
       } else if (
+        !handled &&
         this.selectedElement.elementType === ElementType.Martyria &&
         !event.repeat
       ) {
@@ -1853,6 +1899,40 @@ export default class Editor extends Vue {
             martyriaElement,
             measureBarMapping.neume as MeasureBar,
           );
+        }
+
+        const martyriaConfigMapping =
+          this.neumeKeyboard.findMartyriaConfigMapping(
+            event,
+            this.keyboardModifier,
+          );
+
+        if (martyriaConfigMapping != null) {
+          handled = true;
+
+          if (martyriaConfigMapping.note != null) {
+            // This case will not currently happen
+            // because no keyboard mapping exist for it
+            this.updateMartyriaNoteThrottled(
+              martyriaElement,
+              martyriaConfigMapping.note,
+            );
+          } else if (martyriaConfigMapping.scale != null) {
+            this.updateMartyriaScaleThrottled(
+              martyriaElement,
+              martyriaConfigMapping.scale,
+            );
+          } else if (martyriaConfigMapping.martyriaAlignmentToggle === true) {
+            this.updateMartyriaAlignRightThrottled(
+              martyriaElement,
+              !martyriaElement.alignRight,
+            );
+          } else if (martyriaConfigMapping.martyriaAutoToggle === true) {
+            this.updateMartyriaAutoThrottled(
+              martyriaElement,
+              !martyriaElement.auto,
+            );
+          }
         }
       }
     }
@@ -3176,15 +3256,27 @@ export default class Editor extends Vue {
   }
 
   updateMartyriaAuto(element: MartyriaElement, auto: boolean) {
+    if (element.auto === auto) {
+      return;
+    }
+
     this.updateMartyria(element, { auto });
   }
 
   updateMartyriaNote(element: MartyriaElement, note: Note) {
-    this.updateMartyria(element, { note });
+    if (element.note === note) {
+      return;
+    }
+
+    this.updateMartyria(element, { note, auto: false });
   }
 
   updateMartyriaScale(element: MartyriaElement, scale: Scale) {
-    this.updateMartyria(element, { scale });
+    if (element.scale === scale) {
+      return;
+    }
+
+    this.updateMartyria(element, { scale, auto: false });
   }
 
   updateMartyriaSpaceAfter(element: MartyriaElement, spaceAfter: number) {

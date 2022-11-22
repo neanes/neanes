@@ -11,7 +11,9 @@ import {
   NoteIndicator,
   TempoSign,
   MeasureBar,
+  Note,
 } from '@/models/Neumes';
+import { Scale } from '@/models/Scales';
 import { NeumeMappingService } from './NeumeMappingService';
 
 interface KeyboardMapping {
@@ -20,6 +22,10 @@ interface KeyboardMapping {
   shiftKey?: boolean;
   neume?: Neume;
   neumes?: Neume[];
+  note?: Note;
+  scale?: Scale;
+  martyriaAlignmentToggle?: boolean;
+  martyriaAutoToggle?: boolean;
 }
 
 export class NeumeKeyboard {
@@ -28,7 +34,9 @@ export class NeumeKeyboard {
   private readonly modifier2 = 'KeyD';
   private readonly modifier3 = 'KeyF';
 
+  private readonly martyriaScaleKey = 'KeyZ';
   private readonly tempoKey = 'KeyX';
+  private readonly martyriaConfigKey = 'KeyC';
   private readonly vocalExpressionKey = 'KeyV';
 
   private readonly gorgonKey = 'KeyG';
@@ -56,6 +64,8 @@ export class NeumeKeyboard {
     this.noteIndicatorKey,
     this.tempoKey,
     this.kentimataKey,
+    this.martyriaConfigKey,
+    this.martyriaScaleKey,
   ];
 
   private quantitativeNeumeKeyboardMap: KeyboardMapping[] = [];
@@ -69,6 +79,7 @@ export class NeumeKeyboard {
   private noteIndicatorKeyboardMap: KeyboardMapping[] = [];
   private tempoKeyboardMap: KeyboardMapping[] = [];
   private measureBarKeyboardMap: KeyboardMapping[] = [];
+  private martyriaConfigKeyboardMap: KeyboardMapping[] = [];
 
   constructor() {
     this.initQuantitativeNeumeKeyboardMap();
@@ -82,6 +93,7 @@ export class NeumeKeyboard {
     this.initNoteIndicatorKeyboardMap();
     this.initTempoKeyboardMap();
     this.initMeasureBarKeyboardMap();
+    this.initMartyriaConfigKeyboardMap();
 
     // this.__generateDocumentation();
   }
@@ -885,6 +897,332 @@ export class NeumeKeyboard {
     });
   }
 
+  private initMartyriaConfigKeyboardMap() {
+    this.martyriaConfigKeyboardMap.push({
+      code: 'KeyJ',
+      modifier: this.martyriaConfigKey,
+      note: Note.Ni,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'KeyK',
+      modifier: this.martyriaConfigKey,
+      note: Note.Pa,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'KeyL',
+      modifier: this.martyriaConfigKey,
+      note: Note.Vou,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'Semicolon',
+      modifier: this.martyriaConfigKey,
+      note: Note.Ga,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'Quote',
+      modifier: this.martyriaConfigKey,
+      note: Note.Thi,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'KeyU',
+      modifier: this.martyriaConfigKey,
+      note: Note.Ke,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'KeyI',
+      modifier: this.martyriaConfigKey,
+      note: Note.ZoHigh,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'KeyO',
+      modifier: this.martyriaConfigKey,
+      note: Note.NiHigh,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'KeyP',
+      modifier: this.martyriaConfigKey,
+      note: Note.PaHigh,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'BracketLeft',
+      modifier: this.martyriaConfigKey,
+      note: Note.VouHigh,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'BracketRight',
+      modifier: this.martyriaConfigKey,
+      note: Note.GaHigh,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'Digit7',
+      modifier: this.martyriaConfigKey,
+      note: Note.ThiHigh,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'Digit8',
+      modifier: this.martyriaConfigKey,
+      note: Note.KeHigh,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'KeyN',
+      modifier: this.martyriaConfigKey,
+      note: Note.Zo,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'KeyM',
+      modifier: this.martyriaConfigKey,
+      note: Note.KeLow,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'Comma',
+      modifier: this.martyriaConfigKey,
+      note: Note.ThiLow,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'Period',
+      modifier: this.martyriaConfigKey,
+      note: Note.GaLow,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'Slash',
+      modifier: this.martyriaConfigKey,
+      note: Note.VouLow,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'KeyJ',
+      shiftKey: true,
+      martyriaAlignmentToggle: true,
+      modifier: this.martyriaConfigKey,
+      note: Note.Ni,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'KeyK',
+      shiftKey: true,
+      martyriaAlignmentToggle: true,
+      modifier: this.martyriaConfigKey,
+      note: Note.Pa,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'KeyL',
+      shiftKey: true,
+      martyriaAlignmentToggle: true,
+      modifier: this.martyriaConfigKey,
+      note: Note.Vou,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'Semicolon',
+      shiftKey: true,
+      martyriaAlignmentToggle: true,
+      modifier: this.martyriaConfigKey,
+      note: Note.Ga,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'Quote',
+      shiftKey: true,
+      martyriaAlignmentToggle: true,
+      modifier: this.martyriaConfigKey,
+      note: Note.Thi,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'KeyU',
+      shiftKey: true,
+      martyriaAlignmentToggle: true,
+      modifier: this.martyriaConfigKey,
+      note: Note.Ke,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'KeyI',
+      shiftKey: true,
+      martyriaAlignmentToggle: true,
+      modifier: this.martyriaConfigKey,
+      note: Note.ZoHigh,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'KeyO',
+      shiftKey: true,
+      martyriaAlignmentToggle: true,
+      modifier: this.martyriaConfigKey,
+      note: Note.NiHigh,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'KeyP',
+      shiftKey: true,
+      martyriaAlignmentToggle: true,
+      modifier: this.martyriaConfigKey,
+      note: Note.PaHigh,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'BracketLeft',
+      shiftKey: true,
+      martyriaAlignmentToggle: true,
+      modifier: this.martyriaConfigKey,
+      note: Note.VouHigh,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'BracketRight',
+      shiftKey: true,
+      martyriaAlignmentToggle: true,
+      modifier: this.martyriaConfigKey,
+      note: Note.GaHigh,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'Digit7',
+      shiftKey: true,
+      martyriaAlignmentToggle: true,
+      modifier: this.martyriaConfigKey,
+      note: Note.ThiHigh,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'Digit8',
+      shiftKey: true,
+      martyriaAlignmentToggle: true,
+      modifier: this.martyriaConfigKey,
+      note: Note.KeHigh,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'KeyN',
+      shiftKey: true,
+      martyriaAlignmentToggle: true,
+      modifier: this.martyriaConfigKey,
+      note: Note.Zo,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'KeyM',
+      shiftKey: true,
+      martyriaAlignmentToggle: true,
+      modifier: this.martyriaConfigKey,
+      note: Note.KeLow,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'Comma',
+      shiftKey: true,
+      martyriaAlignmentToggle: true,
+      modifier: this.martyriaConfigKey,
+      note: Note.ThiLow,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'Period',
+      shiftKey: true,
+      martyriaAlignmentToggle: true,
+      modifier: this.martyriaConfigKey,
+      note: Note.GaLow,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'Slash',
+      shiftKey: true,
+      martyriaAlignmentToggle: true,
+      modifier: this.martyriaConfigKey,
+      note: Note.VouLow,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'KeyJ',
+      modifier: this.martyriaScaleKey,
+      scale: Scale.Diatonic,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'KeyK',
+      modifier: this.martyriaScaleKey,
+      scale: Scale.SoftChromatic,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'KeyL',
+      modifier: this.martyriaScaleKey,
+      scale: Scale.HardChromatic,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'Semicolon',
+      modifier: this.martyriaScaleKey,
+      scale: Scale.EnharmonicGa,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'Quote',
+      modifier: this.martyriaScaleKey,
+      scale: Scale.EnharmonicVou,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'KeyU',
+      modifier: this.martyriaScaleKey,
+      scale: Scale.EnharmonicVouHigh,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'KeyI',
+      modifier: this.martyriaScaleKey,
+      scale: Scale.EnharmonicZoHigh,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'KeyO',
+      modifier: this.martyriaScaleKey,
+      scale: Scale.Zygos,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'KeyP',
+      modifier: this.martyriaScaleKey,
+      scale: Scale.Spathi,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'BracketLeft',
+      modifier: this.martyriaScaleKey,
+      scale: Scale.Kliton,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: this.martyriaKey,
+      modifier: this.martyriaConfigKey,
+      martyriaAlignmentToggle: true,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'KeyH',
+      modifier: this.martyriaConfigKey,
+      martyriaAutoToggle: true,
+    });
+  }
+
   private initTempoKeyboardMap() {
     this.tempoKeyboardMap.push({
       code: 'KeyJ',
@@ -1255,5 +1593,16 @@ export class NeumeKeyboard {
     activeModifier: string | null,
   ) {
     return this.findMapping(this.measureBarKeyboardMap, event, activeModifier);
+  }
+
+  public findMartyriaConfigMapping(
+    event: KeyboardEvent,
+    activeModifier: string | null,
+  ) {
+    return this.findMapping(
+      this.martyriaConfigKeyboardMap,
+      event,
+      activeModifier,
+    );
   }
 }

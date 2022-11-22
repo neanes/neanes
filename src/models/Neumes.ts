@@ -259,10 +259,12 @@ export enum Accidental {
   Sharp_2_Left = 'Sharp_2_Left',
   Sharp_4_Left = 'Sharp_4_Left',
   Sharp_6_Left = 'Sharp_6_Left',
+  Sharp_8_Left = 'Sharp_8_Left',
 
   Flat_2_Right = 'Flat_2_Right',
   Flat_4_Right = 'Flat_4_Right',
   Flat_6_Right = 'Flat_6_Right',
+  Flat_8_Right = 'Flat_8_Right',
 }
 
 export enum MeasureBar {

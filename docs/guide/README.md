@@ -86,7 +86,7 @@ There are three modes of neume entry.
 - Insert Mode
 - Single Edit Mode
 
-To change the entry mode, click the `Auto`, `Insert`, or `Single` buttons in the main toolbar.
+To change the entry mode, click the `Auto`, `Insert`, or `Single` buttons in the main toolbar. You may also use the keyboard shortcuts <kbd>Ctrl</kbd>+<kbd>U</kbd> and <kbd>Ctrl</kbd>+<kbd>I</kbd> to cycle through the modes left and right, respectively.
 
 ![Main Toolbar Entry Mode](./images/guide-main-toolbar-entry-mode.png)
 
@@ -160,7 +160,7 @@ A small symbol will appear above the neume to indicate the break.
 
 ## Drop Caps
 
-Drop Caps may be inserted through the main menu by clicking `Insert -> Drop Cap` or by pressing the `Drop Caps` button in the main toolbar.
+Drop Caps may be inserted through the main menu by clicking `Insert -> Drop Cap`, or by pressing the `Drop Caps` button in the main toolbar, or by pressing <kbd>Ctrl</kbd>+<kbd>D</kbd>.
 
 ![Main Toolbar Drop Caps](./images/guide-main-toolbar-drop-caps.png)
 

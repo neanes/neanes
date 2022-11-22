@@ -1613,6 +1613,32 @@ export default class Editor extends Vue {
         this.onPasteScoreElementsThrottled();
         event.preventDefault();
         return;
+      } else if (event.code === 'KeyI') {
+        switch (this.entryMode) {
+          case EntryMode.Auto:
+            this.updateEntryMode(EntryMode.Insert);
+            break;
+          case EntryMode.Insert:
+            this.updateEntryMode(EntryMode.Edit);
+            break;
+          case EntryMode.Edit:
+            this.updateEntryMode(EntryMode.Auto);
+            break;
+        }
+        return;
+      } else if (event.code === 'KeyU') {
+        switch (this.entryMode) {
+          case EntryMode.Auto:
+            this.updateEntryMode(EntryMode.Edit);
+            break;
+          case EntryMode.Edit:
+            this.updateEntryMode(EntryMode.Insert);
+            break;
+          case EntryMode.Insert:
+            this.updateEntryMode(EntryMode.Auto);
+            break;
+        }
+        return;
       }
     }
 

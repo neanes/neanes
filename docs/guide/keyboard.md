@@ -34,7 +34,9 @@ Below is a list of modifiers.
 | <kbd> D </kbd> | Quantity Modifier 2 |
 | <kbd> F </kbd> | Quantity Modifier 3 |
 | <kbd> G </kbd> | Gorgons             |
+| <kbd> Z </kbd> | Martyria 1          |
 | <kbd> X </kbd> | Tempo               |
+| <kbd> C </kbd> | Martyria 2          |
 | <kbd> V </kbd> | Quality             |
 | <kbd> B </kbd> | Apli                |
 

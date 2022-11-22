@@ -3803,7 +3803,6 @@ export default class Editor extends Vue {
       workspace.filePath = args.filePath;
       workspace.tempFileName = this.getTempFilename();
       workspace.score = score;
-      workspace.entryMode = EntryMode.Edit;
 
       this.workspaces.push(workspace);
 

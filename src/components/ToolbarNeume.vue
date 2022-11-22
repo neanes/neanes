@@ -222,6 +222,15 @@
         <div class="menu" v-if="showFlatMenu">
           <div
             class="menu-item"
+            @mouseenter="selectedFlat = Accidental.Flat_8_Right"
+          >
+            <img
+              draggable="false"
+              src="@/assets/icons/alteration-yfesis8.svg"
+            />
+          </div>
+          <div
+            class="menu-item"
             @mouseenter="selectedFlat = Accidental.Flat_6_Right"
           >
             <img
@@ -258,6 +267,15 @@
           <img draggable="false" src="@/assets/icons/alteration-diesis2.svg" />
         </button>
         <div class="menu" v-if="showSharpMenu">
+          <div
+            class="menu-item"
+            @mouseenter="selectedSharp = Accidental.Sharp_8_Left"
+          >
+            <img
+              draggable="false"
+              src="@/assets/icons/alteration-diesis8.svg"
+            />
+          </div>
           <div
             class="menu-item"
             @mouseenter="selectedSharp = Accidental.Sharp_6_Left"

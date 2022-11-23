@@ -16,7 +16,7 @@ import {
   VocalExpressionNeume,
 } from '../models/Neumes';
 
-describe('NeumeMappings', () => {
+describe('NeumeMappingsService', () => {
   it('should have a mapping for every neume', () => {
     Object.values(QuantitativeNeume).forEach((x) => {
       expect(NeumeMappingService.getMapping(x)).toBeDefined();

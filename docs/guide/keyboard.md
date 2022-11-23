@@ -233,9 +233,11 @@ The scale on an existing martyria may be updated with the following shortcuts.
 | <span class="neume"></span> | <kbd>E</kbd> +<kbd>J</kbd> |
 | <span class="neume"></span> | <kbd>E</kbd> +<kbd>K</kbd> |
 | <span class="neume"></span> | <kbd>E</kbd> +<kbd>L</kbd> |
+| <span class="neume"></span> | <kbd>E</kbd> +<kbd>;</kbd> |
 | <span class="neume"></span> | <kbd>E</kbd> +<kbd>U</kbd> |
 | <span class="neume"></span> | <kbd>E</kbd> +<kbd>I</kbd> |
 | <span class="neume"></span> | <kbd>E</kbd> +<kbd>O</kbd> |
+| <span class="neume"></span> | <kbd>E</kbd> +<kbd>P</kbd> |
 
 ## Ison Indicators
 

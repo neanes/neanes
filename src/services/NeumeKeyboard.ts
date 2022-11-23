@@ -723,6 +723,12 @@ export class NeumeKeyboard {
     });
 
     this.accidentalKeyboardMap.push({
+      code: 'Semicolon',
+      modifier: this.accidentalKey,
+      neume: Accidental.Flat_8_Right,
+    });
+
+    this.accidentalKeyboardMap.push({
       code: 'KeyU',
       modifier: this.accidentalKey,
       neume: Accidental.Sharp_2_Left,
@@ -738,6 +744,12 @@ export class NeumeKeyboard {
       code: 'KeyO',
       modifier: this.accidentalKey,
       neume: Accidental.Sharp_6_Left,
+    });
+
+    this.accidentalKeyboardMap.push({
+      code: 'KeyP',
+      modifier: this.accidentalKey,
+      neume: Accidental.Sharp_8_Left,
     });
   }
 

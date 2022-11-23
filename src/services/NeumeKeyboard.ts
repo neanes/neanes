@@ -701,6 +701,24 @@ export class NeumeKeyboard {
       modifier: this.fthoraKey,
       neumes: [Fthora.GeneralSharp_Top, Fthora.GeneralSharp_Bottom],
     });
+
+    this.fthoraKeyboardMap.push({
+      code: 'Digit7',
+      modifier: this.fthoraKey,
+      neumes: [Fthora.Zygos_Top, Fthora.Zygos_Bottom],
+    });
+
+    this.fthoraKeyboardMap.push({
+      code: 'Digit8',
+      modifier: this.fthoraKey,
+      neumes: [Fthora.Kliton_Top, Fthora.Kliton_Bottom],
+    });
+
+    this.fthoraKeyboardMap.push({
+      code: 'Digit9',
+      modifier: this.fthoraKey,
+      neumes: [Fthora.Spathi_Top],
+    });
   }
 
   private initAccidentalKeyboardMap() {
@@ -1544,6 +1562,24 @@ export class NeumeKeyboard {
       this.quantitativeNeumeKeyboardMap,
       event,
       activeModifier,
+    );
+  }
+
+  public findMappingForNeume(neume: Neume) {
+    return (
+      this.quantitativeNeumeKeyboardMap.find((x) => x.neume === neume) ||
+      this.gorgonKeyboardMap.find((x) => x.neumes?.includes(neume)) ||
+      this.isonKeyboardMap.find((x) => x.neume === neume) ||
+      this.accidentalKeyboardMap.find((x) => x.neume === neume) ||
+      this.hapliKeyboardMap.find((x) => x.neume === neume) ||
+      this.tempoKeyboardMap.find((x) => x.neume === neume) ||
+      this.fthoraKeyboardMap.find((x) => x.neumes?.includes(neume)) ||
+      this.measureBarKeyboardMap.find((x) => x.neume === neume) ||
+      this.measureNumberKeyboardMap.find((x) => x.neume === neume) ||
+      this.martyriaConfigKeyboardMap.find((x) => x.note === neume) ||
+      this.vocalExpressionKeyboardMap.find((x) => x.neume === neume) ||
+      this.quantitativeNeumeKeyboardMap.find((x) => x.neume === neume) ||
+      this.noteIndicatorKeyboardMap.find((x) => x.neume === neume)
     );
   }
 

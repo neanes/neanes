@@ -226,7 +226,7 @@ The scale on an existing martyria may be updated with the following shortcuts.
 | <span class="neume"></span> | <kbd>T</kbd> +<kbd>[</kbd> |
 | <span class="neume"></span> | <kbd>T</kbd> +<kbd>]</kbd> |
 | <span class="neume"></span> | <kbd>T</kbd> +<kbd>7</kbd> |
-| <span class="neume"></span> | <kbd>T</kbd> +<kbd>8</kbd> |
+| <span class="neume"></span> | <kbd>T</kbd> +<kbd>8</kbd> |
 | <span class="neume"></span> | <kbd>T</kbd> +<kbd>9</kbd> |
 
 ## Signs of Alteration

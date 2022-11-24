@@ -83,7 +83,10 @@ export default class NeumeBoxSyllablePrint extends Vue {
   get hasHeteron() {
     return (
       this.note.vocalExpressionNeume == VocalExpressionNeume.Heteron ||
-      this.note.vocalExpressionNeume === VocalExpressionNeume.HeteronConnecting
+      this.note.vocalExpressionNeume ===
+        VocalExpressionNeume.HeteronConnecting ||
+      this.note.vocalExpressionNeume ===
+        VocalExpressionNeume.HeteronConnectingLong
     );
   }
 

@@ -148,8 +148,8 @@
         0.175
       ],
       "heteronConnecting": [
-        1.462,
-        0.139
+        1.763,
+        0.162
       ],
       "heteron": [
         1.087,
@@ -5272,6 +5272,22 @@
     }
   },
   "glyphsWithAlternates": {
+    "psifiston": {
+      "alternates": [
+        {
+          "codepoint": "U+F006",
+          "name": "psifiston.salt01"
+        }
+      ]
+    },
+    "heteronConnecting": {
+      "alternates": [
+        {
+          "codepoint": "U+F007",
+          "name": "heteronConnecting.salt01"
+        }
+      ]
+    },
     "modeFourth": {
       "alternates": [
         {

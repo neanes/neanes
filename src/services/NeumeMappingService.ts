@@ -284,8 +284,14 @@ mapNeumeToSbmufl(VocalExpressionNeume.HomalonConnecting, 'omalonConnecting');
 mapNeumeToSbmufl(VocalExpressionNeume.Homalon, 'omalon');
 mapNeumeToSbmufl(VocalExpressionNeume.Antikenoma, 'antikenoma');
 mapNeumeToSbmufl(VocalExpressionNeume.Psifiston, 'psifiston');
+mapNeumeToSbmufl(VocalExpressionNeume.PsifistonSlanted, 'psifiston', 1);
 mapNeumeToSbmufl(VocalExpressionNeume.Heteron, 'heteron');
 mapNeumeToSbmufl(VocalExpressionNeume.HeteronConnecting, 'heteronConnecting');
+mapNeumeToSbmufl(
+  VocalExpressionNeume.HeteronConnectingLong,
+  'heteronConnecting',
+  1,
+);
 mapNeumeToSbmufl(RootSign.Delta, 'martyriaDeltaBelow');
 mapNeumeToSbmufl(RootSign.Alpha, 'martyriaAlphaBelow');
 mapNeumeToSbmufl(RootSign.Legetos, 'martyriaLegetosBelow');

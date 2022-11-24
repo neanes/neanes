@@ -15,6 +15,7 @@ import {
   MeasureBar,
   Neume,
   Note,
+  NoteIndicator,
   QuantitativeNeume,
   RootSign,
   VocalExpressionNeume,
@@ -946,6 +947,9 @@ export class LayoutService {
       if (element.elementType === ElementType.Note) {
         const note = element as NoteElement;
         currentNote += getNeumeValue(note.quantitativeNeume)!;
+        note.noteIndicatorNeume = noteIndicatorMap.get(
+          ((currentNote % 7) + 7) % 7,
+        )!;
 
         if (note.fthora) {
           if (this.fthoraIsValid(note.fthora, currentNote)) {
@@ -1270,6 +1274,16 @@ const noteMap = new Map<number, Note>([
   [9, Note.GaHigh],
   [10, Note.ThiHigh],
   [11, Note.KeHigh],
+]);
+
+const noteIndicatorMap = new Map<number, NoteIndicator>([
+  [0, NoteIndicator.Pa],
+  [1, NoteIndicator.Vou],
+  [2, NoteIndicator.Ga],
+  [3, NoteIndicator.Thi],
+  [4, NoteIndicator.Ke],
+  [5, NoteIndicator.Zo],
+  [6, NoteIndicator.Ni],
 ]);
 
 const reverseNoteMap = new Map<Note, number>();

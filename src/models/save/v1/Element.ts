@@ -47,7 +47,7 @@ export class NoteElement extends ScoreElement {
   // New name: measureBarRight
   public measureBar: MeasureBar | undefined = undefined;
   public measureNumber: MeasureNumber | undefined = undefined;
-  public noteIndicator: NoteIndicator | undefined = undefined;
+  public noteIndicator: boolean | undefined = undefined;
   public ison: Ison | undefined = undefined;
   public vareia: boolean | undefined = undefined;
   public lyrics: string | undefined = undefined;

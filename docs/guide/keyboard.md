@@ -260,15 +260,7 @@ The scale on an existing martyria may be updated with the following shortcuts.
 
 ## Note Indicators
 
-| Neume                        | Keyboard Shortcut          |
-| ---------------------------- | -------------------------- |
-| <span class="neume"></span> | <kbd>Q</kbd> +<kbd>J</kbd> |
-| <span class="neume"></span> | <kbd>Q</kbd> +<kbd>K</kbd> |
-| <span class="neume"></span> | <kbd>Q</kbd> +<kbd>L</kbd> |
-| <span class="neume"></span> | <kbd>Q</kbd> +<kbd>;</kbd> |
-| <span class="neume"></span> | <kbd>Q</kbd> +<kbd>'</kbd> |
-| <span class="neume"></span> | <kbd>Q</kbd> +<kbd>U</kbd> |
-| <span class="neume"></span> | <kbd>Q</kbd> +<kbd>I</kbd> |
+Note indicators can be toggled on and off with <kbd>Q</kbd>. The correct note is automatically calculated and displayed.
 
 ## Measures
 

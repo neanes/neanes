@@ -404,59 +404,12 @@
           </div>
         </div>
       </div>
-      <div
-        class="menu-container"
-        @mousedown="openNoteIndicatorMenu"
-        @mouseleave="selectedNoteIndicator = null"
+      <button
+        class="neume-button"
+        @click="$emit('update:noteIndicator', !element.noteIndicator)"
       >
-        <button class="neume-button">
-          <img draggable="false" src="@/assets/icons/note-ni.svg" />
-        </button>
-        <div class="menu" v-if="showNoteIndicatorMenu">
-          <div
-            class="menu-item"
-            @mouseenter="selectedNoteIndicator = NoteIndicator.Zo"
-          >
-            <img draggable="false" src="@/assets/icons/note-zo.svg" />
-          </div>
-          <div
-            class="menu-item"
-            @mouseenter="selectedNoteIndicator = NoteIndicator.Ke"
-          >
-            <img draggable="false" src="@/assets/icons/note-ke.svg" />
-          </div>
-          <div
-            class="menu-item"
-            @mouseenter="selectedNoteIndicator = NoteIndicator.Thi"
-          >
-            <img draggable="false" src="@/assets/icons/note-di.svg" />
-          </div>
-          <div
-            class="menu-item"
-            @mouseenter="selectedNoteIndicator = NoteIndicator.Ga"
-          >
-            <img draggable="false" src="@/assets/icons/note-ga.svg" />
-          </div>
-          <div
-            class="menu-item"
-            @mouseenter="selectedNoteIndicator = NoteIndicator.Vou"
-          >
-            <img draggable="false" src="@/assets/icons/note-vou.svg" />
-          </div>
-          <div
-            class="menu-item"
-            @mouseenter="selectedNoteIndicator = NoteIndicator.Pa"
-          >
-            <img draggable="false" src="@/assets/icons/note-pa.svg" />
-          </div>
-          <div
-            class="menu-item"
-            @mouseenter="selectedNoteIndicator = NoteIndicator.Ni"
-          >
-            <img draggable="false" src="@/assets/icons/note-ni.svg" />
-          </div>
-        </div>
-      </div>
+        <img draggable="false" src="@/assets/icons/note-ni.svg" />
+      </button>
       <div
         class="menu-container"
         @mousedown="openIsonMenu"
@@ -710,7 +663,6 @@ import {
   Ison,
   MeasureBar,
   MeasureNumber,
-  NoteIndicator,
   TimeNeume,
   VocalExpressionNeume,
 } from '@/models/Neumes';
@@ -732,7 +684,6 @@ export default class ToolbarNeume extends Vue {
   Fthora = Fthora;
   MeasureBar = MeasureBar;
   MeasureNumber = MeasureNumber;
-  NoteIndicator = NoteIndicator;
   Ison = Ison;
 
   showFlatMenu: boolean = false;
@@ -743,7 +694,6 @@ export default class ToolbarNeume extends Vue {
   showTimeMenu: boolean = false;
   showBarLineMenu: boolean = false;
   showMeasureNumberMenu: boolean = false;
-  showNoteIndicatorMenu: boolean = false;
   showIsonMenu: boolean = false;
 
   selectedFlat: Accidental | null = null;
@@ -752,7 +702,6 @@ export default class ToolbarNeume extends Vue {
   selectedTimeNeume: TimeNeume | null = null;
   selectedBarLine: MeasureBar | null = null;
   selectedMeasureNumber: MeasureNumber | null = null;
-  selectedNoteIndicator: NoteIndicator | null = null;
   selectedIson: Ison | null = null;
 
   beforeDestroy() {
@@ -764,7 +713,6 @@ export default class ToolbarNeume extends Vue {
     window.removeEventListener('mouseup', this.onTimeMouseUp);
     window.removeEventListener('mouseup', this.onBarLineMouseUp);
     window.removeEventListener('mouseup', this.onMeasureNumberMouseUp);
-    window.removeEventListener('mouseup', this.onNoteIndicatorMouseUp);
     window.removeEventListener('mouseup', this.onIsonMouseUp);
   }
 
@@ -890,21 +838,6 @@ export default class ToolbarNeume extends Vue {
     this.showMeasureNumberMenu = false;
 
     window.removeEventListener('mouseup', this.onMeasureNumberMouseUp);
-  }
-
-  openNoteIndicatorMenu() {
-    this.showNoteIndicatorMenu = true;
-    window.addEventListener('mouseup', this.onNoteIndicatorMouseUp);
-  }
-
-  onNoteIndicatorMouseUp() {
-    if (this.selectedNoteIndicator) {
-      this.$emit('update:noteIndicator', this.selectedNoteIndicator);
-    }
-
-    this.showNoteIndicatorMenu = false;
-
-    window.removeEventListener('mouseup', this.onNoteIndicatorMouseUp);
   }
 
   openIsonMenu() {

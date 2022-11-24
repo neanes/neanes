@@ -299,7 +299,6 @@ export class SaveService {
     }
 
     if (e.noteIndicator != null) {
-      element.noteIndicator = e.noteIndicator;
       element.noteIndicatorOffsetX = e.noteIndicatorOffsetX || undefined;
       element.noteIndicatorOffsetY = e.noteIndicatorOffsetY || undefined;
     }
@@ -316,6 +315,7 @@ export class SaveService {
     }
 
     element.vareia = e.vareia || undefined;
+    element.noteIndicator = e.noteIndicator || undefined;
 
     element.lyrics = e.lyrics !== '' ? e.lyrics : undefined;
     element.isMelisma = e.isMelisma || undefined;
@@ -690,8 +690,11 @@ export class SaveService {
       element.measureNumberOffsetY = e.measureNumberOffsetY || null;
     }
 
-    if (e.noteIndicator != null) {
-      element.noteIndicator = e.noteIndicator;
+    // For backwards compatibility, noteIndicator used to be a string | undefined
+    element.noteIndicator =
+      e.noteIndicator !== undefined && e.noteIndicator !== false;
+
+    if (element.noteIndicator) {
       element.noteIndicatorOffsetX = e.noteIndicatorOffsetX || null;
       element.noteIndicatorOffsetY = e.noteIndicatorOffsetY || null;
     }

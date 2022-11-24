@@ -8,7 +8,6 @@ import {
   VocalExpressionNeume,
   MeasureNumber,
   Ison,
-  NoteIndicator,
   TempoSign,
   MeasureBar,
   Note,
@@ -61,7 +60,6 @@ export class NeumeKeyboard {
     this.accidentalKey,
     this.hapliKey,
     this.isonKey,
-    this.noteIndicatorKey,
     this.tempoKey,
     this.kentimataKey,
     this.martyriaConfigKey,
@@ -76,7 +74,6 @@ export class NeumeKeyboard {
   private hapliKeyboardMap: KeyboardMapping[] = [];
   private measureNumberKeyboardMap: KeyboardMapping[] = [];
   private isonKeyboardMap: KeyboardMapping[] = [];
-  private noteIndicatorKeyboardMap: KeyboardMapping[] = [];
   private tempoKeyboardMap: KeyboardMapping[] = [];
   private measureBarKeyboardMap: KeyboardMapping[] = [];
   private martyriaConfigKeyboardMap: KeyboardMapping[] = [];
@@ -90,7 +87,6 @@ export class NeumeKeyboard {
     this.initHapliKeyboardMap();
     this.initMeasureNumberKeyboardMap();
     this.initIsonKeyboardMap();
-    this.initNoteIndicatorKeyboardMap();
     this.initTempoKeyboardMap();
     this.initMeasureBarKeyboardMap();
     this.initMartyriaConfigKeyboardMap();
@@ -896,50 +892,6 @@ export class NeumeKeyboard {
     });
   }
 
-  private initNoteIndicatorKeyboardMap() {
-    this.noteIndicatorKeyboardMap.push({
-      code: 'KeyJ',
-      modifier: this.noteIndicatorKey,
-      neume: NoteIndicator.Ni,
-    });
-
-    this.noteIndicatorKeyboardMap.push({
-      code: 'KeyK',
-      modifier: this.noteIndicatorKey,
-      neume: NoteIndicator.Pa,
-    });
-
-    this.noteIndicatorKeyboardMap.push({
-      code: 'KeyL',
-      modifier: this.noteIndicatorKey,
-      neume: NoteIndicator.Vou,
-    });
-
-    this.noteIndicatorKeyboardMap.push({
-      code: 'Semicolon',
-      modifier: this.noteIndicatorKey,
-      neume: NoteIndicator.Ga,
-    });
-
-    this.noteIndicatorKeyboardMap.push({
-      code: 'Quote',
-      modifier: this.noteIndicatorKey,
-      neume: NoteIndicator.Thi,
-    });
-
-    this.noteIndicatorKeyboardMap.push({
-      code: 'KeyU',
-      modifier: this.noteIndicatorKey,
-      neume: NoteIndicator.Ke,
-    });
-
-    this.noteIndicatorKeyboardMap.push({
-      code: 'KeyI',
-      modifier: this.noteIndicatorKey,
-      neume: NoteIndicator.Zo,
-    });
-  }
-
   private initMartyriaConfigKeyboardMap() {
     this.martyriaConfigKeyboardMap.push({
       code: 'KeyJ',
@@ -1476,12 +1428,6 @@ export class NeumeKeyboard {
 
     this.__generateMappingTableForDocs(
       result,
-      'Note Indicators',
-      this.noteIndicatorKeyboardMap,
-    );
-
-    this.__generateMappingTableForDocs(
-      result,
       'Measures',
       this.measureNumberKeyboardMap.concat(this.measureBarKeyboardMap),
     );
@@ -1554,6 +1500,10 @@ export class NeumeKeyboard {
     return this.klasmaKey === code;
   }
 
+  public isNoteIndicator(code: string) {
+    return this.noteIndicatorKey === code;
+  }
+
   public findQuantitativeMapping(
     event: KeyboardEvent,
     activeModifier: string | null,
@@ -1578,8 +1528,7 @@ export class NeumeKeyboard {
       this.measureNumberKeyboardMap.find((x) => x.neume === neume) ||
       this.martyriaConfigKeyboardMap.find((x) => x.note === neume) ||
       this.vocalExpressionKeyboardMap.find((x) => x.neume === neume) ||
-      this.quantitativeNeumeKeyboardMap.find((x) => x.neume === neume) ||
-      this.noteIndicatorKeyboardMap.find((x) => x.neume === neume)
+      this.quantitativeNeumeKeyboardMap.find((x) => x.neume === neume)
     );
   }
 
@@ -1632,17 +1581,6 @@ export class NeumeKeyboard {
 
   public findIsonMapping(event: KeyboardEvent, activeModifier: string | null) {
     return this.findMapping(this.isonKeyboardMap, event, activeModifier);
-  }
-
-  public findNoteIndicatorMapping(
-    event: KeyboardEvent,
-    activeModifier: string | null,
-  ) {
-    return this.findMapping(
-      this.noteIndicatorKeyboardMap,
-      event,
-      activeModifier,
-    );
   }
 
   public findTempoMapping(event: KeyboardEvent, activeModifier: string | null) {

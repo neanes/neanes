@@ -389,7 +389,7 @@
         @update:expression="setVocalExpression(selectedElement, $event)"
         @update:measureBar="setMeasureBarNote(selectedElement, $event)"
         @update:measureNumber="setMeasureNumber(selectedElement, $event)"
-        @update:noteIndicator="setNoteIndicator(selectedElement, $event)"
+        @update:noteIndicator="updateNoteNoteIndicator(selectedElement, $event)"
         @update:ison="setIson(selectedElement, $event)"
         @update:vareia="updateNoteVareia(selectedElement, $event)"
         @update:spaceAfter="updateNoteSpaceAfter(selectedElement, $event)"
@@ -720,10 +720,6 @@ export default class Editor extends Vue {
     this.setMeasureBarMartyria,
   );
   setIsonThrottled = throttle(this.keydownThrottleIntervalMs, this.setIson);
-  setNoteIndicatorThrottled = throttle(
-    this.keydownThrottleIntervalMs,
-    this.setNoteIndicator,
-  );
   setVocalExpressionThrottled = throttle(
     this.keydownThrottleIntervalMs,
     this.setVocalExpression,
@@ -747,6 +743,16 @@ export default class Editor extends Vue {
   updateMartyriaAlignRightThrottled = throttle(
     this.keydownThrottleIntervalMs,
     this.updateMartyriaAlignRight,
+  );
+
+  updateNoteNoteIndicatorThrottled = throttle(
+    this.keydownThrottleIntervalMs,
+    this.updateNoteNoteIndicator,
+  );
+
+  updateNoteVareiaThrottled = throttle(
+    this.keydownThrottleIntervalMs,
+    this.updateNoteVareia,
   );
 
   onWindowResizeThrottled = throttle(250, this.onWindowResize);
@@ -1782,7 +1788,7 @@ export default class Editor extends Vue {
           handled = true;
 
           if (vocalExpressionMapping.neume === VocalExpressionNeume.Vareia) {
-            this.updateNoteVareia(noteElement, !noteElement.vareia);
+            this.updateNoteVareiaThrottled(noteElement, !noteElement.vareia);
           } else {
             this.setVocalExpression(
               noteElement,
@@ -1867,20 +1873,6 @@ export default class Editor extends Vue {
           this.setIsonThrottled(noteElement, isonMapping.neume as Ison);
         }
 
-        const noteIndicatorMapping =
-          this.neumeKeyboard.findNoteIndicatorMapping(
-            event,
-            this.keyboardModifier,
-          );
-
-        if (noteIndicatorMapping != null) {
-          handled = true;
-          this.setNoteIndicatorThrottled(
-            noteElement,
-            noteIndicatorMapping.neume as NoteIndicator,
-          );
-        }
-
         if (
           this.keyboardModifier == null &&
           this.neumeKeyboard.isMartyria(event.code)
@@ -1891,6 +1883,11 @@ export default class Editor extends Vue {
           this.neumeKeyboard.isKlasma(event.code)
         ) {
           this.setKlasmaThrottled(noteElement);
+        }else if (
+          this.keyboardModifier == null &&
+          this.neumeKeyboard.isNoteIndicator(event.code)
+        ) {
+          this.updateNoteNoteIndicatorThrottled(noteElement, !noteElement.noteIndicator);
         }
       } else if (
         !handled &&
@@ -2933,14 +2930,6 @@ export default class Editor extends Vue {
     }
   }
 
-  private setNoteIndicator(element: NoteElement, neume: NoteIndicator) {
-    if (neume === element.noteIndicator) {
-      this.updateNoteNoteIndicator(element, null);
-    } else {
-      this.updateNoteNoteIndicator(element, neume);
-    }
-  }
-
   private setVocalExpression(
     element: NoteElement,
     neume: VocalExpressionNeume,
@@ -3065,10 +3054,7 @@ export default class Editor extends Vue {
     this.save();
   }
 
-  updateNoteNoteIndicator(
-    element: NoteElement,
-    noteIndicator: NoteIndicator | null,
-  ) {
+  updateNoteNoteIndicator(element: NoteElement, noteIndicator: boolean) {
     this.updateNote(element, { noteIndicator });
     this.save();
   }

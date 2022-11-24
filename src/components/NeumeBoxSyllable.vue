@@ -34,8 +34,8 @@
       :style="accidentalStyle"
     />
     <Neume
-      v-if="hasNoteIndicator"
-      :neume="note.noteIndicator"
+      v-if="note.noteIndicator"
+      :neume="note.noteIndicatorNeume"
       :style="noteIndicatorStyle"
     />
     <Neume v-if="hasIson" :neume="note.ison" :style="isonStyle" />
@@ -105,10 +105,6 @@ export default class NeumeBoxSyllable extends Vue {
 
   get hasMeasureNumber() {
     return this.note.measureNumber != null;
-  }
-
-  get hasNoteIndicator() {
-    return this.note.noteIndicator != null;
   }
 
   get hasIson() {

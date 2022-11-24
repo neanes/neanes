@@ -530,7 +530,7 @@ export abstract class TestFileGenerator {
 
       const note = new NoteElement();
       note.quantitativeNeume = quantitativeNeume;
-      note.noteIndicator = NoteIndicator.Ni;
+      note.noteIndicator = true;
       note.lyrics = (counter++).toString();
       elements.push(note);
     }

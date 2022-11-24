@@ -91,12 +91,6 @@ describe('NeumeKeyboard', () => {
         expect(keyboard.findMappingForNeume(x)?.neume).toBe(x);
       });
 
-    Object.values(NoteIndicator)
-      .filter((x) => !exceptions.includes(x))
-      .forEach((x) => {
-        expect(keyboard.findMappingForNeume(x)?.neume).toBe(x);
-      });
-
     Object.values(Ison)
       .filter((x) => !exceptions.includes(x))
       .forEach((x) => {

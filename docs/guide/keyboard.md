@@ -24,7 +24,7 @@ Below is a list of modifiers.
 
 | Key            | Description         |
 | -------------- | ------------------- |
-| <kbd> Q </kbd> | Ison Indicators     |
+| <kbd> Q </kbd> | Note Indicators     |
 | <kbd> W </kbd> | Measure Bars        |
 | <kbd> E </kbd> | Signs of Alteration |
 | <kbd> R </kbd> | Kentimata           |

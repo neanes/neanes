@@ -56,7 +56,7 @@ export class NoteElement extends ScoreElement {
   public measureBarLeft: MeasureBar | null = null;
   public measureBarRight: MeasureBar | null = null;
   public measureNumber: MeasureNumber | null = null;
-  public noteIndicator: NoteIndicator | null = null;
+  public noteIndicator: boolean = false;
   public ison: Ison | null = null;
   public vareia: boolean = false;
   public lyrics: string = '';
@@ -218,6 +218,7 @@ export class NoteElement extends ScoreElement {
   public lyricsHorizontalOffset: number = 0;
   public neumeWidth: number = 0;
   public lyricsWidth: number = 0;
+  public noteIndicatorNeume: NoteIndicator | null = null;
 
   private _quantitativeNeume: QuantitativeNeume = QuantitativeNeume.Ison;
   private _timeNeume: TimeNeume | null = null;

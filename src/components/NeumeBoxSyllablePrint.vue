@@ -37,8 +37,8 @@
       :style="accidentalStyle"
     />
     <Neume
-      v-if="hasNoteIndicator"
-      :neume="note.noteIndicator"
+      v-if="note.noteIndicator"
+      :neume="note.noteIndicatorNeume"
       :style="noteIndicatorStyle"
     />
     <Neume v-if="hasIson" :neume="note.ison" :style="isonStyle" />
@@ -120,10 +120,6 @@ export default class NeumeBoxSyllablePrint extends Vue {
 
   get hasMeasureNumber() {
     return this.note.measureNumber != null;
-  }
-
-  get hasNoteIndicator() {
-    return this.note.noteIndicator != null;
   }
 
   get hasIson() {
@@ -280,7 +276,7 @@ export default class NeumeBoxSyllablePrint extends Vue {
   }
 
   get noteIndicatorStyle() {
-    const offset = this.getOffset(this.note.noteIndicator!);
+    const offset = this.getOffset(this.note.noteIndicatorNeume!);
 
     offset.x += this.note.noteIndicatorOffsetX || 0;
     offset.y += this.note.noteIndicatorOffsetY || 0;

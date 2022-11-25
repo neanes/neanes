@@ -17,8 +17,11 @@ import {
 } from '@/models/Neumes';
 
 import glyphnames from '@/assets/fonts/sbmufl/glyphnames.json';
+import metadata from '@/assets/fonts/neanes.metadata.json';
 
-export type SbmuflGlyphName = keyof typeof glyphnames;
+export type SbmuflGlyphName =
+  | keyof typeof glyphnames
+  | keyof typeof metadata.optionalGlyphs;
 
 export interface NeumeMapping {
   glyphName: SbmuflGlyphName;
@@ -31,6 +34,12 @@ const glyphNameToCodepointMap = new Map<string, string>();
 
 for (let glyph in glyphnames) {
   const data: { codepoint: string } = (glyphnames as any)[glyph];
+  const codepoint = Number('0x' + data.codepoint.substring(2));
+  glyphNameToCodepointMap.set(glyph, String.fromCodePoint(codepoint));
+}
+
+for (let glyph in metadata.optionalGlyphs) {
+  const data: { codepoint: string } = (metadata.optionalGlyphs as any)[glyph];
   const codepoint = Number('0x' + data.codepoint.substring(2));
   glyphNameToCodepointMap.set(glyph, String.fromCodePoint(codepoint));
 }
@@ -284,14 +293,14 @@ mapNeumeToSbmufl(VocalExpressionNeume.HomalonConnecting, 'omalonConnecting');
 mapNeumeToSbmufl(VocalExpressionNeume.Homalon, 'omalon');
 mapNeumeToSbmufl(VocalExpressionNeume.Antikenoma, 'antikenoma');
 mapNeumeToSbmufl(VocalExpressionNeume.Psifiston, 'psifiston');
-mapNeumeToSbmufl(VocalExpressionNeume.PsifistonSlanted, 'psifiston', 1);
+mapNeumeToSbmufl(VocalExpressionNeume.PsifistonSlanted, 'psifiston.salt01');
 mapNeumeToSbmufl(VocalExpressionNeume.Heteron, 'heteron');
 mapNeumeToSbmufl(VocalExpressionNeume.HeteronConnecting, 'heteronConnecting');
 mapNeumeToSbmufl(
   VocalExpressionNeume.HeteronConnectingLong,
-  'heteronConnecting',
-  1,
+  'heteronConnecting.salt01',
 );
+
 mapNeumeToSbmufl(RootSign.Delta, 'martyriaDeltaBelow');
 mapNeumeToSbmufl(RootSign.Alpha, 'martyriaAlphaBelow');
 mapNeumeToSbmufl(RootSign.Legetos, 'martyriaLegetosBelow');

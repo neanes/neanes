@@ -55,16 +55,14 @@
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { NoteElement } from '@/models/Element';
-import { Neume, VocalExpressionNeume } from '@/models/Neumes';
-import NeumeVue from '@/components/Neume.vue';
+import { VocalExpressionNeume } from '@/models/Neumes';
+import Neume from '@/components/Neume.vue';
 import { withZoom } from '@/utils/withZoom';
 import { PageSetup } from '@/models/PageSetup';
-import { fontService } from '@/services/FontService';
-import { NeumeMappingService } from '@/services/NeumeMappingService';
 
 @Component({
   components: {
-    Neume: NeumeVue,
+    Neume,
   },
 })
 export default class NeumeBoxSyllable extends Vue {
@@ -294,31 +292,6 @@ export default class NeumeBoxSyllable extends Vue {
   }
 
   get vocalExpressionStyle() {
-    const style = {
-      left:
-        this.note.vocalExpressionNeumeOffsetX != null
-          ? withZoom(this.note.vocalExpressionNeumeOffsetX, 'em')
-          : undefined,
-      top:
-        this.note.vocalExpressionNeumeOffsetY != null
-          ? withZoom(this.note.vocalExpressionNeumeOffsetY, 'em')
-          : undefined,
-    } as CSSStyleDeclaration;
-
-    const mapping = this.getMapping(this.note.vocalExpressionNeume!);
-
-    // Chrome does not handle stylistic alternatives well,
-    // so we have to calculate the offset
-    if (mapping.salt != null) {
-      const offset = this.getOffset(this.note.vocalExpressionNeume!);
-
-      offset.x += this.note.vocalExpressionNeumeOffsetX || 0;
-      offset.y += this.note.vocalExpressionNeumeOffsetY || 0;
-
-      style.left = withZoom(offset.x, 'em');
-      style.top = withZoom(offset.y, 'em');
-    }
-
     if (
       this.note.vocalExpressionNeume === VocalExpressionNeume.Heteron ||
       this.note.vocalExpressionNeume ===
@@ -326,44 +299,23 @@ export default class NeumeBoxSyllable extends Vue {
       this.note.vocalExpressionNeume ===
         VocalExpressionNeume.HeteronConnectingLong
     ) {
-      style.color = this.pageSetup.heteronDefaultColor;
-      style.webkitTextStrokeWidth = withZoom(
-        this.pageSetup.heteronDefaultStrokeWidth,
-      );
+      return {
+        color: this.pageSetup.heteronDefaultColor,
+        webkitTextStrokeWidth: withZoom(
+          this.pageSetup.heteronDefaultStrokeWidth,
+        ),
+        left:
+          this.note.vocalExpressionNeumeOffsetX != null
+            ? withZoom(this.note.vocalExpressionNeumeOffsetX, 'em')
+            : undefined,
+        top:
+          this.note.vocalExpressionNeumeOffsetY != null
+            ? withZoom(this.note.vocalExpressionNeumeOffsetY, 'em')
+            : undefined,
+      } as CSSStyleDeclaration;
     }
 
-    return style;
-  }
-
-  getMapping(neume: Neume) {
-    return NeumeMappingService.getMapping(neume);
-  }
-
-  getOffset(neume: Neume) {
-    const mark = this.getMapping(neume).glyphName;
-    const base = this.getMapping(this.note.quantitativeNeume).glyphName;
-
-    const offset = fontService.getMarkOffset(base, mark);
-
-    // Shift offset for vareia
-    if (this.note.vareia) {
-      const vareiaGlyphName = this.getMapping(
-        VocalExpressionNeume.Vareia,
-      ).glyphName;
-
-      const vareiaWidth = fontService.getAdvanceWidth(vareiaGlyphName);
-      offset.x += vareiaWidth;
-    }
-
-    // Shift offset for measure bar
-    if (this.note.measureBarLeft) {
-      const glyphName = this.getMapping(this.note.measureBarLeft).glyphName;
-
-      const width = fontService.getAdvanceWidth(glyphName);
-      offset.x += width;
-    }
-
-    return offset;
+    return null;
   }
 }
 </script>

@@ -1759,7 +1759,6 @@ export default class Editor extends Vue {
       }
 
       if (
-        !handled &&
         this.selectedElement.elementType === ElementType.Note &&
         !event.repeat
       ) {
@@ -1883,14 +1882,16 @@ export default class Editor extends Vue {
           this.neumeKeyboard.isKlasma(event.code)
         ) {
           this.setKlasmaThrottled(noteElement);
-        }else if (
+        } else if (
           this.keyboardModifier == null &&
           this.neumeKeyboard.isNoteIndicator(event.code)
         ) {
-          this.updateNoteNoteIndicatorThrottled(noteElement, !noteElement.noteIndicator);
+          this.updateNoteNoteIndicatorThrottled(
+            noteElement,
+            !noteElement.noteIndicator,
+          );
         }
       } else if (
-        !handled &&
         this.selectedElement.elementType === ElementType.Martyria &&
         !event.repeat
       ) {

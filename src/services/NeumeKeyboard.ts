@@ -439,28 +439,28 @@ export class NeumeKeyboard {
     ///////////////////////////////////
     this.quantitativeNeumeKeyboardMap.push({
       code: 'KeyJ',
-      modifier: this.vocalExpressionKey,
+      modifier: this.hapliKey,
       shiftKey: true,
       neume: QuantitativeNeume.VareiaDotted,
     });
 
     this.quantitativeNeumeKeyboardMap.push({
       code: 'KeyK',
-      modifier: this.vocalExpressionKey,
+      modifier: this.hapliKey,
       shiftKey: true,
       neume: QuantitativeNeume.VareiaDotted2,
     });
 
     this.quantitativeNeumeKeyboardMap.push({
       code: 'KeyL',
-      modifier: this.vocalExpressionKey,
+      modifier: this.hapliKey,
       shiftKey: true,
       neume: QuantitativeNeume.VareiaDotted3,
     });
 
     this.quantitativeNeumeKeyboardMap.push({
       code: 'Semicolon',
-      modifier: this.vocalExpressionKey,
+      modifier: this.hapliKey,
       shiftKey: true,
       neume: QuantitativeNeume.VareiaDotted4,
     });
@@ -577,6 +577,13 @@ export class NeumeKeyboard {
     });
 
     this.vocalExpressionKeyboardMap.push({
+      code: 'KeyK',
+      shiftKey: true,
+      modifier: this.vocalExpressionKey,
+      neume: VocalExpressionNeume.PsifistonSlanted,
+    });
+
+    this.vocalExpressionKeyboardMap.push({
       code: 'KeyL',
       modifier: this.vocalExpressionKey,
       neume: VocalExpressionNeume.Antikenoma,
@@ -604,6 +611,13 @@ export class NeumeKeyboard {
       code: 'KeyM',
       modifier: this.vocalExpressionKey,
       neume: VocalExpressionNeume.HeteronConnecting,
+    });
+
+    this.vocalExpressionKeyboardMap.push({
+      code: 'KeyM',
+      shiftKey: true,
+      modifier: this.vocalExpressionKey,
+      neume: VocalExpressionNeume.HeteronConnectingLong,
     });
   }
 

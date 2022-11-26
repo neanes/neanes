@@ -148,8 +148,8 @@
         0.175
       ],
       "heteronConnecting": [
-        1.462,
-        0.139
+        1.763,
+        0.162
       ],
       "heteron": [
         1.087,
@@ -4332,6 +4332,60 @@
         -0.027
       ]
     },
+    "oligonKentimataBelow.alt01": {
+      "measureNumber": [
+        0.172,
+        0.753
+      ],
+      "fthoraBottom": [
+        0.384,
+        0.16
+      ],
+      "diesis": [
+        0.4,
+        0.133
+      ],
+      "gorgonTop": [
+        0.763,
+        0.505
+      ],
+      "klasmaTop": [
+        0.793,
+        0.487
+      ],
+      "yfesis": [
+        1.316,
+        0.619
+      ],
+      "fthoraTop": [
+        0.743,
+        0.515
+      ],
+      "noteTop": [
+        0.262,
+        0.561
+      ],
+      "isonIndicator": [
+        0.71,
+        0.877
+      ],
+      "psifiston": [
+        0.84,
+        0.113
+      ]
+    },
+    "oligonKentimataAbove.alt01": {
+      "psifiston": [
+        0.84,
+        0.113
+      ]
+    },
+    "antikenoma.alt01": {
+      "antikenoma": [
+        0.0,
+        0.088
+      ]
+    },
     "petastiKentimaTripleYpsili": {
       "heteronConnecting": [
         1.316,
@@ -5269,9 +5323,37 @@
         1.58,
         0.74
       ]
+    },
+    "psifiston.salt01": {
+      "psifiston": [
+        -0.001,
+        0.569
+      ]
+    },
+    "heteronConnecting.salt01": {
+      "heteronConnecting": [
+        0.0,
+        -0.019
+      ]
     }
   },
   "glyphsWithAlternates": {
+    "psifiston": {
+      "alternates": [
+        {
+          "codepoint": "U+F006",
+          "name": "psifiston.salt01"
+        }
+      ]
+    },
+    "heteronConnecting": {
+      "alternates": [
+        {
+          "codepoint": "U+F007",
+          "name": "heteronConnecting.salt01"
+        }
+      ]
+    },
     "modeFourth": {
       "alternates": [
         {
@@ -5404,6 +5486,9 @@
     "martyriaNoteDiHigh": 0.886,
     "martyriaNoteKeHigh": 0.894,
     "martyriaTick": 0.148,
+    "oligonKentimataBelow.alt01": 1.465,
+    "oligonKentimataAbove.alt01": 1.465,
+    "antikenoma.alt01": 0.0,
     "petastiKentimaTripleYpsili": 1.439,
     "vareia": 0.534,
     "psifiston": 0.0,
@@ -5572,6 +5657,9 @@
     "endofonon": 0.0,
     "yfenAbove": 0.0,
     "yfenBelow": 0.0,
+    "modeFirst.salt01": 0.945,
+    "modeFourth.salt01": 0.93,
+    "oligonKentimataBelow.alt02": 1.75,
     "gorgonDottedLeftSecondary": 0.0,
     "gorgonDottedRightSecondary": 0.0,
     "digorgonSecondary": 0.0,
@@ -5580,7 +5668,35 @@
     "trigorgonSecondary": 0.0,
     "trigorgonDottedLeftBelowSecondary": 0.0,
     "trigorgonDottedRightSecondary": 0.0,
-    "oligonChamiliKentimata": 1.995
+    "oligonChamiliKentimata": 1.995,
+    "psifiston.salt01": 0.0,
+    "heteronConnecting.salt01": 0.0
+  },
+  "optionalGlyphs": {
+    "oligonKentimataBelow.alt01": {
+      "codepoint": "U+F000"
+    },
+    "oligonKentimataAbove.alt01": {
+      "codepoint": "U+F001"
+    },
+    "antikenoma.alt01": {
+      "codepoint": "U+F002"
+    },
+    "modeFirst.salt01": {
+      "codepoint": "U+F003"
+    },
+    "modeFourth.salt01": {
+      "codepoint": "U+F004"
+    },
+    "oligonKentimataBelow.alt02": {
+      "codepoint": "U+F005"
+    },
+    "psifiston.salt01": {
+      "codepoint": "U+F006"
+    },
+    "heteronConnecting.salt01": {
+      "codepoint": "U+F007"
+    }
   },
   "glyphBBoxes": {
     "ison": {
@@ -6721,6 +6837,36 @@
       "bBoxSW": [
         0.027,
         0.344
+      ]
+    },
+    "oligonKentimataBelow.alt01": {
+      "bBoxNE": [
+        1.4040476190470577,
+        0.3925555555554815
+      ],
+      "bBoxSW": [
+        0.06722222222223703,
+        -0.022545454545446278
+      ]
+    },
+    "oligonKentimataAbove.alt01": {
+      "bBoxNE": [
+        1.3750476190470577,
+        0.662
+      ],
+      "bBoxSW": [
+        0.08222222222223703,
+        0.22242105263118006
+      ]
+    },
+    "antikenoma.alt01": {
+      "bBoxNE": [
+        0.5431978805064592,
+        0.08933340568012374
+      ],
+      "bBoxSW": [
+        -0.5431981349340659,
+        -0.2011251068284493
       ]
     },
     "petastiKentimaTripleYpsili": {
@@ -8403,6 +8549,36 @@
         -0.40603789687608005
       ]
     },
+    "modeFirst.salt01": {
+      "bBoxNE": [
+        0.829,
+        1.255
+      ],
+      "bBoxSW": [
+        0.413,
+        0.07436666666662702
+      ]
+    },
+    "modeFourth.salt01": {
+      "bBoxNE": [
+        0.887,
+        1.255
+      ],
+      "bBoxSW": [
+        0.3116521739127977,
+        0.08022222222223703
+      ]
+    },
+    "oligonKentimataBelow.alt02": {
+      "bBoxNE": [
+        1.6630476190470576,
+        0.78354999999992
+      ],
+      "bBoxSW": [
+        0.3602222222223704,
+        0.36844444444592594
+      ]
+    },
     "gorgonDottedLeftSecondary": {
       "bBoxNE": [
         0.1661667570903627,
@@ -8491,6 +8667,26 @@
       "bBoxSW": [
         0.06873437500002302,
         0.22242105263118006
+      ]
+    },
+    "psifiston.salt01": {
+      "bBoxNE": [
+        0.7598837714134049,
+        0.5547998593754707
+      ],
+      "bBoxSW": [
+        -0.7598828125,
+        0.10288881386723099
+      ]
+    },
+    "heteronConnecting.salt01": {
+      "bBoxNE": [
+        0.688446289062,
+        -0.05262174030508771
+      ],
+      "bBoxSW": [
+        -0.6644466365460583,
+        -0.32169436009241525
       ]
     }
   },

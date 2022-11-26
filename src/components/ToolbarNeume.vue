@@ -190,26 +190,74 @@
       >
         <img src="@/assets/icons/quality-antikenoma.svg" />
       </button>
-      <button
-        class="neume-button"
-        @click="$emit('update:expression', VocalExpressionNeume.Psifiston)"
+      <div
+        class="menu-container"
+        @mousedown="openPsifistonMenu"
+        @mouseleave="selectedPsifiston = null"
       >
-        <img src="@/assets/icons/quality-psifiston.svg" />
-      </button>
+        <button class="neume-button">
+          <img draggable="false" src="@/assets/icons/quality-psifiston.svg" />
+        </button>
+        <div class="menu" v-if="showPsifistonMenu">
+          <div
+            class="menu-item"
+            @mouseenter="
+              selectedPsifiston = VocalExpressionNeume.PsifistonSlanted
+            "
+          >
+            <img
+              draggable="false"
+              src="@/assets/icons/quality-psifiston-slanted.svg"
+            />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedPsifiston = VocalExpressionNeume.Psifiston"
+          >
+            <img draggable="false" src="@/assets/icons/quality-psifiston.svg" />
+          </div>
+        </div>
+      </div>
       <button
         class="neume-button"
         @click="$emit('update:expression', VocalExpressionNeume.Heteron)"
       >
         <img src="@/assets/icons/quality-heteron.svg" />
       </button>
-      <button
-        class="neume-button"
-        @click="
-          $emit('update:expression', VocalExpressionNeume.HeteronConnecting)
-        "
+      <div
+        class="menu-container"
+        @mousedown="openHeteronConnectingMenu"
+        @mouseleave="selectedHeteronConnecting = null"
       >
-        <img src="@/assets/icons/quality-heteron-connecting.svg" />
-      </button>
+        <button class="neume-button">
+          <img src="@/assets/icons/quality-heteron-connecting.svg" />
+        </button>
+        <div class="menu" v-if="showHeteronConnectingMenu">
+          <div
+            class="menu-item"
+            @mouseenter="
+              selectedHeteronConnecting =
+                VocalExpressionNeume.HeteronConnectingLong
+            "
+          >
+            <img
+              draggable="false"
+              src="@/assets/icons/quality-heteron-connecting-long.svg"
+            />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="
+              selectedHeteronConnecting = VocalExpressionNeume.HeteronConnecting
+            "
+          >
+            <img
+              draggable="false"
+              src="@/assets/icons/quality-heteron-connecting.svg"
+            />
+          </div>
+        </div>
+      </div>
       <span class="space"></span>
       <div
         class="menu-container"
@@ -695,6 +743,8 @@ export default class ToolbarNeume extends Vue {
   showBarLineMenu: boolean = false;
   showMeasureNumberMenu: boolean = false;
   showIsonMenu: boolean = false;
+  showPsifistonMenu: boolean = false;
+  showHeteronConnectingMenu: boolean = false;
 
   selectedFlat: Accidental | null = null;
   selectedSharp: Accidental | null = null;
@@ -703,6 +753,8 @@ export default class ToolbarNeume extends Vue {
   selectedBarLine: MeasureBar | null = null;
   selectedMeasureNumber: MeasureNumber | null = null;
   selectedIson: Ison | null = null;
+  selectedPsifiston: VocalExpressionNeume | null = null;
+  selectedHeteronConnecting: VocalExpressionNeume | null = null;
 
   beforeDestroy() {
     window.removeEventListener('mouseup', this.onFlatMouseUp);
@@ -714,6 +766,7 @@ export default class ToolbarNeume extends Vue {
     window.removeEventListener('mouseup', this.onBarLineMouseUp);
     window.removeEventListener('mouseup', this.onMeasureNumberMouseUp);
     window.removeEventListener('mouseup', this.onIsonMouseUp);
+    window.removeEventListener('mouseup', this.onPsifistonMouseUp);
   }
 
   get spaceAfterMax() {
@@ -853,6 +906,36 @@ export default class ToolbarNeume extends Vue {
     this.showIsonMenu = false;
 
     window.removeEventListener('mouseup', this.onIsonMouseUp);
+  }
+
+  openPsifistonMenu() {
+    this.showPsifistonMenu = true;
+    window.addEventListener('mouseup', this.onPsifistonMouseUp);
+  }
+
+  onPsifistonMouseUp() {
+    if (this.selectedPsifiston) {
+      this.$emit('update:expression', this.selectedPsifiston);
+    }
+
+    this.showPsifistonMenu = false;
+
+    window.removeEventListener('mouseup', this.onPsifistonMouseUp);
+  }
+
+  openHeteronConnectingMenu() {
+    this.showHeteronConnectingMenu = true;
+    window.addEventListener('mouseup', this.onHeteronConnectingMouseUp);
+  }
+
+  onHeteronConnectingMouseUp() {
+    if (this.selectedHeteronConnecting) {
+      this.$emit('update:expression', this.selectedHeteronConnecting);
+    }
+
+    this.showHeteronConnectingMenu = false;
+
+    window.removeEventListener('mouseup', this.onHeteronConnectingMouseUp);
   }
 }
 </script>

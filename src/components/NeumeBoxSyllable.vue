@@ -294,7 +294,10 @@ export default class NeumeBoxSyllable extends Vue {
   get vocalExpressionStyle() {
     if (
       this.note.vocalExpressionNeume === VocalExpressionNeume.Heteron ||
-      this.note.vocalExpressionNeume === VocalExpressionNeume.HeteronConnecting
+      this.note.vocalExpressionNeume ===
+        VocalExpressionNeume.HeteronConnecting ||
+      this.note.vocalExpressionNeume ===
+        VocalExpressionNeume.HeteronConnectingLong
     ) {
       return {
         color: this.pageSetup.heteronDefaultColor,

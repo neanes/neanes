@@ -63,6 +63,10 @@ export default class MartyriaToolbar extends Vue {
   :root {
     --zoom: 1 !important;
   }
+
+  body {
+    overflow: visible !important;
+  }
 }
 
 @page {

@@ -1597,6 +1597,7 @@ export class NeumeKeyboard {
       this.accidentalKeyboardMap.find((x) => x.neume === neume) ||
       this.hapliKeyboardMap.find((x) => x.neume === neume) ||
       this.tempoKeyboardMap.find((x) => x.neume === neume) ||
+      this.martyriaTempoKeyboardMap.find((x) => x.neume === neume) ||
       this.fthoraKeyboardMap.find((x) => x.neumes?.includes(neume)) ||
       this.measureBarKeyboardMap.find((x) => x.neume === neume) ||
       this.measureNumberKeyboardMap.find((x) => x.neume === neume) ||

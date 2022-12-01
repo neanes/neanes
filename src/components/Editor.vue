@@ -403,6 +403,7 @@
         :element="selectedElement"
         :pageSetup="score.pageSetup"
         @update:fthora="setFthoraMartyria(selectedElement, $event)"
+        @update:tempo="setMartyriaTempo(selectedElement, $event)"
         @update:measureBar="setMeasureBarMartyria(selectedElement, $event)"
         @update:alignRight="updateMartyriaAlignRight(selectedElement, $event)"
         @update:auto="updateMartyriaAuto(selectedElement, $event)"
@@ -466,7 +467,6 @@ import {
   MeasureBar,
   Accidental,
   MeasureNumber,
-  NoteIndicator,
   Ison,
   Note,
 } from '@/models/Neumes';
@@ -698,6 +698,10 @@ export default class Editor extends Vue {
   setFthoraMartyriaThrottled = throttle(
     this.keydownThrottleIntervalMs,
     this.setFthoraMartyria,
+  );
+  setMartyriaTempoThrottled = throttle(
+    this.keydownThrottleIntervalMs,
+    this.setMartyriaTempo,
   );
   setAccidentalThrottled = throttle(
     this.keydownThrottleIntervalMs,
@@ -1910,6 +1914,19 @@ export default class Editor extends Vue {
           );
         }
 
+        const tempoMapping = this.neumeKeyboard.findMartyriaTempoMapping(
+          event,
+          this.keyboardModifier,
+        );
+
+        if (tempoMapping != null) {
+          handled = true;
+          this.setMartyriaTempoThrottled(
+            martyriaElement,
+            tempoMapping.neume as TempoSign,
+          );
+        }
+
         const measureBarMapping = this.neumeKeyboard.findMeasureBarMapping(
           event,
           this.keyboardModifier,
@@ -2841,6 +2858,14 @@ export default class Editor extends Vue {
     }
   }
 
+  private setMartyriaTempo(element: MartyriaElement, neume: TempoSign) {
+    if (element.tempo === neume) {
+      this.updateMartyriaTempo(element, null);
+    } else {
+      this.updateMartyriaTempo(element, neume);
+    }
+  }
+
   private setAccidental(element: NoteElement, neume: Accidental) {
     if (element.accidental != null && element.accidental === neume) {
       this.updateNoteAccidental(element, null);
@@ -3297,6 +3322,10 @@ export default class Editor extends Vue {
 
   updateMartyriaFthora(element: MartyriaElement, fthora: Fthora | null) {
     this.updateMartyria(element, { fthora });
+  }
+
+  updateMartyriaTempo(element: MartyriaElement, tempo: TempoSign | null) {
+    this.updateMartyria(element, { tempo });
   }
 
   updateMartyriaMeasureBar(

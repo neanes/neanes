@@ -180,6 +180,15 @@ export enum TempoSign {
   Quick = 'Quick',
   Quicker = 'Quicker',
   VeryQuick = 'VeryQuick',
+
+  VerySlowAbove = 'VerySlowAbove',
+  SlowerAbove = 'SlowerAbove',
+  SlowAbove = 'SlowAbove',
+  MediumAbove = 'MediumAbove',
+  ModerateAbove = 'ModerateAbove',
+  QuickAbove = 'QuickAbove',
+  QuickerAbove = 'QuickerAbove',
+  VeryQuickAbove = 'VeryQuickAbove',
 }
 
 export enum ModeSign {

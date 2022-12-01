@@ -10,6 +10,7 @@
       <Neume :neume="neume.note" />
       <Neume :neume="neume.rootSign" />
       <Neume v-if="hasFthora" :neume="neume.fthora" :style="fthoraStyle" />
+      <Neume v-if="hasTempo" :neume="neume.tempo" :style="tempoStyle" />
       <Neume
         v-if="hasMeasureBarRight"
         :neume="neume.measureBarRight"
@@ -42,6 +43,10 @@ export default class NeumeBoxMartyria extends Vue {
     return this.neume.fthora != null;
   }
 
+  get hasTempo() {
+    return this.neume.tempo != null;
+  }
+
   get hasMeasureBarLeft() {
     return this.neume.measureBarLeft != null;
   }
@@ -65,6 +70,13 @@ export default class NeumeBoxMartyria extends Vue {
     return {
       color: this.pageSetup.fthoraDefaultColor,
       webkitTextStrokeWidth: withZoom(this.pageSetup.fthoraDefaultStrokeWidth),
+    } as CSSStyleDeclaration;
+  }
+
+  get tempoStyle() {
+    return {
+      color: this.pageSetup.tempoDefaultColor,
+      webkitTextStrokeWidth: withZoom(this.pageSetup.tempoDefaultStrokeWidth),
     } as CSSStyleDeclaration;
   }
 

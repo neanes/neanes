@@ -225,6 +225,7 @@ export class SaveService {
     element.rootSign = e.rootSign;
     element.scale = e.scale;
     element.fthora = e.fthora || undefined;
+    element.tempo = e.tempo || undefined;
     element.measureBarLeft = e.measureBarLeft || undefined;
     element.measureBarRight = e.measureBarRight || undefined;
     element.alignRight = e.alignRight || undefined;
@@ -601,6 +602,10 @@ export class SaveService {
 
     if (e.fthora != null) {
       element.fthora = e.fthora;
+    }
+
+    if (e.tempo != null) {
+      element.tempo = e.tempo;
     }
 
     if (e.measureBarLeft != null) {

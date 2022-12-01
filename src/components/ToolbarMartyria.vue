@@ -140,6 +140,66 @@
           </div>
         </div>
       </div>
+      <span class="space" />
+      <div
+        class="menu-container"
+        @mousedown="openTempoMenu"
+        @mouseleave="selectedTempo = null"
+      >
+        <button class="neume-button">
+          <img draggable="false" src="@/assets/icons/agogi-poli-argi.svg" />
+        </button>
+        <div class="menu" v-if="showTempoMenu">
+          <div
+            class="menu-item"
+            @mouseenter="selectedTempo = TempoSign.VeryQuickAbove"
+          >
+            <img draggable="false" src="@/assets/icons/agogi-poli-gorgi.svg" />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedTempo = TempoSign.QuickerAbove"
+          >
+            <img draggable="false" src="@/assets/icons/agogi-gorgoteri.svg" />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedTempo = TempoSign.QuickAbove"
+          >
+            <img draggable="false" src="@/assets/icons/agogi-gorgi.svg" />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedTempo = TempoSign.MediumAbove"
+          >
+            <img draggable="false" src="@/assets/icons/agogi-mesi.svg" />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedTempo = TempoSign.ModerateAbove"
+          >
+            <img draggable="false" src="@/assets/icons/agogi-metria.svg" />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedTempo = TempoSign.SlowAbove"
+          >
+            <img draggable="false" src="@/assets/icons/agogi-argi.svg" />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedTempo = TempoSign.SlowerAbove"
+          >
+            <img draggable="false" src="@/assets/icons/agogi-argoteri.svg" />
+          </div>
+          <div
+            class="menu-item"
+            @mouseenter="selectedTempo = TempoSign.VerySlowAbove"
+          >
+            <img draggable="false" src="@/assets/icons/agogi-poli-argi.svg" />
+          </div>
+        </div>
+      </div>
       <span class="space"></span>
       <button
         class="icon-btn"
@@ -206,7 +266,7 @@
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { MartyriaElement } from '@/models/Element';
-import { Fthora, MeasureBar, Note } from '@/models/Neumes';
+import { Fthora, MeasureBar, Note, TempoSign } from '@/models/Neumes';
 import InputUnit from './InputUnit.vue';
 import { Scale } from '@/models/Scales';
 import { PageSetup } from '@/models/PageSetup';
@@ -223,10 +283,13 @@ export default class ToolbarMartyria extends Vue {
   Fthora = Fthora;
   MeasureBar = MeasureBar;
   Note = Note;
+  TempoSign = TempoSign;
 
   showBarLineMenu: boolean = false;
+  showTempoMenu: boolean = false;
 
   selectedBarLine: MeasureBar | null = null;
+  selectedTempo: TempoSign | null = null;
 
   notes = Object.values(Note).map((x) => ({
     key: x,
@@ -284,6 +347,21 @@ export default class ToolbarMartyria extends Vue {
     this.showBarLineMenu = false;
 
     window.removeEventListener('mouseup', this.onBarLineMouseUp);
+  }
+
+  openTempoMenu() {
+    this.showTempoMenu = true;
+    window.addEventListener('mouseup', this.onTempoMouseUp);
+  }
+
+  onTempoMouseUp() {
+    if (this.selectedTempo) {
+      this.$emit('update:tempo', this.selectedTempo);
+    }
+
+    this.showTempoMenu = false;
+
+    window.removeEventListener('mouseup', this.onTempoMouseUp);
   }
 }
 </script>

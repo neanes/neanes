@@ -75,6 +75,7 @@ export class NeumeKeyboard {
   private measureNumberKeyboardMap: KeyboardMapping[] = [];
   private isonKeyboardMap: KeyboardMapping[] = [];
   private tempoKeyboardMap: KeyboardMapping[] = [];
+  private martyriaTempoKeyboardMap: KeyboardMapping[] = [];
   private measureBarKeyboardMap: KeyboardMapping[] = [];
   private martyriaConfigKeyboardMap: KeyboardMapping[] = [];
 
@@ -88,6 +89,7 @@ export class NeumeKeyboard {
     this.initMeasureNumberKeyboardMap();
     this.initIsonKeyboardMap();
     this.initTempoKeyboardMap();
+    this.initMartyriaTempoKeyboardMap();
     this.initMeasureBarKeyboardMap();
     this.initMartyriaConfigKeyboardMap();
 
@@ -1282,6 +1284,64 @@ export class NeumeKeyboard {
     });
   }
 
+  private initMartyriaTempoKeyboardMap() {
+    this.martyriaTempoKeyboardMap.push({
+      code: 'KeyJ',
+      shiftKey: true,
+      modifier: this.tempoKey,
+      neume: TempoSign.MediumAbove,
+    });
+
+    this.martyriaTempoKeyboardMap.push({
+      code: 'KeyK',
+      shiftKey: true,
+      modifier: this.tempoKey,
+      neume: TempoSign.QuickAbove,
+    });
+
+    this.martyriaTempoKeyboardMap.push({
+      code: 'KeyL',
+      shiftKey: true,
+      modifier: this.tempoKey,
+      neume: TempoSign.QuickerAbove,
+    });
+
+    this.martyriaTempoKeyboardMap.push({
+      code: 'Semicolon',
+      shiftKey: true,
+      modifier: this.tempoKey,
+      neume: TempoSign.VeryQuickAbove,
+    });
+
+    this.martyriaTempoKeyboardMap.push({
+      code: 'KeyN',
+      shiftKey: true,
+      modifier: this.tempoKey,
+      neume: TempoSign.ModerateAbove,
+    });
+
+    this.martyriaTempoKeyboardMap.push({
+      code: 'KeyM',
+      shiftKey: true,
+      modifier: this.tempoKey,
+      neume: TempoSign.SlowAbove,
+    });
+
+    this.martyriaTempoKeyboardMap.push({
+      code: 'Comma',
+      shiftKey: true,
+      modifier: this.tempoKey,
+      neume: TempoSign.SlowerAbove,
+    });
+
+    this.martyriaTempoKeyboardMap.push({
+      code: 'Period',
+      shiftKey: true,
+      modifier: this.tempoKey,
+      neume: TempoSign.VerySlowAbove,
+    });
+  }
+
   private initMeasureBarKeyboardMap() {
     this.measureBarKeyboardMap.push({
       code: this.measureBarKey,
@@ -1599,6 +1659,17 @@ export class NeumeKeyboard {
 
   public findTempoMapping(event: KeyboardEvent, activeModifier: string | null) {
     return this.findMapping(this.tempoKeyboardMap, event, activeModifier);
+  }
+
+  public findMartyriaTempoMapping(
+    event: KeyboardEvent,
+    activeModifier: string | null,
+  ) {
+    return this.findMapping(
+      this.martyriaTempoKeyboardMap,
+      event,
+      activeModifier,
+    );
   }
 
   public findMeasureBarMapping(

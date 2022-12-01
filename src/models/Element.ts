@@ -366,6 +366,7 @@ export class MartyriaElement extends ScoreElement {
   public rootSign: RootSign = RootSign.Alpha;
   public scale: Scale = Scale.Diatonic;
   public fthora: Fthora | null = null;
+  public tempo: TempoSign | null = null;
   public measureBarLeft: MeasureBar | null = null;
   public measureBarRight: MeasureBar | null = null;
   public alignRight: boolean = false;
@@ -390,6 +391,7 @@ export class MartyriaElement extends ScoreElement {
       measureBarLeft: this.measureBarLeft,
       measureBarRight: this.measureBarRight,
       fthora: this.fthora,
+      tempo: this.tempo,
     } as Partial<MartyriaElement>;
   }
 }

@@ -452,6 +452,38 @@
     "alternateCodepoint": "U+1D0A1",
     "codepoint": "U+E127"
   },
+  "agogiPoliArgiAbove": {
+    "alternateCodepoint": "U+1D09A",
+    "codepoint": "U+E128"
+  },
+  "agogiArgoteriAbove": {
+    "alternateCodepoint": "U+1D09B",
+    "codepoint": "U+E129"
+  },
+  "agogiArgiAbove": {
+    "alternateCodepoint": "U+1D09C",
+    "codepoint": "U+E12A"
+  },
+  "agogiMetriaAbove": {
+    "alternateCodepoint": "U+1D09D",
+    "codepoint": "U+E12B"
+  },
+  "agogiMesiAbove": {
+    "alternateCodepoint": "U+1D09E",
+    "codepoint": "U+E12C"
+  },
+  "agogiGorgiAbove": {
+    "alternateCodepoint": "U+1D09F",
+    "codepoint": "U+E12D"
+  },
+  "agogiGorgoteriAbove": {
+    "alternateCodepoint": "U+1D0A0",
+    "codepoint": "U+E12E"
+  },
+  "agogiPoliGorgiAbove": {
+    "alternateCodepoint": "U+1D0A1",
+    "codepoint": "U+E12F"
+  },
   "martyriaNoteZoLow": {
     "codepoint": "U+E130"
   },

@@ -9,7 +9,12 @@ class FontService {
   getMarkOffset(base: SbmuflGlyphName, mark: SbmuflGlyphName) {
     const markAnchorName = Object.keys(
       (metadata.glyphsWithAnchors as any)[mark],
-    )[0];
+    ).find((x) => (metadata.glyphsWithAnchors as any)[base][x] != null);
+
+    if (markAnchorName == null) {
+      console.warn(`Missing anchor for base: ${base} mark: ${mark}`);
+      return { x: 0, y: 0 };
+    }
 
     const markAnchor = (metadata.glyphsWithAnchors as any)[mark][
       markAnchorName
@@ -18,11 +23,6 @@ class FontService {
     const baseAnchor = (metadata.glyphsWithAnchors as any)[base][
       markAnchorName
     ] as number[];
-
-    if (baseAnchor == null) {
-      console.warn(`Missing base anchor for base: ${base} mark: ${mark}`);
-      return { x: 0, y: 0 };
-    }
 
     return {
       x: baseAnchor[0] - markAnchor[0],

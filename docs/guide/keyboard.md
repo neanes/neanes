@@ -188,25 +188,38 @@ Martyria may be inserted with the following shortcuts. To insert a right-aligned
 
 The following toggles are available for existing martyria.
 
-| Toggles                | Keyboard Shortcut          |
+| Toggle                 | Keyboard Shortcut          |
 | ---------------------- | -------------------------- |
 | Toggle Right Align     | <kbd>C</kbd> +<kbd>Y</kbd> |
 | Toggle Auto-calculated | <kbd>C</kbd> +<kbd>H</kbd> |
 
 The scale on an existing martyria may be updated with the following shortcuts.
 
-| Scale                                                |     | Keyboard Shortcut          |
-| ---------------------------------------------------- | --- | -------------------------- |
-| <span class="center">Diatonic</span>                 |     | <kbd>Z</kbd> +<kbd>J</kbd> |
-| <span class="center">Soft Chromatic</span>           |     | <kbd>Z</kbd> +<kbd>K</kbd> |
-| <span class="center">Hard Chromatic</span>           |     | <kbd>Z</kbd> +<kbd>L</kbd> |
-| <span class="center">Enharmonic from Ga</span>       |     | <kbd>Z</kbd> +<kbd>;</kbd> |
-| <span class="center">Enharmonic from High Zo</span>  |     | <kbd>Z</kbd> +<kbd>'</kbd> |
-| <span class="center">Enharmonic from Vou</span>      |     | <kbd>Z</kbd> +<kbd>U</kbd> |
-| <span class="center">Enharmonic from High Vou</span> |     | <kbd>Z</kbd> +<kbd>I</kbd> |
-| <span class="center">Zygos</span>                    |     | <kbd>Z</kbd> +<kbd>O</kbd> |
-| <span class="center">Spathi</span>                   |     | <kbd>Z</kbd> +<kbd>P</kbd> |
-| <span class="center">Kliton</span>                   |     | <kbd>Z</kbd> +<kbd>[</kbd> |
+| Scale                                                | Keyboard Shortcut          |
+| ---------------------------------------------------- | -------------------------- |
+| <span class="center">Diatonic</span>                 | <kbd>Z</kbd> +<kbd>J</kbd> |
+| <span class="center">Soft Chromatic</span>           | <kbd>Z</kbd> +<kbd>K</kbd> |
+| <span class="center">Hard Chromatic</span>           | <kbd>Z</kbd> +<kbd>L</kbd> |
+| <span class="center">Enharmonic from Ga</span>       | <kbd>Z</kbd> +<kbd>;</kbd> |
+| <span class="center">Enharmonic from High Zo</span>  | <kbd>Z</kbd> +<kbd>'</kbd> |
+| <span class="center">Enharmonic from Vou</span>      | <kbd>Z</kbd> +<kbd>U</kbd> |
+| <span class="center">Enharmonic from High Vou</span> | <kbd>Z</kbd> +<kbd>I</kbd> |
+| <span class="center">Zygos</span>                    | <kbd>Z</kbd> +<kbd>O</kbd> |
+| <span class="center">Spathi</span>                   | <kbd>Z</kbd> +<kbd>P</kbd> |
+| <span class="center">Kliton</span>                   | <kbd>Z</kbd> +<kbd>[</kbd> |
+
+Tempo characters may be placed above a martyria with the following shortcuts.
+
+| Neume                        | Keyboard Shortcut                            |
+| ---------------------------- | -------------------------------------------- |
+| <span class="neume"></span> | <kbd>Shift</kbd> +<kbd>X</kbd> +<kbd>J</kbd> |
+| <span class="neume"></span> | <kbd>Shift</kbd> +<kbd>X</kbd> +<kbd>K</kbd> |
+| <span class="neume"></span> | <kbd>Shift</kbd> +<kbd>X</kbd> +<kbd>L</kbd> |
+| <span class="neume"></span> | <kbd>Shift</kbd> +<kbd>X</kbd> +<kbd>;</kbd> |
+| <span class="neume"></span> | <kbd>Shift</kbd> +<kbd>X</kbd> +<kbd>N</kbd> |
+| <span class="neume"></span> | <kbd>Shift</kbd> +<kbd>X</kbd> +<kbd>M</kbd> |
+| <span class="neume"></span> | <kbd>Shift</kbd> +<kbd>X</kbd> +<kbd>,</kbd> |
+| <span class="neume"></span> | <kbd>Shift</kbd> +<kbd>X</kbd> +<kbd>.</kbd> |
 
 ## Fthores
 

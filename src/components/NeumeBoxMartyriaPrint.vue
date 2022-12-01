@@ -10,6 +10,7 @@
       <Neume :neume="neume.note" />
       <Neume :neume="neume.rootSign" :style="rootSignStyle" />
       <Neume v-if="hasFthora" :neume="neume.fthora" :style="fthoraStyle" />
+      <Neume v-if="hasTempo" :neume="neume.tempo" :style="tempoStyle" />
       <Neume
         v-if="hasMeasureBarRight"
         :neume="neume.measureBarRight"
@@ -44,6 +45,10 @@ export default class NeumeBoxMartyria extends Vue {
     return this.neume.fthora != null;
   }
 
+  get hasTempo() {
+    return this.neume.tempo != null;
+  }
+
   get hasMeasureBarLeft() {
     return this.neume.measureBarLeft != null;
   }
@@ -75,6 +80,25 @@ export default class NeumeBoxMartyria extends Vue {
     } as CSSStyleDeclaration;
   }
 
+  get tempoStyle() {
+    const offset = this.getOffset(this.neume.tempo!);
+
+    if (this.hasFthora) {
+      const offsetFthora = this.getOffset(this.neume.fthora!);
+      const offsetTempo = this.getOffset(this.neume.tempo!, this.neume.fthora!);
+      offset.x = offsetFthora.x + offsetTempo.x;
+      offset.y = offsetFthora.y + offsetTempo.y;
+    }
+
+    return {
+      position: 'absolute',
+      color: this.pageSetup.tempoDefaultColor,
+      left: withZoom(offset.x, 'em'),
+      top: withZoom(offset.y, 'em'),
+      webkitTextStrokeWidth: withZoom(this.pageSetup.tempoDefaultStrokeWidth),
+    } as CSSStyleDeclaration;
+  }
+
   get rootSignStyle() {
     const offset = this.getOffset(this.neume.rootSign!);
 
@@ -98,9 +122,9 @@ export default class NeumeBoxMartyria extends Vue {
     return NeumeMappingService.getMapping(neume);
   }
 
-  getOffset(neume: GenericNeume) {
+  getOffset(neume: GenericNeume, baseNeume?: GenericNeume) {
     const mark = this.getMapping(neume).glyphName;
-    const base = this.getMapping(this.neume.note).glyphName;
+    const base = this.getMapping(baseNeume ?? this.neume.note).glyphName;
 
     const offset = fontService.getMarkOffset(base, mark);
 

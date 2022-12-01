@@ -292,6 +292,17 @@ export default class NeumeBoxSyllable extends Vue {
   }
 
   get vocalExpressionStyle() {
+    const style = {
+      left:
+        this.note.vocalExpressionNeumeOffsetX != null
+          ? withZoom(this.note.vocalExpressionNeumeOffsetX, 'em')
+          : undefined,
+      top:
+        this.note.vocalExpressionNeumeOffsetY != null
+          ? withZoom(this.note.vocalExpressionNeumeOffsetY, 'em')
+          : undefined,
+    } as CSSStyleDeclaration;
+
     if (
       this.note.vocalExpressionNeume === VocalExpressionNeume.Heteron ||
       this.note.vocalExpressionNeume ===
@@ -299,23 +310,13 @@ export default class NeumeBoxSyllable extends Vue {
       this.note.vocalExpressionNeume ===
         VocalExpressionNeume.HeteronConnectingLong
     ) {
-      return {
-        color: this.pageSetup.heteronDefaultColor,
-        webkitTextStrokeWidth: withZoom(
-          this.pageSetup.heteronDefaultStrokeWidth,
-        ),
-        left:
-          this.note.vocalExpressionNeumeOffsetX != null
-            ? withZoom(this.note.vocalExpressionNeumeOffsetX, 'em')
-            : undefined,
-        top:
-          this.note.vocalExpressionNeumeOffsetY != null
-            ? withZoom(this.note.vocalExpressionNeumeOffsetY, 'em')
-            : undefined,
-      } as CSSStyleDeclaration;
+      style.color = this.pageSetup.heteronDefaultColor;
+      style.webkitTextStrokeWidth = withZoom(
+        this.pageSetup.heteronDefaultStrokeWidth,
+      );
     }
 
-    return null;
+    return style;
   }
 }
 </script>

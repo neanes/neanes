@@ -116,15 +116,20 @@
                         ><img src="@/assets/icons/line-break.svg"
                       /></span>
                       <SyllableNeumeBox
-                        class="syllable-box no-print"
+                        class="syllable-box"
                         :note="element"
                         :pageSetup="score.pageSetup"
-                        :class="[{ selected: isSelected(element) }]"
+                        :class="[
+                          {
+                            selected: isSelected(element),
+                            'no-print': isBrowser,
+                          },
+                        ]"
                         @click.native.exact="selectedElement = element"
                         @click.native.shift.exact="setSelectionRange(element)"
                       />
                       <SyllableNeumeBoxPrint
-                        v-if="printMode"
+                        v-if="isBrowser && printMode"
                         class="syllable-box print-only"
                         :note="element"
                         :pageSetup="score.pageSetup"
@@ -168,14 +173,19 @@
                       /></span>
                       <MartyriaNeumeBox
                         :ref="`element-${getElementIndex(element)}`"
-                        class="marytria-neume-box no-print"
+                        class="marytria-neume-box"
                         :neume="element"
                         :pageSetup="score.pageSetup"
-                        :class="[{ selected: isSelected(element) }]"
+                        :class="[
+                          {
+                            selected: isSelected(element),
+                            'no-print': isBrowser,
+                          },
+                        ]"
                         @click.native="selectedElement = element"
                       />
                       <MartyriaNeumeBoxPrint
-                        v-if="printMode"
+                        v-if="isBrowser && printMode"
                         class="marytria-neume-box print-only"
                         :neume="element"
                         :pageSetup="score.pageSetup"
@@ -251,17 +261,19 @@
                       ><img src="@/assets/icons/line-break.svg"
                     /></span>
                     <ModeKey
-                      class="no-print"
                       :ref="`element-${getElementIndex(element)}`"
                       :element="element"
                       :class="[
-                        { selectedTextbox: element === selectedElement },
+                        {
+                          selectedTextbox: element === selectedElement,
+                          'no-print': isBrowser,
+                        },
                       ]"
                       @click.native="selectedElement = element"
                       @dblclick.native="openModeKeyDialog"
                     />
                     <ModeKeyPrint
-                      v-if="printMode"
+                      v-if="isBrowser && printMode"
                       class="print-only"
                       :element="element"
                     />
@@ -4089,6 +4101,7 @@ export default class Editor extends Vue {
 @media print {
   body * {
     visibility: hidden;
+    overflow: visible !important;
   }
 
   .page,
@@ -4098,9 +4111,6 @@ export default class Editor extends Vue {
 
   .page-background {
     display: block;
-    position: absolute;
-    left: 0;
-    top: 0;
     padding: 0;
   }
 
@@ -4123,6 +4133,9 @@ export default class Editor extends Vue {
     border: none;
   }
 
+  .neume-selector-panel,
+  .workspace-tab-container,
+  .main-toolbar,
   .neume-toolbar,
   .martyria-toolbar,
   .text-toolbar,

@@ -4133,6 +4133,7 @@ export default class Editor extends Vue {
     border: none;
   }
 
+  .file-menu-bar,
   .neume-selector-panel,
   .workspace-tab-container,
   .main-toolbar,

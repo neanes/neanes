@@ -1,11 +1,12 @@
 <template>
   <div class="mode-key-toolbar">
     <input
+      id="toolbar-mode-key-use-default-style"
       type="checkbox"
       :checked="element.useDefaultStyle"
       @change="$emit('update:useDefaultStyle', $event.target.checked)"
     />
-    <label>Use default style</label>
+    <label for="toolbar-mode-key-use-default-style">Use default style</label>
     <span class="divider" />
 
     <template v-if="!element.useDefaultStyle">

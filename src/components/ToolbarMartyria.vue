@@ -217,11 +217,12 @@
       <span class="space" />
       <div style="display: flex; align-items: center">
         <input
+          id="toolbar-martyria-auto"
           type="checkbox"
           :checked="element.auto"
           @change="$emit('update:auto', $event.target.checked)"
         />
-        <label>Auto</label>
+        <label for="toolbar-martyria-auto">Auto</label>
       </div>
       <template v-if="!element.auto">
         <span class="space" />

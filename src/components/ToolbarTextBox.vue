@@ -2,11 +2,12 @@
   <div class="text-box-toolbar">
     <template v-if="element.inline">
       <input
+        id="toolbar-text-box-use-default-style"
         type="checkbox"
         :checked="element.useDefaultStyle"
         @change="$emit('update:useDefaultStyle', $event.target.checked)"
       />
-      <label>Use default style</label>
+      <label for="toolbar-text-box-use-default-style">Use default style</label>
       <span class="divider" />
     </template>
     <template v-if="!element.inline || !element.useDefaultStyle">

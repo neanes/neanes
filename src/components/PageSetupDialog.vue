@@ -240,20 +240,22 @@
           <div class="form-group row">
             <label class="drop-caps-label">Style</label>
             <input
+              id="page-setup-dialog-drop-cap-bold"
               type="checkbox"
               v-model="form.dropCapDefaultFontWeight"
               true-value="700"
               false-value="400"
             />
-            <label>Bold</label>
+            <label for="page-setup-dialog-drop-cap-bold">Bold</label>
 
             <input
+              id="page-setup-dialog-drop-cap-italic"
               type="checkbox"
               v-model="form.dropCapDefaultFontStyle"
               true-value="italic"
               false-value="normal"
             />
-            <label>Italic</label>
+            <label for="page-setup-dialog-drop-cap-italic">Italic</label>
           </div>
           <div class="form-group">
             <label class="drop-caps-label">Outline</label>
@@ -290,20 +292,22 @@
           <div class="form-group row">
             <label class="drop-caps-label">Style</label>
             <input
+              id="page-setup-dialog-lyrics-bold"
               type="checkbox"
               v-model="form.lyricsDefaultFontWeight"
               true-value="700"
               false-value="400"
             />
-            <label>Bold</label>
+            <label for="page-setup-dialog-lyrics-bold">Bold</label>
 
             <input
+              id="page-setup-dialog-lyrics-italic"
               type="checkbox"
               v-model="form.lyricsDefaultFontStyle"
               true-value="italic"
               false-value="normal"
             />
-            <label>Italic</label>
+            <label for="page-setup-dialog-lyrics-italic">Italic</label>
           </div>
           <div class="form-group">
             <label class="drop-caps-label">Outline</label>

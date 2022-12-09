@@ -720,16 +720,20 @@ export class LayoutService {
           continue;
         }
 
+        if (line.elements.length < 2) {
+          continue;
+        }
+
         let currentWidthPx = line.elements
           .map((x) => x.width)
           .reduce((sum, x) => sum + x, 0);
 
         let extraSpace = pageSetup.innerPageWidth - currentWidthPx;
 
-        let spaceToAdd = extraSpace / line.elements.length;
+        let spaceToAdd = extraSpace / (line.elements.length - 1);
 
-        for (let [elementIndex, element] of line.elements.entries()) {
-          element.x += spaceToAdd * (elementIndex + 1);
+        for (let i = 1; i < line.elements.length; i++) {
+          line.elements[i].x += spaceToAdd * (i - 1);
         }
       }
     }

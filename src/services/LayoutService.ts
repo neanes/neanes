@@ -733,7 +733,7 @@ export class LayoutService {
         let spaceToAdd = extraSpace / (line.elements.length - 1);
 
         for (let i = 1; i < line.elements.length; i++) {
-          line.elements[i].x += spaceToAdd * (i - 1);
+          line.elements[i].x += spaceToAdd * i;
         }
       }
     }

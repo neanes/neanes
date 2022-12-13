@@ -15,7 +15,7 @@
       @toggle-page-break="togglePageBreak"
       @toggle-line-break="toggleLineBreak"
       @add-tempo="addTempo"
-      @add-drop-cap="addDropCap"
+      @add-drop-cap="addDropCap(false)"
       @delete-selected-element="deleteSelectedElement"
       @click.native="selectedLyrics = null"
     />
@@ -1133,8 +1133,12 @@ export default class Editor extends Vue {
       this.onFileMenuInsertModeKey,
     );
     EventBus.$on(
-      IpcMainChannels.FileMenuInsertDropCap,
-      this.onFileMenuInsertDropCap,
+      IpcMainChannels.FileMenuInsertDropCapBefore,
+      this.onFileMenuInsertDropCapBefore,
+    );
+    EventBus.$on(
+      IpcMainChannels.FileMenuInsertDropCapAfter,
+      this.onFileMenuInsertDropCapAfter,
     );
     EventBus.$on(
       IpcMainChannels.FileMenuInsertHeader,
@@ -1180,8 +1184,12 @@ export default class Editor extends Vue {
       this.onFileMenuInsertModeKey,
     );
     EventBus.$off(
-      IpcMainChannels.FileMenuInsertDropCap,
-      this.onFileMenuInsertDropCap,
+      IpcMainChannels.FileMenuInsertDropCapBefore,
+      this.onFileMenuInsertDropCapBefore,
+    );
+    EventBus.$off(
+      IpcMainChannels.FileMenuInsertDropCapAfter,
+      this.onFileMenuInsertDropCapAfter,
     );
     EventBus.$off(
       IpcMainChannels.FileMenuGenerateTestFile,
@@ -1475,10 +1483,18 @@ export default class Editor extends Vue {
     this.save();
   }
 
-  addDropCap() {
+  addDropCap(after: boolean) {
+    if (this.selectedElement == null) {
+      return;
+    }
+
     const element = new DropCapElement();
 
-    this.addScoreElement(element, this.selectedElementIndex + 1);
+    if (after && !this.isLastElement(this.selectedElement)) {
+      this.addScoreElement(element, this.selectedElementIndex + 1);
+    } else {
+      this.addScoreElement(element, this.selectedElementIndex);
+    }
 
     this.selectedElement = element;
     this.save();
@@ -3648,8 +3664,12 @@ export default class Editor extends Vue {
     this.save();
   }
 
-  onFileMenuInsertDropCap() {
-    this.addDropCap();
+  onFileMenuInsertDropCapBefore() {
+    this.addDropCap(false);
+  }
+
+  onFileMenuInsertDropCapAfter() {
+    this.addDropCap(true);
   }
 
   onFileMenuInsertHeader() {

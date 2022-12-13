@@ -92,7 +92,7 @@
     </div>
     <span class="space"></span>
     <button
-      title="Insert drop cap"
+      title="Insert drop cap before"
       class="icon-btn"
       @click="$emit('add-drop-cap')"
     >

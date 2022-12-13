@@ -610,10 +610,17 @@ function createMenu() {
       label: '&Insert',
       submenu: [
         {
-          label: '&Drop Cap',
+          label: '&Drop Cap Before',
           accelerator: 'CmdOrCtrl+D',
           click() {
-            win?.webContents.send(IpcMainChannels.FileMenuInsertDropCap);
+            win?.webContents.send(IpcMainChannels.FileMenuInsertDropCapBefore);
+          },
+        },
+        {
+          label: '&Drop Cap After',
+          accelerator: 'CmdOrCtrl+Shift+D',
+          click() {
+            win?.webContents.send(IpcMainChannels.FileMenuInsertDropCapAfter);
           },
         },
         {

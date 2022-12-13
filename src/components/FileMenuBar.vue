@@ -31,7 +31,8 @@
       @mouseenter="selectedMenu = 'Insert'"
       :isOpen="isMenuOpen && selectedMenu === 'Insert'"
     >
-      <FileMenuItem label="Drop Cap" @click="onClickAddDropCap" />
+      <FileMenuItem label="Drop Cap Before" @click="onClickAddDropCapBefore" />
+      <FileMenuItem label="Drop Cap After" @click="onClickAddDropCapAfter" />
       <FileMenuItem label="Text Box" @click="onClickAddTextBox" />
       <FileMenuItem label="Inline Text Box" @click="onClickAddInlineTextBox" />
       <FileMenuItem label="Mode Key" @click="onClickAddModeKey" />
@@ -121,7 +122,11 @@ export default class FileMenuBar extends Vue {
         event.preventDefault();
         return;
       } else if (event.code === 'KeyD') {
-        this.onClickAddDropCap();
+        if (event.shiftKey) {
+          this.onClickAddDropCapAfter();
+        } else {
+          this.onClickAddDropCapBefore();
+        }
         event.preventDefault();
         return;
       }
@@ -235,8 +240,13 @@ export default class FileMenuBar extends Vue {
     this.isMenuOpen = false;
   }
 
-  onClickAddDropCap() {
-    EventBus.$emit(IpcMainChannels.FileMenuInsertDropCap);
+  onClickAddDropCapBefore() {
+    EventBus.$emit(IpcMainChannels.FileMenuInsertDropCapBefore);
+    this.isMenuOpen = false;
+  }
+
+  onClickAddDropCapAfter() {
+    EventBus.$emit(IpcMainChannels.FileMenuInsertDropCapAfter);
     this.isMenuOpen = false;
   }
 

@@ -62,6 +62,12 @@
             :ref="`page-${pageIndex}`"
           >
             <template v-if="page.isVisible || printMode">
+              <template v-if="showGuides">
+                <span class="guide-line-vl" :style="guideStyleLeft" />
+                <span class="guide-line-vr" :style="guideStyleRight" />
+                <span class="guide-line-ht" :style="guideStyleTop" />
+                <span class="guide-line-hb" :style="guideStyleBottom" />
+              </template>
               <template v-if="score.pageSetup.showHeader">
                 <TextBox
                   class="element-box"
@@ -582,6 +588,8 @@ export default class Editor extends Vue {
 
   printMode: boolean = false;
 
+  showGuides: boolean = false;
+
   workspaces: Workspace[] = [];
   selectedWorkspaceValue: Workspace = new Workspace();
 
@@ -951,6 +959,34 @@ export default class Editor extends Vue {
     } as CSSStyleDeclaration;
   }
 
+  get guideStyleLeft() {
+    return {
+      left: withZoom(this.score.pageSetup.leftMargin - 1),
+      height: withZoom(this.score.pageSetup.pageHeight),
+    } as CSSStyleDeclaration;
+  }
+
+  get guideStyleRight() {
+    return {
+      right: withZoom(this.score.pageSetup.rightMargin - 1),
+      height: withZoom(this.score.pageSetup.pageHeight),
+    } as CSSStyleDeclaration;
+  }
+
+  get guideStyleTop() {
+    return {
+      top: withZoom(this.score.pageSetup.topMargin - 1),
+      width: withZoom(this.score.pageSetup.pageWidth),
+    } as CSSStyleDeclaration;
+  }
+
+  get guideStyleBottom() {
+    return {
+      bottom: withZoom(this.score.pageSetup.bottomMargin - 1),
+      width: withZoom(this.score.pageSetup.pageWidth),
+    } as CSSStyleDeclaration;
+  }
+
   get pageVisibilityIntersection() {
     // look ahead/behind 1 page
     const margin = this.score.pageSetup.pageHeight * this.zoom;
@@ -1076,6 +1112,10 @@ export default class Editor extends Vue {
   }
 
   async created() {
+    // Attach the editor component to the window variable
+    // so that it can be used for debugging
+    (window as any)._editor = this;
+
     try {
       const fontLoader = (document as any).fonts;
 
@@ -1155,6 +1195,9 @@ export default class Editor extends Vue {
   }
 
   beforeDestroy() {
+    // Remove the debugging variable from window
+    (window as any)._editor = undefined;
+
     window.removeEventListener('keydown', this.onKeydown);
     window.removeEventListener('resize', this.onWindowResizeThrottled);
 
@@ -3909,6 +3952,27 @@ export default class Editor extends Vue {
   min-width: 1rem;
   text-align: center;
   position: relative;
+}
+
+.guide-line-vl {
+  background-color: black;
+  border-left: 1px solid black;
+  position: absolute;
+}
+
+.guide-line-vr {
+  border-right: 1px solid black;
+  position: absolute;
+}
+
+.guide-line-ht {
+  border-top: 1px solid black;
+  position: absolute;
+}
+
+.guide-line-hb {
+  border-bottom: 1px solid black;
+  position: absolute;
 }
 
 .red {

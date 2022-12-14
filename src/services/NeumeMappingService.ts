@@ -82,6 +82,28 @@ mapNeumeToSbmufl(
   QuantitativeNeume.OligonPlusDoubleHypsili,
   'oligonDoubleYpsili',
 );
+mapNeumeToSbmufl(
+  QuantitativeNeume.OligonKentimataDoubleYpsili,
+  'oligonKentimataDoubleYpsili',
+);
+mapNeumeToSbmufl(
+  QuantitativeNeume.OligonKentimaDoubleYpsiliRight,
+  'oligonKentimaDoubleYpsiliRight',
+);
+mapNeumeToSbmufl(
+  QuantitativeNeume.OligonKentimaDoubleYpsiliLeft,
+  'oligonKentimaDoubleYpsiliLeft',
+);
+mapNeumeToSbmufl(QuantitativeNeume.OligonTripleYpsili, 'oligonTripleYpsili');
+mapNeumeToSbmufl(
+  QuantitativeNeume.OligonKentimataTripleYpsili,
+  'oligonKentimataTripleYpsili',
+);
+mapNeumeToSbmufl(
+  QuantitativeNeume.OligonKentimaTripleYpsili,
+  'oligonKentimaTripleYpsili',
+);
+
 mapNeumeToSbmufl(QuantitativeNeume.PetastiWithIson, 'petastiIson');
 mapNeumeToSbmufl(QuantitativeNeume.Petasti, 'petasti');
 mapNeumeToSbmufl(QuantitativeNeume.PetastiPlusOligon, 'petastiOligon');
@@ -103,6 +125,28 @@ mapNeumeToSbmufl(
   QuantitativeNeume.PetastiPlusDoubleHypsili,
   'petastiDoubleYpsili',
 );
+mapNeumeToSbmufl(
+  QuantitativeNeume.PetastiKentimataDoubleYpsili,
+  'petastiKentimataDoubleYpsili',
+);
+mapNeumeToSbmufl(
+  QuantitativeNeume.PetastiKentimaDoubleYpsiliRight,
+  'petastiKentimaDoubleYpsiliRight',
+);
+mapNeumeToSbmufl(
+  QuantitativeNeume.PetastiKentimaDoubleYpsiliLeft,
+  'petastiKentimaDoubleYpsiliLeft',
+);
+mapNeumeToSbmufl(QuantitativeNeume.PetastiTripleYpsili, 'petastiTripleYpsili');
+mapNeumeToSbmufl(
+  QuantitativeNeume.PetastiKentimataTripleYpsili,
+  'petastiKentimataTripleYpsili',
+);
+mapNeumeToSbmufl(
+  QuantitativeNeume.PetastiKentimaTripleYpsili,
+  'petastiKentimaTripleYpsili',
+);
+
 mapNeumeToSbmufl(QuantitativeNeume.Apostrophos, 'apostrofos');
 mapNeumeToSbmufl(QuantitativeNeume.Elaphron, 'elafron');
 mapNeumeToSbmufl(QuantitativeNeume.Apostrophos, 'apostrofos');
@@ -118,12 +162,42 @@ mapNeumeToSbmufl(
   'chamiliElafronApostrofos',
 );
 mapNeumeToSbmufl(QuantitativeNeume.DoubleHamili, 'doubleChamili');
+mapNeumeToSbmufl(
+  QuantitativeNeume.DoubleHamiliApostrofos,
+  'doubleChamiliApostrofos',
+);
+mapNeumeToSbmufl(QuantitativeNeume.DoubleHamiliElafron, 'doubleChamiliElafron');
+mapNeumeToSbmufl(
+  QuantitativeNeume.DoubleHamiliElafronApostrofos,
+  'doubleChamiliElafronApostrofos',
+);
+mapNeumeToSbmufl(QuantitativeNeume.TripleHamili, 'tripleChamili');
+
 mapNeumeToSbmufl(QuantitativeNeume.PetastiPlusApostrophos, 'petastiApostrofos');
 mapNeumeToSbmufl(QuantitativeNeume.PetastiPlusElaphron, 'petastiElafron');
 mapNeumeToSbmufl(
   QuantitativeNeume.PetastiPlusElaphronPlusApostrophos,
   'petastiElafronApostrofos',
 );
+mapNeumeToSbmufl(QuantitativeNeume.PetastiHamili, 'petastiChamili');
+mapNeumeToSbmufl(
+  QuantitativeNeume.PetastiHamiliApostrofos,
+  'petastiChamiliApostrofos',
+);
+mapNeumeToSbmufl(
+  QuantitativeNeume.PetastiHamiliElafron,
+  'petastiChamiliElafron',
+);
+mapNeumeToSbmufl(
+  QuantitativeNeume.PetastiHamiliElafronApostrofos,
+  'petastiChamiliElafronApostrofos',
+);
+mapNeumeToSbmufl(QuantitativeNeume.PetastiDoubleHamili, 'petastiDoubleChamili');
+mapNeumeToSbmufl(
+  QuantitativeNeume.PetastiDoubleHamiliApostrofos,
+  'petastiDoubleChamiliApostrofos',
+);
+
 mapNeumeToSbmufl(QuantitativeNeume.OligonPlusKentemata, 'oligonKentimataAbove');
 mapNeumeToSbmufl(QuantitativeNeume.KentemataPlusOligon, 'oligonKentimataBelow');
 mapNeumeToSbmufl(

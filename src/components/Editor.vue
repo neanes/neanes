@@ -3955,7 +3955,6 @@ export default class Editor extends Vue {
 }
 
 .guide-line-vl {
-  background-color: black;
   border-left: 1px solid black;
   position: absolute;
 }

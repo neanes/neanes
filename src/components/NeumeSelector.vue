@@ -227,6 +227,12 @@ export default class NeumeSelector extends Vue {
     QuantitativeNeume.VareiaDotted,
     QuantitativeNeume.Cross,
     QuantitativeNeume.Breath,
+    QuantitativeNeume.OligonKentimataDoubleYpsili,
+    QuantitativeNeume.OligonKentimaDoubleYpsiliRight,
+    QuantitativeNeume.OligonKentimaDoubleYpsiliLeft,
+    QuantitativeNeume.OligonTripleYpsili,
+    QuantitativeNeume.OligonKentimataTripleYpsili,
+    QuantitativeNeume.OligonKentimaTripleYpsili,
   ];
 
   ascendingNeumesWithPetasti: QuantitativeNeume[] = [
@@ -239,11 +245,24 @@ export default class NeumeSelector extends Vue {
     QuantitativeNeume.PetastiPlusHypsiliPlusKentimaHorizontal,
     QuantitativeNeume.PetastiPlusHypsiliPlusKentimaVertical,
     QuantitativeNeume.PetastiPlusDoubleHypsili,
+    QuantitativeNeume.PetastiKentimataDoubleYpsili,
+    QuantitativeNeume.PetastiKentimaDoubleYpsiliRight,
+    QuantitativeNeume.PetastiKentimaDoubleYpsiliLeft,
+    QuantitativeNeume.PetastiTripleYpsili,
+    QuantitativeNeume.PetastiKentimataTripleYpsili,
+    QuantitativeNeume.PetastiKentimaTripleYpsili,
+
     QuantitativeNeume.PetastiPlusApostrophos,
     QuantitativeNeume.PetastiPlusElaphron,
     QuantitativeNeume.PetastiPlusElaphronPlusApostrophos,
     QuantitativeNeume.PetastiPlusRunningElaphron,
     QuantitativeNeume.PetastiPlusHyporoe,
+    QuantitativeNeume.PetastiHamili,
+    QuantitativeNeume.PetastiHamiliApostrofos,
+    QuantitativeNeume.PetastiHamiliElafron,
+    QuantitativeNeume.PetastiHamiliElafronApostrofos,
+    QuantitativeNeume.PetastiDoubleHamili,
+    QuantitativeNeume.PetastiDoubleHamiliApostrofos,
   ];
 
   descendingNeumes: QuantitativeNeume[] = [
@@ -259,6 +278,10 @@ export default class NeumeSelector extends Vue {
     QuantitativeNeume.HamiliPlusElaphron,
     QuantitativeNeume.HamiliPlusElaphronPlusApostrophos,
     QuantitativeNeume.DoubleHamili,
+    QuantitativeNeume.DoubleHamiliApostrofos,
+    QuantitativeNeume.DoubleHamiliElafron,
+    QuantitativeNeume.DoubleHamiliElafronApostrofos,
+    QuantitativeNeume.TripleHamili,
   ];
 
   combinationNeumes: QuantitativeNeume[] = [

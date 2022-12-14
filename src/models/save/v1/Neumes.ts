@@ -10,6 +10,13 @@ export enum QuantitativeNeume {
   OligonPlusHypsiliPlusKentimaVertical = 'OligonPlusHypsiliPlusKentimaVertical',
   OligonPlusDoubleHypsili = 'OligonPlusDoubleHypsili',
 
+  OligonKentimataDoubleYpsili = 'OligonKentimataDoubleYpsili',
+  OligonKentimaDoubleYpsiliRight = 'OligonKentimaDoubleYpsiliRight',
+  OligonKentimaDoubleYpsiliLeft = 'OligonKentimaDoubleYpsiliLeft',
+  OligonTripleYpsili = 'OligonTripleYpsili',
+  OligonKentimataTripleYpsili = 'OligonKentimataTripleYpsili',
+  OligonKentimaTripleYpsili = 'OligonKentimaTripleYpsili',
+
   PetastiWithIson = 'PetastiWithIson',
   Petasti = 'Petasti',
   PetastiPlusOligon = 'PetastiPlusOligon',
@@ -20,6 +27,13 @@ export enum QuantitativeNeume {
   PetastiPlusHypsiliPlusKentimaVertical = 'PetastiPlusHypsiliPlusKentimaVertical',
   PetastiPlusDoubleHypsili = 'PetastiPlusDoubleHypsili',
 
+  PetastiKentimataDoubleYpsili = 'PetastiKentimataDoubleYpsili',
+  PetastiKentimaDoubleYpsiliRight = 'PetastiKentimaDoubleYpsiliRight',
+  PetastiKentimaDoubleYpsiliLeft = 'PetastiKentimaDoubleYpsiliLeft',
+  PetastiTripleYpsili = 'PetastiTripleYpsili',
+  PetastiKentimataTripleYpsili = 'PetastiKentimataTripleYpsili',
+  PetastiKentimaTripleYpsili = 'PetastiKentimaTripleYpsili',
+
   Apostrophos = 'Apostrophos',
   Elaphron = 'Elaphron',
   ElaphronPlusApostrophos = 'ElaphronPlusApostrophos',
@@ -29,9 +43,20 @@ export enum QuantitativeNeume {
   HamiliPlusElaphronPlusApostrophos = 'HamiliPlusElaphronPlusApostrophos',
   DoubleHamili = 'DoubleHamili',
 
+  DoubleHamiliApostrofos = 'DoubleHamiliApostrofos',
+  DoubleHamiliElafron = 'DoubleHamiliElafron',
+  DoubleHamiliElafronApostrofos = 'DoubleHamiliElafronApostrofos',
+  TripleHamili = 'TripleHamili',
+
   PetastiPlusApostrophos = 'PetastiPlusApostrophos',
   PetastiPlusElaphron = 'PetastiPlusElaphron',
   PetastiPlusElaphronPlusApostrophos = 'PetastiPlusElaphronPlusApostrophos',
+  PetastiHamili = 'PetastiHamili',
+  PetastiHamiliApostrofos = 'PetastiHamiliApostrofos',
+  PetastiHamiliElafron = 'PetastiHamiliElafron',
+  PetastiHamiliElafronApostrofos = 'PetastiHamiliElafronApostrofos',
+  PetastiDoubleHamili = 'PetastiDoubleHamili',
+  PetastiDoubleHamiliApostrofos = 'PetastiDoubleHamiliApostrofos',
 
   OligonPlusKentemata = 'OligonPlusKentemata',
   KentemataPlusOligon = 'KentemataPlusOligon',

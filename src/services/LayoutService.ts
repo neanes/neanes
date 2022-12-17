@@ -865,7 +865,10 @@ export class LayoutService {
               // If this is the last note on the page, always show the hyphen
               if (numberOfHyphensNeeded == 0 && nextElement == null) {
                 numberOfHyphensNeeded = 1;
-                element.melismaWidth = widthOfHyphen;
+                element.melismaWidth = Math.max(
+                  element.melismaWidth,
+                  widthOfHyphen + widthOfSpace,
+                );
               }
 
               if (

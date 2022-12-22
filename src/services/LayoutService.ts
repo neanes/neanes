@@ -32,6 +32,15 @@ import { Footer } from '@/models/Footer';
 const textWidthCache = new Map<string, number>();
 const neumeWidthCache = new Map<string, number>();
 
+interface GetNoteWidthArgs {
+  lyricsVerticalOffset: number;
+  vareiaWidth: number;
+  measureBarRightWidth: number;
+  measureBarTopWidth: number;
+  runningElaphronWidth: number;
+  elaphronWidth: number;
+}
+
 export class LayoutService {
   public static processPages(score: Score): Page[] {
     const pageSetup = score.pageSetup;
@@ -119,6 +128,15 @@ export class LayoutService {
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
     );
 
+    const noteWidthArgs: GetNoteWidthArgs = {
+      lyricsVerticalOffset,
+      vareiaWidth,
+      measureBarRightWidth,
+      measureBarTopWidth,
+      runningElaphronWidth,
+      elaphronWidth,
+    };
+
     // Process Header and Footers
     // Only a single text box is supported right now
     this.processHeader(score.headers.default, pageSetup, neumeHeight);
@@ -204,86 +222,23 @@ export class LayoutService {
         case ElementType.Note: {
           const noteElement = element as NoteElement;
 
-          noteElement.lyricsVerticalOffset = lyricsVerticalOffset;
-
-          noteElement.neumeWidth = this.getNeumeWidthFromCache(
-            neumeWidthCache,
-            noteElement.quantitativeNeume,
+          elementWidthPx = this.getNoteWidth(
+            noteElement,
             pageSetup,
+            noteWidthArgs,
           );
-
-          if (noteElement.lyrics.length > 0) {
-            noteElement.lyricsWidth = this.getTextWidthFromCache(
-              textWidthCache,
-              noteElement.lyrics,
-              pageSetup,
-            );
-          } else {
-            noteElement.lyricsWidth = 0;
-          }
-
-          noteElement.lyricsHorizontalOffset = 0;
-
-          // Handle special case for vareia:
-          // Shift the lyrics to the right so that they
-          // are centered under the main neume
-          if (noteElement.vareia) {
-            noteElement.lyricsHorizontalOffset += vareiaWidth;
-            noteElement.lyricsWidth += vareiaWidth;
-            noteElement.neumeWidth += vareiaWidth;
-          }
-
-          // Handle special case for measure bars:
-          // Shift the lyrics to the right so that they
-          // are centered under the main neume
-          if (noteElement.measureBarLeft === MeasureBar.MeasureBarRight) {
-            noteElement.lyricsHorizontalOffset += measureBarRightWidth;
-            noteElement.lyricsWidth += measureBarRightWidth;
-            noteElement.neumeWidth += measureBarRightWidth;
-          }
-
-          if (noteElement.measureBarLeft === MeasureBar.MeasureBarTop) {
-            noteElement.lyricsHorizontalOffset += measureBarTopWidth;
-            noteElement.lyricsWidth += measureBarTopWidth;
-            noteElement.neumeWidth += measureBarTopWidth;
-          }
-
-          if (noteElement.measureBarRight === MeasureBar.MeasureBarRight) {
-            noteElement.lyricsHorizontalOffset -= measureBarRightWidth;
-            noteElement.lyricsWidth += measureBarRightWidth;
-            noteElement.neumeWidth += measureBarRightWidth;
-          }
-
-          if (noteElement.measureBarRight === MeasureBar.MeasureBarTop) {
-            noteElement.lyricsHorizontalOffset -= measureBarTopWidth;
-            noteElement.lyricsWidth += measureBarTopWidth;
-            noteElement.neumeWidth += measureBarTopWidth;
-          }
-
-          // Handle special case for running elaphron:
-          // Shift the lyrics to the right so that they
-          // are centered under the elaphron
-          if (
-            noteElement.quantitativeNeume === QuantitativeNeume.RunningElaphron
-          ) {
-            // The stand-alone apostrophos is not the same width
-            // as the apostrophros in the running elaphron, but
-            // the elaphrons are the same width in both neumes.
-            const offset = runningElaphronWidth - elaphronWidth;
-            noteElement.lyricsHorizontalOffset += offset;
-            noteElement.lyricsWidth += offset;
-          }
-
-          elementWidthPx = Math.max(
-            noteElement.neumeWidth,
-            noteElement.lyricsWidth,
-          );
-
-          elementWidthPx += noteElement.spaceAfter;
 
           const nextElement = elements[i + 1];
 
           // Keep note and martyria together
+          // and keep two tied notes together
+
+          const ties = [
+            VocalExpressionNeume.HeteronConnecting,
+            VocalExpressionNeume.HeteronConnectingLong,
+            VocalExpressionNeume.HomalonConnecting,
+          ];
+
           if (
             nextElement != null &&
             nextElement.elementType === ElementType.Martyria
@@ -291,6 +246,17 @@ export class LayoutService {
             additionalWidth =
               this.getMartyriaWidth(nextElement as MartyriaElement, pageSetup) +
               pageSetup.neumeDefaultSpacing;
+          } else if (
+            noteElement.vocalExpressionNeume != null &&
+            ties.includes(noteElement?.vocalExpressionNeume) &&
+            nextElement?.elementType === ElementType.Note
+          ) {
+            additionalWidth =
+              this.getNoteWidth(
+                nextElement as NoteElement,
+                pageSetup,
+                noteWidthArgs,
+              ) + pageSetup.neumeDefaultSpacing;
           }
           break;
         }
@@ -643,6 +609,94 @@ export class LayoutService {
     }
 
     return elementWidthPx;
+  }
+
+  public static getNoteWidth(
+    noteElement: NoteElement,
+    pageSetup: PageSetup,
+    args: GetNoteWidthArgs,
+  ) {
+    const {
+      lyricsVerticalOffset,
+      vareiaWidth,
+      measureBarRightWidth,
+      measureBarTopWidth,
+      runningElaphronWidth,
+      elaphronWidth,
+    } = args;
+
+    noteElement.lyricsVerticalOffset = lyricsVerticalOffset;
+
+    noteElement.neumeWidth = this.getNeumeWidthFromCache(
+      neumeWidthCache,
+      noteElement.quantitativeNeume,
+      pageSetup,
+    );
+
+    if (noteElement.lyrics.length > 0) {
+      noteElement.lyricsWidth = this.getTextWidthFromCache(
+        textWidthCache,
+        noteElement.lyrics,
+        pageSetup,
+      );
+    } else {
+      noteElement.lyricsWidth = 0;
+    }
+
+    noteElement.lyricsHorizontalOffset = 0;
+
+    // Handle special case for vareia:
+    // Shift the lyrics to the right so that they
+    // are centered under the main neume
+    if (noteElement.vareia) {
+      noteElement.lyricsHorizontalOffset += vareiaWidth;
+      noteElement.lyricsWidth += vareiaWidth;
+      noteElement.neumeWidth += vareiaWidth;
+    }
+
+    // Handle special case for measure bars:
+    // Shift the lyrics to the right so that they
+    // are centered under the main neume
+    if (noteElement.measureBarLeft === MeasureBar.MeasureBarRight) {
+      noteElement.lyricsHorizontalOffset += measureBarRightWidth;
+      noteElement.lyricsWidth += measureBarRightWidth;
+      noteElement.neumeWidth += measureBarRightWidth;
+    }
+
+    if (noteElement.measureBarLeft === MeasureBar.MeasureBarTop) {
+      noteElement.lyricsHorizontalOffset += measureBarTopWidth;
+      noteElement.lyricsWidth += measureBarTopWidth;
+      noteElement.neumeWidth += measureBarTopWidth;
+    }
+
+    if (noteElement.measureBarRight === MeasureBar.MeasureBarRight) {
+      noteElement.lyricsHorizontalOffset -= measureBarRightWidth;
+      noteElement.lyricsWidth += measureBarRightWidth;
+      noteElement.neumeWidth += measureBarRightWidth;
+    }
+
+    if (noteElement.measureBarRight === MeasureBar.MeasureBarTop) {
+      noteElement.lyricsHorizontalOffset -= measureBarTopWidth;
+      noteElement.lyricsWidth += measureBarTopWidth;
+      noteElement.neumeWidth += measureBarTopWidth;
+    }
+
+    // Handle special case for running elaphron:
+    // Shift the lyrics to the right so that they
+    // are centered under the elaphron
+    if (noteElement.quantitativeNeume === QuantitativeNeume.RunningElaphron) {
+      // The stand-alone apostrophos is not the same width
+      // as the apostrophros in the running elaphron, but
+      // the elaphrons are the same width in both neumes.
+      const offset = runningElaphronWidth - elaphronWidth;
+      noteElement.lyricsHorizontalOffset += offset;
+      noteElement.lyricsWidth += offset;
+    }
+
+    return (
+      noteElement.spaceAfter +
+      Math.max(noteElement.neumeWidth, noteElement.lyricsWidth)
+    );
   }
 
   public static getMartyriaWidth(

@@ -840,6 +840,10 @@ export class PlaybackService {
     // TODO handle trigorgon dotted
     [GorgonNeume.TrigorgonDottedLeft1Secondary, [0.75, 0.75, 0.75, 0.75]],
     [GorgonNeume.TrigorgonDottedRightSecondary, [0.75, 0.75, 0.75, 0.75]],
+
+    [GorgonNeume.Argon, [0.5, 0.5, -1]],
+    [GorgonNeume.Hemiolion, [0.5, 0.5, -2]],
+    [GorgonNeume.Diargon, [0.5, 0.5, -3]],
   ]);
 
   restMap = new Map<QuantitativeNeume, number>([

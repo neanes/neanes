@@ -18,6 +18,9 @@
       @add-drop-cap="addDropCap(false)"
       @delete-selected-element="deleteSelectedElement"
       @click.native="selectedLyrics = null"
+      @play-audio="playAudio"
+      @stop-audio="stopAudio"
+      @pause-audio="pauseAudio"
     />
     <div class="content">
       <NeumeSelector
@@ -550,6 +553,8 @@ import {
   onlyTakesTopKlasma,
 } from '@/models/NeumeReplacements';
 
+import { AudioService, PlaybackService } from '@/services/audio/AudioService';
+
 @Component({
   components: {
     SyllableNeumeBox,
@@ -605,6 +610,9 @@ export default class Editor extends Vue {
 
   neumeKeyboard: NeumeKeyboard = new NeumeKeyboard();
   keyboardModifier: string | null = null;
+
+  audioService = new AudioService();
+  playbackService = new PlaybackService();
 
   // Commands
   noteElementCommandFactory: CommandFactory<NoteElement> =
@@ -3589,6 +3597,19 @@ export default class Editor extends Vue {
       parseFloat(computedStyle.paddingRight);
 
     this.zoom = availableWidth / this.score.pageSetup.pageWidth;
+  }
+
+  playAudio() {
+    const events = this.playbackService.computePlaybackSequence(this.elements);
+    this.audioService.play(events);
+  }
+
+  stopAudio() {
+    this.audioService.stop();
+  }
+
+  pauseAudio() {
+    this.audioService.pause();
   }
 
   onFileMenuNewScore() {

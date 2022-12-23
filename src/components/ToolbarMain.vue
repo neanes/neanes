@@ -144,6 +144,11 @@
         </div>
       </div>
     </div>
+    <div>
+      <button @click="$emit('play-audio')">Play</button>
+      <button @click="$emit('stop-audio')">Stop</button>
+      <button @click="$emit('pause-audio')">Pause</button>
+    </div>
   </div>
 </template>
 

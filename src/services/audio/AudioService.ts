@@ -475,6 +475,72 @@ export class PlaybackService {
 
           events.push(event2);
         } else if (
+          noteElement.quantitativeNeume === QuantitativeNeume.DoubleApostrophos
+        ) {
+          // Process first note
+          const initialDistance = -1;
+
+          this.moveDistance(workspace, initialDistance);
+
+          if (noteElement.secondaryGorgonNeume) {
+            const gorgonIndex: GorgonIndex = {
+              neume: noteElement.secondaryGorgonNeume,
+              index: events.length,
+              beat,
+            };
+
+            console.log('gorgonIndex', gorgonIndex);
+
+            gorgonIndexes.push(gorgonIndex);
+          }
+
+          const event1: PlaybackSequenceEvent = {
+            frequency: workspace.frequency,
+            type: 'note',
+            duration: 1 * beat,
+            time: 0,
+          };
+
+          events.push(event1);
+
+          // Process the kentimata
+          let event2Duration = 1 * beat;
+
+          this.moveDistance(workspace, -1);
+
+          if (noteElement.gorgonNeume) {
+            const gorgonIndex: GorgonIndex = {
+              neume: noteElement.gorgonNeume,
+              index: events.length,
+              beat,
+            };
+
+            console.log('gorgonIndex', gorgonIndex);
+
+            gorgonIndexes.push(gorgonIndex);
+          }
+
+          // Calculate accidentals
+          let alteredFrequency = workspace.frequency;
+
+          if (noteElement.accidental != null) {
+            const alteration = this.alterationMap.get(noteElement.accidental)!;
+            alteredFrequency = this.changeFrequency(
+              alteredFrequency,
+              alteration,
+            );
+            console.log('alteration', alteration);
+          }
+
+          const event2: PlaybackSequenceEvent = {
+            frequency: alteredFrequency,
+            type: 'note',
+            duration: event2Duration,
+            time: 0,
+          };
+
+          events.push(event2);
+        } else if (
           noteElement.quantitativeNeume === QuantitativeNeume.RunningElaphron
         ) {
           // Process first note

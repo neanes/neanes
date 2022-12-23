@@ -3600,8 +3600,12 @@ export default class Editor extends Vue {
   }
 
   playAudio() {
-    const events = this.playbackService.computePlaybackSequence(this.elements);
-    this.audioService.play(events);
+    const { events, startAt } = this.playbackService.computePlaybackSequence(
+      this.elements,
+      this.selectedElementIndex,
+    );
+
+    this.audioService.play(events, startAt);
   }
 
   stopAudio() {

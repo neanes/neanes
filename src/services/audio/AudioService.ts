@@ -25,9 +25,14 @@ export interface PlaybackSequenceEvent {
 
 interface PlaybackWorkspace {
   frequency: number;
-  time: number;
   note: number;
   scale: number[];
+}
+
+interface GorgonIndex {
+  index: number;
+  neume: GorgonNeume;
+  beat: number;
 }
 
 export class AudioService {
@@ -48,7 +53,7 @@ export class AudioService {
     //this.synth.sync();
   }
 
-  play(events: PlaybackSequenceEvent[]) {
+  play(events: PlaybackSequenceEvent[], startAt: number | null) {
     const synth = this.synth;
 
     this.stop();
@@ -77,6 +82,14 @@ export class AudioService {
     const lastEvent = events[events.length - 1];
     finishEvent.start(lastEvent.time + lastEvent.duration);
 
+    const startTime = startAt != null ? events[startAt].time : 0;
+
+    if (startAt != null) {
+      console.log('starting at', events[startAt]);
+    }
+
+    Tone.Transport.position = startTime;
+
     Tone.Transport.start();
   }
 
@@ -100,7 +113,9 @@ export class AudioService {
   }
 
   createVoiceSynth() {
+    //{w:"triangle",v:.3,a:.05,s:1}
     //[{w:"triangle",v:0.6,a:0.05,s:0.5,},{w:"sine",v:1,f:0.8,d:0.2,s:0.2,g:1,}],
+    //{g:0,w:"sine",t:1,f:0,v:0.5,a:0,h:0.01,d:0.01,s:0,r:0.05,p:1,q:1,k:0};
     return new Tone.FMSynth({
       oscillator: {
         type: 'triangle',
@@ -109,6 +124,7 @@ export class AudioService {
       envelope: {
         attack: 0.05,
         sustain: 0.5,
+        release: 0.05,
       },
       modulation: {
         type: 'sine',
@@ -155,14 +171,19 @@ export class PlaybackService {
   hardChromaticScale = [6, 20, 4, 12];
   softChromaticScale = [8, 14, 8, 12];
 
-  computePlaybackSequence(elements: ScoreElement[]): PlaybackSequenceEvent[] {
+  computePlaybackSequence(
+    elements: ScoreElement[],
+    startAtElementIndex: number | null,
+  ) {
     const events: PlaybackSequenceEvent[] = [];
+    const gorgonIndexes: GorgonIndex[] = [];
+
+    let startAtEventIndex: number | null = null;
 
     const frequencyPa = 293.66;
 
     let workspace: PlaybackWorkspace = {
       note: 0,
-      time: 0,
       frequency: frequencyPa,
       scale: this.diatonicScale,
     };
@@ -172,74 +193,59 @@ export class PlaybackService {
 
     for (let i = 0; i < elements.length; i++) {
       let element = elements[i];
-      let nextElement = elements[i + 1];
 
       if (element.elementType === ElementType.Note) {
-        const noteElement = element as NoteElement;
+        if (i === startAtElementIndex) {
+          console.log('startAt', element);
+          startAtEventIndex = events.length;
+        }
 
-        let duration = 1 * beat;
+        const noteElement = element as NoteElement;
 
         // If we moved, calculate the new note
         const distance = getNeumeValue(noteElement.quantitativeNeume)!;
 
-        if (this.isKentimata(noteElement.quantitativeNeume)) {
+        if (this.isKentimataCombo(noteElement)) {
           // Process first note
           const initialDistance = distance - 1;
 
           this.moveDistance(workspace, initialDistance);
 
-          if (noteElement.gorgonNeume === GorgonNeume.Gorgon_Top) {
-            duration = 0.5 * beat;
+          if (noteElement.secondaryGorgonNeume) {
+            const gorgonIndex: GorgonIndex = {
+              neume: noteElement.secondaryGorgonNeume,
+              index: events.length,
+              beat,
+            };
+
+            console.log('gorgonIndex', gorgonIndex);
+
+            gorgonIndexes.push(gorgonIndex);
           }
 
           const event: PlaybackSequenceEvent = {
             frequency: workspace.frequency,
             type: 'note',
-            duration,
-            time: workspace.time,
+            duration: 1 * beat,
+            time: 0,
           };
 
-          workspace.time += duration;
-
-          if (workspace.time === event.time) {
-            console.error('heyho you done messed up');
-          }
-
-          // TODO Remove?
-          // // Calculate time
-          // if (noteElement.timeNeume != null) {
-          //   duration += this.timeMap.get(noteElement.timeNeume)! * beat;
-          // }
-
-          // if (
-          //   noteElement.quantitativeNeume ===
-          //     QuantitativeNeume.RunningElaphron ||
-          //   noteElement.gorgonNeume === GorgonNeume.Gorgon_Top
-          // ) {
-          //   duration = 0.5 * beat;
-          // }
-
-          // if (nextElement?.elementType === ElementType.Note) {
-          //   const nextNoteElement = nextElement as NoteElement;
-
-          //   if (
-          //     nextNoteElement.quantitativeNeume ===
-          //     QuantitativeNeume.RunningElaphron
-          //   ) {
-          //     duration -= 0.5 * beat;
-          //   } else if (nextNoteElement.gorgonNeume === GorgonNeume.Gorgon_Top) {
-          //     duration -= 0.5 * beat;
-          //   }
-          // }
+          events.push(event);
 
           // Process the kentimata
-          duration = 1 * beat;
-
-          if (noteElement.gorgonNeume === GorgonNeume.Gorgon_Top) {
-            duration = 0.5 * beat;
-          }
-
           this.moveDistance(workspace, 1);
+
+          if (noteElement.gorgonNeume) {
+            const gorgonIndex: GorgonIndex = {
+              neume: noteElement.gorgonNeume,
+              index: events.length,
+              beat,
+            };
+
+            console.log('gorgonIndex', gorgonIndex);
+
+            gorgonIndexes.push(gorgonIndex);
+          }
 
           // Calculate accidentals
           let alteredFrequency = workspace.frequency;
@@ -256,13 +262,10 @@ export class PlaybackService {
           const kentimataEvent: PlaybackSequenceEvent = {
             frequency: alteredFrequency,
             type: 'note',
-            duration,
-            time: workspace.time,
+            duration: 1 * beat,
+            time: 0,
           };
 
-          workspace.time += duration;
-
-          events.push(event);
           events.push(kentimataEvent);
         } else if (
           noteElement.quantitativeNeume ===
@@ -273,30 +276,34 @@ export class PlaybackService {
 
           this.moveDistance(workspace, initialDistance);
 
-          if (noteElement.gorgonNeume === GorgonNeume.Gorgon_Top) {
-            duration = 0.5 * beat;
+          if (noteElement.gorgonNeume) {
+            const gorgonIndex: GorgonIndex = {
+              neume: noteElement.gorgonNeume,
+              index: events.length,
+              beat,
+            };
+
+            console.log('gorgonIndex', gorgonIndex);
+
+            gorgonIndexes.push(gorgonIndex);
           }
 
           const kentimataEvent: PlaybackSequenceEvent = {
             frequency: workspace.frequency,
             type: 'note',
-            duration,
-            time: workspace.time,
+            duration: 1 * beat,
+            time: 0,
           };
 
-          workspace.time += duration;
-
-          if (workspace.time === kentimataEvent.time) {
-            console.error('heyho you done messed up');
-          }
+          events.push(kentimataEvent);
 
           // Process the kentimata
-          duration = 1 * beat;
+          let oligonDuration = 1 * beat;
 
           this.moveDistance(workspace, 1);
 
           if (noteElement.timeNeume != null) {
-            duration += this.timeMap.get(noteElement.timeNeume)! * beat;
+            oligonDuration += this.timeMap.get(noteElement.timeNeume)! * beat;
           }
 
           // Calculate accidentals
@@ -314,13 +321,10 @@ export class PlaybackService {
           const oligonEvent: PlaybackSequenceEvent = {
             frequency: alteredFrequency,
             type: 'note',
-            duration,
-            time: workspace.time,
+            duration: oligonDuration,
+            time: 0,
           };
 
-          workspace.time += duration;
-
-          events.push(kentimataEvent);
           events.push(oligonEvent);
         } else if (
           noteElement.quantitativeNeume === QuantitativeNeume.Hyporoe
@@ -330,23 +334,35 @@ export class PlaybackService {
 
           this.moveDistance(workspace, initialDistance);
 
-          if (noteElement.gorgonNeume === GorgonNeume.Gorgon_Top) {
-            duration = 0.5 * beat;
+          if (noteElement.gorgonNeume) {
+            const gorgonIndex: GorgonIndex = {
+              neume: noteElement.gorgonNeume,
+              index: events.length,
+              beat,
+            };
+
+            console.log('gorgonIndex', gorgonIndex);
+
+            gorgonIndexes.push(gorgonIndex);
           }
 
           const event1: PlaybackSequenceEvent = {
             frequency: workspace.frequency,
             type: 'note',
-            duration,
-            time: workspace.time,
+            duration: 1 * beat,
+            time: 0,
           };
 
-          workspace.time += duration;
+          events.push(event1);
 
           // Process the kentimata
-          duration = 1 * beat;
+          let event2Duration = 1 * beat;
 
           this.moveDistance(workspace, -1);
+
+          if (noteElement.timeNeume != null) {
+            event2Duration += this.timeMap.get(noteElement.timeNeume)! * beat;
+          }
 
           // Calculate accidentals
           let alteredFrequency = workspace.frequency;
@@ -363,38 +379,45 @@ export class PlaybackService {
           const event2: PlaybackSequenceEvent = {
             frequency: alteredFrequency,
             type: 'note',
-            duration,
-            time: workspace.time,
+            duration: event2Duration,
+            time: 0,
           };
 
-          workspace.time += duration;
-
-          events.push(event1);
           events.push(event2);
         } else if (
           noteElement.quantitativeNeume === QuantitativeNeume.RunningElaphron
         ) {
           // Process first note
           this.moveDistance(workspace, -1);
-          duration = 0.5 * beat;
+
+          // Add a virtual gorgon
+          const gorgonIndex: GorgonIndex = {
+            neume: GorgonNeume.Gorgon_Top,
+            index: events.length,
+            beat,
+          };
+
+          console.log('gorgonIndex (virtual)', gorgonIndex);
+
+          gorgonIndexes.push(gorgonIndex);
 
           const event1: PlaybackSequenceEvent = {
             frequency: workspace.frequency,
             type: 'note',
-            duration,
-            time: workspace.time,
+            duration: 1 * beat,
+            time: 0,
           };
 
-          workspace.time += duration;
+          events.push(event1);
 
           // Process the second note
-          duration = 1 * beat;
-
-          if (noteElement.gorgonNeume === GorgonNeume.Gorgon_Top) {
-            duration -= 0.5 * beat;
-          }
+          let event2Duration = 1 * beat;
 
           this.moveDistance(workspace, -1);
+
+          if (noteElement.timeNeume != null) {
+            event2Duration += this.timeMap.get(noteElement.timeNeume)! * beat;
+          }
 
           // Calculate accidentals
           let alteredFrequency = workspace.frequency;
@@ -411,40 +434,41 @@ export class PlaybackService {
           const event2: PlaybackSequenceEvent = {
             frequency: alteredFrequency,
             type: 'note',
-            duration,
-            time: workspace.time,
+            duration: event2Duration,
+            time: 0,
           };
 
-          workspace.time += duration;
-
-          events.push(event1);
           events.push(event2);
+        } else if (this.isRest(noteElement)) {
+          let duration = this.restMap.get(noteElement.quantitativeNeume)!;
+
+          const restEvent: PlaybackSequenceEvent = {
+            type: 'rest',
+            duration,
+            time: 0,
+          };
+
+          events.push(restEvent);
         } else {
           this.moveDistance(workspace, distance);
+
+          let duration = 1 * beat;
 
           // Calculate time
           if (noteElement.timeNeume != null) {
             duration += this.timeMap.get(noteElement.timeNeume)! * beat;
           }
 
-          if (noteElement.gorgonNeume === GorgonNeume.Gorgon_Top) {
-            duration -= 0.5 * beat;
-          }
+          if (noteElement.gorgonNeume) {
+            const gorgonIndex: GorgonIndex = {
+              neume: noteElement.gorgonNeume,
+              index: events.length,
+              beat,
+            };
 
-          if (nextElement?.elementType === ElementType.Note) {
-            const nextNoteElement = nextElement as NoteElement;
+            console.log('gorgonIndex', gorgonIndex);
 
-            if (
-              nextNoteElement.quantitativeNeume ===
-              QuantitativeNeume.RunningElaphron
-            ) {
-              duration -= 0.5 * beat;
-            } else if (
-              nextNoteElement.gorgonNeume === GorgonNeume.Gorgon_Top &&
-              !this.isKentimata(nextNoteElement.quantitativeNeume)
-            ) {
-              duration -= 0.5 * beat;
-            }
+            gorgonIndexes.push(gorgonIndex);
           }
 
           // Calculate accidentals
@@ -463,10 +487,8 @@ export class PlaybackService {
             frequency: alteredFrequency,
             type: 'note',
             duration,
-            time: workspace.time,
+            time: 0,
           };
-
-          workspace.time += duration;
 
           events.push(event);
         }
@@ -512,9 +534,19 @@ export class PlaybackService {
       }
     }
 
-    console.log('playback events', events);
+    this.processGorgons(events, gorgonIndexes);
 
-    return events;
+    // Calculate times
+    let time = 0;
+
+    for (let event of events) {
+      event.time = time;
+      time += event.duration;
+    }
+
+    console.log('playback events', events, startAtEventIndex);
+
+    return { events, startAt: startAtEventIndex };
   }
 
   ////////////////////
@@ -563,9 +595,11 @@ export class PlaybackService {
     workspace.frequency = this.changeFrequency(workspace.frequency, moria);
   }
 
-  isKentimata(neume: QuantitativeNeume) {
+  isKentimataCombo(element: NoteElement) {
+    // Note that this does not contain
+    // oligon with kentimata below because it is
+    // a special case
     return [
-      //QuantitativeNeume.Kentemata,
       QuantitativeNeume.OligonPlusHamiliPlusKentemata,
       QuantitativeNeume.OligonPlusIsonPlusKentemata,
       QuantitativeNeume.OligonPlusHyporoePlusKentemata,
@@ -577,7 +611,41 @@ export class PlaybackService {
       QuantitativeNeume.OligonPlusKentemataPlusHypsiliRight,
       QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
       QuantitativeNeume.OligonPlusKentemata,
-    ].includes(neume);
+    ].includes(element.quantitativeNeume);
+  }
+
+  isRest(element: NoteElement) {
+    return [
+      QuantitativeNeume.Breath,
+      QuantitativeNeume.Cross,
+      QuantitativeNeume.VareiaDotted,
+      QuantitativeNeume.VareiaDotted2,
+      QuantitativeNeume.VareiaDotted3,
+      QuantitativeNeume.VareiaDotted4,
+    ].includes(element.quantitativeNeume);
+  }
+
+  processGorgons(
+    events: PlaybackSequenceEvent[],
+    gorgonIndexes: GorgonIndex[],
+  ) {
+    for (let gorgon of gorgonIndexes) {
+      const durations = this.gorgonMap.get(gorgon.neume)!;
+
+      // TODO: handle the case where the user has made an
+      // error and placed gorgons in a location where
+      // affectedEvents.length < durations.length
+      const affectedEvents = events.slice(
+        gorgon.index - 1,
+        gorgon.index + durations.length - 1,
+      );
+
+      for (let i = 0; i < durations.length; i++) {
+        if (affectedEvents[i]) {
+          affectedEvents[i].duration -= durations[i] * gorgon.beat;
+        }
+      }
+    }
   }
 
   /////////////////////////
@@ -608,6 +676,42 @@ export class PlaybackService {
     [Accidental.Sharp_4_Left, 4],
     [Accidental.Sharp_6_Left, 6],
     [Accidental.Sharp_8_Left, 8],
+  ]);
+
+  gorgonMap = new Map<GorgonNeume, number[]>([
+    [GorgonNeume.Gorgon_Top, [0.5, 0.5]],
+    [GorgonNeume.Gorgon_Bottom, [0.5, 0.5]],
+    [GorgonNeume.GorgonDottedLeft, [1 / 3, 2 / 3]],
+    [GorgonNeume.GorgonDottedRight, [2 / 3, 1 / 3]],
+    [GorgonNeume.Digorgon, [2 / 3, 2 / 3, 2 / 3]],
+    [GorgonNeume.DigorgonDottedLeft1, [0.5, 0.75, 0.75]],
+    [GorgonNeume.DigorgonDottedLeft2, [0.75, 0.5, 0.75]],
+    [GorgonNeume.DigorgonDottedRight, [0.75, 0.75, 0.5]],
+    [GorgonNeume.Trigorgon, [0.75, 0.75, 0.75, 0.75]],
+    // TODO handle trigorgon dotted
+    [GorgonNeume.TrigorgonDottedLeft1, [0.75, 0.75, 0.75, 0.75]],
+    [GorgonNeume.TrigorgonDottedLeft2, [0.75, 0.75, 0.75, 0.75]],
+    [GorgonNeume.TrigorgonDottedRight, [0.75, 0.75, 0.75, 0.75]],
+    // Secondary
+    [GorgonNeume.GorgonSecondary, [0.5, 0.5]],
+    [GorgonNeume.GorgonDottedLeftSecondary, [1 / 3, 2 / 3]],
+    [GorgonNeume.GorgonDottedRightSecondary, [2 / 3, 1 / 3]],
+    [GorgonNeume.DigorgonSecondary, [2 / 3, 2 / 3, 2 / 3]],
+    [GorgonNeume.DigorgonDottedLeft1Secondary, [0.5, 0.75, 0.75]],
+    [GorgonNeume.DigorgonDottedRightSecondary, [0.75, 0.75, 0.5]],
+    [GorgonNeume.TrigorgonSecondary, [0.75, 0.75, 0.75, 0.75]],
+    // TODO handle trigorgon dotted
+    [GorgonNeume.TrigorgonDottedLeft1Secondary, [0.75, 0.75, 0.75, 0.75]],
+    [GorgonNeume.TrigorgonDottedRightSecondary, [0.75, 0.75, 0.75, 0.75]],
+  ]);
+
+  restMap = new Map<QuantitativeNeume, number>([
+    [QuantitativeNeume.Breath, 0],
+    [QuantitativeNeume.Cross, 0],
+    [QuantitativeNeume.VareiaDotted, 1],
+    [QuantitativeNeume.VareiaDotted2, 2],
+    [QuantitativeNeume.VareiaDotted3, 3],
+    [QuantitativeNeume.VareiaDotted4, 4],
   ]);
 
   timeMap = new Map<TimeNeume, number>([

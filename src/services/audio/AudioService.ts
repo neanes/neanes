@@ -71,6 +71,7 @@ export class AudioService {
         });
 
         toneEvent.start(event.time);
+        this.toneEvents.push(toneEvent);
       }
     }
 
@@ -81,6 +82,7 @@ export class AudioService {
 
     const lastEvent = events[events.length - 1];
     finishEvent.start(lastEvent.time + lastEvent.duration);
+    this.toneEvents.push(finishEvent);
 
     const startTime = startAt != null ? events[startAt].time : 0;
 
@@ -100,12 +102,16 @@ export class AudioService {
     Tone.Transport.position = 0;
     Tone.Transport.cancel();
 
-    //this.toneEvents.forEach((e) => e.dispose());
-    //this.toneEvents = [];
+    this.toneEvents.forEach((e) => e.dispose());
+    this.toneEvents = [];
   }
 
   pause() {
     Tone.Transport.pause();
+  }
+
+  resume() {
+    Tone.Transport.start();
   }
 
   nextNote(currentFrequency: number, moria: number) {

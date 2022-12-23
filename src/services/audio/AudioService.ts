@@ -229,7 +229,8 @@ export class PlaybackService {
       } else if (element.elementType === ElementType.ModeKey) {
         const modeKeyElement = element as ModeKeyElement;
 
-        let pa = 1;
+        const frequencyDi = 392;
+        let di = 4;
 
         if (modeKeyElement.scale === Scale.Diatonic) {
           currentScale = this.diatonicScale;
@@ -247,21 +248,21 @@ export class PlaybackService {
             modeKeyElement.scaleNote,
           )!;
 
-          pa = 0;
+          di = 3;
         }
 
         const moria = this.moriaBetweenNotes(
-          pa,
+          di,
           currentScale,
-          currentNote - pa,
+          currentNote - di,
         );
 
-        currentFrequency = this.changeFrequency(frequencyPa, moria);
+        currentFrequency = this.changeFrequency(frequencyDi, moria);
         console.log(
           'frequency change',
           currentFrequency,
           moria,
-          pa,
+          di,
           currentNote,
         );
       }

@@ -10,6 +10,7 @@ import { ToneEvent } from 'tone';
 import {
   Accidental,
   GorgonNeume,
+  Ison,
   QuantitativeNeume,
   TimeNeume,
 } from '@/models/Neumes';
@@ -17,7 +18,7 @@ import { Scale, ScaleNote } from '@/models/Scales';
 
 export interface PlaybackSequenceEvent {
   frequency?: number;
-  type: 'note' | 'rest';
+  type: 'note' | 'rest' | 'ison';
   duration: number;
   bpm?: number;
   time: number;
@@ -26,7 +27,7 @@ export interface PlaybackSequenceEvent {
 interface PlaybackWorkspace {
   frequency: number;
   note: number;
-  scale: number[];
+  scale: PlaybackScale;
 }
 
 interface GorgonIndex {
@@ -35,13 +36,20 @@ interface GorgonIndex {
   beat: number;
 }
 
+interface PlaybackScale {
+  intervals: number[];
+  scaleNoteMap: Map<ScaleNote, number>;
+  isonMap: Map<Ison, number>;
+}
+
 export class AudioService {
-  // Scales
+  // Scales for debugging
   diatonicScale = [12, 10, 8, 12, 12, 10, 8];
   hardChromaticScale = [6, 20, 4, 12, 6, 20, 4];
   softChromaticScale = [8, 14, 8, 12, 8, 14, 8];
 
   synth: Tone.Synth | Tone.FMSynth;
+  isonSynth: Tone.Synth | Tone.FMSynth;
 
   part: Tone.Part | null = null;
 
@@ -50,13 +58,19 @@ export class AudioService {
   constructor() {
     //this.synth = new Tone.Synth().toDestination();
     this.synth = this.createVoiceSynth().toDestination();
+    this.isonSynth = this.createVoiceSynth().toDestination();
+
+    this.isonSynth.volume.value = -4;
     //this.synth.sync();
   }
 
   play(events: PlaybackSequenceEvent[], startAt: number | null) {
     const synth = this.synth;
+    const isonSynth = this.isonSynth;
 
     this.stop();
+
+    let isonUnison = false;
 
     for (let event of events) {
       if (event.type === 'note') {
@@ -67,7 +81,26 @@ export class AudioService {
 
           synth.triggerAttackRelease(event.frequency!, event.duration, time);
 
+          if (isonUnison) {
+            isonSynth.triggerAttack(event.frequency!, time);
+          }
+
           console.log(time, event);
+        });
+
+        toneEvent.start(event.time);
+        this.toneEvents.push(toneEvent);
+      } else if (event.type === 'ison') {
+        let toneEvent = new ToneEvent((time) => {
+          isonSynth.triggerRelease(time);
+
+          isonUnison = event.frequency === -1;
+
+          if (!isonUnison) {
+            isonSynth.triggerAttack(event.frequency!, time);
+          }
+
+          console.log(time, isonUnison, event);
         });
 
         toneEvent.start(event.time);
@@ -77,6 +110,8 @@ export class AudioService {
 
     const finishEvent = new ToneEvent((time) => {
       console.log('playback finished', time);
+      isonSynth.triggerRelease(time);
+      synth.triggerRelease(time);
       Tone.Transport.stop();
     });
 
@@ -97,6 +132,10 @@ export class AudioService {
 
   stop() {
     console.log('stop');
+    // Stop the synths
+    this.isonSynth.triggerRelease();
+    this.synth.triggerRelease();
+
     // Reset the transport
     Tone.Transport.stop();
     Tone.Transport.position = 0;
@@ -130,6 +169,7 @@ export class AudioService {
       envelope: {
         attack: 0.05,
         sustain: 0.5,
+        decay: 0.01,
         release: 0.05,
       },
       modulation: {
@@ -139,6 +179,7 @@ export class AudioService {
       modulationEnvelope: {
         decay: 0.2,
         sustain: 0.2,
+        release: 0.05,
       },
       modulationIndex: 0.8,
     });
@@ -173,10 +214,6 @@ export class AudioService {
 }
 
 export class PlaybackService {
-  diatonicScale = [12, 10, 8, 12, 12, 10, 8];
-  hardChromaticScale = [6, 20, 4, 12];
-  softChromaticScale = [8, 14, 8, 12];
-
   computePlaybackSequence(
     elements: ScoreElement[],
     startAtElementIndex: number | null,
@@ -187,6 +224,7 @@ export class PlaybackService {
     let startAtEventIndex: number | null = null;
 
     const frequencyPa = 293.66;
+    const frequencyDi = 392;
 
     let workspace: PlaybackWorkspace = {
       note: 0,
@@ -207,6 +245,52 @@ export class PlaybackService {
         }
 
         const noteElement = element as NoteElement;
+
+        // Check ison
+        if (noteElement.ison) {
+          // TODO on starting playback on a note without an ison
+          // should we try to find the previous ison?
+
+          let isonfrequency = -1;
+
+          if (noteElement.ison !== Ison.Unison) {
+            const di = workspace.scale.scaleNoteMap.get(ScaleNote.Thi)!;
+            const isonNote = workspace.scale.isonMap.get(noteElement.ison)!;
+
+            const moria = this.moriaBetweenNotes(
+              di,
+              workspace.scale.intervals,
+              isonNote - di,
+            );
+
+            isonfrequency = this.changeFrequency(frequencyDi, moria);
+
+            console.log(
+              'change ison frequency',
+              i,
+              isonfrequency,
+              moria,
+              noteElement,
+            );
+          }
+
+          console.log(
+            'change ison frequency',
+            i,
+            isonfrequency,
+            0,
+            noteElement,
+          );
+
+          const event: PlaybackSequenceEvent = {
+            frequency: isonfrequency,
+            type: 'ison',
+            duration: 0,
+            time: 0,
+          };
+
+          events.push(event);
+        }
 
         // If we moved, calculate the new note
         const distance = getNeumeValue(noteElement.quantitativeNeume)!;
@@ -501,31 +585,23 @@ export class PlaybackService {
       } else if (element.elementType === ElementType.ModeKey) {
         const modeKeyElement = element as ModeKeyElement;
 
-        const frequencyDi = 392;
-        let di = 4;
-
         if (modeKeyElement.scale === Scale.Diatonic) {
           workspace.scale = this.diatonicScale;
-          workspace.note = this.diatonicScaleNoteMap.get(
-            modeKeyElement.scaleNote,
-          )!;
         } else if (modeKeyElement.scale === Scale.SoftChromatic) {
           workspace.scale = this.softChromaticScale;
-          workspace.note = this.softChromaticScaleNoteMap.get(
-            modeKeyElement.scaleNote,
-          )!;
         } else if (modeKeyElement.scale === Scale.HardChromatic) {
           workspace.scale = this.hardChromaticScale;
-          workspace.note = this.hardChromaticScaleNoteMap.get(
-            modeKeyElement.scaleNote,
-          )!;
-
-          di = 3;
         }
+
+        let di = workspace.scale.scaleNoteMap.get(ScaleNote.Thi)!;
+
+        workspace.note = workspace.scale.scaleNoteMap.get(
+          modeKeyElement.scaleNote,
+        )!;
 
         const moria = this.moriaBetweenNotes(
           di,
-          workspace.scale,
+          workspace.scale.intervals,
           workspace.note - di,
         );
 
@@ -566,7 +642,11 @@ export class PlaybackService {
     return ((value % modulus) + modulus) % modulus;
   }
 
-  moriaBetweenNotes(currentNote: number, scale: number[], distance: number) {
+  moriaBetweenNotes(
+    currentNote: number,
+    intervals: number[],
+    distance: number,
+  ) {
     let interval = 0;
 
     const abs = Math.abs(distance);
@@ -575,9 +655,9 @@ export class PlaybackService {
     for (let i = 0; i < abs; i++) {
       let index =
         sign > 0
-          ? this.mod(currentNote, scale.length)
-          : this.mod(currentNote - 1, scale.length);
-      interval += scale[index] * sign;
+          ? this.mod(currentNote, intervals.length)
+          : this.mod(currentNote - 1, intervals.length);
+      interval += intervals[index] * sign;
 
       currentNote += sign;
     }
@@ -592,7 +672,7 @@ export class PlaybackService {
 
     const moria = this.moriaBetweenNotes(
       workspace.note,
-      workspace.scale,
+      workspace.scale.intervals,
       distance,
     );
 
@@ -657,21 +737,6 @@ export class PlaybackService {
   /////////////////////////
   // Maps
   /////////////////////////
-  diatonicScaleNoteMap = new Map<ScaleNote, number>([
-    [ScaleNote.Ni, 0],
-    [ScaleNote.Pa, 1],
-    [ScaleNote.Thi, 4],
-  ]);
-
-  softChromaticScaleNoteMap = new Map<ScaleNote, number>([
-    [ScaleNote.Pa, 1],
-    [ScaleNote.Thi, 4],
-  ]);
-
-  hardChromaticScaleNoteMap = new Map<ScaleNote, number>([
-    [ScaleNote.Pa, 0],
-    [ScaleNote.Thi, 3],
-  ]);
 
   alterationMap = new Map<Accidental, number>([
     [Accidental.Flat_2_Right, -2],
@@ -727,6 +792,85 @@ export class PlaybackService {
     [TimeNeume.Dipli, 2],
     [TimeNeume.Tripli, 3],
   ]);
+
+  // Scales
+  diatonicScale: PlaybackScale = {
+    intervals: [12, 10, 8, 12, 12, 10, 8],
+    scaleNoteMap: new Map<ScaleNote, number>([
+      [ScaleNote.Ni, 0],
+      [ScaleNote.Pa, 1],
+      [ScaleNote.Vou, 2],
+      [ScaleNote.Ga, 3],
+      [ScaleNote.Thi, 4],
+      [ScaleNote.Ke, 5],
+      [ScaleNote.Zo, 6],
+      [ScaleNote.NiHigh, 7],
+    ]),
+    isonMap: new Map<Ison, number>([
+      [Ison.ThiLow, -3],
+      [Ison.KeLow, -2],
+      [Ison.Zo, -1],
+      [Ison.Ni, 0],
+      [Ison.Pa, 1],
+      [Ison.Vou, 2],
+      [Ison.Ga, 3],
+      [Ison.Thi, 4],
+      [Ison.Ke, 5],
+      [Ison.ZoHigh, 6],
+    ]),
+  };
+
+  hardChromaticScale: PlaybackScale = {
+    intervals: [6, 20, 4, 12],
+    scaleNoteMap: new Map<ScaleNote, number>([
+      [ScaleNote.Ni, -1],
+      [ScaleNote.Pa, 0],
+      [ScaleNote.Vou, 1],
+      [ScaleNote.Ga, 2],
+      [ScaleNote.Thi, 3],
+      [ScaleNote.Ke, 4],
+      [ScaleNote.Zo, 5],
+      [ScaleNote.NiHigh, 6],
+    ]),
+    isonMap: new Map<Ison, number>([
+      [Ison.ThiLow, -4],
+      [Ison.KeLow, -3],
+      [Ison.Zo, -2],
+      [Ison.Ni, -1],
+      [Ison.Pa, 0],
+      [Ison.Vou, 1],
+      [Ison.Ga, 2],
+      [Ison.Thi, 3],
+      [Ison.Ke, 4],
+      [Ison.ZoHigh, 5],
+    ]),
+  };
+
+  softChromaticScale: PlaybackScale = {
+    intervals: [8, 14, 8, 12],
+    scaleNoteMap: new Map<ScaleNote, number>([
+      [ScaleNote.Ni, 0],
+      [ScaleNote.Pa, 1],
+      [ScaleNote.Vou, 2],
+      [ScaleNote.Ga, 3],
+      [ScaleNote.Thi, 4],
+      [ScaleNote.Ke, 5],
+      [ScaleNote.Zo, 6],
+      [ScaleNote.NiHigh, 7],
+    ]),
+    isonMap: new Map<Ison, number>([
+      [Ison.ThiLow, -3],
+      [Ison.KeLow, -2],
+      [Ison.Zo, -1],
+      [Ison.Ni, 0],
+      [Ison.Pa, 1],
+      [Ison.Vou, 2],
+      [Ison.Ga, 3],
+      [Ison.Thi, 4],
+      [Ison.Ke, 5],
+      [Ison.ZoHigh, 6],
+    ]),
+  };
 }
 
 // For debugging

@@ -68,6 +68,12 @@ export enum AudioServiceEventNames {
   Stop = 'Stop',
 }
 
+export enum AudioState {
+  Playing,
+  Stopped,
+  Paused,
+}
+
 export class AudioService {
   // Scales for debugging
   diatonicScale = [12, 10, 8, 12, 12, 10, 8];
@@ -80,6 +86,8 @@ export class AudioService {
   part: Tone.Part | null = null;
 
   toneEvents: ToneEvent[] = [];
+
+  state: AudioState = AudioState.Stopped;
 
   constructor() {
     this.synth = new Tone.Synth().toDestination();
@@ -99,13 +107,18 @@ export class AudioService {
     this.isonSynth.dispose();
   }
 
-  play(events: PlaybackSequenceEvent[], startAt: number | null) {
+  play(
+    events: PlaybackSequenceEvent[],
+    startAt: PlaybackSequenceEvent | undefined,
+  ) {
     const synth = this.synth;
     const isonSynth = this.isonSynth;
 
     this.stop();
 
     let isonUnison = false;
+
+    this.state = AudioState.Playing;
 
     for (let event of events) {
       if (event.type === 'note') {
@@ -165,10 +178,10 @@ export class AudioService {
     finishEvent.start(lastEvent.time + lastEvent.duration);
     this.toneEvents.push(finishEvent);
 
-    const startTime = startAt != null ? events[startAt].time : 0;
+    const startTime = startAt != null ? startAt.time : 0;
 
     if (startAt != null) {
-      console.log('starting at', events[startAt]);
+      console.log('starting at', events);
     }
 
     // TODO is there a better way to handle this?
@@ -194,6 +207,7 @@ export class AudioService {
     this.toneEvents = [];
 
     EventBus.$emit(AudioServiceEventNames.Stop);
+    this.state = AudioState.Stopped;
   }
 
   pause() {
@@ -201,10 +215,16 @@ export class AudioService {
     this.synth.triggerRelease();
 
     Tone.Transport.pause();
+
+    this.state = AudioState.Paused;
   }
 
   resume() {
     Tone.Transport.start();
+  }
+
+  jumpToEvent(event: PlaybackSequenceEvent) {
+    Tone.Transport.position = event.time;
   }
 
   nextNote(currentFrequency: number, moria: number) {
@@ -268,14 +288,9 @@ export class AudioService {
 }
 
 export class PlaybackService {
-  computePlaybackSequence(
-    elements: ScoreElement[],
-    startAtElementIndex: number | null,
-  ) {
+  computePlaybackSequence(elements: ScoreElement[]) {
     const events: PlaybackSequenceEvent[] = [];
     const gorgonIndexes: GorgonIndex[] = [];
-
-    let startAtEventIndex: number | null = null;
 
     const frequencyPa = 146.83;
     const frequencyDi = 196;
@@ -295,11 +310,6 @@ export class PlaybackService {
       let element = elements[i];
 
       if (element.elementType === ElementType.Note) {
-        if (i === startAtElementIndex) {
-          console.log('startAt', element);
-          startAtEventIndex = events.length;
-        }
-
         const noteElement = element as NoteElement;
 
         // Check ison
@@ -801,9 +811,9 @@ export class PlaybackService {
       time += event.duration;
     }
 
-    console.log('playback events', events, startAtEventIndex);
+    console.log('playback events', events);
 
-    return { events, startAt: startAtEventIndex };
+    return events;
   }
 
   ////////////////////
@@ -871,6 +881,10 @@ export class PlaybackService {
   }
 
   applyFthora(fthora: Fthora, workspace: PlaybackWorkspace) {
+    if (!this.getScaleFromFthora(fthora)) {
+      return;
+    }
+
     workspace.scale = this.getScaleFromFthora(fthora)!;
 
     workspace.intervalIndex =

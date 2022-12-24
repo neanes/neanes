@@ -557,6 +557,7 @@ import {
 import {
   AudioService,
   AudioServiceEventNames,
+  AudioState,
   PlaybackSequenceEvent,
   PlaybackService,
 } from '@/services/audio/AudioService';
@@ -621,6 +622,7 @@ export default class Editor extends Vue {
   playbackService = new PlaybackService();
 
   audioElement: ScoreElement | null = null;
+  playbackEvents: PlaybackSequenceEvent[] = [];
 
   // Commands
   noteElementCommandFactory: CommandFactory<NoteElement> =
@@ -854,6 +856,16 @@ export default class Editor extends Vue {
       this.selectedLyrics = null;
       this.selectionRange = null;
       this.selectedHeaderFooterElement = null;
+
+      if (this.audioService.state === AudioState.Playing) {
+        const event = this.playbackEvents.find(
+          (x) => x.elementIndex === this.getElementIndex(element),
+        );
+
+        if (event) {
+          this.audioService.jumpToEvent(event);
+        }
+      }
     }
 
     this.selectedWorkspace.selectedElement = element;
@@ -3628,16 +3640,21 @@ export default class Editor extends Vue {
   }
 
   playAudio() {
-    const { events, startAt } = this.playbackService.computePlaybackSequence(
+    this.playbackEvents = this.playbackService.computePlaybackSequence(
       this.elements,
-      this.selectedElementIndex,
     );
 
-    this.audioService.play(events, startAt);
+    const startAt = this.playbackEvents.find(
+      (x) => x.elementIndex === this.selectedElementIndex,
+    );
+
+    this.audioService.play(this.playbackEvents, startAt);
   }
 
   stopAudio() {
     this.audioService.stop();
+
+    this.playbackEvents = [];
   }
 
   pauseAudio() {

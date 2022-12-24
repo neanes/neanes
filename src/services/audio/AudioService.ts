@@ -9,12 +9,18 @@ import { getNeumeValue } from '@/models/NeumeValues';
 import { ToneEvent } from 'tone';
 import {
   Accidental,
+  Fthora,
   GorgonNeume,
   Ison,
   QuantitativeNeume,
   TimeNeume,
 } from '@/models/Neumes';
-import { Scale, ScaleNote } from '@/models/Scales';
+import {
+  getIsonValue,
+  getScaleNoteValue,
+  Scale,
+  ScaleNote,
+} from '@/models/Scales';
 
 export interface PlaybackSequenceEvent {
   frequency?: number;
@@ -26,7 +32,10 @@ export interface PlaybackSequenceEvent {
 
 interface PlaybackWorkspace {
   frequency: number;
-  note: number;
+  // To move up, move up scale.intervals[intervalIndex] moria
+  // To move down, move down scale.intervals[intervalIndex - 1] moria,
+  // wrapping around to the end of the scale.intervals array, if necessary
+  intervalIndex: number;
   scale: PlaybackScale;
 }
 
@@ -36,10 +45,17 @@ interface GorgonIndex {
   beat: number;
 }
 
+enum PlaybackScaleName {
+  Diatonic,
+  SoftChromatic,
+  HardChromatic,
+}
+
 interface PlaybackScale {
+  name: PlaybackScaleName;
   intervals: number[];
   scaleNoteMap: Map<ScaleNote, number>;
-  isonMap: Map<Ison, number>;
+  fthoraMap: Map<Fthora, number>;
 }
 
 export class AudioService {
@@ -125,7 +141,10 @@ export class AudioService {
       console.log('starting at', events[startAt]);
     }
 
-    Tone.Transport.position = startTime;
+    // TODO is there a better way to handle this?
+    // Tone.js sometimes starts late and misses the first ToneEvent,
+    // So we set the position to be just a little bit earlier
+    Tone.Transport.position = Math.max(startTime - 0.01, 0);
 
     Tone.Transport.start();
   }
@@ -227,7 +246,7 @@ export class PlaybackService {
     const frequencyDi = 392;
 
     let workspace: PlaybackWorkspace = {
-      note: 0,
+      intervalIndex: 0,
       frequency: frequencyPa,
       scale: this.diatonicScale,
     };
@@ -255,12 +274,14 @@ export class PlaybackService {
 
           if (noteElement.ison !== Ison.Unison) {
             const di = workspace.scale.scaleNoteMap.get(ScaleNote.Thi)!;
-            const isonNote = workspace.scale.isonMap.get(noteElement.ison)!;
+
+            const distance =
+              getIsonValue(noteElement.ison) - getScaleNoteValue(ScaleNote.Thi);
 
             const moria = this.moriaBetweenNotes(
               di,
               workspace.scale.intervals,
-              isonNote - di,
+              distance,
             );
 
             isonfrequency = this.changeFrequency(frequencyDi, moria);
@@ -648,6 +669,20 @@ export class PlaybackService {
 
           events.push(event);
         }
+
+        if (noteElement.fthora) {
+          if (noteElement.fthora.startsWith('Diatonic')) {
+            workspace.scale = this.diatonicScale;
+          } else if (noteElement.fthora.startsWith('HardChromatic')) {
+            workspace.scale = this.hardChromaticScale;
+          } else if (noteElement.fthora.startsWith('SoftChromatic')) {
+            workspace.scale = this.softChromaticScale;
+          }
+
+          workspace.intervalIndex = workspace.scale.fthoraMap.get(
+            noteElement.fthora,
+          )!;
+        }
       } else if (element.elementType === ElementType.ModeKey) {
         const modeKeyElement = element as ModeKeyElement;
 
@@ -659,25 +694,30 @@ export class PlaybackService {
           workspace.scale = this.hardChromaticScale;
         }
 
-        let di = workspace.scale.scaleNoteMap.get(ScaleNote.Thi)!;
+        const di = workspace.scale.scaleNoteMap.get(ScaleNote.Thi)!;
 
-        workspace.note = workspace.scale.scaleNoteMap.get(
+        const distance =
+          getScaleNoteValue(modeKeyElement.scaleNote) -
+          getScaleNoteValue(ScaleNote.Thi);
+
+        workspace.intervalIndex = workspace.scale.scaleNoteMap.get(
           modeKeyElement.scaleNote,
         )!;
 
         const moria = this.moriaBetweenNotes(
           di,
           workspace.scale.intervals,
-          workspace.note - di,
+          distance,
         );
 
         workspace.frequency = this.changeFrequency(frequencyDi, moria);
+
         console.log(
-          'frequency change',
+          'mode key change',
           workspace.frequency,
           moria,
           di,
-          workspace.note,
+          workspace.intervalIndex,
         );
       }
     }
@@ -709,11 +749,11 @@ export class PlaybackService {
   }
 
   moriaBetweenNotes(
-    currentNote: number,
+    intervalIndex: number,
     intervals: number[],
     distance: number,
   ) {
-    let interval = 0;
+    let moria = 0;
 
     const abs = Math.abs(distance);
     const sign = Math.sign(distance);
@@ -721,14 +761,15 @@ export class PlaybackService {
     for (let i = 0; i < abs; i++) {
       let index =
         sign > 0
-          ? this.mod(currentNote, intervals.length)
-          : this.mod(currentNote - 1, intervals.length);
-      interval += intervals[index] * sign;
+          ? intervalIndex
+          : this.mod(intervalIndex - 1, intervals.length);
 
-      currentNote += sign;
+      moria += intervals[index] * sign;
+
+      intervalIndex = this.mod(intervalIndex + sign, intervals.length);
     }
 
-    return interval;
+    return moria;
   }
 
   moveDistance(workspace: PlaybackWorkspace, distance: number) {
@@ -737,12 +778,15 @@ export class PlaybackService {
     }
 
     const moria = this.moriaBetweenNotes(
-      workspace.note,
+      workspace.intervalIndex,
       workspace.scale.intervals,
       distance,
     );
 
-    workspace.note += distance;
+    workspace.intervalIndex = this.mod(
+      workspace.intervalIndex + distance,
+      workspace.scale.intervals.length,
+    );
 
     workspace.frequency = this.changeFrequency(workspace.frequency, moria);
   }
@@ -863,10 +907,19 @@ export class PlaybackService {
     [TimeNeume.Tripli, 3],
   ]);
 
+  /////////////////////////
   // Scales
+  /////////////////////////
+
   diatonicScale: PlaybackScale = {
+    name: PlaybackScaleName.Diatonic,
     intervals: [12, 10, 8, 12, 12, 10, 8],
     scaleNoteMap: new Map<ScaleNote, number>([
+      [ScaleNote.VouLow, 2],
+      [ScaleNote.GaLow, 3],
+      [ScaleNote.ThiLow, 4],
+      [ScaleNote.KeLow, 5],
+      [ScaleNote.Zo, 6],
       [ScaleNote.Ni, 0],
       [ScaleNote.Pa, 1],
       [ScaleNote.Vou, 2],
@@ -874,71 +927,90 @@ export class PlaybackService {
       [ScaleNote.Thi, 4],
       [ScaleNote.Ke, 5],
       [ScaleNote.Zo, 6],
-      [ScaleNote.NiHigh, 7],
+      [ScaleNote.NiHigh, 0],
+      [ScaleNote.PaHigh, 1],
+      [ScaleNote.VouHigh, 2],
+      [ScaleNote.GaHigh, 3],
+      [ScaleNote.ThiHigh, 4],
+      [ScaleNote.KeHigh, 5],
     ]),
-    isonMap: new Map<Ison, number>([
-      [Ison.ThiLow, -3],
-      [Ison.KeLow, -2],
-      [Ison.Zo, -1],
-      [Ison.Ni, 0],
-      [Ison.Pa, 1],
-      [Ison.Vou, 2],
-      [Ison.Ga, 3],
-      [Ison.Thi, 4],
-      [Ison.Ke, 5],
-      [Ison.ZoHigh, 6],
+    fthoraMap: new Map<Fthora, number>([
+      [Fthora.DiatonicNiLow_Top, 0],
+      [Fthora.DiatonicNiLow_Bottom, 0],
+      [Fthora.DiatonicPa_Top, 1],
+      [Fthora.DiatonicPa_Bottom, 1],
+      [Fthora.DiatonicVou_Top, 2],
+      [Fthora.DiatonicGa_Top, 3],
+      [Fthora.DiatonicThi_Top, 4],
+      [Fthora.DiatonicThi_Bottom, 4],
+      [Fthora.DiatonicKe_Top, 5],
+      [Fthora.DiatonicKe_Bottom, 5],
+      [Fthora.DiatonicZo_Top, 6],
+      [Fthora.DiatonicNiHigh_Top, 0],
+      [Fthora.DiatonicNiHigh_Bottom, 0],
     ]),
   };
 
   hardChromaticScale: PlaybackScale = {
+    name: PlaybackScaleName.HardChromatic,
     intervals: [6, 20, 4, 12],
     scaleNoteMap: new Map<ScaleNote, number>([
-      [ScaleNote.Ni, -1],
+      [ScaleNote.VouLow, 2],
+      [ScaleNote.GaLow, 3],
+      [ScaleNote.ThiLow, 0],
+      [ScaleNote.KeLow, 1],
+      [ScaleNote.Zo, 2],
+      [ScaleNote.Ni, 3],
       [ScaleNote.Pa, 0],
       [ScaleNote.Vou, 1],
       [ScaleNote.Ga, 2],
       [ScaleNote.Thi, 3],
-      [ScaleNote.Ke, 4],
-      [ScaleNote.Zo, 5],
-      [ScaleNote.NiHigh, 6],
+      [ScaleNote.Ke, 0],
+      [ScaleNote.Zo, 1],
+      [ScaleNote.NiHigh, 2],
+      [ScaleNote.PaHigh, 3],
+      [ScaleNote.VouHigh, 0],
+      [ScaleNote.GaHigh, 1],
+      [ScaleNote.ThiHigh, 2],
+      [ScaleNote.KeHigh, 3],
     ]),
-    isonMap: new Map<Ison, number>([
-      [Ison.ThiLow, -4],
-      [Ison.KeLow, -3],
-      [Ison.Zo, -2],
-      [Ison.Ni, -1],
-      [Ison.Pa, 0],
-      [Ison.Vou, 1],
-      [Ison.Ga, 2],
-      [Ison.Thi, 3],
-      [Ison.Ke, 4],
-      [Ison.ZoHigh, 5],
+    fthoraMap: new Map<Fthora, number>([
+      [Fthora.HardChromaticPa_Top, 0],
+      [Fthora.HardChromaticPa_Bottom, 0],
+      [Fthora.HardChromaticThi_Top, 3],
+      [Fthora.HardChromaticThi_Bottom, 3],
     ]),
   };
 
   softChromaticScale: PlaybackScale = {
+    name: PlaybackScaleName.SoftChromatic,
+
     intervals: [8, 14, 8, 12],
     scaleNoteMap: new Map<ScaleNote, number>([
+      [ScaleNote.VouLow, 3],
+      [ScaleNote.GaLow, 0],
+      [ScaleNote.ThiLow, 1],
+      [ScaleNote.KeLow, 2],
+      [ScaleNote.Zo, 3],
       [ScaleNote.Ni, 0],
       [ScaleNote.Pa, 1],
       [ScaleNote.Vou, 2],
       [ScaleNote.Ga, 3],
-      [ScaleNote.Thi, 4],
-      [ScaleNote.Ke, 5],
-      [ScaleNote.Zo, 6],
-      [ScaleNote.NiHigh, 7],
+      [ScaleNote.Thi, 0],
+      [ScaleNote.Ke, 1],
+      [ScaleNote.Zo, 2],
+      [ScaleNote.NiHigh, 3],
+      [ScaleNote.PaHigh, 0],
+      [ScaleNote.VouHigh, 1],
+      [ScaleNote.GaHigh, 2],
+      [ScaleNote.ThiHigh, 3],
+      [ScaleNote.KeHigh, 0],
     ]),
-    isonMap: new Map<Ison, number>([
-      [Ison.ThiLow, -3],
-      [Ison.KeLow, -2],
-      [Ison.Zo, -1],
-      [Ison.Ni, 0],
-      [Ison.Pa, 1],
-      [Ison.Vou, 2],
-      [Ison.Ga, 3],
-      [Ison.Thi, 4],
-      [Ison.Ke, 5],
-      [Ison.ZoHigh, 6],
+    fthoraMap: new Map<Fthora, number>([
+      [Fthora.SoftChromaticPa_Top, 3],
+      [Fthora.SoftChromaticPa_Bottom, 3],
+      [Fthora.SoftChromaticThi_Top, 0],
+      [Fthora.SoftChromaticThi_Bottom, 0],
     ]),
   };
 }

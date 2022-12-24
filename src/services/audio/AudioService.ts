@@ -72,9 +72,11 @@ export class AudioService {
   toneEvents: ToneEvent[] = [];
 
   constructor() {
-    //this.synth = new Tone.Synth().toDestination();
-    this.synth = this.createVoiceSynth().toDestination();
-    this.isonSynth = this.createVoiceSynth().toDestination();
+    this.synth = new Tone.Synth().toDestination();
+    this.isonSynth = new Tone.Synth().toDestination();
+
+    //this.synth = this.createVoiceSynth();
+    //this.isonSynth = this.createVoiceSynth();
 
     this.isonSynth.volume.value = -4;
     //this.synth.sync();
@@ -242,8 +244,11 @@ export class PlaybackService {
 
     let startAtEventIndex: number | null = null;
 
-    const frequencyPa = 293.66;
-    const frequencyDi = 392;
+    const frequencyPa = 146.83;
+    const frequencyDi = 196;
+
+    // const frequencyPa = 293.66;
+    // const frequencyDi = 392;
 
     let workspace: PlaybackWorkspace = {
       intervalIndex: 0,

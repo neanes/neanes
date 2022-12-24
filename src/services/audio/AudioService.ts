@@ -25,11 +25,14 @@ import {
   ScaleNote,
 } from '@/models/Scales';
 
+import { EventBus } from '@/eventBus';
+
 export interface PlaybackSequenceEvent {
   frequency?: number;
   type: 'note' | 'rest' | 'ison';
   duration: number;
   time: number;
+  elementIndex: number;
 }
 
 interface PlaybackWorkspace {
@@ -58,6 +61,11 @@ interface PlaybackScale {
   intervals: number[];
   scaleNoteMap: Map<ScaleNote, number>;
   fthoraMap: Map<Fthora, number>;
+}
+
+export enum AudioServiceEventNames {
+  EventPlay = 'EventPlay',
+  Stop = 'Stop',
 }
 
 export class AudioService {
@@ -101,7 +109,7 @@ export class AudioService {
 
     for (let event of events) {
       if (event.type === 'note') {
-        let toneEvent = new ToneEvent((time) => {
+        const toneEvent = new ToneEvent((time) => {
           //synth.set({ portamento: 0.25 });
 
           synth.triggerAttackRelease(event.frequency!, event.duration, time);
@@ -110,13 +118,15 @@ export class AudioService {
             isonSynth.triggerAttack(event.frequency!, time);
           }
 
+          EventBus.$emit(AudioServiceEventNames.EventPlay, event);
+
           console.log(time, event);
         });
 
         toneEvent.start(event.time);
         this.toneEvents.push(toneEvent);
       } else if (event.type === 'ison') {
-        let toneEvent = new ToneEvent((time) => {
+        const toneEvent = new ToneEvent((time) => {
           isonSynth.triggerRelease(time);
 
           isonUnison = event.frequency === -1;
@@ -130,6 +140,15 @@ export class AudioService {
 
         toneEvent.start(event.time);
         this.toneEvents.push(toneEvent);
+      } else if (event.type === 'rest') {
+        const toneEvent = new ToneEvent((time) => {
+          EventBus.$emit(AudioServiceEventNames.EventPlay, event);
+
+          console.log(time, event);
+        });
+
+        toneEvent.start(event.time);
+        this.toneEvents.push(toneEvent);
       }
     }
 
@@ -138,6 +157,8 @@ export class AudioService {
       isonSynth.triggerRelease(time);
       synth.triggerRelease(time);
       Tone.Transport.stop();
+
+      EventBus.$emit(AudioServiceEventNames.Stop);
     });
 
     const lastEvent = events[events.length - 1];
@@ -171,9 +192,14 @@ export class AudioService {
 
     this.toneEvents.forEach((e) => e.dispose());
     this.toneEvents = [];
+
+    EventBus.$emit(AudioServiceEventNames.Stop);
   }
 
   pause() {
+    this.isonSynth.triggerRelease();
+    this.synth.triggerRelease();
+
     Tone.Transport.pause();
   }
 
@@ -319,6 +345,7 @@ export class PlaybackService {
             type: 'ison',
             duration: 0,
             time: 0,
+            elementIndex: i,
           };
 
           events.push(event);
@@ -350,6 +377,7 @@ export class PlaybackService {
             type: 'note',
             duration: 1 * beat,
             time: 0,
+            elementIndex: i,
           };
 
           events.push(event);
@@ -386,6 +414,7 @@ export class PlaybackService {
             type: 'note',
             duration: 1 * beat,
             time: 0,
+            elementIndex: i,
           };
 
           events.push(kentimataEvent);
@@ -415,6 +444,7 @@ export class PlaybackService {
             type: 'note',
             duration: 1 * beat,
             time: 0,
+            elementIndex: i,
           };
 
           events.push(kentimataEvent);
@@ -445,6 +475,7 @@ export class PlaybackService {
             type: 'note',
             duration: oligonDuration,
             time: 0,
+            elementIndex: i,
           };
 
           events.push(oligonEvent);
@@ -473,6 +504,7 @@ export class PlaybackService {
             type: 'note',
             duration: 1 * beat,
             time: 0,
+            elementIndex: i,
           };
 
           events.push(event1);
@@ -503,6 +535,7 @@ export class PlaybackService {
             type: 'note',
             duration: event2Duration,
             time: 0,
+            elementIndex: i,
           };
 
           events.push(event2);
@@ -531,6 +564,7 @@ export class PlaybackService {
             type: 'note',
             duration: 1 * beat,
             time: 0,
+            elementIndex: i,
           };
 
           events.push(event1);
@@ -569,6 +603,7 @@ export class PlaybackService {
             type: 'note',
             duration: event2Duration,
             time: 0,
+            elementIndex: i,
           };
 
           events.push(event2);
@@ -594,6 +629,7 @@ export class PlaybackService {
             type: 'note',
             duration: 1 * beat,
             time: 0,
+            elementIndex: i,
           };
 
           events.push(event1);
@@ -624,6 +660,7 @@ export class PlaybackService {
             type: 'note',
             duration: event2Duration,
             time: 0,
+            elementIndex: i,
           };
 
           events.push(event2);
@@ -634,6 +671,7 @@ export class PlaybackService {
             type: 'rest',
             duration,
             time: 0,
+            elementIndex: i,
           };
 
           events.push(restEvent);
@@ -676,6 +714,7 @@ export class PlaybackService {
             type: 'note',
             duration,
             time: 0,
+            elementIndex: i,
           };
 
           events.push(event);
@@ -836,6 +875,8 @@ export class PlaybackService {
 
     workspace.intervalIndex =
       workspace.scale.fthoraMap.get(fthora) ?? workspace.intervalIndex;
+
+    console.log('applyFthora', fthora);
   }
 
   isKentimataCombo(element: NoteElement) {

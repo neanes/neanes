@@ -131,6 +131,7 @@
                         :class="[
                           {
                             selected: isSelected(element),
+                            'audio-selected': isAudioSelected(element),
                             'no-print': isBrowser,
                           },
                         ]"
@@ -553,7 +554,12 @@ import {
   onlyTakesTopKlasma,
 } from '@/models/NeumeReplacements';
 
-import { AudioService, PlaybackService } from '@/services/audio/AudioService';
+import {
+  AudioService,
+  AudioServiceEventNames,
+  PlaybackSequenceEvent,
+  PlaybackService,
+} from '@/services/audio/AudioService';
 
 @Component({
   components: {
@@ -613,6 +619,8 @@ export default class Editor extends Vue {
 
   audioService = new AudioService();
   playbackService = new PlaybackService();
+
+  audioElement: ScoreElement | null = null;
 
   // Commands
   noteElementCommandFactory: CommandFactory<NoteElement> =
@@ -1200,6 +1208,13 @@ export default class Editor extends Vue {
       IpcMainChannels.FileMenuGenerateTestFile,
       this.onFileMenuGenerateTestFile,
     );
+
+    EventBus.$on(
+      AudioServiceEventNames.EventPlay,
+      this.onAudioServiceEventPlay,
+    );
+
+    EventBus.$on(AudioServiceEventNames.Stop, this.onAudioServiceStop);
   }
 
   beforeDestroy() {
@@ -1247,6 +1262,13 @@ export default class Editor extends Vue {
       this.onFileMenuGenerateTestFile,
     );
 
+    EventBus.$off(
+      AudioServiceEventNames.EventPlay,
+      this.onAudioServiceEventPlay,
+    );
+
+    EventBus.$off(AudioServiceEventNames.Stop, this.onAudioServiceStop);
+
     this.audioService.dispose();
   }
 
@@ -1287,6 +1309,10 @@ export default class Editor extends Vue {
     }
 
     return false;
+  }
+
+  isAudioSelected(element: ScoreElement) {
+    return this.audioElement === element;
   }
 
   isMelisma(element: NoteElement) {
@@ -3618,6 +3644,14 @@ export default class Editor extends Vue {
     this.audioService.pause();
   }
 
+  onAudioServiceEventPlay(event: PlaybackSequenceEvent) {
+    this.audioElement = this.elements[event.elementIndex];
+  }
+
+  onAudioServiceStop(event: PlaybackSequenceEvent) {
+    this.audioElement = null;
+  }
+
   onFileMenuNewScore() {
     const workspace = new Workspace();
     workspace.tempFileName = this.getTempFilename();
@@ -4007,6 +4041,10 @@ export default class Editor extends Vue {
 
 .neume-box .selected {
   background-color: palegoldenrod;
+}
+
+.neume-box .audio-selected {
+  background-color: rgba(152, 251, 152, 0.5);
 }
 
 .selectedTextbox {

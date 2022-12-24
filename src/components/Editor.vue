@@ -1246,6 +1246,8 @@ export default class Editor extends Vue {
       IpcMainChannels.FileMenuGenerateTestFile,
       this.onFileMenuGenerateTestFile,
     );
+
+    this.audioService.dispose();
   }
 
   getElementIndex(element: ScoreElement) {

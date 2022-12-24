@@ -82,6 +82,13 @@ export class AudioService {
     //this.synth.sync();
   }
 
+  dispose() {
+    this.stop();
+
+    this.synth.dispose();
+    this.isonSynth.dispose();
+  }
+
   play(events: PlaybackSequenceEvent[], startAt: number | null) {
     const synth = this.synth;
     const isonSynth = this.isonSynth;
@@ -256,7 +263,7 @@ export class PlaybackService {
       scale: this.diatonicScale,
     };
 
-    let bpm = 180;
+    let bpm = 160;
     let beat = (1 / bpm) * 60;
 
     for (let i = 0; i < elements.length; i++) {
@@ -684,9 +691,9 @@ export class PlaybackService {
             workspace.scale = this.softChromaticScale;
           }
 
-          workspace.intervalIndex = workspace.scale.fthoraMap.get(
-            noteElement.fthora,
-          )!;
+          workspace.intervalIndex =
+            workspace.scale.fthoraMap.get(noteElement.fthora) ??
+            workspace.intervalIndex;
         }
       } else if (element.elementType === ElementType.ModeKey) {
         const modeKeyElement = element as ModeKeyElement;

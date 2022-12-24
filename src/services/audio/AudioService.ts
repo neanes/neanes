@@ -1,9 +1,11 @@
 import * as Tone from 'tone';
 import {
   ElementType,
+  MartyriaElement,
   ModeKeyElement,
   NoteElement,
   ScoreElement,
+  TempoElement,
 } from '@/models/Element';
 import { getNeumeValue } from '@/models/NeumeValues';
 import { ToneEvent } from 'tone';
@@ -13,6 +15,7 @@ import {
   GorgonNeume,
   Ison,
   QuantitativeNeume,
+  TempoSign,
   TimeNeume,
 } from '@/models/Neumes';
 import {
@@ -26,7 +29,6 @@ export interface PlaybackSequenceEvent {
   frequency?: number;
   type: 'note' | 'rest' | 'ison';
   duration: number;
-  bpm?: number;
   time: number;
 }
 
@@ -101,8 +103,6 @@ export class AudioService {
       if (event.type === 'note') {
         let toneEvent = new ToneEvent((time) => {
           //synth.set({ portamento: 0.25 });
-
-          //Tone.Transport.bpm.setValueAtTime(120, now + 1);
 
           synth.triggerAttackRelease(event.frequency!, event.duration, time);
 
@@ -263,8 +263,7 @@ export class PlaybackService {
       scale: this.diatonicScale,
     };
 
-    let bpm = 160;
-    let beat = (1 / bpm) * 60;
+    let beat = this.beatLengthFromBpm(160);
 
     for (let i = 0; i < elements.length; i++) {
       let element = elements[i];
@@ -682,18 +681,8 @@ export class PlaybackService {
           events.push(event);
         }
 
-        if (noteElement.fthora) {
-          if (noteElement.fthora.startsWith('Diatonic')) {
-            workspace.scale = this.diatonicScale;
-          } else if (noteElement.fthora.startsWith('HardChromatic')) {
-            workspace.scale = this.hardChromaticScale;
-          } else if (noteElement.fthora.startsWith('SoftChromatic')) {
-            workspace.scale = this.softChromaticScale;
-          }
-
-          workspace.intervalIndex =
-            workspace.scale.fthoraMap.get(noteElement.fthora) ??
-            workspace.intervalIndex;
+        if (noteElement.fthora != null) {
+          this.applyFthora(noteElement.fthora, workspace);
         }
       } else if (element.elementType === ElementType.ModeKey) {
         const modeKeyElement = element as ModeKeyElement;
@@ -716,6 +705,15 @@ export class PlaybackService {
           modeKeyElement.scaleNote,
         )!;
 
+        const fthora =
+          modeKeyElement.fthoraAboveNote ??
+          modeKeyElement.fthoraAboveNote2 ??
+          modeKeyElement.fthoraAboveQuantitativeNeumeRight;
+
+        if (fthora) {
+          this.applyFthora(fthora, workspace);
+        }
+
         const moria = this.moriaBetweenNotes(
           di,
           workspace.scale.intervals,
@@ -731,6 +729,26 @@ export class PlaybackService {
           di,
           workspace.intervalIndex,
         );
+      } else if (element.elementType === ElementType.Martyria) {
+        const martyriaElement = element as MartyriaElement;
+
+        if (martyriaElement.tempo != null) {
+          // TODO add bpm to tempo element and use tempoToBpmMap
+          // as a fallback
+          const bpm = this.tempoToBpmMap.get(martyriaElement.tempo)!;
+          beat = this.beatLengthFromBpm(bpm);
+        }
+
+        if (martyriaElement.fthora) {
+          this.applyFthora(martyriaElement.fthora, workspace);
+        }
+      } else if (element.elementType === ElementType.Tempo) {
+        const tempoElement = element as TempoElement;
+
+        // TODO add bpm to tempo element and use tempoToBpmMap
+        // as a fallback
+        const bpm = this.tempoToBpmMap.get(tempoElement.neume)!;
+        beat = this.beatLengthFromBpm(bpm);
       }
     }
 
@@ -758,6 +776,10 @@ export class PlaybackService {
 
   mod(value: number, modulus: number) {
     return ((value % modulus) + modulus) % modulus;
+  }
+
+  beatLengthFromBpm(bpm: number) {
+    return (1 / bpm) * 60;
   }
 
   moriaBetweenNotes(
@@ -801,6 +823,19 @@ export class PlaybackService {
     );
 
     workspace.frequency = this.changeFrequency(workspace.frequency, moria);
+  }
+
+  getScaleFromFthora(fthora: Fthora) {
+    return this.scales.find(
+      (x) => x.name === this.fthoraToScaleMap.get(fthora),
+    );
+  }
+
+  applyFthora(fthora: Fthora, workspace: PlaybackWorkspace) {
+    workspace.scale = this.getScaleFromFthora(fthora)!;
+
+    workspace.intervalIndex =
+      workspace.scale.fthoraMap.get(fthora) ?? workspace.intervalIndex;
   }
 
   isKentimataCombo(element: NoteElement) {
@@ -871,6 +906,32 @@ export class PlaybackService {
     [Accidental.Sharp_8_Left, 8],
   ]);
 
+  fthoraToScaleMap = new Map<Fthora, PlaybackScaleName>([
+    [Fthora.DiatonicNiLow_Top, PlaybackScaleName.Diatonic],
+    [Fthora.DiatonicNiLow_Bottom, PlaybackScaleName.Diatonic],
+    [Fthora.DiatonicPa_Top, PlaybackScaleName.Diatonic],
+    [Fthora.DiatonicPa_Bottom, PlaybackScaleName.Diatonic],
+    [Fthora.DiatonicVou_Top, PlaybackScaleName.Diatonic],
+    [Fthora.DiatonicGa_Top, PlaybackScaleName.Diatonic],
+    [Fthora.DiatonicThi_Top, PlaybackScaleName.Diatonic],
+    [Fthora.DiatonicThi_Bottom, PlaybackScaleName.Diatonic],
+    [Fthora.DiatonicKe_Top, PlaybackScaleName.Diatonic],
+    [Fthora.DiatonicKe_Bottom, PlaybackScaleName.Diatonic],
+    [Fthora.DiatonicZo_Top, PlaybackScaleName.Diatonic],
+    [Fthora.DiatonicNiHigh_Top, PlaybackScaleName.Diatonic],
+    [Fthora.DiatonicNiHigh_Bottom, PlaybackScaleName.Diatonic],
+
+    [Fthora.SoftChromaticPa_Top, PlaybackScaleName.SoftChromatic],
+    [Fthora.SoftChromaticPa_Bottom, PlaybackScaleName.SoftChromatic],
+    [Fthora.SoftChromaticThi_Top, PlaybackScaleName.SoftChromatic],
+    [Fthora.SoftChromaticThi_Bottom, PlaybackScaleName.SoftChromatic],
+
+    [Fthora.HardChromaticPa_Top, PlaybackScaleName.HardChromatic],
+    [Fthora.HardChromaticPa_Bottom, PlaybackScaleName.HardChromatic],
+    [Fthora.HardChromaticThi_Top, PlaybackScaleName.HardChromatic],
+    [Fthora.HardChromaticThi_Bottom, PlaybackScaleName.HardChromatic],
+  ]);
+
   gorgonMap = new Map<GorgonNeume, number[]>([
     [GorgonNeume.Gorgon_Top, [0.5, 0.5]],
     [GorgonNeume.Gorgon_Bottom, [0.5, 0.5]],
@@ -917,6 +978,17 @@ export class PlaybackService {
     [TimeNeume.Hapli, 1],
     [TimeNeume.Dipli, 2],
     [TimeNeume.Tripli, 3],
+  ]);
+
+  tempoToBpmMap = new Map<TempoSign, number>([
+    [TempoSign.VerySlow, 40], // < 56 triargon?
+    [TempoSign.Slower, 56], // 56 - 80 diargon
+    [TempoSign.Slow, 80], // 80 - 100 hemiolion
+    [TempoSign.Moderate, 100], // 100 - 168 argon
+    [TempoSign.Medium, 130], // 130 argon + gorgon
+    [TempoSign.Quick, 168], // 168 - 208 gorgon
+    [TempoSign.Quicker, 208], // 208+ digorgon
+    [TempoSign.VeryQuick, 250], // unattested? trigorgon
   ]);
 
   /////////////////////////
@@ -1025,6 +1097,12 @@ export class PlaybackService {
       [Fthora.SoftChromaticThi_Bottom, 0],
     ]),
   };
+
+  scales: PlaybackScale[] = [
+    this.diatonicScale,
+    this.softChromaticScale,
+    this.hardChromaticScale,
+  ];
 }
 
 // For debugging

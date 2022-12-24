@@ -3640,15 +3640,19 @@ export default class Editor extends Vue {
   }
 
   playAudio() {
-    this.playbackEvents = this.playbackService.computePlaybackSequence(
-      this.elements,
-    );
+    try {
+      this.playbackEvents = this.playbackService.computePlaybackSequence(
+        this.elements,
+      );
 
-    const startAt = this.playbackEvents.find(
-      (x) => x.elementIndex === this.selectedElementIndex,
-    );
+      const startAt = this.playbackEvents.find(
+        (x) => x.elementIndex === this.selectedElementIndex,
+      );
 
-    this.audioService.play(this.playbackEvents, startAt);
+      this.audioService.play(this.playbackEvents, startAt);
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   stopAudio() {
@@ -3658,7 +3662,7 @@ export default class Editor extends Vue {
   }
 
   pauseAudio() {
-    this.audioService.pause();
+    this.audioService.togglePause();
   }
 
   onAudioServiceEventPlay(event: PlaybackSequenceEvent) {

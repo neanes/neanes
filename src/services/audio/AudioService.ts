@@ -29,7 +29,8 @@ import { EventBus } from '@/eventBus';
 
 export interface PlaybackSequenceEvent {
   frequency?: number;
-  type: 'note' | 'rest' | 'ison';
+  isonFrequency?: number;
+  type: 'note' | 'rest';
   duration: number;
   time: number;
   elementIndex: number;
@@ -116,7 +117,7 @@ export class AudioService {
 
     this.stop();
 
-    let isonUnison = false;
+    let currentIsonFrequency = 0;
 
     this.state = AudioState.Playing;
 
@@ -127,28 +128,17 @@ export class AudioService {
 
           synth.triggerAttackRelease(event.frequency!, event.duration, time);
 
+          const isonUnison = event.isonFrequency === -1;
+
           if (isonUnison) {
             isonSynth.triggerAttack(event.frequency!, time);
+          } else if (event.isonFrequency !== currentIsonFrequency) {
+            isonSynth.triggerAttack(event.isonFrequency!, time);
           }
 
           EventBus.$emit(AudioServiceEventNames.EventPlay, event);
 
           console.log(time, event);
-        });
-
-        toneEvent.start(event.time);
-        this.toneEvents.push(toneEvent);
-      } else if (event.type === 'ison') {
-        const toneEvent = new ToneEvent((time) => {
-          isonSynth.triggerRelease(time);
-
-          isonUnison = event.frequency === -1;
-
-          if (!isonUnison) {
-            isonSynth.triggerAttack(event.frequency!, time);
-          }
-
-          console.log(time, isonUnison, event);
         });
 
         toneEvent.start(event.time);
@@ -167,11 +157,13 @@ export class AudioService {
 
     const finishEvent = new ToneEvent((time) => {
       console.log('playback finished', time);
-      isonSynth.triggerRelease(time);
-      synth.triggerRelease(time);
       Tone.Transport.stop();
+      isonSynth.triggerRelease();
+      synth.triggerRelease();
 
       EventBus.$emit(AudioServiceEventNames.Stop);
+
+      this.state = AudioState.Stopped;
     });
 
     const lastEvent = events[events.length - 1];
@@ -181,7 +173,7 @@ export class AudioService {
     const startTime = startAt != null ? startAt.time : 0;
 
     if (startAt != null) {
-      console.log('starting at', events);
+      console.log('starting at', startAt);
     }
 
     // TODO is there a better way to handle this?
@@ -194,14 +186,15 @@ export class AudioService {
 
   stop() {
     console.log('stop');
-    // Stop the synths
-    this.isonSynth.triggerRelease();
-    this.synth.triggerRelease();
 
     // Reset the transport
     Tone.Transport.stop();
     Tone.Transport.position = 0;
     Tone.Transport.cancel();
+
+    // Stop the synths
+    this.isonSynth.triggerRelease();
+    this.synth.triggerRelease();
 
     this.toneEvents.forEach((e) => e.dispose());
     this.toneEvents = [];
@@ -211,16 +204,34 @@ export class AudioService {
   }
 
   pause() {
-    this.isonSynth.triggerRelease();
-    this.synth.triggerRelease();
+    if (this.state === AudioState.Playing) {
+      console.log('pause', Tone.Transport.position);
 
-    Tone.Transport.pause();
+      Tone.Transport.pause();
 
-    this.state = AudioState.Paused;
+      this.isonSynth.triggerRelease();
+      this.synth.triggerRelease();
+
+      this.state = AudioState.Paused;
+    }
   }
 
   resume() {
-    Tone.Transport.start();
+    if (this.state === AudioState.Paused) {
+      console.log('resume', Tone.Transport.position);
+
+      Tone.Transport.start();
+
+      this.state = AudioState.Playing;
+    }
+  }
+
+  togglePause() {
+    if (this.state === AudioState.Paused) {
+      this.resume();
+    } else if (this.state === AudioState.Playing) {
+      this.pause();
+    }
   }
 
   jumpToEvent(event: PlaybackSequenceEvent) {
@@ -305,6 +316,7 @@ export class PlaybackService {
     };
 
     let beat = this.beatLengthFromBpm(160);
+    let isonFrequency = 0;
 
     for (let i = 0; i < elements.length; i++) {
       let element = elements[i];
@@ -314,10 +326,7 @@ export class PlaybackService {
 
         // Check ison
         if (noteElement.ison) {
-          // TODO on starting playback on a note without an ison
-          // should we try to find the previous ison?
-
-          let isonfrequency = -1;
+          isonFrequency = -1;
 
           if (noteElement.ison !== Ison.Unison) {
             const di = workspace.scale.scaleNoteMap.get(ScaleNote.Thi)!;
@@ -331,34 +340,24 @@ export class PlaybackService {
               distance,
             );
 
-            isonfrequency = this.changeFrequency(frequencyDi, moria);
+            isonFrequency = this.changeFrequency(frequencyDi, moria);
 
             console.log(
               'change ison frequency',
               i,
-              isonfrequency,
+              isonFrequency,
               moria,
               noteElement,
             );
+          } else {
+            console.log(
+              'change ison frequency',
+              i,
+              isonFrequency,
+              0,
+              noteElement,
+            );
           }
-
-          console.log(
-            'change ison frequency',
-            i,
-            isonfrequency,
-            0,
-            noteElement,
-          );
-
-          const event: PlaybackSequenceEvent = {
-            frequency: isonfrequency,
-            type: 'ison',
-            duration: 0,
-            time: 0,
-            elementIndex: i,
-          };
-
-          events.push(event);
         }
 
         // If we moved, calculate the new note
@@ -384,6 +383,7 @@ export class PlaybackService {
 
           const event: PlaybackSequenceEvent = {
             frequency: workspace.frequency,
+            isonFrequency,
             type: 'note',
             duration: 1 * beat,
             time: 0,
@@ -421,6 +421,7 @@ export class PlaybackService {
 
           const kentimataEvent: PlaybackSequenceEvent = {
             frequency: alteredFrequency,
+            isonFrequency,
             type: 'note',
             duration: 1 * beat,
             time: 0,
@@ -451,6 +452,7 @@ export class PlaybackService {
 
           const kentimataEvent: PlaybackSequenceEvent = {
             frequency: workspace.frequency,
+            isonFrequency,
             type: 'note',
             duration: 1 * beat,
             time: 0,
@@ -482,6 +484,7 @@ export class PlaybackService {
 
           const oligonEvent: PlaybackSequenceEvent = {
             frequency: alteredFrequency,
+            isonFrequency,
             type: 'note',
             duration: oligonDuration,
             time: 0,
@@ -511,6 +514,7 @@ export class PlaybackService {
 
           const event1: PlaybackSequenceEvent = {
             frequency: workspace.frequency,
+            isonFrequency,
             type: 'note',
             duration: 1 * beat,
             time: 0,
@@ -542,6 +546,7 @@ export class PlaybackService {
 
           const event2: PlaybackSequenceEvent = {
             frequency: alteredFrequency,
+            isonFrequency,
             type: 'note',
             duration: event2Duration,
             time: 0,
@@ -571,6 +576,7 @@ export class PlaybackService {
 
           const event1: PlaybackSequenceEvent = {
             frequency: workspace.frequency,
+            isonFrequency,
             type: 'note',
             duration: 1 * beat,
             time: 0,
@@ -610,6 +616,7 @@ export class PlaybackService {
 
           const event2: PlaybackSequenceEvent = {
             frequency: alteredFrequency,
+            isonFrequency,
             type: 'note',
             duration: event2Duration,
             time: 0,
@@ -636,6 +643,7 @@ export class PlaybackService {
 
           const event1: PlaybackSequenceEvent = {
             frequency: workspace.frequency,
+            isonFrequency,
             type: 'note',
             duration: 1 * beat,
             time: 0,
@@ -667,6 +675,8 @@ export class PlaybackService {
 
           const event2: PlaybackSequenceEvent = {
             frequency: alteredFrequency,
+            isonFrequency,
+
             type: 'note',
             duration: event2Duration,
             time: 0,
@@ -721,6 +731,7 @@ export class PlaybackService {
 
           let event: PlaybackSequenceEvent = {
             frequency: alteredFrequency,
+            isonFrequency,
             type: 'note',
             duration,
             time: 0,
@@ -754,14 +765,19 @@ export class PlaybackService {
           modeKeyElement.scaleNote,
         )!;
 
-        const fthora =
-          modeKeyElement.fthoraAboveNote ??
-          modeKeyElement.fthoraAboveNote2 ??
-          modeKeyElement.fthoraAboveQuantitativeNeumeRight;
+        console.log(modeKeyElement.scaleNote, workspace.scale);
 
-        if (fthora) {
-          this.applyFthora(fthora, workspace);
-        }
+        // TODO fix this because it doesn't work, for example,
+        // with plagal sixth from vou because the fthora is
+        // interpreted as soft chromatic di
+        // const fthora =
+        //   modeKeyElement.fthoraAboveNote ??
+        //   modeKeyElement.fthoraAboveNote2 ??
+        //   modeKeyElement.fthoraAboveQuantitativeNeumeRight;
+
+        // if (fthora) {
+        //   this.applyFthora(fthora, workspace);
+        // }
 
         const moria = this.moriaBetweenNotes(
           di,

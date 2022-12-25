@@ -765,19 +765,9 @@ export class PlaybackService {
           modeKeyElement.scaleNote,
         )!;
 
-        console.log(modeKeyElement.scaleNote, workspace.scale);
-
-        // TODO fix this because it doesn't work, for example,
-        // with plagal sixth from vou because the fthora is
-        // interpreted as soft chromatic di
-        // const fthora =
-        //   modeKeyElement.fthoraAboveNote ??
-        //   modeKeyElement.fthoraAboveNote2 ??
-        //   modeKeyElement.fthoraAboveQuantitativeNeumeRight;
-
-        // if (fthora) {
-        //   this.applyFthora(fthora, workspace);
-        // }
+        if (modeKeyElement.fthora) {
+          this.applyFthora(modeKeyElement.fthora, workspace);
+        }
 
         const moria = this.moriaBetweenNotes(
           di,

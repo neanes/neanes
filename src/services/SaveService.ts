@@ -32,6 +32,7 @@ import { PageSetup } from '@/models/PageSetup';
 import { QuantitativeNeume } from '@/models/Neumes';
 import { Header } from '@/models/Header';
 import { Footer } from '@/models/Footer';
+import { modeKeyTemplates } from '@/models/ModeKeys';
 
 interface IScore {
   version: string;
@@ -763,5 +764,15 @@ export class SaveService {
     element.strokeWidth = e.strokeWidth || element.strokeWidth;
     element.heightAdjustment = e.heightAdjustment || 0;
     element.useDefaultStyle = e.useDefaultStyle === true;
+
+    // For backwards compatibility, we check the current mode key templates
+    // to fill out the fthora if it is missing.
+    if (e.fthora == null) {
+      const template = modeKeyTemplates.find((x) => x.id === e.templateId);
+
+      element.fthora = template?.fthora ?? null;
+    } else {
+      element.fthora = e.fthora;
+    }
   }
 }

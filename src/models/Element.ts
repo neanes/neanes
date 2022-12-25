@@ -491,6 +491,7 @@ export class ModeKeyElement extends ScoreElement {
   public mode: number = 1;
   public scale: Scale = Scale.Diatonic;
   public scaleNote: ScaleNote = ScaleNote.Pa;
+  public fthora: Fthora | null = null;
   public martyria: ModeSign = ModeSign.Alpha;
   public note: ModeSign | null = null;
   public note2: ModeSign | null = null;
@@ -532,6 +533,7 @@ export class ModeKeyElement extends ScoreElement {
     element.mode = template.mode;
     element.scale = template.scale;
     element.scaleNote = template.scaleNote;
+    element.fthora = template.fthora ?? null;
     element.martyria = template.martyria;
     element.fthoraAboveNote = template.fthoraAboveNote || null;
     element.fthoraAboveNote2 = template.fthoraAboveNote2 || null;
@@ -565,9 +567,10 @@ export class ModeKeyElement extends ScoreElement {
       mode: this.mode,
       scale: this.scale,
       scaleNote: this.scaleNote,
+      fthora: this.fthora,
       martyria: this.martyria,
-      fthora: this.fthoraAboveNote,
-      fthora2: this.fthoraAboveNote2,
+      fthoraAboveNote: this.fthoraAboveNote,
+      fthoraAboveNote2: this.fthoraAboveNote2,
       fthoraAboveQuantitativeNeumeRight: this.fthoraAboveQuantitativeNeumeRight,
       note: this.note,
       note2: this.note2,

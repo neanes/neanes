@@ -140,6 +140,7 @@ export class ModeKeyElement extends ScoreElement {
   public mode: number = 1;
   public scale: Scale = Scale.Diatonic;
   public scaleNote: ScaleNote = ScaleNote.Pa;
+  public fthora: Fthora | undefined = undefined;
   public martyria: ModeSign = ModeSign.Alpha;
   public note: ModeSign | undefined = undefined;
   public note2: ModeSign | undefined = undefined;

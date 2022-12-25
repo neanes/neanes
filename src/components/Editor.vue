@@ -1808,9 +1808,18 @@ export default class Editor extends Vue {
           handled = true;
           break;
         case 'ArrowRight':
-        case 'Space':
           this.moveRightThrottled();
           handled = true;
+          break;
+        case 'Space':
+          if (!event.repeat) {
+            if (this.audioService.state === AudioState.Stopped) {
+              this.playAudio();
+            } else {
+              this.pauseAudio();
+            }
+            handled = true;
+          }
           break;
         case 'Backspace':
           handled = true;

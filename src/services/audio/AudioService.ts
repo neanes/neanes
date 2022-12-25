@@ -43,6 +43,7 @@ interface PlaybackWorkspace {
   // wrapping around to the end of the scale.intervals array, if necessary
   intervalIndex: number;
   scale: PlaybackScale;
+  legetos: boolean;
 }
 
 interface GorgonIndex {
@@ -55,6 +56,7 @@ enum PlaybackScaleName {
   Diatonic,
   SoftChromatic,
   HardChromatic,
+  Legetos,
 }
 
 interface PlaybackScale {
@@ -235,6 +237,7 @@ export class AudioService {
   }
 
   jumpToEvent(event: PlaybackSequenceEvent) {
+    console.log('jump to', event.time, event);
     Tone.Transport.position = event.time;
   }
 
@@ -313,6 +316,7 @@ export class PlaybackService {
       intervalIndex: 0,
       frequency: frequencyPa,
       scale: this.diatonicScale,
+      legetos: false,
     };
 
     let beat = this.beatLengthFromBpm(160);
@@ -749,6 +753,15 @@ export class PlaybackService {
 
         if (modeKeyElement.scale === Scale.Diatonic) {
           workspace.scale = this.diatonicScale;
+
+          if (
+            modeKeyElement.mode === 4 &&
+            (modeKeyElement.scaleNote === ScaleNote.Pa ||
+              modeKeyElement.scaleNote === ScaleNote.Vou)
+          ) {
+            workspace.scale = this.legetosScale;
+            workspace.legetos = true;
+          }
         } else if (modeKeyElement.scale === Scale.SoftChromatic) {
           workspace.scale = this.softChromaticScale;
         } else if (modeKeyElement.scale === Scale.HardChromatic) {
@@ -792,6 +805,8 @@ export class PlaybackService {
           // as a fallback
           const bpm = this.tempoToBpmMap.get(martyriaElement.tempo)!;
           beat = this.beatLengthFromBpm(bpm);
+
+          console.log('change bpm', bpm, beat);
         }
 
         if (martyriaElement.fthora) {
@@ -804,6 +819,8 @@ export class PlaybackService {
         // as a fallback
         const bpm = this.tempoToBpmMap.get(tempoElement.neume)!;
         beat = this.beatLengthFromBpm(bpm);
+
+        console.log('change bpm', bpm, beat);
       }
     }
 
@@ -892,6 +909,13 @@ export class PlaybackService {
     }
 
     workspace.scale = this.getScaleFromFthora(fthora)!;
+
+    if (
+      workspace.scale.name === PlaybackScaleName.Diatonic &&
+      workspace.legetos
+    ) {
+      workspace.scale = this.legetosScale;
+    }
 
     workspace.intervalIndex =
       workspace.scale.fthoraMap.get(fthora) ?? workspace.intervalIndex;
@@ -1050,6 +1074,15 @@ export class PlaybackService {
     [TempoSign.Quick, 168], // 168 - 208 gorgon
     [TempoSign.Quicker, 208], // 208+ digorgon
     [TempoSign.VeryQuick, 250], // unattested? trigorgon
+
+    [TempoSign.VerySlowAbove, 40], // < 56 triargon?
+    [TempoSign.SlowerAbove, 56], // 56 - 80 diargon
+    [TempoSign.SlowAbove, 80], // 80 - 100 hemiolion
+    [TempoSign.ModerateAbove, 100], // 100 - 168 argon
+    [TempoSign.MediumAbove, 130], // 130 argon + gorgon
+    [TempoSign.QuickAbove, 168], // 168 - 208 gorgon
+    [TempoSign.QuickerAbove, 208], // 208+ digorgon
+    [TempoSign.VeryQuickAbove, 250], // unattested? trigorgon
   ]);
 
   /////////////////////////
@@ -1159,10 +1192,51 @@ export class PlaybackService {
     ]),
   };
 
+  legetosScale: PlaybackScale = {
+    name: PlaybackScaleName.Legetos,
+    intervals: [15, 6, 9, 15, 12, 6, 9],
+    scaleNoteMap: new Map<ScaleNote, number>([
+      [ScaleNote.VouLow, 2],
+      [ScaleNote.GaLow, 3],
+      [ScaleNote.ThiLow, 4],
+      [ScaleNote.KeLow, 5],
+      [ScaleNote.Zo, 6],
+      [ScaleNote.Ni, 0],
+      [ScaleNote.Pa, 1],
+      [ScaleNote.Vou, 2],
+      [ScaleNote.Ga, 3],
+      [ScaleNote.Thi, 4],
+      [ScaleNote.Ke, 5],
+      [ScaleNote.Zo, 6],
+      [ScaleNote.NiHigh, 0],
+      [ScaleNote.PaHigh, 1],
+      [ScaleNote.VouHigh, 2],
+      [ScaleNote.GaHigh, 3],
+      [ScaleNote.ThiHigh, 4],
+      [ScaleNote.KeHigh, 5],
+    ]),
+    fthoraMap: new Map<Fthora, number>([
+      [Fthora.DiatonicNiLow_Top, 0],
+      [Fthora.DiatonicNiLow_Bottom, 0],
+      [Fthora.DiatonicPa_Top, 1],
+      [Fthora.DiatonicPa_Bottom, 1],
+      [Fthora.DiatonicVou_Top, 2],
+      [Fthora.DiatonicGa_Top, 3],
+      [Fthora.DiatonicThi_Top, 4],
+      [Fthora.DiatonicThi_Bottom, 4],
+      [Fthora.DiatonicKe_Top, 5],
+      [Fthora.DiatonicKe_Bottom, 5],
+      [Fthora.DiatonicZo_Top, 6],
+      [Fthora.DiatonicNiHigh_Top, 0],
+      [Fthora.DiatonicNiHigh_Bottom, 0],
+    ]),
+  };
+
   scales: PlaybackScale[] = [
     this.diatonicScale,
     this.softChromaticScale,
     this.hardChromaticScale,
+    this.legetosScale,
   ];
 }
 

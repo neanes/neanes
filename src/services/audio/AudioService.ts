@@ -34,6 +34,7 @@ export interface PlaybackSequenceEvent {
   duration: number;
   time: number;
   elementIndex: number;
+  bpm: number;
 }
 
 interface PlaybackWorkspace {
@@ -92,6 +93,8 @@ export class AudioService {
 
   state: AudioState = AudioState.Stopped;
 
+  currentEvent: PlaybackSequenceEvent | null = null;
+
   constructor() {
     this.synth = new Tone.Synth().toDestination();
     this.isonSynth = new Tone.Synth().toDestination();
@@ -120,13 +123,25 @@ export class AudioService {
     this.stop();
 
     let currentIsonFrequency = 0;
+    let currentBpm = 0;
 
     this.state = AudioState.Playing;
 
+    Tone.Transport.bpm.value = startAt?.bpm ?? 60;
+
     for (let event of events) {
+      if (currentBpm !== event.bpm) {
+        Tone.Transport.bpm.value = event.bpm!;
+      }
+
       if (event.type === 'note') {
         const toneEvent = new ToneEvent((time) => {
+          this.currentEvent = event;
           //synth.set({ portamento: 0.25 });
+
+          if (currentBpm !== event.bpm) {
+            Tone.Transport.bpm.value = event.bpm!;
+          }
 
           synth.triggerAttackRelease(event.frequency!, event.duration, time);
 
@@ -159,9 +174,10 @@ export class AudioService {
 
     const finishEvent = new ToneEvent((time) => {
       console.log('playback finished', time);
-      Tone.Transport.stop();
       isonSynth.triggerRelease();
       synth.triggerRelease();
+
+      Tone.Transport.stop();
 
       EventBus.$emit(AudioServiceEventNames.Stop);
 
@@ -178,10 +194,10 @@ export class AudioService {
       console.log('starting at', startAt);
     }
 
-    // TODO is there a better way to handle this?
-    // Tone.js sometimes starts late and misses the first ToneEvent,
-    // So we set the position to be just a little bit earlier
-    Tone.Transport.position = Math.max(startTime - 0.01, 0);
+    Tone.Transport.bpm.value = startAt?.bpm ?? 60;
+    currentBpm = Tone.Transport.bpm.value;
+
+    Tone.Transport.seconds = Math.max(startTime, 0);
 
     Tone.Transport.start();
   }
@@ -189,14 +205,14 @@ export class AudioService {
   stop() {
     console.log('stop');
 
+    // Stop the synths
+    this.isonSynth.triggerRelease();
+    this.synth.triggerRelease();
+
     // Reset the transport
     Tone.Transport.stop();
     Tone.Transport.position = 0;
     Tone.Transport.cancel();
-
-    // Stop the synths
-    this.isonSynth.triggerRelease();
-    this.synth.triggerRelease();
 
     this.toneEvents.forEach((e) => e.dispose());
     this.toneEvents = [];
@@ -209,10 +225,10 @@ export class AudioService {
     if (this.state === AudioState.Playing) {
       console.log('pause', Tone.Transport.position);
 
-      Tone.Transport.pause();
-
       this.isonSynth.triggerRelease();
       this.synth.triggerRelease();
+
+      Tone.Transport.stop();
 
       this.state = AudioState.Paused;
     }
@@ -221,6 +237,8 @@ export class AudioService {
   resume() {
     if (this.state === AudioState.Paused) {
       console.log('resume', Tone.Transport.position);
+
+      Tone.Transport.position = this.currentEvent?.time ?? 0;
 
       Tone.Transport.start();
 
@@ -238,6 +256,7 @@ export class AudioService {
 
   jumpToEvent(event: PlaybackSequenceEvent) {
     console.log('jump to', event.time, event);
+    Tone.Transport.bpm.value = event.bpm;
     Tone.Transport.position = event.time;
   }
 
@@ -309,6 +328,8 @@ export class PlaybackService {
     const frequencyPa = 146.83;
     const frequencyDi = 196;
 
+    const defaultBpm = 160;
+
     // const frequencyPa = 293.66;
     // const frequencyDi = 392;
 
@@ -319,7 +340,8 @@ export class PlaybackService {
       legetos: false,
     };
 
-    let beat = this.beatLengthFromBpm(160);
+    let bpm = defaultBpm;
+    let beat = this.beatLengthFromBpm(bpm);
     let isonFrequency = 0;
 
     for (let i = 0; i < elements.length; i++) {
@@ -389,6 +411,7 @@ export class PlaybackService {
             frequency: workspace.frequency,
             isonFrequency,
             type: 'note',
+            bpm,
             duration: 1 * beat,
             time: 0,
             elementIndex: i,
@@ -427,6 +450,7 @@ export class PlaybackService {
             frequency: alteredFrequency,
             isonFrequency,
             type: 'note',
+            bpm,
             duration: 1 * beat,
             time: 0,
             elementIndex: i,
@@ -458,6 +482,7 @@ export class PlaybackService {
             frequency: workspace.frequency,
             isonFrequency,
             type: 'note',
+            bpm,
             duration: 1 * beat,
             time: 0,
             elementIndex: i,
@@ -490,6 +515,7 @@ export class PlaybackService {
             frequency: alteredFrequency,
             isonFrequency,
             type: 'note',
+            bpm,
             duration: oligonDuration,
             time: 0,
             elementIndex: i,
@@ -520,6 +546,7 @@ export class PlaybackService {
             frequency: workspace.frequency,
             isonFrequency,
             type: 'note',
+            bpm,
             duration: 1 * beat,
             time: 0,
             elementIndex: i,
@@ -552,6 +579,7 @@ export class PlaybackService {
             frequency: alteredFrequency,
             isonFrequency,
             type: 'note',
+            bpm,
             duration: event2Duration,
             time: 0,
             elementIndex: i,
@@ -582,6 +610,7 @@ export class PlaybackService {
             frequency: workspace.frequency,
             isonFrequency,
             type: 'note',
+            bpm,
             duration: 1 * beat,
             time: 0,
             elementIndex: i,
@@ -622,6 +651,7 @@ export class PlaybackService {
             frequency: alteredFrequency,
             isonFrequency,
             type: 'note',
+            bpm,
             duration: event2Duration,
             time: 0,
             elementIndex: i,
@@ -649,6 +679,7 @@ export class PlaybackService {
             frequency: workspace.frequency,
             isonFrequency,
             type: 'note',
+            bpm,
             duration: 1 * beat,
             time: 0,
             elementIndex: i,
@@ -680,8 +711,8 @@ export class PlaybackService {
           const event2: PlaybackSequenceEvent = {
             frequency: alteredFrequency,
             isonFrequency,
-
             type: 'note',
+            bpm,
             duration: event2Duration,
             time: 0,
             elementIndex: i,
@@ -693,6 +724,7 @@ export class PlaybackService {
 
           const restEvent: PlaybackSequenceEvent = {
             type: 'rest',
+            bpm,
             duration,
             time: 0,
             elementIndex: i,
@@ -737,6 +769,7 @@ export class PlaybackService {
             frequency: alteredFrequency,
             isonFrequency,
             type: 'note',
+            bpm,
             duration,
             time: 0,
             elementIndex: i,
@@ -803,7 +836,7 @@ export class PlaybackService {
         if (martyriaElement.tempo != null) {
           // TODO add bpm to tempo element and use tempoToBpmMap
           // as a fallback
-          const bpm = this.tempoToBpmMap.get(martyriaElement.tempo)!;
+          bpm = this.tempoToBpmMap.get(martyriaElement.tempo)!;
           beat = this.beatLengthFromBpm(bpm);
 
           console.log('change bpm', bpm, beat);
@@ -817,7 +850,7 @@ export class PlaybackService {
 
         // TODO add bpm to tempo element and use tempoToBpmMap
         // as a fallback
-        const bpm = this.tempoToBpmMap.get(tempoElement.neume)!;
+        bpm = this.tempoToBpmMap.get(tempoElement.neume)!;
         beat = this.beatLengthFromBpm(bpm);
 
         console.log('change bpm', bpm, beat);
@@ -828,10 +861,19 @@ export class PlaybackService {
 
     // Calculate times
     let time = 0;
+    let beats = 0;
+    let currentBpm = defaultBpm;
+    let currentBeatLength = this.beatLengthFromBpm(currentBpm);
 
     for (let event of events) {
+      if (currentBpm != event.bpm) {
+        currentBpm = event.bpm;
+        currentBeatLength = this.beatLengthFromBpm(currentBpm);
+      }
+
+      time = beats * currentBeatLength;
       event.time = time;
-      time += event.duration;
+      beats += event.duration / currentBeatLength;
     }
 
     console.log('playback events', events);

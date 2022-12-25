@@ -865,6 +865,8 @@ export default class Editor extends Vue {
         if (event) {
           this.audioService.jumpToEvent(event);
         }
+      } else if (this.audioService.state === AudioState.Paused) {
+        this.stopAudio();
       }
     }
 
@@ -1813,7 +1815,10 @@ export default class Editor extends Vue {
           break;
         case 'Space':
           if (!event.repeat) {
-            if (this.audioService.state === AudioState.Stopped) {
+            if (
+              this.audioService.state === AudioState.Stopped ||
+              event.ctrlKey
+            ) {
               this.playAudio();
             } else {
               this.pauseAudio();
@@ -3674,6 +3679,10 @@ export default class Editor extends Vue {
 
   pauseAudio() {
     this.audioService.togglePause();
+
+    if (this.audioService.state === AudioState.Paused) {
+      this.audioElement = null;
+    }
   }
 
   onAudioServiceEventPlay(event: PlaybackSequenceEvent) {

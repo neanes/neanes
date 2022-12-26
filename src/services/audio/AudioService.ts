@@ -823,6 +823,9 @@ export class PlaybackService {
       } else if (element.elementType === ElementType.ModeKey) {
         const modeKeyElement = element as ModeKeyElement;
 
+        // Reset legetos flag
+        workspace.legetos = false;
+
         if (modeKeyElement.scale === Scale.Diatonic) {
           workspace.scale = this.diatonicScale;
 

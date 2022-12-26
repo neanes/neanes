@@ -1746,7 +1746,7 @@ export default class Editor extends Vue {
         this.onPasteScoreElementsThrottled();
         event.preventDefault();
         return;
-      } else if (event.code === 'KeyI') {
+      } else if (event.code === 'KeyI' && !event.shiftKey) {
         switch (this.entryMode) {
           case EntryMode.Auto:
             this.updateEntryMode(EntryMode.Insert);
@@ -1759,7 +1759,7 @@ export default class Editor extends Vue {
             break;
         }
         return;
-      } else if (event.code === 'KeyU') {
+      } else if (event.code === 'KeyU' && !event.shiftKey) {
         switch (this.entryMode) {
           case EntryMode.Auto:
             this.updateEntryMode(EntryMode.Edit);
@@ -3690,6 +3690,21 @@ export default class Editor extends Vue {
   onAudioServiceEventPlay(event: PlaybackSequenceEvent) {
     if (this.audioService.state === AudioState.Playing) {
       this.audioElement = this.elements[event.elementIndex];
+
+      // Scroll the currently playing element into view
+      const lyrics = (this.$refs[`lyrics-${event.elementIndex}`] as any[])[0];
+
+      const neumeBox = (
+        this.$refs[`element-${event.elementIndex}`] as any[]
+      )[0];
+
+      if (lyrics?.$el.scrollIntoViewIfNeeded) {
+        lyrics.$el.scrollIntoViewIfNeeded(false);
+      }
+
+      if (neumeBox?.scrollIntoViewIfNeeded) {
+        neumeBox.scrollIntoViewIfNeeded(false);
+      }
     }
   }
 

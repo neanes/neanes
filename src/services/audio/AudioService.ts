@@ -45,6 +45,10 @@ interface PlaybackWorkspace {
   intervalIndex: number;
   scale: PlaybackScale;
   legetos: boolean;
+  note: number;
+
+  // chroa
+  enharmonicZo: boolean;
 }
 
 interface GorgonIndex {
@@ -58,6 +62,10 @@ enum PlaybackScaleName {
   SoftChromatic,
   HardChromatic,
   Legetos,
+  Kliton,
+  Zygos,
+  ZygosLegetos,
+  Spathi,
 }
 
 interface PlaybackScale {
@@ -174,10 +182,11 @@ export class AudioService {
 
     const finishEvent = new ToneEvent((time) => {
       console.log('playback finished', time);
-      isonSynth.triggerRelease();
-      synth.triggerRelease();
 
       Tone.Transport.stop();
+
+      this.isonSynth.triggerRelease('+0.1');
+      this.synth.triggerRelease('+0.1');
 
       EventBus.$emit(AudioServiceEventNames.Stop);
 
@@ -205,14 +214,14 @@ export class AudioService {
   stop() {
     console.log('stop');
 
-    // Stop the synths
-    this.isonSynth.triggerRelease();
-    this.synth.triggerRelease();
-
     // Reset the transport
     Tone.Transport.stop();
     Tone.Transport.position = 0;
     Tone.Transport.cancel();
+
+    // Stop the synths
+    this.isonSynth.triggerRelease('+0.1');
+    this.synth.triggerRelease('+0.1');
 
     this.toneEvents.forEach((e) => e.dispose());
     this.toneEvents = [];
@@ -225,10 +234,10 @@ export class AudioService {
     if (this.state === AudioState.Playing) {
       console.log('pause', Tone.Transport.position);
 
-      this.isonSynth.triggerRelease();
-      this.synth.triggerRelease();
-
       Tone.Transport.stop();
+
+      this.isonSynth.triggerRelease('+0.1');
+      this.synth.triggerRelease('+0.1');
 
       this.state = AudioState.Paused;
     }
@@ -321,6 +330,12 @@ export class AudioService {
 }
 
 export class PlaybackService {
+  constructor() {
+    for (let [key, value] of this.scaleNoteMap) {
+      this.reverseScaleNoteMap.set(value, key);
+    }
+  }
+
   computePlaybackSequence(elements: ScoreElement[]) {
     const events: PlaybackSequenceEvent[] = [];
     const gorgonIndexes: GorgonIndex[] = [];
@@ -338,6 +353,10 @@ export class PlaybackService {
       frequency: frequencyPa,
       scale: this.diatonicScale,
       legetos: false,
+      note: this.reverseScaleNoteMap.get(ScaleNote.Pa)!,
+
+      //chroa
+      enharmonicZo: false,
     };
 
     let bpm = defaultBpm;
@@ -389,6 +408,19 @@ export class PlaybackService {
         // If we moved, calculate the new note
         const distance = getNeumeValue(noteElement.quantitativeNeume)!;
 
+        // Handle enharmonic fthores
+        // Check if we are moving to a note with an enharmonic fthora
+        if (noteElement.fthora != null) {
+          const destinationNote = workspace.note + distance;
+          workspace.enharmonicZo = false;
+
+          if (noteElement.fthora === Fthora.Enharmonic_Top) {
+            if (this.scaleNoteMap.get(destinationNote) === ScaleNote.ZoHigh) {
+              workspace.enharmonicZo = true;
+            }
+          }
+        }
+
         if (this.isKentimataCombo(noteElement)) {
           // Process first note
           const initialDistance = distance - 1;
@@ -407,8 +439,13 @@ export class PlaybackService {
             gorgonIndexes.push(gorgonIndex);
           }
 
+          let alteredFrequency = this.applyEnharmonicAlteration(
+            workspace.frequency,
+            workspace,
+          );
+
           const event: PlaybackSequenceEvent = {
-            frequency: workspace.frequency,
+            frequency: alteredFrequency,
             isonFrequency,
             type: 'note',
             bpm,
@@ -435,19 +472,13 @@ export class PlaybackService {
           }
 
           // Calculate accidentals
-          let alteredFrequency = workspace.frequency;
-
-          if (noteElement.accidental != null) {
-            const alteration = this.alterationMap.get(noteElement.accidental)!;
-            alteredFrequency = this.changeFrequency(
-              alteredFrequency,
-              alteration,
-            );
-            console.log('alteration', alteration);
-          }
+          let alteredFrequencyKentimata = this.applyAlterations(
+            noteElement,
+            workspace,
+          );
 
           const kentimataEvent: PlaybackSequenceEvent = {
-            frequency: alteredFrequency,
+            frequency: alteredFrequencyKentimata,
             isonFrequency,
             type: 'note',
             bpm,
@@ -478,8 +509,13 @@ export class PlaybackService {
             gorgonIndexes.push(gorgonIndex);
           }
 
+          let alteredFrequencyKentimata = this.applyEnharmonicAlteration(
+            workspace.frequency,
+            workspace,
+          );
+
           const kentimataEvent: PlaybackSequenceEvent = {
-            frequency: workspace.frequency,
+            frequency: alteredFrequencyKentimata,
             isonFrequency,
             type: 'note',
             bpm,
@@ -500,16 +536,7 @@ export class PlaybackService {
           }
 
           // Calculate accidentals
-          let alteredFrequency = workspace.frequency;
-
-          if (noteElement.accidental != null) {
-            const alteration = this.alterationMap.get(noteElement.accidental)!;
-            alteredFrequency = this.changeFrequency(
-              alteredFrequency,
-              alteration,
-            );
-            console.log('alteration', alteration);
-          }
+          let alteredFrequency = this.applyAlterations(noteElement, workspace);
 
           const oligonEvent: PlaybackSequenceEvent = {
             frequency: alteredFrequency,
@@ -542,8 +569,13 @@ export class PlaybackService {
             gorgonIndexes.push(gorgonIndex);
           }
 
+          let alteredFrequency1 = this.applyEnharmonicAlteration(
+            workspace.frequency,
+            workspace,
+          );
+
           const event1: PlaybackSequenceEvent = {
-            frequency: workspace.frequency,
+            frequency: alteredFrequency1,
             isonFrequency,
             type: 'note',
             bpm,
@@ -564,19 +596,10 @@ export class PlaybackService {
           }
 
           // Calculate accidentals
-          let alteredFrequency = workspace.frequency;
-
-          if (noteElement.accidental != null) {
-            const alteration = this.alterationMap.get(noteElement.accidental)!;
-            alteredFrequency = this.changeFrequency(
-              alteredFrequency,
-              alteration,
-            );
-            console.log('alteration', alteration);
-          }
+          let alteredFrequency2 = this.applyAlterations(noteElement, workspace);
 
           const event2: PlaybackSequenceEvent = {
-            frequency: alteredFrequency,
+            frequency: alteredFrequency2,
             isonFrequency,
             type: 'note',
             bpm,
@@ -606,8 +629,13 @@ export class PlaybackService {
             gorgonIndexes.push(gorgonIndex);
           }
 
+          let alteredFrequency1 = this.applyEnharmonicAlteration(
+            workspace.frequency,
+            workspace,
+          );
+
           const event1: PlaybackSequenceEvent = {
-            frequency: workspace.frequency,
+            frequency: alteredFrequency1,
             isonFrequency,
             type: 'note',
             bpm,
@@ -636,19 +664,10 @@ export class PlaybackService {
           }
 
           // Calculate accidentals
-          let alteredFrequency = workspace.frequency;
-
-          if (noteElement.accidental != null) {
-            const alteration = this.alterationMap.get(noteElement.accidental)!;
-            alteredFrequency = this.changeFrequency(
-              alteredFrequency,
-              alteration,
-            );
-            console.log('alteration', alteration);
-          }
+          let alteredFrequency2 = this.applyAlterations(noteElement, workspace);
 
           const event2: PlaybackSequenceEvent = {
-            frequency: alteredFrequency,
+            frequency: alteredFrequency2,
             isonFrequency,
             type: 'note',
             bpm,
@@ -675,8 +694,13 @@ export class PlaybackService {
 
           gorgonIndexes.push(gorgonIndex);
 
+          let alteredFrequency1 = this.applyEnharmonicAlteration(
+            workspace.frequency,
+            workspace,
+          );
+
           const event1: PlaybackSequenceEvent = {
-            frequency: workspace.frequency,
+            frequency: alteredFrequency1,
             isonFrequency,
             type: 'note',
             bpm,
@@ -697,19 +721,10 @@ export class PlaybackService {
           }
 
           // Calculate accidentals
-          let alteredFrequency = workspace.frequency;
-
-          if (noteElement.accidental != null) {
-            const alteration = this.alterationMap.get(noteElement.accidental)!;
-            alteredFrequency = this.changeFrequency(
-              alteredFrequency,
-              alteration,
-            );
-            console.log('alteration', alteration);
-          }
+          let alteredFrequency2 = this.applyAlterations(noteElement, workspace);
 
           const event2: PlaybackSequenceEvent = {
-            frequency: alteredFrequency,
+            frequency: alteredFrequency2,
             isonFrequency,
             type: 'note',
             bpm,
@@ -754,16 +769,7 @@ export class PlaybackService {
           }
 
           // Calculate accidentals
-          let alteredFrequency = workspace.frequency;
-
-          if (noteElement.accidental != null) {
-            const alteration = this.alterationMap.get(noteElement.accidental)!;
-            alteredFrequency = this.changeFrequency(
-              alteredFrequency,
-              alteration,
-            );
-            console.log('alteration', alteration);
-          }
+          let alteredFrequency = this.applyAlterations(noteElement, workspace);
 
           let event: PlaybackSequenceEvent = {
             frequency: alteredFrequency,
@@ -789,6 +795,7 @@ export class PlaybackService {
 
           if (
             modeKeyElement.mode === 4 &&
+            modeKeyElement.scale === Scale.Diatonic &&
             (modeKeyElement.scaleNote === ScaleNote.Pa ||
               modeKeyElement.scaleNote === ScaleNote.Vou)
           ) {
@@ -808,6 +815,10 @@ export class PlaybackService {
           getScaleNoteValue(ScaleNote.Thi);
 
         workspace.intervalIndex = workspace.scale.scaleNoteMap.get(
+          modeKeyElement.scaleNote,
+        )!;
+
+        workspace.note = this.reverseScaleNoteMap.get(
           modeKeyElement.scaleNote,
         )!;
 
@@ -845,6 +856,10 @@ export class PlaybackService {
         if (martyriaElement.fthora) {
           this.applyFthora(martyriaElement.fthora, workspace);
         }
+
+        // TODO add support for "implied enharmonic Zo" for thir mode and grave mode
+        // in which case, this flag should not be reset unless there is a fthora
+        workspace.enharmonicZo = false;
       } else if (element.elementType === ElementType.Tempo) {
         const tempoElement = element as TempoElement;
 
@@ -937,6 +952,8 @@ export class PlaybackService {
     );
 
     workspace.frequency = this.changeFrequency(workspace.frequency, moria);
+
+    workspace.note += distance;
   }
 
   getScaleFromFthora(fthora: Fthora) {
@@ -946,23 +963,58 @@ export class PlaybackService {
   }
 
   applyFthora(fthora: Fthora, workspace: PlaybackWorkspace) {
-    if (!this.getScaleFromFthora(fthora)) {
+    const scale = this.getScaleFromFthora(fthora);
+
+    if (scale == null) {
       return;
     }
 
-    workspace.scale = this.getScaleFromFthora(fthora)!;
+    workspace.scale = scale;
 
     if (
       workspace.scale.name === PlaybackScaleName.Diatonic &&
       workspace.legetos
     ) {
       workspace.scale = this.legetosScale;
+    } else if (
+      workspace.scale.name === PlaybackScaleName.Zygos &&
+      workspace.legetos
+    ) {
+      workspace.scale = this.zygosLegetosScale;
     }
 
     workspace.intervalIndex =
       workspace.scale.fthoraMap.get(fthora) ?? workspace.intervalIndex;
 
-    console.log('applyFthora', fthora);
+    console.log('applyFthora', fthora, workspace);
+  }
+
+  applyAlterations(noteElement: NoteElement, workspace: PlaybackWorkspace) {
+    let alteredFrequency = workspace.frequency;
+
+    if (noteElement.accidental != null) {
+      const alteration = this.alterationMap.get(noteElement.accidental)!;
+      alteredFrequency = this.changeFrequency(alteredFrequency, alteration);
+      console.log('alteration', alteration);
+    }
+
+    alteredFrequency = this.applyEnharmonicAlteration(
+      alteredFrequency,
+      workspace,
+    );
+
+    return alteredFrequency;
+  }
+
+  applyEnharmonicAlteration(frequency: number, workspace: PlaybackWorkspace) {
+    if (
+      workspace.enharmonicZo &&
+      this.scaleNoteMap.get(workspace.note) === ScaleNote.ZoHigh
+    ) {
+      frequency = this.changeFrequency(frequency, -4);
+    }
+
+    return frequency;
   }
 
   isKentimataCombo(element: NoteElement) {
@@ -1057,6 +1109,14 @@ export class PlaybackService {
     [Fthora.HardChromaticPa_Bottom, PlaybackScaleName.HardChromatic],
     [Fthora.HardChromaticThi_Top, PlaybackScaleName.HardChromatic],
     [Fthora.HardChromaticThi_Bottom, PlaybackScaleName.HardChromatic],
+
+    [Fthora.Kliton_Top, PlaybackScaleName.Kliton],
+    [Fthora.Kliton_Bottom, PlaybackScaleName.Kliton],
+
+    [Fthora.Zygos_Top, PlaybackScaleName.Zygos],
+    [Fthora.Zygos_Bottom, PlaybackScaleName.Zygos],
+
+    [Fthora.Spathi_Top, PlaybackScaleName.Spathi],
   ]);
 
   gorgonMap = new Map<GorgonNeume, number[]>([
@@ -1099,6 +1159,29 @@ export class PlaybackService {
     [QuantitativeNeume.VareiaDotted4, 4],
   ]);
 
+  scaleNoteMap = new Map<number, ScaleNote>([
+    [-6, ScaleNote.VouLow],
+    [-5, ScaleNote.GaLow],
+    [-4, ScaleNote.ThiLow],
+    [-3, ScaleNote.KeLow],
+    [-2, ScaleNote.Zo],
+    [-1, ScaleNote.Ni],
+    [0, ScaleNote.Pa],
+    [1, ScaleNote.Vou],
+    [2, ScaleNote.Ga],
+    [3, ScaleNote.Thi],
+    [4, ScaleNote.Ke],
+    [5, ScaleNote.ZoHigh],
+    [6, ScaleNote.NiHigh],
+    [7, ScaleNote.PaHigh],
+    [8, ScaleNote.VouHigh],
+    [9, ScaleNote.GaHigh],
+    [10, ScaleNote.ThiHigh],
+    [11, ScaleNote.KeHigh],
+  ]);
+
+  reverseScaleNoteMap = new Map<ScaleNote, number>();
+
   timeMap = new Map<TimeNeume, number>([
     [TimeNeume.Klasma_Bottom, 1],
     [TimeNeume.Klasma_Top, 1],
@@ -1131,29 +1214,31 @@ export class PlaybackService {
   // Scales
   /////////////////////////
 
+  diatonicScaleNoteMap: Map<ScaleNote, number> = new Map<ScaleNote, number>([
+    [ScaleNote.VouLow, 2],
+    [ScaleNote.GaLow, 3],
+    [ScaleNote.ThiLow, 4],
+    [ScaleNote.KeLow, 5],
+    [ScaleNote.Zo, 6],
+    [ScaleNote.Ni, 0],
+    [ScaleNote.Pa, 1],
+    [ScaleNote.Vou, 2],
+    [ScaleNote.Ga, 3],
+    [ScaleNote.Thi, 4],
+    [ScaleNote.Ke, 5],
+    [ScaleNote.Zo, 6],
+    [ScaleNote.NiHigh, 0],
+    [ScaleNote.PaHigh, 1],
+    [ScaleNote.VouHigh, 2],
+    [ScaleNote.GaHigh, 3],
+    [ScaleNote.ThiHigh, 4],
+    [ScaleNote.KeHigh, 5],
+  ]);
+
   diatonicScale: PlaybackScale = {
     name: PlaybackScaleName.Diatonic,
     intervals: [12, 10, 8, 12, 12, 10, 8],
-    scaleNoteMap: new Map<ScaleNote, number>([
-      [ScaleNote.VouLow, 2],
-      [ScaleNote.GaLow, 3],
-      [ScaleNote.ThiLow, 4],
-      [ScaleNote.KeLow, 5],
-      [ScaleNote.Zo, 6],
-      [ScaleNote.Ni, 0],
-      [ScaleNote.Pa, 1],
-      [ScaleNote.Vou, 2],
-      [ScaleNote.Ga, 3],
-      [ScaleNote.Thi, 4],
-      [ScaleNote.Ke, 5],
-      [ScaleNote.Zo, 6],
-      [ScaleNote.NiHigh, 0],
-      [ScaleNote.PaHigh, 1],
-      [ScaleNote.VouHigh, 2],
-      [ScaleNote.GaHigh, 3],
-      [ScaleNote.ThiHigh, 4],
-      [ScaleNote.KeHigh, 5],
-    ]),
+    scaleNoteMap: this.diatonicScaleNoteMap,
     fthoraMap: new Map<Fthora, number>([
       [Fthora.DiatonicNiLow_Top, 0],
       [Fthora.DiatonicNiLow_Bottom, 0],
@@ -1274,11 +1359,52 @@ export class PlaybackService {
     ]),
   };
 
+  zygosScale: PlaybackScale = {
+    name: PlaybackScaleName.Zygos,
+    intervals: [18, 4, 16, 4, 12, 10, 8],
+    scaleNoteMap: this.diatonicScaleNoteMap,
+    fthoraMap: new Map<Fthora, number>([
+      [Fthora.Zygos_Top, 4],
+      [Fthora.Zygos_Bottom, 4],
+    ]),
+  };
+
+  zygosLegetosScale: PlaybackScale = {
+    name: PlaybackScaleName.ZygosLegetos,
+    intervals: [18, 4, 20, 4, 12, 6, 9],
+    scaleNoteMap: this.diatonicScaleNoteMap,
+    fthoraMap: new Map<Fthora, number>([
+      [Fthora.Zygos_Top, 4],
+      [Fthora.Zygos_Bottom, 4],
+    ]),
+  };
+
+  klitonScale: PlaybackScale = {
+    name: PlaybackScaleName.Kliton,
+    intervals: [12, 14, 12, 4, 12, 10, 8],
+    scaleNoteMap: this.diatonicScaleNoteMap,
+    fthoraMap: new Map<Fthora, number>([
+      [Fthora.Kliton_Top, 4],
+      [Fthora.Kliton_Bottom, 4],
+    ]),
+  };
+
+  spathiScale: PlaybackScale = {
+    name: PlaybackScaleName.Spathi,
+    intervals: [12, 10, 8, 20, 4, 4, 14],
+    scaleNoteMap: this.diatonicScaleNoteMap,
+    fthoraMap: new Map<Fthora, number>([[Fthora.Spathi_Top, 5]]),
+  };
+
   scales: PlaybackScale[] = [
     this.diatonicScale,
     this.softChromaticScale,
     this.hardChromaticScale,
     this.legetosScale,
+    this.zygosScale,
+    this.zygosLegetosScale,
+    this.klitonScale,
+    this.spathiScale,
   ];
 }
 

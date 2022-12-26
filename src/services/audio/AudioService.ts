@@ -49,6 +49,10 @@ interface PlaybackWorkspace {
 
   // chroa
   enharmonicZo: boolean;
+  enharmonicGa: boolean;
+  enharmonicVou: boolean;
+  generalSharp: boolean;
+  generalFlat: boolean;
 }
 
 interface GorgonIndex {
@@ -357,6 +361,10 @@ export class PlaybackService {
 
       //chroa
       enharmonicZo: false,
+      enharmonicGa: false,
+      enharmonicVou: false,
+      generalFlat: false,
+      generalSharp: false,
     };
 
     let bpm = defaultBpm;
@@ -413,11 +421,36 @@ export class PlaybackService {
         if (noteElement.fthora != null) {
           const destinationNote = workspace.note + distance;
           workspace.enharmonicZo = false;
+          workspace.enharmonicGa = false;
+          workspace.enharmonicVou = false;
+          workspace.generalFlat = false;
+          workspace.generalSharp = false;
 
-          if (noteElement.fthora === Fthora.Enharmonic_Top) {
+          if (
+            noteElement.fthora === Fthora.Enharmonic_Top ||
+            noteElement.fthora === Fthora.Enharmonic_Bottom
+          ) {
             if (this.scaleNoteMap.get(destinationNote) === ScaleNote.ZoHigh) {
               workspace.enharmonicZo = true;
+            } else if (
+              this.scaleNoteMap.get(destinationNote) === ScaleNote.Ga
+            ) {
+              workspace.enharmonicGa = true;
+            } else if (
+              this.scaleNoteMap.get(destinationNote) === ScaleNote.Vou
+            ) {
+              workspace.enharmonicVou = true;
             }
+          } else if (
+            noteElement.fthora === Fthora.GeneralFlat_Top ||
+            noteElement.fthora === Fthora.GeneralFlat_Bottom
+          ) {
+            workspace.generalFlat = true;
+          } else if (
+            noteElement.fthora === Fthora.GeneralSharp_Top ||
+            noteElement.fthora === Fthora.GeneralSharp_Bottom
+          ) {
+            workspace.generalSharp = true;
           }
         }
 
@@ -860,6 +893,10 @@ export class PlaybackService {
         // TODO add support for "implied enharmonic Zo" for thir mode and grave mode
         // in which case, this flag should not be reset unless there is a fthora
         workspace.enharmonicZo = false;
+        workspace.enharmonicGa = false;
+        workspace.enharmonicVou = false;
+        workspace.generalFlat = false;
+        workspace.generalSharp = false;
       } else if (element.elementType === ElementType.Tempo) {
         const tempoElement = element as TempoElement;
 
@@ -1012,6 +1049,26 @@ export class PlaybackService {
       this.scaleNoteMap.get(workspace.note) === ScaleNote.ZoHigh
     ) {
       frequency = this.changeFrequency(frequency, -4);
+    } else if (
+      workspace.enharmonicGa &&
+      this.scaleNoteMap.get(workspace.note) === ScaleNote.Vou
+    ) {
+      frequency = this.changeFrequency(frequency, 2);
+    } else if (
+      workspace.enharmonicVou &&
+      this.scaleNoteMap.get(workspace.note) === ScaleNote.Vou
+    ) {
+      frequency = this.changeFrequency(frequency, -4);
+    } else if (
+      workspace.generalFlat &&
+      this.scaleNoteMap.get(workspace.note) === ScaleNote.ZoHigh
+    ) {
+      frequency = this.changeFrequency(frequency, -6);
+    } else if (
+      workspace.generalSharp &&
+      this.scaleNoteMap.get(workspace.note) === ScaleNote.Vou
+    ) {
+      frequency = this.changeFrequency(frequency, 4);
     }
 
     return frequency;

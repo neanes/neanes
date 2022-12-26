@@ -821,6 +821,8 @@ export default class Editor extends Vue {
         this.selectedWorkspace.scrollTop,
       );
     });
+
+    this.stopAudio();
   }
 
   get score() {
@@ -3686,7 +3688,9 @@ export default class Editor extends Vue {
   }
 
   onAudioServiceEventPlay(event: PlaybackSequenceEvent) {
-    this.audioElement = this.elements[event.elementIndex];
+    if (this.audioService.state === AudioState.Playing) {
+      this.audioElement = this.elements[event.elementIndex];
+    }
   }
 
   onAudioServiceStop(event: PlaybackSequenceEvent) {

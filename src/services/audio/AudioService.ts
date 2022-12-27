@@ -954,9 +954,9 @@ export class PlaybackService {
         const martyriaElement = element as MartyriaElement;
 
         if (martyriaElement.tempo != null) {
-          // TODO add bpm to tempo element and use tempoToBpmMap
-          // as a fallback
-          bpm = this.tempoToBpmMap.get(martyriaElement.tempo)!;
+          bpm =
+            martyriaElement.bpm ||
+            this.tempoToBpmMap.get(martyriaElement.tempo)!;
           beat = this.beatLengthFromBpm(bpm);
 
           console.log('change bpm', bpm, beat);

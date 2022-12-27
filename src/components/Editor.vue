@@ -431,6 +431,7 @@
         @update:auto="updateMartyriaAuto(selectedElement, $event)"
         @update:note="updateMartyriaNote(selectedElement, $event)"
         @update:scale="updateMartyriaScale(selectedElement, $event)"
+        @update:bpm="updateMartyriaBpm(selectedElement, $event)"
         @update:spaceAfter="updateMartyriaSpaceAfter(selectedElement, $event)"
       />
     </template>
@@ -438,8 +439,8 @@
       <ToolbarTempo
         :element="selectedElement"
         :pageSetup="score.pageSetup"
-        @update:spaceAfter="updateTempoSpaceAfter(selectedElement, $event)"
         @update:bpm="updateTempoBpm(selectedElement, $event)"
+        @update:spaceAfter="updateTempoSpaceAfter(selectedElement, $event)"
       />
     </template>
     <ModeKeyDialog
@@ -3464,7 +3465,22 @@ export default class Editor extends Vue {
   }
 
   updateMartyriaTempo(element: MartyriaElement, tempo: TempoSign | null) {
-    this.updateMartyria(element, { tempo });
+    let bpm = element.bpm;
+
+    if (tempo != null) {
+      bpm = TempoElement.getDefaultBpm(tempo);
+    }
+
+    this.updateMartyria(element, { tempo, bpm });
+  }
+
+  updateMartyriaBpm(element: MartyriaElement, bpm: number) {
+    bpm = Math.round(bpm);
+    bpm = Math.max(5, bpm);
+    bpm = Math.min(999, bpm);
+
+    this.updateMartyria(element, { bpm });
+    this.save();
   }
 
   updateMartyriaMeasureBar(
@@ -3534,8 +3550,6 @@ export default class Editor extends Vue {
   }
 
   updateTempoBpm(element: TempoElement, bpm: number) {
-    console.log('updateTempoBpm', bpm);
-
     bpm = Math.round(bpm);
     bpm = Math.max(5, bpm);
     bpm = Math.min(999, bpm);

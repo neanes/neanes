@@ -249,6 +249,19 @@
       </template>
     </div>
     <div class="row">
+      <label class="right-space">BPM</label>
+      <input
+        type="number"
+        min="5"
+        max="999"
+        step="1"
+        :disabled="element.tempo == null"
+        :value="element.bpm"
+        @change="$emit('update:bpm', $event.target.value)"
+      />
+
+      <span class="space" />
+
       <label class="right-space">Space After</label>
 
       <InputUnit

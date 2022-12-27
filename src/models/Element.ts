@@ -370,6 +370,7 @@ export class MartyriaElement extends ScoreElement {
   public measureBarLeft: MeasureBar | null = null;
   public measureBarRight: MeasureBar | null = null;
   public alignRight: boolean = false;
+  public bpm: number = 0;
   public spaceAfter: number = 0;
 
   public error: boolean = false;
@@ -392,6 +393,7 @@ export class MartyriaElement extends ScoreElement {
       measureBarRight: this.measureBarRight,
       fthora: this.fthora,
       tempo: this.tempo,
+      bpm: this.bpm,
     } as Partial<MartyriaElement>;
   }
 }

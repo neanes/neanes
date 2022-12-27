@@ -230,6 +230,7 @@ export class SaveService {
     element.measureBarLeft = e.measureBarLeft || undefined;
     element.measureBarRight = e.measureBarRight || undefined;
     element.alignRight = e.alignRight || undefined;
+    element.bpm = e.bpm;
     element.spaceAfter = e.spaceAfter;
   }
 
@@ -608,6 +609,7 @@ export class SaveService {
 
     if (e.tempo != null) {
       element.tempo = e.tempo;
+      element.bpm = e.bpm || TempoElement.getDefaultBpm(element.tempo);
     }
 
     if (e.measureBarLeft != null) {

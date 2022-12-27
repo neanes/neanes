@@ -976,9 +976,7 @@ export class PlaybackService {
       } else if (element.elementType === ElementType.Tempo) {
         const tempoElement = element as TempoElement;
 
-        // TODO add bpm to tempo element and use tempoToBpmMap
-        // as a fallback
-        bpm = this.tempoToBpmMap.get(tempoElement.neume)!;
+        bpm = tempoElement.bpm || this.tempoToBpmMap.get(tempoElement.neume)!;
         beat = this.beatLengthFromBpm(bpm);
 
         console.log('change bpm', bpm, beat);

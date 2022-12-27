@@ -235,6 +235,7 @@ export class SaveService {
 
   public static SaveTempo(element: TempoElement_v1, e: TempoElement) {
     element.neume = e.neume;
+    element.bpm = e.bpm;
     element.spaceAfter = e.spaceAfter;
   }
 
@@ -624,6 +625,7 @@ export class SaveService {
 
   public static LoadTempo_v1(element: TempoElement, e: TempoElement_v1) {
     element.neume = e.neume;
+    element.bpm = e.bpm || TempoElement.getDefaultBpm(element.neume);
     element.spaceAfter = e.spaceAfter || 0;
   }
 

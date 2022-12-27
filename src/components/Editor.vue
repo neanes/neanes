@@ -439,6 +439,7 @@
         :element="selectedElement"
         :pageSetup="score.pageSetup"
         @update:spaceAfter="updateTempoSpaceAfter(selectedElement, $event)"
+        @update:bpm="updateTempoBpm(selectedElement, $event)"
       />
     </template>
     <ModeKeyDialog
@@ -1526,6 +1527,7 @@ export default class Editor extends Vue {
 
     const element = new TempoElement();
     element.neume = neume;
+    element.bpm = TempoElement.getDefaultBpm(neume);
 
     switch (this.entryMode) {
       case EntryMode.Auto:
@@ -3528,6 +3530,17 @@ export default class Editor extends Vue {
 
   updateTempoSpaceAfter(element: TempoElement, spaceAfter: number) {
     this.updateTempo(element, { spaceAfter });
+    this.save();
+  }
+
+  updateTempoBpm(element: TempoElement, bpm: number) {
+    console.log('updateTempoBpm', bpm);
+
+    bpm = Math.round(bpm);
+    bpm = Math.max(5, bpm);
+    bpm = Math.min(999, bpm);
+
+    this.updateTempo(element, { bpm });
     this.save();
   }
 

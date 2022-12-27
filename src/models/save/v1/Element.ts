@@ -102,6 +102,7 @@ export class MartyriaElement extends ScoreElement {
 export class TempoElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.Tempo;
   public neume: TempoSign = TempoSign.Moderate;
+  public bpm: number = 0;
   public spaceAfter: number = 0;
 
   public error: boolean = false;

@@ -399,6 +399,7 @@ export class MartyriaElement extends ScoreElement {
 export class TempoElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.Tempo;
   public neume: TempoSign = TempoSign.Moderate;
+  public bpm: number = TempoElement.getDefaultBpm(TempoSign.Moderate);
   public spaceAfter: number = 0;
 
   public clone() {
@@ -412,7 +413,32 @@ export class TempoElement extends ScoreElement {
   public getClipboardProperties() {
     return {
       neume: this.neume,
+      bpm: this.bpm,
     } as Partial<TempoElement>;
+  }
+
+  public static tempoToBpmMap = new Map<TempoSign, number>([
+    [TempoSign.VerySlow, 40], // < 56 triargon?
+    [TempoSign.Slower, 56], // 56 - 80 diargon
+    [TempoSign.Slow, 80], // 80 - 100 hemiolion
+    [TempoSign.Moderate, 100], // 100 - 168 argon
+    [TempoSign.Medium, 130], // 130 argon + gorgon
+    [TempoSign.Quick, 168], // 168 - 208 gorgon
+    [TempoSign.Quicker, 208], // 208+ digorgon
+    [TempoSign.VeryQuick, 250], // unattested? trigorgon
+
+    [TempoSign.VerySlowAbove, 40], // < 56 triargon?
+    [TempoSign.SlowerAbove, 56], // 56 - 80 diargon
+    [TempoSign.SlowAbove, 80], // 80 - 100 hemiolion
+    [TempoSign.ModerateAbove, 100], // 100 - 168 argon
+    [TempoSign.MediumAbove, 130], // 130 argon + gorgon
+    [TempoSign.QuickAbove, 168], // 168 - 208 gorgon
+    [TempoSign.QuickerAbove, 208], // 208+ digorgon
+    [TempoSign.VeryQuickAbove, 250], // unattested? trigorgon
+  ]);
+
+  public static getDefaultBpm(neume: TempoSign) {
+    return TempoElement.tempoToBpmMap.get(neume)!;
   }
 }
 

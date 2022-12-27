@@ -273,6 +273,7 @@
                     <ModeKey
                       :ref="`element-${getElementIndex(element)}`"
                       :element="element"
+                      :pageSetup="score.pageSetup"
                       :class="[
                         {
                           selectedTextbox: element === selectedElement,
@@ -286,6 +287,7 @@
                       v-if="isBrowser && printMode"
                       class="print-only"
                       :element="element"
+                      :pageSetup="score.pageSetup"
                     />
                   </template>
                   <template v-if="isDropCapElement(element)">
@@ -391,6 +393,11 @@
         @update:strokeWidth="updateModeKeyStrokeWidth(selectedElement, $event)"
         @update:alignment="updateModeKeyAlignment(selectedElement, $event)"
         @update:color="updateModeKeyColor(selectedElement, $event)"
+        @update:bpm="updateModeKeyBpm(selectedElement, $event)"
+        @update:tempoAlignRight="
+          updateModeKeyTempoAlignRight(selectedElement, $event)
+        "
+        @update:tempo="updateModeKeyTempo(selectedElement, $event)"
         @update:heightAdjustment="
           updateModeKeyHeightAdjustment(selectedElement, $event)
         "
@@ -3404,6 +3411,35 @@ export default class Editor extends Vue {
     heightAdjustment: number,
   ) {
     this.updateModeKey(element, { heightAdjustment });
+  }
+
+  updateModeKeyTempo(element: ModeKeyElement, tempo: TempoSign | null) {
+    console.log('updateModeKeyTempo');
+
+    let bpm = element.bpm;
+
+    if (tempo != null) {
+      bpm = TempoElement.getDefaultBpm(tempo);
+    }
+
+    this.updateModeKey(element, { tempo, bpm });
+  }
+
+  updateModeKeyBpm(element: ModeKeyElement, bpm: number) {
+    bpm = Math.round(bpm);
+    bpm = Math.max(5, bpm);
+    bpm = Math.min(999, bpm);
+
+    this.updateModeKey(element, { bpm });
+    this.save();
+  }
+
+  updateModeKeyTempoAlignRight(
+    element: ModeKeyElement,
+    tempoAlignRight: boolean,
+  ) {
+    this.updateModeKey(element, { tempoAlignRight });
+    this.save();
   }
 
   updateModeKeyFromTemplate(element: ModeKeyElement, template: ModeKeyElement) {

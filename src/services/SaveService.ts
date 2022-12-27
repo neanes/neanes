@@ -349,6 +349,8 @@ export class SaveService {
     element.scale = e.scale;
     element.scaleNote = e.scaleNote;
     element.fthora = e.fthora || undefined;
+    element.tempo = e.tempo || undefined;
+    element.tempoAlignRight = e.tempoAlignRight || undefined;
     element.note = e.note || undefined;
     element.note2 = e.note2 || undefined;
     element.fthoraAboveNote = e.fthoraAboveNote || undefined;
@@ -366,6 +368,7 @@ export class SaveService {
     element.strokeWidth = e.strokeWidth;
     element.height = e.height;
     element.heightAdjustment = e.heightAdjustment;
+    element.bpm = e.bpm;
     element.useDefaultStyle = e.useDefaultStyle || undefined;
   }
 
@@ -754,6 +757,8 @@ export class SaveService {
     element.mode = e.mode;
     element.scale = e.scale;
     element.scaleNote = e.scaleNote;
+    element.tempo = e.tempo || null;
+    element.tempoAlignRight = e.tempoAlignRight === true;
     element.note = e.note || null;
     element.note2 = e.note2 || null;
     element.fthoraAboveNote = e.fthoraAboveNote || null;
@@ -768,6 +773,7 @@ export class SaveService {
     element.fontSize = e.fontSize;
     element.strokeWidth = e.strokeWidth || element.strokeWidth;
     element.heightAdjustment = e.heightAdjustment || 0;
+    element.bpm = e.bpm || 120;
     element.useDefaultStyle = e.useDefaultStyle === true;
 
     // For backwards compatibility, we check the current mode key templates

@@ -361,10 +361,7 @@ export class PlaybackService {
 
     const defaultFrequencyDi = 196;
 
-    const defaultBpm = 160;
-
-    // const frequencyPa = 293.66;
-    // const frequencyDi = 392;
+    const defaultBpm = 120;
 
     let workspace: PlaybackWorkspace = {
       elements,
@@ -981,6 +978,9 @@ export class PlaybackService {
           moria,
         );
 
+        bpm = modeKeyElement.bpm || 120;
+        beat = this.beatLengthFromBpm(bpm);
+
         console.log(
           'mode key change',
           modeKeyElement.mode,
@@ -988,6 +988,7 @@ export class PlaybackService {
           moria,
           di,
           workspace.intervalIndex,
+          bpm,
         );
       } else if (element.elementType === ElementType.Martyria) {
         const martyriaElement = element as MartyriaElement;

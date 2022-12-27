@@ -520,6 +520,8 @@ export class ModeKeyElement extends ScoreElement {
   public scale: Scale = Scale.Diatonic;
   public scaleNote: ScaleNote = ScaleNote.Pa;
   public fthora: Fthora | null = null;
+  public tempo: TempoSign | null = null;
+  public tempoAlignRight: boolean = false;
   public martyria: ModeSign = ModeSign.Alpha;
   public note: ModeSign | null = null;
   public note2: ModeSign | null = null;
@@ -533,6 +535,7 @@ export class ModeKeyElement extends ScoreElement {
   public fontSize: number = Unit.fromPt(20);
   public strokeWidth: number = 0;
   public heightAdjustment: number = 0;
+  public bpm: number = 120;
   public useDefaultStyle: boolean = true;
   public height: number = Unit.fromPt(37);
 

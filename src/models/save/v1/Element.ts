@@ -143,6 +143,8 @@ export class ModeKeyElement extends ScoreElement {
   public scale: Scale = Scale.Diatonic;
   public scaleNote: ScaleNote = ScaleNote.Pa;
   public fthora: Fthora | undefined = undefined;
+  public tempo: TempoSign | undefined = undefined;
+  public tempoAlignRight: boolean | undefined = undefined;
   public martyria: ModeSign = ModeSign.Alpha;
   public note: ModeSign | undefined = undefined;
   public note2: ModeSign | undefined = undefined;
@@ -157,6 +159,7 @@ export class ModeKeyElement extends ScoreElement {
   public strokeWidth: number = 0;
   public height: number = 20;
   public heightAdjustment: number = 0;
+  public bpm: number = 120;
   public useDefaultStyle: boolean | undefined = undefined;
 }
 

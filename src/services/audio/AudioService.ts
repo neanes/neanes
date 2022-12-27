@@ -923,8 +923,15 @@ export class PlaybackService {
       } else if (element.elementType === ElementType.ModeKey) {
         const modeKeyElement = element as ModeKeyElement;
 
-        // Reset legetos flag
+        // Reset workspace flags
         workspace.legetos = false;
+        workspace.lastAlterationMoria = 0;
+        workspace.enharmonicGa = false;
+        workspace.enharmonicVou = false;
+        workspace.enharmonicZo = false;
+        workspace.generalFlat = false;
+        workspace.generalSharp = false;
+        workspace.noteOffset = 0;
 
         if (modeKeyElement.scale === Scale.Diatonic) {
           workspace.scale = this.diatonicScale;
@@ -976,6 +983,7 @@ export class PlaybackService {
 
         console.log(
           'mode key change',
+          modeKeyElement.mode,
           workspace.frequency,
           moria,
           di,
@@ -1145,7 +1153,7 @@ export class PlaybackService {
       workspace.noteOffset = 0;
     }
 
-    console.log('applyFthora', fthora, workspace);
+    console.log('applyFthora', fthora, workspace, workspace.noteOffset);
   }
 
   applyAlterations(

@@ -646,7 +646,7 @@ export class PlaybackService {
         } else if (
           noteElement.quantitativeNeume === QuantitativeNeume.DoubleApostrophos
         ) {
-          // Process first note
+          // Process first apostrofos
           const initialDistance = -1;
 
           this.moveDistance(workspace, initialDistance);
@@ -677,7 +677,76 @@ export class PlaybackService {
 
           events.push(event1);
 
-          // Process the kentimata
+          // Process the second apsotrofos
+          let event2Duration = 1 * beat;
+
+          this.moveDistance(workspace, -1);
+
+          if (noteElement.gorgonNeume) {
+            const gorgonIndex: GorgonIndex = {
+              neume: noteElement.gorgonNeume,
+              index: events.length,
+              beat,
+            };
+
+            console.log('gorgonIndex', gorgonIndex);
+
+            gorgonIndexes.push(gorgonIndex);
+          }
+
+          // Calculate accidentals
+          let alteredFrequency2 = this.applyAlterations(
+            workspace,
+            noteElement.accidental,
+          );
+
+          const event2: PlaybackSequenceEvent = {
+            frequency: alteredFrequency2,
+            isonFrequency,
+            type: 'note',
+            bpm,
+            duration: event2Duration,
+            time: 0,
+            elementIndex: i,
+          };
+
+          events.push(event2);
+        } else if (
+          noteElement.quantitativeNeume ===
+          QuantitativeNeume.IsonPlusApostrophos
+        ) {
+          // Process ison
+          const initialDistance = 0;
+
+          this.moveDistance(workspace, initialDistance);
+
+          if (noteElement.secondaryGorgonNeume) {
+            const gorgonIndex: GorgonIndex = {
+              neume: noteElement.secondaryGorgonNeume,
+              index: events.length,
+              beat,
+            };
+
+            console.log('gorgonIndex', gorgonIndex);
+
+            gorgonIndexes.push(gorgonIndex);
+          }
+
+          let alteredFrequency1 = this.applyAlterations(workspace);
+
+          const event1: PlaybackSequenceEvent = {
+            frequency: alteredFrequency1,
+            isonFrequency,
+            type: 'note',
+            bpm,
+            duration: 1 * beat,
+            time: 0,
+            elementIndex: i,
+          };
+
+          events.push(event1);
+
+          // Process the apostrofos
           let event2Duration = 1 * beat;
 
           this.moveDistance(workspace, -1);

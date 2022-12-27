@@ -145,11 +145,15 @@
       </div>
     </div>
     <span class="space" />
-    <div>
-      <button @click="$emit('play-audio')">Play</button>
-      <button @click="$emit('stop-audio')">Stop</button>
-      <button @click="$emit('pause-audio')">Pause</button>
-    </div>
+    <button class="icon-btn" @click="$emit('play-audio')">
+      <img
+        v-if="audioState === AudioState.Playing"
+        src="@/assets/icons/audio-pause.svg"
+        width="24"
+        height="24"
+      />
+      <img v-else src="@/assets/icons/audio-play.svg" width="24" height="24" />
+    </button>
   </div>
 </template>
 
@@ -158,6 +162,7 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 import { Note, RootSign, TempoSign } from '@/models/Neumes';
 import Neume from './Neume.vue';
 import { EntryMode } from '@/models/EntryMode';
+import { AudioState } from '@/services/audio/AudioService';
 
 @Component({
   components: {
@@ -168,10 +173,12 @@ export default class ToolbarMain extends Vue {
   @Prop() entryMode!: EntryMode;
   @Prop() zoom!: number;
   @Prop() zoomToFit!: boolean;
+  @Prop() audioState!: AudioState;
   Note = Note;
   RootSign = RootSign;
   TempoSign = TempoSign;
   EntryMode = EntryMode;
+  AudioState = AudioState;
 
   showZoomMenu: boolean = false;
   showTempoMenu: boolean = false;
@@ -182,6 +189,12 @@ export default class ToolbarMain extends Vue {
 
   get zoomDisplay() {
     return this.zoomToFit ? 'Fit' : (this.zoom * 100).toFixed(0) + '%';
+  }
+
+  get playButtonSrc() {
+    return this.audioState === AudioState.Playing
+      ? '@/assets/icons/audio-play.svg'
+      : '@/assets/icons/audio-play.svg';
   }
 
   beforeDestroy() {

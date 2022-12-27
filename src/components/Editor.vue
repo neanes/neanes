@@ -8,6 +8,7 @@
       :entryMode="entryMode"
       :zoom="zoom"
       :zoomToFit="zoomToFit"
+      :audioState="audioService.state"
       @update:zoom="updateZoom"
       @update:zoomToFit="updateZoomToFit"
       @add-auto-martyria="addAutoMartyria"
@@ -19,8 +20,6 @@
       @delete-selected-element="deleteSelectedElement"
       @click.native="selectedLyrics = null"
       @play-audio="playAudio"
-      @stop-audio="stopAudio"
-      @pause-audio="pauseAudio"
     />
     <div class="content">
       <NeumeSelector
@@ -3722,31 +3721,43 @@ export default class Editor extends Vue {
 
   playAudio() {
     try {
-      this.playbackEvents = this.playbackService.computePlaybackSequence(
-        this.elements,
-      );
+      if (this.audioService.state === AudioState.Stopped) {
+        this.playbackEvents = this.playbackService.computePlaybackSequence(
+          this.elements,
+        );
 
-      const startAt = this.playbackEvents.find(
-        (x) => x.elementIndex >= this.selectedElementIndex,
-      );
+        const startAt = this.playbackEvents.find(
+          (x) => x.elementIndex >= this.selectedElementIndex,
+        );
 
-      this.audioService.play(this.playbackEvents, startAt);
+        this.audioService.play(this.playbackEvents, startAt);
+      } else {
+        this.pauseAudio();
+      }
     } catch (error) {
       console.error(error);
     }
   }
 
   stopAudio() {
-    this.audioService.stop();
+    try {
+      this.audioService.stop();
 
-    this.playbackEvents = [];
+      this.playbackEvents = [];
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   pauseAudio() {
-    this.audioService.togglePause();
+    try {
+      this.audioService.togglePause();
 
-    if (this.audioService.state === AudioState.Paused) {
-      this.audioElement = null;
+      if (this.audioService.state === AudioState.Paused) {
+        this.audioElement = null;
+      }
+    } catch (error) {
+      console.error(error);
     }
   }
 

@@ -3691,7 +3691,7 @@ export default class Editor extends Vue {
       );
 
       const startAt = this.playbackEvents.find(
-        (x) => x.elementIndex === this.selectedElementIndex,
+        (x) => x.elementIndex >= this.selectedElementIndex,
       );
 
       this.audioService.play(this.playbackEvents, startAt);

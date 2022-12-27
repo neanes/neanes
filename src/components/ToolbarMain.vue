@@ -144,6 +144,7 @@
         </div>
       </div>
     </div>
+    <span class="space" />
     <div>
       <button @click="$emit('play-audio')">Play</button>
       <button @click="$emit('stop-audio')">Stop</button>

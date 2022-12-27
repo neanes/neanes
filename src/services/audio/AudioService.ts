@@ -37,7 +37,19 @@ export interface PlaybackSequenceEvent {
   bpm: number;
 }
 
+interface PlaybackOptions {
+  useLegetos: boolean;
+  useDefaultAttractionZo: boolean;
+
+  frequencyDi: number;
+}
+
 interface PlaybackWorkspace {
+  elements: ScoreElement[];
+  elementIndex: number;
+
+  options: PlaybackOptions;
+
   frequency: number;
   // To move up, move up scale.intervals[intervalIndex] moria
   // To move down, move down scale.intervals[intervalIndex - 1] moria,
@@ -46,6 +58,7 @@ interface PlaybackWorkspace {
   scale: PlaybackScale;
   legetos: boolean;
   note: number;
+  noteOffset: number;
 
   lastAlterationMoria: number;
 
@@ -346,8 +359,7 @@ export class PlaybackService {
     const events: PlaybackSequenceEvent[] = [];
     const gorgonIndexes: GorgonIndex[] = [];
 
-    const frequencyPa = 146.83;
-    const frequencyDi = 196;
+    const defaultFrequencyDi = 196;
 
     const defaultBpm = 160;
 
@@ -355,11 +367,21 @@ export class PlaybackService {
     // const frequencyDi = 392;
 
     let workspace: PlaybackWorkspace = {
+      elements,
+      elementIndex: 0,
+
+      options: {
+        useLegetos: true,
+        useDefaultAttractionZo: true,
+        frequencyDi: defaultFrequencyDi,
+      },
+
       intervalIndex: 0,
-      frequency: frequencyPa,
+      frequency: defaultFrequencyDi,
       scale: this.diatonicScale,
       legetos: false,
-      note: this.reverseScaleNoteMap.get(ScaleNote.Pa)!,
+      note: this.reverseScaleNoteMap.get(ScaleNote.Thi)!,
+      noteOffset: 0,
 
       lastAlterationMoria: 0,
 
@@ -377,6 +399,8 @@ export class PlaybackService {
 
     for (let i = 0; i < elements.length; i++) {
       let element = elements[i];
+
+      workspace.elementIndex = i;
 
       if (element.elementType === ElementType.Note) {
         const noteElement = element as NoteElement;
@@ -397,7 +421,10 @@ export class PlaybackService {
               distance,
             );
 
-            isonFrequency = this.changeFrequency(frequencyDi, moria);
+            isonFrequency = this.changeFrequency(
+              workspace.options.frequencyDi,
+              moria,
+            );
 
             console.log(
               'change ison frequency',
@@ -903,6 +930,7 @@ export class PlaybackService {
           workspace.scale = this.diatonicScale;
 
           if (
+            workspace.options.useLegetos &&
             modeKeyElement.mode === 4 &&
             modeKeyElement.scale === Scale.Diatonic &&
             (modeKeyElement.scaleNote === ScaleNote.Pa ||
@@ -941,7 +969,10 @@ export class PlaybackService {
           distance,
         );
 
-        workspace.frequency = this.changeFrequency(frequencyDi, moria);
+        workspace.frequency = this.changeFrequency(
+          workspace.options.frequencyDi,
+          moria,
+        );
 
         console.log(
           'mode key change',
@@ -1089,11 +1120,13 @@ export class PlaybackService {
     workspace.scale = scale;
 
     if (
+      workspace.options.useLegetos &&
       workspace.scale.name === PlaybackScaleName.Diatonic &&
       workspace.legetos
     ) {
       workspace.scale = this.legetosScale;
     } else if (
+      workspace.options.useLegetos &&
       workspace.scale.name === PlaybackScaleName.Zygos &&
       workspace.legetos
     ) {
@@ -1102,6 +1135,15 @@ export class PlaybackService {
 
     workspace.intervalIndex =
       workspace.scale.fthoraMap.get(fthora) ?? workspace.intervalIndex;
+
+    // Calculate offset of the parachord
+    const fthoraNote = this.fthoraToScaleNoteMap.get(fthora);
+
+    if (fthoraNote != null) {
+      workspace.noteOffset = getScaleNoteValue(fthoraNote) - workspace.note;
+    } else {
+      workspace.noteOffset = 0;
+    }
 
     console.log('applyFthora', fthora, workspace);
   }
@@ -1129,6 +1171,8 @@ export class PlaybackService {
         'alteration (from previous note)',
         workspace.lastAlterationMoria,
       );
+    } else {
+      alteredFrequency = this.applyAttractions(alteredFrequency, workspace);
     }
 
     alteredFrequency = this.applyEnharmonicAlteration(
@@ -1140,34 +1184,67 @@ export class PlaybackService {
   }
 
   applyEnharmonicAlteration(frequency: number, workspace: PlaybackWorkspace) {
-    if (
-      workspace.enharmonicZo &&
-      this.scaleNoteMap.get(workspace.note) === ScaleNote.ZoHigh
-    ) {
+    const note = this.scaleNoteMap.get(workspace.note);
+
+    if (workspace.enharmonicZo && note === ScaleNote.ZoHigh) {
       frequency = this.changeFrequency(frequency, -4);
-    } else if (
-      workspace.enharmonicGa &&
-      this.scaleNoteMap.get(workspace.note) === ScaleNote.Vou
-    ) {
+    } else if (workspace.enharmonicGa && note === ScaleNote.Vou) {
       frequency = this.changeFrequency(frequency, 2);
-    } else if (
-      workspace.enharmonicVou &&
-      this.scaleNoteMap.get(workspace.note) === ScaleNote.Vou
-    ) {
+    } else if (workspace.enharmonicVou && note === ScaleNote.Vou) {
       frequency = this.changeFrequency(frequency, -4);
-    } else if (
-      workspace.generalFlat &&
-      this.scaleNoteMap.get(workspace.note) === ScaleNote.ZoHigh
-    ) {
+    } else if (workspace.generalFlat && note === ScaleNote.ZoHigh) {
       frequency = this.changeFrequency(frequency, -6);
-    } else if (
-      workspace.generalSharp &&
-      this.scaleNoteMap.get(workspace.note) === ScaleNote.Vou
-    ) {
+    } else if (workspace.generalSharp && note === ScaleNote.Vou) {
       frequency = this.changeFrequency(frequency, 4);
     }
 
     return frequency;
+  }
+
+  applyAttractions(frequency: number, workspace: PlaybackWorkspace) {
+    const note = this.scaleNoteMap.get(workspace.note + workspace.noteOffset);
+
+    const zoAttractionMoria = -4;
+
+    // If melody descends after zo, flatten zo
+    if (
+      workspace.options.useDefaultAttractionZo &&
+      !workspace.enharmonicZo &&
+      (workspace.scale.name === PlaybackScaleName.Diatonic ||
+        workspace.scale.name === PlaybackScaleName.Kliton ||
+        workspace.scale.name === PlaybackScaleName.Zygos)
+    ) {
+      if (
+        (note === ScaleNote.ZoHigh || note === ScaleNote.Zo) &&
+        this.melodyDirection(workspace) < 0
+      ) {
+        frequency = this.changeFrequency(frequency, zoAttractionMoria);
+      }
+    }
+
+    return frequency;
+  }
+
+  melodyDirection(workspace: PlaybackWorkspace) {
+    for (
+      let i = workspace.elementIndex + 1;
+      i < workspace.elements.length;
+      i++
+    ) {
+      const element = workspace.elements[i];
+
+      if (element.elementType !== ElementType.Note) {
+        continue;
+      }
+      const noteElement = element as NoteElement;
+      const value = getNeumeValue(noteElement.quantitativeNeume)!;
+
+      if (value !== 0) {
+        return Math.sign(value);
+      }
+    }
+
+    return 0;
   }
 
   isKentimataCombo(element: NoteElement) {
@@ -1272,6 +1349,22 @@ export class PlaybackService {
     [Fthora.Spathi_Top, PlaybackScaleName.Spathi],
   ]);
 
+  fthoraToScaleNoteMap: Map<Fthora, ScaleNote> = new Map<Fthora, ScaleNote>([
+    [Fthora.DiatonicNiLow_Top, ScaleNote.Ni],
+    [Fthora.DiatonicNiLow_Bottom, ScaleNote.Ni],
+    [Fthora.DiatonicPa_Top, ScaleNote.Pa],
+    [Fthora.DiatonicPa_Bottom, ScaleNote.Pa],
+    [Fthora.DiatonicVou_Top, ScaleNote.Vou],
+    [Fthora.DiatonicGa_Top, ScaleNote.Ga],
+    [Fthora.DiatonicThi_Top, ScaleNote.Thi],
+    [Fthora.DiatonicThi_Bottom, ScaleNote.Thi],
+    [Fthora.DiatonicKe_Top, ScaleNote.Ke],
+    [Fthora.DiatonicKe_Bottom, ScaleNote.Ke],
+    [Fthora.DiatonicZo_Top, ScaleNote.Zo],
+    [Fthora.DiatonicNiHigh_Top, ScaleNote.NiHigh],
+    [Fthora.DiatonicNiHigh_Bottom, ScaleNote.NiHigh],
+  ]);
+
   gorgonMap = new Map<GorgonNeume, number[]>([
     [GorgonNeume.Gorgon_Top, [0.5, 0.5]],
     [GorgonNeume.Gorgon_Bottom, [0.5, 0.5]],
@@ -1367,7 +1460,10 @@ export class PlaybackService {
   // Scales
   /////////////////////////
 
-  diatonicScaleNoteMap: Map<ScaleNote, number> = new Map<ScaleNote, number>([
+  diatonicScaleNoteToIntervalIndexMap: Map<ScaleNote, number> = new Map<
+    ScaleNote,
+    number
+  >([
     [ScaleNote.VouLow, 2],
     [ScaleNote.GaLow, 3],
     [ScaleNote.ThiLow, 4],
@@ -1391,7 +1487,7 @@ export class PlaybackService {
   diatonicScale: PlaybackScale = {
     name: PlaybackScaleName.Diatonic,
     intervals: [12, 10, 8, 12, 12, 10, 8],
-    scaleNoteMap: this.diatonicScaleNoteMap,
+    scaleNoteMap: this.diatonicScaleNoteToIntervalIndexMap,
     fthoraMap: new Map<Fthora, number>([
       [Fthora.DiatonicNiLow_Top, 0],
       [Fthora.DiatonicNiLow_Bottom, 0],
@@ -1515,7 +1611,7 @@ export class PlaybackService {
   zygosScale: PlaybackScale = {
     name: PlaybackScaleName.Zygos,
     intervals: [18, 4, 16, 4, 12, 10, 8],
-    scaleNoteMap: this.diatonicScaleNoteMap,
+    scaleNoteMap: this.diatonicScaleNoteToIntervalIndexMap,
     fthoraMap: new Map<Fthora, number>([
       [Fthora.Zygos_Top, 4],
       [Fthora.Zygos_Bottom, 4],
@@ -1525,7 +1621,7 @@ export class PlaybackService {
   zygosLegetosScale: PlaybackScale = {
     name: PlaybackScaleName.ZygosLegetos,
     intervals: [18, 4, 20, 4, 12, 6, 9],
-    scaleNoteMap: this.diatonicScaleNoteMap,
+    scaleNoteMap: this.diatonicScaleNoteToIntervalIndexMap,
     fthoraMap: new Map<Fthora, number>([
       [Fthora.Zygos_Top, 4],
       [Fthora.Zygos_Bottom, 4],
@@ -1535,7 +1631,7 @@ export class PlaybackService {
   klitonScale: PlaybackScale = {
     name: PlaybackScaleName.Kliton,
     intervals: [12, 14, 12, 4, 12, 10, 8],
-    scaleNoteMap: this.diatonicScaleNoteMap,
+    scaleNoteMap: this.diatonicScaleNoteToIntervalIndexMap,
     fthoraMap: new Map<Fthora, number>([
       [Fthora.Kliton_Top, 4],
       [Fthora.Kliton_Bottom, 4],
@@ -1545,7 +1641,7 @@ export class PlaybackService {
   spathiScale: PlaybackScale = {
     name: PlaybackScaleName.Spathi,
     intervals: [12, 10, 8, 20, 4, 4, 14],
-    scaleNoteMap: this.diatonicScaleNoteMap,
+    scaleNoteMap: this.diatonicScaleNoteToIntervalIndexMap,
     fthoraMap: new Map<Fthora, number>([[Fthora.Spathi_Top, 5]]),
   };
 

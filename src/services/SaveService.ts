@@ -348,6 +348,7 @@ export class SaveService {
     element.mode = e.mode;
     element.scale = e.scale;
     element.scaleNote = e.scaleNote;
+    element.fthora = e.fthora || undefined;
     element.note = e.note || undefined;
     element.note2 = e.note2 || undefined;
     element.fthoraAboveNote = e.fthoraAboveNote || undefined;

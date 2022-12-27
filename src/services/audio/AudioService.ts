@@ -47,6 +47,8 @@ interface PlaybackWorkspace {
   legetos: boolean;
   note: number;
 
+  lastAlterationMoria: number;
+
   // chroa
   enharmonicZo: boolean;
   enharmonicGa: boolean;
@@ -359,6 +361,8 @@ export class PlaybackService {
       legetos: false,
       note: this.reverseScaleNoteMap.get(ScaleNote.Pa)!,
 
+      lastAlterationMoria: 0,
+
       //chroa
       enharmonicZo: false,
       enharmonicGa: false,
@@ -472,10 +476,7 @@ export class PlaybackService {
             gorgonIndexes.push(gorgonIndex);
           }
 
-          let alteredFrequency = this.applyEnharmonicAlteration(
-            workspace.frequency,
-            workspace,
-          );
+          let alteredFrequency = this.applyAlterations(workspace);
 
           const event: PlaybackSequenceEvent = {
             frequency: alteredFrequency,
@@ -506,8 +507,8 @@ export class PlaybackService {
 
           // Calculate accidentals
           let alteredFrequencyKentimata = this.applyAlterations(
-            noteElement,
             workspace,
+            noteElement.accidental,
           );
 
           const kentimataEvent: PlaybackSequenceEvent = {
@@ -542,10 +543,7 @@ export class PlaybackService {
             gorgonIndexes.push(gorgonIndex);
           }
 
-          let alteredFrequencyKentimata = this.applyEnharmonicAlteration(
-            workspace.frequency,
-            workspace,
-          );
+          let alteredFrequencyKentimata = this.applyAlterations(workspace);
 
           const kentimataEvent: PlaybackSequenceEvent = {
             frequency: alteredFrequencyKentimata,
@@ -569,7 +567,10 @@ export class PlaybackService {
           }
 
           // Calculate accidentals
-          let alteredFrequency = this.applyAlterations(noteElement, workspace);
+          let alteredFrequency = this.applyAlterations(
+            workspace,
+            noteElement.accidental,
+          );
 
           const oligonEvent: PlaybackSequenceEvent = {
             frequency: alteredFrequency,
@@ -602,10 +603,7 @@ export class PlaybackService {
             gorgonIndexes.push(gorgonIndex);
           }
 
-          let alteredFrequency1 = this.applyEnharmonicAlteration(
-            workspace.frequency,
-            workspace,
-          );
+          let alteredFrequency1 = this.applyAlterations(workspace);
 
           const event1: PlaybackSequenceEvent = {
             frequency: alteredFrequency1,
@@ -629,7 +627,10 @@ export class PlaybackService {
           }
 
           // Calculate accidentals
-          let alteredFrequency2 = this.applyAlterations(noteElement, workspace);
+          let alteredFrequency2 = this.applyAlterations(
+            workspace,
+            noteElement.accidental,
+          );
 
           const event2: PlaybackSequenceEvent = {
             frequency: alteredFrequency2,
@@ -662,10 +663,7 @@ export class PlaybackService {
             gorgonIndexes.push(gorgonIndex);
           }
 
-          let alteredFrequency1 = this.applyEnharmonicAlteration(
-            workspace.frequency,
-            workspace,
-          );
+          let alteredFrequency1 = this.applyAlterations(workspace);
 
           const event1: PlaybackSequenceEvent = {
             frequency: alteredFrequency1,
@@ -697,7 +695,10 @@ export class PlaybackService {
           }
 
           // Calculate accidentals
-          let alteredFrequency2 = this.applyAlterations(noteElement, workspace);
+          let alteredFrequency2 = this.applyAlterations(
+            workspace,
+            noteElement.accidental,
+          );
 
           const event2: PlaybackSequenceEvent = {
             frequency: alteredFrequency2,
@@ -727,10 +728,7 @@ export class PlaybackService {
 
           gorgonIndexes.push(gorgonIndex);
 
-          let alteredFrequency1 = this.applyEnharmonicAlteration(
-            workspace.frequency,
-            workspace,
-          );
+          let alteredFrequency1 = this.applyAlterations(workspace);
 
           const event1: PlaybackSequenceEvent = {
             frequency: alteredFrequency1,
@@ -754,7 +752,10 @@ export class PlaybackService {
           }
 
           // Calculate accidentals
-          let alteredFrequency2 = this.applyAlterations(noteElement, workspace);
+          let alteredFrequency2 = this.applyAlterations(
+            workspace,
+            noteElement.accidental,
+          );
 
           const event2: PlaybackSequenceEvent = {
             frequency: alteredFrequency2,
@@ -802,7 +803,10 @@ export class PlaybackService {
           }
 
           // Calculate accidentals
-          let alteredFrequency = this.applyAlterations(noteElement, workspace);
+          let alteredFrequency = this.applyAlterations(
+            workspace,
+            noteElement.accidental,
+          );
 
           let event: PlaybackSequenceEvent = {
             frequency: alteredFrequency,
@@ -994,6 +998,12 @@ export class PlaybackService {
     workspace.frequency = this.changeFrequency(workspace.frequency, moria);
 
     workspace.note += distance;
+
+    // Clear the last alteration as soon as we move away
+    // from the altered note
+    if (distance !== 0) {
+      workspace.lastAlterationMoria = 0;
+    }
   }
 
   getScaleFromFthora(fthora: Fthora) {
@@ -1029,13 +1039,29 @@ export class PlaybackService {
     console.log('applyFthora', fthora, workspace);
   }
 
-  applyAlterations(noteElement: NoteElement, workspace: PlaybackWorkspace) {
+  applyAlterations(
+    workspace: PlaybackWorkspace,
+    accidental?: Accidental | null,
+  ) {
     let alteredFrequency = workspace.frequency;
 
-    if (noteElement.accidental != null) {
-      const alteration = this.alterationMap.get(noteElement.accidental)!;
+    if (accidental != null) {
+      const alteration = this.alterationMap.get(accidental)!;
       alteredFrequency = this.changeFrequency(alteredFrequency, alteration);
+
+      workspace.lastAlterationMoria = alteration;
+
       console.log('alteration', alteration);
+    } else if (workspace.lastAlterationMoria !== 0) {
+      alteredFrequency = this.changeFrequency(
+        alteredFrequency,
+        workspace.lastAlterationMoria,
+      );
+
+      console.log(
+        'alteration (from previous note)',
+        workspace.lastAlterationMoria,
+      );
     }
 
     alteredFrequency = this.applyEnharmonicAlteration(

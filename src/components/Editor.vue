@@ -470,6 +470,7 @@
       v-if="playbackSettingsDialogIsOpen"
       :options="audioOptions"
       @close="closePlaybackSettingsDialog"
+      @play-test-tone="playTestTone"
     />
     <PageSetupDialog
       v-if="pageSetupDialogIsOpen"
@@ -3793,6 +3794,14 @@ export default class Editor extends Vue {
       if (this.audioService.state === AudioState.Paused) {
         this.audioElement = null;
       }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  playTestTone() {
+    try {
+      this.audioService.playTestTone(this.audioOptions.frequencyDi);
     } catch (error) {
       console.error(error);
     }

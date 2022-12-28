@@ -326,6 +326,14 @@ export class AudioService {
     });
   }
 
+  playTestTone(frequency: number) {
+    this.synth.volume.value = 0;
+    Tone.Transport.bpm.value = 120;
+    let now = Tone.now();
+
+    this.synth.triggerAttackRelease(frequency, '2n', now);
+  }
+
   // For debugging
   playScale(scale: number[]) {
     const synth = new Tone.Synth().toDestination();

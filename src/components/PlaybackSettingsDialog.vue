@@ -3,7 +3,7 @@
     <div class="container">
       <div class="header">Playback Settings</div>
       <div class="pane-container">
-        <div class="form-group">
+        <div class="form-group row">
           <label>Detune</label>
           <input
             type="number"
@@ -16,6 +16,9 @@
           />
           <span class="unit-label">cents</span>
           <span class="label-g3">Di = G3 = {{ options.frequencyDi }} Hz </span>
+          <button class="btnTestTone" @click="$emit('play-test-tone')">
+            Test
+          </button>
         </div>
 
         <div class="separator" />
@@ -116,6 +119,10 @@ export default class SyllablePositioningDialog extends Vue {
   margin-bottom: 1rem;
 }
 
+.form-group.row {
+  display: flex;
+}
+
 .form-group label {
   display: inline-block;
   font-weight: bold;
@@ -154,5 +161,10 @@ input.detune {
   border-bottom: 1px solid lightgray;
   margin-bottom: 1rem;
   width: 100%;
+}
+
+.btnTestTone {
+  display: inline-block;
+  margin-left: auto;
 }
 </style>

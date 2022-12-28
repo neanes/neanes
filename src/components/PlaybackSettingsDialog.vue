@@ -61,16 +61,14 @@
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import ModalDialog from '@/components/ModalDialog.vue';
-import NeumeBoxSyllable from '@/components/NeumeBoxSyllable.vue';
-import InputUnit from '@/components/InputUnit.vue';
 import { PlaybackOptions } from '@/services/audio/AudioService';
 
 const FREQUENCY_G3 = 196;
 
 @Component({
-  components: { ModalDialog, NeumeBoxSyllable, InputUnit },
+  components: { ModalDialog },
 })
-export default class SyllablePositioningDialog extends Vue {
+export default class PlaybackSettingsDialog extends Vue {
   @Prop() options!: PlaybackOptions;
 
   tuning: number = 0;
@@ -132,11 +130,6 @@ input.detune {
   width: 3.5rem;
   margin-left: 1rem;
   margin-right: 0.5rem;
-}
-
-.form-group .table-header {
-  display: inline-block;
-  width: 3.5rem;
 }
 
 .header {

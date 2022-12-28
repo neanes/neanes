@@ -399,7 +399,7 @@
         @update:tempoAlignRight="
           updateModeKeyTempoAlignRight(selectedElement, $event)
         "
-        @update:tempo="updateModeKeyTempo(selectedElement, $event)"
+        @update:tempo="setModeKeyTempo(selectedElement, $event)"
         @update:heightAdjustment="
           updateModeKeyHeightAdjustment(selectedElement, $event)
         "
@@ -472,6 +472,12 @@
       @close="closePlaybackSettingsDialog"
       @play-test-tone="playTestTone"
     />
+    <EditorPreferencesDialog
+      v-if="editorPreferencesDialogIsOpen"
+      :options="editorPreferences"
+      :pageSetup="score.pageSetup"
+      @close="closeEditorPreferencesDialog"
+    />
     <PageSetupDialog
       v-if="pageSetupDialogIsOpen"
       :pageSetup="score.pageSetup"
@@ -537,6 +543,7 @@ import ToolbarTempo from '@/components/ToolbarTempo.vue';
 import ModeKeyDialog from '@/components/ModeKeyDialog.vue';
 import SyllablePositioningDialog from '@/components/SyllablePositioningDialog.vue';
 import PlaybackSettingsDialog from '@/components/PlaybackSettingsDialog.vue';
+import EditorPreferencesDialog from '@/components/EditorPreferencesDialog.vue';
 import PageSetupDialog from '@/components/PageSetupDialog.vue';
 import FileMenuBar from '@/components/FileMenuBar.vue';
 import {
@@ -581,6 +588,10 @@ import {
   PlaybackService,
 } from '@/services/audio/AudioService';
 
+export interface EditorPreferences {
+  tempoDefaults: { [key in TempoSign]?: number };
+}
+
 @Component({
   components: {
     SyllableNeumeBox,
@@ -604,6 +615,7 @@ import {
     ModeKeyDialog,
     SyllablePositioningDialog,
     PlaybackSettingsDialog,
+    EditorPreferencesDialog,
     PageSetupDialog,
     FileMenuBar,
   },
@@ -631,6 +643,7 @@ export default class Editor extends Vue {
   syllablePositioningDialogIsOpen: boolean = false;
   playbackSettingsDialogIsOpen: boolean = false;
   pageSetupDialogIsOpen: boolean = false;
+  editorPreferencesDialogIsOpen: boolean = false;
 
   clipboard: ScoreElement[] = [];
 
@@ -649,6 +662,19 @@ export default class Editor extends Vue {
     useDefaultAttractionZo: true,
     frequencyDi: 196,
     speed: 1,
+  };
+
+  editorPreferences: EditorPreferences = {
+    tempoDefaults: {
+      [TempoSign.VerySlow]: 40, // < 56 triargon?
+      [TempoSign.Slower]: 56, // 56 - 80 diargon
+      [TempoSign.Slow]: 80, // 80 - 100 hemiolion
+      [TempoSign.Moderate]: 100, // 100 - 168 argon
+      [TempoSign.Medium]: 130, // 130 argon + gorgon
+      [TempoSign.Quick]: 168, // 168 - 208 gorgon
+      [TempoSign.Quicker]: 208, // 208+ digorgon
+      [TempoSign.VeryQuick]: 250, // unattested? trigorgon
+    },
   };
 
   // Commands
@@ -1057,7 +1083,13 @@ export default class Editor extends Vue {
   }
 
   get dialogOpen() {
-    return this.modeKeyDialogIsOpen || this.pageSetupDialogIsOpen;
+    return (
+      this.modeKeyDialogIsOpen ||
+      this.pageSetupDialogIsOpen ||
+      this.playbackSettingsDialogIsOpen ||
+      this.syllablePositioningDialogIsOpen ||
+      this.editorPreferencesDialogIsOpen
+    );
   }
 
   get filteredPages() {
@@ -1208,6 +1240,12 @@ export default class Editor extends Vue {
       Object.assign(this.audioOptions, JSON.parse(savedAudioOptions));
     }
 
+    const savedEditorPreferences = localStorage.getItem('editorPreferences');
+
+    if (savedEditorPreferences != null) {
+      Object.assign(this.editorPreferences, JSON.parse(savedEditorPreferences));
+    }
+
     window.addEventListener('keydown', this.onKeydown);
     window.addEventListener('keyup', this.onKeyup);
     window.addEventListener('resize', this.onWindowResizeThrottled);
@@ -1229,6 +1267,10 @@ export default class Editor extends Vue {
     EventBus.$on(IpcMainChannels.FileMenuCut, this.onFileMenuCut);
     EventBus.$on(IpcMainChannels.FileMenuCopy, this.onFileMenuCopy);
     EventBus.$on(IpcMainChannels.FileMenuPaste, this.onFileMenuPaste);
+    EventBus.$on(
+      IpcMainChannels.FileMenuPreferences,
+      this.onFileMenuPreferences,
+    );
     EventBus.$on(
       IpcMainChannels.FileMenuInsertTextBox,
       this.onFileMenuInsertTextBox,
@@ -1290,6 +1332,10 @@ export default class Editor extends Vue {
     EventBus.$off(IpcMainChannels.FileMenuCut, this.onFileMenuCut);
     EventBus.$off(IpcMainChannels.FileMenuCopy, this.onFileMenuCopy);
     EventBus.$off(IpcMainChannels.FileMenuPaste, this.onFileMenuPaste);
+    EventBus.$off(
+      IpcMainChannels.FileMenuPreferences,
+      this.onFileMenuPreferences,
+    );
     EventBus.$off(
       IpcMainChannels.FileMenuInsertTextBox,
       this.onFileMenuInsertTextBox,
@@ -1398,6 +1444,19 @@ export default class Editor extends Vue {
 
   closePageSetupDialog() {
     this.pageSetupDialogIsOpen = false;
+  }
+
+  closeEditorPreferencesDialog() {
+    this.editorPreferencesDialogIsOpen = false;
+
+    this.saveEditorPreferences();
+  }
+
+  saveEditorPreferences() {
+    localStorage.setItem(
+      'editorPreferences',
+      JSON.stringify(this.editorPreferences),
+    );
   }
 
   isLastElement(element: ScoreElement) {
@@ -1571,7 +1630,9 @@ export default class Editor extends Vue {
 
     const element = new TempoElement();
     element.neume = neume;
-    element.bpm = TempoElement.getDefaultBpm(neume);
+    element.bpm =
+      this.editorPreferences.tempoDefaults[neume] ??
+      TempoElement.getDefaultBpm(neume);
 
     switch (this.entryMode) {
       case EntryMode.Auto:
@@ -3047,6 +3108,14 @@ export default class Editor extends Vue {
     }
   }
 
+  private setModeKeyTempo(element: ModeKeyElement, neume: TempoSign) {
+    if (element.tempo === neume) {
+      this.updateModeKeyTempo(element, null);
+    } else {
+      this.updateModeKeyTempo(element, neume);
+    }
+  }
+
   private setAccidental(element: NoteElement, neume: Accidental) {
     if (element.accidental != null && element.accidental === neume) {
       this.updateNoteAccidental(element, null);
@@ -3455,7 +3524,9 @@ export default class Editor extends Vue {
     let bpm = element.bpm;
 
     if (tempo != null) {
-      bpm = TempoElement.getDefaultBpm(tempo);
+      bpm =
+        this.editorPreferences.tempoDefaults[tempo] ??
+        TempoElement.getDefaultBpm(tempo);
     }
 
     this.updateModeKey(element, { tempo, bpm });
@@ -3540,7 +3611,9 @@ export default class Editor extends Vue {
     let bpm = element.bpm;
 
     if (tempo != null) {
-      bpm = TempoElement.getDefaultBpm(tempo);
+      bpm =
+        this.editorPreferences.tempoDefaults[tempo] ??
+        TempoElement.getDefaultBpm(tempo);
     }
 
     this.updateMartyria(element, { tempo, bpm });
@@ -4069,6 +4142,12 @@ export default class Editor extends Vue {
       this.onPasteScoreElements();
     } else {
       document.execCommand('paste');
+    }
+  }
+
+  onFileMenuPreferences() {
+    if (!this.dialogOpen) {
+      this.editorPreferencesDialogIsOpen = true;
     }
   }
 

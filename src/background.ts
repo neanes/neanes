@@ -594,7 +594,7 @@ function createMenu() {
           },
         },
         {
-          label: '&Paste',
+          label: 'Past&e',
           accelerator: 'CmdOrCtrl+V',
           click(menuItem, browserWindow, event) {
             // The accelerator is handled in the renderer process because of
@@ -602,6 +602,13 @@ function createMenu() {
             if (!event.triggeredByAccelerator) {
               win?.webContents.send(IpcMainChannels.FileMenuPaste);
             }
+          },
+        },
+        { type: 'separator' },
+        {
+          label: '&Preferences',
+          click(menuItem, browserWindow, event) {
+            win?.webContents.send(IpcMainChannels.FileMenuPreferences);
           },
         },
       ],

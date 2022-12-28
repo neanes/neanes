@@ -182,7 +182,10 @@ export class AudioService {
 
           if (isonUnison) {
             isonSynth.triggerAttack(event.frequency!, time);
+          } else if (event.isonFrequency === 0 || event.isonFrequency == null) {
+            isonSynth.triggerRelease(time);
           } else if (event.isonFrequency !== currentIsonFrequency) {
+            currentIsonFrequency = event.isonFrequency;
             isonSynth.triggerAttack(event.isonFrequency!, time);
           }
 
@@ -946,6 +949,8 @@ export class PlaybackService {
         workspace.generalFlat = false;
         workspace.generalSharp = false;
         workspace.noteOffset = 0;
+
+        isonFrequency = 0;
 
         if (modeKeyElement.scale === Scale.Diatonic) {
           workspace.scale = this.diatonicScale;

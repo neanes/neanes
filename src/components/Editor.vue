@@ -9,8 +9,10 @@
       :zoom="zoom"
       :zoomToFit="zoomToFit"
       :audioState="audioService.state"
+      :audioOptions="audioOptions"
       @update:zoom="updateZoom"
       @update:zoomToFit="updateZoomToFit"
+      @update:audioOptionsSpeed="updateAudioOptionsSpeed"
       @add-auto-martyria="addAutoMartyria"
       @update:entryMode="updateEntryMode"
       @toggle-page-break="togglePageBreak"
@@ -20,6 +22,7 @@
       @delete-selected-element="deleteSelectedElement"
       @click.native="selectedLyrics = null"
       @play-audio="playAudio"
+      @open-playback-settings="openPlaybackSettingsDialog"
     />
     <div class="content">
       <NeumeSelector
@@ -463,6 +466,11 @@
       @update="updateNoteAndSave(selectedElement, $event)"
       @close="closeSyllablePositioningDialog"
     />
+    <PlaybackSettingsDialog
+      v-if="playbackSettingsDialogIsOpen"
+      :options="audioOptions"
+      @close="closePlaybackSettingsDialog"
+    />
     <PageSetupDialog
       v-if="pageSetupDialogIsOpen"
       :pageSetup="score.pageSetup"
@@ -527,6 +535,7 @@ import ToolbarMartyria from '@/components/ToolbarMartyria.vue';
 import ToolbarTempo from '@/components/ToolbarTempo.vue';
 import ModeKeyDialog from '@/components/ModeKeyDialog.vue';
 import SyllablePositioningDialog from '@/components/SyllablePositioningDialog.vue';
+import PlaybackSettingsDialog from '@/components/PlaybackSettingsDialog.vue';
 import PageSetupDialog from '@/components/PageSetupDialog.vue';
 import FileMenuBar from '@/components/FileMenuBar.vue';
 import {
@@ -566,6 +575,7 @@ import {
   AudioService,
   AudioServiceEventNames,
   AudioState,
+  PlaybackOptions,
   PlaybackSequenceEvent,
   PlaybackService,
 } from '@/services/audio/AudioService';
@@ -592,6 +602,7 @@ import {
     ToolbarMain,
     ModeKeyDialog,
     SyllablePositioningDialog,
+    PlaybackSettingsDialog,
     PageSetupDialog,
     FileMenuBar,
   },
@@ -617,6 +628,7 @@ export default class Editor extends Vue {
 
   modeKeyDialogIsOpen: boolean = false;
   syllablePositioningDialogIsOpen: boolean = false;
+  playbackSettingsDialogIsOpen: boolean = false;
   pageSetupDialogIsOpen: boolean = false;
 
   clipboard: ScoreElement[] = [];
@@ -631,6 +643,12 @@ export default class Editor extends Vue {
 
   audioElement: ScoreElement | null = null;
   playbackEvents: PlaybackSequenceEvent[] = [];
+  audioOptions: PlaybackOptions = {
+    useLegetos: true,
+    useDefaultAttractionZo: true,
+    frequencyDi: 196,
+    speed: 1,
+  };
 
   // Commands
   noteElementCommandFactory: CommandFactory<NoteElement> =
@@ -1183,6 +1201,12 @@ export default class Editor extends Vue {
   }
 
   mounted() {
+    const savedAudioOptions = localStorage.getItem('audioOptionsDefault');
+
+    if (savedAudioOptions != null) {
+      Object.assign(this.audioOptions, JSON.parse(savedAudioOptions));
+    }
+
     window.addEventListener('keydown', this.onKeydown);
     window.addEventListener('keyup', this.onKeyup);
     window.addEventListener('resize', this.onWindowResizeThrottled);
@@ -1357,6 +1381,18 @@ export default class Editor extends Vue {
 
   closeSyllablePositioningDialog() {
     this.syllablePositioningDialogIsOpen = false;
+  }
+
+  openPlaybackSettingsDialog() {
+    this.playbackSettingsDialogIsOpen = true;
+
+    this.stopAudio();
+  }
+
+  closePlaybackSettingsDialog() {
+    this.playbackSettingsDialogIsOpen = false;
+
+    this.saveAudioOptions();
   }
 
   closePageSetupDialog() {
@@ -3724,6 +3760,7 @@ export default class Editor extends Vue {
       if (this.audioService.state === AudioState.Stopped) {
         this.playbackEvents = this.playbackService.computePlaybackSequence(
           this.elements,
+          this.audioOptions,
         );
 
         const startAt = this.playbackEvents.find(
@@ -3759,6 +3796,27 @@ export default class Editor extends Vue {
     } catch (error) {
       console.error(error);
     }
+  }
+
+  updateAudioOptionsSpeed(speed: number) {
+    if (this.audioService.state === AudioState.Paused) {
+      this.stopAudio();
+    }
+
+    speed = Math.max(0.1, speed);
+    speed = Math.min(3, speed);
+    speed = +speed.toFixed(2);
+
+    this.audioOptions.speed = speed;
+
+    this.saveAudioOptions();
+  }
+
+  saveAudioOptions() {
+    localStorage.setItem(
+      'audioOptionsDefault',
+      JSON.stringify(this.audioOptions),
+    );
   }
 
   onAudioServiceEventPlay(event: PlaybackSequenceEvent) {

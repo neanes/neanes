@@ -37,11 +37,13 @@ export interface PlaybackSequenceEvent {
   bpm: number;
 }
 
-interface PlaybackOptions {
+export interface PlaybackOptions {
   useLegetos: boolean;
   useDefaultAttractionZo: boolean;
 
   frequencyDi: number;
+
+  speed: number;
 }
 
 interface PlaybackWorkspace {
@@ -163,6 +165,10 @@ export class AudioService {
 
       if (event.type === 'note') {
         const toneEvent = new ToneEvent((time) => {
+          if (this.state !== AudioState.Playing) {
+            return;
+          }
+
           this.currentEvent = event;
           //synth.set({ portamento: 0.25 });
 
@@ -355,7 +361,7 @@ export class PlaybackService {
     }
   }
 
-  computePlaybackSequence(elements: ScoreElement[]) {
+  computePlaybackSequence(elements: ScoreElement[], options: PlaybackOptions) {
     const events: PlaybackSequenceEvent[] = [];
     const gorgonIndexes: GorgonIndex[] = [];
 
@@ -371,6 +377,7 @@ export class PlaybackService {
         useLegetos: true,
         useDefaultAttractionZo: true,
         frequencyDi: defaultFrequencyDi,
+        speed: 1,
       },
 
       intervalIndex: 0,
@@ -390,7 +397,9 @@ export class PlaybackService {
       generalSharp: false,
     };
 
-    let bpm = defaultBpm;
+    Object.assign(workspace.options, options);
+
+    let bpm = defaultBpm * workspace.options.speed;
     let beat = this.beatLengthFromBpm(bpm);
     let isonFrequency = 0;
 
@@ -978,7 +987,7 @@ export class PlaybackService {
           moria,
         );
 
-        bpm = modeKeyElement.bpm || 120;
+        bpm = (modeKeyElement.bpm || 120) * workspace.options.speed;
         beat = this.beatLengthFromBpm(bpm);
 
         console.log(
@@ -995,8 +1004,9 @@ export class PlaybackService {
 
         if (martyriaElement.tempo != null) {
           bpm =
-            martyriaElement.bpm ||
-            this.tempoToBpmMap.get(martyriaElement.tempo)!;
+            (martyriaElement.bpm ||
+              this.tempoToBpmMap.get(martyriaElement.tempo)!) *
+            workspace.options.speed;
           beat = this.beatLengthFromBpm(bpm);
 
           console.log('change bpm', bpm, beat);
@@ -1016,7 +1026,9 @@ export class PlaybackService {
       } else if (element.elementType === ElementType.Tempo) {
         const tempoElement = element as TempoElement;
 
-        bpm = tempoElement.bpm || this.tempoToBpmMap.get(tempoElement.neume)!;
+        bpm =
+          (tempoElement.bpm || this.tempoToBpmMap.get(tempoElement.neume)!) *
+          workspace.options.speed;
         beat = this.beatLengthFromBpm(bpm);
 
         console.log('change bpm', bpm, beat);

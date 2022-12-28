@@ -1235,10 +1235,7 @@ export class PlaybackService {
         workspace.scale.name === PlaybackScaleName.Kliton ||
         workspace.scale.name === PlaybackScaleName.Zygos)
     ) {
-      if (
-        (note === ScaleNote.ZoHigh || note === ScaleNote.Zo) &&
-        this.melodyDirection(workspace) < 0
-      ) {
+      if (note === ScaleNote.ZoHigh && this.melodyDirection(workspace) < 0) {
         frequency = this.changeFrequency(frequency, zoAttractionMoria);
       }
     }

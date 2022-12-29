@@ -127,7 +127,7 @@ export class PlaybackService {
       elementIndex: 0,
 
       options: {
-        useLegetos: true,
+        useLegetos: false,
         useDefaultAttractionZo: true,
         frequencyDi: defaultFrequencyDi,
         speed: 1,

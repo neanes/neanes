@@ -661,7 +661,7 @@ export default class Editor extends Vue {
   audioElement: ScoreElement | null = null;
   playbackEvents: PlaybackSequenceEvent[] = [];
   audioOptions: PlaybackOptions = {
-    useLegetos: true,
+    useLegetos: false,
     useDefaultAttractionZo: true,
     frequencyDi: 196,
     speed: 1,

@@ -25,19 +25,6 @@
 
         <div class="form-group">
           <input
-            id="playback-settings-dialog-legetos"
-            type="checkbox"
-            v-model="options.useLegetos"
-          />
-          <label for="playback-settings-dialog-legetos">Classic Legetos</label>
-          <p>
-            If checked, hymns in the fourth mode with base notes Pa or Vou will
-            use the classic legetos scale with Vou lowered.
-          </p>
-        </div>
-
-        <div class="form-group">
-          <input
             id="playback-settings-dialog-diatonic-zo"
             type="checkbox"
             v-model="options.useDefaultAttractionZo"
@@ -64,6 +51,19 @@
           >
             Reset
           </button>
+        </div>
+
+        <div class="form-group">
+          <input
+            id="playback-settings-dialog-legetos"
+            type="checkbox"
+            v-model="options.useLegetos"
+          />
+          <label for="playback-settings-dialog-legetos">Classic Legetos</label>
+          <p>
+            If checked, hymns in the fourth mode with base notes Pa or Vou will
+            use the classic legetos scale with Vou lowered.
+          </p>
         </div>
 
         <div class="separator" />

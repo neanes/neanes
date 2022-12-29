@@ -204,17 +204,23 @@ export class PlaybackService {
               workspace.enharmonicVou = true;
             }
 
+            workspace.generalFlat = false;
+            workspace.generalSharp = false;
+
             this.applyFthora(noteElement.fthora, workspace);
           } else if (
             noteElement.fthora === Fthora.GeneralFlat_Top ||
             noteElement.fthora === Fthora.GeneralFlat_Bottom
           ) {
             workspace.generalFlat = true;
+            workspace.enharmonicZo = false;
           } else if (
             noteElement.fthora === Fthora.GeneralSharp_Top ||
             noteElement.fthora === Fthora.GeneralSharp_Bottom
           ) {
             workspace.generalSharp = true;
+            workspace.enharmonicGa = false;
+            workspace.enharmonicVou = false;
           } else {
             workspace.enharmonicZo = false;
             workspace.enharmonicGa = false;
@@ -736,6 +742,8 @@ export class PlaybackService {
           workspace.scale = this.hardChromaticScale;
         }
 
+        // TODO support mode keys with enharmonic fthora?
+
         const di = workspace.scale.scaleNoteMap.get(ScaleNote.Thi)!;
 
         const distance =
@@ -962,8 +970,11 @@ export class PlaybackService {
   }
 
   constructEnharmonicScale(workspace: PlaybackWorkspace) {
-    // TODO support enharmonic scale from Zo
-    return this.constructEnharmonicScaleFromGa(workspace);
+    if (workspace.enharmonicVou) {
+      return this.constructTetrachordScale([12, 12, 6]);
+    } else {
+      return this.constructEnharmonicScaleFromGa(workspace);
+    }
   }
 
   constructEnharmonicScaleFromGa(workspace: PlaybackWorkspace) {
@@ -1012,6 +1023,14 @@ export class PlaybackService {
       workspace.scale = this.zygosLegetosScale;
     } else if (workspace.scale.name === PlaybackScaleName.Enharmonic) {
       this.enharmonicScale.intervals = this.constructEnharmonicScale(workspace);
+
+      if (workspace.enharmonicVou) {
+        this.enharmonicScale.scaleNoteMap =
+          this.enharmonicZoScaleNoteToIntervalIndexMap;
+      } else {
+        this.enharmonicScale.scaleNoteMap =
+          this.diatonicScaleNoteToIntervalIndexMap;
+      }
     }
 
     workspace.intervalIndex =
@@ -1365,6 +1384,30 @@ export class PlaybackService {
     [ScaleNote.GaHigh, 3],
     [ScaleNote.ThiHigh, 4],
     [ScaleNote.KeHigh, 5],
+  ]);
+
+  enharmonicZoScaleNoteToIntervalIndexMap: Map<ScaleNote, number> = new Map<
+    ScaleNote,
+    number
+  >([
+    [ScaleNote.VouLow, 3],
+    [ScaleNote.GaLow, 4],
+    [ScaleNote.ThiLow, 5],
+    [ScaleNote.KeLow, 6],
+    [ScaleNote.Zo, 0],
+    [ScaleNote.Ni, 1],
+    [ScaleNote.Pa, 2],
+    [ScaleNote.Vou, 3],
+    [ScaleNote.Ga, 4],
+    [ScaleNote.Thi, 5],
+    [ScaleNote.Ke, 6],
+    [ScaleNote.Zo, 0],
+    [ScaleNote.NiHigh, 1],
+    [ScaleNote.PaHigh, 2],
+    [ScaleNote.VouHigh, 3],
+    [ScaleNote.GaHigh, 4],
+    [ScaleNote.ThiHigh, 5],
+    [ScaleNote.KeHigh, 6],
   ]);
 
   diatonicScale: PlaybackScale = {

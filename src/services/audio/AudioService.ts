@@ -101,7 +101,7 @@ export class AudioService {
           console.log(time, event);
         });
 
-        toneEvent.start(event.time);
+        toneEvent.start(event.transportTime);
         this.toneEvents.push(toneEvent);
       } else if (event.type === 'rest') {
         const toneEvent = new ToneEvent((time) => {
@@ -110,7 +110,7 @@ export class AudioService {
           console.log(time, event);
         });
 
-        toneEvent.start(event.time);
+        toneEvent.start(event.transportTime);
         this.toneEvents.push(toneEvent);
       }
     }
@@ -129,10 +129,10 @@ export class AudioService {
     });
 
     const lastEvent = events[events.length - 1];
-    finishEvent.start(lastEvent.time + lastEvent.duration);
+    finishEvent.start(lastEvent.transportTime + lastEvent.duration);
     this.toneEvents.push(finishEvent);
 
-    const startTime = startAt != null ? startAt.time : 0;
+    const startTime = startAt != null ? startAt.transportTime : 0;
 
     if (startAt != null) {
       console.log('starting at', startAt);
@@ -182,7 +182,7 @@ export class AudioService {
     if (this.state === AudioState.Paused) {
       console.log('resume', Tone.Transport.position);
 
-      Tone.Transport.position = this.currentEvent?.time ?? 0;
+      Tone.Transport.position = this.currentEvent?.transportTime ?? 0;
 
       Tone.Transport.start();
 
@@ -199,9 +199,9 @@ export class AudioService {
   }
 
   jumpToEvent(event: PlaybackSequenceEvent) {
-    console.log('jump to', event.time, event);
+    console.log('jump to', event.transportTime, event);
     Tone.Transport.bpm.value = event.bpm;
-    Tone.Transport.position = event.time;
+    Tone.Transport.position = event.transportTime;
   }
 
   nextNote(currentFrequency: number, moria: number) {

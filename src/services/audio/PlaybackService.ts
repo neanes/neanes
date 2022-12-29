@@ -28,7 +28,7 @@ export interface PlaybackSequenceEvent {
   isonFrequency?: number;
   type: 'note' | 'rest';
   duration: number;
-  time: number;
+  transportTime: number;
   elementIndex: number;
   bpm: number;
 }
@@ -295,7 +295,7 @@ export class PlaybackService {
             type: 'note',
             bpm,
             duration: 1 * beat,
-            time: 0,
+            transportTime: 0,
             elementIndex: i,
           };
 
@@ -328,7 +328,7 @@ export class PlaybackService {
             type: 'note',
             bpm,
             duration: 1 * beat,
-            time: 0,
+            transportTime: 0,
             elementIndex: i,
           };
 
@@ -362,7 +362,7 @@ export class PlaybackService {
             type: 'note',
             bpm,
             duration: 1 * beat,
-            time: 0,
+            transportTime: 0,
             elementIndex: i,
           };
 
@@ -389,7 +389,7 @@ export class PlaybackService {
             type: 'note',
             bpm,
             duration: oligonDuration,
-            time: 0,
+            transportTime: 0,
             elementIndex: i,
           };
 
@@ -422,7 +422,7 @@ export class PlaybackService {
             type: 'note',
             bpm,
             duration: 1 * beat,
-            time: 0,
+            transportTime: 0,
             elementIndex: i,
           };
 
@@ -449,7 +449,7 @@ export class PlaybackService {
             type: 'note',
             bpm,
             duration: event2Duration,
-            time: 0,
+            transportTime: 0,
             elementIndex: i,
           };
 
@@ -482,7 +482,7 @@ export class PlaybackService {
             type: 'note',
             bpm,
             duration: 1 * beat,
-            time: 0,
+            transportTime: 0,
             elementIndex: i,
           };
 
@@ -517,7 +517,7 @@ export class PlaybackService {
             type: 'note',
             bpm,
             duration: event2Duration,
-            time: 0,
+            transportTime: 0,
             elementIndex: i,
           };
 
@@ -551,7 +551,7 @@ export class PlaybackService {
             type: 'note',
             bpm,
             duration: 1 * beat,
-            time: 0,
+            transportTime: 0,
             elementIndex: i,
           };
 
@@ -586,7 +586,7 @@ export class PlaybackService {
             type: 'note',
             bpm,
             duration: event2Duration,
-            time: 0,
+            transportTime: 0,
             elementIndex: i,
           };
 
@@ -616,7 +616,7 @@ export class PlaybackService {
             type: 'note',
             bpm,
             duration: 1 * beat,
-            time: 0,
+            transportTime: 0,
             elementIndex: i,
           };
 
@@ -643,7 +643,7 @@ export class PlaybackService {
             type: 'note',
             bpm,
             duration: event2Duration,
-            time: 0,
+            transportTime: 0,
             elementIndex: i,
           };
 
@@ -655,7 +655,7 @@ export class PlaybackService {
             type: 'rest',
             bpm,
             duration,
-            time: 0,
+            transportTime: 0,
             elementIndex: i,
           };
 
@@ -694,7 +694,7 @@ export class PlaybackService {
             type: 'note',
             bpm,
             duration,
-            time: 0,
+            transportTime: 0,
             elementIndex: i,
           };
 
@@ -836,7 +836,7 @@ export class PlaybackService {
       }
 
       time = beats * currentBeatLength;
-      event.time = time;
+      event.transportTime = time;
       beats += event.duration / currentBeatLength;
     }
 

@@ -21,6 +21,31 @@
           </button>
         </div>
 
+        <div class="subheader">Volume</div>
+        <div class="form-group row">
+          <span class="volume-label">Melody</span>
+          <input
+            type="range"
+            class="volume-slider"
+            min="0"
+            max="100"
+            v-model="volumeMelody"
+          />
+          <span class="db-label">{{ options.volumeMelody.toFixed(1) }} dB</span>
+        </div>
+
+        <div class="form-group row">
+          <span class="volume-label">Ison</span>
+          <input
+            type="range"
+            class="volume-slider"
+            min="0"
+            max="100"
+            v-model="volumeIson"
+          />
+          <span class="db-label">{{ options.volumeIson.toFixed(1) }} dB</span>
+        </div>
+
         <div class="separator" />
 
         <div class="form-group">
@@ -395,6 +420,22 @@ export default class PlaybackSettingsDialog extends Vue {
     this.options.defaultAttractionZoMoria = value;
   }
 
+  get volumeIson() {
+    return 100 * Math.pow(10, this.options.volumeIson / 20);
+  }
+
+  set volumeIson(value: number) {
+    this.options.volumeIson = 20 * Math.log10(value / 100);
+  }
+
+  get volumeMelody() {
+    return 100 * Math.pow(10, this.options.volumeMelody / 20);
+  }
+
+  set volumeMelody(value: number) {
+    this.options.volumeMelody = 20 * Math.log10(value / 100);
+  }
+
   mounted() {
     window.addEventListener('keydown', this.onKeyDown);
 
@@ -540,6 +581,14 @@ input.detune {
 
 input.interval {
   width: 2rem;
+}
+
+.volume-slider {
+  margin: 0 1rem;
+}
+
+.volume-label {
+  width: 3rem;
 }
 
 .button-container {

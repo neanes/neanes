@@ -679,6 +679,9 @@ export default class Editor extends Vue {
     generalSharpMoria: 4,
 
     defaultAttractionZoMoria: -4,
+
+    volumeIson: -4,
+    volumeMelody: 0,
   };
 
   editorPreferences: EditorPreferences = {
@@ -1255,6 +1258,12 @@ export default class Editor extends Vue {
 
     if (savedAudioOptions != null) {
       Object.assign(this.audioOptions, JSON.parse(savedAudioOptions));
+
+      // -Infinity is not valid JSON, so it is serialized as null.
+      // Deserialize as -Infinity
+      this.audioOptions.volumeIson = this.audioOptions.volumeIson ?? -Infinity;
+      this.audioOptions.volumeMelody =
+        this.audioOptions.volumeMelody ?? -Infinity;
     }
 
     const savedEditorPreferences = localStorage.getItem('editorPreferences');
@@ -3856,7 +3865,7 @@ export default class Editor extends Vue {
           (x) => x.elementIndex >= this.selectedElementIndex,
         );
 
-        this.audioService.play(this.playbackEvents, startAt);
+        this.audioService.play(this.playbackEvents, this.audioOptions, startAt);
       } else {
         this.pauseAudio();
       }

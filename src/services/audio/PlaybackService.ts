@@ -56,6 +56,9 @@ export interface PlaybackOptions {
   generalSharpMoria: number;
 
   defaultAttractionZoMoria: number;
+
+  volumeIson: number;
+  volumeMelody: number;
 }
 
 interface PlaybackWorkspace {
@@ -147,6 +150,9 @@ export class PlaybackService {
         generalSharpMoria: 4,
 
         defaultAttractionZoMoria: -4,
+
+        volumeIson: -4,
+        volumeMelody: 0,
       },
 
       intervalIndex: 0,

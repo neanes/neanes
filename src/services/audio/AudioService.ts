@@ -2,7 +2,10 @@
 
 import * as Tone from 'tone';
 import { ToneEvent } from 'tone';
-import { PlaybackSequenceEvent } from '@/services/audio/PlaybackService';
+import {
+  PlaybackOptions,
+  PlaybackSequenceEvent,
+} from '@/services/audio/PlaybackService';
 import { EventBus } from '@/eventBus';
 
 export enum AudioServiceEventNames {
@@ -55,12 +58,16 @@ export class AudioService {
 
   play(
     events: PlaybackSequenceEvent[],
+    options: PlaybackOptions,
     startAt: PlaybackSequenceEvent | undefined,
   ) {
     const synth = this.synth;
     const isonSynth = this.isonSynth;
 
     this.stop();
+
+    synth.volume.value = options.volumeMelody;
+    isonSynth.volume.value = options.volumeIson;
 
     let currentIsonFrequency = 0;
     let currentBpm = 0;

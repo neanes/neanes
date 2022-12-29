@@ -4,6 +4,7 @@ import {
   ModeKeyElement,
   NoteElement,
   ScoreElement,
+  TempoElement,
 } from '../../models/Element';
 import { QuantitativeNeume } from '../../models/Neumes';
 
@@ -101,8 +102,8 @@ describe('PlaybackService', () => {
 
         const elements: ScoreElement[] = [];
 
-        elements.push(modeKey(1, Scale.Diatonic, scaleNote));
-        elements.push(note(QuantitativeNeume.Ison));
+        elements.push(getModeKey(1, Scale.Diatonic, scaleNote));
+        elements.push(getNote(QuantitativeNeume.Ison));
 
         const events = service.computePlaybackSequence(elements, options);
 
@@ -125,8 +126,8 @@ describe('PlaybackService', () => {
 
         const elements: ScoreElement[] = [];
 
-        elements.push(modeKey(4, Scale.Diatonic, scaleNote));
-        elements.push(note(QuantitativeNeume.Ison));
+        elements.push(getModeKey(4, Scale.Diatonic, scaleNote));
+        elements.push(getNote(QuantitativeNeume.Ison));
 
         const events = service.computePlaybackSequence(elements, options);
 
@@ -165,8 +166,8 @@ describe('PlaybackService', () => {
 
         const elements: ScoreElement[] = [];
 
-        elements.push(modeKey(4, Scale.Diatonic, ScaleNote.Pa));
-        elements.push(note(base));
+        elements.push(getModeKey(4, Scale.Diatonic, ScaleNote.Pa));
+        elements.push(getNote(base));
 
         const events = service.computePlaybackSequence(elements, options);
 
@@ -204,8 +205,8 @@ describe('PlaybackService', () => {
 
         const elements: ScoreElement[] = [];
 
-        elements.push(modeKey(2, Scale.SoftChromatic, scaleNote));
-        elements.push(note(QuantitativeNeume.Ison));
+        elements.push(getModeKey(2, Scale.SoftChromatic, scaleNote));
+        elements.push(getNote(QuantitativeNeume.Ison));
 
         const events = service.computePlaybackSequence(elements, options);
 
@@ -243,12 +244,47 @@ describe('PlaybackService', () => {
 
         const elements: ScoreElement[] = [];
 
-        elements.push(modeKey(2, Scale.HardChromatic, scaleNote));
-        elements.push(note(QuantitativeNeume.Ison));
+        elements.push(getModeKey(2, Scale.HardChromatic, scaleNote));
+        elements.push(getNote(QuantitativeNeume.Ison));
 
         const events = service.computePlaybackSequence(elements, options);
 
         expect(events[0].frequency).toBeCloseTo(expectedFrequency, 2);
+      },
+    );
+
+    it.each`
+      initialBpm | finalBpm | expectedResult
+      ${120}     | ${60}    | ${[0, 0.5, 1, 1.5, 4, 5, 6, 7]}
+      ${60}      | ${120}   | ${[0, 1, 2, 3, 2, 2.5, 3, 3.5]}
+    `(
+      'should schedule notes correctly when tempo changes',
+      ({ initialBpm, finalBpm, expectedResult }) => {
+        const service = new PlaybackService();
+
+        const options = getDefaultWorkspaceOptions();
+
+        const elements: ScoreElement[] = [];
+
+        const modeKey = getModeKey(1, Scale.Diatonic, ScaleNote.Pa);
+        modeKey.bpm = initialBpm;
+
+        elements.push(modeKey);
+        elements.push(getNote(QuantitativeNeume.Ison));
+        elements.push(getNote(QuantitativeNeume.Ison));
+        elements.push(getNote(QuantitativeNeume.Ison));
+        elements.push(getNote(QuantitativeNeume.Ison));
+
+        elements.push(getTempoChange(finalBpm));
+
+        elements.push(getNote(QuantitativeNeume.Ison));
+        elements.push(getNote(QuantitativeNeume.Ison));
+        elements.push(getNote(QuantitativeNeume.Ison));
+        elements.push(getNote(QuantitativeNeume.Ison));
+
+        const events = service.computePlaybackSequence(elements, options);
+
+        expect(events.map((x) => x.transportTime)).toEqual(expectedResult);
       },
     );
   });
@@ -277,7 +313,7 @@ function getDefaultWorkspaceOptions() {
   } as PlaybackOptions;
 }
 
-function modeKey(mode: number, scale: Scale, scaleNote: ScaleNote) {
+function getModeKey(mode: number, scale: Scale, scaleNote: ScaleNote) {
   const element = new ModeKeyElement();
   element.mode = mode;
   element.scale = scale;
@@ -286,9 +322,16 @@ function modeKey(mode: number, scale: Scale, scaleNote: ScaleNote) {
   return element;
 }
 
-function note(base: QuantitativeNeume) {
+function getNote(base: QuantitativeNeume) {
   const element = new NoteElement();
   element.quantitativeNeume = base;
+
+  return element;
+}
+
+function getTempoChange(bpm: number) {
+  const element = new TempoElement();
+  element.bpm = bpm;
 
   return element;
 }

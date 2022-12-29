@@ -77,7 +77,6 @@ export class AudioService {
           }
 
           this.currentEvent = event;
-          //synth.set({ portamento: 0.25 });
 
           if (currentBpm !== event.bpm) {
             Tone.Transport.bpm.value = event.bpm!;

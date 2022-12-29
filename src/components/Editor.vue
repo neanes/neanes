@@ -3536,8 +3536,6 @@ export default class Editor extends Vue {
   }
 
   updateModeKeyTempo(element: ModeKeyElement, tempo: TempoSign | null) {
-    console.log('updateModeKeyTempo');
-
     let bpm = element.bpm;
 
     if (tempo != null) {

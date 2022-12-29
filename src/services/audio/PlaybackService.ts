@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+
 import {
   ElementType,
   MartyriaElement,
@@ -250,22 +252,6 @@ export class PlaybackService {
               workspace.options.frequencyDi,
               moria,
             );
-
-            console.log(
-              'change ison frequency',
-              i,
-              isonFrequency,
-              moria,
-              noteElement,
-            );
-          } else {
-            console.log(
-              'change ison frequency',
-              i,
-              isonFrequency,
-              0,
-              noteElement,
-            );
           }
         }
 
@@ -281,8 +267,6 @@ export class PlaybackService {
               index: events.length,
               beat,
             };
-
-            console.log('gorgonIndex', gorgonIndex);
 
             gorgonIndexes.push(gorgonIndex);
           }
@@ -310,8 +294,6 @@ export class PlaybackService {
               index: events.length,
               beat,
             };
-
-            console.log('gorgonIndex', gorgonIndex);
 
             gorgonIndexes.push(gorgonIndex);
           }
@@ -348,8 +330,6 @@ export class PlaybackService {
               index: events.length,
               beat,
             };
-
-            console.log('gorgonIndex', gorgonIndex);
 
             gorgonIndexes.push(gorgonIndex);
           }
@@ -409,8 +389,6 @@ export class PlaybackService {
               beat,
             };
 
-            console.log('gorgonIndex', gorgonIndex);
-
             gorgonIndexes.push(gorgonIndex);
           }
 
@@ -469,8 +447,6 @@ export class PlaybackService {
               beat,
             };
 
-            console.log('gorgonIndex', gorgonIndex);
-
             gorgonIndexes.push(gorgonIndex);
           }
 
@@ -499,8 +475,6 @@ export class PlaybackService {
               index: events.length,
               beat,
             };
-
-            console.log('gorgonIndex', gorgonIndex);
 
             gorgonIndexes.push(gorgonIndex);
           }
@@ -538,8 +512,6 @@ export class PlaybackService {
               beat,
             };
 
-            console.log('gorgonIndex', gorgonIndex);
-
             gorgonIndexes.push(gorgonIndex);
           }
 
@@ -568,8 +540,6 @@ export class PlaybackService {
               index: events.length,
               beat,
             };
-
-            console.log('gorgonIndex', gorgonIndex);
 
             gorgonIndexes.push(gorgonIndex);
           }
@@ -603,8 +573,6 @@ export class PlaybackService {
             index: events.length,
             beat,
           };
-
-          console.log('gorgonIndex (virtual)', gorgonIndex);
 
           gorgonIndexes.push(gorgonIndex);
 
@@ -676,8 +644,6 @@ export class PlaybackService {
               index: events.length,
               beat,
             };
-
-            console.log('gorgonIndex', gorgonIndex);
 
             gorgonIndexes.push(gorgonIndex);
           }
@@ -775,16 +741,6 @@ export class PlaybackService {
 
         bpm = (modeKeyElement.bpm || 120) * workspace.options.speed;
         beat = this.beatLengthFromBpm(bpm);
-
-        console.log(
-          'mode key change',
-          modeKeyElement.mode,
-          workspace.frequency,
-          moria,
-          di,
-          workspace.intervalIndex,
-          bpm,
-        );
       } else if (element.elementType === ElementType.Martyria) {
         const martyriaElement = element as MartyriaElement;
 
@@ -794,8 +750,6 @@ export class PlaybackService {
               this.tempoToBpmMap.get(martyriaElement.tempo)!) *
             workspace.options.speed;
           beat = this.beatLengthFromBpm(bpm);
-
-          console.log('change bpm', bpm, beat);
         }
 
         if (martyriaElement.fthora) {
@@ -816,8 +770,6 @@ export class PlaybackService {
           (tempoElement.bpm || this.tempoToBpmMap.get(tempoElement.neume)!) *
           workspace.options.speed;
         beat = this.beatLengthFromBpm(bpm);
-
-        console.log('change bpm', bpm, beat);
       }
     }
 
@@ -839,8 +791,6 @@ export class PlaybackService {
       event.transportTime = time;
       beats += event.duration / currentBeatLength;
     }
-
-    console.log('playback events', events);
 
     return events;
   }
@@ -1044,8 +994,6 @@ export class PlaybackService {
     } else {
       workspace.noteOffset = 0;
     }
-
-    console.log('applyFthora', fthora, workspace, workspace.noteOffset);
   }
 
   applyAlterations(
@@ -1059,16 +1007,9 @@ export class PlaybackService {
       alteredFrequency = this.changeFrequency(alteredFrequency, alteration);
 
       workspace.lastAlterationMoria = alteration;
-
-      console.log('alteration', alteration);
     } else if (workspace.lastAlterationMoria !== 0) {
       alteredFrequency = this.changeFrequency(
         alteredFrequency,
-        workspace.lastAlterationMoria,
-      );
-
-      console.log(
-        'alteration (from previous note)',
         workspace.lastAlterationMoria,
       );
     }

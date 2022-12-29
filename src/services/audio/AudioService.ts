@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+
 import * as Tone from 'tone';
 import { ToneEvent } from 'tone';
 import { PlaybackSequenceEvent } from '@/services/audio/PlaybackService';
@@ -30,6 +32,8 @@ export class AudioService {
   state: AudioState = AudioState.Stopped;
 
   currentEvent: PlaybackSequenceEvent | null = null;
+
+  loggingEnabled: boolean = false;
 
   constructor() {
     this.synth = new Tone.Synth().toDestination();
@@ -97,7 +101,14 @@ export class AudioService {
 
           EventBus.$emit(AudioServiceEventNames.EventPlay, event);
 
-          console.log(time, event);
+          if (this.loggingEnabled) {
+            console.groupCollapsed('AudioService', 'note event');
+            console.log('time', time);
+            console.log('duration', event.duration);
+            console.log('frequency', event.frequency);
+            console.log('event', event);
+            console.groupEnd();
+          }
         });
 
         toneEvent.start(event.transportTime);
@@ -106,7 +117,13 @@ export class AudioService {
         const toneEvent = new ToneEvent((time) => {
           EventBus.$emit(AudioServiceEventNames.EventPlay, event);
 
-          console.log(time, event);
+          if (this.loggingEnabled) {
+            console.groupCollapsed('AudioService', 'rest event');
+            console.log('time', time);
+            console.log('duration', event.duration);
+            console.log('event', event);
+            console.groupEnd();
+          }
         });
 
         toneEvent.start(event.transportTime);
@@ -115,7 +132,9 @@ export class AudioService {
     }
 
     const finishEvent = new ToneEvent((time) => {
-      console.log('playback finished', time);
+      if (this.loggingEnabled) {
+        console.log('AudioService', 'playback finished', time);
+      }
 
       Tone.Transport.stop();
 
@@ -133,10 +152,6 @@ export class AudioService {
 
     const startTime = startAt != null ? startAt.transportTime : 0;
 
-    if (startAt != null) {
-      console.log('starting at', startAt);
-    }
-
     Tone.Transport.bpm.value = startAt?.bpm ?? 60;
     currentBpm = Tone.Transport.bpm.value;
 
@@ -146,7 +161,9 @@ export class AudioService {
   }
 
   stop() {
-    console.log('stop');
+    if (this.loggingEnabled) {
+      console.log('AudioService', 'stop');
+    }
 
     // Reset the transport
     Tone.Transport.stop();
@@ -166,7 +183,11 @@ export class AudioService {
 
   pause() {
     if (this.state === AudioState.Playing) {
-      console.log('pause', Tone.Transport.position);
+      if (this.loggingEnabled) {
+        console.groupCollapsed('AudioService', 'pause');
+        console.log('transport position', Tone.Transport.seconds);
+        console.groupEnd();
+      }
 
       Tone.Transport.stop();
 
@@ -179,9 +200,13 @@ export class AudioService {
 
   resume() {
     if (this.state === AudioState.Paused) {
-      console.log('resume', Tone.Transport.position);
-
       Tone.Transport.position = this.currentEvent?.transportTime ?? 0;
+
+      if (this.loggingEnabled) {
+        console.group('AudioService', 'resume');
+        console.log('transport position', Tone.Transport.seconds);
+        console.groupEnd();
+      }
 
       Tone.Transport.start();
 
@@ -198,7 +223,13 @@ export class AudioService {
   }
 
   jumpToEvent(event: PlaybackSequenceEvent) {
-    console.log('jump to', event.transportTime, event);
+    if (this.loggingEnabled) {
+      console.groupCollapsed('AudioService', 'jump to');
+      console.log('transportTime', event.transportTime);
+      console.log('event', event);
+      console.groupEnd();
+    }
+
     Tone.Transport.bpm.value = event.bpm;
     Tone.Transport.position = event.transportTime;
   }

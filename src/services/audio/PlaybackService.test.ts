@@ -258,7 +258,7 @@ describe('PlaybackService', () => {
       ${120}     | ${60}    | ${[0, 0.5, 1, 1.5, 4, 5, 6, 7]}
       ${60}      | ${120}   | ${[0, 1, 2, 3, 2, 2.5, 3, 3.5]}
     `(
-      'should schedule notes correctly when tempo changes',
+      'should schedule 8 notes correctly when tempo changes midway',
       ({ initialBpm, finalBpm, expectedResult }) => {
         const service = new PlaybackService();
 

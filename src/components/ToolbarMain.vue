@@ -183,7 +183,8 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 import { Note, RootSign, TempoSign } from '@/models/Neumes';
 import Neume from './Neume.vue';
 import { EntryMode } from '@/models/EntryMode';
-import { AudioState, PlaybackOptions } from '@/services/audio/AudioService';
+import { AudioState } from '@/services/audio/AudioService';
+import { PlaybackOptions } from '@/services/audio/PlaybackService';
 
 @Component({
   components: {

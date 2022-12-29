@@ -583,10 +583,13 @@ import {
   AudioService,
   AudioServiceEventNames,
   AudioState,
+} from '@/services/audio/AudioService';
+
+import {
   PlaybackOptions,
   PlaybackSequenceEvent,
   PlaybackService,
-} from '@/services/audio/AudioService';
+} from '@/services/audio/PlaybackService';
 
 export interface EditorPreferences {
   tempoDefaults: { [key in TempoSign]?: number };
@@ -662,6 +665,20 @@ export default class Editor extends Vue {
     useDefaultAttractionZo: true,
     frequencyDi: 196,
     speed: 1,
+
+    diatonicIntervals: [12, 10, 8],
+    hardChromaticIntervals: [6, 20, 4],
+    softChromaticIntervals: [8, 14, 8],
+    legetosIntervals: [6, 9, 15],
+    zygosIntervals: [18, 4, 16, 4],
+    zygosLegetosIntervals: [18, 4, 20, 4],
+    spathiIntervals: [20, 4, 4, 14],
+    klitonIntervals: [14, 12, 4],
+
+    generalFlatMoria: -6,
+    generalSharpMoria: 4,
+
+    defaultAttractionZoMoria: -4,
   };
 
   editorPreferences: EditorPreferences = {

@@ -80,12 +80,23 @@ export default class PreferencesDialog extends Vue {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+.dialog-content {
+  display: flex;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 80vh;
+}
+
 .pane-container {
   display: flex;
   flex-direction: column;
   width: 420px;
   margin-bottom: 1.5rem;
   margin-top: 1.5rem;
+  overflow: auto;
 }
 
 .form-group {

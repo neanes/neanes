@@ -40,6 +40,10 @@ To learn how to use the software, read the [guide](https://danielgarthur.github.
 
 ## Building
 
+### Prerequisites
+
+- Node.js 16
+
 ### Project Setup
 
 First install the project dependencies:

@@ -64,7 +64,9 @@ export class NoteElement extends ScoreElement {
   public isMelismaStart: boolean = false;
   public isHyphen: boolean = false;
   public spaceAfter: number = 0;
-  public ignoreAttractions: boolean = true;
+  public ignoreAttractions: boolean = false;
+
+  public chromaticFthoraNote: ScaleNote | null = null;
 
   public accidentalOffsetX: number | null = null;
   public accidentalOffsetY: number | null = null;
@@ -120,6 +122,7 @@ export class NoteElement extends ScoreElement {
       accidentalOffsetX: this.accidentalOffsetX,
       accidentalOffsetY: this.accidentalOffsetY,
       fthora: this.fthora,
+      chromaticFthoraNote: this.chromaticFthoraNote,
       fthoraOffsetX: this.fthoraOffsetX,
       fthoraOffsetY: this.fthoraOffsetY,
       gorgonNeume: this.gorgonNeume,
@@ -367,6 +370,7 @@ export class MartyriaElement extends ScoreElement {
   public rootSign: RootSign = RootSign.Alpha;
   public scale: Scale = Scale.Diatonic;
   public fthora: Fthora | null = null;
+  public chromaticFthoraNote: ScaleNote | null = null;
   public tempo: TempoSign | null = null;
   public measureBarLeft: MeasureBar | null = null;
   public measureBarRight: MeasureBar | null = null;
@@ -393,6 +397,7 @@ export class MartyriaElement extends ScoreElement {
       measureBarLeft: this.measureBarLeft,
       measureBarRight: this.measureBarRight,
       fthora: this.fthora,
+      chromaticFthoraNote: this.chromaticFthoraNote,
       tempo: this.tempo,
       bpm: this.bpm,
     } as Partial<MartyriaElement>;
@@ -538,7 +543,7 @@ export class ModeKeyElement extends ScoreElement {
   public heightAdjustment: number = 0;
   public bpm: number = 120;
   public useDefaultStyle: boolean = true;
-  public ignoreAttractions: boolean = true;
+  public ignoreAttractions: boolean = false;
   public permanentEnharmonicZo: boolean = false;
   public height: number = Unit.fromPt(37);
 

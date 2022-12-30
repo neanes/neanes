@@ -261,6 +261,7 @@ export class PlaybackService {
             this.applyFthora(
               noteElement.fthora,
               workspace,
+              noteElement.chromaticFthoraNote,
               this.scaleNoteMap.get(workspace.note),
             );
           } else if (
@@ -753,7 +754,11 @@ export class PlaybackService {
           noteElement.fthora !== Fthora.Enharmonic_Top &&
           noteElement.fthora !== Fthora.Enharmonic_Bottom
         ) {
-          this.applyFthora(noteElement.fthora, workspace);
+          this.applyFthora(
+            noteElement.fthora,
+            workspace,
+            noteElement.chromaticFthoraNote,
+          );
         }
       } else if (element.elementType === ElementType.ModeKey) {
         this.applyModeKey(element as ModeKeyElement, workspace);
@@ -769,7 +774,11 @@ export class PlaybackService {
         }
 
         if (martyriaElement.fthora) {
-          this.applyFthora(martyriaElement.fthora, workspace);
+          this.applyFthora(
+            martyriaElement.fthora,
+            workspace,
+            martyriaElement.chromaticFthoraNote,
+          );
         } else if (
           workspace.scale.name === PlaybackScaleName.Enharmonic &&
           !workspace.permanentEnharmonicZo
@@ -1009,7 +1018,12 @@ export class PlaybackService {
     );
   }
 
-  applyFthora(fthora: Fthora, workspace: PlaybackWorkspace, note?: ScaleNote) {
+  applyFthora(
+    fthora: Fthora,
+    workspace: PlaybackWorkspace,
+    chromaticFthoraNote: ScaleNote | null,
+    note?: ScaleNote,
+  ) {
     const scale = this.getScaleFromFthora(fthora);
     if (scale == null) {
       return;
@@ -1047,8 +1061,18 @@ export class PlaybackService {
       }
     }
 
-    workspace.intervalIndex =
-      workspace.scale.fthoraMap.get(fthora) ?? workspace.intervalIndex;
+    if (
+      chromaticFthoraNote != null &&
+      (workspace.scale.name === PlaybackScaleName.SoftChromatic ||
+        workspace.scale.name === PlaybackScaleName.HardChromatic)
+    ) {
+      workspace.intervalIndex =
+        workspace.scale.scaleNoteMap.get(chromaticFthoraNote) ??
+        workspace.intervalIndex;
+    } else {
+      workspace.intervalIndex =
+        workspace.scale.fthoraMap.get(fthora) ?? workspace.intervalIndex;
+    }
 
     // Calculate offset of the parachord
     const fthoraNote = this.fthoraToScaleNoteMap.get(fthora);
@@ -1250,7 +1274,7 @@ export class PlaybackService {
     workspace.note = this.reverseScaleNoteMap.get(modeKeyElement.scaleNote)!;
 
     if (modeKeyElement.fthora) {
-      this.applyFthora(modeKeyElement.fthora, workspace);
+      this.applyFthora(modeKeyElement.fthora, workspace, null);
     }
 
     const moria = this.moriaBetweenNotes(

@@ -226,6 +226,7 @@ export class SaveService {
     element.rootSign = e.rootSign;
     element.scale = e.scale;
     element.fthora = e.fthora || undefined;
+    element.chromaticFthoraNote = e.chromaticFthoraNote || undefined;
     element.tempo = e.tempo || undefined;
     element.measureBarLeft = e.measureBarLeft || undefined;
     element.measureBarRight = e.measureBarRight || undefined;
@@ -268,6 +269,10 @@ export class SaveService {
       element.fthora = e.fthora;
       element.fthoraOffsetX = e.fthoraOffsetX || undefined;
       element.fthoraOffsetY = e.fthoraOffsetY || undefined;
+    }
+
+    if (e.chromaticFthoraNote != null) {
+      element.chromaticFthoraNote = e.chromaticFthoraNote;
     }
 
     if (e.accidental != null) {
@@ -615,6 +620,10 @@ export class SaveService {
       element.fthora = e.fthora;
     }
 
+    if (e.chromaticFthoraNote != null) {
+      element.chromaticFthoraNote = e.chromaticFthoraNote;
+    }
+
     if (e.tempo != null) {
       element.tempo = e.tempo;
       element.bpm = e.bpm || TempoElement.getDefaultBpm(element.tempo);
@@ -670,6 +679,10 @@ export class SaveService {
       element.fthora = e.fthora;
       element.fthoraOffsetX = e.fthoraOffsetX || null;
       element.fthoraOffsetY = e.fthoraOffsetY || null;
+    }
+
+    if (e.chromaticFthoraNote != null) {
+      element.chromaticFthoraNote = e.chromaticFthoraNote;
     }
 
     if (e.accidental != null) {

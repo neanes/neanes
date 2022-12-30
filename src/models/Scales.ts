@@ -95,3 +95,24 @@ export const getScaleNoteValue = (note: ScaleNote) =>
 export const getNoteValue = (note: Note) => noteToNoteValueMap.get(note)!;
 
 export const getIsonValue = (ison: Ison) => isonToNoteValueMap.get(ison)!;
+
+export const getOrderedNotes = () => [
+  ScaleNote.VouLow,
+  ScaleNote.GaLow,
+  ScaleNote.ThiLow,
+  ScaleNote.KeLow,
+  ScaleNote.Zo,
+  ScaleNote.Ni,
+  ScaleNote.Pa,
+  ScaleNote.Vou,
+  ScaleNote.Ga,
+  ScaleNote.Thi,
+  ScaleNote.Ke,
+  ScaleNote.ZoHigh,
+  ScaleNote.NiHigh,
+  ScaleNote.PaHigh,
+  ScaleNote.VouHigh,
+  ScaleNote.GaHigh,
+  ScaleNote.ThiHigh,
+  ScaleNote.KeHigh,
+];

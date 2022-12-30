@@ -420,6 +420,9 @@
         :pageSetup="score.pageSetup"
         @update:accidental="setAccidental(selectedElement, $event)"
         @update:fthora="setFthoraNote(selectedElement, $event)"
+        @update:chromaticFthoraNote="
+          updateNoteChromaticFthoraNote(selectedElement, $event)
+        "
         @update:gorgon="setGorgon(selectedElement, $event)"
         @update:klasma="setKlasma(selectedElement)"
         @update:time="setTimeNeume(selectedElement, $event)"
@@ -443,6 +446,9 @@
         :element="selectedElement"
         :pageSetup="score.pageSetup"
         @update:fthora="setFthoraMartyria(selectedElement, $event)"
+        @update:chromaticFthoraNote="
+          updateMartyriaChromaticFthoraNote(selectedElement, $event)
+        "
         @update:tempo="setMartyriaTempo(selectedElement, $event)"
         @update:measureBar="setMeasureBarMartyria(selectedElement, $event)"
         @update:alignRight="updateMartyriaAlignRight(selectedElement, $event)"
@@ -577,7 +583,7 @@ import { PageSetup } from '@/models/PageSetup';
 import { Header } from '@/models/Header';
 import { Footer } from '@/models/Footer';
 import { TokenMetadata } from '@/utils/replaceTokens';
-import { Scale } from '@/models/Scales';
+import { Scale, ScaleNote } from '@/models/Scales';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { IPlatformService } from '@/services/platform/IPlatformService';
 import { NeumeKeyboard } from '@/services/NeumeKeyboard';
@@ -3329,7 +3335,31 @@ export default class Editor extends Vue {
   }
 
   updateNoteFthora(element: NoteElement, fthora: Fthora | null) {
-    this.updateNote(element, { fthora });
+    let chromaticFthoraNote: ScaleNote | null = null;
+
+    if (
+      fthora === Fthora.SoftChromaticThi_Top ||
+      fthora === Fthora.SoftChromaticThi_Bottom
+    ) {
+      chromaticFthoraNote = ScaleNote.Thi;
+    } else if (
+      fthora === Fthora.SoftChromaticPa_Top ||
+      fthora === Fthora.SoftChromaticPa_Bottom
+    ) {
+      chromaticFthoraNote = ScaleNote.Ke;
+    } else if (
+      fthora === Fthora.HardChromaticThi_Top ||
+      fthora === Fthora.HardChromaticThi_Bottom
+    ) {
+      chromaticFthoraNote = ScaleNote.Thi;
+    } else if (
+      fthora === Fthora.HardChromaticPa_Top ||
+      fthora === Fthora.HardChromaticPa_Bottom
+    ) {
+      chromaticFthoraNote = ScaleNote.Pa;
+    }
+
+    this.updateNote(element, { fthora, chromaticFthoraNote });
     this.save();
   }
 
@@ -3401,6 +3431,14 @@ export default class Editor extends Vue {
     ignoreAttractions: boolean,
   ) {
     this.updateNote(element, { ignoreAttractions });
+    this.save();
+  }
+
+  updateNoteChromaticFthoraNote(
+    element: NoteElement,
+    chromaticFthoraNote: ScaleNote | null,
+  ) {
+    this.updateNote(element, { chromaticFthoraNote });
     this.save();
   }
 
@@ -3672,7 +3710,31 @@ export default class Editor extends Vue {
   }
 
   updateMartyriaFthora(element: MartyriaElement, fthora: Fthora | null) {
-    this.updateMartyria(element, { fthora });
+    let chromaticFthoraNote: ScaleNote | null = null;
+
+    if (
+      fthora === Fthora.SoftChromaticThi_Top ||
+      fthora === Fthora.SoftChromaticThi_Bottom
+    ) {
+      chromaticFthoraNote = ScaleNote.Thi;
+    } else if (
+      fthora === Fthora.SoftChromaticPa_Top ||
+      fthora === Fthora.SoftChromaticPa_Bottom
+    ) {
+      chromaticFthoraNote = ScaleNote.Ke;
+    } else if (
+      fthora === Fthora.HardChromaticThi_Top ||
+      fthora === Fthora.HardChromaticThi_Bottom
+    ) {
+      chromaticFthoraNote = ScaleNote.Thi;
+    } else if (
+      fthora === Fthora.HardChromaticPa_Top ||
+      fthora === Fthora.HardChromaticPa_Bottom
+    ) {
+      chromaticFthoraNote = ScaleNote.Pa;
+    }
+
+    this.updateMartyria(element, { fthora, chromaticFthoraNote });
   }
 
   updateMartyriaTempo(element: MartyriaElement, tempo: TempoSign | null) {
@@ -3715,6 +3777,13 @@ export default class Editor extends Vue {
 
   updateMartyriaAlignRight(element: MartyriaElement, alignRight: boolean) {
     this.updateMartyria(element, { alignRight });
+  }
+
+  updateMartyriaChromaticFthoraNote(
+    element: MartyriaElement,
+    chromaticFthoraNote: ScaleNote | null,
+  ) {
+    this.updateMartyria(element, { chromaticFthoraNote });
   }
 
   updateMartyriaAuto(element: MartyriaElement, auto: boolean) {

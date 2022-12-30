@@ -40,6 +40,7 @@ export class NoteElement extends ScoreElement {
   public secondaryGorgonNeume: GorgonNeume | undefined = undefined;
   public vocalExpressionNeume: VocalExpressionNeume | undefined = undefined;
   public fthora: Fthora | undefined = undefined;
+  public chromaticFthoraNote: ScaleNote | undefined = undefined;
   public accidental: Accidental | undefined = undefined;
   public measureBarLeft: MeasureBar | undefined = undefined;
   public measureBarRight: MeasureBar | undefined = undefined;
@@ -90,6 +91,7 @@ export class MartyriaElement extends ScoreElement {
   public rootSign: RootSign = RootSign.Alpha;
   public scale: Scale = Scale.Diatonic;
   public fthora: Fthora | undefined = undefined;
+  public chromaticFthoraNote: ScaleNote | undefined = undefined;
   public tempo: TempoSign | undefined = undefined;
   public measureBarLeft: MeasureBar | undefined = undefined;
   public measureBarRight: MeasureBar | undefined = undefined;

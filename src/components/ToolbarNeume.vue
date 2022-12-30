@@ -707,6 +707,19 @@
         />
         <label for="toolbar-neume-ignore-attractions">Ignore Attractions</label>
       </div>
+
+      <template v-if="showChromaticFthoraNote">
+        <span class="space" />
+        <label class="right-space">Fthora Note</label>
+        <select
+          :value="element.chromaticFthoraNote"
+          @change="$emit('update:chromaticFthoraNote', $event.target.value)"
+        >
+          <option v-for="note in notes" :key="note" :value="note">
+            {{ note }}
+          </option>
+        </select>
+      </template>
     </div>
   </div>
 </template>
@@ -727,6 +740,7 @@ import {
 } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
 import { Unit } from '@/utils/Unit';
+import { ScaleNote } from '@/models/Scales';
 
 @Component({
   components: {
@@ -766,6 +780,50 @@ export default class ToolbarNeume extends Vue {
   selectedIson: Ison | null = null;
   selectedPsifiston: VocalExpressionNeume | null = null;
   selectedHeteronConnecting: VocalExpressionNeume | null = null;
+
+  chromaticFthoras = [
+    Fthora.SoftChromaticPa_Top,
+    Fthora.SoftChromaticPa_Bottom,
+    Fthora.SoftChromaticThi_Top,
+    Fthora.SoftChromaticThi_Bottom,
+    Fthora.HardChromaticPa_Top,
+    Fthora.HardChromaticPa_Bottom,
+    Fthora.HardChromaticThi_Top,
+    Fthora.HardChromaticThi_Bottom,
+  ];
+
+  get notes() {
+    if (
+      this.element.fthora === Fthora.SoftChromaticThi_Top ||
+      this.element.fthora === Fthora.SoftChromaticThi_Bottom
+    ) {
+      return [ScaleNote.Thi, ScaleNote.Vou];
+    } else if (
+      this.element.fthora === Fthora.SoftChromaticPa_Top ||
+      this.element.fthora === Fthora.SoftChromaticPa_Bottom
+    ) {
+      return [ScaleNote.Ke, ScaleNote.Ga];
+    } else if (
+      this.element.fthora === Fthora.HardChromaticThi_Top ||
+      this.element.fthora === Fthora.HardChromaticThi_Bottom
+    ) {
+      return [ScaleNote.Thi, ScaleNote.Vou];
+    } else if (
+      this.element.fthora === Fthora.HardChromaticPa_Top ||
+      this.element.fthora === Fthora.HardChromaticPa_Bottom
+    ) {
+      return [ScaleNote.Pa, ScaleNote.Ga];
+    }
+
+    return [];
+  }
+
+  get showChromaticFthoraNote() {
+    return (
+      this.element.fthora != null &&
+      this.chromaticFthoras.includes(this.element.fthora)
+    );
+  }
 
   beforeDestroy() {
     window.removeEventListener('mouseup', this.onFlatMouseUp);

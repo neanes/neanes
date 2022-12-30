@@ -457,6 +457,45 @@ describe('PlaybackService', () => {
       );
     });
 
+    it('should play the 12-12-6 enharmonic scale from Ga with diatonic bottom when permanent enharmonic zo is enabled', () => {
+      const service = new PlaybackService();
+
+      const options = getDefaultWorkspaceOptions();
+      options.diatonicIntervals = [12, 10, 8];
+
+      const elements: ScoreElement[] = [];
+
+      elements.push(
+        getModeKey(3, Scale.Diatonic, ScaleNote.Ga, {
+          permanentEnharmonicZo: true,
+        }),
+      );
+      elements.push(getNote(QuantitativeNeume.Ison));
+      elements.push(getNote(QuantitativeNeume.PetastiPlusKentimaAbove));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(
+        getNote(QuantitativeNeume.PetastiPlusHypsiliPlusKentimaVertical),
+      );
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+
+      const events = service.computePlaybackSequence(elements, options);
+      const expectedFrequencies = [
+        174.62, 233.08, 220, 196, 174.62, 161.67, 146.83, 130.81, 261.63,
+        293.67, 323.35,
+      ];
+
+      expect(events.map((x) => x.frequency)).toBeDeepCloseTo(
+        expectedFrequencies,
+        2,
+      );
+    });
+
     it('should play the 12-12-6 enharmonic scale from Vou when enharmonic fthora on Vou', () => {
       const service = new PlaybackService();
 
@@ -545,11 +584,20 @@ function getDefaultWorkspaceOptions() {
   } as PlaybackOptions;
 }
 
-function getModeKey(mode: number, scale: Scale, scaleNote: ScaleNote) {
+function getModeKey(
+  mode: number,
+  scale: Scale,
+  scaleNote: ScaleNote,
+  options?: Partial<ModeKeyElement>,
+) {
   const element = new ModeKeyElement();
   element.mode = mode;
   element.scale = scale;
   element.scaleNote = scaleNote;
+
+  if (options) {
+    Object.assign(element, options);
+  }
 
   return element;
 }

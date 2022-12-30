@@ -280,3 +280,9 @@ Tempo is measured in beats per minute (BPM) and can be set via the `BPM` propert
 The property is found in the bottom toolbar when the element is selected.
 
 You may configure the default tempos for each tempo sign in the `Preferences` dialog, which can be opened from the file menu by going to `Edit -> Preferences`.
+
+### Other Playback Settings
+
+#### Permanent Enharmonic Zo
+
+It is common to write hymns of the third mode and the grave mode without the proper fthores and alterations on Zo. In order to get the correct playback with a flattened Zo, click the mode key and check `Permanant Enharmonic Zo`. This will make all Zo notes enharmonic, even if not specified.

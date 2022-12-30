@@ -161,8 +161,9 @@ export class ModeKeyElement extends ScoreElement {
   public height: number = 20;
   public heightAdjustment: number = 0;
   public bpm: number = 120;
-  public ignoreAttractions: boolean | undefined = undefined;
   public useDefaultStyle: boolean | undefined = undefined;
+  public ignoreAttractions: boolean | undefined = undefined;
+  public permanentEnharmonicZo: boolean | undefined = undefined;
 }
 
 export class DropCapElement extends ScoreElement {

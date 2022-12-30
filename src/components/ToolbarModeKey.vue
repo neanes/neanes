@@ -167,6 +167,22 @@
     </div>
     <span class="space" />
 
+    <div
+      v-if="element.mode === 3 || element.mode === 7"
+      style="display: flex; align-items: center"
+    >
+      <input
+        id="toolbar-mode-key-permanent-enharmonic-zo"
+        type="checkbox"
+        :checked="element.permanentEnharmonicZo"
+        @change="$emit('update:permanentEnharmonicZo', $event.target.checked)"
+      />
+      <label for="toolbar-mode-key-permanent-enharmonic-zo"
+        >Permanent Enharmonic Zo</label
+      >
+    </div>
+    <span class="space" />
+
     <button @click="$emit('open-mode-key-dialog')">Change Key</button>
   </div>
 </template>

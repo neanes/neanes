@@ -99,6 +99,8 @@ interface PlaybackWorkspace {
   enharmonicVou: boolean;
   generalSharp: boolean;
   generalFlat: boolean;
+
+  permanentEnharmonicZo: boolean;
 }
 
 interface GorgonIndex {
@@ -199,6 +201,8 @@ export class PlaybackService {
       enharmonicVou: false,
       generalFlat: false,
       generalSharp: false,
+
+      permanentEnharmonicZo: false,
     };
 
     Object.assign(workspace.options, options);
@@ -264,7 +268,7 @@ export class PlaybackService {
             workspace.enharmonicGa = false;
             workspace.enharmonicVou = false;
           } else {
-            workspace.enharmonicZo = false;
+            workspace.enharmonicZo = workspace.permanentEnharmonicZo;
             workspace.enharmonicGa = false;
             workspace.enharmonicVou = false;
             workspace.generalFlat = false;
@@ -749,6 +753,7 @@ export class PlaybackService {
         workspace.enharmonicZo = false;
         workspace.generalFlat = false;
         workspace.generalSharp = false;
+        workspace.permanentEnharmonicZo = false;
         workspace.noteOffset = 0;
         workspace.ignoreAttractions = modeKeyElement.ignoreAttractions;
 
@@ -766,6 +771,22 @@ export class PlaybackService {
           ) {
             workspace.scale = this.legetosScale;
             workspace.legetos = true;
+          }
+
+          if (
+            modeKeyElement.permanentEnharmonicZo &&
+            (modeKeyElement.mode === 3 || modeKeyElement.mode === 7)
+          ) {
+            console.log('permanent zo');
+            workspace.enharmonicZo = true;
+            workspace.permanentEnharmonicZo = true;
+
+            workspace.scale = this.enharmonicScale;
+            workspace.scale.intervals =
+              this.constructEnharmonicScaleFromGa(workspace);
+
+            this.enharmonicScale.scaleNoteMap =
+              this.diatonicScaleNoteToIntervalIndexMap;
           }
         } else if (modeKeyElement.scale === Scale.SoftChromatic) {
           workspace.scale = this.softChromaticScale;
@@ -819,7 +840,10 @@ export class PlaybackService {
 
         if (martyriaElement.fthora) {
           this.applyFthora(martyriaElement.fthora, workspace);
-        } else if (workspace.scale.name === PlaybackScaleName.Enharmonic) {
+        } else if (
+          workspace.scale.name === PlaybackScaleName.Enharmonic &&
+          !workspace.permanentEnharmonicZo
+        ) {
           // Clear the enharmonic fthora
           const note = this.scaleNoteMap.get(workspace.note);
 
@@ -828,10 +852,7 @@ export class PlaybackService {
           workspace.intervalIndex = this.diatonicScale.scaleNoteMap.get(note!)!;
         }
 
-        // TODO add support for "implied enharmonic Zo" for thir mode and grave mode
-        // in which case, this flag should not be reset unless there is a fthora
-
-        workspace.enharmonicZo = false;
+        workspace.enharmonicZo = workspace.permanentEnharmonicZo;
         workspace.enharmonicGa = false;
         workspace.enharmonicVou = false;
         workspace.generalFlat = false;

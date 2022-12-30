@@ -539,6 +539,7 @@ export class ModeKeyElement extends ScoreElement {
   public bpm: number = 120;
   public useDefaultStyle: boolean = true;
   public ignoreAttractions: boolean = true;
+  public permanentEnharmonicZo: boolean = false;
   public height: number = Unit.fromPt(37);
 
   // Values computed by the layout service
@@ -581,6 +582,9 @@ export class ModeKeyElement extends ScoreElement {
     element.quantitativeNeumeRight = template.quantitativeNeumeRight || null;
     element.alignment = alignment || TextBoxAlignment.Center;
 
+    element.ignoreAttractions = false;
+    element.permanentEnharmonicZo = false;
+
     return element;
   }
 
@@ -614,6 +618,8 @@ export class ModeKeyElement extends ScoreElement {
       strokeWidth: this.strokeWidth,
       heightAdjustment: this.heightAdjustment,
       useDefaultStyle: this.useDefaultStyle,
+      ignoreAttractions: this.ignoreAttractions,
+      permanentEnharmonicZo: this.permanentEnharmonicZo,
     } as Partial<ModeKeyElement>;
   }
 }

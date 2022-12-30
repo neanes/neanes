@@ -373,6 +373,7 @@ export class SaveService {
     element.bpm = e.bpm;
     element.ignoreAttractions = e.ignoreAttractions || undefined;
     element.useDefaultStyle = e.useDefaultStyle || undefined;
+    element.permanentEnharmonicZo = e.permanentEnharmonicZo || undefined;
   }
 
   public static LoadScore_v1(s: Score_v1) {
@@ -780,6 +781,7 @@ export class SaveService {
     element.bpm = e.bpm || 120;
     element.ignoreAttractions = e.ignoreAttractions === true;
     element.useDefaultStyle = e.useDefaultStyle === true;
+    element.permanentEnharmonicZo = e.permanentEnharmonicZo === true;
 
     // For backwards compatibility, we check the current mode key templates
     // to fill out the fthora if it is missing.

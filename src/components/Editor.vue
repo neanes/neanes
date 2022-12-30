@@ -406,6 +406,9 @@
         @update:heightAdjustment="
           updateModeKeyHeightAdjustment(selectedElement, $event)
         "
+        @update:permanentEnharmonicZo="
+          updateModeKeyPermanentEnharmonicZo(selectedElement, $event)
+        "
         @open-mode-key-dialog="openModeKeyDialog"
       />
     </template>
@@ -3603,6 +3606,14 @@ export default class Editor extends Vue {
     tempoAlignRight: boolean,
   ) {
     this.updateModeKey(element, { tempoAlignRight });
+    this.save();
+  }
+
+  updateModeKeyPermanentEnharmonicZo(
+    element: ModeKeyElement,
+    permanentEnharmonicZo: boolean,
+  ) {
+    this.updateModeKey(element, { permanentEnharmonicZo });
     this.save();
   }
 

@@ -41,6 +41,8 @@
         :style="fthoraAboveQuantitativeNeumeRightStyle"
       />
     </span>
+
+    <Neume v-if="hasTempo" :neume="element.tempo" :style="tempoStyle" />
   </div>
 </template>
 
@@ -52,6 +54,7 @@ import { ModeSign, Neume as GenericNeume } from '@/models/Neumes';
 import { withZoom } from '@/utils/withZoom';
 import { fontService } from '@/services/FontService';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
+import { PageSetup } from '@/models/PageSetup';
 
 @Component({
   components: {
@@ -60,6 +63,8 @@ import { NeumeMappingService } from '@/services/NeumeMappingService';
 })
 export default class ModeKey extends Vue {
   @Prop() element!: ModeKeyElement;
+  @Prop() pageSetup!: PageSetup;
+
   ModeSign = ModeSign;
 
   get hasFthoraAboveNote() {
@@ -92,6 +97,10 @@ export default class ModeKey extends Vue {
 
   get hasQuantitativeNeumeRight() {
     return this.element.quantitativeNeumeRight != null;
+  }
+
+  get hasTempo() {
+    return this.element.tempo != null;
   }
 
   get style() {
@@ -169,6 +178,23 @@ export default class ModeKey extends Vue {
       left: withZoom(offset.x, 'em'),
       top: withZoom(offset.y, 'em'),
     } as CSSStyleDeclaration;
+  }
+
+  get tempoStyle() {
+    // TODO figure out a way to remove the hard-coded 12
+    // font metadata json?
+    const style = {
+      color: this.pageSetup.tempoDefaultColor,
+      webkitTextStrokeWidth: withZoom(this.pageSetup.tempoDefaultStrokeWidth),
+      top: withZoom(-12),
+    } as CSSStyleDeclaration;
+
+    if (this.element.tempoAlignRight) {
+      style.position = 'absolute';
+      style.right = withZoom(0);
+    }
+
+    return style;
   }
 
   getMapping(neume: GenericNeume) {

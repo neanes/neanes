@@ -6,6 +6,9 @@ export interface ModeKeyTemplate {
   mode: number;
   scale: Scale;
   scaleNote: ScaleNote;
+  fthora?: Fthora;
+
+  // Visual representation
   martyria: ModeSign;
   note?: ModeSign;
   note2?: ModeSign;
@@ -46,8 +49,9 @@ export const modeKeyTemplates: ModeKeyTemplate[] = [
   {
     id: 103,
     mode: 1,
-    scale: Scale.Diatonic,
+    scale: Scale.SoftChromatic,
     scaleNote: ScaleNote.Ke,
+    fthora: Fthora.SoftChromaticThi_Top,
     martyria: ModeSign.AlphaWithDeltaHat,
     note: ModeSign.Ke,
     fthoraAboveNote: Fthora.SoftChromaticThi_Top,
@@ -93,6 +97,7 @@ export const modeKeyTemplates: ModeKeyTemplate[] = [
     mode: 2,
     scale: Scale.HardChromatic,
     scaleNote: ScaleNote.Vou,
+    fthora: Fthora.HardChromaticPa_Top,
     martyria: ModeSign.SoftChromatic2,
     note: ModeSign.Vou,
     fthoraAboveNote: Fthora.HardChromaticPa_Top,
@@ -127,6 +132,7 @@ export const modeKeyTemplates: ModeKeyTemplate[] = [
     mode: 3,
     scale: Scale.Diatonic,
     scaleNote: ScaleNote.Ga,
+    fthora: Fthora.DiatonicNiLow_Top,
     martyria: ModeSign.Nana,
     note: ModeSign.Ga,
     fthoraAboveNote: Fthora.DiatonicNiLow_Top,
@@ -177,6 +183,7 @@ export const modeKeyTemplates: ModeKeyTemplate[] = [
     mode: 4,
     scale: Scale.HardChromatic,
     scaleNote: ScaleNote.Thi,
+    fthora: Fthora.HardChromaticThi_Top,
     martyria: ModeSign.DeltaWithDeltaHat,
     note: ModeSign.Thi,
     fthoraAboveNote: Fthora.HardChromaticThi_Top,
@@ -186,6 +193,7 @@ export const modeKeyTemplates: ModeKeyTemplate[] = [
     mode: 4,
     scale: Scale.Kliton,
     scaleNote: ScaleNote.Thi,
+    fthora: Fthora.Kliton_Top,
     martyria: ModeSign.FourthCapital,
     note: ModeSign.Thi,
     fthoraAboveNote: Fthora.Kliton_Top,
@@ -240,6 +248,7 @@ export const modeKeyTemplates: ModeKeyTemplate[] = [
     mode: 6,
     scale: Scale.HardChromatic,
     scaleNote: ScaleNote.Thi,
+    fthora: Fthora.HardChromaticThi_Top,
     martyria: ModeSign.SoftChromatic6,
     note: ModeSign.Pa,
     note2: ModeSign.Thi,
@@ -275,6 +284,7 @@ export const modeKeyTemplates: ModeKeyTemplate[] = [
     mode: 8,
     scale: Scale.Diatonic,
     scaleNote: ScaleNote.Ga,
+    fthora: Fthora.DiatonicNiLow_Top,
     martyria: ModeSign.Delta,
     quantitativeNeumeRight: QuantitativeNeume.OligonPlusKentimaAbove,
     fthoraAboveQuantitativeNeumeRight: Fthora.DiatonicNiLow_Top,

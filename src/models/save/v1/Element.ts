@@ -40,6 +40,7 @@ export class NoteElement extends ScoreElement {
   public secondaryGorgonNeume: GorgonNeume | undefined = undefined;
   public vocalExpressionNeume: VocalExpressionNeume | undefined = undefined;
   public fthora: Fthora | undefined = undefined;
+  public chromaticFthoraNote: ScaleNote | undefined = undefined;
   public accidental: Accidental | undefined = undefined;
   public measureBarLeft: MeasureBar | undefined = undefined;
   public measureBarRight: MeasureBar | undefined = undefined;
@@ -55,6 +56,7 @@ export class NoteElement extends ScoreElement {
   public isMelismaStart: boolean | undefined = undefined;
   public isHyphen: boolean | undefined = undefined;
   public spaceAfter: number = 0;
+  public ignoreAttractions: boolean | undefined = undefined;
 
   public accidentalOffsetX: number | undefined = undefined;
   public accidentalOffsetY: number | undefined = undefined;
@@ -89,6 +91,7 @@ export class MartyriaElement extends ScoreElement {
   public rootSign: RootSign = RootSign.Alpha;
   public scale: Scale = Scale.Diatonic;
   public fthora: Fthora | undefined = undefined;
+  public chromaticFthoraNote: ScaleNote | undefined = undefined;
   public tempo: TempoSign | undefined = undefined;
   public measureBarLeft: MeasureBar | undefined = undefined;
   public measureBarRight: MeasureBar | undefined = undefined;
@@ -96,12 +99,14 @@ export class MartyriaElement extends ScoreElement {
   // New name: measureBarRight
   public measureBar: MeasureBar | undefined = undefined;
   public alignRight: boolean | undefined = undefined;
+  public bpm: number = 0;
   public spaceAfter: number = 0;
 }
 
 export class TempoElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.Tempo;
   public neume: TempoSign = TempoSign.Moderate;
+  public bpm: number = 0;
   public spaceAfter: number = 0;
 
   public error: boolean = false;
@@ -140,6 +145,9 @@ export class ModeKeyElement extends ScoreElement {
   public mode: number = 1;
   public scale: Scale = Scale.Diatonic;
   public scaleNote: ScaleNote = ScaleNote.Pa;
+  public fthora: Fthora | undefined = undefined;
+  public tempo: TempoSign | undefined = undefined;
+  public tempoAlignRight: boolean | undefined = undefined;
   public martyria: ModeSign = ModeSign.Alpha;
   public note: ModeSign | undefined = undefined;
   public note2: ModeSign | undefined = undefined;
@@ -154,7 +162,10 @@ export class ModeKeyElement extends ScoreElement {
   public strokeWidth: number = 0;
   public height: number = 20;
   public heightAdjustment: number = 0;
+  public bpm: number = 120;
   public useDefaultStyle: boolean | undefined = undefined;
+  public ignoreAttractions: boolean | undefined = undefined;
+  public permanentEnharmonicZo: boolean | undefined = undefined;
 }
 
 export class DropCapElement extends ScoreElement {

@@ -64,6 +64,9 @@ export class NoteElement extends ScoreElement {
   public isMelismaStart: boolean = false;
   public isHyphen: boolean = false;
   public spaceAfter: number = 0;
+  public ignoreAttractions: boolean = false;
+
+  public chromaticFthoraNote: ScaleNote | null = null;
 
   public accidentalOffsetX: number | null = null;
   public accidentalOffsetY: number | null = null;
@@ -119,6 +122,7 @@ export class NoteElement extends ScoreElement {
       accidentalOffsetX: this.accidentalOffsetX,
       accidentalOffsetY: this.accidentalOffsetY,
       fthora: this.fthora,
+      chromaticFthoraNote: this.chromaticFthoraNote,
       fthoraOffsetX: this.fthoraOffsetX,
       fthoraOffsetY: this.fthoraOffsetY,
       gorgonNeume: this.gorgonNeume,
@@ -366,10 +370,12 @@ export class MartyriaElement extends ScoreElement {
   public rootSign: RootSign = RootSign.Alpha;
   public scale: Scale = Scale.Diatonic;
   public fthora: Fthora | null = null;
+  public chromaticFthoraNote: ScaleNote | null = null;
   public tempo: TempoSign | null = null;
   public measureBarLeft: MeasureBar | null = null;
   public measureBarRight: MeasureBar | null = null;
   public alignRight: boolean = false;
+  public bpm: number = 0;
   public spaceAfter: number = 0;
 
   public error: boolean = false;
@@ -391,7 +397,9 @@ export class MartyriaElement extends ScoreElement {
       measureBarLeft: this.measureBarLeft,
       measureBarRight: this.measureBarRight,
       fthora: this.fthora,
+      chromaticFthoraNote: this.chromaticFthoraNote,
       tempo: this.tempo,
+      bpm: this.bpm,
     } as Partial<MartyriaElement>;
   }
 }
@@ -399,6 +407,7 @@ export class MartyriaElement extends ScoreElement {
 export class TempoElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.Tempo;
   public neume: TempoSign = TempoSign.Moderate;
+  public bpm: number = TempoElement.getDefaultBpm(TempoSign.Moderate);
   public spaceAfter: number = 0;
 
   public clone() {
@@ -412,7 +421,32 @@ export class TempoElement extends ScoreElement {
   public getClipboardProperties() {
     return {
       neume: this.neume,
+      bpm: this.bpm,
     } as Partial<TempoElement>;
+  }
+
+  public static tempoToBpmMap = new Map<TempoSign, number>([
+    [TempoSign.VerySlow, 40], // < 56 triargon?
+    [TempoSign.Slower, 56], // 56 - 80 diargon
+    [TempoSign.Slow, 80], // 80 - 100 hemiolion
+    [TempoSign.Moderate, 100], // 100 - 168 argon
+    [TempoSign.Medium, 130], // 130 argon + gorgon
+    [TempoSign.Quick, 168], // 168 - 208 gorgon
+    [TempoSign.Quicker, 208], // 208+ digorgon
+    [TempoSign.VeryQuick, 250], // unattested? trigorgon
+
+    [TempoSign.VerySlowAbove, 40], // < 56 triargon?
+    [TempoSign.SlowerAbove, 56], // 56 - 80 diargon
+    [TempoSign.SlowAbove, 80], // 80 - 100 hemiolion
+    [TempoSign.ModerateAbove, 100], // 100 - 168 argon
+    [TempoSign.MediumAbove, 130], // 130 argon + gorgon
+    [TempoSign.QuickAbove, 168], // 168 - 208 gorgon
+    [TempoSign.QuickerAbove, 208], // 208+ digorgon
+    [TempoSign.VeryQuickAbove, 250], // unattested? trigorgon
+  ]);
+
+  public static getDefaultBpm(neume: TempoSign) {
+    return TempoElement.tempoToBpmMap.get(neume)!;
   }
 }
 
@@ -491,6 +525,9 @@ export class ModeKeyElement extends ScoreElement {
   public mode: number = 1;
   public scale: Scale = Scale.Diatonic;
   public scaleNote: ScaleNote = ScaleNote.Pa;
+  public fthora: Fthora | null = null;
+  public tempo: TempoSign | null = null;
+  public tempoAlignRight: boolean = false;
   public martyria: ModeSign = ModeSign.Alpha;
   public note: ModeSign | null = null;
   public note2: ModeSign | null = null;
@@ -504,7 +541,10 @@ export class ModeKeyElement extends ScoreElement {
   public fontSize: number = Unit.fromPt(20);
   public strokeWidth: number = 0;
   public heightAdjustment: number = 0;
+  public bpm: number = 120;
   public useDefaultStyle: boolean = true;
+  public ignoreAttractions: boolean = false;
+  public permanentEnharmonicZo: boolean = false;
   public height: number = Unit.fromPt(37);
 
   // Values computed by the layout service
@@ -532,6 +572,7 @@ export class ModeKeyElement extends ScoreElement {
     element.mode = template.mode;
     element.scale = template.scale;
     element.scaleNote = template.scaleNote;
+    element.fthora = template.fthora ?? null;
     element.martyria = template.martyria;
     element.fthoraAboveNote = template.fthoraAboveNote || null;
     element.fthoraAboveNote2 = template.fthoraAboveNote2 || null;
@@ -545,6 +586,9 @@ export class ModeKeyElement extends ScoreElement {
       template.quantitativeNeumeAboveNote2 || null;
     element.quantitativeNeumeRight = template.quantitativeNeumeRight || null;
     element.alignment = alignment || TextBoxAlignment.Center;
+
+    element.ignoreAttractions = false;
+    element.permanentEnharmonicZo = false;
 
     return element;
   }
@@ -565,9 +609,10 @@ export class ModeKeyElement extends ScoreElement {
       mode: this.mode,
       scale: this.scale,
       scaleNote: this.scaleNote,
+      fthora: this.fthora,
       martyria: this.martyria,
-      fthora: this.fthoraAboveNote,
-      fthora2: this.fthoraAboveNote2,
+      fthoraAboveNote: this.fthoraAboveNote,
+      fthoraAboveNote2: this.fthoraAboveNote2,
       fthoraAboveQuantitativeNeumeRight: this.fthoraAboveQuantitativeNeumeRight,
       note: this.note,
       note2: this.note2,
@@ -578,6 +623,8 @@ export class ModeKeyElement extends ScoreElement {
       strokeWidth: this.strokeWidth,
       heightAdjustment: this.heightAdjustment,
       useDefaultStyle: this.useDefaultStyle,
+      ignoreAttractions: this.ignoreAttractions,
+      permanentEnharmonicZo: this.permanentEnharmonicZo,
     } as Partial<ModeKeyElement>;
   }
 }

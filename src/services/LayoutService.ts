@@ -1029,25 +1029,11 @@ export class LayoutService {
         const modeKey = element as ModeKeyElement;
         currentNote = getScaleNoteValue(modeKey.scaleNote);
         currentScale = modeKey.scale;
-        if (modeKey.fthoraAboveNote) {
+        if (modeKey.fthora) {
           currentShift = this.getShift(
             currentNote,
             currentScale,
-            modeKey.fthoraAboveNote,
-          );
-        }
-        if (modeKey.fthoraAboveNote2) {
-          currentShift = this.getShift(
-            currentNote,
-            currentScale,
-            modeKey.fthoraAboveNote2,
-          );
-        }
-        if (modeKey.fthoraAboveQuantitativeNeumeRight) {
-          currentShift = this.getShift(
-            currentNote,
-            currentScale,
-            modeKey.fthoraAboveQuantitativeNeumeRight,
+            modeKey.fthora,
           );
         }
       } else if (element.elementType === ElementType.Martyria) {

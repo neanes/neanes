@@ -1,6 +1,18 @@
 <template>
   <div class="tempo-toolbar">
     <div class="row">
+      <label class="right-space">BPM</label>
+      <input
+        type="number"
+        min="5"
+        max="999"
+        step="1"
+        :value="element.bpm"
+        @change="$emit('update:bpm', $event.target.value)"
+      />
+
+      <span class="space" />
+
       <label class="right-space">Space After</label>
 
       <InputUnit
@@ -56,5 +68,9 @@ export default class ToolbarTempo extends Vue {
 
 label.right-space {
   margin-right: 0.5rem;
+}
+
+.space {
+  width: 16px;
 }
 </style>

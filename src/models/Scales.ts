@@ -1,3 +1,5 @@
+import { Ison, Note } from './Neumes';
+
 export enum Scale {
   Diatonic = 'Diatonic',
   SoftChromatic = 'SoftChromatic',
@@ -53,5 +55,64 @@ const scaleNoteToNoteValueMap = new Map<ScaleNote, number>([
   [ScaleNote.KeHigh, 11],
 ]);
 
+const noteToNoteValueMap = new Map<Note, number>([
+  [Note.VouLow, -6],
+  [Note.GaLow, -5],
+  [Note.ThiLow, -4],
+  [Note.KeLow, -3],
+  [Note.Zo, -2],
+  [Note.Ni, -1],
+  [Note.Pa, 0],
+  [Note.Vou, 1],
+  [Note.Ga, 2],
+  [Note.Thi, 3],
+  [Note.Ke, 4],
+  [Note.ZoHigh, 5],
+  [Note.NiHigh, 6],
+  [Note.PaHigh, 7],
+  [Note.VouHigh, 8],
+  [Note.GaHigh, 9],
+  [Note.ThiHigh, 10],
+  [Note.KeHigh, 11],
+]);
+
+const isonToNoteValueMap = new Map<Ison, number>([
+  [Ison.ThiLow, -4],
+  [Ison.KeLow, -3],
+  [Ison.Zo, -2],
+  [Ison.Ni, -1],
+  [Ison.Pa, 0],
+  [Ison.Vou, 1],
+  [Ison.Ga, 2],
+  [Ison.Thi, 3],
+  [Ison.Ke, 4],
+  [Ison.ZoHigh, 5],
+]);
+
 export const getScaleNoteValue = (note: ScaleNote) =>
   scaleNoteToNoteValueMap.get(note)!;
+
+export const getNoteValue = (note: Note) => noteToNoteValueMap.get(note)!;
+
+export const getIsonValue = (ison: Ison) => isonToNoteValueMap.get(ison)!;
+
+export const getOrderedNotes = () => [
+  ScaleNote.VouLow,
+  ScaleNote.GaLow,
+  ScaleNote.ThiLow,
+  ScaleNote.KeLow,
+  ScaleNote.Zo,
+  ScaleNote.Ni,
+  ScaleNote.Pa,
+  ScaleNote.Vou,
+  ScaleNote.Ga,
+  ScaleNote.Thi,
+  ScaleNote.Ke,
+  ScaleNote.ZoHigh,
+  ScaleNote.NiHigh,
+  ScaleNote.PaHigh,
+  ScaleNote.VouHigh,
+  ScaleNote.GaHigh,
+  ScaleNote.ThiHigh,
+  ScaleNote.KeHigh,
+];

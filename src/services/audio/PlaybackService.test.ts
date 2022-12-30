@@ -84,6 +84,83 @@ describe('PlaybackService', () => {
     });
   });
 
+  describe('applyModeKey', () => {
+    it('should clear enharmonic Ga', () => {
+      const service = new PlaybackService();
+
+      const workspace = getDefaultWorkspace([], service.diatonicScale);
+
+      workspace.enharmonicGa = true;
+
+      service.applyModeKey(
+        getModeKey(1, Scale.Diatonic, ScaleNote.Pa),
+        workspace,
+      );
+
+      expect(workspace.enharmonicGa).toBeFalsy();
+    });
+
+    it('should clear enharmonic Zo', () => {
+      const service = new PlaybackService();
+
+      const workspace = getDefaultWorkspace([], service.diatonicScale);
+
+      workspace.enharmonicZo = true;
+
+      service.applyModeKey(
+        getModeKey(1, Scale.Diatonic, ScaleNote.Pa),
+        workspace,
+      );
+
+      expect(workspace.enharmonicZo).toBeFalsy();
+    });
+
+    it('should clear enharmonic Vou', () => {
+      const service = new PlaybackService();
+
+      const workspace = getDefaultWorkspace([], service.diatonicScale);
+
+      workspace.enharmonicVou = true;
+
+      service.applyModeKey(
+        getModeKey(1, Scale.Diatonic, ScaleNote.Pa),
+        workspace,
+      );
+
+      expect(workspace.enharmonicVou).toBeFalsy();
+    });
+
+    it('should clear general flat', () => {
+      const service = new PlaybackService();
+
+      const workspace = getDefaultWorkspace([], service.diatonicScale);
+
+      workspace.generalFlat = true;
+
+      service.applyModeKey(
+        getModeKey(1, Scale.Diatonic, ScaleNote.Pa),
+        workspace,
+      );
+
+      expect(workspace.generalFlat).toBeFalsy();
+    });
+
+    it('should clear general sharp', () => {
+      const service = new PlaybackService();
+
+      const workspace = getDefaultWorkspace([], service.diatonicScale);
+
+      workspace.generalSharp = true;
+
+      service.applyModeKey(
+        getModeKey(1, Scale.Diatonic, ScaleNote.Pa),
+        workspace,
+      );
+
+      expect(workspace.generalSharp).toBeFalsy();
+    });
+  });
+
   describe('computePlaybackSequence', () => {
     it.each`
       scaleNote            | expectedFrequency
@@ -562,21 +639,6 @@ describe('PlaybackService', () => {
         expectedFrequencies,
         2,
       );
-    });
-
-    it('should clear enharmonic Ga when mode key changes', () => {
-      const service = new PlaybackService();
-
-      const workspace = getDefaultWorkspace([], service.diatonicScale);
-
-      workspace.enharmonicGa = true;
-
-      service.applyModeKey(
-        getModeKey(1, Scale.Diatonic, ScaleNote.Pa),
-        workspace,
-      );
-
-      expect(workspace.enharmonicGa).toBeFalsy();
     });
 
     it.each`

@@ -696,6 +696,17 @@
       <button @click="$emit('open-syllable-positioning-dialog')">
         Positioning
       </button>
+      <span class="space" />
+
+      <div style="display: flex; align-items: center">
+        <input
+          id="toolbar-neume-ignore-attractions"
+          type="checkbox"
+          :checked="element.ignoreAttractions"
+          @change="$emit('update:ignoreAttractions', $event.target.checked)"
+        />
+        <label for="toolbar-neume-ignore-attractions">Ignore Attractions</label>
+      </div>
     </div>
   </div>
 </template>

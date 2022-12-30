@@ -64,6 +64,7 @@ export class NoteElement extends ScoreElement {
   public isMelismaStart: boolean = false;
   public isHyphen: boolean = false;
   public spaceAfter: number = 0;
+  public ignoreAttractions: boolean = true;
 
   public accidentalOffsetX: number | null = null;
   public accidentalOffsetY: number | null = null;
@@ -537,6 +538,7 @@ export class ModeKeyElement extends ScoreElement {
   public heightAdjustment: number = 0;
   public bpm: number = 120;
   public useDefaultStyle: boolean = true;
+  public ignoreAttractions: boolean = true;
   public height: number = Unit.fromPt(37);
 
   // Values computed by the layout service

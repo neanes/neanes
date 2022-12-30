@@ -325,6 +325,8 @@ export class SaveService {
     element.isMelisma = e.isMelisma || undefined;
     element.isMelismaStart = e.isMelismaStart || undefined;
     element.isHyphen = e.isHyphen || undefined;
+
+    element.ignoreAttractions = e.ignoreAttractions || undefined;
   }
 
   public static SaveTextBox(element: TextBoxElement_v1, e: TextBoxElement) {
@@ -369,6 +371,7 @@ export class SaveService {
     element.height = e.height;
     element.heightAdjustment = e.heightAdjustment;
     element.bpm = e.bpm;
+    element.ignoreAttractions = e.ignoreAttractions || undefined;
     element.useDefaultStyle = e.useDefaultStyle || undefined;
   }
 
@@ -733,6 +736,7 @@ export class SaveService {
     element.isMelisma = e.isMelisma === true;
     element.isMelismaStart = e.isMelismaStart === true;
     element.isHyphen = e.isHyphen === true;
+    element.ignoreAttractions = e.ignoreAttractions === true;
     element.spaceAfter = e.spaceAfter || 0;
   }
 
@@ -774,6 +778,7 @@ export class SaveService {
     element.strokeWidth = e.strokeWidth || element.strokeWidth;
     element.heightAdjustment = e.heightAdjustment || 0;
     element.bpm = e.bpm || 120;
+    element.ignoreAttractions = e.ignoreAttractions === true;
     element.useDefaultStyle = e.useDefaultStyle === true;
 
     // For backwards compatibility, we check the current mode key templates

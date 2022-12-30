@@ -396,6 +396,9 @@
         @update:alignment="updateModeKeyAlignment(selectedElement, $event)"
         @update:color="updateModeKeyColor(selectedElement, $event)"
         @update:bpm="updateModeKeyBpm(selectedElement, $event)"
+        @update:ignoreAttractions="
+          updateModeKeyIgnoreAttractions(selectedElement, $event)
+        "
         @update:tempoAlignRight="
           updateModeKeyTempoAlignRight(selectedElement, $event)
         "
@@ -424,6 +427,9 @@
         @update:ison="setIson(selectedElement, $event)"
         @update:vareia="updateNoteVareia(selectedElement, $event)"
         @update:spaceAfter="updateNoteSpaceAfter(selectedElement, $event)"
+        @update:ignoreAttractions="
+          updateNoteIgnoreAttractions(selectedElement, $event)
+        "
         @open-syllable-positioning-dialog="openSyllablePositioningDialog"
       />
     </template>
@@ -3387,6 +3393,14 @@ export default class Editor extends Vue {
     this.save();
   }
 
+  updateNoteIgnoreAttractions(
+    element: NoteElement,
+    ignoreAttractions: boolean,
+  ) {
+    this.updateNote(element, { ignoreAttractions });
+    this.save();
+  }
+
   updateLyrics(element: NoteElement, lyrics: string) {
     // Replace newlines. This should only happen if the user pastes
     // text containing new lines.
@@ -3573,6 +3587,14 @@ export default class Editor extends Vue {
     bpm = Math.min(999, bpm);
 
     this.updateModeKey(element, { bpm });
+    this.save();
+  }
+
+  updateModeKeyIgnoreAttractions(
+    element: ModeKeyElement,
+    ignoreAttractions: boolean,
+  ) {
+    this.updateModeKey(element, { ignoreAttractions });
     this.save();
   }
 

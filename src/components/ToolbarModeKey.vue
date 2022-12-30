@@ -154,6 +154,19 @@
 
     <span class="space" />
 
+    <div style="display: flex; align-items: center">
+      <input
+        id="toolbar-mode-key-ignore-attractions"
+        type="checkbox"
+        :checked="element.ignoreAttractions"
+        @change="$emit('update:ignoreAttractions', $event.target.checked)"
+      />
+      <label for="toolbar-mode-key-ignore-attractions"
+        >Ignore Attractions</label
+      >
+    </div>
+    <span class="space" />
+
     <button @click="$emit('open-mode-key-dialog')">Change Key</button>
   </div>
 </template>

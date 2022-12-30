@@ -244,6 +244,10 @@ Use the volume sliders to adjust the volume of the melody and the ison. The volu
 
 If checked, hymns that use the diatonic scale will automatically have the note Zo' lowered if the melody does not ascend past Zo', and the note does not already have a sharp, flat, or fthora explicitly specified. You may adjust the number of moria to lower Zo'.
 
+This setting may be temporarily overridden for a particular note by checking the `Ignore Attractions` checkbox in the bottom toolbar. This is helpful when the software incorrectly guesses that you want the Zo flattened. By checking `Ignore Attractions`, the note will be natural unless you explictly place an alteration on the it.
+
+It may also be overridden for an entire hymn by clicking on the mode key and checking the `Ignore Attractions` checkbox in the bottom toolbar. This is useful for hymns of the plagal first mode from Ke, which are sometimes sung as if from Pa, but without the proper Pa fthora placed above Ke.
+
 #### Classic Legetos
 
 If checked, hymns in the fourth mode with base notes Pa or Vou will use the classic legetos scale with Vou lowered so that the interval Vou - Di is larger than a minor third.

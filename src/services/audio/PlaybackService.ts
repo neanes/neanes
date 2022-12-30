@@ -14,6 +14,7 @@ import {
   Fthora,
   GorgonNeume,
   Ison,
+  Note,
   QuantitativeNeume,
   TempoSign,
   TimeNeume,
@@ -65,6 +66,7 @@ export interface PlaybackOptions {
 interface PlaybackWorkspace {
   elements: ScoreElement[];
   elementIndex: number;
+  currentNoteElement: NoteElement | null;
 
   // This is used to keep track which part of a combination
   // character we are processing (i.e. oligon + kentimata)
@@ -73,14 +75,21 @@ interface PlaybackWorkspace {
   options: PlaybackOptions;
 
   frequency: number;
-  // To move up, move up scale.intervals[intervalIndex] moria
-  // To move down, move down scale.intervals[intervalIndex - 1] moria,
-  // wrapping around to the end of the scale.intervals array, if necessary
+  /**
+   * To move up, move up scale.intervals[intervalIndex] moria
+   * To move down, move down scale.intervals[intervalIndex - 1] moria,
+   * wrapping around to the end of the scale.intervals array, if necessary
+   */
   intervalIndex: number;
   scale: PlaybackScale;
   legetos: boolean;
   note: number;
   noteOffset: number;
+
+  /**
+   * If true, attractions will be ignored
+   */
+  ignoreAttractions: boolean;
 
   lastAlterationMoria: number;
 
@@ -136,6 +145,7 @@ export class PlaybackService {
       elements,
       elementIndex: 0,
       innerElementIndex: 0,
+      currentNoteElement: null,
 
       options: {
         useLegetos: false,
@@ -179,6 +189,8 @@ export class PlaybackService {
       note: this.reverseScaleNoteMap.get(ScaleNote.Thi)!,
       noteOffset: 0,
 
+      ignoreAttractions: false,
+
       lastAlterationMoria: 0,
 
       //chroa
@@ -201,9 +213,12 @@ export class PlaybackService {
       let element = elements[i];
 
       workspace.elementIndex = i;
+      workspace.currentNoteElement = null;
 
       if (element.elementType === ElementType.Note) {
         const noteElement = element as NoteElement;
+
+        workspace.currentNoteElement = noteElement;
 
         // If we moved, calculate the new note
         const distance = getNeumeValue(noteElement.quantitativeNeume)!;
@@ -735,6 +750,7 @@ export class PlaybackService {
         workspace.generalFlat = false;
         workspace.generalSharp = false;
         workspace.noteOffset = 0;
+        workspace.ignoreAttractions = modeKeyElement.ignoreAttractions;
 
         isonFrequency = 0;
 
@@ -1088,7 +1104,11 @@ export class PlaybackService {
       workspace,
     );
 
-    if (alteredFrequency === workspace.frequency) {
+    if (
+      alteredFrequency === workspace.frequency &&
+      !workspace.currentNoteElement?.ignoreAttractions &&
+      !workspace.ignoreAttractions
+    ) {
       alteredFrequency = this.applyAttractions(alteredFrequency, workspace);
     }
 

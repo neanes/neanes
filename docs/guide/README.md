@@ -70,7 +70,7 @@ To override a martyria, uncheck the `Auto` checkbox in the martyria toolbar and 
 
 ### Tempo
 
-To insert a tempo marker, click and hold the tempo button in the main tool bar.
+To insert a tempo marker, click and hold the tempo button in the main toolbar.
 
 ![Main Toolbar Expanded](./images/guide-main-toolbar-tempo.png)
 
@@ -213,3 +213,64 @@ Increasing this number will increase the space between lines.
 The amount of space between the hyphens that are automatically drawn between melismatic syllables. To draw more hyphens between syllables, decrease this number. To draw less hyphens between syllables, increase this number.
 
 ![Page Setup Hyphen Spacing Example](./images/guide-page-setup-hyphen-spacing-example-1.png)
+
+## Audio Playback
+
+To play a score, use the playback panel in the main toolbar.
+
+![Main Toolbar Playback Panel](./images/guide-main-toolbar-playback-panel.png)
+
+Press the `Play` button to start the audio playback. Press the button again to pause. Playback may also be started and stopped by pressing <kbd>Space</kbd> on the keyboard.
+
+While the audio is playing, the screen will automatically scroll to the position of the current note. If you click another note, playback will jump to that note.
+
+The `Speed` dropdown may be used to play the score at a slower or faster rate than the tempos specified in the score.
+
+### Playback Settings
+
+To configure the playback options, press the `Gear` button to open the `Playback Settings` dialog. An explanation of the settings is below.
+
+#### Detune
+
+The audio playback uses Di (Δι) as the reference note. The pitch of every note is calculated relative to the pitch of Di. By default, the pitch is set to 196 Hz, which corresponds to G3 (the G note below Middle C) using the A440 tuning standard.
+
+You may adjust the pitch of this note to be higher or lower, which raises or lowers the pitch of the entire composition. The detune value is measured in cents, where `100 cents = 6 moria = one semitone`.
+
+#### Volume
+
+Use the volume sliders to adjust the volume of the melody and the ison. The volume is measured in decibels (dB), which is a logarithmic scale. The maximum value is `0 dB`, which corresponds to playing at your speaker's volume setting. The minimum value is `-Infinity`, which corresponds to muting the volume. `-10 dB` is approximately "half as loud" as `0 dB`.
+
+#### Diatonic Zo Attraction
+
+If checked, hymns that use the diatonic scale will automatically have the note Zo' lowered if the melody does not ascend past Zo', and the note does not already have a sharp, flat, or fthora explicitly specified. You may adjust the number of moria to lower Zo'.
+
+#### Classic Legetos
+
+If checked, hymns in the fourth mode with base notes Pa or Vou will use the classic legetos scale with Vou lowered so that the interval Vou - Di is larger than a minor third.
+
+Below is an [example](/neanes/assets/media/Legetos_Example_1__Father_Dositheos_Katounakiotis_Kekragarion.20055d92.mp3) of Father Dositheos Katounakiotis chanting the Kekragarion in the legetos mode.
+
+<audio controls>
+  <source src="./music/Legetos_Example_1__Father_Dositheos_Katounakiotis_Kekragarion.mp3" type="audio/mpeg">
+Your browser does not support the audio element.
+</audio>
+
+#### Intervals
+
+In this section, you may specify the intervals for each scale, measured in moria. The enharmonic scale is not alterable, since it is always assumed to be a `12-12-6` tetrachord.
+
+#### Alterations
+
+In this section, you may specify the size in moria of the general flat and general sharp alterations.
+
+### Tempo
+
+Tempo is measured in beats per minute (BPM) and can be set via the `BPM` property on the following elements.
+
+- Mode keys
+- Tempo signs
+- Martyria with tempo signs above them
+
+The property is found in the bottom toolbar when the element is selected.
+
+You may configure the default tempos for each tempo sign in the `Preferences` dialog, which can be opened from the file menu by going to `Edit -> Preferences`.

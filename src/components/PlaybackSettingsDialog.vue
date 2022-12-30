@@ -21,7 +21,7 @@
           </button>
         </div>
 
-        <div class="subheader">Volume</div>
+        <div class="form-group subheader">Volume</div>
         <div class="form-group row">
           <span class="volume-label">Melody</span>
           <input

@@ -212,22 +212,24 @@ export class PlaybackService {
             noteElement.fthora === Fthora.Enharmonic_Top ||
             noteElement.fthora === Fthora.Enharmonic_Bottom
           ) {
-            if (this.scaleNoteMap.get(destinationNote) === ScaleNote.ZoHigh) {
+            const scaleNote = this.scaleNoteMap.get(destinationNote);
+
+            if (scaleNote === ScaleNote.ZoHigh) {
               workspace.enharmonicZo = true;
-            } else if (
-              this.scaleNoteMap.get(destinationNote) === ScaleNote.Ga
-            ) {
+            } else if (scaleNote === ScaleNote.Ga) {
               workspace.enharmonicGa = true;
-            } else if (
-              this.scaleNoteMap.get(destinationNote) === ScaleNote.Vou
-            ) {
+            } else if (scaleNote === ScaleNote.Vou) {
               workspace.enharmonicVou = true;
             }
 
             workspace.generalFlat = false;
             workspace.generalSharp = false;
 
-            this.applyFthora(noteElement.fthora, workspace);
+            this.applyFthora(
+              noteElement.fthora,
+              workspace,
+              this.scaleNoteMap.get(workspace.note),
+            );
           } else if (
             noteElement.fthora === Fthora.GeneralFlat_Top ||
             noteElement.fthora === Fthora.GeneralFlat_Bottom
@@ -948,6 +950,10 @@ export class PlaybackService {
   constructEnharmonicScaleFromGa(workspace: PlaybackWorkspace) {
     const scale: number[] = [];
 
+    if (workspace.enharmonicGa && workspace.enharmonicZo) {
+      return [12, 12, 6];
+    }
+
     if (workspace.enharmonicGa) {
       scale.push(12, 12, 6);
     } else {
@@ -969,7 +975,7 @@ export class PlaybackService {
     );
   }
 
-  applyFthora(fthora: Fthora, workspace: PlaybackWorkspace) {
+  applyFthora(fthora: Fthora, workspace: PlaybackWorkspace, note?: ScaleNote) {
     const scale = this.getScaleFromFthora(fthora);
     if (scale == null) {
       return;
@@ -995,9 +1001,15 @@ export class PlaybackService {
       if (workspace.enharmonicVou) {
         this.enharmonicScale.scaleNoteMap =
           this.enharmonicZoScaleNoteToIntervalIndexMap;
+        workspace.intervalIndex = this.enharmonicScale.scaleNoteMap.get(note!)!;
+      } else if (workspace.enharmonicGa && workspace.enharmonicZo) {
+        this.enharmonicScale.scaleNoteMap =
+          this.enharmonicGaScaleNoteToIntervalIndexMap;
+        workspace.intervalIndex = this.enharmonicScale.scaleNoteMap.get(note!)!;
       } else {
         this.enharmonicScale.scaleNoteMap =
           this.diatonicScaleNoteToIntervalIndexMap;
+        workspace.intervalIndex = this.enharmonicScale.scaleNoteMap.get(note!)!;
       }
     }
 
@@ -1351,24 +1363,48 @@ export class PlaybackService {
     ScaleNote,
     number
   >([
-    [ScaleNote.VouLow, 3],
-    [ScaleNote.GaLow, 4],
-    [ScaleNote.ThiLow, 5],
-    [ScaleNote.KeLow, 6],
+    [ScaleNote.VouLow, 0],
+    [ScaleNote.GaLow, 1],
+    [ScaleNote.ThiLow, 2],
+    [ScaleNote.KeLow, 3],
     [ScaleNote.Zo, 0],
     [ScaleNote.Ni, 1],
     [ScaleNote.Pa, 2],
     [ScaleNote.Vou, 3],
-    [ScaleNote.Ga, 4],
-    [ScaleNote.Thi, 5],
-    [ScaleNote.Ke, 6],
+    [ScaleNote.Ga, 0],
+    [ScaleNote.Thi, 1],
+    [ScaleNote.Ke, 2],
+    [ScaleNote.Zo, 3],
+    [ScaleNote.NiHigh, 0],
+    [ScaleNote.PaHigh, 1],
+    [ScaleNote.VouHigh, 2],
+    [ScaleNote.GaHigh, 3],
+    [ScaleNote.ThiHigh, 0],
+    [ScaleNote.KeHigh, 1],
+  ]);
+
+  enharmonicGaScaleNoteToIntervalIndexMap: Map<ScaleNote, number> = new Map<
+    ScaleNote,
+    number
+  >([
+    [ScaleNote.VouLow, 1],
+    [ScaleNote.GaLow, 2],
+    [ScaleNote.ThiLow, 0],
+    [ScaleNote.KeLow, 1],
+    [ScaleNote.Zo, 2],
+    [ScaleNote.Ni, 0],
+    [ScaleNote.Pa, 1],
+    [ScaleNote.Vou, 2],
+    [ScaleNote.Ga, 0],
+    [ScaleNote.Thi, 1],
+    [ScaleNote.Ke, 2],
     [ScaleNote.Zo, 0],
     [ScaleNote.NiHigh, 1],
     [ScaleNote.PaHigh, 2],
-    [ScaleNote.VouHigh, 3],
-    [ScaleNote.GaHigh, 4],
-    [ScaleNote.ThiHigh, 5],
-    [ScaleNote.KeHigh, 6],
+    [ScaleNote.VouHigh, 0],
+    [ScaleNote.GaHigh, 1],
+    [ScaleNote.ThiHigh, 2],
+    [ScaleNote.KeHigh, 0],
   ]);
 
   diatonicScale: PlaybackScale = {

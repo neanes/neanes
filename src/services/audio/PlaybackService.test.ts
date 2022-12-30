@@ -6,7 +6,9 @@ import {
   ScoreElement,
   TempoElement,
 } from '../../models/Element';
-import { QuantitativeNeume } from '../../models/Neumes';
+import { Fthora, QuantitativeNeume } from '../../models/Neumes';
+import { toBeDeepCloseTo, toMatchCloseTo } from 'jest-matcher-deep-close-to';
+expect.extend({ toBeDeepCloseTo, toMatchCloseTo });
 
 describe('PlaybackService', () => {
   describe('constructTetrachordScale', () => {
@@ -111,6 +113,46 @@ describe('PlaybackService', () => {
       },
     );
 
+    it('should play the 12-10-8 diatonic scale', () => {
+      const service = new PlaybackService();
+
+      const options = getDefaultWorkspaceOptions();
+      options.diatonicIntervals = [12, 10, 8];
+
+      const elements: ScoreElement[] = [];
+
+      elements.push(getModeKey(1, Scale.Diatonic, ScaleNote.VouLow));
+      elements.push(getNote(QuantitativeNeume.Ison));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+
+      const events = service.computePlaybackSequence(elements, options);
+      const expectedFrequencies = [
+        80.84, 87.31, 98, 110, 121.12, 130.81, 146.83, 161.67, 174.62, 196, 220,
+        242.24, 261.63, 293.67, 323.35, 349.23, 392, 440.01,
+      ];
+
+      expect(events.map((x) => x.frequency)).toBeDeepCloseTo(
+        expectedFrequencies,
+        2,
+      );
+    });
+
     it.each`
       scaleNote        | expectedFrequency
       ${ScaleNote.Pa}  | ${146.83}
@@ -214,6 +256,46 @@ describe('PlaybackService', () => {
       },
     );
 
+    it('should play the 8-14-8 soft chromatic scale', () => {
+      const service = new PlaybackService();
+
+      const options = getDefaultWorkspaceOptions();
+      options.softChromaticIntervals = [8, 14, 8];
+
+      const elements: ScoreElement[] = [];
+
+      elements.push(getModeKey(2, Scale.SoftChromatic, ScaleNote.VouLow));
+      elements.push(getNote(QuantitativeNeume.Ison));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+
+      const events = service.computePlaybackSequence(elements, options);
+      const expectedFrequencies = [
+        77.78, 87.31, 94.3, 107.9, 116.54, 130.81, 141.29, 161.67, 174.62, 196,
+        211.69, 242.24, 261.63, 293.67, 317.18, 362.94, 392, 440.01,
+      ];
+
+      expect(events.map((x) => x.frequency)).toBeDeepCloseTo(
+        expectedFrequencies,
+        2,
+      );
+    });
+
     it.each`
       scaleNote            | expectedFrequency
       ${ScaleNote.VouLow}  | ${84.01}
@@ -252,6 +334,156 @@ describe('PlaybackService', () => {
         expect(events[0].frequency).toBeCloseTo(expectedFrequency, 2);
       },
     );
+
+    it('should play the 6-20-4 hard chromatic scale', () => {
+      const service = new PlaybackService();
+
+      const options = getDefaultWorkspaceOptions();
+      options.hardChromaticIntervals = [6, 20, 4];
+
+      const elements: ScoreElement[] = [];
+
+      elements.push(getModeKey(2, Scale.HardChromatic, ScaleNote.VouLow));
+      elements.push(getNote(QuantitativeNeume.Ison));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+
+      const events = service.computePlaybackSequence(elements, options);
+      const expectedFrequencies = [
+        84.01, 87.31, 98, 103.83, 125.87, 130.81, 146.83, 155.57, 188.6, 196,
+        220, 233.08, 282.57, 293.67, 329.63, 349.23, 423.38, 440.01,
+      ];
+
+      expect(events.map((x) => x.frequency)).toBeDeepCloseTo(
+        expectedFrequencies,
+        2,
+      );
+    });
+
+    it('should play the 12-12-6 enharmonic scale from Ga when enharmonic fthora on Ga and Zo', () => {
+      const service = new PlaybackService();
+
+      const options = getDefaultWorkspaceOptions();
+      options.diatonicIntervals = [12, 10, 8];
+
+      const elements: ScoreElement[] = [];
+
+      elements.push(getModeKey(7, Scale.Diatonic, ScaleNote.Ga));
+      elements.push(getNote(QuantitativeNeume.Ison));
+      elements.push(
+        getNote(QuantitativeNeume.PetastiPlusKentimaAbove, {
+          fthora: Fthora.Enharmonic_Top,
+        }),
+      );
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(
+        getNote(QuantitativeNeume.Apostrophos, {
+          fthora: Fthora.Enharmonic_Top,
+        }),
+      );
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(
+        getNote(QuantitativeNeume.PetastiPlusHypsiliPlusKentimaVertical),
+      );
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+
+      const events = service.computePlaybackSequence(elements, options);
+      const expectedFrequencies = [
+        174.62, 233.08, 220, 196, 174.62, 164.82, 146.83, 130.81, 261.63,
+        293.67, 311.13,
+      ];
+
+      expect(events.map((x) => x.frequency)).toBeDeepCloseTo(
+        expectedFrequencies,
+        2,
+      );
+    });
+
+    it('should play the 12-12-6 enharmonic scale from Ga with diatonic bottom when enharmonic fthora on Zo only', () => {
+      const service = new PlaybackService();
+
+      const options = getDefaultWorkspaceOptions();
+      options.diatonicIntervals = [12, 10, 8];
+
+      const elements: ScoreElement[] = [];
+
+      elements.push(getModeKey(7, Scale.Diatonic, ScaleNote.Ga));
+      elements.push(getNote(QuantitativeNeume.Ison));
+      elements.push(
+        getNote(QuantitativeNeume.PetastiPlusKentimaAbove, {
+          fthora: Fthora.Enharmonic_Top,
+        }),
+      );
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(
+        getNote(QuantitativeNeume.PetastiPlusHypsiliPlusKentimaVertical),
+      );
+      elements.push(getNote(QuantitativeNeume.Oligon));
+      elements.push(getNote(QuantitativeNeume.Oligon));
+
+      const events = service.computePlaybackSequence(elements, options);
+      const expectedFrequencies = [
+        174.62, 233.08, 220, 196, 174.62, 161.67, 146.83, 130.81, 261.63,
+        293.67, 323.35,
+      ];
+
+      expect(events.map((x) => x.frequency)).toBeDeepCloseTo(
+        expectedFrequencies,
+        2,
+      );
+    });
+
+    it('should play the 12-12-6 enharmonic scale from Vou when enharmonic fthora on Vou', () => {
+      const service = new PlaybackService();
+
+      const options = getDefaultWorkspaceOptions();
+      options.diatonicIntervals = [12, 10, 8];
+
+      const elements: ScoreElement[] = [];
+
+      elements.push(getModeKey(7, Scale.Diatonic, ScaleNote.Ga));
+      elements.push(getNote(QuantitativeNeume.Ison));
+      elements.push(
+        getNote(QuantitativeNeume.Apostrophos, {
+          fthora: Fthora.Enharmonic_Top,
+        }),
+      );
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+      elements.push(getNote(QuantitativeNeume.Apostrophos));
+
+      const events = service.computePlaybackSequence(elements, options);
+      const expectedFrequencies = [174.62, 155.57, 146.83, 130.81, 116.54];
+
+      expect(events.map((x) => x.frequency)).toBeDeepCloseTo(
+        expectedFrequencies,
+        2,
+      );
+    });
 
     it.each`
       initialBpm | finalBpm | expectedResult
@@ -322,9 +554,13 @@ function getModeKey(mode: number, scale: Scale, scaleNote: ScaleNote) {
   return element;
 }
 
-function getNote(base: QuantitativeNeume) {
+function getNote(base: QuantitativeNeume, options?: Partial<NoteElement>) {
   const element = new NoteElement();
   element.quantitativeNeume = base;
+
+  if (options) {
+    Object.assign(element, options);
+  }
 
   return element;
 }

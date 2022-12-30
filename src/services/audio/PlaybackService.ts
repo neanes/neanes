@@ -52,6 +52,7 @@ export interface PlaybackOptions {
   spathiIntervals: number[];
   klitonIntervals: number[];
 
+  alterationMoriaMap: { [key in Accidental]?: number };
   generalFlatMoria: number;
   generalSharpMoria: number;
 
@@ -153,6 +154,17 @@ export class PlaybackService {
 
         volumeIson: -4,
         volumeMelody: 0,
+
+        alterationMoriaMap: {
+          [Accidental.Flat_2_Right]: -2,
+          [Accidental.Flat_4_Right]: -4,
+          [Accidental.Flat_6_Right]: -6,
+          [Accidental.Flat_8_Right]: -8,
+          [Accidental.Sharp_2_Left]: 2,
+          [Accidental.Sharp_4_Left]: 4,
+          [Accidental.Sharp_6_Left]: 6,
+          [Accidental.Sharp_8_Left]: 8,
+        },
       },
 
       intervalIndex: 0,
@@ -1009,7 +1021,9 @@ export class PlaybackService {
     let alteredFrequency = workspace.frequency;
 
     if (accidental != null) {
-      const alteration = this.alterationMap.get(accidental)!;
+      const alteration =
+        workspace.options.alterationMoriaMap[accidental] ??
+        this.alterationMap.get(accidental)!;
       alteredFrequency = this.changeFrequency(alteredFrequency, alteration);
 
       workspace.lastAlterationMoria = alteration;

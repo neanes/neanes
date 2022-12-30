@@ -74,6 +74,8 @@ export default class PreferencesDialog extends Vue {
     bpm = Math.min(999, bpm);
 
     this.options.tempoDefaults[neume] = bpm;
+
+    this.$forceUpdate();
   }
 }
 </script>

@@ -259,6 +259,8 @@ Your browser does not support the audio element.
 
 In this section, you may specify the intervals for each scale, measured in moria. The enharmonic scale is not alterable, since it is always assumed to be a `12-12-6` tetrachord.
 
+If the length of a tetrachord does not add up to 30 moria, then a warning will be displayed. This is because a tetrachord traditionally always spans a perfect fourth. You may ignore the warning if you wish.
+
 #### Alterations
 
 In this section, you may specify the size in moria of the general flat and general sharp alterations.

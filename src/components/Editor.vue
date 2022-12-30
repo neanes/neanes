@@ -682,6 +682,17 @@ export default class Editor extends Vue {
 
     volumeIson: -4,
     volumeMelody: 0,
+
+    alterationMoriaMap: {
+      [Accidental.Flat_2_Right]: -2,
+      [Accidental.Flat_4_Right]: -4,
+      [Accidental.Flat_6_Right]: -6,
+      [Accidental.Flat_8_Right]: -8,
+      [Accidental.Sharp_2_Left]: 2,
+      [Accidental.Sharp_4_Left]: 4,
+      [Accidental.Sharp_6_Left]: 6,
+      [Accidental.Sharp_8_Left]: 8,
+    },
   };
 
   editorPreferences: EditorPreferences = {

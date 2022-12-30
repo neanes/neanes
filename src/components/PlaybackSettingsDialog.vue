@@ -66,9 +66,10 @@
             type="number"
             class="interval"
             min="-72"
-            max="72"
+            max="0"
             step="1"
-            v-model="defaultAttractionZoMoria"
+            :value="options.defaultAttractionZoMoria"
+            @change="onDefaultAttractionZoMoriaChanged($event.target.value)"
           />
           <button
             class="btnResetDefaultAttractionZoMoria"
@@ -336,9 +337,10 @@
               type="number"
               class="interval"
               min="-72"
-              max="72"
+              max="0"
               step="1"
-              v-model="generalFlatMoria"
+              :value="options.generalFlatMoria"
+              @change="onGeneralFlatMoriaChanged($event.target.value)"
             />
           </div>
           <span class="interval-label">moria</span>
@@ -350,10 +352,148 @@
             <input
               type="number"
               class="interval"
-              min="-72"
+              min="0"
               max="72"
               step="1"
-              v-model="generalSharpMoria"
+              :value="options.generalSharpMoria"
+              @change="onGeneralSharpMoriaChanged($event.target.value)"
+            />
+          </div>
+          <span class="interval-label">moria</span>
+        </div>
+
+        <div class="form-group row">
+          <span class="alteration-name">Diesis Apli</span>
+          <div class="row">
+            <input
+              type="number"
+              class="interval"
+              min="0"
+              max="72"
+              step="1"
+              :value="options.alterationMoriaMap[Accidental.Sharp_2_Left]"
+              @change="
+                onDiesisChanged(Accidental.Sharp_2_Left, $event.target.value)
+              "
+            />
+          </div>
+          <span class="interval-label">moria</span>
+        </div>
+        <div class="form-group row">
+          <span class="alteration-name">Diesis Monogrammos</span>
+          <div class="row">
+            <input
+              type="number"
+              class="interval"
+              min="0"
+              max="72"
+              step="1"
+              :value="options.alterationMoriaMap[Accidental.Sharp_4_Left]"
+              @change="
+                onDiesisChanged(Accidental.Sharp_4_Left, $event.target.value)
+              "
+            />
+          </div>
+          <span class="interval-label">moria</span>
+        </div>
+        <div class="form-group row">
+          <span class="alteration-name">Diesis Digrammos</span>
+          <div class="row">
+            <input
+              type="number"
+              class="interval"
+              min="0"
+              max="72"
+              step="1"
+              :value="options.alterationMoriaMap[Accidental.Sharp_6_Left]"
+              @change="
+                onDiesisChanged(Accidental.Sharp_6_Left, $event.target.value)
+              "
+            />
+          </div>
+          <span class="interval-label">moria</span>
+        </div>
+        <div class="form-group row">
+          <span class="alteration-name">Diesis Trigrammos</span>
+          <div class="row">
+            <input
+              type="number"
+              class="interval"
+              min="0"
+              max="72"
+              step="1"
+              :value="options.alterationMoriaMap[Accidental.Sharp_8_Left]"
+              @change="
+                onDiesisChanged(Accidental.Sharp_8_Left, $event.target.value)
+              "
+            />
+          </div>
+          <span class="interval-label">moria</span>
+        </div>
+        <div class="form-group row">
+          <span class="alteration-name">Yfesis Apli</span>
+          <div class="row">
+            <input
+              type="number"
+              class="interval"
+              min="-72"
+              max="0"
+              step="1"
+              :value="options.alterationMoriaMap[Accidental.Flat_2_Right]"
+              @change="
+                onYfesisChanged(Accidental.Flat_2_Right, $event.target.value)
+              "
+            />
+          </div>
+          <span class="interval-label">moria</span>
+        </div>
+        <div class="form-group row">
+          <span class="alteration-name">Yfesis Monogrammos</span>
+          <div class="row">
+            <input
+              type="number"
+              class="interval"
+              min="-72"
+              max="0"
+              step="1"
+              :value="options.alterationMoriaMap[Accidental.Flat_4_Right]"
+              @change="
+                onYfesisChanged(Accidental.Flat_4_Right, $event.target.value)
+              "
+            />
+          </div>
+          <span class="interval-label">moria</span>
+        </div>
+        <div class="form-group row">
+          <span class="alteration-name">Yfesis Digrammos</span>
+          <div class="row">
+            <input
+              type="number"
+              class="interval"
+              min="-72"
+              max="0"
+              step="1"
+              :value="options.alterationMoriaMap[Accidental.Flat_6_Right]"
+              @change="
+                onYfesisChanged(Accidental.Flat_6_Right, $event.target.value)
+              "
+            />
+          </div>
+          <span class="interval-label">moria</span>
+        </div>
+        <div class="form-group row">
+          <span class="alteration-name">Yfesis Trigrammos</span>
+          <div class="row">
+            <input
+              type="number"
+              class="interval"
+              min="-72"
+              max="0"
+              step="1"
+              :value="options.alterationMoriaMap[Accidental.Flat_8_Right]"
+              @change="
+                onYfesisChanged(Accidental.Flat_8_Right, $event.target.value)
+              "
             />
           </div>
           <span class="interval-label">moria</span>
@@ -371,6 +511,7 @@
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import ModalDialog from '@/components/ModalDialog.vue';
 import { PlaybackOptions } from '@/services/audio/PlaybackService';
+import { Accidental } from '@/models/Neumes';
 
 const FREQUENCY_G3 = 196;
 
@@ -380,45 +521,11 @@ const FREQUENCY_G3 = 196;
 export default class PlaybackSettingsDialog extends Vue {
   @Prop() options!: PlaybackOptions;
 
+  Accidental = Accidental;
+
   tuning: number = 0;
 
   error: string | null = null;
-
-  get generalSharpMoria() {
-    return this.options.generalSharpMoria;
-  }
-
-  set generalSharpMoria(value: number) {
-    value = Math.max(-72, value);
-    value = Math.min(72, value);
-    value = Math.round(value);
-
-    this.options.generalSharpMoria = value;
-  }
-
-  get generalFlatMoria() {
-    return this.options.generalFlatMoria;
-  }
-
-  set generalFlatMoria(value: number) {
-    value = Math.max(-72, value);
-    value = Math.min(72, value);
-    value = Math.round(value);
-
-    this.options.generalFlatMoria = value;
-  }
-
-  get defaultAttractionZoMoria() {
-    return this.options.defaultAttractionZoMoria;
-  }
-
-  set defaultAttractionZoMoria(value: number) {
-    value = Math.max(-72, value);
-    value = Math.min(72, value);
-    value = Math.round(value);
-
-    this.options.defaultAttractionZoMoria = value;
-  }
 
   get volumeIson() {
     return 100 * Math.pow(10, this.options.volumeIson / 20);
@@ -462,6 +569,8 @@ export default class PlaybackSettingsDialog extends Vue {
     intervals[index] = value;
 
     this.validateIntervals();
+
+    this.$forceUpdate();
   }
 
   validateIntervals() {
@@ -501,10 +610,84 @@ export default class PlaybackSettingsDialog extends Vue {
   resetAlterations() {
     this.options.generalFlatMoria = -6;
     this.options.generalSharpMoria = 4;
+
+    this.options.alterationMoriaMap = {
+      [Accidental.Flat_2_Right]: -2,
+      [Accidental.Flat_4_Right]: -4,
+      [Accidental.Flat_6_Right]: -6,
+      [Accidental.Flat_8_Right]: -8,
+      [Accidental.Sharp_2_Left]: 2,
+      [Accidental.Sharp_4_Left]: 4,
+      [Accidental.Sharp_6_Left]: 6,
+      [Accidental.Sharp_8_Left]: 8,
+    };
   }
 
   resetDefaultAttractionZoMoria() {
     this.options.defaultAttractionZoMoria = -4;
+  }
+
+  onDiesisChanged(neume: Accidental, moria: number) {
+    moria = Math.round(moria);
+
+    moria = Math.max(0, moria);
+    moria = Math.min(72, moria);
+
+    this.options.alterationMoriaMap[neume] = moria;
+
+    this.$forceUpdate();
+  }
+
+  onYfesisChanged(neume: Accidental, moria: number) {
+    moria = Math.round(moria);
+
+    moria = Math.max(-72, moria);
+    moria = Math.min(0, moria);
+
+    this.options.alterationMoriaMap[neume] = moria;
+
+    this.$forceUpdate();
+  }
+
+  onGeneralSharpMoriaChanged(value: number) {
+    value = Math.max(0, value);
+    value = Math.min(72, value);
+    value = Math.round(value);
+
+    this.options.generalSharpMoria = value;
+
+    this.$forceUpdate();
+  }
+
+  onGeneralFlatMoriaChanged(value: number) {
+    value = Math.max(-72, value);
+    value = Math.min(0, value);
+    value = Math.round(value);
+
+    this.options.generalFlatMoria = value;
+
+    this.$forceUpdate();
+  }
+
+  onDefaultAttractionZoMoriaChanged(value: number) {
+    value = Math.max(-72, value);
+    value = Math.min(0, value);
+    value = Math.round(value);
+
+    this.options.defaultAttractionZoMoria = value;
+
+    this.$forceUpdate();
+  }
+
+  onTuningChanged(value: number) {
+    this.tuning = Math.max(-2400, value);
+    this.tuning = Math.min(2400, this.tuning);
+    this.tuning = Math.round(this.tuning);
+    this.options.frequencyDi = +(
+      FREQUENCY_G3 * Math.pow(2, this.tuning / 1200)
+    ).toFixed(1);
+
+    this.$forceUpdate();
   }
 
   close() {
@@ -528,7 +711,7 @@ export default class PlaybackSettingsDialog extends Vue {
 .pane-container {
   display: flex;
   flex-direction: column;
-  width: 520px;
+  width: 550px;
   margin-bottom: 1.5rem;
   margin-top: 1.5rem;
   overflow: auto;
@@ -571,7 +754,7 @@ input.detune {
 }
 
 .alteration-name {
-  width: 8rem;
+  width: 11rem;
 }
 
 .interval-label {
@@ -580,7 +763,7 @@ input.detune {
 }
 
 input.interval {
-  width: 2rem;
+  width: 2.5rem;
 }
 
 .volume-slider {

@@ -1,12 +1,23 @@
-import { PlaybackOptions, PlaybackService } from './PlaybackService';
+import {
+  PlaybackOptions,
+  PlaybackWorkspace,
+  PlaybackService,
+  PlaybackScale,
+} from './PlaybackService';
 import { Scale, ScaleNote } from '../../models/Scales';
 import {
+  MartyriaElement,
   ModeKeyElement,
   NoteElement,
   ScoreElement,
   TempoElement,
 } from '../../models/Element';
-import { Fthora, QuantitativeNeume } from '../../models/Neumes';
+import {
+  Accidental,
+  Fthora,
+  Note,
+  QuantitativeNeume,
+} from '../../models/Neumes';
 import { toBeDeepCloseTo, toMatchCloseTo } from 'jest-matcher-deep-close-to';
 expect.extend({ toBeDeepCloseTo, toMatchCloseTo });
 
@@ -524,6 +535,50 @@ describe('PlaybackService', () => {
       );
     });
 
+    it('should jump to martyria note for non-auto martyria', () => {
+      const service = new PlaybackService();
+
+      const options = getDefaultWorkspaceOptions();
+      options.diatonicIntervals = [12, 10, 8];
+
+      const elements: ScoreElement[] = [];
+
+      elements.push(getModeKey(5, Scale.Diatonic, ScaleNote.Pa));
+      elements.push(getNote(QuantitativeNeume.Ison));
+      elements.push(getNote(QuantitativeNeume.OligonPlusKentimaAbove));
+      elements.push(getNote(QuantitativeNeume.Kentemata));
+      elements.push(getMartyria({ auto: false, note: Note.Pa }));
+      elements.push(getNote(QuantitativeNeume.Ison));
+
+      const events = service.computePlaybackSequence(elements, options);
+      const expectedFrequencies = [
+        getDiatonicFrequency(ScaleNote.Pa),
+        getDiatonicFrequency(ScaleNote.Thi),
+        getDiatonicFrequency(ScaleNote.Ke),
+        getDiatonicFrequency(ScaleNote.Pa),
+      ];
+
+      expect(events.map((x) => x.frequency)).toBeDeepCloseTo(
+        expectedFrequencies,
+        2,
+      );
+    });
+
+    it('should clear enharmonic Ga when mode key changes', () => {
+      const service = new PlaybackService();
+
+      const workspace = getDefaultWorkspace([], service.diatonicScale);
+
+      workspace.enharmonicGa = true;
+
+      service.applyModeKey(
+        getModeKey(1, Scale.Diatonic, ScaleNote.Pa),
+        workspace,
+      );
+
+      expect(workspace.enharmonicGa).toBeFalsy();
+    });
+
     it.each`
       initialBpm | finalBpm | expectedResult
       ${120}     | ${60}    | ${[0, 0.5, 1, 1.5, 4, 5, 6, 7]}
@@ -561,11 +616,13 @@ describe('PlaybackService', () => {
   });
 });
 
+const defaultFrequencyDi = 196;
+
 function getDefaultWorkspaceOptions() {
   return {
-    useLegetos: true,
+    useLegetos: false,
     useDefaultAttractionZo: true,
-    frequencyDi: 196,
+    frequencyDi: defaultFrequencyDi,
     speed: 1,
 
     diatonicIntervals: [12, 10, 8],
@@ -581,7 +638,58 @@ function getDefaultWorkspaceOptions() {
     generalSharpMoria: 4,
 
     defaultAttractionZoMoria: -4,
+
+    volumeIson: -4,
+    volumeMelody: 0,
+
+    alterationMoriaMap: {
+      [Accidental.Flat_2_Right]: -2,
+      [Accidental.Flat_4_Right]: -4,
+      [Accidental.Flat_6_Right]: -6,
+      [Accidental.Flat_8_Right]: -8,
+      [Accidental.Sharp_2_Left]: 2,
+      [Accidental.Sharp_4_Left]: 4,
+      [Accidental.Sharp_6_Left]: 6,
+      [Accidental.Sharp_8_Left]: 8,
+    },
   } as PlaybackOptions;
+}
+
+function getDefaultWorkspace(elements: ScoreElement[], scale: PlaybackScale) {
+  let workspace: PlaybackWorkspace = {
+    elements,
+    elementIndex: 0,
+    innerElementIndex: 0,
+    currentNoteElement: null,
+
+    options: getDefaultWorkspaceOptions(),
+
+    intervalIndex: 0,
+    frequency: defaultFrequencyDi,
+    isonFrequency: 0,
+    scale: scale,
+    legetos: false,
+    note: 3, // Thi
+    noteOffset: 0,
+
+    bpm: 0,
+    beat: 0,
+
+    ignoreAttractions: false,
+
+    lastAlterationMoria: 0,
+
+    //chroa
+    enharmonicZo: false,
+    enharmonicGa: false,
+    enharmonicVou: false,
+    generalFlat: false,
+    generalSharp: false,
+
+    permanentEnharmonicZo: false,
+  };
+
+  return workspace;
 }
 
 function getModeKey(
@@ -613,6 +721,16 @@ function getNote(base: QuantitativeNeume, options?: Partial<NoteElement>) {
   return element;
 }
 
+function getMartyria(options?: Partial<MartyriaElement>) {
+  const element = new MartyriaElement();
+
+  if (options) {
+    Object.assign(element, options);
+  }
+
+  return element;
+}
+
 function getTempoChange(bpm: number) {
   const element = new TempoElement();
   element.bpm = bpm;
@@ -620,23 +738,33 @@ function getTempoChange(bpm: number) {
   return element;
 }
 
-/*
-      ${ScaleNote.VouLow}  | ${77.78}
-      ${ScaleNote.GaLow}   | ${84.82}
-      ${ScaleNote.ThiLow}  | ${98}
-      ${ScaleNote.KeLow}   | ${110}
-      ${ScaleNote.Zo}      | ${116.54}
-      ${ScaleNote.Ni}      | ${127.09}
-      ${ScaleNote.Pa}      | ${146.83}
-      ${ScaleNote.Vou}     | ${155.57}
-      ${ScaleNote.Ga}      | ${169.65}
-      ${ScaleNote.Thi}     | ${196}
-      ${ScaleNote.Ke}      | ${220}
-      ${ScaleNote.ZoHigh}  | ${233.08}
-      ${ScaleNote.NiHigh}  | ${254.18}
-      ${ScaleNote.PaHigh}  | ${293.67}
-      ${ScaleNote.VouHigh} | ${311.13}
-      ${ScaleNote.GaHigh}  | ${339.29}
-      ${ScaleNote.ThiHigh} | ${392}
-      ${ScaleNote.KeHigh}  | ${440.01}
-*/
+/**
+ * Frequencies for a 12-10-8 diatonic scale
+ */
+const diatonicFrequencyMap = new Map<ScaleNote, number>([
+  [ScaleNote.VouLow, 80.84],
+  [ScaleNote.GaLow, 87.31],
+  [ScaleNote.ThiLow, 98],
+  [ScaleNote.KeLow, 110],
+  [ScaleNote.Zo, 121.12],
+  [ScaleNote.Ni, 130.81],
+  [ScaleNote.Pa, 146.83],
+  [ScaleNote.Vou, 161.67],
+  [ScaleNote.Ga, 174.62],
+  [ScaleNote.Thi, 196],
+  [ScaleNote.Ke, 220],
+  [ScaleNote.ZoHigh, 242.24],
+  [ScaleNote.NiHigh, 261.63],
+  [ScaleNote.PaHigh, 293.67],
+  [ScaleNote.VouHigh, 323.35],
+  [ScaleNote.GaHigh, 349.23],
+  [ScaleNote.ThiHigh, 392],
+  [ScaleNote.KeHigh, 440.01],
+]);
+
+/**
+ * Returns the frequency for a note in the 12-10-8 diatonic scale
+ */
+function getDiatonicFrequency(note: ScaleNote) {
+  return diatonicFrequencyMap.get(note)!;
+}

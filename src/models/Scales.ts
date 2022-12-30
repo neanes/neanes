@@ -1,4 +1,4 @@
-import { Ison } from './Neumes';
+import { Ison, Note } from './Neumes';
 
 export enum Scale {
   Diatonic = 'Diatonic',
@@ -55,6 +55,27 @@ const scaleNoteToNoteValueMap = new Map<ScaleNote, number>([
   [ScaleNote.KeHigh, 11],
 ]);
 
+const noteToNoteValueMap = new Map<Note, number>([
+  [Note.VouLow, -6],
+  [Note.GaLow, -5],
+  [Note.ThiLow, -4],
+  [Note.KeLow, -3],
+  [Note.Zo, -2],
+  [Note.Ni, -1],
+  [Note.Pa, 0],
+  [Note.Vou, 1],
+  [Note.Ga, 2],
+  [Note.Thi, 3],
+  [Note.Ke, 4],
+  [Note.ZoHigh, 5],
+  [Note.NiHigh, 6],
+  [Note.PaHigh, 7],
+  [Note.VouHigh, 8],
+  [Note.GaHigh, 9],
+  [Note.ThiHigh, 10],
+  [Note.KeHigh, 11],
+]);
+
 const isonToNoteValueMap = new Map<Ison, number>([
   [Ison.ThiLow, -4],
   [Ison.KeLow, -3],
@@ -70,5 +91,7 @@ const isonToNoteValueMap = new Map<Ison, number>([
 
 export const getScaleNoteValue = (note: ScaleNote) =>
   scaleNoteToNoteValueMap.get(note)!;
+
+export const getNoteValue = (note: Note) => noteToNoteValueMap.get(note)!;
 
 export const getIsonValue = (ison: Ison) => isonToNoteValueMap.get(ison)!;

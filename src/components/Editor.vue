@@ -8,8 +8,11 @@
       :entryMode="entryMode"
       :zoom="zoom"
       :zoomToFit="zoomToFit"
+      :audioState="audioService.state"
+      :audioOptions="audioOptions"
       @update:zoom="updateZoom"
       @update:zoomToFit="updateZoomToFit"
+      @update:audioOptionsSpeed="updateAudioOptionsSpeed"
       @add-auto-martyria="addAutoMartyria"
       @update:entryMode="updateEntryMode"
       @toggle-page-break="togglePageBreak"
@@ -18,6 +21,8 @@
       @add-drop-cap="addDropCap(false)"
       @delete-selected-element="deleteSelectedElement"
       @click.native="selectedLyrics = null"
+      @play-audio="playAudio"
+      @open-playback-settings="openPlaybackSettingsDialog"
     />
     <div class="content">
       <NeumeSelector
@@ -128,6 +133,7 @@
                         :class="[
                           {
                             selected: isSelected(element),
+                            'audio-selected': isAudioSelected(element),
                             'no-print': isBrowser,
                           },
                         ]"
@@ -269,6 +275,7 @@
                     <ModeKey
                       :ref="`element-${getElementIndex(element)}`"
                       :element="element"
+                      :pageSetup="score.pageSetup"
                       :class="[
                         {
                           selectedTextbox: element === selectedElement,
@@ -282,6 +289,7 @@
                       v-if="isBrowser && printMode"
                       class="print-only"
                       :element="element"
+                      :pageSetup="score.pageSetup"
                     />
                   </template>
                   <template v-if="isDropCapElement(element)">
@@ -387,8 +395,19 @@
         @update:strokeWidth="updateModeKeyStrokeWidth(selectedElement, $event)"
         @update:alignment="updateModeKeyAlignment(selectedElement, $event)"
         @update:color="updateModeKeyColor(selectedElement, $event)"
+        @update:bpm="updateModeKeyBpm(selectedElement, $event)"
+        @update:ignoreAttractions="
+          updateModeKeyIgnoreAttractions(selectedElement, $event)
+        "
+        @update:tempoAlignRight="
+          updateModeKeyTempoAlignRight(selectedElement, $event)
+        "
+        @update:tempo="setModeKeyTempo(selectedElement, $event)"
         @update:heightAdjustment="
           updateModeKeyHeightAdjustment(selectedElement, $event)
+        "
+        @update:permanentEnharmonicZo="
+          updateModeKeyPermanentEnharmonicZo(selectedElement, $event)
         "
         @open-mode-key-dialog="openModeKeyDialog"
       />
@@ -401,6 +420,9 @@
         :pageSetup="score.pageSetup"
         @update:accidental="setAccidental(selectedElement, $event)"
         @update:fthora="setFthoraNote(selectedElement, $event)"
+        @update:chromaticFthoraNote="
+          updateNoteChromaticFthoraNote(selectedElement, $event)
+        "
         @update:gorgon="setGorgon(selectedElement, $event)"
         @update:klasma="setKlasma(selectedElement)"
         @update:time="setTimeNeume(selectedElement, $event)"
@@ -411,6 +433,9 @@
         @update:ison="setIson(selectedElement, $event)"
         @update:vareia="updateNoteVareia(selectedElement, $event)"
         @update:spaceAfter="updateNoteSpaceAfter(selectedElement, $event)"
+        @update:ignoreAttractions="
+          updateNoteIgnoreAttractions(selectedElement, $event)
+        "
         @open-syllable-positioning-dialog="openSyllablePositioningDialog"
       />
     </template>
@@ -421,12 +446,16 @@
         :element="selectedElement"
         :pageSetup="score.pageSetup"
         @update:fthora="setFthoraMartyria(selectedElement, $event)"
+        @update:chromaticFthoraNote="
+          updateMartyriaChromaticFthoraNote(selectedElement, $event)
+        "
         @update:tempo="setMartyriaTempo(selectedElement, $event)"
         @update:measureBar="setMeasureBarMartyria(selectedElement, $event)"
         @update:alignRight="updateMartyriaAlignRight(selectedElement, $event)"
         @update:auto="updateMartyriaAuto(selectedElement, $event)"
         @update:note="updateMartyriaNote(selectedElement, $event)"
         @update:scale="updateMartyriaScale(selectedElement, $event)"
+        @update:bpm="updateMartyriaBpm(selectedElement, $event)"
         @update:spaceAfter="updateMartyriaSpaceAfter(selectedElement, $event)"
       />
     </template>
@@ -434,6 +463,7 @@
       <ToolbarTempo
         :element="selectedElement"
         :pageSetup="score.pageSetup"
+        @update:bpm="updateTempoBpm(selectedElement, $event)"
         @update:spaceAfter="updateTempoSpaceAfter(selectedElement, $event)"
       />
     </template>
@@ -450,6 +480,18 @@
       :pageSetup="score.pageSetup"
       @update="updateNoteAndSave(selectedElement, $event)"
       @close="closeSyllablePositioningDialog"
+    />
+    <PlaybackSettingsDialog
+      v-if="playbackSettingsDialogIsOpen"
+      :options="audioOptions"
+      @close="closePlaybackSettingsDialog"
+      @play-test-tone="playTestTone"
+    />
+    <EditorPreferencesDialog
+      v-if="editorPreferencesDialogIsOpen"
+      :options="editorPreferences"
+      :pageSetup="score.pageSetup"
+      @close="closeEditorPreferencesDialog"
     />
     <PageSetupDialog
       v-if="pageSetupDialogIsOpen"
@@ -515,6 +557,8 @@ import ToolbarMartyria from '@/components/ToolbarMartyria.vue';
 import ToolbarTempo from '@/components/ToolbarTempo.vue';
 import ModeKeyDialog from '@/components/ModeKeyDialog.vue';
 import SyllablePositioningDialog from '@/components/SyllablePositioningDialog.vue';
+import PlaybackSettingsDialog from '@/components/PlaybackSettingsDialog.vue';
+import EditorPreferencesDialog from '@/components/EditorPreferencesDialog.vue';
 import PageSetupDialog from '@/components/PageSetupDialog.vue';
 import FileMenuBar from '@/components/FileMenuBar.vue';
 import {
@@ -539,7 +583,7 @@ import { PageSetup } from '@/models/PageSetup';
 import { Header } from '@/models/Header';
 import { Footer } from '@/models/Footer';
 import { TokenMetadata } from '@/utils/replaceTokens';
-import { Scale } from '@/models/Scales';
+import { Scale, ScaleNote } from '@/models/Scales';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { IPlatformService } from '@/services/platform/IPlatformService';
 import { NeumeKeyboard } from '@/services/NeumeKeyboard';
@@ -549,6 +593,22 @@ import {
   onlyTakesTopGorgon,
   onlyTakesTopKlasma,
 } from '@/models/NeumeReplacements';
+
+import {
+  AudioService,
+  AudioServiceEventNames,
+  AudioState,
+} from '@/services/audio/AudioService';
+
+import {
+  PlaybackOptions,
+  PlaybackSequenceEvent,
+  PlaybackService,
+} from '@/services/audio/PlaybackService';
+
+export interface EditorPreferences {
+  tempoDefaults: { [key in TempoSign]?: number };
+}
 
 @Component({
   components: {
@@ -572,6 +632,8 @@ import {
     ToolbarMain,
     ModeKeyDialog,
     SyllablePositioningDialog,
+    PlaybackSettingsDialog,
+    EditorPreferencesDialog,
     PageSetupDialog,
     FileMenuBar,
   },
@@ -597,7 +659,9 @@ export default class Editor extends Vue {
 
   modeKeyDialogIsOpen: boolean = false;
   syllablePositioningDialogIsOpen: boolean = false;
+  playbackSettingsDialogIsOpen: boolean = false;
   pageSetupDialogIsOpen: boolean = false;
+  editorPreferencesDialogIsOpen: boolean = false;
 
   clipboard: ScoreElement[] = [];
 
@@ -605,6 +669,59 @@ export default class Editor extends Vue {
 
   neumeKeyboard: NeumeKeyboard = new NeumeKeyboard();
   keyboardModifier: string | null = null;
+
+  audioService = new AudioService();
+  playbackService = new PlaybackService();
+
+  audioElement: ScoreElement | null = null;
+  playbackEvents: PlaybackSequenceEvent[] = [];
+  audioOptions: PlaybackOptions = {
+    useLegetos: false,
+    useDefaultAttractionZo: true,
+    frequencyDi: 196,
+    speed: 1,
+
+    diatonicIntervals: [12, 10, 8],
+    hardChromaticIntervals: [6, 20, 4],
+    softChromaticIntervals: [8, 14, 8],
+    legetosIntervals: [6, 9, 15],
+    zygosIntervals: [18, 4, 16, 4],
+    zygosLegetosIntervals: [18, 4, 20, 4],
+    spathiIntervals: [20, 4, 4, 14],
+    klitonIntervals: [14, 12, 4],
+
+    generalFlatMoria: -6,
+    generalSharpMoria: 4,
+
+    defaultAttractionZoMoria: -4,
+
+    volumeIson: -4,
+    volumeMelody: 0,
+
+    alterationMoriaMap: {
+      [Accidental.Flat_2_Right]: -2,
+      [Accidental.Flat_4_Right]: -4,
+      [Accidental.Flat_6_Right]: -6,
+      [Accidental.Flat_8_Right]: -8,
+      [Accidental.Sharp_2_Left]: 2,
+      [Accidental.Sharp_4_Left]: 4,
+      [Accidental.Sharp_6_Left]: 6,
+      [Accidental.Sharp_8_Left]: 8,
+    },
+  };
+
+  editorPreferences: EditorPreferences = {
+    tempoDefaults: {
+      [TempoSign.VerySlow]: 40, // < 56 triargon?
+      [TempoSign.Slower]: 56, // 56 - 80 diargon
+      [TempoSign.Slow]: 80, // 80 - 100 hemiolion
+      [TempoSign.Moderate]: 100, // 100 - 168 argon
+      [TempoSign.Medium]: 130, // 130 argon + gorgon
+      [TempoSign.Quick]: 168, // 168 - 208 gorgon
+      [TempoSign.Quicker]: 208, // 208+ digorgon
+      [TempoSign.VeryQuick]: 250, // unattested? trigorgon
+    },
+  };
 
   // Commands
   noteElementCommandFactory: CommandFactory<NoteElement> =
@@ -803,6 +920,8 @@ export default class Editor extends Vue {
         this.selectedWorkspace.scrollTop,
       );
     });
+
+    this.stopAudio();
   }
 
   get score() {
@@ -838,6 +957,18 @@ export default class Editor extends Vue {
       this.selectedLyrics = null;
       this.selectionRange = null;
       this.selectedHeaderFooterElement = null;
+
+      if (this.audioService.state === AudioState.Playing) {
+        const event = this.playbackEvents.find(
+          (x) => x.elementIndex === this.getElementIndex(element),
+        );
+
+        if (event) {
+          this.audioService.jumpToEvent(event);
+        }
+      } else if (this.audioService.state === AudioState.Paused) {
+        this.stopAudio();
+      }
     }
 
     this.selectedWorkspace.selectedElement = element;
@@ -998,7 +1129,13 @@ export default class Editor extends Vue {
   }
 
   get dialogOpen() {
-    return this.modeKeyDialogIsOpen || this.pageSetupDialogIsOpen;
+    return (
+      this.modeKeyDialogIsOpen ||
+      this.pageSetupDialogIsOpen ||
+      this.playbackSettingsDialogIsOpen ||
+      this.syllablePositioningDialogIsOpen ||
+      this.editorPreferencesDialogIsOpen
+    );
   }
 
   get filteredPages() {
@@ -1143,6 +1280,24 @@ export default class Editor extends Vue {
   }
 
   mounted() {
+    const savedAudioOptions = localStorage.getItem('audioOptionsDefault');
+
+    if (savedAudioOptions != null) {
+      Object.assign(this.audioOptions, JSON.parse(savedAudioOptions));
+
+      // -Infinity is not valid JSON, so it is serialized as null.
+      // Deserialize as -Infinity
+      this.audioOptions.volumeIson = this.audioOptions.volumeIson ?? -Infinity;
+      this.audioOptions.volumeMelody =
+        this.audioOptions.volumeMelody ?? -Infinity;
+    }
+
+    const savedEditorPreferences = localStorage.getItem('editorPreferences');
+
+    if (savedEditorPreferences != null) {
+      Object.assign(this.editorPreferences, JSON.parse(savedEditorPreferences));
+    }
+
     window.addEventListener('keydown', this.onKeydown);
     window.addEventListener('keyup', this.onKeyup);
     window.addEventListener('resize', this.onWindowResizeThrottled);
@@ -1164,6 +1319,10 @@ export default class Editor extends Vue {
     EventBus.$on(IpcMainChannels.FileMenuCut, this.onFileMenuCut);
     EventBus.$on(IpcMainChannels.FileMenuCopy, this.onFileMenuCopy);
     EventBus.$on(IpcMainChannels.FileMenuPaste, this.onFileMenuPaste);
+    EventBus.$on(
+      IpcMainChannels.FileMenuPreferences,
+      this.onFileMenuPreferences,
+    );
     EventBus.$on(
       IpcMainChannels.FileMenuInsertTextBox,
       this.onFileMenuInsertTextBox,
@@ -1192,6 +1351,13 @@ export default class Editor extends Vue {
       IpcMainChannels.FileMenuGenerateTestFile,
       this.onFileMenuGenerateTestFile,
     );
+
+    EventBus.$on(
+      AudioServiceEventNames.EventPlay,
+      this.onAudioServiceEventPlay,
+    );
+
+    EventBus.$on(AudioServiceEventNames.Stop, this.onAudioServiceStop);
   }
 
   beforeDestroy() {
@@ -1219,6 +1385,10 @@ export default class Editor extends Vue {
     EventBus.$off(IpcMainChannels.FileMenuCopy, this.onFileMenuCopy);
     EventBus.$off(IpcMainChannels.FileMenuPaste, this.onFileMenuPaste);
     EventBus.$off(
+      IpcMainChannels.FileMenuPreferences,
+      this.onFileMenuPreferences,
+    );
+    EventBus.$off(
       IpcMainChannels.FileMenuInsertTextBox,
       this.onFileMenuInsertTextBox,
     );
@@ -1238,6 +1408,15 @@ export default class Editor extends Vue {
       IpcMainChannels.FileMenuGenerateTestFile,
       this.onFileMenuGenerateTestFile,
     );
+
+    EventBus.$off(
+      AudioServiceEventNames.EventPlay,
+      this.onAudioServiceEventPlay,
+    );
+
+    EventBus.$off(AudioServiceEventNames.Stop, this.onAudioServiceStop);
+
+    this.audioService.dispose();
   }
 
   getElementIndex(element: ScoreElement) {
@@ -1279,6 +1458,10 @@ export default class Editor extends Vue {
     return false;
   }
 
+  isAudioSelected(element: ScoreElement) {
+    return this.audioElement === element;
+  }
+
   isMelisma(element: NoteElement) {
     return element.melismaWidth > 0;
   }
@@ -1299,8 +1482,33 @@ export default class Editor extends Vue {
     this.syllablePositioningDialogIsOpen = false;
   }
 
+  openPlaybackSettingsDialog() {
+    this.playbackSettingsDialogIsOpen = true;
+
+    this.stopAudio();
+  }
+
+  closePlaybackSettingsDialog() {
+    this.playbackSettingsDialogIsOpen = false;
+
+    this.saveAudioOptions();
+  }
+
   closePageSetupDialog() {
     this.pageSetupDialogIsOpen = false;
+  }
+
+  closeEditorPreferencesDialog() {
+    this.editorPreferencesDialogIsOpen = false;
+
+    this.saveEditorPreferences();
+  }
+
+  saveEditorPreferences() {
+    localStorage.setItem(
+      'editorPreferences',
+      JSON.stringify(this.editorPreferences),
+    );
   }
 
   isLastElement(element: ScoreElement) {
@@ -1474,6 +1682,9 @@ export default class Editor extends Vue {
 
     const element = new TempoElement();
     element.neume = neume;
+    element.bpm =
+      this.editorPreferences.tempoDefaults[neume] ??
+      TempoElement.getDefaultBpm(neume);
 
     switch (this.entryMode) {
       case EntryMode.Auto:
@@ -1694,7 +1905,7 @@ export default class Editor extends Vue {
         this.onPasteScoreElementsThrottled();
         event.preventDefault();
         return;
-      } else if (event.code === 'KeyI') {
+      } else if (event.code === 'KeyI' && !event.shiftKey) {
         switch (this.entryMode) {
           case EntryMode.Auto:
             this.updateEntryMode(EntryMode.Insert);
@@ -1707,7 +1918,7 @@ export default class Editor extends Vue {
             break;
         }
         return;
-      } else if (event.code === 'KeyU') {
+      } else if (event.code === 'KeyU' && !event.shiftKey) {
         switch (this.entryMode) {
           case EntryMode.Auto:
             this.updateEntryMode(EntryMode.Edit);
@@ -1760,9 +1971,21 @@ export default class Editor extends Vue {
           handled = true;
           break;
         case 'ArrowRight':
-        case 'Space':
           this.moveRightThrottled();
           handled = true;
+          break;
+        case 'Space':
+          if (!event.repeat) {
+            if (
+              this.audioService.state === AudioState.Stopped ||
+              event.ctrlKey
+            ) {
+              this.playAudio();
+            } else {
+              this.pauseAudio();
+            }
+            handled = true;
+          }
           break;
         case 'Backspace':
           handled = true;
@@ -2937,6 +3160,14 @@ export default class Editor extends Vue {
     }
   }
 
+  private setModeKeyTempo(element: ModeKeyElement, neume: TempoSign) {
+    if (element.tempo === neume) {
+      this.updateModeKeyTempo(element, null);
+    } else {
+      this.updateModeKeyTempo(element, neume);
+    }
+  }
+
   private setAccidental(element: NoteElement, neume: Accidental) {
     if (element.accidental != null && element.accidental === neume) {
       this.updateNoteAccidental(element, null);
@@ -3104,7 +3335,31 @@ export default class Editor extends Vue {
   }
 
   updateNoteFthora(element: NoteElement, fthora: Fthora | null) {
-    this.updateNote(element, { fthora });
+    let chromaticFthoraNote: ScaleNote | null = null;
+
+    if (
+      fthora === Fthora.SoftChromaticThi_Top ||
+      fthora === Fthora.SoftChromaticThi_Bottom
+    ) {
+      chromaticFthoraNote = ScaleNote.Thi;
+    } else if (
+      fthora === Fthora.SoftChromaticPa_Top ||
+      fthora === Fthora.SoftChromaticPa_Bottom
+    ) {
+      chromaticFthoraNote = ScaleNote.Ke;
+    } else if (
+      fthora === Fthora.HardChromaticThi_Top ||
+      fthora === Fthora.HardChromaticThi_Bottom
+    ) {
+      chromaticFthoraNote = ScaleNote.Thi;
+    } else if (
+      fthora === Fthora.HardChromaticPa_Top ||
+      fthora === Fthora.HardChromaticPa_Bottom
+    ) {
+      chromaticFthoraNote = ScaleNote.Pa;
+    }
+
+    this.updateNote(element, { fthora, chromaticFthoraNote });
     this.save();
   }
 
@@ -3168,6 +3423,22 @@ export default class Editor extends Vue {
 
   updateNoteSpaceAfter(element: NoteElement, spaceAfter: number) {
     this.updateNote(element, { spaceAfter });
+    this.save();
+  }
+
+  updateNoteIgnoreAttractions(
+    element: NoteElement,
+    ignoreAttractions: boolean,
+  ) {
+    this.updateNote(element, { ignoreAttractions });
+    this.save();
+  }
+
+  updateNoteChromaticFthoraNote(
+    element: NoteElement,
+    chromaticFthoraNote: ScaleNote | null,
+  ) {
+    this.updateNote(element, { chromaticFthoraNote });
     this.save();
   }
 
@@ -3339,12 +3610,58 @@ export default class Editor extends Vue {
     this.updateModeKey(element, { heightAdjustment });
   }
 
+  updateModeKeyTempo(element: ModeKeyElement, tempo: TempoSign | null) {
+    let bpm = element.bpm;
+
+    if (tempo != null) {
+      bpm =
+        this.editorPreferences.tempoDefaults[tempo] ??
+        TempoElement.getDefaultBpm(tempo);
+    }
+
+    this.updateModeKey(element, { tempo, bpm });
+  }
+
+  updateModeKeyBpm(element: ModeKeyElement, bpm: number) {
+    bpm = Math.round(bpm);
+    bpm = Math.max(5, bpm);
+    bpm = Math.min(999, bpm);
+
+    this.updateModeKey(element, { bpm });
+    this.save();
+  }
+
+  updateModeKeyIgnoreAttractions(
+    element: ModeKeyElement,
+    ignoreAttractions: boolean,
+  ) {
+    this.updateModeKey(element, { ignoreAttractions });
+    this.save();
+  }
+
+  updateModeKeyTempoAlignRight(
+    element: ModeKeyElement,
+    tempoAlignRight: boolean,
+  ) {
+    this.updateModeKey(element, { tempoAlignRight });
+    this.save();
+  }
+
+  updateModeKeyPermanentEnharmonicZo(
+    element: ModeKeyElement,
+    permanentEnharmonicZo: boolean,
+  ) {
+    this.updateModeKey(element, { permanentEnharmonicZo });
+    this.save();
+  }
+
   updateModeKeyFromTemplate(element: ModeKeyElement, template: ModeKeyElement) {
     const {
       templateId,
       mode,
       scale,
       scaleNote,
+      fthora,
       martyria,
       fthoraAboveNote,
       fthoraAboveNote2,
@@ -3361,6 +3678,7 @@ export default class Editor extends Vue {
       mode,
       scale,
       scaleNote,
+      fthora,
       martyria,
       fthoraAboveNote,
       fthoraAboveNote2,
@@ -3392,11 +3710,52 @@ export default class Editor extends Vue {
   }
 
   updateMartyriaFthora(element: MartyriaElement, fthora: Fthora | null) {
-    this.updateMartyria(element, { fthora });
+    let chromaticFthoraNote: ScaleNote | null = null;
+
+    if (
+      fthora === Fthora.SoftChromaticThi_Top ||
+      fthora === Fthora.SoftChromaticThi_Bottom
+    ) {
+      chromaticFthoraNote = ScaleNote.Thi;
+    } else if (
+      fthora === Fthora.SoftChromaticPa_Top ||
+      fthora === Fthora.SoftChromaticPa_Bottom
+    ) {
+      chromaticFthoraNote = ScaleNote.Ke;
+    } else if (
+      fthora === Fthora.HardChromaticThi_Top ||
+      fthora === Fthora.HardChromaticThi_Bottom
+    ) {
+      chromaticFthoraNote = ScaleNote.Thi;
+    } else if (
+      fthora === Fthora.HardChromaticPa_Top ||
+      fthora === Fthora.HardChromaticPa_Bottom
+    ) {
+      chromaticFthoraNote = ScaleNote.Pa;
+    }
+
+    this.updateMartyria(element, { fthora, chromaticFthoraNote });
   }
 
   updateMartyriaTempo(element: MartyriaElement, tempo: TempoSign | null) {
-    this.updateMartyria(element, { tempo });
+    let bpm = element.bpm;
+
+    if (tempo != null) {
+      bpm =
+        this.editorPreferences.tempoDefaults[tempo] ??
+        TempoElement.getDefaultBpm(tempo);
+    }
+
+    this.updateMartyria(element, { tempo, bpm });
+  }
+
+  updateMartyriaBpm(element: MartyriaElement, bpm: number) {
+    bpm = Math.round(bpm);
+    bpm = Math.max(5, bpm);
+    bpm = Math.min(999, bpm);
+
+    this.updateMartyria(element, { bpm });
+    this.save();
   }
 
   updateMartyriaMeasureBar(
@@ -3418,6 +3777,13 @@ export default class Editor extends Vue {
 
   updateMartyriaAlignRight(element: MartyriaElement, alignRight: boolean) {
     this.updateMartyria(element, { alignRight });
+  }
+
+  updateMartyriaChromaticFthoraNote(
+    element: MartyriaElement,
+    chromaticFthoraNote: ScaleNote | null,
+  ) {
+    this.updateMartyria(element, { chromaticFthoraNote });
   }
 
   updateMartyriaAuto(element: MartyriaElement, auto: boolean) {
@@ -3462,6 +3828,15 @@ export default class Editor extends Vue {
 
   updateTempoSpaceAfter(element: TempoElement, spaceAfter: number) {
     this.updateTempo(element, { spaceAfter });
+    this.save();
+  }
+
+  updateTempoBpm(element: TempoElement, bpm: number) {
+    bpm = Math.round(bpm);
+    bpm = Math.max(5, bpm);
+    bpm = Math.min(999, bpm);
+
+    this.updateTempo(element, { bpm });
     this.save();
   }
 
@@ -3589,6 +3964,103 @@ export default class Editor extends Vue {
       parseFloat(computedStyle.paddingRight);
 
     this.zoom = availableWidth / this.score.pageSetup.pageWidth;
+  }
+
+  playAudio() {
+    try {
+      if (this.audioService.state === AudioState.Stopped) {
+        this.playbackEvents = this.playbackService.computePlaybackSequence(
+          this.elements,
+          this.audioOptions,
+        );
+
+        const startAt = this.playbackEvents.find(
+          (x) => x.elementIndex >= this.selectedElementIndex,
+        );
+
+        this.audioService.play(this.playbackEvents, this.audioOptions, startAt);
+      } else {
+        this.pauseAudio();
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  stopAudio() {
+    try {
+      this.audioService.stop();
+
+      this.playbackEvents = [];
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  pauseAudio() {
+    try {
+      this.audioService.togglePause();
+
+      if (this.audioService.state === AudioState.Paused) {
+        this.audioElement = null;
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  playTestTone() {
+    try {
+      this.audioService.playTestTone(this.audioOptions.frequencyDi);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  updateAudioOptionsSpeed(speed: number) {
+    if (this.audioService.state === AudioState.Paused) {
+      this.stopAudio();
+    }
+
+    speed = Math.max(0.1, speed);
+    speed = Math.min(3, speed);
+    speed = +speed.toFixed(2);
+
+    this.audioOptions.speed = speed;
+
+    this.saveAudioOptions();
+  }
+
+  saveAudioOptions() {
+    localStorage.setItem(
+      'audioOptionsDefault',
+      JSON.stringify(this.audioOptions),
+    );
+  }
+
+  onAudioServiceEventPlay(event: PlaybackSequenceEvent) {
+    if (this.audioService.state === AudioState.Playing) {
+      this.audioElement = this.elements[event.elementIndex];
+
+      // Scroll the currently playing element into view
+      const lyrics = (this.$refs[`lyrics-${event.elementIndex}`] as any[])[0];
+
+      const neumeBox = (
+        this.$refs[`element-${event.elementIndex}`] as any[]
+      )[0];
+
+      if (lyrics?.$el.scrollIntoViewIfNeeded) {
+        lyrics.$el.scrollIntoViewIfNeeded(false);
+      }
+
+      if (neumeBox?.scrollIntoViewIfNeeded) {
+        neumeBox.scrollIntoViewIfNeeded(false);
+      }
+    }
+  }
+
+  onAudioServiceStop(event: PlaybackSequenceEvent) {
+    this.audioElement = null;
   }
 
   onFileMenuNewScore() {
@@ -3810,6 +4282,12 @@ export default class Editor extends Vue {
     }
   }
 
+  onFileMenuPreferences() {
+    if (!this.dialogOpen) {
+      this.editorPreferencesDialogIsOpen = true;
+    }
+  }
+
   onFileMenuGenerateTestFile(testFileType: TestFileType) {
     const workspace = new Workspace();
     workspace.tempFileName = this.getTempFilename();
@@ -3980,6 +4458,10 @@ export default class Editor extends Vue {
 
 .neume-box .selected {
   background-color: palegoldenrod;
+}
+
+.neume-box .audio-selected {
+  background-color: rgba(152, 251, 152, 0.5);
 }
 
 .selectedTextbox {

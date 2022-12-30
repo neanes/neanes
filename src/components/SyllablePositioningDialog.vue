@@ -297,11 +297,23 @@ export default class SyllablePositioningDialog extends Vue {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+.dialog-content {
+  display: flex;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 80vh;
+}
+
 .pane-container {
   display: flex;
   flex-direction: column;
   width: 420px;
   margin-bottom: 1.5rem;
+  overflow: auto;
+  flex: 1;
 }
 
 .form-group label {
@@ -322,6 +334,11 @@ export default class SyllablePositioningDialog extends Vue {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.bottom-pane {
+  overflow: auto;
+  flex: 1;
 }
 
 .header {

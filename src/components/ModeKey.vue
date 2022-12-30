@@ -24,6 +24,7 @@
       v-if="hasFthoraAboveQuantitativeNeumeRight"
       :neume="element.fthoraAboveQuantitativeNeumeRight"
     />
+    <Neume v-if="hasTempo" :neume="element.tempo" :style="tempoStyle" />
   </div>
 </template>
 
@@ -33,6 +34,7 @@ import { ModeKeyElement } from '@/models/Element';
 import Neume from '@/components/Neume.vue';
 import { ModeSign } from '@/models/Neumes';
 import { withZoom } from '@/utils/withZoom';
+import { PageSetup } from '@/models/PageSetup';
 
 @Component({
   components: {
@@ -41,6 +43,7 @@ import { withZoom } from '@/utils/withZoom';
 })
 export default class ModeKey extends Vue {
   @Prop() element!: ModeKeyElement;
+  @Prop() pageSetup!: PageSetup;
   ModeSign = ModeSign;
 
   get hasFthoraAboveNote() {
@@ -75,6 +78,10 @@ export default class ModeKey extends Vue {
     return this.element.quantitativeNeumeRight != null;
   }
 
+  get hasTempo() {
+    return this.element.tempo != null;
+  }
+
   get style() {
     return {
       color: this.element.computedColor,
@@ -86,6 +93,23 @@ export default class ModeKey extends Vue {
       webkitTextStrokeWidth: withZoom(this.element.computedStrokeWidth),
     } as CSSStyleDeclaration;
   }
+
+  get tempoStyle() {
+    // TODO figure out a way to remove the hard-coded 12
+    // font metadata json?
+    const style = {
+      color: this.pageSetup.tempoDefaultColor,
+      webkitTextStrokeWidth: withZoom(this.pageSetup.tempoDefaultStrokeWidth),
+      top: withZoom(-12),
+    } as CSSStyleDeclaration;
+
+    if (this.element.tempoAlignRight) {
+      style.position = 'absolute';
+      style.right = withZoom(0);
+    }
+
+    return style;
+  }
 }
 </script>
 
@@ -94,5 +118,7 @@ export default class ModeKey extends Vue {
   border: 1px dotted black;
   box-sizing: border-box;
   user-select: none;
+
+  position: relative;
 }
 </style>

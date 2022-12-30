@@ -249,6 +249,19 @@
       </template>
     </div>
     <div class="row">
+      <label class="right-space">BPM</label>
+      <input
+        type="number"
+        min="5"
+        max="999"
+        step="1"
+        :disabled="element.tempo == null"
+        :value="element.bpm"
+        @change="$emit('update:bpm', $event.target.value)"
+      />
+
+      <span class="space" />
+
       <label class="right-space">Space After</label>
 
       <InputUnit
@@ -260,6 +273,19 @@
         :value="element.spaceAfter"
         @input="$emit('update:spaceAfter', $event)"
       />
+
+      <template v-if="showChromaticFthoraNote">
+        <span class="space" />
+        <label class="right-space">Fthora Note</label>
+        <select
+          :value="element.chromaticFthoraNote"
+          @change="$emit('update:chromaticFthoraNote', $event.target.value)"
+        >
+          <option v-for="note in fthoraNotes" :key="note" :value="note">
+            {{ note }}
+          </option>
+        </select>
+      </template>
     </div>
   </div>
 </template>
@@ -269,7 +295,7 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 import { MartyriaElement } from '@/models/Element';
 import { Fthora, MeasureBar, Note, TempoSign } from '@/models/Neumes';
 import InputUnit from './InputUnit.vue';
-import { Scale } from '@/models/Scales';
+import { Scale, ScaleNote } from '@/models/Scales';
 import { PageSetup } from '@/models/PageSetup';
 import { Unit } from '@/utils/Unit';
 
@@ -304,6 +330,50 @@ export default class ToolbarMartyria extends Vue {
 
   get spaceAfterMax() {
     return Math.round(Unit.toPt(this.pageSetup.pageWidth));
+  }
+
+  chromaticFthoras = [
+    Fthora.SoftChromaticPa_Top,
+    Fthora.SoftChromaticPa_Bottom,
+    Fthora.SoftChromaticThi_Top,
+    Fthora.SoftChromaticThi_Bottom,
+    Fthora.HardChromaticPa_Top,
+    Fthora.HardChromaticPa_Bottom,
+    Fthora.HardChromaticThi_Top,
+    Fthora.HardChromaticThi_Bottom,
+  ];
+
+  get fthoraNotes() {
+    if (
+      this.element.fthora === Fthora.SoftChromaticThi_Top ||
+      this.element.fthora === Fthora.SoftChromaticThi_Bottom
+    ) {
+      return [ScaleNote.Thi, ScaleNote.Vou];
+    } else if (
+      this.element.fthora === Fthora.SoftChromaticPa_Top ||
+      this.element.fthora === Fthora.SoftChromaticPa_Bottom
+    ) {
+      return [ScaleNote.Ke, ScaleNote.Ga];
+    } else if (
+      this.element.fthora === Fthora.HardChromaticThi_Top ||
+      this.element.fthora === Fthora.HardChromaticThi_Bottom
+    ) {
+      return [ScaleNote.Thi, ScaleNote.Vou];
+    } else if (
+      this.element.fthora === Fthora.HardChromaticPa_Top ||
+      this.element.fthora === Fthora.HardChromaticPa_Bottom
+    ) {
+      return [ScaleNote.Pa, ScaleNote.Ga];
+    }
+
+    return [];
+  }
+
+  get showChromaticFthoraNote() {
+    return (
+      this.element.fthora != null &&
+      this.chromaticFthoras.includes(this.element.fthora)
+    );
   }
 
   private getNoteDisplayName(note: Note) {

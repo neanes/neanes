@@ -32,6 +32,7 @@ import { PageSetup } from '@/models/PageSetup';
 import { QuantitativeNeume } from '@/models/Neumes';
 import { Header } from '@/models/Header';
 import { Footer } from '@/models/Footer';
+import { modeKeyTemplates } from '@/models/ModeKeys';
 
 interface IScore {
   version: string;
@@ -225,15 +226,18 @@ export class SaveService {
     element.rootSign = e.rootSign;
     element.scale = e.scale;
     element.fthora = e.fthora || undefined;
+    element.chromaticFthoraNote = e.chromaticFthoraNote || undefined;
     element.tempo = e.tempo || undefined;
     element.measureBarLeft = e.measureBarLeft || undefined;
     element.measureBarRight = e.measureBarRight || undefined;
     element.alignRight = e.alignRight || undefined;
+    element.bpm = e.bpm;
     element.spaceAfter = e.spaceAfter;
   }
 
   public static SaveTempo(element: TempoElement_v1, e: TempoElement) {
     element.neume = e.neume;
+    element.bpm = e.bpm;
     element.spaceAfter = e.spaceAfter;
   }
 
@@ -265,6 +269,10 @@ export class SaveService {
       element.fthora = e.fthora;
       element.fthoraOffsetX = e.fthoraOffsetX || undefined;
       element.fthoraOffsetY = e.fthoraOffsetY || undefined;
+    }
+
+    if (e.chromaticFthoraNote != null) {
+      element.chromaticFthoraNote = e.chromaticFthoraNote;
     }
 
     if (e.accidental != null) {
@@ -322,6 +330,8 @@ export class SaveService {
     element.isMelisma = e.isMelisma || undefined;
     element.isMelismaStart = e.isMelismaStart || undefined;
     element.isHyphen = e.isHyphen || undefined;
+
+    element.ignoreAttractions = e.ignoreAttractions || undefined;
   }
 
   public static SaveTextBox(element: TextBoxElement_v1, e: TextBoxElement) {
@@ -345,6 +355,9 @@ export class SaveService {
     element.mode = e.mode;
     element.scale = e.scale;
     element.scaleNote = e.scaleNote;
+    element.fthora = e.fthora || undefined;
+    element.tempo = e.tempo || undefined;
+    element.tempoAlignRight = e.tempoAlignRight || undefined;
     element.note = e.note || undefined;
     element.note2 = e.note2 || undefined;
     element.fthoraAboveNote = e.fthoraAboveNote || undefined;
@@ -362,7 +375,10 @@ export class SaveService {
     element.strokeWidth = e.strokeWidth;
     element.height = e.height;
     element.heightAdjustment = e.heightAdjustment;
+    element.bpm = e.bpm;
+    element.ignoreAttractions = e.ignoreAttractions || undefined;
     element.useDefaultStyle = e.useDefaultStyle || undefined;
+    element.permanentEnharmonicZo = e.permanentEnharmonicZo || undefined;
   }
 
   public static LoadScore_v1(s: Score_v1) {
@@ -604,8 +620,13 @@ export class SaveService {
       element.fthora = e.fthora;
     }
 
+    if (e.chromaticFthoraNote != null) {
+      element.chromaticFthoraNote = e.chromaticFthoraNote;
+    }
+
     if (e.tempo != null) {
       element.tempo = e.tempo;
+      element.bpm = e.bpm || TempoElement.getDefaultBpm(element.tempo);
     }
 
     if (e.measureBarLeft != null) {
@@ -623,6 +644,7 @@ export class SaveService {
 
   public static LoadTempo_v1(element: TempoElement, e: TempoElement_v1) {
     element.neume = e.neume;
+    element.bpm = e.bpm || TempoElement.getDefaultBpm(element.neume);
     element.spaceAfter = e.spaceAfter || 0;
   }
 
@@ -657,6 +679,10 @@ export class SaveService {
       element.fthora = e.fthora;
       element.fthoraOffsetX = e.fthoraOffsetX || null;
       element.fthoraOffsetY = e.fthoraOffsetY || null;
+    }
+
+    if (e.chromaticFthoraNote != null) {
+      element.chromaticFthoraNote = e.chromaticFthoraNote;
     }
 
     if (e.accidental != null) {
@@ -724,6 +750,7 @@ export class SaveService {
     element.isMelisma = e.isMelisma === true;
     element.isMelismaStart = e.isMelismaStart === true;
     element.isHyphen = e.isHyphen === true;
+    element.ignoreAttractions = e.ignoreAttractions === true;
     element.spaceAfter = e.spaceAfter || 0;
   }
 
@@ -748,6 +775,8 @@ export class SaveService {
     element.mode = e.mode;
     element.scale = e.scale;
     element.scaleNote = e.scaleNote;
+    element.tempo = e.tempo || null;
+    element.tempoAlignRight = e.tempoAlignRight === true;
     element.note = e.note || null;
     element.note2 = e.note2 || null;
     element.fthoraAboveNote = e.fthoraAboveNote || null;
@@ -762,6 +791,19 @@ export class SaveService {
     element.fontSize = e.fontSize;
     element.strokeWidth = e.strokeWidth || element.strokeWidth;
     element.heightAdjustment = e.heightAdjustment || 0;
+    element.bpm = e.bpm || 120;
+    element.ignoreAttractions = e.ignoreAttractions === true;
     element.useDefaultStyle = e.useDefaultStyle === true;
+    element.permanentEnharmonicZo = e.permanentEnharmonicZo === true;
+
+    // For backwards compatibility, we check the current mode key templates
+    // to fill out the fthora if it is missing.
+    if (e.fthora == null) {
+      const template = modeKeyTemplates.find((x) => x.id === e.templateId);
+
+      element.fthora = template?.fthora ?? null;
+    } else {
+      element.fthora = e.fthora;
+    }
   }
 }

@@ -263,7 +263,7 @@ If the length of a tetrachord does not add up to 30 moria, then a warning will b
 
 #### Alterations
 
-In this section, you may specify the size in moria of the general flat and general sharp alterations.
+In this section, you may specify the size in moria of the general flat, general sharp, diesis, and yfesis alterations.
 
 ### Tempo
 

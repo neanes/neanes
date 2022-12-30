@@ -66,6 +66,10 @@ interface PlaybackWorkspace {
   elements: ScoreElement[];
   elementIndex: number;
 
+  // This is used to keep track which part of a combination
+  // character we are processing (i.e. oligon + kentimata)
+  innerElementIndex: number;
+
   options: PlaybackOptions;
 
   frequency: number;
@@ -131,6 +135,7 @@ export class PlaybackService {
     let workspace: PlaybackWorkspace = {
       elements,
       elementIndex: 0,
+      innerElementIndex: 0,
 
       options: {
         useLegetos: false,
@@ -277,6 +282,7 @@ export class PlaybackService {
 
         if (this.isKentimataCombo(noteElement)) {
           // Process first note
+          workspace.innerElementIndex = 0;
           const initialDistance = distance - 1;
 
           this.moveDistance(workspace, initialDistance);
@@ -306,6 +312,7 @@ export class PlaybackService {
           events.push(event);
 
           // Process the kentimata
+          workspace.innerElementIndex = 1;
           this.moveDistance(workspace, 1);
 
           if (noteElement.gorgonNeume) {
@@ -340,6 +347,8 @@ export class PlaybackService {
           QuantitativeNeume.KentemataPlusOligon
         ) {
           // Process first note
+          workspace.innerElementIndex = 0;
+
           const initialDistance = 1;
 
           this.moveDistance(workspace, initialDistance);
@@ -369,6 +378,8 @@ export class PlaybackService {
           events.push(kentimataEvent);
 
           // Process the kentimata
+          workspace.innerElementIndex = 1;
+
           let oligonDuration = 1 * beat;
 
           this.moveDistance(workspace, 1);
@@ -398,6 +409,8 @@ export class PlaybackService {
           noteElement.quantitativeNeume === QuantitativeNeume.Hyporoe
         ) {
           // Process first note
+          workspace.innerElementIndex = 0;
+
           const initialDistance = -1;
 
           this.moveDistance(workspace, initialDistance);
@@ -427,6 +440,8 @@ export class PlaybackService {
           events.push(event1);
 
           // Process the kentimata
+          workspace.innerElementIndex = 1;
+
           let event2Duration = 1 * beat;
 
           this.moveDistance(workspace, -1);
@@ -456,6 +471,8 @@ export class PlaybackService {
           noteElement.quantitativeNeume === QuantitativeNeume.DoubleApostrophos
         ) {
           // Process first apostrofos
+          workspace.innerElementIndex = 0;
+
           const initialDistance = -1;
 
           this.moveDistance(workspace, initialDistance);
@@ -485,6 +502,8 @@ export class PlaybackService {
           events.push(event1);
 
           // Process the second apsotrofos
+          workspace.innerElementIndex = 1;
+
           let event2Duration = 1 * beat;
 
           this.moveDistance(workspace, -1);
@@ -521,6 +540,8 @@ export class PlaybackService {
           QuantitativeNeume.IsonPlusApostrophos
         ) {
           // Process ison
+          workspace.innerElementIndex = 0;
+
           const initialDistance = 0;
 
           this.moveDistance(workspace, initialDistance);
@@ -550,6 +571,8 @@ export class PlaybackService {
           events.push(event1);
 
           // Process the apostrofos
+          workspace.innerElementIndex = 1;
+
           let event2Duration = 1 * beat;
 
           this.moveDistance(workspace, -1);
@@ -585,6 +608,8 @@ export class PlaybackService {
           noteElement.quantitativeNeume === QuantitativeNeume.RunningElaphron
         ) {
           // Process first note
+          workspace.innerElementIndex = 0;
+
           this.moveDistance(workspace, -1);
 
           // Add a virtual gorgon
@@ -611,6 +636,8 @@ export class PlaybackService {
           events.push(event1);
 
           // Process the second note
+          workspace.innerElementIndex = 1;
+
           let event2Duration = 1 * beat;
 
           this.moveDistance(workspace, -1);
@@ -649,6 +676,8 @@ export class PlaybackService {
 
           events.push(restEvent);
         } else {
+          workspace.innerElementIndex = 0;
+
           this.moveDistance(workspace, distance);
 
           let duration = 1 * beat;
@@ -774,10 +803,18 @@ export class PlaybackService {
 
         if (martyriaElement.fthora) {
           this.applyFthora(martyriaElement.fthora, workspace);
+        } else if (workspace.scale.name === PlaybackScaleName.Enharmonic) {
+          // Clear the enharmonic fthora
+          const note = this.scaleNoteMap.get(workspace.note);
+
+          workspace.scale = this.diatonicScale;
+
+          workspace.intervalIndex = this.diatonicScale.scaleNoteMap.get(note!)!;
         }
 
         // TODO add support for "implied enharmonic Zo" for thir mode and grave mode
         // in which case, this flag should not be reset unless there is a fthora
+
         workspace.enharmonicZo = false;
         workspace.enharmonicGa = false;
         workspace.enharmonicVou = false;
@@ -1098,6 +1135,35 @@ export class PlaybackService {
   }
 
   melodyDirection(workspace: PlaybackWorkspace) {
+    const currentElement = workspace.elements[
+      workspace.elementIndex
+    ] as NoteElement;
+
+    // If this is the first part of a kentimata combo, then the melody
+    // is clearly ascending
+    if (
+      workspace.innerElementIndex === 0 &&
+      (this.isKentimataCombo(currentElement) ||
+        currentElement.quantitativeNeume ===
+          QuantitativeNeume.KentemataPlusOligon)
+    ) {
+      return 1;
+    }
+
+    // If this is the first part of a descending combo, then the melody
+    // is clearly descending
+    if (
+      workspace.innerElementIndex === 0 &&
+      (currentElement.quantitativeNeume ===
+        QuantitativeNeume.DoubleApostrophos ||
+        currentElement.quantitativeNeume ===
+          QuantitativeNeume.IsonPlusApostrophos ||
+        currentElement.quantitativeNeume === QuantitativeNeume.Hyporoe ||
+        currentElement.quantitativeNeume === QuantitativeNeume.RunningElaphron)
+    ) {
+      return -1;
+    }
+
     for (
       let i = workspace.elementIndex + 1;
       i < workspace.elements.length;

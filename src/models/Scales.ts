@@ -90,8 +90,17 @@ const isonToNoteValueMap = new Map<Ison, number>([
   [Ison.ZoHigh, 5],
 ]);
 
+const noteValueToScaleNoteMap = new Map<number, ScaleNote>();
+
+for (let [key, value] of scaleNoteToNoteValueMap) {
+  noteValueToScaleNoteMap.set(value, key);
+}
+
 export const getScaleNoteValue = (note: ScaleNote) =>
   scaleNoteToNoteValueMap.get(note)!;
+
+export const getScaleNoteFromValue = (value: number) =>
+  noteValueToScaleNoteMap.get(value)!;
 
 export const getNoteValue = (note: Note) => noteToNoteValueMap.get(note)!;
 

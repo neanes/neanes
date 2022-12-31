@@ -23,7 +23,12 @@ import {
 import { getNeumeValue } from '@/models/NeumeValues';
 import { Line, Page } from '@/models/Page';
 import { PageSetup } from '@/models/PageSetup';
-import { getScaleNoteValue, Scale, ScaleNote } from '@/models/Scales';
+import {
+  getScaleNoteFromValue,
+  getScaleNoteValue,
+  Scale,
+  ScaleNote,
+} from '@/models/Scales';
 import { TextMeasurementService } from './TextMeasurementService';
 import { Score } from '@/models/Score';
 import { Header } from '@/models/Header';
@@ -1013,6 +1018,8 @@ export class LayoutService {
         note.noteIndicatorNeume = noteIndicatorMap.get(
           ((currentNote % 7) + 7) % 7,
         )!;
+
+        note.scaleNote = getScaleNoteFromValue(currentNote);
 
         if (note.fthora) {
           if (this.fthoraIsValid(note.fthora, currentNote)) {

@@ -626,6 +626,8 @@
       <span class="space"></span>
       <button
         class="neume-button"
+        :disabled="enharmonicDisabled"
+        :title="enharmonicTitle"
         @click="
           $emit('update:fthora', [
             Fthora.Enharmonic_Top,
@@ -637,6 +639,8 @@
       </button>
       <button
         class="neume-button"
+        :disabled="generalFlatDisabled"
+        :title="generalFlatTitle"
         @click="
           $emit('update:fthora', [
             Fthora.GeneralFlat_Top,
@@ -648,6 +652,8 @@
       </button>
       <button
         class="neume-button"
+        :disabled="generalSharpDisabled"
+        :title="generalSharpTitle"
         @click="
           $emit('update:fthora', [
             Fthora.GeneralSharp_Top,
@@ -660,12 +666,16 @@
       <span class="space"></span>
       <button
         class="neume-button"
+        :disabled="zygosDisabled"
+        :title="zygosTitle"
         @click="$emit('update:fthora', [Fthora.Zygos_Top, Fthora.Zygos_Bottom])"
       >
         <img src="@/assets/icons/fthora-zygos.svg" />
       </button>
       <button
         class="neume-button"
+        :disabled="klitonDisabled"
+        :title="klitonTitle"
         @click="
           $emit('update:fthora', [Fthora.Kliton_Top, Fthora.Kliton_Bottom])
         "
@@ -674,7 +684,11 @@
       </button>
       <button
         class="neume-button"
-        @click="$emit('update:fthora', [Fthora.Spathi_Top, Fthora.Spathi_Bottom])"
+        :disabled="spathiDisabled"
+        :title="spathiTitle"
+        @click="
+          $emit('update:fthora', [Fthora.Spathi_Top, Fthora.Spathi_Bottom])
+        "
       >
         <img src="@/assets/icons/fthora-spathi.svg" />
       </button>
@@ -823,6 +837,66 @@ export default class ToolbarNeume extends Vue {
       this.element.fthora != null &&
       this.chromaticFthoras.includes(this.element.fthora)
     );
+  }
+
+  get spathiDisabled() {
+    return this.element.scaleNote !== ScaleNote.Ke;
+  }
+
+  get spathiTitle() {
+    return this.spathiDisabled ? 'Spathi may only be placed on Ke' : '';
+  }
+
+  get klitonDisabled() {
+    return this.element.scaleNote !== ScaleNote.Thi;
+  }
+
+  get klitonTitle() {
+    return this.klitonDisabled ? 'Kliton may only be placed on Thi' : '';
+  }
+
+  get zygosDisabled() {
+    return this.element.scaleNote !== ScaleNote.Thi;
+  }
+
+  get zygosTitle() {
+    return this.zygosDisabled ? 'Zygos may only be placed on Thi' : '';
+  }
+
+  get enharmonicDisabled() {
+    return (
+      this.element.scaleNote !== ScaleNote.Zo &&
+      this.element.scaleNote !== ScaleNote.ZoHigh &&
+      this.element.scaleNote !== ScaleNote.Vou &&
+      this.element.scaleNote !== ScaleNote.VouHigh &&
+      this.element.scaleNote !== ScaleNote.Ga
+    );
+  }
+
+  get enharmonicTitle() {
+    return this.enharmonicDisabled
+      ? 'Enharmonic fthora may only be placed on Ga, Zo, and Vou'
+      : '';
+  }
+
+  get generalFlatDisabled() {
+    return this.element.scaleNote !== ScaleNote.Ke;
+  }
+
+  get generalFlatTitle() {
+    return this.generalFlatDisabled
+      ? 'General flat may only be placed on Ke'
+      : '';
+  }
+
+  get generalSharpDisabled() {
+    return this.element.scaleNote !== ScaleNote.Ga;
+  }
+
+  get generalSharpTitle() {
+    return this.generalSharpDisabled
+      ? 'General sharp may only be placed on Ga'
+      : '';
   }
 
   beforeDestroy() {

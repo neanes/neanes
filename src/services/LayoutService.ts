@@ -1029,6 +1029,8 @@ export class LayoutService {
         const modeKey = element as ModeKeyElement;
         currentNote = getScaleNoteValue(modeKey.scaleNote);
         currentScale = modeKey.scale;
+        currentShift = 0;
+
         if (modeKey.fthora) {
           currentShift = this.getShift(
             currentNote,

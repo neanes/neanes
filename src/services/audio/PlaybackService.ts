@@ -64,6 +64,8 @@ export interface PlaybackOptions {
 }
 
 export interface PlaybackWorkspace {
+  events: PlaybackSequenceEvent[];
+  gorgonIndexes: GorgonIndex[];
   elements: ScoreElement[];
   elementIndex: number;
   currentNoteElement: NoteElement | null;
@@ -142,14 +144,13 @@ export class PlaybackService {
   }
 
   computePlaybackSequence(elements: ScoreElement[], options: PlaybackOptions) {
-    const events: PlaybackSequenceEvent[] = [];
-    const gorgonIndexes: GorgonIndex[] = [];
-
     const defaultFrequencyDi = 196;
 
     const defaultBpm = 120;
 
     let workspace: PlaybackWorkspace = {
+      events: [],
+      gorgonIndexes: [],
       elements,
       elementIndex: 0,
       innerElementIndex: 0,
@@ -235,12 +236,11 @@ export class PlaybackService {
 
         workspace.currentNoteElement = noteElement;
 
-        // If we moved, calculate the new note
-        const distance = getNeumeValue(noteElement.quantitativeNeume)!;
-
         // Handle enharmonic fthores
         // Check if we are moving to a note with an enharmonic fthora
         if (noteElement.fthora != null) {
+          const distance = getNeumeValue(noteElement.quantitativeNeume)!;
+
           const destinationNote = workspace.note + distance;
 
           if (
@@ -312,443 +312,33 @@ export class PlaybackService {
         }
 
         if (this.isKentimataCombo(noteElement)) {
-          // Process first note
-          workspace.innerElementIndex = 0;
-          const initialDistance = distance - 1;
-
-          this.moveDistance(workspace, initialDistance);
-
-          if (noteElement.secondaryGorgonNeume) {
-            const gorgonIndex: GorgonIndex = {
-              neume: noteElement.secondaryGorgonNeume,
-              index: events.length,
-              beat: workspace.beat,
-            };
-
-            gorgonIndexes.push(gorgonIndex);
-          }
-
-          let alteredFrequency = this.applyAlterations(workspace);
-
-          const event: PlaybackSequenceEvent = {
-            frequency: alteredFrequency,
-            isonFrequency: workspace.isonFrequency,
-            type: 'note',
-            bpm: workspace.bpm,
-            duration: 1 * workspace.beat,
-            transportTime: 0,
-            elementIndex: i,
-          };
-
-          events.push(event);
-
-          // Process the kentimata
-          workspace.innerElementIndex = 1;
-          this.moveDistance(workspace, 1);
-
-          if (noteElement.gorgonNeume) {
-            const gorgonIndex: GorgonIndex = {
-              neume: noteElement.gorgonNeume,
-              index: events.length,
-              beat: workspace.beat,
-            };
-
-            gorgonIndexes.push(gorgonIndex);
-          }
-
-          // Calculate accidentals
-          let alteredFrequencyKentimata = this.applyAlterations(
-            workspace,
-            noteElement.accidental,
-          );
-
-          const kentimataEvent: PlaybackSequenceEvent = {
-            frequency: alteredFrequencyKentimata,
-            isonFrequency: workspace.isonFrequency,
-            type: 'note',
-            bpm: workspace.bpm,
-            duration: 1 * workspace.beat,
-            transportTime: 0,
-            elementIndex: i,
-          };
-
-          events.push(kentimataEvent);
+          this.handleKentimataCombo(noteElement, workspace);
         } else if (
           noteElement.quantitativeNeume ===
           QuantitativeNeume.KentemataPlusOligon
         ) {
-          // Process first note
-          workspace.innerElementIndex = 0;
-
-          const initialDistance = 1;
-
-          this.moveDistance(workspace, initialDistance);
-
-          if (noteElement.gorgonNeume) {
-            const gorgonIndex: GorgonIndex = {
-              neume: noteElement.gorgonNeume,
-              index: events.length,
-              beat: workspace.beat,
-            };
-
-            gorgonIndexes.push(gorgonIndex);
-          }
-
-          let alteredFrequencyKentimata = this.applyAlterations(workspace);
-
-          const kentimataEvent: PlaybackSequenceEvent = {
-            frequency: alteredFrequencyKentimata,
-            isonFrequency: workspace.isonFrequency,
-            type: 'note',
-            bpm: workspace.bpm,
-            duration: 1 * workspace.beat,
-            transportTime: 0,
-            elementIndex: i,
-          };
-
-          events.push(kentimataEvent);
-
-          // Process the kentimata
-          workspace.innerElementIndex = 1;
-
-          let oligonDuration = 1 * workspace.beat;
-
-          this.moveDistance(workspace, 1);
-
-          if (noteElement.timeNeume != null) {
-            oligonDuration +=
-              this.timeMap.get(noteElement.timeNeume)! * workspace.beat;
-          }
-
-          // Calculate accidentals
-          let alteredFrequency = this.applyAlterations(
-            workspace,
-            noteElement.accidental,
-          );
-
-          const oligonEvent: PlaybackSequenceEvent = {
-            frequency: alteredFrequency,
-            isonFrequency: workspace.isonFrequency,
-            type: 'note',
-            bpm: workspace.bpm,
-            duration: oligonDuration,
-            transportTime: 0,
-            elementIndex: i,
-          };
-
-          events.push(oligonEvent);
+          this.handleKentimataOligon(noteElement, workspace);
         } else if (
           noteElement.quantitativeNeume === QuantitativeNeume.Hyporoe
         ) {
-          // Process first note
-          workspace.innerElementIndex = 0;
-
-          const initialDistance = -1;
-
-          this.moveDistance(workspace, initialDistance);
-
-          if (noteElement.gorgonNeume) {
-            const gorgonIndex: GorgonIndex = {
-              neume: noteElement.gorgonNeume,
-              index: events.length,
-              beat: workspace.beat,
-            };
-
-            gorgonIndexes.push(gorgonIndex);
-          }
-
-          let alteredFrequency1 = this.applyAlterations(workspace);
-
-          const event1: PlaybackSequenceEvent = {
-            frequency: alteredFrequency1,
-            isonFrequency: workspace.isonFrequency,
-            type: 'note',
-            bpm: workspace.bpm,
-            duration: 1 * workspace.beat,
-            transportTime: 0,
-            elementIndex: i,
-          };
-
-          events.push(event1);
-
-          // Process the kentimata
-          workspace.innerElementIndex = 1;
-
-          let event2Duration = 1 * workspace.beat;
-
-          this.moveDistance(workspace, -1);
-
-          if (noteElement.timeNeume != null) {
-            event2Duration +=
-              this.timeMap.get(noteElement.timeNeume)! * workspace.beat;
-          }
-
-          // Calculate accidentals
-          let alteredFrequency2 = this.applyAlterations(
-            workspace,
-            noteElement.accidental,
-          );
-
-          const event2: PlaybackSequenceEvent = {
-            frequency: alteredFrequency2,
-            isonFrequency: workspace.isonFrequency,
-            type: 'note',
-            bpm: workspace.bpm,
-            duration: event2Duration,
-            transportTime: 0,
-            elementIndex: i,
-          };
-
-          events.push(event2);
+          this.handleHyporoe(noteElement, workspace);
         } else if (
           noteElement.quantitativeNeume === QuantitativeNeume.DoubleApostrophos
         ) {
-          // Process first apostrofos
-          workspace.innerElementIndex = 0;
-
-          const initialDistance = -1;
-
-          this.moveDistance(workspace, initialDistance);
-
-          if (noteElement.secondaryGorgonNeume) {
-            const gorgonIndex: GorgonIndex = {
-              neume: noteElement.secondaryGorgonNeume,
-              index: events.length,
-              beat: workspace.beat,
-            };
-
-            gorgonIndexes.push(gorgonIndex);
-          }
-
-          let alteredFrequency1 = this.applyAlterations(workspace);
-
-          const event1: PlaybackSequenceEvent = {
-            frequency: alteredFrequency1,
-            isonFrequency: workspace.isonFrequency,
-            type: 'note',
-            bpm: workspace.bpm,
-            duration: 1 * workspace.beat,
-            transportTime: 0,
-            elementIndex: i,
-          };
-
-          events.push(event1);
-
-          // Process the second apsotrofos
-          workspace.innerElementIndex = 1;
-
-          let event2Duration = 1 * workspace.beat;
-
-          this.moveDistance(workspace, -1);
-
-          if (noteElement.gorgonNeume) {
-            const gorgonIndex: GorgonIndex = {
-              neume: noteElement.gorgonNeume,
-              index: events.length,
-              beat: workspace.beat,
-            };
-
-            gorgonIndexes.push(gorgonIndex);
-          }
-
-          // Calculate accidentals
-          let alteredFrequency2 = this.applyAlterations(
-            workspace,
-            noteElement.accidental,
-          );
-
-          const event2: PlaybackSequenceEvent = {
-            frequency: alteredFrequency2,
-            isonFrequency: workspace.isonFrequency,
-            type: 'note',
-            bpm: workspace.bpm,
-            duration: event2Duration,
-            transportTime: 0,
-            elementIndex: i,
-          };
-
-          events.push(event2);
+          this.handleDoubleApostrophos(noteElement, workspace);
         } else if (
           noteElement.quantitativeNeume ===
           QuantitativeNeume.IsonPlusApostrophos
         ) {
-          // Process ison
-          workspace.innerElementIndex = 0;
-
-          const initialDistance = 0;
-
-          this.moveDistance(workspace, initialDistance);
-
-          if (noteElement.secondaryGorgonNeume) {
-            const gorgonIndex: GorgonIndex = {
-              neume: noteElement.secondaryGorgonNeume,
-              index: events.length,
-              beat: workspace.beat,
-            };
-
-            gorgonIndexes.push(gorgonIndex);
-          }
-
-          let alteredFrequency1 = this.applyAlterations(workspace);
-
-          const event1: PlaybackSequenceEvent = {
-            frequency: alteredFrequency1,
-            isonFrequency: workspace.isonFrequency,
-            type: 'note',
-            bpm: workspace.bpm,
-            duration: 1 * workspace.beat,
-            transportTime: 0,
-            elementIndex: i,
-          };
-
-          events.push(event1);
-
-          // Process the apostrofos
-          workspace.innerElementIndex = 1;
-
-          let event2Duration = 1 * workspace.beat;
-
-          this.moveDistance(workspace, -1);
-
-          if (noteElement.gorgonNeume) {
-            const gorgonIndex: GorgonIndex = {
-              neume: noteElement.gorgonNeume,
-              index: events.length,
-              beat: workspace.beat,
-            };
-
-            gorgonIndexes.push(gorgonIndex);
-          }
-
-          // Calculate accidentals
-          let alteredFrequency2 = this.applyAlterations(
-            workspace,
-            noteElement.accidental,
-          );
-
-          const event2: PlaybackSequenceEvent = {
-            frequency: alteredFrequency2,
-            isonFrequency: workspace.isonFrequency,
-            type: 'note',
-            bpm: workspace.bpm,
-            duration: event2Duration,
-            transportTime: 0,
-            elementIndex: i,
-          };
-
-          events.push(event2);
+          this.handleIsonApostrophos(noteElement, workspace);
         } else if (
           noteElement.quantitativeNeume === QuantitativeNeume.RunningElaphron
         ) {
-          // Process first note
-          workspace.innerElementIndex = 0;
-
-          this.moveDistance(workspace, -1);
-
-          // Add a virtual gorgon
-          const gorgonIndex: GorgonIndex = {
-            neume: GorgonNeume.Gorgon_Top,
-            index: events.length,
-            beat: workspace.beat,
-          };
-
-          gorgonIndexes.push(gorgonIndex);
-
-          let alteredFrequency1 = this.applyAlterations(workspace);
-
-          const event1: PlaybackSequenceEvent = {
-            frequency: alteredFrequency1,
-            isonFrequency: workspace.isonFrequency,
-            type: 'note',
-            bpm: workspace.bpm,
-            duration: 1 * workspace.beat,
-            transportTime: 0,
-            elementIndex: i,
-          };
-
-          events.push(event1);
-
-          // Process the second note
-          workspace.innerElementIndex = 1;
-
-          let event2Duration = 1 * workspace.beat;
-
-          this.moveDistance(workspace, -1);
-
-          if (noteElement.timeNeume != null) {
-            event2Duration +=
-              this.timeMap.get(noteElement.timeNeume)! * workspace.beat;
-          }
-
-          // Calculate accidentals
-          let alteredFrequency2 = this.applyAlterations(
-            workspace,
-            noteElement.accidental,
-          );
-
-          const event2: PlaybackSequenceEvent = {
-            frequency: alteredFrequency2,
-            isonFrequency: workspace.isonFrequency,
-            type: 'note',
-            bpm: workspace.bpm,
-            duration: event2Duration,
-            transportTime: 0,
-            elementIndex: i,
-          };
-
-          events.push(event2);
+          this.handleRunningElaphron(noteElement, workspace);
         } else if (this.isRest(noteElement)) {
-          let duration = this.restMap.get(noteElement.quantitativeNeume)!;
-
-          const restEvent: PlaybackSequenceEvent = {
-            type: 'rest',
-            bpm: workspace.bpm,
-            duration,
-            transportTime: 0,
-            elementIndex: i,
-          };
-
-          events.push(restEvent);
+          this.handleRest(noteElement, workspace);
         } else {
-          workspace.innerElementIndex = 0;
-
-          this.moveDistance(workspace, distance);
-
-          let duration = 1 * workspace.beat;
-
-          // Calculate time
-          if (noteElement.timeNeume != null) {
-            duration +=
-              this.timeMap.get(noteElement.timeNeume)! * workspace.beat;
-          }
-
-          if (noteElement.gorgonNeume) {
-            const gorgonIndex: GorgonIndex = {
-              neume: noteElement.gorgonNeume,
-              index: events.length,
-              beat: workspace.beat,
-            };
-
-            gorgonIndexes.push(gorgonIndex);
-          }
-
-          // Calculate accidentals
-          let alteredFrequency = this.applyAlterations(
-            workspace,
-            noteElement.accidental,
-          );
-
-          let event: PlaybackSequenceEvent = {
-            frequency: alteredFrequency,
-            isonFrequency: workspace.isonFrequency,
-            type: 'note',
-            bpm: workspace.bpm,
-            duration,
-            transportTime: 0,
-            elementIndex: i,
-          };
-
-          events.push(event);
+          this.handleNote(noteElement, workspace);
         }
 
         if (
@@ -765,81 +355,13 @@ export class PlaybackService {
       } else if (element.elementType === ElementType.ModeKey) {
         this.applyModeKey(element as ModeKeyElement, workspace);
       } else if (element.elementType === ElementType.Martyria) {
-        const martyriaElement = element as MartyriaElement;
-
-        if (martyriaElement.tempo != null) {
-          workspace.bpm =
-            (martyriaElement.bpm ||
-              this.tempoToBpmMap.get(martyriaElement.tempo)!) *
-            workspace.options.speed;
-          workspace.beat = this.beatLengthFromBpm(workspace.bpm);
-        }
-
-        if (martyriaElement.fthora) {
-          this.applyFthora(
-            martyriaElement.fthora,
-            workspace,
-            martyriaElement.chromaticFthoraNote,
-          );
-        } else if (
-          workspace.scale.name === PlaybackScaleName.Enharmonic &&
-          !workspace.permanentEnharmonicZo &&
-          !workspace.permanentEnharmonicVou
-        ) {
-          // Clear the enharmonic fthora
-          const note = this.scaleNoteMap.get(workspace.note);
-
-          workspace.scale = this.diatonicScale;
-
-          workspace.intervalIndex = this.diatonicScale.scaleNoteMap.get(note!)!;
-        }
-
-        if (!martyriaElement.auto) {
-          // TODO support martyriaElement.scale
-          // if (martyriaElement.scale === Scale.Diatonic) {
-          //   workspace.scale = this.diatonicScale;
-
-          //   if (workspace.legetos) {
-          //     workspace.scale = this.legetosScale;
-          //   }
-
-          //   if (workspace.permanentEnharmonicZo) {
-          //     workspace.scale = this.enharmonicScale;
-          //     workspace.scale.intervals =
-          //       this.constructEnharmonicScaleFromGa(workspace);
-
-          //     this.enharmonicScale.scaleNoteMap =
-          //       this.diatonicScaleNoteToIntervalIndexMap;
-          //   }
-          // } else if (martyriaElement.scale === Scale.SoftChromatic) {
-          //   workspace.scale = this.softChromaticScale;
-          // } else if (martyriaElement.scale === Scale.HardChromatic) {
-          //   workspace.scale = this.hardChromaticScale;
-          // }
-
-          const distance =
-            getNoteValue(martyriaElement.note) -
-            getScaleNoteValue(this.scaleNoteMap.get(workspace.note)!);
-
-          this.moveDistance(workspace, distance);
-        }
-
-        workspace.enharmonicZo = workspace.permanentEnharmonicZo;
-        workspace.enharmonicGa = false;
-        workspace.enharmonicVou = workspace.permanentEnharmonicVou;
-        workspace.generalFlat = false;
-        workspace.generalSharp = false;
+        this.handleMartyria(element as MartyriaElement, workspace);
       } else if (element.elementType === ElementType.Tempo) {
-        const tempoElement = element as TempoElement;
-
-        workspace.bpm =
-          (tempoElement.bpm || this.tempoToBpmMap.get(tempoElement.neume)!) *
-          workspace.options.speed;
-        workspace.beat = this.beatLengthFromBpm(workspace.bpm);
+        this.handleTempo(element as TempoElement, workspace);
       }
     }
 
-    this.processGorgons(events, gorgonIndexes);
+    this.processGorgons(workspace.events, workspace.gorgonIndexes);
 
     // Calculate times
     let time = 0;
@@ -847,7 +369,7 @@ export class PlaybackService {
     let currentBpm = defaultBpm;
     let currentBeatLength = this.beatLengthFromBpm(currentBpm);
 
-    for (let event of events) {
+    for (let event of workspace.events) {
       if (currentBpm != event.bpm) {
         currentBpm = event.bpm;
         currentBeatLength = this.beatLengthFromBpm(currentBpm);
@@ -858,7 +380,7 @@ export class PlaybackService {
       beats += event.duration / currentBeatLength;
     }
 
-    return events;
+    return workspace.events;
   }
 
   ////////////////////
@@ -1316,6 +838,552 @@ export class PlaybackService {
     );
 
     workspace.bpm = (modeKeyElement.bpm || 120) * workspace.options.speed;
+    workspace.beat = this.beatLengthFromBpm(workspace.bpm);
+  }
+
+  handleKentimataCombo(noteElement: NoteElement, workspace: PlaybackWorkspace) {
+    const { events, gorgonIndexes } = workspace;
+
+    const distance = getNeumeValue(noteElement.quantitativeNeume)!;
+
+    // Process first note
+    workspace.innerElementIndex = 0;
+    const initialDistance = distance - 1;
+
+    this.moveDistance(workspace, initialDistance);
+
+    if (noteElement.secondaryGorgonNeume) {
+      const gorgonIndex: GorgonIndex = {
+        neume: noteElement.secondaryGorgonNeume,
+        index: events.length,
+        beat: workspace.beat,
+      };
+
+      gorgonIndexes.push(gorgonIndex);
+    }
+
+    let alteredFrequency = this.applyAlterations(workspace);
+
+    const event: PlaybackSequenceEvent = {
+      frequency: alteredFrequency,
+      isonFrequency: workspace.isonFrequency,
+      type: 'note',
+      bpm: workspace.bpm,
+      duration: 1 * workspace.beat,
+      transportTime: 0,
+      elementIndex: workspace.elementIndex,
+    };
+
+    events.push(event);
+
+    // Process the kentimata
+    workspace.innerElementIndex = 1;
+    this.moveDistance(workspace, 1);
+
+    if (noteElement.gorgonNeume) {
+      const gorgonIndex: GorgonIndex = {
+        neume: noteElement.gorgonNeume,
+        index: events.length,
+        beat: workspace.beat,
+      };
+
+      gorgonIndexes.push(gorgonIndex);
+    }
+
+    // Calculate accidentals
+    let alteredFrequencyKentimata = this.applyAlterations(
+      workspace,
+      noteElement.accidental,
+    );
+
+    const kentimataEvent: PlaybackSequenceEvent = {
+      frequency: alteredFrequencyKentimata,
+      isonFrequency: workspace.isonFrequency,
+      type: 'note',
+      bpm: workspace.bpm,
+      duration: 1 * workspace.beat,
+      transportTime: 0,
+      elementIndex: workspace.elementIndex,
+    };
+
+    events.push(kentimataEvent);
+  }
+
+  handleKentimataOligon(
+    noteElement: NoteElement,
+    workspace: PlaybackWorkspace,
+  ) {
+    const { events, gorgonIndexes } = workspace;
+
+    // Process first note
+    workspace.innerElementIndex = 0;
+
+    const initialDistance = 1;
+
+    this.moveDistance(workspace, initialDistance);
+
+    if (noteElement.gorgonNeume) {
+      const gorgonIndex: GorgonIndex = {
+        neume: noteElement.gorgonNeume,
+        index: events.length,
+        beat: workspace.beat,
+      };
+
+      gorgonIndexes.push(gorgonIndex);
+    }
+
+    let alteredFrequencyKentimata = this.applyAlterations(workspace);
+
+    const kentimataEvent: PlaybackSequenceEvent = {
+      frequency: alteredFrequencyKentimata,
+      isonFrequency: workspace.isonFrequency,
+      type: 'note',
+      bpm: workspace.bpm,
+      duration: 1 * workspace.beat,
+      transportTime: 0,
+      elementIndex: workspace.elementIndex,
+    };
+
+    events.push(kentimataEvent);
+
+    // Process the kentimata
+    workspace.innerElementIndex = 1;
+
+    let oligonDuration = 1 * workspace.beat;
+
+    this.moveDistance(workspace, 1);
+
+    if (noteElement.timeNeume != null) {
+      oligonDuration +=
+        this.timeMap.get(noteElement.timeNeume)! * workspace.beat;
+    }
+
+    // Calculate accidentals
+    let alteredFrequency = this.applyAlterations(
+      workspace,
+      noteElement.accidental,
+    );
+
+    const oligonEvent: PlaybackSequenceEvent = {
+      frequency: alteredFrequency,
+      isonFrequency: workspace.isonFrequency,
+      type: 'note',
+      bpm: workspace.bpm,
+      duration: oligonDuration,
+      transportTime: 0,
+      elementIndex: workspace.elementIndex,
+    };
+
+    events.push(oligonEvent);
+  }
+
+  handleHyporoe(noteElement: NoteElement, workspace: PlaybackWorkspace) {
+    const { events, gorgonIndexes } = workspace;
+
+    // Process first note
+    workspace.innerElementIndex = 0;
+
+    const initialDistance = -1;
+
+    this.moveDistance(workspace, initialDistance);
+
+    if (noteElement.gorgonNeume) {
+      const gorgonIndex: GorgonIndex = {
+        neume: noteElement.gorgonNeume,
+        index: events.length,
+        beat: workspace.beat,
+      };
+
+      gorgonIndexes.push(gorgonIndex);
+    }
+
+    let alteredFrequency1 = this.applyAlterations(workspace);
+
+    const event1: PlaybackSequenceEvent = {
+      frequency: alteredFrequency1,
+      isonFrequency: workspace.isonFrequency,
+      type: 'note',
+      bpm: workspace.bpm,
+      duration: 1 * workspace.beat,
+      transportTime: 0,
+      elementIndex: workspace.elementIndex,
+    };
+
+    events.push(event1);
+
+    // Process the kentimata
+    workspace.innerElementIndex = 1;
+
+    let event2Duration = 1 * workspace.beat;
+
+    this.moveDistance(workspace, -1);
+
+    if (noteElement.timeNeume != null) {
+      event2Duration +=
+        this.timeMap.get(noteElement.timeNeume)! * workspace.beat;
+    }
+
+    // Calculate accidentals
+    let alteredFrequency2 = this.applyAlterations(
+      workspace,
+      noteElement.accidental,
+    );
+
+    const event2: PlaybackSequenceEvent = {
+      frequency: alteredFrequency2,
+      isonFrequency: workspace.isonFrequency,
+      type: 'note',
+      bpm: workspace.bpm,
+      duration: event2Duration,
+      transportTime: 0,
+      elementIndex: workspace.elementIndex,
+    };
+
+    events.push(event2);
+  }
+
+  handleDoubleApostrophos(
+    noteElement: NoteElement,
+    workspace: PlaybackWorkspace,
+  ) {
+    const { events, gorgonIndexes } = workspace;
+
+    // Process first apostrofos
+    workspace.innerElementIndex = 0;
+
+    const initialDistance = -1;
+
+    this.moveDistance(workspace, initialDistance);
+
+    if (noteElement.secondaryGorgonNeume) {
+      const gorgonIndex: GorgonIndex = {
+        neume: noteElement.secondaryGorgonNeume,
+        index: events.length,
+        beat: workspace.beat,
+      };
+
+      gorgonIndexes.push(gorgonIndex);
+    }
+
+    let alteredFrequency1 = this.applyAlterations(workspace);
+
+    const event1: PlaybackSequenceEvent = {
+      frequency: alteredFrequency1,
+      isonFrequency: workspace.isonFrequency,
+      type: 'note',
+      bpm: workspace.bpm,
+      duration: 1 * workspace.beat,
+      transportTime: 0,
+      elementIndex: workspace.elementIndex,
+    };
+
+    events.push(event1);
+
+    // Process the second apsotrofos
+    workspace.innerElementIndex = 1;
+
+    let event2Duration = 1 * workspace.beat;
+
+    this.moveDistance(workspace, -1);
+
+    if (noteElement.gorgonNeume) {
+      const gorgonIndex: GorgonIndex = {
+        neume: noteElement.gorgonNeume,
+        index: events.length,
+        beat: workspace.beat,
+      };
+
+      gorgonIndexes.push(gorgonIndex);
+    }
+
+    // Calculate accidentals
+    let alteredFrequency2 = this.applyAlterations(
+      workspace,
+      noteElement.accidental,
+    );
+
+    const event2: PlaybackSequenceEvent = {
+      frequency: alteredFrequency2,
+      isonFrequency: workspace.isonFrequency,
+      type: 'note',
+      bpm: workspace.bpm,
+      duration: event2Duration,
+      transportTime: 0,
+      elementIndex: workspace.elementIndex,
+    };
+
+    events.push(event2);
+  }
+
+  handleIsonApostrophos(
+    noteElement: NoteElement,
+    workspace: PlaybackWorkspace,
+  ) {
+    const { events, gorgonIndexes } = workspace;
+
+    // Process ison
+    workspace.innerElementIndex = 0;
+
+    const initialDistance = 0;
+
+    this.moveDistance(workspace, initialDistance);
+
+    if (noteElement.secondaryGorgonNeume) {
+      const gorgonIndex: GorgonIndex = {
+        neume: noteElement.secondaryGorgonNeume,
+        index: events.length,
+        beat: workspace.beat,
+      };
+
+      gorgonIndexes.push(gorgonIndex);
+    }
+
+    let alteredFrequency1 = this.applyAlterations(workspace);
+
+    const event1: PlaybackSequenceEvent = {
+      frequency: alteredFrequency1,
+      isonFrequency: workspace.isonFrequency,
+      type: 'note',
+      bpm: workspace.bpm,
+      duration: 1 * workspace.beat,
+      transportTime: 0,
+      elementIndex: workspace.elementIndex,
+    };
+
+    events.push(event1);
+
+    // Process the apostrofos
+    workspace.innerElementIndex = 1;
+
+    let event2Duration = 1 * workspace.beat;
+
+    this.moveDistance(workspace, -1);
+
+    if (noteElement.gorgonNeume) {
+      const gorgonIndex: GorgonIndex = {
+        neume: noteElement.gorgonNeume,
+        index: events.length,
+        beat: workspace.beat,
+      };
+
+      gorgonIndexes.push(gorgonIndex);
+    }
+
+    // Calculate accidentals
+    let alteredFrequency2 = this.applyAlterations(
+      workspace,
+      noteElement.accidental,
+    );
+
+    const event2: PlaybackSequenceEvent = {
+      frequency: alteredFrequency2,
+      isonFrequency: workspace.isonFrequency,
+      type: 'note',
+      bpm: workspace.bpm,
+      duration: event2Duration,
+      transportTime: 0,
+      elementIndex: workspace.elementIndex,
+    };
+
+    events.push(event2);
+  }
+
+  handleRunningElaphron(
+    noteElement: NoteElement,
+    workspace: PlaybackWorkspace,
+  ) {
+    const { events, gorgonIndexes } = workspace;
+
+    // Process first note
+    workspace.innerElementIndex = 0;
+
+    this.moveDistance(workspace, -1);
+
+    // Add a virtual gorgon
+    const gorgonIndex: GorgonIndex = {
+      neume: GorgonNeume.Gorgon_Top,
+      index: events.length,
+      beat: workspace.beat,
+    };
+
+    gorgonIndexes.push(gorgonIndex);
+
+    let alteredFrequency1 = this.applyAlterations(workspace);
+
+    const event1: PlaybackSequenceEvent = {
+      frequency: alteredFrequency1,
+      isonFrequency: workspace.isonFrequency,
+      type: 'note',
+      bpm: workspace.bpm,
+      duration: 1 * workspace.beat,
+      transportTime: 0,
+      elementIndex: workspace.elementIndex,
+    };
+
+    events.push(event1);
+
+    // Process the second note
+    workspace.innerElementIndex = 1;
+
+    let event2Duration = 1 * workspace.beat;
+
+    this.moveDistance(workspace, -1);
+
+    if (noteElement.timeNeume != null) {
+      event2Duration +=
+        this.timeMap.get(noteElement.timeNeume)! * workspace.beat;
+    }
+
+    // Calculate accidentals
+    let alteredFrequency2 = this.applyAlterations(
+      workspace,
+      noteElement.accidental,
+    );
+
+    const event2: PlaybackSequenceEvent = {
+      frequency: alteredFrequency2,
+      isonFrequency: workspace.isonFrequency,
+      type: 'note',
+      bpm: workspace.bpm,
+      duration: event2Duration,
+      transportTime: 0,
+      elementIndex: workspace.elementIndex,
+    };
+
+    events.push(event2);
+  }
+
+  handleNote(noteElement: NoteElement, workspace: PlaybackWorkspace) {
+    const { events, gorgonIndexes } = workspace;
+
+    const distance = getNeumeValue(noteElement.quantitativeNeume)!;
+
+    workspace.innerElementIndex = 0;
+
+    this.moveDistance(workspace, distance);
+
+    let duration = 1 * workspace.beat;
+
+    // Calculate time
+    if (noteElement.timeNeume != null) {
+      duration += this.timeMap.get(noteElement.timeNeume)! * workspace.beat;
+    }
+
+    if (noteElement.gorgonNeume) {
+      const gorgonIndex: GorgonIndex = {
+        neume: noteElement.gorgonNeume,
+        index: events.length,
+        beat: workspace.beat,
+      };
+
+      gorgonIndexes.push(gorgonIndex);
+    }
+
+    // Calculate accidentals
+    let alteredFrequency = this.applyAlterations(
+      workspace,
+      noteElement.accidental,
+    );
+
+    let event: PlaybackSequenceEvent = {
+      frequency: alteredFrequency,
+      isonFrequency: workspace.isonFrequency,
+      type: 'note',
+      bpm: workspace.bpm,
+      duration,
+      transportTime: 0,
+      elementIndex: workspace.elementIndex,
+    };
+
+    events.push(event);
+  }
+
+  handleRest(noteElement: NoteElement, workspace: PlaybackWorkspace) {
+    let duration = this.restMap.get(noteElement.quantitativeNeume)!;
+
+    const restEvent: PlaybackSequenceEvent = {
+      type: 'rest',
+      bpm: workspace.bpm,
+      duration,
+      transportTime: 0,
+      elementIndex: workspace.elementIndex,
+    };
+
+    workspace.events.push(restEvent);
+  }
+
+  handleMartyria(
+    martyriaElement: MartyriaElement,
+    workspace: PlaybackWorkspace,
+  ) {
+    if (martyriaElement.tempo != null) {
+      workspace.bpm =
+        (martyriaElement.bpm ||
+          this.tempoToBpmMap.get(martyriaElement.tempo)!) *
+        workspace.options.speed;
+      workspace.beat = this.beatLengthFromBpm(workspace.bpm);
+    }
+
+    if (martyriaElement.fthora) {
+      this.applyFthora(
+        martyriaElement.fthora,
+        workspace,
+        martyriaElement.chromaticFthoraNote,
+      );
+    } else if (
+      workspace.scale.name === PlaybackScaleName.Enharmonic &&
+      !workspace.permanentEnharmonicZo &&
+      !workspace.permanentEnharmonicVou
+    ) {
+      // Clear the enharmonic fthora
+      const note = this.scaleNoteMap.get(workspace.note);
+
+      workspace.scale = this.diatonicScale;
+
+      workspace.intervalIndex = this.diatonicScale.scaleNoteMap.get(note!)!;
+    }
+
+    if (!martyriaElement.auto) {
+      // TODO support martyriaElement.scale
+      // if (martyriaElement.scale === Scale.Diatonic) {
+      //   workspace.scale = this.diatonicScale;
+
+      //   if (workspace.legetos) {
+      //     workspace.scale = this.legetosScale;
+      //   }
+
+      //   if (workspace.permanentEnharmonicZo) {
+      //     workspace.scale = this.enharmonicScale;
+      //     workspace.scale.intervals =
+      //       this.constructEnharmonicScaleFromGa(workspace);
+
+      //     this.enharmonicScale.scaleNoteMap =
+      //       this.diatonicScaleNoteToIntervalIndexMap;
+      //   }
+      // } else if (martyriaElement.scale === Scale.SoftChromatic) {
+      //   workspace.scale = this.softChromaticScale;
+      // } else if (martyriaElement.scale === Scale.HardChromatic) {
+      //   workspace.scale = this.hardChromaticScale;
+      // }
+
+      const distance =
+        getNoteValue(martyriaElement.note) -
+        getScaleNoteValue(this.scaleNoteMap.get(workspace.note)!);
+
+      this.moveDistance(workspace, distance);
+    }
+
+    workspace.enharmonicZo = workspace.permanentEnharmonicZo;
+    workspace.enharmonicGa = false;
+    workspace.enharmonicVou = workspace.permanentEnharmonicVou;
+    workspace.generalFlat = false;
+    workspace.generalSharp = false;
+  }
+
+  handleTempo(tempoElement: TempoElement, workspace: PlaybackWorkspace) {
+    workspace.bpm =
+      (tempoElement.bpm || this.tempoToBpmMap.get(tempoElement.neume)!) *
+      workspace.options.speed;
     workspace.beat = this.beatLengthFromBpm(workspace.bpm);
   }
 

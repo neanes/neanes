@@ -756,7 +756,9 @@ export class LayoutService {
           continue;
         }
 
-        if (line.elements.some((x) => x.lineBreak == true)) {
+        if (
+          line.elements.some((x) => x.lineBreak == true && x.justify == false)
+        ) {
           continue;
         }
 

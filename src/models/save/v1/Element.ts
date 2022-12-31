@@ -30,6 +30,7 @@ export abstract class ScoreElement {
   abstract elementType: ElementType;
   public lineBreak: boolean | undefined = undefined;
   public pageBreak: boolean | undefined = undefined;
+  public justify: boolean | undefined = undefined;
 }
 
 export class NoteElement extends ScoreElement {

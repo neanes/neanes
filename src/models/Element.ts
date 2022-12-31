@@ -39,6 +39,7 @@ export abstract class ScoreElement {
   abstract elementType: ElementType;
   abstract clone(): ScoreElement;
   public lineBreak: boolean = false;
+  public justify: boolean = false;
   public pageBreak: boolean = false;
 
   public x: number = 0;

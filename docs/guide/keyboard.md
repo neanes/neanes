@@ -112,6 +112,7 @@ Below is a list of modifiers.
 | <span class="neume"></span>                     | <kbd>V</kbd> +<kbd>N</kbd>                    |
 | <span class="neume"></span> (Connecting)        | <kbd>V</kbd> +<kbd>M</kbd>                    |
 | <span class="neume">&#xF007;</span> (Connecting) | <kbd>Shift</kbd> + <kbd>V</kbd> +<kbd>M</kbd> |
+| <span class="neume">&#xE0A7;</span>              | <kbd>V</kbd> +<kbd>,</kbd>                    |
 
 ## Characters of Temporal Augmentation
 

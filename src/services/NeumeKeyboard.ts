@@ -621,6 +621,12 @@ export class NeumeKeyboard {
       modifier: this.vocalExpressionKey,
       neume: VocalExpressionNeume.HeteronConnectingLong,
     });
+
+    this.vocalExpressionKeyboardMap.push({
+      code: 'Comma',
+      modifier: this.vocalExpressionKey,
+      neume: VocalExpressionNeume.Endofonon,
+    });
   }
 
   private initFthoraKeyboardMap() {

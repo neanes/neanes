@@ -258,6 +258,12 @@
           </div>
         </div>
       </div>
+      <button
+        class="neume-button"
+        @click="$emit('update:expression', VocalExpressionNeume.Endofonon)"
+      >
+        <img src="@/assets/icons/quality-endofonon.svg" />
+      </button>
       <span class="space"></span>
       <div
         class="menu-container"

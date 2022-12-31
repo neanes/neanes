@@ -639,13 +639,13 @@ export class NeumeKeyboard {
     this.fthoraKeyboardMap.push({
       code: 'KeyL',
       modifier: this.fthoraKey,
-      neumes: [Fthora.DiatonicVou_Top],
+      neumes: [Fthora.DiatonicVou_Top, Fthora.DiatonicVou_Bottom],
     });
 
     this.fthoraKeyboardMap.push({
       code: 'Semicolon',
       modifier: this.fthoraKey,
-      neumes: [Fthora.DiatonicGa_Top],
+      neumes: [Fthora.DiatonicGa_Top, Fthora.DiatonicGa_Bottom],
     });
 
     this.fthoraKeyboardMap.push({
@@ -663,7 +663,7 @@ export class NeumeKeyboard {
     this.fthoraKeyboardMap.push({
       code: 'KeyI',
       modifier: this.fthoraKey,
-      neumes: [Fthora.DiatonicZo_Top],
+      neumes: [Fthora.DiatonicZo_Top, Fthora.DiatonicZo_Bottom],
     });
 
     this.fthoraKeyboardMap.push({

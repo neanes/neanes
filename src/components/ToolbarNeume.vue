@@ -528,13 +528,23 @@
       </button>
       <button
         class="neume-button"
-        @click="$emit('update:fthora', [Fthora.DiatonicVou_Top])"
+        @click="
+          $emit('update:fthora', [
+            Fthora.DiatonicVou_Top,
+            Fthora.DiatonicVou_Bottom,
+          ])
+        "
       >
         <img src="@/assets/icons/fthora-diatonic-vou.svg" />
       </button>
       <button
         class="neume-button"
-        @click="$emit('update:fthora', [Fthora.DiatonicGa_Top])"
+        @click="
+          $emit('update:fthora', [
+            Fthora.DiatonicGa_Top,
+            Fthora.DiatonicGa_Bottom,
+          ])
+        "
       >
         <img src="@/assets/icons/fthora-diatonic-ga.svg" />
       </button>
@@ -562,7 +572,12 @@
       </button>
       <button
         class="neume-button"
-        @click="$emit('update:fthora', [Fthora.DiatonicZo_Top])"
+        @click="
+          $emit('update:fthora', [
+            Fthora.DiatonicZo_Top,
+            Fthora.DiatonicZo_Bottom,
+          ])
+        "
       >
         <img src="@/assets/icons/fthora-diatonic-zo.svg" />
       </button>

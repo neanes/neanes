@@ -274,8 +274,11 @@ export enum Fthora {
 
   DiatonicNiLow_Bottom = 'DiatonicNiLow_Bottom',
   DiatonicPa_Bottom = 'DiatonicPa_Bottom',
+  DiatonicVou_Bottom = 'DiatonicVou_Bottom',
+  DiatonicGa_Bottom = 'DiatonicGa_Bottom',
   DiatonicThi_Bottom = 'DiatonicThi_Bottom',
   DiatonicKe_Bottom = 'DiatonicKe_Bottom',
+  DiatonicZo_Bottom = 'DiatonicZo_Bottom',
   DiatonicNiHigh_Bottom = 'DiatonicNiHigh_Bottom',
   HardChromaticPa_Bottom = 'HardChromaticPa_Bottom',
   HardChromaticThi_Bottom = 'HardChromaticThi_Bottom',

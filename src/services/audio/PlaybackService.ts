@@ -1413,7 +1413,7 @@ export class PlaybackService {
     [Fthora.DiatonicThi_Bottom, ScaleNote.Thi],
     [Fthora.DiatonicKe_Top, ScaleNote.Ke],
     [Fthora.DiatonicKe_Bottom, ScaleNote.Ke],
-    [Fthora.DiatonicZo_Top, ScaleNote.Zo],
+    [Fthora.DiatonicZo_Top, ScaleNote.ZoHigh],
     [Fthora.DiatonicNiHigh_Top, ScaleNote.NiHigh],
     [Fthora.DiatonicNiHigh_Bottom, ScaleNote.NiHigh],
   ]);
@@ -1528,7 +1528,7 @@ export class PlaybackService {
     [ScaleNote.Ga, 3],
     [ScaleNote.Thi, 4],
     [ScaleNote.Ke, 5],
-    [ScaleNote.Zo, 6],
+    [ScaleNote.ZoHigh, 6],
     [ScaleNote.NiHigh, 0],
     [ScaleNote.PaHigh, 1],
     [ScaleNote.VouHigh, 2],

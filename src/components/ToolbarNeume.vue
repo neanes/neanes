@@ -694,6 +694,12 @@
       </button>
     </div>
     <div class="row">
+      <span class="space" />
+
+      <span class="note-name">{{ noteDisplay }}</span>
+
+      <span class="separator" />
+
       <label class="right-space">Space After</label>
 
       <InputUnit
@@ -897,6 +903,39 @@ export default class ToolbarNeume extends Vue {
     return this.generalSharpDisabled
       ? 'General sharp may only be placed on Ga'
       : '';
+  }
+
+  get noteDisplay() {
+    if (this.element.scaleNote == null) {
+      return '???';
+    }
+
+    switch (this.element.scaleNote) {
+      case ScaleNote.VouLow:
+        return 'vou';
+      case ScaleNote.GaLow:
+        return 'ga';
+      case ScaleNote.ThiLow:
+        return 'thi';
+      case ScaleNote.KeLow:
+        return 'ke';
+      case ScaleNote.ZoHigh:
+        return "Zo'";
+      case ScaleNote.NiHigh:
+        return "Ni'";
+      case ScaleNote.PaHigh:
+        return "Pa'";
+      case ScaleNote.VouHigh:
+        return "Vou'";
+      case ScaleNote.GaHigh:
+        return "Ga'";
+      case ScaleNote.ThiHigh:
+        return "Thi'";
+      case ScaleNote.KeHigh:
+        return "Ke'";
+      default:
+        return this.element.scaleNote;
+    }
   }
 
   beforeDestroy() {
@@ -1119,12 +1158,23 @@ export default class ToolbarNeume extends Vue {
   width: var(--btn-size);
 }
 
+.note-name {
+  width: 4ch;
+  text-align: center;
+}
+
 label.right-space {
   margin-right: 0.5rem;
 }
 
 .space {
   width: 16px;
+}
+
+.separator {
+  margin: 0 16px;
+  border-right: 1px solid black;
+  height: 16px;
 }
 
 .menu-container {

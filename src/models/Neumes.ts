@@ -267,6 +267,7 @@ export enum Fthora {
   Zygos_Top = 'Zygos_Top',
   Kliton_Top = 'Kliton_Top',
   Spathi_Top = 'Spathi_Top',
+  Spathi_Bottom = 'Spathi_Bottom',
 
   DiatonicNiLow_Bottom = 'DiatonicNiLow_Bottom',
   DiatonicPa_Bottom = 'DiatonicPa_Bottom',

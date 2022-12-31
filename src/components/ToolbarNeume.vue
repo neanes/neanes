@@ -674,7 +674,7 @@
       </button>
       <button
         class="neume-button"
-        @click="$emit('update:fthora', [Fthora.Spathi_Top])"
+        @click="$emit('update:fthora', [Fthora.Spathi_Top, Fthora.Spathi_Bottom])"
       >
         <img src="@/assets/icons/fthora-spathi.svg" />
       </button>

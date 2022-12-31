@@ -330,6 +330,7 @@ mapNeumeToSbmufl(Fthora.Enharmonic_Top, 'fthoraEnharmonicAbove');
 mapNeumeToSbmufl(Fthora.Zygos_Top, 'chroaZygosAbove');
 mapNeumeToSbmufl(Fthora.Kliton_Top, 'chroaKlitonAbove');
 mapNeumeToSbmufl(Fthora.Spathi_Top, 'chroaSpathiAbove');
+mapNeumeToSbmufl(Fthora.Spathi_Bottom, 'chroaSpathiBelow');
 mapNeumeToSbmufl(Fthora.GeneralSharp_Top, 'diesisGenikiAbove');
 mapNeumeToSbmufl(Fthora.GeneralFlat_Top, 'yfesisGenikiAbove');
 mapNeumeToSbmufl(Fthora.DiatonicNiLow_Bottom, 'fthoraDiatonicNiLowBelow');

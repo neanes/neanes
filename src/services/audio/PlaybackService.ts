@@ -1257,6 +1257,10 @@ export class PlaybackService {
       workspace.scale = this.softChromaticScale;
     } else if (modeKeyElement.scale === Scale.HardChromatic) {
       workspace.scale = this.hardChromaticScale;
+    } else if (modeKeyElement.scale === Scale.Kliton) {
+      workspace.scale = this.klitonScale;
+    } else if (modeKeyElement.scale === Scale.Spathi) {
+      workspace.scale = this.spathiScale;
     }
 
     // TODO support mode keys with enharmonic fthora?
@@ -1392,6 +1396,7 @@ export class PlaybackService {
     [Fthora.Zygos_Bottom, PlaybackScaleName.Zygos],
 
     [Fthora.Spathi_Top, PlaybackScaleName.Spathi],
+    [Fthora.Spathi_Bottom, PlaybackScaleName.Spathi],
 
     [Fthora.Enharmonic_Top, PlaybackScaleName.Enharmonic],
     [Fthora.Enharmonic_Bottom, PlaybackScaleName.Enharmonic],
@@ -1738,7 +1743,10 @@ export class PlaybackService {
     name: PlaybackScaleName.Spathi,
     intervals: [12, 10, 8, 20, 4, 4, 14],
     scaleNoteMap: this.diatonicScaleNoteToIntervalIndexMap,
-    fthoraMap: new Map<Fthora, number>([[Fthora.Spathi_Top, 5]]),
+    fthoraMap: new Map<Fthora, number>([
+      [Fthora.Spathi_Top, 5],
+      [Fthora.Spathi_Bottom, 5],
+    ]),
   };
 
   // The intervals of this scale are constructed dynamically

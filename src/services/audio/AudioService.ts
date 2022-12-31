@@ -93,17 +93,30 @@ export class AudioService {
             Tone.Transport.bpm.value = event.bpm!;
           }
 
-          synth.triggerAttackRelease(event.frequency!, event.duration, time);
+          if (event.duration != null && event.frequency != null) {
+            synth.triggerAttackRelease(event.frequency!, event.duration, time);
+          } else {
+            console.warn(
+              'AudioService: note missing duration or frequency',
+              event,
+            );
+          }
 
           const isonUnison = event.isonFrequency === -1;
 
           if (isonUnison) {
-            isonSynth.triggerAttack(event.frequency!, time);
+            if (event.frequency != null) {
+              isonSynth.triggerAttack(event.frequency!, time);
+            }
           } else if (event.isonFrequency === 0 || event.isonFrequency == null) {
             isonSynth.triggerRelease(time);
           } else if (event.isonFrequency !== currentIsonFrequency) {
             currentIsonFrequency = event.isonFrequency;
-            isonSynth.triggerAttack(event.isonFrequency!, time);
+            if (event.isonFrequency != null) {
+              isonSynth.triggerAttack(event.isonFrequency!, time);
+            } else {
+              console.warn('AudioService: missing ison frequency', event);
+            }
           }
 
           EventBus.$emit(AudioServiceEventNames.EventPlay, event);

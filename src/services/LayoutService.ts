@@ -1399,7 +1399,7 @@ enharmonicZoRootSignMap.set(-2, RootSign.Nana);
 const enharmonicZoHighRootSignMap = new Map<number, RootSign>(
   diatonicRootSignMap,
 );
-enharmonicZoRootSignMap.set(5, RootSign.Nana);
+enharmonicZoHighRootSignMap.set(5, RootSign.Nana);
 
 const enharmonicVouRootSignMap = new Map<number, RootSign>(diatonicRootSignMap);
 enharmonicVouRootSignMap.set(1, RootSign.Nana);

@@ -114,6 +114,7 @@ export class SaveService {
       }
 
       element.lineBreak = e.lineBreak || undefined;
+      element.justify = e.justify || undefined;
       element.pageBreak = e.pageBreak || undefined;
 
       score.staff.elements.push(element);
@@ -457,6 +458,7 @@ export class SaveService {
       }
 
       element.lineBreak = e.lineBreak === true;
+      element.justify = e.justify === true;
       element.pageBreak = e.pageBreak === true;
 
       score.staff.elements.push(element);

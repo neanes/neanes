@@ -16,7 +16,7 @@
       @add-auto-martyria="addAutoMartyria"
       @update:entryMode="updateEntryMode"
       @toggle-page-break="togglePageBreak"
-      @toggle-line-break="toggleLineBreak"
+      @toggle-line-break="toggleLineBreak($event)"
       @add-tempo="addTempo"
       @add-drop-cap="addDropCap(false)"
       @delete-selected-element="deleteSelectedElement"
@@ -124,7 +124,11 @@
                         ><img src="@/assets/icons/page-break.svg"
                       /></span>
                       <span class="line-break" v-if="element.lineBreak"
-                        ><img src="@/assets/icons/line-break.svg"
+                        ><img
+                          v-if="element.justify"
+                          src="@/assets/icons/line-break-justify.svg" /><img
+                          v-else
+                          src="@/assets/icons/line-break.svg"
                       /></span>
                       <SyllableNeumeBox
                         class="syllable-box"
@@ -1776,14 +1780,21 @@ export default class Editor extends Vue {
     }
   }
 
-  toggleLineBreak() {
+  toggleLineBreak(justify: boolean) {
     if (this.selectedElement && !this.isLastElement(this.selectedElement)) {
+      let lineBreak = !this.selectedElement.lineBreak;
+
+      if (justify != this.selectedElement.justify) {
+        lineBreak = true;
+      }
+
       this.commandService.execute(
         this.scoreElementCommandFactory.create('update-properties', {
           target: this.selectedElement,
           newValues: {
-            lineBreak: !this.selectedElement.lineBreak,
+            lineBreak,
             pageBreak: false,
+            justify,
           },
         }),
       );

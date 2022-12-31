@@ -102,9 +102,16 @@
     <button
       class="icon-btn line-break-btn"
       title="Insert or remove line break after selected element"
-      @click="$emit('toggle-line-break')"
+      @click="$emit('toggle-line-break', false)"
     >
       <img src="@/assets/icons/line-break.svg" width="24" height="24" />
+    </button>
+    <button
+      class="icon-btn line-break-btn"
+      title="Insert or remove justified line break after selected element"
+      @click="$emit('toggle-line-break', true)"
+    >
+      <img src="@/assets/icons/line-break-justify.svg" width="24" height="24" />
     </button>
     <button
       class="icon-btn"

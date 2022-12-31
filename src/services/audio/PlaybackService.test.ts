@@ -719,6 +719,9 @@ function getDefaultWorkspaceOptions() {
 
 function getDefaultWorkspace(elements: ScoreElement[], scale: PlaybackScale) {
   let workspace: PlaybackWorkspace = {
+    events: [],
+    gorgonIndexes: [],
+
     elements,
     elementIndex: 0,
     innerElementIndex: 0,
@@ -749,6 +752,7 @@ function getDefaultWorkspace(elements: ScoreElement[], scale: PlaybackScale) {
     generalSharp: false,
 
     permanentEnharmonicZo: false,
+    permanentEnharmonicVou: false,
   };
 
   return workspace;

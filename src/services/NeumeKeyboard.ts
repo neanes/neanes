@@ -729,7 +729,7 @@ export class NeumeKeyboard {
     this.fthoraKeyboardMap.push({
       code: 'Digit9',
       modifier: this.fthoraKey,
-      neumes: [Fthora.Spathi_Top],
+      neumes: [Fthora.Spathi_Top, Fthora.Spathi_Bottom],
     });
   }
 

@@ -386,6 +386,7 @@ mapNeumeToSbmufl(
   VocalExpressionNeume.HeteronConnectingLong,
   'heteronConnecting.salt01',
 );
+mapNeumeToSbmufl(VocalExpressionNeume.Endofonon, 'endofonon');
 
 mapNeumeToSbmufl(RootSign.Delta, 'martyriaDeltaBelow');
 mapNeumeToSbmufl(RootSign.Alpha, 'martyriaAlphaBelow');

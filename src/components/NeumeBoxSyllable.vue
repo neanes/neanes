@@ -308,7 +308,8 @@ export default class NeumeBoxSyllable extends Vue {
       this.note.vocalExpressionNeume ===
         VocalExpressionNeume.HeteronConnecting ||
       this.note.vocalExpressionNeume ===
-        VocalExpressionNeume.HeteronConnectingLong
+        VocalExpressionNeume.HeteronConnectingLong ||
+      this.note.vocalExpressionNeume === VocalExpressionNeume.Endofonon
     ) {
       style.color = this.pageSetup.heteronDefaultColor;
       style.webkitTextStrokeWidth = withZoom(

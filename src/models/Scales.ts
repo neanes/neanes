@@ -5,6 +5,7 @@ export enum Scale {
   SoftChromatic = 'SoftChromatic',
   HardChromatic = 'HardChromatic',
   EnharmonicGa = 'EnharmonicGa',
+  EnharmonicZo = 'EnharmonicZo',
   EnharmonicZoHigh = 'EnharmonicZoHigh',
   EnharmonicVou = 'EnharmonicVou',
   EnharmonicVouHigh = 'EnharmonicVouHigh',

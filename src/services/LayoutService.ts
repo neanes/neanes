@@ -1091,6 +1091,10 @@ export class LayoutService {
               RootSign.Alpha;
           } else if (currentScale === Scale.EnharmonicZoHigh) {
             martyria.rootSign =
+              enharmonicZoHighRootSignMap.get(currentScaleNote) ||
+              RootSign.Alpha;
+          } else if (currentScale === Scale.EnharmonicZo) {
+            martyria.rootSign =
               enharmonicZoRootSignMap.get(currentScaleNote) || RootSign.Alpha;
           }
 
@@ -1140,6 +1144,9 @@ export class LayoutService {
       }
       if (currentNote === getScaleNoteValue(ScaleNote.ZoHigh)) {
         return Scale.EnharmonicZoHigh;
+      }
+      if (currentNote === getScaleNoteValue(ScaleNote.Zo)) {
+        return Scale.EnharmonicZo;
       }
       if (currentNote === getScaleNoteValue(ScaleNote.Vou)) {
         return Scale.EnharmonicVou;
@@ -1235,6 +1242,7 @@ export class LayoutService {
 
     if (
       fthora.startsWith('Enharmonic') &&
+      currentNote !== getScaleNoteValue(ScaleNote.Zo) &&
       currentNote !== getScaleNoteValue(ScaleNote.Ga) &&
       currentNote !== getScaleNoteValue(ScaleNote.ZoHigh) &&
       currentNote !== getScaleNoteValue(ScaleNote.Vou) &&
@@ -1386,10 +1394,16 @@ enharmonicGaRootSignMap.set(0, RootSign.Delta);
 enharmonicGaRootSignMap.set(1, RootSign.Alpha);
 
 const enharmonicZoRootSignMap = new Map<number, RootSign>(diatonicRootSignMap);
+enharmonicZoRootSignMap.set(-2, RootSign.Nana);
+
+const enharmonicZoHighRootSignMap = new Map<number, RootSign>(
+  diatonicRootSignMap,
+);
 enharmonicZoRootSignMap.set(5, RootSign.Nana);
 
 const enharmonicVouRootSignMap = new Map<number, RootSign>(diatonicRootSignMap);
 enharmonicVouRootSignMap.set(1, RootSign.Nana);
+enharmonicVouRootSignMap.set(-2, RootSign.Nana);
 
 const enharmonicVouHighRootSignMap = new Map<number, RootSign>(
   diatonicRootSignMap,

@@ -106,6 +106,7 @@ export interface PlaybackWorkspace {
   generalFlat: boolean;
 
   permanentEnharmonicZo: boolean;
+  permanentEnharmonicVou: boolean;
 }
 
 interface GorgonIndex {
@@ -212,6 +213,7 @@ export class PlaybackService {
       generalSharp: false,
 
       permanentEnharmonicZo: false,
+      permanentEnharmonicVou: false,
     };
 
     Object.assign(workspace.options, options);
@@ -280,7 +282,7 @@ export class PlaybackService {
           } else {
             workspace.enharmonicZo = workspace.permanentEnharmonicZo;
             workspace.enharmonicGa = false;
-            workspace.enharmonicVou = false;
+            workspace.enharmonicVou = workspace.permanentEnharmonicVou;
             workspace.generalFlat = false;
             workspace.generalSharp = false;
           }
@@ -781,7 +783,8 @@ export class PlaybackService {
           );
         } else if (
           workspace.scale.name === PlaybackScaleName.Enharmonic &&
-          !workspace.permanentEnharmonicZo
+          !workspace.permanentEnharmonicZo &&
+          !workspace.permanentEnharmonicVou
         ) {
           // Clear the enharmonic fthora
           const note = this.scaleNoteMap.get(workspace.note);
@@ -823,7 +826,7 @@ export class PlaybackService {
 
         workspace.enharmonicZo = workspace.permanentEnharmonicZo;
         workspace.enharmonicGa = false;
-        workspace.enharmonicVou = false;
+        workspace.enharmonicVou = workspace.permanentEnharmonicVou;
         workspace.generalFlat = false;
         workspace.generalSharp = false;
       } else if (element.elementType === ElementType.Tempo) {
@@ -1220,6 +1223,7 @@ export class PlaybackService {
     workspace.generalFlat = false;
     workspace.generalSharp = false;
     workspace.permanentEnharmonicZo = false;
+    workspace.permanentEnharmonicVou = false;
     workspace.noteOffset = 0;
     workspace.ignoreAttractions = modeKeyElement.ignoreAttractions;
 
@@ -1252,6 +1256,25 @@ export class PlaybackService {
 
         this.enharmonicScale.scaleNoteMap =
           this.diatonicScaleNoteToIntervalIndexMap;
+      }
+
+      if (
+        modeKeyElement.mode === 7 &&
+        modeKeyElement.scaleNote === ScaleNote.Zo &&
+        modeKeyElement.fthoraAboveNote === Fthora.Enharmonic_Top
+      ) {
+        workspace.enharmonicVou = true;
+        workspace.enharmonicZo = true;
+        workspace.permanentEnharmonicZo = true;
+        workspace.permanentEnharmonicVou = true;
+
+        workspace.scale = this.enharmonicScale;
+
+        this.enharmonicScale.intervals =
+          this.constructEnharmonicScale(workspace);
+
+        this.enharmonicScale.scaleNoteMap =
+          this.enharmonicZoScaleNoteToIntervalIndexMap;
       }
     } else if (modeKeyElement.scale === Scale.SoftChromatic) {
       workspace.scale = this.softChromaticScale;

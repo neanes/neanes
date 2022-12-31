@@ -1188,7 +1188,7 @@ export class NeumeKeyboard {
     this.martyriaConfigKeyboardMap.push({
       code: 'Quote',
       modifier: this.martyriaScaleKey,
-      scale: Scale.EnharmonicVou,
+      scale: Scale.EnharmonicZoHigh,
     });
 
     this.martyriaConfigKeyboardMap.push({
@@ -1200,23 +1200,29 @@ export class NeumeKeyboard {
     this.martyriaConfigKeyboardMap.push({
       code: 'KeyI',
       modifier: this.martyriaScaleKey,
-      scale: Scale.EnharmonicZoHigh,
+      scale: Scale.EnharmonicVou,
     });
 
     this.martyriaConfigKeyboardMap.push({
       code: 'KeyO',
       modifier: this.martyriaScaleKey,
-      scale: Scale.Zygos,
+      scale: Scale.EnharmonicZo,
     });
 
     this.martyriaConfigKeyboardMap.push({
       code: 'KeyP',
       modifier: this.martyriaScaleKey,
-      scale: Scale.Spathi,
+      scale: Scale.Zygos,
     });
 
     this.martyriaConfigKeyboardMap.push({
       code: 'BracketLeft',
+      modifier: this.martyriaScaleKey,
+      scale: Scale.Spathi,
+    });
+
+    this.martyriaConfigKeyboardMap.push({
+      code: 'BracketRight',
       modifier: this.martyriaScaleKey,
       scale: Scale.Kliton,
     });

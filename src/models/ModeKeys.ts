@@ -298,6 +298,15 @@ export const modeKeyTemplates: ModeKeyTemplate[] = [
     note: ModeSign.Zo,
   },
   {
+    id: 702,
+    mode: 7,
+    scale: Scale.Diatonic,
+    scaleNote: ScaleNote.Zo,
+    martyria: ModeSign.VarysZo,
+    note: ModeSign.Zo,
+    fthoraAboveNote: Fthora.Enharmonic_Top,
+  },
+  {
     id: 800,
     mode: 8,
     scale: Scale.Diatonic,

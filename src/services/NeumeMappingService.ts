@@ -314,8 +314,8 @@ mapNeumeToSbmufl(TimeNeume.Hapli, 'apli');
 mapNeumeToSbmufl(TimeNeume.Dipli, 'dipli');
 mapNeumeToSbmufl(TimeNeume.Tripli, 'tripli');
 
-mapNeumeToSbmufl(Fthora.DiatonicNiLow_Top, 'fthoraDiatonicNiLowAbove'),
-  mapNeumeToSbmufl(Fthora.DiatonicPa_Top, 'fthoraDiatonicPaAbove');
+mapNeumeToSbmufl(Fthora.DiatonicNiLow_Top, 'fthoraDiatonicNiLowAbove');
+mapNeumeToSbmufl(Fthora.DiatonicPa_Top, 'fthoraDiatonicPaAbove');
 mapNeumeToSbmufl(Fthora.DiatonicVou_Top, 'fthoraDiatonicVouAbove');
 mapNeumeToSbmufl(Fthora.DiatonicGa_Top, 'fthoraDiatonicGaAbove');
 mapNeumeToSbmufl(Fthora.DiatonicThi_Top, 'fthoraDiatonicDiAbove');

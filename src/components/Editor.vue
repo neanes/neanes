@@ -3100,8 +3100,11 @@ export default class Editor extends Vue {
     }
   }
 
-  setGorgon(element: NoteElement, neumes: GorgonNeume[]) {
+  setGorgon(element: NoteElement, neumes: GorgonNeume | GorgonNeume[]) {
     let equivalent = false;
+
+    // Force neumes to be an array if it's not
+    neumes = Array.isArray(neumes) ? neumes : [neumes];
 
     for (let neume of neumes) {
       if (

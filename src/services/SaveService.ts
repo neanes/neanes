@@ -491,93 +491,93 @@ export class SaveService {
     pageSetup.lineHeight = p.lineHeight;
 
     pageSetup.dropCapDefaultColor =
-      p.dropCapDefaultColor || pageSetup.dropCapDefaultColor;
+      p.dropCapDefaultColor ?? pageSetup.dropCapDefaultColor;
     pageSetup.dropCapDefaultFontFamily = p.dropCapDefaultFontFamily;
     pageSetup.dropCapDefaultFontSize = p.dropCapDefaultFontSize;
     pageSetup.dropCapDefaultFontWeight =
-      p.dropCapDefaultFontWeight || pageSetup.dropCapDefaultFontWeight;
+      p.dropCapDefaultFontWeight ?? pageSetup.dropCapDefaultFontWeight;
     pageSetup.dropCapDefaultFontStyle =
-      p.dropCapDefaultFontStyle || pageSetup.dropCapDefaultFontStyle;
+      p.dropCapDefaultFontStyle ?? pageSetup.dropCapDefaultFontStyle;
     pageSetup.dropCapDefaultStrokeWidth =
-      p.dropCapDefaultStrokeWidth || pageSetup.dropCapDefaultStrokeWidth;
+      p.dropCapDefaultStrokeWidth ?? pageSetup.dropCapDefaultStrokeWidth;
 
     pageSetup.lyricsDefaultColor =
-      p.lyricsDefaultColor || pageSetup.lyricsDefaultColor;
+      p.lyricsDefaultColor ?? pageSetup.lyricsDefaultColor;
     pageSetup.lyricsDefaultFontFamily = p.lyricsDefaultFontFamily;
     pageSetup.lyricsDefaultFontSize = p.lyricsDefaultFontSize;
     pageSetup.lyricsDefaultFontWeight =
-      p.lyricsDefaultFontWeight || pageSetup.lyricsDefaultFontWeight;
+      p.lyricsDefaultFontWeight ?? pageSetup.lyricsDefaultFontWeight;
     pageSetup.lyricsDefaultFontStyle =
-      p.lyricsDefaultFontStyle || pageSetup.lyricsDefaultFontStyle;
+      p.lyricsDefaultFontStyle ?? pageSetup.lyricsDefaultFontStyle;
     pageSetup.lyricsDefaultStrokeWidth =
-      p.lyricsDefaultStrokeWidth || pageSetup.lyricsDefaultStrokeWidth;
+      p.lyricsDefaultStrokeWidth ?? pageSetup.lyricsDefaultStrokeWidth;
     pageSetup.lyricsVerticalOffset = p.lyricsVerticalOffset;
 
     pageSetup.martyriaDefaultColor =
-      p.martyriaDefaultColor || pageSetup.martyriaDefaultColor;
+      p.martyriaDefaultColor ?? pageSetup.martyriaDefaultColor;
     pageSetup.martyriaDefaultStrokeWidth =
-      p.martyriaDefaultStrokeWidth || pageSetup.martyriaDefaultStrokeWidth;
+      p.martyriaDefaultStrokeWidth ?? pageSetup.martyriaDefaultStrokeWidth;
     pageSetup.tempoDefaultColor =
-      p.tempoDefaultColor || pageSetup.tempoDefaultColor;
+      p.tempoDefaultColor ?? pageSetup.tempoDefaultColor;
     pageSetup.tempoDefaultStrokeWidth =
-      p.tempoDefaultStrokeWidth || pageSetup.tempoDefaultStrokeWidth;
+      p.tempoDefaultStrokeWidth ?? pageSetup.tempoDefaultStrokeWidth;
     pageSetup.neumeDefaultColor =
-      p.neumeDefaultColor || pageSetup.neumeDefaultColor;
+      p.neumeDefaultColor ?? pageSetup.neumeDefaultColor;
 
     pageSetup.neumeDefaultFontFamily =
-      p.neumeDefaultFontFamily || pageSetup.neumeDefaultFontFamily;
+      p.neumeDefaultFontFamily ?? pageSetup.neumeDefaultFontFamily;
     pageSetup.neumeDefaultFontSize = p.neumeDefaultFontSize;
     pageSetup.neumeDefaultStrokeWidth =
-      p.neumeDefaultStrokeWidth || pageSetup.neumeDefaultStrokeWidth;
+      p.neumeDefaultStrokeWidth ?? pageSetup.neumeDefaultStrokeWidth;
     pageSetup.neumeDefaultSpacing = p.neumeDefaultSpacing;
 
     pageSetup.modeKeyDefaultColor =
-      p.modeKeyDefaultColor || pageSetup.modeKeyDefaultColor;
+      p.modeKeyDefaultColor ?? pageSetup.modeKeyDefaultColor;
     pageSetup.modeKeyDefaultStrokeWidth =
-      p.modeKeyDefaultStrokeWidth || pageSetup.modeKeyDefaultStrokeWidth;
+      p.modeKeyDefaultStrokeWidth ?? pageSetup.modeKeyDefaultStrokeWidth;
     pageSetup.modeKeyDefaultFontSize =
-      p.modeKeyDefaultFontSize || pageSetup.modeKeyDefaultFontSize;
+      p.modeKeyDefaultFontSize ?? pageSetup.modeKeyDefaultFontSize;
     pageSetup.modeKeyDefaultHeightAdjustment =
-      p.modeKeyDefaultHeightAdjustment ||
+      p.modeKeyDefaultHeightAdjustment ??
       pageSetup.modeKeyDefaultHeightAdjustment;
 
     pageSetup.accidentalDefaultColor =
-      p.accidentalDefaultColor || pageSetup.accidentalDefaultColor;
+      p.accidentalDefaultColor ?? pageSetup.accidentalDefaultColor;
     pageSetup.accidentalDefaultStrokeWidth =
-      p.accidentalDefaultStrokeWidth || pageSetup.accidentalDefaultStrokeWidth;
+      p.accidentalDefaultStrokeWidth ?? pageSetup.accidentalDefaultStrokeWidth;
     pageSetup.fthoraDefaultColor =
-      p.fthoraDefaultColor || pageSetup.fthoraDefaultColor;
+      p.fthoraDefaultColor ?? pageSetup.fthoraDefaultColor;
     pageSetup.fthoraDefaultStrokeWidth =
-      p.fthoraDefaultStrokeWidth || pageSetup.fthoraDefaultStrokeWidth;
+      p.fthoraDefaultStrokeWidth ?? pageSetup.fthoraDefaultStrokeWidth;
     pageSetup.heteronDefaultColor =
-      p.heteronDefaultColor || pageSetup.heteronDefaultColor;
+      p.heteronDefaultColor ?? pageSetup.heteronDefaultColor;
     pageSetup.heteronDefaultStrokeWidth =
-      p.heteronDefaultStrokeWidth || pageSetup.heteronDefaultStrokeWidth;
+      p.heteronDefaultStrokeWidth ?? pageSetup.heteronDefaultStrokeWidth;
     pageSetup.gorgonDefaultColor =
-      p.gorgonDefaultColor || pageSetup.gorgonDefaultColor;
+      p.gorgonDefaultColor ?? pageSetup.gorgonDefaultColor;
     pageSetup.gorgonDefaultStrokeWidth =
-      p.gorgonDefaultStrokeWidth || pageSetup.gorgonDefaultStrokeWidth;
+      p.gorgonDefaultStrokeWidth ?? pageSetup.gorgonDefaultStrokeWidth;
     pageSetup.measureBarDefaultColor =
-      p.measureBarDefaultColor || pageSetup.measureBarDefaultColor;
+      p.measureBarDefaultColor ?? pageSetup.measureBarDefaultColor;
     pageSetup.measureBarDefaultStrokeWidth =
-      p.measureBarDefaultStrokeWidth || pageSetup.measureBarDefaultStrokeWidth;
+      p.measureBarDefaultStrokeWidth ?? pageSetup.measureBarDefaultStrokeWidth;
     pageSetup.measureNumberDefaultColor =
-      p.measureNumberDefaultColor || pageSetup.measureNumberDefaultColor;
+      p.measureNumberDefaultColor ?? pageSetup.measureNumberDefaultColor;
     pageSetup.measureNumberDefaultStrokeWidth =
-      p.measureNumberDefaultStrokeWidth ||
+      p.measureNumberDefaultStrokeWidth ??
       pageSetup.measureNumberDefaultStrokeWidth;
     pageSetup.noteIndicatorDefaultColor =
-      p.noteIndicatorDefaultColor || pageSetup.noteIndicatorDefaultColor;
+      p.noteIndicatorDefaultColor ?? pageSetup.noteIndicatorDefaultColor;
     pageSetup.noteIndicatorDefaultStrokeWidth =
-      p.noteIndicatorDefaultStrokeWidth ||
+      p.noteIndicatorDefaultStrokeWidth ??
       pageSetup.noteIndicatorDefaultStrokeWidth;
     pageSetup.isonDefaultColor =
-      p.isonDefaultColor || pageSetup.isonDefaultColor;
+      p.isonDefaultColor ?? pageSetup.isonDefaultColor;
     pageSetup.isonDefaultStrokeWidth =
-      p.isonDefaultStrokeWidth || pageSetup.isonDefaultStrokeWidth;
+      p.isonDefaultStrokeWidth ?? pageSetup.isonDefaultStrokeWidth;
 
-    pageSetup.pageSize = p.pageSize || pageSetup.pageSize;
-    pageSetup.pageSizeUnit = p.pageSizeUnit || pageSetup.pageSizeUnit;
+    pageSetup.pageSize = p.pageSize ?? pageSetup.pageSize;
+    pageSetup.pageSizeUnit = p.pageSizeUnit ?? pageSetup.pageSizeUnit;
     pageSetup.landscape = p.landscape === true;
 
     pageSetup.hyphenSpacing = p.hyphenSpacing;
@@ -598,13 +598,13 @@ export class SaveService {
   }
 
   public static LoadDropCap_v1(element: DropCapElement, e: DropCapElement_v1) {
-    element.color = e.color || null;
+    element.color = e.color ?? null;
     element.content = e.content;
-    element.fontFamily = e.fontFamily || null;
-    element.fontSize = e.fontSize || null;
-    element.fontWeight = e.fontWeight || null;
-    element.fontStyle = e.fontStyle || null;
-    element.strokeWidth = e.strokeWidth || null;
+    element.fontFamily = e.fontFamily ?? null;
+    element.fontSize = e.fontSize ?? null;
+    element.fontWeight = e.fontWeight ?? null;
+    element.fontStyle = e.fontStyle ?? null;
+    element.strokeWidth = e.strokeWidth ?? null;
   }
 
   public static LoadMartyria_v1(
@@ -616,7 +616,7 @@ export class SaveService {
     element.note = e.note;
     element.scale = e.scale;
     element.rootSign = e.rootSign;
-    element.spaceAfter = e.spaceAfter || 0;
+    element.spaceAfter = e.spaceAfter ?? 0;
 
     if (e.fthora != null) {
       element.fthora = e.fthora;
@@ -628,7 +628,7 @@ export class SaveService {
 
     if (e.tempo != null) {
       element.tempo = e.tempo;
-      element.bpm = e.bpm || TempoElement.getDefaultBpm(element.tempo);
+      element.bpm = e.bpm ?? TempoElement.getDefaultBpm(element.tempo);
     }
 
     if (e.measureBarLeft != null) {
@@ -640,14 +640,14 @@ export class SaveService {
     }
 
     if (e.measureBarRight != null) {
-      element.measureBarRight = e.measureBarRight || e.measureBar;
+      element.measureBarRight = e.measureBarRight ?? e.measureBar;
     }
   }
 
   public static LoadTempo_v1(element: TempoElement, e: TempoElement_v1) {
     element.neume = e.neume;
-    element.bpm = e.bpm || TempoElement.getDefaultBpm(element.neume);
-    element.spaceAfter = e.spaceAfter || 0;
+    element.bpm = e.bpm ?? TempoElement.getDefaultBpm(element.neume);
+    element.spaceAfter = e.spaceAfter ?? 0;
   }
 
   public static LoadNote_v1(element: NoteElement, e: NoteElement_v1) {
@@ -659,28 +659,28 @@ export class SaveService {
 
     if (e.timeNeume != null) {
       element.timeNeume = e.timeNeume;
-      element.timeNeumeOffsetX = e.timeNeumeOffsetX || null;
-      element.timeNeumeOffsetY = e.timeNeumeOffsetY || null;
+      element.timeNeumeOffsetX = e.timeNeumeOffsetX ?? null;
+      element.timeNeumeOffsetY = e.timeNeumeOffsetY ?? null;
     }
 
     if (e.gorgonNeume != null) {
       element.gorgonNeume = e.gorgonNeume;
-      element.gorgonNeumeOffsetX = e.gorgonNeumeOffsetX || null;
-      element.gorgonNeumeOffsetY = e.gorgonNeumeOffsetY || null;
+      element.gorgonNeumeOffsetX = e.gorgonNeumeOffsetX ?? null;
+      element.gorgonNeumeOffsetY = e.gorgonNeumeOffsetY ?? null;
     }
 
     if (e.secondaryGorgonNeume != null) {
       element.secondaryGorgonNeume = e.secondaryGorgonNeume;
       element.secondaryGorgonNeumeOffsetX =
-        e.secondaryGorgonNeumeOffsetX || null;
+        e.secondaryGorgonNeumeOffsetX ?? null;
       element.secondaryGorgonNeumeOffsetY =
-        e.secondaryGorgonNeumeOffsetY || null;
+        e.secondaryGorgonNeumeOffsetY ?? null;
     }
 
     if (e.fthora != null) {
       element.fthora = e.fthora;
-      element.fthoraOffsetX = e.fthoraOffsetX || null;
-      element.fthoraOffsetY = e.fthoraOffsetY || null;
+      element.fthoraOffsetX = e.fthoraOffsetX ?? null;
+      element.fthoraOffsetY = e.fthoraOffsetY ?? null;
     }
 
     if (e.chromaticFthoraNote != null) {
@@ -689,22 +689,22 @@ export class SaveService {
 
     if (e.accidental != null) {
       element.accidental = e.accidental;
-      element.accidentalOffsetX = e.accidentalOffsetX || null;
-      element.accidentalOffsetY = e.accidentalOffsetY || null;
+      element.accidentalOffsetX = e.accidentalOffsetX ?? null;
+      element.accidentalOffsetY = e.accidentalOffsetY ?? null;
     }
 
     if (e.vocalExpressionNeume != null) {
       element.vocalExpressionNeume = e.vocalExpressionNeume;
       element.vocalExpressionNeumeOffsetX =
-        e.vocalExpressionNeumeOffsetX || null;
+        e.vocalExpressionNeumeOffsetX ?? null;
       element.vocalExpressionNeumeOffsetY =
-        e.vocalExpressionNeumeOffsetY || null;
+        e.vocalExpressionNeumeOffsetY ?? null;
     }
 
     if (e.measureBarLeft != null) {
       element.measureBarLeft = e.measureBarLeft;
-      element.measureBarLeftOffsetX = e.measureBarLeftOffsetX || null;
-      element.measureBarLeftOffsetY = e.measureBarLeftOffsetY || null;
+      element.measureBarLeftOffsetX = e.measureBarLeftOffsetX ?? null;
+      element.measureBarLeftOffsetY = e.measureBarLeftOffsetY ?? null;
     }
 
     if (e.measureBar != null) {
@@ -713,14 +713,14 @@ export class SaveService {
 
     if (e.measureBarRight != null) {
       element.measureBarRight = e.measureBarRight;
-      element.measureBarRightOffsetX = e.measureBarRightOffsetX || null;
-      element.measureBarRightOffsetY = e.measureBarRightOffsetY || null;
+      element.measureBarRightOffsetX = e.measureBarRightOffsetX ?? null;
+      element.measureBarRightOffsetY = e.measureBarRightOffsetY ?? null;
     }
 
     if (e.measureNumber != null) {
       element.measureNumber = e.measureNumber;
-      element.measureNumberOffsetX = e.measureNumberOffsetX || null;
-      element.measureNumberOffsetY = e.measureNumberOffsetY || null;
+      element.measureNumberOffsetX = e.measureNumberOffsetX ?? null;
+      element.measureNumberOffsetY = e.measureNumberOffsetY ?? null;
     }
 
     // For backwards compatibility, noteIndicator used to be a string | undefined
@@ -728,14 +728,14 @@ export class SaveService {
       e.noteIndicator !== undefined && e.noteIndicator !== false;
 
     if (element.noteIndicator) {
-      element.noteIndicatorOffsetX = e.noteIndicatorOffsetX || null;
-      element.noteIndicatorOffsetY = e.noteIndicatorOffsetY || null;
+      element.noteIndicatorOffsetX = e.noteIndicatorOffsetX ?? null;
+      element.noteIndicatorOffsetY = e.noteIndicatorOffsetY ?? null;
     }
 
     if (e.ison != null) {
       element.ison = e.ison;
-      element.isonOffsetX = e.isonOffsetX || null;
-      element.isonOffsetY = e.isonOffsetY || null;
+      element.isonOffsetX = e.isonOffsetX ?? null;
+      element.isonOffsetY = e.isonOffsetY ?? null;
     }
 
     if (e.lyrics != null) {
@@ -743,8 +743,8 @@ export class SaveService {
     }
 
     if (e.vareia === true) {
-      element.vareiaOffsetX = e.vareiaOffsetX || null;
-      element.vareiaOffsetY = e.vareiaOffsetY || null;
+      element.vareiaOffsetX = e.vareiaOffsetX ?? null;
+      element.vareiaOffsetY = e.vareiaOffsetY ?? null;
     }
 
     element.vareia = e.vareia === true;
@@ -753,7 +753,7 @@ export class SaveService {
     element.isMelismaStart = e.isMelismaStart === true;
     element.isHyphen = e.isHyphen === true;
     element.ignoreAttractions = e.ignoreAttractions === true;
-    element.spaceAfter = e.spaceAfter || 0;
+    element.spaceAfter = e.spaceAfter ?? 0;
   }
 
   public static LoadTextBox_v1(element: TextBoxElement, e: TextBoxElement_v1) {
@@ -767,33 +767,33 @@ export class SaveService {
     element.italic = e.italic === true;
     element.underline = e.underline === true;
     element.height = e.height;
-    element.strokeWidth = e.strokeWidth || element.strokeWidth;
+    element.strokeWidth = e.strokeWidth ?? element.strokeWidth;
     element.useDefaultStyle = e.useDefaultStyle === true;
   }
 
   public static LoadModeKey_v1(element: ModeKeyElement, e: ModeKeyElement_v1) {
-    element.templateId = e.templateId || null;
+    element.templateId = e.templateId ?? null;
     element.alignment = e.alignment;
     element.mode = e.mode;
     element.scale = e.scale;
     element.scaleNote = e.scaleNote;
-    element.tempo = e.tempo || null;
+    element.tempo = e.tempo ?? null;
     element.tempoAlignRight = e.tempoAlignRight === true;
-    element.note = e.note || null;
-    element.note2 = e.note2 || null;
-    element.fthoraAboveNote = e.fthoraAboveNote || null;
-    element.fthoraAboveNote2 = e.fthoraAboveNote2 || null;
+    element.note = e.note ?? null;
+    element.note2 = e.note2 ?? null;
+    element.fthoraAboveNote = e.fthoraAboveNote ?? null;
+    element.fthoraAboveNote2 = e.fthoraAboveNote2 ?? null;
     element.fthoraAboveQuantitativeNeumeRight =
-      e.fthoraAboveQuantitativeNeumeRight || null;
-    element.quantitativeNeumeAboveNote = e.quantitativeNeumeAboveNote || null;
-    element.quantitativeNeumeAboveNote2 = e.quantitativeNeumeAboveNote2 || null;
-    element.quantitativeNeumeRight = e.quantitativeNeumeRight || null;
+      e.fthoraAboveQuantitativeNeumeRight ?? null;
+    element.quantitativeNeumeAboveNote = e.quantitativeNeumeAboveNote ?? null;
+    element.quantitativeNeumeAboveNote2 = e.quantitativeNeumeAboveNote2 ?? null;
+    element.quantitativeNeumeRight = e.quantitativeNeumeRight ?? null;
     element.martyria = e.martyria;
     element.color = e.color;
     element.fontSize = e.fontSize;
-    element.strokeWidth = e.strokeWidth || element.strokeWidth;
-    element.heightAdjustment = e.heightAdjustment || 0;
-    element.bpm = e.bpm || 120;
+    element.strokeWidth = e.strokeWidth ?? element.strokeWidth;
+    element.heightAdjustment = e.heightAdjustment ?? 0;
+    element.bpm = e.bpm ?? 120;
     element.ignoreAttractions = e.ignoreAttractions === true;
     element.useDefaultStyle = e.useDefaultStyle === true;
     element.permanentEnharmonicZo = e.permanentEnharmonicZo === true;

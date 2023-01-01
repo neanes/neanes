@@ -102,16 +102,23 @@
     <button
       class="icon-btn line-break-btn"
       title="Insert or remove line break after selected element"
-      @click="$emit('toggle-line-break', false)"
+      @click="$emit('toggle-line-break', LineBreakType.Left)"
     >
       <img src="@/assets/icons/line-break.svg" width="24" height="24" />
     </button>
     <button
       class="icon-btn line-break-btn"
       title="Insert or remove justified line break after selected element"
-      @click="$emit('toggle-line-break', true)"
+      @click="$emit('toggle-line-break', LineBreakType.Justify)"
     >
       <img src="@/assets/icons/line-break-justify.svg" width="24" height="24" />
+    </button>
+    <button
+      class="icon-btn line-break-btn"
+      title="Insert or remove centered line break after selected element"
+      @click="$emit('toggle-line-break', LineBreakType.Center)"
+    >
+      <img src="@/assets/icons/line-break-center.svg" width="24" height="24" />
     </button>
     <button
       class="icon-btn"
@@ -192,6 +199,7 @@ import Neume from './Neume.vue';
 import { EntryMode } from '@/models/EntryMode';
 import { AudioState } from '@/services/audio/AudioService';
 import { PlaybackOptions } from '@/services/audio/PlaybackService';
+import { LineBreakType } from '@/models/Element';
 
 @Component({
   components: {
@@ -209,6 +217,7 @@ export default class ToolbarMain extends Vue {
   TempoSign = TempoSign;
   EntryMode = EntryMode;
   AudioState = AudioState;
+  LineBreakType = LineBreakType;
 
   showZoomMenu: boolean = false;
   showTempoMenu: boolean = false;

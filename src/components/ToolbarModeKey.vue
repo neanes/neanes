@@ -85,45 +85,10 @@
       />
       <span class="space" />
     </template>
-
-    <div
-      class="menu-container"
-      @mousedown="openTempoMenu"
-      @mouseleave="selectedTempo = null"
-    >
-      <button class="neume-button">
-        <img draggable="false" src="@/assets/icons/agogi-poli-argi.svg" />
-      </button>
-      <div class="menu" v-if="showTempoMenu">
-        <div
-          class="menu-item"
-          @mouseenter="selectedTempo = TempoSign.VeryQuick"
-        >
-          <img draggable="false" src="@/assets/icons/agogi-poli-gorgi.svg" />
-        </div>
-        <div class="menu-item" @mouseenter="selectedTempo = TempoSign.Quicker">
-          <img draggable="false" src="@/assets/icons/agogi-gorgoteri.svg" />
-        </div>
-        <div class="menu-item" @mouseenter="selectedTempo = TempoSign.Quick">
-          <img draggable="false" src="@/assets/icons/agogi-gorgi.svg" />
-        </div>
-        <div class="menu-item" @mouseenter="selectedTempo = TempoSign.Medium">
-          <img draggable="false" src="@/assets/icons/agogi-mesi.svg" />
-        </div>
-        <div class="menu-item" @mouseenter="selectedTempo = TempoSign.Moderate">
-          <img draggable="false" src="@/assets/icons/agogi-metria.svg" />
-        </div>
-        <div class="menu-item" @mouseenter="selectedTempo = TempoSign.Slow">
-          <img draggable="false" src="@/assets/icons/agogi-argi.svg" />
-        </div>
-        <div class="menu-item" @mouseenter="selectedTempo = TempoSign.Slower">
-          <img draggable="false" src="@/assets/icons/agogi-argoteri.svg" />
-        </div>
-        <div class="menu-item" @mouseenter="selectedTempo = TempoSign.VerySlow">
-          <img draggable="false" src="@/assets/icons/agogi-poli-argi.svg" />
-        </div>
-      </div>
-    </div>
+    <ButtonWithMenu
+      :options="tempoMenuOptions"
+      @select="$emit('update:tempo', $event)"
+    />
     <span class="space" />
 
     <button
@@ -197,41 +162,64 @@ import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import { PageSetup } from '@/models/PageSetup';
 import { TempoSign } from '@/models/Neumes';
+import ButtonWithMenu, { ButtonWithMenuOption } from './ButtonWithMenu.vue';
 
 @Component({
-  components: { ColorPicker, InputUnit, InputFontSize, InputStrokeWidth },
+  components: {
+    ColorPicker,
+    InputUnit,
+    InputFontSize,
+    InputStrokeWidth,
+    ButtonWithMenu,
+  },
 })
 export default class ToolbarModeKey extends Vue {
   @Prop() element!: ModeKeyElement;
   @Prop() pageSetup!: PageSetup;
   TextBoxAlignment = TextBoxAlignment;
-  TempoSign = TempoSign;
 
-  showTempoMenu: boolean = false;
-  selectedTempo: TempoSign | null = null;
-
-  private get heightAdjustmentMin() {
+  get heightAdjustmentMin() {
     return -Math.round(Unit.fromPt(this.element.height));
   }
 
-  private get heightAdjustmentMax() {
+  get heightAdjustmentMax() {
     return Unit.toPt(this.pageSetup.pageHeight);
   }
 
-  openTempoMenu() {
-    this.showTempoMenu = true;
-    window.addEventListener('mouseup', this.onTempoMouseUp);
-  }
-
-  onTempoMouseUp() {
-    if (this.selectedTempo) {
-      this.$emit('update:tempo', this.selectedTempo);
-    }
-
-    this.showTempoMenu = false;
-
-    window.removeEventListener('mouseup', this.onTempoMouseUp);
-  }
+  tempoMenuOptions: ButtonWithMenuOption[] = [
+    {
+      neume: TempoSign.VeryQuick,
+      icon: require('@/assets/icons/agogi-poli-gorgi.svg'),
+    },
+    {
+      neume: TempoSign.Quicker,
+      icon: require('@/assets/icons/agogi-gorgoteri.svg'),
+    },
+    {
+      neume: TempoSign.Quick,
+      icon: require('@/assets/icons/agogi-gorgi.svg'),
+    },
+    {
+      neume: TempoSign.Medium,
+      icon: require('@/assets/icons/agogi-mesi.svg'),
+    },
+    {
+      neume: TempoSign.Moderate,
+      icon: require('@/assets/icons/agogi-metria.svg'),
+    },
+    {
+      neume: TempoSign.Slow,
+      icon: require('@/assets/icons/agogi-argi.svg'),
+    },
+    {
+      neume: TempoSign.Slower,
+      icon: require('@/assets/icons/agogi-argoteri.svg'),
+    },
+    {
+      neume: TempoSign.VerySlow,
+      icon: require('@/assets/icons/agogi-poli-argi.svg'),
+    },
+  ];
 }
 </script>
 
@@ -292,35 +280,5 @@ label.right-space {
 
 .short-input {
   width: 4rem;
-}
-.menu-container {
-  display: flex;
-  position: relative;
-  height: var(--btn-size);
-}
-
-.menu {
-  position: absolute;
-  z-index: 999;
-  background-color: white;
-  border: 1px solid black;
-  box-sizing: border-box;
-  width: var(--btn-size);
-  bottom: 0;
-}
-
-.menu-item {
-  height: var(--btn-size);
-  width: 100%;
-  padding: 3px 0;
-  box-sizing: border-box;
-  text-align: center;
-  user-select: none;
-  overflow: hidden;
-  position: relative;
-}
-
-.menu-item:hover {
-  background-color: aliceblue;
 }
 </style>

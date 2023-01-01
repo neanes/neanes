@@ -403,14 +403,9 @@ import ButtonWithMenu, {
 export default class ToolbarNeume extends Vue {
   @Prop() element!: NoteElement;
   @Prop() pageSetup!: PageSetup;
-  Accidental = Accidental;
   VocalExpressionNeume = VocalExpressionNeume;
-  TimeNeume = TimeNeume;
   GorgonNeume = GorgonNeume;
   Fthora = Fthora;
-  MeasureBar = MeasureBar;
-  MeasureNumber = MeasureNumber;
-  Ison = Ison;
 
   chromaticFthoras = [
     Fthora.SoftChromaticPa_Top,

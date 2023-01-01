@@ -126,92 +126,15 @@
         <img src="@/assets/icons/fthora-spathi.svg" />
       </button>
       <span class="space"></span>
-      <div
-        class="menu-container"
-        @mousedown="openBarLineMenu"
-        @mouseleave="selectedBarLine = null"
-      >
-        <button class="neume-button">
-          <img draggable="false" src="@/assets/icons/barline-single.svg" />
-        </button>
-        <div class="menu" v-if="showBarLineMenu">
-          <div
-            class="menu-item"
-            @mouseenter="selectedBarLine = MeasureBar.MeasureBarTop"
-          >
-            <img
-              draggable="false"
-              src="@/assets/icons/barline-short-single.svg"
-            />
-          </div>
-          <div
-            class="menu-item"
-            @mouseenter="selectedBarLine = MeasureBar.MeasureBarRight"
-          >
-            <img draggable="false" src="@/assets/icons/barline-single.svg" />
-          </div>
-        </div>
-      </div>
+      <ButtonWithMenu
+        :options="barlineMenuOptions"
+        @select="$emit('update:measureBar', $event)"
+      />
       <span class="space" />
-      <div
-        class="menu-container"
-        @mousedown="openTempoMenu"
-        @mouseleave="selectedTempo = null"
-      >
-        <button class="neume-button">
-          <img draggable="false" src="@/assets/icons/agogi-poli-argi.svg" />
-        </button>
-        <div class="menu" v-if="showTempoMenu">
-          <div
-            class="menu-item"
-            @mouseenter="selectedTempo = TempoSign.VeryQuickAbove"
-          >
-            <img draggable="false" src="@/assets/icons/agogi-poli-gorgi.svg" />
-          </div>
-          <div
-            class="menu-item"
-            @mouseenter="selectedTempo = TempoSign.QuickerAbove"
-          >
-            <img draggable="false" src="@/assets/icons/agogi-gorgoteri.svg" />
-          </div>
-          <div
-            class="menu-item"
-            @mouseenter="selectedTempo = TempoSign.QuickAbove"
-          >
-            <img draggable="false" src="@/assets/icons/agogi-gorgi.svg" />
-          </div>
-          <div
-            class="menu-item"
-            @mouseenter="selectedTempo = TempoSign.MediumAbove"
-          >
-            <img draggable="false" src="@/assets/icons/agogi-mesi.svg" />
-          </div>
-          <div
-            class="menu-item"
-            @mouseenter="selectedTempo = TempoSign.ModerateAbove"
-          >
-            <img draggable="false" src="@/assets/icons/agogi-metria.svg" />
-          </div>
-          <div
-            class="menu-item"
-            @mouseenter="selectedTempo = TempoSign.SlowAbove"
-          >
-            <img draggable="false" src="@/assets/icons/agogi-argi.svg" />
-          </div>
-          <div
-            class="menu-item"
-            @mouseenter="selectedTempo = TempoSign.SlowerAbove"
-          >
-            <img draggable="false" src="@/assets/icons/agogi-argoteri.svg" />
-          </div>
-          <div
-            class="menu-item"
-            @mouseenter="selectedTempo = TempoSign.VerySlowAbove"
-          >
-            <img draggable="false" src="@/assets/icons/agogi-poli-argi.svg" />
-          </div>
-        </div>
-      </div>
+      <ButtonWithMenu
+        :options="tempoMenuOptions"
+        @select="$emit('update:tempo', $event)"
+      />
       <span class="space"></span>
       <button
         class="icon-btn"
@@ -310,25 +233,18 @@ import InputUnit from './InputUnit.vue';
 import { Scale, ScaleNote } from '@/models/Scales';
 import { PageSetup } from '@/models/PageSetup';
 import { Unit } from '@/utils/Unit';
+import ButtonWithMenu, { ButtonWithMenuOption } from './ButtonWithMenu.vue';
 
 @Component({
   components: {
     InputUnit,
+    ButtonWithMenu,
   },
 })
 export default class ToolbarMartyria extends Vue {
   @Prop() element!: MartyriaElement;
   @Prop() pageSetup!: PageSetup;
   Fthora = Fthora;
-  MeasureBar = MeasureBar;
-  Note = Note;
-  TempoSign = TempoSign;
-
-  showBarLineMenu: boolean = false;
-  showTempoMenu: boolean = false;
-
-  selectedBarLine: MeasureBar | null = null;
-  selectedTempo: TempoSign | null = null;
 
   notes = Object.values(Note).map((x) => ({
     key: x,
@@ -479,35 +395,51 @@ export default class ToolbarMartyria extends Vue {
       : '';
   }
 
-  openBarLineMenu() {
-    this.showBarLineMenu = true;
-    window.addEventListener('mouseup', this.onBarLineMouseUp);
-  }
+  tempoMenuOptions: ButtonWithMenuOption[] = [
+    {
+      neume: TempoSign.VeryQuickAbove,
+      icon: require('@/assets/icons/agogi-poli-gorgi.svg'),
+    },
+    {
+      neume: TempoSign.QuickerAbove,
+      icon: require('@/assets/icons/agogi-gorgoteri.svg'),
+    },
+    {
+      neume: TempoSign.QuickAbove,
+      icon: require('@/assets/icons/agogi-gorgi.svg'),
+    },
+    {
+      neume: TempoSign.MediumAbove,
+      icon: require('@/assets/icons/agogi-mesi.svg'),
+    },
+    {
+      neume: TempoSign.ModerateAbove,
+      icon: require('@/assets/icons/agogi-metria.svg'),
+    },
+    {
+      neume: TempoSign.SlowAbove,
+      icon: require('@/assets/icons/agogi-argi.svg'),
+    },
+    {
+      neume: TempoSign.SlowerAbove,
+      icon: require('@/assets/icons/agogi-argoteri.svg'),
+    },
+    {
+      neume: TempoSign.VerySlowAbove,
+      icon: require('@/assets/icons/agogi-poli-argi.svg'),
+    },
+  ];
 
-  onBarLineMouseUp() {
-    if (this.selectedBarLine) {
-      this.$emit('update:measureBar', this.selectedBarLine);
-    }
-
-    this.showBarLineMenu = false;
-
-    window.removeEventListener('mouseup', this.onBarLineMouseUp);
-  }
-
-  openTempoMenu() {
-    this.showTempoMenu = true;
-    window.addEventListener('mouseup', this.onTempoMouseUp);
-  }
-
-  onTempoMouseUp() {
-    if (this.selectedTempo) {
-      this.$emit('update:tempo', this.selectedTempo);
-    }
-
-    this.showTempoMenu = false;
-
-    window.removeEventListener('mouseup', this.onTempoMouseUp);
-  }
+  barlineMenuOptions: ButtonWithMenuOption[] = [
+    {
+      neume: MeasureBar.MeasureBarTop,
+      icon: require('@/assets/icons/barline-short-single.svg'),
+    },
+    {
+      neume: MeasureBar.MeasureBarRight,
+      icon: require('@/assets/icons/barline-single.svg'),
+    },
+  ];
 }
 </script>
 
@@ -564,36 +496,5 @@ label.right-space {
 
 .icon-btn-img {
   vertical-align: middle;
-}
-
-.menu-container {
-  display: flex;
-  position: relative;
-  height: var(--btn-size);
-}
-
-.menu {
-  position: absolute;
-  z-index: 999;
-  background-color: white;
-  border: 1px solid black;
-  box-sizing: border-box;
-  width: var(--btn-size);
-  bottom: 0;
-}
-
-.menu-item {
-  height: var(--btn-size);
-  width: 100%;
-  padding: 3px 0;
-  box-sizing: border-box;
-  text-align: center;
-  user-select: none;
-  overflow: hidden;
-  position: relative;
-}
-
-.menu-item:hover {
-  background-color: aliceblue;
 }
 </style>

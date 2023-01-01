@@ -479,7 +479,7 @@ export class SaveService {
       pageSetup.headerMargin = p.headerMargin;
     }
 
-    if (p.footerMargin) {
+    if (p.footerMargin != null) {
       pageSetup.footerMargin = p.footerMargin;
     }
 

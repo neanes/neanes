@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg version="1.1" viewBox="-10472 -10457 32 32" xmlns="http://www.w3.org/2000/svg">
+ <defs>
+  <style>.cls-1 {
+        fill: none;
+      }
+
+      .cls-2 {
+        fill: #000;
+      }</style>
+ </defs>
+ <g transform="translate(-8)" aria-label="¶">
+  <path d="m-10458-10428v-14.287q-2.557-0.137-4.047-1.655-1.477-1.531-1.477-3.896 0-2.639 1.641-4.197 1.654-1.573 4.826-1.573h8.655v2.366h-1.969v23.242h-2.324v-23.242h-3.049v23.242z"/>
+ </g>
+ <g id="_03-Center" transform="translate(-11532,-10904)" data-name="03-Center">
+  <rect class="cls-1" transform="translate(1067,456)" width="32" height="32" rx="2" ry="2" data-name="Rectangle 2306"/>
+  <rect class="cls-2" transform="translate(1075,465)" width="17" height="1" data-name="Rectangle 3057"/>
+  <rect class="cls-2" transform="translate(1077,468)" width="13" height="1" data-name="Rectangle 3058"/>
+  <rect class="cls-2" transform="translate(1075,471)" width="17" height="1" data-name="Rectangle 3059"/>
+  <rect class="cls-2" transform="translate(1077,474)" width="13" height="1" data-name="Rectangle 3060"/>
+  <rect class="cls-2" transform="translate(1075,477)" width="17" height="1" data-name="Rectangle 3061"/>
+ </g>
+</svg>

@@ -8,6 +8,7 @@ import {
   TextBoxElement,
   TempoElement,
   EmptyElement,
+  LineBreakType,
 } from '@/models/Element';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import {
@@ -762,7 +763,10 @@ export class LayoutService {
         }
 
         if (
-          line.elements.some((x) => x.lineBreak == true && x.justify == false)
+          line.elements.some(
+            (x) =>
+              x.lineBreak == true && x.lineBreakType === LineBreakType.Left,
+          )
         ) {
           continue;
         }
@@ -785,16 +789,27 @@ export class LayoutService {
           continue;
         }
 
+        let alignCenter = line.elements.some(
+          (x) =>
+            x.lineBreak == true && x.lineBreakType === LineBreakType.Center,
+        );
+
         let currentWidthPx = line.elements
           .map((x) => x.width)
           .reduce((sum, x) => sum + x, 0);
 
         let extraSpace = pageSetup.innerPageWidth - currentWidthPx;
 
-        let spaceToAdd = extraSpace / (line.elements.length - 1);
+        if (alignCenter) {
+          for (let i = 0; i < line.elements.length; i++) {
+            line.elements[i].x += extraSpace / 2;
+          }
+        } else {
+          let spaceToAdd = extraSpace / (line.elements.length - 1);
 
-        for (let i = 1; i < line.elements.length; i++) {
-          line.elements[i].x += spaceToAdd * i;
+          for (let i = 1; i < line.elements.length; i++) {
+            line.elements[i].x += spaceToAdd * i;
+          }
         }
       }
     }

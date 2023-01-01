@@ -125,8 +125,12 @@
                       /></span>
                       <span class="line-break" v-if="element.lineBreak"
                         ><img
-                          v-if="element.justify"
+                          v-if="element.lineBreakType === LineBreakType.Justify"
                           src="@/assets/icons/line-break-justify.svg" /><img
+                          v-else-if="
+                            element.lineBreakType === LineBreakType.Center
+                          "
+                          src="@/assets/icons/line-break-center.svg" /><img
                           v-else
                           src="@/assets/icons/line-break.svg"
                       /></span>
@@ -520,6 +524,7 @@ import {
   TempoElement,
   ModeKeyElement,
   TextBoxAlignment,
+  LineBreakType,
 } from '@/models/Element';
 import {
   QuantitativeNeume,
@@ -646,6 +651,8 @@ export default class Editor extends Vue {
   @Prop() ipcService!: IIpcService;
   @Prop() platformService!: IPlatformService;
   @Prop() showFileMenuBar!: boolean;
+
+  LineBreakType = LineBreakType;
 
   isDevelopment: boolean = process.env.NODE_ENV !== 'production';
   isBrowser: boolean = process.env.IS_ELECTRON == null;
@@ -1780,11 +1787,11 @@ export default class Editor extends Vue {
     }
   }
 
-  toggleLineBreak(justify: boolean) {
+  toggleLineBreak(lineBreakType: LineBreakType) {
     if (this.selectedElement && !this.isLastElement(this.selectedElement)) {
       let lineBreak = !this.selectedElement.lineBreak;
 
-      if (justify != this.selectedElement.justify) {
+      if (lineBreakType != this.selectedElement.lineBreakType) {
         lineBreak = true;
       }
 
@@ -1794,7 +1801,7 @@ export default class Editor extends Vue {
           newValues: {
             lineBreak,
             pageBreak: false,
-            justify,
+            lineBreakType,
           },
         }),
       );

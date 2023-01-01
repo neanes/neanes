@@ -10,6 +10,7 @@ import {
   TextBoxElement,
   ModeKeyElement,
   TempoElement,
+  LineBreakType,
 } from '@/models/Element';
 
 import { Score as Score_v1, Staff as Staff_v1 } from '@/models/save/v1/Score';
@@ -458,7 +459,7 @@ export class SaveService {
       }
 
       element.lineBreak = e.lineBreak === true;
-      element.lineBreakType = e.lineBreakType ?? null;
+      element.lineBreakType = e.lineBreakType ?? LineBreakType.Left;
       element.pageBreak = e.pageBreak === true;
 
       score.staff.elements.push(element);

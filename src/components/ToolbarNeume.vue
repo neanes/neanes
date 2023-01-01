@@ -4,165 +4,24 @@
       <button class="neume-button" @click="$emit('update:klasma')">
         <img src="@/assets/icons/time-klasma.svg" />
       </button>
-      <div
-        class="menu-container"
-        @mousedown="openTimeMenu"
-        @mouseleave="selectedTimeNeume = null"
-      >
-        <button class="neume-button">
-          <img draggable="false" src="@/assets/icons/time-apli.svg" />
-        </button>
-        <div class="menu" v-if="showTimeMenu">
-          <div
-            class="menu-item"
-            @mouseenter="selectedTimeNeume = TimeNeume.Tripli"
-          >
-            <img draggable="false" src="@/assets/icons/time-tripli.svg" />
-          </div>
-          <div
-            class="menu-item"
-            @mouseenter="selectedTimeNeume = TimeNeume.Dipli"
-          >
-            <img draggable="false" src="@/assets/icons/time-dipli.svg" />
-          </div>
-          <div
-            class="menu-item"
-            @mouseenter="selectedTimeNeume = TimeNeume.Hapli"
-          >
-            <img draggable="false" src="@/assets/icons/time-apli.svg" />
-          </div>
-        </div>
-      </div>
+      <ButtonWithMenu
+        :options="apliMenuOptions"
+        @select="$emit('update:time', $event)"
+      />
       <span class="space"></span>
-      <div
-        class="menu-container"
-        @mousedown="openGorgonMenu"
-        @mouseleave="selectedGorgon = null"
-      >
-        <button class="neume-button">
-          <img draggable="false" src="@/assets/icons/time-gorgon.svg" />
-        </button>
-        <div class="menu" v-if="showGorgonMenu">
-          <div
-            class="menu-item"
-            @mouseenter="selectedGorgon = [GorgonNeume.GorgonDottedRight]"
-          >
-            <img
-              draggable="false"
-              src="@/assets/icons/time-gorgon-dotted-right.svg"
-            />
-          </div>
-          <div
-            class="menu-item"
-            @mouseenter="selectedGorgon = [GorgonNeume.GorgonDottedLeft]"
-          >
-            <img
-              draggable="false"
-              src="@/assets/icons/time-gorgon-dotted-left.svg"
-            />
-          </div>
-          <div
-            class="menu-item"
-            @mouseenter="
-              selectedGorgon = [
-                GorgonNeume.Gorgon_Top,
-                GorgonNeume.Gorgon_Bottom,
-              ]
-            "
-          >
-            <img draggable="false" src="@/assets/icons/time-gorgon.svg" />
-          </div>
-        </div>
-      </div>
-      <div
-        class="menu-container"
-        @mousedown="openDigorgonMenu"
-        @mouseleave="selectedGorgon = null"
-      >
-        <button class="neume-button">
-          <img draggable="false" src="@/assets/icons/time-digorgon.svg" />
-        </button>
-        <div class="menu" v-if="showDigorgonMenu">
-          <div
-            class="menu-item"
-            @mouseenter="selectedGorgon = [GorgonNeume.DigorgonDottedRight]"
-          >
-            <img
-              draggable="false"
-              src="@/assets/icons/time-digorgon-dotted-right.svg"
-            />
-          </div>
-          <div
-            class="menu-item"
-            @mouseenter="selectedGorgon = [GorgonNeume.DigorgonDottedLeft2]"
-          >
-            <img
-              draggable="false"
-              src="@/assets/icons/time-digorgon-dotted-left-above.svg"
-            />
-          </div>
-          <div
-            class="menu-item"
-            @mouseenter="selectedGorgon = [GorgonNeume.DigorgonDottedLeft1]"
-          >
-            <img
-              draggable="false"
-              src="@/assets/icons/time-digorgon-dotted-left-below.svg"
-            />
-          </div>
-          <div
-            class="menu-item"
-            @mouseenter="selectedGorgon = [GorgonNeume.Digorgon]"
-          >
-            <img draggable="false" src="@/assets/icons/time-digorgon.svg" />
-          </div>
-        </div>
-      </div>
-      <div
-        class="menu-container"
-        @mousedown="openTrigorgonMenu"
-        @mouseleave="selectedGorgon = null"
-      >
-        <button class="neume-button">
-          <img draggable="false" src="@/assets/icons/time-trigorgon.svg" />
-        </button>
-        <div class="menu" v-if="showTrigorgonMenu">
-          <div
-            class="menu-item"
-            @mouseenter="selectedGorgon = [GorgonNeume.TrigorgonDottedRight]"
-          >
-            <img
-              draggable="false"
-              src="@/assets/icons/time-trigorgon-dotted-right.svg"
-            />
-          </div>
-          <div
-            class="menu-item"
-            @mouseenter="selectedGorgon = [GorgonNeume.TrigorgonDottedLeft2]"
-          >
-            <img
-              draggable="false"
-              src="@/assets/icons/time-trigorgon-dotted-left-above.svg"
-            />
-          </div>
-          <div
-            class="menu-item"
-            @mouseenter="selectedGorgon = [GorgonNeume.TrigorgonDottedLeft1]"
-          >
-            <img
-              draggable="false"
-              src="@/assets/icons/time-trigorgon-dotted-left-below.svg"
-            />
-          </div>
-          <div
-            class="menu-item"
-            @mouseenter="selectedGorgon = [GorgonNeume.Trigorgon]"
-          >
-            <img draggable="false" src="@/assets/icons/time-trigorgon.svg" />
-          </div>
-        </div>
-      </div>
 
+      <ButtonWithMenu
+        :options="gorgonMenuOptions"
+        @select="$emit('update:gorgon', $event)"
+      />
+      <ButtonWithMenu
+        :options="digorgonMenuOptions"
+        @select="$emit('update:gorgon', $event)"
+      />
+      <ButtonWithMenu
+        :options="trigorgonMenuOptions"
+        @select="$emit('update:gorgon', $event)"
+      />
       <span class="space"></span>
       <button
         class="neume-button"
@@ -190,74 +49,20 @@
       >
         <img src="@/assets/icons/quality-antikenoma.svg" />
       </button>
-      <div
-        class="menu-container"
-        @mousedown="openPsifistonMenu"
-        @mouseleave="selectedPsifiston = null"
-      >
-        <button class="neume-button">
-          <img draggable="false" src="@/assets/icons/quality-psifiston.svg" />
-        </button>
-        <div class="menu" v-if="showPsifistonMenu">
-          <div
-            class="menu-item"
-            @mouseenter="
-              selectedPsifiston = VocalExpressionNeume.PsifistonSlanted
-            "
-          >
-            <img
-              draggable="false"
-              src="@/assets/icons/quality-psifiston-slanted.svg"
-            />
-          </div>
-          <div
-            class="menu-item"
-            @mouseenter="selectedPsifiston = VocalExpressionNeume.Psifiston"
-          >
-            <img draggable="false" src="@/assets/icons/quality-psifiston.svg" />
-          </div>
-        </div>
-      </div>
+      <ButtonWithMenu
+        :options="psifistonMenuOptions"
+        @select="$emit('update:expression', $event)"
+      />
       <button
         class="neume-button"
         @click="$emit('update:expression', VocalExpressionNeume.Heteron)"
       >
         <img src="@/assets/icons/quality-heteron.svg" />
       </button>
-      <div
-        class="menu-container"
-        @mousedown="openHeteronConnectingMenu"
-        @mouseleave="selectedHeteronConnecting = null"
-      >
-        <button class="neume-button">
-          <img src="@/assets/icons/quality-heteron-connecting.svg" />
-        </button>
-        <div class="menu" v-if="showHeteronConnectingMenu">
-          <div
-            class="menu-item"
-            @mouseenter="
-              selectedHeteronConnecting =
-                VocalExpressionNeume.HeteronConnectingLong
-            "
-          >
-            <img
-              draggable="false"
-              src="@/assets/icons/quality-heteron-connecting-long.svg"
-            />
-          </div>
-          <div
-            class="menu-item"
-            @mouseenter="
-              selectedHeteronConnecting = VocalExpressionNeume.HeteronConnecting
-            "
-          >
-            <img
-              draggable="false"
-              src="@/assets/icons/quality-heteron-connecting.svg"
-            />
-          </div>
-        </div>
-      </div>
+      <ButtonWithMenu
+        :options="heteronConnectingMenuOptions"
+        @select="$emit('update:expression', $event)"
+      />
       <button
         class="neume-button"
         @click="$emit('update:expression', VocalExpressionNeume.Endofonon)"
@@ -265,100 +70,14 @@
         <img src="@/assets/icons/quality-endofonon.svg" />
       </button>
       <span class="space"></span>
-      <div
-        class="menu-container"
-        @mousedown="openFlatMenu"
-        @mouseleave="selectedFlat = null"
-      >
-        <button class="neume-button">
-          <img draggable="false" src="@/assets/icons/alteration-yfesis2.svg" />
-        </button>
-        <div class="menu" v-if="showFlatMenu">
-          <div
-            class="menu-item"
-            @mouseenter="selectedFlat = Accidental.Flat_8_Right"
-          >
-            <img
-              draggable="false"
-              src="@/assets/icons/alteration-yfesis8.svg"
-            />
-          </div>
-          <div
-            class="menu-item"
-            @mouseenter="selectedFlat = Accidental.Flat_6_Right"
-          >
-            <img
-              draggable="false"
-              src="@/assets/icons/alteration-yfesis6.svg"
-            />
-          </div>
-          <div
-            class="menu-item"
-            @mouseenter="selectedFlat = Accidental.Flat_4_Right"
-          >
-            <img
-              draggable="false"
-              src="@/assets/icons/alteration-yfesis4.svg"
-            />
-          </div>
-          <div
-            class="menu-item"
-            @mouseenter="selectedFlat = Accidental.Flat_2_Right"
-          >
-            <img
-              draggable="false"
-              src="@/assets/icons/alteration-yfesis2.svg"
-            />
-          </div>
-        </div>
-      </div>
-      <div
-        class="menu-container"
-        @mousedown="openSharpMenu"
-        @mouseleave="selectedSharp = null"
-      >
-        <button class="neume-button">
-          <img draggable="false" src="@/assets/icons/alteration-diesis2.svg" />
-        </button>
-        <div class="menu" v-if="showSharpMenu">
-          <div
-            class="menu-item"
-            @mouseenter="selectedSharp = Accidental.Sharp_8_Left"
-          >
-            <img
-              draggable="false"
-              src="@/assets/icons/alteration-diesis8.svg"
-            />
-          </div>
-          <div
-            class="menu-item"
-            @mouseenter="selectedSharp = Accidental.Sharp_6_Left"
-          >
-            <img
-              draggable="false"
-              src="@/assets/icons/alteration-diesis6.svg"
-            />
-          </div>
-          <div
-            class="menu-item"
-            @mouseenter="selectedSharp = Accidental.Sharp_4_Left"
-          >
-            <img
-              draggable="false"
-              src="@/assets/icons/alteration-diesis4.svg"
-            />
-          </div>
-          <div
-            class="menu-item"
-            @mouseenter="selectedSharp = Accidental.Sharp_2_Left"
-          >
-            <img
-              draggable="false"
-              src="@/assets/icons/alteration-diesis2.svg"
-            />
-          </div>
-        </div>
-      </div>
+      <ButtonWithMenu
+        :options="flatMenuOptions"
+        @select="$emit('update:accidental', $event)"
+      />
+      <ButtonWithMenu
+        :options="sharpMenuOptions"
+        @select="$emit('update:accidental', $event)"
+      />
       <span class="space"></span>
       <button
         class="neume-button"
@@ -379,135 +98,24 @@
         <img src="@/assets/icons/time-triargon.svg" />
       </button>
       <span class="space"></span>
-      <div
-        class="menu-container"
-        @mousedown="openBarLineMenu"
-        @mouseleave="selectedBarLine = null"
-      >
-        <button class="neume-button">
-          <img draggable="false" src="@/assets/icons/barline-single.svg" />
-        </button>
-        <div class="menu" v-if="showBarLineMenu">
-          <div
-            class="menu-item"
-            @mouseenter="selectedBarLine = MeasureBar.MeasureBarTop"
-          >
-            <img
-              draggable="false"
-              src="@/assets/icons/barline-short-single.svg"
-            />
-          </div>
-          <div
-            class="menu-item"
-            @mouseenter="selectedBarLine = MeasureBar.MeasureBarRight"
-          >
-            <img draggable="false" src="@/assets/icons/barline-single.svg" />
-          </div>
-        </div>
-      </div>
-      <div
-        class="menu-container"
-        @mousedown="openMeasureNumberMenu"
-        @mouseleave="selectedMeasureNumber = null"
-      >
-        <button class="neume-button">
-          <img draggable="false" src="@/assets/icons/measure-number-2.svg" />
-        </button>
-        <div class="menu" v-if="showMeasureNumberMenu">
-          <div
-            class="menu-item"
-            @mouseenter="selectedMeasureNumber = MeasureNumber.Eight"
-          >
-            <img draggable="false" src="@/assets/icons/measure-number-8.svg" />
-          </div>
-          <div
-            class="menu-item"
-            @mouseenter="selectedMeasureNumber = MeasureNumber.Seven"
-          >
-            <img draggable="false" src="@/assets/icons/measure-number-7.svg" />
-          </div>
-          <div
-            class="menu-item"
-            @mouseenter="selectedMeasureNumber = MeasureNumber.Six"
-          >
-            <img draggable="false" src="@/assets/icons/measure-number-6.svg" />
-          </div>
-          <div
-            class="menu-item"
-            @mouseenter="selectedMeasureNumber = MeasureNumber.Five"
-          >
-            <img draggable="false" src="@/assets/icons/measure-number-5.svg" />
-          </div>
-          <div
-            class="menu-item"
-            @mouseenter="selectedMeasureNumber = MeasureNumber.Four"
-          >
-            <img draggable="false" src="@/assets/icons/measure-number-4.svg" />
-          </div>
-          <div
-            class="menu-item"
-            @mouseenter="selectedMeasureNumber = MeasureNumber.Three"
-          >
-            <img draggable="false" src="@/assets/icons/measure-number-3.svg" />
-          </div>
-          <div
-            class="menu-item"
-            @mouseenter="selectedMeasureNumber = MeasureNumber.Two"
-          >
-            <img draggable="false" src="@/assets/icons/measure-number-2.svg" />
-          </div>
-        </div>
-      </div>
+      <ButtonWithMenu
+        :options="barlineMenuOptions"
+        @select="$emit('update:measureBar', $event)"
+      />
+      <ButtonWithMenu
+        :options="measureNumberMenuOptions"
+        @select="$emit('update:measureNumber', $event)"
+      />
       <button
         class="neume-button"
         @click="$emit('update:noteIndicator', !element.noteIndicator)"
       >
         <img draggable="false" src="@/assets/icons/note-ni.svg" />
       </button>
-      <div
-        class="menu-container"
-        @mousedown="openIsonMenu"
-        @mouseleave="selectedIson = null"
-      >
-        <button class="neume-button">
-          <img draggable="false" src="@/assets/icons/ison-unison.svg" />
-        </button>
-        <div class="menu" v-if="showIsonMenu">
-          <div class="menu-item" @mouseenter="selectedIson = Ison.ZoHigh">
-            <img draggable="false" src="@/assets/icons/ison-zo-high.svg" />
-          </div>
-          <div class="menu-item" @mouseenter="selectedIson = Ison.Ke">
-            <img draggable="false" src="@/assets/icons/ison-ke.svg" />
-          </div>
-          <div class="menu-item" @mouseenter="selectedIson = Ison.Thi">
-            <img draggable="false" src="@/assets/icons/ison-di.svg" />
-          </div>
-          <div class="menu-item" @mouseenter="selectedIson = Ison.Ga">
-            <img draggable="false" src="@/assets/icons/ison-ga.svg" />
-          </div>
-          <div class="menu-item" @mouseenter="selectedIson = Ison.Vou">
-            <img draggable="false" src="@/assets/icons/ison-vou.svg" />
-          </div>
-          <div class="menu-item" @mouseenter="selectedIson = Ison.Pa">
-            <img draggable="false" src="@/assets/icons/ison-pa.svg" />
-          </div>
-          <div class="menu-item" @mouseenter="selectedIson = Ison.Ni">
-            <img draggable="false" src="@/assets/icons/ison-ni.svg" />
-          </div>
-          <div class="menu-item" @mouseenter="selectedIson = Ison.Zo">
-            <img draggable="false" src="@/assets/icons/ison-zo.svg" />
-          </div>
-          <div class="menu-item" @mouseenter="selectedIson = Ison.KeLow">
-            <img draggable="false" src="@/assets/icons/ison-ke-low.svg" />
-          </div>
-          <div class="menu-item" @mouseenter="selectedIson = Ison.ThiLow">
-            <img draggable="false" src="@/assets/icons/ison-di-low.svg" />
-          </div>
-          <div class="menu-item" @mouseenter="selectedIson = Ison.Unison">
-            <img draggable="false" src="@/assets/icons/ison-unison.svg" />
-          </div>
-        </div>
-      </div>
+      <ButtonWithMenu
+        :options="isonMenuOptions"
+        @select="$emit('update:ison', $event)"
+      />
     </div>
     <div class="row">
       <button
@@ -782,10 +390,14 @@ import {
 import { PageSetup } from '@/models/PageSetup';
 import { Unit } from '@/utils/Unit';
 import { ScaleNote } from '@/models/Scales';
+import ButtonWithMenu, {
+  ButtonWithMenuOption,
+} from '@/components/ButtonWithMenu.vue';
 
 @Component({
   components: {
     InputUnit,
+    ButtonWithMenu,
   },
 })
 export default class ToolbarNeume extends Vue {
@@ -800,28 +412,6 @@ export default class ToolbarNeume extends Vue {
   MeasureNumber = MeasureNumber;
   Ison = Ison;
 
-  showFlatMenu: boolean = false;
-  showSharpMenu: boolean = false;
-  showGorgonMenu: boolean = false;
-  showDigorgonMenu: boolean = false;
-  showTrigorgonMenu: boolean = false;
-  showTimeMenu: boolean = false;
-  showBarLineMenu: boolean = false;
-  showMeasureNumberMenu: boolean = false;
-  showIsonMenu: boolean = false;
-  showPsifistonMenu: boolean = false;
-  showHeteronConnectingMenu: boolean = false;
-
-  selectedFlat: Accidental | null = null;
-  selectedSharp: Accidental | null = null;
-  selectedGorgon: GorgonNeume[] | null = null;
-  selectedTimeNeume: TimeNeume | null = null;
-  selectedBarLine: MeasureBar | null = null;
-  selectedMeasureNumber: MeasureNumber | null = null;
-  selectedIson: Ison | null = null;
-  selectedPsifiston: VocalExpressionNeume | null = null;
-  selectedHeteronConnecting: VocalExpressionNeume | null = null;
-
   chromaticFthoras = [
     Fthora.SoftChromaticPa_Top,
     Fthora.SoftChromaticPa_Bottom,
@@ -831,6 +421,223 @@ export default class ToolbarNeume extends Vue {
     Fthora.HardChromaticPa_Bottom,
     Fthora.HardChromaticThi_Top,
     Fthora.HardChromaticThi_Bottom,
+  ];
+
+  apliMenuOptions: ButtonWithMenuOption[] = [
+    {
+      neume: TimeNeume.Tripli,
+      icon: require('@/assets/icons/time-tripli.svg'),
+    },
+    {
+      neume: TimeNeume.Dipli,
+      icon: require('@/assets/icons/time-dipli.svg'),
+    },
+    {
+      neume: TimeNeume.Hapli,
+      icon: require('@/assets/icons/time-apli.svg'),
+    },
+  ];
+
+  gorgonMenuOptions: ButtonWithMenuOption[] = [
+    {
+      neume: GorgonNeume.GorgonDottedRight,
+      icon: require('@/assets/icons/time-gorgon-dotted-right.svg'),
+    },
+    {
+      neume: GorgonNeume.GorgonDottedLeft,
+      icon: require('@/assets/icons/time-gorgon-dotted-left.svg'),
+    },
+    {
+      neume: [GorgonNeume.Gorgon_Top, GorgonNeume.Gorgon_Bottom],
+      icon: require('@/assets/icons/time-gorgon.svg'),
+    },
+  ];
+
+  digorgonMenuOptions: ButtonWithMenuOption[] = [
+    {
+      neume: GorgonNeume.DigorgonDottedRight,
+      icon: require('@/assets/icons/time-digorgon-dotted-right.svg'),
+    },
+    {
+      neume: GorgonNeume.DigorgonDottedLeft2,
+      icon: require('@/assets/icons/time-digorgon-dotted-left-above.svg'),
+    },
+    {
+      neume: GorgonNeume.DigorgonDottedLeft1,
+      icon: require('@/assets/icons/time-digorgon-dotted-left-below.svg'),
+    },
+    {
+      neume: GorgonNeume.Digorgon,
+      icon: require('@/assets/icons/time-digorgon.svg'),
+    },
+  ];
+
+  trigorgonMenuOptions: ButtonWithMenuOption[] = [
+    {
+      neume: GorgonNeume.TrigorgonDottedRight,
+      icon: require('@/assets/icons/time-trigorgon-dotted-right.svg'),
+    },
+    {
+      neume: GorgonNeume.TrigorgonDottedLeft2,
+      icon: require('@/assets/icons/time-trigorgon-dotted-left-above.svg'),
+    },
+    {
+      neume: GorgonNeume.TrigorgonDottedLeft1,
+      icon: require('@/assets/icons/time-trigorgon-dotted-left-below.svg'),
+    },
+    {
+      neume: GorgonNeume.Trigorgon,
+      icon: require('@/assets/icons/time-trigorgon.svg'),
+    },
+  ];
+
+  psifistonMenuOptions: ButtonWithMenuOption[] = [
+    {
+      neume: VocalExpressionNeume.PsifistonSlanted,
+      icon: require('@/assets/icons/quality-psifiston-slanted.svg'),
+    },
+    {
+      neume: VocalExpressionNeume.Psifiston,
+      icon: require('@/assets/icons/quality-psifiston.svg'),
+    },
+  ];
+
+  heteronConnectingMenuOptions: ButtonWithMenuOption[] = [
+    {
+      neume: VocalExpressionNeume.HeteronConnectingLong,
+      icon: require('@/assets/icons/quality-heteron-connecting-long.svg'),
+    },
+    {
+      neume: VocalExpressionNeume.HeteronConnecting,
+      icon: require('@/assets/icons/quality-heteron-connecting.svg'),
+    },
+  ];
+
+  flatMenuOptions: ButtonWithMenuOption[] = [
+    {
+      neume: Accidental.Flat_8_Right,
+      icon: require('@/assets/icons/alteration-yfesis8.svg'),
+    },
+    {
+      neume: Accidental.Flat_6_Right,
+      icon: require('@/assets/icons/alteration-yfesis6.svg'),
+    },
+    {
+      neume: Accidental.Flat_4_Right,
+      icon: require('@/assets/icons/alteration-yfesis4.svg'),
+    },
+    {
+      neume: Accidental.Flat_2_Right,
+      icon: require('@/assets/icons/alteration-yfesis2.svg'),
+    },
+  ];
+
+  sharpMenuOptions: ButtonWithMenuOption[] = [
+    {
+      neume: Accidental.Sharp_8_Left,
+      icon: require('@/assets/icons/alteration-diesis8.svg'),
+    },
+    {
+      neume: Accidental.Sharp_6_Left,
+      icon: require('@/assets/icons/alteration-diesis6.svg'),
+    },
+    {
+      neume: Accidental.Sharp_4_Left,
+      icon: require('@/assets/icons/alteration-diesis4.svg'),
+    },
+    {
+      neume: Accidental.Sharp_2_Left,
+      icon: require('@/assets/icons/alteration-diesis2.svg'),
+    },
+  ];
+
+  barlineMenuOptions: ButtonWithMenuOption[] = [
+    {
+      neume: MeasureBar.MeasureBarTop,
+      icon: require('@/assets/icons/barline-short-single.svg'),
+    },
+    {
+      neume: MeasureBar.MeasureBarRight,
+      icon: require('@/assets/icons/barline-single.svg'),
+    },
+  ];
+
+  measureNumberMenuOptions: ButtonWithMenuOption[] = [
+    {
+      neume: MeasureNumber.Eight,
+      icon: require('@/assets/icons/measure-number-8.svg'),
+    },
+    {
+      neume: MeasureNumber.Seven,
+      icon: require('@/assets/icons/measure-number-7.svg'),
+    },
+    {
+      neume: MeasureNumber.Six,
+      icon: require('@/assets/icons/measure-number-6.svg'),
+    },
+    {
+      neume: MeasureNumber.Five,
+      icon: require('@/assets/icons/measure-number-5.svg'),
+    },
+    {
+      neume: MeasureNumber.Four,
+      icon: require('@/assets/icons/measure-number-4.svg'),
+    },
+    {
+      neume: MeasureNumber.Three,
+      icon: require('@/assets/icons/measure-number-3.svg'),
+    },
+    {
+      neume: MeasureNumber.Two,
+      icon: require('@/assets/icons/measure-number-2.svg'),
+    },
+  ];
+
+  isonMenuOptions: ButtonWithMenuOption[] = [
+    {
+      neume: Ison.ZoHigh,
+      icon: require('@/assets/icons/ison-zo-high.svg'),
+    },
+    {
+      neume: Ison.Ke,
+      icon: require('@/assets/icons/ison-ke.svg'),
+    },
+    {
+      neume: Ison.Thi,
+      icon: require('@/assets/icons/ison-di.svg'),
+    },
+    {
+      neume: Ison.Ga,
+      icon: require('@/assets/icons/ison-ga.svg'),
+    },
+    {
+      neume: Ison.Vou,
+      icon: require('@/assets/icons/ison-vou.svg'),
+    },
+    {
+      neume: Ison.Pa,
+      icon: require('@/assets/icons/ison-pa.svg'),
+    },
+    {
+      neume: Ison.Ni,
+      icon: require('@/assets/icons/ison-ni.svg'),
+    },
+    {
+      neume: Ison.Zo,
+      icon: require('@/assets/icons/ison-zo.svg'),
+    },
+    {
+      neume: Ison.KeLow,
+      icon: require('@/assets/icons/ison-ke-low.svg'),
+    },
+    {
+      neume: Ison.ThiLow,
+      icon: require('@/assets/icons/ison-di-low.svg'),
+    },
+    {
+      neume: Ison.Unison,
+      icon: require('@/assets/icons/ison-unison.svg'),
+    },
   ];
 
   get notes() {
@@ -959,186 +766,8 @@ export default class ToolbarNeume extends Vue {
     }
   }
 
-  beforeDestroy() {
-    window.removeEventListener('mouseup', this.onFlatMouseUp);
-    window.removeEventListener('mouseup', this.onSharpMouseUp);
-    window.removeEventListener('mouseup', this.onGorgonMouseUp);
-    window.removeEventListener('mouseup', this.onDigorgonMouseUp);
-    window.removeEventListener('mouseup', this.onTrigorgonMouseUp);
-    window.removeEventListener('mouseup', this.onTimeMouseUp);
-    window.removeEventListener('mouseup', this.onBarLineMouseUp);
-    window.removeEventListener('mouseup', this.onMeasureNumberMouseUp);
-    window.removeEventListener('mouseup', this.onIsonMouseUp);
-    window.removeEventListener('mouseup', this.onPsifistonMouseUp);
-  }
-
   get spaceAfterMax() {
     return Math.round(Unit.toPt(this.pageSetup.pageWidth));
-  }
-
-  openFlatMenu() {
-    this.showFlatMenu = true;
-    window.addEventListener('mouseup', this.onFlatMouseUp);
-  }
-
-  onFlatMouseUp() {
-    if (this.selectedFlat) {
-      this.$emit('update:accidental', this.selectedFlat);
-    }
-
-    this.showFlatMenu = false;
-
-    window.removeEventListener('mouseup', this.onFlatMouseUp);
-  }
-
-  openSharpMenu() {
-    this.showSharpMenu = true;
-    window.addEventListener('mouseup', this.onSharpMouseUp);
-  }
-
-  onSharpMouseUp() {
-    if (this.selectedSharp) {
-      this.$emit('update:accidental', this.selectedSharp);
-    }
-
-    this.showSharpMenu = false;
-
-    window.removeEventListener('mouseup', this.onSharpMouseUp);
-  }
-
-  openGorgonMenu() {
-    this.showGorgonMenu = true;
-    window.addEventListener('mouseup', this.onGorgonMouseUp);
-  }
-
-  onGorgonMouseUp() {
-    if (this.selectedGorgon) {
-      this.$emit('update:gorgon', this.selectedGorgon);
-    }
-
-    this.showGorgonMenu = false;
-
-    window.removeEventListener('mouseup', this.onGorgonMouseUp);
-  }
-
-  openDigorgonMenu() {
-    this.showDigorgonMenu = true;
-    window.addEventListener('mouseup', this.onDigorgonMouseUp);
-  }
-
-  onDigorgonMouseUp() {
-    if (this.selectedGorgon) {
-      this.$emit('update:gorgon', this.selectedGorgon);
-    }
-
-    this.showDigorgonMenu = false;
-
-    window.removeEventListener('mouseup', this.onDigorgonMouseUp);
-  }
-
-  openTrigorgonMenu() {
-    this.showTrigorgonMenu = true;
-    window.addEventListener('mouseup', this.onTrigorgonMouseUp);
-  }
-
-  onTrigorgonMouseUp() {
-    if (this.selectedGorgon) {
-      this.$emit('update:gorgon', this.selectedGorgon);
-    }
-
-    this.showTrigorgonMenu = false;
-
-    window.removeEventListener('mouseup', this.onTrigorgonMouseUp);
-  }
-
-  openTimeMenu() {
-    this.showTimeMenu = true;
-    window.addEventListener('mouseup', this.onTimeMouseUp);
-  }
-
-  onTimeMouseUp() {
-    if (this.selectedTimeNeume) {
-      this.$emit('update:time', this.selectedTimeNeume);
-    }
-
-    this.showTimeMenu = false;
-
-    window.removeEventListener('mouseup', this.onTimeMouseUp);
-  }
-
-  openBarLineMenu() {
-    this.showBarLineMenu = true;
-    window.addEventListener('mouseup', this.onBarLineMouseUp);
-  }
-
-  onBarLineMouseUp() {
-    if (this.selectedBarLine) {
-      this.$emit('update:measureBar', this.selectedBarLine);
-    }
-
-    this.showBarLineMenu = false;
-
-    window.removeEventListener('mouseup', this.onBarLineMouseUp);
-  }
-
-  openMeasureNumberMenu() {
-    this.showMeasureNumberMenu = true;
-    window.addEventListener('mouseup', this.onMeasureNumberMouseUp);
-  }
-
-  onMeasureNumberMouseUp() {
-    if (this.selectedMeasureNumber) {
-      this.$emit('update:measureNumber', this.selectedMeasureNumber);
-    }
-
-    this.showMeasureNumberMenu = false;
-
-    window.removeEventListener('mouseup', this.onMeasureNumberMouseUp);
-  }
-
-  openIsonMenu() {
-    this.showIsonMenu = true;
-    window.addEventListener('mouseup', this.onIsonMouseUp);
-  }
-
-  onIsonMouseUp() {
-    if (this.selectedIson) {
-      this.$emit('update:ison', this.selectedIson);
-    }
-
-    this.showIsonMenu = false;
-
-    window.removeEventListener('mouseup', this.onIsonMouseUp);
-  }
-
-  openPsifistonMenu() {
-    this.showPsifistonMenu = true;
-    window.addEventListener('mouseup', this.onPsifistonMouseUp);
-  }
-
-  onPsifistonMouseUp() {
-    if (this.selectedPsifiston) {
-      this.$emit('update:expression', this.selectedPsifiston);
-    }
-
-    this.showPsifistonMenu = false;
-
-    window.removeEventListener('mouseup', this.onPsifistonMouseUp);
-  }
-
-  openHeteronConnectingMenu() {
-    this.showHeteronConnectingMenu = true;
-    window.addEventListener('mouseup', this.onHeteronConnectingMouseUp);
-  }
-
-  onHeteronConnectingMouseUp() {
-    if (this.selectedHeteronConnecting) {
-      this.$emit('update:expression', this.selectedHeteronConnecting);
-    }
-
-    this.showHeteronConnectingMenu = false;
-
-    window.removeEventListener('mouseup', this.onHeteronConnectingMouseUp);
   }
 }
 </script>
@@ -1196,36 +825,5 @@ label.right-space {
   margin: 0 16px;
   border-right: 1px solid black;
   height: 16px;
-}
-
-.menu-container {
-  display: flex;
-  position: relative;
-  height: var(--btn-size);
-}
-
-.menu {
-  position: absolute;
-  z-index: 999;
-  background-color: white;
-  border: 1px solid black;
-  box-sizing: border-box;
-  width: var(--btn-size);
-  bottom: 0;
-}
-
-.menu-item {
-  height: var(--btn-size);
-  width: 100%;
-  padding: 3px 0;
-  box-sizing: border-box;
-  text-align: center;
-  user-select: none;
-  overflow: hidden;
-  position: relative;
-}
-
-.menu-item:hover {
-  background-color: aliceblue;
 }
 </style>

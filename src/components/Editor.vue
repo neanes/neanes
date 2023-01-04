@@ -3995,6 +3995,10 @@ export default class Editor extends Vue {
           this.audioOptions,
         );
 
+        if (this.playbackEvents.length === 0) {
+          return;
+        }
+
         const startAt = this.playbackEvents.find(
           (x) => x.elementIndex >= this.selectedElementIndex,
         );

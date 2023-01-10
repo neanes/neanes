@@ -441,8 +441,10 @@ export class LayoutService {
 
         if (noteElement.lyricsWidth > noteElement.neumeWidth) {
           const adjustment = Math.max(
-            (noteElement.lyricsWidth - noteElement.neumeWidth) / 2 -
-              noteElement.lyricsHorizontalOffset,
+            (noteElement.lyricsWidth -
+              noteElement.lyricsHorizontalOffset -
+              noteElement.neumeWidth) /
+              2,
             0,
           );
           element.x += adjustment;
@@ -667,25 +669,21 @@ export class LayoutService {
     // are centered under the main neume
     if (noteElement.measureBarLeft === MeasureBar.MeasureBarRight) {
       noteElement.lyricsHorizontalOffset += measureBarRightWidth;
-      noteElement.lyricsWidth += measureBarRightWidth;
       noteElement.neumeWidth += measureBarRightWidth;
     }
 
     if (noteElement.measureBarLeft === MeasureBar.MeasureBarTop) {
       noteElement.lyricsHorizontalOffset += measureBarTopWidth;
-      noteElement.lyricsWidth += measureBarTopWidth;
       noteElement.neumeWidth += measureBarTopWidth;
     }
 
     if (noteElement.measureBarRight === MeasureBar.MeasureBarRight) {
       noteElement.lyricsHorizontalOffset -= measureBarRightWidth;
-      noteElement.lyricsWidth += measureBarRightWidth;
       noteElement.neumeWidth += measureBarRightWidth;
     }
 
     if (noteElement.measureBarRight === MeasureBar.MeasureBarTop) {
       noteElement.lyricsHorizontalOffset -= measureBarTopWidth;
-      noteElement.lyricsWidth += measureBarTopWidth;
       noteElement.neumeWidth += measureBarTopWidth;
     }
 
@@ -698,7 +696,6 @@ export class LayoutService {
       // the elaphrons are the same width in both neumes.
       const offset = runningElaphronWidth - elaphronWidth;
       noteElement.lyricsHorizontalOffset += offset;
-      noteElement.lyricsWidth += offset;
     }
 
     return (

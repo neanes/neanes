@@ -440,8 +440,11 @@ export class LayoutService {
         const noteElement = element as NoteElement;
 
         if (noteElement.lyricsWidth > noteElement.neumeWidth) {
-          const adjustment =
-            (noteElement.lyricsWidth - noteElement.neumeWidth) / 2;
+          const adjustment = Math.max(
+            (noteElement.lyricsWidth - noteElement.neumeWidth) / 2 -
+              noteElement.lyricsHorizontalOffset,
+            0,
+          );
           element.x += adjustment;
         }
       }
@@ -656,7 +659,6 @@ export class LayoutService {
     // are centered under the main neume
     if (noteElement.vareia) {
       noteElement.lyricsHorizontalOffset += vareiaWidth;
-      noteElement.lyricsWidth += vareiaWidth;
       noteElement.neumeWidth += vareiaWidth;
     }
 

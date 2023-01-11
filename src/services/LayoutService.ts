@@ -485,7 +485,6 @@ export class LayoutService {
           element.x += adjustment;
           element.width += adjustment;
           elementWidthPx += adjustment;
-          console.log('adjusting', adjustment, noteElement.lyrics);
         }
 
         const lyricsEnd =
@@ -511,7 +510,6 @@ export class LayoutService {
             element.x + element.width + pageSetup.neumeDefaultSpacing;
           element.width += adjustment;
           elementWidthPx += adjustment;
-          console.log('adjusting', adjustment);
         } else {
           currentLyricsEndPx =
             element.x + element.width + pageSetup.neumeDefaultSpacing;

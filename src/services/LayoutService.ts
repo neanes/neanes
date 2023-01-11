@@ -322,6 +322,7 @@ export class LayoutService {
 
       if (element.elementType === ElementType.Note) {
         const noteElement = element as NoteElement;
+
         elementWidthWithLyricsPx = Math.max(
           elementWidthPx,
           noteElement.lyricsWidth,
@@ -498,7 +499,8 @@ export class LayoutService {
           noteElement.neumeWidth +
           pageSetup.neumeDefaultSpacing;
 
-        currentLyricsEndPx = noteElement.isMelisma ? neumeEnd : lyricsEnd;
+        currentLyricsEndPx =
+          noteElement.isMelisma && !noteElement.isHyphen ? neumeEnd : lyricsEnd;
       } else {
         // Ensure that there is at least a small width between other elements
         if (element.x <= currentLyricsEndPx + pageSetup.neumeDefaultSpacing) {
@@ -966,7 +968,10 @@ export class LayoutService {
                 (element.lyricsWidth - element.neumeWidth) / 2;
             } else {
               start =
-                element.x + element.neumeWidth / 2 + element.lyricsWidth / 2;
+                element.x +
+                element.neumeWidth / 2 +
+                element.lyricsWidth / 2 +
+                element.lyricsHorizontalOffset / 2;
             }
 
             if (element.isHyphen) {
@@ -1011,9 +1016,19 @@ export class LayoutService {
                 );
               }
 
+              const minimumNumberOfSpacesNeeded = Math.ceil(
+                (element.melismaWidth - widthOfHyphen) / widthOfSpace,
+              );
+
+              const minimumNumberOfSpacesBetweenHyphens = Math.floor(
+                minimumNumberOfSpacesNeeded / 2,
+              );
+
               if (
                 numberOfHyphensNeeded == 0 &&
-                element.melismaWidth >= widthOfHyphen
+                element.melismaWidth >=
+                  widthOfHyphen +
+                    widthOfSpace * minimumNumberOfSpacesBetweenHyphens
               ) {
                 numberOfHyphensNeeded = 1;
               }

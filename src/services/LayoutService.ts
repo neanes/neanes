@@ -396,6 +396,7 @@ export class LayoutService {
 
         if (elementWithTrailingSpace != null) {
           elementWithTrailingSpace.width -= pageSetup.neumeDefaultSpacing;
+          elementWithTrailingSpace = null;
         }
       }
 
@@ -413,6 +414,11 @@ export class LayoutService {
         lastLineHeightPx = 0;
         currentLyricsEndPx =
           pageSetup.leftMargin - pageSetup.lyricsMinimumSpacing;
+
+        if (elementWithTrailingSpace != null) {
+          elementWithTrailingSpace.width -= pageSetup.neumeDefaultSpacing;
+          elementWithTrailingSpace = null;
+        }
       }
 
       element.x = pageSetup.leftMargin + currentLineWidthPx;

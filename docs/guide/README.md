@@ -196,11 +196,17 @@ The amount of extra space that is inserted between neumes. Some scores look bett
 
 ![Page Setup Neume Spacing Example](./images/guide-page-setup-neume-spacing-example-1.png)
 
-#### Lyrics
+#### Lyrics V
 
-The distance between the neumes and lyrics. This number can be negative, in which case the lyrics will be drawn closer to the neumes than they would be by default.
+The vertical distance between the neumes and lyrics. This number can be negative, in which case the lyrics will be drawn closer to the neumes than they would be by default.
 
-![Page Setup Lyric Spacing Example](./images/guide-page-setup-lyric-spacing-example-1.png)
+![Page Setup Lyric Spacing V Example](./images/guide-page-setup-lyric-spacing-example-1.png)
+
+#### Lyrics H
+
+The minimum horizontal distance between the lyrics of two different notes.
+
+![Page Setup Lyric Spacing H Example](./images/guide-page-setup-lyric-spacing-example-2.png)
 
 #### Line
 

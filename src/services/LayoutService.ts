@@ -155,6 +155,8 @@ export class LayoutService {
     this.processFooter(score.footers.even, pageSetup, neumeHeight);
     this.processFooter(score.footers.firstPage, pageSetup, neumeHeight);
 
+    let elementWithTrailingSpace: ScoreElement | null = null;
+
     for (let i = 0; i < elements.length; i++) {
       const element = elements[i];
 
@@ -375,6 +377,11 @@ export class LayoutService {
         }
 
         currentLineWidthPx = 0;
+
+        if (elementWithTrailingSpace != null) {
+          elementWithTrailingSpace.width -= pageSetup.neumeDefaultSpacing;
+          elementWithTrailingSpace = null;
+        }
       }
 
       // Check if we need a new page
@@ -389,6 +396,11 @@ export class LayoutService {
         currentPageHeightPx = 0;
         currentLineWidthPx = 0;
         lastLineHeightPx = 0;
+
+        if (elementWithTrailingSpace != null) {
+          elementWithTrailingSpace.width -= pageSetup.neumeDefaultSpacing;
+          elementWithTrailingSpace = null;
+        }
       }
 
       element.x = pageSetup.leftMargin + currentLineWidthPx;
@@ -464,6 +476,9 @@ export class LayoutService {
       ) {
         currentLineWidthPx += pageSetup.neumeDefaultSpacing;
         element.width += pageSetup.neumeDefaultSpacing;
+        elementWithTrailingSpace = element;
+      } else {
+        elementWithTrailingSpace = null;
       }
 
       line.elements.push(element);

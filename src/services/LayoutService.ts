@@ -155,10 +155,16 @@ export class LayoutService {
     this.processFooter(score.footers.even, pageSetup, neumeHeight);
     this.processFooter(score.footers.firstPage, pageSetup, neumeHeight);
 
+    let currentLyricsEndPx =
+      pageSetup.leftMargin - pageSetup.lyricsMinimumSpacing;
+
+    let elementWithTrailingSpace: ScoreElement | null = null;
+
     for (let i = 0; i < elements.length; i++) {
       const element = elements[i];
 
       let elementWidthPx = 0;
+      let elementWidthWithLyricsPx = 0;
       let additionalWidth = 0;
 
       const currentPageNumber = pages.length;
@@ -314,9 +320,19 @@ export class LayoutService {
           );
       }
 
+      if (element.elementType === ElementType.Note) {
+        const noteElement = element as NoteElement;
+        elementWidthWithLyricsPx = Math.max(
+          elementWidthPx,
+          noteElement.lyricsWidth,
+        );
+      } else {
+        elementWidthWithLyricsPx = elementWidthPx;
+      }
+
       // Check if we need a new line
       if (
-        currentLineWidthPx + elementWidthPx + additionalWidth >
+        currentLineWidthPx + elementWidthWithLyricsPx + additionalWidth >
           pageSetup.innerPageWidth ||
         lastElementWasLineBreak
       ) {
@@ -375,6 +391,12 @@ export class LayoutService {
         }
 
         currentLineWidthPx = 0;
+        currentLyricsEndPx =
+          pageSetup.leftMargin - pageSetup.lyricsMinimumSpacing;
+
+        if (elementWithTrailingSpace != null) {
+          elementWithTrailingSpace.width -= pageSetup.neumeDefaultSpacing;
+        }
       }
 
       // Check if we need a new page
@@ -389,6 +411,8 @@ export class LayoutService {
         currentPageHeightPx = 0;
         currentLineWidthPx = 0;
         lastLineHeightPx = 0;
+        currentLyricsEndPx =
+          pageSetup.leftMargin - pageSetup.lyricsMinimumSpacing;
       }
 
       element.x = pageSetup.leftMargin + currentLineWidthPx;
@@ -439,15 +463,50 @@ export class LayoutService {
       if (element.elementType === ElementType.Note) {
         const noteElement = element as NoteElement;
 
-        if (noteElement.lyricsWidth > noteElement.neumeWidth) {
-          const adjustment = Math.max(
-            (noteElement.lyricsWidth -
-              noteElement.lyricsHorizontalOffset -
-              noteElement.neumeWidth) /
-              2,
-            0,
-          );
+        const lyricsStart =
+          noteElement.x +
+          noteElement.lyricsHorizontalOffset / 2 +
+          noteElement.neumeWidth / 2 -
+          noteElement.lyricsWidth / 2;
+
+        const spacing = pageSetup.lyricsMinimumSpacing;
+
+        // Ensure that there is at least a small width between the start of
+        // this notes lyrics and the end of the previous note's lyrics
+        if (lyricsStart <= currentLyricsEndPx + spacing) {
+          const adjustment = currentLyricsEndPx - lyricsStart + spacing;
           element.x += adjustment;
+          element.width += adjustment;
+          elementWidthPx += adjustment;
+          console.log('adjusting', adjustment, noteElement.lyrics);
+        }
+
+        const lyricsEnd =
+          noteElement.x +
+          noteElement.lyricsHorizontalOffset / 2 +
+          noteElement.neumeWidth / 2 +
+          noteElement.lyricsWidth / 2;
+
+        const neumeEnd =
+          noteElement.x +
+          noteElement.neumeWidth +
+          pageSetup.neumeDefaultSpacing;
+
+        currentLyricsEndPx = noteElement.isMelisma ? neumeEnd : lyricsEnd;
+      } else {
+        // Ensure that there is at least a small width between other elements
+        if (element.x <= currentLyricsEndPx + pageSetup.neumeDefaultSpacing) {
+          const adjustment =
+            currentLyricsEndPx - element.x + pageSetup.neumeDefaultSpacing;
+          element.x += adjustment;
+          currentLyricsEndPx =
+            element.x + element.width + pageSetup.neumeDefaultSpacing;
+          element.width += adjustment;
+          elementWidthPx += adjustment;
+          console.log('adjusting', adjustment);
+        } else {
+          currentLyricsEndPx =
+            element.x + element.width + pageSetup.neumeDefaultSpacing;
         }
       }
 
@@ -464,6 +523,9 @@ export class LayoutService {
       ) {
         currentLineWidthPx += pageSetup.neumeDefaultSpacing;
         element.width += pageSetup.neumeDefaultSpacing;
+        elementWithTrailingSpace = element;
+      } else {
+        elementWithTrailingSpace = null;
       }
 
       line.elements.push(element);
@@ -698,10 +760,7 @@ export class LayoutService {
       noteElement.lyricsHorizontalOffset += offset;
     }
 
-    return (
-      noteElement.spaceAfter +
-      Math.max(noteElement.neumeWidth, noteElement.lyricsWidth)
-    );
+    return noteElement.spaceAfter + noteElement.neumeWidth;
   }
 
   public static getMartyriaWidth(

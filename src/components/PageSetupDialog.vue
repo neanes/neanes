@@ -140,13 +140,23 @@
             />
           </div>
           <div class="form-group">
-            <label class="margin-label">Lyrics</label>
+            <label class="margin-label">Lyrics V</label>
             <input
               class="margin-input"
               type="number"
               :step="spacingStep"
               :value="lyricsVerticalOffset"
               @change="updateLyricsVerticalOffset($event.target.value)"
+            />
+          </div>
+          <div class="form-group">
+            <label class="margin-label">Lyrics H</label>
+            <input
+              class="margin-input"
+              type="number"
+              :step="spacingStep"
+              :value="lyricsMinimumSpacing"
+              @change="updateLyricsMinimumSpacing($event.target.value)"
             />
           </div>
           <div class="form-group">
@@ -825,6 +835,19 @@ export default class PageSetupDialog extends Vue {
       this.form!.innerPageHeight -
         this.form.lyricsDefaultFontSize -
         this.form.neumeDefaultFontSize,
+    );
+
+    this.$forceUpdate();
+  }
+
+  get lyricsMinimumSpacing() {
+    return this.toDisplayUnit(this.form!.lyricsMinimumSpacing).toFixed(3);
+  }
+
+  updateLyricsMinimumSpacing(value: number) {
+    this.form!.lyricsMinimumSpacing = Math.min(
+      this.toStorageUnit(value),
+      this.form!.innerPageWidth,
     );
 
     this.$forceUpdate();

@@ -141,6 +141,7 @@ export class SaveService {
     pageSetup.lyricsDefaultFontStyle = p.lyricsDefaultFontStyle;
     pageSetup.lyricsDefaultStrokeWidth = p.lyricsDefaultStrokeWidth;
     pageSetup.lyricsVerticalOffset = p.lyricsVerticalOffset;
+    pageSetup.lyricsMinimumSpacing = p.lyricsMinimumSpacing;
 
     pageSetup.martyriaDefaultColor = p.martyriaDefaultColor;
     pageSetup.martyriaDefaultStrokeWidth = p.martyriaDefaultStrokeWidth;
@@ -513,6 +514,8 @@ export class SaveService {
     pageSetup.lyricsDefaultStrokeWidth =
       p.lyricsDefaultStrokeWidth ?? pageSetup.lyricsDefaultStrokeWidth;
     pageSetup.lyricsVerticalOffset = p.lyricsVerticalOffset;
+    pageSetup.lyricsMinimumSpacing =
+      p.lyricsMinimumSpacing ?? pageSetup.lyricsMinimumSpacing;
 
     pageSetup.martyriaDefaultColor =
       p.martyriaDefaultColor ?? pageSetup.martyriaDefaultColor;

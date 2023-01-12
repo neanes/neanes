@@ -72,6 +72,7 @@ export class PageSetup {
   public lyricsDefaultColor = '#000000';
   public lyricsDefaultStrokeWidth = 0;
   public lyricsVerticalOffset = -Unit.fromInch(0.06);
+  public lyricsMinimumSpacing = Unit.fromInch(0.05);
 
   public get lyricsFont() {
     return `${this.lyricsDefaultFontStyle} normal ${this.lyricsDefaultFontWeight} ${this.lyricsDefaultFontSize}px "${this.lyricsDefaultFontFamily}"`;

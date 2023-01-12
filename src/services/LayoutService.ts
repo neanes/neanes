@@ -499,7 +499,10 @@ export class LayoutService {
           pageSetup.neumeDefaultSpacing;
 
         currentLyricsEndPx =
-          noteElement.isMelisma && !noteElement.isHyphen ? neumeEnd : lyricsEnd;
+          noteElement.spaceAfter +
+          (noteElement.isMelisma && !noteElement.isHyphen
+            ? neumeEnd
+            : lyricsEnd);
       } else {
         // Ensure that there is at least a small width between other elements
         if (element.x <= currentLyricsEndPx + pageSetup.neumeDefaultSpacing) {

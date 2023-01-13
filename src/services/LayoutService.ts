@@ -498,11 +498,7 @@ export class LayoutService {
           noteElement.neumeWidth +
           pageSetup.neumeDefaultSpacing;
 
-        currentLyricsEndPx =
-          noteElement.spaceAfter +
-          (noteElement.isMelisma && !noteElement.isHyphen
-            ? neumeEnd
-            : lyricsEnd);
+        currentLyricsEndPx = noteElement.spaceAfter + lyricsEnd;
       } else {
         // Ensure that there is at least a small width between other elements
         if (element.x <= currentLyricsEndPx + pageSetup.neumeDefaultSpacing) {
@@ -1059,27 +1055,40 @@ export class LayoutService {
                 (nextElement as NoteElement).quantitativeNeume ===
                   QuantitativeNeume.RunningElaphron;
 
-              // Special case for when the next neume is a running elaphron.
+              // Note the special case for when the next neume is a running elaphron.
               // The melisma, which by convention must always be a final melisma,
               // should run all the way to the elaphron, instead of stopping at
-              // the apostrophos. To handle this, set the final element to the
-              // next element (the elaphron), later we will substract out the width
-              // of the initial apostrophos in the running elaphron.
-              if (nextElementIsRunningElaphron) {
-                finalElement = nextElement as NoteElement;
-              }
+              // the apostrophos.
 
-              if (finalElement == null) {
-                end = element.x + element.neumeWidth;
-              } else if (finalElement.lyricsWidth > finalElement.neumeWidth) {
+              const nextNoteElement = nextElement as NoteElement;
+
+              if (
+                nextNoteElement != null &&
+                nextNoteElement.lyricsWidth > nextNoteElement.neumeWidth
+              ) {
                 end =
-                  finalElement.x -
-                  (finalElement.lyricsWidth - finalElement.neumeWidth) / 2;
+                  nextNoteElement.x +
+                  nextNoteElement.lyricsHorizontalOffset / 2 -
+                  (nextNoteElement.lyricsWidth - nextNoteElement.neumeWidth) /
+                    2 -
+                  pageSetup.lyricsMinimumSpacing;
+              } else if (
+                nextElementIsRunningElaphron &&
+                nextNoteElement.lyricsWidth > elaphronWidth
+              ) {
+                end =
+                  nextNoteElement.x +
+                  (runningElaphronWidth - elaphronWidth) -
+                  (nextNoteElement.lyricsWidth - elaphronWidth) / 2 -
+                  pageSetup.lyricsMinimumSpacing;
               } else if (nextElementIsRunningElaphron) {
                 // The stand-alone apostrophos is not the same width
                 // as the apostrophros in the running elaphron, but
                 // the elaphrons are the same width in both neumes.
-                end = finalElement.x + (runningElaphronWidth - elaphronWidth);
+                end =
+                  nextNoteElement.x + (runningElaphronWidth - elaphronWidth);
+              } else if (finalElement == null) {
+                end = element.x + element.neumeWidth;
               } else {
                 end = finalElement.x + finalElement.neumeWidth;
               }

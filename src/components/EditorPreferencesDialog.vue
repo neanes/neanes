@@ -11,14 +11,18 @@
             :fontFamily="pageSetup.neumeDefaultFontFamily"
           />
           <InputBpm
-            :value="options.tempoDefaults[tempo]"
+            :value="form.tempoDefaults[tempo]"
             @input="onTempoChanged(tempo, $event)"
           />
           <span class="unit-label">BPM</span>
         </div>
       </div>
       <div class="button-container">
-        <button class="cancel-btn" @click="$emit('close')">Close</button>
+        <button class="ok-btn" @click="$emit('update', form)">Update</button>
+        <button class="reset-btn neutral-btn" @click="resetToSystemDefaults">
+          Use System Default
+        </button>
+        <button class="cancel-btn" @click="$emit('close')">Cancel</button>
       </div>
     </div>
   </ModalDialog>
@@ -30,7 +34,7 @@ import ModalDialog from '@/components/ModalDialog.vue';
 import Neume from '@/components/Neume.vue';
 import InputBpm from './InputBpm.vue';
 import { TempoSign } from '@/models/Neumes';
-import { EditorPreferences } from './Editor.vue';
+import { EditorPreferences } from '@/models/EditorPreferences';
 import { PageSetup } from '@/models/PageSetup';
 
 @Component({
@@ -39,6 +43,8 @@ import { PageSetup } from '@/models/PageSetup';
 export default class PreferencesDialog extends Vue {
   @Prop() options!: EditorPreferences;
   @Prop() pageSetup!: PageSetup;
+
+  form: EditorPreferences = new EditorPreferences();
 
   tempoSigns = [
     TempoSign.VerySlow,
@@ -52,6 +58,8 @@ export default class PreferencesDialog extends Vue {
   ];
 
   mounted() {
+    this.form = JSON.parse(JSON.stringify(this.options));
+
     window.addEventListener('keydown', this.onKeyDown);
   }
 
@@ -66,7 +74,11 @@ export default class PreferencesDialog extends Vue {
   }
 
   onTempoChanged(neume: TempoSign, bpm: number) {
-    this.options.tempoDefaults[neume] = bpm;
+    this.form.tempoDefaults[neume] = bpm;
+  }
+
+  resetToSystemDefaults() {
+    this.form = new EditorPreferences();
   }
 }
 </script>
@@ -120,7 +132,8 @@ export default class PreferencesDialog extends Vue {
   justify-content: center;
 }
 
-.ok-btn {
+.ok-btn,
+.reset-btn {
   margin-right: 2rem;
 }
 

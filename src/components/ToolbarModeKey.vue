@@ -108,14 +108,7 @@
     <span class="space" />
 
     <label class="right-space">BPM</label>
-    <input
-      type="number"
-      min="5"
-      max="999"
-      step="1"
-      :value="element.bpm"
-      @change="$emit('update:bpm', $event.target.value)"
-    />
+    <InputBpm :value="element.bpm" @input="$emit('update:bpm', $event)" />
 
     <span class="space" />
 
@@ -158,6 +151,7 @@ import { TextBoxAlignment, ModeKeyElement } from '@/models/Element';
 import { Unit } from '@/utils/Unit';
 import ColorPicker from '@/components/ColorPicker.vue';
 import InputUnit from '@/components/InputUnit.vue';
+import InputBpm from '@/components/InputBpm.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import { PageSetup } from '@/models/PageSetup';
@@ -168,6 +162,7 @@ import ButtonWithMenu, { ButtonWithMenuOption } from './ButtonWithMenu.vue';
   components: {
     ColorPicker,
     InputUnit,
+    InputBpm,
     InputFontSize,
     InputStrokeWidth,
     ButtonWithMenu,

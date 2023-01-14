@@ -1,22 +1,23 @@
 <template>
   <input
     :value="displayValue"
-    @change="onValueChanged($event.target.value)"
+    @change="onChange($event.target.value)"
     type="number"
     :min="min"
     :max="max"
     :step="step"
+    :disabled="disabled"
   />
 </template>
 
 <script lang="ts">
 import { Unit } from '@/utils/Unit';
-import { Component, Prop, Vue } from 'vue-property-decorator';
+import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
 
 @Component({ components: {} })
 export default class InputUnit extends Vue {
   @Prop() value!: number;
-  @Prop() unit!: 'pt' | 'in' | 'mm';
+  @Prop() unit!: 'pt' | 'in' | 'mm' | 'unitless';
   /**
    * The minimum value allowed, in display units.
    */
@@ -34,6 +35,10 @@ export default class InputUnit extends Vue {
    */
   @Prop() precision!: number | undefined;
   /**
+   * Whether the input is disabled
+   */
+  @Prop({ default: false }) disabled!: boolean;
+  /**
    * A special rounding function applied to the display value
    * before it is converted to the stored value.
    */
@@ -47,11 +52,11 @@ export default class InputUnit extends Vue {
     let convertedValue = this.toDisplay(this.value);
 
     return this.precision != null
-      ? convertedValue.toFixed(this.precision || 0)
+      ? convertedValue.toFixed(this.precision)
       : convertedValue.toString();
   }
 
-  onValueChanged(input: string) {
+  onChange(input: string) {
     let newValue = parseFloat(input);
 
     if (isNaN(newValue)) {
@@ -87,6 +92,8 @@ export default class InputUnit extends Vue {
         return Unit.fromInch(value);
       case 'mm':
         return Unit.fromMm(value);
+      case 'unitless':
+        return value;
       default:
         console.error(`Unsupported unit ${this.unit}`);
         return value;
@@ -101,10 +108,17 @@ export default class InputUnit extends Vue {
         return Unit.toInch(value);
       case 'mm':
         return Unit.toMm(value);
+      case 'unitless':
+        return value;
       default:
         console.error(`Unsupported unit ${this.unit}`);
         return value;
     }
+  }
+
+  @Watch('value')
+  onValueChanged() {
+    this.htmlElement.value = this.displayValue;
   }
 }
 </script>

@@ -2,14 +2,7 @@
   <div class="tempo-toolbar">
     <div class="row">
       <label class="right-space">BPM</label>
-      <input
-        type="number"
-        min="5"
-        max="999"
-        step="1"
-        :value="element.bpm"
-        @change="$emit('update:bpm', $event.target.value)"
-      />
+      <InputBpm :value="element.bpm" @input="$emit('update:bpm', $event)" />
 
       <span class="space" />
 
@@ -32,12 +25,14 @@
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { TempoElement } from '@/models/Element';
 import InputUnit from './InputUnit.vue';
+import InputBpm from './InputBpm.vue';
 import { PageSetup } from '@/models/PageSetup';
 import { Unit } from '@/utils/Unit';
 
 @Component({
   components: {
     InputUnit,
+    InputBpm,
   },
 })
 export default class ToolbarTempo extends Vue {

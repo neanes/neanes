@@ -499,6 +499,7 @@
       v-if="editorPreferencesDialogIsOpen"
       :options="editorPreferences"
       :pageSetup="score.pageSetup"
+      @update="updateEditorPreferences"
       @close="closeEditorPreferencesDialog"
     />
     <PageSetupDialog
@@ -593,6 +594,7 @@ import { Header } from '@/models/Header';
 import { Footer } from '@/models/Footer';
 import { TokenMetadata } from '@/utils/replaceTokens';
 import { Scale, ScaleNote } from '@/models/Scales';
+import { EditorPreferences } from '@/models/EditorPreferences';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { IPlatformService } from '@/services/platform/IPlatformService';
 import { NeumeKeyboard } from '@/services/NeumeKeyboard';
@@ -614,10 +616,6 @@ import {
   PlaybackSequenceEvent,
   PlaybackService,
 } from '@/services/audio/PlaybackService';
-
-export interface EditorPreferences {
-  tempoDefaults: { [key in TempoSign]?: number };
-}
 
 @Component({
   components: {
@@ -721,18 +719,7 @@ export default class Editor extends Vue {
     },
   };
 
-  editorPreferences: EditorPreferences = {
-    tempoDefaults: {
-      [TempoSign.VerySlow]: 40, // < 56 triargon?
-      [TempoSign.Slower]: 56, // 56 - 80 diargon
-      [TempoSign.Slow]: 80, // 80 - 100 hemiolion
-      [TempoSign.Moderate]: 100, // 100 - 168 argon
-      [TempoSign.Medium]: 130, // 130 argon + gorgon
-      [TempoSign.Quick]: 168, // 168 - 208 gorgon
-      [TempoSign.Quicker]: 208, // 208+ digorgon
-      [TempoSign.VeryQuick]: 250, // unattested? trigorgon
-    },
-  };
+  editorPreferences: EditorPreferences = new EditorPreferences();
 
   // Commands
   noteElementCommandFactory: CommandFactory<NoteElement> =
@@ -1306,7 +1293,9 @@ export default class Editor extends Vue {
     const savedEditorPreferences = localStorage.getItem('editorPreferences');
 
     if (savedEditorPreferences != null) {
-      Object.assign(this.editorPreferences, JSON.parse(savedEditorPreferences));
+      this.editorPreferences = EditorPreferences.createFrom(
+        JSON.parse(savedEditorPreferences),
+      );
     }
 
     window.addEventListener('keydown', this.onKeydown);
@@ -1509,10 +1498,16 @@ export default class Editor extends Vue {
     this.pageSetupDialogIsOpen = false;
   }
 
-  closeEditorPreferencesDialog() {
-    this.editorPreferencesDialogIsOpen = false;
+  updateEditorPreferences(form: EditorPreferences) {
+    Object.assign(this.editorPreferences, form);
 
     this.saveEditorPreferences();
+
+    this.editorPreferencesDialogIsOpen = false;
+  }
+
+  closeEditorPreferencesDialog() {
+    this.editorPreferencesDialogIsOpen = false;
   }
 
   saveEditorPreferences() {
@@ -1694,7 +1689,7 @@ export default class Editor extends Vue {
     const element = new TempoElement();
     element.neume = neume;
     element.bpm =
-      this.editorPreferences.tempoDefaults[neume] ??
+      this.editorPreferences.getDefaultTempo(neume) ??
       TempoElement.getDefaultBpm(neume);
 
     switch (this.entryMode) {
@@ -3636,7 +3631,7 @@ export default class Editor extends Vue {
 
     if (tempo != null) {
       bpm =
-        this.editorPreferences.tempoDefaults[tempo] ??
+        this.editorPreferences.getDefaultTempo(tempo) ??
         TempoElement.getDefaultBpm(tempo);
     }
 
@@ -3759,7 +3754,7 @@ export default class Editor extends Vue {
 
     if (tempo != null) {
       bpm =
-        this.editorPreferences.tempoDefaults[tempo] ??
+        this.editorPreferences.getDefaultTempo(tempo) ??
         TempoElement.getDefaultBpm(tempo);
     }
 

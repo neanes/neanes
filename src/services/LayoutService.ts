@@ -962,6 +962,7 @@ export class LayoutService {
               start =
                 element.x +
                 element.neumeWidth +
+                element.lyricsHorizontalOffset / 2 +
                 (element.lyricsWidth - element.neumeWidth) / 2;
             } else {
               start =

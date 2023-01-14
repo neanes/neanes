@@ -342,7 +342,11 @@ async function printWorkspace(args: PrintWorkspaceArgs) {
           landscape: args.landscape,
         },
         (success, failureReason) => {
-          if (!success && failureReason !== 'cancelled') {
+          if (
+            !success &&
+            failureReason !== 'cancelled' &&
+            failureReason !== 'Print job canceled'
+          ) {
             dialog.showMessageBox(win!, {
               type: 'error',
               title: 'Print failed',

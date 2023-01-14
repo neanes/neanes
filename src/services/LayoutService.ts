@@ -1065,7 +1065,9 @@ export class LayoutService {
 
               if (
                 nextNoteElement != null &&
-                nextNoteElement.lyricsWidth > nextNoteElement.neumeWidth
+                nextNoteElement.lyricsWidth >
+                  nextNoteElement.neumeWidth +
+                    nextNoteElement.lyricsHorizontalOffset
               ) {
                 end =
                   nextNoteElement.x +

@@ -4615,7 +4615,7 @@ export default class Editor extends Vue {
 .melisma {
   position: absolute;
   display: inline;
-  overflow: hidden;
+  overflow: hidden !important;
   white-space: pre;
 }
 

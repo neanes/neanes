@@ -10,13 +10,9 @@
             :neume="tempo"
             :fontFamily="pageSetup.neumeDefaultFontFamily"
           />
-          <input
-            type="number"
-            min="5"
-            max="999"
-            step="1"
+          <InputBpm
             :value="options.tempoDefaults[tempo]"
-            @change="onTempoChanged(tempo, $event.target.value)"
+            @input="onTempoChanged(tempo, $event)"
           />
           <span class="unit-label">BPM</span>
         </div>
@@ -32,12 +28,13 @@
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import ModalDialog from '@/components/ModalDialog.vue';
 import Neume from '@/components/Neume.vue';
+import InputBpm from './InputBpm.vue';
 import { TempoSign } from '@/models/Neumes';
 import { EditorPreferences } from './Editor.vue';
 import { PageSetup } from '@/models/PageSetup';
 
 @Component({
-  components: { ModalDialog, Neume },
+  components: { ModalDialog, Neume, InputBpm },
 })
 export default class PreferencesDialog extends Vue {
   @Prop() options!: EditorPreferences;
@@ -69,13 +66,7 @@ export default class PreferencesDialog extends Vue {
   }
 
   onTempoChanged(neume: TempoSign, bpm: number) {
-    bpm = Math.round(bpm);
-    bpm = Math.max(5, bpm);
-    bpm = Math.min(999, bpm);
-
     this.options.tempoDefaults[neume] = bpm;
-
-    this.$forceUpdate();
   }
 }
 </script>

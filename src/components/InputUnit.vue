@@ -39,16 +39,24 @@ export default class InputUnit extends Vue {
    */
   @Prop() round!: ((x: number) => number) | undefined;
 
+  get htmlElement() {
+    return this.$el as HTMLInputElement;
+  }
+
   get displayValue() {
     let convertedValue = this.toDisplay(this.value);
 
     return this.precision != null
       ? convertedValue.toFixed(this.precision || 0)
-      : convertedValue;
+      : convertedValue.toString();
   }
 
   onValueChanged(input: string) {
     let newValue = parseFloat(input);
+
+    if (isNaN(newValue)) {
+      newValue = 0;
+    }
 
     if (this.round != null) {
       newValue = this.round(newValue);
@@ -64,7 +72,11 @@ export default class InputUnit extends Vue {
       storageValue = Math.min(this.toStorage(this.max), storageValue);
     }
 
-    this.$emit('input', storageValue);
+    if (this.value !== storageValue) {
+      this.$emit('input', storageValue);
+    } else {
+      this.htmlElement.value = this.displayValue;
+    }
   }
 
   toStorage(value: number) {

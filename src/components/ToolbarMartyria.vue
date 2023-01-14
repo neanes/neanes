@@ -185,14 +185,10 @@
     </div>
     <div class="row">
       <label class="right-space">BPM</label>
-      <input
-        type="number"
-        min="5"
-        max="999"
-        step="1"
+      <InputBpm
         :disabled="element.tempo == null"
         :value="element.bpm"
-        @change="$emit('update:bpm', $event.target.value)"
+        @input="$emit('update:bpm', $event)"
       />
 
       <span class="space" />
@@ -230,6 +226,7 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 import { MartyriaElement } from '@/models/Element';
 import { Fthora, MeasureBar, Note, TempoSign } from '@/models/Neumes';
 import InputUnit from './InputUnit.vue';
+import InputBpm from './InputBpm.vue';
 import { Scale, ScaleNote } from '@/models/Scales';
 import { PageSetup } from '@/models/PageSetup';
 import { Unit } from '@/utils/Unit';
@@ -238,6 +235,7 @@ import ButtonWithMenu, { ButtonWithMenuOption } from './ButtonWithMenu.vue';
 @Component({
   components: {
     InputUnit,
+    InputBpm,
     ButtonWithMenu,
   },
 })

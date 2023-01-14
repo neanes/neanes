@@ -3644,10 +3644,6 @@ export default class Editor extends Vue {
   }
 
   updateModeKeyBpm(element: ModeKeyElement, bpm: number) {
-    bpm = Math.round(bpm);
-    bpm = Math.max(5, bpm);
-    bpm = Math.min(999, bpm);
-
     this.updateModeKey(element, { bpm });
     this.save();
   }
@@ -3771,10 +3767,6 @@ export default class Editor extends Vue {
   }
 
   updateMartyriaBpm(element: MartyriaElement, bpm: number) {
-    bpm = Math.round(bpm);
-    bpm = Math.max(5, bpm);
-    bpm = Math.min(999, bpm);
-
     this.updateMartyria(element, { bpm });
     this.save();
   }
@@ -3853,10 +3845,6 @@ export default class Editor extends Vue {
   }
 
   updateTempoBpm(element: TempoElement, bpm: number) {
-    bpm = Math.round(bpm);
-    bpm = Math.max(5, bpm);
-    bpm = Math.min(999, bpm);
-
     this.updateTempo(element, { bpm });
     this.save();
   }

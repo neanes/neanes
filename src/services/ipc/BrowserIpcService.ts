@@ -58,7 +58,7 @@ export class BrowserIpcService implements IIpcService {
   }
 
   public isShowMessageBoxSupported(): boolean {
-    return true;
+    return false;
   }
 
   public async getSystemFonts(): Promise<string[]> {

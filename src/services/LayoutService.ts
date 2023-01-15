@@ -498,7 +498,10 @@ export class LayoutService {
           noteElement.neumeWidth +
           pageSetup.neumeDefaultSpacing;
 
-        currentLyricsEndPx = noteElement.spaceAfter + lyricsEnd;
+        currentLyricsEndPx =
+          noteElement.isMelismaStart && !noteElement.isHyphen
+            ? neumeEnd
+            : noteElement.spaceAfter + lyricsEnd;
       } else {
         // Ensure that there is at least a small width between other elements
         if (element.x <= currentLyricsEndPx + pageSetup.neumeDefaultSpacing) {

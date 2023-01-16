@@ -106,7 +106,7 @@ export class MartyriaElement extends ScoreElement {
   // New name: measureBarRight
   public measureBar: MeasureBar | undefined = undefined;
   public alignRight: boolean | undefined = undefined;
-  public bpm: number = 0;
+  public bpm: number | undefined = undefined;
   public spaceAfter: number | undefined = undefined;
 }
 

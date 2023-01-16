@@ -4,7 +4,7 @@
     @mousedown="openMenu"
     @mouseleave="selectedOption = null"
   >
-    <button class="neume-button">
+    <button class="neume-button" :disabled="disabled">
       <img draggable="false" :src="mainIcon" />
     </button>
     <div class="menu" v-if="showMenu">
@@ -33,6 +33,7 @@ export interface ButtonWithMenuOption {
 export default class ButtonWithMenu extends Vue {
   @Prop({ default: 'up' }) direction!: 'up' | 'down';
   @Prop({ required: true }) options!: ButtonWithMenuOption[];
+  @Prop({ default: false }) disabled!: boolean;
 
   showMenu: boolean = false;
   selectedOption: Neume | Neume[] | null = null;
@@ -52,6 +53,10 @@ export default class ButtonWithMenu extends Vue {
   }
 
   openMenu() {
+    if (this.disabled) {
+      return;
+    }
+
     this.showMenu = true;
     window.addEventListener('mouseup', this.onMouseUp);
   }

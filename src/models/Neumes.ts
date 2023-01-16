@@ -402,3 +402,12 @@ export const oligonNeumes: ReadonlyArray<QuantitativeNeume> = [
   QuantitativeNeume.KentemataPlusOligon,
   QuantitativeNeume.PetastiPlusOligon,
 ];
+
+export const restNeumes: ReadonlyArray<QuantitativeNeume> = [
+  QuantitativeNeume.Breath,
+  QuantitativeNeume.Cross,
+  QuantitativeNeume.VareiaDotted,
+  QuantitativeNeume.VareiaDotted2,
+  QuantitativeNeume.VareiaDotted3,
+  QuantitativeNeume.VareiaDotted4,
+];

@@ -50,6 +50,9 @@ let win: BrowserWindow | null = null;
 let readyToExit = false;
 let quitting = false;
 
+const minWidth = 800;
+const minHeight = 600;
+
 interface WindowState {
   width: number;
   height: number;
@@ -841,11 +844,14 @@ async function createWindow() {
 
   store.windowState = ensureVisibleOnSomeDisplay(store.windowState);
 
+  store.windowState.height = Math.max(minHeight, store.windowState.height);
+  store.windowState.width = Math.max(minWidth, store.windowState.width);
+
   // Create the browser window.
   win = new BrowserWindow({
     ...store.windowState,
-    minWidth: 800,
-    minHeight: 600,
+    minWidth,
+    minHeight,
     webPreferences: {
       // Use pluginOptions.nodeIntegration, leave this alone
       // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info

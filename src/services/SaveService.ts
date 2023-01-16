@@ -116,7 +116,7 @@ export class SaveService {
 
       element.lineBreak = e.lineBreak || undefined;
 
-      if (element.lineBreak) {
+      if (e.lineBreak) {
         element.lineBreakType = e.lineBreakType || undefined;
       }
 
@@ -238,7 +238,12 @@ export class SaveService {
     element.measureBarLeft = e.measureBarLeft || undefined;
     element.measureBarRight = e.measureBarRight || undefined;
     element.alignRight = e.alignRight || undefined;
-    element.bpm = e.bpm;
+
+    if (e.tempo != null) {
+      console.log('saving bpm', e.tempo);
+      element.bpm = e.bpm;
+    }
+
     element.spaceAfter = e.spaceAfter || undefined;
   }
 

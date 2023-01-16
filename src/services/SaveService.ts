@@ -240,7 +240,6 @@ export class SaveService {
     element.alignRight = e.alignRight || undefined;
 
     if (e.tempo != null) {
-      console.log('saving bpm', e.tempo);
       element.bpm = e.bpm;
     }
 

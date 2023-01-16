@@ -9,6 +9,7 @@ import {
   ipcMain,
   MenuItemConstructorOptions,
   shell,
+  screen,
 } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib';
@@ -29,10 +30,10 @@ import {
 import path from 'path';
 import { promises as fs } from 'fs';
 import { TestFileType } from './utils/TestFileType';
-import { errorMonitor } from 'events';
 import { Score } from './models/save/v1/Score';
 import { getSystemFonts } from './utils/getSystemFonts';
 import JSZip from 'jszip';
+import { debounce } from 'throttle-debounce';
 
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
@@ -49,13 +50,33 @@ let win: BrowserWindow | null = null;
 let readyToExit = false;
 let quitting = false;
 
-interface Store {
-  recentFiles: string[];
+interface WindowState {
+  width: number;
+  height: number;
+  x: number;
+  y: number;
+  maximized: boolean;
 }
 
-let store: Store = {
-  recentFiles: [],
+interface Store {
+  recentFiles: string[];
+  windowState: WindowState;
+}
+
+const defaultWindowState: WindowState = {
+  width: 800,
+  height: 600,
+  x: 0,
+  y: 0,
+  maximized: true,
 };
+
+const defaultStore = {
+  recentFiles: [],
+  windowState: defaultWindowState,
+};
+
+let store: Store = defaultStore;
 
 interface SecondInstanceData {
   argv: string[];
@@ -78,19 +99,27 @@ if (
   app.exit();
 }
 
+const debouncedSaveWindowState = debounce(500, saveStore);
+
 async function loadStore() {
   try {
-    store = JSON.parse(await fs.readFile(storeFilePath, 'utf8'));
+    Object.assign(store, JSON.parse(await fs.readFile(storeFilePath, 'utf8')));
   } catch (error) {
     // Return default file
-    return {
-      recentFiles: [],
-    } as Store;
+    return defaultStore;
   }
 }
 
 async function saveStore() {
   try {
+    if (win != null) {
+      if (!win.isMinimized() && !win.isMaximized()) {
+        Object.assign(store.windowState, getCurrentPosition());
+      }
+
+      store.windowState.maximized = win.isMaximized();
+    }
+
     await fs.writeFile(storeFilePath, JSON.stringify(store));
   } catch (error) {
     console.error(error);
@@ -410,6 +439,49 @@ async function openWorkspace() {
   }
 
   return result;
+}
+
+const getCurrentPosition = () => {
+  const position = win!.getPosition();
+  const size = win!.getSize();
+  return {
+    x: position[0],
+    y: position[1],
+    width: size[0],
+    height: size[1],
+  };
+};
+
+function windowWithinBounds(
+  windowState: WindowState,
+  bounds: Electron.Rectangle,
+) {
+  return (
+    windowState.x >= bounds.x &&
+    windowState.y >= bounds.y &&
+    windowState.x + windowState.width <= bounds.x + bounds.width &&
+    windowState.y + windowState.height <= bounds.y + bounds.height
+  );
+}
+
+function resetToDefaults() {
+  const bounds = screen.getPrimaryDisplay().bounds;
+  return Object.assign({}, defaultWindowState, {
+    x: Math.max(0, (bounds.width - defaultWindowState.width) / 2),
+    y: Math.max(0, (bounds.height - defaultWindowState.height) / 2),
+  });
+}
+
+function ensureVisibleOnSomeDisplay(windowState: WindowState) {
+  const visible = screen.getAllDisplays().some((display) => {
+    return windowWithinBounds(windowState, display.bounds);
+  });
+  if (!visible) {
+    // Window is partially or fully not visible now.
+    // Reset it to safe defaults.
+    return resetToDefaults();
+  }
+  return windowState;
 }
 
 function createMenu() {
@@ -765,10 +837,13 @@ function createMenu() {
 async function createWindow() {
   readyToExit = false;
 
+  await loadStore();
+
+  store.windowState = ensureVisibleOnSomeDisplay(store.windowState);
+
   // Create the browser window.
   win = new BrowserWindow({
-    width: 1280,
-    height: 1024,
+    ...store.windowState,
     webPreferences: {
       // Use pluginOptions.nodeIntegration, leave this alone
       // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
@@ -782,7 +857,12 @@ async function createWindow() {
     show: false,
   });
 
-  win.maximize();
+  if (store.windowState.maximized) {
+    win.maximize();
+  }
+
+  win.on('resize', debouncedSaveWindowState);
+  win.on('move', debouncedSaveWindowState);
 
   win.once('ready-to-show', () => {
     win?.show();
@@ -805,15 +885,14 @@ async function createWindow() {
     darwinPath = null;
   });
 
-  // Load store before we create the menu, since
-  // the store contains the list of recent files
-  await loadStore();
   createMenu();
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
     await win.loadURL(process.env.WEBPACK_DEV_SERVER_URL as string);
-    if (!process.env.IS_TEST) win.webContents.openDevTools();
+    if (!process.env.IS_TEST) {
+      win.webContents.openDevTools();
+    }
   } else {
     createProtocol('app');
     // Load the index.html when not in development

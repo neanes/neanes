@@ -1782,12 +1782,16 @@ export default class Editor extends Vue {
     }
   }
 
-  toggleLineBreak(lineBreakType: LineBreakType) {
+  toggleLineBreak(lineBreakType: LineBreakType | null) {
     if (this.selectedElement && !this.isLastElement(this.selectedElement)) {
       let lineBreak = !this.selectedElement.lineBreak;
 
       if (lineBreakType != this.selectedElement.lineBreakType) {
         lineBreak = true;
+      }
+
+      if (!lineBreak) {
+        lineBreakType = null;
       }
 
       this.commandService.execute(

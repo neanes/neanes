@@ -115,7 +115,11 @@ export class SaveService {
       }
 
       element.lineBreak = e.lineBreak || undefined;
-      element.lineBreakType = e.lineBreakType || undefined;
+
+      if (element.lineBreak) {
+        element.lineBreakType = e.lineBreakType || undefined;
+      }
+
       element.pageBreak = e.pageBreak || undefined;
 
       score.staff.elements.push(element);
@@ -235,18 +239,18 @@ export class SaveService {
     element.measureBarRight = e.measureBarRight || undefined;
     element.alignRight = e.alignRight || undefined;
     element.bpm = e.bpm;
-    element.spaceAfter = e.spaceAfter;
+    element.spaceAfter = e.spaceAfter || undefined;
   }
 
   public static SaveTempo(element: TempoElement_v1, e: TempoElement) {
     element.neume = e.neume;
     element.bpm = e.bpm;
-    element.spaceAfter = e.spaceAfter;
+    element.spaceAfter = e.spaceAfter || undefined;
   }
 
   public static SaveNote(element: NoteElement_v1, e: NoteElement) {
     element.quantitativeNeume = e.quantitativeNeume;
-    element.spaceAfter = e.spaceAfter;
+    element.spaceAfter = e.spaceAfter || undefined;
 
     if (e.timeNeume != null) {
       element.timeNeume = e.timeNeume;

@@ -11,7 +11,6 @@ import {
   TempoSign,
   MeasureBar,
   MeasureNumber,
-  NoteIndicator,
   Ison,
 } from '@/models/save/v1/Neumes';
 import { Scale, ScaleNote } from './Scales';

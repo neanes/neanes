@@ -1,11 +1,16 @@
 <template>
   <div class="neume-toolbar">
     <div class="row">
-      <button class="neume-button" @click="$emit('update:klasma')">
+      <button
+        class="neume-button"
+        :disabled="klasmaDisabled"
+        @click="$emit('update:klasma')"
+      >
         <img src="@/assets/icons/time-klasma.svg" />
       </button>
       <ButtonWithMenu
         :options="apliMenuOptions"
+        :disabled="apleDisabled"
         @select="$emit('update:time', $event)"
       />
       <span class="space"></span>
@@ -25,18 +30,21 @@
       <span class="space"></span>
       <button
         class="neume-button"
+        :disabled="expressionsDisabled"
         @click="$emit('update:vareia', !element.vareia)"
       >
         <img src="@/assets/icons/quality-vareia.svg" />
       </button>
       <button
         class="neume-button"
+        :disabled="expressionsDisabled"
         @click="$emit('update:expression', VocalExpressionNeume.Homalon)"
       >
         <img src="@/assets/icons/quality-omalon.svg" />
       </button>
       <button
         class="neume-button"
+        :disabled="expressionsDisabled"
         @click="
           $emit('update:expression', VocalExpressionNeume.HomalonConnecting)
         "
@@ -45,26 +53,31 @@
       </button>
       <button
         class="neume-button"
+        :disabled="expressionsDisabled"
         @click="$emit('update:expression', VocalExpressionNeume.Antikenoma)"
       >
         <img src="@/assets/icons/quality-antikenoma.svg" />
       </button>
       <ButtonWithMenu
         :options="psifistonMenuOptions"
+        :disabled="expressionsDisabled"
         @select="$emit('update:expression', $event)"
       />
       <button
         class="neume-button"
+        :disabled="expressionsDisabled"
         @click="$emit('update:expression', VocalExpressionNeume.Heteron)"
       >
         <img src="@/assets/icons/quality-heteron.svg" />
       </button>
       <ButtonWithMenu
         :options="heteronConnectingMenuOptions"
+        :disabled="expressionsDisabled"
         @select="$emit('update:expression', $event)"
       />
       <button
         class="neume-button"
+        :disabled="expressionsDisabled"
         @click="$emit('update:expression', VocalExpressionNeume.Endofonon)"
       >
         <img src="@/assets/icons/quality-endofonon.svg" />
@@ -72,27 +85,32 @@
       <span class="space"></span>
       <ButtonWithMenu
         :options="flatMenuOptions"
+        :disabled="accidentalsDisabled"
         @select="$emit('update:accidental', $event)"
       />
       <ButtonWithMenu
         :options="sharpMenuOptions"
+        :disabled="accidentalsDisabled"
         @select="$emit('update:accidental', $event)"
       />
       <span class="space"></span>
       <button
         class="neume-button"
+        :disabled="argonDisabled"
         @click="$emit('update:gorgon', [GorgonNeume.Argon])"
       >
         <img src="@/assets/icons/time-argon.svg" />
       </button>
       <button
         class="neume-button"
+        :disabled="argonDisabled"
         @click="$emit('update:gorgon', [GorgonNeume.Hemiolion])"
       >
         <img src="@/assets/icons/time-diargon.svg" />
       </button>
       <button
         class="neume-button"
+        :disabled="argonDisabled"
         @click="$emit('update:gorgon', [GorgonNeume.Diargon])"
       >
         <img src="@/assets/icons/time-triargon.svg" />
@@ -120,6 +138,7 @@
     <div class="row">
       <button
         class="neume-button"
+        :disabled="fthoresDisabled"
         @click="
           $emit('update:fthora', [
             Fthora.DiatonicNiLow_Top,
@@ -131,6 +150,7 @@
       </button>
       <button
         class="neume-button"
+        :disabled="fthoresDisabled"
         @click="
           $emit('update:fthora', [
             Fthora.DiatonicPa_Top,
@@ -142,6 +162,7 @@
       </button>
       <button
         class="neume-button"
+        :disabled="fthoresDisabled"
         @click="
           $emit('update:fthora', [
             Fthora.DiatonicVou_Top,
@@ -153,6 +174,7 @@
       </button>
       <button
         class="neume-button"
+        :disabled="fthoresDisabled"
         @click="
           $emit('update:fthora', [
             Fthora.DiatonicGa_Top,
@@ -164,6 +186,7 @@
       </button>
       <button
         class="neume-button"
+        :disabled="fthoresDisabled"
         @click="
           $emit('update:fthora', [
             Fthora.DiatonicThi_Top,
@@ -175,6 +198,7 @@
       </button>
       <button
         class="neume-button"
+        :disabled="fthoresDisabled"
         @click="
           $emit('update:fthora', [
             Fthora.DiatonicKe_Top,
@@ -186,6 +210,7 @@
       </button>
       <button
         class="neume-button"
+        :disabled="fthoresDisabled"
         @click="
           $emit('update:fthora', [
             Fthora.DiatonicZo_Top,
@@ -197,6 +222,7 @@
       </button>
       <button
         class="neume-button"
+        :disabled="fthoresDisabled"
         @click="
           $emit('update:fthora', [
             Fthora.DiatonicNiHigh_Top,
@@ -209,6 +235,7 @@
       <span class="space"></span>
       <button
         class="neume-button"
+        :disabled="fthoresDisabled"
         @click="
           $emit('update:fthora', [
             Fthora.SoftChromaticThi_Top,
@@ -220,6 +247,7 @@
       </button>
       <button
         class="neume-button"
+        :disabled="fthoresDisabled"
         @click="
           $emit('update:fthora', [
             Fthora.SoftChromaticPa_Top,
@@ -232,6 +260,7 @@
       <span class="space"></span>
       <button
         class="neume-button"
+        :disabled="fthoresDisabled"
         @click="
           $emit('update:fthora', [
             Fthora.HardChromaticPa_Top,
@@ -243,6 +272,7 @@
       </button>
       <button
         class="neume-button"
+        :disabled="fthoresDisabled"
         @click="
           $emit('update:fthora', [
             Fthora.HardChromaticThi_Top,
@@ -255,7 +285,7 @@
       <span class="space"></span>
       <button
         class="neume-button"
-        :disabled="enharmonicDisabled"
+        :disabled="fthoresDisabled || enharmonicDisabled"
         :title="enharmonicTitle"
         @click="
           $emit('update:fthora', [
@@ -268,7 +298,7 @@
       </button>
       <button
         class="neume-button"
-        :disabled="generalFlatDisabled"
+        :disabled="fthoresDisabled || generalFlatDisabled"
         :title="generalFlatTitle"
         @click="
           $emit('update:fthora', [
@@ -281,7 +311,7 @@
       </button>
       <button
         class="neume-button"
-        :disabled="generalSharpDisabled"
+        :disabled="fthoresDisabled || generalSharpDisabled"
         :title="generalSharpTitle"
         @click="
           $emit('update:fthora', [
@@ -295,7 +325,7 @@
       <span class="space"></span>
       <button
         class="neume-button"
-        :disabled="zygosDisabled"
+        :disabled="fthoresDisabled || zygosDisabled"
         :title="zygosTitle"
         @click="$emit('update:fthora', [Fthora.Zygos_Top, Fthora.Zygos_Bottom])"
       >
@@ -303,7 +333,7 @@
       </button>
       <button
         class="neume-button"
-        :disabled="klitonDisabled"
+        :disabled="fthoresDisabled || klitonDisabled"
         :title="klitonTitle"
         @click="
           $emit('update:fthora', [Fthora.Kliton_Top, Fthora.Kliton_Bottom])
@@ -313,7 +343,7 @@
       </button>
       <button
         class="neume-button"
-        :disabled="spathiDisabled"
+        :disabled="fthoresDisabled || spathiDisabled"
         :title="spathiTitle"
         @click="
           $emit('update:fthora', [Fthora.Spathi_Top, Fthora.Spathi_Bottom])
@@ -384,6 +414,8 @@ import {
   Ison,
   MeasureBar,
   MeasureNumber,
+  QuantitativeNeume,
+  restNeumes,
   TimeNeume,
   VocalExpressionNeume,
 } from '@/models/Neumes';
@@ -665,6 +697,32 @@ export default class ToolbarNeume extends Vue {
     return (
       this.element.fthora != null &&
       this.chromaticFthoras.includes(this.element.fthora)
+    );
+  }
+
+  get fthoresDisabled() {
+    return restNeumes.includes(this.element.quantitativeNeume);
+  }
+
+  get expressionsDisabled() {
+    return restNeumes.includes(this.element.quantitativeNeume);
+  }
+
+  get accidentalsDisabled() {
+    return restNeumes.includes(this.element.quantitativeNeume);
+  }
+
+  get klasmaDisabled() {
+    return restNeumes.includes(this.element.quantitativeNeume);
+  }
+
+  get apleDisabled() {
+    return restNeumes.includes(this.element.quantitativeNeume);
+  }
+
+  get argonDisabled() {
+    return (
+      this.element.quantitativeNeume !== QuantitativeNeume.KentemataPlusOligon
     );
   }
 

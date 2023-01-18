@@ -57,6 +57,7 @@ export class NoteElement extends ScoreElement {
   public noteIndicator: boolean | undefined = undefined;
   public ison: Ison | undefined = undefined;
   public vareia: boolean | undefined = undefined;
+  public koronis: boolean | undefined = undefined;
   public lyrics: string | undefined = undefined;
   public isMelisma: boolean | undefined = undefined;
   public isMelismaStart: boolean | undefined = undefined;
@@ -72,6 +73,8 @@ export class NoteElement extends ScoreElement {
   public gorgonNeumeOffsetY: number | undefined = undefined;
   public isonOffsetX: number | undefined = undefined;
   public isonOffsetY: number | undefined = undefined;
+  public koronisOffsetX: number | undefined = undefined;
+  public koronisOffsetY: number | undefined = undefined;
   public measureBarLeftOffsetX: number | undefined = undefined;
   public measureBarLeftOffsetY: number | undefined = undefined;
   public measureBarRightOffsetX: number | undefined = undefined;

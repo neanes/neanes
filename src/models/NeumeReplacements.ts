@@ -34,7 +34,7 @@ const kentemataNeumesNoOmalon: Neume[] = [
   QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
 ];
 
-const kentemataNeumes: Neume[] = [
+export const kentemataNeumes: Neume[] = [
   ...kentemataNeumesNoOmalon,
   QuantitativeNeume.OligonPlusKentemata,
 ];

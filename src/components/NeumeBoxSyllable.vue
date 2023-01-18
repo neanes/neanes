@@ -18,6 +18,11 @@
     />
     <Neume v-if="hasTimeNeume" :neume="note.timeNeume" :style="timeStyle" />
     <Neume
+      v-if="note.koronis"
+      :neume="TimeNeume.Koronis"
+      :style="koronisStyle"
+    />
+    <Neume
       v-if="hasGorgonNeume"
       :neume="note.gorgonNeume"
       :style="gorgonStyle"
@@ -55,7 +60,7 @@
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { NoteElement } from '@/models/Element';
-import { VocalExpressionNeume } from '@/models/Neumes';
+import { TimeNeume, VocalExpressionNeume } from '@/models/Neumes';
 import Neume from '@/components/Neume.vue';
 import { withZoom } from '@/utils/withZoom';
 import { PageSetup } from '@/models/PageSetup';
@@ -69,6 +74,7 @@ export default class NeumeBoxSyllable extends Vue {
   @Prop() note!: NoteElement;
   @Prop() pageSetup!: PageSetup;
 
+  TimeNeume = TimeNeume;
   VocalExpressionNeume = VocalExpressionNeume;
 
   get hasVocalExpressionNeume() {
@@ -274,6 +280,21 @@ export default class NeumeBoxSyllable extends Vue {
       top:
         this.note.timeNeumeOffsetY != null
           ? withZoom(this.note.timeNeumeOffsetY, 'em')
+          : undefined,
+    } as CSSStyleDeclaration;
+  }
+
+  get koronisStyle() {
+    return {
+      color: this.pageSetup.koronisDefaultColor,
+      webkitTextStrokeWidth: withZoom(this.pageSetup.koronisDefaultStrokeWidth),
+      left:
+        this.note.koronisOffsetX != null
+          ? withZoom(this.note.koronisOffsetX, 'em')
+          : undefined,
+      top:
+        this.note.koronisOffsetY != null
+          ? withZoom(this.note.koronisOffsetY, 'em')
           : undefined,
     } as CSSStyleDeclaration;
   }

@@ -313,6 +313,8 @@ mapNeumeToSbmufl(TimeNeume.Klasma_Bottom, 'klasmaBelow');
 mapNeumeToSbmufl(TimeNeume.Hapli, 'apli');
 mapNeumeToSbmufl(TimeNeume.Dipli, 'dipli');
 mapNeumeToSbmufl(TimeNeume.Tripli, 'tripli');
+mapNeumeToSbmufl(TimeNeume.Tetrapli, 'tetrapli');
+mapNeumeToSbmufl(TimeNeume.Koronis, 'koronis');
 
 mapNeumeToSbmufl(Fthora.DiatonicNiLow_Top, 'fthoraDiatonicNiLowAbove');
 mapNeumeToSbmufl(Fthora.DiatonicPa_Top, 'fthoraDiatonicPaAbove');

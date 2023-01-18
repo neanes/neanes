@@ -195,6 +195,8 @@ export class SaveService {
       p.noteIndicatorDefaultStrokeWidth;
     pageSetup.isonDefaultColor = p.isonDefaultColor;
     pageSetup.isonDefaultStrokeWidth = p.isonDefaultStrokeWidth;
+    pageSetup.koronisDefaultColor = p.koronisDefaultColor;
+    pageSetup.koronisDefaultStrokeWidth = p.koronisDefaultStrokeWidth;
 
     pageSetup.pageSize = p.pageSize;
     pageSetup.pageSizeUnit = p.pageSizeUnit;
@@ -334,8 +336,14 @@ export class SaveService {
       element.vareiaOffsetY = e.vareiaOffsetY || undefined;
     }
 
+    if (e.koronis) {
+      element.koronisOffsetX = e.koronisOffsetX || undefined;
+      element.koronisOffsetY = e.koronisOffsetY || undefined;
+    }
+
     element.vareia = e.vareia || undefined;
     element.noteIndicator = e.noteIndicator || undefined;
+    element.koronis = e.koronis || undefined;
 
     element.lyrics = e.lyrics !== '' ? e.lyrics : undefined;
     element.isMelisma = e.isMelisma || undefined;
@@ -587,6 +595,10 @@ export class SaveService {
       p.isonDefaultColor ?? pageSetup.isonDefaultColor;
     pageSetup.isonDefaultStrokeWidth =
       p.isonDefaultStrokeWidth ?? pageSetup.isonDefaultStrokeWidth;
+    pageSetup.koronisDefaultColor =
+      p.koronisDefaultColor ?? pageSetup.koronisDefaultColor;
+    pageSetup.koronisDefaultStrokeWidth =
+      p.koronisDefaultStrokeWidth ?? pageSetup.koronisDefaultStrokeWidth;
 
     pageSetup.pageSize = p.pageSize ?? pageSetup.pageSize;
     pageSetup.pageSizeUnit = p.pageSizeUnit ?? pageSetup.pageSizeUnit;
@@ -759,7 +771,13 @@ export class SaveService {
       element.vareiaOffsetY = e.vareiaOffsetY ?? null;
     }
 
+    if (e.koronis === true) {
+      element.koronisOffsetX = e.koronisOffsetX ?? null;
+      element.koronisOffsetY = e.koronisOffsetY ?? null;
+    }
+
     element.vareia = e.vareia === true;
+    element.koronis = e.koronis === true;
 
     element.isMelisma = e.isMelisma === true;
     element.isMelismaStart = e.isMelismaStart === true;

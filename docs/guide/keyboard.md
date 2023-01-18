@@ -116,18 +116,20 @@ Below is a list of modifiers.
 
 ## Characters of Temporal Augmentation
 
-| Neume                        | Keyboard Shortcut                            |
-| ---------------------------- | -------------------------------------------- |
-| <span class="neume"></span> | <kbd>H</kbd>                                 |
-| <span class="neume"></span> | <kbd>B</kbd>                                 |
-| <span class="neume"></span> | <kbd>B</kbd> +<kbd>J</kbd>                   |
-| <span class="neume"></span> | <kbd>B</kbd> +<kbd>K</kbd>                   |
-| <span class="neume"></span> | <kbd>Shift</kbd> +<kbd>B</kbd> +<kbd>J</kbd> |
-| <span class="neume"></span> | <kbd>Shift</kbd> +<kbd>B</kbd> +<kbd>K</kbd> |
-| <span class="neume"></span> | <kbd>Shift</kbd> +<kbd>B</kbd> +<kbd>L</kbd> |
-| <span class="neume"></span> | <kbd>Shift</kbd> +<kbd>B</kbd> +<kbd>;</kbd> |
-| <span class="neume"></span> | <kbd>Shift</kbd> +<kbd>=</kbd>               |
-| <span class="neume"></span> | <kbd>=</kbd>                                 |
+| Neume                               | Keyboard Shortcut                            |
+| ----------------------------------- | -------------------------------------------- |
+| <span class="neume"></span>        | <kbd>H</kbd>                                 |
+| <span class="neume"></span>        | <kbd>B</kbd>                                 |
+| <span class="neume"></span>        | <kbd>B</kbd> +<kbd>J</kbd>                   |
+| <span class="neume"></span>        | <kbd>B</kbd> +<kbd>K</kbd>                   |
+| <span class="neume">&#xE0D5;</span> | <kbd>B</kbd> +<kbd>L</kbd>                   |
+| <span class="neume">&#xE0D6;</span> | <kbd>B</kbd> +<kbd>;</kbd>                   |
+| <span class="neume"></span>        | <kbd>Shift</kbd> +<kbd>B</kbd> +<kbd>J</kbd> |
+| <span class="neume"></span>        | <kbd>Shift</kbd> +<kbd>B</kbd> +<kbd>K</kbd> |
+| <span class="neume"></span>        | <kbd>Shift</kbd> +<kbd>B</kbd> +<kbd>L</kbd> |
+| <span class="neume"></span>        | <kbd>Shift</kbd> +<kbd>B</kbd> +<kbd>;</kbd> |
+| <span class="neume"></span>        | <kbd>Shift</kbd> +<kbd>=</kbd>               |
+| <span class="neume"></span>        | <kbd>=</kbd>                                 |
 
 ## Characters of Temporal Division
 

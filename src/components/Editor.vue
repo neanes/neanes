@@ -439,6 +439,7 @@
         @update:measureNumber="setMeasureNumber(selectedElement, $event)"
         @update:noteIndicator="updateNoteNoteIndicator(selectedElement, $event)"
         @update:ison="setIson(selectedElement, $event)"
+        @update:koronis="updateNoteKoronis(selectedElement, $event)"
         @update:vareia="updateNoteVareia(selectedElement, $event)"
         @update:spaceAfter="updateNoteSpaceAfter(selectedElement, $event)"
         @update:ignoreAttractions="
@@ -887,6 +888,11 @@ export default class Editor extends Vue {
   updateNoteNoteIndicatorThrottled = throttle(
     this.keydownThrottleIntervalMs,
     this.updateNoteNoteIndicator,
+  );
+
+  updateNoteKoronisThrottled = throttle(
+    this.keydownThrottleIntervalMs,
+    this.updateNoteKoronis,
   );
 
   updateNoteVareiaThrottled = throttle(
@@ -2144,10 +2150,15 @@ export default class Editor extends Vue {
 
         if (hapliMapping != null) {
           handled = true;
-          this.setTimeNeumeThrottled(
-            noteElement,
-            hapliMapping.neume as TimeNeume,
-          );
+
+          if (hapliMapping.neume === TimeNeume.Koronis) {
+            this.updateNoteKoronisThrottled(noteElement, !noteElement.koronis);
+          } else {
+            this.setTimeNeumeThrottled(
+              noteElement,
+              hapliMapping.neume as TimeNeume,
+            );
+          }
         }
 
         const measureNumberMapping =
@@ -3433,6 +3444,11 @@ export default class Editor extends Vue {
 
   updateNoteIson(element: NoteElement, ison: Ison | null) {
     this.updateNote(element, { ison });
+    this.save();
+  }
+
+  updateNoteKoronis(element: NoteElement, koronis: boolean) {
+    this.updateNote(element, { koronis });
     this.save();
   }
 

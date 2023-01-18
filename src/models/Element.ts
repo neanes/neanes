@@ -66,6 +66,7 @@ export class NoteElement extends ScoreElement {
   public noteIndicator: boolean = false;
   public ison: Ison | null = null;
   public vareia: boolean = false;
+  public koronis: boolean = false;
   public lyrics: string = '';
   public isMelisma: boolean = false;
   public isMelismaStart: boolean = false;
@@ -83,6 +84,8 @@ export class NoteElement extends ScoreElement {
   public gorgonNeumeOffsetY: number | null = null;
   public isonOffsetX: number | null = null;
   public isonOffsetY: number | null = null;
+  public koronisOffsetX: number | null = null;
+  public koronisOffsetY: number | null = null;
   public measureBarLeftOffsetX: number | null = null;
   public measureBarLeftOffsetY: number | null = null;
   public measureBarRightOffsetX: number | null = null;

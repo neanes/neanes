@@ -13,6 +13,13 @@
         :disabled="apleDisabled"
         @select="$emit('update:time', $event)"
       />
+      <button
+        class="neume-button"
+        :disabled="koronisDisabled"
+        @click="$emit('update:koronis', !element.koronis)"
+      >
+        <img src="@/assets/icons/time-koronis.svg" />
+      </button>
       <span class="space"></span>
 
       <ButtonWithMenu
@@ -425,6 +432,7 @@ import { ScaleNote } from '@/models/Scales';
 import ButtonWithMenu, {
   ButtonWithMenuOption,
 } from '@/components/ButtonWithMenu.vue';
+import { kentemataNeumes } from '@/models/NeumeReplacements';
 
 @Component({
   components: {
@@ -451,6 +459,10 @@ export default class ToolbarNeume extends Vue {
   ];
 
   apliMenuOptions: ButtonWithMenuOption[] = [
+    {
+      neume: TimeNeume.Tetrapli,
+      icon: require('@/assets/icons/time-tetrapli.svg'),
+    },
     {
       neume: TimeNeume.Tripli,
       icon: require('@/assets/icons/time-tripli.svg'),
@@ -713,11 +725,24 @@ export default class ToolbarNeume extends Vue {
   }
 
   get klasmaDisabled() {
-    return restNeumes.includes(this.element.quantitativeNeume);
+    return (
+      restNeumes.includes(this.element.quantitativeNeume) ||
+      kentemataNeumes.includes(this.element.quantitativeNeume)
+    );
   }
 
   get apleDisabled() {
-    return restNeumes.includes(this.element.quantitativeNeume);
+    return (
+      restNeumes.includes(this.element.quantitativeNeume) ||
+      kentemataNeumes.includes(this.element.quantitativeNeume)
+    );
+  }
+
+  get koronisDisabled() {
+    return (
+      restNeumes.includes(this.element.quantitativeNeume) ||
+      kentemataNeumes.includes(this.element.quantitativeNeume)
+    );
   }
 
   get argonDisabled() {

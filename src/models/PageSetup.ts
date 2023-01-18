@@ -105,6 +105,8 @@ export class PageSetup {
   public noteIndicatorDefaultStrokeWidth = 0;
   public isonDefaultColor = '#ED0000';
   public isonDefaultStrokeWidth = 0;
+  public koronisDefaultColor = '#ED0000';
+  public koronisDefaultStrokeWidth = 0;
   public martyriaDefaultColor = '#ED0000';
   public martyriaDefaultStrokeWidth = 0;
   public tempoDefaultColor = '#ED0000';

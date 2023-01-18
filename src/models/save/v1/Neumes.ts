@@ -104,6 +104,9 @@ export enum TimeNeume {
   Hapli = 'Hapli',
   Dipli = 'Dipli',
   Tripli = 'Tripli',
+  Tetrapli = 'Tetrapli',
+
+  Koronis = 'Koronis',
 }
 
 export enum GorgonNeume {

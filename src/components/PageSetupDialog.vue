@@ -439,6 +439,17 @@
             />
           </div>
           <div class="form-group row">
+            <label class="neume-colors-label">Koronis</label>
+            <ColorPicker
+              class="neume-colors-input"
+              v-model="form.koronisDefaultColor"
+            />
+            <InputStrokeWidth
+              class="drop-caps-input"
+              v-model="form.koronisDefaultStrokeWidth"
+            />
+          </div>
+          <div class="form-group row">
             <label class="neume-colors-label">Martyrias</label>
             <ColorPicker
               class="neume-colors-input"

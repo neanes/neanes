@@ -3,6 +3,10 @@
   "fontVersion": "001.000",
   "glyphsWithAnchors": {
     "ison": {
+      "koronis": [
+        0.783,
+        0.801
+      ],
       "measureNumber": [
         0.172,
         0.753
@@ -64,7 +68,7 @@
         0.113
       ],
       "klasmaTop": [
-        0.793,
+        0.873,
         0.487
       ],
       "gorgonTop": [
@@ -73,6 +77,10 @@
       ]
     },
     "oligonKentimaBelow": {
+      "koronis": [
+        0.783,
+        0.801
+      ],
       "measureNumber": [
         0.172,
         0.753
@@ -135,6 +143,10 @@
       ]
     },
     "oligon": {
+      "koronis": [
+        0.783,
+        0.801
+      ],
       "measureNumber": [
         0.172,
         0.753
@@ -192,7 +204,7 @@
         0.619
       ],
       "klasmaTop": [
-        0.793,
+        0.873,
         0.487
       ],
       "psifiston": [
@@ -205,6 +217,10 @@
       ]
     },
     "oligonKentimaAbove": {
+      "koronis": [
+        0.783,
+        0.891
+      ],
       "measureNumber": [
         0.172,
         0.753
@@ -275,6 +291,10 @@
       ]
     },
     "oligonYpsiliRight": {
+      "koronis": [
+        0.783,
+        0.801
+      ],
       "measureNumber": [
         0.172,
         0.753
@@ -345,6 +365,10 @@
       ]
     },
     "oligonYpsiliLeft": {
+      "koronis": [
+        0.951,
+        0.855
+      ],
       "measureNumber": [
         0.213,
         0.827
@@ -415,6 +439,10 @@
       ]
     },
     "oligonKentimaYpsiliRight": {
+      "koronis": [
+        0.783,
+        0.911
+      ],
       "measureNumber": [
         0.172,
         0.753
@@ -485,6 +513,10 @@
       ]
     },
     "oligonKentimaYpsiliMiddle": {
+      "koronis": [
+        0.275,
+        0.835
+      ],
       "klasmaTop": [
         0.353,
         0.487
@@ -555,6 +587,10 @@
       ]
     },
     "oligonDoubleYpsili": {
+      "koronis": [
+        0.783,
+        1.261
+      ],
       "measureNumber": [
         0.16,
         0.8
@@ -621,6 +657,10 @@
       ]
     },
     "oligonKentimataDoubleYpsili": {
+      "koronis": [
+        0.783,
+        1.371
+      ],
       "measureNumber": [
         0.172,
         0.875
@@ -683,6 +723,10 @@
       ]
     },
     "isonApostrofos": {
+      "koronis": [
+        0.63,
+        0.881
+      ],
       "apli": [
         1.244,
         -0.424
@@ -713,6 +757,10 @@
       ]
     },
     "apostrofosSyndesmos": {
+      "koronis": [
+        0.63,
+        0.881
+      ],
       "apli": [
         0.944,
         -0.424
@@ -747,6 +795,10 @@
       ]
     },
     "yporroi": {
+      "koronis": [
+        0.21,
+        0.881
+      ],
       "heteronConnecting": [
         0.304,
         -0.062
@@ -793,6 +845,10 @@
       ]
     },
     "runningElafron": {
+      "koronis": [
+        1.03,
+        0.746
+      ],
       "measureNumber": [
         0.172,
         0.653
@@ -847,6 +903,10 @@
       ]
     },
     "elafron": {
+      "koronis": [
+        0.56,
+        0.746
+      ],
       "measureNumber": [
         0.172,
         0.613
@@ -905,6 +965,10 @@
       ]
     },
     "elafronApostrofos": {
+      "koronis": [
+        0.56,
+        0.746
+      ],
       "measureNumber": [
         0.172,
         0.643
@@ -959,6 +1023,10 @@
       ]
     },
     "chamiliApostrofos": {
+      "koronis": [
+        0.72,
+        0.91
+      ],
       "measureNumber": [
         0.172,
         0.943
@@ -1013,6 +1081,10 @@
       ]
     },
     "chamili": {
+      "koronis": [
+        0.77,
+        0.916
+      ],
       "measureNumber": [
         0.172,
         0.943
@@ -1071,6 +1143,10 @@
       ]
     },
     "chamiliElafron": {
+      "koronis": [
+        0.77,
+        1.226
+      ],
       "measureNumber": [
         0.172,
         1.233
@@ -1125,6 +1201,10 @@
       ]
     },
     "chamiliElafronApostrofos": {
+      "koronis": [
+        0.77,
+        1.216
+      ],
       "measureNumber": [
         0.172,
         1.233
@@ -1179,6 +1259,10 @@
       ]
     },
     "doubleChamili": {
+      "koronis": [
+        0.77,
+        1.226
+      ],
       "measureNumber": [
         0.172,
         1.223
@@ -1233,6 +1317,10 @@
       ]
     },
     "petastiIson": {
+      "koronis": [
+        0.73,
+        1.046
+      ],
       "heteronConnecting": [
         1.316,
         0.052
@@ -1283,6 +1371,10 @@
       ]
     },
     "petasti": {
+      "koronis": [
+        0.73,
+        1.046
+      ],
       "heteronConnecting": [
         1.316,
         0.052
@@ -1333,6 +1425,10 @@
       ]
     },
     "petastiOligon": {
+      "koronis": [
+        0.73,
+        1.046
+      ],
       "heteronConnecting": [
         1.316,
         0.052
@@ -1383,6 +1479,10 @@
       ]
     },
     "petastiKentima": {
+      "koronis": [
+        0.73,
+        1.046
+      ],
       "heteronConnecting": [
         1.316,
         0.052
@@ -1433,6 +1533,10 @@
       ]
     },
     "petastiYpsiliRight": {
+      "koronis": [
+        0.43,
+        0.876
+      ],
       "heteronConnecting": [
         1.316,
         0.052
@@ -1483,6 +1587,10 @@
       ]
     },
     "petastiYpsiliLeft": {
+      "koronis": [
+        0.925,
+        0.807
+      ],
       "heteronConnecting": [
         1.316,
         0.052
@@ -1533,6 +1641,10 @@
       ]
     },
     "petastiKentimaYpsiliRight": {
+      "koronis": [
+        0.599,
+        0.969
+      ],
       "heteronConnecting": [
         1.316,
         0.052
@@ -1583,6 +1695,10 @@
       ]
     },
     "petastiKentimaYpsiliMiddle": {
+      "koronis": [
+        0.313,
+        0.963
+      ],
       "heteronConnecting": [
         1.316,
         0.052
@@ -1633,6 +1749,10 @@
       ]
     },
     "petastiApostrofos": {
+      "koronis": [
+        0.663,
+        0.961
+      ],
       "heteronConnecting": [
         1.316,
         0.052
@@ -1683,6 +1803,10 @@
       ]
     },
     "petastiElafron": {
+      "koronis": [
+        0.663,
+        1.091
+      ],
       "heteronConnecting": [
         1.316,
         0.052
@@ -1733,6 +1857,10 @@
       ]
     },
     "petastiElafronApostrofos": {
+      "koronis": [
+        0.663,
+        1.091
+      ],
       "heteronConnecting": [
         1.316,
         0.052
@@ -1783,6 +1911,10 @@
       ]
     },
     "petastiChamili": {
+      "koronis": [
+        0.763,
+        1.131
+      ],
       "heteronConnecting": [
         1.316,
         0.052
@@ -2163,6 +2295,10 @@
       ]
     },
     "oligonKentimataBelow": {
+      "koronis": [
+        0.783,
+        0.801
+      ],
       "heteron": [
         1.087,
         0.227
@@ -2216,7 +2352,7 @@
         0.619
       ],
       "klasmaTop": [
-        0.793,
+        0.893,
         0.487
       ],
       "gorgonTop": [
@@ -2229,6 +2365,10 @@
       ]
     },
     "oligonKentimaTripleYpsili": {
+      "koronis": [
+        0.783,
+        1.461
+      ],
       "measureNumber": [
         0.172,
         1.213
@@ -2291,6 +2431,10 @@
       ]
     },
     "oligonIson": {
+      "koronis": [
+        0.783,
+        0.911
+      ],
       "measureNumber": [
         0.172,
         0.943
@@ -2353,6 +2497,10 @@
       ]
     },
     "oligonElafron": {
+      "koronis": [
+        0.783,
+        1.041
+      ],
       "measureNumber": [
         0.172,
         0.943
@@ -2415,6 +2563,10 @@
       ]
     },
     "petastiRunningElafron": {
+      "koronis": [
+        0.833,
+        1.041
+      ],
       "heteronConnecting": [
         1.586,
         0.052
@@ -2465,6 +2617,10 @@
       ]
     },
     "oligonApostrofos": {
+      "koronis": [
+        0.783,
+        0.911
+      ],
       "measureNumber": [
         0.172,
         0.943
@@ -2527,6 +2683,10 @@
       ]
     },
     "oligonYporroi": {
+      "koronis": [
+        0.783,
+        0.911
+      ],
       "measureNumber": [
         0.172,
         0.943
@@ -2589,6 +2749,10 @@
       ]
     },
     "petastiYporroi": {
+      "koronis": [
+        0.663,
+        0.961
+      ],
       "heteronConnecting": [
         1.316,
         0.052
@@ -2823,6 +2987,10 @@
       ]
     },
     "petastiChamiliApostrofos": {
+      "koronis": [
+        0.763,
+        1.131
+      ],
       "heteronConnecting": [
         1.316,
         0.052
@@ -2873,6 +3041,10 @@
       ]
     },
     "apostrofos": {
+      "koronis": [
+        0.37,
+        0.891
+      ],
       "heteronConnecting": [
         0.731,
         0.125
@@ -2927,6 +3099,10 @@
       ]
     },
     "oligonKentimataTripleYpsili": {
+      "koronis": [
+        0.783,
+        1.461
+      ],
       "measureNumber": [
         0.172,
         1.213
@@ -2989,6 +3165,10 @@
       ]
     },
     "doubleChamiliElafronApostrofos": {
+      "koronis": [
+        0.77,
+        1.236
+      ],
       "measureNumber": [
         0.172,
         1.223
@@ -3043,6 +3223,10 @@
       ]
     },
     "doubleChamiliElafron": {
+      "koronis": [
+        0.77,
+        1.226
+      ],
       "measureNumber": [
         0.172,
         1.223
@@ -3097,6 +3281,10 @@
       ]
     },
     "doubleChamiliApostrofos": {
+      "koronis": [
+        0.77,
+        1.236
+      ],
       "measureNumber": [
         0.172,
         1.223
@@ -3151,6 +3339,10 @@
       ]
     },
     "petastiKentimataDoubleYpsili": {
+      "koronis": [
+        0.235,
+        1.333
+      ],
       "heteronConnecting": [
         1.316,
         0.052
@@ -3201,6 +3393,10 @@
       ]
     },
     "petastiKentimaDoubleYpsiliRight": {
+      "koronis": [
+        0.34,
+        1.33
+      ],
       "heteronConnecting": [
         1.316,
         0.052
@@ -3251,6 +3447,10 @@
       ]
     },
     "petastiKentimaDoubleYpsiliLeft": {
+      "koronis": [
+        0.67,
+        1.46
+      ],
       "heteronConnecting": [
         1.316,
         0.052
@@ -3301,6 +3501,10 @@
       ]
     },
     "petastiKentimataTripleYpsili": {
+      "koronis": [
+        0.663,
+        1.383
+      ],
       "heteronConnecting": [
         1.316,
         0.052
@@ -3351,6 +3555,10 @@
       ]
     },
     "petastiTripleYpsili": {
+      "koronis": [
+        0.663,
+        1.313
+      ],
       "heteronConnecting": [
         1.316,
         0.052
@@ -3401,6 +3609,10 @@
       ]
     },
     "oligonKentimaDoubleYpsiliRight": {
+      "koronis": [
+        0.783,
+        1.441
+      ],
       "measureNumber": [
         0.172,
         0.853
@@ -3463,6 +3675,10 @@
       ]
     },
     "oligonKentimaDoubleYpsiliLeft": {
+      "koronis": [
+        0.783,
+        1.441
+      ],
       "measureNumber": [
         0.172,
         1.213
@@ -3525,6 +3741,10 @@
       ]
     },
     "oligonTripleYpsili": {
+      "koronis": [
+        0.783,
+        1.281
+      ],
       "measureNumber": [
         0.172,
         1.213
@@ -3587,6 +3807,10 @@
       ]
     },
     "oligonElafronApostrofos": {
+      "koronis": [
+        0.783,
+        1.041
+      ],
       "measureNumber": [
         0.172,
         0.943
@@ -3649,6 +3873,10 @@
       ]
     },
     "petastiDoubleYpsili": {
+      "koronis": [
+        0.867,
+        1.283
+      ],
       "heteronConnecting": [
         1.316,
         0.052
@@ -3699,6 +3927,10 @@
       ]
     },
     "oligonChamili": {
+      "koronis": [
+        0.783,
+        1.041
+      ],
       "measureNumber": [
         0.172,
         0.513
@@ -3761,6 +3993,10 @@
       ]
     },
     "petastiChamiliElafron": {
+      "koronis": [
+        0.763,
+        1.421
+      ],
       "heteronConnecting": [
         1.316,
         0.052
@@ -3811,6 +4047,10 @@
       ]
     },
     "petastiChamiliElafronApostrofos": {
+      "koronis": [
+        0.763,
+        1.421
+      ],
       "heteronConnecting": [
         1.316,
         0.052
@@ -3861,6 +4101,10 @@
       ]
     },
     "petastiDoubleChamili": {
+      "koronis": [
+        0.763,
+        1.291
+      ],
       "heteronConnecting": [
         1.316,
         -0.049
@@ -3911,6 +4155,10 @@
       ]
     },
     "petastiDoubleChamiliApostrofos": {
+      "koronis": [
+        0.763,
+        1.291
+      ],
       "heteronConnecting": [
         1.316,
         -0.049
@@ -3985,6 +4233,10 @@
       ]
     },
     "oligonKentimaMiddle": {
+      "koronis": [
+        0.783,
+        0.801
+      ],
       "measureNumber": [
         0.172,
         0.753
@@ -4063,6 +4315,10 @@
       ]
     },
     "tripleChamili": {
+      "koronis": [
+        0.67,
+        1.33
+      ],
       "measureNumber": [
         0.172,
         1.363
@@ -4471,6 +4727,10 @@
       ]
     },
     "petastiKentimaTripleYpsili": {
+      "koronis": [
+        0.663,
+        1.383
+      ],
       "heteronConnecting": [
         1.316,
         0.052
@@ -5364,6 +5624,12 @@
       "modeTop": [
         0.0,
         0.8
+      ]
+    },
+    "koronis": {
+      "koronis": [
+        0.0,
+        0.872
       ]
     },
     "gorgonSecondary": {

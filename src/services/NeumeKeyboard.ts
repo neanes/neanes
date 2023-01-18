@@ -807,6 +807,18 @@ export class NeumeKeyboard {
       modifier: this.hapliKey,
       neume: TimeNeume.Tripli,
     });
+
+    this.hapliKeyboardMap.push({
+      code: 'KeyL',
+      modifier: this.hapliKey,
+      neume: TimeNeume.Tetrapli,
+    });
+
+    this.hapliKeyboardMap.push({
+      code: 'Semicolon',
+      modifier: this.hapliKey,
+      neume: TimeNeume.Koronis,
+    });
   }
 
   private initMeasureNumberKeyboardMap() {

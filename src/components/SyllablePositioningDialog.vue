@@ -146,6 +146,25 @@
             />
           </div>
           <div class="form-group">
+            <label>Koronis</label>
+            <InputUnit
+              :unit="unit"
+              :min="min"
+              :max="max"
+              :step="stepSize"
+              :precision="precision"
+              v-model="form.koronisOffsetX"
+            />
+            <InputUnit
+              :unit="unit"
+              :min="min"
+              :max="max"
+              :step="stepSize"
+              :precision="precision"
+              v-model="form.koronisOffsetY"
+            />
+          </div>
+          <div class="form-group">
             <label>Measure No.</label>
             <InputUnit
               :unit="unit"

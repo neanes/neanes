@@ -125,7 +125,8 @@ export enum PlaybackScaleName {
   Kliton,
   Zygos,
   ZygosLegetos,
-  Spathi,
+  SpathiKe,
+  SpathiGa,
   Enharmonic,
 }
 
@@ -481,7 +482,12 @@ export class PlaybackService {
       workspace.options.diatonicIntervals,
     );
 
-    this.spathiScale.intervals = this.constructSpathiScale(
+    this.spathiKeScale.intervals = this.constructSpathiKeScale(
+      workspace.options.spathiIntervals,
+      workspace.options.diatonicIntervals,
+    );
+
+    this.spathiGaScale.intervals = this.constructSpathiGaScale(
       workspace.options.spathiIntervals,
       workspace.options.diatonicIntervals,
     );
@@ -503,8 +509,23 @@ export class PlaybackService {
     return [diatonicIntervals[0], ...klitonIntervals, ...diatonicIntervals];
   }
 
-  constructSpathiScale(spathiIntervals: number[], diatonicIntervals: number[]) {
+  constructSpathiKeScale(
+    spathiIntervals: number[],
+    diatonicIntervals: number[],
+  ) {
     return [...diatonicIntervals, ...spathiIntervals];
+  }
+
+  constructSpathiGaScale(
+    spathiIntervals: number[],
+    diatonicIntervals: number[],
+  ) {
+    return [
+      diatonicIntervals[0],
+      ...spathiIntervals,
+      diatonicIntervals[1],
+      diatonicIntervals[2],
+    ];
   }
 
   constructEnharmonicScale(workspace: PlaybackWorkspace) {
@@ -584,6 +605,11 @@ export class PlaybackService {
           this.diatonicScaleNoteToIntervalIndexMap;
         workspace.intervalIndex = this.enharmonicScale.scaleNoteMap.get(note!)!;
       }
+    } else if (
+      workspace.scale.name === PlaybackScaleName.SpathiKe &&
+      note === ScaleNote.Ga
+    ) {
+      workspace.scale = this.spathiGaScale;
     }
 
     if (
@@ -804,8 +830,16 @@ export class PlaybackService {
       workspace.scale = this.hardChromaticScale;
     } else if (modeKeyElement.scale === Scale.Kliton) {
       workspace.scale = this.klitonScale;
-    } else if (modeKeyElement.scale === Scale.Spathi) {
-      workspace.scale = this.spathiScale;
+    } else if (
+      modeKeyElement.scale === Scale.Spathi &&
+      modeKeyElement.scaleNote === ScaleNote.Ke
+    ) {
+      workspace.scale = this.spathiKeScale;
+    } else if (
+      modeKeyElement.scale === Scale.Spathi &&
+      modeKeyElement.scaleNote === ScaleNote.Ga
+    ) {
+      workspace.scale = this.spathiGaScale;
     }
 
     // TODO support mode keys with enharmonic fthora?
@@ -1489,8 +1523,8 @@ export class PlaybackService {
     [Fthora.Zygos_Top, PlaybackScaleName.Zygos],
     [Fthora.Zygos_Bottom, PlaybackScaleName.Zygos],
 
-    [Fthora.Spathi_Top, PlaybackScaleName.Spathi],
-    [Fthora.Spathi_Bottom, PlaybackScaleName.Spathi],
+    [Fthora.Spathi_Top, PlaybackScaleName.SpathiKe],
+    [Fthora.Spathi_Bottom, PlaybackScaleName.SpathiKe],
 
     [Fthora.Enharmonic_Top, PlaybackScaleName.Enharmonic],
     [Fthora.Enharmonic_Bottom, PlaybackScaleName.Enharmonic],
@@ -1842,13 +1876,23 @@ export class PlaybackService {
     ]),
   };
 
-  spathiScale: PlaybackScale = {
-    name: PlaybackScaleName.Spathi,
+  spathiKeScale: PlaybackScale = {
+    name: PlaybackScaleName.SpathiKe,
     intervals: [12, 10, 8, 20, 4, 4, 14],
     scaleNoteMap: this.diatonicScaleNoteToIntervalIndexMap,
     fthoraMap: new Map<Fthora, number>([
       [Fthora.Spathi_Top, 5],
       [Fthora.Spathi_Bottom, 5],
+    ]),
+  };
+
+  spathiGaScale: PlaybackScale = {
+    name: PlaybackScaleName.SpathiGa,
+    intervals: [12, 14, 4, 4, 20, 10, 8],
+    scaleNoteMap: this.diatonicScaleNoteToIntervalIndexMap,
+    fthoraMap: new Map<Fthora, number>([
+      [Fthora.Spathi_Top, 3],
+      [Fthora.Spathi_Bottom, 3],
     ]),
   };
 
@@ -1868,7 +1912,8 @@ export class PlaybackService {
     this.zygosScale,
     this.zygosLegetosScale,
     this.klitonScale,
-    this.spathiScale,
+    this.spathiKeScale,
+    this.spathiGaScale,
     this.enharmonicScale,
   ];
 }

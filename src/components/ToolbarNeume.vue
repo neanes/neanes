@@ -752,11 +752,14 @@ export default class ToolbarNeume extends Vue {
   }
 
   get spathiDisabled() {
-    return this.element.scaleNote !== ScaleNote.Ke;
+    return (
+      this.element.scaleNote !== ScaleNote.Ke &&
+      this.element.scaleNote !== ScaleNote.Ga
+    );
   }
 
   get spathiTitle() {
-    return this.spathiDisabled ? 'Spathi may only be placed on Ke' : '';
+    return this.spathiDisabled ? 'Spathi may only be placed on Ke or Ga' : '';
   }
 
   get klitonDisabled() {

@@ -1199,7 +1199,10 @@ export class LayoutService {
               klitonRootSignMap.get(currentScaleNote) || RootSign.Alpha;
           } else if (currentScale === Scale.Spathi) {
             martyria.rootSign =
-              spathiRootSignMap.get(currentScaleNote) || RootSign.Alpha;
+              spathiKeRootSignMap.get(currentScaleNote) || RootSign.Alpha;
+          } else if (currentScale === Scale.SpathiGa) {
+            martyria.rootSign =
+              spathiGaRootSignMap.get(currentScaleNote) || RootSign.Alpha;
           } else if (currentScale === Scale.EnharmonicGa) {
             martyria.rootSign =
               enharmonicGaRootSignMap.get(currentScaleNote) || RootSign.Alpha;
@@ -1282,7 +1285,12 @@ export class LayoutService {
     }
 
     if (fthora.startsWith('Spathi')) {
-      return Scale.Spathi;
+      if (currentNote === getScaleNoteValue(ScaleNote.Ke)) {
+        return Scale.Spathi;
+      }
+      if (currentNote === getScaleNoteValue(ScaleNote.Ga)) {
+        return Scale.SpathiGa;
+      }
     }
 
     if (fthora.startsWith('Kliton')) {
@@ -1356,7 +1364,8 @@ export class LayoutService {
 
     if (
       fthora.startsWith('Spathi') &&
-      currentNote !== getScaleNoteValue(ScaleNote.Ke)
+      currentNote !== getScaleNoteValue(ScaleNote.Ke) &&
+      currentNote !== getScaleNoteValue(ScaleNote.Ga)
     ) {
       return false;
     }
@@ -1504,10 +1513,16 @@ klitonRootSignMap.set(1, RootSign.Alpha);
 klitonRootSignMap.set(2, RootSign.Legetos);
 klitonRootSignMap.set(3, RootSign.Nana);
 
-const spathiRootSignMap = new Map<number, RootSign>(diatonicRootSignMap);
-spathiRootSignMap.set(3, RootSign.Squiggle);
-spathiRootSignMap.set(5, RootSign.Nana);
-spathiRootSignMap.set(6, RootSign.DeltaDotted);
+const spathiKeRootSignMap = new Map<number, RootSign>(diatonicRootSignMap);
+spathiKeRootSignMap.set(3, RootSign.Squiggle);
+spathiKeRootSignMap.set(5, RootSign.Nana);
+spathiKeRootSignMap.set(6, RootSign.DeltaDotted);
+
+const spathiGaRootSignMap = new Map<number, RootSign>(diatonicRootSignMap);
+spathiGaRootSignMap.set(0, RootSign.DeltaDotted);
+spathiGaRootSignMap.set(1, RootSign.AlphaDotted);
+spathiGaRootSignMap.set(3, RootSign.Tilt);
+spathiGaRootSignMap.set(4, RootSign.Squiggle);
 
 const enharmonicGaRootSignMap = new Map<number, RootSign>(diatonicRootSignMap);
 enharmonicGaRootSignMap.set(-1, RootSign.Nana);

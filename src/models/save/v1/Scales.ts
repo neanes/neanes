@@ -9,6 +9,7 @@ export enum Scale {
   EnharmonicVouHigh = 'EnharmonicVouHigh',
   Zygos = 'Zygos',
   Spathi = 'Spathi',
+  SpathiGa = 'SpathiGa',
   Kliton = 'Kliton',
 }
 

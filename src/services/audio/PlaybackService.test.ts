@@ -71,16 +71,30 @@ describe('PlaybackService', () => {
   });
 
   describe('constructSpathiScale', () => {
-    it('should construct the spathi scale', () => {
+    it('should construct the spathi scale from ke', () => {
       const service = new PlaybackService();
 
-      expect(service.constructSpathiScale([4, 5, 6, 7], [1, 2, 3])).toEqual([
+      expect(service.constructSpathiKeScale([4, 5, 6, 7], [1, 2, 3])).toEqual([
         1, 2, 3, 4, 5, 6, 7,
       ]);
 
-      expect(service.constructSpathiScale([20, 4, 4, 14], [12, 10, 8])).toEqual(
-        [12, 10, 8, 20, 4, 4, 14],
-      );
+      expect(
+        service.constructSpathiKeScale([20, 4, 4, 14], [12, 10, 8]),
+      ).toEqual([12, 10, 8, 20, 4, 4, 14]);
+    });
+  });
+
+  describe('constructSpathiGaScale', () => {
+    it('should construct the spathi scale from ga', () => {
+      const service = new PlaybackService();
+
+      expect(service.constructSpathiGaScale([2, 3, 4, 5], [1, 6, 7])).toEqual([
+        1, 2, 3, 4, 5, 6, 7,
+      ]);
+
+      expect(
+        service.constructSpathiGaScale([20, 4, 4, 14], [12, 10, 8]),
+      ).toEqual([12, 20, 4, 4, 14, 10, 8]);
     });
   });
 

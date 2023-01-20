@@ -350,15 +350,15 @@ export default class NeumeBoxSyllablePrint extends Vue {
   }
 
   get tieStyle() {
+    const offset = this.getOffset(this.note.tie!);
+
+    offset.x += this.note.tieOffsetX || 0;
+    offset.y += this.note.tieOffsetY || 0;
+
     return {
-      left:
-        this.note.tieOffsetX != null
-          ? withZoom(this.note.tieOffsetX, 'em')
-          : undefined,
-      top:
-        this.note.tieOffsetY != null
-          ? withZoom(this.note.tieOffsetY, 'em')
-          : undefined,
+      position: 'absolute',
+      left: withZoom(offset.x, 'em'),
+      top: withZoom(offset.y, 'em'),
     } as CSSStyleDeclaration;
   }
 

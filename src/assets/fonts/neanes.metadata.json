@@ -3,6 +3,10 @@
   "fontVersion": "001.000",
   "glyphsWithAnchors": {
     "ison": {
+      "yfenAbove": [
+        0.93,
+        0.641
+      ],
       "yfenBelow": [
         0.929,
         -0.04

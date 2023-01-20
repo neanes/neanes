@@ -89,6 +89,13 @@
       >
         <img src="@/assets/icons/quality-endofonon.svg" />
       </button>
+      <button
+        class="neume-button"
+        :disabled="expressionsDisabled"
+        @click="$emit('update:tie', [Tie.YfenBelow, Tie.YfenAbove])"
+      >
+        <img src="@/assets/icons/tie-yfen-below.svg" />
+      </button>
       <span class="space"></span>
       <ButtonWithMenu
         :options="flatMenuOptions"
@@ -423,6 +430,7 @@ import {
   MeasureNumber,
   QuantitativeNeume,
   restNeumes,
+  Tie,
   TimeNeume,
   VocalExpressionNeume,
 } from '@/models/Neumes';
@@ -446,6 +454,7 @@ export default class ToolbarNeume extends Vue {
   VocalExpressionNeume = VocalExpressionNeume;
   GorgonNeume = GorgonNeume;
   Fthora = Fthora;
+  Tie = Tie;
 
   chromaticFthoras = [
     Fthora.SoftChromaticPa_Top,

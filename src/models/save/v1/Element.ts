@@ -12,6 +12,7 @@ import {
   MeasureBar,
   MeasureNumber,
   Ison,
+  Tie,
 } from '@/models/save/v1/Neumes';
 import { Scale, ScaleNote } from './Scales';
 
@@ -56,6 +57,7 @@ export class NoteElement extends ScoreElement {
   public measureNumber: MeasureNumber | undefined = undefined;
   public noteIndicator: boolean | undefined = undefined;
   public ison: Ison | undefined = undefined;
+  public tie: Tie | undefined = undefined;
   public vareia: boolean | undefined = undefined;
   public koronis: boolean | undefined = undefined;
   public lyrics: string | undefined = undefined;
@@ -85,6 +87,8 @@ export class NoteElement extends ScoreElement {
   public noteIndicatorOffsetY: number | undefined = undefined;
   public secondaryGorgonNeumeOffsetX: number | undefined = undefined;
   public secondaryGorgonNeumeOffsetY: number | undefined = undefined;
+  public tieOffsetX: number | undefined = undefined;
+  public tieOffsetY: number | undefined = undefined;
   public timeNeumeOffsetX: number | undefined = undefined;
   public timeNeumeOffsetY: number | undefined = undefined;
   public vareiaOffsetX: number | undefined = undefined;

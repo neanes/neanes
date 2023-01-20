@@ -13,6 +13,7 @@ import {
   MeasureNumber,
   NoteIndicator,
   Ison,
+  Tie,
 } from '@/models/Neumes';
 import { Unit } from '@/utils/Unit';
 import { ModeKeyTemplate } from './ModeKeys';
@@ -63,6 +64,7 @@ export class NoteElement extends ScoreElement {
   public measureBarLeft: MeasureBar | null = null;
   public measureBarRight: MeasureBar | null = null;
   public measureNumber: MeasureNumber | null = null;
+  public tie: Tie | null = null;
   public noteIndicator: boolean = false;
   public ison: Ison | null = null;
   public vareia: boolean = false;
@@ -96,6 +98,8 @@ export class NoteElement extends ScoreElement {
   public noteIndicatorOffsetY: number | null = null;
   public secondaryGorgonNeumeOffsetX: number | null = null;
   public secondaryGorgonNeumeOffsetY: number | null = null;
+  public tieOffsetX: number | null = null;
+  public tieOffsetY: number | null = null;
   public timeNeumeOffsetX: number | null = null;
   public timeNeumeOffsetY: number | null = null;
   public vareiaOffsetX: number | null = null;

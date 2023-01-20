@@ -203,6 +203,25 @@
             />
           </div>
           <div class="form-group">
+            <label>Tie</label>
+            <InputUnit
+              :unit="unit"
+              :min="min"
+              :max="max"
+              :step="stepSize"
+              :precision="precision"
+              v-model="form.tieOffsetX"
+            />
+            <InputUnit
+              :unit="unit"
+              :min="min"
+              :max="max"
+              :step="stepSize"
+              :precision="precision"
+              v-model="form.tieOffsetY"
+            />
+          </div>
+          <div class="form-group">
             <label>Time</label>
             <InputUnit
               :unit="unit"

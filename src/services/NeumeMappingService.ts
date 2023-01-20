@@ -14,6 +14,7 @@ import {
   MeasureNumber,
   NoteIndicator,
   Ison,
+  Tie,
 } from '@/models/Neumes';
 
 import glyphnames from '@/assets/fonts/sbmufl/glyphnames.json';
@@ -501,6 +502,9 @@ mapNeumeToSbmufl(Ison.Ga, 'isonIndicatorGa');
 mapNeumeToSbmufl(Ison.Thi, 'isonIndicatorDi');
 mapNeumeToSbmufl(Ison.Ke, 'isonIndicatorKe');
 mapNeumeToSbmufl(Ison.ZoHigh, 'isonIndicatorZoHigh');
+
+mapNeumeToSbmufl(Tie.YfenAbove, 'yfenAbove');
+mapNeumeToSbmufl(Tie.YfenBelow, 'yfenBelow');
 
 export class NeumeMappingService {
   public static getMapping(neume: Neume): NeumeMapping {

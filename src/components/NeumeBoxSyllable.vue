@@ -54,6 +54,7 @@
       :neume="note.measureBarRight"
       :style="measureBarRightStyle"
     />
+    <Neume v-if="hasTie" :neume="note.tie" :style="tieStyle" />
   </div>
 </template>
 
@@ -115,6 +116,10 @@ export default class NeumeBoxSyllable extends Vue {
 
   get hasIson() {
     return this.note.ison != null;
+  }
+
+  get hasTie() {
+    return this.note.tie != null;
   }
 
   get style() {
@@ -339,6 +344,19 @@ export default class NeumeBoxSyllable extends Vue {
     }
 
     return style;
+  }
+
+  get tieStyle() {
+    return {
+      left:
+        this.note.tieOffsetX != null
+          ? withZoom(this.note.tieOffsetX, 'em')
+          : undefined,
+      top:
+        this.note.tieOffsetY != null
+          ? withZoom(this.note.tieOffsetY, 'em')
+          : undefined,
+    } as CSSStyleDeclaration;
   }
 }
 </script>

@@ -57,6 +57,7 @@
       :neume="note.measureBarRight"
       :style="measureBarRightStyle"
     />
+    <Neume v-if="hasTie" :neume="note.tie" :style="tieStyle" />
   </div>
 </template>
 
@@ -131,6 +132,10 @@ export default class NeumeBoxSyllablePrint extends Vue {
 
   get hasIson() {
     return this.note.ison != null;
+  }
+
+  get hasTie() {
+    return this.note.tie != null;
   }
 
   get style() {
@@ -341,6 +346,19 @@ export default class NeumeBoxSyllablePrint extends Vue {
       top: withZoom(offset.y, 'em'),
       color: this.pageSetup.heteronDefaultColor,
       webkitTextStrokeWidth: withZoom(this.pageSetup.heteronDefaultStrokeWidth),
+    } as CSSStyleDeclaration;
+  }
+
+  get tieStyle() {
+    return {
+      left:
+        this.note.tieOffsetX != null
+          ? withZoom(this.note.tieOffsetX, 'em')
+          : undefined,
+      top:
+        this.note.tieOffsetY != null
+          ? withZoom(this.note.tieOffsetY, 'em')
+          : undefined,
     } as CSSStyleDeclaration;
   }
 

@@ -331,6 +331,12 @@ export class SaveService {
       element.isonOffsetY = e.isonOffsetY || undefined;
     }
 
+    if (e.tie != null) {
+      element.tie = e.tie;
+      element.tieOffsetX = e.tieOffsetX || undefined;
+      element.tieOffsetY = e.tieOffsetY || undefined;
+    }
+
     if (e.vareia) {
       element.vareiaOffsetX = e.vareiaOffsetX || undefined;
       element.vareiaOffsetY = e.vareiaOffsetY || undefined;
@@ -760,6 +766,12 @@ export class SaveService {
       element.ison = e.ison;
       element.isonOffsetX = e.isonOffsetX ?? null;
       element.isonOffsetY = e.isonOffsetY ?? null;
+    }
+
+    if (e.tie != null) {
+      element.tie = e.tie;
+      element.tieOffsetX = e.tieOffsetX ?? null;
+      element.tieOffsetY = e.tieOffsetY ?? null;
     }
 
     if (e.lyrics != null) {

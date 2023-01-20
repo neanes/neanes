@@ -2,7 +2,6 @@
 
 ## Nice-to-haves
 
-- Advanced neumes (e.g. ties)
 - Header Images
 - Configurable Neume Keyboard
 - Better styling

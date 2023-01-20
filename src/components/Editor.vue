@@ -441,6 +441,7 @@
         @update:ison="setIson(selectedElement, $event)"
         @update:koronis="updateNoteKoronis(selectedElement, $event)"
         @update:vareia="updateNoteVareia(selectedElement, $event)"
+        @update:tie="setTie(selectedElement, $event)"
         @update:spaceAfter="updateNoteSpaceAfter(selectedElement, $event)"
         @update:ignoreAttractions="
           updateNoteIgnoreAttractions(selectedElement, $event)
@@ -540,6 +541,7 @@ import {
   MeasureNumber,
   Ison,
   Note,
+  Tie,
 } from '@/models/Neumes';
 import { Page } from '@/models/Page';
 import { Score } from '@/models/Score';
@@ -860,6 +862,7 @@ export default class Editor extends Vue {
     this.setMeasureBarMartyria,
   );
   setIsonThrottled = throttle(this.keydownThrottleIntervalMs, this.setIson);
+  setTieThrottled = throttle(this.keydownThrottleIntervalMs, this.setTie);
   setVocalExpressionThrottled = throttle(
     this.keydownThrottleIntervalMs,
     this.setVocalExpression,
@@ -2110,11 +2113,22 @@ export default class Editor extends Vue {
           if (vocalExpressionMapping.neume === VocalExpressionNeume.Vareia) {
             this.updateNoteVareiaThrottled(noteElement, !noteElement.vareia);
           } else {
-            this.setVocalExpression(
+            this.setVocalExpressionThrottled(
               noteElement,
               vocalExpressionMapping.neume as VocalExpressionNeume,
             );
           }
+        }
+
+        const tieMapping = this.neumeKeyboard.findTieMapping(
+          event,
+          this.keyboardModifier,
+        );
+
+        if (tieMapping != null) {
+          handled = true;
+
+          this.setTieThrottled(noteElement, tieMapping.neumes as Tie[]);
         }
 
         const fthoraMapping = this.neumeKeyboard.findFthoraMapping(
@@ -3303,6 +3317,30 @@ export default class Editor extends Vue {
     }
   }
 
+  private setTie(element: NoteElement, neumes: Tie[]) {
+    let equivalent = false;
+
+    for (let neume of neumes) {
+      // If previous neume was matched, set to the next neume in the cycle
+      if (equivalent) {
+        this.updateNoteTie(element, neume);
+        return;
+      }
+
+      equivalent = element.tie === neume;
+    }
+
+    // We've cycled through all the neumes.
+    // If we got to the end of the cycle, remove all
+    // fthora neumes. Otherwise set fthora to the first neume
+    // in the cycle.
+    if (equivalent) {
+      this.updateNoteTie(element, null);
+    } else {
+      this.updateNoteTie(element, neumes[0]);
+    }
+  }
+
   addScoreElement(element: ScoreElement, insertAtIndex?: number) {
     this.commandService.execute(
       this.scoreElementCommandFactory.create('add-to-collection', {
@@ -3454,6 +3492,11 @@ export default class Editor extends Vue {
 
   updateNoteVareia(element: NoteElement, vareia: boolean) {
     this.updateNote(element, { vareia });
+    this.save();
+  }
+
+  updateNoteTie(element: NoteElement, tie: Tie | null) {
+    this.updateNote(element, { tie });
     this.save();
   }
 

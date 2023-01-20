@@ -347,6 +347,11 @@ export enum Ison {
   ZoHigh = 'Ison.ZoHigh',
 }
 
+export enum Tie {
+  YfenAbove = 'YfenAbove',
+  YfenBelow = 'YfenBelow',
+}
+
 export type Neume =
   | QuantitativeNeume
   | TimeNeume
@@ -361,7 +366,8 @@ export type Neume =
   | MeasureBar
   | MeasureNumber
   | NoteIndicator
-  | Ison;
+  | Ison
+  | Tie;
 
 export const petastiNeumes: ReadonlyArray<QuantitativeNeume> = [
   QuantitativeNeume.PetastiWithIson,

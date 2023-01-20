@@ -11,6 +11,7 @@ import {
   TempoSign,
   MeasureBar,
   Note,
+  Tie,
 } from '@/models/Neumes';
 import { Scale } from '@/models/Scales';
 import { NeumeMappingService } from './NeumeMappingService';
@@ -70,6 +71,7 @@ export class NeumeKeyboard {
   private gorgonKeyboardMap: KeyboardMapping[] = [];
   private fthoraKeyboardMap: KeyboardMapping[] = [];
   private vocalExpressionKeyboardMap: KeyboardMapping[] = [];
+  private tieKeyboardMap: KeyboardMapping[] = [];
   private accidentalKeyboardMap: KeyboardMapping[] = [];
   private hapliKeyboardMap: KeyboardMapping[] = [];
   private measureNumberKeyboardMap: KeyboardMapping[] = [];
@@ -85,6 +87,7 @@ export class NeumeKeyboard {
     this.initFthoraKeyboardMap();
     this.initAccidentalKeyboardMap();
     this.initVocalExpressionKeyboardMap();
+    this.initTieKeyboardMap();
     this.initHapliKeyboardMap();
     this.initMeasureNumberKeyboardMap();
     this.initIsonKeyboardMap();
@@ -626,6 +629,14 @@ export class NeumeKeyboard {
       code: 'Comma',
       modifier: this.vocalExpressionKey,
       neume: VocalExpressionNeume.Endofonon,
+    });
+  }
+
+  private initTieKeyboardMap() {
+    this.tieKeyboardMap.push({
+      code: 'Period',
+      modifier: this.vocalExpressionKey,
+      neumes: [Tie.YfenBelow, Tie.YfenAbove],
     });
   }
 
@@ -1627,6 +1638,7 @@ export class NeumeKeyboard {
       this.measureNumberKeyboardMap.find((x) => x.neume === neume) ||
       this.martyriaConfigKeyboardMap.find((x) => x.note === neume) ||
       this.vocalExpressionKeyboardMap.find((x) => x.neume === neume) ||
+      this.tieKeyboardMap.find((x) => x.neumes?.includes(neume)) ||
       this.quantitativeNeumeKeyboardMap.find((x) => x.neume === neume)
     );
   }
@@ -1713,5 +1725,9 @@ export class NeumeKeyboard {
       event,
       activeModifier,
     );
+  }
+
+  public findTieMapping(event: KeyboardEvent, activeModifier: string | null) {
+    return this.findMapping(this.tieKeyboardMap, event, activeModifier);
   }
 }

@@ -19,6 +19,7 @@ import {
   NoteIndicator,
   QuantitativeNeume,
   RootSign,
+  Tie,
   VocalExpressionNeume,
 } from '@/models/Neumes';
 import { getNeumeValue } from '@/models/NeumeValues';
@@ -249,7 +250,13 @@ export class LayoutService {
             VocalExpressionNeume.HeteronConnecting,
             VocalExpressionNeume.HeteronConnectingLong,
             VocalExpressionNeume.HomalonConnecting,
+            Tie.YfenAbove,
+            Tie.YfenBelow,
           ];
+
+          const noteTied =
+            ties.includes(noteElement.vocalExpressionNeume!) ||
+            ties.includes(noteElement.tie!);
 
           if (
             nextElement != null &&
@@ -259,8 +266,7 @@ export class LayoutService {
               this.getMartyriaWidth(nextElement as MartyriaElement, pageSetup) +
               pageSetup.neumeDefaultSpacing;
           } else if (
-            noteElement.vocalExpressionNeume != null &&
-            ties.includes(noteElement?.vocalExpressionNeume) &&
+            noteTied &&
             nextElement?.elementType === ElementType.Note
           ) {
             additionalWidth =

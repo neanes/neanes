@@ -2,14 +2,15 @@
   <ModalDialog>
     <div class="container">
       <div class="header">Neume Positioning</div>
-      <div class="pane-container">
-        <div class="top-pane">
-          <!-- <template v-if="hasPreviousElement">
+      <div class="pane-container" :style="paneContainerStyle">
+        <div class="top-pane" :style="topPaneStyle">
+          <template v-if="hasPreviousElement">
             <NeumeBoxSyllable
               v-if="previousElement.elementType === ElementType.Note"
               class="other-neume"
               :note="previousElement"
               :pageSetup="pageSetup"
+              :style="previousElementStyle"
             />
 
             <NeumeBoxMartyria
@@ -17,6 +18,7 @@
               class="other-neume"
               :neume="previousElement"
               :pageSetup="pageSetup"
+              :style="previousElementStyle"
             />
 
             <NeumeBoxTempo
@@ -24,10 +26,11 @@
               class="other-neume"
               :neume="previousElement"
               :pageSetup="pageSetup"
+              :style="previousElementStyle"
             />
-          </template> -->
+          </template>
 
-          <div class="neume-container">
+          <div class="neume-container" :style="mainStyle">
             <NeumeBoxSyllable :note="form" :pageSetup="pageSetup" />
             <DragHandle
               v-if="hasAccidental"
@@ -156,12 +159,13 @@
               @update="updateQualityOffset($event)"
             />
           </div>
-          <!-- <template v-if="hasNextElement">
+          <template v-if="hasNextElement">
             <NeumeBoxSyllable
               v-if="nextElement.elementType === ElementType.Note"
               class="other-neume"
               :note="nextElement"
               :pageSetup="pageSetup"
+              :style="nextElementStyle"
             />
 
             <NeumeBoxMartyria
@@ -169,6 +173,7 @@
               class="other-neume"
               :neume="nextElement"
               :pageSetup="pageSetup"
+              :style="nextElementStyle"
             />
 
             <NeumeBoxTempo
@@ -176,8 +181,9 @@
               class="other-neume"
               :neume="nextElement"
               :pageSetup="pageSetup"
+              :style="nextElementStyle"
             />
-          </template> -->
+          </template>
         </div>
         <div class="bottom-pane">
           <div class="form-group">
@@ -501,6 +507,8 @@ export default class SyllablePositioningDialog extends Vue {
   precision: number = 2;
   unit: string = 'unitless';
 
+  paneContainerWidthPx = 420;
+
   get hasNextElement() {
     return (
       this.nextElement?.elementType === ElementType.Note ||
@@ -559,6 +567,44 @@ export default class SyllablePositioningDialog extends Vue {
 
   get hasTie() {
     return this.form.tie != null;
+  }
+
+  get centerLeft() {
+    return this.paneContainerWidthPx / 2;
+  }
+
+  get previousElementStyle() {
+    return {
+      left: `calc(${this.centerLeft}px - ${
+        this.element.x - this.previousElement.x
+      }px * var(--zoom, 1))`,
+    } as CSSStyleDeclaration;
+  }
+
+  get nextElementStyle() {
+    return {
+      left: `calc(${this.centerLeft}px + ${
+        this.nextElement.x - this.element.x
+      }px * var(--zoom, 1))`,
+    } as CSSStyleDeclaration;
+  }
+
+  get mainStyle() {
+    return {
+      left: this.centerLeft + 'px',
+    } as CSSStyleDeclaration;
+  }
+
+  get topPaneStyle() {
+    return {
+      height: this.pageSetup.lineHeight + 'px',
+    } as CSSStyleDeclaration;
+  }
+
+  get paneContainerStyle() {
+    return {
+      width: this.paneContainerWidthPx + 'px',
+    } as CSSStyleDeclaration;
   }
 
   created() {
@@ -669,7 +715,6 @@ export default class SyllablePositioningDialog extends Vue {
 .pane-container {
   display: flex;
   flex-direction: column;
-  width: 420px;
   margin-bottom: 1.5rem;
   overflow: auto;
   flex: 1;
@@ -715,10 +760,11 @@ export default class SyllablePositioningDialog extends Vue {
 }
 
 .neume-container {
-  position: relative;
+  position: absolute;
 }
 
 .other-neume {
+  position: absolute;
   opacity: 0.5;
 }
 </style>

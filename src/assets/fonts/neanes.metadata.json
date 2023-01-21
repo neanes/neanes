@@ -2776,7 +2776,7 @@
         -0.2
       ],
       "koronis": [
-        0.783,
+        0.686,
         0.801
       ],
       "endofonon": [
@@ -2836,7 +2836,7 @@
         0.619
       ],
       "klasmaTop": [
-        0.893,
+        0.793,
         0.487
       ],
       "gorgonTop": [
@@ -5565,6 +5565,10 @@
       ]
     },
     "oligonKentimataBelow.alt01": {
+      "koronis": [
+        0.686,
+        0.801
+      ],
       "measureNumber": [
         0.172,
         0.753

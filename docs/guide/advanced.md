@@ -29,7 +29,7 @@ Several other tokens are available. Below is a list of currently supported token
 
 ## Fine-tuning Neume Positions
 
-Sometimes the font is unable to properly position neumes when there are multiple supporting neumes. To fix collisions, either double click the neume click the `Positioning` button in the neume toolbar.
+Sometimes the font is unable to properly position neumes when there are multiple supporting neumes. To fix collisions, either double-click the neume or click the `Positioning` button in the neume toolbar.
 
 ![Neume Toolbar Positioning Button](./images/guide-neume-toolbar-positioning.png)
 
@@ -37,7 +37,7 @@ This will open the neume positioning dialog.
 
 ![Neume Toolbar Positioning Button](./images/guide-neume-positioning-dialog-1.png)
 
-You can move neumes by either clicking a drag handle (the small blue box near the neume) and moving the mouse, or by directly using the `Left` and `Top` input boxes.
+You can move neumes by either clicking a drag handle (the small blue box near the neume) and moving the mouse, or by editing the values in the `Left` and `Top` input boxes.
 
 - To move a neume **left**, **decrease** the `Left` number.
 - To move a neume **right**, **increase** the `Left` number.

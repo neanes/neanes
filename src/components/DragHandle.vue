@@ -116,5 +116,6 @@ export default class DragHandle extends Vue {
   z-index: 999;
   background-color: lightskyblue;
   display: inline-block;
+  opacity: 0.6;
 }
 </style>

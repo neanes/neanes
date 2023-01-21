@@ -29,6 +29,26 @@ class FontService {
       y: -(baseAnchor[1] - markAnchor[1]),
     };
   }
+
+  getMarkAnchorOffset(base: SbmuflGlyphName, mark: SbmuflGlyphName) {
+    const markAnchorName = Object.keys(
+      (metadata.glyphsWithAnchors as any)[mark],
+    ).find((x) => (metadata.glyphsWithAnchors as any)[base][x] != null);
+
+    if (markAnchorName == null) {
+      console.warn(`Missing anchor for base: ${base} mark: ${mark}`);
+      return { x: 0, y: 0 };
+    }
+
+    const baseAnchor = (metadata.glyphsWithAnchors as any)[base][
+      markAnchorName
+    ] as number[];
+
+    return {
+      x: baseAnchor[0],
+      y: metadata.metrics.winAscent - baseAnchor[1],
+    };
+  }
 }
 
 const fontService = new FontService();

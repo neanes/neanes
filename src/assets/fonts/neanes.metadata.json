@@ -1,6 +1,10 @@
 {
   "fontName": "Neanes",
   "fontVersion": "001.000",
+  "metrics": {
+    "winAscent": 1.4,
+    "winDescent": 0.466
+  },
   "glyphsWithAnchors": {
     "ison": {
       "yfenAbove": [

@@ -57,6 +57,9 @@ export abstract class ScoreElement {
 
   // This is used to help force components to re-render
   public keyHelper: number = 0;
+
+  // Used internally, not saved
+  public line: number = 0;
 }
 
 export class NoteElement extends ScoreElement {

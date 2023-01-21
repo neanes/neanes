@@ -436,6 +436,8 @@ export class LayoutService {
         lastLineHeightPx;
       element.width = elementWidthPx;
 
+      element.line = page.lines.length;
+
       // Special logic to adjust drop caps.
       // This aligns the bottom of the drop cap with
       // the bottom of the lyrics.

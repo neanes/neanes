@@ -100,19 +100,19 @@ export default class InputUnit extends Vue {
     }
   }
 
-  toDisplay(value: number) {
+  toDisplay(value: number | null) {
     switch (this.unit) {
       case 'pt':
-        return Unit.toPt(value);
+        return Unit.toPt(value!);
       case 'in':
-        return Unit.toInch(value);
+        return Unit.toInch(value!);
       case 'mm':
-        return Unit.toMm(value);
+        return Unit.toMm(value!);
       case 'unitless':
-        return value;
+        return value ?? 0;
       default:
         console.error(`Unsupported unit ${this.unit}`);
-        return value;
+        return value ?? 0;
     }
   }
 

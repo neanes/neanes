@@ -147,6 +147,8 @@
                         ]"
                         @click.native.exact="selectedElement = element"
                         @click.native.shift.exact="setSelectionRange(element)"
+                        @dblclick.native="openSyllablePositioningDialog"
+                        @update="updateNoteAndSave(element, $event)"
                       />
                       <SyllableNeumeBoxPrint
                         v-if="isBrowser && printMode"
@@ -487,6 +489,8 @@
     <SyllablePositioningDialog
       v-if="syllablePositioningDialogIsOpen"
       :element="selectedElement"
+      :previousElement="previousElementOnLine"
+      :nextElement="nextElementOnLine"
       :pageSetup="score.pageSetup"
       @update="updateNoteAndSave(selectedElement, $event)"
       @close="closeSyllablePositioningDialog"
@@ -979,6 +983,30 @@ export default class Editor extends Vue {
     }
 
     this.selectedWorkspace.selectedElement = element;
+  }
+
+  get previousElementOnLine() {
+    const index = this.selectedElementIndex;
+
+    if (index - 1 < 0) {
+      return null;
+    }
+
+    return this.elements[index - 1].line === this.selectedElement?.line
+      ? this.elements[index - 1]
+      : null;
+  }
+
+  get nextElementOnLine() {
+    const index = this.selectedElementIndex;
+
+    if (index + 1 >= this.elements.length - 1) {
+      return null;
+    }
+
+    return this.elements[index + 1].line === this.selectedElement?.line
+      ? this.elements[index + 1]
+      : null;
   }
 
   get selectedLyrics() {

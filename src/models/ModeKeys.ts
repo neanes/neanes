@@ -282,6 +282,16 @@ export const modeKeyTemplates: ModeKeyTemplate[] = [
     quantitativeNeumeAboveNote2: ModeSign.OligonPlusKentima,
   },
   {
+    id: 604,
+    mode: 6,
+    scale: Scale.HardChromatic,
+    scaleNote: ScaleNote.PaHigh,
+    martyria: ModeSign.SoftChromatic6,
+    quantitativeNeumeRight:
+      QuantitativeNeume.OligonPlusHypsiliPlusKentimaVertical,
+    fthoraAboveQuantitativeNeumeRight: Fthora.HardChromaticThi_Top,
+  },
+  {
     id: 700,
     mode: 7,
     scale: Scale.Diatonic,

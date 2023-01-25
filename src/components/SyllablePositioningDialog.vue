@@ -37,6 +37,7 @@
               :note="form"
               :mark="form.accidental"
               :fontSize="pageSetup.neumeDefaultFontSize"
+              :zoom="zoom"
               :x="form.accidentalOffsetX"
               :y="form.accidentalOffsetY"
               @update="updateAccidentalOffset($event)"
@@ -46,6 +47,7 @@
               :note="form"
               :mark="form.measureBarLeft"
               :fontSize="pageSetup.neumeDefaultFontSize"
+              :zoom="zoom"
               :x="form.measureBarLeftOffsetX"
               :y="form.measureBarLeftOffsetY"
               @update="updateMeasureBarLeftOffset($event)"
@@ -55,6 +57,7 @@
               :note="form"
               :mark="form.measureBarRight"
               :fontSize="pageSetup.neumeDefaultFontSize"
+              :zoom="zoom"
               :x="form.measureBarRightOffsetX"
               :y="form.measureBarRightOffsetY"
               @update="updateMeasureBarRightOffset($event)"
@@ -64,6 +67,7 @@
               :note="form"
               :mark="form.fthora"
               :fontSize="pageSetup.neumeDefaultFontSize"
+              :zoom="zoom"
               :x="form.fthoraOffsetX"
               :y="form.fthoraOffsetY"
               @update="updateFthoraOffset($event)"
@@ -73,6 +77,7 @@
               :note="form"
               :mark="form.gorgonNeume"
               :fontSize="pageSetup.neumeDefaultFontSize"
+              :zoom="zoom"
               :x="form.gorgonNeumeOffsetX"
               :y="form.gorgonNeumeOffsetY"
               @update="updateGorgonOffset($event)"
@@ -82,6 +87,7 @@
               :note="form"
               :mark="form.secondaryGorgonNeume"
               :fontSize="pageSetup.neumeDefaultFontSize"
+              :zoom="zoom"
               :x="form.secondaryGorgonNeumeOffsetX"
               :y="form.secondaryGorgonNeumeOffsetY"
               @update="updateGorgon2Offset($event)"
@@ -91,6 +97,7 @@
               :note="form"
               :mark="form.ison"
               :fontSize="pageSetup.neumeDefaultFontSize"
+              :zoom="zoom"
               :x="form.isonOffsetX"
               :y="form.isonOffsetY"
               @update="updateIsonOffset($event)"
@@ -100,6 +107,7 @@
               :note="form"
               :mark="TimeNeume.Koronis"
               :fontSize="pageSetup.neumeDefaultFontSize"
+              :zoom="zoom"
               :x="form.koronisOffsetX"
               :y="form.koronisOffsetY"
               @update="updateKoronisOffset($event)"
@@ -109,6 +117,7 @@
               :note="form"
               :mark="form.measureNumber"
               :fontSize="pageSetup.neumeDefaultFontSize"
+              :zoom="zoom"
               :x="form.measureNumberOffsetX"
               :y="form.measureNumberOffsetY"
               @update="updateMeasureNumberOffset($event)"
@@ -118,6 +127,7 @@
               :note="form"
               :mark="form.noteIndicatorNeume"
               :fontSize="pageSetup.neumeDefaultFontSize"
+              :zoom="zoom"
               :x="form.noteIndicatorOffsetX"
               :y="form.noteIndicatorOffsetY"
               @update="updateNoteIndicatorOffset($event)"
@@ -127,6 +137,7 @@
               :note="form"
               :mark="form.tie"
               :fontSize="pageSetup.neumeDefaultFontSize"
+              :zoom="zoom"
               :x="form.tieOffsetX"
               :y="form.tieOffsetY"
               @update="updateTieOffset($event)"
@@ -136,6 +147,7 @@
               :note="form"
               :mark="form.timeNeume"
               :fontSize="pageSetup.neumeDefaultFontSize"
+              :zoom="zoom"
               :x="form.timeNeumeOffsetX"
               :y="form.timeNeumeOffsetY"
               @update="updateTimeOffset($event)"
@@ -145,6 +157,7 @@
               :note="form"
               :mark="VocalExpressionNeume.Vareia"
               :fontSize="pageSetup.neumeDefaultFontSize"
+              :zoom="zoom"
               :x="form.vareiaOffsetX"
               :y="form.vareiaOffsetY"
               @update="updateVareiaOffset($event)"
@@ -154,6 +167,7 @@
               :note="form"
               :mark="form.vocalExpressionNeume"
               :fontSize="pageSetup.neumeDefaultFontSize"
+              :zoom="zoom"
               :x="form.vocalExpressionNeumeOffsetX"
               :y="form.vocalExpressionNeumeOffsetY"
               @update="updateQualityOffset($event)"
@@ -509,6 +523,8 @@ export default class SyllablePositioningDialog extends Vue {
 
   paneContainerWidthPx = 420;
 
+  zoom = 2;
+
   get hasNextElement() {
     return (
       this.nextElement?.elementType === ElementType.Note ||
@@ -597,7 +613,7 @@ export default class SyllablePositioningDialog extends Vue {
 
   get topPaneStyle() {
     return {
-      height: this.pageSetup.lineHeight + 'px',
+      height: this.pageSetup.lineHeight * this.zoom + 'px',
     } as CSSStyleDeclaration;
   }
 
@@ -766,5 +782,13 @@ export default class SyllablePositioningDialog extends Vue {
 .other-neume {
   position: absolute;
   opacity: 0.5;
+}
+
+.neume {
+  --zoom: 2;
+}
+
+.handle {
+  --zoom: 2;
 }
 </style>

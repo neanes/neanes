@@ -20,10 +20,11 @@ export default class DragHandle extends Vue {
   @Prop() x!: number | null;
   @Prop() y!: number | null;
   @Prop() fontSize!: number;
+  @Prop({ default: 1 }) zoom!: number;
   @Prop() note!: NoteElement;
   @Prop() mark!: Neume;
-  @Prop({ default: 0.25 }) height!: number;
-  @Prop({ default: 0.25 }) width!: number;
+  @Prop({ default: 8 }) height!: number;
+  @Prop({ default: 8 }) width!: number;
 
   startX: number = 0;
   startY: number = 0;
@@ -42,8 +43,8 @@ export default class DragHandle extends Vue {
   handleMouseDown(e: MouseEvent) {
     e.preventDefault();
 
-    this.startX = e.clientX - (this.x ?? 0) * this.fontSize;
-    this.startY = e.clientY - (this.y ?? 0) * this.fontSize;
+    this.startX = e.clientX - (this.x ?? 0) * this.fontSize * this.zoom;
+    this.startY = e.clientY - (this.y ?? 0) * this.fontSize * this.zoom;
 
     document.addEventListener('mouseup', this.handleMouseUp);
     document.addEventListener('mousemove', this.handleMouseMove);
@@ -52,8 +53,8 @@ export default class DragHandle extends Vue {
   handleMouseMove(e: MouseEvent) {
     e.preventDefault();
 
-    const x = (e.clientX - this.startX) / this.fontSize;
-    const y = (e.clientY - this.startY) / this.fontSize;
+    const x = (e.clientX - this.startX) / this.fontSize / this.zoom;
+    const y = (e.clientY - this.startY) / this.fontSize / this.zoom;
 
     this.$emit('update', { x, y });
   }
@@ -64,16 +65,16 @@ export default class DragHandle extends Vue {
   }
 
   get handleStyle() {
-    const left = this.offset.x + (this.x ?? 0) - this.width / 2;
-    const top = this.offset.y + (this.y ?? 0) - this.height / 2;
+    const left = this.offset.x + (this.x ?? 0);
+    const top = this.offset.y + (this.y ?? 0);
 
     return {
       position: 'absolute',
-      left: left + 'em',
-      top: top + 'em',
+      left: `calc(${left}em - ${(this.zoom * this.width) / 2}px)`,
+      top: `calc(${top}em - ${(this.zoom * this.height) / 2}px)`,
       fontSize: withZoom(this.fontSize),
-      height: withZoom(this.height, 'em'),
-      width: withZoom(this.width, 'em'),
+      height: withZoom(this.height),
+      width: withZoom(this.width),
     } as CSSStyleDeclaration;
   }
 

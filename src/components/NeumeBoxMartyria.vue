@@ -91,4 +91,9 @@ export default class NeumeBoxMartyria extends Vue {
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+.neume {
+  cursor: default;
+  user-select: none;
+}
+</style>

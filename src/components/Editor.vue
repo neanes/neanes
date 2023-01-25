@@ -204,7 +204,8 @@
                             'no-print': isBrowser,
                           },
                         ]"
-                        @click.native="selectedElement = element"
+                        @click.native.exact="selectedElement = element"
+                        @click.native.shift.exact="setSelectionRange(element)"
                       />
                       <MartyriaNeumeBoxPrint
                         v-if="isBrowser && printMode"

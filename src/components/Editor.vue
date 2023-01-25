@@ -2377,7 +2377,7 @@ export default class Editor extends Vue {
     } else {
       switch (event.code) {
         case 'Space':
-          this.moveToNextLyricBoxThrottled();
+          this.moveToNextLyricBoxThrottled(true);
           handled = true;
           break;
         case 'ArrowLeft':
@@ -2865,7 +2865,7 @@ export default class Editor extends Vue {
     return -1;
   }
 
-  moveToNextLyricBox() {
+  moveToNextLyricBox(clearMelisma: boolean = false) {
     const nextIndex = this.getNextLyricBoxIndex();
 
     if (nextIndex >= 0) {
@@ -2888,7 +2888,7 @@ export default class Editor extends Vue {
         ] as ContentEditable[]
       )[0].getInnerText();
 
-      this.updateLyrics(noteElement, text);
+      this.updateLyrics(noteElement, text, clearMelisma);
 
       Vue.nextTick(() => {
         this.focusLyrics(nextIndex, true);
@@ -3550,7 +3550,11 @@ export default class Editor extends Vue {
     this.save();
   }
 
-  updateLyrics(element: NoteElement, lyrics: string) {
+  updateLyrics(
+    element: NoteElement,
+    lyrics: string,
+    clearMelisma: boolean = false,
+  ) {
     // Replace newlines. This should only happen if the user pastes
     // text containing new lines.
     const sanitizedLyrics = lyrics.replace(/(?:\r\n|\r|\n)/g, ' ');
@@ -3561,7 +3565,7 @@ export default class Editor extends Vue {
       element.keyHelper++;
     }
 
-    if (element.lyrics === lyrics) {
+    if (element.lyrics === lyrics && !(element.isMelisma && clearMelisma)) {
       return;
     }
 

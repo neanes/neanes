@@ -131,6 +131,14 @@ export default class FileMenuBar extends Vue {
         }
         event.preventDefault();
         return;
+      } else if (event.shiftKey && event.code === 'KeyP') {
+        this.onClickPageSetup();
+        event.preventDefault();
+        return;
+      } else if (event.code === 'Comma') {
+        this.onClickPreferences();
+        event.preventDefault();
+        return;
       }
     }
   }

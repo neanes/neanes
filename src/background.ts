@@ -600,6 +600,7 @@ function createMenu() {
         { type: 'separator' },
         {
           label: 'Page Setup',
+          accelerator: 'CmdOrCtrl+Shift+P',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuPageSetup);
           },
@@ -686,6 +687,7 @@ function createMenu() {
         { type: 'separator' },
         {
           label: '&Preferences',
+          accelerator: 'CmdOrCtrl+,',
           click(menuItem, browserWindow, event) {
             win?.webContents.send(IpcMainChannels.FileMenuPreferences);
           },

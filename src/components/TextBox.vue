@@ -89,6 +89,10 @@ export default class TextBox extends Vue {
     this.$emit('update:content', content);
   }
 
+  blur() {
+    this.textElement.blur();
+  }
+
   focus() {
     this.textElement.focus(true);
   }

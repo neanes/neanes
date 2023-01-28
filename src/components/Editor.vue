@@ -269,9 +269,7 @@
                       :element="element"
                       :editMode="true"
                       :metadata="getTokenMetadata(pageIndex)"
-                      :class="[
-                        { selectedTextbox: element === selectedElement },
-                      ]"
+                      :class="[{ selectedTextbox: isSelected(element) }]"
                       @click.native="selectedElement = element"
                       @update:content="updateTextBoxContent(element, $event)"
                     />
@@ -289,7 +287,7 @@
                       :pageSetup="score.pageSetup"
                       :class="[
                         {
-                          selectedTextbox: element === selectedElement,
+                          selectedTextbox: isSelected(element),
                           'no-print': isBrowser,
                         },
                       ]"
@@ -317,6 +315,11 @@
                       }`"
                       :element="element"
                       :pageSetup="score.pageSetup"
+                      :class="[
+                        {
+                          selectedTextbox: isSelected(element),
+                        },
+                      ]"
                       @click.native="selectedElement = element"
                       @update:content="updateDropCapContent(element, $event)"
                     />
@@ -1993,11 +1996,12 @@ export default class Editor extends Vue {
       return this.onKeydownLyrics(event);
     }
 
-    if (
-      this.selectedElement != null &&
-      this.selectedElement.elementType === ElementType.DropCap
-    ) {
+    if (this.selectedElement?.elementType === ElementType.DropCap) {
       return this.onKeydownDropCap(event);
+    }
+
+    if (this.selectedElement?.elementType === ElementType.TextBox) {
+      return this.onKeydownTextBox(event);
     }
 
     if (!this.isTextInputFocused() && !this.dialogOpen) {
@@ -2462,6 +2466,38 @@ export default class Editor extends Vue {
     }
   }
 
+  onKeydownTextBox(event: KeyboardEvent) {
+    let handled = false;
+
+    const index = this.elements.indexOf(this.selectedElement!);
+    const htmlElement = (this.$refs[`element-${index}`] as TextBox[])[0];
+
+    switch (event.code) {
+      case 'Tab':
+        this.moveRightThrottled();
+        handled = true;
+        break;
+      case 'ArrowLeft':
+        if (getCursorPosition() === 0) {
+          this.moveLeftThrottled();
+          handled = true;
+        }
+        break;
+      case 'ArrowRight':
+        if (
+          getCursorPosition() === htmlElement.textElement.getInnerText().length
+        ) {
+          this.moveRightThrottled();
+          handled = true;
+        }
+        break;
+    }
+
+    if (handled) {
+      event.preventDefault();
+    }
+  }
+
   onKeyup(event: KeyboardEvent) {
     let handled = false;
 
@@ -2743,6 +2779,8 @@ export default class Editor extends Vue {
     ElementType.Tempo,
     ElementType.Empty,
     ElementType.DropCap,
+    ElementType.TextBox,
+    ElementType.ModeKey,
   ];
 
   moveLeft() {
@@ -2758,16 +2796,20 @@ export default class Editor extends Vue {
       index - 1 >= 0 &&
       this.navigableElements.includes(this.elements[index - 1].elementType)
     ) {
-      // If the currently selected element is a drop cap, blur it first
+      // If the currently selected element is a drop cap or text box, blur it first
       if (this.selectedElement?.elementType === ElementType.DropCap) {
         (this.$refs[`element-${index}`] as DropCap[])[0].blur();
+      } else if (this.selectedElement?.elementType === ElementType.TextBox) {
+        (this.$refs[`element-${index}`] as TextBox[])[0].blur();
       }
 
       this.selectedElement = this.elements[index - 1];
 
-      // If the newly selected element is a drop cap, focus it
+      // If the newly selected element is a drop cap or text box, focus it
       if (this.selectedElement.elementType === ElementType.DropCap) {
         (this.$refs[`element-${index - 1}`] as DropCap[])[0].focus();
+      } else if (this.selectedElement.elementType === ElementType.TextBox) {
+        (this.$refs[`element-${index - 1}`] as TextBox[])[0].focus();
       }
 
       return true;
@@ -2793,6 +2835,8 @@ export default class Editor extends Vue {
       // If the currently selected element is a drop cap, blur it first
       if (this.selectedElement?.elementType === ElementType.DropCap) {
         (this.$refs[`element-${index}`] as DropCap[])[0].blur();
+      } else if (this.selectedElement?.elementType === ElementType.TextBox) {
+        (this.$refs[`element-${index}`] as TextBox[])[0].blur();
       }
 
       this.selectedElement = this.elements[index + 1];
@@ -2800,6 +2844,8 @@ export default class Editor extends Vue {
       // If the newly selected element is a drop cap, focus it
       if (this.selectedElement.elementType === ElementType.DropCap) {
         (this.$refs[`element-${index + 1}`] as DropCap[])[0].focus();
+      } else if (this.selectedElement.elementType === ElementType.TextBox) {
+        (this.$refs[`element-${index + 1}`] as TextBox[])[0].focus();
       }
 
       return true;

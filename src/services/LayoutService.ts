@@ -1000,14 +1000,16 @@ export class LayoutService {
               ) {
                 end =
                   nextNoteElement.x -
-                  (nextNoteElement.lyricsWidth - nextNoteElement.neumeWidth) /
+                  (nextNoteElement.lyricsWidth -
+                    nextNoteElement.neumeWidth -
+                    nextNoteElement.lyricsHorizontalOffset) /
                     2;
               } else {
                 end =
                   nextNoteElement.x +
                   nextNoteElement.neumeWidth / 2 -
                   nextNoteElement.lyricsWidth / 2 +
-                  nextNoteElement.lyricsHorizontalOffset;
+                  nextNoteElement.lyricsHorizontalOffset / 2;
               }
 
               element.melismaWidth = Math.max(end - start, 0);

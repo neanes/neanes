@@ -1106,7 +1106,26 @@ app.on('ready', async () => {
       }
     }
   }
+
   createWindow();
+
+  if (isMac) {
+    autoUpdater.once('update-available', async (info) => {
+      const result = await dialog.showMessageBox(win!, {
+        type: 'info',
+        title: 'Update Available',
+        message: 'An update is available.',
+        detail: `Version ${info.version} is available.`,
+        buttons: ['Download', 'Not now'],
+        defaultId: 0,
+        cancelId: 1,
+      });
+
+      if (result.response === 0) {
+        shell.openExternal(process.env.VUE_APP_DOWNLOAD_URL!);
+      }
+    });
+  }
 });
 
 // Exit cleanly on request from parent process in development mode.

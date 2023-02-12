@@ -507,7 +507,7 @@ export class LayoutService {
 
         currentLyricsEndPx =
           noteElement.isMelismaStart && !noteElement.isHyphen
-            ? Math.max(neumeEnd, noteElement.spaceAfter + lyricsEnd)
+            ? neumeEnd
             : noteElement.spaceAfter + lyricsEnd;
       } else {
         // Ensure that there is at least a small width between other elements

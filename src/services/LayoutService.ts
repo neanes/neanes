@@ -282,7 +282,6 @@ export class LayoutService {
           const martyriaElement = element as MartyriaElement;
 
           elementWidthPx = this.getMartyriaWidth(martyriaElement, pageSetup);
-
           break;
         }
         case ElementType.Tempo: {
@@ -556,7 +555,12 @@ export class LayoutService {
       ) {
         lastElementWasLineBreak = true;
 
-        element.x = pageSetup.pageWidth - pageSetup.rightMargin - element.width;
+        // Must not use the element.width because this may include
+        // additional width due to lyrics, neume spacing, etc.
+        element.x =
+          pageSetup.pageWidth -
+          pageSetup.rightMargin -
+          this.getMartyriaWidth(element as MartyriaElement, pageSetup);
       }
     }
 

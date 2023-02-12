@@ -159,6 +159,8 @@ export class LayoutService {
     let currentLyricsEndPx =
       pageSetup.leftMargin - pageSetup.lyricsMinimumSpacing;
 
+    let currentMelismaLyricsEndPx: number | null = null;
+
     let elementWithTrailingSpace: ScoreElement | null = null;
 
     for (let i = 0; i < elements.length; i++) {
@@ -399,6 +401,7 @@ export class LayoutService {
         currentLineWidthPx = 0;
         currentLyricsEndPx =
           pageSetup.leftMargin - pageSetup.lyricsMinimumSpacing;
+        currentMelismaLyricsEndPx = null;
 
         if (elementWithTrailingSpace != null) {
           elementWithTrailingSpace.width -= pageSetup.neumeDefaultSpacing;
@@ -420,6 +423,7 @@ export class LayoutService {
         lastLineHeightPx = 0;
         currentLyricsEndPx =
           pageSetup.leftMargin - pageSetup.lyricsMinimumSpacing;
+        currentMelismaLyricsEndPx = null;
 
         if (elementWithTrailingSpace != null) {
           elementWithTrailingSpace.width -= pageSetup.neumeDefaultSpacing;
@@ -487,7 +491,16 @@ export class LayoutService {
 
         // Ensure that there is at least a small width between the start of
         // this notes lyrics and the end of the previous note's lyrics
-        if (lyricsStart <= currentLyricsEndPx + spacing) {
+        if (
+          currentMelismaLyricsEndPx != null &&
+          (!noteElement.isMelisma || noteElement.isMelismaStart) &&
+          lyricsStart <= currentMelismaLyricsEndPx + spacing
+        ) {
+          const adjustment = currentMelismaLyricsEndPx - lyricsStart + spacing;
+          element.x += adjustment;
+          element.width += adjustment;
+          elementWidthPx += adjustment;
+        } else if (lyricsStart <= currentLyricsEndPx + spacing) {
           const adjustment = currentLyricsEndPx - lyricsStart + spacing;
           element.x += adjustment;
           element.width += adjustment;
@@ -505,10 +518,23 @@ export class LayoutService {
           noteElement.neumeWidth +
           pageSetup.neumeDefaultSpacing;
 
-        currentLyricsEndPx =
-          noteElement.isMelismaStart && !noteElement.isHyphen
-            ? neumeEnd
-            : noteElement.spaceAfter + lyricsEnd;
+        currentLyricsEndPx = noteElement.isMelismaStart
+          ? neumeEnd
+          : noteElement.spaceAfter + lyricsEnd;
+
+        if (noteElement.isMelismaStart) {
+          currentMelismaLyricsEndPx = Math.max(
+            neumeEnd,
+            noteElement.spaceAfter + lyricsEnd,
+          );
+        } else if (noteElement.isMelisma) {
+          currentMelismaLyricsEndPx = Math.max(
+            neumeEnd,
+            currentMelismaLyricsEndPx!,
+          );
+        } else if (!noteElement.isMelisma) {
+          currentMelismaLyricsEndPx = null;
+        }
       } else {
         // Ensure that there is at least a small width between other elements
         if (element.x <= currentLyricsEndPx + pageSetup.neumeDefaultSpacing) {

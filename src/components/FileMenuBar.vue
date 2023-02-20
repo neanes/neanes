@@ -24,6 +24,7 @@
       <FileMenuItem label="Cut" @click="onClickCut" />
       <FileMenuItem label="Copy" @click="onClickCopy" />
       <FileMenuItem label="Paste" @click="onClickPaste" />
+      <FileMenuItem label="Paste with lyrics" @click="onClickPasteWithLyrics" />
       <div class="separator" />
       <FileMenuItem label="Preferences" @click="onClickPreferences" />
     </FileMenuBarItem>
@@ -218,6 +219,11 @@ export default class FileMenuBar extends Vue {
 
   onClickPaste() {
     EventBus.$emit(IpcMainChannels.FileMenuPaste);
+    this.isMenuOpen = false;
+  }
+
+  onClickPasteWithLyrics() {
+    EventBus.$emit(IpcMainChannels.FileMenuPasteWithLyrics);
     this.isMenuOpen = false;
   }
 

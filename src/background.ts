@@ -684,6 +684,17 @@ function createMenu() {
             }
           },
         },
+        {
+          label: 'Paste with &lyrics',
+          accelerator: 'CmdOrCtrl+Shift+V',
+          click(menuItem, browserWindow, event) {
+            // The accelerator is handled in the renderer process because of
+            // https://github.com/electron/electron/issues/3682.
+            if (!event.triggeredByAccelerator) {
+              win?.webContents.send(IpcMainChannels.FileMenuPasteWithLyrics);
+            }
+          },
+        },
         { type: 'separator' },
         {
           label: '&Preferences',

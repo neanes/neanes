@@ -42,9 +42,13 @@ export enum LineBreakType {
   Left = 'Left',
 }
 
+export interface ElementCloneArgs {
+  includeLyrics?: boolean;
+}
+
 export abstract class ScoreElement {
   abstract elementType: ElementType;
-  abstract clone(): ScoreElement;
+  abstract clone(args?: ElementCloneArgs): ScoreElement;
   public lineBreak: boolean = false;
   public lineBreakType: LineBreakType | null = null;
   public pageBreak: boolean = false;
@@ -110,16 +114,27 @@ export class NoteElement extends ScoreElement {
   public vocalExpressionNeumeOffsetX: number | null = null;
   public vocalExpressionNeumeOffsetY: number | null = null;
 
-  public clone() {
+  public clone(args?: ElementCloneArgs) {
     const clone = new NoteElement();
 
-    Object.assign(clone, this.getClipboardProperties());
+    Object.assign(
+      clone,
+      this.getClipboardProperties(args?.includeLyrics ?? true),
+    );
 
     return clone;
   }
 
-  public getClipboardProperties() {
+  public getClipboardProperties(includeLyrics: boolean) {
     return {
+      ...(includeLyrics
+        ? {
+            lyrics: this.lyrics,
+            isHyphen: this.isHyphen,
+            isMelismaStart: this.isMelismaStart,
+            isMelisma: this.isMelisma,
+          }
+        : null),
       measureBarLeft: this.measureBarLeft,
       measureBarLeftOffsetX: this.measureBarLeftOffsetX,
       measureBarLeftOffsetY: this.measureBarLeftOffsetY,
@@ -398,7 +413,7 @@ export class MartyriaElement extends ScoreElement {
 
   public error: boolean = false;
 
-  public clone() {
+  public clone(args?: ElementCloneArgs) {
     const clone = new MartyriaElement();
 
     Object.assign(clone, this.getClipboardProperties());
@@ -428,7 +443,7 @@ export class TempoElement extends ScoreElement {
   public bpm: number = TempoElement.getDefaultBpm(TempoSign.Moderate);
   public spaceAfter: number = 0;
 
-  public clone() {
+  public clone(args?: ElementCloneArgs) {
     const clone = new TempoElement();
 
     Object.assign(clone, this.getClipboardProperties());
@@ -473,7 +488,7 @@ export class EmptyElement extends ScoreElement {
 
   public height: number = 0;
 
-  public clone() {
+  public clone(args?: ElementCloneArgs) {
     return new EmptyElement();
   }
 }
@@ -511,7 +526,7 @@ export class TextBoxElement extends ScoreElement {
     return `${this.computedFontStyle} normal ${this.computedFontWeight} ${this.computedFontSize}px ${this.computedFontFamily}`;
   }
 
-  public clone() {
+  public clone(args?: ElementCloneArgs) {
     const clone = new TextBoxElement();
 
     Object.assign(clone, this.getClipboardProperties());
@@ -611,7 +626,7 @@ export class ModeKeyElement extends ScoreElement {
     return element;
   }
 
-  public clone() {
+  public clone(args?: ElementCloneArgs) {
     const clone = new ModeKeyElement();
 
     Object.assign(clone, this.getClipboardProperties());
@@ -657,7 +672,7 @@ export class DropCapElement extends ScoreElement {
   public strokeWidth: number | null = null;
   public color: string | null = null;
 
-  public clone() {
+  public clone(args?: ElementCloneArgs) {
     const clone = new DropCapElement();
 
     Object.assign(clone, this.getClipboardProperties());

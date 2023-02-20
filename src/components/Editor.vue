@@ -1361,6 +1361,10 @@ export default class Editor extends Vue {
     EventBus.$on(IpcMainChannels.FileMenuCopy, this.onFileMenuCopy);
     EventBus.$on(IpcMainChannels.FileMenuPaste, this.onFileMenuPaste);
     EventBus.$on(
+      IpcMainChannels.FileMenuPasteWithLyrics,
+      this.onFileMenuPasteWithLyrics,
+    );
+    EventBus.$on(
       IpcMainChannels.FileMenuPreferences,
       this.onFileMenuPreferences,
     );
@@ -1425,6 +1429,10 @@ export default class Editor extends Vue {
     EventBus.$off(IpcMainChannels.FileMenuCut, this.onFileMenuCut);
     EventBus.$off(IpcMainChannels.FileMenuCopy, this.onFileMenuCopy);
     EventBus.$off(IpcMainChannels.FileMenuPaste, this.onFileMenuPaste);
+    EventBus.$off(
+      IpcMainChannels.FileMenuPasteWithLyrics,
+      this.onFileMenuPasteWithLyrics,
+    );
     EventBus.$off(
       IpcMainChannels.FileMenuPreferences,
       this.onFileMenuPreferences,
@@ -1960,7 +1968,8 @@ export default class Editor extends Vue {
         event.preventDefault();
         return;
       } else if (event.code === 'KeyV') {
-        this.onPasteScoreElementsThrottled();
+        const includeLyrics = event.shiftKey;
+        this.onPasteScoreElementsThrottled(includeLyrics);
         event.preventDefault();
         return;
       } else if (event.code === 'KeyI' && !event.shiftKey) {
@@ -2567,23 +2576,23 @@ export default class Editor extends Vue {
     }
   }
 
-  onPasteScoreElements() {
+  onPasteScoreElements(includeLyrics: boolean) {
     if (this.clipboard.length > 0 && this.selectedElement != null) {
       switch (this.entryMode) {
         case EntryMode.Insert:
-          this.onPasteScoreElementsInsert();
+          this.onPasteScoreElementsInsert(includeLyrics);
           break;
         case EntryMode.Auto:
-          this.onPasteScoreElementsAuto();
+          this.onPasteScoreElementsAuto(includeLyrics);
           break;
         case EntryMode.Edit:
-          this.onPasteScoreElementsEdit();
+          this.onPasteScoreElementsEdit(includeLyrics);
           break;
       }
     }
   }
 
-  onPasteScoreElementsInsert() {
+  onPasteScoreElementsInsert(includeLyrics: boolean) {
     if (this.selectedElement == null || this.clipboard.length === 0) {
       return;
     }
@@ -2592,7 +2601,7 @@ export default class Editor extends Vue {
       ? this.selectedElementIndex
       : this.selectedElementIndex + 1;
 
-    const newElements = this.clipboard.map((x) => x.clone());
+    const newElements = this.clipboard.map((x) => x.clone({ includeLyrics }));
 
     this.addScoreElements(newElements, insertAtIndex);
 
@@ -2600,7 +2609,7 @@ export default class Editor extends Vue {
     this.save();
   }
 
-  onPasteScoreElementsEdit() {
+  onPasteScoreElementsEdit(includeLyrics: boolean) {
     if (this.selectedElement == null || this.clipboard.length === 0) {
       return;
     }
@@ -2615,7 +2624,7 @@ export default class Editor extends Vue {
       if (currentIndex >= this.elements.length - 1) {
         commands.push(
           this.scoreElementCommandFactory.create('add-to-collection', {
-            elements: [clipboardElement.clone()],
+            elements: [clipboardElement.clone({ includeLyrics })],
             collection: this.elements,
             insertAtIndex: currentIndex,
           }),
@@ -2626,8 +2635,12 @@ export default class Editor extends Vue {
             case ElementType.Note:
               if (
                 !shallowEquals(
-                  (currentElement as NoteElement).getClipboardProperties(),
-                  (clipboardElement as NoteElement).getClipboardProperties(),
+                  (currentElement as NoteElement).getClipboardProperties(
+                    includeLyrics,
+                  ),
+                  (clipboardElement as NoteElement).getClipboardProperties(
+                    includeLyrics,
+                  ),
                 )
               ) {
                 commands.push(
@@ -2635,7 +2648,7 @@ export default class Editor extends Vue {
                     target: currentElement as NoteElement,
                     newValues: (
                       clipboardElement as NoteElement
-                    ).getClipboardProperties(),
+                    ).getClipboardProperties(includeLyrics),
                   }),
                 );
               }
@@ -2754,11 +2767,11 @@ export default class Editor extends Vue {
     this.save();
   }
 
-  onPasteScoreElementsAuto() {
+  onPasteScoreElementsAuto(includeLyrics: boolean) {
     this.moveRight();
     const currentIndex = this.selectedElementIndex;
 
-    this.onPasteScoreElementsEdit();
+    this.onPasteScoreElementsEdit(includeLyrics);
 
     // Set the selected element to the last element that was pasted
     this.selectedElement =
@@ -4426,7 +4439,15 @@ export default class Editor extends Vue {
 
   onFileMenuPaste() {
     if (!this.isTextInputFocused() && !this.dialogOpen) {
-      this.onPasteScoreElements();
+      this.onPasteScoreElements(false);
+    } else {
+      document.execCommand('paste');
+    }
+  }
+
+  onFileMenuPasteWithLyrics() {
+    if (!this.isTextInputFocused() && !this.dialogOpen) {
+      this.onPasteScoreElements(true);
     } else {
       document.execCommand('paste');
     }

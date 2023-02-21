@@ -2042,6 +2042,24 @@ export default class Editor extends Vue {
           this.moveRightThrottled();
           handled = true;
           break;
+        case 'ArrowDown':
+          if (
+            (event.ctrlKey || event.metaKey) &&
+            this.selectedElement?.elementType === ElementType.Note
+          ) {
+            const index = this.selectedElementIndex;
+
+            this.focusLyrics(index, true);
+
+            // Select All doesn't work until after the lyrics have been selected,
+            // hence we call focus lyrics twice
+            Vue.nextTick(() => {
+              this.focusLyrics(index, true);
+            });
+
+            handled = true;
+          }
+          break;
         case 'Space':
           if (!event.repeat) {
             if (
@@ -2379,6 +2397,12 @@ export default class Editor extends Vue {
           break;
         case 'ArrowLeft':
           this.moveToPreviousLyricBoxThrottled();
+          handled = true;
+          break;
+        case 'ArrowUp':
+          this.selectedElement = this.selectedLyrics;
+          this.blurActiveElement();
+          window.getSelection()?.removeAllRanges();
           handled = true;
           break;
         case 'Space':

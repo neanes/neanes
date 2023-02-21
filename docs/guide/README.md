@@ -133,6 +133,8 @@ To insert lyrics, click on the space just below a neume and begin typing.
 - To move to the previous lyric box, press `Ctrl + Left Arrow`.
 - If you press the `Left Arrow` key while the cursor is at the beginning of a lyric box, then the cursor will move to the previous lyric box.
 - If you press the `Right Arrow` key while the cursor is at the end of a lyric box, then the cursor will move to the next lyric box.
+- To move from a neume to its lyrics, press `Ctrl + Down Arrow`.
+- To move from the lyrics back to the neume, press `Ctrl + Up Arrow`.
 
 ### Melismas
 

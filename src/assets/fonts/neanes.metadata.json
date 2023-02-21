@@ -2647,6 +2647,10 @@
       ]
     },
     "oligonElafronKentimata": {
+      "gorgonSecondary": [
+        0.638,
+        0.939
+      ],
       "yfenAbove": [
         1.28,
         1.061
@@ -3371,6 +3375,10 @@
       ]
     },
     "oligonRunningElafronKentimata": {
+      "gorgonSecondary": [
+        0.948,
+        0.889
+      ],
       "yfenAbove": [
         1.32,
         1.061
@@ -3429,6 +3437,10 @@
       ]
     },
     "oligonElafronApostrofosKentimata": {
+      "gorgonSecondary": [
+        0.638,
+        0.939
+      ],
       "yfenAbove": [
         1.24,
         1.061
@@ -6613,6 +6625,10 @@
       ]
     },
     "oligonChamiliKentimata": {
+      "gorgonSecondary": [
+        0.795,
+        0.91
+      ],
       "yfenAbove": [
         1.26,
         1.061
@@ -6888,7 +6904,6 @@
     "agogiGorgoteri": 0.826,
     "agogiPoliGorgi": 1.02,
     "agogiMetria": 0.608,
-    "uniE016": 1.0,
     "digorgonDottedLeftAbove": 0.0,
     "martyriaNoteZoLow": 0.783,
     "martyriaNoteNiLow": 0.731,
@@ -8031,16 +8046,6 @@
       "bBoxSW": [
         0.078833333333325,
         -0.3391111111093795
-      ]
-    },
-    "uniE016": {
-      "bBoxNE": [
-        0.0,
-        0.0
-      ],
-      "bBoxSW": [
-        0.0,
-        0.0
       ]
     },
     "digorgonDottedLeftAbove": {

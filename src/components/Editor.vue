@@ -614,6 +614,7 @@ import {
   onlyTakesBottomKlasma,
   onlyTakesTopGorgon,
   onlyTakesTopKlasma,
+  takesSecondaryGorgon,
 } from '@/models/NeumeReplacements';
 
 import {
@@ -1589,11 +1590,7 @@ export default class Editor extends Vue {
     const element = new NoteElement();
     element.quantitativeNeume = quantitativeNeume;
     // Special case for neumes with secondary gorgon
-    if (
-      quantitativeNeume === QuantitativeNeume.OligonPlusHyporoePlusKentemata ||
-      quantitativeNeume === QuantitativeNeume.OligonPlusIsonPlusKentemata ||
-      quantitativeNeume === QuantitativeNeume.OligonPlusApostrophosPlusKentemata
-    ) {
+    if (takesSecondaryGorgon(quantitativeNeume)) {
       element.secondaryGorgonNeume = secondaryGorgonNeume;
     }
 

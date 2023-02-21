@@ -23,6 +23,7 @@ import {
   getVocalExpressionReplacements,
   getFthoraReplacements,
   getQuantitativeReplacements,
+  takesSecondaryGorgon,
 } from './NeumeReplacements';
 import { Scale, ScaleNote } from './Scales';
 
@@ -208,10 +209,7 @@ export class NoteElement extends ScoreElement {
     this._quantitativeNeume = neume;
     this.replaceNeumes();
 
-    if (
-      this.quantitativeNeume !==
-      QuantitativeNeume.OligonPlusHyporoePlusKentemata
-    ) {
+    if (!takesSecondaryGorgon(this.quantitativeNeume)) {
       this._secondaryGorgonNeume = null;
     }
   }

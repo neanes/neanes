@@ -177,6 +177,167 @@
             </div>
           </div>
         </template>
+        <template
+          v-else-if="
+            neume === QuantitativeNeume.OligonPlusElaphronPlusKentemata
+          "
+        >
+          <div
+            :key="`combinationNeumes-${index}`"
+            class="menu-container"
+            @mousedown="openElaphronKentemataMenu"
+            @mouseleave="selectedSecondaryGorgon = null"
+          >
+            <Neume
+              class="neume"
+              :neume="QuantitativeNeume.OligonPlusElaphronPlusKentemata"
+              :fontFamily="pageSetup.neumeDefaultFontFamily"
+            />
+
+            <div class="menu" v-if="showElaphronKentemataMenu">
+              <div
+                class="menu-item"
+                v-for="menuItem in secondaryGorgonMenuItems"
+                :key="menuItem.gorgon"
+                @mouseenter="selectedSecondaryGorgon = menuItem"
+              >
+                <Neume
+                  class="neume"
+                  :neume="QuantitativeNeume.OligonPlusElaphronPlusKentemata"
+                  :fontFamily="pageSetup.neumeDefaultFontFamily"
+                />
+                <Neume
+                  class="neume"
+                  :neume="menuItem.gorgon"
+                  :fontFamily="pageSetup.neumeDefaultFontFamily"
+                  v-if="menuItem.gorgon != null"
+                />
+              </div>
+            </div>
+          </div>
+        </template>
+        <template
+          v-else-if="
+            neume ===
+            QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata
+          "
+        >
+          <div
+            :key="`combinationNeumes-${index}`"
+            class="menu-container"
+            @mousedown="openElaphronApostrophosKentemataMenu"
+            @mouseleave="selectedSecondaryGorgon = null"
+          >
+            <Neume
+              class="neume"
+              :neume="
+                QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata
+              "
+              :fontFamily="pageSetup.neumeDefaultFontFamily"
+            />
+
+            <div class="menu" v-if="showElaphronApostrophosKentemataMenu">
+              <div
+                class="menu-item"
+                v-for="menuItem in secondaryGorgonMenuItems"
+                :key="menuItem.gorgon"
+                @mouseenter="selectedSecondaryGorgon = menuItem"
+              >
+                <Neume
+                  class="neume"
+                  :neume="
+                    QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata
+                  "
+                  :fontFamily="pageSetup.neumeDefaultFontFamily"
+                />
+                <Neume
+                  class="neume"
+                  :neume="menuItem.gorgon"
+                  :fontFamily="pageSetup.neumeDefaultFontFamily"
+                  v-if="menuItem.gorgon != null"
+                />
+              </div>
+            </div>
+          </div>
+        </template>
+        <template
+          v-else-if="neume === QuantitativeNeume.OligonPlusHamiliPlusKentemata"
+        >
+          <div
+            :key="`combinationNeumes-${index}`"
+            class="menu-container"
+            @mousedown="openHamiliKentemataMenu"
+            @mouseleave="selectedSecondaryGorgon = null"
+          >
+            <Neume
+              class="neume"
+              :neume="QuantitativeNeume.OligonPlusHamiliPlusKentemata"
+              :fontFamily="pageSetup.neumeDefaultFontFamily"
+            />
+
+            <div class="menu" v-if="showHamiliKentemataMenu">
+              <div
+                class="menu-item"
+                v-for="menuItem in secondaryGorgonMenuItems"
+                :key="menuItem.gorgon"
+                @mouseenter="selectedSecondaryGorgon = menuItem"
+              >
+                <Neume
+                  class="neume"
+                  :neume="QuantitativeNeume.OligonPlusHamiliPlusKentemata"
+                  :fontFamily="pageSetup.neumeDefaultFontFamily"
+                />
+                <Neume
+                  class="neume"
+                  :neume="menuItem.gorgon"
+                  :fontFamily="pageSetup.neumeDefaultFontFamily"
+                  v-if="menuItem.gorgon != null"
+                />
+              </div>
+            </div>
+          </div>
+        </template>
+        <template
+          v-else-if="
+            neume === QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata
+          "
+        >
+          <div
+            :key="`combinationNeumes-${index}`"
+            class="menu-container"
+            @mousedown="openRunningElaphronKentemataMenu"
+            @mouseleave="selectedSecondaryGorgon = null"
+          >
+            <Neume
+              class="neume"
+              :neume="QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata"
+              :fontFamily="pageSetup.neumeDefaultFontFamily"
+            />
+
+            <div class="menu" v-if="showRunningElaphronKentemataMenu">
+              <div
+                class="menu-item"
+                v-for="menuItem in secondaryGorgonMenuItems"
+                :key="menuItem.gorgon"
+                @mouseenter="selectedSecondaryGorgon = menuItem"
+              >
+                <Neume
+                  class="neume"
+                  :neume="
+                    QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata
+                  "
+                  :fontFamily="pageSetup.neumeDefaultFontFamily"
+                />
+                <Neume
+                  class="neume"
+                  :neume="menuItem.gorgon"
+                  :fontFamily="pageSetup.neumeDefaultFontFamily"
+                  v-if="menuItem.gorgon != null"
+                />
+              </div>
+            </div>
+          </div>
+        </template>
         <template v-else>
           <Neume
             class="neume"
@@ -329,6 +490,10 @@ export default class NeumeSelector extends Vue {
   showHyporoeKentemataMenu: boolean = false;
   showIsonKentemataMenu: boolean = false;
   showApostrophosKentemataMenu: boolean = false;
+  showElaphronKentemataMenu: boolean = false;
+  showElaphronApostrophosKentemataMenu: boolean = false;
+  showRunningElaphronKentemataMenu: boolean = false;
+  showHamiliKentemataMenu: boolean = false;
   showVareiaDottedMenu: boolean = false;
   selectedSecondaryGorgon: SecondaryGorgonMenuItem | null = null;
   selectedVareiaDotted: QuantitativeNeume | null = null;
@@ -346,6 +511,29 @@ export default class NeumeSelector extends Vue {
   openApostrophosKentemataMenu() {
     this.showApostrophosKentemataMenu = true;
     window.addEventListener('mouseup', this.onApostrophosKentemataMouseUp);
+  }
+
+  openElaphronKentemataMenu() {
+    this.showElaphronKentemataMenu = true;
+    window.addEventListener('mouseup', this.onElaphronKentemataMouseUp);
+  }
+
+  openElaphronApostrophosKentemataMenu() {
+    this.showElaphronApostrophosKentemataMenu = true;
+    window.addEventListener(
+      'mouseup',
+      this.onElaphronApostrophosKentemataMouseUp,
+    );
+  }
+
+  openRunningElaphronKentemataMenu() {
+    this.showRunningElaphronKentemataMenu = true;
+    window.addEventListener('mouseup', this.onRunningElaphronKentemataMouseUp);
+  }
+
+  openHamiliKentemataMenu() {
+    this.showHamiliKentemataMenu = true;
+    window.addEventListener('mouseup', this.onHamiliKentemataMouseUp);
   }
 
   onHyporoeMouseUp() {
@@ -388,6 +576,68 @@ export default class NeumeSelector extends Vue {
     this.showApostrophosKentemataMenu = false;
 
     window.removeEventListener('mouseup', this.onApostrophosKentemataMouseUp);
+  }
+
+  onElaphronKentemataMouseUp() {
+    if (this.selectedSecondaryGorgon) {
+      this.$emit(
+        'select-quantitative-neume',
+        QuantitativeNeume.OligonPlusElaphronPlusKentemata,
+        this.selectedSecondaryGorgon.gorgon,
+      );
+    }
+
+    this.showElaphronKentemataMenu = false;
+
+    window.removeEventListener('mouseup', this.onElaphronKentemataMouseUp);
+  }
+
+  onElaphronApostrophosKentemataMouseUp() {
+    if (this.selectedSecondaryGorgon) {
+      this.$emit(
+        'select-quantitative-neume',
+        QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
+        this.selectedSecondaryGorgon.gorgon,
+      );
+    }
+
+    this.showElaphronApostrophosKentemataMenu = false;
+
+    window.removeEventListener(
+      'mouseup',
+      this.onElaphronApostrophosKentemataMouseUp,
+    );
+  }
+
+  onRunningElaphronKentemataMouseUp() {
+    if (this.selectedSecondaryGorgon) {
+      this.$emit(
+        'select-quantitative-neume',
+        QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
+        this.selectedSecondaryGorgon.gorgon,
+      );
+    }
+
+    this.showRunningElaphronKentemataMenu = false;
+
+    window.removeEventListener(
+      'mouseup',
+      this.onRunningElaphronKentemataMouseUp,
+    );
+  }
+
+  onHamiliKentemataMouseUp() {
+    if (this.selectedSecondaryGorgon) {
+      this.$emit(
+        'select-quantitative-neume',
+        QuantitativeNeume.OligonPlusHamiliPlusKentemata,
+        this.selectedSecondaryGorgon.gorgon,
+      );
+    }
+
+    this.showHamiliKentemataMenu = false;
+
+    window.removeEventListener('mouseup', this.onHamiliKentemataMouseUp);
   }
 
   openVareiaDottedMenu() {

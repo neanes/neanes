@@ -135,6 +135,21 @@ export class LayoutService {
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
     );
 
+    const widthOfUnderscore = TextMeasurementService.getTextWidth(
+      '_',
+      pageSetup.lyricsFont,
+    );
+
+    const widthOfHyphen = TextMeasurementService.getTextWidth(
+      '-',
+      pageSetup.lyricsFont,
+    );
+
+    const widthOfSpace = TextMeasurementService.getTextWidth(
+      ' ',
+      pageSetup.lyricsFont,
+    );
+
     const noteWidthArgs: GetNoteWidthArgs = {
       lyricsVerticalOffset,
       vareiaWidth,
@@ -522,16 +537,12 @@ export class LayoutService {
           ? neumeEnd
           : noteElement.spaceAfter + lyricsEnd;
 
-        if (noteElement.isMelismaStart) {
-          currentMelismaLyricsEndPx = Math.max(
-            neumeEnd,
-            noteElement.spaceAfter + lyricsEnd,
-          );
-        } else if (noteElement.isMelisma) {
-          currentMelismaLyricsEndPx = Math.max(
-            neumeEnd,
-            currentMelismaLyricsEndPx!,
-          );
+        if (noteElement.isMelismaStart && noteElement.isHyphen) {
+          currentMelismaLyricsEndPx =
+            noteElement.spaceAfter + lyricsEnd + widthOfHyphen;
+        } else if (noteElement.isMelismaStart) {
+          currentMelismaLyricsEndPx =
+            noteElement.spaceAfter + lyricsEnd + widthOfUnderscore;
         } else if (!noteElement.isMelisma) {
           currentMelismaLyricsEndPx = null;
         }

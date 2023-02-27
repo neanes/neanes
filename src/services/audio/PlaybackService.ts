@@ -320,7 +320,8 @@ export class PlaybackService {
         ) {
           this.handleKentimataOligon(noteElement, workspace);
         } else if (
-          noteElement.quantitativeNeume === QuantitativeNeume.Hyporoe
+          noteElement.quantitativeNeume === QuantitativeNeume.Hyporoe ||
+          noteElement.quantitativeNeume === QuantitativeNeume.PetastiPlusHyporoe
         ) {
           this.handleHyporoe(noteElement, workspace);
         } else if (
@@ -333,7 +334,9 @@ export class PlaybackService {
         ) {
           this.handleIsonApostrophos(noteElement, workspace);
         } else if (
-          noteElement.quantitativeNeume === QuantitativeNeume.RunningElaphron
+          noteElement.quantitativeNeume === QuantitativeNeume.RunningElaphron ||
+          noteElement.quantitativeNeume ===
+            QuantitativeNeume.PetastiPlusRunningElaphron
         ) {
           this.handleRunningElaphron(noteElement, workspace);
         } else if (this.isRest(noteElement)) {

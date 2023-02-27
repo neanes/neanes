@@ -1180,10 +1180,16 @@ export class LayoutService {
           ((currentNote % 7) + 7) % 7,
         )!;
 
-        note.scaleNote = getScaleNoteFromValue(currentNote);
+        let noteSpread = this.getNoteSpread(note.quantitativeNeume);
+
+        let currentNotes = noteSpread.map((x) => currentNote + x);
+
+        note.scaleNotes = noteSpread.map((x) =>
+          getScaleNoteFromValue(currentNote + x),
+        );
 
         if (note.fthora) {
-          if (this.fthoraIsValid(note.fthora, currentNote)) {
+          if (this.fthoraIsValid(note.fthora, currentNotes)) {
             currentScale =
               this.getScaleFromFthora(note.fthora, currentNote) || currentScale;
             currentShift = this.getShift(
@@ -1282,7 +1288,7 @@ export class LayoutService {
           }
 
           if (martyria.fthora) {
-            if (this.fthoraIsValid(martyria.fthora, currentNote)) {
+            if (this.fthoraIsValid(martyria.fthora, [currentNote])) {
               currentScale =
                 this.getScaleFromFthora(martyria.fthora, currentNote) ||
                 currentScale;
@@ -1397,51 +1403,79 @@ export class LayoutService {
     return shift;
   }
 
-  private static fthoraIsValid(fthora: Fthora, currentNote: number) {
+  private static getNoteSpread(neume: QuantitativeNeume) {
+    switch (neume) {
+      case QuantitativeNeume.OligonPlusHamiliPlusKentemata:
+      case QuantitativeNeume.OligonPlusIsonPlusKentemata:
+      case QuantitativeNeume.OligonPlusElaphronPlusKentemata:
+      case QuantitativeNeume.OligonPlusApostrophosPlusKentemata:
+      case QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata:
+      case QuantitativeNeume.OligonKentimaMiddleKentimata:
+      case QuantitativeNeume.OligonPlusKentemataPlusHypsiliLeft:
+      case QuantitativeNeume.OligonPlusKentemataPlusHypsiliRight:
+      case QuantitativeNeume.OligonPlusKentemata:
+      case QuantitativeNeume.KentemataPlusOligon:
+        return [-1, 0];
+      case QuantitativeNeume.Hyporoe:
+      case QuantitativeNeume.PetastiPlusHyporoe:
+      case QuantitativeNeume.DoubleApostrophos:
+      case QuantitativeNeume.RunningElaphron:
+      case QuantitativeNeume.PetastiPlusRunningElaphron:
+      case QuantitativeNeume.IsonPlusApostrophos:
+        return [1, 0];
+      case QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata:
+      case QuantitativeNeume.OligonPlusHyporoePlusKentemata:
+        return [0, -1, 0];
+      default:
+        return [0];
+    }
+  }
+
+  private static fthoraIsValid(fthora: Fthora, currentNotes: number[]) {
     // Make sure chroa are on the correct notes
     if (
       fthora.startsWith('Zygos') &&
-      currentNote !== getScaleNoteValue(ScaleNote.Thi)
+      !currentNotes.includes(getScaleNoteValue(ScaleNote.Thi))
     ) {
       return false;
     }
 
     if (
       fthora.startsWith('Kliton') &&
-      currentNote !== getScaleNoteValue(ScaleNote.Thi)
+      !currentNotes.includes(getScaleNoteValue(ScaleNote.Thi))
     ) {
       return false;
     }
 
     if (
       fthora.startsWith('Spathi') &&
-      currentNote !== getScaleNoteValue(ScaleNote.Ke) &&
-      currentNote !== getScaleNoteValue(ScaleNote.Ga)
+      !currentNotes.includes(getScaleNoteValue(ScaleNote.Ke)) &&
+      !currentNotes.includes(getScaleNoteValue(ScaleNote.Ga))
     ) {
       return false;
     }
 
     if (
       fthora.startsWith('Enharmonic') &&
-      currentNote !== getScaleNoteValue(ScaleNote.Zo) &&
-      currentNote !== getScaleNoteValue(ScaleNote.Ga) &&
-      currentNote !== getScaleNoteValue(ScaleNote.ZoHigh) &&
-      currentNote !== getScaleNoteValue(ScaleNote.Vou) &&
-      currentNote !== getScaleNoteValue(ScaleNote.VouHigh)
+      !currentNotes.includes(getScaleNoteValue(ScaleNote.Zo)) &&
+      !currentNotes.includes(getScaleNoteValue(ScaleNote.Ga)) &&
+      !currentNotes.includes(getScaleNoteValue(ScaleNote.ZoHigh)) &&
+      !currentNotes.includes(getScaleNoteValue(ScaleNote.Vou)) &&
+      !currentNotes.includes(getScaleNoteValue(ScaleNote.VouHigh))
     ) {
       return false;
     }
 
     if (
       fthora.startsWith('GeneralSharp') &&
-      currentNote !== getScaleNoteValue(ScaleNote.Ga)
+      !currentNotes.includes(getScaleNoteValue(ScaleNote.Ga))
     ) {
       return false;
     }
 
     if (
       fthora.startsWith('GeneralFlat') &&
-      currentNote !== getScaleNoteValue(ScaleNote.Ke)
+      !currentNotes.includes(getScaleNoteValue(ScaleNote.Ke))
     ) {
       return false;
     }

@@ -339,6 +339,16 @@ export class PlaybackService {
             QuantitativeNeume.PetastiPlusRunningElaphron
         ) {
           this.handleRunningElaphron(noteElement, workspace);
+        } else if (
+          noteElement.quantitativeNeume ===
+          QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata
+        ) {
+          this.handleRunningElaphronKentemata(noteElement, workspace);
+        } else if (
+          noteElement.quantitativeNeume ===
+          QuantitativeNeume.OligonPlusHyporoePlusKentemata
+        ) {
+          this.handleHyporoeKentemata(noteElement, workspace);
         } else if (this.isRest(noteElement)) {
           this.handleRest(noteElement, workspace);
         } else {
@@ -1079,6 +1089,103 @@ export class PlaybackService {
     events.push(event2);
   }
 
+  handleHyporoeKentemata(
+    noteElement: NoteElement,
+    workspace: PlaybackWorkspace,
+  ) {
+    const { events, gorgonIndexes } = workspace;
+
+    // Process first note
+    workspace.innerElementIndex = 0;
+
+    const initialDistance = -1;
+
+    this.moveDistance(workspace, initialDistance);
+
+    if (noteElement.secondaryGorgonNeume) {
+      const gorgonIndex: GorgonIndex = {
+        neume: noteElement.secondaryGorgonNeume,
+        index: events.length,
+        beat: workspace.beat,
+      };
+
+      gorgonIndexes.push(gorgonIndex);
+    }
+
+    let alteredFrequency1 = this.applyAlterations(workspace);
+
+    const event1: PlaybackSequenceEvent = {
+      frequency: alteredFrequency1,
+      isonFrequency: workspace.isonFrequency,
+      type: 'note',
+      bpm: workspace.bpm,
+      duration: 1 * workspace.beat,
+      transportTime: 0,
+      elementIndex: workspace.elementIndex,
+    };
+
+    events.push(event1);
+
+    // Process the kentimata
+    workspace.innerElementIndex = 1;
+
+    let event2Duration = 1 * workspace.beat;
+
+    this.moveDistance(workspace, -1);
+
+    if (noteElement.timeNeume != null) {
+      event2Duration +=
+        this.timeMap.get(noteElement.timeNeume)! * workspace.beat;
+    }
+
+    // Calculate accidentals
+    let alteredFrequency2 = this.applyAlterations(workspace);
+
+    const event2: PlaybackSequenceEvent = {
+      frequency: alteredFrequency2,
+      isonFrequency: workspace.isonFrequency,
+      type: 'note',
+      bpm: workspace.bpm,
+      duration: event2Duration,
+      transportTime: 0,
+      elementIndex: workspace.elementIndex,
+    };
+
+    events.push(event2);
+
+    // Process the kentimata
+    workspace.innerElementIndex = 2;
+    this.moveDistance(workspace, 1);
+
+    if (noteElement.gorgonNeume) {
+      const gorgonIndex: GorgonIndex = {
+        neume: noteElement.gorgonNeume,
+        index: events.length,
+        beat: workspace.beat,
+      };
+
+      gorgonIndexes.push(gorgonIndex);
+    }
+
+    // Calculate accidentals
+    let alteredFrequencyKentimata = this.applyAlterations(
+      workspace,
+      noteElement.accidental,
+    );
+
+    const kentimataEvent: PlaybackSequenceEvent = {
+      frequency: alteredFrequencyKentimata,
+      isonFrequency: workspace.isonFrequency,
+      type: 'note',
+      bpm: workspace.bpm,
+      duration: 1 * workspace.beat,
+      transportTime: 0,
+      elementIndex: workspace.elementIndex,
+    };
+
+    events.push(kentimataEvent);
+  }
+
   handleDoubleApostrophos(
     noteElement: NoteElement,
     workspace: PlaybackWorkspace,
@@ -1290,6 +1397,100 @@ export class PlaybackService {
     events.push(event2);
   }
 
+  handleRunningElaphronKentemata(
+    noteElement: NoteElement,
+    workspace: PlaybackWorkspace,
+  ) {
+    const { events, gorgonIndexes } = workspace;
+
+    // Process first note
+    workspace.innerElementIndex = 0;
+
+    this.moveDistance(workspace, -1);
+
+    // Add a virtual gorgon
+    const gorgonIndex: GorgonIndex = {
+      neume: GorgonNeume.Gorgon_Top,
+      index: events.length,
+      beat: workspace.beat,
+    };
+
+    gorgonIndexes.push(gorgonIndex);
+
+    let alteredFrequency1 = this.applyAlterations(workspace);
+
+    const event1: PlaybackSequenceEvent = {
+      frequency: alteredFrequency1,
+      isonFrequency: workspace.isonFrequency,
+      type: 'note',
+      bpm: workspace.bpm,
+      duration: 1 * workspace.beat,
+      transportTime: 0,
+      elementIndex: workspace.elementIndex,
+    };
+
+    events.push(event1);
+
+    // Process the second note
+    workspace.innerElementIndex = 1;
+
+    let event2Duration = 1 * workspace.beat;
+
+    this.moveDistance(workspace, -1);
+
+    if (noteElement.timeNeume != null) {
+      event2Duration +=
+        this.timeMap.get(noteElement.timeNeume)! * workspace.beat;
+    }
+
+    // Calculate accidentals
+    let alteredFrequency2 = this.applyAlterations(workspace);
+
+    const event2: PlaybackSequenceEvent = {
+      frequency: alteredFrequency2,
+      isonFrequency: workspace.isonFrequency,
+      type: 'note',
+      bpm: workspace.bpm,
+      duration: event2Duration,
+      transportTime: 0,
+      elementIndex: workspace.elementIndex,
+    };
+
+    events.push(event2);
+
+    // Process the kentimata
+    workspace.innerElementIndex = 2;
+    this.moveDistance(workspace, 1);
+
+    if (noteElement.gorgonNeume) {
+      const gorgonIndex: GorgonIndex = {
+        neume: noteElement.gorgonNeume,
+        index: events.length,
+        beat: workspace.beat,
+      };
+
+      gorgonIndexes.push(gorgonIndex);
+    }
+
+    // Calculate accidentals
+    let alteredFrequencyKentimata = this.applyAlterations(
+      workspace,
+      noteElement.accidental,
+    );
+
+    const kentimataEvent: PlaybackSequenceEvent = {
+      frequency: alteredFrequencyKentimata,
+      isonFrequency: workspace.isonFrequency,
+      type: 'note',
+      bpm: workspace.bpm,
+      duration: 1 * workspace.beat,
+      transportTime: 0,
+      elementIndex: workspace.elementIndex,
+    };
+
+    events.push(kentimataEvent);
+  }
+
   handleNote(noteElement: NoteElement, workspace: PlaybackWorkspace) {
     const { events, gorgonIndexes } = workspace;
 
@@ -1425,20 +1626,20 @@ export class PlaybackService {
   }
 
   isKentimataCombo(element: NoteElement) {
-    // Note that this does not contain
-    // oligon with kentimata below because it is
-    // a special case
+    // Note that this list does not contain the following special cases:
+    // OligonPlusHyporoePlusKentemata
+    // OligonPlusRunningElaphronPlusKentemata
+    // KentemataPlusOligon
+    // These are handled separately
     return [
       QuantitativeNeume.OligonPlusHamiliPlusKentemata,
       QuantitativeNeume.OligonPlusIsonPlusKentemata,
-      QuantitativeNeume.OligonPlusHyporoePlusKentemata,
       QuantitativeNeume.OligonPlusElaphronPlusKentemata,
       QuantitativeNeume.OligonPlusApostrophosPlusKentemata,
       QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
       QuantitativeNeume.OligonKentimaMiddleKentimata,
       QuantitativeNeume.OligonPlusKentemataPlusHypsiliLeft,
       QuantitativeNeume.OligonPlusKentemataPlusHypsiliRight,
-      QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
       QuantitativeNeume.OligonPlusKentemata,
     ].includes(element.quantitativeNeume);
   }

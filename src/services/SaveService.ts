@@ -29,7 +29,7 @@ import {
   ModeKeyElement as ModeKeyElement_v1,
 } from '@/models/save/v1/Element';
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
-import { PageSetup } from '@/models/PageSetup';
+import { PageSetup, pageSizes } from '@/models/PageSetup';
 import { QuantitativeNeume } from '@/models/Neumes';
 import { Header } from '@/models/Header';
 import { Footer } from '@/models/Footer';
@@ -494,6 +494,7 @@ export class SaveService {
   public static LoadPageSetup_v1(pageSetup: PageSetup, p: PageSetup_v1) {
     pageSetup.pageHeight = p.pageHeight;
     pageSetup.pageWidth = p.pageWidth;
+
     pageSetup.topMargin = p.topMargin;
     pageSetup.bottomMargin = p.bottomMargin;
     pageSetup.leftMargin = p.leftMargin;
@@ -611,6 +612,19 @@ export class SaveService {
     pageSetup.landscape = p.landscape === true;
 
     pageSetup.hyphenSpacing = p.hyphenSpacing;
+
+    // Fix pageWidth and pageHeight
+    // Due to bug #71, A-series paper sizes had incorrect width and height
+    const pageSize = pageSizes.find((x) => x.name === pageSetup.pageSize);
+    if (pageSize) {
+      if (pageSetup.landscape) {
+        pageSetup.pageWidth = pageSize.height;
+        pageSetup.pageHeight = pageSize.width;
+      } else {
+        pageSetup.pageWidth = pageSize.width;
+        pageSetup.pageHeight = pageSize.height;
+      }
+    }
   }
 
   public static LoadHeader_v1(header: Header, h: Header_v1) {

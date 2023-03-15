@@ -521,7 +521,7 @@ export class TextBoxElement extends ScoreElement {
   public computedStrokeWidth: number = 0;
 
   public get computedFont() {
-    return `${this.computedFontStyle} normal ${this.computedFontWeight} ${this.computedFontSize}px ${this.computedFontFamily}`;
+    return `${this.computedFontStyle} normal ${this.computedFontWeight} ${this.computedFontSize}px "${this.computedFontFamily}"`;
   }
 
   public clone(args?: ElementCloneArgs) {
@@ -663,12 +663,25 @@ export class ModeKeyElement extends ScoreElement {
 export class DropCapElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.DropCap;
   public content: string = 'A';
-  public fontFamily: string | null = null;
-  public fontSize: number | null = null;
-  public fontWeight: string | null = null;
-  public fontStyle: string | null = null;
-  public strokeWidth: number | null = null;
-  public color: string | null = null;
+  public fontFamily: string = 'Athonite';
+  public fontSize: number = Unit.fromPt(60);
+  public fontWeight: string = '400';
+  public fontStyle: string = 'normal';
+  public strokeWidth: number = 0;
+  public color: string = '#000000';
+  public useDefaultStyle: boolean = true;
+
+  // Values computed by the layout service
+  public computedFontFamily: string = '';
+  public computedFontSize: number = Unit.fromPt(60);
+  public computedFontWeight: string = '400';
+  public computedFontStyle: string = 'normal';
+  public computedColor: string = '#000000';
+  public computedStrokeWidth: number = 0;
+
+  public get computedFont() {
+    return `${this.computedFontStyle} normal ${this.computedFontWeight} ${this.computedFontSize}px "${this.computedFontFamily}"`;
+  }
 
   public clone(args?: ElementCloneArgs) {
     const clone = new DropCapElement();

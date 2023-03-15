@@ -14,6 +14,7 @@ import {
   Ison,
   Tie,
 } from '@/models/save/v1/Neumes';
+import { Unit } from '@/utils/Unit';
 import { Scale, ScaleNote } from './Scales';
 
 export enum ElementType {
@@ -184,12 +185,13 @@ export class ModeKeyElement extends ScoreElement {
 export class DropCapElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.DropCap;
   public content: string = 'A';
-  public fontFamily: string | undefined = undefined;
-  public fontSize: number | undefined = undefined;
-  public fontWeight: string | undefined = undefined;
-  public fontStyle: string | undefined = undefined;
-  public strokeWidth: number | undefined = undefined;
-  public color: string | undefined = undefined;
+  public fontFamily: string = 'Athonite';
+  public fontSize: number = Unit.fromPt(60);
+  public fontWeight: string = '400';
+  public fontStyle: string = 'normal';
+  public strokeWidth: number = 0;
+  public color: string = '#000000';
+  public useDefaultStyle: boolean | undefined = undefined;
 }
 
 export class ScoreElementOffset {

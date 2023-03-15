@@ -316,17 +316,34 @@ export class LayoutService {
         }
         case ElementType.DropCap: {
           const dropCapElement = element as DropCapElement;
-          const dropCapFontFamily =
-            dropCapElement.fontFamily || pageSetup.dropCapDefaultFontFamily;
-          const dropCapFontSize =
-            dropCapElement.fontSize || pageSetup.dropCapDefaultFontSize;
-          const dropCapFontWeight =
-            dropCapElement.fontWeight || pageSetup.dropCapDefaultFontWeight;
-          const dropCapFontStyle =
-            dropCapElement.fontStyle || pageSetup.dropCapDefaultFontStyle;
+
+          dropCapElement.computedFontFamily = dropCapElement.useDefaultStyle
+            ? pageSetup.dropCapDefaultFontFamily
+            : dropCapElement.fontFamily;
+
+          dropCapElement.computedFontSize = dropCapElement.useDefaultStyle
+            ? pageSetup.dropCapDefaultFontSize
+            : dropCapElement.fontSize;
+
+          dropCapElement.computedColor = dropCapElement.useDefaultStyle
+            ? pageSetup.dropCapDefaultColor
+            : dropCapElement.color;
+
+          dropCapElement.computedStrokeWidth = dropCapElement.useDefaultStyle
+            ? pageSetup.dropCapDefaultStrokeWidth
+            : dropCapElement.strokeWidth;
+
+          dropCapElement.computedFontWeight = dropCapElement.useDefaultStyle
+            ? pageSetup.dropCapDefaultFontWeight
+            : dropCapElement.fontWeight;
+
+          dropCapElement.computedFontStyle = dropCapElement.useDefaultStyle
+            ? pageSetup.dropCapDefaultFontStyle
+            : dropCapElement.fontStyle;
+
           elementWidthPx = TextMeasurementService.getTextWidth(
             dropCapElement.content,
-            `${dropCapFontStyle} normal ${dropCapFontWeight} ${dropCapFontSize}px "${dropCapFontFamily}"`,
+            dropCapElement.computedFont,
           );
           break;
         }
@@ -465,26 +482,16 @@ export class LayoutService {
 
         const dropCapElement = element as DropCapElement;
 
-        const dropCapFontFamily =
-          dropCapElement.fontFamily || pageSetup.dropCapDefaultFontFamily;
-        const dropCapFontSize =
-          dropCapElement.fontSize || pageSetup.dropCapDefaultFontSize;
-        const dropCapFontWeight =
-          dropCapElement.fontWeight || pageSetup.dropCapDefaultFontWeight;
-        const dropCapFontStyle =
-          dropCapElement.fontStyle || pageSetup.dropCapDefaultFontStyle;
-
-        const dropCapFont = `${dropCapFontStyle} normal ${dropCapFontWeight} ${dropCapFontSize}px "${dropCapFontFamily}"`;
-        const fontHeight = TextMeasurementService.getFontHeight(dropCapFont);
-        const fountBoundingBoxDescent =
+        const fontHeight = TextMeasurementService.getFontHeight(
+          dropCapElement.computedFont,
+        );
+        const fontBoundingBoxDescent =
           TextMeasurementService.getFontBoundingBoxDescent(
             dropCapElement.content,
-            dropCapFont,
+            dropCapElement.computedFont,
           );
         const adjustment =
-          fontHeight -
-          distanceFromTopToBottomOfLyrics -
-          fountBoundingBoxDescent;
+          fontHeight - distanceFromTopToBottomOfLyrics - fontBoundingBoxDescent;
 
         element.y -= adjustment;
       }

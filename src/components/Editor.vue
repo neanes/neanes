@@ -389,6 +389,23 @@
         @insert:pelastikon="insertPelastikon"
       />
     </template>
+    <template
+      v-if="selectedElement != null && isDropCapElement(selectedElement)"
+    >
+      <ToolbarDropCap
+        :element="selectedElement"
+        :fonts="fonts"
+        @update:useDefaultStyle="
+          updateDropCapUseDefaultStyle(selectedElement, $event)
+        "
+        @update:fontSize="updateDropCapFontSize(selectedElement, $event)"
+        @update:fontFamily="updateDropCapFontFamily(selectedElement, $event)"
+        @update:strokeWidth="updateDropCapStrokeWidth(selectedElement, $event)"
+        @update:color="updateDropCapColor(selectedElement, $event)"
+        @update:bold="updateDropCapFontWeight(selectedElement, $event)"
+        @update:italic="updateDropCapFontStyle(selectedElement, $event)"
+      />
+    </template>
     <template v-if="selectedLyrics != null">
       <ToolbarLyrics
         :element="selectedLyrics"
@@ -576,6 +593,7 @@ import ToolbarMain from '@/components/ToolbarMain.vue';
 import ToolbarNeume from '@/components/ToolbarNeume.vue';
 import ToolbarMartyria from '@/components/ToolbarMartyria.vue';
 import ToolbarTempo from '@/components/ToolbarTempo.vue';
+import ToolbarDropCap from '@/components/ToolbarDropCap.vue';
 import ModeKeyDialog from '@/components/ModeKeyDialog.vue';
 import SyllablePositioningDialog from '@/components/SyllablePositioningDialog.vue';
 import PlaybackSettingsDialog from '@/components/PlaybackSettingsDialog.vue';
@@ -648,6 +666,7 @@ import {
     ToolbarNeume,
     ToolbarMartyria,
     ToolbarTempo,
+    ToolbarDropCap,
     ToolbarMain,
     ModeKeyDialog,
     SyllablePositioningDialog,
@@ -1795,6 +1814,13 @@ export default class Editor extends Vue {
     }
 
     const element = new DropCapElement();
+
+    element.color = this.score.pageSetup.dropCapDefaultColor;
+    element.fontFamily = this.score.pageSetup.dropCapDefaultFontFamily;
+    element.fontSize = this.score.pageSetup.dropCapDefaultFontSize;
+    element.strokeWidth = this.score.pageSetup.dropCapDefaultStrokeWidth;
+    element.fontWeight = this.score.pageSetup.dropCapDefaultFontWeight;
+    element.fontStyle = this.score.pageSetup.dropCapDefaultFontStyle;
 
     if (after && !this.isLastElement(this.selectedElement)) {
       this.addScoreElement(element, this.selectedElementIndex + 1);
@@ -4020,6 +4046,17 @@ export default class Editor extends Vue {
     this.save();
   }
 
+  updateDropCap(element: DropCapElement, newValues: Partial<DropCapElement>) {
+    this.commandService.execute(
+      this.dropCapCommandFactory.create('update-properties', {
+        target: element,
+        newValues: newValues,
+      }),
+    );
+
+    this.save();
+  }
+
   updateDropCapContent(element: DropCapElement, content: string) {
     // Replace newlines. This should only happen if the user pastes
     // text containing new lines.
@@ -4051,6 +4088,37 @@ export default class Editor extends Vue {
     }
 
     this.save();
+  }
+
+  updateDropCapUseDefaultStyle(
+    element: DropCapElement,
+    useDefaultStyle: boolean,
+  ) {
+    this.updateDropCap(element, { useDefaultStyle });
+  }
+
+  updateDropCapFontSize(element: DropCapElement, fontSize: number) {
+    this.updateDropCap(element, { fontSize });
+  }
+
+  updateDropCapFontFamily(element: DropCapElement, fontFamily: string) {
+    this.updateDropCap(element, { fontFamily });
+  }
+
+  updateDropCapStrokeWidth(element: DropCapElement, strokeWidth: number) {
+    this.updateDropCap(element, { strokeWidth });
+  }
+
+  updateDropCapColor(element: DropCapElement, color: string) {
+    this.updateDropCap(element, { color });
+  }
+
+  updateDropCapFontWeight(element: DropCapElement, bold: boolean) {
+    this.updateDropCap(element, { fontWeight: bold ? '700' : '400' });
+  }
+
+  updateDropCapFontStyle(element: DropCapElement, italic: boolean) {
+    this.updateDropCap(element, { fontStyle: italic ? 'italic' : 'normal' });
   }
 
   deleteSelectedElement() {

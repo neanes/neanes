@@ -61,21 +61,35 @@ export class ByzHtmlExporter {
   }
 
   exportPageSetup(pageSetup: PageSetup) {
+    let orientation = pageSetup.landscape ? 'landscape' : 'portrait';
+
     let style = `:root {
         --byz-neume-font-size: ${Unit.toPt(pageSetup.neumeDefaultFontSize)}pt;
         
         --byz-lyric-font-family: ${pageSetup.lyricsDefaultFontFamily};
         --byz-lyric-font-size: ${Unit.toPt(pageSetup.lyricsDefaultFontSize)}pt;
         --byz-lyric-offset-h: 3.6pt;
-        /*--byz-lyric-offset-v: -3pt;*/
+        --byz-lyric-offset-v: ${Unit.toPt(pageSetup.lyricsVerticalOffset)}pt;
 
-        --byz-lyric-font-family: ${pageSetup.dropCapDefaultFontFamily};
+        --byz-drop-cap-font-family: ${pageSetup.dropCapDefaultFontFamily};
         --byz-drop-cap-font-size: ${Unit.toPt(
           pageSetup.dropCapDefaultFontSize,
         )}pt;
         --byz-drop-cap-offset-v: ${Unit.toPt(
           this.getDropCapAdjustment(pageSetup),
         )}pt;
+
+        --byz-color-accidental: ${pageSetup.accidentalDefaultColor};
+        --byz-color-agogi: ${pageSetup.tempoDefaultColor};
+        --byz-color-barline: ${pageSetup.measureBarDefaultColor};
+        --byz-color-fthora: ${pageSetup.fthoraDefaultColor};
+        --byz-color-gorgon: ${pageSetup.gorgonDefaultColor};
+        --byz-color-heteron: ${pageSetup.heteronDefaultColor};
+        --byz-color-ison-indicator: ${pageSetup.isonDefaultColor};
+        --byz-color-koronis: ${pageSetup.koronisDefaultColor};
+        --byz-color-martyria: ${pageSetup.martyriaDefaultColor};
+        --byz-color-measure-number: ${pageSetup.measureNumberDefaultColor};
+        --byz-color-note-indicator: ${pageSetup.noteIndicatorDefaultColor};
       }
       
       body {
@@ -86,8 +100,9 @@ export class ByzHtmlExporter {
     )}px;
       }
 
-      x-martyria {
-        color: ${pageSetup.martyriaDefaultColor};
+      @page {
+        margin: 0;
+        size: ${pageSetup.pageSize} ${orientation}
       }
 
       x-lyrics {
@@ -104,6 +119,22 @@ export class ByzHtmlExporter {
 
       .byz--text-box {
         white-space: break-spaces;
+      }
+
+      .byz--mode-key .byz--tempo {
+        position: relative;
+        top: -9pt;
+        margin-left: 8px;
+      }
+
+      .byz--mode-key .byz--tempo-align-right {
+        float: right;
+      }
+
+      .byz--neume-paragraph {
+        display: inline-flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
       }
 `;
 
@@ -387,6 +418,7 @@ export class ByzHtmlExporter {
   exportModeKey(element: ModeKeyElement, indentation: number) {
     const classFthora = 'byz--fthora';
     const classTempo = 'byz--tempo';
+    const classTempoAlignRight = 'byz--tempo-align-right';
 
     let inner = '';
 
@@ -439,7 +471,9 @@ export class ByzHtmlExporter {
       element.tempo,
       indentation + 2,
       NoOffset,
-      classTempo,
+      element.tempoAlignRight
+        ? classTempo + ' ' + classTempoAlignRight
+        : classTempo,
     );
 
     let style = '';
@@ -527,11 +561,21 @@ export class ByzHtmlExporter {
   }
 
   getDropCapAdjustment(pageSetup: PageSetup) {
+    const neumeHeight = TextMeasurementService.getFontHeight(
+      `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
+    );
+
     const font = `${pageSetup.dropCapDefaultFontStyle} normal ${pageSetup.dropCapDefaultFontWeight} ${pageSetup.dropCapDefaultFontSize}px "${pageSetup.dropCapDefaultFontFamily}"`;
 
     const fontBoundingBoxDescent =
-      TextMeasurementService.getFontBoundingBoxDescent('A', font);
+      TextMeasurementService.getFontBoundingBoxDescent('R', font);
 
-    return fontBoundingBoxDescent;
+    // TODO this doesn't work correctly for every font
+    return (
+      neumeHeight +
+      pageSetup.lyricsDefaultFontSize +
+      pageSetup.lyricsVerticalOffset -
+      fontBoundingBoxDescent
+    );
   }
 }

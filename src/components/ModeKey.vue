@@ -106,6 +106,8 @@ export default class ModeKey extends Vue {
     if (this.element.tempoAlignRight) {
       style.position = 'absolute';
       style.right = withZoom(0);
+    } else {
+      style.marginLeft = withZoom(8);
     }
 
     return style;

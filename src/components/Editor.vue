@@ -624,6 +624,7 @@ import { Footer } from '@/models/Footer';
 import { TokenMetadata } from '@/utils/replaceTokens';
 import { Scale, ScaleNote } from '@/models/Scales';
 import { EditorPreferences } from '@/models/EditorPreferences';
+import { ByzHtmlExporter } from '@/services/integration/ByzHtmlExporter';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { IPlatformService } from '@/services/platform/IPlatformService';
 import { NeumeKeyboard } from '@/services/NeumeKeyboard';
@@ -751,6 +752,8 @@ export default class Editor extends Vue {
   };
 
   editorPreferences: EditorPreferences = new EditorPreferences();
+
+  byzHtmlExporter: ByzHtmlExporter = new ByzHtmlExporter();
 
   // Commands
   noteElementCommandFactory: CommandFactory<NoteElement> =

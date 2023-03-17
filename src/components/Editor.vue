@@ -1378,6 +1378,10 @@ export default class Editor extends Vue {
       IpcMainChannels.FileMenuExportAsPdf,
       this.onFileMenuExportAsPdf,
     );
+    EventBus.$on(
+      IpcMainChannels.FileMenuExportAsHtml,
+      this.onFileMenuExportAsHtml,
+    );
     EventBus.$on(IpcMainChannels.FileMenuUndo, this.onFileMenuUndo);
     EventBus.$on(IpcMainChannels.FileMenuRedo, this.onFileMenuRedo);
     EventBus.$on(IpcMainChannels.FileMenuCut, this.onFileMenuCut);
@@ -1446,6 +1450,10 @@ export default class Editor extends Vue {
     EventBus.$off(
       IpcMainChannels.FileMenuExportAsPdf,
       this.onFileMenuExportAsPdf,
+    );
+    EventBus.$off(
+      IpcMainChannels.FileMenuExportAsHtml,
+      this.onFileMenuExportAsHtml,
     );
     EventBus.$off(IpcMainChannels.FileMenuUndo, this.onFileMenuUndo);
     EventBus.$off(IpcMainChannels.FileMenuRedo, this.onFileMenuRedo);
@@ -4380,6 +4388,13 @@ export default class Editor extends Vue {
       // Re-focus the active element
       this.focusElement(activeElement);
     });
+  }
+
+  async onFileMenuExportAsHtml() {
+    await this.ipcService.exportWorkspaceAsHtml(
+      this.selectedWorkspace,
+      this.byzHtmlExporter.exportScore(this.score),
+    );
   }
 
   blurActiveElement() {

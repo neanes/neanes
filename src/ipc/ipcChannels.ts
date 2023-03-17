@@ -8,6 +8,7 @@ export enum IpcMainChannels {
   FileMenuSave = 'FileMenuSave',
   FileMenuSaveAs = 'FileMenuSaveAs',
   FileMenuExportAsPdf = 'FileMenuExportAsPdf',
+  FileMenuExportAsHtml = 'FileMenuExportAsHtml',
 
   FileMenuPageSetup = 'FileMenuPageSetup',
 
@@ -43,6 +44,7 @@ export enum IpcRendererChannels {
   SaveWorkspace = 'SaveWorkspace',
   SaveWorkspaceAs = 'SaveWorkspaceAs',
   ExportWorkspaceAsPdf = 'ExportWorkspaceAsPdf',
+  ExportWorkspaceAsHtml = 'ExportWorkspaceAsHtml',
   PrintWorkspace = 'PrintWorkspace',
   OpenWorkspaceFromArgv = 'OpenWorkspaceFromArgv',
 
@@ -106,6 +108,12 @@ export interface ExportWorkspaceAsPdfArgs {
   tempFileName: string;
   pageSize: PageSize;
   landscape: boolean;
+}
+
+export interface ExportWorkspaceAsHtmlArgs {
+  filePath: string | null;
+  tempFileName: string;
+  data: string;
 }
 
 export interface PrintWorkspaceArgs {

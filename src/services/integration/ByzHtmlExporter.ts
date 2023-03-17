@@ -57,7 +57,7 @@ export class ByzHtmlExporter {
   </body>
 </html>`;
 
-    console.log(result);
+    return result;
   }
 
   exportPageSetup(pageSetup: PageSetup) {
@@ -109,6 +109,11 @@ export class ByzHtmlExporter {
         color: ${pageSetup.lyricsDefaultColor};
       }
 
+      x-gorthmikon, x-pelastikon {
+        --byz-neume-font-size: ${Unit.toPt(pageSetup.lyricsDefaultFontSize)}pt;
+        line-height: ${Unit.toPt(pageSetup.lyricsDefaultFontSize)}pt;
+      }
+
       x-martyria.byz--align-right {
         margin-left: auto;
       }
@@ -119,6 +124,11 @@ export class ByzHtmlExporter {
 
       .byz--text-box {
         white-space: break-spaces;
+      }
+
+      .byz--text-box-inline {
+        display: flex;
+        align-items: center;
       }
 
       .byz--mode-key .byz--tempo {
@@ -132,9 +142,14 @@ export class ByzHtmlExporter {
       }
 
       .byz--neume-paragraph {
-        display: inline-flex;
+        display: flex;
         flex-wrap: wrap;
         justify-content: space-between;
+        margin-bottom: ${Unit.toPt(pageSetup.neumeDefaultFontSize)}pt;
+      }
+
+      .byz--neume-paragraph:last-child {
+        margin-bottom: 0;
       }
 `;
 
@@ -169,7 +184,13 @@ export class ByzHtmlExporter {
             indentation + 2,
           );
 
-          needLineBreak = !(element as MartyriaElement).alignRight;
+          if ((element as MartyriaElement).alignRight) {
+            result += this.endPage(indentation + 2, false);
+            insidePage = false;
+            needLineBreak = false;
+          } else {
+            needLineBreak = true;
+          }
           break;
         case ElementType.DropCap:
           if (!insidePage) {
@@ -195,7 +216,7 @@ export class ByzHtmlExporter {
           needLineBreak = true;
           break;
         case ElementType.TextBox:
-          if (insidePage) {
+          if (insidePage && !(element as TextBoxElement).inline) {
             result += this.endPage(indentation + 2, needLineBreak);
             insidePage = false;
             needLineBreak = false;
@@ -211,6 +232,13 @@ export class ByzHtmlExporter {
 
           result += this.exportModeKey(element as ModeKeyElement, indentation);
           break;
+      }
+
+      if (element.lineBreak || element.pageBreak) {
+        if (insidePage) {
+          result += this.endPage(indentation + 2, true);
+          insidePage = false;
+        }
       }
     }
 
@@ -335,12 +363,16 @@ export class ByzHtmlExporter {
         spacer += '<x-spacer-apostrofos></x-spacer-apostrofos>';
       }
 
-      inner += `<x-lyric slot="lyric">${spacer}${
-        element.lyrics
-      }</x-lyric\n${this.getIndentationString(indentation)}>`;
+      let lyrics = element.lyrics
+        .replaceAll('\u{1d0b4}', `<x-pelastikon></x-pelastikon`)
+        .replaceAll('\u{1d0b5}', `<x-gorthmikon></x-gorthmikon`);
+
+      inner += `<x-lyric slot="lyric">${spacer}${lyrics}</x-lyric\n${this.getIndentationString(
+        indentation,
+      )}>`;
 
       if (element.isMelisma) {
-        inner += `<x-melisma slot="melisma">${spacer}${element.melismaText.replaceAll(
+        inner += `<x-melisma slot="melisma">${element.melismaText.replaceAll(
           ' ',
           '&nbsp;',
         )}</x-melisma\n${this.getIndentationString(indentation)}>`;
@@ -398,11 +430,13 @@ export class ByzHtmlExporter {
   exportTextBox(element: TextBoxElement, indentation: number) {
     let style = '';
 
+    let className = 'byz--text-box';
+
     style += `color: ${element.computedColor};`;
     style += `font-family: ${getFontFamilyWithFallback(
       element.computedFontFamily,
     ).replaceAll('"', "'")};`;
-    style += `font-size: ${element.computedFontSize};`;
+    style += `font-size: ${Unit.toPt(element.computedFontSize)}pt;`;
     style += `font-weight: ${element.computedFontWeight};`;
     style += `font-style: ${element.computedFontStyle};`;
     style += `text-align: ${element.alignment};`;
@@ -410,7 +444,11 @@ export class ByzHtmlExporter {
     //style += `width: ${element.width};`;
     //style += `height: ${element.height};`;
 
-    return `<div class="byz--text-box" style="${style}">${
+    if (element.inline) {
+      className += ' byz--text-box-inline';
+    }
+
+    return `<div class="${className}" style="${style}">${
       element.content
     }</div\n${this.getIndentationString(indentation)}>`;
   }
@@ -482,7 +520,7 @@ export class ByzHtmlExporter {
     style += `font-family: ${getFontFamilyWithFallback(
       element.computedFontFamily,
     ).replaceAll('"', "'")};`;
-    style += `font-size: ${element.computedFontSize};`;
+    style += `font-size: ${Unit.toPt(element.computedFontSize)}pt;`;
     style += `text-align: ${element.alignment};`;
     style += `-webkit-text-stroke-width: ${element.computedStrokeWidth};`;
 

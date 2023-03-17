@@ -11,6 +11,7 @@
       <FileMenuItem label="Save" @click="onClickSave" />
       <div class="separator" />
       <FileMenuItem label="Page Setup" @click="onClickPageSetup" />
+      <FileMenuItem label="Export as HTML" @click="onClickExportAsHtml" />
     </FileMenuBarItem>
     <FileMenuBarItem
       label="Edit"
@@ -160,6 +161,11 @@ export default class FileMenuBar extends Vue {
 
   onClickSave() {
     EventBus.$emit(IpcMainChannels.FileMenuSaveAs);
+    this.isMenuOpen = false;
+  }
+
+  onClickExportAsHtml() {
+    EventBus.$emit(IpcMainChannels.FileMenuExportAsHtml);
     this.isMenuOpen = false;
   }
 

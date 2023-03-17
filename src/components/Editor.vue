@@ -624,6 +624,7 @@ import { Footer } from '@/models/Footer';
 import { TokenMetadata } from '@/utils/replaceTokens';
 import { Scale, ScaleNote } from '@/models/Scales';
 import { EditorPreferences } from '@/models/EditorPreferences';
+import { ByzHtmlExporter } from '@/services/integration/ByzHtmlExporter';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { IPlatformService } from '@/services/platform/IPlatformService';
 import { NeumeKeyboard } from '@/services/NeumeKeyboard';
@@ -752,6 +753,8 @@ export default class Editor extends Vue {
 
   editorPreferences: EditorPreferences = new EditorPreferences();
 
+  byzHtmlExporter: ByzHtmlExporter = new ByzHtmlExporter();
+
   // Commands
   noteElementCommandFactory: CommandFactory<NoteElement> =
     new CommandFactory<NoteElement>();
@@ -836,6 +839,11 @@ export default class Editor extends Vue {
   onCopyScoreElementsThrottled = throttle(
     this.keydownThrottleIntervalMs,
     this.onCopyScoreElements,
+  );
+
+  onFileMenuCopyAsHtmlThrottled = throttle(
+    this.keydownThrottleIntervalMs,
+    this.onFileMenuCopyAsHtml,
   );
 
   onPasteScoreElementsThrottled = throttle(
@@ -1375,10 +1383,15 @@ export default class Editor extends Vue {
       IpcMainChannels.FileMenuExportAsPdf,
       this.onFileMenuExportAsPdf,
     );
+    EventBus.$on(
+      IpcMainChannels.FileMenuExportAsHtml,
+      this.onFileMenuExportAsHtml,
+    );
     EventBus.$on(IpcMainChannels.FileMenuUndo, this.onFileMenuUndo);
     EventBus.$on(IpcMainChannels.FileMenuRedo, this.onFileMenuRedo);
     EventBus.$on(IpcMainChannels.FileMenuCut, this.onFileMenuCut);
     EventBus.$on(IpcMainChannels.FileMenuCopy, this.onFileMenuCopy);
+    EventBus.$on(IpcMainChannels.FileMenuCopyAsHtml, this.onFileMenuCopyAsHtml);
     EventBus.$on(IpcMainChannels.FileMenuPaste, this.onFileMenuPaste);
     EventBus.$on(
       IpcMainChannels.FileMenuPasteWithLyrics,
@@ -1444,10 +1457,18 @@ export default class Editor extends Vue {
       IpcMainChannels.FileMenuExportAsPdf,
       this.onFileMenuExportAsPdf,
     );
+    EventBus.$off(
+      IpcMainChannels.FileMenuExportAsHtml,
+      this.onFileMenuExportAsHtml,
+    );
     EventBus.$off(IpcMainChannels.FileMenuUndo, this.onFileMenuUndo);
     EventBus.$off(IpcMainChannels.FileMenuRedo, this.onFileMenuRedo);
     EventBus.$off(IpcMainChannels.FileMenuCut, this.onFileMenuCut);
     EventBus.$off(IpcMainChannels.FileMenuCopy, this.onFileMenuCopy);
+    EventBus.$off(
+      IpcMainChannels.FileMenuCopyAsHtml,
+      this.onFileMenuCopyAsHtml,
+    );
     EventBus.$off(IpcMainChannels.FileMenuPaste, this.onFileMenuPaste);
     EventBus.$off(
       IpcMainChannels.FileMenuPasteWithLyrics,
@@ -1987,7 +2008,11 @@ export default class Editor extends Vue {
         event.preventDefault();
         return;
       } else if (event.code === 'KeyC') {
-        this.onCopyScoreElementsThrottled();
+        if (event.shiftKey) {
+          this.onFileMenuCopyAsHtmlThrottled();
+        } else {
+          this.onCopyScoreElementsThrottled();
+        }
         event.preventDefault();
         return;
       } else if (event.code === 'KeyV') {
@@ -4379,6 +4404,13 @@ export default class Editor extends Vue {
     });
   }
 
+  async onFileMenuExportAsHtml() {
+    await this.ipcService.exportWorkspaceAsHtml(
+      this.selectedWorkspace,
+      this.byzHtmlExporter.exportScore(this.score),
+    );
+  }
+
   blurActiveElement() {
     const activeElement = document.activeElement;
 
@@ -4524,6 +4556,24 @@ export default class Editor extends Vue {
     } else {
       document.execCommand('copy');
     }
+  }
+
+  onFileMenuCopyAsHtml() {
+    let elements: ScoreElement[] = [];
+
+    if (this.selectionRange != null) {
+      elements = this.elements.filter(
+        (x) => x.elementType != ElementType.Empty && this.isSelected(x),
+      );
+    } else if (this.selectedElement != null) {
+      elements = [this.selectedElement];
+    } else if (this.selectedLyrics != null) {
+      elements = [this.selectedLyrics];
+    }
+
+    const html = this.byzHtmlExporter.exportElements(elements, 0, true);
+
+    navigator.clipboard.writeText(html);
   }
 
   onFileMenuPaste() {

@@ -14,6 +14,8 @@ export interface IIpcService {
 
   exportWorkspaceAsPdf(workspace: Workspace): Promise<void>;
 
+  exportWorkspaceAsHtml(workspace: Workspace, data: string): Promise<void>;
+
   printWorkspace(workspace: Workspace): Promise<void>;
 
   openWorkspaceFromArgv(): Promise<FileMenuOpenScoreArgs[]>;

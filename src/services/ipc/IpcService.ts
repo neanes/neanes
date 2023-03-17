@@ -1,4 +1,5 @@
 import {
+  ExportWorkspaceAsHtmlArgs,
   ExportWorkspaceAsPdfArgs,
   FileMenuOpenScoreArgs,
   IpcRendererChannels,
@@ -11,6 +12,7 @@ import {
   ShowMessageBoxReplyArgs,
 } from '@/ipc/ipcChannels';
 import { Workspace } from '@/models/Workspace';
+import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
 import { SaveService } from '../SaveService';
 import { IIpcService } from './IIpcService';
 
@@ -47,6 +49,20 @@ export class IpcService implements IIpcService {
         landscape: workspace.score.pageSetup.landscape,
         pageSize: workspace.score.pageSetup.pageSize,
       } as ExportWorkspaceAsPdfArgs,
+    );
+  }
+
+  public async exportWorkspaceAsHtml(workspace: Workspace, data: string) {
+    return await window.ipcRenderer.invoke(
+      IpcRendererChannels.ExportWorkspaceAsHtml,
+      {
+        filePath:
+          workspace.filePath != null
+            ? `${getFileNameFromPath(workspace.filePath)}.html`
+            : null,
+        tempFileName: `${workspace.tempFileName}.html`,
+        data,
+      } as ExportWorkspaceAsHtmlArgs,
     );
   }
 

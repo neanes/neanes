@@ -26,6 +26,7 @@ import {
   FileMenuOpenScoreArgs,
   SaveWorkspaceAsReplyArgs,
   FileMenuInsertTextboxArgs,
+  ExportWorkspaceAsHtmlArgs,
 } from './ipc/ipcChannels';
 import path from 'path';
 import { promises as fs } from 'fs';
@@ -360,6 +361,44 @@ async function exportWorkspaceAsPdf(args: ExportWorkspaceAsPdfArgs) {
   }
 }
 
+async function exportWorkspaceAsHtml(args: ExportWorkspaceAsHtmlArgs) {
+  try {
+    if (saving) {
+      return false;
+    }
+
+    saving = true;
+
+    const dialogResult = await dialog.showSaveDialog(win!, {
+      title: 'Export Score as HTML',
+      defaultPath: args.filePath || args.tempFileName,
+      filters: [
+        {
+          name: `HTML File`,
+          extensions: ['html'],
+        },
+      ],
+    });
+
+    if (!dialogResult.canceled) {
+      await fs.writeFile(dialogResult.filePath!, args.data);
+      await shell.openPath(dialogResult.filePath!);
+    }
+  } catch (error) {
+    console.error(error);
+
+    if (error instanceof Error) {
+      dialog.showMessageBox(win!, {
+        type: 'error',
+        title: 'Export as HTML failed',
+        message: error.message,
+      });
+    }
+  } finally {
+    saving = false;
+  }
+}
+
 async function printWorkspace(args: PrintWorkspaceArgs) {
   return new Promise((resolve) => {
     try {
@@ -613,6 +652,13 @@ function createMenu() {
           },
         },
         {
+          label: 'Export as &HTML',
+          accelerator: 'CmdOrCtrl+Shift+E',
+          click() {
+            win?.webContents.send(IpcMainChannels.FileMenuExportAsHtml);
+          },
+        },
+        {
           label: '&Print',
           accelerator: 'CmdOrCtrl+P',
           click() {
@@ -670,6 +716,17 @@ function createMenu() {
             // https://github.com/electron/electron/issues/3682.
             if (!event.triggeredByAccelerator) {
               win?.webContents.send(IpcMainChannels.FileMenuCopy);
+            }
+          },
+        },
+        {
+          label: 'Copy as &HTML',
+          accelerator: 'CmdOrCtrl+Shift+C',
+          click(menuItem, browserWindow, event) {
+            // The accelerator is handled in the renderer process because of
+            // https://github.com/electron/electron/issues/3682.
+            if (!event.triggeredByAccelerator) {
+              win?.webContents.send(IpcMainChannels.FileMenuCopyAsHtml);
             }
           },
         },
@@ -981,6 +1038,13 @@ ipcMain.handle(
   IpcRendererChannels.ExportWorkspaceAsPdf,
   async (event, args: ExportWorkspaceAsPdfArgs) => {
     return await exportWorkspaceAsPdf(args);
+  },
+);
+
+ipcMain.handle(
+  IpcRendererChannels.ExportWorkspaceAsHtml,
+  async (event, args: ExportWorkspaceAsHtmlArgs) => {
+    return await exportWorkspaceAsHtml(args);
   },
 );
 

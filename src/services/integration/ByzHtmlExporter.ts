@@ -29,7 +29,7 @@ interface NeumeOffset {
 }
 
 const NoOffset: NeumeOffset = { x: null, y: null };
-const byzhtmlVersion = 'latest';
+const byzhtmlVersion = process.env.VUE_APP_BYZHTML_VERSION;
 
 export class ByzHtmlExporter {
   neumeToTagMap: Map<Neume, string> = new Map<Neume, string>();

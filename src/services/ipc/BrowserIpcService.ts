@@ -35,6 +35,20 @@ export class BrowserIpcService implements IIpcService {
     throw 'exportWorkspaceAsPdf is not available in the browser.';
   }
 
+  public async exportWorkspaceAsHtml(workspace: Workspace, data: string) {
+    const file = new Blob([data], { type: 'application/json' });
+
+    const downloadFileName =
+      workspace.filePath != null
+        ? `${getFileNameFromPath(workspace.filePath)}.html`
+        : `${workspace.tempFileName}.html`;
+
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(file);
+    a.download = downloadFileName;
+    a.click();
+  }
+
   public async printWorkspace(workspace: Workspace): Promise<void> {
     return new Promise((resolve) => {
       window.addEventListener(

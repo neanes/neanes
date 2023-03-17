@@ -156,10 +156,14 @@ export class ByzHtmlExporter {
     return style;
   }
 
-  exportElements(elements: ScoreElement[], indentation: number) {
+  exportElements(
+    elements: ScoreElement[],
+    indentation: number,
+    startInsidePage: boolean = false,
+  ) {
     let result = '';
 
-    let insidePage = false;
+    let insidePage = startInsidePage;
     let needLineBreak = true;
 
     for (let element of elements) {

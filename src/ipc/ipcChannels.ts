@@ -17,6 +17,7 @@ export enum IpcMainChannels {
 
   FileMenuCut = 'FileMenuCut',
   FileMenuCopy = 'FileMenuCopy',
+  FileMenuCopyAsHtml = 'FileMenuCopyAsHtml',
   FileMenuPaste = 'FileMenuPaste',
   FileMenuPasteWithLyrics = 'FileMenuPasteWithLyrics',
 

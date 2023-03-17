@@ -841,6 +841,11 @@ export default class Editor extends Vue {
     this.onCopyScoreElements,
   );
 
+  onFileMenuCopyAsHtmlThrottled = throttle(
+    this.keydownThrottleIntervalMs,
+    this.onFileMenuCopyAsHtml,
+  );
+
   onPasteScoreElementsThrottled = throttle(
     this.keydownThrottleIntervalMs,
     this.onPasteScoreElements,
@@ -1386,6 +1391,7 @@ export default class Editor extends Vue {
     EventBus.$on(IpcMainChannels.FileMenuRedo, this.onFileMenuRedo);
     EventBus.$on(IpcMainChannels.FileMenuCut, this.onFileMenuCut);
     EventBus.$on(IpcMainChannels.FileMenuCopy, this.onFileMenuCopy);
+    EventBus.$on(IpcMainChannels.FileMenuCopyAsHtml, this.onFileMenuCopyAsHtml);
     EventBus.$on(IpcMainChannels.FileMenuPaste, this.onFileMenuPaste);
     EventBus.$on(
       IpcMainChannels.FileMenuPasteWithLyrics,
@@ -1459,6 +1465,10 @@ export default class Editor extends Vue {
     EventBus.$off(IpcMainChannels.FileMenuRedo, this.onFileMenuRedo);
     EventBus.$off(IpcMainChannels.FileMenuCut, this.onFileMenuCut);
     EventBus.$off(IpcMainChannels.FileMenuCopy, this.onFileMenuCopy);
+    EventBus.$off(
+      IpcMainChannels.FileMenuCopyAsHtml,
+      this.onFileMenuCopyAsHtml,
+    );
     EventBus.$off(IpcMainChannels.FileMenuPaste, this.onFileMenuPaste);
     EventBus.$off(
       IpcMainChannels.FileMenuPasteWithLyrics,
@@ -1998,7 +2008,11 @@ export default class Editor extends Vue {
         event.preventDefault();
         return;
       } else if (event.code === 'KeyC') {
-        this.onCopyScoreElementsThrottled();
+        if (event.shiftKey) {
+          this.onFileMenuCopyAsHtmlThrottled();
+        } else {
+          this.onCopyScoreElementsThrottled();
+        }
         event.preventDefault();
         return;
       } else if (event.code === 'KeyV') {
@@ -4542,6 +4556,24 @@ export default class Editor extends Vue {
     } else {
       document.execCommand('copy');
     }
+  }
+
+  onFileMenuCopyAsHtml() {
+    let elements: ScoreElement[] = [];
+
+    if (this.selectionRange != null) {
+      elements = this.elements.filter(
+        (x) => x.elementType != ElementType.Empty && this.isSelected(x),
+      );
+    } else if (this.selectedElement != null) {
+      elements = [this.selectedElement];
+    } else if (this.selectedLyrics != null) {
+      elements = [this.selectedLyrics];
+    }
+
+    const html = this.byzHtmlExporter.exportElements(elements, 0, true);
+
+    navigator.clipboard.writeText(html);
   }
 
   onFileMenuPaste() {

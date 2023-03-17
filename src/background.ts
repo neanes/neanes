@@ -720,6 +720,17 @@ function createMenu() {
           },
         },
         {
+          label: 'Copy as &HTML',
+          accelerator: 'CmdOrCtrl+Shift+C',
+          click(menuItem, browserWindow, event) {
+            // The accelerator is handled in the renderer process because of
+            // https://github.com/electron/electron/issues/3682.
+            if (!event.triggeredByAccelerator) {
+              win?.webContents.send(IpcMainChannels.FileMenuCopyAsHtml);
+            }
+          },
+        },
+        {
           label: 'Past&e',
           accelerator: 'CmdOrCtrl+V',
           click(menuItem, browserWindow, event) {

@@ -101,8 +101,18 @@ export class ByzHtmlExporter {
       }
 
       @page {
-        margin: 0;
+        margin: ${Unit.toPt(pageSetup.topMargin)}px ${Unit.toPt(
+      pageSetup.rightMargin,
+    )}px ${Unit.toPt(pageSetup.bottomMargin)}px ${Unit.toPt(
+      pageSetup.leftMargin,
+    )}px;
         size: ${pageSetup.pageSize} ${orientation}
+      }
+
+      @media print {
+        body {
+          margin: 0;
+        }
       }
 
       x-lyrics {

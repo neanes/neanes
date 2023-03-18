@@ -438,7 +438,7 @@ export class ByzHtmlExporter {
   }
 
   exportTempo(element: TempoElement, indentation: number) {
-    return this.exportNeume(element.neume, 0);
+    return this.exportNeume(element.neume, 0, NoOffset, 'byz--tempo');
   }
 
   exportTextBox(element: TextBoxElement, indentation: number) {
@@ -558,7 +558,7 @@ export class ByzHtmlExporter {
     let styleAttribute = '';
 
     if (offset && offset.x != null && offset.y != null) {
-      styleAttribute = ` style="position: relative; left: ${offset.x}em; top: ${offset.y}em;"`;
+      styleAttribute = ` left="${offset.x}em" top="${offset.y}em"`;
     }
 
     if (classname != null) {

@@ -31,8 +31,13 @@ interface NeumeOffset {
 const NoOffset: NeumeOffset = { x: null, y: null };
 const byzhtmlVersion = process.env.VUE_APP_BYZHTML_VERSION;
 
+interface TagInfo {
+  tag: string;
+  salt: number | undefined;
+}
+
 export class ByzHtmlExporter {
-  neumeToTagMap: Map<Neume, string> = new Map<Neume, string>();
+  neumeToTagMap: Map<Neume, TagInfo> = new Map<Neume, TagInfo>();
 
   exportScore(score: Score) {
     const style = this.exportPageSetup(score.pageSetup);
@@ -47,6 +52,11 @@ export class ByzHtmlExporter {
     />
     
     <script src="https://cdn.jsdelivr.net/gh/danielgarthur/byzhtml@${byzhtmlVersion}/dist/byzhtml.min.js"></script>
+
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, minimum-scale=1.0"
+    />
 
     <style>
       ${style}
@@ -78,6 +88,7 @@ export class ByzHtmlExporter {
         --byz-drop-cap-offset-v: ${Unit.toPt(
           this.getDropCapAdjustment(pageSetup),
         )}pt;
+        --byz-drop-cap-color: ${pageSetup.dropCapDefaultColor};
 
         --byz-color-accidental: ${pageSetup.accidentalDefaultColor};
         --byz-color-agogi: ${pageSetup.tempoDefaultColor};
@@ -112,6 +123,12 @@ export class ByzHtmlExporter {
       @media print {
         body {
           margin: 0;
+        }
+      }
+
+      @media screen and (max-width: 768px) {
+        body {
+          margin: 24px;
         }
       }
 
@@ -367,29 +384,20 @@ export class ByzHtmlExporter {
     }
 
     if (element.lyrics.trim() != '') {
-      let spacer = '';
-
-      if (element.vareia) {
-        spacer = '<x-spacer-vareia></x-spacer-vareia>';
-      }
-
-      if (element.quantitativeNeume === QuantitativeNeume.RunningElaphron) {
-        spacer += '<x-spacer-apostrofos></x-spacer-apostrofos>';
-      }
-
       let lyrics = element.lyrics
         .replaceAll('\u{1d0b4}', `<x-pelastikon></x-pelastikon`)
         .replaceAll('\u{1d0b5}', `<x-gorthmikon></x-gorthmikon`);
 
-      inner += `<x-lyric slot="lyric">${spacer}${lyrics}</x-lyric\n${this.getIndentationString(
+      inner += `<x-lyric slot="lyric">${lyrics}</x-lyric\n${this.getIndentationString(
         indentation,
       )}>`;
 
-      if (element.isMelisma) {
-        inner += `<x-melisma slot="melisma">${element.melismaText.replaceAll(
-          ' ',
-          '&nbsp;',
-        )}</x-melisma\n${this.getIndentationString(indentation)}>`;
+      if (element.isMelismaStart) {
+        const hyphenAttribute = element.isHyphen ? ' hyphen' : '';
+
+        inner += `<x-melisma auto${hyphenAttribute} slot="melisma"></x-melisma\n${this.getIndentationString(
+          indentation,
+        )}>`;
       }
     }
 
@@ -553,23 +561,29 @@ export class ByzHtmlExporter {
       return '';
     }
 
-    const tag = this.getTag(neume);
+    const tagInfo = this.getTagInfo(neume);
 
     let styleAttribute = '';
+    let saltAttribute = '';
+    let classAttribute = '';
 
     if (offset && offset.x != null && offset.y != null) {
-      styleAttribute = ` left="${offset.x}em" top="${offset.y}em"`;
+      styleAttribute = ` left="${offset.x}em" top="${offset.y}em";`;
+    }
+
+    if (tagInfo.salt != null) {
+      saltAttribute = ` salt="${tagInfo.salt}"`;
     }
 
     if (classname != null) {
-      return `<${tag} class="${classname}"${styleAttribute}></${tag}\n${this.getIndentationString(
-        indentation,
-      )}>`;
-    } else {
-      return `<${tag}${styleAttribute}></${tag}\n${this.getIndentationString(
-        indentation,
-      )}>`;
+      classAttribute = ` class="${classname}"`;
     }
+
+    return `<${
+      tagInfo.tag
+    } ${classAttribute}${styleAttribute}${saltAttribute}></${
+      tagInfo.tag
+    }\n${this.getIndentationString(indentation)}>`;
   }
 
   startPage(indentation: number) {
@@ -588,18 +602,18 @@ export class ByzHtmlExporter {
     return `${lineBreak}</div\n${this.getIndentationString(indentation)}>`;
   }
 
-  getTag(neume: Neume) {
+  getTagInfo(neume: Neume) {
     if (!this.neumeToTagMap.has(neume)) {
-      const glyphName = NeumeMappingService.getMapping(neume).glyphName;
+      const mapping = NeumeMappingService.getMapping(neume);
       const pattern = /(?<!^)(?=[A-Z])/g;
 
-      this.neumeToTagMap.set(
-        neume,
-        'x-' + glyphName.replaceAll(pattern, '-').toLowerCase(),
-      );
+      this.neumeToTagMap.set(neume, {
+        tag: 'x-' + mapping.glyphName.replaceAll(pattern, '-').toLowerCase(),
+        salt: mapping.salt,
+      });
     }
 
-    return this.neumeToTagMap.get(neume);
+    return this.neumeToTagMap.get(neume)!;
   }
 
   getIndentationString(indentation: number) {

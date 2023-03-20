@@ -193,6 +193,12 @@ export class ByzHtmlExporter {
         color: ${pageSetup.lyricsDefaultColor};
       }
 
+      ${this.config.tagDropCap} {
+        font-weight: ${pageSetup.dropCapDefaultFontWeight};
+        font-style: ${pageSetup.dropCapDefaultFontStyle};
+        -webkit-text-stroke-width: ${pageSetup.dropCapDefaultStrokeWidth};
+      }
+
       ${this.getTag('gorthmikon')}, ${this.getTag('pelastikon')} {
         --byz-neume-font-size: ${Unit.toPt(pageSetup.lyricsDefaultFontSize)}pt;
         line-height: ${Unit.toPt(pageSetup.lyricsDefaultFontSize)}pt;
@@ -210,7 +216,7 @@ export class ByzHtmlExporter {
         white-space: break-spaces;
         font-family: ${pageSetup.lyricsDefaultFontFamily};
         font-size: ${Unit.toPt(pageSetup.lyricsDefaultFontSize)}pt;
-        font-weight ${pageSetup.lyricsDefaultFontWeight};
+        font-weight: ${pageSetup.lyricsDefaultFontWeight};
         font-style: ${pageSetup.lyricsDefaultFontStyle};
         color: ${pageSetup.lyricsDefaultColor};
         -webkit-text-stroke-width: ${pageSetup.lyricsDefaultStrokeWidth};
@@ -516,7 +522,24 @@ export class ByzHtmlExporter {
   }
 
   exportDropCap(element: DropCapElement, indentation: number) {
-    return `<${this.config.tagDropCap}>${element.content}</${
+    let styleAttribute = '';
+
+    if (!element.useDefaultStyle) {
+      let style = '';
+
+      style += `color: ${element.computedColor};`;
+      style += `font-family: ${getFontFamilyWithFallback(
+        element.computedFontFamily,
+      ).replaceAll('"', "'")};`;
+      style += `font-size: ${Unit.toPt(element.computedFontSize)}pt;`;
+      style += `font-weight: ${element.computedFontWeight};`;
+      style += `font-style: ${element.computedFontStyle};`;
+      style += `-webkit-text-stroke-width: ${element.computedStrokeWidth};`;
+
+      styleAttribute = ` style="${style}"`;
+    }
+
+    return `<${this.config.tagDropCap}${styleAttribute}>${element.content}</${
       this.config.tagDropCap
     }\n${this.getIndentationString(indentation)}>`;
   }

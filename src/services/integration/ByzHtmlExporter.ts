@@ -50,6 +50,12 @@ interface ByzHtmlExporterConfig {
   classTextBoxInline: string;
   classModeKey: string;
   classLineBreak: string;
+
+  tagLyric: string;
+  tagMelisma: string;
+  tagNote: string;
+  tagMartyria: string;
+  tagDropCap: string;
 }
 
 export class ByzHtmlExporter {
@@ -69,6 +75,12 @@ export class ByzHtmlExporter {
     classTextBoxInline: 'byz--text-box-inline',
     classModeKey: 'byz--mode-key',
     classLineBreak: 'byz--line-break',
+
+    tagLyric: 'x-ly',
+    tagMelisma: 'x-mel',
+    tagNote: 'x-n',
+    tagMartyria: 'x-m',
+    tagDropCap: 'x-dc',
   };
 
   exportScore(score: Score) {
@@ -166,7 +178,7 @@ export class ByzHtmlExporter {
         }
       }
 
-      x-lyrics {
+      ${this.config.tagLyric} {
         color: ${pageSetup.lyricsDefaultColor};
       }
 
@@ -175,7 +187,7 @@ export class ByzHtmlExporter {
         line-height: ${Unit.toPt(pageSetup.lyricsDefaultFontSize)}pt;
       }
 
-      x-martyria.${this.config.classMartyriaAlignRight} {
+      ${this.config.tagMartyria}.${this.config.classMartyriaAlignRight} {
         margin-left: auto;
       }
 
@@ -417,22 +429,24 @@ export class ByzHtmlExporter {
         .replaceAll('\u{1d0b4}', `<x-pelastikon></x-pelastikon`)
         .replaceAll('\u{1d0b5}', `<x-gorthmikon></x-gorthmikon`);
 
-      inner += `<x-lyric>${lyrics}</x-lyric\n${this.getIndentationString(
-        indentation,
-      )}>`;
+      inner += `<${this.config.tagLyric}>${lyrics}</${
+        this.config.tagLyric
+      }\n${this.getIndentationString(indentation)}>`;
 
       if (element.isMelismaStart) {
         const hyphenAttribute = element.isHyphen ? ' hyphen' : '';
 
-        inner += `<x-melisma auto${hyphenAttribute}></x-melisma\n${this.getIndentationString(
-          indentation,
-        )}>`;
+        inner += `<${this.config.tagMelisma} auto${hyphenAttribute}></${
+          this.config.tagMelisma
+        }\n${this.getIndentationString(indentation)}>`;
       }
     }
 
-    return `<x-note\n${this.getIndentationString(
+    return `<${this.config.tagNote}\n${this.getIndentationString(
       indentation + 2,
-    )}>${inner}</x-note\n${this.getIndentationString(indentation)}>`;
+    )}>${inner}</${this.config.tagNote}\n${this.getIndentationString(
+      indentation,
+    )}>`;
   }
 
   exportMartyria(element: MartyriaElement, indentation: number) {
@@ -459,15 +473,19 @@ export class ByzHtmlExporter {
       classAttribute = ` class="${this.config.classMartyriaAlignRight}"`;
     }
 
-    return `<x-martyria${classAttribute}\n${this.getIndentationString(
+    return `<${
+      this.config.tagMartyria
+    }${classAttribute}\n${this.getIndentationString(
       indentation + 2,
-    )}>${inner}</x-martyria\n${this.getIndentationString(indentation)}>`;
+    )}>${inner}</${this.config.tagMartyria}\n${this.getIndentationString(
+      indentation,
+    )}>`;
   }
 
   exportDropCap(element: DropCapElement, indentation: number) {
-    return `<x-drop-cap>${
-      element.content
-    }</x-drop-cap\n${this.getIndentationString(indentation)}>`;
+    return `<${this.config.tagDropCap}>${element.content}</${
+      this.config.tagDropCap
+    }\n${this.getIndentationString(indentation)}>`;
   }
 
   exportTempo(element: TempoElement, indentation: number) {
@@ -479,7 +497,7 @@ export class ByzHtmlExporter {
 
     let className = this.config.classTextBox;
 
-    if (!element.useDefaultStyle) {
+    if (!element.inline || !element.useDefaultStyle) {
       let style = '';
 
       style += `color: ${element.computedColor};`;

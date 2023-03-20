@@ -36,8 +36,40 @@ interface TagInfo {
   salt: number | undefined;
 }
 
+interface ByzHtmlExporterConfig {
+  classFthora: string;
+  classGorgon: string;
+  classIson: string;
+  classNoteIndicator: string;
+  classTempo: string;
+  classTempoAbove: string;
+  classMartyriaAlignRight: string;
+  classTempoAlignRight: string;
+  classNeumeParagraph: string;
+  classTextBox: string;
+  classTextBoxInline: string;
+  classModeKey: string;
+  classLineBreak: string;
+}
+
 export class ByzHtmlExporter {
   neumeToTagMap: Map<Neume, TagInfo> = new Map<Neume, TagInfo>();
+
+  config: ByzHtmlExporterConfig = {
+    classFthora: 'byz--f',
+    classGorgon: 'byz--g',
+    classIson: 'byz--ii',
+    classNoteIndicator: 'byz--ni',
+    classTempo: 'byz--t',
+    classTempoAbove: 'byz--t-m',
+    classMartyriaAlignRight: 'byz--m-align-right',
+    classTempoAlignRight: 'byz--t-align-right',
+    classNeumeParagraph: 'byz--neume-paragraph',
+    classTextBox: 'byz--text-box',
+    classTextBoxInline: 'byz--text-box-inline',
+    classModeKey: 'byz--mode-key',
+    classLineBreak: 'byz--line-break',
+  };
 
   exportScore(score: Score) {
     const style = this.exportPageSetup(score.pageSetup);
@@ -143,41 +175,41 @@ export class ByzHtmlExporter {
         line-height: ${Unit.toPt(pageSetup.lyricsDefaultFontSize)}pt;
       }
 
-      x-martyria.byz--align-right {
+      x-martyria.${this.config.classMartyriaAlignRight} {
         margin-left: auto;
       }
 
-      .byz--line-break {
+      .${this.config.classLineBreak} {
         margin-left: auto;
       }
 
-      .byz--text-box {
+      .${this.config.classTextBox} {
         white-space: break-spaces;
       }
 
-      .byz--text-box-inline {
+      .${this.config.classTextBoxInline} {
         display: flex;
         align-items: center;
       }
 
-      .byz--mode-key .byz--tempo {
+      .${this.config.classModeKey} .${this.config.classTempo} {
         position: relative;
         top: -9pt;
         margin-left: 8px;
       }
 
-      .byz--mode-key .byz--tempo-align-right {
+      .${this.config.classModeKey} .${this.config.classTempoAlignRight} {
         float: right;
       }
 
-      .byz--neume-paragraph {
+      .${this.config.classNeumeParagraph} {
         display: flex;
         flex-wrap: wrap;
         justify-content: space-between;
         margin-bottom: ${Unit.toPt(pageSetup.neumeDefaultFontSize)}pt;
       }
 
-      .byz--neume-paragraph:last-child {
+      .${this.config.classNeumeParagraph}:last-child {
         margin-bottom: 0;
       }
 `;
@@ -283,11 +315,6 @@ export class ByzHtmlExporter {
   }
 
   exportNote(element: NoteElement, indentation: number) {
-    const classFthora = 'byz--fthora';
-    const classGorgon = 'byz--gorgon';
-    const classIson = 'byz--ison';
-    const classNoteIndicator = 'byz--note-indicator';
-
     let inner = '';
 
     if (element.vareia) {
@@ -320,7 +347,7 @@ export class ByzHtmlExporter {
       element.gorgonNeume,
       indentation + 2,
       { x: element.gorgonNeumeOffsetX, y: element.gorgonNeumeOffsetY },
-      classGorgon,
+      this.config.classGorgon,
     );
 
     inner += this.exportNeume(
@@ -330,14 +357,14 @@ export class ByzHtmlExporter {
         x: element.secondaryGorgonNeumeOffsetX,
         y: element.secondaryGorgonNeumeOffsetY,
       },
-      classGorgon,
+      this.config.classGorgon,
     );
 
     inner += this.exportNeume(
       element.fthora,
       indentation + 2,
       { x: element.fthoraOffsetX, y: element.fthoraOffsetY },
-      classFthora,
+      this.config.classFthora,
     );
 
     inner += this.exportNeume(element.accidental, indentation + 2, {
@@ -355,7 +382,7 @@ export class ByzHtmlExporter {
         element.noteIndicatorNeume,
         indentation + 2,
         { x: element.noteIndicatorOffsetX, y: element.noteIndicatorOffsetY },
-        classNoteIndicator,
+        this.config.classNoteIndicator,
       );
     }
 
@@ -363,7 +390,7 @@ export class ByzHtmlExporter {
       element.ison,
       indentation + 2,
       { x: element.isonOffsetX, y: element.isonOffsetY },
-      classIson,
+      this.config.classIson,
     );
 
     inner += this.exportNeume(element.tie, indentation + 2, {
@@ -390,14 +417,14 @@ export class ByzHtmlExporter {
         .replaceAll('\u{1d0b4}', `<x-pelastikon></x-pelastikon`)
         .replaceAll('\u{1d0b5}', `<x-gorthmikon></x-gorthmikon`);
 
-      inner += `<x-lyric slot="lyric">${lyrics}</x-lyric\n${this.getIndentationString(
+      inner += `<x-lyric>${lyrics}</x-lyric\n${this.getIndentationString(
         indentation,
       )}>`;
 
       if (element.isMelismaStart) {
         const hyphenAttribute = element.isHyphen ? ' hyphen' : '';
 
-        inner += `<x-melisma auto${hyphenAttribute} slot="melisma"></x-melisma\n${this.getIndentationString(
+        inner += `<x-melisma auto${hyphenAttribute}></x-melisma\n${this.getIndentationString(
           indentation,
         )}>`;
       }
@@ -409,10 +436,6 @@ export class ByzHtmlExporter {
   }
 
   exportMartyria(element: MartyriaElement, indentation: number) {
-    const classFthora = 'byz--fthora';
-    const classTempo = 'byz--martyria-tempo';
-    const classAlignRight = 'byz--align-right';
-
     let inner = '';
 
     inner += this.exportNeume(element.note, indentation + 2);
@@ -421,19 +444,19 @@ export class ByzHtmlExporter {
       element.tempo,
       indentation + 2,
       NoOffset,
-      classTempo,
+      this.config.classTempoAbove,
     );
     inner += this.exportNeume(
       element.fthora,
       indentation + 2,
       NoOffset,
-      classFthora,
+      this.config.classFthora,
     );
 
     let classAttribute = '';
 
     if (element.alignRight) {
-      classAttribute = ` class="${classAlignRight}"`;
+      classAttribute = ` class="${this.config.classMartyriaAlignRight}"`;
     }
 
     return `<x-martyria${classAttribute}\n${this.getIndentationString(
@@ -448,40 +471,42 @@ export class ByzHtmlExporter {
   }
 
   exportTempo(element: TempoElement, indentation: number) {
-    return this.exportNeume(element.neume, 0, NoOffset, 'byz--tempo');
+    return this.exportNeume(element.neume, 0, NoOffset, this.config.classTempo);
   }
 
   exportTextBox(element: TextBoxElement, indentation: number) {
-    let style = '';
+    let styleAttribute = '';
 
-    let className = 'byz--text-box';
+    let className = this.config.classTextBox;
 
-    style += `color: ${element.computedColor};`;
-    style += `font-family: ${getFontFamilyWithFallback(
-      element.computedFontFamily,
-    ).replaceAll('"', "'")};`;
-    style += `font-size: ${Unit.toPt(element.computedFontSize)}pt;`;
-    style += `font-weight: ${element.computedFontWeight};`;
-    style += `font-style: ${element.computedFontStyle};`;
-    style += `text-align: ${element.alignment};`;
-    style += `-webkit-text-stroke-width: ${element.computedStrokeWidth};`;
-    //style += `width: ${element.width};`;
-    //style += `height: ${element.height};`;
+    if (!element.useDefaultStyle) {
+      let style = '';
 
-    if (element.inline) {
-      className += ' byz--text-box-inline';
+      style += `color: ${element.computedColor};`;
+      style += `font-family: ${getFontFamilyWithFallback(
+        element.computedFontFamily,
+      ).replaceAll('"', "'")};`;
+      style += `font-size: ${Unit.toPt(element.computedFontSize)}pt;`;
+      style += `font-weight: ${element.computedFontWeight};`;
+      style += `font-style: ${element.computedFontStyle};`;
+      style += `text-align: ${element.alignment};`;
+      style += `-webkit-text-stroke-width: ${element.computedStrokeWidth};`;
+      //style += `width: ${element.width};`;
+      //style += `height: ${element.height};`;
+
+      styleAttribute = ` style="${style}"`;
     }
 
-    return `<div class="${className}" style="${style}">${
+    if (element.inline) {
+      className += ` ${this.config.classTextBoxInline}`;
+    }
+
+    return `<div class="${className}"${styleAttribute}>${
       element.content
     }</div\n${this.getIndentationString(indentation)}>`;
   }
 
   exportModeKey(element: ModeKeyElement, indentation: number) {
-    const classFthora = 'byz--fthora';
-    const classTempo = 'byz--tempo';
-    const classTempoAlignRight = 'byz--tempo-align-right';
-
     let inner = '';
 
     inner += this.exportNeume(ModeSign.Ekhos, indentation + 2);
@@ -500,13 +525,13 @@ export class ByzHtmlExporter {
       element.fthora,
       indentation + 2,
       NoOffset,
-      classFthora,
+      this.config.classFthora,
     );
     inner += this.exportNeume(
       element.fthoraAboveNote,
       indentation + 2,
       NoOffset,
-      classFthora,
+      this.config.classFthora,
     );
     inner += this.exportNeume(
       element.quantitativeNeumeAboveNote,
@@ -517,7 +542,7 @@ export class ByzHtmlExporter {
       element.fthoraAboveNote2,
       indentation + 2,
       NoOffset,
-      classFthora,
+      this.config.classFthora,
     );
     inner += this.exportNeume(
       element.quantitativeNeumeAboveNote2,
@@ -534,21 +559,29 @@ export class ByzHtmlExporter {
       indentation + 2,
       NoOffset,
       element.tempoAlignRight
-        ? classTempo + ' ' + classTempoAlignRight
-        : classTempo,
+        ? this.config.classTempo + ' ' + this.config.classTempoAlignRight
+        : this.config.classTempo,
     );
 
-    let style = '';
+    let styleAttribute = '';
 
-    style += `color: ${element.computedColor};`;
-    style += `font-family: ${getFontFamilyWithFallback(
-      element.computedFontFamily,
-    ).replaceAll('"', "'")};`;
-    style += `font-size: ${Unit.toPt(element.computedFontSize)}pt;`;
-    style += `text-align: ${element.alignment};`;
-    style += `-webkit-text-stroke-width: ${element.computedStrokeWidth};`;
+    if (!element.useDefaultStyle) {
+      let style = '';
 
-    return `<div class="byz--mode-key" style="${style}"\n${this.getIndentationString(
+      style += `color: ${element.computedColor};`;
+      style += `font-family: ${getFontFamilyWithFallback(
+        element.computedFontFamily,
+      ).replaceAll('"', "'")};`;
+      style += `font-size: ${Unit.toPt(element.computedFontSize)}pt;`;
+      style += `text-align: ${element.alignment};`;
+      style += `-webkit-text-stroke-width: ${element.computedStrokeWidth};`;
+
+      styleAttribute = ` style="${style}"`;
+    }
+
+    return `<div class="${
+      this.config.classModeKey
+    }"${styleAttribute}\n${this.getIndentationString(
       indentation + 2,
     )}>${inner}</div\n${this.getIndentationString(indentation)}>`;
   }
@@ -589,16 +622,16 @@ export class ByzHtmlExporter {
   }
 
   startPage(indentation: number) {
-    return `<div class="byz--neume-paragraph"\n${this.getIndentationString(
-      indentation,
-    )}>`;
+    return `<div class="${
+      this.config.classNeumeParagraph
+    }"\n${this.getIndentationString(indentation)}>`;
   }
 
   endPage(indentation: number, needLineBreak: boolean) {
     const lineBreak = needLineBreak
-      ? `<div class="byz--line-break"></div\n${this.getIndentationString(
-          indentation + 2,
-        )}>`
+      ? `<div class="${
+          this.config.classLineBreak
+        }"></div\n${this.getIndentationString(indentation + 2)}>`
       : '';
 
     return `${lineBreak}</div\n${this.getIndentationString(indentation)}>`;

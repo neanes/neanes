@@ -7,7 +7,9 @@ describe('ByzHtmlExporter', () => {
     const exporter = new ByzHtmlExporter();
 
     expect(
-      Object.keys(glyphnames).every((x) => exporter.getTag(x) !== undefined),
+      Object.keys(glyphnames).every(
+        (x) => exporter.getTag(x as SbmuflGlyphName) !== undefined,
+      ),
     ).toBe(true);
   });
 });

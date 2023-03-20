@@ -605,7 +605,7 @@ export class ByzHtmlExporter {
   getTagInfo(neume: Neume) {
     if (!this.neumeToTagMap.has(neume)) {
       const mapping = NeumeMappingService.getMapping(neume);
-      const pattern = /(?<!^)(?=[A-Z])/g;
+      const pattern = /(?<!^)(?=[A-Z0-9])/g;
 
       this.neumeToTagMap.set(neume, {
         tag: 'x-' + mapping.glyphName.replaceAll(pattern, '-').toLowerCase(),

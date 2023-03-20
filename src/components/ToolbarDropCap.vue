@@ -43,13 +43,13 @@
       >
         <i>I</i>
       </button>
+      <span class="space"></span>
+      <label class="right-space">Outline</label>
+      <InputStrokeWidth
+        :value="element.strokeWidth"
+        @input="$emit('update:strokeWidth', $event)"
+      />
     </template>
-    <span class="space"></span>
-    <label class="right-space">Outline</label>
-    <InputStrokeWidth
-      :value="element.strokeWidth"
-      @input="$emit('update:strokeWidth', $event)"
-    />
   </div>
 </template>
 

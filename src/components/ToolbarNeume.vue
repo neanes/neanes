@@ -839,7 +839,7 @@ export default class ToolbarNeume extends Vue {
   }
 
   get noteDisplay() {
-    return this.element.scaleNotes.map((x) => this.getNoteName(x)).join(' ');
+    return this.element.scaleNotes.map((x) => this.getNoteName(x)).join(' - ');
   }
 
   getNoteName(note: ScaleNote) {
@@ -920,7 +920,7 @@ export default class ToolbarNeume extends Vue {
 }
 
 .note-name {
-  width: 8ch;
+  width: 12ch;
   text-align: center;
 }
 

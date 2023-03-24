@@ -10,6 +10,8 @@
       :zoomToFit="zoomToFit"
       :audioState="audioService.state"
       :audioOptions="audioOptions"
+      :currentPageNumber="currentPageNumber"
+      :pageCount="pageCount"
       @update:zoom="updateZoom"
       @update:zoomToFit="updateZoomToFit"
       @update:audioOptionsSpeed="updateAudioOptionsSpeed"
@@ -54,7 +56,11 @@
             </div>
           </div>
         </div>
-        <div class="page-background" ref="page-background">
+        <div
+          class="page-background"
+          ref="page-background"
+          @scroll="onScrollThrottled"
+        >
           <div
             class="page"
             :style="pageStyle"
@@ -64,7 +70,7 @@
             }"
             v-for="(page, pageIndex) in filteredPages"
             :key="`page-${pageIndex}`"
-            :ref="`page-${pageIndex}`"
+            ref="pages"
           >
             <template v-if="page.isVisible || printMode">
               <template v-if="showGuides">
@@ -698,6 +704,8 @@ export default class Editor extends Vue {
 
   pages: Page[] = [];
 
+  currentPageNumber: number = 0;
+
   modeKeyDialogIsOpen: boolean = false;
   syllablePositioningDialogIsOpen: boolean = false;
   playbackSettingsDialogIsOpen: boolean = false;
@@ -940,6 +948,7 @@ export default class Editor extends Vue {
   );
 
   onWindowResizeThrottled = throttle(250, this.onWindowResize);
+  onScrollThrottled = throttle(250, this.onScroll);
 
   get selectedWorkspace() {
     return this.selectedWorkspaceValue;
@@ -962,6 +971,8 @@ export default class Editor extends Vue {
         this.selectedWorkspace.scrollLeft,
         this.selectedWorkspace.scrollTop,
       );
+
+      this.calculatePageNumber();
     });
 
     this.stopAudio();
@@ -973,6 +984,10 @@ export default class Editor extends Vue {
 
   get elements() {
     return this.score != null ? this.score.staff.elements : [];
+  }
+
+  get pageCount() {
+    return this.pages.length;
   }
 
   get commandService() {
@@ -1306,7 +1321,7 @@ export default class Editor extends Vue {
   getTokenMetadata(pageIndex: number): TokenMetadata {
     return {
       pageNumber: pageIndex + 1,
-      numberOfPages: this.pages.length,
+      numberOfPages: this.pageCount,
       fileName:
         this.selectedWorkspace.filePath != null
           ? getFileNameFromPath(this.selectedWorkspace.filePath)
@@ -1443,6 +1458,7 @@ export default class Editor extends Vue {
     (window as any)._editor = undefined;
 
     window.removeEventListener('keydown', this.onKeydown);
+    window.removeEventListener('keyup', this.onKeyup);
     window.removeEventListener('resize', this.onWindowResizeThrottled);
 
     EventBus.$off(IpcMainChannels.CloseApplication, this.onCloseApplication);
@@ -1981,6 +1997,10 @@ export default class Editor extends Vue {
     if (this.zoomToFit) {
       this.performZoomToFit();
     }
+  }
+
+  onScroll() {
+    this.calculatePageNumber();
   }
 
   onKeydown(event: KeyboardEvent) {
@@ -3051,6 +3071,39 @@ export default class Editor extends Vue {
     }
 
     return false;
+  }
+
+  calculatePageNumber() {
+    let maxPercentage = 0;
+    let maxPercentageIndex = -1;
+
+    const viewportHeight =
+      window.innerHeight || document.documentElement.clientHeight;
+
+    for (let pageIndex = 0; pageIndex < this.pageCount; pageIndex++) {
+      const rect = (this.$refs.pages as Element[])[
+        pageIndex
+      ].getBoundingClientRect();
+
+      const percentage =
+        Math.max(
+          0,
+          rect.top > 0
+            ? Math.min(rect.height, viewportHeight - rect.top)
+            : rect.bottom < viewportHeight
+            ? rect.bottom
+            : viewportHeight,
+        ) / rect.height;
+
+      if (percentage > maxPercentage) {
+        maxPercentage = percentage;
+        maxPercentageIndex = pageIndex;
+      }
+    }
+
+    if (maxPercentageIndex >= 0) {
+      this.currentPageNumber = maxPercentageIndex + 1;
+    }
   }
 
   save(markUnsavedChanges: boolean = true) {

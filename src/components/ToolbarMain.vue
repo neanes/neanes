@@ -160,35 +160,47 @@
     </div>
     <span class="space" />
     <span class="space" />
-    <button class="icon-btn" @click="$emit('play-audio')">
-      <img
-        v-if="audioState === AudioState.Playing"
-        src="@/assets/icons/audio-pause.svg"
-        width="24"
-        height="24"
-      />
-      <img v-else src="@/assets/icons/audio-play.svg" width="24" height="24" />
-    </button>
-    <button class="icon-btn config" @click="$emit('open-playback-settings')">
-      <img src="@/assets/icons/config.svg" width="32" height="32" />
-    </button>
-    <span class="space" />
-    <label class="right-space">Speed</label>
-    <select
-      class="audio-speed"
-      :value="audioOptions.speed"
-      :disabled="audioState === AudioState.Playing"
-      @change="$emit('update:audioOptionsSpeed', $event.target.value)"
-    >
-      <option value="0.25">0.25x</option>
-      <option value="0.5">0.5x</option>
-      <option value="0.75">0.75x</option>
-      <option value="1">1x</option>
-      <option value="1.25">1.25x</option>
-      <option value="1.5">1.5x</option>
-      <option value="1.75">1.75x</option>
-      <option value="2">2x</option>
-    </select>
+    <div class="audio-container">
+      <button class="icon-btn" @click="$emit('play-audio')">
+        <img
+          v-if="audioState === AudioState.Playing"
+          src="@/assets/icons/audio-pause.svg"
+          width="24"
+          height="24"
+        />
+        <img
+          v-else
+          src="@/assets/icons/audio-play.svg"
+          width="24"
+          height="24"
+        />
+      </button>
+      <button class="icon-btn config" @click="$emit('open-playback-settings')">
+        <img src="@/assets/icons/config.svg" width="32" height="32" />
+      </button>
+      <span class="space" />
+      <label class="right-space">Speed</label>
+      <select
+        class="audio-speed"
+        :value="audioOptions.speed"
+        :disabled="audioState === AudioState.Playing"
+        @change="$emit('update:audioOptionsSpeed', $event.target.value)"
+      >
+        <option value="0.25">0.25x</option>
+        <option value="0.5">0.5x</option>
+        <option value="0.75">0.75x</option>
+        <option value="1">1x</option>
+        <option value="1.25">1.25x</option>
+        <option value="1.5">1.5x</option>
+        <option value="1.75">1.75x</option>
+        <option value="2">2x</option>
+      </select>
+    </div>
+    <span class="space"></span>
+    <span class="space"></span>
+    <div class="page-number-container">
+      Page {{ currentPageNumber }} of {{ pageCount }}
+    </div>
   </div>
 </template>
 
@@ -210,6 +222,8 @@ export default class ToolbarMain extends Vue {
   @Prop() entryMode!: EntryMode;
   @Prop() zoom!: number;
   @Prop() zoomToFit!: boolean;
+  @Prop() currentPageNumber!: Number;
+  @Prop() pageCount!: Number;
   @Prop() audioState!: AudioState;
   @Prop() audioOptions!: PlaybackOptions;
   Note = Note;
@@ -404,6 +418,11 @@ export default class ToolbarMain extends Vue {
 
 label.right-space {
   margin-right: 0.5rem;
+}
+
+.audio-container {
+  display: flex;
+  align-items: center;
 }
 
 .audio-speed {

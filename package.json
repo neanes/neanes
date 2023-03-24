@@ -1,10 +1,14 @@
 {
   "name": "neanes",
   "productName": "Neanes",
-  "version": "0.3.0-beta.7",
+  "version": "0.3.0-beta.8",
   "private": true,
   "description": "A Byzantine Chant Scorewriter",
   "author": "danielgarthur",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/danielgarthur/neanes.git"
+  },
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",

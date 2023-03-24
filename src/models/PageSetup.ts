@@ -27,18 +27,18 @@ export const pageSizes: PageSizeOption[] = [
   },
   {
     name: 'A3',
-    width: Unit.fromInch(11.69),
-    height: Unit.fromInch(16.54),
+    width: Unit.fromMm(297),
+    height: Unit.fromMm(420),
   },
   {
     name: 'A4',
-    width: Unit.fromInch(8.29),
-    height: Unit.fromInch(11.69),
+    width: Unit.fromMm(210),
+    height: Unit.fromMm(297),
   },
   {
     name: 'A5',
-    width: Unit.fromInch(5.83),
-    height: Unit.fromInch(8.27),
+    width: Unit.fromMm(148),
+    height: Unit.fromMm(210),
   },
 ];
 

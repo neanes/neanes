@@ -29,7 +29,7 @@ import {
   ModeKeyElement as ModeKeyElement_v1,
 } from '@/models/save/v1/Element';
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
-import { PageSetup } from '@/models/PageSetup';
+import { PageSetup, pageSizes } from '@/models/PageSetup';
 import { QuantitativeNeume } from '@/models/Neumes';
 import { Header } from '@/models/Header';
 import { Footer } from '@/models/Footer';
@@ -220,13 +220,14 @@ export class SaveService {
   }
 
   public static SaveDropCap(element: DropCapElement_v1, e: DropCapElement) {
-    element.color = e.color || undefined;
+    element.color = e.color;
     element.content = e.content;
-    element.fontFamily = e.fontFamily || undefined;
-    element.fontSize = e.fontSize || undefined;
-    element.fontWeight = e.fontWeight || undefined;
-    element.fontStyle = e.fontStyle || undefined;
-    element.strokeWidth = e.strokeWidth || undefined;
+    element.fontFamily = e.fontFamily;
+    element.fontSize = e.fontSize;
+    element.fontWeight = e.fontWeight;
+    element.fontStyle = e.fontStyle;
+    element.strokeWidth = e.strokeWidth;
+    element.useDefaultStyle = e.useDefaultStyle || undefined;
   }
 
   public static SaveMartyria(element: MartyriaElement_v1, e: MartyriaElement) {
@@ -439,6 +440,7 @@ export class SaveService {
           this.LoadDropCap_v1(
             element as DropCapElement,
             e as DropCapElement_v1,
+            score.pageSetup,
           );
           break;
         case ElementType_v1.Empty:
@@ -494,6 +496,7 @@ export class SaveService {
   public static LoadPageSetup_v1(pageSetup: PageSetup, p: PageSetup_v1) {
     pageSetup.pageHeight = p.pageHeight;
     pageSetup.pageWidth = p.pageWidth;
+
     pageSetup.topMargin = p.topMargin;
     pageSetup.bottomMargin = p.bottomMargin;
     pageSetup.leftMargin = p.leftMargin;
@@ -611,6 +614,19 @@ export class SaveService {
     pageSetup.landscape = p.landscape === true;
 
     pageSetup.hyphenSpacing = p.hyphenSpacing;
+
+    // Fix pageWidth and pageHeight
+    // Due to bug #71, A-series paper sizes had incorrect width and height
+    const pageSize = pageSizes.find((x) => x.name === pageSetup.pageSize);
+    if (pageSize) {
+      if (pageSetup.landscape) {
+        pageSetup.pageWidth = pageSize.height;
+        pageSetup.pageHeight = pageSize.width;
+      } else {
+        pageSetup.pageWidth = pageSize.width;
+        pageSetup.pageHeight = pageSize.height;
+      }
+    }
   }
 
   public static LoadHeader_v1(header: Header, h: Header_v1) {
@@ -627,14 +643,20 @@ export class SaveService {
     this.LoadTextBox_v1(element as TextBoxElement, e as TextBoxElement_v1);
   }
 
-  public static LoadDropCap_v1(element: DropCapElement, e: DropCapElement_v1) {
-    element.color = e.color ?? null;
+  public static LoadDropCap_v1(
+    element: DropCapElement,
+    e: DropCapElement_v1,
+    pageSetup: PageSetup,
+  ) {
+    // Due to model changes, these values may be null for older files
+    element.color = e.color ?? pageSetup.dropCapDefaultColor;
     element.content = e.content;
-    element.fontFamily = e.fontFamily ?? null;
-    element.fontSize = e.fontSize ?? null;
-    element.fontWeight = e.fontWeight ?? null;
-    element.fontStyle = e.fontStyle ?? null;
-    element.strokeWidth = e.strokeWidth ?? null;
+    element.fontFamily = e.fontFamily ?? pageSetup.dropCapDefaultFontFamily;
+    element.fontSize = e.fontSize ?? pageSetup.dropCapDefaultFontSize;
+    element.fontWeight = e.fontWeight ?? pageSetup.dropCapDefaultFontWeight;
+    element.fontStyle = e.fontStyle ?? pageSetup.dropCapDefaultFontStyle;
+    element.strokeWidth = e.strokeWidth ?? pageSetup.dropCapDefaultStrokeWidth;
+    element.useDefaultStyle = e.useDefaultStyle === true;
   }
 
   public static LoadMartyria_v1(

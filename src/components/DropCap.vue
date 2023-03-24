@@ -35,20 +35,12 @@ export default class DropCap extends Vue {
 
   get style() {
     const style = {
-      color: this.element.color || this.pageSetup.dropCapDefaultColor,
-      fontFamily: getFontFamilyWithFallback(
-        this.element.fontFamily || this.pageSetup.dropCapDefaultFontFamily,
-      ),
-      fontSize: withZoom(
-        this.element.fontSize || this.pageSetup.dropCapDefaultFontSize,
-      ),
-      fontWeight:
-        this.element.fontWeight || this.pageSetup.dropCapDefaultFontWeight,
-      fontStyle:
-        this.element.fontStyle || this.pageSetup.dropCapDefaultFontStyle,
-      webkitTextStrokeWidth: withZoom(
-        this.element.strokeWidth || this.pageSetup.dropCapDefaultStrokeWidth,
-      ),
+      color: this.element.computedColor,
+      fontFamily: getFontFamilyWithFallback(this.element.computedFontFamily),
+      fontSize: withZoom(this.element.computedFontSize),
+      fontWeight: this.element.computedFontWeight,
+      fontStyle: this.element.computedFontStyle,
+      webkitTextStrokeWidth: withZoom(this.element.computedStrokeWidth),
     } as CSSStyleDeclaration;
 
     return style;

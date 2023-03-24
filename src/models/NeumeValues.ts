@@ -96,5 +96,33 @@ const neumeValueMap = new Map<QuantitativeNeume, number>([
   [QuantitativeNeume.VareiaDotted4, 0],
 ]);
 
+export function getNoteSpread(neume: QuantitativeNeume) {
+  switch (neume) {
+    case QuantitativeNeume.OligonPlusHamiliPlusKentemata:
+    case QuantitativeNeume.OligonPlusIsonPlusKentemata:
+    case QuantitativeNeume.OligonPlusElaphronPlusKentemata:
+    case QuantitativeNeume.OligonPlusApostrophosPlusKentemata:
+    case QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata:
+    case QuantitativeNeume.OligonKentimaMiddleKentimata:
+    case QuantitativeNeume.OligonPlusKentemataPlusHypsiliLeft:
+    case QuantitativeNeume.OligonPlusKentemataPlusHypsiliRight:
+    case QuantitativeNeume.OligonPlusKentemata:
+    case QuantitativeNeume.KentemataPlusOligon:
+      return [-1, 0];
+    case QuantitativeNeume.Hyporoe:
+    case QuantitativeNeume.PetastiPlusHyporoe:
+    case QuantitativeNeume.DoubleApostrophos:
+    case QuantitativeNeume.RunningElaphron:
+    case QuantitativeNeume.PetastiPlusRunningElaphron:
+    case QuantitativeNeume.IsonPlusApostrophos:
+      return [1, 0];
+    case QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata:
+    case QuantitativeNeume.OligonPlusHyporoePlusKentemata:
+      return [0, -1, 0];
+    default:
+      return [0];
+  }
+}
+
 export const getNeumeValue = (neume: QuantitativeNeume) =>
   neumeValueMap.get(neume);

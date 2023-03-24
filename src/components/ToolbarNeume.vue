@@ -709,15 +709,30 @@ export default class ToolbarNeume extends Vue {
       this.element.fthora === Fthora.HardChromaticPa_Bottom
     ) {
       return [ScaleNote.Pa, ScaleNote.Ga];
+    } else if (
+      this.element.fthora === Fthora.Enharmonic_Top ||
+      this.element.fthora === Fthora.Enharmonic_Bottom
+    ) {
+      return [ScaleNote.Ga, ScaleNote.Vou];
     }
 
     return [];
   }
 
+  get hasAmbiguousEnharmonicFthora() {
+    return (
+      (this.element.fthora === Fthora.Enharmonic_Top ||
+        this.element.fthora === Fthora.Enharmonic_Bottom) &&
+      this.element.scaleNotes.includes(ScaleNote.Ga) &&
+      this.element.scaleNotes.includes(ScaleNote.Vou)
+    );
+  }
+
   get showChromaticFthoraNote() {
     return (
       this.element.fthora != null &&
-      this.chromaticFthoras.includes(this.element.fthora)
+      (this.chromaticFthoras.includes(this.element.fthora) ||
+        this.hasAmbiguousEnharmonicFthora)
     );
   }
 
@@ -762,8 +777,8 @@ export default class ToolbarNeume extends Vue {
 
   get spathiDisabled() {
     return (
-      this.element.scaleNote !== ScaleNote.Ke &&
-      this.element.scaleNote !== ScaleNote.Ga
+      !this.element.scaleNotes.includes(ScaleNote.Ke) &&
+      !this.element.scaleNotes.includes(ScaleNote.Ga)
     );
   }
 
@@ -772,7 +787,7 @@ export default class ToolbarNeume extends Vue {
   }
 
   get klitonDisabled() {
-    return this.element.scaleNote !== ScaleNote.Thi;
+    return !this.element.scaleNotes.includes(ScaleNote.Thi);
   }
 
   get klitonTitle() {
@@ -780,7 +795,7 @@ export default class ToolbarNeume extends Vue {
   }
 
   get zygosDisabled() {
-    return this.element.scaleNote !== ScaleNote.Thi;
+    return !this.element.scaleNotes.includes(ScaleNote.Thi);
   }
 
   get zygosTitle() {
@@ -789,11 +804,11 @@ export default class ToolbarNeume extends Vue {
 
   get enharmonicDisabled() {
     return (
-      this.element.scaleNote !== ScaleNote.Zo &&
-      this.element.scaleNote !== ScaleNote.ZoHigh &&
-      this.element.scaleNote !== ScaleNote.Vou &&
-      this.element.scaleNote !== ScaleNote.VouHigh &&
-      this.element.scaleNote !== ScaleNote.Ga
+      !this.element.scaleNotes.includes(ScaleNote.Zo) &&
+      !this.element.scaleNotes.includes(ScaleNote.ZoHigh) &&
+      !this.element.scaleNotes.includes(ScaleNote.Vou) &&
+      !this.element.scaleNotes.includes(ScaleNote.VouHigh) &&
+      !this.element.scaleNotes.includes(ScaleNote.Ga)
     );
   }
 
@@ -804,7 +819,7 @@ export default class ToolbarNeume extends Vue {
   }
 
   get generalFlatDisabled() {
-    return this.element.scaleNote !== ScaleNote.Ke;
+    return !this.element.scaleNotes.includes(ScaleNote.Ke);
   }
 
   get generalFlatTitle() {
@@ -814,7 +829,7 @@ export default class ToolbarNeume extends Vue {
   }
 
   get generalSharpDisabled() {
-    return this.element.scaleNote !== ScaleNote.Ga;
+    return !this.element.scaleNotes.includes(ScaleNote.Ga);
   }
 
   get generalSharpTitle() {
@@ -824,19 +839,25 @@ export default class ToolbarNeume extends Vue {
   }
 
   get noteDisplay() {
-    if (this.element.scaleNote == null) {
+    return this.element.scaleNotes.map((x) => this.getNoteName(x)).join(' - ');
+  }
+
+  getNoteName(note: ScaleNote) {
+    if (note == null) {
       return '???';
     }
 
-    switch (this.element.scaleNote) {
+    switch (note) {
       case ScaleNote.VouLow:
         return 'vou';
       case ScaleNote.GaLow:
         return 'ga';
       case ScaleNote.ThiLow:
-        return 'thi';
+        return 'di';
       case ScaleNote.KeLow:
         return 'ke';
+      case ScaleNote.Thi:
+        return 'Di';
       case ScaleNote.ZoHigh:
         return "Zo'";
       case ScaleNote.NiHigh:
@@ -848,11 +869,11 @@ export default class ToolbarNeume extends Vue {
       case ScaleNote.GaHigh:
         return "Ga'";
       case ScaleNote.ThiHigh:
-        return "Thi'";
+        return "Di'";
       case ScaleNote.KeHigh:
         return "Ke'";
       default:
-        return this.element.scaleNote;
+        return note;
     }
   }
 
@@ -899,7 +920,7 @@ export default class ToolbarNeume extends Vue {
 }
 
 .note-name {
-  width: 4ch;
+  width: 12ch;
   text-align: center;
 }
 

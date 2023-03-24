@@ -253,7 +253,7 @@ export class NoteElement extends ScoreElement {
   public neumeWidth: number = 0;
   public lyricsWidth: number = 0;
   public noteIndicatorNeume: NoteIndicator | null = null;
-  public scaleNote: ScaleNote | null = null;
+  public scaleNotes: ScaleNote[] = [];
 
   private _quantitativeNeume: QuantitativeNeume = QuantitativeNeume.Ison;
   private _timeNeume: TimeNeume | null = null;

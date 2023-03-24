@@ -8,7 +8,7 @@ import {
   ScoreElement,
   TempoElement,
 } from '@/models/Element';
-import { getNeumeValue } from '@/models/NeumeValues';
+import { getNeumeValue, getNoteSpread } from '@/models/NeumeValues';
 import {
   Accidental,
   Fthora,
@@ -244,14 +244,34 @@ export class PlaybackService {
 
           const destinationNote = workspace.note + distance;
 
+          let noteSpread = getNoteSpread(noteElement.quantitativeNeume);
+
+          let allNotes = noteSpread.map((x) =>
+            this.scaleNoteMap.get(destinationNote + x),
+          );
+
           if (
             noteElement.fthora === Fthora.Enharmonic_Top ||
             noteElement.fthora === Fthora.Enharmonic_Bottom
           ) {
             const scaleNote = this.scaleNoteMap.get(destinationNote);
 
-            if (scaleNote === ScaleNote.ZoHigh) {
+            if (allNotes.includes(ScaleNote.ZoHigh)) {
               workspace.enharmonicZo = true;
+            } else if (
+              allNotes.includes(ScaleNote.Ga) &&
+              allNotes.includes(ScaleNote.Vou)
+            ) {
+              // If there is ambiguity, use the chromatic fthora note to decide
+              if (noteElement.chromaticFthoraNote === ScaleNote.Ga) {
+                workspace.enharmonicGa = true;
+              } else if (noteElement.chromaticFthoraNote === ScaleNote.Vou) {
+                workspace.enharmonicVou = true;
+              } else {
+                // In older scores, chromaticFthoraNote may be null.
+                // In this case, assume the fthora is on Ga.
+                workspace.enharmonicGa = true;
+              }
             } else if (scaleNote === ScaleNote.Ga) {
               workspace.enharmonicGa = true;
             } else if (scaleNote === ScaleNote.Vou) {

@@ -296,9 +296,19 @@ async function saveWorkspaceAs(args: SaveWorkspaceAsArgs) {
     if (!dialogResult.canceled) {
       result.filePath = dialogResult.filePath!;
 
-      await writeScoreFile(dialogResult.filePath!, args.data);
+      // Hack for Linux: if the filepath doesn't end with the proper extension,
+      // then add it
+      // See https://github.com/electron/electron/issues/21935
+      if (
+        !result.filePath.endsWith('.byz') &&
+        !result.filePath.endsWith('.byzx')
+      ) {
+        result.filePath += '.byz';
+      }
 
-      await addToRecentFiles(dialogResult.filePath!);
+      await writeScoreFile(result.filePath!, args.data);
+
+      await addToRecentFiles(result.filePath!);
       createMenu();
 
       result.success = true;
@@ -338,13 +348,22 @@ async function exportWorkspaceAsPdf(args: ExportWorkspaceAsPdfArgs) {
     });
 
     if (!dialogResult.canceled) {
+      let filePath = dialogResult.filePath!;
+
+      // Hack for Linux: if the filepath doesn't end with the proper extension,
+      // then add it
+      // See https://github.com/electron/electron/issues/21935
+      if (!filePath.endsWith('.pdf')) {
+        filePath += '.pdf';
+      }
+
       const data = await win.webContents.printToPDF({
         pageSize: args.pageSize,
         landscape: args.landscape,
       });
-      await fs.writeFile(dialogResult.filePath!, data);
+      await fs.writeFile(filePath!, data);
 
-      await shell.openPath(dialogResult.filePath!);
+      await shell.openPath(filePath!);
     }
   } catch (error) {
     console.error(error);
@@ -381,8 +400,17 @@ async function exportWorkspaceAsHtml(args: ExportWorkspaceAsHtmlArgs) {
     });
 
     if (!dialogResult.canceled) {
-      await fs.writeFile(dialogResult.filePath!, args.data);
-      await shell.openPath(dialogResult.filePath!);
+      let filePath = dialogResult.filePath!;
+
+      // Hack for Linux: if the filepath doesn't end with the proper extension,
+      // then add it
+      // See https://github.com/electron/electron/issues/21935
+      if (!filePath.endsWith('.html')) {
+        filePath += '.html';
+      }
+
+      await fs.writeFile(filePath!, args.data);
+      await shell.openPath(filePath!);
     }
   } catch (error) {
     console.error(error);

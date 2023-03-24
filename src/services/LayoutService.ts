@@ -22,7 +22,7 @@ import {
   Tie,
   VocalExpressionNeume,
 } from '@/models/Neumes';
-import { getNeumeValue } from '@/models/NeumeValues';
+import { getNeumeValue, getNoteSpread } from '@/models/NeumeValues';
 import { Line, Page } from '@/models/Page';
 import { PageSetup } from '@/models/PageSetup';
 import {
@@ -1187,7 +1187,7 @@ export class LayoutService {
           ((currentNote % 7) + 7) % 7,
         )!;
 
-        let noteSpread = this.getNoteSpread(note.quantitativeNeume);
+        let noteSpread = getNoteSpread(note.quantitativeNeume);
 
         let currentNotes = noteSpread.map((x) => currentNote + x);
 
@@ -1408,34 +1408,6 @@ export class LayoutService {
     }
 
     return shift;
-  }
-
-  private static getNoteSpread(neume: QuantitativeNeume) {
-    switch (neume) {
-      case QuantitativeNeume.OligonPlusHamiliPlusKentemata:
-      case QuantitativeNeume.OligonPlusIsonPlusKentemata:
-      case QuantitativeNeume.OligonPlusElaphronPlusKentemata:
-      case QuantitativeNeume.OligonPlusApostrophosPlusKentemata:
-      case QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata:
-      case QuantitativeNeume.OligonKentimaMiddleKentimata:
-      case QuantitativeNeume.OligonPlusKentemataPlusHypsiliLeft:
-      case QuantitativeNeume.OligonPlusKentemataPlusHypsiliRight:
-      case QuantitativeNeume.OligonPlusKentemata:
-      case QuantitativeNeume.KentemataPlusOligon:
-        return [-1, 0];
-      case QuantitativeNeume.Hyporoe:
-      case QuantitativeNeume.PetastiPlusHyporoe:
-      case QuantitativeNeume.DoubleApostrophos:
-      case QuantitativeNeume.RunningElaphron:
-      case QuantitativeNeume.PetastiPlusRunningElaphron:
-      case QuantitativeNeume.IsonPlusApostrophos:
-        return [1, 0];
-      case QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata:
-      case QuantitativeNeume.OligonPlusHyporoePlusKentemata:
-        return [0, -1, 0];
-      default:
-        return [0];
-    }
   }
 
   private static fthoraIsValid(fthora: Fthora, currentNotes: number[]) {

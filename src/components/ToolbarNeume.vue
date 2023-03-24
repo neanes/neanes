@@ -709,15 +709,30 @@ export default class ToolbarNeume extends Vue {
       this.element.fthora === Fthora.HardChromaticPa_Bottom
     ) {
       return [ScaleNote.Pa, ScaleNote.Ga];
+    } else if (
+      this.element.fthora === Fthora.Enharmonic_Top ||
+      this.element.fthora === Fthora.Enharmonic_Bottom
+    ) {
+      return [ScaleNote.Ga, ScaleNote.Vou];
     }
 
     return [];
   }
 
+  get hasAmbiguousEnharmonicFthora() {
+    return (
+      (this.element.fthora === Fthora.Enharmonic_Top ||
+        this.element.fthora === Fthora.Enharmonic_Bottom) &&
+      this.element.scaleNotes.includes(ScaleNote.Ga) &&
+      this.element.scaleNotes.includes(ScaleNote.Vou)
+    );
+  }
+
   get showChromaticFthoraNote() {
     return (
       this.element.fthora != null &&
-      this.chromaticFthoras.includes(this.element.fthora)
+      (this.chromaticFthoras.includes(this.element.fthora) ||
+        this.hasAmbiguousEnharmonicFthora)
     );
   }
 

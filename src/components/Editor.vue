@@ -3586,6 +3586,11 @@ export default class Editor extends Vue {
       fthora === Fthora.HardChromaticPa_Bottom
     ) {
       chromaticFthoraNote = ScaleNote.Pa;
+    } else if (
+      fthora === Fthora.Enharmonic_Top ||
+      fthora === Fthora.Enharmonic_Bottom
+    ) {
+      chromaticFthoraNote = ScaleNote.Ga;
     }
 
     this.updateNote(element, { fthora, chromaticFthoraNote });

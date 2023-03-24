@@ -130,6 +130,27 @@ async function saveStore() {
   }
 }
 
+async function showReplaceFileDialog(filePath: string) {
+  try {
+    await fs.stat(filePath);
+
+    const replaceFileResult = await dialog.showMessageBox(win!, {
+      type: 'question',
+      title: 'Replace file?',
+      message: `A file named "${path.basename(
+        filePath,
+      )}" already exists. Do you want to replace it?`,
+      buttons: ['Cancel', 'Replace'],
+      defaultId: 0,
+      cancelId: 0,
+    });
+
+    return replaceFileResult.response === 1;
+  } catch {}
+
+  return true;
+}
+
 async function addToRecentFiles(filePath: string) {
   // This is probably overkill, but we'll load the store first
   // to get the most recent store, just in case there are multiple
@@ -299,19 +320,25 @@ async function saveWorkspaceAs(args: SaveWorkspaceAsArgs) {
       // Hack for Linux: if the filepath doesn't end with the proper extension,
       // then add it
       // See https://github.com/electron/electron/issues/21935
+      let doWrite = true;
+
       if (
         !result.filePath.endsWith('.byz') &&
         !result.filePath.endsWith('.byzx')
       ) {
         result.filePath += '.byz';
+
+        doWrite = await showReplaceFileDialog(result.filePath);
       }
 
-      await writeScoreFile(result.filePath!, args.data);
+      if (doWrite) {
+        await writeScoreFile(result.filePath!, args.data);
 
-      await addToRecentFiles(result.filePath!);
-      createMenu();
+        await addToRecentFiles(result.filePath!);
+        createMenu();
 
-      result.success = true;
+        result.success = true;
+      }
     }
   } catch (error) {
     console.error(error);
@@ -353,17 +380,23 @@ async function exportWorkspaceAsPdf(args: ExportWorkspaceAsPdfArgs) {
       // Hack for Linux: if the filepath doesn't end with the proper extension,
       // then add it
       // See https://github.com/electron/electron/issues/21935
+      let doWrite = true;
+
       if (!filePath.endsWith('.pdf')) {
         filePath += '.pdf';
+
+        doWrite = await showReplaceFileDialog(filePath);
       }
 
-      const data = await win.webContents.printToPDF({
-        pageSize: args.pageSize,
-        landscape: args.landscape,
-      });
-      await fs.writeFile(filePath!, data);
+      if (doWrite) {
+        const data = await win.webContents.printToPDF({
+          pageSize: args.pageSize,
+          landscape: args.landscape,
+        });
+        await fs.writeFile(filePath!, data);
 
-      await shell.openPath(filePath!);
+        await shell.openPath(filePath!);
+      }
     }
   } catch (error) {
     console.error(error);
@@ -405,12 +438,18 @@ async function exportWorkspaceAsHtml(args: ExportWorkspaceAsHtmlArgs) {
       // Hack for Linux: if the filepath doesn't end with the proper extension,
       // then add it
       // See https://github.com/electron/electron/issues/21935
+      let doWrite = true;
+
       if (!filePath.endsWith('.html')) {
         filePath += '.html';
+
+        doWrite = await showReplaceFileDialog(filePath);
       }
 
-      await fs.writeFile(filePath!, args.data);
-      await shell.openPath(filePath!);
+      if (doWrite) {
+        await fs.writeFile(filePath!, args.data);
+        await shell.openPath(filePath!);
+      }
     }
   } catch (error) {
     console.error(error);

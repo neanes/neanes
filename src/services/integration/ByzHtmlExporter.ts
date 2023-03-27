@@ -597,12 +597,6 @@ export class ByzHtmlExporter {
     inner += this.exportNeume(element.martyria, indentation + 2);
     inner += this.exportNeume(element.note, indentation + 2);
     inner += this.exportNeume(
-      element.fthora,
-      indentation + 2,
-      NoOffset,
-      this.config.classFthora,
-    );
-    inner += this.exportNeume(
       element.fthoraAboveNote,
       indentation + 2,
       NoOffset,

@@ -98,6 +98,9 @@
     >
       <img src="@/assets/icons/drop-cap.svg" width="24" height="24" />
     </button>
+    <button title="Insert image" class="icon-btn" @click="$emit('add-image')">
+      <img src="@/assets/icons/image-add.svg" width="24" height="24" />
+    </button>
     <span class="space"></span>
     <button
       class="icon-btn line-break-btn"

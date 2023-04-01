@@ -49,6 +49,7 @@ export enum IpcRendererChannels {
   ExportWorkspaceAsHtml = 'ExportWorkspaceAsHtml',
   PrintWorkspace = 'PrintWorkspace',
   OpenWorkspaceFromArgv = 'OpenWorkspaceFromArgv',
+  OpenImageDialog = 'OpenImageDialog',
 
   GetSystemFonts = 'GetSystemFonts',
 

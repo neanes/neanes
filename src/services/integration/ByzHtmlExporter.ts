@@ -1,6 +1,7 @@
 import {
   DropCapElement,
   ElementType,
+  ImageBoxElement,
   MartyriaElement,
   ModeKeyElement,
   NoteElement,
@@ -49,6 +50,8 @@ interface ByzHtmlExporterConfig {
   classNeumeParagraph: string;
   classTextBox: string;
   classTextBoxInline: string;
+  classImageBox: string;
+  classImageBoxInline: string;
   classModeKey: string;
   classLineBreak: string;
 
@@ -79,6 +82,8 @@ export class ByzHtmlExporter {
     classNeumeParagraph: 'byz--neume-paragraph',
     classTextBox: 'byz--text-box',
     classTextBoxInline: 'byz--text-box-inline',
+    classImageBox: 'byz--image-box',
+    classImageBoxInline: 'byz--image-box-inline',
     classModeKey: 'byz--mode-key',
     classLineBreak: 'byz--line-break',
 
@@ -227,6 +232,11 @@ export class ByzHtmlExporter {
         align-items: center;
       }
 
+      .${this.config.classImageBox} {
+        display: flex;
+        align-items: center;
+      }
+
       .${this.config.classModeKey} {
         font-size: ${Unit.toPt(pageSetup.modeKeyDefaultFontSize)}pt;
         color: ${pageSetup.modeKeyDefaultColor};
@@ -337,6 +347,18 @@ export class ByzHtmlExporter {
           }
 
           result += this.exportModeKey(element as ModeKeyElement, indentation);
+          break;
+        case ElementType.ImageBox:
+          if (insidePage && !(element as ImageBoxElement).inline) {
+            result += this.endPage(indentation + 2, needLineBreak);
+            insidePage = false;
+            needLineBreak = false;
+          }
+
+          result += this.exportImageBox(
+            element as ImageBoxElement,
+            indentation,
+          );
           break;
       }
 
@@ -653,6 +675,34 @@ export class ByzHtmlExporter {
     }"${styleAttribute}\n${this.getIndentationString(
       indentation + 2,
     )}>${inner}</div\n${this.getIndentationString(indentation)}>`;
+  }
+
+  exportImageBox(element: ImageBoxElement, indentation: number) {
+    let styleAttribute = '';
+
+    let className = this.config.classImageBox;
+
+    let style = '';
+
+    if (!element.inline) {
+      style += `justify-content: ${element.alignment};`;
+    }
+
+    style += `text-align: ${element.alignment};`;
+
+    styleAttribute = ` style="${style}"`;
+
+    if (element.inline) {
+      className += ` ${this.config.classImageBoxInline}`;
+    }
+
+    const imgTag = `<img src="${element.data}" style="width: ${element.imageWidth}px; height: ${element.imageHeight}px" />`;
+
+    return `<div class="${className}"${styleAttribute}>\n${this.getIndentationString(
+      indentation + 4,
+    )}${imgTag}\n${this.getIndentationString(
+      indentation,
+    )}</div\n${this.getIndentationString(indentation)}>`;
   }
 
   exportNeume(

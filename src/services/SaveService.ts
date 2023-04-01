@@ -11,6 +11,7 @@ import {
   ModeKeyElement,
   TempoElement,
   LineBreakType,
+  ImageBoxElement,
 } from '@/models/Element';
 
 import { Score as Score_v1, Staff as Staff_v1 } from '@/models/save/v1/Score';
@@ -27,6 +28,7 @@ import {
   ScoreElement as ScoreElement_v1,
   ScoreElementOffset as ScoreElementOffset_v1,
   ModeKeyElement as ModeKeyElement_v1,
+  ImageBoxElement as ImageBoxElement_v1,
 } from '@/models/save/v1/Element';
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
 import { PageSetup, pageSizes } from '@/models/PageSetup';
@@ -109,6 +111,13 @@ export class SaveService {
         case ElementType.ModeKey:
           element = new ModeKeyElement_v1();
           this.SaveModeKey(element as ModeKeyElement_v1, e as ModeKeyElement);
+          break;
+        case ElementType.ImageBox:
+          element = new ImageBoxElement_v1();
+          this.SaveImageBox(
+            element as ImageBoxElement_v1,
+            e as ImageBoxElement,
+          );
           break;
         default:
           console.warn('Unrecognized element in score', e.elementType);
@@ -228,6 +237,15 @@ export class SaveService {
     element.fontStyle = e.fontStyle;
     element.strokeWidth = e.strokeWidth;
     element.useDefaultStyle = e.useDefaultStyle || undefined;
+  }
+
+  public static SaveImageBox(element: ImageBoxElement_v1, e: ImageBoxElement) {
+    element.imageHeight = e.imageHeight;
+    element.imageWidth = e.imageWidth;
+    element.alignment = e.alignment;
+    element.data = e.data;
+    element.inline = e.inline || undefined;
+    element.lockAspectRatio = e.lockAspectRatio || undefined;
   }
 
   public static SaveMartyria(element: MartyriaElement_v1, e: MartyriaElement) {
@@ -475,6 +493,14 @@ export class SaveService {
             e as ModeKeyElement_v1,
           );
           break;
+
+        case ElementType_v1.ImageBox:
+          element = new ImageBoxElement();
+          this.LoadImageBox_v1(
+            element as ImageBoxElement,
+            e as ImageBoxElement_v1,
+          );
+          break;
         default:
           console.warn(
             'Unrecognized element in score file',
@@ -657,6 +683,18 @@ export class SaveService {
     element.fontStyle = e.fontStyle ?? pageSetup.dropCapDefaultFontStyle;
     element.strokeWidth = e.strokeWidth ?? pageSetup.dropCapDefaultStrokeWidth;
     element.useDefaultStyle = e.useDefaultStyle === true;
+  }
+
+  public static LoadImageBox_v1(
+    element: ImageBoxElement,
+    e: ImageBoxElement_v1,
+  ) {
+    element.imageHeight = e.imageHeight;
+    element.imageWidth = e.imageWidth;
+    element.alignment = e.alignment;
+    element.data = e.data;
+    element.inline = e.inline === true;
+    element.lockAspectRatio = e.lockAspectRatio === true;
   }
 
   public static LoadMartyria_v1(

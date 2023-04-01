@@ -1142,6 +1142,14 @@ ipcMain.on(IpcRendererChannels.SetCanRedo, async (event, data) => {
   Menu.getApplicationMenu()!.getMenuItemById('redo')!.enabled = data;
 });
 
+ipcMain.on(IpcRendererChannels.OpenImageDialog, async (event) => {
+  const data = await openImage();
+
+  if (data.success) {
+    win?.webContents.send(IpcMainChannels.FileMenuInsertImage, data);
+  }
+});
+
 ipcMain.handle(IpcRendererChannels.ExitApplication, async () => {
   readyToExit = true;
 

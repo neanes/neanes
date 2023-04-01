@@ -90,6 +90,7 @@ import {
   FileMenuOpenImageArgs,
   FileMenuOpenScoreArgs,
   IpcMainChannels,
+  IpcRendererChannels,
 } from '@/ipc/ipcChannels';
 import JSZip from 'jszip';
 
@@ -118,10 +119,13 @@ export default class FileMenuBar extends Vue {
     // If using the browser, then we need to hook into the key down
     // to listen for Ctrl+O for oven, Ctrl+S for save, etc.
     window.addEventListener('keydown', this.onKeyDown);
+
+    EventBus.$on(IpcRendererChannels.OpenImageDialog, this.onClickAddImage);
   }
 
   beforeDestroy() {
     window.removeEventListener('keydown', this.onKeyDown);
+    EventBus.$off(IpcRendererChannels.OpenImageDialog, this.onClickAddImage);
   }
 
   onKeyDown(event: KeyboardEvent) {

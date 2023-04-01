@@ -21,6 +21,7 @@
       @toggle-line-break="toggleLineBreak($event)"
       @add-tempo="addTempo"
       @add-drop-cap="addDropCap(false)"
+      @add-image="onClickAddImage"
       @delete-selected-element="deleteSelectedElement"
       @click.native="selectedLyrics = null"
       @play-audio="playAudio"
@@ -653,6 +654,7 @@ import {
   ShowMessageBoxReplyArgs,
   FileMenuInsertTextboxArgs,
   FileMenuOpenImageArgs,
+  IpcRendererChannels,
 } from '@/ipc/ipcChannels';
 import { EventBus } from '@/eventBus';
 import { modeKeyTemplates } from '@/models/ModeKeys';
@@ -1928,6 +1930,10 @@ export default class Editor extends Vue {
 
       (this.$refs[`element-${index}`] as any)[0].focus();
     });
+  }
+
+  onClickAddImage() {
+    EventBus.$emit(IpcRendererChannels.OpenImageDialog);
   }
 
   togglePageBreak() {

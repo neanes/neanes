@@ -4945,7 +4945,7 @@ export default class Editor extends Vue {
 }
 
 .neume-box .selected {
-  background-color: palegoldenrod;
+  background-color: rgb(238, 232, 170, 0.7);
 }
 
 .neume-box .audio-selected {

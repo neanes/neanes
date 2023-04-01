@@ -11,7 +11,7 @@
       @resizing="onResize"
       @resizestop="onResizeStop"
     >
-      <img class="image-box" :src="content" :style="imageStyle" />
+      <img class="image-box" :src="element.data" :style="imageStyle" />
     </vue-draggable-resizable>
   </div>
 </template>
@@ -30,10 +30,6 @@ import { withZoom } from '@/utils/withZoom';
 export default class ImageBox extends Vue {
   @Prop() element!: ImageBoxElement;
   @Prop() zoom!: number;
-
-  get content() {
-    return `data:image;base64,${this.element.data}`;
-  }
 
   get imageWidthZoomed() {
     return this.element.imageWidth * this.zoom;

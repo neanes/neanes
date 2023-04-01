@@ -41,6 +41,7 @@
       <FileMenuItem label="Text Box" @click="onClickAddTextBox" />
       <FileMenuItem label="Inline Text Box" @click="onClickAddInlineTextBox" />
       <FileMenuItem label="Mode Key" @click="onClickAddModeKey" />
+      <FileMenuItem label="Image" @click="onClickAddImage" />
       <div class="separator" />
       <FileMenuItem label="Header" @click="onClickAddHeader" />
       <FileMenuItem label="Footer" @click="onClickAddFooter" />
@@ -69,6 +70,13 @@
       v-show="false"
       @change="onSelectFile"
     />
+    <input
+      ref="imagefile"
+      type="file"
+      :accept="acceptImage"
+      v-show="false"
+      @change="onSelectImageFile"
+    />
   </div>
 </template>
 
@@ -79,6 +87,7 @@ import FileMenuItem from '@/components/FileMenuItem.vue';
 import { EventBus } from '@/eventBus';
 import {
   FileMenuInsertTextboxArgs,
+  FileMenuOpenImageArgs,
   FileMenuOpenScoreArgs,
   IpcMainChannels,
 } from '@/ipc/ipcChannels';
@@ -94,10 +103,15 @@ export default class FileMenuBar extends Vue {
   private isMenuOpen = false;
   private selectedMenu = '';
   private accept = '.byz,.byzx';
+  private acceptImage = '.bmp,.jpg,.jpeg,.jpe,.png,.gif,.svg,.webp,.ico';
   private isChrome = (window as any).chrome != null;
 
   private get fileSelector() {
     return this.$refs.file as HTMLInputElement;
+  }
+
+  private get imageFileSelector() {
+    return this.$refs.imagefile as HTMLInputElement;
   }
 
   mounted() {
@@ -214,6 +228,42 @@ export default class FileMenuBar extends Vue {
     }
   }
 
+  async onSelectImageFile() {
+    const files = this.imageFileSelector.files!;
+
+    if (files.length > 0) {
+      var file = files[0];
+
+      var reader = new FileReader();
+
+      reader.onload = () => {
+        const data = reader.result as string;
+
+        // Create an instance of Image to determine the
+        // original image's height and width
+        const image = new Image();
+
+        image.onload = () => {
+          EventBus.$emit(IpcMainChannels.FileMenuInsertImage, {
+            data,
+            imageHeight: image.height,
+            imageWidth: image.width,
+            filePath: file.name,
+            success: true,
+          } as FileMenuOpenImageArgs);
+        };
+
+        image.src = data;
+
+        // Reset the selector so that if the user selects
+        // the same file twice, it will load
+        this.fileSelector.value = '';
+      };
+
+      reader.readAsDataURL(file);
+    }
+  }
+
   onClickCut() {
     EventBus.$emit(IpcMainChannels.FileMenuCut);
     this.isMenuOpen = false;
@@ -280,6 +330,11 @@ export default class FileMenuBar extends Vue {
 
   onClickAddDropCapAfter() {
     EventBus.$emit(IpcMainChannels.FileMenuInsertDropCapAfter);
+    this.isMenuOpen = false;
+  }
+
+  onClickAddImage() {
+    this.imageFileSelector.click();
     this.isMenuOpen = false;
   }
 

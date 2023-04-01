@@ -26,9 +26,11 @@
   },
   "main": "background.js",
   "dependencies": {
+    "@types/mime-types": "^2.1.1",
     "core-js": "^3.4.3",
     "image-size": "^1.0.2",
     "jszip": "^3.9.1",
+    "mime-types": "^2.1.35",
     "register-service-worker": "^1.7.2",
     "tone": "^14.8.49",
     "uuid": "^8.3.2",

@@ -37,6 +37,7 @@ import { getSystemFonts } from './utils/getSystemFonts';
 import JSZip from 'jszip';
 import { debounce } from 'throttle-debounce';
 import { promisify } from 'util';
+import mimetypes from 'mime-types';
 const sizeOf = promisify(require('image-size'));
 
 const isDevelopment = process.env.NODE_ENV !== 'production';
@@ -394,7 +395,11 @@ async function openImage() {
     if (!dialogResult.canceled) {
       const filePath = dialogResult.filePaths[0];
 
-      result.data = await fs.readFile(filePath, { encoding: 'base64' });
+      const mimeType = mimetypes.lookup(filePath);
+      const base64 = await fs.readFile(filePath, { encoding: 'base64' });
+
+      result.data = `data:${mimeType};base64,${base64}`;
+
       result.filePath = filePath;
       result.success = true;
 

@@ -2,6 +2,7 @@ import {
   DropCapElement,
   ElementType,
   ImageBoxElement,
+  LineBreakType,
   MartyriaElement,
   ModeKeyElement,
   NoteElement,
@@ -48,6 +49,7 @@ interface ByzHtmlExporterConfig {
   classMartyriaAlignRight: string;
   classTempoAlignRight: string;
   classNeumeParagraph: string;
+  classNeumeParagraphCenter: string;
   classTextBox: string;
   classTextBoxInline: string;
   classImageBox: string;
@@ -80,6 +82,7 @@ export class ByzHtmlExporter {
     classMartyriaAlignRight: 'byz--m-align-right',
     classTempoAlignRight: 'byz--t-align-right',
     classNeumeParagraph: 'byz--neume-paragraph',
+    classNeumeParagraphCenter: 'byz--neume-paragraph-center',
     classTextBox: 'byz--text-box',
     classTextBoxInline: 'byz--text-box-inline',
     classImageBox: 'byz--image-box',
@@ -263,6 +266,10 @@ export class ByzHtmlExporter {
       .${this.config.classNeumeParagraph}:last-child {
         margin-bottom: 0;
       }
+
+      .${this.config.classNeumeParagraphCenter} {
+        justify-content: center;
+      }
 `;
 
     return style;
@@ -278,11 +285,13 @@ export class ByzHtmlExporter {
     let insidePage = startInsidePage;
     let needLineBreak = true;
 
-    for (let element of elements) {
+    for (let i = 0; i < elements.length; i++) {
+      const element = elements[i];
+
       switch (element.elementType) {
         case ElementType.Note:
           if (!insidePage) {
-            result += this.startPage(indentation + 2);
+            result += this.startPage(indentation + 2, i, elements);
             insidePage = true;
           }
 
@@ -291,7 +300,7 @@ export class ByzHtmlExporter {
           break;
         case ElementType.Martyria:
           if (!insidePage) {
-            result += this.startPage(indentation + 2);
+            result += this.startPage(indentation + 2, i, elements);
             insidePage = true;
           }
 
@@ -310,7 +319,7 @@ export class ByzHtmlExporter {
           break;
         case ElementType.DropCap:
           if (!insidePage) {
-            result += this.startPage(indentation + 2);
+            result += this.startPage(indentation + 2, i, elements);
             insidePage = true;
           }
 
@@ -323,7 +332,7 @@ export class ByzHtmlExporter {
           break;
         case ElementType.Tempo:
           if (!insidePage) {
-            result += this.startPage(indentation + 2);
+            result += this.startPage(indentation + 2, i, elements);
             insidePage = true;
           }
 
@@ -362,9 +371,16 @@ export class ByzHtmlExporter {
           break;
       }
 
-      if (element.lineBreak || element.pageBreak) {
+      if (
+        (element.lineBreak &&
+          element.lineBreakType !== LineBreakType.Justify) ||
+        element.pageBreak
+      ) {
         if (insidePage) {
-          result += this.endPage(indentation + 2, true);
+          result += this.endPage(
+            indentation + 2,
+            element.pageBreak || element.lineBreakType !== LineBreakType.Center,
+          );
           insidePage = false;
         }
       }
@@ -745,10 +761,14 @@ export class ByzHtmlExporter {
     }\n${this.getIndentationString(indentation)}>`;
   }
 
-  startPage(indentation: number) {
+  startPage(indentation: number, index: number, elements: ScoreElement[]) {
+    const center = this.shouldCenterParagraph(index, elements)
+      ? ` ${this.config.classNeumeParagraphCenter}`
+      : '';
+
     return `<div class="${
       this.config.classNeumeParagraph
-    }"\n${this.getIndentationString(indentation)}>`;
+    }${center}"\n${this.getIndentationString(indentation)}>`;
   }
 
   endPage(indentation: number, needLineBreak: boolean) {
@@ -759,6 +779,47 @@ export class ByzHtmlExporter {
       : '';
 
     return `${lineBreak}</div\n${this.getIndentationString(indentation)}>`;
+  }
+
+  shouldCenterParagraph(index: number, elements: ScoreElement[]) {
+    for (let i = index; i < elements.length; i++) {
+      const element = elements[i];
+
+      if (element.lineBreak && element.lineBreakType === LineBreakType.Center) {
+        return true;
+      }
+
+      if (
+        element.lineBreak ||
+        element.pageBreak ||
+        element.elementType === ElementType.ModeKey
+      ) {
+        return false;
+      }
+
+      if (
+        element.elementType === ElementType.TextBox &&
+        !(element as TextBoxElement).inline
+      ) {
+        return false;
+      }
+
+      if (
+        element.elementType === ElementType.ImageBox &&
+        !(element as ImageBoxElement).inline
+      ) {
+        return false;
+      }
+
+      if (
+        element.elementType === ElementType.Martyria &&
+        (element as MartyriaElement).alignRight
+      ) {
+        return false;
+      }
+    }
+
+    return false;
   }
 
   getTagInfo(neume: Neume) {

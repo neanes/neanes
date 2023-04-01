@@ -27,6 +27,7 @@ import {
   SaveWorkspaceAsReplyArgs,
   FileMenuInsertTextboxArgs,
   ExportWorkspaceAsHtmlArgs,
+  FileMenuOpenImageArgs,
 } from './ipc/ipcChannels';
 import path from 'path';
 import { promises as fs } from 'fs';
@@ -35,6 +36,8 @@ import { Score } from './models/save/v1/Score';
 import { getSystemFonts } from './utils/getSystemFonts';
 import JSZip from 'jszip';
 import { debounce } from 'throttle-debounce';
+import { promisify } from 'util';
+const sizeOf = promisify(require('image-size'));
 
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
@@ -352,6 +355,71 @@ async function saveWorkspaceAs(args: SaveWorkspaceAsArgs) {
     }
   } finally {
     saving = false;
+  }
+
+  return result;
+}
+
+async function openImage() {
+  const result: FileMenuOpenImageArgs = {
+    filePath: '',
+    data: '',
+    imageHeight: 0,
+    imageWidth: 0,
+    success: false,
+  };
+
+  try {
+    const dialogResult = await dialog.showOpenDialog(win!, {
+      properties: ['openFile'],
+      title: 'Insert Image',
+      filters: [
+        {
+          name: `All image types`,
+          extensions: [
+            'bmp',
+            'jpg',
+            'jpeg',
+            'jpe',
+            'png',
+            'gif',
+            'svg',
+            'webp',
+            'ico',
+          ],
+        },
+      ],
+    });
+
+    if (!dialogResult.canceled) {
+      const filePath = dialogResult.filePaths[0];
+
+      result.data = await fs.readFile(filePath, { encoding: 'base64' });
+      result.filePath = filePath;
+      result.success = true;
+
+      try {
+        const dimensions = await sizeOf(filePath);
+        result.imageHeight = dimensions.height;
+        result.imageWidth = dimensions.width;
+      } catch {
+        console.error(
+          'Could not read dimensions of image. Defaulting to 100x100.',
+        );
+        result.imageHeight = 100;
+        result.imageWidth = 100;
+      }
+    }
+  } catch (error) {
+    console.error(error);
+
+    if (error instanceof Error) {
+      dialog.showMessageBox(win!, {
+        type: 'error',
+        title: 'Open image failed',
+        message: error.message,
+      });
+    }
   }
 
   return result;
@@ -866,6 +934,16 @@ function createMenu() {
           label: '&Mode Key',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuInsertModeKey);
+          },
+        },
+        {
+          label: '&Image',
+          async click() {
+            const data = await openImage();
+
+            if (data.success) {
+              win?.webContents.send(IpcMainChannels.FileMenuInsertImage, data);
+            }
           },
         },
         { type: 'separator' },

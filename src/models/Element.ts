@@ -35,6 +35,7 @@ export enum ElementType {
   TextBox = 'TextBox',
   DropCap = 'DropCap',
   ModeKey = 'ModeKey',
+  ImageBox = 'ImageBox',
 }
 
 export enum LineBreakType {
@@ -698,6 +699,41 @@ export class DropCapElement extends ScoreElement {
       fontSize: this.fontSize,
       fontFamily: this.fontFamily,
     } as Partial<DropCapElement>;
+  }
+}
+
+export class ImageBoxElement extends ScoreElement {
+  public readonly elementType: ElementType = ElementType.ImageBox;
+
+  public data: string = '';
+
+  public imageHeight: number = 100;
+  public imageWidth: number = 100;
+  public inline: boolean = false;
+  public lockAspectRatio: boolean = true;
+  public alignment: TextBoxAlignment = TextBoxAlignment.Center;
+
+  public get aspectRatio() {
+    return this.imageWidth / this.imageHeight;
+  }
+
+  public clone(args?: ElementCloneArgs) {
+    const clone = new ImageBoxElement();
+
+    Object.assign(clone, this.getClipboardProperties());
+
+    return clone;
+  }
+
+  public getClipboardProperties() {
+    return {
+      data: this.data,
+      imageHeight: this.imageHeight,
+      imageWidth: this.imageWidth,
+      inline: this.inline,
+      lockAspectRatio: this.lockAspectRatio,
+      alignment: this.alignment,
+    } as Partial<ImageBoxElement>;
   }
 }
 

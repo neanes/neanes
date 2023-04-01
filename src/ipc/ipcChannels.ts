@@ -27,6 +27,7 @@ export enum IpcMainChannels {
   FileMenuInsertModeKey = 'FileMenuInsertModeKey',
   FileMenuInsertDropCapBefore = 'FileMenuInsertDropCapBefore',
   FileMenuInsertDropCapAfter = 'FileMenuInsertDropCapAfter',
+  FileMenuInsertImage = 'FileMenuInsertImage',
 
   FileMenuInsertHeader = 'FileMenuInsertHeader',
   FileMenuInsertFooter = 'FileMenuInsertFooter',
@@ -57,6 +58,14 @@ export enum IpcRendererChannels {
 
 export interface FileMenuOpenScoreArgs {
   data: string;
+  filePath: string;
+  success: boolean;
+}
+
+export interface FileMenuOpenImageArgs {
+  data: string;
+  imageWidth: number;
+  imageHeight: number;
   filePath: string;
   success: boolean;
 }

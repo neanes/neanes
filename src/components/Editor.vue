@@ -330,6 +330,28 @@
                       @update:content="updateDropCapContent(element, $event)"
                     />
                   </template>
+                  <template v-if="isImageBoxElement(element)">
+                    <span class="page-break-2" v-if="element.pageBreak"
+                      ><img src="@/assets/icons/page-break.svg"
+                    /></span>
+                    <span class="line-break-2" v-if="element.lineBreak"
+                      ><img src="@/assets/icons/line-break.svg"
+                    /></span>
+                    <ImageBox
+                      :ref="`element-${getElementIndex(element)}`"
+                      :element="element"
+                      :zoom="zoom"
+                      :class="[{ selectedImagebox: isSelected(element) }]"
+                      @click.native="selectedElement = element"
+                      @update:size="
+                        updateImageBoxSize(
+                          selectedElement,
+                          $event.width,
+                          $event.height,
+                        )
+                      "
+                    />
+                  </template>
                 </div>
               </div>
               <template v-if="score.pageSetup.showFooter">
@@ -410,6 +432,22 @@
         @update:color="updateDropCapColor(selectedElement, $event)"
         @update:bold="updateDropCapFontWeight(selectedElement, $event)"
         @update:italic="updateDropCapFontStyle(selectedElement, $event)"
+      />
+    </template>
+    <template
+      v-if="selectedElement != null && isImageBoxElement(selectedElement)"
+    >
+      <ToolbarImageBox
+        :element="selectedElement"
+        :pageSetup="score.pageSetup"
+        @update:alignment="updateImageBoxAlignment(selectedElement, $event)"
+        @update:inline="updateImageBoxInline(selectedElement, $event)"
+        @update:lockAspectRatio="
+          updateImageBoxLockAspectRatio(selectedElement, $event)
+        "
+        @update:size="
+          updateImageBoxSize(selectedElement, $event.width, $event.height)
+        "
       />
     </template>
     <template v-if="selectedLyrics != null">
@@ -559,6 +597,7 @@ import {
   ModeKeyElement,
   TextBoxAlignment,
   LineBreakType,
+  ImageBoxElement,
 } from '@/models/Element';
 import {
   QuantitativeNeume,
@@ -589,9 +628,11 @@ import TempoNeumeBox from '@/components/NeumeBoxTempo.vue';
 import NeumeSelector from '@/components/NeumeSelector.vue';
 import ContentEditable from '@/components/ContentEditable.vue';
 import TextBox from '@/components/TextBox.vue';
+import ImageBox from '@/components/ImageBox.vue';
 import DropCap from '@/components/DropCap.vue';
 import ModeKey from '@/components/ModeKey.vue';
 import ModeKeyPrint from '@/components/ModeKeyPrint.vue';
+import ToolbarImageBox from '@/components/ToolbarImageBox.vue';
 import ToolbarTextBox from '@/components/ToolbarTextBox.vue';
 import ToolbarLyrics from '@/components/ToolbarLyrics.vue';
 import ToolbarModeKey from '@/components/ToolbarModeKey.vue';
@@ -611,6 +652,7 @@ import {
   FileMenuOpenScoreArgs,
   ShowMessageBoxReplyArgs,
   FileMenuInsertTextboxArgs,
+  FileMenuOpenImageArgs,
 } from '@/ipc/ipcChannels';
 import { EventBus } from '@/eventBus';
 import { modeKeyTemplates } from '@/models/ModeKeys';
@@ -665,8 +707,10 @@ import {
     ContentEditable,
     TextBox,
     DropCap,
+    ImageBox,
     ModeKey,
     ModeKeyPrint,
+    ToolbarImageBox,
     ToolbarTextBox,
     ToolbarLyrics,
     ToolbarModeKey,
@@ -775,6 +819,9 @@ export default class Editor extends Vue {
 
   textBoxCommandFactory: CommandFactory<TextBoxElement> =
     new CommandFactory<TextBoxElement>();
+
+  imageBoxCommandFactory: CommandFactory<ImageBoxElement> =
+    new CommandFactory<ImageBoxElement>();
 
   modeKeyCommandFactory: CommandFactory<ModeKeyElement> =
     new CommandFactory<ModeKeyElement>();
@@ -1433,6 +1480,10 @@ export default class Editor extends Vue {
       this.onFileMenuInsertDropCapAfter,
     );
     EventBus.$on(
+      IpcMainChannels.FileMenuInsertImage,
+      this.onFileMenuInsertImage,
+    );
+    EventBus.$on(
       IpcMainChannels.FileMenuInsertHeader,
       this.onFileMenuInsertHeader,
     );
@@ -1509,6 +1560,10 @@ export default class Editor extends Vue {
     EventBus.$off(
       IpcMainChannels.FileMenuInsertDropCapAfter,
       this.onFileMenuInsertDropCapAfter,
+    );
+    EventBus.$off(
+      IpcMainChannels.FileMenuInsertImage,
+      this.onFileMenuInsertImage,
     );
     EventBus.$off(
       IpcMainChannels.FileMenuGenerateTestFile,
@@ -1982,6 +2037,10 @@ export default class Editor extends Vue {
 
   isModeKeyElement(element: ScoreElement) {
     return element.elementType == ElementType.ModeKey;
+  }
+
+  isImageBoxElement(element: ScoreElement) {
+    return element.elementType == ElementType.ImageBox;
   }
 
   isTextInputFocused() {
@@ -2885,6 +2944,7 @@ export default class Editor extends Vue {
     ElementType.Empty,
     ElementType.DropCap,
     ElementType.TextBox,
+    ElementType.ImageBox,
     ElementType.ModeKey,
   ];
 
@@ -4204,6 +4264,46 @@ export default class Editor extends Vue {
     this.updateDropCap(element, { fontStyle: italic ? 'italic' : 'normal' });
   }
 
+  updateImageBox(
+    element: ImageBoxElement,
+    newValues: Partial<ImageBoxElement>,
+  ) {
+    this.commandService.execute(
+      this.imageBoxCommandFactory.create('update-properties', {
+        target: element,
+        newValues: newValues,
+      }),
+    );
+
+    this.save();
+  }
+
+  updateImageBoxInline(element: ImageBoxElement, inline: boolean) {
+    this.updateImageBox(element, { inline });
+  }
+
+  updateImageBoxLockAspectRatio(
+    element: ImageBoxElement,
+    lockAspectRatio: boolean,
+  ) {
+    this.updateImageBox(element, { lockAspectRatio });
+  }
+
+  updateImageBoxAlignment(
+    element: ImageBoxElement,
+    alignment: TextBoxAlignment,
+  ) {
+    this.updateImageBox(element, { alignment });
+  }
+
+  updateImageBoxSize(
+    element: ImageBoxElement,
+    imageWidth: number,
+    imageHeight: number,
+  ) {
+    this.updateImageBox(element, { imageWidth, imageHeight });
+  }
+
   deleteSelectedElement() {
     if (
       this.selectedElement != null &&
@@ -4529,6 +4629,20 @@ export default class Editor extends Vue {
     this.addDropCap(true);
   }
 
+  onFileMenuInsertImage(args: FileMenuOpenImageArgs) {
+    const element = new ImageBoxElement();
+
+    element.data = args.data;
+    element.imageWidth = args.imageWidth;
+    element.imageHeight = args.imageHeight;
+
+    this.addScoreElement(element, this.selectedElementIndex);
+
+    this.selectedElement = element;
+
+    this.save();
+  }
+
   onFileMenuInsertHeader() {
     if (this.score.pageSetup.showHeader) {
       return;
@@ -4836,6 +4950,10 @@ export default class Editor extends Vue {
   border: 1px solid goldenrod;
 }
 
+.selectedImagebox {
+  border: 1px solid goldenrod;
+}
+
 .line {
   display: flex;
   flex-direction: row;
@@ -5066,6 +5184,10 @@ export default class Editor extends Vue {
     border: none;
   }
 
+  .image-box-container {
+    border: none;
+  }
+
   .file-menu-bar,
   .neume-selector-panel,
   .workspace-tab-container,
@@ -5076,6 +5198,7 @@ export default class Editor extends Vue {
   .neume-toolbar,
   .tempo-toolbar,
   .text-box-toolbar,
+  .image-box-toolbar,
   .page-break,
   .line-break,
   .page-break-2,

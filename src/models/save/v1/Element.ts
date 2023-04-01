@@ -25,6 +25,7 @@ export enum ElementType {
   DropCap = 'DropCap',
   ModeKey = 'ModeKey',
   Tempo = 'Tempo',
+  ImageBox = 'ImageBox',
 }
 
 export enum LineBreakType {
@@ -192,6 +193,18 @@ export class DropCapElement extends ScoreElement {
   public strokeWidth: number = 0;
   public color: string = '#000000';
   public useDefaultStyle: boolean | undefined = undefined;
+}
+
+export class ImageBoxElement extends ScoreElement {
+  public readonly elementType: ElementType = ElementType.ImageBox;
+
+  public data: string = '';
+
+  public imageHeight: number = 0;
+  public imageWidth: number = 0;
+  public inline: boolean | undefined = undefined;
+  public lockAspectRatio: boolean | undefined = undefined;
+  public alignment: TextBoxAlignment = TextBoxAlignment.Left;
 }
 
 export class ScoreElementOffset {

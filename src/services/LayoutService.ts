@@ -9,6 +9,7 @@ import {
   TempoElement,
   EmptyElement,
   LineBreakType,
+  ImageBoxElement,
 } from '@/models/Element';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import {
@@ -218,6 +219,14 @@ export class LayoutService {
             neumeHeight,
           );
           break;
+        case ElementType.ImageBox:
+          {
+            const imageBox = element as ImageBoxElement;
+            elementWidthPx = imageBox.inline
+              ? imageBox.imageWidth
+              : pageSetup.innerPageWidth;
+          }
+          break;
         case ElementType.ModeKey: {
           const modeKeyElement = element as ModeKeyElement;
 
@@ -400,10 +409,19 @@ export class LayoutService {
           } else if (
             line.elements.some((x) => x.elementType === ElementType.ModeKey)
           ) {
-            const textbox = line.elements.find(
+            const modekey = line.elements.find(
               (x) => x.elementType === ElementType.ModeKey,
             ) as ModeKeyElement;
-            height = textbox.height;
+            height = modekey.height;
+          } else if (
+            line.elements.some((x) => x.elementType === ElementType.ImageBox)
+          ) {
+            const imageBox = line.elements.find(
+              (x) => x.elementType === ElementType.ImageBox,
+            ) as ImageBoxElement;
+            height = imageBox.inline
+              ? Math.max(imageBox.imageHeight, neumeHeight)
+              : imageBox.imageHeight;
           } else if (
             line.elements.some((x) =>
               [

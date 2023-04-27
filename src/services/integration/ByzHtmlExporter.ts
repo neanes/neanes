@@ -55,6 +55,11 @@ interface ByzHtmlExporterConfig {
   classImageBox: string;
   classImageBoxInline: string;
   classModeKey: string;
+  classModeKeyRightContainer: string;
+  classModeKeyAmbitus: string;
+  classModeKeyAmbitusText: string;
+  classModeKeyAmbitusHigh: string;
+  classModeKeyAmbitusLow: string;
   classLineBreak: string;
 
   tagLyric: string;
@@ -88,6 +93,11 @@ export class ByzHtmlExporter {
     classImageBox: 'byz--image-box',
     classImageBoxInline: 'byz--image-box-inline',
     classModeKey: 'byz--mode-key',
+    classModeKeyRightContainer: 'byz--mode-key-right-container',
+    classModeKeyAmbitus: 'byz--mode-key-ambitus',
+    classModeKeyAmbitusText: 'byz--mode-key-ambitus-text',
+    classModeKeyAmbitusLow: 'byz--mode-key-ambitus-low',
+    classModeKeyAmbitusHigh: 'byz--mode-key-ambitus-high',
     classLineBreak: 'byz--line-break',
 
     tagLyric: 'x-ly',
@@ -241,9 +251,37 @@ export class ByzHtmlExporter {
       }
 
       .${this.config.classModeKey} {
+        position: relative;
         font-size: ${Unit.toPt(pageSetup.modeKeyDefaultFontSize)}pt;
         color: ${pageSetup.modeKeyDefaultColor};
         -webkit-text-stroke-width: ${pageSetup.modeKeyDefaultStrokeWidth};
+      }
+
+      .${this.config.classModeKeyRightContainer} {
+        position: absolute;
+        right: 0;
+      } 
+
+      .${this.config.classModeKeyAmbitus} {
+        position: relative;
+        top: -4px;
+      }
+
+      .${this.config.classModeKeyAmbitusText} {
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      .${this.config.classModeKeyAmbitusLow} {
+        margin-right: 10px;
+        position: relative;
+        top: -12px;
+      }
+
+      .${this.config.classModeKeyAmbitusHigh} {
+        margin-left: 2px;
+        margin-right: 4px;
+        position: relative;
+        top: -12px;
       }
 
       .${this.config.classModeKey} .${this.config.classTempo} {
@@ -253,7 +291,8 @@ export class ByzHtmlExporter {
       }
 
       .${this.config.classModeKey} .${this.config.classTempoAlignRight} {
-        float: right;
+        position: absolute;
+        right: 0;
       }
 
       .${this.config.classNeumeParagraph} {
@@ -661,14 +700,60 @@ export class ByzHtmlExporter {
       indentation + 2,
     );
 
+    let rightContainer = false;
+
+    if (element.showAmbitus) {
+      inner += `<span class="${this.config.classModeKeyRightContainer}">`;
+      rightContainer = true;
+
+      inner += `<span class="${this.config.classModeKeyAmbitus}">`;
+      inner += `<span class="${this.config.classModeKeyAmbitusText}">(</span>`;
+      inner += `<span class="${this.config.classModeKeyAmbitusLow}">`;
+      inner += this.exportNeume(
+        element.ambitusLowNote,
+        indentation + 2,
+        NoOffset,
+      );
+
+      inner += this.exportNeume(
+        element.ambitusLowRootSign,
+        indentation + 2,
+        NoOffset,
+      );
+      inner += '</span>';
+      inner += `<span class="${this.config.classModeKeyAmbitusText}">-</span>`;
+      inner += `<span class="${this.config.classModeKeyAmbitusHigh}">`;
+      inner += this.exportNeume(
+        element.ambitusHighNote,
+        indentation + 2,
+        NoOffset,
+      );
+
+      inner += this.exportNeume(
+        element.ambitusHighRootSign,
+        indentation + 2,
+        NoOffset,
+      );
+      inner += '</span>';
+      inner += `<span class="${this.config.classModeKeyAmbitusText}">)</span>`;
+      inner += '</span>';
+    }
+
+    if (element.tempo && element.tempoAlignRight && !rightContainer) {
+      inner += `<span class="${this.config.classModeKeyRightContainer}">`;
+      rightContainer = true;
+    }
+
     inner += this.exportNeume(
       element.tempo,
       indentation + 2,
       NoOffset,
-      element.tempoAlignRight
-        ? this.config.classTempo + ' ' + this.config.classTempoAlignRight
-        : this.config.classTempo,
+      this.config.classTempo,
     );
+
+    if (rightContainer) {
+      inner += `</span>`;
+    }
 
     let styleAttribute = '';
     let style = '';

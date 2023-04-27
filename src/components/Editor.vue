@@ -149,19 +149,12 @@
                           {
                             selected: isSelected(element),
                             'audio-selected': isAudioSelected(element),
-                            'no-print': isBrowser,
                           },
                         ]"
                         @click.native.exact="selectedElement = element"
                         @click.native.shift.exact="setSelectionRange(element)"
                         @dblclick.native="openSyllablePositioningDialog"
                         @update="updateNoteAndSave(element, $event)"
-                      />
-                      <SyllableNeumeBoxPrint
-                        v-if="isBrowser && printMode"
-                        class="syllable-box print-only"
-                        :note="element"
-                        :pageSetup="score.pageSetup"
                       />
                       <div
                         class="lyrics-container"
@@ -208,17 +201,10 @@
                         :class="[
                           {
                             selected: isSelected(element),
-                            'no-print': isBrowser,
                           },
                         ]"
                         @click.native.exact="selectedElement = element"
                         @click.native.shift.exact="setSelectionRange(element)"
-                      />
-                      <MartyriaNeumeBoxPrint
-                        v-if="isBrowser && printMode"
-                        class="marytria-neume-box print-only"
-                        :neume="element"
-                        :pageSetup="score.pageSetup"
                       />
                       <div class="lyrics"></div>
                     </div>
@@ -295,17 +281,10 @@
                       :class="[
                         {
                           selectedTextbox: isSelected(element),
-                          'no-print': isBrowser,
                         },
                       ]"
                       @click.native="selectedElement = element"
                       @dblclick.native="openModeKeyDialog"
-                    />
-                    <ModeKeyPrint
-                      v-if="isBrowser && printMode"
-                      class="print-only"
-                      :element="element"
-                      :pageSetup="score.pageSetup"
                     />
                   </template>
                   <template v-if="isDropCapElement(element)">

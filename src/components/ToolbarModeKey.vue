@@ -123,6 +123,19 @@
         >Ignore Attractions</label
       >
     </div>
+
+    <span class="space" />
+
+    <div style="display: flex; align-items: center">
+      <input
+        id="toolbar-mode-key-show-ambitus"
+        type="checkbox"
+        :checked="element.showAmbitus"
+        @change="$emit('update:showAmbitus', $event.target.checked)"
+      />
+      <label for="toolbar-mode-key-show-ambitus">Show Ambitus</label>
+    </div>
+
     <span class="space" />
 
     <div

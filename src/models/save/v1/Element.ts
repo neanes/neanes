@@ -181,6 +181,11 @@ export class ModeKeyElement extends ScoreElement {
   public useDefaultStyle: boolean | undefined = undefined;
   public ignoreAttractions: boolean | undefined = undefined;
   public permanentEnharmonicZo: boolean | undefined = undefined;
+  public ambitusLowNote: Note = Note.Pa;
+  public ambitusLowRootSign: RootSign = RootSign.Alpha;
+  public ambitusHighNote: Note = Note.Pa;
+  public ambitusHighRootSign: RootSign = RootSign.Alpha;
+  public showAmbitus: boolean | undefined = undefined;
 }
 
 export class DropCapElement extends ScoreElement {

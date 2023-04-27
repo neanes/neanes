@@ -421,6 +421,7 @@ export class SaveService {
     element.heightAdjustment = e.heightAdjustment;
     element.bpm = e.bpm;
     element.ignoreAttractions = e.ignoreAttractions || undefined;
+    element.showAmbitus = e.showAmbitus || undefined;
     element.useDefaultStyle = e.useDefaultStyle || undefined;
     element.permanentEnharmonicZo = e.permanentEnharmonicZo || undefined;
   }
@@ -897,6 +898,7 @@ export class SaveService {
     element.heightAdjustment = e.heightAdjustment ?? 0;
     element.bpm = e.bpm ?? 120;
     element.ignoreAttractions = e.ignoreAttractions === true;
+    element.showAmbitus = e.showAmbitus === true;
     element.useDefaultStyle = e.useDefaultStyle === true;
     element.permanentEnharmonicZo = e.permanentEnharmonicZo === true;
 

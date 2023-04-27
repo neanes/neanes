@@ -27,6 +27,7 @@ import { getNeumeValue, getNoteSpread } from '@/models/NeumeValues';
 import { Line, Page } from '@/models/Page';
 import { PageSetup } from '@/models/PageSetup';
 import {
+  getNoteFromValue,
   getScaleNoteFromValue,
   getScaleNoteValue,
   Scale,
@@ -39,6 +40,7 @@ import { Footer } from '@/models/Footer';
 
 const textWidthCache = new Map<string, number>();
 const neumeWidthCache = new Map<string, number>();
+const emptyElementWidth = 39;
 
 interface GetNoteWidthArgs {
   lyricsVerticalOffset: number;
@@ -48,7 +50,6 @@ interface GetNoteWidthArgs {
   runningElaphronWidth: number;
   elaphronWidth: number;
 }
-
 export class LayoutService {
   public static processPages(score: Score): Page[] {
     const pageSetup = score.pageSetup;
@@ -358,7 +359,7 @@ export class LayoutService {
         }
         case ElementType.Empty: {
           const emptyElement = element as EmptyElement;
-          elementWidthPx = 39;
+          elementWidthPx = emptyElementWidth;
           emptyElement.height = neumeHeight;
           break;
         }
@@ -1197,6 +1198,14 @@ export class LayoutService {
     let currentScale = Scale.Diatonic;
     let currentShift = 0;
 
+    let ambitusLow: number = Number.MAX_SAFE_INTEGER;
+    let ambitusHigh: number = Number.MIN_SAFE_INTEGER;
+    let ambitusLowScale = Scale.Diatonic;
+    let ambitusHighScale = Scale.Diatonic;
+    let ambitusLowShift = 0;
+    let ambitusHighShift = 0;
+    let currentModeKey: ModeKeyElement | null = null;
+
     for (let element of elements) {
       if (element.elementType === ElementType.Note) {
         const note = element as NoteElement;
@@ -1226,8 +1235,49 @@ export class LayoutService {
             note.fthora = null;
           }
         }
+
+        for (let noteValue of currentNotes) {
+          if (noteValue < ambitusLow) {
+            ambitusLow = noteValue;
+            ambitusLowScale = currentScale;
+            ambitusLowShift = currentShift;
+          }
+          if (noteValue > ambitusHigh) {
+            ambitusHigh = noteValue;
+            ambitusHighScale = currentScale;
+            ambitusHighShift = currentShift;
+          }
+        }
       } else if (element.elementType === ElementType.ModeKey) {
         const modeKey = element as ModeKeyElement;
+
+        if (currentModeKey) {
+          currentModeKey.ambitusLowNote =
+            getNoteFromValue(ambitusLow) ?? Note.Pa;
+          currentModeKey.ambitusHighNote =
+            getNoteFromValue(ambitusHigh) ?? Note.Pa;
+          currentModeKey.ambitusLowRootSign =
+            ambitusLow !== Number.MAX_SAFE_INTEGER
+              ? this.getRootSign(
+                  ambitusLowScale,
+                  ambitusLow + ambitusLowShift,
+                  ambitusLow,
+                )
+              : RootSign.Alpha;
+          currentModeKey.ambitusHighRootSign =
+            ambitusHigh !== Number.MIN_SAFE_INTEGER
+              ? this.getRootSign(
+                  ambitusHighScale,
+                  ambitusHigh + ambitusHighShift,
+                  ambitusHigh,
+                )
+              : RootSign.Alpha;
+        }
+
+        ambitusLow = Number.MAX_SAFE_INTEGER;
+        ambitusHigh = Number.MIN_SAFE_INTEGER;
+
+        currentModeKey = modeKey;
         currentNote = getScaleNoteValue(modeKey.scaleNote);
         currentScale = modeKey.scale;
         currentShift = 0;
@@ -1262,55 +1312,11 @@ export class LayoutService {
 
           const currentScaleNote = currentNote + currentShift;
 
-          if (currentScale === Scale.HardChromatic) {
-            martyria.rootSign =
-              currentScaleNote % 2 === 0 ? RootSign.Squiggle : RootSign.Tilt;
-          } else if (currentScale === Scale.SoftChromatic) {
-            martyria.rootSign =
-              currentScaleNote % 2 === 0
-                ? RootSign.SoftChromaticPaRootSign
-                : RootSign.SoftChromaticSquiggle;
-          } else if (currentScale === Scale.Diatonic) {
-            martyria.rootSign =
-              diatonicRootSignMap.get(currentScaleNote) || RootSign.Alpha;
-          } else if (currentScale === Scale.Zygos) {
-            martyria.rootSign =
-              zygosRootSignMap.get(currentScaleNote) || RootSign.Alpha;
-          } else if (currentScale === Scale.Kliton) {
-            martyria.rootSign =
-              klitonRootSignMap.get(currentScaleNote) || RootSign.Alpha;
-          } else if (currentScale === Scale.Spathi) {
-            martyria.rootSign =
-              spathiKeRootSignMap.get(currentScaleNote) || RootSign.Alpha;
-          } else if (currentScale === Scale.SpathiGa) {
-            martyria.rootSign =
-              spathiGaRootSignMap.get(currentScaleNote) || RootSign.Alpha;
-          } else if (currentScale === Scale.EnharmonicGa) {
-            martyria.rootSign =
-              enharmonicGaRootSignMap.get(currentScaleNote) || RootSign.Alpha;
-          } else if (currentScale === Scale.EnharmonicVou) {
-            martyria.rootSign =
-              enharmonicVouRootSignMap.get(currentScaleNote) || RootSign.Alpha;
-          } else if (currentScale === Scale.EnharmonicVouHigh) {
-            martyria.rootSign =
-              enharmonicVouHighRootSignMap.get(currentScaleNote) ||
-              RootSign.Alpha;
-          } else if (currentScale === Scale.EnharmonicZoHigh) {
-            martyria.rootSign =
-              enharmonicZoHighRootSignMap.get(currentScaleNote) ||
-              RootSign.Alpha;
-          } else if (currentScale === Scale.EnharmonicZo) {
-            martyria.rootSign =
-              enharmonicZoRootSignMap.get(currentScaleNote) || RootSign.Alpha;
-          }
-
-          if (currentNote <= reverseNoteMap.get(Note.KeLow)!) {
-            martyria.rootSign =
-              lowRootSignMap.get(martyria.rootSign) || martyria.rootSign;
-          } else if (currentNote > reverseNoteMap.get(Note.KeLow)!) {
-            martyria.rootSign =
-              highRootSignMap.get(martyria.rootSign) || martyria.rootSign;
-          }
+          martyria.rootSign = this.getRootSign(
+            currentScale,
+            currentScaleNote,
+            currentNote,
+          );
 
           if (martyria.fthora) {
             if (this.fthoraIsValid(martyria.fthora, [currentNote])) {
@@ -1329,6 +1335,77 @@ export class LayoutService {
         }
       }
     }
+
+    if (currentModeKey) {
+      currentModeKey.ambitusLowNote = getNoteFromValue(ambitusLow) ?? Note.Pa;
+      currentModeKey.ambitusHighNote = getNoteFromValue(ambitusHigh) ?? Note.Pa;
+      currentModeKey.ambitusLowRootSign =
+        ambitusLow !== Number.MAX_SAFE_INTEGER
+          ? this.getRootSign(
+              ambitusLowScale,
+              ambitusLow + ambitusLowShift,
+              ambitusLow,
+            )
+          : RootSign.Alpha;
+      currentModeKey.ambitusHighRootSign =
+        ambitusHigh !== Number.MIN_SAFE_INTEGER
+          ? this.getRootSign(
+              ambitusHighScale,
+              ambitusHigh + ambitusHighShift,
+              ambitusHigh,
+            )
+          : RootSign.Alpha;
+    }
+  }
+
+  private static getRootSign(
+    currentScale: Scale,
+    currentScaleNote: number,
+    currentNote: number,
+  ) {
+    let rootSign: RootSign = RootSign.Alpha;
+
+    if (currentScale === Scale.HardChromatic) {
+      rootSign = currentScaleNote % 2 === 0 ? RootSign.Squiggle : RootSign.Tilt;
+    } else if (currentScale === Scale.SoftChromatic) {
+      rootSign =
+        currentScaleNote % 2 === 0
+          ? RootSign.SoftChromaticPaRootSign
+          : RootSign.SoftChromaticSquiggle;
+    } else if (currentScale === Scale.Diatonic) {
+      rootSign = diatonicRootSignMap.get(currentScaleNote) || RootSign.Alpha;
+    } else if (currentScale === Scale.Zygos) {
+      rootSign = zygosRootSignMap.get(currentScaleNote) || RootSign.Alpha;
+    } else if (currentScale === Scale.Kliton) {
+      rootSign = klitonRootSignMap.get(currentScaleNote) || RootSign.Alpha;
+    } else if (currentScale === Scale.Spathi) {
+      rootSign = spathiKeRootSignMap.get(currentScaleNote) || RootSign.Alpha;
+    } else if (currentScale === Scale.SpathiGa) {
+      rootSign = spathiGaRootSignMap.get(currentScaleNote) || RootSign.Alpha;
+    } else if (currentScale === Scale.EnharmonicGa) {
+      rootSign =
+        enharmonicGaRootSignMap.get(currentScaleNote) || RootSign.Alpha;
+    } else if (currentScale === Scale.EnharmonicVou) {
+      rootSign =
+        enharmonicVouRootSignMap.get(currentScaleNote) || RootSign.Alpha;
+    } else if (currentScale === Scale.EnharmonicVouHigh) {
+      rootSign =
+        enharmonicVouHighRootSignMap.get(currentScaleNote) || RootSign.Alpha;
+    } else if (currentScale === Scale.EnharmonicZoHigh) {
+      rootSign =
+        enharmonicZoHighRootSignMap.get(currentScaleNote) || RootSign.Alpha;
+    } else if (currentScale === Scale.EnharmonicZo) {
+      rootSign =
+        enharmonicZoRootSignMap.get(currentScaleNote) || RootSign.Alpha;
+    }
+
+    if (currentNote <= reverseNoteMap.get(Note.KeLow)!) {
+      rootSign = lowRootSignMap.get(rootSign) || rootSign;
+    } else if (currentNote > reverseNoteMap.get(Note.KeLow)!) {
+      rootSign = highRootSignMap.get(rootSign) || rootSign;
+    }
+
+    return rootSign;
   }
 
   private static getScaleFromFthora(fthora: Fthora, currentNote: number) {

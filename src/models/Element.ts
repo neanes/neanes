@@ -577,6 +577,11 @@ export class ModeKeyElement extends ScoreElement {
   public useDefaultStyle: boolean = true;
   public ignoreAttractions: boolean = false;
   public permanentEnharmonicZo: boolean = false;
+  public ambitusLowNote: Note = Note.Pa;
+  public ambitusLowRootSign: RootSign = RootSign.Alpha;
+  public ambitusHighNote: Note = Note.Pa;
+  public ambitusHighRootSign: RootSign = RootSign.Alpha;
+  public showAmbitus: boolean = false;
   public height: number = Unit.fromPt(37);
 
   // Values computed by the layout service

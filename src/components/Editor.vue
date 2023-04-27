@@ -475,6 +475,7 @@
         @update:ignoreAttractions="
           updateModeKeyIgnoreAttractions(selectedElement, $event)
         "
+        @update:showAmbitus="updateModeKeyShowAmbitus(selectedElement, $event)"
         @update:tempoAlignRight="
           updateModeKeyTempoAlignRight(selectedElement, $event)
         "
@@ -3999,6 +4000,11 @@ export default class Editor extends Vue {
     ignoreAttractions: boolean,
   ) {
     this.updateModeKey(element, { ignoreAttractions });
+    this.save();
+  }
+
+  updateModeKeyShowAmbitus(element: ModeKeyElement, showAmbitus: boolean) {
+    this.updateModeKey(element, { showAmbitus });
     this.save();
   }
 

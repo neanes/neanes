@@ -24,7 +24,32 @@
       v-if="hasFthoraAboveQuantitativeNeumeRight"
       :neume="element.fthoraAboveQuantitativeNeumeRight"
     />
-    <Neume v-if="hasTempo" :neume="element.tempo" :style="tempoStyle" />
+    <Neume
+      v-if="hasTempo && !element.tempoAlignRight"
+      :neume="element.tempo"
+      :style="tempoStyle"
+    />
+    <span class="right-container">
+      <span class="ambitus" v-if="element.showAmbitus">
+        <span class="ambitus-text">(</span>
+        <span class="ambitus-low" :style="ambitusStyle">
+          <Neume :neume="element.ambitusLowNote" />
+          <Neume :neume="element.ambitusLowRootSign" />
+        </span>
+        <span class="ambitus-text">-</span>
+        <span class="ambitus-high" :style="ambitusStyle">
+          <Neume :neume="element.ambitusHighNote" />
+          <Neume :neume="element.ambitusHighRootSign" />
+        </span>
+        <span class="ambitus-text">)</span>
+      </span>
+
+      <Neume
+        v-if="hasTempo && element.tempoAlignRight"
+        :neume="element.tempo"
+        :style="tempoStyle"
+      />
+    </span>
   </div>
 </template>
 
@@ -101,14 +126,23 @@ export default class ModeKey extends Vue {
       color: this.pageSetup.tempoDefaultColor,
       webkitTextStrokeWidth: withZoom(this.pageSetup.tempoDefaultStrokeWidth),
       top: withZoom(-12),
+      marginLeft: withZoom(8),
     } as CSSStyleDeclaration;
 
-    if (this.element.tempoAlignRight) {
-      style.position = 'absolute';
-      style.right = withZoom(0);
-    } else {
-      style.marginLeft = withZoom(8);
-    }
+    return style;
+  }
+
+  get ambitusStyle() {
+    // TODO figure out a way to remove the hard-coded 12
+    // font metadata json?
+    const style = {
+      color: this.pageSetup.martyriaDefaultColor,
+      webkitTextStrokeWidth: withZoom(
+        this.pageSetup.martyriaDefaultStrokeWidth,
+      ),
+      position: 'relative',
+      top: withZoom(-12),
+    } as CSSStyleDeclaration;
 
     return style;
   }
@@ -122,5 +156,28 @@ export default class ModeKey extends Vue {
   user-select: none;
 
   position: relative;
+}
+
+.right-container {
+  position: absolute;
+  right: 0;
+}
+
+.ambitus {
+  position: relative;
+  top: calc(-4px * var(--zoom));
+}
+
+.ambitus-text {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.ambitus-low {
+  margin-right: 10px;
+}
+
+.ambitus-high {
+  margin-left: 2px;
+  margin-right: 4px;
 }
 </style>

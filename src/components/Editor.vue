@@ -429,6 +429,7 @@
         @update:color="updateDropCapColor(selectedElement, $event)"
         @update:bold="updateDropCapFontWeight(selectedElement, $event)"
         @update:italic="updateDropCapFontStyle(selectedElement, $event)"
+        @update:lineHeight="updateDropCapLineHeight(selectedElement, $event)"
       />
     </template>
     <template
@@ -1959,6 +1960,7 @@ export default class Editor extends Vue {
     element.strokeWidth = this.score.pageSetup.dropCapDefaultStrokeWidth;
     element.fontWeight = this.score.pageSetup.dropCapDefaultFontWeight;
     element.fontStyle = this.score.pageSetup.dropCapDefaultFontStyle;
+    element.lineHeight = this.score.pageSetup.dropCapDefaultLineHeight;
 
     if (after && !this.isLastElement(this.selectedElement)) {
       this.addScoreElement(element, this.selectedElementIndex + 1);
@@ -4412,6 +4414,10 @@ export default class Editor extends Vue {
 
   updateDropCapFontStyle(element: DropCapElement, italic: boolean) {
     this.updateDropCap(element, { fontStyle: italic ? 'italic' : 'normal' });
+  }
+
+  updateDropCapLineHeight(element: DropCapElement, lineHeight: string) {
+    this.updateDropCap(element, { lineHeight });
   }
 
   updateImageBox(

@@ -144,6 +144,7 @@ export class SaveService {
     pageSetup.dropCapDefaultFontWeight = p.dropCapDefaultFontWeight;
     pageSetup.dropCapDefaultFontStyle = p.dropCapDefaultFontStyle;
     pageSetup.dropCapDefaultStrokeWidth = p.dropCapDefaultStrokeWidth;
+    pageSetup.dropCapDefaultLineHeight = p.dropCapDefaultLineHeight;
     pageSetup.leftMargin = p.leftMargin;
     pageSetup.lineHeight = p.lineHeight;
     pageSetup.lyricsDefaultColor = p.lyricsDefaultColor;
@@ -587,6 +588,7 @@ export class SaveService {
       p.dropCapDefaultFontStyle ?? pageSetup.dropCapDefaultFontStyle;
     pageSetup.dropCapDefaultStrokeWidth =
       p.dropCapDefaultStrokeWidth ?? pageSetup.dropCapDefaultStrokeWidth;
+    pageSetup.dropCapDefaultLineHeight = p.dropCapDefaultLineHeight;
 
     pageSetup.lyricsDefaultColor =
       p.lyricsDefaultColor ?? pageSetup.lyricsDefaultColor;
@@ -715,6 +717,7 @@ export class SaveService {
     element.content = e.content;
     element.fontFamily = e.fontFamily ?? pageSetup.dropCapDefaultFontFamily;
     element.fontSize = e.fontSize ?? pageSetup.dropCapDefaultFontSize;
+    element.lineHeight = e.lineHeight ?? pageSetup.dropCapDefaultLineHeight;
     element.fontWeight = e.fontWeight ?? pageSetup.dropCapDefaultFontWeight;
     element.fontStyle = e.fontStyle ?? pageSetup.dropCapDefaultFontStyle;
     element.strokeWidth = e.strokeWidth ?? pageSetup.dropCapDefaultStrokeWidth;

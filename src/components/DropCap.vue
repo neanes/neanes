@@ -40,6 +40,7 @@ export default class DropCap extends Vue {
       fontSize: withZoom(this.element.computedFontSize),
       fontWeight: this.element.computedFontWeight,
       fontStyle: this.element.computedFontStyle,
+      lineHeight: this.element.computedLineHeight,
       webkitTextStrokeWidth: withZoom(this.element.computedStrokeWidth),
     } as CSSStyleDeclaration;
 

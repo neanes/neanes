@@ -24,6 +24,12 @@
         @input="$emit('update:fontSize', $event)"
       />
       <span class="space"></span>
+      <input
+        class="drop-caps-input"
+        :value="element.lineHeight"
+        @change="$emit('update:lineHeight', $event.target.value)"
+      />
+      <span class="space"></span>
       <ColorPicker
         :value="element.color"
         @input="$emit('update:color', $event)"

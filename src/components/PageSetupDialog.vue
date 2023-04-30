@@ -261,7 +261,13 @@
               v-model="form.dropCapDefaultFontSize"
             />
           </div>
-
+          <div class="form-group">
+            <label class="drop-caps-label">Line height</label>
+            <input
+              class="drop-caps-input"
+              v-model="form.dropCapDefaultLineHeight"
+            />
+          </div>
           <div class="form-group">
             <label class="drop-caps-label">Font</label>
             <select

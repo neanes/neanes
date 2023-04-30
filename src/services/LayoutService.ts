@@ -386,6 +386,10 @@ export class LayoutService {
             ? pageSetup.dropCapDefaultFontStyle
             : dropCapElement.fontStyle;
 
+          dropCapElement.computedLineHeight = dropCapElement.useDefaultStyle
+            ? pageSetup.dropCapDefaultLineHeight
+            : dropCapElement.lineHeight;
+
           elementWidthPx = TextMeasurementService.getTextWidth(
             dropCapElement.content,
             dropCapElement.computedFont,

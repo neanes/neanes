@@ -34,9 +34,29 @@
     />
     <Neume v-if="hasFthora" :neume="note.fthora" :style="fthoraStyle" />
     <Neume
+      v-if="hasSecondaryFthora"
+      :neume="note.secondaryFthora"
+      :style="secondaryFthoraStyle"
+    />
+    <Neume
+      v-if="hasTertiaryFthora"
+      :neume="note.tertiaryFthora"
+      :style="tertiaryFthoraStyle"
+    />
+    <Neume
       v-if="hasAccidental"
       :neume="note.accidental"
       :style="accidentalStyle"
+    />
+    <Neume
+      v-if="hasSecondaryAccidental"
+      :neume="note.secondaryAccidental"
+      :style="secondaryAccidentalStyle"
+    />
+    <Neume
+      v-if="hasTertiaryAccidental"
+      :neume="note.tertiaryAccidental"
+      :style="tertiaryAccidentalStyle"
     />
     <Neume
       v-if="note.noteIndicator"
@@ -98,8 +118,24 @@ export default class NeumeBoxSyllable extends Vue {
     return this.note.fthora != null;
   }
 
+  get hasSecondaryFthora() {
+    return this.note.secondaryFthora != null;
+  }
+
+  get hasTertiaryFthora() {
+    return this.note.tertiaryFthora != null;
+  }
+
   get hasAccidental() {
     return this.note.accidental != null;
+  }
+
+  get hasSecondaryAccidental() {
+    return this.note.secondaryAccidental != null;
+  }
+
+  get hasTertiaryAccidental() {
+    return this.note.tertiaryAccidental != null;
   }
 
   get hasMeasureBarLeft() {
@@ -176,6 +212,36 @@ export default class NeumeBoxSyllable extends Vue {
     } as CSSStyleDeclaration;
   }
 
+  get secondaryFthoraStyle() {
+    return {
+      color: this.pageSetup.fthoraDefaultColor,
+      webkitTextStrokeWidth: withZoom(this.pageSetup.fthoraDefaultStrokeWidth),
+      left:
+        this.note.secondaryFthoraOffsetX != null
+          ? `${this.note.secondaryFthoraOffsetX}em`
+          : undefined,
+      top:
+        this.note.secondaryFthoraOffsetY != null
+          ? `${this.note.secondaryFthoraOffsetY}em`
+          : undefined,
+    } as CSSStyleDeclaration;
+  }
+
+  get tertiaryFthoraStyle() {
+    return {
+      color: this.pageSetup.fthoraDefaultColor,
+      webkitTextStrokeWidth: withZoom(this.pageSetup.fthoraDefaultStrokeWidth),
+      left:
+        this.note.tertiaryFthoraOffsetX != null
+          ? `${this.note.tertiaryFthoraOffsetX}em`
+          : undefined,
+      top:
+        this.note.tertiaryFthoraOffsetY != null
+          ? `${this.note.tertiaryFthoraOffsetY}em`
+          : undefined,
+    } as CSSStyleDeclaration;
+  }
+
   get accidentalStyle() {
     return {
       color: this.pageSetup.accidentalDefaultColor,
@@ -189,6 +255,40 @@ export default class NeumeBoxSyllable extends Vue {
       top:
         this.note.accidentalOffsetY != null
           ? `${this.note.accidentalOffsetY}em`
+          : undefined,
+    } as CSSStyleDeclaration;
+  }
+
+  get secondaryAccidentalStyle() {
+    return {
+      color: this.pageSetup.accidentalDefaultColor,
+      webkitTextStrokeWidth: withZoom(
+        this.pageSetup.accidentalDefaultStrokeWidth,
+      ),
+      left:
+        this.note.secondaryAccidentalOffsetX != null
+          ? `${this.note.secondaryAccidentalOffsetX}em`
+          : undefined,
+      top:
+        this.note.secondaryAccidentalOffsetY != null
+          ? `${this.note.secondaryAccidentalOffsetY}em`
+          : undefined,
+    } as CSSStyleDeclaration;
+  }
+
+  get tertiaryAccidentalStyle() {
+    return {
+      color: this.pageSetup.accidentalDefaultColor,
+      webkitTextStrokeWidth: withZoom(
+        this.pageSetup.accidentalDefaultStrokeWidth,
+      ),
+      left:
+        this.note.tertiaryAccidentalOffsetX != null
+          ? `${this.note.tertiaryAccidentalOffsetX}em`
+          : undefined,
+      top:
+        this.note.tertiaryAccidentalOffsetY != null
+          ? `${this.note.tertiaryAccidentalOffsetY}em`
           : undefined,
     } as CSSStyleDeclaration;
   }

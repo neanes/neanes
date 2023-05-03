@@ -23,7 +23,8 @@ import {
   getVocalExpressionReplacements,
   getFthoraReplacements,
   getQuantitativeReplacements,
-  takesSecondaryGorgon,
+  takesSecondaryNeumes,
+  takesTertiaryNeumes,
 } from './NeumeReplacements';
 import { Scale, ScaleNote } from './Scales';
 
@@ -105,8 +106,16 @@ export class NoteElement extends ScoreElement {
   public measureNumberOffsetY: number | null = null;
   public noteIndicatorOffsetX: number | null = null;
   public noteIndicatorOffsetY: number | null = null;
+  public secondaryAccidentalOffsetX: number | null = null;
+  public secondaryAccidentalOffsetY: number | null = null;
+  public secondaryFthoraOffsetX: number | null = null;
+  public secondaryFthoraOffsetY: number | null = null;
   public secondaryGorgonNeumeOffsetX: number | null = null;
   public secondaryGorgonNeumeOffsetY: number | null = null;
+  public tertiaryAccidentalOffsetX: number | null = null;
+  public tertiaryAccidentalOffsetY: number | null = null;
+  public tertiaryFthoraOffsetX: number | null = null;
+  public tertiaryFthoraOffsetY: number | null = null;
   public tieOffsetX: number | null = null;
   public tieOffsetY: number | null = null;
   public timeNeumeOffsetX: number | null = null;
@@ -155,10 +164,22 @@ export class NoteElement extends ScoreElement {
       accidental: this.accidental,
       accidentalOffsetX: this.accidentalOffsetX,
       accidentalOffsetY: this.accidentalOffsetY,
+      secondaryAccidental: this.secondaryAccidental,
+      secondaryAccidentalOffsetX: this.secondaryAccidentalOffsetX,
+      secondaryAccidentalOffsetY: this.secondaryAccidentalOffsetY,
+      tertiaryAccidental: this.tertiaryAccidental,
+      tertiaryAccidentalOffsetX: this.tertiaryAccidentalOffsetX,
+      tertiaryAccidentalOffsetY: this.tertiaryAccidentalOffsetY,
       fthora: this.fthora,
-      chromaticFthoraNote: this.chromaticFthoraNote,
       fthoraOffsetX: this.fthoraOffsetX,
       fthoraOffsetY: this.fthoraOffsetY,
+      secondaryFthora: this.secondaryFthora,
+      secondaryFthoraOffsetX: this.secondaryFthoraOffsetX,
+      secondaryFthoraOffsetY: this.secondaryFthoraOffsetY,
+      tertiaryFthora: this.tertiaryFthora,
+      tertiaryFthoraOffsetX: this.tertiaryFthoraOffsetX,
+      tertiaryFthoraOffsetY: this.tertiaryFthoraOffsetY,
+      chromaticFthoraNote: this.chromaticFthoraNote,
       gorgonNeume: this.gorgonNeume,
       gorgonNeumeOffsetX: this.gorgonNeumeOffsetX,
       gorgonNeumeOffsetY: this.gorgonNeumeOffsetY,
@@ -202,16 +223,39 @@ export class NoteElement extends ScoreElement {
     return this._accidental;
   }
 
+  public get secondaryAccidental() {
+    return this._secondaryAccidental;
+  }
+
+  public get tertiaryAccidental() {
+    return this._tertiaryAccidental;
+  }
+
   public get fthora() {
     return this._fthora;
+  }
+
+  public get secondaryFthora() {
+    return this._secondaryFthora;
+  }
+
+  public get tertiaryFthora() {
+    return this._tertiaryFthora;
   }
 
   public set quantitativeNeume(neume: QuantitativeNeume) {
     this._quantitativeNeume = neume;
     this.replaceNeumes();
 
-    if (!takesSecondaryGorgon(this.quantitativeNeume)) {
+    if (!takesSecondaryNeumes(this.quantitativeNeume)) {
       this._secondaryGorgonNeume = null;
+      this._secondaryFthora = null;
+      this._secondaryAccidental = null;
+    }
+
+    if (!takesTertiaryNeumes(this.quantitativeNeume)) {
+      this._tertiaryFthora = null;
+      this._tertiaryAccidental = null;
     }
   }
 
@@ -240,8 +284,28 @@ export class NoteElement extends ScoreElement {
     this.replaceNeumes();
   }
 
+  public set secondaryAccidental(neume: Accidental | null) {
+    this._secondaryAccidental = neume;
+    this.replaceNeumes();
+  }
+
+  public set tertiaryAccidental(neume: Accidental | null) {
+    this._tertiaryAccidental = neume;
+    this.replaceNeumes();
+  }
+
   public set fthora(neume: Fthora | null) {
     this._fthora = neume;
+    this.replaceNeumes();
+  }
+
+  public set secondaryFthora(neume: Fthora | null) {
+    this._secondaryFthora = neume;
+    this.replaceNeumes();
+  }
+
+  public set tertiaryFthora(neume: Fthora | null) {
+    this._tertiaryFthora = neume;
     this.replaceNeumes();
   }
 
@@ -262,7 +326,11 @@ export class NoteElement extends ScoreElement {
   private _secondaryGorgonNeume: GorgonNeume | null = null;
   private _vocalExpressionNeume: VocalExpressionNeume | null = null;
   private _fthora: Fthora | null = null;
+  private _secondaryFthora: Fthora | null = null;
+  private _tertiaryFthora: Fthora | null = null;
   private _accidental: Accidental | null = null;
+  private _secondaryAccidental: Accidental | null = null;
+  private _tertiaryAccidental: Accidental | null = null;
 
   private replaceNeumes() {
     this.replaceQuantitativeNeumes();

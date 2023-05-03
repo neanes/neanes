@@ -298,12 +298,20 @@ mapNeumeToSbmufl(
   'digorgonDottedLeftBelowSecondary',
 );
 mapNeumeToSbmufl(
+  GorgonNeume.DigorgonDottedLeft2Secondary,
+  'digorgonDottedLeftSecondary',
+);
+mapNeumeToSbmufl(
   GorgonNeume.DigorgonDottedRightSecondary,
   'digorgonDottedRightSecondary',
 );
 mapNeumeToSbmufl(
   GorgonNeume.TrigorgonDottedLeft1Secondary,
   'trigorgonDottedLeftBelowSecondary',
+);
+mapNeumeToSbmufl(
+  GorgonNeume.TrigorgonDottedLeft2Secondary,
+  'trigorgonDottedLeftSecondary',
 );
 mapNeumeToSbmufl(
   GorgonNeume.TrigorgonDottedRightSecondary,
@@ -333,9 +341,80 @@ mapNeumeToSbmufl(Fthora.Enharmonic_Top, 'fthoraEnharmonicAbove');
 mapNeumeToSbmufl(Fthora.Zygos_Top, 'chroaZygosAbove');
 mapNeumeToSbmufl(Fthora.Kliton_Top, 'chroaKlitonAbove');
 mapNeumeToSbmufl(Fthora.Spathi_Top, 'chroaSpathiAbove');
-mapNeumeToSbmufl(Fthora.Spathi_Bottom, 'chroaSpathiBelow');
 mapNeumeToSbmufl(Fthora.GeneralSharp_Top, 'diesisGenikiAbove');
+mapNeumeToSbmufl(Fthora.GeneralSharp_TopSecondary, 'diesisGenikiSecondary');
+mapNeumeToSbmufl(Fthora.GeneralSharp_TopTertiary, 'diesisGenikiTertiary');
 mapNeumeToSbmufl(Fthora.GeneralFlat_Top, 'yfesisGenikiAbove');
+mapNeumeToSbmufl(Fthora.GeneralFlat_TopSecondary, 'yfesisGenikiSecondary');
+mapNeumeToSbmufl(Fthora.GeneralFlat_TopTertiary, 'yfesisGenikiTertiary');
+mapNeumeToSbmufl(
+  Fthora.DiatonicNiLow_TopSecondary,
+  'fthoraDiatonicNiLowSecondary',
+);
+mapNeumeToSbmufl(Fthora.DiatonicPa_TopSecondary, 'fthoraDiatonicPaSecondary');
+mapNeumeToSbmufl(Fthora.DiatonicVou_TopSecondary, 'fthoraDiatonicVouSecondary');
+mapNeumeToSbmufl(Fthora.DiatonicGa_TopSecondary, 'fthoraDiatonicGaSecondary');
+mapNeumeToSbmufl(Fthora.DiatonicThi_TopSecondary, 'fthoraDiatonicDiSecondary');
+mapNeumeToSbmufl(Fthora.DiatonicKe_TopSecondary, 'fthoraDiatonicKeSecondary');
+mapNeumeToSbmufl(Fthora.DiatonicZo_TopSecondary, 'fthoraDiatonicZoSecondary');
+mapNeumeToSbmufl(
+  Fthora.DiatonicNiHigh_TopSecondary,
+  'fthoraDiatonicNiHighSecondary',
+);
+mapNeumeToSbmufl(
+  Fthora.HardChromaticPa_TopSecondary,
+  'fthoraHardChromaticPaSecondary',
+);
+mapNeumeToSbmufl(
+  Fthora.HardChromaticThi_TopSecondary,
+  'fthoraHardChromaticDiSecondary',
+);
+mapNeumeToSbmufl(
+  Fthora.SoftChromaticThi_TopSecondary,
+  'fthoraSoftChromaticDiSecondary',
+);
+mapNeumeToSbmufl(
+  Fthora.SoftChromaticPa_TopSecondary,
+  'fthoraSoftChromaticKeSecondary',
+);
+mapNeumeToSbmufl(Fthora.Enharmonic_TopSecondary, 'fthoraEnharmonicSecondary');
+mapNeumeToSbmufl(Fthora.Zygos_TopSecondary, 'chroaZygosSecondary');
+mapNeumeToSbmufl(Fthora.Kliton_TopSecondary, 'chroaKlitonSecondary');
+mapNeumeToSbmufl(Fthora.Spathi_TopSecondary, 'chroaSpathiSecondary');
+mapNeumeToSbmufl(
+  Fthora.DiatonicNiLow_TopTertiary,
+  'fthoraDiatonicNiLowTertiary',
+);
+mapNeumeToSbmufl(Fthora.DiatonicPa_TopTertiary, 'fthoraDiatonicPaTertiary');
+mapNeumeToSbmufl(Fthora.DiatonicVou_TopTertiary, 'fthoraDiatonicVouTertiary');
+mapNeumeToSbmufl(Fthora.DiatonicGa_TopTertiary, 'fthoraDiatonicGaTertiary');
+mapNeumeToSbmufl(Fthora.DiatonicThi_TopTertiary, 'fthoraDiatonicDiTertiary');
+mapNeumeToSbmufl(Fthora.DiatonicKe_TopTertiary, 'fthoraDiatonicKeTertiary');
+mapNeumeToSbmufl(Fthora.DiatonicZo_TopTertiary, 'fthoraDiatonicZoTertiary');
+mapNeumeToSbmufl(
+  Fthora.DiatonicNiHigh_TopTertiary,
+  'fthoraDiatonicNiHighTertiary',
+);
+mapNeumeToSbmufl(
+  Fthora.HardChromaticPa_TopTertiary,
+  'fthoraHardChromaticPaTertiary',
+);
+mapNeumeToSbmufl(
+  Fthora.HardChromaticThi_TopTertiary,
+  'fthoraHardChromaticDiTertiary',
+);
+mapNeumeToSbmufl(
+  Fthora.SoftChromaticThi_TopTertiary,
+  'fthoraSoftChromaticDiTertiary',
+);
+mapNeumeToSbmufl(
+  Fthora.SoftChromaticPa_TopTertiary,
+  'fthoraSoftChromaticKeTertiary',
+);
+mapNeumeToSbmufl(Fthora.Enharmonic_TopTertiary, 'fthoraEnharmonicTertiary');
+mapNeumeToSbmufl(Fthora.Zygos_TopTertiary, 'chroaZygosTertiary');
+mapNeumeToSbmufl(Fthora.Kliton_TopTertiary, 'chroaKlitonTertiary');
+mapNeumeToSbmufl(Fthora.Spathi_TopTertiary, 'chroaSpathiTertiary');
 mapNeumeToSbmufl(Fthora.DiatonicNiLow_Bottom, 'fthoraDiatonicNiLowBelow');
 mapNeumeToSbmufl(Fthora.DiatonicPa_Bottom, 'fthoraDiatonicPaBelow');
 mapNeumeToSbmufl(Fthora.DiatonicVou_Bottom, 'fthoraDiatonicVouBelow');
@@ -351,6 +430,7 @@ mapNeumeToSbmufl(Fthora.SoftChromaticPa_Bottom, 'fthoraSoftChromaticKeBelow');
 mapNeumeToSbmufl(Fthora.Enharmonic_Bottom, 'fthoraEnharmonicBelow');
 mapNeumeToSbmufl(Fthora.Zygos_Bottom, 'chroaZygosBelow');
 mapNeumeToSbmufl(Fthora.Kliton_Bottom, 'chroaKlitonBelow');
+mapNeumeToSbmufl(Fthora.Spathi_Bottom, 'chroaSpathiBelow');
 mapNeumeToSbmufl(Fthora.GeneralSharp_Bottom, 'diesisGenikiBelow');
 mapNeumeToSbmufl(Fthora.GeneralFlat_Bottom, 'yfesisGenikiBelow');
 mapNeumeToSbmufl(Accidental.Sharp_2_Left, 'diesis2');
@@ -361,6 +441,14 @@ mapNeumeToSbmufl(Accidental.Flat_2_Right, 'yfesis2');
 mapNeumeToSbmufl(Accidental.Flat_4_Right, 'yfesis4');
 mapNeumeToSbmufl(Accidental.Flat_6_Right, 'yfesis6');
 mapNeumeToSbmufl(Accidental.Flat_8_Right, 'yfesis8');
+mapNeumeToSbmufl(Accidental.Flat_2_RightSecondary, 'yfesis2Secondary');
+mapNeumeToSbmufl(Accidental.Flat_4_RightSecondary, 'yfesis4Secondary');
+mapNeumeToSbmufl(Accidental.Flat_6_RightSecondary, 'yfesis6Secondary');
+mapNeumeToSbmufl(Accidental.Flat_8_RightSecondary, 'yfesis8Secondary');
+mapNeumeToSbmufl(Accidental.Flat_2_RightTertiary, 'yfesis2Tertiary');
+mapNeumeToSbmufl(Accidental.Flat_4_RightTertiary, 'yfesis4Tertiary');
+mapNeumeToSbmufl(Accidental.Flat_6_RightTertiary, 'yfesis6Tertiary');
+mapNeumeToSbmufl(Accidental.Flat_8_RightTertiary, 'yfesis8Tertiary');
 mapNeumeToSbmufl(TempoSign.VerySlow, 'agogiPoliArgi');
 mapNeumeToSbmufl(TempoSign.Slower, 'agogiArgoteri');
 mapNeumeToSbmufl(TempoSign.Slow, 'agogiArgi');

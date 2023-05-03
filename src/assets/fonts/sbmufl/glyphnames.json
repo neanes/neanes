@@ -420,6 +420,12 @@
   "trigorgonDottedRightSecondary": {
     "codepoint": "U+E108"
   },
+  "digorgonDottedLeftSecondary": {
+    "codepoint": "U+E109"
+  },
+  "trigorgonDottedLeftSecondary": {
+    "codepoint": "U+E10A"
+  },
   "agogiPoliArgi": {
     "alternateCodepoint": "U+1D09A",
     "codepoint": "U+E120"
@@ -670,6 +676,102 @@
   "chroaSpathiAbove": {
     "codepoint": "U+E19F"
   },
+  "fthoraDiatonicNiLowSecondary": {
+    "codepoint": "U+E1A0"
+  },
+  "fthoraDiatonicPaSecondary": {
+    "codepoint": "U+E1A1"
+  },
+  "fthoraDiatonicVouSecondary": {
+    "codepoint": "U+E1A2"
+  },
+  "fthoraDiatonicGaSecondary": {
+    "codepoint": "U+E1A3"
+  },
+  "fthoraDiatonicDiSecondary": {
+    "codepoint": "U+E1A4"
+  },
+  "fthoraDiatonicKeSecondary": {
+    "codepoint": "U+E1A5"
+  },
+  "fthoraDiatonicZoSecondary": {
+    "codepoint": "U+E1A6"
+  },
+  "fthoraDiatonicNiHighSecondary": {
+    "codepoint": "U+E1A7"
+  },
+  "fthoraHardChromaticPaSecondary": {
+    "codepoint": "U+E1A8"
+  },
+  "fthoraHardChromaticDiSecondary": {
+    "codepoint": "U+E1A9"
+  },
+  "fthoraSoftChromaticDiSecondary": {
+    "codepoint": "U+E1AA"
+  },
+  "fthoraSoftChromaticKeSecondary": {
+    "codepoint": "U+E1AB"
+  },
+  "fthoraEnharmonicSecondary": {
+    "codepoint": "U+E1AC"
+  },
+  "chroaZygosSecondary": {
+    "codepoint": "U+E1AD"
+  },
+  "chroaKlitonSecondary": {
+    "codepoint": "U+E1AE"
+  },
+  "chroaSpathiSecondary": {
+    "codepoint": "U+E1AF"
+  },
+  "fthoraDiatonicNiLowTertiary": {
+    "codepoint": "U+E1B0"
+  },
+  "fthoraDiatonicPaTertiary": {
+    "codepoint": "U+E1B1"
+  },
+  "fthoraDiatonicVouTertiary": {
+    "codepoint": "U+E1B2"
+  },
+  "fthoraDiatonicGaTertiary": {
+    "codepoint": "U+E1B3"
+  },
+  "fthoraDiatonicDiTertiary": {
+    "codepoint": "U+E1B4"
+  },
+  "fthoraDiatonicKeTertiary": {
+    "codepoint": "U+E1B5"
+  },
+  "fthoraDiatonicZoTertiary": {
+    "codepoint": "U+E1B6"
+  },
+  "fthoraDiatonicNiHighTertiary": {
+    "codepoint": "U+E1B7"
+  },
+  "fthoraHardChromaticPaTertiary": {
+    "codepoint": "U+E1B8"
+  },
+  "fthoraHardChromaticDiTertiary": {
+    "codepoint": "U+E1B9"
+  },
+  "fthoraSoftChromaticDiTertiary": {
+    "codepoint": "U+E1BA"
+  },
+  "fthoraSoftChromaticKeTertiary": {
+    "codepoint": "U+E1BB"
+  },
+  "fthoraEnharmonicTertiary": {
+    "codepoint": "U+E1BC"
+  },
+  "chroaZygosTertiary": {
+    "codepoint": "U+E1BD"
+  },
+  "chroaKlitonTertiary": {
+    "codepoint": "U+E1BE"
+  },
+  "chroaSpathiTertiary": {
+    "codepoint": "U+E1BF"
+  },
   "fthoraDiatonicNiLowBelow": {
     "codepoint": "U+E1C0"
   },
@@ -740,6 +842,12 @@
   "diesisGenikiBelow": {
     "codepoint": "U+E1F5"
   },
+  "diesisGenikiSecondary": {
+    "codepoint": "U+E1FE"
+  },
+  "diesisGenikiTertiary": {
+    "codepoint": "U+E1FF"
+  },
   "yfesis2": {
     "alternateCodepoint": "U+1D0D4",
     "codepoint": "U+E200"
@@ -761,6 +869,36 @@
   },
   "yfesisGenikiBelow": {
     "codepoint": "U+E205"
+  },
+  "yfesis2Secondary": {
+    "codepoint": "U+E206"
+  },
+  "yfesis4Secondary": {
+    "codepoint": "U+E207"
+  },
+  "yfesis6Secondary": {
+    "codepoint": "U+E208"
+  },
+  "yfesis8Secondary": {
+    "codepoint": "U+E209"
+  },
+  "yfesis2Tertiary": {
+    "codepoint": "U+E20A"
+  },
+  "yfesis4Tertiary": {
+    "codepoint": "U+E20B"
+  },
+  "yfesis6Tertiary": {
+    "codepoint": "U+E20C"
+  },
+  "yfesis8Tertiary": {
+    "codepoint": "U+E20D"
+  },
+  "yfesisGenikiSecondary": {
+    "codepoint": "U+E20E"
+  },
+  "yfesisGenikiTertiary": {
+    "codepoint": "U+E20F"
   },
   "barlineSingle": {
     "alternateCodepoint": "U+1D0DB",

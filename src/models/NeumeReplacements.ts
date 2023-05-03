@@ -87,13 +87,17 @@ const rests: Neume[] = [
   QuantitativeNeume.Cross,
 ];
 
-const secondaryGorgonAllowedNeumes: Neume[] = [
+const secondaryNeumesAllowedNeumes: Neume[] = [
   QuantitativeNeume.OligonPlusIsonPlusKentemata,
   QuantitativeNeume.OligonPlusApostrophosPlusKentemata,
   QuantitativeNeume.OligonPlusElaphronPlusKentemata,
   QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
   QuantitativeNeume.OligonPlusHamiliPlusKentemata,
   QuantitativeNeume.OligonPlusHyporoePlusKentemata,
+  QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
+];
+
+const tertiaryNeumesAllowedNeumes: Neume[] = [
   QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
 ];
 
@@ -542,5 +546,8 @@ export const onlyTakesBottomKlasma = (neume: QuantitativeNeume) =>
 export const onlyTakesTopGorgon = (neume: QuantitativeNeume) =>
   !bottomAllowedGorgonNeumes.includes(neume);
 
-export const takesSecondaryGorgon = (neume: QuantitativeNeume) =>
-  secondaryGorgonAllowedNeumes.includes(neume);
+export const takesSecondaryNeumes = (neume: QuantitativeNeume) =>
+  secondaryNeumesAllowedNeumes.includes(neume);
+
+export const takesTertiaryNeumes = (neume: QuantitativeNeume) =>
+  tertiaryNeumesAllowedNeumes.includes(neume);

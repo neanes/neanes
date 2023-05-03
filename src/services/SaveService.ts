@@ -303,6 +303,18 @@ export class SaveService {
       element.fthoraOffsetY = e.fthoraOffsetY || undefined;
     }
 
+    if (e.secondaryFthora != null) {
+      element.secondaryFthora = e.secondaryFthora;
+      element.secondaryFthoraOffsetX = e.secondaryFthoraOffsetX || undefined;
+      element.secondaryFthoraOffsetY = e.secondaryFthoraOffsetY || undefined;
+    }
+
+    if (e.tertiaryFthora != null) {
+      element.tertiaryFthora = e.tertiaryFthora;
+      element.tertiaryFthoraOffsetX = e.tertiaryFthoraOffsetX || undefined;
+      element.tertiaryFthoraOffsetY = e.tertiaryFthoraOffsetY || undefined;
+    }
+
     if (e.chromaticFthoraNote != null) {
       element.chromaticFthoraNote = e.chromaticFthoraNote;
     }
@@ -311,6 +323,22 @@ export class SaveService {
       element.accidental = e.accidental;
       element.accidentalOffsetX = e.accidentalOffsetX || undefined;
       element.accidentalOffsetY = e.accidentalOffsetY || undefined;
+    }
+
+    if (e.secondaryAccidental != null) {
+      element.secondaryAccidental = e.secondaryAccidental;
+      element.secondaryAccidentalOffsetX =
+        e.secondaryAccidentalOffsetX || undefined;
+      element.secondaryAccidentalOffsetY =
+        e.secondaryAccidentalOffsetY || undefined;
+    }
+
+    if (e.tertiaryAccidental != null) {
+      element.tertiaryAccidental = e.tertiaryAccidental;
+      element.tertiaryAccidentalOffsetX =
+        e.tertiaryAccidentalOffsetX || undefined;
+      element.tertiaryAccidentalOffsetY =
+        e.tertiaryAccidentalOffsetY || undefined;
     }
 
     if (e.vocalExpressionNeume != null) {
@@ -774,6 +802,18 @@ export class SaveService {
       element.fthoraOffsetY = e.fthoraOffsetY ?? null;
     }
 
+    if (e.secondaryFthora != null) {
+      element.secondaryFthora = e.secondaryFthora;
+      element.secondaryFthoraOffsetX = e.secondaryFthoraOffsetX ?? null;
+      element.secondaryFthoraOffsetY = e.secondaryFthoraOffsetY ?? null;
+    }
+
+    if (e.tertiaryFthora != null) {
+      element.tertiaryFthora = e.tertiaryFthora;
+      element.tertiaryFthoraOffsetX = e.tertiaryFthoraOffsetX ?? null;
+      element.tertiaryFthoraOffsetY = e.tertiaryFthoraOffsetY ?? null;
+    }
+
     if (e.chromaticFthoraNote != null) {
       element.chromaticFthoraNote = e.chromaticFthoraNote;
     }
@@ -782,6 +822,18 @@ export class SaveService {
       element.accidental = e.accidental;
       element.accidentalOffsetX = e.accidentalOffsetX ?? null;
       element.accidentalOffsetY = e.accidentalOffsetY ?? null;
+    }
+
+    if (e.secondaryAccidental != null) {
+      element.secondaryAccidental = e.secondaryAccidental;
+      element.secondaryAccidentalOffsetX = e.secondaryAccidentalOffsetX ?? null;
+      element.secondaryAccidentalOffsetY = e.secondaryAccidentalOffsetY ?? null;
+    }
+
+    if (e.tertiaryAccidental != null) {
+      element.tertiaryAccidental = e.tertiaryAccidental;
+      element.tertiaryAccidentalOffsetX = e.tertiaryAccidentalOffsetX ?? null;
+      element.tertiaryAccidentalOffsetY = e.tertiaryAccidentalOffsetY ?? null;
     }
 
     if (e.vocalExpressionNeume != null) {

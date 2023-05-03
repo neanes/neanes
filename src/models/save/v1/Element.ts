@@ -49,8 +49,12 @@ export class NoteElement extends ScoreElement {
   public secondaryGorgonNeume: GorgonNeume | undefined = undefined;
   public vocalExpressionNeume: VocalExpressionNeume | undefined = undefined;
   public fthora: Fthora | undefined = undefined;
+  public secondaryFthora: Fthora | undefined = undefined;
+  public tertiaryFthora: Fthora | undefined = undefined;
   public chromaticFthoraNote: ScaleNote | undefined = undefined;
   public accidental: Accidental | undefined = undefined;
+  public secondaryAccidental: Accidental | undefined = undefined;
+  public tertiaryAccidental: Accidental | undefined = undefined;
   public measureBarLeft: MeasureBar | undefined = undefined;
   public measureBarRight: MeasureBar | undefined = undefined;
   // Deprecated
@@ -87,8 +91,16 @@ export class NoteElement extends ScoreElement {
   public measureNumberOffsetY: number | undefined = undefined;
   public noteIndicatorOffsetX: number | undefined = undefined;
   public noteIndicatorOffsetY: number | undefined = undefined;
+  public secondaryAccidentalOffsetX: number | undefined = undefined;
+  public secondaryAccidentalOffsetY: number | undefined = undefined;
+  public secondaryFthoraOffsetX: number | undefined = undefined;
+  public secondaryFthoraOffsetY: number | undefined = undefined;
   public secondaryGorgonNeumeOffsetX: number | undefined = undefined;
   public secondaryGorgonNeumeOffsetY: number | undefined = undefined;
+  public tertiaryAccidentalOffsetX: number | undefined = undefined;
+  public tertiaryAccidentalOffsetY: number | undefined = undefined;
+  public tertiaryFthoraOffsetX: number | undefined = undefined;
+  public tertiaryFthoraOffsetY: number | undefined = undefined;
   public tieOffsetX: number | undefined = undefined;
   public tieOffsetY: number | undefined = undefined;
   public timeNeumeOffsetX: number | undefined = undefined;

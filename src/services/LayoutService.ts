@@ -1222,6 +1222,8 @@ export class LayoutService {
           getScaleNoteFromValue(currentNote + x),
         );
 
+        // TODO handle the case when the yporroe has a fthora on it
+        // The shift is not currently calculated correctly in that case.
         if (note.fthora) {
           if (this.fthoraIsValid(note.fthora, currentNotes)) {
             currentScale =
@@ -1230,6 +1232,32 @@ export class LayoutService {
               currentNote,
               currentScale,
               note.fthora,
+            );
+          } else {
+            note.fthora = null;
+          }
+        } else if (note.secondaryFthora) {
+          if (this.fthoraIsValid(note.secondaryFthora, currentNotes)) {
+            currentScale =
+              this.getScaleFromFthora(note.secondaryFthora, currentNote - 1) ||
+              currentScale;
+            currentShift = this.getShift(
+              currentNote - 1,
+              currentScale,
+              note.secondaryFthora,
+            );
+          } else {
+            note.secondaryFthora = null;
+          }
+        } else if (note.tertiaryFthora) {
+          if (this.fthoraIsValid(note.tertiaryFthora, currentNotes)) {
+            currentScale =
+              this.getScaleFromFthora(note.tertiaryFthora, currentNote - 2) ||
+              currentScale;
+            currentShift = this.getShift(
+              currentNote - 2,
+              currentScale,
+              note.tertiaryFthora,
             );
           } else {
             note.fthora = null;

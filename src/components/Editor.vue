@@ -475,11 +475,20 @@
         :element="selectedElement"
         :pageSetup="score.pageSetup"
         @update:accidental="setAccidental(selectedElement, $event)"
+        @update:secondaryAccidental="
+          setSecondaryAccidental(selectedElement, $event)
+        "
+        @update:tertiaryAccidental="
+          setTertiaryAccidental(selectedElement, $event)
+        "
         @update:fthora="setFthoraNote(selectedElement, $event)"
+        @update:secondaryFthora="setSecondaryFthora(selectedElement, $event)"
+        @update:tertiaryFthora="setTertiaryFthora(selectedElement, $event)"
         @update:chromaticFthoraNote="
           updateNoteChromaticFthoraNote(selectedElement, $event)
         "
         @update:gorgon="setGorgon(selectedElement, $event)"
+        @update:secondaryGorgon="setSecondaryGorgon(selectedElement, $event)"
         @update:klasma="setKlasma(selectedElement)"
         @update:time="setTimeNeume(selectedElement, $event)"
         @update:expression="setVocalExpression(selectedElement, $event)"
@@ -663,7 +672,7 @@ import {
   onlyTakesBottomKlasma,
   onlyTakesTopGorgon,
   onlyTakesTopKlasma,
-  takesSecondaryGorgon,
+  takesSecondaryNeumes,
 } from '@/models/NeumeReplacements';
 
 import {
@@ -1683,7 +1692,7 @@ export default class Editor extends Vue {
     const element = new NoteElement();
     element.quantitativeNeume = quantitativeNeume;
     // Special case for neumes with secondary gorgon
-    if (takesSecondaryGorgon(quantitativeNeume)) {
+    if (takesSecondaryNeumes(quantitativeNeume)) {
       element.secondaryGorgonNeume = secondaryGorgonNeume;
     }
 
@@ -3424,6 +3433,14 @@ export default class Editor extends Vue {
     }
   }
 
+  private setSecondaryGorgon(element: NoteElement, neume: GorgonNeume) {
+    if (element.secondaryGorgonNeume === neume) {
+      this.updateNoteGorgonSecondary(element, null);
+    } else {
+      this.updateNoteGorgonSecondary(element, neume);
+    }
+  }
+
   private setFthoraNote(element: NoteElement, neumes: Fthora[]) {
     let equivalent = false;
 
@@ -3445,6 +3462,22 @@ export default class Editor extends Vue {
       this.updateNoteFthora(element, null);
     } else {
       this.updateNoteFthora(element, neumes[0]);
+    }
+  }
+
+  private setSecondaryFthora(element: NoteElement, neume: Fthora) {
+    if (element.secondaryFthora === neume) {
+      this.updateNoteFthoraSecondary(element, null);
+    } else {
+      this.updateNoteFthoraSecondary(element, neume);
+    }
+  }
+
+  private setTertiaryFthora(element: NoteElement, neume: Fthora) {
+    if (element.tertiaryFthora === neume) {
+      this.updateNoteFthoraTertiary(element, null);
+    } else {
+      this.updateNoteFthoraTertiary(element, neume);
     }
   }
 
@@ -3477,6 +3510,28 @@ export default class Editor extends Vue {
       this.updateNoteAccidental(element, null);
     } else {
       this.updateNoteAccidental(element, neume);
+    }
+  }
+
+  private setSecondaryAccidental(element: NoteElement, neume: Accidental) {
+    if (
+      element.secondaryAccidental != null &&
+      element.secondaryAccidental === neume
+    ) {
+      this.updateNoteAccidentalSecondary(element, null);
+    } else {
+      this.updateNoteAccidentalSecondary(element, neume);
+    }
+  }
+
+  private setTertiaryAccidental(element: NoteElement, neume: Accidental) {
+    if (
+      element.tertiaryAccidental != null &&
+      element.tertiaryAccidental === neume
+    ) {
+      this.updateNoteAccidentalTertiary(element, null);
+    } else {
+      this.updateNoteAccidentalTertiary(element, neume);
     }
   }
 
@@ -3662,6 +3717,22 @@ export default class Editor extends Vue {
     this.save();
   }
 
+  updateNoteAccidentalSecondary(
+    element: NoteElement,
+    secondaryAccidental: Accidental | null,
+  ) {
+    this.updateNote(element, { secondaryAccidental });
+    this.save();
+  }
+
+  updateNoteAccidentalTertiary(
+    element: NoteElement,
+    tertiaryAccidental: Accidental | null,
+  ) {
+    this.updateNote(element, { tertiaryAccidental });
+    this.save();
+  }
+
   updateNoteFthora(element: NoteElement, fthora: Fthora | null) {
     let chromaticFthoraNote: ScaleNote | null = null;
 
@@ -3696,6 +3767,22 @@ export default class Editor extends Vue {
     this.save();
   }
 
+  updateNoteFthoraSecondary(
+    element: NoteElement,
+    secondaryFthora: Fthora | null,
+  ) {
+    this.updateNote(element, { secondaryFthora });
+    this.save();
+  }
+
+  updateNoteFthoraTertiary(
+    element: NoteElement,
+    tertiaryFthora: Fthora | null,
+  ) {
+    this.updateNote(element, { tertiaryFthora });
+    this.save();
+  }
+
   updateNoteExpression(
     element: NoteElement,
     vocalExpressionNeume: VocalExpressionNeume | null,
@@ -3711,6 +3798,14 @@ export default class Editor extends Vue {
 
   updateNoteGorgon(element: NoteElement, gorgonNeume: GorgonNeume | null) {
     this.updateNote(element, { gorgonNeume });
+    this.save();
+  }
+
+  updateNoteGorgonSecondary(
+    element: NoteElement,
+    secondaryGorgonNeume: GorgonNeume | null,
+  ) {
+    this.updateNote(element, { secondaryGorgonNeume });
     this.save();
   }
 

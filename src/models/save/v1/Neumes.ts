@@ -132,10 +132,12 @@ export enum GorgonNeume {
 
   DigorgonSecondary = 'DigorgonSecondary',
   DigorgonDottedLeft1Secondary = 'DigorgonDottedLeft1Secondary',
+  DigorgonDottedLeft2Secondary = 'DigorgonDottedLeft2Secondary',
   DigorgonDottedRightSecondary = 'DigorgonDottedRightSecondary',
 
   TrigorgonSecondary = 'TrigorgonSecondary',
   TrigorgonDottedLeft1Secondary = 'TrigorgonDottedLeft1Secondary',
+  TrigorgonDottedLeft2Secondary = 'TrigorgonDottedLeft2Secondary',
   TrigorgonDottedRightSecondary = 'TrigorgonDottedRightSecondary',
 
   Argon = 'Argon',
@@ -274,7 +276,40 @@ export enum Fthora {
   Zygos_Top = 'Zygos_Top',
   Kliton_Top = 'Kliton_Top',
   Spathi_Top = 'Spathi_Top',
-  Spathi_Bottom = 'Spathi_Bottom',
+
+  DiatonicNiLow_TopSecondary = 'DiatonicNiLow_TopSecondary',
+  DiatonicPa_TopSecondary = 'DiatonicPa_TopSecondary',
+  DiatonicVou_TopSecondary = 'DiatonicVou_TopSecondary',
+  DiatonicGa_TopSecondary = 'DiatonicGa_TopSecondary',
+  DiatonicThi_TopSecondary = 'DiatonicThi_TopSecondary',
+  DiatonicKe_TopSecondary = 'DiatonicKe_TopSecondary',
+  DiatonicZo_TopSecondary = 'DiatonicZo_TopSecondary',
+  DiatonicNiHigh_TopSecondary = 'DiatonicNiHigh_TopSecondary',
+  HardChromaticPa_TopSecondary = 'HardChromaticPa_TopSecondary',
+  HardChromaticThi_TopSecondary = 'HardChromaticThi_TopSecondary',
+  SoftChromaticPa_TopSecondary = 'SoftChromaticPa_TopSecondary',
+  SoftChromaticThi_TopSecondary = 'SoftChromaticThi_TopSecondary',
+  Enharmonic_TopSecondary = 'Enharmonic_TopSecondary',
+  Zygos_TopSecondary = 'Zygos_TopSecondary',
+  Kliton_TopSecondary = 'Kliton_TopSecondary',
+  Spathi_TopSecondary = 'Spathi_TopSecondary',
+
+  DiatonicNiLow_TopTertiary = 'DiatonicNiLow_TopTertiary',
+  DiatonicPa_TopTertiary = 'DiatonicPa_TopTertiary',
+  DiatonicVou_TopTertiary = 'DiatonicVou_TopTertiary',
+  DiatonicGa_TopTertiary = 'DiatonicGa_TopTertiary',
+  DiatonicThi_TopTertiary = 'DiatonicThi_TopTertiary',
+  DiatonicKe_TopTertiary = 'DiatonicKe_TopTertiary',
+  DiatonicZo_TopTertiary = 'DiatonicZo_TopTertiary',
+  DiatonicNiHigh_TopTertiary = 'DiatonicNiHigh_TopTertiary',
+  HardChromaticPa_TopTertiary = 'HardChromaticPa_TopTertiary',
+  HardChromaticThi_TopTertiary = 'HardChromaticThi_TopTertiary',
+  SoftChromaticPa_TopTertiary = 'SoftChromaticPa_TopTertiary',
+  SoftChromaticThi_TopTertiary = 'SoftChromaticThi_TopTertiary',
+  Enharmonic_TopTertiary = 'Enharmonic_TopTertiary',
+  Zygos_TopTertiary = 'Zygos_TopTertiary',
+  Kliton_TopTertiary = 'Kliton_TopTertiary',
+  Spathi_TopTertiary = 'Spathi_TopTertiary',
 
   DiatonicNiLow_Bottom = 'DiatonicNiLow_Bottom',
   DiatonicPa_Bottom = 'DiatonicPa_Bottom',
@@ -291,11 +326,16 @@ export enum Fthora {
   Enharmonic_Bottom = 'Enharmonic_Bottom',
   Zygos_Bottom = 'Zygos_Bottom',
   Kliton_Bottom = 'Kliton_Bottom',
+  Spathi_Bottom = 'Spathi_Bottom',
 
   GeneralSharp_Top = 'GeneralSharp_Top',
+  GeneralSharp_TopSecondary = 'GeneralSharp_TopSecondary',
+  GeneralSharp_TopTertiary = 'GeneralSharp_TopTertiary',
   GeneralSharp_Bottom = 'GeneralSharp_Bottom',
 
   GeneralFlat_Top = 'GeneralFlat_Top',
+  GeneralFlat_TopSecondary = 'GeneralFlat_TopSecondary',
+  GeneralFlat_TopTertiary = 'GeneralFlat_TopTertiary',
   GeneralFlat_Bottom = 'GeneralFlat_Bottom',
 }
 
@@ -309,6 +349,16 @@ export enum Accidental {
   Flat_4_Right = 'Flat_4_Right',
   Flat_6_Right = 'Flat_6_Right',
   Flat_8_Right = 'Flat_8_Right',
+
+  Flat_2_RightSecondary = 'Flat_2_RightSecondary',
+  Flat_4_RightSecondary = 'Flat_4_RightSecondary',
+  Flat_6_RightSecondary = 'Flat_6_RightSecondary',
+  Flat_8_RightSecondary = 'Flat_8_RightSecondary',
+
+  Flat_2_RightTertiary = 'Flat_2_RightTertiary',
+  Flat_4_RightTertiary = 'Flat_4_RightTertiary',
+  Flat_6_RightTertiary = 'Flat_6_RightTertiary',
+  Flat_8_RightTertiary = 'Flat_8_RightTertiary',
 }
 
 export enum MeasureBar {

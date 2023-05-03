@@ -48,6 +48,11 @@ Some buttons in this toolbar will open a menu containing more options. To operat
 
 ![Neume Toolbar Gorgon Example](./images/guide-neume-toolbar-gorgon-expanded.png)
 
+Neumes that are combined with kentimata can take supporting neumes on more than one neume component. To select which neume a gorgon, fthora, or accidental should be placed on, use the `Neume Select` buttons that appear in the toolbar when the neume is selected.
+
+![Neume Toolbar Neume Select](./images/guide-neume-toolbar-neume-select.png)
+![Neume Toolbar Neume Select Neume Example](./images/guide-neume-toolbar-neume-select-neume.png)
+
 #### Keyboard Shortcuts
 
 Most common neumes have keyboard shortcuts. See [Neume Keyboard](./keyboard.html) for more information.

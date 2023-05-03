@@ -485,9 +485,33 @@ export class ByzHtmlExporter {
       this.config.classFthora,
     );
 
+    inner += this.exportNeume(
+      element.secondaryFthora,
+      indentation + 2,
+      { x: element.secondaryFthoraOffsetX, y: element.secondaryFthoraOffsetY },
+      this.config.classFthora,
+    );
+
+    inner += this.exportNeume(
+      element.tertiaryFthora,
+      indentation + 2,
+      { x: element.tertiaryFthoraOffsetX, y: element.tertiaryFthoraOffsetY },
+      this.config.classFthora,
+    );
+
     inner += this.exportNeume(element.accidental, indentation + 2, {
       x: element.accidentalOffsetX,
       y: element.accidentalOffsetY,
+    });
+
+    inner += this.exportNeume(element.secondaryAccidental, indentation + 2, {
+      x: element.secondaryAccidentalOffsetX,
+      y: element.secondaryAccidentalOffsetY,
+    });
+
+    inner += this.exportNeume(element.tertiaryAccidental, indentation + 2, {
+      x: element.tertiaryAccidentalOffsetX,
+      y: element.tertiaryAccidentalOffsetY,
     });
 
     inner += this.exportNeume(element.measureNumber, indentation + 2, {

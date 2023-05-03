@@ -422,7 +422,11 @@ import { ScaleNote } from '@/models/Scales';
 import ButtonWithMenu, {
   ButtonWithMenuOption,
 } from '@/components/ButtonWithMenu.vue';
-import { kentemataNeumes } from '@/models/NeumeReplacements';
+import {
+  kentemataNeumes,
+  takesSecondaryNeumes,
+  takesTertiaryNeumes,
+} from '@/models/NeumeReplacements';
 
 @Component({
   components: {
@@ -672,18 +676,8 @@ export default class ToolbarNeume extends Vue {
     },
   ];
 
-  multiNeumes = [
-    QuantitativeNeume.OligonPlusIsonPlusKentemata,
-    QuantitativeNeume.OligonPlusApostrophosPlusKentemata,
-    QuantitativeNeume.OligonPlusHyporoePlusKentemata,
-    QuantitativeNeume.OligonPlusElaphronPlusKentemata,
-    QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
-    QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
-    QuantitativeNeume.OligonPlusHamiliPlusKentemata,
-  ];
-
   get isMultiNeume() {
-    const result = this.multiNeumes.includes(this.element.quantitativeNeume);
+    const result = takesSecondaryNeumes(this.element.quantitativeNeume);
 
     this.innerNeume = 'Primary';
 
@@ -691,10 +685,7 @@ export default class ToolbarNeume extends Vue {
   }
 
   get hasTertiaryNeume() {
-    return (
-      this.element.quantitativeNeume ===
-      QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata
-    );
+    return takesTertiaryNeumes(this.element.quantitativeNeume);
   }
 
   get notes() {

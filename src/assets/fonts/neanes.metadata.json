@@ -993,6 +993,14 @@
       ]
     },
     "runningElafron": {
+      "fthoraTopSecondary": [
+        0.29,
+        0.665
+      ],
+      "yfesisSecondary": [
+        0.388,
+        0.57
+      ],
       "yfenAbove": [
         1.06,
         0.891
@@ -3119,6 +3127,14 @@
       ]
     },
     "petastiRunningElafron": {
+      "yfesisSecondary": [
+        0.338,
+        0.91
+      ],
+      "fthoraTopSecondary": [
+        0.15,
+        0.906
+      ],
       "yfenAbove": [
         0.932,
         1.049

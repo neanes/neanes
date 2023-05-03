@@ -1,5 +1,31 @@
 <template>
   <div class="neume-toolbar">
+    <div class="row" v-if="isMultiNeume">
+      <span>Neume Select</span>
+      <span class="space"></span>
+      <button
+        v-if="hasTertiaryNeume"
+        class="btnNeumeSelect"
+        @click="innerNeume = 'Tertiary'"
+        :class="{ selected: innerNeume === 'Tertiary' }"
+      >
+        1
+      </button>
+      <button
+        @click="innerNeume = 'Secondary'"
+        class="btnNeumeSelect"
+        :class="{ selected: innerNeume === 'Secondary' }"
+      >
+        {{ hasTertiaryNeume ? '2' : '1' }}
+      </button>
+      <button
+        @click="innerNeume = 'Primary'"
+        class="btnNeumeSelect"
+        :class="{ selected: innerNeume === 'Primary' }"
+      >
+        {{ hasTertiaryNeume ? '3' : '2' }}
+      </button>
+    </div>
     <div class="row">
       <button
         class="neume-button"
@@ -24,15 +50,15 @@
 
       <ButtonWithMenu
         :options="gorgonMenuOptions"
-        @select="$emit('update:gorgon', $event)"
+        @select="updateGorgon($event)"
       />
       <ButtonWithMenu
         :options="digorgonMenuOptions"
-        @select="$emit('update:gorgon', $event)"
+        @select="updateGorgon($event)"
       />
       <ButtonWithMenu
         :options="trigorgonMenuOptions"
-        @select="$emit('update:gorgon', $event)"
+        @select="updateGorgon($event)"
       />
       <span class="space"></span>
       <button
@@ -100,12 +126,12 @@
       <ButtonWithMenu
         :options="flatMenuOptions"
         :disabled="accidentalsDisabled"
-        @select="$emit('update:accidental', $event)"
+        @select="updateAccidental($event)"
       />
       <ButtonWithMenu
         :options="sharpMenuOptions"
         :disabled="accidentalsDisabled"
-        @select="$emit('update:accidental', $event)"
+        @select="updateAccidental($event)"
       />
       <span class="space"></span>
       <button
@@ -154,10 +180,7 @@
         class="neume-button"
         :disabled="fthoresDisabled"
         @click="
-          $emit('update:fthora', [
-            Fthora.DiatonicNiLow_Top,
-            Fthora.DiatonicNiLow_Bottom,
-          ])
+          updateFthora([Fthora.DiatonicNiLow_Top, Fthora.DiatonicNiLow_Bottom])
         "
       >
         <img src="@/assets/icons/fthora-diatonic-ni-low.svg" />
@@ -165,12 +188,7 @@
       <button
         class="neume-button"
         :disabled="fthoresDisabled"
-        @click="
-          $emit('update:fthora', [
-            Fthora.DiatonicPa_Top,
-            Fthora.DiatonicPa_Bottom,
-          ])
-        "
+        @click="updateFthora([Fthora.DiatonicPa_Top, Fthora.DiatonicPa_Bottom])"
       >
         <img src="@/assets/icons/fthora-diatonic-pa.svg" />
       </button>
@@ -178,10 +196,7 @@
         class="neume-button"
         :disabled="fthoresDisabled"
         @click="
-          $emit('update:fthora', [
-            Fthora.DiatonicVou_Top,
-            Fthora.DiatonicVou_Bottom,
-          ])
+          updateFthora([Fthora.DiatonicVou_Top, Fthora.DiatonicVou_Bottom])
         "
       >
         <img src="@/assets/icons/fthora-diatonic-vou.svg" />
@@ -189,12 +204,7 @@
       <button
         class="neume-button"
         :disabled="fthoresDisabled"
-        @click="
-          $emit('update:fthora', [
-            Fthora.DiatonicGa_Top,
-            Fthora.DiatonicGa_Bottom,
-          ])
-        "
+        @click="updateFthora([Fthora.DiatonicGa_Top, Fthora.DiatonicGa_Bottom])"
       >
         <img src="@/assets/icons/fthora-diatonic-ga.svg" />
       </button>
@@ -202,10 +212,7 @@
         class="neume-button"
         :disabled="fthoresDisabled"
         @click="
-          $emit('update:fthora', [
-            Fthora.DiatonicThi_Top,
-            Fthora.DiatonicThi_Bottom,
-          ])
+          updateFthora([Fthora.DiatonicThi_Top, Fthora.DiatonicThi_Bottom])
         "
       >
         <img src="@/assets/icons/fthora-diatonic-di.svg" />
@@ -213,24 +220,14 @@
       <button
         class="neume-button"
         :disabled="fthoresDisabled"
-        @click="
-          $emit('update:fthora', [
-            Fthora.DiatonicKe_Top,
-            Fthora.DiatonicKe_Bottom,
-          ])
-        "
+        @click="updateFthora([Fthora.DiatonicKe_Top, Fthora.DiatonicKe_Bottom])"
       >
         <img src="@/assets/icons/fthora-diatonic-ke.svg" />
       </button>
       <button
         class="neume-button"
         :disabled="fthoresDisabled"
-        @click="
-          $emit('update:fthora', [
-            Fthora.DiatonicZo_Top,
-            Fthora.DiatonicZo_Bottom,
-          ])
-        "
+        @click="updateFthora([Fthora.DiatonicZo_Top, Fthora.DiatonicZo_Bottom])"
       >
         <img src="@/assets/icons/fthora-diatonic-zo.svg" />
       </button>
@@ -238,7 +235,7 @@
         class="neume-button"
         :disabled="fthoresDisabled"
         @click="
-          $emit('update:fthora', [
+          updateFthora([
             Fthora.DiatonicNiHigh_Top,
             Fthora.DiatonicNiHigh_Bottom,
           ])
@@ -251,7 +248,7 @@
         class="neume-button"
         :disabled="fthoresDisabled"
         @click="
-          $emit('update:fthora', [
+          updateFthora([
             Fthora.SoftChromaticThi_Top,
             Fthora.SoftChromaticThi_Bottom,
           ])
@@ -263,7 +260,7 @@
         class="neume-button"
         :disabled="fthoresDisabled"
         @click="
-          $emit('update:fthora', [
+          updateFthora([
             Fthora.SoftChromaticPa_Top,
             Fthora.SoftChromaticPa_Bottom,
           ])
@@ -276,7 +273,7 @@
         class="neume-button"
         :disabled="fthoresDisabled"
         @click="
-          $emit('update:fthora', [
+          updateFthora([
             Fthora.HardChromaticPa_Top,
             Fthora.HardChromaticPa_Bottom,
           ])
@@ -288,7 +285,7 @@
         class="neume-button"
         :disabled="fthoresDisabled"
         @click="
-          $emit('update:fthora', [
+          updateFthora([
             Fthora.HardChromaticThi_Top,
             Fthora.HardChromaticThi_Bottom,
           ])
@@ -301,12 +298,7 @@
         class="neume-button"
         :disabled="fthoresDisabled || enharmonicDisabled"
         :title="enharmonicTitle"
-        @click="
-          $emit('update:fthora', [
-            Fthora.Enharmonic_Top,
-            Fthora.Enharmonic_Bottom,
-          ])
-        "
+        @click="updateFthora([Fthora.Enharmonic_Top, Fthora.Enharmonic_Bottom])"
       >
         <img src="@/assets/icons/fthora-enharmonic.svg" />
       </button>
@@ -315,10 +307,7 @@
         :disabled="fthoresDisabled || generalFlatDisabled"
         :title="generalFlatTitle"
         @click="
-          $emit('update:fthora', [
-            Fthora.GeneralFlat_Top,
-            Fthora.GeneralFlat_Bottom,
-          ])
+          updateFthora([Fthora.GeneralFlat_Top, Fthora.GeneralFlat_Bottom])
         "
       >
         <img src="@/assets/icons/fthora-general-flat.svg" />
@@ -328,10 +317,7 @@
         :disabled="fthoresDisabled || generalSharpDisabled"
         :title="generalSharpTitle"
         @click="
-          $emit('update:fthora', [
-            Fthora.GeneralSharp_Top,
-            Fthora.GeneralSharp_Bottom,
-          ])
+          updateFthora([Fthora.GeneralSharp_Top, Fthora.GeneralSharp_Bottom])
         "
       >
         <img src="@/assets/icons/fthora-general-sharp.svg" />
@@ -341,7 +327,7 @@
         class="neume-button"
         :disabled="fthoresDisabled || zygosDisabled"
         :title="zygosTitle"
-        @click="$emit('update:fthora', [Fthora.Zygos_Top, Fthora.Zygos_Bottom])"
+        @click="updateFthora([Fthora.Zygos_Top, Fthora.Zygos_Bottom])"
       >
         <img src="@/assets/icons/fthora-zygos.svg" />
       </button>
@@ -349,9 +335,7 @@
         class="neume-button"
         :disabled="fthoresDisabled || klitonDisabled"
         :title="klitonTitle"
-        @click="
-          $emit('update:fthora', [Fthora.Kliton_Top, Fthora.Kliton_Bottom])
-        "
+        @click="updateFthora([Fthora.Kliton_Top, Fthora.Kliton_Bottom])"
       >
         <img src="@/assets/icons/fthora-kliton.svg" />
       </button>
@@ -359,9 +343,7 @@
         class="neume-button"
         :disabled="fthoresDisabled || spathiDisabled"
         :title="spathiTitle"
-        @click="
-          $emit('update:fthora', [Fthora.Spathi_Top, Fthora.Spathi_Bottom])
-        "
+        @click="updateFthora([Fthora.Spathi_Top, Fthora.Spathi_Bottom])"
       >
         <img src="@/assets/icons/fthora-spathi.svg" />
       </button>
@@ -455,6 +437,8 @@ export default class ToolbarNeume extends Vue {
   GorgonNeume = GorgonNeume;
   Fthora = Fthora;
   Tie = Tie;
+
+  innerNeume = 'Primary';
 
   chromaticFthoras = [
     Fthora.SoftChromaticPa_Top,
@@ -688,6 +672,31 @@ export default class ToolbarNeume extends Vue {
     },
   ];
 
+  multiNeumes = [
+    QuantitativeNeume.OligonPlusIsonPlusKentemata,
+    QuantitativeNeume.OligonPlusApostrophosPlusKentemata,
+    QuantitativeNeume.OligonPlusHyporoePlusKentemata,
+    QuantitativeNeume.OligonPlusElaphronPlusKentemata,
+    QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
+    QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
+    QuantitativeNeume.OligonPlusHamiliPlusKentemata,
+  ];
+
+  get isMultiNeume() {
+    const result = this.multiNeumes.includes(this.element.quantitativeNeume);
+
+    this.innerNeume = 'Primary';
+
+    return result;
+  }
+
+  get hasTertiaryNeume() {
+    return (
+      this.element.quantitativeNeume ===
+      QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata
+    );
+  }
+
   get notes() {
     if (
       this.element.fthora === Fthora.SoftChromaticThi_Top ||
@@ -880,6 +889,38 @@ export default class ToolbarNeume extends Vue {
   get spaceAfterMax() {
     return Math.round(Unit.toPt(this.pageSetup.pageWidth));
   }
+
+  updateFthora(args: string[]) {
+    if (this.innerNeume === 'Secondary') {
+      this.$emit('update:secondaryFthora', args[0] + this.innerNeume);
+    } else if (this.innerNeume === 'Tertiary') {
+      this.$emit('update:tertiaryFthora', args[0] + this.innerNeume);
+    } else {
+      this.$emit('update:fthora', args);
+    }
+  }
+
+  updateGorgon(args: string | string[]) {
+    if (this.innerNeume === 'Secondary') {
+      if (Array.isArray(args)) {
+        this.$emit('update:secondaryGorgon', GorgonNeume.GorgonSecondary);
+      } else {
+        this.$emit('update:secondaryGorgon', args + this.innerNeume);
+      }
+    } else {
+      this.$emit('update:gorgon', args);
+    }
+  }
+
+  updateAccidental(args: string) {
+    if (this.innerNeume === 'Secondary' && args.startsWith('Flat')) {
+      this.$emit('update:secondaryAccidental', args + this.innerNeume);
+    } else if (this.innerNeume === 'Tertiary' && args.startsWith('Flat')) {
+      this.$emit('update:tertiaryAccidental', args + this.innerNeume);
+    } else {
+      this.$emit('update:accidental', args);
+    }
+  }
 }
 </script>
 
@@ -936,5 +977,9 @@ label.right-space {
   margin: 0 16px;
   border-right: 1px solid black;
   height: 16px;
+}
+
+.btnNeumeSelect.selected {
+  background-color: var(--btn-color-selected);
 }
 </style>

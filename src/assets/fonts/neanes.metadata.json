@@ -2465,6 +2465,14 @@
       ]
     },
     "oligonIsonKentimata": {
+      "yfesisSecondary": [
+        0.93,
+        0.776
+      ],
+      "fthoraTopSecondary": [
+        0.682,
+        0.9
+      ],
       "yfenAbove": [
         1.35,
         0.961
@@ -2483,7 +2491,7 @@
       ],
       "gorgonSecondary": [
         0.685,
-        0.866
+        0.703
       ],
       "measureNumber": [
         0.194,
@@ -2585,6 +2593,14 @@
       ]
     },
     "oligonApostrofosKentimata": {
+      "yfesisSecondary": [
+        0.64,
+        0.828
+      ],
+      "fthoraTopSecondary": [
+        0.41,
+        0.813
+      ],
       "yfenAbove": [
         0.93,
         1.111
@@ -2647,6 +2663,14 @@
       ]
     },
     "oligonElafronKentimata": {
+      "yfesisSecondary": [
+        1.0,
+        0.838
+      ],
+      "fthoraTopSecondary": [
+        0.492,
+        0.912
+      ],
       "gorgonSecondary": [
         0.638,
         0.939
@@ -2709,6 +2733,14 @@
       ]
     },
     "oligonYporroiKentimata": {
+      "yfesisSecondary": [
+        0.64,
+        0.828
+      ],
+      "fthoraTopSecondary": [
+        0.492,
+        0.835
+      ],
       "yfenAbove": [
         0.93,
         1.141
@@ -3375,6 +3407,22 @@
       ]
     },
     "oligonRunningElafronKentimata": {
+      "yfesisTertiary": [
+        0.376,
+        0.858
+      ],
+      "yfesisSecondary": [
+        1.27,
+        0.808
+      ],
+      "fthoraTopTertiary": [
+        0.188,
+        0.854
+      ],
+      "fthoraTopSecondary": [
+        0.832,
+        0.852
+      ],
       "gorgonSecondary": [
         0.948,
         0.889
@@ -3437,6 +3485,14 @@
       ]
     },
     "oligonElafronApostrofosKentimata": {
+      "yfesisSecondary": [
+        1.002,
+        0.812
+      ],
+      "fthoraTopSecondary": [
+        0.492,
+        0.912
+      ],
       "gorgonSecondary": [
         0.638,
         0.939
@@ -6625,6 +6681,14 @@
       ]
     },
     "oligonChamiliKentimata": {
+      "yfesisSecondary": [
+        1.002,
+        0.812
+      ],
+      "fthoraTopSecondary": [
+        0.794,
+        0.902
+      ],
       "gorgonSecondary": [
         0.795,
         0.91
@@ -6776,6 +6840,282 @@
       "agogiAboveFthora": [
         0.388983,
         -0.20847300000000002
+      ]
+    },
+    "fthoraDiatonicNiLowSecondary": {
+      "fthoraTopSecondary": [
+        0.0,
+        0.734
+      ]
+    },
+    "fthoraDiatonicPaSecondary": {
+      "fthoraTopSecondary": [
+        0.0,
+        0.644
+      ]
+    },
+    "fthoraDiatonicVouSecondary": {
+      "fthoraTopSecondary": [
+        0.0,
+        0.634
+      ]
+    },
+    "fthoraDiatonicGaSecondary": {
+      "fthoraTopSecondary": [
+        0.0,
+        0.684
+      ]
+    },
+    "fthoraDiatonicDiSecondary": {
+      "fthoraTopSecondary": [
+        0.0,
+        0.744
+      ]
+    },
+    "fthoraDiatonicKeSecondary": {
+      "fthoraTopSecondary": [
+        0.0,
+        0.804
+      ]
+    },
+    "fthoraDiatonicZoSecondary": {
+      "fthoraTopSecondary": [
+        0.0,
+        0.624
+      ]
+    },
+    "fthoraDiatonicNiHighSecondary": {
+      "fthoraTopSecondary": [
+        0.0,
+        0.754
+      ]
+    },
+    "fthoraHardChromaticPaSecondary": {
+      "fthoraTopSecondary": [
+        0.0,
+        0.804
+      ]
+    },
+    "fthoraHardChromaticDiSecondary": {
+      "fthoraTopSecondary": [
+        0.0,
+        0.744
+      ]
+    },
+    "fthoraSoftChromaticDiSecondary": {
+      "fthoraTopSecondary": [
+        0.0,
+        0.804
+      ]
+    },
+    "fthoraSoftChromaticKeSecondary": {
+      "fthoraTopSecondary": [
+        0.0,
+        0.714
+      ]
+    },
+    "fthoraEnharmonicSecondary": {
+      "fthoraTopSecondary": [
+        0.0,
+        0.734
+      ]
+    },
+    "chroaZygosSecondary": {
+      "fthoraTopSecondary": [
+        0.0,
+        0.704
+      ]
+    },
+    "chroaKlitonSecondary": {
+      "fthoraTopSecondary": [
+        0.0,
+        0.734
+      ]
+    },
+    "chroaSpathiSecondary": {
+      "fthoraTopSecondary": [
+        0.0,
+        0.804
+      ]
+    },
+    "fthoraDiatonicNiLowTertiary": {
+      "fthoraTopTertiary": [
+        0.0,
+        0.734
+      ]
+    },
+    "fthoraDiatonicPaTertiary": {
+      "fthoraTopTertiary": [
+        0.0,
+        0.644
+      ]
+    },
+    "fthoraDiatonicVouTertiary": {
+      "fthoraTopTertiary": [
+        0.0,
+        0.634
+      ]
+    },
+    "fthoraDiatonicGaTertiary": {
+      "fthoraTopTertiary": [
+        0.0,
+        0.684
+      ]
+    },
+    "fthoraDiatonicDiTertiary": {
+      "fthoraTopTertiary": [
+        0.0,
+        0.744
+      ]
+    },
+    "fthoraDiatonicKeTertiary": {
+      "fthoraTopTertiary": [
+        0.0,
+        0.804
+      ]
+    },
+    "fthoraDiatonicZoTertiary": {
+      "fthoraTopTertiary": [
+        0.0,
+        0.624
+      ]
+    },
+    "fthoraDiatonicNiHighTertiary": {
+      "fthoraTopTertiary": [
+        0.0,
+        0.754
+      ]
+    },
+    "fthoraHardChromaticPaTertiary": {
+      "fthoraTopTertiary": [
+        0.0,
+        0.804
+      ]
+    },
+    "fthoraHardChromaticDiTertiary": {
+      "fthoraTopTertiary": [
+        0.0,
+        0.744
+      ]
+    },
+    "fthoraSoftChromaticDiTertiary": {
+      "fthoraTopTertiary": [
+        0.0,
+        0.804
+      ]
+    },
+    "fthoraSoftChromaticKeTertiary": {
+      "fthoraTopTertiary": [
+        0.0,
+        0.714
+      ]
+    },
+    "fthoraEnharmonicTertiary": {
+      "fthoraTopTertiary": [
+        0.0,
+        0.734
+      ]
+    },
+    "chroaZygosTertiary": {
+      "fthoraTopTertiary": [
+        0.0,
+        0.704
+      ]
+    },
+    "chroaKlitonTertiary": {
+      "fthoraTopTertiary": [
+        0.0,
+        0.734
+      ]
+    },
+    "chroaSpathiTertiary": {
+      "fthoraTopTertiary": [
+        0.0,
+        0.804
+      ]
+    },
+    "yfesis2Secondary": {
+      "yfesisSecondary": [
+        -0.213,
+        0.452
+      ]
+    },
+    "yfesis4Secondary": {
+      "yfesisSecondary": [
+        -0.134,
+        0.429
+      ]
+    },
+    "yfesis6Secondary": {
+      "yfesisSecondary": [
+        -0.153,
+        0.456
+      ]
+    },
+    "yfesis8Secondary": {
+      "yfesisSecondary": [
+        -0.159,
+        0.44
+      ]
+    },
+    "yfesis2Tertiary": {
+      "yfesisTertiary": [
+        -0.213,
+        0.452
+      ]
+    },
+    "yfesis4Tertiary": {
+      "yfesisTertiary": [
+        -0.134,
+        0.429
+      ]
+    },
+    "yfesis6Tertiary": {
+      "yfesisTertiary": [
+        -0.153,
+        0.456
+      ]
+    },
+    "yfesis8Tertiary": {
+      "yfesisTertiary": [
+        -0.159,
+        0.44
+      ]
+    },
+    "yfesisGenikiSecondary": {
+      "fthoraTopSecondary": [
+        0.0,
+        0.634
+      ]
+    },
+    "yfesisGenikiTertiary": {
+      "fthoraTopTertiary": [
+        0.0,
+        0.634
+      ]
+    },
+    "diesisGenikiSecondary": {
+      "fthoraTopSecondary": [
+        0.0,
+        0.804
+      ]
+    },
+    "diesisGenikiTertiary": {
+      "fthoraTopTertiary": [
+        0.0,
+        0.804
+      ]
+    },
+    "digorgonDottedLeftSecondary": {
+      "gorgonSecondary": [
+        0.0,
+        0.8
+      ]
+    },
+    "trigorgonDottedLeftSecondary": {
+      "gorgonSecondary": [
+        0.0,
+        0.8
       ]
     }
   },
@@ -7119,7 +7459,53 @@
     "agogiMesiAbove": 0.709,
     "agogiGorgiAbove": 0.618,
     "agogiGorgoteriAbove": 0.826,
-    "agogiPoliGorgiAbove": 1.02
+    "agogiPoliGorgiAbove": 1.02,
+    "fthoraDiatonicNiLowSecondary": 0.0,
+    "fthoraDiatonicPaSecondary": 0.0,
+    "fthoraDiatonicVouSecondary": 0.0,
+    "fthoraDiatonicGaSecondary": 0.0,
+    "fthoraDiatonicDiSecondary": 0.0,
+    "fthoraDiatonicKeSecondary": 0.0,
+    "fthoraDiatonicZoSecondary": 0.0,
+    "fthoraDiatonicNiHighSecondary": 0.0,
+    "fthoraHardChromaticPaSecondary": 0.0,
+    "fthoraHardChromaticDiSecondary": 0.0,
+    "fthoraSoftChromaticDiSecondary": 0.0,
+    "fthoraSoftChromaticKeSecondary": 0.0,
+    "fthoraEnharmonicSecondary": 0.0,
+    "chroaZygosSecondary": 0.0,
+    "chroaKlitonSecondary": 0.0,
+    "chroaSpathiSecondary": 0.0,
+    "fthoraDiatonicNiLowTertiary": 0.0,
+    "fthoraDiatonicPaTertiary": 0.0,
+    "fthoraDiatonicVouTertiary": 0.0,
+    "fthoraDiatonicGaTertiary": 0.0,
+    "fthoraDiatonicDiTertiary": 0.0,
+    "fthoraDiatonicKeTertiary": 0.0,
+    "fthoraDiatonicZoTertiary": 0.0,
+    "fthoraDiatonicNiHighTertiary": 0.0,
+    "fthoraHardChromaticPaTertiary": 0.0,
+    "fthoraHardChromaticDiTertiary": 0.0,
+    "fthoraSoftChromaticDiTertiary": 0.0,
+    "fthoraSoftChromaticKeTertiary": 0.0,
+    "fthoraEnharmonicTertiary": 0.0,
+    "chroaZygosTertiary": 0.0,
+    "chroaKlitonTertiary": 0.0,
+    "chroaSpathiTertiary": 0.0,
+    "yfesis2Secondary": 0.0,
+    "yfesis4Secondary": 0.0,
+    "yfesis6Secondary": 0.0,
+    "yfesis8Secondary": 0.0,
+    "yfesis2Tertiary": 0.0,
+    "yfesis4Tertiary": 0.0,
+    "yfesis6Tertiary": 0.0,
+    "yfesis8Tertiary": 0.0,
+    "yfesisGenikiSecondary": 0.0,
+    "yfesisGenikiTertiary": 0.0,
+    "diesisGenikiSecondary": 0.0,
+    "diesisGenikiTertiary": 0.0,
+    "digorgonDottedLeftSecondary": 0.0,
+    "trigorgonDottedLeftSecondary": 0.0
   },
   "optionalGlyphs": {
     "oligonKentimataBelow.alt01": {
@@ -10206,6 +10592,466 @@
       "bBoxSW": [
         0.228358789062,
         -0.19809715898936994
+      ]
+    },
+    "fthoraDiatonicNiLowSecondary": {
+      "bBoxNE": [
+        0.16331190499236686,
+        1.103
+      ],
+      "bBoxSW": [
+        -0.16331152343799998,
+        0.7433847594021427
+      ]
+    },
+    "fthoraDiatonicPaSecondary": {
+      "bBoxNE": [
+        0.118,
+        1.04
+      ],
+      "bBoxSW": [
+        -0.118,
+        0.653483900458442
+      ]
+    },
+    "fthoraDiatonicVouSecondary": {
+      "bBoxNE": [
+        0.1904031808035714,
+        1.2630741311373195
+      ],
+      "bBoxSW": [
+        -0.19040308369840575,
+        0.6347272727272727
+      ]
+    },
+    "fthoraDiatonicGaSecondary": {
+      "bBoxNE": [
+        0.1195,
+        1.1660625536532372
+      ],
+      "bBoxSW": [
+        -0.1195,
+        0.6874848754319814
+      ]
+    },
+    "fthoraDiatonicDiSecondary": {
+      "bBoxNE": [
+        0.18158286025331868,
+        1.1141281988753013
+      ],
+      "bBoxSW": [
+        -0.1815826091587148,
+        0.7499501087637955
+      ]
+    },
+    "fthoraDiatonicKeSecondary": {
+      "bBoxNE": [
+        0.1175,
+        1.1855172088799377
+      ],
+      "bBoxSW": [
+        -0.1175,
+        0.802
+      ]
+    },
+    "fthoraDiatonicZoSecondary": {
+      "bBoxNE": [
+        0.19027915736657142,
+        1.306
+      ],
+      "bBoxSW": [
+        -0.19027943533552527,
+        0.6307313504137247
+      ]
+    },
+    "fthoraDiatonicNiHighSecondary": {
+      "bBoxNE": [
+        0.15286891609707054,
+        1.1962423302730039
+      ],
+      "bBoxSW": [
+        -0.15286816406200002,
+        0.7527998437325972
+      ]
+    },
+    "fthoraHardChromaticPaSecondary": {
+      "bBoxNE": [
+        0.3732340494958155,
+        1.084
+      ],
+      "bBoxSW": [
+        -0.37323397634571476,
+        0.813
+      ]
+    },
+    "fthoraHardChromaticDiSecondary": {
+      "bBoxNE": [
+        0.18065369481572754,
+        1.1071281988753015
+      ],
+      "bBoxSW": [
+        -0.18065414931631868,
+        0.7447367267789309
+      ]
+    },
+    "fthoraSoftChromaticDiSecondary": {
+      "bBoxNE": [
+        0.41786185685826244,
+        1.104
+      ],
+      "bBoxSW": [
+        -0.417861328125,
+        0.7999671821392237
+      ]
+    },
+    "fthoraSoftChromaticKeSecondary": {
+      "bBoxNE": [
+        0.21519488153134927,
+        1.1388787804909166
+      ],
+      "bBoxSW": [
+        -0.21519517062270022,
+        0.715372212189666
+      ]
+    },
+    "fthoraEnharmonicSecondary": {
+      "bBoxNE": [
+        0.211887695312,
+        1.099
+      ],
+      "bBoxSW": [
+        -0.21188794462011185,
+        0.7388570403524606
+      ]
+    },
+    "chroaZygosSecondary": {
+      "bBoxNE": [
+        0.21662778781033412,
+        1.1344
+      ],
+      "bBoxSW": [
+        -0.21662778781033412,
+        0.7085
+      ]
+    },
+    "chroaKlitonSecondary": {
+      "bBoxNE": [
+        0.24301926467134485,
+        1.1995110740546344
+      ],
+      "bBoxSW": [
+        -0.2430193455254081,
+        0.7338748931715506
+      ]
+    },
+    "chroaSpathiSecondary": {
+      "bBoxNE": [
+        0.41836185685826244,
+        1.101
+      ],
+      "bBoxSW": [
+        -0.418361328125,
+        0.798
+      ]
+    },
+    "fthoraDiatonicNiLowTertiary": {
+      "bBoxNE": [
+        0.16331190499236686,
+        1.103
+      ],
+      "bBoxSW": [
+        -0.16331152343799998,
+        0.7433847594021427
+      ]
+    },
+    "fthoraDiatonicPaTertiary": {
+      "bBoxNE": [
+        0.118,
+        1.04
+      ],
+      "bBoxSW": [
+        -0.118,
+        0.653483900458442
+      ]
+    },
+    "fthoraDiatonicVouTertiary": {
+      "bBoxNE": [
+        0.1904031808035714,
+        1.2630741311373195
+      ],
+      "bBoxSW": [
+        -0.19040308369840575,
+        0.6347272727272727
+      ]
+    },
+    "fthoraDiatonicGaTertiary": {
+      "bBoxNE": [
+        0.1195,
+        1.1660625536532372
+      ],
+      "bBoxSW": [
+        -0.1195,
+        0.6874848754319814
+      ]
+    },
+    "fthoraDiatonicDiTertiary": {
+      "bBoxNE": [
+        0.18158286025331868,
+        1.1141281988753013
+      ],
+      "bBoxSW": [
+        -0.1815826091587148,
+        0.7499501087637955
+      ]
+    },
+    "fthoraDiatonicKeTertiary": {
+      "bBoxNE": [
+        0.1175,
+        1.1855172088799377
+      ],
+      "bBoxSW": [
+        -0.1175,
+        0.802
+      ]
+    },
+    "fthoraDiatonicZoTertiary": {
+      "bBoxNE": [
+        0.19027915736657142,
+        1.306
+      ],
+      "bBoxSW": [
+        -0.19027943533552527,
+        0.6307313504137247
+      ]
+    },
+    "fthoraDiatonicNiHighTertiary": {
+      "bBoxNE": [
+        0.15286891609707054,
+        1.1962423302730039
+      ],
+      "bBoxSW": [
+        -0.15286816406200002,
+        0.7527998437325972
+      ]
+    },
+    "fthoraHardChromaticPaTertiary": {
+      "bBoxNE": [
+        0.3732340494958155,
+        1.084
+      ],
+      "bBoxSW": [
+        -0.37323397634571476,
+        0.813
+      ]
+    },
+    "fthoraHardChromaticDiTertiary": {
+      "bBoxNE": [
+        0.18065369481572754,
+        1.1071281988753015
+      ],
+      "bBoxSW": [
+        -0.18065414931631868,
+        0.7447367267789309
+      ]
+    },
+    "fthoraSoftChromaticDiTertiary": {
+      "bBoxNE": [
+        0.41786185685826244,
+        1.104
+      ],
+      "bBoxSW": [
+        -0.417861328125,
+        0.7999671821392237
+      ]
+    },
+    "fthoraSoftChromaticKeTertiary": {
+      "bBoxNE": [
+        0.21519488153134927,
+        1.1388787804909166
+      ],
+      "bBoxSW": [
+        -0.21519517062270022,
+        0.715372212189666
+      ]
+    },
+    "fthoraEnharmonicTertiary": {
+      "bBoxNE": [
+        0.211887695312,
+        1.099
+      ],
+      "bBoxSW": [
+        -0.21188794462011185,
+        0.7388570403524606
+      ]
+    },
+    "chroaZygosTertiary": {
+      "bBoxNE": [
+        0.21662778781033412,
+        1.1344
+      ],
+      "bBoxSW": [
+        -0.21662778781033412,
+        0.7085
+      ]
+    },
+    "chroaKlitonTertiary": {
+      "bBoxNE": [
+        0.24301926467134485,
+        1.1995110740546344
+      ],
+      "bBoxSW": [
+        -0.2430193455254081,
+        0.7338748931715506
+      ]
+    },
+    "chroaSpathiTertiary": {
+      "bBoxNE": [
+        0.41836185685826244,
+        1.101
+      ],
+      "bBoxSW": [
+        -0.418361328125,
+        0.798
+      ]
+    },
+    "yfesis2Secondary": {
+      "bBoxNE": [
+        0.114,
+        0.776
+      ],
+      "bBoxSW": [
+        -0.212000244141,
+        0.4532380836358958
+      ]
+    },
+    "yfesis4Secondary": {
+      "bBoxNE": [
+        0.194,
+        0.754
+      ],
+      "bBoxSW": [
+        -0.133000244141,
+        0.4295
+      ]
+    },
+    "yfesis6Secondary": {
+      "bBoxNE": [
+        0.174,
+        0.779
+      ],
+      "bBoxSW": [
+        -0.17887817375458334,
+        0.4283713031149435
+      ]
+    },
+    "yfesis8Secondary": {
+      "bBoxNE": [
+        0.195,
+        0.79
+      ],
+      "bBoxSW": [
+        -0.19276191636410422,
+        0.4043713031149435
+      ]
+    },
+    "yfesis2Tertiary": {
+      "bBoxNE": [
+        0.114,
+        0.776
+      ],
+      "bBoxSW": [
+        -0.212000244141,
+        0.4532380836358958
+      ]
+    },
+    "yfesis4Tertiary": {
+      "bBoxNE": [
+        0.194,
+        0.754
+      ],
+      "bBoxSW": [
+        -0.133000244141,
+        0.4295
+      ]
+    },
+    "yfesis6Tertiary": {
+      "bBoxNE": [
+        0.174,
+        0.779
+      ],
+      "bBoxSW": [
+        -0.17887817375458334,
+        0.4283713031149435
+      ]
+    },
+    "yfesis8Tertiary": {
+      "bBoxNE": [
+        0.195,
+        0.79
+      ],
+      "bBoxSW": [
+        -0.19276191636410422,
+        0.4043713031149435
+      ]
+    },
+    "yfesisGenikiSecondary": {
+      "bBoxNE": [
+        0.1195,
+        1.062
+      ],
+      "bBoxSW": [
+        -0.1195,
+        0.6404857413782357
+      ]
+    },
+    "yfesisGenikiTertiary": {
+      "bBoxNE": [
+        0.1195,
+        1.062
+      ],
+      "bBoxSW": [
+        -0.1195,
+        0.6404857413782357
+      ]
+    },
+    "diesisGenikiSecondary": {
+      "bBoxNE": [
+        0.1195,
+        1.229515124567853
+      ],
+      "bBoxSW": [
+        -0.1195,
+        0.808
+      ]
+    },
+    "diesisGenikiTertiary": {
+      "bBoxNE": [
+        0.1195,
+        1.229515124567853
+      ],
+      "bBoxSW": [
+        -0.1195,
+        0.808
+      ]
+    },
+    "digorgonDottedLeftSecondary": {
+      "bBoxNE": [
+        0.3117645770791375,
+        1.188
+      ],
+      "bBoxSW": [
+        -0.251,
+        0.820666594325061
+      ]
+    },
+    "trigorgonDottedLeftSecondary": {
+      "bBoxNE": [
+        0.42316675709036267,
+        1.223
+      ],
+      "bBoxSW": [
+        -0.384,
+        0.8096665943250609
       ]
     }
   },

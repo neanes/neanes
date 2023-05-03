@@ -42,6 +42,26 @@
               :y="form.accidentalOffsetY"
               @update="updateAccidentalOffset($event)"
             />
+            <DragHandle
+              v-if="hasSecondaryAccidental"
+              :note="form"
+              :mark="form.secondaryAccidental"
+              :fontSize="pageSetup.neumeDefaultFontSize"
+              :zoom="zoom"
+              :x="form.secondaryAccidentalOffsetX"
+              :y="form.secondaryAccidentalOffsetY"
+              @update="updateSecondaryAccidentalOffset($event)"
+            />
+            <DragHandle
+              v-if="hasTertiaryAccidental"
+              :note="form"
+              :mark="form.tertiaryAccidental"
+              :fontSize="pageSetup.neumeDefaultFontSize"
+              :zoom="zoom"
+              :x="form.tertiaryAccidentalOffsetX"
+              :y="form.tertiaryAccidentalOffsetY"
+              @update="updateTertiaryAccidentalOffset($event)"
+            />
             <!-- <DragHandle
               v-if="hasMeasureBarLeft"
               :note="form"
@@ -71,6 +91,26 @@
               :x="form.fthoraOffsetX"
               :y="form.fthoraOffsetY"
               @update="updateFthoraOffset($event)"
+            />
+            <DragHandle
+              v-if="hasSecondaryFthora"
+              :note="form"
+              :mark="form.secondaryFthora"
+              :fontSize="pageSetup.neumeDefaultFontSize"
+              :zoom="zoom"
+              :x="form.secondaryFthoraOffsetX"
+              :y="form.secondaryFthoraOffsetY"
+              @update="updateSecondaryFthoraOffset($event)"
+            />
+            <DragHandle
+              v-if="hasTertiaryFthora"
+              :note="form"
+              :mark="form.tertiaryFthora"
+              :fontSize="pageSetup.neumeDefaultFontSize"
+              :zoom="zoom"
+              :x="form.tertiaryFthoraOffsetX"
+              :y="form.tertiaryFthoraOffsetY"
+              @update="updateTertiaryFthoraOffset($event)"
             />
             <DragHandle
               v-if="hasGorgonNeume"
@@ -225,6 +265,44 @@
             />
           </div>
           <div class="form-group">
+            <label>Accidental 2</label>
+            <InputUnit
+              :unit="unit"
+              :min="min"
+              :max="max"
+              :step="stepSize"
+              :precision="precision"
+              v-model="form.secondaryAccidentalOffsetX"
+            />
+            <InputUnit
+              :unit="unit"
+              :min="min"
+              :max="max"
+              :step="stepSize"
+              :precision="precision"
+              v-model="form.secondaryAccidentalOffsetY"
+            />
+          </div>
+          <div class="form-group">
+            <label>Accidental 3</label>
+            <InputUnit
+              :unit="unit"
+              :min="min"
+              :max="max"
+              :step="stepSize"
+              :precision="precision"
+              v-model="form.tertiaryAccidentalOffsetX"
+            />
+            <InputUnit
+              :unit="unit"
+              :min="min"
+              :max="max"
+              :step="stepSize"
+              :precision="precision"
+              v-model="form.tertiaryAccidentalOffsetY"
+            />
+          </div>
+          <div class="form-group">
             <label>Bar Line L</label>
             <InputUnit
               :unit="unit"
@@ -279,6 +357,44 @@
               :step="stepSize"
               :precision="precision"
               v-model="form.fthoraOffsetY"
+            />
+          </div>
+          <div class="form-group">
+            <label>Fthora 2</label>
+            <InputUnit
+              :unit="unit"
+              :min="min"
+              :max="max"
+              :step="stepSize"
+              :precision="precision"
+              v-model="form.secondaryFthoraOffsetX"
+            />
+            <InputUnit
+              :unit="unit"
+              :min="min"
+              :max="max"
+              :step="stepSize"
+              :precision="precision"
+              v-model="form.secondaryFthoraOffsetY"
+            />
+          </div>
+          <div class="form-group">
+            <label>Fthora 3</label>
+            <InputUnit
+              :unit="unit"
+              :min="min"
+              :max="max"
+              :step="stepSize"
+              :precision="precision"
+              v-model="form.tertiaryFthoraOffsetX"
+            />
+            <InputUnit
+              :unit="unit"
+              :min="min"
+              :max="max"
+              :step="stepSize"
+              :precision="precision"
+              v-model="form.tertiaryFthoraOffsetY"
             />
           </div>
           <div class="form-group">
@@ -561,8 +677,24 @@ export default class SyllablePositioningDialog extends Vue {
     return this.form.fthora != null;
   }
 
+  get hasSecondaryFthora() {
+    return this.form.secondaryFthora != null;
+  }
+
+  get hasTertiaryFthora() {
+    return this.form.tertiaryFthora != null;
+  }
+
   get hasAccidental() {
     return this.form.accidental != null;
+  }
+
+  get hasSecondaryAccidental() {
+    return this.form.secondaryAccidental != null;
+  }
+
+  get hasTertiaryAccidental() {
+    return this.form.tertiaryAccidental != null;
   }
 
   get hasMeasureBarLeft() {
@@ -649,6 +781,16 @@ export default class SyllablePositioningDialog extends Vue {
     this.form.accidentalOffsetY = args.y;
   }
 
+  updateSecondaryAccidentalOffset(args: ScoreElementOffset) {
+    this.form.secondaryAccidentalOffsetX = args.x;
+    this.form.secondaryAccidentalOffsetY = args.y;
+  }
+
+  updateTertiaryAccidentalOffset(args: ScoreElementOffset) {
+    this.form.tertiaryAccidentalOffsetX = args.x;
+    this.form.tertiaryAccidentalOffsetY = args.y;
+  }
+
   updateMeasureBarLeftOffset(args: ScoreElementOffset) {
     this.form.measureBarLeftOffsetX = args.x;
     this.form.measureBarLeftOffsetY = args.y;
@@ -662,6 +804,16 @@ export default class SyllablePositioningDialog extends Vue {
   updateFthoraOffset(args: ScoreElementOffset) {
     this.form.fthoraOffsetX = args.x;
     this.form.fthoraOffsetY = args.y;
+  }
+
+  updateSecondaryFthoraOffset(args: ScoreElementOffset) {
+    this.form.secondaryFthoraOffsetX = args.x;
+    this.form.secondaryFthoraOffsetY = args.y;
+  }
+
+  updateTertiaryFthoraOffset(args: ScoreElementOffset) {
+    this.form.tertiaryFthoraOffsetX = args.x;
+    this.form.tertiaryFthoraOffsetY = args.y;
   }
 
   updateGorgonOffset(args: ScoreElementOffset) {

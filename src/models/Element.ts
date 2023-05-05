@@ -146,6 +146,7 @@ export class NoteElement extends ScoreElement {
             isMelisma: this.isMelisma,
           }
         : null),
+      quantitativeNeume: this.quantitativeNeume,
       measureBarLeft: this.measureBarLeft,
       measureBarLeftOffsetX: this.measureBarLeftOffsetX,
       measureBarLeftOffsetY: this.measureBarLeftOffsetY,
@@ -186,7 +187,6 @@ export class NoteElement extends ScoreElement {
       secondaryGorgonNeume: this.secondaryGorgonNeume,
       secondaryGorgonNeumeOffsetX: this.secondaryGorgonNeumeOffsetX,
       secondaryGorgonNeumeOffsetY: this.secondaryGorgonNeumeOffsetY,
-      quantitativeNeume: this.quantitativeNeume,
       timeNeume: this.timeNeume,
       timeNeumeOffsetX: this.timeNeumeOffsetX,
       timeNeumeOffsetY: this.timeNeumeOffsetY,

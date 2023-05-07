@@ -1,5 +1,7 @@
 import {
+  ExportPageAsImageArgs,
   ExportWorkspaceAsHtmlArgs,
+  ExportWorkspaceAsImageArgs,
   ExportWorkspaceAsPdfArgs,
   FileMenuOpenScoreArgs,
   IpcRendererChannels,
@@ -52,6 +54,33 @@ export class IpcService implements IIpcService {
     );
   }
 
+  public async exportWorkspaceAsImage(
+    workspace: Workspace,
+    imageFormat: 'png' | 'svg',
+  ) {
+    return await window.ipcRenderer.invoke(
+      IpcRendererChannels.ExportWorkspaceAsImage,
+      {
+        filePath: workspace.filePath,
+        tempFileName: workspace.tempFileName,
+        imageFormat,
+      } as ExportWorkspaceAsImageArgs,
+    );
+  }
+
+  public async exportPageAsImage(
+    filePath: string,
+    data: string,
+  ): Promise<boolean> {
+    return await window.ipcRenderer.invoke(
+      IpcRendererChannels.ExportPageAsImage,
+      {
+        filePath,
+        data,
+      } as ExportPageAsImageArgs,
+    );
+  }
+
   public async exportWorkspaceAsHtml(workspace: Workspace, data: string) {
     return await window.ipcRenderer.invoke(
       IpcRendererChannels.ExportWorkspaceAsHtml,
@@ -85,6 +114,13 @@ export class IpcService implements IIpcService {
     return await window.ipcRenderer.invoke(
       IpcRendererChannels.ShowMessageBox,
       args,
+    );
+  }
+
+  public async showItemInFolder(path: string) {
+    return await window.ipcRenderer.invoke(
+      IpcRendererChannels.ShowItemInFolder,
+      path,
     );
   }
 

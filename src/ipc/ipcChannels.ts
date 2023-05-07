@@ -9,6 +9,7 @@ export enum IpcMainChannels {
   FileMenuSaveAs = 'FileMenuSaveAs',
   FileMenuExportAsPdf = 'FileMenuExportAsPdf',
   FileMenuExportAsHtml = 'FileMenuExportAsHtml',
+  FileMenuExportAsImage = 'FileMenuExportAsImage',
 
   FileMenuPageSetup = 'FileMenuPageSetup',
 
@@ -42,11 +43,14 @@ export enum IpcRendererChannels {
   SetCanRedo = 'SetCanRedo',
 
   ShowMessageBox = 'ShowMessageBox',
+  ShowItemInFolder = 'ShowItemInFolder',
 
   SaveWorkspace = 'SaveWorkspace',
   SaveWorkspaceAs = 'SaveWorkspaceAs',
   ExportWorkspaceAsPdf = 'ExportWorkspaceAsPdf',
   ExportWorkspaceAsHtml = 'ExportWorkspaceAsHtml',
+  ExportWorkspaceAsImage = 'ExportWorkspaceAsImage',
+  ExportPageAsImage = 'ExportPageAsImage',
   PrintWorkspace = 'PrintWorkspace',
   OpenWorkspaceFromArgv = 'OpenWorkspaceFromArgv',
   OpenImageDialog = 'OpenImageDialog',
@@ -124,6 +128,22 @@ export interface ExportWorkspaceAsPdfArgs {
 export interface ExportWorkspaceAsHtmlArgs {
   filePath: string | null;
   tempFileName: string;
+  data: string;
+}
+
+export interface ExportWorkspaceAsImageArgs {
+  filePath: string | null;
+  tempFileName: string;
+  imageFormat: 'svg' | 'png';
+}
+
+export interface ExportWorkspaceAsImageReplyArgs {
+  filePath: string;
+  success: boolean;
+}
+
+export interface ExportPageAsImageArgs {
+  filePath: string;
   data: string;
 }
 

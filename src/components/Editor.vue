@@ -72,6 +72,7 @@
             v-for="(page, pageIndex) in filteredPages"
             :key="`page-${pageIndex}`"
             ref="pages"
+            :class="{ print: printMode }"
           >
             <template v-if="page.isVisible || printMode">
               <template v-if="showGuides">
@@ -570,11 +571,18 @@
       @update="updatePageSetup($event)"
       @close="closePageSetupDialog"
     />
+    <ExportDialog
+      v-if="exportDialogIsOpen"
+      :loading="exportInProgress"
+      @exportAsPng="exportAsPng"
+      @close="closeExportDialog"
+    />
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Prop, Watch, Vue } from 'vue-property-decorator';
+import { toPng, getFontEmbedCSS, toSvg } from 'html-to-image';
 import {
   ScoreElement,
   MartyriaElement,
@@ -635,6 +643,9 @@ import ModeKeyDialog from '@/components/ModeKeyDialog.vue';
 import SyllablePositioningDialog from '@/components/SyllablePositioningDialog.vue';
 import PlaybackSettingsDialog from '@/components/PlaybackSettingsDialog.vue';
 import EditorPreferencesDialog from '@/components/EditorPreferencesDialog.vue';
+import ExportDialog, {
+  ExportAsPngSettings,
+} from '@/components/ExportDialog.vue';
 import PageSetupDialog from '@/components/PageSetupDialog.vue';
 import FileMenuBar from '@/components/FileMenuBar.vue';
 import {
@@ -644,6 +655,7 @@ import {
   FileMenuInsertTextboxArgs,
   FileMenuOpenImageArgs,
   IpcRendererChannels,
+  ExportWorkspaceAsImageReplyArgs,
 } from '@/ipc/ipcChannels';
 import { EventBus } from '@/eventBus';
 import { modeKeyTemplates } from '@/models/ModeKeys';
@@ -714,6 +726,7 @@ import {
     SyllablePositioningDialog,
     PlaybackSettingsDialog,
     EditorPreferencesDialog,
+    ExportDialog,
     PageSetupDialog,
     FileMenuBar,
   },
@@ -746,6 +759,7 @@ export default class Editor extends Vue {
   playbackSettingsDialogIsOpen: boolean = false;
   pageSetupDialogIsOpen: boolean = false;
   editorPreferencesDialogIsOpen: boolean = false;
+  exportDialogIsOpen: boolean = false;
 
   clipboard: ScoreElement[] = [];
 
@@ -797,6 +811,8 @@ export default class Editor extends Vue {
   editorPreferences: EditorPreferences = new EditorPreferences();
 
   byzHtmlExporter: ByzHtmlExporter = new ByzHtmlExporter();
+
+  exportInProgress: boolean = false;
 
   // Commands
   noteElementCommandFactory: CommandFactory<NoteElement> =
@@ -1440,6 +1456,10 @@ export default class Editor extends Vue {
       IpcMainChannels.FileMenuExportAsHtml,
       this.onFileMenuExportAsHtml,
     );
+    EventBus.$on(
+      IpcMainChannels.FileMenuExportAsImage,
+      this.onFileMenuExportAsImage,
+    );
     EventBus.$on(IpcMainChannels.FileMenuUndo, this.onFileMenuUndo);
     EventBus.$on(IpcMainChannels.FileMenuRedo, this.onFileMenuRedo);
     EventBus.$on(IpcMainChannels.FileMenuCut, this.onFileMenuCut);
@@ -1518,6 +1538,10 @@ export default class Editor extends Vue {
     EventBus.$off(
       IpcMainChannels.FileMenuExportAsHtml,
       this.onFileMenuExportAsHtml,
+    );
+    EventBus.$off(
+      IpcMainChannels.FileMenuExportAsImage,
+      this.onFileMenuExportAsImage,
     );
     EventBus.$off(IpcMainChannels.FileMenuUndo, this.onFileMenuUndo);
     EventBus.$off(IpcMainChannels.FileMenuRedo, this.onFileMenuRedo);
@@ -1648,6 +1672,10 @@ export default class Editor extends Vue {
 
   closePageSetupDialog() {
     this.pageSetupDialogIsOpen = false;
+  }
+
+  closeExportDialog() {
+    this.exportDialogIsOpen = false;
   }
 
   updateEditorPreferences(form: EditorPreferences) {
@@ -4648,6 +4676,158 @@ export default class Editor extends Vue {
     });
   }
 
+  async onFileMenuExportAsImage() {
+    this.exportDialogIsOpen = true;
+  }
+
+  async exportAsPng(args: ExportAsPngSettings) {
+    let reply: ExportWorkspaceAsImageReplyArgs;
+
+    try {
+      reply = await this.ipcService.exportWorkspaceAsImage(
+        this.selectedWorkspace,
+        'png',
+      );
+
+      if (!reply.success) {
+        return;
+      }
+    } catch (error) {
+      console.error(error);
+      return;
+    }
+
+    this.printMode = true;
+    this.exportInProgress = true;
+
+    // Blur the active element so that focus outlines and
+    // blinking cursors don't show up in the printed page
+    const activeElement = this.blurActiveElement();
+
+    Vue.nextTick(async () => {
+      try {
+        const pages = this.$refs.pages as HTMLElement[];
+
+        if (pages.length > 0) {
+          const fontEmbedCSS = await getFontEmbedCSS(pages[0]);
+
+          let pageNumber = 1;
+
+          for (let page of pages) {
+            const options = {
+              fontEmbedCSS,
+              pixelRatio: args.dpi / 96,
+            } as any;
+
+            if (args.transparentBackground) {
+              options.style = {
+                backgroundColor: 'transparent',
+              };
+            }
+
+            let data = await toPng(page, options);
+
+            if (data != null) {
+              const fileName = reply.filePath.replace(
+                /\.png$/,
+                `-${pageNumber++}.png`,
+              );
+
+              data = data.replace(/^data:image\/png;base64,/, '');
+
+              if (!(await this.ipcService.exportPageAsImage(fileName, data))) {
+                break;
+              }
+            }
+          }
+        }
+
+        if (args.openFolder) {
+          await this.ipcService.showItemInFolder(
+            reply.filePath.replace(/\.png$/, '-1.png'),
+          );
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        this.printMode = false;
+        this.exportInProgress = false;
+        this.closeExportDialog();
+        // Re-focus the active element
+        this.focusElement(activeElement);
+      }
+    });
+  }
+
+  // async exportAsSvg(openFolder: boolean) {
+  //   let reply: ExportWorkspaceAsImageReplyArgs;
+
+  //   try {
+  //     reply = await this.ipcService.exportWorkspaceAsImage(
+  //       this.selectedWorkspace,
+  //       'svg',
+  //     );
+
+  //     if (!reply.success) {
+  //       return;
+  //     }
+  //   } catch (error) {
+  //     console.error(error);
+  //     return;
+  //   }
+
+  //   this.printMode = true;
+  //   this.exportInProgress = true;
+
+  //   // Blur the active element so that focus outlines and
+  //   // blinking cursors don't show up in the printed page
+  //   const activeElement = this.blurActiveElement();
+
+  //   Vue.nextTick(async () => {
+  //     try {
+  //       const pages = this.$refs.pages as HTMLElement[];
+
+  //       if (pages.length > 0) {
+  //         const fontEmbedCSS = await getFontEmbedCSS(pages[0]);
+
+  //         let pageNumber = 1;
+
+  //         for (let page of pages) {
+  //           const data = await toSvg(page, {
+  //             fontEmbedCSS,
+  //           });
+
+
+  //           if (data != null) {
+  //             const fileName = reply.filePath.replace(
+  //               /.svg$/,
+  //               `-${pageNumber++}.svg`,
+  //             );
+
+  //             if (!(await this.ipcService.exportPageAsImage(fileName, data))) {
+  //               break;
+  //             }
+  //           }
+  //         }
+  //       }
+
+  //       if (openFolder) {
+  //         await this.ipcService.showItemInFolder(
+  //           reply.filePath.replace(/\.svg$/, '-1.svg'),
+  //         );
+  //       }
+  //     } catch (error) {
+  //       console.error(error);
+  //     } finally {
+  //       this.printMode = false;
+  //       this.exportInProgress = false;
+  //       this.closeExportDialog();
+  //       // Re-focus the active element
+  //       this.focusElement(activeElement);
+  //     }
+  //   });
+  // }
+
   async onFileMenuExportAsHtml() {
     await this.ipcService.exportWorkspaceAsHtml(
       this.selectedWorkspace,
@@ -5233,6 +5413,29 @@ export default class Editor extends Vue {
 
 .print-only {
   display: none;
+}
+
+.page.print .empty-neume-box {
+  visibility: hidden;
+}
+
+.page.print .text-box-container {
+  border: none;
+}
+
+.page.print .mode-key-container {
+  border: none;
+}
+
+.page.print .image-box-container {
+  border: none;
+}
+
+.page.print .page-break,
+.page.print .line-break,
+.page.print .page-break-2,
+.page.print .line-break-2 {
+  display: none !important;
 }
 
 @media print {

@@ -28,6 +28,9 @@ import {
   FileMenuInsertTextboxArgs,
   ExportWorkspaceAsHtmlArgs,
   FileMenuOpenImageArgs,
+  ExportPageAsImageArgs,
+  ExportWorkspaceAsImageArgs,
+  ExportWorkspaceAsImageReplyArgs,
 } from './ipc/ipcChannels';
 import path from 'path';
 import { promises as fs } from 'fs';
@@ -90,9 +93,18 @@ interface SecondInstanceData {
   argv: string[];
 }
 
+enum OnConflictChoice {
+  Replace = 0,
+  ReplaceAll = 1,
+  Skip = 2,
+  SkipAll = 3,
+}
+
 let saving = false;
 let exporting = false;
 let loaded = false;
+
+let exportAsImageOnConflict: OnConflictChoice | null = null;
 
 let darwinPath: string | null = null;
 
@@ -153,6 +165,27 @@ async function showReplaceFileDialog(filePath: string) {
   } catch {}
 
   return true;
+}
+
+async function showReplaceOrSkipFileDialog(filePath: string) {
+  try {
+    await fs.stat(filePath);
+
+    const replaceFileResult = await dialog.showMessageBox(win!, {
+      type: 'question',
+      title: 'Replace file?',
+      message: `A file named "${path.basename(
+        filePath,
+      )}" already exists. Do you want to replace it?`,
+      buttons: ['Replace', 'Replace all', 'Skip', 'Skip all'],
+      defaultId: 0,
+      cancelId: 0,
+    });
+
+    return replaceFileResult.response as OnConflictChoice;
+  } catch {}
+
+  return OnConflictChoice.Replace;
 }
 
 async function addToRecentFiles(filePath: string) {
@@ -539,6 +572,100 @@ async function exportWorkspaceAsHtml(args: ExportWorkspaceAsHtmlArgs) {
   }
 }
 
+async function exportWorkspaceAsImage(args: ExportWorkspaceAsImageArgs) {
+  let result = {
+    filePath: args.filePath,
+    success: false,
+  } as ExportWorkspaceAsImageReplyArgs;
+
+  try {
+    if (saving) {
+      return result;
+    }
+
+    saving = true;
+
+    const dialogResult = await dialog.showSaveDialog(win!, {
+      title: 'Export Score as Images',
+      defaultPath: args.filePath?.replace(/\.byzx?$/, '') || args.tempFileName,
+      filters: [
+        {
+          name: args.imageFormat === 'png' ? `PNG File` : `SVG File`,
+          extensions: [args.imageFormat],
+        },
+      ],
+    });
+
+    if (!dialogResult.canceled) {
+      let filePath = dialogResult.filePath!;
+      if (!filePath.endsWith(args.imageFormat)) {
+        filePath += `.${args.imageFormat}`;
+      }
+
+      result.filePath = filePath;
+      result.success = true;
+      exportAsImageOnConflict = null;
+    }
+
+    return result;
+  } catch (error) {
+    console.error(error);
+
+    if (error instanceof Error) {
+      dialog.showMessageBox(win!, {
+        type: 'error',
+        title: 'Export as Image failed',
+        message: error.message,
+      });
+    }
+
+    return result;
+  } finally {
+    saving = false;
+  }
+}
+
+async function exportPageAsImage(args: ExportPageAsImageArgs) {
+  try {
+    if (saving || exportAsImageOnConflict === OnConflictChoice.SkipAll) {
+      return false;
+    }
+
+    saving = true;
+
+    if (exportAsImageOnConflict !== OnConflictChoice.ReplaceAll) {
+      exportAsImageOnConflict = await showReplaceOrSkipFileDialog(
+        args.filePath,
+      );
+
+      if (exportAsImageOnConflict === OnConflictChoice.SkipAll) {
+        return false;
+      }
+    }
+
+    if (
+      exportAsImageOnConflict === OnConflictChoice.ReplaceAll ||
+      exportAsImageOnConflict === OnConflictChoice.Replace
+    ) {
+      await fs.writeFile(args.filePath, args.data, 'base64');
+    }
+
+    return true;
+  } catch (error) {
+    console.error(error);
+
+    if (error instanceof Error) {
+      dialog.showMessageBox(win!, {
+        type: 'error',
+        title: 'Export as Image failed',
+        message: error.message,
+      });
+    }
+  } finally {
+    saving = false;
+  }
+}
+
 async function printWorkspace(args: PrintWorkspaceArgs) {
   return new Promise((resolve) => {
     try {
@@ -796,6 +923,12 @@ function createMenu() {
           accelerator: 'CmdOrCtrl+Shift+E',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuExportAsHtml);
+          },
+        },
+        {
+          label: 'Export as &Image',
+          click() {
+            win?.webContents.send(IpcMainChannels.FileMenuExportAsImage);
           },
         },
         {
@@ -1178,6 +1311,10 @@ ipcMain.handle(
   },
 );
 
+ipcMain.handle(IpcRendererChannels.ShowItemInFolder, async (event, path) => {
+  shell.showItemInFolder(path);
+});
+
 ipcMain.handle(
   IpcRendererChannels.SaveWorkspace,
   async (event, args: SaveWorkspaceArgs) => {
@@ -1203,6 +1340,20 @@ ipcMain.handle(
   IpcRendererChannels.ExportWorkspaceAsHtml,
   async (event, args: ExportWorkspaceAsHtmlArgs) => {
     return await exportWorkspaceAsHtml(args);
+  },
+);
+
+ipcMain.handle(
+  IpcRendererChannels.ExportWorkspaceAsImage,
+  async (event, args: ExportWorkspaceAsImageArgs) => {
+    return await exportWorkspaceAsImage(args);
+  },
+);
+
+ipcMain.handle(
+  IpcRendererChannels.ExportPageAsImage,
+  async (event, args: ExportPageAsImageArgs) => {
+    return await exportPageAsImage(args);
   },
 );
 

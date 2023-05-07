@@ -1,4 +1,5 @@
 import {
+  ExportWorkspaceAsImageReplyArgs,
   FileMenuOpenScoreArgs,
   SaveWorkspaceAsReplyArgs,
   SaveWorkspaceReplyArgs,
@@ -49,6 +50,20 @@ export class BrowserIpcService implements IIpcService {
     a.click();
   }
 
+  public async exportWorkspaceAsImage(
+    workspace: Workspace,
+    imageFormat: 'png' | 'svg',
+  ): Promise<ExportWorkspaceAsImageReplyArgs> {
+    throw 'exportWorkspaceAsPdf is not available in the browser.';
+  }
+
+  public async exportPageAsImage(
+    filePath: string,
+    data: string,
+  ): Promise<boolean> {
+    throw 'exportPageAsImage is not available in the browser.';
+  }
+
   public async printWorkspace(workspace: Workspace): Promise<void> {
     return new Promise((resolve) => {
       window.addEventListener(
@@ -69,6 +84,10 @@ export class BrowserIpcService implements IIpcService {
     args: ShowMessageBoxArgs,
   ): Promise<ShowMessageBoxReplyArgs> {
     return Promise.resolve({ response: 0, checkboxChecked: false });
+  }
+
+  public async showItemInFolder(): Promise<void> {
+    throw 'showItemInFolder is not available in the browser.';
   }
 
   public isShowMessageBoxSupported(): boolean {

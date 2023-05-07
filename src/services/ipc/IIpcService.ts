@@ -1,4 +1,5 @@
 import {
+  ExportWorkspaceAsImageReplyArgs,
   FileMenuOpenScoreArgs,
   SaveWorkspaceAsReplyArgs,
   SaveWorkspaceReplyArgs,
@@ -16,11 +17,20 @@ export interface IIpcService {
 
   exportWorkspaceAsHtml(workspace: Workspace, data: string): Promise<void>;
 
+  exportWorkspaceAsImage(
+    workspace: Workspace,
+    imageFormat: 'png' | 'svg',
+  ): Promise<ExportWorkspaceAsImageReplyArgs>;
+
+  exportPageAsImage(fileName: string, data: string): Promise<boolean>;
+
   printWorkspace(workspace: Workspace): Promise<void>;
 
   openWorkspaceFromArgv(): Promise<FileMenuOpenScoreArgs[]>;
 
   showMessageBox(args: ShowMessageBoxArgs): Promise<ShowMessageBoxReplyArgs>;
+
+  showItemInFolder(path: string): Promise<void>;
 
   isShowMessageBoxSupported(): boolean;
 

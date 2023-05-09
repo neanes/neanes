@@ -311,6 +311,7 @@ export class NoteElement extends ScoreElement {
 
   // Used for display
   public melismaText: string = '';
+  public hyphenOffsets: number[] = [];
   public isFullMelisma: boolean = false;
   public melismaWidth: number = 0;
   public lyricsVerticalOffset: number = 0;

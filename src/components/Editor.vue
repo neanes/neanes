@@ -175,7 +175,23 @@
                             selectedLyrics = null;
                           "
                         />
-                        <template v-if="isMelisma(element)">
+                        <template v-if="isMelisma(element) && element.isHyphen">
+                          <div
+                            class="melisma"
+                            :style="getMelismaStyle(element)"
+                          >
+                            <span
+                              class="melisma-hyphen"
+                              v-for="(offset, index) in element.hyphenOffsets"
+                              :key="index"
+                              :style="getMelismaHyphenStyle(element, index)"
+                              >-</span
+                            >
+                          </div>
+                        </template>
+                        <template
+                          v-else-if="isMelisma(element) && !element.isHyphen"
+                        >
                           <div
                             class="melisma"
                             :class="{ full: element.isFullMelisma }"
@@ -1334,6 +1350,13 @@ export default class Editor extends Vue {
   getMelismaStyle(element: NoteElement) {
     return {
       width: withZoom(element.melismaWidth!),
+      minHeight: withZoom(this.score.pageSetup.lyricsDefaultFontSize),
+    } as CSSStyleDeclaration;
+  }
+
+  getMelismaHyphenStyle(element: NoteElement, index: number) {
+    return {
+      left: withZoom(element.hyphenOffsets[index]),
     } as CSSStyleDeclaration;
   }
 
@@ -4797,7 +4820,6 @@ export default class Editor extends Vue {
   //             fontEmbedCSS,
   //           });
 
-
   //           if (data != null) {
   //             const fileName = reply.filePath.replace(
   //               /.svg$/,
@@ -5367,9 +5389,9 @@ export default class Editor extends Vue {
   left: 0;
 }
 
-/* .neume {
-  display: flex;
-} */
+.melisma-hyphen {
+  position: absolute;
+}
 
 .page-break {
   position: absolute;

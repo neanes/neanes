@@ -1004,6 +1004,7 @@ export class LayoutService {
           // First, clear melisma fields, since
           // they may be stale
           element.melismaText = '';
+          element.hyphenOffsets = [];
           element.melismaWidth = 0;
           element.isFullMelisma = isIntermediateMelismaAtStartOfLine;
 
@@ -1094,40 +1095,18 @@ export class LayoutService {
                 );
               }
 
-              const minimumNumberOfSpacesNeeded = Math.ceil(
-                (element.melismaWidth - widthOfHyphen) / widthOfSpace,
-              );
-
-              const minimumNumberOfSpacesBetweenHyphens = Math.floor(
-                minimumNumberOfSpacesNeeded / 2,
-              );
-
               if (
                 numberOfHyphensNeeded == 0 &&
-                element.melismaWidth >=
-                  widthOfHyphen +
-                    widthOfSpace * minimumNumberOfSpacesBetweenHyphens
+                element.melismaWidth >= widthOfHyphen
               ) {
                 numberOfHyphensNeeded = 1;
               }
 
-              const numberOfSpacesNeeded = Math.ceil(
-                (element.melismaWidth - numberOfHyphensNeeded * widthOfHyphen) /
-                  widthOfSpace,
-              );
-
-              const numberOfSpacesBetweenHyphens = Math.floor(
-                numberOfSpacesNeeded / (numberOfHyphensNeeded + 1),
-              );
-
-              for (let i = 0; i < numberOfHyphensNeeded + 1; i++) {
-                for (let j = 0; j < numberOfSpacesBetweenHyphens; j++) {
-                  element.melismaText += ' ';
-                }
-
-                if (i < numberOfHyphensNeeded) {
-                  element.melismaText += '-';
-                }
+              for (let i = 1; i <= numberOfHyphensNeeded; i++) {
+                element.hyphenOffsets.push(
+                  element.melismaWidth * (i / (numberOfHyphensNeeded + 1)) -
+                    widthOfHyphen / 2,
+                );
               }
             } else {
               const nextElementIsRunningElaphron =

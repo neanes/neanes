@@ -287,11 +287,11 @@ export default class ToolbarMartyria extends Vue {
     },
     {
       name: 'Pl. Fourth',
-      value: RootSign.Alpha,
+      value: RootSign.Delta,
     },
     {
       name: 'Pl. First',
-      value: RootSign.Delta,
+      value: RootSign.Alpha,
     },
     {
       name: 'Legetos',
@@ -304,6 +304,10 @@ export default class ToolbarMartyria extends Vue {
     {
       name: 'Fourth',
       value: RootSign.DeltaDotted,
+    },
+    {
+      name: 'First',
+      value: RootSign.AlphaDotted,
     },
     {
       name: 'Hard Chromatic Pa',

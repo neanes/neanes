@@ -217,6 +217,17 @@
           </option>
         </select>
       </template>
+      <span class="space" />
+      <label class="right-space">Root Sign Override</label>
+      <select
+        :value="element.rootSignOverride"
+        @change="$emit('update:rootSignOverride', $event.target.value)"
+      >
+        <option value="">None</option>
+        <option v-for="sign in rootSigns" :key="sign.value" :value="sign.value">
+          {{ sign.name }}
+        </option>
+      </select>
     </div>
   </div>
 </template>
@@ -224,7 +235,7 @@
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { MartyriaElement } from '@/models/Element';
-import { Fthora, MeasureBar, Note, TempoSign } from '@/models/Neumes';
+import { Fthora, MeasureBar, Note, RootSign, TempoSign } from '@/models/Neumes';
 import InputUnit from './InputUnit.vue';
 import InputBpm from './InputBpm.vue';
 import { Scale, ScaleNote } from '@/models/Scales';
@@ -267,6 +278,53 @@ export default class ToolbarMartyria extends Vue {
     Fthora.HardChromaticPa_Bottom,
     Fthora.HardChromaticThi_Top,
     Fthora.HardChromaticThi_Bottom,
+  ];
+
+  rootSigns = [
+    {
+      name: 'Varys',
+      value: RootSign.Zo,
+    },
+    {
+      name: 'Pl. Fourth',
+      value: RootSign.Alpha,
+    },
+    {
+      name: 'Pl. First',
+      value: RootSign.Delta,
+    },
+    {
+      name: 'Legetos',
+      value: RootSign.Legetos,
+    },
+    {
+      name: 'Nana',
+      value: RootSign.Nana,
+    },
+    {
+      name: 'Fourth',
+      value: RootSign.DeltaDotted,
+    },
+    {
+      name: 'Hard Chromatic Pa',
+      value: RootSign.Squiggle,
+    },
+    {
+      name: 'Hard Chromatic Di',
+      value: RootSign.Tilt,
+    },
+    {
+      name: 'Soft Chromatic Di',
+      value: RootSign.SoftChromaticSquiggle,
+    },
+    {
+      name: 'Hard Chromatic Ke',
+      value: RootSign.SoftChromaticPaRootSign,
+    },
+    {
+      name: 'Zygos',
+      value: RootSign.Zygos,
+    },
   ];
 
   get fthoraNotes() {
@@ -334,7 +392,11 @@ export default class ToolbarMartyria extends Vue {
   }
 
   get spathiDisabled() {
-    return this.element.note !== Note.Ke;
+    return (
+      !this.pageSetup.noFthoraRestrictions &&
+      this.element.note !== Note.Ke &&
+      this.element.note !== Note.Ga
+    );
   }
 
   get spathiTitle() {
@@ -342,7 +404,9 @@ export default class ToolbarMartyria extends Vue {
   }
 
   get klitonDisabled() {
-    return this.element.note !== Note.Thi;
+    return (
+      !this.pageSetup.noFthoraRestrictions && this.element.note !== Note.Thi
+    );
   }
 
   get klitonTitle() {
@@ -350,7 +414,9 @@ export default class ToolbarMartyria extends Vue {
   }
 
   get zygosDisabled() {
-    return this.element.note !== Note.Thi;
+    return (
+      !this.pageSetup.noFthoraRestrictions && this.element.note !== Note.Thi
+    );
   }
 
   get zygosTitle() {
@@ -359,6 +425,7 @@ export default class ToolbarMartyria extends Vue {
 
   get enharmonicDisabled() {
     return (
+      !this.pageSetup.noFthoraRestrictions &&
       this.element.note !== Note.Zo &&
       this.element.note !== Note.ZoHigh &&
       this.element.note !== Note.Vou &&
@@ -374,7 +441,9 @@ export default class ToolbarMartyria extends Vue {
   }
 
   get generalFlatDisabled() {
-    return this.element.note !== Note.Ke;
+    return (
+      !this.pageSetup.noFthoraRestrictions && this.element.note !== Note.Ke
+    );
   }
 
   get generalFlatTitle() {
@@ -384,7 +453,9 @@ export default class ToolbarMartyria extends Vue {
   }
 
   get generalSharpDisabled() {
-    return this.element.note !== Note.Ga;
+    return (
+      !this.pageSetup.noFthoraRestrictions && this.element.note !== Note.Ga
+    );
   }
 
   get generalSharpTitle() {

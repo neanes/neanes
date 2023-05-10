@@ -221,6 +221,18 @@
               >Different Odd &amp; Even</label
             >
           </div>
+          <div class="subheader">Misc.</div>
+
+          <div class="form-group">
+            <input
+              id="page-setup-dialog-no-fthora-restrictions"
+              type="checkbox"
+              v-model="form.noFthoraRestrictions"
+            />
+            <label for="page-setup-dialog-no-fthora-restrictions"
+              >Disable Fthora Restrictions</label
+            >
+          </div>
         </div>
         <div class="right-pane">
           <div class="subheader">Drop Caps</div>

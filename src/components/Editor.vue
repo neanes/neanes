@@ -541,6 +541,9 @@
         @update:scale="updateMartyriaScale(selectedElement, $event)"
         @update:bpm="updateMartyriaBpm(selectedElement, $event)"
         @update:spaceAfter="updateMartyriaSpaceAfter(selectedElement, $event)"
+        @update:rootSignOverride="
+          updateMartyriaRootSignOverride(selectedElement, $event)
+        "
       />
     </template>
     <template v-if="selectedElement != null && isTempoElement(selectedElement)">
@@ -626,6 +629,7 @@ import {
   Ison,
   Note,
   Tie,
+  RootSign,
 } from '@/models/Neumes';
 import { Page } from '@/models/Page';
 import { Score } from '@/models/Score';
@@ -4302,6 +4306,15 @@ export default class Editor extends Vue {
 
   updateMartyriaSpaceAfter(element: MartyriaElement, spaceAfter: number) {
     this.updateMartyria(element, { spaceAfter });
+    this.save();
+  }
+
+  updateMartyriaRootSignOverride(
+    element: MartyriaElement,
+    rootSignOverride: RootSign,
+  ) {
+    rootSignOverride = rootSignOverride || null;
+    this.updateMartyria(element, { rootSignOverride });
     this.save();
   }
 

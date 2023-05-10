@@ -121,6 +121,8 @@ export class PageSetup {
 
   public hyphenSpacing: number = Unit.fromInch(0.75);
 
+  public noFthoraRestrictions: boolean = false;
+
   public get innerPageWidth() {
     return this.pageWidth - this.leftMargin - this.rightMargin;
   }

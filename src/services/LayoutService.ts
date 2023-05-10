@@ -57,7 +57,7 @@ export class LayoutService {
 
     elements.forEach((x, index) => (x.index = index));
 
-    this.calculateMartyrias(elements);
+    this.calculateMartyrias(elements, pageSetup);
 
     // Always make sure this is an empty element at the end of the score.
     // If this case is true, we have a bug, but this will prevent
@@ -1172,7 +1172,10 @@ export class LayoutService {
     }
   }
 
-  public static calculateMartyrias(elements: ScoreElement[]) {
+  public static calculateMartyrias(
+    elements: ScoreElement[],
+    pageSetup: PageSetup,
+  ) {
     let currentNote = 0;
     let currentScale = Scale.Diatonic;
     let currentShift = 0;
@@ -1204,7 +1207,7 @@ export class LayoutService {
         // TODO handle the case when the yporroe has a fthora on it
         // The shift is not currently calculated correctly in that case.
         if (note.fthora) {
-          if (this.fthoraIsValid(note.fthora, currentNotes)) {
+          if (this.fthoraIsValid(note.fthora, currentNotes, pageSetup)) {
             currentScale =
               this.getScaleFromFthora(note.fthora, currentNote) || currentScale;
             currentShift = this.getShift(
@@ -1216,7 +1219,9 @@ export class LayoutService {
             note.fthora = null;
           }
         } else if (note.secondaryFthora) {
-          if (this.fthoraIsValid(note.secondaryFthora, currentNotes)) {
+          if (
+            this.fthoraIsValid(note.secondaryFthora, currentNotes, pageSetup)
+          ) {
             currentScale =
               this.getScaleFromFthora(note.secondaryFthora, currentNote - 1) ||
               currentScale;
@@ -1229,7 +1234,9 @@ export class LayoutService {
             note.secondaryFthora = null;
           }
         } else if (note.tertiaryFthora) {
-          if (this.fthoraIsValid(note.tertiaryFthora, currentNotes)) {
+          if (
+            this.fthoraIsValid(note.tertiaryFthora, currentNotes, pageSetup)
+          ) {
             currentScale =
               this.getScaleFromFthora(note.tertiaryFthora, currentNote - 2) ||
               currentScale;
@@ -1323,10 +1330,11 @@ export class LayoutService {
             currentScale,
             currentScaleNote,
             currentNote,
+            martyria.rootSignOverride,
           );
 
           if (martyria.fthora) {
-            if (this.fthoraIsValid(martyria.fthora, [currentNote])) {
+            if (this.fthoraIsValid(martyria.fthora, [currentNote], pageSetup)) {
               currentScale =
                 this.getScaleFromFthora(martyria.fthora, currentNote) ||
                 currentScale;
@@ -1369,10 +1377,13 @@ export class LayoutService {
     currentScale: Scale,
     currentScaleNote: number,
     currentNote: number,
+    rootSignOverride?: RootSign | null,
   ) {
     let rootSign: RootSign = RootSign.Alpha;
 
-    if (currentScale === Scale.HardChromatic) {
+    if (rootSignOverride != null) {
+      rootSign = rootSignOverride;
+    } else if (currentScale === Scale.HardChromatic) {
       rootSign = currentScaleNote % 2 === 0 ? RootSign.Squiggle : RootSign.Tilt;
     } else if (currentScale === Scale.SoftChromatic) {
       rootSign =
@@ -1457,6 +1468,9 @@ export class LayoutService {
       if (currentNote === getScaleNoteValue(ScaleNote.Ga)) {
         return Scale.SpathiGa;
       }
+
+      // If fthora restrictions are disabled, default to Spathi from Ke
+      return Scale.Spathi;
     }
 
     if (fthora.startsWith('Kliton')) {
@@ -1507,12 +1521,28 @@ export class LayoutService {
       }
 
       shift = fthoraNote - currentNote;
+    } else if (currentScale === Scale.Kliton) {
+      shift = getScaleNoteValue(ScaleNote.Thi) - currentNote;
+    } else if (currentScale === Scale.Zygos) {
+      shift = getScaleNoteValue(ScaleNote.Thi) - currentNote;
+    } else if (currentScale === Scale.Spathi) {
+      shift = getScaleNoteValue(ScaleNote.Ke) - currentNote;
+    } else if (currentScale === Scale.SpathiGa) {
+      shift = getScaleNoteValue(ScaleNote.Ga) - currentNote;
     }
 
     return shift;
   }
 
-  private static fthoraIsValid(fthora: Fthora, currentNotes: number[]) {
+  private static fthoraIsValid(
+    fthora: Fthora,
+    currentNotes: number[],
+    pageSetup: PageSetup,
+  ) {
+    if (pageSetup.noFthoraRestrictions) {
+      return true;
+    }
+
     // Make sure chroa are on the correct notes
     if (
       fthora.startsWith('Zygos') &&

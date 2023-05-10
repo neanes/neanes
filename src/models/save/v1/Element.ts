@@ -116,6 +116,7 @@ export class MartyriaElement extends ScoreElement {
   public auto: boolean | undefined = undefined;
   public note: Note = Note.Pa;
   public rootSign: RootSign = RootSign.Alpha;
+  public rootSignOverride: RootSign | undefined = undefined;
   public scale: Scale = Scale.Diatonic;
   public fthora: Fthora | undefined = undefined;
   public chromaticFthoraNote: ScaleNote | undefined = undefined;

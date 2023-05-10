@@ -212,6 +212,8 @@ export class SaveService {
     pageSetup.landscape = p.landscape || undefined;
 
     pageSetup.hyphenSpacing = p.hyphenSpacing;
+
+    pageSetup.noFthoraRestrictions = p.noFthoraRestrictions || undefined;
   }
 
   public static SaveHeader(header: Header_v1, h: Header) {
@@ -252,6 +254,7 @@ export class SaveService {
     element.auto = e.auto || undefined;
     element.note = e.note;
     element.rootSign = e.rootSign;
+    element.rootSignOverride = e.rootSignOverride || undefined;
     element.scale = e.scale;
     element.fthora = e.fthora || undefined;
     element.chromaticFthoraNote = e.chromaticFthoraNote || undefined;
@@ -670,6 +673,8 @@ export class SaveService {
 
     pageSetup.hyphenSpacing = p.hyphenSpacing;
 
+    pageSetup.noFthoraRestrictions = p.noFthoraRestrictions === true;
+
     // Fix pageWidth and pageHeight
     // Due to bug #71, A-series paper sizes had incorrect width and height
     const pageSize = pageSizes.find((x) => x.name === pageSetup.pageSize);
@@ -735,6 +740,7 @@ export class SaveService {
     element.note = e.note;
     element.scale = e.scale;
     element.rootSign = e.rootSign;
+    element.rootSignOverride = e.rootSignOverride || null;
     element.spaceAfter = e.spaceAfter ?? 0;
 
     if (e.fthora != null) {

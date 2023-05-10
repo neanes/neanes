@@ -76,4 +76,6 @@ export class PageSetup {
   public dropCapDefaultStrokeWidth = 0;
 
   public hyphenSpacing: number = Unit.fromInch(0.75);
+
+  public noFthoraRestrictions: boolean | undefined = undefined;
 }

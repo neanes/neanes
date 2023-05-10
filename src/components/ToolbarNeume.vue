@@ -777,6 +777,7 @@ export default class ToolbarNeume extends Vue {
 
   get spathiDisabled() {
     return (
+      !this.pageSetup.noFthoraRestrictions &&
       !this.element.scaleNotes.includes(ScaleNote.Ke) &&
       !this.element.scaleNotes.includes(ScaleNote.Ga)
     );
@@ -787,7 +788,10 @@ export default class ToolbarNeume extends Vue {
   }
 
   get klitonDisabled() {
-    return !this.element.scaleNotes.includes(ScaleNote.Thi);
+    return (
+      !this.pageSetup.noFthoraRestrictions &&
+      !this.element.scaleNotes.includes(ScaleNote.Thi)
+    );
   }
 
   get klitonTitle() {
@@ -795,7 +799,10 @@ export default class ToolbarNeume extends Vue {
   }
 
   get zygosDisabled() {
-    return !this.element.scaleNotes.includes(ScaleNote.Thi);
+    return (
+      !this.pageSetup.noFthoraRestrictions &&
+      !this.element.scaleNotes.includes(ScaleNote.Thi)
+    );
   }
 
   get zygosTitle() {
@@ -804,6 +811,7 @@ export default class ToolbarNeume extends Vue {
 
   get enharmonicDisabled() {
     return (
+      !this.pageSetup.noFthoraRestrictions &&
       !this.element.scaleNotes.includes(ScaleNote.Zo) &&
       !this.element.scaleNotes.includes(ScaleNote.ZoHigh) &&
       !this.element.scaleNotes.includes(ScaleNote.Vou) &&
@@ -819,7 +827,10 @@ export default class ToolbarNeume extends Vue {
   }
 
   get generalFlatDisabled() {
-    return !this.element.scaleNotes.includes(ScaleNote.Ke);
+    return (
+      !this.pageSetup.noFthoraRestrictions &&
+      !this.element.scaleNotes.includes(ScaleNote.Ke)
+    );
   }
 
   get generalFlatTitle() {
@@ -829,7 +840,10 @@ export default class ToolbarNeume extends Vue {
   }
 
   get generalSharpDisabled() {
-    return !this.element.scaleNotes.includes(ScaleNote.Ga);
+    return (
+      !this.pageSetup.noFthoraRestrictions &&
+      !this.element.scaleNotes.includes(ScaleNote.Ga)
+    );
   }
 
   get generalSharpTitle() {

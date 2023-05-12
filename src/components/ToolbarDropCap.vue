@@ -24,10 +24,15 @@
         @input="$emit('update:fontSize', $event)"
       />
       <span class="space"></span>
-      <input
+      <InputUnit
         class="drop-caps-input"
+        unit="unitless"
+        :blank="true"
+        :min="0"
+        :step="0.1"
         :value="element.lineHeight"
-        @change="$emit('update:lineHeight', $event.target.value)"
+        placeholder="Line Height"
+        @input="$emit('update:lineHeight', $event)"
       />
       <span class="space"></span>
       <ColorPicker
@@ -65,9 +70,10 @@ import { DropCapElement } from '@/models/Element';
 import ColorPicker from '@/components/ColorPicker.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
+import InputUnit from '@/components/InputUnit.vue';
 
 @Component({
-  components: { ColorPicker, InputFontSize, InputStrokeWidth },
+  components: { ColorPicker, InputFontSize, InputStrokeWidth, InputUnit },
 })
 export default class ToolbarDropCap extends Vue {
   @Prop() element!: DropCapElement;

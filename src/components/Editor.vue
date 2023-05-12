@@ -4416,7 +4416,7 @@ export default class Editor extends Vue {
     this.updateDropCap(element, { fontStyle: italic ? 'italic' : 'normal' });
   }
 
-  updateDropCapLineHeight(element: DropCapElement, lineHeight: string) {
+  updateDropCapLineHeight(element: DropCapElement, lineHeight: number) {
     this.updateDropCap(element, { lineHeight });
   }
 

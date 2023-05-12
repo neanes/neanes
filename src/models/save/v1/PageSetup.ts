@@ -75,7 +75,7 @@ export class PageSetup {
   public dropCapDefaultFontStyle = 'normal';
   public dropCapDefaultColor = '#000000';
   public dropCapDefaultStrokeWidth = 0;
-  public dropCapDefaultLineHeight = 'normal';
+  public dropCapDefaultLineHeight: number | undefined = undefined;
 
   public hyphenSpacing: number = Unit.fromInch(0.75);
 

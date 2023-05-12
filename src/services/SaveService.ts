@@ -588,7 +588,8 @@ export class SaveService {
       p.dropCapDefaultFontStyle ?? pageSetup.dropCapDefaultFontStyle;
     pageSetup.dropCapDefaultStrokeWidth =
       p.dropCapDefaultStrokeWidth ?? pageSetup.dropCapDefaultStrokeWidth;
-    pageSetup.dropCapDefaultLineHeight = p.dropCapDefaultLineHeight;
+    pageSetup.dropCapDefaultLineHeight =
+      p.dropCapDefaultLineHeight ?? pageSetup.dropCapDefaultLineHeight;
 
     pageSetup.lyricsDefaultColor =
       p.lyricsDefaultColor ?? pageSetup.lyricsDefaultColor;

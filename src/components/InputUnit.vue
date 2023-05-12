@@ -18,7 +18,7 @@ import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
 export default class InputUnit extends Vue {
   @Prop() value!: number;
   @Prop() unit!: 'pt' | 'in' | 'mm' | 'unitless';
-  @Prop({ default: false }) blank!: boolean;
+  @Prop({ default: false }) nullable!: boolean;
   /**
    * The minimum value allowed, in display units.
    */
@@ -57,7 +57,7 @@ export default class InputUnit extends Vue {
     let convertedValue = this.toDisplay(this.value);
 
     if (convertedValue === null || convertedValue === undefined)
-      return this.blank ? '' : '0';
+      return this.nullable ? '' : '0';
 
     return this.precision != null
       ? convertedValue.toFixed(this.precision)
@@ -73,7 +73,7 @@ export default class InputUnit extends Vue {
   }
 
   onChange(input: string) {
-    if (input === '' && this.blank) {
+    if (input === '' && this.nullable) {
       return this.emitValue(null);
     }
 

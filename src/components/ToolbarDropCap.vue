@@ -27,7 +27,7 @@
       <InputUnit
         class="drop-caps-input"
         unit="unitless"
-        :blank="true"
+        :nullable="true"
         :min="0"
         :step="0.1"
         :value="element.lineHeight"

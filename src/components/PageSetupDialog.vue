@@ -268,7 +268,7 @@
               :min="0"
               :step="0.1"
               unit="unitless"
-              :blank="true"
+              :nullable="true"
               v-model="form.dropCapDefaultLineHeight"
             />
           </div>

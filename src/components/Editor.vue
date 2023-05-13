@@ -1401,8 +1401,8 @@ export default class Editor extends Vue {
 
   getTokenMetadata(pageIndex: number): TokenMetadata {
     return {
-      pageNumber: pageIndex + 1,
-      numberOfPages: this.pageCount,
+      pageNumber: pageIndex + this.score.pageSetup.firstPageNumber,
+      numberOfPages: this.pageCount + this.score.pageSetup.firstPageNumber - 1,
       fileName:
         this.selectedWorkspace.filePath != null
           ? getFileNameFromPath(this.selectedWorkspace.filePath)

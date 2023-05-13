@@ -22,6 +22,7 @@ export class PageSetup {
   public headerDifferentOddEven: boolean | undefined = undefined;
   public showHeader: boolean | undefined = undefined;
   public showFooter: boolean | undefined = undefined;
+  public firstPageNumber = 1;
 
   public lineHeight = Unit.fromInch(0.75);
 

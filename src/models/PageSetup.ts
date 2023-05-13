@@ -62,6 +62,7 @@ export class PageSetup {
   public headerDifferentOddEven = false;
   public showHeader = false;
   public showFooter = false;
+  public firstPageNumber = 1;
 
   public lineHeight = Unit.fromInch(0.75);
 

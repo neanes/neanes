@@ -35,6 +35,10 @@ export default class InputUnit extends Vue {
    */
   @Prop() precision!: number | undefined;
   /**
+   * The default value if the value is cleared
+   */
+  @Prop({ default: 0 }) defaultValue!: number;
+  /**
    * Whether the input is disabled
    */
   @Prop({ default: false }) disabled!: boolean;
@@ -60,7 +64,7 @@ export default class InputUnit extends Vue {
     let newValue = parseFloat(input);
 
     if (isNaN(newValue)) {
-      newValue = 0;
+      newValue = this.defaultValue;
     }
 
     if (this.round != null) {

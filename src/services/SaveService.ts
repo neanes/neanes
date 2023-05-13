@@ -186,6 +186,8 @@ export class SaveService {
     pageSetup.showHeader = p.showHeader || undefined;
     pageSetup.showFooter = p.showFooter || undefined;
 
+    pageSetup.firstPageNumber = p.firstPageNumber;
+
     pageSetup.accidentalDefaultColor = p.accidentalDefaultColor;
     pageSetup.accidentalDefaultStrokeWidth = p.accidentalDefaultStrokeWidth;
     pageSetup.fthoraDefaultColor = p.fthoraDefaultColor;
@@ -572,6 +574,7 @@ export class SaveService {
     pageSetup.headerDifferentOddEven = p.headerDifferentOddEven === true;
     pageSetup.showHeader = p.showHeader === true;
     pageSetup.showFooter = p.showFooter === true;
+    pageSetup.firstPageNumber = p.firstPageNumber ?? pageSetup.firstPageNumber;
 
     pageSetup.lineHeight = p.lineHeight;
 

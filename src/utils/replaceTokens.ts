@@ -12,7 +12,8 @@ export function replaceTokens(
   metadata: TokenMetadata,
   alignment: TextBoxAlignment,
 ) {
-  let pageNumber = metadata.pageNumber.toString();
+  let pageNumber =
+    metadata.pageNumber > 0 ? metadata.pageNumber.toString() : '';
 
   // This is a hack to add in an extra space
   // if the page number is less than the length of

@@ -221,6 +221,20 @@
               >Different Odd &amp; Even</label
             >
           </div>
+
+          <div class="form-group">
+            <label>First Page No.</label>
+
+            <InputUnit
+              style="width: 3rem; margin-left: 0.5rem"
+              unit="unitless"
+              :step="1"
+              :precision="0"
+              :defaultValue="1"
+              v-model="form.firstPageNumber"
+            />
+          </div>
+
           <div class="subheader">Misc.</div>
 
           <div class="form-group">

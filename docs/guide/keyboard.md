@@ -282,6 +282,17 @@ Tempo characters may be placed above a martyria with the following shortcuts.
 
 Note indicators can be toggled on and off with <kbd>Q</kbd>. The correct note is automatically calculated and displayed.
 
+## Measure Bars
+
+| Neume                               | Keyboard Shortcut                            |
+| ----------------------------------- | -------------------------------------------- |
+| <span class="neume">&#xE210;</span> | <kbd>W</kbd> +<kbd>J</kbd>                   |
+| <span class="neume">&#xE211;</span> | <kbd>W</kbd> +<kbd>K</kbd>                   |
+| <span class="neume">&#xE212;</span> | <kbd>W</kbd> +<kbd>L</kbd>                   |
+| <span class="neume">&#xE213;</span> | <kbd>Shift</kbd> +<kbd>W</kbd> +<kbd>J</kbd> |
+| <span class="neume">&#xE214;</span> | <kbd>Shift</kbd> +<kbd>W</kbd> +<kbd>K</kbd> |
+| <span class="neume">&#xE215;</span> | <kbd>Shift</kbd> +<kbd>W</kbd> +<kbd>L</kbd> |
+
 ## Measures
 
 | Neume                        | Keyboard Shortcut              |

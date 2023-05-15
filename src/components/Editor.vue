@@ -5473,6 +5473,10 @@ export default class Editor extends Vue {
   display: none !important;
 }
 
+.page.print .neume-box .selected {
+  background-color: initial;
+}
+
 @media print {
   body * {
     visibility: hidden;

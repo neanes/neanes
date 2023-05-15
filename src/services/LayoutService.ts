@@ -47,6 +47,10 @@ interface GetNoteWidthArgs {
   vareiaWidth: number;
   measureBarRightWidth: number;
   measureBarTopWidth: number;
+  measureBarDoubleWidth: number;
+  measureBarTheseosWidth: number;
+  measureBarShortDoubleWidth: number;
+  measureBarShortTheseosWidth: number;
   runningElaphronWidth: number;
   elaphronWidth: number;
 }
@@ -121,6 +125,38 @@ export class LayoutService {
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
     );
 
+    const measureBarDoubleMapping = NeumeMappingService.getMapping(
+      MeasureBar.MeasureBarDouble,
+    )!;
+    const measureBarDoubleWidth = TextMeasurementService.getTextWidth(
+      measureBarDoubleMapping.text,
+      `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
+    );
+
+    const measureBarTheseosMapping = NeumeMappingService.getMapping(
+      MeasureBar.MeasureBarTheseos,
+    )!;
+    const measureBarTheseosWidth = TextMeasurementService.getTextWidth(
+      measureBarTheseosMapping.text,
+      `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
+    );
+
+    const measureBarShortDoubleMapping = NeumeMappingService.getMapping(
+      MeasureBar.MeasureBarShortDouble,
+    )!;
+    const measureBarShortDoubleWidth = TextMeasurementService.getTextWidth(
+      measureBarShortDoubleMapping.text,
+      `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
+    );
+
+    const measureBarShortTheseosMapping = NeumeMappingService.getMapping(
+      MeasureBar.MeasureBarShortTheseos,
+    )!;
+    const measureBarShortTheseosWidth = TextMeasurementService.getTextWidth(
+      measureBarShortTheseosMapping.text,
+      `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
+    );
+
     const elaphronMapping = NeumeMappingService.getMapping(
       QuantitativeNeume.Elaphron,
     )!;
@@ -147,16 +183,15 @@ export class LayoutService {
       pageSetup.lyricsFont,
     );
 
-    const widthOfSpace = TextMeasurementService.getTextWidth(
-      ' ',
-      pageSetup.lyricsFont,
-    );
-
     const noteWidthArgs: GetNoteWidthArgs = {
       lyricsVerticalOffset,
       vareiaWidth,
       measureBarRightWidth,
       measureBarTopWidth,
+      measureBarDoubleWidth,
+      measureBarTheseosWidth,
+      measureBarShortDoubleWidth,
+      measureBarShortTheseosWidth,
       runningElaphronWidth,
       elaphronWidth,
     };
@@ -777,6 +812,10 @@ export class LayoutService {
       vareiaWidth,
       measureBarRightWidth,
       measureBarTopWidth,
+      measureBarDoubleWidth,
+      measureBarTheseosWidth,
+      measureBarShortDoubleWidth,
+      measureBarShortTheseosWidth,
       runningElaphronWidth,
       elaphronWidth,
     } = args;
@@ -815,21 +854,49 @@ export class LayoutService {
     if (noteElement.measureBarLeft === MeasureBar.MeasureBarRight) {
       noteElement.lyricsHorizontalOffset += measureBarRightWidth;
       noteElement.neumeWidth += measureBarRightWidth;
-    }
-
-    if (noteElement.measureBarLeft === MeasureBar.MeasureBarTop) {
+    } else if (noteElement.measureBarLeft === MeasureBar.MeasureBarTop) {
       noteElement.lyricsHorizontalOffset += measureBarTopWidth;
       noteElement.neumeWidth += measureBarTopWidth;
+    } else if (noteElement.measureBarLeft === MeasureBar.MeasureBarDouble) {
+      noteElement.lyricsHorizontalOffset += measureBarDoubleWidth;
+      noteElement.neumeWidth += measureBarDoubleWidth;
+    } else if (noteElement.measureBarLeft === MeasureBar.MeasureBarTheseos) {
+      noteElement.lyricsHorizontalOffset += measureBarTheseosWidth;
+      noteElement.neumeWidth += measureBarTheseosWidth;
+    } else if (
+      noteElement.measureBarLeft === MeasureBar.MeasureBarShortDouble
+    ) {
+      noteElement.lyricsHorizontalOffset += measureBarShortDoubleWidth;
+      noteElement.neumeWidth += measureBarShortDoubleWidth;
+    } else if (
+      noteElement.measureBarLeft === MeasureBar.MeasureBarShortTheseos
+    ) {
+      noteElement.lyricsHorizontalOffset += measureBarShortTheseosWidth;
+      noteElement.neumeWidth += measureBarShortTheseosWidth;
     }
 
     if (noteElement.measureBarRight === MeasureBar.MeasureBarRight) {
       noteElement.lyricsHorizontalOffset -= measureBarRightWidth;
       noteElement.neumeWidth += measureBarRightWidth;
-    }
-
-    if (noteElement.measureBarRight === MeasureBar.MeasureBarTop) {
+    } else if (noteElement.measureBarRight === MeasureBar.MeasureBarTop) {
       noteElement.lyricsHorizontalOffset -= measureBarTopWidth;
       noteElement.neumeWidth += measureBarTopWidth;
+    } else if (noteElement.measureBarRight === MeasureBar.MeasureBarDouble) {
+      noteElement.lyricsHorizontalOffset -= measureBarDoubleWidth;
+      noteElement.neumeWidth += measureBarDoubleWidth;
+    } else if (noteElement.measureBarRight === MeasureBar.MeasureBarTheseos) {
+      noteElement.lyricsHorizontalOffset -= measureBarTheseosWidth;
+      noteElement.neumeWidth += measureBarTheseosWidth;
+    } else if (
+      noteElement.measureBarRight === MeasureBar.MeasureBarShortDouble
+    ) {
+      noteElement.lyricsHorizontalOffset -= measureBarShortDoubleWidth;
+      noteElement.neumeWidth += measureBarShortDoubleWidth;
+    } else if (
+      noteElement.measureBarRight === MeasureBar.MeasureBarShortTheseos
+    ) {
+      noteElement.lyricsHorizontalOffset -= measureBarShortTheseosWidth;
+      noteElement.neumeWidth += measureBarShortTheseosWidth;
     }
 
     // Handle special case for running elaphron:

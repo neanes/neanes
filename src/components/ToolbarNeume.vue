@@ -589,8 +589,24 @@ export default class ToolbarNeume extends Vue {
 
   barlineMenuOptions: ButtonWithMenuOption[] = [
     {
+      neume: MeasureBar.MeasureBarShortTheseos,
+      icon: require('@/assets/icons/barline-short-theseos.svg'),
+    },
+    {
+      neume: MeasureBar.MeasureBarShortDouble,
+      icon: require('@/assets/icons/barline-short-double.svg'),
+    },
+    {
       neume: MeasureBar.MeasureBarTop,
       icon: require('@/assets/icons/barline-short-single.svg'),
+    },
+    {
+      neume: MeasureBar.MeasureBarTheseos,
+      icon: require('@/assets/icons/barline-theseos.svg'),
+    },
+    {
+      neume: MeasureBar.MeasureBarDouble,
+      icon: require('@/assets/icons/barline-double.svg'),
     },
     {
       neume: MeasureBar.MeasureBarRight,

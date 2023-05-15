@@ -65,6 +65,7 @@ export class NeumeKeyboard {
     this.kentimataKey,
     this.martyriaConfigKey,
     this.martyriaScaleKey,
+    this.measureBarKey,
   ];
 
   private quantitativeNeumeKeyboardMap: KeyboardMapping[] = [];
@@ -1379,14 +1380,42 @@ export class NeumeKeyboard {
 
   private initMeasureBarKeyboardMap() {
     this.measureBarKeyboardMap.push({
-      code: this.measureBarKey,
+      code: 'KeyJ',
+      modifier: this.measureBarKey,
       neume: MeasureBar.MeasureBarRight,
     });
 
     this.measureBarKeyboardMap.push({
-      code: this.measureBarKey,
+      code: 'KeyJ',
+      modifier: this.measureBarKey,
       shiftKey: true,
       neume: MeasureBar.MeasureBarTop,
+    });
+
+    this.measureBarKeyboardMap.push({
+      code: 'KeyK',
+      modifier: this.measureBarKey,
+      neume: MeasureBar.MeasureBarDouble,
+    });
+
+    this.measureBarKeyboardMap.push({
+      code: 'KeyK',
+      modifier: this.measureBarKey,
+      shiftKey: true,
+      neume: MeasureBar.MeasureBarShortDouble,
+    });
+
+    this.measureBarKeyboardMap.push({
+      code: 'KeyL',
+      modifier: this.measureBarKey,
+      neume: MeasureBar.MeasureBarTheseos,
+    });
+
+    this.measureBarKeyboardMap.push({
+      code: 'KeyL',
+      modifier: this.measureBarKey,
+      shiftKey: true,
+      neume: MeasureBar.MeasureBarShortTheseos,
     });
   }
 

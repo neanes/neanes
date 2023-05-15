@@ -364,6 +364,10 @@ export enum Accidental {
 export enum MeasureBar {
   MeasureBarRight = 'MeasureBarRight',
   MeasureBarTop = 'MeasureBarTop',
+  MeasureBarDouble = 'MeasureBarDouble',
+  MeasureBarShortDouble = 'MeasureBarShortDouble',
+  MeasureBarTheseos = 'MeasureBarTheseos',
+  MeasureBarShortTheseos = 'MeasureBarShortTheseos',
 }
 
 export enum MeasureNumber {

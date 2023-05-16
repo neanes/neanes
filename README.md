@@ -50,7 +50,7 @@ To learn how to use the software, read the [guide](https://danielgarthur.github.
 First install the project dependencies:
 
 ```
-npm install
+npm ci
 ```
 
 ### Release Build

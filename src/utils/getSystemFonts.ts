@@ -58,7 +58,7 @@ async function getLinuxSystemFonts() {
 
   const fonts: string[] = [];
 
-  for (let line of stdout.split('\n')) {
+  for (const line of stdout.split('\n')) {
     const names = line.split(',');
 
     if (names.length > 1) {

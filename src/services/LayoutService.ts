@@ -428,7 +428,7 @@ export class LayoutService {
         // Calculate the current page height
         currentPageHeightPx = 0;
 
-        for (let line of page.lines) {
+        for (const line of page.lines) {
           let height = 0;
 
           if (
@@ -961,8 +961,8 @@ export class LayoutService {
   }
 
   public static justifyLines(pages: Page[], pageSetup: PageSetup) {
-    for (let page of pages) {
-      for (let line of page.lines) {
+    for (const page of pages) {
+      for (const line of page.lines) {
         if (
           pages.indexOf(page) === pages.length - 1 &&
           page.lines.indexOf(line) === page.lines.length - 1
@@ -997,23 +997,23 @@ export class LayoutService {
           continue;
         }
 
-        let alignCenter = line.elements.some(
+        const alignCenter = line.elements.some(
           (x) =>
             x.lineBreak == true && x.lineBreakType === LineBreakType.Center,
         );
 
-        let currentWidthPx = line.elements
+        const currentWidthPx = line.elements
           .map((x) => x.width)
           .reduce((sum, x) => sum + x, 0);
 
-        let extraSpace = pageSetup.innerPageWidth - currentWidthPx;
+        const extraSpace = pageSetup.innerPageWidth - currentWidthPx;
 
         if (alignCenter) {
           for (let i = 0; i < line.elements.length; i++) {
             line.elements[i].x += extraSpace / 2;
           }
         } else {
-          let spaceToAdd = extraSpace / (line.elements.length - 1);
+          const spaceToAdd = extraSpace / (line.elements.length - 1);
 
           for (let i = 1; i < line.elements.length; i++) {
             line.elements[i].x += spaceToAdd * i;
@@ -1056,13 +1056,13 @@ export class LayoutService {
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
     );
 
-    for (let page of pages) {
-      for (let line of page.lines) {
+    for (const page of pages) {
+      for (const line of page.lines) {
         const noteElements = line.elements.filter(
           (x) => x.elementType === ElementType.Note,
         ) as NoteElement[];
 
-        for (let element of noteElements) {
+        for (const element of noteElements) {
           const index = line.elements.indexOf(element);
 
           const isIntermediateMelismaAtStartOfLine =
@@ -1255,7 +1255,7 @@ export class LayoutService {
     let ambitusHighShift = 0;
     let currentModeKey: ModeKeyElement | null = null;
 
-    for (let element of elements) {
+    for (const element of elements) {
       if (element.elementType === ElementType.Note) {
         const note = element as NoteElement;
         currentNote += getNeumeValue(note.quantitativeNeume)!;
@@ -1263,9 +1263,9 @@ export class LayoutService {
           ((currentNote % 7) + 7) % 7,
         )!;
 
-        let noteSpread = getNoteSpread(note.quantitativeNeume);
+        const noteSpread = getNoteSpread(note.quantitativeNeume);
 
-        let currentNotes = noteSpread.map((x) => currentNote + x);
+        const currentNotes = noteSpread.map((x) => currentNote + x);
 
         note.scaleNotes = noteSpread.map((x) =>
           getScaleNoteFromValue(currentNote + x),
@@ -1317,7 +1317,7 @@ export class LayoutService {
           }
         }
 
-        for (let noteValue of currentNotes) {
+        for (const noteValue of currentNotes) {
           if (noteValue < ambitusLow) {
             ambitusLow = noteValue;
             ambitusLowScale = currentScale;
@@ -1736,7 +1736,7 @@ const noteIndicatorMap = new Map<number, NoteIndicator>([
 
 const reverseNoteMap = new Map<Note, number>();
 
-for (let [key, value] of noteMap) {
+for (const [key, value] of noteMap) {
   reverseNoteMap.set(value, key);
 }
 
@@ -1824,6 +1824,6 @@ const lowRootSignMap = new Map<RootSign, RootSign>([
 
 const highRootSignMap = new Map<RootSign, RootSign>();
 
-for (let [key, value] of lowRootSignMap) {
+for (const [key, value] of lowRootSignMap) {
   highRootSignMap.set(value, key);
 }

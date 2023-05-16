@@ -30,7 +30,7 @@ export class UpdatePropertiesCommand<T> implements Command {
   private updateProperties(newValues: Partial<T>) {
     const previousValues: Partial<T> = {};
 
-    for (let key of Object.keys(newValues)) {
+    for (const key of Object.keys(newValues)) {
       // Save the previous values for undo
       (previousValues as any)[key] = (this.args.target as any)[key];
 

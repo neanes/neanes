@@ -76,7 +76,7 @@ export class AudioService {
 
     Tone.Transport.bpm.value = startAt?.bpm ?? 60;
 
-    for (let event of events) {
+    for (const event of events) {
       if (currentBpm !== event.bpm) {
         Tone.Transport.bpm.value = event.bpm!;
       }
@@ -293,7 +293,7 @@ export class AudioService {
   playTestTone(frequency: number) {
     this.synth.volume.value = 0;
     Tone.Transport.bpm.value = 120;
-    let now = Tone.now();
+    const now = Tone.now();
 
     this.synth.triggerAttackRelease(frequency, '2n', now);
   }
@@ -305,7 +305,7 @@ export class AudioService {
     let currentFrequency = 261.63;
     let now = Tone.now();
 
-    for (let interval of scale) {
+    for (const interval of scale) {
       synth.triggerAttackRelease(currentFrequency, '8n', now);
       currentFrequency = this.nextNote(currentFrequency, interval);
       now += 0.5;

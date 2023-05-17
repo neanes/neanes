@@ -83,5 +83,5 @@
     }
   },
   "license": "GPL-3.0",
-  "packageManager": "npm@8.1.2"
+  "packageManager": "npm@8.19.4"
 }

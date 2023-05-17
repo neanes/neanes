@@ -10,7 +10,8 @@ module.exports = {
         ? ['error', { allow: ['warn', 'error'] }]
         : 'off',
     'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',
-    'no-unused-vars': 'warn',
+    'no-unused-vars': 'off',
+    '@typescript-eslint/no-unused-vars': 'warn',
   },
   parserOptions: {
     parser: '@typescript-eslint/parser',

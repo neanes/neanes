@@ -22,7 +22,6 @@
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { NoteElement } from '@/models/Element';
-import { Unit } from '@/utils/Unit';
 
 @Component({
   components: {},

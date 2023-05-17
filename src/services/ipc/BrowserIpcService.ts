@@ -3,7 +3,6 @@ import {
   FileMenuOpenScoreArgs,
   SaveWorkspaceAsReplyArgs,
   SaveWorkspaceReplyArgs,
-  ShowMessageBoxArgs,
   ShowMessageBoxReplyArgs,
 } from '@/ipc/ipcChannels';
 import { Workspace } from '@/models/Workspace';
@@ -32,7 +31,7 @@ export class BrowserIpcService implements IIpcService {
     });
   }
 
-  public async exportWorkspaceAsPdf(workspace: Workspace) {
+  public async exportWorkspaceAsPdf() {
     throw 'exportWorkspaceAsPdf is not available in the browser.';
   }
 
@@ -50,21 +49,15 @@ export class BrowserIpcService implements IIpcService {
     a.click();
   }
 
-  public async exportWorkspaceAsImage(
-    workspace: Workspace,
-    imageFormat: 'png' | 'svg',
-  ): Promise<ExportWorkspaceAsImageReplyArgs> {
+  public async exportWorkspaceAsImage(): Promise<ExportWorkspaceAsImageReplyArgs> {
     throw 'exportWorkspaceAsPdf is not available in the browser.';
   }
 
-  public async exportPageAsImage(
-    filePath: string,
-    data: string,
-  ): Promise<boolean> {
+  public async exportPageAsImage(): Promise<boolean> {
     throw 'exportPageAsImage is not available in the browser.';
   }
 
-  public async printWorkspace(workspace: Workspace): Promise<void> {
+  public async printWorkspace(): Promise<void> {
     return new Promise((resolve) => {
       window.addEventListener(
         'afterprint',
@@ -80,9 +73,7 @@ export class BrowserIpcService implements IIpcService {
     return [];
   }
 
-  public async showMessageBox(
-    args: ShowMessageBoxArgs,
-  ): Promise<ShowMessageBoxReplyArgs> {
+  public async showMessageBox(): Promise<ShowMessageBoxReplyArgs> {
     return Promise.resolve({ response: 0, checkboxChecked: false });
   }
 

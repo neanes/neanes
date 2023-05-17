@@ -13,7 +13,6 @@ import {
 import {
   MeasureBar,
   Neume,
-  QuantitativeNeume,
   TimeNeume,
   VocalExpressionNeume,
   ModeSign,
@@ -646,7 +645,12 @@ export class ByzHtmlExporter {
   }
 
   exportTempo(element: TempoElement, indentation: number) {
-    return this.exportNeume(element.neume, 0, NoOffset, this.config.classTempo);
+    return this.exportNeume(
+      element.neume,
+      indentation,
+      NoOffset,
+      this.config.classTempo,
+    );
   }
 
   exportTextBox(element: TextBoxElement, indentation: number) {

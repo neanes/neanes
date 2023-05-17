@@ -8,7 +8,6 @@ import {
   MeasureNumber,
   Neume,
   Note,
-  NoteIndicator,
   QuantitativeNeume,
   TempoSign,
   TimeNeume,

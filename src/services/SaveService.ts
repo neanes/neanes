@@ -26,7 +26,6 @@ import {
   NoteElement as NoteElement_v1,
   TextBoxElement as TextBoxElement_v1,
   ScoreElement as ScoreElement_v1,
-  ScoreElementOffset as ScoreElementOffset_v1,
   ModeKeyElement as ModeKeyElement_v1,
   ImageBoxElement as ImageBoxElement_v1,
 } from '@/models/save/v1/Element';

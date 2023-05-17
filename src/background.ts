@@ -269,7 +269,7 @@ async function openFile(filePath: string) {
 async function openFileFromArgs(argv: string[]) {
   const result: FileMenuOpenScoreArgs[] = [];
 
-  // Check if there a file was passed to the app.
+  // Check whether a file was passed to the app.
   // See https://github.com/electron/electron/issues/4690#issuecomment-422617581
   // for why the special case for isPackaged is needed.
   if (app.isPackaged) {
@@ -283,8 +283,8 @@ async function openFileFromArgs(argv: string[]) {
   for (const parameter of parameters) {
     try {
       result.push({
-        data: await openFile(parameters[0]),
-        filePath: parameters[0],
+        data: await openFile(parameter),
+        filePath: parameter,
         success: true,
       });
     } catch (error) {
@@ -1036,7 +1036,7 @@ function createMenu() {
         {
           label: '&Preferences',
           accelerator: 'CmdOrCtrl+,',
-          click(menuItem, browserWindow, event) {
+          click() {
             win?.webContents.send(IpcMainChannels.FileMenuPreferences);
           },
         },
@@ -1282,7 +1282,7 @@ ipcMain.on(IpcRendererChannels.SetCanRedo, async (event, data) => {
   Menu.getApplicationMenu()!.getMenuItemById('redo')!.enabled = data;
 });
 
-ipcMain.on(IpcRendererChannels.OpenImageDialog, async (event) => {
+ipcMain.on(IpcRendererChannels.OpenImageDialog, async () => {
   const data = await openImage();
 
   if (data.success) {

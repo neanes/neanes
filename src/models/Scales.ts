@@ -93,13 +93,13 @@ const isonToNoteValueMap = new Map<Ison, number>([
 
 const noteValueToScaleNoteMap = new Map<number, ScaleNote>();
 
-for (let [key, value] of scaleNoteToNoteValueMap) {
+for (const [key, value] of scaleNoteToNoteValueMap) {
   noteValueToScaleNoteMap.set(value, key);
 }
 
 const noteValueToNoteMap = new Map<number, Note>();
 
-for (let [key, value] of noteToNoteValueMap) {
+for (const [key, value] of noteToNoteValueMap) {
   noteValueToNoteMap.set(value, key);
 }
 

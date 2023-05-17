@@ -146,9 +146,9 @@ export class ByzHtmlExporter {
   }
 
   exportPageSetup(pageSetup: PageSetup) {
-    let orientation = pageSetup.landscape ? 'landscape' : 'portrait';
+    const orientation = pageSetup.landscape ? 'landscape' : 'portrait';
 
-    let style = `:root {
+    const style = `:root {
         --byz-neume-font-size: ${Unit.toPt(pageSetup.neumeDefaultFontSize)}pt;
         
         --byz-lyric-font-family: ${pageSetup.lyricsDefaultFontFamily};
@@ -555,7 +555,7 @@ export class ByzHtmlExporter {
     }
 
     if (element.lyrics.trim() != '') {
-      let lyrics = element.lyrics
+      const lyrics = element.lyrics
         .replaceAll(
           '\u{1d0b4}',
           `<${this.getTag('pelastikon')}></${this.getTag('pelastikon')}>`,

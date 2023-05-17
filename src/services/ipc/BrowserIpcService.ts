@@ -107,7 +107,7 @@ export class BrowserIpcService implements IIpcService {
   }
 
   private async doSave(workspace: Workspace) {
-    var score = SaveService.SaveScoreToJson(workspace.score);
+    const score = SaveService.SaveScoreToJson(workspace.score);
     const data = JSON.stringify(score, null, 2);
     let file: Blob;
 
@@ -115,7 +115,7 @@ export class BrowserIpcService implements IIpcService {
     // so we always save in .byz, unless the user has already opened
     // .byzx file from the computer.
     if (workspace.filePath == null || workspace.filePath.endsWith('.byz')) {
-      var zip = new JSZip();
+      const zip = new JSZip();
 
       const fileName =
         workspace.filePath != null

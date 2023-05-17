@@ -33,13 +33,13 @@ export interface NeumeMapping {
 // Create mapping from glyph name to codepoint
 const glyphNameToCodepointMap = new Map<string, string>();
 
-for (let glyph in glyphnames) {
+for (const glyph in glyphnames) {
   const data: { codepoint: string } = (glyphnames as any)[glyph];
   const codepoint = Number('0x' + data.codepoint.substring(2));
   glyphNameToCodepointMap.set(glyph, String.fromCodePoint(codepoint));
 }
 
-for (let glyph in metadata.optionalGlyphs) {
+for (const glyph in metadata.optionalGlyphs) {
   const data: { codepoint: string } = (metadata.optionalGlyphs as any)[glyph];
   const codepoint = Number('0x' + data.codepoint.substring(2));
   glyphNameToCodepointMap.set(glyph, String.fromCodePoint(codepoint));

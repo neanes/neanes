@@ -1582,7 +1582,7 @@ export class NeumeKeyboard {
     result.push('| Neume | Keyboard Shortcut |\n');
     result.push('| ----- | ----------------- |\n');
 
-    for (let mapping of mappings) {
+    for (const mapping of mappings) {
       result.push('|');
 
       result.push(

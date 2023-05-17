@@ -78,7 +78,7 @@ export class SaveService {
     this.SaveFooter(score.footers.odd, s.footers.odd);
     this.SaveFooter(score.footers.firstPage, s.footers.firstPage);
 
-    for (let e of s.staff.elements) {
+    for (const e of s.staff.elements) {
       let element: ScoreElement_v1 = new EmptyElement_v1();
 
       switch (e.elementType) {
@@ -483,7 +483,7 @@ export class SaveService {
       this.LoadFooter_v1(score.footers.firstPage, s.footers.firstPage);
     }
 
-    for (let e of s.staff.elements) {
+    for (const e of s.staff.elements) {
       let element: ScoreElement = new EmptyElement();
 
       switch (e.elementType) {

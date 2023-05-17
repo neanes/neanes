@@ -87,7 +87,7 @@ const defaultStore = {
   windowState: defaultWindowState,
 };
 
-let store: Store = defaultStore;
+const store: Store = defaultStore;
 
 interface SecondInstanceData {
   argv: string[];
@@ -280,7 +280,7 @@ async function openFileFromArgs(argv: string[]) {
   // parameters is now an array containing any files/folders that your OS will pass to your application
   const parameters = argv.slice(2);
 
-  for (let parameter of parameters) {
+  for (const parameter of parameters) {
     try {
       result.push({
         data: await openFile(parameters[0]),
@@ -580,7 +580,7 @@ async function exportWorkspaceAsHtml(args: ExportWorkspaceAsHtmlArgs) {
 }
 
 async function exportWorkspaceAsImage(args: ExportWorkspaceAsImageArgs) {
-  let result = {
+  const result = {
     filePath: args.filePath,
     success: false,
   } as ExportWorkspaceAsImageReplyArgs;
@@ -801,7 +801,7 @@ function ensureVisibleOnSomeDisplay(windowState: WindowState) {
 }
 
 function createMenu() {
-  var menu = Menu.buildFromTemplate([
+  const menu = Menu.buildFromTemplate([
     ...(isMac
       ? ([
           {

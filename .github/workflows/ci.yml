@@ -31,6 +31,7 @@ jobs:
           path: ./node_modules
           key: ${{ runner.os }}-modules-${{ hashFiles('package-lock.json') }}
 
+      - run: corepack enable npm
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: npm ci

@@ -43,13 +43,14 @@ To learn how to use the software, read the [guide](https://danielgarthur.github.
 
 ### Prerequisites
 
-- Node.js 16
+- Node.js 16.9.0 or later
 
 ### Project Setup
 
 First install the project dependencies:
 
 ```
+corepack enable npm
 npm install
 ```
 
@@ -72,6 +73,8 @@ npm run electron:serve
 ```
 
 This will launch the application in development mode. As changes are made to the source code, the app will reload automatically.
+
+Any change that updates `package.json` _must_ include the corresponding update to `package-lock.json` after running `npm install`.
 
 ### Code Formatting
 

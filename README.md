@@ -43,13 +43,14 @@ To learn how to use the software, read the [guide](https://danielgarthur.github.
 
 ### Prerequisites
 
-- Node.js 16
+- Node.js 16.9.0 or later
 
 ### Project Setup
 
 First install the project dependencies:
 
 ```
+corepack enable npm
 npm install
 ```
 

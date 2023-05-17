@@ -8,7 +8,6 @@ import {
   Accidental,
   VocalExpressionNeume,
   MeasureNumber,
-  NoteIndicator,
   Ison,
 } from '@/models/Neumes';
 import { TestFileType } from './TestFileType';

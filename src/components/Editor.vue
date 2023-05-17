@@ -601,7 +601,7 @@
 
 <script lang="ts">
 import { Component, Prop, Watch, Vue } from 'vue-property-decorator';
-import { toPng, getFontEmbedCSS, toSvg } from 'html-to-image';
+import { toPng, getFontEmbedCSS } from 'html-to-image';
 import {
   ScoreElement,
   MartyriaElement,
@@ -4644,7 +4644,7 @@ export default class Editor extends Vue {
     }
   }
 
-  onAudioServiceStop(event: PlaybackSequenceEvent) {
+  onAudioServiceStop() {
     this.audioElement = null;
   }
 

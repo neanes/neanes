@@ -482,7 +482,7 @@ export class MartyriaElement extends ScoreElement {
 
   public error: boolean = false;
 
-  public clone(args?: ElementCloneArgs) {
+  public clone() {
     const clone = new MartyriaElement();
 
     Object.assign(clone, this.getClipboardProperties());
@@ -512,7 +512,7 @@ export class TempoElement extends ScoreElement {
   public bpm: number = TempoElement.getDefaultBpm(TempoSign.Moderate);
   public spaceAfter: number = 0;
 
-  public clone(args?: ElementCloneArgs) {
+  public clone() {
     const clone = new TempoElement();
 
     Object.assign(clone, this.getClipboardProperties());
@@ -557,7 +557,7 @@ export class EmptyElement extends ScoreElement {
 
   public height: number = 0;
 
-  public clone(args?: ElementCloneArgs) {
+  public clone() {
     return new EmptyElement();
   }
 }
@@ -595,7 +595,7 @@ export class TextBoxElement extends ScoreElement {
     return `${this.computedFontStyle} normal ${this.computedFontWeight} ${this.computedFontSize}px "${this.computedFontFamily}"`;
   }
 
-  public clone(args?: ElementCloneArgs) {
+  public clone() {
     const clone = new TextBoxElement();
 
     Object.assign(clone, this.getClipboardProperties());
@@ -700,7 +700,7 @@ export class ModeKeyElement extends ScoreElement {
     return element;
   }
 
-  public clone(args?: ElementCloneArgs) {
+  public clone() {
     const clone = new ModeKeyElement();
 
     Object.assign(clone, this.getClipboardProperties());
@@ -759,7 +759,7 @@ export class DropCapElement extends ScoreElement {
     return `${this.computedFontStyle} normal ${this.computedFontWeight} ${this.computedFontSize}px "${this.computedFontFamily}"`;
   }
 
-  public clone(args?: ElementCloneArgs) {
+  public clone() {
     const clone = new DropCapElement();
 
     Object.assign(clone, this.getClipboardProperties());
@@ -792,7 +792,7 @@ export class ImageBoxElement extends ScoreElement {
     return this.imageWidth / this.imageHeight;
   }
 
-  public clone(args?: ElementCloneArgs) {
+  public clone() {
     const clone = new ImageBoxElement();
 
     Object.assign(clone, this.getClipboardProperties());

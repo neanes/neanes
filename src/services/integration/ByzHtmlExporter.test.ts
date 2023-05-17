@@ -1,5 +1,5 @@
 import { ByzHtmlExporter } from './ByzHtmlExporter';
-import { NeumeMappingService, SbmuflGlyphName } from './../NeumeMappingService';
+import { SbmuflGlyphName } from './../NeumeMappingService';
 import glyphnames from '../../assets/fonts/sbmufl/glyphnames.json';
 
 describe('ByzHtmlExporter', () => {

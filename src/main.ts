@@ -1,7 +1,5 @@
 import Vue from 'vue';
 import App from './App.vue';
-import { EventBus } from './eventBus';
-import { IpcMainChannels } from './ipc/ipcChannels';
 import { initializeIpcListeners } from './ipc/ipcListeners';
 import { initalizeBrowserIpcListeners } from './ipc/browserIpcListeners';
 import router from './router';

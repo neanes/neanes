@@ -1,5 +1,5 @@
 import { EventBus } from '@/eventBus';
-import { IpcMainChannels, IpcRendererChannels } from './ipcChannels';
+import { IpcMainChannels } from './ipcChannels';
 
 export const initalizeBrowserIpcListeners = () => {
   // If using the browser, then we need to hook into the beforeprint event

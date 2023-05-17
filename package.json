@@ -82,5 +82,6 @@
       "electron-builder": "^23.6.0"
     }
   },
-  "license": "GPL-3.0"
+  "license": "GPL-3.0",
+  "packageManager": "npm@8.1.2"
 }

@@ -165,7 +165,9 @@ async function showReplaceFileDialog(filePath: string) {
     });
 
     return replaceFileResult.response === 1;
-  } catch {}
+  } catch {
+    // ignore
+  }
 
   return true;
 }
@@ -186,7 +188,9 @@ async function showReplaceOrSkipFileDialog(filePath: string) {
     });
 
     return replaceFileResult.response as OnConflictChoice;
-  } catch {}
+  } catch {
+    // ignore
+  }
 
   return OnConflictChoice.Replace;
 }

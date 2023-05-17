@@ -52,7 +52,7 @@ export abstract class TestFileGenerator {
 
     let counter = 1;
 
-    for (let q in QuantitativeNeume) {
+    for (const q in QuantitativeNeume) {
       const quantitativeNeume = q as QuantitativeNeume;
       if (
         [
@@ -64,7 +64,7 @@ export abstract class TestFileGenerator {
         continue;
       }
 
-      for (let f in Fthora) {
+      for (const f in Fthora) {
         const fthora = f as Fthora;
         if (
           fthora.startsWith('Zygos') ||
@@ -94,7 +94,7 @@ export abstract class TestFileGenerator {
 
     let counter = 1;
 
-    for (let q in QuantitativeNeume) {
+    for (const q in QuantitativeNeume) {
       const quantitativeNeume = q as QuantitativeNeume;
       if (
         [
@@ -113,7 +113,7 @@ export abstract class TestFileGenerator {
       elements.push(note);
     }
 
-    for (let q in QuantitativeNeume) {
+    for (const q in QuantitativeNeume) {
       const quantitativeNeume = q as QuantitativeNeume;
       if (
         [
@@ -132,7 +132,7 @@ export abstract class TestFileGenerator {
       elements.push(note);
     }
 
-    for (let q in QuantitativeNeume) {
+    for (const q in QuantitativeNeume) {
       const quantitativeNeume = q as QuantitativeNeume;
       if (
         [
@@ -151,7 +151,7 @@ export abstract class TestFileGenerator {
       elements.push(note);
     }
 
-    for (let q in QuantitativeNeume) {
+    for (const q in QuantitativeNeume) {
       const quantitativeNeume = q as QuantitativeNeume;
       if (
         [
@@ -178,7 +178,7 @@ export abstract class TestFileGenerator {
 
     let counter = 1;
 
-    for (let q in QuantitativeNeume) {
+    for (const q in QuantitativeNeume) {
       const quantitativeNeume = q as QuantitativeNeume;
       if (
         [
@@ -197,7 +197,7 @@ export abstract class TestFileGenerator {
       elements.push(note);
     }
 
-    for (let q in QuantitativeNeume) {
+    for (const q in QuantitativeNeume) {
       const quantitativeNeume = q as QuantitativeNeume;
       if (
         [
@@ -224,7 +224,7 @@ export abstract class TestFileGenerator {
 
     let counter = 1;
 
-    for (let q in QuantitativeNeume) {
+    for (const q in QuantitativeNeume) {
       const quantitativeNeume = q as QuantitativeNeume;
       if (
         [
@@ -243,7 +243,7 @@ export abstract class TestFileGenerator {
       elements.push(note);
     }
 
-    for (let q in QuantitativeNeume) {
+    for (const q in QuantitativeNeume) {
       const quantitativeNeume = q as QuantitativeNeume;
       if (
         [
@@ -262,7 +262,7 @@ export abstract class TestFileGenerator {
       elements.push(note);
     }
 
-    for (let q in QuantitativeNeume) {
+    for (const q in QuantitativeNeume) {
       const quantitativeNeume = q as QuantitativeNeume;
       if (
         [
@@ -289,7 +289,7 @@ export abstract class TestFileGenerator {
 
     let counter = 1;
 
-    for (let q in QuantitativeNeume) {
+    for (const q in QuantitativeNeume) {
       const quantitativeNeume = q as QuantitativeNeume;
       if (
         [
@@ -320,7 +320,7 @@ export abstract class TestFileGenerator {
       elements.push(note);
     }
 
-    for (let q in QuantitativeNeume) {
+    for (const q in QuantitativeNeume) {
       const quantitativeNeume = q as QuantitativeNeume;
       if (
         [
@@ -359,7 +359,7 @@ export abstract class TestFileGenerator {
 
     let counter = 1;
 
-    for (let q in QuantitativeNeume) {
+    for (const q in QuantitativeNeume) {
       const quantitativeNeume = q as QuantitativeNeume;
       if (
         [
@@ -378,7 +378,7 @@ export abstract class TestFileGenerator {
       elements.push(note);
     }
 
-    for (let q in QuantitativeNeume) {
+    for (const q in QuantitativeNeume) {
       const quantitativeNeume = q as QuantitativeNeume;
       if (
         [
@@ -397,7 +397,7 @@ export abstract class TestFileGenerator {
       elements.push(note);
     }
 
-    for (let q in QuantitativeNeume) {
+    for (const q in QuantitativeNeume) {
       const quantitativeNeume = q as QuantitativeNeume;
       if (
         [
@@ -416,7 +416,7 @@ export abstract class TestFileGenerator {
       elements.push(note);
     }
 
-    for (let q in QuantitativeNeume) {
+    for (const q in QuantitativeNeume) {
       const quantitativeNeume = q as QuantitativeNeume;
       if (
         [
@@ -439,7 +439,7 @@ export abstract class TestFileGenerator {
       elements.push(ison);
     }
 
-    for (let q in QuantitativeNeume) {
+    for (const q in QuantitativeNeume) {
       const quantitativeNeume = q as QuantitativeNeume;
       if (
         [
@@ -470,7 +470,7 @@ export abstract class TestFileGenerator {
 
     let counter = 1;
 
-    for (let q in QuantitativeNeume) {
+    for (const q in QuantitativeNeume) {
       const quantitativeNeume = q as QuantitativeNeume;
       if (
         [
@@ -489,7 +489,7 @@ export abstract class TestFileGenerator {
       elements.push(note);
     }
 
-    for (let q in QuantitativeNeume) {
+    for (const q in QuantitativeNeume) {
       const quantitativeNeume = q as QuantitativeNeume;
       if (
         [
@@ -516,7 +516,7 @@ export abstract class TestFileGenerator {
 
     let counter = 1;
 
-    for (let q in QuantitativeNeume) {
+    for (const q in QuantitativeNeume) {
       const quantitativeNeume = q as QuantitativeNeume;
       if (
         [
@@ -543,7 +543,7 @@ export abstract class TestFileGenerator {
 
     let counter = 1;
 
-    for (let q in QuantitativeNeume) {
+    for (const q in QuantitativeNeume) {
       const quantitativeNeume = q as QuantitativeNeume;
       if (
         [
@@ -568,7 +568,7 @@ export abstract class TestFileGenerator {
   private static generateTestFile_ModeKey() {
     const elements: ScoreElement[] = [];
 
-    for (let template of modeKeyTemplates) {
+    for (const template of modeKeyTemplates) {
       elements.push(ModeKeyElement.createFromTemplate(template));
     }
 

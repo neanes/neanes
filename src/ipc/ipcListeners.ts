@@ -7,13 +7,13 @@ import { IpcMainChannels, IpcRendererChannels } from './ipcChannels';
  * implemented that uses the Event Bus to send the same events.
  */
 export const initializeIpcListeners = () => {
-  for (let channel of Object.values(IpcMainChannels)) {
+  for (const channel of Object.values(IpcMainChannels)) {
     window.ipcRenderer.on(channel, (...args) => {
       EventBus.$emit(channel, ...args);
     });
   }
 
-  for (let channel of Object.values(IpcRendererChannels)) {
+  for (const channel of Object.values(IpcRendererChannels)) {
     EventBus.$on(channel, (...args: any[]) => {
       window.ipcRenderer.send(channel, ...args);
     });

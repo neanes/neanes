@@ -139,7 +139,7 @@ export interface PlaybackScale {
 
 export class PlaybackService {
   constructor() {
-    for (let [key, value] of this.scaleNoteMap) {
+    for (const [key, value] of this.scaleNoteMap) {
       this.reverseScaleNoteMap.set(value, key);
     }
   }
@@ -149,7 +149,7 @@ export class PlaybackService {
 
     const defaultBpm = 120;
 
-    let workspace: PlaybackWorkspace = {
+    const workspace: PlaybackWorkspace = {
       events: [],
       gorgonIndexes: [],
       elements,
@@ -227,7 +227,7 @@ export class PlaybackService {
     workspace.isonFrequency = 0;
 
     for (let i = 0; i < elements.length; i++) {
-      let element = elements[i];
+      const element = elements[i];
 
       workspace.elementIndex = i;
       workspace.currentNoteElement = null;
@@ -244,9 +244,9 @@ export class PlaybackService {
 
           const destinationNote = workspace.note + distance;
 
-          let noteSpread = getNoteSpread(noteElement.quantitativeNeume);
+          const noteSpread = getNoteSpread(noteElement.quantitativeNeume);
 
-          let allNotes = noteSpread.map((x) =>
+          const allNotes = noteSpread.map((x) =>
             this.scaleNoteMap.get(destinationNote + x),
           );
 
@@ -403,7 +403,7 @@ export class PlaybackService {
     let currentBpm = defaultBpm;
     let currentBeatLength = this.beatLengthFromBpm(currentBpm);
 
-    for (let event of workspace.events) {
+    for (const event of workspace.events) {
       if (currentBpm != event.bpm) {
         currentBpm = event.bpm;
         currentBeatLength = this.beatLengthFromBpm(currentBpm);
@@ -443,7 +443,7 @@ export class PlaybackService {
     const sign = Math.sign(distance);
 
     for (let i = 0; i < abs; i++) {
-      let index =
+      const index =
         sign > 0
           ? intervalIndex
           : this.mod(intervalIndex - 1, intervals.length);
@@ -929,7 +929,7 @@ export class PlaybackService {
       gorgonIndexes.push(gorgonIndex);
     }
 
-    let alteredFrequency = this.applyAlterations(workspace);
+    const alteredFrequency = this.applyAlterations(workspace);
 
     const event: PlaybackSequenceEvent = {
       frequency: alteredFrequency,
@@ -958,7 +958,7 @@ export class PlaybackService {
     }
 
     // Calculate accidentals
-    let alteredFrequencyKentimata = this.applyAlterations(
+    const alteredFrequencyKentimata = this.applyAlterations(
       workspace,
       noteElement.accidental,
     );
@@ -999,7 +999,7 @@ export class PlaybackService {
       gorgonIndexes.push(gorgonIndex);
     }
 
-    let alteredFrequencyKentimata = this.applyAlterations(workspace);
+    const alteredFrequencyKentimata = this.applyAlterations(workspace);
 
     const kentimataEvent: PlaybackSequenceEvent = {
       frequency: alteredFrequencyKentimata,
@@ -1026,7 +1026,7 @@ export class PlaybackService {
     }
 
     // Calculate accidentals
-    let alteredFrequency = this.applyAlterations(
+    const alteredFrequency = this.applyAlterations(
       workspace,
       noteElement.accidental,
     );
@@ -1064,7 +1064,7 @@ export class PlaybackService {
       gorgonIndexes.push(gorgonIndex);
     }
 
-    let alteredFrequency1 = this.applyAlterations(workspace);
+    const alteredFrequency1 = this.applyAlterations(workspace);
 
     const event1: PlaybackSequenceEvent = {
       frequency: alteredFrequency1,
@@ -1091,7 +1091,7 @@ export class PlaybackService {
     }
 
     // Calculate accidentals
-    let alteredFrequency2 = this.applyAlterations(
+    const alteredFrequency2 = this.applyAlterations(
       workspace,
       noteElement.accidental,
     );
@@ -1132,7 +1132,7 @@ export class PlaybackService {
       gorgonIndexes.push(gorgonIndex);
     }
 
-    let alteredFrequency1 = this.applyAlterations(workspace);
+    const alteredFrequency1 = this.applyAlterations(workspace);
 
     const event1: PlaybackSequenceEvent = {
       frequency: alteredFrequency1,
@@ -1159,7 +1159,7 @@ export class PlaybackService {
     }
 
     // Calculate accidentals
-    let alteredFrequency2 = this.applyAlterations(workspace);
+    const alteredFrequency2 = this.applyAlterations(workspace);
 
     const event2: PlaybackSequenceEvent = {
       frequency: alteredFrequency2,
@@ -1188,7 +1188,7 @@ export class PlaybackService {
     }
 
     // Calculate accidentals
-    let alteredFrequencyKentimata = this.applyAlterations(
+    const alteredFrequencyKentimata = this.applyAlterations(
       workspace,
       noteElement.accidental,
     );
@@ -1229,7 +1229,7 @@ export class PlaybackService {
       gorgonIndexes.push(gorgonIndex);
     }
 
-    let alteredFrequency1 = this.applyAlterations(workspace);
+    const alteredFrequency1 = this.applyAlterations(workspace);
 
     const event1: PlaybackSequenceEvent = {
       frequency: alteredFrequency1,
@@ -1246,7 +1246,7 @@ export class PlaybackService {
     // Process the second apsotrofos
     workspace.innerElementIndex = 1;
 
-    let event2Duration = 1 * workspace.beat;
+    const event2Duration = 1 * workspace.beat;
 
     this.moveDistance(workspace, -1);
 
@@ -1261,7 +1261,7 @@ export class PlaybackService {
     }
 
     // Calculate accidentals
-    let alteredFrequency2 = this.applyAlterations(
+    const alteredFrequency2 = this.applyAlterations(
       workspace,
       noteElement.accidental,
     );
@@ -1302,7 +1302,7 @@ export class PlaybackService {
       gorgonIndexes.push(gorgonIndex);
     }
 
-    let alteredFrequency1 = this.applyAlterations(workspace);
+    const alteredFrequency1 = this.applyAlterations(workspace);
 
     const event1: PlaybackSequenceEvent = {
       frequency: alteredFrequency1,
@@ -1319,7 +1319,7 @@ export class PlaybackService {
     // Process the apostrofos
     workspace.innerElementIndex = 1;
 
-    let event2Duration = 1 * workspace.beat;
+    const event2Duration = 1 * workspace.beat;
 
     this.moveDistance(workspace, -1);
 
@@ -1334,7 +1334,7 @@ export class PlaybackService {
     }
 
     // Calculate accidentals
-    let alteredFrequency2 = this.applyAlterations(
+    const alteredFrequency2 = this.applyAlterations(
       workspace,
       noteElement.accidental,
     );
@@ -1372,7 +1372,7 @@ export class PlaybackService {
 
     gorgonIndexes.push(gorgonIndex);
 
-    let alteredFrequency1 = this.applyAlterations(workspace);
+    const alteredFrequency1 = this.applyAlterations(workspace);
 
     const event1: PlaybackSequenceEvent = {
       frequency: alteredFrequency1,
@@ -1399,7 +1399,7 @@ export class PlaybackService {
     }
 
     // Calculate accidentals
-    let alteredFrequency2 = this.applyAlterations(
+    const alteredFrequency2 = this.applyAlterations(
       workspace,
       noteElement.accidental,
     );
@@ -1437,7 +1437,7 @@ export class PlaybackService {
 
     gorgonIndexes.push(gorgonIndex);
 
-    let alteredFrequency1 = this.applyAlterations(workspace);
+    const alteredFrequency1 = this.applyAlterations(workspace);
 
     const event1: PlaybackSequenceEvent = {
       frequency: alteredFrequency1,
@@ -1464,7 +1464,7 @@ export class PlaybackService {
     }
 
     // Calculate accidentals
-    let alteredFrequency2 = this.applyAlterations(workspace);
+    const alteredFrequency2 = this.applyAlterations(workspace);
 
     const event2: PlaybackSequenceEvent = {
       frequency: alteredFrequency2,
@@ -1493,7 +1493,7 @@ export class PlaybackService {
     }
 
     // Calculate accidentals
-    let alteredFrequencyKentimata = this.applyAlterations(
+    const alteredFrequencyKentimata = this.applyAlterations(
       workspace,
       noteElement.accidental,
     );
@@ -1538,12 +1538,12 @@ export class PlaybackService {
     }
 
     // Calculate accidentals
-    let alteredFrequency = this.applyAlterations(
+    const alteredFrequency = this.applyAlterations(
       workspace,
       noteElement.accidental,
     );
 
-    let event: PlaybackSequenceEvent = {
+    const event: PlaybackSequenceEvent = {
       frequency: alteredFrequency,
       isonFrequency: workspace.isonFrequency,
       type: 'note',
@@ -1557,7 +1557,7 @@ export class PlaybackService {
   }
 
   handleRest(noteElement: NoteElement, workspace: PlaybackWorkspace) {
-    let duration = this.restMap.get(noteElement.quantitativeNeume)!;
+    const duration = this.restMap.get(noteElement.quantitativeNeume)!;
 
     const restEvent: PlaybackSequenceEvent = {
       type: 'rest',
@@ -1679,7 +1679,7 @@ export class PlaybackService {
     events: PlaybackSequenceEvent[],
     gorgonIndexes: GorgonIndex[],
   ) {
-    for (let gorgon of gorgonIndexes) {
+    for (const gorgon of gorgonIndexes) {
       const durations = this.gorgonMap.get(gorgon.neume)!;
 
       // TODO: handle the case where the user has made an

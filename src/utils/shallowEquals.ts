@@ -6,7 +6,7 @@ export const shallowEquals = (object1: any, object2: any) => {
     return false;
   }
 
-  for (let key of keys1) {
+  for (const key of keys1) {
     if (object1[key] !== object2[key]) {
       return false;
     }

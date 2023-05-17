@@ -95,7 +95,7 @@ export class CommandService {
   }
 
   public executeAsBatch(batch: Command[]) {
-    for (let command of batch) {
+    for (const command of batch) {
       command.batchId = this.nextBatchId;
       this.execute(command);
     }
@@ -105,7 +105,7 @@ export class CommandService {
 
   public undo() {
     if (this.index >= 0) {
-      let batchId = this.commandHistory[this.index].batchId;
+      const batchId = this.commandHistory[this.index].batchId;
 
       do {
         this.commandHistory[this.index].undo();
@@ -122,7 +122,7 @@ export class CommandService {
 
   public redo() {
     if (this.index < this.commandHistory.length - 1) {
-      let batchId = this.commandHistory[this.index + 1].batchId;
+      const batchId = this.commandHistory[this.index + 1].batchId;
 
       do {
         this.index++;

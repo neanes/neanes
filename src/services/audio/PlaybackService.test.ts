@@ -732,7 +732,7 @@ function getDefaultWorkspaceOptions() {
 }
 
 function getDefaultWorkspace(elements: ScoreElement[], scale: PlaybackScale) {
-  let workspace: PlaybackWorkspace = {
+  const workspace: PlaybackWorkspace = {
     events: [],
     gorgonIndexes: [],
 

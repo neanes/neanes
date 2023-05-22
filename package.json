@@ -27,7 +27,6 @@
   "main": "background.js",
   "dependencies": {
     "@types/mime-types": "^2.1.1",
-    "core-js": "^3.4.3",
     "html-to-image": "^1.11.11",
     "image-size": "^1.0.2",
     "jszip": "^3.10.1",

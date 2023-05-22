@@ -30,7 +30,7 @@
     "core-js": "^3.4.3",
     "html-to-image": "^1.11.11",
     "image-size": "^1.0.2",
-    "jszip": "^3.9.1",
+    "jszip": "^3.10.1",
     "mime-types": "^2.1.35",
     "register-service-worker": "^1.7.2",
     "tone": "^14.8.49",

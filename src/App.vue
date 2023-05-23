@@ -21,6 +21,7 @@ export default class MartyriaToolbar extends Vue {
     if (navigator.serviceWorker) {
       document.addEventListener(
         'swUpdated',
+        // eslint-disable-next-line no-undef
         this.onUpdateAvailable as EventListener,
         {
           once: true,

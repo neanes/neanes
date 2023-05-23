@@ -17,6 +17,7 @@ import { PlatformService } from '@/services/platform/PlatformService';
 import { BrowserPlatformService } from '@/services/platform/BrowserPlatformService';
 
 export default {
+  // eslint-disable-next-line vue/multi-word-component-names
   name: 'home',
   components: {
     Editor,

@@ -1,0 +1,41 @@
+# https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+---
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    ignore:
+      # Vue CLI 5 depends on ts-loader 9, which depends on Webpack 5; however,
+      # Vue CLI Plugin Electron Builder does not support Webpack 5. See:
+      # https://github.com/nklayman/vue-cli-plugin-electron-builder/issues/1677
+      - dependency-name: "@vue/cli"
+        versions: [">=5.0.0"]
+      - dependency-name: "@vue/cli-plugin-babel"
+        versions: [">=5.0.0"]
+      - dependency-name: "@vue/cli-plugin-eslint"
+        versions: [">=5.0.0"]
+      - dependency-name: "@vue/cli-plugin-pwa"
+        versions: [">=5.0.0"]
+      - dependency-name: "@vue/cli-plugin-router"
+        versions: [">=5.0.0"]
+      - dependency-name: "@vue/cli-plugin-typescript"
+        versions: [">=5.0.0"]
+      - dependency-name: "@vue/cli-service"
+        versions: [">=5.0.0"]
+      # Vue CLI Plugin Electron Builder does not support Node.js 18 and Electron
+      # 23. See:
+      # https://github.com/nklayman/vue-cli-plugin-electron-builder/issues/1959
+      - dependency-name: "electron"
+        versions: [">=23.0.0"]
+      # Vue CLI Plugin ESLint 4 does not support ESLint 8.
+      - dependency-name: "eslint"
+        versions: [">=8.0.0"]
+      # Contains breaking changes. See: https://v3-migration.vuejs.org/
+      - dependency-name: "vue"
+        versions: [">=3.0.0"]
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"

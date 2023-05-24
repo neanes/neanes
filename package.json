@@ -39,7 +39,7 @@
     "vue-color": "^2.8.1",
     "vue-draggable-resizable": "^2.3.0",
     "vue-observe-visibility": "^1.0.0",
-    "vue-property-decorator": "^8.5.1",
+    "vue-property-decorator": "^9.1.2",
     "vue-router": "^3.6.5"
   },
   "devDependencies": {

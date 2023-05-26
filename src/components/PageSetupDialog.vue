@@ -268,6 +268,8 @@
               :min="0"
               :step="0.1"
               unit="unitless"
+              :precision="2"
+              placeholder="normal"
               :nullable="true"
               v-model="form.dropCapDefaultLineHeight"
             />

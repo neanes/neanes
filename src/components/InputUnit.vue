@@ -56,8 +56,8 @@ export default class InputUnit extends Vue {
   get displayValue() {
     let convertedValue = this.toDisplay(this.value);
 
-    if (convertedValue === null || convertedValue === undefined)
-      return this.nullable ? '' : '0';
+    if (convertedValue == null)
+      return this.nullable ? '' : this.defaultValue.toString();
 
     return this.precision != null
       ? convertedValue.toFixed(this.precision)
@@ -73,7 +73,7 @@ export default class InputUnit extends Vue {
   }
 
   onChange(input: string) {
-    if (input === '' && this.nullable) {
+    if (input.trim() === '' && this.nullable) {
       return this.emitValue(null);
     }
 

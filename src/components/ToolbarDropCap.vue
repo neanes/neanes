@@ -23,7 +23,7 @@
         :value="element.fontSize"
         @input="$emit('update:fontSize', $event)"
       />
-      <span class="space"></span>
+      <span class="space" style="text-align: center;">&#47;</span>
       <InputUnit
         class="drop-caps-input"
         unit="unitless"
@@ -31,7 +31,8 @@
         :min="0"
         :step="0.1"
         :value="element.lineHeight"
-        placeholder="Line Height"
+        :precision="2"
+        placeholder="normal"
         @input="$emit('update:lineHeight', $event)"
       />
       <span class="space"></span>

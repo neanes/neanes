@@ -119,7 +119,7 @@ export class PageSetup {
   public dropCapDefaultFontStyle = 'normal';
   public dropCapDefaultColor = '#000000';
   public dropCapDefaultStrokeWidth = 0;
-  public dropCapDefaultLineHeight: number | undefined = undefined;
+  public dropCapDefaultLineHeight: number | null = null;
 
   public hyphenSpacing: number = Unit.fromInch(0.75);
 

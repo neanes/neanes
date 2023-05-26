@@ -743,6 +743,7 @@ export class DropCapElement extends ScoreElement {
   public fontSize: number = Unit.fromPt(60);
   public fontWeight: string = '400';
   public fontStyle: string = 'normal';
+  public lineHeight: number | null = null;
   public strokeWidth: number = 0;
   public color: string = '#000000';
   public useDefaultStyle: boolean = true;
@@ -754,6 +755,7 @@ export class DropCapElement extends ScoreElement {
   public computedFontStyle: string = 'normal';
   public computedColor: string = '#000000';
   public computedStrokeWidth: number = 0;
+  public computedLineHeight: number | null = null;
 
   public get computedFont() {
     return `${this.computedFontStyle} normal ${this.computedFontWeight} ${this.computedFontSize}px "${this.computedFontFamily}"`;

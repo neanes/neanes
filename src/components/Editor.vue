@@ -168,6 +168,7 @@
                         <ContentEditable
                           class="lyrics"
                           :content="element.lyrics"
+                          whiteSpace="nowrap"
                           :ref="`lyrics-${getElementIndex(element)}`"
                           @focus.native="selectedLyrics = element"
                           @blur="
@@ -2566,72 +2567,74 @@ export default class Editor extends Vue {
       return;
     }
 
-    if (event.ctrlKey || event.metaKey) {
-      switch (event.code) {
-        case 'ArrowRight':
+    switch (event.code) {
+      case 'ArrowRight':
+        if (event.ctrlKey || event.metaKey) {
           this.moveToNextLyricBoxThrottled();
           handled = true;
-          break;
-        case 'ArrowLeft':
+        } else if (
+          getCursorPosition() === this.getLyricLength(this.selectedLyrics!)
+        ) {
+          this.moveToNextLyricBoxThrottled();
+          handled = true;
+        }
+        break;
+      case 'ArrowLeft':
+        if (event.ctrlKey || event.metaKey) {
           this.moveToPreviousLyricBoxThrottled();
           handled = true;
-          break;
-        case 'ArrowUp':
+        } else if (getCursorPosition() === 0) {
+          this.moveToPreviousLyricBoxThrottled();
+          handled = true;
+        }
+        break;
+      case 'ArrowUp':
+        if (event.ctrlKey || event.metaKey) {
           this.selectedElement = this.selectedLyrics;
           this.blurActiveElement();
           window.getSelection()?.removeAllRanges();
           handled = true;
-          break;
-        case 'Space':
-          // Ctrl + Space should add a normal space character
+        }
+        break;
+      case 'Space':
+        // Ctrl + Space should add a normal space character
+        if (event.ctrlKey || event.metaKey) {
           document.execCommand('insertText', false, ' ');
-          handled = true;
-          break;
-      }
-    } else {
-      switch (event.code) {
-        case 'Space':
+        } else {
           this.moveToNextLyricBoxThrottled(true);
-          handled = true;
-          break;
-        case 'ArrowLeft':
-          if (getCursorPosition() === 0) {
-            this.moveToPreviousLyricBoxThrottled();
-            handled = true;
-          }
-          break;
-        case 'ArrowRight':
-          if (
-            getCursorPosition() === this.getLyricLength(this.selectedLyrics!)
-          ) {
+        }
+        handled = true;
+        break;
+      case 'Minus': {
+        if (event.shiftKey) {
+          document.execCommand('insertText', false, '_');
+        } else {
+          document.execCommand('insertText', false, '-');
+        }
+
+        // Ctrl key overrides the "go to next lyrics" (Alt key for mac)
+        const overridden =
+          (this.platformService.isMac && event.altKey) ||
+          (!this.platformService.isMac && event.ctrlKey);
+
+        if (
+          !overridden &&
+          getCursorPosition() === this.getLyricLength(this.selectedLyrics!)
+        ) {
+          if (this.getNextLyricBoxIndex() >= 0) {
             this.moveToNextLyricBoxThrottled();
-            handled = true;
-          }
-          break;
-        case 'Minus':
-          if (event.shiftKey) {
-            document.execCommand('insertText', false, '_');
           } else {
-            document.execCommand('insertText', false, '-');
+            // If this is the last lyric box, blur
+            // so that the melisma is registered and
+            // the user doesn't accidentally type more
+            // characters into box
+            const index = this.elements.indexOf(this.selectedLyrics!);
+            (this.$refs[`lyrics-${index}`] as ContentEditable[])[0].blur();
           }
+        }
 
-          if (
-            getCursorPosition() === this.getLyricLength(this.selectedLyrics!)
-          ) {
-            if (this.getNextLyricBoxIndex() >= 0) {
-              this.moveToNextLyricBoxThrottled();
-            } else {
-              // If this is the last lyric box, blur
-              // so that the melisma is registered and
-              // the user doesn't accidentally type more
-              // characters into box
-              const index = this.elements.indexOf(this.selectedLyrics!);
-              (this.$refs[`lyrics-${index}`] as ContentEditable[])[0].blur();
-            }
-          }
-
-          handled = true;
-          break;
+        handled = true;
+        break;
       }
     }
 

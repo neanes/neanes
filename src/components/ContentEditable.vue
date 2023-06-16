@@ -2,6 +2,7 @@
   <span
     class="contenteditable"
     :contenteditable="contentEditable"
+    :style="style"
     @blur="onBlur"
     v-html="content"
   ></span>
@@ -16,6 +17,7 @@ export default class ContentEditable extends Vue {
   @Prop({ default: true }) selectAllOnFocus!: boolean;
   @Prop({ default: true }) editable!: boolean;
   @Prop({ default: true }) plaintextOnly!: boolean;
+  @Prop({ default: 'break-spaces' }) whiteSpace!: string;
 
   get contentEditable() {
     return this.editable
@@ -27,6 +29,12 @@ export default class ContentEditable extends Vue {
 
   get htmlElement() {
     return this.$el as HTMLElement;
+  }
+
+  get style() {
+    return {
+      whiteSpace: this.whiteSpace,
+    } as CSSStyleDeclaration;
   }
 
   getInnerText() {
@@ -55,6 +63,5 @@ export default class ContentEditable extends Vue {
 <style scoped>
 .contenteditable {
   overflow-wrap: break-word;
-  white-space: break-spaces;
 }
 </style>

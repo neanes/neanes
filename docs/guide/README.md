@@ -145,6 +145,8 @@ To insert lyrics, click on the space just below a neume and begin typing.
 
 To create a melisma, end your lyrics with an underscore or hyphen (`_` or `-`). To continue the melisma, set the lyrics for each neume in the melisma to a single underscore or hyphen. The full melisma will be drawn for you.
 
+To insert hyphens or underscores without creating a melisma, hold <kbd>Ctrl</kbd> while typing the character.
+
 ## Page Breaks and Line Breaks
 
 To insert a page break or a line break, click the neume that you want the break to occur after, and press the `Page Break` or `Line Break` button in the main toolbar. To remove the page or line break, highlight the element with the break, and press the button page or line break button again.

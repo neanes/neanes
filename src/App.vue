@@ -1,11 +1,9 @@
 <template>
-  <div id="app">
-    <router-view />
-    <div class="update-notification" v-if="updateExists">
-      An update is available.
-      <button class="ok" @click="refreshApp">Update</button>
-      <button class="cancel" @click="updateExists = false">Not now</button>
-    </div>
+  <router-view />
+  <div class="update-notification" v-if="updateExists">
+    An update is available.
+    <button class="ok" @click="refreshApp">Update</button>
+    <button class="cancel" @click="updateExists = false">Not now</button>
   </div>
 </template>
 
@@ -58,6 +56,14 @@ export default class MartyriaToolbar extends Vue {
   --zoom: 1;
 
   --btn-color-selected: lightsteelblue;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+
+  height: 100%;
 }
 
 @media print {
@@ -138,14 +144,6 @@ body {
 </style>
 
 <style scoped>
-#app {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-
-  height: 100%;
-}
-
 .update-notification {
   position: absolute;
   bottom: 0;

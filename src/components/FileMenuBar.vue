@@ -81,7 +81,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-property-decorator';
+import { Component, Vue } from 'vue-facing-decorator';
 import FileMenuBarItem from '@/components/FileMenuBarItem.vue';
 import FileMenuItem from '@/components/FileMenuItem.vue';
 import { EventBus } from '@/eventBus';
@@ -123,7 +123,7 @@ export default class FileMenuBar extends Vue {
     EventBus.$on(IpcRendererChannels.OpenImageDialog, this.onClickAddImage);
   }
 
-  beforeDestroy() {
+  beforeUnmount() {
     window.removeEventListener('keydown', this.onKeyDown);
     EventBus.$off(IpcRendererChannels.OpenImageDialog, this.onClickAddImage);
   }

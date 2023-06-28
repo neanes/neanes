@@ -598,7 +598,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator';
+import { Component, Prop, Vue } from 'vue-facing-decorator';
 import { ElementType, NoteElement, ScoreElementOffset } from '@/models/Element';
 import ModalDialog from '@/components/ModalDialog.vue';
 import NeumeBoxSyllable from '@/components/NeumeBoxSyllable.vue';
@@ -619,6 +619,7 @@ import { TimeNeume } from '@/models/save/v1/Neumes';
     InputUnit,
     DragHandle,
   },
+  emits: ['close', 'update'],
 })
 export default class SyllablePositioningDialog extends Vue {
   @Prop() element!: NoteElement;
@@ -761,7 +762,7 @@ export default class SyllablePositioningDialog extends Vue {
     window.addEventListener('keydown', this.onKeyDown);
   }
 
-  beforeDestroy() {
+  beforeUnmount() {
     window.removeEventListener('keydown', this.onKeyDown);
   }
 

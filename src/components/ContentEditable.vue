@@ -9,9 +9,11 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator';
+import { Component, Prop, Vue } from 'vue-facing-decorator';
 
-@Component
+@Component({
+  emits: ['blur'],
+})
 export default class ContentEditable extends Vue {
   @Prop() content!: string;
   @Prop({ default: true }) selectAllOnFocus!: boolean;

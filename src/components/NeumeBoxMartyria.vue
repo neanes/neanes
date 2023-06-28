@@ -21,7 +21,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator';
+import { Component, Prop, Vue } from 'vue-facing-decorator';
 import { MartyriaElement } from '@/models/Element';
 import Neume from '@/components/Neume.vue';
 import { Note } from '@/models/Neumes';

@@ -2,7 +2,10 @@
   <div class="tempo-toolbar">
     <div class="row">
       <label class="right-space">BPM</label>
-      <InputBpm :value="element.bpm" @input="$emit('update:bpm', $event)" />
+      <InputBpm
+        :modelValue="element.bpm"
+        @update:modelValue="$emit('update:bpm', $event)"
+      />
 
       <span class="space" />
 
@@ -14,15 +17,15 @@
         :max="spaceAfterMax"
         :step="0.5"
         :precision="2"
-        :value="element.spaceAfter"
-        @input="$emit('update:spaceAfter', $event)"
+        :modelValue="element.spaceAfter"
+        @update:modelValue="$emit('update:spaceAfter', $event)"
       />
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator';
+import { Component, Prop, Vue } from 'vue-facing-decorator';
 import { TempoElement } from '@/models/Element';
 import InputUnit from './InputUnit.vue';
 import InputBpm from './InputBpm.vue';
@@ -30,10 +33,8 @@ import { PageSetup } from '@/models/PageSetup';
 import { Unit } from '@/utils/Unit';
 
 @Component({
-  components: {
-    InputUnit,
-    InputBpm,
-  },
+  components: { InputUnit, InputBpm },
+  emits: ['update:bpm', 'update:spaceAfter'],
 })
 export default class ToolbarTempo extends Vue {
   @Prop() element!: TempoElement;

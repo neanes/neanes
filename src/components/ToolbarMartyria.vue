@@ -187,8 +187,8 @@
       <label class="right-space">BPM</label>
       <InputBpm
         :disabled="element.tempo == null"
-        :value="element.bpm"
-        @input="$emit('update:bpm', $event)"
+        :modelValue="element.bpm"
+        @update:modelValue="$emit('update:bpm', $event)"
       />
 
       <span class="space" />
@@ -201,8 +201,8 @@
         :max="spaceAfterMax"
         :step="0.5"
         :precision="2"
-        :value="element.spaceAfter"
-        @input="$emit('update:spaceAfter', $event)"
+        :modelValue="element.spaceAfter"
+        @update:modelValue="$emit('update:spaceAfter', $event)"
       />
 
       <template v-if="showChromaticFthoraNote">
@@ -233,7 +233,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator';
+import { Component, Prop, Vue } from 'vue-facing-decorator';
 import { MartyriaElement } from '@/models/Element';
 import { Fthora, MeasureBar, Note, RootSign, TempoSign } from '@/models/Neumes';
 import InputUnit from './InputUnit.vue';
@@ -244,11 +244,20 @@ import { Unit } from '@/utils/Unit';
 import ButtonWithMenu, { ButtonWithMenuOption } from './ButtonWithMenu.vue';
 
 @Component({
-  components: {
-    InputUnit,
-    InputBpm,
-    ButtonWithMenu,
-  },
+  components: { InputUnit, InputBpm, ButtonWithMenu },
+  emits: [
+    'update:alignRight',
+    'update:auto',
+    'update:bpm',
+    'update:chromaticFthoraNote',
+    'update:fthora',
+    'update:measureBar',
+    'update:note',
+    'update:rootSignOverride',
+    'update:scale',
+    'update:spaceAfter',
+    'update:tempo',
+  ],
 })
 export default class ToolbarMartyria extends Vue {
   @Prop() element!: MartyriaElement;

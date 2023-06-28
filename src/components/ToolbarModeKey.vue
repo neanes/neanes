@@ -13,13 +13,13 @@
       <label class="right-space">Size</label>
       <InputFontSize
         class="drop-caps-input"
-        :value="element.fontSize"
-        @input="$emit('update:fontSize', $event)"
+        :modelValue="element.fontSize"
+        @update:modelValue="$emit('update:fontSize', $event)"
       />
       <span class="space"></span>
       <ColorPicker
-        :value="element.color"
-        @input="$emit('update:color', $event)"
+        :modelValue="element.color"
+        @update:modelValue="$emit('update:color', $event)"
       />
       <span class="space"></span>
     </template>
@@ -66,8 +66,8 @@
     <template v-if="!element.useDefaultStyle">
       <label class="right-space">Outline</label>
       <InputStrokeWidth
-        :value="element.strokeWidth"
-        @input="$emit('update:strokeWidth', $event)"
+        :modelValue="element.strokeWidth"
+        @update:modelValue="$emit('update:strokeWidth', $event)"
       />
       <span class="space" />
 
@@ -80,8 +80,8 @@
         :max="heightAdjustmentMax"
         :step="0.5"
         :precision="2"
-        :value="element.heightAdjustment"
-        @input="$emit('update:heightAdjustment', $event)"
+        :modelValue="element.heightAdjustment"
+        @update:modelValue="$emit('update:heightAdjustment', $event)"
       />
       <span class="space" />
     </template>
@@ -108,7 +108,10 @@
     <span class="space" />
 
     <label class="right-space">BPM</label>
-    <InputBpm :value="element.bpm" @input="$emit('update:bpm', $event)" />
+    <InputBpm
+      :modelValue="element.bpm"
+      @update:modelValue="$emit('update:bpm', $event)"
+    />
 
     <span class="space" />
 
@@ -159,7 +162,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator';
+import { Component, Prop, Vue } from 'vue-facing-decorator';
 import { TextBoxAlignment, ModeKeyElement } from '@/models/Element';
 import { Unit } from '@/utils/Unit';
 import ColorPicker from '@/components/ColorPicker.vue';
@@ -180,6 +183,21 @@ import ButtonWithMenu, { ButtonWithMenuOption } from './ButtonWithMenu.vue';
     InputStrokeWidth,
     ButtonWithMenu,
   },
+  emits: [
+    'open-mode-key-dialog',
+    'update:alignment',
+    'update:bpm',
+    'update:color',
+    'update:fontSize',
+    'update:heightAdjustment',
+    'update:ignoreAttractions',
+    'update:permanentEnharmonicZo',
+    'update:showAmbitus',
+    'update:strokeWidth',
+    'update:tempo',
+    'update:tempoAlignRight',
+    'update:useDefaultStyle',
+  ],
 })
 export default class ToolbarModeKey extends Vue {
   @Prop() element!: ModeKeyElement;

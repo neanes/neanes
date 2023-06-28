@@ -23,7 +23,7 @@
       @add-drop-cap="addDropCap(false)"
       @add-image="onClickAddImage"
       @delete-selected-element="deleteSelectedElement"
-      @click.native="selectedLyrics = null"
+      @click="selectedLyrics = null"
       @play-audio="playAudio"
       @open-playback-settings="openPlaybackSettingsDialog"
     />
@@ -99,7 +99,7 @@
                     },
                   ]"
                   :style="headerStyle"
-                  @click.native="
+                  @click="
                     selectedHeaderFooterElement =
                       getHeaderForPageIndex(pageIndex)
                   "
@@ -152,9 +152,9 @@
                             'audio-selected': isAudioSelected(element),
                           },
                         ]"
-                        @click.native.exact="selectedElement = element"
-                        @click.native.shift.exact="setSelectionRange(element)"
-                        @dblclick.native="openSyllablePositioningDialog"
+                        @click.exact="selectedElement = element"
+                        @click.shift.exact="setSelectionRange(element)"
+                        @dblclick="openSyllablePositioningDialog"
                         @update="updateNoteAndSave(element, $event)"
                       />
                       <div
@@ -170,7 +170,7 @@
                           :content="element.lyrics"
                           whiteSpace="nowrap"
                           :ref="`lyrics-${getElementIndex(element)}`"
-                          @focus.native="selectedLyrics = element"
+                          @focus="selectedLyrics = element"
                           @blur="
                             updateLyrics(element, $event);
                             selectedLyrics = null;
@@ -221,8 +221,8 @@
                             selected: isSelected(element),
                           },
                         ]"
-                        @click.native.exact="selectedElement = element"
-                        @click.native.shift.exact="setSelectionRange(element)"
+                        @click.exact="selectedElement = element"
+                        @click.shift.exact="setSelectionRange(element)"
                       />
                       <div class="lyrics"></div>
                     </div>
@@ -243,7 +243,7 @@
                         :neume="element"
                         :pageSetup="score.pageSetup"
                         :class="[{ selected: isSelected(element) }]"
-                        @click.native="selectedElement = element"
+                        @click="selectedElement = element"
                       />
                       <div class="lyrics"></div>
                     </div>
@@ -281,7 +281,7 @@
                       :editMode="true"
                       :metadata="getTokenMetadata(pageIndex)"
                       :class="[{ selectedTextbox: isSelected(element) }]"
-                      @click.native="selectedElement = element"
+                      @click="selectedElement = element"
                       @update:content="updateTextBoxContent(element, $event)"
                     />
                   </template>
@@ -301,8 +301,8 @@
                           selectedTextbox: isSelected(element),
                         },
                       ]"
-                      @click.native="selectedElement = element"
-                      @dblclick.native="openModeKeyDialog"
+                      @click="selectedElement = element"
+                      @dblclick="openModeKeyDialog"
                     />
                   </template>
                   <template v-if="isDropCapElement(element)">
@@ -324,7 +324,7 @@
                           selectedTextbox: isSelected(element),
                         },
                       ]"
-                      @click.native="selectedElement = element"
+                      @click="selectedElement = element"
                       @update:content="updateDropCapContent(element, $event)"
                     />
                   </template>
@@ -340,7 +340,7 @@
                       :element="element"
                       :zoom="zoom"
                       :class="[{ selectedImagebox: isSelected(element) }]"
-                      @click.native="selectedElement = element"
+                      @click="selectedElement = element"
                       @update:size="
                         updateImageBoxSize(
                           selectedElement,
@@ -370,7 +370,7 @@
                     },
                   ]"
                   :style="footerStyle"
-                  @click.native="
+                  @click="
                     selectedHeaderFooterElement =
                       getFooterForPageIndex(pageIndex)
                   "
@@ -601,7 +601,8 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Watch, Vue } from 'vue-property-decorator';
+import { nextTick } from 'vue';
+import { Component, Inject, Prop, Watch, Vue } from 'vue-facing-decorator';
 import { toPng, getFontEmbedCSS } from 'html-to-image';
 import {
   ScoreElement,
@@ -757,6 +758,9 @@ export default class Editor extends Vue {
   @Prop() platformService!: IPlatformService;
   @Prop() showFileMenuBar!: boolean;
 
+  @Inject() readonly audioService!: AudioService;
+  @Inject() readonly playbackService!: PlaybackService;
+
   LineBreakType = LineBreakType;
 
   isDevelopment: boolean = process.env.NODE_ENV !== 'production';
@@ -788,9 +792,6 @@ export default class Editor extends Vue {
 
   neumeKeyboard: NeumeKeyboard = new NeumeKeyboard();
   keyboardModifier: string | null = null;
-
-  audioService = new AudioService();
-  playbackService = new PlaybackService();
 
   audioElement: ScoreElement | null = null;
   playbackEvents: PlaybackSequenceEvent[] = [];
@@ -1041,7 +1042,7 @@ export default class Editor extends Vue {
 
     // Scroll to the new workspace's saved scroll position
     // Use nextTick to scroll after the DOM has refreshed
-    Vue.nextTick(() => {
+    nextTick(() => {
       pageBackgroundElement.scrollTo(
         this.selectedWorkspace.scrollLeft,
         this.selectedWorkspace.scrollTop,
@@ -1543,7 +1544,7 @@ export default class Editor extends Vue {
     EventBus.$on(AudioServiceEventNames.Stop, this.onAudioServiceStop);
   }
 
-  beforeDestroy() {
+  beforeUnmount() {
     // Remove the debugging variable from window
     (window as any)._editor = undefined;
 
@@ -1970,7 +1971,7 @@ export default class Editor extends Vue {
     this.selectedElement = element;
     this.save();
 
-    Vue.nextTick(() => {
+    nextTick(() => {
       const index = this.elements.indexOf(element);
 
       (this.$refs[`element-${index}`] as any)[0].focus();
@@ -2231,7 +2232,7 @@ export default class Editor extends Vue {
 
             // Select All doesn't work until after the lyrics have been selected,
             // hence we call focus lyrics twice
-            Vue.nextTick(() => {
+            nextTick(() => {
               this.focusLyrics(index, true);
             });
 
@@ -3141,7 +3142,7 @@ export default class Editor extends Vue {
       // and finally the newly selected element would lose focus because processPages
       // moves the element to the next line.
 
-      // To prevent this we, preemptively call updateLyrics and then use Vue.nextTick
+      // To prevent this we, preemptively call updateLyrics and then use nextTick
       // to only focus the next lyrics after the UI has been redrawn.
 
       const noteElement = this.selectedLyrics!;
@@ -3154,7 +3155,7 @@ export default class Editor extends Vue {
 
       this.updateLyrics(noteElement, text, clearMelisma);
 
-      Vue.nextTick(() => {
+      nextTick(() => {
         this.focusLyrics(nextIndex, true);
       });
 
@@ -4664,7 +4665,7 @@ export default class Editor extends Vue {
       this.score.staff.elements[this.score.staff.elements.length - 1];
     this.save(false);
 
-    Vue.nextTick(() => {
+    nextTick(() => {
       const tabContainerElement = this.$refs[
         'workspace-tab-container'
       ] as HTMLElement;
@@ -4690,7 +4691,7 @@ export default class Editor extends Vue {
     // blinking cursors don't show up in the printed page
     const activeElement = this.blurActiveElement();
 
-    Vue.nextTick(async () => {
+    nextTick(async () => {
       await this.ipcService.printWorkspace(this.selectedWorkspace);
       this.printMode = false;
 
@@ -4706,7 +4707,7 @@ export default class Editor extends Vue {
     // blinking cursors don't show up in the printed page
     const activeElement = this.blurActiveElement();
 
-    Vue.nextTick(async () => {
+    nextTick(async () => {
       await this.ipcService.exportWorkspaceAsPdf(this.selectedWorkspace);
       this.printMode = false;
 
@@ -4743,7 +4744,7 @@ export default class Editor extends Vue {
     // blinking cursors don't show up in the printed page
     const activeElement = this.blurActiveElement();
 
-    Vue.nextTick(async () => {
+    nextTick(async () => {
       try {
         const pages = this.$refs.pages as HTMLElement[];
 
@@ -4822,7 +4823,7 @@ export default class Editor extends Vue {
   //   // blinking cursors don't show up in the printed page
   //   const activeElement = this.blurActiveElement();
 
-  //   Vue.nextTick(async () => {
+  //   nextTick(async () => {
   //     try {
   //       const pages = this.$refs.pages as HTMLElement[];
 
@@ -4906,7 +4907,7 @@ export default class Editor extends Vue {
 
     this.save();
 
-    Vue.nextTick(() => {
+    nextTick(() => {
       const index = this.elements.indexOf(element);
 
       (this.$refs[`element-${index}`] as any)[0].focus();
@@ -5167,7 +5168,7 @@ export default class Editor extends Vue {
 
       this.save(false);
 
-      Vue.nextTick(() => {
+      nextTick(() => {
         const tabContainerElement = this.$refs[
           'workspace-tab-container'
         ] as HTMLElement;

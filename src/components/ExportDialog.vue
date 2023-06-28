@@ -65,7 +65,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator';
+import { Component, Prop, Vue } from 'vue-facing-decorator';
 import ModalDialog from '@/components/ModalDialog.vue';
 import InputUnit from '@/components/InputUnit.vue';
 
@@ -84,6 +84,7 @@ export interface ExportAsPngSettings {
 
 @Component({
   components: { ModalDialog, InputUnit },
+  emits: ['close', 'exportAsPng', 'exportAsSvg'],
 })
 export default class ExportDialog extends Vue {
   @Prop() defaultFormat: ExportFormat | undefined;
@@ -108,7 +109,7 @@ export default class ExportDialog extends Vue {
     window.addEventListener('keydown', this.onKeyDown);
   }
 
-  beforeDestroy() {
+  beforeUnmount() {
     window.removeEventListener('keydown', this.onKeyDown);
   }
 

@@ -20,13 +20,13 @@
       <span class="space"></span>
       <InputFontSize
         class="drop-caps-input"
-        :value="element.fontSize"
-        @input="$emit('update:fontSize', $event)"
+        :modelValue="element.fontSize"
+        @update:modelValue="$emit('update:fontSize', $event)"
       />
       <span class="space"></span>
       <ColorPicker
-        :value="element.color"
-        @input="$emit('update:color', $event)"
+        :modelValue="element.color"
+        @update:modelValue="$emit('update:color', $event)"
       />
       <span class="space"></span>
       <button
@@ -46,15 +46,15 @@
       <span class="space"></span>
       <label class="right-space">Outline</label>
       <InputStrokeWidth
-        :value="element.strokeWidth"
-        @input="$emit('update:strokeWidth', $event)"
+        :modelValue="element.strokeWidth"
+        @update:modelValue="$emit('update:strokeWidth', $event)"
       />
     </template>
   </div>
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator';
+import { Component, Prop, Vue } from 'vue-facing-decorator';
 import { DropCapElement } from '@/models/Element';
 import ColorPicker from '@/components/ColorPicker.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
@@ -62,6 +62,15 @@ import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 
 @Component({
   components: { ColorPicker, InputFontSize, InputStrokeWidth },
+  emits: [
+    'update:bold',
+    'update:color',
+    'update:fontFamily',
+    'update:fontSize',
+    'update:italic',
+    'update:strokeWidth',
+    'update:useDefaultStyle',
+  ],
 })
 export default class ToolbarDropCap extends Vue {
   @Prop() element!: DropCapElement;

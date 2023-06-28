@@ -5,18 +5,21 @@
     :max="strokeWidthMax"
     :step="strokeWidthStep"
     :precision="strokeWidthPrecision"
-    :value="value"
-    @input="$emit('input', $event)"
+    :modelValue="modelValue"
+    @update:modelValue="$emit('update:modelValue', $event)"
   />
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator';
+import { Component, Prop, Vue } from 'vue-facing-decorator';
 import InputUnit from '@/components/InputUnit.vue';
 
-@Component({ components: { InputUnit } })
+@Component({
+  components: { InputUnit },
+  emits: ['update:modelValue'],
+})
 export default class InputStrokeWidth extends Vue {
-  @Prop() value!: number;
+  @Prop() modelValue!: number;
 
   strokeWidthMax = 5;
   strokeWidthStep = 0.1;

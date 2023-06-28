@@ -12,11 +12,14 @@
 
 <script lang="ts">
 import { Unit } from '@/utils/Unit';
-import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
+import { Component, Prop, Vue, Watch } from 'vue-facing-decorator';
 
-@Component({ components: {} })
+@Component({
+  components: {},
+  emits: ['update:modelValue'],
+})
 export default class InputUnit extends Vue {
-  @Prop() value!: number;
+  @Prop() modelValue!: number;
   @Prop() unit!: 'pt' | 'in' | 'mm' | 'unitless';
   /**
    * The minimum value allowed, in display units.
@@ -53,7 +56,7 @@ export default class InputUnit extends Vue {
   }
 
   get displayValue() {
-    let convertedValue = this.toDisplay(this.value);
+    let convertedValue = this.toDisplay(this.modelValue);
 
     return this.precision != null
       ? convertedValue.toFixed(this.precision)
@@ -81,8 +84,8 @@ export default class InputUnit extends Vue {
       storageValue = Math.min(this.toStorage(this.max), storageValue);
     }
 
-    if (this.value !== storageValue) {
-      this.$emit('input', storageValue);
+    if (this.modelValue !== storageValue) {
+      this.$emit('update:modelValue', storageValue);
     } else {
       this.htmlElement.value = this.displayValue;
     }

@@ -60,7 +60,9 @@
             <li
               @click="selectedModeKey = template"
               v-for="(template, index) in modeKeyTemplatesForSelectedMode"
-              :class="{ selected: selectedModeKey === template }"
+              :class="{
+                selected: selectedModeKey?.templateId === template.templateId,
+              }"
               :key="index"
             >
               <ModeKey :element="template" />
@@ -98,8 +100,8 @@ import { TextMeasurementService } from '@/services/TextMeasurementService';
 export default class ModeKeyDialog extends Vue {
   @Prop() element!: ModeKeyElement;
   @Prop() pageSetup!: PageSetup;
-  private selectedMode: number | null = null;
-  private selectedModeKey: ModeKeyElement | null = null;
+  selectedMode: number | null = null;
+  selectedModeKey: ModeKeyElement | null = null;
 
   created() {
     this.selectMode(this.element.mode);

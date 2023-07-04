@@ -1,5 +1,10 @@
 <template>
-  <div class="neume" :style="style">
+  <div
+    class="neume"
+    :style="style"
+    @click.exact="$emit('select-single')"
+    @click.shift.exact="$emit('select-range')"
+  >
     <Neume
       v-if="hasMeasureBarLeft"
       :neume="note.measureBarLeft"
@@ -90,6 +95,7 @@ import { PageSetup } from '@/models/PageSetup';
   components: {
     Neume: NeumeVue,
   },
+  emits: ['select-single', 'select-range'],
 })
 export default class NeumeBoxSyllable extends Vue {
   @Prop() note!: NoteElement;

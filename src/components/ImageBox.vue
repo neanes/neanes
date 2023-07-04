@@ -1,5 +1,9 @@
 <template>
-  <div class="image-box-container" :style="containerStyle">
+  <div
+    class="image-box-container"
+    :style="containerStyle"
+    @click="$emit('select-single')"
+  >
     <vue-draggable-resizable
       :lock-aspect-ratio="element.lockAspectRatio"
       :w="imageWidthZoomed"
@@ -26,7 +30,7 @@ import { withZoom } from '@/utils/withZoom';
 
 @Component({
   components: { ContentEditable, VueDraggableResizable },
-  emits: ['update:size'],
+  emits: ['update:size', 'select-single'],
 })
 export default class ImageBox extends Vue {
   @Prop() element!: ImageBoxElement;

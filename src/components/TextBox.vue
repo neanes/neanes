@@ -1,5 +1,9 @@
 <template>
-  <div class="text-box-container" :style="containerStyle">
+  <div
+    class="text-box-container"
+    :style="containerStyle"
+    @click="$emit('select-single')"
+  >
     <ContentEditable
       ref="text"
       class="text-box"
@@ -22,7 +26,7 @@ import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 
 @Component({
   components: { ContentEditable },
-  emits: ['update:content'],
+  emits: ['update:content', 'select-single'],
 })
 export default class TextBox extends Vue {
   @Prop() element!: TextBoxElement;

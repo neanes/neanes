@@ -152,10 +152,9 @@
                             'audio-selected': isAudioSelected(element),
                           },
                         ]"
-                        @click.exact="selectedElement = element"
-                        @click.shift.exact="setSelectionRange(element)"
+                        @select-single="selectedElement = element"
+                        @select-range="setSelectionRange(element)"
                         @dblclick="openSyllablePositioningDialog"
-                        @update="updateNoteAndSave(element, $event)"
                       />
                       <div
                         class="lyrics-container"
@@ -163,13 +162,13 @@
                           element.keyHelper
                         }`"
                         :style="getLyricStyle(element)"
-                        @click="focusLyrics(getElementIndex(element))"
                       >
                         <ContentEditable
                           class="lyrics"
                           :content="element.lyrics"
                           whiteSpace="nowrap"
                           :ref="`lyrics-${getElementIndex(element)}`"
+                          @click="focusLyrics(getElementIndex(element))"
                           @focus="selectedLyrics = element"
                           @blur="
                             updateLyrics(element, $event);
@@ -221,8 +220,8 @@
                             selected: isSelected(element),
                           },
                         ]"
-                        @click.exact="selectedElement = element"
-                        @click.shift.exact="setSelectionRange(element)"
+                        @select-single="selectedElement = element"
+                        @select-range="setSelectionRange(element)"
                       />
                       <div class="lyrics"></div>
                     </div>
@@ -243,7 +242,8 @@
                         :neume="element"
                         :pageSetup="score.pageSetup"
                         :class="[{ selected: isSelected(element) }]"
-                        @click="selectedElement = element"
+                        @select-single="selectedElement = element"
+                        @select-range="setSelectionRange(element)"
                       />
                       <div class="lyrics"></div>
                     </div>
@@ -259,12 +259,12 @@
                       <span class="line-break" v-if="element.lineBreak"
                         ><img src="@/assets/icons/line-break.svg"
                       /></span>
-                      <div
+                      <EmptyNeumeBox
                         class="empty-neume-box"
                         :class="[{ selected: isSelected(element) }]"
                         :style="getEmptyBoxStyle(element)"
-                        @click="selectedElement = element"
-                      ></div>
+                        @select-single="selectedElement = element"
+                      ></EmptyNeumeBox>
                       <div class="lyrics"></div>
                     </div>
                   </template>
@@ -281,7 +281,7 @@
                       :editMode="true"
                       :metadata="getTokenMetadata(pageIndex)"
                       :class="[{ selectedTextbox: isSelected(element) }]"
-                      @click="selectedElement = element"
+                      @select-single="selectedElement = element"
                       @update:content="updateTextBoxContent(element, $event)"
                     />
                   </template>
@@ -301,7 +301,7 @@
                           selectedTextbox: isSelected(element),
                         },
                       ]"
-                      @click="selectedElement = element"
+                      @select-single="selectedElement = element"
                       @dblclick="openModeKeyDialog"
                     />
                   </template>
@@ -324,7 +324,7 @@
                           selectedTextbox: isSelected(element),
                         },
                       ]"
-                      @click="selectedElement = element"
+                      @select-single="selectedElement = element"
                       @update:content="updateDropCapContent(element, $event)"
                     />
                   </template>
@@ -340,7 +340,7 @@
                       :element="element"
                       :zoom="zoom"
                       :class="[{ selectedImagebox: isSelected(element) }]"
-                      @click="selectedElement = element"
+                      @select-single="selectedElement = element"
                       @update:size="
                         updateImageBoxSize(
                           selectedElement,
@@ -645,6 +645,7 @@ import SyllableNeumeBoxPrint from '@/components/NeumeBoxSyllablePrint.vue';
 import MartyriaNeumeBox from '@/components/NeumeBoxMartyria.vue';
 import MartyriaNeumeBoxPrint from '@/components/NeumeBoxMartyriaPrint.vue';
 import TempoNeumeBox from '@/components/NeumeBoxTempo.vue';
+import EmptyNeumeBox from '@/components/NeumeBoxEmpty.vue';
 import NeumeSelector from '@/components/NeumeSelector.vue';
 import ContentEditable from '@/components/ContentEditable.vue';
 import TextBox from '@/components/TextBox.vue';
@@ -728,6 +729,7 @@ import {
     MartyriaNeumeBox,
     MartyriaNeumeBoxPrint,
     TempoNeumeBox,
+    EmptyNeumeBox,
     NeumeSelector,
     ContentEditable,
     TextBox,
@@ -5277,11 +5279,6 @@ export default class Editor extends Vue {
   justify-content: center;
 
   position: relative;
-}
-
-.empty-neume-box {
-  border: 1px dotted black;
-  box-sizing: border-box;
 }
 
 .page-container {

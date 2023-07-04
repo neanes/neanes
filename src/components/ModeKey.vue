@@ -1,5 +1,9 @@
 <template>
-  <div class="mode-key-container" :style="style">
+  <div
+    class="mode-key-container"
+    :style="style"
+    @click="$emit('select-single')"
+  >
     <Neume :neume="ModeSign.Ekhos" />
     <Neume v-if="element.isPlagal" :neume="ModeSign.Plagal" />
     <Neume v-if="element.isVarys" :neume="ModeSign.Varys" />
@@ -65,6 +69,7 @@ import { PageSetup } from '@/models/PageSetup';
   components: {
     Neume,
   },
+  emits: ['select-single'],
 })
 export default class ModeKey extends Vue {
   @Prop() element!: ModeKeyElement;

@@ -1,5 +1,5 @@
 <template>
-  <div class="drop-cap-container">
+  <div class="drop-cap-container" @click="$emit('select-single')">
     <ContentEditable
       ref="text"
       class="drop-cap"
@@ -20,7 +20,7 @@ import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 
 @Component({
   components: { ContentEditable },
-  emits: ['update:content'],
+  emits: ['update:content', 'select-single'],
 })
 export default class DropCap extends Vue {
   @Prop() element!: DropCapElement;

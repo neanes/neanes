@@ -71,6 +71,8 @@ export abstract class ScoreElement {
   public keyHelper: number = 0;
   public updated: boolean = false;
 
+  public widthPrevious = 0;
+
   // Used internally, not saved
   public line: number = 0;
 }

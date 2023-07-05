@@ -65,6 +65,8 @@ export class LayoutService {
       // Save the current element state so we can determine which elements updated
       element.updated = false;
 
+      element.widthPrevious = element.width;
+
       if (element.elementType === ElementType.Martyria) {
         const martyria = element as MartyriaElement;
         martyria.notePrevious = martyria.note;
@@ -731,6 +733,7 @@ export class LayoutService {
         const textbox = element as TextBoxElement;
 
         textbox.updated =
+          textbox.widthPrevious !== textbox.width ||
           textbox.computedFontFamilyPrevious !== textbox.computedFontFamily ||
           textbox.computedFontSizePrevious !== textbox.computedFontSize ||
           textbox.computedFontWeightPrevious !== textbox.computedFontWeight ||
@@ -743,6 +746,7 @@ export class LayoutService {
         const modeKey = element as ModeKeyElement;
 
         modeKey.updated =
+          modeKey.widthPrevious !== modeKey.width ||
           modeKey.computedFontFamilyPrevious !== modeKey.computedFontFamily ||
           modeKey.computedFontSizePrevious !== modeKey.computedFontSize ||
           modeKey.computedHeightAdjustmentPrevious !==

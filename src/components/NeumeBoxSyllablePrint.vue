@@ -62,7 +62,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator';
+import { Component, Prop, Vue } from 'vue-facing-decorator';
 import { NoteElement } from '@/models/Element';
 import { VocalExpressionNeume, Neume, TimeNeume } from '@/models/Neumes';
 import NeumeVue from '@/components/Neume.vue';

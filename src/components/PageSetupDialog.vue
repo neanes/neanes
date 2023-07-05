@@ -578,7 +578,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator';
+import { Component, Prop, Vue } from 'vue-facing-decorator';
 import ModalDialog from '@/components/ModalDialog.vue';
 import NeumeVue from '@/components/Neume.vue';
 import { PageSetup, PageSize, pageSizes } from '@/models/PageSetup';
@@ -607,6 +607,7 @@ import { SaveService } from '@/services/SaveService';
     NeumeBoxMartyria,
     NeumeBoxTempo,
   },
+  emits: ['close', 'update'],
 })
 export default class PageSetupDialog extends Vue {
   @Prop() pageSetup!: PageSetup;
@@ -697,7 +698,7 @@ export default class PageSetupDialog extends Vue {
     window.addEventListener('keydown', this.onKeyDown);
   }
 
-  beforeDestroy() {
+  beforeUnmount() {
     window.removeEventListener('keydown', this.onKeyDown);
   }
 

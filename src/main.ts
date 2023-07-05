@@ -1,16 +1,13 @@
-import Vue from 'vue';
+import { createApp } from 'vue';
 import App from './App.vue';
 import { initializeIpcListeners } from './ipc/ipcListeners';
 import { initalizeBrowserIpcListeners } from './ipc/browserIpcListeners';
+import { AudioService } from '@/services/audio/AudioService';
+import { PlaybackService } from '@/services/audio/PlaybackService';
 import router from './router';
+import ObserveVisibility from './directives/observeVisibility';
 import './registerServiceWorker';
-// @ts-ignore
-import VueDraggableResizable from 'vue-draggable-resizable';
 import 'vue-draggable-resizable/dist/VueDraggableResizable.css';
-
-Vue.component('vue-draggable-resizable', VueDraggableResizable);
-
-Vue.config.productionTip = false;
 
 if (process.env.IS_ELECTRON) {
   initializeIpcListeners();
@@ -18,7 +15,9 @@ if (process.env.IS_ELECTRON) {
   initalizeBrowserIpcListeners();
 }
 
-new Vue({
-  router,
-  render: (h) => h(App),
-}).$mount('#app');
+const app = createApp(App);
+app.directive('observe-visibility', ObserveVisibility);
+app.provide('audioService', new AudioService());
+app.provide('playbackService', new PlaybackService());
+app.use(router);
+app.mount('#app');

@@ -20,11 +20,12 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator';
+import { Component, Prop, Vue } from 'vue-facing-decorator';
 import { NoteElement } from '@/models/Element';
 
 @Component({
   components: {},
+  emits: ['insert:gorthmikon', 'insert:pelastikon'],
 })
 export default class ToolbarLyrics extends Vue {
   @Prop() element!: NoteElement;

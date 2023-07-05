@@ -1,5 +1,10 @@
 <template>
-  <div class="neume" :style="style">
+  <div
+    class="neume"
+    :style="style"
+    @click.exact="$emit('select-single')"
+    @click.shift.exact="$emit('select-range')"
+  >
     <Neume
       :neume="neume.neume"
       :fontFamily="pageSetup.neumeDefaultFontFamily"
@@ -8,7 +13,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator';
+import { Component, Prop, Vue } from 'vue-facing-decorator';
 import { TempoElement } from '@/models/Element';
 import Neume from '@/components/Neume.vue';
 import { withZoom } from '@/utils/withZoom';
@@ -18,6 +23,7 @@ import { PageSetup } from '@/models/PageSetup';
   components: {
     Neume,
   },
+  emits: ['select-single', 'select-range'],
 })
 export default class NeumeBoxMartyria extends Vue {
   @Prop() neume!: TempoElement;
@@ -33,4 +39,9 @@ export default class NeumeBoxMartyria extends Vue {
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+.neume {
+  cursor: default;
+  user-select: none;
+}
+</style>

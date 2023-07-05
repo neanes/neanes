@@ -4,14 +4,18 @@
     :contenteditable="contentEditable"
     :style="style"
     @blur="onBlur"
+    @focus="$emit('focus')"
+    @click="$emit('click')"
     v-html="content"
   ></span>
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator';
+import { Component, Prop, Vue } from 'vue-facing-decorator';
 
-@Component
+@Component({
+  emits: ['click', 'focus', 'blur'],
+})
 export default class ContentEditable extends Vue {
   @Prop() content!: string;
   @Prop({ default: true }) selectAllOnFocus!: boolean;

@@ -363,8 +363,8 @@
         :max="spaceAfterMax"
         :step="0.5"
         :precision="2"
-        :value="element.spaceAfter"
-        @input="$emit('update:spaceAfter', $event)"
+        :modelValue="element.spaceAfter"
+        @update:modelValue="$emit('update:spaceAfter', $event)"
       />
       <span class="space"></span>
 
@@ -400,7 +400,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator';
+import { Component, Prop, Vue } from 'vue-facing-decorator';
 import { NoteElement } from '@/models/Element';
 import InputUnit from '@/components/InputUnit.vue';
 import {
@@ -429,10 +429,31 @@ import {
 } from '@/models/NeumeReplacements';
 
 @Component({
-  components: {
-    InputUnit,
-    ButtonWithMenu,
-  },
+  components: { InputUnit, ButtonWithMenu },
+  emits: [
+    'open-syllable-positioning-dialog',
+    'update:accidental',
+    'update:chromaticFthoraNote',
+    'update:expression',
+    'update:fthora',
+    'update:gorgon',
+    'update:ignoreAttractions',
+    'update:ison',
+    'update:klasma',
+    'update:koronis',
+    'update:measureBar',
+    'update:measureNumber',
+    'update:noteIndicator',
+    'update:secondaryAccidental',
+    'update:secondaryFthora',
+    'update:secondaryGorgon',
+    'update:spaceAfter',
+    'update:tertiaryAccidental',
+    'update:tertiaryFthora',
+    'update:tie',
+    'update:time',
+    'update:vareia',
+  ],
 })
 export default class ToolbarNeume extends Vue {
   @Prop() element!: NoteElement;

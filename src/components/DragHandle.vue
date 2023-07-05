@@ -3,7 +3,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator';
+import { Component, Prop, Vue } from 'vue-facing-decorator';
 import ContentEditable from '@/components/ContentEditable.vue';
 import { withZoom } from '@/utils/withZoom';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
@@ -12,9 +12,8 @@ import { fontService } from '@/services/FontService';
 import { NoteElement, ScoreElementOffset } from '@/models/save/v1/Element';
 
 @Component({
-  components: {
-    ContentEditable,
-  },
+  components: { ContentEditable },
+  emits: ['update'],
 })
 export default class DragHandle extends Vue {
   @Prop() x!: number | null;
@@ -35,7 +34,7 @@ export default class DragHandle extends Vue {
     this.offset = this.getOffset(this.mark);
   }
 
-  beforeDestroy() {
+  beforeUnmount() {
     document.removeEventListener('mouseup', this.handleMouseUp);
     document.removeEventListener('mousemove', this.handleMouseMove);
   }

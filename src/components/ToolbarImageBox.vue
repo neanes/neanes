@@ -29,8 +29,8 @@
     <div style="display: flex; align-items: center">
       <label class="right-space">W</label>
       <InputUnit
-        :value="element.imageWidth"
-        @input="onChangeWidth($event)"
+        :modelValue="element.imageWidth"
+        @update:modelValue="onChangeWidth($event)"
         unit="unitless"
         :min="10"
         :max="pageSetup.pageWidth"
@@ -44,8 +44,8 @@
     <div style="display: flex; align-items: center">
       <label class="right-space">H</label>
       <InputUnit
-        :value="element.imageHeight"
-        @input="onChangeHeight($event)"
+        :modelValue="element.imageHeight"
+        @update:modelValue="onChangeHeight($event)"
         unit="unitless"
         :min="10"
         :max="pageSetup.pageHeight"
@@ -96,13 +96,19 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator';
+import { Component, Prop, Vue } from 'vue-facing-decorator';
 import { TextBoxAlignment, ImageBoxElement } from '@/models/Element';
 import { PageSetup } from '@/models/PageSetup';
 import InputUnit from './InputUnit.vue';
 
 @Component({
   components: { InputUnit },
+  emits: [
+    'update:alignment',
+    'update:inline',
+    'update:lockAspectRatio',
+    'update:size',
+  ],
 })
 export default class ToolbarImageBox extends Vue {
   @Prop() element!: ImageBoxElement;

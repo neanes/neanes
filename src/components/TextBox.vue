@@ -1,5 +1,9 @@
 <template>
-  <div class="text-box-container" :style="containerStyle">
+  <div
+    class="text-box-container"
+    :style="containerStyle"
+    @click="$emit('select-single')"
+  >
     <ContentEditable
       ref="text"
       class="text-box"
@@ -13,7 +17,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator';
+import { Component, Prop, Vue } from 'vue-facing-decorator';
 import { TextBoxElement } from '@/models/Element';
 import ContentEditable from '@/components/ContentEditable.vue';
 import { withZoom } from '@/utils/withZoom';
@@ -21,9 +25,8 @@ import { replaceTokens, TokenMetadata } from '@/utils/replaceTokens';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 
 @Component({
-  components: {
-    ContentEditable,
-  },
+  components: { ContentEditable },
+  emits: ['update:content', 'select-single'],
 })
 export default class TextBox extends Vue {
   @Prop() element!: TextBoxElement;

@@ -118,8 +118,8 @@
                 :ref="`line-${lineIndex}`"
               >
                 <div
-                  v-for="(element, index) in line.elements"
-                  :key="`lineElement-${pageIndex}-${lineIndex}-${index}`"
+                  v-for="element in line.elements"
+                  :key="`element-${element.id}-${element.keyHelper}`"
                   class="element-box"
                   :style="getElementStyle(element)"
                 >
@@ -158,9 +158,6 @@
                       />
                       <div
                         class="lyrics-container"
-                        :key="`lyrics-${getElementIndex(element)}-${
-                          element.keyHelper
-                        }`"
                         :style="getLyricStyle(element)"
                       >
                         <ContentEditable
@@ -314,9 +311,6 @@
                     /></span>
                     <DropCap
                       :ref="`element-${getElementIndex(element)}`"
-                      :key="`drop-cap-${getElementIndex(element)}-${
-                        element.keyHelper
-                      }`"
                       :element="element"
                       :pageSetup="score.pageSetup"
                       :class="[
@@ -492,6 +486,7 @@
       <ToolbarNeume
         :element="selectedElement"
         :pageSetup="score.pageSetup"
+        :key="`toolbar-neume-${selectedElement.id}-${selectedElement.keyHelper}`"
         @update:accidental="setAccidental(selectedElement, $event)"
         @update:secondaryAccidental="
           setSecondaryAccidental(selectedElement, $event)
@@ -601,7 +596,7 @@
 </template>
 
 <script lang="ts">
-import { nextTick } from 'vue';
+import { nextTick, toRaw } from 'vue';
 import { Component, Inject, Prop, Watch, Vue } from 'vue-facing-decorator';
 import { toPng, getFontEmbedCSS } from 'html-to-image';
 import {
@@ -3232,10 +3227,23 @@ export default class Editor extends Vue {
       .map((_, i) => i)
       .filter((i) => this.pages[i].isVisible);
 
-    const pages = LayoutService.processPages(this.score);
+    const pages = LayoutService.processPages(toRaw(this.score));
 
     // Set page visibility for the newly processed pages
     pages.forEach((x, index) => (x.isVisible = visiblePages.includes(index)));
+
+    // Only re-render elements that are visible and that have been updated by processPages
+    pages
+      .filter((x) => x.isVisible)
+      .forEach((page) => {
+        page.lines.forEach((line) =>
+          line.elements
+            .filter((x) => x.updated)
+            .forEach((element) => {
+              element.keyHelper++;
+            }),
+        );
+      });
 
     this.pages = pages;
 
@@ -3771,6 +3779,9 @@ export default class Editor extends Vue {
         newValues: newValues,
       }),
     );
+
+    // Force the element to update so that the neume toolbar updates
+    element.keyHelper++;
   }
 
   updateNoteAccidental(element: NoteElement, accidental: Accidental | null) {
@@ -5006,6 +5017,10 @@ export default class Editor extends Vue {
     this.selectedElement =
       this.elements[Math.min(currentIndex, this.elements.length - 1)];
 
+    // Undo/redo could affect the note display in the neume toolbar (among other things),
+    // so we force a refresh here
+    this.selectedElement.keyHelper++;
+
     this.save();
   }
 
@@ -5017,6 +5032,10 @@ export default class Editor extends Vue {
     // If the selected element was removed during the redo process, choose a new one
     this.selectedElement =
       this.elements[Math.min(currentIndex, this.elements.length - 1)];
+
+    // Undo/redo could affect the note display in the neume toolbar (among other things),
+    // so we force a refresh here
+    this.selectedElement.keyHelper++;
 
     this.save();
   }

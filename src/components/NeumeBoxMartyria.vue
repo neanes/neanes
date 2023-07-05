@@ -1,5 +1,10 @@
 <template>
-  <div class="neume" :style="style">
+  <div
+    class="neume"
+    :style="style"
+    @click.exact="$emit('select-single')"
+    @click.shift.exact="$emit('select-range')"
+  >
     <template v-if="neume.error"> ? </template>
     <template v-else>
       <Neume
@@ -21,7 +26,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator';
+import { Component, Prop, Vue } from 'vue-facing-decorator';
 import { MartyriaElement } from '@/models/Element';
 import Neume from '@/components/Neume.vue';
 import { Note } from '@/models/Neumes';
@@ -32,6 +37,7 @@ import { PageSetup } from '@/models/PageSetup';
   components: {
     Neume,
   },
+  emits: ['select-single', 'select-range'],
 })
 export default class NeumeBoxMartyria extends Vue {
   @Prop() neume!: MartyriaElement;

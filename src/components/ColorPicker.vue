@@ -7,9 +7,9 @@
       <div class="popover" :style="popupStyle">
         <div class="cover" @click="close" />
         <Sketch
-          @input="onColorChanged"
-          :value="color"
-          :preset-colors="presetColors"
+          @update:modelValue="onColorChanged"
+          :modelValue="color"
+          :presetColors="presetColors"
           :disableAlpha="true"
         />
       </div>
@@ -18,16 +18,19 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator';
-import { Sketch } from 'vue-color';
+import { Component, Prop, Vue } from 'vue-facing-decorator';
+import { Sketch } from '@ckpack/vue-color';
 
 interface Color {
   hex: string;
 }
 
-@Component({ components: { Sketch } })
+@Component({
+  components: { Sketch },
+  emits: ['update:modelValue'],
+})
 export default class ColorPicker extends Vue {
-  @Prop() value!: string;
+  @Prop() modelValue!: string;
   @Prop({ default: 'colorPicker_presetColors' }) historyKey!: string;
 
   isOpen: boolean = false;
@@ -41,7 +44,7 @@ export default class ColorPicker extends Vue {
   color: string = '#000000';
 
   created() {
-    this.color = this.value;
+    this.color = this.modelValue;
   }
 
   get swatch() {
@@ -98,8 +101,8 @@ export default class ColorPicker extends Vue {
 
     this.isOpen = false;
 
-    if (this.color !== this.value) {
-      this.$emit('input', this.color);
+    if (this.color !== this.modelValue) {
+      this.$emit('update:modelValue', this.color);
     }
   }
 }

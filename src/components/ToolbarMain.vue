@@ -208,7 +208,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator';
+import { Component, Prop, Vue } from 'vue-facing-decorator';
 import { Note, RootSign, TempoSign } from '@/models/Neumes';
 import Neume from './Neume.vue';
 import { EntryMode } from '@/models/EntryMode';
@@ -217,9 +217,22 @@ import { PlaybackOptions } from '@/services/audio/PlaybackService';
 import { LineBreakType } from '@/models/Element';
 
 @Component({
-  components: {
-    Neume,
-  },
+  components: { Neume },
+  emits: [
+    'add-auto-martyria',
+    'add-drop-cap',
+    'add-image',
+    'add-tempo',
+    'delete-selected-element',
+    'open-playback-settings',
+    'play-audio',
+    'toggle-line-break',
+    'toggle-page-break',
+    'update:audioOptionsSpeed',
+    'update:entryMode',
+    'update:zoom',
+    'update:zoomToFit',
+  ],
 })
 export default class ToolbarMain extends Vue {
   @Prop() entryMode!: EntryMode;
@@ -253,7 +266,7 @@ export default class ToolbarMain extends Vue {
       : '@/assets/icons/audio-play.svg';
   }
 
-  beforeDestroy() {
+  beforeUnmount() {
     window.removeEventListener('mouseup', this.onTempoMouseUp);
   }
 

@@ -59,7 +59,47 @@ export class LayoutService {
     const pageSetup = score.pageSetup;
     const elements = score.staff.elements;
 
-    elements.forEach((x, index) => (x.index = index));
+    elements.forEach((element, index) => {
+      element.index = index;
+
+      // Save the current element state so we can determine which elements updated
+      element.updated = false;
+
+      if (element.elementType === ElementType.Martyria) {
+        const martyria = element as MartyriaElement;
+        martyria.notePrevious = martyria.note;
+        martyria.rootSignPrevious = martyria.rootSign;
+      } else if (element.elementType === ElementType.Note) {
+        const note = element as NoteElement;
+        note.fthoraPrevious = note.fthora;
+        note.secondaryFthoraPrevious = note.secondaryFthora;
+        note.tertiaryFthoraPrevious = note.tertiaryFthora;
+      } else if (element.elementType === ElementType.TextBox) {
+        const textbox = element as TextBoxElement;
+        textbox.computedFontFamilyPrevious = textbox.computedFontFamily;
+        textbox.computedFontSizePrevious = textbox.computedFontSize;
+        textbox.computedFontWeightPrevious = textbox.computedFontWeight;
+        textbox.computedFontStylePrevious = textbox.computedFontStyle;
+        textbox.computedColorPrevious = textbox.computedColor;
+        textbox.computedStrokeWidthPrevious = textbox.computedStrokeWidth;
+      } else if (element.elementType === ElementType.ModeKey) {
+        const modeKey = element as ModeKeyElement;
+        modeKey.computedFontFamilyPrevious = modeKey.computedFontFamily;
+        modeKey.computedFontSizePrevious = modeKey.computedFontSize;
+        modeKey.computedHeightAdjustmentPrevious =
+          modeKey.computedHeightAdjustment;
+        modeKey.computedColorPrevious = modeKey.computedColor;
+        modeKey.computedStrokeWidthPrevious = modeKey.computedStrokeWidth;
+      } else if (element.elementType === ElementType.DropCap) {
+        const dropCap = element as DropCapElement;
+        dropCap.computedFontFamilyPrevious = dropCap.computedFontFamily;
+        dropCap.computedFontSizePrevious = dropCap.computedFontSize;
+        dropCap.computedFontWeightPrevious = dropCap.computedFontWeight;
+        dropCap.computedFontStylePrevious = dropCap.computedFontStyle;
+        dropCap.computedColorPrevious = dropCap.computedColor;
+        dropCap.computedStrokeWidthPrevious = dropCap.computedStrokeWidth;
+      }
+    });
 
     this.calculateMartyrias(elements, pageSetup);
 
@@ -665,6 +705,64 @@ export class LayoutService {
     this.justifyLines(pages, pageSetup);
 
     this.addMelismas(pages, pageSetup);
+
+    // Record element updates
+    elements.forEach((element) => {
+      if (!element.updated && element.elementType === ElementType.Martyria) {
+        const martyria = element as MartyriaElement;
+        martyria.updated =
+          martyria.notePrevious !== martyria.note ||
+          martyria.rootSignPrevious !== martyria.rootSign;
+      }
+
+      if (!element.updated && element.elementType === ElementType.Note) {
+        const note = element as NoteElement;
+
+        // Refresh notes that have note indicators. Indicators should be rare enough
+        // that we don't need to check whether any scale notes actually changed
+        note.updated =
+          note.noteIndicator ||
+          note.fthoraPrevious !== note.fthora ||
+          note.secondaryFthoraPrevious !== note.secondaryFthora ||
+          note.tertiaryFthoraPrevious !== note.tertiaryFthora;
+      }
+
+      if (!element.updated && element.elementType === ElementType.TextBox) {
+        const textbox = element as TextBoxElement;
+
+        textbox.updated =
+          textbox.computedFontFamilyPrevious !== textbox.computedFontFamily ||
+          textbox.computedFontSizePrevious !== textbox.computedFontSize ||
+          textbox.computedFontWeightPrevious !== textbox.computedFontWeight ||
+          textbox.computedFontStylePrevious !== textbox.computedFontStyle ||
+          textbox.computedColorPrevious !== textbox.computedColor ||
+          textbox.computedStrokeWidthPrevious !== textbox.computedStrokeWidth;
+      }
+
+      if (!element.updated && element.elementType === ElementType.ModeKey) {
+        const modeKey = element as ModeKeyElement;
+
+        modeKey.updated =
+          modeKey.computedFontFamilyPrevious !== modeKey.computedFontFamily ||
+          modeKey.computedFontSizePrevious !== modeKey.computedFontSize ||
+          modeKey.computedHeightAdjustmentPrevious !==
+            modeKey.computedHeightAdjustment ||
+          modeKey.computedColorPrevious !== modeKey.computedColor ||
+          modeKey.computedStrokeWidthPrevious !== modeKey.computedStrokeWidth;
+      }
+
+      if (!element.updated && element.elementType === ElementType.DropCap) {
+        const dropCap = element as DropCapElement;
+
+        dropCap.updated =
+          dropCap.computedFontFamilyPrevious !== dropCap.computedFontFamily ||
+          dropCap.computedFontSizePrevious !== dropCap.computedFontSize ||
+          dropCap.computedFontWeightPrevious !== dropCap.computedFontWeight ||
+          dropCap.computedFontStylePrevious !== dropCap.computedFontStyle ||
+          dropCap.computedColorPrevious !== dropCap.computedColor ||
+          dropCap.computedStrokeWidthPrevious !== dropCap.computedStrokeWidth;
+      }
+    });
 
     return pages;
   }

@@ -1,5 +1,5 @@
 <template>
-  <div class="drop-cap-container">
+  <div class="drop-cap-container" @click="$emit('select-single')">
     <ContentEditable
       ref="text"
       class="drop-cap"
@@ -11,7 +11,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator';
+import { Component, Prop, Vue } from 'vue-facing-decorator';
 import { DropCapElement } from '@/models/Element';
 import ContentEditable from '@/components/ContentEditable.vue';
 import { withZoom } from '@/utils/withZoom';
@@ -19,9 +19,8 @@ import { PageSetup } from '@/models/PageSetup';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 
 @Component({
-  components: {
-    ContentEditable,
-  },
+  components: { ContentEditable },
+  emits: ['update:content', 'select-single'],
 })
 export default class DropCap extends Vue {
   @Prop() element!: DropCapElement;

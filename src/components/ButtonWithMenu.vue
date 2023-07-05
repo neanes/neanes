@@ -22,14 +22,17 @@
 
 <script lang="ts">
 import { Neume } from '@/models/Neumes';
-import { Component, Prop, Vue } from 'vue-property-decorator';
+import { Component, Prop, Vue } from 'vue-facing-decorator';
 
 export interface ButtonWithMenuOption {
   icon: string;
   neume: Neume | Neume[];
 }
 
-@Component({ components: {} })
+@Component({
+  components: {},
+  emits: ['select'],
+})
 export default class ButtonWithMenu extends Vue {
   @Prop({ default: 'up' }) direction!: 'up' | 'down';
   @Prop({ required: true }) options!: ButtonWithMenuOption[];
@@ -48,7 +51,7 @@ export default class ButtonWithMenu extends Vue {
     return Array.isArray(option.neume) ? option.neume[0] : option.neume;
   }
 
-  beforeDestroy() {
+  beforeUnmount() {
     window.removeEventListener('mouseup', this.onMouseUp);
   }
 

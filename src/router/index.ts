@@ -1,22 +1,22 @@
-import Vue from 'vue';
-import VueRouter from 'vue-router';
-import Home from '../views/Home.vue';
-import VueObserveVisibility from 'vue-observe-visibility';
+import {
+  createRouter,
+  createWebHashHistory,
+  createWebHistory,
+  RouteRecordRaw,
+} from 'vue-router';
 
-Vue.use(VueObserveVisibility);
-Vue.use(VueRouter);
-
-const routes = [
+const routes: RouteRecordRaw[] = [
   {
     path: '/',
     name: 'home',
-    component: Home,
+    component: () => import('../views/Home.vue'),
   },
 ];
 
-const router = new VueRouter({
-  mode: process.env.IS_ELECTRON ? 'hash' : 'history',
-  base: process.env.BASE_URL,
+const router = createRouter({
+  history: process.env.IS_ELECTRON
+    ? createWebHashHistory(process.env.BASE_URL)
+    : createWebHistory(process.env.BASE_URL),
   routes,
 });
 

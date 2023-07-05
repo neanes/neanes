@@ -60,7 +60,9 @@
             <li
               @click="selectedModeKey = template"
               v-for="(template, index) in modeKeyTemplatesForSelectedMode"
-              :class="{ selected: selectedModeKey === template }"
+              :class="{
+                selected: selectedModeKey?.templateId === template.templateId,
+              }"
               :key="index"
             >
               <ModeKey :element="template" />
@@ -83,7 +85,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator';
+import { Component, Prop, Vue } from 'vue-facing-decorator';
 import { ModeKeyElement, TextBoxAlignment } from '@/models/Element';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import ModalDialog from '@/components/ModalDialog.vue';
@@ -93,12 +95,13 @@ import { TextMeasurementService } from '@/services/TextMeasurementService';
 
 @Component({
   components: { ModalDialog, ModeKey },
+  emits: ['close', 'update'],
 })
 export default class ModeKeyDialog extends Vue {
   @Prop() element!: ModeKeyElement;
   @Prop() pageSetup!: PageSetup;
-  private selectedMode: number | null = null;
-  private selectedModeKey: ModeKeyElement | null = null;
+  selectedMode: number | null = null;
+  selectedModeKey: ModeKeyElement | null = null;
 
   created() {
     this.selectMode(this.element.mode);
@@ -106,7 +109,7 @@ export default class ModeKeyDialog extends Vue {
     window.addEventListener('keydown', this.onKeyDown);
   }
 
-  beforeDestroy() {
+  beforeUnmount() {
     window.removeEventListener('keydown', this.onKeyDown);
   }
 

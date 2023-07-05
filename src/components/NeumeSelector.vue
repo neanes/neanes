@@ -37,7 +37,7 @@
             :key="`ascendingNeumes-${index}`"
             :neume="neume"
             :fontFamily="pageSetup.neumeDefaultFontFamily"
-            @click.native="$emit('select-quantitative-neume', neume)"
+            @click="$emit('select-quantitative-neume', neume)"
           />
         </template>
       </template>
@@ -49,7 +49,7 @@
         :key="`ascendingNeumesWithPetasti-${index}`"
         :neume="neume"
         :fontFamily="pageSetup.neumeDefaultFontFamily"
-        @click.native="$emit('select-quantitative-neume', neume)"
+        @click="$emit('select-quantitative-neume', neume)"
       />
     </div>
     <div class="row">
@@ -59,7 +59,7 @@
         :key="`descendingNeumes-${index}`"
         :neume="neume"
         :fontFamily="pageSetup.neumeDefaultFontFamily"
-        @click.native="$emit('select-quantitative-neume', neume)"
+        @click="$emit('select-quantitative-neume', neume)"
       />
     </div>
     <div class="row">
@@ -344,7 +344,7 @@
             :key="`combinationNeumes-${index}`"
             :neume="neume"
             :fontFamily="pageSetup.neumeDefaultFontFamily"
-            @click.native="$emit('select-quantitative-neume', neume)"
+            @click="$emit('select-quantitative-neume', neume)"
           />
         </template>
       </template>
@@ -353,7 +353,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator';
+import { Component, Prop, Vue } from 'vue-facing-decorator';
 import { GorgonNeume, QuantitativeNeume } from '@/models/Neumes';
 import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
 import Neume from '@/components/Neume.vue';
@@ -364,10 +364,8 @@ interface SecondaryGorgonMenuItem {
 }
 
 @Component({
-  components: {
-    SyllableNeumeBox,
-    Neume,
-  },
+  components: { SyllableNeumeBox, Neume },
+  emits: ['select-quantitative-neume'],
 })
 export default class NeumeSelector extends Vue {
   @Prop() pageSetup!: PageSetup;

@@ -5,19 +5,22 @@
     :max="999"
     :step="1"
     :round="round"
-    :value="value"
+    :modelValue="modelValue"
     :disabled="disabled"
-    @input="$emit('input', $event)"
+    @update:modelValue="$emit('update:modelValue', $event)"
   />
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator';
+import { Component, Prop, Vue } from 'vue-facing-decorator';
 import InputUnit from '@/components/InputUnit.vue';
 
-@Component({ components: { InputUnit } })
+@Component({
+  components: { InputUnit },
+  emits: ['update:modelValue'],
+})
 export default class InputBpm extends Vue {
-  @Prop() value!: number;
+  @Prop() modelValue!: number;
   @Prop({ default: false }) disabled!: boolean;
 
   private round(value: number) {

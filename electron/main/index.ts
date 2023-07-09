@@ -68,7 +68,7 @@ process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
 
 const sizeOf = promisify(require('image-size'));
 
-const isDevelopment = process.env.NODE_ENV !== 'production';
+const isDevelopment = import.meta.env.DEV;
 
 const userDataPath = app.getPath('userData');
 
@@ -1174,20 +1174,20 @@ function createMenu() {
         {
           label: 'Guide',
           click() {
-            shell.openExternal(process.env.VITE_GUIDE_URL!);
+            shell.openExternal(import.meta.env.VITE_GUIDE_URL!);
           },
         },
         { type: 'separator' },
         {
           label: 'Request a Feature',
           click() {
-            shell.openExternal(process.env.VITE_ISSUES_URL!);
+            shell.openExternal(import.meta.env.VITE_ISSUES_URL!);
           },
         },
         {
           label: 'Report an Issue',
           click() {
-            shell.openExternal(process.env.VITE_ISSUES_URL!);
+            shell.openExternal(import.meta.env.VITE_ISSUES_URL!);
           },
         },
         { type: 'separator' },
@@ -1535,7 +1535,7 @@ app.on('ready', async () => {
       });
 
       if (result.response === 0) {
-        shell.openExternal(process.env.VITE_DOWNLOAD_URL!);
+        shell.openExternal(import.meta.env.VITE_DOWNLOAD_URL!);
       }
     });
   }

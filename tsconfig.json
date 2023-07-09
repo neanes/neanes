@@ -28,6 +28,7 @@
     ]
   },
   "include": [
+    "electron/**/*.ts",
     "src/**/*.ts",
     "src/**/*.vue",
     "tests/**/*.ts"

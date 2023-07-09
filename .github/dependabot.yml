@@ -6,6 +6,7 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    ignore:
       # Electron 25 does not support printing. See:
       # https://github.com/electron/electron/issues/39025
       - dependency-name: "electron"

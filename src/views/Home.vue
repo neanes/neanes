@@ -8,13 +8,14 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 // @ is an alias to /src
 import Editor from '@/components/Editor.vue';
 import { IpcService } from '@/services/ipc/IpcService';
 import { BrowserIpcService } from '@/services/ipc/BrowserIpcService';
 import { PlatformService } from '@/services/platform/PlatformService';
 import { BrowserPlatformService } from '@/services/platform/BrowserPlatformService';
+import { isElectron } from '@/utils/isElectron';
 
 export default {
   // eslint-disable-next-line vue/multi-word-component-names
@@ -30,7 +31,7 @@ export default {
     };
   },
   created() {
-    if (process.env.IS_ELECTRON) {
+    if (isElectron()) {
       this.ipcService = new IpcService();
       this.platformService = new PlatformService();
     } else {

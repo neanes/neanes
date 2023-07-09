@@ -1,3 +1,4 @@
+import { isElectron } from '@/utils/isElectron';
 import {
   createRouter,
   createWebHashHistory,
@@ -14,9 +15,9 @@ const routes: RouteRecordRaw[] = [
 ];
 
 const router = createRouter({
-  history: process.env.IS_ELECTRON
-    ? createWebHashHistory(process.env.BASE_URL)
-    : createWebHistory(process.env.BASE_URL),
+  history: isElectron()
+    ? createWebHashHistory(import.meta.env.BASE_URL)
+    : createWebHistory(import.meta.env.BASE_URL),
   routes,
 });
 

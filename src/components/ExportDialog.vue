@@ -86,7 +86,7 @@ export interface ExportAsPngSettings {
   components: { ModalDialog, InputUnit },
   emits: ['close', 'exportAsPng', 'exportAsSvg'],
 })
-export default class ExportDialog extends Vue {
+class ExportDialog extends Vue {
   @Prop() defaultFormat: ExportFormat | undefined;
   @Prop() loading!: boolean;
 
@@ -140,6 +140,8 @@ export default class ExportDialog extends Vue {
     this.$emit('close');
   }
 }
+
+export default ExportDialog;
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

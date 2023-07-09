@@ -1,6 +1,5 @@
 .DS_Store
 node_modules
-/dist
 .scripts
 .test-files
 
@@ -22,5 +21,9 @@ yarn-error.log*
 *.sln
 *.sw?
 
+# VitePress output
+/docs/.vitepress/dist
+
 #Electron-builder output
-/dist_electron
+/dist
+/dist-electron

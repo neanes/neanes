@@ -1,7 +1,3 @@
----
-sidebarDepth: 2
----
-
 # Web App
 
 You can try Neanes in your browser [here](https://danielgarthur.github.io/neanes-web-app/).

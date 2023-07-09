@@ -8,8 +8,9 @@ import router from './router';
 import ObserveVisibility from './directives/observeVisibility';
 import './registerServiceWorker';
 import 'vue-draggable-resizable/dist/VueDraggableResizable.css';
+import { isElectron } from './utils/isElectron';
 
-if (process.env.IS_ELECTRON) {
+if (isElectron()) {
   initializeIpcListeners();
 } else {
   initalizeBrowserIpcListeners();

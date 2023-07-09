@@ -1,12 +1,4 @@
----
-sidebarDepth: 2
----
-
-# Guide
-
-## Table of Contents
-
-[[toc]]
+# Get Started
 
 ## Creating a new score
 

@@ -100,7 +100,7 @@ import JSZip from 'jszip';
     FileMenuItem,
   },
 })
-export default class FileMenuBar extends Vue {
+class FileMenuBar extends Vue {
   private isMenuOpen = false;
   private selectedMenu = '';
   private accept = '.byz,.byzx';
@@ -353,25 +353,27 @@ export default class FileMenuBar extends Vue {
   }
 
   onClickAbout() {
-    alert(`Neanes\nVersion: ${process.env.VUE_APP_VERSION}`);
+    alert(`Neanes\nVersion: ${import.meta.env.VITE_VERSION}`);
     this.isMenuOpen = false;
   }
 
   onClickGuide() {
-    window.open(process.env.VUE_APP_GUIDE_URL, '_blank');
+    window.open(import.meta.env.VITE_GUIDE_URL, '_blank');
     this.isMenuOpen = false;
   }
 
   onClickRequestFeature() {
-    window.open(process.env.VUE_APP_ISSUES_URL, '_blank');
+    window.open(import.meta.env.VITE_ISSUES_URL, '_blank');
     this.isMenuOpen = false;
   }
 
   onClickReportIssue() {
-    window.open(process.env.VUE_APP_ISSUES_URL, '_blank');
+    window.open(import.meta.env.VITE_ISSUES_URL, '_blank');
     this.isMenuOpen = false;
   }
 }
+
+export default FileMenuBar;
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

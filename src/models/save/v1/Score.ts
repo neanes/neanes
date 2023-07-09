@@ -9,7 +9,7 @@ export { ScoreVersion };
 
 export class Score {
   public version: string = ScoreVersion;
-  public appVersion: string = process.env.VUE_APP_VERSION!;
+  public appVersion: string = import.meta.env.VITE_VERSION!;
   public pageSetup: PageSetup = new PageSetup();
   public headers: Headers = new Headers();
   public footers: Footers = new Footers();

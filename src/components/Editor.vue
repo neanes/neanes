@@ -716,6 +716,7 @@ import {
   PlaybackSequenceEvent,
   PlaybackService,
 } from '@/services/audio/PlaybackService';
+import { isElectron } from '@/utils/isElectron';
 
 @Component({
   components: {
@@ -750,7 +751,7 @@ import {
     FileMenuBar,
   },
 })
-export default class Editor extends Vue {
+class Editor extends Vue {
   @Prop() ipcService!: IIpcService;
   @Prop() platformService!: IPlatformService;
   @Prop() showFileMenuBar!: boolean;
@@ -760,8 +761,9 @@ export default class Editor extends Vue {
 
   LineBreakType = LineBreakType;
 
-  isDevelopment: boolean = process.env.NODE_ENV !== 'production';
-  isBrowser: boolean = process.env.IS_ELECTRON == null;
+  isDevelopment: boolean = import.meta.env.DEV;
+
+  isBrowser: boolean = !isElectron();
 
   isLoading: boolean = true;
 
@@ -1075,7 +1077,7 @@ export default class Editor extends Vue {
 
   get windowTitle() {
     return `${this.getFileName(this.selectedWorkspace)} - ${
-      process.env.VUE_APP_TITLE
+      import.meta.env.VITE_TITLE
     }`;
   }
 
@@ -3367,7 +3369,7 @@ export default class Editor extends Vue {
 
       if (this.ipcService.isShowMessageBoxSupported()) {
         dialogResult = await this.ipcService.showMessageBox({
-          title: process.env.VUE_APP_TITLE,
+          title: import.meta.env.VITE_TITLE,
           message: `Do you want to save the changes you made to ${fileName}?`,
           detail: "Your changes will be lost if you don't save them.",
           type: 'warning',
@@ -5214,6 +5216,8 @@ export default class Editor extends Vue {
     }
   }
 }
+
+export default Editor;
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

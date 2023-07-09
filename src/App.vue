@@ -11,7 +11,7 @@
 import { Component, Vue } from 'vue-facing-decorator';
 
 @Component
-export default class MartyriaToolbar extends Vue {
+class MartyriaToolbar extends Vue {
   registration: ServiceWorkerRegistration | null = null;
   updateExists: boolean = false;
 
@@ -49,6 +49,8 @@ export default class MartyriaToolbar extends Vue {
     }
   }
 }
+
+export default MartyriaToolbar;
 </script>
 
 <style>
@@ -82,22 +84,22 @@ export default class MartyriaToolbar extends Vue {
 
 @font-face {
   font-family: Neanes;
-  src: url('~@/assets/fonts/Neanes.otf');
+  src: url('./assets/fonts/Neanes.otf');
 }
 
 @font-face {
   font-family: Omega;
-  src: url('~@/assets/fonts/EZ Omega.ttf');
+  src: url('./assets/fonts/EZ Omega.ttf');
 }
 
 @font-face {
   font-family: Athonite;
-  src: url('~@/assets/fonts/Athonite.ttf');
+  src: url('./assets/fonts/Athonite.ttf');
 }
 
 @font-face {
   font-family: PFGoudyInitials;
-  src: url('~@/assets/fonts/PFGoudyInitials.ttf');
+  src: url('./assets/fonts/PFGoudyInitials.ttf');
 }
 
 html {

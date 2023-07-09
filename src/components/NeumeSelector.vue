@@ -367,7 +367,7 @@ interface SecondaryGorgonMenuItem {
   components: { SyllableNeumeBox, Neume },
   emits: ['select-quantitative-neume'],
 })
-export default class NeumeSelector extends Vue {
+export class NeumeSelector extends Vue {
   @Prop() pageSetup!: PageSetup;
 
   QuantitativeNeume = QuantitativeNeume;
@@ -653,6 +653,8 @@ export default class NeumeSelector extends Vue {
     window.removeEventListener('mouseup', this.onVareiaDottedMouseUp);
   }
 }
+
+export default NeumeSelector;
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

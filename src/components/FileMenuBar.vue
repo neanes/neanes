@@ -197,7 +197,7 @@ export default class FileMenuBar extends Vue {
     const files = this.fileSelector.files!;
 
     if (files.length > 0) {
-      var file = files[0];
+      const file = files[0];
 
       if (file.name.endsWith('.byz')) {
         const zip = await JSZip.loadAsync(file);
@@ -213,7 +213,7 @@ export default class FileMenuBar extends Vue {
         // the same file twice, it will load
         this.fileSelector.value = '';
       } else {
-        var reader = new FileReader();
+        const reader = new FileReader();
 
         reader.onload = () => {
           EventBus.$emit(IpcMainChannels.FileMenuOpenScore, {
@@ -236,9 +236,9 @@ export default class FileMenuBar extends Vue {
     const files = this.imageFileSelector.files!;
 
     if (files.length > 0) {
-      var file = files[0];
+      const file = files[0];
 
-      var reader = new FileReader();
+      const reader = new FileReader();
 
       reader.onload = () => {
         const data = reader.result as string;

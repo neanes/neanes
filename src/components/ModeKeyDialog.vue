@@ -122,7 +122,7 @@ export default class ModeKeyDialog extends Vue {
       `${elements[0].fontSize}px ${this.pageSetup.neumeDefaultFontFamily}`,
     );
 
-    for (let element of elements) {
+    for (const element of elements) {
       element.height = height;
       element.computedFontFamily = this.pageSetup.neumeDefaultFontFamily;
     }

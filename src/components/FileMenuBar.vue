@@ -100,7 +100,7 @@ import JSZip from 'jszip';
     FileMenuItem,
   },
 })
-class FileMenuBar extends Vue {
+export default class FileMenuBar extends Vue {
   private isMenuOpen = false;
   private selectedMenu = '';
   private accept = '.byz,.byzx';
@@ -372,8 +372,6 @@ class FileMenuBar extends Vue {
     this.isMenuOpen = false;
   }
 }
-
-export default FileMenuBar;
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

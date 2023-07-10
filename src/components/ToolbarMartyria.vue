@@ -259,7 +259,7 @@ import ButtonWithMenu, { ButtonWithMenuOption } from './ButtonWithMenu.vue';
     'update:tempo',
   ],
 })
-class ToolbarMartyria extends Vue {
+export default class ToolbarMartyria extends Vue {
   @Prop() element!: MartyriaElement;
   @Prop() pageSetup!: PageSetup;
   Fthora = Fthora;
@@ -543,8 +543,6 @@ class ToolbarMartyria extends Vue {
     },
   ];
 }
-
-export default ToolbarMartyria;
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

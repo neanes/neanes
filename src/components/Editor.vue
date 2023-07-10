@@ -751,7 +751,7 @@ import { isElectron } from '@/utils/isElectron';
     FileMenuBar,
   },
 })
-class Editor extends Vue {
+export default class Editor extends Vue {
   @Prop() ipcService!: IIpcService;
   @Prop() platformService!: IPlatformService;
   @Prop() showFileMenuBar!: boolean;
@@ -5216,8 +5216,6 @@ class Editor extends Vue {
     }
   }
 }
-
-export default Editor;
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

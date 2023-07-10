@@ -11,7 +11,7 @@
 import { Component, Vue } from 'vue-facing-decorator';
 
 @Component
-class MartyriaToolbar extends Vue {
+export default class App extends Vue {
   registration: ServiceWorkerRegistration | null = null;
   updateExists: boolean = false;
 
@@ -49,8 +49,6 @@ class MartyriaToolbar extends Vue {
     }
   }
 }
-
-export default MartyriaToolbar;
 </script>
 
 <style>

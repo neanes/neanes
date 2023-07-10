@@ -2822,7 +2822,7 @@ export default class Editor extends Vue {
 
     let currentIndex = this.selectedElementIndex;
 
-    for (let clipboardElement of this.clipboard) {
+    for (const clipboardElement of this.clipboard) {
       const currentElement = this.elements[currentIndex];
 
       if (currentIndex >= this.elements.length - 1) {
@@ -3436,7 +3436,7 @@ export default class Editor extends Vue {
       (x) => x.hasUnsavedChanges,
     );
 
-    for (let workspace of unsavedWorkspaces) {
+    for (const workspace of unsavedWorkspaces) {
       if (!(await this.closeWorkspace(workspace))) {
         await this.ipcService.cancelExit();
         return false;
@@ -3476,7 +3476,7 @@ export default class Editor extends Vue {
     // Force neumes to be an array if it's not
     neumes = Array.isArray(neumes) ? neumes : [neumes];
 
-    for (let neume of neumes) {
+    for (const neume of neumes) {
       if (
         neume === GorgonNeume.Gorgon_Bottom &&
         onlyTakesTopGorgon(element.quantitativeNeume)
@@ -3515,7 +3515,7 @@ export default class Editor extends Vue {
   private setFthoraNote(element: NoteElement, neumes: Fthora[]) {
     let equivalent = false;
 
-    for (let neume of neumes) {
+    for (const neume of neumes) {
       // If previous neume was matched, set to the next neume in the cycle
       if (equivalent) {
         this.updateNoteFthora(element, neume);
@@ -3705,7 +3705,7 @@ export default class Editor extends Vue {
   private setTie(element: NoteElement, neumes: Tie[]) {
     let equivalent = false;
 
-    for (let neume of neumes) {
+    for (const neume of neumes) {
       // If previous neume was matched, set to the next neume in the cycle
       if (equivalent) {
         this.updateNoteTie(element, neume);
@@ -4768,7 +4768,7 @@ export default class Editor extends Vue {
 
           let pageNumber = 1;
 
-          for (let page of pages) {
+          for (const page of pages) {
             const options = {
               fontEmbedCSS,
               pixelRatio: args.dpi / 96,

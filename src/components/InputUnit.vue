@@ -56,7 +56,7 @@ export default class InputUnit extends Vue {
   }
 
   get displayValue() {
-    let convertedValue = this.toDisplay(this.modelValue);
+    const convertedValue = this.toDisplay(this.modelValue);
 
     return this.precision != null
       ? convertedValue.toFixed(this.precision)

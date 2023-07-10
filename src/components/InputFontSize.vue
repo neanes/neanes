@@ -5,18 +5,21 @@
     :max="100"
     :step="1"
     :round="round"
-    :value="value"
-    @input="$emit('input', $event)"
+    :modelValue="modelValue"
+    @update:modelValue="$emit('update:modelValue', $event)"
   />
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator';
+import { Component, Prop, Vue } from 'vue-facing-decorator';
 import InputUnit from '@/components/InputUnit.vue';
 
-@Component({ components: { InputUnit } })
+@Component({
+  components: { InputUnit },
+  emits: ['update:modelValue'],
+})
 export default class InputFontSize extends Vue {
-  @Prop() value!: number;
+  @Prop() modelValue!: number;
 
   private round(value: number) {
     return Math.round(value * 2) / 2;

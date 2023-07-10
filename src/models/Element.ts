@@ -49,12 +49,17 @@ export interface ElementCloneArgs {
   includeLyrics?: boolean;
 }
 
+let id = 1;
+
 export abstract class ScoreElement {
   abstract elementType: ElementType;
   abstract clone(args?: ElementCloneArgs): ScoreElement;
   public lineBreak: boolean = false;
   public lineBreakType: LineBreakType | null = null;
   public pageBreak: boolean = false;
+
+  // Give each element a unique ID for rendering in the UI
+  public id: number = id++;
 
   public x: number = 0;
   public y: number = 0;
@@ -64,6 +69,9 @@ export abstract class ScoreElement {
 
   // This is used to help force components to re-render
   public keyHelper: number = 0;
+  public updated: boolean = false;
+
+  public widthPrevious = 0;
 
   // Used internally, not saved
   public line: number = 0;
@@ -124,6 +132,11 @@ export class NoteElement extends ScoreElement {
   public vareiaOffsetY: number | null = null;
   public vocalExpressionNeumeOffsetX: number | null = null;
   public vocalExpressionNeumeOffsetY: number | null = null;
+
+  // Re-render helpers
+  public fthoraPrevious: Fthora | null = null;
+  public secondaryFthoraPrevious: Fthora | null = null;
+  public tertiaryFthoraPrevious: Fthora | null = null;
 
   public clone(args?: ElementCloneArgs) {
     const clone = new NoteElement();
@@ -482,6 +495,10 @@ export class MartyriaElement extends ScoreElement {
 
   public error: boolean = false;
 
+  // Re-render helpers
+  public notePrevious: Note = Note.Pa;
+  public rootSignPrevious: RootSign = RootSign.Alpha;
+
   public clone() {
     const clone = new MartyriaElement();
 
@@ -591,6 +608,14 @@ export class TextBoxElement extends ScoreElement {
   public computedColor: string = '#000000';
   public computedStrokeWidth: number = 0;
 
+  // Re-render helpers
+  public computedFontFamilyPrevious: string = '';
+  public computedFontSizePrevious: number = Unit.fromPt(20);
+  public computedFontWeightPrevious: string = '400';
+  public computedFontStylePrevious: string = 'normal';
+  public computedColorPrevious: string = '#000000';
+  public computedStrokeWidthPrevious: number = 0;
+
   public get computedFont() {
     return `${this.computedFontStyle} normal ${this.computedFontWeight} ${this.computedFontSize}px "${this.computedFontFamily}"`;
   }
@@ -660,6 +685,13 @@ export class ModeKeyElement extends ScoreElement {
   public computedColor: string = '#000000';
   public computedStrokeWidth: number = 0;
   public computedHeightAdjustment: number = 0;
+
+  // Re-render helpers
+  public computedFontFamilyPrevious: string = '';
+  public computedFontSizePrevious: number = Unit.fromPt(20);
+  public computedColorPrevious: string = '#000000';
+  public computedStrokeWidthPrevious: number = 0;
+  public computedHeightAdjustmentPrevious: number = 0;
 
   public get isPlagal() {
     return this.mode > 4 && this.mode !== 7;
@@ -757,6 +789,15 @@ export class DropCapElement extends ScoreElement {
   public computedStrokeWidth: number = 0;
   public computedLineHeight: number | null = null;
 
+  // Re-render helpers
+  public computedFontFamilyPrevious: string = '';
+  public computedFontSizePrevious: number = Unit.fromPt(60);
+  public computedFontWeightPrevious: string = '400';
+  public computedFontStylePrevious: string = 'normal';
+  public computedColorPrevious: string = '#000000';
+  public computedStrokeWidthPrevious: number = 0;
+  public computedLineHeightPrevious: number | null = null;
+
   public get computedFont() {
     return `${this.computedFontStyle} normal ${this.computedFontWeight} ${this.computedFontSize}px "${this.computedFontFamily}"`;
   }
@@ -775,6 +816,7 @@ export class DropCapElement extends ScoreElement {
       content: this.content,
       fontSize: this.fontSize,
       fontFamily: this.fontFamily,
+      lineHeight: this.lineHeight,
     } as Partial<DropCapElement>;
   }
 }

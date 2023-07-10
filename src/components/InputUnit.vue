@@ -12,11 +12,14 @@
 
 <script lang="ts">
 import { Unit } from '@/utils/Unit';
-import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
+import { Component, Prop, Vue, Watch } from 'vue-facing-decorator';
 
-@Component({ components: {} })
+@Component({
+  components: {},
+  emits: ['update:modelValue'],
+})
 export default class InputUnit extends Vue {
-  @Prop() value!: number;
+  @Prop() modelValue!: number;
   @Prop() unit!: 'pt' | 'in' | 'mm' | 'unitless';
   @Prop({ default: false }) nullable!: boolean;
   /**
@@ -54,7 +57,7 @@ export default class InputUnit extends Vue {
   }
 
   get displayValue() {
-    let convertedValue = this.toDisplay(this.value);
+    let convertedValue = this.toDisplay(this.modelValue);
 
     if (convertedValue == null)
       return this.nullable ? '' : this.defaultValue.toString();
@@ -65,8 +68,8 @@ export default class InputUnit extends Vue {
   }
 
   emitValue(v: number | null) {
-    if (this.value !== v) {
-      this.$emit('input', v);
+    if (this.modelValue !== v) {
+      this.$emit('update:modelValue', v);
     } else {
       this.htmlElement.value = this.displayValue;
     }

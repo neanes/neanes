@@ -23,7 +23,7 @@
       @add-drop-cap="addDropCap(false)"
       @add-image="onClickAddImage"
       @delete-selected-element="deleteSelectedElement"
-      @click.native="selectedLyrics = null"
+      @click="selectedLyrics = null"
       @play-audio="playAudio"
       @open-playback-settings="openPlaybackSettingsDialog"
     />
@@ -99,7 +99,7 @@
                     },
                   ]"
                   :style="headerStyle"
-                  @click.native="
+                  @click="
                     selectedHeaderFooterElement =
                       getHeaderForPageIndex(pageIndex)
                   "
@@ -118,8 +118,8 @@
                 :ref="`line-${lineIndex}`"
               >
                 <div
-                  v-for="(element, index) in line.elements"
-                  :key="`lineElement-${pageIndex}-${lineIndex}-${index}`"
+                  v-for="element in line.elements"
+                  :key="`element-${element.id}-${element.keyHelper}`"
                   class="element-box"
                   :style="getElementStyle(element)"
                 >
@@ -152,24 +152,21 @@
                             'audio-selected': isAudioSelected(element),
                           },
                         ]"
-                        @click.native.exact="selectedElement = element"
-                        @click.native.shift.exact="setSelectionRange(element)"
-                        @dblclick.native="openSyllablePositioningDialog"
-                        @update="updateNoteAndSave(element, $event)"
+                        @select-single="selectedElement = element"
+                        @select-range="setSelectionRange(element)"
+                        @dblclick="openSyllablePositioningDialog"
                       />
                       <div
                         class="lyrics-container"
-                        :key="`lyrics-${getElementIndex(element)}-${
-                          element.keyHelper
-                        }`"
                         :style="getLyricStyle(element)"
-                        @click="focusLyrics(getElementIndex(element))"
                       >
                         <ContentEditable
                           class="lyrics"
                           :content="element.lyrics"
+                          whiteSpace="nowrap"
                           :ref="`lyrics-${getElementIndex(element)}`"
-                          @focus.native="selectedLyrics = element"
+                          @click="focusLyrics(getElementIndex(element))"
+                          @focus="selectedLyrics = element"
                           @blur="
                             updateLyrics(element, $event);
                             selectedLyrics = null;
@@ -220,8 +217,8 @@
                             selected: isSelected(element),
                           },
                         ]"
-                        @click.native.exact="selectedElement = element"
-                        @click.native.shift.exact="setSelectionRange(element)"
+                        @select-single="selectedElement = element"
+                        @select-range="setSelectionRange(element)"
                       />
                       <div class="lyrics"></div>
                     </div>
@@ -242,7 +239,8 @@
                         :neume="element"
                         :pageSetup="score.pageSetup"
                         :class="[{ selected: isSelected(element) }]"
-                        @click.native="selectedElement = element"
+                        @select-single="selectedElement = element"
+                        @select-range="setSelectionRange(element)"
                       />
                       <div class="lyrics"></div>
                     </div>
@@ -258,12 +256,12 @@
                       <span class="line-break" v-if="element.lineBreak"
                         ><img src="@/assets/icons/line-break.svg"
                       /></span>
-                      <div
+                      <EmptyNeumeBox
                         class="empty-neume-box"
                         :class="[{ selected: isSelected(element) }]"
                         :style="getEmptyBoxStyle(element)"
-                        @click="selectedElement = element"
-                      ></div>
+                        @select-single="selectedElement = element"
+                      ></EmptyNeumeBox>
                       <div class="lyrics"></div>
                     </div>
                   </template>
@@ -280,7 +278,7 @@
                       :editMode="true"
                       :metadata="getTokenMetadata(pageIndex)"
                       :class="[{ selectedTextbox: isSelected(element) }]"
-                      @click.native="selectedElement = element"
+                      @select-single="selectedElement = element"
                       @update:content="updateTextBoxContent(element, $event)"
                     />
                   </template>
@@ -300,8 +298,8 @@
                           selectedTextbox: isSelected(element),
                         },
                       ]"
-                      @click.native="selectedElement = element"
-                      @dblclick.native="openModeKeyDialog"
+                      @select-single="selectedElement = element"
+                      @dblclick="openModeKeyDialog"
                     />
                   </template>
                   <template v-if="isDropCapElement(element)">
@@ -313,9 +311,6 @@
                     /></span>
                     <DropCap
                       :ref="`element-${getElementIndex(element)}`"
-                      :key="`drop-cap-${getElementIndex(element)}-${
-                        element.keyHelper
-                      }`"
                       :element="element"
                       :pageSetup="score.pageSetup"
                       :class="[
@@ -323,7 +318,7 @@
                           selectedTextbox: isSelected(element),
                         },
                       ]"
-                      @click.native="selectedElement = element"
+                      @select-single="selectedElement = element"
                       @update:content="updateDropCapContent(element, $event)"
                     />
                   </template>
@@ -339,7 +334,7 @@
                       :element="element"
                       :zoom="zoom"
                       :class="[{ selectedImagebox: isSelected(element) }]"
-                      @click.native="selectedElement = element"
+                      @select-single="selectedElement = element"
                       @update:size="
                         updateImageBoxSize(
                           selectedElement,
@@ -369,7 +364,7 @@
                     },
                   ]"
                   :style="footerStyle"
-                  @click.native="
+                  @click="
                     selectedHeaderFooterElement =
                       getFooterForPageIndex(pageIndex)
                   "
@@ -492,6 +487,7 @@
       <ToolbarNeume
         :element="selectedElement"
         :pageSetup="score.pageSetup"
+        :key="`toolbar-neume-${selectedElement.id}-${selectedElement.keyHelper}`"
         @update:accidental="setAccidental(selectedElement, $event)"
         @update:secondaryAccidental="
           setSecondaryAccidental(selectedElement, $event)
@@ -601,7 +597,8 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Watch, Vue } from 'vue-property-decorator';
+import { nextTick, toRaw } from 'vue';
+import { Component, Inject, Prop, Watch, Vue } from 'vue-facing-decorator';
 import { toPng, getFontEmbedCSS } from 'html-to-image';
 import {
   ScoreElement,
@@ -644,6 +641,7 @@ import SyllableNeumeBoxPrint from '@/components/NeumeBoxSyllablePrint.vue';
 import MartyriaNeumeBox from '@/components/NeumeBoxMartyria.vue';
 import MartyriaNeumeBoxPrint from '@/components/NeumeBoxMartyriaPrint.vue';
 import TempoNeumeBox from '@/components/NeumeBoxTempo.vue';
+import EmptyNeumeBox from '@/components/NeumeBoxEmpty.vue';
 import NeumeSelector from '@/components/NeumeSelector.vue';
 import ContentEditable from '@/components/ContentEditable.vue';
 import TextBox from '@/components/TextBox.vue';
@@ -727,6 +725,7 @@ import {
     MartyriaNeumeBox,
     MartyriaNeumeBoxPrint,
     TempoNeumeBox,
+    EmptyNeumeBox,
     NeumeSelector,
     ContentEditable,
     TextBox,
@@ -756,6 +755,9 @@ export default class Editor extends Vue {
   @Prop() ipcService!: IIpcService;
   @Prop() platformService!: IPlatformService;
   @Prop() showFileMenuBar!: boolean;
+
+  @Inject() readonly audioService!: AudioService;
+  @Inject() readonly playbackService!: PlaybackService;
 
   LineBreakType = LineBreakType;
 
@@ -788,9 +790,6 @@ export default class Editor extends Vue {
 
   neumeKeyboard: NeumeKeyboard = new NeumeKeyboard();
   keyboardModifier: string | null = null;
-
-  audioService = new AudioService();
-  playbackService = new PlaybackService();
 
   audioElement: ScoreElement | null = null;
   playbackEvents: PlaybackSequenceEvent[] = [];
@@ -1041,7 +1040,7 @@ export default class Editor extends Vue {
 
     // Scroll to the new workspace's saved scroll position
     // Use nextTick to scroll after the DOM has refreshed
-    Vue.nextTick(() => {
+    nextTick(() => {
       pageBackgroundElement.scrollTo(
         this.selectedWorkspace.scrollLeft,
         this.selectedWorkspace.scrollTop,
@@ -1543,7 +1542,7 @@ export default class Editor extends Vue {
     EventBus.$on(AudioServiceEventNames.Stop, this.onAudioServiceStop);
   }
 
-  beforeDestroy() {
+  beforeUnmount() {
     // Remove the debugging variable from window
     (window as any)._editor = undefined;
 
@@ -1971,7 +1970,7 @@ export default class Editor extends Vue {
     this.selectedElement = element;
     this.save();
 
-    Vue.nextTick(() => {
+    nextTick(() => {
       const index = this.elements.indexOf(element);
 
       (this.$refs[`element-${index}`] as any)[0].focus();
@@ -2232,7 +2231,7 @@ export default class Editor extends Vue {
 
             // Select All doesn't work until after the lyrics have been selected,
             // hence we call focus lyrics twice
-            Vue.nextTick(() => {
+            nextTick(() => {
               this.focusLyrics(index, true);
             });
 
@@ -2568,72 +2567,74 @@ export default class Editor extends Vue {
       return;
     }
 
-    if (event.ctrlKey || event.metaKey) {
-      switch (event.code) {
-        case 'ArrowRight':
+    switch (event.code) {
+      case 'ArrowRight':
+        if (event.ctrlKey || event.metaKey) {
           this.moveToNextLyricBoxThrottled();
           handled = true;
-          break;
-        case 'ArrowLeft':
+        } else if (
+          getCursorPosition() === this.getLyricLength(this.selectedLyrics!)
+        ) {
+          this.moveToNextLyricBoxThrottled();
+          handled = true;
+        }
+        break;
+      case 'ArrowLeft':
+        if (event.ctrlKey || event.metaKey) {
           this.moveToPreviousLyricBoxThrottled();
           handled = true;
-          break;
-        case 'ArrowUp':
+        } else if (getCursorPosition() === 0) {
+          this.moveToPreviousLyricBoxThrottled();
+          handled = true;
+        }
+        break;
+      case 'ArrowUp':
+        if (event.ctrlKey || event.metaKey) {
           this.selectedElement = this.selectedLyrics;
           this.blurActiveElement();
           window.getSelection()?.removeAllRanges();
           handled = true;
-          break;
-        case 'Space':
-          // Ctrl + Space should add a normal space character
+        }
+        break;
+      case 'Space':
+        // Ctrl + Space should add a normal space character
+        if (event.ctrlKey || event.metaKey) {
           document.execCommand('insertText', false, ' ');
-          handled = true;
-          break;
-      }
-    } else {
-      switch (event.code) {
-        case 'Space':
+        } else {
           this.moveToNextLyricBoxThrottled(true);
-          handled = true;
-          break;
-        case 'ArrowLeft':
-          if (getCursorPosition() === 0) {
-            this.moveToPreviousLyricBoxThrottled();
-            handled = true;
-          }
-          break;
-        case 'ArrowRight':
-          if (
-            getCursorPosition() === this.getLyricLength(this.selectedLyrics!)
-          ) {
+        }
+        handled = true;
+        break;
+      case 'Minus': {
+        if (event.shiftKey) {
+          document.execCommand('insertText', false, '_');
+        } else {
+          document.execCommand('insertText', false, '-');
+        }
+
+        // Ctrl key overrides the "go to next lyrics" (Alt key for mac)
+        const overridden =
+          (this.platformService.isMac && event.altKey) ||
+          (!this.platformService.isMac && event.ctrlKey);
+
+        if (
+          !overridden &&
+          getCursorPosition() === this.getLyricLength(this.selectedLyrics!)
+        ) {
+          if (this.getNextLyricBoxIndex() >= 0) {
             this.moveToNextLyricBoxThrottled();
-            handled = true;
-          }
-          break;
-        case 'Minus':
-          if (event.shiftKey) {
-            document.execCommand('insertText', false, '_');
           } else {
-            document.execCommand('insertText', false, '-');
+            // If this is the last lyric box, blur
+            // so that the melisma is registered and
+            // the user doesn't accidentally type more
+            // characters into box
+            const index = this.elements.indexOf(this.selectedLyrics!);
+            (this.$refs[`lyrics-${index}`] as ContentEditable[])[0].blur();
           }
+        }
 
-          if (
-            getCursorPosition() === this.getLyricLength(this.selectedLyrics!)
-          ) {
-            if (this.getNextLyricBoxIndex() >= 0) {
-              this.moveToNextLyricBoxThrottled();
-            } else {
-              // If this is the last lyric box, blur
-              // so that the melisma is registered and
-              // the user doesn't accidentally type more
-              // characters into box
-              const index = this.elements.indexOf(this.selectedLyrics!);
-              (this.$refs[`lyrics-${index}`] as ContentEditable[])[0].blur();
-            }
-          }
-
-          handled = true;
-          break;
+        handled = true;
+        break;
       }
     }
 
@@ -3140,7 +3141,7 @@ export default class Editor extends Vue {
       // and finally the newly selected element would lose focus because processPages
       // moves the element to the next line.
 
-      // To prevent this we, preemptively call updateLyrics and then use Vue.nextTick
+      // To prevent this we, preemptively call updateLyrics and then use nextTick
       // to only focus the next lyrics after the UI has been redrawn.
 
       const noteElement = this.selectedLyrics!;
@@ -3153,7 +3154,7 @@ export default class Editor extends Vue {
 
       this.updateLyrics(noteElement, text, clearMelisma);
 
-      Vue.nextTick(() => {
+      nextTick(() => {
         this.focusLyrics(nextIndex, true);
       });
 
@@ -3228,10 +3229,23 @@ export default class Editor extends Vue {
       .map((_, i) => i)
       .filter((i) => this.pages[i].isVisible);
 
-    const pages = LayoutService.processPages(this.score);
+    const pages = LayoutService.processPages(toRaw(this.score));
 
     // Set page visibility for the newly processed pages
     pages.forEach((x, index) => (x.isVisible = visiblePages.includes(index)));
+
+    // Only re-render elements that are visible and that have been updated by processPages
+    pages
+      .filter((x) => x.isVisible)
+      .forEach((page) => {
+        page.lines.forEach((line) =>
+          line.elements
+            .filter((x) => x.updated)
+            .forEach((element) => {
+              element.keyHelper++;
+            }),
+        );
+      });
 
     this.pages = pages;
 
@@ -3767,6 +3781,9 @@ export default class Editor extends Vue {
         newValues: newValues,
       }),
     );
+
+    // Force the element to update so that the neume toolbar updates
+    element.keyHelper++;
   }
 
   updateNoteAccidental(element: NoteElement, accidental: Accidental | null) {
@@ -4667,7 +4684,7 @@ export default class Editor extends Vue {
       this.score.staff.elements[this.score.staff.elements.length - 1];
     this.save(false);
 
-    Vue.nextTick(() => {
+    nextTick(() => {
       const tabContainerElement = this.$refs[
         'workspace-tab-container'
       ] as HTMLElement;
@@ -4693,7 +4710,7 @@ export default class Editor extends Vue {
     // blinking cursors don't show up in the printed page
     const activeElement = this.blurActiveElement();
 
-    Vue.nextTick(async () => {
+    nextTick(async () => {
       await this.ipcService.printWorkspace(this.selectedWorkspace);
       this.printMode = false;
 
@@ -4709,7 +4726,7 @@ export default class Editor extends Vue {
     // blinking cursors don't show up in the printed page
     const activeElement = this.blurActiveElement();
 
-    Vue.nextTick(async () => {
+    nextTick(async () => {
       await this.ipcService.exportWorkspaceAsPdf(this.selectedWorkspace);
       this.printMode = false;
 
@@ -4746,7 +4763,7 @@ export default class Editor extends Vue {
     // blinking cursors don't show up in the printed page
     const activeElement = this.blurActiveElement();
 
-    Vue.nextTick(async () => {
+    nextTick(async () => {
       try {
         const pages = this.$refs.pages as HTMLElement[];
 
@@ -4825,7 +4842,7 @@ export default class Editor extends Vue {
   //   // blinking cursors don't show up in the printed page
   //   const activeElement = this.blurActiveElement();
 
-  //   Vue.nextTick(async () => {
+  //   nextTick(async () => {
   //     try {
   //       const pages = this.$refs.pages as HTMLElement[];
 
@@ -4909,7 +4926,7 @@ export default class Editor extends Vue {
 
     this.save();
 
-    Vue.nextTick(() => {
+    nextTick(() => {
       const index = this.elements.indexOf(element);
 
       (this.$refs[`element-${index}`] as any)[0].focus();
@@ -5006,6 +5023,10 @@ export default class Editor extends Vue {
     this.selectedElement =
       this.elements[Math.min(currentIndex, this.elements.length - 1)];
 
+    // Undo/redo could affect the note display in the neume toolbar (among other things),
+    // so we force a refresh here
+    this.selectedElement.keyHelper++;
+
     this.save();
   }
 
@@ -5017,6 +5038,10 @@ export default class Editor extends Vue {
     // If the selected element was removed during the redo process, choose a new one
     this.selectedElement =
       this.elements[Math.min(currentIndex, this.elements.length - 1)];
+
+    // Undo/redo could affect the note display in the neume toolbar (among other things),
+    // so we force a refresh here
+    this.selectedElement.keyHelper++;
 
     this.save();
   }
@@ -5170,7 +5195,7 @@ export default class Editor extends Vue {
 
       this.save(false);
 
-      Vue.nextTick(() => {
+      nextTick(() => {
         const tabContainerElement = this.$refs[
           'workspace-tab-container'
         ] as HTMLElement;
@@ -5279,11 +5304,6 @@ export default class Editor extends Vue {
   justify-content: center;
 
   position: relative;
-}
-
-.empty-neume-box {
-  border: 1px dotted black;
-  box-sizing: border-box;
 }
 
 .page-container {

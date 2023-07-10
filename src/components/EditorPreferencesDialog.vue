@@ -11,8 +11,8 @@
             :fontFamily="pageSetup.neumeDefaultFontFamily"
           />
           <InputBpm
-            :value="form.tempoDefaults[tempo]"
-            @input="onTempoChanged(tempo, $event)"
+            :modelValue="form.tempoDefaults[tempo]"
+            @update:modelValue="onTempoChanged(tempo, $event)"
           />
           <span class="unit-label">BPM</span>
         </div>
@@ -29,7 +29,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator';
+import { Component, Prop, Vue } from 'vue-facing-decorator';
 import ModalDialog from '@/components/ModalDialog.vue';
 import Neume from '@/components/Neume.vue';
 import InputBpm from './InputBpm.vue';
@@ -39,6 +39,7 @@ import { PageSetup } from '@/models/PageSetup';
 
 @Component({
   components: { ModalDialog, Neume, InputBpm },
+  emits: ['close', 'update'],
 })
 export default class PreferencesDialog extends Vue {
   @Prop() options!: EditorPreferences;
@@ -63,7 +64,7 @@ export default class PreferencesDialog extends Vue {
     window.addEventListener('keydown', this.onKeyDown);
   }
 
-  beforeDestroy() {
+  beforeUnmount() {
     window.removeEventListener('keydown', this.onKeyDown);
   }
 

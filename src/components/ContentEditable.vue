@@ -2,20 +2,26 @@
   <span
     class="contenteditable"
     :contenteditable="contentEditable"
+    :style="style"
     @blur="onBlur"
+    @focus="$emit('focus')"
+    @click="$emit('click')"
     v-html="content"
   ></span>
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator';
+import { Component, Prop, Vue } from 'vue-facing-decorator';
 
-@Component
+@Component({
+  emits: ['click', 'focus', 'blur'],
+})
 export default class ContentEditable extends Vue {
   @Prop() content!: string;
   @Prop({ default: true }) selectAllOnFocus!: boolean;
   @Prop({ default: true }) editable!: boolean;
   @Prop({ default: true }) plaintextOnly!: boolean;
+  @Prop({ default: 'break-spaces' }) whiteSpace!: string;
 
   get contentEditable() {
     return this.editable
@@ -27,6 +33,12 @@ export default class ContentEditable extends Vue {
 
   get htmlElement() {
     return this.$el as HTMLElement;
+  }
+
+  get style() {
+    return {
+      whiteSpace: this.whiteSpace,
+    } as CSSStyleDeclaration;
   }
 
   getInnerText() {
@@ -55,6 +67,5 @@ export default class ContentEditable extends Vue {
 <style scoped>
 .contenteditable {
   overflow-wrap: break-word;
-  white-space: break-spaces;
 }
 </style>

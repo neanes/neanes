@@ -32,9 +32,6 @@ updates:
       # Vue CLI Plugin ESLint 4 does not support ESLint 8.
       - dependency-name: "eslint"
         versions: [">=8.0.0"]
-      # Contains breaking changes. See: https://v3-migration.vuejs.org/
-      - dependency-name: "vue"
-        versions: [">=3.0.0"]
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

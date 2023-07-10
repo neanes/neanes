@@ -20,8 +20,8 @@
       <span class="space"></span>
       <InputFontSize
         class="drop-caps-input"
-        :value="element.fontSize"
-        @input="$emit('update:fontSize', $event)"
+        :modelValue="element.fontSize"
+        @update:modelValue="$emit('update:fontSize', $event)"
       />
       <span class="space" style="text-align: center;">&#47;</span>
       <InputUnit
@@ -30,15 +30,15 @@
         :nullable="true"
         :min="0"
         :step="0.1"
-        :value="element.lineHeight"
+        :modelValue="element.lineHeight"
         :precision="2"
         placeholder="normal"
-        @input="$emit('update:lineHeight', $event)"
+        @update:modelValue="$emit('update:lineHeight', $event)"
       />
       <span class="space"></span>
       <ColorPicker
-        :value="element.color"
-        @input="$emit('update:color', $event)"
+        :modelValue="element.color"
+        @update:modelValue="$emit('update:color', $event)"
       />
       <span class="space"></span>
       <button
@@ -58,15 +58,15 @@
       <span class="space"></span>
       <label class="right-space">Outline</label>
       <InputStrokeWidth
-        :value="element.strokeWidth"
-        @input="$emit('update:strokeWidth', $event)"
+        :modelValue="element.strokeWidth"
+        @update:modelValue="$emit('update:strokeWidth', $event)"
       />
     </template>
   </div>
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator';
+import { Component, Prop, Vue } from 'vue-facing-decorator';
 import { DropCapElement } from '@/models/Element';
 import ColorPicker from '@/components/ColorPicker.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
@@ -75,6 +75,16 @@ import InputUnit from '@/components/InputUnit.vue';
 
 @Component({
   components: { ColorPicker, InputFontSize, InputStrokeWidth, InputUnit },
+  emits: [
+    'update:bold',
+    'update:color',
+    'update:fontFamily',
+    'update:fontSize',
+    'update:italic',
+    'update:strokeWidth',
+    'update:useDefaultStyle',
+    'update:lineHeight'
+  ],
 })
 export default class ToolbarDropCap extends Vue {
   @Prop() element!: DropCapElement;

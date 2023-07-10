@@ -508,7 +508,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator';
+import { Component, Prop, Vue } from 'vue-facing-decorator';
 import ModalDialog from '@/components/ModalDialog.vue';
 import { PlaybackOptions } from '@/services/audio/PlaybackService';
 import { Accidental } from '@/models/Neumes';
@@ -517,6 +517,7 @@ const FREQUENCY_G3 = 196;
 
 @Component({
   components: { ModalDialog },
+  emits: ['close', 'play-test-tone'],
 })
 export default class PlaybackSettingsDialog extends Vue {
   @Prop() options!: PlaybackOptions;
@@ -551,7 +552,7 @@ export default class PlaybackSettingsDialog extends Vue {
     );
   }
 
-  beforeDestroy() {
+  beforeUnmount() {
     window.removeEventListener('keydown', this.onKeyDown);
   }
 

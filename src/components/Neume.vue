@@ -3,7 +3,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator';
+import { Component, Prop, Vue } from 'vue-facing-decorator';
 import { Neume as NeumeType } from '@/models/Neumes';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { ScoreElementOffset } from '@/models/Element';

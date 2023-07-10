@@ -92,6 +92,13 @@ To run tests before committing, type:
 npm test
 ```
 
+### IDE Support
+
+When using [Visual Studio Code](https://github.com/microsoft/vscode), install the following extensions:
+
+- [Vue Language Features (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.volar)
+- [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin)
+
 ## Acknowledgements
 
 This software uses the "EZ" Byzantine Music Font Package created at St. Anthony's Greek Orthodox Monastery. See [the monastery's website](https://stanthonysmonastery.org/pages/writing-with-byzantine-notation) for more details. Thank you for your work on these fonts, without which this program would not be possible.

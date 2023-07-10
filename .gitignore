@@ -23,6 +23,7 @@ yarn-error.log*
 
 # VitePress output
 /docs/.vitepress/dist
+/docs/.vitepress/cache
 
 #Electron-builder output
 /dist

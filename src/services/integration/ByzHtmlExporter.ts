@@ -179,18 +179,18 @@ export class ByzHtmlExporter {
       
       body {
         margin: ${Unit.toPt(pageSetup.topMargin)}px ${Unit.toPt(
-      pageSetup.rightMargin,
-    )}px ${Unit.toPt(pageSetup.bottomMargin)}px ${Unit.toPt(
-      pageSetup.leftMargin,
-    )}px;
+          pageSetup.rightMargin,
+        )}px ${Unit.toPt(pageSetup.bottomMargin)}px ${Unit.toPt(
+          pageSetup.leftMargin,
+        )}px;
       }
 
       @page {
         margin: ${Unit.toPt(pageSetup.topMargin)}px ${Unit.toPt(
-      pageSetup.rightMargin,
-    )}px ${Unit.toPt(pageSetup.bottomMargin)}px ${Unit.toPt(
-      pageSetup.leftMargin,
-    )}px;
+          pageSetup.rightMargin,
+        )}px ${Unit.toPt(pageSetup.bottomMargin)}px ${Unit.toPt(
+          pageSetup.leftMargin,
+        )}px;
         size: ${pageSetup.pageSize} ${orientation}
       }
 

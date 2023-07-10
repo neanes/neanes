@@ -234,7 +234,7 @@ import { LineBreakType } from '@/models/Element';
     'update:zoomToFit',
   ],
 })
-class ToolbarMain extends Vue {
+export default class ToolbarMain extends Vue {
   @Prop() entryMode!: EntryMode;
   @Prop() zoom!: number;
   @Prop() zoomToFit!: boolean;
@@ -306,8 +306,6 @@ class ToolbarMain extends Vue {
     window.removeEventListener('mouseup', this.onTempoMouseUp);
   }
 }
-
-export default ToolbarMain;
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

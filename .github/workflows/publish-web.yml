@@ -30,7 +30,7 @@ jobs:
         run: npm ci
 
       - run: npm test
-      - run: npm run build
+      - run: npm run web:build
       - name: Push
         run: |
           cd dist

@@ -455,7 +455,7 @@ import {
     'update:vareia',
   ],
 })
-class ToolbarNeume extends Vue {
+export default class ToolbarNeume extends Vue {
   @Prop() element!: NoteElement;
   @Prop() pageSetup!: PageSetup;
   VocalExpressionNeume = VocalExpressionNeume;
@@ -1016,8 +1016,6 @@ class ToolbarNeume extends Vue {
     }
   }
 }
-
-export default ToolbarNeume;
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

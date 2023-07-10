@@ -1469,8 +1469,8 @@ app.on(
     if (loaded) {
       results
         .filter((x) => x.success)
-        .forEach((x) =>
-          win?.webContents.send(IpcMainChannels.FileMenuOpenScore, x),
+        .forEach(
+          (x) => win?.webContents.send(IpcMainChannels.FileMenuOpenScore, x),
         );
 
       win?.show();
@@ -1478,8 +1478,8 @@ app.on(
       win?.webContents.once('did-finish-load', () => {
         results
           .filter((x) => x.success)
-          .forEach((x) =>
-            win?.webContents.send(IpcMainChannels.FileMenuOpenScore, x),
+          .forEach(
+            (x) => win?.webContents.send(IpcMainChannels.FileMenuOpenScore, x),
           );
       });
     }

@@ -1,0 +1,22 @@
+{
+  "appId": "com.danielgarthur.neanes",
+  "files": ["dist-electron", "dist"],
+  "productName": "Neanes",
+  "copyright": "Copyright © 2021 danielgarthur",
+  "publish": ["github"],
+  "fileAssociations": [
+    {
+      "ext": "byz",
+      "name": "Neanes File",
+      "role": "Editor"
+    },
+    {
+      "ext": "byzx",
+      "name": "Uncompressed Neanes File",
+      "role": "Editor"
+    }
+  ],
+  "snap": {
+    "publish": ["github"]
+  }
+}

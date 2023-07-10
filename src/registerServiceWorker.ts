@@ -1,9 +1,10 @@
 /* eslint-disable no-console */
 
 import { register } from 'register-service-worker';
+import { isElectron } from './utils/isElectron';
 
-if (process.env.NODE_ENV === 'production' && !process.env.IS_ELECTRON) {
-  register(`${process.env.BASE_URL}service-worker.js`, {
+if (import.meta.env.PROD && !isElectron()) {
+  register(`${import.meta.env.BASE_URL}service-worker.js`, {
     ready() {
       console.log(
         'App is being served from cache by a service worker.\n' +

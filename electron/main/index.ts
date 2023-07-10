@@ -12,7 +12,6 @@ import {
   screen,
 } from 'electron';
 import { autoUpdater } from 'electron-updater';
-import { createProtocol } from 'vue-cli-plugin-electron-builder/lib';
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer';
 import {
   IpcMainChannels,
@@ -31,19 +30,45 @@ import {
   ExportPageAsImageArgs,
   ExportWorkspaceAsImageArgs,
   ExportWorkspaceAsImageReplyArgs,
-} from './ipc/ipcChannels';
+} from '../../src/ipc/ipcChannels';
 import path from 'path';
 import { promises as fs } from 'fs';
-import { TestFileType } from './utils/TestFileType';
-import { Score } from './models/save/v1/Score';
-import { getSystemFonts } from './utils/getSystemFonts';
+import { TestFileType } from '../../src/utils/TestFileType';
+import { Score } from '../../src/models/save/v1/Score';
+import { getSystemFonts } from '../../src/utils/getSystemFonts';
 import JSZip from 'jszip';
 import { debounce } from 'throttle-debounce';
 import { promisify } from 'util';
 import mimetypes from 'mime-types';
+
+// The built directory structure
+//
+// ├─┬ dist-electron
+// │ ├─┬ main
+// │ │ └── index.js    > Electron-Main
+// │ └─┬ preload
+// │   └── index.js    > Preload-Scripts
+// ├─┬ dist
+// │ └── index.html    > Electron-Renderer
+//
+process.env.DIST_ELECTRON = path.join(__dirname, '..');
+process.env.DIST = path.join(process.env.DIST_ELECTRON, '../dist');
+process.env.PUBLIC = process.env.VITE_DEV_SERVER_URL
+  ? path.join(process.env.DIST_ELECTRON, '../public')
+  : process.env.DIST;
+
+const preload = path.join(__dirname, '../preload/index.js');
+const url = process.env.VITE_DEV_SERVER_URL;
+const indexHtml = path.join(process.env.DIST, 'index.html');
+
+// Remove electron security warnings
+// This warning only shows in development mode
+// Read more on https://www.electronjs.org/docs/latest/tutorial/security
+process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
+
 const sizeOf = promisify(require('image-size'));
 
-const isDevelopment = process.env.NODE_ENV !== 'production';
+const isDevelopment = import.meta.env.DEV;
 
 const userDataPath = app.getPath('userData');
 
@@ -51,8 +76,6 @@ const maxRecentFiles = 20;
 const storeFilePath = path.join(userDataPath, 'settings.json');
 
 const isMac = process.platform === 'darwin';
-
-declare const __static: string;
 
 let win: BrowserWindow | null = null;
 let readyToExit = false;
@@ -1151,20 +1174,20 @@ function createMenu() {
         {
           label: 'Guide',
           click() {
-            shell.openExternal(process.env.VUE_APP_GUIDE_URL!);
+            shell.openExternal(import.meta.env.VITE_GUIDE_URL!);
           },
         },
         { type: 'separator' },
         {
           label: 'Request a Feature',
           click() {
-            shell.openExternal(process.env.VUE_APP_ISSUES_URL!);
+            shell.openExternal(import.meta.env.VITE_ISSUES_URL!);
           },
         },
         {
           label: 'Report an Issue',
           click() {
-            shell.openExternal(process.env.VUE_APP_ISSUES_URL!);
+            shell.openExternal(import.meta.env.VITE_ISSUES_URL!);
           },
         },
         { type: 'separator' },
@@ -1218,10 +1241,10 @@ async function createWindow() {
       nodeIntegration: process.env
         .ELECTRON_NODE_INTEGRATION as unknown as boolean,
       contextIsolation: !process.env.ELECTRON_NODE_INTEGRATION,
-      preload: path.join(__dirname, 'preload.js'),
+      preload,
       spellcheck: false,
     },
-    icon: path.join(__static, 'favicon-32.png'),
+    icon: path.join(process.env.PUBLIC!, 'favicon-32.png'),
     show: false,
   });
 
@@ -1255,17 +1278,16 @@ async function createWindow() {
 
   createMenu();
 
-  if (process.env.WEBPACK_DEV_SERVER_URL) {
+  if (process.env.VITE_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
-    await win.loadURL(process.env.WEBPACK_DEV_SERVER_URL as string);
+    await win.loadURL(url!);
     if (!process.env.IS_TEST) {
       win.webContents.openDevTools();
     }
   } else {
-    createProtocol('app');
     // Load the index.html when not in development
     autoUpdater.checkForUpdatesAndNotify();
-    await win.loadURL('app://./index.html');
+    await win.loadFile(indexHtml);
   }
 }
 
@@ -1513,7 +1535,7 @@ app.on('ready', async () => {
       });
 
       if (result.response === 0) {
-        shell.openExternal(process.env.VUE_APP_DOWNLOAD_URL!);
+        shell.openExternal(import.meta.env.VITE_DOWNLOAD_URL!);
       }
     });
   }

@@ -480,62 +480,66 @@ export default class ToolbarMartyria extends Vue {
   tempoMenuOptions: ButtonWithMenuOption[] = [
     {
       neume: TempoSign.VeryQuickAbove,
-      icon: require('@/assets/icons/agogi-poli-gorgi.svg'),
+      icon: new URL('@/assets/icons/agogi-poli-gorgi.svg', import.meta.url)
+        .href,
     },
     {
       neume: TempoSign.QuickerAbove,
-      icon: require('@/assets/icons/agogi-gorgoteri.svg'),
+      icon: new URL('@/assets/icons/agogi-gorgoteri.svg', import.meta.url).href,
     },
     {
       neume: TempoSign.QuickAbove,
-      icon: require('@/assets/icons/agogi-gorgi.svg'),
+      icon: new URL('@/assets/icons/agogi-gorgi.svg', import.meta.url).href,
     },
     {
       neume: TempoSign.MediumAbove,
-      icon: require('@/assets/icons/agogi-mesi.svg'),
+      icon: new URL('@/assets/icons/agogi-mesi.svg', import.meta.url).href,
     },
     {
       neume: TempoSign.ModerateAbove,
-      icon: require('@/assets/icons/agogi-metria.svg'),
+      icon: new URL('@/assets/icons/agogi-metria.svg', import.meta.url).href,
     },
     {
       neume: TempoSign.SlowAbove,
-      icon: require('@/assets/icons/agogi-argi.svg'),
+      icon: new URL('@/assets/icons/agogi-argi.svg', import.meta.url).href,
     },
     {
       neume: TempoSign.SlowerAbove,
-      icon: require('@/assets/icons/agogi-argoteri.svg'),
+      icon: new URL('@/assets/icons/agogi-argoteri.svg', import.meta.url).href,
     },
     {
       neume: TempoSign.VerySlowAbove,
-      icon: require('@/assets/icons/agogi-poli-argi.svg'),
+      icon: new URL('@/assets/icons/agogi-poli-argi.svg', import.meta.url).href,
     },
   ];
 
   barlineMenuOptions: ButtonWithMenuOption[] = [
     {
       neume: MeasureBar.MeasureBarShortTheseos,
-      icon: require('@/assets/icons/barline-short-theseos.svg'),
+      icon: new URL('@/assets/icons/barline-short-theseos.svg', import.meta.url)
+        .href,
     },
     {
       neume: MeasureBar.MeasureBarShortDouble,
-      icon: require('@/assets/icons/barline-short-double.svg'),
+      icon: new URL('@/assets/icons/barline-short-double.svg', import.meta.url)
+        .href,
     },
     {
       neume: MeasureBar.MeasureBarTop,
-      icon: require('@/assets/icons/barline-short-single.svg'),
+      icon: new URL('@/assets/icons/barline-short-single.svg', import.meta.url)
+        .href,
     },
     {
       neume: MeasureBar.MeasureBarTheseos,
-      icon: require('@/assets/icons/barline-theseos.svg'),
+      icon: new URL('@/assets/icons/barline-theseos.svg', import.meta.url).href,
     },
     {
       neume: MeasureBar.MeasureBarDouble,
-      icon: require('@/assets/icons/barline-double.svg'),
+      icon: new URL('@/assets/icons/barline-double.svg', import.meta.url).href,
     },
     {
       neume: MeasureBar.MeasureBarRight,
-      icon: require('@/assets/icons/barline-single.svg'),
+      icon: new URL('@/assets/icons/barline-single.svg', import.meta.url).href,
     },
   ];
 }

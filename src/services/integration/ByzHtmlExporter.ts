@@ -30,7 +30,7 @@ interface NeumeOffset {
 }
 
 const NoOffset: NeumeOffset = { x: null, y: null };
-const byzhtmlVersion = process.env.VUE_APP_BYZHTML_VERSION;
+const byzhtmlVersion = import.meta.env.VITE_BYZHTML_VERSION;
 
 interface TagInfo {
   tag: string;

@@ -215,35 +215,36 @@ export default class ToolbarModeKey extends Vue {
   tempoMenuOptions: ButtonWithMenuOption[] = [
     {
       neume: TempoSign.VeryQuick,
-      icon: require('@/assets/icons/agogi-poli-gorgi.svg'),
+      icon: new URL('@/assets/icons/agogi-poli-gorgi.svg', import.meta.url)
+        .href,
     },
     {
       neume: TempoSign.Quicker,
-      icon: require('@/assets/icons/agogi-gorgoteri.svg'),
+      icon: new URL('@/assets/icons/agogi-gorgoteri.svg', import.meta.url).href,
     },
     {
       neume: TempoSign.Quick,
-      icon: require('@/assets/icons/agogi-gorgi.svg'),
+      icon: new URL('@/assets/icons/agogi-gorgi.svg', import.meta.url).href,
     },
     {
       neume: TempoSign.Medium,
-      icon: require('@/assets/icons/agogi-mesi.svg'),
+      icon: new URL('@/assets/icons/agogi-mesi.svg', import.meta.url).href,
     },
     {
       neume: TempoSign.Moderate,
-      icon: require('@/assets/icons/agogi-metria.svg'),
+      icon: new URL('@/assets/icons/agogi-metria.svg', import.meta.url).href,
     },
     {
       neume: TempoSign.Slow,
-      icon: require('@/assets/icons/agogi-argi.svg'),
+      icon: new URL('@/assets/icons/agogi-argi.svg', import.meta.url).href,
     },
     {
       neume: TempoSign.Slower,
-      icon: require('@/assets/icons/agogi-argoteri.svg'),
+      icon: new URL('@/assets/icons/agogi-argoteri.svg', import.meta.url).href,
     },
     {
       neume: TempoSign.VerySlow,
-      icon: require('@/assets/icons/agogi-poli-argi.svg'),
+      icon: new URL('@/assets/icons/agogi-poli-argi.svg', import.meta.url).href,
     },
   ];
 }

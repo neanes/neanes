@@ -243,8 +243,8 @@ export default class ToolbarMain extends Vue {
   @Prop() entryMode!: EntryMode;
   @Prop() zoom!: number;
   @Prop() zoomToFit!: boolean;
-  @Prop() currentPageNumber!: Number;
-  @Prop() pageCount!: Number;
+  @Prop() currentPageNumber!: number;
+  @Prop() pageCount!: number;
   @Prop() audioState!: AudioState;
   @Prop() audioOptions!: PlaybackOptions;
   Note = Note;

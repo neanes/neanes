@@ -66,7 +66,8 @@
             class="page"
             :style="pageStyle"
             v-observe-visibility="{
-              callback: (isVisible: boolean) => updatePageVisibility(page, isVisible),
+              callback: (isVisible: boolean) =>
+                updatePageVisibility(page, isVisible),
               intersection: pageVisibilityIntersection,
             }"
             v-for="(page, pageIndex) in filteredPages"
@@ -172,26 +173,42 @@
                             selectedLyrics = null;
                           "
                         />
-                        <template v-if="isMelisma(element as NoteElement) && (element as NoteElement).isHyphen">
+                        <template
+                          v-if="
+                            isMelisma(element as NoteElement) &&
+                            (element as NoteElement).isHyphen
+                          "
+                        >
                           <div
                             class="melisma"
                             :style="getMelismaStyle(element as NoteElement)"
                           >
                             <span
                               class="melisma-hyphen"
-                              v-for="(offset, index) in (element as NoteElement).hyphenOffsets"
+                              v-for="(offset, index) in (element as NoteElement)
+                                .hyphenOffsets"
                               :key="index"
-                              :style="getMelismaHyphenStyle(element as NoteElement, index)"
+                              :style="
+                                getMelismaHyphenStyle(
+                                  element as NoteElement,
+                                  index,
+                                )
+                              "
                               >-</span
                             >
                           </div>
                         </template>
                         <template
-                          v-else-if="isMelisma(element as NoteElement) && !(element as NoteElement).isHyphen"
+                          v-else-if="
+                            isMelisma(element as NoteElement) &&
+                            !(element as NoteElement).isHyphen
+                          "
                         >
                           <div
                             class="melisma"
-                            :class="{ full: (element as NoteElement).isFullMelisma }"
+                            :class="{
+                              full: (element as NoteElement).isFullMelisma,
+                            }"
                             :style="getMelismaStyle(element as NoteElement)"
                             v-text="(element as NoteElement).melismaText"
                           ></div>
@@ -279,7 +296,9 @@
                       :metadata="getTokenMetadata(pageIndex)"
                       :class="[{ selectedTextbox: isSelected(element) }]"
                       @select-single="selectedElement = element"
-                      @update:content="updateTextBoxContent(element as TextBoxElement, $event)"
+                      @update:content="
+                        updateTextBoxContent(element as TextBoxElement, $event)
+                      "
                     />
                   </template>
                   <template v-if="isModeKeyElement(element)">
@@ -319,7 +338,9 @@
                         },
                       ]"
                       @select-single="selectedElement = element"
-                      @update:content="updateDropCapContent(element as DropCapElement, $event)"
+                      @update:content="
+                        updateDropCapContent(element as DropCapElement, $event)
+                      "
                     />
                   </template>
                   <template v-if="isImageBoxElement(element)">
@@ -416,14 +437,29 @@
         :element="selectedElement"
         :fonts="fonts"
         @update:useDefaultStyle="
-          updateDropCapUseDefaultStyle(selectedElement as DropCapElement, $event)
+          updateDropCapUseDefaultStyle(
+            selectedElement as DropCapElement,
+            $event,
+          )
         "
-        @update:fontSize="updateDropCapFontSize(selectedElement as DropCapElement, $event)"
-        @update:fontFamily="updateDropCapFontFamily(selectedElement as DropCapElement, $event)"
-        @update:strokeWidth="updateDropCapStrokeWidth(selectedElement as DropCapElement, $event)"
-        @update:color="updateDropCapColor(selectedElement as DropCapElement, $event)"
-        @update:bold="updateDropCapFontWeight(selectedElement as DropCapElement, $event)"
-        @update:italic="updateDropCapFontStyle(selectedElement as DropCapElement, $event)"
+        @update:fontSize="
+          updateDropCapFontSize(selectedElement as DropCapElement, $event)
+        "
+        @update:fontFamily="
+          updateDropCapFontFamily(selectedElement as DropCapElement, $event)
+        "
+        @update:strokeWidth="
+          updateDropCapStrokeWidth(selectedElement as DropCapElement, $event)
+        "
+        @update:color="
+          updateDropCapColor(selectedElement as DropCapElement, $event)
+        "
+        @update:bold="
+          updateDropCapFontWeight(selectedElement as DropCapElement, $event)
+        "
+        @update:italic="
+          updateDropCapFontStyle(selectedElement as DropCapElement, $event)
+        "
       />
     </template>
     <template
@@ -432,13 +468,24 @@
       <ToolbarImageBox
         :element="selectedElement"
         :pageSetup="score.pageSetup"
-        @update:alignment="updateImageBoxAlignment(selectedElement as ImageBoxElement, $event)"
-        @update:inline="updateImageBoxInline(selectedElement as ImageBoxElement, $event)"
+        @update:alignment="
+          updateImageBoxAlignment(selectedElement as ImageBoxElement, $event)
+        "
+        @update:inline="
+          updateImageBoxInline(selectedElement as ImageBoxElement, $event)
+        "
         @update:lockAspectRatio="
-          updateImageBoxLockAspectRatio(selectedElement as ImageBoxElement, $event)
+          updateImageBoxLockAspectRatio(
+            selectedElement as ImageBoxElement,
+            $event,
+          )
         "
         @update:size="
-          updateImageBoxSize(selectedElement as ImageBoxElement, $event.width, $event.height)
+          updateImageBoxSize(
+            selectedElement as ImageBoxElement,
+            $event.width,
+            $event.height,
+          )
         "
       />
     </template>
@@ -456,26 +503,55 @@
         :element="selectedElement"
         :pageSetup="score.pageSetup"
         @update:useDefaultStyle="
-          updateModeKeyUseDefaultStyle(selectedElement as ModeKeyElement, $event)
+          updateModeKeyUseDefaultStyle(
+            selectedElement as ModeKeyElement,
+            $event,
+          )
         "
-        @update:fontSize="updateModeKeyFontSize(selectedElement as ModeKeyElement, $event)"
-        @update:strokeWidth="updateModeKeyStrokeWidth(selectedElement as ModeKeyElement, $event)"
-        @update:alignment="updateModeKeyAlignment(selectedElement as ModeKeyElement, $event)"
-        @update:color="updateModeKeyColor(selectedElement as ModeKeyElement, $event)"
-        @update:bpm="updateModeKeyBpm(selectedElement as ModeKeyElement, $event)"
+        @update:fontSize="
+          updateModeKeyFontSize(selectedElement as ModeKeyElement, $event)
+        "
+        @update:strokeWidth="
+          updateModeKeyStrokeWidth(selectedElement as ModeKeyElement, $event)
+        "
+        @update:alignment="
+          updateModeKeyAlignment(selectedElement as ModeKeyElement, $event)
+        "
+        @update:color="
+          updateModeKeyColor(selectedElement as ModeKeyElement, $event)
+        "
+        @update:bpm="
+          updateModeKeyBpm(selectedElement as ModeKeyElement, $event)
+        "
         @update:ignoreAttractions="
-          updateModeKeyIgnoreAttractions(selectedElement as ModeKeyElement, $event)
+          updateModeKeyIgnoreAttractions(
+            selectedElement as ModeKeyElement,
+            $event,
+          )
         "
-        @update:showAmbitus="updateModeKeyShowAmbitus(selectedElement as ModeKeyElement, $event)"
+        @update:showAmbitus="
+          updateModeKeyShowAmbitus(selectedElement as ModeKeyElement, $event)
+        "
         @update:tempoAlignRight="
-          updateModeKeyTempoAlignRight(selectedElement as ModeKeyElement, $event)
+          updateModeKeyTempoAlignRight(
+            selectedElement as ModeKeyElement,
+            $event,
+          )
         "
-        @update:tempo="setModeKeyTempo(selectedElement as ModeKeyElement, $event)"
+        @update:tempo="
+          setModeKeyTempo(selectedElement as ModeKeyElement, $event)
+        "
         @update:heightAdjustment="
-          updateModeKeyHeightAdjustment(selectedElement as ModeKeyElement, $event)
+          updateModeKeyHeightAdjustment(
+            selectedElement as ModeKeyElement,
+            $event,
+          )
         "
         @update:permanentEnharmonicZo="
-          updateModeKeyPermanentEnharmonicZo(selectedElement as ModeKeyElement, $event)
+          updateModeKeyPermanentEnharmonicZo(
+            selectedElement as ModeKeyElement,
+            $event,
+          )
         "
         @open-mode-key-dialog="openModeKeyDialog"
       />
@@ -487,7 +563,9 @@
         :element="selectedElement"
         :pageSetup="score.pageSetup"
         :key="`toolbar-neume-${selectedElement.id}-${selectedElement.keyHelper}`"
-        @update:accidental="setAccidental(selectedElement as NoteElement, $event)"
+        @update:accidental="
+          setAccidental(selectedElement as NoteElement, $event)
+        "
         @update:secondaryAccidental="
           setSecondaryAccidental(selectedElement as NoteElement, $event)
         "
@@ -495,24 +573,44 @@
           setTertiaryAccidental(selectedElement as NoteElement, $event)
         "
         @update:fthora="setFthoraNote(selectedElement as NoteElement, $event)"
-        @update:secondaryFthora="setSecondaryFthora(selectedElement as NoteElement, $event)"
-        @update:tertiaryFthora="setTertiaryFthora(selectedElement as NoteElement, $event)"
+        @update:secondaryFthora="
+          setSecondaryFthora(selectedElement as NoteElement, $event)
+        "
+        @update:tertiaryFthora="
+          setTertiaryFthora(selectedElement as NoteElement, $event)
+        "
         @update:chromaticFthoraNote="
           updateNoteChromaticFthoraNote(selectedElement as NoteElement, $event)
         "
         @update:gorgon="setGorgon(selectedElement as NoteElement, $event)"
-        @update:secondaryGorgon="setSecondaryGorgon(selectedElement as NoteElement, $event)"
+        @update:secondaryGorgon="
+          setSecondaryGorgon(selectedElement as NoteElement, $event)
+        "
         @update:klasma="setKlasma(selectedElement as NoteElement)"
         @update:time="setTimeNeume(selectedElement as NoteElement, $event)"
-        @update:expression="setVocalExpression(selectedElement as NoteElement, $event)"
-        @update:measureBar="setMeasureBarNote(selectedElement as NoteElement, $event)"
-        @update:measureNumber="setMeasureNumber(selectedElement as NoteElement, $event)"
-        @update:noteIndicator="updateNoteNoteIndicator(selectedElement as NoteElement, $event)"
+        @update:expression="
+          setVocalExpression(selectedElement as NoteElement, $event)
+        "
+        @update:measureBar="
+          setMeasureBarNote(selectedElement as NoteElement, $event)
+        "
+        @update:measureNumber="
+          setMeasureNumber(selectedElement as NoteElement, $event)
+        "
+        @update:noteIndicator="
+          updateNoteNoteIndicator(selectedElement as NoteElement, $event)
+        "
         @update:ison="setIson(selectedElement as NoteElement, $event)"
-        @update:koronis="updateNoteKoronis(selectedElement as NoteElement, $event)"
-        @update:vareia="updateNoteVareia(selectedElement as NoteElement, $event)"
+        @update:koronis="
+          updateNoteKoronis(selectedElement as NoteElement, $event)
+        "
+        @update:vareia="
+          updateNoteVareia(selectedElement as NoteElement, $event)
+        "
         @update:tie="setTie(selectedElement as NoteElement, $event)"
-        @update:spaceAfter="updateNoteSpaceAfter(selectedElement as NoteElement, $event)"
+        @update:spaceAfter="
+          updateNoteSpaceAfter(selectedElement as NoteElement, $event)
+        "
         @update:ignoreAttractions="
           updateNoteIgnoreAttractions(selectedElement as NoteElement, $event)
         "
@@ -525,20 +623,44 @@
       <ToolbarMartyria
         :element="selectedElement"
         :pageSetup="score.pageSetup"
-        @update:fthora="setFthoraMartyria(selectedElement as MartyriaElement, $event)"
-        @update:chromaticFthoraNote="
-          updateMartyriaChromaticFthoraNote(selectedElement as MartyriaElement, $event)
+        @update:fthora="
+          setFthoraMartyria(selectedElement as MartyriaElement, $event)
         "
-        @update:tempo="setMartyriaTempo(selectedElement as MartyriaElement, $event)"
-        @update:measureBar="setMeasureBarMartyria(selectedElement as MartyriaElement, $event)"
-        @update:alignRight="updateMartyriaAlignRight(selectedElement as MartyriaElement, $event)"
-        @update:auto="updateMartyriaAuto(selectedElement as MartyriaElement, $event)"
-        @update:note="updateMartyriaNote(selectedElement as MartyriaElement, $event)"
-        @update:scale="updateMartyriaScale(selectedElement as MartyriaElement, $event)"
-        @update:bpm="updateMartyriaBpm(selectedElement as MartyriaElement, $event)"
-        @update:spaceAfter="updateMartyriaSpaceAfter(selectedElement as MartyriaElement, $event)"
+        @update:chromaticFthoraNote="
+          updateMartyriaChromaticFthoraNote(
+            selectedElement as MartyriaElement,
+            $event,
+          )
+        "
+        @update:tempo="
+          setMartyriaTempo(selectedElement as MartyriaElement, $event)
+        "
+        @update:measureBar="
+          setMeasureBarMartyria(selectedElement as MartyriaElement, $event)
+        "
+        @update:alignRight="
+          updateMartyriaAlignRight(selectedElement as MartyriaElement, $event)
+        "
+        @update:auto="
+          updateMartyriaAuto(selectedElement as MartyriaElement, $event)
+        "
+        @update:note="
+          updateMartyriaNote(selectedElement as MartyriaElement, $event)
+        "
+        @update:scale="
+          updateMartyriaScale(selectedElement as MartyriaElement, $event)
+        "
+        @update:bpm="
+          updateMartyriaBpm(selectedElement as MartyriaElement, $event)
+        "
+        @update:spaceAfter="
+          updateMartyriaSpaceAfter(selectedElement as MartyriaElement, $event)
+        "
         @update:rootSignOverride="
-          updateMartyriaRootSignOverride(selectedElement as MartyriaElement, $event)
+          updateMartyriaRootSignOverride(
+            selectedElement as MartyriaElement,
+            $event,
+          )
         "
       />
     </template>
@@ -547,14 +669,18 @@
         :element="selectedElement"
         :pageSetup="score.pageSetup"
         @update:bpm="updateTempoBpm(selectedElement as TempoElement, $event)"
-        @update:spaceAfter="updateTempoSpaceAfter(selectedElement as TempoElement, $event)"
+        @update:spaceAfter="
+          updateTempoSpaceAfter(selectedElement as TempoElement, $event)
+        "
       />
     </template>
     <ModeKeyDialog
       v-if="modeKeyDialogIsOpen"
       :element="selectedElement"
       :pageSetup="score.pageSetup"
-      @update="updateModeKeyFromTemplate(selectedElement as ModeKeyElement, $event)"
+      @update="
+        updateModeKeyFromTemplate(selectedElement as ModeKeyElement, $event)
+      "
       @close="closeModeKeyDialog"
     />
     <SyllablePositioningDialog
@@ -1382,7 +1508,7 @@ export default class Editor extends Vue {
     const header = this.score.getHeaderForPage(pageNumber);
 
     // Currently, headers only support a single text box element.
-    return header != null ? header.elements[0] as TextBoxElement : null;
+    return header != null ? (header.elements[0] as TextBoxElement) : null;
   }
 
   getFooterForPageIndex(pageIndex: number) {
@@ -1391,7 +1517,7 @@ export default class Editor extends Vue {
     const footer = this.score.getFooterForPage(pageNumber);
 
     // Currently, footers only support a single text box element.
-    return footer != null ? footer.elements[0] as TextBoxElement : null;
+    return footer != null ? (footer.elements[0] as TextBoxElement) : null;
   }
 
   getTokenMetadata(pageIndex: number): TokenMetadata {
@@ -3682,10 +3808,7 @@ export default class Editor extends Vue {
     }
   }
 
-  setVocalExpression(
-    element: NoteElement,
-    neume: VocalExpressionNeume,
-  ) {
+  setVocalExpression(element: NoteElement, neume: VocalExpressionNeume) {
     if (
       element.vocalExpressionNeume != null &&
       areVocalExpressionsEquivalent(neume, element.vocalExpressionNeume)

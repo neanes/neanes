@@ -187,7 +187,12 @@
         class="audio-speed"
         :value="audioOptions.speed"
         :disabled="audioState === AudioState.Playing"
-        @change="$emit('update:audioOptionsSpeed', ($event.target as HTMLInputElement).value)"
+        @change="
+          $emit(
+            'update:audioOptionsSpeed',
+            ($event.target as HTMLInputElement).value,
+          )
+        "
       >
         <option value="0.25">0.25x</option>
         <option value="0.5">0.5x</option>

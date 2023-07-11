@@ -15,7 +15,11 @@
               min="0"
               :step="marginStep"
               :value="topMargin"
-              @change="updateTopMargin(Number(($event.target as HTMLInputElement).value))"
+              @change="
+                updateTopMargin(
+                  Number(($event.target as HTMLInputElement).value),
+                )
+              "
             />
           </div>
           <div class="form-group">
@@ -26,7 +30,11 @@
               min="0"
               :step="marginStep"
               :value="bottomMargin"
-              @change="updateBottomMargin(Number(($event.target as HTMLInputElement).value))"
+              @change="
+                updateBottomMargin(
+                  Number(($event.target as HTMLInputElement).value),
+                )
+              "
             />
           </div>
           <div class="form-group">
@@ -37,7 +45,11 @@
               min="0"
               :step="marginStep"
               :value="leftMargin"
-              @change="updateLeftMargin(Number(($event.target as HTMLInputElement).value))"
+              @change="
+                updateLeftMargin(
+                  Number(($event.target as HTMLInputElement).value),
+                )
+              "
             />
           </div>
           <div class="form-group">
@@ -48,7 +60,11 @@
               min="0"
               :step="marginStep"
               :value="rightMargin"
-              @change="updateRightMargin(Number(($event.target as HTMLInputElement).value))"
+              @change="
+                updateRightMargin(
+                  Number(($event.target as HTMLInputElement).value),
+                )
+              "
             />
           </div>
           <div class="form-group">
@@ -59,7 +75,11 @@
               min="0"
               :step="marginStep"
               :value="headerMargin"
-              @change="updateHeaderMargin(Number(($event.target as HTMLInputElement).value))"
+              @change="
+                updateHeaderMargin(
+                  Number(($event.target as HTMLInputElement).value),
+                )
+              "
             />
           </div>
           <div class="form-group">
@@ -70,7 +90,11 @@
               min="0"
               :step="marginStep"
               :value="footerMargin"
-              @change="updateFooterMargin(Number(($event.target as HTMLInputElement).value))"
+              @change="
+                updateFooterMargin(
+                  Number(($event.target as HTMLInputElement).value),
+                )
+              "
             />
           </div>
           <div class="form-group">
@@ -146,7 +170,11 @@
               type="number"
               :step="spacingStep"
               :value="lyricsVerticalOffset"
-              @change="updateLyricsVerticalOffset(Number(($event.target as HTMLInputElement).value))"
+              @change="
+                updateLyricsVerticalOffset(
+                  Number(($event.target as HTMLInputElement).value),
+                )
+              "
             />
           </div>
           <div class="form-group">
@@ -156,7 +184,11 @@
               type="number"
               :step="spacingStep"
               :value="lyricsMinimumSpacing"
-              @change="updateLyricsMinimumSpacing(Number(($event.target as HTMLInputElement).value))"
+              @change="
+                updateLyricsMinimumSpacing(
+                  Number(($event.target as HTMLInputElement).value),
+                )
+              "
             />
           </div>
           <div class="form-group">
@@ -167,7 +199,11 @@
               min="0"
               :step="spacingStep"
               :value="lineHeight"
-              @change="updateLineHeight(Number(($event.target as HTMLInputElement).value))"
+              @change="
+                updateLineHeight(
+                  Number(($event.target as HTMLInputElement).value),
+                )
+              "
             />
           </div>
           <div class="form-group">
@@ -178,7 +214,11 @@
               min="0"
               :step="spacingStep"
               :value="hyphenSpacing"
-              @change="updateHyphenSpacing(Number(($event.target as HTMLInputElement).value))"
+              @change="
+                updateHyphenSpacing(
+                  Number(($event.target as HTMLInputElement).value),
+                )
+              "
             />
           </div>
           <div class="subheader">Headers &amp; Footers</div>

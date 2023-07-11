@@ -83,7 +83,7 @@
               <div
                 class="menu-item"
                 v-for="menuItem in secondaryGorgonMenuItems"
-                :key="(menuItem.gorgon as string)"
+                :key="menuItem.gorgon as string"
                 @mouseenter="selectedSecondaryGorgon = menuItem"
               >
                 <Neume
@@ -120,7 +120,7 @@
               <div
                 class="menu-item"
                 v-for="menuItem in secondaryGorgonMenuItemsDown"
-                :key="(menuItem.gorgon as string)"
+                :key="menuItem.gorgon as string"
                 @mouseenter="selectedSecondaryGorgon = menuItem"
               >
                 <Neume

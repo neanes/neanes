@@ -36,7 +36,7 @@ export default {
     let platformService: IPlatformService;
     let showFileMenuBar = false;
 
-     if (isElectron()) {
+    if (isElectron()) {
       ipcService = new IpcService();
       platformService = new PlatformService();
     } else {
@@ -51,7 +51,7 @@ export default {
       platformService,
       showFileMenuBar,
     };
-  }
+  },
 };
 </script>
 

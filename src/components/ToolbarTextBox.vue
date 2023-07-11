@@ -5,7 +5,12 @@
         id="toolbar-text-box-use-default-style"
         type="checkbox"
         :checked="element.useDefaultStyle"
-        @change="$emit('update:useDefaultStyle', ($event.target as HTMLInputElement).checked)"
+        @change="
+          $emit(
+            'update:useDefaultStyle',
+            ($event.target as HTMLInputElement).checked,
+          )
+        "
       />
       <label for="toolbar-text-box-use-default-style">Use default style</label>
       <span class="divider" />
@@ -13,7 +18,9 @@
     <template v-if="!element.inline || !element.useDefaultStyle">
       <select
         :value="element.fontFamily"
-        @change="$emit('update:fontFamily', ($event.target as HTMLInputElement).value)"
+        @change="
+          $emit('update:fontFamily', ($event.target as HTMLInputElement).value)
+        "
       >
         <option>Athonite</option>
         <option>Omega</option>

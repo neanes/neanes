@@ -65,7 +65,6 @@ async function getLinuxSystemFonts() {
       const name = names.find(
         (element, index) =>
           index > 0 &&
-          // eslint-disable-next-line no-control-regex
           /^[\x00-\x7F]*$/.test(element) &&
           fonts.indexOf(element) === -1,
       );

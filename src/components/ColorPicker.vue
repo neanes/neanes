@@ -20,6 +20,7 @@
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-facing-decorator';
 import { Sketch } from '@ckpack/vue-color';
+import { StyleValue } from 'vue';
 
 interface Color {
   hex: string;
@@ -54,13 +55,13 @@ export default class ColorPicker extends Vue {
   get colorStyle() {
     return {
       backgroundColor: this.color,
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get popupStyle() {
     return {
       top: `${this.popupPositionTop}px`,
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   open() {

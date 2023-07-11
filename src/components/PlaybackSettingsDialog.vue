@@ -12,7 +12,9 @@
             max="2400"
             step="1"
             :value="tuning"
-            @change="onTuningChanged($event.target.value)"
+            @change="
+              onTuningChanged(Number(($event.target as HTMLInputElement).value))
+            "
           />
           <span class="unit-label">cents</span>
           <span class="label-g3">Di = G3 = {{ options.frequencyDi }} Hz </span>
@@ -69,7 +71,11 @@
             max="0"
             step="1"
             :value="options.defaultAttractionZoMoria"
-            @change="onDefaultAttractionZoMoriaChanged($event.target.value)"
+            @change="
+              onDefaultAttractionZoMoriaChanged(
+                Number(($event.target as HTMLInputElement).value),
+              )
+            "
           />
           <button
             class="btnResetDefaultAttractionZoMoria"
@@ -122,7 +128,7 @@
                 onIntervalChanged(
                   options.diatonicIntervals,
                   index,
-                  $event.target.value,
+                  Number(($event.target as HTMLInputElement).value),
                 )
               "
             />
@@ -149,7 +155,7 @@
                 onIntervalChanged(
                   options.legetosIntervals,
                   index,
-                  $event.target.value,
+                  Number(($event.target as HTMLInputElement).value),
                 )
               "
             />
@@ -176,7 +182,7 @@
                 onIntervalChanged(
                   options.softChromaticIntervals,
                   index,
-                  $event.target.value,
+                  Number(($event.target as HTMLInputElement).value),
                 )
               "
             />
@@ -203,7 +209,7 @@
                 onIntervalChanged(
                   options.hardChromaticIntervals,
                   index,
-                  $event.target.value,
+                  Number(($event.target as HTMLInputElement).value),
                 )
               "
             />
@@ -230,7 +236,7 @@
                 onIntervalChanged(
                   options.zygosIntervals,
                   index,
-                  $event.target.value,
+                  Number(($event.target as HTMLInputElement).value),
                 )
               "
             />
@@ -257,7 +263,7 @@
                 onIntervalChanged(
                   options.zygosLegetosIntervals,
                   index,
-                  $event.target.value,
+                  Number(($event.target as HTMLInputElement).value),
                 )
               "
             />
@@ -284,7 +290,7 @@
                 onIntervalChanged(
                   options.klitonIntervals,
                   index,
-                  $event.target.value,
+                  Number(($event.target as HTMLInputElement).value),
                 )
               "
             />
@@ -311,7 +317,7 @@
                 onIntervalChanged(
                   options.spathiIntervals,
                   index,
-                  $event.target.value,
+                  Number(($event.target as HTMLInputElement).value),
                 )
               "
             />
@@ -340,7 +346,11 @@
               max="0"
               step="1"
               :value="options.generalFlatMoria"
-              @change="onGeneralFlatMoriaChanged($event.target.value)"
+              @change="
+                onGeneralFlatMoriaChanged(
+                  Number(($event.target as HTMLInputElement).value),
+                )
+              "
             />
           </div>
           <span class="interval-label">moria</span>
@@ -356,7 +366,11 @@
               max="72"
               step="1"
               :value="options.generalSharpMoria"
-              @change="onGeneralSharpMoriaChanged($event.target.value)"
+              @change="
+                onGeneralSharpMoriaChanged(
+                  Number(($event.target as HTMLInputElement).value),
+                )
+              "
             />
           </div>
           <span class="interval-label">moria</span>
@@ -373,7 +387,10 @@
               step="1"
               :value="options.alterationMoriaMap[Accidental.Sharp_2_Left]"
               @change="
-                onDiesisChanged(Accidental.Sharp_2_Left, $event.target.value)
+                onDiesisChanged(
+                  Accidental.Sharp_2_Left,
+                  Number(($event.target as HTMLInputElement).value),
+                )
               "
             />
           </div>
@@ -390,7 +407,10 @@
               step="1"
               :value="options.alterationMoriaMap[Accidental.Sharp_4_Left]"
               @change="
-                onDiesisChanged(Accidental.Sharp_4_Left, $event.target.value)
+                onDiesisChanged(
+                  Accidental.Sharp_4_Left,
+                  Number(($event.target as HTMLInputElement).value),
+                )
               "
             />
           </div>
@@ -407,7 +427,10 @@
               step="1"
               :value="options.alterationMoriaMap[Accidental.Sharp_6_Left]"
               @change="
-                onDiesisChanged(Accidental.Sharp_6_Left, $event.target.value)
+                onDiesisChanged(
+                  Accidental.Sharp_6_Left,
+                  Number(($event.target as HTMLInputElement).value),
+                )
               "
             />
           </div>
@@ -424,7 +447,10 @@
               step="1"
               :value="options.alterationMoriaMap[Accidental.Sharp_8_Left]"
               @change="
-                onDiesisChanged(Accidental.Sharp_8_Left, $event.target.value)
+                onDiesisChanged(
+                  Accidental.Sharp_8_Left,
+                  Number(($event.target as HTMLInputElement).value),
+                )
               "
             />
           </div>
@@ -441,7 +467,10 @@
               step="1"
               :value="options.alterationMoriaMap[Accidental.Flat_2_Right]"
               @change="
-                onYfesisChanged(Accidental.Flat_2_Right, $event.target.value)
+                onYfesisChanged(
+                  Accidental.Flat_2_Right,
+                  Number(($event.target as HTMLInputElement).value),
+                )
               "
             />
           </div>
@@ -458,7 +487,10 @@
               step="1"
               :value="options.alterationMoriaMap[Accidental.Flat_4_Right]"
               @change="
-                onYfesisChanged(Accidental.Flat_4_Right, $event.target.value)
+                onYfesisChanged(
+                  Accidental.Flat_4_Right,
+                  Number(($event.target as HTMLInputElement).value),
+                )
               "
             />
           </div>
@@ -475,7 +507,10 @@
               step="1"
               :value="options.alterationMoriaMap[Accidental.Flat_6_Right]"
               @change="
-                onYfesisChanged(Accidental.Flat_6_Right, $event.target.value)
+                onYfesisChanged(
+                  Accidental.Flat_6_Right,
+                  Number(($event.target as HTMLInputElement).value),
+                )
               "
             />
           </div>
@@ -492,7 +527,10 @@
               step="1"
               :value="options.alterationMoriaMap[Accidental.Flat_8_Right]"
               @change="
-                onYfesisChanged(Accidental.Flat_8_Right, $event.target.value)
+                onYfesisChanged(
+                  Accidental.Flat_8_Right,
+                  Number(($event.target as HTMLInputElement).value),
+                )
               "
             />
           </div>

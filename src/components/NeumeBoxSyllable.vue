@@ -90,6 +90,7 @@ import { TimeNeume, VocalExpressionNeume } from '@/models/Neumes';
 import NeumeVue from '@/components/Neume.vue';
 import { withZoom } from '@/utils/withZoom';
 import { PageSetup } from '@/models/PageSetup';
+import { StyleValue } from 'vue';
 
 @Component({
   components: {
@@ -170,7 +171,7 @@ export default class NeumeBoxSyllable extends Vue {
       fontSize: withZoom(this.pageSetup.neumeDefaultFontSize),
       color: this.pageSetup.neumeDefaultColor,
       webkitTextStrokeWidth: withZoom(this.pageSetup.neumeDefaultStrokeWidth),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get gorgonStyle() {
@@ -185,7 +186,7 @@ export default class NeumeBoxSyllable extends Vue {
         this.note.gorgonNeumeOffsetY != null
           ? `${this.note.gorgonNeumeOffsetY}em`
           : undefined,
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get secondaryGorgonStyle() {
@@ -200,7 +201,7 @@ export default class NeumeBoxSyllable extends Vue {
         this.note.secondaryGorgonNeumeOffsetY != null
           ? `${this.note.secondaryGorgonNeumeOffsetY}em`
           : undefined,
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get fthoraStyle() {
@@ -215,7 +216,7 @@ export default class NeumeBoxSyllable extends Vue {
         this.note.fthoraOffsetY != null
           ? `${this.note.fthoraOffsetY}em`
           : undefined,
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get secondaryFthoraStyle() {
@@ -230,7 +231,7 @@ export default class NeumeBoxSyllable extends Vue {
         this.note.secondaryFthoraOffsetY != null
           ? `${this.note.secondaryFthoraOffsetY}em`
           : undefined,
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get tertiaryFthoraStyle() {
@@ -245,7 +246,7 @@ export default class NeumeBoxSyllable extends Vue {
         this.note.tertiaryFthoraOffsetY != null
           ? `${this.note.tertiaryFthoraOffsetY}em`
           : undefined,
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get accidentalStyle() {
@@ -262,7 +263,7 @@ export default class NeumeBoxSyllable extends Vue {
         this.note.accidentalOffsetY != null
           ? `${this.note.accidentalOffsetY}em`
           : undefined,
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get secondaryAccidentalStyle() {
@@ -279,7 +280,7 @@ export default class NeumeBoxSyllable extends Vue {
         this.note.secondaryAccidentalOffsetY != null
           ? `${this.note.secondaryAccidentalOffsetY}em`
           : undefined,
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get tertiaryAccidentalStyle() {
@@ -296,7 +297,7 @@ export default class NeumeBoxSyllable extends Vue {
         this.note.tertiaryAccidentalOffsetY != null
           ? `${this.note.tertiaryAccidentalOffsetY}em`
           : undefined,
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get measureBarLeftStyle() {
@@ -313,7 +314,7 @@ export default class NeumeBoxSyllable extends Vue {
         this.note.measureBarLeftOffsetY != null
           ? `${this.note.measureBarLeftOffsetY}em`
           : undefined,
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get measureBarRightStyle() {
@@ -330,7 +331,7 @@ export default class NeumeBoxSyllable extends Vue {
         this.note.measureBarRightOffsetY != null
           ? `${this.note.measureBarRightOffsetY}em`
           : undefined,
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get measureNumberStyle() {
@@ -347,7 +348,7 @@ export default class NeumeBoxSyllable extends Vue {
         this.note.measureNumberOffsetY != null
           ? `${this.note.measureNumberOffsetY}em`
           : undefined,
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get noteIndicatorStyle() {
@@ -364,7 +365,7 @@ export default class NeumeBoxSyllable extends Vue {
         this.note.noteIndicatorOffsetY != null
           ? `${this.note.noteIndicatorOffsetY}em`
           : undefined,
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get isonStyle() {
@@ -379,7 +380,7 @@ export default class NeumeBoxSyllable extends Vue {
         this.note.isonOffsetY != null
           ? `${this.note.isonOffsetY}em`
           : undefined,
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get timeStyle() {
@@ -392,7 +393,7 @@ export default class NeumeBoxSyllable extends Vue {
         this.note.timeNeumeOffsetY != null
           ? `${this.note.timeNeumeOffsetY}em`
           : undefined,
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get koronisStyle() {
@@ -407,7 +408,7 @@ export default class NeumeBoxSyllable extends Vue {
         this.note.koronisOffsetY != null
           ? `${this.note.koronisOffsetY}em`
           : undefined,
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get vareiaStyle() {
@@ -420,7 +421,7 @@ export default class NeumeBoxSyllable extends Vue {
         this.note.vareiaOffsetY != null
           ? `${this.note.vareiaOffsetY}em`
           : undefined,
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get vocalExpressionStyle() {
@@ -433,7 +434,7 @@ export default class NeumeBoxSyllable extends Vue {
         this.note.vocalExpressionNeumeOffsetY != null
           ? `${this.note.vocalExpressionNeumeOffsetY}em`
           : undefined,
-    } as CSSStyleDeclaration;
+    } as Partial<CSSStyleDeclaration>;
 
     if (
       this.note.vocalExpressionNeume === VocalExpressionNeume.Heteron ||
@@ -458,7 +459,7 @@ export default class NeumeBoxSyllable extends Vue {
         this.note.tieOffsetX != null ? `${this.note.tieOffsetX}em` : undefined,
       top:
         this.note.tieOffsetY != null ? `${this.note.tieOffsetY}em` : undefined,
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 }
 </script>

@@ -1,7 +1,7 @@
 <template>
   <span
     class="contenteditable"
-    :contenteditable="contentEditable"
+    :contenteditable="contentEditable as any"
     :style="style"
     @blur="onBlur"
     @focus="$emit('focus')"

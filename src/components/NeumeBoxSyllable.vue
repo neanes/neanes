@@ -434,7 +434,7 @@ export default class NeumeBoxSyllable extends Vue {
         this.note.vocalExpressionNeumeOffsetY != null
           ? `${this.note.vocalExpressionNeumeOffsetY}em`
           : undefined,
-    } as StyleValue;
+    } as Partial<CSSStyleDeclaration>;
 
     if (
       this.note.vocalExpressionNeume === VocalExpressionNeume.Heteron ||

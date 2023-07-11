@@ -27,6 +27,7 @@ import ContentEditable from '@/components/ContentEditable.vue';
 // @ts-ignore
 import VueDraggableResizable from 'vue-draggable-resizable/src/components/vue-draggable-resizable.vue';
 import { withZoom } from '@/utils/withZoom';
+import { StyleValue } from 'vue';
 
 @Component({
   components: { ContentEditable, VueDraggableResizable },
@@ -49,13 +50,13 @@ export default class ImageBox extends Vue {
       justifyContent: this.element.alignment,
       width: withZoom(this.element.width),
       height: withZoom(this.element.imageHeight),
-    } as StyleValue;
+    } as Partial<CSSStyleDeclaration>;
 
     if (this.element.inline) {
       style.border = 'none';
     }
 
-    return style;
+    return style as StyleValue;
   }
 
   get imageStyle() {

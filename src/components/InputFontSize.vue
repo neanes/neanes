@@ -21,7 +21,7 @@ import InputUnit from '@/components/InputUnit.vue';
 export default class InputFontSize extends Vue {
   @Prop() modelValue!: number;
 
-  private round(value: number) {
+  round(value: number) {
     return Math.round(value * 2) / 2;
   }
 }

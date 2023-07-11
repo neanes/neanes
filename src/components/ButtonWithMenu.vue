@@ -44,7 +44,7 @@ export default class ButtonWithMenu extends Vue {
   get mainIcon() {
     return this.direction === 'up'
       ? this.options.at(-1)!.icon
-      : this.options[0];
+      : this.options[0].icon;
   }
 
   getKey(option: ButtonWithMenuOption) {

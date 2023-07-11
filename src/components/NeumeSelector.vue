@@ -83,7 +83,7 @@
               <div
                 class="menu-item"
                 v-for="menuItem in secondaryGorgonMenuItems"
-                :key="menuItem.gorgon"
+                :key="(menuItem.gorgon as string)"
                 @mouseenter="selectedSecondaryGorgon = menuItem"
               >
                 <Neume
@@ -120,7 +120,7 @@
               <div
                 class="menu-item"
                 v-for="menuItem in secondaryGorgonMenuItemsDown"
-                :key="menuItem.gorgon"
+                :key="(menuItem.gorgon as string)"
                 @mouseenter="selectedSecondaryGorgon = menuItem"
               >
                 <Neume
@@ -130,7 +130,7 @@
                 />
                 <Neume
                   class="neume"
-                  :neume="menuItem.gorgon"
+                  :neume="menuItem.gorgon as string"
                   :fontFamily="pageSetup.neumeDefaultFontFamily"
                   v-if="menuItem.gorgon != null"
                 />
@@ -159,7 +159,7 @@
               <div
                 class="menu-item"
                 v-for="menuItem in secondaryGorgonMenuItems"
-                :key="menuItem.gorgon"
+                :key="menuItem.gorgon as string"
                 @mouseenter="selectedSecondaryGorgon = menuItem"
               >
                 <Neume
@@ -198,7 +198,7 @@
               <div
                 class="menu-item"
                 v-for="menuItem in secondaryGorgonMenuItems"
-                :key="menuItem.gorgon"
+                :key="menuItem.gorgon as string"
                 @mouseenter="selectedSecondaryGorgon = menuItem"
               >
                 <Neume
@@ -208,7 +208,7 @@
                 />
                 <Neume
                   class="neume"
-                  :neume="menuItem.gorgon"
+                  :neume="menuItem.gorgon as string"
                   :fontFamily="pageSetup.neumeDefaultFontFamily"
                   v-if="menuItem.gorgon != null"
                 />
@@ -240,7 +240,7 @@
               <div
                 class="menu-item"
                 v-for="menuItem in secondaryGorgonMenuItems"
-                :key="menuItem.gorgon"
+                :key="menuItem.gorgon as string"
                 @mouseenter="selectedSecondaryGorgon = menuItem"
               >
                 <Neume
@@ -252,7 +252,7 @@
                 />
                 <Neume
                   class="neume"
-                  :neume="menuItem.gorgon"
+                  :neume="menuItem.gorgon as string"
                   :fontFamily="pageSetup.neumeDefaultFontFamily"
                   v-if="menuItem.gorgon != null"
                 />
@@ -279,7 +279,7 @@
               <div
                 class="menu-item"
                 v-for="menuItem in secondaryGorgonMenuItems"
-                :key="menuItem.gorgon"
+                :key="menuItem.gorgon as string"
                 @mouseenter="selectedSecondaryGorgon = menuItem"
               >
                 <Neume
@@ -318,7 +318,7 @@
               <div
                 class="menu-item"
                 v-for="menuItem in secondaryGorgonMenuItems"
-                :key="menuItem.gorgon"
+                :key="menuItem.gorgon as string"
                 @mouseenter="selectedSecondaryGorgon = menuItem"
               >
                 <Neume

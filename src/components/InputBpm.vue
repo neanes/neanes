@@ -23,7 +23,7 @@ export default class InputBpm extends Vue {
   @Prop() modelValue!: number;
   @Prop({ default: false }) disabled!: boolean;
 
-  private round(value: number) {
+  round(value: number) {
     return Math.round(value);
   }
 }

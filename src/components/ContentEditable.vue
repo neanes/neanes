@@ -1,7 +1,7 @@
 <template>
   <span
     class="contenteditable"
-    :contenteditable="contentEditable"
+    :contenteditable="contentEditable as any"
     :style="style"
     @blur="onBlur"
     @focus="$emit('focus')"
@@ -11,6 +11,7 @@
 </template>
 
 <script lang="ts">
+import { StyleValue } from 'vue';
 import { Component, Prop, Vue } from 'vue-facing-decorator';
 
 @Component({
@@ -38,7 +39,7 @@ export default class ContentEditable extends Vue {
   get style() {
     return {
       whiteSpace: this.whiteSpace,
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   getInnerText() {

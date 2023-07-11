@@ -18,6 +18,7 @@ import { TempoElement } from '@/models/Element';
 import Neume from '@/components/Neume.vue';
 import { withZoom } from '@/utils/withZoom';
 import { PageSetup } from '@/models/PageSetup';
+import { StyleValue } from 'vue';
 
 @Component({
   components: {
@@ -34,7 +35,7 @@ export default class NeumeBoxMartyria extends Vue {
       color: this.pageSetup.tempoDefaultColor,
       fontSize: withZoom(this.pageSetup.neumeDefaultFontSize),
       webkitTextStrokeWidth: withZoom(this.pageSetup.tempoDefaultStrokeWidth),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 }
 </script>

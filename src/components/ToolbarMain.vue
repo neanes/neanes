@@ -143,7 +143,7 @@
       <input
         class="zoom"
         :value="zoomDisplay"
-        @change="updateZoom($event.target.value)"
+        @change="updateZoom(($event.target as HTMLInputElement).value)"
       />
       <span class="zoom-arrow" @click="showZoomMenu = !showZoomMenu"
         >&#x25BE;</span
@@ -187,7 +187,12 @@
         class="audio-speed"
         :value="audioOptions.speed"
         :disabled="audioState === AudioState.Playing"
-        @change="$emit('update:audioOptionsSpeed', $event.target.value)"
+        @change="
+          $emit(
+            'update:audioOptionsSpeed',
+            ($event.target as HTMLInputElement).value,
+          )
+        "
       >
         <option value="0.25">0.25x</option>
         <option value="0.5">0.5x</option>
@@ -254,7 +259,7 @@ export default class ToolbarMain extends Vue {
 
   selectedTempoNeume: TempoSign | null = null;
 
-  zoomOptions: number[] = [50, 75, 90, 100, 125, 150, 200];
+  zoomOptions: string[] = ['50', '75', '90', '100', '125', '150', '200'];
 
   get zoomDisplay() {
     return this.zoomToFit ? 'Fit' : (this.zoom * 100).toFixed(0) + '%';

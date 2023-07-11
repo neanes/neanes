@@ -8,13 +8,22 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 // @ is an alias to /src
 import Editor from '@/components/Editor.vue';
 import { IpcService } from '@/services/ipc/IpcService';
 import { BrowserIpcService } from '@/services/ipc/BrowserIpcService';
 import { PlatformService } from '@/services/platform/PlatformService';
 import { BrowserPlatformService } from '@/services/platform/BrowserPlatformService';
+import { isElectron } from '@/utils/isElectron';
+import { IIpcService } from '@/services/ipc/IIpcService';
+import { IPlatformService } from '@/services/platform/IPlatformService';
+
+interface Data {
+  ipcService: IIpcService;
+  platformService: IPlatformService;
+  showFileMenuBar: boolean;
+}
 
 export default {
   // eslint-disable-next-line vue/multi-word-component-names
@@ -22,23 +31,26 @@ export default {
   components: {
     Editor,
   },
-  data() {
-    return {
-      ipcService: null,
-      platformService: null,
-      showFileMenuBar: false,
-    };
-  },
-  created() {
-    if (process.env.IS_ELECTRON) {
-      this.ipcService = new IpcService();
-      this.platformService = new PlatformService();
-    } else {
-      this.ipcService = new BrowserIpcService();
-      this.platformService = new BrowserPlatformService();
+  data(): Data {
+    let ipcService: IpcService;
+    let platformService: IPlatformService;
+    let showFileMenuBar = false;
 
-      this.showFileMenuBar = true;
+    if (isElectron()) {
+      ipcService = new IpcService();
+      platformService = new PlatformService();
+    } else {
+      ipcService = new BrowserIpcService();
+      platformService = new BrowserPlatformService();
+
+      showFileMenuBar = true;
     }
+
+    return {
+      ipcService,
+      platformService,
+      showFileMenuBar,
+    };
   },
 };
 </script>

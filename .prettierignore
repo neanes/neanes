@@ -1,2 +1,3 @@
-dist_electron
+dist
+dist-electron
 node_modules

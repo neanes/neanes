@@ -43,7 +43,7 @@ To learn how to use the software, read the [guide](https://danielgarthur.github.
 
 ### Prerequisites
 
-- Node.js 16.9.0 or later
+- Node.js 18.x or later
 
 ### Project Setup
 
@@ -59,17 +59,17 @@ npm install
 To create a release build, type:
 
 ```
-npm run electron:build
+npm run build
 ```
 
-The build artifacts are found in `dist_electron/`. For Windows, the installer will be called `Neanes Setup [version].exe`. The raw files can be found in `dist_electron/win_unpacked`.
+The build artifacts are found in `dist/`. For Windows, the installer will be called `Neanes Setup [version].exe`. The raw files can be found in `dist/win_unpacked`.
 
 ### Development
 
 To run the development server, type:
 
 ```
-npm run electron:serve
+npm run dev
 ```
 
 This will launch the application in development mode. As changes are made to the source code, the app will reload automatically.
@@ -91,6 +91,13 @@ To run tests before committing, type:
 ```
 npm test
 ```
+
+### IDE Support
+
+When using [Visual Studio Code](https://github.com/microsoft/vscode), install the following extensions:
+
+- [Vue Language Features (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.volar)
+- [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin)
 
 ## Acknowledgements
 

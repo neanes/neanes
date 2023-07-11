@@ -64,6 +64,7 @@ import Neume from '@/components/Neume.vue';
 import { ModeSign } from '@/models/Neumes';
 import { withZoom } from '@/utils/withZoom';
 import { PageSetup } from '@/models/PageSetup';
+import { StyleValue } from 'vue';
 
 @Component({
   components: {
@@ -121,7 +122,7 @@ export default class ModeKey extends Vue {
       width: withZoom(this.element.width),
       height: withZoom(this.element.height),
       webkitTextStrokeWidth: withZoom(this.element.computedStrokeWidth),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get tempoStyle() {
@@ -132,7 +133,7 @@ export default class ModeKey extends Vue {
       webkitTextStrokeWidth: withZoom(this.pageSetup.tempoDefaultStrokeWidth),
       top: withZoom(-12),
       marginLeft: withZoom(8),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
 
     return style;
   }
@@ -147,7 +148,7 @@ export default class ModeKey extends Vue {
       ),
       position: 'relative',
       top: withZoom(-12),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
 
     return style;
   }

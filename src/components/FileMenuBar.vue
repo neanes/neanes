@@ -101,17 +101,17 @@ import JSZip from 'jszip';
   },
 })
 export default class FileMenuBar extends Vue {
-  private isMenuOpen = false;
-  private selectedMenu = '';
-  private accept = '.byz,.byzx';
-  private acceptImage = '.bmp,.jpg,.jpeg,.jpe,.png,.gif,.svg,.webp,.ico';
-  private isChrome = (window as any).chrome != null;
+  isMenuOpen = false;
+  selectedMenu = '';
+  accept = '.byz,.byzx';
+  acceptImage = '.bmp,.jpg,.jpeg,.jpe,.png,.gif,.svg,.webp,.ico';
+  isChrome = (window as any).chrome != null;
 
-  private get fileSelector() {
+  get fileSelector() {
     return this.$refs.file as HTMLInputElement;
   }
 
-  private get imageFileSelector() {
+  get imageFileSelector() {
     return this.$refs.imagefile as HTMLInputElement;
   }
 
@@ -197,7 +197,7 @@ export default class FileMenuBar extends Vue {
     const files = this.fileSelector.files!;
 
     if (files.length > 0) {
-      var file = files[0];
+      const file = files[0];
 
       if (file.name.endsWith('.byz')) {
         const zip = await JSZip.loadAsync(file);
@@ -213,7 +213,7 @@ export default class FileMenuBar extends Vue {
         // the same file twice, it will load
         this.fileSelector.value = '';
       } else {
-        var reader = new FileReader();
+        const reader = new FileReader();
 
         reader.onload = () => {
           EventBus.$emit(IpcMainChannels.FileMenuOpenScore, {
@@ -236,9 +236,9 @@ export default class FileMenuBar extends Vue {
     const files = this.imageFileSelector.files!;
 
     if (files.length > 0) {
-      var file = files[0];
+      const file = files[0];
 
-      var reader = new FileReader();
+      const reader = new FileReader();
 
       reader.onload = () => {
         const data = reader.result as string;
@@ -353,22 +353,22 @@ export default class FileMenuBar extends Vue {
   }
 
   onClickAbout() {
-    alert(`Neanes\nVersion: ${process.env.VUE_APP_VERSION}`);
+    alert(`Neanes\nVersion: ${import.meta.env.VITE_VERSION}`);
     this.isMenuOpen = false;
   }
 
   onClickGuide() {
-    window.open(process.env.VUE_APP_GUIDE_URL, '_blank');
+    window.open(import.meta.env.VITE_GUIDE_URL, '_blank');
     this.isMenuOpen = false;
   }
 
   onClickRequestFeature() {
-    window.open(process.env.VUE_APP_ISSUES_URL, '_blank');
+    window.open(import.meta.env.VITE_ISSUES_URL, '_blank');
     this.isMenuOpen = false;
   }
 
   onClickReportIssue() {
-    window.open(process.env.VUE_APP_ISSUES_URL, '_blank');
+    window.open(import.meta.env.VITE_ISSUES_URL, '_blank');
     this.isMenuOpen = false;
   }
 }

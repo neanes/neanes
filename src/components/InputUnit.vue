@@ -1,7 +1,7 @@
 <template>
   <input
     :value="displayValue"
-    @change="onChange($event.target.value)"
+    @change="onChange(($event.target as HTMLInputElement).value)"
     type="number"
     :min="min"
     :max="max"
@@ -57,7 +57,7 @@ export default class InputUnit extends Vue {
   }
 
   get displayValue() {
-    let convertedValue = this.toDisplay(this.modelValue);
+    const convertedValue = this.toDisplay(this.modelValue);
 
     if (convertedValue == null)
       return this.nullable ? '' : this.defaultValue.toString();

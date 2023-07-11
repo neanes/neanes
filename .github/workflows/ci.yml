@@ -19,10 +19,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Use Node.js 16.x
+      - name: Use Node.js 18.x
         uses: actions/setup-node@v3
         with:
-          node-version: 16.x
+          node-version: 18.x
 
       - name: Cache dependencies
         id: cache
@@ -37,6 +37,6 @@ jobs:
         run: npm ci
 
       - run: npm test
-      - run: npm run electron:build
+      - run: npm run build
         env:
           GH_TOKEN: ${{secrets.GITHUB_TOKEN}}

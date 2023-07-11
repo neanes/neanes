@@ -378,7 +378,12 @@
           id="toolbar-neume-ignore-attractions"
           type="checkbox"
           :checked="element.ignoreAttractions"
-          @change="$emit('update:ignoreAttractions', $event.target.checked)"
+          @change="
+            $emit(
+              'update:ignoreAttractions',
+              ($event.target as HTMLInputElement).checked,
+            )
+          "
         />
         <label for="toolbar-neume-ignore-attractions">Ignore Attractions</label>
       </div>
@@ -388,7 +393,12 @@
         <label class="right-space">Fthora Note</label>
         <select
           :value="element.chromaticFthoraNote"
-          @change="$emit('update:chromaticFthoraNote', $event.target.value)"
+          @change="
+            $emit(
+              'update:chromaticFthoraNote',
+              ($event.target as HTMLInputElement).value,
+            )
+          "
         >
           <option v-for="note in notes" :key="note" :value="note">
             {{ note }}
@@ -479,237 +489,289 @@ export default class ToolbarNeume extends Vue {
   apliMenuOptions: ButtonWithMenuOption[] = [
     {
       neume: TimeNeume.Tetrapli,
-      icon: require('@/assets/icons/time-tetrapli.svg'),
+      icon: new URL('@/assets/icons/time-tetrapli.svg', import.meta.url).href,
     },
     {
       neume: TimeNeume.Tripli,
-      icon: require('@/assets/icons/time-tripli.svg'),
+      icon: new URL('@/assets/icons/time-tripli.svg', import.meta.url).href,
     },
     {
       neume: TimeNeume.Dipli,
-      icon: require('@/assets/icons/time-dipli.svg'),
+      icon: new URL('@/assets/icons/time-dipli.svg', import.meta.url).href,
     },
     {
       neume: TimeNeume.Hapli,
-      icon: require('@/assets/icons/time-apli.svg'),
+      icon: new URL('@/assets/icons/time-apli.svg', import.meta.url).href,
     },
   ];
 
   gorgonMenuOptions: ButtonWithMenuOption[] = [
     {
       neume: GorgonNeume.GorgonDottedRight,
-      icon: require('@/assets/icons/time-gorgon-dotted-right.svg'),
+      icon: new URL(
+        '@/assets/icons/time-gorgon-dotted-right.svg',
+        import.meta.url,
+      ).href,
     },
     {
       neume: GorgonNeume.GorgonDottedLeft,
-      icon: require('@/assets/icons/time-gorgon-dotted-left.svg'),
+      icon: new URL(
+        '@/assets/icons/time-gorgon-dotted-left.svg',
+        import.meta.url,
+      ).href,
     },
     {
       neume: [GorgonNeume.Gorgon_Top, GorgonNeume.Gorgon_Bottom],
-      icon: require('@/assets/icons/time-gorgon.svg'),
+      icon: new URL('@/assets/icons/time-gorgon.svg', import.meta.url).href,
     },
   ];
 
   digorgonMenuOptions: ButtonWithMenuOption[] = [
     {
       neume: GorgonNeume.DigorgonDottedRight,
-      icon: require('@/assets/icons/time-digorgon-dotted-right.svg'),
+      icon: new URL(
+        '@/assets/icons/time-digorgon-dotted-right.svg',
+        import.meta.url,
+      ).href,
     },
     {
       neume: GorgonNeume.DigorgonDottedLeft2,
-      icon: require('@/assets/icons/time-digorgon-dotted-left-above.svg'),
+      icon: new URL(
+        '@/assets/icons/time-digorgon-dotted-left-above.svg',
+        import.meta.url,
+      ).href,
     },
     {
       neume: GorgonNeume.DigorgonDottedLeft1,
-      icon: require('@/assets/icons/time-digorgon-dotted-left-below.svg'),
+      icon: new URL(
+        '@/assets/icons/time-digorgon-dotted-left-below.svg',
+        import.meta.url,
+      ).href,
     },
     {
       neume: GorgonNeume.Digorgon,
-      icon: require('@/assets/icons/time-digorgon.svg'),
+      icon: new URL('@/assets/icons/time-digorgon.svg', import.meta.url).href,
     },
   ];
 
   trigorgonMenuOptions: ButtonWithMenuOption[] = [
     {
       neume: GorgonNeume.TrigorgonDottedRight,
-      icon: require('@/assets/icons/time-trigorgon-dotted-right.svg'),
+      icon: new URL(
+        '@/assets/icons/time-trigorgon-dotted-right.svg',
+        import.meta.url,
+      ).href,
     },
     {
       neume: GorgonNeume.TrigorgonDottedLeft2,
-      icon: require('@/assets/icons/time-trigorgon-dotted-left-above.svg'),
+      icon: new URL(
+        '@/assets/icons/time-trigorgon-dotted-left-above.svg',
+        import.meta.url,
+      ).href,
     },
     {
       neume: GorgonNeume.TrigorgonDottedLeft1,
-      icon: require('@/assets/icons/time-trigorgon-dotted-left-below.svg'),
+      icon: new URL(
+        '@/assets/icons/time-trigorgon-dotted-left-below.svg',
+        import.meta.url,
+      ).href,
     },
     {
       neume: GorgonNeume.Trigorgon,
-      icon: require('@/assets/icons/time-trigorgon.svg'),
+      icon: new URL('@/assets/icons/time-trigorgon.svg', import.meta.url).href,
     },
   ];
 
   psifistonMenuOptions: ButtonWithMenuOption[] = [
     {
       neume: VocalExpressionNeume.PsifistonSlanted,
-      icon: require('@/assets/icons/quality-psifiston-slanted.svg'),
+      icon: new URL(
+        '@/assets/icons/quality-psifiston-slanted.svg',
+        import.meta.url,
+      ).href,
     },
     {
       neume: VocalExpressionNeume.Psifiston,
-      icon: require('@/assets/icons/quality-psifiston.svg'),
+      icon: new URL('@/assets/icons/quality-psifiston.svg', import.meta.url)
+        .href,
     },
   ];
 
   heteronConnectingMenuOptions: ButtonWithMenuOption[] = [
     {
       neume: VocalExpressionNeume.HeteronConnectingLong,
-      icon: require('@/assets/icons/quality-heteron-connecting-long.svg'),
+      icon: new URL(
+        '@/assets/icons/quality-heteron-connecting-long.svg',
+        import.meta.url,
+      ).href,
     },
     {
       neume: VocalExpressionNeume.HeteronConnecting,
-      icon: require('@/assets/icons/quality-heteron-connecting.svg'),
+      icon: new URL(
+        '@/assets/icons/quality-heteron-connecting.svg',
+        import.meta.url,
+      ).href,
     },
   ];
 
   flatMenuOptions: ButtonWithMenuOption[] = [
     {
       neume: Accidental.Flat_8_Right,
-      icon: require('@/assets/icons/alteration-yfesis8.svg'),
+      icon: new URL('@/assets/icons/alteration-yfesis8.svg', import.meta.url)
+        .href,
     },
     {
       neume: Accidental.Flat_6_Right,
-      icon: require('@/assets/icons/alteration-yfesis6.svg'),
+      icon: new URL('@/assets/icons/alteration-yfesis6.svg', import.meta.url)
+        .href,
     },
     {
       neume: Accidental.Flat_4_Right,
-      icon: require('@/assets/icons/alteration-yfesis4.svg'),
+      icon: new URL('@/assets/icons/alteration-yfesis4.svg', import.meta.url)
+        .href,
     },
     {
       neume: Accidental.Flat_2_Right,
-      icon: require('@/assets/icons/alteration-yfesis2.svg'),
+      icon: new URL('@/assets/icons/alteration-yfesis2.svg', import.meta.url)
+        .href,
     },
   ];
 
   sharpMenuOptions: ButtonWithMenuOption[] = [
     {
       neume: Accidental.Sharp_8_Left,
-      icon: require('@/assets/icons/alteration-diesis8.svg'),
+      icon: new URL('@/assets/icons/alteration-diesis8.svg', import.meta.url)
+        .href,
     },
     {
       neume: Accidental.Sharp_6_Left,
-      icon: require('@/assets/icons/alteration-diesis6.svg'),
+      icon: new URL('@/assets/icons/alteration-diesis6.svg', import.meta.url)
+        .href,
     },
     {
       neume: Accidental.Sharp_4_Left,
-      icon: require('@/assets/icons/alteration-diesis4.svg'),
+      icon: new URL('@/assets/icons/alteration-diesis4.svg', import.meta.url)
+        .href,
     },
     {
       neume: Accidental.Sharp_2_Left,
-      icon: require('@/assets/icons/alteration-diesis2.svg'),
+      icon: new URL('@/assets/icons/alteration-diesis2.svg', import.meta.url)
+        .href,
     },
   ];
 
   barlineMenuOptions: ButtonWithMenuOption[] = [
     {
       neume: MeasureBar.MeasureBarShortTheseos,
-      icon: require('@/assets/icons/barline-short-theseos.svg'),
+      icon: new URL('@/assets/icons/barline-short-theseos.svg', import.meta.url)
+        .href,
     },
     {
       neume: MeasureBar.MeasureBarShortDouble,
-      icon: require('@/assets/icons/barline-short-double.svg'),
+      icon: new URL('@/assets/icons/barline-short-double.svg', import.meta.url)
+        .href,
     },
     {
       neume: MeasureBar.MeasureBarTop,
-      icon: require('@/assets/icons/barline-short-single.svg'),
+      icon: new URL('@/assets/icons/barline-short-single.svg', import.meta.url)
+        .href,
     },
     {
       neume: MeasureBar.MeasureBarTheseos,
-      icon: require('@/assets/icons/barline-theseos.svg'),
+      icon: new URL('@/assets/icons/barline-theseos.svg', import.meta.url).href,
     },
     {
       neume: MeasureBar.MeasureBarDouble,
-      icon: require('@/assets/icons/barline-double.svg'),
+      icon: new URL('@/assets/icons/barline-double.svg', import.meta.url).href,
     },
     {
       neume: MeasureBar.MeasureBarRight,
-      icon: require('@/assets/icons/barline-single.svg'),
+      icon: new URL('@/assets/icons/barline-single.svg', import.meta.url).href,
     },
   ];
 
   measureNumberMenuOptions: ButtonWithMenuOption[] = [
     {
       neume: MeasureNumber.Eight,
-      icon: require('@/assets/icons/measure-number-8.svg'),
+      icon: new URL('@/assets/icons/measure-number-8.svg', import.meta.url)
+        .href,
     },
     {
       neume: MeasureNumber.Seven,
-      icon: require('@/assets/icons/measure-number-7.svg'),
+      icon: new URL('@/assets/icons/measure-number-7.svg', import.meta.url)
+        .href,
     },
     {
       neume: MeasureNumber.Six,
-      icon: require('@/assets/icons/measure-number-6.svg'),
+      icon: new URL('@/assets/icons/measure-number-6.svg', import.meta.url)
+        .href,
     },
     {
       neume: MeasureNumber.Five,
-      icon: require('@/assets/icons/measure-number-5.svg'),
+      icon: new URL('@/assets/icons/measure-number-5.svg', import.meta.url)
+        .href,
     },
     {
       neume: MeasureNumber.Four,
-      icon: require('@/assets/icons/measure-number-4.svg'),
+      icon: new URL('@/assets/icons/measure-number-4.svg', import.meta.url)
+        .href,
     },
     {
       neume: MeasureNumber.Three,
-      icon: require('@/assets/icons/measure-number-3.svg'),
+      icon: new URL('@/assets/icons/measure-number-3.svg', import.meta.url)
+        .href,
     },
     {
       neume: MeasureNumber.Two,
-      icon: require('@/assets/icons/measure-number-2.svg'),
+      icon: new URL('@/assets/icons/measure-number-2.svg', import.meta.url)
+        .href,
     },
   ];
 
   isonMenuOptions: ButtonWithMenuOption[] = [
     {
       neume: Ison.ZoHigh,
-      icon: require('@/assets/icons/ison-zo-high.svg'),
+      icon: new URL('@/assets/icons/ison-zo-high.svg', import.meta.url).href,
     },
     {
       neume: Ison.Ke,
-      icon: require('@/assets/icons/ison-ke.svg'),
+      icon: new URL('@/assets/icons/ison-ke.svg', import.meta.url).href,
     },
     {
       neume: Ison.Thi,
-      icon: require('@/assets/icons/ison-di.svg'),
+      icon: new URL('@/assets/icons/ison-di.svg', import.meta.url).href,
     },
     {
       neume: Ison.Ga,
-      icon: require('@/assets/icons/ison-ga.svg'),
+      icon: new URL('@/assets/icons/ison-ga.svg', import.meta.url).href,
     },
     {
       neume: Ison.Vou,
-      icon: require('@/assets/icons/ison-vou.svg'),
+      icon: new URL('@/assets/icons/ison-vou.svg', import.meta.url).href,
     },
     {
       neume: Ison.Pa,
-      icon: require('@/assets/icons/ison-pa.svg'),
+      icon: new URL('@/assets/icons/ison-pa.svg', import.meta.url).href,
     },
     {
       neume: Ison.Ni,
-      icon: require('@/assets/icons/ison-ni.svg'),
+      icon: new URL('@/assets/icons/ison-ni.svg', import.meta.url).href,
     },
     {
       neume: Ison.Zo,
-      icon: require('@/assets/icons/ison-zo.svg'),
+      icon: new URL('@/assets/icons/ison-zo.svg', import.meta.url).href,
     },
     {
       neume: Ison.KeLow,
-      icon: require('@/assets/icons/ison-ke-low.svg'),
+      icon: new URL('@/assets/icons/ison-ke-low.svg', import.meta.url).href,
     },
     {
       neume: Ison.ThiLow,
-      icon: require('@/assets/icons/ison-di-low.svg'),
+      icon: new URL('@/assets/icons/ison-di-low.svg', import.meta.url).href,
     },
     {
       neume: Ison.Unison,
-      icon: require('@/assets/icons/ison-unison.svg'),
+      icon: new URL('@/assets/icons/ison-unison.svg', import.meta.url).href,
     },
   ];
 

@@ -43,7 +43,7 @@
             :class="{ selected: workspace == selectedWorkspace }"
             v-for="(workspace, index) in workspaces"
             :key="`${index}-${workspace.filePath}`"
-            :title="workspace.filePath"
+            :title="workspace.filePath ?? undefined"
             @click="selectedWorkspace = workspace"
           >
             <div class="workspace-tab-label">
@@ -66,7 +66,8 @@
             class="page"
             :style="pageStyle"
             v-observe-visibility="{
-              callback: (isVisible) => updatePageVisibility(page, isVisible),
+              callback: (isVisible: boolean) =>
+                updatePageVisibility(page, isVisible),
               intersection: pageVisibilityIntersection,
             }"
             v-for="(page, pageIndex) in filteredPages"
@@ -105,7 +106,7 @@
                   "
                   @update:content="
                     updateTextBoxContent(
-                      getHeaderForPageIndex(pageIndex),
+                      getHeaderForPageIndex(pageIndex)!,
                       $event,
                     )
                   "
@@ -158,42 +159,58 @@
                       />
                       <div
                         class="lyrics-container"
-                        :style="getLyricStyle(element)"
+                        :style="getLyricStyle(element as NoteElement)"
                       >
                         <ContentEditable
                           class="lyrics"
-                          :content="element.lyrics"
+                          :content="(element as NoteElement).lyrics"
                           whiteSpace="nowrap"
                           :ref="`lyrics-${getElementIndex(element)}`"
                           @click="focusLyrics(getElementIndex(element))"
-                          @focus="selectedLyrics = element"
+                          @focus="selectedLyrics = element as NoteElement"
                           @blur="
-                            updateLyrics(element, $event);
+                            updateLyrics(element as NoteElement, $event);
                             selectedLyrics = null;
                           "
                         />
-                        <template v-if="isMelisma(element) && element.isHyphen">
+                        <template
+                          v-if="
+                            isMelisma(element as NoteElement) &&
+                            (element as NoteElement).isHyphen
+                          "
+                        >
                           <div
                             class="melisma"
-                            :style="getMelismaStyle(element)"
+                            :style="getMelismaStyle(element as NoteElement)"
                           >
                             <span
                               class="melisma-hyphen"
-                              v-for="(offset, index) in element.hyphenOffsets"
+                              v-for="(offset, index) in (element as NoteElement)
+                                .hyphenOffsets"
                               :key="index"
-                              :style="getMelismaHyphenStyle(element, index)"
+                              :style="
+                                getMelismaHyphenStyle(
+                                  element as NoteElement,
+                                  index,
+                                )
+                              "
                               >-</span
                             >
                           </div>
                         </template>
                         <template
-                          v-else-if="isMelisma(element) && !element.isHyphen"
+                          v-else-if="
+                            isMelisma(element as NoteElement) &&
+                            !(element as NoteElement).isHyphen
+                          "
                         >
                           <div
                             class="melisma"
-                            :class="{ full: element.isFullMelisma }"
-                            :style="getMelismaStyle(element)"
-                            v-text="element.melismaText"
+                            :class="{
+                              full: (element as NoteElement).isFullMelisma,
+                            }"
+                            :style="getMelismaStyle(element as NoteElement)"
+                            v-text="(element as NoteElement).melismaText"
                           ></div>
                         </template>
                       </div>
@@ -259,7 +276,7 @@
                       <EmptyNeumeBox
                         class="empty-neume-box"
                         :class="[{ selected: isSelected(element) }]"
-                        :style="getEmptyBoxStyle(element)"
+                        :style="getEmptyBoxStyle(element as EmptyElement)"
                         @select-single="selectedElement = element"
                       ></EmptyNeumeBox>
                       <div class="lyrics"></div>
@@ -279,7 +296,9 @@
                       :metadata="getTokenMetadata(pageIndex)"
                       :class="[{ selectedTextbox: isSelected(element) }]"
                       @select-single="selectedElement = element"
-                      @update:content="updateTextBoxContent(element, $event)"
+                      @update:content="
+                        updateTextBoxContent(element as TextBoxElement, $event)
+                      "
                     />
                   </template>
                   <template v-if="isModeKeyElement(element)">
@@ -319,7 +338,9 @@
                         },
                       ]"
                       @select-single="selectedElement = element"
-                      @update:content="updateDropCapContent(element, $event)"
+                      @update:content="
+                        updateDropCapContent(element as DropCapElement, $event)
+                      "
                     />
                   </template>
                   <template v-if="isImageBoxElement(element)">
@@ -337,7 +358,7 @@
                       @select-single="selectedElement = element"
                       @update:size="
                         updateImageBoxSize(
-                          selectedElement,
+                          selectedElement as ImageBoxElement,
                           $event.width,
                           $event.height,
                         )
@@ -370,7 +391,7 @@
                   "
                   @update:content="
                     updateTextBoxContent(
-                      getFooterForPageIndex(pageIndex),
+                      getFooterForPageIndex(pageIndex)!,
                       $event,
                     )
                   "
@@ -416,15 +437,32 @@
         :element="selectedElement"
         :fonts="fonts"
         @update:useDefaultStyle="
-          updateDropCapUseDefaultStyle(selectedElement, $event)
+          updateDropCapUseDefaultStyle(
+            selectedElement as DropCapElement,
+            $event,
+          )
         "
-        @update:fontSize="updateDropCapFontSize(selectedElement, $event)"
-        @update:fontFamily="updateDropCapFontFamily(selectedElement, $event)"
-        @update:strokeWidth="updateDropCapStrokeWidth(selectedElement, $event)"
-        @update:color="updateDropCapColor(selectedElement, $event)"
-        @update:bold="updateDropCapFontWeight(selectedElement, $event)"
-        @update:italic="updateDropCapFontStyle(selectedElement, $event)"
-        @update:lineHeight="updateDropCapLineHeight(selectedElement, $event)"
+        @update:fontSize="
+          updateDropCapFontSize(selectedElement as DropCapElement, $event)
+        "
+        @update:fontFamily="
+          updateDropCapFontFamily(selectedElement as DropCapElement, $event)
+        "
+        @update:strokeWidth="
+          updateDropCapStrokeWidth(selectedElement as DropCapElement, $event)
+        "
+        @update:color="
+          updateDropCapColor(selectedElement as DropCapElement, $event)
+        "
+        @update:bold="
+          updateDropCapFontWeight(selectedElement as DropCapElement, $event)
+        "
+        @update:italic="
+          updateDropCapFontStyle(selectedElement as DropCapElement, $event)
+        "
+        @update:lineHeight="
+          updateDropCapLineHeight(selectedElement as DropCapElement, $event)
+        "
       />
     </template>
     <template
@@ -433,13 +471,24 @@
       <ToolbarImageBox
         :element="selectedElement"
         :pageSetup="score.pageSetup"
-        @update:alignment="updateImageBoxAlignment(selectedElement, $event)"
-        @update:inline="updateImageBoxInline(selectedElement, $event)"
+        @update:alignment="
+          updateImageBoxAlignment(selectedElement as ImageBoxElement, $event)
+        "
+        @update:inline="
+          updateImageBoxInline(selectedElement as ImageBoxElement, $event)
+        "
         @update:lockAspectRatio="
-          updateImageBoxLockAspectRatio(selectedElement, $event)
+          updateImageBoxLockAspectRatio(
+            selectedElement as ImageBoxElement,
+            $event,
+          )
         "
         @update:size="
-          updateImageBoxSize(selectedElement, $event.width, $event.height)
+          updateImageBoxSize(
+            selectedElement as ImageBoxElement,
+            $event.width,
+            $event.height,
+          )
         "
       />
     </template>
@@ -457,26 +506,55 @@
         :element="selectedElement"
         :pageSetup="score.pageSetup"
         @update:useDefaultStyle="
-          updateModeKeyUseDefaultStyle(selectedElement, $event)
+          updateModeKeyUseDefaultStyle(
+            selectedElement as ModeKeyElement,
+            $event,
+          )
         "
-        @update:fontSize="updateModeKeyFontSize(selectedElement, $event)"
-        @update:strokeWidth="updateModeKeyStrokeWidth(selectedElement, $event)"
-        @update:alignment="updateModeKeyAlignment(selectedElement, $event)"
-        @update:color="updateModeKeyColor(selectedElement, $event)"
-        @update:bpm="updateModeKeyBpm(selectedElement, $event)"
+        @update:fontSize="
+          updateModeKeyFontSize(selectedElement as ModeKeyElement, $event)
+        "
+        @update:strokeWidth="
+          updateModeKeyStrokeWidth(selectedElement as ModeKeyElement, $event)
+        "
+        @update:alignment="
+          updateModeKeyAlignment(selectedElement as ModeKeyElement, $event)
+        "
+        @update:color="
+          updateModeKeyColor(selectedElement as ModeKeyElement, $event)
+        "
+        @update:bpm="
+          updateModeKeyBpm(selectedElement as ModeKeyElement, $event)
+        "
         @update:ignoreAttractions="
-          updateModeKeyIgnoreAttractions(selectedElement, $event)
+          updateModeKeyIgnoreAttractions(
+            selectedElement as ModeKeyElement,
+            $event,
+          )
         "
-        @update:showAmbitus="updateModeKeyShowAmbitus(selectedElement, $event)"
+        @update:showAmbitus="
+          updateModeKeyShowAmbitus(selectedElement as ModeKeyElement, $event)
+        "
         @update:tempoAlignRight="
-          updateModeKeyTempoAlignRight(selectedElement, $event)
+          updateModeKeyTempoAlignRight(
+            selectedElement as ModeKeyElement,
+            $event,
+          )
         "
-        @update:tempo="setModeKeyTempo(selectedElement, $event)"
+        @update:tempo="
+          setModeKeyTempo(selectedElement as ModeKeyElement, $event)
+        "
         @update:heightAdjustment="
-          updateModeKeyHeightAdjustment(selectedElement, $event)
+          updateModeKeyHeightAdjustment(
+            selectedElement as ModeKeyElement,
+            $event,
+          )
         "
         @update:permanentEnharmonicZo="
-          updateModeKeyPermanentEnharmonicZo(selectedElement, $event)
+          updateModeKeyPermanentEnharmonicZo(
+            selectedElement as ModeKeyElement,
+            $event,
+          )
         "
         @open-mode-key-dialog="openModeKeyDialog"
       />
@@ -488,34 +566,56 @@
         :element="selectedElement"
         :pageSetup="score.pageSetup"
         :key="`toolbar-neume-${selectedElement.id}-${selectedElement.keyHelper}`"
-        @update:accidental="setAccidental(selectedElement, $event)"
+        @update:accidental="
+          setAccidental(selectedElement as NoteElement, $event)
+        "
         @update:secondaryAccidental="
-          setSecondaryAccidental(selectedElement, $event)
+          setSecondaryAccidental(selectedElement as NoteElement, $event)
         "
         @update:tertiaryAccidental="
-          setTertiaryAccidental(selectedElement, $event)
+          setTertiaryAccidental(selectedElement as NoteElement, $event)
         "
-        @update:fthora="setFthoraNote(selectedElement, $event)"
-        @update:secondaryFthora="setSecondaryFthora(selectedElement, $event)"
-        @update:tertiaryFthora="setTertiaryFthora(selectedElement, $event)"
+        @update:fthora="setFthoraNote(selectedElement as NoteElement, $event)"
+        @update:secondaryFthora="
+          setSecondaryFthora(selectedElement as NoteElement, $event)
+        "
+        @update:tertiaryFthora="
+          setTertiaryFthora(selectedElement as NoteElement, $event)
+        "
         @update:chromaticFthoraNote="
-          updateNoteChromaticFthoraNote(selectedElement, $event)
+          updateNoteChromaticFthoraNote(selectedElement as NoteElement, $event)
         "
-        @update:gorgon="setGorgon(selectedElement, $event)"
-        @update:secondaryGorgon="setSecondaryGorgon(selectedElement, $event)"
-        @update:klasma="setKlasma(selectedElement)"
-        @update:time="setTimeNeume(selectedElement, $event)"
-        @update:expression="setVocalExpression(selectedElement, $event)"
-        @update:measureBar="setMeasureBarNote(selectedElement, $event)"
-        @update:measureNumber="setMeasureNumber(selectedElement, $event)"
-        @update:noteIndicator="updateNoteNoteIndicator(selectedElement, $event)"
-        @update:ison="setIson(selectedElement, $event)"
-        @update:koronis="updateNoteKoronis(selectedElement, $event)"
-        @update:vareia="updateNoteVareia(selectedElement, $event)"
-        @update:tie="setTie(selectedElement, $event)"
-        @update:spaceAfter="updateNoteSpaceAfter(selectedElement, $event)"
+        @update:gorgon="setGorgon(selectedElement as NoteElement, $event)"
+        @update:secondaryGorgon="
+          setSecondaryGorgon(selectedElement as NoteElement, $event)
+        "
+        @update:klasma="setKlasma(selectedElement as NoteElement)"
+        @update:time="setTimeNeume(selectedElement as NoteElement, $event)"
+        @update:expression="
+          setVocalExpression(selectedElement as NoteElement, $event)
+        "
+        @update:measureBar="
+          setMeasureBarNote(selectedElement as NoteElement, $event)
+        "
+        @update:measureNumber="
+          setMeasureNumber(selectedElement as NoteElement, $event)
+        "
+        @update:noteIndicator="
+          updateNoteNoteIndicator(selectedElement as NoteElement, $event)
+        "
+        @update:ison="setIson(selectedElement as NoteElement, $event)"
+        @update:koronis="
+          updateNoteKoronis(selectedElement as NoteElement, $event)
+        "
+        @update:vareia="
+          updateNoteVareia(selectedElement as NoteElement, $event)
+        "
+        @update:tie="setTie(selectedElement as NoteElement, $event)"
+        @update:spaceAfter="
+          updateNoteSpaceAfter(selectedElement as NoteElement, $event)
+        "
         @update:ignoreAttractions="
-          updateNoteIgnoreAttractions(selectedElement, $event)
+          updateNoteIgnoreAttractions(selectedElement as NoteElement, $event)
         "
         @open-syllable-positioning-dialog="openSyllablePositioningDialog"
       />
@@ -526,20 +626,44 @@
       <ToolbarMartyria
         :element="selectedElement"
         :pageSetup="score.pageSetup"
-        @update:fthora="setFthoraMartyria(selectedElement, $event)"
-        @update:chromaticFthoraNote="
-          updateMartyriaChromaticFthoraNote(selectedElement, $event)
+        @update:fthora="
+          setFthoraMartyria(selectedElement as MartyriaElement, $event)
         "
-        @update:tempo="setMartyriaTempo(selectedElement, $event)"
-        @update:measureBar="setMeasureBarMartyria(selectedElement, $event)"
-        @update:alignRight="updateMartyriaAlignRight(selectedElement, $event)"
-        @update:auto="updateMartyriaAuto(selectedElement, $event)"
-        @update:note="updateMartyriaNote(selectedElement, $event)"
-        @update:scale="updateMartyriaScale(selectedElement, $event)"
-        @update:bpm="updateMartyriaBpm(selectedElement, $event)"
-        @update:spaceAfter="updateMartyriaSpaceAfter(selectedElement, $event)"
+        @update:chromaticFthoraNote="
+          updateMartyriaChromaticFthoraNote(
+            selectedElement as MartyriaElement,
+            $event,
+          )
+        "
+        @update:tempo="
+          setMartyriaTempo(selectedElement as MartyriaElement, $event)
+        "
+        @update:measureBar="
+          setMeasureBarMartyria(selectedElement as MartyriaElement, $event)
+        "
+        @update:alignRight="
+          updateMartyriaAlignRight(selectedElement as MartyriaElement, $event)
+        "
+        @update:auto="
+          updateMartyriaAuto(selectedElement as MartyriaElement, $event)
+        "
+        @update:note="
+          updateMartyriaNote(selectedElement as MartyriaElement, $event)
+        "
+        @update:scale="
+          updateMartyriaScale(selectedElement as MartyriaElement, $event)
+        "
+        @update:bpm="
+          updateMartyriaBpm(selectedElement as MartyriaElement, $event)
+        "
+        @update:spaceAfter="
+          updateMartyriaSpaceAfter(selectedElement as MartyriaElement, $event)
+        "
         @update:rootSignOverride="
-          updateMartyriaRootSignOverride(selectedElement, $event)
+          updateMartyriaRootSignOverride(
+            selectedElement as MartyriaElement,
+            $event,
+          )
         "
       />
     </template>
@@ -547,15 +671,19 @@
       <ToolbarTempo
         :element="selectedElement"
         :pageSetup="score.pageSetup"
-        @update:bpm="updateTempoBpm(selectedElement, $event)"
-        @update:spaceAfter="updateTempoSpaceAfter(selectedElement, $event)"
+        @update:bpm="updateTempoBpm(selectedElement as TempoElement, $event)"
+        @update:spaceAfter="
+          updateTempoSpaceAfter(selectedElement as TempoElement, $event)
+        "
       />
     </template>
     <ModeKeyDialog
       v-if="modeKeyDialogIsOpen"
       :element="selectedElement"
       :pageSetup="score.pageSetup"
-      @update="updateModeKeyFromTemplate(selectedElement, $event)"
+      @update="
+        updateModeKeyFromTemplate(selectedElement as ModeKeyElement, $event)
+      "
       @close="closeModeKeyDialog"
     />
     <SyllablePositioningDialog
@@ -564,7 +692,7 @@
       :previousElement="previousElementOnLine"
       :nextElement="nextElementOnLine"
       :pageSetup="score.pageSetup"
-      @update="updateNoteAndSave(selectedElement, $event)"
+      @update="updateNoteAndSave(selectedElement as NoteElement, $event)"
       @close="closeSyllablePositioningDialog"
     />
     <PlaybackSettingsDialog
@@ -597,7 +725,7 @@
 </template>
 
 <script lang="ts">
-import { nextTick, toRaw } from 'vue';
+import { StyleValue, nextTick, toRaw } from 'vue';
 import { Component, Inject, Prop, Watch, Vue } from 'vue-facing-decorator';
 import { toPng, getFontEmbedCSS } from 'html-to-image';
 import {
@@ -637,9 +765,7 @@ import { ScoreElementSelectionRange } from '@/models/ScoreElementSelectionRange'
 import { SaveService } from '@/services/SaveService';
 import { LayoutService } from '@/services/LayoutService';
 import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
-import SyllableNeumeBoxPrint from '@/components/NeumeBoxSyllablePrint.vue';
 import MartyriaNeumeBox from '@/components/NeumeBoxMartyria.vue';
-import MartyriaNeumeBoxPrint from '@/components/NeumeBoxMartyriaPrint.vue';
 import TempoNeumeBox from '@/components/NeumeBoxTempo.vue';
 import EmptyNeumeBox from '@/components/NeumeBoxEmpty.vue';
 import NeumeSelector from '@/components/NeumeSelector.vue';
@@ -648,7 +774,6 @@ import TextBox from '@/components/TextBox.vue';
 import ImageBox from '@/components/ImageBox.vue';
 import DropCap from '@/components/DropCap.vue';
 import ModeKey from '@/components/ModeKey.vue';
-import ModeKeyPrint from '@/components/ModeKeyPrint.vue';
 import ToolbarImageBox from '@/components/ToolbarImageBox.vue';
 import ToolbarTextBox from '@/components/ToolbarTextBox.vue';
 import ToolbarLyrics from '@/components/ToolbarLyrics.vue';
@@ -717,13 +842,12 @@ import {
   PlaybackSequenceEvent,
   PlaybackService,
 } from '@/services/audio/PlaybackService';
+import { isElectron } from '@/utils/isElectron';
 
 @Component({
   components: {
     SyllableNeumeBox,
-    SyllableNeumeBoxPrint,
     MartyriaNeumeBox,
-    MartyriaNeumeBoxPrint,
     TempoNeumeBox,
     EmptyNeumeBox,
     NeumeSelector,
@@ -732,7 +856,6 @@ import {
     DropCap,
     ImageBox,
     ModeKey,
-    ModeKeyPrint,
     ToolbarImageBox,
     ToolbarTextBox,
     ToolbarLyrics,
@@ -761,8 +884,9 @@ export default class Editor extends Vue {
 
   LineBreakType = LineBreakType;
 
-  isDevelopment: boolean = process.env.NODE_ENV !== 'production';
-  isBrowser: boolean = process.env.IS_ELECTRON == null;
+  isDevelopment: boolean = import.meta.env.DEV;
+
+  isBrowser: boolean = !isElectron();
 
   isLoading: boolean = true;
 
@@ -1076,7 +1200,7 @@ export default class Editor extends Vue {
 
   get windowTitle() {
     return `${this.getFileName(this.selectedWorkspace)} - ${
-      process.env.VUE_APP_TITLE
+      import.meta.env.VITE_TITLE
     }`;
   }
 
@@ -1229,49 +1353,49 @@ export default class Editor extends Vue {
       height: withZoom(this.score.pageSetup.pageHeight),
       minHeight: withZoom(this.score.pageSetup.pageHeight),
       maxHeight: withZoom(this.score.pageSetup.pageHeight),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get headerStyle() {
     return {
       left: withZoom(this.score.pageSetup.leftMargin),
       top: withZoom(this.score.pageSetup.headerMargin),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get footerStyle() {
     return {
       left: withZoom(this.score.pageSetup.leftMargin),
       bottom: withZoom(this.score.pageSetup.footerMargin),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get guideStyleLeft() {
     return {
       left: withZoom(this.score.pageSetup.leftMargin - 1),
       height: withZoom(this.score.pageSetup.pageHeight),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get guideStyleRight() {
     return {
       right: withZoom(this.score.pageSetup.rightMargin - 1),
       height: withZoom(this.score.pageSetup.pageHeight),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get guideStyleTop() {
     return {
       top: withZoom(this.score.pageSetup.topMargin - 1),
       width: withZoom(this.score.pageSetup.pageWidth),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get guideStyleBottom() {
     return {
       bottom: withZoom(this.score.pageSetup.bottomMargin - 1),
       width: withZoom(this.score.pageSetup.pageWidth),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get pageVisibilityIntersection() {
@@ -1334,34 +1458,34 @@ export default class Editor extends Vue {
       webkitTextStrokeWidth: withZoom(
         this.score.pageSetup.lyricsDefaultStrokeWidth,
       ),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   getEmptyBoxStyle(element: EmptyElement) {
     return {
       width: withZoom(element.width),
       height: withZoom(element.height),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   getElementStyle(element: ScoreElement) {
     return {
       left: withZoom(element.x),
       top: withZoom(element.y),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   getMelismaStyle(element: NoteElement) {
     return {
       width: withZoom(element.melismaWidth!),
       minHeight: withZoom(this.score.pageSetup.lyricsDefaultFontSize),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   getMelismaHyphenStyle(element: NoteElement, index: number) {
     return {
       left: withZoom(element.hyphenOffsets[index]),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   untitledIndex: number = 1;
@@ -1387,7 +1511,7 @@ export default class Editor extends Vue {
     const header = this.score.getHeaderForPage(pageNumber);
 
     // Currently, headers only support a single text box element.
-    return header != null ? header.elements[0] : null;
+    return header != null ? (header.elements[0] as TextBoxElement) : null;
   }
 
   getFooterForPageIndex(pageIndex: number) {
@@ -1396,7 +1520,7 @@ export default class Editor extends Vue {
     const footer = this.score.getFooterForPage(pageNumber);
 
     // Currently, footers only support a single text box element.
-    return footer != null ? footer.elements[0] : null;
+    return footer != null ? (footer.elements[0] as TextBoxElement) : null;
   }
 
   getTokenMetadata(pageIndex: number): TokenMetadata {
@@ -2822,7 +2946,7 @@ export default class Editor extends Vue {
 
     let currentIndex = this.selectedElementIndex;
 
-    for (let clipboardElement of this.clipboard) {
+    for (const clipboardElement of this.clipboard) {
       const currentElement = this.elements[currentIndex];
 
       if (currentIndex >= this.elements.length - 1) {
@@ -3369,7 +3493,7 @@ export default class Editor extends Vue {
 
       if (this.ipcService.isShowMessageBoxSupported()) {
         dialogResult = await this.ipcService.showMessageBox({
-          title: process.env.VUE_APP_TITLE,
+          title: import.meta.env.VITE_TITLE,
           message: `Do you want to save the changes you made to ${fileName}?`,
           detail: "Your changes will be lost if you don't save them.",
           type: 'warning',
@@ -3436,7 +3560,7 @@ export default class Editor extends Vue {
       (x) => x.hasUnsavedChanges,
     );
 
-    for (let workspace of unsavedWorkspaces) {
+    for (const workspace of unsavedWorkspaces) {
       if (!(await this.closeWorkspace(workspace))) {
         await this.ipcService.cancelExit();
         return false;
@@ -3476,7 +3600,7 @@ export default class Editor extends Vue {
     // Force neumes to be an array if it's not
     neumes = Array.isArray(neumes) ? neumes : [neumes];
 
-    for (let neume of neumes) {
+    for (const neume of neumes) {
       if (
         neume === GorgonNeume.Gorgon_Bottom &&
         onlyTakesTopGorgon(element.quantitativeNeume)
@@ -3504,7 +3628,7 @@ export default class Editor extends Vue {
     }
   }
 
-  private setSecondaryGorgon(element: NoteElement, neume: GorgonNeume) {
+  setSecondaryGorgon(element: NoteElement, neume: GorgonNeume) {
     if (element.secondaryGorgonNeume === neume) {
       this.updateNoteGorgonSecondary(element, null);
     } else {
@@ -3512,10 +3636,10 @@ export default class Editor extends Vue {
     }
   }
 
-  private setFthoraNote(element: NoteElement, neumes: Fthora[]) {
+  setFthoraNote(element: NoteElement, neumes: Fthora[]) {
     let equivalent = false;
 
-    for (let neume of neumes) {
+    for (const neume of neumes) {
       // If previous neume was matched, set to the next neume in the cycle
       if (equivalent) {
         this.updateNoteFthora(element, neume);
@@ -3536,7 +3660,7 @@ export default class Editor extends Vue {
     }
   }
 
-  private setSecondaryFthora(element: NoteElement, neume: Fthora) {
+  setSecondaryFthora(element: NoteElement, neume: Fthora) {
     if (element.secondaryFthora === neume) {
       this.updateNoteFthoraSecondary(element, null);
     } else {
@@ -3544,7 +3668,7 @@ export default class Editor extends Vue {
     }
   }
 
-  private setTertiaryFthora(element: NoteElement, neume: Fthora) {
+  setTertiaryFthora(element: NoteElement, neume: Fthora) {
     if (element.tertiaryFthora === neume) {
       this.updateNoteFthoraTertiary(element, null);
     } else {
@@ -3552,7 +3676,7 @@ export default class Editor extends Vue {
     }
   }
 
-  private setFthoraMartyria(element: MartyriaElement, neume: Fthora) {
+  setFthoraMartyria(element: MartyriaElement, neume: Fthora) {
     if (element.fthora === neume) {
       this.updateMartyriaFthora(element, null);
     } else {
@@ -3560,7 +3684,7 @@ export default class Editor extends Vue {
     }
   }
 
-  private setMartyriaTempo(element: MartyriaElement, neume: TempoSign) {
+  setMartyriaTempo(element: MartyriaElement, neume: TempoSign) {
     if (element.tempo === neume) {
       this.updateMartyriaTempo(element, null);
     } else {
@@ -3568,7 +3692,7 @@ export default class Editor extends Vue {
     }
   }
 
-  private setModeKeyTempo(element: ModeKeyElement, neume: TempoSign) {
+  setModeKeyTempo(element: ModeKeyElement, neume: TempoSign) {
     if (element.tempo === neume) {
       this.updateModeKeyTempo(element, null);
     } else {
@@ -3576,7 +3700,7 @@ export default class Editor extends Vue {
     }
   }
 
-  private setAccidental(element: NoteElement, neume: Accidental) {
+  setAccidental(element: NoteElement, neume: Accidental) {
     if (element.accidental != null && element.accidental === neume) {
       this.updateNoteAccidental(element, null);
     } else {
@@ -3584,7 +3708,7 @@ export default class Editor extends Vue {
     }
   }
 
-  private setSecondaryAccidental(element: NoteElement, neume: Accidental) {
+  setSecondaryAccidental(element: NoteElement, neume: Accidental) {
     if (
       element.secondaryAccidental != null &&
       element.secondaryAccidental === neume
@@ -3595,7 +3719,7 @@ export default class Editor extends Vue {
     }
   }
 
-  private setTertiaryAccidental(element: NoteElement, neume: Accidental) {
+  setTertiaryAccidental(element: NoteElement, neume: Accidental) {
     if (
       element.tertiaryAccidental != null &&
       element.tertiaryAccidental === neume
@@ -3606,7 +3730,7 @@ export default class Editor extends Vue {
     }
   }
 
-  private setTimeNeume(element: NoteElement, neume: TimeNeume) {
+  setTimeNeume(element: NoteElement, neume: TimeNeume) {
     if (element.timeNeume === neume) {
       this.updateNoteTime(element, null);
     } else {
@@ -3614,7 +3738,7 @@ export default class Editor extends Vue {
     }
   }
 
-  private setMeasureNumber(element: NoteElement, neume: MeasureNumber) {
+  setMeasureNumber(element: NoteElement, neume: MeasureNumber) {
     if (neume === element.measureNumber) {
       this.updateNoteMeasureNumber(element, null);
     } else {
@@ -3622,7 +3746,7 @@ export default class Editor extends Vue {
     }
   }
 
-  private setMeasureBarNote(element: NoteElement, neume: MeasureBar) {
+  setMeasureBarNote(element: NoteElement, neume: MeasureBar) {
     // Cycle through
     // Left
     // Right
@@ -3651,7 +3775,7 @@ export default class Editor extends Vue {
     }
   }
 
-  private setMeasureBarMartyria(element: MartyriaElement, neume: MeasureBar) {
+  setMeasureBarMartyria(element: MartyriaElement, neume: MeasureBar) {
     // Cycle through
     // Left
     // Right
@@ -3680,7 +3804,7 @@ export default class Editor extends Vue {
     }
   }
 
-  private setIson(element: NoteElement, neume: Ison) {
+  setIson(element: NoteElement, neume: Ison) {
     if (neume === element.ison) {
       this.updateNoteIson(element, null);
     } else {
@@ -3688,10 +3812,7 @@ export default class Editor extends Vue {
     }
   }
 
-  private setVocalExpression(
-    element: NoteElement,
-    neume: VocalExpressionNeume,
-  ) {
+  setVocalExpression(element: NoteElement, neume: VocalExpressionNeume) {
     if (
       element.vocalExpressionNeume != null &&
       areVocalExpressionsEquivalent(neume, element.vocalExpressionNeume)
@@ -3702,10 +3823,10 @@ export default class Editor extends Vue {
     }
   }
 
-  private setTie(element: NoteElement, neumes: Tie[]) {
+  setTie(element: NoteElement, neumes: Tie[]) {
     let equivalent = false;
 
-    for (let neume of neumes) {
+    for (const neume of neumes) {
       // If previous neume was matched, set to the next neume in the cycle
       if (equivalent) {
         this.updateNoteTie(element, neume);
@@ -4772,7 +4893,7 @@ export default class Editor extends Vue {
 
           let pageNumber = 1;
 
-          for (let page of pages) {
+          for (const page of pages) {
             const options = {
               fontEmbedCSS,
               pixelRatio: args.dpi / 96,

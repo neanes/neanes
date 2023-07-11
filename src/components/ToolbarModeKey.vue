@@ -4,7 +4,12 @@
       id="toolbar-mode-key-use-default-style"
       type="checkbox"
       :checked="element.useDefaultStyle"
-      @change="$emit('update:useDefaultStyle', $event.target.checked)"
+      @change="
+        $emit(
+          'update:useDefaultStyle',
+          ($event.target as HTMLInputElement).checked,
+        )
+      "
     />
     <label for="toolbar-mode-key-use-default-style">Use default style</label>
     <span class="divider" />
@@ -120,7 +125,12 @@
         id="toolbar-mode-key-ignore-attractions"
         type="checkbox"
         :checked="element.ignoreAttractions"
-        @change="$emit('update:ignoreAttractions', $event.target.checked)"
+        @change="
+          $emit(
+            'update:ignoreAttractions',
+            ($event.target as HTMLInputElement).checked,
+          )
+        "
       />
       <label for="toolbar-mode-key-ignore-attractions"
         >Ignore Attractions</label
@@ -134,7 +144,12 @@
         id="toolbar-mode-key-show-ambitus"
         type="checkbox"
         :checked="element.showAmbitus"
-        @change="$emit('update:showAmbitus', $event.target.checked)"
+        @change="
+          $emit(
+            'update:showAmbitus',
+            ($event.target as HTMLInputElement).checked,
+          )
+        "
       />
       <label for="toolbar-mode-key-show-ambitus">Show Ambitus</label>
     </div>
@@ -149,7 +164,12 @@
         id="toolbar-mode-key-permanent-enharmonic-zo"
         type="checkbox"
         :checked="element.permanentEnharmonicZo"
-        @change="$emit('update:permanentEnharmonicZo', $event.target.checked)"
+        @change="
+          $emit(
+            'update:permanentEnharmonicZo',
+            ($event.target as HTMLInputElement).checked,
+          )
+        "
       />
       <label for="toolbar-mode-key-permanent-enharmonic-zo"
         >Permanent Enharmonic Zo</label
@@ -215,35 +235,36 @@ export default class ToolbarModeKey extends Vue {
   tempoMenuOptions: ButtonWithMenuOption[] = [
     {
       neume: TempoSign.VeryQuick,
-      icon: require('@/assets/icons/agogi-poli-gorgi.svg'),
+      icon: new URL('@/assets/icons/agogi-poli-gorgi.svg', import.meta.url)
+        .href,
     },
     {
       neume: TempoSign.Quicker,
-      icon: require('@/assets/icons/agogi-gorgoteri.svg'),
+      icon: new URL('@/assets/icons/agogi-gorgoteri.svg', import.meta.url).href,
     },
     {
       neume: TempoSign.Quick,
-      icon: require('@/assets/icons/agogi-gorgi.svg'),
+      icon: new URL('@/assets/icons/agogi-gorgi.svg', import.meta.url).href,
     },
     {
       neume: TempoSign.Medium,
-      icon: require('@/assets/icons/agogi-mesi.svg'),
+      icon: new URL('@/assets/icons/agogi-mesi.svg', import.meta.url).href,
     },
     {
       neume: TempoSign.Moderate,
-      icon: require('@/assets/icons/agogi-metria.svg'),
+      icon: new URL('@/assets/icons/agogi-metria.svg', import.meta.url).href,
     },
     {
       neume: TempoSign.Slow,
-      icon: require('@/assets/icons/agogi-argi.svg'),
+      icon: new URL('@/assets/icons/agogi-argi.svg', import.meta.url).href,
     },
     {
       neume: TempoSign.Slower,
-      icon: require('@/assets/icons/agogi-argoteri.svg'),
+      icon: new URL('@/assets/icons/agogi-argoteri.svg', import.meta.url).href,
     },
     {
       neume: TempoSign.VerySlow,
-      icon: require('@/assets/icons/agogi-poli-argi.svg'),
+      icon: new URL('@/assets/icons/agogi-poli-argi.svg', import.meta.url).href,
     },
   ];
 }

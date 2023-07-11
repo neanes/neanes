@@ -32,6 +32,7 @@ import Neume from '@/components/Neume.vue';
 import { Note } from '@/models/Neumes';
 import { withZoom } from '@/utils/withZoom';
 import { PageSetup } from '@/models/PageSetup';
+import { StyleValue } from 'vue';
 
 @Component({
   components: {
@@ -69,21 +70,21 @@ export default class NeumeBoxMartyria extends Vue {
       webkitTextStrokeWidth: withZoom(
         this.pageSetup.martyriaDefaultStrokeWidth,
       ),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get fthoraStyle() {
     return {
       color: this.pageSetup.fthoraDefaultColor,
       webkitTextStrokeWidth: withZoom(this.pageSetup.fthoraDefaultStrokeWidth),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get tempoStyle() {
     return {
       color: this.pageSetup.tempoDefaultColor,
       webkitTextStrokeWidth: withZoom(this.pageSetup.tempoDefaultStrokeWidth),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get measureBarStyle() {
@@ -92,7 +93,7 @@ export default class NeumeBoxMartyria extends Vue {
       webkitTextStrokeWidth: withZoom(
         this.pageSetup.measureBarDefaultStrokeWidth,
       ),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 }
 </script>

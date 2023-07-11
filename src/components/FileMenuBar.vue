@@ -101,17 +101,17 @@ import JSZip from 'jszip';
   },
 })
 export default class FileMenuBar extends Vue {
-  private isMenuOpen = false;
-  private selectedMenu = '';
-  private accept = '.byz,.byzx';
-  private acceptImage = '.bmp,.jpg,.jpeg,.jpe,.png,.gif,.svg,.webp,.ico';
-  private isChrome = (window as any).chrome != null;
+  isMenuOpen = false;
+  selectedMenu = '';
+  accept = '.byz,.byzx';
+  acceptImage = '.bmp,.jpg,.jpeg,.jpe,.png,.gif,.svg,.webp,.ico';
+  isChrome = (window as any).chrome != null;
 
-  private get fileSelector() {
+  get fileSelector() {
     return this.$refs.file as HTMLInputElement;
   }
 
-  private get imageFileSelector() {
+  get imageFileSelector() {
     return this.$refs.imagefile as HTMLInputElement;
   }
 

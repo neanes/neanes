@@ -609,6 +609,7 @@ import DragHandle from '@/components/DragHandle.vue';
 import { PageSetup } from '@/models/PageSetup';
 import { VocalExpressionNeume } from '@/models/Neumes';
 import { TimeNeume } from '@/models/save/v1/Neumes';
+import { StyleValue } from 'vue';
 
 @Component({
   components: {
@@ -727,7 +728,7 @@ export default class SyllablePositioningDialog extends Vue {
       left: `calc(${this.centerLeft}px - ${
         this.element.x - this.previousElement.x
       }px * var(--zoom, 1))`,
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get nextElementStyle() {
@@ -735,25 +736,25 @@ export default class SyllablePositioningDialog extends Vue {
       left: `calc(${this.centerLeft}px + ${
         this.nextElement.x - this.element.x
       }px * var(--zoom, 1))`,
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get mainStyle() {
     return {
       left: this.centerLeft + 'px',
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get topPaneStyle() {
     return {
       height: this.pageSetup.lineHeight * this.zoom + 'px',
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get paneContainerStyle() {
     return {
       width: this.paneContainerWidthPx + 'px',
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   created() {

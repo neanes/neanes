@@ -49,7 +49,7 @@ export default class ImageBox extends Vue {
       justifyContent: this.element.alignment,
       width: withZoom(this.element.width),
       height: withZoom(this.element.imageHeight),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
 
     if (this.element.inline) {
       style.border = 'none';

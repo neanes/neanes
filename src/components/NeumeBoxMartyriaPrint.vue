@@ -29,6 +29,7 @@ import { withZoom } from '@/utils/withZoom';
 import { PageSetup } from '@/models/PageSetup';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { fontService } from '@/services/FontService';
+import { StyleValue } from 'vue';
 
 @Component({
   components: {
@@ -65,7 +66,7 @@ export default class NeumeBoxMartyria extends Vue {
       webkitTextStrokeWidth: withZoom(
         this.pageSetup.martyriaDefaultStrokeWidth,
       ),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get fthoraStyle() {
@@ -77,7 +78,7 @@ export default class NeumeBoxMartyria extends Vue {
       left: withZoom(offset.x, 'em'),
       top: withZoom(offset.y, 'em'),
       webkitTextStrokeWidth: withZoom(this.pageSetup.fthoraDefaultStrokeWidth),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get tempoStyle() {
@@ -96,7 +97,7 @@ export default class NeumeBoxMartyria extends Vue {
       left: withZoom(offset.x, 'em'),
       top: withZoom(offset.y, 'em'),
       webkitTextStrokeWidth: withZoom(this.pageSetup.tempoDefaultStrokeWidth),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get rootSignStyle() {
@@ -106,7 +107,7 @@ export default class NeumeBoxMartyria extends Vue {
       position: 'absolute',
       left: withZoom(offset.x, 'em'),
       top: withZoom(offset.y, 'em'),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get measureBarStyle() {
@@ -115,7 +116,7 @@ export default class NeumeBoxMartyria extends Vue {
       webkitTextStrokeWidth: withZoom(
         this.pageSetup.measureBarDefaultStrokeWidth,
       ),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   getMapping(neume: GenericNeume) {

@@ -536,7 +536,7 @@
         <div class="small-header">Preview</div>
         <div class="preview-elements">
           <template v-for="(element, index) in previewNeumes">
-            <template v-if="isSyllableElement(element)">
+            <template v-if="isSyllableElement(element.elementType)">
               <NeumeBoxSyllable
                 class="syllable-box"
                 :key="index"
@@ -544,7 +544,7 @@
                 :pageSetup="form"
               />
             </template>
-            <template v-if="isMartyriaElement(element)">
+            <template v-if="isMartyriaElement(element.elementType)">
               <NeumeBoxMartyria
                 class="marytria-neume-box"
                 :key="index"
@@ -552,7 +552,7 @@
                 :pageSetup="form"
               />
             </template>
-            <template v-if="isTempoElement(element)">
+            <template v-if="isTempoElement(element.elementType)">
               <NeumeBoxTempo
                 class="tempo-neume-box"
                 :key="index"
@@ -592,7 +592,7 @@ import { QuantitativeNeume, Accidental } from '@/models/Neumes';
 import NeumeBoxSyllable from '@/components/NeumeBoxSyllable.vue';
 import NeumeBoxMartyria from '@/components/NeumeBoxMartyria.vue';
 import NeumeBoxTempo from '@/components/NeumeBoxTempo.vue';
-import { ElementType, ScoreElement } from '@/models/Element';
+import { ElementType } from '@/models/Element';
 import { SaveService } from '@/services/SaveService';
 
 @Component({
@@ -612,24 +612,24 @@ import { SaveService } from '@/services/SaveService';
 export default class PageSetupDialog extends Vue {
   @Prop() pageSetup!: PageSetup;
   @Prop() fonts!: string[];
-  private form: PageSetup = new PageSetup();
+  form: PageSetup = new PageSetup();
 
   QuantitativeNeume = QuantitativeNeume;
   Accidental = Accidental;
 
   previewNeumes = [
     {
-      elementType: 'Tempo',
+      elementType: ElementType.Tempo,
       neume: 'Moderate',
     },
     {
-      elementType: 'Note',
+      elementType: ElementType.Note,
       quantitativeNeume: 'Ison',
       gorgonNeume: 'Gorgon_Bottom',
       ison: 'Ison.Ga',
     },
     {
-      elementType: 'Note',
+      elementType: ElementType.Note,
       quantitativeNeume: 'Ison',
       timeNeume: 'Dipli',
       measureBarLeft: 'MeasureBarRight',
@@ -637,33 +637,33 @@ export default class PageSetupDialog extends Vue {
       measureNumber: 'Three',
     },
     {
-      elementType: 'Note',
+      elementType: ElementType.Note,
       quantitativeNeume: 'Oligon',
       vocalExpressionNeume: 'Antikenoma',
       ison: 'Ison.Ni',
     },
     {
-      elementType: 'Note',
+      elementType: ElementType.Note,
       quantitativeNeume: 'Apostrophos',
     },
     {
-      elementType: 'Note',
+      elementType: ElementType.Note,
       quantitativeNeume: 'Oligon',
       timeNeume: 'Klasma_Top',
     },
     {
-      elementType: 'Note',
+      elementType: ElementType.Note,
       quantitativeNeume: 'Oligon',
       gorgonNeume: 'Gorgon_Top',
       vocalExpressionNeume: 'Psifiston',
       accidental: 'Flat_2_Right',
     },
     {
-      elementType: 'Note',
+      elementType: ElementType.Note,
       quantitativeNeume: 'Apostrophos',
     },
     {
-      elementType: 'Martyria',
+      elementType: ElementType.Martyria,
       auto: true,
       note: 'Thi',
       rootSign: 'DeltaDotted',
@@ -917,16 +917,16 @@ export default class PageSetupDialog extends Vue {
     this.$forceUpdate();
   }
 
-  isSyllableElement(element: ScoreElement) {
-    return element.elementType == ElementType.Note;
+  isSyllableElement(elementType: ElementType) {
+    return elementType == ElementType.Note;
   }
 
-  isMartyriaElement(element: ScoreElement) {
-    return element.elementType == ElementType.Martyria;
+  isMartyriaElement(elementType: ElementType) {
+    return elementType == ElementType.Martyria;
   }
 
-  isTempoElement(element: ScoreElement) {
-    return element.elementType == ElementType.Tempo;
+  isTempoElement(elementType: ElementType) {
+    return elementType == ElementType.Tempo;
   }
 
   onKeyDown(event: KeyboardEvent) {

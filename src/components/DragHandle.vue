@@ -10,6 +10,7 @@ import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { Neume, VocalExpressionNeume } from '@/models/Neumes';
 import { fontService } from '@/services/FontService';
 import { NoteElement, ScoreElementOffset } from '@/models/save/v1/Element';
+import { StyleValue } from 'vue';
 
 @Component({
   components: { ContentEditable },
@@ -74,7 +75,7 @@ export default class DragHandle extends Vue {
       fontSize: withZoom(this.fontSize),
       height: withZoom(this.height),
       width: withZoom(this.width),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   getOffset(neume: Neume) {

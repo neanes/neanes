@@ -17,6 +17,7 @@ import ContentEditable from '@/components/ContentEditable.vue';
 import { withZoom } from '@/utils/withZoom';
 import { PageSetup } from '@/models/PageSetup';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
+import { StyleValue } from 'vue';
 
 @Component({
   components: { ContentEditable },
@@ -40,7 +41,7 @@ export default class DropCap extends Vue {
       fontWeight: this.element.computedFontWeight,
       fontStyle: this.element.computedFontStyle,
       webkitTextStrokeWidth: withZoom(this.element.computedStrokeWidth),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
 
     return style;
   }

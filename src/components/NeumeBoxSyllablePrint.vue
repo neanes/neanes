@@ -70,6 +70,7 @@ import { withZoom } from '@/utils/withZoom';
 import { PageSetup } from '@/models/PageSetup';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { fontService } from '@/services/FontService';
+import { StyleValue } from 'vue';
 
 @Component({
   components: {
@@ -144,7 +145,7 @@ export default class NeumeBoxSyllablePrint extends Vue {
       fontSize: withZoom(this.pageSetup.neumeDefaultFontSize),
       color: this.pageSetup.neumeDefaultColor,
       webkitTextStrokeWidth: withZoom(this.pageSetup.neumeDefaultStrokeWidth),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get gorgonStyle() {
@@ -159,7 +160,7 @@ export default class NeumeBoxSyllablePrint extends Vue {
       top: withZoom(offset.y, 'em'),
       color: this.pageSetup.gorgonDefaultColor,
       webkitTextStrokeWidth: withZoom(this.pageSetup.gorgonDefaultStrokeWidth),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get secondaryGorgonStyle() {
@@ -174,7 +175,7 @@ export default class NeumeBoxSyllablePrint extends Vue {
       top: withZoom(offset.y, 'em'),
       color: this.pageSetup.gorgonDefaultColor,
       webkitTextStrokeWidth: withZoom(this.pageSetup.gorgonDefaultStrokeWidth),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get timeStyle() {
@@ -188,7 +189,7 @@ export default class NeumeBoxSyllablePrint extends Vue {
       left: withZoom(offset.x, 'em'),
       top: withZoom(offset.y, 'em'),
       webkitTextStrokeWidth: withZoom(this.pageSetup.neumeDefaultStrokeWidth),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get koronisStyle() {
@@ -203,7 +204,7 @@ export default class NeumeBoxSyllablePrint extends Vue {
       top: withZoom(offset.y, 'em'),
       color: this.pageSetup.koronisDefaultColor,
       webkitTextStrokeWidth: withZoom(this.pageSetup.koronisDefaultStrokeWidth),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get vareiaStyle() {
@@ -216,7 +217,7 @@ export default class NeumeBoxSyllablePrint extends Vue {
         this.note.vareiaOffsetY != null
           ? withZoom(this.note.vareiaOffsetY, 'em')
           : undefined,
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get fthoraStyle() {
@@ -231,7 +232,7 @@ export default class NeumeBoxSyllablePrint extends Vue {
       top: withZoom(offset.y, 'em'),
       color: this.pageSetup.fthoraDefaultColor,
       webkitTextStrokeWidth: withZoom(this.pageSetup.fthoraDefaultStrokeWidth),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get accidentalStyle() {
@@ -248,7 +249,7 @@ export default class NeumeBoxSyllablePrint extends Vue {
       webkitTextStrokeWidth: withZoom(
         this.pageSetup.accidentalDefaultStrokeWidth,
       ),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get measureBarLeftStyle() {
@@ -265,7 +266,7 @@ export default class NeumeBoxSyllablePrint extends Vue {
         this.note.measureBarLeftOffsetY != null
           ? withZoom(this.note.measureBarLeftOffsetY, 'em')
           : undefined,
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get measureBarRightStyle() {
@@ -282,7 +283,7 @@ export default class NeumeBoxSyllablePrint extends Vue {
         this.note.measureBarRightOffsetY != null
           ? withZoom(this.note.measureBarRightOffsetY, 'em')
           : undefined,
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get measureNumberStyle() {
@@ -299,7 +300,7 @@ export default class NeumeBoxSyllablePrint extends Vue {
       webkitTextStrokeWidth: withZoom(
         this.pageSetup.measureNumberDefaultStrokeWidth,
       ),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get noteIndicatorStyle() {
@@ -316,7 +317,7 @@ export default class NeumeBoxSyllablePrint extends Vue {
       webkitTextStrokeWidth: withZoom(
         this.pageSetup.noteIndicatorDefaultStrokeWidth,
       ),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get isonStyle() {
@@ -331,7 +332,7 @@ export default class NeumeBoxSyllablePrint extends Vue {
       top: withZoom(offset.y, 'em'),
       color: this.pageSetup.isonDefaultColor,
       webkitTextStrokeWidth: withZoom(this.pageSetup.isonDefaultStrokeWidth),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get heteronStyle() {
@@ -346,7 +347,7 @@ export default class NeumeBoxSyllablePrint extends Vue {
       top: withZoom(offset.y, 'em'),
       color: this.pageSetup.heteronDefaultColor,
       webkitTextStrokeWidth: withZoom(this.pageSetup.heteronDefaultStrokeWidth),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get tieStyle() {
@@ -359,7 +360,7 @@ export default class NeumeBoxSyllablePrint extends Vue {
       position: 'absolute',
       left: withZoom(offset.x, 'em'),
       top: withZoom(offset.y, 'em'),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   getMapping(neume: Neume) {

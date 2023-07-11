@@ -596,7 +596,7 @@
 </template>
 
 <script lang="ts">
-import { nextTick, toRaw } from 'vue';
+import { StyleValue, nextTick, toRaw } from 'vue';
 import { Component, Inject, Prop, Watch, Vue } from 'vue-facing-decorator';
 import { toPng, getFontEmbedCSS } from 'html-to-image';
 import {
@@ -1230,49 +1230,49 @@ export default class Editor extends Vue {
       height: withZoom(this.score.pageSetup.pageHeight),
       minHeight: withZoom(this.score.pageSetup.pageHeight),
       maxHeight: withZoom(this.score.pageSetup.pageHeight),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get headerStyle() {
     return {
       left: withZoom(this.score.pageSetup.leftMargin),
       top: withZoom(this.score.pageSetup.headerMargin),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get footerStyle() {
     return {
       left: withZoom(this.score.pageSetup.leftMargin),
       bottom: withZoom(this.score.pageSetup.footerMargin),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get guideStyleLeft() {
     return {
       left: withZoom(this.score.pageSetup.leftMargin - 1),
       height: withZoom(this.score.pageSetup.pageHeight),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get guideStyleRight() {
     return {
       right: withZoom(this.score.pageSetup.rightMargin - 1),
       height: withZoom(this.score.pageSetup.pageHeight),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get guideStyleTop() {
     return {
       top: withZoom(this.score.pageSetup.topMargin - 1),
       width: withZoom(this.score.pageSetup.pageWidth),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get guideStyleBottom() {
     return {
       bottom: withZoom(this.score.pageSetup.bottomMargin - 1),
       width: withZoom(this.score.pageSetup.pageWidth),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get pageVisibilityIntersection() {
@@ -1335,34 +1335,34 @@ export default class Editor extends Vue {
       webkitTextStrokeWidth: withZoom(
         this.score.pageSetup.lyricsDefaultStrokeWidth,
       ),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   getEmptyBoxStyle(element: EmptyElement) {
     return {
       width: withZoom(element.width),
       height: withZoom(element.height),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   getElementStyle(element: ScoreElement) {
     return {
       left: withZoom(element.x),
       top: withZoom(element.y),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   getMelismaStyle(element: NoteElement) {
     return {
       width: withZoom(element.melismaWidth!),
       minHeight: withZoom(this.score.pageSetup.lyricsDefaultFontSize),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   getMelismaHyphenStyle(element: NoteElement, index: number) {
     return {
       left: withZoom(element.hyphenOffsets[index]),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   untitledIndex: number = 1;

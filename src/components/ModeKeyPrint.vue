@@ -55,6 +55,7 @@ import { withZoom } from '@/utils/withZoom';
 import { fontService } from '@/services/FontService';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { PageSetup } from '@/models/PageSetup';
+import { StyleValue } from 'vue';
 
 @Component({
   components: {
@@ -112,7 +113,7 @@ export default class ModeKey extends Vue {
       width: withZoom(this.element.width),
       height: withZoom(this.element.height),
       webkitTextStrokeWidth: withZoom(this.element.computedStrokeWidth),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get fthoraAboveNoteStyle() {
@@ -125,7 +126,7 @@ export default class ModeKey extends Vue {
       position: 'absolute',
       left: withZoom(offset.x, 'em'),
       top: withZoom(offset.y, 'em'),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get fthoraAboveNote2Style() {
@@ -138,7 +139,7 @@ export default class ModeKey extends Vue {
       position: 'absolute',
       left: withZoom(offset.x, 'em'),
       top: withZoom(offset.y, 'em'),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get fthoraAboveQuantitativeNeumeRightStyle() {
@@ -151,7 +152,7 @@ export default class ModeKey extends Vue {
       position: 'absolute',
       left: withZoom(offset.x, 'em'),
       top: withZoom(offset.y, 'em'),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get quantitativeNeumeAboveNoteStyle() {
@@ -164,7 +165,7 @@ export default class ModeKey extends Vue {
       position: 'absolute',
       left: withZoom(offset.x, 'em'),
       top: withZoom(offset.y, 'em'),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get quantitativeNeumeAboveNote2Style() {
@@ -177,7 +178,7 @@ export default class ModeKey extends Vue {
       position: 'absolute',
       left: withZoom(offset.x, 'em'),
       top: withZoom(offset.y, 'em'),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
   }
 
   get tempoStyle() {
@@ -187,7 +188,7 @@ export default class ModeKey extends Vue {
       color: this.pageSetup.tempoDefaultColor,
       webkitTextStrokeWidth: withZoom(this.pageSetup.tempoDefaultStrokeWidth),
       top: withZoom(-12),
-    } as CSSStyleDeclaration;
+    } as Partial<CSSStyleDeclaration>;
 
     if (this.element.tempoAlignRight) {
       style.position = 'absolute';

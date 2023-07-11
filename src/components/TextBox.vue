@@ -23,6 +23,7 @@ import ContentEditable from '@/components/ContentEditable.vue';
 import { withZoom } from '@/utils/withZoom';
 import { replaceTokens, TokenMetadata } from '@/utils/replaceTokens';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
+import { StyleValue } from 'vue';
 
 @Component({
   components: { ContentEditable },
@@ -62,7 +63,7 @@ export default class TextBox extends Vue {
       width: this.width,
       height: withZoom(this.element.height),
       webkitTextStrokeWidth: withZoom(this.element.computedStrokeWidth),
-    } as CSSStyleDeclaration;
+    } as StyleValue;
 
     return style;
   }

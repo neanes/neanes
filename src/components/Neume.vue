@@ -8,6 +8,7 @@ import { Neume as NeumeType } from '@/models/Neumes';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { ScoreElementOffset } from '@/models/Element';
 import { withZoom } from '@/utils/withZoom';
+import { StyleValue } from 'vue';
 
 @Component
 export default class Neume extends Vue {
@@ -34,7 +35,7 @@ export default class Neume extends Vue {
   }
 
   get style() {
-    const style = {} as CSSStyleDeclaration;
+    const style = {} as Partial<CSSStyleDeclaration>;
 
     if (this.fontFamily != null) {
       style.fontFamily = this.fontFamily;
@@ -49,7 +50,7 @@ export default class Neume extends Vue {
       style.top = withZoom(this.offset.y);
     }
 
-    return style;
+    return style as StyleValue;
   }
 }
 </script>

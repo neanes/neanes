@@ -4,14 +4,14 @@
       id="toolbar-drop-cap-use-default-style"
       type="checkbox"
       :checked="element.useDefaultStyle"
-      @change="$emit('update:useDefaultStyle', $event.target.checked)"
+      @change="$emit('update:useDefaultStyle', ($event.target as HTMLInputElement).checked)"
     />
     <label for="toolbar-drop-cap-use-default-style">Use default style</label>
     <span class="divider" />
     <template v-if="!element.useDefaultStyle">
       <select
         :value="element.fontFamily"
-        @change="$emit('update:fontFamily', $event.target.value)"
+        @change="$emit('update:fontFamily', ($event.target as HTMLInputElement).value)"
       >
         <option v-for="font in dropCapFontFamilies" :key="font" :value="font">
           {{ font }}

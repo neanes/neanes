@@ -15,7 +15,7 @@
               min="0"
               :step="marginStep"
               :value="topMargin"
-              @change="updateTopMargin($event.target.value)"
+              @change="updateTopMargin(Number(($event.target as HTMLInputElement).value))"
             />
           </div>
           <div class="form-group">
@@ -26,7 +26,7 @@
               min="0"
               :step="marginStep"
               :value="bottomMargin"
-              @change="updateBottomMargin($event.target.value)"
+              @change="updateBottomMargin(Number(($event.target as HTMLInputElement).value))"
             />
           </div>
           <div class="form-group">
@@ -37,7 +37,7 @@
               min="0"
               :step="marginStep"
               :value="leftMargin"
-              @change="updateLeftMargin($event.target.value)"
+              @change="updateLeftMargin(Number(($event.target as HTMLInputElement).value))"
             />
           </div>
           <div class="form-group">
@@ -48,7 +48,7 @@
               min="0"
               :step="marginStep"
               :value="rightMargin"
-              @change="updateRightMargin($event.target.value)"
+              @change="updateRightMargin(Number(($event.target as HTMLInputElement).value))"
             />
           </div>
           <div class="form-group">
@@ -59,7 +59,7 @@
               min="0"
               :step="marginStep"
               :value="headerMargin"
-              @change="updateHeaderMargin($event.target.value)"
+              @change="updateHeaderMargin(Number(($event.target as HTMLInputElement).value))"
             />
           </div>
           <div class="form-group">
@@ -70,7 +70,7 @@
               min="0"
               :step="marginStep"
               :value="footerMargin"
-              @change="updateFooterMargin($event.target.value)"
+              @change="updateFooterMargin(Number(($event.target as HTMLInputElement).value))"
             />
           </div>
           <div class="form-group">
@@ -146,7 +146,7 @@
               type="number"
               :step="spacingStep"
               :value="lyricsVerticalOffset"
-              @change="updateLyricsVerticalOffset($event.target.value)"
+              @change="updateLyricsVerticalOffset(Number(($event.target as HTMLInputElement).value))"
             />
           </div>
           <div class="form-group">
@@ -156,7 +156,7 @@
               type="number"
               :step="spacingStep"
               :value="lyricsMinimumSpacing"
-              @change="updateLyricsMinimumSpacing($event.target.value)"
+              @change="updateLyricsMinimumSpacing(Number(($event.target as HTMLInputElement).value))"
             />
           </div>
           <div class="form-group">
@@ -167,7 +167,7 @@
               min="0"
               :step="spacingStep"
               :value="lineHeight"
-              @change="updateLineHeight($event.target.value)"
+              @change="updateLineHeight(Number(($event.target as HTMLInputElement).value))"
             />
           </div>
           <div class="form-group">
@@ -178,7 +178,7 @@
               min="0"
               :step="spacingStep"
               :value="hyphenSpacing"
-              @change="updateHyphenSpacing($event.target.value)"
+              @change="updateHyphenSpacing(Number(($event.target as HTMLInputElement).value))"
             />
           </div>
           <div class="subheader">Headers &amp; Footers</div>

@@ -155,7 +155,7 @@
           id="toolbar-martyria-auto"
           type="checkbox"
           :checked="element.auto"
-          @change="$emit('update:auto', $event.target.checked)"
+          @change="$emit('update:auto', ($event.target as HTMLInputElement).checked)"
         />
         <label for="toolbar-martyria-auto">Auto</label>
       </div>
@@ -164,7 +164,7 @@
         <label class="right-space">Note</label>
         <select
           :value="element.note"
-          @change="$emit('update:note', $event.target.value)"
+          @change="$emit('update:note', ($event.target as HTMLInputElement).value)"
         >
           <option v-for="note in notes" :key="note.key" :value="note.key">
             {{ note.displayName }}
@@ -175,7 +175,7 @@
         <label class="right-space">Scale</label>
         <select
           :value="element.scale"
-          @change="$emit('update:scale', $event.target.value)"
+          @change="$emit('update:scale', ($event.target as HTMLInputElement).value)"
         >
           <option v-for="scale in scales" :key="scale.key" :value="scale.key">
             {{ scale.displayName }}
@@ -210,7 +210,7 @@
         <label class="right-space">Fthora Note</label>
         <select
           :value="element.chromaticFthoraNote"
-          @change="$emit('update:chromaticFthoraNote', $event.target.value)"
+          @change="$emit('update:chromaticFthoraNote', ($event.target as HTMLInputElement).value)"
         >
           <option v-for="note in fthoraNotes" :key="note" :value="note">
             {{ note }}
@@ -221,7 +221,7 @@
       <label class="right-space">Root Sign Override</label>
       <select
         :value="element.rootSignOverride"
-        @change="$emit('update:rootSignOverride', $event.target.value)"
+        @change="$emit('update:rootSignOverride', ($event.target as HTMLInputElement).value)"
       >
         <option value="">None</option>
         <option v-for="sign in rootSigns" :key="sign.value" :value="sign.value">

@@ -1,7 +1,7 @@
 <template>
   <input
     :value="displayValue"
-    @change="onChange($event.target.value)"
+    @change="onChange(($event.target as HTMLInputElement).value)"
     type="number"
     :min="min"
     :max="max"

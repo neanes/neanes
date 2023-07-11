@@ -378,7 +378,7 @@
           id="toolbar-neume-ignore-attractions"
           type="checkbox"
           :checked="element.ignoreAttractions"
-          @change="$emit('update:ignoreAttractions', $event.target.checked)"
+          @change="$emit('update:ignoreAttractions', ($event.target as HTMLInputElement).checked)"
         />
         <label for="toolbar-neume-ignore-attractions">Ignore Attractions</label>
       </div>
@@ -388,7 +388,7 @@
         <label class="right-space">Fthora Note</label>
         <select
           :value="element.chromaticFthoraNote"
-          @change="$emit('update:chromaticFthoraNote', $event.target.value)"
+          @change="$emit('update:chromaticFthoraNote', ($event.target as HTMLInputElement).value)"
         >
           <option v-for="note in notes" :key="note" :value="note">
             {{ note }}

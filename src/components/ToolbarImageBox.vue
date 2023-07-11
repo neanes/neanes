@@ -5,7 +5,7 @@
         id="toolbar-image-box-inline"
         type="checkbox"
         :checked="element.inline"
-        @change="$emit('update:inline', $event.target.checked)"
+        @change="$emit('update:inline', ($event.target as HTMLInputElement).checked)"
       />
       <label for="toolbar-image-box-inline">Inline</label>
     </div>
@@ -17,7 +17,7 @@
         id="toolbar-image-box-lock-aspect-ratio"
         type="checkbox"
         :checked="element.lockAspectRatio"
-        @change="$emit('update:lockAspectRatio', $event.target.checked)"
+        @change="$emit('update:lockAspectRatio', ($event.target as HTMLInputElement).checked)"
       />
       <label for="toolbar-image-box-lock-aspect-ratio"
         >Maintain Aspect Ratio</label

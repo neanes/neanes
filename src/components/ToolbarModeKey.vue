@@ -4,7 +4,7 @@
       id="toolbar-mode-key-use-default-style"
       type="checkbox"
       :checked="element.useDefaultStyle"
-      @change="$emit('update:useDefaultStyle', $event.target.checked)"
+      @change="$emit('update:useDefaultStyle', ($event.target as HTMLInputElement).checked)"
     />
     <label for="toolbar-mode-key-use-default-style">Use default style</label>
     <span class="divider" />
@@ -120,7 +120,7 @@
         id="toolbar-mode-key-ignore-attractions"
         type="checkbox"
         :checked="element.ignoreAttractions"
-        @change="$emit('update:ignoreAttractions', $event.target.checked)"
+        @change="$emit('update:ignoreAttractions', ($event.target as HTMLInputElement).checked)"
       />
       <label for="toolbar-mode-key-ignore-attractions"
         >Ignore Attractions</label
@@ -134,7 +134,7 @@
         id="toolbar-mode-key-show-ambitus"
         type="checkbox"
         :checked="element.showAmbitus"
-        @change="$emit('update:showAmbitus', $event.target.checked)"
+        @change="$emit('update:showAmbitus', ($event.target as HTMLInputElement).checked)"
       />
       <label for="toolbar-mode-key-show-ambitus">Show Ambitus</label>
     </div>
@@ -149,7 +149,7 @@
         id="toolbar-mode-key-permanent-enharmonic-zo"
         type="checkbox"
         :checked="element.permanentEnharmonicZo"
-        @change="$emit('update:permanentEnharmonicZo', $event.target.checked)"
+        @change="$emit('update:permanentEnharmonicZo', ($event.target as HTMLInputElement).checked)"
       />
       <label for="toolbar-mode-key-permanent-enharmonic-zo"
         >Permanent Enharmonic Zo</label

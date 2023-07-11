@@ -6,6 +6,7 @@ import vue from '@vitejs/plugin-vue';
 import electron from 'vite-plugin-electron';
 import eslintPlugin from 'vite-plugin-eslint';
 import pkg from './package.json';
+import VueDevTools from 'vite-plugin-vue-devtools';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command, mode }) => {
@@ -87,6 +88,7 @@ export default defineConfig(({ command, mode }) => {
           ],
         },
       }),
+      VueDevTools(),
       vue(),
       eslintPlugin(),
       !mode.includes('web')

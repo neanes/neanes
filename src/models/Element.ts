@@ -778,6 +778,7 @@ export class DropCapElement extends ScoreElement {
   public fontSize: number = Unit.fromPt(60);
   public fontWeight: string = '400';
   public fontStyle: string = 'normal';
+  public lineHeight: number | null = null;
   public strokeWidth: number = 0;
   public color: string = '#000000';
   public useDefaultStyle: boolean = true;
@@ -789,6 +790,7 @@ export class DropCapElement extends ScoreElement {
   public computedFontStyle: string = 'normal';
   public computedColor: string = '#000000';
   public computedStrokeWidth: number = 0;
+  public computedLineHeight: number | null = null;
 
   // Re-render helpers
   public computedFontFamilyPrevious: string = '';
@@ -797,6 +799,7 @@ export class DropCapElement extends ScoreElement {
   public computedFontStylePrevious: string = 'normal';
   public computedColorPrevious: string = '#000000';
   public computedStrokeWidthPrevious: number = 0;
+  public computedLineHeightPrevious: number | null = null;
 
   public get computedFont() {
     return `${this.computedFontStyle} normal ${this.computedFontWeight} ${this.computedFontSize}px "${this.computedFontFamily}"`;
@@ -816,6 +819,7 @@ export class DropCapElement extends ScoreElement {
       content: this.content,
       fontSize: this.fontSize,
       fontFamily: this.fontFamily,
+      lineHeight: this.lineHeight,
     } as Partial<DropCapElement>;
   }
 }

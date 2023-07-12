@@ -964,7 +964,11 @@ export class ByzHtmlExporter {
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
     );
 
-    const font = `${pageSetup.dropCapDefaultFontStyle} normal ${pageSetup.dropCapDefaultFontWeight} ${pageSetup.dropCapDefaultFontSize}px "${pageSetup.dropCapDefaultFontFamily}"`;
+    const font = `${pageSetup.dropCapDefaultFontStyle} normal ${
+      pageSetup.dropCapDefaultFontWeight
+    } ${pageSetup.dropCapDefaultFontSize}px/${
+      pageSetup.dropCapDefaultLineHeight ?? 'normal'
+    } "${pageSetup.dropCapDefaultFontFamily}"`;
 
     const fontBoundingBoxDescent =
       TextMeasurementService.getFontBoundingBoxDescent('R', font);

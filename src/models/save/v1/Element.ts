@@ -208,6 +208,7 @@ export class DropCapElement extends ScoreElement {
   public fontSize: number = Unit.fromPt(60);
   public fontWeight: string = '400';
   public fontStyle: string = 'normal';
+  public lineHeight: number | undefined = undefined;
   public strokeWidth: number = 0;
   public color: string = '#000000';
   public useDefaultStyle: boolean | undefined = undefined;

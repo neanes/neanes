@@ -21,6 +21,7 @@ import { Component, Prop, Vue, Watch } from 'vue-facing-decorator';
 export default class InputUnit extends Vue {
   @Prop() modelValue!: number;
   @Prop() unit!: 'pt' | 'in' | 'mm' | 'unitless';
+  @Prop({ default: false }) nullable!: boolean;
   /**
    * The minimum value allowed, in display units.
    */
@@ -58,12 +59,27 @@ export default class InputUnit extends Vue {
   get displayValue() {
     const convertedValue = this.toDisplay(this.modelValue);
 
+    if (convertedValue == null)
+      return this.nullable ? '' : this.defaultValue.toString();
+
     return this.precision != null
       ? convertedValue.toFixed(this.precision)
       : convertedValue.toString();
   }
 
+  emitValue(v: number | null) {
+    if (this.modelValue !== v) {
+      this.$emit('update:modelValue', v);
+    } else {
+      this.htmlElement.value = this.displayValue;
+    }
+  }
+
   onChange(input: string) {
+    if (input.trim() === '' && this.nullable) {
+      return this.emitValue(null);
+    }
+
     let newValue = parseFloat(input);
 
     if (isNaN(newValue)) {
@@ -84,11 +100,7 @@ export default class InputUnit extends Vue {
       storageValue = Math.min(this.toStorage(this.max), storageValue);
     }
 
-    if (this.modelValue !== storageValue) {
-      this.$emit('update:modelValue', storageValue);
-    } else {
-      this.htmlElement.value = this.displayValue;
-    }
+    this.emitValue(storageValue);
   }
 
   toStorage(value: number) {
@@ -116,10 +128,10 @@ export default class InputUnit extends Vue {
       case 'mm':
         return Unit.toMm(value!);
       case 'unitless':
-        return value ?? 0;
+        return value;
       default:
         console.error(`Unsupported unit ${this.unit}`);
-        return value ?? 0;
+        return value;
     }
   }
 

@@ -100,6 +100,7 @@ export class LayoutService {
         dropCap.computedFontStylePrevious = dropCap.computedFontStyle;
         dropCap.computedColorPrevious = dropCap.computedColor;
         dropCap.computedStrokeWidthPrevious = dropCap.computedStrokeWidth;
+        dropCap.computedLineHeightPrevious = dropCap.computedLineHeight;
       }
     });
 
@@ -427,6 +428,10 @@ export class LayoutService {
           dropCapElement.computedFontStyle = dropCapElement.useDefaultStyle
             ? pageSetup.dropCapDefaultFontStyle
             : dropCapElement.fontStyle;
+
+          dropCapElement.computedLineHeight = dropCapElement.useDefaultStyle
+            ? pageSetup.dropCapDefaultLineHeight
+            : dropCapElement.lineHeight;
 
           elementWidthPx = TextMeasurementService.getTextWidth(
             dropCapElement.content,
@@ -764,7 +769,8 @@ export class LayoutService {
           dropCap.computedFontWeightPrevious !== dropCap.computedFontWeight ||
           dropCap.computedFontStylePrevious !== dropCap.computedFontStyle ||
           dropCap.computedColorPrevious !== dropCap.computedColor ||
-          dropCap.computedStrokeWidthPrevious !== dropCap.computedStrokeWidth;
+          dropCap.computedStrokeWidthPrevious !== dropCap.computedStrokeWidth ||
+          dropCap.computedLineHeightPrevious !== dropCap.computedLineHeight;
       }
     });
 

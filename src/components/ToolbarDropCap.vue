@@ -30,7 +30,7 @@
         :modelValue="element.fontSize"
         @update:modelValue="$emit('update:fontSize', $event)"
       />
-      <span class="space" style="text-align: center;">&#47;</span>
+      <span class="space" style="text-align: center">&#47;</span>
       <InputUnit
         class="drop-caps-input"
         unit="unitless"
@@ -90,7 +90,7 @@ import InputUnit from '@/components/InputUnit.vue';
     'update:italic',
     'update:strokeWidth',
     'update:useDefaultStyle',
-    'update:lineHeight'
+    'update:lineHeight',
   ],
 })
 export default class ToolbarDropCap extends Vue {

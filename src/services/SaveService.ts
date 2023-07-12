@@ -144,7 +144,8 @@ export class SaveService {
     pageSetup.dropCapDefaultFontWeight = p.dropCapDefaultFontWeight;
     pageSetup.dropCapDefaultFontStyle = p.dropCapDefaultFontStyle;
     pageSetup.dropCapDefaultStrokeWidth = p.dropCapDefaultStrokeWidth;
-    pageSetup.dropCapDefaultLineHeight = p.dropCapDefaultLineHeight || undefined;
+    pageSetup.dropCapDefaultLineHeight =
+      p.dropCapDefaultLineHeight || undefined;
     pageSetup.leftMargin = p.leftMargin;
     pageSetup.lineHeight = p.lineHeight;
     pageSetup.lyricsDefaultColor = p.lyricsDefaultColor;

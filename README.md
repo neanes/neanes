@@ -76,12 +76,18 @@ This will launch the application in development mode. As changes are made to the
 
 Any change that updates `package.json` _must_ include the corresponding update to `package-lock.json` after running `npm install`.
 
-### Code Formatting
+### Linting
 
-To format the code before committing, type:
+To check that the code is linted, type:
 
 ```
-npm run prettier
+npm run lint
+```
+
+To automatically fix any lint issues, type:
+
+```
+npm run lint:fix
 ```
 
 ### Tests

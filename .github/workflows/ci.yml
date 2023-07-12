@@ -37,6 +37,7 @@ jobs:
         run: npm ci
 
       - run: npm test
+      - run: npm run lint
       - run: npm run build
         env:
           GH_TOKEN: ${{secrets.GITHUB_TOKEN}}

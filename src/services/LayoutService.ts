@@ -1218,15 +1218,15 @@ export class LayoutService {
               ) {
                 finalElement = line.elements[i] as NoteElement;
               } else if (
-                (line.elements[i].elementType === ElementType.Martyria &&
-                  i + 1 === line.elements.length &&
+                line.elements[i].elementType === ElementType.Martyria &&
+                ((i + 1 === line.elements.length &&
                   firstElementOnNextLine?.elementType === ElementType.Note &&
                   (firstElementOnNextLine as NoteElement).isMelisma &&
                   !(firstElementOnNextLine as NoteElement).isMelismaStart) ||
-                (i + 1 < line.elements.length &&
-                  line.elements[i + 1].elementType === ElementType.Note &&
-                  (line.elements[i + 1] as NoteElement).isMelisma &&
-                  !(line.elements[i + 1] as NoteElement).isMelismaStart)
+                  (i + 1 < line.elements.length &&
+                    line.elements[i + 1].elementType === ElementType.Note &&
+                    (line.elements[i + 1] as NoteElement).isMelisma &&
+                    !(line.elements[i + 1] as NoteElement).isMelismaStart))
               ) {
                 // If the next element is a martyria, then check the next note
                 // to see if the melisma should continue through the martyria

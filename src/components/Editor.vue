@@ -5140,13 +5140,15 @@ export default class Editor extends Vue {
 
     this.commandService.undo();
 
-    // If the selected element was removed during the undo process, choose a new one
-    this.selectedElement =
-      this.elements[Math.min(currentIndex, this.elements.length - 1)];
+    if (currentIndex > -1) {
+      // If the selected element was removed during the undo process, choose a new one
+      this.selectedElement =
+        this.elements[Math.min(currentIndex, this.elements.length - 1)];
 
-    // Undo/redo could affect the note display in the neume toolbar (among other things),
-    // so we force a refresh here
-    this.selectedElement.keyHelper++;
+      // Undo/redo could affect the note display in the neume toolbar (among other things),
+      // so we force a refresh here
+      this.selectedElement.keyHelper++;
+    }
 
     this.save();
   }
@@ -5156,13 +5158,15 @@ export default class Editor extends Vue {
 
     this.commandService.redo();
 
-    // If the selected element was removed during the redo process, choose a new one
-    this.selectedElement =
-      this.elements[Math.min(currentIndex, this.elements.length - 1)];
+    if (currentIndex > -1) {
+      // If the selected element was removed during the redo process, choose a new one
+      this.selectedElement =
+        this.elements[Math.min(currentIndex, this.elements.length - 1)];
 
-    // Undo/redo could affect the note display in the neume toolbar (among other things),
-    // so we force a refresh here
-    this.selectedElement.keyHelper++;
+      // Undo/redo could affect the note display in the neume toolbar (among other things),
+      // so we force a refresh here
+      this.selectedElement.keyHelper++;
+    }
 
     this.save();
   }

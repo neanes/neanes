@@ -1036,6 +1036,12 @@ export class LayoutService {
     // the martyria and the next neume
     const padding = pageSetup.neumeDefaultFontSize * 0.148;
 
+    martyriaElement.neumeWidth = this.getNeumeWidthFromCache(
+      neumeWidthCache,
+      martyriaElement.note,
+      pageSetup,
+    );
+
     return (
       martyriaElement.spaceAfter +
       (padding +
@@ -1158,8 +1164,20 @@ export class LayoutService {
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
     );
 
-    for (const page of pages) {
-      for (const line of page.lines) {
+    for (let pageIndex = 0; pageIndex < pages.length; pageIndex++) {
+      const page = pages[pageIndex];
+
+      for (let lineIndex = 0; lineIndex < page.lines.length; lineIndex++) {
+        const line = page.lines[lineIndex];
+
+        let firstElementOnNextLine: ScoreElement | null = null;
+
+        if (lineIndex + 1 < page.lines.length) {
+          firstElementOnNextLine = page.lines[lineIndex + 1].elements[0];
+        } else if (pageIndex + 1 < pages.length) {
+          firstElementOnNextLine = pages[pageIndex + 1].lines[0].elements[0];
+        }
+
         const noteElements = line.elements.filter(
           (x) => x.elementType === ElementType.Note,
         ) as NoteElement[];
@@ -1180,7 +1198,7 @@ export class LayoutService {
           if (element.isMelismaStart || isIntermediateMelismaAtStartOfLine) {
             // The final element in the melisma, or the final
             // element in the line
-            let finalElement: NoteElement | null = null;
+            let finalElement: NoteElement | MartyriaElement | null = null;
 
             // The next element in the line after the final element,
             // if there is one.
@@ -1193,6 +1211,20 @@ export class LayoutService {
                 !(line.elements[i] as NoteElement).isMelismaStart
               ) {
                 finalElement = line.elements[i] as NoteElement;
+              } else if (
+                (line.elements[i].elementType === ElementType.Martyria &&
+                  i + 1 === line.elements.length &&
+                  firstElementOnNextLine?.elementType === ElementType.Note &&
+                  (firstElementOnNextLine as NoteElement).isMelisma &&
+                  !(firstElementOnNextLine as NoteElement).isMelismaStart) ||
+                (i + 1 < line.elements.length &&
+                  line.elements[i + 1].elementType === ElementType.Note &&
+                  (line.elements[i + 1] as NoteElement).isMelisma &&
+                  !(line.elements[i + 1] as NoteElement).isMelismaStart)
+              ) {
+                // If the next element is a martyria, then check the next note
+                // to see if the melisma should continue through the martyria
+                finalElement = line.elements[i] as MartyriaElement;
               } else {
                 nextElement = line.elements[i];
                 break;

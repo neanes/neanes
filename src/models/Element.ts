@@ -495,6 +495,9 @@ export class MartyriaElement extends ScoreElement {
 
   public error: boolean = false;
 
+  // Used for display
+  public neumeWidth: number = 0;
+
   // Re-render helpers
   public notePrevious: Note = Note.Pa;
   public rootSignPrevious: RootSign = RootSign.Alpha;

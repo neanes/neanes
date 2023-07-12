@@ -216,46 +216,6 @@ export class NoteElement extends ScoreElement {
     return this._quantitativeNeume;
   }
 
-  public get timeNeume() {
-    return this._timeNeume;
-  }
-
-  public get gorgonNeume() {
-    return this._gorgonNeume;
-  }
-
-  public get secondaryGorgonNeume() {
-    return this._secondaryGorgonNeume;
-  }
-
-  public get vocalExpressionNeume() {
-    return this._vocalExpressionNeume;
-  }
-
-  public get accidental() {
-    return this._accidental;
-  }
-
-  public get secondaryAccidental() {
-    return this._secondaryAccidental;
-  }
-
-  public get tertiaryAccidental() {
-    return this._tertiaryAccidental;
-  }
-
-  public get fthora() {
-    return this._fthora;
-  }
-
-  public get secondaryFthora() {
-    return this._secondaryFthora;
-  }
-
-  public get tertiaryFthora() {
-    return this._tertiaryFthora;
-  }
-
   public set quantitativeNeume(neume: QuantitativeNeume) {
     this._quantitativeNeume = neume;
     this.replaceNeumes();
@@ -272,9 +232,17 @@ export class NoteElement extends ScoreElement {
     }
   }
 
+  public get timeNeume() {
+    return this._timeNeume;
+  }
+
   public set timeNeume(neume: TimeNeume | null) {
     this._timeNeume = neume;
     this.replaceNeumes();
+  }
+
+  public get gorgonNeume() {
+    return this._gorgonNeume;
   }
 
   public set gorgonNeume(neume: GorgonNeume | null) {
@@ -282,9 +250,17 @@ export class NoteElement extends ScoreElement {
     this.replaceNeumes();
   }
 
+  public get secondaryGorgonNeume() {
+    return this._secondaryGorgonNeume;
+  }
+
   public set secondaryGorgonNeume(neume: GorgonNeume | null) {
     this._secondaryGorgonNeume = neume;
     this.replaceNeumes();
+  }
+
+  public get vocalExpressionNeume() {
+    return this._vocalExpressionNeume;
   }
 
   public set vocalExpressionNeume(neume: VocalExpressionNeume | null) {
@@ -292,9 +268,17 @@ export class NoteElement extends ScoreElement {
     this.replaceNeumes();
   }
 
+  public get accidental() {
+    return this._accidental;
+  }
+
   public set accidental(neume: Accidental | null) {
     this._accidental = neume;
     this.replaceNeumes();
+  }
+
+  public get secondaryAccidental() {
+    return this._secondaryAccidental;
   }
 
   public set secondaryAccidental(neume: Accidental | null) {
@@ -302,9 +286,17 @@ export class NoteElement extends ScoreElement {
     this.replaceNeumes();
   }
 
+  public get tertiaryAccidental() {
+    return this._tertiaryAccidental;
+  }
+
   public set tertiaryAccidental(neume: Accidental | null) {
     this._tertiaryAccidental = neume;
     this.replaceNeumes();
+  }
+
+  public get fthora() {
+    return this._fthora;
   }
 
   public set fthora(neume: Fthora | null) {
@@ -312,9 +304,17 @@ export class NoteElement extends ScoreElement {
     this.replaceNeumes();
   }
 
+  public get secondaryFthora() {
+    return this._secondaryFthora;
+  }
+
   public set secondaryFthora(neume: Fthora | null) {
     this._secondaryFthora = neume;
     this.replaceNeumes();
+  }
+
+  public get tertiaryFthora() {
+    return this._tertiaryFthora;
   }
 
   public set tertiaryFthora(neume: Fthora | null) {
@@ -494,6 +494,9 @@ export class MartyriaElement extends ScoreElement {
   public spaceAfter: number = 0;
 
   public error: boolean = false;
+
+  // Used for display
+  public neumeWidth: number = 0;
 
   // Re-render helpers
   public notePrevious: Note = Note.Pa;

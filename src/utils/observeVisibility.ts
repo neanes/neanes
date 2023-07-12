@@ -14,10 +14,12 @@ export function processOptions(value: any) {
 }
 
 interface ThrottleOptions {
+  // eslint-disable-next-line @typescript-eslint/ban-types
   leading?: boolean | string | Function;
 }
 
 export function throttle(
+  // eslint-disable-next-line @typescript-eslint/ban-types
   callback: Function,
   delay: number,
   options: ThrottleOptions = {},

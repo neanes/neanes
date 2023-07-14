@@ -61,7 +61,7 @@
     "electron-devtools-installer": "^3.2.0",
     "electron-icon-builder": "^2.0.1",
     "electron-updater": "^6.1.1",
-    "eslint": "^8.44.0",
+    "eslint": "^8.45.0",
     "eslint-plugin-prettier": "^5.0.0",
     "eslint-plugin-vue": "^9.15.1",
     "jest-matcher-deep-close-to": "^3.0.2",

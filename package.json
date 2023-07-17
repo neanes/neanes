@@ -27,7 +27,7 @@
     "postinstall": "electron-builder install-app-deps",
     "postuninstall": "electron-builder install-app-deps",
     "test": "vitest --run",
-    "web:dev": "vite --mode webdev",
+    "web:dev": "vite --mode web",
     "web:build": "vite build --mode web"
   },
   "main": "dist-electron/main/index.js",

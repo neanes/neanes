@@ -1,5 +1,7 @@
 /// <reference types="vite/client" />
 
+declare const APP_VERSION: string;
+
 interface ImportMetaEnv {
   readonly VITE_TITLE: string;
   readonly VITE_GUIDE_URL: string;

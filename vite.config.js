@@ -21,6 +21,9 @@ export default defineConfig(({ command, mode }) => {
         '@': path.resolve(__dirname, './src'),
       },
     },
+    define: {
+      APP_VERSION: JSON.stringify(process.env.npm_package_version),
+    },
     plugins: [
       mode === 'web'
         ? VitePWA({

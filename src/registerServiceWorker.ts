@@ -31,7 +31,7 @@ if (import.meta.env.PROD && !isElectron()) {
         'No internet connection found. App is running in offline mode.',
       );
     },
-    error(error: string) {
+    error(error: Error) {
       console.error('Error during service worker registration:', error);
     },
   });

@@ -27,6 +27,7 @@ export default defineConfig(({ command, mode }) => {
     plugins: [
       mode === 'web'
         ? VitePWA({
+            registerType: null, // We'll inject the service worker ourselves
             includeAssets: [
               'favicon-32.png',
               'favicon-16.png',

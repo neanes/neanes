@@ -353,7 +353,7 @@ export default class FileMenuBar extends Vue {
   }
 
   onClickAbout() {
-    alert(`Neanes\nVersion: ${import.meta.env.VITE_VERSION}`);
+    alert(`Neanes\nVersion: ${APP_VERSION}`);
     this.isMenuOpen = false;
   }
 

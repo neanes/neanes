@@ -31,7 +31,7 @@ jobs:
 
       - run: npm test
       - run: npm run lint
-      - run: npm run web:build
+      - run: npm run web:build -- --base=https://danielgarthur.github.io/neanes-web-app/
       - name: Push
         run: |
           cd dist

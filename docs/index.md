@@ -6,8 +6,8 @@ titleTemplate: A Byzantine Chant Scorewriter
 
 hero:
   name: Neanes
-  text: A Byzantine Chant Scorewriter
-  tagline: A Byzantine Chant Scorewriter
+  text: Byzantine Chant Scorewriter
+  tagline:
   image:
     src: /hero.png
     alt: Neanes

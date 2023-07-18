@@ -7,7 +7,7 @@
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-facing-decorator';
 
-@Component
+@Component({ emits: ['click'] })
 export default class FileMenuItem extends Vue {
   @Prop() label!: string;
 }

@@ -3,7 +3,7 @@
     <div>
       Download the latest release from
       <a
-        href="https://github.com/danielgarthur/neanes/releases"
+        href="https://github.com/danielgarthur/neanes/releases/latest"
         target="_blank"
         rel="noopener noreferrer"
         >Github</a

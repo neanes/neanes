@@ -26,7 +26,7 @@ export default defineConfig({
     'Neanes is a free and open source scorewriter for notating Byzantine chant in Byzantine notation.',
   base: '/neanes/',
   head: [
-    ['link', { rel: 'shortcut icon', href: '/favicon.ico' }],
+    ['link', { rel: 'shortcut icon', href: '/neanes/favicon.ico' }],
     [
       'meta',
       {
@@ -36,7 +36,7 @@ export default defineConfig({
     ],
   ],
   themeConfig: {
-    logo: '/favicon.svg',
+    logo: '/favicon.ico',
     footer: {
       message: 'GPL 3.0 Licensed',
       copyright: 'Copyright © 2020-present danielgarthur',

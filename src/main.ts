@@ -6,7 +6,6 @@ import { AudioService } from '@/services/audio/AudioService';
 import { PlaybackService } from '@/services/audio/PlaybackService';
 import router from './router';
 import ObserveVisibility from './directives/observeVisibility';
-import './registerServiceWorker';
 import 'vue-draggable-resizable/dist/VueDraggableResizable.css';
 import { isElectron } from './utils/isElectron';
 

@@ -14,6 +14,8 @@ import {
 import { autoUpdater } from 'electron-updater';
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer';
 import {
+  CloseWorkspacesArgs,
+  CloseWorkspacesDisposition,
   IpcMainChannels,
   IpcRendererChannels,
   ShowMessageBoxArgs,
@@ -968,6 +970,24 @@ function createMenu() {
           accelerator: 'CmdOrCtrl+P',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuPrint);
+          },
+        },
+        { type: 'separator' },
+        {
+          label: '&Close',
+          accelerator: 'CmdOrCtrl+W',
+          click() {
+            win?.webContents.send(IpcMainChannels.CloseWorkspaces, {
+              disposition: CloseWorkspacesDisposition.SELF,
+            } as CloseWorkspacesArgs);
+          },
+        },
+        {
+          label: 'Close Ot&hers',
+          click() {
+            win?.webContents.send(IpcMainChannels.CloseWorkspaces, {
+              disposition: CloseWorkspacesDisposition.OTHERS,
+            } as CloseWorkspacesArgs);
           },
         },
         { type: 'separator' },

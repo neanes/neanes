@@ -35,6 +35,8 @@ export enum IpcMainChannels {
 
   FileMenuGenerateTestFile = 'GenerateTestFile',
 
+  CloseWorkspaces = 'CloseWorkspaces',
+
   CloseApplication = 'CloseApplication',
 }
 
@@ -150,4 +152,15 @@ export interface ExportPageAsImageArgs {
 export interface PrintWorkspaceArgs {
   pageSize: PageSize;
   landscape: boolean;
+}
+
+export enum CloseWorkspacesDisposition {
+  SELF,
+  OTHERS,
+  LEFT,
+  RIGHT,
+}
+
+export interface CloseWorkspacesArgs {
+  disposition: CloseWorkspacesDisposition;
 }

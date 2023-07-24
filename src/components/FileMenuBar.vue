@@ -12,6 +12,9 @@
       <div class="separator" />
       <FileMenuItem label="Page Setup" @click="onClickPageSetup" />
       <FileMenuItem label="Export as HTML" @click="onClickExportAsHtml" />
+      <div class="separator" />
+      <FileMenuItem label="Close" @click="onClickClose" />
+      <FileMenuItem label="Close Others" @click="onClickCloseOthers" />
     </FileMenuBarItem>
     <FileMenuBarItem
       label="Edit"
@@ -86,6 +89,8 @@ import FileMenuBarItem from '@/components/FileMenuBarItem.vue';
 import FileMenuItem from '@/components/FileMenuItem.vue';
 import { EventBus } from '@/eventBus';
 import {
+  CloseWorkspacesArgs,
+  CloseWorkspacesDisposition,
   FileMenuInsertTextboxArgs,
   FileMenuOpenImageArgs,
   FileMenuOpenScoreArgs,
@@ -190,6 +195,20 @@ export default class FileMenuBar extends Vue {
 
   onClickPageSetup() {
     EventBus.$emit(IpcMainChannels.FileMenuPageSetup);
+    this.isMenuOpen = false;
+  }
+
+  onClickClose() {
+    EventBus.$emit(IpcMainChannels.CloseWorkspaces, {
+      disposition: CloseWorkspacesDisposition.SELF,
+    } as CloseWorkspacesArgs);
+    this.isMenuOpen = false;
+  }
+
+  onClickCloseOthers() {
+    EventBus.$emit(IpcMainChannels.CloseWorkspaces, {
+      disposition: CloseWorkspacesDisposition.OTHERS,
+    } as CloseWorkspacesArgs);
     this.isMenuOpen = false;
   }
 

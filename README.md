@@ -74,6 +74,9 @@ npm run dev
 
 This will launch the application in development mode. As changes are made to the source code, the app will reload automatically.
 
+The [Vue Devtools](https://devtools.vuejs.org/) extension is available in development mode.
+To access it, go to **Help, Toggle Developer Tools** and select the **Vue** tab.
+
 Any change that updates `package.json` _must_ include the corresponding update to `package-lock.json` after running `npm install`.
 
 ### Linting

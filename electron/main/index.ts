@@ -742,16 +742,12 @@ async function printWorkspace(args: PrintWorkspaceArgs) {
   });
 }
 
-async function openWorkspace() {
-  const result: FileMenuOpenScoreArgs = {
-    filePath: '',
-    data: '',
-    success: false,
-  };
+async function openWorkspaces() {
+  const workspaces: FileMenuOpenScoreArgs[] = [];
 
   try {
     const dialogResult = await dialog.showOpenDialog(win!, {
-      properties: ['openFile'],
+      properties: ['openFile', 'multiSelections'],
       title: 'Open Score',
       filters: [
         {
@@ -762,10 +758,13 @@ async function openWorkspace() {
     });
 
     if (!dialogResult.canceled) {
-      const filePath = dialogResult.filePaths[0];
-      result.data = await openFile(filePath);
-      result.filePath = filePath;
-      result.success = true;
+      for (const filePath of dialogResult.filePaths) {
+        workspaces.push({
+          data: await openFile(filePath),
+          filePath: filePath,
+          success: true,
+        });
+      }
     }
   } catch (error) {
     console.error(error);
@@ -779,7 +778,7 @@ async function openWorkspace() {
     }
   }
 
-  return result;
+  return workspaces;
 }
 
 const getCurrentPosition = () => {
@@ -878,13 +877,18 @@ function createMenu() {
           label: '&Open',
           accelerator: 'CmdOrCtrl+O',
           async click() {
-            const data = await openWorkspace();
+            const workspaces: FileMenuOpenScoreArgs[] = await openWorkspaces();
 
-            if (!win && data.success) {
-              darwinPath = data.filePath;
-              createWindow();
-            } else {
-              win?.webContents.send(IpcMainChannels.FileMenuOpenScore, data);
+            for (const workspace of workspaces) {
+              if (!win && workspace.success) {
+                darwinPath = workspace.filePath;
+                createWindow();
+              } else {
+                win?.webContents.send(
+                  IpcMainChannels.FileMenuOpenScore,
+                  workspace,
+                );
+              }
             }
           },
         },

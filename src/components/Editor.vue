@@ -793,6 +793,8 @@ import ExportDialog, {
 import PageSetupDialog from '@/components/PageSetupDialog.vue';
 import FileMenuBar from '@/components/FileMenuBar.vue';
 import {
+  CloseWorkspacesArgs,
+  CloseWorkspacesDisposition,
   IpcMainChannels,
   FileMenuOpenScoreArgs,
   ShowMessageBoxReplyArgs,
@@ -1591,6 +1593,7 @@ export default class Editor extends Vue {
     window.addEventListener('keyup', this.onKeyup);
     window.addEventListener('resize', this.onWindowResizeThrottled);
 
+    EventBus.$on(IpcMainChannels.CloseWorkspaces, this.onCloseWorkspaces);
     EventBus.$on(IpcMainChannels.CloseApplication, this.onCloseApplication);
 
     EventBus.$on(IpcMainChannels.FileMenuNewScore, this.onFileMenuNewScore);
@@ -1674,6 +1677,7 @@ export default class Editor extends Vue {
     window.removeEventListener('keyup', this.onKeyup);
     window.removeEventListener('resize', this.onWindowResizeThrottled);
 
+    EventBus.$off(IpcMainChannels.CloseWorkspaces, this.onCloseWorkspaces);
     EventBus.$off(IpcMainChannels.CloseApplication, this.onCloseApplication);
 
     EventBus.$off(IpcMainChannels.FileMenuNewScore, this.onFileMenuNewScore);
@@ -3552,6 +3556,33 @@ export default class Editor extends Vue {
     }
 
     return shouldClose;
+  }
+
+  async onCloseWorkspaces(args: CloseWorkspacesArgs) {
+    const workspacesToClose: Workspace[] = this.workspaces.filter(
+      (_, index) => {
+        const pivot: number = this.workspaces.indexOf(this.selectedWorkspace);
+        switch (args.disposition) {
+          case CloseWorkspacesDisposition.SELF:
+            return index === pivot;
+          case CloseWorkspacesDisposition.OTHERS:
+            return index !== pivot;
+          case CloseWorkspacesDisposition.LEFT:
+            return index < pivot;
+          case CloseWorkspacesDisposition.RIGHT:
+            return index > pivot;
+          default:
+            throw new Error(`Error: Unknown disposition ${args.disposition}.`);
+        }
+      },
+    );
+
+    for (const workspaceToClose of workspacesToClose) {
+      if (!(await this.closeWorkspace(workspaceToClose))) {
+        // The user vetoed the operation.
+        break;
+      }
+    }
   }
 
   async onCloseApplication() {

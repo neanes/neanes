@@ -138,6 +138,11 @@ export class NoteElement extends ScoreElement {
   public secondaryFthoraPrevious: Fthora | null = null;
   public tertiaryFthoraPrevious: Fthora | null = null;
 
+  // Fthora helper
+  public fthoraCarry: Fthora | null = null;
+  public secondaryFthoraCarry: Fthora | null = null;
+  public tertiaryFthoraCarry: Fthora | null = null;
+
   public clone(args?: ElementCloneArgs) {
     const clone = new NoteElement();
 
@@ -501,6 +506,9 @@ export class MartyriaElement extends ScoreElement {
   // Re-render helpers
   public notePrevious: Note = Note.Pa;
   public rootSignPrevious: RootSign = RootSign.Alpha;
+
+  // Fthora helper
+  public fthoraCarry: Fthora | null = null;
 
   public clone() {
     const clone = new MartyriaElement();

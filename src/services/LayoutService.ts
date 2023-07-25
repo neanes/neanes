@@ -1411,18 +1411,47 @@ export class LayoutService {
           getScaleNoteFromValue(currentNote + x),
         );
 
+        // Handle fthora carries
+        if (
+          note.fthoraCarry &&
+          this.fthoraIsValid(note.fthoraCarry, currentNotes, pageSetup)
+        ) {
+          note.fthora = note.fthoraCarry;
+          note.fthoraCarry = null;
+        }
+
+        if (
+          note.secondaryFthoraCarry &&
+          this.fthoraIsValid(note.secondaryFthoraCarry, currentNotes, pageSetup)
+        ) {
+          note.secondaryFthora = note.secondaryFthoraCarry;
+          note.secondaryFthoraCarry = null;
+        }
+
+        if (
+          note.tertiaryFthoraCarry &&
+          this.fthoraIsValid(note.tertiaryFthoraCarry, currentNotes, pageSetup)
+        ) {
+          note.tertiaryFthora = note.tertiaryFthoraCarry;
+          note.tertiaryFthoraCarry = null;
+        }
+
         // TODO handle the case when the yporroe has a fthora on it
         // The shift is not currently calculated correctly in that case.
         if (note.fthora) {
           if (this.fthoraIsValid(note.fthora, currentNotes, pageSetup)) {
             currentScale =
               this.getScaleFromFthora(note.fthora, currentNote) || currentScale;
+
             currentShift = this.getShift(
               currentNote,
               currentScale,
               note.fthora,
             );
+
+            note.fthoraCarry = null;
           } else {
+            note.fthoraCarry = note.fthora;
             note.fthora = null;
           }
         } else if (note.secondaryFthora) {
@@ -1432,12 +1461,16 @@ export class LayoutService {
             currentScale =
               this.getScaleFromFthora(note.secondaryFthora, currentNote - 1) ||
               currentScale;
+
             currentShift = this.getShift(
               currentNote - 1,
               currentScale,
               note.secondaryFthora,
             );
+
+            note.secondaryFthoraCarry = null;
           } else {
+            note.secondaryFthoraCarry = note.secondaryFthora;
             note.secondaryFthora = null;
           }
         } else if (note.tertiaryFthora) {
@@ -1447,12 +1480,16 @@ export class LayoutService {
             currentScale =
               this.getScaleFromFthora(note.tertiaryFthora, currentNote - 2) ||
               currentScale;
+
             currentShift = this.getShift(
               currentNote - 2,
               currentScale,
               note.tertiaryFthora,
             );
+
+            note.tertiaryFthoraCarry = null;
           } else {
+            note.tertiaryFthoraCarry = note.tertiaryFthoraCarry;
             note.tertiaryFthora = null;
           }
         }
@@ -1540,17 +1577,30 @@ export class LayoutService {
             martyria.rootSignOverride,
           );
 
+          // Handle fthora carry
+          if (
+            martyria.fthoraCarry &&
+            this.fthoraIsValid(martyria.fthoraCarry, [currentNote], pageSetup)
+          ) {
+            martyria.fthora = martyria.fthoraCarry;
+            martyria.fthoraCarry = null;
+          }
+
           if (martyria.fthora) {
             if (this.fthoraIsValid(martyria.fthora, [currentNote], pageSetup)) {
               currentScale =
                 this.getScaleFromFthora(martyria.fthora, currentNote) ||
                 currentScale;
+
               currentShift = this.getShift(
                 currentNote,
                 currentScale,
                 martyria.fthora,
               );
+
+              martyria.fthoraCarry = null;
             } else {
+              martyria.fthoraCarry = martyria.fthora;
               martyria.fthora = null;
             }
           }

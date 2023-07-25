@@ -1453,7 +1453,7 @@ export class LayoutService {
               note.tertiaryFthora,
             );
           } else {
-            note.fthora = null;
+            note.tertiaryFthora = null;
           }
         }
 

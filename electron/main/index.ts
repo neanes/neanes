@@ -32,6 +32,7 @@ import {
   ExportPageAsImageArgs,
   ExportWorkspaceAsImageArgs,
   ExportWorkspaceAsImageReplyArgs,
+  OpenContextMenuForTabArgs,
 } from '../../src/ipc/ipcChannels';
 import path from 'path';
 import { promises as fs } from 'fs';
@@ -1337,6 +1338,54 @@ ipcMain.on(IpcRendererChannels.OpenImageDialog, async () => {
     win?.webContents.send(IpcMainChannels.FileMenuInsertImage, data);
   }
 });
+
+ipcMain.on(
+  IpcRendererChannels.OpenContextMenuForTab,
+  async (event, args: OpenContextMenuForTabArgs) => {
+    const menu = Menu.buildFromTemplate([
+      {
+        label: 'Close',
+        click() {
+          win?.webContents.send(IpcMainChannels.CloseWorkspaces, {
+            disposition: CloseWorkspacesDisposition.SELF,
+            workspaceId: args.workspaceId,
+          } as CloseWorkspacesArgs);
+        },
+      },
+
+      {
+        label: 'Close Others',
+        click() {
+          win?.webContents.send(IpcMainChannels.CloseWorkspaces, {
+            disposition: CloseWorkspacesDisposition.OTHERS,
+            workspaceId: args.workspaceId,
+          } as CloseWorkspacesArgs);
+        },
+      },
+
+      {
+        label: 'Close to the Left',
+        click() {
+          win?.webContents.send(IpcMainChannels.CloseWorkspaces, {
+            disposition: CloseWorkspacesDisposition.LEFT,
+            workspaceId: args.workspaceId,
+          } as CloseWorkspacesArgs);
+        },
+      },
+      {
+        label: 'Close to the Right',
+        click() {
+          win?.webContents.send(IpcMainChannels.CloseWorkspaces, {
+            disposition: CloseWorkspacesDisposition.RIGHT,
+            workspaceId: args.workspaceId,
+          } as CloseWorkspacesArgs);
+        },
+      },
+    ]);
+
+    menu.popup();
+  },
+);
 
 ipcMain.handle(IpcRendererChannels.ExitApplication, async () => {
   readyToExit = true;

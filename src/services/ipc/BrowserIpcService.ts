@@ -77,6 +77,10 @@ export class BrowserIpcService implements IIpcService {
     return Promise.resolve({ response: 0, checkboxChecked: false });
   }
 
+  public openContextMenuForTab(): void {
+    throw 'openContextMenuForTab is not available in the browser.';
+  }
+
   public async showItemInFolder(): Promise<void> {
     throw 'showItemInFolder is not available in the browser.';
   }

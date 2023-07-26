@@ -5,6 +5,7 @@ import {
   ExportWorkspaceAsPdfArgs,
   FileMenuOpenScoreArgs,
   IpcRendererChannels,
+  OpenContextMenuForTabArgs,
   PrintWorkspaceArgs,
   SaveWorkspaceArgs,
   SaveWorkspaceAsArgs,
@@ -115,6 +116,10 @@ export class IpcService implements IIpcService {
       IpcRendererChannels.ShowMessageBox,
       args,
     );
+  }
+
+  public openContextMenuForTab(args: OpenContextMenuForTabArgs): void {
+    window.ipcRenderer.send(IpcRendererChannels.OpenContextMenuForTab, args);
   }
 
   public async showItemInFolder(path: string) {

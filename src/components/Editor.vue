@@ -41,6 +41,7 @@
           v-model="selectedWorkspaceId"
           :on-close="onTabClosed"
           :render-label="renderTabLabel"
+          @contextmenu="openContextMenuForTab"
         >
           <template v-slot:after>
             <button
@@ -3562,7 +3563,9 @@ export default class Editor extends Vue {
   async onCloseWorkspaces(args: CloseWorkspacesArgs) {
     const workspacesToClose: Workspace[] = this.workspaces.filter(
       (_, index) => {
-        const pivot: number = this.workspaces.indexOf(this.selectedWorkspace);
+        const pivot: number = args.workspaceId
+          ? this.workspaces.findIndex((x) => x.id === args.workspaceId)
+          : this.workspaces.indexOf(this.selectedWorkspace);
         switch (args.disposition) {
           case CloseWorkspacesDisposition.SELF:
             return index === pivot;
@@ -5402,6 +5405,13 @@ export default class Editor extends Vue {
       // If we got here, the workspace was already removed by closeWorkspace.
       // We allow the tab component to close the tab by returning true.
       return true;
+    }
+  }
+
+  openContextMenuForTab(event: PointerEvent, tab: Tab) {
+    // TODO for browser version, show a custom (non-native) context menu.
+    if (!this.isBrowser) {
+      this.ipcService.openContextMenuForTab({ workspaceId: tab.key });
     }
   }
 

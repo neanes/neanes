@@ -61,6 +61,8 @@ export enum IpcRendererChannels {
 
   ExitApplication = 'ExitApplication',
   CancelExit = 'CancelExit',
+
+  OpenContextMenuForTab = 'OpenContextMenuForTab',
 }
 
 export interface FileMenuOpenScoreArgs {
@@ -163,4 +165,9 @@ export enum CloseWorkspacesDisposition {
 
 export interface CloseWorkspacesArgs {
   disposition: CloseWorkspacesDisposition;
+  workspaceId?: string;
+}
+
+export interface OpenContextMenuForTabArgs {
+  workspaceId: string;
 }

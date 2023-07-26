@@ -34,29 +34,23 @@
         @select-quantitative-neume="addQuantitativeNeume"
       />
       <div class="page-container">
-        <div class="workspace-tab-container" ref="workspace-tab-container">
-          <div class="workspace-tab-new-button" @click="onFileMenuNewScore">
-            +
-          </div>
-          <div
-            class="workspace-tab"
-            :class="{ selected: workspace == selectedWorkspace }"
-            v-for="(workspace, index) in workspaces"
-            :key="`${index}-${workspace.filePath}`"
-            :title="workspace.filePath ?? undefined"
-            @click="selectedWorkspace = workspace"
-          >
-            <div class="workspace-tab-label">
-              {{ getFileName(workspace) }}
-            </div>
-            <div
-              class="workspace-tab-close-btn"
-              @click.stop="closeWorkspace(workspace)"
+        <Vue3TabsChrome
+          class="workspace-tab-container"
+          ref="tabs"
+          :tabs="tabs"
+          v-model="selectedWorkspaceId"
+          :on-close="onTabClosed"
+          :render-label="renderTabLabel"
+        >
+          <template v-slot:after>
+            <button
+              class="workspace-tab-new-button"
+              @click="onFileMenuNewScore"
             >
-              X
-            </div>
-          </div>
-        </div>
+              +
+            </button>
+          </template></Vue3TabsChrome
+        >
         <div
           class="page-background"
           ref="page-background"
@@ -845,6 +839,13 @@ import {
   PlaybackService,
 } from '@/services/audio/PlaybackService';
 import { isElectron } from '@/utils/isElectron';
+import Vue3TabsChrome, { Tab } from 'vue3-tabs-chrome';
+import 'vue3-tabs-chrome/dist/vue3-tabs-chrome.css';
+
+interface Vue3TabsChromeComponent {
+  addTab: (...newTabs: Array<Tab>) => void;
+  removeTab: (tabKey: string | number) => void;
+}
 
 @Component({
   components: {
@@ -874,6 +875,7 @@ import { isElectron } from '@/utils/isElectron';
     ExportDialog,
     PageSetupDialog,
     FileMenuBar,
+    Vue3TabsChrome,
   },
 })
 export default class Editor extends Vue {
@@ -898,6 +900,17 @@ export default class Editor extends Vue {
 
   workspaces: Workspace[] = [];
   selectedWorkspaceValue: Workspace = new Workspace();
+
+  get selectedWorkspaceId() {
+    return this.selectedWorkspace.id;
+  }
+
+  set selectedWorkspaceId(value: string) {
+    this.selectedWorkspace =
+      this.workspaces.find((x) => x.id === value) ?? new Workspace();
+  }
+
+  tabs: Tab[] = [];
 
   pages: Page[] = [];
 
@@ -3428,7 +3441,7 @@ export default class Editor extends Vue {
               JSON.parse(localStorageWorkspace.score),
             );
 
-            this.workspaces.push(workspace);
+            this.addWorkspace(workspace);
           } catch (error) {
             // We couldn't load this workspace for some reason. Remove it from storage.
             localStorage.removeItem(key);
@@ -3459,7 +3472,7 @@ export default class Editor extends Vue {
     workspace.tempFileName = this.getTempFilename();
     workspace.score = this.createDefaultScore();
 
-    this.workspaces.push(workspace);
+    this.addWorkspace(workspace);
 
     if (this.isDevelopment) {
       const scoreString = localStorage.getItem('score');
@@ -3540,19 +3553,7 @@ export default class Editor extends Vue {
         this.ipcService.exitApplication();
       }
 
-      const index = this.workspaces.indexOf(workspace);
-
-      this.workspaces.splice(index, 1);
-
-      if (this.selectedWorkspace === workspace) {
-        if (this.workspaces.length > 0) {
-          this.selectedWorkspace =
-            this.workspaces[Math.min(index, this.workspaces.length - 1)];
-        } else {
-          // TODO support closing all workspaces
-          this.onFileMenuNewScore();
-        }
-      }
+      this.removeWorkspace(workspace);
     }
 
     return shouldClose;
@@ -4828,21 +4829,13 @@ export default class Editor extends Vue {
     workspace.tempFileName = this.getTempFilename();
     workspace.score = this.createDefaultScore();
 
-    this.workspaces.push(workspace);
+    this.addWorkspace(workspace);
 
     this.selectedWorkspace = workspace;
 
     this.selectedElement =
       this.score.staff.elements[this.score.staff.elements.length - 1];
     this.save(false);
-
-    nextTick(() => {
-      const tabContainerElement = this.$refs[
-        'workspace-tab-container'
-      ] as HTMLElement;
-
-      tabContainerElement.scrollTo(tabContainerElement.scrollWidth, 0);
-    });
   }
 
   async onFileMenuOpenScore(args: FileMenuOpenScoreArgs) {
@@ -5263,7 +5256,7 @@ export default class Editor extends Vue {
     workspace.tempFileName = this.getTempFilename();
     workspace.score = new Score();
 
-    this.workspaces.push(workspace);
+    this.addWorkspace(workspace);
 
     this.selectedWorkspace = workspace;
 
@@ -5343,21 +5336,13 @@ export default class Editor extends Vue {
       workspace.tempFileName = this.getTempFilename();
       workspace.score = score;
 
-      this.workspaces.push(workspace);
+      this.addWorkspace(workspace);
 
       this.selectedWorkspace = workspace;
 
       this.selectedElement = null;
 
       this.save(false);
-
-      nextTick(() => {
-        const tabContainerElement = this.$refs[
-          'workspace-tab-container'
-        ] as HTMLElement;
-
-        tabContainerElement.scrollTo(tabContainerElement.scrollWidth, 0);
-      });
     } catch (error) {
       args.success = false;
       console.error(error);
@@ -5374,6 +5359,56 @@ export default class Editor extends Vue {
         }
       }
     }
+  }
+
+  addWorkspace(workspace: Workspace) {
+    this.workspaces.push(workspace);
+
+    (this.$refs.tabs as Vue3TabsChromeComponent).addTab({
+      label: this.getFileName(workspace),
+      key: workspace.id,
+    });
+  }
+
+  removeWorkspace(workspace: Workspace) {
+    const index = this.workspaces.indexOf(workspace);
+
+    this.workspaces.splice(index, 1);
+
+    (this.$refs.tabs as Vue3TabsChromeComponent).removeTab(workspace.id);
+
+    if (this.selectedWorkspace === workspace) {
+      if (this.workspaces.length > 0) {
+        this.selectedWorkspace =
+          this.workspaces[Math.min(index, this.workspaces.length - 1)];
+      } else {
+        // TODO support closing all workspaces
+        this.onFileMenuNewScore();
+      }
+    }
+  }
+
+  onTabClosed(tab: Tab) {
+    const workspace = this.workspaces.find((x) => x.id === tab.key);
+
+    if (workspace) {
+      // If the workspace is still in our list, then call closeWorkspace.
+      // closeWorkspace will decide whether to remove the tab and will
+      // explicitly call removeTab. Returning false tells the tab component
+      // to not close the tab, so that we can take care of it manually.
+      this.closeWorkspace(workspace);
+      return false;
+    } else {
+      // If we got here, the workspace was already removed by closeWorkspace.
+      // We allow the tab component to close the tab by returning true.
+      return true;
+    }
+  }
+
+  renderTabLabel(tab: Tab) {
+    const workspace = this.workspaces.find((x) => x.id === tab.key);
+
+    return workspace ? this.getFileName(workspace) : '';
   }
 }
 </script>
@@ -5469,16 +5504,6 @@ export default class Editor extends Vue {
   flex: 1;
 }
 
-.workspace-tab-container {
-  display: flex;
-  overflow: hidden;
-  background-color: #b5b5b5;
-}
-
-.workspace-tab-container:hover {
-  overflow-x: auto;
-}
-
 .workspace-tab-new-button {
   display: flex;
   align-items: center;
@@ -5489,34 +5514,6 @@ export default class Editor extends Vue {
   font-weight: bold;
 
   cursor: default;
-}
-
-.workspace-tab {
-  display: flex;
-  align-items: center;
-  cursor: default;
-  white-space: nowrap;
-  border-right: 1px solid black;
-  padding: 0.5rem 1rem;
-  padding-right: 0.5rem;
-  background-color: #c0c0c0;
-}
-
-.workspace-tab:last-child {
-  border-right: none;
-}
-
-.workspace-tab.selected {
-  background-color: lightgray;
-}
-
-.workspace-tab-label {
-  margin-right: 0.75rem;
-}
-
-.workspace-tab-close-btn {
-  margin-left: auto;
-  font-size: 0.75rem;
 }
 
 .page-background {

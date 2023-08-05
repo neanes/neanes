@@ -843,6 +843,7 @@ import {
 import { isElectron } from '@/utils/isElectron';
 import Vue3TabsChrome, { Tab } from 'vue3-tabs-chrome';
 import 'vue3-tabs-chrome/dist/vue3-tabs-chrome.css';
+import { getDefaultFontFamily } from '@/utils/getDefaultFontFamily';
 
 interface Vue3TabsChromeComponent {
   addTab: (...newTabs: Array<Tab>) => void;
@@ -5298,6 +5299,10 @@ export default class Editor extends Vue {
         SaveService.LoadPageSetup_v1(
           score.pageSetup,
           JSON.parse(pageSetupDefault),
+        );
+      } else {
+        score.pageSetup.lyricsDefaultFontFamily = getDefaultFontFamily(
+          this.fonts,
         );
       }
     } catch (error) {

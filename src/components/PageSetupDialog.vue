@@ -646,6 +646,7 @@ import NeumeBoxMartyria from '@/components/NeumeBoxMartyria.vue';
 import NeumeBoxTempo from '@/components/NeumeBoxTempo.vue';
 import { ElementType } from '@/models/Element';
 import { SaveService } from '@/services/SaveService';
+import { getDefaultFontFamily } from '@/utils/getDefaultFontFamily';
 
 @Component({
   components: {
@@ -1014,6 +1015,7 @@ export default class PageSetupDialog extends Vue {
 
   resetToSystemDefaults() {
     this.form = new PageSetup();
+    this.form.lyricsDefaultFontFamily = getDefaultFontFamily(this.fonts);
   }
 }
 </script>

@@ -3563,10 +3563,15 @@ export default class Editor extends Vue {
 
   async onCloseWorkspaces(args: CloseWorkspacesArgs) {
     const workspacesToClose: Workspace[] = this.workspaces.filter(
-      (_, index) => {
+      (workspace) => {
+        const index: number = this.tabs.findIndex(
+          (x) => x.key === workspace.id,
+        );
+
         const pivot: number = args.workspaceId
-          ? this.workspaces.findIndex((x) => x.id === args.workspaceId)
-          : this.workspaces.indexOf(this.selectedWorkspace);
+          ? this.tabs.findIndex((x) => x.key === args.workspaceId)
+          : this.tabs.findIndex((x) => x.key === this.selectedWorkspace.id);
+
         switch (args.disposition) {
           case CloseWorkspacesDisposition.SELF:
             return index === pivot;

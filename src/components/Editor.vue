@@ -39,6 +39,7 @@
           ref="tabs"
           :tabs="tabs"
           v-model="selectedWorkspaceId"
+          :gap="0"
           :on-close="onTabClosed"
           :render-label="renderTabLabel"
           @contextmenu="openContextMenuForTab"
@@ -5514,6 +5515,49 @@ export default class Editor extends Vue {
   flex: 1;
 }
 
+:deep(.vue3-tabs-chrome) {
+  padding: 0;
+}
+
+:deep(.vue3-tabs-chrome .tabs-background) {
+  display: none;
+}
+
+:deep(.vue3-tabs-chrome .tabs-main) {
+  border-radius: 0;
+  background-color: silver;
+  margin: 0;
+  padding: 0.5rem 0.5rem 0.5rem 1rem;
+}
+
+:deep(.vue3-tabs-chrome .tabs-item) {
+  border-right: 1px solid black;
+}
+
+:deep(.vue3-tabs-chrome .tabs-item:last-of-type) {
+  border-right: none;
+}
+
+:deep(.vue3-tabs-chrome .tabs-item.active .tabs-main) {
+  background-color: lightgray;
+}
+
+:deep(.vue3-tabs-chrome .tabs-item.active .tabs-close) {
+  background-color: inherit;
+}
+
+:deep(.vue3-tabs-chrome .tabs-close) {
+  right: 0.5rem;
+}
+
+:deep(.vue3-tabs-chrome .tabs-after) {
+  height: 100%;
+}
+
+.workspace-tab-container {
+  background-color: #b5b5b5;
+}
+
 .workspace-tab-new-button {
   display: flex;
   align-items: center;
@@ -5522,6 +5566,10 @@ export default class Editor extends Vue {
 
   font-size: 1.25rem;
   font-weight: bold;
+
+  background-color: darkgray;
+
+  border: none;
 
   cursor: default;
 }

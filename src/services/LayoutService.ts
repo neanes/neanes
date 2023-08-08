@@ -78,6 +78,7 @@ export class LayoutService {
         note.tertiaryFthoraPrevious = note.tertiaryFthora;
       } else if (element.elementType === ElementType.TextBox) {
         const textbox = element as TextBoxElement;
+        textbox.heightPrevious = textbox.height;
         textbox.computedFontFamilyPrevious = textbox.computedFontFamily;
         textbox.computedFontSizePrevious = textbox.computedFontSize;
         textbox.computedFontWeightPrevious = textbox.computedFontWeight;
@@ -740,6 +741,7 @@ export class LayoutService {
 
         textbox.updated =
           textbox.widthPrevious !== textbox.width ||
+          textbox.heightPrevious !== textbox.height ||
           textbox.computedFontFamilyPrevious !== textbox.computedFontFamily ||
           textbox.computedFontSizePrevious !== textbox.computedFontSize ||
           textbox.computedFontWeightPrevious !== textbox.computedFontWeight ||

@@ -400,6 +400,7 @@ export class LayoutService {
               temoMapping.text,
               `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
             ) + tempoElement.spaceAfter;
+          tempoElement.neumeWidth = elementWidthPx;
           break;
         }
         case ElementType.DropCap: {
@@ -1204,7 +1205,11 @@ export class LayoutService {
           if (element.isMelismaStart || isIntermediateMelismaAtStartOfLine) {
             // The final element in the melisma, or the final
             // element in the line
-            let finalElement: NoteElement | MartyriaElement | null = null;
+            let finalElement:
+              | NoteElement
+              | MartyriaElement
+              | TempoElement
+              | null = null;
 
             // The next element in the line after the final element,
             // if there is one.
@@ -1218,7 +1223,8 @@ export class LayoutService {
               ) {
                 finalElement = line.elements[i] as NoteElement;
               } else if (
-                line.elements[i].elementType === ElementType.Martyria &&
+                (line.elements[i].elementType === ElementType.Martyria ||
+                  line.elements[i].elementType === ElementType.Tempo) &&
                 ((i + 1 === line.elements.length &&
                   firstElementOnNextLine?.elementType === ElementType.Note &&
                   (firstElementOnNextLine as NoteElement).isMelisma &&
@@ -1228,9 +1234,13 @@ export class LayoutService {
                     (line.elements[i + 1] as NoteElement).isMelisma &&
                     !(line.elements[i + 1] as NoteElement).isMelismaStart))
               ) {
-                // If the next element is a martyria, then check the next note
-                // to see if the melisma should continue through the martyria
-                finalElement = line.elements[i] as MartyriaElement;
+                // If the next element is a martyria or tempo sign, then check
+                // the next note to see if the melisma should continue through
+                // the martyria or tempo sign.
+                finalElement =
+                  line.elements[i].elementType === ElementType.Martyria
+                    ? (line.elements[i] as MartyriaElement)
+                    : (line.elements[i] as TempoElement);
               } else {
                 nextElement = line.elements[i];
                 break;

@@ -623,6 +623,7 @@ export class TextBoxElement extends ScoreElement {
   public computedStrokeWidth: number = 0;
 
   // Re-render helpers
+  public heightPrevious: number = 0;
   public computedFontFamilyPrevious: string = '';
   public computedFontSizePrevious: number = Unit.fromPt(20);
   public computedFontWeightPrevious: string = '400';

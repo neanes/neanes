@@ -1560,7 +1560,7 @@ export class PlaybackService {
     const restEvent: PlaybackSequenceEvent = {
       type: 'rest',
       bpm: workspace.bpm,
-      duration,
+      duration: duration * workspace.beat,
       transportTime: 0,
       elementIndex: workspace.elementIndex,
     };

@@ -540,6 +540,9 @@ export class TempoElement extends ScoreElement {
   public bpm: number = TempoElement.getDefaultBpm(TempoSign.Moderate);
   public spaceAfter: number = 0;
 
+  // Used for display
+  public neumeWidth: number = 0;
+
   public clone() {
     const clone = new TempoElement();
 

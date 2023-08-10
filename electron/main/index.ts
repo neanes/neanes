@@ -83,6 +83,7 @@ const isMac = process.platform === 'darwin';
 
 let win: BrowserWindow | null = null;
 let readyToExit = false;
+let creatingWindow = false;
 let quitting = false;
 
 const minWidth = 800;
@@ -1248,6 +1249,13 @@ function createMenu() {
 }
 
 async function createWindow() {
+  // Guard against race conditions
+  if (creatingWindow) {
+    return;
+  }
+
+  creatingWindow = true;
+
   readyToExit = false;
 
   await loadStore();
@@ -1316,6 +1324,8 @@ async function createWindow() {
     autoUpdater.checkForUpdatesAndNotify();
     await win.loadFile(indexHtml);
   }
+
+  creatingWindow = false;
 }
 
 app.setAboutPanelOptions({
@@ -1595,7 +1605,9 @@ app.on('ready', async () => {
     }
   }
 
-  createWindow();
+  if (!win) {
+    createWindow();
+  }
 
   if (isMac) {
     autoUpdater.once('update-available', async (info) => {

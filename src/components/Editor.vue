@@ -81,6 +81,9 @@
               <template v-if="score.pageSetup.showHeader">
                 <TextBox
                   class="element-box"
+                  :key="`element-${getHeaderForPageIndex(pageIndex).id}-${
+                    getHeaderForPageIndex(pageIndex).keyHelper
+                  }`"
                   :ref="`header-${pageIndex}`"
                   :element="getHeaderForPageIndex(pageIndex)"
                   :editMode="
@@ -367,6 +370,9 @@
                 <TextBox
                   class="element-box"
                   :ref="`footer-${pageIndex}`"
+                  :key="`element-${getFooterForPageIndex(pageIndex).id}-${
+                    getFooterForPageIndex(pageIndex).keyHelper
+                  }`"
                   :element="getFooterForPageIndex(pageIndex)"
                   :editMode="
                     getFooterForPageIndex(pageIndex) ==
@@ -1529,7 +1535,7 @@ export default class Editor extends Vue {
     const header = this.score.getHeaderForPage(pageNumber);
 
     // Currently, headers only support a single text box element.
-    return header != null ? (header.elements[0] as TextBoxElement) : null;
+    return header.elements[0] as TextBoxElement;
   }
 
   getFooterForPageIndex(pageIndex: number) {
@@ -1538,7 +1544,7 @@ export default class Editor extends Vue {
     const footer = this.score.getFooterForPage(pageNumber);
 
     // Currently, footers only support a single text box element.
-    return footer != null ? (footer.elements[0] as TextBoxElement) : null;
+    return footer.elements[0] as TextBoxElement;
   }
 
   getTokenMetadata(pageIndex: number): TokenMetadata {
@@ -3389,6 +3395,13 @@ export default class Editor extends Vue {
               element.keyHelper++;
             }),
         );
+      });
+
+    // Re-render headers and footers if they changed
+    this.score.headersAndFooters
+      .filter((x) => x.updated)
+      .forEach((element) => {
+        element.keyHelper++;
       });
 
     this.pages = pages;

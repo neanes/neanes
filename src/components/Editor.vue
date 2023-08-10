@@ -5334,6 +5334,15 @@ export default class Editor extends Vue {
       this.createDefaultModeKey(score.pageSetup),
     );
 
+    for (const element of score.headersAndFooters) {
+      if (element.elementType === ElementType.TextBox) {
+        (element as TextBoxElement).fontFamily =
+          score.pageSetup.lyricsDefaultFontFamily;
+        (element as TextBoxElement).strokeWidth =
+          score.pageSetup.lyricsDefaultStrokeWidth;
+      }
+    }
+
     return score;
   }
 

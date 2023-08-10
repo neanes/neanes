@@ -11,6 +11,19 @@ export class Score {
   public footers: Footers = new Footers();
   public staff: Staff = new Staff();
 
+  public get headersAndFooters() {
+    return [
+      ...this.headers.default.elements,
+      ...this.headers.even.elements,
+      ...this.headers.firstPage.elements,
+      ...this.headers.odd.elements,
+      ...this.footers.default.elements,
+      ...this.footers.even.elements,
+      ...this.footers.firstPage.elements,
+      ...this.footers.odd.elements,
+    ];
+  }
+
   getHeaderForPage(pageNumber: number) {
     let header: Header;
 

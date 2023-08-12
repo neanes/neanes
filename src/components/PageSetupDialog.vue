@@ -631,22 +631,23 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-facing-decorator';
+
+import ColorPicker from '@/components/ColorPicker.vue';
+import InputFontSize from '@/components/InputFontSize.vue';
+import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
+import InputUnit from '@/components/InputUnit.vue';
 import ModalDialog from '@/components/ModalDialog.vue';
 import NeumeVue from '@/components/Neume.vue';
-import { PageSetup, PageSize, pageSizes } from '@/models/PageSetup';
-import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
-import { Unit } from '@/utils/Unit';
-import ColorPicker from '@/components/ColorPicker.vue';
-import InputUnit from '@/components/InputUnit.vue';
-import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
-import InputFontSize from '@/components/InputFontSize.vue';
-import { QuantitativeNeume, Accidental } from '@/models/Neumes';
-import NeumeBoxSyllable from '@/components/NeumeBoxSyllable.vue';
 import NeumeBoxMartyria from '@/components/NeumeBoxMartyria.vue';
+import NeumeBoxSyllable from '@/components/NeumeBoxSyllable.vue';
 import NeumeBoxTempo from '@/components/NeumeBoxTempo.vue';
 import { ElementType } from '@/models/Element';
+import { Accidental, QuantitativeNeume } from '@/models/Neumes';
+import { PageSetup, PageSize, pageSizes } from '@/models/PageSetup';
+import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
 import { SaveService } from '@/services/SaveService';
 import { getDefaultFontFamily } from '@/utils/getDefaultFontFamily';
+import { Unit } from '@/utils/Unit';
 
 @Component({
   components: {

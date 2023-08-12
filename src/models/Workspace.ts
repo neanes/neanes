@@ -1,9 +1,11 @@
+import { v4 as uuidv4 } from 'uuid';
+
+import { EntryMode } from '@/models/EntryMode';
 import { CommandService } from '@/services/history/CommandService';
+
 import { NoteElement, ScoreElement } from './Element';
 import { Score } from './Score';
 import { ScoreElementSelectionRange } from './ScoreElementSelectionRange';
-import { EntryMode } from '@/models/EntryMode';
-import { v4 as uuidv4 } from 'uuid';
 
 export class Workspace {
   public id: string = uuidv4();

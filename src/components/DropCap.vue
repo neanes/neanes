@@ -11,13 +11,14 @@
 </template>
 
 <script lang="ts">
+import { StyleValue } from 'vue';
 import { Component, Prop, Vue } from 'vue-facing-decorator';
-import { DropCapElement } from '@/models/Element';
+
 import ContentEditable from '@/components/ContentEditable.vue';
-import { withZoom } from '@/utils/withZoom';
+import { DropCapElement } from '@/models/Element';
 import { PageSetup } from '@/models/PageSetup';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
-import { StyleValue } from 'vue';
+import { withZoom } from '@/utils/withZoom';
 
 @Component({
   components: { ContentEditable },

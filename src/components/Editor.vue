@@ -727,106 +727,73 @@
 </template>
 
 <script lang="ts">
-import { StyleValue, nextTick, toRaw } from 'vue';
-import { Component, Inject, Prop, Watch, Vue } from 'vue-facing-decorator';
-import { toPng, getFontEmbedCSS } from 'html-to-image';
-import {
-  ScoreElement,
-  MartyriaElement,
-  NoteElement,
-  ElementType,
-  EmptyElement,
-  TextBoxElement,
-  DropCapElement,
-  TempoElement,
-  ModeKeyElement,
-  TextBoxAlignment,
-  LineBreakType,
-  ImageBoxElement,
-} from '@/models/Element';
-import {
-  QuantitativeNeume,
-  TimeNeume,
-  VocalExpressionNeume,
-  Fthora,
-  GorgonNeume,
-  TempoSign,
-  MeasureBar,
-  Accidental,
-  MeasureNumber,
-  Ison,
-  Note,
-  Tie,
-  RootSign,
-} from '@/models/Neumes';
-import { Page } from '@/models/Page';
-import { Score } from '@/models/Score';
-import { Workspace, WorkspaceLocalStorage } from '@/models/Workspace';
-import { EntryMode } from '@/models/EntryMode';
-import { ScoreElementSelectionRange } from '@/models/ScoreElementSelectionRange';
-import { SaveService } from '@/services/SaveService';
-import { LayoutService } from '@/services/LayoutService';
-import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
-import MartyriaNeumeBox from '@/components/NeumeBoxMartyria.vue';
-import TempoNeumeBox from '@/components/NeumeBoxTempo.vue';
-import EmptyNeumeBox from '@/components/NeumeBoxEmpty.vue';
-import NeumeSelector from '@/components/NeumeSelector.vue';
+import 'vue3-tabs-chrome/dist/vue3-tabs-chrome.css';
+
+import { getFontEmbedCSS, toPng } from 'html-to-image';
+import { throttle } from 'throttle-debounce';
+import { nextTick, StyleValue, toRaw } from 'vue';
+import { Component, Inject, Prop, Vue, Watch } from 'vue-facing-decorator';
+import Vue3TabsChrome, { Tab } from 'vue3-tabs-chrome';
+
 import ContentEditable from '@/components/ContentEditable.vue';
-import TextBox from '@/components/TextBox.vue';
-import ImageBox from '@/components/ImageBox.vue';
 import DropCap from '@/components/DropCap.vue';
-import ModeKey from '@/components/ModeKey.vue';
-import ToolbarImageBox from '@/components/ToolbarImageBox.vue';
-import ToolbarTextBox from '@/components/ToolbarTextBox.vue';
-import ToolbarLyrics from '@/components/ToolbarLyrics.vue';
-import ToolbarModeKey from '@/components/ToolbarModeKey.vue';
-import ToolbarMain from '@/components/ToolbarMain.vue';
-import ToolbarNeume from '@/components/ToolbarNeume.vue';
-import ToolbarMartyria from '@/components/ToolbarMartyria.vue';
-import ToolbarTempo from '@/components/ToolbarTempo.vue';
-import ToolbarDropCap from '@/components/ToolbarDropCap.vue';
-import ModeKeyDialog from '@/components/ModeKeyDialog.vue';
-import SyllablePositioningDialog from '@/components/SyllablePositioningDialog.vue';
-import PlaybackSettingsDialog from '@/components/PlaybackSettingsDialog.vue';
 import EditorPreferencesDialog from '@/components/EditorPreferencesDialog.vue';
 import ExportDialog, {
   ExportAsPngSettings,
 } from '@/components/ExportDialog.vue';
-import PageSetupDialog from '@/components/PageSetupDialog.vue';
 import FileMenuBar from '@/components/FileMenuBar.vue';
+import ImageBox from '@/components/ImageBox.vue';
+import ModeKey from '@/components/ModeKey.vue';
+import ModeKeyDialog from '@/components/ModeKeyDialog.vue';
+import EmptyNeumeBox from '@/components/NeumeBoxEmpty.vue';
+import MartyriaNeumeBox from '@/components/NeumeBoxMartyria.vue';
+import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
+import TempoNeumeBox from '@/components/NeumeBoxTempo.vue';
+import NeumeSelector from '@/components/NeumeSelector.vue';
+import PageSetupDialog from '@/components/PageSetupDialog.vue';
+import PlaybackSettingsDialog from '@/components/PlaybackSettingsDialog.vue';
+import SyllablePositioningDialog from '@/components/SyllablePositioningDialog.vue';
+import TextBox from '@/components/TextBox.vue';
+import ToolbarDropCap from '@/components/ToolbarDropCap.vue';
+import ToolbarImageBox from '@/components/ToolbarImageBox.vue';
+import ToolbarLyrics from '@/components/ToolbarLyrics.vue';
+import ToolbarMain from '@/components/ToolbarMain.vue';
+import ToolbarMartyria from '@/components/ToolbarMartyria.vue';
+import ToolbarModeKey from '@/components/ToolbarModeKey.vue';
+import ToolbarNeume from '@/components/ToolbarNeume.vue';
+import ToolbarTempo from '@/components/ToolbarTempo.vue';
+import ToolbarTextBox from '@/components/ToolbarTextBox.vue';
+import { EventBus } from '@/eventBus';
 import {
   CloseWorkspacesArgs,
   CloseWorkspacesDisposition,
-  IpcMainChannels,
-  FileMenuOpenScoreArgs,
-  ShowMessageBoxReplyArgs,
+  ExportWorkspaceAsImageReplyArgs,
   FileMenuInsertTextboxArgs,
   FileMenuOpenImageArgs,
+  FileMenuOpenScoreArgs,
+  IpcMainChannels,
   IpcRendererChannels,
-  ExportWorkspaceAsImageReplyArgs,
+  ShowMessageBoxReplyArgs,
 } from '@/ipc/ipcChannels';
-import { EventBus } from '@/eventBus';
-import { modeKeyTemplates } from '@/models/ModeKeys';
-import { TestFileGenerator } from '@/utils/TestFileGenerator';
-import { TestFileType } from '@/utils/TestFileType';
-import { Unit } from '@/utils/Unit';
-import { withZoom } from '@/utils/withZoom';
-import { shallowEquals } from '@/utils/shallowEquals';
-import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
-import { getCursorPosition } from '@/utils/getCursorPosition';
-import { throttle } from 'throttle-debounce';
-import { Command, CommandFactory } from '@/services/history/CommandService';
-import { IIpcService } from '@/services/ipc/IIpcService';
-import { PageSetup } from '@/models/PageSetup';
-import { Header } from '@/models/Header';
-import { Footer } from '@/models/Footer';
-import { TokenMetadata } from '@/utils/replaceTokens';
-import { Scale, ScaleNote } from '@/models/Scales';
 import { EditorPreferences } from '@/models/EditorPreferences';
-import { ByzHtmlExporter } from '@/services/integration/ByzHtmlExporter';
-import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
-import { IPlatformService } from '@/services/platform/IPlatformService';
-import { NeumeKeyboard } from '@/services/NeumeKeyboard';
+import {
+  DropCapElement,
+  ElementType,
+  EmptyElement,
+  ImageBoxElement,
+  LineBreakType,
+  MartyriaElement,
+  ModeKeyElement,
+  NoteElement,
+  ScoreElement,
+  TempoElement,
+  TextBoxAlignment,
+  TextBoxElement,
+} from '@/models/Element';
+import { EntryMode } from '@/models/EntryMode';
+import { Footer } from '@/models/Footer';
+import { Header } from '@/models/Header';
+import { modeKeyTemplates } from '@/models/ModeKeys';
 import {
   areVocalExpressionsEquivalent,
   onlyTakesBottomKlasma,
@@ -834,22 +801,55 @@ import {
   onlyTakesTopKlasma,
   takesSecondaryNeumes,
 } from '@/models/NeumeReplacements';
-
+import {
+  Accidental,
+  Fthora,
+  GorgonNeume,
+  Ison,
+  MeasureBar,
+  MeasureNumber,
+  Note,
+  QuantitativeNeume,
+  RootSign,
+  TempoSign,
+  Tie,
+  TimeNeume,
+  VocalExpressionNeume,
+} from '@/models/Neumes';
+import { Page } from '@/models/Page';
+import { PageSetup } from '@/models/PageSetup';
+import { Scale, ScaleNote } from '@/models/Scales';
+import { Score } from '@/models/Score';
+import { ScoreElementSelectionRange } from '@/models/ScoreElementSelectionRange';
+import { Workspace, WorkspaceLocalStorage } from '@/models/Workspace';
 import {
   AudioService,
   AudioServiceEventNames,
   AudioState,
 } from '@/services/audio/AudioService';
-
 import {
   PlaybackOptions,
   PlaybackSequenceEvent,
   PlaybackService,
 } from '@/services/audio/PlaybackService';
-import { isElectron } from '@/utils/isElectron';
-import Vue3TabsChrome, { Tab } from 'vue3-tabs-chrome';
-import 'vue3-tabs-chrome/dist/vue3-tabs-chrome.css';
+import { Command, CommandFactory } from '@/services/history/CommandService';
+import { ByzHtmlExporter } from '@/services/integration/ByzHtmlExporter';
+import { IIpcService } from '@/services/ipc/IIpcService';
+import { LayoutService } from '@/services/LayoutService';
+import { NeumeKeyboard } from '@/services/NeumeKeyboard';
+import { IPlatformService } from '@/services/platform/IPlatformService';
+import { SaveService } from '@/services/SaveService';
+import { getCursorPosition } from '@/utils/getCursorPosition';
 import { getDefaultFontFamily } from '@/utils/getDefaultFontFamily';
+import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
+import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
+import { isElectron } from '@/utils/isElectron';
+import { TokenMetadata } from '@/utils/replaceTokens';
+import { shallowEquals } from '@/utils/shallowEquals';
+import { TestFileGenerator } from '@/utils/TestFileGenerator';
+import { TestFileType } from '@/utils/TestFileType';
+import { Unit } from '@/utils/Unit';
+import { withZoom } from '@/utils/withZoom';
 
 interface Vue3TabsChromeComponent {
   addTab: (...newTabs: Array<Tab>) => void;

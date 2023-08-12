@@ -1,5 +1,5 @@
-import { getNeumeValue } from './NeumeValues';
 import { QuantitativeNeume } from './Neumes';
+import { getNeumeValue } from './NeumeValues';
 
 describe('NeumeValues', () => {
   it('should have a value for every neume', () => {

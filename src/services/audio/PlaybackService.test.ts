@@ -1,10 +1,5 @@
-import {
-  PlaybackOptions,
-  PlaybackWorkspace,
-  PlaybackService,
-  PlaybackScale,
-} from './PlaybackService';
-import { Scale, ScaleNote } from '../../models/Scales';
+import { toBeDeepCloseTo, toMatchCloseTo } from 'jest-matcher-deep-close-to';
+
 import {
   MartyriaElement,
   ModeKeyElement,
@@ -18,7 +13,13 @@ import {
   Note,
   QuantitativeNeume,
 } from '../../models/Neumes';
-import { toBeDeepCloseTo, toMatchCloseTo } from 'jest-matcher-deep-close-to';
+import { Scale, ScaleNote } from '../../models/Scales';
+import {
+  PlaybackOptions,
+  PlaybackScale,
+  PlaybackService,
+  PlaybackWorkspace,
+} from './PlaybackService';
 expect.extend({ toBeDeepCloseTo, toMatchCloseTo });
 
 describe('PlaybackService', () => {

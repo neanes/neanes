@@ -354,9 +354,10 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-facing-decorator';
-import { GorgonNeume, QuantitativeNeume } from '@/models/Neumes';
-import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
+
 import Neume from '@/components/Neume.vue';
+import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
+import { GorgonNeume, QuantitativeNeume } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
 
 interface SecondaryGorgonMenuItem {

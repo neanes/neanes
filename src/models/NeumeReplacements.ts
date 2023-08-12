@@ -1,11 +1,11 @@
 import {
-  Neume,
-  TimeNeume,
-  QuantitativeNeume,
   Fthora,
-  VocalExpressionNeume,
   GorgonNeume,
+  Neume,
   petastiNeumes,
+  QuantitativeNeume,
+  TimeNeume,
+  VocalExpressionNeume,
 } from '@/models/Neumes';
 
 export interface NeumeReplacement<T> {

@@ -2,11 +2,12 @@
 
 import * as Tone from 'tone';
 import { ToneEvent } from 'tone';
+
+import { EventBus } from '@/eventBus';
 import {
   PlaybackOptions,
   PlaybackSequenceEvent,
 } from '@/services/audio/PlaybackService';
-import { EventBus } from '@/eventBus';
 
 export enum AudioServiceEventNames {
   EventPlay = 'EventPlay',

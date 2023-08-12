@@ -13,12 +13,13 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-facing-decorator';
-import { TempoElement } from '@/models/Element';
-import Neume from '@/components/Neume.vue';
-import { withZoom } from '@/utils/withZoom';
-import { PageSetup } from '@/models/PageSetup';
 import { StyleValue } from 'vue';
+import { Component, Prop, Vue } from 'vue-facing-decorator';
+
+import Neume from '@/components/Neume.vue';
+import { TempoElement } from '@/models/Element';
+import { PageSetup } from '@/models/PageSetup';
+import { withZoom } from '@/utils/withZoom';
 
 @Component({
   components: {

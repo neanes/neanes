@@ -411,8 +411,17 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-facing-decorator';
-import { NoteElement } from '@/models/Element';
+
+import ButtonWithMenu, {
+  ButtonWithMenuOption,
+} from '@/components/ButtonWithMenu.vue';
 import InputUnit from '@/components/InputUnit.vue';
+import { NoteElement } from '@/models/Element';
+import {
+  kentemataNeumes,
+  takesSecondaryNeumes,
+  takesTertiaryNeumes,
+} from '@/models/NeumeReplacements';
 import {
   Accidental,
   Fthora,
@@ -427,16 +436,8 @@ import {
   VocalExpressionNeume,
 } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
-import { Unit } from '@/utils/Unit';
 import { ScaleNote } from '@/models/Scales';
-import ButtonWithMenu, {
-  ButtonWithMenuOption,
-} from '@/components/ButtonWithMenu.vue';
-import {
-  kentemataNeumes,
-  takesSecondaryNeumes,
-  takesTertiaryNeumes,
-} from '@/models/NeumeReplacements';
+import { Unit } from '@/utils/Unit';
 
 @Component({
   components: { InputUnit, ButtonWithMenu },

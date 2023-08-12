@@ -104,8 +104,10 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-facing-decorator';
-import { TextBoxAlignment, ImageBoxElement } from '@/models/Element';
+
+import { ImageBoxElement, TextBoxAlignment } from '@/models/Element';
 import { PageSetup } from '@/models/PageSetup';
+
 import InputUnit from './InputUnit.vue';
 
 @Component({

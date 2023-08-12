@@ -87,10 +87,11 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-facing-decorator';
-import { ModeKeyElement, TextBoxAlignment } from '@/models/Element';
-import { modeKeyTemplates } from '@/models/ModeKeys';
+
 import ModalDialog from '@/components/ModalDialog.vue';
 import ModeKey from '@/components/ModeKey.vue';
+import { ModeKeyElement, TextBoxAlignment } from '@/models/Element';
+import { modeKeyTemplates } from '@/models/ModeKeys';
 import { PageSetup } from '@/models/PageSetup';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
 

@@ -1,6 +1,6 @@
-import { ByzHtmlExporter } from './ByzHtmlExporter';
-import { SbmuflGlyphName } from './../NeumeMappingService';
 import glyphnames from '../../assets/fonts/sbmufl/glyphnames.json';
+import { SbmuflGlyphName } from './../NeumeMappingService';
+import { ByzHtmlExporter } from './ByzHtmlExporter';
 
 describe('ByzHtmlExporter', () => {
   it('should have a tag mapping for every glyphname', () => {

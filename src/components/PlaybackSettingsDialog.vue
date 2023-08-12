@@ -547,9 +547,10 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-facing-decorator';
+
 import ModalDialog from '@/components/ModalDialog.vue';
-import { PlaybackOptions } from '@/services/audio/PlaybackService';
 import { Accidental } from '@/models/Neumes';
+import { PlaybackOptions } from '@/services/audio/PlaybackService';
 
 const FREQUENCY_G3 = 196;
 

@@ -183,15 +183,17 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-facing-decorator';
-import { TextBoxAlignment, ModeKeyElement } from '@/models/Element';
-import { Unit } from '@/utils/Unit';
+
 import ColorPicker from '@/components/ColorPicker.vue';
-import InputUnit from '@/components/InputUnit.vue';
 import InputBpm from '@/components/InputBpm.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
-import { PageSetup } from '@/models/PageSetup';
+import InputUnit from '@/components/InputUnit.vue';
+import { ModeKeyElement, TextBoxAlignment } from '@/models/Element';
 import { TempoSign } from '@/models/Neumes';
+import { PageSetup } from '@/models/PageSetup';
+import { Unit } from '@/utils/Unit';
+
 import ButtonWithMenu, { ButtonWithMenuOption } from './ButtonWithMenu.vue';
 
 @Component({

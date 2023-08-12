@@ -1,5 +1,6 @@
 import { EventBus } from '@/eventBus';
 import { IpcRendererChannels } from '@/ipc/ipcChannels';
+
 import {
   AddToCollectionCommand,
   AddToCollectionCommandArgs,
@@ -13,8 +14,8 @@ import {
   ReplaceElementInCollectionCommandArgs,
 } from './commands/ReplaceElementInCollectionCommand';
 import {
-  UpdatePropertiesCommandArgs,
   UpdatePropertiesCommand,
+  UpdatePropertiesCommandArgs,
 } from './commands/UpdatePropertiesCommand';
 
 export interface Command {

@@ -26,11 +26,13 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-facing-decorator';
+
 import { TempoElement } from '@/models/Element';
-import InputUnit from './InputUnit.vue';
-import InputBpm from './InputBpm.vue';
 import { PageSetup } from '@/models/PageSetup';
 import { Unit } from '@/utils/Unit';
+
+import InputBpm from './InputBpm.vue';
+import InputUnit from './InputUnit.vue';
 
 @Component({
   components: { InputUnit, InputBpm },

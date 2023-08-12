@@ -6,7 +6,6 @@ import {
   ScoreElement,
   TempoElement,
 } from '@/models/Element';
-import { getNeumeValue, getNoteSpread } from '@/models/NeumeValues';
 import {
   Accidental,
   Fthora,
@@ -16,6 +15,7 @@ import {
   TempoSign,
   TimeNeume,
 } from '@/models/Neumes';
+import { getNeumeValue, getNoteSpread } from '@/models/NeumeValues';
 import {
   getIsonValue,
   getNoteValue,

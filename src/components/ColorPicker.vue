@@ -18,9 +18,9 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-facing-decorator';
 import { Sketch } from '@ckpack/vue-color';
 import { StyleValue } from 'vue';
+import { Component, Prop, Vue } from 'vue-facing-decorator';
 
 interface Color {
   hex: string;

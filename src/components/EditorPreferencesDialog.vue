@@ -30,12 +30,14 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-facing-decorator';
+
 import ModalDialog from '@/components/ModalDialog.vue';
 import Neume from '@/components/Neume.vue';
-import InputBpm from './InputBpm.vue';
-import { TempoSign } from '@/models/Neumes';
 import { EditorPreferences } from '@/models/EditorPreferences';
+import { TempoSign } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
+
+import InputBpm from './InputBpm.vue';
 
 @Component({
   components: { ModalDialog, Neume, InputBpm },

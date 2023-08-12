@@ -66,6 +66,7 @@
               :key="index"
             >
               <ModeKey :element="template" />
+              <div class="mode-key-description">{{ template.description }}</div>
             </li>
           </ul>
         </div>
@@ -155,7 +156,7 @@ export default class ModeKeyDialog extends Vue {
 <style scoped>
 .pane-container {
   display: flex;
-  width: 420px;
+  width: 460px;
   margin-bottom: 1.5rem;
 }
 

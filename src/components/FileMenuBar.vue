@@ -84,7 +84,9 @@
 </template>
 
 <script lang="ts">
+import JSZip from 'jszip';
 import { Component, Vue } from 'vue-facing-decorator';
+
 import FileMenuBarItem from '@/components/FileMenuBarItem.vue';
 import FileMenuItem from '@/components/FileMenuItem.vue';
 import { EventBus } from '@/eventBus';
@@ -97,7 +99,6 @@ import {
   IpcMainChannels,
   IpcRendererChannels,
 } from '@/ipc/ipcChannels';
-import JSZip from 'jszip';
 
 @Component({
   components: {

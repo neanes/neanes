@@ -250,14 +250,16 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-facing-decorator';
+
 import { MartyriaElement } from '@/models/Element';
 import { Fthora, MeasureBar, Note, RootSign, TempoSign } from '@/models/Neumes';
-import InputUnit from './InputUnit.vue';
-import InputBpm from './InputBpm.vue';
-import { Scale, ScaleNote } from '@/models/Scales';
 import { PageSetup } from '@/models/PageSetup';
+import { Scale, ScaleNote } from '@/models/Scales';
 import { Unit } from '@/utils/Unit';
+
 import ButtonWithMenu, { ButtonWithMenuOption } from './ButtonWithMenu.vue';
+import InputBpm from './InputBpm.vue';
+import InputUnit from './InputUnit.vue';
 
 @Component({
   components: { InputUnit, InputBpm, ButtonWithMenu },

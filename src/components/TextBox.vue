@@ -17,13 +17,14 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-facing-decorator';
-import { TextBoxElement } from '@/models/Element';
-import ContentEditable from '@/components/ContentEditable.vue';
-import { withZoom } from '@/utils/withZoom';
-import { replaceTokens, TokenMetadata } from '@/utils/replaceTokens';
-import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { StyleValue } from 'vue';
+import { Component, Prop, Vue } from 'vue-facing-decorator';
+
+import ContentEditable from '@/components/ContentEditable.vue';
+import { TextBoxElement } from '@/models/Element';
+import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
+import { replaceTokens, TokenMetadata } from '@/utils/replaceTokens';
+import { withZoom } from '@/utils/withZoom';
 
 @Component({
   components: { ContentEditable },

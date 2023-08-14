@@ -11,13 +11,13 @@
 <script lang="ts">
 // @ is an alias to /src
 import Editor from '@/components/Editor.vue';
-import { IpcService } from '@/services/ipc/IpcService';
 import { BrowserIpcService } from '@/services/ipc/BrowserIpcService';
-import { PlatformService } from '@/services/platform/PlatformService';
-import { BrowserPlatformService } from '@/services/platform/BrowserPlatformService';
-import { isElectron } from '@/utils/isElectron';
 import { IIpcService } from '@/services/ipc/IIpcService';
+import { IpcService } from '@/services/ipc/IpcService';
+import { BrowserPlatformService } from '@/services/platform/BrowserPlatformService';
 import { IPlatformService } from '@/services/platform/IPlatformService';
+import { PlatformService } from '@/services/platform/PlatformService';
+import { isElectron } from '@/utils/isElectron';
 
 interface Data {
   ipcService: IIpcService;

@@ -214,12 +214,14 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-facing-decorator';
-import { Note, RootSign, TempoSign } from '@/models/Neumes';
-import Neume from './Neume.vue';
+
+import { LineBreakType } from '@/models/Element';
 import { EntryMode } from '@/models/EntryMode';
+import { Note, RootSign, TempoSign } from '@/models/Neumes';
 import { AudioState } from '@/services/audio/AudioService';
 import { PlaybackOptions } from '@/services/audio/PlaybackService';
-import { LineBreakType } from '@/models/Element';
+
+import Neume from './Neume.vue';
 
 @Component({
   components: { Neume },

@@ -3,14 +3,15 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-facing-decorator';
-import ContentEditable from '@/components/ContentEditable.vue';
-import { withZoom } from '@/utils/withZoom';
-import { NeumeMappingService } from '@/services/NeumeMappingService';
-import { Neume, VocalExpressionNeume } from '@/models/Neumes';
-import { fontService } from '@/services/FontService';
-import { NoteElement, ScoreElementOffset } from '@/models/save/v1/Element';
 import { StyleValue } from 'vue';
+import { Component, Prop, Vue } from 'vue-facing-decorator';
+
+import ContentEditable from '@/components/ContentEditable.vue';
+import { Neume, VocalExpressionNeume } from '@/models/Neumes';
+import { NoteElement, ScoreElementOffset } from '@/models/save/v1/Element';
+import { fontService } from '@/services/FontService';
+import { NeumeMappingService } from '@/services/NeumeMappingService';
+import { withZoom } from '@/utils/withZoom';
 
 @Component({
   components: { ContentEditable },

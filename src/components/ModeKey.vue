@@ -58,13 +58,14 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-facing-decorator';
-import { ModeKeyElement } from '@/models/Element';
-import Neume from '@/components/Neume.vue';
-import { ModeSign } from '@/models/Neumes';
-import { withZoom } from '@/utils/withZoom';
-import { PageSetup } from '@/models/PageSetup';
 import { StyleValue } from 'vue';
+import { Component, Prop, Vue } from 'vue-facing-decorator';
+
+import Neume from '@/components/Neume.vue';
+import { ModeKeyElement } from '@/models/Element';
+import { ModeSign } from '@/models/Neumes';
+import { PageSetup } from '@/models/PageSetup';
+import { withZoom } from '@/utils/withZoom';
 
 @Component({
   components: {

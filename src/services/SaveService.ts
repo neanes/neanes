@@ -1,40 +1,39 @@
-import { Score } from '@/models/Score';
-import { Staff } from '@/models/Staff';
 import {
   DropCapElement,
   ElementType,
   EmptyElement,
+  ImageBoxElement,
+  LineBreakType,
   MartyriaElement,
+  ModeKeyElement,
   NoteElement,
   ScoreElement,
-  TextBoxElement,
-  ModeKeyElement,
   TempoElement,
-  LineBreakType,
-  ImageBoxElement,
+  TextBoxElement,
 } from '@/models/Element';
-
-import { Score as Score_v1, Staff as Staff_v1 } from '@/models/save/v1/Score';
-import { Header as Header_v1 } from '@/models/save/v1/Header';
-import { Footer as Footer_v1 } from '@/models/save/v1/Footer';
+import { Footer } from '@/models/Footer';
+import { Header } from '@/models/Header';
+import { modeKeyTemplates } from '@/models/ModeKeys';
+import { QuantitativeNeume } from '@/models/Neumes';
+import { PageSetup, pageSizes } from '@/models/PageSetup';
 import {
   DropCapElement as DropCapElement_v1,
   ElementType as ElementType_v1,
   EmptyElement as EmptyElement_v1,
-  MartyriaElement as MartyriaElement_v1,
-  TempoElement as TempoElement_v1,
-  NoteElement as NoteElement_v1,
-  TextBoxElement as TextBoxElement_v1,
-  ScoreElement as ScoreElement_v1,
-  ModeKeyElement as ModeKeyElement_v1,
   ImageBoxElement as ImageBoxElement_v1,
+  MartyriaElement as MartyriaElement_v1,
+  ModeKeyElement as ModeKeyElement_v1,
+  NoteElement as NoteElement_v1,
+  ScoreElement as ScoreElement_v1,
+  TempoElement as TempoElement_v1,
+  TextBoxElement as TextBoxElement_v1,
 } from '@/models/save/v1/Element';
+import { Footer as Footer_v1 } from '@/models/save/v1/Footer';
+import { Header as Header_v1 } from '@/models/save/v1/Header';
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
-import { PageSetup, pageSizes } from '@/models/PageSetup';
-import { QuantitativeNeume } from '@/models/Neumes';
-import { Header } from '@/models/Header';
-import { Footer } from '@/models/Footer';
-import { modeKeyTemplates } from '@/models/ModeKeys';
+import { Score as Score_v1, Staff as Staff_v1 } from '@/models/save/v1/Score';
+import { Score } from '@/models/Score';
+import { Staff } from '@/models/Staff';
 
 interface IScore {
   version: string;

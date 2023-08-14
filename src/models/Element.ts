@@ -1,28 +1,29 @@
 import {
-  TimeNeume,
-  QuantitativeNeume,
-  Note,
-  RootSign,
-  VocalExpressionNeume,
-  Fthora,
   Accidental,
+  Fthora,
   GorgonNeume,
-  TempoSign,
-  ModeSign,
+  Ison,
   MeasureBar,
   MeasureNumber,
+  ModeSign,
+  Note,
   NoteIndicator,
-  Ison,
+  QuantitativeNeume,
+  RootSign,
+  TempoSign,
   Tie,
+  TimeNeume,
+  VocalExpressionNeume,
 } from '@/models/Neumes';
 import { Unit } from '@/utils/Unit';
+
 import { ModeKeyTemplate } from './ModeKeys';
 import {
+  getFthoraReplacements,
   getGorgonReplacements,
+  getQuantitativeReplacements,
   getTimeReplacements,
   getVocalExpressionReplacements,
-  getFthoraReplacements,
-  getQuantitativeReplacements,
   takesSecondaryNeumes,
   takesTertiaryNeumes,
 } from './NeumeReplacements';

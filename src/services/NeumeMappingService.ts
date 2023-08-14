@@ -1,24 +1,23 @@
+import metadata from '@/assets/fonts/neanes.metadata.json';
+import glyphnames from '@/assets/fonts/sbmufl/glyphnames.json';
 import {
-  Neume,
-  TimeNeume,
-  QuantitativeNeume,
-  Fthora,
   Accidental,
-  TempoSign,
-  VocalExpressionNeume,
-  RootSign,
-  Note,
+  Fthora,
   GorgonNeume,
-  ModeSign,
+  Ison,
   MeasureBar,
   MeasureNumber,
+  ModeSign,
+  Neume,
+  Note,
   NoteIndicator,
-  Ison,
+  QuantitativeNeume,
+  RootSign,
+  TempoSign,
   Tie,
+  TimeNeume,
+  VocalExpressionNeume,
 } from '@/models/Neumes';
-
-import glyphnames from '@/assets/fonts/sbmufl/glyphnames.json';
-import metadata from '@/assets/fonts/neanes.metadata.json';
 
 export type SbmuflGlyphName =
   | keyof typeof glyphnames

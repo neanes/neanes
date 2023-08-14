@@ -1,4 +1,3 @@
-import { NeumeMappingService } from './NeumeMappingService';
 import {
   Accidental,
   Fthora,
@@ -15,6 +14,7 @@ import {
   TimeNeume,
   VocalExpressionNeume,
 } from '../models/Neumes';
+import { NeumeMappingService } from './NeumeMappingService';
 
 describe('NeumeMappingsService', () => {
   it('should have a mapping for every neume', () => {

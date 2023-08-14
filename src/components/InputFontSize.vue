@@ -12,6 +12,7 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-facing-decorator';
+
 import InputUnit from '@/components/InputUnit.vue';
 
 @Component({

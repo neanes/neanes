@@ -1,17 +1,19 @@
+import { v4 as uuidv4 } from 'uuid';
+
 import { ModeKeyElement, NoteElement, ScoreElement } from '@/models/Element';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import {
+  Accidental,
   Fthora,
+  GorgonNeume,
+  Ison,
+  MeasureNumber,
   QuantitativeNeume,
   TimeNeume,
-  GorgonNeume,
-  Accidental,
   VocalExpressionNeume,
-  MeasureNumber,
-  Ison,
 } from '@/models/Neumes';
+
 import { TestFileType } from './TestFileType';
-import { v4 as uuidv4 } from 'uuid';
 
 export abstract class TestFileGenerator {
   public static generateTestFile(type: TestFileType) {

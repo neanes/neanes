@@ -74,11 +74,12 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-facing-decorator';
-import { DropCapElement } from '@/models/Element';
+
 import ColorPicker from '@/components/ColorPicker.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import InputUnit from '@/components/InputUnit.vue';
+import { DropCapElement } from '@/models/Element';
 
 @Component({
   components: { ColorPicker, InputFontSize, InputStrokeWidth, InputUnit },

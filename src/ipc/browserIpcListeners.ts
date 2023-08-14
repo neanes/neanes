@@ -1,4 +1,5 @@
 import { EventBus } from '@/eventBus';
+
 import { IpcMainChannels } from './ipcChannels';
 
 export const initalizeBrowserIpcListeners = () => {

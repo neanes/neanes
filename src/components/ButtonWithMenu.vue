@@ -21,8 +21,9 @@
 </template>
 
 <script lang="ts">
-import { Neume } from '@/models/Neumes';
 import { Component, Prop, Vue } from 'vue-facing-decorator';
+
+import { Neume } from '@/models/Neumes';
 
 export interface ButtonWithMenuOption {
   icon: string;

@@ -2,18 +2,19 @@ import {
   Accidental,
   Fthora,
   GorgonNeume,
-  Neume,
-  TimeNeume,
-  QuantitativeNeume,
-  VocalExpressionNeume,
-  MeasureNumber,
   Ison,
-  TempoSign,
   MeasureBar,
+  MeasureNumber,
+  Neume,
   Note,
+  QuantitativeNeume,
+  TempoSign,
   Tie,
+  TimeNeume,
+  VocalExpressionNeume,
 } from '@/models/Neumes';
 import { Scale } from '@/models/Scales';
+
 import { NeumeMappingService } from './NeumeMappingService';
 
 interface KeyboardMapping {

@@ -1,3 +1,5 @@
+import JSZip from 'jszip';
+
 import {
   ExportWorkspaceAsImageReplyArgs,
   FileMenuOpenScoreArgs,
@@ -8,7 +10,7 @@ import {
 import { Workspace } from '@/models/Workspace';
 import { SaveService } from '@/services/SaveService';
 import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
-import JSZip from 'jszip';
+
 import { IIpcService } from './IIpcService';
 
 export class BrowserIpcService implements IIpcService {

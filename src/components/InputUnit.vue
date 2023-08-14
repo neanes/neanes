@@ -11,8 +11,9 @@
 </template>
 
 <script lang="ts">
-import { Unit } from '@/utils/Unit';
 import { Component, Prop, Vue, Watch } from 'vue-facing-decorator';
+
+import { Unit } from '@/utils/Unit';
 
 @Component({
   components: {},

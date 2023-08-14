@@ -598,18 +598,19 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-facing-decorator';
-import { ElementType, NoteElement, ScoreElementOffset } from '@/models/Element';
-import ModalDialog from '@/components/ModalDialog.vue';
-import NeumeBoxSyllable from '@/components/NeumeBoxSyllable.vue';
-import NeumeBoxMartyria from '@/components/NeumeBoxMartyria.vue';
-import NeumeBoxTempo from '@/components/NeumeBoxTempo.vue';
-import InputUnit from '@/components/InputUnit.vue';
-import DragHandle from '@/components/DragHandle.vue';
-import { PageSetup } from '@/models/PageSetup';
-import { VocalExpressionNeume } from '@/models/Neumes';
-import { TimeNeume } from '@/models/save/v1/Neumes';
 import { StyleValue } from 'vue';
+import { Component, Prop, Vue } from 'vue-facing-decorator';
+
+import DragHandle from '@/components/DragHandle.vue';
+import InputUnit from '@/components/InputUnit.vue';
+import ModalDialog from '@/components/ModalDialog.vue';
+import NeumeBoxMartyria from '@/components/NeumeBoxMartyria.vue';
+import NeumeBoxSyllable from '@/components/NeumeBoxSyllable.vue';
+import NeumeBoxTempo from '@/components/NeumeBoxTempo.vue';
+import { ElementType, NoteElement, ScoreElementOffset } from '@/models/Element';
+import { VocalExpressionNeume } from '@/models/Neumes';
+import { PageSetup } from '@/models/PageSetup';
+import { TimeNeume } from '@/models/save/v1/Neumes';
 
 @Component({
   components: {

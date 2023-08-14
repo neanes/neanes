@@ -1,10 +1,11 @@
-import { isElectron } from '@/utils/isElectron';
 import {
   createRouter,
   createWebHashHistory,
   createWebHistory,
   RouteRecordRaw,
 } from 'vue-router';
+
+import { isElectron } from '@/utils/isElectron';
 
 const routes: RouteRecordRaw[] = [
   {

@@ -3,12 +3,13 @@
 </template>
 
 <script lang="ts">
+import { StyleValue } from 'vue';
 import { Component, Prop, Vue } from 'vue-facing-decorator';
+
+import { ScoreElementOffset } from '@/models/Element';
 import { Neume as NeumeType } from '@/models/Neumes';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
-import { ScoreElementOffset } from '@/models/Element';
 import { withZoom } from '@/utils/withZoom';
-import { StyleValue } from 'vue';
 
 @Component
 export default class Neume extends Vue {

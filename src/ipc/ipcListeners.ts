@@ -1,4 +1,5 @@
 import { EventBus } from '@/eventBus';
+
 import { IpcMainChannels, IpcRendererChannels } from './ipcChannels';
 
 /**

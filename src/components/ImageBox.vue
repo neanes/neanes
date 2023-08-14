@@ -21,12 +21,13 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-facing-decorator';
-import { ImageBoxElement } from '@/models/Element';
-import ContentEditable from '@/components/ContentEditable.vue';
-import VueDraggableResizable from 'vue-draggable-resizable/src/components/vue-draggable-resizable.vue';
-import { withZoom } from '@/utils/withZoom';
 import { StyleValue } from 'vue';
+import VueDraggableResizable from 'vue-draggable-resizable/src/components/vue-draggable-resizable.vue';
+import { Component, Prop, Vue } from 'vue-facing-decorator';
+
+import ContentEditable from '@/components/ContentEditable.vue';
+import { ImageBoxElement } from '@/models/Element';
+import { withZoom } from '@/utils/withZoom';
 
 @Component({
   components: { ContentEditable, VueDraggableResizable },

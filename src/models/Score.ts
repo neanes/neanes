@@ -1,9 +1,9 @@
 import { Footer } from './Footer';
+import { Footers } from './Footers';
 import { Header } from './Header';
 import { Headers } from './Headers';
 import { PageSetup } from './PageSetup';
 import { Staff } from './Staff';
-import { Footers } from './Footers';
 
 export class Score {
   public pageSetup: PageSetup = new PageSetup();

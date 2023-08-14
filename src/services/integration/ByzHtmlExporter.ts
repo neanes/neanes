@@ -12,15 +12,16 @@ import {
 } from '@/models/Element';
 import {
   MeasureBar,
+  ModeSign,
   Neume,
   TimeNeume,
   VocalExpressionNeume,
-  ModeSign,
 } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
 import { Score } from '@/models/Score';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { Unit } from '@/utils/Unit';
+
 import { NeumeMappingService, SbmuflGlyphName } from '../NeumeMappingService';
 import { TextMeasurementService } from '../TextMeasurementService';
 

@@ -66,8 +66,9 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-facing-decorator';
-import ModalDialog from '@/components/ModalDialog.vue';
+
 import InputUnit from '@/components/InputUnit.vue';
+import ModalDialog from '@/components/ModalDialog.vue';
 
 export enum ExportFormat {
   HTML = 'HTML',

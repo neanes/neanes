@@ -1,17 +1,18 @@
 import {
   DropCapElement,
   ElementType,
-  MartyriaElement,
-  NoteElement,
-  ModeKeyElement,
-  ScoreElement,
-  TextBoxElement,
-  TempoElement,
   EmptyElement,
-  LineBreakType,
   ImageBoxElement,
+  LineBreakType,
+  MartyriaElement,
+  ModeKeyElement,
+  NoteElement,
+  ScoreElement,
+  TempoElement,
+  TextBoxElement,
 } from '@/models/Element';
-import { NeumeMappingService } from '@/services/NeumeMappingService';
+import { Footer } from '@/models/Footer';
+import { Header } from '@/models/Header';
 import {
   Fthora,
   MeasureBar,
@@ -33,10 +34,10 @@ import {
   Scale,
   ScaleNote,
 } from '@/models/Scales';
-import { TextMeasurementService } from './TextMeasurementService';
 import { Score } from '@/models/Score';
-import { Header } from '@/models/Header';
-import { Footer } from '@/models/Footer';
+import { NeumeMappingService } from '@/services/NeumeMappingService';
+
+import { TextMeasurementService } from './TextMeasurementService';
 
 const textWidthCache = new Map<string, number>();
 const neumeWidthCache = new Map<string, number>();

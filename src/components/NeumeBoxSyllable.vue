@@ -84,13 +84,14 @@
 </template>
 
 <script lang="ts">
+import { StyleValue } from 'vue';
 import { Component, Prop, Vue } from 'vue-facing-decorator';
+
+import NeumeVue from '@/components/Neume.vue';
 import { NoteElement } from '@/models/Element';
 import { TimeNeume, VocalExpressionNeume } from '@/models/Neumes';
-import NeumeVue from '@/components/Neume.vue';
-import { withZoom } from '@/utils/withZoom';
 import { PageSetup } from '@/models/PageSetup';
-import { StyleValue } from 'vue';
+import { withZoom } from '@/utils/withZoom';
 
 @Component({
   components: {

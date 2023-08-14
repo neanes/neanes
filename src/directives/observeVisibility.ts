@@ -1,4 +1,5 @@
-import { ObjectDirective, nextTick } from 'vue';
+import { nextTick, ObjectDirective } from 'vue';
+
 import { deepEqual, processOptions, throttle } from '@/utils/observeVisibility';
 
 class VisibilityState {

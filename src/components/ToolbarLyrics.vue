@@ -21,6 +21,7 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-facing-decorator';
+
 import { NoteElement } from '@/models/Element';
 
 @Component({

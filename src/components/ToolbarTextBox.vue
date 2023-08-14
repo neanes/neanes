@@ -130,10 +130,11 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-facing-decorator';
-import { TextBoxAlignment, TextBoxElement } from '@/models/Element';
+
 import ColorPicker from '@/components/ColorPicker.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
+import { TextBoxAlignment, TextBoxElement } from '@/models/Element';
 
 @Component({
   components: { ColorPicker, InputFontSize, InputStrokeWidth },

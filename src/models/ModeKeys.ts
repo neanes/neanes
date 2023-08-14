@@ -1,4 +1,5 @@
 import { Fthora, ModeSign, QuantitativeNeume } from '@/models/Neumes';
+
 import { Scale, ScaleNote } from './Scales';
 
 export interface ModeKeyTemplate {

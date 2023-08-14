@@ -1713,7 +1713,11 @@ export class LayoutService {
   }
 
   private static getScaleFromFthora(fthora: Fthora, currentNote: number) {
-    if (fthora.startsWith('Diatonic')) {
+    if (
+      fthora.startsWith('Diatonic') ||
+      fthora.startsWith('GeneralSharp') ||
+      fthora.startsWith('GeneralFlat')
+    ) {
       return Scale.Diatonic;
     }
 

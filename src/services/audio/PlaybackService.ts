@@ -1632,8 +1632,6 @@ export class PlaybackService {
     workspace.enharmonicZo = workspace.permanentEnharmonicZo;
     workspace.enharmonicGa = false;
     workspace.enharmonicVou = workspace.permanentEnharmonicVou;
-    workspace.generalFlat = false;
-    workspace.generalSharp = false;
   }
 
   handleTempo(tempoElement: TempoElement, workspace: PlaybackWorkspace) {

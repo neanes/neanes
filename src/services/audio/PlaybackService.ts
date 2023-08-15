@@ -291,6 +291,10 @@ export class PlaybackService {
           ) {
             workspace.generalFlat = true;
             workspace.enharmonicZo = false;
+            if (workspace.scale.name !== PlaybackScaleName.Diatonic) {
+              // General flat implies a switch to the diatonic scale
+              this.switchToDiatonic(workspace);
+            }
           } else if (
             noteElement.fthora === Fthora.GeneralSharp_Top ||
             noteElement.fthora === Fthora.GeneralSharp_Bottom
@@ -298,6 +302,10 @@ export class PlaybackService {
             workspace.generalSharp = true;
             workspace.enharmonicGa = false;
             workspace.enharmonicVou = false;
+            if (workspace.scale.name !== PlaybackScaleName.Diatonic) {
+              // General sharp implies a switch to the diatonic scale
+              this.switchToDiatonic(workspace);
+            }
           } else {
             workspace.enharmonicZo = workspace.permanentEnharmonicZo;
             workspace.enharmonicGa = false;
@@ -664,6 +672,12 @@ export class PlaybackService {
     } else {
       workspace.noteOffset = 0;
     }
+  }
+
+  switchToDiatonic(workspace: PlaybackWorkspace) {
+    const note = this.scaleNoteMap.get(workspace.note);
+    workspace.scale = this.diatonicScale;
+    workspace.intervalIndex = this.diatonicScale.scaleNoteMap.get(note!)!;
   }
 
   applyAlterations(
@@ -1592,11 +1606,7 @@ export class PlaybackService {
       !workspace.permanentEnharmonicVou
     ) {
       // Clear the enharmonic fthora
-      const note = this.scaleNoteMap.get(workspace.note);
-
-      workspace.scale = this.diatonicScale;
-
-      workspace.intervalIndex = this.diatonicScale.scaleNoteMap.get(note!)!;
+      this.switchToDiatonic(workspace);
     }
 
     if (!martyriaElement.auto) {

@@ -409,6 +409,11 @@ export class SaveService {
     element.isMelismaStart = e.isMelismaStart || undefined;
     element.isHyphen = e.isHyphen || undefined;
 
+    if (!e.useDefaultStyle) {
+      element.useDefaultStyle = e.useDefaultStyle;
+      element.lyricsColor = e.lyricsColor;
+    }
+
     element.ignoreAttractions = e.ignoreAttractions || undefined;
   }
 
@@ -904,6 +909,10 @@ export class SaveService {
       element.lyrics = e.lyrics;
     }
 
+    if (e.lyricsColor != null) {
+      element.lyricsColor = e.lyricsColor;
+    }
+
     if (e.vareia === true) {
       element.vareiaOffsetX = e.vareiaOffsetX ?? null;
       element.vareiaOffsetY = e.vareiaOffsetY ?? null;
@@ -922,6 +931,10 @@ export class SaveService {
     element.isHyphen = e.isHyphen === true;
     element.ignoreAttractions = e.ignoreAttractions === true;
     element.spaceAfter = e.spaceAfter ?? 0;
+
+    if (e.useDefaultStyle != null) {
+      element.useDefaultStyle = e.useDefaultStyle;
+    }
   }
 
   public static LoadTextBox_v1(element: TextBoxElement, e: TextBoxElement_v1) {

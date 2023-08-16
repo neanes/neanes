@@ -162,15 +162,15 @@
                       >
                         <ContentEditable
                           class="lyrics"
+                          :class="{
+                            selectedLyrics: element === selectedLyrics,
+                          }"
                           :content="(element as NoteElement).lyrics"
                           whiteSpace="nowrap"
                           :ref="`lyrics-${getElementIndex(element)}`"
                           @click="focusLyrics(getElementIndex(element))"
                           @focus="selectedLyrics = element as NoteElement"
-                          @blur="
-                            updateLyrics(element as NoteElement, $event);
-                            selectedLyrics = null;
-                          "
+                          @blur="updateLyrics(element as NoteElement, $event)"
                         />
                         <template
                           v-if="
@@ -497,6 +497,12 @@
     <template v-if="selectedLyrics != null">
       <ToolbarLyrics
         :element="selectedLyrics"
+        @update:lyricsColor="
+          updateNoteLyricsColor(selectedLyrics as NoteElement, $event)
+        "
+        @update:useDefaultStyle="
+          updateNoteUseDefaultStyle(selectedLyrics as NoteElement, $event)
+        "
         @insert:gorthmikon="insertGorthmikon"
         @insert:pelastikon="insertPelastikon"
       />
@@ -1478,7 +1484,9 @@ export default class Editor extends Vue {
       ),
       fontWeight: this.score.pageSetup.lyricsDefaultFontWeight,
       fontStyle: this.score.pageSetup.lyricsDefaultFontStyle,
-      color: this.score.pageSetup.lyricsDefaultColor,
+      color: element.useDefaultStyle
+        ? this.score.pageSetup.lyricsDefaultColor
+        : element.lyricsColor,
       webkitTextStrokeWidth: withZoom(
         this.score.pageSetup.lyricsDefaultStrokeWidth,
       ),
@@ -1895,6 +1903,8 @@ export default class Editor extends Vue {
     }
 
     const element = new NoteElement();
+    element.lyricsColor = this.score.pageSetup.lyricsDefaultColor;
+
     element.quantitativeNeume = quantitativeNeume;
     // Special case for neumes with secondary gorgon
     if (takesSecondaryNeumes(quantitativeNeume)) {
@@ -3962,6 +3972,16 @@ export default class Editor extends Vue {
     element.keyHelper++;
   }
 
+  updateNoteUseDefaultStyle(element: NoteElement, useDefaultStyle: boolean) {
+    this.updateNote(element, { useDefaultStyle });
+    this.save();
+  }
+
+  updateNoteLyricsColor(element: NoteElement, lyricsColor: string) {
+    this.updateNote(element, { lyricsColor });
+    this.save();
+  }
+
   updateNoteAccidental(element: NoteElement, accidental: Accidental | null) {
     this.updateNote(element, { accidental });
     this.save();
@@ -5480,6 +5500,9 @@ export default class Editor extends Vue {
   position: relative;
 }
 
+.lyrics:focus {
+  outline: none;
+}
 .guide-line-vl {
   border-left: 1px solid black;
   position: absolute;
@@ -5517,6 +5540,10 @@ export default class Editor extends Vue {
 }
 
 .selectedImagebox {
+  border: 1px solid goldenrod;
+}
+
+.selectedLyrics {
   border: 1px solid goldenrod;
 }
 

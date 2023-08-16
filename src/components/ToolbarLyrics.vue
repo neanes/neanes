@@ -1,5 +1,25 @@
 <template>
-  <div class="lyrics-toolbar">
+  <div class="lyrics-toolbar" @mousedown.prevent.self>
+    <input
+      id="toolbar-lyrics-use-default-style"
+      type="checkbox"
+      :checked="element.useDefaultStyle"
+      @change="
+        $emit(
+          'update:useDefaultStyle',
+          ($event.target as HTMLInputElement).checked,
+        )
+      "
+    />
+    <label for="toolbar-lyrics-use-default-style">Use default style</label>
+    <span class="divider" />
+    <template v-if="!element.useDefaultStyle">
+      <ColorPicker
+        :modelValue="element.lyricsColor"
+        @update:modelValue="$emit('update:lyricsColor', $event)"
+      />
+    </template>
+    <span class="space" />
     <button class="icon-btn" @mousedown.prevent="$emit('insert:pelastikon')">
       <img
         src="@/assets/icons/letterPelastikon.svg"
@@ -22,11 +42,17 @@
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-facing-decorator';
 
+import ColorPicker from '@/components/ColorPicker.vue';
 import { NoteElement } from '@/models/Element';
 
 @Component({
-  components: {},
-  emits: ['insert:gorthmikon', 'insert:pelastikon'],
+  components: { ColorPicker },
+  emits: [
+    'insert:gorthmikon',
+    'insert:pelastikon',
+    'update:lyricsColor',
+    'update:useDefaultStyle',
+  ],
 })
 export default class ToolbarLyrics extends Vue {
   @Prop() element!: NoteElement;
@@ -51,6 +77,12 @@ export default class ToolbarLyrics extends Vue {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.divider {
+  height: 32px;
+  border-right: 1px solid #666;
+  margin: 0 0.5rem;
 }
 
 .icon-btn.selected {

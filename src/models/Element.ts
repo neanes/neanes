@@ -89,11 +89,13 @@ export class NoteElement extends ScoreElement {
   public vareia: boolean = false;
   public koronis: boolean = false;
   public lyrics: string = '';
+  public lyricsColor: string = 'black';
   public isMelisma: boolean = false;
   public isMelismaStart: boolean = false;
   public isHyphen: boolean = false;
   public spaceAfter: number = 0;
   public ignoreAttractions: boolean = false;
+  public useDefaultStyle: boolean = true;
 
   public chromaticFthoraNote: ScaleNote | null = null;
 
@@ -163,6 +165,8 @@ export class NoteElement extends ScoreElement {
             isHyphen: this.isHyphen,
             isMelismaStart: this.isMelismaStart,
             isMelisma: this.isMelisma,
+            useDefaultStyle: this.useDefaultStyle,
+            lyricsColor: this.lyricsColor,
           }
         : null),
       quantitativeNeume: this.quantitativeNeume,

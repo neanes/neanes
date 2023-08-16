@@ -68,11 +68,13 @@ export class NoteElement extends ScoreElement {
   public vareia: boolean | undefined = undefined;
   public koronis: boolean | undefined = undefined;
   public lyrics: string | undefined = undefined;
+  public lyricsColor: string | undefined = undefined;
   public isMelisma: boolean | undefined = undefined;
   public isMelismaStart: boolean | undefined = undefined;
   public isHyphen: boolean | undefined = undefined;
   public spaceAfter: number | undefined = undefined;
   public ignoreAttractions: boolean | undefined = undefined;
+  public useDefaultStyle: boolean | undefined = undefined;
 
   public accidentalOffsetX: number | undefined = undefined;
   public accidentalOffsetY: number | undefined = undefined;

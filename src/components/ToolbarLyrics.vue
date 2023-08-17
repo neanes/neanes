@@ -1,22 +1,48 @@
 <template>
-  <div class="lyrics-toolbar" @mousedown.prevent.self>
+  <div class="lyrics-toolbar">
     <input
       id="toolbar-lyrics-use-default-style"
       type="checkbox"
-      :checked="element.useDefaultStyle"
+      :checked="element.lyricsUseDefaultStyle"
       @change="
         $emit(
-          'update:useDefaultStyle',
+          'update:lyricsUseDefaultStyle',
           ($event.target as HTMLInputElement).checked,
         )
       "
     />
     <label for="toolbar-lyrics-use-default-style">Use default style</label>
     <span class="divider" />
-    <template v-if="!element.useDefaultStyle">
+    <template v-if="!element.lyricsUseDefaultStyle">
+      <select
+        :value="element.lyricsFontFamily"
+        @change="
+          $emit(
+            'update:lyricsFontFamily',
+            ($event.target as HTMLInputElement).value,
+          )
+        "
+      >
+        <option v-for="font in fonts" :key="font" :value="font">
+          {{ font }}
+        </option>
+      </select>
+      <span class="space"></span>
+      <InputFontSize
+        class="lyrics-input"
+        :modelValue="element.lyricsFontSize"
+        @update:modelValue="$emit('update:lyricsFontSize', $event)"
+      />
+      <span class="space"></span>
       <ColorPicker
         :modelValue="element.lyricsColor"
         @update:modelValue="$emit('update:lyricsColor', $event)"
+      />
+      <span class="space"></span>
+      <label class="right-space">Outline</label>
+      <InputStrokeWidth
+        :modelValue="element.lyricsStrokeWidth"
+        @update:modelValue="$emit('update:lyricsStrokeWidth', $event)"
       />
     </template>
     <span class="space" />
@@ -43,19 +69,28 @@
 import { Component, Prop, Vue } from 'vue-facing-decorator';
 
 import ColorPicker from '@/components/ColorPicker.vue';
+import InputFontSize from '@/components/InputFontSize.vue';
+import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import { NoteElement } from '@/models/Element';
 
 @Component({
-  components: { ColorPicker },
+  components: { ColorPicker, InputFontSize, InputStrokeWidth },
   emits: [
     'insert:gorthmikon',
     'insert:pelastikon',
     'update:lyricsColor',
-    'update:useDefaultStyle',
+    'update:lyricsFontFamily',
+    'update:lyricsFontSize',
+    'update:lyricsBold',
+    'update:lyricsItalic',
+    'update:lyricsUnderline',
+    'update:lyricsStrokeWidth',
+    'update:lyricsUseDefaultStyle',
   ],
 })
 export default class ToolbarLyrics extends Vue {
   @Prop() element!: NoteElement;
+  @Prop() fonts!: string[];
 }
 </script>
 

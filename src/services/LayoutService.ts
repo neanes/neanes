@@ -959,7 +959,7 @@ export class LayoutService {
     if (noteElement.lyrics.length > 0) {
       noteElement.lyricsWidth = this.getTextWidthFromCache(
         textWidthCache,
-        noteElement.lyrics,
+        noteElement,
         pageSetup,
       );
     } else {
@@ -1909,15 +1909,19 @@ export class LayoutService {
 
   private static getTextWidthFromCache(
     cache: Map<string, number>,
-    text: string,
+    element: NoteElement,
     pageSetup: PageSetup,
   ) {
-    const key = `${text} | ${pageSetup.lyricsFont}`;
+    const font = element.lyricsUseDefaultStyle
+      ? pageSetup.lyricsFont
+      : element.lyricsFont;
+
+    const key = `${element.lyrics} | ${font}`;
 
     let width = cache.get(key);
 
     if (width == null) {
-      width = TextMeasurementService.getTextWidth(text, pageSetup.lyricsFont);
+      width = TextMeasurementService.getTextWidth(element.lyrics, font);
 
       cache.set(key, width);
     }

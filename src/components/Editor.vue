@@ -497,11 +497,21 @@
     <template v-if="selectedLyrics != null">
       <ToolbarLyrics
         :element="selectedLyrics"
+        :fonts="fonts"
         @update:lyricsColor="
           updateNoteLyricsColor(selectedLyrics as NoteElement, $event)
         "
-        @update:useDefaultStyle="
-          updateNoteUseDefaultStyle(selectedLyrics as NoteElement, $event)
+        @update:lyricsFontFamily="
+          updateNoteLyricsFontFamily(selectedLyrics as NoteElement, $event)
+        "
+        @update:lyricsFontSize="
+          updateNoteLyricsFontSize(selectedLyrics as NoteElement, $event)
+        "
+        @update:lyricsStrokeWidth="
+          updateNoteLyricsStrokeWidth(selectedLyrics as NoteElement, $event)
+        "
+        @update:lyricsUseDefaultStyle="
+          updateNoteLyricsUseDefaultStyle(selectedLyrics as NoteElement, $event)
         "
         @insert:gorthmikon="insertGorthmikon"
         @insert:pelastikon="insertPelastikon"
@@ -1478,18 +1488,22 @@ export default class Editor extends Vue {
         element.lyricsHorizontalOffset < 0
           ? withZoom(-element.lyricsHorizontalOffset)
           : undefined,
-      fontSize: withZoom(this.score.pageSetup.lyricsDefaultFontSize),
-      fontFamily: getFontFamilyWithFallback(
-        this.score.pageSetup.lyricsDefaultFontFamily,
-      ),
+      fontSize: element.lyricsUseDefaultStyle
+        ? withZoom(this.score.pageSetup.lyricsDefaultFontSize)
+        : withZoom(element.lyricsFontSize),
+      fontFamily: element.lyricsUseDefaultStyle
+        ? getFontFamilyWithFallback(
+            this.score.pageSetup.lyricsDefaultFontFamily,
+          )
+        : getFontFamilyWithFallback(element.lyricsFontFamily),
       fontWeight: this.score.pageSetup.lyricsDefaultFontWeight,
       fontStyle: this.score.pageSetup.lyricsDefaultFontStyle,
-      color: element.useDefaultStyle
+      color: element.lyricsUseDefaultStyle
         ? this.score.pageSetup.lyricsDefaultColor
         : element.lyricsColor,
-      webkitTextStrokeWidth: withZoom(
-        this.score.pageSetup.lyricsDefaultStrokeWidth,
-      ),
+      webkitTextStrokeWidth: element.lyricsUseDefaultStyle
+        ? withZoom(this.score.pageSetup.lyricsDefaultStrokeWidth)
+        : withZoom(element.lyricsStrokeWidth),
     } as StyleValue;
   }
 
@@ -3972,13 +3986,32 @@ export default class Editor extends Vue {
     element.keyHelper++;
   }
 
-  updateNoteUseDefaultStyle(element: NoteElement, useDefaultStyle: boolean) {
-    this.updateNote(element, { useDefaultStyle });
+  updateNoteLyricsUseDefaultStyle(
+    element: NoteElement,
+    lyricsUseDefaultStyle: boolean,
+  ) {
+    this.updateNote(element, { lyricsUseDefaultStyle });
     this.save();
   }
 
   updateNoteLyricsColor(element: NoteElement, lyricsColor: string) {
     this.updateNote(element, { lyricsColor });
+    this.save();
+  }
+
+  updateNoteLyricsFontFamily(element: NoteElement, lyricsFontFamily: string) {
+    this.updateNote(element, { lyricsFontFamily });
+    this.save();
+  }
+
+  updateNoteLyricsFontSize(element: NoteElement, lyricsFontSize: number) {
+    console.log('update font size');
+    this.updateNote(element, { lyricsFontSize });
+    this.save();
+  }
+
+  updateNoteLyricsStrokeWidth(element: NoteElement, lyricsStrokeWidth: number) {
+    this.updateNote(element, { lyricsStrokeWidth });
     this.save();
   }
 

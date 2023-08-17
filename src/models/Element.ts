@@ -90,12 +90,18 @@ export class NoteElement extends ScoreElement {
   public koronis: boolean = false;
   public lyrics: string = '';
   public lyricsColor: string = 'black';
+  public lyricsFontFamily: string = 'Omega';
+  public lyricsFontSize: number = Unit.fromPt(12);
+  public lyricsStrokeWidth: number = 0;
+  public lyricsUseDefaultStyle: boolean = true;
+  public lyricsFontStyle: string = 'normal';
+  public lyricsFontWeight: string = '400';
+  public lyricsTextDecoration: string = 'none';
   public isMelisma: boolean = false;
   public isMelismaStart: boolean = false;
   public isHyphen: boolean = false;
   public spaceAfter: number = 0;
   public ignoreAttractions: boolean = false;
-  public useDefaultStyle: boolean = true;
 
   public chromaticFthoraNote: ScaleNote | null = null;
 
@@ -146,6 +152,10 @@ export class NoteElement extends ScoreElement {
   public secondaryFthoraCarry: Fthora | null = null;
   public tertiaryFthoraCarry: Fthora | null = null;
 
+  public get lyricsFont() {
+    return `${this.lyricsFontStyle} normal ${this.lyricsFontWeight} ${this.lyricsFontSize}px "${this.lyricsFontFamily}"`;
+  }
+
   public clone(args?: ElementCloneArgs) {
     const clone = new NoteElement();
 
@@ -165,8 +175,11 @@ export class NoteElement extends ScoreElement {
             isHyphen: this.isHyphen,
             isMelismaStart: this.isMelismaStart,
             isMelisma: this.isMelisma,
-            useDefaultStyle: this.useDefaultStyle,
+            lyricsUseDefaultStyle: this.lyricsUseDefaultStyle,
             lyricsColor: this.lyricsColor,
+            lyricsFontFamily: this.lyricsFontFamily,
+            lyricsFontSize: this.lyricsFontSize,
+            lyricsStrokeWidth: this.lyricsStrokeWidth,
           }
         : null),
       quantitativeNeume: this.quantitativeNeume,

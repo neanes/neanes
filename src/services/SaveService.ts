@@ -409,9 +409,15 @@ export class SaveService {
     element.isMelismaStart = e.isMelismaStart || undefined;
     element.isHyphen = e.isHyphen || undefined;
 
-    if (!e.useDefaultStyle) {
-      element.useDefaultStyle = e.useDefaultStyle;
+    if (!e.lyricsUseDefaultStyle) {
+      element.lyricsUseDefaultStyle = e.lyricsUseDefaultStyle;
       element.lyricsColor = e.lyricsColor;
+      element.lyricsFontStyle = e.lyricsFontStyle;
+      element.lyricsFontWeight = e.lyricsFontWeight;
+      element.lyricsFontFamily = e.lyricsFontFamily;
+      element.lyricsFontSize = e.lyricsFontSize;
+      element.lyricsTextDecoration = e.lyricsTextDecoration;
+      element.lyricsStrokeWidth = e.lyricsStrokeWidth;
     }
 
     element.ignoreAttractions = e.ignoreAttractions || undefined;
@@ -909,10 +915,6 @@ export class SaveService {
       element.lyrics = e.lyrics;
     }
 
-    if (e.lyricsColor != null) {
-      element.lyricsColor = e.lyricsColor;
-    }
-
     if (e.vareia === true) {
       element.vareiaOffsetX = e.vareiaOffsetX ?? null;
       element.vareiaOffsetY = e.vareiaOffsetY ?? null;
@@ -932,8 +934,17 @@ export class SaveService {
     element.ignoreAttractions = e.ignoreAttractions === true;
     element.spaceAfter = e.spaceAfter ?? 0;
 
-    if (e.useDefaultStyle != null) {
-      element.useDefaultStyle = e.useDefaultStyle;
+    if (e.lyricsUseDefaultStyle != null) {
+      element.lyricsUseDefaultStyle = e.lyricsUseDefaultStyle;
+      element.lyricsColor = e.lyricsColor ?? element.lyricsColor;
+      element.lyricsFontStyle = e.lyricsFontStyle ?? element.lyricsFontStyle;
+      element.lyricsFontWeight = e.lyricsFontWeight ?? element.lyricsFontWeight;
+      element.lyricsFontFamily = e.lyricsFontFamily ?? element.lyricsFontFamily;
+      element.lyricsFontSize = e.lyricsFontSize ?? element.lyricsFontSize;
+      element.lyricsTextDecoration =
+        e.lyricsTextDecoration ?? element.lyricsTextDecoration;
+      element.lyricsStrokeWidth =
+        e.lyricsStrokeWidth ?? element.lyricsStrokeWidth;
     }
   }
 

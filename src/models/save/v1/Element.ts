@@ -69,12 +69,18 @@ export class NoteElement extends ScoreElement {
   public koronis: boolean | undefined = undefined;
   public lyrics: string | undefined = undefined;
   public lyricsColor: string | undefined = undefined;
+  public lyricsFontFamily: string | undefined = undefined;
+  public lyricsFontSize: number | undefined = undefined;
+  public lyricsStrokeWidth: number | undefined = undefined;
+  public lyricsFontStyle: string | undefined = undefined;
+  public lyricsFontWeight: string | undefined = undefined;
+  public lyricsTextDecoration: string | undefined = undefined;
+  public lyricsUseDefaultStyle: boolean | undefined = undefined;
   public isMelisma: boolean | undefined = undefined;
   public isMelismaStart: boolean | undefined = undefined;
   public isHyphen: boolean | undefined = undefined;
   public spaceAfter: number | undefined = undefined;
   public ignoreAttractions: boolean | undefined = undefined;
-  public useDefaultStyle: boolean | undefined = undefined;
 
   public accidentalOffsetX: number | undefined = undefined;
   public accidentalOffsetY: number | undefined = undefined;

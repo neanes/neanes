@@ -497,11 +497,30 @@
     <template v-if="selectedLyrics != null">
       <ToolbarLyrics
         :element="selectedLyrics"
+        :fonts="fonts"
         @update:lyricsColor="
           updateNoteLyricsColor(selectedLyrics as NoteElement, $event)
         "
-        @update:useDefaultStyle="
-          updateNoteUseDefaultStyle(selectedLyrics as NoteElement, $event)
+        @update:lyricsFontFamily="
+          updateNoteLyricsFontFamily(selectedLyrics as NoteElement, $event)
+        "
+        @update:lyricsFontSize="
+          updateNoteLyricsFontSize(selectedLyrics as NoteElement, $event)
+        "
+        @update:lyricsFontStyle="
+          updateNoteLyricsFontStyle(selectedLyrics as NoteElement, $event)
+        "
+        @update:lyricsFontWeight="
+          updateNoteLyricsFontWeight(selectedLyrics as NoteElement, $event)
+        "
+        @update:lyricsTextDecoration="
+          updateNoteLyricsTextDecoration(selectedLyrics as NoteElement, $event)
+        "
+        @update:lyricsStrokeWidth="
+          updateNoteLyricsStrokeWidth(selectedLyrics as NoteElement, $event)
+        "
+        @update:lyricsUseDefaultStyle="
+          updateNoteLyricsUseDefaultStyle(selectedLyrics as NoteElement, $event)
         "
         @insert:gorthmikon="insertGorthmikon"
         @insert:pelastikon="insertPelastikon"
@@ -1478,18 +1497,29 @@ export default class Editor extends Vue {
         element.lyricsHorizontalOffset < 0
           ? withZoom(-element.lyricsHorizontalOffset)
           : undefined,
-      fontSize: withZoom(this.score.pageSetup.lyricsDefaultFontSize),
-      fontFamily: getFontFamilyWithFallback(
-        this.score.pageSetup.lyricsDefaultFontFamily,
-      ),
-      fontWeight: this.score.pageSetup.lyricsDefaultFontWeight,
-      fontStyle: this.score.pageSetup.lyricsDefaultFontStyle,
-      color: element.useDefaultStyle
+      fontSize: element.lyricsUseDefaultStyle
+        ? withZoom(this.score.pageSetup.lyricsDefaultFontSize)
+        : withZoom(element.lyricsFontSize),
+      fontFamily: element.lyricsUseDefaultStyle
+        ? getFontFamilyWithFallback(
+            this.score.pageSetup.lyricsDefaultFontFamily,
+          )
+        : getFontFamilyWithFallback(element.lyricsFontFamily),
+      fontWeight: element.lyricsUseDefaultStyle
+        ? this.score.pageSetup.lyricsDefaultFontWeight
+        : element.lyricsFontWeight,
+      fontStyle: element.lyricsUseDefaultStyle
+        ? this.score.pageSetup.lyricsDefaultFontStyle
+        : element.lyricsFontStyle,
+      textDecoration: element.lyricsUseDefaultStyle
+        ? undefined
+        : element.lyricsTextDecoration,
+      color: element.lyricsUseDefaultStyle
         ? this.score.pageSetup.lyricsDefaultColor
         : element.lyricsColor,
-      webkitTextStrokeWidth: withZoom(
-        this.score.pageSetup.lyricsDefaultStrokeWidth,
-      ),
+      webkitTextStrokeWidth: element.lyricsUseDefaultStyle
+        ? withZoom(this.score.pageSetup.lyricsDefaultStrokeWidth)
+        : withZoom(element.lyricsStrokeWidth),
     } as StyleValue;
   }
 
@@ -1510,7 +1540,9 @@ export default class Editor extends Vue {
   getMelismaStyle(element: NoteElement) {
     return {
       width: withZoom(element.melismaWidth!),
-      minHeight: withZoom(this.score.pageSetup.lyricsDefaultFontSize),
+      minHeight: element.lyricsUseDefaultStyle
+        ? withZoom(this.score.pageSetup.lyricsDefaultFontSize)
+        : withZoom(element.lyricsFontSize),
     } as StyleValue;
   }
 
@@ -1904,6 +1936,11 @@ export default class Editor extends Vue {
 
     const element = new NoteElement();
     element.lyricsColor = this.score.pageSetup.lyricsDefaultColor;
+    element.lyricsFontFamily = this.score.pageSetup.lyricsDefaultFontFamily;
+    element.lyricsFontSize = this.score.pageSetup.lyricsDefaultFontSize;
+    element.lyricsFontStyle = this.score.pageSetup.lyricsDefaultFontStyle;
+    element.lyricsFontWeight = this.score.pageSetup.lyricsDefaultFontWeight;
+    element.lyricsStrokeWidth = this.score.pageSetup.lyricsDefaultStrokeWidth;
 
     element.quantitativeNeume = quantitativeNeume;
     // Special case for neumes with secondary gorgon
@@ -3972,13 +4009,48 @@ export default class Editor extends Vue {
     element.keyHelper++;
   }
 
-  updateNoteUseDefaultStyle(element: NoteElement, useDefaultStyle: boolean) {
-    this.updateNote(element, { useDefaultStyle });
+  updateNoteLyricsUseDefaultStyle(
+    element: NoteElement,
+    lyricsUseDefaultStyle: boolean,
+  ) {
+    this.updateNote(element, { lyricsUseDefaultStyle });
     this.save();
   }
 
   updateNoteLyricsColor(element: NoteElement, lyricsColor: string) {
     this.updateNote(element, { lyricsColor });
+    this.save();
+  }
+
+  updateNoteLyricsFontFamily(element: NoteElement, lyricsFontFamily: string) {
+    this.updateNote(element, { lyricsFontFamily });
+    this.save();
+  }
+
+  updateNoteLyricsFontSize(element: NoteElement, lyricsFontSize: number) {
+    this.updateNote(element, { lyricsFontSize });
+    this.save();
+  }
+
+  updateNoteLyricsStrokeWidth(element: NoteElement, lyricsStrokeWidth: number) {
+    this.updateNote(element, { lyricsStrokeWidth });
+    this.save();
+  }
+
+  updateNoteLyricsFontWeight(element: NoteElement, bold: boolean) {
+    this.updateNote(element, { lyricsFontWeight: bold ? '700' : '400' });
+    this.save();
+  }
+
+  updateNoteLyricsFontStyle(element: NoteElement, italic: boolean) {
+    this.updateNote(element, { lyricsFontStyle: italic ? 'italic' : 'normal' });
+    this.save();
+  }
+
+  updateNoteLyricsTextDecoration(element: NoteElement, underline: boolean) {
+    this.updateNote(element, {
+      lyricsTextDecoration: underline ? 'underline' : 'none',
+    });
     this.save();
   }
 

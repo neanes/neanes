@@ -96,7 +96,7 @@ import { DropCapElement } from '@/models/Element';
 })
 export default class ToolbarDropCap extends Vue {
   @Prop() element!: DropCapElement;
-  @Prop() fonts!: string;
+  @Prop() fonts!: string[];
 
   get bold() {
     return this.element.fontWeight === '700';

@@ -4028,7 +4028,6 @@ export default class Editor extends Vue {
   }
 
   updateNoteLyricsFontSize(element: NoteElement, lyricsFontSize: number) {
-    console.log('update font size');
     this.updateNote(element, { lyricsFontSize });
     this.save();
   }

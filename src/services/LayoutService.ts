@@ -613,11 +613,32 @@ export class LayoutService {
           : noteElement.spaceAfter + lyricsEnd;
 
         if (noteElement.isMelismaStart && noteElement.isHyphen) {
+          const widthOfHyphenForThisElement = noteElement.lyricsUseDefaultStyle
+            ? widthOfHyphen
+            : this.getTextWidthFromCache(
+                textWidthCache,
+                noteElement,
+                pageSetup,
+                '-',
+              );
+
           currentMelismaLyricsEndPx =
-            noteElement.spaceAfter + lyricsEnd + widthOfHyphen;
+            noteElement.spaceAfter + lyricsEnd + widthOfHyphenForThisElement;
         } else if (noteElement.isMelismaStart) {
+          const widthOfUnderscoreForThisElement =
+            noteElement.lyricsUseDefaultStyle
+              ? widthOfUnderscore
+              : this.getTextWidthFromCache(
+                  textWidthCache,
+                  noteElement,
+                  pageSetup,
+                  '_',
+                );
+
           currentMelismaLyricsEndPx =
-            noteElement.spaceAfter + lyricsEnd + widthOfUnderscore;
+            noteElement.spaceAfter +
+            lyricsEnd +
+            widthOfUnderscoreForThisElement;
         } else if (!noteElement.isMelisma) {
           currentMelismaLyricsEndPx = null;
         }
@@ -1322,18 +1343,27 @@ export class LayoutService {
                 element.melismaWidth / pageSetup.hyphenSpacing,
               );
 
+              const widthOfHyphenForThisElement = element.lyricsUseDefaultStyle
+                ? widthOfHyphen
+                : this.getTextWidthFromCache(
+                    textWidthCache,
+                    element,
+                    pageSetup,
+                    '-',
+                  );
+
               // If this is the last note on the page, always show the hyphen
               if (numberOfHyphensNeeded == 0 && nextElement == null) {
                 numberOfHyphensNeeded = 1;
                 element.melismaWidth = Math.max(
                   element.melismaWidth,
-                  widthOfHyphen + widthOfSpace,
+                  widthOfHyphenForThisElement + widthOfSpace,
                 );
               }
 
               if (
                 numberOfHyphensNeeded == 0 &&
-                element.melismaWidth >= widthOfHyphen
+                element.melismaWidth >= widthOfHyphenForThisElement
               ) {
                 numberOfHyphensNeeded = 1;
               }
@@ -1341,7 +1371,7 @@ export class LayoutService {
               for (let i = 1; i <= numberOfHyphensNeeded; i++) {
                 element.hyphenOffsets.push(
                   element.melismaWidth * (i / (numberOfHyphensNeeded + 1)) -
-                    widthOfHyphen / 2,
+                    widthOfHyphenForThisElement / 2,
                 );
               }
             } else {
@@ -1391,11 +1421,24 @@ export class LayoutService {
                 end = finalElement.x + finalElement.neumeWidth;
               }
 
+              const widthOfUnderscoreForThisElement =
+                element.lyricsUseDefaultStyle
+                  ? widthOfUnderscore
+                  : this.getTextWidthFromCache(
+                      textWidthCache,
+                      element,
+                      pageSetup,
+                      '_',
+                    );
+
               // Always show at least one underscore to indicate it's a melisma.
-              element.melismaWidth = Math.max(end - start, widthOfUnderscore);
+              element.melismaWidth = Math.max(
+                end - start,
+                widthOfUnderscoreForThisElement,
+              );
 
               const numberOfUnderScoresNeeded = Math.ceil(
-                element.melismaWidth / widthOfUnderscore,
+                element.melismaWidth / widthOfUnderscoreForThisElement,
               );
 
               for (let i = 0; i < numberOfUnderScoresNeeded; i++) {
@@ -1911,17 +1954,20 @@ export class LayoutService {
     cache: Map<string, number>,
     element: NoteElement,
     pageSetup: PageSetup,
+    textOverride: string | null = null,
   ) {
     const font = element.lyricsUseDefaultStyle
       ? pageSetup.lyricsFont
       : element.lyricsFont;
 
-    const key = `${element.lyrics} | ${font}`;
+    const text = textOverride ?? element.lyrics;
+
+    const key = `${text} | ${font}`;
 
     let width = cache.get(key);
 
     if (width == null) {
-      width = TextMeasurementService.getTextWidth(element.lyrics, font);
+      width = TextMeasurementService.getTextWidth(text, font);
 
       cache.set(key, width);
     }

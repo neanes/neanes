@@ -96,6 +96,7 @@ export class NoteElement extends ScoreElement {
   public lyricsUseDefaultStyle: boolean = true;
   public lyricsFontStyle: string = 'normal';
   public lyricsFontWeight: string = '400';
+  public lyricsTextDecoration: string = 'none';
   public isMelisma: boolean = false;
   public isMelismaStart: boolean = false;
   public isHyphen: boolean = false;

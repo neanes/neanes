@@ -23,7 +23,7 @@
           )
         "
       >
-        <option v-for="font in fonts" :key="font" :value="font">
+        <option v-for="font in lyricsFontFamilies" :key="font" :value="font">
           {{ font }}
         </option>
       </select>
@@ -38,6 +38,28 @@
         :modelValue="element.lyricsColor"
         @update:modelValue="$emit('update:lyricsColor', $event)"
       />
+      <span class="space"></span>
+      <button
+        class="icon-btn"
+        :class="{ selected: bold }"
+        @click="$emit('update:lyricsFontWeight', !bold)"
+      >
+        <b>B</b>
+      </button>
+      <button
+        class="icon-btn"
+        :class="{ selected: italic }"
+        @click="$emit('update:lyricsFontStyle', !italic)"
+      >
+        <i>I</i>
+      </button>
+      <button
+        class="icon-btn"
+        :class="{ selected: underline }"
+        @click="$emit('update:lyricsTextDecoration', !underline)"
+      >
+        <u>U</u>
+      </button>
       <span class="space"></span>
       <label class="right-space">Outline</label>
       <InputStrokeWidth
@@ -81,16 +103,32 @@ import { NoteElement } from '@/models/Element';
     'update:lyricsColor',
     'update:lyricsFontFamily',
     'update:lyricsFontSize',
-    'update:lyricsBold',
-    'update:lyricsItalic',
-    'update:lyricsUnderline',
+    'update:lyricsFontStyle',
+    'update:lyricsFontWeight',
     'update:lyricsStrokeWidth',
+    'update:lyricsTextDecoration',
     'update:lyricsUseDefaultStyle',
   ],
 })
 export default class ToolbarLyrics extends Vue {
   @Prop() element!: NoteElement;
   @Prop() fonts!: string[];
+
+  get bold() {
+    return this.element.lyricsFontWeight === '700';
+  }
+
+  get italic() {
+    return this.element.lyricsFontStyle === 'italic';
+  }
+
+  get underline() {
+    return this.element.lyricsTextDecoration === 'underline';
+  }
+
+  get lyricsFontFamilies() {
+    return ['Omega', ...this.fonts];
+  }
 }
 </script>
 

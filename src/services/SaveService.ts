@@ -416,6 +416,7 @@ export class SaveService {
       element.lyricsFontWeight = e.lyricsFontWeight;
       element.lyricsFontFamily = e.lyricsFontFamily;
       element.lyricsFontSize = e.lyricsFontSize;
+      element.lyricsTextDecoration = e.lyricsTextDecoration;
       element.lyricsStrokeWidth = e.lyricsStrokeWidth;
     }
 
@@ -940,6 +941,8 @@ export class SaveService {
       element.lyricsFontWeight = e.lyricsFontWeight ?? element.lyricsFontWeight;
       element.lyricsFontFamily = e.lyricsFontFamily ?? element.lyricsFontFamily;
       element.lyricsFontSize = e.lyricsFontSize ?? element.lyricsFontSize;
+      element.lyricsTextDecoration =
+        e.lyricsTextDecoration ?? element.lyricsTextDecoration;
       element.lyricsStrokeWidth =
         e.lyricsStrokeWidth ?? element.lyricsStrokeWidth;
     }

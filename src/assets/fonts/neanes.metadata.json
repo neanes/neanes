@@ -7221,6 +7221,12 @@
         0.0,
         0.8
       ]
+    },
+    "psifiston.alt01": {
+      "psifiston": [
+        -0.0016748000000000002,
+        0.458
+      ]
     }
   },
   "glyphsWithAlternates": {
@@ -7609,7 +7615,8 @@
     "diesisGenikiSecondary": 0.0,
     "diesisGenikiTertiary": 0.0,
     "digorgonDottedLeftSecondary": 0.0,
-    "trigorgonDottedLeftSecondary": 0.0
+    "trigorgonDottedLeftSecondary": 0.0,
+    "psifiston.alt01": 0.0
   },
   "optionalGlyphs": {
     "oligonKentimataBelow.alt01": {
@@ -7635,6 +7642,9 @@
     },
     "heteronConnecting.salt01": {
       "codepoint": "U+F007"
+    },
+    "psifiston.alt01": {
+      "codepoint": "U+F008"
     }
   },
   "glyphBBoxes": {
@@ -11156,6 +11166,16 @@
       "bBoxSW": [
         -0.384,
         0.8096665943250609
+      ]
+    },
+    "psifiston.alt01": {
+      "bBoxNE": [
+        0.9103316795701148,
+        0.46087718870268657
+      ],
+      "bBoxSW": [
+        -0.9111816955578537,
+        0.09988008099790775
       ]
     }
   },

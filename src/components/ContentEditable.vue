@@ -61,6 +61,10 @@ export default class ContentEditable extends Vue {
   blur() {
     this.htmlElement.blur();
   }
+
+  setInnerText(text: string) {
+    this.htmlElement.innerText = text;
+  }
 }
 </script>
 

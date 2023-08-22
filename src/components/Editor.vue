@@ -2259,6 +2259,12 @@ export default class Editor extends Vue {
     (this.$refs[`lyrics-${index}`] as ContentEditable[])[0].focus(selectAll);
   }
 
+  setLyrics(index: number, lyrics: string) {
+    (this.$refs[`lyrics-${index}`] as ContentEditable[])[0].setInnerText(
+      lyrics,
+    );
+  }
+
   isSyllableElement(element: ScoreElement) {
     return element.elementType == ElementType.Note;
   }
@@ -4233,8 +4239,7 @@ export default class Editor extends Vue {
     if (sanitizedLyrics !== lyrics) {
       lyrics = sanitizedLyrics;
 
-      // Force the lyrics to re-render
-      element.keyHelper++;
+      this.setLyrics(this.getElementIndex(element), lyrics);
     }
 
     if (element.lyrics === lyrics && !(element.isMelisma && clearMelisma)) {
@@ -4252,16 +4257,14 @@ export default class Editor extends Vue {
       isHyphen = lyrics === '-';
       lyrics = '';
 
-      // Force the lyrics to re-render
-      element.keyHelper++;
+      this.setLyrics(this.getElementIndex(element), lyrics);
     } else if (lyrics.endsWith('_') || lyrics.endsWith('-')) {
       isMelisma = true;
       isMelismaStart = true;
       isHyphen = lyrics.endsWith('-');
       lyrics = lyrics.slice(0, -1);
 
-      // Force the lyrics to re-render
-      element.keyHelper++;
+      this.setLyrics(this.getElementIndex(element), lyrics);
     } else {
       isMelisma = false;
       isMelismaStart = false;

@@ -276,9 +276,6 @@ export class PlaybackService {
               workspace.enharmonicVou = true;
             }
 
-            workspace.generalFlat = false;
-            workspace.generalSharp = false;
-
             this.applyFthora(
               noteElement.fthora,
               workspace,
@@ -609,6 +606,19 @@ export class PlaybackService {
     chromaticFthoraNote: ScaleNote | null,
     note?: ScaleNote,
   ) {
+    if (
+      fthora != Fthora.GeneralFlat_Top &&
+      fthora != Fthora.GeneralFlat_Bottom
+    ) {
+      workspace.generalFlat = false;
+    }
+    if (
+      fthora != Fthora.GeneralSharp_Top &&
+      fthora != Fthora.GeneralSharp_Bottom
+    ) {
+      workspace.generalSharp = false;
+    }
+
     const scale = this.getScaleFromFthora(fthora);
     if (scale == null) {
       return;
@@ -1642,8 +1652,6 @@ export class PlaybackService {
     workspace.enharmonicZo = workspace.permanentEnharmonicZo;
     workspace.enharmonicGa = false;
     workspace.enharmonicVou = workspace.permanentEnharmonicVou;
-    workspace.generalFlat = false;
-    workspace.generalSharp = false;
   }
 
   handleTempo(tempoElement: TempoElement, workspace: PlaybackWorkspace) {

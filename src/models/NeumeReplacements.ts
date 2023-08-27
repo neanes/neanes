@@ -98,7 +98,6 @@ const topOnlyKlasmaNeumes: Neume[] = [
   QuantitativeNeume.Elaphron,
   QuantitativeNeume.ElaphronPlusApostrophos,
   QuantitativeNeume.RunningElaphron,
-  QuantitativeNeume.PetastiPlusRunningElaphron,
 ];
 
 const rests: Neume[] = [

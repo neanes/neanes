@@ -5887,6 +5887,10 @@ export default class Editor extends Vue {
     border: none;
   }
 
+  .selectedLyrics {
+    border: none;
+  }
+
   .file-menu-bar,
   .neume-selector-panel,
   .workspace-tab-container,

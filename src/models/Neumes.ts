@@ -406,6 +406,12 @@ export enum Tie {
   YfenBelow = 'YfenBelow',
 }
 
+export enum NeumeSelection {
+  Primary = 'Primary',
+  Secondary = 'Secondary',
+  Tertiary = 'Tertiary',
+}
+
 export type Neume =
   | QuantitativeNeume
   | TimeNeume

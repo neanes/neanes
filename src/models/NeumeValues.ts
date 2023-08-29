@@ -1,4 +1,4 @@
-import { QuantitativeNeume } from '@/models/Neumes';
+import { Fthora, NeumeSelection, QuantitativeNeume } from '@/models/Neumes';
 
 const neumeValueMap = new Map<QuantitativeNeume, number>([
   [QuantitativeNeume.Ison, 0],
@@ -121,6 +121,74 @@ export function getNoteSpread(neume: QuantitativeNeume) {
       return [0, -1, 0];
     default:
       return [0];
+  }
+}
+
+export function getSpreadIndex(
+  fthora: Fthora,
+  neume: QuantitativeNeume,
+  neumeSelection: NeumeSelection,
+) {
+  switch (neume) {
+    case QuantitativeNeume.KentemataPlusOligon:
+      if (neumeSelection === NeumeSelection.Primary) {
+        return 1;
+      } else if (neumeSelection === NeumeSelection.Secondary) {
+        return -1; // Undefined
+      } else if (neumeSelection === NeumeSelection.Tertiary) {
+        return -1; // Undefined
+      }
+    case QuantitativeNeume.Hyporoe:
+    case QuantitativeNeume.PetastiPlusHyporoe:
+      if (neumeSelection === NeumeSelection.Primary) {
+        if (
+          fthora.endsWith('_Top') ||
+          fthora.endsWith('_TopSecondary') ||
+          fthora.endsWith('_TopTertiary')
+        ) {
+          return 0;
+        } else if (fthora.endsWith('_Bottom')) {
+          return 1;
+        } else {
+          return -1; // Undefined
+        }
+      } else if (neumeSelection === NeumeSelection.Secondary) {
+        return -1; // Undefined
+      } else if (neumeSelection === NeumeSelection.Tertiary) {
+        return -1; // Undefined
+      }
+    case QuantitativeNeume.OligonPlusHamiliPlusKentemata:
+    case QuantitativeNeume.OligonPlusIsonPlusKentemata:
+    case QuantitativeNeume.OligonPlusElaphronPlusKentemata:
+    case QuantitativeNeume.OligonPlusApostrophosPlusKentemata:
+    case QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata:
+    case QuantitativeNeume.RunningElaphron:
+    case QuantitativeNeume.PetastiPlusRunningElaphron:
+      if (neumeSelection === NeumeSelection.Primary) {
+        return 1;
+      } else if (neumeSelection === NeumeSelection.Secondary) {
+        return 0;
+      } else if (neumeSelection === NeumeSelection.Tertiary) {
+        return -1; // Undefined
+      }
+    case QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata:
+      if (neumeSelection == NeumeSelection.Primary) {
+        return 2;
+      } else if (neumeSelection === NeumeSelection.Secondary) {
+        return 1;
+      } else if (neumeSelection === NeumeSelection.Tertiary) {
+        return 0;
+      }
+    case QuantitativeNeume.OligonPlusHyporoePlusKentemata:
+      if (neumeSelection === NeumeSelection.Primary) {
+        return 2;
+      } else if (neumeSelection === NeumeSelection.Secondary) {
+        return 0;
+      } else if (neumeSelection === NeumeSelection.Tertiary) {
+        return -1; // Undefined
+      }
+    default:
+      return -1; // Undefined
   }
 }
 

@@ -593,6 +593,8 @@
         :element="selectedElement"
         :pageSetup="score.pageSetup"
         :key="`toolbar-neume-${selectedElement.id}-${selectedElement.keyHelper}`"
+        :innerNeume="toolbarInnerNeume"
+        @update:innerNeume="toolbarInnerNeume = $event"
         @update:accidental="
           setAccidental(selectedElement as NoteElement, $event)
         "
@@ -961,6 +963,8 @@ export default class Editor extends Vue {
 
   fonts: string[] = [];
 
+  toolbarInnerNeume: string = 'Primary';
+
   neumeKeyboard: NeumeKeyboard = new NeumeKeyboard();
   keyboardModifier: string | null = null;
 
@@ -1262,6 +1266,7 @@ export default class Editor extends Vue {
       this.selectedLyrics = null;
       this.selectionRange = null;
       this.selectedHeaderFooterElement = null;
+      this.toolbarInnerNeume = 'Primary';
 
       if (this.audioService.state === AudioState.Playing) {
         const event = this.playbackEvents.find(

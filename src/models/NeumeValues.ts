@@ -135,11 +135,7 @@ export function getSpreadIndex(
     case QuantitativeNeume.OligonPlusKentemataPlusHypsiliRight:
     case QuantitativeNeume.OligonPlusKentemata:
       if (neumeSelection === NeumeSelection.Primary) {
-        if (
-          fthora.endsWith('_Top') ||
-          fthora.endsWith('_TopSecondary') ||
-          fthora.endsWith('_TopTertiary')
-        ) {
+        if (fthora.endsWith('_Top')) {
           return 1;
         } else if (fthora.endsWith('_Bottom')) {
           return 0;
@@ -162,11 +158,7 @@ export function getSpreadIndex(
     case QuantitativeNeume.Hyporoe:
     case QuantitativeNeume.PetastiPlusHyporoe:
       if (neumeSelection === NeumeSelection.Primary) {
-        if (
-          fthora.endsWith('_Top') ||
-          fthora.endsWith('_TopSecondary') ||
-          fthora.endsWith('_TopTertiary')
-        ) {
+        if (fthora.endsWith('_Top')) {
           return 0;
         } else if (fthora.endsWith('_Bottom')) {
           return 1;

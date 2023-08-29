@@ -6,20 +6,20 @@
       <button
         v-if="hasTertiaryNeume"
         class="btnNeumeSelect"
-        @click="innerNeume = 'Tertiary'"
+        @click="$emit('update:innerNeume', 'Tertiary')"
         :class="{ selected: innerNeume === 'Tertiary' }"
       >
         1
       </button>
       <button
-        @click="innerNeume = 'Secondary'"
+        @click="$emit('update:innerNeume', 'Secondary')"
         class="btnNeumeSelect"
         :class="{ selected: innerNeume === 'Secondary' }"
       >
         {{ hasTertiaryNeume ? '2' : '1' }}
       </button>
       <button
-        @click="innerNeume = 'Primary'"
+        @click="$emit('update:innerNeume', 'Primary')"
         class="btnNeumeSelect"
         :class="{ selected: innerNeume === 'Primary' }"
       >
@@ -449,6 +449,7 @@ import { Unit } from '@/utils/Unit';
     'update:fthora',
     'update:gorgon',
     'update:ignoreAttractions',
+    'update:innerNeume',
     'update:ison',
     'update:klasma',
     'update:koronis',
@@ -469,12 +470,11 @@ import { Unit } from '@/utils/Unit';
 export default class ToolbarNeume extends Vue {
   @Prop() element!: NoteElement;
   @Prop() pageSetup!: PageSetup;
+  @Prop() innerNeume!: string;
   VocalExpressionNeume = VocalExpressionNeume;
   GorgonNeume = GorgonNeume;
   Fthora = Fthora;
   Tie = Tie;
-
-  innerNeume = 'Primary';
 
   chromaticFthoras = [
     Fthora.SoftChromaticPa_Top,
@@ -777,11 +777,7 @@ export default class ToolbarNeume extends Vue {
   ];
 
   get isMultiNeume() {
-    const result = takesSecondaryNeumes(this.element.quantitativeNeume);
-
-    this.innerNeume = 'Primary';
-
-    return result;
+    return takesSecondaryNeumes(this.element.quantitativeNeume);
   }
 
   get hasTertiaryNeume() {

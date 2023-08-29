@@ -17,6 +17,7 @@ import {
   Fthora,
   MeasureBar,
   Neume,
+  NeumeSelection,
   Note,
   NoteIndicator,
   QuantitativeNeume,
@@ -24,7 +25,11 @@ import {
   Tie,
   VocalExpressionNeume,
 } from '@/models/Neumes';
-import { getNeumeValue, getNoteSpread } from '@/models/NeumeValues';
+import {
+  getNeumeValue,
+  getNoteSpread,
+  getSpreadIndex,
+} from '@/models/NeumeValues';
 import { Line, Page } from '@/models/Page';
 import { PageSetup } from '@/models/PageSetup';
 import {
@@ -1508,18 +1513,20 @@ export class LayoutService {
           note.tertiaryFthoraCarry = null;
         }
 
-        // TODO handle the case when the yporroe has a fthora on it
-        // The shift is not currently calculated correctly in that case.
         if (note.fthora) {
           if (this.fthoraIsValid(note.fthora, currentNotes, pageSetup)) {
-            currentScale =
-              this.getScaleFromFthora(note.fthora, currentNote) || currentScale;
-
-            currentShift = this.getShift(
-              currentNote,
-              currentScale,
+            const spreadIndex = getSpreadIndex(
               note.fthora,
+              note.quantitativeNeume,
+              NeumeSelection.Primary,
             );
+            const fthoraNote =
+              spreadIndex != -1 ? currentNotes[spreadIndex] : currentNote;
+
+            currentScale =
+              this.getScaleFromFthora(note.fthora, fthoraNote) || currentScale;
+
+            currentShift = this.getShift(fthoraNote, currentScale, note.fthora);
 
             note.fthoraCarry = null;
           } else {
@@ -1530,12 +1537,20 @@ export class LayoutService {
           if (
             this.fthoraIsValid(note.secondaryFthora, currentNotes, pageSetup)
           ) {
+            const spreadIndex = getSpreadIndex(
+              note.secondaryFthora,
+              note.quantitativeNeume,
+              NeumeSelection.Secondary,
+            );
+            const fthoraNote =
+              spreadIndex != -1 ? currentNotes[spreadIndex] : currentNote;
+
             currentScale =
-              this.getScaleFromFthora(note.secondaryFthora, currentNote - 1) ||
+              this.getScaleFromFthora(note.secondaryFthora, fthoraNote) ||
               currentScale;
 
             currentShift = this.getShift(
-              currentNote - 1,
+              fthoraNote,
               currentScale,
               note.secondaryFthora,
             );
@@ -1549,12 +1564,20 @@ export class LayoutService {
           if (
             this.fthoraIsValid(note.tertiaryFthora, currentNotes, pageSetup)
           ) {
+            const spreadIndex = getSpreadIndex(
+              note.tertiaryFthora,
+              note.quantitativeNeume,
+              NeumeSelection.Tertiary,
+            );
+            const fthoraNote =
+              spreadIndex != -1 ? currentNotes[spreadIndex] : currentNote;
+
             currentScale =
-              this.getScaleFromFthora(note.tertiaryFthora, currentNote - 2) ||
+              this.getScaleFromFthora(note.tertiaryFthora, fthoraNote) ||
               currentScale;
 
             currentShift = this.getShift(
-              currentNote - 2,
+              fthoraNote,
               currentScale,
               note.tertiaryFthora,
             );

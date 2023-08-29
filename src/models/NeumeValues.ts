@@ -130,6 +130,27 @@ export function getSpreadIndex(
   neumeSelection: NeumeSelection,
 ) {
   switch (neume) {
+    case QuantitativeNeume.OligonKentimaMiddleKentimata:
+    case QuantitativeNeume.OligonPlusKentemataPlusHypsiliLeft:
+    case QuantitativeNeume.OligonPlusKentemataPlusHypsiliRight:
+    case QuantitativeNeume.OligonPlusKentemata:
+      if (neumeSelection === NeumeSelection.Primary) {
+        if (
+          fthora.endsWith('_Top') ||
+          fthora.endsWith('_TopSecondary') ||
+          fthora.endsWith('_TopTertiary')
+        ) {
+          return 1;
+        } else if (fthora.endsWith('_Bottom')) {
+          return 0;
+        } else {
+          return -1; // Undefined
+        }
+      } else if (neumeSelection === NeumeSelection.Secondary) {
+        return -1; // Undefined
+      } else if (neumeSelection === NeumeSelection.Tertiary) {
+        return -1; // Undefined
+      }
     case QuantitativeNeume.KentemataPlusOligon:
       if (neumeSelection === NeumeSelection.Primary) {
         return 1;

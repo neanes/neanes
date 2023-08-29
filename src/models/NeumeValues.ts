@@ -134,6 +134,7 @@ export function getSpreadIndex(
     case QuantitativeNeume.OligonPlusKentemataPlusHypsiliLeft:
     case QuantitativeNeume.OligonPlusKentemataPlusHypsiliRight:
     case QuantitativeNeume.OligonPlusKentemata:
+      // TODO (#253) Add support for fthora above oligon that applies to oligon rather than kentemata
       if (neumeSelection === NeumeSelection.Primary) {
         if (fthora.endsWith('_Top')) {
           return 1;

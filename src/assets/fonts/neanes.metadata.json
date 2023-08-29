@@ -2447,6 +2447,10 @@
       ]
     },
     "oligonKentimataAbove": {
+      "fthoraTopSecondary": [
+        0.24,
+        0.48
+      ],
       "yfenAbove": [
         0.93,
         0.901

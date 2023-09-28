@@ -172,6 +172,7 @@
       </button>
       <ButtonWithMenu
         :options="isonMenuOptions"
+        :disabled="isonDisabled"
         @select="$emit('update:ison', $event)"
       />
     </div>
@@ -869,6 +870,10 @@ export default class ToolbarNeume extends Vue {
     return (
       this.element.quantitativeNeume !== QuantitativeNeume.KentemataPlusOligon
     );
+  }
+
+  get isonDisabled() {
+    return restNeumes.includes(this.element.quantitativeNeume);
   }
 
   get spathiDisabled() {

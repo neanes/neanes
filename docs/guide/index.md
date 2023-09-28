@@ -257,7 +257,7 @@ It may also be overridden for an entire hymn by clicking on the mode key and che
 
 #### Classic Legetos
 
-If checked, hymns in the fourth mode with base notes Pa or Vou will use the classic legetos scale with Vou lowered so that the interval Vou - Di is larger than a minor third.
+If checked, hymns in the fourth mode with base notes Pa or Vou will use the classic legetos scale with Vou lowered so that the interval Vou - Di is larger than it is in the standard diatonic scale.
 
 Below is an [example](/neanes/assets/media/Legetos_Example_1__Father_Dositheos_Katounakiotis_Kekragarion.20055d92.mp3) of Father Dositheos Katounakiotis chanting the Kekragarion in the legetos mode.
 

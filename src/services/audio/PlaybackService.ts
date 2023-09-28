@@ -159,7 +159,7 @@ export class PlaybackService {
         diatonicIntervals: [12, 10, 8],
         hardChromaticIntervals: [6, 20, 4],
         softChromaticIntervals: [8, 14, 8],
-        legetosIntervals: [6, 9, 15],
+        legetosIntervals: [8, 10, 12],
         zygosIntervals: [18, 4, 16, 4],
         zygosLegetosIntervals: [18, 4, 20, 4],
         spathiIntervals: [20, 4, 4, 14],
@@ -2017,7 +2017,7 @@ export class PlaybackService {
 
   legetosScale: PlaybackScale = {
     name: PlaybackScaleName.Legetos,
-    intervals: [6, 9, 15, 12, 6, 9, 15],
+    intervals: [8, 10, 12, 12, 8, 10, 12],
     scaleNoteMap: new Map<ScaleNote, number>([
       [ScaleNote.VouLow, 1],
       [ScaleNote.GaLow, 2],

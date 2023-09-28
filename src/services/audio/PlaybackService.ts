@@ -1582,6 +1582,7 @@ export class PlaybackService {
     const duration = this.restMap.get(noteElement.quantitativeNeume)!;
 
     const restEvent: PlaybackSequenceEvent = {
+      isonFrequency: workspace.isonFrequency,
       type: 'rest',
       bpm: workspace.bpm,
       duration: duration * workspace.beat,

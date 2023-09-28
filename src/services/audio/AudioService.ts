@@ -140,6 +140,27 @@ export class AudioService {
         this.toneEvents.push(toneEvent);
       } else if (event.type === 'rest') {
         const toneEvent = new ToneEvent((time) => {
+          const isonUnison = event.isonFrequency === -1;
+
+          if (isonUnison) {
+            if (event.frequency != null) {
+              isonSynth.triggerAttack(event.frequency!, time);
+            }
+
+            currentIsonFrequency = 0;
+          } else if (event.isonFrequency === 0 || event.isonFrequency == null) {
+            isonSynth.triggerRelease(time);
+            currentIsonFrequency = 0;
+          } else if (event.isonFrequency !== currentIsonFrequency) {
+            currentIsonFrequency = event.isonFrequency;
+
+            if (event.isonFrequency != null) {
+              isonSynth.triggerAttack(event.isonFrequency!, time);
+            } else {
+              console.warn('AudioService: missing ison frequency', event);
+            }
+          }
+
           EventBus.$emit(AudioServiceEventNames.EventPlay, event);
 
           if (this.loggingEnabled) {

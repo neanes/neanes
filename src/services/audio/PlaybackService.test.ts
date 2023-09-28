@@ -259,14 +259,14 @@ describe('PlaybackService', () => {
     it.each`
       scaleNote        | expectedFrequency
       ${ScaleNote.Pa}  | ${146.83}
-      ${ScaleNote.Vou} | ${155.57}
+      ${ScaleNote.Vou} | ${158.59}
     `(
-      'should play the correct starting note for the 6-9-15 legetos scale when no fthora is present',
+      'should play the correct starting note for the 8-10-12 legetos scale when no fthora is present',
       ({ scaleNote, expectedFrequency }) => {
         const service = new PlaybackService();
 
         const options = getDefaultWorkspaceOptions();
-        options.legetosIntervals = [6, 9, 15];
+        options.legetosIntervals = [8, 10, 12];
         options.useLegetos = true;
 
         const elements: ScoreElement[] = [];
@@ -282,31 +282,31 @@ describe('PlaybackService', () => {
 
     it.each`
       base                                                         | expectedFrequency
-      ${QuantitativeNeume.HamiliPlusElaphron}                      | ${77.78}
-      ${QuantitativeNeume.HamiliPlusApostrophos}                   | ${84.82}
+      ${QuantitativeNeume.HamiliPlusElaphron}                      | ${79.29}
+      ${QuantitativeNeume.HamiliPlusApostrophos}                   | ${87.31}
       ${QuantitativeNeume.Hamili}                                  | ${98}
       ${QuantitativeNeume.ElaphronPlusApostrophos}                 | ${110}
-      ${QuantitativeNeume.Elaphron}                                | ${116.54}
-      ${QuantitativeNeume.Apostrophos}                             | ${127.09}
+      ${QuantitativeNeume.Elaphron}                                | ${118.81}
+      ${QuantitativeNeume.Apostrophos}                             | ${130.81}
       ${QuantitativeNeume.Ison}                                    | ${146.83}
-      ${QuantitativeNeume.Oligon}                                  | ${155.57}
-      ${QuantitativeNeume.OligonPlusKentima}                       | ${169.65}
+      ${QuantitativeNeume.Oligon}                                  | ${158.59}
+      ${QuantitativeNeume.OligonPlusKentima}                       | ${174.62}
       ${QuantitativeNeume.OligonPlusKentimaAbove}                  | ${196}
       ${QuantitativeNeume.OligonPlusHypsiliRight}                  | ${220}
-      ${QuantitativeNeume.OligonPlusHypsiliLeft}                   | ${233.08}
-      ${QuantitativeNeume.PetastiPlusHypsiliPlusKentimaHorizontal} | ${254.18}
+      ${QuantitativeNeume.OligonPlusHypsiliLeft}                   | ${237.62}
+      ${QuantitativeNeume.PetastiPlusHypsiliPlusKentimaHorizontal} | ${261.63}
       ${QuantitativeNeume.PetastiPlusHypsiliPlusKentimaVertical}   | ${293.67}
-      ${QuantitativeNeume.PetastiPlusDoubleHypsili}                | ${311.13}
-      ${QuantitativeNeume.PetastiKentimataDoubleYpsili}            | ${339.29}
+      ${QuantitativeNeume.PetastiPlusDoubleHypsili}                | ${317.18}
+      ${QuantitativeNeume.PetastiKentimataDoubleYpsili}            | ${349.23}
       ${QuantitativeNeume.PetastiKentimaDoubleYpsiliRight}         | ${392}
       ${QuantitativeNeume.PetastiKentimaDoubleYpsiliLeft}          | ${440.01}
     `(
-      'should play the correct starting note for 6-9-15 legetos scale when no fthora is present',
+      'should play the correct starting note for 8-10-12 legetos scale when no fthora is present',
       ({ base, expectedFrequency }) => {
         const service = new PlaybackService();
 
         const options = getDefaultWorkspaceOptions();
-        options.legetosIntervals = [6, 9, 15];
+        options.legetosIntervals = [8, 10, 12];
         options.useLegetos = true;
 
         const elements: ScoreElement[] = [];
@@ -705,7 +705,7 @@ function getDefaultWorkspaceOptions() {
     diatonicIntervals: [12, 10, 8],
     hardChromaticIntervals: [6, 20, 4],
     softChromaticIntervals: [8, 14, 8],
-    legetosIntervals: [6, 9, 15],
+    legetosIntervals: [8, 10, 12],
     zygosIntervals: [18, 4, 16, 4],
     zygosLegetosIntervals: [18, 4, 20, 4],
     spathiIntervals: [20, 4, 4, 14],

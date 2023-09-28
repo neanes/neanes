@@ -979,7 +979,7 @@ export default class Editor extends Vue {
     diatonicIntervals: [12, 10, 8],
     hardChromaticIntervals: [6, 20, 4],
     softChromaticIntervals: [8, 14, 8],
-    legetosIntervals: [6, 9, 15],
+    legetosIntervals: [8, 10, 12],
     zygosIntervals: [18, 4, 16, 4],
     zygosLegetosIntervals: [18, 4, 20, 4],
     spathiIntervals: [20, 4, 4, 14],

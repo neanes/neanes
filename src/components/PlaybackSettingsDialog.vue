@@ -645,7 +645,7 @@ export default class PlaybackSettingsDialog extends Vue {
     this.options.diatonicIntervals = [12, 10, 8];
     this.options.hardChromaticIntervals = [6, 20, 4];
     this.options.softChromaticIntervals = [8, 14, 8];
-    this.options.legetosIntervals = [6, 9, 15];
+    this.options.legetosIntervals = [8, 10, 12];
     this.options.zygosIntervals = [18, 4, 16, 4];
     this.options.zygosLegetosIntervals = [18, 4, 20, 4];
     this.options.spathiIntervals = [20, 4, 4, 14];

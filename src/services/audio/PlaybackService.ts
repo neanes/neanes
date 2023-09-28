@@ -19,6 +19,7 @@ import { getNeumeValue, getNoteSpread } from '@/models/NeumeValues';
 import {
   getIsonValue,
   getNoteValue,
+  getScaleNoteFromValue,
   getScaleNoteValue,
   Scale,
   ScaleNote,
@@ -136,12 +137,6 @@ export interface PlaybackScale {
 }
 
 export class PlaybackService {
-  constructor() {
-    for (const [key, value] of this.scaleNoteMap) {
-      this.reverseScaleNoteMap.set(value, key);
-    }
-  }
-
   computePlaybackSequence(elements: ScoreElement[], options: PlaybackOptions) {
     const defaultFrequencyDi = 196;
 
@@ -195,7 +190,7 @@ export class PlaybackService {
       isonFrequency: 0,
       scale: this.diatonicScale,
       legetos: false,
-      note: this.reverseScaleNoteMap.get(ScaleNote.Thi)!,
+      note: getScaleNoteValue(ScaleNote.Thi)!,
       noteOffset: 0,
 
       bpm: 0,
@@ -245,14 +240,14 @@ export class PlaybackService {
           const noteSpread = getNoteSpread(noteElement.quantitativeNeume);
 
           const allNotes = noteSpread.map((x) =>
-            this.scaleNoteMap.get(destinationNote + x),
+            getScaleNoteFromValue(destinationNote + x),
           );
 
           if (
             noteElement.fthora === Fthora.Enharmonic_Top ||
             noteElement.fthora === Fthora.Enharmonic_Bottom
           ) {
-            const scaleNote = this.scaleNoteMap.get(destinationNote);
+            const scaleNote = getScaleNoteFromValue(destinationNote);
 
             if (allNotes.includes(ScaleNote.ZoHigh)) {
               workspace.enharmonicZo = true;
@@ -280,7 +275,7 @@ export class PlaybackService {
               noteElement.fthora,
               workspace,
               noteElement.chromaticFthoraNote,
-              this.scaleNoteMap.get(workspace.note),
+              getScaleNoteFromValue(workspace.note),
             );
           } else if (
             noteElement.fthora === Fthora.GeneralFlat_Top ||
@@ -685,7 +680,7 @@ export class PlaybackService {
   }
 
   switchToDiatonic(workspace: PlaybackWorkspace) {
-    const note = this.scaleNoteMap.get(workspace.note);
+    const note = getScaleNoteFromValue(workspace.note);
     workspace.scale = this.diatonicScale;
     workspace.intervalIndex = this.diatonicScale.scaleNoteMap.get(note!)!;
   }
@@ -727,7 +722,7 @@ export class PlaybackService {
   }
 
   applyGeneralAlterations(frequency: number, workspace: PlaybackWorkspace) {
-    const note = this.scaleNoteMap.get(workspace.note);
+    const note = getScaleNoteFromValue(workspace.note);
     if (workspace.generalFlat && note === ScaleNote.ZoHigh) {
       frequency = this.changeFrequency(
         frequency,
@@ -744,7 +739,7 @@ export class PlaybackService {
   }
 
   applyAttractions(frequency: number, workspace: PlaybackWorkspace) {
-    const note = this.scaleNoteMap.get(workspace.note + workspace.noteOffset);
+    const note = getScaleNoteFromValue(workspace.note + workspace.noteOffset);
 
     // If melody descends after zo, flatten zo
     if (
@@ -909,7 +904,7 @@ export class PlaybackService {
       modeKeyElement.scaleNote,
     )!;
 
-    workspace.note = this.reverseScaleNoteMap.get(modeKeyElement.scaleNote)!;
+    workspace.note = getScaleNoteValue(modeKeyElement.scaleNote)!;
 
     if (modeKeyElement.fthora) {
       this.applyFthora(modeKeyElement.fthora, workspace, null);
@@ -1644,7 +1639,7 @@ export class PlaybackService {
 
       const distance =
         getNoteValue(martyriaElement.note) -
-        getScaleNoteValue(this.scaleNoteMap.get(workspace.note)!);
+        getScaleNoteValue(getScaleNoteFromValue(workspace.note)!);
 
       this.moveDistance(workspace, distance);
     }
@@ -1828,29 +1823,6 @@ export class PlaybackService {
     [QuantitativeNeume.VareiaDotted3, 3],
     [QuantitativeNeume.VareiaDotted4, 4],
   ]);
-
-  scaleNoteMap = new Map<number, ScaleNote>([
-    [-6, ScaleNote.VouLow],
-    [-5, ScaleNote.GaLow],
-    [-4, ScaleNote.ThiLow],
-    [-3, ScaleNote.KeLow],
-    [-2, ScaleNote.Zo],
-    [-1, ScaleNote.Ni],
-    [0, ScaleNote.Pa],
-    [1, ScaleNote.Vou],
-    [2, ScaleNote.Ga],
-    [3, ScaleNote.Thi],
-    [4, ScaleNote.Ke],
-    [5, ScaleNote.ZoHigh],
-    [6, ScaleNote.NiHigh],
-    [7, ScaleNote.PaHigh],
-    [8, ScaleNote.VouHigh],
-    [9, ScaleNote.GaHigh],
-    [10, ScaleNote.ThiHigh],
-    [11, ScaleNote.KeHigh],
-  ]);
-
-  reverseScaleNoteMap = new Map<ScaleNote, number>();
 
   timeMap = new Map<TimeNeume, number>([
     [TimeNeume.Klasma_Bottom, 1],

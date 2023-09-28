@@ -34,6 +34,7 @@ import { Line, Page } from '@/models/Page';
 import { PageSetup } from '@/models/PageSetup';
 import {
   getNoteFromValue,
+  getNoteValue,
   getScaleNoteFromValue,
   getScaleNoteValue,
   Scale,
@@ -1646,9 +1647,7 @@ export class LayoutService {
         const martyria = element as MartyriaElement;
 
         if (!martyria.auto) {
-          currentNote = reverseNoteMap.has(martyria.note)
-            ? reverseNoteMap.get(martyria.note)!
-            : currentNote;
+          currentNote = getNoteValue(martyria.note);
 
           currentScale = martyria.scale;
 
@@ -1660,7 +1659,7 @@ export class LayoutService {
         } else {
           martyria.error = false;
 
-          martyria.note = noteMap.get(currentNote) || Note.Pa;
+          martyria.note = getNoteFromValue(currentNote);
           martyria.scale = currentScale;
 
           const currentScaleNote = currentNote + currentShift;
@@ -1769,9 +1768,9 @@ export class LayoutService {
         enharmonicZoRootSignMap.get(currentScaleNote) || RootSign.Alpha;
     }
 
-    if (currentNote <= reverseNoteMap.get(Note.KeLow)!) {
+    if (currentNote <= getNoteValue(Note.KeLow)) {
       rootSign = lowRootSignMap.get(rootSign) || rootSign;
-    } else if (currentNote > reverseNoteMap.get(Note.KeLow)!) {
+    } else if (currentNote > getNoteValue(Note.KeLow)) {
       rootSign = highRootSignMap.get(rootSign) || rootSign;
     }
 
@@ -1999,27 +1998,6 @@ export class LayoutService {
   }
 }
 
-const noteMap = new Map<number, Note>([
-  [-6, Note.VouLow],
-  [-5, Note.GaLow],
-  [-4, Note.ThiLow],
-  [-3, Note.KeLow],
-  [-2, Note.Zo],
-  [-1, Note.Ni],
-  [0, Note.Pa],
-  [1, Note.Vou],
-  [2, Note.Ga],
-  [3, Note.Thi],
-  [4, Note.Ke],
-  [5, Note.ZoHigh],
-  [6, Note.NiHigh],
-  [7, Note.PaHigh],
-  [8, Note.VouHigh],
-  [9, Note.GaHigh],
-  [10, Note.ThiHigh],
-  [11, Note.KeHigh],
-]);
-
 const noteIndicatorMap = new Map<number, NoteIndicator>([
   [0, NoteIndicator.Pa],
   [1, NoteIndicator.Vou],
@@ -2029,12 +2007,6 @@ const noteIndicatorMap = new Map<number, NoteIndicator>([
   [5, NoteIndicator.Zo],
   [6, NoteIndicator.Ni],
 ]);
-
-const reverseNoteMap = new Map<Note, number>();
-
-for (const [key, value] of noteMap) {
-  reverseNoteMap.set(value, key);
-}
 
 const diatonicRootSignMap = new Map<number, RootSign>([
   [-9, RootSign.NanaLow],

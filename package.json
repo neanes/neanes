@@ -51,7 +51,7 @@
     "@babel/preset-typescript": "^7.23.0",
     "@types/electron-devtools-installer": "^2.2.3",
     "@types/mime-types": "^2.1.2",
-    "@types/node": "^20.7.0",
+    "@types/node": "^20.7.2",
     "@types/throttle-debounce": "^5.0.0",
     "@types/uuid": "^9.0.4",
     "@vitejs/plugin-vue": "^4.3.4",

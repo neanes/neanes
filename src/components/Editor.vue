@@ -4098,7 +4098,7 @@ export default class Editor extends Vue {
       fthora === Fthora.SoftChromaticPa_Top ||
       fthora === Fthora.SoftChromaticPa_Bottom
     ) {
-      chromaticFthoraNote = ScaleNote.Ke;
+      chromaticFthoraNote = ScaleNote.Ga;
     } else if (
       fthora === Fthora.HardChromaticThi_Top ||
       fthora === Fthora.HardChromaticThi_Bottom
@@ -4514,7 +4514,7 @@ export default class Editor extends Vue {
       fthora === Fthora.SoftChromaticPa_Top ||
       fthora === Fthora.SoftChromaticPa_Bottom
     ) {
-      chromaticFthoraNote = ScaleNote.Ke;
+      chromaticFthoraNote = ScaleNote.Ga;
     } else if (
       fthora === Fthora.HardChromaticThi_Top ||
       fthora === Fthora.HardChromaticThi_Bottom

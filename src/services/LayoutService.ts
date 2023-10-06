@@ -1795,7 +1795,7 @@ export class LayoutService {
     return rootSign;
   }
 
-  private static getScaleFromFthora(fthora: Fthora, currentNote: number) {
+  public static getScaleFromFthora(fthora: Fthora, currentNote: number) {
     if (
       fthora.startsWith('Diatonic') ||
       fthora.startsWith('GeneralSharp') ||
@@ -1853,7 +1853,7 @@ export class LayoutService {
     return null;
   }
 
-  private static getShift(
+  public static getShift(
     currentNote: number,
     currentScale: Scale,
     fthora: Fthora,
@@ -1868,7 +1868,7 @@ export class LayoutService {
       );
 
       shift = fthoraNote - currentNote;
-      shift = shift % 4;
+      shift %= 4;
     } else if (currentScale === Scale.SoftChromatic) {
       const fthoraNote = getScaleNoteValue(
         chromaticFthoraNote ??
@@ -1876,7 +1876,7 @@ export class LayoutService {
       );
 
       shift = fthoraNote - currentNote;
-      shift = shift % 4;
+      shift %= 4;
     } else if (currentScale === Scale.Diatonic) {
       let fthoraNote = currentNote;
 

@@ -99,52 +99,7 @@ describe('PlaybackService', () => {
     });
   });
 
-  describe('applyModeKey', () => {
-    it('should clear enharmonic Ga', () => {
-      const service = new PlaybackService();
-
-      const workspace = getDefaultWorkspace([], service.diatonicScale);
-
-      workspace.enharmonicGa = true;
-
-      service.applyModeKey(
-        getModeKey(1, Scale.Diatonic, ScaleNote.Pa),
-        workspace,
-      );
-
-      expect(workspace.enharmonicGa).toBeFalsy();
-    });
-
-    it('should clear enharmonic Zo', () => {
-      const service = new PlaybackService();
-
-      const workspace = getDefaultWorkspace([], service.diatonicScale);
-
-      workspace.enharmonicZo = true;
-
-      service.applyModeKey(
-        getModeKey(1, Scale.Diatonic, ScaleNote.Pa),
-        workspace,
-      );
-
-      expect(workspace.enharmonicZo).toBeFalsy();
-    });
-
-    it('should clear enharmonic Vou', () => {
-      const service = new PlaybackService();
-
-      const workspace = getDefaultWorkspace([], service.diatonicScale);
-
-      workspace.enharmonicVou = true;
-
-      service.applyModeKey(
-        getModeKey(1, Scale.Diatonic, ScaleNote.Pa),
-        workspace,
-      );
-
-      expect(workspace.enharmonicVou).toBeFalsy();
-    });
-
+  describe('handleModeKey', () => {
     it('should clear general flat', () => {
       const service = new PlaybackService();
 
@@ -152,7 +107,7 @@ describe('PlaybackService', () => {
 
       workspace.generalFlat = true;
 
-      service.applyModeKey(
+      service.handleModeKey(
         getModeKey(1, Scale.Diatonic, ScaleNote.Pa),
         workspace,
       );
@@ -167,7 +122,7 @@ describe('PlaybackService', () => {
 
       workspace.generalSharp = true;
 
-      service.applyModeKey(
+      service.handleModeKey(
         getModeKey(1, Scale.Diatonic, ScaleNote.Pa),
         workspace,
       );

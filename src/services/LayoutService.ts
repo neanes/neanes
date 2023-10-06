@@ -1527,8 +1527,16 @@ export class LayoutService {
             currentScale =
               this.getScaleFromFthora(note.fthora, fthoraNote) || currentScale;
 
-            currentShift = this.getShift(fthoraNote, currentScale, note.fthora);
+            currentShift = this.getShift(
+              fthoraNote,
+              currentScale,
+              note.fthora,
+              note.chromaticFthoraNote,
+            );
 
+            note.noteIndicatorNeume = noteIndicatorMap.get(
+              (((currentNote + currentShift) % 7) + 7) % 7,
+            )!;
             note.fthoraCarry = null;
           } else {
             note.fthoraCarry = note.fthora;
@@ -1554,8 +1562,12 @@ export class LayoutService {
               fthoraNote,
               currentScale,
               note.secondaryFthora,
+              note.chromaticFthoraNote,
             );
 
+            note.noteIndicatorNeume = noteIndicatorMap.get(
+              (((currentNote + currentShift) % 7) + 7) % 7,
+            )!;
             note.secondaryFthoraCarry = null;
           } else {
             note.secondaryFthoraCarry = note.secondaryFthora;
@@ -1581,8 +1593,12 @@ export class LayoutService {
               fthoraNote,
               currentScale,
               note.tertiaryFthora,
+              note.chromaticFthoraNote,
             );
 
+            note.noteIndicatorNeume = noteIndicatorMap.get(
+              (((currentNote + currentShift) % 7) + 7) % 7,
+            )!;
             note.tertiaryFthoraCarry = null;
           } else {
             note.tertiaryFthoraCarry = note.tertiaryFthoraCarry;
@@ -1641,6 +1657,7 @@ export class LayoutService {
             currentNote,
             currentScale,
             modeKey.fthora,
+            null,
           );
         }
       } else if (element.elementType === ElementType.Martyria) {
@@ -1690,6 +1707,7 @@ export class LayoutService {
                 currentNote,
                 currentScale,
                 martyria.fthora,
+                martyria.chromaticFthoraNote,
               );
 
               martyria.fthoraCarry = null;
@@ -1839,21 +1857,26 @@ export class LayoutService {
     currentNote: number,
     currentScale: Scale,
     fthora: Fthora,
+    chromaticFthoraNote: ScaleNote | null,
   ) {
     let shift = 0;
 
     if (currentScale === Scale.HardChromatic) {
-      if (currentNote % 2 === 0) {
-        shift = fthora.startsWith('HardChromaticPa') ? 0 : 1;
-      } else {
-        shift = fthora.startsWith('HardChromaticThi') ? 0 : 1;
-      }
+      const fthoraNote = getScaleNoteValue(
+        chromaticFthoraNote ??
+          (fthora.startsWith('HardChromaticPa') ? ScaleNote.Pa : ScaleNote.Thi),
+      );
+
+      shift = fthoraNote - currentNote;
+      shift = shift % 4;
     } else if (currentScale === Scale.SoftChromatic) {
-      if (currentNote % 2 === 0) {
-        shift = fthora.startsWith('SoftChromaticPa') ? 0 : 1;
-      } else {
-        shift = fthora.startsWith('SoftChromaticThi') ? 0 : 1;
-      }
+      const fthoraNote = getScaleNoteValue(
+        chromaticFthoraNote ??
+          (fthora.startsWith('SoftChromaticPa') ? ScaleNote.Pa : ScaleNote.Thi),
+      );
+
+      shift = fthoraNote - currentNote;
+      shift = shift % 4;
     } else if (currentScale === Scale.Diatonic) {
       let fthoraNote = currentNote;
 

@@ -541,6 +541,8 @@ export class MartyriaElement extends ScoreElement {
       auto: this.auto,
       note: this.note,
       rootSign: this.rootSign,
+      rootSignOverride: this.rootSignOverride,
+      scale: this.scale,
       alignRight: this.alignRight,
       measureBarLeft: this.measureBarLeft,
       measureBarRight: this.measureBarRight,

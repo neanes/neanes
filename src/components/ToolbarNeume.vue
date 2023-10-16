@@ -816,20 +816,10 @@ export default class ToolbarNeume extends Vue {
     return [];
   }
 
-  get hasAmbiguousEnharmonicFthora() {
-    return (
-      (this.element.fthora === Fthora.Enharmonic_Top ||
-        this.element.fthora === Fthora.Enharmonic_Bottom) &&
-      this.element.scaleNotes.includes(ScaleNote.Ga) &&
-      this.element.scaleNotes.includes(ScaleNote.Vou)
-    );
-  }
-
   get showChromaticFthoraNote() {
     return (
       this.element.fthora != null &&
-      (this.chromaticFthoras.includes(this.element.fthora) ||
-        this.hasAmbiguousEnharmonicFthora)
+      this.chromaticFthoras.includes(this.element.fthora)
     );
   }
 

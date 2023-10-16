@@ -1,29 +1,26 @@
-import {
-  ElementType,
-  MartyriaElement,
-  ModeKeyElement,
-  NoteElement,
-  ScoreElement,
-  TempoElement,
-} from '@/models/Element';
-import {
-  Accidental,
-  Fthora,
-  GorgonNeume,
-  Ison,
-  QuantitativeNeume,
-  TempoSign,
-  TimeNeume,
-} from '@/models/Neumes';
-import { getNeumeValue, getNoteSpread } from '@/models/NeumeValues';
+/* eslint-disable no-console */
+
+import { ScoreElement } from '@/models/Element';
+import { Accidental, Ison } from '@/models/Neumes';
 import {
   getIsonValue,
-  getNoteValue,
   getScaleNoteFromValue,
   getScaleNoteValue,
   Scale,
   ScaleNote,
 } from '@/models/Scales';
+
+import {
+  AnalysisNode,
+  AnalysisService,
+  FthoraNode,
+  IsonNode,
+  ModeKeyNode,
+  NodeType,
+  NoteAtomNode,
+  RestNode,
+  TempoNode,
+} from './AnalysisService';
 
 export interface PlaybackSequenceEvent {
   frequency?: number;
@@ -64,14 +61,6 @@ export interface PlaybackOptions {
 
 export interface PlaybackWorkspace {
   events: PlaybackSequenceEvent[];
-  gorgonIndexes: GorgonIndex[];
-  elements: ScoreElement[];
-  elementIndex: number;
-  currentNoteElement: NoteElement | null;
-
-  // This is used to keep track which part of a combination
-  // character we are processing (i.e. oligon + kentimata)
-  innerElementIndex: number;
 
   options: PlaybackOptions;
 
@@ -81,39 +70,37 @@ export interface PlaybackWorkspace {
   bpm: number;
   beat: number;
 
-  /**
-   * To move up, move up scale.intervals[intervalIndex] moria
-   * To move down, move down scale.intervals[intervalIndex - 1] moria,
-   * wrapping around to the end of the scale.intervals array, if necessary
-   */
-  intervalIndex: number;
   scale: PlaybackScale;
   legetos: boolean;
-  note: number;
-  noteOffset: number;
+
+  /*
+   * If a fthora is in effect, the number of moria by which the virtual notes
+   * need to be transposed to reach their physical targets.
+   */
+  transpositionMoria: number;
 
   /**
    * If true, attractions will be ignored
    */
   ignoreAttractions: boolean;
 
+  /**
+   * These fields are used to ensure that an accidental that is applied to a
+   * particular note persists on that note until we move off that note, even if
+   * subsequent instances of that note do not have an explicit accidental. Note
+   * that the last alteration note a physical note, not a virtual note.
+   */
   lastAlterationMoria: number;
+  lastAlterationNote: ScaleNote;
 
   // chroa
-  enharmonicZo: boolean;
-  enharmonicGa: boolean;
-  enharmonicVou: boolean;
   generalSharp: boolean;
   generalFlat: boolean;
 
   permanentEnharmonicZo: boolean;
-  permanentEnharmonicVou: boolean;
-}
 
-interface GorgonIndex {
-  index: number;
-  neume: GorgonNeume;
-  beat: number;
+  // debug
+  loggingEnabled: boolean;
 }
 
 export enum PlaybackScaleName {
@@ -133,7 +120,6 @@ export interface PlaybackScale {
   name: PlaybackScaleName;
   intervals: number[];
   scaleNoteMap: Map<ScaleNote, number>;
-  fthoraMap: Map<Fthora, number>;
 }
 
 export class PlaybackService {
@@ -144,11 +130,6 @@ export class PlaybackService {
 
     const workspace: PlaybackWorkspace = {
       events: [],
-      gorgonIndexes: [],
-      elements,
-      elementIndex: 0,
-      innerElementIndex: 0,
-      currentNoteElement: null,
 
       options: {
         useLegetos: false,
@@ -185,13 +166,12 @@ export class PlaybackService {
         },
       },
 
-      intervalIndex: 0,
       frequency: defaultFrequencyDi,
       isonFrequency: 0,
       scale: this.diatonicScale,
       legetos: false,
-      note: getScaleNoteValue(ScaleNote.Thi)!,
-      noteOffset: 0,
+
+      transpositionMoria: 0,
 
       bpm: 0,
       beat: 0,
@@ -199,16 +179,15 @@ export class PlaybackService {
       ignoreAttractions: false,
 
       lastAlterationMoria: 0,
+      lastAlterationNote: ScaleNote.Pa,
 
       //chroa
-      enharmonicZo: false,
-      enharmonicGa: false,
-      enharmonicVou: false,
       generalFlat: false,
       generalSharp: false,
 
       permanentEnharmonicZo: false,
-      permanentEnharmonicVou: false,
+
+      loggingEnabled: false,
     };
 
     Object.assign(workspace.options, options);
@@ -219,181 +198,22 @@ export class PlaybackService {
     workspace.beat = this.beatLengthFromBpm(workspace.bpm);
     workspace.isonFrequency = 0;
 
-    for (let i = 0; i < elements.length; i++) {
-      const element = elements[i];
-
-      workspace.elementIndex = i;
-      workspace.currentNoteElement = null;
-
-      if (element.elementType === ElementType.Note) {
-        const noteElement = element as NoteElement;
-
-        workspace.currentNoteElement = noteElement;
-
-        // Handle enharmonic fthores
-        // Check if we are moving to a note with an enharmonic fthora
-        if (noteElement.fthora != null) {
-          const distance = getNeumeValue(noteElement.quantitativeNeume)!;
-
-          const destinationNote = workspace.note + distance;
-
-          const noteSpread = getNoteSpread(noteElement.quantitativeNeume);
-
-          const allNotes = noteSpread.map((x) =>
-            getScaleNoteFromValue(destinationNote + x),
-          );
-
-          if (
-            noteElement.fthora === Fthora.Enharmonic_Top ||
-            noteElement.fthora === Fthora.Enharmonic_Bottom
-          ) {
-            const scaleNote = getScaleNoteFromValue(destinationNote);
-
-            if (allNotes.includes(ScaleNote.ZoHigh)) {
-              workspace.enharmonicZo = true;
-            } else if (
-              allNotes.includes(ScaleNote.Ga) &&
-              allNotes.includes(ScaleNote.Vou)
-            ) {
-              // If there is ambiguity, use the chromatic fthora note to decide
-              if (noteElement.chromaticFthoraNote === ScaleNote.Ga) {
-                workspace.enharmonicGa = true;
-              } else if (noteElement.chromaticFthoraNote === ScaleNote.Vou) {
-                workspace.enharmonicVou = true;
-              } else {
-                // In older scores, chromaticFthoraNote may be null.
-                // In this case, assume the fthora is on Ga.
-                workspace.enharmonicGa = true;
-              }
-            } else if (scaleNote === ScaleNote.Ga) {
-              workspace.enharmonicGa = true;
-            } else if (scaleNote === ScaleNote.Vou) {
-              workspace.enharmonicVou = true;
-            }
-
-            this.applyFthora(
-              noteElement.fthora,
-              workspace,
-              noteElement.chromaticFthoraNote,
-              getScaleNoteFromValue(workspace.note),
-            );
-          } else if (
-            noteElement.fthora === Fthora.GeneralFlat_Top ||
-            noteElement.fthora === Fthora.GeneralFlat_Bottom
-          ) {
-            workspace.generalFlat = true;
-            workspace.enharmonicZo = false;
-            if (workspace.scale.name !== PlaybackScaleName.Diatonic) {
-              // General flat implies a switch to the diatonic scale
-              this.switchToDiatonic(workspace);
-            }
-          } else if (
-            noteElement.fthora === Fthora.GeneralSharp_Top ||
-            noteElement.fthora === Fthora.GeneralSharp_Bottom
-          ) {
-            workspace.generalSharp = true;
-            workspace.enharmonicGa = false;
-            workspace.enharmonicVou = false;
-            if (workspace.scale.name !== PlaybackScaleName.Diatonic) {
-              // General sharp implies a switch to the diatonic scale
-              this.switchToDiatonic(workspace);
-            }
-          } else {
-            workspace.enharmonicZo = workspace.permanentEnharmonicZo;
-            workspace.enharmonicGa = false;
-            workspace.enharmonicVou = workspace.permanentEnharmonicVou;
-            workspace.generalFlat = false;
-            workspace.generalSharp = false;
-          }
-        }
-
-        // Check ison
-        if (noteElement.ison) {
-          workspace.isonFrequency = -1;
-
-          if (noteElement.ison !== Ison.Unison) {
-            const di = workspace.scale.scaleNoteMap.get(ScaleNote.Thi)!;
-
-            const distance =
-              getIsonValue(noteElement.ison) - getScaleNoteValue(ScaleNote.Thi);
-
-            const moria = this.moriaBetweenNotes(
-              di,
-              workspace.scale.intervals,
-              distance,
-            );
-
-            workspace.isonFrequency = this.changeFrequency(
-              workspace.options.frequencyDi,
-              moria,
-            );
-          }
-        }
-
-        if (this.isKentimataCombo(noteElement)) {
-          this.handleKentimataCombo(noteElement, workspace);
-        } else if (
-          noteElement.quantitativeNeume ===
-          QuantitativeNeume.KentemataPlusOligon
-        ) {
-          this.handleKentimataOligon(noteElement, workspace);
-        } else if (
-          noteElement.quantitativeNeume === QuantitativeNeume.Hyporoe ||
-          noteElement.quantitativeNeume === QuantitativeNeume.PetastiPlusHyporoe
-        ) {
-          this.handleHyporoe(noteElement, workspace);
-        } else if (
-          noteElement.quantitativeNeume === QuantitativeNeume.DoubleApostrophos
-        ) {
-          this.handleDoubleApostrophos(noteElement, workspace);
-        } else if (
-          noteElement.quantitativeNeume ===
-          QuantitativeNeume.IsonPlusApostrophos
-        ) {
-          this.handleIsonApostrophos(noteElement, workspace);
-        } else if (
-          noteElement.quantitativeNeume === QuantitativeNeume.RunningElaphron ||
-          noteElement.quantitativeNeume ===
-            QuantitativeNeume.PetastiPlusRunningElaphron
-        ) {
-          this.handleRunningElaphron(noteElement, workspace);
-        } else if (
-          noteElement.quantitativeNeume ===
-          QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata
-        ) {
-          this.handleRunningElaphronKentemata(noteElement, workspace);
-        } else if (
-          noteElement.quantitativeNeume ===
-          QuantitativeNeume.OligonPlusHyporoePlusKentemata
-        ) {
-          this.handleHyporoeKentemata(noteElement, workspace);
-        } else if (this.isRest(noteElement)) {
-          this.handleRest(noteElement, workspace);
-        } else {
-          this.handleNote(noteElement, workspace);
-        }
-
-        if (
-          noteElement.fthora != null &&
-          noteElement.fthora !== Fthora.Enharmonic_Top &&
-          noteElement.fthora !== Fthora.Enharmonic_Bottom
-        ) {
-          this.applyFthora(
-            noteElement.fthora,
-            workspace,
-            noteElement.chromaticFthoraNote,
-          );
-        }
-      } else if (element.elementType === ElementType.ModeKey) {
-        this.applyModeKey(element as ModeKeyElement, workspace);
-      } else if (element.elementType === ElementType.Martyria) {
-        this.handleMartyria(element as MartyriaElement, workspace);
-      } else if (element.elementType === ElementType.Tempo) {
-        this.handleTempo(element as TempoElement, workspace);
+    const nodes: AnalysisNode[] = AnalysisService.analyze(elements);
+    for (const node of nodes) {
+      if (node.nodeType === NodeType.NoteAtomNode) {
+        this.handleNoteAtom(node as NoteAtomNode, nodes, workspace);
+      } else if (node.nodeType === NodeType.RestNode) {
+        this.handleRest(node as RestNode, workspace);
+      } else if (node.nodeType === NodeType.ModeKeyNode) {
+        this.handleModeKey(node as ModeKeyNode, workspace);
+      } else if (node.nodeType === NodeType.FthoraNode) {
+        this.handleFthora(node as FthoraNode, workspace);
+      } else if (node.nodeType === NodeType.IsonNode) {
+        this.handleIson(node as IsonNode, workspace);
+      } else if (node.nodeType === NodeType.TempoNode) {
+        this.handleTempo(node as TempoNode, workspace);
       }
     }
-
-    this.processGorgons(workspace.events, workspace.gorgonIndexes);
 
     // Calculate times
     let time = 0;
@@ -430,6 +250,11 @@ export class PlaybackService {
     return (1 / bpm) * 60;
   }
 
+  /**
+   * To move up, move up scale.intervals[intervalIndex] moria
+   * To move down, move down scale.intervals[intervalIndex - 1] moria,
+   * wrapping around to the end of the scale.intervals array, if necessary
+   */
   moriaBetweenNotes(
     intervalIndex: number,
     intervals: number[],
@@ -454,31 +279,43 @@ export class PlaybackService {
     return moria;
   }
 
-  moveDistance(workspace: PlaybackWorkspace, distance: number) {
-    if (distance === 0) {
-      return;
+  moveTo(
+    scaleNote: ScaleNote,
+    isVirtual: boolean,
+    workspace: PlaybackWorkspace,
+  ): number {
+    const { scale } = workspace;
+
+    let pivot: ScaleNote;
+    if (scale.name === PlaybackScaleName.SpathiGa) {
+      pivot = ScaleNote.Ga;
+    } else if (scale.name === PlaybackScaleName.SpathiKe) {
+      pivot = ScaleNote.Ke;
+    } else {
+      pivot = ScaleNote.Thi;
     }
 
-    const moria = this.moriaBetweenNotes(
-      workspace.intervalIndex,
-      workspace.scale.intervals,
+    const intervalIndex = scale.scaleNoteMap.get(pivot)!;
+
+    const distance = getScaleNoteValue(scaleNote) - getScaleNoteValue(pivot);
+
+    let moria = this.moriaBetweenNotes(
+      intervalIndex,
+      scale.intervals,
       distance,
     );
 
-    workspace.intervalIndex = this.mod(
-      workspace.intervalIndex + distance,
-      workspace.scale.intervals.length,
+    moria += this.moriaBetweenNotes(
+      this.diatonicScale.scaleNoteMap.get(ScaleNote.Thi)!,
+      this.diatonicScale.intervals,
+      getScaleNoteValue(pivot) - getScaleNoteValue(ScaleNote.Thi),
     );
 
-    workspace.frequency = this.changeFrequency(workspace.frequency, moria);
-
-    workspace.note += distance;
-
-    // Clear the last alteration as soon as we move away
-    // from the altered note
-    if (distance !== 0) {
-      workspace.lastAlterationMoria = 0;
+    if (isVirtual) {
+      moria += workspace.transpositionMoria;
     }
+
+    return this.changeFrequency(workspace.options.frequencyDi, moria);
   }
 
   constructScales(workspace: PlaybackWorkspace) {
@@ -559,146 +396,51 @@ export class PlaybackService {
     ];
   }
 
-  constructEnharmonicScale(workspace: PlaybackWorkspace) {
-    if (workspace.enharmonicVou) {
+  constructEnharmonicScale(scale: Scale, workspace: PlaybackWorkspace) {
+    if (scale === Scale.EnharmonicZo || scale === Scale.EnharmonicVou) {
       return this.constructTetrachordScale([12, 12, 6]);
     } else {
-      return this.constructEnharmonicScaleFromGa(workspace);
+      return this.constructEnharmonicScaleFromGa(scale, workspace);
     }
   }
 
-  constructEnharmonicScaleFromGa(workspace: PlaybackWorkspace) {
-    const scale: number[] = [];
+  constructEnharmonicScaleFromGa(scale: Scale, workspace: PlaybackWorkspace) {
+    const result: number[] = [];
 
-    if (workspace.enharmonicGa && workspace.enharmonicZo) {
+    if (scale === Scale.EnharmonicGa || scale === Scale.EnharmonicVouHigh) {
       return [12, 12, 6];
     }
 
-    if (workspace.enharmonicGa) {
-      scale.push(12, 12, 6);
+    result.push(...workspace.options.diatonicIntervals);
+
+    if (scale === Scale.EnharmonicZoHigh || workspace.permanentEnharmonicZo) {
+      result.push(12, 12, 6, 12);
     } else {
-      scale.push(...workspace.options.diatonicIntervals);
+      result.push(12, ...workspace.options.diatonicIntervals);
     }
 
-    if (workspace.enharmonicZo) {
-      scale.push(12, 12, 6, 12);
-    } else {
-      scale.push(12, ...workspace.options.diatonicIntervals);
-    }
-
-    return scale;
-  }
-
-  getScaleFromFthora(fthora: Fthora) {
-    return this.scales.find(
-      (x) => x.name === this.fthoraToScaleMap.get(fthora),
-    );
-  }
-
-  applyFthora(
-    fthora: Fthora,
-    workspace: PlaybackWorkspace,
-    chromaticFthoraNote: ScaleNote | null,
-    note?: ScaleNote,
-  ) {
-    if (
-      fthora != Fthora.GeneralFlat_Top &&
-      fthora != Fthora.GeneralFlat_Bottom
-    ) {
-      workspace.generalFlat = false;
-    }
-    if (
-      fthora != Fthora.GeneralSharp_Top &&
-      fthora != Fthora.GeneralSharp_Bottom
-    ) {
-      workspace.generalSharp = false;
-    }
-
-    const scale = this.getScaleFromFthora(fthora);
-    if (scale == null) {
-      return;
-    }
-
-    workspace.scale = scale;
-
-    if (
-      workspace.options.useLegetos &&
-      workspace.scale.name === PlaybackScaleName.Diatonic &&
-      workspace.legetos
-    ) {
-      workspace.scale = this.legetosScale;
-    } else if (
-      workspace.options.useLegetos &&
-      workspace.scale.name === PlaybackScaleName.Zygos &&
-      workspace.legetos
-    ) {
-      workspace.scale = this.zygosLegetosScale;
-    } else if (workspace.scale.name === PlaybackScaleName.Enharmonic) {
-      this.enharmonicScale.intervals = this.constructEnharmonicScale(workspace);
-
-      if (workspace.enharmonicVou) {
-        this.enharmonicScale.scaleNoteMap =
-          this.enharmonicZoScaleNoteToIntervalIndexMap;
-        workspace.intervalIndex = this.enharmonicScale.scaleNoteMap.get(note!)!;
-      } else if (workspace.enharmonicGa && workspace.enharmonicZo) {
-        this.enharmonicScale.scaleNoteMap =
-          this.enharmonicGaScaleNoteToIntervalIndexMap;
-        workspace.intervalIndex = this.enharmonicScale.scaleNoteMap.get(note!)!;
-      } else {
-        this.enharmonicScale.scaleNoteMap =
-          this.diatonicScaleNoteToIntervalIndexMap;
-        workspace.intervalIndex = this.enharmonicScale.scaleNoteMap.get(note!)!;
-      }
-    } else if (
-      workspace.scale.name === PlaybackScaleName.SpathiKe &&
-      note === ScaleNote.Ga
-    ) {
-      workspace.scale = this.spathiGaScale;
-    }
-
-    if (
-      chromaticFthoraNote != null &&
-      (workspace.scale.name === PlaybackScaleName.SoftChromatic ||
-        workspace.scale.name === PlaybackScaleName.HardChromatic)
-    ) {
-      workspace.intervalIndex =
-        workspace.scale.scaleNoteMap.get(chromaticFthoraNote) ??
-        workspace.intervalIndex;
-    } else {
-      workspace.intervalIndex =
-        workspace.scale.fthoraMap.get(fthora) ?? workspace.intervalIndex;
-    }
-
-    // Calculate offset of the parachord
-    const fthoraNote = this.fthoraToScaleNoteMap.get(fthora);
-
-    if (fthoraNote != null) {
-      workspace.noteOffset = getScaleNoteValue(fthoraNote) - workspace.note;
-    } else {
-      workspace.noteOffset = 0;
-    }
-  }
-
-  switchToDiatonic(workspace: PlaybackWorkspace) {
-    const note = getScaleNoteFromValue(workspace.note);
-    workspace.scale = this.diatonicScale;
-    workspace.intervalIndex = this.diatonicScale.scaleNoteMap.get(note!)!;
+    return result;
   }
 
   applyAlterations(
+    noteAtomNode: Readonly<NoteAtomNode>,
+    nodes: AnalysisNode[],
     workspace: PlaybackWorkspace,
-    accidental?: Accidental | null,
   ) {
     let alteredFrequency = workspace.frequency;
 
-    if (accidental != null) {
+    if (noteAtomNode.accidental) {
       const alteration =
-        workspace.options.alterationMoriaMap[accidental] ??
-        this.alterationMap.get(accidental)!;
+        workspace.options.alterationMoriaMap[noteAtomNode.accidental] ??
+        this.alterationMap.get(noteAtomNode.accidental)!;
       alteredFrequency = this.changeFrequency(alteredFrequency, alteration);
 
       workspace.lastAlterationMoria = alteration;
-    } else if (workspace.lastAlterationMoria !== 0) {
+      workspace.lastAlterationNote = noteAtomNode.physicalNote;
+    } else if (
+      workspace.lastAlterationMoria !== 0 &&
+      workspace.lastAlterationNote === noteAtomNode.physicalNote
+    ) {
       alteredFrequency = this.changeFrequency(
         alteredFrequency,
         workspace.lastAlterationMoria,
@@ -707,22 +449,31 @@ export class PlaybackService {
 
     alteredFrequency = this.applyGeneralAlterations(
       alteredFrequency,
+      noteAtomNode.virtualNote,
       workspace,
     );
 
     if (
       alteredFrequency === workspace.frequency &&
-      !workspace.currentNoteElement?.ignoreAttractions &&
+      !noteAtomNode.ignoreAttractions &&
       !workspace.ignoreAttractions
     ) {
-      alteredFrequency = this.applyAttractions(alteredFrequency, workspace);
+      alteredFrequency = this.applyAttractions(
+        alteredFrequency,
+        noteAtomNode,
+        nodes,
+        workspace,
+      );
     }
 
     return alteredFrequency;
   }
 
-  applyGeneralAlterations(frequency: number, workspace: PlaybackWorkspace) {
-    const note = getScaleNoteFromValue(workspace.note);
+  applyGeneralAlterations(
+    frequency: number,
+    note: ScaleNote,
+    workspace: PlaybackWorkspace,
+  ) {
     if (workspace.generalFlat && note === ScaleNote.ZoHigh) {
       frequency = this.changeFrequency(
         frequency,
@@ -738,18 +489,26 @@ export class PlaybackService {
     return frequency;
   }
 
-  applyAttractions(frequency: number, workspace: PlaybackWorkspace) {
-    const note = getScaleNoteFromValue(workspace.note + workspace.noteOffset);
+  applyAttractions(
+    frequency: number,
+    noteAtomNode: Readonly<NoteAtomNode>,
+    nodes: AnalysisNode[],
+    workspace: PlaybackWorkspace,
+  ) {
+    const { scale } = workspace;
 
     // If melody descends after zo, flatten zo
     if (
       workspace.options.useDefaultAttractionZo &&
-      !workspace.enharmonicZo &&
-      (workspace.scale.name === PlaybackScaleName.Diatonic ||
-        workspace.scale.name === PlaybackScaleName.Kliton ||
-        workspace.scale.name === PlaybackScaleName.Zygos)
+      !workspace.permanentEnharmonicZo &&
+      (scale.name === PlaybackScaleName.Diatonic ||
+        scale.name === PlaybackScaleName.Kliton ||
+        scale.name === PlaybackScaleName.Zygos)
     ) {
-      if (note === ScaleNote.ZoHigh && this.melodyDirection(workspace) < 0) {
+      if (
+        noteAtomNode.virtualNote === ScaleNote.ZoHigh &&
+        this.melodyDirection(noteAtomNode, nodes) < 0
+      ) {
         frequency = this.changeFrequency(
           frequency,
           workspace.options.defaultAttractionZoMoria,
@@ -760,804 +519,70 @@ export class PlaybackService {
     return frequency;
   }
 
-  melodyDirection(workspace: PlaybackWorkspace) {
-    const currentElement = workspace.elements[
-      workspace.elementIndex
-    ] as NoteElement;
-
-    // If this is the first part of a kentimata combo, then the melody
-    // is clearly ascending
-    if (
-      workspace.innerElementIndex === 0 &&
-      (this.isKentimataCombo(currentElement) ||
-        currentElement.quantitativeNeume ===
-          QuantitativeNeume.KentemataPlusOligon)
-    ) {
+  melodyDirection(
+    noteAtomNode: Readonly<NoteAtomNode>,
+    nodes: AnalysisNode[],
+  ): number {
+    let index: number = nodes.indexOf(noteAtomNode);
+    if (index === nodes.length - 1) {
+      return 0;
+    }
+    index += 1;
+    while (nodes[index].nodeType !== NodeType.NoteAtomNode) {
+      index += 1;
+    }
+    const next: number = getScaleNoteValue(
+      (nodes[index] as NoteAtomNode).virtualNote,
+    );
+    const cur: number = getScaleNoteValue(noteAtomNode.virtualNote);
+    if (cur < next) {
       return 1;
-    }
-
-    // If this is the first part of a descending combo, then the melody
-    // is clearly descending
-    if (
-      workspace.innerElementIndex === 0 &&
-      (currentElement.quantitativeNeume ===
-        QuantitativeNeume.DoubleApostrophos ||
-        currentElement.quantitativeNeume ===
-          QuantitativeNeume.IsonPlusApostrophos ||
-        currentElement.quantitativeNeume === QuantitativeNeume.Hyporoe ||
-        currentElement.quantitativeNeume === QuantitativeNeume.RunningElaphron)
-    ) {
+    } else if (cur > next) {
       return -1;
+    } else {
+      return 0;
     }
-
-    for (
-      let i = workspace.elementIndex + 1;
-      i < workspace.elements.length;
-      i++
-    ) {
-      const element = workspace.elements[i];
-
-      if (element.elementType !== ElementType.Note) {
-        continue;
-      }
-      const noteElement = element as NoteElement;
-      const value = getNeumeValue(noteElement.quantitativeNeume)!;
-
-      if (value !== 0) {
-        return Math.sign(value);
-      }
-    }
-
-    return 0;
   }
 
-  applyModeKey(modeKeyElement: ModeKeyElement, workspace: PlaybackWorkspace) {
-    // Reset workspace flags
-    workspace.legetos = false;
-    workspace.lastAlterationMoria = 0;
-    workspace.enharmonicGa = false;
-    workspace.enharmonicVou = false;
-    workspace.enharmonicZo = false;
-    workspace.generalFlat = false;
-    workspace.generalSharp = false;
-    workspace.permanentEnharmonicZo = false;
-    workspace.permanentEnharmonicVou = false;
-    workspace.noteOffset = 0;
-    workspace.ignoreAttractions = modeKeyElement.ignoreAttractions;
-
-    workspace.isonFrequency = 0;
-
-    if (modeKeyElement.scale === Scale.Diatonic) {
-      workspace.scale = this.diatonicScale;
-
-      if (
-        workspace.options.useLegetos &&
-        modeKeyElement.mode === 4 &&
-        modeKeyElement.scale === Scale.Diatonic &&
-        (modeKeyElement.scaleNote === ScaleNote.Pa ||
-          modeKeyElement.scaleNote === ScaleNote.Vou)
-      ) {
-        workspace.scale = this.legetosScale;
-        workspace.legetos = true;
-      }
-
-      if (
-        modeKeyElement.permanentEnharmonicZo &&
-        (modeKeyElement.mode === 3 || modeKeyElement.mode === 7)
-      ) {
-        workspace.enharmonicZo = true;
-        workspace.permanentEnharmonicZo = true;
-
-        workspace.scale = this.enharmonicScale;
-        workspace.scale.intervals =
-          this.constructEnharmonicScaleFromGa(workspace);
-
-        this.enharmonicScale.scaleNoteMap =
-          this.diatonicScaleNoteToIntervalIndexMap;
-      }
-
-      if (
-        modeKeyElement.mode === 7 &&
-        modeKeyElement.scaleNote === ScaleNote.Zo &&
-        modeKeyElement.fthoraAboveNote === Fthora.Enharmonic_Top
-      ) {
-        workspace.enharmonicVou = true;
-        workspace.enharmonicZo = true;
-        workspace.permanentEnharmonicZo = true;
-        workspace.permanentEnharmonicVou = true;
-
-        workspace.scale = this.enharmonicScale;
-
-        this.enharmonicScale.intervals =
-          this.constructEnharmonicScale(workspace);
-
-        this.enharmonicScale.scaleNoteMap =
-          this.enharmonicZoScaleNoteToIntervalIndexMap;
-      }
-    } else if (modeKeyElement.scale === Scale.SoftChromatic) {
-      workspace.scale = this.softChromaticScale;
-    } else if (modeKeyElement.scale === Scale.HardChromatic) {
-      workspace.scale = this.hardChromaticScale;
-    } else if (modeKeyElement.scale === Scale.Kliton) {
-      workspace.scale = this.klitonScale;
-    } else if (
-      modeKeyElement.scale === Scale.Spathi &&
-      modeKeyElement.scaleNote === ScaleNote.Ke
-    ) {
-      workspace.scale = this.spathiKeScale;
-    } else if (
-      modeKeyElement.scale === Scale.Spathi &&
-      modeKeyElement.scaleNote === ScaleNote.Ga
-    ) {
-      workspace.scale = this.spathiGaScale;
-    }
-
-    // TODO support mode keys with enharmonic fthora?
-
-    const di = workspace.scale.scaleNoteMap.get(ScaleNote.Thi)!;
-
-    const distance =
-      getScaleNoteValue(modeKeyElement.scaleNote) -
-      getScaleNoteValue(ScaleNote.Thi);
-
-    workspace.intervalIndex = workspace.scale.scaleNoteMap.get(
-      modeKeyElement.scaleNote,
-    )!;
-
-    workspace.note = getScaleNoteValue(modeKeyElement.scaleNote)!;
-
-    if (modeKeyElement.fthora) {
-      this.applyFthora(modeKeyElement.fthora, workspace, null);
-    }
-
-    const moria = this.moriaBetweenNotes(
-      di,
-      workspace.scale.intervals,
-      distance,
-    );
-
-    workspace.frequency = this.changeFrequency(
-      workspace.options.frequencyDi,
-      moria,
-    );
-
-    workspace.bpm = (modeKeyElement.bpm || 120) * workspace.options.speed;
-    workspace.beat = this.beatLengthFromBpm(workspace.bpm);
-  }
-
-  handleKentimataCombo(noteElement: NoteElement, workspace: PlaybackWorkspace) {
-    const { events, gorgonIndexes } = workspace;
-
-    const distance = getNeumeValue(noteElement.quantitativeNeume)!;
-
-    // Process first note
-    workspace.innerElementIndex = 0;
-    const initialDistance = distance - 1;
-
-    this.moveDistance(workspace, initialDistance);
-
-    if (noteElement.secondaryGorgonNeume) {
-      const gorgonIndex: GorgonIndex = {
-        neume: noteElement.secondaryGorgonNeume,
-        index: events.length,
-        beat: workspace.beat,
-      };
-
-      gorgonIndexes.push(gorgonIndex);
-    }
-
-    const alteredFrequency = this.applyAlterations(workspace);
-
-    const event: PlaybackSequenceEvent = {
-      frequency: alteredFrequency,
-      isonFrequency: workspace.isonFrequency,
-      type: 'note',
-      bpm: workspace.bpm,
-      duration: 1 * workspace.beat,
-      transportTime: 0,
-      elementIndex: workspace.elementIndex,
-    };
-
-    events.push(event);
-
-    // Process the kentimata
-    workspace.innerElementIndex = 1;
-    this.moveDistance(workspace, 1);
-
-    if (noteElement.gorgonNeume) {
-      const gorgonIndex: GorgonIndex = {
-        neume: noteElement.gorgonNeume,
-        index: events.length,
-        beat: workspace.beat,
-      };
-
-      gorgonIndexes.push(gorgonIndex);
-    }
-
-    // Calculate accidentals
-    const alteredFrequencyKentimata = this.applyAlterations(
-      workspace,
-      noteElement.accidental,
-    );
-
-    const kentimataEvent: PlaybackSequenceEvent = {
-      frequency: alteredFrequencyKentimata,
-      isonFrequency: workspace.isonFrequency,
-      type: 'note',
-      bpm: workspace.bpm,
-      duration: 1 * workspace.beat,
-      transportTime: 0,
-      elementIndex: workspace.elementIndex,
-    };
-
-    events.push(kentimataEvent);
-  }
-
-  handleKentimataOligon(
-    noteElement: NoteElement,
+  handleNoteAtom(
+    noteAtomNode: Readonly<NoteAtomNode>,
+    nodes: AnalysisNode[],
     workspace: PlaybackWorkspace,
   ) {
-    const { events, gorgonIndexes } = workspace;
+    const { events } = workspace;
 
-    // Process first note
-    workspace.innerElementIndex = 0;
-
-    const initialDistance = 1;
-
-    this.moveDistance(workspace, initialDistance);
-
-    if (noteElement.gorgonNeume) {
-      const gorgonIndex: GorgonIndex = {
-        neume: noteElement.gorgonNeume,
-        index: events.length,
-        beat: workspace.beat,
-      };
-
-      gorgonIndexes.push(gorgonIndex);
+    if (workspace.loggingEnabled) {
+      console.groupCollapsed('PlaybackService', 'noteAtom');
+      console.log('physicalNote', noteAtomNode.physicalNote);
+      console.log('virtualNote', noteAtomNode.virtualNote);
+      console.log('scale', noteAtomNode.scale);
+      console.log('duration', noteAtomNode.duration);
+      console.log('ignoreAttractions', noteAtomNode.ignoreAttractions);
+      console.log('accidental', noteAtomNode.accidental);
+      console.groupEnd();
     }
 
-    const alteredFrequencyKentimata = this.applyAlterations(workspace);
+    workspace.frequency = this.moveTo(
+      noteAtomNode.virtualNote,
+      true,
+      workspace,
+    );
 
-    const kentimataEvent: PlaybackSequenceEvent = {
-      frequency: alteredFrequencyKentimata,
-      isonFrequency: workspace.isonFrequency,
-      type: 'note',
-      bpm: workspace.bpm,
-      duration: 1 * workspace.beat,
-      transportTime: 0,
-      elementIndex: workspace.elementIndex,
-    };
-
-    events.push(kentimataEvent);
-
-    // Process the kentimata
-    workspace.innerElementIndex = 1;
-
-    let oligonDuration = 1 * workspace.beat;
-
-    this.moveDistance(workspace, 1);
-
-    if (noteElement.timeNeume != null) {
-      oligonDuration +=
-        this.timeMap.get(noteElement.timeNeume)! * workspace.beat;
+    if (
+      workspace.lastAlterationMoria !== 0 &&
+      workspace.lastAlterationNote !== noteAtomNode.physicalNote
+    ) {
+      // Clear the last alteration as soon as we move away
+      // from the altered note
+      workspace.lastAlterationMoria = 0;
+      workspace.lastAlterationNote = ScaleNote.Pa;
     }
 
     // Calculate accidentals
     const alteredFrequency = this.applyAlterations(
+      noteAtomNode,
+      nodes,
       workspace,
-      noteElement.accidental,
-    );
-
-    const oligonEvent: PlaybackSequenceEvent = {
-      frequency: alteredFrequency,
-      isonFrequency: workspace.isonFrequency,
-      type: 'note',
-      bpm: workspace.bpm,
-      duration: oligonDuration,
-      transportTime: 0,
-      elementIndex: workspace.elementIndex,
-    };
-
-    events.push(oligonEvent);
-  }
-
-  handleHyporoe(noteElement: NoteElement, workspace: PlaybackWorkspace) {
-    const { events, gorgonIndexes } = workspace;
-
-    // Process first note
-    workspace.innerElementIndex = 0;
-
-    const initialDistance = -1;
-
-    this.moveDistance(workspace, initialDistance);
-
-    if (noteElement.gorgonNeume) {
-      const gorgonIndex: GorgonIndex = {
-        neume: noteElement.gorgonNeume,
-        index: events.length,
-        beat: workspace.beat,
-      };
-
-      gorgonIndexes.push(gorgonIndex);
-    }
-
-    const alteredFrequency1 = this.applyAlterations(workspace);
-
-    const event1: PlaybackSequenceEvent = {
-      frequency: alteredFrequency1,
-      isonFrequency: workspace.isonFrequency,
-      type: 'note',
-      bpm: workspace.bpm,
-      duration: 1 * workspace.beat,
-      transportTime: 0,
-      elementIndex: workspace.elementIndex,
-    };
-
-    events.push(event1);
-
-    // Process the kentimata
-    workspace.innerElementIndex = 1;
-
-    let event2Duration = 1 * workspace.beat;
-
-    this.moveDistance(workspace, -1);
-
-    if (noteElement.timeNeume != null) {
-      event2Duration +=
-        this.timeMap.get(noteElement.timeNeume)! * workspace.beat;
-    }
-
-    // Calculate accidentals
-    const alteredFrequency2 = this.applyAlterations(
-      workspace,
-      noteElement.accidental,
-    );
-
-    const event2: PlaybackSequenceEvent = {
-      frequency: alteredFrequency2,
-      isonFrequency: workspace.isonFrequency,
-      type: 'note',
-      bpm: workspace.bpm,
-      duration: event2Duration,
-      transportTime: 0,
-      elementIndex: workspace.elementIndex,
-    };
-
-    events.push(event2);
-  }
-
-  handleHyporoeKentemata(
-    noteElement: NoteElement,
-    workspace: PlaybackWorkspace,
-  ) {
-    const { events, gorgonIndexes } = workspace;
-
-    // Process first note
-    workspace.innerElementIndex = 0;
-
-    const initialDistance = -1;
-
-    this.moveDistance(workspace, initialDistance);
-
-    if (noteElement.secondaryGorgonNeume) {
-      const gorgonIndex: GorgonIndex = {
-        neume: noteElement.secondaryGorgonNeume,
-        index: events.length,
-        beat: workspace.beat,
-      };
-
-      gorgonIndexes.push(gorgonIndex);
-    }
-
-    const alteredFrequency1 = this.applyAlterations(workspace);
-
-    const event1: PlaybackSequenceEvent = {
-      frequency: alteredFrequency1,
-      isonFrequency: workspace.isonFrequency,
-      type: 'note',
-      bpm: workspace.bpm,
-      duration: 1 * workspace.beat,
-      transportTime: 0,
-      elementIndex: workspace.elementIndex,
-    };
-
-    events.push(event1);
-
-    // Process the kentimata
-    workspace.innerElementIndex = 1;
-
-    let event2Duration = 1 * workspace.beat;
-
-    this.moveDistance(workspace, -1);
-
-    if (noteElement.timeNeume != null) {
-      event2Duration +=
-        this.timeMap.get(noteElement.timeNeume)! * workspace.beat;
-    }
-
-    // Calculate accidentals
-    const alteredFrequency2 = this.applyAlterations(workspace);
-
-    const event2: PlaybackSequenceEvent = {
-      frequency: alteredFrequency2,
-      isonFrequency: workspace.isonFrequency,
-      type: 'note',
-      bpm: workspace.bpm,
-      duration: event2Duration,
-      transportTime: 0,
-      elementIndex: workspace.elementIndex,
-    };
-
-    events.push(event2);
-
-    // Process the kentimata
-    workspace.innerElementIndex = 2;
-    this.moveDistance(workspace, 1);
-
-    if (noteElement.gorgonNeume) {
-      const gorgonIndex: GorgonIndex = {
-        neume: noteElement.gorgonNeume,
-        index: events.length,
-        beat: workspace.beat,
-      };
-
-      gorgonIndexes.push(gorgonIndex);
-    }
-
-    // Calculate accidentals
-    const alteredFrequencyKentimata = this.applyAlterations(
-      workspace,
-      noteElement.accidental,
-    );
-
-    const kentimataEvent: PlaybackSequenceEvent = {
-      frequency: alteredFrequencyKentimata,
-      isonFrequency: workspace.isonFrequency,
-      type: 'note',
-      bpm: workspace.bpm,
-      duration: 1 * workspace.beat,
-      transportTime: 0,
-      elementIndex: workspace.elementIndex,
-    };
-
-    events.push(kentimataEvent);
-  }
-
-  handleDoubleApostrophos(
-    noteElement: NoteElement,
-    workspace: PlaybackWorkspace,
-  ) {
-    const { events, gorgonIndexes } = workspace;
-
-    // Process first apostrofos
-    workspace.innerElementIndex = 0;
-
-    const initialDistance = -1;
-
-    this.moveDistance(workspace, initialDistance);
-
-    if (noteElement.secondaryGorgonNeume) {
-      const gorgonIndex: GorgonIndex = {
-        neume: noteElement.secondaryGorgonNeume,
-        index: events.length,
-        beat: workspace.beat,
-      };
-
-      gorgonIndexes.push(gorgonIndex);
-    }
-
-    const alteredFrequency1 = this.applyAlterations(workspace);
-
-    const event1: PlaybackSequenceEvent = {
-      frequency: alteredFrequency1,
-      isonFrequency: workspace.isonFrequency,
-      type: 'note',
-      bpm: workspace.bpm,
-      duration: 1 * workspace.beat,
-      transportTime: 0,
-      elementIndex: workspace.elementIndex,
-    };
-
-    events.push(event1);
-
-    // Process the second apsotrofos
-    workspace.innerElementIndex = 1;
-
-    const event2Duration = 1 * workspace.beat;
-
-    this.moveDistance(workspace, -1);
-
-    if (noteElement.gorgonNeume) {
-      const gorgonIndex: GorgonIndex = {
-        neume: noteElement.gorgonNeume,
-        index: events.length,
-        beat: workspace.beat,
-      };
-
-      gorgonIndexes.push(gorgonIndex);
-    }
-
-    // Calculate accidentals
-    const alteredFrequency2 = this.applyAlterations(
-      workspace,
-      noteElement.accidental,
-    );
-
-    const event2: PlaybackSequenceEvent = {
-      frequency: alteredFrequency2,
-      isonFrequency: workspace.isonFrequency,
-      type: 'note',
-      bpm: workspace.bpm,
-      duration: event2Duration,
-      transportTime: 0,
-      elementIndex: workspace.elementIndex,
-    };
-
-    events.push(event2);
-  }
-
-  handleIsonApostrophos(
-    noteElement: NoteElement,
-    workspace: PlaybackWorkspace,
-  ) {
-    const { events, gorgonIndexes } = workspace;
-
-    // Process ison
-    workspace.innerElementIndex = 0;
-
-    const initialDistance = 0;
-
-    this.moveDistance(workspace, initialDistance);
-
-    if (noteElement.secondaryGorgonNeume) {
-      const gorgonIndex: GorgonIndex = {
-        neume: noteElement.secondaryGorgonNeume,
-        index: events.length,
-        beat: workspace.beat,
-      };
-
-      gorgonIndexes.push(gorgonIndex);
-    }
-
-    const alteredFrequency1 = this.applyAlterations(workspace);
-
-    const event1: PlaybackSequenceEvent = {
-      frequency: alteredFrequency1,
-      isonFrequency: workspace.isonFrequency,
-      type: 'note',
-      bpm: workspace.bpm,
-      duration: 1 * workspace.beat,
-      transportTime: 0,
-      elementIndex: workspace.elementIndex,
-    };
-
-    events.push(event1);
-
-    // Process the apostrofos
-    workspace.innerElementIndex = 1;
-
-    const event2Duration = 1 * workspace.beat;
-
-    this.moveDistance(workspace, -1);
-
-    if (noteElement.gorgonNeume) {
-      const gorgonIndex: GorgonIndex = {
-        neume: noteElement.gorgonNeume,
-        index: events.length,
-        beat: workspace.beat,
-      };
-
-      gorgonIndexes.push(gorgonIndex);
-    }
-
-    // Calculate accidentals
-    const alteredFrequency2 = this.applyAlterations(
-      workspace,
-      noteElement.accidental,
-    );
-
-    const event2: PlaybackSequenceEvent = {
-      frequency: alteredFrequency2,
-      isonFrequency: workspace.isonFrequency,
-      type: 'note',
-      bpm: workspace.bpm,
-      duration: event2Duration,
-      transportTime: 0,
-      elementIndex: workspace.elementIndex,
-    };
-
-    events.push(event2);
-  }
-
-  handleRunningElaphron(
-    noteElement: NoteElement,
-    workspace: PlaybackWorkspace,
-  ) {
-    const { events, gorgonIndexes } = workspace;
-
-    // Process first note
-    workspace.innerElementIndex = 0;
-
-    this.moveDistance(workspace, -1);
-
-    // Add a virtual gorgon
-    const gorgonIndex: GorgonIndex = {
-      neume: GorgonNeume.Gorgon_Top,
-      index: events.length,
-      beat: workspace.beat,
-    };
-
-    gorgonIndexes.push(gorgonIndex);
-
-    const alteredFrequency1 = this.applyAlterations(workspace);
-
-    const event1: PlaybackSequenceEvent = {
-      frequency: alteredFrequency1,
-      isonFrequency: workspace.isonFrequency,
-      type: 'note',
-      bpm: workspace.bpm,
-      duration: 1 * workspace.beat,
-      transportTime: 0,
-      elementIndex: workspace.elementIndex,
-    };
-
-    events.push(event1);
-
-    // Process the second note
-    workspace.innerElementIndex = 1;
-
-    let event2Duration = 1 * workspace.beat;
-
-    this.moveDistance(workspace, -1);
-
-    if (noteElement.timeNeume != null) {
-      event2Duration +=
-        this.timeMap.get(noteElement.timeNeume)! * workspace.beat;
-    }
-
-    // Calculate accidentals
-    const alteredFrequency2 = this.applyAlterations(
-      workspace,
-      noteElement.accidental,
-    );
-
-    const event2: PlaybackSequenceEvent = {
-      frequency: alteredFrequency2,
-      isonFrequency: workspace.isonFrequency,
-      type: 'note',
-      bpm: workspace.bpm,
-      duration: event2Duration,
-      transportTime: 0,
-      elementIndex: workspace.elementIndex,
-    };
-
-    events.push(event2);
-  }
-
-  handleRunningElaphronKentemata(
-    noteElement: NoteElement,
-    workspace: PlaybackWorkspace,
-  ) {
-    const { events, gorgonIndexes } = workspace;
-
-    // Process first note
-    workspace.innerElementIndex = 0;
-
-    this.moveDistance(workspace, -1);
-
-    // Add a virtual gorgon
-    const gorgonIndex: GorgonIndex = {
-      neume: GorgonNeume.Gorgon_Top,
-      index: events.length,
-      beat: workspace.beat,
-    };
-
-    gorgonIndexes.push(gorgonIndex);
-
-    const alteredFrequency1 = this.applyAlterations(workspace);
-
-    const event1: PlaybackSequenceEvent = {
-      frequency: alteredFrequency1,
-      isonFrequency: workspace.isonFrequency,
-      type: 'note',
-      bpm: workspace.bpm,
-      duration: 1 * workspace.beat,
-      transportTime: 0,
-      elementIndex: workspace.elementIndex,
-    };
-
-    events.push(event1);
-
-    // Process the second note
-    workspace.innerElementIndex = 1;
-
-    let event2Duration = 1 * workspace.beat;
-
-    this.moveDistance(workspace, -1);
-
-    if (noteElement.timeNeume != null) {
-      event2Duration +=
-        this.timeMap.get(noteElement.timeNeume)! * workspace.beat;
-    }
-
-    // Calculate accidentals
-    const alteredFrequency2 = this.applyAlterations(workspace);
-
-    const event2: PlaybackSequenceEvent = {
-      frequency: alteredFrequency2,
-      isonFrequency: workspace.isonFrequency,
-      type: 'note',
-      bpm: workspace.bpm,
-      duration: event2Duration,
-      transportTime: 0,
-      elementIndex: workspace.elementIndex,
-    };
-
-    events.push(event2);
-
-    // Process the kentimata
-    workspace.innerElementIndex = 2;
-    this.moveDistance(workspace, 1);
-
-    if (noteElement.gorgonNeume) {
-      const gorgonIndex: GorgonIndex = {
-        neume: noteElement.gorgonNeume,
-        index: events.length,
-        beat: workspace.beat,
-      };
-
-      gorgonIndexes.push(gorgonIndex);
-    }
-
-    // Calculate accidentals
-    const alteredFrequencyKentimata = this.applyAlterations(
-      workspace,
-      noteElement.accidental,
-    );
-
-    const kentimataEvent: PlaybackSequenceEvent = {
-      frequency: alteredFrequencyKentimata,
-      isonFrequency: workspace.isonFrequency,
-      type: 'note',
-      bpm: workspace.bpm,
-      duration: 1 * workspace.beat,
-      transportTime: 0,
-      elementIndex: workspace.elementIndex,
-    };
-
-    events.push(kentimataEvent);
-  }
-
-  handleNote(noteElement: NoteElement, workspace: PlaybackWorkspace) {
-    const { events, gorgonIndexes } = workspace;
-
-    const distance = getNeumeValue(noteElement.quantitativeNeume)!;
-
-    workspace.innerElementIndex = 0;
-
-    this.moveDistance(workspace, distance);
-
-    let duration = 1 * workspace.beat;
-
-    // Calculate time
-    if (noteElement.timeNeume != null) {
-      duration += this.timeMap.get(noteElement.timeNeume)! * workspace.beat;
-    }
-
-    if (noteElement.gorgonNeume) {
-      const gorgonIndex: GorgonIndex = {
-        neume: noteElement.gorgonNeume,
-        index: events.length,
-        beat: workspace.beat,
-      };
-
-      gorgonIndexes.push(gorgonIndex);
-    }
-
-    // Calculate accidentals
-    const alteredFrequency = this.applyAlterations(
-      workspace,
-      noteElement.accidental,
     );
 
     const event: PlaybackSequenceEvent = {
@@ -1565,148 +590,206 @@ export class PlaybackService {
       isonFrequency: workspace.isonFrequency,
       type: 'note',
       bpm: workspace.bpm,
-      duration,
+      duration: noteAtomNode.duration * workspace.beat,
       transportTime: 0,
-      elementIndex: workspace.elementIndex,
+      elementIndex: noteAtomNode.elementIndex,
     };
 
     events.push(event);
   }
 
-  handleRest(noteElement: NoteElement, workspace: PlaybackWorkspace) {
-    const duration = this.restMap.get(noteElement.quantitativeNeume)!;
+  handleRest(restNode: Readonly<RestNode>, workspace: PlaybackWorkspace) {
+    const { events } = workspace;
+
+    if (workspace.loggingEnabled) {
+      console.groupCollapsed('PlaybackService', 'rest');
+      console.log('duration', restNode.duration);
+      console.groupEnd();
+    }
 
     const restEvent: PlaybackSequenceEvent = {
       type: 'rest',
       bpm: workspace.bpm,
-      duration: duration * workspace.beat,
+      duration: restNode.duration * workspace.beat,
       transportTime: 0,
-      elementIndex: workspace.elementIndex,
+      elementIndex: restNode.elementIndex,
     };
 
-    workspace.events.push(restEvent);
+    events.push(restEvent);
   }
 
-  handleMartyria(
-    martyriaElement: MartyriaElement,
+  handleModeKey(
+    modeKeyNode: Readonly<ModeKeyNode>,
     workspace: PlaybackWorkspace,
   ) {
-    if (martyriaElement.tempo != null) {
-      workspace.bpm =
-        (martyriaElement.bpm ||
-          this.tempoToBpmMap.get(martyriaElement.tempo)!) *
-        workspace.options.speed;
-      workspace.beat = this.beatLengthFromBpm(workspace.bpm);
+    // Reset workspace flags
+    workspace.legetos = modeKeyNode.legetos;
+    workspace.lastAlterationMoria = 0;
+    workspace.lastAlterationNote = ScaleNote.Pa;
+    workspace.generalFlat = false;
+    workspace.generalSharp = false;
+    workspace.permanentEnharmonicZo = modeKeyNode.permanentEnharmonicZo;
+    workspace.ignoreAttractions = modeKeyNode.ignoreAttractions;
+
+    workspace.isonFrequency = 0;
+
+    workspace.scale = this.getPlaybackScale(modeKeyNode.scale, workspace);
+
+    workspace.frequency = this.moveTo(modeKeyNode.virtualNote, true, workspace);
+  }
+
+  handleFthora(fthoraNode: Readonly<FthoraNode>, workspace: PlaybackWorkspace) {
+    if (workspace.loggingEnabled) {
+      console.groupCollapsed('PlaybackService', 'fthora');
+      console.log('physicalNote', fthoraNode.physicalNote);
+      console.log('virtualNote', fthoraNode.virtualNote);
+      console.log('scale', fthoraNode.scale);
+      console.log('generalFlat', fthoraNode.generalFlat);
+      console.log('generalSharp', fthoraNode.generalSharp);
+      console.groupEnd();
     }
 
-    if (martyriaElement.fthora) {
-      this.applyFthora(
-        martyriaElement.fthora,
+    workspace.generalFlat = fthoraNode.generalFlat;
+    workspace.generalSharp = fthoraNode.generalSharp;
+
+    const currentShift =
+      getScaleNoteValue(fthoraNode.virtualNote) -
+      getScaleNoteValue(fthoraNode.physicalNote);
+    if (currentShift) {
+      // Compute distance from physical note to Di in the old scale
+      const moria = this.moriaBetweenNotes(
+        workspace.scale.scaleNoteMap.get(ScaleNote.Thi)!,
+        workspace.scale.intervals,
+        getScaleNoteValue(fthoraNode.physicalNote) -
+          getScaleNoteValue(ScaleNote.Thi),
+      );
+      if (workspace.loggingEnabled) {
+        console.log(
+          'Moria from physical note ' +
+            fthoraNode.physicalNote +
+            ' to Di in the old scale',
+          moria,
+        );
+      }
+
+      // Scale change
+      workspace.scale = this.getPlaybackScale(fthoraNode.scale, workspace);
+
+      // Compute distance from Di to virtual note in the new scale
+      const moria2 = this.moriaBetweenNotes(
+        workspace.scale.scaleNoteMap.get(fthoraNode.virtualNote)!,
+        workspace.scale.intervals,
+        getScaleNoteValue(ScaleNote.Thi) -
+          getScaleNoteValue(fthoraNode.virtualNote),
+      );
+      if (workspace.loggingEnabled) {
+        console.log(
+          'Moria from virtual note ' +
+            fthoraNode.virtualNote +
+            ' to Di in the new scale',
+          moria2,
+        );
+      }
+
+      workspace.transpositionMoria = moria + moria2;
+      if (workspace.loggingEnabled) {
+        console.log('Entering transposition', workspace.transpositionMoria);
+      }
+    } else {
+      workspace.scale = this.getPlaybackScale(fthoraNode.scale, workspace);
+
+      workspace.transpositionMoria = 0;
+    }
+  }
+
+  getPlaybackScale(scale: Scale, workspace: PlaybackWorkspace): PlaybackScale {
+    let playbackScale: PlaybackScale;
+
+    switch (scale) {
+      case Scale.Diatonic:
+        playbackScale =
+          workspace.options.useLegetos && workspace.legetos
+            ? this.legetosScale
+            : this.diatonicScale;
+        break;
+      case Scale.SoftChromatic:
+        playbackScale = this.softChromaticScale;
+        break;
+      case Scale.HardChromatic:
+        playbackScale = this.hardChromaticScale;
+        break;
+      case Scale.EnharmonicGa:
+      case Scale.EnharmonicZo:
+      case Scale.EnharmonicZoHigh:
+      case Scale.EnharmonicVou:
+      case Scale.EnharmonicVouHigh:
+        playbackScale = this.enharmonicScale;
+        break;
+      case Scale.Zygos:
+        playbackScale =
+          workspace.options.useLegetos && workspace.legetos
+            ? this.zygosLegetosScale
+            : this.zygosScale;
+        break;
+      case Scale.Spathi:
+        playbackScale = this.spathiKeScale;
+        break;
+      case Scale.SpathiGa:
+        playbackScale = this.spathiGaScale;
+        break;
+      case Scale.Kliton:
+        playbackScale = this.klitonScale;
+        break;
+    }
+
+    if (workspace.permanentEnharmonicZo) {
+      playbackScale = this.enharmonicScale;
+    }
+
+    if (playbackScale.name === PlaybackScaleName.Enharmonic) {
+      this.enharmonicScale.intervals = this.constructEnharmonicScale(
+        scale,
         workspace,
-        martyriaElement.chromaticFthoraNote,
       );
-    } else if (
-      workspace.scale.name === PlaybackScaleName.Enharmonic &&
-      !workspace.permanentEnharmonicZo &&
-      !workspace.permanentEnharmonicVou
-    ) {
-      // Clear the enharmonic fthora
-      this.switchToDiatonic(workspace);
-    }
-
-    if (!martyriaElement.auto) {
-      // TODO support martyriaElement.scale
-      // if (martyriaElement.scale === Scale.Diatonic) {
-      //   workspace.scale = this.diatonicScale;
-
-      //   if (workspace.legetos) {
-      //     workspace.scale = this.legetosScale;
-      //   }
-
-      //   if (workspace.permanentEnharmonicZo) {
-      //     workspace.scale = this.enharmonicScale;
-      //     workspace.scale.intervals =
-      //       this.constructEnharmonicScaleFromGa(workspace);
-
-      //     this.enharmonicScale.scaleNoteMap =
-      //       this.diatonicScaleNoteToIntervalIndexMap;
-      //   }
-      // } else if (martyriaElement.scale === Scale.SoftChromatic) {
-      //   workspace.scale = this.softChromaticScale;
-      // } else if (martyriaElement.scale === Scale.HardChromatic) {
-      //   workspace.scale = this.hardChromaticScale;
-      // }
-
-      const distance =
-        getNoteValue(martyriaElement.note) -
-        getScaleNoteValue(getScaleNoteFromValue(workspace.note)!);
-
-      this.moveDistance(workspace, distance);
-    }
-
-    workspace.enharmonicZo = workspace.permanentEnharmonicZo;
-    workspace.enharmonicGa = false;
-    workspace.enharmonicVou = workspace.permanentEnharmonicVou;
-  }
-
-  handleTempo(tempoElement: TempoElement, workspace: PlaybackWorkspace) {
-    workspace.bpm =
-      (tempoElement.bpm || this.tempoToBpmMap.get(tempoElement.neume)!) *
-      workspace.options.speed;
-    workspace.beat = this.beatLengthFromBpm(workspace.bpm);
-  }
-
-  isKentimataCombo(element: NoteElement) {
-    // Note that this list does not contain the following special cases:
-    // OligonPlusHyporoePlusKentemata
-    // OligonPlusRunningElaphronPlusKentemata
-    // KentemataPlusOligon
-    // These are handled separately
-    return [
-      QuantitativeNeume.OligonPlusHamiliPlusKentemata,
-      QuantitativeNeume.OligonPlusIsonPlusKentemata,
-      QuantitativeNeume.OligonPlusElaphronPlusKentemata,
-      QuantitativeNeume.OligonPlusApostrophosPlusKentemata,
-      QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
-      QuantitativeNeume.OligonKentimaMiddleKentimata,
-      QuantitativeNeume.OligonPlusKentemataPlusHypsiliLeft,
-      QuantitativeNeume.OligonPlusKentemataPlusHypsiliRight,
-      QuantitativeNeume.OligonPlusKentemata,
-    ].includes(element.quantitativeNeume);
-  }
-
-  isRest(element: NoteElement) {
-    return [
-      QuantitativeNeume.Breath,
-      QuantitativeNeume.Cross,
-      QuantitativeNeume.VareiaDotted,
-      QuantitativeNeume.VareiaDotted2,
-      QuantitativeNeume.VareiaDotted3,
-      QuantitativeNeume.VareiaDotted4,
-    ].includes(element.quantitativeNeume);
-  }
-
-  processGorgons(
-    events: PlaybackSequenceEvent[],
-    gorgonIndexes: GorgonIndex[],
-  ) {
-    for (const gorgon of gorgonIndexes) {
-      const durations = this.gorgonMap.get(gorgon.neume)!;
-
-      // TODO: handle the case where the user has made an
-      // error and placed gorgons in a location where
-      // affectedEvents.length < durations.length
-      const affectedEvents = events.slice(
-        gorgon.index - 1,
-        gorgon.index + durations.length - 1,
-      );
-
-      for (let i = 0; i < durations.length; i++) {
-        if (affectedEvents[i]) {
-          affectedEvents[i].duration -= durations[i] * gorgon.beat;
-        }
+      if (scale === Scale.EnharmonicZo || scale === Scale.EnharmonicVou) {
+        this.enharmonicScale.scaleNoteMap =
+          this.enharmonicZoScaleNoteToIntervalIndexMap;
+      } else if (
+        scale === Scale.EnharmonicGa ||
+        scale === Scale.EnharmonicVouHigh
+      ) {
+        this.enharmonicScale.scaleNoteMap =
+          this.enharmonicGaScaleNoteToIntervalIndexMap;
+      } else {
+        this.enharmonicScale.scaleNoteMap =
+          this.diatonicScaleNoteToIntervalIndexMap;
       }
     }
+
+    return playbackScale;
+  }
+
+  handleIson(isonNode: Readonly<IsonNode>, workspace: PlaybackWorkspace) {
+    workspace.isonFrequency = -1;
+
+    if (isonNode.ison !== Ison.Unison) {
+      workspace.isonFrequency = this.moveTo(
+        getScaleNoteFromValue(getIsonValue(isonNode.ison)),
+        false,
+        workspace,
+      );
+    }
+  }
+
+  handleTempo(tempoNode: Readonly<TempoNode>, workspace: PlaybackWorkspace) {
+    if (workspace.loggingEnabled) {
+      console.groupCollapsed('PlaybackService', 'tempo');
+      console.log('bpm', tempoNode.bpm);
+      console.groupEnd();
+    }
+
+    workspace.bpm = tempoNode.bpm * workspace.options.speed;
+    workspace.beat = this.beatLengthFromBpm(workspace.bpm);
   }
 
   /////////////////////////
@@ -1722,134 +805,6 @@ export class PlaybackService {
     [Accidental.Sharp_4_Left, 4],
     [Accidental.Sharp_6_Left, 6],
     [Accidental.Sharp_8_Left, 8],
-  ]);
-
-  fthoraToScaleMap = new Map<Fthora, PlaybackScaleName>([
-    [Fthora.DiatonicNiLow_Top, PlaybackScaleName.Diatonic],
-    [Fthora.DiatonicNiLow_Bottom, PlaybackScaleName.Diatonic],
-    [Fthora.DiatonicPa_Top, PlaybackScaleName.Diatonic],
-    [Fthora.DiatonicPa_Bottom, PlaybackScaleName.Diatonic],
-    [Fthora.DiatonicVou_Top, PlaybackScaleName.Diatonic],
-    [Fthora.DiatonicVou_Bottom, PlaybackScaleName.Diatonic],
-    [Fthora.DiatonicGa_Top, PlaybackScaleName.Diatonic],
-    [Fthora.DiatonicGa_Bottom, PlaybackScaleName.Diatonic],
-    [Fthora.DiatonicThi_Top, PlaybackScaleName.Diatonic],
-    [Fthora.DiatonicThi_Bottom, PlaybackScaleName.Diatonic],
-    [Fthora.DiatonicKe_Top, PlaybackScaleName.Diatonic],
-    [Fthora.DiatonicKe_Bottom, PlaybackScaleName.Diatonic],
-    [Fthora.DiatonicZo_Top, PlaybackScaleName.Diatonic],
-    [Fthora.DiatonicZo_Bottom, PlaybackScaleName.Diatonic],
-    [Fthora.DiatonicNiHigh_Top, PlaybackScaleName.Diatonic],
-    [Fthora.DiatonicNiHigh_Bottom, PlaybackScaleName.Diatonic],
-
-    [Fthora.SoftChromaticPa_Top, PlaybackScaleName.SoftChromatic],
-    [Fthora.SoftChromaticPa_Bottom, PlaybackScaleName.SoftChromatic],
-    [Fthora.SoftChromaticThi_Top, PlaybackScaleName.SoftChromatic],
-    [Fthora.SoftChromaticThi_Bottom, PlaybackScaleName.SoftChromatic],
-
-    [Fthora.HardChromaticPa_Top, PlaybackScaleName.HardChromatic],
-    [Fthora.HardChromaticPa_Bottom, PlaybackScaleName.HardChromatic],
-    [Fthora.HardChromaticThi_Top, PlaybackScaleName.HardChromatic],
-    [Fthora.HardChromaticThi_Bottom, PlaybackScaleName.HardChromatic],
-
-    [Fthora.Kliton_Top, PlaybackScaleName.Kliton],
-    [Fthora.Kliton_Bottom, PlaybackScaleName.Kliton],
-
-    [Fthora.Zygos_Top, PlaybackScaleName.Zygos],
-    [Fthora.Zygos_Bottom, PlaybackScaleName.Zygos],
-
-    [Fthora.Spathi_Top, PlaybackScaleName.SpathiKe],
-    [Fthora.Spathi_Bottom, PlaybackScaleName.SpathiKe],
-
-    [Fthora.Enharmonic_Top, PlaybackScaleName.Enharmonic],
-    [Fthora.Enharmonic_Bottom, PlaybackScaleName.Enharmonic],
-  ]);
-
-  fthoraToScaleNoteMap: Map<Fthora, ScaleNote> = new Map<Fthora, ScaleNote>([
-    [Fthora.DiatonicNiLow_Top, ScaleNote.Ni],
-    [Fthora.DiatonicNiLow_Bottom, ScaleNote.Ni],
-    [Fthora.DiatonicPa_Top, ScaleNote.Pa],
-    [Fthora.DiatonicPa_Bottom, ScaleNote.Pa],
-    [Fthora.DiatonicVou_Top, ScaleNote.Vou],
-    [Fthora.DiatonicVou_Bottom, ScaleNote.Vou],
-    [Fthora.DiatonicGa_Top, ScaleNote.Ga],
-    [Fthora.DiatonicGa_Bottom, ScaleNote.Ga],
-    [Fthora.DiatonicThi_Top, ScaleNote.Thi],
-    [Fthora.DiatonicThi_Bottom, ScaleNote.Thi],
-    [Fthora.DiatonicKe_Top, ScaleNote.Ke],
-    [Fthora.DiatonicKe_Bottom, ScaleNote.Ke],
-    [Fthora.DiatonicZo_Top, ScaleNote.ZoHigh],
-    [Fthora.DiatonicZo_Bottom, ScaleNote.ZoHigh],
-    [Fthora.DiatonicNiHigh_Top, ScaleNote.NiHigh],
-    [Fthora.DiatonicNiHigh_Bottom, ScaleNote.NiHigh],
-  ]);
-
-  gorgonMap = new Map<GorgonNeume, number[]>([
-    [GorgonNeume.Gorgon_Top, [0.5, 0.5]],
-    [GorgonNeume.Gorgon_Bottom, [0.5, 0.5]],
-    [GorgonNeume.GorgonDottedLeft, [1 / 3, 2 / 3]],
-    [GorgonNeume.GorgonDottedRight, [2 / 3, 1 / 3]],
-    [GorgonNeume.Digorgon, [2 / 3, 2 / 3, 2 / 3]],
-    [GorgonNeume.DigorgonDottedLeft1, [0.5, 0.75, 0.75]],
-    [GorgonNeume.DigorgonDottedLeft2, [0.75, 0.5, 0.75]],
-    [GorgonNeume.DigorgonDottedRight, [0.75, 0.75, 0.5]],
-    [GorgonNeume.Trigorgon, [0.75, 0.75, 0.75, 0.75]],
-    // TODO handle trigorgon dotted
-    [GorgonNeume.TrigorgonDottedLeft1, [0.75, 0.75, 0.75, 0.75]],
-    [GorgonNeume.TrigorgonDottedLeft2, [0.75, 0.75, 0.75, 0.75]],
-    [GorgonNeume.TrigorgonDottedRight, [0.75, 0.75, 0.75, 0.75]],
-    // Secondary
-    [GorgonNeume.GorgonSecondary, [0.5, 0.5]],
-    [GorgonNeume.GorgonDottedLeftSecondary, [1 / 3, 2 / 3]],
-    [GorgonNeume.GorgonDottedRightSecondary, [2 / 3, 1 / 3]],
-    [GorgonNeume.DigorgonSecondary, [2 / 3, 2 / 3, 2 / 3]],
-    [GorgonNeume.DigorgonDottedLeft1Secondary, [0.5, 0.75, 0.75]],
-    [GorgonNeume.DigorgonDottedRightSecondary, [0.75, 0.75, 0.5]],
-    [GorgonNeume.TrigorgonSecondary, [0.75, 0.75, 0.75, 0.75]],
-    // TODO handle trigorgon dotted
-    [GorgonNeume.TrigorgonDottedLeft1Secondary, [0.75, 0.75, 0.75, 0.75]],
-    [GorgonNeume.TrigorgonDottedRightSecondary, [0.75, 0.75, 0.75, 0.75]],
-
-    [GorgonNeume.Argon, [0.5, 0.5, -1]],
-    [GorgonNeume.Hemiolion, [0.5, 0.5, -2]],
-    [GorgonNeume.Diargon, [0.5, 0.5, -3]],
-  ]);
-
-  restMap = new Map<QuantitativeNeume, number>([
-    [QuantitativeNeume.Breath, 0],
-    [QuantitativeNeume.Cross, 0],
-    [QuantitativeNeume.VareiaDotted, 1],
-    [QuantitativeNeume.VareiaDotted2, 2],
-    [QuantitativeNeume.VareiaDotted3, 3],
-    [QuantitativeNeume.VareiaDotted4, 4],
-  ]);
-
-  timeMap = new Map<TimeNeume, number>([
-    [TimeNeume.Klasma_Bottom, 1],
-    [TimeNeume.Klasma_Top, 1],
-    [TimeNeume.Hapli, 1],
-    [TimeNeume.Dipli, 2],
-    [TimeNeume.Tripli, 3],
-  ]);
-
-  tempoToBpmMap = new Map<TempoSign, number>([
-    [TempoSign.VerySlow, 40], // < 56 triargon?
-    [TempoSign.Slower, 56], // 56 - 80 diargon
-    [TempoSign.Slow, 80], // 80 - 100 hemiolion
-    [TempoSign.Moderate, 100], // 100 - 168 argon
-    [TempoSign.Medium, 130], // 130 argon + gorgon
-    [TempoSign.Quick, 168], // 168 - 208 gorgon
-    [TempoSign.Quicker, 208], // 208+ digorgon
-    [TempoSign.VeryQuick, 250], // unattested? trigorgon
-
-    [TempoSign.VerySlowAbove, 40], // < 56 triargon?
-    [TempoSign.SlowerAbove, 56], // 56 - 80 diargon
-    [TempoSign.SlowAbove, 80], // 80 - 100 hemiolion
-    [TempoSign.ModerateAbove, 100], // 100 - 168 argon
-    [TempoSign.MediumAbove, 130], // 130 argon + gorgon
-    [TempoSign.QuickAbove, 168], // 168 - 208 gorgon
-    [TempoSign.QuickerAbove, 208], // 208+ digorgon
-    [TempoSign.VeryQuickAbove, 250], // unattested? trigorgon
   ]);
 
   /////////////////////////
@@ -1932,24 +887,6 @@ export class PlaybackService {
     name: PlaybackScaleName.Diatonic,
     intervals: [12, 10, 8, 12, 12, 10, 8],
     scaleNoteMap: this.diatonicScaleNoteToIntervalIndexMap,
-    fthoraMap: new Map<Fthora, number>([
-      [Fthora.DiatonicNiLow_Top, 0],
-      [Fthora.DiatonicNiLow_Bottom, 0],
-      [Fthora.DiatonicPa_Top, 1],
-      [Fthora.DiatonicPa_Bottom, 1],
-      [Fthora.DiatonicVou_Top, 2],
-      [Fthora.DiatonicVou_Bottom, 2],
-      [Fthora.DiatonicGa_Top, 3],
-      [Fthora.DiatonicGa_Bottom, 3],
-      [Fthora.DiatonicThi_Top, 4],
-      [Fthora.DiatonicThi_Bottom, 4],
-      [Fthora.DiatonicKe_Top, 5],
-      [Fthora.DiatonicKe_Bottom, 5],
-      [Fthora.DiatonicZo_Top, 6],
-      [Fthora.DiatonicZo_Bottom, 6],
-      [Fthora.DiatonicNiHigh_Top, 0],
-      [Fthora.DiatonicNiHigh_Bottom, 0],
-    ]),
   };
 
   hardChromaticScale: PlaybackScale = {
@@ -1974,12 +911,6 @@ export class PlaybackService {
       [ScaleNote.GaHigh, 1],
       [ScaleNote.ThiHigh, 2],
       [ScaleNote.KeHigh, 3],
-    ]),
-    fthoraMap: new Map<Fthora, number>([
-      [Fthora.HardChromaticPa_Top, 0],
-      [Fthora.HardChromaticPa_Bottom, 0],
-      [Fthora.HardChromaticThi_Top, 3],
-      [Fthora.HardChromaticThi_Bottom, 3],
     ]),
   };
 
@@ -2007,12 +938,6 @@ export class PlaybackService {
       [ScaleNote.ThiHigh, 3],
       [ScaleNote.KeHigh, 0],
     ]),
-    fthoraMap: new Map<Fthora, number>([
-      [Fthora.SoftChromaticPa_Top, 3],
-      [Fthora.SoftChromaticPa_Bottom, 3],
-      [Fthora.SoftChromaticThi_Top, 0],
-      [Fthora.SoftChromaticThi_Bottom, 0],
-    ]),
   };
 
   legetosScale: PlaybackScale = {
@@ -2038,74 +963,36 @@ export class PlaybackService {
       [ScaleNote.ThiHigh, 3],
       [ScaleNote.KeHigh, 4],
     ]),
-    fthoraMap: new Map<Fthora, number>([
-      [Fthora.DiatonicNiLow_Top, 6],
-      [Fthora.DiatonicNiLow_Bottom, 6],
-      [Fthora.DiatonicPa_Top, 0],
-      [Fthora.DiatonicPa_Bottom, 0],
-      [Fthora.DiatonicVou_Top, 1],
-      [Fthora.DiatonicVou_Bottom, 1],
-      [Fthora.DiatonicGa_Top, 2],
-      [Fthora.DiatonicGa_Bottom, 2],
-      [Fthora.DiatonicThi_Top, 3],
-      [Fthora.DiatonicThi_Bottom, 3],
-      [Fthora.DiatonicKe_Top, 4],
-      [Fthora.DiatonicKe_Bottom, 4],
-      [Fthora.DiatonicZo_Top, 5],
-      [Fthora.DiatonicZo_Bottom, 5],
-      [Fthora.DiatonicNiHigh_Top, 6],
-      [Fthora.DiatonicNiHigh_Bottom, 6],
-    ]),
   };
 
   zygosScale: PlaybackScale = {
     name: PlaybackScaleName.Zygos,
     intervals: [18, 4, 16, 4, 12, 10, 8],
     scaleNoteMap: this.diatonicScaleNoteToIntervalIndexMap,
-    fthoraMap: new Map<Fthora, number>([
-      [Fthora.Zygos_Top, 4],
-      [Fthora.Zygos_Bottom, 4],
-    ]),
   };
 
   zygosLegetosScale: PlaybackScale = {
     name: PlaybackScaleName.ZygosLegetos,
     intervals: [18, 4, 20, 4, 12, 6, 9],
     scaleNoteMap: this.diatonicScaleNoteToIntervalIndexMap,
-    fthoraMap: new Map<Fthora, number>([
-      [Fthora.Zygos_Top, 4],
-      [Fthora.Zygos_Bottom, 4],
-    ]),
   };
 
   klitonScale: PlaybackScale = {
     name: PlaybackScaleName.Kliton,
     intervals: [12, 14, 12, 4, 12, 10, 8],
     scaleNoteMap: this.diatonicScaleNoteToIntervalIndexMap,
-    fthoraMap: new Map<Fthora, number>([
-      [Fthora.Kliton_Top, 4],
-      [Fthora.Kliton_Bottom, 4],
-    ]),
   };
 
   spathiKeScale: PlaybackScale = {
     name: PlaybackScaleName.SpathiKe,
     intervals: [12, 10, 8, 20, 4, 4, 14],
     scaleNoteMap: this.diatonicScaleNoteToIntervalIndexMap,
-    fthoraMap: new Map<Fthora, number>([
-      [Fthora.Spathi_Top, 5],
-      [Fthora.Spathi_Bottom, 5],
-    ]),
   };
 
   spathiGaScale: PlaybackScale = {
     name: PlaybackScaleName.SpathiGa,
     intervals: [12, 14, 4, 4, 20, 10, 8],
     scaleNoteMap: this.diatonicScaleNoteToIntervalIndexMap,
-    fthoraMap: new Map<Fthora, number>([
-      [Fthora.Spathi_Top, 3],
-      [Fthora.Spathi_Bottom, 3],
-    ]),
   };
 
   // The intervals of this scale are constructed dynamically
@@ -2113,19 +1000,5 @@ export class PlaybackService {
     name: PlaybackScaleName.Enharmonic,
     intervals: [12, 12, 6, 12, 12, 12, 6],
     scaleNoteMap: this.diatonicScaleNoteToIntervalIndexMap,
-    fthoraMap: new Map<Fthora, number>(),
   };
-
-  scales: PlaybackScale[] = [
-    this.diatonicScale,
-    this.softChromaticScale,
-    this.hardChromaticScale,
-    this.legetosScale,
-    this.zygosScale,
-    this.zygosLegetosScale,
-    this.klitonScale,
-    this.spathiKeScale,
-    this.spathiGaScale,
-    this.enharmonicScale,
-  ];
 }

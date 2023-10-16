@@ -428,8 +428,8 @@
         0.619
       ],
       "klasmaTop": [
-        0.433,
-        0.48
+        0.598,
+        0.487
       ],
       "klasmaBottom": [
         0.785,
@@ -518,8 +518,8 @@
         0.619
       ],
       "klasmaTop": [
-        1.04,
-        0.5
+        0.98,
+        0.487
       ],
       "klasmaBottom": [
         0.785,
@@ -967,6 +967,10 @@
       ]
     },
     "yporroi": {
+      "barline": [
+        0.286,
+        0.59
+      ],
       "yfenAbove": [
         0.217,
         0.887
@@ -1029,6 +1033,10 @@
       ]
     },
     "runningElafron": {
+      "barline": [
+        0.583,
+        0.59
+      ],
       "fthoraTopSecondary": [
         0.29,
         0.665
@@ -1103,7 +1111,7 @@
       ],
       "klasmaTop": [
         1.06,
-        0.57
+        0.62
       ]
     },
     "elafron": {
@@ -1177,7 +1185,7 @@
       ],
       "klasmaTop": [
         0.56,
-        0.57
+        0.62
       ]
     },
     "elafronApostrofos": {
@@ -1247,7 +1255,7 @@
       ],
       "klasmaTop": [
         0.56,
-        0.57
+        0.62
       ]
     },
     "chamiliApostrofos": {
@@ -2781,6 +2789,10 @@
       ]
     },
     "oligonYporroiKentimata": {
+      "barline": [
+        0.502,
+        0.862
+      ],
       "yfesisSecondary": [
         0.64,
         0.828
@@ -2851,6 +2863,10 @@
       ]
     },
     "oligonKentimataBelow": {
+      "barline": [
+        0.277,
+        0.59
+      ],
       "yfenAbove": [
         0.93,
         0.641
@@ -2884,7 +2900,7 @@
         0.753
       ],
       "diesis": [
-        0.4,
+        0.71,
         0.133
       ],
       "isonIndicator": [
@@ -3179,6 +3195,10 @@
       ]
     },
     "petastiRunningElafron": {
+      "barline": [
+        0.397,
+        0.94
+      ],
       "yfesisSecondary": [
         0.338,
         0.91
@@ -3335,6 +3355,10 @@
       ]
     },
     "oligonYporroi": {
+      "barline": [
+        0.997,
+        0.878
+      ],
       "gorgonBottom": [
         0.667,
         0.175
@@ -3417,6 +3441,10 @@
       ]
     },
     "petastiYporroi": {
+      "barline": [
+        0.702,
+        0.816
+      ],
       "gorgonTop": [
         0.83,
         0.758
@@ -3487,6 +3515,10 @@
       ]
     },
     "oligonRunningElafronKentimata": {
+      "barline": [
+        0.459,
+        0.856
+      ],
       "yfesisTertiary": [
         0.376,
         0.858
@@ -5447,6 +5479,10 @@
       ]
     },
     "martyriaNoteZoLow": {
+      "barline": [
+        0.517,
+        0.59
+      ],
       "agogi": [
         0.517,
         0.444
@@ -5461,6 +5497,10 @@
       ]
     },
     "martyriaNoteNiLow": {
+      "barline": [
+        0.517,
+        0.59
+      ],
       "agogi": [
         0.517,
         0.374
@@ -5475,6 +5515,10 @@
       ]
     },
     "martyriaNotePaLow": {
+      "barline": [
+        0.517,
+        0.59
+      ],
       "agogi": [
         0.517,
         0.474
@@ -5489,6 +5533,10 @@
       ]
     },
     "martyriaNoteVouLow": {
+      "barline": [
+        0.517,
+        0.59
+      ],
       "agogi": [
         0.517,
         0.454
@@ -5503,6 +5551,10 @@
       ]
     },
     "martyriaNoteGaLow": {
+      "barline": [
+        0.517,
+        0.59
+      ],
       "agogi": [
         0.517,
         0.444
@@ -5517,6 +5569,10 @@
       ]
     },
     "martyriaNoteDiLow": {
+      "barline": [
+        0.517,
+        0.59
+      ],
       "agogi": [
         0.517,
         0.444
@@ -5531,6 +5587,10 @@
       ]
     },
     "martyriaNoteKeLow": {
+      "barline": [
+        0.517,
+        0.59
+      ],
       "agogi": [
         0.517,
         0.444
@@ -5545,6 +5605,10 @@
       ]
     },
     "martyriaNoteZo": {
+      "barline": [
+        0.517,
+        0.59
+      ],
       "agogi": [
         0.517,
         0.541
@@ -5559,6 +5623,10 @@
       ]
     },
     "martyriaNotePa": {
+      "barline": [
+        0.517,
+        0.59
+      ],
       "agogi": [
         0.517,
         0.448
@@ -5573,6 +5641,10 @@
       ]
     },
     "martyriaNoteNi": {
+      "barline": [
+        0.517,
+        0.59
+      ],
       "agogi": [
         0.517,
         0.417
@@ -5587,6 +5659,10 @@
       ]
     },
     "martyriaNoteVou": {
+      "barline": [
+        0.517,
+        0.59
+      ],
       "agogi": [
         0.517,
         0.523
@@ -5601,6 +5677,10 @@
       ]
     },
     "martyriaNoteNiHigh": {
+      "barline": [
+        0.517,
+        0.59
+      ],
       "agogi": [
         0.517,
         0.417
@@ -5615,6 +5695,10 @@
       ]
     },
     "martyriaNoteGa": {
+      "barline": [
+        0.517,
+        0.59
+      ],
       "agogi": [
         0.517,
         0.529
@@ -5629,6 +5713,10 @@
       ]
     },
     "martyriaNoteDi": {
+      "barline": [
+        0.517,
+        0.59
+      ],
       "agogi": [
         0.539,
         0.548
@@ -5643,6 +5731,10 @@
       ]
     },
     "martyriaNoteKe": {
+      "barline": [
+        0.517,
+        0.59
+      ],
       "agogi": [
         0.517,
         0.449
@@ -5657,6 +5749,10 @@
       ]
     },
     "martyriaNoteZoHigh": {
+      "barline": [
+        0.517,
+        0.59
+      ],
       "agogi": [
         0.517,
         0.541
@@ -5671,6 +5767,10 @@
       ]
     },
     "martyriaNotePaHigh": {
+      "barline": [
+        0.517,
+        0.59
+      ],
       "agogi": [
         0.517,
         0.448
@@ -5685,6 +5785,10 @@
       ]
     },
     "martyriaNoteVouHigh": {
+      "barline": [
+        0.517,
+        0.59
+      ],
       "agogi": [
         0.517,
         0.523
@@ -5699,6 +5803,10 @@
       ]
     },
     "martyriaNoteGaHigh": {
+      "barline": [
+        0.517,
+        0.59
+      ],
       "agogi": [
         0.517,
         0.529
@@ -5713,6 +5821,10 @@
       ]
     },
     "martyriaNoteDiHigh": {
+      "barline": [
+        0.517,
+        0.59
+      ],
       "agogi": [
         0.539,
         0.548
@@ -5727,6 +5839,10 @@
       ]
     },
     "martyriaNoteKeHigh": {
+      "barline": [
+        0.517,
+        0.59
+      ],
       "agogi": [
         0.517,
         0.449
@@ -7231,6 +7347,42 @@
         -0.002,
         0.458
       ]
+    },
+    "barlineShortSingleAbove": {
+      "barline": [
+        0.075,
+        0.59
+      ]
+    },
+    "barlineSingleAbove": {
+      "barline": [
+        0.107,
+        0.004
+      ]
+    },
+    "barlineDoubleAbove": {
+      "barline": [
+        0.175,
+        0.004
+      ]
+    },
+    "barlineTheseosAbove": {
+      "barline": [
+        0.107,
+        0.004
+      ]
+    },
+    "barlineShortDoubleAbove": {
+      "barline": [
+        0.129,
+        0.59
+      ]
+    },
+    "barlineShortTheseosAbove": {
+      "barline": [
+        0.087,
+        0.589
+      ]
     }
   },
   "glyphsWithAlternates": {
@@ -7620,7 +7772,13 @@
     "diesisGenikiTertiary": 0.0,
     "digorgonDottedLeftSecondary": 0.0,
     "trigorgonDottedLeftSecondary": 0.0,
-    "psifiston.alt01": 0.0
+    "psifiston.alt01": 0.0,
+    "barlineShortSingleAbove": 0.152,
+    "barlineSingleAbove": 0.208,
+    "barlineDoubleAbove": 0.34,
+    "barlineTheseosAbove": 0.208,
+    "barlineShortDoubleAbove": 0.256,
+    "barlineShortTheseosAbove": 0.172
   },
   "optionalGlyphs": {
     "oligonKentimataBelow.alt01": {
@@ -11180,6 +11338,66 @@
       "bBoxSW": [
         -0.911,
         0.1
+      ]
+    },
+    "barlineShortSingleAbove": {
+      "bBoxNE": [
+        0.091,
+        0.895
+      ],
+      "bBoxSW": [
+        0.059,
+        0.59
+      ]
+    },
+    "barlineSingleAbove": {
+      "bBoxNE": [
+        0.123,
+        0.705
+      ],
+      "bBoxSW": [
+        0.091,
+        0.004
+      ]
+    },
+    "barlineDoubleAbove": {
+      "bBoxNE": [
+        0.249,
+        0.705
+      ],
+      "bBoxSW": [
+        0.1,
+        0.004
+      ]
+    },
+    "barlineTheseosAbove": {
+      "bBoxNE": [
+        0.306,
+        0.812
+      ],
+      "bBoxSW": [
+        -0.101,
+        0.004
+      ]
+    },
+    "barlineShortDoubleAbove": {
+      "bBoxNE": [
+        0.192,
+        0.895
+      ],
+      "bBoxSW": [
+        0.067,
+        0.59
+      ]
+    },
+    "barlineShortTheseosAbove": {
+      "bBoxNE": [
+        0.232,
+        0.989
+      ],
+      "bBoxSW": [
+        -0.062,
+        0.589
       ]
     }
   },

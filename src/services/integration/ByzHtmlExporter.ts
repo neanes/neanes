@@ -1273,6 +1273,12 @@ export class ByzHtmlExporter {
     map.set('barlineShortSingle', 'x-bar-s');
     map.set('barlineShortDouble', 'x-bar2-s');
     map.set('barlineShortTheseos', 'x-bar-th-s');
+    map.set('barlineSingleAbove', 'x-bar');
+    map.set('barlineDoubleAbove', 'x-bar2');
+    map.set('barlineTheseosAbove', 'x-bar-th');
+    map.set('barlineShortSingleAbove', 'x-bar-s');
+    map.set('barlineShortDoubleAbove', 'x-bar2-s');
+    map.set('barlineShortTheseosAbove', 'x-bar-th-s');
     map.set('measureNumber2', 'x-mn2');
     map.set('measureNumber3', 'x-mn3');
     map.set('measureNumber4', 'x-mn4');

@@ -1,6 +1,7 @@
 import {
   Fthora,
   GorgonNeume,
+  MeasureBar,
   Neume,
   petastiNeumes,
   QuantitativeNeume,
@@ -124,6 +125,16 @@ const secondaryNeumesAllowedNeumes: Neume[] = [
 
 const tertiaryNeumesAllowedNeumes: Neume[] = [
   QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
+];
+
+const measureBarAboveNeumes: Neume[] = [
+  QuantitativeNeume.Hyporoe,
+  QuantitativeNeume.KentemataPlusOligon,
+  QuantitativeNeume.OligonPlusHyporoePlusKentemata,
+  QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
+  QuantitativeNeume.PetastiPlusHyporoe,
+  QuantitativeNeume.PetastiPlusRunningElaphron,
+  QuantitativeNeume.RunningElaphron,
 ];
 
 export const gorgonReplacementMap = new Map<
@@ -482,6 +493,21 @@ export const fthoraReplacementMap = new Map<Fthora, NeumeReplacement<Fthora>[]>(
   [],
 );
 
+export const measureBarLeftToAbove = new Map<MeasureBar, MeasureBar>([
+  [MeasureBar.MeasureBarRight, MeasureBar.MeasureBarRightAbove],
+  [MeasureBar.MeasureBarTop, MeasureBar.MeasureBarTopAbove],
+  [MeasureBar.MeasureBarDouble, MeasureBar.MeasureBarDoubleAbove],
+  [MeasureBar.MeasureBarShortDouble, MeasureBar.MeasureBarShortDoubleAbove],
+  [MeasureBar.MeasureBarTheseos, MeasureBar.MeasureBarTheseosAbove],
+  [MeasureBar.MeasureBarShortTheseos, MeasureBar.MeasureBarShortTheseosAbove],
+]);
+
+export const measureBarAboveToLeft = new Map<MeasureBar, MeasureBar>();
+
+for (const [key, value] of measureBarLeftToAbove) {
+  measureBarAboveToLeft.set(value, key);
+}
+
 export const quantitativeNeumeReplacementMap = new Map<
   QuantitativeNeume,
   QuantitativeNeumeReplacement<QuantitativeNeume>[]
@@ -576,3 +602,6 @@ export const takesSecondaryNeumes = (neume: QuantitativeNeume) =>
 
 export const takesTertiaryNeumes = (neume: QuantitativeNeume) =>
   tertiaryNeumesAllowedNeumes.includes(neume);
+
+export const isMeasureBarAbove = (neume: QuantitativeNeume) =>
+  measureBarAboveNeumes.includes(neume);

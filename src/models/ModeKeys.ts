@@ -347,6 +347,7 @@ export const modeKeyTemplates: ModeKeyTemplate[] = [
     scale: Scale.Diatonic,
     scaleNote: ScaleNote.Zo,
     description: 'Enharmonic',
+    fthora: Fthora.Enharmonic_Top,
     martyria: ModeSign.VarysZo,
     note: ModeSign.Zo,
     fthoraAboveNote: Fthora.Enharmonic_Top,

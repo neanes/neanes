@@ -266,6 +266,7 @@ export const modeKeyTemplates: ModeKeyTemplate[] = [
     scaleNote: ScaleNote.Ke,
     description: 'Spathi',
     martyria: ModeSign.Alpha,
+    note: ModeSign.Pa,
     quantitativeNeumeRight: QuantitativeNeume.OligonPlusHypsiliRight,
     fthoraAboveQuantitativeNeumeRight: Fthora.Spathi_Bottom,
   },
@@ -319,6 +320,8 @@ export const modeKeyTemplates: ModeKeyTemplate[] = [
     scaleNote: ScaleNote.PaHigh,
     description: 'Heptaphonic (Maqam Hijaz Kar)',
     martyria: ModeSign.SoftChromatic6,
+    note: ModeSign.Pa,
+    fthoraAboveNote: Fthora.HardChromaticPa_Top,
     quantitativeNeumeRight:
       QuantitativeNeume.OligonPlusHypsiliPlusKentimaVertical,
     fthoraAboveQuantitativeNeumeRight: Fthora.HardChromaticThi_Top,

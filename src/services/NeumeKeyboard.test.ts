@@ -97,6 +97,12 @@ describe('NeumeKeyboard', () => {
       Fthora.GeneralFlat_TopTertiary,
       Fthora.GeneralSharp_TopSecondary,
       Fthora.GeneralSharp_TopTertiary,
+      MeasureBar.MeasureBarDoubleAbove,
+      MeasureBar.MeasureBarRightAbove,
+      MeasureBar.MeasureBarShortDoubleAbove,
+      MeasureBar.MeasureBarShortTheseosAbove,
+      MeasureBar.MeasureBarTheseosAbove,
+      MeasureBar.MeasureBarTopAbove,
     ];
 
     const keyboard = new NeumeKeyboard();

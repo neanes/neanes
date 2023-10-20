@@ -6,8 +6,8 @@
     @click.shift.exact="$emit('select-range')"
   >
     <Neume
-      v-if="hasMeasureBarLeft"
-      :neume="note.measureBarLeft"
+      v-if="hasMeasureBarLeft && !isMeasureBarAbove"
+      :neume="getMeasureBarLeft"
       :style="measureBarLeftStyle"
     />
     <Neume
@@ -75,8 +75,13 @@
       :style="measureNumberStyle"
     />
     <Neume
+      v-if="hasMeasureBarLeft && isMeasureBarAbove"
+      :neume="getMeasureBarLeft"
+      :style="measureBarLeftStyle"
+    />
+    <Neume
       v-if="hasMeasureBarRight"
-      :neume="note.measureBarRight"
+      :neume="getMeasureBarRight"
       :style="measureBarRightStyle"
     />
     <Neume v-if="hasTie" :neume="note.tie" :style="tieStyle" />
@@ -147,11 +152,37 @@ export default class NeumeBoxSyllable extends Vue {
   }
 
   get hasMeasureBarLeft() {
-    return this.note.measureBarLeft != null;
+    return (
+      this.note.measureBarLeft != null ||
+      this.note.computedMeasureBarLeft != null
+    );
   }
 
   get hasMeasureBarRight() {
-    return this.note.measureBarRight != null;
+    return (
+      this.note.measureBarRight != null ||
+      this.note.computedMeasureBarRight != null
+    );
+  }
+
+  get getMeasureBarLeft() {
+    return this.note.measureBarLeft
+      ? this.note.measureBarLeft
+      : this.note.computedMeasureBarLeft;
+  }
+
+  get getMeasureBarRight() {
+    return this.note.measureBarRight
+      ? this.note.measureBarRight
+      : this.note.computedMeasureBarRight;
+  }
+
+  get isMeasureBarAbove() {
+    return (
+      this.note.measureBarLeft
+        ? this.note.measureBarLeft
+        : this.note.computedMeasureBarLeft
+    )?.endsWith('Above');
   }
 
   get hasMeasureNumber() {

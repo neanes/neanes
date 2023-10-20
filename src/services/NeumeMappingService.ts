@@ -568,6 +568,18 @@ mapNeumeToSbmufl(MeasureBar.MeasureBarDouble, 'barlineDouble');
 mapNeumeToSbmufl(MeasureBar.MeasureBarShortDouble, 'barlineShortDouble');
 mapNeumeToSbmufl(MeasureBar.MeasureBarTheseos, 'barlineTheseos');
 mapNeumeToSbmufl(MeasureBar.MeasureBarShortTheseos, 'barlineShortTheseos');
+mapNeumeToSbmufl(MeasureBar.MeasureBarRightAbove, 'barlineSingleAbove');
+mapNeumeToSbmufl(MeasureBar.MeasureBarTopAbove, 'barlineShortSingleAbove');
+mapNeumeToSbmufl(MeasureBar.MeasureBarDoubleAbove, 'barlineDoubleAbove');
+mapNeumeToSbmufl(
+  MeasureBar.MeasureBarShortDoubleAbove,
+  'barlineShortDoubleAbove',
+);
+mapNeumeToSbmufl(MeasureBar.MeasureBarTheseosAbove, 'barlineTheseosAbove');
+mapNeumeToSbmufl(
+  MeasureBar.MeasureBarShortTheseosAbove,
+  'barlineShortTheseosAbove',
+);
 mapNeumeToSbmufl(MeasureNumber.Two, 'measureNumber2');
 mapNeumeToSbmufl(MeasureNumber.Three, 'measureNumber3');
 mapNeumeToSbmufl(MeasureNumber.Four, 'measureNumber4');

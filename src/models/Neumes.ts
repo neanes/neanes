@@ -365,6 +365,12 @@ export enum MeasureBar {
   MeasureBarShortDouble = 'MeasureBarShortDouble',
   MeasureBarTheseos = 'MeasureBarTheseos',
   MeasureBarShortTheseos = 'MeasureBarShortTheseos',
+  MeasureBarRightAbove = 'MeasureBarRightAbove',
+  MeasureBarTopAbove = 'MeasureBarTopAbove',
+  MeasureBarDoubleAbove = 'MeasureBarDoubleAbove',
+  MeasureBarShortDoubleAbove = 'MeasureBarShortDoubleAbove',
+  MeasureBarTheseosAbove = 'MeasureBarTheseosAbove',
+  MeasureBarShortTheseosAbove = 'MeasureBarShortTheseosAbove',
 }
 
 export enum MeasureNumber {

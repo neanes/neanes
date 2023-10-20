@@ -922,6 +922,24 @@
     "alternateCodepoint": "U+1D0DD",
     "codepoint": "U+E215"
   },
+  "barlineSingleAbove": {
+    "codepoint": "U+E216"
+  },
+  "barlineDoubleAbove": {
+    "codepoint": "U+E217"
+  },
+  "barlineTheseosAbove": {
+    "codepoint": "U+E218"
+  },
+  "barlineShortSingleAbove": {
+    "codepoint": "U+E219"
+  },
+  "barlineShortDoubleAbove": {
+    "codepoint": "U+E21A"
+  },
+  "barlineShortTheseosAbove": {
+    "codepoint": "U+E21B"
+  },
   "measureNumber2": {
     "codepoint": "U+E220"
   },

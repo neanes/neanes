@@ -8,7 +8,7 @@
     <template v-if="neume.error"> ? </template>
     <template v-else>
       <Neume
-        v-if="hasMeasureBarLeft"
+        v-if="hasMeasureBarLeft && !isMeasureBarAbove"
         :neume="neume.measureBarLeft"
         :style="measureBarStyle"
       />
@@ -16,6 +16,11 @@
       <Neume :neume="neume.rootSign" />
       <Neume v-if="hasFthora" :neume="neume.fthora" :style="fthoraStyle" />
       <Neume v-if="hasTempo" :neume="neume.tempo" :style="tempoStyle" />
+      <Neume
+        v-if="hasMeasureBarLeft && isMeasureBarAbove"
+        :neume="neume.measureBarLeft"
+        :style="measureBarStyle"
+      />
       <Neume
         v-if="hasMeasureBarRight"
         :neume="neume.measureBarRight"
@@ -61,6 +66,10 @@ export default class NeumeBoxMartyria extends Vue {
 
   get hasMeasureBarRight() {
     return this.neume.measureBarRight != null;
+  }
+
+  get isMeasureBarAbove() {
+    return this.neume.measureBarLeft?.endsWith('Above');
   }
 
   get style() {

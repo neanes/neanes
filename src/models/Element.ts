@@ -24,6 +24,9 @@ import {
   getQuantitativeReplacements,
   getTimeReplacements,
   getVocalExpressionReplacements,
+  isMeasureBarAbove,
+  measureBarAboveToLeft,
+  measureBarLeftToAbove,
   takesSecondaryNeumes,
   takesTertiaryNeumes,
 } from './NeumeReplacements';
@@ -76,12 +79,17 @@ export abstract class ScoreElement {
 
   // Used internally, not saved
   public line: number = 0;
+
+  public static isShort(measureBar: MeasureBar): boolean {
+    return (
+      measureBar.startsWith('MeasureBarTop') ||
+      measureBar.startsWith('MeasureBarShort')
+    );
+  }
 }
 
 export class NoteElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.Note;
-  public measureBarLeft: MeasureBar | null = null;
-  public measureBarRight: MeasureBar | null = null;
   public measureNumber: MeasureNumber | null = null;
   public tie: Tie | null = null;
   public noteIndicator: boolean = false;
@@ -146,6 +154,8 @@ export class NoteElement extends ScoreElement {
   public fthoraPrevious: Fthora | null = null;
   public secondaryFthoraPrevious: Fthora | null = null;
   public tertiaryFthoraPrevious: Fthora | null = null;
+  public computedMeasureBarLeftPrevious: MeasureBar | null = null;
+  public computedMeasureBarRightPrevious: MeasureBar | null = null;
 
   // Fthora helper
   public fthoraCarry: Fthora | null = null;
@@ -345,6 +355,24 @@ export class NoteElement extends ScoreElement {
     this.replaceNeumes();
   }
 
+  public get measureBarLeft() {
+    return this._measureBarLeft;
+  }
+
+  public set measureBarLeft(measureBar: MeasureBar | null) {
+    this._measureBarLeft = measureBar;
+    this.replaceNeumes();
+  }
+
+  public get measureBarRight() {
+    return this._measureBarRight;
+  }
+
+  public set measureBarRight(measureBar: MeasureBar | null) {
+    this._measureBarRight = measureBar;
+    this.replaceNeumes();
+  }
+
   // Used for display
   public melismaText: string = '';
   public hyphenOffsets: number[] = [];
@@ -356,6 +384,8 @@ export class NoteElement extends ScoreElement {
   public lyricsWidth: number = 0;
   public noteIndicatorNeume: NoteIndicator | null = null;
   public scaleNotes: ScaleNote[] = [];
+  public computedMeasureBarLeft: MeasureBar | null = null;
+  public computedMeasureBarRight: MeasureBar | null = null;
 
   private _quantitativeNeume: QuantitativeNeume = QuantitativeNeume.Ison;
   private _timeNeume: TimeNeume | null = null;
@@ -368,6 +398,8 @@ export class NoteElement extends ScoreElement {
   private _accidental: Accidental | null = null;
   private _secondaryAccidental: Accidental | null = null;
   private _tertiaryAccidental: Accidental | null = null;
+  private _measureBarLeft: MeasureBar | null = null;
+  private _measureBarRight: MeasureBar | null = null;
 
   private replaceNeumes() {
     this.replaceQuantitativeNeumes();
@@ -375,6 +407,7 @@ export class NoteElement extends ScoreElement {
     this.replaceTimeNeumes();
     this.replaceVocalExpressions();
     this.replaceFthora();
+    this.replaceMeasureBars();
   }
 
   private replaceGorgons() {
@@ -498,6 +531,24 @@ export class NoteElement extends ScoreElement {
       }
     }
   }
+
+  private replaceMeasureBars() {
+    if (
+      this.measureBarLeft &&
+      ScoreElement.isShort(this.measureBarLeft) &&
+      isMeasureBarAbove(this.quantitativeNeume) &&
+      measureBarLeftToAbove.has(this.measureBarLeft)
+    ) {
+      this.measureBarLeft = measureBarLeftToAbove.get(this.measureBarLeft)!;
+    } else if (
+      this.measureBarLeft &&
+      ScoreElement.isShort(this.measureBarLeft) &&
+      !isMeasureBarAbove(this.quantitativeNeume) &&
+      measureBarAboveToLeft.has(this.measureBarLeft)
+    ) {
+      this.measureBarLeft = measureBarAboveToLeft.get(this.measureBarLeft)!;
+    }
+  }
 }
 
 export class MartyriaElement extends ScoreElement {
@@ -510,16 +561,51 @@ export class MartyriaElement extends ScoreElement {
   public fthora: Fthora | null = null;
   public chromaticFthoraNote: ScaleNote | null = null;
   public tempo: TempoSign | null = null;
-  public measureBarLeft: MeasureBar | null = null;
-  public measureBarRight: MeasureBar | null = null;
   public alignRight: boolean = false;
   public bpm: number = 0;
   public spaceAfter: number = 0;
 
   public error: boolean = false;
 
+  public get measureBarLeft() {
+    return this._measureBarLeft;
+  }
+
+  public set measureBarLeft(measureBar: MeasureBar | null) {
+    this._measureBarLeft = measureBar;
+    this.replaceMeasureBars();
+  }
+
+  public get measureBarRight() {
+    return this._measureBarRight;
+  }
+
+  public set measureBarRight(measureBar: MeasureBar | null) {
+    this._measureBarRight = measureBar;
+    this.replaceMeasureBars();
+  }
+
   // Used for display
   public neumeWidth: number = 0;
+
+  private _measureBarLeft: MeasureBar | null = null;
+  private _measureBarRight: MeasureBar | null = null;
+
+  private replaceMeasureBars() {
+    if (
+      this.measureBarLeft &&
+      ScoreElement.isShort(this.measureBarLeft) &&
+      measureBarLeftToAbove.has(this.measureBarLeft)
+    ) {
+      this.measureBarLeft = measureBarLeftToAbove.get(this.measureBarLeft)!;
+    } else if (
+      this.measureBarLeft &&
+      !ScoreElement.isShort(this.measureBarLeft) &&
+      measureBarAboveToLeft.has(this.measureBarLeft)
+    ) {
+      this.measureBarLeft = measureBarAboveToLeft.get(this.measureBarLeft)!;
+    }
+  }
 
   // Re-render helpers
   public notePrevious: Note = Note.Pa;

@@ -75,6 +75,14 @@ This will open a menu of tempo markers. While continuing to hold the mouse butto
 
 ![Main Toolbar Tempo Expanded](./images/guide-main-toolbar-tempo-expanded.png)
 
+### Barlines
+
+To insert a barline, click and hold the barline button in the toolbar that appears on the bottom of the screen.
+
+Barlines are of two types: long and short. Short barlines will automatically be positioned above a multi-neume group or martyria.
+
+For best results, apply barlines to the left of a given neume rather than to the right of the preceding neume; this will automatically apply the barline to the right of the preceding neume if the given neume begins a new line. Similarly, apply barlines to the top or right of a given martyria rather than to the left of the subsequent neume; this will automatically apply the barline to the left of the subsequent neume if the subsequent neume beings a new line.
+
 ## Entry Modes
 
 There are three modes of neume entry.

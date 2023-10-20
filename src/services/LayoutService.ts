@@ -13,6 +13,7 @@ import {
 } from '@/models/Element';
 import { Footer } from '@/models/Footer';
 import { Header } from '@/models/Header';
+import { measureBarAboveToLeft } from '@/models/NeumeReplacements';
 import {
   Fthora,
   MeasureBar,
@@ -435,12 +436,66 @@ export class LayoutService {
         elementWidthWithLyricsPx = elementWidthPx;
       }
 
+      if (element.elementType === ElementType.Note) {
+        const noteElement = element as NoteElement;
+        noteElement.computedMeasureBarLeft = null;
+        noteElement.computedMeasureBarRight = null;
+      }
+
       // Check if we need a new line
       if (
         currentLineWidthPx + elementWidthWithLyricsPx + additionalWidth >
           pageSetup.innerPageWidth ||
         lastElementWasLineBreak
       ) {
+        if (element.elementType === ElementType.Note) {
+          const noteElement = element as NoteElement;
+          const previousElement = elements[i - 1];
+          if (previousElement?.elementType === ElementType.Note) {
+            // If the new line starts with a left measure, apply it to the right
+            // of the previous line
+            const previousNoteElement = previousElement as NoteElement;
+            const normalizedMeasureBar = noteElement.measureBarLeft?.endsWith(
+              'Above',
+            )
+              ? measureBarAboveToLeft.get(noteElement.measureBarLeft)
+              : noteElement.measureBarLeft;
+            if (normalizedMeasureBar) {
+              previousNoteElement.computedMeasureBarRight =
+                normalizedMeasureBar;
+            }
+          } else if (previousElement?.elementType === ElementType.Martyria) {
+            // If the previous line ends with a martyria with a barline, apply
+            // it to the left of the new line
+            const previousMartyriaElement = previousElement as MartyriaElement;
+            const normalizedMeasureBar =
+              previousMartyriaElement.measureBarLeft?.endsWith('Above')
+                ? measureBarAboveToLeft.get(
+                    previousMartyriaElement.measureBarLeft,
+                  )
+                : previousMartyriaElement.measureBarRight;
+            if (normalizedMeasureBar) {
+              noteElement.computedMeasureBarLeft = normalizedMeasureBar;
+            }
+          }
+        } else if (element.elementType === ElementType.Martyria) {
+          // If the new line starts with a left measure, apply it to the right
+          // of the previous line
+          const martyriaElement = element as MartyriaElement;
+          const previousElement = elements[i - 1];
+          if (previousElement?.elementType === ElementType.Note) {
+            const previousNoteElement = previousElement as NoteElement;
+            const normalizedMeasureBar =
+              martyriaElement.measureBarLeft?.endsWith('Above')
+                ? measureBarAboveToLeft.get(martyriaElement.measureBarLeft)
+                : martyriaElement.measureBarLeft;
+            if (normalizedMeasureBar) {
+              previousNoteElement.computedMeasureBarRight =
+                normalizedMeasureBar;
+            }
+          }
+        }
+
         line = new Line();
 
         page.lines.push(line);
@@ -703,7 +758,7 @@ export class LayoutService {
       }
     }
 
-    this.justifyLines(pages, pageSetup);
+    this.justifyLines(pages, pageSetup, noteWidthArgs);
 
     this.addMelismas(pages, pageSetup);
 
@@ -867,6 +922,8 @@ export class LayoutService {
       note.fthoraPrevious = note.fthora;
       note.secondaryFthoraPrevious = note.secondaryFthora;
       note.tertiaryFthoraPrevious = note.tertiaryFthora;
+      note.computedMeasureBarLeftPrevious = note.computedMeasureBarLeft;
+      note.computedMeasureBarRightPrevious = note.computedMeasureBarRight;
     } else if (element.elementType === ElementType.TextBox) {
       const textbox = element as TextBoxElement;
       textbox.heightPrevious = textbox.height;
@@ -913,7 +970,9 @@ export class LayoutService {
         note.noteIndicator ||
         note.fthoraPrevious !== note.fthora ||
         note.secondaryFthoraPrevious !== note.secondaryFthora ||
-        note.tertiaryFthoraPrevious !== note.tertiaryFthora;
+        note.tertiaryFthoraPrevious !== note.tertiaryFthora ||
+        note.computedMeasureBarLeftPrevious !== note.computedMeasureBarLeft ||
+        note.computedMeasureBarRightPrevious !== note.computedMeasureBarRight;
     }
 
     if (!element.updated && element.elementType === ElementType.TextBox) {
@@ -1121,7 +1180,19 @@ export class LayoutService {
     );
   }
 
-  public static justifyLines(pages: Page[], pageSetup: PageSetup) {
+  public static justifyLines(
+    pages: Page[],
+    pageSetup: PageSetup,
+    args: GetNoteWidthArgs,
+  ) {
+    const {
+      measureBarRightWidth,
+      measureBarTopWidth,
+      measureBarDoubleWidth,
+      measureBarTheseosWidth,
+      measureBarShortDoubleWidth,
+      measureBarShortTheseosWidth,
+    } = args;
     for (const page of pages) {
       for (const line of page.lines) {
         if (
@@ -1167,7 +1238,72 @@ export class LayoutService {
           .map((x) => x.width)
           .reduce((sum, x) => sum + x, 0);
 
-        const extraSpace = pageSetup.innerPageWidth - currentWidthPx;
+        let computedBarlineWidth = 0;
+        const lastElement = line.elements[line.elements.length - 1];
+        if (lastElement.elementType === ElementType.Note) {
+          const noteElement = lastElement as NoteElement;
+          if (
+            noteElement.computedMeasureBarLeft === MeasureBar.MeasureBarRight
+          ) {
+            computedBarlineWidth += measureBarRightWidth;
+          } else if (
+            noteElement.computedMeasureBarLeft === MeasureBar.MeasureBarTop
+          ) {
+            computedBarlineWidth += measureBarTopWidth;
+          } else if (
+            noteElement.computedMeasureBarLeft === MeasureBar.MeasureBarDouble
+          ) {
+            computedBarlineWidth += measureBarDoubleWidth;
+          } else if (
+            noteElement.computedMeasureBarLeft === MeasureBar.MeasureBarTheseos
+          ) {
+            computedBarlineWidth += measureBarTheseosWidth;
+          } else if (
+            noteElement.computedMeasureBarLeft ===
+            MeasureBar.MeasureBarShortDouble
+          ) {
+            computedBarlineWidth += measureBarShortDoubleWidth;
+          } else if (
+            noteElement.computedMeasureBarLeft ===
+            MeasureBar.MeasureBarShortTheseos
+          ) {
+            computedBarlineWidth += measureBarShortTheseosWidth;
+          }
+          if (
+            noteElement.computedMeasureBarRight === MeasureBar.MeasureBarRight
+          ) {
+            computedBarlineWidth += measureBarRightWidth;
+          } else if (
+            noteElement.computedMeasureBarRight === MeasureBar.MeasureBarTop
+          ) {
+            computedBarlineWidth += measureBarTopWidth;
+          } else if (
+            noteElement.computedMeasureBarRight === MeasureBar.MeasureBarDouble
+          ) {
+            computedBarlineWidth += measureBarDoubleWidth;
+          } else if (
+            noteElement.computedMeasureBarRight === MeasureBar.MeasureBarTheseos
+          ) {
+            computedBarlineWidth += measureBarTheseosWidth;
+          } else if (
+            noteElement.computedMeasureBarRight ===
+            MeasureBar.MeasureBarShortDouble
+          ) {
+            computedBarlineWidth += measureBarShortDoubleWidth;
+          } else if (
+            noteElement.computedMeasureBarRight ===
+            MeasureBar.MeasureBarShortTheseos
+          ) {
+            computedBarlineWidth += measureBarShortTheseosWidth;
+          }
+        }
+
+        // A posteriori adjustment of an existing set of breakpoints is the best
+        // we can do with a first-fit algorithm
+        const extraSpace = Math.max(
+          0,
+          pageSetup.innerPageWidth - currentWidthPx - computedBarlineWidth,
+        );
 
         if (alignCenter) {
           for (let i = 0; i < line.elements.length; i++) {

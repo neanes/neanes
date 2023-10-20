@@ -823,6 +823,7 @@ import { Header } from '@/models/Header';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import {
   areVocalExpressionsEquivalent,
+  measureBarAboveToLeft,
   onlyTakesBottomKlasma,
   onlyTakesTopGorgon,
   onlyTakesTopKlasma,
@@ -3865,12 +3866,15 @@ export default class Editor extends Vue {
     // Right
     // Both Sides
     // None
-    if (neume === element.measureBarLeft && neume === element.measureBarRight) {
+    const normalizedMeasureBar = element.measureBarLeft?.endsWith('Above')
+      ? measureBarAboveToLeft.get(element.measureBarLeft)
+      : element.measureBarLeft;
+    if (neume === normalizedMeasureBar && neume === element.measureBarRight) {
       this.updateNoteMeasureBar(element, {
         measureBarLeft: null,
         measureBarRight: null,
       });
-    } else if (neume === element.measureBarLeft) {
+    } else if (neume === normalizedMeasureBar) {
       this.updateNoteMeasureBar(element, {
         measureBarLeft: null,
         measureBarRight: neume,
@@ -3894,12 +3898,15 @@ export default class Editor extends Vue {
     // Right
     // Both Sides
     // None
-    if (neume === element.measureBarLeft && neume === element.measureBarRight) {
+    const normalizedMeasureBar = element.measureBarLeft?.endsWith('Above')
+      ? measureBarAboveToLeft.get(element.measureBarLeft)
+      : element.measureBarLeft;
+    if (neume === normalizedMeasureBar && neume === element.measureBarRight) {
       this.updateMartyriaMeasureBar(element, {
         measureBarLeft: null,
         measureBarRight: null,
       });
-    } else if (neume === element.measureBarLeft) {
+    } else if (neume === normalizedMeasureBar) {
       this.updateMartyriaMeasureBar(element, {
         measureBarLeft: null,
         measureBarRight: neume,

@@ -96,7 +96,7 @@ Below is a list of modifiers.
 | <span class="neume"></span>        | <kbd>Shift</kbd> + <kbd>F</kbd> + <kbd>J</kbd> |
 | <span class="neume"></span>        | <kbd>Shift</kbd> + <kbd>F</kbd> + <kbd>N</kbd> |
 | <span class="neume"></span>        | <kbd>Shift</kbd> + <kbd>F</kbd> + <kbd>M</kbd> |
-| <span class="neume">&#xE011;</span> | <kbd>Shift</kbd> + <kbd>F</kbd> + <kbd>/</kbd> |
+| <span class="neume">&#xE012;</span> | <kbd>Shift</kbd> + <kbd>F</kbd> + <kbd>/</kbd> |
 | <span class="neume"></span>        | <kbd>Shift</kbd> + <kbd>F</kbd> + <kbd>,</kbd> |
 | <span class="neume"></span>        | <kbd>Shift</kbd> + <kbd>F</kbd> + <kbd>.</kbd> |
 

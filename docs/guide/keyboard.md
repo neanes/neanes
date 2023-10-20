@@ -42,242 +42,242 @@ Below is a list of modifiers.
 
 ## Characters of Quantity
 
-| Neume                               | Keyboard Shortcut                            |
-| ----------------------------------- | -------------------------------------------- |
-| <span class="neume"></span>        | <kbd>J</kbd>                                 |
-| <span class="neume"></span>        | <kbd>K</kbd>                                 |
-| <span class="neume"></span>        | <kbd>L</kbd>                                 |
-| <span class="neume"></span>        | <kbd>S</kbd> +<kbd>L</kbd>                   |
-| <span class="neume"></span>        | <kbd>;</kbd>                                 |
-| <span class="neume"></span>        | <kbd>'</kbd>                                 |
-| <span class="neume"></span>        | <kbd>U</kbd>                                 |
-| <span class="neume"></span>        | <kbd>I</kbd>                                 |
-| <span class="neume"></span>        | <kbd>O</kbd>                                 |
-| <span class="neume"></span>        | <kbd>P</kbd>                                 |
-| <span class="neume"></span>        | <kbd>Shift</kbd> +<kbd>J</kbd>               |
-| <span class="neume"></span>        | <kbd>Shift</kbd> +<kbd>K</kbd>               |
-| <span class="neume"></span>        | <kbd>Shift</kbd> +<kbd>L</kbd>               |
-| <span class="neume"></span>        | <kbd>Shift</kbd> +<kbd>;</kbd>               |
-| <span class="neume"></span>        | <kbd>Shift</kbd> +<kbd>'</kbd>               |
-| <span class="neume"></span>        | <kbd>Shift</kbd> +<kbd>U</kbd>               |
-| <span class="neume"></span>        | <kbd>Shift</kbd> +<kbd>I</kbd>               |
-| <span class="neume"></span>        | <kbd>Shift</kbd> +<kbd>O</kbd>               |
-| <span class="neume"></span>        | <kbd>Shift</kbd> +<kbd>P</kbd>               |
-| <span class="neume"></span>        | <kbd>N</kbd>                                 |
-| <span class="neume"></span>        | <kbd>S</kbd> +<kbd>N</kbd>                   |
-| <span class="neume"></span>        | <kbd>M</kbd>                                 |
-| <span class="neume"></span>        | <kbd>F</kbd> +<kbd>M</kbd>                   |
-| <span class="neume"></span>        | <kbd>D</kbd> +<kbd>M</kbd>                   |
-| <span class="neume"></span>        | <kbd>S</kbd> +<kbd>M</kbd>                   |
-| <span class="neume"></span>        | <kbd>,</kbd>                                 |
-| <span class="neume"></span>        | <kbd>.</kbd>                                 |
-| <span class="neume"></span>        | <kbd>/</kbd>                                 |
-| <span class="neume"></span>        | <kbd>S</kbd> +<kbd>/</kbd>                   |
-| <span class="neume"></span>        | <kbd>D</kbd> +<kbd>/</kbd>                   |
-| <span class="neume"></span>        | <kbd>F</kbd> +<kbd>/</kbd>                   |
-| <span class="neume"></span>        | <kbd>Shift</kbd> +<kbd>N</kbd>               |
-| <span class="neume"></span>        | <kbd>Shift</kbd> +<kbd>M</kbd>               |
-| <span class="neume"></span>        | <kbd>Shift</kbd> +<kbd>S</kbd> +<kbd>M</kbd> |
-| <span class="neume"></span>        | <kbd>Shift</kbd> +<kbd>D</kbd> +<kbd>M</kbd> |
-| <span class="neume"></span>        | <kbd>Shift</kbd> +<kbd>,</kbd>               |
-| <span class="neume"></span>        | <kbd>R</kbd> +<kbd>;</kbd>                   |
-| <span class="neume"></span>        | <kbd>R</kbd> +<kbd>J</kbd>                   |
-| <span class="neume"></span>        | <kbd>R</kbd> +<kbd>K</kbd>                   |
-| <span class="neume"></span>        | <kbd>Shift</kbd> +<kbd>R</kbd> +<kbd>K</kbd> |
-| <span class="neume"></span>        | <kbd>R</kbd> +<kbd>L</kbd>                   |
-| <span class="neume"></span>        | <kbd>R</kbd> +<kbd>'</kbd>                   |
-| <span class="neume"></span>        | <kbd>R</kbd> +<kbd>U</kbd>                   |
-| <span class="neume"></span>        | <kbd>R</kbd> +<kbd>N</kbd>                   |
-| <span class="neume"></span>        | <kbd>R</kbd> +<kbd>M</kbd>                   |
-| <span class="neume"></span>        | <kbd>Shift</kbd> +<kbd>R</kbd> +<kbd>M</kbd> |
-| <span class="neume"></span>        | <kbd>R</kbd> +<kbd>,</kbd>                   |
-| <span class="neume"></span>        | <kbd>R</kbd> +<kbd>.</kbd>                   |
-| <span class="neume"></span>        | <kbd>R</kbd> +<kbd>/</kbd>                   |
-| <span class="neume"></span>        | <kbd>Shift</kbd> +<kbd>F</kbd> +<kbd>J</kbd> |
-| <span class="neume"></span>        | <kbd>Shift</kbd> +<kbd>F</kbd> +<kbd>N</kbd> |
-| <span class="neume"></span>        | <kbd>Shift</kbd> +<kbd>F</kbd> +<kbd>M</kbd> |
-| <span class="neume">&#xE011;</span> | <kbd>Shift</kbd> +<kbd>F</kbd> +<kbd>/</kbd> |
-| <span class="neume"></span>        | <kbd>Shift</kbd> +<kbd>F</kbd> +<kbd>,</kbd> |
-| <span class="neume"></span>        | <kbd>Shift</kbd> +<kbd>F</kbd> +<kbd>.</kbd> |
+| Neume                               | Keyboard Shortcut                              |
+| ----------------------------------- | ---------------------------------------------- |
+| <span class="neume"></span>        | <kbd>J</kbd>                                   |
+| <span class="neume"></span>        | <kbd>K</kbd>                                   |
+| <span class="neume"></span>        | <kbd>L</kbd>                                   |
+| <span class="neume"></span>        | <kbd>S</kbd> + <kbd>L</kbd>                    |
+| <span class="neume"></span>        | <kbd>;</kbd>                                   |
+| <span class="neume"></span>        | <kbd>'</kbd>                                   |
+| <span class="neume"></span>        | <kbd>U</kbd>                                   |
+| <span class="neume"></span>        | <kbd>I</kbd>                                   |
+| <span class="neume"></span>        | <kbd>O</kbd>                                   |
+| <span class="neume"></span>        | <kbd>P</kbd>                                   |
+| <span class="neume"></span>        | <kbd>Shift</kbd> + <kbd>J</kbd>                |
+| <span class="neume"></span>        | <kbd>Shift</kbd> + <kbd>K</kbd>                |
+| <span class="neume"></span>        | <kbd>Shift</kbd> + <kbd>L</kbd>                |
+| <span class="neume"></span>        | <kbd>Shift</kbd> + <kbd>;</kbd>                |
+| <span class="neume"></span>        | <kbd>Shift</kbd> + <kbd>'</kbd>                |
+| <span class="neume"></span>        | <kbd>Shift</kbd> + <kbd>U</kbd>                |
+| <span class="neume"></span>        | <kbd>Shift</kbd> + <kbd>I</kbd>                |
+| <span class="neume"></span>        | <kbd>Shift</kbd> + <kbd>O</kbd>                |
+| <span class="neume"></span>        | <kbd>Shift</kbd> + <kbd>P</kbd>                |
+| <span class="neume"></span>        | <kbd>N</kbd>                                   |
+| <span class="neume"></span>        | <kbd>S</kbd> + <kbd>N</kbd>                    |
+| <span class="neume"></span>        | <kbd>M</kbd>                                   |
+| <span class="neume"></span>        | <kbd>F</kbd> + <kbd>M</kbd>                    |
+| <span class="neume"></span>        | <kbd>D</kbd> + <kbd>M</kbd>                    |
+| <span class="neume"></span>        | <kbd>S</kbd> + <kbd>M</kbd>                    |
+| <span class="neume"></span>        | <kbd>,</kbd>                                   |
+| <span class="neume"></span>        | <kbd>.</kbd>                                   |
+| <span class="neume"></span>        | <kbd>/</kbd>                                   |
+| <span class="neume"></span>        | <kbd>S</kbd> + <kbd>/</kbd>                    |
+| <span class="neume"></span>        | <kbd>D</kbd> + <kbd>/</kbd>                    |
+| <span class="neume"></span>        | <kbd>F</kbd> + <kbd>/</kbd>                    |
+| <span class="neume"></span>        | <kbd>Shift</kbd> + <kbd>N</kbd>                |
+| <span class="neume"></span>        | <kbd>Shift</kbd> + <kbd>M</kbd>                |
+| <span class="neume"></span>        | <kbd>Shift</kbd> + <kbd>S</kbd> + <kbd>M</kbd> |
+| <span class="neume"></span>        | <kbd>Shift</kbd> + <kbd>D</kbd> + <kbd>M</kbd> |
+| <span class="neume"></span>        | <kbd>Shift</kbd> + <kbd>,</kbd>                |
+| <span class="neume"></span>        | <kbd>R</kbd> + <kbd>;</kbd>                    |
+| <span class="neume"></span>        | <kbd>R</kbd> + <kbd>J</kbd>                    |
+| <span class="neume"></span>        | <kbd>R</kbd> + <kbd>K</kbd>                    |
+| <span class="neume"></span>        | <kbd>Shift</kbd> + <kbd>R</kbd> + <kbd>K</kbd> |
+| <span class="neume"></span>        | <kbd>R</kbd> + <kbd>L</kbd>                    |
+| <span class="neume"></span>        | <kbd>R</kbd> + <kbd>'</kbd>                    |
+| <span class="neume"></span>        | <kbd>R</kbd> + <kbd>U</kbd>                    |
+| <span class="neume"></span>        | <kbd>R</kbd> + <kbd>N</kbd>                    |
+| <span class="neume"></span>        | <kbd>R</kbd> + <kbd>M</kbd>                    |
+| <span class="neume"></span>        | <kbd>Shift</kbd> + <kbd>R</kbd> + <kbd>M</kbd> |
+| <span class="neume"></span>        | <kbd>R</kbd> + <kbd>,</kbd>                    |
+| <span class="neume"></span>        | <kbd>R</kbd> + <kbd>.</kbd>                    |
+| <span class="neume"></span>        | <kbd>R</kbd> + <kbd>/</kbd>                    |
+| <span class="neume"></span>        | <kbd>Shift</kbd> + <kbd>F</kbd> + <kbd>J</kbd> |
+| <span class="neume"></span>        | <kbd>Shift</kbd> + <kbd>F</kbd> + <kbd>N</kbd> |
+| <span class="neume"></span>        | <kbd>Shift</kbd> + <kbd>F</kbd> + <kbd>M</kbd> |
+| <span class="neume">&#xE011;</span> | <kbd>Shift</kbd> + <kbd>F</kbd> + <kbd>/</kbd> |
+| <span class="neume"></span>        | <kbd>Shift</kbd> + <kbd>F</kbd> + <kbd>,</kbd> |
+| <span class="neume"></span>        | <kbd>Shift</kbd> + <kbd>F</kbd> + <kbd>.</kbd> |
 
 ## Characters of Quality
 
-| Neume                                            | Keyboard Shortcut                             |
-| ------------------------------------------------ | --------------------------------------------- |
-| <span class="neume"></span>                     | <kbd>V</kbd> +<kbd>J</kbd>                    |
-| <span class="neume"></span>                     | <kbd>V</kbd> +<kbd>K</kbd>                    |
-| <span class="neume">&#xF006;</span>              | <kbd>Shift</kbd> + <kbd>V</kbd> +<kbd>K</kbd> |
-| <span class="neume"></span>                     | <kbd>V</kbd> +<kbd>L</kbd>                    |
-| <span class="neume"></span>                     | <kbd>V</kbd> +<kbd>U</kbd>                    |
-| <span class="neume"></span> (Connecting)        | <kbd>V</kbd> +<kbd>I</kbd>                    |
-| <span class="neume"></span>                     | <kbd>V</kbd> +<kbd>N</kbd>                    |
-| <span class="neume"></span> (Connecting)        | <kbd>V</kbd> +<kbd>M</kbd>                    |
-| <span class="neume">&#xF007;</span> (Connecting) | <kbd>Shift</kbd> + <kbd>V</kbd> +<kbd>M</kbd> |
-| <span class="neume">&#xE0A7;</span>              | <kbd>V</kbd> +<kbd>,</kbd>                    |
-| <span class="neume">&#xE0B1;</span>              | <kbd>V</kbd> +<kbd>.</kbd>                    |
+| Neume                                            | Keyboard Shortcut                              |
+| ------------------------------------------------ | ---------------------------------------------- |
+| <span class="neume"></span>                     | <kbd>V</kbd> + <kbd>J</kbd>                    |
+| <span class="neume"></span>                     | <kbd>V</kbd> + <kbd>K</kbd>                    |
+| <span class="neume">&#xF006;</span>              | <kbd>Shift</kbd> + <kbd>V</kbd> + <kbd>K</kbd> |
+| <span class="neume"></span>                     | <kbd>V</kbd> + <kbd>L</kbd>                    |
+| <span class="neume"></span>                     | <kbd>V</kbd> + <kbd>U</kbd>                    |
+| <span class="neume"></span> (Connecting)        | <kbd>V</kbd> + <kbd>I</kbd>                    |
+| <span class="neume"></span>                     | <kbd>V</kbd> + <kbd>N</kbd>                    |
+| <span class="neume"></span> (Connecting)        | <kbd>V</kbd> + <kbd>M</kbd>                    |
+| <span class="neume">&#xF007;</span> (Connecting) | <kbd>Shift</kbd> + <kbd>V</kbd> + <kbd>M</kbd> |
+| <span class="neume">&#xE0A7;</span>              | <kbd>V</kbd> + <kbd>,</kbd>                    |
+| <span class="neume">&#xE0B1;</span>              | <kbd>V</kbd> + <kbd>.</kbd>                    |
 
 ## Characters of Temporal Augmentation
 
-| Neume                               | Keyboard Shortcut                            |
-| ----------------------------------- | -------------------------------------------- |
-| <span class="neume"></span>        | <kbd>H</kbd>                                 |
-| <span class="neume"></span>        | <kbd>B</kbd>                                 |
-| <span class="neume"></span>        | <kbd>B</kbd> +<kbd>J</kbd>                   |
-| <span class="neume"></span>        | <kbd>B</kbd> +<kbd>K</kbd>                   |
-| <span class="neume">&#xE0D5;</span> | <kbd>B</kbd> +<kbd>L</kbd>                   |
-| <span class="neume">&#xE0D6;</span> | <kbd>B</kbd> +<kbd>;</kbd>                   |
-| <span class="neume"></span>        | <kbd>Shift</kbd> +<kbd>B</kbd> +<kbd>J</kbd> |
-| <span class="neume"></span>        | <kbd>Shift</kbd> +<kbd>B</kbd> +<kbd>K</kbd> |
-| <span class="neume"></span>        | <kbd>Shift</kbd> +<kbd>B</kbd> +<kbd>L</kbd> |
-| <span class="neume"></span>        | <kbd>Shift</kbd> +<kbd>B</kbd> +<kbd>;</kbd> |
-| <span class="neume"></span>        | <kbd>Shift</kbd> +<kbd>=</kbd>               |
-| <span class="neume"></span>        | <kbd>=</kbd>                                 |
+| Neume                               | Keyboard Shortcut                              |
+| ----------------------------------- | ---------------------------------------------- |
+| <span class="neume"></span>        | <kbd>H</kbd>                                   |
+| <span class="neume"></span>        | <kbd>B</kbd>                                   |
+| <span class="neume"></span>        | <kbd>B</kbd> + <kbd>J</kbd>                    |
+| <span class="neume"></span>        | <kbd>B</kbd> + <kbd>K</kbd>                    |
+| <span class="neume">&#xE0D5;</span> | <kbd>B</kbd> + <kbd>L</kbd>                    |
+| <span class="neume">&#xE0D6;</span> | <kbd>B</kbd> + <kbd>;</kbd>                    |
+| <span class="neume"></span>        | <kbd>Shift</kbd> + <kbd>B</kbd> + <kbd>J</kbd> |
+| <span class="neume"></span>        | <kbd>Shift</kbd> + <kbd>B</kbd> + <kbd>K</kbd> |
+| <span class="neume"></span>        | <kbd>Shift</kbd> + <kbd>B</kbd> + <kbd>L</kbd> |
+| <span class="neume"></span>        | <kbd>Shift</kbd> + <kbd>B</kbd> + <kbd>;</kbd> |
+| <span class="neume"></span>        | <kbd>Shift</kbd> + <kbd>=</kbd>                |
+| <span class="neume"></span>        | <kbd>=</kbd>                                   |
 
 ## Characters of Temporal Division
 
-| Neume                        | Keyboard Shortcut          |
-| ---------------------------- | -------------------------- |
-| <span class="neume"></span> | <kbd>G</kbd>               |
-| <span class="neume"></span> | <kbd>G</kbd> +<kbd>J</kbd> |
-| <span class="neume"></span> | <kbd>G</kbd> +<kbd>K</kbd> |
-| <span class="neume"></span> | <kbd>G</kbd> +<kbd>L</kbd> |
-| <span class="neume"></span> | <kbd>G</kbd> +<kbd>;</kbd> |
-| <span class="neume"></span> | <kbd>G</kbd> +<kbd>'</kbd> |
-| <span class="neume"></span> | <kbd>G</kbd> +<kbd>U</kbd> |
-| <span class="neume"></span> | <kbd>G</kbd> +<kbd>I</kbd> |
-| <span class="neume"></span> | <kbd>G</kbd> +<kbd>O</kbd> |
-| <span class="neume"></span> | <kbd>G</kbd> +<kbd>P</kbd> |
-| <span class="neume"></span> | <kbd>G</kbd> +<kbd>[</kbd> |
-| <span class="neume"></span> | <kbd>G</kbd> +<kbd>N</kbd> |
-| <span class="neume"></span> | <kbd>G</kbd> +<kbd>M</kbd> |
-| <span class="neume"></span> | <kbd>G</kbd> +<kbd>,</kbd> |
+| Neume                        | Keyboard Shortcut           |
+| ---------------------------- | --------------------------- |
+| <span class="neume"></span> | <kbd>G</kbd>                |
+| <span class="neume"></span> | <kbd>G</kbd> + <kbd>J</kbd> |
+| <span class="neume"></span> | <kbd>G</kbd> + <kbd>K</kbd> |
+| <span class="neume"></span> | <kbd>G</kbd> + <kbd>L</kbd> |
+| <span class="neume"></span> | <kbd>G</kbd> + <kbd>;</kbd> |
+| <span class="neume"></span> | <kbd>G</kbd> + <kbd>'</kbd> |
+| <span class="neume"></span> | <kbd>G</kbd> + <kbd>U</kbd> |
+| <span class="neume"></span> | <kbd>G</kbd> + <kbd>I</kbd> |
+| <span class="neume"></span> | <kbd>G</kbd> + <kbd>O</kbd> |
+| <span class="neume"></span> | <kbd>G</kbd> + <kbd>P</kbd> |
+| <span class="neume"></span> | <kbd>G</kbd> + <kbd>[</kbd> |
+| <span class="neume"></span> | <kbd>G</kbd> + <kbd>N</kbd> |
+| <span class="neume"></span> | <kbd>G</kbd> + <kbd>M</kbd> |
+| <span class="neume"></span> | <kbd>G</kbd> + <kbd>,</kbd> |
 
 ## Characters of Tempo
 
-| Neume                        | Keyboard Shortcut          |
-| ---------------------------- | -------------------------- |
-| <span class="neume"></span> | <kbd>X</kbd> +<kbd>J</kbd> |
-| <span class="neume"></span> | <kbd>X</kbd> +<kbd>K</kbd> |
-| <span class="neume"></span> | <kbd>X</kbd> +<kbd>L</kbd> |
-| <span class="neume"></span> | <kbd>X</kbd> +<kbd>;</kbd> |
-| <span class="neume"></span> | <kbd>X</kbd> +<kbd>N</kbd> |
-| <span class="neume"></span> | <kbd>X</kbd> +<kbd>M</kbd> |
-| <span class="neume"></span> | <kbd>X</kbd> +<kbd>,</kbd> |
-| <span class="neume"></span> | <kbd>X</kbd> +<kbd>.</kbd> |
+| Neume                        | Keyboard Shortcut           |
+| ---------------------------- | --------------------------- |
+| <span class="neume"></span> | <kbd>X</kbd> + <kbd>J</kbd> |
+| <span class="neume"></span> | <kbd>X</kbd> + <kbd>K</kbd> |
+| <span class="neume"></span> | <kbd>X</kbd> + <kbd>L</kbd> |
+| <span class="neume"></span> | <kbd>X</kbd> + <kbd>;</kbd> |
+| <span class="neume"></span> | <kbd>X</kbd> + <kbd>N</kbd> |
+| <span class="neume"></span> | <kbd>X</kbd> + <kbd>M</kbd> |
+| <span class="neume"></span> | <kbd>X</kbd> + <kbd>,</kbd> |
+| <span class="neume"></span> | <kbd>X</kbd> + <kbd>.</kbd> |
 
 ## Martyria of the Notes
 
 Martyria may be inserted with the following shortcuts. To insert a right-aligned martyria, hold <kbd>Shift</kbd> while typing the shortcut.
 
-| Note                                        |        | Keyboard Shortcut          |
-| ------------------------------------------- | ------ | -------------------------- |
-| <span class="center">Auto-calculated</span> |        | <kbd>Y</kbd>               |
-| <span class="neume"></span>                |        | <kbd>C</kbd> +<kbd>J</kbd> |
-| <span class="neume"></span>                |        | <kbd>C</kbd> +<kbd>K</kbd> |
-| <span class="neume"></span>                |        | <kbd>C</kbd> +<kbd>L</kbd> |
-| <span class="neume"></span>                |        | <kbd>C</kbd> +<kbd>;</kbd> |
-| <span class="neume"></span>                |        | <kbd>C</kbd> +<kbd>'</kbd> |
-| <span class="neume"></span>                |        | <kbd>C</kbd> +<kbd>U</kbd> |
-| <span class="neume"></span>                |        | <kbd>C</kbd> +<kbd>I</kbd> |
-| <span class="neume"></span>                | (High) | <kbd>C</kbd> +<kbd>O</kbd> |
-| <span class="neume"></span>                | (High) | <kbd>C</kbd> +<kbd>P</kbd> |
-| <span class="neume"></span>                | (High) | <kbd>C</kbd> +<kbd>[</kbd> |
-| <span class="neume"></span>                | (High) | <kbd>C</kbd> +<kbd>]</kbd> |
-| <span class="neume"></span>                | (High) | <kbd>C</kbd> +<kbd>7</kbd> |
-| <span class="neume"></span>                | (High) | <kbd>C</kbd> +<kbd>8</kbd> |
-| <span class="neume"></span>                | (Low)  | <kbd>C</kbd> +<kbd>N</kbd> |
-| <span class="neume"></span>                | (Low)  | <kbd>C</kbd> +<kbd>M</kbd> |
-| <span class="neume"></span>                | (Low)  | <kbd>C</kbd> +<kbd>,</kbd> |
-| <span class="neume"></span>                | (Low)  | <kbd>C</kbd> +<kbd>.</kbd> |
-| <span class="neume"></span>                | (Low)  | <kbd>C</kbd> +<kbd>/</kbd> |
+| Note                                        |        | Keyboard Shortcut           |
+| ------------------------------------------- | ------ | --------------------------- |
+| <span class="center">Auto-calculated</span> |        | <kbd>Y</kbd>                |
+| <span class="neume"></span>                |        | <kbd>C</kbd> + <kbd>J</kbd> |
+| <span class="neume"></span>                |        | <kbd>C</kbd> + <kbd>K</kbd> |
+| <span class="neume"></span>                |        | <kbd>C</kbd> + <kbd>L</kbd> |
+| <span class="neume"></span>                |        | <kbd>C</kbd> + <kbd>;</kbd> |
+| <span class="neume"></span>                |        | <kbd>C</kbd> + <kbd>'</kbd> |
+| <span class="neume"></span>                |        | <kbd>C</kbd> + <kbd>U</kbd> |
+| <span class="neume"></span>                |        | <kbd>C</kbd> + <kbd>I</kbd> |
+| <span class="neume"></span>                | (High) | <kbd>C</kbd> + <kbd>O</kbd> |
+| <span class="neume"></span>                | (High) | <kbd>C</kbd> + <kbd>P</kbd> |
+| <span class="neume"></span>                | (High) | <kbd>C</kbd> + <kbd>[</kbd> |
+| <span class="neume"></span>                | (High) | <kbd>C</kbd> + <kbd>]</kbd> |
+| <span class="neume"></span>                | (High) | <kbd>C</kbd> + <kbd>7</kbd> |
+| <span class="neume"></span>                | (High) | <kbd>C</kbd> + <kbd>8</kbd> |
+| <span class="neume"></span>                | (Low)  | <kbd>C</kbd> + <kbd>N</kbd> |
+| <span class="neume"></span>                | (Low)  | <kbd>C</kbd> + <kbd>M</kbd> |
+| <span class="neume"></span>                | (Low)  | <kbd>C</kbd> + <kbd>,</kbd> |
+| <span class="neume"></span>                | (Low)  | <kbd>C</kbd> + <kbd>.</kbd> |
+| <span class="neume"></span>                | (Low)  | <kbd>C</kbd> + <kbd>/</kbd> |
 
 The following toggles are available for existing martyria.
 
-| Toggle                 | Keyboard Shortcut          |
-| ---------------------- | -------------------------- |
-| Toggle Right Align     | <kbd>C</kbd> +<kbd>Y</kbd> |
-| Toggle Auto-calculated | <kbd>C</kbd> +<kbd>H</kbd> |
+| Toggle                 | Keyboard Shortcut           |
+| ---------------------- | --------------------------- |
+| Toggle Right Align     | <kbd>C</kbd> + <kbd>Y</kbd> |
+| Toggle Auto-calculated | <kbd>C</kbd> + <kbd>H</kbd> |
 
 The scale on an existing martyria may be updated with the following shortcuts.
 
-| Scale                                                | Keyboard Shortcut          |
-| ---------------------------------------------------- | -------------------------- |
-| <span class="center">Diatonic</span>                 | <kbd>Z</kbd> +<kbd>J</kbd> |
-| <span class="center">Soft Chromatic</span>           | <kbd>Z</kbd> +<kbd>K</kbd> |
-| <span class="center">Hard Chromatic</span>           | <kbd>Z</kbd> +<kbd>L</kbd> |
-| <span class="center">Enharmonic from Ga</span>       | <kbd>Z</kbd> +<kbd>;</kbd> |
-| <span class="center">Enharmonic from High Zo</span>  | <kbd>Z</kbd> +<kbd>'</kbd> |
-| <span class="center">Enharmonic from High Vou</span> | <kbd>Z</kbd> +<kbd>U</kbd> |
-| <span class="center">Enharmonic from Vou</span>      | <kbd>Z</kbd> +<kbd>I</kbd> |
-| <span class="center">Enharmonic from Zo</span>       | <kbd>Z</kbd> +<kbd>O</kbd> |
-| <span class="center">Zygos</span>                    | <kbd>Z</kbd> +<kbd>P</kbd> |
-| <span class="center">Spathi</span>                   | <kbd>Z</kbd> +<kbd>[</kbd> |
-| <span class="center">Kliton</span>                   | <kbd>Z</kbd> +<kbd>]</kbd> |
+| Scale                                                | Keyboard Shortcut           |
+| ---------------------------------------------------- | --------------------------- |
+| <span class="center">Diatonic</span>                 | <kbd>Z</kbd> + <kbd>J</kbd> |
+| <span class="center">Soft Chromatic</span>           | <kbd>Z</kbd> + <kbd>K</kbd> |
+| <span class="center">Hard Chromatic</span>           | <kbd>Z</kbd> + <kbd>L</kbd> |
+| <span class="center">Enharmonic from Ga</span>       | <kbd>Z</kbd> + <kbd>;</kbd> |
+| <span class="center">Enharmonic from High Zo</span>  | <kbd>Z</kbd> + <kbd>'</kbd> |
+| <span class="center">Enharmonic from High Vou</span> | <kbd>Z</kbd> + <kbd>U</kbd> |
+| <span class="center">Enharmonic from Vou</span>      | <kbd>Z</kbd> + <kbd>I</kbd> |
+| <span class="center">Enharmonic from Zo</span>       | <kbd>Z</kbd> + <kbd>O</kbd> |
+| <span class="center">Zygos</span>                    | <kbd>Z</kbd> + <kbd>P</kbd> |
+| <span class="center">Spathi</span>                   | <kbd>Z</kbd> + <kbd>[</kbd> |
+| <span class="center">Kliton</span>                   | <kbd>Z</kbd> + <kbd>]</kbd> |
 
 Tempo characters may be placed above a martyria with the following shortcuts.
 
-| Neume                        | Keyboard Shortcut                            |
-| ---------------------------- | -------------------------------------------- |
-| <span class="neume"></span> | <kbd>Shift</kbd> +<kbd>X</kbd> +<kbd>J</kbd> |
-| <span class="neume"></span> | <kbd>Shift</kbd> +<kbd>X</kbd> +<kbd>K</kbd> |
-| <span class="neume"></span> | <kbd>Shift</kbd> +<kbd>X</kbd> +<kbd>L</kbd> |
-| <span class="neume"></span> | <kbd>Shift</kbd> +<kbd>X</kbd> +<kbd>;</kbd> |
-| <span class="neume"></span> | <kbd>Shift</kbd> +<kbd>X</kbd> +<kbd>N</kbd> |
-| <span class="neume"></span> | <kbd>Shift</kbd> +<kbd>X</kbd> +<kbd>M</kbd> |
-| <span class="neume"></span> | <kbd>Shift</kbd> +<kbd>X</kbd> +<kbd>,</kbd> |
-| <span class="neume"></span> | <kbd>Shift</kbd> +<kbd>X</kbd> +<kbd>.</kbd> |
+| Neume                        | Keyboard Shortcut                              |
+| ---------------------------- | ---------------------------------------------- |
+| <span class="neume"></span> | <kbd>Shift</kbd> + <kbd>X</kbd> + <kbd>J</kbd> |
+| <span class="neume"></span> | <kbd>Shift</kbd> + <kbd>X</kbd> + <kbd>K</kbd> |
+| <span class="neume"></span> | <kbd>Shift</kbd> + <kbd>X</kbd> + <kbd>L</kbd> |
+| <span class="neume"></span> | <kbd>Shift</kbd> + <kbd>X</kbd> + <kbd>;</kbd> |
+| <span class="neume"></span> | <kbd>Shift</kbd> + <kbd>X</kbd> + <kbd>N</kbd> |
+| <span class="neume"></span> | <kbd>Shift</kbd> + <kbd>X</kbd> + <kbd>M</kbd> |
+| <span class="neume"></span> | <kbd>Shift</kbd> + <kbd>X</kbd> + <kbd>,</kbd> |
+| <span class="neume"></span> | <kbd>Shift</kbd> + <kbd>X</kbd> + <kbd>.</kbd> |
 
 ## Fthores
 
-| Neume                        | Keyboard Shortcut          |
-| ---------------------------- | -------------------------- |
-| <span class="neume"></span> | <kbd>T</kbd> +<kbd>J</kbd> |
-| <span class="neume"></span> | <kbd>T</kbd> +<kbd>K</kbd> |
-| <span class="neume"></span> | <kbd>T</kbd> +<kbd>L</kbd> |
-| <span class="neume"></span> | <kbd>T</kbd> +<kbd>;</kbd> |
-| <span class="neume"></span> | <kbd>T</kbd> +<kbd>'</kbd> |
-| <span class="neume"></span> | <kbd>T</kbd> +<kbd>U</kbd> |
-| <span class="neume"></span> | <kbd>T</kbd> +<kbd>I</kbd> |
-| <span class="neume"></span> | <kbd>T</kbd> +<kbd>O</kbd> |
-| <span class="neume"></span> | <kbd>T</kbd> +<kbd>N</kbd> |
-| <span class="neume"></span> | <kbd>T</kbd> +<kbd>M</kbd> |
-| <span class="neume"></span> | <kbd>T</kbd> +<kbd>,</kbd> |
-| <span class="neume"></span> | <kbd>T</kbd> +<kbd>.</kbd> |
-| <span class="neume"></span> | <kbd>T</kbd> +<kbd>P</kbd> |
-| <span class="neume"></span> | <kbd>T</kbd> +<kbd>[</kbd> |
-| <span class="neume"></span> | <kbd>T</kbd> +<kbd>]</kbd> |
-| <span class="neume"></span> | <kbd>T</kbd> +<kbd>7</kbd> |
-| <span class="neume"></span> | <kbd>T</kbd> +<kbd>8</kbd> |
-| <span class="neume"></span> | <kbd>T</kbd> +<kbd>9</kbd> |
+| Neume                        | Keyboard Shortcut           |
+| ---------------------------- | --------------------------- |
+| <span class="neume"></span> | <kbd>T</kbd> + <kbd>J</kbd> |
+| <span class="neume"></span> | <kbd>T</kbd> + <kbd>K</kbd> |
+| <span class="neume"></span> | <kbd>T</kbd> + <kbd>L</kbd> |
+| <span class="neume"></span> | <kbd>T</kbd> + <kbd>;</kbd> |
+| <span class="neume"></span> | <kbd>T</kbd> + <kbd>'</kbd> |
+| <span class="neume"></span> | <kbd>T</kbd> + <kbd>U</kbd> |
+| <span class="neume"></span> | <kbd>T</kbd> + <kbd>I</kbd> |
+| <span class="neume"></span> | <kbd>T</kbd> + <kbd>O</kbd> |
+| <span class="neume"></span> | <kbd>T</kbd> + <kbd>N</kbd> |
+| <span class="neume"></span> | <kbd>T</kbd> + <kbd>M</kbd> |
+| <span class="neume"></span> | <kbd>T</kbd> + <kbd>,</kbd> |
+| <span class="neume"></span> | <kbd>T</kbd> + <kbd>.</kbd> |
+| <span class="neume"></span> | <kbd>T</kbd> + <kbd>P</kbd> |
+| <span class="neume"></span> | <kbd>T</kbd> + <kbd>[</kbd> |
+| <span class="neume"></span> | <kbd>T</kbd> + <kbd>]</kbd> |
+| <span class="neume"></span> | <kbd>T</kbd> + <kbd>7</kbd> |
+| <span class="neume"></span> | <kbd>T</kbd> + <kbd>8</kbd> |
+| <span class="neume"></span> | <kbd>T</kbd> + <kbd>9</kbd> |
 
 ## Signs of Alteration
 
-| Neume                        | Keyboard Shortcut          |
-| ---------------------------- | -------------------------- |
-| <span class="neume"></span> | <kbd>E</kbd> +<kbd>J</kbd> |
-| <span class="neume"></span> | <kbd>E</kbd> +<kbd>K</kbd> |
-| <span class="neume"></span> | <kbd>E</kbd> +<kbd>L</kbd> |
-| <span class="neume"></span> | <kbd>E</kbd> +<kbd>;</kbd> |
-| <span class="neume"></span> | <kbd>E</kbd> +<kbd>U</kbd> |
-| <span class="neume"></span> | <kbd>E</kbd> +<kbd>I</kbd> |
-| <span class="neume"></span> | <kbd>E</kbd> +<kbd>O</kbd> |
-| <span class="neume"></span> | <kbd>E</kbd> +<kbd>P</kbd> |
+| Neume                        | Keyboard Shortcut           |
+| ---------------------------- | --------------------------- |
+| <span class="neume"></span> | <kbd>E</kbd> + <kbd>J</kbd> |
+| <span class="neume"></span> | <kbd>E</kbd> + <kbd>K</kbd> |
+| <span class="neume"></span> | <kbd>E</kbd> + <kbd>L</kbd> |
+| <span class="neume"></span> | <kbd>E</kbd> + <kbd>;</kbd> |
+| <span class="neume"></span> | <kbd>E</kbd> + <kbd>U</kbd> |
+| <span class="neume"></span> | <kbd>E</kbd> + <kbd>I</kbd> |
+| <span class="neume"></span> | <kbd>E</kbd> + <kbd>O</kbd> |
+| <span class="neume"></span> | <kbd>E</kbd> + <kbd>P</kbd> |
 
 ## Ison Indicators
 
-| Neume                        | Keyboard Shortcut          |
-| ---------------------------- | -------------------------- |
-| <span class="neume"></span> | <kbd>A</kbd> +<kbd>J</kbd> |
-| <span class="neume"></span> | <kbd>A</kbd> +<kbd>K</kbd> |
-| <span class="neume"></span> | <kbd>A</kbd> +<kbd>L</kbd> |
-| <span class="neume"></span> | <kbd>A</kbd> +<kbd>;</kbd> |
-| <span class="neume"></span> | <kbd>A</kbd> +<kbd>'</kbd> |
-| <span class="neume"></span> | <kbd>A</kbd> +<kbd>U</kbd> |
-| <span class="neume"></span> | <kbd>A</kbd> +<kbd>I</kbd> |
-| <span class="neume"></span> | <kbd>A</kbd> +<kbd>O</kbd> |
-| <span class="neume"></span> | <kbd>A</kbd> +<kbd>N</kbd> |
-| <span class="neume"></span> | <kbd>A</kbd> +<kbd>M</kbd> |
-| <span class="neume"></span> | <kbd>A</kbd> +<kbd>,</kbd> |
+| Neume                        | Keyboard Shortcut           |
+| ---------------------------- | --------------------------- |
+| <span class="neume"></span> | <kbd>A</kbd> + <kbd>J</kbd> |
+| <span class="neume"></span> | <kbd>A</kbd> + <kbd>K</kbd> |
+| <span class="neume"></span> | <kbd>A</kbd> + <kbd>L</kbd> |
+| <span class="neume"></span> | <kbd>A</kbd> + <kbd>;</kbd> |
+| <span class="neume"></span> | <kbd>A</kbd> + <kbd>'</kbd> |
+| <span class="neume"></span> | <kbd>A</kbd> + <kbd>U</kbd> |
+| <span class="neume"></span> | <kbd>A</kbd> + <kbd>I</kbd> |
+| <span class="neume"></span> | <kbd>A</kbd> + <kbd>O</kbd> |
+| <span class="neume"></span> | <kbd>A</kbd> + <kbd>N</kbd> |
+| <span class="neume"></span> | <kbd>A</kbd> + <kbd>M</kbd> |
+| <span class="neume"></span> | <kbd>A</kbd> + <kbd>,</kbd> |
 
 ## Note Indicators
 
@@ -285,25 +285,25 @@ Note indicators can be toggled on and off with <kbd>Q</kbd>. The correct note is
 
 ## Measure Bars
 
-| Neume                               | Keyboard Shortcut                            |
-| ----------------------------------- | -------------------------------------------- |
-| <span class="neume">&#xE210;</span> | <kbd>W</kbd> +<kbd>J</kbd>                   |
-| <span class="neume">&#xE211;</span> | <kbd>W</kbd> +<kbd>K</kbd>                   |
-| <span class="neume">&#xE212;</span> | <kbd>W</kbd> +<kbd>L</kbd>                   |
-| <span class="neume">&#xE213;</span> | <kbd>Shift</kbd> +<kbd>W</kbd> +<kbd>J</kbd> |
-| <span class="neume">&#xE214;</span> | <kbd>Shift</kbd> +<kbd>W</kbd> +<kbd>K</kbd> |
-| <span class="neume">&#xE215;</span> | <kbd>Shift</kbd> +<kbd>W</kbd> +<kbd>L</kbd> |
+| Neume                               | Keyboard Shortcut                              |
+| ----------------------------------- | ---------------------------------------------- |
+| <span class="neume">&#xE210;</span> | <kbd>W</kbd> + <kbd>J</kbd>                    |
+| <span class="neume">&#xE211;</span> | <kbd>W</kbd> + <kbd>K</kbd>                    |
+| <span class="neume">&#xE212;</span> | <kbd>W</kbd> + <kbd>L</kbd>                    |
+| <span class="neume">&#xE213;</span> | <kbd>Shift</kbd> + <kbd>W</kbd> + <kbd>J</kbd> |
+| <span class="neume">&#xE214;</span> | <kbd>Shift</kbd> + <kbd>W</kbd> + <kbd>K</kbd> |
+| <span class="neume">&#xE215;</span> | <kbd>Shift</kbd> + <kbd>W</kbd> + <kbd>L</kbd> |
 
 ## Measures
 
-| Neume                        | Keyboard Shortcut              |
-| ---------------------------- | ------------------------------ |
-| <span class="neume"></span> | <kbd>2</kbd>                   |
-| <span class="neume"></span> | <kbd>3</kbd>                   |
-| <span class="neume"></span> | <kbd>4</kbd>                   |
-| <span class="neume"></span> | <kbd>5</kbd>                   |
-| <span class="neume"></span> | <kbd>6</kbd>                   |
-| <span class="neume"></span> | <kbd>7</kbd>                   |
-| <span class="neume"></span> | <kbd>8</kbd>                   |
-| <span class="neume"></span> | <kbd>W</kbd>                   |
-| <span class="neume"></span> | <kbd>Shift</kbd> +<kbd>W</kbd> |
+| Neume                        | Keyboard Shortcut               |
+| ---------------------------- | ------------------------------- |
+| <span class="neume"></span> | <kbd>2</kbd>                    |
+| <span class="neume"></span> | <kbd>3</kbd>                    |
+| <span class="neume"></span> | <kbd>4</kbd>                    |
+| <span class="neume"></span> | <kbd>5</kbd>                    |
+| <span class="neume"></span> | <kbd>6</kbd>                    |
+| <span class="neume"></span> | <kbd>7</kbd>                    |
+| <span class="neume"></span> | <kbd>8</kbd>                    |
+| <span class="neume"></span> | <kbd>W</kbd>                    |
+| <span class="neume"></span> | <kbd>Shift</kbd> + <kbd>W</kbd> |

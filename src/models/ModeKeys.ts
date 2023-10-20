@@ -397,4 +397,15 @@ export const modeKeyTemplates: ModeKeyTemplate[] = [
     note: ModeSign.Ni,
     quantitativeNeumeRight: QuantitativeNeume.KentemataPlusOligon,
   },
+  {
+    id: 803,
+    mode: 8,
+    scale: Scale.Diatonic,
+    scaleNote: ScaleNote.NiHigh,
+    description: 'Heptaphonic',
+    martyria: ModeSign.Delta,
+    note: ModeSign.Ni,
+    quantitativeNeumeRight:
+      QuantitativeNeume.OligonPlusHypsiliPlusKentimaVertical,
+  },
 ];

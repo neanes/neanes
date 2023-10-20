@@ -78,6 +78,7 @@ const neumeValueMap = new Map<QuantitativeNeume, number>([
   [QuantitativeNeume.OligonPlusIson, 0],
   [QuantitativeNeume.OligonPlusApostrophos, -1],
   [QuantitativeNeume.OligonPlusElaphron, -2],
+  [QuantitativeNeume.OligonPlusHyporoe, -2],
   [QuantitativeNeume.OligonPlusElaphronPlusApostrophos, -3],
   [QuantitativeNeume.OligonPlusHamili, -4],
 
@@ -111,6 +112,7 @@ export function getNoteSpread(neume: QuantitativeNeume) {
       return [-1, 0];
     case QuantitativeNeume.Hyporoe:
     case QuantitativeNeume.PetastiPlusHyporoe:
+    case QuantitativeNeume.OligonPlusHyporoe:
     case QuantitativeNeume.DoubleApostrophos:
     case QuantitativeNeume.RunningElaphron:
     case QuantitativeNeume.PetastiPlusRunningElaphron:
@@ -161,6 +163,7 @@ export function getSpreadIndex(
       }
     case QuantitativeNeume.Hyporoe:
     case QuantitativeNeume.PetastiPlusHyporoe:
+    case QuantitativeNeume.OligonPlusHyporoe:
       if (neumeSelection === NeumeSelection.Primary) {
         if (fthora.endsWith('_Top')) {
           return 0;

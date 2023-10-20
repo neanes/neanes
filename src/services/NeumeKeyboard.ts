@@ -428,6 +428,13 @@ export class NeumeKeyboard {
     });
 
     this.quantitativeNeumeKeyboardMap.push({
+      code: 'Slash',
+      modifier: this.modifier2,
+      shiftKey: true,
+      neume: QuantitativeNeume.OligonPlusHyporoe,
+    });
+
+    this.quantitativeNeumeKeyboardMap.push({
       code: 'Comma',
       modifier: this.modifier3,
       shiftKey: true,

@@ -171,6 +171,7 @@ export class AnalysisService {
         noteElement.quantitativeNeume === QuantitativeNeume.Hyporoe ||
         noteElement.quantitativeNeume ===
           QuantitativeNeume.PetastiPlusHyporoe ||
+        noteElement.quantitativeNeume === QuantitativeNeume.OligonPlusHyporoe ||
         noteElement.quantitativeNeume ===
           QuantitativeNeume.OligonPlusHyporoePlusKentemata
       ) {
@@ -241,6 +242,7 @@ export class AnalysisService {
         break;
       case QuantitativeNeume.Hyporoe:
       case QuantitativeNeume.PetastiPlusHyporoe:
+      case QuantitativeNeume.OligonPlusHyporoe:
         this.handleHyporoe(noteElement, noteAtomNodes, workspace);
         break;
       case QuantitativeNeume.DoubleApostrophos:

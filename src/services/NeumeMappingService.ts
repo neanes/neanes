@@ -234,6 +234,7 @@ mapNeumeToSbmufl(QuantitativeNeume.PetastiPlusHyporoe, 'petastiYporroi');
 mapNeumeToSbmufl(QuantitativeNeume.OligonPlusIson, 'oligonIson');
 mapNeumeToSbmufl(QuantitativeNeume.OligonPlusApostrophos, 'oligonApostrofos');
 mapNeumeToSbmufl(QuantitativeNeume.OligonPlusElaphron, 'oligonElafron');
+mapNeumeToSbmufl(QuantitativeNeume.OligonPlusHyporoe, 'oligonYporroi');
 mapNeumeToSbmufl(
   QuantitativeNeume.OligonPlusElaphronPlusApostrophos,
   'oligonElafronApostrofos',

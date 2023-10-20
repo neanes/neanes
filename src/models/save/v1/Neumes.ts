@@ -75,6 +75,7 @@ export enum QuantitativeNeume {
   OligonPlusIson = 'OligonPlusIson',
   OligonPlusApostrophos = 'OligonPlusApostrophos',
   OligonPlusElaphron = 'OligonPlusElaphron',
+  OligonPlusHyporoe = 'OligonPlusHyporoe',
   OligonPlusElaphronPlusApostrophos = 'OligonPlusElaphronPlusApostrophos',
   OligonPlusHamili = 'OligonPlusHamili',
 

@@ -271,6 +271,18 @@ export const modeKeyTemplates: ModeKeyTemplate[] = [
     fthoraAboveQuantitativeNeumeRight: Fthora.Spathi_Bottom,
   },
   {
+    id: 503,
+    mode: 5,
+    scale: Scale.Diatonic,
+    scaleNote: ScaleNote.ZoHigh,
+    fthora: Fthora.Enharmonic_Top,
+    description: 'Pentaphonic',
+    martyria: ModeSign.Alpha,
+    note: ModeSign.Pa,
+    quantitativeNeumeRight: QuantitativeNeume.OligonPlusHypsiliLeft,
+    fthoraAboveQuantitativeNeumeRight: Fthora.Enharmonic_Top,
+  },
+  {
     id: 600,
     mode: 6,
     scale: Scale.HardChromatic,

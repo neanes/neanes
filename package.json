@@ -45,7 +45,7 @@
     "vue-draggable-resizable": "^2.3.0",
     "vue-facing-decorator": "^3.0.3",
     "vue-router": "^4.2.5",
-    "vue3-tabs-chrome": "^0.3.2"
+    "vue3-tabs-chrome": "^0.3.3"
   },
   "devDependencies": {
     "@babel/preset-typescript": "^7.23.0",

@@ -107,7 +107,15 @@ export default class ToolbarDropCap extends Vue {
   }
 
   get dropCapFontFamilies() {
-    return ['Athonite', 'Omega', 'PFGoudyInitials', ...this.fonts];
+    return [
+      'Source Serif',
+      'Athonite',
+      'GFS Didot',
+      'Noto Naskh Arabic',
+      'Omega',
+      'PFGoudyInitials',
+      ...this.fonts,
+    ];
   }
 }
 </script>

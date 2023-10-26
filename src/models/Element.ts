@@ -98,7 +98,7 @@ export class NoteElement extends ScoreElement {
   public koronis: boolean = false;
   public lyrics: string = '';
   public lyricsColor: string = 'black';
-  public lyricsFontFamily: string = 'Omega';
+  public lyricsFontFamily: string = 'Source Serif';
   public lyricsFontSize: number = Unit.fromPt(12);
   public lyricsStrokeWidth: number = 0;
   public lyricsUseDefaultStyle: boolean = true;
@@ -711,7 +711,7 @@ export class TextBoxElement extends ScoreElement {
   public color: string = '#000000';
   public content: string = '';
   public fontSize: number = 16;
-  public fontFamily: string = 'Omega';
+  public fontFamily: string = 'Source Serif';
   public strokeWidth: number = 0;
   public inline: boolean = false;
   public bold: boolean = false;
@@ -894,7 +894,7 @@ export class ModeKeyElement extends ScoreElement {
 export class DropCapElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.DropCap;
   public content: string = 'A';
-  public fontFamily: string = 'Athonite';
+  public fontFamily: string = 'Source Serif';
   public fontSize: number = Unit.fromPt(60);
   public fontWeight: string = '400';
   public fontStyle: string = 'normal';

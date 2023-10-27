@@ -99,6 +99,65 @@ export default class App extends Vue {
   src: url('./assets/fonts/PFGoudyInitials.ttf');
 }
 
+@font-face {
+  font-family: 'GFS Didot';
+  src: url('./assets/fonts/GFSDidot.otf');
+}
+
+@font-face {
+  font-family: 'GFS Didot';
+  src: url('./assets/fonts/GFSDidotBold.otf');
+  font-weight: bold;
+}
+
+@font-face {
+  font-family: 'GFS Didot';
+  src: url('./assets/fonts/GFSDidotItalic.otf');
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'GFS Didot';
+  src: url('./assets/fonts/GFSDidotBoldItalic.otf');
+  font-weight: bold;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Noto Naskh Arabic';
+  src: url('./assets/fonts/NotoNaskhArabic-Regular.otf');
+}
+
+@font-face {
+  font-family: 'Noto Naskh Arabic';
+  src: url('./assets/fonts/NotoNaskhArabic-Bold.otf');
+  font-weight: bold;
+}
+
+@font-face {
+  font-family: 'Source Serif';
+  src: url('./assets/fonts/SourceSerif4-Regular.otf');
+}
+
+@font-face {
+  font-family: 'Source Serif';
+  src: url('./assets/fonts/SourceSerif4-Bold.otf');
+  font-weight: bold;
+}
+
+@font-face {
+  font-family: 'Source Serif';
+  src: url('./assets/fonts/SourceSerif4-It.otf');
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Source Serif';
+  src: url('./assets/fonts/SourceSerif4-BoldIt.otf');
+  font-weight: bold;
+  font-style: italic;
+}
+
 html {
   height: 100vh;
 }

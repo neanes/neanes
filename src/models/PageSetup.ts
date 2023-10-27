@@ -66,7 +66,7 @@ export class PageSetup {
 
   public lineHeight = Unit.fromInch(0.75);
 
-  public lyricsDefaultFontFamily = 'Omega';
+  public lyricsDefaultFontFamily = 'Source Serif';
   public lyricsDefaultFontSize = Unit.fromPt(12);
   public lyricsDefaultFontWeight = '400';
   public lyricsDefaultFontStyle = 'normal';
@@ -113,7 +113,7 @@ export class PageSetup {
   public tempoDefaultColor = '#ED0000';
   public tempoDefaultStrokeWidth = 0;
 
-  public dropCapDefaultFontFamily = 'Athonite';
+  public dropCapDefaultFontFamily = 'Source Serif';
   public dropCapDefaultFontSize = Unit.fromPt(60);
   public dropCapDefaultFontWeight = '400';
   public dropCapDefaultFontStyle = 'normal';

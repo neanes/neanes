@@ -49,6 +49,7 @@ export interface PlaybackOptions {
   spathiIntervals: number[];
   klitonIntervals: number[];
 
+  alterationMultipliers: number[];
   alterationMoriaMap: { [key in Accidental]?: number };
   generalFlatMoria: number;
   generalSharpMoria: number;
@@ -72,6 +73,7 @@ export interface PlaybackWorkspace {
 
   scale: PlaybackScale;
   legetos: boolean;
+  chrysanthineAccidentals: boolean;
 
   /*
    * If a fthora is in effect, the number of moria by which the virtual notes
@@ -123,7 +125,11 @@ export interface PlaybackScale {
 }
 
 export class PlaybackService {
-  computePlaybackSequence(elements: ScoreElement[], options: PlaybackOptions) {
+  computePlaybackSequence(
+    elements: ScoreElement[],
+    options: PlaybackOptions,
+    chrysanthineAccidentals: boolean,
+  ) {
     const defaultFrequencyDi = 196;
 
     const defaultBpm = 120;
@@ -154,6 +160,8 @@ export class PlaybackService {
         volumeIson: -4,
         volumeMelody: 0,
 
+        alterationMultipliers: [0.5, 0.25, 0.75],
+
         alterationMoriaMap: {
           [Accidental.Flat_2_Right]: -2,
           [Accidental.Flat_4_Right]: -4,
@@ -170,6 +178,7 @@ export class PlaybackService {
       isonFrequency: 0,
       scale: this.diatonicScale,
       legetos: false,
+      chrysanthineAccidentals: chrysanthineAccidentals,
 
       transpositionMoria: 0,
 
@@ -430,9 +439,40 @@ export class PlaybackService {
     let alteredFrequency = workspace.frequency;
 
     if (noteAtomNode.accidental) {
-      const alteration =
-        workspace.options.alterationMoriaMap[noteAtomNode.accidental] ??
-        this.alterationMap.get(noteAtomNode.accidental)!;
+      let alteration = 0;
+      if (workspace.chrysanthineAccidentals) {
+        const moria = this.moriaBetweenNotes(
+          workspace.scale.scaleNoteMap.get(noteAtomNode.virtualNote)!,
+          workspace.scale.intervals,
+          this.alterationMap.get(noteAtomNode.accidental)! < 0 ? -1 : 1,
+        );
+        switch (noteAtomNode.accidental) {
+          case Accidental.Sharp_2_Left:
+          case Accidental.Flat_2_Right:
+            alteration = Math.round(
+              moria * workspace.options.alterationMultipliers[0],
+            );
+            break;
+          case Accidental.Sharp_4_Left:
+          case Accidental.Flat_4_Right:
+            alteration = Math.round(
+              moria * workspace.options.alterationMultipliers[1],
+            );
+            break;
+          case Accidental.Sharp_6_Left:
+          case Accidental.Flat_6_Right:
+            alteration = Math.round(
+              moria * workspace.options.alterationMultipliers[2],
+            );
+            break;
+          // Accidentals with three crossbars are undefined in the Chrysanthine
+          // system.
+        }
+      } else {
+        alteration =
+          workspace.options.alterationMoriaMap[noteAtomNode.accidental] ??
+          this.alterationMap.get(noteAtomNode.accidental)!;
+      }
       alteredFrequency = this.changeFrequency(alteredFrequency, alteration);
 
       workspace.lastAlterationMoria = alteration;

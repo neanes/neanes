@@ -279,6 +279,17 @@
 
           <div class="form-group">
             <input
+              id="page-setup-dialog-chrysanthine-accidentals"
+              type="checkbox"
+              v-model="form.chrysanthineAccidentals"
+            />
+            <label for="page-setup-dialog-chrysanthine-accidentals"
+              >Use Chrysanthine Accidentals</label
+            >
+          </div>
+
+          <div class="form-group">
+            <input
               id="page-setup-dialog-no-fthora-restrictions"
               type="checkbox"
               v-model="form.noFthoraRestrictions"

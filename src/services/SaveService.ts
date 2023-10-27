@@ -215,6 +215,7 @@ export class SaveService {
 
     pageSetup.hyphenSpacing = p.hyphenSpacing;
 
+    pageSetup.chrysanthineAccidentals = p.chrysanthineAccidentals;
     pageSetup.noFthoraRestrictions = p.noFthoraRestrictions || undefined;
   }
 
@@ -690,6 +691,9 @@ export class SaveService {
 
     pageSetup.hyphenSpacing = p.hyphenSpacing;
 
+    pageSetup.chrysanthineAccidentals =
+      p.chrysanthineAccidentals === true ||
+      p.chrysanthineAccidentals === undefined;
     pageSetup.noFthoraRestrictions = p.noFthoraRestrictions === true;
 
     // Fix pageWidth and pageHeight

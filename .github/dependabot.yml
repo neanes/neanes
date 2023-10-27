@@ -2,16 +2,20 @@
 ---
 version: 2
 updates:
-  - package-ecosystem: "npm"
-    directory: "/"
+  - package-ecosystem: 'npm'
+    directory: '/'
     schedule:
-      interval: "daily"
+      interval: 'daily'
+    commit-message:
+      prefix: 'chore'
     ignore:
       # Electron 25 does not support printing. See:
       # https://github.com/electron/electron/issues/39025
-      - dependency-name: "electron"
-        versions: [">=25.0.0"]
-  - package-ecosystem: "github-actions"
-    directory: "/"
+      - dependency-name: 'electron'
+        versions: ['>=25.0.0']
+  - package-ecosystem: 'github-actions'
+    directory: '/'
     schedule:
-      interval: "daily"
+      interval: 'daily'
+    commit-message:
+      prefix: 'chore'

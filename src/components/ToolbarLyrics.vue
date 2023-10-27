@@ -127,7 +127,13 @@ export default class ToolbarLyrics extends Vue {
   }
 
   get lyricsFontFamilies() {
-    return ['Omega', ...this.fonts];
+    return [
+      'Source Serif',
+      'GFS Didot',
+      'Noto Naskh Arabic',
+      'Omega',
+      ...this.fonts,
+    ];
   }
 }
 </script>

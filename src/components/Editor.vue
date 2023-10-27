@@ -868,7 +868,6 @@ import { NeumeKeyboard } from '@/services/NeumeKeyboard';
 import { IPlatformService } from '@/services/platform/IPlatformService';
 import { SaveService } from '@/services/SaveService';
 import { getCursorPosition } from '@/utils/getCursorPosition';
-import { getDefaultFontFamily } from '@/utils/getDefaultFontFamily';
 import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { isElectron } from '@/utils/isElectron';
@@ -1622,9 +1621,12 @@ export default class Editor extends Vue {
       await Promise.all([
         loadSystemFontsPromise,
         fontLoader.load('1rem Athonite'),
+        fontLoader.load('1rem "GFS Didot"'),
+        fontLoader.load('1rem Neanes'),
+        fontLoader.load('1rem "Noto Naskh Arabic"'),
         fontLoader.load('1rem Omega'),
         fontLoader.load('1rem PFGoudyInitials'),
-        fontLoader.load('1rem Neanes'),
+        fontLoader.load('1rem "Source Serif"'),
         fontLoader.ready,
       ]);
 
@@ -5414,10 +5416,6 @@ export default class Editor extends Vue {
         SaveService.LoadPageSetup_v1(
           score.pageSetup,
           JSON.parse(pageSetupDefault),
-        );
-      } else {
-        score.pageSetup.lyricsDefaultFontFamily = getDefaultFontFamily(
-          this.fonts,
         );
       }
     } catch (error) {

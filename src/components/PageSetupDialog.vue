@@ -646,7 +646,6 @@ import { Accidental, QuantitativeNeume } from '@/models/Neumes';
 import { PageSetup, PageSize, pageSizes } from '@/models/PageSetup';
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
 import { SaveService } from '@/services/SaveService';
-import { getDefaultFontFamily } from '@/utils/getDefaultFontFamily';
 import { Unit } from '@/utils/Unit';
 
 @Component({
@@ -727,11 +726,25 @@ export default class PageSetupDialog extends Vue {
   ];
 
   get dropCapFontFamilies() {
-    return ['Athonite', 'Omega', 'PFGoudyInitials', ...this.fonts];
+    return [
+      'Source Serif',
+      'Athonite',
+      'GFS Didot',
+      'Noto Naskh Arabic',
+      'Omega',
+      'PFGoudyInitials',
+      ...this.fonts,
+    ];
   }
 
   get lyricsFontFamilies() {
-    return ['Omega', ...this.fonts];
+    return [
+      'Source Serif',
+      'GFS Didot',
+      'Noto Naskh Arabic',
+      'Omega',
+      ...this.fonts,
+    ];
   }
 
   get neumeSpacingMax() {
@@ -1016,7 +1029,6 @@ export default class PageSetupDialog extends Vue {
 
   resetToSystemDefaults() {
     this.form = new PageSetup();
-    this.form.lyricsDefaultFontFamily = getDefaultFontFamily(this.fonts);
   }
 }
 </script>

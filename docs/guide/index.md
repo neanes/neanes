@@ -229,6 +229,10 @@ The amount of space between the hyphens that are automatically drawn between mel
 
 ![Page Setup Hyphen Spacing Example](./images/guide-page-setup-hyphen-spacing-example-1.png)
 
+### Fonts
+
+The default font is Source Serif, which supports the Adobe Latin-4 character set, as well as Cyrillic and Greek writing systems. GFS Didot is bundled for use with Greek texts, and Noto Naskh Arabic is bundled for use with Arabic texts.
+
 ## Audio Playback
 
 To play a score, use the playback panel in the main toolbar.

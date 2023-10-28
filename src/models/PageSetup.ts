@@ -123,6 +123,7 @@ export class PageSetup {
 
   public hyphenSpacing: number = Unit.fromInch(0.75);
 
+  public chrysanthineAccidentals: boolean = true;
   public noFthoraRestrictions: boolean = false;
 
   public get innerPageWidth() {

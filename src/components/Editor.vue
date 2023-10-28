@@ -993,6 +993,8 @@ export default class Editor extends Vue {
     volumeIson: -4,
     volumeMelody: 0,
 
+    alterationMultipliers: [0.5, 0.25, 0.75],
+
     alterationMoriaMap: {
       [Accidental.Flat_2_Right]: -2,
       [Accidental.Flat_4_Right]: -4,
@@ -4856,6 +4858,7 @@ export default class Editor extends Vue {
         this.playbackEvents = this.playbackService.computePlaybackSequence(
           this.elements,
           this.audioOptions,
+          this.score.pageSetup.chrysanthineAccidentals,
         );
 
         if (this.playbackEvents.length === 0) {

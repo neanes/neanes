@@ -49,7 +49,7 @@
   },
   "devDependencies": {
     "@babel/preset-typescript": "^7.23.0",
-    "@types/electron-devtools-installer": "^2.2.3",
+    "@types/electron-devtools-installer": "^2.2.4",
     "@types/mime-types": "^2.1.2",
     "@types/node": "^20.8.7",
     "@types/throttle-debounce": "^5.0.1",

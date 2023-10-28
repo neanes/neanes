@@ -165,7 +165,7 @@ describe('PlaybackService', () => {
         elements.push(getModeKey(1, Scale.Diatonic, scaleNote));
         elements.push(getNote(QuantitativeNeume.Ison));
 
-        const events = service.computePlaybackSequence(elements, options);
+        const events = service.computePlaybackSequence(elements, options, true);
 
         expect(events[0].frequency).toBeCloseTo(expectedFrequency, 2);
       },
@@ -199,7 +199,7 @@ describe('PlaybackService', () => {
       elements.push(getNote(QuantitativeNeume.Oligon));
       elements.push(getNote(QuantitativeNeume.Oligon));
 
-      const events = service.computePlaybackSequence(elements, options);
+      const events = service.computePlaybackSequence(elements, options, true);
       const expectedFrequencies = [
         80.84, 87.31, 98, 110, 121.12, 130.81, 146.83, 161.67, 174.62, 196, 220,
         242.24, 261.63, 293.67, 323.35, 349.23, 392, 440.01,
@@ -229,7 +229,7 @@ describe('PlaybackService', () => {
         elements.push(getModeKey(4, Scale.Diatonic, scaleNote));
         elements.push(getNote(QuantitativeNeume.Ison));
 
-        const events = service.computePlaybackSequence(elements, options);
+        const events = service.computePlaybackSequence(elements, options, true);
 
         expect(events[0].frequency).toBeCloseTo(expectedFrequency, 2);
       },
@@ -269,7 +269,7 @@ describe('PlaybackService', () => {
         elements.push(getModeKey(4, Scale.Diatonic, ScaleNote.Pa));
         elements.push(getNote(base));
 
-        const events = service.computePlaybackSequence(elements, options);
+        const events = service.computePlaybackSequence(elements, options, true);
 
         expect(events[0].frequency).toBeCloseTo(expectedFrequency, 2);
       },
@@ -308,7 +308,7 @@ describe('PlaybackService', () => {
         elements.push(getModeKey(2, Scale.SoftChromatic, scaleNote));
         elements.push(getNote(QuantitativeNeume.Ison));
 
-        const events = service.computePlaybackSequence(elements, options);
+        const events = service.computePlaybackSequence(elements, options, true);
 
         expect(events[0].frequency).toBeCloseTo(expectedFrequency, 2);
       },
@@ -342,7 +342,7 @@ describe('PlaybackService', () => {
       elements.push(getNote(QuantitativeNeume.Oligon));
       elements.push(getNote(QuantitativeNeume.Oligon));
 
-      const events = service.computePlaybackSequence(elements, options);
+      const events = service.computePlaybackSequence(elements, options, true);
       const expectedFrequencies = [
         77.78, 87.31, 94.3, 107.9, 116.54, 130.81, 141.29, 161.67, 174.62, 196,
         211.69, 242.24, 261.63, 293.67, 317.18, 362.94, 392, 440.01,
@@ -387,7 +387,7 @@ describe('PlaybackService', () => {
         elements.push(getModeKey(2, Scale.HardChromatic, scaleNote));
         elements.push(getNote(QuantitativeNeume.Ison));
 
-        const events = service.computePlaybackSequence(elements, options);
+        const events = service.computePlaybackSequence(elements, options, true);
 
         expect(events[0].frequency).toBeCloseTo(expectedFrequency, 2);
       },
@@ -421,7 +421,7 @@ describe('PlaybackService', () => {
       elements.push(getNote(QuantitativeNeume.Oligon));
       elements.push(getNote(QuantitativeNeume.Oligon));
 
-      const events = service.computePlaybackSequence(elements, options);
+      const events = service.computePlaybackSequence(elements, options, true);
       const expectedFrequencies = [
         84.01, 87.31, 98, 103.83, 125.87, 130.81, 146.83, 155.57, 188.6, 196,
         220, 233.08, 282.57, 293.67, 329.63, 349.23, 423.38, 440.01,
@@ -464,7 +464,7 @@ describe('PlaybackService', () => {
       elements.push(getNote(QuantitativeNeume.Oligon));
       elements.push(getNote(QuantitativeNeume.Oligon));
 
-      const events = service.computePlaybackSequence(elements, options);
+      const events = service.computePlaybackSequence(elements, options, true);
       const expectedFrequencies = [
         174.62, 233.08, 220, 196, 174.62, 164.82, 146.83, 130.81, 261.63,
         293.67, 311.13,
@@ -503,7 +503,7 @@ describe('PlaybackService', () => {
       elements.push(getNote(QuantitativeNeume.Oligon));
       elements.push(getNote(QuantitativeNeume.Oligon));
 
-      const events = service.computePlaybackSequence(elements, options);
+      const events = service.computePlaybackSequence(elements, options, true);
       const expectedFrequencies = [
         174.62, 233.08, 220, 196, 174.62, 161.67, 146.83, 130.81, 261.63,
         293.67, 323.35,
@@ -542,7 +542,7 @@ describe('PlaybackService', () => {
       elements.push(getNote(QuantitativeNeume.Oligon));
       elements.push(getNote(QuantitativeNeume.Oligon));
 
-      const events = service.computePlaybackSequence(elements, options);
+      const events = service.computePlaybackSequence(elements, options, true);
       const expectedFrequencies = [
         174.62, 233.08, 220, 196, 174.62, 161.67, 146.83, 130.81, 261.63,
         293.67, 323.35,
@@ -573,7 +573,7 @@ describe('PlaybackService', () => {
       elements.push(getNote(QuantitativeNeume.Apostrophos));
       elements.push(getNote(QuantitativeNeume.Apostrophos));
 
-      const events = service.computePlaybackSequence(elements, options);
+      const events = service.computePlaybackSequence(elements, options, true);
       const expectedFrequencies = [174.62, 155.57, 146.83, 130.81, 116.54];
 
       expect(events.map((x) => x.frequency)).toBeDeepCloseTo(
@@ -597,7 +597,7 @@ describe('PlaybackService', () => {
       elements.push(getMartyria({ auto: false, note: Note.Pa }));
       elements.push(getNote(QuantitativeNeume.Ison));
 
-      const events = service.computePlaybackSequence(elements, options);
+      const events = service.computePlaybackSequence(elements, options, true);
       const expectedFrequencies = [
         getDiatonicFrequency(ScaleNote.Pa),
         getDiatonicFrequency(ScaleNote.Thi),
@@ -640,7 +640,7 @@ describe('PlaybackService', () => {
         elements.push(getNote(QuantitativeNeume.Ison));
         elements.push(getNote(QuantitativeNeume.Ison));
 
-        const events = service.computePlaybackSequence(elements, options);
+        const events = service.computePlaybackSequence(elements, options, true);
 
         expect(events.map((x) => x.transportTime)).toEqual(expectedResult);
       },

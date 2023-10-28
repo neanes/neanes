@@ -79,5 +79,6 @@ export class PageSetup {
 
   public hyphenSpacing: number = Unit.fromInch(0.75);
 
+  public chrysanthineAccidentals: boolean | undefined = undefined;
   public noFthoraRestrictions: boolean | undefined = undefined;
 }

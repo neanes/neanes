@@ -377,6 +377,66 @@
         </div>
 
         <div class="form-group row">
+          <span class="alteration-name">Imitonios</span>
+          <div class="row">
+            <input
+              type="number"
+              class="interval"
+              min="0"
+              max="1"
+              step="0.05"
+              :value="options.alterationMultipliers[0]"
+              @change="
+                onAlterationMultiplierChanged(
+                  0,
+                  Number(($event.target as HTMLInputElement).value),
+                )
+              "
+            />
+          </div>
+          <span class="interval-label">&#215;</span>
+        </div>
+        <div class="form-group row">
+          <span class="alteration-name">Enos Tetartimoriou</span>
+          <div class="row">
+            <input
+              type="number"
+              class="interval"
+              min="0"
+              max="1"
+              step="0.05"
+              :value="options.alterationMultipliers[1]"
+              @change="
+                onAlterationMultiplierChanged(
+                  1,
+                  Number(($event.target as HTMLInputElement).value),
+                )
+              "
+            />
+          </div>
+          <span class="interval-label">&#215;</span>
+        </div>
+        <div class="form-group row">
+          <span class="alteration-name">Trion Tetartimoriou</span>
+          <div class="row">
+            <input
+              type="number"
+              class="interval"
+              min="0"
+              max="1"
+              step="0.05"
+              :value="options.alterationMultipliers[2]"
+              @change="
+                onAlterationMultiplierChanged(
+                  2,
+                  Number(($event.target as HTMLInputElement).value),
+                )
+              "
+            />
+          </div>
+          <span class="interval-label">&#215;</span>
+        </div>
+        <div class="form-group row">
           <span class="alteration-name">Diesis Apli</span>
           <div class="row">
             <input
@@ -656,6 +716,8 @@ export default class PlaybackSettingsDialog extends Vue {
     this.options.generalFlatMoria = -6;
     this.options.generalSharpMoria = 4;
 
+    this.options.alterationMultipliers = [0.5, 0.25, 0.75];
+
     this.options.alterationMoriaMap = {
       [Accidental.Flat_2_Right]: -2,
       [Accidental.Flat_4_Right]: -4,
@@ -731,6 +793,15 @@ export default class PlaybackSettingsDialog extends Vue {
     this.options.frequencyDi = +(
       FREQUENCY_G3 * Math.pow(2, this.tuning / 1200)
     ).toFixed(1);
+
+    this.$forceUpdate();
+  }
+
+  onAlterationMultiplierChanged(index: number, multiplier: number) {
+    multiplier = Math.max(0, multiplier);
+    multiplier = Math.min(1, multiplier);
+
+    this.options.alterationMultipliers[index] = multiplier;
 
     this.$forceUpdate();
   }

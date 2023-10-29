@@ -368,6 +368,18 @@ export const modeKeyTemplates: ModeKeyTemplate[] = [
     fthoraAboveNote: Fthora.Enharmonic_Top,
   },
   {
+    id: 703,
+    mode: 7,
+    scale: Scale.Diatonic,
+    scaleNote: ScaleNote.Thi,
+    description: 'Pentaphonic (Maqam Ferahnak)',
+    fthora: Fthora.DiatonicNiLow_Top,
+    martyria: ModeSign.VarysZo,
+    note: ModeSign.Zo,
+    quantitativeNeumeRight: QuantitativeNeume.OligonPlusHypsiliLeft,
+    fthoraAboveQuantitativeNeumeRight: Fthora.DiatonicNiLow_Top,
+  },
+  {
     id: 800,
     mode: 8,
     scale: Scale.Diatonic,

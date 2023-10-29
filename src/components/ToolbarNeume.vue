@@ -1009,9 +1009,9 @@ export default class ToolbarNeume extends Vue {
   }
 
   updateAccidental(args: string) {
-    if (this.innerNeume === 'Secondary' && args.startsWith('Flat')) {
+    if (this.innerNeume === 'Secondary') {
       this.$emit('update:secondaryAccidental', args + this.innerNeume);
-    } else if (this.innerNeume === 'Tertiary' && args.startsWith('Flat')) {
+    } else if (this.innerNeume === 'Tertiary') {
       this.$emit('update:tertiaryAccidental', args + this.innerNeume);
     } else {
       this.$emit('update:accidental', args);

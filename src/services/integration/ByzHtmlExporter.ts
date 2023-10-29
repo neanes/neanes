@@ -1249,6 +1249,14 @@ export class ByzHtmlExporter {
     map.set('diesis8', 'x-di8');
     map.set('diesisGenikiAbove', 'x-di-g');
     map.set('diesisGenikiBelow', 'x-di-g-b');
+    map.set('diesis2Secondary', 'x-di2-2');
+    map.set('diesis4Secondary', 'x-di4-2');
+    map.set('diesis6Secondary', 'x-di6-2');
+    map.set('diesis8Secondary', 'x-di8-2');
+    map.set('diesis2Tertiary', 'x-di2-3');
+    map.set('diesis4Tertiary', 'x-di4-3');
+    map.set('diesis6Tertiary', 'x-di6-3');
+    map.set('diesis8Tertiary', 'x-di8-3');
     map.set('diesisGenikiSecondary', 'x-di-g-2');
     map.set('diesisGenikiTertiary', 'x-di-g-3');
     map.set('yfesis2', 'x-yf2');

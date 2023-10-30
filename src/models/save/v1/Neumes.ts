@@ -346,6 +346,16 @@ export enum Accidental {
   Sharp_6_Left = 'Sharp_6_Left',
   Sharp_8_Left = 'Sharp_8_Left',
 
+  Sharp_2_LeftSecondary = 'Sharp_2_LeftSecondary',
+  Sharp_4_LeftSecondary = 'Sharp_4_LeftSecondary',
+  Sharp_6_LeftSecondary = 'Sharp_6_LeftSecondary',
+  Sharp_8_LeftSecondary = 'Sharp_8_LeftSecondary',
+
+  Sharp_2_LeftTertiary = 'Sharp_2_LeftTertiary',
+  Sharp_4_LeftTertiary = 'Sharp_4_LeftTertiary',
+  Sharp_6_LeftTertiary = 'Sharp_6_LeftTertiary',
+  Sharp_8_LeftTertiary = 'Sharp_8_LeftTertiary',
+
   Flat_2_Right = 'Flat_2_Right',
   Flat_4_Right = 'Flat_4_Right',
   Flat_6_Right = 'Flat_6_Right',

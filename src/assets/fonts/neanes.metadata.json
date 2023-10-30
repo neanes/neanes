@@ -1033,6 +1033,10 @@
       ]
     },
     "runningElafron": {
+      "diesisSecondary": [
+        0.713,
+        0.895
+      ],
       "barline": [
         0.583,
         0.59
@@ -2521,6 +2525,10 @@
       ]
     },
     "oligonIsonKentimata": {
+      "diesisSecondary": [
+        1.255,
+        1.101
+      ],
       "yfesisSecondary": [
         0.93,
         0.776
@@ -2649,6 +2657,10 @@
       ]
     },
     "oligonApostrofosKentimata": {
+      "diesisSecondary": [
+        0.965,
+        1.154
+      ],
       "yfesisSecondary": [
         0.64,
         0.828
@@ -2719,6 +2731,10 @@
       ]
     },
     "oligonElafronKentimata": {
+      "diesisSecondary": [
+        1.325,
+        1.163
+      ],
       "yfesisSecondary": [
         1.0,
         0.838
@@ -2789,6 +2805,10 @@
       ]
     },
     "oligonYporroiKentimata": {
+      "diesisSecondary": [
+        0.965,
+        1.153
+      ],
       "barline": [
         0.502,
         0.862
@@ -3195,6 +3215,10 @@
       ]
     },
     "petastiRunningElafron": {
+      "diesisSecondary": [
+        0.663,
+        1.235
+      ],
       "barline": [
         0.397,
         0.94
@@ -3515,6 +3539,14 @@
       ]
     },
     "oligonRunningElafronKentimata": {
+      "diesisTertiary": [
+        0.701,
+        1.183
+      ],
+      "diesisSecondary": [
+        1.595,
+        1.133
+      ],
       "barline": [
         0.459,
         0.856
@@ -3597,6 +3629,10 @@
       ]
     },
     "oligonElafronApostrofosKentimata": {
+      "diesisSecondary": [
+        1.327,
+        1.137
+      ],
       "yfesisSecondary": [
         1.002,
         0.812
@@ -6905,6 +6941,10 @@
       ]
     },
     "oligonChamiliKentimata": {
+      "diesisSecondary": [
+        1.327,
+        1.137
+      ],
       "yfesisSecondary": [
         1.002,
         0.812
@@ -7383,6 +7423,54 @@
         0.087,
         0.589
       ]
+    },
+    "diesis2Secondary": {
+      "diesisSecondary": [
+        0.196,
+        0.612
+      ]
+    },
+    "diesis4Secondary": {
+      "diesisSecondary": [
+        0.177,
+        0.682
+      ]
+    },
+    "diesis6Secondary": {
+      "diesisSecondary": [
+        0.152,
+        0.652
+      ]
+    },
+    "diesis8Secondary": {
+      "diesisSecondary": [
+        0.012,
+        0.553
+      ]
+    },
+    "diesis2Tertiary": {
+      "diesisTertiary": [
+        0.196,
+        0.612
+      ]
+    },
+    "diesis4Tertiary": {
+      "diesisTertiary": [
+        0.177,
+        0.682
+      ]
+    },
+    "diesis6Tertiary": {
+      "diesisTertiary": [
+        0.152,
+        0.652
+      ]
+    },
+    "diesis8Tertiary": {
+      "diesisTertiary": [
+        0.012,
+        0.553
+      ]
     }
   },
   "glyphsWithAlternates": {
@@ -7778,7 +7866,15 @@
     "barlineDoubleAbove": 0.34,
     "barlineTheseosAbove": 0.208,
     "barlineShortDoubleAbove": 0.256,
-    "barlineShortTheseosAbove": 0.172
+    "barlineShortTheseosAbove": 0.172,
+    "diesis2Secondary": 0.0,
+    "diesis4Secondary": 0.0,
+    "diesis6Secondary": 0.0,
+    "diesis8Secondary": 0.0,
+    "diesis2Tertiary": 0.0,
+    "diesis4Tertiary": 0.0,
+    "diesis6Tertiary": 0.0,
+    "diesis8Tertiary": 0.0
   },
   "optionalGlyphs": {
     "oligonKentimataBelow.alt01": {
@@ -11398,6 +11494,86 @@
       "bBoxSW": [
         -0.062,
         0.589
+      ]
+    },
+    "diesis2Secondary": {
+      "bBoxNE": [
+        0.191,
+        0.609
+      ],
+      "bBoxSW": [
+        -0.132,
+        0.29
+      ]
+    },
+    "diesis4Secondary": {
+      "bBoxNE": [
+        0.177,
+        0.68
+      ],
+      "bBoxSW": [
+        -0.152,
+        0.354
+      ]
+    },
+    "diesis6Secondary": {
+      "bBoxNE": [
+        0.171,
+        0.676
+      ],
+      "bBoxSW": [
+        -0.182,
+        0.324
+      ]
+    },
+    "diesis8Secondary": {
+      "bBoxNE": [
+        0.046,
+        0.59
+      ],
+      "bBoxSW": [
+        -0.343,
+        0.203
+      ]
+    },
+    "diesis2Tertiary": {
+      "bBoxNE": [
+        0.191,
+        0.609
+      ],
+      "bBoxSW": [
+        -0.132,
+        0.29
+      ]
+    },
+    "diesis4Tertiary": {
+      "bBoxNE": [
+        0.177,
+        0.68
+      ],
+      "bBoxSW": [
+        -0.152,
+        0.354
+      ]
+    },
+    "diesis6Tertiary": {
+      "bBoxNE": [
+        0.171,
+        0.676
+      ],
+      "bBoxSW": [
+        -0.182,
+        0.324
+      ]
+    },
+    "diesis8Tertiary": {
+      "bBoxNE": [
+        0.046,
+        0.59
+      ],
+      "bBoxSW": [
+        -0.343,
+        0.203
       ]
     }
   },

@@ -725,7 +725,9 @@ export class AnalysisService {
       noteAtomNode.virtualNote === ScaleNote.Vou &&
       !noteAtomNode.accidental
     ) {
-      noteAtomNode.accidental = Accidental.Sharp_4_Left;
+      noteAtomNode.accidental = workspace.chrysanthineAccidentals
+        ? Accidental.Sharp_2_Left
+        : Accidental.Sharp_4_Left;
     }
 
     workspace.nodes.push(noteAtomNode);

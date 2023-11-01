@@ -337,46 +337,6 @@
         <div class="vertical-spacer" />
 
         <div class="form-group row">
-          <span class="alteration-name">General Flat</span>
-          <div class="row">
-            <input
-              type="number"
-              class="interval"
-              min="-72"
-              max="0"
-              step="1"
-              :value="options.generalFlatMoria"
-              @change="
-                onGeneralFlatMoriaChanged(
-                  Number(($event.target as HTMLInputElement).value),
-                )
-              "
-            />
-          </div>
-          <span class="interval-label">moria</span>
-        </div>
-
-        <div class="form-group row">
-          <span class="alteration-name">General Sharp</span>
-          <div class="row">
-            <input
-              type="number"
-              class="interval"
-              min="0"
-              max="72"
-              step="1"
-              :value="options.generalSharpMoria"
-              @change="
-                onGeneralSharpMoriaChanged(
-                  Number(($event.target as HTMLInputElement).value),
-                )
-              "
-            />
-          </div>
-          <span class="interval-label">moria</span>
-        </div>
-
-        <div class="form-group row">
           <span class="alteration-name">Imitonios</span>
           <div class="row">
             <input
@@ -713,9 +673,6 @@ export default class PlaybackSettingsDialog extends Vue {
   }
 
   resetAlterations() {
-    this.options.generalFlatMoria = -6;
-    this.options.generalSharpMoria = 4;
-
     this.options.alterationMultipliers = [0.5, 0.25, 0.75];
 
     this.options.alterationMoriaMap = {
@@ -752,26 +709,6 @@ export default class PlaybackSettingsDialog extends Vue {
     moria = Math.min(0, moria);
 
     this.options.alterationMoriaMap[neume] = moria;
-
-    this.$forceUpdate();
-  }
-
-  onGeneralSharpMoriaChanged(value: number) {
-    value = Math.max(0, value);
-    value = Math.min(72, value);
-    value = Math.round(value);
-
-    this.options.generalSharpMoria = value;
-
-    this.$forceUpdate();
-  }
-
-  onGeneralFlatMoriaChanged(value: number) {
-    value = Math.max(-72, value);
-    value = Math.min(0, value);
-    value = Math.round(value);
-
-    this.options.generalFlatMoria = value;
 
     this.$forceUpdate();
   }

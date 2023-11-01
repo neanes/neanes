@@ -328,8 +328,11 @@
         <div class="separator" />
 
         <div class="row">
-          <span class="subheader">Alterations</span
-          ><button class="btnResetIntervals" @click="resetAlterations">
+          <span class="subheader">Alteration Multipliers (Chrysanthine)</span
+          ><button
+            class="btnResetIntervals"
+            @click="resetAlterationMultipliers"
+          >
             Reset
           </button>
         </div>
@@ -337,7 +340,7 @@
         <div class="vertical-spacer" />
 
         <div class="form-group row">
-          <span class="alteration-name">Imitonios</span>
+          <span class="alteration-name">Zero crossbeams</span>
           <div class="row">
             <input
               type="number"
@@ -357,7 +360,7 @@
           <span class="interval-label">&#215;</span>
         </div>
         <div class="form-group row">
-          <span class="alteration-name">Enos Tetartimoriou</span>
+          <span class="alteration-name">One crossbeam</span>
           <div class="row">
             <input
               type="number"
@@ -377,7 +380,7 @@
           <span class="interval-label">&#215;</span>
         </div>
         <div class="form-group row">
-          <span class="alteration-name">Trion Tetartimoriou</span>
+          <span class="alteration-name">Two crossbeams</span>
           <div class="row">
             <input
               type="number"
@@ -396,8 +399,19 @@
           </div>
           <span class="interval-label">&#215;</span>
         </div>
+
+        <div class="separator" />
+
+        <div class="row">
+          <span class="subheader">Alteration Moria (1881 Committee)</span
+          ><button class="btnResetIntervals" @click="resetAlterationMoria">
+            Reset
+          </button>
+        </div>
+
+        <div class="vertical-spacer" />
         <div class="form-group row">
-          <span class="alteration-name">Diesis Apli</span>
+          <span class="alteration-name">Sharp with zero crossbeams</span>
           <div class="row">
             <input
               type="number"
@@ -417,7 +431,7 @@
           <span class="interval-label">moria</span>
         </div>
         <div class="form-group row">
-          <span class="alteration-name">Diesis Monogrammos</span>
+          <span class="alteration-name">Sharp with one crossbeam</span>
           <div class="row">
             <input
               type="number"
@@ -437,7 +451,7 @@
           <span class="interval-label">moria</span>
         </div>
         <div class="form-group row">
-          <span class="alteration-name">Diesis Digrammos</span>
+          <span class="alteration-name">Sharp with two crossbeams</span>
           <div class="row">
             <input
               type="number"
@@ -457,7 +471,7 @@
           <span class="interval-label">moria</span>
         </div>
         <div class="form-group row">
-          <span class="alteration-name">Diesis Trigrammos</span>
+          <span class="alteration-name">Sharp with three crossbeams</span>
           <div class="row">
             <input
               type="number"
@@ -477,7 +491,7 @@
           <span class="interval-label">moria</span>
         </div>
         <div class="form-group row">
-          <span class="alteration-name">Yfesis Apli</span>
+          <span class="alteration-name">Flat with zero crossbeams</span>
           <div class="row">
             <input
               type="number"
@@ -497,7 +511,7 @@
           <span class="interval-label">moria</span>
         </div>
         <div class="form-group row">
-          <span class="alteration-name">Yfesis Monogrammos</span>
+          <span class="alteration-name">Flat with one crossbeam</span>
           <div class="row">
             <input
               type="number"
@@ -517,7 +531,7 @@
           <span class="interval-label">moria</span>
         </div>
         <div class="form-group row">
-          <span class="alteration-name">Yfesis Digrammos</span>
+          <span class="alteration-name">Flat with two crossbeams</span>
           <div class="row">
             <input
               type="number"
@@ -537,7 +551,7 @@
           <span class="interval-label">moria</span>
         </div>
         <div class="form-group row">
-          <span class="alteration-name">Yfesis Trigrammos</span>
+          <span class="alteration-name">Flat with three crossbeams</span>
           <div class="row">
             <input
               type="number"
@@ -672,9 +686,11 @@ export default class PlaybackSettingsDialog extends Vue {
     this.options.klitonIntervals = [14, 12, 4];
   }
 
-  resetAlterations() {
+  resetAlterationMultipliers() {
     this.options.alterationMultipliers = [0.5, 0.25, 0.75];
+  }
 
+  resetAlterationMoria() {
     this.options.alterationMoriaMap = {
       [Accidental.Flat_2_Right]: -2,
       [Accidental.Flat_4_Right]: -4,
@@ -807,7 +823,7 @@ input.detune {
 }
 
 .alteration-name {
-  width: 11rem;
+  width: 16rem;
 }
 
 .interval-label {

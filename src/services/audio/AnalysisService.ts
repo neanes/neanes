@@ -84,8 +84,6 @@ export class FthoraNode implements PitchNode {
   public physicalNote: ScaleNote = ScaleNote.Pa;
   public virtualNote: ScaleNote = ScaleNote.Pa;
   public scale: Scale = Scale.Diatonic;
-  public generalFlat: boolean = false;
-  public generalSharp: boolean = false;
 }
 
 export class IsonNode implements AnalysisNode {
@@ -107,6 +105,11 @@ interface AnalysisWorkspace {
   currentNote: number;
   currentScale: Scale;
   currentShift: number;
+
+  generalFlat: boolean;
+  generalSharp: boolean;
+
+  chrysanthineAccidentals: boolean;
 }
 
 interface GorgonIndex {
@@ -115,7 +118,10 @@ interface GorgonIndex {
 }
 
 export class AnalysisService {
-  public static analyze(elements: ScoreElement[]): AnalysisNode[] {
+  public static analyze(
+    elements: ScoreElement[],
+    chrysanthineAccidentals: boolean,
+  ): AnalysisNode[] {
     const workspace: AnalysisWorkspace = {
       nodes: [],
       gorgonIndexes: [],
@@ -123,6 +129,11 @@ export class AnalysisService {
       currentNote: 0,
       currentScale: Scale.Diatonic,
       currentShift: 0,
+
+      generalFlat: false,
+      generalSharp: false,
+
+      chrysanthineAccidentals: chrysanthineAccidentals,
     };
 
     for (const element of elements) {
@@ -699,6 +710,26 @@ export class AnalysisService {
       getScaleNoteValue(noteAtomNode.physicalNote) + workspace.currentShift,
     );
     noteAtomNode.scale = workspace.currentScale;
+
+    // Apply general alterations
+    if (
+      workspace.generalFlat &&
+      noteAtomNode.virtualNote === ScaleNote.ZoHigh &&
+      !noteAtomNode.accidental
+    ) {
+      noteAtomNode.accidental = workspace.chrysanthineAccidentals
+        ? Accidental.Flat_2_Right
+        : Accidental.Flat_6_Right;
+    } else if (
+      workspace.generalSharp &&
+      noteAtomNode.virtualNote === ScaleNote.Vou &&
+      !noteAtomNode.accidental
+    ) {
+      noteAtomNode.accidental = workspace.chrysanthineAccidentals
+        ? Accidental.Sharp_2_Left
+        : Accidental.Sharp_4_Left;
+    }
+
     workspace.nodes.push(noteAtomNode);
   }
 
@@ -720,6 +751,8 @@ export class AnalysisService {
     workspace.currentNote = getScaleNoteValue(modeKeyElement.scaleNote);
     workspace.currentScale = modeKeyElement.scale;
     workspace.currentShift = 0;
+    workspace.generalFlat = false;
+    workspace.generalSharp = false;
 
     const modeKeyNode: ModeKeyNode = new ModeKeyNode();
     modeKeyNode.elementIndex = modeKeyElement.index;
@@ -768,9 +801,22 @@ export class AnalysisService {
         fthora,
         getScaleNoteValue(physicalNote),
       ) || workspace.currentScale;
-    // General flat/sharp implies a switch to the diatonic scale
-    if (fthora.startsWith('GeneralFlat') || fthora.startsWith('GeneralSharp')) {
+
+    if (fthora.startsWith('GeneralFlat')) {
+      workspace.generalFlat = true;
+      workspace.generalSharp = false;
+
+      // General flat/sharp implies a switch to the diatonic scale
       workspace.currentScale = Scale.Diatonic;
+    } else if (fthora.startsWith('GeneralSharp')) {
+      workspace.generalFlat = false;
+      workspace.generalSharp = true;
+
+      // General flat/sharp implies a switch to the diatonic scale
+      workspace.currentScale = Scale.Diatonic;
+    } else {
+      workspace.generalFlat = false;
+      workspace.generalSharp = false;
     }
 
     workspace.currentShift = LayoutService.getShift(
@@ -787,8 +833,6 @@ export class AnalysisService {
       getScaleNoteValue(physicalNote) + workspace.currentShift,
     );
     fthoraNode.scale = workspace.currentScale;
-    fthoraNode.generalFlat = fthora.startsWith('GeneralFlat');
-    fthoraNode.generalSharp = fthora.startsWith('GeneralSharp');
     workspace.nodes.push(fthoraNode);
   }
 

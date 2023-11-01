@@ -14,12 +14,7 @@ import {
   QuantitativeNeume,
 } from '../../models/Neumes';
 import { Scale, ScaleNote } from '../../models/Scales';
-import {
-  PlaybackOptions,
-  PlaybackScale,
-  PlaybackService,
-  PlaybackWorkspace,
-} from './PlaybackService';
+import { PlaybackOptions, PlaybackService } from './PlaybackService';
 expect.extend({ toBeDeepCloseTo, toMatchCloseTo });
 
 describe('PlaybackService', () => {
@@ -96,38 +91,6 @@ describe('PlaybackService', () => {
       expect(
         service.constructSpathiGaScale([20, 4, 4, 14], [12, 10, 8]),
       ).toEqual([12, 20, 4, 4, 14, 10, 8]);
-    });
-  });
-
-  describe('handleModeKey', () => {
-    it('should clear general flat', () => {
-      const service = new PlaybackService();
-
-      const workspace = getDefaultWorkspace([], service.diatonicScale);
-
-      workspace.generalFlat = true;
-
-      service.handleModeKey(
-        getModeKey(1, Scale.Diatonic, ScaleNote.Pa),
-        workspace,
-      );
-
-      expect(workspace.generalFlat).toBeFalsy();
-    });
-
-    it('should clear general sharp', () => {
-      const service = new PlaybackService();
-
-      const workspace = getDefaultWorkspace([], service.diatonicScale);
-
-      workspace.generalSharp = true;
-
-      service.handleModeKey(
-        getModeKey(1, Scale.Diatonic, ScaleNote.Pa),
-        workspace,
-      );
-
-      expect(workspace.generalSharp).toBeFalsy();
     });
   });
 
@@ -666,9 +629,6 @@ function getDefaultWorkspaceOptions() {
     spathiIntervals: [20, 4, 4, 14],
     klitonIntervals: [14, 12, 4],
 
-    generalFlatMoria: -6,
-    generalSharpMoria: 4,
-
     defaultAttractionZoMoria: -4,
 
     volumeIson: -4,
@@ -685,47 +645,6 @@ function getDefaultWorkspaceOptions() {
       [Accidental.Sharp_8_Left]: 8,
     },
   } as PlaybackOptions;
-}
-
-function getDefaultWorkspace(elements: ScoreElement[], scale: PlaybackScale) {
-  const workspace: PlaybackWorkspace = {
-    events: [],
-    gorgonIndexes: [],
-
-    elements,
-    elementIndex: 0,
-    innerElementIndex: 0,
-    currentNoteElement: null,
-
-    options: getDefaultWorkspaceOptions(),
-
-    intervalIndex: 0,
-    frequency: defaultFrequencyDi,
-    isonFrequency: 0,
-    scale: scale,
-    legetos: false,
-    note: 3, // Thi
-    noteOffset: 0,
-
-    bpm: 0,
-    beat: 0,
-
-    ignoreAttractions: false,
-
-    lastAlterationMoria: 0,
-
-    //chroa
-    enharmonicZo: false,
-    enharmonicGa: false,
-    enharmonicVou: false,
-    generalFlat: false,
-    generalSharp: false,
-
-    permanentEnharmonicZo: false,
-    permanentEnharmonicVou: false,
-  };
-
-  return workspace;
 }
 
 function getModeKey(

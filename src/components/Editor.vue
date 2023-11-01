@@ -985,9 +985,6 @@ export default class Editor extends Vue {
     spathiIntervals: [20, 4, 4, 14],
     klitonIntervals: [14, 12, 4],
 
-    generalFlatMoria: -6,
-    generalSharpMoria: 4,
-
     defaultAttractionZoMoria: -4,
 
     volumeIson: -4,

@@ -51,8 +51,6 @@ export interface PlaybackOptions {
 
   alterationMultipliers: number[];
   alterationMoriaMap: { [key in Accidental]?: number };
-  generalFlatMoria: number;
-  generalSharpMoria: number;
 
   defaultAttractionZoMoria: number;
 
@@ -94,10 +92,6 @@ export interface PlaybackWorkspace {
    */
   lastAlterationMoria: number;
   lastAlterationNote: ScaleNote;
-
-  // chroa
-  generalSharp: boolean;
-  generalFlat: boolean;
 
   permanentEnharmonicZo: boolean;
 
@@ -152,9 +146,6 @@ export class PlaybackService {
         spathiIntervals: [20, 4, 4, 14],
         klitonIntervals: [14, 12, 4],
 
-        generalFlatMoria: -6,
-        generalSharpMoria: 4,
-
         defaultAttractionZoMoria: -4,
 
         volumeIson: -4,
@@ -190,10 +181,6 @@ export class PlaybackService {
       lastAlterationMoria: 0,
       lastAlterationNote: ScaleNote.Pa,
 
-      //chroa
-      generalFlat: false,
-      generalSharp: false,
-
       permanentEnharmonicZo: false,
 
       loggingEnabled: false,
@@ -207,7 +194,10 @@ export class PlaybackService {
     workspace.beat = this.beatLengthFromBpm(workspace.bpm);
     workspace.isonFrequency = 0;
 
-    const nodes: AnalysisNode[] = AnalysisService.analyze(elements);
+    const nodes: AnalysisNode[] = AnalysisService.analyze(
+      elements,
+      chrysanthineAccidentals,
+    );
     for (const node of nodes) {
       if (node.nodeType === NodeType.NoteAtomNode) {
         this.handleNoteAtom(node as NoteAtomNode, nodes, workspace);
@@ -487,12 +477,6 @@ export class PlaybackService {
       );
     }
 
-    alteredFrequency = this.applyGeneralAlterations(
-      alteredFrequency,
-      noteAtomNode.virtualNote,
-      workspace,
-    );
-
     if (
       alteredFrequency === workspace.frequency &&
       !noteAtomNode.ignoreAttractions &&
@@ -507,26 +491,6 @@ export class PlaybackService {
     }
 
     return alteredFrequency;
-  }
-
-  applyGeneralAlterations(
-    frequency: number,
-    note: ScaleNote,
-    workspace: PlaybackWorkspace,
-  ) {
-    if (workspace.generalFlat && note === ScaleNote.ZoHigh) {
-      frequency = this.changeFrequency(
-        frequency,
-        workspace.options.generalFlatMoria,
-      );
-    } else if (workspace.generalSharp && note === ScaleNote.Vou) {
-      frequency = this.changeFrequency(
-        frequency,
-        workspace.options.generalSharpMoria,
-      );
-    }
-
-    return frequency;
   }
 
   applyAttractions(
@@ -666,8 +630,6 @@ export class PlaybackService {
     workspace.legetos = modeKeyNode.legetos;
     workspace.lastAlterationMoria = 0;
     workspace.lastAlterationNote = ScaleNote.Pa;
-    workspace.generalFlat = false;
-    workspace.generalSharp = false;
     workspace.permanentEnharmonicZo = modeKeyNode.permanentEnharmonicZo;
     workspace.ignoreAttractions = modeKeyNode.ignoreAttractions;
 
@@ -684,13 +646,8 @@ export class PlaybackService {
       console.log('physicalNote', fthoraNode.physicalNote);
       console.log('virtualNote', fthoraNode.virtualNote);
       console.log('scale', fthoraNode.scale);
-      console.log('generalFlat', fthoraNode.generalFlat);
-      console.log('generalSharp', fthoraNode.generalSharp);
       console.groupEnd();
     }
-
-    workspace.generalFlat = fthoraNode.generalFlat;
-    workspace.generalSharp = fthoraNode.generalSharp;
 
     const currentShift =
       getScaleNoteValue(fthoraNode.virtualNote) -

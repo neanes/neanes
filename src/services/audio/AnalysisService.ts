@@ -918,6 +918,18 @@ export class AnalysisService {
 
   private static normalizeAccidental(accidental: Accidental): Accidental {
     switch (accidental) {
+      case Accidental.Sharp_2_LeftSecondary:
+      case Accidental.Sharp_2_LeftTertiary:
+        return Accidental.Sharp_2_Left;
+      case Accidental.Sharp_4_LeftSecondary:
+      case Accidental.Sharp_4_LeftTertiary:
+        return Accidental.Sharp_4_Left;
+      case Accidental.Sharp_6_LeftSecondary:
+      case Accidental.Sharp_6_LeftTertiary:
+        return Accidental.Sharp_6_Left;
+      case Accidental.Sharp_8_LeftSecondary:
+      case Accidental.Sharp_8_LeftTertiary:
+        return Accidental.Sharp_8_Left;
       case Accidental.Flat_2_RightSecondary:
       case Accidental.Flat_2_RightTertiary:
         return Accidental.Flat_2_Right;

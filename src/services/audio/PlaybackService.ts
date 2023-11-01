@@ -455,7 +455,7 @@ export class PlaybackService {
               moria * workspace.options.alterationMultipliers[2],
             );
             break;
-          // Accidentals with three crossbars are undefined in the Chrysanthine
+          // Accidentals with three crossbeams are undefined in the Chrysanthine
           // system.
         }
       } else {

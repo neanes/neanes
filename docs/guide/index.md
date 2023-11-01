@@ -284,9 +284,13 @@ In this section, you may specify the intervals for each scale, measured in moria
 
 If the length of a tetrachord does not add up to 30 moria, then a warning will be displayed. This is because a tetrachord traditionally always spans a perfect fourth. You may ignore the warning if you wish.
 
-#### Alterations
+#### Alteration Multipliers (Chrysanthine)
 
-In this section, you may specify the size in moria of the general flat, general sharp, diesis, and yfesis alterations.
+When **Use Chrysanthine Accidentals** is checked in **Page Setup**, the amount that each alteration changes the pitch is proportional to the interval between it and the next note. In this section, you may change the multipliers for these alterations.
+
+#### Alteration Moria (1881 Committee)
+
+In this section, you may specify the size in moria of the sharp and flat alterations.
 
 ### Tempo
 

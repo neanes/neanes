@@ -634,6 +634,7 @@ export class PlaybackService {
     workspace.ignoreAttractions = modeKeyNode.ignoreAttractions;
 
     workspace.isonFrequency = 0;
+    workspace.transpositionMoria = 0;
 
     workspace.scale = this.getPlaybackScale(modeKeyNode.scale, workspace);
 

@@ -967,6 +967,14 @@
       ]
     },
     "yporroi": {
+      "diesisSecondary": [
+        0.587,
+        0.887
+      ],
+      "yfesisSecondary": [
+        -0.019,
+        -0.223
+      ],
       "yfesis": [
         0.308,
         0.609
@@ -2887,6 +2895,14 @@
       ]
     },
     "oligonKentimataBelow": {
+      "diesisSecondary": [
+        1.596,
+        0.897
+      ],
+      "yfesisSecondary": [
+        0.425,
+        -0.145
+      ],
       "barline": [
         0.277,
         0.59

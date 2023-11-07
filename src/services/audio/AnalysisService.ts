@@ -171,68 +171,13 @@ export class AnalysisService {
       noteAtomNode.elementIndex = noteElement.index;
       noteAtomNode.physicalNote = getScaleNoteFromValue(x);
       noteAtomNode.duration = 1;
-      noteAtomNode.ignoreAttractions = noteElement.ignoreAttractions;
       if (noteElement.timeNeume && index === noteSpread.length - 1) {
         noteAtomNode.duration += timeMap.get(noteElement.timeNeume)!;
       }
       if (noteElement.koronis && index === noteSpread.length - 1) {
         noteAtomNode.duration *= 2;
       }
-      if (
-        noteElement.quantitativeNeume === QuantitativeNeume.Hyporoe ||
-        noteElement.quantitativeNeume ===
-          QuantitativeNeume.PetastiPlusHyporoe ||
-        noteElement.quantitativeNeume === QuantitativeNeume.OligonPlusHyporoe ||
-        noteElement.quantitativeNeume ===
-          QuantitativeNeume.OligonPlusHyporoePlusKentemata
-      ) {
-        // Sharp applies to the second note of the spread
-        if (
-          noteElement.accidental &&
-          noteElement.accidental.startsWith('Sharp') &&
-          index === 1
-        ) {
-          noteAtomNode.accidental = this.normalizeAccidental(
-            noteElement.accidental,
-          );
-        }
-      } else {
-        // Sharp applies to the first note of the spread
-        if (
-          noteElement.accidental &&
-          noteElement.accidental.startsWith('Sharp') &&
-          index === 0
-        ) {
-          noteAtomNode.accidental = this.normalizeAccidental(
-            noteElement.accidental,
-          );
-        }
-      }
-      // Flat applies to the last note of the spread
-      if (
-        noteElement.accidental &&
-        noteElement.accidental.startsWith('Flat') &&
-        index === currentNotes.length - 1
-      ) {
-        noteAtomNode.accidental = this.normalizeAccidental(
-          noteElement.accidental,
-        );
-      }
-      // Secondary flat applies to the second to last note of the spread
-      if (
-        noteElement.secondaryAccidental &&
-        index === currentNotes.length - 2
-      ) {
-        noteAtomNode.accidental = this.normalizeAccidental(
-          noteElement.secondaryAccidental,
-        );
-      }
-      // Tertiary flat applies to the first note of the spread
-      if (noteElement.tertiaryAccidental && index === 0) {
-        noteAtomNode.accidental = this.normalizeAccidental(
-          noteElement.tertiaryAccidental,
-        );
-      }
+      noteAtomNode.ignoreAttractions = noteElement.ignoreAttractions;
       return noteAtomNode;
     });
 
@@ -302,6 +247,18 @@ export class AnalysisService {
       throw new Error('Unexpected length: ' + noteAtomNodes.length);
     }
 
+    // Sharp applies to the first note of the spread
+    if (noteElement.accidental && noteElement.accidental.startsWith('Sharp')) {
+      noteAtomNodes[0].accidental = this.normalizeAccidental(
+        noteElement.accidental,
+      );
+    }
+    // Secondary accidental applies to the first note of the spread
+    if (noteElement.secondaryAccidental) {
+      noteAtomNodes[0].accidental = this.normalizeAccidental(
+        noteElement.secondaryAccidental,
+      );
+    }
     // Bottom fthora applies to the first note of the spread
     if (noteElement.fthora && noteElement.fthora.endsWith('_Bottom')) {
       this.handleFthora(
@@ -339,6 +296,12 @@ export class AnalysisService {
     }
     this.finalizeNoteAtomNode(noteAtomNodes[0], workspace);
 
+    // Flat applies to the second note of the spread
+    if (noteElement.accidental && noteElement.accidental.startsWith('Flat')) {
+      noteAtomNodes[1].accidental = this.normalizeAccidental(
+        noteElement.accidental,
+      );
+    }
     // Top fthora applies to the second note of the spread
     if (noteElement.fthora && noteElement.fthora.endsWith('_Top')) {
       this.handleFthora(
@@ -369,6 +332,21 @@ export class AnalysisService {
       throw new Error('Unexpected length: ' + noteAtomNodes.length);
     }
 
+    // Sharp applies to the kentemata
+    if (noteElement.accidental && noteElement.accidental.startsWith('Sharp')) {
+      noteAtomNodes[0].accidental = this.normalizeAccidental(
+        noteElement.accidental,
+      );
+    }
+    // Secondary flat applies to the kentemata
+    if (
+      noteElement.secondaryAccidental &&
+      noteElement.secondaryAccidental.startsWith('Flat')
+    ) {
+      noteAtomNodes[0].accidental = this.normalizeAccidental(
+        noteElement.secondaryAccidental,
+      );
+    }
     // Gorgon applies to the kentemata
     if (noteElement.gorgonNeume) {
       const gorgonIndex: GorgonIndex = {
@@ -379,6 +357,21 @@ export class AnalysisService {
     }
     this.finalizeNoteAtomNode(noteAtomNodes[0], workspace);
 
+    // Flat applies to the oligon
+    if (noteElement.accidental && noteElement.accidental.startsWith('Flat')) {
+      noteAtomNodes[1].accidental = this.normalizeAccidental(
+        noteElement.accidental,
+      );
+    }
+    // Secondary sharp applies to the oligon
+    if (
+      noteElement.secondaryAccidental &&
+      noteElement.secondaryAccidental.startsWith('Sharp')
+    ) {
+      noteAtomNodes[1].accidental = this.normalizeAccidental(
+        noteElement.secondaryAccidental,
+      );
+    }
     // Fthora applies to the oligon
     if (noteElement.fthora) {
       this.handleFthora(
@@ -408,6 +401,21 @@ export class AnalysisService {
       throw new Error('Unexpected length: ' + noteAtomNodes.length);
     }
 
+    // Flat applies to the first note of the spread
+    if (noteElement.accidental && noteElement.accidental.startsWith('Flat')) {
+      noteAtomNodes[0].accidental = this.normalizeAccidental(
+        noteElement.accidental,
+      );
+    }
+    // Secondary sharp applies to the first note of the spread
+    if (
+      noteElement.secondaryAccidental &&
+      noteElement.secondaryAccidental.startsWith('Sharp')
+    ) {
+      noteAtomNodes[0].accidental = this.normalizeAccidental(
+        noteElement.secondaryAccidental,
+      );
+    }
     // Top fthora applies to the first note of the spread
     if (noteElement.fthora && noteElement.fthora.endsWith('_Top')) {
       this.handleFthora(
@@ -428,6 +436,21 @@ export class AnalysisService {
     }
     this.finalizeNoteAtomNode(noteAtomNodes[0], workspace);
 
+    // Sharp applies to the second note of the spread
+    if (noteElement.accidental && noteElement.accidental.startsWith('Sharp')) {
+      noteAtomNodes[1].accidental = this.normalizeAccidental(
+        noteElement.accidental,
+      );
+    }
+    // Secondary flat applies to the second note of the spread
+    if (
+      noteElement.secondaryAccidental &&
+      noteElement.secondaryAccidental.startsWith('Flat')
+    ) {
+      noteAtomNodes[1].accidental = this.normalizeAccidental(
+        noteElement.secondaryAccidental,
+      );
+    }
     // Bottom fthora applies to the second note of the spread
     if (noteElement.fthora && noteElement.fthora.endsWith('_Bottom')) {
       this.handleFthora(
@@ -457,6 +480,12 @@ export class AnalysisService {
       throw new Error('Unexpected length: ' + noteAtomNodes.length);
     }
 
+    // Sharp applies to the first note of the spread
+    if (noteElement.accidental && noteElement.accidental.startsWith('Sharp')) {
+      noteAtomNodes[0].accidental = this.normalizeAccidental(
+        noteElement.accidental,
+      );
+    }
     // Fthora applies to the first note of the spread
     if (noteElement.fthora) {
       this.handleFthora(
@@ -484,6 +513,12 @@ export class AnalysisService {
     }
     this.finalizeNoteAtomNode(noteAtomNodes[0], workspace);
 
+    // Flat applies to the second note of the spread
+    if (noteElement.accidental && noteElement.accidental.startsWith('Flat')) {
+      noteAtomNodes[1].accidental = this.normalizeAccidental(
+        noteElement.accidental,
+      );
+    }
     // Gorgon applies to the second note of the spread
     if (noteElement.gorgonNeume) {
       const gorgonIndex: GorgonIndex = {
@@ -504,6 +539,12 @@ export class AnalysisService {
       throw new Error('Unexpected length: ' + noteAtomNodes.length);
     }
 
+    // Secondary accidental applies to the first note of the spread
+    if (noteElement.secondaryAccidental) {
+      noteAtomNodes[0].accidental = this.normalizeAccidental(
+        noteElement.secondaryAccidental,
+      );
+    }
     // Secondary fthora applies to the first note of the spread
     if (noteElement.secondaryFthora) {
       this.handleFthora(
@@ -522,6 +563,12 @@ export class AnalysisService {
     workspace.gorgonIndexes.push(gorgonIndex);
     this.finalizeNoteAtomNode(noteAtomNodes[0], workspace);
 
+    // Accidental applies to the second note of the spread
+    if (noteElement.accidental) {
+      noteAtomNodes[1].accidental = this.normalizeAccidental(
+        noteElement.accidental,
+      );
+    }
     // Fthora applies to the second note of the spread
     if (noteElement.fthora) {
       this.handleFthora(
@@ -551,6 +598,12 @@ export class AnalysisService {
       throw new Error('Unexpected length: ' + noteAtomNodes.length);
     }
 
+    // Tertiary accidental applies to the first note of the spread
+    if (noteElement.tertiaryAccidental) {
+      noteAtomNodes[0].accidental = this.normalizeAccidental(
+        noteElement.tertiaryAccidental,
+      );
+    }
     // Tertiary fthora applies to the first note of the spread
     if (noteElement.tertiaryFthora) {
       this.handleFthora(
@@ -569,6 +622,12 @@ export class AnalysisService {
     workspace.gorgonIndexes.push(gorgonIndex);
     this.finalizeNoteAtomNode(noteAtomNodes[0], workspace);
 
+    // Secondary accidental applies to the second note of the spread
+    if (noteElement.secondaryAccidental) {
+      noteAtomNodes[1].accidental = this.normalizeAccidental(
+        noteElement.secondaryAccidental,
+      );
+    }
     // Secondary fthora applies to the second note of the spread
     if (noteElement.secondaryFthora) {
       this.handleFthora(
@@ -588,6 +647,12 @@ export class AnalysisService {
     }
     this.finalizeNoteAtomNode(noteAtomNodes[1], workspace);
 
+    // Accidental applies to the third note of the spread
+    if (noteElement.accidental) {
+      noteAtomNodes[2].accidental = this.normalizeAccidental(
+        noteElement.accidental,
+      );
+    }
     // Fthora applies to the third note of the spread
     if (noteElement.fthora) {
       this.handleFthora(
@@ -618,6 +683,12 @@ export class AnalysisService {
       throw new Error('Unexpected length: ' + noteAtomNodes.length);
     }
 
+    // Secondary accidental applies to the first note of the spread
+    if (noteElement.secondaryAccidental) {
+      noteAtomNodes[0].accidental = this.normalizeAccidental(
+        noteElement.secondaryAccidental,
+      );
+    }
     // Secondary fthora applies to the first note of the spread
     if (noteElement.secondaryFthora) {
       this.handleFthora(
@@ -647,6 +718,12 @@ export class AnalysisService {
       workspace.nodes.push(isonNode);
     }
 
+    // Accidental applies to the third note of the spread
+    if (noteElement.accidental) {
+      noteAtomNodes[2].accidental = this.normalizeAccidental(
+        noteElement.accidental,
+      );
+    }
     // Fthora applies to the third note of the spread
     if (noteElement.fthora) {
       this.handleFthora(
@@ -677,6 +754,11 @@ export class AnalysisService {
       throw new Error('Unexpected length: ' + noteAtomNodes.length);
     }
 
+    if (noteElement.accidental) {
+      noteAtomNodes[0].accidental = this.normalizeAccidental(
+        noteElement.accidental,
+      );
+    }
     if (noteElement.fthora) {
       this.handleFthora(
         noteAtomNodes[0].physicalNote,

@@ -122,6 +122,8 @@ const secondaryNeumesAllowedNeumes: Neume[] = [
   QuantitativeNeume.OligonPlusKentemata,
   QuantitativeNeume.RunningElaphron,
   QuantitativeNeume.PetastiPlusRunningElaphron,
+  QuantitativeNeume.KentemataPlusOligon,
+  QuantitativeNeume.Hyporoe,
 ];
 
 const tertiaryNeumesAllowedNeumes: Neume[] = [

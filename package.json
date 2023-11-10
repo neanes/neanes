@@ -48,7 +48,7 @@
     "vue3-tabs-chrome": "^0.3.3"
   },
   "devDependencies": {
-    "@babel/preset-typescript": "^7.23.2",
+    "@babel/preset-typescript": "^7.23.3",
     "@types/electron-devtools-installer": "^2.2.5",
     "@types/mime-types": "^2.1.4",
     "@types/node": "^20.9.0",

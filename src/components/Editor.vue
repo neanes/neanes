@@ -3414,8 +3414,8 @@ export default class Editor extends Vue {
           rect.top > 0
             ? Math.min(rect.height, viewportHeight - rect.top)
             : rect.bottom < viewportHeight
-            ? rect.bottom
-            : viewportHeight,
+              ? rect.bottom
+              : viewportHeight,
         ) / rect.height;
 
       if (percentage > maxPercentage) {

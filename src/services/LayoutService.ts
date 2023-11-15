@@ -835,14 +835,14 @@ export class LayoutService {
       textBoxElement.computedFontWeight = textBoxElement.useDefaultStyle
         ? pageSetup.lyricsDefaultFontWeight
         : textBoxElement.bold
-        ? '700'
-        : '400';
+          ? '700'
+          : '400';
 
       textBoxElement.computedFontStyle = textBoxElement.useDefaultStyle
         ? pageSetup.lyricsDefaultFontStyle
         : textBoxElement.italic
-        ? 'italic'
-        : 'normal';
+          ? 'italic'
+          : 'normal';
 
       elementWidthPx = TextMeasurementService.getTextWidth(
         textBoxElement.content,

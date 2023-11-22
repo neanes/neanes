@@ -1,10 +1,12 @@
 import { rmSync } from 'node:fs';
-import { defineConfig } from 'vite';
-import { VitePWA } from 'vite-plugin-pwa';
-import path from 'path';
+
 import vue from '@vitejs/plugin-vue';
+import path from 'path';
+import { defineConfig } from 'vite';
 import electron from 'vite-plugin-electron';
 import eslintPlugin from 'vite-plugin-eslint';
+import { VitePWA } from 'vite-plugin-pwa';
+
 import pkg from './package.json';
 
 // https://vitejs.dev/config/

@@ -33,7 +33,7 @@
       ],
       "gorgonBottom": [
         0.713,
-        0.173
+        0.125
       ],
       "heteronConnecting": [
         1.462,
@@ -99,7 +99,7 @@
       ],
       "gorgonBottom": [
         0.45,
-        0.175
+        0.125
       ],
       "yfenAbove": [
         0.93,
@@ -205,7 +205,7 @@
       ],
       "gorgonBottom": [
         0.667,
-        0.175
+        0.125
       ],
       "heteronConnecting": [
         1.763,
@@ -267,7 +267,7 @@
     "oligonKentimaAbove": {
       "gorgonBottom": [
         0.667,
-        0.175
+        0.125
       ],
       "yfenAbove": [
         0.93,
@@ -357,7 +357,7 @@
     "oligonYpsiliRight": {
       "gorgonBottom": [
         0.667,
-        0.175
+        0.125
       ],
       "yfenAbove": [
         0.93,
@@ -447,7 +447,7 @@
     "oligonYpsiliLeft": {
       "gorgonBottom": [
         0.667,
-        0.175
+        0.125
       ],
       "yfenAbove": [
         0.93,
@@ -537,7 +537,7 @@
     "oligonKentimaYpsiliRight": {
       "gorgonBottom": [
         0.667,
-        0.175
+        0.125
       ],
       "yfenAbove": [
         0.93,
@@ -627,7 +627,7 @@
     "oligonKentimaYpsiliMiddle": {
       "gorgonBottom": [
         0.667,
-        0.175
+        0.125
       ],
       "yfenAbove": [
         0.93,
@@ -713,7 +713,7 @@
     "oligonDoubleYpsili": {
       "gorgonBottom": [
         0.667,
-        0.175
+        0.125
       ],
       "yfenAbove": [
         0.93,
@@ -799,7 +799,7 @@
     "oligonKentimataDoubleYpsili": {
       "gorgonBottom": [
         0.667,
-        0.175
+        0.125
       ],
       "yfenAbove": [
         0.93,
@@ -1157,7 +1157,7 @@
       ],
       "gorgonBottom": [
         0.487,
-        0.08
+        -0.018
       ],
       "heteronConnecting": [
         1.214,
@@ -1205,6 +1205,10 @@
       ]
     },
     "elafronApostrofos": {
+      "gorgonBottom": [
+        0.487,
+        -0.093
+      ],
       "yfenAbove": [
         0.63,
         0.891
@@ -1371,7 +1375,7 @@
       ],
       "gorgonBottom": [
         0.393,
-        0.24
+        0.125
       ],
       "heteronConnecting": [
         1.114,
@@ -2439,7 +2443,7 @@
       ],
       "gorgonBottom": [
         0.354,
-        0.096
+        -0.018
       ],
       "isonIndicator": [
         0.33,
@@ -2991,7 +2995,7 @@
     "oligonKentimaTripleYpsili": {
       "gorgonBottom": [
         0.667,
-        0.175
+        0.125
       ],
       "yfenAbove": [
         0.93,
@@ -3073,7 +3077,7 @@
     "oligonIson": {
       "gorgonBottom": [
         0.667,
-        0.175
+        0.125
       ],
       "yfenAbove": [
         0.93,
@@ -3155,7 +3159,7 @@
     "oligonElafron": {
       "gorgonBottom": [
         0.667,
-        0.175
+        0.125
       ],
       "yfenAbove": [
         0.93,
@@ -3319,7 +3323,7 @@
     "oligonApostrofos": {
       "gorgonBottom": [
         0.667,
-        0.175
+        0.125
       ],
       "yfenAbove": [
         0.93,
@@ -3405,7 +3409,7 @@
       ],
       "gorgonBottom": [
         0.667,
-        0.175
+        0.125
       ],
       "yfenAbove": [
         0.93,
@@ -3934,8 +3938,8 @@
         0.885
       ],
       "gorgonBottom": [
-        0.287,
-        0.093
+        0.348,
+        -0.018
       ],
       "apli": [
         0.5,
@@ -3977,7 +3981,7 @@
     "oligonKentimataTripleYpsili": {
       "gorgonBottom": [
         0.667,
-        0.175
+        0.125
       ],
       "yfenAbove": [
         0.93,
@@ -4599,7 +4603,7 @@
     "oligonKentimaDoubleYpsiliRight": {
       "gorgonBottom": [
         0.667,
-        0.175
+        0.125
       ],
       "yfenAbove": [
         0.93,
@@ -4681,7 +4685,7 @@
     "oligonKentimaDoubleYpsiliLeft": {
       "gorgonBottom": [
         0.667,
-        0.175
+        0.125
       ],
       "yfenAbove": [
         0.93,
@@ -4763,7 +4767,7 @@
     "oligonTripleYpsili": {
       "gorgonBottom": [
         0.667,
-        0.175
+        0.125
       ],
       "yfenAbove": [
         0.93,
@@ -4845,7 +4849,7 @@
     "oligonElafronApostrofos": {
       "gorgonBottom": [
         0.667,
-        0.175
+        0.125
       ],
       "yfenAbove": [
         0.93,
@@ -4993,7 +4997,7 @@
     "oligonChamili": {
       "gorgonBottom": [
         0.667,
-        0.175
+        0.125
       ],
       "yfenAbove": [
         0.93,
@@ -5363,7 +5367,7 @@
     "oligonKentimaMiddle": {
       "gorgonBottom": [
         0.667,
-        0.175
+        0.125
       ],
       "yfenAbove": [
         0.93,

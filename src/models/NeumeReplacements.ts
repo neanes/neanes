@@ -70,6 +70,7 @@ const bottomAllowedGorgonNeumes: Neume[] = [
   QuantitativeNeume.OligonPlusHamili,
   QuantitativeNeume.Kentemata,
   QuantitativeNeume.Elaphron,
+  QuantitativeNeume.ElaphronPlusApostrophos,
   QuantitativeNeume.Hamili,
 ];
 

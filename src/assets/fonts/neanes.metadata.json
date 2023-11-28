@@ -36,8 +36,8 @@
         0.125
       ],
       "heteronConnecting": [
-        1.462,
-        0.139
+        1.7,
+        -0.019
       ],
       "heteron": [
         1.027,
@@ -126,7 +126,7 @@
         0.913
       ],
       "heteronConnecting": [
-        1.462,
+        1.692,
         -0.051
       ],
       "heteron": [
@@ -208,8 +208,8 @@
         0.125
       ],
       "heteronConnecting": [
-        1.763,
-        0.162
+        1.692,
+        -0.019
       ],
       "heteron": [
         1.087,
@@ -294,8 +294,8 @@
         0.913
       ],
       "heteronConnecting": [
-        1.462,
-        0.139
+        1.692,
+        -0.019
       ],
       "heteron": [
         1.087,
@@ -384,8 +384,8 @@
         1.203
       ],
       "heteronConnecting": [
-        1.462,
-        0.139
+        1.692,
+        -0.019
       ],
       "heteron": [
         1.087,
@@ -474,8 +474,8 @@
         1.283
       ],
       "heteronConnecting": [
-        1.462,
-        0.139
+        1.692,
+        -0.019
       ],
       "heteron": [
         1.087,
@@ -564,8 +564,8 @@
         1.203
       ],
       "heteronConnecting": [
-        1.462,
-        0.139
+        1.692,
+        -0.019
       ],
       "heteron": [
         1.087,
@@ -654,8 +654,8 @@
         1.403
       ],
       "heteronConnecting": [
-        1.462,
-        0.139
+        1.692,
+        -0.019
       ],
       "heteron": [
         1.087,
@@ -740,8 +740,8 @@
         1.273
       ],
       "heteronConnecting": [
-        1.462,
-        0.139
+        1.692,
+        -0.019
       ],
       "heteron": [
         1.087,
@@ -826,8 +826,8 @@
         1.373
       ],
       "heteronConnecting": [
-        1.462,
-        0.139
+        1.692,
+        -0.019
       ],
       "heteron": [
         1.087,
@@ -1000,8 +1000,8 @@
         -0.146
       ],
       "heteronConnecting": [
-        0.304,
-        -0.062
+        0.583,
+        -0.019
       ],
       "measureNumber": [
         0.072,
@@ -1086,8 +1086,8 @@
         0.887
       ],
       "heteronConnecting": [
-        1.714,
-        0.184
+        1.929,
+        -0.019
       ],
       "omalonConnecting": [
         1.751,
@@ -1160,8 +1160,8 @@
         -0.018
       ],
       "heteronConnecting": [
-        1.214,
-        0.184
+        1.42,
+        -0.019
       ],
       "omalonConnecting": [
         1.241,
@@ -1234,8 +1234,8 @@
         0.897
       ],
       "heteronConnecting": [
-        1.153,
-        0.04
+        1.42,
+        -0.019
       ],
       "omalonConnecting": [
         1.241,
@@ -1304,8 +1304,8 @@
         0.897
       ],
       "heteronConnecting": [
-        1.04,
-        -0.08
+        1.284,
+        -0.18
       ],
       "omalonConnecting": [
         1.107,
@@ -1378,8 +1378,8 @@
         0.125
       ],
       "heteronConnecting": [
-        1.114,
-        0.184
+        1.284,
+        -0.019
       ],
       "omalonConnecting": [
         1.111,
@@ -1448,8 +1448,8 @@
         1.227
       ],
       "heteronConnecting": [
-        1.199,
-        0.156
+        1.42,
+        -0.019
       ],
       "omalonConnecting": [
         1.24,
@@ -1518,8 +1518,8 @@
         1.227
       ],
       "heteronConnecting": [
-        1.153,
-        0.033
+        1.42,
+        -0.019
       ],
       "omalonConnecting": [
         1.24,
@@ -1588,8 +1588,8 @@
         1.227
       ],
       "heteronConnecting": [
-        1.099,
-        0.186
+        1.284,
+        -0.019
       ],
       "omalonConnecting": [
         1.108,
@@ -1651,7 +1651,7 @@
       ],
       "heteronConnecting": [
         1.316,
-        0.052
+        -0.019
       ],
       "yfesis": [
         1.179,
@@ -1717,7 +1717,7 @@
       ],
       "heteronConnecting": [
         1.316,
-        0.052
+        -0.019
       ],
       "yfesis": [
         1.113,
@@ -1783,7 +1783,7 @@
       ],
       "heteronConnecting": [
         1.316,
-        0.052
+        -0.019
       ],
       "yfesis": [
         1.113,
@@ -1849,7 +1849,7 @@
       ],
       "heteronConnecting": [
         1.316,
-        0.052
+        -0.019
       ],
       "yfesis": [
         1.113,
@@ -1915,7 +1915,7 @@
       ],
       "heteronConnecting": [
         1.316,
-        0.052
+        -0.019
       ],
       "yfesis": [
         1.113,
@@ -1981,7 +1981,7 @@
       ],
       "heteronConnecting": [
         1.316,
-        0.052
+        -0.019
       ],
       "yfesis": [
         1.113,
@@ -2047,7 +2047,7 @@
       ],
       "heteronConnecting": [
         1.316,
-        0.052
+        -0.019
       ],
       "yfesis": [
         1.113,
@@ -2113,7 +2113,7 @@
       ],
       "heteronConnecting": [
         1.316,
-        0.052
+        -0.019
       ],
       "yfesis": [
         1.113,
@@ -2179,7 +2179,7 @@
       ],
       "heteronConnecting": [
         1.316,
-        0.052
+        -0.019
       ],
       "psifiston": [
         0.795,
@@ -2245,7 +2245,7 @@
       ],
       "heteronConnecting": [
         1.316,
-        0.052
+        -0.019
       ],
       "psifiston": [
         0.795,
@@ -2311,7 +2311,7 @@
       ],
       "heteronConnecting": [
         1.316,
-        0.052
+        -0.019
       ],
       "psifiston": [
         0.795,
@@ -2377,7 +2377,7 @@
       ],
       "heteronConnecting": [
         1.316,
-        0.052
+        -0.019
       ],
       "psifiston": [
         0.795,
@@ -2493,7 +2493,7 @@
       ],
       "heteronConnecting": [
         1.594,
-        0.132
+        -0.019
       ],
       "omalonConnecting": [
         1.59,
@@ -2567,7 +2567,7 @@
       ],
       "heteronConnecting": [
         2.0,
-        0.132
+        -0.019
       ],
       "gorgonSecondary": [
         0.685,
@@ -2629,7 +2629,7 @@
       ],
       "heteronConnecting": [
         1.594,
-        0.132
+        -0.019
       ],
       "measureNumber": [
         0.174,
@@ -2699,7 +2699,7 @@
       ],
       "heteronConnecting": [
         1.594,
-        0.132
+        -0.019
       ],
       "gorgonSecondary": [
         0.41,
@@ -2777,7 +2777,7 @@
       ],
       "heteronConnecting": [
         2.05,
-        0.132
+        -0.019
       ],
       "gorgonTop": [
         1.647,
@@ -2851,7 +2851,7 @@
       ],
       "heteronConnecting": [
         1.594,
-        0.132
+        -0.019
       ],
       "measureNumber": [
         0.172,
@@ -3022,8 +3022,8 @@
         1.463
       ],
       "heteronConnecting": [
-        1.462,
-        0.139
+        1.692,
+        -0.019
       ],
       "heteron": [
         1.087,
@@ -3104,8 +3104,8 @@
         0.913
       ],
       "heteronConnecting": [
-        1.462,
-        0.139
+        1.692,
+        -0.019
       ],
       "heteron": [
         1.087,
@@ -3186,8 +3186,8 @@
         1.093
       ],
       "heteronConnecting": [
-        1.462,
-        0.139
+        1.692,
+        -0.019
       ],
       "heteron": [
         1.087,
@@ -3273,7 +3273,7 @@
       ],
       "heteronConnecting": [
         1.586,
-        0.052
+        -0.019
       ],
       "measureNumber": [
         0.173,
@@ -3350,8 +3350,8 @@
         0.913
       ],
       "heteronConnecting": [
-        1.462,
-        0.139
+        1.692,
+        -0.019
       ],
       "heteron": [
         1.087,
@@ -3436,8 +3436,8 @@
         0.973
       ],
       "heteronConnecting": [
-        1.462,
-        0.139
+        1.692,
+        -0.019
       ],
       "heteron": [
         1.087,
@@ -3515,7 +3515,7 @@
       ],
       "heteronConnecting": [
         1.316,
-        0.052
+        -0.019
       ],
       "psifiston": [
         0.745,
@@ -3609,7 +3609,7 @@
       ],
       "heteronConnecting": [
         2.15,
-        0.132
+        -0.019
       ],
       "measureNumber": [
         0.662,
@@ -3683,7 +3683,7 @@
       ],
       "heteronConnecting": [
         2.05,
-        0.132
+        -0.019
       ],
       "measureNumber": [
         0.172,
@@ -3740,8 +3740,8 @@
         -0.037
       ],
       "heteronConnecting": [
-        1.594,
-        0.132
+        1.92,
+        -0.019
       ],
       "measureNumber": [
         0.172,
@@ -3799,7 +3799,7 @@
       ],
       "heteronConnecting": [
         1.594,
-        0.132
+        -0.019
       ],
       "measureNumber": [
         0.164,
@@ -3861,7 +3861,7 @@
       ],
       "heteronConnecting": [
         1.316,
-        0.052
+        -0.019
       ],
       "psifiston": [
         0.795,
@@ -3926,8 +3926,8 @@
         -0.126
       ],
       "heteronConnecting": [
-        0.731,
-        0.125
+        0.879,
+        -0.019
       ],
       "measureNumber": [
         0.172,
@@ -4008,8 +4008,8 @@
         1.463
       ],
       "heteronConnecting": [
-        1.462,
-        0.139
+        1.692,
+        -0.019
       ],
       "heteron": [
         1.087,
@@ -4086,7 +4086,7 @@
         1.227
       ],
       "heteronConnecting": [
-        1.144,
+        1.284,
         -0.24
       ],
       "omalonConnecting": [
@@ -4156,8 +4156,8 @@
         1.227
       ],
       "heteronConnecting": [
-        1.144,
-        -0.074
+        1.284,
+        -0.24
       ],
       "omalonConnecting": [
         1.153,
@@ -4226,7 +4226,7 @@
         1.227
       ],
       "heteronConnecting": [
-        1.013,
+        1.284,
         -0.18
       ],
       "omalonConnecting": [
@@ -4289,7 +4289,7 @@
       ],
       "heteronConnecting": [
         1.316,
-        0.052
+        -0.019
       ],
       "yfesis": [
         1.22,
@@ -4355,7 +4355,7 @@
       ],
       "heteronConnecting": [
         1.316,
-        0.052
+        -0.019
       ],
       "yfesis": [
         1.113,
@@ -4421,7 +4421,7 @@
       ],
       "heteronConnecting": [
         1.316,
-        0.052
+        -0.019
       ],
       "yfesis": [
         1.113,
@@ -4487,7 +4487,7 @@
       ],
       "heteronConnecting": [
         1.316,
-        0.052
+        -0.019
       ],
       "yfesis": [
         1.227,
@@ -4553,7 +4553,7 @@
       ],
       "heteronConnecting": [
         1.316,
-        0.052
+        -0.019
       ],
       "yfesis": [
         1.193,
@@ -4630,8 +4630,8 @@
         1.443
       ],
       "heteronConnecting": [
-        1.462,
-        0.139
+        1.692,
+        -0.019
       ],
       "heteron": [
         1.087,
@@ -4712,8 +4712,8 @@
         1.443
       ],
       "heteronConnecting": [
-        1.462,
-        0.139
+        1.692,
+        -0.019
       ],
       "heteron": [
         1.087,
@@ -4794,8 +4794,8 @@
         1.283
       ],
       "heteronConnecting": [
-        1.462,
-        0.139
+        1.692,
+        -0.019
       ],
       "heteron": [
         1.087,
@@ -4876,8 +4876,8 @@
         1.093
       ],
       "heteronConnecting": [
-        1.462,
-        0.139
+        1.692,
+        -0.019
       ],
       "heteron": [
         1.087,
@@ -4947,7 +4947,7 @@
       ],
       "heteronConnecting": [
         1.316,
-        0.052
+        -0.019
       ],
       "yfesis": [
         1.113,
@@ -5024,8 +5024,8 @@
         1.023
       ],
       "heteronConnecting": [
-        1.462,
-        0.139
+        1.692,
+        -0.019
       ],
       "heteron": [
         1.087,
@@ -5095,7 +5095,7 @@
       ],
       "heteronConnecting": [
         1.316,
-        0.052
+        -0.019
       ],
       "psifiston": [
         0.795,
@@ -5161,7 +5161,7 @@
       ],
       "heteronConnecting": [
         1.316,
-        0.052
+        -0.019
       ],
       "psifiston": [
         0.795,
@@ -5293,7 +5293,7 @@
       ],
       "heteronConnecting": [
         1.316,
-        -0.049
+        -0.019
       ],
       "psifiston": [
         0.781,
@@ -5394,8 +5394,8 @@
         0.913
       ],
       "heteronConnecting": [
-        1.462,
-        0.139
+        1.97,
+        -0.019
       ],
       "heteron": [
         1.087,
@@ -5488,8 +5488,8 @@
         1.317
       ],
       "heteronConnecting": [
-        0.974,
-        0.146
+        1.284,
+        -0.019
       ],
       "omalonConnecting": [
         1.001,
@@ -5997,7 +5997,7 @@
       ],
       "heteronConnecting": [
         1.316,
-        0.052
+        -0.019
       ],
       "yfesis": [
         1.213,
@@ -6999,7 +6999,7 @@
       ],
       "heteronConnecting": [
         2.0,
-        0.132
+        -0.019
       ],
       "measureNumber": [
         0.172,
@@ -7051,7 +7051,7 @@
     "heteronConnecting.salt01": {
       "heteronConnecting": [
         0.0,
-        -0.019
+        -0.2
       ]
     },
     "agogiPoliArgiAbove": {

@@ -64,7 +64,7 @@ export class PageSetup {
   public showFooter = false;
   public firstPageNumber = 1;
 
-  public lineHeight = Unit.fromInch(0.75);
+  public lineHeight = Unit.fromInch(0.76);
 
   public lyricsDefaultFontFamily = 'Source Serif';
   public lyricsDefaultFontSize = Unit.fromPt(12);
@@ -72,7 +72,7 @@ export class PageSetup {
   public lyricsDefaultFontStyle = 'normal';
   public lyricsDefaultColor = '#000000';
   public lyricsDefaultStrokeWidth = 0;
-  public lyricsVerticalOffset = -Unit.fromInch(0.06);
+  public lyricsVerticalOffset = -Unit.fromInch(0.05);
   public lyricsMinimumSpacing = Unit.fromInch(0.05);
 
   public get lyricsFont() {

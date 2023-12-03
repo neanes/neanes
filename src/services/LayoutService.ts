@@ -455,14 +455,13 @@ export class LayoutService {
             // If the new line starts with a left measure, apply it to the right
             // of the previous line
             const previousNoteElement = previousElement as NoteElement;
-            const normalizedMeasureBar = noteElement.measureBarLeft?.endsWith(
-              'Above',
-            )
-              ? measureBarAboveToLeft.get(noteElement.measureBarLeft)
-              : noteElement.measureBarLeft;
-            if (normalizedMeasureBar) {
+            if (
+              noteElement.measureBarLeft &&
+              (noteElement.elementType === ElementType.Martyria ||
+                !noteElement.measureBarLeft.endsWith('Above'))
+            ) {
               previousNoteElement.computedMeasureBarRight =
-                normalizedMeasureBar;
+                noteElement.measureBarLeft;
             }
           } else if (previousElement?.elementType === ElementType.Martyria) {
             // If the previous line ends with a martyria with a barline, apply
@@ -758,7 +757,7 @@ export class LayoutService {
       }
     }
 
-    this.justifyLines(pages, pageSetup, noteWidthArgs);
+    this.justifyLines(pages, pageSetup);
 
     this.addMelismas(pages, pageSetup);
 
@@ -1065,50 +1064,46 @@ export class LayoutService {
     // Handle special case for measure bars:
     // Shift the lyrics to the right so that they
     // are centered under the main neume
-    if (noteElement.measureBarLeft === MeasureBar.MeasureBarRight) {
+    const measureBarLeft =
+      noteElement.measureBarLeft || noteElement.computedMeasureBarLeft;
+    if (measureBarLeft === MeasureBar.MeasureBarRight) {
       noteElement.lyricsHorizontalOffset += measureBarRightWidth;
       noteElement.neumeWidth += measureBarRightWidth;
-    } else if (noteElement.measureBarLeft === MeasureBar.MeasureBarTop) {
+    } else if (measureBarLeft === MeasureBar.MeasureBarTop) {
       noteElement.lyricsHorizontalOffset += measureBarTopWidth;
       noteElement.neumeWidth += measureBarTopWidth;
-    } else if (noteElement.measureBarLeft === MeasureBar.MeasureBarDouble) {
+    } else if (measureBarLeft === MeasureBar.MeasureBarDouble) {
       noteElement.lyricsHorizontalOffset += measureBarDoubleWidth;
       noteElement.neumeWidth += measureBarDoubleWidth;
-    } else if (noteElement.measureBarLeft === MeasureBar.MeasureBarTheseos) {
+    } else if (measureBarLeft === MeasureBar.MeasureBarTheseos) {
       noteElement.lyricsHorizontalOffset += measureBarTheseosWidth;
       noteElement.neumeWidth += measureBarTheseosWidth;
-    } else if (
-      noteElement.measureBarLeft === MeasureBar.MeasureBarShortDouble
-    ) {
+    } else if (measureBarLeft === MeasureBar.MeasureBarShortDouble) {
       noteElement.lyricsHorizontalOffset += measureBarShortDoubleWidth;
       noteElement.neumeWidth += measureBarShortDoubleWidth;
-    } else if (
-      noteElement.measureBarLeft === MeasureBar.MeasureBarShortTheseos
-    ) {
+    } else if (measureBarLeft === MeasureBar.MeasureBarShortTheseos) {
       noteElement.lyricsHorizontalOffset += measureBarShortTheseosWidth;
       noteElement.neumeWidth += measureBarShortTheseosWidth;
     }
 
-    if (noteElement.measureBarRight === MeasureBar.MeasureBarRight) {
+    const measureBarRight =
+      noteElement.measureBarRight || noteElement.computedMeasureBarRight;
+    if (measureBarRight === MeasureBar.MeasureBarRight) {
       noteElement.lyricsHorizontalOffset -= measureBarRightWidth;
       noteElement.neumeWidth += measureBarRightWidth;
-    } else if (noteElement.measureBarRight === MeasureBar.MeasureBarTop) {
+    } else if (measureBarRight === MeasureBar.MeasureBarTop) {
       noteElement.lyricsHorizontalOffset -= measureBarTopWidth;
       noteElement.neumeWidth += measureBarTopWidth;
-    } else if (noteElement.measureBarRight === MeasureBar.MeasureBarDouble) {
+    } else if (measureBarRight === MeasureBar.MeasureBarDouble) {
       noteElement.lyricsHorizontalOffset -= measureBarDoubleWidth;
       noteElement.neumeWidth += measureBarDoubleWidth;
-    } else if (noteElement.measureBarRight === MeasureBar.MeasureBarTheseos) {
+    } else if (measureBarRight === MeasureBar.MeasureBarTheseos) {
       noteElement.lyricsHorizontalOffset -= measureBarTheseosWidth;
       noteElement.neumeWidth += measureBarTheseosWidth;
-    } else if (
-      noteElement.measureBarRight === MeasureBar.MeasureBarShortDouble
-    ) {
+    } else if (measureBarRight === MeasureBar.MeasureBarShortDouble) {
       noteElement.lyricsHorizontalOffset -= measureBarShortDoubleWidth;
       noteElement.neumeWidth += measureBarShortDoubleWidth;
-    } else if (
-      noteElement.measureBarRight === MeasureBar.MeasureBarShortTheseos
-    ) {
+    } else if (measureBarRight === MeasureBar.MeasureBarShortTheseos) {
       noteElement.lyricsHorizontalOffset -= measureBarShortTheseosWidth;
       noteElement.neumeWidth += measureBarShortTheseosWidth;
     }
@@ -1180,19 +1175,7 @@ export class LayoutService {
     );
   }
 
-  public static justifyLines(
-    pages: Page[],
-    pageSetup: PageSetup,
-    args: GetNoteWidthArgs,
-  ) {
-    const {
-      measureBarRightWidth,
-      measureBarTopWidth,
-      measureBarDoubleWidth,
-      measureBarTheseosWidth,
-      measureBarShortDoubleWidth,
-      measureBarShortTheseosWidth,
-    } = args;
+  public static justifyLines(pages: Page[], pageSetup: PageSetup) {
     for (const page of pages) {
       for (const line of page.lines) {
         if (
@@ -1238,72 +1221,7 @@ export class LayoutService {
           .map((x) => x.width)
           .reduce((sum, x) => sum + x, 0);
 
-        let computedBarlineWidth = 0;
-        const lastElement = line.elements[line.elements.length - 1];
-        if (lastElement.elementType === ElementType.Note) {
-          const noteElement = lastElement as NoteElement;
-          if (
-            noteElement.computedMeasureBarLeft === MeasureBar.MeasureBarRight
-          ) {
-            computedBarlineWidth += measureBarRightWidth;
-          } else if (
-            noteElement.computedMeasureBarLeft === MeasureBar.MeasureBarTop
-          ) {
-            computedBarlineWidth += measureBarTopWidth;
-          } else if (
-            noteElement.computedMeasureBarLeft === MeasureBar.MeasureBarDouble
-          ) {
-            computedBarlineWidth += measureBarDoubleWidth;
-          } else if (
-            noteElement.computedMeasureBarLeft === MeasureBar.MeasureBarTheseos
-          ) {
-            computedBarlineWidth += measureBarTheseosWidth;
-          } else if (
-            noteElement.computedMeasureBarLeft ===
-            MeasureBar.MeasureBarShortDouble
-          ) {
-            computedBarlineWidth += measureBarShortDoubleWidth;
-          } else if (
-            noteElement.computedMeasureBarLeft ===
-            MeasureBar.MeasureBarShortTheseos
-          ) {
-            computedBarlineWidth += measureBarShortTheseosWidth;
-          }
-          if (
-            noteElement.computedMeasureBarRight === MeasureBar.MeasureBarRight
-          ) {
-            computedBarlineWidth += measureBarRightWidth;
-          } else if (
-            noteElement.computedMeasureBarRight === MeasureBar.MeasureBarTop
-          ) {
-            computedBarlineWidth += measureBarTopWidth;
-          } else if (
-            noteElement.computedMeasureBarRight === MeasureBar.MeasureBarDouble
-          ) {
-            computedBarlineWidth += measureBarDoubleWidth;
-          } else if (
-            noteElement.computedMeasureBarRight === MeasureBar.MeasureBarTheseos
-          ) {
-            computedBarlineWidth += measureBarTheseosWidth;
-          } else if (
-            noteElement.computedMeasureBarRight ===
-            MeasureBar.MeasureBarShortDouble
-          ) {
-            computedBarlineWidth += measureBarShortDoubleWidth;
-          } else if (
-            noteElement.computedMeasureBarRight ===
-            MeasureBar.MeasureBarShortTheseos
-          ) {
-            computedBarlineWidth += measureBarShortTheseosWidth;
-          }
-        }
-
-        // A posteriori adjustment of an existing set of breakpoints is the best
-        // we can do with a first-fit algorithm
-        const extraSpace = Math.max(
-          0,
-          pageSetup.innerPageWidth - currentWidthPx - computedBarlineWidth,
-        );
+        const extraSpace = pageSetup.innerPageWidth - currentWidthPx;
 
         if (alignCenter) {
           for (let i = 0; i < line.elements.length; i++) {

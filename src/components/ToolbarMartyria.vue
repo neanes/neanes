@@ -417,6 +417,8 @@ export default class ToolbarMartyria extends Vue {
         return 'Enharmonic from Zo';
       case Scale.EnharmonicVouHigh:
         return 'Enharmonic from High Vou';
+      case Scale.SpathiGa:
+        return 'Spathi from Ga';
       default:
         return scale;
     }

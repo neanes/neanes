@@ -1440,6 +1440,18 @@ export class NeumeKeyboard {
     );
   }
 
+  public generateTooltip(mapping: KeyboardMapping) {
+    let result = '';
+    if (mapping.shiftKey) {
+      result += 'Shift + ';
+    }
+    if (mapping.modifier != null && mapping.modifier !== mapping.code) {
+      result += this.__formatKeyForDocs(mapping.modifier) + ' + ';
+    }
+    result += this.__formatKeyForDocs(mapping.code);
+    return result;
+  }
+
   private __generateDocumentation() {
     const result: string[] = [];
 

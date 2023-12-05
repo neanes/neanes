@@ -1789,6 +1789,10 @@ export class LayoutService {
         currentShift = 0;
 
         if (modeKey.fthora) {
+          currentScale =
+            this.getScaleFromFthora(modeKey.fthora, currentNote) ||
+            currentScale;
+
           currentShift = this.getShift(
             currentNote,
             currentScale,

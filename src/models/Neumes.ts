@@ -154,6 +154,7 @@ export enum VocalExpressionNeume {
   HeteronConnecting = 'HeteronConnecting',
   HeteronConnectingLong = 'HeteronConnectingLong',
   Endofonon = 'Endofonon',
+  Cross_Top = 'Cross_Top',
 }
 
 export enum RootSign {

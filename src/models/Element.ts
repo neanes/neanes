@@ -96,6 +96,7 @@ export class NoteElement extends ScoreElement {
   public ison: Ison | null = null;
   public vareia: boolean = false;
   public koronis: boolean = false;
+  public stavros: boolean = false;
   public lyrics: string = '';
   public lyricsColor: string = 'black';
   public lyricsFontFamily: string = 'Source Serif';
@@ -137,6 +138,8 @@ export class NoteElement extends ScoreElement {
   public secondaryFthoraOffsetY: number | null = null;
   public secondaryGorgonNeumeOffsetX: number | null = null;
   public secondaryGorgonNeumeOffsetY: number | null = null;
+  public stavrosOffsetX: number | null = null;
+  public stavrosOffsetY: number | null = null;
   public tertiaryAccidentalOffsetX: number | null = null;
   public tertiaryAccidentalOffsetY: number | null = null;
   public tertiaryFthoraOffsetX: number | null = null;

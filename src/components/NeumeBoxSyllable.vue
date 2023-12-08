@@ -17,6 +17,11 @@
     />
     <Neume :neume="note.quantitativeNeume" />
     <Neume
+      v-if="note.stavros"
+      :neume="VocalExpressionNeume.Cross_Top"
+      :style="stavrosStyle"
+    />
+    <Neume
       v-if="hasVocalExpressionNeume"
       :neume="note.vocalExpressionNeume"
       :style="vocalExpressionStyle"
@@ -439,6 +444,19 @@ export default class NeumeBoxSyllable extends Vue {
       top:
         this.note.koronisOffsetY != null
           ? `${this.note.koronisOffsetY}em`
+          : undefined,
+    } as StyleValue;
+  }
+
+  get stavrosStyle() {
+    return {
+      left:
+        this.note.stavrosOffsetX != null
+          ? `${this.note.stavrosOffsetX}em`
+          : undefined,
+      top:
+        this.note.stavrosOffsetY != null
+          ? `${this.note.stavrosOffsetY}em`
           : undefined,
     } as StyleValue;
   }

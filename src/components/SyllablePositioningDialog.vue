@@ -173,6 +173,16 @@
               @update="updateNoteIndicatorOffset($event)"
             />
             <DragHandle
+              v-if="form.stavros"
+              :note="form"
+              :mark="VocalExpressionNeume.Cross_Top"
+              :fontSize="pageSetup.neumeDefaultFontSize"
+              :zoom="zoom"
+              :x="form.stavrosOffsetX"
+              :y="form.stavrosOffsetY"
+              @update="updateStavrosOffset($event)"
+            />
+            <DragHandle
               v-if="hasTie"
               :note="form"
               :mark="form.tie"
@@ -512,6 +522,25 @@
             />
           </div>
           <div class="form-group">
+            <label>Stavros</label>
+            <InputUnit
+              :unit="unit"
+              :min="min"
+              :max="max"
+              :step="stepSize"
+              :precision="precision"
+              v-model="form.stavrosOffsetX"
+            />
+            <InputUnit
+              :unit="unit"
+              :min="min"
+              :max="max"
+              :step="stepSize"
+              :precision="precision"
+              v-model="form.stavrosOffsetY"
+            />
+          </div>
+          <div class="form-group">
             <label>Tie</label>
             <InputUnit
               :unit="unit"
@@ -847,6 +876,11 @@ export default class SyllablePositioningDialog extends Vue {
   updateNoteIndicatorOffset(args: ScoreElementOffset) {
     this.form.noteIndicatorOffsetX = args.x;
     this.form.noteIndicatorOffsetY = args.y;
+  }
+
+  updateStavrosOffset(args: ScoreElementOffset) {
+    this.form.stavrosOffsetX = args.x;
+    this.form.stavrosOffsetY = args.y;
   }
 
   updateTieOffset(args: ScoreElementOffset) {

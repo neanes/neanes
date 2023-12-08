@@ -67,6 +67,7 @@ export class NoteElement extends ScoreElement {
   public tie: Tie | undefined = undefined;
   public vareia: boolean | undefined = undefined;
   public koronis: boolean | undefined = undefined;
+  public stavros: boolean | undefined = undefined;
   public lyrics: string | undefined = undefined;
   public lyricsColor: string | undefined = undefined;
   public lyricsFontFamily: string | undefined = undefined;
@@ -106,6 +107,8 @@ export class NoteElement extends ScoreElement {
   public secondaryFthoraOffsetY: number | undefined = undefined;
   public secondaryGorgonNeumeOffsetX: number | undefined = undefined;
   public secondaryGorgonNeumeOffsetY: number | undefined = undefined;
+  public stavrosOffsetX: number | undefined = undefined;
+  public stavrosOffsetY: number | undefined = undefined;
   public tertiaryAccidentalOffsetX: number | undefined = undefined;
   public tertiaryAccidentalOffsetY: number | undefined = undefined;
   public tertiaryFthoraOffsetX: number | undefined = undefined;

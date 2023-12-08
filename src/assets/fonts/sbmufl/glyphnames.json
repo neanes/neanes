@@ -289,6 +289,10 @@
     "alternateCodepoint": "U+1D112",
     "codepoint": "U+E0C1"
   },
+  "stavrosAbove": {
+    "alternateCodepoint": "U+1D07E",
+    "codepoint": "U+E0C8"
+  },
   "klasmaAbove": {
     "alternateCodepoint": "U+1D07F",
     "codepoint": "U+E0D0"

@@ -636,6 +636,9 @@
         @update:koronis="
           updateNoteKoronis(selectedElement as NoteElement, $event)
         "
+        @update:stavros="
+          updateNoteStavros(selectedElement as NoteElement, $event)
+        "
         @update:vareia="
           updateNoteVareia(selectedElement as NoteElement, $event)
         "
@@ -4202,6 +4205,11 @@ export default class Editor extends Vue {
 
   updateNoteKoronis(element: NoteElement, koronis: boolean) {
     this.updateNote(element, { koronis });
+    this.save();
+  }
+
+  updateNoteStavros(element: NoteElement, stavros: boolean) {
+    this.updateNote(element, { stavros });
     this.save();
   }
 

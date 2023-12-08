@@ -111,6 +111,7 @@ describe('NeumeKeyboard', () => {
       MeasureBar.MeasureBarShortTheseosAbove,
       MeasureBar.MeasureBarTheseosAbove,
       MeasureBar.MeasureBarTopAbove,
+      VocalExpressionNeume.Cross_Top,
     ];
 
     const keyboard = new NeumeKeyboard();

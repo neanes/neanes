@@ -46,6 +46,13 @@
       >
         <img src="@/assets/icons/time-koronis.svg" />
       </button>
+      <button
+        class="neume-button"
+        :disabled="stavrosDisabled"
+        @click="$emit('update:stavros', !element.stavros)"
+      >
+        <img src="@/assets/icons/time-stavros.svg" />
+      </button>
       <span class="space"></span>
 
       <ButtonWithMenu
@@ -454,6 +461,7 @@ import { Unit } from '@/utils/Unit';
     'update:ison',
     'update:klasma',
     'update:koronis',
+    'update:stavros',
     'update:measureBar',
     'update:measureNumber',
     'update:noteIndicator',
@@ -854,6 +862,10 @@ export default class ToolbarNeume extends Vue {
       restNeumes.includes(this.element.quantitativeNeume) ||
       kentemataNeumes.includes(this.element.quantitativeNeume)
     );
+  }
+
+  get stavrosDisabled() {
+    return this.element.quantitativeNeume !== QuantitativeNeume.RunningElaphron;
   }
 
   get argonDisabled() {

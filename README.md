@@ -44,7 +44,7 @@ To learn how to use the software, read the [guide](https://danielgarthur.github.
 
 ### Prerequisites
 
-- Node.js 18.x or later
+- Node.js 20.x or later
 
 ### Project Setup
 

@@ -80,5 +80,5 @@
     "vue-tsc": "^1.8.25"
   },
   "license": "GPL-3.0",
-  "packageManager": "npm@9.8.1"
+  "packageManager": "npm@10.2.3"
 }

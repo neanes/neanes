@@ -1079,6 +1079,7 @@ export class ByzHtmlExporter {
     map.set('yfenBelow', 'x-yfen-below');
     map.set('stavros', 'x-stavros');
     map.set('breath', 'x-breath');
+    map.set('stavrosAbove', 'x-stavros-a');
     map.set('klasmaAbove', 'x-kl');
     map.set('klasmaBelow', 'x-kl-b');
     map.set('apli', 'x-apli');

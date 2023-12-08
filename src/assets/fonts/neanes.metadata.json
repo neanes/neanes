@@ -1045,6 +1045,10 @@
       ]
     },
     "runningElafron": {
+      "stavros": [
+        0.547,
+        0.487
+      ],
       "diesisSecondary": [
         0.713,
         0.895
@@ -7499,6 +7503,12 @@
         0.012,
         0.553
       ]
+    },
+    "stavrosAbove": {
+      "stavros": [
+        0.261,
+        0.124
+      ]
     }
   },
   "glyphsWithAlternates": {
@@ -7902,7 +7912,8 @@
     "diesis2Tertiary": 0.0,
     "diesis4Tertiary": 0.0,
     "diesis6Tertiary": 0.0,
-    "diesis8Tertiary": 0.0
+    "diesis8Tertiary": 0.0,
+    "stavrosAbove": 0.457
   },
   "optionalGlyphs": {
     "oligonKentimataBelow.alt01": {
@@ -11602,6 +11613,16 @@
       "bBoxSW": [
         -0.343,
         0.203
+      ]
+    },
+    "stavrosAbove": {
+      "bBoxNE": [
+        0.436,
+        0.471
+      ],
+      "bBoxSW": [
+        0.09,
+        0.126
       ]
     }
   },

@@ -401,9 +401,15 @@ export class SaveService {
       element.koronisOffsetY = e.koronisOffsetY || undefined;
     }
 
+    if (e.stavros) {
+      element.stavrosOffsetX = e.stavrosOffsetX || undefined;
+      element.stavrosOffsetY = e.stavrosOffsetY || undefined;
+    }
+
     element.vareia = e.vareia || undefined;
     element.noteIndicator = e.noteIndicator || undefined;
     element.koronis = e.koronis || undefined;
+    element.stavros = e.stavros || undefined;
 
     element.lyrics = e.lyrics !== '' ? e.lyrics : undefined;
     element.isMelisma = e.isMelisma || undefined;
@@ -929,8 +935,14 @@ export class SaveService {
       element.koronisOffsetY = e.koronisOffsetY ?? null;
     }
 
+    if (e.stavros === true) {
+      element.stavrosOffsetX = e.stavrosOffsetX ?? null;
+      element.stavrosOffsetY = e.stavrosOffsetY ?? null;
+    }
+
     element.vareia = e.vareia === true;
     element.koronis = e.koronis === true;
+    element.stavros = e.stavros === true;
 
     element.isMelisma = e.isMelisma === true;
     element.isMelismaStart = e.isMelismaStart === true;

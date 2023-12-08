@@ -263,6 +263,7 @@ mapNeumeToSbmufl(
 );
 mapNeumeToSbmufl(QuantitativeNeume.Cross, 'stavros');
 mapNeumeToSbmufl(QuantitativeNeume.Breath, 'breath');
+mapNeumeToSbmufl(VocalExpressionNeume.Cross_Top, 'stavrosAbove');
 mapNeumeToSbmufl(QuantitativeNeume.VareiaDotted, 'leimma1');
 mapNeumeToSbmufl(QuantitativeNeume.VareiaDotted2, 'leimma2');
 mapNeumeToSbmufl(QuantitativeNeume.VareiaDotted3, 'leimma3');

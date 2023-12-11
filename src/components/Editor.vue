@@ -4146,6 +4146,27 @@ export default class Editor extends Vue {
     element: NoteElement,
     vocalExpressionNeume: VocalExpressionNeume | null,
   ) {
+    // Replace the psifiston with a slanted psifiston if the previous neume
+    // contains a long heteron
+    if (vocalExpressionNeume === VocalExpressionNeume.Psifiston) {
+      const index = this.getElementIndex(element);
+
+      if (index > 0) {
+        const previousElement = this.elements[index - 1];
+
+        if (previousElement.elementType === ElementType.Note) {
+          const previousNote = previousElement as NoteElement;
+
+          if (
+            previousNote.vocalExpressionNeume ===
+            VocalExpressionNeume.HeteronConnectingLong
+          ) {
+            vocalExpressionNeume = VocalExpressionNeume.PsifistonSlanted;
+          }
+        }
+      }
+    }
+
     this.updateNote(element, { vocalExpressionNeume });
     this.save();
   }

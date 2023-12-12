@@ -31,6 +31,9 @@
       <FileMenuItem label="Paste" @click="onClickPaste" />
       <FileMenuItem label="Paste with lyrics" @click="onClickPasteWithLyrics" />
       <div class="separator" />
+      <FileMenuItem label="Copy Format" @click="onClickCopyFormat" />
+      <FileMenuItem label="Paste Format" @click="onClickPasteFormat" />
+      <div class="separator" />
       <FileMenuItem label="Preferences" @click="onClickPreferences" />
     </FileMenuBarItem>
     <FileMenuBarItem
@@ -303,6 +306,11 @@ export default class FileMenuBar extends Vue {
     this.isMenuOpen = false;
   }
 
+  onClickCopyFormat() {
+    EventBus.$emit(IpcMainChannels.FileMenuCopyFormat);
+    this.isMenuOpen = false;
+  }
+
   onClickPaste() {
     EventBus.$emit(IpcMainChannels.FileMenuPaste);
     this.isMenuOpen = false;
@@ -310,6 +318,11 @@ export default class FileMenuBar extends Vue {
 
   onClickPasteWithLyrics() {
     EventBus.$emit(IpcMainChannels.FileMenuPasteWithLyrics);
+    this.isMenuOpen = false;
+  }
+
+  onClickPasteFormat() {
+    EventBus.$emit(IpcMainChannels.FileMenuPasteFormat);
     this.isMenuOpen = false;
   }
 

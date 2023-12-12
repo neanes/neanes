@@ -2,48 +2,49 @@
 
 import {
   app,
-  protocol,
   BrowserWindow,
-  Menu,
   dialog,
   ipcMain,
+  Menu,
   MenuItemConstructorOptions,
-  shell,
+  protocol,
   screen,
+  shell,
 } from 'electron';
-import { autoUpdater } from 'electron-updater';
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer';
+import { autoUpdater } from 'electron-updater';
+import { promises as fs } from 'fs';
+import sizeOf from 'image-size';
+import JSZip from 'jszip';
+import mimetypes from 'mime-types';
+import path from 'path';
+import { debounce } from 'throttle-debounce';
+import { promisify } from 'util';
+
 import {
   CloseWorkspacesArgs,
   CloseWorkspacesDisposition,
-  IpcMainChannels,
-  IpcRendererChannels,
-  ShowMessageBoxArgs,
-  SaveWorkspaceArgs,
-  SaveWorkspaceAsArgs,
-  ExportWorkspaceAsPdfArgs,
-  SaveWorkspaceReplyArgs,
-  PrintWorkspaceArgs,
-  FileMenuOpenScoreArgs,
-  SaveWorkspaceAsReplyArgs,
-  FileMenuInsertTextboxArgs,
-  ExportWorkspaceAsHtmlArgs,
-  FileMenuOpenImageArgs,
   ExportPageAsImageArgs,
+  ExportWorkspaceAsHtmlArgs,
   ExportWorkspaceAsImageArgs,
   ExportWorkspaceAsImageReplyArgs,
+  ExportWorkspaceAsPdfArgs,
+  FileMenuInsertTextboxArgs,
+  FileMenuOpenImageArgs,
+  FileMenuOpenScoreArgs,
+  IpcMainChannels,
+  IpcRendererChannels,
   OpenContextMenuForTabArgs,
+  PrintWorkspaceArgs,
+  SaveWorkspaceArgs,
+  SaveWorkspaceAsArgs,
+  SaveWorkspaceAsReplyArgs,
+  SaveWorkspaceReplyArgs,
+  ShowMessageBoxArgs,
 } from '../../src/ipc/ipcChannels';
-import path from 'path';
-import { promises as fs } from 'fs';
-import { TestFileType } from '../../src/utils/TestFileType';
 import { Score } from '../../src/models/save/v1/Score';
 import { getSystemFonts } from '../../src/utils/getSystemFonts';
-import JSZip from 'jszip';
-import { debounce } from 'throttle-debounce';
-import { promisify } from 'util';
-import mimetypes from 'mime-types';
-import sizeOf from 'image-size';
+import { TestFileType } from '../../src/utils/TestFileType';
 
 // The built directory structure
 //
@@ -1081,6 +1082,21 @@ function createMenu() {
             if (!event.triggeredByAccelerator) {
               win?.webContents.send(IpcMainChannels.FileMenuPasteWithLyrics);
             }
+          },
+        },
+        { type: 'separator' },
+        {
+          label: 'Copy &Format',
+          accelerator: 'CmdOrCtrl+Shift+R',
+          click() {
+            win?.webContents.send(IpcMainChannels.FileMenuCopyFormat);
+          },
+        },
+        {
+          label: 'Paste Fo&rmat',
+          accelerator: 'CmdOrCtrl+R',
+          click() {
+            win?.webContents.send(IpcMainChannels.FileMenuPasteFormat);
           },
         },
         { type: 'separator' },

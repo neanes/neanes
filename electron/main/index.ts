@@ -1085,6 +1085,19 @@ function createMenu() {
         },
         { type: 'separator' },
         {
+          label: 'Copy &Format',
+          click() {
+            win?.webContents.send(IpcMainChannels.FileMenuCopyFormat);
+          },
+        },
+        {
+          label: 'Paste Format',
+          click() {
+            win?.webContents.send(IpcMainChannels.FileMenuPasteFormat);
+          },
+        },
+        { type: 'separator' },
+        {
           label: '&Preferences',
           accelerator: 'CmdOrCtrl+,',
           click() {

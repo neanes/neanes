@@ -963,6 +963,7 @@ export default class Editor extends Vue {
   exportDialogIsOpen: boolean = false;
 
   clipboard: ScoreElement[] = [];
+  textBoxFormat: Partial<TextBoxElement> | null = null;
 
   fonts: string[] = [];
 
@@ -1691,10 +1692,15 @@ export default class Editor extends Vue {
     EventBus.$on(IpcMainChannels.FileMenuCut, this.onFileMenuCut);
     EventBus.$on(IpcMainChannels.FileMenuCopy, this.onFileMenuCopy);
     EventBus.$on(IpcMainChannels.FileMenuCopyAsHtml, this.onFileMenuCopyAsHtml);
+    EventBus.$on(IpcMainChannels.FileMenuCopyFormat, this.onFileMenuCopyFormat);
     EventBus.$on(IpcMainChannels.FileMenuPaste, this.onFileMenuPaste);
     EventBus.$on(
       IpcMainChannels.FileMenuPasteWithLyrics,
       this.onFileMenuPasteWithLyrics,
+    );
+    EventBus.$on(
+      IpcMainChannels.FileMenuPasteFormat,
+      this.onFileMenuPasteFormat,
     );
     EventBus.$on(
       IpcMainChannels.FileMenuPreferences,
@@ -1778,10 +1784,18 @@ export default class Editor extends Vue {
       IpcMainChannels.FileMenuCopyAsHtml,
       this.onFileMenuCopyAsHtml,
     );
+    EventBus.$off(
+      IpcMainChannels.FileMenuCopyFormat,
+      this.onFileMenuCopyFormat,
+    );
     EventBus.$off(IpcMainChannels.FileMenuPaste, this.onFileMenuPaste);
     EventBus.$off(
       IpcMainChannels.FileMenuPasteWithLyrics,
       this.onFileMenuPasteWithLyrics,
+    );
+    EventBus.$off(
+      IpcMainChannels.FileMenuPasteFormat,
+      this.onFileMenuPasteFormat,
     );
     EventBus.$off(
       IpcMainChannels.FileMenuPreferences,
@@ -5367,6 +5381,18 @@ export default class Editor extends Vue {
     }
   }
 
+  onFileMenuCopyFormat() {
+    if (this.selectedElement == null) {
+      return;
+    }
+
+    if (this.selectedElement.elementType === ElementType.TextBox) {
+      this.textBoxFormat = (
+        this.selectedElement as TextBoxElement
+      ).cloneFormat();
+    }
+  }
+
   onFileMenuCopyAsHtml() {
     let elements: ScoreElement[] = [];
 
@@ -5398,6 +5424,19 @@ export default class Editor extends Vue {
       this.onPasteScoreElements(true);
     } else {
       document.execCommand('paste');
+    }
+  }
+
+  onFileMenuPasteFormat() {
+    if (this.selectedElement == null || this.textBoxFormat == null) {
+      return;
+    }
+
+    if (this.selectedElement.elementType === ElementType.TextBox) {
+      this.updateTextBox(
+        this.selectedElement as TextBoxElement,
+        this.textBoxFormat,
+      );
     }
   }
 

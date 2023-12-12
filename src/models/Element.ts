@@ -767,6 +767,12 @@ export class TextBoxElement extends ScoreElement {
       useDefaultStyle: this.useDefaultStyle,
     } as Partial<TextBoxElement>;
   }
+
+  public cloneFormat() {
+    const format = this.getClipboardProperties();
+    delete format.content;
+    return format;
+  }
 }
 
 export class ModeKeyElement extends ScoreElement {

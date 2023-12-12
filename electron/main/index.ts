@@ -1087,12 +1087,14 @@ function createMenu() {
         { type: 'separator' },
         {
           label: 'Copy &Format',
+          accelerator: 'CmdOrCtrl+Shift+R',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuCopyFormat);
           },
         },
         {
-          label: 'Paste Format',
+          label: 'Paste Fo&rmat',
+          accelerator: 'CmdOrCtrl+R',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuPasteFormat);
           },

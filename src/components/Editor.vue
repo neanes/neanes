@@ -5648,6 +5648,10 @@ export default class Editor extends Vue {
   border: 1px solid goldenrod;
 }
 
+.selectedTextbox:deep(.handle) {
+  display: inline;
+}
+
 .selectedImagebox {
   border: 1px solid goldenrod;
 }

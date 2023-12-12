@@ -4,6 +4,7 @@
     :style="containerStyle"
     @click="$emit('select-single')"
   >
+    <span class="handle"></span>
     <ContentEditable
       ref="text"
       class="text-box"
@@ -129,5 +130,20 @@ export default class TextBox extends Vue {
 
 .text-box.underline {
   text-decoration: underline;
+}
+
+.text-box-container .handle {
+  bottom: calc(50% - 5px);
+  left: -10px;
+
+  z-index: 1;
+
+  display: none;
+}
+
+@media print {
+  .text-box-container .handle {
+    display: none !important;
+  }
 }
 </style>

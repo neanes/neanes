@@ -398,6 +398,7 @@ interface SecondaryGorgonMenuItem {
 })
 export default class NeumeSelector extends Vue {
   @Prop() pageSetup!: PageSetup;
+  @Prop() neumeKeyboard!: NeumeKeyboard;
 
   QuantitativeNeume = QuantitativeNeume;
 
@@ -514,8 +515,6 @@ export default class NeumeSelector extends Vue {
     QuantitativeNeume.VareiaDotted2,
     QuantitativeNeume.VareiaDotted,
   ];
-
-  neumeKeyboard: NeumeKeyboard = new NeumeKeyboard();
 
   showHyporoeKentemataMenu: boolean = false;
   showIsonKentemataMenu: boolean = false;

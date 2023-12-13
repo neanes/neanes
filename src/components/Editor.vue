@@ -31,6 +31,7 @@
       <NeumeSelector
         class="neume-selector"
         :pageSetup="score.pageSetup"
+        :neumeKeyboard="neumeKeyboard"
         @select-quantitative-neume="addQuantitativeNeume"
       />
       <div class="page-container">

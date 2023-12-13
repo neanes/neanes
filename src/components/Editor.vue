@@ -353,6 +353,7 @@
                       :ref="`element-${getElementIndex(element)}`"
                       :element="element"
                       :zoom="zoom"
+                      :printMode="printMode"
                       :class="[{ selectedImagebox: isSelected(element) }]"
                       @select-single="selectedElement = element"
                       @update:size="

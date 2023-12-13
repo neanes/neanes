@@ -4,7 +4,15 @@
     :style="containerStyle"
     @click="$emit('select-single')"
   >
+    <img
+      v-if="printMode"
+      class="image-box"
+      :src="element.data"
+      :style="imageStyle"
+    />
+
     <vue-draggable-resizable
+      v-else
       :lock-aspect-ratio="element.lockAspectRatio"
       :w="imageWidthZoomed"
       :h="imageHeightZoomed"
@@ -36,6 +44,7 @@ import { withZoom } from '@/utils/withZoom';
 export default class ImageBox extends Vue {
   @Prop() element!: ImageBoxElement;
   @Prop() zoom!: number;
+  @Prop() printMode!: boolean;
 
   get imageWidthZoomed() {
     return this.element.imageWidth * this.zoom;

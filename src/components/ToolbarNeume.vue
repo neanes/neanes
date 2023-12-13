@@ -1092,7 +1092,7 @@ export default class ToolbarNeume extends Vue {
     } else if (neume === TimeNeume.Klasma_Top) {
       return `Klasma (${this.neumeKeyboard.getKlasmaKeyTooltip()})`;
     } else if (neume === NoteIndicator.Pa) {
-      return `Klasma (${this.neumeKeyboard.getNoteIndicatorKeyTooltip()})`;
+      return `Note Indicator (${this.neumeKeyboard.getNoteIndicatorKeyTooltip()})`;
     } else {
       return `${displayName}`;
     }
@@ -1138,8 +1138,6 @@ export default class ToolbarNeume extends Vue {
         return 'Measure Bar';
       case MeasureNumber.Two:
         return 'Measure Number';
-      case NoteIndicator.Pa:
-        return 'Note Indicator';
       case Tie.YfenBelow:
         return 'Yfen';
       case VocalExpressionNeume.HeteronConnecting:

@@ -1788,6 +1788,12 @@ export class NeumeKeyboard {
     return this.__formatKeyForDocs(this.martyriaKey);
   }
 
+  public getMaryriaRightAlignTooltip() {
+    return `${this.__formatKeyForDocs(
+      this.martyriaConfigKey,
+    )} + ${this.__formatKeyForDocs(this.martyriaKey)}`;
+  }
+
   public getNoteIndicatorKeyTooltip() {
     return this.__formatKeyForDocs(this.noteIndicatorKey);
   }

@@ -662,6 +662,7 @@
       <ToolbarMartyria
         :element="selectedElement"
         :pageSetup="score.pageSetup"
+        :neumeKeyboard="neumeKeyboard"
         @update:fthora="
           setFthoraMartyria(selectedElement as MartyriaElement, $event)
         "

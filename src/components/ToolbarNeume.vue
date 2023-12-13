@@ -30,6 +30,7 @@
       <button
         class="neume-button"
         :disabled="klasmaDisabled"
+        :title="tooltip(TimeNeume.Klasma_Top)"
         @click="$emit('update:klasma')"
       >
         <img src="@/assets/icons/time-klasma.svg" />
@@ -37,11 +38,13 @@
       <ButtonWithMenu
         :options="apliMenuOptions"
         :disabled="apleDisabled"
+        :title="tooltip(TimeNeume.Hapli)"
         @select="$emit('update:time', $event)"
       />
       <button
         class="neume-button"
         :disabled="koronisDisabled"
+        :title="tooltip(TimeNeume.Koronis)"
         @click="$emit('update:koronis', !element.koronis)"
       >
         <img src="@/assets/icons/time-koronis.svg" />
@@ -49,6 +52,7 @@
       <button
         class="neume-button"
         :disabled="stavrosDisabled"
+        :title="tooltip(VocalExpressionNeume.Cross_Top)"
         @click="$emit('update:stavros', !element.stavros)"
       >
         <img src="@/assets/icons/time-stavros.svg" />
@@ -57,20 +61,24 @@
 
       <ButtonWithMenu
         :options="gorgonMenuOptions"
+        :title="tooltip(GorgonNeume.Gorgon_Top)"
         @select="updateGorgon($event)"
       />
       <ButtonWithMenu
         :options="digorgonMenuOptions"
+        :title="tooltip(GorgonNeume.Digorgon)"
         @select="updateGorgon($event)"
       />
       <ButtonWithMenu
         :options="trigorgonMenuOptions"
+        :title="tooltip(GorgonNeume.Trigorgon)"
         @select="updateGorgon($event)"
       />
       <span class="space"></span>
       <button
         class="neume-button"
         :disabled="expressionsDisabled"
+        :title="tooltip(VocalExpressionNeume.Vareia)"
         @click="$emit('update:vareia', !element.vareia)"
       >
         <img src="@/assets/icons/quality-vareia.svg" />
@@ -78,6 +86,7 @@
       <button
         class="neume-button"
         :disabled="expressionsDisabled"
+        :title="tooltip(VocalExpressionNeume.Homalon)"
         @click="$emit('update:expression', VocalExpressionNeume.Homalon)"
       >
         <img src="@/assets/icons/quality-omalon.svg" />
@@ -85,6 +94,7 @@
       <button
         class="neume-button"
         :disabled="expressionsDisabled"
+        :title="tooltip(VocalExpressionNeume.HomalonConnecting)"
         @click="
           $emit('update:expression', VocalExpressionNeume.HomalonConnecting)
         "
@@ -94,6 +104,7 @@
       <button
         class="neume-button"
         :disabled="expressionsDisabled"
+        :title="tooltip(VocalExpressionNeume.Antikenoma)"
         @click="$emit('update:expression', VocalExpressionNeume.Antikenoma)"
       >
         <img src="@/assets/icons/quality-antikenoma.svg" />
@@ -101,11 +112,13 @@
       <ButtonWithMenu
         :options="psifistonMenuOptions"
         :disabled="expressionsDisabled"
+        :title="tooltip(VocalExpressionNeume.Psifiston)"
         @select="$emit('update:expression', $event)"
       />
       <button
         class="neume-button"
         :disabled="expressionsDisabled"
+        :title="tooltip(VocalExpressionNeume.Heteron)"
         @click="$emit('update:expression', VocalExpressionNeume.Heteron)"
       >
         <img src="@/assets/icons/quality-heteron.svg" />
@@ -113,11 +126,13 @@
       <ButtonWithMenu
         :options="heteronConnectingMenuOptions"
         :disabled="expressionsDisabled"
+        :title="tooltip(VocalExpressionNeume.HeteronConnecting)"
         @select="$emit('update:expression', $event)"
       />
       <button
         class="neume-button"
         :disabled="expressionsDisabled"
+        :title="tooltip(VocalExpressionNeume.Endofonon)"
         @click="$emit('update:expression', VocalExpressionNeume.Endofonon)"
       >
         <img src="@/assets/icons/quality-endofonon.svg" />
@@ -125,6 +140,7 @@
       <button
         class="neume-button"
         :disabled="expressionsDisabled"
+        :title="tooltip(Tie.YfenBelow)"
         @click="$emit('update:tie', [Tie.YfenBelow, Tie.YfenAbove])"
       >
         <img src="@/assets/icons/tie-yfen-below.svg" />
@@ -133,17 +149,20 @@
       <ButtonWithMenu
         :options="flatMenuOptions"
         :disabled="accidentalsDisabled"
+        :title="tooltip(Accidental.Flat_2_Right)"
         @select="updateAccidental($event)"
       />
       <ButtonWithMenu
         :options="sharpMenuOptions"
         :disabled="accidentalsDisabled"
+        :title="tooltip(Accidental.Sharp_2_Left)"
         @select="updateAccidental($event)"
       />
       <span class="space"></span>
       <button
         class="neume-button"
         :disabled="argonDisabled"
+        :title="tooltip(GorgonNeume.Argon)"
         @click="$emit('update:gorgon', [GorgonNeume.Argon])"
       >
         <img src="@/assets/icons/time-argon.svg" />
@@ -151,6 +170,7 @@
       <button
         class="neume-button"
         :disabled="argonDisabled"
+        :title="tooltip(GorgonNeume.Hemiolion)"
         @click="$emit('update:gorgon', [GorgonNeume.Hemiolion])"
       >
         <img src="@/assets/icons/time-diargon.svg" />
@@ -158,6 +178,7 @@
       <button
         class="neume-button"
         :disabled="argonDisabled"
+        :title="tooltip(GorgonNeume.Diargon)"
         @click="$emit('update:gorgon', [GorgonNeume.Diargon])"
       >
         <img src="@/assets/icons/time-triargon.svg" />
@@ -165,14 +186,17 @@
       <span class="space"></span>
       <ButtonWithMenu
         :options="barlineMenuOptions"
+        :title="tooltip(MeasureBar.MeasureBarRight)"
         @select="$emit('update:measureBar', $event)"
       />
       <ButtonWithMenu
         :options="measureNumberMenuOptions"
+        :title="tooltip(MeasureNumber.Two)"
         @select="$emit('update:measureNumber', $event)"
       />
       <button
         class="neume-button"
+        :title="tooltip(NoteIndicator.Pa)"
         @click="$emit('update:noteIndicator', !element.noteIndicator)"
       >
         <img draggable="false" src="@/assets/icons/note-ni.svg" />
@@ -180,6 +204,7 @@
       <ButtonWithMenu
         :options="isonMenuOptions"
         :disabled="isonDisabled"
+        :title="tooltip(Ison.Unison)"
         @select="$emit('update:ison', $event)"
       />
     </div>
@@ -187,6 +212,7 @@
       <button
         class="neume-button"
         :disabled="fthoresDisabled"
+        :title="tooltip(Fthora.DiatonicNiLow_Top)"
         @click="
           updateFthora([Fthora.DiatonicNiLow_Top, Fthora.DiatonicNiLow_Bottom])
         "
@@ -196,6 +222,7 @@
       <button
         class="neume-button"
         :disabled="fthoresDisabled"
+        :title="tooltip(Fthora.DiatonicPa_Top)"
         @click="updateFthora([Fthora.DiatonicPa_Top, Fthora.DiatonicPa_Bottom])"
       >
         <img src="@/assets/icons/fthora-diatonic-pa.svg" />
@@ -203,6 +230,7 @@
       <button
         class="neume-button"
         :disabled="fthoresDisabled"
+        :title="tooltip(Fthora.DiatonicVou_Top)"
         @click="
           updateFthora([Fthora.DiatonicVou_Top, Fthora.DiatonicVou_Bottom])
         "
@@ -212,6 +240,7 @@
       <button
         class="neume-button"
         :disabled="fthoresDisabled"
+        :title="tooltip(Fthora.DiatonicGa_Top)"
         @click="updateFthora([Fthora.DiatonicGa_Top, Fthora.DiatonicGa_Bottom])"
       >
         <img src="@/assets/icons/fthora-diatonic-ga.svg" />
@@ -219,6 +248,7 @@
       <button
         class="neume-button"
         :disabled="fthoresDisabled"
+        :title="tooltip(Fthora.DiatonicThi_Top)"
         @click="
           updateFthora([Fthora.DiatonicThi_Top, Fthora.DiatonicThi_Bottom])
         "
@@ -228,6 +258,7 @@
       <button
         class="neume-button"
         :disabled="fthoresDisabled"
+        :title="tooltip(Fthora.DiatonicKe_Top)"
         @click="updateFthora([Fthora.DiatonicKe_Top, Fthora.DiatonicKe_Bottom])"
       >
         <img src="@/assets/icons/fthora-diatonic-ke.svg" />
@@ -235,6 +266,7 @@
       <button
         class="neume-button"
         :disabled="fthoresDisabled"
+        :title="tooltip(Fthora.DiatonicZo_Top)"
         @click="updateFthora([Fthora.DiatonicZo_Top, Fthora.DiatonicZo_Bottom])"
       >
         <img src="@/assets/icons/fthora-diatonic-zo.svg" />
@@ -242,6 +274,7 @@
       <button
         class="neume-button"
         :disabled="fthoresDisabled"
+        :title="tooltip(Fthora.DiatonicNiHigh_Top)"
         @click="
           updateFthora([
             Fthora.DiatonicNiHigh_Top,
@@ -255,6 +288,7 @@
       <button
         class="neume-button"
         :disabled="fthoresDisabled"
+        :title="tooltip(Fthora.SoftChromaticThi_Top)"
         @click="
           updateFthora([
             Fthora.SoftChromaticThi_Top,
@@ -267,6 +301,7 @@
       <button
         class="neume-button"
         :disabled="fthoresDisabled"
+        :title="tooltip(Fthora.SoftChromaticPa_Top)"
         @click="
           updateFthora([
             Fthora.SoftChromaticPa_Top,
@@ -280,6 +315,7 @@
       <button
         class="neume-button"
         :disabled="fthoresDisabled"
+        :title="tooltip(Fthora.HardChromaticPa_Top)"
         @click="
           updateFthora([
             Fthora.HardChromaticPa_Top,
@@ -292,6 +328,7 @@
       <button
         class="neume-button"
         :disabled="fthoresDisabled"
+        :title="tooltip(Fthora.HardChromaticThi_Top)"
         @click="
           updateFthora([
             Fthora.HardChromaticThi_Top,
@@ -437,6 +474,8 @@ import {
   Ison,
   MeasureBar,
   MeasureNumber,
+  Neume,
+  NoteIndicator,
   QuantitativeNeume,
   restNeumes,
   Tie,
@@ -445,6 +484,7 @@ import {
 } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
 import { ScaleNote } from '@/models/Scales';
+import { NeumeKeyboard } from '@/services/NeumeKeyboard';
 import { Unit } from '@/utils/Unit';
 
 @Component({
@@ -480,10 +520,18 @@ export default class ToolbarNeume extends Vue {
   @Prop() element!: NoteElement;
   @Prop() pageSetup!: PageSetup;
   @Prop() innerNeume!: string;
-  VocalExpressionNeume = VocalExpressionNeume;
+  @Prop() neumeKeyboard!: NeumeKeyboard;
+
+  Accidental = Accidental;
   GorgonNeume = GorgonNeume;
   Fthora = Fthora;
+  MeasureBar = MeasureBar;
+  MeasureNumber = MeasureNumber;
+  NoteIndicator = NoteIndicator;
+  Ison = Ison;
   Tie = Tie;
+  TimeNeume = TimeNeume;
+  VocalExpressionNeume = VocalExpressionNeume;
 
   chromaticFthoras = [
     Fthora.SoftChromaticPa_Top,
@@ -887,7 +935,9 @@ export default class ToolbarNeume extends Vue {
   }
 
   get spathiTitle() {
-    return this.spathiDisabled ? 'Spathi may only be placed on Ke or Ga' : '';
+    return this.spathiDisabled
+      ? 'Spathi may only be placed on Ke or Ga'
+      : this.tooltip(Fthora.Spathi_Top);
   }
 
   get klitonDisabled() {
@@ -898,7 +948,9 @@ export default class ToolbarNeume extends Vue {
   }
 
   get klitonTitle() {
-    return this.klitonDisabled ? 'Kliton may only be placed on Thi' : '';
+    return this.klitonDisabled
+      ? 'Kliton may only be placed on Thi'
+      : this.tooltip(Fthora.Kliton_Top);
   }
 
   get zygosDisabled() {
@@ -909,7 +961,9 @@ export default class ToolbarNeume extends Vue {
   }
 
   get zygosTitle() {
-    return this.zygosDisabled ? 'Zygos may only be placed on Thi' : '';
+    return this.zygosDisabled
+      ? 'Zygos may only be placed on Thi'
+      : this.tooltip(Fthora.Zygos_Top);
   }
 
   get enharmonicDisabled() {
@@ -926,7 +980,7 @@ export default class ToolbarNeume extends Vue {
   get enharmonicTitle() {
     return this.enharmonicDisabled
       ? 'Enharmonic fthora may only be placed on Ga, Zo, and Vou'
-      : '';
+      : this.tooltip(Fthora.Enharmonic_Top);
   }
 
   get generalFlatDisabled() {
@@ -939,7 +993,7 @@ export default class ToolbarNeume extends Vue {
   get generalFlatTitle() {
     return this.generalFlatDisabled
       ? 'General flat may only be placed on Ke'
-      : '';
+      : this.tooltip(Fthora.GeneralFlat_Top);
   }
 
   get generalSharpDisabled() {
@@ -952,7 +1006,7 @@ export default class ToolbarNeume extends Vue {
   get generalSharpTitle() {
     return this.generalSharpDisabled
       ? 'General sharp may only be placed on Ga'
-      : '';
+      : this.tooltip(Fthora.GeneralSharp_Top);
   }
 
   get noteDisplay() {
@@ -1027,6 +1081,73 @@ export default class ToolbarNeume extends Vue {
       this.$emit('update:tertiaryAccidental', args + this.innerNeume);
     } else {
       this.$emit('update:accidental', args);
+    }
+  }
+
+  tooltip(neume: Neume) {
+    const displayName = this.getDisplayName(neume);
+    const mapping = this.neumeKeyboard.findMappingForNeume(neume);
+    if (mapping) {
+      return `${displayName} (${this.neumeKeyboard.generateTooltip(mapping)})`;
+    } else if (neume === TimeNeume.Klasma_Top) {
+      return `Klasma (${this.neumeKeyboard.getKlasmaKeyTooltip()})`;
+    } else if (neume === NoteIndicator.Pa) {
+      return `Klasma (${this.neumeKeyboard.getNoteIndicatorKeyTooltip()})`;
+    } else {
+      return `${displayName}`;
+    }
+  }
+
+  getDisplayName(neume: Neume) {
+    if (neume.startsWith('Diatonic')) {
+      return neume
+        .replace(/Diatonic(\w+)_Top/, 'Diatonic $1')
+        .replace('Thi', 'Di')
+        .replace('Low', ' Low')
+        .replace('High', ' High');
+    }
+
+    if (neume.startsWith('SoftChromatic')) {
+      return neume
+        .replace(/SoftChromatic(\w+)_Top/, 'Soft Chromatic $1')
+        .replace('Thi', 'Di');
+    }
+
+    if (neume.startsWith('HardChromatic')) {
+      return neume
+        .replace(/HardChromatic(\w+)_Top/, 'Hard Chromatic $1')
+        .replace('Thi', 'Di');
+    }
+
+    if (neume.startsWith('General')) {
+      return neume.replace(/General(\w+)_Top/, 'General $1');
+    }
+
+    if (neume.endsWith('_Top')) {
+      return neume.replace('_Top', '');
+    }
+
+    switch (neume) {
+      case Accidental.Flat_2_Right:
+        return 'Flat';
+      case Accidental.Sharp_2_Left:
+        return 'Sharp';
+      case Ison.Unison:
+        return 'Ison Indicator';
+      case MeasureBar.MeasureBarRight:
+        return 'Measure Bar';
+      case MeasureNumber.Two:
+        return 'Measure Number';
+      case NoteIndicator.Pa:
+        return 'Note Indicator';
+      case Tie.YfenBelow:
+        return 'Yfen';
+      case VocalExpressionNeume.HeteronConnecting:
+        return 'Connecting Heteron';
+      case VocalExpressionNeume.HomalonConnecting:
+        return 'Connecting Homalon';
+      default:
+        return neume;
     }
   }
 }

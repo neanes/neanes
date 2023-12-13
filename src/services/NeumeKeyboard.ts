@@ -1779,4 +1779,22 @@ export class NeumeKeyboard {
   public findTieMapping(event: KeyboardEvent, activeModifier: string | null) {
     return this.findMapping(this.tieKeyboardMap, event, activeModifier);
   }
+
+  public getKlasmaKeyTooltip() {
+    return this.__formatKeyForDocs(this.klasmaKey);
+  }
+
+  public getMartyriaKeyTooltip() {
+    return this.__formatKeyForDocs(this.martyriaKey);
+  }
+
+  public getMaryriaRightAlignTooltip() {
+    return `${this.__formatKeyForDocs(
+      this.martyriaConfigKey,
+    )} + ${this.__formatKeyForDocs(this.martyriaKey)}`;
+  }
+
+  public getNoteIndicatorKeyTooltip() {
+    return this.__formatKeyForDocs(this.noteIndicatorKey);
+  }
 }

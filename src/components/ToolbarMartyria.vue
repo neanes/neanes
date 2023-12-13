@@ -3,48 +3,56 @@
     <div class="row">
       <button
         class="neume-button"
+        :title="tooltip(Fthora.DiatonicNiLow_Top)"
         @click="$emit('update:fthora', Fthora.DiatonicNiLow_Top)"
       >
         <img src="@/assets/icons/fthora-diatonic-ni-low.svg" />
       </button>
       <button
         class="neume-button"
+        :title="tooltip(Fthora.DiatonicPa_Top)"
         @click="$emit('update:fthora', Fthora.DiatonicPa_Top)"
       >
         <img src="@/assets/icons/fthora-diatonic-pa.svg" />
       </button>
       <button
         class="neume-button"
+        :title="tooltip(Fthora.DiatonicVou_Top)"
         @click="$emit('update:fthora', Fthora.DiatonicVou_Top)"
       >
         <img src="@/assets/icons/fthora-diatonic-vou.svg" />
       </button>
       <button
         class="neume-button"
+        :title="tooltip(Fthora.DiatonicGa_Top)"
         @click="$emit('update:fthora', Fthora.DiatonicGa_Top)"
       >
         <img src="@/assets/icons/fthora-diatonic-ga.svg" />
       </button>
       <button
         class="neume-button"
+        :title="tooltip(Fthora.DiatonicThi_Top)"
         @click="$emit('update:fthora', Fthora.DiatonicThi_Top)"
       >
         <img src="@/assets/icons/fthora-diatonic-di.svg" />
       </button>
       <button
         class="neume-button"
+        :title="tooltip(Fthora.DiatonicKe_Top)"
         @click="$emit('update:fthora', Fthora.DiatonicKe_Top)"
       >
         <img src="@/assets/icons/fthora-diatonic-ke.svg" />
       </button>
       <button
         class="neume-button"
+        :title="tooltip(Fthora.DiatonicZo_Top)"
         @click="$emit('update:fthora', Fthora.DiatonicZo_Top)"
       >
         <img src="@/assets/icons/fthora-diatonic-zo.svg" />
       </button>
       <button
         class="neume-button"
+        :title="tooltip(Fthora.DiatonicNiHigh_Top)"
         @click="$emit('update:fthora', Fthora.DiatonicNiHigh_Top)"
       >
         <img src="@/assets/icons/fthora-diatonic-ni-high.svg" />
@@ -52,12 +60,14 @@
       <span class="space"></span>
       <button
         class="neume-button"
+        :title="tooltip(Fthora.SoftChromaticThi_Top)"
         @click="$emit('update:fthora', Fthora.SoftChromaticThi_Top)"
       >
         <img src="@/assets/icons/fthora-soft-chromatic-di.svg" />
       </button>
       <button
         class="neume-button"
+        :title="tooltip(Fthora.SoftChromaticPa_Top)"
         @click="$emit('update:fthora', Fthora.SoftChromaticPa_Top)"
       >
         <img src="@/assets/icons/fthora-soft-chromatic-ke.svg" />
@@ -65,12 +75,14 @@
       <span class="space"></span>
       <button
         class="neume-button"
+        :title="tooltip(Fthora.HardChromaticPa_Top)"
         @click="$emit('update:fthora', Fthora.HardChromaticPa_Top)"
       >
         <img src="@/assets/icons/fthora-hard-chromatic-pa.svg" />
       </button>
       <button
         class="neume-button"
+        :title="tooltip(Fthora.HardChromaticThi_Top)"
         @click="$emit('update:fthora', Fthora.HardChromaticThi_Top)"
       >
         <img src="@/assets/icons/fthora-hard-chromatic-di.svg" />
@@ -128,21 +140,23 @@
       <span class="space"></span>
       <ButtonWithMenu
         :options="barlineMenuOptions"
+        :title="tooltip(MeasureBar.MeasureBarRight)"
         @select="$emit('update:measureBar', $event)"
       />
       <span class="space" />
       <ButtonWithMenu
         :options="tempoMenuOptions"
+        :title="tooltip(TempoSign.VerySlowAbove)"
         @select="$emit('update:tempo', $event)"
       />
       <span class="space"></span>
       <button
         class="icon-btn"
         :class="{ selected: element.alignRight }"
+        :title="alignRightTooltip"
         @click="$emit('update:alignRight', !element.alignRight)"
       >
         <img
-          title="Align martyria to the end of the line"
           src="@/assets/icons/alignright2.svg"
           height="24"
           width="24"
@@ -252,9 +266,17 @@
 import { Component, Prop, Vue } from 'vue-facing-decorator';
 
 import { MartyriaElement } from '@/models/Element';
-import { Fthora, MeasureBar, Note, RootSign, TempoSign } from '@/models/Neumes';
+import {
+  Fthora,
+  MeasureBar,
+  Neume,
+  Note,
+  RootSign,
+  TempoSign,
+} from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
 import { Scale, ScaleNote } from '@/models/Scales';
+import { NeumeKeyboard } from '@/services/NeumeKeyboard';
 import { Unit } from '@/utils/Unit';
 
 import ButtonWithMenu, { ButtonWithMenuOption } from './ButtonWithMenu.vue';
@@ -280,7 +302,11 @@ import InputUnit from './InputUnit.vue';
 export default class ToolbarMartyria extends Vue {
   @Prop() element!: MartyriaElement;
   @Prop() pageSetup!: PageSetup;
+  @Prop() neumeKeyboard!: NeumeKeyboard;
+
   Fthora = Fthora;
+  MeasureBar = MeasureBar;
+  TempoSign = TempoSign;
 
   notes = Object.values(Note).map((x) => ({
     key: x,
@@ -433,7 +459,9 @@ export default class ToolbarMartyria extends Vue {
   }
 
   get spathiTitle() {
-    return this.spathiDisabled ? 'Spathi may only be placed on Ke' : '';
+    return this.spathiDisabled
+      ? 'Spathi may only be placed on Ke'
+      : this.tooltip(Fthora.Spathi_Top);
   }
 
   get klitonDisabled() {
@@ -443,7 +471,9 @@ export default class ToolbarMartyria extends Vue {
   }
 
   get klitonTitle() {
-    return this.klitonDisabled ? 'Kliton may only be placed on Thi' : '';
+    return this.klitonDisabled
+      ? 'Kliton may only be placed on Thi'
+      : this.tooltip(Fthora.Kliton_Top);
   }
 
   get zygosDisabled() {
@@ -453,7 +483,9 @@ export default class ToolbarMartyria extends Vue {
   }
 
   get zygosTitle() {
-    return this.zygosDisabled ? 'Zygos may only be placed on Thi' : '';
+    return this.zygosDisabled
+      ? 'Zygos may only be placed on Thi'
+      : this.tooltip(Fthora.Zygos_Top);
   }
 
   get enharmonicDisabled() {
@@ -470,7 +502,7 @@ export default class ToolbarMartyria extends Vue {
   get enharmonicTitle() {
     return this.enharmonicDisabled
       ? 'Enharmonic fthora may only be placed on Ga, Zo, and Vou'
-      : '';
+      : this.tooltip(Fthora.Enharmonic_Top);
   }
 
   get generalFlatDisabled() {
@@ -482,7 +514,7 @@ export default class ToolbarMartyria extends Vue {
   get generalFlatTitle() {
     return this.generalFlatDisabled
       ? 'General flat may only be placed on Ke'
-      : '';
+      : this.tooltip(Fthora.GeneralFlat_Top);
   }
 
   get generalSharpDisabled() {
@@ -494,7 +526,7 @@ export default class ToolbarMartyria extends Vue {
   get generalSharpTitle() {
     return this.generalSharpDisabled
       ? 'General sharp may only be placed on Ga'
-      : '';
+      : this.tooltip(Fthora.GeneralSharp_Top);
   }
 
   tempoMenuOptions: ButtonWithMenuOption[] = [
@@ -562,6 +594,57 @@ export default class ToolbarMartyria extends Vue {
       icon: new URL('@/assets/icons/barline-single.svg', import.meta.url).href,
     },
   ];
+
+  get alignRightTooltip() {
+    return `Align Right (${this.neumeKeyboard.getMaryriaRightAlignTooltip()})`;
+  }
+
+  tooltip(neume: Neume) {
+    const displayName = this.getDisplayName(neume);
+    const mapping = this.neumeKeyboard.findMappingForNeume(neume);
+    if (mapping) {
+      return `${displayName} (${this.neumeKeyboard.generateTooltip(mapping)})`;
+    } else {
+      return `${displayName}`;
+    }
+  }
+
+  getDisplayName(neume: Neume) {
+    if (neume.startsWith('Diatonic')) {
+      return neume
+        .replace(/Diatonic(\w+)_Top/, 'Diatonic $1')
+        .replace('Thi', 'Di')
+        .replace('Low', ' Low')
+        .replace('High', ' High');
+    }
+
+    if (neume.startsWith('SoftChromatic')) {
+      return neume
+        .replace(/SoftChromatic(\w+)_Top/, 'Soft Chromatic $1')
+        .replace('Thi', 'Di');
+    }
+
+    if (neume.startsWith('HardChromatic')) {
+      return neume
+        .replace(/HardChromatic(\w+)_Top/, 'Hard Chromatic $1')
+        .replace('Thi', 'Di');
+    }
+
+    if (neume.startsWith('General')) {
+      return neume.replace(/General(\w+)_Top/, 'General $1');
+    }
+
+    if (neume.endsWith('_Top')) {
+      return neume.replace('_Top', '');
+    }
+
+    switch (neume) {
+      case MeasureBar.MeasureBarRight:
+        return 'Measure Bar';
+      default:
+        return neume;
+    }
+  }
 }
 </script>
 

@@ -23,7 +23,7 @@
     </button>
     <span class="space"></span>
     <button
-      title="Insert martyria"
+      :title="martyriaTooltip"
       class="neume-button martyria"
       @click="$emit('add-auto-martyria')"
     >
@@ -32,6 +32,7 @@
     <span class="space"></span>
     <div
       class="tempo-container"
+      :title="tempoTooltip"
       @mousedown="openTempoMenu"
       @mouseleave="selectedTempoNeume = null"
     >
@@ -220,6 +221,7 @@ import { EntryMode } from '@/models/EntryMode';
 import { Note, RootSign, TempoSign } from '@/models/Neumes';
 import { AudioState } from '@/services/audio/AudioService';
 import { PlaybackOptions } from '@/services/audio/PlaybackService';
+import { NeumeKeyboard } from '@/services/NeumeKeyboard';
 
 import Neume from './Neume.vue';
 
@@ -249,6 +251,8 @@ export default class ToolbarMain extends Vue {
   @Prop() pageCount!: number;
   @Prop() audioState!: AudioState;
   @Prop() audioOptions!: PlaybackOptions;
+  @Prop() neumeKeyboard!: NeumeKeyboard;
+
   Note = Note;
   RootSign = RootSign;
   TempoSign = TempoSign;
@@ -271,6 +275,16 @@ export default class ToolbarMain extends Vue {
     return this.audioState === AudioState.Playing
       ? '@/assets/icons/audio-play.svg'
       : '@/assets/icons/audio-play.svg';
+  }
+
+  get martyriaTooltip() {
+    return `Martyria (${this.neumeKeyboard.getMartyriaKeyTooltip()})`;
+  }
+
+  get tempoTooltip() {
+    return `Tempo (${this.neumeKeyboard.generateTooltip(
+      this.neumeKeyboard.findMappingForNeume(TempoSign.VerySlow)!,
+    )})`;
   }
 
   beforeUnmount() {

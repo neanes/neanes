@@ -12,6 +12,7 @@
       :audioOptions="audioOptions"
       :currentPageNumber="currentPageNumber"
       :pageCount="pageCount"
+      :neumeKeyboard="neumeKeyboard"
       @update:zoom="updateZoom"
       @update:zoomToFit="updateZoomToFit"
       @update:audioOptionsSpeed="updateAudioOptionsSpeed"
@@ -594,6 +595,7 @@
       <ToolbarNeume
         :element="selectedElement"
         :pageSetup="score.pageSetup"
+        :neumeKeyboard="neumeKeyboard"
         :key="`toolbar-neume-${selectedElement.id}-${selectedElement.keyHelper}`"
         :innerNeume="toolbarInnerNeume"
         @update:innerNeume="toolbarInnerNeume = $event"

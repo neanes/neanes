@@ -11,7 +11,9 @@
         )
       "
     />
-    <label for="toolbar-drop-cap-use-default-style">Use default style</label>
+    <label for="toolbar-drop-cap-use-default-style">{{
+      $t('toolbar.dropCap.useDefaultStyle')
+    }}</label>
     <span class="divider" />
     <template v-if="!element.useDefaultStyle">
       <select
@@ -63,7 +65,7 @@
         <i>I</i>
       </button>
       <span class="space"></span>
-      <label class="right-space">Outline</label>
+      <label class="right-space">{{ $t('toolbar.dropCap.outline') }}</label>
       <InputStrokeWidth
         :modelValue="element.strokeWidth"
         @update:modelValue="$emit('update:strokeWidth', $event)"

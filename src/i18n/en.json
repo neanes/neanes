@@ -1,0 +1,120 @@
+{
+  "menu": {
+    "file": {
+      "root": "File",
+      "new": "New",
+      "open": "Open",
+      "openRecent": "Open Recent",
+      "save": "Save",
+      "saveAs": "Save As",
+      "pageSetup": "Page Setup",
+      "exportAsPdf": "Export as PDF",
+      "exportAsHtml": "Export as HTML",
+      "exportAsImage": "Export as Image",
+      "print": "Print",
+      "close": "Close",
+      "closeOthers": "Close Others"
+    },
+    "edit": {
+      "root": "Edit",
+      "undo": "Undo",
+      "redo": "Redo",
+      "cut": "Cut",
+      "copy": "Copy",
+      "copyAsHtml": "Copy as HTML",
+      "paste": "Paste",
+      "pasteWithLyrics": "Paste with Lyrics",
+      "copyFormat": "Copy Format",
+      "pasteFormat": "Paste Format",
+      "preferences": "Preferences"
+    },
+    "insert": {
+      "root": "Insert",
+      "dropCapBefore": "Drop Cap Before",
+      "dropCapAfter": "Drop Cap After",
+      "textBox": "Text Box",
+      "inlineTextBox": "Inline Text Box",
+      "modeKey": "Mode Key",
+      "image": "Image",
+      "headersAndFooters": "Headers and Footers",
+      "header": "Header",
+      "footer": "Footer"
+    },
+    "view": {
+      "root": "View (Debug)",
+      "generateTestFiles": "Generate Test Files (Debug)"
+    },
+    "help": {
+      "root": "Help",
+      "guide": "Guide",
+      "requestAFeature": "Request a Feature",
+      "reportAnIssue": "Report an Issue",
+      "about": "About"
+    },
+    "tab": {
+      "close": "Close",
+      "closeOthers": "Close Others",
+      "closeToTheLeft": "Close to the Left",
+      "closeToTheRight": "Close to the Right"
+    },
+    "warning": "Warning: This application works best in Chromium-based browsers. You may experience reduced functionality or errors in non-Chromium-based browsers."
+  },
+  "toolbar": {
+    "main": {
+      "auto": "Auto",
+      "insert": "Insert",
+      "single": "Single",
+      "fit": "Fit",
+      "speed": "Speed",
+      "pageNumber": "Page {{ currentPageNumber }} of {{ pageCount }}"
+    },
+    "dropCap": {
+      "useDefaultStyle": "Use Default Style",
+      "outline": "Outline"
+    },
+    "imageBox": {
+      "inline": "Inline",
+      "maintainAspectRatio": "Maintain Aspect Ratio",
+      "width": "Width",
+      "height": "Height"
+    },
+    "lyrics": {
+      "useDefaultStyle": "Use Default Style",
+      "outline": "Outline"
+    },
+    "martyria": {
+      "auto": "Auto",
+      "note": "Note",
+      "scale": "Scale",
+      "bpm": "BPM",
+      "spaceAfter": "Space After",
+      "fthoraNote": "Fthora Note",
+      "rootSignOverride": "Root Sign Override"
+    },
+    "modeKey": {
+      "useDefaultStyle": "Use Default Style",
+      "size": "Size",
+      "outline": "Outline",
+      "heightAdjustment": "Height Adjustment",
+      "bpm": "BPM",
+      "ignoreAttractions": "Ignore Attractions",
+      "showAmbitus": "Show Ambitus",
+      "permanentEnharmonicZo": "Permanent Enharmonic Zo",
+      "changeKey": "Change Key"
+    },
+    "neume": {
+      "spaceAfter": "Space After",
+      "positioning": "Positioning",
+      "ignoreAttractions": "Ignore Attractions",
+      "fthoraNote": "Fthora Note"
+    },
+    "tempo": {
+      "bpm": "BPM",
+      "spaceAfter": "Space After"
+    },
+    "textBox": {
+      "useDefaultStyle": "Use Default Style",
+      "outline": "Outline"
+    }
+  }
+}

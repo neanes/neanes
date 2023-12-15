@@ -5,21 +5,21 @@
       @click="$emit('update:entryMode', EntryMode.Auto)"
       :class="{ on: entryMode === EntryMode.Auto }"
     >
-      Auto
+      {{ $t('toolbar.main.auto') }}
     </button>
     <button
       class="entry-mode-btn"
       @click="$emit('update:entryMode', EntryMode.Insert)"
       :class="{ on: entryMode === EntryMode.Insert }"
     >
-      Insert
+      {{ $t('toolbar.main.insert') }}
     </button>
     <button
       class="entry-mode-btn"
       @click="$emit('update:entryMode', EntryMode.Edit)"
       :class="{ on: entryMode === EntryMode.Edit }"
     >
-      Single
+      {{ $t('toolbar.main.single') }}
     </button>
     <span class="space"></span>
     <button
@@ -150,7 +150,9 @@
         >&#x25BE;</span
       >
       <div class="zoom-menu" v-if="showZoomMenu">
-        <div class="zoom-menu-item" @click="updateZoom('Fit')">Fit</div>
+        <div class="zoom-menu-item" @click="updateZoom('Fit')">
+          {{ $t('toolbar.main.fit') }}
+        </div>
         <div class="zoom-menu-separator"></div>
         <div
           v-for="option in zoomOptions"
@@ -183,7 +185,7 @@
         <img src="@/assets/icons/config.svg" width="32" height="32" />
       </button>
       <span class="space" />
-      <label class="right-space">Speed</label>
+      <label class="right-space">{{ $t('toolbar.main.speed') }}</label>
       <select
         class="audio-speed"
         :value="audioOptions.speed"
@@ -208,7 +210,7 @@
     <span class="space"></span>
     <span class="space"></span>
     <div class="page-number-container">
-      Page {{ currentPageNumber }} of {{ pageCount }}
+      {{ $t('toolbar.main.pageNumber', { currentPageNumber, pageCount }) }}
     </div>
   </div>
 </template>

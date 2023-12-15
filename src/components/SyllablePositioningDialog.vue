@@ -1,7 +1,7 @@
 <template>
   <ModalDialog>
     <div class="container">
-      <div class="header">Neume Positioning</div>
+      <div class="header">{{ $t('dialog.neumePositioning.root') }}</div>
       <div class="pane-container" :style="paneContainerStyle">
         <div class="top-pane" :style="topPaneStyle">
           <template v-if="hasPreviousElement">
@@ -252,11 +252,15 @@
         <div class="bottom-pane">
           <div class="form-group">
             <label />
-            <span class="table-header">Left</span>
-            <span class="table-header">Top</span>
+            <span class="table-header">{{
+              $t('dialog.neumePositioning.left')
+            }}</span>
+            <span class="table-header">{{
+              $t('dialog.neumePositioning.top')
+            }}</span>
           </div>
           <div class="form-group">
-            <label>Accidental</label>
+            <label>{{ $t('dialog.neumePositioning.accidental') }}</label>
             <InputUnit
               :unit="unit"
               :min="min"
@@ -275,7 +279,7 @@
             />
           </div>
           <div class="form-group">
-            <label>Accidental 2</label>
+            <label>{{ $t('dialog.neumePositioning.accidental2') }}</label>
             <InputUnit
               :unit="unit"
               :min="min"
@@ -294,7 +298,7 @@
             />
           </div>
           <div class="form-group">
-            <label>Accidental 3</label>
+            <label>{{ $t('dialog.neumePositioning.accidental3') }}</label>
             <InputUnit
               :unit="unit"
               :min="min"
@@ -313,7 +317,7 @@
             />
           </div>
           <div class="form-group">
-            <label>Bar Line L</label>
+            <label>{{ $t('dialog.neumePositioning.barLineL') }}</label>
             <InputUnit
               :unit="unit"
               :min="min"
@@ -332,7 +336,7 @@
             />
           </div>
           <div class="form-group">
-            <label>Bar Line R</label>
+            <label>{{ $t('dialog.neumePositioning.barLineR') }}</label>
             <InputUnit
               :unit="unit"
               :min="min"
@@ -351,7 +355,7 @@
             />
           </div>
           <div class="form-group">
-            <label>Fthora</label>
+            <label>{{ $t('dialog.neumePositioning.fthora') }}</label>
             <InputUnit
               :unit="unit"
               :min="min"
@@ -370,7 +374,7 @@
             />
           </div>
           <div class="form-group">
-            <label>Fthora 2</label>
+            <label>{{ $t('dialog.neumePositioning.fthora2') }}</label>
             <InputUnit
               :unit="unit"
               :min="min"
@@ -389,7 +393,7 @@
             />
           </div>
           <div class="form-group">
-            <label>Fthora 3</label>
+            <label>{{ $t('dialog.neumePositioning.fthora3') }}</label>
             <InputUnit
               :unit="unit"
               :min="min"
@@ -408,7 +412,7 @@
             />
           </div>
           <div class="form-group">
-            <label>Gorgon</label>
+            <label>{{ $t('dialog.neumePositioning.gorgon') }}</label>
             <InputUnit
               :unit="unit"
               :min="min"
@@ -427,7 +431,7 @@
             />
           </div>
           <div class="form-group">
-            <label>Gorgon 2</label>
+            <label>{{ $t('dialog.neumePositioning.gorgon2') }}</label>
             <InputUnit
               :unit="unit"
               :min="min"
@@ -446,7 +450,7 @@
             />
           </div>
           <div class="form-group">
-            <label>Ison</label>
+            <label>{{ $t('dialog.neumePositioning.ison') }}</label>
             <InputUnit
               :unit="unit"
               :min="min"
@@ -465,7 +469,7 @@
             />
           </div>
           <div class="form-group">
-            <label>Koronis</label>
+            <label>{{ $t('dialog.neumePositioning.koronis') }}</label>
             <InputUnit
               :unit="unit"
               :min="min"
@@ -484,7 +488,7 @@
             />
           </div>
           <div class="form-group">
-            <label>Measure No.</label>
+            <label>{{ $t('dialog.neumePositioning.measureNo') }}</label>
             <InputUnit
               :unit="unit"
               :min="min"
@@ -503,7 +507,7 @@
             />
           </div>
           <div class="form-group">
-            <label>Note</label>
+            <label>{{ $t('dialog.neumePositioning.note') }}</label>
             <InputUnit
               :unit="unit"
               :min="min"
@@ -522,7 +526,7 @@
             />
           </div>
           <div class="form-group">
-            <label>Stavros</label>
+            <label>{{ $t('dialog.neumePositioning.stavros') }}</label>
             <InputUnit
               :unit="unit"
               :min="min"
@@ -541,7 +545,7 @@
             />
           </div>
           <div class="form-group">
-            <label>Tie</label>
+            <label>{{ $t('dialog.neumePositioning.tie') }}</label>
             <InputUnit
               :unit="unit"
               :min="min"
@@ -560,7 +564,7 @@
             />
           </div>
           <div class="form-group">
-            <label>Time</label>
+            <label>{{ $t('dialog.neumePositioning.time') }}</label>
             <InputUnit
               :unit="unit"
               :min="min"
@@ -579,7 +583,7 @@
             />
           </div>
           <div class="form-group">
-            <label>Vareia</label>
+            <label>{{ $t('dialog.neumePositioning.vareia') }}</label>
             <InputUnit
               :unit="unit"
               :min="min"
@@ -598,7 +602,7 @@
             />
           </div>
           <div class="form-group">
-            <label>Quality</label>
+            <label>{{ $t('dialog.neumePositioning.quality') }}</label>
             <InputUnit
               :unit="unit"
               :min="min"
@@ -619,8 +623,12 @@
         </div>
       </div>
       <div class="button-container">
-        <button class="ok-btn" @click="update">Update</button>
-        <button class="cancel-btn" @click="$emit('close')">Cancel</button>
+        <button class="ok-btn" @click="update">
+          {{ $t('dialog.neumePositioning.update') }}
+        </button>
+        <button class="cancel-btn" @click="$emit('close')">
+          {{ $t('dialog.neumePositioning.cancel') }}
+        </button>
       </div>
     </div>
   </ModalDialog>

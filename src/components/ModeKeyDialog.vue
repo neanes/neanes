@@ -1,7 +1,7 @@
 <template>
   <ModalDialog>
     <div class="container">
-      <div class="header">Select Mode Key</div>
+      <div class="header">{{ $t('dialog.modeKey.root') }}</div>
       <div class="pane-container">
         <div class="left-pane">
           <ul class="mode-list">
@@ -9,49 +9,49 @@
               :class="{ selected: selectedMode === 1 }"
               @click="selectMode(1)"
             >
-              First Mode
+              {{ $t('dialog.modeKey.firstMode') }}
             </li>
             <li
               :class="{ selected: selectedMode === 2 }"
               @click="selectMode(2)"
             >
-              Second Mode
+              {{ $t('dialog.modeKey.secondMode') }}
             </li>
             <li
               :class="{ selected: selectedMode === 3 }"
               @click="selectMode(3)"
             >
-              Third Mode
+              {{ $t('dialog.modeKey.thirdMode') }}
             </li>
             <li
               :class="{ selected: selectedMode === 4 }"
               @click="selectMode(4)"
             >
-              Fourth Mode
+              {{ $t('dialog.modeKey.fourthMode') }}
             </li>
             <li
               :class="{ selected: selectedMode === 5 }"
               @click="selectMode(5)"
             >
-              Plagal of the First Mode
+              {{ $t('dialog.modeKey.plagalOfFirstMode') }}
             </li>
             <li
               :class="{ selected: selectedMode === 6 }"
               @click="selectMode(6)"
             >
-              Plagal of the Second Mode
+              {{ $t('dialog.modeKey.plagalOfSecondMode') }}
             </li>
             <li
               :class="{ selected: selectedMode === 7 }"
               @click="selectMode(7)"
             >
-              Grave Mode
+              {{ $t('dialog.modeKey.graveMode') }}
             </li>
             <li
               :class="{ selected: selectedMode === 8 }"
               @click="selectMode(8)"
             >
-              Plagal of the Fourth Mode
+              {{ $t('dialog.modeKey.plagalOfFourthMode') }}
             </li>
           </ul>
         </div>
@@ -66,7 +66,9 @@
               :key="index"
             >
               <ModeKey :element="template" />
-              <div class="mode-key-description">{{ template.description }}</div>
+              <div class="mode-key-description">
+                {{ $t(template.description) }}
+              </div>
             </li>
           </ul>
         </div>
@@ -77,9 +79,11 @@
           :disabled="selectedModeKey == null"
           @click="updateModeKey"
         >
-          Update
+          {{ $t('dialog.modeKey.update') }}
         </button>
-        <button class="cancel-btn" @click="$emit('close')">Cancel</button>
+        <button class="cancel-btn" @click="$emit('close')">
+          {{ $t('dialog.modeKey.cancel') }}
+        </button>
       </div>
     </div>
   </ModalDialog>

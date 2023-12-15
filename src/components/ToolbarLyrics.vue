@@ -11,7 +11,9 @@
         )
       "
     />
-    <label for="toolbar-lyrics-use-default-style">Use default style</label>
+    <label for="toolbar-lyrics-use-default-style">{{
+      $t('toolbar.lyrics.useDefaultStyle')
+    }}</label>
     <span class="divider" />
     <template v-if="!element.lyricsUseDefaultStyle">
       <select
@@ -61,7 +63,7 @@
         <u>U</u>
       </button>
       <span class="space"></span>
-      <label class="right-space">Outline</label>
+      <label class="right-space">{{ $t('toolbar.lyrics.outline') }}</label>
       <InputStrokeWidth
         :modelValue="element.lyricsStrokeWidth"
         @update:modelValue="$emit('update:lyricsStrokeWidth', $event)"

@@ -9,7 +9,9 @@
           $emit('update:inline', ($event.target as HTMLInputElement).checked)
         "
       />
-      <label for="toolbar-image-box-inline">Inline</label>
+      <label for="toolbar-image-box-inline">{{
+        $t('toolbar.imageBox.inline')
+      }}</label>
     </div>
 
     <span class="space" />
@@ -26,15 +28,15 @@
           )
         "
       />
-      <label for="toolbar-image-box-lock-aspect-ratio"
-        >Maintain Aspect Ratio</label
-      >
+      <label for="toolbar-image-box-lock-aspect-ratio">{{
+        $t('toolbar.imageBox.maintainAspectRatio')
+      }}</label>
     </div>
 
     <span class="space" />
 
     <div style="display: flex; align-items: center">
-      <label class="right-space">W</label>
+      <label class="right-space">{{ $t('toolbar.imageBox.width') }}</label>
       <InputUnit
         :modelValue="element.imageWidth"
         @update:modelValue="onChangeWidth($event)"
@@ -49,7 +51,7 @@
     <span class="space" />
 
     <div style="display: flex; align-items: center">
-      <label class="right-space">H</label>
+      <label class="right-space">{{ $t('toolbar.imageBox.height') }}</label>
       <InputUnit
         :modelValue="element.imageHeight"
         @update:modelValue="onChangeHeight($event)"

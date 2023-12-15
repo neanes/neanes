@@ -11,11 +11,13 @@
         )
       "
     />
-    <label for="toolbar-mode-key-use-default-style">Use default style</label>
+    <label for="toolbar-mode-key-use-default-style">{{
+      $t('toolbar.modeKey.useDefaultStyle')
+    }}</label>
     <span class="divider" />
 
     <template v-if="!element.useDefaultStyle">
-      <label class="right-space">Size</label>
+      <label class="right-space">{{ $t('toolbar.modeKey.size') }}</label>
       <InputFontSize
         class="drop-caps-input"
         :modelValue="element.fontSize"
@@ -69,14 +71,16 @@
     </button>
     <span class="space" />
     <template v-if="!element.useDefaultStyle">
-      <label class="right-space">Outline</label>
+      <label class="right-space">{{ $t('toolbar.modeKey.outline') }}</label>
       <InputStrokeWidth
         :modelValue="element.strokeWidth"
         @update:modelValue="$emit('update:strokeWidth', $event)"
       />
       <span class="space" />
 
-      <label class="right-space">Height Adjustment</label>
+      <label class="right-space">{{
+        $t('toolbar.modeKey.heightAdjustment')
+      }}</label>
 
       <InputUnit
         class="short-input"
@@ -112,7 +116,7 @@
 
     <span class="space" />
 
-    <label class="right-space">BPM</label>
+    <label class="right-space">{{ $t('toolbar.modeKey.bpm') }}</label>
     <InputBpm
       :modelValue="element.bpm"
       @update:modelValue="$emit('update:bpm', $event)"
@@ -132,9 +136,9 @@
           )
         "
       />
-      <label for="toolbar-mode-key-ignore-attractions"
-        >Ignore Attractions</label
-      >
+      <label for="toolbar-mode-key-ignore-attractions">{{
+        $t('toolbar.modeKey.ignoreAttractions')
+      }}</label>
     </div>
 
     <span class="space" />
@@ -151,7 +155,9 @@
           )
         "
       />
-      <label for="toolbar-mode-key-show-ambitus">Show Ambitus</label>
+      <label for="toolbar-mode-key-show-ambitus">{{
+        $t('toolbar.modeKey.showAmbitus')
+      }}</label>
     </div>
 
     <span class="space" />
@@ -171,13 +177,15 @@
           )
         "
       />
-      <label for="toolbar-mode-key-permanent-enharmonic-zo"
-        >Permanent Enharmonic Zo</label
-      >
+      <label for="toolbar-mode-key-permanent-enharmonic-zo">{{
+        $t('toolbar.modeKey.permanentEnharmonicZo')
+      }}</label>
     </div>
     <span class="space" />
 
-    <button @click="$emit('open-mode-key-dialog')">Change Key</button>
+    <button @click="$emit('open-mode-key-dialog')">
+      {{ $t('toolbar.modeKey.changeKey') }}
+    </button>
   </div>
 </template>
 

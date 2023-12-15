@@ -173,11 +173,13 @@
             $emit('update:auto', ($event.target as HTMLInputElement).checked)
           "
         />
-        <label for="toolbar-martyria-auto">Auto</label>
+        <label for="toolbar-martyria-auto">{{
+          $t('toolbar.martyria.auto')
+        }}</label>
       </div>
       <template v-if="!element.auto">
         <span class="space" />
-        <label class="right-space">Note</label>
+        <label class="right-space">{{ $t('toolbar.martyria.note') }}</label>
         <select
           :value="element.note"
           @change="
@@ -190,7 +192,7 @@
         </select>
 
         <span class="space" />
-        <label class="right-space">Scale</label>
+        <label class="right-space">{{ $t('toolbar.martyria.scale') }}</label>
         <select
           :value="element.scale"
           @change="
@@ -204,7 +206,7 @@
       </template>
     </div>
     <div class="row">
-      <label class="right-space">BPM</label>
+      <label class="right-space">{{ $t('toolbar.martyria.bpm') }}</label>
       <InputBpm
         :disabled="element.tempo == null"
         :modelValue="element.bpm"
@@ -213,7 +215,7 @@
 
       <span class="space" />
 
-      <label class="right-space">Space After</label>
+      <label class="right-space">{{ $t('toolbar.martyria.spaceAfter') }}</label>
 
       <InputUnit
         unit="pt"
@@ -227,7 +229,9 @@
 
       <template v-if="showChromaticFthoraNote">
         <span class="space" />
-        <label class="right-space">Fthora Note</label>
+        <label class="right-space">{{
+          $t('toolbar.martyria.fthoraNote')
+        }}</label>
         <select
           :value="element.chromaticFthoraNote"
           @change="
@@ -243,7 +247,9 @@
         </select>
       </template>
       <span class="space" />
-      <label class="right-space">Root Sign Override</label>
+      <label class="right-space">{{
+        $t('toolbar.martyria.rootSignOverride')
+      }}</label>
       <select
         :value="element.rootSignOverride"
         @change="

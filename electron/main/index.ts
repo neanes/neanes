@@ -14,6 +14,7 @@ import {
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer';
 import { autoUpdater } from 'electron-updater';
 import { promises as fs } from 'fs';
+import i18next from 'i18next';
 import sizeOf from 'image-size';
 import JSZip from 'jszip';
 import mimetypes from 'mime-types';
@@ -21,6 +22,7 @@ import path from 'path';
 import { debounce } from 'throttle-debounce';
 import { promisify } from 'util';
 
+import resources from '../../src/i18n';
 import {
   CloseWorkspacesArgs,
   CloseWorkspacesDisposition,
@@ -865,10 +867,10 @@ function createMenu() {
         ] as MenuItemConstructorOptions[])
       : []),
     {
-      label: '&File',
+      label: i18next.t('menu.file.root'),
       submenu: [
         {
-          label: '&New',
+          label: i18next.t('menu.file.new'),
           accelerator: 'CmdOrCtrl+N',
           click() {
             if (!win) {
@@ -879,7 +881,7 @@ function createMenu() {
           },
         },
         {
-          label: '&Open',
+          label: i18next.t('menu.file.open'),
           accelerator: 'CmdOrCtrl+O',
           async click() {
             const workspaces: FileMenuOpenScoreArgs[] = await openWorkspaces();
@@ -899,7 +901,7 @@ function createMenu() {
         },
         {
           id: 'recentfiles',
-          label: 'Open Recent',
+          label: i18next.t('menu.file.openRecent'),
           submenu: store.recentFiles.map((x, index) => ({
             label: `${index + 1}: ${x}`,
             async click() {
@@ -931,14 +933,14 @@ function createMenu() {
           })),
         },
         {
-          label: '&Save',
+          label: i18next.t('menu.file.save'),
           accelerator: 'CmdOrCtrl+S',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuSave);
           },
         },
         {
-          label: 'Save &As',
+          label: i18next.t('menu.file.saveAs'),
           accelerator: 'CmdOrCtrl+Shift+S',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuSaveAs);
@@ -946,34 +948,34 @@ function createMenu() {
         },
         { type: 'separator' },
         {
-          label: 'Page Setup',
+          label: i18next.t('menu.file.pageSetup'),
           accelerator: 'CmdOrCtrl+Shift+P',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuPageSetup);
           },
         },
         {
-          label: '&Export as PDF',
+          label: i18next.t('menu.file.exportAsPdf'),
           accelerator: 'CmdOrCtrl+E',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuExportAsPdf);
           },
         },
         {
-          label: 'Export as &HTML',
+          label: i18next.t('menu.file.exportAsHtml'),
           accelerator: 'CmdOrCtrl+Shift+E',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuExportAsHtml);
           },
         },
         {
-          label: 'Export as &Image',
+          label: i18next.t('menu.file.exportAsImage'),
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuExportAsImage);
           },
         },
         {
-          label: '&Print',
+          label: i18next.t('menu.file.print'),
           accelerator: 'CmdOrCtrl+P',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuPrint);
@@ -981,7 +983,7 @@ function createMenu() {
         },
         { type: 'separator' },
         {
-          label: '&Close',
+          label: i18next.t('menu.file.close'),
           accelerator: 'CmdOrCtrl+W',
           click() {
             win?.webContents.send(IpcMainChannels.CloseWorkspaces, {
@@ -990,7 +992,7 @@ function createMenu() {
           },
         },
         {
-          label: 'Close Ot&hers',
+          label: i18next.t('menu.file.closeOthers'),
           click() {
             win?.webContents.send(IpcMainChannels.CloseWorkspaces, {
               disposition: CloseWorkspacesDisposition.OTHERS,
@@ -1002,11 +1004,11 @@ function createMenu() {
       ],
     },
     {
-      label: '&Edit',
+      label: i18next.t('menu.edit.root'),
       submenu: [
         {
           id: 'undo',
-          label: '&Undo',
+          label: i18next.t('menu.edit.undo'),
           accelerator: 'CmdOrCtrl+Z',
           click(menuItem, browserWindow, event) {
             // The accelerator is handled in the renderer process because of
@@ -1018,7 +1020,7 @@ function createMenu() {
         },
         {
           id: 'redo',
-          label: '&Redo',
+          label: i18next.t('menu.edit.redo'),
           accelerator: isMac ? 'CmdOrCtrl+Shift+Z' : 'CmdOrCtrl+Y',
           click(menuItem, browserWindow, event) {
             // The accelerator is handled in the renderer process because of
@@ -1030,7 +1032,7 @@ function createMenu() {
         },
         { type: 'separator' },
         {
-          label: 'Cu&t',
+          label: i18next.t('menu.edit.cut'),
           accelerator: 'CmdOrCtrl+X',
           click(menuItem, browserWindow, event) {
             // The accelerator is handled in the renderer process because of
@@ -1041,7 +1043,7 @@ function createMenu() {
           },
         },
         {
-          label: '&Copy',
+          label: i18next.t('menu.edit.copy'),
           accelerator: 'CmdOrCtrl+C',
           click(menuItem, browserWindow, event) {
             // The accelerator is handled in the renderer process because of
@@ -1052,7 +1054,7 @@ function createMenu() {
           },
         },
         {
-          label: 'Copy as &HTML',
+          label: i18next.t('menu.edit.copyAsHtml'),
           accelerator: 'CmdOrCtrl+Shift+C',
           click(menuItem, browserWindow, event) {
             // The accelerator is handled in the renderer process because of
@@ -1063,7 +1065,7 @@ function createMenu() {
           },
         },
         {
-          label: 'Past&e',
+          label: i18next.t('menu.edit.paste'),
           accelerator: 'CmdOrCtrl+V',
           click(menuItem, browserWindow, event) {
             // The accelerator is handled in the renderer process because of
@@ -1074,7 +1076,7 @@ function createMenu() {
           },
         },
         {
-          label: 'Paste with &lyrics',
+          label: i18next.t('menu.edit.pasteWithLyrics'),
           accelerator: 'CmdOrCtrl+Shift+V',
           click(menuItem, browserWindow, event) {
             // The accelerator is handled in the renderer process because of
@@ -1086,14 +1088,14 @@ function createMenu() {
         },
         { type: 'separator' },
         {
-          label: 'Copy &Format',
+          label: i18next.t('menu.edit.copyFormat'),
           accelerator: 'CmdOrCtrl+Shift+R',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuCopyFormat);
           },
         },
         {
-          label: 'Paste Fo&rmat',
+          label: i18next.t('menu.edit.pasteFormat'),
           accelerator: 'CmdOrCtrl+R',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuPasteFormat);
@@ -1101,7 +1103,7 @@ function createMenu() {
         },
         { type: 'separator' },
         {
-          label: '&Preferences',
+          label: i18next.t('menu.edit.preferences'),
           accelerator: 'CmdOrCtrl+,',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuPreferences);
@@ -1110,24 +1112,24 @@ function createMenu() {
       ],
     },
     {
-      label: '&Insert',
+      label: i18next.t('menu.insert.root'),
       submenu: [
         {
-          label: '&Drop Cap Before',
+          label: i18next.t('menu.insert.dropCapBefore'),
           accelerator: 'CmdOrCtrl+D',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuInsertDropCapBefore);
           },
         },
         {
-          label: '&Drop Cap After',
+          label: i18next.t('menu.insert.dropCapAfter'),
           accelerator: 'CmdOrCtrl+Shift+D',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuInsertDropCapAfter);
           },
         },
         {
-          label: '&Text Box',
+          label: i18next.t('menu.insert.textBox'),
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuInsertTextBox, {
               inline: false,
@@ -1135,7 +1137,7 @@ function createMenu() {
           },
         },
         {
-          label: '&Inline Text Box',
+          label: i18next.t('menu.insert.inlineTextBox'),
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuInsertTextBox, {
               inline: true,
@@ -1143,13 +1145,13 @@ function createMenu() {
           },
         },
         {
-          label: '&Mode Key',
+          label: i18next.t('menu.insert.modeKey'),
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuInsertModeKey);
           },
         },
         {
-          label: '&Image',
+          label: i18next.t('menu.insert.image'),
           async click() {
             const data = await openImage();
 
@@ -1160,16 +1162,16 @@ function createMenu() {
         },
         { type: 'separator' },
         {
-          label: 'Headers && Footers',
+          label: i18next.t('menu.insert.headersAndFooters'),
           submenu: [
             {
-              label: 'Header',
+              label: i18next.t('menu.insert.header'),
               click() {
                 win?.webContents.send(IpcMainChannels.FileMenuInsertHeader);
               },
             },
             {
-              label: 'Footer',
+              label: i18next.t('menu.insert.footer'),
               click() {
                 win?.webContents.send(IpcMainChannels.FileMenuInsertFooter);
               },
@@ -1181,7 +1183,7 @@ function createMenu() {
     ...(isDevelopment
       ? [
           {
-            label: 'View (Debug)',
+            label: i18next.t('menu.view.root'),
             submenu: [
               { role: 'reload' },
               { role: 'forceReload' },
@@ -1195,7 +1197,7 @@ function createMenu() {
             ],
           } as MenuItemConstructorOptions,
           {
-            label: 'Generate Test Files (Debug)',
+            label: i18next.t('menu.view.generateTestFiles'),
             submenu: Object.values(TestFileType).map((testFileType) => ({
               label: testFileType,
               click() {
@@ -1216,20 +1218,20 @@ function createMenu() {
       role: 'help',
       submenu: [
         {
-          label: 'Guide',
+          label: i18next.t('menu.help.guide'),
           click() {
             shell.openExternal(import.meta.env.VITE_GUIDE_URL!);
           },
         },
         { type: 'separator' },
         {
-          label: 'Request a Feature',
+          label: i18next.t('menu.help.requestAFeature'),
           click() {
             shell.openExternal(import.meta.env.VITE_ISSUES_URL!);
           },
         },
         {
-          label: 'Report an Issue',
+          label: i18next.t('menu.help.reportAnIssue'),
           click() {
             shell.openExternal(import.meta.env.VITE_ISSUES_URL!);
           },
@@ -1240,7 +1242,7 @@ function createMenu() {
         ...(!isMac
           ? ([
               {
-                label: 'About',
+                label: i18next.t('menu.help.about'),
                 click() {
                   let detail = `Version: ${app.getVersion()}\n`;
                   detail += `Electron: ${process.versions.electron}\n`;
@@ -1370,7 +1372,7 @@ ipcMain.on(
   async (event, args: OpenContextMenuForTabArgs) => {
     const menu = Menu.buildFromTemplate([
       {
-        label: 'Close',
+        label: i18next.t('menu.tab.close'),
         click() {
           win?.webContents.send(IpcMainChannels.CloseWorkspaces, {
             disposition: CloseWorkspacesDisposition.SELF,
@@ -1380,7 +1382,7 @@ ipcMain.on(
       },
 
       {
-        label: 'Close Others',
+        label: i18next.t('menu.tab.closeOthers'),
         click() {
           win?.webContents.send(IpcMainChannels.CloseWorkspaces, {
             disposition: CloseWorkspacesDisposition.OTHERS,
@@ -1390,7 +1392,7 @@ ipcMain.on(
       },
 
       {
-        label: 'Close to the Left',
+        label: i18next.t('menu.tab.closeToTheLeft'),
         click() {
           win?.webContents.send(IpcMainChannels.CloseWorkspaces, {
             disposition: CloseWorkspacesDisposition.LEFT,
@@ -1399,7 +1401,7 @@ ipcMain.on(
         },
       },
       {
-        label: 'Close to the Right',
+        label: i18next.t('menu.tab.closeToTheRight'),
         click() {
           win?.webContents.send(IpcMainChannels.CloseWorkspaces, {
             disposition: CloseWorkspacesDisposition.RIGHT,
@@ -1610,6 +1612,12 @@ app.on('activate', () => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', async () => {
+  i18next.init({
+    lng: app.getLocale().slice(0, 2),
+    fallbackLng: 'en',
+    resources,
+  });
+
   if (isDevelopment && !process.env.IS_TEST) {
     // Install Vue Devtools
     try {

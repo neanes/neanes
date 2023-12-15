@@ -400,7 +400,7 @@
 
       <span class="separator" />
 
-      <label class="right-space">Space After</label>
+      <label class="right-space">{{ $t('toolbar.neume.spaceAfter') }}</label>
 
       <InputUnit
         unit="pt"
@@ -414,7 +414,7 @@
       <span class="space"></span>
 
       <button @click="$emit('open-syllable-positioning-dialog')">
-        Positioning
+        {{ $t('toolbar.neume.positioning') }}
       </button>
       <span class="space" />
 
@@ -430,12 +430,14 @@
             )
           "
         />
-        <label for="toolbar-neume-ignore-attractions">Ignore Attractions</label>
+        <label for="toolbar-neume-ignore-attractions">{{
+          $t('toolbar.neume.ignoreAttractions')
+        }}</label>
       </div>
 
       <template v-if="showChromaticFthoraNote">
         <span class="space" />
-        <label class="right-space">Fthora Note</label>
+        <label class="right-space">{{ $t('toolbar.neume.fthoraNote') }}</label>
         <select
           :value="element.chromaticFthoraNote"
           @change="

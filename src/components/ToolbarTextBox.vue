@@ -12,7 +12,9 @@
           )
         "
       />
-      <label for="toolbar-text-box-use-default-style">Use default style</label>
+      <label for="toolbar-text-box-use-default-style">{{
+        $t('toolbar.textBox.useDefaultStyle')
+      }}</label>
       <span class="divider" />
     </template>
     <template v-if="!element.inline || !element.useDefaultStyle">
@@ -105,7 +107,7 @@
     </button>
     <template v-if="!element.inline || !element.useDefaultStyle">
       <span class="space" />
-      <label class="right-space">Outline</label>
+      <label class="right-space">{{ $t('toolbar.textBox.outline') }}</label>
       <InputStrokeWidth
         :modelValue="element.strokeWidth"
         @update:modelValue="$emit('update:strokeWidth', $event)"

@@ -28,6 +28,9 @@ i18next.use(LanguageDetector).init({
     order: ['querystring', 'navigator'],
   },
   fallbackLng: 'en',
+  interpolation: {
+    escapeValue: false,
+  },
   resources,
 });
 

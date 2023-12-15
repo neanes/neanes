@@ -1,20 +1,22 @@
 <template>
   <ModalDialog>
     <div class="container">
-      <div class="header">Export</div>
+      <div class="header">{{ $t('dialog.export.root') }}</div>
       <div class="pane-container">
         <div class="vertical-spacer" />
         <div class="form-group row">
-          <label class="medium">Format</label>
+          <label class="medium">{{ $t('dialog.export.format') }}</label>
           <select v-model="format">
             <!-- <option :value="ExportFormat.HTML">HTML file</option>
             <option :value="ExportFormat.PDF">PDF file</option> -->
-            <option :value="ExportFormat.PNG">PNG images</option>
+            <option :value="ExportFormat.PNG">
+              {{ $t('dialog.export.pngImages') }}
+            </option>
             <!-- <option :value="ExportFormat.SVG">SVG images</option> -->
           </select>
         </div>
         <div class="form-group row" v-if="format === ExportFormat.PNG">
-          <label class="medium">Resolution</label>
+          <label class="medium">{{ $t('dialog.export.resolution') }}</label>
           <InputUnit
             unit="unitless"
             class="dpi"
@@ -24,7 +26,7 @@
             :round="round"
             v-model="dpi"
           />
-          <span class="unit-label">dpi</span>
+          <span class="unit-label">{{ $t('dialog.export.dpi') }}</span>
         </div>
         <div class="form-group row" v-if="format === ExportFormat.PNG">
           <input
@@ -32,12 +34,12 @@
             type="checkbox"
             v-model="transparentBackground"
           />
-          <label for="export-dialog-transparent-bg"
-            >Transparent Background</label
-          >
+          <label for="export-dialog-transparent-bg">{{
+            $t('dialog.export.transparentBackground')
+          }}</label>
         </div>
         <div class="form-group row" v-if="exportFormatIsImage">
-          Each page will be exported as a separate image file.
+          {{ $t('dialog.export.separateImageFile') }}
         </div>
         <div class="separator"></div>
         <div class="form-group row" v-if="exportFormatIsImage">
@@ -46,18 +48,24 @@
             type="checkbox"
             v-model="openFolder"
           />
-          <label for="export-dialog-open-folder"
-            >Open destination folder after export</label
-          >
+          <label for="export-dialog-open-folder">{{
+            $t('dialog.export.openDestinationFolderAfterExport')
+          }}</label>
         </div>
       </div>
       <div class="button-container">
         <template v-if="loading">
-          <button class="cancel-btn" disabled>Exporting...</button>
+          <button class="cancel-btn" disabled>
+            {{ $t('dialog.export.exporting') }}
+          </button>
         </template>
         <template v-else>
-          <button class="ok-btn" @click="doExport">Export</button>
-          <button class="cancel-btn" @click="close">Close</button>
+          <button class="ok-btn" @click="doExport">
+            {{ $t('dialog.export.export') }}
+          </button>
+          <button class="cancel-btn" @click="close">
+            {{ $t('dialog.export.close') }}
+          </button>
         </template>
       </div>
     </div>

@@ -1,10 +1,10 @@
 <template>
   <ModalDialog>
     <div class="container">
-      <div class="header">Playback Settings</div>
+      <div class="header">{{ $t('dialog.playbackSettings.root') }}</div>
       <div class="pane-container">
         <div class="form-group row">
-          <label>Detune</label>
+          <label>{{ $t('dialog.playbackSettings.detune') }}</label>
           <input
             type="number"
             class="detune"
@@ -19,13 +19,17 @@
           <span class="unit-label">cents</span>
           <span class="label-g3">Di = G3 = {{ options.frequencyDi }} Hz </span>
           <button class="btnTestTone" @click="$emit('play-test-tone')">
-            Test
+            {{ $t('dialog.playbackSettings.test') }}
           </button>
         </div>
 
-        <div class="form-group subheader">Volume</div>
+        <div class="form-group subheader">
+          {{ $t('dialog.playbackSettings.volume') }}
+        </div>
         <div class="form-group row">
-          <span class="volume-label">Melody</span>
+          <span class="volume-label">{{
+            $t('dialog.playbackSettings.melody')
+          }}</span>
           <input
             type="range"
             class="volume-slider"
@@ -37,7 +41,9 @@
         </div>
 
         <div class="form-group row">
-          <span class="volume-label">Ison</span>
+          <span class="volume-label">{{
+            $t('dialog.playbackSettings.ison')
+          }}</span>
           <input
             type="range"
             class="volume-slider"
@@ -56,14 +62,13 @@
             type="checkbox"
             v-model="options.useDefaultAttractionZo"
           />
-          <label for="playback-settings-dialog-diatonic-zo"
-            >Diatonic Zo Attraction</label
-          >
+          <label for="playback-settings-dialog-diatonic-zo">{{
+            $t('dialog.playbackSettings.diatonicZoAttraction')
+          }}</label>
           <p>
-            If checked, hymns that use the diatonic scale will automatically
-            have the note Zo lowered if the melody does not ascend past Zo.
+            {{ $t('dialog.playbackSettings.diatonicZoAttractionDescription') }}
           </p>
-          Moria:
+          {{ $t('dialog.playbackSettings.moria') }}
           <input
             type="number"
             class="interval"
@@ -81,7 +86,7 @@
             class="btnResetDefaultAttractionZoMoria"
             @click="resetDefaultAttractionZoMoria"
           >
-            Reset
+            {{ $t('dialog.playbackSettings.reset') }}
           </button>
         </div>
 
@@ -91,26 +96,31 @@
             type="checkbox"
             v-model="options.useLegetos"
           />
-          <label for="playback-settings-dialog-legetos">Classic Legetos</label>
+          <label for="playback-settings-dialog-legetos">{{
+            $t('dialog.playbackSettings.classicLegetos')
+          }}</label>
           <p>
-            If checked, hymns in the fourth mode with base notes Pa or Vou will
-            use the classic legetos scale with Vou lowered.
+            {{ $t('dialog.playbackSettings.classicLegetosDescription') }}
           </p>
         </div>
 
         <div class="separator" />
 
         <div class="row">
-          <span class="subheader">Intervals</span
+          <span class="subheader">{{
+            $t('dialog.playbackSettings.intervals')
+          }}</span
           ><button class="btnResetIntervals" @click="resetIntervals">
-            Reset
+            {{ $t('dialog.playbackSettings.reset') }}
           </button>
         </div>
 
         <div class="vertical-spacer" />
 
         <div class="form-group row">
-          <span class="scale-name">Diatonic</span>
+          <span class="scale-name">{{
+            $t('dialog.playbackSettings.diatonic')
+          }}</span>
           <div
             class="row"
             v-for="(note, index) in ['Ni', 'Pa', 'Vou']"
@@ -137,7 +147,9 @@
         </div>
 
         <div v-if="options.useLegetos" class="form-group row">
-          <span class="scale-name">Legetos</span>
+          <span class="scale-name">{{
+            $t('dialog.playbackSettings.legetos')
+          }}</span>
           <div
             class="row"
             v-for="(note, index) in ['Pa', 'Vou', 'Ga']"
@@ -164,7 +176,9 @@
         </div>
 
         <div class="form-group row">
-          <span class="scale-name">Soft Chromatic</span>
+          <span class="scale-name">{{
+            $t('dialog.playbackSettings.softChromatic')
+          }}</span>
           <div
             class="row"
             v-for="(note, index) in ['Ni', 'Pa', 'Vou']"
@@ -191,7 +205,9 @@
         </div>
 
         <div class="form-group row">
-          <span class="scale-name">Hard Chromatic</span>
+          <span class="scale-name">{{
+            $t('dialog.playbackSettings.hardChromatic')
+          }}</span>
           <div
             class="row"
             v-for="(note, index) in ['Pa', 'Vou', 'Ga']"
@@ -218,7 +234,9 @@
         </div>
 
         <div class="form-group row">
-          <span class="scale-name">Zygos</span>
+          <span class="scale-name">{{
+            $t('dialog.playbackSettings.zygos')
+          }}</span>
           <div
             class="row"
             v-for="(note, index) in ['Ni', 'Pa', 'Vou', 'Ga']"
@@ -245,7 +263,9 @@
         </div>
 
         <div v-if="options.useLegetos" class="form-group row">
-          <span class="scale-name">Zygos (Legetos)</span>
+          <span class="scale-name">{{
+            $t('dialog.playbackSettings.zygosLegetos')
+          }}</span>
           <div
             class="row"
             v-for="(note, index) in ['Ni', 'Pa', 'Vou', 'Ga']"
@@ -272,7 +292,9 @@
         </div>
 
         <div class="form-group row">
-          <span class="scale-name">Kliton</span>
+          <span class="scale-name">{{
+            $t('dialog.playbackSettings.kliton')
+          }}</span>
           <div
             class="row"
             v-for="(note, index) in ['Pa', 'Vou', 'Ga']"
@@ -299,7 +321,9 @@
         </div>
 
         <div class="form-group row">
-          <span class="scale-name">Spathi</span>
+          <span class="scale-name">{{
+            $t('dialog.playbackSettings.spathi')
+          }}</span>
           <div
             class="row"
             v-for="(note, index) in ['Ga', 'Di', 'Ke', 'Zo']"
@@ -328,19 +352,23 @@
         <div class="separator" />
 
         <div class="row">
-          <span class="subheader">Alteration Multipliers (Chrysanthine)</span
+          <span class="subheader">{{
+            $t('dialog.playbackSettings.alterationMultipliersChrysanthine')
+          }}</span
           ><button
             class="btnResetIntervals"
             @click="resetAlterationMultipliers"
           >
-            Reset
+            {{ $t('dialog.playbackSettings.reset') }}
           </button>
         </div>
 
         <div class="vertical-spacer" />
 
         <div class="form-group row">
-          <span class="alteration-name">Zero crossbeams</span>
+          <span class="alteration-name">{{
+            $t('dialog.playbackSettings.zeroCrossbeams')
+          }}</span>
           <div class="row">
             <input
               type="number"
@@ -360,7 +388,9 @@
           <span class="interval-label">&#215;</span>
         </div>
         <div class="form-group row">
-          <span class="alteration-name">One crossbeam</span>
+          <span class="alteration-name">{{
+            $t('dialog.playbackSettings.oneCrossbeam')
+          }}</span>
           <div class="row">
             <input
               type="number"
@@ -380,7 +410,9 @@
           <span class="interval-label">&#215;</span>
         </div>
         <div class="form-group row">
-          <span class="alteration-name">Two crossbeams</span>
+          <span class="alteration-name">{{
+            $t('dialog.playbackSettings.twoCrossbeams')
+          }}</span>
           <div class="row">
             <input
               type="number"
@@ -403,7 +435,9 @@
         <div class="separator" />
 
         <div class="row">
-          <span class="subheader">Alteration Moria (1881 Committee)</span
+          <span class="subheader">{{
+            $t('dialog.playbackSettings.alterationMoria1881Committee')
+          }}</span
           ><button class="btnResetIntervals" @click="resetAlterationMoria">
             Reset
           </button>
@@ -411,7 +445,9 @@
 
         <div class="vertical-spacer" />
         <div class="form-group row">
-          <span class="alteration-name">Sharp with zero crossbeams</span>
+          <span class="alteration-name">{{
+            $t('dialog.playbackSettings.sharpWithZeroCrossbeams')
+          }}</span>
           <div class="row">
             <input
               type="number"
@@ -431,7 +467,9 @@
           <span class="interval-label">moria</span>
         </div>
         <div class="form-group row">
-          <span class="alteration-name">Sharp with one crossbeam</span>
+          <span class="alteration-name">{{
+            $t('dialog.playbackSettings.sharpWithOneCrossbeam')
+          }}</span>
           <div class="row">
             <input
               type="number"
@@ -451,7 +489,9 @@
           <span class="interval-label">moria</span>
         </div>
         <div class="form-group row">
-          <span class="alteration-name">Sharp with two crossbeams</span>
+          <span class="alteration-name">{{
+            $t('dialog.playbackSettings.sharpWithTwoCrossbeams')
+          }}</span>
           <div class="row">
             <input
               type="number"
@@ -471,7 +511,9 @@
           <span class="interval-label">moria</span>
         </div>
         <div class="form-group row">
-          <span class="alteration-name">Sharp with three crossbeams</span>
+          <span class="alteration-name">{{
+            $t('dialog.playbackSettings.sharpWithThreeCrossbeams')
+          }}</span>
           <div class="row">
             <input
               type="number"
@@ -491,7 +533,9 @@
           <span class="interval-label">moria</span>
         </div>
         <div class="form-group row">
-          <span class="alteration-name">Flat with zero crossbeams</span>
+          <span class="alteration-name">{{
+            $t('dialog.playbackSettings.flatWithZeroCrossbeams')
+          }}</span>
           <div class="row">
             <input
               type="number"
@@ -511,7 +555,9 @@
           <span class="interval-label">moria</span>
         </div>
         <div class="form-group row">
-          <span class="alteration-name">Flat with one crossbeam</span>
+          <span class="alteration-name">{{
+            $t('dialog.playbackSettings.flatWithOneCrossbeam')
+          }}</span>
           <div class="row">
             <input
               type="number"
@@ -531,7 +577,9 @@
           <span class="interval-label">moria</span>
         </div>
         <div class="form-group row">
-          <span class="alteration-name">Flat with two crossbeams</span>
+          <span class="alteration-name">{{
+            $t('dialog.playbackSettings.flatWithTwoCrossbeams')
+          }}</span>
           <div class="row">
             <input
               type="number"
@@ -551,7 +599,9 @@
           <span class="interval-label">moria</span>
         </div>
         <div class="form-group row">
-          <span class="alteration-name">Flat with three crossbeams</span>
+          <span class="alteration-name">{{
+            $t('dialog.playbackSettings.flatWithThreeCrossbeams')
+          }}</span>
           <div class="row">
             <input
               type="number"
@@ -573,7 +623,9 @@
       </div>
       <div class="error">{{ error }}</div>
       <div class="button-container">
-        <button class="cancel-btn" @click="close">Close</button>
+        <button class="cancel-btn" @click="close">
+          {{ $t('dialog.playbackSettings.close') }}
+        </button>
       </div>
     </div>
   </ModalDialog>

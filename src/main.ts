@@ -3,6 +3,7 @@ import 'vue-draggable-resizable/dist/VueDraggableResizable.css';
 
 import i18next from 'i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
+import Pseudo from 'i18next-pseudo';
 import I18NextVue from 'i18next-vue';
 import { createApp } from 'vue';
 
@@ -23,16 +24,25 @@ if (isElectron()) {
   initalizeBrowserIpcListeners();
 }
 
-i18next.use(LanguageDetector).init({
-  detection: {
-    order: ['querystring', 'navigator'],
-  },
-  fallbackLng: 'en',
-  interpolation: {
-    escapeValue: false,
-  },
-  resources,
-});
+i18next
+  .use(LanguageDetector)
+  .use(
+    new Pseudo({
+      enabled: 'VITE_PSEUDOLOCALIZATION' in import.meta.env,
+      languageToPseudo: 'en-US',
+    }),
+  )
+  .init({
+    detection: {
+      order: ['querystring', 'navigator'],
+    },
+    fallbackLng: 'en',
+    interpolation: {
+      escapeValue: false,
+    },
+    postProcess: ['pseudo'],
+    resources,
+  });
 
 const app = createApp(App);
 app.directive('observe-visibility', ObserveVisibility);

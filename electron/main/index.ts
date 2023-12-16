@@ -15,6 +15,7 @@ import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer';
 import { autoUpdater } from 'electron-updater';
 import { promises as fs } from 'fs';
 import i18next from 'i18next';
+import Pseudo from 'i18next-pseudo';
 import sizeOf from 'image-size';
 import JSZip from 'jszip';
 import mimetypes from 'mime-types';
@@ -1612,11 +1613,19 @@ app.on('activate', () => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', async () => {
-  i18next.init({
-    lng: app.getLocale().slice(0, 2),
-    fallbackLng: 'en',
-    resources,
-  });
+  i18next
+    .use(
+      new Pseudo({
+        enabled: 'VITE_PSEUDOLOCALIZATION' in import.meta.env,
+        languageToPseudo: 'en-US',
+      }),
+    )
+    .init({
+      lng: app.getLocale(),
+      fallbackLng: 'en',
+      postProcess: ['pseudo'],
+      resources,
+    });
 
   if (isDevelopment && !process.env.IS_TEST) {
     // Install Vue Devtools

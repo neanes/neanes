@@ -93,40 +93,48 @@
     </div>
     <span class="space"></span>
     <button
-      title="Insert drop cap before"
+      :title="$t('toolbar.main.insertDropCapBefore')"
       class="icon-btn"
       @click="$emit('add-drop-cap')"
     >
       <img src="@/assets/icons/drop-cap.svg" width="24" height="24" />
     </button>
-    <button title="Insert image" class="icon-btn" @click="$emit('add-image')">
+    <button
+      :title="$t('toolbar.main.insertImage')"
+      class="icon-btn"
+      @click="$emit('add-image')"
+    >
       <img src="@/assets/icons/image-add.svg" width="24" height="24" />
     </button>
     <span class="space"></span>
     <button
       class="icon-btn line-break-btn"
-      title="Insert or remove line break after selected element"
+      :title="$t('toolbar.main.insertOrRemoveLineBreakAfterSelectedElement')"
       @click="$emit('toggle-line-break', LineBreakType.Left)"
     >
       <img src="@/assets/icons/line-break.svg" width="24" height="24" />
     </button>
     <button
       class="icon-btn line-break-btn"
-      title="Insert or remove justified line break after selected element"
+      :title="
+        $t('toolbar.main.insertOrRemoveJustifiedLineBreakAfterSelectedElement')
+      "
       @click="$emit('toggle-line-break', LineBreakType.Justify)"
     >
       <img src="@/assets/icons/line-break-justify.svg" width="24" height="24" />
     </button>
     <button
       class="icon-btn line-break-btn"
-      title="Insert or remove centered line break after selected element"
+      :title="
+        $t('toolbar.main.insertOrRemoveCenteredLineBreakAfterSelectedElement')
+      "
       @click="$emit('toggle-line-break', LineBreakType.Center)"
     >
       <img src="@/assets/icons/line-break-center.svg" width="24" height="24" />
     </button>
     <button
       class="icon-btn"
-      title="Insert or remove page break after selected element"
+      :title="$t('toolbar.main.insertOrRemovePageBreakAfterSelectedElement')"
       @click="$emit('toggle-page-break')"
     >
       <img src="@/assets/icons/page-break.svg" width="24" height="24" />
@@ -134,7 +142,7 @@
     <span class="space"></span>
     <button
       class="red icon-btn"
-      title="Delete selected element"
+      :title="$t('toolbar.main.deleteSelectedElement')"
       @click="$emit('delete-selected-element')"
     >
       <img src="@/assets/icons/delete.svg" width="24" height="24" />
@@ -280,11 +288,15 @@ export default class ToolbarMain extends Vue {
   }
 
   get martyriaTooltip() {
-    return `Martyria (${this.neumeKeyboard.getMartyriaKeyTooltip()})`;
+    return `${this.$t(
+      'toolbar.main.martyria',
+    )} (${this.neumeKeyboard.getMartyriaKeyTooltip()})`;
   }
 
   get tempoTooltip() {
-    return `Tempo (${this.neumeKeyboard.generateTooltip(
+    return `${this.$t(
+      'toolbar.main.tempo',
+    )} (${this.neumeKeyboard.generateTooltip(
       this.neumeKeyboard.findMappingForNeume(TempoSign.VerySlow)!,
     )})`;
   }

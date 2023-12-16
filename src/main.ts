@@ -33,6 +33,7 @@ i18next
     }),
   )
   .init({
+    debug: 'VITE_PSEUDOLOCALIZATION' in import.meta.env,
     detection: {
       order: ['querystring', 'navigator'],
     },

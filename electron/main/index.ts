@@ -1621,6 +1621,7 @@ app.on('ready', async () => {
       }),
     )
     .init({
+      debug: 'VITE_PSEUDOLOCALIZATION' in import.meta.env,
       lng: app.getLocale(),
       fallbackLng: 'en',
       postProcess: ['pseudo'],

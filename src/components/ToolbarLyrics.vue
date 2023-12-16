@@ -75,7 +75,7 @@
         src="@/assets/icons/letterPelastikon.svg"
         width="32"
         height="32"
-        title="Insert Pelastikon"
+        :title="$t('toolbar.lyrics.insertPelastikon')"
       />
     </button>
     <button class="icon-btn" @mousedown.prevent="$emit('insert:gorthmikon')">
@@ -83,7 +83,7 @@
         src="@/assets/icons/letterGorthmikon.svg"
         width="32"
         height="32"
-        title="Insert Gorthmikon"
+        :title="$t('toolbar.lyrics.insertGorthmikon')"
       />
     </button>
   </div>

@@ -466,7 +466,7 @@ export default class ToolbarMartyria extends Vue {
 
   get spathiTitle() {
     return this.spathiDisabled
-      ? 'Spathi may only be placed on Ke'
+      ? this.$t('toolbar.martyria.spathiDisabled')
       : this.tooltip(Fthora.Spathi_Top);
   }
 
@@ -478,7 +478,7 @@ export default class ToolbarMartyria extends Vue {
 
   get klitonTitle() {
     return this.klitonDisabled
-      ? 'Kliton may only be placed on Thi'
+      ? this.$t('toolbar.martyria.klitonDisabled')
       : this.tooltip(Fthora.Kliton_Top);
   }
 
@@ -490,7 +490,7 @@ export default class ToolbarMartyria extends Vue {
 
   get zygosTitle() {
     return this.zygosDisabled
-      ? 'Zygos may only be placed on Thi'
+      ? this.$t('toolbar.martyria.zygosDisabled')
       : this.tooltip(Fthora.Zygos_Top);
   }
 
@@ -507,7 +507,7 @@ export default class ToolbarMartyria extends Vue {
 
   get enharmonicTitle() {
     return this.enharmonicDisabled
-      ? 'Enharmonic fthora may only be placed on Ga, Zo, and Vou'
+      ? this.$t('toolbar.martyria.enharmonicDisabled')
       : this.tooltip(Fthora.Enharmonic_Top);
   }
 
@@ -519,7 +519,7 @@ export default class ToolbarMartyria extends Vue {
 
   get generalFlatTitle() {
     return this.generalFlatDisabled
-      ? 'General flat may only be placed on Ke'
+      ? this.$t('toolbar.martyria.generalFlatDisabled')
       : this.tooltip(Fthora.GeneralFlat_Top);
   }
 
@@ -531,7 +531,7 @@ export default class ToolbarMartyria extends Vue {
 
   get generalSharpTitle() {
     return this.generalSharpDisabled
-      ? 'General sharp may only be placed on Ga'
+      ? this.$t('toolbar.martyria.generalSharpDisabled')
       : this.tooltip(Fthora.GeneralSharp_Top);
   }
 
@@ -602,51 +602,65 @@ export default class ToolbarMartyria extends Vue {
   ];
 
   get alignRightTooltip() {
-    return `Align Right (${this.neumeKeyboard.getMaryriaRightAlignTooltip()})`;
+    return `${this.$t(
+      'toolbar.martyria.alignRight',
+    )}(${this.neumeKeyboard.getMaryriaRightAlignTooltip()})`;
   }
 
   tooltip(neume: Neume) {
     const displayName = this.getDisplayName(neume);
     const mapping = this.neumeKeyboard.findMappingForNeume(neume);
     if (mapping) {
-      return `${displayName} (${this.neumeKeyboard.generateTooltip(mapping)})`;
+      return `${this.$t(displayName)} (${this.neumeKeyboard.generateTooltip(
+        mapping,
+      )})`;
     } else {
-      return `${displayName}`;
+      return `${this.$t(displayName)}`;
     }
   }
 
   getDisplayName(neume: Neume) {
-    if (neume.startsWith('Diatonic')) {
-      return neume
-        .replace(/Diatonic(\w+)_Top/, 'Diatonic $1')
-        .replace('Thi', 'Di')
-        .replace('Low', ' Low')
-        .replace('High', ' High');
-    }
-
-    if (neume.startsWith('SoftChromatic')) {
-      return neume
-        .replace(/SoftChromatic(\w+)_Top/, 'Soft Chromatic $1')
-        .replace('Thi', 'Di');
-    }
-
-    if (neume.startsWith('HardChromatic')) {
-      return neume
-        .replace(/HardChromatic(\w+)_Top/, 'Hard Chromatic $1')
-        .replace('Thi', 'Di');
-    }
-
-    if (neume.startsWith('General')) {
-      return neume.replace(/General(\w+)_Top/, 'General $1');
-    }
-
-    if (neume.endsWith('_Top')) {
-      return neume.replace('_Top', '');
-    }
-
     switch (neume) {
+      case Fthora.DiatonicNiLow_Top:
+        return 'toolbar.martyria.diatonicNiLow';
+      case Fthora.DiatonicPa_Top:
+        return 'toolbar.martyria.diatonicPa';
+      case Fthora.DiatonicVou_Top:
+        return 'toolbar.martyria.diatonicVou';
+      case Fthora.DiatonicGa_Top:
+        return 'toolbar.martyria.diatonicGa';
+      case Fthora.DiatonicThi_Top:
+        return 'toolbar.martyria.diatonicDi';
+      case Fthora.DiatonicKe_Top:
+        return 'toolbar.martyria.diatonicKe';
+      case Fthora.DiatonicZo_Top:
+        return 'toolbar.martyria.diatonicZo';
+      case Fthora.DiatonicNiHigh_Top:
+        return 'toolbar.martyria.diatonicNiHigh';
+      case Fthora.SoftChromaticThi_Top:
+        return 'toolbar.martyria.softChromaticDi';
+      case Fthora.SoftChromaticPa_Top:
+        return 'toolbar.martyria.softChromaticPa';
+      case Fthora.HardChromaticPa_Top:
+        return 'toolbar.martyria.hardChromaticPa';
+      case Fthora.HardChromaticThi_Top:
+        return 'toolbar.martyria.hardChromaticDi';
+      case Fthora.Enharmonic_Top:
+        return 'toolbar.martyria.enharmonic';
+      case Fthora.GeneralFlat_Top:
+        return 'toolbar.martyria.generalFlat';
+      case Fthora.GeneralSharp_Top:
+        return 'toolbar.martyria.generalSharp';
+      case Fthora.Zygos_Top:
+        return 'toolbar.martyria.zygos';
+      case Fthora.Kliton_Top:
+        return 'toolbar.martyria.kliton';
+      case Fthora.Spathi_Top:
+        return 'toolbar.martyria.spathi';
       case MeasureBar.MeasureBarRight:
-        return 'Measure Bar';
+        return 'toolbar.martyria.measureBar';
+      case TempoSign.VerySlowAbove:
+        return 'toolbar.martyria.tempo';
       default:
         return neume;
     }

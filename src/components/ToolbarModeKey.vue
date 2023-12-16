@@ -40,7 +40,7 @@
         src="@/assets/icons/alignleft.svg"
         width="32"
         height="32"
-        title="Align Left"
+        :title="$t('toolbar.modeKey.alignLeft')"
       />
     </button>
     <button
@@ -53,7 +53,7 @@
         src="@/assets/icons/aligncenter.svg"
         width="32"
         height="32"
-        title="Align Center"
+        :title="$t('toolbar.modeKey.alignCenter')"
       />
     </button>
     <button
@@ -66,7 +66,7 @@
         src="@/assets/icons/alignright.svg"
         width="32"
         height="32"
-        title="Align Right"
+        :title="$t('toolbar.modeKey.alignRight')"
       />
     </button>
     <span class="space" />
@@ -106,7 +106,7 @@
       @click="$emit('update:tempoAlignRight', !element.tempoAlignRight)"
     >
       <img
-        title="Right-align tempo"
+        :title="$t('toolbar.modeKey.rightAlignTempo')"
         src="@/assets/icons/alignright2.svg"
         height="24"
         width="24"

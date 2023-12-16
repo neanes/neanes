@@ -78,7 +78,7 @@
         src="@/assets/icons/alignleft.svg"
         width="32"
         height="32"
-        title="Align Left"
+        :title="$t('toolbar.textBox.alignLeft')"
       />
     </button>
     <button
@@ -90,7 +90,7 @@
         src="@/assets/icons/aligncenter.svg"
         width="32"
         height="32"
-        title="Align Center"
+        :title="$t('toolbar.textBox.alignCenter')"
       />
     </button>
     <button
@@ -102,7 +102,7 @@
         src="@/assets/icons/alignright.svg"
         width="32"
         height="32"
-        title="Align Right"
+        :title="$t('toolbar.textBox.alignRight')"
       />
     </button>
     <template v-if="!element.inline || !element.useDefaultStyle">
@@ -119,7 +119,7 @@
         src="@/assets/icons/letterPelastikon.svg"
         width="32"
         height="32"
-        title="Insert Pelastikon"
+        :title="$t('toolbar.textBox.insertPelastikon')"
       />
     </button>
     <button class="icon-btn" @mousedown.prevent="$emit('insert:gorthmikon')">
@@ -127,7 +127,7 @@
         src="@/assets/icons/letterGorthmikon.svg"
         width="32"
         height="32"
-        title="Insert Gorthmikon"
+        :title="$t('toolbar.textBox.insertGorthmikon')"
       />
     </button>
   </div>

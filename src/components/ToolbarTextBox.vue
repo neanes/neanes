@@ -13,7 +13,7 @@
         "
       />
       <label for="toolbar-text-box-use-default-style">{{
-        $t('toolbar.textBox.useDefaultStyle')
+        $t('toolbar.common.useDefaultStyle')
       }}</label>
       <span class="divider" />
     </template>
@@ -78,7 +78,7 @@
         src="@/assets/icons/alignleft.svg"
         width="32"
         height="32"
-        :title="$t('toolbar.textBox.alignLeft')"
+        :title="$t('toolbar.common.alignLeft')"
       />
     </button>
     <button
@@ -90,7 +90,7 @@
         src="@/assets/icons/aligncenter.svg"
         width="32"
         height="32"
-        :title="$t('toolbar.textBox.alignCenter')"
+        :title="$t('toolbar.common.alignCenter')"
       />
     </button>
     <button
@@ -102,12 +102,12 @@
         src="@/assets/icons/alignright.svg"
         width="32"
         height="32"
-        :title="$t('toolbar.textBox.alignRight')"
+        :title="$t('toolbar.common.alignRight')"
       />
     </button>
     <template v-if="!element.inline || !element.useDefaultStyle">
       <span class="space" />
-      <label class="right-space">{{ $t('toolbar.textBox.outline') }}</label>
+      <label class="right-space">{{ $t('toolbar.common.outline') }}</label>
       <InputStrokeWidth
         :modelValue="element.strokeWidth"
         @update:modelValue="$emit('update:strokeWidth', $event)"
@@ -119,7 +119,7 @@
         src="@/assets/icons/letterPelastikon.svg"
         width="32"
         height="32"
-        :title="$t('toolbar.textBox.insertPelastikon')"
+        :title="$t('toolbar.common.insertPelastikon')"
       />
     </button>
     <button class="icon-btn" @mousedown.prevent="$emit('insert:gorthmikon')">
@@ -127,7 +127,7 @@
         src="@/assets/icons/letterGorthmikon.svg"
         width="32"
         height="32"
-        :title="$t('toolbar.textBox.insertGorthmikon')"
+        :title="$t('toolbar.common.insertGorthmikon')"
       />
     </button>
   </div>

@@ -1,7 +1,7 @@
 <template>
   <div class="tempo-toolbar">
     <div class="row">
-      <label class="right-space">{{ $t('toolbar.tempo.bpm') }}</label>
+      <label class="right-space">{{ $t('toolbar.common.bpm') }}</label>
       <InputBpm
         :modelValue="element.bpm"
         @update:modelValue="$emit('update:bpm', $event)"
@@ -9,7 +9,7 @@
 
       <span class="space" />
 
-      <label class="right-space">{{ $t('toolbar.tempo.spaceAfter') }}</label>
+      <label class="right-space">{{ $t('toolbar.common.spaceAfter') }}</label>
 
       <InputUnit
         unit="pt"

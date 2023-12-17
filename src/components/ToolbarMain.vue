@@ -295,7 +295,7 @@ export default class ToolbarMain extends Vue {
 
   get tempoTooltip() {
     return `${this.$t(
-      'toolbar.main.tempo',
+      'toolbar.common.tempoSign',
     )} (${this.neumeKeyboard.generateTooltip(
       this.neumeKeyboard.findMappingForNeume(TempoSign.VerySlow)!,
     )})`;

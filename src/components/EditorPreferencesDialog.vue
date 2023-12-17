@@ -21,13 +21,13 @@
       </div>
       <div class="button-container">
         <button class="ok-btn" @click="$emit('update', form)">
-          {{ $t('dialog.preferences.update') }}
+          {{ $t('dialog.common.update') }}
         </button>
         <button class="reset-btn neutral-btn" @click="resetToSystemDefaults">
-          {{ $t('dialog.preferences.useSystemDefault') }}
+          {{ $t('dialog.common.useSystemDefault') }}
         </button>
         <button class="cancel-btn" @click="$emit('close')">
-          {{ $t('dialog.preferences.cancel') }}
+          {{ $t('dialog.common.cancel') }}
         </button>
       </div>
     </div>

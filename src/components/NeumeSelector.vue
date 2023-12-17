@@ -699,161 +699,161 @@ export default class NeumeSelector extends Vue {
   private getDisplayName(neume: QuantitativeNeume) {
     switch (neume) {
       case QuantitativeNeume.Ison:
-        return 'toolbar.neumeSelector.ison';
+        return 'model.neume.quantitative.ison';
       case QuantitativeNeume.Oligon:
-        return 'toolbar.neumeSelector.oligon';
+        return 'model.neume.quantitative.oligon';
       case QuantitativeNeume.OligonPlusKentima:
       case QuantitativeNeume.OligonPlusKentimaBelow:
       case QuantitativeNeume.OligonPlusKentimaAbove:
-        return 'toolbar.neumeSelector.oligonWithKentima';
+        return 'model.neume.quantitative.oligonWithKentima';
       case QuantitativeNeume.OligonPlusHypsiliRight:
       case QuantitativeNeume.OligonPlusHypsiliLeft:
-        return 'toolbar.neumeSelector.oligonWithYpsili';
+        return 'model.neume.quantitative.oligonWithYpsili';
       case QuantitativeNeume.OligonPlusHypsiliPlusKentimaHorizontal:
       case QuantitativeNeume.OligonPlusHypsiliPlusKentimaVertical:
-        return 'toolbar.neumeSelector.oligonWithYpsiliAndKentima';
+        return 'model.neume.quantitative.oligonWithYpsiliAndKentima';
       case QuantitativeNeume.OligonPlusDoubleHypsili:
-        return 'toolbar.neumeSelector.oligonWithDoubleYpsili';
+        return 'model.neume.quantitative.oligonWithDoubleYpsili';
       case QuantitativeNeume.OligonKentimataDoubleYpsili:
-        return 'toolbar.neumeSelector.oligonWithKentimataAndDoubleYpsili';
+        return 'model.neume.quantitative.oligonWithKentimataAndDoubleYpsili';
       case QuantitativeNeume.OligonKentimaDoubleYpsiliRight:
       case QuantitativeNeume.OligonKentimaDoubleYpsiliLeft:
-        return 'toolbar.neumeSelector.oligonWithKentimaAndDoubleYpsili';
+        return 'model.neume.quantitative.oligonWithKentimaAndDoubleYpsili';
       case QuantitativeNeume.OligonTripleYpsili:
-        return 'toolbar.neumeSelector.oligonWithTripleYpsili';
+        return 'model.neume.quantitative.oligonWithTripleYpsili';
       case QuantitativeNeume.OligonKentimataTripleYpsili:
-        return 'toolbar.neumeSelector.oligonWithKentimataAndTripleYpsili';
+        return 'model.neume.quantitative.oligonWithKentimataAndTripleYpsili';
       case QuantitativeNeume.OligonKentimaTripleYpsili:
-        return 'toolbar.neumeSelector.oligonWithKentimaAndTripleYpsili';
+        return 'model.neume.quantitative.oligonWithKentimaAndTripleYpsili';
       case QuantitativeNeume.PetastiWithIson:
-        return 'toolbar.neumeSelector.petastiWithIson';
+        return 'model.neume.quantitative.petastiWithIson';
       case QuantitativeNeume.Petasti:
-        return 'toolbar.neumeSelector.petasti';
+        return 'model.neume.quantitative.petasti';
       case QuantitativeNeume.PetastiPlusOligon:
-        return 'toolbar.neumeSelector.petastiWithOligon';
+        return 'model.neume.quantitative.petastiWithOligon';
       case QuantitativeNeume.PetastiPlusKentimaAbove:
-        return 'toolbar.neumeSelector.petastiWithKentima';
+        return 'model.neume.quantitative.petastiWithKentima';
       case QuantitativeNeume.PetastiPlusHypsiliRight:
       case QuantitativeNeume.PetastiPlusHypsiliLeft:
-        return 'toolbar.neumeSelector.petastiWithYpsili';
+        return 'model.neume.quantitative.petastiWithYpsili';
       case QuantitativeNeume.PetastiPlusHypsiliPlusKentimaHorizontal:
       case QuantitativeNeume.PetastiPlusHypsiliPlusKentimaVertical:
-        return 'toolbar.neumeSelector.petastiWithYpsiliAndKentima';
+        return 'model.neume.quantitative.petastiWithYpsiliAndKentima';
       case QuantitativeNeume.PetastiPlusDoubleHypsili:
-        return 'toolbar.neumeSelector.petastiWithDoubleYpsili';
+        return 'model.neume.quantitative.petastiWithDoubleYpsili';
       case QuantitativeNeume.PetastiKentimataDoubleYpsili:
-        return 'toolbar.neumeSelector.petastiWithKentimataAndDoubleYpsili';
+        return 'model.neume.quantitative.petastiWithKentimataAndDoubleYpsili';
       case QuantitativeNeume.PetastiKentimaDoubleYpsiliRight:
       case QuantitativeNeume.PetastiKentimaDoubleYpsiliLeft:
-        return 'toolbar.neumeSelector.petastiWithKentimaAndDoubleYpsili';
+        return 'model.neume.quantitative.petastiWithKentimaAndDoubleYpsili';
       case QuantitativeNeume.PetastiTripleYpsili:
-        return 'toolbar.neumeSelector.petastiWithTripleYpsili';
+        return 'model.neume.quantitative.petastiWithTripleYpsili';
       case QuantitativeNeume.PetastiKentimataTripleYpsili:
-        return 'toolbar.neumeSelector.petastiWithKentimataAndTripleYpsili';
+        return 'model.neume.quantitative.petastiWithKentimataAndTripleYpsili';
       case QuantitativeNeume.PetastiKentimaTripleYpsili:
-        return 'toolbar.neumeSelector.petastiWithKentimaAndTripleYpsili';
+        return 'model.neume.quantitative.petastiWithKentimaAndTripleYpsili';
       case QuantitativeNeume.Apostrophos:
-        return 'toolbar.neumeSelector.apostrophos';
+        return 'model.neume.quantitative.apostrophos';
       case QuantitativeNeume.Elaphron:
-        return 'toolbar.neumeSelector.elaphron';
+        return 'model.neume.quantitative.elaphron';
       case QuantitativeNeume.ElaphronPlusApostrophos:
-        return 'toolbar.neumeSelector.elaphronWithApostrophos';
+        return 'model.neume.quantitative.elaphronWithApostrophos';
       case QuantitativeNeume.Hamili:
-        return 'toolbar.neumeSelector.hamili';
+        return 'model.neume.quantitative.hamili';
       case QuantitativeNeume.HamiliPlusApostrophos:
-        return 'toolbar.neumeSelector.hamiliWithApostrophos';
+        return 'model.neume.quantitative.hamiliWithApostrophos';
       case QuantitativeNeume.HamiliPlusElaphron:
-        return 'toolbar.neumeSelector.hamiliWithElaphron';
+        return 'model.neume.quantitative.hamiliWithElaphron';
       case QuantitativeNeume.HamiliPlusElaphronPlusApostrophos:
-        return 'toolbar.neumeSelector.hamiliWithElaphronAndApostrophos';
+        return 'model.neume.quantitative.hamiliWithElaphronAndApostrophos';
       case QuantitativeNeume.DoubleHamili:
-        return 'toolbar.neumeSelector.doubleHamili';
+        return 'model.neume.quantitative.doubleHamili';
       case QuantitativeNeume.DoubleHamiliApostrofos:
-        return 'toolbar.neumeSelector.doubleHamiliWithApostrophos';
+        return 'model.neume.quantitative.doubleHamiliWithApostrophos';
       case QuantitativeNeume.DoubleHamiliElafron:
-        return 'toolbar.neumeSelector.doubleHamiliWithElaphron';
+        return 'model.neume.quantitative.doubleHamiliWithElaphron';
       case QuantitativeNeume.DoubleHamiliElafronApostrofos:
-        return 'toolbar.neumeSelector.doubleHamiliWithElaphronAndApostrophos';
+        return 'model.neume.quantitative.doubleHamiliWithElaphronAndApostrophos';
       case QuantitativeNeume.TripleHamili:
-        return 'toolbar.neumeSelector.tripleHamili';
+        return 'model.neume.quantitative.tripleHamili';
       case QuantitativeNeume.PetastiPlusApostrophos:
-        return 'toolbar.neumeSelector.petastiWithApostrophos';
+        return 'model.neume.quantitative.petastiWithApostrophos';
       case QuantitativeNeume.PetastiPlusElaphron:
-        return 'toolbar.neumeSelector.petastiWithElaphron';
+        return 'model.neume.quantitative.petastiWithElaphron';
       case QuantitativeNeume.PetastiPlusElaphronPlusApostrophos:
-        return 'toolbar.neumeSelector.petastiWithElaphronAndApostrophos';
+        return 'model.neume.quantitative.petastiWithElaphronAndApostrophos';
       case QuantitativeNeume.PetastiHamili:
-        return 'toolbar.neumeSelector.petastiWithHamili';
+        return 'model.neume.quantitative.petastiWithHamili';
       case QuantitativeNeume.PetastiHamiliApostrofos:
-        return 'toolbar.neumeSelector.petastiWithHamiliAndApostrophos';
+        return 'model.neume.quantitative.petastiWithHamiliAndApostrophos';
       case QuantitativeNeume.PetastiHamiliElafron:
-        return 'toolbar.neumeSelector.petastiWithHamiliAndElaphron';
+        return 'model.neume.quantitative.petastiWithHamiliAndElaphron';
       case QuantitativeNeume.PetastiHamiliElafronApostrofos:
-        return 'toolbar.neumeSelector.petastiWithHamiliElaphronAndApostrophos';
+        return 'model.neume.quantitative.petastiWithHamiliElaphronAndApostrophos';
       case QuantitativeNeume.PetastiDoubleHamili:
-        return 'toolbar.neumeSelector.petastiWithDoubleHamili';
+        return 'model.neume.quantitative.petastiWithDoubleHamili';
       case QuantitativeNeume.PetastiDoubleHamiliApostrofos:
-        return 'toolbar.neumeSelector.petastiWithDoubleHamiliAndApostrophos';
+        return 'model.neume.quantitative.petastiWithDoubleHamiliAndApostrophos';
       case QuantitativeNeume.OligonPlusKentemata:
-        return 'toolbar.neumeSelector.oligonAndKentimata';
+        return 'model.neume.quantitative.oligonAndKentimata';
       case QuantitativeNeume.KentemataPlusOligon:
-        return 'toolbar.neumeSelector.kentimataAndOligon';
+        return 'model.neume.quantitative.kentimataAndOligon';
       case QuantitativeNeume.OligonPlusIsonPlusKentemata:
-        return 'toolbar.neumeSelector.isonAndKentimataWithSupportingOligon';
+        return 'model.neume.quantitative.isonAndKentimataWithSupportingOligon';
       case QuantitativeNeume.OligonPlusApostrophosPlusKentemata:
-        return 'toolbar.neumeSelector.apostrophosAndKentimataWithSupportingOligon';
+        return 'model.neume.quantitative.apostrophosAndKentimataWithSupportingOligon';
       case QuantitativeNeume.OligonPlusHyporoePlusKentemata:
-        return 'toolbar.neumeSelector.yporoeAndKentimataWithSupportingOligon';
+        return 'model.neume.quantitative.yporoeAndKentimataWithSupportingOligon';
       case QuantitativeNeume.OligonPlusElaphronPlusKentemata:
-        return 'toolbar.neumeSelector.elaphronAndKentimataWithSupportingOligon';
+        return 'model.neume.quantitative.elaphronAndKentimataWithSupportingOligon';
       case QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata:
-        return 'toolbar.neumeSelector.elaphronWithApostrophosAndKentimataWithSupportingOligon';
+        return 'model.neume.quantitative.elaphronWithApostrophosAndKentimataWithSupportingOligon';
       case QuantitativeNeume.OligonPlusHamiliPlusKentemata:
-        return 'toolbar.neumeSelector.hamiliAndKentimataWithSupportingOligon';
+        return 'model.neume.quantitative.hamiliAndKentimataWithSupportingOligon';
       case QuantitativeNeume.RunningElaphron:
-        return 'toolbar.neumeSelector.runningElaphron';
+        return 'model.neume.quantitative.runningElaphron';
       case QuantitativeNeume.Hyporoe:
-        return 'toolbar.neumeSelector.yporoe';
+        return 'model.neume.quantitative.yporoe';
       case QuantitativeNeume.PetastiPlusRunningElaphron:
-        return 'toolbar.neumeSelector.petastiWithRunningElaphron';
+        return 'model.neume.quantitative.petastiWithRunningElaphron';
       case QuantitativeNeume.PetastiPlusHyporoe:
-        return 'toolbar.neumeSelector.petastiWithYporoe';
+        return 'model.neume.quantitative.petastiWithYporoe';
       case QuantitativeNeume.OligonPlusIson:
-        return 'toolbar.neumeSelector.isonWithSupportingOligon';
+        return 'model.neume.quantitative.isonWithSupportingOligon';
       case QuantitativeNeume.OligonPlusApostrophos:
-        return 'toolbar.neumeSelector.apostrophosWithSupportingOligon';
+        return 'model.neume.quantitative.apostrophosWithSupportingOligon';
       case QuantitativeNeume.OligonPlusElaphron:
-        return 'toolbar.neumeSelector.elaphronWithSupportingOligon';
+        return 'model.neume.quantitative.elaphronWithSupportingOligon';
       case QuantitativeNeume.OligonPlusHyporoe:
-        return 'toolbar.neumeSelector.yporoeWithSupportingOligon';
+        return 'model.neume.quantitative.yporoeWithSupportingOligon';
       case QuantitativeNeume.OligonPlusElaphronPlusApostrophos:
-        return 'toolbar.neumeSelector.elaphronWithApostrophosAndSupportingOligon';
+        return 'model.neume.quantitative.elaphronWithApostrophosAndSupportingOligon';
       case QuantitativeNeume.OligonPlusHamili:
-        return 'toolbar.neumeSelector.hamiliWithSupportingOligon';
+        return 'model.neume.quantitative.hamiliWithSupportingOligon';
       case QuantitativeNeume.Kentima:
-        return 'toolbar.neumeSelector.kentima';
+        return 'model.neume.quantitative.kentima';
       case QuantitativeNeume.Kentemata:
-        return 'toolbar.neumeSelector.kentimata';
+        return 'model.neume.quantitative.kentimata';
       case QuantitativeNeume.DoubleApostrophos:
-        return 'toolbar.neumeSelector.doubleApostrophos';
+        return 'model.neume.quantitative.doubleApostrophos';
       case QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata:
-        return 'toolbar.neumeSelector.runningElaphronAndKentimataWithSupportingOligon';
+        return 'model.neume.quantitative.runningElaphronAndKentimataWithSupportingOligon';
       case QuantitativeNeume.IsonPlusApostrophos:
-        return 'toolbar.neumeSelector.isonAndApostrophos';
+        return 'model.neume.quantitative.isonAndApostrophos';
       case QuantitativeNeume.OligonKentimaMiddleKentimata:
-        return 'toolbar.neumeSelector.oligonWithKentimaAndKentimata';
+        return 'model.neume.quantitative.oligonWithKentimaAndKentimata';
       case QuantitativeNeume.OligonPlusKentemataPlusHypsiliLeft:
       case QuantitativeNeume.OligonPlusKentemataPlusHypsiliRight:
-        return 'toolbar.neumeSelector.oligonWithYpsiliAndKentimata';
+        return 'model.neume.quantitative.oligonWithYpsiliAndKentimata';
       case QuantitativeNeume.VareiaDotted:
       case QuantitativeNeume.VareiaDotted2:
       case QuantitativeNeume.VareiaDotted3:
       case QuantitativeNeume.VareiaDotted4:
-        return 'toolbar.neumeSelector.rest';
+        return 'model.neume.quantitative.rest';
       case QuantitativeNeume.Cross:
-        return 'toolbar.neumeSelector.cross';
+        return 'model.neume.quantitative.cross';
       case QuantitativeNeume.Breath:
-        return 'toolbar.neumeSelector.breath';
+        return 'model.neume.quantitative.breath';
     }
   }
 }

@@ -11,7 +11,7 @@ import { PlaybackService } from '@/services/audio/PlaybackService';
 
 import App from './App.vue';
 import ObserveVisibility from './directives/observeVisibility';
-import resources from './i18n';
+import { defaultNS, resources } from './i18n';
 import { initalizeBrowserIpcListeners } from './ipc/browserIpcListeners';
 import { initializeIpcListeners } from './ipc/ipcListeners';
 import router from './router';
@@ -31,6 +31,8 @@ i18next.use(LanguageDetector).init({
   interpolation: {
     escapeValue: false,
   },
+  ns: Object.keys(resources['en']),
+  defaultNS,
   resources,
 });
 

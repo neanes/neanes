@@ -12,12 +12,12 @@
       "
     />
     <label for="toolbar-mode-key-use-default-style">{{
-      $t('toolbar.common.useDefaultStyle')
+      $t('toolbar:common.useDefaultStyle')
     }}</label>
     <span class="divider" />
 
     <template v-if="!element.useDefaultStyle">
-      <label class="right-space">{{ $t('toolbar.modeKey.size') }}</label>
+      <label class="right-space">{{ $t('toolbar:modeKey.size') }}</label>
       <InputFontSize
         class="drop-caps-input"
         :modelValue="element.fontSize"
@@ -40,7 +40,7 @@
         src="@/assets/icons/alignleft.svg"
         width="32"
         height="32"
-        :title="$t('toolbar.common.alignLeft')"
+        :title="$t('toolbar:common.alignLeft')"
       />
     </button>
     <button
@@ -53,7 +53,7 @@
         src="@/assets/icons/aligncenter.svg"
         width="32"
         height="32"
-        :title="$t('toolbar.common.alignCenter')"
+        :title="$t('toolbar:common.alignCenter')"
       />
     </button>
     <button
@@ -66,12 +66,12 @@
         src="@/assets/icons/alignright.svg"
         width="32"
         height="32"
-        :title="$t('toolbar.common.alignRight')"
+        :title="$t('toolbar:common.alignRight')"
       />
     </button>
     <span class="space" />
     <template v-if="!element.useDefaultStyle">
-      <label class="right-space">{{ $t('toolbar.common.outline') }}</label>
+      <label class="right-space">{{ $t('toolbar:common.outline') }}</label>
       <InputStrokeWidth
         :modelValue="element.strokeWidth"
         @update:modelValue="$emit('update:strokeWidth', $event)"
@@ -79,7 +79,7 @@
       <span class="space" />
 
       <label class="right-space">{{
-        $t('toolbar.modeKey.heightAdjustment')
+        $t('toolbar:modeKey.heightAdjustment')
       }}</label>
 
       <InputUnit
@@ -106,7 +106,7 @@
       @click="$emit('update:tempoAlignRight', !element.tempoAlignRight)"
     >
       <img
-        :title="$t('toolbar.modeKey.rightAlignTempo')"
+        :title="$t('toolbar:modeKey.rightAlignTempo')"
         src="@/assets/icons/alignright2.svg"
         height="24"
         width="24"
@@ -116,7 +116,7 @@
 
     <span class="space" />
 
-    <label class="right-space">{{ $t('toolbar.common.bpm') }}</label>
+    <label class="right-space">{{ $t('toolbar:common.bpm') }}</label>
     <InputBpm
       :modelValue="element.bpm"
       @update:modelValue="$emit('update:bpm', $event)"
@@ -137,7 +137,7 @@
         "
       />
       <label for="toolbar-mode-key-ignore-attractions">{{
-        $t('toolbar.common.ignoreAttractions')
+        $t('toolbar:common.ignoreAttractions')
       }}</label>
     </div>
 
@@ -156,7 +156,7 @@
         "
       />
       <label for="toolbar-mode-key-show-ambitus">{{
-        $t('toolbar.modeKey.showAmbitus')
+        $t('toolbar:modeKey.showAmbitus')
       }}</label>
     </div>
 
@@ -178,13 +178,13 @@
         "
       />
       <label for="toolbar-mode-key-permanent-enharmonic-zo">{{
-        $t('toolbar.modeKey.permanentEnharmonicZo')
+        $t('toolbar:modeKey.permanentEnharmonicZo')
       }}</label>
     </div>
     <span class="space" />
 
     <button @click="$emit('open-mode-key-dialog')">
-      {{ $t('toolbar.modeKey.changeKey') }}
+      {{ $t('toolbar:modeKey.changeKey') }}
     </button>
   </div>
 </template>

@@ -1,10 +1,10 @@
 <template>
   <ModalDialog>
     <div class="container">
-      <div class="header">{{ $t('dialog.preferences.root') }}</div>
+      <div class="header">{{ $t('dialog:preferences.root') }}</div>
       <div class="pane-container">
         <div class="subheader">
-          {{ $t('dialog.preferences.tempoDefaults') }}
+          {{ $t('dialog:preferences.tempoDefaults') }}
         </div>
         <div v-for="tempo in tempoSigns" :key="tempo" class="form-group row">
           <Neume
@@ -16,18 +16,18 @@
             :modelValue="form.tempoDefaults[tempo]"
             @update:modelValue="onTempoChanged(tempo, $event)"
           />
-          <span class="unit-label">{{ $t('dialog.preferences.bpm') }}</span>
+          <span class="unit-label">{{ $t('dialog:preferences.bpm') }}</span>
         </div>
       </div>
       <div class="button-container">
         <button class="ok-btn" @click="$emit('update', form)">
-          {{ $t('dialog.common.update') }}
+          {{ $t('dialog:common.update') }}
         </button>
         <button class="reset-btn neutral-btn" @click="resetToSystemDefaults">
-          {{ $t('dialog.common.useSystemDefault') }}
+          {{ $t('dialog:common.useSystemDefault') }}
         </button>
         <button class="cancel-btn" @click="$emit('close')">
-          {{ $t('dialog.common.cancel') }}
+          {{ $t('dialog:common.cancel') }}
         </button>
       </div>
     </div>

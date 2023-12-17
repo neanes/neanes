@@ -1,7 +1,7 @@
 <template>
   <div class="neume-toolbar">
     <div class="row" v-if="isMultiNeume">
-      <span>{{ $t('toolbar.neume.neumeSelect') }}</span>
+      <span>{{ $t('toolbar:neume.neumeSelect') }}</span>
       <span class="space"></span>
       <button
         v-if="hasTertiaryNeume"
@@ -400,7 +400,7 @@
 
       <span class="separator" />
 
-      <label class="right-space">{{ $t('toolbar.common.spaceAfter') }}</label>
+      <label class="right-space">{{ $t('toolbar:common.spaceAfter') }}</label>
 
       <InputUnit
         unit="pt"
@@ -414,13 +414,13 @@
       <span class="space"></span>
 
       <button @click="$emit('open-syllable-positioning-dialog')">
-        {{ $t('toolbar.neume.positioning') }}
+        {{ $t('toolbar:neume.positioning') }}
       </button>
       <span class="space" />
 
       <div style="display: flex; align-items: center">
         <input
-          id="toolbar-neume-ignore-attractions"
+          id="toolbar:neume-ignore-attractions"
           type="checkbox"
           :checked="element.ignoreAttractions"
           @change="
@@ -430,14 +430,14 @@
             )
           "
         />
-        <label for="toolbar-neume-ignore-attractions">{{
-          $t('toolbar.common.ignoreAttractions')
+        <label for="toolbar:neume-ignore-attractions">{{
+          $t('toolbar:common.ignoreAttractions')
         }}</label>
       </div>
 
       <template v-if="showChromaticFthoraNote">
         <span class="space" />
-        <label class="right-space">{{ $t('toolbar.common.fthoraNote') }}</label>
+        <label class="right-space">{{ $t('toolbar:common.fthoraNote') }}</label>
         <select
           :value="element.chromaticFthoraNote"
           @change="
@@ -938,7 +938,7 @@ export default class ToolbarNeume extends Vue {
 
   get spathiTitle() {
     return this.spathiDisabled
-      ? this.$t('toolbar.common.spathiDisabled')
+      ? this.$t('toolbar:common.spathiDisabled')
       : this.tooltip(Fthora.Spathi_Top);
   }
 
@@ -951,7 +951,7 @@ export default class ToolbarNeume extends Vue {
 
   get klitonTitle() {
     return this.klitonDisabled
-      ? this.$t('toolbar.common.klitonDisabled')
+      ? this.$t('toolbar:common.klitonDisabled')
       : this.tooltip(Fthora.Kliton_Top);
   }
 
@@ -964,7 +964,7 @@ export default class ToolbarNeume extends Vue {
 
   get zygosTitle() {
     return this.zygosDisabled
-      ? this.$t('toolbar.common.zygosDisabled')
+      ? this.$t('toolbar:common.zygosDisabled')
       : this.tooltip(Fthora.Zygos_Top);
   }
 
@@ -981,7 +981,7 @@ export default class ToolbarNeume extends Vue {
 
   get enharmonicTitle() {
     return this.enharmonicDisabled
-      ? this.$t('toolbar.common.enharmonicDisabled')
+      ? this.$t('toolbar:common.enharmonicDisabled')
       : this.tooltip(Fthora.Enharmonic_Top);
   }
 
@@ -994,7 +994,7 @@ export default class ToolbarNeume extends Vue {
 
   get generalFlatTitle() {
     return this.generalFlatDisabled
-      ? this.$t('toolbar.common.generalFlatDisabled')
+      ? this.$t('toolbar:common.generalFlatDisabled')
       : this.tooltip(Fthora.GeneralFlat_Top);
   }
 
@@ -1007,7 +1007,7 @@ export default class ToolbarNeume extends Vue {
 
   get generalSharpTitle() {
     return this.generalSharpDisabled
-      ? this.$t('toolbar.common.generalSharpDisabled')
+      ? this.$t('toolbar:common.generalSharpDisabled')
       : this.tooltip(Fthora.GeneralSharp_Top);
   }
 
@@ -1024,41 +1024,41 @@ export default class ToolbarNeume extends Vue {
 
     switch (note) {
       case ScaleNote.VouLow:
-        return 'model.note.vouLow';
+        return 'model:note.vouLow';
       case ScaleNote.GaLow:
-        return 'model.note.gaLow';
+        return 'model:note.gaLow';
       case ScaleNote.ThiLow:
-        return 'model.note.diLow';
+        return 'model:note.diLow';
       case ScaleNote.KeLow:
-        return 'model.note.keLow';
+        return 'model:note.keLow';
       case ScaleNote.Zo:
-        return 'model.note.zo';
+        return 'model:note.zo';
       case ScaleNote.Ni:
-        return 'model.note.ni';
+        return 'model:note.ni';
       case ScaleNote.Pa:
-        return 'model.note.pa';
+        return 'model:note.pa';
       case ScaleNote.Vou:
-        return 'model.note.vou';
+        return 'model:note.vou';
       case ScaleNote.Ga:
-        return 'model.note.ga';
+        return 'model:note.ga';
       case ScaleNote.Thi:
-        return 'model.note.di';
+        return 'model:note.di';
       case ScaleNote.Ke:
-        return 'model.note.ke';
+        return 'model:note.ke';
       case ScaleNote.ZoHigh:
-        return 'model.note.zoHigh';
+        return 'model:note.zoHigh';
       case ScaleNote.NiHigh:
-        return 'model.note.niHigh';
+        return 'model:note.niHigh';
       case ScaleNote.PaHigh:
-        return 'model.note.paHigh';
+        return 'model:note.paHigh';
       case ScaleNote.VouHigh:
-        return 'model.note.vouHigh';
+        return 'model:note.vouHigh';
       case ScaleNote.GaHigh:
-        return 'model.note.gaHigh';
+        return 'model:note.gaHigh';
       case ScaleNote.ThiHigh:
-        return 'model.note.diHigh';
+        return 'model:note.diHigh';
       case ScaleNote.KeHigh:
-        return 'model.note.keHigh';
+        return 'model:note.keHigh';
       default:
         return note;
     }
@@ -1109,11 +1109,11 @@ export default class ToolbarNeume extends Vue {
       )})`;
     } else if (neume === TimeNeume.Klasma_Top) {
       return `${this.$t(
-        'model.neume.time.klasma',
+        'model:neume.time.klasma',
       )} (${this.neumeKeyboard.getKlasmaKeyTooltip()})`;
     } else if (neume === NoteIndicator.Pa) {
       return `${this.$t(
-        'toolbar.neume.noteIndicator',
+        'toolbar:neume.noteIndicator',
       )} (${this.neumeKeyboard.getNoteIndicatorKeyTooltip()})`;
     } else {
       return `${this.$t(displayName)}`;
@@ -1123,91 +1123,91 @@ export default class ToolbarNeume extends Vue {
   getDisplayName(neume: Neume) {
     switch (neume) {
       case TimeNeume.Klasma_Top:
-        return 'model.neume.time.klasma';
+        return 'model:neume.time.klasma';
       case TimeNeume.Hapli:
-        return 'model.neume.time.hapli';
+        return 'model:neume.time.hapli';
       case TimeNeume.Koronis:
-        return 'model.neume.time.koronis';
+        return 'model:neume.time.koronis';
       case VocalExpressionNeume.Cross_Top:
-        return 'model.neume.quantitative.cross';
+        return 'model:neume.quantitative.cross';
       case GorgonNeume.Gorgon_Top:
-        return 'model.neume.gorgon.gorgon';
+        return 'model:neume.gorgon.gorgon';
       case GorgonNeume.Digorgon:
-        return 'model.neume.gorgon.digorgon';
+        return 'model:neume.gorgon.digorgon';
       case GorgonNeume.Trigorgon:
-        return 'model.neume.gorgon.trigorgon';
+        return 'model:neume.gorgon.trigorgon';
       case VocalExpressionNeume.Vareia:
-        return 'model.neume.vocalExpression.vareia';
+        return 'model:neume.vocalExpression.vareia';
       case VocalExpressionNeume.Homalon:
-        return 'model.neume.vocalExpression.homalon';
+        return 'model:neume.vocalExpression.homalon';
       case VocalExpressionNeume.HomalonConnecting:
-        return 'model.neume.vocalExpression.connectingHomalon';
+        return 'model:neume.vocalExpression.connectingHomalon';
       case VocalExpressionNeume.Antikenoma:
-        return 'model.neume.vocalExpression.antikenoma';
+        return 'model:neume.vocalExpression.antikenoma';
       case VocalExpressionNeume.Psifiston:
-        return 'model.neume.vocalExpression.psifiston';
+        return 'model:neume.vocalExpression.psifiston';
       case VocalExpressionNeume.Heteron:
-        return 'model.neume.vocalExpression.heteron';
+        return 'model:neume.vocalExpression.heteron';
       case VocalExpressionNeume.HeteronConnecting:
-        return 'model.neume.vocalExpression.connectingHeteron';
+        return 'model:neume.vocalExpression.connectingHeteron';
       case VocalExpressionNeume.Endofonon:
-        return 'model.neume.vocalExpression.endofonon';
+        return 'model:neume.vocalExpression.endofonon';
       case Tie.YfenBelow:
-        return 'toolbar.neume.yfen';
+        return 'toolbar:neume.yfen';
       case Accidental.Flat_2_Right:
-        return 'toolbar.neume.flat';
+        return 'toolbar:neume.flat';
       case Accidental.Sharp_2_Left:
-        return 'toolbar.neume.sharp';
+        return 'toolbar:neume.sharp';
       case GorgonNeume.Argon:
-        return 'model.neume.gorgon.argon';
+        return 'model:neume.gorgon.argon';
       case GorgonNeume.Hemiolion:
-        return 'model.neume.gorgon.hemiolion';
+        return 'model:neume.gorgon.hemiolion';
       case GorgonNeume.Diargon:
-        return 'model.neume.gorgon.diargon';
+        return 'model:neume.gorgon.diargon';
       case MeasureBar.MeasureBarRight:
-        return 'toolbar.common.measureBar';
+        return 'toolbar:common.measureBar';
       case MeasureNumber.Two:
-        return 'toolbar.neume.measureNumber';
+        return 'toolbar:neume.measureNumber';
       case NoteIndicator.Pa:
-        return 'toolbar.neume.noteIndicator';
+        return 'toolbar:neume.noteIndicator';
       case Ison.Unison:
-        return 'toolbar.neume.isonIndicator';
+        return 'toolbar:neume.isonIndicator';
       case Fthora.DiatonicNiLow_Top:
-        return 'model.neume.fthora.diatonicNiLow';
+        return 'model:neume.fthora.diatonicNiLow';
       case Fthora.DiatonicPa_Top:
-        return 'model.neume.fthora.diatonicPa';
+        return 'model:neume.fthora.diatonicPa';
       case Fthora.DiatonicVou_Top:
-        return 'model.neume.fthora.diatonicVou';
+        return 'model:neume.fthora.diatonicVou';
       case Fthora.DiatonicGa_Top:
-        return 'model.neume.fthora.diatonicGa';
+        return 'model:neume.fthora.diatonicGa';
       case Fthora.DiatonicThi_Top:
-        return 'model.neume.fthora.diatonicDi';
+        return 'model:neume.fthora.diatonicDi';
       case Fthora.DiatonicKe_Top:
-        return 'model.neume.fthora.diatonicKe';
+        return 'model:neume.fthora.diatonicKe';
       case Fthora.DiatonicZo_Top:
-        return 'model.neume.fthora.diatonicZo';
+        return 'model:neume.fthora.diatonicZo';
       case Fthora.DiatonicNiHigh_Top:
-        return 'model.neume.fthora.diatonicNiHigh';
+        return 'model:neume.fthora.diatonicNiHigh';
       case Fthora.SoftChromaticThi_Top:
-        return 'model.neume.fthora.softChromaticDi';
+        return 'model:neume.fthora.softChromaticDi';
       case Fthora.SoftChromaticPa_Top:
-        return 'model.neume.fthora.softChromaticGa';
+        return 'model:neume.fthora.softChromaticGa';
       case Fthora.HardChromaticPa_Top:
-        return 'model.neume.fthora.hardChromaticPa';
+        return 'model:neume.fthora.hardChromaticPa';
       case Fthora.HardChromaticThi_Top:
-        return 'model.neume.fthora.hardChromaticDi';
+        return 'model:neume.fthora.hardChromaticDi';
       case Fthora.Enharmonic_Top:
-        return 'model.neume.fthora.enharmonic';
+        return 'model:neume.fthora.enharmonic';
       case Fthora.GeneralFlat_Top:
-        return 'model.neume.fthora.generalSharp';
+        return 'model:neume.fthora.generalSharp';
       case Fthora.GeneralSharp_Top:
-        return 'model.neume.fthora.generalFlat';
+        return 'model:neume.fthora.generalFlat';
       case Fthora.Zygos_Top:
-        return 'model.neume.fthora.zygos';
+        return 'model:neume.fthora.zygos';
       case Fthora.Kliton_Top:
-        return 'model.neume.fthora.kliton';
+        return 'model:neume.fthora.kliton';
       case Fthora.Spathi_Top:
-        return 'model.neume.fthora.spathi';
+        return 'model:neume.fthora.spathi';
       default:
         return neume;
     }

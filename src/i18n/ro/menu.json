@@ -1,0 +1,16 @@
+{
+  "file": {
+    "root": "Fișier",
+    "print": "Tipărește"
+  },
+  "edit": {
+    "root": "Editare"
+  },
+  "view": {
+    "root": "Vizualizare (Debugare)"
+  },
+  "help": {
+    "root": "Ajutor"
+  },
+  "warning": "Atenție: Această aplicație funcționează cel mai bine în browsere bazate pe Chromium. S-ar putea să întâmpinați funcționalitate redusă sau erori în browsere care nu sunt bazate pe Chromium."
+}

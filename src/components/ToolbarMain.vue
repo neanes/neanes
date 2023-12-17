@@ -5,21 +5,21 @@
       @click="$emit('update:entryMode', EntryMode.Auto)"
       :class="{ on: entryMode === EntryMode.Auto }"
     >
-      {{ $t('toolbar.main.auto') }}
+      {{ $t('toolbar:main.auto') }}
     </button>
     <button
       class="entry-mode-btn"
       @click="$emit('update:entryMode', EntryMode.Insert)"
       :class="{ on: entryMode === EntryMode.Insert }"
     >
-      {{ $t('toolbar.main.insert') }}
+      {{ $t('toolbar:main.insert') }}
     </button>
     <button
       class="entry-mode-btn"
       @click="$emit('update:entryMode', EntryMode.Edit)"
       :class="{ on: entryMode === EntryMode.Edit }"
     >
-      {{ $t('toolbar.main.single') }}
+      {{ $t('toolbar:main.single') }}
     </button>
     <span class="space"></span>
     <button
@@ -93,14 +93,14 @@
     </div>
     <span class="space"></span>
     <button
-      :title="$t('toolbar.main.insertDropCapBefore')"
+      :title="$t('toolbar:main.insertDropCapBefore')"
       class="icon-btn"
       @click="$emit('add-drop-cap')"
     >
       <img src="@/assets/icons/drop-cap.svg" width="24" height="24" />
     </button>
     <button
-      :title="$t('toolbar.main.insertImage')"
+      :title="$t('toolbar:main.insertImage')"
       class="icon-btn"
       @click="$emit('add-image')"
     >
@@ -109,7 +109,7 @@
     <span class="space"></span>
     <button
       class="icon-btn line-break-btn"
-      :title="$t('toolbar.main.insertOrRemoveLineBreakAfterSelectedElement')"
+      :title="$t('toolbar:main.insertOrRemoveLineBreakAfterSelectedElement')"
       @click="$emit('toggle-line-break', LineBreakType.Left)"
     >
       <img src="@/assets/icons/line-break.svg" width="24" height="24" />
@@ -117,7 +117,7 @@
     <button
       class="icon-btn line-break-btn"
       :title="
-        $t('toolbar.main.insertOrRemoveJustifiedLineBreakAfterSelectedElement')
+        $t('toolbar:main.insertOrRemoveJustifiedLineBreakAfterSelectedElement')
       "
       @click="$emit('toggle-line-break', LineBreakType.Justify)"
     >
@@ -126,7 +126,7 @@
     <button
       class="icon-btn line-break-btn"
       :title="
-        $t('toolbar.main.insertOrRemoveCenteredLineBreakAfterSelectedElement')
+        $t('toolbar:main.insertOrRemoveCenteredLineBreakAfterSelectedElement')
       "
       @click="$emit('toggle-line-break', LineBreakType.Center)"
     >
@@ -134,7 +134,7 @@
     </button>
     <button
       class="icon-btn"
-      :title="$t('toolbar.main.insertOrRemovePageBreakAfterSelectedElement')"
+      :title="$t('toolbar:main.insertOrRemovePageBreakAfterSelectedElement')"
       @click="$emit('toggle-page-break')"
     >
       <img src="@/assets/icons/page-break.svg" width="24" height="24" />
@@ -142,7 +142,7 @@
     <span class="space"></span>
     <button
       class="red icon-btn"
-      :title="$t('toolbar.main.deleteSelectedElement')"
+      :title="$t('toolbar:main.deleteSelectedElement')"
       @click="$emit('delete-selected-element')"
     >
       <img src="@/assets/icons/delete.svg" width="24" height="24" />
@@ -159,7 +159,7 @@
       >
       <div class="zoom-menu" v-if="showZoomMenu">
         <div class="zoom-menu-item" @click="updateZoom('Fit')">
-          {{ $t('toolbar.main.fit') }}
+          {{ $t('toolbar:main.fit') }}
         </div>
         <div class="zoom-menu-separator"></div>
         <div
@@ -193,7 +193,7 @@
         <img src="@/assets/icons/config.svg" width="32" height="32" />
       </button>
       <span class="space" />
-      <label class="right-space">{{ $t('toolbar.main.speed') }}</label>
+      <label class="right-space">{{ $t('toolbar:main.speed') }}</label>
       <select
         class="audio-speed"
         :value="audioOptions.speed"
@@ -218,7 +218,7 @@
     <span class="space"></span>
     <span class="space"></span>
     <div class="page-number-container">
-      {{ $t('toolbar.main.pageNumber', { currentPageNumber, pageCount }) }}
+      {{ $t('toolbar:main.pageNumber', { currentPageNumber, pageCount }) }}
     </div>
   </div>
 </template>
@@ -289,13 +289,13 @@ export default class ToolbarMain extends Vue {
 
   get martyriaTooltip() {
     return `${this.$t(
-      'toolbar.main.martyria',
+      'toolbar:main.martyria',
     )} (${this.neumeKeyboard.getMartyriaKeyTooltip()})`;
   }
 
   get tempoTooltip() {
     return `${this.$t(
-      'toolbar.common.tempoSign',
+      'toolbar:common.tempoSign',
     )} (${this.neumeKeyboard.generateTooltip(
       this.neumeKeyboard.findMappingForNeume(TempoSign.VerySlow)!,
     )})`;

@@ -1,0 +1,70 @@
+{
+  "common": {
+    "alignLeft": "Align Left",
+    "alignCenter": "Align Center",
+    "alignRight": "Align Right",
+    "bpm": "BPM",
+    "fthoraNote": "Fthora Note",
+    "ignoreAttractions": "Ignore Attractions",
+    "insertGorthmikon": "Insert Gorthmikon",
+    "insertPelastikon": "Insert Pelastikon",
+    "measureBar": "Measure Bar",
+    "outline": "Outline",
+    "spaceAfter": "Space After",
+    "tempoSign": "Tempo Sign",
+    "useDefaultStyle": "Use Default Style",
+    "enharmonicDisabled": "Enharmonic fthora may only be placed on Ga, Zo, or Vou",
+    "generalFlatDisabled": "General flat may only be placed on Ke",
+    "generalSharpDisabled": "General sharp may only be placed on Ga",
+    "zygosDisabled": "Zygos may only be placed on Di",
+    "klitonDisabled": "Kliton may only be placed on Di",
+    "spathiDisabled": "Spathi may only be placed on Ke or Ga"
+  },
+  "main": {
+    "auto": "Auto",
+    "insert": "Insert",
+    "single": "Single",
+    "martyria": "Martyria",
+    "insertDropCapBefore": "Insert drop cap before",
+    "insertImage": "Insert image",
+    "insertOrRemoveLineBreakAfterSelectedElement": "Insert or remove line break after selected element",
+    "insertOrRemoveJustifiedLineBreakAfterSelectedElement": "Insert or remove justified line break after selected element",
+    "insertOrRemoveCenteredLineBreakAfterSelectedElement": "Insert or remove centered line break after selected element",
+    "insertOrRemovePageBreakAfterSelectedElement": "Insert or remove page break after selected element",
+    "deleteSelectedElement": "Delete selected element",
+    "fit": "Fit",
+    "speed": "Speed",
+    "pageNumber": "Page {{ currentPageNumber }} of {{ pageCount }}"
+  },
+  "imageBox": {
+    "inline": "Inline",
+    "maintainAspectRatio": "Maintain Aspect Ratio",
+    "width": "Width",
+    "height": "Height"
+  },
+  "martyria": {
+    "auto": "Auto",
+    "note": "Note",
+    "scale": "Scale",
+    "rootSignOverride": "Root Sign Override",
+    "none": "None"
+  },
+  "modeKey": {
+    "size": "Size",
+    "heightAdjustment": "Height Adjustment",
+    "rightAlignTempo": "Right-align tempo",
+    "showAmbitus": "Show Ambitus",
+    "permanentEnharmonicZo": "Permanent Enharmonic Zo",
+    "changeKey": "Change Key"
+  },
+  "neume": {
+    "neumeSelect": "Neume Select",
+    "positioning": "Positioning",
+    "yfen": "Yfen",
+    "flat": "Flat",
+    "sharp": "Sharp",
+    "measureNumber": "Measure Number",
+    "noteIndicator": "Note Indicator",
+    "isonIndicator": "Ison Indicator"
+  }
+}

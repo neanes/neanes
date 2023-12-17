@@ -1,123 +1,123 @@
 <template>
   <div class="file-menu-bar" @focusout="isMenuOpen = false" tabindex="-1">
     <FileMenuBarItem
-      :label="$t('menu.file.root')"
+      :label="$t('menu:file.root')"
       @click="toggleMenu"
       @mouseenter="selectedMenu = 'File'"
       :isOpen="isMenuOpen && selectedMenu === 'File'"
     >
-      <FileMenuItem :label="$t('menu.file.new')" @click="onClickNew" />
-      <FileMenuItem :label="$t('menu.file.open')" @click="onClickOpen" />
-      <FileMenuItem :label="$t('menu.file.save')" @click="onClickSave" />
+      <FileMenuItem :label="$t('menu:file.new')" @click="onClickNew" />
+      <FileMenuItem :label="$t('menu:file.open')" @click="onClickOpen" />
+      <FileMenuItem :label="$t('menu:file.save')" @click="onClickSave" />
       <div class="separator" />
       <FileMenuItem
-        :label="$t('menu.file.pageSetup')"
+        :label="$t('menu:file.pageSetup')"
         @click="onClickPageSetup"
       />
       <FileMenuItem
-        :label="$t('menu.file.exportAsHtml')"
+        :label="$t('menu:file.exportAsHtml')"
         @click="onClickExportAsHtml"
       />
       <div class="separator" />
-      <FileMenuItem :label="$t('menu.file.close')" @click="onClickClose" />
+      <FileMenuItem :label="$t('menu:file.close')" @click="onClickClose" />
       <FileMenuItem
-        :label="$t('menu.file.closeOthers')"
+        :label="$t('menu:file.closeOthers')"
         @click="onClickCloseOthers"
       />
     </FileMenuBarItem>
     <FileMenuBarItem
-      :label="$t('menu.edit.root')"
+      :label="$t('menu:edit.root')"
       @click="toggleMenu"
       @mouseenter="selectedMenu = 'Edit'"
       :isOpen="isMenuOpen && selectedMenu === 'Edit'"
     >
-      <FileMenuItem :label="$t('menu.edit.undo')" @click="onClickUndo" />
-      <FileMenuItem :label="$t('menu.edit.redo')" @click="onClickRedo" />
+      <FileMenuItem :label="$t('menu:edit.undo')" @click="onClickUndo" />
+      <FileMenuItem :label="$t('menu:edit.redo')" @click="onClickRedo" />
       <div class="separator" />
-      <FileMenuItem :label="$t('menu.edit.cut')" @click="onClickCut" />
-      <FileMenuItem :label="$t('menu.edit.copy')" @click="onClickCopy" />
+      <FileMenuItem :label="$t('menu:edit.cut')" @click="onClickCut" />
+      <FileMenuItem :label="$t('menu:edit.copy')" @click="onClickCopy" />
       <FileMenuItem
-        :label="$t('menu.edit.copyAsHtml')"
+        :label="$t('menu:edit.copyAsHtml')"
         @click="onClickCopyAsHtml"
       />
-      <FileMenuItem :label="$t('menu.edit.paste')" @click="onClickPaste" />
+      <FileMenuItem :label="$t('menu:edit.paste')" @click="onClickPaste" />
       <FileMenuItem
-        :label="$t('menu.edit.pasteWithLyrics')"
+        :label="$t('menu:edit.pasteWithLyrics')"
         @click="onClickPasteWithLyrics"
       />
       <div class="separator" />
       <FileMenuItem
-        :label="$t('menu.edit.copyFormat')"
+        :label="$t('menu:edit.copyFormat')"
         @click="onClickCopyFormat"
       />
       <FileMenuItem
-        :label="$t('menu.edit.pasteFormat')"
+        :label="$t('menu:edit.pasteFormat')"
         @click="onClickPasteFormat"
       />
       <div class="separator" />
       <FileMenuItem
-        :label="$t('menu.edit.preferences')"
+        :label="$t('menu:edit.preferences')"
         @click="onClickPreferences"
       />
     </FileMenuBarItem>
     <FileMenuBarItem
-      :label="$t('menu.insert.root')"
+      :label="$t('menu:insert.root')"
       @click="toggleMenu"
       @mouseenter="selectedMenu = 'Insert'"
       :isOpen="isMenuOpen && selectedMenu === 'Insert'"
     >
       <FileMenuItem
-        :label="$t('menu.insert.dropCapBefore')"
+        :label="$t('menu:insert.dropCapBefore')"
         @click="onClickAddDropCapBefore"
       />
       <FileMenuItem
-        :label="$t('menu.insert.dropCapAfter')"
+        :label="$t('menu:insert.dropCapAfter')"
         @click="onClickAddDropCapAfter"
       />
       <FileMenuItem
-        :label="$t('menu.insert.textBox')"
+        :label="$t('menu:insert.textBox')"
         @click="onClickAddTextBox"
       />
       <FileMenuItem
-        :label="$t('menu.insert.inlineTextBox')"
+        :label="$t('menu:insert.inlineTextBox')"
         @click="onClickAddInlineTextBox"
       />
       <FileMenuItem
-        :label="$t('menu.insert.modeKey')"
+        :label="$t('menu:insert.modeKey')"
         @click="onClickAddModeKey"
       />
-      <FileMenuItem :label="$t('menu.insert.image')" @click="onClickAddImage" />
+      <FileMenuItem :label="$t('menu:insert.image')" @click="onClickAddImage" />
       <div class="separator" />
       <FileMenuItem
-        :label="$t('menu.insert.header')"
+        :label="$t('menu:insert.header')"
         @click="onClickAddHeader"
       />
       <FileMenuItem
-        :label="$t('menu.insert.footer')"
+        :label="$t('menu:insert.footer')"
         @click="onClickAddFooter"
       />
     </FileMenuBarItem>
     <FileMenuBarItem
-      :label="$t('menu.help.root')"
+      :label="$t('menu:help.root')"
       @click="toggleMenu"
       @mouseenter="selectedMenu = 'Help'"
       :isOpen="isMenuOpen && selectedMenu === 'Help'"
     >
-      <FileMenuItem :label="$t('menu.help.guide')" @click="onClickGuide" />
+      <FileMenuItem :label="$t('menu:help.guide')" @click="onClickGuide" />
       <div class="separator" />
       <FileMenuItem
-        :label="$t('menu.help.requestAFeature')"
+        :label="$t('menu:help.requestAFeature')"
         @click="onClickRequestFeature"
       />
       <FileMenuItem
-        :label="$t('menu.help.reportAnIssue')"
+        :label="$t('menu:help.reportAnIssue')"
         @click="onClickReportIssue"
       />
       <div class="separator" />
-      <FileMenuItem :label="$t('menu.help.about')" @click="onClickAbout" />
+      <FileMenuItem :label="$t('menu:help.about')" @click="onClickAbout" />
     </FileMenuBarItem>
     <div class="browser-warning" v-if="!isChrome">
-      {{ $t('menu.warning') }}
+      {{ $t('menu:warning') }}
     </div>
     <input
       ref="file"

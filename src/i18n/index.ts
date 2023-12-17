@@ -1,17 +1,10 @@
-import el from './el.json';
-import en from './en.json';
-import ro from './ro.json';
+import el from './el';
+import en from './en';
+import ro from './ro';
 
-const resources = {
-  en: {
-    translation: en,
-  },
-  el: {
-    translation: el,
-  },
-  ro: {
-    translation: ro,
-  },
-};
-
-export default resources;
+export const defaultNS = 'model';
+export const resources = {
+  el,
+  en,
+  ro,
+} as const;

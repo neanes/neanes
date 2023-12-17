@@ -73,7 +73,7 @@
           src="@/assets/icons/alignleft.svg"
           width="32"
           height="32"
-          :title="$t('toolbar.imageBox.alignLeft')"
+          :title="$t('toolbar.common.alignLeft')"
         />
       </button>
       <button
@@ -85,7 +85,7 @@
           src="@/assets/icons/aligncenter.svg"
           width="32"
           height="32"
-          :title="$t('toolbar.imageBox.alignCenter')"
+          :title="$t('toolbar.common.alignCenter')"
         />
       </button>
       <button
@@ -97,7 +97,7 @@
           src="@/assets/icons/alignright.svg"
           width="32"
           height="32"
-          :title="$t('toolbar.imageBox.alignRight')"
+          :title="$t('toolbar.common.alignRight')"
         />
       </button>
     </template>

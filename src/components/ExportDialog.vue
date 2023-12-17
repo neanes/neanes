@@ -64,7 +64,7 @@
             {{ $t('dialog.export.export') }}
           </button>
           <button class="cancel-btn" @click="close">
-            {{ $t('dialog.export.close') }}
+            {{ $t('dialog.common.cancel') }}
           </button>
         </template>
       </div>

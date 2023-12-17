@@ -252,12 +252,8 @@
         <div class="bottom-pane">
           <div class="form-group">
             <label />
-            <span class="table-header">{{
-              $t('dialog.neumePositioning.left')
-            }}</span>
-            <span class="table-header">{{
-              $t('dialog.neumePositioning.top')
-            }}</span>
+            <span class="table-header">{{ $t('dialog.common.left') }}</span>
+            <span class="table-header">{{ $t('dialog.common.top') }}</span>
           </div>
           <div class="form-group">
             <label>{{ $t('dialog.neumePositioning.accidental') }}</label>
@@ -526,7 +522,7 @@
             />
           </div>
           <div class="form-group">
-            <label>{{ $t('dialog.neumePositioning.stavros') }}</label>
+            <label>{{ $t('dialog.neumePositioning.cross') }}</label>
             <InputUnit
               :unit="unit"
               :min="min"
@@ -624,10 +620,10 @@
       </div>
       <div class="button-container">
         <button class="ok-btn" @click="update">
-          {{ $t('dialog.neumePositioning.update') }}
+          {{ $t('dialog.common.update') }}
         </button>
         <button class="cancel-btn" @click="$emit('close')">
-          {{ $t('dialog.neumePositioning.cancel') }}
+          {{ $t('dialog.common.cancel') }}
         </button>
       </div>
     </div>

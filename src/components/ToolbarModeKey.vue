@@ -12,7 +12,7 @@
       "
     />
     <label for="toolbar-mode-key-use-default-style">{{
-      $t('toolbar.modeKey.useDefaultStyle')
+      $t('toolbar.common.useDefaultStyle')
     }}</label>
     <span class="divider" />
 
@@ -40,7 +40,7 @@
         src="@/assets/icons/alignleft.svg"
         width="32"
         height="32"
-        :title="$t('toolbar.modeKey.alignLeft')"
+        :title="$t('toolbar.common.alignLeft')"
       />
     </button>
     <button
@@ -53,7 +53,7 @@
         src="@/assets/icons/aligncenter.svg"
         width="32"
         height="32"
-        :title="$t('toolbar.modeKey.alignCenter')"
+        :title="$t('toolbar.common.alignCenter')"
       />
     </button>
     <button
@@ -66,12 +66,12 @@
         src="@/assets/icons/alignright.svg"
         width="32"
         height="32"
-        :title="$t('toolbar.modeKey.alignRight')"
+        :title="$t('toolbar.common.alignRight')"
       />
     </button>
     <span class="space" />
     <template v-if="!element.useDefaultStyle">
-      <label class="right-space">{{ $t('toolbar.modeKey.outline') }}</label>
+      <label class="right-space">{{ $t('toolbar.common.outline') }}</label>
       <InputStrokeWidth
         :modelValue="element.strokeWidth"
         @update:modelValue="$emit('update:strokeWidth', $event)"
@@ -116,7 +116,7 @@
 
     <span class="space" />
 
-    <label class="right-space">{{ $t('toolbar.modeKey.bpm') }}</label>
+    <label class="right-space">{{ $t('toolbar.common.bpm') }}</label>
     <InputBpm
       :modelValue="element.bpm"
       @update:modelValue="$emit('update:bpm', $event)"
@@ -137,7 +137,7 @@
         "
       />
       <label for="toolbar-mode-key-ignore-attractions">{{
-        $t('toolbar.modeKey.ignoreAttractions')
+        $t('toolbar.common.ignoreAttractions')
       }}</label>
     </div>
 

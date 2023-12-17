@@ -1,10 +1,10 @@
 <template>
   <ModalDialog>
     <div class="container">
-      <div class="header">{{ $t('dialog.playbackSettings.root') }}</div>
+      <div class="header">{{ $t('dialog:playbackSettings.root') }}</div>
       <div class="pane-container">
         <div class="form-group row">
-          <label>{{ $t('dialog.playbackSettings.detune') }}</label>
+          <label>{{ $t('dialog:playbackSettings.detune') }}</label>
           <input
             type="number"
             class="detune"
@@ -19,16 +19,16 @@
           <span class="unit-label">cents</span>
           <span class="label-g3">Di = G3 = {{ options.frequencyDi }} Hz </span>
           <button class="btnTestTone" @click="$emit('play-test-tone')">
-            {{ $t('dialog.playbackSettings.test') }}
+            {{ $t('dialog:playbackSettings.test') }}
           </button>
         </div>
 
         <div class="form-group subheader">
-          {{ $t('dialog.playbackSettings.volume') }}
+          {{ $t('dialog:playbackSettings.volume') }}
         </div>
         <div class="form-group row">
           <span class="volume-label">{{
-            $t('dialog.playbackSettings.melody')
+            $t('dialog:playbackSettings.melody')
           }}</span>
           <input
             type="range"
@@ -42,7 +42,7 @@
 
         <div class="form-group row">
           <span class="volume-label">{{
-            $t('dialog.playbackSettings.ison')
+            $t('dialog:playbackSettings.ison')
           }}</span>
           <input
             type="range"
@@ -63,12 +63,12 @@
             v-model="options.useDefaultAttractionZo"
           />
           <label for="playback-settings-dialog-diatonic-zo">{{
-            $t('dialog.playbackSettings.diatonicZoAttraction')
+            $t('dialog:playbackSettings.diatonicZoAttraction')
           }}</label>
           <p>
-            {{ $t('dialog.playbackSettings.diatonicZoAttractionDescription') }}
+            {{ $t('dialog:playbackSettings.diatonicZoAttractionDescription') }}
           </p>
-          {{ $t('dialog.playbackSettings.moria') }}
+          {{ $t('dialog:playbackSettings.moria') }}
           <input
             type="number"
             class="interval"
@@ -86,7 +86,7 @@
             class="btnResetDefaultAttractionZoMoria"
             @click="resetDefaultAttractionZoMoria"
           >
-            {{ $t('dialog.playbackSettings.reset') }}
+            {{ $t('dialog:playbackSettings.reset') }}
           </button>
         </div>
 
@@ -97,10 +97,10 @@
             v-model="options.useLegetos"
           />
           <label for="playback-settings-dialog-legetos">{{
-            $t('dialog.playbackSettings.classicLegetos')
+            $t('dialog:playbackSettings.classicLegetos')
           }}</label>
           <p>
-            {{ $t('dialog.playbackSettings.classicLegetosDescription') }}
+            {{ $t('dialog:playbackSettings.classicLegetosDescription') }}
           </p>
         </div>
 
@@ -108,10 +108,10 @@
 
         <div class="row">
           <span class="subheader">{{
-            $t('dialog.playbackSettings.intervals')
+            $t('dialog:playbackSettings.intervals')
           }}</span
           ><button class="btnResetIntervals" @click="resetIntervals">
-            {{ $t('dialog.playbackSettings.reset') }}
+            {{ $t('dialog:playbackSettings.reset') }}
           </button>
         </div>
 
@@ -119,7 +119,7 @@
 
         <div class="form-group row">
           <span class="scale-name">{{
-            $t('dialog.playbackSettings.diatonic')
+            $t('dialog:playbackSettings.diatonic')
           }}</span>
           <div
             class="row"
@@ -148,7 +148,7 @@
 
         <div v-if="options.useLegetos" class="form-group row">
           <span class="scale-name">{{
-            $t('dialog.playbackSettings.legetos')
+            $t('dialog:playbackSettings.legetos')
           }}</span>
           <div
             class="row"
@@ -177,7 +177,7 @@
 
         <div class="form-group row">
           <span class="scale-name">{{
-            $t('dialog.playbackSettings.softChromatic')
+            $t('dialog:playbackSettings.softChromatic')
           }}</span>
           <div
             class="row"
@@ -206,7 +206,7 @@
 
         <div class="form-group row">
           <span class="scale-name">{{
-            $t('dialog.playbackSettings.hardChromatic')
+            $t('dialog:playbackSettings.hardChromatic')
           }}</span>
           <div
             class="row"
@@ -235,7 +235,7 @@
 
         <div class="form-group row">
           <span class="scale-name">{{
-            $t('dialog.playbackSettings.zygos')
+            $t('dialog:playbackSettings.zygos')
           }}</span>
           <div
             class="row"
@@ -264,7 +264,7 @@
 
         <div v-if="options.useLegetos" class="form-group row">
           <span class="scale-name">{{
-            $t('dialog.playbackSettings.zygosLegetos')
+            $t('dialog:playbackSettings.zygosLegetos')
           }}</span>
           <div
             class="row"
@@ -293,7 +293,7 @@
 
         <div class="form-group row">
           <span class="scale-name">{{
-            $t('dialog.playbackSettings.kliton')
+            $t('dialog:playbackSettings.kliton')
           }}</span>
           <div
             class="row"
@@ -322,7 +322,7 @@
 
         <div class="form-group row">
           <span class="scale-name">{{
-            $t('dialog.playbackSettings.spathi')
+            $t('dialog:playbackSettings.spathi')
           }}</span>
           <div
             class="row"
@@ -353,13 +353,13 @@
 
         <div class="row">
           <span class="subheader">{{
-            $t('dialog.playbackSettings.alterationMultipliersChrysanthine')
+            $t('dialog:playbackSettings.alterationMultipliersChrysanthine')
           }}</span
           ><button
             class="btnResetIntervals"
             @click="resetAlterationMultipliers"
           >
-            {{ $t('dialog.playbackSettings.reset') }}
+            {{ $t('dialog:playbackSettings.reset') }}
           </button>
         </div>
 
@@ -367,7 +367,7 @@
 
         <div class="form-group row">
           <span class="alteration-name">{{
-            $t('dialog.playbackSettings.zeroCrossbeams')
+            $t('dialog:playbackSettings.zeroCrossbeams')
           }}</span>
           <div class="row">
             <input
@@ -389,7 +389,7 @@
         </div>
         <div class="form-group row">
           <span class="alteration-name">{{
-            $t('dialog.playbackSettings.oneCrossbeam')
+            $t('dialog:playbackSettings.oneCrossbeam')
           }}</span>
           <div class="row">
             <input
@@ -411,7 +411,7 @@
         </div>
         <div class="form-group row">
           <span class="alteration-name">{{
-            $t('dialog.playbackSettings.twoCrossbeams')
+            $t('dialog:playbackSettings.twoCrossbeams')
           }}</span>
           <div class="row">
             <input
@@ -436,7 +436,7 @@
 
         <div class="row">
           <span class="subheader">{{
-            $t('dialog.playbackSettings.alterationMoria1881Committee')
+            $t('dialog:playbackSettings.alterationMoria1881Committee')
           }}</span
           ><button class="btnResetIntervals" @click="resetAlterationMoria">
             Reset
@@ -446,7 +446,7 @@
         <div class="vertical-spacer" />
         <div class="form-group row">
           <span class="alteration-name">{{
-            $t('dialog.playbackSettings.sharpWithZeroCrossbeams')
+            $t('dialog:playbackSettings.sharpWithZeroCrossbeams')
           }}</span>
           <div class="row">
             <input
@@ -468,7 +468,7 @@
         </div>
         <div class="form-group row">
           <span class="alteration-name">{{
-            $t('dialog.playbackSettings.sharpWithOneCrossbeam')
+            $t('dialog:playbackSettings.sharpWithOneCrossbeam')
           }}</span>
           <div class="row">
             <input
@@ -490,7 +490,7 @@
         </div>
         <div class="form-group row">
           <span class="alteration-name">{{
-            $t('dialog.playbackSettings.sharpWithTwoCrossbeams')
+            $t('dialog:playbackSettings.sharpWithTwoCrossbeams')
           }}</span>
           <div class="row">
             <input
@@ -512,7 +512,7 @@
         </div>
         <div class="form-group row">
           <span class="alteration-name">{{
-            $t('dialog.playbackSettings.sharpWithThreeCrossbeams')
+            $t('dialog:playbackSettings.sharpWithThreeCrossbeams')
           }}</span>
           <div class="row">
             <input
@@ -534,7 +534,7 @@
         </div>
         <div class="form-group row">
           <span class="alteration-name">{{
-            $t('dialog.playbackSettings.flatWithZeroCrossbeams')
+            $t('dialog:playbackSettings.flatWithZeroCrossbeams')
           }}</span>
           <div class="row">
             <input
@@ -556,7 +556,7 @@
         </div>
         <div class="form-group row">
           <span class="alteration-name">{{
-            $t('dialog.playbackSettings.flatWithOneCrossbeam')
+            $t('dialog:playbackSettings.flatWithOneCrossbeam')
           }}</span>
           <div class="row">
             <input
@@ -578,7 +578,7 @@
         </div>
         <div class="form-group row">
           <span class="alteration-name">{{
-            $t('dialog.playbackSettings.flatWithTwoCrossbeams')
+            $t('dialog:playbackSettings.flatWithTwoCrossbeams')
           }}</span>
           <div class="row">
             <input
@@ -600,7 +600,7 @@
         </div>
         <div class="form-group row">
           <span class="alteration-name">{{
-            $t('dialog.playbackSettings.flatWithThreeCrossbeams')
+            $t('dialog:playbackSettings.flatWithThreeCrossbeams')
           }}</span>
           <div class="row">
             <input
@@ -624,7 +624,7 @@
       <div class="error">{{ error }}</div>
       <div class="button-container">
         <button class="cancel-btn" @click="close">
-          {{ $t('dialog.playbackSettings.close') }}
+          {{ $t('dialog:playbackSettings.close') }}
         </button>
       </div>
     </div>

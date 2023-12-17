@@ -6,10 +6,10 @@
         <div class="left-pane">
           <div class="subheader">
             {{ $t('dialog.pageSetup.root') }}
-            <span class="units">({{ marginUnitLabel }})</span>
+            <span class="units">({{ $t(marginUnitLabel!) }})</span>
           </div>
           <div class="form-group">
-            <label class="margin-label">{{ $t('dialog.pageSetup.top') }}</label>
+            <label class="margin-label">{{ $t('dialog.common.top') }}</label>
             <input
               class="margin-input"
               type="number"
@@ -24,9 +24,7 @@
             />
           </div>
           <div class="form-group">
-            <label class="margin-label">{{
-              $t('dialog.pageSetup.bottom')
-            }}</label>
+            <label class="margin-label">{{ $t('dialog.common.bottom') }}</label>
             <input
               class="margin-input"
               type="number"
@@ -41,9 +39,7 @@
             />
           </div>
           <div class="form-group">
-            <label class="margin-label">{{
-              $t('dialog.pageSetup.left')
-            }}</label>
+            <label class="margin-label">{{ $t('dialog.common.left') }}</label>
             <input
               class="margin-input"
               type="number"
@@ -58,9 +54,7 @@
             />
           </div>
           <div class="form-group">
-            <label class="margin-label">{{
-              $t('dialog.pageSetup.right')
-            }}</label>
+            <label class="margin-label">{{ $t('dialog.common.right') }}</label>
             <input
               class="margin-input"
               type="number"
@@ -138,6 +132,7 @@
           <div class="form-group">
             <div class="subheader">{{ $t('dialog.pageSetup.paperSize') }}</div>
             <select class="paper-size-select" v-model="pageSize">
+              <!-- TODO localize -->
               <option v-for="size in pageSizes" :key="size.name">
                 {{ size.name }}
               </option>
@@ -153,7 +148,9 @@
               value="in"
               :checked="form.pageSizeUnit === 'in'"
             />
-            <label for="page-setup-dialog-unit-in">inch</label>
+            <label for="page-setup-dialog-unit-in">{{
+              $t('dialog.pageSetup.in')
+            }}</label>
             <input
               id="page-setup-dialog-unit-mm"
               type="radio"
@@ -162,11 +159,13 @@
               value="mm"
               :checked="form.pageSizeUnit === 'mm'"
             />
-            <label for="page-setup-dialog-unit-mm">mm</label>
+            <label for="page-setup-dialog-unit-mm">{{
+              $t('dialog.pageSetup.mm')
+            }}</label>
           </div>
           <div class="subheader">
             {{ $t('dialog.pageSetup.spacing') }}
-            <span class="units">({{ marginUnitLabel }})</span>
+            <span class="units">({{ $t(marginUnitLabel!) }})</span>
           </div>
           <div class="form-group">
             <label class="margin-label">{{
@@ -481,7 +480,7 @@
               v-model="form.lyricsDefaultStrokeWidth"
             />
           </div>
-          <div class="subheader">{{ $t('dialog.pageSetup.modeKey') }}</div>
+          <div class="subheader">{{ $t('dialog.pageSetup.modeKeys') }}</div>
           <div class="form-group row">
             <label class="drop-caps-label">{{
               $t('dialog.pageSetup.color')
@@ -638,7 +637,7 @@
           </div>
           <div class="form-group row">
             <label class="neume-colors-label">{{
-              $t('dialog.pageSetup.martyrias')
+              $t('dialog.pageSetup.martyriae')
             }}</label>
             <ColorPicker
               class="neume-colors-input"
@@ -736,16 +735,16 @@
       </div>
       <div class="button-container">
         <button class="ok-btn" @click="updatePageSetup">
-          {{ $t('dialog.pageSetup.update') }}
+          {{ $t('dialog.common.update') }}
         </button>
         <button class="reset-btn neutral-btn" @click="saveAsDefault">
-          {{ $t('dialog.pageSetup.setAsDefault') }}
+          {{ $t('dialog.common.setAsDefault') }}
         </button>
         <button class="reset-btn neutral-btn" @click="resetToSystemDefaults">
-          {{ $t('dialog.pageSetup.useSystemDefault') }}
+          {{ $t('dialog.common.useSystemDefault') }}
         </button>
         <button class="cancel-btn" @click="$emit('close')">
-          {{ $t('dialog.pageSetup.cancel') }}
+          {{ $t('dialog.common.cancel') }}
         </button>
       </div>
     </div>
@@ -918,9 +917,9 @@ export default class PageSetupDialog extends Vue {
   get marginUnitLabel() {
     switch (this.form.pageSizeUnit) {
       case 'mm':
-        return 'mm';
+        return 'dialog.pageSetup.mm';
       case 'in':
-        return 'inches';
+        return 'dialog.pageSetup.in';
       default:
         console.warn(`Unknown page size unit: ${this.form.pageSizeUnit}`);
         return null;

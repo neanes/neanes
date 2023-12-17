@@ -187,7 +187,7 @@
           "
         >
           <option v-for="note in notes" :key="note.key" :value="note.key">
-            {{ note.displayName }}
+            {{ $t(note.displayName) }}
           </option>
         </select>
 
@@ -200,13 +200,13 @@
           "
         >
           <option v-for="scale in scales" :key="scale.key" :value="scale.key">
-            {{ scale.displayName }}
+            {{ $t(scale.displayName) }}
           </option>
         </select>
       </template>
     </div>
     <div class="row">
-      <label class="right-space">{{ $t('toolbar.martyria.bpm') }}</label>
+      <label class="right-space">{{ $t('toolbar.common.bpm') }}</label>
       <InputBpm
         :disabled="element.tempo == null"
         :modelValue="element.bpm"
@@ -215,7 +215,7 @@
 
       <span class="space" />
 
-      <label class="right-space">{{ $t('toolbar.martyria.spaceAfter') }}</label>
+      <label class="right-space">{{ $t('toolbar.common.spaceAfter') }}</label>
 
       <InputUnit
         unit="pt"
@@ -229,9 +229,7 @@
 
       <template v-if="showChromaticFthoraNote">
         <span class="space" />
-        <label class="right-space">{{
-          $t('toolbar.martyria.fthoraNote')
-        }}</label>
+        <label class="right-space">{{ $t('toolbar.common.fthoraNote') }}</label>
         <select
           :value="element.chromaticFthoraNote"
           @change="
@@ -259,9 +257,9 @@
           )
         "
       >
-        <option value="">None</option>
+        <option value="">{{ $t('toolbar.martyria.none') }}</option>
         <option v-for="sign in rootSigns" :key="sign.value" :value="sign.value">
-          {{ sign.name }}
+          {{ $t(sign.name) }}
         </option>
       </select>
     </div>
@@ -341,52 +339,52 @@ export default class ToolbarMartyria extends Vue {
 
   rootSigns = [
     {
-      name: 'Varys',
-      value: RootSign.Zo,
-    },
-    {
-      name: 'Pl. Fourth',
-      value: RootSign.Delta,
-    },
-    {
-      name: 'Pl. First',
+      name: 'model.neume.rootSign.ananes',
       value: RootSign.Alpha,
     },
     {
-      name: 'Legetos',
-      value: RootSign.Legetos,
-    },
-    {
-      name: 'Nana',
-      value: RootSign.Nana,
-    },
-    {
-      name: 'Fourth',
-      value: RootSign.DeltaDotted,
-    },
-    {
-      name: 'First',
-      value: RootSign.AlphaDotted,
-    },
-    {
-      name: 'Hard Chromatic Pa',
-      value: RootSign.Squiggle,
-    },
-    {
-      name: 'Hard Chromatic Di',
-      value: RootSign.Tilt,
-    },
-    {
-      name: 'Soft Chromatic Di',
+      name: 'model.neume.rootSign.neanes',
       value: RootSign.SoftChromaticSquiggle,
     },
     {
-      name: 'Hard Chromatic Ke',
+      name: 'model.neume.rootSign.softChromaticGa',
       value: RootSign.SoftChromaticPaRootSign,
     },
     {
-      name: 'Zygos',
+      name: 'model.neume.rootSign.nana',
+      value: RootSign.Nana,
+    },
+    {
+      name: 'model.neume.rootSign.legetos',
+      value: RootSign.Legetos,
+    },
+    {
+      name: 'model.neume.rootSign.agia',
+      value: RootSign.DeltaDotted,
+    },
+    {
+      name: 'model.neume.rootSign.zygos',
       value: RootSign.Zygos,
+    },
+    {
+      name: 'model.neume.rootSign.aneanes',
+      value: RootSign.AlphaDotted,
+    },
+    {
+      name: 'model.neume.rootSign.necheanes',
+      value: RootSign.Squiggle,
+    },
+    {
+      name: 'model.neume.rootSign.nenano',
+      value: RootSign.Tilt,
+    },
+    {
+      name: 'model.neume.rootSign.varys',
+      value: RootSign.Zo,
+    },
+    {
+      name: 'model.neume.rootSign.neagie',
+      value: RootSign.Delta,
     },
   ];
 
@@ -424,33 +422,74 @@ export default class ToolbarMartyria extends Vue {
   }
 
   private getNoteDisplayName(note: Note) {
-    if (note.includes('High')) {
-      return note.replace('High', ' (High)');
-    } else if (note.includes('Low')) {
-      return note.replace('Low', ' (Low)');
+    switch (note) {
+      case Note.VouLow:
+        return 'model.note.vouLow';
+      case Note.GaLow:
+        return 'model.note.gaLow';
+      case Note.ThiLow:
+        return 'model.note.diLow';
+      case Note.KeLow:
+        return 'model.note.keLow';
+      case Note.Zo:
+        return 'model.note.zo';
+      case Note.Ni:
+        return 'model.note.ni';
+      case Note.Pa:
+        return 'model.note.pa';
+      case Note.Vou:
+        return 'model.note.vou';
+      case Note.Ga:
+        return 'model.note.ga';
+      case Note.Thi:
+        return 'model.note.di';
+      case Note.Ke:
+        return 'model.note.ke';
+      case Note.ZoHigh:
+        return 'model.note.zoHigh';
+      case Note.NiHigh:
+        return 'model.note.niHigh';
+      case Note.PaHigh:
+        return 'model.note.paHigh';
+      case Note.VouHigh:
+        return 'model.note.vouHigh';
+      case Note.GaHigh:
+        return 'model.note.gaHigh';
+      case Note.ThiHigh:
+        return 'model.note.diHigh';
+      case Note.KeHigh:
+        return 'model.note.keHigh';
+      default:
+        return note;
     }
-
-    return note;
   }
 
   private getScaleDisplayName(scale: Scale) {
     switch (scale) {
+      case Scale.Diatonic:
+        return 'model.scale.diatonic';
       case Scale.SoftChromatic:
-        return 'Soft Chromatic';
+        return 'model.scale.softChromatic';
       case Scale.HardChromatic:
-        return 'Hard Chromatic';
+        return 'model.scale.hardChromatic';
       case Scale.EnharmonicGa:
-        return 'Enharmonic from Ga';
+        return 'model.scale.enharmonicGa';
       case Scale.EnharmonicZoHigh:
-        return 'Enharmonic from High Zo';
+        return 'model.scale.enharmonicZoHigh';
       case Scale.EnharmonicVou:
-        return 'Enharmonic from Vou';
+        return 'model.scale.enharmonicVou';
       case Scale.EnharmonicZo:
-        return 'Enharmonic from Zo';
+        return 'model.scale.enharmonicZo';
       case Scale.EnharmonicVouHigh:
-        return 'Enharmonic from High Vou';
+        return 'model.scale.enharmonicVouHigh';
+      case Scale.Zygos:
+        return 'model.scale.zygos';
+      case Scale.Spathi:
+        return 'model.scale.spathi';
       case Scale.SpathiGa:
-        return 'Spathi from Ga';
+        return 'model.scale.spathiGa';
+      case Scale.Kliton:
+        return 'model.scale.kliton';
       default:
         return scale;
     }
@@ -466,7 +505,7 @@ export default class ToolbarMartyria extends Vue {
 
   get spathiTitle() {
     return this.spathiDisabled
-      ? this.$t('toolbar.martyria.spathiDisabled')
+      ? this.$t('toolbar.common.spathiDisabled')
       : this.tooltip(Fthora.Spathi_Top);
   }
 
@@ -478,7 +517,7 @@ export default class ToolbarMartyria extends Vue {
 
   get klitonTitle() {
     return this.klitonDisabled
-      ? this.$t('toolbar.martyria.klitonDisabled')
+      ? this.$t('toolbar.common.klitonDisabled')
       : this.tooltip(Fthora.Kliton_Top);
   }
 
@@ -490,7 +529,7 @@ export default class ToolbarMartyria extends Vue {
 
   get zygosTitle() {
     return this.zygosDisabled
-      ? this.$t('toolbar.martyria.zygosDisabled')
+      ? this.$t('toolbar.common.zygosDisabled')
       : this.tooltip(Fthora.Zygos_Top);
   }
 
@@ -507,7 +546,7 @@ export default class ToolbarMartyria extends Vue {
 
   get enharmonicTitle() {
     return this.enharmonicDisabled
-      ? this.$t('toolbar.martyria.enharmonicDisabled')
+      ? this.$t('toolbar.common.enharmonicDisabled')
       : this.tooltip(Fthora.Enharmonic_Top);
   }
 
@@ -519,7 +558,7 @@ export default class ToolbarMartyria extends Vue {
 
   get generalFlatTitle() {
     return this.generalFlatDisabled
-      ? this.$t('toolbar.martyria.generalFlatDisabled')
+      ? this.$t('toolbar.common.generalFlatDisabled')
       : this.tooltip(Fthora.GeneralFlat_Top);
   }
 
@@ -531,7 +570,7 @@ export default class ToolbarMartyria extends Vue {
 
   get generalSharpTitle() {
     return this.generalSharpDisabled
-      ? this.$t('toolbar.martyria.generalSharpDisabled')
+      ? this.$t('toolbar.common.generalSharpDisabled')
       : this.tooltip(Fthora.GeneralSharp_Top);
   }
 
@@ -603,7 +642,7 @@ export default class ToolbarMartyria extends Vue {
 
   get alignRightTooltip() {
     return `${this.$t(
-      'toolbar.martyria.alignRight',
+      'toolbar.common.alignRight',
     )}(${this.neumeKeyboard.getMaryriaRightAlignTooltip()})`;
   }
 
@@ -622,45 +661,45 @@ export default class ToolbarMartyria extends Vue {
   getDisplayName(neume: Neume) {
     switch (neume) {
       case Fthora.DiatonicNiLow_Top:
-        return 'toolbar.martyria.diatonicNiLow';
+        return 'model.neume.fthora.diatonicNiLow';
       case Fthora.DiatonicPa_Top:
-        return 'toolbar.martyria.diatonicPa';
+        return 'model.neume.fthora.diatonicPa';
       case Fthora.DiatonicVou_Top:
-        return 'toolbar.martyria.diatonicVou';
+        return 'model.neume.fthora.diatonicVou';
       case Fthora.DiatonicGa_Top:
-        return 'toolbar.martyria.diatonicGa';
+        return 'model.neume.fthora.diatonicGa';
       case Fthora.DiatonicThi_Top:
-        return 'toolbar.martyria.diatonicDi';
+        return 'model.neume.fthora.diatonicDi';
       case Fthora.DiatonicKe_Top:
-        return 'toolbar.martyria.diatonicKe';
+        return 'model.neume.fthora.diatonicKe';
       case Fthora.DiatonicZo_Top:
-        return 'toolbar.martyria.diatonicZo';
+        return 'model.neume.fthora.diatonicZo';
       case Fthora.DiatonicNiHigh_Top:
-        return 'toolbar.martyria.diatonicNiHigh';
+        return 'model.neume.fthora.diatonicNiHigh';
       case Fthora.SoftChromaticThi_Top:
-        return 'toolbar.martyria.softChromaticDi';
+        return 'model.neume.fthora.softChromaticDi';
       case Fthora.SoftChromaticPa_Top:
-        return 'toolbar.martyria.softChromaticPa';
+        return 'model.neume.fthora.softChromaticGa';
       case Fthora.HardChromaticPa_Top:
-        return 'toolbar.martyria.hardChromaticPa';
+        return 'model.neume.fthora.hardChromaticPa';
       case Fthora.HardChromaticThi_Top:
-        return 'toolbar.martyria.hardChromaticDi';
+        return 'model.neume.fthora.hardChromaticDi';
       case Fthora.Enharmonic_Top:
-        return 'toolbar.martyria.enharmonic';
+        return 'model.neume.fthora.enharmonic';
       case Fthora.GeneralFlat_Top:
-        return 'toolbar.martyria.generalFlat';
+        return 'model.neume.fthora.generalFlat';
       case Fthora.GeneralSharp_Top:
-        return 'toolbar.martyria.generalSharp';
+        return 'model.neume.fthora.generalSharp';
       case Fthora.Zygos_Top:
-        return 'toolbar.martyria.zygos';
+        return 'model.neume.fthora.zygos';
       case Fthora.Kliton_Top:
-        return 'toolbar.martyria.kliton';
+        return 'model.neume.fthora.kliton';
       case Fthora.Spathi_Top:
-        return 'toolbar.martyria.spathi';
+        return 'model.neume.fthora.spathi';
       case MeasureBar.MeasureBarRight:
-        return 'toolbar.martyria.measureBar';
+        return 'toolbar.common.measureBar';
       case TempoSign.VerySlowAbove:
-        return 'toolbar.martyria.tempo';
+        return 'toolbar.common.tempoSign';
       default:
         return neume;
     }

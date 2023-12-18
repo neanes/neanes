@@ -1616,12 +1616,16 @@ app.on('ready', async () => {
   i18next
     .use(
       new Pseudo({
-        enabled: 'VITE_PSEUDOLOCALIZATION' in import.meta.env,
+        enabled:
+          'VITE_PSEUDOLOCALIZATION' in import.meta.env &&
+          import.meta.env['VITE_PSEUDOLOCALIZATION'] === 'true',
         languageToPseudo: 'en-US',
       }),
     )
     .init({
-      debug: 'VITE_PSEUDOLOCALIZATION' in import.meta.env,
+      debug:
+        'VITE_PSEUDOLOCALIZATION' in import.meta.env &&
+        import.meta.env['VITE_PSEUDOLOCALIZATION'] === 'true',
       lng: app.getLocale(),
       fallbackLng: 'en',
       ns: Object.keys(resources['en']),

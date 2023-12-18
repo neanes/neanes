@@ -28,12 +28,16 @@ i18next
   .use(LanguageDetector)
   .use(
     new Pseudo({
-      enabled: 'VITE_PSEUDOLOCALIZATION' in import.meta.env,
+      enabled:
+        'VITE_PSEUDOLOCALIZATION' in import.meta.env &&
+        import.meta.env['VITE_PSEUDOLOCALIZATION'] === 'true',
       languageToPseudo: 'en-US',
     }),
   )
   .init({
-    debug: 'VITE_PSEUDOLOCALIZATION' in import.meta.env,
+    debug:
+      'VITE_PSEUDOLOCALIZATION' in import.meta.env &&
+      import.meta.env['VITE_PSEUDOLOCALIZATION'] === 'true',
     detection: {
       order: ['querystring', 'navigator'],
     },

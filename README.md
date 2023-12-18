@@ -109,9 +109,19 @@ When using [Visual Studio Code](https://github.com/microsoft/vscode), install th
 - [Vue Language Features (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.volar)
 - [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin)
 
+### Localization
+
+To test localization support, add the following to `.env.local` and/or `.env.web.local`:
+
+```
+VITE_PSEUDOLOCALIZATION=true
+```
+
+This enables [pseudolocalization](https://en.wikipedia.org/wiki/Pseudolocalization) for all localized strings.
+
 ## License
 
-This project is licensed under the [GNU General Public, License version 3](./LICENSE).
+This project is licensed under the [GNU General Public License, version 3](./LICENSE).
 
 The following bundled fonts are licensed under the [SIL Open Font License (OFL), version 1.1](https://scripts.sil.org/OFL):
 

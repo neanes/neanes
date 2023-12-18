@@ -1,7 +1,7 @@
 <template>
   <ModalDialog>
     <div class="container">
-      <div class="header">{{ $t('dialog.modeKey.root') }}</div>
+      <div class="header">{{ $t('dialog:modeKey.root') }}</div>
       <div class="pane-container">
         <div class="left-pane">
           <ul class="mode-list">
@@ -9,49 +9,49 @@
               :class="{ selected: selectedMode === 1 }"
               @click="selectMode(1)"
             >
-              {{ $t('dialog.modeKey.firstMode') }}
+              {{ $t('model:mode.first') }}
             </li>
             <li
               :class="{ selected: selectedMode === 2 }"
               @click="selectMode(2)"
             >
-              {{ $t('dialog.modeKey.secondMode') }}
+              {{ $t('model:mode.second') }}
             </li>
             <li
               :class="{ selected: selectedMode === 3 }"
               @click="selectMode(3)"
             >
-              {{ $t('dialog.modeKey.thirdMode') }}
+              {{ $t('model:mode.third') }}
             </li>
             <li
               :class="{ selected: selectedMode === 4 }"
               @click="selectMode(4)"
             >
-              {{ $t('dialog.modeKey.fourthMode') }}
+              {{ $t('model:mode.fourth') }}
             </li>
             <li
               :class="{ selected: selectedMode === 5 }"
               @click="selectMode(5)"
             >
-              {{ $t('dialog.modeKey.plagalOfFirstMode') }}
+              {{ $t('model:mode.plagalFirst') }}
             </li>
             <li
               :class="{ selected: selectedMode === 6 }"
               @click="selectMode(6)"
             >
-              {{ $t('dialog.modeKey.plagalOfSecondMode') }}
+              {{ $t('model:mode.plagalSecond') }}
             </li>
             <li
               :class="{ selected: selectedMode === 7 }"
               @click="selectMode(7)"
             >
-              {{ $t('dialog.modeKey.graveMode') }}
+              {{ $t('model:mode.grave') }}
             </li>
             <li
               :class="{ selected: selectedMode === 8 }"
               @click="selectMode(8)"
             >
-              {{ $t('dialog.modeKey.plagalOfFourthMode') }}
+              {{ $t('model:mode.plagalFourth') }}
             </li>
           </ul>
         </div>
@@ -79,10 +79,10 @@
           :disabled="selectedModeKey == null"
           @click="updateModeKey"
         >
-          {{ $t('dialog.modeKey.update') }}
+          {{ $t('dialog:common.update') }}
         </button>
         <button class="cancel-btn" @click="$emit('close')">
-          {{ $t('dialog.modeKey.cancel') }}
+          {{ $t('dialog:common.cancel') }}
         </button>
       </div>
     </div>

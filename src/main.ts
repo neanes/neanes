@@ -12,7 +12,7 @@ import { PlaybackService } from '@/services/audio/PlaybackService';
 
 import App from './App.vue';
 import ObserveVisibility from './directives/observeVisibility';
-import resources from './i18n';
+import { defaultNS, resources } from './i18n';
 import { initalizeBrowserIpcListeners } from './ipc/browserIpcListeners';
 import { initializeIpcListeners } from './ipc/ipcListeners';
 import router from './router';
@@ -41,7 +41,9 @@ i18next
     interpolation: {
       escapeValue: false,
     },
+    ns: Object.keys(resources['en']),
     postProcess: ['pseudo'],
+    defaultNS,
     resources,
   });
 

@@ -1,0 +1,60 @@
+{
+  "file": {
+    "root": "File",
+    "new": "New",
+    "open": "Open",
+    "openRecent": "Open Recent",
+    "save": "Save",
+    "saveAs": "Save As",
+    "pageSetup": "Page Setup",
+    "exportAsPdf": "Export as PDF",
+    "exportAsHtml": "Export as HTML",
+    "exportAsImage": "Export as Image",
+    "print": "Print",
+    "close": "Close",
+    "closeOthers": "Close Others"
+  },
+  "edit": {
+    "root": "Edit",
+    "undo": "Undo",
+    "redo": "Redo",
+    "cut": "Cut",
+    "copy": "Copy",
+    "copyAsHtml": "Copy as HTML",
+    "paste": "Paste",
+    "pasteWithLyrics": "Paste with Lyrics",
+    "copyFormat": "Copy Format",
+    "pasteFormat": "Paste Format",
+    "preferences": "Preferences"
+  },
+  "insert": {
+    "root": "Insert",
+    "dropCapBefore": "Drop Cap Before",
+    "dropCapAfter": "Drop Cap After",
+    "textBox": "Text Box",
+    "inlineTextBox": "Inline Text Box",
+    "modeKey": "Mode Key",
+    "image": "Image",
+    "headersAndFooters": "Headers and Footers",
+    "header": "Header",
+    "footer": "Footer"
+  },
+  "view": {
+    "root": "View (Debug)",
+    "generateTestFiles": "Generate Test Files (Debug)"
+  },
+  "help": {
+    "root": "Help",
+    "guide": "Guide",
+    "requestAFeature": "Request a Feature",
+    "reportAnIssue": "Report an Issue",
+    "about": "About"
+  },
+  "tab": {
+    "close": "Close",
+    "closeOthers": "Close Others",
+    "closeToTheLeft": "Close to the Left",
+    "closeToTheRight": "Close to the Right"
+  },
+  "warning": "Warning: This application works best in Chromium-based browsers. You may experience reduced functionality or errors in non-Chromium-based browsers."
+}

@@ -6,12 +6,12 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 import Pseudo from 'i18next-pseudo';
 import I18NextVue from 'i18next-vue';
 import { createApp } from 'vue';
+import VueObserveVisibility from 'vue3-observe-visibility';
 
 import { AudioService } from '@/services/audio/AudioService';
 import { PlaybackService } from '@/services/audio/PlaybackService';
 
 import App from './App.vue';
-import ObserveVisibility from './directives/observeVisibility';
 import { defaultNS, resources } from './i18n';
 import { initalizeBrowserIpcListeners } from './ipc/browserIpcListeners';
 import { initializeIpcListeners } from './ipc/ipcListeners';
@@ -52,7 +52,7 @@ i18next
   });
 
 const app = createApp(App);
-app.directive('observe-visibility', ObserveVisibility);
+app.use(VueObserveVisibility);
 app.provide('audioService', new AudioService());
 app.provide('playbackService', new PlaybackService());
 app.use(router);

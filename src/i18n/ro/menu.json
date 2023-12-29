@@ -1,16 +1,60 @@
 {
   "file": {
     "root": "Fișier",
-    "print": "Tipărește"
+    "new": "Nou",
+    "open": "Deschide",
+    "openRecent": "Deschide Recent",
+    "save": "Salvează",
+    "saveAs": "Salvează Ca",
+    "pageSetup": "Configurare Pagină",
+    "exportAsPdf": "Exportă ca PDF",
+    "exportAsHtml": "Exportă ca HTML",
+    "exportAsImage": "Exportă ca Imagine",
+    "print": "Tipărește",
+    "close": "Închide",
+    "closeOthers": "Închide Celelalte"
   },
   "edit": {
-    "root": "Editare"
+    "root": "Editare",
+    "undo": "Anulează",
+    "redo": "Refă",
+    "cut": "Taie",
+    "copy": "Copiază",
+    "copyAsHtml": "Copiază ca HTML",
+    "paste": "Lipire",
+    "pasteWithLyrics": "Lipire cu Versuri",
+    "copyFormat": "Copiază Formatul",
+    "pasteFormat": "Lipire Formatul",
+    "preferences": "Preferințe"
+  },
+  "insert": {
+    "root": "Inserare",
+    "dropCapBefore": "Majusculă Înainte",
+    "dropCapAfter": "Majusculă După",
+    "textBox": "Caseta de Text",
+    "inlineTextBox": "Caseta de Text în Linie",
+    "modeKey": "Initial Mărturia",
+    "image": "Imagine",
+    "headersAndFooters": "Antete și Subsoluri",
+    "header": "Antet",
+    "footer": "Subsol"
   },
   "view": {
-    "root": "Vizualizare (Debugare)"
+    "root": "Vizualizare (Debugare)",
+    "generateTestFiles": "Generare Fișiere de Test (Debugare)"
   },
   "help": {
-    "root": "Ajutor"
+    "root": "Ajutor",
+    "guide": "Ghid",
+    "requestAFeature": "Solicită o Caracteristică",
+    "reportAnIssue": "Raportează o Problemă",
+    "about": "Despre"
+  },
+  "tab": {
+    "close": "Închide",
+    "closeOthers": "Închide Celelalte",
+    "closeToTheLeft": "Închide la Stânga",
+    "closeToTheRight": "Închide la Dreapta"
   },
   "warning": "Atenție: Această aplicație funcționează cel mai bine în browsere bazate pe Chromium. S-ar putea să întâmpinați funcționalitate redusă sau erori în browsere care nu sunt bazate pe Chromium."
 }

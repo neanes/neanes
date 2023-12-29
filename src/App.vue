@@ -171,7 +171,13 @@ body {
   overflow: hidden;
 
   font-size: 16px;
+}
 
+body,
+button,
+input,
+select,
+textarea {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans',
     Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
 }

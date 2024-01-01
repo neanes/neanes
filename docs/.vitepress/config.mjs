@@ -14,7 +14,7 @@ const defaultNav = [
   { text: 'Web App', link: '/web-app/' },
   {
     text: 'Changelog',
-    link: 'https://github.com/danielgarthur/neanes/releases',
+    link: 'https://github.com/neanes/neanes/releases',
   },
 ];
 
@@ -47,12 +47,10 @@ export default defineConfig({
       '/download/': defaultNav,
       '/web-app/': defaultNav,
     },
-    socialLinks: [
-      { icon: 'github', link: 'https://github.com/danielgarthur/neanes' },
-    ],
+    socialLinks: [{ icon: 'github', link: 'https://github.com/neanes/neanes' }],
     docsDir: 'docs',
     editLink: {
-      pattern: 'https://github.com/danielgarthur/neanes/tree/master/:path',
+      pattern: 'https://github.com/neanes/neanes/tree/master/:path',
       text: 'Suggest changes to this page',
     },
   },

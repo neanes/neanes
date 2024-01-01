@@ -7,7 +7,7 @@
   "author": "danielgarthur",
   "repository": {
     "type": "git",
-    "url": "https://github.com/danielgarthur/neanes.git"
+    "url": "https://github.com/neanes/neanes.git"
   },
   "debug": {
     "env": {

@@ -3,7 +3,7 @@
     <div>
       Download the latest release from
       <a
-        href="https://github.com/danielgarthur/neanes/releases/latest"
+        href="https://github.com/neanes/neanes/releases/latest"
         target="_blank"
         rel="noopener noreferrer"
         >Github</a
@@ -56,7 +56,7 @@ export default {
   async mounted() {
     try {
       const response = await fetch(
-        'https://api.github.com/repos/danielgarthur/neanes/releases?per_page=1',
+        'https://api.github.com/repos/neanes/neanes/releases?per_page=1',
         { headers: { Accept: 'application/vnd.github.v3+json' } },
       );
 

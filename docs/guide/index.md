@@ -20,7 +20,7 @@ To update the mode key, double click the current mode key to open the mode key d
 
 ![Mode Key Dialog](./images/guide-mode-key-dialog.png)
 
-In the mode key dialog, select the mode on the left, and then pick the appropriate signature on the right. Most common signatures should be present in the dialog. Many signatures can be written in several different ways, and not all variations have been included. If a signature is missing, request it by [opening an issue](https://github.com/danielgarthur/neanes/issues/new).
+In the mode key dialog, select the mode on the left, and then pick the appropriate signature on the right. Most common signatures should be present in the dialog. Many signatures can be written in several different ways, and not all variations have been included. If a signature is missing, request it by [opening an issue](https://github.com/neanes/neanes/issues/new).
 
 While the mode key is selected, a toolbar at the bottom the screen will be visible that allows you to change the color, size, and alignment of the key.
 

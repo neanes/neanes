@@ -1,6 +1,6 @@
 # Web App
 
-You can try Neanes in your browser [here](https://danielgarthur.github.io/neanes-web-app/).
+You can try Neanes in your browser [here](https://neanes.github.io/neanes-web-app/).
 
 The web version has less features than the desktop version and may have bugs not present in the desktop version. It requires a Chromium-based browser, such as Chrome or Edge.
 

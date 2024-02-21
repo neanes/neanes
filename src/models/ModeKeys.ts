@@ -432,4 +432,15 @@ export const modeKeyTemplates: ModeKeyTemplate[] = [
     quantitativeNeumeRight:
       QuantitativeNeume.OligonPlusHypsiliPlusKentimaVertical,
   },
+  {
+    id: 804,
+    mode: 8,
+    scale: Scale.Diatonic,
+    scaleNote: ScaleNote.Pa,
+    description: 'model:modeKey.sticheraricAndPapadicFromPa',
+    fthora: Fthora.DiatonicNiLow_Top,
+    martyria: ModeSign.Delta,
+    fthoraAboveNote: Fthora.DiatonicNiLow_Top,
+    note: ModeSign.Pa,
+  },
 ];

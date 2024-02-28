@@ -182,6 +182,9 @@
                         >
                           <div
                             class="melisma"
+                            :class="{
+                              full: (element as NoteElement).isFullMelisma,
+                            }"
                             :style="getMelismaStyle(element as NoteElement)"
                           >
                             <span

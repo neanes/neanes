@@ -2,10 +2,11 @@ import { rmSync } from 'node:fs';
 
 import vue from '@vitejs/plugin-vue';
 import path from 'path';
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import electron from 'vite-plugin-electron';
 import eslintPlugin from 'vite-plugin-eslint';
 import { VitePWA } from 'vite-plugin-pwa';
+import VueDevTools from 'vite-plugin-vue-devtools';
 
 import pkg from './package.json';
 
@@ -16,6 +17,8 @@ export default defineConfig(({ command, mode }) => {
   const isServe = command === 'serve';
   const isBuild = command === 'build';
   const sourcemap = isServe || !!process.env.VSCODE_DEBUG;
+
+  process.env = { ...process.env, ...loadEnv(mode, process.cwd()) };
 
   return {
     resolve: {
@@ -96,6 +99,7 @@ export default defineConfig(({ command, mode }) => {
           })
         : undefined,
       vue(),
+      process.env.VITE_ENABLE_DEV_TOOLS === 'true' ? VueDevTools() : undefined,
       eslintPlugin(),
       !mode.includes('web')
         ? electron([

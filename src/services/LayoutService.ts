@@ -43,6 +43,7 @@ import {
 } from '@/models/Scales';
 import { Score } from '@/models/Score';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
+import { TATWEEL } from '@/utils/constants';
 
 import { TextMeasurementService } from './TextMeasurementService';
 
@@ -1245,6 +1246,11 @@ export class LayoutService {
       pageSetup.lyricsFont,
     );
 
+    const widthOfTatweel = TextMeasurementService.getTextWidth(
+      TATWEEL,
+      pageSetup.lyricsFont,
+    );
+
     const widthOfHyphen = TextMeasurementService.getTextWidth(
       '-',
       pageSetup.lyricsFont,
@@ -1355,17 +1361,29 @@ export class LayoutService {
               // beginning of the neume.
               start = element.x;
             } else if (element.lyricsWidth > element.neumeWidth) {
-              start =
-                element.x +
-                element.neumeWidth +
-                element.lyricsHorizontalOffset / 2 +
-                (element.lyricsWidth - element.neumeWidth) / 2;
+              if (!pageSetup.melkiteRtl) {
+                start =
+                  element.x +
+                  element.neumeWidth +
+                  element.lyricsHorizontalOffset / 2 +
+                  (element.lyricsWidth - element.neumeWidth) / 2;
+              } else {
+                start =
+                  element.x +
+                  element.neumeWidth +
+                  (element.lyricsWidth - element.neumeWidth) / 2;
+              }
             } else {
-              start =
-                element.x +
-                element.neumeWidth / 2 +
-                element.lyricsWidth / 2 +
-                element.lyricsHorizontalOffset / 2;
+              if (!pageSetup.melkiteRtl) {
+                start =
+                  element.x +
+                  element.neumeWidth / 2 +
+                  element.lyricsWidth / 2 +
+                  element.lyricsHorizontalOffset / 2;
+              } else {
+                start =
+                  element.x + element.neumeWidth / 2 + element.lyricsWidth / 2;
+              }
             }
 
             if (element.isHyphen) {
@@ -1434,7 +1452,7 @@ export class LayoutService {
                     widthOfHyphenForThisElement / 2,
                 );
               }
-            } else {
+            } else if (!pageSetup.melkiteRtl) {
               const nextElementIsRunningElaphron =
                 nextElement &&
                 nextElement.elementType === ElementType.Note &&
@@ -1503,6 +1521,54 @@ export class LayoutService {
 
               for (let i = 0; i < numberOfUnderScoresNeeded; i++) {
                 element.melismaText += '_';
+              }
+            } else if (pageSetup.melkiteRtl) {
+              const nextNoteElement = nextElement as NoteElement;
+
+              if (
+                nextElement == null ||
+                nextElement.elementType !== ElementType.Note
+              ) {
+                if (finalElement) {
+                  end = finalElement.x + finalElement.neumeWidth;
+                } else {
+                  end = element.x + element.neumeWidth;
+                }
+              } else if (
+                nextNoteElement.lyricsWidth > nextNoteElement.neumeWidth
+              ) {
+                end =
+                  nextNoteElement.x -
+                  (nextNoteElement.lyricsWidth - nextNoteElement.neumeWidth) /
+                    2;
+              } else {
+                end =
+                  nextNoteElement.x +
+                  nextNoteElement.neumeWidth / 2 -
+                  nextNoteElement.lyricsWidth / 2;
+              }
+
+              const widthOfTatweelForThisElement = element.lyricsUseDefaultStyle
+                ? widthOfTatweel
+                : this.getTextWidthFromCache(
+                    textWidthCache,
+                    element,
+                    pageSetup,
+                    TATWEEL,
+                  );
+
+              // Always show at least one underscore to indicate it's a melisma.
+              element.melismaWidth = Math.max(
+                end - start,
+                widthOfTatweelForThisElement,
+              );
+
+              const numberOfUnderScoresNeeded = Math.ceil(
+                element.melismaWidth / widthOfTatweelForThisElement,
+              );
+
+              for (let i = 0; i < numberOfUnderScoresNeeded; i++) {
+                element.melismaText += TATWEEL;
               }
             }
           }

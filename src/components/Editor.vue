@@ -211,7 +211,10 @@
                           <div
                             class="melisma"
                             :class="{
-                              full: (element as NoteElement).isFullMelisma,
+                              full:
+                                (element as NoteElement).isFullMelisma && !rtl,
+                              fullRtl:
+                                (element as NoteElement).isFullMelisma && rtl,
                             }"
                             :style="getMelismaStyle(element as NoteElement)"
                             v-text="(element as NoteElement).melismaText"
@@ -878,6 +881,7 @@ import { LayoutService } from '@/services/LayoutService';
 import { NeumeKeyboard } from '@/services/NeumeKeyboard';
 import { IPlatformService } from '@/services/platform/IPlatformService';
 import { SaveService } from '@/services/SaveService';
+import { TATWEEL } from '@/utils/constants';
 import { getCursorPosition } from '@/utils/getCursorPosition';
 import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
@@ -955,6 +959,10 @@ export default class Editor extends Vue {
   set selectedWorkspaceId(value: string) {
     this.selectedWorkspace =
       this.workspaces.find((x) => x.id === value) ?? new Workspace();
+  }
+
+  get rtl() {
+    return this.score.pageSetup.melkiteRtl;
   }
 
   tabs: Tab[] = [];
@@ -1504,6 +1512,7 @@ export default class Editor extends Vue {
 
   getLyricStyle(element: NoteElement) {
     return {
+      direction: this.rtl ? 'rtl' : undefined,
       top: withZoom(element.lyricsVerticalOffset),
       paddingLeft:
         element.lyricsHorizontalOffset > 0
@@ -1548,7 +1557,8 @@ export default class Editor extends Vue {
 
   getElementStyle(element: ScoreElement) {
     return {
-      left: withZoom(element.x),
+      left: !this.rtl ? withZoom(element.x) : undefined,
+      right: this.rtl ? withZoom(element.x) : undefined,
       top: withZoom(element.y),
     } as StyleValue;
   }
@@ -2448,11 +2458,11 @@ export default class Editor extends Vue {
     } else {
       switch (event.code) {
         case 'ArrowLeft':
-          this.moveLeftThrottled();
+          !this.rtl ? this.moveLeftThrottled() : this.moveRightThrottled();
           handled = true;
           break;
         case 'ArrowRight':
-          this.moveRightThrottled();
+          !this.rtl ? this.moveRightThrottled() : this.moveLeftThrottled();
           handled = true;
           break;
         case 'ArrowDown':
@@ -2798,28 +2808,46 @@ export default class Editor extends Vue {
       return;
     }
 
-    if (event.shiftKey && event.code !== 'Minus') {
+    if (!this.rtl && event.shiftKey && event.code !== 'Minus') {
+      return;
+    }
+
+    if (this.rtl && event.shiftKey && event.code !== 'KeyJ') {
       return;
     }
 
     switch (event.code) {
       case 'ArrowRight':
         if (event.ctrlKey || event.metaKey) {
-          this.moveToNextLyricBoxThrottled();
+          !this.rtl
+            ? this.moveToNextLyricBoxThrottled()
+            : this.moveToPreviousLyricBoxThrottled();
           handled = true;
         } else if (
+          !this.rtl &&
           getCursorPosition() === this.getLyricLength(this.selectedLyrics!)
         ) {
           this.moveToNextLyricBoxThrottled();
+          handled = true;
+        } else if (this.rtl && getCursorPosition() === 0) {
+          this.moveToPreviousLyricBoxThrottled();
           handled = true;
         }
         break;
       case 'ArrowLeft':
         if (event.ctrlKey || event.metaKey) {
+          !this.rtl
+            ? this.moveToPreviousLyricBoxThrottled()
+            : this.moveToNextLyricBoxThrottled();
+          handled = true;
+        } else if (!this.rtl && getCursorPosition() === 0) {
           this.moveToPreviousLyricBoxThrottled();
           handled = true;
-        } else if (getCursorPosition() === 0) {
-          this.moveToPreviousLyricBoxThrottled();
+        } else if (
+          this.rtl &&
+          getCursorPosition() === this.getLyricLength(this.selectedLyrics!)
+        ) {
+          this.moveToNextLyricBoxThrottled();
           handled = true;
         }
         break;
@@ -2871,6 +2899,40 @@ export default class Editor extends Vue {
         handled = true;
         break;
       }
+      case 'KeyJ': {
+        if (!this.rtl) {
+          return;
+        }
+        if (event.shiftKey) {
+          document.execCommand('insertText', false, TATWEEL);
+        } else {
+          return;
+        }
+
+        // Ctrl key overrides the "go to next lyrics" (Alt key for mac)
+        const overridden =
+          (this.platformService.isMac && event.altKey) ||
+          (!this.platformService.isMac && event.ctrlKey);
+
+        if (
+          !overridden &&
+          getCursorPosition() === this.getLyricLength(this.selectedLyrics!)
+        ) {
+          if (this.getNextLyricBoxIndex() >= 0) {
+            this.moveToNextLyricBoxThrottled();
+          } else {
+            // If this is the last lyric box, blur
+            // so that the melisma is registered and
+            // the user doesn't accidentally type more
+            // characters into box
+            const index = this.elements.indexOf(this.selectedLyrics!);
+            (this.$refs[`lyrics-${index}`] as ContentEditable[])[0].blur();
+          }
+        }
+
+        handled = true;
+        break;
+      }
     }
 
     if (handled) {
@@ -2895,7 +2957,7 @@ export default class Editor extends Vue {
         break;
       case 'ArrowLeft':
         if (getCursorPosition() === 0) {
-          this.moveLeftThrottled();
+          !this.rtl ? this.moveLeftThrottled() : this.moveRightThrottled();
           handled = true;
         }
         break;
@@ -2903,7 +2965,8 @@ export default class Editor extends Vue {
         if (
           getCursorPosition() === htmlElement.textElement.getInnerText().length
         ) {
-          this.moveRightThrottled();
+          !this.rtl ? this.moveRightThrottled() : this.moveLeftThrottled();
+
           handled = true;
         }
         break;
@@ -2927,7 +2990,7 @@ export default class Editor extends Vue {
         break;
       case 'ArrowLeft':
         if (getCursorPosition() === 0) {
-          this.moveLeftThrottled();
+          !this.rtl ? this.moveLeftThrottled() : this.moveRightThrottled();
           handled = true;
         }
         break;
@@ -2935,7 +2998,7 @@ export default class Editor extends Vue {
         if (
           getCursorPosition() === htmlElement.textElement.getInnerText().length
         ) {
-          this.moveRightThrottled();
+          !this.rtl ? this.moveRightThrottled() : this.moveLeftThrottled();
           handled = true;
         }
         break;
@@ -4310,24 +4373,45 @@ export default class Editor extends Vue {
     let isMelismaStart: boolean;
     let isHyphen: boolean;
 
-    if (lyrics === '_' || lyrics === '-') {
+    if (lyrics === '_' || lyrics === '-' || lyrics === TATWEEL) {
       isMelisma = true;
       isMelismaStart = false;
       isHyphen = lyrics === '-';
       lyrics = '';
 
       this.setLyrics(this.getElementIndex(element), lyrics);
-    } else if (lyrics.endsWith('_') || lyrics.endsWith('-')) {
+    } else if (
+      lyrics.endsWith('_') ||
+      lyrics.endsWith('-') ||
+      lyrics.endsWith(TATWEEL)
+    ) {
       isMelisma = true;
       isMelismaStart = true;
       isHyphen = lyrics.endsWith('-');
-      lyrics = lyrics.slice(0, -1);
+
+      lyrics = !this.rtl ? lyrics.slice(0, -1) : lyrics;
 
       this.setLyrics(this.getElementIndex(element), lyrics);
     } else {
       isMelisma = false;
       isMelismaStart = false;
       isHyphen = false;
+    }
+
+    if (this.rtl) {
+      const currentIndex = this.getElementIndex(element);
+
+      if (currentIndex > 0) {
+        const previousElement = this.elements[currentIndex - 1];
+
+        if (
+          previousElement.elementType === ElementType.Note &&
+          (previousElement as NoteElement).isMelisma &&
+          !lyrics.startsWith(TATWEEL)
+        ) {
+          lyrics = TATWEEL + lyrics;
+        }
+      }
     }
 
     // If nothing changed, return. This could happen if
@@ -5856,6 +5940,10 @@ export default class Editor extends Vue {
 
 .melisma.full {
   left: 0;
+}
+
+.melisma.fullRtl {
+  right: 0;
 }
 
 .melisma-hyphen {

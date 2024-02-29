@@ -333,6 +333,17 @@
               $t('dialog:pageSetup.disableFthoraRestrictions')
             }}</label>
           </div>
+
+          <div class="form-group">
+            <input
+              id="page-setup-dialog-melkite-rtl"
+              type="checkbox"
+              v-model="form.melkiteRtl"
+            />
+            <label for="page-setup-dialog-melkite-rtl">{{
+              $t('dialog:pageSetup.melkiteRtl')
+            }}</label>
+          </div>
         </div>
         <div class="right-pane">
           <div class="subheader">{{ $t('dialog:pageSetup.dropCaps') }}</div>

@@ -11,11 +11,16 @@
       :style="measureBarLeftStyle"
     />
     <Neume
-      v-if="note.vareia"
+      v-if="note.vareia && !pageSetup.melkiteRtl"
       :neume="VocalExpressionNeume.Vareia"
       :style="vareiaStyle"
     />
     <Neume :neume="note.quantitativeNeume" />
+    <Neume
+      v-if="note.vareia && pageSetup.melkiteRtl"
+      :neume="VocalExpressionNeume.Vareia"
+      :style="vareiaStyle"
+    />
     <Neume
       v-if="note.stavros"
       :neume="VocalExpressionNeume.Cross_Top"

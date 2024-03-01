@@ -93,6 +93,7 @@
                     selectedHeaderFooterElement
                   "
                   :metadata="getTokenMetadata(pageIndex)"
+                  :pageSetup="score.pageSetup"
                   :class="[
                     {
                       selectedTextbox:
@@ -301,6 +302,7 @@
                       :element="element"
                       :editMode="true"
                       :metadata="getTokenMetadata(pageIndex)"
+                      :pageSetup="score.pageSetup"
                       :class="[{ selectedTextbox: isSelected(element) }]"
                       @select-single="selectedElement = element"
                       @update:content="
@@ -388,6 +390,7 @@
                     selectedHeaderFooterElement
                   "
                   :metadata="getTokenMetadata(pageIndex)"
+                  :pageSetup="score.pageSetup"
                   :class="[
                     {
                       selectedTextbox:
@@ -2990,16 +2993,27 @@ export default class Editor extends Vue {
         handled = true;
         break;
       case 'ArrowLeft':
-        if (getCursorPosition() === 0) {
-          !this.rtl ? this.moveLeftThrottled() : this.moveRightThrottled();
+        if (!this.rtl && getCursorPosition() === 0) {
+          this.moveLeftThrottled();
+          handled = true;
+        } else if (
+          this.rtl &&
+          getCursorPosition() === htmlElement.textElement.getInnerText().length
+        ) {
+          console.log('moving right');
+          this.moveRightThrottled();
           handled = true;
         }
         break;
       case 'ArrowRight':
         if (
+          !this.rtl &&
           getCursorPosition() === htmlElement.textElement.getInnerText().length
         ) {
-          !this.rtl ? this.moveRightThrottled() : this.moveLeftThrottled();
+          this.moveRightThrottled();
+          handled = true;
+        } else if (this.rtl && getCursorPosition() === 0) {
+          this.moveLeftThrottled();
           handled = true;
         }
         break;

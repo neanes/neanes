@@ -17,11 +17,6 @@
     />
     <Neume :neume="note.quantitativeNeume" />
     <Neume
-      v-if="note.vareia && pageSetup.melkiteRtl"
-      :neume="VocalExpressionNeume.Vareia"
-      :style="vareiaStyle"
-    />
-    <Neume
       v-if="note.stavros"
       :neume="VocalExpressionNeume.Cross_Top"
       :style="stavrosStyle"
@@ -95,6 +90,11 @@
       :style="measureBarRightStyle"
     />
     <Neume v-if="hasTie" :neume="note.tie" :style="tieStyle" />
+    <Neume
+      v-if="note.vareia && pageSetup.melkiteRtl"
+      :neume="VocalExpressionNeume.Vareia"
+      :style="vareiaStyle"
+    />
   </div>
 </template>
 

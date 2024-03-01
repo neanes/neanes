@@ -1058,7 +1058,12 @@ export class LayoutService {
     // Shift the lyrics to the right so that they
     // are centered under the main neume
     if (noteElement.vareia) {
-      noteElement.lyricsHorizontalOffset += vareiaWidth;
+      if (pageSetup.melkiteRtl) {
+        noteElement.lyricsHorizontalOffset -= vareiaWidth;
+      } else {
+        noteElement.lyricsHorizontalOffset += vareiaWidth;
+      }
+
       noteElement.neumeWidth += vareiaWidth;
     }
 
@@ -1117,7 +1122,12 @@ export class LayoutService {
       // as the apostrophros in the running elaphron, but
       // the elaphrons are the same width in both neumes.
       const offset = runningElaphronWidth - elaphronWidth;
-      noteElement.lyricsHorizontalOffset += offset;
+
+      if (pageSetup.melkiteRtl) {
+        noteElement.lyricsHorizontalOffset -= offset;
+      } else {
+        noteElement.lyricsHorizontalOffset += offset;
+      }
     }
 
     return noteElement.spaceAfter + noteElement.neumeWidth;
@@ -1370,7 +1380,8 @@ export class LayoutService {
               } else {
                 start =
                   element.x +
-                  element.neumeWidth +
+                  element.neumeWidth -
+                  element.lyricsHorizontalOffset / 2 +
                   (element.lyricsWidth - element.neumeWidth) / 2;
               }
             } else {
@@ -1382,7 +1393,10 @@ export class LayoutService {
                   element.lyricsHorizontalOffset / 2;
               } else {
                 start =
-                  element.x + element.neumeWidth / 2 + element.lyricsWidth / 2;
+                  element.x +
+                  element.neumeWidth / 2 +
+                  element.lyricsWidth / 2 -
+                  element.lyricsHorizontalOffset / 2;
               }
             }
 
@@ -1539,13 +1553,16 @@ export class LayoutService {
               ) {
                 end =
                   nextNoteElement.x -
-                  (nextNoteElement.lyricsWidth - nextNoteElement.neumeWidth) /
+                  (nextNoteElement.lyricsWidth -
+                    nextNoteElement.neumeWidth +
+                    nextNoteElement.lyricsHorizontalOffset) /
                     2;
               } else {
                 end =
                   nextNoteElement.x +
                   nextNoteElement.neumeWidth / 2 -
-                  nextNoteElement.lyricsWidth / 2;
+                  nextNoteElement.lyricsWidth / 2 -
+                  nextNoteElement.lyricsHorizontalOffset / 2;
               }
 
               const widthOfTatweelForThisElement = element.lyricsUseDefaultStyle

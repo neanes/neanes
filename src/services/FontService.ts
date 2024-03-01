@@ -1,12 +1,27 @@
 import metadata from '@/assets/fonts/neanes.metadata.json';
+import metadataRtl from '@/assets/fonts/neanesrtl.metadata.json';
 import { SbmuflGlyphName } from '@/services/NeumeMappingService';
 
+const metadataMap = new Map();
+metadataMap.set('Neanes', metadata);
+metadataMap.set('NeanesRTL', metadataRtl);
+
 class FontService {
-  getAdvanceWidth(glyph: SbmuflGlyphName) {
-    return metadata.glyphAdvanceWidths[glyph];
+  getMetadata(fontFamily: string) {
+    return metadataMap.get(fontFamily);
   }
 
-  getMarkOffset(base: SbmuflGlyphName, mark: SbmuflGlyphName) {
+  getAdvanceWidth(fontFamily: string, glyph: SbmuflGlyphName) {
+    return this.getMetadata(fontFamily).glyphAdvanceWidths[glyph];
+  }
+
+  getMarkOffset(
+    fontFamily: string,
+    base: SbmuflGlyphName,
+    mark: SbmuflGlyphName,
+  ) {
+    const metadata = this.getMetadata(fontFamily);
+
     const markAnchorName = Object.keys(
       (metadata.glyphsWithAnchors as any)[mark],
     ).find((x) => (metadata.glyphsWithAnchors as any)[base][x] != null);
@@ -30,7 +45,12 @@ class FontService {
     };
   }
 
-  getMarkAnchorOffset(base: SbmuflGlyphName, mark: SbmuflGlyphName) {
+  getMarkAnchorOffset(
+    fontFamily: string,
+    base: SbmuflGlyphName,
+    mark: SbmuflGlyphName,
+  ) {
+    const metadata = this.getMetadata(fontFamily);
     const markAnchorName = Object.keys(
       (metadata.glyphsWithAnchors as any)[mark],
     ).find((x) => (metadata.glyphsWithAnchors as any)[base][x] != null);

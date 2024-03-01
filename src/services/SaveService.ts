@@ -177,6 +177,8 @@ export class SaveService {
     pageSetup.rightMargin = p.rightMargin;
     pageSetup.topMargin = p.topMargin;
 
+    pageSetup.melkiteRtl = p.melkiteRtl || undefined;
+
     pageSetup.headerMargin = p.headerMargin;
     pageSetup.footerMargin = p.footerMargin;
     pageSetup.headerDifferentFirstPage =
@@ -588,6 +590,8 @@ export class SaveService {
     if (p.footerMargin != null) {
       pageSetup.footerMargin = p.footerMargin;
     }
+
+    pageSetup.melkiteRtl = p.melkiteRtl === true;
 
     pageSetup.headerDifferentFirstPage = p.headerDifferentFirstPage === true;
     pageSetup.headerDifferentOddEven = p.headerDifferentOddEven === true;

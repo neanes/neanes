@@ -26,6 +26,7 @@ export default class DragHandle extends Vue {
   @Prop() mark!: Neume;
   @Prop({ default: 8 }) height!: number;
   @Prop({ default: 8 }) width!: number;
+  @Prop() fontFamily!: string;
 
   startX: number = 0;
   startY: number = 0;
@@ -83,7 +84,7 @@ export default class DragHandle extends Vue {
     const mark = this.getMapping(neume).glyphName;
     const base = this.getMapping(this.note.quantitativeNeume).glyphName;
 
-    const offset = fontService.getMarkAnchorOffset(base, mark);
+    const offset = fontService.getMarkAnchorOffset(this.fontFamily, base, mark);
 
     // Shift offset for vareia
     if (this.note.vareia) {
@@ -91,7 +92,10 @@ export default class DragHandle extends Vue {
         VocalExpressionNeume.Vareia,
       ).glyphName;
 
-      const vareiaWidth = fontService.getAdvanceWidth(vareiaGlyphName);
+      const vareiaWidth = fontService.getAdvanceWidth(
+        this.fontFamily,
+        vareiaGlyphName,
+      );
       offset.x += vareiaWidth;
     }
 
@@ -99,7 +103,7 @@ export default class DragHandle extends Vue {
     if (this.note.measureBarLeft) {
       const glyphName = this.getMapping(this.note.measureBarLeft).glyphName;
 
-      const width = fontService.getAdvanceWidth(glyphName);
+      const width = fontService.getAdvanceWidth(this.fontFamily, glyphName);
       offset.x += width;
     }
 

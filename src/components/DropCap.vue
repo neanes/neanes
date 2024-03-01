@@ -1,5 +1,9 @@
 <template>
-  <div class="drop-cap-container" @click="$emit('select-single')">
+  <div
+    class="drop-cap-container"
+    @click="$emit('select-single')"
+    :style="containerStyle"
+  >
     <ContentEditable
       ref="text"
       class="drop-cap"
@@ -48,6 +52,12 @@ export default class DropCap extends Vue {
     return style;
   }
 
+  get containerStyle() {
+    return {
+      direction: this.pageSetup.melkiteRtl ? 'rtl' : undefined,
+    } as StyleValue;
+  }
+
   focus() {
     this.textElement.focus(true);
   }
@@ -67,4 +77,8 @@ export default class DropCap extends Vue {
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+.drop-cap:focus {
+  outline: none;
+}
+</style>

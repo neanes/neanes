@@ -26,6 +26,8 @@ export class PageSetup {
 
   public lineHeight = Unit.fromInch(0.76);
 
+  public melkiteRtl: boolean | undefined = false;
+
   public lyricsDefaultFontFamily = 'Omega';
   public lyricsDefaultFontSize = Unit.fromPt(12);
   public lyricsDefaultFontWeight = '400';

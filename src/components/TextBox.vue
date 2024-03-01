@@ -23,6 +23,7 @@ import { Component, Prop, Vue } from 'vue-facing-decorator';
 
 import ContentEditable from '@/components/ContentEditable.vue';
 import { TextBoxElement } from '@/models/Element';
+import { PageSetup } from '@/models/PageSetup';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { replaceTokens, TokenMetadata } from '@/utils/replaceTokens';
 import { withZoom } from '@/utils/withZoom';
@@ -33,6 +34,7 @@ import { withZoom } from '@/utils/withZoom';
 })
 export default class TextBox extends Vue {
   @Prop() element!: TextBoxElement;
+  @Prop() pageSetup!: PageSetup;
   @Prop({ default: true }) editMode!: boolean;
   @Prop() metadata!: TokenMetadata;
 
@@ -65,6 +67,7 @@ export default class TextBox extends Vue {
       width: this.width,
       height: withZoom(this.element.height),
       webkitTextStrokeWidth: withZoom(this.element.computedStrokeWidth),
+      direction: this.pageSetup.melkiteRtl ? 'rtl' : undefined,
     } as StyleValue;
 
     return style;

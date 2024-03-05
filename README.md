@@ -108,10 +108,9 @@ npm test
 
 ### IDE Support
 
-When using [Visual Studio Code](https://github.com/microsoft/vscode), install the following extensions:
+When using [Visual Studio Code](https://github.com/microsoft/vscode), install the following extension:
 
-- [Vue Language Features (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.volar)
-- [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin)
+- [Vue - Official](https://marketplace.visualstudio.com/items?itemName=Vue.volar)
 
 ### Localization
 

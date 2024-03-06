@@ -79,6 +79,7 @@ export abstract class ScoreElement {
 
   // Used internally, not saved
   public line: number = 0;
+  public page: number = 0;
 
   public static isShort(measureBar: MeasureBar): boolean {
     return (

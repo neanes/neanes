@@ -5631,6 +5631,10 @@ export default class Editor extends Vue {
           (
             this.$refs[`element-${this.selectedElementIndex}`] as DropCap[]
           )[0].$el.scrollIntoView();
+        } else if (this.selectedElement?.elementType === ElementType.TextBox) {
+          (
+            this.$refs[`element-${this.selectedElementIndex}`] as TextBox[]
+          )[0].$el.scrollIntoView();
         }
       });
     }

@@ -3,6 +3,7 @@ import {
   ElementType,
   NoteElement,
   ScoreElement,
+  TextBoxElement,
 } from '@/models/Element';
 
 export class TextSearchService {
@@ -22,7 +23,7 @@ export class TextSearchService {
 
     for (let i = start; i < elements.length; i++) {
       const currentElement = reverse
-        ? elements.at(elements.length - i)!
+        ? elements.at(elements.length - i - 1)!
         : elements.at(i)!;
 
       const text = this.getElementText(currentElement);
@@ -32,7 +33,7 @@ export class TextSearchService {
 
         for (let j = i; j < elements.length; j++) {
           const nextElement = reverse
-            ? elements.at(elements.length - j)!
+            ? elements.at(elements.length - 1 - j)!
             : elements.at(j)!;
 
           const text = this.getElementText(nextElement);
@@ -56,10 +57,10 @@ export class TextSearchService {
       }
     }
 
-    if (reverse && index !== elements.length) {
-      return this.findTextInElements(q, elements, elements.length, reverse);
-    } else if (!reverse && index !== 0) {
-      return this.findTextInElements(q, elements, 0, reverse);
+    if (reverse && index !== elements.length + 1) {
+      return this.findTextInElements(q, elements, elements.length + 1, reverse);
+    } else if (!reverse && index !== -1) {
+      return this.findTextInElements(q, elements, -1, reverse);
     }
 
     return null;
@@ -72,6 +73,8 @@ export class TextSearchService {
       text = (element as NoteElement).lyrics.toLowerCase();
     } else if (element.elementType === ElementType.DropCap) {
       text = (element as DropCapElement).content.toLowerCase();
+    } else if (element.elementType === ElementType.TextBox) {
+      text = (element as TextBoxElement).content.toLowerCase();
     }
 
     return text;

@@ -17,6 +17,6 @@
     }
   ],
   "snap": {
-    "publish": ["github"]
+    "publish": []
   }
 }

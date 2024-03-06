@@ -5623,9 +5623,15 @@ export default class Editor extends Vue {
       this.pages[this.selectedElement.page - 1].isVisible = true;
 
       nextTick(() => {
-        (
-          this.$refs[`element-${this.selectedElementIndex}`] as HTMLElement[]
-        )[0].scrollIntoView();
+        if (this.selectedElement?.elementType === ElementType.Note) {
+          (
+            this.$refs[`element-${this.selectedElementIndex}`] as HTMLElement[]
+          )[0].scrollIntoView();
+        } else if (this.selectedElement?.elementType === ElementType.DropCap) {
+          (
+            this.$refs[`element-${this.selectedElementIndex}`] as DropCap[]
+          )[0].$el.scrollIntoView();
+        }
       });
     }
   }

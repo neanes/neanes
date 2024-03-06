@@ -3,10 +3,19 @@
     <input
       ref="input"
       :query="query"
-      @keydown.enter="$emit('search', { query })"
+      @keydown.enter="
+        $emit('search', { query: ($event.target as HTMLInputElement).value })
+      "
       @change="$emit('update:query', ($event.target as HTMLInputElement).value)"
     />
-    <button @click="$emit('search', { query, reverse: true })">
+    <button
+      @click="
+        $emit('search', {
+          query,
+          reverse: true,
+        })
+      "
+    >
       <img src="@/assets/icons/arrow-up.svg" />
     </button>
     <button @click="$emit('search', { query })">

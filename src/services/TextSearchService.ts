@@ -1,4 +1,9 @@
-import { ElementType, NoteElement, ScoreElement } from '@/models/Element';
+import {
+  DropCapElement,
+  ElementType,
+  NoteElement,
+  ScoreElement,
+} from '@/models/Element';
 
 export class TextSearchService {
   findTextInElements(
@@ -20,30 +25,27 @@ export class TextSearchService {
         ? elements.at(elements.length - i)!
         : elements.at(i)!;
 
-      if (
-        currentElement.elementType === ElementType.Note &&
-        (currentElement as NoteElement).lyrics.trim() !== '' &&
-        (q.includes((currentElement as NoteElement).lyrics.toLowerCase()) ||
-          (currentElement as NoteElement).lyrics.toLowerCase().includes(q))
-      ) {
+      const text = this.getElementText(currentElement);
+
+      if (text != '' && (q.includes(text) || text.includes(q))) {
         let run = '';
 
         for (let j = i; j < elements.length; j++) {
           const nextElement = reverse
-            ? (elements.at(elements.length - j) as NoteElement)!
+            ? elements.at(elements.length - j)!
             : elements.at(j)!;
 
-          if (nextElement.elementType === ElementType.Note) {
-            const noteElement = nextElement as NoteElement;
+          const text = this.getElementText(nextElement);
 
+          if (text != '') {
             if (reverse) {
-              run = noteElement.lyrics.toLowerCase() + run;
+              run = text + run;
             } else {
-              run += noteElement.lyrics.toLowerCase();
+              run += text;
             }
 
             if (run.includes(q)) {
-              return currentElement;
+              return reverse ? nextElement : currentElement;
             }
 
             if (!q.includes(run)) {
@@ -61,5 +63,17 @@ export class TextSearchService {
     }
 
     return null;
+  }
+
+  private getElementText(element: ScoreElement) {
+    let text = '';
+
+    if (element.elementType === ElementType.Note) {
+      text = (element as NoteElement).lyrics.toLowerCase();
+    } else if (element.elementType === ElementType.DropCap) {
+      text = (element as DropCapElement).content.toLowerCase();
+    }
+
+    return text;
   }
 }

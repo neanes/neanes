@@ -16,7 +16,7 @@
       "role": "Editor"
     }
   ],
-  "snap": {
-    "publish": []
+  "linux": {
+    "target": ["AppImage"]
   }
 }

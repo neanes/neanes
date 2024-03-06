@@ -23,8 +23,12 @@ export class TextSearchService {
 
     for (let i = start; i < elements.length; i++) {
       const currentElement = reverse
-        ? elements.at(elements.length - i - 1)!
-        : elements.at(i)!;
+        ? elements.at(elements.length - i - 1)
+        : elements.at(i);
+
+      if (currentElement == null) {
+        continue;
+      }
 
       const text = this.getElementText(currentElement);
 
@@ -33,8 +37,12 @@ export class TextSearchService {
 
         for (let j = i; j < elements.length; j++) {
           const nextElement = reverse
-            ? elements.at(elements.length - 1 - j)!
-            : elements.at(j)!;
+            ? elements.at(elements.length - 1 - j)
+            : elements.at(j);
+
+          if (nextElement == null) {
+            continue;
+          }
 
           const text = this.getElementText(nextElement);
 

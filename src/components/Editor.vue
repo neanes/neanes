@@ -949,8 +949,8 @@ export default class Editor extends Vue {
 
   @Inject() readonly audioService!: AudioService;
   @Inject() readonly playbackService!: PlaybackService;
+  @Inject() readonly textSearchService = new TextSearchService();
 
-  textSearchService = new TextSearchService();
   searchTextQuery: string = '';
   searchTextPanelIsOpen = false;
 

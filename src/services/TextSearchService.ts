@@ -5,6 +5,7 @@ import {
   ScoreElement,
   TextBoxElement,
 } from '@/models/Element';
+import { TATWEEL } from '@/utils/constants';
 
 export class TextSearchService {
   findTextInElements(
@@ -78,13 +79,13 @@ export class TextSearchService {
     let text = '';
 
     if (element.elementType === ElementType.Note) {
-      text = (element as NoteElement).lyrics.toLowerCase();
+      text = (element as NoteElement).lyrics;
     } else if (element.elementType === ElementType.DropCap) {
-      text = (element as DropCapElement).content.toLowerCase();
+      text = (element as DropCapElement).content;
     } else if (element.elementType === ElementType.TextBox) {
-      text = (element as TextBoxElement).content.toLowerCase();
+      text = (element as TextBoxElement).content;
     }
 
-    return text;
+    return text.toLowerCase().replaceAll(TATWEEL, '');
   }
 }

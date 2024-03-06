@@ -1103,6 +1103,14 @@ function createMenu() {
         },
         { type: 'separator' },
         {
+          label: i18next.t('menu:edit.find'),
+          accelerator: 'CmdOrCtrl+F',
+          click() {
+            win?.webContents.send(IpcMainChannels.FileMenuFind);
+          },
+        },
+        { type: 'separator' },
+        {
           label: i18next.t('menu:edit.preferences'),
           accelerator: 'CmdOrCtrl+,',
           click() {

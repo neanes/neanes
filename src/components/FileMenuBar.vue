@@ -55,6 +55,8 @@
         @click="onClickPasteFormat"
       />
       <div class="separator" />
+      <FileMenuItem :label="$t('menu:edit.find')" @click="onClickFind" />
+      <div class="separator" />
       <FileMenuItem
         :label="$t('menu:edit.preferences')"
         @click="onClickPreferences"
@@ -373,6 +375,11 @@ export default class FileMenuBar extends Vue {
 
   onClickPasteFormat() {
     EventBus.$emit(IpcMainChannels.FileMenuPasteFormat);
+    this.isMenuOpen = false;
+  }
+
+  onClickFind() {
+    EventBus.$emit(IpcMainChannels.FileMenuFind);
     this.isMenuOpen = false;
   }
 

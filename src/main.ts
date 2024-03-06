@@ -16,6 +16,7 @@ import { defaultNS, resources } from './i18n';
 import { initalizeBrowserIpcListeners } from './ipc/browserIpcListeners';
 import { initializeIpcListeners } from './ipc/ipcListeners';
 import router from './router';
+import { TextSearchService } from './services/TextSearchService';
 import { isElectron } from './utils/isElectron';
 
 if (isElectron()) {
@@ -55,6 +56,7 @@ const app = createApp(App);
 app.use(VueObserveVisibility);
 app.provide('audioService', new AudioService());
 app.provide('playbackService', new PlaybackService());
+app.provide('textSearchService', new TextSearchService());
 app.use(router);
 app.use(I18NextVue, { i18next });
 app.mount('#app');

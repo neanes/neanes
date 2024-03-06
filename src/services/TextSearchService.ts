@@ -14,7 +14,7 @@ export class TextSearchService {
     index: number = 0,
     reverse: boolean = false,
   ): ScoreElement | null {
-    q = q.replace(/\s+/g, '').toLowerCase();
+    q = q.replace(/\s+/g, '').toLowerCase().replaceAll(TATWEEL, '');
 
     if (q === '') {
       return null;

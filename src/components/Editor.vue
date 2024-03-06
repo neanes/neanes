@@ -55,6 +55,13 @@
             </button>
           </template></Vue3TabsChrome
         >
+        <SearchText
+          ref="searchText"
+          v-if="searchTextPanelIsOpen"
+          v-model:query="searchTextQuery"
+          @search="onSearchText"
+          @close="searchTextPanelIsOpen = false"
+        />
         <div
           class="page-background"
           ref="page-background"
@@ -796,6 +803,7 @@ import TempoNeumeBox from '@/components/NeumeBoxTempo.vue';
 import NeumeSelector from '@/components/NeumeSelector.vue';
 import PageSetupDialog from '@/components/PageSetupDialog.vue';
 import PlaybackSettingsDialog from '@/components/PlaybackSettingsDialog.vue';
+import SearchText from '@/components/SearchText.vue';
 import SyllablePositioningDialog from '@/components/SyllablePositioningDialog.vue';
 import TextBox from '@/components/TextBox.vue';
 import ToolbarDropCap from '@/components/ToolbarDropCap.vue';
@@ -884,6 +892,7 @@ import { LayoutService } from '@/services/LayoutService';
 import { NeumeKeyboard } from '@/services/NeumeKeyboard';
 import { IPlatformService } from '@/services/platform/IPlatformService';
 import { SaveService } from '@/services/SaveService';
+import { TextSearchService } from '@/services/TextSearchService';
 import { TATWEEL } from '@/utils/constants';
 import { getCursorPosition } from '@/utils/getCursorPosition';
 import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
@@ -930,6 +939,7 @@ interface Vue3TabsChromeComponent {
     PageSetupDialog,
     FileMenuBar,
     Vue3TabsChrome,
+    SearchText,
   },
 })
 export default class Editor extends Vue {
@@ -939,6 +949,10 @@ export default class Editor extends Vue {
 
   @Inject() readonly audioService!: AudioService;
   @Inject() readonly playbackService!: PlaybackService;
+  @Inject() readonly textSearchService!: TextSearchService;
+
+  searchTextQuery: string = '';
+  searchTextPanelIsOpen = false;
 
   LineBreakType = LineBreakType;
 
@@ -1724,6 +1738,7 @@ export default class Editor extends Vue {
       IpcMainChannels.FileMenuPasteFormat,
       this.onFileMenuPasteFormat,
     );
+    EventBus.$on(IpcMainChannels.FileMenuFind, this.onFileMenuFind);
     EventBus.$on(
       IpcMainChannels.FileMenuPreferences,
       this.onFileMenuPreferences,
@@ -1819,6 +1834,7 @@ export default class Editor extends Vue {
       IpcMainChannels.FileMenuPasteFormat,
       this.onFileMenuPasteFormat,
     );
+    EventBus.$off(IpcMainChannels.FileMenuFind, this.onFileMenuFind);
     EventBus.$off(
       IpcMainChannels.FileMenuPreferences,
       this.onFileMenuPreferences,
@@ -5559,6 +5575,14 @@ export default class Editor extends Vue {
     }
   }
 
+  onFileMenuFind() {
+    if (this.searchTextPanelIsOpen) {
+      (this.$refs.searchText as SearchText).focus();
+    } else {
+      this.searchTextPanelIsOpen = true;
+    }
+  }
+
   onFileMenuPreferences() {
     if (!this.dialogOpen) {
       this.editorPreferencesDialogIsOpen = true;
@@ -5579,6 +5603,41 @@ export default class Editor extends Vue {
       ...(TestFileGenerator.generateTestFile(testFileType) || []),
     );
     this.save();
+  }
+
+  onSearchText(args: { query: string; reverse?: boolean }) {
+    const result = this.textSearchService.findTextInElements(
+      args.query,
+      this.elements,
+      this.selectedElementIndex,
+      args.reverse ?? false,
+    );
+
+    if (result != null) {
+      this.selectedElement = result;
+
+      (this.$refs.pages as HTMLElement[])[
+        this.selectedElement.page - 1
+      ].scrollIntoView();
+
+      this.pages[this.selectedElement.page - 1].isVisible = true;
+
+      nextTick(() => {
+        if (this.selectedElement?.elementType === ElementType.Note) {
+          (
+            this.$refs[`element-${this.selectedElementIndex}`] as HTMLElement[]
+          )[0].scrollIntoView();
+        } else if (this.selectedElement?.elementType === ElementType.DropCap) {
+          (
+            this.$refs[`element-${this.selectedElementIndex}`] as DropCap[]
+          )[0].$el.scrollIntoView();
+        } else if (this.selectedElement?.elementType === ElementType.TextBox) {
+          (
+            this.$refs[`element-${this.selectedElementIndex}`] as TextBox[]
+          )[0].$el.scrollIntoView();
+        }
+      });
+    }
   }
 
   createDefaultModeKey(pageSetup: PageSetup) {
@@ -6102,6 +6161,7 @@ export default class Editor extends Vue {
   .tempo-toolbar,
   .text-box-toolbar,
   .image-box-toolbar,
+  .search-text-container,
   .page-break,
   .line-break,
   .page-break-2,

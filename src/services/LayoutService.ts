@@ -601,6 +601,7 @@ export class LayoutService {
       element.width = elementWidthPx;
 
       element.line = page.lines.length;
+      element.page = pages.length;
 
       // Special logic to adjust drop caps.
       // This aligns the bottom of the drop cap with

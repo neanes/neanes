@@ -505,13 +505,25 @@ export class SaveService {
 
     if (s.headers) {
       this.LoadHeader_v1(
+        s.version,
         score.headers.default,
         s.headers.default,
         score.pageSetup,
       );
-      this.LoadHeader_v1(score.headers.even, s.headers.even, score.pageSetup);
-      this.LoadHeader_v1(score.headers.odd, s.headers.odd, score.pageSetup);
       this.LoadHeader_v1(
+        s.version,
+        score.headers.even,
+        s.headers.even,
+        score.pageSetup,
+      );
+      this.LoadHeader_v1(
+        s.version,
+        score.headers.odd,
+        s.headers.odd,
+        score.pageSetup,
+      );
+      this.LoadHeader_v1(
+        s.version,
         score.headers.firstPage,
         s.headers.firstPage,
         score.pageSetup,
@@ -520,13 +532,25 @@ export class SaveService {
 
     if (s.footers) {
       this.LoadFooter_v1(
+        s.version,
         score.footers.default,
         s.footers.default,
         score.pageSetup,
       );
-      this.LoadFooter_v1(score.footers.even, s.footers.even, score.pageSetup);
-      this.LoadFooter_v1(score.footers.odd, s.footers.odd, score.pageSetup);
       this.LoadFooter_v1(
+        s.version,
+        score.footers.even,
+        s.footers.even,
+        score.pageSetup,
+      );
+      this.LoadFooter_v1(
+        s.version,
+        score.footers.odd,
+        s.footers.odd,
+        score.pageSetup,
+      );
+      this.LoadFooter_v1(
+        s.version,
         score.footers.firstPage,
         s.footers.firstPage,
         score.pageSetup,
@@ -566,6 +590,7 @@ export class SaveService {
         case ElementType_v1.TextBox:
           element = new TextBoxElement();
           this.LoadTextBox_v1(
+            s.version,
             element as TextBoxElement,
             e as TextBoxElement_v1,
             score.pageSetup,
@@ -766,6 +791,7 @@ export class SaveService {
   }
 
   public static LoadHeader_v1(
+    scoreVersion: string,
     header: Header,
     h: Header_v1,
     pageSetup: PageSetup,
@@ -774,6 +800,7 @@ export class SaveService {
     const e = h.elements[0];
     const element = header.elements[0];
     this.LoadTextBox_v1(
+      scoreVersion,
       element as TextBoxElement,
       e as TextBoxElement_v1,
       pageSetup,
@@ -781,6 +808,7 @@ export class SaveService {
   }
 
   public static LoadFooter_v1(
+    scoreVersion: string,
     footer: Footer,
     f: Footer_v1,
     pageSetup: PageSetup,
@@ -789,6 +817,7 @@ export class SaveService {
     const e = f.elements[0];
     const element = footer.elements[0];
     this.LoadTextBox_v1(
+      scoreVersion,
       element as TextBoxElement,
       e as TextBoxElement_v1,
       pageSetup,
@@ -1030,6 +1059,7 @@ export class SaveService {
   }
 
   public static LoadTextBox_v1(
+    scoreVersion: string,
     element: TextBoxElement,
     e: TextBoxElement_v1,
     pageSetup: PageSetup,
@@ -1046,7 +1076,14 @@ export class SaveService {
     element.height = e.height;
     element.strokeWidth = e.strokeWidth ?? element.strokeWidth;
     element.lineHeight = e.lineHeight ?? pageSetup.textBoxDefaultLineHeight;
-    element.useDefaultStyle = e.useDefaultStyle === true;
+
+    if (scoreVersion === '1.0') {
+      // In this version, use default was incorrectly set to true
+      // for non-inline text boxes even though the field was never used
+      element.useDefaultStyle = element.inline && e.useDefaultStyle === true;
+    } else {
+      element.useDefaultStyle = e.useDefaultStyle === true;
+    }
   }
 
   public static LoadModeKey_v1(element: ModeKeyElement, e: ModeKeyElement_v1) {

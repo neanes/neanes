@@ -137,6 +137,7 @@ export class SaveService {
 
   public static SavePageSetup(pageSetup: PageSetup_v1, p: PageSetup) {
     pageSetup.bottomMargin = p.bottomMargin;
+
     pageSetup.dropCapDefaultColor = p.dropCapDefaultColor;
     pageSetup.dropCapDefaultFontFamily = p.dropCapDefaultFontFamily;
     pageSetup.dropCapDefaultFontSize = p.dropCapDefaultFontSize;
@@ -145,8 +146,10 @@ export class SaveService {
     pageSetup.dropCapDefaultStrokeWidth = p.dropCapDefaultStrokeWidth;
     pageSetup.dropCapDefaultLineHeight =
       p.dropCapDefaultLineHeight ?? undefined;
+
     pageSetup.leftMargin = p.leftMargin;
     pageSetup.lineHeight = p.lineHeight;
+
     pageSetup.lyricsDefaultColor = p.lyricsDefaultColor;
     pageSetup.lyricsDefaultFontFamily = p.lyricsDefaultFontFamily;
     pageSetup.lyricsDefaultFontSize = p.lyricsDefaultFontSize;
@@ -155,6 +158,15 @@ export class SaveService {
     pageSetup.lyricsDefaultStrokeWidth = p.lyricsDefaultStrokeWidth;
     pageSetup.lyricsVerticalOffset = p.lyricsVerticalOffset;
     pageSetup.lyricsMinimumSpacing = p.lyricsMinimumSpacing;
+
+    pageSetup.textBoxDefaultColor = p.textBoxDefaultColor;
+    pageSetup.textBoxDefaultFontFamily = p.textBoxDefaultFontFamily;
+    pageSetup.textBoxDefaultFontSize = p.textBoxDefaultFontSize;
+    pageSetup.textBoxDefaultFontWeight = p.textBoxDefaultFontWeight;
+    pageSetup.textBoxDefaultFontStyle = p.textBoxDefaultFontStyle;
+    pageSetup.textBoxDefaultStrokeWidth = p.textBoxDefaultStrokeWidth;
+    pageSetup.textBoxDefaultLineHeight =
+      p.textBoxDefaultLineHeight ?? undefined;
 
     pageSetup.martyriaDefaultColor = p.martyriaDefaultColor;
     pageSetup.martyriaDefaultStrokeWidth = p.martyriaDefaultStrokeWidth;
@@ -443,6 +455,7 @@ export class SaveService {
     element.bold = e.bold || undefined;
     element.italic = e.italic || undefined;
     element.underline = e.underline || undefined;
+    element.lineHeight = e.lineHeight ?? undefined;
     element.height = e.height;
     element.useDefaultStyle = e.useDefaultStyle || undefined;
   }
@@ -491,17 +504,33 @@ export class SaveService {
     this.LoadPageSetup_v1(score.pageSetup, s.pageSetup);
 
     if (s.headers) {
-      this.LoadHeader_v1(score.headers.default, s.headers.default);
-      this.LoadHeader_v1(score.headers.even, s.headers.even);
-      this.LoadHeader_v1(score.headers.odd, s.headers.odd);
-      this.LoadHeader_v1(score.headers.firstPage, s.headers.firstPage);
+      this.LoadHeader_v1(
+        score.headers.default,
+        s.headers.default,
+        score.pageSetup,
+      );
+      this.LoadHeader_v1(score.headers.even, s.headers.even, score.pageSetup);
+      this.LoadHeader_v1(score.headers.odd, s.headers.odd, score.pageSetup);
+      this.LoadHeader_v1(
+        score.headers.firstPage,
+        s.headers.firstPage,
+        score.pageSetup,
+      );
     }
 
     if (s.footers) {
-      this.LoadFooter_v1(score.footers.default, s.footers.default);
-      this.LoadFooter_v1(score.footers.even, s.footers.even);
-      this.LoadFooter_v1(score.footers.odd, s.footers.odd);
-      this.LoadFooter_v1(score.footers.firstPage, s.footers.firstPage);
+      this.LoadFooter_v1(
+        score.footers.default,
+        s.footers.default,
+        score.pageSetup,
+      );
+      this.LoadFooter_v1(score.footers.even, s.footers.even, score.pageSetup);
+      this.LoadFooter_v1(score.footers.odd, s.footers.odd, score.pageSetup);
+      this.LoadFooter_v1(
+        score.footers.firstPage,
+        s.footers.firstPage,
+        score.pageSetup,
+      );
     }
 
     for (const e of s.staff.elements) {
@@ -539,6 +568,7 @@ export class SaveService {
           this.LoadTextBox_v1(
             element as TextBoxElement,
             e as TextBoxElement_v1,
+            score.pageSetup,
           );
           break;
         case ElementType_v1.ModeKey:
@@ -613,6 +643,21 @@ export class SaveService {
       p.dropCapDefaultStrokeWidth ?? pageSetup.dropCapDefaultStrokeWidth;
     pageSetup.dropCapDefaultLineHeight =
       p.dropCapDefaultLineHeight ?? pageSetup.dropCapDefaultLineHeight;
+
+    pageSetup.textBoxDefaultColor =
+      p.textBoxDefaultColor ?? pageSetup.textBoxDefaultColor;
+    pageSetup.textBoxDefaultFontFamily =
+      p.textBoxDefaultFontFamily ?? pageSetup.textBoxDefaultFontFamily;
+    pageSetup.textBoxDefaultFontSize =
+      p.textBoxDefaultFontSize ?? pageSetup.textBoxDefaultFontSize;
+    pageSetup.textBoxDefaultFontWeight =
+      p.textBoxDefaultFontWeight ?? pageSetup.textBoxDefaultFontWeight;
+    pageSetup.textBoxDefaultFontStyle =
+      p.textBoxDefaultFontStyle ?? pageSetup.textBoxDefaultFontStyle;
+    pageSetup.textBoxDefaultStrokeWidth =
+      p.textBoxDefaultStrokeWidth ?? pageSetup.textBoxDefaultStrokeWidth;
+    pageSetup.textBoxDefaultLineHeight =
+      p.textBoxDefaultLineHeight ?? pageSetup.textBoxDefaultLineHeight;
 
     pageSetup.lyricsDefaultColor =
       p.lyricsDefaultColor ?? pageSetup.lyricsDefaultColor;
@@ -720,18 +765,34 @@ export class SaveService {
     }
   }
 
-  public static LoadHeader_v1(header: Header, h: Header_v1) {
+  public static LoadHeader_v1(
+    header: Header,
+    h: Header_v1,
+    pageSetup: PageSetup,
+  ) {
     // Currently, headers only support a single element
     const e = h.elements[0];
     const element = header.elements[0];
-    this.LoadTextBox_v1(element as TextBoxElement, e as TextBoxElement_v1);
+    this.LoadTextBox_v1(
+      element as TextBoxElement,
+      e as TextBoxElement_v1,
+      pageSetup,
+    );
   }
 
-  public static LoadFooter_v1(footer: Footer, f: Footer_v1) {
+  public static LoadFooter_v1(
+    footer: Footer,
+    f: Footer_v1,
+    pageSetup: PageSetup,
+  ) {
     // Currently, footers only support a single element
     const e = f.elements[0];
     const element = footer.elements[0];
-    this.LoadTextBox_v1(element as TextBoxElement, e as TextBoxElement_v1);
+    this.LoadTextBox_v1(
+      element as TextBoxElement,
+      e as TextBoxElement_v1,
+      pageSetup,
+    );
   }
 
   public static LoadDropCap_v1(
@@ -968,7 +1029,11 @@ export class SaveService {
     }
   }
 
-  public static LoadTextBox_v1(element: TextBoxElement, e: TextBoxElement_v1) {
+  public static LoadTextBox_v1(
+    element: TextBoxElement,
+    e: TextBoxElement_v1,
+    pageSetup: PageSetup,
+  ) {
     element.alignment = e.alignment;
     element.color = e.color;
     element.content = e.content;
@@ -980,6 +1045,7 @@ export class SaveService {
     element.underline = e.underline === true;
     element.height = e.height;
     element.strokeWidth = e.strokeWidth ?? element.strokeWidth;
+    element.lineHeight = e.lineHeight ?? pageSetup.textBoxDefaultLineHeight;
     element.useDefaultStyle = e.useDefaultStyle === true;
   }
 

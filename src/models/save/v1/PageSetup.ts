@@ -28,7 +28,7 @@ export class PageSetup {
 
   public melkiteRtl: boolean | undefined = false;
 
-  public lyricsDefaultFontFamily = 'Omega';
+  public lyricsDefaultFontFamily = 'Source Serif';
   public lyricsDefaultFontSize = Unit.fromPt(12);
   public lyricsDefaultFontWeight = '400';
   public lyricsDefaultFontStyle = 'normal';
@@ -71,13 +71,21 @@ export class PageSetup {
   public tempoDefaultColor = '#ED0000';
   public tempoDefaultStrokeWidth = 0;
 
-  public dropCapDefaultFontFamily = 'Athonite';
+  public dropCapDefaultFontFamily = 'Source Serif';
   public dropCapDefaultFontSize = Unit.fromPt(60);
   public dropCapDefaultFontWeight = '400';
   public dropCapDefaultFontStyle = 'normal';
   public dropCapDefaultColor = '#000000';
   public dropCapDefaultStrokeWidth = 0;
   public dropCapDefaultLineHeight: number | undefined = undefined;
+
+  public textBoxDefaultFontFamily = 'Source Serif';
+  public textBoxDefaultFontSize = Unit.fromPt(20);
+  public textBoxDefaultFontWeight = '400';
+  public textBoxDefaultFontStyle = 'normal';
+  public textBoxDefaultColor = '#000000';
+  public textBoxDefaultStrokeWidth = 0;
+  public textBoxDefaultLineHeight: number | undefined = undefined;
 
   public hyphenSpacing: number = Unit.fromInch(0.75);
 

@@ -447,6 +447,9 @@
         @update:underline="
           updateTextBoxUnderline(selectedTextBoxElement, $event)
         "
+        @update:lineHeight="
+          updateTextBoxLineHeight(selectedTextBoxElement, $event)
+        "
         @insert:gorthmikon="insertGorthmikon"
         @insert:pelastikon="insertPelastikon"
       />
@@ -901,7 +904,6 @@ import { TokenMetadata } from '@/utils/replaceTokens';
 import { shallowEquals } from '@/utils/shallowEquals';
 import { TestFileGenerator } from '@/utils/TestFileGenerator';
 import { TestFileType } from '@/utils/TestFileType';
-import { Unit } from '@/utils/Unit';
 import { withZoom } from '@/utils/withZoom';
 
 interface Vue3TabsChromeComponent {
@@ -4541,6 +4543,10 @@ export default class Editor extends Vue {
     this.updateTextBox(element, { underline });
   }
 
+  updateTextBoxLineHeight(element: TextBoxElement, lineHeight: number | null) {
+    this.updateTextBox(element, { lineHeight });
+  }
+
   updateModeKey(element: ModeKeyElement, newValues: Partial<ModeKeyElement>) {
     this.commandService.execute(
       this.modeKeyCommandFactory.create('update-properties', {
@@ -5366,12 +5372,23 @@ export default class Editor extends Vue {
     const element = new TextBoxElement();
     element.inline = args.inline;
 
-    element.color = this.score.pageSetup.lyricsDefaultColor;
-    element.fontFamily = this.score.pageSetup.lyricsDefaultFontFamily;
-    element.fontSize = this.score.pageSetup.lyricsDefaultFontSize;
-    element.strokeWidth = this.score.pageSetup.lyricsDefaultStrokeWidth;
-    element.bold = this.score.pageSetup.lyricsDefaultFontWeight === '700';
-    element.italic = this.score.pageSetup.lyricsDefaultFontStyle === 'italic';
+    if (element.inline) {
+      element.color = this.score.pageSetup.lyricsDefaultColor;
+      element.fontFamily = this.score.pageSetup.lyricsDefaultFontFamily;
+      element.fontSize = this.score.pageSetup.lyricsDefaultFontSize;
+      element.strokeWidth = this.score.pageSetup.lyricsDefaultStrokeWidth;
+      element.bold = this.score.pageSetup.lyricsDefaultFontWeight === '700';
+      element.italic = this.score.pageSetup.lyricsDefaultFontStyle === 'italic';
+    } else {
+      element.color = this.score.pageSetup.textBoxDefaultColor;
+      element.fontFamily = this.score.pageSetup.textBoxDefaultFontFamily;
+      element.fontSize = this.score.pageSetup.textBoxDefaultFontSize;
+      element.strokeWidth = this.score.pageSetup.textBoxDefaultStrokeWidth;
+      element.lineHeight = this.score.pageSetup.textBoxDefaultLineHeight;
+      element.bold = this.score.pageSetup.textBoxDefaultFontWeight === '700';
+      element.italic =
+        this.score.pageSetup.textBoxDefaultFontStyle === 'italic';
+    }
 
     this.addScoreElement(element, this.selectedElementIndex);
 
@@ -5673,10 +5690,14 @@ export default class Editor extends Vue {
 
     const title = new TextBoxElement();
     title.content = 'Title';
-    title.fontFamily = score.pageSetup.lyricsDefaultFontFamily;
-    title.fontSize = Unit.fromPt(20);
-    title.strokeWidth = score.pageSetup.lyricsDefaultStrokeWidth;
     title.alignment = TextBoxAlignment.Center;
+    title.color = score.pageSetup.textBoxDefaultColor;
+    title.fontFamily = score.pageSetup.textBoxDefaultFontFamily;
+    title.fontSize = score.pageSetup.textBoxDefaultFontSize;
+    title.strokeWidth = score.pageSetup.textBoxDefaultStrokeWidth;
+    title.lineHeight = score.pageSetup.textBoxDefaultLineHeight;
+    title.bold = score.pageSetup.textBoxDefaultFontWeight === '700';
+    title.italic = score.pageSetup.textBoxDefaultFontStyle === 'italic';
 
     score.staff.elements.unshift(
       title,

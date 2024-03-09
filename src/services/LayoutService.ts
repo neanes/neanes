@@ -859,14 +859,37 @@ export class LayoutService {
     } else {
       elementWidthPx = pageSetup.innerPageWidth;
 
-      textBoxElement.computedFontFamily = textBoxElement.fontFamily;
-      textBoxElement.computedFontSize = textBoxElement.fontSize;
-      textBoxElement.computedColor = textBoxElement.color;
-      textBoxElement.computedStrokeWidth = textBoxElement.strokeWidth;
-      textBoxElement.computedFontWeight = textBoxElement.bold ? '700' : '400';
-      textBoxElement.computedFontStyle = textBoxElement.italic
-        ? 'italic'
-        : 'normal';
+      textBoxElement.computedFontFamily = textBoxElement.useDefaultStyle
+        ? pageSetup.textBoxDefaultFontFamily
+        : textBoxElement.fontFamily;
+
+      textBoxElement.computedFontSize = textBoxElement.useDefaultStyle
+        ? pageSetup.textBoxDefaultFontSize
+        : textBoxElement.fontSize;
+
+      textBoxElement.computedColor = textBoxElement.useDefaultStyle
+        ? pageSetup.textBoxDefaultColor
+        : textBoxElement.color;
+
+      textBoxElement.computedStrokeWidth = textBoxElement.useDefaultStyle
+        ? pageSetup.textBoxDefaultStrokeWidth
+        : textBoxElement.strokeWidth;
+
+      textBoxElement.computedFontWeight = textBoxElement.useDefaultStyle
+        ? pageSetup.textBoxDefaultFontWeight
+        : textBoxElement.bold
+          ? '700'
+          : '400';
+
+      textBoxElement.computedFontStyle = textBoxElement.useDefaultStyle
+        ? pageSetup.textBoxDefaultFontStyle
+        : textBoxElement.italic
+          ? 'italic'
+          : 'normal';
+
+      textBoxElement.computedLineHeight = textBoxElement.useDefaultStyle
+        ? pageSetup.textBoxDefaultLineHeight
+        : textBoxElement.lineHeight;
     }
 
     const fontHeight = TextMeasurementService.getFontHeight(
@@ -934,6 +957,7 @@ export class LayoutService {
       textbox.computedFontStylePrevious = textbox.computedFontStyle;
       textbox.computedColorPrevious = textbox.computedColor;
       textbox.computedStrokeWidthPrevious = textbox.computedStrokeWidth;
+      textbox.computedLineHeightPrevious = textbox.computedLineHeight;
     } else if (element.elementType === ElementType.ModeKey) {
       const modeKey = element as ModeKeyElement;
       modeKey.computedFontFamilyPrevious = modeKey.computedFontFamily;
@@ -987,7 +1011,8 @@ export class LayoutService {
         textbox.computedFontWeightPrevious !== textbox.computedFontWeight ||
         textbox.computedFontStylePrevious !== textbox.computedFontStyle ||
         textbox.computedColorPrevious !== textbox.computedColor ||
-        textbox.computedStrokeWidthPrevious !== textbox.computedStrokeWidth;
+        textbox.computedStrokeWidthPrevious !== textbox.computedStrokeWidth ||
+        textbox.computedLineHeightPrevious !== textbox.computedLineHeight;
     }
 
     if (!element.updated && element.elementType === ElementType.ModeKey) {

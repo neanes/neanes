@@ -1,23 +1,21 @@
 <template>
   <div class="text-box-toolbar">
-    <template v-if="element.inline">
-      <input
-        id="toolbar-text-box-use-default-style"
-        type="checkbox"
-        :checked="element.useDefaultStyle"
-        @change="
-          $emit(
-            'update:useDefaultStyle',
-            ($event.target as HTMLInputElement).checked,
-          )
-        "
-      />
-      <label for="toolbar-text-box-use-default-style">{{
-        $t('toolbar:common.useDefaultStyle')
-      }}</label>
-      <span class="divider" />
-    </template>
-    <template v-if="!element.inline || !element.useDefaultStyle">
+    <input
+      id="toolbar-text-box-use-default-style"
+      type="checkbox"
+      :checked="element.useDefaultStyle"
+      @change="
+        $emit(
+          'update:useDefaultStyle',
+          ($event.target as HTMLInputElement).checked,
+        )
+      "
+    />
+    <label for="toolbar-text-box-use-default-style">{{
+      $t('toolbar:common.useDefaultStyle')
+    }}</label>
+    <span class="divider" />
+    <template v-if="!element.useDefaultStyle">
       <select
         :value="element.fontFamily"
         @change="
@@ -39,6 +37,18 @@
         class="drop-caps-input"
         :modelValue="element.fontSize"
         @update:modelValue="$emit('update:fontSize', $event)"
+      />
+      <span class="space" style="text-align: center">&#47;</span>
+      <InputUnit
+        class="drop-caps-input"
+        unit="unitless"
+        :nullable="true"
+        :min="0"
+        :step="0.1"
+        :modelValue="element.lineHeight"
+        :precision="2"
+        placeholder="normal"
+        @update:modelValue="$emit('update:lineHeight', $event)"
       />
       <span class="space"></span>
       <ColorPicker
@@ -105,7 +115,7 @@
         :title="$t('toolbar:common.alignRight')"
       />
     </button>
-    <template v-if="!element.inline || !element.useDefaultStyle">
+    <template v-if="!element.useDefaultStyle">
       <span class="space" />
       <label class="right-space">{{ $t('toolbar:common.outline') }}</label>
       <InputStrokeWidth
@@ -139,10 +149,11 @@ import { Component, Prop, Vue } from 'vue-facing-decorator';
 import ColorPicker from '@/components/ColorPicker.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
+import InputUnit from '@/components/InputUnit.vue';
 import { TextBoxAlignment, TextBoxElement } from '@/models/Element';
 
 @Component({
-  components: { ColorPicker, InputFontSize, InputStrokeWidth },
+  components: { ColorPicker, InputFontSize, InputUnit, InputStrokeWidth },
   emits: [
     'insert:gorthmikon',
     'insert:pelastikon',
@@ -152,6 +163,7 @@ import { TextBoxAlignment, TextBoxElement } from '@/models/Element';
     'update:fontFamily',
     'update:fontSize',
     'update:italic',
+    'update:lineHeight',
     'update:strokeWidth',
     'update:underline',
     'update:useDefaultStyle',

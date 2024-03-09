@@ -4,7 +4,7 @@ import { Footers } from './Footers';
 import { Headers } from './Headers';
 import { PageSetup } from './PageSetup';
 
-const ScoreVersion: string = '1.0';
+const ScoreVersion: string = '1.1';
 
 export { ScoreVersion };
 

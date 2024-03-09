@@ -721,6 +721,7 @@ export class TextBoxElement extends ScoreElement {
   public bold: boolean = false;
   public italic: boolean = false;
   public underline: boolean = false;
+  public lineHeight: number | null = null;
   public useDefaultStyle: boolean = true;
   public height: number = 20;
 
@@ -731,6 +732,7 @@ export class TextBoxElement extends ScoreElement {
   public computedFontStyle: string = 'normal';
   public computedColor: string = '#000000';
   public computedStrokeWidth: number = 0;
+  public computedLineHeight: number | null = null;
 
   // Re-render helpers
   public heightPrevious: number = 0;
@@ -740,6 +742,7 @@ export class TextBoxElement extends ScoreElement {
   public computedFontStylePrevious: string = 'normal';
   public computedColorPrevious: string = '#000000';
   public computedStrokeWidthPrevious: number = 0;
+  public computedLineHeightPrevious: number | null = null;
 
   public get computedFont() {
     return `${this.computedFontStyle} normal ${this.computedFontWeight} ${this.computedFontSize}px "${this.computedFontFamily}"`;

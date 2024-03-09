@@ -123,6 +123,14 @@ export class PageSetup {
   public dropCapDefaultStrokeWidth = 0;
   public dropCapDefaultLineHeight: number | null = null;
 
+  public textBoxDefaultFontFamily = 'Source Serif';
+  public textBoxDefaultFontSize = Unit.fromPt(20);
+  public textBoxDefaultFontWeight = '400';
+  public textBoxDefaultFontStyle = 'normal';
+  public textBoxDefaultColor = '#000000';
+  public textBoxDefaultStrokeWidth = 0;
+  public textBoxDefaultLineHeight: number | null = null;
+
   public hyphenSpacing: number = Unit.fromInch(0.75);
 
   public chrysanthineAccidentals: boolean = true;

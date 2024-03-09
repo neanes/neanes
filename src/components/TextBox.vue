@@ -67,6 +67,7 @@ export default class TextBox extends Vue {
       width: this.width,
       height: withZoom(this.element.height),
       webkitTextStrokeWidth: withZoom(this.element.computedStrokeWidth),
+      lineHeight: `${this.element.computedLineHeight ?? 'normal'}`,
       direction: this.pageSetup.melkiteRtl ? 'rtl' : undefined,
     } as StyleValue;
 

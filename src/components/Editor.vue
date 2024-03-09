@@ -541,8 +541,7 @@
         @update:lyricsUseDefaultStyle="
           updateNoteLyricsUseDefaultStyle(selectedLyrics as NoteElement, $event)
         "
-        @insert:gorthmikon="insertGorthmikon"
-        @insert:pelastikon="insertPelastikon"
+        @insert:specialCharacter="insertSpecialCharacter"
       />
     </template>
     <template
@@ -893,7 +892,7 @@ import { NeumeKeyboard } from '@/services/NeumeKeyboard';
 import { IPlatformService } from '@/services/platform/IPlatformService';
 import { SaveService } from '@/services/SaveService';
 import { TextSearchService } from '@/services/TextSearchService';
-import { TATWEEL } from '@/utils/constants';
+import { GORTHMIKON, PELASTIKON, TATWEEL } from '@/utils/constants';
 import { getCursorPosition } from '@/utils/getCursorPosition';
 import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
@@ -1981,11 +1980,15 @@ export default class Editor extends Vue {
   }
 
   insertPelastikon() {
-    document.execCommand('insertText', false, '\u{1d0b4}');
+    document.execCommand('insertText', false, PELASTIKON);
   }
 
   insertGorthmikon() {
-    document.execCommand('insertText', false, '\u{1d0b5}');
+    document.execCommand('insertText', false, GORTHMIKON);
+  }
+
+  insertSpecialCharacter(character: string) {
+    document.execCommand('insertText', false, character);
   }
 
   addQuantitativeNeume(

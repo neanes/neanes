@@ -70,7 +70,10 @@
       />
     </template>
     <span class="space" />
-    <button class="icon-btn" @mousedown.prevent="$emit('insert:pelastikon')">
+    <button
+      class="icon-btn"
+      @mousedown.prevent="$emit('insert:specialCharacter', PELASTIKON)"
+    >
       <img
         src="@/assets/icons/letterPelastikon.svg"
         width="32"
@@ -78,7 +81,10 @@
         :title="$t('toolbar:common.insertPelastikon')"
       />
     </button>
-    <button class="icon-btn" @mousedown.prevent="$emit('insert:gorthmikon')">
+    <button
+      class="icon-btn"
+      @mousedown.prevent="$emit('insert:specialCharacter', GORTHMIKON)"
+    >
       <img
         src="@/assets/icons/letterGorthmikon.svg"
         width="32"
@@ -86,6 +92,16 @@
         :title="$t('toolbar:common.insertGorthmikon')"
       />
     </button>
+    <span class="space" />
+    <template v-for="character in specialCharacters" :key="character.value">
+      <button
+        class="icon-btn"
+        :class="character.language"
+        @mousedown.prevent="$emit('insert:specialCharacter', character.value)"
+      >
+        {{ character.value }}
+      </button>
+    </template>
   </div>
 </template>
 
@@ -96,12 +112,21 @@ import ColorPicker from '@/components/ColorPicker.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import { NoteElement } from '@/models/Element';
+import {
+  E_MACRON,
+  E_MACRON_SMALL,
+  GORTHMIKON,
+  GREEK_OU,
+  GREEK_OU_SMALL,
+  PELASTIKON,
+  STIGMA,
+  STIGMA_SMALL,
+} from '@/utils/constants';
 
 @Component({
   components: { ColorPicker, InputFontSize, InputStrokeWidth },
   emits: [
-    'insert:gorthmikon',
-    'insert:pelastikon',
+    'insert:specialCharacter',
     'update:lyricsColor',
     'update:lyricsFontFamily',
     'update:lyricsFontSize',
@@ -115,6 +140,18 @@ import { NoteElement } from '@/models/Element';
 export default class ToolbarLyrics extends Vue {
   @Prop() element!: NoteElement;
   @Prop() fonts!: string[];
+
+  GORTHMIKON = GORTHMIKON;
+  PELASTIKON = PELASTIKON;
+
+  specialCharacters = [
+    { value: E_MACRON_SMALL, language: 'english' },
+    { value: E_MACRON, language: 'english' },
+    { value: STIGMA_SMALL, language: 'greek' },
+    { value: STIGMA, language: 'greek' },
+    { value: GREEK_OU_SMALL, language: 'greek' },
+    { value: GREEK_OU, language: 'greek' },
+  ];
 
   get bold() {
     return this.element.lyricsFontWeight === '700';
@@ -158,6 +195,7 @@ export default class ToolbarLyrics extends Vue {
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 1.25rem;
 }
 
 .divider {
@@ -172,5 +210,13 @@ export default class ToolbarLyrics extends Vue {
 
 .space {
   width: 16px;
+}
+
+.english {
+  font-family: 'Source Serif';
+}
+
+.greek {
+  font-family: 'GFS Didot';
 }
 </style>

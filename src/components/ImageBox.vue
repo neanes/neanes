@@ -29,8 +29,10 @@
 </template>
 
 <script lang="ts">
+import 'vue-draggable-resizable/style.css';
+
 import { StyleValue } from 'vue';
-import VueDraggableResizable from 'vue-draggable-resizable/src/components/vue-draggable-resizable.vue';
+import VueDraggableResizable from 'vue-draggable-resizable';
 import { Component, Prop, Vue } from 'vue-facing-decorator';
 
 import ContentEditable from '@/components/ContentEditable.vue';

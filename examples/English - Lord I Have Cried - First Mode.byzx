@@ -514,6 +514,7 @@
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusKentimaAbove",
         "vocalExpressionNeume": "HomalonConnecting",
+        "vareia": true,
         "lyrics": "Lord,",
         "isMelisma": true,
         "isMelismaStart": true
@@ -870,6 +871,7 @@
       {
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusKentimaBelow",
+        "vareia": true,
         "lyrics": "Thee:",
         "isMelisma": true,
         "isMelismaStart": true

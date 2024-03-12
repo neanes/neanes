@@ -96,8 +96,9 @@
                   :ref="`header-${pageIndex}`"
                   :element="getHeaderForPageIndex(pageIndex)"
                   :editMode="
+                    !printMode &&
                     getHeaderForPageIndex(pageIndex) ==
-                    selectedHeaderFooterElement
+                      selectedHeaderFooterElement
                   "
                   :metadata="getTokenMetadata(pageIndex)"
                   :pageSetup="score.pageSetup"
@@ -393,8 +394,9 @@
                   }`"
                   :element="getFooterForPageIndex(pageIndex)"
                   :editMode="
+                    !printMode &&
                     getFooterForPageIndex(pageIndex) ==
-                    selectedHeaderFooterElement
+                      selectedHeaderFooterElement
                   "
                   :metadata="getTokenMetadata(pageIndex)"
                   :pageSetup="score.pageSetup"

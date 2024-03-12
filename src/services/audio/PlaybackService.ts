@@ -278,11 +278,7 @@ export class PlaybackService {
     return moria;
   }
 
-  moveTo(
-    scaleNote: ScaleNote,
-    isVirtual: boolean,
-    workspace: PlaybackWorkspace,
-  ): number {
+  moveTo(scaleNote: ScaleNote, workspace: PlaybackWorkspace): number {
     const { scale } = workspace;
 
     let pivot: ScaleNote;
@@ -310,9 +306,7 @@ export class PlaybackService {
       getScaleNoteValue(pivot) - getScaleNoteValue(ScaleNote.Thi),
     );
 
-    if (isVirtual) {
-      moria += workspace.transpositionMoria;
-    }
+    moria += workspace.transpositionMoria;
 
     return this.changeFrequency(workspace.options.frequencyDi, moria);
   }
@@ -566,11 +560,7 @@ export class PlaybackService {
       console.groupEnd();
     }
 
-    workspace.frequency = this.moveTo(
-      noteAtomNode.virtualNote,
-      true,
-      workspace,
-    );
+    workspace.frequency = this.moveTo(noteAtomNode.virtualNote, workspace);
 
     if (
       workspace.lastAlterationMoria !== 0 &&
@@ -638,7 +628,7 @@ export class PlaybackService {
 
     workspace.scale = this.getPlaybackScale(modeKeyNode.scale, workspace);
 
-    workspace.frequency = this.moveTo(modeKeyNode.virtualNote, true, workspace);
+    workspace.frequency = this.moveTo(modeKeyNode.virtualNote, workspace);
   }
 
   handleFthora(fthoraNode: Readonly<FthoraNode>, workspace: PlaybackWorkspace) {
@@ -768,12 +758,18 @@ export class PlaybackService {
   }
 
   handleIson(isonNode: Readonly<IsonNode>, workspace: PlaybackWorkspace) {
+    if (workspace.loggingEnabled) {
+      console.groupCollapsed('PlaybackService', 'ison');
+      console.log('physicalNote', isonNode.physicalNote);
+      console.log('virtualNote', isonNode.virtualNote);
+      console.groupEnd();
+    }
+
     workspace.isonFrequency = -1;
 
-    if (isonNode.ison !== Ison.Unison) {
+    if (isonNode.physicalNote !== Ison.Unison) {
       workspace.isonFrequency = this.moveTo(
-        getScaleNoteFromValue(getIsonValue(isonNode.ison)),
-        false,
+        getScaleNoteFromValue(getIsonValue(isonNode.virtualNote)),
         workspace,
       );
     }

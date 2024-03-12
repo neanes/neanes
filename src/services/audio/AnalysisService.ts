@@ -17,6 +17,8 @@ import {
 } from '@/models/Neumes';
 import { getNeumeValue, getNoteSpread } from '@/models/NeumeValues';
 import {
+  getIsonFromValue,
+  getIsonValue,
   getNoteValue,
   getScaleNoteFromValue,
   getScaleNoteValue,
@@ -89,7 +91,8 @@ export class FthoraNode implements PitchNode {
 export class IsonNode implements AnalysisNode {
   public readonly nodeType: NodeType = NodeType.IsonNode;
   public elementIndex: number = 0;
-  public ison: Ison = Ison.Pa;
+  public physicalNote: Ison = Ison.Pa;
+  public virtualNote: Ison = Ison.Pa;
 }
 
 export class TempoNode implements AnalysisNode {
@@ -283,7 +286,10 @@ export class AnalysisService {
     if (noteElement.ison) {
       const isonNode: IsonNode = new IsonNode();
       isonNode.elementIndex = noteElement.index;
-      isonNode.ison = noteElement.ison;
+      isonNode.physicalNote = noteElement.ison;
+      isonNode.virtualNote = getIsonFromValue(
+        getIsonValue(isonNode.physicalNote) + workspace.currentShift,
+      );
       workspace.nodes.push(isonNode);
     }
     // Secondary gorgon applies to the first note of the spread
@@ -386,7 +392,10 @@ export class AnalysisService {
     if (noteElement.ison) {
       const isonNode: IsonNode = new IsonNode();
       isonNode.elementIndex = noteElement.index;
-      isonNode.ison = noteElement.ison;
+      isonNode.physicalNote = noteElement.ison;
+      isonNode.virtualNote = getIsonFromValue(
+        getIsonValue(isonNode.physicalNote) + workspace.currentShift,
+      );
       workspace.nodes.push(isonNode);
     }
     this.finalizeNoteAtomNode(noteAtomNodes[1], workspace);
@@ -465,7 +474,10 @@ export class AnalysisService {
     if (noteElement.ison) {
       const isonNode: IsonNode = new IsonNode();
       isonNode.elementIndex = noteElement.index;
-      isonNode.ison = noteElement.ison;
+      isonNode.physicalNote = noteElement.ison;
+      isonNode.virtualNote = getIsonFromValue(
+        getIsonValue(isonNode.physicalNote) + workspace.currentShift,
+      );
       workspace.nodes.push(isonNode);
     }
     this.finalizeNoteAtomNode(noteAtomNodes[1], workspace);
@@ -500,7 +512,10 @@ export class AnalysisService {
     if (noteElement.ison) {
       const isonNode: IsonNode = new IsonNode();
       isonNode.elementIndex = noteElement.index;
-      isonNode.ison = noteElement.ison;
+      isonNode.physicalNote = noteElement.ison;
+      isonNode.virtualNote = getIsonFromValue(
+        getIsonValue(isonNode.physicalNote) + workspace.currentShift,
+      );
       workspace.nodes.push(isonNode);
     }
     // Secondary gorgon applies to the first note of the spread
@@ -583,7 +598,10 @@ export class AnalysisService {
     if (noteElement.ison) {
       const isonNode: IsonNode = new IsonNode();
       isonNode.elementIndex = noteElement.index;
-      isonNode.ison = noteElement.ison;
+      isonNode.physicalNote = noteElement.ison;
+      isonNode.virtualNote = getIsonFromValue(
+        getIsonValue(isonNode.physicalNote) + workspace.currentShift,
+      );
       workspace.nodes.push(isonNode);
     }
     this.finalizeNoteAtomNode(noteAtomNodes[1], workspace);
@@ -642,7 +660,10 @@ export class AnalysisService {
     if (noteElement.ison) {
       const isonNode: IsonNode = new IsonNode();
       isonNode.elementIndex = noteElement.index;
-      isonNode.ison = noteElement.ison;
+      isonNode.physicalNote = noteElement.ison;
+      isonNode.virtualNote = getIsonFromValue(
+        getIsonValue(isonNode.physicalNote) + workspace.currentShift,
+      );
       workspace.nodes.push(isonNode);
     }
     this.finalizeNoteAtomNode(noteAtomNodes[1], workspace);
@@ -714,7 +735,10 @@ export class AnalysisService {
     if (noteElement.ison) {
       const isonNode: IsonNode = new IsonNode();
       isonNode.elementIndex = noteElement.index;
-      isonNode.ison = noteElement.ison;
+      isonNode.physicalNote = noteElement.ison;
+      isonNode.virtualNote = getIsonFromValue(
+        getIsonValue(isonNode.physicalNote) + workspace.currentShift,
+      );
       workspace.nodes.push(isonNode);
     }
 
@@ -771,7 +795,10 @@ export class AnalysisService {
     if (noteElement.ison) {
       const isonNode: IsonNode = new IsonNode();
       isonNode.elementIndex = noteElement.index;
-      isonNode.ison = noteElement.ison;
+      isonNode.physicalNote = noteElement.ison;
+      isonNode.virtualNote = getIsonFromValue(
+        getIsonValue(isonNode.physicalNote) + workspace.currentShift,
+      );
       workspace.nodes.push(isonNode);
     }
     if (noteElement.gorgonNeume) {

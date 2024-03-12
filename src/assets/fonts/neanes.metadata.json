@@ -2429,6 +2429,10 @@
       ]
     },
     "kentimata": {
+      "heteronConnecting": [
+        0.806,
+        0.034
+      ],
       "yfenAbove": [
         0.413,
         0.875

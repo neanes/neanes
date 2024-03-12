@@ -1,6 +1,6 @@
 {
-  "version": "1.0",
-  "appVersion": "0.4.15",
+  "version": "1.1",
+  "appVersion": "0.4.17",
   "pageSetup": {
     "pageSize": "A4",
     "pageSizeUnit": "in",
@@ -60,8 +60,14 @@
     "dropCapDefaultFontStyle": "normal",
     "dropCapDefaultColor": "#000000",
     "dropCapDefaultStrokeWidth": 0,
+    "textBoxDefaultFontFamily": "Source Serif",
+    "textBoxDefaultFontSize": 26.666666666666668,
+    "textBoxDefaultFontWeight": "400",
+    "textBoxDefaultFontStyle": "normal",
+    "textBoxDefaultColor": "#000000",
+    "textBoxDefaultStrokeWidth": 0,
     "hyphenSpacing": 72,
-    "chrysanthineAccidentals": true
+    "chrysanthineAccidentals": false
   },
   "headers": {
     "default": {
@@ -74,8 +80,7 @@
           "fontSize": 16,
           "fontFamily": "Source Serif",
           "strokeWidth": 0,
-          "height": 22,
-          "useDefaultStyle": true
+          "height": 22
         }
       ]
     },
@@ -89,8 +94,7 @@
           "fontSize": 16,
           "fontFamily": "Source Serif",
           "strokeWidth": 0,
-          "height": 22,
-          "useDefaultStyle": true
+          "height": 22
         }
       ]
     },
@@ -104,8 +108,7 @@
           "fontSize": 16,
           "fontFamily": "Source Serif",
           "strokeWidth": 0,
-          "height": 22,
-          "useDefaultStyle": true
+          "height": 22
         }
       ]
     },
@@ -119,8 +122,7 @@
           "fontSize": 16,
           "fontFamily": "Source Serif",
           "strokeWidth": 0,
-          "height": 22,
-          "useDefaultStyle": true
+          "height": 22
         }
       ]
     }
@@ -136,8 +138,7 @@
           "fontSize": 16,
           "fontFamily": "Source Serif",
           "strokeWidth": 0,
-          "height": 22,
-          "useDefaultStyle": true
+          "height": 22
         }
       ]
     },
@@ -151,8 +152,7 @@
           "fontSize": 16,
           "fontFamily": "Source Serif",
           "strokeWidth": 0,
-          "height": 22,
-          "useDefaultStyle": true
+          "height": 22
         }
       ]
     },
@@ -166,8 +166,7 @@
           "fontSize": 16,
           "fontFamily": "Source Serif",
           "strokeWidth": 0,
-          "height": 22,
-          "useDefaultStyle": true
+          "height": 22
         }
       ]
     },
@@ -181,8 +180,7 @@
           "fontSize": 16,
           "fontFamily": "Source Serif",
           "strokeWidth": 0,
-          "height": 22,
-          "useDefaultStyle": true
+          "height": 22
         }
       ]
     }
@@ -197,8 +195,7 @@
         "fontSize": 26.666666666666668,
         "fontFamily": "Scheherazade New",
         "strokeWidth": 0,
-        "height": 30,
-        "useDefaultStyle": true
+        "height": 30
       },
       {
         "elementType": "ModeKey",

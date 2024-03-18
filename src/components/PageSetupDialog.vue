@@ -333,6 +333,17 @@
               $t('dialog:pageSetup.disableFthoraRestrictions')
             }}</label>
           </div>
+
+          <div class="form-group">
+            <input
+              id="page-setup-dialog-melkite-rtl"
+              type="checkbox"
+              v-model="form.melkiteRtl"
+            />
+            <label for="page-setup-dialog-melkite-rtl">{{
+              $t('dialog:pageSetup.melkiteRtl')
+            }}</label>
+          </div>
         </div>
         <div class="right-pane">
           <div class="subheader">{{ $t('dialog:pageSetup.dropCaps') }}</div>
@@ -478,6 +489,86 @@
             <InputStrokeWidth
               class="drop-caps-input"
               v-model="form.lyricsDefaultStrokeWidth"
+            />
+          </div>
+          <div class="subheader">{{ $t('dialog:pageSetup.textBoxes') }}</div>
+          <div class="form-group row">
+            <label class="drop-caps-label">{{
+              $t('dialog:pageSetup.color')
+            }}</label>
+            <ColorPicker v-model="form.textBoxDefaultColor" />
+          </div>
+          <div class="form-group">
+            <label class="drop-caps-label">{{
+              $t('dialog:pageSetup.size')
+            }}</label>
+            <InputFontSize
+              class="drop-caps-input"
+              v-model="form.textBoxDefaultFontSize"
+            />
+          </div>
+          <div class="form-group">
+            <label class="drop-caps-label">{{
+              $t('dialog:pageSetup.lineHeight')
+            }}</label>
+            <InputUnit
+              class="drop-caps-input"
+              :min="0"
+              :step="0.1"
+              unit="unitless"
+              :precision="2"
+              placeholder="normal"
+              :nullable="true"
+              v-model="form.textBoxDefaultLineHeight"
+            />
+          </div>
+          <div class="form-group">
+            <label class="drop-caps-label">{{
+              $t('dialog:pageSetup.font')
+            }}</label>
+            <select
+              class="drop-caps-select"
+              v-model="form.textBoxDefaultFontFamily"
+            >
+              <option v-for="family in lyricsFontFamilies" :key="family">
+                {{ family }}
+              </option>
+            </select>
+          </div>
+          <div class="form-group row">
+            <label class="drop-caps-label">{{
+              $t('dialog:pageSetup.style')
+            }}</label>
+            <input
+              id="page-setup-dialog-text-box-bold"
+              type="checkbox"
+              v-model="form.textBoxDefaultFontWeight"
+              true-value="700"
+              false-value="400"
+            />
+            <label for="page-setup-dialog-text-box-bold">{{
+              $t('dialog:pageSetup.bold')
+            }}</label>
+
+            <input
+              id="page-setup-dialog-text-box-italic"
+              type="checkbox"
+              v-model="form.textBoxDefaultFontStyle"
+              true-value="italic"
+              false-value="normal"
+            />
+            <label for="page-setup-dialog-text-box-italic">{{
+              $t('dialog:pageSetup.italic')
+            }}</label>
+          </div>
+          <div class="form-group">
+            <label class="drop-caps-label">{{
+              $t('dialog:pageSetup.outline')
+            }}</label>
+
+            <InputStrokeWidth
+              class="drop-caps-input"
+              v-model="form.textBoxDefaultStrokeWidth"
             />
           </div>
           <div class="subheader">{{ $t('dialog:pageSetup.modeKeys') }}</div>

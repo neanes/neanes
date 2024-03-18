@@ -43,6 +43,7 @@ import {
 } from '@/models/Scales';
 import { Score } from '@/models/Score';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
+import { TATWEEL } from '@/utils/constants';
 
 import { TextMeasurementService } from './TextMeasurementService';
 
@@ -600,6 +601,7 @@ export class LayoutService {
       element.width = elementWidthPx;
 
       element.line = page.lines.length;
+      element.page = pages.length;
 
       // Special logic to adjust drop caps.
       // This aligns the bottom of the drop cap with
@@ -857,14 +859,37 @@ export class LayoutService {
     } else {
       elementWidthPx = pageSetup.innerPageWidth;
 
-      textBoxElement.computedFontFamily = textBoxElement.fontFamily;
-      textBoxElement.computedFontSize = textBoxElement.fontSize;
-      textBoxElement.computedColor = textBoxElement.color;
-      textBoxElement.computedStrokeWidth = textBoxElement.strokeWidth;
-      textBoxElement.computedFontWeight = textBoxElement.bold ? '700' : '400';
-      textBoxElement.computedFontStyle = textBoxElement.italic
-        ? 'italic'
-        : 'normal';
+      textBoxElement.computedFontFamily = textBoxElement.useDefaultStyle
+        ? pageSetup.textBoxDefaultFontFamily
+        : textBoxElement.fontFamily;
+
+      textBoxElement.computedFontSize = textBoxElement.useDefaultStyle
+        ? pageSetup.textBoxDefaultFontSize
+        : textBoxElement.fontSize;
+
+      textBoxElement.computedColor = textBoxElement.useDefaultStyle
+        ? pageSetup.textBoxDefaultColor
+        : textBoxElement.color;
+
+      textBoxElement.computedStrokeWidth = textBoxElement.useDefaultStyle
+        ? pageSetup.textBoxDefaultStrokeWidth
+        : textBoxElement.strokeWidth;
+
+      textBoxElement.computedFontWeight = textBoxElement.useDefaultStyle
+        ? pageSetup.textBoxDefaultFontWeight
+        : textBoxElement.bold
+          ? '700'
+          : '400';
+
+      textBoxElement.computedFontStyle = textBoxElement.useDefaultStyle
+        ? pageSetup.textBoxDefaultFontStyle
+        : textBoxElement.italic
+          ? 'italic'
+          : 'normal';
+
+      textBoxElement.computedLineHeight = textBoxElement.useDefaultStyle
+        ? pageSetup.textBoxDefaultLineHeight
+        : textBoxElement.lineHeight;
     }
 
     const fontHeight = TextMeasurementService.getFontHeight(
@@ -932,6 +957,7 @@ export class LayoutService {
       textbox.computedFontStylePrevious = textbox.computedFontStyle;
       textbox.computedColorPrevious = textbox.computedColor;
       textbox.computedStrokeWidthPrevious = textbox.computedStrokeWidth;
+      textbox.computedLineHeightPrevious = textbox.computedLineHeight;
     } else if (element.elementType === ElementType.ModeKey) {
       const modeKey = element as ModeKeyElement;
       modeKey.computedFontFamilyPrevious = modeKey.computedFontFamily;
@@ -985,7 +1011,8 @@ export class LayoutService {
         textbox.computedFontWeightPrevious !== textbox.computedFontWeight ||
         textbox.computedFontStylePrevious !== textbox.computedFontStyle ||
         textbox.computedColorPrevious !== textbox.computedColor ||
-        textbox.computedStrokeWidthPrevious !== textbox.computedStrokeWidth;
+        textbox.computedStrokeWidthPrevious !== textbox.computedStrokeWidth ||
+        textbox.computedLineHeightPrevious !== textbox.computedLineHeight;
     }
 
     if (!element.updated && element.elementType === ElementType.ModeKey) {
@@ -1057,7 +1084,12 @@ export class LayoutService {
     // Shift the lyrics to the right so that they
     // are centered under the main neume
     if (noteElement.vareia) {
-      noteElement.lyricsHorizontalOffset += vareiaWidth;
+      if (pageSetup.melkiteRtl) {
+        noteElement.lyricsHorizontalOffset -= vareiaWidth;
+      } else {
+        noteElement.lyricsHorizontalOffset += vareiaWidth;
+      }
+
       noteElement.neumeWidth += vareiaWidth;
     }
 
@@ -1116,7 +1148,12 @@ export class LayoutService {
       // as the apostrophros in the running elaphron, but
       // the elaphrons are the same width in both neumes.
       const offset = runningElaphronWidth - elaphronWidth;
-      noteElement.lyricsHorizontalOffset += offset;
+
+      if (pageSetup.melkiteRtl) {
+        noteElement.lyricsHorizontalOffset -= offset;
+      } else {
+        noteElement.lyricsHorizontalOffset += offset;
+      }
     }
 
     return noteElement.spaceAfter + noteElement.neumeWidth;
@@ -1245,6 +1282,11 @@ export class LayoutService {
       pageSetup.lyricsFont,
     );
 
+    const widthOfTatweel = TextMeasurementService.getTextWidth(
+      TATWEEL,
+      pageSetup.lyricsFont,
+    );
+
     const widthOfHyphen = TextMeasurementService.getTextWidth(
       '-',
       pageSetup.lyricsFont,
@@ -1355,17 +1397,33 @@ export class LayoutService {
               // beginning of the neume.
               start = element.x;
             } else if (element.lyricsWidth > element.neumeWidth) {
-              start =
-                element.x +
-                element.neumeWidth +
-                element.lyricsHorizontalOffset / 2 +
-                (element.lyricsWidth - element.neumeWidth) / 2;
+              if (!pageSetup.melkiteRtl) {
+                start =
+                  element.x +
+                  element.neumeWidth +
+                  element.lyricsHorizontalOffset / 2 +
+                  (element.lyricsWidth - element.neumeWidth) / 2;
+              } else {
+                start =
+                  element.x +
+                  element.neumeWidth -
+                  element.lyricsHorizontalOffset / 2 +
+                  (element.lyricsWidth - element.neumeWidth) / 2;
+              }
             } else {
-              start =
-                element.x +
-                element.neumeWidth / 2 +
-                element.lyricsWidth / 2 +
-                element.lyricsHorizontalOffset / 2;
+              if (!pageSetup.melkiteRtl) {
+                start =
+                  element.x +
+                  element.neumeWidth / 2 +
+                  element.lyricsWidth / 2 +
+                  element.lyricsHorizontalOffset / 2;
+              } else {
+                start =
+                  element.x +
+                  element.neumeWidth / 2 +
+                  element.lyricsWidth / 2 -
+                  element.lyricsHorizontalOffset / 2;
+              }
             }
 
             if (element.isHyphen) {
@@ -1434,7 +1492,7 @@ export class LayoutService {
                     widthOfHyphenForThisElement / 2,
                 );
               }
-            } else {
+            } else if (!pageSetup.melkiteRtl) {
               const nextElementIsRunningElaphron =
                 nextElement &&
                 nextElement.elementType === ElementType.Note &&
@@ -1503,6 +1561,57 @@ export class LayoutService {
 
               for (let i = 0; i < numberOfUnderScoresNeeded; i++) {
                 element.melismaText += '_';
+              }
+            } else if (pageSetup.melkiteRtl) {
+              const nextNoteElement = nextElement as NoteElement;
+
+              if (
+                nextElement == null ||
+                nextElement.elementType !== ElementType.Note
+              ) {
+                if (finalElement) {
+                  end = finalElement.x + finalElement.neumeWidth;
+                } else {
+                  end = element.x + element.neumeWidth;
+                }
+              } else if (
+                nextNoteElement.lyricsWidth > nextNoteElement.neumeWidth
+              ) {
+                end =
+                  nextNoteElement.x -
+                  (nextNoteElement.lyricsWidth -
+                    nextNoteElement.neumeWidth +
+                    nextNoteElement.lyricsHorizontalOffset) /
+                    2;
+              } else {
+                end =
+                  nextNoteElement.x +
+                  nextNoteElement.neumeWidth / 2 -
+                  nextNoteElement.lyricsWidth / 2 -
+                  nextNoteElement.lyricsHorizontalOffset / 2;
+              }
+
+              const widthOfTatweelForThisElement = element.lyricsUseDefaultStyle
+                ? widthOfTatweel
+                : this.getTextWidthFromCache(
+                    textWidthCache,
+                    element,
+                    pageSetup,
+                    TATWEEL,
+                  );
+
+              // Always show at least one underscore to indicate it's a melisma.
+              element.melismaWidth = Math.max(
+                end - start,
+                widthOfTatweelForThisElement,
+              );
+
+              const numberOfUnderScoresNeeded = Math.ceil(
+                element.melismaWidth / widthOfTatweelForThisElement,
+              );
+
+              for (let i = 0; i < numberOfUnderScoresNeeded; i++) {
+                element.melismaText += TATWEEL;
               }
             }
           }

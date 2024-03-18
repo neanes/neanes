@@ -19,6 +19,7 @@ import {
 } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
 import { Score } from '@/models/Score';
+import { GORTHMIKON, PELASTIKON } from '@/utils/constants';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { Unit } from '@/utils/Unit';
 
@@ -557,11 +558,11 @@ export class ByzHtmlExporter {
     if (element.lyrics.trim() != '') {
       const lyrics = element.lyrics
         .replaceAll(
-          '\u{1d0b4}',
+          PELASTIKON,
           `<${this.getTag('pelastikon')}></${this.getTag('pelastikon')}>`,
         )
         .replaceAll(
-          '\u{1d0b5}',
+          GORTHMIKON,
           `<${this.getTag('gorthmikon')}></${this.getTag('gorthmikon')}>`,
         );
 
@@ -635,6 +636,7 @@ export class ByzHtmlExporter {
       style += `font-size: ${Unit.toPt(element.computedFontSize)}pt;`;
       style += `font-weight: ${element.computedFontWeight};`;
       style += `font-style: ${element.computedFontStyle};`;
+      style += `line-height: ${element.computedLineHeight};`;
       style += `-webkit-text-stroke-width: ${element.computedStrokeWidth};`;
 
       styleAttribute = ` style="${style}"`;
@@ -669,6 +671,7 @@ export class ByzHtmlExporter {
       style += `font-size: ${Unit.toPt(element.computedFontSize)}pt;`;
       style += `font-weight: ${element.computedFontWeight};`;
       style += `font-style: ${element.computedFontStyle};`;
+      style += `line-height: ${element.computedLineHeight};`;
       style += `-webkit-text-stroke-width: ${element.computedStrokeWidth};`;
       //style += `width: ${element.width};`;
       //style += `height: ${element.height};`;

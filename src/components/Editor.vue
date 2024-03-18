@@ -55,6 +55,13 @@
             </button>
           </template></Vue3TabsChrome
         >
+        <SearchText
+          ref="searchText"
+          v-if="searchTextPanelIsOpen"
+          v-model:query="searchTextQuery"
+          @search="onSearchText"
+          @close="searchTextPanelIsOpen = false"
+        />
         <div
           class="page-background"
           ref="page-background"
@@ -89,10 +96,12 @@
                   :ref="`header-${pageIndex}`"
                   :element="getHeaderForPageIndex(pageIndex)"
                   :editMode="
+                    !printMode &&
                     getHeaderForPageIndex(pageIndex) ==
-                    selectedHeaderFooterElement
+                      selectedHeaderFooterElement
                   "
                   :metadata="getTokenMetadata(pageIndex)"
+                  :pageSetup="score.pageSetup"
                   :class="[
                     {
                       selectedTextbox:
@@ -182,6 +191,9 @@
                         >
                           <div
                             class="melisma"
+                            :class="{
+                              full: (element as NoteElement).isFullMelisma,
+                            }"
                             :style="getMelismaStyle(element as NoteElement)"
                           >
                             <span
@@ -208,7 +220,10 @@
                           <div
                             class="melisma"
                             :class="{
-                              full: (element as NoteElement).isFullMelisma,
+                              full:
+                                (element as NoteElement).isFullMelisma && !rtl,
+                              fullRtl:
+                                (element as NoteElement).isFullMelisma && rtl,
                             }"
                             :style="getMelismaStyle(element as NoteElement)"
                             v-text="(element as NoteElement).melismaText"
@@ -295,6 +310,7 @@
                       :element="element"
                       :editMode="true"
                       :metadata="getTokenMetadata(pageIndex)"
+                      :pageSetup="score.pageSetup"
                       :class="[{ selectedTextbox: isSelected(element) }]"
                       @select-single="selectedElement = element"
                       @update:content="
@@ -378,10 +394,12 @@
                   }`"
                   :element="getFooterForPageIndex(pageIndex)"
                   :editMode="
+                    !printMode &&
                     getFooterForPageIndex(pageIndex) ==
-                    selectedHeaderFooterElement
+                      selectedHeaderFooterElement
                   "
                   :metadata="getTokenMetadata(pageIndex)"
+                  :pageSetup="score.pageSetup"
                   :class="[
                     {
                       selectedTextbox:
@@ -430,6 +448,9 @@
         @update:italic="updateTextBoxItalic(selectedTextBoxElement, $event)"
         @update:underline="
           updateTextBoxUnderline(selectedTextBoxElement, $event)
+        "
+        @update:lineHeight="
+          updateTextBoxLineHeight(selectedTextBoxElement, $event)
         "
         @insert:gorthmikon="insertGorthmikon"
         @insert:pelastikon="insertPelastikon"
@@ -525,8 +546,7 @@
         @update:lyricsUseDefaultStyle="
           updateNoteLyricsUseDefaultStyle(selectedLyrics as NoteElement, $event)
         "
-        @insert:gorthmikon="insertGorthmikon"
-        @insert:pelastikon="insertPelastikon"
+        @insert:specialCharacter="insertSpecialCharacter"
       />
     </template>
     <template
@@ -787,6 +807,7 @@ import TempoNeumeBox from '@/components/NeumeBoxTempo.vue';
 import NeumeSelector from '@/components/NeumeSelector.vue';
 import PageSetupDialog from '@/components/PageSetupDialog.vue';
 import PlaybackSettingsDialog from '@/components/PlaybackSettingsDialog.vue';
+import SearchText from '@/components/SearchText.vue';
 import SyllablePositioningDialog from '@/components/SyllablePositioningDialog.vue';
 import TextBox from '@/components/TextBox.vue';
 import ToolbarDropCap from '@/components/ToolbarDropCap.vue';
@@ -875,6 +896,8 @@ import { LayoutService } from '@/services/LayoutService';
 import { NeumeKeyboard } from '@/services/NeumeKeyboard';
 import { IPlatformService } from '@/services/platform/IPlatformService';
 import { SaveService } from '@/services/SaveService';
+import { TextSearchService } from '@/services/TextSearchService';
+import { GORTHMIKON, PELASTIKON, TATWEEL } from '@/utils/constants';
 import { getCursorPosition } from '@/utils/getCursorPosition';
 import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
@@ -883,7 +906,6 @@ import { TokenMetadata } from '@/utils/replaceTokens';
 import { shallowEquals } from '@/utils/shallowEquals';
 import { TestFileGenerator } from '@/utils/TestFileGenerator';
 import { TestFileType } from '@/utils/TestFileType';
-import { Unit } from '@/utils/Unit';
 import { withZoom } from '@/utils/withZoom';
 
 interface Vue3TabsChromeComponent {
@@ -920,6 +942,7 @@ interface Vue3TabsChromeComponent {
     PageSetupDialog,
     FileMenuBar,
     Vue3TabsChrome,
+    SearchText,
   },
 })
 export default class Editor extends Vue {
@@ -929,6 +952,10 @@ export default class Editor extends Vue {
 
   @Inject() readonly audioService!: AudioService;
   @Inject() readonly playbackService!: PlaybackService;
+  @Inject() readonly textSearchService!: TextSearchService;
+
+  searchTextQuery: string = '';
+  searchTextPanelIsOpen = false;
 
   LineBreakType = LineBreakType;
 
@@ -952,6 +979,10 @@ export default class Editor extends Vue {
   set selectedWorkspaceId(value: string) {
     this.selectedWorkspace =
       this.workspaces.find((x) => x.id === value) ?? new Workspace();
+  }
+
+  get rtl() {
+    return this.score.pageSetup.melkiteRtl;
   }
 
   tabs: Tab[] = [];
@@ -1501,6 +1532,7 @@ export default class Editor extends Vue {
 
   getLyricStyle(element: NoteElement) {
     return {
+      direction: this.rtl ? 'rtl' : undefined,
       top: withZoom(element.lyricsVerticalOffset),
       paddingLeft:
         element.lyricsHorizontalOffset > 0
@@ -1545,7 +1577,8 @@ export default class Editor extends Vue {
 
   getElementStyle(element: ScoreElement) {
     return {
-      left: withZoom(element.x),
+      left: !this.rtl ? withZoom(element.x) : undefined,
+      right: this.rtl ? withZoom(element.x) : undefined,
       top: withZoom(element.y),
     } as StyleValue;
   }
@@ -1631,6 +1664,7 @@ export default class Editor extends Vue {
         fontLoader.load('1rem Athonite'),
         fontLoader.load('1rem "GFS Didot"'),
         fontLoader.load('1rem Neanes'),
+        fontLoader.load('1rem NeanesRTL'),
         fontLoader.load('1rem "Noto Naskh Arabic"'),
         fontLoader.load('1rem Omega'),
         fontLoader.load('1rem PFGoudyInitials'),
@@ -1707,6 +1741,7 @@ export default class Editor extends Vue {
       IpcMainChannels.FileMenuPasteFormat,
       this.onFileMenuPasteFormat,
     );
+    EventBus.$on(IpcMainChannels.FileMenuFind, this.onFileMenuFind);
     EventBus.$on(
       IpcMainChannels.FileMenuPreferences,
       this.onFileMenuPreferences,
@@ -1802,6 +1837,7 @@ export default class Editor extends Vue {
       IpcMainChannels.FileMenuPasteFormat,
       this.onFileMenuPasteFormat,
     );
+    EventBus.$off(IpcMainChannels.FileMenuFind, this.onFileMenuFind);
     EventBus.$off(
       IpcMainChannels.FileMenuPreferences,
       this.onFileMenuPreferences,
@@ -1948,11 +1984,15 @@ export default class Editor extends Vue {
   }
 
   insertPelastikon() {
-    document.execCommand('insertText', false, '\u{1d0b4}');
+    document.execCommand('insertText', false, PELASTIKON);
   }
 
   insertGorthmikon() {
-    document.execCommand('insertText', false, '\u{1d0b5}');
+    document.execCommand('insertText', false, GORTHMIKON);
+  }
+
+  insertSpecialCharacter(character: string) {
+    document.execCommand('insertText', false, character);
   }
 
   addQuantitativeNeume(
@@ -2445,11 +2485,11 @@ export default class Editor extends Vue {
     } else {
       switch (event.code) {
         case 'ArrowLeft':
-          this.moveLeftThrottled();
+          !this.rtl ? this.moveLeftThrottled() : this.moveRightThrottled();
           handled = true;
           break;
         case 'ArrowRight':
-          this.moveRightThrottled();
+          !this.rtl ? this.moveRightThrottled() : this.moveLeftThrottled();
           handled = true;
           break;
         case 'ArrowDown':
@@ -2795,28 +2835,46 @@ export default class Editor extends Vue {
       return;
     }
 
-    if (event.shiftKey && event.code !== 'Minus') {
+    if (!this.rtl && event.shiftKey && event.code !== 'Minus') {
+      return;
+    }
+
+    if (this.rtl && event.shiftKey && event.code !== 'KeyJ') {
       return;
     }
 
     switch (event.code) {
       case 'ArrowRight':
         if (event.ctrlKey || event.metaKey) {
-          this.moveToNextLyricBoxThrottled();
+          !this.rtl
+            ? this.moveToNextLyricBoxThrottled()
+            : this.moveToPreviousLyricBoxThrottled();
           handled = true;
         } else if (
+          !this.rtl &&
           getCursorPosition() === this.getLyricLength(this.selectedLyrics!)
         ) {
           this.moveToNextLyricBoxThrottled();
+          handled = true;
+        } else if (this.rtl && getCursorPosition() === 0) {
+          this.moveToPreviousLyricBoxThrottled();
           handled = true;
         }
         break;
       case 'ArrowLeft':
         if (event.ctrlKey || event.metaKey) {
+          !this.rtl
+            ? this.moveToPreviousLyricBoxThrottled()
+            : this.moveToNextLyricBoxThrottled();
+          handled = true;
+        } else if (!this.rtl && getCursorPosition() === 0) {
           this.moveToPreviousLyricBoxThrottled();
           handled = true;
-        } else if (getCursorPosition() === 0) {
-          this.moveToPreviousLyricBoxThrottled();
+        } else if (
+          this.rtl &&
+          getCursorPosition() === this.getLyricLength(this.selectedLyrics!)
+        ) {
+          this.moveToNextLyricBoxThrottled();
           handled = true;
         }
         break;
@@ -2868,6 +2926,40 @@ export default class Editor extends Vue {
         handled = true;
         break;
       }
+      case 'KeyJ': {
+        if (!this.rtl) {
+          return;
+        }
+        if (event.shiftKey) {
+          document.execCommand('insertText', false, TATWEEL);
+        } else {
+          return;
+        }
+
+        // Ctrl key overrides the "go to next lyrics" (Alt key for mac)
+        const overridden =
+          (this.platformService.isMac && event.altKey) ||
+          (!this.platformService.isMac && event.ctrlKey);
+
+        if (
+          !overridden &&
+          getCursorPosition() === this.getLyricLength(this.selectedLyrics!)
+        ) {
+          if (this.getNextLyricBoxIndex() >= 0) {
+            this.moveToNextLyricBoxThrottled();
+          } else {
+            // If this is the last lyric box, blur
+            // so that the melisma is registered and
+            // the user doesn't accidentally type more
+            // characters into box
+            const index = this.elements.indexOf(this.selectedLyrics!);
+            (this.$refs[`lyrics-${index}`] as ContentEditable[])[0].blur();
+          }
+        }
+
+        handled = true;
+        break;
+      }
     }
 
     if (handled) {
@@ -2891,16 +2983,26 @@ export default class Editor extends Vue {
         handled = true;
         break;
       case 'ArrowLeft':
-        if (getCursorPosition() === 0) {
+        if (!this.rtl && getCursorPosition() === 0) {
           this.moveLeftThrottled();
+          handled = true;
+        } else if (
+          this.rtl &&
+          getCursorPosition() === htmlElement.textElement.getInnerText().length
+        ) {
+          this.moveRightThrottled();
           handled = true;
         }
         break;
       case 'ArrowRight':
         if (
+          !this.rtl &&
           getCursorPosition() === htmlElement.textElement.getInnerText().length
         ) {
           this.moveRightThrottled();
+          handled = true;
+        } else if (this.rtl && getCursorPosition() === 0) {
+          this.moveLeftThrottled();
           handled = true;
         }
         break;
@@ -2923,16 +3025,26 @@ export default class Editor extends Vue {
         handled = true;
         break;
       case 'ArrowLeft':
-        if (getCursorPosition() === 0) {
+        if (!this.rtl && getCursorPosition() === 0) {
           this.moveLeftThrottled();
+          handled = true;
+        } else if (
+          this.rtl &&
+          getCursorPosition() === htmlElement.textElement.getInnerText().length
+        ) {
+          this.moveRightThrottled();
           handled = true;
         }
         break;
       case 'ArrowRight':
         if (
+          !this.rtl &&
           getCursorPosition() === htmlElement.textElement.getInnerText().length
         ) {
           this.moveRightThrottled();
+          handled = true;
+        } else if (this.rtl && getCursorPosition() === 0) {
+          this.moveLeftThrottled();
           handled = true;
         }
         break;
@@ -4307,24 +4419,45 @@ export default class Editor extends Vue {
     let isMelismaStart: boolean;
     let isHyphen: boolean;
 
-    if (lyrics === '_' || lyrics === '-') {
+    if (lyrics === '_' || lyrics === '-' || lyrics === TATWEEL) {
       isMelisma = true;
       isMelismaStart = false;
       isHyphen = lyrics === '-';
       lyrics = '';
 
       this.setLyrics(this.getElementIndex(element), lyrics);
-    } else if (lyrics.endsWith('_') || lyrics.endsWith('-')) {
+    } else if (
+      lyrics.endsWith('_') ||
+      lyrics.endsWith('-') ||
+      lyrics.endsWith(TATWEEL)
+    ) {
       isMelisma = true;
       isMelismaStart = true;
       isHyphen = lyrics.endsWith('-');
-      lyrics = lyrics.slice(0, -1);
+
+      lyrics = !this.rtl ? lyrics.slice(0, -1) : lyrics;
 
       this.setLyrics(this.getElementIndex(element), lyrics);
     } else {
       isMelisma = false;
       isMelismaStart = false;
       isHyphen = false;
+    }
+
+    if (this.rtl) {
+      const currentIndex = this.getElementIndex(element);
+
+      if (currentIndex > 0) {
+        const previousElement = this.elements[currentIndex - 1];
+
+        if (
+          previousElement.elementType === ElementType.Note &&
+          (previousElement as NoteElement).isMelisma &&
+          !lyrics.startsWith(TATWEEL)
+        ) {
+          lyrics = TATWEEL + lyrics;
+        }
+      }
     }
 
     // If nothing changed, return. This could happen if
@@ -4410,6 +4543,10 @@ export default class Editor extends Vue {
 
   updateTextBoxUnderline(element: TextBoxElement, underline: boolean) {
     this.updateTextBox(element, { underline });
+  }
+
+  updateTextBoxLineHeight(element: TextBoxElement, lineHeight: number | null) {
+    this.updateTextBox(element, { lineHeight });
   }
 
   updateModeKey(element: ModeKeyElement, newValues: Partial<ModeKeyElement>) {
@@ -4857,6 +4994,10 @@ export default class Editor extends Vue {
   }
 
   updatePageSetup(pageSetup: PageSetup) {
+    pageSetup.neumeDefaultFontFamily = pageSetup.melkiteRtl
+      ? 'NeanesRTL'
+      : 'Neanes';
+
     this.commandService.execute(
       this.pageSetupCommandFactory.create('update-properties', {
         target: this.score.pageSetup,
@@ -5233,12 +5374,23 @@ export default class Editor extends Vue {
     const element = new TextBoxElement();
     element.inline = args.inline;
 
-    element.color = this.score.pageSetup.lyricsDefaultColor;
-    element.fontFamily = this.score.pageSetup.lyricsDefaultFontFamily;
-    element.fontSize = this.score.pageSetup.lyricsDefaultFontSize;
-    element.strokeWidth = this.score.pageSetup.lyricsDefaultStrokeWidth;
-    element.bold = this.score.pageSetup.lyricsDefaultFontWeight === '700';
-    element.italic = this.score.pageSetup.lyricsDefaultFontStyle === 'italic';
+    if (element.inline) {
+      element.color = this.score.pageSetup.lyricsDefaultColor;
+      element.fontFamily = this.score.pageSetup.lyricsDefaultFontFamily;
+      element.fontSize = this.score.pageSetup.lyricsDefaultFontSize;
+      element.strokeWidth = this.score.pageSetup.lyricsDefaultStrokeWidth;
+      element.bold = this.score.pageSetup.lyricsDefaultFontWeight === '700';
+      element.italic = this.score.pageSetup.lyricsDefaultFontStyle === 'italic';
+    } else {
+      element.color = this.score.pageSetup.textBoxDefaultColor;
+      element.fontFamily = this.score.pageSetup.textBoxDefaultFontFamily;
+      element.fontSize = this.score.pageSetup.textBoxDefaultFontSize;
+      element.strokeWidth = this.score.pageSetup.textBoxDefaultStrokeWidth;
+      element.lineHeight = this.score.pageSetup.textBoxDefaultLineHeight;
+      element.bold = this.score.pageSetup.textBoxDefaultFontWeight === '700';
+      element.italic =
+        this.score.pageSetup.textBoxDefaultFontStyle === 'italic';
+    }
 
     this.addScoreElement(element, this.selectedElementIndex);
 
@@ -5445,6 +5597,14 @@ export default class Editor extends Vue {
     }
   }
 
+  onFileMenuFind() {
+    if (this.searchTextPanelIsOpen) {
+      (this.$refs.searchText as SearchText).focus();
+    } else {
+      this.searchTextPanelIsOpen = true;
+    }
+  }
+
   onFileMenuPreferences() {
     if (!this.dialogOpen) {
       this.editorPreferencesDialogIsOpen = true;
@@ -5465,6 +5625,41 @@ export default class Editor extends Vue {
       ...(TestFileGenerator.generateTestFile(testFileType) || []),
     );
     this.save();
+  }
+
+  onSearchText(args: { query: string; reverse?: boolean }) {
+    const result = this.textSearchService.findTextInElements(
+      args.query,
+      this.elements,
+      this.selectedElementIndex,
+      args.reverse ?? false,
+    );
+
+    if (result != null) {
+      this.selectedElement = result;
+
+      (this.$refs.pages as HTMLElement[])[
+        this.selectedElement.page - 1
+      ].scrollIntoView();
+
+      this.pages[this.selectedElement.page - 1].isVisible = true;
+
+      nextTick(() => {
+        if (this.selectedElement?.elementType === ElementType.Note) {
+          (
+            this.$refs[`element-${this.selectedElementIndex}`] as HTMLElement[]
+          )[0].scrollIntoView();
+        } else if (this.selectedElement?.elementType === ElementType.DropCap) {
+          (
+            this.$refs[`element-${this.selectedElementIndex}`] as DropCap[]
+          )[0].$el.scrollIntoView();
+        } else if (this.selectedElement?.elementType === ElementType.TextBox) {
+          (
+            this.$refs[`element-${this.selectedElementIndex}`] as TextBox[]
+          )[0].$el.scrollIntoView();
+        }
+      });
+    }
   }
 
   createDefaultModeKey(pageSetup: PageSetup) {
@@ -5497,10 +5692,14 @@ export default class Editor extends Vue {
 
     const title = new TextBoxElement();
     title.content = 'Title';
-    title.fontFamily = score.pageSetup.lyricsDefaultFontFamily;
-    title.fontSize = Unit.fromPt(20);
-    title.strokeWidth = score.pageSetup.lyricsDefaultStrokeWidth;
     title.alignment = TextBoxAlignment.Center;
+    title.color = score.pageSetup.textBoxDefaultColor;
+    title.fontFamily = score.pageSetup.textBoxDefaultFontFamily;
+    title.fontSize = score.pageSetup.textBoxDefaultFontSize;
+    title.strokeWidth = score.pageSetup.textBoxDefaultStrokeWidth;
+    title.lineHeight = score.pageSetup.textBoxDefaultLineHeight;
+    title.bold = score.pageSetup.textBoxDefaultFontWeight === '700';
+    title.italic = score.pageSetup.textBoxDefaultFontStyle === 'italic';
 
     score.staff.elements.unshift(
       title,
@@ -5855,6 +6054,10 @@ export default class Editor extends Vue {
   left: 0;
 }
 
+.melisma.fullRtl {
+  right: 0;
+}
+
 .melisma-hyphen {
   position: absolute;
 }
@@ -5984,6 +6187,7 @@ export default class Editor extends Vue {
   .tempo-toolbar,
   .text-box-toolbar,
   .image-box-toolbar,
+  .search-text-container,
   .page-break,
   .line-break,
   .page-break-2,

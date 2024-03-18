@@ -19,7 +19,7 @@ jobs:
 
       - name: Cache dependencies
         id: cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ./node_modules
           key: ${{ runner.os }}-modules-${{ hashFiles('package-lock.json') }}
@@ -40,4 +40,4 @@ jobs:
           git init -b master
           git add -A
           git commit -m "Deploy"
-          git push -f https://danielgarthur:${{secrets.PAT}}@github.com/danielgarthur/neanes-web-app master:gh-pages
+          git push -f https://danielgarthur:${{secrets.PAT}}@github.com/neanes/neanes-web-app master:gh-pages

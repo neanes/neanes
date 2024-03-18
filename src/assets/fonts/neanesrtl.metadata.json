@@ -1,5 +1,5 @@
 {
-  "fontName": "Neanes",
+  "fontName": "NeanesRTL",
   "fontVersion": "001.000",
   "metrics": {
     "winAscent": 1.4,
@@ -8,11 +8,11 @@
   "glyphsWithAnchors": {
     "ison": {
       "yfenAbove": [
-        0.93,
+        0.594,
         0.641
       ],
       "yfenBelow": [
-        0.929,
+        0.595,
         -0.04
       ],
       "koronis": [
@@ -36,7 +36,7 @@
         0.125
       ],
       "heteronConnecting": [
-        1.7,
+        -0.176,
         -0.019
       ],
       "heteron": [
@@ -44,7 +44,7 @@
         0.207
       ],
       "omalonConnecting": [
-        1.471,
+        0.053,
         0.133
       ],
       "omalon": [
@@ -102,11 +102,11 @@
         0.125
       ],
       "yfenAbove": [
-        0.93,
+        0.585,
         0.641
       ],
       "yfenBelow": [
-        0.929,
+        0.586,
         -0.2
       ],
       "koronis": [
@@ -126,7 +126,7 @@
         0.913
       ],
       "heteronConnecting": [
-        1.692,
+        -0.177,
         -0.051
       ],
       "heteron": [
@@ -138,7 +138,7 @@
         -0.067
       ],
       "omalonConnecting": [
-        1.473,
+        0.042,
         -0.053
       ],
       "antikenoma": [
@@ -180,11 +180,11 @@
     },
     "oligon": {
       "yfenAbove": [
-        0.93,
+        0.585,
         0.641
       ],
       "yfenBelow": [
-        0.929,
+        0.586,
         -0.04
       ],
       "koronis": [
@@ -208,7 +208,7 @@
         0.125
       ],
       "heteronConnecting": [
-        1.692,
+        -0.177,
         -0.019
       ],
       "heteron": [
@@ -220,7 +220,7 @@
         0.133
       ],
       "omalonConnecting": [
-        1.471,
+        0.044,
         0.133
       ],
       "apli": [
@@ -270,11 +270,11 @@
         0.125
       ],
       "yfenAbove": [
-        0.93,
+        0.585,
         0.911
       ],
       "yfenBelow": [
-        0.929,
+        0.586,
         -0.04
       ],
       "koronis": [
@@ -294,7 +294,7 @@
         0.913
       ],
       "heteronConnecting": [
-        1.692,
+        -0.177,
         -0.019
       ],
       "heteron": [
@@ -306,7 +306,7 @@
         0.133
       ],
       "omalonConnecting": [
-        1.471,
+        0.044,
         0.133
       ],
       "antikenoma": [
@@ -360,11 +360,11 @@
         0.125
       ],
       "yfenAbove": [
-        0.93,
+        0.585,
         1.203
       ],
       "yfenBelow": [
-        0.929,
+        0.586,
         -0.04
       ],
       "koronis": [
@@ -384,7 +384,7 @@
         1.203
       ],
       "heteronConnecting": [
-        1.692,
+        -0.177,
         -0.019
       ],
       "heteron": [
@@ -396,7 +396,7 @@
         0.133
       ],
       "omalonConnecting": [
-        1.471,
+        0.044,
         0.133
       ],
       "antikenoma": [
@@ -450,11 +450,11 @@
         0.125
       ],
       "yfenAbove": [
-        0.93,
+        0.585,
         1.285
       ],
       "yfenBelow": [
-        0.929,
+        0.586,
         -0.04
       ],
       "koronis": [
@@ -474,7 +474,7 @@
         1.283
       ],
       "heteronConnecting": [
-        1.692,
+        -0.177,
         -0.019
       ],
       "heteron": [
@@ -486,7 +486,7 @@
         0.133
       ],
       "omalonConnecting": [
-        1.471,
+        0.044,
         0.133
       ],
       "antikenoma": [
@@ -540,11 +540,11 @@
         0.125
       ],
       "yfenAbove": [
-        0.93,
+        0.585,
         1.202
       ],
       "yfenBelow": [
-        0.929,
+        0.586,
         -0.04
       ],
       "koronis": [
@@ -564,7 +564,7 @@
         1.203
       ],
       "heteronConnecting": [
-        1.692,
+        -0.177,
         -0.019
       ],
       "heteron": [
@@ -576,7 +576,7 @@
         0.133
       ],
       "omalonConnecting": [
-        1.471,
+        0.044,
         0.133
       ],
       "antikenoma": [
@@ -630,11 +630,11 @@
         0.125
       ],
       "yfenAbove": [
-        0.93,
+        0.585,
         1.403
       ],
       "yfenBelow": [
-        0.929,
+        0.586,
         -0.04
       ],
       "koronis": [
@@ -654,7 +654,7 @@
         1.403
       ],
       "heteronConnecting": [
-        1.692,
+        -0.177,
         -0.019
       ],
       "heteron": [
@@ -666,7 +666,7 @@
         0.133
       ],
       "omalonConnecting": [
-        1.471,
+        0.044,
         0.133
       ],
       "antikenoma": [
@@ -716,11 +716,11 @@
         0.125
       ],
       "yfenAbove": [
-        0.93,
+        0.585,
         1.271
       ],
       "yfenBelow": [
-        0.929,
+        0.586,
         -0.04
       ],
       "koronis": [
@@ -740,7 +740,7 @@
         1.273
       ],
       "heteronConnecting": [
-        1.692,
+        -0.177,
         -0.019
       ],
       "heteron": [
@@ -752,7 +752,7 @@
         0.133
       ],
       "omalonConnecting": [
-        1.471,
+        0.044,
         0.133
       ],
       "antikenoma": [
@@ -802,11 +802,11 @@
         0.125
       ],
       "yfenAbove": [
-        0.93,
+        0.666,
         1.371
       ],
       "yfenBelow": [
-        0.929,
+        0.667,
         -0.04
       ],
       "koronis": [
@@ -826,7 +826,7 @@
         1.373
       ],
       "heteronConnecting": [
-        1.692,
+        -0.096,
         -0.019
       ],
       "heteron": [
@@ -838,7 +838,7 @@
         0.133
       ],
       "omalonConnecting": [
-        1.471,
+        0.125,
         0.133
       ],
       "antikenoma": [
@@ -880,11 +880,11 @@
     },
     "isonApostrofos": {
       "yfenAbove": [
-        0.69,
+        0.587,
         0.891
       ],
       "yfenBelow": [
-        0.754,
+        0.523,
         -0.236
       ],
       "koronis": [
@@ -922,11 +922,11 @@
     },
     "apostrofosSyndesmos": {
       "yfenAbove": [
-        0.93,
+        0.247,
         0.891
       ],
       "yfenBelow": [
-        0.929,
+        0.248,
         -0.4
       ],
       "koronis": [
@@ -984,11 +984,11 @@
         0.59
       ],
       "yfenAbove": [
-        0.217,
+        0.183,
         0.887
       ],
       "yfenBelow": [
-        0.159,
+        0.241,
         -0.04
       ],
       "koronis": [
@@ -1000,7 +1000,7 @@
         -0.146
       ],
       "heteronConnecting": [
-        0.583,
+        -0.183,
         -0.019
       ],
       "measureNumber": [
@@ -1046,31 +1046,31 @@
     },
     "runningElafron": {
       "stavros": [
-        0.547,
-        0.487
+        0.991,
+        0.495
       ],
       "diesisSecondary": [
-        0.713,
+        0.203,
         0.895
       ],
       "barline": [
-        0.583,
-        0.59
+        0.987,
+        0.598
       ],
       "fthoraTopSecondary": [
-        0.29,
-        0.665
+        1.294,
+        0.673
       ],
       "yfesisSecondary": [
-        0.388,
-        0.57
+        1.392,
+        0.578
       ],
       "yfenAbove": [
-        1.06,
+        0.692,
         0.891
       ],
       "yfenBelow": [
-        1.109,
+        0.643,
         -0.04
       ],
       "koronis": [
@@ -1090,15 +1090,15 @@
         0.887
       ],
       "heteronConnecting": [
-        1.929,
+        -0.177,
         -0.019
       ],
       "omalonConnecting": [
-        1.751,
+        0.001,
         0.089
       ],
       "apli": [
-        1.132,
+        0.622,
         0.013
       ],
       "antikenoma": [
@@ -1110,37 +1110,37 @@
         0.703
       ],
       "fthoraTop": [
-        1.098,
+        0.588,
         0.66
       ],
       "fthoraBottom": [
-        1.139,
+        0.629,
         0.07
       ],
       "gorgonTop": [
-        1.147,
+        0.637,
         0.58
       ],
       "diesis": [
-        0.937,
+        0.427,
         0.02
       ],
       "yfesis": [
-        1.49,
+        0.98,
         0.536
       ],
       "klasmaTop": [
-        1.06,
+        0.55,
         0.62
       ]
     },
     "elafron": {
       "yfenAbove": [
-        0.65,
+        0.593,
         0.901
       ],
       "yfenBelow": [
-        0.659,
+        0.584,
         -0.04
       ],
       "koronis": [
@@ -1164,11 +1164,11 @@
         -0.018
       ],
       "heteronConnecting": [
-        1.42,
+        -0.177,
         -0.019
       ],
       "omalonConnecting": [
-        1.241,
+        0.002,
         0.089
       ],
       "apli": [
@@ -1214,11 +1214,11 @@
         -0.093
       ],
       "yfenAbove": [
-        0.63,
+        0.613,
         0.891
       ],
       "yfenBelow": [
-        0.659,
+        0.584,
         -0.21
       ],
       "koronis": [
@@ -1238,11 +1238,11 @@
         0.897
       ],
       "heteronConnecting": [
-        1.42,
+        -0.177,
         -0.019
       ],
       "omalonConnecting": [
-        1.241,
+        0.002,
         0.089
       ],
       "apli": [
@@ -1284,11 +1284,11 @@
     },
     "chamiliApostrofos": {
       "yfenAbove": [
-        0.63,
+        0.483,
         0.921
       ],
       "yfenBelow": [
-        0.659,
+        0.454,
         -0.3
       ],
       "koronis": [
@@ -1308,11 +1308,11 @@
         0.897
       ],
       "heteronConnecting": [
-        1.284,
+        -0.171,
         -0.18
       ],
       "omalonConnecting": [
-        1.107,
+        0.006,
         -0.04
       ],
       "apli": [
@@ -1354,11 +1354,11 @@
     },
     "chamili": {
       "yfenAbove": [
-        0.63,
+        0.483,
         0.921
       ],
       "yfenBelow": [
-        0.659,
+        0.454,
         -0.04
       ],
       "koronis": [
@@ -1382,11 +1382,11 @@
         0.125
       ],
       "heteronConnecting": [
-        1.284,
+        -0.171,
         -0.019
       ],
       "omalonConnecting": [
-        1.111,
+        0.002,
         0.089
       ],
       "apli": [
@@ -1428,11 +1428,11 @@
     },
     "chamiliElafron": {
       "yfenAbove": [
-        0.63,
+        0.61,
         1.301
       ],
       "yfenBelow": [
-        0.659,
+        0.581,
         -0.04
       ],
       "koronis": [
@@ -1452,11 +1452,11 @@
         1.227
       ],
       "heteronConnecting": [
-        1.42,
+        -0.18,
         -0.019
       ],
       "omalonConnecting": [
-        1.24,
+        0.0,
         0.089
       ],
       "apli": [
@@ -1498,11 +1498,11 @@
     },
     "chamiliElafronApostrofos": {
       "yfenAbove": [
-        0.63,
+        0.613,
         1.251
       ],
       "yfenBelow": [
-        0.659,
+        0.584,
         -0.23
       ],
       "koronis": [
@@ -1522,11 +1522,11 @@
         1.227
       ],
       "heteronConnecting": [
-        1.42,
+        -0.177,
         -0.019
       ],
       "omalonConnecting": [
-        1.24,
+        0.003,
         0.089
       ],
       "apli": [
@@ -1568,11 +1568,11 @@
     },
     "doubleChamili": {
       "yfenAbove": [
-        0.63,
+        0.477,
         1.241
       ],
       "yfenBelow": [
-        0.659,
+        0.448,
         -0.04
       ],
       "koronis": [
@@ -1592,11 +1592,11 @@
         1.227
       ],
       "heteronConnecting": [
-        1.284,
+        -0.177,
         -0.019
       ],
       "omalonConnecting": [
-        1.108,
+        -0.001,
         0.089
       ],
       "apli": [
@@ -1638,11 +1638,11 @@
     },
     "petastiIson": {
       "yfenAbove": [
-        0.792,
+        0.526,
         1.049
       ],
       "yfenBelow": [
-        0.729,
+        0.589,
         -0.04
       ],
       "koronis": [
@@ -1654,7 +1654,7 @@
         -0.127
       ],
       "heteronConnecting": [
-        1.316,
+        0.002,
         -0.019
       ],
       "yfesis": [
@@ -1704,11 +1704,11 @@
     },
     "petasti": {
       "yfenAbove": [
-        0.792,
+        0.451,
         1.049
       ],
       "yfenBelow": [
-        0.769,
+        0.474,
         -0.04
       ],
       "koronis": [
@@ -1720,7 +1720,7 @@
         -0.127
       ],
       "heteronConnecting": [
-        1.316,
+        -0.073,
         -0.019
       ],
       "yfesis": [
@@ -1770,11 +1770,11 @@
     },
     "petastiOligon": {
       "yfenAbove": [
-        0.792,
+        0.575,
         1.049
       ],
       "yfenBelow": [
-        0.789,
+        0.578,
         -0.04
       ],
       "koronis": [
@@ -1786,7 +1786,7 @@
         -0.127
       ],
       "heteronConnecting": [
-        1.316,
+        0.051,
         -0.019
       ],
       "yfesis": [
@@ -1836,11 +1836,11 @@
     },
     "petastiKentima": {
       "yfenAbove": [
-        0.792,
+        0.444,
         1.049
       ],
       "yfenBelow": [
-        0.729,
+        0.507,
         -0.04
       ],
       "koronis": [
@@ -1852,7 +1852,7 @@
         -0.127
       ],
       "heteronConnecting": [
-        1.316,
+        -0.08,
         -0.019
       ],
       "yfesis": [
@@ -1902,11 +1902,11 @@
     },
     "petastiYpsiliRight": {
       "yfenAbove": [
-        0.792,
+        0.444,
         1.309
       ],
       "yfenBelow": [
-        0.729,
+        0.507,
         -0.04
       ],
       "koronis": [
@@ -1918,7 +1918,7 @@
         -0.127
       ],
       "heteronConnecting": [
-        1.316,
+        -0.08,
         -0.019
       ],
       "yfesis": [
@@ -1968,11 +1968,11 @@
     },
     "petastiYpsiliLeft": {
       "yfenAbove": [
-        0.792,
+        0.444,
         1.299
       ],
       "yfenBelow": [
-        0.729,
+        0.507,
         -0.04
       ],
       "koronis": [
@@ -1984,7 +1984,7 @@
         -0.127
       ],
       "heteronConnecting": [
-        1.316,
+        -0.08,
         -0.019
       ],
       "yfesis": [
@@ -2034,11 +2034,11 @@
     },
     "petastiKentimaYpsiliRight": {
       "yfenAbove": [
-        0.792,
+        0.442,
         1.299
       ],
       "yfenBelow": [
-        0.729,
+        0.505,
         -0.04
       ],
       "koronis": [
@@ -2050,7 +2050,7 @@
         -0.127
       ],
       "heteronConnecting": [
-        1.316,
+        -0.082,
         -0.019
       ],
       "yfesis": [
@@ -2100,11 +2100,11 @@
     },
     "petastiKentimaYpsiliMiddle": {
       "yfenAbove": [
-        0.792,
+        0.444,
         1.299
       ],
       "yfenBelow": [
-        0.729,
+        0.507,
         -0.04
       ],
       "koronis": [
@@ -2116,7 +2116,7 @@
         -0.127
       ],
       "heteronConnecting": [
-        1.316,
+        -0.08,
         -0.019
       ],
       "yfesis": [
@@ -2166,11 +2166,11 @@
     },
     "petastiApostrofos": {
       "yfenAbove": [
-        0.792,
+        0.444,
         1.049
       ],
       "yfenBelow": [
-        0.729,
+        0.507,
         -0.04
       ],
       "koronis": [
@@ -2182,7 +2182,7 @@
         -0.127
       ],
       "heteronConnecting": [
-        1.316,
+        -0.08,
         -0.019
       ],
       "psifiston": [
@@ -2232,11 +2232,11 @@
     },
     "petastiElafron": {
       "yfenAbove": [
-        0.712,
+        0.53,
         1.109
       ],
       "yfenBelow": [
-        0.729,
+        0.513,
         -0.04
       ],
       "koronis": [
@@ -2248,7 +2248,7 @@
         -0.127
       ],
       "heteronConnecting": [
-        1.316,
+        -0.074,
         -0.019
       ],
       "psifiston": [
@@ -2298,11 +2298,11 @@
     },
     "petastiElafronApostrofos": {
       "yfenAbove": [
-        0.702,
+        0.541,
         1.089
       ],
       "yfenBelow": [
-        0.729,
+        0.514,
         -0.04
       ],
       "koronis": [
@@ -2314,7 +2314,7 @@
         -0.127
       ],
       "heteronConnecting": [
-        1.316,
+        -0.073,
         -0.019
       ],
       "psifiston": [
@@ -2364,11 +2364,11 @@
     },
     "petastiChamili": {
       "yfenAbove": [
-        0.782,
+        0.454,
         1.229
       ],
       "yfenBelow": [
-        0.729,
+        0.507,
         -0.04
       ],
       "koronis": [
@@ -2380,7 +2380,7 @@
         -0.127
       ],
       "heteronConnecting": [
-        1.316,
+        -0.08,
         -0.019
       ],
       "psifiston": [
@@ -2430,15 +2430,15 @@
     },
     "kentimata": {
       "heteronConnecting": [
-        0.806,
+        -0.068,
         0.034
       ],
       "yfenAbove": [
-        0.413,
+        0.325,
         0.875
       ],
       "yfenBelow": [
-        0.459,
+        0.279,
         -0.04
       ],
       "endofonon": [
@@ -2488,11 +2488,11 @@
         0.48
       ],
       "yfenAbove": [
-        0.93,
+        0.535,
         0.901
       ],
       "yfenBelow": [
-        0.929,
+        0.536,
         -0.04
       ],
       "endofonon": [
@@ -2500,11 +2500,11 @@
         -0.047
       ],
       "heteronConnecting": [
-        1.594,
+        -0.129,
         -0.019
       ],
       "omalonConnecting": [
-        1.59,
+        -0.125,
         0.13
       ],
       "measureNumber": [
@@ -2550,23 +2550,23 @@
     },
     "oligonIsonKentimata": {
       "diesisSecondary": [
-        1.255,
-        1.101
+        0.145,
+        1.142
       ],
       "yfesisSecondary": [
-        0.93,
+        1.6,
         0.776
       ],
       "fthoraTopSecondary": [
-        0.682,
+        1.352,
         0.9
       ],
       "yfenAbove": [
-        1.35,
+        0.614,
         0.961
       ],
       "yfenBelow": [
-        1.389,
+        0.575,
         -0.04
       ],
       "endofonon": [
@@ -2574,11 +2574,11 @@
         -0.077
       ],
       "heteronConnecting": [
-        2.0,
+        -0.036,
         -0.019
       ],
       "gorgonSecondary": [
-        0.685,
+        1.355,
         0.703
       ],
       "measureNumber": [
@@ -2602,33 +2602,33 @@
         0.194
       ],
       "fthoraTop": [
-        1.453,
-        0.901
+        0.343,
+        0.942
       ],
       "diesis": [
         0.4,
         0.133
       ],
       "yfesis": [
-        1.819,
-        0.82
+        0.709,
+        0.861
       ],
       "psifiston": [
         1.13,
         0.113
       ],
       "gorgonTop": [
-        1.56,
-        0.76
+        0.45,
+        0.801
       ]
     },
     "oligonYpsiliLeftKentimata": {
       "yfenAbove": [
-        0.93,
+        0.585,
         1.201
       ],
       "yfenBelow": [
-        0.929,
+        0.586,
         -0.04
       ],
       "endofonon": [
@@ -2636,7 +2636,7 @@
         -0.037
       ],
       "heteronConnecting": [
-        1.594,
+        -0.079,
         -0.019
       ],
       "measureNumber": [
@@ -2682,23 +2682,23 @@
     },
     "oligonApostrofosKentimata": {
       "diesisSecondary": [
-        0.965,
-        1.154
+        0.23,
+        1.193
       ],
       "yfesisSecondary": [
-        0.64,
+        1.41,
         0.828
       ],
       "fthoraTopSecondary": [
-        0.41,
+        1.18,
         0.813
       ],
       "yfenAbove": [
-        0.93,
+        0.697,
         1.111
       ],
       "yfenBelow": [
-        0.929,
+        0.698,
         -0.04
       ],
       "endofonon": [
@@ -2706,11 +2706,11 @@
         -0.037
       ],
       "heteronConnecting": [
-        1.594,
+        0.033,
         -0.019
       ],
       "gorgonSecondary": [
-        0.41,
+        1.18,
         0.874
       ],
       "measureNumber": [
@@ -2734,49 +2734,49 @@
         0.194
       ],
       "fthoraTop": [
-        1.087,
-        0.789
+        0.352,
+        0.828
       ],
       "diesis": [
         0.4,
         0.133
       ],
       "yfesis": [
-        1.437,
-        0.76
+        0.702,
+        0.799
       ],
       "psifiston": [
         0.895,
         0.113
       ],
       "gorgonTop": [
-        1.213,
-        0.74
+        0.478,
+        0.779
       ]
     },
     "oligonElafronKentimata": {
       "diesisSecondary": [
-        1.325,
-        1.163
+        0.185,
+        1.209
       ],
       "yfesisSecondary": [
-        1.0,
+        1.7,
         0.838
       ],
       "fthoraTopSecondary": [
-        0.492,
+        1.192,
         0.912
       ],
       "gorgonSecondary": [
-        0.638,
+        1.338,
         0.939
       ],
       "yfenAbove": [
-        1.28,
+        0.797,
         1.061
       ],
       "yfenBelow": [
-        1.349,
+        0.728,
         -0.04
       ],
       "endofonon": [
@@ -2784,12 +2784,12 @@
         -0.037
       ],
       "heteronConnecting": [
-        2.05,
+        0.027,
         -0.019
       ],
       "gorgonTop": [
-        1.647,
-        0.733
+        0.507,
+        0.779
       ],
       "measureNumber": [
         0.172,
@@ -2812,16 +2812,16 @@
         0.194
       ],
       "fthoraTop": [
-        1.523,
-        0.825
+        0.383,
+        0.871
       ],
       "diesis": [
         0.4,
         0.133
       ],
       "yfesis": [
-        1.829,
-        0.761
+        0.689,
+        0.807
       ],
       "psifiston": [
         1.14,
@@ -2830,27 +2830,27 @@
     },
     "oligonYporroiKentimata": {
       "diesisSecondary": [
-        0.965,
-        1.153
+        0.225,
+        1.193
       ],
       "barline": [
-        0.502,
+        1.312,
         0.862
       ],
       "yfesisSecondary": [
-        0.64,
+        1.45,
         0.828
       ],
       "fthoraTopSecondary": [
-        0.492,
+        1.302,
         0.835
       ],
       "yfenAbove": [
-        0.93,
+        0.697,
         1.141
       ],
       "yfenBelow": [
-        0.929,
+        0.698,
         -0.04
       ],
       "endofonon": [
@@ -2858,7 +2858,7 @@
         -0.037
       ],
       "heteronConnecting": [
-        1.594,
+        0.033,
         -0.019
       ],
       "measureNumber": [
@@ -2874,7 +2874,7 @@
         0.165
       ],
       "noteTop": [
-        0.192,
+        1.002,
         0.941
       ],
       "fthoraBottom": [
@@ -2882,28 +2882,28 @@
         0.194
       ],
       "fthoraTop": [
-        1.093,
-        0.767
+        0.353,
+        0.807
       ],
       "diesis": [
         0.4,
         0.133
       ],
       "yfesis": [
-        1.433,
-        0.719
+        0.693,
+        0.759
       ],
       "psifiston": [
         0.87,
         0.113
       ],
       "gorgonSecondary": [
-        0.61,
+        1.42,
         0.793
       ],
       "gorgonTop": [
-        1.207,
-        0.733
+        0.467,
+        0.773
       ]
     },
     "oligonKentimataBelow": {
@@ -2920,11 +2920,11 @@
         0.59
       ],
       "yfenAbove": [
-        0.93,
+        0.585,
         0.641
       ],
       "yfenBelow": [
-        0.929,
+        0.586,
         -0.2
       ],
       "koronis": [
@@ -2940,7 +2940,7 @@
         0.227
       ],
       "heteronConnecting": [
-        1.684,
+        -0.169,
         -0.138
       ],
       "apli": [
@@ -2960,7 +2960,7 @@
         0.877
       ],
       "omalonConnecting": [
-        1.46,
+        0.055,
         -0.04
       ],
       "omalon": [
@@ -3006,11 +3006,11 @@
         0.125
       ],
       "yfenAbove": [
-        0.93,
+        0.65,
         1.461
       ],
       "yfenBelow": [
-        0.929,
+        0.651,
         -0.04
       ],
       "koronis": [
@@ -3030,7 +3030,7 @@
         1.463
       ],
       "heteronConnecting": [
-        1.692,
+        -0.112,
         -0.019
       ],
       "heteron": [
@@ -3042,7 +3042,7 @@
         0.133
       ],
       "omalonConnecting": [
-        1.471,
+        0.109,
         0.133
       ],
       "antikenoma": [
@@ -3088,11 +3088,11 @@
         0.125
       ],
       "yfenAbove": [
-        0.93,
+        0.585,
         0.911
       ],
       "yfenBelow": [
-        0.929,
+        0.586,
         -0.04
       ],
       "koronis": [
@@ -3112,7 +3112,7 @@
         0.913
       ],
       "heteronConnecting": [
-        1.692,
+        -0.177,
         -0.019
       ],
       "heteron": [
@@ -3124,7 +3124,7 @@
         0.133
       ],
       "omalonConnecting": [
-        1.471,
+        0.044,
         0.133
       ],
       "antikenoma": [
@@ -3170,11 +3170,11 @@
         0.125
       ],
       "yfenAbove": [
-        0.93,
+        0.589,
         1.091
       ],
       "yfenBelow": [
-        0.929,
+        0.59,
         -0.04
       ],
       "koronis": [
@@ -3194,7 +3194,7 @@
         1.093
       ],
       "heteronConnecting": [
-        1.692,
+        -0.173,
         -0.019
       ],
       "heteron": [
@@ -3206,7 +3206,7 @@
         0.133
       ],
       "omalonConnecting": [
-        1.471,
+        0.048,
         0.133
       ],
       "antikenoma": [
@@ -3248,31 +3248,31 @@
     },
     "petastiRunningElafron": {
       "diesisSecondary": [
-        0.663,
+        0.323,
         1.235
       ],
       "barline": [
-        0.397,
+        0.057,
         0.94
       ],
       "yfesisSecondary": [
-        0.338,
-        0.91
+        1.378,
+        0.914
       ],
       "fthoraTopSecondary": [
-        0.15,
-        0.906
+        1.19,
+        0.91
       ],
       "yfenAbove": [
-        0.932,
+        0.582,
         1.049
       ],
       "yfenBelow": [
-        1.029,
+        0.485,
         -0.04
       ],
       "koronis": [
-        0.833,
+        0.493,
         1.041
       ],
       "endofonon": [
@@ -3280,7 +3280,7 @@
         -0.127
       ],
       "heteronConnecting": [
-        1.586,
+        -0.072,
         -0.019
       ],
       "measureNumber": [
@@ -3292,7 +3292,7 @@
         0.999
       ],
       "apli": [
-        1.095,
+        0.755,
         -0.08
       ],
       "antikenoma": [
@@ -3300,11 +3300,11 @@
         0.062
       ],
       "fthoraBottom": [
-        0.542,
+        0.202,
         0.162
       ],
       "fthoraTop": [
-        0.759,
+        0.419,
         0.911
       ],
       "noteTop": [
@@ -3312,19 +3312,19 @@
         0.972
       ],
       "diesis": [
-        0.754,
+        0.414,
         0.147
       ],
       "yfesis": [
-        1.222,
+        0.882,
         0.911
       ],
       "psifiston": [
-        1.072,
+        0.732,
         0.129
       ],
       "klasmaBottom": [
-        1.071,
+        0.731,
         0.053
       ]
     },
@@ -3334,11 +3334,11 @@
         0.125
       ],
       "yfenAbove": [
-        0.93,
+        0.585,
         0.911
       ],
       "yfenBelow": [
-        0.929,
+        0.586,
         -0.04
       ],
       "koronis": [
@@ -3358,7 +3358,7 @@
         0.913
       ],
       "heteronConnecting": [
-        1.692,
+        -0.177,
         -0.019
       ],
       "heteron": [
@@ -3370,7 +3370,7 @@
         0.133
       ],
       "omalonConnecting": [
-        1.471,
+        0.044,
         0.133
       ],
       "antikenoma": [
@@ -3420,11 +3420,11 @@
         0.125
       ],
       "yfenAbove": [
-        0.93,
+        0.585,
         0.971
       ],
       "yfenBelow": [
-        0.929,
+        0.586,
         -0.04
       ],
       "koronis": [
@@ -3444,7 +3444,7 @@
         0.973
       ],
       "heteronConnecting": [
-        1.692,
+        -0.177,
         -0.019
       ],
       "heteron": [
@@ -3456,7 +3456,7 @@
         0.133
       ],
       "omalonConnecting": [
-        1.471,
+        0.044,
         0.133
       ],
       "antikenoma": [
@@ -3506,11 +3506,11 @@
         0.758
       ],
       "yfenAbove": [
-        0.702,
+        0.462,
         1.049
       ],
       "yfenBelow": [
-        0.729,
+        0.435,
         -0.04
       ],
       "koronis": [
@@ -3522,7 +3522,7 @@
         -0.127
       ],
       "heteronConnecting": [
-        1.316,
+        -0.152,
         -0.019
       ],
       "psifiston": [
@@ -3572,43 +3572,43 @@
     },
     "oligonRunningElafronKentimata": {
       "diesisTertiary": [
-        0.701,
+        1.101,
         1.183
       ],
       "diesisSecondary": [
-        1.595,
-        1.133
+        0.339,
+        1.185
       ],
       "barline": [
-        0.459,
+        2.189,
         0.856
       ],
       "yfesisTertiary": [
-        0.376,
+        2.106,
         0.858
       ],
       "yfesisSecondary": [
-        1.27,
+        1.67,
         0.808
       ],
       "fthoraTopTertiary": [
-        0.188,
+        1.918,
         0.854
       ],
       "fthoraTopSecondary": [
-        0.832,
+        1.232,
         0.852
       ],
       "gorgonSecondary": [
-        0.948,
+        1.348,
         0.889
       ],
       "yfenAbove": [
-        1.32,
+        0.881,
         1.061
       ],
       "yfenBelow": [
-        1.389,
+        0.812,
         -0.04
       ],
       "endofonon": [
@@ -3616,7 +3616,7 @@
         -0.037
       ],
       "heteronConnecting": [
-        2.15,
+        0.051,
         -0.019
       ],
       "measureNumber": [
@@ -3640,49 +3640,49 @@
         0.194
       ],
       "fthoraTop": [
-        1.735,
-        0.743
+        0.479,
+        0.795
       ],
       "diesis": [
         0.4,
         0.133
       ],
       "yfesis": [
-        2.033,
-        0.829
+        0.777,
+        0.881
       ],
       "psifiston": [
         1.22,
         0.113
       ],
       "gorgonTop": [
-        1.86,
-        0.74
+        0.604,
+        0.792
       ]
     },
     "oligonElafronApostrofosKentimata": {
       "diesisSecondary": [
-        1.327,
-        1.137
+        0.185,
+        1.195
       ],
       "yfesisSecondary": [
-        1.002,
+        1.702,
         0.812
       ],
       "fthoraTopSecondary": [
-        0.492,
+        1.192,
         0.912
       ],
       "gorgonSecondary": [
-        0.638,
+        1.338,
         0.939
       ],
       "yfenAbove": [
-        1.24,
+        0.837,
         1.061
       ],
       "yfenBelow": [
-        1.269,
+        0.808,
         -0.04
       ],
       "endofonon": [
@@ -3690,7 +3690,7 @@
         -0.037
       ],
       "heteronConnecting": [
-        2.05,
+        0.027,
         -0.019
       ],
       "measureNumber": [
@@ -3714,33 +3714,33 @@
         0.194
       ],
       "fthoraTop": [
-        1.527,
-        0.745
+        0.385,
+        0.803
       ],
       "diesis": [
         0.4,
         0.133
       ],
       "yfesis": [
-        1.868,
-        0.766
+        0.726,
+        0.824
       ],
       "psifiston": [
         1.14,
         0.113
       ],
       "gorgonTop": [
-        1.647,
-        0.733
+        0.505,
+        0.791
       ]
     },
     "oligonKentimaMiddleKentimata": {
       "yfenAbove": [
-        0.93,
+        0.814,
         1.101
       ],
       "yfenBelow": [
-        1.109,
+        0.635,
         -0.04
       ],
       "endofonon": [
@@ -3748,7 +3748,7 @@
         -0.037
       ],
       "heteronConnecting": [
-        1.92,
+        -0.176,
         -0.019
       ],
       "measureNumber": [
@@ -3794,11 +3794,11 @@
     },
     "oligonYpsiliRightKentimata": {
       "yfenAbove": [
-        0.93,
+        0.602,
         1.251
       ],
       "yfenBelow": [
-        0.929,
+        0.603,
         -0.04
       ],
       "endofonon": [
@@ -3806,7 +3806,7 @@
         -0.037
       ],
       "heteronConnecting": [
-        1.594,
+        -0.062,
         -0.019
       ],
       "measureNumber": [
@@ -3852,11 +3852,11 @@
     },
     "petastiChamiliApostrofos": {
       "yfenAbove": [
-        0.782,
+        0.454,
         1.229
       ],
       "yfenBelow": [
-        0.729,
+        0.507,
         -0.08
       ],
       "koronis": [
@@ -3868,7 +3868,7 @@
         -0.127
       ],
       "heteronConnecting": [
-        1.316,
+        -0.08,
         -0.019
       ],
       "psifiston": [
@@ -3918,11 +3918,11 @@
     },
     "apostrofos": {
       "yfenAbove": [
-        0.47,
+        0.233,
         0.891
       ],
       "yfenBelow": [
-        0.509,
+        0.194,
         -0.04
       ],
       "koronis": [
@@ -3934,7 +3934,7 @@
         -0.126
       ],
       "heteronConnecting": [
-        0.879,
+        -0.176,
         -0.019
       ],
       "measureNumber": [
@@ -3992,11 +3992,11 @@
         0.125
       ],
       "yfenAbove": [
-        0.93,
+        0.65,
         1.461
       ],
       "yfenBelow": [
-        0.929,
+        0.651,
         -0.04
       ],
       "koronis": [
@@ -4016,7 +4016,7 @@
         1.463
       ],
       "heteronConnecting": [
-        1.692,
+        -0.112,
         -0.019
       ],
       "heteron": [
@@ -4028,7 +4028,7 @@
         0.133
       ],
       "omalonConnecting": [
-        1.471,
+        0.109,
         0.133
       ],
       "antikenoma": [
@@ -4070,11 +4070,11 @@
     },
     "doubleChamiliElafronApostrofos": {
       "yfenAbove": [
-        0.63,
+        0.544,
         1.231
       ],
       "yfenBelow": [
-        0.659,
+        0.515,
         -0.31
       ],
       "koronis": [
@@ -4094,11 +4094,11 @@
         1.227
       ],
       "heteronConnecting": [
-        1.284,
+        -0.11,
         -0.24
       ],
       "omalonConnecting": [
-        1.16,
+        0.014,
         -0.18
       ],
       "apli": [
@@ -4140,11 +4140,11 @@
     },
     "doubleChamiliElafron": {
       "yfenAbove": [
-        0.63,
+        0.544,
         1.231
       ],
       "yfenBelow": [
-        0.659,
+        0.515,
         -0.31
       ],
       "koronis": [
@@ -4164,11 +4164,11 @@
         1.227
       ],
       "heteronConnecting": [
-        1.284,
+        -0.11,
         -0.24
       ],
       "omalonConnecting": [
-        1.153,
+        0.021,
         -0.14
       ],
       "apli": [
@@ -4210,11 +4210,11 @@
     },
     "doubleChamiliApostrofos": {
       "yfenAbove": [
-        0.63,
+        0.477,
         1.231
       ],
       "yfenBelow": [
-        0.659,
+        0.448,
         -0.31
       ],
       "koronis": [
@@ -4234,11 +4234,11 @@
         1.227
       ],
       "heteronConnecting": [
-        1.284,
+        -0.177,
         -0.18
       ],
       "omalonConnecting": [
-        1.087,
+        0.02,
         -0.113
       ],
       "apli": [
@@ -4280,11 +4280,11 @@
     },
     "petastiKentimataDoubleYpsili": {
       "yfenAbove": [
-        0.792,
+        0.647,
         1.419
       ],
       "yfenBelow": [
-        0.729,
+        0.71,
         -0.04
       ],
       "koronis": [
@@ -4296,7 +4296,7 @@
         -0.127
       ],
       "heteronConnecting": [
-        1.316,
+        0.123,
         -0.019
       ],
       "yfesis": [
@@ -4346,11 +4346,11 @@
     },
     "petastiKentimaDoubleYpsiliRight": {
       "yfenAbove": [
-        0.792,
+        0.521,
         1.449
       ],
       "yfenBelow": [
-        0.729,
+        0.584,
         -0.04
       ],
       "koronis": [
@@ -4362,7 +4362,7 @@
         -0.127
       ],
       "heteronConnecting": [
-        1.316,
+        -0.003,
         -0.019
       ],
       "yfesis": [
@@ -4412,11 +4412,11 @@
     },
     "petastiKentimaDoubleYpsiliLeft": {
       "yfenAbove": [
-        0.792,
+        0.444,
         1.449
       ],
       "yfenBelow": [
-        0.729,
+        0.507,
         -0.04
       ],
       "koronis": [
@@ -4428,7 +4428,7 @@
         -0.127
       ],
       "heteronConnecting": [
-        1.316,
+        -0.08,
         -0.019
       ],
       "yfesis": [
@@ -4478,11 +4478,11 @@
     },
     "petastiKentimataTripleYpsili": {
       "yfenAbove": [
-        0.792,
+        0.647,
         1.439
       ],
       "yfenBelow": [
-        0.729,
+        0.71,
         -0.04
       ],
       "koronis": [
@@ -4494,7 +4494,7 @@
         -0.127
       ],
       "heteronConnecting": [
-        1.316,
+        0.123,
         -0.019
       ],
       "yfesis": [
@@ -4544,11 +4544,11 @@
     },
     "petastiTripleYpsili": {
       "yfenAbove": [
-        0.792,
+        0.568,
         1.379
       ],
       "yfenBelow": [
-        0.729,
+        0.631,
         -0.04
       ],
       "koronis": [
@@ -4560,7 +4560,7 @@
         -0.127
       ],
       "heteronConnecting": [
-        1.316,
+        0.044,
         -0.019
       ],
       "yfesis": [
@@ -4614,11 +4614,11 @@
         0.125
       ],
       "yfenAbove": [
-        0.93,
+        0.647,
         1.441
       ],
       "yfenBelow": [
-        0.929,
+        0.648,
         -0.04
       ],
       "koronis": [
@@ -4638,7 +4638,7 @@
         1.443
       ],
       "heteronConnecting": [
-        1.692,
+        -0.115,
         -0.019
       ],
       "heteron": [
@@ -4650,7 +4650,7 @@
         0.133
       ],
       "omalonConnecting": [
-        1.471,
+        0.106,
         0.133
       ],
       "antikenoma": [
@@ -4696,11 +4696,11 @@
         0.125
       ],
       "yfenAbove": [
-        0.93,
+        0.587,
         1.441
       ],
       "yfenBelow": [
-        0.929,
+        0.588,
         -0.04
       ],
       "koronis": [
@@ -4720,7 +4720,7 @@
         1.443
       ],
       "heteronConnecting": [
-        1.692,
+        -0.175,
         -0.019
       ],
       "heteron": [
@@ -4732,7 +4732,7 @@
         0.133
       ],
       "omalonConnecting": [
-        1.471,
+        0.046,
         0.133
       ],
       "antikenoma": [
@@ -4778,11 +4778,11 @@
         0.125
       ],
       "yfenAbove": [
-        0.93,
+        0.65,
         1.281
       ],
       "yfenBelow": [
-        0.929,
+        0.651,
         -0.04
       ],
       "koronis": [
@@ -4802,7 +4802,7 @@
         1.283
       ],
       "heteronConnecting": [
-        1.692,
+        -0.112,
         -0.019
       ],
       "heteron": [
@@ -4814,7 +4814,7 @@
         0.133
       ],
       "omalonConnecting": [
-        1.471,
+        0.109,
         0.133
       ],
       "antikenoma": [
@@ -4860,11 +4860,11 @@
         0.125
       ],
       "yfenAbove": [
-        0.93,
+        0.585,
         1.091
       ],
       "yfenBelow": [
-        0.929,
+        0.586,
         -0.04
       ],
       "koronis": [
@@ -4884,7 +4884,7 @@
         1.093
       ],
       "heteronConnecting": [
-        1.692,
+        -0.177,
         -0.019
       ],
       "heteron": [
@@ -4896,7 +4896,7 @@
         0.133
       ],
       "omalonConnecting": [
-        1.471,
+        0.044,
         0.133
       ],
       "antikenoma": [
@@ -4938,11 +4938,11 @@
     },
     "petastiDoubleYpsili": {
       "yfenAbove": [
-        0.792,
+        0.44,
         1.299
       ],
       "yfenBelow": [
-        0.729,
+        0.503,
         -0.04
       ],
       "koronis": [
@@ -4954,7 +4954,7 @@
         -0.127
       ],
       "heteronConnecting": [
-        1.316,
+        -0.084,
         -0.019
       ],
       "yfesis": [
@@ -5008,11 +5008,11 @@
         0.125
       ],
       "yfenAbove": [
-        0.93,
+        0.585,
         1.031
       ],
       "yfenBelow": [
-        0.929,
+        0.586,
         -0.04
       ],
       "koronis": [
@@ -5032,7 +5032,7 @@
         1.023
       ],
       "heteronConnecting": [
-        1.692,
+        -0.177,
         -0.019
       ],
       "heteron": [
@@ -5044,7 +5044,7 @@
         0.133
       ],
       "omalonConnecting": [
-        1.471,
+        0.044,
         0.133
       ],
       "antikenoma": [
@@ -5086,11 +5086,11 @@
     },
     "petastiChamiliElafron": {
       "yfenAbove": [
-        0.782,
+        0.454,
         1.429
       ],
       "yfenBelow": [
-        0.729,
+        0.507,
         -0.04
       ],
       "koronis": [
@@ -5102,7 +5102,7 @@
         -0.127
       ],
       "heteronConnecting": [
-        1.316,
+        -0.08,
         -0.019
       ],
       "psifiston": [
@@ -5152,11 +5152,11 @@
     },
     "petastiChamiliElafronApostrofos": {
       "yfenAbove": [
-        0.782,
+        0.454,
         1.429
       ],
       "yfenBelow": [
-        0.729,
+        0.507,
         -0.04
       ],
       "koronis": [
@@ -5168,7 +5168,7 @@
         -0.127
       ],
       "heteronConnecting": [
-        1.316,
+        -0.08,
         -0.019
       ],
       "psifiston": [
@@ -5218,11 +5218,11 @@
     },
     "petastiDoubleChamili": {
       "yfenAbove": [
-        0.782,
+        0.454,
         1.289
       ],
       "yfenBelow": [
-        0.729,
+        0.507,
         -0.21
       ],
       "koronis": [
@@ -5234,7 +5234,7 @@
         -0.277
       ],
       "heteronConnecting": [
-        1.316,
+        -0.08,
         -0.049
       ],
       "psifiston": [
@@ -5284,11 +5284,11 @@
     },
     "petastiDoubleChamiliApostrofos": {
       "yfenAbove": [
-        0.782,
+        0.454,
         1.289
       ],
       "yfenBelow": [
-        0.729,
+        0.507,
         -0.21
       ],
       "koronis": [
@@ -5300,7 +5300,7 @@
         -0.287
       ],
       "heteronConnecting": [
-        1.316,
+        -0.08,
         -0.019
       ],
       "psifiston": [
@@ -5378,11 +5378,11 @@
         0.125
       ],
       "yfenAbove": [
-        0.93,
+        0.864,
         0.641
       ],
       "yfenBelow": [
-        0.929,
+        0.865,
         -0.04
       ],
       "koronis": [
@@ -5402,7 +5402,7 @@
         0.913
       ],
       "heteronConnecting": [
-        1.97,
+        -0.176,
         -0.019
       ],
       "heteron": [
@@ -5414,7 +5414,7 @@
         0.133
       ],
       "omalonConnecting": [
-        1.471,
+        0.323,
         0.133
       ],
       "antikenoma": [
@@ -5472,11 +5472,11 @@
     },
     "tripleChamili": {
       "yfenAbove": [
-        0.63,
+        0.376,
         1.321
       ],
       "yfenBelow": [
-        0.659,
+        0.347,
         -0.04
       ],
       "koronis": [
@@ -5496,11 +5496,11 @@
         1.317
       ],
       "heteronConnecting": [
-        1.284,
+        -0.278,
         -0.019
       ],
       "omalonConnecting": [
-        1.001,
+        0.005,
         0.089
       ],
       "apli": [
@@ -5988,11 +5988,11 @@
     },
     "petastiKentimaTripleYpsili": {
       "yfenAbove": [
-        0.792,
+        0.647,
         1.439
       ],
       "yfenBelow": [
-        0.729,
+        0.71,
         -0.04
       ],
       "koronis": [
@@ -6004,7 +6004,7 @@
         -0.127
       ],
       "heteronConnecting": [
-        1.316,
+        0.123,
         -0.019
       ],
       "yfesis": [
@@ -6918,13 +6918,13 @@
     },
     "yfenAbove": {
       "yfenAbove": [
-        -0.589,
+        0.589,
         0.951
       ]
     },
     "yfenBelow": {
       "yfenBelow": [
-        -0.593,
+        0.593,
         -0.043
       ]
     },
@@ -6978,27 +6978,27 @@
     },
     "oligonChamiliKentimata": {
       "diesisSecondary": [
-        1.327,
-        1.137
+        0.297,
+        1.227
       ],
       "yfesisSecondary": [
-        1.002,
+        1.712,
         0.812
       ],
       "fthoraTopSecondary": [
-        0.794,
+        1.504,
         0.902
       ],
       "gorgonSecondary": [
-        0.795,
+        1.505,
         0.91
       ],
       "yfenAbove": [
-        1.26,
+        0.735,
         1.061
       ],
       "yfenBelow": [
-        1.299,
+        0.696,
         -0.04
       ],
       "endofonon": [
@@ -7006,7 +7006,7 @@
         -0.037
       ],
       "heteronConnecting": [
-        2.0,
+        -0.005,
         -0.019
       ],
       "measureNumber": [
@@ -7022,7 +7022,7 @@
         0.173
       ],
       "noteTop": [
-        0.372,
+        1.082,
         0.991
       ],
       "fthoraBottom": [
@@ -7030,24 +7030,24 @@
         0.194
       ],
       "fthoraTop": [
-        1.459,
-        0.751
+        0.429,
+        0.841
       ],
       "diesis": [
         0.4,
         0.133
       ],
       "yfesis": [
-        1.828,
-        0.736
+        0.798,
+        0.826
       ],
       "psifiston": [
         1.13,
         0.113
       ],
       "gorgonTop": [
-        1.58,
-        0.74
+        0.55,
+        0.83
       ]
     },
     "psifiston.salt01": {
@@ -8081,12 +8081,12 @@
     },
     "runningElafron": {
       "bBoxNE": [
-        1.693,
+        1.573,
         0.505
       ],
       "bBoxSW": [
-        0.047,
-        0.131
+        0.082,
+        0.133
       ]
     },
     "elafron": {
@@ -8315,7 +8315,7 @@
         0.833
       ],
       "bBoxSW": [
-        0.083,
+        0.106,
         0.222
       ]
     },
@@ -8345,7 +8345,7 @@
         0.854
       ],
       "bBoxSW": [
-        0.08,
+        0.161,
         0.222
       ]
     },
@@ -8401,11 +8401,11 @@
     },
     "petastiRunningElafron": {
       "bBoxNE": [
-        1.429,
+        1.43,
         0.856
       ],
       "bBoxSW": [
-        -0.077,
+        0.066,
         0.127
       ]
     },
@@ -8441,11 +8441,11 @@
     },
     "oligonRunningElafronKentimata": {
       "bBoxNE": [
-        2.083,
+        2.188,
         0.792
       ],
       "bBoxSW": [
-        -0.009,
+        0.24,
         0.222
       ]
     },
@@ -8455,7 +8455,7 @@
         0.852
       ],
       "bBoxSW": [
-        0.079,
+        0.159,
         0.222
       ]
     },
@@ -10905,7 +10905,7 @@
         0.936
       ],
       "bBoxSW": [
-        0.069,
+        0.169,
         0.222
       ]
     },

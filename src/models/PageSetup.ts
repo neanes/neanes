@@ -66,6 +66,8 @@ export class PageSetup {
 
   public lineHeight = Unit.fromInch(0.76);
 
+  public melkiteRtl = false;
+
   public lyricsDefaultFontFamily = 'Source Serif';
   public lyricsDefaultFontSize = Unit.fromPt(12);
   public lyricsDefaultFontWeight = '400';
@@ -120,6 +122,14 @@ export class PageSetup {
   public dropCapDefaultColor = '#000000';
   public dropCapDefaultStrokeWidth = 0;
   public dropCapDefaultLineHeight: number | null = null;
+
+  public textBoxDefaultFontFamily = 'Source Serif';
+  public textBoxDefaultFontSize = Unit.fromPt(20);
+  public textBoxDefaultFontWeight = '400';
+  public textBoxDefaultFontStyle = 'normal';
+  public textBoxDefaultColor = '#000000';
+  public textBoxDefaultStrokeWidth = 0;
+  public textBoxDefaultLineHeight: number | null = null;
 
   public hyphenSpacing: number = Unit.fromInch(0.75);
 

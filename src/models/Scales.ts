@@ -103,6 +103,12 @@ for (const [key, value] of noteToNoteValueMap) {
   noteValueToNoteMap.set(value, key);
 }
 
+const noteValueToIsonMap = new Map<number, Ison>();
+
+for (const [key, value] of isonToNoteValueMap) {
+  noteValueToIsonMap.set(value, key);
+}
+
 export const getScaleNoteValue = (note: ScaleNote) =>
   scaleNoteToNoteValueMap.get(note)!;
 
@@ -115,6 +121,9 @@ export const getNoteFromValue = (value: number) =>
   noteValueToNoteMap.get(value)!;
 
 export const getIsonValue = (ison: Ison) => isonToNoteValueMap.get(ison)!;
+
+export const getIsonFromValue = (value: number) =>
+  noteValueToIsonMap.get(value)!;
 
 export const getOrderedNotes = () => [
   ScaleNote.VouLow,

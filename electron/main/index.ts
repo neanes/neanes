@@ -11,7 +11,6 @@ import {
   screen,
   shell,
 } from 'electron';
-import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer';
 import { autoUpdater } from 'electron-updater';
 import { promises as fs } from 'fs';
 import i18next from 'i18next';
@@ -1104,6 +1103,14 @@ function createMenu() {
         },
         { type: 'separator' },
         {
+          label: i18next.t('menu:edit.find'),
+          accelerator: 'CmdOrCtrl+F',
+          click() {
+            win?.webContents.send(IpcMainChannels.FileMenuFind);
+          },
+        },
+        { type: 'separator' },
+        {
           label: i18next.t('menu:edit.preferences'),
           accelerator: 'CmdOrCtrl+,',
           click() {
@@ -1573,8 +1580,8 @@ app.on(
     if (loaded) {
       results
         .filter((x) => x.success)
-        .forEach(
-          (x) => win?.webContents.send(IpcMainChannels.FileMenuOpenScore, x),
+        .forEach((x) =>
+          win?.webContents.send(IpcMainChannels.FileMenuOpenScore, x),
         );
 
       win?.show();
@@ -1582,8 +1589,8 @@ app.on(
       win?.webContents.once('did-finish-load', () => {
         results
           .filter((x) => x.success)
-          .forEach(
-            (x) => win?.webContents.send(IpcMainChannels.FileMenuOpenScore, x),
+          .forEach((x) =>
+            win?.webContents.send(IpcMainChannels.FileMenuOpenScore, x),
           );
       });
     }
@@ -1633,17 +1640,6 @@ app.on('ready', async () => {
       defaultNS,
       resources,
     });
-
-  if (isDevelopment && !process.env.IS_TEST) {
-    // Install Vue Devtools
-    try {
-      await installExtension(VUEJS_DEVTOOLS);
-    } catch (e) {
-      if (e instanceof Error) {
-        console.error('Vue Devtools failed to install:', e.toString());
-      }
-    }
-  }
 
   if (!win) {
     createWindow();

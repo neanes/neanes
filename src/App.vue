@@ -85,6 +85,11 @@ export default class App extends Vue {
 }
 
 @font-face {
+  font-family: NeanesRTL;
+  src: url('./assets/fonts/NeanesRTL.otf');
+}
+
+@font-face {
   font-family: Omega;
   src: url('./assets/fonts/EZ Omega.ttf');
 }

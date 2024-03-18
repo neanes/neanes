@@ -459,7 +459,7 @@ export class LayoutService {
             if (
               noteElement.measureBarLeft &&
               (noteElement.elementType === ElementType.Martyria ||
-                !noteElement.measureBarLeft.endsWith('Above'))
+                noteElement.measureBarLeft.endsWith('Above'))
             ) {
               previousNoteElement.computedMeasureBarRight =
                 noteElement.measureBarLeft;

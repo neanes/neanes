@@ -52,7 +52,7 @@
     "vue3-tabs-chrome": "^0.3.3"
   },
   "devDependencies": {
-    "@babel/preset-typescript": "^7.23.3",
+    "@babel/preset-typescript": "^7.24.1",
     "@types/mime-types": "^2.1.4",
     "@types/node": "^20.11.30",
     "@types/throttle-debounce": "^5.0.2",

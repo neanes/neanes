@@ -10,8 +10,8 @@
       :zoomToFit="zoomToFit"
       :audioState="audioService.state"
       :audioOptions="audioOptions"
-      :playbackTime="playbackTime"
-      :playbackBpm="playbackBpm"
+      :playbackTime="selectedWorkspace.playbackTime"
+      :playbackBpm="selectedWorkspace.playbackBpm"
       :currentPageNumber="currentPageNumber"
       :pageCount="pageCount"
       :neumeKeyboard="neumeKeyboard"
@@ -1012,9 +1012,7 @@ export default class Editor extends Vue {
 
   audioElement: ScoreElement | null = null;
   playbackEvents: PlaybackSequenceEvent[] = [];
-  playbackTime = 0;
   playbackTimeInterval: ReturnType<typeof setTimeout> | null = null;
-  playbackBpm = 120;
   audioOptions: PlaybackOptions = {
     useLegetos: false,
     useDefaultAttractionZo: true,
@@ -5067,7 +5065,7 @@ export default class Editor extends Vue {
         }
 
         this.playbackTimeInterval = setInterval(() => {
-          this.playbackTime += 0.1;
+          this.selectedWorkspace.playbackTime += 0.1;
         }, 100);
       } else {
         this.pauseAudio();
@@ -5103,7 +5101,7 @@ export default class Editor extends Vue {
         this.audioElement = null;
       } else {
         this.playbackTimeInterval = setInterval(() => {
-          this.playbackTime += 0.1;
+          this.selectedWorkspace.playbackTime += 0.1;
         }, 100);
       }
     } catch (error) {
@@ -5142,8 +5140,8 @@ export default class Editor extends Vue {
 
   onAudioServiceEventPlay(event: PlaybackSequenceEvent) {
     if (this.audioService.state === AudioState.Playing) {
-      this.playbackTime = event.absoluteTime;
-      this.playbackBpm = event.bpm;
+      this.selectedWorkspace.playbackTime = event.absoluteTime;
+      this.selectedWorkspace.playbackBpm = event.bpm;
 
       this.audioElement = this.elements[event.elementIndex];
 

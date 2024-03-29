@@ -23,6 +23,8 @@ export class Workspace {
   public entryMode: EntryMode = EntryMode.Auto;
   public scrollLeft: number = 0;
   public scrollTop: number = 0;
+  public playbackTime: number = 0;
+  public playbackBpm: number = 0;
 }
 
 export interface WorkspaceLocalStorage {

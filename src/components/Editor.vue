@@ -10,6 +10,8 @@
       :zoomToFit="zoomToFit"
       :audioState="audioService.state"
       :audioOptions="audioOptions"
+      :playbackTime="playbackTime"
+      :playbackBpm="playbackBpm"
       :currentPageNumber="currentPageNumber"
       :pageCount="pageCount"
       :neumeKeyboard="neumeKeyboard"
@@ -1010,6 +1012,9 @@ export default class Editor extends Vue {
 
   audioElement: ScoreElement | null = null;
   playbackEvents: PlaybackSequenceEvent[] = [];
+  playbackTime = 0;
+  playbackTimeInterval: ReturnType<typeof setTimeout> | null = null;
+  playbackBpm = 120;
   audioOptions: PlaybackOptions = {
     useLegetos: false,
     useDefaultAttractionZo: true,
@@ -5056,6 +5061,14 @@ export default class Editor extends Vue {
         );
 
         this.audioService.play(this.playbackEvents, this.audioOptions, startAt);
+
+        if (this.playbackTimeInterval != null) {
+          clearInterval(this.playbackTimeInterval);
+        }
+
+        this.playbackTimeInterval = setInterval(() => {
+          this.playbackTime += 0.1;
+        }, 100);
       } else {
         this.pauseAudio();
       }
@@ -5069,6 +5082,10 @@ export default class Editor extends Vue {
       this.audioService.stop();
 
       this.playbackEvents = [];
+
+      if (this.playbackTimeInterval != null) {
+        clearInterval(this.playbackTimeInterval);
+      }
     } catch (error) {
       console.error(error);
     }
@@ -5078,8 +5095,16 @@ export default class Editor extends Vue {
     try {
       this.audioService.togglePause();
 
+      if (this.playbackTimeInterval != null) {
+        clearInterval(this.playbackTimeInterval);
+      }
+
       if (this.audioService.state === AudioState.Paused) {
         this.audioElement = null;
+      } else {
+        this.playbackTimeInterval = setInterval(() => {
+          this.playbackTime += 0.1;
+        }, 100);
       }
     } catch (error) {
       console.error(error);
@@ -5117,6 +5142,9 @@ export default class Editor extends Vue {
 
   onAudioServiceEventPlay(event: PlaybackSequenceEvent) {
     if (this.audioService.state === AudioState.Playing) {
+      this.playbackTime = event.absoluteTime;
+      this.playbackBpm = event.bpm;
+
       this.audioElement = this.elements[event.elementIndex];
 
       // Scroll the currently playing element into view
@@ -5138,6 +5166,10 @@ export default class Editor extends Vue {
 
   onAudioServiceStop() {
     this.audioElement = null;
+
+    if (this.playbackTimeInterval != null) {
+      clearInterval(this.playbackTimeInterval);
+    }
   }
 
   onFileMenuNewScore() {

@@ -28,6 +28,7 @@ export interface PlaybackSequenceEvent {
   type: 'note' | 'rest';
   duration: number;
   transportTime: number;
+  absoluteTime: number;
   elementIndex: number;
   bpm: number;
 }
@@ -216,6 +217,7 @@ export class PlaybackService {
 
     // Calculate times
     let time = 0;
+    let absoluteTime = 0;
     let beats = 0;
     let currentBpm = defaultBpm;
     let currentBeatLength = this.beatLengthFromBpm(currentBpm);
@@ -229,6 +231,9 @@ export class PlaybackService {
       time = beats * currentBeatLength;
       event.transportTime = time;
       beats += event.duration / currentBeatLength;
+
+      event.absoluteTime = absoluteTime;
+      absoluteTime += event.duration;
     }
 
     return workspace.events;
@@ -586,6 +591,7 @@ export class PlaybackService {
       bpm: workspace.bpm,
       duration: noteAtomNode.duration * workspace.beat,
       transportTime: 0,
+      absoluteTime: 0,
       elementIndex: noteAtomNode.elementIndex,
     };
 
@@ -606,6 +612,7 @@ export class PlaybackService {
       bpm: workspace.bpm,
       duration: restNode.duration * workspace.beat,
       transportTime: 0,
+      absoluteTime: 0,
       elementIndex: restNode.elementIndex,
     };
 

@@ -192,6 +192,12 @@
       <button class="icon-btn config" @click="$emit('open-playback-settings')">
         <img src="@/assets/icons/config.svg" width="32" height="32" />
       </button>
+      <span class="divider"></span>
+
+      <span>{{ playbackTimeDisplay }}</span>
+      <span class="space" />
+      <span>BPM = {{ playbackBpm }}</span>
+
       <span class="space" />
       <label class="right-space">{{ $t('toolbar:main.speed') }}</label>
       <select
@@ -262,6 +268,8 @@ export default class ToolbarMain extends Vue {
   @Prop() audioState!: AudioState;
   @Prop() audioOptions!: PlaybackOptions;
   @Prop() neumeKeyboard!: NeumeKeyboard;
+  @Prop() playbackTime!: number;
+  @Prop() playbackBpm!: number;
 
   Note = Note;
   RootSign = RootSign;
@@ -281,10 +289,13 @@ export default class ToolbarMain extends Vue {
     return this.zoomToFit ? 'Fit' : (this.zoom * 100).toFixed(0) + '%';
   }
 
-  get playButtonSrc() {
-    return this.audioState === AudioState.Playing
-      ? '@/assets/icons/audio-play.svg'
-      : '@/assets/icons/audio-play.svg';
+  get playbackTimeDisplay() {
+    const hours = Math.floor(this.playbackTime / 3600);
+    const minutes = Math.floor((this.playbackTime % 3600) / 60);
+    const seconds = Math.floor(this.playbackTime % 60);
+    const tenths = this.playbackTime.toFixed(1).split('.')[1];
+
+    return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}:${tenths}`;
   }
 
   get martyriaTooltip() {
@@ -394,6 +405,12 @@ export default class ToolbarMain extends Vue {
 
 .space {
   width: 16px;
+}
+
+.divider {
+  height: 32px;
+  border-right: 1px solid #666;
+  margin: 0 0.5rem;
 }
 
 .zoom {

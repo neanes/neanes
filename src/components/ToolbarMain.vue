@@ -196,30 +196,37 @@
 
       <span>{{ playbackTimeDisplay }}</span>
       <span class="space" />
-      <span>BPM = {{ playbackBpm }}</span>
+      <span>BPM = {{ playbackBpmDisplay }}</span>
 
       <span class="space" />
       <label class="right-space">{{ $t('toolbar:main.speed') }}</label>
-      <select
-        class="audio-speed"
-        :value="audioOptions.speed"
+      <input
+        class="audio-speed-slider"
+        type="range"
+        min=".1"
+        max="3"
+        step=".05"
         :disabled="audioState === AudioState.Playing"
-        @change="
+        :value="audioOptions.speed"
+        @input="
           $emit(
             'update:audioOptionsSpeed',
             ($event.target as HTMLInputElement).value,
           )
         "
-      >
-        <option value="0.25">0.25x</option>
-        <option value="0.5">0.5x</option>
-        <option value="0.75">0.75x</option>
-        <option value="1">1x</option>
-        <option value="1.25">1.25x</option>
-        <option value="1.5">1.5x</option>
-        <option value="1.75">1.75x</option>
-        <option value="2">2x</option>
-      </select>
+      />
+      <InputUnit
+        class="audio-speed"
+        unit="percent"
+        :min="10"
+        :max="300"
+        :step="1"
+        :precision="0"
+        :modelValue="audioOptions.speed"
+        :disabled="audioState === AudioState.Playing"
+        @update:modelValue="$emit('update:audioOptionsSpeed', $event)"
+      />
+      <span>%</span>
     </div>
     <span class="space"></span>
     <span class="space"></span>
@@ -232,6 +239,7 @@
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-facing-decorator';
 
+import InputUnit from '@/components/InputUnit.vue';
 import { LineBreakType } from '@/models/Element';
 import { EntryMode } from '@/models/EntryMode';
 import { Note, RootSign, TempoSign } from '@/models/Neumes';
@@ -242,7 +250,7 @@ import { NeumeKeyboard } from '@/services/NeumeKeyboard';
 import Neume from './Neume.vue';
 
 @Component({
-  components: { Neume },
+  components: { InputUnit, Neume },
   emits: [
     'add-auto-martyria',
     'add-drop-cap',
@@ -278,8 +286,8 @@ export default class ToolbarMain extends Vue {
   AudioState = AudioState;
   LineBreakType = LineBreakType;
 
-  showZoomMenu: boolean = false;
   showTempoMenu: boolean = false;
+  showZoomMenu: boolean = false;
 
   selectedTempoNeume: TempoSign | null = null;
 
@@ -289,6 +297,10 @@ export default class ToolbarMain extends Vue {
     return this.zoomToFit ? 'Fit' : (this.zoom * 100).toFixed(0) + '%';
   }
 
+  get speedDisplay() {
+    return (this.audioOptions.speed * 100).toFixed(0) + '%';
+  }
+
   get playbackTimeDisplay() {
     const hours = Math.floor(this.playbackTime / 3600);
     const minutes = Math.floor((this.playbackTime % 3600) / 60);
@@ -296,6 +308,10 @@ export default class ToolbarMain extends Vue {
     const tenths = this.playbackTime.toFixed(1).split('.')[1];
 
     return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}:${tenths}`;
+  }
+
+  get playbackBpmDisplay() {
+    return this.playbackBpm.toFixed(0);
   }
 
   get martyriaTooltip() {
@@ -494,6 +510,10 @@ label.right-space {
 }
 
 .audio-speed {
-  width: 3.5rem;
+  width: 2.5rem;
+}
+
+.audio-speed-slider {
+  width: 58px;
 }
 </style>

@@ -21,7 +21,7 @@ import { Unit } from '@/utils/Unit';
 })
 export default class InputUnit extends Vue {
   @Prop() modelValue!: number;
-  @Prop() unit!: 'pt' | 'in' | 'mm' | 'unitless';
+  @Prop() unit!: 'pt' | 'in' | 'mm' | 'percent' | 'unitless';
   @Prop({ default: false }) nullable!: boolean;
   /**
    * The minimum value allowed, in display units.
@@ -112,6 +112,8 @@ export default class InputUnit extends Vue {
         return Unit.fromInch(value);
       case 'mm':
         return Unit.fromMm(value);
+      case 'percent':
+        return Unit.fromPercent(value);
       case 'unitless':
         return value;
       default:
@@ -128,6 +130,8 @@ export default class InputUnit extends Vue {
         return Unit.toInch(value!);
       case 'mm':
         return Unit.toMm(value!);
+      case 'percent':
+        return Unit.toPercent(value!);
       case 'unitless':
         return value;
       default:

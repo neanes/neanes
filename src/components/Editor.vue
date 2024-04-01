@@ -5060,13 +5060,7 @@ export default class Editor extends Vue {
 
         this.audioService.play(this.playbackEvents, this.audioOptions, startAt);
 
-        if (this.playbackTimeInterval != null) {
-          clearInterval(this.playbackTimeInterval);
-        }
-
-        this.playbackTimeInterval = setInterval(() => {
-          this.selectedWorkspace.playbackTime += 0.1;
-        }, 100);
+        this.startPlaybackClock();
       } else {
         this.pauseAudio();
       }
@@ -5081,9 +5075,7 @@ export default class Editor extends Vue {
 
       this.playbackEvents = [];
 
-      if (this.playbackTimeInterval != null) {
-        clearInterval(this.playbackTimeInterval);
-      }
+      this.stopPlaybackClock();
     } catch (error) {
       console.error(error);
     }
@@ -5093,19 +5085,28 @@ export default class Editor extends Vue {
     try {
       this.audioService.togglePause();
 
-      if (this.playbackTimeInterval != null) {
-        clearInterval(this.playbackTimeInterval);
-      }
-
       if (this.audioService.state === AudioState.Paused) {
         this.audioElement = null;
+        this.stopPlaybackClock();
       } else {
-        this.playbackTimeInterval = setInterval(() => {
-          this.selectedWorkspace.playbackTime += 0.1;
-        }, 100);
+        this.startPlaybackClock();
       }
     } catch (error) {
       console.error(error);
+    }
+  }
+
+  startPlaybackClock() {
+    this.stopPlaybackClock();
+
+    this.playbackTimeInterval = setInterval(() => {
+      this.selectedWorkspace.playbackTime += 0.1;
+    }, 100);
+  }
+
+  stopPlaybackClock() {
+    if (this.playbackTimeInterval != null) {
+      clearInterval(this.playbackTimeInterval);
     }
   }
 
@@ -5165,9 +5166,7 @@ export default class Editor extends Vue {
   onAudioServiceStop() {
     this.audioElement = null;
 
-    if (this.playbackTimeInterval != null) {
-      clearInterval(this.playbackTimeInterval);
-    }
+    this.stopPlaybackClock();
   }
 
   onFileMenuNewScore() {

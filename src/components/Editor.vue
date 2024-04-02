@@ -1317,6 +1317,7 @@ export default class Editor extends Vue {
 
         if (event) {
           this.audioService.jumpToEvent(event);
+          this.selectedWorkspace.playbackTime = event.absoluteTime;
         }
       } else if (this.audioService.state === AudioState.Paused) {
         this.stopAudio();
@@ -5059,6 +5060,10 @@ export default class Editor extends Vue {
         );
 
         this.audioService.play(this.playbackEvents, this.audioOptions, startAt);
+
+        if (startAt) {
+          this.selectedWorkspace.playbackTime = startAt.absoluteTime;
+        }
 
         this.startPlaybackClock();
       } else {

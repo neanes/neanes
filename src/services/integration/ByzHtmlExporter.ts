@@ -452,6 +452,17 @@ export class ByzHtmlExporter {
 
     inner += this.exportNeume(element.quantitativeNeume, indentation + 2);
 
+    if (element.stavros) {
+      inner += this.exportNeume(
+        VocalExpressionNeume.Cross_Top,
+        indentation + 2,
+        {
+          x: element.stavrosOffsetX,
+          y: element.stavrosOffsetY,
+        },
+      );
+    }
+
     inner += this.exportNeume(element.vocalExpressionNeume, indentation + 2, {
       x: element.vocalExpressionNeumeOffsetX,
       y: element.vocalExpressionNeumeOffsetY,
@@ -1082,7 +1093,7 @@ export class ByzHtmlExporter {
     map.set('yfenBelow', 'x-yfen-below');
     map.set('stavros', 'x-stavros');
     map.set('breath', 'x-breath');
-    map.set('stavrosAbove', 'x-stavros-a');
+    map.set('stavrosAbove', 'x-stavros-above');
     map.set('klasmaAbove', 'x-kl');
     map.set('klasmaBelow', 'x-kl-b');
     map.set('apli', 'x-apli');
@@ -1285,12 +1296,12 @@ export class ByzHtmlExporter {
     map.set('barlineShortSingle', 'x-bar-s');
     map.set('barlineShortDouble', 'x-bar2-s');
     map.set('barlineShortTheseos', 'x-bar-th-s');
-    map.set('barlineSingleAbove', 'x-bar');
-    map.set('barlineDoubleAbove', 'x-bar2');
-    map.set('barlineTheseosAbove', 'x-bar-th');
-    map.set('barlineShortSingleAbove', 'x-bar-s');
-    map.set('barlineShortDoubleAbove', 'x-bar2-s');
-    map.set('barlineShortTheseosAbove', 'x-bar-th-s');
+    map.set('barlineSingleAbove', 'x-bar-a');
+    map.set('barlineDoubleAbove', 'x-bar2-a');
+    map.set('barlineTheseosAbove', 'x-bar-th-a');
+    map.set('barlineShortSingleAbove', 'x-bar-s-a');
+    map.set('barlineShortDoubleAbove', 'x-bar2-s-a');
+    map.set('barlineShortTheseosAbove', 'x-bar-th-s-a');
     map.set('measureNumber2', 'x-mn2');
     map.set('measureNumber3', 'x-mn3');
     map.set('measureNumber4', 'x-mn4');

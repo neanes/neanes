@@ -302,6 +302,8 @@ export default class ToolbarMain extends Vue {
   }
 
   get playbackTimeDisplay() {
+    // Round to the nearest tenth to eliminate floating point errors
+    // E.g. 4.999999... should give 0:00:05:0, instead of 0:00:04:0
     const roundedTime = Math.round(this.playbackTime * 10) / 10;
 
     const hours = Math.floor(roundedTime / 3600);

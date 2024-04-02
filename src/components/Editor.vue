@@ -5132,6 +5132,9 @@ export default class Editor extends Vue {
     speed = Math.min(3, speed);
     speed = +speed.toFixed(2);
 
+    this.selectedWorkspace.playbackBpm /= this.audioOptions.speed;
+    this.selectedWorkspace.playbackBpm *= speed;
+
     this.audioOptions.speed = speed;
 
     this.saveAudioOptions();

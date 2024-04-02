@@ -302,10 +302,12 @@ export default class ToolbarMain extends Vue {
   }
 
   get playbackTimeDisplay() {
-    const hours = Math.floor(this.playbackTime / 3600);
-    const minutes = Math.floor((this.playbackTime % 3600) / 60);
-    const seconds = Math.floor(this.playbackTime % 60);
-    const tenths = this.playbackTime.toFixed(1).split('.')[1];
+    const roundedTime = Math.round(this.playbackTime * 10) / 10;
+
+    const hours = Math.floor(roundedTime / 3600);
+    const minutes = Math.floor((roundedTime % 3600) / 60);
+    const seconds = Math.floor(roundedTime % 60);
+    const tenths = roundedTime.toFixed(1).split('.')[1];
 
     return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}:${tenths}`;
   }

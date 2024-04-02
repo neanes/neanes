@@ -118,6 +118,12 @@ export class ByzHtmlExporter {
 
     const body = this.exportElements(score.staff.elements, 4);
 
+    let injectRtl = '';
+
+    if (score.pageSetup.melkiteRtl) {
+      injectRtl = `<script>byzhtml.options.defaultFontFamily = 'NeanesRTL'</script>`;
+    }
+
     const result = `<html>
   <head>
     <link
@@ -126,6 +132,8 @@ export class ByzHtmlExporter {
     />
     
     <script src="https://cdn.jsdelivr.net/gh/danielgarthur/byzhtml@${byzhtmlVersion}/dist/byzhtml.min.js"></script>
+
+    ${injectRtl}
 
     <meta
       name="viewport"
@@ -148,6 +156,8 @@ export class ByzHtmlExporter {
 
   exportPageSetup(pageSetup: PageSetup) {
     const orientation = pageSetup.landscape ? 'landscape' : 'portrait';
+
+    const rtlParagraph = pageSetup.melkiteRtl ? 'direction: rtl' : '';
 
     const style = `:root {
         --byz-neume-font-size: ${Unit.toPt(pageSetup.neumeDefaultFontSize)}pt;
@@ -301,6 +311,7 @@ export class ByzHtmlExporter {
         flex-wrap: wrap;
         justify-content: space-between;
         margin-bottom: ${Unit.toPt(pageSetup.neumeDefaultFontSize)}pt;
+        ${rtlParagraph}
       }
 
       .${this.config.classNeumeParagraph}:last-child {

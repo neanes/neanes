@@ -121,7 +121,10 @@ export class ByzHtmlExporter {
     let injectRtl = '';
 
     if (score.pageSetup.melkiteRtl) {
-      injectRtl = `<script>byzhtml.options.defaultFontFamily = 'NeanesRTL'</script>`;
+      injectRtl = `<script>      
+  byzhtml.options.defaultFontFamily = 'NeanesRTL';
+  byzhtml.options.melkiteRtl = true;
+</script>`;
     }
 
     const result = `<html>
@@ -158,13 +161,14 @@ export class ByzHtmlExporter {
     const orientation = pageSetup.landscape ? 'landscape' : 'portrait';
 
     const rtlParagraph = pageSetup.melkiteRtl ? 'direction: rtl' : '';
+    const lyricOffsetH = pageSetup.melkiteRtl ? '0' : '3.6pt';
 
     const style = `:root {
         --byz-neume-font-size: ${Unit.toPt(pageSetup.neumeDefaultFontSize)}pt;
         
         --byz-lyric-font-family: ${pageSetup.lyricsDefaultFontFamily};
         --byz-lyric-font-size: ${Unit.toPt(pageSetup.lyricsDefaultFontSize)}pt;
-        --byz-lyric-offset-h: 3.6pt;
+        --byz-lyric-offset-h: ${lyricOffsetH};
         --byz-lyric-offset-v: ${Unit.toPt(pageSetup.lyricsVerticalOffset)}pt;
 
         --byz-drop-cap-font-family: ${pageSetup.dropCapDefaultFontFamily};

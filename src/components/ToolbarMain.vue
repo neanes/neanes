@@ -196,7 +196,7 @@
 
       <span>{{ playbackTimeDisplay }}</span>
       <span class="space" />
-      <span>BPM = {{ playbackBpmDisplay }}</span>
+      <span class="label-bpm">BPM = {{ playbackBpmDisplay }}</span>
 
       <span class="space" />
       <label class="right-space">{{ $t('toolbar:main.speed') }}</label>
@@ -515,5 +515,9 @@ label.right-space {
 
 .audio-speed-slider {
   width: 58px;
+}
+
+.label-bpm {
+  width: 5rem;
 }
 </style>

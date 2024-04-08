@@ -60,7 +60,7 @@
     "@vitejs/plugin-vue": "^5.0.4",
     "@vue/eslint-config-prettier": "^9.0.0",
     "@vue/eslint-config-typescript": "^13.0.0",
-    "electron": "^29.1.6",
+    "electron": "^29.2.0",
     "electron-builder": "^24.13.3",
     "electron-updater": "^6.1.8",
     "eslint": "^8.57.0",

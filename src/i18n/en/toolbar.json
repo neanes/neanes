@@ -66,5 +66,8 @@
     "measureNumber": "Measure Number",
     "noteIndicator": "Note Indicator",
     "isonIndicator": "Ison Indicator"
+  },
+  "textbox": {
+    "multi": "Multipanel"
   }
 }

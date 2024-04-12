@@ -898,6 +898,8 @@ export class LayoutService {
 
     if (textBoxElement.inline) {
       textBoxElement.height = neumeHeight;
+    } else if (textBoxElement.multi) {
+      textBoxElement.height = fontHeight;
     } else {
       let height = 0;
 

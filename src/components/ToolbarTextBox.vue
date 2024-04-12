@@ -140,6 +140,22 @@
         :title="$t('toolbar:common.insertGorthmikon')"
       />
     </button>
+
+    <template v-if="!element.inline">
+      <span class="divider" />
+
+      <input
+        id="toolbar-text-box-multi"
+        type="checkbox"
+        :checked="element.multi"
+        @change="
+          $emit('update:multi', ($event.target as HTMLInputElement).checked)
+        "
+      />
+      <label for="toolbar-text-box-multi">{{
+        $t('toolbar:textbox.multi')
+      }}</label></template
+    >
   </div>
 </template>
 
@@ -164,6 +180,7 @@ import { TextBoxAlignment, TextBoxElement } from '@/models/Element';
     'update:fontSize',
     'update:italic',
     'update:lineHeight',
+    'update:multi',
     'update:strokeWidth',
     'update:underline',
     'update:useDefaultStyle',

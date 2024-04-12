@@ -122,6 +122,24 @@
                       $event,
                     )
                   "
+                  @update:contentLeft="
+                    updateTextBoxContentLeft(
+                      getHeaderForPageIndex(pageIndex)!,
+                      $event,
+                    )
+                  "
+                  @update:contentCenter="
+                    updateTextBoxContentCenter(
+                      getHeaderForPageIndex(pageIndex)!,
+                      $event,
+                    )
+                  "
+                  @update:contentRight="
+                    updateTextBoxContentRight(
+                      getHeaderForPageIndex(pageIndex)!,
+                      $event,
+                    )
+                  "
                 />
               </template>
               <div
@@ -420,6 +438,24 @@
                       $event,
                     )
                   "
+                  @update:contentLeft="
+                    updateTextBoxContentLeft(
+                      getFooterForPageIndex(pageIndex)!,
+                      $event,
+                    )
+                  "
+                  @update:contentCenter="
+                    updateTextBoxContentCenter(
+                      getFooterForPageIndex(pageIndex)!,
+                      $event,
+                    )
+                  "
+                  @update:contentRight="
+                    updateTextBoxContentRight(
+                      getFooterForPageIndex(pageIndex)!,
+                      $event,
+                    )
+                  "
                 />
               </template>
             </template>
@@ -431,6 +467,7 @@
       <ToolbarTextBox
         :element="selectedTextBoxElement"
         :fonts="fonts"
+        @update:multi="updateTextBoxMulti(selectedTextBoxElement, $event)"
         @update:useDefaultStyle="
           updateTextBoxUseDefaultStyle(selectedTextBoxElement, $event)
         "
@@ -4506,11 +4543,27 @@ export default class Editor extends Vue {
     this.updateTextBox(element, { content });
   }
 
+  updateTextBoxContentLeft(element: TextBoxElement, contentLeft: string) {
+    this.updateTextBox(element, { contentLeft });
+  }
+
+  updateTextBoxContentCenter(element: TextBoxElement, contentCenter: string) {
+    this.updateTextBox(element, { contentCenter });
+  }
+
+  updateTextBoxContentRight(element: TextBoxElement, contentRight: string) {
+    this.updateTextBox(element, { contentRight });
+  }
+
   updateTextBoxUseDefaultStyle(
     element: TextBoxElement,
     useDefaultStyle: boolean,
   ) {
     this.updateTextBox(element, { useDefaultStyle });
+  }
+
+  updateTextBoxMulti(element: TextBoxElement, multi: boolean) {
+    this.updateTextBox(element, { multi });
   }
 
   updateTextBoxFontSize(element: TextBoxElement, fontSize: number) {
@@ -6148,6 +6201,10 @@ export default class Editor extends Vue {
 }
 
 .page.print .text-box-container {
+  border: none;
+}
+
+.page.print :deep(.text-box.multi) {
   border: none;
 }
 

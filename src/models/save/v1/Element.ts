@@ -167,9 +167,13 @@ export class TextBoxElement extends ScoreElement {
   public alignment: TextBoxAlignment = TextBoxAlignment.Left;
   public color: string = '#000000';
   public content: string = '';
+  public contentLeft: string = '';
+  public contentCenter: string = '';
+  public contentRight: string = '';
   public fontSize: number = 16;
   public fontFamily: string = 'Omega';
   public strokeWidth: number = 0;
+  public multi: boolean | undefined = undefined;
   public inline: boolean | undefined = undefined;
   public bold: boolean | undefined = undefined;
   public italic: boolean | undefined = undefined;

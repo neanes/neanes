@@ -714,9 +714,13 @@ export class TextBoxElement extends ScoreElement {
   public alignment: TextBoxAlignment = TextBoxAlignment.Left;
   public color: string = '#000000';
   public content: string = '';
+  public contentLeft: string = '';
+  public contentCenter: string = '';
+  public contentRight: string = '';
   public fontSize: number = 16;
   public fontFamily: string = 'Source Serif';
   public strokeWidth: number = 0;
+  public multi: boolean = false;
   public inline: boolean = false;
   public bold: boolean = false;
   public italic: boolean = false;

@@ -78,43 +78,45 @@
     >
       <u>U</u>
     </button>
-    <span class="space"></span>
-    <button
-      class="icon-btn"
-      :class="{ selected: element.alignment === TextBoxAlignment.Left }"
-      @click="$emit('update:alignment', TextBoxAlignment.Left)"
-    >
-      <img
-        src="@/assets/icons/alignleft.svg"
-        width="32"
-        height="32"
-        :title="$t('toolbar:common.alignLeft')"
-      />
-    </button>
-    <button
-      class="icon-btn"
-      :class="{ selected: element.alignment === TextBoxAlignment.Center }"
-      @click="$emit('update:alignment', TextBoxAlignment.Center)"
-    >
-      <img
-        src="@/assets/icons/aligncenter.svg"
-        width="32"
-        height="32"
-        :title="$t('toolbar:common.alignCenter')"
-      />
-    </button>
-    <button
-      class="icon-btn"
-      :class="{ selected: element.alignment === TextBoxAlignment.Right }"
-      @click="$emit('update:alignment', TextBoxAlignment.Right)"
-    >
-      <img
-        src="@/assets/icons/alignright.svg"
-        width="32"
-        height="32"
-        :title="$t('toolbar:common.alignRight')"
-      />
-    </button>
+    <template v-if="!element.multipanel">
+      <span class="space"></span>
+      <button
+        class="icon-btn"
+        :class="{ selected: element.alignment === TextBoxAlignment.Left }"
+        @click="$emit('update:alignment', TextBoxAlignment.Left)"
+      >
+        <img
+          src="@/assets/icons/alignleft.svg"
+          width="32"
+          height="32"
+          :title="$t('toolbar:common.alignLeft')"
+        />
+      </button>
+      <button
+        class="icon-btn"
+        :class="{ selected: element.alignment === TextBoxAlignment.Center }"
+        @click="$emit('update:alignment', TextBoxAlignment.Center)"
+      >
+        <img
+          src="@/assets/icons/aligncenter.svg"
+          width="32"
+          height="32"
+          :title="$t('toolbar:common.alignCenter')"
+        />
+      </button>
+      <button
+        class="icon-btn"
+        :class="{ selected: element.alignment === TextBoxAlignment.Right }"
+        @click="$emit('update:alignment', TextBoxAlignment.Right)"
+      >
+        <img
+          src="@/assets/icons/alignright.svg"
+          width="32"
+          height="32"
+          :title="$t('toolbar:common.alignRight')"
+        />
+      </button>
+    </template>
     <template v-if="!element.useDefaultStyle">
       <span class="space" />
       <label class="right-space">{{ $t('toolbar:common.outline') }}</label>
@@ -140,6 +142,25 @@
         :title="$t('toolbar:common.insertGorthmikon')"
       />
     </button>
+
+    <template v-if="!element.inline">
+      <span class="divider" />
+
+      <input
+        id="toolbar-text-box-multipanel"
+        type="checkbox"
+        :checked="element.multipanel"
+        @change="
+          $emit(
+            'update:multipanel',
+            ($event.target as HTMLInputElement).checked,
+          )
+        "
+      />
+      <label for="toolbar-text-box-multipanel">{{
+        $t('toolbar:textbox.multipanel')
+      }}</label></template
+    >
   </div>
 </template>
 
@@ -164,6 +185,7 @@ import { TextBoxAlignment, TextBoxElement } from '@/models/Element';
     'update:fontSize',
     'update:italic',
     'update:lineHeight',
+    'update:multipanel',
     'update:strokeWidth',
     'update:underline',
     'update:useDefaultStyle',

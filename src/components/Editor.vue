@@ -122,6 +122,24 @@
                       $event,
                     )
                   "
+                  @update:contentLeft="
+                    updateTextBoxContentLeft(
+                      getHeaderForPageIndex(pageIndex)!,
+                      $event,
+                    )
+                  "
+                  @update:contentCenter="
+                    updateTextBoxContentCenter(
+                      getHeaderForPageIndex(pageIndex)!,
+                      $event,
+                    )
+                  "
+                  @update:contentRight="
+                    updateTextBoxContentRight(
+                      getHeaderForPageIndex(pageIndex)!,
+                      $event,
+                    )
+                  "
                 />
               </template>
               <div
@@ -318,6 +336,24 @@
                       @update:content="
                         updateTextBoxContent(element as TextBoxElement, $event)
                       "
+                      @update:contentLeft="
+                        updateTextBoxContentLeft(
+                          element as TextBoxElement,
+                          $event,
+                        )
+                      "
+                      @update:contentCenter="
+                        updateTextBoxContentCenter(
+                          element as TextBoxElement,
+                          $event,
+                        )
+                      "
+                      @update:contentRight="
+                        updateTextBoxContentRight(
+                          element as TextBoxElement,
+                          $event,
+                        )
+                      "
                     />
                   </template>
                   <template v-if="isModeKeyElement(element)">
@@ -420,6 +456,24 @@
                       $event,
                     )
                   "
+                  @update:contentLeft="
+                    updateTextBoxContentLeft(
+                      getFooterForPageIndex(pageIndex)!,
+                      $event,
+                    )
+                  "
+                  @update:contentCenter="
+                    updateTextBoxContentCenter(
+                      getFooterForPageIndex(pageIndex)!,
+                      $event,
+                    )
+                  "
+                  @update:contentRight="
+                    updateTextBoxContentRight(
+                      getFooterForPageIndex(pageIndex)!,
+                      $event,
+                    )
+                  "
                 />
               </template>
             </template>
@@ -431,6 +485,9 @@
       <ToolbarTextBox
         :element="selectedTextBoxElement"
         :fonts="fonts"
+        @update:multipanel="
+          updateTextBoxMultipanel(selectedTextBoxElement, $event)
+        "
         @update:useDefaultStyle="
           updateTextBoxUseDefaultStyle(selectedTextBoxElement, $event)
         "
@@ -4506,11 +4563,27 @@ export default class Editor extends Vue {
     this.updateTextBox(element, { content });
   }
 
+  updateTextBoxContentLeft(element: TextBoxElement, contentLeft: string) {
+    this.updateTextBox(element, { contentLeft });
+  }
+
+  updateTextBoxContentCenter(element: TextBoxElement, contentCenter: string) {
+    this.updateTextBox(element, { contentCenter });
+  }
+
+  updateTextBoxContentRight(element: TextBoxElement, contentRight: string) {
+    this.updateTextBox(element, { contentRight });
+  }
+
   updateTextBoxUseDefaultStyle(
     element: TextBoxElement,
     useDefaultStyle: boolean,
   ) {
     this.updateTextBox(element, { useDefaultStyle });
+  }
+
+  updateTextBoxMultipanel(element: TextBoxElement, multipanel: boolean) {
+    this.updateTextBox(element, { multipanel });
   }
 
   updateTextBoxFontSize(element: TextBoxElement, fontSize: number) {
@@ -6148,6 +6221,10 @@ export default class Editor extends Vue {
 }
 
 .page.print .text-box-container {
+  border: none;
+}
+
+.page.print :deep(.text-box.multipanel) {
   border: none;
 }
 

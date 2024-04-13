@@ -448,6 +448,12 @@ export class SaveService {
     element.alignment = e.alignment;
     element.color = e.color;
     element.content = e.content;
+    if (e.multipanel) {
+      element.contentLeft = e.contentLeft;
+      element.contentCenter = e.contentCenter;
+      element.contentRight = e.contentRight;
+      element.multipanel = true;
+    }
     element.fontFamily = e.fontFamily;
     element.fontSize = e.fontSize;
     element.strokeWidth = e.strokeWidth;
@@ -1067,6 +1073,15 @@ export class SaveService {
     element.alignment = e.alignment;
     element.color = e.color;
     element.content = e.content;
+
+    if (e.multipanel) {
+      element.contentLeft = e.contentLeft;
+      element.contentCenter = e.contentCenter;
+      element.contentRight = e.contentRight;
+    }
+
+    element.multipanel = e.multipanel === true;
+
     element.fontFamily = e.fontFamily;
     element.fontSize = e.fontSize;
     element.inline = e.inline === true;

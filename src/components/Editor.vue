@@ -336,6 +336,24 @@
                       @update:content="
                         updateTextBoxContent(element as TextBoxElement, $event)
                       "
+                      @update:contentLeft="
+                        updateTextBoxContentLeft(
+                          element as TextBoxElement,
+                          $event,
+                        )
+                      "
+                      @update:contentCenter="
+                        updateTextBoxContentCenter(
+                          element as TextBoxElement,
+                          $event,
+                        )
+                      "
+                      @update:contentRight="
+                        updateTextBoxContentRight(
+                          element as TextBoxElement,
+                          $event,
+                        )
+                      "
                     />
                   </template>
                   <template v-if="isModeKeyElement(element)">

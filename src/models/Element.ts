@@ -720,7 +720,7 @@ export class TextBoxElement extends ScoreElement {
   public fontSize: number = 16;
   public fontFamily: string = 'Source Serif';
   public strokeWidth: number = 0;
-  public multi: boolean = false;
+  public multipanel: boolean = false;
   public inline: boolean = false;
   public bold: boolean = false;
   public italic: boolean = false;

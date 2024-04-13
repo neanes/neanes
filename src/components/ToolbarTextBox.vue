@@ -78,7 +78,7 @@
     >
       <u>U</u>
     </button>
-    <template v-if="!element.multi">
+    <template v-if="!element.multipanel">
       <span class="space"></span>
       <button
         class="icon-btn"
@@ -147,15 +147,18 @@
       <span class="divider" />
 
       <input
-        id="toolbar-text-box-multi"
+        id="toolbar-text-box-multipanel"
         type="checkbox"
-        :checked="element.multi"
+        :checked="element.multipanel"
         @change="
-          $emit('update:multi', ($event.target as HTMLInputElement).checked)
+          $emit(
+            'update:multipanel',
+            ($event.target as HTMLInputElement).checked,
+          )
         "
       />
-      <label for="toolbar-text-box-multi">{{
-        $t('toolbar:textbox.multi')
+      <label for="toolbar-text-box-multipanel">{{
+        $t('toolbar:textbox.multipanel')
       }}</label></template
     >
   </div>
@@ -182,7 +185,7 @@ import { TextBoxAlignment, TextBoxElement } from '@/models/Element';
     'update:fontSize',
     'update:italic',
     'update:lineHeight',
-    'update:multi',
+    'update:multipanel',
     'update:strokeWidth',
     'update:underline',
     'update:useDefaultStyle',

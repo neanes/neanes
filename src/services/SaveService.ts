@@ -448,11 +448,11 @@ export class SaveService {
     element.alignment = e.alignment;
     element.color = e.color;
     element.content = e.content;
-    if (e.multi) {
+    if (e.multipanel) {
       element.contentLeft = e.contentLeft;
       element.contentCenter = e.contentCenter;
       element.contentRight = e.contentRight;
-      element.multi = true;
+      element.multipanel = true;
     }
     element.fontFamily = e.fontFamily;
     element.fontSize = e.fontSize;
@@ -1074,13 +1074,13 @@ export class SaveService {
     element.color = e.color;
     element.content = e.content;
 
-    if (e.multi) {
+    if (e.multipanel) {
       element.contentLeft = e.contentLeft;
       element.contentCenter = e.contentCenter;
       element.contentRight = e.contentRight;
     }
 
-    element.multi = e.multi === true;
+    element.multipanel = e.multipanel === true;
 
     element.fontFamily = e.fontFamily;
     element.fontSize = e.fontSize;

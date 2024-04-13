@@ -5,10 +5,10 @@
     @click="$emit('select-single')"
   >
     <span class="handle"></span>
-    <div class="text-box-multi-container" v-if="element.multi">
+    <div class="text-box-multipanel-container" v-if="element.multipanel">
       <ContentEditable
         ref="text"
-        class="text-box multi left"
+        class="text-box multipanel left"
         :class="textBoxClass"
         :style="textBoxStyle"
         :content="contentLeft"
@@ -17,7 +17,7 @@
       ></ContentEditable>
       <ContentEditable
         ref="text"
-        class="text-box multi center"
+        class="text-box multipanel center"
         :class="textBoxClass"
         :style="textBoxStyle"
         :content="contentCenter"
@@ -26,7 +26,7 @@
       ></ContentEditable>
       <ContentEditable
         ref="text"
-        class="text-box multi right"
+        class="text-box multipanel right"
         :class="textBoxClass"
         :style="textBoxStyle"
         :content="contentRight"
@@ -142,7 +142,7 @@ export default class TextBox extends Vue {
 
   get textBoxStyle() {
     const style: any = {
-      width: !this.element.multi ? this.width : undefined,
+      width: !this.element.multipanel ? this.width : undefined,
       height: withZoom(this.element.height),
     };
 
@@ -209,7 +209,7 @@ export default class TextBox extends Vue {
   min-height: 10px;
 }
 
-.text-box-multi-container {
+.text-box-multipanel-container {
   display: flex;
 }
 
@@ -233,7 +233,7 @@ export default class TextBox extends Vue {
   text-decoration: underline;
 }
 
-.text-box.multi {
+.text-box.multipanel {
   border: 1px dotted black;
   box-sizing: border-box;
   min-width: 2.5rem;
@@ -269,7 +269,7 @@ export default class TextBox extends Vue {
     display: none !important;
   }
 
-  .text-box.multi {
+  .text-box.multipanel {
     border: none !important;
   }
 }

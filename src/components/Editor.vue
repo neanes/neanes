@@ -485,7 +485,9 @@
       <ToolbarTextBox
         :element="selectedTextBoxElement"
         :fonts="fonts"
-        @update:multi="updateTextBoxMulti(selectedTextBoxElement, $event)"
+        @update:multipanel="
+          updateTextBoxMultipanel(selectedTextBoxElement, $event)
+        "
         @update:useDefaultStyle="
           updateTextBoxUseDefaultStyle(selectedTextBoxElement, $event)
         "
@@ -4580,8 +4582,8 @@ export default class Editor extends Vue {
     this.updateTextBox(element, { useDefaultStyle });
   }
 
-  updateTextBoxMulti(element: TextBoxElement, multi: boolean) {
-    this.updateTextBox(element, { multi });
+  updateTextBoxMultipanel(element: TextBoxElement, multipanel: boolean) {
+    this.updateTextBox(element, { multipanel });
   }
 
   updateTextBoxFontSize(element: TextBoxElement, fontSize: number) {
@@ -6222,7 +6224,7 @@ export default class Editor extends Vue {
   border: none;
 }
 
-.page.print :deep(.text-box.multi) {
+.page.print :deep(.text-box.multipanel) {
   border: none;
 }
 

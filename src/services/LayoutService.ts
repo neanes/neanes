@@ -898,7 +898,7 @@ export class LayoutService {
 
     if (textBoxElement.inline) {
       textBoxElement.height = neumeHeight;
-    } else if (textBoxElement.multi) {
+    } else if (textBoxElement.multipanel) {
       const height = Math.max(
         LayoutService.calculateTextBoxHeight(
           textBoxElement.contentLeft,

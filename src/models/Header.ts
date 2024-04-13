@@ -5,7 +5,7 @@ export class Header {
 
   constructor() {
     const textbox = new TextBoxElement();
-    textbox.multi = true;
+    textbox.multipanel = true;
     this.elements = [textbox];
   }
 }

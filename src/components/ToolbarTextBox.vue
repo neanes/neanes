@@ -78,43 +78,45 @@
     >
       <u>U</u>
     </button>
-    <span class="space"></span>
-    <button
-      class="icon-btn"
-      :class="{ selected: element.alignment === TextBoxAlignment.Left }"
-      @click="$emit('update:alignment', TextBoxAlignment.Left)"
-    >
-      <img
-        src="@/assets/icons/alignleft.svg"
-        width="32"
-        height="32"
-        :title="$t('toolbar:common.alignLeft')"
-      />
-    </button>
-    <button
-      class="icon-btn"
-      :class="{ selected: element.alignment === TextBoxAlignment.Center }"
-      @click="$emit('update:alignment', TextBoxAlignment.Center)"
-    >
-      <img
-        src="@/assets/icons/aligncenter.svg"
-        width="32"
-        height="32"
-        :title="$t('toolbar:common.alignCenter')"
-      />
-    </button>
-    <button
-      class="icon-btn"
-      :class="{ selected: element.alignment === TextBoxAlignment.Right }"
-      @click="$emit('update:alignment', TextBoxAlignment.Right)"
-    >
-      <img
-        src="@/assets/icons/alignright.svg"
-        width="32"
-        height="32"
-        :title="$t('toolbar:common.alignRight')"
-      />
-    </button>
+    <template v-if="!element.multi">
+      <span class="space"></span>
+      <button
+        class="icon-btn"
+        :class="{ selected: element.alignment === TextBoxAlignment.Left }"
+        @click="$emit('update:alignment', TextBoxAlignment.Left)"
+      >
+        <img
+          src="@/assets/icons/alignleft.svg"
+          width="32"
+          height="32"
+          :title="$t('toolbar:common.alignLeft')"
+        />
+      </button>
+      <button
+        class="icon-btn"
+        :class="{ selected: element.alignment === TextBoxAlignment.Center }"
+        @click="$emit('update:alignment', TextBoxAlignment.Center)"
+      >
+        <img
+          src="@/assets/icons/aligncenter.svg"
+          width="32"
+          height="32"
+          :title="$t('toolbar:common.alignCenter')"
+        />
+      </button>
+      <button
+        class="icon-btn"
+        :class="{ selected: element.alignment === TextBoxAlignment.Right }"
+        @click="$emit('update:alignment', TextBoxAlignment.Right)"
+      >
+        <img
+          src="@/assets/icons/alignright.svg"
+          width="32"
+          height="32"
+          :title="$t('toolbar:common.alignRight')"
+        />
+      </button>
+    </template>
     <template v-if="!element.useDefaultStyle">
       <span class="space" />
       <label class="right-space">{{ $t('toolbar:common.outline') }}</label>

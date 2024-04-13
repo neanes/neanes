@@ -765,6 +765,9 @@ export class TextBoxElement extends ScoreElement {
       alignment: this.alignment,
       color: this.color,
       content: this.content,
+      contentLeft: this.contentLeft,
+      contentCenter: this.contentCenter,
+      contentRight: this.contentRight,
       fontSize: this.fontSize,
       fontFamily: this.fontFamily,
       strokeWidth: this.strokeWidth,
@@ -773,6 +776,7 @@ export class TextBoxElement extends ScoreElement {
       italic: this.italic,
       underline: this.underline,
       useDefaultStyle: this.useDefaultStyle,
+      multipanel: this.multipanel,
     } as Partial<TextBoxElement>;
   }
 

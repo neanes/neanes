@@ -899,7 +899,22 @@ export class LayoutService {
     if (textBoxElement.inline) {
       textBoxElement.height = neumeHeight;
     } else if (textBoxElement.multi) {
-      textBoxElement.height = fontHeight;
+      const height = Math.max(
+        LayoutService.calculateTextBoxHeight(
+          textBoxElement.contentLeft,
+          fontHeight,
+        ),
+        LayoutService.calculateTextBoxHeight(
+          textBoxElement.contentCenter,
+          fontHeight,
+        ),
+        LayoutService.calculateTextBoxHeight(
+          textBoxElement.contentRight,
+          fontHeight,
+        ),
+      );
+
+      textBoxElement.height = Math.max(height, fontHeight);
     } else {
       let height = 0;
 
@@ -931,6 +946,22 @@ export class LayoutService {
     }
 
     return elementWidthPx;
+  }
+
+  private static calculateTextBoxHeight(content: string, fontHeight: number) {
+    const lines = content.split(/(?:\r\n|\r|\n)/g);
+
+    let height = 0;
+
+    for (let i = 0; i < lines.length; i++) {
+      // If the last line is blank, don't include the height
+      if (i === lines.length - 1 && lines[i] === '') {
+        continue;
+      }
+      height += fontHeight;
+    }
+
+    return height;
   }
 
   private static saveElementState(element: ScoreElement) {

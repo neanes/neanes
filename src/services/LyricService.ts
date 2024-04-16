@@ -4,6 +4,7 @@ import {
   NoteElement,
   ScoreElement,
 } from '@/models/Element';
+import { QuantitativeNeume } from '@/models/Neumes';
 
 export class LyricService {
   extractLyrics(elements: ScoreElement[]): string {
@@ -18,7 +19,10 @@ export class LyricService {
     for (let i = 0; i < noteElements.length; i++) {
       const note = noteElements[i] as NoteElement;
 
-      if (!note.isMelisma || note.isMelismaStart) {
+      if (
+        note.acceptsLyrics !== AcceptsLyricsOption.MelismaOnly &&
+        (!note.isMelisma || note.isMelismaStart)
+      ) {
         if (needSpace) {
           lyrics += ' ';
         }
@@ -47,6 +51,33 @@ export class LyricService {
     }
 
     return lyrics.trimEnd();
+  }
+
+  getEffectiveAcceptsLyrics(note: NoteElement) {
+    let acceptsLyrics = note.acceptsLyrics;
+
+    if (note.acceptsLyrics === AcceptsLyricsOption.Default) {
+      const noLyricsAccepted = [
+        QuantitativeNeume.Cross,
+        QuantitativeNeume.Breath,
+        QuantitativeNeume.VareiaDotted,
+        QuantitativeNeume.VareiaDotted2,
+        QuantitativeNeume.VareiaDotted3,
+        QuantitativeNeume.VareiaDotted4,
+      ];
+
+      const melismaOnly = [QuantitativeNeume.Kentemata];
+
+      if (noLyricsAccepted.includes(note.quantitativeNeume)) {
+        acceptsLyrics = AcceptsLyricsOption.No;
+      } else if (melismaOnly.includes(note.quantitativeNeume)) {
+        acceptsLyrics = AcceptsLyricsOption.MelismaOnly;
+      } else {
+        acceptsLyrics = AcceptsLyricsOption.Yes;
+      }
+    }
+
+    return acceptsLyrics;
   }
 }
 

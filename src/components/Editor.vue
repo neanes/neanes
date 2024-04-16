@@ -4650,24 +4650,7 @@ export default class Editor extends Vue {
 
       let token = '';
 
-      let acceptsLyrics = note.acceptsLyrics;
-
-      if (note.acceptsLyrics === AcceptsLyricsOption.Default) {
-        const noLyricsAccepted = [
-          QuantitativeNeume.Cross,
-          QuantitativeNeume.Breath,
-          QuantitativeNeume.VareiaDotted,
-          QuantitativeNeume.VareiaDotted2,
-          QuantitativeNeume.VareiaDotted3,
-          QuantitativeNeume.VareiaDotted4,
-        ];
-
-        if (noLyricsAccepted.includes(note.quantitativeNeume)) {
-          acceptsLyrics = AcceptsLyricsOption.No;
-        } else {
-          acceptsLyrics = AcceptsLyricsOption.Yes;
-        }
-      }
+      const acceptsLyrics = this.lyricService.getEffectiveAcceptsLyrics(note);
 
       if (acceptsLyrics === AcceptsLyricsOption.MelismaOnly) {
         // This note only takes melismas. If the previous note was a melisma,
@@ -4688,7 +4671,8 @@ export default class Editor extends Vue {
           const nextNote = noteElements[i + 1] as NoteElement;
 
           if (
-            nextNote.acceptsLyrics === AcceptsLyricsOption.MelismaOnly &&
+            this.lyricService.getEffectiveAcceptsLyrics(nextNote) ===
+              AcceptsLyricsOption.MelismaOnly &&
             !token.endsWith('_') &&
             !token.endsWith('-')
           ) {

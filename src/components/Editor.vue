@@ -4291,6 +4291,15 @@ export default class Editor extends Vue {
 
     // Force the element to update so that the neume toolbar updates
     element.keyHelper++;
+
+    // If we change certain fields, we need to refresh the staff lyrics
+    if (
+      newValues.quantitativeNeume !== undefined ||
+      newValues.tie !== undefined ||
+      newValues.acceptsLyrics !== undefined
+    ) {
+      this.refreshStaffLyrics();
+    }
   }
 
   updateNoteLyricsUseDefaultStyle(
@@ -4527,8 +4536,6 @@ export default class Editor extends Vue {
       acceptsLyrics: acceptsLyrics,
     });
     this.save();
-
-    this.refreshStaffLyrics();
   }
 
   updateNoteChromaticFthoraNote(

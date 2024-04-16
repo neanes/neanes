@@ -197,6 +197,7 @@
                             selectedLyrics: element === selectedLyrics,
                           }"
                           :content="(element as NoteElement).lyrics"
+                          :editable="!lyricsLocked"
                           whiteSpace="nowrap"
                           :ref="`lyrics-${getElementIndex(element)}`"
                           @click="focusLyrics(getElementIndex(element))"
@@ -1167,6 +1168,11 @@ export default class Editor extends Vue {
   // Throttled Methods
   keydownThrottleIntervalMs: number = 100;
 
+  assignLyricsThrottled = throttle(
+    this.keydownThrottleIntervalMs,
+    this.assignLyrics,
+  );
+
   moveToPreviousLyricBoxThrottled = throttle(
     this.keydownThrottleIntervalMs,
     this.moveToPreviousLyricBox,
@@ -2063,7 +2069,7 @@ export default class Editor extends Vue {
 
   openLyricManager() {
     this.lyricManagerIsOpen = true;
-    this.refreshAllLyrics();
+    this.refreshStaffLyrics();
   }
 
   closeLyricManager() {
@@ -2439,9 +2445,11 @@ export default class Editor extends Vue {
   }
 
   setLyrics(index: number, lyrics: string) {
-    (this.$refs[`lyrics-${index}`] as ContentEditable[])[0].setInnerText(
-      lyrics,
-    );
+    const elements = this.$refs[`lyrics-${index}`] as ContentEditable[];
+
+    if (elements?.length > 0) {
+      elements[0].setInnerText(lyrics);
+    }
   }
 
   isSyllableElement(element: ScoreElement) {
@@ -3200,6 +3208,8 @@ export default class Editor extends Vue {
         ),
       );
 
+      this.refreshStaffLyrics();
+
       this.selectedElement =
         this.elements[Math.min(start, this.elements.length - 1)];
 
@@ -3418,8 +3428,10 @@ export default class Editor extends Vue {
 
     if (commands.length > 1) {
       this.commandService.executeAsBatch(commands);
+      this.refreshStaffLyrics();
     } else if (commands.length === 1) {
       this.commandService.execute(commands[0]);
+      this.refreshStaffLyrics();
     }
 
     this.save();
@@ -4221,7 +4233,7 @@ export default class Editor extends Vue {
       }),
     );
 
-    this.refreshAllLyrics();
+    this.refreshStaffLyrics();
   }
 
   addScoreElements(elements: ScoreElement[], insertAtIndex?: number) {
@@ -4233,7 +4245,7 @@ export default class Editor extends Vue {
       }),
     );
 
-    this.refreshAllLyrics();
+    this.refreshStaffLyrics();
   }
 
   replaceScoreElement(element: ScoreElement, replaceAtIndex: number) {
@@ -4245,7 +4257,7 @@ export default class Editor extends Vue {
       }),
     );
 
-    this.refreshAllLyrics();
+    this.refreshStaffLyrics();
   }
 
   removeScoreElement(element: ScoreElement) {
@@ -4256,7 +4268,7 @@ export default class Editor extends Vue {
       }),
     );
 
-    this.refreshAllLyrics();
+    this.refreshStaffLyrics();
   }
 
   updatePageVisibility(page: Page, isVisible: boolean) {
@@ -4515,7 +4527,7 @@ export default class Editor extends Vue {
     });
     this.save();
 
-    this.assignLyrics();
+    this.refreshStaffLyrics();
   }
 
   updateNoteChromaticFthoraNote(
@@ -4619,7 +4631,7 @@ export default class Editor extends Vue {
 
   updateStaffLyrics(lyrics: string) {
     this.lyrics = lyrics;
-    this.assignLyrics();
+    this.assignLyricsThrottled();
   }
 
   assignLyrics() {
@@ -4679,7 +4691,7 @@ export default class Editor extends Vue {
     }
 
     if (updateCommands.length > 0) {
-      this.commandService.executeAsBatch(updateCommands);
+      this.commandService.executeAsBatch(updateCommands, this.lyricsLocked);
       this.save();
     }
   }
@@ -4731,13 +4743,15 @@ export default class Editor extends Vue {
 
     if (updateCommand != null) {
       this.commandService.execute(updateCommand);
-      this.refreshAllLyrics();
+      this.refreshStaffLyrics();
       this.save();
     }
   }
 
-  refreshAllLyrics() {
-    if (this.lyricManagerIsOpen && !this.lyricsLocked) {
+  refreshStaffLyrics() {
+    if (this.lyricsLocked) {
+      this.assignLyrics();
+    } else if (this.lyricManagerIsOpen) {
       this.lyrics = this.lyricService.extractLyrics(this.elements);
     }
   }
@@ -5237,6 +5251,8 @@ export default class Editor extends Vue {
           }),
         ),
       );
+
+      this.refreshStaffLyrics();
 
       const start = Math.min(
         this.selectionRange.start,
@@ -5795,6 +5811,10 @@ export default class Editor extends Vue {
 
     this.commandService.undo();
 
+    // TODO this may be overkill, but the alternative is putting in place
+    // an event system to only refresh on certain undo actions
+    this.refreshStaffLyrics();
+
     if (currentIndex > -1) {
       // If the selected element was removed during the undo process, choose a new one
       this.selectedElement =
@@ -5812,6 +5832,10 @@ export default class Editor extends Vue {
     const currentIndex = this.selectedElementIndex;
 
     this.commandService.redo();
+
+    // TODO this may be overkill, but the alternative is putting in place
+    // an event system to only refresh on certain undo actions
+    this.refreshStaffLyrics();
 
     if (currentIndex > -1) {
       // If the selected element was removed during the redo process, choose a new one
@@ -5911,7 +5935,11 @@ export default class Editor extends Vue {
 
   onFileMenuLyrics() {
     if (!this.dialogOpen) {
-      this.lyricManagerIsOpen = !this.lyricManagerIsOpen;
+      if (this.lyricManagerIsOpen) {
+        this.closeLyricManager();
+      } else {
+        this.openLyricManager();
+      }
     }
   }
 

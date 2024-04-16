@@ -83,22 +83,23 @@ export class CommandService {
     EventBus.$emit(IpcRendererChannels.SetCanRedo, this.canRedo);
   }
 
-  public execute(command: Command) {
+  public execute(command: Command, noHistory: boolean = false) {
     command!.execute();
 
     // Remove everything after the current index
     // and push the new command
-    this.commandHistory = this.commandHistory.slice(0, this.index + 1);
-    this.commandHistory.push(command!);
-    this.index++;
-
-    this.notify();
+    if (!noHistory) {
+      this.commandHistory = this.commandHistory.slice(0, this.index + 1);
+      this.commandHistory.push(command!);
+      this.index++;
+      this.notify();
+    }
   }
 
-  public executeAsBatch(batch: Command[]) {
+  public executeAsBatch(batch: Command[], noHistory: boolean = false) {
     for (const command of batch) {
       command.batchId = this.nextBatchId;
-      this.execute(command);
+      this.execute(command, noHistory);
     }
 
     this.nextBatchId++;

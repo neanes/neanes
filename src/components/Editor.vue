@@ -4647,10 +4647,14 @@ export default class Editor extends Vue {
 
     for (let i = 0; i < noteElements.length; i++) {
       const note = noteElements[i] as NoteElement;
+      const previousNote = i > 0 ? (noteElements[i - 1] as NoteElement) : null;
 
       let token = '';
 
-      const acceptsLyrics = this.lyricService.getEffectiveAcceptsLyrics(note);
+      const acceptsLyrics = this.lyricService.getEffectiveAcceptsLyrics(
+        note,
+        previousNote,
+      );
 
       if (acceptsLyrics === AcceptsLyricsOption.MelismaOnly) {
         // This note only takes melismas. If the previous note was a melisma,
@@ -4671,7 +4675,7 @@ export default class Editor extends Vue {
           const nextNote = noteElements[i + 1] as NoteElement;
 
           if (
-            this.lyricService.getEffectiveAcceptsLyrics(nextNote) ===
+            this.lyricService.getEffectiveAcceptsLyrics(nextNote, note) ===
               AcceptsLyricsOption.MelismaOnly &&
             !token.endsWith('_') &&
             !token.endsWith('-')

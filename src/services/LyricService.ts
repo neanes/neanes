@@ -50,7 +50,10 @@ export class LyricService {
     return lyrics.trimEnd();
   }
 
-  getEffectiveAcceptsLyrics(note: NoteElement) {
+  getEffectiveAcceptsLyrics(
+    note: NoteElement,
+    previousNote: NoteElement | null,
+  ) {
     let acceptsLyrics = note.acceptsLyrics;
 
     if (note.acceptsLyrics === AcceptsLyricsOption.Default) {
@@ -67,7 +70,10 @@ export class LyricService {
 
       if (noLyricsAccepted.includes(note.quantitativeNeume)) {
         acceptsLyrics = AcceptsLyricsOption.No;
-      } else if (melismaOnly.includes(note.quantitativeNeume)) {
+      } else if (
+        melismaOnly.includes(note.quantitativeNeume) ||
+        previousNote?.tie != null
+      ) {
         acceptsLyrics = AcceptsLyricsOption.MelismaOnly;
       } else {
         acceptsLyrics = AcceptsLyricsOption.Yes;

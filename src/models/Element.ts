@@ -89,6 +89,12 @@ export abstract class ScoreElement {
   }
 }
 
+export enum AcceptsLyricsOption {
+  Yes = 'Yes',
+  No = 'No',
+  MelismaOnly = 'MelismaOnly',
+}
+
 export class NoteElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.Note;
   public measureNumber: MeasureNumber | null = null;
@@ -107,6 +113,7 @@ export class NoteElement extends ScoreElement {
   public lyricsFontStyle: string = 'normal';
   public lyricsFontWeight: string = '400';
   public lyricsTextDecoration: string = 'none';
+  public acceptsLyrics: AcceptsLyricsOption = AcceptsLyricsOption.Yes;
   public isMelisma: boolean = false;
   public isMelismaStart: boolean = false;
   public isHyphen: boolean = false;
@@ -197,6 +204,7 @@ export class NoteElement extends ScoreElement {
           }
         : null),
       quantitativeNeume: this.quantitativeNeume,
+      acceptsLyrics: this.acceptsLyrics,
       measureBarLeft: this.measureBarLeft,
       measureBarLeftOffsetX: this.measureBarLeftOffsetX,
       measureBarLeftOffsetY: this.measureBarLeftOffsetY,

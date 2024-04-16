@@ -19,4 +19,10 @@ export class Score {
 
 export class Staff {
   public elements: ScoreElement[] = [new EmptyElement()];
+  public lyrics: LyricSetup = new LyricSetup();
+}
+
+export class LyricSetup {
+  public locked: boolean | undefined = undefined;
+  public text: string = '';
 }

@@ -1,4 +1,9 @@
-import { ElementType, NoteElement, ScoreElement } from '@/models/Element';
+import {
+  AcceptsLyricsOption,
+  ElementType,
+  NoteElement,
+  ScoreElement,
+} from '@/models/Element';
 
 export class LyricService {
   extractLyrics(elements: ScoreElement[]): string {
@@ -6,10 +11,12 @@ export class LyricService {
 
     let needSpace = false;
 
-    for (const element of elements.filter(
+    const noteElements = elements.filter(
       (x) => x.elementType === ElementType.Note,
-    )) {
-      const note = element as NoteElement;
+    );
+
+    for (let i = 0; i < noteElements.length; i++) {
+      const note = noteElements[i] as NoteElement;
 
       if (!note.isMelisma || note.isMelismaStart) {
         if (needSpace) {
@@ -21,9 +28,20 @@ export class LyricService {
       }
 
       if (note.isHyphen) {
-        lyrics += '-';
+        if (note.acceptsLyrics !== AcceptsLyricsOption.MelismaOnly) {
+          lyrics += '-';
+        }
       } else if (note.isMelisma) {
-        lyrics += '_';
+        const nextNote =
+          i + 1 < noteElements.length
+            ? (noteElements[i + 1] as NoteElement)
+            : null;
+        if (
+          note.acceptsLyrics !== AcceptsLyricsOption.MelismaOnly &&
+          nextNote?.acceptsLyrics !== AcceptsLyricsOption.MelismaOnly
+        ) {
+          lyrics += '_';
+        }
         needSpace = true;
       }
     }

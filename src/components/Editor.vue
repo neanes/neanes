@@ -4721,7 +4721,7 @@ export default class Editor extends Vue {
     )) {
       const note = element as NoteElement;
 
-      let acceptsLyrics = AcceptsLyricsOption.Yes;
+      let acceptsLyrics = AcceptsLyricsOption.Default;
 
       if (note.isMelisma && !note.isMelismaStart) {
         acceptsLyrics = AcceptsLyricsOption.MelismaOnly;
@@ -4734,7 +4734,7 @@ export default class Editor extends Vue {
           this.noteElementCommandFactory.create('update-properties', {
             target: note,
             newValues: {
-              acceptsLyrics: AcceptsLyricsOption.MelismaOnly,
+              acceptsLyrics,
             },
           }),
         );
@@ -4743,6 +4743,7 @@ export default class Editor extends Vue {
 
     if (commands.length > 0) {
       this.commandService.executeAsBatch(commands);
+      this.refreshStaffLyrics();
       this.save();
     }
   }

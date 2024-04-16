@@ -19,10 +19,7 @@ export class LyricService {
     for (let i = 0; i < noteElements.length; i++) {
       const note = noteElements[i] as NoteElement;
 
-      if (
-        note.acceptsLyrics !== AcceptsLyricsOption.MelismaOnly &&
-        (!note.isMelisma || note.isMelismaStart)
-      ) {
+      if (!note.isMelisma || note.isMelismaStart) {
         if (needSpace) {
           lyrics += ' ';
         }

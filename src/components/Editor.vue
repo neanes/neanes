@@ -4650,10 +4650,26 @@ export default class Editor extends Vue {
 
       let token = '';
 
-      if (note.acceptsLyrics === AcceptsLyricsOption.No) {
-        // This note never takes lyrics. Skip this note.
-        continue;
-      } else if (note.acceptsLyrics === AcceptsLyricsOption.MelismaOnly) {
+      let acceptsLyrics = note.acceptsLyrics;
+
+      if (note.acceptsLyrics === AcceptsLyricsOption.Default) {
+        const noLyricsAccepted = [
+          QuantitativeNeume.Cross,
+          QuantitativeNeume.Breath,
+          QuantitativeNeume.VareiaDotted,
+          QuantitativeNeume.VareiaDotted2,
+          QuantitativeNeume.VareiaDotted3,
+          QuantitativeNeume.VareiaDotted4,
+        ];
+
+        if (noLyricsAccepted.includes(note.quantitativeNeume)) {
+          acceptsLyrics = AcceptsLyricsOption.No;
+        } else {
+          acceptsLyrics = AcceptsLyricsOption.Yes;
+        }
+      }
+
+      if (acceptsLyrics === AcceptsLyricsOption.MelismaOnly) {
         // This note only takes melismas. If the previous note was a melisma,
         // then extend the melisma to this note. Otherwise, do nothing
         if (previousToken.endsWith('-')) {
@@ -4661,7 +4677,7 @@ export default class Editor extends Vue {
         } else {
           token = '_';
         }
-      } else {
+      } else if (acceptsLyrics === AcceptsLyricsOption.Yes) {
         // The only other options is "Yes". So grab the next token
         // and assign it to the note.
         token = tokenizer.getNextToken();
@@ -4681,7 +4697,7 @@ export default class Editor extends Vue {
         }
       }
 
-      const updateCommand = this.getLyricUpdateCommand(note, token);
+      const updateCommand = this.getLyricUpdateCommand(note, token, true);
 
       if (updateCommand != null) {
         note.updated = true;

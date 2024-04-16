@@ -451,14 +451,17 @@
             )
           "
         >
+          <option :value="AcceptsLyricsOption.Default">
+            {{ $t('toolbar:neume.acceptsLyricsDefault') }}
+          </option>
           <option :value="AcceptsLyricsOption.Yes">
             {{ $t('toolbar:neume.acceptsLyricsYes') }}
           </option>
-          <option :value="AcceptsLyricsOption.MelismaOnly">
-            {{ $t('toolbar:neume.acceptsLyricsMelismaOnly') }}
-          </option>
           <option :value="AcceptsLyricsOption.No">
             {{ $t('toolbar:neume.acceptsLyricsNo') }}
+          </option>
+          <option :value="AcceptsLyricsOption.MelismaOnly">
+            {{ $t('toolbar:neume.acceptsLyricsMelismaOnly') }}
           </option>
         </select>
       </div>

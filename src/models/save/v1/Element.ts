@@ -43,6 +43,7 @@ export abstract class ScoreElement {
 }
 
 export enum AcceptsLyricsOption {
+  Default = 'Default',
   Yes = 'Yes',
   No = 'No',
   MelismaOnly = 'MelismaOnly',

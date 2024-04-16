@@ -804,6 +804,7 @@
       @update:locked="updateLyricsLocked"
       @update:lyrics="updateStaffLyrics"
       @assignAcceptsLyrics="assignAcceptsLyricsFromCurrentLyrics"
+      @close="closeLyricManager"
       @click="
         selectedElement = null;
         selectedLyrics = null;

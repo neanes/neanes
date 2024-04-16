@@ -71,6 +71,7 @@
     "noteIndicator": "Note Indicator",
     "isonIndicator": "Ison Indicator",
     "acceptsLyrics": "Accepts Lyrics",
+    "acceptsLyricsDefault": "Default",
     "acceptsLyricsYes": "Yes",
     "acceptsLyricsNo": "No",
     "acceptsLyricsMelismaOnly": "Melisma Only"

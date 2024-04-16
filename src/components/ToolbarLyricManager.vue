@@ -18,6 +18,8 @@
       <button @click="$emit('assignAcceptsLyrics')">
         {{ $t('toolbar:lyricManager.assignAcceptsLyrics') }}
       </button>
+
+      <span class="close" @click="$emit('close')">&#x2715;</span>
     </div>
     <textarea
       :value="lyrics"
@@ -54,7 +56,17 @@ export default class ToolbarLyricManager extends Vue {
   height: 16px;
 }
 
+.close {
+  float: right;
+  cursor: default;
+}
+
+.close:hover {
+  background-color: darkgray;
+}
+
 textarea {
   width: 100%;
+  margin-top: 0.25rem;
 }
 </style>

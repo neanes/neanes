@@ -455,7 +455,7 @@ export class SaveService {
 
     element.ignoreAttractions = e.ignoreAttractions || undefined;
 
-    if (e.acceptsLyrics !== AcceptsLyricsOption.Yes) {
+    if (e.acceptsLyrics !== AcceptsLyricsOption.Default) {
       element.acceptsLyrics = e.acceptsLyrics;
     }
   }
@@ -1091,7 +1091,7 @@ export class SaveService {
     if (e.acceptsLyrics !== undefined) {
       element.acceptsLyrics = e.acceptsLyrics;
     } else {
-      element.acceptsLyrics = AcceptsLyricsOption.Yes;
+      element.acceptsLyrics = AcceptsLyricsOption.Default;
     }
   }
 

@@ -90,6 +90,7 @@ export abstract class ScoreElement {
 }
 
 export enum AcceptsLyricsOption {
+  Default = 'Default',
   Yes = 'Yes',
   No = 'No',
   MelismaOnly = 'MelismaOnly',
@@ -113,7 +114,7 @@ export class NoteElement extends ScoreElement {
   public lyricsFontStyle: string = 'normal';
   public lyricsFontWeight: string = '400';
   public lyricsTextDecoration: string = 'none';
-  public acceptsLyrics: AcceptsLyricsOption = AcceptsLyricsOption.Yes;
+  public acceptsLyrics: AcceptsLyricsOption = AcceptsLyricsOption.Default;
   public isMelisma: boolean = false;
   public isMelismaStart: boolean = false;
   public isHyphen: boolean = false;

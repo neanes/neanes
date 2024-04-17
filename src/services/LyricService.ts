@@ -1,5 +1,6 @@
 import {
   AcceptsLyricsOption,
+  DropCapElement,
   ElementType,
   NoteElement,
   ScoreElement,
@@ -12,38 +13,52 @@ export class LyricService {
 
     let needSpace = false;
 
-    const noteElements = elements.filter(
-      (x) => x.elementType === ElementType.Note,
+    const filteredElements = elements.filter(
+      (x) =>
+        x.elementType === ElementType.Note ||
+        x.elementType === ElementType.DropCap,
     );
 
-    for (let i = 0; i < noteElements.length; i++) {
-      const note = noteElements[i] as NoteElement;
+    for (let i = 0; i < filteredElements.length; i++) {
+      if (filteredElements[i].elementType === ElementType.Note) {
+        const note = filteredElements[i] as NoteElement;
 
-      if (!note.isMelisma || note.isMelismaStart) {
-        if (needSpace) {
+        if (!note.isMelisma || note.isMelismaStart) {
+          if (needSpace) {
+            lyrics += ' ';
+          }
+
+          lyrics += note.lyrics;
+          needSpace = !note.isMelismaStart;
+        }
+
+        if (note.isHyphen) {
+          if (note.acceptsLyrics !== AcceptsLyricsOption.MelismaOnly) {
+            lyrics += '-';
+          }
+        } else if (note.isMelisma) {
+          const nextNote =
+            i + 1 < filteredElements.length
+              ? (filteredElements[i + 1] as NoteElement)
+              : null;
+          if (
+            note.acceptsLyrics !== AcceptsLyricsOption.MelismaOnly &&
+            nextNote?.elementType === ElementType.Note &&
+            nextNote?.acceptsLyrics !== AcceptsLyricsOption.MelismaOnly
+          ) {
+            lyrics += '_';
+          }
+          needSpace = true;
+        }
+      } else if (filteredElements[i].elementType === ElementType.DropCap) {
+        const dropCap = filteredElements[i] as DropCapElement;
+
+        if (i > 0) {
           lyrics += ' ';
         }
 
-        lyrics += note.lyrics;
-        needSpace = !note.isMelismaStart;
-      }
-
-      if (note.isHyphen) {
-        if (note.acceptsLyrics !== AcceptsLyricsOption.MelismaOnly) {
-          lyrics += '-';
-        }
-      } else if (note.isMelisma) {
-        const nextNote =
-          i + 1 < noteElements.length
-            ? (noteElements[i + 1] as NoteElement)
-            : null;
-        if (
-          note.acceptsLyrics !== AcceptsLyricsOption.MelismaOnly &&
-          nextNote?.acceptsLyrics !== AcceptsLyricsOption.MelismaOnly
-        ) {
-          lyrics += '_';
-        }
-        needSpace = true;
+        lyrics += dropCap.content;
+        needSpace = false;
       }
     }
 
@@ -119,5 +134,13 @@ export class LyricTokenizer {
     }
 
     return token.trim();
+  }
+
+  getNextCharacter() {
+    let c = ' ';
+    while (c === ' ' && this.index < this.lyrics.length) {
+      c = this.lyrics[this.index++];
+    }
+    return c;
   }
 }

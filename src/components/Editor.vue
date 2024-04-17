@@ -388,6 +388,7 @@
                       :ref="`element-${getElementIndex(element)}`"
                       :element="element"
                       :pageSetup="score.pageSetup"
+                      :editable="!lyricsLocked"
                       :class="[
                         {
                           selectedTextbox: isSelected(element),
@@ -4648,13 +4649,32 @@ export default class Editor extends Vue {
     const updateCommands: Command[] = [];
     let previousToken = '';
 
-    const noteElements = this.elements.filter(
-      (x) => x.elementType === ElementType.Note,
+    const filteredElements = this.elements.filter(
+      (x) =>
+        x.elementType === ElementType.Note ||
+        x.elementType === ElementType.DropCap,
     );
 
-    for (let i = 0; i < noteElements.length; i++) {
-      const note = noteElements[i] as NoteElement;
-      const previousNote = i > 0 ? (noteElements[i - 1] as NoteElement) : null;
+    for (let i = 0; i < filteredElements.length; i++) {
+      if (filteredElements[i].elementType === ElementType.DropCap) {
+        const dropCap = filteredElements[i] as DropCapElement;
+        const token = tokenizer.getNextCharacter();
+
+        if (dropCap.content !== token) {
+          updateCommands.push(
+            this.dropCapCommandFactory.create('update-properties', {
+              target: dropCap,
+              newValues: { content: token },
+            }),
+          );
+        }
+
+        continue;
+      }
+
+      const note = filteredElements[i] as NoteElement;
+      const previousNote =
+        i > 0 ? (filteredElements[i - 1] as NoteElement) : null;
 
       let token = '';
 
@@ -4678,8 +4698,8 @@ export default class Editor extends Vue {
 
         // If the next note only takes a melisma, then ensure that this token
         // ends in an underscore
-        if (i + 1 < noteElements.length) {
-          const nextNote = noteElements[i + 1] as NoteElement;
+        if (i + 1 < filteredElements.length) {
+          const nextNote = filteredElements[i + 1] as NoteElement;
 
           if (
             this.lyricService.getEffectiveAcceptsLyrics(nextNote, note) ===
@@ -5159,6 +5179,8 @@ export default class Editor extends Vue {
           newValues: { content },
         }),
       );
+
+      this.refreshStaffLyrics();
     }
 
     this.save();

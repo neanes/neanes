@@ -47,3 +47,93 @@ You can move neumes by either clicking a drag handle (the small blue box near th
 In the below example, we have corrected the collision between the heteron and the dipli.
 
 ![Neume Toolbar Positioning Button](./images/guide-neume-positioning-dialog-2.png)
+
+## Advanced Lyrics Entry
+
+While lyrics can be entered by clicking under a neume and typing, there is an alternate method of entering and manipulating lyrics.
+
+Press <kbd>Ctrl</kbd>+<kbd>L</kbd> or select the `Edit -> Lyrics` from the file menu to open the lyrics toolbar.
+
+As you type into the toolbar's text area, lyrics will be automatically assigned to the neumes. Conversely, as you add or remove neumes, or edit lyrics by clicking underneath a neume, the text area will automatically update with the current lyrics.
+
+> [!TIP]
+> You can quickly shift all lyrics left or right by editing the lyrics in the lyrics toolbar.
+
+#### Example
+
+![Lyrics Toolbar Example](./images/guide-lyrics-toolbar-1.png)
+
+If the neume with the lyrics `two` in the image above is deleted, the lyrics in the toolbar will change from
+
+```
+one two three four
+```
+
+to
+
+```
+one three four
+```
+
+### Locking Lyrics
+
+To lock lyrics, select the `Lock Lyrics` checkbox in the lyrics toolbar. When lyrics are locked, you can only edit lyrics in the toolbar. In addition, when you add or remove neumes, the lyrics will automatically be assigned to the current neumes.
+
+#### Example
+
+Neumes:
+
+![Lyrics Toolbar Example](./images/guide-lyrics-toolbar-locked-1.png)
+
+Lyrics:
+
+```
+one two three four
+```
+
+If the second neume in the image above is deleted, the lyrics in the toolbar will not change, since they are locked. Instead, the lyrics will be assigned to the remaining three neumes, as shown below.
+
+![Lyrics Toolbar Example](./images/guide-lyrics-toolbar-locked-2.png)
+
+If you add a fourth neume, it will receive the lyrics `four`.
+
+![Lyrics Toolbar Example](./images/guide-lyrics-toolbar-locked-3.png)
+
+### Assigning Lyrics to Neumes
+
+If you select a neume, you will see an `Accepts Lyrics` dropdown in the neume toolbar. This can take one of the following values.
+
+| Value        | Meaning                                                                                                      |
+| ------------ | ------------------------------------------------------------------------------------------------------------ |
+| Default      | The neume will receive lyrics based on the neume itself. For example, rests never receive lyrics by default. |
+| Yes          | The neume should always receive lyrics.                                                                      |
+| No           | The neume should never receive lyrics.                                                                       |
+| Melisma Only | The neume should only function as a melisma that contains a hyphen or underscore.                            |
+
+The most useful of these options is `Melisma Only`. If the proper neumes are given this value, then you may omit underscores and extra hyphens in the lyrics toolbar text area. The neumes will automatically receive underscores or hyphens.
+
+### An Example with Prosomoia
+
+Let's say that you want to create a template for `Ποίοις εὐφημιῶν`.
+
+You would begin by creating a new score and typing out the neumes and the lyrics as normal. Then open the lyrics toolbar and press the button labeled `Save Current Melismas`. This will update the `Accepts Lyrics` setting on each neume to match its current function in the hymn, based on the current lyrics. It is recommended that you lock the lyrics.
+
+Save this file as your template. There is an example of this template in the [examples](https://github.com/neanes/neanes/tree/master/examples) folder of this project's repository.
+
+Copy the template file and open the copy, so that the original template file is preserved.
+
+Next, type out the lyrics for your prosomoion in a word processor. For this example, we will use the text below.
+
+```
+With what fair crowns of praise shall we crown the divine and all-laudable hierarch? That clear trumpet sounding theology, the mouth of grace that doth breathe forth fire, the ven'rable vessel of the Spirit, the mighty unshaken pillar of the Church of Christ, the great and exceeding gladness of the world entire, the mighty river of wisdom of God's inspiration, and the lamp of the divine light, the bright and far-shining star that maketh creation radiant.
+```
+
+Next, either add hyphens yourself, or use a tool such as [Juicio Brennan's Hyphenator](https://juiciobrennan.com/hyphenator/) to add the hyphens. Below is the hyphenated text.
+
+```
+With what fair crowns of praise shall we crown the di-vine and all-laud-a-ble hier-arch? That clear trum-pet sound-ing the-ol-o-gy, the mouth of grace that doth breathe forth fire, the ven'-ra-ble ves-sel of the Spir-it, the might-y un-shak-en pil-lar of the Church of Christ, the great and ex-ceed-ing glad-ness of the world en-tire, the might-y riv-er of wis-dom of God's in-spi-ra-tion, and the lamp of the di-vine light, the bright and far-shin-ing star that mak-eth cre-a-tion ra-di-ant.
+```
+
+Copy and paste the hyphenated text into the lyrics toolbar. The lyrics will be automatically assigned to the correct neumes.
+
+In this example, the prosomoion matches the automelon perfectly, but for other hymns you may need to make minor adjustments.

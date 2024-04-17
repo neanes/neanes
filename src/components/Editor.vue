@@ -3837,6 +3837,22 @@ export default class Editor extends Vue {
     this.pages = LayoutService.processPages(this.score);
   }
 
+  async saveWorkspace(workspace: Workspace) {
+    if (!this.lyricsLocked) {
+      this.lyrics = this.lyricService.extractLyrics(this.elements);
+    }
+
+    return await this.ipcService.saveWorkspace(workspace);
+  }
+
+  async saveWorkspaceAs(workspace: Workspace) {
+    if (!this.lyricsLocked) {
+      this.lyrics = this.lyricService.extractLyrics(this.elements);
+    }
+
+    return await this.ipcService.saveWorkspaceAs(workspace);
+  }
+
   async closeWorkspace(workspace: Workspace) {
     let shouldClose = true;
 
@@ -3871,8 +3887,8 @@ export default class Editor extends Vue {
         // User chose "Save"
         const saveResult =
           workspace.filePath != null
-            ? await this.ipcService.saveWorkspace(workspace)
-            : await this.ipcService.saveWorkspaceAs(workspace);
+            ? await this.saveWorkspace(workspace)
+            : await this.saveWorkspaceAs(workspace);
 
         // If they successfully saved, then we can close the workspacce
         shouldClose = saveResult.success;
@@ -5824,12 +5840,12 @@ export default class Editor extends Vue {
     const workspace = this.selectedWorkspace;
 
     if (workspace.filePath != null) {
-      const result = await this.ipcService.saveWorkspace(workspace);
+      const result = await this.saveWorkspace(workspace);
       if (result.success) {
         workspace.hasUnsavedChanges = false;
       }
     } else {
-      const result = await this.ipcService.saveWorkspaceAs(workspace);
+      const result = await this.saveWorkspaceAs(workspace);
       if (result.success) {
         workspace.filePath = result.filePath;
         workspace.hasUnsavedChanges = false;
@@ -5840,7 +5856,7 @@ export default class Editor extends Vue {
   async onFileMenuSaveAs() {
     const workspace = this.selectedWorkspace;
 
-    const result = await this.ipcService.saveWorkspaceAs(workspace);
+    const result = await this.saveWorkspaceAs(workspace);
     if (result.success) {
       workspace.filePath = result.filePath;
       workspace.hasUnsavedChanges = false;

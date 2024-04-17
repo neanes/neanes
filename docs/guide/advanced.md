@@ -134,7 +134,7 @@ You can tell Neanes to automatically set the `Accepts Lyrics` value for every ne
 
 Let's say that you want to create a template for `Ποίοις εὐφημιῶν`.
 
-You would begin by creating a new score and typing out the neumes and the lyrics as normal. Then open the lyrics toolbar and press the button labeled `Save Current Melismas`. This will update the `Accepts Lyrics` setting on each neume to match its current function in the hymn, based on the current lyrics. It is recommended that you lock the lyrics.
+You would begin by creating a new score and typing out the neumes and the lyrics as normal. Then open the lyrics toolbar and press the button labeled `Save Current Melismas`. This will update the `Accepts Lyrics` setting on each neume to match its current function in the hymn, based on the current lyrics. It is recommended that you lock the lyrics at this point.
 
 Save this file as your template. There is an example of this template in the [examples](https://github.com/neanes/neanes/tree/master/examples) folder of this project's repository.
 

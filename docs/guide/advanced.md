@@ -112,6 +112,24 @@ If you select a neume, you will see an `Accepts Lyrics` dropdown in the neume to
 
 The most useful of these options is `Melisma Only`. If the proper neumes are given this value, then you may omit underscores and extra hyphens in the lyrics toolbar text area. The neumes will automatically receive underscores or hyphens.
 
+#### Example
+
+![Lyrics Toolbar Example](./images/guide-lyrics-toolbar-accept-1.png)
+
+When all the neumes in the image above have `Accepts Lyrics` set to `Default`, the lyrics will be written as the following.
+
+```
+With___ what fair
+```
+
+If you change the second and third neumes to `Melisma Only`, then the lyrics will be written as the following.
+
+```
+With what fair
+```
+
+You can tell Neanes to automatically set the `Accepts Lyrics` value for every neume in the score based on the current lyrics by pressing the `Save Current Melismas` button in the lyrics toolbar. So if your score looks like the image above, then pressing the `Save Current Melismas` button, will result in the second and third neumes being set to `Melisma Only` because they contain melismas. The other three neumes will be set to `Default`.
+
 ### An Example with Prosomoia
 
 Let's say that you want to create a template for `Ποίοις εὐφημιῶν`.

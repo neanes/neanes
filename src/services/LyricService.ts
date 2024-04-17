@@ -56,7 +56,7 @@ export class LyricService {
       } else if (filteredElements[i].elementType === ElementType.DropCap) {
         const dropCap = filteredElements[i] as DropCapElement;
 
-        if (i > 0) {
+        if (needSpace) {
           lyrics += ' ';
         }
 

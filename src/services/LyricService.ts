@@ -2,6 +2,7 @@ import {
   AcceptsLyricsOption,
   DropCapElement,
   ElementType,
+  MartyriaElement,
   NoteElement,
   ScoreElement,
 } from '@/models/Element';
@@ -16,7 +17,9 @@ export class LyricService {
     const filteredElements = elements.filter(
       (x) =>
         x.elementType === ElementType.Note ||
-        x.elementType === ElementType.DropCap,
+        x.elementType === ElementType.DropCap ||
+        x.elementType === ElementType.ModeKey ||
+        x.elementType === ElementType.Martyria,
     );
 
     for (let i = 0; i < filteredElements.length; i++) {
@@ -59,6 +62,17 @@ export class LyricService {
 
         lyrics += dropCap.content;
         needSpace = false;
+      } else if (filteredElements[i].elementType === ElementType.ModeKey) {
+        if (lyrics.trim() !== '') {
+          lyrics += '\n\n';
+          needSpace = false;
+        }
+      } else if (filteredElements[i].elementType === ElementType.Martyria) {
+        const martyria = filteredElements[i] as MartyriaElement;
+        if (martyria.alignRight) {
+          lyrics += '\n\n';
+          needSpace = false;
+        }
       }
     }
 
@@ -117,12 +131,12 @@ export class LyricTokenizer {
     while (!foundCompleteToken && this.index < this.lyrics.length) {
       const c = this.lyrics[this.index];
 
-      if (c !== ' ') {
+      if (c.trim() !== '') {
         token += c;
       }
 
       // Eat spaces until next non-space character
-      if (c === ' ' && token.length > 0) {
+      if (c.trim() === '' && token.length > 0) {
         foundCompleteToken = true;
       }
 
@@ -137,8 +151,8 @@ export class LyricTokenizer {
   }
 
   getNextCharacter() {
-    let c = ' ';
-    while (c === ' ' && this.index < this.lyrics.length) {
+    let c = '';
+    while (c.trim() === '' && this.index < this.lyrics.length) {
       c = this.lyrics[this.index++];
     }
     return c;

@@ -15,7 +15,7 @@
     "showFooter": true,
     "firstPageNumber": 1,
     "lineHeight": 72,
-    "lyricsDefaultFontFamily": "Omega",
+    "lyricsDefaultFontFamily": "Source Serif",
     "lyricsDefaultFontSize": 16,
     "lyricsDefaultFontWeight": "400",
     "lyricsDefaultFontStyle": "normal",
@@ -48,7 +48,7 @@
     "noteIndicatorDefaultStrokeWidth": 0,
     "isonDefaultColor": "#800000",
     "isonDefaultStrokeWidth": 0,
-    "koronisDefaultColor": "#ED0000",
+    "koronisDefaultColor": "#800000",
     "koronisDefaultStrokeWidth": 0,
     "martyriaDefaultColor": "#800000",
     "martyriaDefaultStrokeWidth": 0,
@@ -146,14 +146,14 @@
           "elementType": "TextBox",
           "alignment": "center",
           "color": "#000000",
-          "content": "Text from Holy Transfiguration Monastery\nMusic from Ειρμολόγιον Καταβασιών, Ιωάννου Πρωτοψάλτου, p. 169f",
+          "content": "Text © 2005 Holy Transfiguration Monastery, Brookline, MA. All rights reserved.\nMusic from Ειρμολόγιον Καταβασιών, Ιωάννου Πρωτοψάλτου, p. 169f",
           "contentLeft": "",
           "contentCenter": "",
           "contentRight": "",
-          "fontSize": 16,
-          "fontFamily": "Omega",
+          "fontSize": 13.333333333333334,
+          "fontFamily": "Source Serif",
           "strokeWidth": 0,
-          "height": 38
+          "height": 36
         }
       ]
     },
@@ -222,7 +222,8 @@
         "fontSize": 26.666666666666668,
         "fontFamily": "Omega",
         "strokeWidth": 0,
-        "height": 32
+        "height": 37,
+        "useDefaultStyle": true
       },
       {
         "elementType": "TextBox",
@@ -233,7 +234,7 @@
         "contentCenter": "",
         "contentRight": "",
         "fontSize": 16,
-        "fontFamily": "Omega",
+        "fontFamily": "GFS Didot",
         "strokeWidth": 0,
         "height": 19
       },
@@ -260,9 +261,20 @@
         "ambitusHighRootSign": "Alpha"
       },
       {
+        "elementType": "DropCap",
+        "content": "W",
+        "fontFamily": "Athonite",
+        "fontSize": 80,
+        "fontWeight": "400",
+        "fontStyle": "normal",
+        "strokeWidth": 0,
+        "color": "#800000",
+        "useDefaultStyle": true
+      },
+      {
         "elementType": "Note",
         "quantitativeNeume": "Elaphron",
-        "lyrics": "With",
+        "lyrics": "ith",
         "isMelisma": true,
         "isMelismaStart": true
       },
@@ -1663,14 +1675,6 @@
         "quantitativeNeume": "Ison",
         "timeNeume": "Dipli",
         "lyrics": "world."
-      },
-      {
-        "elementType": "Martyria",
-        "auto": true,
-        "note": "Thi",
-        "rootSign": "SoftChromaticSquiggle",
-        "scale": "SoftChromatic",
-        "alignRight": true
       },
       {
         "elementType": "Empty"

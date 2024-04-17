@@ -1039,8 +1039,6 @@ export default class Editor extends Vue {
   searchTextQuery: string = '';
   searchTextPanelIsOpen = false;
 
-  lyricManagerIsOpen = false;
-
   LineBreakType = LineBreakType;
 
   isDevelopment: boolean = import.meta.env.DEV;
@@ -1380,6 +1378,14 @@ export default class Editor extends Vue {
 
   set lyricsLocked(value: boolean) {
     this.score.staff.lyrics.locked = value;
+  }
+
+  get lyricManagerIsOpen() {
+    return this.selectedWorkspace.lyricManagerIsOpen;
+  }
+
+  set lyricManagerIsOpen(value: boolean) {
+    this.selectedWorkspace.lyricManagerIsOpen = value;
   }
 
   get pageCount() {

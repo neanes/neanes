@@ -90,7 +90,7 @@ export class CommandService {
     // and push the new command
     if (!noHistory) {
       this.commandHistory = this.commandHistory.slice(0, this.index + 1);
-      this.commandHistory.push(command!);
+      this.commandHistory.push(command);
       this.index++;
       this.notify();
     }
@@ -99,7 +99,16 @@ export class CommandService {
   public executeAsBatch(batch: Command[], noHistory: boolean = false) {
     for (const command of batch) {
       command.batchId = this.nextBatchId;
-      this.execute(command, noHistory);
+      this.execute(command, true);
+    }
+
+    // Remove everything after the current index
+    // and push the new commands
+    if (!noHistory) {
+      this.commandHistory = this.commandHistory.slice(0, this.index + 1);
+      batch.forEach((x) => this.commandHistory.push(x));
+      this.index += batch.length;
+      this.notify();
     }
 
     this.nextBatchId++;

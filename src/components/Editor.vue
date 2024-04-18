@@ -6228,6 +6228,14 @@ export default class Editor extends Vue {
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
+<style>
+@media print {
+  body * {
+    visibility: hidden;
+    overflow: visible !important;
+  }
+}
+</style>
 <style scoped>
 .loading-overlay {
   position: absolute;
@@ -6537,11 +6545,6 @@ export default class Editor extends Vue {
 }
 
 @media print {
-  body * {
-    visibility: hidden;
-    overflow: visible !important;
-  }
-
   .page,
   .page * {
     visibility: visible;

@@ -6583,6 +6583,7 @@ export default class Editor extends Vue {
   .neume-selector-panel,
   .workspace-tab-container,
   .lyrics-toolbar,
+  .lyric-manager-toolbar,
   .main-toolbar,
   .martyria-toolbar,
   .mode-key-toolbar,

@@ -1,4 +1,5 @@
 import {
+  AcceptsLyricsOption,
   DropCapElement,
   ElementType,
   EmptyElement,
@@ -13,6 +14,7 @@ import {
 } from '@/models/Element';
 import { Footer } from '@/models/Footer';
 import { Header } from '@/models/Header';
+import { LyricSetup } from '@/models/LyricSetup';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import { QuantitativeNeume } from '@/models/Neumes';
 import { PageSetup, pageSizes } from '@/models/PageSetup';
@@ -31,7 +33,11 @@ import {
 import { Footer as Footer_v1 } from '@/models/save/v1/Footer';
 import { Header as Header_v1 } from '@/models/save/v1/Header';
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
-import { Score as Score_v1, Staff as Staff_v1 } from '@/models/save/v1/Score';
+import {
+  LyricSetup as LyricSetup_v1,
+  Score as Score_v1,
+  Staff as Staff_v1,
+} from '@/models/save/v1/Score';
 import { Score } from '@/models/Score';
 import { Staff } from '@/models/Staff';
 
@@ -65,6 +71,7 @@ export class SaveService {
     score.pageSetup = new PageSetup_v1();
 
     this.SavePageSetup(score.pageSetup, s.pageSetup);
+    this.SaveLyricSetup(score.staff.lyrics, s.staff.lyrics);
 
     this.SaveHeader(score.headers.default, s.headers.default);
     this.SaveHeader(score.headers.even, s.headers.even);
@@ -231,6 +238,11 @@ export class SaveService {
 
     pageSetup.chrysanthineAccidentals = p.chrysanthineAccidentals;
     pageSetup.noFthoraRestrictions = p.noFthoraRestrictions || undefined;
+  }
+
+  public static SaveLyricSetup(lyricSetup: LyricSetup_v1, l: LyricSetup) {
+    lyricSetup.locked = l.locked || undefined;
+    lyricSetup.text = l.text;
   }
 
   public static SaveHeader(header: Header_v1, h: Header) {
@@ -442,6 +454,10 @@ export class SaveService {
     }
 
     element.ignoreAttractions = e.ignoreAttractions || undefined;
+
+    if (e.acceptsLyrics !== AcceptsLyricsOption.Default) {
+      element.acceptsLyrics = e.acceptsLyrics;
+    }
   }
 
   public static SaveTextBox(element: TextBoxElement_v1, e: TextBoxElement) {
@@ -508,6 +524,10 @@ export class SaveService {
     score.pageSetup = new PageSetup();
 
     this.LoadPageSetup_v1(score.pageSetup, s.pageSetup);
+    this.LoadLyricSetup_v1(
+      score.staff.lyrics,
+      s.staff.lyrics ?? new LyricSetup(),
+    );
 
     if (s.headers) {
       this.LoadHeader_v1(
@@ -796,6 +816,11 @@ export class SaveService {
     }
   }
 
+  public static LoadLyricSetup_v1(lyricSetup: LyricSetup, l: LyricSetup_v1) {
+    lyricSetup.locked = l.locked === true;
+    lyricSetup.text = l.text;
+  }
+
   public static LoadHeader_v1(
     scoreVersion: string,
     header: Header,
@@ -1061,6 +1086,12 @@ export class SaveService {
         e.lyricsTextDecoration ?? element.lyricsTextDecoration;
       element.lyricsStrokeWidth =
         e.lyricsStrokeWidth ?? element.lyricsStrokeWidth;
+    }
+
+    if (e.acceptsLyrics !== undefined) {
+      element.acceptsLyrics = e.acceptsLyrics;
+    } else {
+      element.acceptsLyrics = AcceptsLyricsOption.Default;
     }
   }
 

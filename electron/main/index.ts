@@ -1111,6 +1111,14 @@ function createMenu() {
         },
         { type: 'separator' },
         {
+          label: i18next.t('menu:edit.lyrics'),
+          accelerator: 'CmdOrCtrl+L',
+          click() {
+            win?.webContents.send(IpcMainChannels.FileMenuLyrics);
+          },
+        },
+        { type: 'separator' },
+        {
           label: i18next.t('menu:edit.preferences'),
           accelerator: 'CmdOrCtrl+,',
           click() {

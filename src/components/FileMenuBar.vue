@@ -57,6 +57,8 @@
       <div class="separator" />
       <FileMenuItem :label="$t('menu:edit.find')" @click="onClickFind" />
       <div class="separator" />
+      <FileMenuItem :label="$t('menu:edit.lyrics')" @click="onClickLyrics" />
+      <div class="separator" />
       <FileMenuItem
         :label="$t('menu:edit.preferences')"
         @click="onClickPreferences"
@@ -380,6 +382,11 @@ export default class FileMenuBar extends Vue {
 
   onClickFind() {
     EventBus.$emit(IpcMainChannels.FileMenuFind);
+    this.isMenuOpen = false;
+  }
+
+  onClickLyrics() {
+    EventBus.$emit(IpcMainChannels.FileMenuLyrics);
     this.isMenuOpen = false;
   }
 

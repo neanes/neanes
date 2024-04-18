@@ -197,6 +197,7 @@
                             selectedLyrics: element === selectedLyrics,
                           }"
                           :content="(element as NoteElement).lyrics"
+                          :editable="!lyricsLocked"
                           whiteSpace="nowrap"
                           :ref="`lyrics-${getElementIndex(element)}`"
                           @click="focusLyrics(getElementIndex(element))"
@@ -387,6 +388,7 @@
                       :ref="`element-${getElementIndex(element)}`"
                       :element="element"
                       :pageSetup="score.pageSetup"
+                      :editable="!lyricsLocked"
                       :class="[
                         {
                           selectedTextbox: isSelected(element),
@@ -732,6 +734,9 @@
         @update:ignoreAttractions="
           updateNoteIgnoreAttractions(selectedElement as NoteElement, $event)
         "
+        @update:acceptsLyrics="
+          updateNoteAcceptsLyrics(selectedElement as NoteElement, $event)
+        "
         @open-syllable-positioning-dialog="openSyllablePositioningDialog"
       />
     </template>
@@ -793,6 +798,19 @@
         "
       />
     </template>
+    <ToolbarLyricManager
+      v-if="lyricManagerIsOpen"
+      :lyrics="lyrics"
+      :locked="lyricsLocked"
+      @update:locked="updateLyricsLocked"
+      @update:lyrics="updateStaffLyrics"
+      @assignAcceptsLyrics="assignAcceptsLyricsFromCurrentLyrics"
+      @close="closeLyricManager"
+      @click="
+        selectedElement = null;
+        selectedLyrics = null;
+      "
+    ></ToolbarLyricManager>
     <ModeKeyDialog
       v-if="modeKeyDialogIsOpen"
       :element="selectedElement"
@@ -871,6 +889,7 @@ import SyllablePositioningDialog from '@/components/SyllablePositioningDialog.vu
 import TextBox from '@/components/TextBox.vue';
 import ToolbarDropCap from '@/components/ToolbarDropCap.vue';
 import ToolbarImageBox from '@/components/ToolbarImageBox.vue';
+import ToolbarLyricManager from '@/components/ToolbarLyricManager.vue';
 import ToolbarLyrics from '@/components/ToolbarLyrics.vue';
 import ToolbarMain from '@/components/ToolbarMain.vue';
 import ToolbarMartyria from '@/components/ToolbarMartyria.vue';
@@ -892,6 +911,7 @@ import {
 } from '@/ipc/ipcChannels';
 import { EditorPreferences } from '@/models/EditorPreferences';
 import {
+  AcceptsLyricsOption,
   DropCapElement,
   ElementType,
   EmptyElement,
@@ -952,6 +972,7 @@ import { Command, CommandFactory } from '@/services/history/CommandService';
 import { ByzHtmlExporter } from '@/services/integration/ByzHtmlExporter';
 import { IIpcService } from '@/services/ipc/IIpcService';
 import { LayoutService } from '@/services/LayoutService';
+import { LyricService, LyricTokenizer } from '@/services/LyricService';
 import { NeumeKeyboard } from '@/services/NeumeKeyboard';
 import { IPlatformService } from '@/services/platform/IPlatformService';
 import { SaveService } from '@/services/SaveService';
@@ -987,6 +1008,7 @@ interface Vue3TabsChromeComponent {
     ToolbarImageBox,
     ToolbarTextBox,
     ToolbarLyrics,
+    ToolbarLyricManager,
     ToolbarModeKey,
     ToolbarNeume,
     ToolbarMartyria,
@@ -1012,6 +1034,7 @@ export default class Editor extends Vue {
   @Inject() readonly audioService!: AudioService;
   @Inject() readonly playbackService!: PlaybackService;
   @Inject() readonly textSearchService!: TextSearchService;
+  @Inject() readonly lyricService!: LyricService;
 
   searchTextQuery: string = '';
   searchTextPanelIsOpen = false;
@@ -1144,6 +1167,11 @@ export default class Editor extends Vue {
 
   // Throttled Methods
   keydownThrottleIntervalMs: number = 100;
+
+  assignLyricsThrottled = throttle(
+    this.keydownThrottleIntervalMs,
+    this.assignLyrics,
+  );
 
   moveToPreviousLyricBoxThrottled = throttle(
     this.keydownThrottleIntervalMs,
@@ -1334,6 +1362,30 @@ export default class Editor extends Vue {
 
   get elements() {
     return this.score != null ? this.score.staff.elements : [];
+  }
+
+  get lyrics() {
+    return this.score?.staff.lyrics.text ?? '';
+  }
+
+  set lyrics(value: string) {
+    this.score.staff.lyrics.text = value;
+  }
+
+  get lyricsLocked() {
+    return this.score?.staff.lyrics.locked ?? false;
+  }
+
+  set lyricsLocked(value: boolean) {
+    this.score.staff.lyrics.locked = value;
+  }
+
+  get lyricManagerIsOpen() {
+    return this.selectedWorkspace.lyricManagerIsOpen;
+  }
+
+  set lyricManagerIsOpen(value: boolean) {
+    this.selectedWorkspace.lyricManagerIsOpen = value;
   }
 
   get pageCount() {
@@ -1803,6 +1855,7 @@ export default class Editor extends Vue {
       this.onFileMenuPasteFormat,
     );
     EventBus.$on(IpcMainChannels.FileMenuFind, this.onFileMenuFind);
+    EventBus.$on(IpcMainChannels.FileMenuLyrics, this.onFileMenuLyrics);
     EventBus.$on(
       IpcMainChannels.FileMenuPreferences,
       this.onFileMenuPreferences,
@@ -1899,6 +1952,7 @@ export default class Editor extends Vue {
       this.onFileMenuPasteFormat,
     );
     EventBus.$off(IpcMainChannels.FileMenuFind, this.onFileMenuFind);
+    EventBus.$off(IpcMainChannels.FileMenuLyrics, this.onFileMenuLyrics);
     EventBus.$off(
       IpcMainChannels.FileMenuPreferences,
       this.onFileMenuPreferences,
@@ -2019,6 +2073,15 @@ export default class Editor extends Vue {
 
   closeExportDialog() {
     this.exportDialogIsOpen = false;
+  }
+
+  openLyricManager() {
+    this.lyricManagerIsOpen = true;
+    this.refreshStaffLyrics();
+  }
+
+  closeLyricManager() {
+    this.lyricManagerIsOpen = false;
   }
 
   updateEditorPreferences(form: EditorPreferences) {
@@ -2390,9 +2453,11 @@ export default class Editor extends Vue {
   }
 
   setLyrics(index: number, lyrics: string) {
-    (this.$refs[`lyrics-${index}`] as ContentEditable[])[0].setInnerText(
-      lyrics,
-    );
+    const elements = this.$refs[`lyrics-${index}`] as ContentEditable[];
+
+    if (elements?.length > 0) {
+      elements[0].setInnerText(lyrics);
+    }
   }
 
   isSyllableElement(element: ScoreElement) {
@@ -3151,6 +3216,8 @@ export default class Editor extends Vue {
         ),
       );
 
+      this.refreshStaffLyrics();
+
       this.selectedElement =
         this.elements[Math.min(start, this.elements.length - 1)];
 
@@ -3369,8 +3436,10 @@ export default class Editor extends Vue {
 
     if (commands.length > 1) {
       this.commandService.executeAsBatch(commands);
+      this.refreshStaffLyrics();
     } else if (commands.length === 1) {
       this.commandService.execute(commands[0]);
+      this.refreshStaffLyrics();
     }
 
     this.save();
@@ -3768,6 +3837,22 @@ export default class Editor extends Vue {
     this.pages = LayoutService.processPages(this.score);
   }
 
+  async saveWorkspace(workspace: Workspace) {
+    if (!this.lyricsLocked) {
+      this.lyrics = this.lyricService.extractLyrics(this.elements);
+    }
+
+    return await this.ipcService.saveWorkspace(workspace);
+  }
+
+  async saveWorkspaceAs(workspace: Workspace) {
+    if (!this.lyricsLocked) {
+      this.lyrics = this.lyricService.extractLyrics(this.elements);
+    }
+
+    return await this.ipcService.saveWorkspaceAs(workspace);
+  }
+
   async closeWorkspace(workspace: Workspace) {
     let shouldClose = true;
 
@@ -3802,8 +3887,8 @@ export default class Editor extends Vue {
         // User chose "Save"
         const saveResult =
           workspace.filePath != null
-            ? await this.ipcService.saveWorkspace(workspace)
-            : await this.ipcService.saveWorkspaceAs(workspace);
+            ? await this.saveWorkspace(workspace)
+            : await this.saveWorkspaceAs(workspace);
 
         // If they successfully saved, then we can close the workspacce
         shouldClose = saveResult.success;
@@ -4171,6 +4256,8 @@ export default class Editor extends Vue {
         insertAtIndex,
       }),
     );
+
+    this.refreshStaffLyrics();
   }
 
   addScoreElements(elements: ScoreElement[], insertAtIndex?: number) {
@@ -4181,6 +4268,8 @@ export default class Editor extends Vue {
         insertAtIndex,
       }),
     );
+
+    this.refreshStaffLyrics();
   }
 
   replaceScoreElement(element: ScoreElement, replaceAtIndex: number) {
@@ -4191,6 +4280,8 @@ export default class Editor extends Vue {
         replaceAtIndex,
       }),
     );
+
+    this.refreshStaffLyrics();
   }
 
   removeScoreElement(element: ScoreElement) {
@@ -4200,6 +4291,8 @@ export default class Editor extends Vue {
         collection: this.elements,
       }),
     );
+
+    this.refreshStaffLyrics();
   }
 
   updatePageVisibility(page: Page, isVisible: boolean) {
@@ -4221,6 +4314,15 @@ export default class Editor extends Vue {
 
     // Force the element to update so that the neume toolbar updates
     element.keyHelper++;
+
+    // If we change certain fields, we need to refresh the staff lyrics
+    if (
+      newValues.quantitativeNeume !== undefined ||
+      newValues.tie !== undefined ||
+      newValues.acceptsLyrics !== undefined
+    ) {
+      this.refreshStaffLyrics();
+    }
   }
 
   updateNoteLyricsUseDefaultStyle(
@@ -4449,6 +4551,16 @@ export default class Editor extends Vue {
     this.save();
   }
 
+  updateNoteAcceptsLyrics(
+    element: NoteElement,
+    acceptsLyrics: AcceptsLyricsOption,
+  ) {
+    this.updateNote(element, {
+      acceptsLyrics: acceptsLyrics,
+    });
+    this.save();
+  }
+
   updateNoteChromaticFthoraNote(
     element: NoteElement,
     chromaticFthoraNote: ScaleNote | null,
@@ -4457,7 +4569,7 @@ export default class Editor extends Vue {
     this.save();
   }
 
-  updateLyrics(
+  getLyricUpdateCommand(
     element: NoteElement,
     lyrics: string,
     clearMelisma: boolean = false,
@@ -4472,7 +4584,7 @@ export default class Editor extends Vue {
     }
 
     if (element.lyrics === lyrics && !(element.isMelisma && clearMelisma)) {
-      return;
+      return null;
     }
 
     // Calculate melisma properties
@@ -4530,22 +4642,177 @@ export default class Editor extends Vue {
       element.isMelisma === isMelisma &&
       element.isHyphen === isHyphen
     ) {
-      return;
+      return null;
     }
 
-    this.commandService.execute(
-      this.noteElementCommandFactory.create('update-properties', {
-        target: element,
-        newValues: {
-          lyrics,
-          isMelisma,
-          isMelismaStart,
-          isHyphen,
-        },
-      }),
+    return this.noteElementCommandFactory.create('update-properties', {
+      target: element,
+      newValues: {
+        lyrics,
+        isMelisma,
+        isMelismaStart,
+        isHyphen,
+      },
+    });
+  }
+
+  updateLyricsLocked(locked: boolean) {
+    this.lyricsLocked = locked;
+  }
+
+  updateStaffLyrics(lyrics: string) {
+    this.lyrics = lyrics;
+    this.assignLyricsThrottled();
+  }
+
+  assignLyrics() {
+    const tokenizer = new LyricTokenizer(this.lyrics);
+
+    const updateCommands: Command[] = [];
+    let previousToken = '';
+
+    const filteredElements = this.elements.filter(
+      (x) =>
+        x.elementType === ElementType.Note ||
+        x.elementType === ElementType.DropCap,
     );
 
-    this.save();
+    for (let i = 0; i < filteredElements.length; i++) {
+      if (filteredElements[i].elementType === ElementType.DropCap) {
+        const dropCap = filteredElements[i] as DropCapElement;
+        const token = tokenizer.getNextCharacter();
+
+        if (dropCap.content !== token) {
+          updateCommands.push(
+            this.dropCapCommandFactory.create('update-properties', {
+              target: dropCap,
+              newValues: { content: token },
+            }),
+          );
+        }
+
+        continue;
+      }
+
+      const note = filteredElements[i] as NoteElement;
+      const previousNote =
+        i > 0 ? (filteredElements[i - 1] as NoteElement) : null;
+
+      let token = '';
+
+      const acceptsLyrics = this.lyricService.getEffectiveAcceptsLyrics(
+        note,
+        previousNote,
+      );
+
+      if (acceptsLyrics === AcceptsLyricsOption.MelismaOnly) {
+        // This note only takes melismas. If the previous note was a melisma,
+        // then extend the melisma to this note. Otherwise, do nothing
+        if (previousToken.endsWith('-')) {
+          token = '-';
+        } else {
+          token = '_';
+        }
+      } else if (acceptsLyrics === AcceptsLyricsOption.Yes) {
+        // The only other options is "Yes". So grab the next token
+        // and assign it to the note.
+        token = tokenizer.getNextToken();
+
+        if (token === '_' && !previousToken.endsWith('_')) {
+          token = '';
+        } else {
+          // If the next note only takes a melisma, then ensure that this token
+          // ends in an underscore
+          if (i + 1 < filteredElements.length) {
+            const nextNote = filteredElements[i + 1] as NoteElement;
+
+            if (
+              this.lyricService.getEffectiveAcceptsLyrics(nextNote, note) ===
+                AcceptsLyricsOption.MelismaOnly &&
+              !token.endsWith('_') &&
+              !token.endsWith('-')
+            ) {
+              token += '_';
+            }
+          }
+        }
+      }
+
+      const updateCommand = this.getLyricUpdateCommand(note, token, true);
+
+      if (updateCommand != null) {
+        note.updated = true;
+        updateCommands.push(updateCommand);
+      }
+
+      previousToken = token;
+    }
+
+    if (updateCommands.length > 0) {
+      this.commandService.executeAsBatch(updateCommands, this.lyricsLocked);
+      this.save();
+    }
+  }
+
+  assignAcceptsLyricsFromCurrentLyrics() {
+    const commands = [];
+
+    for (const element of this.elements.filter(
+      (x) => x.elementType === ElementType.Note,
+    )) {
+      const note = element as NoteElement;
+
+      let acceptsLyrics = AcceptsLyricsOption.Default;
+
+      if (note.isMelisma && !note.isMelismaStart) {
+        acceptsLyrics = AcceptsLyricsOption.MelismaOnly;
+      } else if (note.lyrics.trim() === '') {
+        acceptsLyrics = AcceptsLyricsOption.No;
+      }
+
+      if (note.acceptsLyrics != acceptsLyrics) {
+        commands.push(
+          this.noteElementCommandFactory.create('update-properties', {
+            target: note,
+            newValues: {
+              acceptsLyrics,
+            },
+          }),
+        );
+      }
+    }
+
+    if (commands.length > 0) {
+      this.commandService.executeAsBatch(commands);
+      this.refreshStaffLyrics();
+      this.save();
+    }
+  }
+
+  updateLyrics(
+    element: NoteElement,
+    lyrics: string,
+    clearMelisma: boolean = false,
+  ) {
+    const updateCommand = this.getLyricUpdateCommand(
+      element,
+      lyrics,
+      clearMelisma,
+    );
+
+    if (updateCommand != null) {
+      this.commandService.execute(updateCommand);
+      this.refreshStaffLyrics();
+      this.save();
+    }
+  }
+
+  refreshStaffLyrics() {
+    if (this.lyricsLocked) {
+      this.assignLyrics();
+    } else if (this.lyricManagerIsOpen) {
+      this.lyrics = this.lyricService.extractLyrics(this.elements);
+    }
   }
 
   updateTextBox(element: TextBoxElement, newValues: Partial<TextBoxElement>) {
@@ -4938,6 +5205,8 @@ export default class Editor extends Vue {
           newValues: { content },
         }),
       );
+
+      this.refreshStaffLyrics();
     }
 
     this.save();
@@ -5043,6 +5312,8 @@ export default class Editor extends Vue {
           }),
         ),
       );
+
+      this.refreshStaffLyrics();
 
       const start = Math.min(
         this.selectionRange.start,
@@ -5573,12 +5844,12 @@ export default class Editor extends Vue {
     const workspace = this.selectedWorkspace;
 
     if (workspace.filePath != null) {
-      const result = await this.ipcService.saveWorkspace(workspace);
+      const result = await this.saveWorkspace(workspace);
       if (result.success) {
         workspace.hasUnsavedChanges = false;
       }
     } else {
-      const result = await this.ipcService.saveWorkspaceAs(workspace);
+      const result = await this.saveWorkspaceAs(workspace);
       if (result.success) {
         workspace.filePath = result.filePath;
         workspace.hasUnsavedChanges = false;
@@ -5589,7 +5860,7 @@ export default class Editor extends Vue {
   async onFileMenuSaveAs() {
     const workspace = this.selectedWorkspace;
 
-    const result = await this.ipcService.saveWorkspaceAs(workspace);
+    const result = await this.saveWorkspaceAs(workspace);
     if (result.success) {
       workspace.filePath = result.filePath;
       workspace.hasUnsavedChanges = false;
@@ -5600,6 +5871,10 @@ export default class Editor extends Vue {
     const currentIndex = this.selectedElementIndex;
 
     this.commandService.undo();
+
+    // TODO this may be overkill, but the alternative is putting in place
+    // an event system to only refresh on certain undo actions
+    this.refreshStaffLyrics();
 
     if (currentIndex > -1) {
       // If the selected element was removed during the undo process, choose a new one
@@ -5618,6 +5893,10 @@ export default class Editor extends Vue {
     const currentIndex = this.selectedElementIndex;
 
     this.commandService.redo();
+
+    // TODO this may be overkill, but the alternative is putting in place
+    // an event system to only refresh on certain undo actions
+    this.refreshStaffLyrics();
 
     if (currentIndex > -1) {
       // If the selected element was removed during the redo process, choose a new one
@@ -5712,6 +5991,16 @@ export default class Editor extends Vue {
       (this.$refs.searchText as SearchText).focus();
     } else {
       this.searchTextPanelIsOpen = true;
+    }
+  }
+
+  onFileMenuLyrics() {
+    if (!this.dialogOpen) {
+      if (this.lyricManagerIsOpen) {
+        this.closeLyricManager();
+      } else {
+        this.openLyricManager();
+      }
     }
   }
 

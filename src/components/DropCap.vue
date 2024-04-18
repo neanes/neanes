@@ -9,6 +9,7 @@
       class="drop-cap"
       :style="style"
       :content="element.content"
+      :editable="editable"
       @blur="updateContent"
     ></ContentEditable>
   </div>
@@ -31,8 +32,7 @@ import { withZoom } from '@/utils/withZoom';
 export default class DropCap extends Vue {
   @Prop() element!: DropCapElement;
   @Prop() pageSetup!: PageSetup;
-
-  editable: boolean = false;
+  @Prop() editable!: boolean;
 
   get textElement() {
     return this.$refs.text as ContentEditable;

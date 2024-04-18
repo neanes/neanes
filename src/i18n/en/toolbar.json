@@ -42,6 +42,10 @@
     "width": "Width",
     "height": "Height"
   },
+  "lyricManager": {
+    "locked": "Lock Lyrics",
+    "assignAcceptsLyrics": "Save Current Melismas"
+  },
   "martyria": {
     "auto": "Auto",
     "note": "Note",
@@ -65,7 +69,12 @@
     "sharp": "Sharp",
     "measureNumber": "Measure Number",
     "noteIndicator": "Note Indicator",
-    "isonIndicator": "Ison Indicator"
+    "isonIndicator": "Ison Indicator",
+    "acceptsLyrics": "Accepts Lyrics",
+    "acceptsLyricsDefault": "Default",
+    "acceptsLyricsYes": "Yes",
+    "acceptsLyricsNo": "No",
+    "acceptsLyricsMelismaOnly": "Melisma Only"
   },
   "textbox": {
     "multipanel": "Multipanel"

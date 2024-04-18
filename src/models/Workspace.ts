@@ -25,6 +25,7 @@ export class Workspace {
   public scrollTop: number = 0;
   public playbackTime: number = 0;
   public playbackBpm: number = 0;
+  public lyricManagerIsOpen: boolean = false;
 }
 
 export interface WorkspaceLocalStorage {

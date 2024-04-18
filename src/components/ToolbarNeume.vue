@@ -435,6 +435,37 @@
         }}</label>
       </div>
 
+      <span class="space" />
+
+      <div style="display: flex; align-items: center">
+        <label class="right-space" for="toolbar:neume-accepts-lyrics">{{
+          $t('toolbar:neume.acceptsLyrics')
+        }}</label>
+        <select
+          id="toolbar:neume-accepts-lyrics"
+          :value="element.acceptsLyrics"
+          @change="
+            $emit(
+              'update:acceptsLyrics',
+              ($event.target as HTMLSelectElement).value,
+            )
+          "
+        >
+          <option :value="AcceptsLyricsOption.Default">
+            {{ $t('toolbar:neume.acceptsLyricsDefault') }}
+          </option>
+          <option :value="AcceptsLyricsOption.Yes">
+            {{ $t('toolbar:neume.acceptsLyricsYes') }}
+          </option>
+          <option :value="AcceptsLyricsOption.No">
+            {{ $t('toolbar:neume.acceptsLyricsNo') }}
+          </option>
+          <option :value="AcceptsLyricsOption.MelismaOnly">
+            {{ $t('toolbar:neume.acceptsLyricsMelismaOnly') }}
+          </option>
+        </select>
+      </div>
+
       <template v-if="showChromaticFthoraNote">
         <span class="space" />
         <label class="right-space">{{ $t('toolbar:common.fthoraNote') }}</label>
@@ -463,7 +494,7 @@ import ButtonWithMenu, {
   ButtonWithMenuOption,
 } from '@/components/ButtonWithMenu.vue';
 import InputUnit from '@/components/InputUnit.vue';
-import { NoteElement } from '@/models/Element';
+import { AcceptsLyricsOption, NoteElement } from '@/models/Element';
 import {
   kentemataNeumes,
   takesSecondaryNeumes,
@@ -494,6 +525,7 @@ import { Unit } from '@/utils/Unit';
   emits: [
     'open-syllable-positioning-dialog',
     'update:accidental',
+    'update:acceptsLyrics',
     'update:chromaticFthoraNote',
     'update:expression',
     'update:fthora',
@@ -534,6 +566,8 @@ export default class ToolbarNeume extends Vue {
   Tie = Tie;
   TimeNeume = TimeNeume;
   VocalExpressionNeume = VocalExpressionNeume;
+
+  AcceptsLyricsOption = AcceptsLyricsOption;
 
   chromaticFthoras = [
     Fthora.SoftChromaticPa_Top,

@@ -42,6 +42,13 @@ export abstract class ScoreElement {
   public lineBreakType: LineBreakType | undefined = undefined;
 }
 
+export enum AcceptsLyricsOption {
+  Default = 'Default',
+  Yes = 'Yes',
+  No = 'No',
+  MelismaOnly = 'MelismaOnly',
+}
+
 export class NoteElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.Note;
   public quantitativeNeume: QuantitativeNeume = QuantitativeNeume.Ison;
@@ -77,6 +84,7 @@ export class NoteElement extends ScoreElement {
   public lyricsFontWeight: string | undefined = undefined;
   public lyricsTextDecoration: string | undefined = undefined;
   public lyricsUseDefaultStyle: boolean | undefined = undefined;
+  public acceptsLyrics: AcceptsLyricsOption | undefined = undefined;
   public isMelisma: boolean | undefined = undefined;
   public isMelismaStart: boolean | undefined = undefined;
   public isHyphen: boolean | undefined = undefined;

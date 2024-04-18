@@ -141,6 +141,8 @@ To insert lyrics, click on the space just below a neume and begin typing.
 - To move from a neume to its lyrics, press `Ctrl + Down Arrow`.
 - To move from the lyrics back to the neume, press `Ctrl + Up Arrow`.
 
+There is a more advanced method of editing lyrics that is described [here](./advanced.html#advanced-lyrics-entry). The advanced method can be used to quickly alter the lyrics for many neumes at once, shift all lyrics left or right, or to create prosomoia.
+
 ### Melismas
 
 To create a melisma, end your lyrics with an underscore or hyphen (`_` or `-`). To continue the melisma, set the lyrics for each neume in the melisma to a single underscore or hyphen. The full melisma will be drawn for you.

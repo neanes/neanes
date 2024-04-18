@@ -33,8 +33,10 @@ export class LyricService {
           }
 
           if (note.lyrics.trim() === '') {
-            lyrics += '_';
-            needSpace = true;
+            if (!note.isMelisma) {
+              lyrics += '_';
+              needSpace = true;
+            }
           } else {
             lyrics += note.lyrics;
             needSpace = !note.isMelismaStart;

@@ -29,10 +29,16 @@ export class LyricService {
         if (!note.isMelisma || note.isMelismaStart) {
           if (needSpace) {
             lyrics += ' ';
+            needSpace = false;
           }
 
-          lyrics += note.lyrics;
-          needSpace = !note.isMelismaStart;
+          if (note.lyrics.trim() === '') {
+            lyrics += '_';
+            needSpace = true;
+          } else {
+            lyrics += note.lyrics;
+            needSpace = !note.isMelismaStart;
+          }
         }
 
         if (note.isHyphen) {

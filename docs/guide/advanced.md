@@ -59,7 +59,7 @@ As you type into the toolbar's text area, lyrics will be automatically assigned 
 > [!TIP]
 > You can quickly shift all lyrics left or right by editing the lyrics in the lyrics toolbar.
 
-#### Example
+#### Example 1
 
 ![Lyrics Toolbar Example](./images/guide-lyrics-toolbar-1.png)
 
@@ -73,6 +73,18 @@ to
 
 ```
 one three four
+```
+
+#### Example 2
+
+To leave a neume without any lyrics, use a single underscore.
+
+![Lyrics Toolbar Example](./images/guide-lyrics-toolbar-blank-1.png)
+
+Lyrics:
+
+```
+one _ two
 ```
 
 ### Locking Lyrics

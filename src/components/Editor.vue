@@ -4718,18 +4718,22 @@ export default class Editor extends Vue {
         // and assign it to the note.
         token = tokenizer.getNextToken();
 
-        // If the next note only takes a melisma, then ensure that this token
-        // ends in an underscore
-        if (i + 1 < filteredElements.length) {
-          const nextNote = filteredElements[i + 1] as NoteElement;
+        if (token === '_' && !previousToken.endsWith('_')) {
+          token = '';
+        } else {
+          // If the next note only takes a melisma, then ensure that this token
+          // ends in an underscore
+          if (i + 1 < filteredElements.length) {
+            const nextNote = filteredElements[i + 1] as NoteElement;
 
-          if (
-            this.lyricService.getEffectiveAcceptsLyrics(nextNote, note) ===
-              AcceptsLyricsOption.MelismaOnly &&
-            !token.endsWith('_') &&
-            !token.endsWith('-')
-          ) {
-            token += '_';
+            if (
+              this.lyricService.getEffectiveAcceptsLyrics(nextNote, note) ===
+                AcceptsLyricsOption.MelismaOnly &&
+              !token.endsWith('_') &&
+              !token.endsWith('-')
+            ) {
+              token += '_';
+            }
           }
         }
       }
@@ -4762,7 +4766,7 @@ export default class Editor extends Vue {
 
       if (note.isMelisma && !note.isMelismaStart) {
         acceptsLyrics = AcceptsLyricsOption.MelismaOnly;
-      } else if (note.lyrics === '') {
+      } else if (note.lyrics.trim() === '') {
         acceptsLyrics = AcceptsLyricsOption.No;
       }
 

@@ -1777,6 +1777,7 @@ export default class Editor extends Vue {
         fontLoader.load('1rem Athonite'),
         fontLoader.load('1rem "GFS Didot"'),
         fontLoader.load('1rem Neanes'),
+        fontLoader.load('1rem NeanesStathisSeries'),
         fontLoader.load('1rem NeanesRTL'),
         fontLoader.load('1rem "Noto Naskh Arabic"'),
         fontLoader.load('1rem Omega'),
@@ -5342,10 +5343,6 @@ export default class Editor extends Vue {
   }
 
   updatePageSetup(pageSetup: PageSetup) {
-    pageSetup.neumeDefaultFontFamily = pageSetup.melkiteRtl
-      ? 'NeanesRTL'
-      : 'Neanes';
-
     this.commandService.execute(
       this.pageSetupCommandFactory.create('update-properties', {
         target: this.score.pageSetup,

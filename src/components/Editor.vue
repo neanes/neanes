@@ -1661,8 +1661,12 @@ export default class Editor extends Vue {
       fontFamily: element.lyricsUseDefaultStyle
         ? getFontFamilyWithFallback(
             this.score.pageSetup.lyricsDefaultFontFamily,
+            this.score.pageSetup.neumeDefaultFontFamily,
           )
-        : getFontFamilyWithFallback(element.lyricsFontFamily),
+        : getFontFamilyWithFallback(
+            element.lyricsFontFamily,
+            this.score.pageSetup.neumeDefaultFontFamily,
+          ),
       fontWeight: element.lyricsUseDefaultStyle
         ? this.score.pageSetup.lyricsDefaultFontWeight
         : element.lyricsFontWeight,

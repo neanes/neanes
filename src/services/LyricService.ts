@@ -26,6 +26,16 @@ export class LyricService {
       if (filteredElements[i].elementType === ElementType.Note) {
         const note = filteredElements[i] as NoteElement;
 
+        let previousNote: NoteElement | null = null;
+
+        if (i > 0) {
+          const previousElement = filteredElements[i - 1];
+
+          if (previousElement.elementType === ElementType.Note) {
+            previousNote = previousElement as NoteElement;
+          }
+        }
+
         if (!note.isMelisma || note.isMelismaStart) {
           if (needSpace) {
             lyrics += ' ';
@@ -33,7 +43,11 @@ export class LyricService {
           }
 
           if (note.lyrics.trim() === '') {
-            if (!note.isMelisma) {
+            if (
+              !note.isMelisma &&
+              this.getEffectiveAcceptsLyrics(note, previousNote) !==
+                AcceptsLyricsOption.No
+            ) {
               lyrics += '_';
               needSpace = true;
             }
@@ -44,7 +58,10 @@ export class LyricService {
         }
 
         if (note.isHyphen) {
-          if (note.acceptsLyrics !== AcceptsLyricsOption.MelismaOnly) {
+          if (
+            this.getEffectiveAcceptsLyrics(note, previousNote) !==
+            AcceptsLyricsOption.MelismaOnly
+          ) {
             lyrics += '-';
           }
         } else if (note.isMelisma) {
@@ -53,9 +70,11 @@ export class LyricService {
               ? (filteredElements[i + 1] as NoteElement)
               : null;
           if (
-            note.acceptsLyrics !== AcceptsLyricsOption.MelismaOnly &&
+            this.getEffectiveAcceptsLyrics(note, previousNote) !==
+              AcceptsLyricsOption.MelismaOnly &&
             nextNote?.elementType === ElementType.Note &&
-            nextNote?.acceptsLyrics !== AcceptsLyricsOption.MelismaOnly
+            this.getEffectiveAcceptsLyrics(nextNote, note) !==
+              AcceptsLyricsOption.MelismaOnly
           ) {
             lyrics += '_';
           }

@@ -6522,6 +6522,10 @@ export default class Editor extends Vue {
   border: none;
 }
 
+.page.print .drop-cap-container {
+  border: none;
+}
+
 .page.print :deep(.text-box.multipanel) {
   border: none;
 }
@@ -6568,6 +6572,10 @@ export default class Editor extends Vue {
   }
 
   .text-box-container {
+    border: none;
+  }
+
+  .drop-cap-container {
     border: none;
   }
 

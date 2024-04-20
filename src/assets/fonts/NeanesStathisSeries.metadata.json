@@ -1,6 +1,6 @@
 {
   "fontName": "NeanesStathisSeries",
-  "fontVersion": "001.000",
+  "fontVersion": "1.000",
   "metrics": {
     "winAscent": 1.4,
     "winDescent": 0.466
@@ -572,7 +572,7 @@
         0.227
       ],
       "fthoraTop": [
-        0.889,
+        1.0,
         0.501
       ],
       "fthoraBottom": [
@@ -662,8 +662,8 @@
         0.227
       ],
       "fthoraTop": [
-        0.358,
-        0.507
+        0.47,
+        0.95
       ],
       "fthoraBottom": [
         0.789,
@@ -752,7 +752,7 @@
         0.227
       ],
       "fthoraTop": [
-        1.227,
+        1.4,
         0.447
       ],
       "fthoraBottom": [
@@ -834,8 +834,8 @@
         0.227
       ],
       "fthoraTop": [
-        0.678,
-        0.507
+        0.68,
+        1.07
       ],
       "fthoraBottom": [
         0.789,
@@ -916,8 +916,8 @@
         0.227
       ],
       "fthoraTop": [
-        0.314,
-        1.071
+        0.14,
+        1.11
       ],
       "fthoraBottom": [
         0.789,
@@ -998,8 +998,8 @@
         0.227
       ],
       "fthoraTop": [
-        0.245,
-        1.056
+        0.15,
+        1.08
       ],
       "fthoraBottom": [
         0.789,
@@ -1080,8 +1080,8 @@
         0.227
       ],
       "fthoraTop": [
-        1.262,
-        0.861
+        0.48,
+        1.19
       ],
       "fthoraBottom": [
         0.789,
@@ -3466,7 +3466,7 @@
         0.062
       ],
       "fthoraTop": [
-        1.02,
+        1.2,
         0.68
       ],
       "fthoraBottom": [
@@ -3532,8 +3532,8 @@
         0.062
       ],
       "fthoraTop": [
-        0.204,
-        0.842
+        0.37,
+        1.11
       ],
       "fthoraBottom": [
         0.352,
@@ -3598,8 +3598,8 @@
         0.062
       ],
       "fthoraTop": [
-        0.192,
-        0.75
+        0.22,
+        1.23
       ],
       "fthoraBottom": [
         0.352,
@@ -4679,7 +4679,7 @@
       ],
       "fthoraTop": [
         0.649,
-        1.101
+        1.336
       ],
       "fthoraBottom": [
         0.352,
@@ -7877,7 +7877,7 @@
     "modeThird": 2.612,
     "modeThirdNana": 1.02,
     "modeFourth": 0.98,
-    "modeLegetos": 1.505,
+    "modeLegetos": 2.242,
     "modePlagalFirst": 0.945,
     "modePlagalSecond": 1.232,
     "modeVarys": 1.485,
@@ -8138,7 +8138,7 @@
     "oligonElafron": {
       "bBoxNE": [
         1.432,
-        0.867
+        0.86
       ],
       "bBoxSW": [
         0.076,
@@ -8508,7 +8508,7 @@
     "petastiRunningElafron": {
       "bBoxNE": [
         1.515,
-        0.856
+        0.868
       ],
       "bBoxSW": [
         -0.332,
@@ -11257,11 +11257,11 @@
     },
     "modeLegetos": {
       "bBoxNE": [
-        1.428,
-        0.714
+        2.167,
+        0.789
       ],
       "bBoxSW": [
-        0.188,
+        0.396,
         0.145
       ]
     },

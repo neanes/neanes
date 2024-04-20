@@ -339,6 +339,7 @@
               id="page-setup-dialog-melkite-rtl"
               type="checkbox"
               v-model="form.melkiteRtl"
+              @change="onChangeMelkiteRtl"
             />
             <label for="page-setup-dialog-melkite-rtl">{{
               $t('dialog:pageSetup.melkiteRtl')
@@ -626,6 +627,24 @@
               class="drop-caps-input"
               v-model="form.neumeDefaultFontSize"
             />
+          </div>
+          <div class="form-group">
+            <label class="drop-caps-label">{{
+              $t('dialog:pageSetup.font')
+            }}</label>
+            <select
+              class="drop-caps-select"
+              v-model="form.neumeDefaultFontFamily"
+              :disabled="form.melkiteRtl"
+            >
+              <option
+                v-for="family in neumeFontFamilies"
+                :key="family.value"
+                :value="family.value"
+              >
+                {{ family.displayName }}
+              </option>
+            </select>
           </div>
           <div class="form-group">
             <label class="drop-caps-label">{{
@@ -960,6 +979,17 @@ export default class PageSetupDialog extends Vue {
     ];
   }
 
+  get neumeFontFamilies() {
+    if (this.form.melkiteRtl) {
+      return [{ displayName: 'EZ Psaltica RTL', value: 'NeanesRTL' }];
+    } else {
+      return [
+        { displayName: 'EZ Psaltica', value: 'Neanes' },
+        { displayName: 'Stathis Series', value: 'NeanesStathisSeries' },
+      ];
+    }
+  }
+
   get neumeSpacingMax() {
     return Math.round(this.toDisplayUnit(this.form.pageWidth));
   }
@@ -1195,6 +1225,12 @@ export default class PageSetupDialog extends Vue {
     );
 
     this.$forceUpdate();
+  }
+
+  onChangeMelkiteRtl() {
+    this.form.neumeDefaultFontFamily = this.form.melkiteRtl
+      ? 'NeanesRTL'
+      : 'Neanes';
   }
 
   isSyllableElement(elementType: ElementType) {

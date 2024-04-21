@@ -1,9 +1,9 @@
 ---
 name: Bug report
 about: Create a report to help us improve
-title: '[BUG] My Bug'
-labels: bug
-assignees: danielgarthur
+title: 'My bug'
+labels:
+  - 'Type: Bug'
 ---
 
 **This bug was found in**

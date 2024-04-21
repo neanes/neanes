@@ -8,6 +8,8 @@ updates:
       interval: 'weekly'
     commit-message:
       prefix: 'chore'
+    labels:
+      - 'Type: Dependencies'
     ignore:
       # Electron 30 segfaults on Linux. See:
       # https://github.com/electron/electron/issues/41839
@@ -19,3 +21,5 @@ updates:
       interval: 'weekly'
     commit-message:
       prefix: 'chore'
+    labels:
+      - 'Type: Dependencies'

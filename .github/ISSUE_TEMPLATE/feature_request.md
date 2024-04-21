@@ -1,10 +1,9 @@
 ---
 name: Feature request
 about: Suggest an idea for this project
-title: "[ENHANCEMENT] My Feature Request"
-labels: enhancement
-assignees: danielgarthur
-
+title: 'My feature request'
+labels:
+  - 'Type: Feature'
 ---
 
 **Is your feature request related to a problem? Please describe.**

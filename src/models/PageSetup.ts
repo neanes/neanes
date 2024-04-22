@@ -77,6 +77,11 @@ export class PageSetup {
   public lyricsVerticalOffset = -Unit.fromInch(0.05);
   public lyricsMinimumSpacing = Unit.fromInch(0.05);
 
+  // These two melisma properties are currently not exposed in the UI or saved
+  // as part of the byzx format.
+  public lyricsMelismaSpacing = Unit.fromInch(0.025);
+  public lyricsMelismaThickeness = 1;
+
   public get lyricsFont() {
     return `${this.lyricsDefaultFontStyle} normal ${this.lyricsDefaultFontWeight} ${this.lyricsDefaultFontSize}px "${this.lyricsDefaultFontFamily}"`;
   }

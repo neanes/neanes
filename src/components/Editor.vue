@@ -246,8 +246,9 @@
                               fullRtl:
                                 (element as NoteElement).isFullMelisma && rtl,
                             }"
-                            :style="getMelismaStyle(element as NoteElement)"
-                            v-text="(element as NoteElement).melismaText"
+                            :style="
+                              getMelismaUnderscoreStyle(element as NoteElement)
+                            "
                           ></div>
                         </template>
                       </div>
@@ -1707,6 +1708,20 @@ export default class Editor extends Vue {
         ? withZoom(this.score.pageSetup.lyricsDefaultFontSize)
         : withZoom(element.lyricsFontSize),
     } as StyleValue;
+  }
+
+  getMelismaUnderscoreStyle(element: NoteElement) {
+    const thickness = 1;
+    return {
+      borderBottom: `${withZoom(thickness)} solid ${
+        element.lyricsUseDefaultStyle
+          ? this.score.pageSetup.lyricsDefaultColor
+          : element.lyricsColor
+      }`,
+      top: withZoom(element.melismaOffsetTop),
+      height: withZoom(element.melismaHeight - thickness / 2),
+      width: withZoom(element.melismaWidth!),
+    };
   }
 
   getMelismaHyphenStyle(element: NoteElement, index: number) {

@@ -25,11 +25,11 @@ export class TextMeasurementService {
     return metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent;
   }
 
-  public static getFontBoundingBoxDescent(text: string, font: string) {
+  public static getFontBoundingBoxDescent(font: string) {
     const canvas = this.canvas || document.createElement('canvas');
     const context = canvas.getContext('2d')!;
     context.font = font;
-    const metrics = context.measureText(text);
+    const metrics = context.measureText('');
     return metrics.fontBoundingBoxDescent;
   }
 }

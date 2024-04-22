@@ -6521,6 +6521,10 @@ export default class Editor extends Vue {
   left: 0;
 }
 
+.melisma-underscore.full {
+  left: 0;
+}
+
 .melisma.fullRtl {
   right: 0;
 }

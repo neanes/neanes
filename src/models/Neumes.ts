@@ -181,6 +181,9 @@ export enum RootSign {
 }
 
 export enum Note {
+  ZoLow = 'ZoLow',
+  NiLow = 'NiLow',
+  PaLow = 'PaLow',
   VouLow = 'VouLow',
   GaLow = 'GaLow',
   ThiLow = 'ThiLow',

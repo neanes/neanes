@@ -112,6 +112,9 @@
     }
   },
   "note": {
+    "zoLow": "ζω",
+    "niLow": "νη",
+    "paLow": "πα",
     "vouLow": "βου",
     "gaLow": "γα",
     "diLow": "δι",

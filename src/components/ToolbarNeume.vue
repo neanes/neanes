@@ -1057,6 +1057,12 @@ export default class ToolbarNeume extends Vue {
     }
 
     switch (note) {
+      case ScaleNote.ZoLow:
+        return 'model:note.zoLow';
+      case ScaleNote.NiLow:
+        return 'model:note.niLow';
+      case ScaleNote.PaLow:
+        return 'model:note.paLow';
       case ScaleNote.VouLow:
         return 'model:note.vouLow';
       case ScaleNote.GaLow:

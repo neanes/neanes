@@ -845,10 +845,22 @@ export class LayoutService {
           ? 'italic'
           : 'normal';
 
-      elementWidthPx = TextMeasurementService.getTextWidth(
-        textBoxElement.content,
-        textBoxElement.computedFont,
-      );
+      const lines = textBoxElement.content.split(/(?:\r\n|\r|\n)/g);
+
+      let maxWidth = 0;
+
+      for (const line of lines) {
+        const lineWidth = TextMeasurementService.getTextWidth(
+          line,
+          textBoxElement.computedFont,
+        );
+
+        if (lineWidth > maxWidth) {
+          maxWidth = lineWidth;
+        }
+      }
+
+      elementWidthPx = maxWidth;
 
       const minimumWidth = TextMeasurementService.getTextWidth(
         ' ',

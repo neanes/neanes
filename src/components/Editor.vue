@@ -239,7 +239,7 @@
                           "
                         >
                           <div
-                            class="melisma"
+                            class="melisma-underscore"
                             :class="{
                               full:
                                 (element as NoteElement).isFullMelisma && !rtl,
@@ -247,9 +247,20 @@
                                 (element as NoteElement).isFullMelisma && rtl,
                             }"
                             :style="
-                              getMelismaUnderscoreStyle(element as NoteElement)
+                              getMelismaUnderscoreStyleOuter(
+                                element as NoteElement,
+                              )
                             "
-                          ></div>
+                          >
+                            <div
+                              class="melisma-inner"
+                              :style="
+                                getMelismaUnderscoreStyleInner(
+                                  element as NoteElement,
+                                )
+                              "
+                            ></div>
+                          </div>
                         </template>
                       </div>
                     </div>
@@ -1710,17 +1721,30 @@ export default class Editor extends Vue {
     } as StyleValue;
   }
 
-  getMelismaUnderscoreStyle(element: NoteElement) {
+  getMelismaUnderscoreStyleOuter(element: NoteElement) {
     const thickness = 1;
+    return {
+      top: withZoom(element.melismaOffsetTop),
+      height: withZoom(element.melismaHeight - thickness / 2),
+      width: withZoom(element.melismaWidth!),
+    };
+  }
+
+  getMelismaUnderscoreStyleInner(element: NoteElement) {
+    const thickness = 1;
+
+    const spacing = !element.isFullMelisma
+      ? this.score.pageSetup.lyricsMinimumSpacing
+      : 0;
+
     return {
       borderBottom: `${withZoom(thickness)} solid ${
         element.lyricsUseDefaultStyle
           ? this.score.pageSetup.lyricsDefaultColor
           : element.lyricsColor
       }`,
-      top: withZoom(element.melismaOffsetTop),
-      height: withZoom(element.melismaHeight - thickness / 2),
-      width: withZoom(element.melismaWidth!),
+      left: withZoom(spacing),
+      width: `calc(100% - ${withZoom(spacing)})`,
     };
   }
 
@@ -6473,6 +6497,12 @@ export default class Editor extends Vue {
   white-space: pre;
 }
 
+.melisma-underscore {
+  position: absolute;
+  display: inline;
+  white-space: pre;
+}
+
 .melisma.full {
   left: 0;
 }
@@ -6483,6 +6513,11 @@ export default class Editor extends Vue {
 
 .melisma-hyphen {
   position: absolute;
+}
+
+.melisma-inner {
+  height: 100%;
+  position: relative;
 }
 
 .page-break {

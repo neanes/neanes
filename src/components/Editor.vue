@@ -235,16 +235,42 @@
                         <template
                           v-else-if="
                             isMelisma(element as NoteElement) &&
-                            !(element as NoteElement).isHyphen
+                            !(element as NoteElement).isHyphen &&
+                            !rtl
+                          "
+                        >
+                          <div
+                            class="melisma-underscore"
+                            :class="{
+                              full: (element as NoteElement).isFullMelisma,
+                            }"
+                            :style="
+                              getMelismaUnderscoreStyleOuter(
+                                element as NoteElement,
+                              )
+                            "
+                          >
+                            <div
+                              class="melisma-inner"
+                              :style="
+                                getMelismaUnderscoreStyleInner(
+                                  element as NoteElement,
+                                )
+                              "
+                            ></div>
+                          </div>
+                        </template>
+                        <template
+                          v-else-if="
+                            isMelisma(element as NoteElement) &&
+                            !(element as NoteElement).isHyphen &&
+                            rtl
                           "
                         >
                           <div
                             class="melisma"
                             :class="{
-                              full:
-                                (element as NoteElement).isFullMelisma && !rtl,
-                              fullRtl:
-                                (element as NoteElement).isFullMelisma && rtl,
+                              fullRtl: (element as NoteElement).isFullMelisma,
                             }"
                             :style="getMelismaStyle(element as NoteElement)"
                             v-text="(element as NoteElement).melismaText"
@@ -1707,6 +1733,32 @@ export default class Editor extends Vue {
         ? withZoom(this.score.pageSetup.lyricsDefaultFontSize)
         : withZoom(element.lyricsFontSize),
     } as StyleValue;
+  }
+
+  getMelismaUnderscoreStyleOuter(element: NoteElement) {
+    return {
+      top: withZoom(element.melismaOffsetTop),
+      height: withZoom(element.melismaHeight),
+      width: withZoom(element.melismaWidth!),
+    };
+  }
+
+  getMelismaUnderscoreStyleInner(element: NoteElement) {
+    const thickness = this.score.pageSetup.lyricsMelismaThickeness;
+
+    const spacing = !element.isFullMelisma
+      ? this.score.pageSetup.lyricsMelismaSpacing
+      : 0;
+
+    return {
+      borderBottom: `${withZoom(thickness)} solid ${
+        element.lyricsUseDefaultStyle
+          ? this.score.pageSetup.lyricsDefaultColor
+          : element.lyricsColor
+      }`,
+      left: withZoom(spacing),
+      width: `calc(100% - ${withZoom(spacing)})`,
+    };
   }
 
   getMelismaHyphenStyle(element: NoteElement, index: number) {
@@ -6458,7 +6510,17 @@ export default class Editor extends Vue {
   white-space: pre;
 }
 
+.melisma-underscore {
+  position: absolute;
+  display: inline;
+  white-space: pre;
+}
+
 .melisma.full {
+  left: 0;
+}
+
+.melisma-underscore.full {
   left: 0;
 }
 
@@ -6468,6 +6530,12 @@ export default class Editor extends Vue {
 
 .melisma-hyphen {
   position: absolute;
+}
+
+.melisma-inner {
+  height: 100%;
+  position: relative;
+  box-sizing: border-box;
 }
 
 .page-break {

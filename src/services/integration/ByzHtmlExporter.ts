@@ -1001,7 +1001,7 @@ export class ByzHtmlExporter {
     } "${pageSetup.dropCapDefaultFontFamily}"`;
 
     const fontBoundingBoxDescent =
-      TextMeasurementService.getFontBoundingBoxDescent('R', font);
+      TextMeasurementService.getFontBoundingBoxDescent(font);
 
     // TODO this doesn't work correctly for every font
     return (

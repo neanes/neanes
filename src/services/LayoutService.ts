@@ -47,6 +47,8 @@ import { TATWEEL } from '@/utils/constants';
 
 import { TextMeasurementService } from './TextMeasurementService';
 
+const fontHeightCache = new Map<string, number>();
+const fontBoundingBoxDescentCache = new Map<string, number>();
 const textWidthCache = new Map<string, number>();
 const neumeWidthCache = new Map<string, number>();
 const emptyElementWidth = 39;
@@ -617,7 +619,6 @@ export class LayoutService {
         );
         const fontBoundingBoxDescent =
           TextMeasurementService.getFontBoundingBoxDescent(
-            dropCapElement.content,
             dropCapElement.computedFont,
           );
         const adjustment =
@@ -1600,13 +1601,19 @@ export class LayoutService {
                 widthOfUnderscoreForThisElement,
               );
 
-              const numberOfUnderScoresNeeded = Math.ceil(
-                element.melismaWidth / widthOfUnderscoreForThisElement,
-              );
+              // Calculate the distance from the alphabetic baseline to the bottom of the font bounding box
+              element.melismaOffsetTop =
+                -this.getFontBoundingBoxDescentFromCache(
+                  fontBoundingBoxDescentCache,
+                  element,
+                  pageSetup,
+                );
 
-              for (let i = 0; i < numberOfUnderScoresNeeded; i++) {
-                element.melismaText += '_';
-              }
+              element.melismaHeight = this.getFontHeightFromCache(
+                fontHeightCache,
+                element,
+                pageSetup,
+              );
             } else if (pageSetup.melkiteRtl) {
               const nextNoteElement = nextElement as NoteElement;
 
@@ -2230,6 +2237,50 @@ export class LayoutService {
     }
 
     return width;
+  }
+
+  private static getFontBoundingBoxDescentFromCache(
+    cache: Map<string, number>,
+    element: NoteElement,
+    pageSetup: PageSetup,
+  ) {
+    const font = element.lyricsUseDefaultStyle
+      ? pageSetup.lyricsFont
+      : element.lyricsFont;
+
+    const key = font;
+
+    let descent = cache.get(key);
+
+    if (descent == null) {
+      descent = TextMeasurementService.getFontBoundingBoxDescent(font);
+
+      cache.set(key, descent);
+    }
+
+    return descent;
+  }
+
+  private static getFontHeightFromCache(
+    cache: Map<string, number>,
+    element: NoteElement,
+    pageSetup: PageSetup,
+  ) {
+    const font = element.lyricsUseDefaultStyle
+      ? pageSetup.lyricsFont
+      : element.lyricsFont;
+
+    const key = font;
+
+    let height = cache.get(key);
+
+    if (height == null) {
+      height = TextMeasurementService.getFontHeight(font);
+
+      cache.set(key, height);
+    }
+
+    return height;
   }
 }
 

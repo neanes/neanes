@@ -6532,6 +6532,7 @@ export default class Editor extends Vue {
 .melisma-inner {
   height: 100%;
   position: relative;
+  box-sizing: border-box;
 }
 
 .page-break {

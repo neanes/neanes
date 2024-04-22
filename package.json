@@ -44,7 +44,7 @@
     "register-service-worker": "^1.7.2",
     "tone": "^14.8.49",
     "uuid": "^9.0.1",
-    "vue": "^3.4.23",
+    "vue": "^3.4.24",
     "vue-draggable-resizable": "^3.0.0",
     "vue-facing-decorator": "^3.0.4",
     "vue-router": "^4.3.2",
@@ -79,7 +79,7 @@
     "vite-plugin-vue-devtools": "^7.0.27",
     "vitepress": "^1.1.3",
     "vitest": "^1.5.0",
-    "vue-tsc": "^2.0.13"
+    "vue-tsc": "^2.0.14"
   },
   "overrides": {
     "vite-plugin-electron": {

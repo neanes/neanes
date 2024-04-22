@@ -423,6 +423,12 @@ export default class ToolbarMartyria extends Vue {
 
   private getNoteDisplayName(note: Note) {
     switch (note) {
+      case Note.ZoLow:
+        return 'model:note.zoLow';
+      case Note.NiLow:
+        return 'model:note.niLow';
+      case Note.PaLow:
+        return 'model:note.paLow';
       case Note.VouLow:
         return 'model:note.vouLow';
       case Note.GaLow:

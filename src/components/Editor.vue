@@ -1736,11 +1736,9 @@ export default class Editor extends Vue {
   }
 
   getMelismaUnderscoreStyleOuter(element: NoteElement) {
-    const thickness = this.score.pageSetup.lyricsMelismaThickeness;
-
     return {
       top: withZoom(element.melismaOffsetTop),
-      height: withZoom(element.melismaHeight - thickness / 2),
+      height: withZoom(element.melismaHeight),
       width: withZoom(element.melismaWidth!),
     };
   }

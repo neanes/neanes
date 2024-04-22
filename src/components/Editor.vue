@@ -235,16 +235,14 @@
                         <template
                           v-else-if="
                             isMelisma(element as NoteElement) &&
-                            !(element as NoteElement).isHyphen
+                            !(element as NoteElement).isHyphen &&
+                            !rtl
                           "
                         >
                           <div
                             class="melisma-underscore"
                             :class="{
-                              full:
-                                (element as NoteElement).isFullMelisma && !rtl,
-                              fullRtl:
-                                (element as NoteElement).isFullMelisma && rtl,
+                              full: (element as NoteElement).isFullMelisma,
                             }"
                             :style="
                               getMelismaUnderscoreStyleOuter(
@@ -261,6 +259,22 @@
                               "
                             ></div>
                           </div>
+                        </template>
+                        <template
+                          v-else-if="
+                            isMelisma(element as NoteElement) &&
+                            !(element as NoteElement).isHyphen &&
+                            rtl
+                          "
+                        >
+                          <div
+                            class="melisma"
+                            :class="{
+                              fullRtl: (element as NoteElement).isFullMelisma,
+                            }"
+                            :style="getMelismaStyle(element as NoteElement)"
+                            v-text="(element as NoteElement).melismaText"
+                          ></div>
                         </template>
                       </div>
                     </div>

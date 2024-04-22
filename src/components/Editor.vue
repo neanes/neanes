@@ -1736,7 +1736,8 @@ export default class Editor extends Vue {
   }
 
   getMelismaUnderscoreStyleOuter(element: NoteElement) {
-    const thickness = 1;
+    const thickness = this.score.pageSetup.lyricsMelismaThickeness;
+
     return {
       top: withZoom(element.melismaOffsetTop),
       height: withZoom(element.melismaHeight - thickness / 2),
@@ -1745,10 +1746,10 @@ export default class Editor extends Vue {
   }
 
   getMelismaUnderscoreStyleInner(element: NoteElement) {
-    const thickness = 1;
+    const thickness = this.score.pageSetup.lyricsMelismaThickeness;
 
     const spacing = !element.isFullMelisma
-      ? this.score.pageSetup.lyricsMinimumSpacing
+      ? this.score.pageSetup.lyricsMelismaSpacing
       : 0;
 
     return {

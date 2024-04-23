@@ -154,6 +154,9 @@
     }
   },
   "note": {
+    "zoLow": "zo",
+    "niLow": "ni",
+    "paLow": "pa",
     "vouLow": "vou",
     "gaLow": "ga",
     "diLow": "di",

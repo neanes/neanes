@@ -1890,7 +1890,7 @@ export class LayoutService {
           currentShift = 0;
         }
 
-        if (currentNote < -6 || currentNote > 11) {
+        if (currentNote < -9 || currentNote > 11) {
           martyria.error = true;
         } else {
           martyria.error = false;

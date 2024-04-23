@@ -1,6 +1,6 @@
 {
   "version": "1.1",
-  "appVersion": "0.4.25",
+  "appVersion": "0.4.26",
   "pageSetup": {
     "pageSize": "Letter",
     "pageSizeUnit": "in",
@@ -25,7 +25,7 @@
     "neumeDefaultFontFamily": "NeanesStathisSeries",
     "neumeDefaultFontSize": 26.666666666666668,
     "neumeDefaultColor": "#000000",
-    "neumeDefaultSpacing": 1.92,
+    "neumeDefaultSpacing": 0.96,
     "neumeDefaultStrokeWidth": 0,
     "modeKeyDefaultColor": "#800000",
     "modeKeyDefaultStrokeWidth": 0,

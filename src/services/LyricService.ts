@@ -177,6 +177,13 @@ export class LyricTokenizer {
     return token.trim();
   }
 
+  peekNextToken() {
+    const orig = this.index;
+    const result = this.getNextToken();
+    this.index = orig;
+    return result;
+  }
+
   getNextCharacter() {
     let c = '';
     while (c.trim() === '' && this.index < this.lyrics.length) {

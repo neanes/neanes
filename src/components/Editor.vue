@@ -4738,12 +4738,14 @@ export default class Editor extends Vue {
       if (filteredElements[i].elementType === ElementType.DropCap) {
         const dropCap = filteredElements[i] as DropCapElement;
         const token = tokenizer.getNextCharacter();
+        const nextToken = tokenizer.peekNextToken();
+        const content = nextToken === '_' ? `${token} ` : token;
 
         if (dropCap.content !== token) {
           updateCommands.push(
             this.dropCapCommandFactory.create('update-properties', {
               target: dropCap,
-              newValues: { content: token },
+              newValues: { content },
             }),
           );
         }

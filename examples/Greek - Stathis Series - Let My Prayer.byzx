@@ -1,6 +1,6 @@
 {
   "version": "1.1",
-  "appVersion": "0.4.24",
+  "appVersion": "0.4.25",
   "pageSetup": {
     "pageSize": "Letter",
     "pageSizeUnit": "in",
@@ -214,7 +214,7 @@
         "elementType": "TextBox",
         "alignment": "center",
         "color": "#000000",
-        "content": "Κατευθυνθητω",
+        "content": "ΚΑΤΕΥΘΥΝΘΗΤΩ",
         "contentLeft": "",
         "contentCenter": "",
         "contentRight": "",

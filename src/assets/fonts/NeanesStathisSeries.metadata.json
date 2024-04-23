@@ -5748,7 +5748,7 @@
     },
     "leimma1": {
       "gorgonTop": [
-        0.605,
+        0.755,
         0.403
       ]
     },
@@ -7624,7 +7624,7 @@
     "oligonRunningElafronKentimata": 2.201,
     "oligonElafronApostrofosKentimata": 2.077,
     "oligonChamiliKentimata": 1.995,
-    "vareia": 0.478,
+    "vareia": 0.625,
     "psifiston": 0.0,
     "antikenoma": 0.0,
     "omalon": 0.0,
@@ -7644,10 +7644,10 @@
     "tripli": 0.0,
     "tetrapli": 0.0,
     "koronis": 0.0,
-    "leimma1": 0.902,
-    "leimma2": 0.923,
-    "leimma3": 1.0,
-    "leimma4": 1.166,
+    "leimma1": 1.052,
+    "leimma2": 1.073,
+    "leimma3": 1.147,
+    "leimma4": 1.334,
     "leimmaDot": 0.233,
     "gorgonAbove": 0.0,
     "gorgonBelow": 0.0,
@@ -8727,11 +8727,11 @@
     },
     "vareia": {
       "bBoxNE": [
-        1.024,
+        1.171,
         0.461
       ],
       "bBoxSW": [
-        0.012,
+        0.159,
         -0.213
       ]
     },
@@ -8927,41 +8927,41 @@
     },
     "leimma1": {
       "bBoxNE": [
-        1.016,
+        1.166,
         0.459
       ],
       "bBoxSW": [
-        0.004,
+        0.154,
         -0.215
       ]
     },
     "leimma2": {
       "bBoxNE": [
-        1.016,
+        1.166,
         0.459
       ],
       "bBoxSW": [
-        0.004,
+        0.154,
         -0.215
       ]
     },
     "leimma3": {
       "bBoxNE": [
-        1.016,
+        1.163,
         0.459
       ],
       "bBoxSW": [
-        0.004,
+        0.151,
         -0.215
       ]
     },
     "leimma4": {
       "bBoxNE": [
-        1.131,
-        0.459
+        1.299,
+        0.466
       ],
       "bBoxSW": [
-        0.004,
+        0.147,
         -0.215
       ]
     },

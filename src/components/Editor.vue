@@ -4741,7 +4741,7 @@ export default class Editor extends Vue {
         const nextToken = tokenizer.peekNextToken();
         const content = nextToken === '_' ? `${token} ` : token;
 
-        if (dropCap.content !== token) {
+        if (dropCap.content !== content) {
           updateCommands.push(
             this.dropCapCommandFactory.create('update-properties', {
               target: dropCap,

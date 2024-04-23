@@ -14,6 +14,9 @@ export enum Scale {
 }
 
 export enum ScaleNote {
+  ZoLow = 'ZoLow',
+  NiLow = 'NiLow',
+  PaLow = 'PaLow',
   VouLow = 'VouLow',
   GaLow = 'GaLow',
   ThiLow = 'ThiLow',

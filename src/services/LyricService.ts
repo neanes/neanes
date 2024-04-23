@@ -65,14 +65,16 @@ export class LyricService {
             lyrics += '-';
           }
         } else if (note.isMelisma) {
-          const nextNote =
-            i + 1 < filteredElements.length
-              ? (filteredElements[i + 1] as NoteElement)
-              : null;
+          let nextNote: NoteElement | null = null;
+          for (let j = i + 1; j < filteredElements.length; j++) {
+            if (filteredElements[j].elementType === ElementType.Note) {
+              nextNote = filteredElements[j] as NoteElement;
+            }
+          }
           if (
             this.getEffectiveAcceptsLyrics(note, previousNote) !==
               AcceptsLyricsOption.MelismaOnly &&
-            nextNote?.elementType === ElementType.Note &&
+            nextNote &&
             this.getEffectiveAcceptsLyrics(nextNote, note) !==
               AcceptsLyricsOption.MelismaOnly
           ) {

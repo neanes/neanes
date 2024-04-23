@@ -17,6 +17,9 @@ import { NeumeKeyboard } from './NeumeKeyboard';
 describe('NeumeKeyboard', () => {
   it('should have a mapping for every neume that is not in the list of exceptions', () => {
     const exceptions: Neume[] = [
+      Note.NiLow,
+      Note.PaLow,
+      Note.ZoLow,
       QuantitativeNeume.Kentima,
       QuantitativeNeume.OligonKentimataDoubleYpsili,
       QuantitativeNeume.OligonKentimaDoubleYpsiliRight,

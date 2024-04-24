@@ -407,6 +407,7 @@
       {
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusHypsiliRight",
+        "vareia": true,
         "lyrics": "νω"
       },
       {

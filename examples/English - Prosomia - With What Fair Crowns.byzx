@@ -215,7 +215,7 @@
         "elementType": "TextBox",
         "alignment": "center",
         "color": "#000000",
-        "content": "With What Fair Crowns",
+        "content": "“With what fair crowns…”",
         "contentLeft": "",
         "contentCenter": "",
         "contentRight": "",
@@ -1432,7 +1432,6 @@
       {
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusKentemata",
-        "gorgonNeume": "Gorgon_Top",
         "lyrics": "right",
         "isMelisma": true,
         "isMelismaStart": true

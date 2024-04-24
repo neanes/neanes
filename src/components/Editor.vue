@@ -352,7 +352,7 @@
                     <span class="line-break-2" v-if="element.lineBreak"
                       ><img src="@/assets/icons/line-break.svg"
                     /></span>
-                    <TextBox
+                    <TextBoxRich
                       :ref="`element-${getElementIndex(element)}`"
                       :element="element"
                       :editMode="true"
@@ -510,7 +510,7 @@
       </div>
     </div>
     <template v-if="selectedTextBoxElement">
-      <ToolbarTextBox
+      <ToolbarTextBoxRich
         :element="selectedTextBoxElement"
         :fonts="fonts"
         @update:multipanel="
@@ -913,6 +913,7 @@ import PlaybackSettingsDialog from '@/components/PlaybackSettingsDialog.vue';
 import SearchText from '@/components/SearchText.vue';
 import SyllablePositioningDialog from '@/components/SyllablePositioningDialog.vue';
 import TextBox from '@/components/TextBox.vue';
+import TextBoxRich from '@/components/TextBoxRich.vue';
 import ToolbarDropCap from '@/components/ToolbarDropCap.vue';
 import ToolbarImageBox from '@/components/ToolbarImageBox.vue';
 import ToolbarLyricManager from '@/components/ToolbarLyricManager.vue';
@@ -923,6 +924,7 @@ import ToolbarModeKey from '@/components/ToolbarModeKey.vue';
 import ToolbarNeume from '@/components/ToolbarNeume.vue';
 import ToolbarTempo from '@/components/ToolbarTempo.vue';
 import ToolbarTextBox from '@/components/ToolbarTextBox.vue';
+import ToolbarTextBoxRich from '@/components/ToolbarTextBoxRich.vue';
 import { EventBus } from '@/eventBus';
 import {
   CloseWorkspacesArgs,
@@ -1028,11 +1030,13 @@ interface Vue3TabsChromeComponent {
     NeumeSelector,
     ContentEditable,
     TextBox,
+    TextBoxRich,
     DropCap,
     ImageBox,
     ModeKey,
     ToolbarImageBox,
     ToolbarTextBox,
+    ToolbarTextBoxRich,
     ToolbarLyrics,
     ToolbarLyricManager,
     ToolbarModeKey,

@@ -1,6 +1,6 @@
 <template>
   <div class="color-picker-container">
-    <div ref="swatch" class="swatch" @click="open">
+    <div ref="swatch" class="swatch" @mousedown="open">
       <div class="swatch--color" :style="colorStyle" />
     </div>
     <template v-if="isOpen">
@@ -64,7 +64,7 @@ export default class ColorPicker extends Vue {
     } as StyleValue;
   }
 
-  open() {
+  open(event: Event) {
     this.presetColors = JSON.parse(localStorage.getItem(this.historyKey)!) || [
       '#000000',
       '#800000',
@@ -83,6 +83,8 @@ export default class ColorPicker extends Vue {
     }
 
     this.isOpen = true;
+
+    event.preventDefault();
   }
 
   onColorChanged(color: Color) {

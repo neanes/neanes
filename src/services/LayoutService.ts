@@ -1750,7 +1750,7 @@ export class LayoutService {
             );
 
             note.noteIndicatorNeume = noteIndicatorMap.get(
-              (((currentNote + currentShift) % 7) + 7) % 7,
+              (((fthoraNote + currentShift) % 7) + 7) % 7,
             )!;
             note.fthoraCarry = null;
           } else {
@@ -1781,7 +1781,7 @@ export class LayoutService {
             );
 
             note.noteIndicatorNeume = noteIndicatorMap.get(
-              (((currentNote + currentShift) % 7) + 7) % 7,
+              (((fthoraNote + currentShift) % 7) + 7) % 7,
             )!;
             note.secondaryFthoraCarry = null;
           } else {
@@ -1812,7 +1812,7 @@ export class LayoutService {
             );
 
             note.noteIndicatorNeume = noteIndicatorMap.get(
-              (((currentNote + currentShift) % 7) + 7) % 7,
+              (((fthoraNote + currentShift) % 7) + 7) % 7,
             )!;
             note.tertiaryFthoraCarry = null;
           } else {

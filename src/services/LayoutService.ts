@@ -316,6 +316,12 @@ export class LayoutService {
         case ElementType.Note: {
           const noteElement = element as NoteElement;
 
+          noteElement.lyricsFontHeight = this.getLyricsFontHeightFromCache(
+            fontHeightCache,
+            noteElement,
+            pageSetup,
+          );
+
           elementWidthPx = this.getNoteWidth(
             noteElement,
             pageSetup,
@@ -1603,17 +1609,11 @@ export class LayoutService {
 
               // Calculate the distance from the alphabetic baseline to the bottom of the font bounding box
               element.melismaOffsetTop =
-                -this.getFontBoundingBoxDescentFromCache(
+                -this.getLyricsFontBoundingBoxDescentFromCache(
                   fontBoundingBoxDescentCache,
                   element,
                   pageSetup,
                 );
-
-              element.melismaHeight = this.getFontHeightFromCache(
-                fontHeightCache,
-                element,
-                pageSetup,
-              );
             } else if (pageSetup.melkiteRtl) {
               const nextNoteElement = nextElement as NoteElement;
 
@@ -2239,7 +2239,7 @@ export class LayoutService {
     return width;
   }
 
-  private static getFontBoundingBoxDescentFromCache(
+  private static getLyricsFontBoundingBoxDescentFromCache(
     cache: Map<string, number>,
     element: NoteElement,
     pageSetup: PageSetup,
@@ -2261,7 +2261,7 @@ export class LayoutService {
     return descent;
   }
 
-  private static getFontHeightFromCache(
+  private static getLyricsFontHeightFromCache(
     cache: Map<string, number>,
     element: NoteElement,
     pageSetup: PageSetup,

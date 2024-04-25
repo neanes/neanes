@@ -1708,6 +1708,7 @@ export default class Editor extends Vue {
       webkitTextStrokeWidth: element.lyricsUseDefaultStyle
         ? withZoom(this.score.pageSetup.lyricsDefaultStrokeWidth)
         : withZoom(element.lyricsStrokeWidth),
+      lineHeight: withZoom(element.lyricsFontHeight),
     } as StyleValue;
   }
 
@@ -1738,7 +1739,7 @@ export default class Editor extends Vue {
   getMelismaUnderscoreStyleOuter(element: NoteElement) {
     return {
       top: withZoom(element.melismaOffsetTop),
-      height: withZoom(element.melismaHeight),
+      height: withZoom(element.lyricsFontHeight),
       width: withZoom(element.melismaWidth!),
     };
   }

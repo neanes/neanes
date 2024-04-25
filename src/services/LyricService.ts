@@ -69,14 +69,18 @@ export class LyricService {
           for (let j = i + 1; j < filteredElements.length; j++) {
             if (filteredElements[j].elementType === ElementType.Note) {
               nextNote = filteredElements[j] as NoteElement;
+            } else if (
+              filteredElements[j].elementType !== ElementType.Martyria
+            ) {
+              break;
             }
           }
           if (
             this.getEffectiveAcceptsLyrics(note, previousNote) !==
               AcceptsLyricsOption.MelismaOnly &&
-            nextNote &&
-            this.getEffectiveAcceptsLyrics(nextNote, note) !==
-              AcceptsLyricsOption.MelismaOnly
+            (!nextNote ||
+              this.getEffectiveAcceptsLyrics(nextNote, note) !==
+                AcceptsLyricsOption.MelismaOnly)
           ) {
             lyrics += '_';
           }

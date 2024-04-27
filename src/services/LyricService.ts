@@ -69,9 +69,6 @@ export class LyricService {
           for (let j = i + 1; j < filteredElements.length; j++) {
             if (filteredElements[j].elementType === ElementType.Note) {
               nextNote = filteredElements[j] as NoteElement;
-            } else if (
-              filteredElements[j].elementType !== ElementType.Martyria
-            ) {
               break;
             }
           }
@@ -82,6 +79,7 @@ export class LyricService {
               this.getEffectiveAcceptsLyrics(nextNote, note) !==
                 AcceptsLyricsOption.MelismaOnly)
           ) {
+            console.log(note, previousNote, nextNote);
             lyrics += '_';
           }
           needSpace = true;

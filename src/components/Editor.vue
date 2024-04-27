@@ -207,7 +207,8 @@
                         <template
                           v-if="
                             isMelisma(element as NoteElement) &&
-                            (element as NoteElement).isHyphen
+                            (element as NoteElement).isHyphen &&
+                            (element as NoteElement).melismaText === ''
                           "
                         >
                           <div
@@ -236,7 +237,8 @@
                           v-else-if="
                             isMelisma(element as NoteElement) &&
                             !(element as NoteElement).isHyphen &&
-                            !rtl
+                            !rtl &&
+                            (element as NoteElement).melismaText === ''
                           "
                         >
                           <div
@@ -275,6 +277,22 @@
                             :style="getMelismaStyle(element as NoteElement)"
                             v-text="(element as NoteElement).melismaText"
                           ></div>
+                        </template>
+                        <template
+                          v-else-if="
+                            (element as NoteElement).isMelisma &&
+                            (element as NoteElement).melismaText !== '' &&
+                            !rtl
+                          "
+                        >
+                          <span
+                            v-text="(element as NoteElement).melismaText"
+                            :class="{
+                              selectedMelisma: element === selectedLyrics,
+                            }"
+                            @click="focusLyrics(getElementIndex(element))"
+                            @focus="selectedLyrics = element as NoteElement"
+                          ></span>
                         </template>
                       </div>
                     </div>
@@ -6362,6 +6380,10 @@ export default class Editor extends Vue {
 
 .selectedLyrics {
   border: 1px solid goldenrod;
+}
+
+.selectedMelisma {
+  display: none;
 }
 
 .line {

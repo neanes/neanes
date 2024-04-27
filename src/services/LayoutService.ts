@@ -45,6 +45,7 @@ import { Score } from '@/models/Score';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { TATWEEL } from '@/utils/constants';
 
+import { MelismaHelperGreek, MelismaSyllables } from './MelismaHelperGreek';
 import { TextMeasurementService } from './TextMeasurementService';
 
 const fontHeightCache = new Map<string, number>();
@@ -1365,6 +1366,9 @@ export class LayoutService {
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
     );
 
+    let melismaSyllables: MelismaSyllables | null = null;
+    let previousMelismaElement: NoteElement | null = null;
+
     for (let pageIndex = 0; pageIndex < pages.length; pageIndex++) {
       const page = pages[pageIndex];
 
@@ -1395,6 +1399,31 @@ export class LayoutService {
           element.hyphenOffsets = [];
           element.melismaWidth = 0;
           element.isFullMelisma = isIntermediateMelismaAtStartOfLine;
+
+          if (MelismaHelperGreek.isGreek(element.lyrics)) {
+            if (element.isMelismaStart) {
+              melismaSyllables = MelismaHelperGreek.getMelismaSyllable(
+                element.lyrics,
+              );
+            }
+
+            continue;
+          }
+
+          if (melismaSyllables != null) {
+            if (element.isMelisma) {
+              element.melismaText = melismaSyllables.middle;
+              previousMelismaElement = element;
+              // TODO check width of melisma text and hide if too close to previous
+              // lyrics
+              continue;
+            } else {
+              if (previousMelismaElement != null) {
+                previousMelismaElement.melismaText = melismaSyllables.final;
+              }
+              melismaSyllables = null;
+            }
+          }
 
           if (element.isMelismaStart || isIntermediateMelismaAtStartOfLine) {
             // The final element in the melisma, or the final

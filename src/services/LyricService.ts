@@ -79,7 +79,6 @@ export class LyricService {
               this.getEffectiveAcceptsLyrics(nextNote, note) !==
                 AcceptsLyricsOption.MelismaOnly)
           ) {
-            console.log(note, previousNote, nextNote);
             lyrics += '_';
           }
           needSpace = true;

@@ -68,10 +68,13 @@ export class LyricService {
           let nextNote: NoteElement | null = null;
           for (let j = i + 1; j < filteredElements.length; j++) {
             if (filteredElements[j].elementType === ElementType.Note) {
+              // We found a note. Stop.
               nextNote = filteredElements[j] as NoteElement;
+              break;
             } else if (
               filteredElements[j].elementType !== ElementType.Martyria
             ) {
+              // Look past martyria, but stop at any other element (e.g. a mode key)
               break;
             }
           }

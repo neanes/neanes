@@ -17,8 +17,7 @@
     }
   ],
   "mac": {
-    "category": "public.app-category.graphics-design",
-    "identity": "-"
+    "category": "public.app-category.graphics-design"
   },
   "linux": {
     "target": ["AppImage"]

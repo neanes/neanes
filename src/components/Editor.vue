@@ -4716,11 +4716,13 @@ export default class Editor extends Vue {
 
   updateLyricsLocked(locked: boolean) {
     this.lyricsLocked = locked;
+    this.hasUnsavedChanges = true;
   }
 
   updateStaffLyrics(lyrics: string) {
     this.lyrics = lyrics;
     this.assignLyricsThrottled();
+    this.hasUnsavedChanges = true;
   }
 
   assignLyrics() {

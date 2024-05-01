@@ -1367,7 +1367,6 @@ export class LayoutService {
     );
 
     let melismaSyllables: MelismaSyllables | null = null;
-    let previousMelismaElement: NoteElement | null = null;
     let melismaLyricsEnd: number | null = null;
 
     for (let pageIndex = 0; pageIndex < pages.length; pageIndex++) {
@@ -1414,15 +1413,18 @@ export class LayoutService {
                 element.lyricsHorizontalOffset / 2 +
                 element.neumeWidth / 2 +
                 element.lyricsWidth / 2;
+            } else {
+              melismaSyllables = null;
             }
 
             continue;
           }
 
           if (melismaSyllables != null) {
+            console.log(element.lyrics, element.isMelisma);
             if (element.isMelisma) {
               element.melismaText = melismaSyllables.middle;
-              previousMelismaElement = element;
+
               // Check the width of the melisma text and hide it if it's
               //  too close to previous the lyrics
               if (melismaLyricsEnd != null) {
@@ -1445,28 +1447,6 @@ export class LayoutService {
               }
               continue;
             } else {
-              if (previousMelismaElement != null) {
-                previousMelismaElement.melismaText = melismaSyllables.final;
-
-                if (melismaLyricsEnd != null) {
-                  const lyricsWidth = this.getTextWidthFromCache(
-                    textWidthCache,
-                    previousMelismaElement,
-                    pageSetup,
-                    previousMelismaElement.melismaText,
-                  );
-
-                  const melismaLyricsStart =
-                    previousMelismaElement.x +
-                    previousMelismaElement.lyricsHorizontalOffset / 2 +
-                    previousMelismaElement.neumeWidth / 2 -
-                    lyricsWidth / 2;
-
-                  if (melismaLyricsEnd > melismaLyricsStart) {
-                    previousMelismaElement.melismaText = '';
-                  }
-                }
-              }
               melismaSyllables = null;
             }
           }

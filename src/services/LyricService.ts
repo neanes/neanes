@@ -8,6 +8,8 @@ import {
 } from '@/models/Element';
 import { QuantitativeNeume } from '@/models/Neumes';
 
+import { MelismaHelperGreek } from './MelismaHelperGreek';
+
 export class LyricService {
   extractLyrics(elements: ScoreElement[]): string {
     let lyrics = '';
@@ -62,7 +64,14 @@ export class LyricService {
             this.getEffectiveAcceptsLyrics(note, previousNote) !==
             AcceptsLyricsOption.MelismaOnly
           ) {
-            lyrics += '-';
+            if (
+              MelismaHelperGreek.isGreek(note.lyrics) ||
+              MelismaHelperGreek.isGreek(note.melismaText)
+            ) {
+              lyrics += note.isMelismaStart ? ' ' : note.melismaText + ' ';
+            } else {
+              lyrics += '-';
+            }
           }
         } else if (note.isMelisma) {
           let nextNote: NoteElement | null = null;
@@ -85,7 +94,14 @@ export class LyricService {
               this.getEffectiveAcceptsLyrics(nextNote, note) !==
                 AcceptsLyricsOption.MelismaOnly)
           ) {
-            lyrics += '_';
+            if (
+              MelismaHelperGreek.isGreek(note.lyrics) ||
+              MelismaHelperGreek.isGreek(note.melismaText)
+            ) {
+              lyrics += note.isMelismaStart ? '' : ' ' + note.melismaText;
+            } else {
+              lyrics += '_';
+            }
           }
           needSpace = true;
         }

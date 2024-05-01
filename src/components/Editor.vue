@@ -286,6 +286,7 @@
                           "
                         >
                           <span
+                            class="melisma-text"
                             v-text="(element as NoteElement).melismaText"
                             :class="{
                               selectedMelisma: element === selectedLyrics,
@@ -6563,6 +6564,10 @@ export default class Editor extends Vue {
   box-sizing: border-box;
 }
 
+.melisma-text {
+  opacity: 0.5;
+}
+
 .page-break {
   position: absolute;
   top: calc(-10px * var(--zoom, 1));
@@ -6642,6 +6647,10 @@ export default class Editor extends Vue {
   background-color: initial;
 }
 
+.page.print .melisma-text {
+  opacity: 1;
+}
+
 @media print {
   .page,
   .page * {
@@ -6682,6 +6691,10 @@ export default class Editor extends Vue {
 
   .selectedLyrics {
     border: none;
+  }
+
+  .melisma-text {
+    opacity: 1;
   }
 
   .file-menu-bar,

@@ -1368,12 +1368,15 @@ export class LayoutService {
 
     let melismaSyllables: MelismaSyllables | null = null;
     let previousMelismaElement: NoteElement | null = null;
+    let melismaLyricsEnd: number | null = null;
 
     for (let pageIndex = 0; pageIndex < pages.length; pageIndex++) {
       const page = pages[pageIndex];
 
       for (let lineIndex = 0; lineIndex < page.lines.length; lineIndex++) {
         const line = page.lines[lineIndex];
+
+        melismaLyricsEnd = null;
 
         let firstElementOnNextLine: ScoreElement | null = null;
 
@@ -1405,6 +1408,12 @@ export class LayoutService {
               melismaSyllables = MelismaHelperGreek.getMelismaSyllable(
                 element.lyrics,
               );
+
+              melismaLyricsEnd =
+                element.x +
+                element.lyricsHorizontalOffset / 2 +
+                element.neumeWidth / 2 +
+                element.lyricsWidth / 2;
             }
 
             continue;
@@ -1414,12 +1423,49 @@ export class LayoutService {
             if (element.isMelisma) {
               element.melismaText = melismaSyllables.middle;
               previousMelismaElement = element;
-              // TODO check width of melisma text and hide if too close to previous
-              // lyrics
+              // Check the width of the melisma text and hide it if it's
+              //  too close to previous the lyrics
+              if (melismaLyricsEnd != null) {
+                const lyricsWidth = this.getTextWidthFromCache(
+                  textWidthCache,
+                  element,
+                  pageSetup,
+                  element.melismaText,
+                );
+
+                const melismaLyricsStart =
+                  element.x +
+                  element.lyricsHorizontalOffset / 2 +
+                  element.neumeWidth / 2 -
+                  lyricsWidth / 2;
+
+                if (melismaLyricsEnd > melismaLyricsStart) {
+                  element.melismaText = '';
+                }
+              }
               continue;
             } else {
               if (previousMelismaElement != null) {
                 previousMelismaElement.melismaText = melismaSyllables.final;
+
+                if (melismaLyricsEnd != null) {
+                  const lyricsWidth = this.getTextWidthFromCache(
+                    textWidthCache,
+                    previousMelismaElement,
+                    pageSetup,
+                    previousMelismaElement.melismaText,
+                  );
+
+                  const melismaLyricsStart =
+                    previousMelismaElement.x +
+                    previousMelismaElement.lyricsHorizontalOffset / 2 +
+                    previousMelismaElement.neumeWidth / 2 -
+                    lyricsWidth / 2;
+
+                  if (melismaLyricsEnd > melismaLyricsStart) {
+                    previousMelismaElement.melismaText = '';
+                  }
+                }
               }
               melismaSyllables = null;
             }

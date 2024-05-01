@@ -1421,7 +1421,6 @@ export class LayoutService {
           }
 
           if (melismaSyllables != null) {
-            console.log(element.lyrics, element.isMelisma);
             if (element.isMelisma) {
               element.melismaText = melismaSyllables.middle;
 

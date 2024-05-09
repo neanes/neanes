@@ -1018,6 +1018,10 @@ import { ByzHtmlExporter } from '@/services/integration/ByzHtmlExporter';
 import { IIpcService } from '@/services/ipc/IIpcService';
 import { LayoutService } from '@/services/LayoutService';
 import { LyricService, LyricTokenizer } from '@/services/LyricService';
+import {
+  MelismaHelperGreek,
+  MelismaSyllables,
+} from '@/services/MelismaHelperGreek';
 import { NeumeKeyboard } from '@/services/NeumeKeyboard';
 import { IPlatformService } from '@/services/platform/IPlatformService';
 import { SaveService } from '@/services/SaveService';
@@ -4749,6 +4753,7 @@ export default class Editor extends Vue {
 
     const updateCommands: Command[] = [];
     let previousToken = '';
+    let melismaSyllables: MelismaSyllables | null = null;
 
     const filteredElements = this.elements.filter(
       (x) =>
@@ -4792,6 +4797,23 @@ export default class Editor extends Vue {
         } else {
           token = '_';
         }
+
+        if (i + 1 < filteredElements.length) {
+          const nextNote = filteredElements[i + 1] as NoteElement;
+
+          // (Greek) Set the final melisma syllable if applicable
+          if (
+            melismaSyllables != null &&
+            this.lyricService.getEffectiveAcceptsLyrics(nextNote, note) ===
+              AcceptsLyricsOption.Yes
+          ) {
+            if (melismaSyllables.final !== melismaSyllables.middle) {
+              token = melismaSyllables.final;
+            }
+
+            melismaSyllables = null;
+          }
+        }
       } else if (acceptsLyrics === AcceptsLyricsOption.Yes) {
         // The only other options is "Yes". So grab the next token
         // and assign it to the note.
@@ -4800,18 +4822,45 @@ export default class Editor extends Vue {
         if (token === '_' && !previousToken.endsWith('_')) {
           token = '';
         } else {
-          // If the next note only takes a melisma, then ensure that this token
-          // ends in an underscore
           if (i + 1 < filteredElements.length) {
             const nextNote = filteredElements[i + 1] as NoteElement;
 
-            if (
+            const nextNoteIsMelisma =
               this.lyricService.getEffectiveAcceptsLyrics(nextNote, note) ===
-                AcceptsLyricsOption.MelismaOnly &&
+              AcceptsLyricsOption.MelismaOnly;
+
+            // (Greek) Calculate melisma syllables
+            if (
+              (nextNoteIsMelisma || token.endsWith('_')) &&
+              MelismaHelperGreek.isGreek(token)
+            ) {
+              melismaSyllables = MelismaHelperGreek.getMelismaSyllable(
+                token.replace('_', ''),
+              );
+              token = melismaSyllables.initial + '_';
+            } else if (token !== '_') {
+              melismaSyllables = null;
+            }
+
+            // If the next note only takes a melisma, then ensure that this token
+            // ends in an underscore
+            if (
+              nextNoteIsMelisma &&
               !token.endsWith('_') &&
               !token.endsWith('-')
             ) {
               token += '_';
+            }
+
+            // (Greek) Set final melisma syllable if applicable
+            if (
+              melismaSyllables != null &&
+              token === '_' &&
+              melismaSyllables.final !== melismaSyllables.middle &&
+              !nextNoteIsMelisma &&
+              tokenizer.peekNextToken() !== '_'
+            ) {
+              token = melismaSyllables.final;
             }
           }
         }

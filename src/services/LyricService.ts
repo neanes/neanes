@@ -202,6 +202,16 @@ export class LyricTokenizer {
     return token.trim();
   }
 
+  peekNextToken() {
+    const previousIndex = this.index;
+
+    const token = this.getNextToken();
+
+    this.index = previousIndex;
+
+    return token;
+  }
+
   getNextCharacter() {
     let c = '';
     while (c.trim() === '' && this.index < this.lyrics.length) {

@@ -1,4 +1,5 @@
 export interface MelismaSyllables {
+  initial: string;
   middle: string;
   final: string;
 }
@@ -14,10 +15,10 @@ export class MelismaHelperGreek {
 
   public static getMelismaSyllable(text: string): MelismaSyllables {
     //const match = text.match(/[αειουηω](?!.*[αειουηω])/i);
-    const match = text.match(/([αειουηω]+)[^αειουηω]*$/i);
+    const match = text.match(/([^αειουηω]*)([αειουηω]+)([^αειουηω]*)$/i);
 
-    let middle = match ? match[1] : '';
-    let final = match ? match[0] : '';
+    let middle = match ? match[2] : '';
+    let final = match ? middle + match[3] : '';
 
     if (middle === 'ευ') {
       middle = 'ε';
@@ -30,6 +31,8 @@ export class MelismaHelperGreek {
       final = 'ηυ';
     }
 
-    return { middle, final };
+    const initial = match ? match[1] + middle : '';
+
+    return { initial, middle, final };
   }
 }

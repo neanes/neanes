@@ -26,6 +26,7 @@
     "postinstall": "electron-builder install-app-deps",
     "postuninstall": "electron-builder install-app-deps",
     "test": "vitest --run",
+    "test:dev": "vitest",
     "web:dev": "vite --mode web",
     "web:build": "vite build --mode web"
   },

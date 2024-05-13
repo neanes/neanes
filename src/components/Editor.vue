@@ -4819,49 +4819,62 @@ export default class Editor extends Vue {
         // and assign it to the note.
         token = tokenizer.getNextToken();
 
+        if (
+          melismaSyllables != null &&
+          token === '_' &&
+          melismaSyllables.middle !== melismaSyllables.final
+        ) {
+          token = '-';
+        }
+
         if (token === '_' && !previousToken.endsWith('_')) {
           token = '';
-        } else {
-          if (i + 1 < filteredElements.length) {
-            const nextNote = filteredElements[i + 1] as NoteElement;
+          continue;
+        }
 
-            const nextNoteIsMelisma =
-              this.lyricService.getEffectiveAcceptsLyrics(nextNote, note) ===
-              AcceptsLyricsOption.MelismaOnly;
+        if (i + 1 < filteredElements.length) {
+          const nextNote = filteredElements[i + 1] as NoteElement;
 
-            // (Greek) Calculate melisma syllables
-            if (
-              (nextNoteIsMelisma || token.endsWith('_')) &&
-              MelismaHelperGreek.isGreek(token)
-            ) {
-              melismaSyllables = MelismaHelperGreek.getMelismaSyllable(
-                token.replace('_', ''),
-              );
+          const nextNoteIsMelisma =
+            this.lyricService.getEffectiveAcceptsLyrics(nextNote, note) ===
+            AcceptsLyricsOption.MelismaOnly;
+
+          // (Greek) Calculate melisma syllables
+          if (
+            (nextNoteIsMelisma || token.endsWith('_')) &&
+            MelismaHelperGreek.isGreek(token)
+          ) {
+            melismaSyllables = MelismaHelperGreek.getMelismaSyllable(
+              token.replace('_', ''),
+            );
+            if (melismaSyllables.middle === melismaSyllables.final) {
               token = melismaSyllables.initial + '_';
-            } else if (token !== '_') {
-              melismaSyllables = null;
+            } else {
+              token = melismaSyllables.initial + '-';
             }
+          } else if (token !== '_') {
+            melismaSyllables = null;
+          }
 
-            // If the next note only takes a melisma, then ensure that this token
-            // ends in an underscore
-            if (
-              nextNoteIsMelisma &&
-              !token.endsWith('_') &&
-              !token.endsWith('-')
-            ) {
-              token += '_';
-            }
+          // If the next note only takes a melisma, then ensure that this token
+          // ends in an underscore
+          if (
+            nextNoteIsMelisma &&
+            !token.endsWith('_') &&
+            !token.endsWith('-')
+          ) {
+            token += '_';
+          }
 
-            // (Greek) Set final melisma syllable if applicable
-            if (
-              melismaSyllables != null &&
-              token === '_' &&
-              melismaSyllables.final !== melismaSyllables.middle &&
-              !nextNoteIsMelisma &&
-              tokenizer.peekNextToken() !== '_'
-            ) {
-              token = melismaSyllables.final;
-            }
+          // (Greek) Set final melisma syllable if applicable
+          if (
+            melismaSyllables != null &&
+            token === '-' &&
+            melismaSyllables.final !== melismaSyllables.middle &&
+            !nextNoteIsMelisma &&
+            tokenizer.peekNextToken() !== '_'
+          ) {
+            token = melismaSyllables.final;
           }
         }
       }
@@ -4885,6 +4898,8 @@ export default class Editor extends Vue {
   assignAcceptsLyricsFromCurrentLyrics() {
     const commands = [];
 
+    let previousNote: NoteElement | null = null;
+
     for (const element of this.elements.filter(
       (x) => x.elementType === ElementType.Note,
     )) {
@@ -4892,7 +4907,10 @@ export default class Editor extends Vue {
 
       let acceptsLyrics = AcceptsLyricsOption.Default;
 
-      if (note.isMelisma && !note.isMelismaStart) {
+      if (
+        (note.isMelisma && !note.isMelismaStart) ||
+        (previousNote?.isHyphen && MelismaHelperGreek.isGreek(note.lyrics))
+      ) {
         acceptsLyrics = AcceptsLyricsOption.MelismaOnly;
       } else if (note.lyrics.trim() === '') {
         acceptsLyrics = AcceptsLyricsOption.No;
@@ -4908,6 +4926,8 @@ export default class Editor extends Vue {
           }),
         );
       }
+
+      previousNote = note;
     }
 
     if (commands.length > 0) {

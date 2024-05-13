@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { NoteElement, ScoreElement } from '../models/Element';
 import { LyricService } from './LyricService';
 
-describe('LyricService', () => {
+describe('LyricService (English)', () => {
   it('should extract single word', () => {
     const lyricService = new LyricService();
 
@@ -108,17 +108,88 @@ describe('LyricService', () => {
   });
 });
 
+describe('LyricService (Greek)', () => {
+  it('should extract single word', () => {
+    const lyricService = new LyricService();
+
+    const scoreElements: ScoreElement[] = [];
+
+    scoreElements.push(createNote('των'));
+
+    expect(lyricService.extractLyrics(scoreElements)).toEqual('των');
+  });
+
+  it('should extract two words', () => {
+    const lyricService = new LyricService();
+
+    const scoreElements: ScoreElement[] = [];
+
+    scoreElements.push(createNote('των'));
+    scoreElements.push(createNote('γαρ'));
+
+    expect(lyricService.extractLyrics(scoreElements)).toEqual('των γαρ');
+  });
+
+  it('should extract melisma CV', () => {
+    const lyricService = new LyricService();
+
+    const scoreElements: ScoreElement[] = [];
+
+    scoreElements.push(createNote('τω', true, true));
+    scoreElements.push(createNote('', true, false));
+
+    expect(lyricService.extractLyrics(scoreElements)).toEqual('τω__');
+  });
+
+  it('should extract hyphenated CVC', () => {
+    const lyricService = new LyricService();
+
+    const scoreElements: ScoreElement[] = [];
+
+    scoreElements.push(createNote('τω', true, true, true));
+    scoreElements.push(createNote('ων'));
+
+    expect(lyricService.extractLyrics(scoreElements)).toEqual('των__');
+  });
+
+  it('should extract melisma CVC with melisma', () => {
+    const lyricService = new LyricService();
+
+    const scoreElements: ScoreElement[] = [];
+
+    scoreElements.push(createNote('τω', true, true, true));
+    scoreElements.push(createNote('', true, true, true, 'ω'));
+    scoreElements.push(createNote('ων'));
+
+    expect(lyricService.extractLyrics(scoreElements)).toEqual('των___');
+  });
+
+  it('should extract word after melisma', () => {
+    const lyricService = new LyricService();
+
+    const scoreElements: ScoreElement[] = [];
+
+    scoreElements.push(createNote('τω', true, true, false));
+    scoreElements.push(createNote('', true, false, false, 'ω'));
+    scoreElements.push(createNote('ων'));
+
+    expect(lyricService.extractLyrics(scoreElements)).toEqual('τω__ ων');
+  });
+});
+
 function createNote(
   lyrics: string,
   isMelisma: boolean = false,
   isMelismaStart: boolean = false,
   isHyphen: boolean = false,
+  melismaText: string = '',
 ) {
   const note = new NoteElement();
   note.lyrics = lyrics;
   note.isMelisma = isMelisma;
   note.isHyphen = isHyphen;
   note.isMelismaStart = isMelismaStart;
+  note.melismaText = melismaText;
 
   return note;
 }

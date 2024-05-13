@@ -15,6 +15,8 @@ export class LyricService {
     let lyrics = '';
 
     let needSpace = false;
+    let mergeSyllables: string | null = null;
+    let mergeUnderscores = '';
 
     const filteredElements = elements.filter(
       (x) =>
@@ -36,6 +38,15 @@ export class LyricService {
           if (previousElement.elementType === ElementType.Note) {
             previousNote = previousElement as NoteElement;
           }
+        }
+
+        if (mergeSyllables != null && !note.isMelisma) {
+          lyrics += note.lyrics.replace(mergeSyllables, '') + mergeUnderscores;
+
+          mergeSyllables = null;
+          mergeUnderscores = '';
+          needSpace = true;
+          continue;
         }
 
         if (!note.isMelisma || note.isMelismaStart) {
@@ -61,6 +72,24 @@ export class LyricService {
 
         if (note.isHyphen) {
           if (
+            mergeSyllables == null &&
+            note.isMelismaStart &&
+            MelismaHelperGreek.isGreek(note.lyrics)
+          ) {
+            mergeSyllables = MelismaHelperGreek.getMelismaSyllable(
+              note.lyrics,
+            ).middle;
+
+            const nextNote = this.findNextNote(filteredElements, i);
+
+            if (
+              !nextNote ||
+              this.getEffectiveAcceptsLyrics(nextNote, note) !==
+                AcceptsLyricsOption.MelismaOnly
+            ) {
+              mergeUnderscores = '__';
+            }
+          } else if (
             this.getEffectiveAcceptsLyrics(note, previousNote) !==
             AcceptsLyricsOption.MelismaOnly
           ) {
@@ -68,25 +97,14 @@ export class LyricService {
               MelismaHelperGreek.isGreek(note.lyrics) ||
               MelismaHelperGreek.isGreek(note.melismaText)
             ) {
-              lyrics += note.isMelismaStart ? ' ' : note.melismaText + ' ';
+              mergeUnderscores += '_';
             } else {
               lyrics += '-';
             }
           }
         } else if (note.isMelisma) {
-          let nextNote: NoteElement | null = null;
-          for (let j = i + 1; j < filteredElements.length; j++) {
-            if (filteredElements[j].elementType === ElementType.Note) {
-              // We found a note. Stop.
-              nextNote = filteredElements[j] as NoteElement;
-              break;
-            } else if (
-              filteredElements[j].elementType !== ElementType.Martyria
-            ) {
-              // Look past martyria, but stop at any other element (e.g. a mode key)
-              break;
-            }
-          }
+          const nextNote = this.findNextNote(filteredElements, i);
+
           if (
             this.getEffectiveAcceptsLyrics(note, previousNote) !==
               AcceptsLyricsOption.MelismaOnly &&
@@ -94,14 +112,7 @@ export class LyricService {
               this.getEffectiveAcceptsLyrics(nextNote, note) !==
                 AcceptsLyricsOption.MelismaOnly)
           ) {
-            if (
-              MelismaHelperGreek.isGreek(note.lyrics) ||
-              MelismaHelperGreek.isGreek(note.melismaText)
-            ) {
-              lyrics += note.isMelismaStart ? '' : ' ' + note.melismaText;
-            } else {
-              lyrics += '_';
-            }
+            lyrics += '_';
           }
           needSpace = true;
         }
@@ -162,6 +173,23 @@ export class LyricService {
     }
 
     return acceptsLyrics;
+  }
+
+  findNextNote(elements: ScoreElement[], start: number) {
+    let nextNote: NoteElement | null = null;
+
+    for (let j = start + 1; j < elements.length; j++) {
+      if (elements[j].elementType === ElementType.Note) {
+        // We found a note. Stop.
+        nextNote = elements[j] as NoteElement;
+        break;
+      } else if (elements[j].elementType !== ElementType.Martyria) {
+        // Look past martyria, but stop at any other element (e.g. a mode key)
+        break;
+      }
+    }
+
+    return nextNote;
   }
 }
 

@@ -1,3 +1,5 @@
+import { describe, expect, it } from 'vitest';
+
 import { MelismaHelperGreek } from './MelismaHelperGreek';
 
 const vowels = 'αειουηω';

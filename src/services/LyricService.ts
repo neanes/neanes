@@ -11,6 +11,10 @@ import { QuantitativeNeume } from '@/models/Neumes';
 import { MelismaHelperGreek, MelismaSyllables } from './MelismaHelperGreek';
 
 export type UpdateNoteCallback = (element: NoteElement, value: string) => void;
+export type UpdateNoteAcceptsLyricsCallback = (
+  element: NoteElement,
+  value: AcceptsLyricsOption,
+) => void;
 
 export type UpdateDropCapCallback = (
   element: DropCapElement,
@@ -188,7 +192,9 @@ export class LyricService {
         const dropCap = filteredElements[i] as DropCapElement;
         const token = tokenizer.getNextCharacter();
 
-        updateDropCap(dropCap, token);
+        if (dropCap.content != token) {
+          updateDropCap(dropCap, token);
+        }
 
         // Skip to the next element
         continue;
@@ -319,6 +325,41 @@ export class LyricService {
       updateNote(note, token);
 
       previousToken = token;
+      previousNote = note;
+    }
+  }
+
+  /**
+   * Updates the `acceptsLyrics` property for every score element according to how it is used with the current lyrics. This method does not directly alter the elements. Instead, the caller should provide callbacks to handle the updates.
+   * @param elements The elements to update
+   * @param updateNote A callback that is called whenever an element should be updated.
+   */
+  assignAcceptsLyricsFromCurrentLyrics(
+    elements: ScoreElement[],
+    updateNote: UpdateNoteAcceptsLyricsCallback,
+  ) {
+    let previousNote: NoteElement | null = null;
+
+    for (const element of elements.filter(
+      (x) => x.elementType === ElementType.Note,
+    )) {
+      const note = element as NoteElement;
+
+      let acceptsLyrics = AcceptsLyricsOption.Default;
+
+      if (
+        (note.isMelisma && !note.isMelismaStart) ||
+        (previousNote?.isHyphen && MelismaHelperGreek.isGreek(note.lyrics))
+      ) {
+        acceptsLyrics = AcceptsLyricsOption.MelismaOnly;
+      } else if (note.lyrics.trim() === '') {
+        acceptsLyrics = AcceptsLyricsOption.No;
+      }
+
+      if (note.acceptsLyrics != acceptsLyrics) {
+        updateNote(note, acceptsLyrics);
+      }
+
       previousNote = note;
     }
   }

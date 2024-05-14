@@ -1018,7 +1018,6 @@ import { ByzHtmlExporter } from '@/services/integration/ByzHtmlExporter';
 import { IIpcService } from '@/services/ipc/IIpcService';
 import { LayoutService } from '@/services/LayoutService';
 import { LyricService } from '@/services/LyricService';
-import { MelismaHelperGreek } from '@/services/MelismaHelperGreek';
 import { NeumeKeyboard } from '@/services/NeumeKeyboard';
 import { IPlatformService } from '@/services/platform/IPlatformService';
 import { SaveService } from '@/services/SaveService';
@@ -4760,14 +4759,12 @@ export default class Editor extends Vue {
         }
       },
       (dropCap, token) => {
-        if (dropCap.content !== token) {
-          updateCommands.push(
-            this.dropCapCommandFactory.create('update-properties', {
-              target: dropCap,
-              newValues: { content: token },
-            }),
-          );
-        }
+        updateCommands.push(
+          this.dropCapCommandFactory.create('update-properties', {
+            target: dropCap,
+            newValues: { content: token },
+          }),
+        );
       },
     );
 
@@ -4778,27 +4775,11 @@ export default class Editor extends Vue {
   }
 
   assignAcceptsLyricsFromCurrentLyrics() {
-    const commands = [];
+    const commands: Command[] = [];
 
-    let previousNote: NoteElement | null = null;
-
-    for (const element of this.elements.filter(
-      (x) => x.elementType === ElementType.Note,
-    )) {
-      const note = element as NoteElement;
-
-      let acceptsLyrics = AcceptsLyricsOption.Default;
-
-      if (
-        (note.isMelisma && !note.isMelismaStart) ||
-        (previousNote?.isHyphen && MelismaHelperGreek.isGreek(note.lyrics))
-      ) {
-        acceptsLyrics = AcceptsLyricsOption.MelismaOnly;
-      } else if (note.lyrics.trim() === '') {
-        acceptsLyrics = AcceptsLyricsOption.No;
-      }
-
-      if (note.acceptsLyrics != acceptsLyrics) {
+    this.lyricService.assignAcceptsLyricsFromCurrentLyrics(
+      this.elements,
+      (note, acceptsLyrics) => {
         commands.push(
           this.noteElementCommandFactory.create('update-properties', {
             target: note,
@@ -4807,10 +4788,8 @@ export default class Editor extends Vue {
             },
           }),
         );
-      }
-
-      previousNote = note;
-    }
+      },
+    );
 
     if (commands.length > 0) {
       this.commandService.executeAsBatch(commands);

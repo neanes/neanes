@@ -1017,11 +1017,8 @@ import { Command, CommandFactory } from '@/services/history/CommandService';
 import { ByzHtmlExporter } from '@/services/integration/ByzHtmlExporter';
 import { IIpcService } from '@/services/ipc/IIpcService';
 import { LayoutService } from '@/services/LayoutService';
-import { LyricService, LyricTokenizer } from '@/services/LyricService';
-import {
-  MelismaHelperGreek,
-  MelismaSyllables,
-} from '@/services/MelismaHelperGreek';
+import { LyricService } from '@/services/LyricService';
+import { MelismaHelperGreek } from '@/services/MelismaHelperGreek';
 import { NeumeKeyboard } from '@/services/NeumeKeyboard';
 import { IPlatformService } from '@/services/platform/IPlatformService';
 import { SaveService } from '@/services/SaveService';
@@ -4749,23 +4746,20 @@ export default class Editor extends Vue {
   }
 
   assignLyrics() {
-    const tokenizer = new LyricTokenizer(this.lyrics);
-
     const updateCommands: Command[] = [];
-    let previousToken = '';
-    let melismaSyllables: MelismaSyllables | null = null;
 
-    const filteredElements = this.elements.filter(
-      (x) =>
-        x.elementType === ElementType.Note ||
-        x.elementType === ElementType.DropCap,
-    );
+    this.lyricService.assignLyrics(
+      this.lyrics,
+      this.elements,
+      (note, token) => {
+        const updateCommand = this.getLyricUpdateCommand(note, token, true);
 
-    for (let i = 0; i < filteredElements.length; i++) {
-      if (filteredElements[i].elementType === ElementType.DropCap) {
-        const dropCap = filteredElements[i] as DropCapElement;
-        const token = tokenizer.getNextCharacter();
-
+        if (updateCommand != null) {
+          note.updated = true;
+          updateCommands.push(updateCommand);
+        }
+      },
+      (dropCap, token) => {
         if (dropCap.content !== token) {
           updateCommands.push(
             this.dropCapCommandFactory.create('update-properties', {
@@ -4774,120 +4768,8 @@ export default class Editor extends Vue {
             }),
           );
         }
-
-        continue;
-      }
-
-      const note = filteredElements[i] as NoteElement;
-      const previousNote =
-        i > 0 ? (filteredElements[i - 1] as NoteElement) : null;
-
-      let token = '';
-
-      const acceptsLyrics = this.lyricService.getEffectiveAcceptsLyrics(
-        note,
-        previousNote,
-      );
-
-      if (acceptsLyrics === AcceptsLyricsOption.MelismaOnly) {
-        // This note only takes melismas. If the previous note was a melisma,
-        // then extend the melisma to this note. Otherwise, do nothing
-        if (previousToken.endsWith('-')) {
-          token = '-';
-        } else {
-          token = '_';
-        }
-
-        if (i + 1 < filteredElements.length) {
-          const nextNote = filteredElements[i + 1] as NoteElement;
-
-          // (Greek) Set the final melisma syllable if applicable
-          if (
-            melismaSyllables != null &&
-            this.lyricService.getEffectiveAcceptsLyrics(nextNote, note) ===
-              AcceptsLyricsOption.Yes
-          ) {
-            if (melismaSyllables.final !== melismaSyllables.middle) {
-              token = melismaSyllables.final;
-            }
-
-            melismaSyllables = null;
-          }
-        }
-      } else if (acceptsLyrics === AcceptsLyricsOption.Yes) {
-        // The only other options is "Yes". So grab the next token
-        // and assign it to the note.
-        token = tokenizer.getNextToken();
-
-        if (
-          melismaSyllables != null &&
-          token === '_' &&
-          melismaSyllables.middle !== melismaSyllables.final
-        ) {
-          token = '-';
-        }
-
-        if (token === '_' && !previousToken.endsWith('_')) {
-          token = '';
-          continue;
-        }
-
-        if (i + 1 < filteredElements.length) {
-          const nextNote = filteredElements[i + 1] as NoteElement;
-
-          const nextNoteIsMelisma =
-            this.lyricService.getEffectiveAcceptsLyrics(nextNote, note) ===
-            AcceptsLyricsOption.MelismaOnly;
-
-          // (Greek) Calculate melisma syllables
-          if (
-            (nextNoteIsMelisma || token.endsWith('_')) &&
-            MelismaHelperGreek.isGreek(token)
-          ) {
-            melismaSyllables = MelismaHelperGreek.getMelismaSyllable(
-              token.replace('_', ''),
-            );
-            if (melismaSyllables.middle === melismaSyllables.final) {
-              token = melismaSyllables.initial + '_';
-            } else {
-              token = melismaSyllables.initial + '-';
-            }
-          } else if (token !== '_') {
-            melismaSyllables = null;
-          }
-
-          // If the next note only takes a melisma, then ensure that this token
-          // ends in an underscore
-          if (
-            nextNoteIsMelisma &&
-            !token.endsWith('_') &&
-            !token.endsWith('-')
-          ) {
-            token += '_';
-          }
-
-          // (Greek) Set final melisma syllable if applicable
-          if (
-            melismaSyllables != null &&
-            token === '-' &&
-            melismaSyllables.final !== melismaSyllables.middle &&
-            !nextNoteIsMelisma &&
-            tokenizer.peekNextToken() !== '_'
-          ) {
-            token = melismaSyllables.final;
-          }
-        }
-      }
-
-      const updateCommand = this.getLyricUpdateCommand(note, token, true);
-
-      if (updateCommand != null) {
-        note.updated = true;
-        updateCommands.push(updateCommand);
-      }
-
-      previousToken = token;
-    }
+      },
+    );
 
     if (updateCommands.length > 0) {
       this.commandService.executeAsBatch(updateCommands, this.lyricsLocked);

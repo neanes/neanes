@@ -8,7 +8,14 @@ import {
 } from '@/models/Element';
 import { QuantitativeNeume } from '@/models/Neumes';
 
-import { MelismaHelperGreek } from './MelismaHelperGreek';
+import { MelismaHelperGreek, MelismaSyllables } from './MelismaHelperGreek';
+
+export type UpdateNoteCallback = (element: NoteElement, value: string) => void;
+
+export type UpdateDropCapCallback = (
+  element: DropCapElement,
+  value: string,
+) => void;
 
 export class LyricService {
   extractLyrics(elements: ScoreElement[]): string {
@@ -140,6 +147,175 @@ export class LyricService {
     }
 
     return lyrics.trimEnd();
+  }
+
+  /**
+   * Assigns lyrics to score elements. This method does not directly alter the elements. Instead, the caller should provide callbacks to handle the updates.
+   * @param lyrics The lyrics
+   * @param elements The elements to assign lyrics to
+   * @param updateNote A callback that is called when lyrics should be updated
+   * @param updateDropCap A callback that is called when drop caps should be updated
+   */
+  assignLyrics(
+    lyrics: string,
+    elements: ScoreElement[],
+    updateNote: UpdateNoteCallback,
+    updateDropCap: UpdateDropCapCallback,
+  ) {
+    const tokenizer = new LyricTokenizer(lyrics);
+
+    let previousToken = '';
+    let previousNote: NoteElement | null = null;
+    let melismaSyllables: MelismaSyllables | null = null;
+
+    // Only assign lyrics to notes and drop caps
+    const filteredElements = elements.filter(
+      (x) =>
+        x.elementType === ElementType.Note ||
+        x.elementType === ElementType.DropCap,
+    );
+
+    // Loop over the elements
+    for (let i = 0; i < filteredElements.length; i++) {
+      // If the element is a drop cap, then grab the next character
+      // from the lyrics and assign it to the drop cap.
+      if (filteredElements[i].elementType === ElementType.DropCap) {
+        const dropCap = filteredElements[i] as DropCapElement;
+        const token = tokenizer.getNextCharacter();
+
+        updateDropCap(dropCap, token);
+
+        // Skip to the next element
+        continue;
+      }
+
+      // If the element is a note, process it.
+      const note = filteredElements[i] as NoteElement;
+
+      let token = '';
+
+      // Check whether the note accepts lyrics
+      const acceptsLyrics = this.getEffectiveAcceptsLyrics(note, previousNote);
+
+      if (acceptsLyrics === AcceptsLyricsOption.MelismaOnly) {
+        // This note only takes melismas. If the previous note was a melisma,
+        // then extend the melisma to this note.
+        if (previousToken.endsWith('-')) {
+          token = '-';
+        } else {
+          token = '_';
+        }
+
+        // (Greek) Check whether this is the last note in a melisma.
+        // If so, the final text of the syllable may be different
+        // than than the melismatic text. For example τω ω ω ων.
+        if (i + 1 < filteredElements.length) {
+          const nextNote = filteredElements[i + 1] as NoteElement;
+
+          // If the next note accepts syllables, then it is not a melisma
+          if (
+            melismaSyllables != null &&
+            this.getEffectiveAcceptsLyrics(nextNote, note) ===
+              AcceptsLyricsOption.Yes
+          ) {
+            // If the final syllable text is different than the middle,
+            // then use the final text.
+            if (melismaSyllables.final !== melismaSyllables.middle) {
+              token = melismaSyllables.final;
+            }
+
+            // Clear the syllables since we are no longer in a melisma.
+            melismaSyllables = null;
+          }
+        }
+      } else if (acceptsLyrics === AcceptsLyricsOption.Yes) {
+        // The only other options is "Yes". So grab the next token
+        // and assign it to the note.
+        token = tokenizer.getNextToken();
+
+        // (Greek) In Greek mode, lyrics only use underscores, but the lyrics assigned
+        // to a note must sometimes be converted to a hyphen. This helps us distinguish between
+        // των and τω ων. We detect this by checking whether the syllable ends in a constant,
+        // in which case the middle syllable text will not match the final syllable text.
+        if (
+          melismaSyllables != null &&
+          token === '_' &&
+          melismaSyllables.middle !== melismaSyllables.final
+        ) {
+          token = '-';
+        }
+
+        // If the token is a single underscore surrounded by spaces,
+        // then this is interpreted as a note with no lyrics.
+        if (token === '_' && !previousToken.endsWith('_')) {
+          token = '';
+          // Skip to the next element.
+          continue;
+        }
+
+        // Finally, we check the next note to handle some special cases.
+        if (i + 1 < filteredElements.length) {
+          const nextNote = filteredElements[i + 1] as NoteElement;
+
+          const nextNoteIsMelisma =
+            this.getEffectiveAcceptsLyrics(nextNote, note) ===
+            AcceptsLyricsOption.MelismaOnly;
+
+          // (Greek) Calculate melisma syllables.
+          // If the lyrics are Greek and the next note is a melisma,
+          // then calculate the melismatic syllables.
+          if (
+            (nextNoteIsMelisma || token.endsWith('_')) &&
+            MelismaHelperGreek.isGreek(token)
+          ) {
+            melismaSyllables = MelismaHelperGreek.getMelismaSyllable(
+              token.replace('_', ''),
+            );
+            // By convention, we distinguish between των and τω ων by
+            // setting note lyrics to either a hyphen or underscore, respectively.
+            if (melismaSyllables.middle === melismaSyllables.final) {
+              token = melismaSyllables.initial + '_';
+            } else {
+              token = melismaSyllables.initial + '-';
+            }
+          } else if (token !== '_') {
+            // If the token is a single underscore, then MelismaHelperGreek.isGreek(token)
+            // will be false, but we may still be in a melisma.
+            // But if the token is not a single underscore, then we are not in a melisma.
+            // So we clear the melisma.
+            melismaSyllables = null;
+          }
+
+          // If the next note only takes a melisma, then ensure that this token
+          // ends in an underscore
+          if (
+            nextNoteIsMelisma &&
+            !token.endsWith('_') &&
+            !token.endsWith('-')
+          ) {
+            token += '_';
+          }
+
+          // (Greek) If we are in a melisma and the next note is not a melisma,
+          // then we should set the present note to the final melisma text if it differs
+          // from the middle text. I.e. τω ω ω ων.
+          if (
+            melismaSyllables != null &&
+            token === '-' &&
+            melismaSyllables.final !== melismaSyllables.middle &&
+            !nextNoteIsMelisma &&
+            tokenizer.peekNextToken() !== '_'
+          ) {
+            token = melismaSyllables.final;
+          }
+        }
+      }
+
+      updateNote(note, token);
+
+      previousToken = token;
+      previousNote = note;
+    }
   }
 
   getEffectiveAcceptsLyrics(

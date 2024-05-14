@@ -18,6 +18,11 @@ export type UpdateDropCapCallback = (
 ) => void;
 
 export class LyricService {
+  /**
+   * Extracts lyrics from score elements
+   * @param elements The elements from which lyrics are extracted
+   * @returns A string containing the extracted lyrics.
+   */
   extractLyrics(elements: ScoreElement[]): string {
     let lyrics = '';
 
@@ -318,6 +323,12 @@ export class LyricService {
     }
   }
 
+  /**
+   * Calculates whether a note should accept lyrics when `acceptsLyrics` is set to `Default`.
+   * @param note The note
+   * @param previousNote The previous note, if one exists. Otherwise, pass `null`.
+   * @returns The effective value of `acceptsLyrics`.
+   */
   getEffectiveAcceptsLyrics(
     note: NoteElement,
     previousNote: NoteElement | null,
@@ -351,6 +362,12 @@ export class LyricService {
     return acceptsLyrics;
   }
 
+  /**
+   * Finds the next note in an array of elements, looking past martyria, but stops at any other element.
+   * @param elements The elements to search
+   * @param start The index of `elements` where the search should start.
+   * @returns The next note element, if a note is found before a non-martyria element. Otherwise, `null` is returned.
+   */
   findNextNote(elements: ScoreElement[], start: number) {
     let nextNote: NoteElement | null = null;
 
@@ -377,6 +394,10 @@ export class LyricTokenizer {
     this.lyrics = lyrics;
   }
 
+  /**
+   * Returns the next token in the lyrics.
+   * @returns The next token
+   */
   getNextToken() {
     const breakingCharacters = ['-', '_'];
 
@@ -406,6 +427,10 @@ export class LyricTokenizer {
     return token.trim();
   }
 
+  /**
+   * Peeks ahead at the next token without changing the tokenizer's index.
+   * @returns The next token
+   */
   peekNextToken() {
     const previousIndex = this.index;
 
@@ -416,6 +441,10 @@ export class LyricTokenizer {
     return token;
   }
 
+  /**
+   * Returns the next single character in the lyrics.
+   * @returns The next character
+   */
   getNextCharacter() {
     let c = '';
     while (c.trim() === '' && this.index < this.lyrics.length) {

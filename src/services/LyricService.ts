@@ -213,7 +213,7 @@ export class LyricService {
 
         // (Greek) Check whether this is the last note in a melisma.
         // If so, the final text of the syllable may be different
-        // than than the melismatic text. For example τω ω ω ων.
+        // than the melismatic text. For example τω ω ω ων.
         if (i + 1 < filteredElements.length) {
           const nextNote = filteredElements[i + 1] as NoteElement;
 

@@ -7,10 +7,20 @@ import {
   ScoreElement,
 } from '@/models/Element';
 import { QuantitativeNeume } from '@/models/Neumes';
+import { TATWEEL } from '@/utils/constants';
 
 import { MelismaHelperGreek, MelismaSyllables } from './MelismaHelperGreek';
 
-export type UpdateNoteCallback = (element: NoteElement, value: string) => void;
+export type UpdateNoteCallback = (
+  element: NoteElement,
+  values: Partial<NoteElement>,
+) => void;
+
+export type UpdateNoteLyricsCallback = (
+  element: NoteElement,
+  value: string,
+) => void;
+
 export type UpdateNoteAcceptsLyricsCallback = (
   element: NoteElement,
   value: AcceptsLyricsOption,
@@ -168,6 +178,8 @@ export class LyricService {
   assignLyrics(
     lyrics: string,
     elements: ScoreElement[],
+    rtl: boolean,
+    setLyrics: UpdateNoteLyricsCallback,
     updateNote: UpdateNoteCallback,
     updateDropCap: UpdateDropCapCallback,
   ) {
@@ -322,7 +334,18 @@ export class LyricService {
         }
       }
 
-      updateNote(note, token);
+      const newValues = this.getLyricUpdateValues(
+        note,
+        token,
+        elements,
+        rtl,
+        setLyrics,
+        true,
+      );
+
+      if (newValues != null) {
+        updateNote(note, newValues);
+      }
 
       previousToken = token;
       previousNote = note;
@@ -362,6 +385,103 @@ export class LyricService {
 
       previousNote = note;
     }
+  }
+
+  /**
+   * Returns all the values that should be updated if the `element` were assigned the `lyrics`.
+   * @param element The note element that would be updated.
+   * @param lyrics The lyrics
+   * @param elements All the elements in the score. Needed for RTL calculations.
+   * @param rtl Whether the score is RTL
+   * @param setLyrics A callback that is invoked whenever lyrics should be immediately changed.
+   * @param clearMelisma Whether existing melismas should be cleared.
+   * @returns The values that should be updated.
+   */
+  getLyricUpdateValues(
+    element: NoteElement,
+    lyrics: string,
+    elements: ScoreElement[],
+    rtl: boolean,
+    setLyrics: UpdateNoteLyricsCallback,
+    clearMelisma: boolean = false,
+  ): Partial<NoteElement> | null {
+    // Replace newlines. This should only happen if the user pastes
+    // text containing new lines.
+    const sanitizedLyrics = lyrics.replace(/(?:\r\n|\r|\n)/g, ' ');
+    if (sanitizedLyrics !== lyrics) {
+      lyrics = sanitizedLyrics;
+
+      setLyrics(element, lyrics);
+    }
+
+    if (element.lyrics === lyrics && !(element.isMelisma && clearMelisma)) {
+      return null;
+    }
+
+    // Calculate melisma properties
+    let isMelisma: boolean;
+    let isMelismaStart: boolean;
+    let isHyphen: boolean;
+
+    if (lyrics === '_' || lyrics === '-' || lyrics === TATWEEL) {
+      isMelisma = true;
+      isMelismaStart = false;
+      isHyphen = lyrics === '-';
+      lyrics = '';
+
+      setLyrics(element, lyrics);
+    } else if (
+      lyrics.endsWith('_') ||
+      lyrics.endsWith('-') ||
+      lyrics.endsWith(TATWEEL)
+    ) {
+      isMelisma = true;
+      isMelismaStart = true;
+      isHyphen = lyrics.endsWith('-');
+
+      lyrics = !rtl ? lyrics.slice(0, -1) : lyrics;
+
+      setLyrics(element, lyrics);
+    } else {
+      isMelisma = false;
+      isMelismaStart = false;
+      isHyphen = false;
+    }
+
+    if (rtl) {
+      const currentIndex = element.index;
+
+      if (currentIndex > 0) {
+        const previousElement = elements[currentIndex - 1];
+
+        if (
+          previousElement.elementType === ElementType.Note &&
+          (previousElement as NoteElement).isMelisma &&
+          !lyrics.startsWith(TATWEEL)
+        ) {
+          lyrics = TATWEEL + lyrics;
+        }
+      }
+    }
+
+    // If nothing changed, return. This could happen if
+    // the user types in an underscore when the element is
+    // already a melisma.
+    if (
+      element.lyrics === lyrics &&
+      element.isMelismaStart === isMelismaStart &&
+      element.isMelisma === isMelisma &&
+      element.isHyphen === isHyphen
+    ) {
+      return null;
+    }
+
+    return {
+      lyrics,
+      isMelisma,
+      isMelismaStart,
+      isHyphen,
+    };
   }
 
   /**

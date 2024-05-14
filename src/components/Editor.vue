@@ -4646,93 +4646,6 @@ export default class Editor extends Vue {
     this.save();
   }
 
-  getLyricUpdateCommand(
-    element: NoteElement,
-    lyrics: string,
-    clearMelisma: boolean = false,
-  ) {
-    // Replace newlines. This should only happen if the user pastes
-    // text containing new lines.
-    const sanitizedLyrics = lyrics.replace(/(?:\r\n|\r|\n)/g, ' ');
-    if (sanitizedLyrics !== lyrics) {
-      lyrics = sanitizedLyrics;
-
-      this.setLyrics(this.getElementIndex(element), lyrics);
-    }
-
-    if (element.lyrics === lyrics && !(element.isMelisma && clearMelisma)) {
-      return null;
-    }
-
-    // Calculate melisma properties
-    let isMelisma: boolean;
-    let isMelismaStart: boolean;
-    let isHyphen: boolean;
-
-    if (lyrics === '_' || lyrics === '-' || lyrics === TATWEEL) {
-      isMelisma = true;
-      isMelismaStart = false;
-      isHyphen = lyrics === '-';
-      lyrics = '';
-
-      this.setLyrics(this.getElementIndex(element), lyrics);
-    } else if (
-      lyrics.endsWith('_') ||
-      lyrics.endsWith('-') ||
-      lyrics.endsWith(TATWEEL)
-    ) {
-      isMelisma = true;
-      isMelismaStart = true;
-      isHyphen = lyrics.endsWith('-');
-
-      lyrics = !this.rtl ? lyrics.slice(0, -1) : lyrics;
-
-      this.setLyrics(this.getElementIndex(element), lyrics);
-    } else {
-      isMelisma = false;
-      isMelismaStart = false;
-      isHyphen = false;
-    }
-
-    if (this.rtl) {
-      const currentIndex = this.getElementIndex(element);
-
-      if (currentIndex > 0) {
-        const previousElement = this.elements[currentIndex - 1];
-
-        if (
-          previousElement.elementType === ElementType.Note &&
-          (previousElement as NoteElement).isMelisma &&
-          !lyrics.startsWith(TATWEEL)
-        ) {
-          lyrics = TATWEEL + lyrics;
-        }
-      }
-    }
-
-    // If nothing changed, return. This could happen if
-    // the user types in an underscore when the element is
-    // already a melisma.
-    if (
-      element.lyrics === lyrics &&
-      element.isMelismaStart === isMelismaStart &&
-      element.isMelisma === isMelisma &&
-      element.isHyphen === isHyphen
-    ) {
-      return null;
-    }
-
-    return this.noteElementCommandFactory.create('update-properties', {
-      target: element,
-      newValues: {
-        lyrics,
-        isMelisma,
-        isMelismaStart,
-        isHyphen,
-      },
-    });
-  }
-
   updateLyricsLocked(locked: boolean) {
     this.lyricsLocked = locked;
     this.hasUnsavedChanges = true;
@@ -4750,13 +4663,16 @@ export default class Editor extends Vue {
     this.lyricService.assignLyrics(
       this.lyrics,
       this.elements,
-      (note, token) => {
-        const updateCommand = this.getLyricUpdateCommand(note, token, true);
-
-        if (updateCommand != null) {
-          note.updated = true;
-          updateCommands.push(updateCommand);
-        }
+      this.rtl,
+      (note, lyrics) => this.setLyrics(this.getElementIndex(note), lyrics),
+      (note, newValues) => {
+        note.updated = true;
+        updateCommands.push(
+          this.noteElementCommandFactory.create('update-properties', {
+            target: note,
+            newValues,
+          }),
+        );
       },
       (dropCap, token) => {
         updateCommands.push(
@@ -4803,14 +4719,22 @@ export default class Editor extends Vue {
     lyrics: string,
     clearMelisma: boolean = false,
   ) {
-    const updateCommand = this.getLyricUpdateCommand(
+    const newValues = this.lyricService.getLyricUpdateValues(
       element,
       lyrics,
+      this.elements,
+      this.rtl,
+      (note, lyrics) => this.setLyrics(this.getElementIndex(note), lyrics),
       clearMelisma,
     );
 
-    if (updateCommand != null) {
-      this.commandService.execute(updateCommand);
+    if (newValues != null) {
+      this.commandService.execute(
+        this.noteElementCommandFactory.create('update-properties', {
+          target: element,
+          newValues,
+        }),
+      );
       this.refreshStaffLyrics();
       this.save();
     }

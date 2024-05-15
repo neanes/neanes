@@ -62,7 +62,6 @@ export class LyricService {
 
     // Loop over the elements
     for (let i = 0; i < filteredElements.length; i++) {
-      //
       if (filteredElements[i].elementType === ElementType.Note) {
         // Extract the lyrics from the note
         const note = filteredElements[i] as NoteElement;

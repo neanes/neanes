@@ -40,8 +40,16 @@ export class LyricService {
   extractLyrics(elements: ScoreElement[]): string {
     let lyrics = '';
 
+    // Set to true if we need to add a space before the next character
     let needSpace = false;
-    let mergeSyllables: string | null = null;
+
+    // When a melismatic syllable ends in a consonant, we must "merge"
+    // the lyrics spread across multiple notes into a single lyric.
+    // E.g. τω ω ω ω ων => των.
+    // The mergeVowels in this case would be ω (i.e. the middle vowel)
+    // The mergeUnderscores represents the number of underscores that
+    // be added to the end of the syllable. In this case των_____.
+    let mergeVowels: string | null = null;
     let mergeUnderscores = '';
 
     const filteredElements = elements.filter(
@@ -52,10 +60,14 @@ export class LyricService {
         x.elementType === ElementType.Martyria,
     );
 
+    // Loop over the elements
     for (let i = 0; i < filteredElements.length; i++) {
+      //
       if (filteredElements[i].elementType === ElementType.Note) {
+        // Extract the lyrics from the note
         const note = filteredElements[i] as NoteElement;
 
+        // Keep track of the previous note
         let previousNote: NoteElement | null = null;
 
         if (i > 0) {
@@ -66,22 +78,36 @@ export class LyricService {
           }
         }
 
-        if (mergeSyllables != null && !note.isMelisma) {
-          lyrics += note.lyrics.replace(mergeSyllables, '') + mergeUnderscores;
+        // If a melisma has ended and we have merge vowels
+        // then merge the last note's lyrics into the previously extracted
+        // lyrics. This is done by removing the mergeVowels from the current note
+        // and appending the necessary underscores.
+        // E.g. merge τω + ων = των__
+        if (mergeVowels != null && !note.isMelisma) {
+          lyrics += note.lyrics.replace(mergeVowels, '') + mergeUnderscores;
 
-          mergeSyllables = null;
+          mergeVowels = null;
           mergeUnderscores = '';
           needSpace = true;
           continue;
         }
 
+        // First, we consider notes that should not consist of
+        // only an underscore or hyphen. That is, these notes are not
+        // in the middle of a melisma.
         if (!note.isMelisma || note.isMelismaStart) {
+          // Add space if needed
           if (needSpace) {
             lyrics += ' ';
             needSpace = false;
           }
 
           if (note.lyrics.trim() === '') {
+            // If this note has no lyrics, then we might be a melisma.
+            // But if we are not a melisma, then we represent the missing lyrics
+            // with a single underscore surrounded by spaces.
+            // Unless acceptsLyrics is "No", in which case we omit the underscore for
+            // brevity.
             if (
               !note.isMelisma &&
               this.getEffectiveAcceptsLyrics(note, previousNote) !==
@@ -91,23 +117,32 @@ export class LyricService {
               needSpace = true;
             }
           } else {
+            // Append the lyrics.
             lyrics += note.lyrics;
+            // Unless this is the start of a melisma, we need to
+            // add a space before the next word.
             needSpace = !note.isMelismaStart;
           }
         }
 
+        // Next we handle hyphenated melismas
         if (note.isHyphen) {
+          // (Greek) If this is the start of a melisma and the text is greek,
+          // calculate the middle vowel(s) so we can merge later.
+          // Also start keeping track of the underscores we need to add later.
           if (
-            mergeSyllables == null &&
+            mergeVowels == null &&
             note.isMelismaStart &&
             MelismaHelperGreek.isGreek(note.lyrics)
           ) {
-            mergeSyllables = MelismaHelperGreek.getMelismaSyllable(
+            mergeVowels = MelismaHelperGreek.getMelismaSyllable(
               note.lyrics,
             ).middle;
 
             const nextNote = this.findNextNote(filteredElements, i);
 
+            // We only need the underscores if the next note's
+            // acceptsLyrics is not MelismaOnly
             if (
               !nextNote ||
               this.getEffectiveAcceptsLyrics(nextNote, note) !==
@@ -119,6 +154,9 @@ export class LyricService {
             this.getEffectiveAcceptsLyrics(note, previousNote) !==
             AcceptsLyricsOption.MelismaOnly
           ) {
+            // If this note's acceptsLyrics is not MelismaOnly,
+            // then we append a hyphen for non-Greek lyrics,
+            // and an underscore for Greek lyrics.
             if (
               MelismaHelperGreek.isGreek(note.lyrics) ||
               MelismaHelperGreek.isGreek(note.melismaText)
@@ -129,8 +167,12 @@ export class LyricService {
             }
           }
         } else if (note.isMelisma) {
+          // Finally we handle non-hyphenated melismas
           const nextNote = this.findNextNote(filteredElements, i);
 
+          // Unless the user set acceptsLyrics to indicate a MelismaOnly,
+          // or the note's default effective value is MelismaOnly,
+          // we add the melismatic underscore to the lyrics.
           if (
             this.getEffectiveAcceptsLyrics(note, previousNote) !==
               AcceptsLyricsOption.MelismaOnly &&
@@ -143,20 +185,27 @@ export class LyricService {
           needSpace = true;
         }
       } else if (filteredElements[i].elementType === ElementType.DropCap) {
+        // Extract the character(s) from the drop cap
         const dropCap = filteredElements[i] as DropCapElement;
 
+        // Add a space if we need to
         if (needSpace) {
           lyrics += ' ';
         }
 
+        // Append the drop cap text to the lyrics
         lyrics += dropCap.content;
         needSpace = false;
       } else if (filteredElements[i].elementType === ElementType.ModeKey) {
+        // Start a new paragraph when a mode key is encountered since this
+        // typically separates a hymn.
         if (lyrics.trim() !== '') {
           lyrics += '\n\n';
           needSpace = false;
         }
       } else if (filteredElements[i].elementType === ElementType.Martyria) {
+        // Start a new paragraph when a right-aligned marytyria is encountered
+        // since this typically separates a hymn or verse
         const martyria = filteredElements[i] as MartyriaElement;
         if (martyria.alignRight) {
           lyrics += '\n\n';
@@ -207,6 +256,8 @@ export class LyricService {
         if (dropCap.content != token) {
           updateDropCap(dropCap, token);
         }
+
+        previousNote = null;
 
         // Skip to the next element
         continue;

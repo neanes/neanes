@@ -79,7 +79,7 @@
     "vite-plugin-vue-devtools": "^7.2.0",
     "vitepress": "^1.1.4",
     "vitest": "^1.6.0",
-    "vue-tsc": "^2.0.16"
+    "vue-tsc": "^2.0.19"
   },
   "overrides": {
     "vite-plugin-electron": {

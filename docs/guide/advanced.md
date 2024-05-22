@@ -167,3 +167,11 @@ With what fair crowns of praise shall we crown the di-vine and all-laud-a-ble hi
 Copy and paste the hyphenated text into the lyrics toolbar. The lyrics will be automatically assigned to the correct neumes.
 
 In this example, the prosomoion matches the automelon perfectly, but for other hymns you may need to make minor adjustments.
+
+### Greek
+
+When working with Greek lyrics, the hyphen is not used. Syllables should be separated by a single space and melismata should be indicated by an underscore. If a syllable ends in a consonant, the underscore should be placed at the end of the syllable.
+
+For example, `των___` will be interpreted as the following.
+
+![Greek Lyrics Example 1](./images/guide-lyrics-greek-example-1.png)

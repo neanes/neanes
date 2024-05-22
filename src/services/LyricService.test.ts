@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { NoteElement, ScoreElement } from '../models/Element';
+import {
+  AcceptsLyricsOption,
+  NoteElement,
+  ScoreElement,
+} from '../models/Element';
 import { LyricService } from './LyricService';
 
 describe('LyricService (English)', () => {
@@ -106,6 +110,79 @@ describe('LyricService (English)', () => {
 
     expect(lyricService.extractLyrics(scoreElements)).toEqual('one__ two');
   });
+
+  it('should round trip (default)', () => {
+    const lyricService = new LyricService();
+
+    const scoreElements: ScoreElement[] = [];
+
+    scoreElements.push(new NoteElement());
+    scoreElements.push(new NoteElement());
+    scoreElements.push(new NoteElement());
+    scoreElements.push(new NoteElement());
+    scoreElements.push(new NoteElement());
+    scoreElements.push(new NoteElement());
+    scoreElements.push(new NoteElement());
+    scoreElements.push(new NoteElement());
+    scoreElements.push(new NoteElement());
+    scoreElements.push(new NoteElement());
+    scoreElements.push(new NoteElement());
+
+    const lyrics = 'test-ing__ test--ing one two three___';
+
+    lyricService.assignLyrics(
+      lyrics,
+      scoreElements,
+      false,
+      () => {},
+      (note, values) => {
+        Object.assign(note, values);
+      },
+      () => {},
+    );
+
+    expect(lyricService.extractLyrics(scoreElements)).toEqual(lyrics);
+  });
+
+  it('should round trip (melisma-only)', () => {
+    const lyricService = new LyricService();
+
+    const scoreElements: ScoreElement[] = [];
+
+    scoreElements.push(new NoteElement());
+    scoreElements.push(new NoteElement());
+    scoreElements.push(new NoteElement());
+    scoreElements.push(new NoteElement());
+    scoreElements.push(new NoteElement());
+    scoreElements.push(new NoteElement());
+    scoreElements.push(new NoteElement());
+    scoreElements.push(new NoteElement());
+    scoreElements.push(new NoteElement());
+    scoreElements.push(new NoteElement());
+    scoreElements.push(new NoteElement());
+
+    (scoreElements[4] as NoteElement).acceptsLyrics =
+      AcceptsLyricsOption.MelismaOnly;
+    (scoreElements[9] as NoteElement).acceptsLyrics =
+      AcceptsLyricsOption.MelismaOnly;
+    (scoreElements[10] as NoteElement).acceptsLyrics =
+      AcceptsLyricsOption.MelismaOnly;
+
+    const lyrics = 'test-ing test-ing one two three';
+
+    lyricService.assignLyrics(
+      lyrics,
+      scoreElements,
+      false,
+      () => {},
+      (note, values) => {
+        Object.assign(note, values);
+      },
+      () => {},
+    );
+
+    expect(lyricService.extractLyrics(scoreElements)).toEqual(lyrics);
+  });
 });
 
 describe('LyricService (Greek)', () => {
@@ -174,6 +251,84 @@ describe('LyricService (Greek)', () => {
     scoreElements.push(createNote('ων'));
 
     expect(lyricService.extractLyrics(scoreElements)).toEqual('τω__ ων');
+  });
+
+  it('should round trip (default)', () => {
+    const lyricService = new LyricService();
+
+    const scoreElements: ScoreElement[] = [];
+
+    scoreElements.push(new NoteElement());
+    scoreElements.push(new NoteElement());
+    scoreElements.push(new NoteElement());
+    scoreElements.push(new NoteElement());
+    scoreElements.push(new NoteElement());
+    scoreElements.push(new NoteElement());
+    scoreElements.push(new NoteElement());
+    scoreElements.push(new NoteElement());
+    scoreElements.push(new NoteElement());
+    scoreElements.push(new NoteElement());
+
+    const lyrics = 'Κα τευ θυν θη___ τω γαρ___';
+
+    lyricService.assignLyrics(
+      lyrics,
+      scoreElements,
+      false,
+      () => {},
+      (note, values) => {
+        Object.assign(note, values);
+      },
+      () => {},
+    );
+
+    // The layout service should assign melismaText so we do that here.
+    // This process should probably be improved to be more testable.
+    (scoreElements[8] as NoteElement).melismaText = 'α';
+
+    expect(lyricService.extractLyrics(scoreElements)).toEqual(lyrics);
+  });
+
+  it('should round trip (melisma-only)', () => {
+    const lyricService = new LyricService();
+
+    const scoreElements: ScoreElement[] = [];
+
+    scoreElements.push(new NoteElement());
+    scoreElements.push(new NoteElement());
+    scoreElements.push(new NoteElement());
+    scoreElements.push(new NoteElement());
+    scoreElements.push(new NoteElement());
+    scoreElements.push(new NoteElement());
+    scoreElements.push(new NoteElement());
+    scoreElements.push(new NoteElement());
+    scoreElements.push(new NoteElement());
+    scoreElements.push(new NoteElement());
+
+    (scoreElements[4] as NoteElement).acceptsLyrics =
+      AcceptsLyricsOption.MelismaOnly;
+    (scoreElements[5] as NoteElement).acceptsLyrics =
+      AcceptsLyricsOption.MelismaOnly;
+
+    (scoreElements[8] as NoteElement).acceptsLyrics =
+      AcceptsLyricsOption.MelismaOnly;
+    (scoreElements[9] as NoteElement).acceptsLyrics =
+      AcceptsLyricsOption.MelismaOnly;
+
+    const lyrics = 'Κα τευ θυν θη τω γαρ';
+
+    lyricService.assignLyrics(
+      lyrics,
+      scoreElements,
+      false,
+      () => {},
+      (note, values) => {
+        Object.assign(note, values);
+      },
+      () => {},
+    );
+
+    expect(lyricService.extractLyrics(scoreElements)).toEqual(lyrics);
   });
 });
 

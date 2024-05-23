@@ -1,6 +1,6 @@
 {
   "version": "1.1",
-  "appVersion": "0.4.26",
+  "appVersion": "0.4.29",
   "pageSetup": {
     "pageSize": "Letter",
     "pageSizeUnit": "in",
@@ -276,19 +276,26 @@
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusKentimaAbove",
         "vareia": true,
-        "lyrics": "θη"
+        "lyrics": "θη",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
         "gorgonNeume": "Gorgon_Top",
-        "lyrics": "η"
+        "acceptsLyrics": "MelismaOnly",
+        "isMelisma": true,
+        "isHyphen": true
       },
       {
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusKentemata",
         "gorgonNeume": "Gorgon_Top",
-        "lyrics": "η"
+        "acceptsLyrics": "MelismaOnly",
+        "isMelisma": true,
+        "isHyphen": true
       },
       {
         "elementType": "Note",
@@ -304,24 +311,34 @@
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusIsonPlusKentemata",
         "gorgonNeume": "Gorgon_Top",
-        "lyrics": "προ"
+        "lyrics": "προ",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "lyrics": "ο"
+        "acceptsLyrics": "MelismaOnly",
+        "isMelisma": true,
+        "isHyphen": true
       },
       {
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
         "vareia": true,
-        "lyrics": "σε"
+        "lyrics": "σε",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
         "gorgonNeume": "Gorgon_Top",
-        "lyrics": "ε"
+        "acceptsLyrics": "MelismaOnly",
+        "isMelisma": true,
+        "isHyphen": true
       },
       {
         "elementType": "Note",
@@ -332,23 +349,28 @@
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusKentemata",
         "vocalExpressionNeume": "Psifiston",
-        "lyrics": "χη"
+        "lyrics": "χη",
+        "isMelisma": true,
+        "isMelismaStart": true
       },
       {
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "lyrics": "η"
+        "acceptsLyrics": "MelismaOnly",
+        "isMelisma": true
       },
       {
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "lyrics": "η"
+        "acceptsLyrics": "MelismaOnly",
+        "isMelisma": true
       },
       {
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
         "gorgonNeume": "Gorgon_Top",
-        "lyrics": "η"
+        "acceptsLyrics": "MelismaOnly",
+        "isMelisma": true
       },
       {
         "elementType": "Note",
@@ -371,13 +393,18 @@
         "quantitativeNeume": "Oligon",
         "timeNeume": "Klasma_Top",
         "vocalExpressionNeume": "Psifiston",
-        "lyrics": "μι"
+        "lyrics": "μι",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "elementType": "Note",
         "quantitativeNeume": "Hyporoe",
         "gorgonNeume": "Gorgon_Top",
-        "lyrics": "ι"
+        "acceptsLyrics": "MelismaOnly",
+        "isMelisma": true,
+        "isHyphen": true
       },
       {
         "elementType": "Note",
@@ -408,19 +435,26 @@
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusHypsiliRight",
         "vareia": true,
-        "lyrics": "νω"
+        "lyrics": "νω",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
         "gorgonNeume": "Gorgon_Bottom",
-        "lyrics": "ω"
+        "acceptsLyrics": "MelismaOnly",
+        "isMelisma": true,
+        "isHyphen": true
       },
       {
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusKentemata",
         "gorgonNeume": "Gorgon_Top",
-        "lyrics": "ω"
+        "acceptsLyrics": "MelismaOnly",
+        "isMelisma": true,
+        "isHyphen": true
       },
       {
         "elementType": "Note",
@@ -431,12 +465,17 @@
       {
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "lyrics": "ο"
+        "lyrics": "ο",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "elementType": "Note",
         "quantitativeNeume": "KentemataPlusOligon",
-        "lyrics": "ο"
+        "acceptsLyrics": "MelismaOnly",
+        "isMelisma": true,
+        "isHyphen": true
       },
       {
         "elementType": "Note",
@@ -454,12 +493,17 @@
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusIsonPlusKentemata",
         "gorgonNeume": "GorgonDottedRight",
-        "lyrics": "ε"
+        "lyrics": "ε",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "elementType": "Note",
         "quantitativeNeume": "Ison",
-        "lyrics": "ε"
+        "acceptsLyrics": "MelismaOnly",
+        "isMelisma": true,
+        "isHyphen": true
       },
       {
         "elementType": "Note",
@@ -495,34 +539,48 @@
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
         "vareia": true,
-        "lyrics": "χει"
+        "lyrics": "χει",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
         "gorgonNeume": "Gorgon_Top",
-        "lyrics": "ει"
+        "acceptsLyrics": "MelismaOnly",
+        "isMelisma": true,
+        "isHyphen": true
       },
       {
         "elementType": "Note",
         "quantitativeNeume": "Oligon",
-        "lyrics": "ει"
+        "acceptsLyrics": "MelismaOnly",
+        "isMelisma": true,
+        "isHyphen": true
       },
       {
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusKentemata",
         "vocalExpressionNeume": "Psifiston",
-        "lyrics": "ρω"
+        "lyrics": "ρω",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "lyrics": "ω"
+        "acceptsLyrics": "MelismaOnly",
+        "isMelisma": true,
+        "isHyphen": true
       },
       {
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "lyrics": "ω"
+        "acceptsLyrics": "MelismaOnly",
+        "isMelisma": true,
+        "isHyphen": true
       },
       {
         "elementType": "Note",
@@ -545,7 +603,8 @@
       },
       {
         "elementType": "Note",
-        "quantitativeNeume": "VareiaDotted"
+        "quantitativeNeume": "VareiaDotted",
+        "acceptsLyrics": "No"
       },
       {
         "elementType": "Note",
@@ -556,23 +615,32 @@
         "elementType": "Note",
         "quantitativeNeume": "Oligon",
         "vocalExpressionNeume": "Psifiston",
-        "lyrics": "σι"
+        "lyrics": "σι",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "lyrics": "ι"
+        "acceptsLyrics": "MelismaOnly",
+        "isMelisma": true,
+        "isHyphen": true
       },
       {
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
-        "lyrics": "ι"
+        "acceptsLyrics": "MelismaOnly",
+        "isMelisma": true,
+        "isHyphen": true
       },
       {
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
         "accidental": "Sharp_2_Left",
-        "lyrics": "ι"
+        "acceptsLyrics": "MelismaOnly",
+        "isMelisma": true,
+        "isHyphen": true
       },
       {
         "elementType": "Note",
@@ -583,98 +651,129 @@
       {
         "elementType": "Note",
         "quantitativeNeume": "Oligon",
-        "lyrics": "ε"
+        "lyrics": "ε",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "elementType": "Note",
         "quantitativeNeume": "KentemataPlusOligon",
-        "lyrics": "ε"
+        "acceptsLyrics": "MelismaOnly",
+        "isMelisma": true,
+        "isHyphen": true
       },
       {
         "elementType": "Note",
         "quantitativeNeume": "Oligon",
-        "lyrics": "ε"
+        "acceptsLyrics": "MelismaOnly",
+        "isMelisma": true,
+        "isHyphen": true
       },
       {
         "elementType": "Note",
         "quantitativeNeume": "Ison",
         "vareia": true,
-        "lyrics": "σπε"
+        "lyrics": "σπε",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
         "timeNeume": "Hapli",
-        "lyrics": "ε"
+        "acceptsLyrics": "MelismaOnly",
+        "isMelisma": true,
+        "isHyphen": true
       },
       {
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusApostrophosPlusKentemata",
         "gorgonNeume": "Gorgon_Top",
-        "lyrics": "ε"
+        "acceptsLyrics": "MelismaOnly",
+        "isMelisma": true,
+        "isHyphen": true
       },
       {
         "elementType": "Note",
         "quantitativeNeume": "Ison",
         "vareia": true,
-        "lyrics": "ε"
+        "acceptsLyrics": "MelismaOnly",
+        "isMelisma": true,
+        "isHyphen": true
       },
       {
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
         "gorgonNeume": "Gorgon_Top",
         "vocalExpressionNeume": "HeteronConnecting",
-        "lyrics": "ε"
+        "acceptsLyrics": "MelismaOnly",
+        "isMelisma": true,
+        "isHyphen": true
       },
       {
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusIsonPlusKentemata",
         "gorgonNeume": "Gorgon_Top",
-        "lyrics": "ε"
+        "acceptsLyrics": "MelismaOnly",
+        "isMelisma": true,
+        "isHyphen": true
       },
       {
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
         "vareia": true,
-        "lyrics": "ρι"
+        "lyrics": "ρι",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
       },
       {
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
         "timeNeume": "Hapli",
         "gorgonNeume": "Gorgon_Top",
-        "lyrics": "ι"
+        "acceptsLyrics": "MelismaOnly",
+        "isMelisma": true,
+        "isHyphen": true
       },
       {
         "elementType": "Note",
         "quantitativeNeume": "Ison",
-        "lyrics": "νη"
+        "lyrics": "νη",
+        "isMelisma": true,
+        "isMelismaStart": true
       },
       {
         "elementType": "Note",
         "quantitativeNeume": "Ison",
         "vocalExpressionNeume": "HomalonConnecting",
         "vareia": true,
-        "lyrics": "η"
+        "acceptsLyrics": "MelismaOnly",
+        "isMelisma": true
       },
       {
         "elementType": "Note",
         "quantitativeNeume": "Ison",
         "gorgonNeume": "Gorgon_Top",
-        "lyrics": "η"
+        "acceptsLyrics": "MelismaOnly",
+        "isMelisma": true
       },
       {
         "elementType": "Note",
         "quantitativeNeume": "Ison",
         "timeNeume": "Klasma_Top",
-        "lyrics": "η"
+        "acceptsLyrics": "MelismaOnly",
+        "isMelisma": true
       },
       {
         "elementType": "Empty"
       }
     ],
     "lyrics": {
-      "text": "Κα τευ θυν θη η η τω η προ ο σε ε ευ χη η η η μου ως θυ μι ι α μα ε νω ω ω πι ο ο ον σου ε ε πα αρ σις τω ων χει ει ει ρω ω ω ων μου θυ σι ι ι ι α ε ε ε σπε ε ε ε ε ε ρι ι νη η η η"
+      "locked": true,
+      "text": "Κα τευ θυν θη τω η προ σε ευ χη μου ως θυ μι α μα ε νω πι ο ον σου ε πα αρ σις τω ων χει ρω ων μου θυ σι α ε σπε ρι νη"
     }
   }
 }

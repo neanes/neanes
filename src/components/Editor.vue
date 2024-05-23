@@ -207,7 +207,8 @@
                         <template
                           v-if="
                             isMelisma(element as NoteElement) &&
-                            (element as NoteElement).isHyphen
+                            (element as NoteElement).isHyphen &&
+                            (element as NoteElement).melismaText === ''
                           "
                         >
                           <div
@@ -236,7 +237,8 @@
                           v-else-if="
                             isMelisma(element as NoteElement) &&
                             !(element as NoteElement).isHyphen &&
-                            !rtl
+                            !rtl &&
+                            (element as NoteElement).melismaText === ''
                           "
                         >
                           <div
@@ -275,6 +277,23 @@
                             :style="getMelismaStyle(element as NoteElement)"
                             v-text="(element as NoteElement).melismaText"
                           ></div>
+                        </template>
+                        <template
+                          v-else-if="
+                            (element as NoteElement).isMelisma &&
+                            (element as NoteElement).melismaText !== '' &&
+                            !rtl
+                          "
+                        >
+                          <span
+                            class="melisma-text"
+                            v-text="(element as NoteElement).melismaText"
+                            :class="{
+                              selectedMelisma: element === selectedLyrics,
+                            }"
+                            @click="focusLyrics(getElementIndex(element))"
+                            @focus="selectedLyrics = element as NoteElement"
+                          ></span>
                         </template>
                       </div>
                     </div>
@@ -998,7 +1017,7 @@ import { Command, CommandFactory } from '@/services/history/CommandService';
 import { ByzHtmlExporter } from '@/services/integration/ByzHtmlExporter';
 import { IIpcService } from '@/services/ipc/IIpcService';
 import { LayoutService } from '@/services/LayoutService';
-import { LyricService, LyricTokenizer } from '@/services/LyricService';
+import { LyricService } from '@/services/LyricService';
 import { NeumeKeyboard } from '@/services/NeumeKeyboard';
 import { IPlatformService } from '@/services/platform/IPlatformService';
 import { SaveService } from '@/services/SaveService';
@@ -4627,93 +4646,6 @@ export default class Editor extends Vue {
     this.save();
   }
 
-  getLyricUpdateCommand(
-    element: NoteElement,
-    lyrics: string,
-    clearMelisma: boolean = false,
-  ) {
-    // Replace newlines. This should only happen if the user pastes
-    // text containing new lines.
-    const sanitizedLyrics = lyrics.replace(/(?:\r\n|\r|\n)/g, ' ');
-    if (sanitizedLyrics !== lyrics) {
-      lyrics = sanitizedLyrics;
-
-      this.setLyrics(this.getElementIndex(element), lyrics);
-    }
-
-    if (element.lyrics === lyrics && !(element.isMelisma && clearMelisma)) {
-      return null;
-    }
-
-    // Calculate melisma properties
-    let isMelisma: boolean;
-    let isMelismaStart: boolean;
-    let isHyphen: boolean;
-
-    if (lyrics === '_' || lyrics === '-' || lyrics === TATWEEL) {
-      isMelisma = true;
-      isMelismaStart = false;
-      isHyphen = lyrics === '-';
-      lyrics = '';
-
-      this.setLyrics(this.getElementIndex(element), lyrics);
-    } else if (
-      lyrics.endsWith('_') ||
-      lyrics.endsWith('-') ||
-      lyrics.endsWith(TATWEEL)
-    ) {
-      isMelisma = true;
-      isMelismaStart = true;
-      isHyphen = lyrics.endsWith('-');
-
-      lyrics = !this.rtl ? lyrics.slice(0, -1) : lyrics;
-
-      this.setLyrics(this.getElementIndex(element), lyrics);
-    } else {
-      isMelisma = false;
-      isMelismaStart = false;
-      isHyphen = false;
-    }
-
-    if (this.rtl) {
-      const currentIndex = this.getElementIndex(element);
-
-      if (currentIndex > 0) {
-        const previousElement = this.elements[currentIndex - 1];
-
-        if (
-          previousElement.elementType === ElementType.Note &&
-          (previousElement as NoteElement).isMelisma &&
-          !lyrics.startsWith(TATWEEL)
-        ) {
-          lyrics = TATWEEL + lyrics;
-        }
-      }
-    }
-
-    // If nothing changed, return. This could happen if
-    // the user types in an underscore when the element is
-    // already a melisma.
-    if (
-      element.lyrics === lyrics &&
-      element.isMelismaStart === isMelismaStart &&
-      element.isMelisma === isMelisma &&
-      element.isHyphen === isHyphen
-    ) {
-      return null;
-    }
-
-    return this.noteElementCommandFactory.create('update-properties', {
-      target: element,
-      newValues: {
-        lyrics,
-        isMelisma,
-        isMelismaStart,
-        isHyphen,
-      },
-    });
-  }
-
   updateLyricsLocked(locked: boolean) {
     this.lyricsLocked = locked;
     this.hasUnsavedChanges = true;
@@ -4726,87 +4658,31 @@ export default class Editor extends Vue {
   }
 
   assignLyrics() {
-    const tokenizer = new LyricTokenizer(this.lyrics);
-
     const updateCommands: Command[] = [];
-    let previousToken = '';
 
-    const filteredElements = this.elements.filter(
-      (x) =>
-        x.elementType === ElementType.Note ||
-        x.elementType === ElementType.DropCap,
-    );
-
-    for (let i = 0; i < filteredElements.length; i++) {
-      if (filteredElements[i].elementType === ElementType.DropCap) {
-        const dropCap = filteredElements[i] as DropCapElement;
-        const token = tokenizer.getNextCharacter();
-
-        if (dropCap.content !== token) {
-          updateCommands.push(
-            this.dropCapCommandFactory.create('update-properties', {
-              target: dropCap,
-              newValues: { content: token },
-            }),
-          );
-        }
-
-        continue;
-      }
-
-      const note = filteredElements[i] as NoteElement;
-      const previousNote =
-        i > 0 ? (filteredElements[i - 1] as NoteElement) : null;
-
-      let token = '';
-
-      const acceptsLyrics = this.lyricService.getEffectiveAcceptsLyrics(
-        note,
-        previousNote,
-      );
-
-      if (acceptsLyrics === AcceptsLyricsOption.MelismaOnly) {
-        // This note only takes melismas. If the previous note was a melisma,
-        // then extend the melisma to this note. Otherwise, do nothing
-        if (previousToken.endsWith('-')) {
-          token = '-';
-        } else {
-          token = '_';
-        }
-      } else if (acceptsLyrics === AcceptsLyricsOption.Yes) {
-        // The only other options is "Yes". So grab the next token
-        // and assign it to the note.
-        token = tokenizer.getNextToken();
-
-        if (token === '_' && !previousToken.endsWith('_')) {
-          token = '';
-        } else {
-          // If the next note only takes a melisma, then ensure that this token
-          // ends in an underscore
-          if (i + 1 < filteredElements.length) {
-            const nextNote = filteredElements[i + 1] as NoteElement;
-
-            if (
-              this.lyricService.getEffectiveAcceptsLyrics(nextNote, note) ===
-                AcceptsLyricsOption.MelismaOnly &&
-              !token.endsWith('_') &&
-              !token.endsWith('-')
-            ) {
-              token += '_';
-            }
-          }
-        }
-      }
-
-      const updateCommand = this.getLyricUpdateCommand(note, token, true);
-
-      if (updateCommand != null) {
+    this.lyricService.assignLyrics(
+      this.lyrics,
+      this.elements,
+      this.rtl,
+      (note, lyrics) => this.setLyrics(this.getElementIndex(note), lyrics),
+      (note, newValues) => {
         note.updated = true;
-        updateCommands.push(updateCommand);
-      }
-
-      previousToken = token;
-    }
+        updateCommands.push(
+          this.noteElementCommandFactory.create('update-properties', {
+            target: note,
+            newValues,
+          }),
+        );
+      },
+      (dropCap, token) => {
+        updateCommands.push(
+          this.dropCapCommandFactory.create('update-properties', {
+            target: dropCap,
+            newValues: { content: token },
+          }),
+        );
+      },
+    );
 
     if (updateCommands.length > 0) {
       this.commandService.executeAsBatch(updateCommands, this.lyricsLocked);
@@ -4815,22 +4691,11 @@ export default class Editor extends Vue {
   }
 
   assignAcceptsLyricsFromCurrentLyrics() {
-    const commands = [];
+    const commands: Command[] = [];
 
-    for (const element of this.elements.filter(
-      (x) => x.elementType === ElementType.Note,
-    )) {
-      const note = element as NoteElement;
-
-      let acceptsLyrics = AcceptsLyricsOption.Default;
-
-      if (note.isMelisma && !note.isMelismaStart) {
-        acceptsLyrics = AcceptsLyricsOption.MelismaOnly;
-      } else if (note.lyrics.trim() === '') {
-        acceptsLyrics = AcceptsLyricsOption.No;
-      }
-
-      if (note.acceptsLyrics != acceptsLyrics) {
+    this.lyricService.assignAcceptsLyricsFromCurrentLyrics(
+      this.elements,
+      (note, acceptsLyrics) => {
         commands.push(
           this.noteElementCommandFactory.create('update-properties', {
             target: note,
@@ -4839,8 +4704,8 @@ export default class Editor extends Vue {
             },
           }),
         );
-      }
-    }
+      },
+    );
 
     if (commands.length > 0) {
       this.commandService.executeAsBatch(commands);
@@ -4854,14 +4719,22 @@ export default class Editor extends Vue {
     lyrics: string,
     clearMelisma: boolean = false,
   ) {
-    const updateCommand = this.getLyricUpdateCommand(
+    const newValues = this.lyricService.getLyricUpdateValues(
       element,
       lyrics,
+      this.elements,
+      this.rtl,
+      (note, lyrics) => this.setLyrics(this.getElementIndex(note), lyrics),
       clearMelisma,
     );
 
-    if (updateCommand != null) {
-      this.commandService.execute(updateCommand);
+    if (newValues != null) {
+      this.commandService.execute(
+        this.noteElementCommandFactory.create('update-properties', {
+          target: element,
+          newValues,
+        }),
+      );
       this.refreshStaffLyrics();
       this.save();
     }
@@ -6366,6 +6239,10 @@ export default class Editor extends Vue {
   border: 1px solid goldenrod;
 }
 
+.selectedMelisma {
+  display: none;
+}
+
 .line {
   display: flex;
   flex-direction: row;
@@ -6541,6 +6418,10 @@ export default class Editor extends Vue {
   box-sizing: border-box;
 }
 
+.melisma-text {
+  opacity: 0.5;
+}
+
 .page-break {
   position: absolute;
   top: calc(-10px * var(--zoom, 1));
@@ -6620,6 +6501,10 @@ export default class Editor extends Vue {
   background-color: initial;
 }
 
+.page.print .melisma-text {
+  opacity: 1;
+}
+
 @media print {
   .page,
   .page * {
@@ -6660,6 +6545,10 @@ export default class Editor extends Vue {
 
   .selectedLyrics {
     border: none;
+  }
+
+  .melisma-text {
+    opacity: 1;
   }
 
   .file-menu-bar,

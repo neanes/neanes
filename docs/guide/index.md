@@ -149,6 +149,21 @@ To create a melisma, end your lyrics with an underscore or hyphen (`_` or `-`). 
 
 To insert hyphens or underscores without creating a melisma, hold <kbd>Ctrl</kbd> while typing the character.
 
+#### Greek
+
+To continue the final vowel or vowels of a syllable that ends in a vowel, use an underscore (`_`). The vowel or vowels will appear slightly transparent to distinguish them from non-melismatic vowels.
+
+For example, to add a melisma to the word `και`, type <kbd>και\_</kbd> <kbd>\_</kbd> <kbd>\_</kbd>.
+![Greek Lyrics Example 2](./images/guide-lyrics-greek-example-2.png)
+
+To continue the inner vowel or vowels in a single syllable that ends with a consonant, use a hyphen (`-`).
+
+For example, to add a melisma to the word `των`, type <kbd>τω-</kbd> <kbd>-</kbd> <kbd>ων</kbd>.
+![Greek Lyrics Example 1](./images/guide-lyrics-greek-example-1.png)
+
+> [!IMPORTANT]
+> Although there is no visual distinction between using a hyphen or underscore, the character chosen is used to distinguish between `των` and `τω ων` in the [lyrics toolbar](./advanced.html#advanced-lyrics-entry). For example, the following will be interpreted as two words (`τω ων`) in the lyrics manager: <kbd>τω\_</kbd> <kbd>\_</kbd> <kbd>ων</kbd>.
+
 ## Page Breaks and Line Breaks
 
 To insert a page break or a line break, click the neume that you want the break to occur after, and press the `Page Break` or `Line Break` button in the main toolbar. To remove the page or line break, highlight the element with the break, and press the button page or line break button again.
@@ -315,3 +330,21 @@ It is common to write hymns of the third mode and the grave mode without the pro
 #### Chromatic Fthora Note
 
 Chromatic fthoras are sometimes ambiguous. Use the `Chromatic Fthora` dropdown in the bottom toolbar to specify the correct note for audio playback.
+
+<style>
+kbd {
+  background-color: #eee;
+  border-radius: 3px;
+  border: 1px solid #b4b4b4;
+  box-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.2),
+    0 2px 0 0 rgba(255, 255, 255, 0.7) inset;
+  color: #333;
+  display: inline-block;
+  font-size: 0.85em;
+  font-weight: 700;
+  line-height: 1;
+  padding: 2px 4px;
+  white-space: nowrap;
+}
+</style>

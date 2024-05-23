@@ -1,3 +1,5 @@
+import { describe, expect, it } from 'vitest';
+
 import glyphnames from '../../assets/fonts/sbmufl/glyphnames.json';
 import { SbmuflGlyphName } from './../NeumeMappingService';
 import { ByzHtmlExporter } from './ByzHtmlExporter';

@@ -176,6 +176,7 @@ export class LyricService {
             this.getEffectiveAcceptsLyrics(note, previousNote) !==
               AcceptsLyricsOption.MelismaOnly &&
             (!nextNote ||
+              note.isMelismaStart ||
               this.getEffectiveAcceptsLyrics(nextNote, note) !==
                 AcceptsLyricsOption.MelismaOnly)
           ) {

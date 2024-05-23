@@ -45,6 +45,7 @@ import { Score } from '@/models/Score';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { TATWEEL } from '@/utils/constants';
 
+import { MelismaHelperGreek, MelismaSyllables } from './MelismaHelperGreek';
 import { TextMeasurementService } from './TextMeasurementService';
 
 const fontHeightCache = new Map<string, number>();
@@ -1365,11 +1366,16 @@ export class LayoutService {
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
     );
 
+    let melismaSyllables: MelismaSyllables | null = null;
+    let melismaLyricsEnd: number | null = null;
+
     for (let pageIndex = 0; pageIndex < pages.length; pageIndex++) {
       const page = pages[pageIndex];
 
       for (let lineIndex = 0; lineIndex < page.lines.length; lineIndex++) {
         const line = page.lines[lineIndex];
+
+        melismaLyricsEnd = null;
 
         let firstElementOnNextLine: ScoreElement | null = null;
 
@@ -1395,6 +1401,54 @@ export class LayoutService {
           element.hyphenOffsets = [];
           element.melismaWidth = 0;
           element.isFullMelisma = isIntermediateMelismaAtStartOfLine;
+
+          if (MelismaHelperGreek.isGreek(element.lyrics)) {
+            if (element.isMelismaStart) {
+              melismaSyllables = MelismaHelperGreek.getMelismaSyllable(
+                element.lyrics,
+              );
+
+              melismaLyricsEnd =
+                element.x +
+                element.lyricsHorizontalOffset / 2 +
+                element.neumeWidth / 2 +
+                element.lyricsWidth / 2;
+            } else {
+              melismaSyllables = null;
+            }
+
+            continue;
+          }
+
+          if (melismaSyllables != null) {
+            if (element.isMelisma) {
+              element.melismaText = melismaSyllables.middle;
+
+              // Check the width of the melisma text and hide it if it's
+              //  too close to previous the lyrics
+              if (melismaLyricsEnd != null) {
+                const lyricsWidth = this.getTextWidthFromCache(
+                  textWidthCache,
+                  element,
+                  pageSetup,
+                  element.melismaText,
+                );
+
+                const melismaLyricsStart =
+                  element.x +
+                  element.lyricsHorizontalOffset / 2 +
+                  element.neumeWidth / 2 -
+                  lyricsWidth / 2;
+
+                if (melismaLyricsEnd > melismaLyricsStart) {
+                  element.melismaText = '';
+                }
+              }
+              continue;
+            } else {
+              melismaSyllables = null;
+            }
+          }
 
           if (element.isMelismaStart || isIntermediateMelismaAtStartOfLine) {
             // The final element in the melisma, or the final

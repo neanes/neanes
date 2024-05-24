@@ -296,14 +296,12 @@ Note indicators can be toggled on and off with <kbd>Q</kbd>. The correct note is
 
 ## Measures
 
-| Neume                        | Keyboard Shortcut               |
-| ---------------------------- | ------------------------------- |
-| <span class="neume"></span> | <kbd>2</kbd>                    |
-| <span class="neume"></span> | <kbd>3</kbd>                    |
-| <span class="neume"></span> | <kbd>4</kbd>                    |
-| <span class="neume"></span> | <kbd>5</kbd>                    |
-| <span class="neume"></span> | <kbd>6</kbd>                    |
-| <span class="neume"></span> | <kbd>7</kbd>                    |
-| <span class="neume"></span> | <kbd>8</kbd>                    |
-| <span class="neume"></span> | <kbd>W</kbd>                    |
-| <span class="neume"></span> | <kbd>Shift</kbd> + <kbd>W</kbd> |
+| Neume                        | Keyboard Shortcut |
+| ---------------------------- | ----------------- |
+| <span class="neume"></span> | <kbd>2</kbd>      |
+| <span class="neume"></span> | <kbd>3</kbd>      |
+| <span class="neume"></span> | <kbd>4</kbd>      |
+| <span class="neume"></span> | <kbd>5</kbd>      |
+| <span class="neume"></span> | <kbd>6</kbd>      |
+| <span class="neume"></span> | <kbd>7</kbd>      |
+| <span class="neume"></span> | <kbd>8</kbd>      |

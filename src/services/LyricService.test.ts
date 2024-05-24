@@ -116,17 +116,9 @@ describe('LyricService (English)', () => {
 
     const scoreElements: ScoreElement[] = [];
 
-    scoreElements.push(new NoteElement());
-    scoreElements.push(new NoteElement());
-    scoreElements.push(new NoteElement());
-    scoreElements.push(new NoteElement());
-    scoreElements.push(new NoteElement());
-    scoreElements.push(new NoteElement());
-    scoreElements.push(new NoteElement());
-    scoreElements.push(new NoteElement());
-    scoreElements.push(new NoteElement());
-    scoreElements.push(new NoteElement());
-    scoreElements.push(new NoteElement());
+    for (let i = 0; i < 11; i++) {
+      scoreElements.push(new NoteElement());
+    }
 
     const lyrics = 'test-ing__ test--ing one two three___';
 
@@ -149,18 +141,12 @@ describe('LyricService (English)', () => {
 
     const scoreElements: ScoreElement[] = [];
 
-    scoreElements.push(new NoteElement());
-    scoreElements.push(new NoteElement());
-    scoreElements.push(new NoteElement());
-    scoreElements.push(new NoteElement());
-    scoreElements.push(new NoteElement());
-    scoreElements.push(new NoteElement());
-    scoreElements.push(new NoteElement());
-    scoreElements.push(new NoteElement());
-    scoreElements.push(new NoteElement());
-    scoreElements.push(new NoteElement());
-    scoreElements.push(new NoteElement());
+    for (let i = 0; i < 11; i++) {
+      scoreElements.push(new NoteElement());
+    }
 
+    (scoreElements[2] as NoteElement).acceptsLyrics =
+      AcceptsLyricsOption.MelismaOnly;
     (scoreElements[4] as NoteElement).acceptsLyrics =
       AcceptsLyricsOption.MelismaOnly;
     (scoreElements[9] as NoteElement).acceptsLyrics =

@@ -1,11 +1,15 @@
+import { readFile } from 'fs/promises';
 import { describe, expect, it } from 'vitest';
 
 import {
   AcceptsLyricsOption,
+  DropCapElement,
+  ElementType,
   NoteElement,
   ScoreElement,
 } from '../models/Element';
 import { LyricService } from './LyricService';
+import { SaveService } from './SaveService';
 
 describe('LyricService (English)', () => {
   it('should extract single word', () => {
@@ -168,6 +172,54 @@ describe('LyricService (English)', () => {
     );
 
     expect(lyricService.extractLyrics(scoreElements)).toEqual(lyrics);
+  });
+
+  it('should create a prosomia', async () => {
+    const lyricService = new LyricService();
+
+    const jsonInput = await readFile(
+      `${__dirname}/../../tests/data/prosomoia1_input.byzx`,
+      'utf8',
+    );
+
+    const scoreInput = SaveService.LoadScoreFromJson(JSON.parse(jsonInput));
+
+    const newLyrics =
+      "With what fair crowns of praise shall we crown the di-vine and all-laud-a-ble hier-arch? That clear trum-pet sound-ing the-ol-o-gy, the mouth of grace that doth breathe forth fire, the ven'-ra-ble ves-sel of the Spir-it, the might-y un-shak-en pil-lar of the Church of Christ, the great and ex-ceed-ing glad-ness of the world en-tire, the might-y riv-er of wis-dom of God's in-spi-ra-tion, and the lamp of the di-vine light, the bright and far-shin-ing star that mak-eth cre-a-tion ra-di-ant.";
+
+    lyricService.assignLyrics(
+      newLyrics,
+      scoreInput.staff.elements,
+      false,
+      () => {},
+      (note, values) => {
+        Object.assign(note, values);
+      },
+      () => {},
+    );
+
+    // First make sure the lyrics round trip
+    expect(lyricService.extractLyrics(scoreInput.staff.elements)).toEqual(
+      newLyrics,
+    );
+
+    // Next match the snapshot
+    expect(
+      scoreInput.staff.elements
+        .filter((x) =>
+          [ElementType.Note, ElementType.DropCap].includes(x.elementType),
+        )
+        .map((x: NoteElement | DropCapElement) =>
+          x.elementType === ElementType.Note
+            ? {
+                lyrics: (x as NoteElement).lyrics,
+                isMelisma: (x as NoteElement).isMelisma,
+                isMelismaStart: (x as NoteElement).isMelismaStart,
+                isHyphen: (x as NoteElement).isHyphen,
+              }
+            : { content: (x as DropCapElement).content },
+        ),
+    ).toMatchSnapshot();
   });
 });
 

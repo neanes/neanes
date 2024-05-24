@@ -2755,9 +2755,19 @@ export default class Editor extends Vue {
 
       if (quantitativeMapping != null) {
         handled = true;
-        this.addQuantitativeNeumeThrottled(
-          quantitativeMapping.neume as QuantitativeNeume,
-        );
+
+        if (quantitativeMapping.acceptsLyricsOption != null) {
+          if (this.selectedElement.elementType === ElementType.Note) {
+            this.updateNoteAcceptsLyrics(
+              this.selectedElement as NoteElement,
+              quantitativeMapping.acceptsLyricsOption,
+            );
+          }
+        } else {
+          this.addQuantitativeNeumeThrottled(
+            quantitativeMapping.neume as QuantitativeNeume,
+          );
+        }
       }
 
       const tempoMapping = this.neumeKeyboard.findTempoMapping(

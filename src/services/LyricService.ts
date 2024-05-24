@@ -167,20 +167,20 @@ export class LyricService {
           }
         } else if (note.isMelisma) {
           // Finally we handle non-hyphenated melismas
-          const nextNote = this.findNextNote(filteredElements, i);
-
-          // Unless the user set acceptsLyrics to indicate a MelismaOnly,
-          // or the note's default effective value is MelismaOnly,
-          // we add the melismatic underscore to the lyrics.
-          if (
-            this.getEffectiveAcceptsLyrics(note, previousNote) !==
-              AcceptsLyricsOption.MelismaOnly &&
-            (!nextNote ||
-              note.isMelismaStart ||
-              this.getEffectiveAcceptsLyrics(nextNote, note) !==
-                AcceptsLyricsOption.MelismaOnly)
-          ) {
-            lyrics += '_';
+          if (note.isMelismaStart) {
+            if (this.hasNonMelismaOnlyNotes(filteredElements, i)) {
+              lyrics += '_';
+            }
+          } else {
+            // Unless the user set acceptsLyrics to indicate a MelismaOnly,
+            // or the note's default effective value is MelismaOnly,
+            // we add the melismatic underscore to the lyrics.
+            if (
+              this.getEffectiveAcceptsLyrics(note, previousNote) !==
+              AcceptsLyricsOption.MelismaOnly
+            ) {
+              lyrics += '_';
+            }
           }
           needSpace = true;
         }
@@ -592,6 +592,40 @@ export class LyricService {
     }
 
     return nextNote;
+  }
+
+  /**
+   * Determines whether a group of melismatic notes contains a note that is not set to `MelismaOnly`
+   * @param elements The elements to search
+   * @param start The index of `elements` where the search should start. The first element considered is `start + 1`. The element at `start` must be a note.
+   * @returns Returns true if any note is not set to `MelismaOnly`.
+   */
+  hasNonMelismaOnlyNotes(elements: ScoreElement[], start: number) {
+    let previousNote: NoteElement = elements[start] as NoteElement;
+
+    for (let j = start + 1; j < elements.length; j++) {
+      if (elements[j].elementType === ElementType.Note) {
+        const note = elements[j] as NoteElement;
+
+        if (note.isMelismaStart || !note.isMelisma) {
+          return false;
+        } else if (
+          note.isMelisma &&
+          this.getEffectiveAcceptsLyrics(note, previousNote) !==
+            AcceptsLyricsOption.MelismaOnly
+        ) {
+          return true;
+        }
+
+        previousNote = note;
+      } else if (elements[j].elementType !== ElementType.Martyria) {
+        // Look past martyria, but stop at any other element (e.g. a mode key)
+        return false;
+      }
+    }
+
+    // We've run out of elements and haven't found the end of the melisma
+    return false;
   }
 }
 

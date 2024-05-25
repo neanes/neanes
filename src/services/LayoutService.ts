@@ -193,11 +193,6 @@ export class LayoutService {
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
     );
 
-    const widthOfUnderscore = TextMeasurementService.getTextWidth(
-      '_',
-      pageSetup.lyricsFont,
-    );
-
     const widthOfHyphen = TextMeasurementService.getTextWidth(
       '-',
       pageSetup.lyricsFont,
@@ -667,11 +662,28 @@ export class LayoutService {
           elementWidthPx += adjustment;
         }
 
-        const lyricsEnd =
-          noteElement.x +
-          noteElement.lyricsHorizontalOffset / 2 +
-          noteElement.neumeWidth / 2 +
-          noteElement.lyricsWidth / 2;
+        let lyricsEnd = 0;
+
+        if (
+          noteElement.isMelismaStart &&
+          noteElement.lyricsWidth > noteElement.neumeWidth
+        ) {
+          // At the start of a melisma, the syllable is aligned to the
+          // left of the neume, but only if the lyrics are wider than the neume
+          lyricsEnd =
+            noteElement.x +
+            noteElement.lyricsHorizontalOffset / 2 +
+            noteElement.lyricsWidth;
+
+          noteElement.alignLeft = true;
+        } else {
+          // Otherwise the lyrics are centered under the neume
+          lyricsEnd =
+            noteElement.x +
+            noteElement.lyricsHorizontalOffset / 2 +
+            noteElement.neumeWidth / 2 +
+            noteElement.lyricsWidth / 2;
+        }
 
         const neumeEnd =
           noteElement.x +
@@ -695,20 +707,7 @@ export class LayoutService {
           currentMelismaLyricsEndPx =
             noteElement.spaceAfter + lyricsEnd + widthOfHyphenForThisElement;
         } else if (noteElement.isMelismaStart) {
-          const widthOfUnderscoreForThisElement =
-            noteElement.lyricsUseDefaultStyle
-              ? widthOfUnderscore
-              : this.getTextWidthFromCache(
-                  textWidthCache,
-                  noteElement,
-                  pageSetup,
-                  '_',
-                );
-
-          currentMelismaLyricsEndPx =
-            noteElement.spaceAfter +
-            lyricsEnd +
-            widthOfUnderscoreForThisElement;
+          currentMelismaLyricsEndPx = noteElement.spaceAfter + lyricsEnd;
         } else if (!noteElement.isMelisma) {
           currentMelismaLyricsEndPx = null;
         }
@@ -1330,10 +1329,6 @@ export class LayoutService {
 
   public static addMelismas(pages: Page[], pageSetup: PageSetup) {
     // First calculate some constants
-    const widthOfUnderscore = TextMeasurementService.getTextWidth(
-      '_',
-      pageSetup.lyricsFont,
-    );
 
     const widthOfTatweel = TextMeasurementService.getTextWidth(
       TATWEEL,
@@ -1498,17 +1493,19 @@ export class LayoutService {
             let start = 0;
             let end = 0;
 
+            // Calculate the start of the melisma
             if (isIntermediateMelismaAtStartOfLine) {
               // Special case. No lyrics, so start at the
               // beginning of the neume.
               start = element.x;
             } else if (element.lyricsWidth > element.neumeWidth) {
               if (!pageSetup.melkiteRtl) {
+                // At the start of a melisma, the syllable is aligned to the
+                // left of the neume, but only if the lyrics are wider than the neume
                 start =
                   element.x +
-                  element.neumeWidth +
                   element.lyricsHorizontalOffset / 2 +
-                  (element.lyricsWidth - element.neumeWidth) / 2;
+                  element.lyricsWidth;
               } else {
                 start =
                   element.x +
@@ -1532,6 +1529,7 @@ export class LayoutService {
               }
             }
 
+            // Calculate the end and the final melisma width
             if (element.isHyphen) {
               const nextNoteElement = nextElement as NoteElement;
 
@@ -1547,12 +1545,21 @@ export class LayoutService {
               } else if (
                 nextNoteElement.lyricsWidth > nextNoteElement.neumeWidth
               ) {
-                end =
-                  nextNoteElement.x -
-                  (nextNoteElement.lyricsWidth -
-                    nextNoteElement.neumeWidth -
-                    nextNoteElement.lyricsHorizontalOffset) /
-                    2;
+                // At the start of a melisma, the syllable is aligned to the
+                // left of the neume, but only if the lyrics are wider than the neume
+                if (nextNoteElement.isMelismaStart) {
+                  end =
+                    nextNoteElement.x -
+                    nextNoteElement.lyricsHorizontalOffset / 2;
+                } else {
+                  // Otherwise, the syllable is centered under the neume
+                  end =
+                    nextNoteElement.x -
+                    (nextNoteElement.lyricsWidth -
+                      nextNoteElement.neumeWidth -
+                      nextNoteElement.lyricsHorizontalOffset) /
+                      2;
+                }
               } else {
                 end =
                   nextNoteElement.x +
@@ -1599,6 +1606,7 @@ export class LayoutService {
                 );
               }
             } else if (!pageSetup.melkiteRtl) {
+              // Else not a hyphen, so an underscore
               const nextElementIsRunningElaphron =
                 nextElement &&
                 nextElement.elementType === ElementType.Note &&
@@ -1618,12 +1626,22 @@ export class LayoutService {
                   nextNoteElement.neumeWidth +
                     nextNoteElement.lyricsHorizontalOffset
               ) {
-                end =
-                  nextNoteElement.x +
-                  nextNoteElement.lyricsHorizontalOffset / 2 -
-                  (nextNoteElement.lyricsWidth - nextNoteElement.neumeWidth) /
-                    2 -
-                  pageSetup.lyricsMinimumSpacing;
+                if (nextNoteElement.isMelismaStart) {
+                  // At the start of a melisma, the syllable is aligned to the
+                  // left of the neume, but only if the lyrics are wider than the neume
+                  end =
+                    nextNoteElement.x +
+                    nextNoteElement.lyricsHorizontalOffset / 2 -
+                    pageSetup.lyricsMinimumSpacing;
+                } else {
+                  // Otherwise, the lyrics are centered under the element.
+                  end =
+                    nextNoteElement.x +
+                    nextNoteElement.lyricsHorizontalOffset / 2 -
+                    (nextNoteElement.lyricsWidth - nextNoteElement.neumeWidth) /
+                      2 -
+                    pageSetup.lyricsMinimumSpacing;
+                }
               } else if (
                 nextElementIsRunningElaphron &&
                 nextNoteElement.lyricsWidth > elaphronWidth
@@ -1645,21 +1663,7 @@ export class LayoutService {
                 end = finalElement.x + finalElement.neumeWidth;
               }
 
-              const widthOfUnderscoreForThisElement =
-                element.lyricsUseDefaultStyle
-                  ? widthOfUnderscore
-                  : this.getTextWidthFromCache(
-                      textWidthCache,
-                      element,
-                      pageSetup,
-                      '_',
-                    );
-
-              // Always show at least one underscore to indicate it's a melisma.
-              element.melismaWidth = Math.max(
-                end - start,
-                widthOfUnderscoreForThisElement,
-              );
+              element.melismaWidth = Math.max(end - start, 0);
 
               // Calculate the distance from the alphabetic baseline to the bottom of the font bounding box
               element.melismaOffsetTop =

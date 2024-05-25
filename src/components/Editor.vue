@@ -1728,6 +1728,7 @@ export default class Editor extends Vue {
         ? withZoom(this.score.pageSetup.lyricsDefaultStrokeWidth)
         : withZoom(element.lyricsStrokeWidth),
       lineHeight: withZoom(element.lyricsFontHeight),
+      left: element.alignLeft ? 0 : undefined,
     } as StyleValue;
   }
 

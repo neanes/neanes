@@ -636,6 +636,8 @@ export class LayoutService {
       if (element.elementType === ElementType.Note) {
         const noteElement = element as NoteElement;
 
+        noteElement.alignLeft = false;
+
         const lyricsStart =
           noteElement.x +
           noteElement.lyricsHorizontalOffset / 2 +

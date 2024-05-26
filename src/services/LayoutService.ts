@@ -666,12 +666,26 @@ export class LayoutService {
 
         let lyricsEnd = 0;
 
+        const nextElement = i + 1 < elements.length ? elements[i + 1] : null;
+        let nextNoteElement: NoteElement | null = null;
+
+        if (nextElement?.elementType === ElementType.Note) {
+          nextNoteElement = nextElement as NoteElement;
+        }
+
         if (
           noteElement.isMelismaStart &&
-          noteElement.lyricsWidth > noteElement.neumeWidth
+          noteElement.lyricsWidth > noteElement.neumeWidth &&
+          (!noteElement.isHyphen ||
+            (nextNoteElement != null &&
+              nextNoteElement.isMelisma &&
+              !nextNoteElement.isMelismaStart))
         ) {
           // At the start of a melisma, the syllable is aligned to the
-          // left of the neume, but only if the lyrics are wider than the neume
+          // left of the neume, but only if the lyrics are wider than the neume.
+          // NOTE: a syllable ending with a hyphen is only considered a melismatic note
+          // if the next note is purely melismatic (i.e. the next note contains only a hyphen),
+          // despite the unfortunate property name "isMelisma" being true.
           lyricsEnd =
             noteElement.x +
             noteElement.lyricsHorizontalOffset / 2 +
@@ -1495,6 +1509,12 @@ export class LayoutService {
             let start = 0;
             let end = 0;
 
+            let nextNoteElement: NoteElement | null = null;
+
+            if (nextElement?.elementType === ElementType.Note) {
+              nextNoteElement = nextElement as NoteElement;
+            }
+
             // Calculate the start of the melisma
             if (isIntermediateMelismaAtStartOfLine) {
               // Special case. No lyrics, so start at the
@@ -1504,10 +1524,18 @@ export class LayoutService {
               if (!pageSetup.melkiteRtl) {
                 // At the start of a melisma, the syllable is aligned to the
                 // left of the neume, but only if the lyrics are wider than the neume
-                start =
-                  element.x +
-                  element.lyricsHorizontalOffset / 2 +
-                  element.lyricsWidth;
+                if (element.alignLeft) {
+                  start =
+                    element.x +
+                    element.lyricsHorizontalOffset / 2 +
+                    element.lyricsWidth;
+                } else {
+                  start =
+                    element.x +
+                    element.neumeWidth +
+                    element.lyricsHorizontalOffset / 2 +
+                    (element.lyricsWidth - element.neumeWidth) / 2;
+                }
               } else {
                 start =
                   element.x +
@@ -1533,12 +1561,7 @@ export class LayoutService {
 
             // Calculate the end and the final melisma width
             if (element.isHyphen) {
-              const nextNoteElement = nextElement as NoteElement;
-
-              if (
-                nextElement == null ||
-                nextElement.elementType !== ElementType.Note
-              ) {
+              if (nextNoteElement == null) {
                 if (finalElement) {
                   end = finalElement.x + finalElement.neumeWidth;
                 } else {
@@ -1549,7 +1572,7 @@ export class LayoutService {
               ) {
                 // At the start of a melisma, the syllable is aligned to the
                 // left of the neume, but only if the lyrics are wider than the neume
-                if (nextNoteElement.isMelismaStart) {
+                if (nextNoteElement.alignLeft) {
                   end =
                     nextNoteElement.x -
                     nextNoteElement.lyricsHorizontalOffset / 2;
@@ -1628,7 +1651,7 @@ export class LayoutService {
                   nextNoteElement.neumeWidth +
                     nextNoteElement.lyricsHorizontalOffset
               ) {
-                if (nextNoteElement.isMelismaStart) {
+                if (nextNoteElement.alignLeft) {
                   // At the start of a melisma, the syllable is aligned to the
                   // left of the neume, but only if the lyrics are wider than the neume
                   end =

@@ -47,7 +47,7 @@ export default class ContentEditable extends Vue {
   }
 
   onBlur() {
-    this.$emit('blur', this.htmlElement.innerText);
+    this.$emit('blur', this.escapeHtml(this.htmlElement.innerText));
   }
 
   focus(selectAll: boolean) {
@@ -64,6 +64,12 @@ export default class ContentEditable extends Vue {
 
   setInnerText(text: string) {
     this.htmlElement.innerText = text;
+  }
+
+  escapeHtml(text: string) {
+    const p = document.createElement('p');
+    p.appendChild(document.createTextNode(text));
+    return p.innerHTML;
   }
 }
 </script>

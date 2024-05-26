@@ -1729,6 +1729,7 @@ export default class Editor extends Vue {
         : withZoom(element.lyricsStrokeWidth),
       lineHeight: withZoom(element.lyricsFontHeight),
       left: element.alignLeft ? 0 : undefined,
+      textAlign: element.alignLeft ? 'left' : undefined,
     } as StyleValue;
   }
 

@@ -1530,22 +1530,25 @@ export class LayoutService {
               // Special case. No lyrics, so start at the
               // beginning of the neume.
               start = element.x;
+            } else if (element.alignLeft) {
+              if (!pageSetup.melkiteRtl) {
+                start =
+                  element.x +
+                  element.lyricsHorizontalOffset +
+                  element.lyricsWidth;
+              } else {
+                start =
+                  element.x -
+                  element.lyricsHorizontalOffset +
+                  element.lyricsWidth;
+              }
             } else if (element.lyricsWidth > element.neumeWidth) {
               if (!pageSetup.melkiteRtl) {
-                // At the start of a melisma, the syllable is aligned to the
-                // left of the neume, but only if the lyrics are wider than the neume
-                if (element.alignLeft) {
-                  start =
-                    element.x +
-                    element.lyricsHorizontalOffset +
-                    element.lyricsWidth;
-                } else {
-                  start =
-                    element.x +
-                    element.neumeWidth +
-                    element.lyricsHorizontalOffset / 2 +
-                    (element.lyricsWidth - element.neumeWidth) / 2;
-                }
+                start =
+                  element.x +
+                  element.neumeWidth +
+                  element.lyricsHorizontalOffset / 2 +
+                  (element.lyricsWidth - element.neumeWidth) / 2;
               } else {
                 start =
                   element.x +
@@ -1684,33 +1687,29 @@ export class LayoutService {
                   end = finalElement.x + finalElement.neumeWidth;
                 }
 
-                if (
+                if (nextNoteElement != null && nextNoteElement.alignLeft) {
+                  // At the start of a melisma, the syllable is aligned to the
+                  // left of the neume, but only if the lyrics are wider than the neume
+                  end = Math.min(
+                    end,
+                    nextNoteElement.x +
+                      nextNoteElement.lyricsHorizontalOffset -
+                      pageSetup.lyricsMinimumSpacing,
+                  );
+                } else if (
                   nextNoteElement != null &&
-                  nextNoteElement.lyricsWidth >
-                    nextNoteElement.neumeWidth +
-                      nextNoteElement.lyricsHorizontalOffset
+                  nextNoteElement.lyricsWidth > nextNoteElement.neumeWidth
                 ) {
-                  if (nextNoteElement.alignLeft) {
-                    // At the start of a melisma, the syllable is aligned to the
-                    // left of the neume, but only if the lyrics are wider than the neume
-                    end = Math.min(
-                      end,
-                      nextNoteElement.x +
-                        nextNoteElement.lyricsHorizontalOffset -
-                        pageSetup.lyricsMinimumSpacing,
-                    );
-                  } else {
-                    // Otherwise, the lyrics are centered under the element.
-                    end = Math.min(
-                      end,
-                      nextNoteElement.x +
-                        nextNoteElement.lyricsHorizontalOffset / 2 -
-                        (nextNoteElement.lyricsWidth -
-                          nextNoteElement.neumeWidth) /
-                          2 -
-                        pageSetup.lyricsMinimumSpacing,
-                    );
-                  }
+                  // Otherwise, the lyrics are centered under the element.
+                  end = Math.min(
+                    end,
+                    nextNoteElement.x +
+                      nextNoteElement.lyricsHorizontalOffset / 2 -
+                      (nextNoteElement.lyricsWidth -
+                        nextNoteElement.neumeWidth) /
+                        2 -
+                      pageSetup.lyricsMinimumSpacing,
+                  );
                 }
               }
 

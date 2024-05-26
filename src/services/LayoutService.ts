@@ -1584,7 +1584,7 @@ export class LayoutService {
                 // left of the neume, but only if the lyrics are wider than the neume
                 if (nextNoteElement.alignLeft) {
                   end =
-                    nextNoteElement.x - nextNoteElement.lyricsHorizontalOffset;
+                    nextNoteElement.x + nextNoteElement.lyricsHorizontalOffset;
                 } else {
                   // Otherwise, the syllable is centered under the neume
                   end =

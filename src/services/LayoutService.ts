@@ -651,7 +651,8 @@ export class LayoutService {
         // despite the unfortunate property name "isMelisma" being true.
         if (
           noteElement.isMelismaStart &&
-          noteElement.lyricsWidth > noteElement.neumeWidth &&
+          noteElement.lyricsWidth >
+            noteElement.neumeWidth - noteElement.lyricsHorizontalOffset &&
           (!noteElement.isHyphen ||
             (nextNoteElement != null &&
               nextNoteElement.isMelisma &&

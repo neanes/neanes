@@ -635,14 +635,42 @@ export class LayoutService {
       // Thus, the lyrics start at the (previous) x position instead of the neume.
       if (element.elementType === ElementType.Note) {
         const noteElement = element as NoteElement;
-
         noteElement.alignLeft = false;
 
-        const lyricsStart =
-          noteElement.x +
-          noteElement.lyricsHorizontalOffset / 2 +
-          noteElement.neumeWidth / 2 -
-          noteElement.lyricsWidth / 2;
+        const nextElement = i + 1 < elements.length ? elements[i + 1] : null;
+        let nextNoteElement: NoteElement | null = null;
+
+        if (nextElement?.elementType === ElementType.Note) {
+          nextNoteElement = nextElement as NoteElement;
+        }
+
+        // At the start of a melisma, the syllable is aligned to the
+        // left of the neume, but only if the lyrics are wider than the neume.
+        // NOTE: a syllable ending with a hyphen is only considered a melismatic note
+        // if the next note is purely melismatic (i.e. the next note contains only a hyphen),
+        // despite the unfortunate property name "isMelisma" being true.
+        if (
+          noteElement.isMelismaStart &&
+          noteElement.lyricsWidth > noteElement.neumeWidth &&
+          (!noteElement.isHyphen ||
+            (nextNoteElement != null &&
+              nextNoteElement.isMelisma &&
+              !nextNoteElement.isMelismaStart))
+        ) {
+          noteElement.alignLeft = true;
+        }
+
+        let lyricsStart = 0;
+
+        if (noteElement.alignLeft) {
+          lyricsStart = noteElement.x + noteElement.lyricsHorizontalOffset;
+        } else {
+          lyricsStart =
+            noteElement.x +
+            noteElement.lyricsHorizontalOffset / 2 +
+            noteElement.neumeWidth / 2 -
+            noteElement.lyricsWidth / 2;
+        }
 
         const spacing = pageSetup.lyricsMinimumSpacing;
 
@@ -666,26 +694,7 @@ export class LayoutService {
 
         let lyricsEnd = 0;
 
-        const nextElement = i + 1 < elements.length ? elements[i + 1] : null;
-        let nextNoteElement: NoteElement | null = null;
-
-        if (nextElement?.elementType === ElementType.Note) {
-          nextNoteElement = nextElement as NoteElement;
-        }
-
-        if (
-          noteElement.isMelismaStart &&
-          noteElement.lyricsWidth > noteElement.neumeWidth &&
-          (!noteElement.isHyphen ||
-            (nextNoteElement != null &&
-              nextNoteElement.isMelisma &&
-              !nextNoteElement.isMelismaStart))
-        ) {
-          // At the start of a melisma, the syllable is aligned to the
-          // left of the neume, but only if the lyrics are wider than the neume.
-          // NOTE: a syllable ending with a hyphen is only considered a melismatic note
-          // if the next note is purely melismatic (i.e. the next note contains only a hyphen),
-          // despite the unfortunate property name "isMelisma" being true.
+        if (noteElement.alignLeft) {
           lyricsEnd =
             noteElement.x +
             noteElement.lyricsHorizontalOffset +

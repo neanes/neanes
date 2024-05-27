@@ -1,5 +1,14 @@
 <template>
-  <div
+  <ckeditor
+    ref="text"
+    :editor="editor"
+    v-model="element.content"
+    @blur="onBlur"
+    :config="editorConfig"
+    :style="textBoxStyle"
+  ></ckeditor>
+
+  <!-- <div
     class="text-box-container"
     :style="containerStyle"
     @click="$emit('select-single')"
@@ -45,7 +54,7 @@
       :plaintextOnly="false"
       @blur="updateContent($event)"
     ></ContentEditable>
-  </div>
+  </div> -->
 </template>
 
 <script lang="ts">
@@ -53,7 +62,8 @@ import { StyleValue } from 'vue';
 import { Component, Prop, Vue } from 'vue-facing-decorator';
 
 import ContentEditable from '@/components/ContentEditable.vue';
-import { TextBoxAlignment, TextBoxElement } from '@/models/Element';
+import InlineEditor from '@/customEditor';
+import { TextBoxElement } from '@/models/Element';
 import { PageSetup } from '@/models/PageSetup';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { replaceTokens, TokenMetadata } from '@/utils/replaceTokens';
@@ -75,6 +85,10 @@ export default class TextBoxRich extends Vue {
   @Prop({ default: true }) editMode!: boolean;
   @Prop() metadata!: TokenMetadata;
 
+  editor = InlineEditor;
+  editorData = '';
+  editorConfig = {};
+
   get textElement() {
     return this.$refs.text as ContentEditable;
   }
@@ -86,36 +100,6 @@ export default class TextBoxRich extends Vue {
           this.element.content,
           this.metadata,
           this.element.alignment,
-        );
-  }
-
-  get contentLeft() {
-    return this.editMode
-      ? this.element.contentLeft
-      : replaceTokens(
-          this.element.contentLeft,
-          this.metadata,
-          TextBoxAlignment.Left,
-        );
-  }
-
-  get contentCenter() {
-    return this.editMode
-      ? this.element.contentCenter
-      : replaceTokens(
-          this.element.contentCenter,
-          this.metadata,
-          TextBoxAlignment.Center,
-        );
-  }
-
-  get contentRight() {
-    return this.editMode
-      ? this.element.contentRight
-      : replaceTokens(
-          this.element.contentRight,
-          this.metadata,
-          TextBoxAlignment.Right,
         );
   }
 
@@ -144,8 +128,6 @@ export default class TextBoxRich extends Vue {
   get textBoxStyle() {
     const style: any = {
       width: !this.element.multipanel ? this.width : undefined,
-      height: withZoom(this.element.height),
-      textWrap: this.element.alignment === 'center' ? 'balance' : 'pretty',
     };
 
     return style;
@@ -162,6 +144,13 @@ export default class TextBoxRich extends Vue {
     window._richText = this;
   }
 
+  onBlur() {
+    console.log(this.element.height);
+    this.element.height =
+      document.getElementsByClassName('ck-content')[0].scrollHeight;
+    console.log(this.element.height);
+  }
+
   updateContent(content: string) {
     // Nothing actually changed, so do nothing
     if (this.element.content === content) {
@@ -171,78 +160,12 @@ export default class TextBoxRich extends Vue {
     this.$emit('update:content', content);
   }
 
-  updateContentLeft(content: string) {
-    // Nothing actually changed, so do nothing
-    if (this.element.contentLeft === content) {
-      return;
-    }
-
-    this.$emit('update:contentLeft', content);
-  }
-
-  updateContentCenter(content: string) {
-    // Nothing actually changed, so do nothing
-    if (this.element.contentCenter === content) {
-      return;
-    }
-
-    this.$emit('update:contentCenter', content);
-  }
-
-  updateContentRight(content: string) {
-    // Nothing actually changed, so do nothing
-    if (this.element.contentRight === content) {
-      return;
-    }
-
-    this.$emit('update:contentRight', content);
-  }
-
   blur() {
     this.textElement.blur();
   }
 
   focus() {
     this.textElement.focus(true);
-  }
-
-  onPaste(event: ClipboardEvent) {
-    console.log('caught paste');
-    event.preventDefault();
-    const text = event.clipboardData?.getData('text/plain');
-    const html = event.clipboardData?.getData('text/html');
-    console.log('html', html);
-
-    // Sanitize and insert plain text
-    const sanitizedHtml = html != null ? this.sanitizeHtml(html) : text; // You need to implement this function
-    document.execCommand('insertHTML', false, sanitizedHtml);
-
-    console.log(sanitizedHtml);
-  }
-
-  sanitizeHtml(html: string) {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-    const allowedTags = ['span', 'font'];
-    const allowedAttributes = ['style', 'color'];
-    console.log(doc);
-
-    doc.body.querySelectorAll('*').forEach((element) => {
-      if (!allowedTags.includes(element.tagName.toLowerCase())) {
-        element.remove();
-      } else {
-        const attributes = element.getAttributeNames();
-        attributes.forEach((attr) => {
-          if (!allowedAttributes.includes(attr.toLowerCase())) {
-            element.removeAttribute(attr);
-          }
-        });
-      }
-    });
-
-    console.log(doc);
-
-    return doc.body?.innerHTML || '';
   }
 }
 </script>

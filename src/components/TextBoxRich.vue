@@ -12,6 +12,7 @@
       @blur="onBlur"
       :config="editorConfig"
       :style="textBoxStyle"
+      class="editor"
     ></ckeditor>
   </div>
 </template>
@@ -64,7 +65,6 @@ export default class TextBoxRich extends Vue {
   get textBoxStyle() {
     const style: any = {
       width: this.width,
-      padding: 0,
     };
 
     return style;
@@ -80,7 +80,7 @@ export default class TextBoxRich extends Vue {
     let updated = false;
 
     const height = (this.$el as HTMLElement).querySelector(
-      'ck-content',
+      '.ck-content',
     )!.scrollHeight;
 
     const content = this.editorInstance.getData();
@@ -106,7 +106,7 @@ export default class TextBoxRich extends Vue {
   }
 
   focus() {
-    this.editorInstance.editing.view.focus();
+    //this.editorInstance.editing.view.focus();
   }
 }
 </script>
@@ -132,6 +132,11 @@ export default class TextBoxRich extends Vue {
 
 .ck.ck-editor__editable_inline > *:last-child {
   margin-bottom: 0;
+}
+
+.editor {
+  padding: 0;
+  box-sizing: border-box;
 }
 
 .text-box-container {

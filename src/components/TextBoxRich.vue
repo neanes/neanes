@@ -1,13 +1,18 @@
 <template>
-  <ckeditor
-    ref="text"
-    :editor="editor"
-    v-model="element.content"
-    @blur="onBlur"
-    :config="editorConfig"
-    :style="textBoxStyle"
-  ></ckeditor>
-
+  <div
+    class="text-box-container"
+    :style="containerStyle"
+    @click="$emit('select-single')"
+  >
+    <ckeditor
+      ref="editor"
+      :editor="editor"
+      :model-value="element.content"
+      @blur="onBlur"
+      :config="editorConfig"
+      :style="textBoxStyle"
+    ></ckeditor>
+  </div>
   <!-- <div
     class="text-box-container"
     :style="containerStyle"
@@ -58,6 +63,7 @@
 </template>
 
 <script lang="ts">
+import { CKEditorComponentData } from '@ckeditor/ckeditor5-vue/dist/ckeditor';
 import { StyleValue } from 'vue';
 import { Component, Prop, Vue } from 'vue-facing-decorator';
 
@@ -65,7 +71,6 @@ import ContentEditable from '@/components/ContentEditable.vue';
 import InlineEditor from '@/customEditor';
 import { TextBoxElement } from '@/models/Element';
 import { PageSetup } from '@/models/PageSetup';
-import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { replaceTokens, TokenMetadata } from '@/utils/replaceTokens';
 import { withZoom } from '@/utils/withZoom';
 
@@ -89,8 +94,8 @@ export default class TextBoxRich extends Vue {
   editorData = '';
   editorConfig = {};
 
-  get textElement() {
-    return this.$refs.text as ContentEditable;
+  get editorInstance() {
+    return (this.$refs.editor as CKEditorComponentData).instance!;
   }
 
   get content() {
@@ -109,17 +114,8 @@ export default class TextBoxRich extends Vue {
 
   get containerStyle() {
     const style = {
-      color: this.element.computedColor,
-      fontFamily: getFontFamilyWithFallback(this.element.computedFontFamily),
-      fontSize: withZoom(this.element.computedFontSize),
-      fontWeight: this.element.computedFontWeight,
-      fontStyle: this.element.computedFontStyle,
-      textAlign: this.element.alignment,
       width: this.width,
       height: withZoom(this.element.height),
-      webkitTextStrokeWidth: withZoom(this.element.computedStrokeWidth),
-      lineHeight: `${this.element.computedLineHeight ?? 'normal'}`,
-      direction: this.pageSetup.melkiteRtl ? 'rtl' : undefined,
     } as StyleValue;
 
     return style;
@@ -145,10 +141,10 @@ export default class TextBoxRich extends Vue {
   }
 
   onBlur() {
-    console.log(this.element.height);
     this.element.height =
       document.getElementsByClassName('ck-content')[0].scrollHeight;
-    console.log(this.element.height);
+
+    this.updateContent(this.editorInstance.getData());
   }
 
   updateContent(content: string) {
@@ -161,11 +157,12 @@ export default class TextBoxRich extends Vue {
   }
 
   blur() {
-    this.textElement.blur();
+    //this.textElement.blur();
+    //this.editorInstance.editing.view.();
   }
 
   focus() {
-    this.textElement.focus(true);
+    this.editorInstance.editing.view.focus();
   }
 }
 </script>

@@ -79,8 +79,9 @@ export default class TextBoxRich extends Vue {
 
     let updated = false;
 
-    const height =
-      document.getElementsByClassName('ck-content')[0].scrollHeight;
+    const height = (this.$el as HTMLElement).querySelector(
+      'ck-content',
+    )!.scrollHeight;
 
     const content = this.editorInstance.getData();
 
@@ -97,15 +98,6 @@ export default class TextBoxRich extends Vue {
     if (updated) {
       this.$emit('update', updates);
     }
-  }
-
-  updateContent(content: string) {
-    // Nothing actually changed, so do nothing
-    if (this.element.content === content) {
-      return;
-    }
-
-    this.$emit('update:content', content);
   }
 
   blur() {

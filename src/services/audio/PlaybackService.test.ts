@@ -1,4 +1,5 @@
 import { toBeDeepCloseTo, toMatchCloseTo } from 'jest-matcher-deep-close-to';
+import { describe, expect, it } from 'vitest';
 
 import {
   MartyriaElement,
@@ -634,6 +635,7 @@ function getDefaultWorkspaceOptions() {
     volumeIson: -4,
     volumeMelody: 0,
 
+    alterationMultipliers: [0.5, 0.25, 0.75],
     alterationMoriaMap: {
       [Accidental.Flat_2_Right]: -2,
       [Accidental.Flat_4_Right]: -4,

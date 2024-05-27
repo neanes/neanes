@@ -67,9 +67,10 @@ export default {
       const linuxAsset = this.latestRelease.assets.find((x) =>
         x.name.endsWith('.AppImage'),
       );
-      const macAsset = this.latestRelease.assets.find((x) =>
-        x.name.endsWith('.dmg'),
+      const macAsset = this.latestRelease.assets.find(
+        (x) => x.name.endsWith('.dmg') && !x.name.endsWith('arm64.dmg'),
       );
+
       const windowsAsset = this.latestRelease.assets.find((x) =>
         x.name.endsWith('.exe'),
       );

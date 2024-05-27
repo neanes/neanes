@@ -1,3 +1,4 @@
+import { AcceptsLyricsOption } from '@/models/Element';
 import {
   Accidental,
   Fthora,
@@ -27,6 +28,7 @@ interface KeyboardMapping {
   scale?: Scale;
   martyriaAlignmentToggle?: boolean;
   martyriaAutoToggle?: boolean;
+  acceptsLyricsOption?: AcceptsLyricsOption;
 }
 
 export class NeumeKeyboard {
@@ -488,6 +490,33 @@ export class NeumeKeyboard {
     this.quantitativeNeumeKeyboardMap.push({
       code: 'Equal',
       neume: QuantitativeNeume.Breath,
+    });
+
+    ///////////////////////////////////
+    // Note modifications
+    ///////////////////////////////////
+    this.quantitativeNeumeKeyboardMap.push({
+      code: 'Digit7',
+      shiftKey: true,
+      acceptsLyricsOption: AcceptsLyricsOption.Yes,
+    });
+
+    this.quantitativeNeumeKeyboardMap.push({
+      code: 'Digit8',
+      shiftKey: true,
+      acceptsLyricsOption: AcceptsLyricsOption.MelismaOnly,
+    });
+
+    this.quantitativeNeumeKeyboardMap.push({
+      code: 'Digit9',
+      shiftKey: true,
+      acceptsLyricsOption: AcceptsLyricsOption.Default,
+    });
+
+    this.quantitativeNeumeKeyboardMap.push({
+      code: 'Digit0',
+      shiftKey: true,
+      acceptsLyricsOption: AcceptsLyricsOption.No,
     });
   }
 

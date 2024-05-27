@@ -389,7 +389,7 @@ export class NoteElement extends ScoreElement {
   // Used for display
   public melismaText: string = '';
   public melismaOffsetTop: number = 0;
-  public melismaHeight: number = 0;
+  public lyricsFontHeight: number = 0;
   public hyphenOffsets: number[] = [];
   public isFullMelisma: boolean = false;
   public melismaWidth: number = 0;
@@ -397,6 +397,7 @@ export class NoteElement extends ScoreElement {
   public lyricsHorizontalOffset: number = 0;
   public neumeWidth: number = 0;
   public lyricsWidth: number = 0;
+  public alignLeft: boolean = false;
   public noteIndicatorNeume: NoteIndicator | null = null;
   public scaleNotes: ScaleNote[] = [];
   public computedMeasureBarLeft: MeasureBar | null = null;

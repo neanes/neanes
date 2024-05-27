@@ -19,6 +19,7 @@
 
 <script lang="ts">
 import { EditorConfig } from '@ckeditor/ckeditor5-core';
+import { FontSizeOption } from '@ckeditor/ckeditor5-font/src/fontconfig';
 import { CKEditorComponentData } from '@ckeditor/ckeditor5-vue/dist/ckeditor';
 import { StyleValue } from 'vue';
 import { Component, Prop, Vue } from 'vue-facing-decorator';
@@ -27,6 +28,7 @@ import ContentEditable from '@/components/ContentEditable.vue';
 import InlineEditor from '@/customEditor';
 import { RichTextBoxElement } from '@/models/Element';
 import { PageSetup } from '@/models/PageSetup';
+import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { withZoom } from '@/utils/withZoom';
 
 @Component({
@@ -42,7 +44,22 @@ export default class TextBoxRich extends Vue {
   editorData = '';
 
   get editorConfig(): EditorConfig {
-    return { fontFamily: { options: this.fonts } };
+    const fontSizeOptions: FontSizeOption[] = [];
+
+    for (let i = 8; i <= 72; i++) {
+      fontSizeOptions.push({
+        title: `${i}`,
+        model: `${i}pt`,
+      });
+    }
+
+    return {
+      fontFamily: { options: ['default', ...this.fonts] },
+      fontSize: {
+        supportAllValues: true,
+        options: ['default', ...fontSizeOptions],
+      },
+    };
   }
 
   get editorInstance() {
@@ -65,13 +82,13 @@ export default class TextBoxRich extends Vue {
   get textBoxStyle() {
     const style: any = {
       width: this.width,
+      fontFamily: getFontFamilyWithFallback(
+        this.pageSetup.textBoxDefaultFontFamily,
+      ),
+      fontSize: withZoom(this.pageSetup.textBoxDefaultFontSize),
     };
 
     return style;
-  }
-
-  mounted() {
-    window._richText = this;
   }
 
   onBlur() {
@@ -113,7 +130,8 @@ export default class TextBoxRich extends Vue {
 
 <style>
 /* https://github.com/ckeditor/ckeditor5/issues/952 */
-.ck.ck-font-family-dropdown {
+.ck.ck-font-family-dropdown,
+.ck.ck-font-size-dropdown {
   .ck.ck-dropdown__panel {
     max-height: 150px !important;
     overflow-y: auto !important;
@@ -166,6 +184,14 @@ export default class TextBoxRich extends Vue {
 
 @media print {
   .text-box-container .handle {
+    display: none !important;
+  }
+
+  :deep(.ck-widget) {
+    outline: none !important;
+  }
+
+  :deep(.ck-widget__type-around) {
     display: none !important;
   }
 }

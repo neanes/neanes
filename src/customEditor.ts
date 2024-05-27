@@ -10,8 +10,6 @@ import { InlineEditor as InlineEditorBase } from '@ckeditor/ckeditor5-editor-inl
 import { Essentials } from '@ckeditor/ckeditor5-essentials';
 import { FindAndReplace } from '@ckeditor/ckeditor5-find-and-replace';
 import { FontColor, FontFamily, FontSize } from '@ckeditor/ckeditor5-font';
-import { Heading } from '@ckeditor/ckeditor5-heading';
-import { HorizontalLine } from '@ckeditor/ckeditor5-horizontal-line';
 import {
   AutoImage,
   Image,
@@ -51,8 +49,6 @@ InlineEditor.builtinPlugins = [
   FontColor,
   FontFamily,
   FontSize,
-  Heading,
-  HorizontalLine,
   Image,
   ImageCaption,
   ImageResize,
@@ -82,8 +78,6 @@ InlineEditor.builtinPlugins = [
 InlineEditor.defaultConfig = {
   toolbar: {
     items: [
-      'heading',
-      '|',
       'bold',
       'italic',
       'underline',
@@ -110,7 +104,7 @@ InlineEditor.defaultConfig = {
       'link',
       'imageUpload',
       'insertTable',
-      'horizontalLine',
+      '|',
       'undo',
       'redo',
     ],

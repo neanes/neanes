@@ -131,6 +131,14 @@ export default class TextBoxRich extends Vue {
   margin: 0;
 }
 
+.ck.ck-editor__editable_inline > *:first-child {
+  margin-top: 0;
+}
+
+.ck.ck-editor__editable_inline > *:last-child {
+  margin-bottom: 0;
+}
+
 .text-box-container {
   border: 1px dotted black;
   box-sizing: border-box;

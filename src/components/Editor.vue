@@ -371,7 +371,7 @@
                     <span class="line-break-2" v-if="element.lineBreak"
                       ><img src="@/assets/icons/line-break.svg"
                     /></span>
-                    <TextBoxRich
+                    <TextBox
                       :ref="`element-${getElementIndex(element)}`"
                       :element="element"
                       :editMode="true"
@@ -399,6 +399,25 @@
                           element as TextBoxElement,
                           $event,
                         )
+                      "
+                    />
+                  </template>
+                  <template v-if="isRichTextBoxElement(element)">
+                    <span class="page-break-2" v-if="element.pageBreak"
+                      ><img src="@/assets/icons/page-break.svg"
+                    /></span>
+                    <span class="line-break-2" v-if="element.lineBreak"
+                      ><img src="@/assets/icons/line-break.svg"
+                    /></span>
+                    <TextBoxRich
+                      :ref="`element-${getElementIndex(element)}`"
+                      :element="element"
+                      :pageSetup="score.pageSetup"
+                      :fonts="fonts"
+                      :class="[{ selectedTextbox: isSelected(element) }]"
+                      @select-single="selectedElement = element"
+                      @update="
+                        updateRichTextBox(element as RichTextBoxElement, $event)
                       "
                     />
                   </template>
@@ -529,7 +548,7 @@
       </div>
     </div>
     <template v-if="selectedTextBoxElement">
-      <ToolbarTextBoxRich
+      <ToolbarTextBox
         :element="selectedTextBoxElement"
         :fonts="fonts"
         @update:multipanel="
@@ -967,6 +986,7 @@ import {
   MartyriaElement,
   ModeKeyElement,
   NoteElement,
+  RichTextBoxElement,
   ScoreElement,
   TempoElement,
   TextBoxAlignment,
@@ -1194,6 +1214,9 @@ export default class Editor extends Vue {
 
   textBoxCommandFactory: CommandFactory<TextBoxElement> =
     new CommandFactory<TextBoxElement>();
+
+  richTextBoxCommandFactory: CommandFactory<RichTextBoxElement> =
+    new CommandFactory<RichTextBoxElement>();
 
   imageBoxCommandFactory: CommandFactory<ImageBoxElement> =
     new CommandFactory<ImageBoxElement>();
@@ -1948,6 +1971,10 @@ export default class Editor extends Vue {
       this.onFileMenuInsertTextBox,
     );
     EventBus.$on(
+      IpcMainChannels.FileMenuInsertRichTextBox,
+      this.onFileMenuInsertRichTextBox,
+    );
+    EventBus.$on(
       IpcMainChannels.FileMenuInsertModeKey,
       this.onFileMenuInsertModeKey,
     );
@@ -2043,6 +2070,10 @@ export default class Editor extends Vue {
     EventBus.$off(
       IpcMainChannels.FileMenuInsertTextBox,
       this.onFileMenuInsertTextBox,
+    );
+    EventBus.$off(
+      IpcMainChannels.FileMenuInsertRichTextBox,
+      this.onFileMenuInsertRichTextBox,
     );
     EventBus.$off(
       IpcMainChannels.FileMenuInsertModeKey,
@@ -2561,6 +2592,10 @@ export default class Editor extends Vue {
 
   isTextBoxElement(element: ScoreElement) {
     return element.elementType == ElementType.TextBox;
+  }
+
+  isRichTextBoxElement(element: ScoreElement) {
+    return element.elementType == ElementType.RichTextBox;
   }
 
   isDropCapElement(element: ScoreElement) {
@@ -4764,6 +4799,20 @@ export default class Editor extends Vue {
     }
   }
 
+  updateRichTextBox(
+    element: RichTextBoxElement,
+    newValues: Partial<RichTextBoxElement>,
+  ) {
+    this.commandService.execute(
+      this.richTextBoxCommandFactory.create('update-properties', {
+        target: element,
+        newValues: newValues,
+      }),
+    );
+
+    this.save();
+  }
+
   updateTextBox(element: TextBoxElement, newValues: Partial<TextBoxElement>) {
     this.commandService.execute(
       this.textBoxCommandFactory.create('update-properties', {
@@ -5717,6 +5766,23 @@ export default class Editor extends Vue {
       element.italic =
         this.score.pageSetup.textBoxDefaultFontStyle === 'italic';
     }
+
+    this.addScoreElement(element, this.selectedElementIndex);
+
+    this.selectedElement = element;
+
+    this.save();
+
+    nextTick(() => {
+      const index = this.elements.indexOf(element);
+
+      (this.$refs[`element-${index}`] as any)[0].focus();
+    });
+  }
+
+  onFileMenuInsertRichTextBox() {
+    const element = new RichTextBoxElement();
+    //element.inline = args.inline;
 
     this.addScoreElement(element, this.selectedElementIndex);
 

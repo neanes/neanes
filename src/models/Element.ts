@@ -38,6 +38,7 @@ export enum ElementType {
   Tempo = 'Tempo',
   Empty = 'Empty',
   TextBox = 'TextBox',
+  RichTextBox = 'RichTextBox',
   DropCap = 'DropCap',
   ModeKey = 'ModeKey',
   ImageBox = 'ImageBox',
@@ -796,6 +797,26 @@ export class TextBoxElement extends ScoreElement {
     const format = this.getClipboardProperties();
     delete format.content;
     return format;
+  }
+}
+
+export class RichTextBoxElement extends ScoreElement {
+  public readonly elementType: ElementType = ElementType.RichTextBox;
+  public content: string = '';
+  public height: number = 20;
+
+  public clone() {
+    const clone = new TextBoxElement();
+
+    Object.assign(clone, this.getClipboardProperties());
+
+    return clone;
+  }
+
+  public getClipboardProperties() {
+    return {
+      content: this.content,
+    } as Partial<TextBoxElement>;
   }
 }
 

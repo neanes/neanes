@@ -83,6 +83,10 @@
         @click="onClickAddTextBox"
       />
       <FileMenuItem
+        :label="$t('menu:insert.richTextBox')"
+        @click="onClickAddRichTextBox"
+      />
+      <FileMenuItem
         :label="$t('menu:insert.inlineTextBox')"
         @click="onClickAddInlineTextBox"
       />
@@ -409,6 +413,11 @@ export default class FileMenuBar extends Vue {
     EventBus.$emit(IpcMainChannels.FileMenuInsertTextBox, {
       inline: false,
     } as FileMenuInsertTextboxArgs);
+    this.isMenuOpen = false;
+  }
+
+  onClickAddRichTextBox() {
+    EventBus.$emit(IpcMainChannels.FileMenuInsertRichTextBox);
     this.isMenuOpen = false;
   }
 

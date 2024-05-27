@@ -13,53 +13,6 @@
       :style="textBoxStyle"
     ></ckeditor>
   </div>
-  <!-- <div
-    class="text-box-container"
-    :style="containerStyle"
-    @click="$emit('select-single')"
-  >
-    <span class="handle"></span>
-    <div class="text-box-multipanel-container" v-if="element.multipanel">
-      <ContentEditable
-        ref="text"
-        class="text-box multipanel left"
-        :class="textBoxClass"
-        :style="textBoxStyle"
-        :content="contentLeft"
-        :editable="editMode"
-        @blur="updateContentLeft($event)"
-      ></ContentEditable>
-      <ContentEditable
-        ref="text"
-        class="text-box multipanel center"
-        :class="textBoxClass"
-        :style="textBoxStyle"
-        :content="contentCenter"
-        :editable="editMode"
-        @blur="updateContentCenter($event)"
-      ></ContentEditable>
-      <ContentEditable
-        ref="text"
-        class="text-box multipanel right"
-        :class="textBoxClass"
-        :style="textBoxStyle"
-        :content="contentRight"
-        :editable="editMode"
-        @blur="updateContentRight($event)"
-      ></ContentEditable>
-    </div>
-    <ContentEditable
-      v-else
-      ref="text"
-      class="text-box"
-      :class="textBoxClass"
-      :style="textBoxStyle"
-      :content="content"
-      :editable="editMode"
-      :plaintextOnly="false"
-      @blur="updateContent($event)"
-    ></ContentEditable>
-  </div> -->
 </template>
 
 <script lang="ts">
@@ -69,43 +22,29 @@ import { Component, Prop, Vue } from 'vue-facing-decorator';
 
 import ContentEditable from '@/components/ContentEditable.vue';
 import InlineEditor from '@/customEditor';
-import { TextBoxElement } from '@/models/Element';
+import { RichTextBoxElement } from '@/models/Element';
 import { PageSetup } from '@/models/PageSetup';
-import { replaceTokens, TokenMetadata } from '@/utils/replaceTokens';
 import { withZoom } from '@/utils/withZoom';
 
 @Component({
   components: { ContentEditable },
-  emits: [
-    'update:content',
-    'update:contentLeft',
-    'update:contentCenter',
-    'update:contentRight',
-    'select-single',
-  ],
+  emits: ['update', 'select-single'],
 })
 export default class TextBoxRich extends Vue {
-  @Prop() element!: TextBoxElement;
+  @Prop() element!: RichTextBoxElement;
   @Prop() pageSetup!: PageSetup;
-  @Prop({ default: true }) editMode!: boolean;
-  @Prop() metadata!: TokenMetadata;
+  @Prop() fonts!: string[];
 
   editor = InlineEditor;
   editorData = '';
-  editorConfig = {};
+  editorConfig = {
+    fontFamily: {
+      options: this.fonts,
+    },
+  };
 
   get editorInstance() {
     return (this.$refs.editor as CKEditorComponentData).instance!;
-  }
-
-  get content() {
-    return this.editMode
-      ? this.element.content
-      : replaceTokens(
-          this.element.content,
-          this.metadata,
-          this.element.alignment,
-        );
   }
 
   get width() {
@@ -123,21 +62,11 @@ export default class TextBoxRich extends Vue {
 
   get textBoxStyle() {
     const style: any = {
-      width: !this.element.multipanel ? this.width : undefined,
-      backgroundColor: 'white',
-      zIndex: 999,
-      position: 'relative',
+      width: this.width,
       padding: 0,
     };
 
     return style;
-  }
-
-  get textBoxClass() {
-    return {
-      inline: this.element.inline,
-      underline: this.element.underline,
-    };
   }
 
   mounted() {
@@ -145,10 +74,28 @@ export default class TextBoxRich extends Vue {
   }
 
   onBlur() {
-    this.element.height =
+    const updates: Partial<RichTextBoxElement> = {};
+
+    let updated = false;
+
+    const height =
       document.getElementsByClassName('ck-content')[0].scrollHeight;
 
-    this.updateContent(this.editorInstance.getData());
+    const content = this.editorInstance.getData();
+
+    if (this.element.content !== content) {
+      updates.content = content;
+      updated = true;
+    }
+
+    if (this.element.height != height) {
+      updates.height = height;
+      updated = true;
+    }
+
+    if (updated) {
+      this.$emit('update', updates);
+    }
   }
 
   updateContent(content: string) {

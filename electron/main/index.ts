@@ -1153,6 +1153,12 @@ function createMenu() {
           },
         },
         {
+          label: i18next.t('menu:insert.richTextBox'),
+          click() {
+            win?.webContents.send(IpcMainChannels.FileMenuInsertRichTextBox);
+          },
+        },
+        {
           label: i18next.t('menu:insert.inlineTextBox'),
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuInsertTextBox, {

@@ -806,7 +806,7 @@ export class RichTextBoxElement extends ScoreElement {
   public height: number = 20;
 
   public clone() {
-    const clone = new TextBoxElement();
+    const clone = new RichTextBoxElement();
 
     Object.assign(clone, this.getClipboardProperties());
 
@@ -816,7 +816,8 @@ export class RichTextBoxElement extends ScoreElement {
   public getClipboardProperties() {
     return {
       content: this.content,
-    } as Partial<TextBoxElement>;
+      height: this.height,
+    } as Partial<RichTextBoxElement>;
   }
 }
 

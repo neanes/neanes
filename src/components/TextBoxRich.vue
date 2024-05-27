@@ -4,6 +4,7 @@
     :style="containerStyle"
     @click="$emit('select-single')"
   >
+    <span class="handle"></span>
     <ckeditor
       ref="editor"
       :editor="editor"
@@ -147,50 +148,8 @@ export default class TextBoxRich extends Vue {
   min-height: 10px;
 }
 
-.text-box-multipanel-container {
-  display: flex;
-}
-
-.text-box {
-  display: block;
-
-  min-height: 10px;
-}
-
 .text-box:focus {
   outline: none;
-}
-
-.text-box.inline {
-  display: flex;
-  align-items: center;
-  white-space: nowrap;
-}
-
-.text-box.underline {
-  text-decoration: underline;
-}
-
-.text-box.multipanel {
-  border: 1px dotted black;
-  box-sizing: border-box;
-  min-width: 2.5rem;
-}
-
-.text-box.left {
-  position: absolute;
-  left: 0;
-}
-
-.text-box.center {
-  flex: 1;
-  text-align: center;
-}
-
-.text-box.right {
-  position: absolute;
-  right: 0;
-  text-align: right;
 }
 
 .text-box-container .handle {
@@ -205,10 +164,6 @@ export default class TextBoxRich extends Vue {
 @media print {
   .text-box-container .handle {
     display: none !important;
-  }
-
-  .text-box.multipanel {
-    border: none !important;
   }
 }
 </style>

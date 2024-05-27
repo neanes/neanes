@@ -134,6 +134,12 @@ export default class TextBoxRich extends Vue {
   margin-bottom: 0;
 }
 
+.ck-focused {
+  background-color: white;
+  position: relative;
+  z-index: 1;
+}
+
 .editor {
   padding: 0;
   box-sizing: border-box;

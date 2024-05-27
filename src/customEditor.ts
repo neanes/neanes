@@ -9,12 +9,7 @@ import {
 import { InlineEditor as InlineEditorBase } from '@ckeditor/ckeditor5-editor-inline';
 import { Essentials } from '@ckeditor/ckeditor5-essentials';
 import { FindAndReplace } from '@ckeditor/ckeditor5-find-and-replace';
-import {
-  FontBackgroundColor,
-  FontColor,
-  FontFamily,
-  FontSize,
-} from '@ckeditor/ckeditor5-font';
+import { FontColor, FontFamily, FontSize } from '@ckeditor/ckeditor5-font';
 import { Heading } from '@ckeditor/ckeditor5-heading';
 import { HorizontalLine } from '@ckeditor/ckeditor5-horizontal-line';
 import {
@@ -53,7 +48,6 @@ InlineEditor.builtinPlugins = [
   Bold,
   Essentials,
   FindAndReplace,
-  FontBackgroundColor,
   FontColor,
   FontFamily,
   FontSize,
@@ -97,18 +91,19 @@ InlineEditor.defaultConfig = {
       'fontSize',
       'fontFamily',
       'fontColor',
-      'fontBackgroundColor',
+      '|',
+      'alignment',
       'subscript',
       'superscript',
       '|',
       'findAndReplace',
       'selectAll',
+      '|',
       'removeFormat',
       '|',
       'bulletedList',
       'numberedList',
       '|',
-      'alignment',
       'outdent',
       'indent',
       '|',

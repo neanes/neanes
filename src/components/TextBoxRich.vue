@@ -120,9 +120,11 @@ export default class TextBoxRich extends Vue {
 
 <style>
 /* https://github.com/ckeditor/ckeditor5/issues/952 */
-.ck.ck-dropdown__panel {
-  max-height: 150px !important;
-  overflow-y: auto !important;
+.ck.ck-font-family-dropdown {
+  .ck.ck-dropdown__panel {
+    max-height: 150px !important;
+    overflow-y: auto !important;
+  }
 }
 </style>
 

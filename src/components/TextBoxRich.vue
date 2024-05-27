@@ -124,6 +124,10 @@ export default class TextBoxRich extends Vue {
   get textBoxStyle() {
     const style: any = {
       width: !this.element.multipanel ? this.width : undefined,
+      backgroundColor: 'white',
+      zIndex: 999,
+      position: 'relative',
+      padding: 0,
     };
 
     return style;
@@ -168,6 +172,10 @@ export default class TextBoxRich extends Vue {
 </script>
 
 <style scoped>
+:deep(p) {
+  margin: 0;
+}
+
 .text-box-container {
   border: 1px dotted black;
   box-sizing: border-box;

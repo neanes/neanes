@@ -16,6 +16,7 @@
 </template>
 
 <script lang="ts">
+import { EditorConfig } from '@ckeditor/ckeditor5-core';
 import { CKEditorComponentData } from '@ckeditor/ckeditor5-vue/dist/ckeditor';
 import { StyleValue } from 'vue';
 import { Component, Prop, Vue } from 'vue-facing-decorator';
@@ -37,11 +38,10 @@ export default class TextBoxRich extends Vue {
 
   editor = InlineEditor;
   editorData = '';
-  editorConfig = {
-    fontFamily: {
-      options: this.fonts,
-    },
-  };
+
+  get editorConfig(): EditorConfig {
+    return { fontFamily: { options: this.fonts } };
+  }
 
   get editorInstance() {
     return (this.$refs.editor as CKEditorComponentData).instance!;
@@ -117,6 +117,14 @@ export default class TextBoxRich extends Vue {
   }
 }
 </script>
+
+<style>
+/* https://github.com/ckeditor/ckeditor5/issues/952 */
+.ck.ck-dropdown__panel {
+  max-height: 150px !important;
+  overflow-y: auto !important;
+}
+</style>
 
 <style scoped>
 :deep(p) {

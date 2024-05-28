@@ -45,6 +45,7 @@ export default class TextBoxRich extends Vue {
   editorData = '';
 
   focusOnReady = false;
+  unmounting = false;
 
   get editorConfig(): EditorConfig {
     const fontSizeOptions: FontSizeOption[] = [];
@@ -66,7 +67,7 @@ export default class TextBoxRich extends Vue {
   }
 
   get editorInstance() {
-    return (this.$refs.editor as CKEditorComponentData).instance!;
+    return (this.$refs.editor as CKEditorComponentData).instance;
   }
 
   get width() {
@@ -94,27 +95,44 @@ export default class TextBoxRich extends Vue {
     return style;
   }
 
+  beforeUnmount() {
+    this.unmounting = true;
+    this.update();
+  }
+
   onEditorReady() {
     const height = this.getHeight();
 
-    if (this.element.height !== height) {
+    if (height != null && this.element.height !== height) {
       this.$emit('update:height', height);
     }
 
     if (this.focusOnReady) {
-      this.editorInstance.editing.view.focus();
+      this.editorInstance?.editing.view.focus();
       this.focusOnReady = false;
     }
   }
 
   onBlur() {
+    if (!this.unmounting) {
+      this.update();
+    }
+  }
+
+  update() {
     const updates: Partial<RichTextBoxElement> = {};
 
     let updated = false;
 
     const height = this.getHeight();
 
-    const content = this.editorInstance.getData();
+    const content = this.editorInstance?.getData();
+
+    // This should never happen, but if it does, we don't want
+    // to save garbage values.
+    if (height == null || content == null) {
+      return;
+    }
 
     if (this.element.content !== content) {
       updates.content = content;
@@ -132,7 +150,7 @@ export default class TextBoxRich extends Vue {
   }
 
   getHeight() {
-    return (this.$el as HTMLElement).querySelector('.ck-content')!.scrollHeight;
+    return (this.$el as HTMLElement).querySelector('.ck-content')?.scrollHeight;
   }
 
   focus() {

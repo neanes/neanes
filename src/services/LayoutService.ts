@@ -7,6 +7,7 @@ import {
   MartyriaElement,
   ModeKeyElement,
   NoteElement,
+  RichTextBoxElement,
   ScoreElement,
   TempoElement,
   TextBoxElement,
@@ -529,7 +530,7 @@ export class LayoutService {
           ) {
             const textbox = line.elements.find(
               (x) => x.elementType === ElementType.RichTextBox,
-            ) as TextBoxElement;
+            ) as RichTextBoxElement;
             height = textbox.height;
           } else if (
             line.elements.some((x) => x.elementType === ElementType.ModeKey)

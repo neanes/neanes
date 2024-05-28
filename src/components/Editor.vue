@@ -983,7 +983,6 @@ import ToolbarModeKey from '@/components/ToolbarModeKey.vue';
 import ToolbarNeume from '@/components/ToolbarNeume.vue';
 import ToolbarTempo from '@/components/ToolbarTempo.vue';
 import ToolbarTextBox from '@/components/ToolbarTextBox.vue';
-import ToolbarTextBoxRich from '@/components/ToolbarTextBoxRich.vue';
 import { EventBus } from '@/eventBus';
 import {
   CloseWorkspacesArgs,
@@ -1096,7 +1095,6 @@ interface Vue3TabsChromeComponent {
     ModeKey,
     ToolbarImageBox,
     ToolbarTextBox,
-    ToolbarTextBoxRich,
     ToolbarLyrics,
     ToolbarLyricManager,
     ToolbarModeKey,

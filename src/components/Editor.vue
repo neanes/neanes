@@ -419,6 +419,12 @@
                       @update="
                         updateRichTextBox(element as RichTextBoxElement, $event)
                       "
+                      @update:height="
+                        updateRichTextBoxHeight(
+                          element as RichTextBoxElement,
+                          $event,
+                        )
+                      "
                     />
                   </template>
                   <template v-if="isModeKeyElement(element)">
@@ -919,6 +925,19 @@
       @exportAsPng="exportAsPng"
       @close="closeExportDialog"
     />
+    <template v-if="richTextBoxCalculation">
+      <TextBoxRich
+        class="richTextBoxCalculation"
+        v-for="element in richTextBoxElements"
+        :key="element.id"
+        :element="element"
+        :pageSetup="score.pageSetup"
+        :fonts="fonts"
+        @update:height="
+          updateRichTextBoxHeight(element as RichTextBoxElement, $event)
+        "
+      />
+    </template>
   </div>
 </template>
 
@@ -926,7 +945,7 @@
 import 'vue3-tabs-chrome/dist/vue3-tabs-chrome.css';
 
 import { getFontEmbedCSS, toPng } from 'html-to-image';
-import { throttle } from 'throttle-debounce';
+import { debounce, throttle } from 'throttle-debounce';
 import { nextTick, StyleValue, toRaw } from 'vue';
 import { Component, Inject, Prop, Vue, Watch } from 'vue-facing-decorator';
 import Vue3TabsChrome, { Tab } from 'vue3-tabs-chrome';
@@ -1151,6 +1170,8 @@ export default class Editor extends Vue {
 
   clipboard: ScoreElement[] = [];
   textBoxFormat: Partial<TextBoxElement> | null = null;
+  richTextBoxCalculation = false;
+  richTextBoxCalculationCount = 0;
 
   fonts: string[] = [];
 
@@ -1400,6 +1421,8 @@ export default class Editor extends Vue {
   onWindowResizeThrottled = throttle(250, this.onWindowResize);
   onScrollThrottled = throttle(250, this.onScroll);
 
+  saveDebounced = debounce(250, this.save);
+
   get selectedWorkspace() {
     return this.selectedWorkspaceValue;
   }
@@ -1433,7 +1456,13 @@ export default class Editor extends Vue {
   }
 
   get elements() {
-    return this.score != null ? this.score.staff.elements : [];
+    return this.score?.staff.elements ?? [];
+  }
+
+  get richTextBoxElements() {
+    return this.elements.filter(
+      (x) => x.elementType === ElementType.RichTextBox,
+    );
   }
 
   get lyrics() {
@@ -4813,6 +4842,14 @@ export default class Editor extends Vue {
     this.save();
   }
 
+  updateRichTextBoxHeight(element: RichTextBoxElement, height: number) {
+    // The height could be updated by many rich text box elements at once
+    // (e.g. if PageSetup changes) so we debounce the save.
+    element.height = height;
+    this.richTextBoxCalculationCount++;
+    this.saveDebounced();
+  }
+
   updateTextBox(element: TextBoxElement, newValues: Partial<TextBoxElement>) {
     this.commandService.execute(
       this.textBoxCommandFactory.create('update-properties', {
@@ -5340,12 +5377,22 @@ export default class Editor extends Vue {
   }
 
   updatePageSetup(pageSetup: PageSetup) {
+    const needToRecalcRichTextBoxes =
+      pageSetup.textBoxDefaultFontFamily !=
+        this.score.pageSetup.textBoxDefaultFontFamily ||
+      pageSetup.textBoxDefaultFontSize !=
+        this.score.pageSetup.textBoxDefaultFontSize;
+
     this.commandService.execute(
       this.pageSetupCommandFactory.create('update-properties', {
         target: this.score.pageSetup,
         newValues: pageSetup,
       }),
     );
+
+    if (needToRecalcRichTextBoxes) {
+      this.recalculateRichTextBoxHeights();
+    }
 
     this.save();
   }
@@ -5513,6 +5560,42 @@ export default class Editor extends Vue {
     this.audioElement = null;
 
     this.stopPlaybackClock();
+  }
+
+  recalculateRichTextBoxHeights() {
+    if (this.richTextBoxCalculation) {
+      this.richTextBoxCalculation = false;
+    }
+
+    nextTick(async () => {
+      const expectedCount = this.richTextBoxElements.length;
+      this.richTextBoxCalculationCount = 0;
+      this.richTextBoxCalculation = true;
+
+      const maxTries = 4 * 30; // 30 seconds
+      let tries = 1;
+      let lastCount = 0;
+
+      // Wait until all rich text boxes have updated
+      const poll = (resolve: (value: unknown) => void) => {
+        if (
+          this.richTextBoxCalculationCount === expectedCount ||
+          tries >= maxTries ||
+          this.richTextBoxCalculationCount < lastCount
+        ) {
+          resolve(true);
+        } else {
+          tries++;
+          lastCount = this.richTextBoxCalculationCount;
+          setTimeout(() => poll(resolve), 250);
+        }
+      };
+
+      await new Promise(poll);
+
+      this.richTextBoxCalculation = false;
+      this.saveDebounced();
+    });
   }
 
   onFileMenuNewScore() {
@@ -5881,6 +5964,11 @@ export default class Editor extends Vue {
   onFileMenuUndo() {
     const currentIndex = this.selectedElementIndex;
 
+    const textBoxDefaultFontFamilyPrevious =
+      this.score.pageSetup.textBoxDefaultFontFamily;
+    const textBoxDefaultFontSizePrevious =
+      this.score.pageSetup.textBoxDefaultFontSize;
+
     this.commandService.undo();
 
     // TODO this may be overkill, but the alternative is putting in place
@@ -5897,11 +5985,25 @@ export default class Editor extends Vue {
       this.selectedElement.keyHelper++;
     }
 
+    if (
+      textBoxDefaultFontFamilyPrevious !=
+        this.score.pageSetup.textBoxDefaultFontFamily ||
+      textBoxDefaultFontSizePrevious !=
+        this.score.pageSetup.textBoxDefaultFontSize
+    ) {
+      this.recalculateRichTextBoxHeights();
+    }
+
     this.save();
   }
 
   onFileMenuRedo() {
     const currentIndex = this.selectedElementIndex;
+
+    const textBoxDefaultFontFamilyPrevious =
+      this.score.pageSetup.textBoxDefaultFontFamily;
+    const textBoxDefaultFontSizePrevious =
+      this.score.pageSetup.textBoxDefaultFontSize;
 
     this.commandService.redo();
 
@@ -5917,6 +6019,15 @@ export default class Editor extends Vue {
       // Undo/redo could affect the note display in the neume toolbar (among other things),
       // so we force a refresh here
       this.selectedElement.keyHelper++;
+    }
+
+    if (
+      textBoxDefaultFontFamilyPrevious !=
+        this.score.pageSetup.textBoxDefaultFontFamily ||
+      textBoxDefaultFontSizePrevious !=
+        this.score.pageSetup.textBoxDefaultFontSize
+    ) {
+      this.recalculateRichTextBoxHeights();
     }
 
     this.save();
@@ -6323,6 +6434,11 @@ export default class Editor extends Vue {
 
 .selectedMelisma {
   display: none;
+}
+
+.richTextBoxCalculation {
+  position: absolute;
+  left: -99999999px;
 }
 
 .line {

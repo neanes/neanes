@@ -10,6 +10,7 @@
       :editor="editor"
       :model-value="element.content"
       @blur="onBlur"
+      @ready="onEditorReady"
       :config="editorConfig"
       :style="textBoxStyle"
       class="editor"
@@ -33,7 +34,7 @@ import { withZoom } from '@/utils/withZoom';
 
 @Component({
   components: { ContentEditable },
-  emits: ['update', 'select-single'],
+  emits: ['update', 'update:height', 'select-single'],
 })
 export default class TextBoxRich extends Vue {
   @Prop() element!: RichTextBoxElement;
@@ -74,21 +75,29 @@ export default class TextBoxRich extends Vue {
     const style = {
       width: this.width,
       height: withZoom(this.element.height),
+      fontFamily: getFontFamilyWithFallback(
+        this.pageSetup.textBoxDefaultFontFamily,
+      ),
+      fontSize: withZoom(this.pageSetup.textBoxDefaultFontSize),
     } as StyleValue;
 
     return style;
   }
 
   get textBoxStyle() {
-    const style: any = {
+    const style: StyleValue = {
       width: this.width,
-      fontFamily: getFontFamilyWithFallback(
-        this.pageSetup.textBoxDefaultFontFamily,
-      ),
-      fontSize: withZoom(this.pageSetup.textBoxDefaultFontSize),
     };
 
     return style;
+  }
+
+  onEditorReady() {
+    const height = this.getHeight();
+
+    if (this.element.height !== height) {
+      this.$emit('update:height', height);
+    }
   }
 
   onBlur() {
@@ -96,9 +105,7 @@ export default class TextBoxRich extends Vue {
 
     let updated = false;
 
-    const height = (this.$el as HTMLElement).querySelector(
-      '.ck-content',
-    )!.scrollHeight;
+    const height = this.getHeight();
 
     const content = this.editorInstance.getData();
 
@@ -115,6 +122,10 @@ export default class TextBoxRich extends Vue {
     if (updated) {
       this.$emit('update', updates);
     }
+  }
+
+  getHeight() {
+    return (this.$el as HTMLElement).querySelector('.ck-content')!.scrollHeight;
   }
 
   blur() {

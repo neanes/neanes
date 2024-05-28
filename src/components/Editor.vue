@@ -24,6 +24,8 @@
       @toggle-line-break="toggleLineBreak($event)"
       @add-tempo="addTempo"
       @add-drop-cap="addDropCap(false)"
+      @add-text-box="onFileMenuInsertTextBox"
+      @add-text-box-rich="onFileMenuInsertRichTextBox"
       @add-image="onClickAddImage"
       @delete-selected-element="deleteSelectedElement"
       @click="selectedLyrics = null"
@@ -5828,9 +5830,9 @@ export default class Editor extends Vue {
     }
   }
 
-  onFileMenuInsertTextBox(args: FileMenuInsertTextboxArgs) {
+  onFileMenuInsertTextBox(args?: FileMenuInsertTextboxArgs) {
     const element = new TextBoxElement();
-    element.inline = args.inline;
+    element.inline = args?.inline ?? false;
 
     if (element.inline) {
       element.color = this.score.pageSetup.lyricsDefaultColor;
@@ -6668,31 +6670,26 @@ export default class Editor extends Vue {
   visibility: hidden;
 }
 
-.page.print .text-box-container {
-  border: none;
-}
-
-.page.print .drop-cap-container {
-  border: none;
-}
-
+.page.print .text-box-container,
+.page.print .rich-text-box-container,
+.page.print .drop-cap-container,
+.page.print .mode-key-container,
+.page.print .image-box-container,
 .page.print :deep(.text-box.multipanel) {
-  border: none;
-}
-
-.page.print .mode-key-container {
-  border: none;
-}
-
-.page.print .image-box-container {
   border: none;
 }
 
 .page.print .page-break,
 .page.print .line-break,
 .page.print .page-break-2,
-.page.print .line-break-2 {
+.page.print .line-break-2,
+.page.print :deep(.handle),
+.page.print :deep(.ck-widget__type-around) {
   display: none !important;
+}
+
+.page.print :deep(.ck-widget) {
+  outline: none !important;
 }
 
 .page.print .neume-box .selected {
@@ -6701,6 +6698,10 @@ export default class Editor extends Vue {
 
 .page.print .melisma-text {
   opacity: 1;
+}
+
+.page.print :deep(.rich-text-editor) {
+  overflow: hidden !important;
 }
 
 @media print {

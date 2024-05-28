@@ -26,6 +26,8 @@
     "single": "Single",
     "martyria": "Martyria",
     "insertDropCapBefore": "Insert drop cap before",
+    "insertTextBox": "Insert Text Box",
+    "insertRichTextBox": "Insert Rich Text Box",
     "insertImage": "Insert image",
     "insertOrRemoveLineBreakAfterSelectedElement": "Insert or remove line break after selected element",
     "insertOrRemoveJustifiedLineBreakAfterSelectedElement": "Insert or remove justified line break after selected element",

@@ -1,6 +1,6 @@
 <template>
   <div
-    class="text-box-container"
+    class="rich-text-box-container"
     :style="containerStyle"
     @click="$emit('select-single')"
   >
@@ -13,7 +13,7 @@
       @ready="onEditorReady"
       :config="editorConfig"
       :style="textBoxStyle"
-      class="editor"
+      class="rich-text-editor"
     ></ckeditor>
   </div>
 </template>
@@ -43,6 +43,8 @@ export default class TextBoxRich extends Vue {
 
   editor = InlineEditor;
   editorData = '';
+
+  focusOnReady = false;
 
   get editorConfig(): EditorConfig {
     const fontSizeOptions: FontSizeOption[] = [];
@@ -98,6 +100,11 @@ export default class TextBoxRich extends Vue {
     if (this.element.height !== height) {
       this.$emit('update:height', height);
     }
+
+    if (this.focusOnReady) {
+      this.editorInstance.editing.view.focus();
+      this.focusOnReady = false;
+    }
   }
 
   onBlur() {
@@ -128,13 +135,8 @@ export default class TextBoxRich extends Vue {
     return (this.$el as HTMLElement).querySelector('.ck-content')!.scrollHeight;
   }
 
-  blur() {
-    //this.textElement.blur();
-    //this.editorInstance.editing.view.();
-  }
-
   focus() {
-    //this.editorInstance.editing.view.focus();
+    this.focusOnReady = true;
   }
 }
 </script>
@@ -169,22 +171,18 @@ export default class TextBoxRich extends Vue {
   z-index: 1;
 }
 
-.editor {
+.rich-text-editor {
   padding: 0;
   box-sizing: border-box;
 }
 
-.text-box-container {
+.rich-text-box-container {
   border: 1px dotted black;
   box-sizing: border-box;
   min-height: 10px;
 }
 
-.text-box:focus {
-  outline: none;
-}
-
-.text-box-container .handle {
+.rich-text-box-container .handle {
   bottom: calc(50% - 5px);
   left: -10px;
 
@@ -194,7 +192,7 @@ export default class TextBoxRich extends Vue {
 }
 
 @media print {
-  .text-box-container .handle {
+  .rich-text-box-container .handle {
     display: none !important;
   }
 

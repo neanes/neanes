@@ -325,60 +325,62 @@ export class LyricService {
         // then this is interpreted as a note with no lyrics.
         if (token === '_' && !previousToken.endsWith('_')) {
           token = '';
-          // Skip to the next element.
-          continue;
-        }
+        } else {
+          const nextNote = this.findNextNote(filteredElements, i);
+          const nextNoteIsMelisma =
+            nextNote != null
+              ? this.getEffectiveAcceptsLyrics(nextNote, note) ===
+                AcceptsLyricsOption.MelismaOnly
+              : false;
 
-        const nextNote = this.findNextNote(filteredElements, i);
-        const nextNoteIsMelisma =
-          nextNote != null
-            ? this.getEffectiveAcceptsLyrics(nextNote, note) ===
-              AcceptsLyricsOption.MelismaOnly
-            : false;
-
-        // Finally, we check the next note to handle some special cases.
-        // (Greek) Calculate melisma syllables.
-        // If the lyrics are Greek and the next note is a melisma,
-        // then calculate the melismatic syllables.
-        if (
-          (nextNoteIsMelisma || token.endsWith('_')) &&
-          MelismaHelperGreek.isGreek(token)
-        ) {
-          melismaSyllables = MelismaHelperGreek.getMelismaSyllable(
-            token.replace('_', ''),
-          );
-          // By convention, we distinguish between των and τω ων by
-          // setting note lyrics to either a hyphen or underscore, respectively.
-          if (melismaSyllables.middle === melismaSyllables.final) {
-            token = melismaSyllables.initial + '_';
-          } else {
-            token = melismaSyllables.initial + '-';
+          // Finally, we check the next note to handle some special cases.
+          // (Greek) Calculate melisma syllables.
+          // If the lyrics are Greek and the next note is a melisma,
+          // then calculate the melismatic syllables.
+          if (
+            (nextNoteIsMelisma || token.endsWith('_')) &&
+            MelismaHelperGreek.isGreek(token)
+          ) {
+            melismaSyllables = MelismaHelperGreek.getMelismaSyllable(
+              token.replace('_', ''),
+            );
+            // By convention, we distinguish between των and τω ων by
+            // setting note lyrics to either a hyphen or underscore, respectively.
+            if (melismaSyllables.middle === melismaSyllables.final) {
+              token = melismaSyllables.initial + '_';
+            } else {
+              token = melismaSyllables.initial + '-';
+            }
+          } else if (token !== '_' && token !== '-') {
+            // If the token is a single underscore, then MelismaHelperGreek.isGreek(token)
+            // will be false, but we may still be in a melisma.
+            // But if the token is not a single underscore, then we are not in a melisma.
+            // So we clear the melisma.
+            melismaSyllables = null;
           }
-        } else if (token !== '_' && token !== '-') {
-          // If the token is a single underscore, then MelismaHelperGreek.isGreek(token)
-          // will be false, but we may still be in a melisma.
-          // But if the token is not a single underscore, then we are not in a melisma.
-          // So we clear the melisma.
-          melismaSyllables = null;
-        }
 
-        // If the next note only takes a melisma, then ensure that this token
-        // ends in an underscore
-        if (nextNoteIsMelisma && !token.endsWith('_') && !token.endsWith('-')) {
-          token += '_';
-        }
+          // If the next note only takes a melisma, then ensure that this token
+          // ends in an underscore
+          if (
+            nextNoteIsMelisma &&
+            !token.endsWith('_') &&
+            !token.endsWith('-')
+          ) {
+            token += '_';
+          }
 
-        // (Greek) If we are in a melisma and the next note is not a melisma,
-        // then we should set the present note to the final melisma text if it differs
-        // from the middle text. I.e. τω ω ω ων.
-        if (
-          melismaSyllables != null &&
-          token === '-' &&
-          melismaSyllables.final !== melismaSyllables.middle &&
-          !nextNoteIsMelisma &&
-          tokenizer.peekNextToken() !== '_'
-        ) {
-          token = melismaSyllables.final;
+          // (Greek) If we are in a melisma and the next note is not a melisma,
+          // then we should set the present note to the final melisma text if it differs
+          // from the middle text. I.e. τω ω ω ων.
+          if (
+            melismaSyllables != null &&
+            token === '-' &&
+            melismaSyllables.final !== melismaSyllables.middle &&
+            !nextNoteIsMelisma &&
+            tokenizer.peekNextToken() !== '_'
+          ) {
+            token = melismaSyllables.final;
+          }
         }
       }
 

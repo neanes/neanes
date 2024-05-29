@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg version="1.1" viewBox="-10472 -10457 32 32" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <defs>
+  <style>.cls-1 {
+        fill: none;
+      }
+
+      .cls-2 {
+        fill: #000;
+      }</style>
+  <linearGradient id="linearGradient28664" x1="-10465" x2="-10452" y1="-10441" y2="-10441" gradientUnits="userSpaceOnUse">
+   <stop stop-color="#f0000f" offset="0"/>
+   <stop stop-color="#800000" offset="1"/>
+  </linearGradient>
+ </defs>
+ <rect class="cls-1" x="-10472" y="-10457" width="32" height="32" rx="2" data-name="Rectangle 2306"/>
+ <g fill="url(#linearGradient28664)" aria-label="T">
+  <path d="m-10454-10448v14.098h2.426q1.301 0 1.846 0.509 0.562 0.493 0.562 1.301 0 0.791-0.562 1.301-0.545 0.492-1.846 0.492h-8.437q-1.301 0-1.864-0.492-0.545-0.51-0.545-1.318 0-0.791 0.545-1.284 0.563-0.509 1.864-0.509h2.408v-14.098h-3.902v3.41q0 1.301-0.51 1.863-0.492 0.545-1.301 0.545-0.791 0-1.301-0.545-0.492-0.562-0.492-1.863v-7.031l18.668 0.02v7.014q0 1.301-0.51 1.863-0.492 0.545-1.301 0.545-0.791 0-1.3-0.545-0.493-0.562-0.493-1.863v-3.41z" fill="url(#linearGradient28664)"/>
+ </g>
+ <rect x="-10470" y="-10455" width="27.865" height="27.865" fill="none" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.1354" style="paint-order:markers fill stroke"/>
+</svg>

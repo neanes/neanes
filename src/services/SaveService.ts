@@ -8,6 +8,7 @@ import {
   MartyriaElement,
   ModeKeyElement,
   NoteElement,
+  RichTextBoxElement,
   ScoreElement,
   TempoElement,
   TextBoxElement,
@@ -26,6 +27,7 @@ import {
   MartyriaElement as MartyriaElement_v1,
   ModeKeyElement as ModeKeyElement_v1,
   NoteElement as NoteElement_v1,
+  RichTextBoxElement as RichTextBoxElement_v1,
   ScoreElement as ScoreElement_v1,
   TempoElement as TempoElement_v1,
   TextBoxElement as TextBoxElement_v1,
@@ -112,6 +114,13 @@ export class SaveService {
         case ElementType.TextBox:
           element = new TextBoxElement_v1();
           this.SaveTextBox(element as TextBoxElement_v1, e as TextBoxElement);
+          break;
+        case ElementType.RichTextBox:
+          element = new RichTextBoxElement_v1();
+          this.SaveRichTextBox(
+            element as RichTextBoxElement_v1,
+            e as RichTextBoxElement,
+          );
           break;
         case ElementType.ModeKey:
           element = new ModeKeyElement_v1();
@@ -482,6 +491,14 @@ export class SaveService {
     element.useDefaultStyle = e.useDefaultStyle || undefined;
   }
 
+  public static SaveRichTextBox(
+    element: RichTextBoxElement_v1,
+    e: RichTextBoxElement,
+  ) {
+    element.content = e.content;
+    element.height = e.height;
+  }
+
   public static SaveModeKey(element: ModeKeyElement_v1, e: ModeKeyElement) {
     element.templateId = e.templateId || undefined;
     element.alignment = e.alignment;
@@ -620,6 +637,13 @@ export class SaveService {
             element as TextBoxElement,
             e as TextBoxElement_v1,
             score.pageSetup,
+          );
+          break;
+        case ElementType_v1.RichTextBox:
+          element = new RichTextBoxElement();
+          this.LoadRichTextBox_v1(
+            element as RichTextBoxElement,
+            e as RichTextBoxElement_v1,
           );
           break;
         case ElementType_v1.ModeKey:
@@ -1130,6 +1154,14 @@ export class SaveService {
     } else {
       element.useDefaultStyle = e.useDefaultStyle === true;
     }
+  }
+
+  public static LoadRichTextBox_v1(
+    element: RichTextBoxElement,
+    e: RichTextBoxElement_v1,
+  ) {
+    element.content = e.content;
+    element.height = e.height;
   }
 
   public static LoadModeKey_v1(element: ModeKeyElement, e: ModeKeyElement_v1) {

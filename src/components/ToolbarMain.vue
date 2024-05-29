@@ -100,6 +100,20 @@
       <img src="@/assets/icons/drop-cap.svg" width="24" height="24" />
     </button>
     <button
+      :title="$t('toolbar:main.insertTextBox')"
+      class="icon-btn"
+      @click="$emit('add-text-box')"
+    >
+      <img src="@/assets/icons/text-box.svg" width="24" height="24" />
+    </button>
+    <button
+      :title="$t('toolbar:main.insertTextBoxRich')"
+      class="icon-btn"
+      @click="$emit('add-text-box-rich')"
+    >
+      <img src="@/assets/icons/text-box-rich.svg" width="24" height="24" />
+    </button>
+    <button
       :title="$t('toolbar:main.insertImage')"
       class="icon-btn"
       @click="$emit('add-image')"
@@ -256,6 +270,8 @@ import Neume from './Neume.vue';
     'add-drop-cap',
     'add-image',
     'add-tempo',
+    'add-text-box',
+    'add-text-box-rich',
     'delete-selected-element',
     'open-playback-settings',
     'play-audio',

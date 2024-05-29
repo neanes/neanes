@@ -29,7 +29,9 @@ import { SelectAll } from '@ckeditor/ckeditor5-select-all';
 import {
   Table,
   TableCaption,
+  TableCellProperties,
   TableColumnResize,
+  TableProperties,
   TableToolbar,
 } from '@ckeditor/ckeditor5-table';
 import { TextTransformation } from '@ckeditor/ckeditor5-typing';
@@ -68,7 +70,9 @@ InlineEditor.builtinPlugins = [
   Superscript,
   Table,
   TableCaption,
+  TableCellProperties,
   TableColumnResize,
+  TableProperties,
   TableToolbar,
   TextTransformation,
   Underline,
@@ -120,6 +124,12 @@ InlineEditor.defaultConfig = {
     ],
   },
   table: {
-    contentToolbar: ['tableColumn', 'tableRow', 'mergeTableCells'],
+    contentToolbar: [
+      'tableColumn',
+      'tableRow',
+      'mergeTableCells',
+      'tableProperties',
+      'tableCellProperties',
+    ],
   },
 };

@@ -23,6 +23,7 @@ export enum ElementType {
   Martyria = 'Martyria',
   Empty = 'Empty',
   TextBox = 'TextBox',
+  RichTextBox = 'RichTextBox',
   DropCap = 'DropCap',
   ModeKey = 'ModeKey',
   Tempo = 'Tempo',
@@ -189,6 +190,12 @@ export class TextBoxElement extends ScoreElement {
   public lineHeight: number | undefined = undefined;
   public height: number = 20;
   public useDefaultStyle: boolean | undefined = undefined;
+}
+
+export class RichTextBoxElement extends ScoreElement {
+  public readonly elementType: ElementType = ElementType.RichTextBox;
+  public content: string = '';
+  public height: number = 20;
 }
 
 export class ModeKeyElement extends ScoreElement {

@@ -34,6 +34,7 @@
     "dropCapBefore": "Drop Cap Before",
     "dropCapAfter": "Drop Cap After",
     "textBox": "Text Box",
+    "richTextBox": "Rich Text Box",
     "inlineTextBox": "Inline Text Box",
     "modeKey": "Mode Key",
     "image": "Image",

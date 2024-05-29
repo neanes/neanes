@@ -6,6 +6,7 @@ import {
   MartyriaElement,
   ModeKeyElement,
   NoteElement,
+  RichTextBoxElement,
   ScoreElement,
   TempoElement,
   TextBoxElement,
@@ -53,6 +54,7 @@ interface ByzHtmlExporterConfig {
   classNeumeParagraphCenter: string;
   classTextBox: string;
   classTextBoxInline: string;
+  classRichTextBox: string;
   classImageBox: string;
   classImageBoxInline: string;
   classModeKey: string;
@@ -90,6 +92,7 @@ export class ByzHtmlExporter {
     classNeumeParagraph: 'byz--neume-paragraph',
     classNeumeParagraphCenter: 'byz--neume-paragraph-center',
     classTextBox: 'byz--text-box',
+    classRichTextBox: 'byz---rich-text-box',
     classTextBoxInline: 'byz--text-box-inline',
     classImageBox: 'byz--image-box',
     classImageBoxInline: 'byz--image-box-inline',
@@ -247,17 +250,22 @@ export class ByzHtmlExporter {
 
       .${this.config.classTextBox} {
         white-space: break-spaces;
-        font-family: ${pageSetup.lyricsDefaultFontFamily};
-        font-size: ${Unit.toPt(pageSetup.lyricsDefaultFontSize)}pt;
-        font-weight: ${pageSetup.lyricsDefaultFontWeight};
-        font-style: ${pageSetup.lyricsDefaultFontStyle};
-        color: ${pageSetup.lyricsDefaultColor};
-        -webkit-text-stroke-width: ${pageSetup.lyricsDefaultStrokeWidth};
+        font-family: ${pageSetup.textBoxDefaultFontFamily};
+        font-size: ${Unit.toPt(pageSetup.textBoxDefaultFontSize)}pt;
+        font-weight: ${pageSetup.textBoxDefaultFontWeight};
+        font-style: ${pageSetup.textBoxDefaultFontStyle};
+        color: ${pageSetup.textBoxDefaultColor};
+        -webkit-text-stroke-width: ${pageSetup.textBoxDefaultStrokeWidth};
       }
 
       .${this.config.classTextBoxInline} {
         display: flex;
         align-items: center;
+      }
+
+      .${this.config.classRichTextBox} {
+        font-family: ${pageSetup.textBoxDefaultFontFamily};
+        font-size: ${Unit.toPt(pageSetup.textBoxDefaultFontSize)}pt;
       }
 
       .${this.config.classImageBox} {
@@ -403,6 +411,18 @@ export class ByzHtmlExporter {
           }
 
           result += this.exportTextBox(element as TextBoxElement, indentation);
+          break;
+        case ElementType.RichTextBox:
+          if (insidePage) {
+            result += this.endPage(indentation + 2, needLineBreak);
+            insidePage = false;
+            needLineBreak = false;
+          }
+
+          result += this.exportRichTextBox(
+            element as RichTextBoxElement,
+            indentation,
+          );
           break;
         case ElementType.ModeKey:
           if (insidePage) {
@@ -712,6 +732,14 @@ export class ByzHtmlExporter {
     }
 
     return `<div class="${className}"${styleAttribute}>${
+      element.content
+    }</div\n${this.getIndentationString(indentation)}>`;
+  }
+
+  exportRichTextBox(element: RichTextBoxElement, indentation: number) {
+    const className = this.config.classRichTextBox;
+
+    return `<div class="${className}">${
       element.content
     }</div\n${this.getIndentationString(indentation)}>`;
   }

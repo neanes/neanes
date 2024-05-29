@@ -1,5 +1,9 @@
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
+
 import { rmSync } from 'node:fs';
 
+import ckeditor5 from '@ckeditor/vite-plugin-ckeditor5';
 import vue from '@vitejs/plugin-vue';
 import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
@@ -101,6 +105,7 @@ export default defineConfig(({ command, mode }) => {
       vue(),
       process.env.VITE_ENABLE_DEV_TOOLS === 'true' ? VueDevTools() : undefined,
       eslintPlugin(),
+      ckeditor5({ theme: require.resolve('@ckeditor/ckeditor5-theme-lark') }),
       !mode.includes('web')
         ? electron([
             {

@@ -7,6 +7,7 @@ import {
   MartyriaElement,
   ModeKeyElement,
   NoteElement,
+  RichTextBoxElement,
   ScoreElement,
   TempoElement,
   TextBoxElement,
@@ -270,6 +271,9 @@ export class LayoutService {
             neumeHeight,
           );
           break;
+        case ElementType.RichTextBox:
+          elementWidthPx = pageSetup.innerPageWidth;
+          break;
         case ElementType.ImageBox:
           {
             const imageBox = element as ImageBoxElement;
@@ -520,6 +524,13 @@ export class LayoutService {
             const textbox = line.elements.find(
               (x) => x.elementType === ElementType.TextBox,
             ) as TextBoxElement;
+            height = textbox.height;
+          } else if (
+            line.elements.some((x) => x.elementType === ElementType.RichTextBox)
+          ) {
+            const textbox = line.elements.find(
+              (x) => x.elementType === ElementType.RichTextBox,
+            ) as RichTextBoxElement;
             height = textbox.height;
           } else if (
             line.elements.some((x) => x.elementType === ElementType.ModeKey)

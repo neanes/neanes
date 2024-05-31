@@ -24,6 +24,7 @@ import { GORTHMIKON, PELASTIKON } from '@/utils/constants';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { Unit } from '@/utils/Unit';
 
+import { MelismaHelperGreek } from '../MelismaHelperGreek';
 import { NeumeMappingService, SbmuflGlyphName } from '../NeumeMappingService';
 import { TextMeasurementService } from '../TextMeasurementService';
 
@@ -616,7 +617,10 @@ export class ByzHtmlExporter {
         this.config.tagLyric
       }\n${this.getIndentationString(indentation)}>`;
 
-      if (element.isMelismaStart) {
+      if (
+        element.isMelismaStart &&
+        !MelismaHelperGreek.isGreek(element.lyrics)
+      ) {
         const hyphenAttribute = element.isHyphen
           ? ` ${this.config.attributeMelismaHyphen}`
           : '';
@@ -627,6 +631,10 @@ export class ByzHtmlExporter {
           this.config.tagMelisma
         }\n${this.getIndentationString(indentation)}>`;
       }
+    } else if (element.melismaText.trim() != '') {
+      inner += `<${this.config.tagLyric}>${element.melismaText}</${
+        this.config.tagLyric
+      }\n${this.getIndentationString(indentation)}>`;
     }
 
     return `<${this.config.tagNote}\n${this.getIndentationString(

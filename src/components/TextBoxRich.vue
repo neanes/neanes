@@ -70,18 +70,14 @@ export default class TextBoxRich extends Vue {
     return (this.$refs.editor as CKEditorComponentData).instance;
   }
 
-  get width() {
-    return withZoom(this.element.width);
-  }
-
   get containerStyle() {
     const style = {
-      width: this.width,
+      width: withZoom(this.element.width),
       height: withZoom(this.element.height),
       fontFamily: getFontFamilyWithFallback(
         this.pageSetup.textBoxDefaultFontFamily,
       ),
-      fontSize: withZoom(this.pageSetup.textBoxDefaultFontSize),
+      fontSize: this.pageSetup.textBoxDefaultFontSize, // no zoom because we will apply zooming on the whole editor
     } as StyleValue;
 
     return style;
@@ -89,7 +85,9 @@ export default class TextBoxRich extends Vue {
 
   get textBoxStyle() {
     const style: StyleValue = {
-      width: this.width,
+      width: `${this.element.width}px`, // no zoom because we scale with the transform
+      transformOrigin: '0 0',
+      transform: 'scale(var(--zoom,1))',
     };
 
     return style;
@@ -192,6 +190,7 @@ export default class TextBoxRich extends Vue {
 .rich-text-editor {
   padding: 0;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 .rich-text-box-container {

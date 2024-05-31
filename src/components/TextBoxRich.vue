@@ -77,7 +77,7 @@ export default class TextBoxRich extends Vue {
       fontFamily: getFontFamilyWithFallback(
         this.pageSetup.textBoxDefaultFontFamily,
       ),
-      fontSize: this.pageSetup.textBoxDefaultFontSize, // no zoom because we will apply zooming on the whole editor
+      fontSize: `${this.pageSetup.textBoxDefaultFontSize}px`, // no zoom because we will apply zooming on the whole editor
     } as StyleValue;
 
     return style;

@@ -5,7 +5,11 @@
     @click="$emit('select-single')"
   >
     <span class="handle"></span>
-    <div class="rich-text-box-multipanel-container" v-if="element.multipanel">
+    <div
+      v-if="element.multipanel"
+      class="rich-text-box-multipanel-container"
+      :style="multipanelContainerStyle"
+    >
       <ckeditor
         ref="editorLeft"
         class="rich-text-editor multipanel left"
@@ -14,7 +18,6 @@
         @blur="onBlur"
         @ready="onEditorReady"
         :config="editorConfig"
-        :style="textBoxStyle"
       />
       <ckeditor
         ref="editorCenter"
@@ -24,7 +27,6 @@
         @blur="onBlur"
         @ready="onEditorReady"
         :config="editorConfig"
-        :style="textBoxStyle"
       />
       <ckeditor
         ref="editorRight"
@@ -34,7 +36,6 @@
         @blur="onBlur"
         @ready="onEditorReady"
         :config="editorConfig"
-        :style="textBoxStyle"
       />
     </div>
     <ckeditor
@@ -173,9 +174,15 @@ export default class TextBoxRich extends Vue {
 
   get textBoxStyle() {
     const style: StyleValue = {
-      width: !this.element.multipanel ? `${this.element.width}px` : undefined, // no zoom because we scale with the transform
-      transformOrigin: '0 0',
-      transform: 'scale(var(--zoom,1))',
+      width: `${this.element.width}px`, // no zoom because we scale with the transform
+    };
+
+    return style;
+  }
+
+  get multipanelContainerStyle() {
+    const style: StyleValue = {
+      width: `${this.element.width}px`, // no zoom because we scale with the transform
     };
 
     return style;
@@ -297,6 +304,8 @@ export default class TextBoxRich extends Vue {
   padding: 0;
   box-sizing: border-box;
   overflow: hidden;
+  transform-origin: 0 0;
+  transform: scale(var(--zoom, 1));
 }
 
 .rich-text-box-container {
@@ -332,13 +341,12 @@ export default class TextBoxRich extends Vue {
 
 .rich-text-editor.center {
   flex: 1;
-  text-align: center;
 }
 
 .rich-text-editor.right {
   position: absolute;
   right: 0;
-  text-align: right;
+  transform-origin: top right;
 }
 
 @media print {

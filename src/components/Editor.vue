@@ -5491,7 +5491,7 @@ export default class Editor extends Vue {
           'replace-element-in-collection',
           {
             collection: this.score.headers.default.elements,
-            element: this.createRichHeaderFooter(),
+            element: this.createRichHeaderFooter('', 'Title', '$p'),
             replaceAtIndex: 0,
           },
         ),
@@ -5499,7 +5499,7 @@ export default class Editor extends Vue {
           'replace-element-in-collection',
           {
             collection: this.score.headers.even.elements,
-            element: this.createRichHeaderFooter(),
+            element: this.createRichHeaderFooter('$p', 'Title', ''),
             replaceAtIndex: 0,
           },
         ),
@@ -5507,7 +5507,7 @@ export default class Editor extends Vue {
           'replace-element-in-collection',
           {
             collection: this.score.headers.firstPage.elements,
-            element: this.createRichHeaderFooter(),
+            element: this.createRichHeaderFooter('', 'Title', '$p'),
             replaceAtIndex: 0,
           },
         ),
@@ -5515,7 +5515,7 @@ export default class Editor extends Vue {
           'replace-element-in-collection',
           {
             collection: this.score.headers.odd.elements,
-            element: this.createRichHeaderFooter(),
+            element: this.createRichHeaderFooter('', 'Title', '$p'),
             replaceAtIndex: 0,
           },
         ),
@@ -5523,7 +5523,7 @@ export default class Editor extends Vue {
           'replace-element-in-collection',
           {
             collection: this.score.footers.default.elements,
-            element: this.createRichHeaderFooter(),
+            element: this.createRichHeaderFooter('', 'Footer', '$p'),
             replaceAtIndex: 0,
           },
         ),
@@ -5531,7 +5531,7 @@ export default class Editor extends Vue {
           'replace-element-in-collection',
           {
             collection: this.score.footers.even.elements,
-            element: this.createRichHeaderFooter(),
+            element: this.createRichHeaderFooter('$p', 'Footer', ''),
             replaceAtIndex: 0,
           },
         ),
@@ -5539,7 +5539,7 @@ export default class Editor extends Vue {
           'replace-element-in-collection',
           {
             collection: this.score.footers.firstPage.elements,
-            element: this.createRichHeaderFooter(),
+            element: this.createRichHeaderFooter('', 'Footer', '$p'),
             replaceAtIndex: 0,
           },
         ),
@@ -5547,7 +5547,7 @@ export default class Editor extends Vue {
           'replace-element-in-collection',
           {
             collection: this.score.footers.odd.elements,
-            element: this.createRichHeaderFooter(),
+            element: this.createRichHeaderFooter('', 'Footer', '$p'),
             replaceAtIndex: 0,
           },
         ),
@@ -5561,7 +5561,7 @@ export default class Editor extends Vue {
           'replace-element-in-collection',
           {
             collection: this.score.headers.default.elements,
-            element: this.createRegularHeaderFooter(),
+            element: this.createRegularHeaderFooter('', 'Title', '$p'),
             replaceAtIndex: 0,
           },
         ),
@@ -5569,7 +5569,7 @@ export default class Editor extends Vue {
           'replace-element-in-collection',
           {
             collection: this.score.headers.even.elements,
-            element: this.createRegularHeaderFooter(),
+            element: this.createRegularHeaderFooter('$p', 'Title', ''),
             replaceAtIndex: 0,
           },
         ),
@@ -5577,7 +5577,7 @@ export default class Editor extends Vue {
           'replace-element-in-collection',
           {
             collection: this.score.headers.firstPage.elements,
-            element: this.createRegularHeaderFooter(),
+            element: this.createRegularHeaderFooter('', 'Title', '$p'),
             replaceAtIndex: 0,
           },
         ),
@@ -5585,7 +5585,7 @@ export default class Editor extends Vue {
           'replace-element-in-collection',
           {
             collection: this.score.headers.odd.elements,
-            element: this.createRegularHeaderFooter(),
+            element: this.createRegularHeaderFooter('', 'Title', '$p'),
             replaceAtIndex: 0,
           },
         ),
@@ -5593,7 +5593,7 @@ export default class Editor extends Vue {
           'replace-element-in-collection',
           {
             collection: this.score.footers.default.elements,
-            element: this.createRegularHeaderFooter(),
+            element: this.createRegularHeaderFooter('', 'Footer', '$p'),
             replaceAtIndex: 0,
           },
         ),
@@ -5601,7 +5601,7 @@ export default class Editor extends Vue {
           'replace-element-in-collection',
           {
             collection: this.score.footers.even.elements,
-            element: this.createRegularHeaderFooter(),
+            element: this.createRegularHeaderFooter('$p', 'Footer', ''),
             replaceAtIndex: 0,
           },
         ),
@@ -5609,7 +5609,7 @@ export default class Editor extends Vue {
           'replace-element-in-collection',
           {
             collection: this.score.footers.firstPage.elements,
-            element: this.createRegularHeaderFooter(),
+            element: this.createRegularHeaderFooter('', 'Footer', '$p'),
             replaceAtIndex: 0,
           },
         ),
@@ -5617,7 +5617,7 @@ export default class Editor extends Vue {
           'replace-element-in-collection',
           {
             collection: this.score.footers.odd.elements,
-            element: this.createRegularHeaderFooter(),
+            element: this.createRegularHeaderFooter('', 'Footer', '$p'),
             replaceAtIndex: 0,
           },
         ),
@@ -5633,17 +5633,21 @@ export default class Editor extends Vue {
     this.save();
   }
 
-  createRegularHeaderFooter() {
+  createRegularHeaderFooter(left: string, center: string, right: string) {
     const textbox = new TextBoxElement();
     textbox.multipanel = true;
+    textbox.contentLeft = left;
+    textbox.contentCenter = center;
+    textbox.contentRight = right;
     return textbox;
   }
 
-  createRichHeaderFooter() {
+  createRichHeaderFooter(left: string, center: string, right: string) {
     const textbox = new RichTextBoxElement();
     textbox.multipanel = true;
-    textbox.contentCenter = '<p style="text-align:center;"></p>';
-    textbox.contentRight = '<p style="text-align:right;"></p>';
+    textbox.contentLeft = `${left}`;
+    textbox.contentCenter = `<p style="text-align:center;">${center}</p>`;
+    textbox.contentRight = `<p style="text-align:right;">${right}</p>`;
     return textbox;
   }
 

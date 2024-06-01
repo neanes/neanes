@@ -824,8 +824,13 @@ export class LayoutService {
     pageSetup: PageSetup,
     neumeHeight: number,
   ) {
-    // Currently headers may only contain a single text box
-    if (header.elements.length > 0) {
+    // Currently headers may only contain a single text box.
+    // It may be a rich textbox, but we don't need to do any
+    // processing in that case.
+    if (
+      header.elements.length > 0 &&
+      header.elements[0].elementType === ElementType.TextBox
+    ) {
       const element = header.elements[0] as TextBoxElement;
 
       element.width = this.processTextBoxElement(
@@ -833,6 +838,12 @@ export class LayoutService {
         pageSetup,
         neumeHeight,
       );
+    } else if (
+      header.elements.length > 0 &&
+      header.elements[0].elementType === ElementType.RichTextBox
+    ) {
+      const element = header.elements[0] as RichTextBoxElement;
+      element.width = pageSetup.innerPageWidth;
     }
   }
 
@@ -841,8 +852,13 @@ export class LayoutService {
     pageSetup: PageSetup,
     neumeHeight: number,
   ) {
-    // Currently footers may only contain a single text box
-    if (footer.elements.length > 0) {
+    // Currently footers may only contain a single text box.
+    // It may be a rich textbox, but we don't need to do any
+    // processing in that case.
+    if (
+      footer.elements.length > 0 &&
+      footer.elements[0].elementType === ElementType.TextBox
+    ) {
       const element = footer.elements[0] as TextBoxElement;
 
       element.width = this.processTextBoxElement(
@@ -850,6 +866,12 @@ export class LayoutService {
         pageSetup,
         neumeHeight,
       );
+    } else if (
+      footer.elements.length > 0 &&
+      footer.elements[0].elementType === ElementType.RichTextBox
+    ) {
+      const element = footer.elements[0] as RichTextBoxElement;
+      element.width = pageSetup.innerPageWidth;
     }
   }
 

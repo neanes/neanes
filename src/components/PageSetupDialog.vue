@@ -294,6 +294,16 @@
               $t('dialog:pageSetup.differentOddAndEven')
             }}</label>
           </div>
+          <div class="form-group">
+            <input
+              id="page-setup-dialog-rich-header-footer"
+              type="checkbox"
+              v-model="form.richHeaderFooter"
+            />
+            <label for="page-setup-dialog-rich-header-footer">{{
+              $t('dialog:pageSetup.richHeaderFooter')
+            }}</label>
+          </div>
 
           <div class="form-group">
             <label>{{ $t('dialog:pageSetup.firstPageNumber') }}</label>

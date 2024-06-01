@@ -215,6 +215,7 @@ export class SaveService {
 
     pageSetup.showHeader = p.showHeader || undefined;
     pageSetup.showFooter = p.showFooter || undefined;
+    pageSetup.richHeaderFooter = p.richHeaderFooter || undefined;
 
     pageSetup.firstPageNumber = p.firstPageNumber;
 
@@ -257,15 +258,45 @@ export class SaveService {
   public static SaveHeader(header: Header_v1, h: Header) {
     // Currently, headers only support a single element
     const e = h.elements[0];
-    const element = header.elements[0];
-    this.SaveTextBox(element as TextBoxElement_v1, e as TextBoxElement);
+
+    if (e.elementType === ElementType.TextBox) {
+      const element = new TextBoxElement_v1();
+
+      this.SaveTextBox(element as TextBoxElement_v1, e as TextBoxElement);
+
+      header.elements[0] = element;
+    } else if (e.elementType === ElementType.RichTextBox) {
+      const element = new RichTextBoxElement_v1();
+
+      this.SaveRichTextBox(
+        element as RichTextBoxElement_v1,
+        e as RichTextBoxElement,
+      );
+
+      header.elements[0] = element;
+    }
   }
 
   public static SaveFooter(footer: Footer_v1, f: Footer) {
     // Currently, footers only support a single element
     const e = f.elements[0];
-    const element = footer.elements[0];
-    this.SaveTextBox(element as TextBoxElement_v1, e as TextBoxElement);
+
+    if (e.elementType === ElementType.TextBox) {
+      const element = new TextBoxElement_v1();
+
+      this.SaveTextBox(element as TextBoxElement_v1, e as TextBoxElement);
+
+      footer.elements[0] = element;
+    } else if (e.elementType === ElementType.RichTextBox) {
+      const element = new RichTextBoxElement_v1();
+
+      this.SaveRichTextBox(
+        element as RichTextBoxElement_v1,
+        e as RichTextBoxElement,
+      );
+
+      footer.elements[0] = element;
+    }
   }
 
   public static SaveDropCap(element: DropCapElement_v1, e: DropCapElement) {
@@ -496,6 +527,14 @@ export class SaveService {
     e: RichTextBoxElement,
   ) {
     element.content = e.content;
+
+    if (e.multipanel) {
+      element.contentLeft = e.contentLeft;
+      element.contentCenter = e.contentCenter;
+      element.contentRight = e.contentRight;
+      element.multipanel = true;
+    }
+
     element.height = e.height;
   }
 
@@ -702,6 +741,7 @@ export class SaveService {
     pageSetup.headerDifferentOddEven = p.headerDifferentOddEven === true;
     pageSetup.showHeader = p.showHeader === true;
     pageSetup.showFooter = p.showFooter === true;
+    pageSetup.richHeaderFooter = p.richHeaderFooter === true;
     pageSetup.firstPageNumber = p.firstPageNumber ?? pageSetup.firstPageNumber;
 
     pageSetup.lineHeight = p.lineHeight;
@@ -853,13 +893,28 @@ export class SaveService {
   ) {
     // Currently, headers only support a single element
     const e = h.elements[0];
-    const element = header.elements[0];
-    this.LoadTextBox_v1(
-      scoreVersion,
-      element as TextBoxElement,
-      e as TextBoxElement_v1,
-      pageSetup,
-    );
+
+    if (e.elementType === ElementType.TextBox) {
+      const element = new TextBoxElement();
+
+      this.LoadTextBox_v1(
+        scoreVersion,
+        element as TextBoxElement,
+        e as TextBoxElement_v1,
+        pageSetup,
+      );
+
+      header.elements[0] = element;
+    } else if (e.elementType === ElementType.RichTextBox) {
+      const element = new RichTextBoxElement();
+
+      this.LoadRichTextBox_v1(
+        element as RichTextBoxElement,
+        e as RichTextBoxElement_v1,
+      );
+
+      header.elements[0] = element;
+    }
   }
 
   public static LoadFooter_v1(
@@ -870,13 +925,28 @@ export class SaveService {
   ) {
     // Currently, footers only support a single element
     const e = f.elements[0];
-    const element = footer.elements[0];
-    this.LoadTextBox_v1(
-      scoreVersion,
-      element as TextBoxElement,
-      e as TextBoxElement_v1,
-      pageSetup,
-    );
+
+    if (e.elementType === ElementType.TextBox) {
+      const element = new TextBoxElement();
+
+      this.LoadTextBox_v1(
+        scoreVersion,
+        element as TextBoxElement,
+        e as TextBoxElement_v1,
+        pageSetup,
+      );
+
+      footer.elements[0] = element;
+    } else if (e.elementType === ElementType.RichTextBox) {
+      const element = new RichTextBoxElement();
+
+      this.LoadRichTextBox_v1(
+        element as RichTextBoxElement,
+        e as RichTextBoxElement_v1,
+      );
+
+      footer.elements[0] = element;
+    }
   }
 
   public static LoadDropCap_v1(
@@ -1162,6 +1232,14 @@ export class SaveService {
   ) {
     element.content = e.content;
     element.height = e.height;
+
+    if (e.multipanel) {
+      element.contentLeft = e.contentLeft;
+      element.contentCenter = e.contentCenter;
+      element.contentRight = e.contentRight;
+    }
+
+    element.multipanel = e.multipanel === true;
   }
 
   public static LoadModeKey_v1(element: ModeKeyElement, e: ModeKeyElement_v1) {

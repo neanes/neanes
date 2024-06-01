@@ -5,16 +5,50 @@
     @click="$emit('select-single')"
   >
     <span class="handle"></span>
+    <div
+      v-if="element.multipanel"
+      class="rich-text-box-multipanel-container"
+      :style="multipanelContainerStyle"
+    >
+      <ckeditor
+        ref="editorLeft"
+        class="rich-text-editor multipanel left"
+        :editor="editor"
+        :model-value="contentLeft"
+        @blur="onBlur"
+        @ready="onEditorReady"
+        :config="editorConfig"
+      />
+      <ckeditor
+        ref="editorCenter"
+        class="rich-text-editor multipanel center"
+        :editor="editor"
+        :model-value="contentCenter"
+        @blur="onBlur"
+        @ready="onEditorReady"
+        :config="editorConfig"
+      />
+      <ckeditor
+        ref="editorRight"
+        class="rich-text-editor multipanel right"
+        :editor="editor"
+        :model-value="contentRight"
+        @blur="onBlur"
+        @ready="onEditorReady"
+        :config="editorConfig"
+      />
+    </div>
     <ckeditor
+      v-else
       ref="editor"
+      class="rich-text-editor"
       :editor="editor"
-      :model-value="element.content"
+      :model-value="contentRight"
       @blur="onBlur"
       @ready="onEditorReady"
       :config="editorConfig"
       :style="textBoxStyle"
-      class="rich-text-editor"
-    ></ckeditor>
+    />
   </div>
 </template>
 
@@ -27,9 +61,10 @@ import { Component, Prop, Vue } from 'vue-facing-decorator';
 
 import ContentEditable from '@/components/ContentEditable.vue';
 import InlineEditor from '@/customEditor';
-import { RichTextBoxElement } from '@/models/Element';
+import { RichTextBoxElement, TextBoxAlignment } from '@/models/Element';
 import { PageSetup } from '@/models/PageSetup';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
+import { replaceTokens, TokenMetadata } from '@/utils/replaceTokens';
 import { withZoom } from '@/utils/withZoom';
 
 @Component({
@@ -40,6 +75,8 @@ export default class TextBoxRich extends Vue {
   @Prop() element!: RichTextBoxElement;
   @Prop() pageSetup!: PageSetup;
   @Prop() fonts!: string[];
+  @Prop({ default: true }) editMode!: boolean;
+  @Prop() metadata!: TokenMetadata;
 
   editor = InlineEditor;
   editorData = '';
@@ -67,7 +104,59 @@ export default class TextBoxRich extends Vue {
   }
 
   get editorInstance() {
-    return (this.$refs.editor as CKEditorComponentData).instance;
+    return (this.$refs.editor as CKEditorComponentData)?.instance;
+  }
+
+  get editorInstanceLeft() {
+    return (this.$refs.editorLeft as CKEditorComponentData)?.instance;
+  }
+
+  get editorInstanceCenter() {
+    return (this.$refs.editorCenter as CKEditorComponentData)?.instance;
+  }
+
+  get editorInstanceRight() {
+    return (this.$refs.editorRight as CKEditorComponentData)?.instance;
+  }
+
+  get content() {
+    return this.editMode
+      ? this.element.content
+      : replaceTokens(
+          this.element.content,
+          this.metadata,
+          TextBoxAlignment.Center,
+        );
+  }
+
+  get contentLeft() {
+    return this.editMode
+      ? this.element.contentLeft
+      : replaceTokens(
+          this.element.contentLeft,
+          this.metadata,
+          TextBoxAlignment.Left,
+        );
+  }
+
+  get contentCenter() {
+    return this.editMode
+      ? this.element.contentCenter
+      : replaceTokens(
+          this.element.contentCenter,
+          this.metadata,
+          TextBoxAlignment.Center,
+        );
+  }
+
+  get contentRight() {
+    return this.editMode
+      ? this.element.contentRight
+      : replaceTokens(
+          this.element.contentRight,
+          this.metadata,
+          TextBoxAlignment.Right,
+        );
   }
 
   get containerStyle() {
@@ -86,8 +175,14 @@ export default class TextBoxRich extends Vue {
   get textBoxStyle() {
     const style: StyleValue = {
       width: `${this.element.width}px`, // no zoom because we scale with the transform
-      transformOrigin: '0 0',
-      transform: 'scale(var(--zoom,1))',
+    };
+
+    return style;
+  }
+
+  get multipanelContainerStyle() {
+    const style: StyleValue = {
+      width: `${this.element.width}px`, // no zoom because we scale with the transform
     };
 
     return style;
@@ -124,16 +219,34 @@ export default class TextBoxRich extends Vue {
 
     const height = this.getHeight();
 
-    const content = this.editorInstance?.getData();
+    const content = this.editorInstance?.getData() ?? '';
+    const contentLeft = this.editorInstanceLeft?.getData() ?? '';
+    const contentCenter = this.editorInstanceCenter?.getData() ?? '';
+    const contentRight = this.editorInstanceRight?.getData() ?? '';
 
     // This should never happen, but if it does, we don't want
     // to save garbage values.
-    if (height == null || content == null) {
+    if (height == null) {
       return;
     }
 
-    if (this.element.content !== content) {
+    if (this.editMode && this.element.content !== content) {
       updates.content = content;
+      updated = true;
+    }
+
+    if (this.editMode && this.element.contentLeft !== contentLeft) {
+      updates.contentLeft = contentLeft;
+      updated = true;
+    }
+
+    if (this.editMode && this.element.contentCenter !== contentCenter) {
+      updates.contentCenter = contentCenter;
+      updated = true;
+    }
+
+    if (this.editMode && this.element.contentRight !== contentRight) {
+      updates.contentRight = contentRight;
       updated = true;
     }
 
@@ -181,7 +294,7 @@ export default class TextBoxRich extends Vue {
   margin-bottom: 0;
 }
 
-.ck-focused {
+.ck-focused:not(.multipanel) {
   background-color: white;
   position: relative;
   z-index: 1;
@@ -191,6 +304,8 @@ export default class TextBoxRich extends Vue {
   padding: 0;
   box-sizing: border-box;
   overflow: hidden;
+  transform-origin: 0 0;
+  transform: scale(var(--zoom, 1));
 }
 
 .rich-text-box-container {
@@ -208,9 +323,39 @@ export default class TextBoxRich extends Vue {
   display: none;
 }
 
+.rich-text-box-multipanel-container {
+  display: flex;
+}
+
+.rich-text-editor.multipanel {
+  border: 1px dotted black;
+  box-sizing: border-box;
+  min-width: 2.5rem;
+}
+
+.rich-text-editor.left {
+  position: absolute;
+  left: 0;
+  z-index: 1;
+}
+
+.rich-text-editor.center {
+  flex: 1;
+}
+
+.rich-text-editor.right {
+  position: absolute;
+  right: 0;
+  transform-origin: top right;
+}
+
 @media print {
   .rich-text-box-container .handle {
     display: none !important;
+  }
+
+  .rich-text-editor.multipanel {
+    border: none !important;
   }
 
   :deep(.ck-widget) {

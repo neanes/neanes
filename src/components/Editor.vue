@@ -92,57 +92,105 @@
                 <span class="guide-line-hb" :style="guideStyleBottom" />
               </template>
               <template v-if="score.pageSetup.showHeader">
-                <TextBox
-                  class="element-box"
-                  :key="`element-${getHeaderForPageIndex(pageIndex).id}-${
-                    getHeaderForPageIndex(pageIndex).keyHelper
-                  }`"
-                  :ref="`header-${pageIndex}`"
-                  :element="getHeaderForPageIndex(pageIndex)"
-                  :editMode="
-                    !printMode &&
-                    getHeaderForPageIndex(pageIndex) ==
-                      selectedHeaderFooterElement
-                  "
-                  :metadata="getTokenMetadata(pageIndex)"
-                  :pageSetup="score.pageSetup"
-                  :class="[
-                    {
-                      selectedTextbox:
-                        getHeaderForPageIndex(pageIndex) ==
-                        selectedHeaderFooterElement,
-                    },
-                  ]"
-                  :style="headerStyle"
-                  @click="
-                    selectedHeaderFooterElement =
-                      getHeaderForPageIndex(pageIndex)
-                  "
-                  @update:content="
-                    updateTextBoxContent(
-                      getHeaderForPageIndex(pageIndex)!,
-                      $event,
-                    )
-                  "
-                  @update:contentLeft="
-                    updateTextBoxContentLeft(
-                      getHeaderForPageIndex(pageIndex)!,
-                      $event,
-                    )
-                  "
-                  @update:contentCenter="
-                    updateTextBoxContentCenter(
-                      getHeaderForPageIndex(pageIndex)!,
-                      $event,
-                    )
-                  "
-                  @update:contentRight="
-                    updateTextBoxContentRight(
-                      getHeaderForPageIndex(pageIndex)!,
-                      $event,
-                    )
-                  "
-                />
+                <template
+                  v-if="isRichTextBoxElement(getHeaderForPageIndex(pageIndex))"
+                >
+                  <TextBoxRich
+                    class="element-box"
+                    :key="`element-${getHeaderForPageIndex(pageIndex).id}-${
+                      getHeaderForPageIndex(pageIndex).keyHelper
+                    }`"
+                    :ref="`header-${pageIndex}`"
+                    :element="getHeaderForPageIndex(pageIndex)"
+                    :editMode="
+                      !printMode &&
+                      getHeaderForPageIndex(pageIndex) ==
+                        selectedHeaderFooterElement
+                    "
+                    :metadata="getTokenMetadata(pageIndex)"
+                    :pageSetup="score.pageSetup"
+                    :fonts="fonts"
+                    :class="[
+                      {
+                        selectedTextbox:
+                          getHeaderForPageIndex(pageIndex) ==
+                          selectedHeaderFooterElement,
+                      },
+                    ]"
+                    :style="headerStyle"
+                    @click="
+                      selectedHeaderFooterElement =
+                        getHeaderForPageIndex(pageIndex)
+                    "
+                    @update="
+                      updateRichTextBox(
+                        getHeaderForPageIndex(pageIndex),
+                        $event,
+                      )
+                    "
+                    @update:height="
+                      updateRichTextBoxHeight(
+                        getHeaderForPageIndex(pageIndex),
+                        $event,
+                      )
+                    "
+                  />
+                </template>
+                <template
+                  v-else-if="isTextBoxElement(getHeaderForPageIndex(pageIndex))"
+                >
+                  <TextBox
+                    class="element-box"
+                    :key="`element-${getHeaderForPageIndex(pageIndex).id}-${
+                      getHeaderForPageIndex(pageIndex).keyHelper
+                    }`"
+                    :ref="`header-${pageIndex}`"
+                    :element="getHeaderForPageIndex(pageIndex)"
+                    :editMode="
+                      !printMode &&
+                      getHeaderForPageIndex(pageIndex) ==
+                        selectedHeaderFooterElement
+                    "
+                    :metadata="getTokenMetadata(pageIndex)"
+                    :pageSetup="score.pageSetup"
+                    :class="[
+                      {
+                        selectedTextbox:
+                          getHeaderForPageIndex(pageIndex) ==
+                          selectedHeaderFooterElement,
+                      },
+                    ]"
+                    :style="headerStyle"
+                    @click="
+                      selectedHeaderFooterElement =
+                        getHeaderForPageIndex(pageIndex)
+                    "
+                    @update:content="
+                      updateTextBoxContent(
+                        getHeaderForPageIndex(pageIndex)!,
+                        $event,
+                      )
+                    "
+                    @update:contentLeft="
+                      updateTextBoxContentLeft(
+                        getHeaderForPageIndex(pageIndex)!,
+                        $event,
+                      )
+                    "
+                    @update:contentCenter="
+                      updateTextBoxContentCenter(
+                        getHeaderForPageIndex(pageIndex)!,
+                        $event,
+                      )
+                    "
+                    @update:contentRight="
+                      updateTextBoxContentRight(
+                        getHeaderForPageIndex(pageIndex)!,
+                        $event,
+                      )
+                    "
+                  />
+                </template>
               </template>
               <div
                 class="line"
@@ -300,7 +348,7 @@
                       </div>
                     </div>
                   </template>
-                  <template v-if="isMartyriaElement(element)">
+                  <template v-else-if="isMartyriaElement(element)">
                     <div class="neume-box">
                       <span class="page-break" v-if="element.pageBreak">
                         <img src="@/assets/icons/page-break.svg"
@@ -324,7 +372,7 @@
                       <div class="lyrics"></div>
                     </div>
                   </template>
-                  <template v-if="isTempoElement(element)">
+                  <template v-else-if="isTempoElement(element)">
                     <div
                       :ref="`element-${getElementIndex(element)}`"
                       class="neume-box"
@@ -346,7 +394,7 @@
                       <div class="lyrics"></div>
                     </div>
                   </template>
-                  <template v-if="isEmptyElement(element)">
+                  <template v-else-if="isEmptyElement(element)">
                     <div
                       :ref="`element-${getElementIndex(element)}`"
                       class="neume-box"
@@ -366,7 +414,7 @@
                       <div class="lyrics"></div>
                     </div>
                   </template>
-                  <template v-if="isTextBoxElement(element)">
+                  <template v-else-if="isTextBoxElement(element)">
                     <span class="page-break-2" v-if="element.pageBreak"
                       ><img src="@/assets/icons/page-break.svg"
                     /></span>
@@ -404,7 +452,7 @@
                       "
                     />
                   </template>
-                  <template v-if="isRichTextBoxElement(element)">
+                  <template v-else-if="isRichTextBoxElement(element)">
                     <span class="page-break-2" v-if="element.pageBreak"
                       ><img src="@/assets/icons/page-break.svg"
                     /></span>
@@ -429,7 +477,7 @@
                       "
                     />
                   </template>
-                  <template v-if="isModeKeyElement(element)">
+                  <template v-else-if="isModeKeyElement(element)">
                     <span class="page-break-2" v-if="element.pageBreak"
                       ><img src="@/assets/icons/page-break.svg"
                     /></span>
@@ -449,7 +497,7 @@
                       @dblclick="openModeKeyDialog"
                     />
                   </template>
-                  <template v-if="isDropCapElement(element)">
+                  <template v-else-if="isDropCapElement(element)">
                     <span class="page-break" v-if="element.pageBreak"
                       ><img src="@/assets/icons/page-break.svg"
                     /></span>
@@ -472,7 +520,7 @@
                       "
                     />
                   </template>
-                  <template v-if="isImageBoxElement(element)">
+                  <template v-else-if="isImageBoxElement(element)">
                     <span class="page-break-2" v-if="element.pageBreak"
                       ><img src="@/assets/icons/page-break.svg"
                     /></span>
@@ -498,57 +546,104 @@
                 </div>
               </div>
               <template v-if="score.pageSetup.showFooter">
-                <TextBox
-                  class="element-box"
-                  :ref="`footer-${pageIndex}`"
-                  :key="`element-${getFooterForPageIndex(pageIndex).id}-${
-                    getFooterForPageIndex(pageIndex).keyHelper
-                  }`"
-                  :element="getFooterForPageIndex(pageIndex)"
-                  :editMode="
-                    !printMode &&
-                    getFooterForPageIndex(pageIndex) ==
-                      selectedHeaderFooterElement
-                  "
-                  :metadata="getTokenMetadata(pageIndex)"
-                  :pageSetup="score.pageSetup"
-                  :class="[
-                    {
-                      selectedTextbox:
-                        getFooterForPageIndex(pageIndex) ==
-                        selectedHeaderFooterElement,
-                    },
-                  ]"
-                  :style="footerStyle"
-                  @click="
-                    selectedHeaderFooterElement =
-                      getFooterForPageIndex(pageIndex)
-                  "
-                  @update:content="
-                    updateTextBoxContent(
-                      getFooterForPageIndex(pageIndex)!,
-                      $event,
-                    )
-                  "
-                  @update:contentLeft="
-                    updateTextBoxContentLeft(
-                      getFooterForPageIndex(pageIndex)!,
-                      $event,
-                    )
-                  "
-                  @update:contentCenter="
-                    updateTextBoxContentCenter(
-                      getFooterForPageIndex(pageIndex)!,
-                      $event,
-                    )
-                  "
-                  @update:contentRight="
-                    updateTextBoxContentRight(
-                      getFooterForPageIndex(pageIndex)!,
-                      $event,
-                    )
-                  "
-                />
+                <template
+                  v-if="isRichTextBoxElement(getFooterForPageIndex(pageIndex))"
+                >
+                  <TextBoxRich
+                    class="element-box"
+                    :key="`element-${getFooterForPageIndex(pageIndex).id}-${
+                      getFooterForPageIndex(pageIndex).keyHelper
+                    }`"
+                    :ref="`footer-${pageIndex}`"
+                    :element="getFooterForPageIndex(pageIndex)"
+                    :editMode="
+                      !printMode &&
+                      getFooterForPageIndex(pageIndex) ==
+                        selectedHeaderFooterElement
+                    "
+                    :metadata="getTokenMetadata(pageIndex)"
+                    :pageSetup="score.pageSetup"
+                    :fonts="fonts"
+                    :class="[
+                      {
+                        selectedTextbox:
+                          getFooterForPageIndex(pageIndex) ==
+                          selectedHeaderFooterElement,
+                      },
+                    ]"
+                    :style="footerStyle"
+                    @click="
+                      selectedHeaderFooterElement =
+                        getFooterForPageIndex(pageIndex)
+                    "
+                    @update="
+                      updateRichTextBox(
+                        getFooterForPageIndex(pageIndex),
+                        $event,
+                      )
+                    "
+                    @update:height="
+                      updateRichTextBoxHeight(
+                        getFooterForPageIndex(pageIndex),
+                        $event,
+                      )
+                    "
+                  />
+                </template>
+                <template
+                  v-else-if="isTextBoxElement(getHeaderForPageIndex(pageIndex))"
+                >
+                  <TextBox
+                    class="element-box"
+                    :ref="`footer-${pageIndex}`"
+                    :key="`element-${getFooterForPageIndex(pageIndex).id}-${
+                      getFooterForPageIndex(pageIndex).keyHelper
+                    }`"
+                    :element="getFooterForPageIndex(pageIndex)"
+                    :editMode="
+                      !printMode &&
+                      getFooterForPageIndex(pageIndex) ==
+                        selectedHeaderFooterElement
+                    "
+                    :metadata="getTokenMetadata(pageIndex)"
+                    :pageSetup="score.pageSetup"
+                    :class="[
+                      {
+                        selectedTextbox:
+                          getFooterForPageIndex(pageIndex) ==
+                          selectedHeaderFooterElement,
+                      },
+                    ]"
+                    :style="footerStyle"
+                    @click="
+                      selectedHeaderFooterElement =
+                        getFooterForPageIndex(pageIndex)
+                    "
+                    @update:content="
+                      updateTextBoxContent(
+                        getFooterForPageIndex(pageIndex)!,
+                        $event,
+                      )
+                    "
+                    @update:contentLeft="
+                      updateTextBoxContentLeft(
+                        getFooterForPageIndex(pageIndex)!,
+                        $event,
+                      )
+                    "
+                    @update:contentCenter="
+                      updateTextBoxContentCenter(
+                        getFooterForPageIndex(pageIndex)!,
+                        $event,
+                      )
+                    "
+                    @update:contentRight="
+                      updateTextBoxContentRight(
+                        getFooterForPageIndex(pageIndex)!,
+                        $event,
+                      )
+                    "
+                /></template>
               </template>
             </template>
           </div>
@@ -5383,18 +5478,177 @@ export default class Editor extends Vue {
       pageSetup.textBoxDefaultFontSize !=
         this.score.pageSetup.textBoxDefaultFontSize;
 
-    this.commandService.execute(
+    const updateCommands: Command[] = [
       this.pageSetupCommandFactory.create('update-properties', {
         target: this.score.pageSetup,
         newValues: pageSetup,
       }),
-    );
+    ];
+
+    if (pageSetup.richHeaderFooter && !this.score.pageSetup.richHeaderFooter) {
+      updateCommands.push(
+        this.scoreElementCommandFactory.create(
+          'replace-element-in-collection',
+          {
+            collection: this.score.headers.default.elements,
+            element: this.createRichHeaderFooter('', 'Title', '$p'),
+            replaceAtIndex: 0,
+          },
+        ),
+        this.scoreElementCommandFactory.create(
+          'replace-element-in-collection',
+          {
+            collection: this.score.headers.even.elements,
+            element: this.createRichHeaderFooter('$p', 'Title', ''),
+            replaceAtIndex: 0,
+          },
+        ),
+        this.scoreElementCommandFactory.create(
+          'replace-element-in-collection',
+          {
+            collection: this.score.headers.firstPage.elements,
+            element: this.createRichHeaderFooter('', 'Title', '$p'),
+            replaceAtIndex: 0,
+          },
+        ),
+        this.scoreElementCommandFactory.create(
+          'replace-element-in-collection',
+          {
+            collection: this.score.headers.odd.elements,
+            element: this.createRichHeaderFooter('', 'Title', '$p'),
+            replaceAtIndex: 0,
+          },
+        ),
+        this.scoreElementCommandFactory.create(
+          'replace-element-in-collection',
+          {
+            collection: this.score.footers.default.elements,
+            element: this.createRichHeaderFooter('', 'Footer', '$p'),
+            replaceAtIndex: 0,
+          },
+        ),
+        this.scoreElementCommandFactory.create(
+          'replace-element-in-collection',
+          {
+            collection: this.score.footers.even.elements,
+            element: this.createRichHeaderFooter('$p', 'Footer', ''),
+            replaceAtIndex: 0,
+          },
+        ),
+        this.scoreElementCommandFactory.create(
+          'replace-element-in-collection',
+          {
+            collection: this.score.footers.firstPage.elements,
+            element: this.createRichHeaderFooter('', 'Footer', '$p'),
+            replaceAtIndex: 0,
+          },
+        ),
+        this.scoreElementCommandFactory.create(
+          'replace-element-in-collection',
+          {
+            collection: this.score.footers.odd.elements,
+            element: this.createRichHeaderFooter('', 'Footer', '$p'),
+            replaceAtIndex: 0,
+          },
+        ),
+      );
+    } else if (
+      !pageSetup.richHeaderFooter &&
+      this.score.pageSetup.richHeaderFooter
+    ) {
+      updateCommands.push(
+        this.scoreElementCommandFactory.create(
+          'replace-element-in-collection',
+          {
+            collection: this.score.headers.default.elements,
+            element: this.createRegularHeaderFooter('', 'Title', '$p'),
+            replaceAtIndex: 0,
+          },
+        ),
+        this.scoreElementCommandFactory.create(
+          'replace-element-in-collection',
+          {
+            collection: this.score.headers.even.elements,
+            element: this.createRegularHeaderFooter('$p', 'Title', ''),
+            replaceAtIndex: 0,
+          },
+        ),
+        this.scoreElementCommandFactory.create(
+          'replace-element-in-collection',
+          {
+            collection: this.score.headers.firstPage.elements,
+            element: this.createRegularHeaderFooter('', 'Title', '$p'),
+            replaceAtIndex: 0,
+          },
+        ),
+        this.scoreElementCommandFactory.create(
+          'replace-element-in-collection',
+          {
+            collection: this.score.headers.odd.elements,
+            element: this.createRegularHeaderFooter('', 'Title', '$p'),
+            replaceAtIndex: 0,
+          },
+        ),
+        this.scoreElementCommandFactory.create(
+          'replace-element-in-collection',
+          {
+            collection: this.score.footers.default.elements,
+            element: this.createRegularHeaderFooter('', 'Footer', '$p'),
+            replaceAtIndex: 0,
+          },
+        ),
+        this.scoreElementCommandFactory.create(
+          'replace-element-in-collection',
+          {
+            collection: this.score.footers.even.elements,
+            element: this.createRegularHeaderFooter('$p', 'Footer', ''),
+            replaceAtIndex: 0,
+          },
+        ),
+        this.scoreElementCommandFactory.create(
+          'replace-element-in-collection',
+          {
+            collection: this.score.footers.firstPage.elements,
+            element: this.createRegularHeaderFooter('', 'Footer', '$p'),
+            replaceAtIndex: 0,
+          },
+        ),
+        this.scoreElementCommandFactory.create(
+          'replace-element-in-collection',
+          {
+            collection: this.score.footers.odd.elements,
+            element: this.createRegularHeaderFooter('', 'Footer', '$p'),
+            replaceAtIndex: 0,
+          },
+        ),
+      );
+    }
+
+    this.commandService.executeAsBatch(updateCommands);
 
     if (needToRecalcRichTextBoxes) {
       this.recalculateRichTextBoxHeights();
     }
 
     this.save();
+  }
+
+  createRegularHeaderFooter(left: string, center: string, right: string) {
+    const textbox = new TextBoxElement();
+    textbox.multipanel = true;
+    textbox.contentLeft = left;
+    textbox.contentCenter = center;
+    textbox.contentRight = right;
+    return textbox;
+  }
+
+  createRichHeaderFooter(left: string, center: string, right: string) {
+    const textbox = new RichTextBoxElement();
+    textbox.multipanel = true;
+    textbox.contentLeft = `${left}`;
+    textbox.contentCenter = `<p style="text-align:center;">${center}</p>`;
+    textbox.contentRight = `<p style="text-align:right;">${right}</p>`;
+    return textbox;
   }
 
   updateEntryMode(mode: EntryMode) {

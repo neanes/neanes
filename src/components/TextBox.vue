@@ -224,6 +224,9 @@ export default class TextBox extends Vue {
 
 .text-box:focus {
   outline: none;
+}
+
+.text-box:focus:not(.multipanel) {
   border: var(--ck-focus-ring);
   background-color: white;
   position: relative;

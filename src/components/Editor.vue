@@ -348,7 +348,7 @@
                       </div>
                     </div>
                   </template>
-                  <template v-if="isMartyriaElement(element)">
+                  <template v-else-if="isMartyriaElement(element)">
                     <div class="neume-box">
                       <span class="page-break" v-if="element.pageBreak">
                         <img src="@/assets/icons/page-break.svg"
@@ -372,7 +372,7 @@
                       <div class="lyrics"></div>
                     </div>
                   </template>
-                  <template v-if="isTempoElement(element)">
+                  <template v-else-if="isTempoElement(element)">
                     <div
                       :ref="`element-${getElementIndex(element)}`"
                       class="neume-box"
@@ -394,7 +394,7 @@
                       <div class="lyrics"></div>
                     </div>
                   </template>
-                  <template v-if="isEmptyElement(element)">
+                  <template v-else-if="isEmptyElement(element)">
                     <div
                       :ref="`element-${getElementIndex(element)}`"
                       class="neume-box"
@@ -414,7 +414,7 @@
                       <div class="lyrics"></div>
                     </div>
                   </template>
-                  <template v-if="isTextBoxElement(element)">
+                  <template v-else-if="isTextBoxElement(element)">
                     <span class="page-break-2" v-if="element.pageBreak"
                       ><img src="@/assets/icons/page-break.svg"
                     /></span>
@@ -452,7 +452,7 @@
                       "
                     />
                   </template>
-                  <template v-if="isRichTextBoxElement(element)">
+                  <template v-else-if="isRichTextBoxElement(element)">
                     <span class="page-break-2" v-if="element.pageBreak"
                       ><img src="@/assets/icons/page-break.svg"
                     /></span>
@@ -477,7 +477,7 @@
                       "
                     />
                   </template>
-                  <template v-if="isModeKeyElement(element)">
+                  <template v-else-if="isModeKeyElement(element)">
                     <span class="page-break-2" v-if="element.pageBreak"
                       ><img src="@/assets/icons/page-break.svg"
                     /></span>
@@ -497,7 +497,7 @@
                       @dblclick="openModeKeyDialog"
                     />
                   </template>
-                  <template v-if="isDropCapElement(element)">
+                  <template v-else-if="isDropCapElement(element)">
                     <span class="page-break" v-if="element.pageBreak"
                       ><img src="@/assets/icons/page-break.svg"
                     /></span>
@@ -520,7 +520,7 @@
                       "
                     />
                   </template>
-                  <template v-if="isImageBoxElement(element)">
+                  <template v-else-if="isImageBoxElement(element)">
                     <span class="page-break-2" v-if="element.pageBreak"
                       ><img src="@/assets/icons/page-break.svg"
                     /></span>

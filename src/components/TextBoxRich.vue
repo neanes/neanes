@@ -43,7 +43,7 @@
       ref="editor"
       class="rich-text-editor"
       :editor="editor"
-      :model-value="contentRight"
+      :model-value="content"
       @blur="onBlur"
       @ready="onEditorReady"
       :config="editorConfig"

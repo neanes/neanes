@@ -60,8 +60,9 @@ export default class InputUnit extends Vue {
   get displayValue() {
     const convertedValue = this.toDisplay(this.modelValue);
 
-    if (convertedValue == null)
+    if (convertedValue == null) {
       return this.nullable ? '' : this.defaultValue.toString();
+    }
 
     return this.precision != null
       ? convertedValue.toFixed(this.precision)
@@ -123,15 +124,19 @@ export default class InputUnit extends Vue {
   }
 
   toDisplay(value: number | null) {
+    if (value == null) {
+      return null;
+    }
+
     switch (this.unit) {
       case 'pt':
-        return Unit.toPt(value!);
+        return Unit.toPt(value);
       case 'in':
-        return Unit.toInch(value!);
+        return Unit.toInch(value);
       case 'mm':
-        return Unit.toMm(value!);
+        return Unit.toMm(value);
       case 'percent':
-        return Unit.toPercent(value!);
+        return Unit.toPercent(value);
       case 'unitless':
         return value;
       default:

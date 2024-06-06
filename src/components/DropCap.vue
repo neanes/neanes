@@ -4,6 +4,8 @@
     @click="$emit('select-single')"
     :style="containerStyle"
   >
+    <span class="handle"></span>
+
     <ContentEditable
       ref="text"
       class="drop-cap"
@@ -80,5 +82,14 @@ export default class DropCap extends Vue {
 <style scoped>
 .drop-cap:focus {
   outline: none;
+}
+
+.drop-cap-container .handle {
+  bottom: calc(50% - 5px);
+  left: -10px;
+
+  z-index: 1;
+
+  display: none;
 }
 </style>

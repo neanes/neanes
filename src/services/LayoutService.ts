@@ -1001,6 +1001,8 @@ export class LayoutService {
       );
 
       textBoxElement.height = Math.max(height, fontHeight);
+    } else if (textBoxElement.customHeight != null) {
+      textBoxElement.height = textBoxElement.customHeight;
     } else {
       let height = 0;
 

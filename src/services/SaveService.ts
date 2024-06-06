@@ -520,6 +520,7 @@ export class SaveService {
     element.underline = e.underline || undefined;
     element.lineHeight = e.lineHeight ?? undefined;
     element.height = e.height;
+    element.customWidth = e.customWidth ?? undefined;
     element.useDefaultStyle = e.useDefaultStyle || undefined;
   }
 
@@ -1218,6 +1219,7 @@ export class SaveService {
     element.height = e.height;
     element.strokeWidth = e.strokeWidth ?? element.strokeWidth;
     element.lineHeight = e.lineHeight ?? pageSetup.textBoxDefaultLineHeight;
+    element.customWidth = e.customWidth ?? null;
 
     if (scoreVersion === '1.0') {
       // In this version, use default was incorrectly set to true

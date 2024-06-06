@@ -161,6 +161,22 @@
         $t('toolbar:textbox.multipanel')
       }}</label></template
     >
+    <template v-else>
+      <span class="divider" />
+      <label class="right-space">{{ $t('toolbar:common.width') }}</label>
+      <InputUnit
+        class="text-box-input-width"
+        unit="pt"
+        :nullable="true"
+        :min="0.5"
+        :max="maxWidth"
+        :step="0.5"
+        :modelValue="element.customWidth"
+        :precision="1"
+        placeholder="auto"
+        @update:modelValue="$emit('update:customWidth', $event)"
+      />
+    </template>
   </div>
 </template>
 
@@ -172,6 +188,8 @@ import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import InputUnit from '@/components/InputUnit.vue';
 import { TextBoxAlignment, TextBoxElement } from '@/models/Element';
+import { PageSetup } from '@/models/PageSetup';
+import { Unit } from '@/utils/Unit';
 
 @Component({
   components: { ColorPicker, InputFontSize, InputUnit, InputStrokeWidth },
@@ -181,6 +199,7 @@ import { TextBoxAlignment, TextBoxElement } from '@/models/Element';
     'update:alignment',
     'update:bold',
     'update:color',
+    'update:customWidth',
     'update:fontFamily',
     'update:fontSize',
     'update:italic',
@@ -194,8 +213,13 @@ import { TextBoxAlignment, TextBoxElement } from '@/models/Element';
 export default class ToolbarTextBox extends Vue {
   @Prop() element!: TextBoxElement;
   @Prop() fonts!: string;
+  @Prop() pageSetup!: PageSetup;
 
   TextBoxAlignment = TextBoxAlignment;
+
+  get maxWidth() {
+    return Unit.toPt(this.pageSetup.innerPageWidth);
+  }
 }
 </script>
 
@@ -235,5 +259,9 @@ label.right-space {
 
 .space {
   width: 16px;
+}
+
+.text-box-input-width {
+  width: 8ch;
 }
 </style>

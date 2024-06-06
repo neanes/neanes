@@ -18,7 +18,8 @@
     "generalSharpDisabled": "General sharp may only be placed on Ga",
     "zygosDisabled": "Zygos may only be placed on Di",
     "klitonDisabled": "Kliton may only be placed on Di",
-    "spathiDisabled": "Spathi may only be placed on Ke or Ga"
+    "spathiDisabled": "Spathi may only be placed on Ke or Ga",
+    "width": "Width"
   },
   "main": {
     "auto": "Auto",

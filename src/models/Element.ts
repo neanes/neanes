@@ -962,6 +962,7 @@ export class DropCapElement extends ScoreElement {
   public strokeWidth: number = 0;
   public color: string = '#000000';
   public useDefaultStyle: boolean = true;
+  public customWidth: number | null = null;
 
   // Values computed by the layout service
   public computedFontFamily: string = '';
@@ -998,8 +999,13 @@ export class DropCapElement extends ScoreElement {
       color: this.color,
       content: this.content,
       fontSize: this.fontSize,
+      fontStyle: this.fontStyle,
       fontFamily: this.fontFamily,
+      fontWeight: this.fontWeight,
       lineHeight: this.lineHeight,
+      strokeWidth: this.strokeWidth,
+      customWidth: this.customWidth,
+      useDefaultStyle: this.useDefaultStyle,
     } as Partial<DropCapElement>;
   }
 }

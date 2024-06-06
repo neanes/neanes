@@ -248,6 +248,7 @@ export class DropCapElement extends ScoreElement {
   public strokeWidth: number = 0;
   public color: string = '#000000';
   public useDefaultStyle: boolean | undefined = undefined;
+  public customWidth: number | undefined = undefined;
 }
 
 export class ImageBoxElement extends ScoreElement {

@@ -159,8 +159,24 @@
       />
       <label for="toolbar-text-box-multipanel">{{
         $t('toolbar:textbox.multipanel')
-      }}</label></template
-    >
+      }}</label>
+      <template v-if="!element.multipanel">
+        <span class="divider" />
+        <label class="right-space">{{ $t('toolbar:common.height') }}</label>
+        <InputUnit
+          class="text-box-input-width"
+          unit="pt"
+          :nullable="true"
+          :min="0.5"
+          :max="maxWidth"
+          :step="0.5"
+          :modelValue="element.customHeight"
+          :precision="1"
+          placeholder="auto"
+          @update:modelValue="$emit('update:customHeight', $event)"
+        />
+      </template>
+    </template>
     <template v-else>
       <span class="divider" />
       <label class="right-space">{{ $t('toolbar:common.width') }}</label>
@@ -199,6 +215,7 @@ import { Unit } from '@/utils/Unit';
     'update:alignment',
     'update:bold',
     'update:color',
+    'update:customHeight',
     'update:customWidth',
     'update:fontFamily',
     'update:fontSize',

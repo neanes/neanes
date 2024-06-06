@@ -55,7 +55,6 @@ export default class DropCap extends Vue {
   get containerStyle() {
     return {
       direction: this.pageSetup.melkiteRtl ? 'rtl' : undefined,
-      width: this.element.customWidth ?? undefined,
     } as StyleValue;
   }
 

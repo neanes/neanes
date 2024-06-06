@@ -19,7 +19,8 @@
     "zygosDisabled": "Zygos may only be placed on Di",
     "klitonDisabled": "Kliton may only be placed on Di",
     "spathiDisabled": "Spathi may only be placed on Ke or Ga",
-    "width": "Width"
+    "width": "Width",
+    "height": "Height"
   },
   "main": {
     "auto": "Auto",

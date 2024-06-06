@@ -682,6 +682,9 @@
           updateTextBoxLineHeight(selectedTextBoxElement, $event)
         "
         @update:customWidth="updateTextBoxWidth(selectedTextBoxElement, $event)"
+        @update:customHeight="
+          updateTextBoxHeight(selectedTextBoxElement, $event)
+        "
         @insert:gorthmikon="insertGorthmikon"
         @insert:pelastikon="insertPelastikon"
       />
@@ -5031,6 +5034,10 @@ export default class Editor extends Vue {
 
   updateTextBoxWidth(element: TextBoxElement, customWidth: number | null) {
     this.updateTextBox(element, { customWidth });
+  }
+
+  updateTextBoxHeight(element: TextBoxElement, customHeight: number | null) {
+    this.updateTextBox(element, { customHeight });
   }
 
   updateModeKey(element: ModeKeyElement, newValues: Partial<ModeKeyElement>) {

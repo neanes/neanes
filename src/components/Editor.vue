@@ -654,6 +654,7 @@
       <ToolbarTextBox
         :element="selectedTextBoxElement"
         :fonts="fonts"
+        :pageSetup="score.pageSetup"
         @update:multipanel="
           updateTextBoxMultipanel(selectedTextBoxElement, $event)
         "
@@ -680,6 +681,7 @@
         @update:lineHeight="
           updateTextBoxLineHeight(selectedTextBoxElement, $event)
         "
+        @update:customWidth="updateTextBoxWidth(selectedTextBoxElement, $event)"
         @insert:gorthmikon="insertGorthmikon"
         @insert:pelastikon="insertPelastikon"
       />
@@ -5025,6 +5027,10 @@ export default class Editor extends Vue {
 
   updateTextBoxLineHeight(element: TextBoxElement, lineHeight: number | null) {
     this.updateTextBox(element, { lineHeight });
+  }
+
+  updateTextBoxWidth(element: TextBoxElement, customWidth: number | null) {
+    this.updateTextBox(element, { customWidth });
   }
 
   updateModeKey(element: ModeKeyElement, newValues: Partial<ModeKeyElement>) {

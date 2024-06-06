@@ -189,6 +189,7 @@ export class TextBoxElement extends ScoreElement {
   public underline: boolean | undefined = undefined;
   public lineHeight: number | undefined = undefined;
   public height: number = 20;
+  public customWidth: number | undefined = undefined;
   public useDefaultStyle: boolean | undefined = undefined;
 }
 

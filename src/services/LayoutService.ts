@@ -887,37 +887,37 @@ export class LayoutService {
     let elementWidthPx = 0;
 
     if (textBoxElement.inline) {
+      textBoxElement.computedFontFamily = textBoxElement.useDefaultStyle
+        ? pageSetup.lyricsDefaultFontFamily
+        : textBoxElement.fontFamily;
+
+      textBoxElement.computedFontSize = textBoxElement.useDefaultStyle
+        ? pageSetup.lyricsDefaultFontSize
+        : textBoxElement.fontSize;
+
+      textBoxElement.computedColor = textBoxElement.useDefaultStyle
+        ? pageSetup.lyricsDefaultColor
+        : textBoxElement.color;
+
+      textBoxElement.computedStrokeWidth = textBoxElement.useDefaultStyle
+        ? pageSetup.lyricsDefaultStrokeWidth
+        : textBoxElement.strokeWidth;
+
+      textBoxElement.computedFontWeight = textBoxElement.useDefaultStyle
+        ? pageSetup.lyricsDefaultFontWeight
+        : textBoxElement.bold
+          ? '700'
+          : '400';
+
+      textBoxElement.computedFontStyle = textBoxElement.useDefaultStyle
+        ? pageSetup.lyricsDefaultFontStyle
+        : textBoxElement.italic
+          ? 'italic'
+          : 'normal';
+
       if (textBoxElement.customWidth != null) {
         elementWidthPx = textBoxElement.customWidth;
       } else {
-        textBoxElement.computedFontFamily = textBoxElement.useDefaultStyle
-          ? pageSetup.lyricsDefaultFontFamily
-          : textBoxElement.fontFamily;
-
-        textBoxElement.computedFontSize = textBoxElement.useDefaultStyle
-          ? pageSetup.lyricsDefaultFontSize
-          : textBoxElement.fontSize;
-
-        textBoxElement.computedColor = textBoxElement.useDefaultStyle
-          ? pageSetup.lyricsDefaultColor
-          : textBoxElement.color;
-
-        textBoxElement.computedStrokeWidth = textBoxElement.useDefaultStyle
-          ? pageSetup.lyricsDefaultStrokeWidth
-          : textBoxElement.strokeWidth;
-
-        textBoxElement.computedFontWeight = textBoxElement.useDefaultStyle
-          ? pageSetup.lyricsDefaultFontWeight
-          : textBoxElement.bold
-            ? '700'
-            : '400';
-
-        textBoxElement.computedFontStyle = textBoxElement.useDefaultStyle
-          ? pageSetup.lyricsDefaultFontStyle
-          : textBoxElement.italic
-            ? 'italic'
-            : 'normal';
-
         const lines = textBoxElement.content.split(/(?:\r\n|\r|\n)/g);
 
         let maxWidth = 0;

@@ -999,8 +999,13 @@ export class DropCapElement extends ScoreElement {
       color: this.color,
       content: this.content,
       fontSize: this.fontSize,
+      fontStyle: this.fontStyle,
       fontFamily: this.fontFamily,
+      fontWeight: this.fontWeight,
       lineHeight: this.lineHeight,
+      strokeWidth: this.strokeWidth,
+      customWidth: this.customWidth,
+      useDefaultStyle: this.useDefaultStyle,
     } as Partial<DropCapElement>;
   }
 }

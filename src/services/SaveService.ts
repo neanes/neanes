@@ -308,6 +308,7 @@ export class SaveService {
     element.fontStyle = e.fontStyle;
     element.lineHeight = e.lineHeight ?? undefined;
     element.strokeWidth = e.strokeWidth;
+    element.customWidth = e.customWidth ?? undefined;
     element.useDefaultStyle = e.useDefaultStyle || undefined;
   }
 
@@ -963,6 +964,7 @@ export class SaveService {
     element.fontWeight = e.fontWeight ?? pageSetup.dropCapDefaultFontWeight;
     element.fontStyle = e.fontStyle ?? pageSetup.dropCapDefaultFontStyle;
     element.strokeWidth = e.strokeWidth ?? pageSetup.dropCapDefaultStrokeWidth;
+    element.customWidth = e.customWidth ?? null;
     element.useDefaultStyle = e.useDefaultStyle === true;
   }
 

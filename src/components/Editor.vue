@@ -690,6 +690,7 @@
       <ToolbarDropCap
         :element="selectedElement"
         :fonts="fonts"
+        :pageSetup="score.pageSetup"
         @update:useDefaultStyle="
           updateDropCapUseDefaultStyle(
             selectedElement as DropCapElement,
@@ -716,6 +717,9 @@
         "
         @update:lineHeight="
           updateDropCapLineHeight(selectedElement as DropCapElement, $event)
+        "
+        @update:customWidth="
+          updateDropCapWidth(selectedElement as DropCapElement, $event)
         "
       />
     </template>
@@ -5375,6 +5379,10 @@ export default class Editor extends Vue {
 
   updateDropCapLineHeight(element: DropCapElement, lineHeight: number | null) {
     this.updateDropCap(element, { lineHeight });
+  }
+
+  updateDropCapWidth(element: DropCapElement, customWidth: number | null) {
+    this.updateDropCap(element, { customWidth });
   }
 
   updateImageBox(

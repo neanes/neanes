@@ -416,10 +416,14 @@ export class LayoutService {
             ? pageSetup.dropCapDefaultLineHeight
             : dropCapElement.lineHeight;
 
-          elementWidthPx = TextMeasurementService.getTextWidth(
-            dropCapElement.content,
-            dropCapElement.computedFont,
-          );
+          if (dropCapElement.customWidth != null) {
+            elementWidthPx = dropCapElement.customWidth;
+          } else {
+            elementWidthPx = TextMeasurementService.getTextWidth(
+              dropCapElement.content,
+              dropCapElement.computedFont,
+            );
+          }
           break;
         }
         case ElementType.Empty: {
@@ -1143,6 +1147,7 @@ export class LayoutService {
       const dropCap = element as DropCapElement;
 
       dropCap.updated =
+        dropCap.widthPrevious !== dropCap.width ||
         dropCap.computedFontFamilyPrevious !== dropCap.computedFontFamily ||
         dropCap.computedFontSizePrevious !== dropCap.computedFontSize ||
         dropCap.computedFontWeightPrevious !== dropCap.computedFontWeight ||

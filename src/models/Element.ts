@@ -741,6 +741,7 @@ export class TextBoxElement extends ScoreElement {
   public lineHeight: number | null = null;
   public useDefaultStyle: boolean = true;
   public height: number = 20;
+  public customWidth: number | null = null;
 
   // Values computed by the layout service
   public computedFontFamily: string = '';
@@ -784,6 +785,7 @@ export class TextBoxElement extends ScoreElement {
       fontSize: this.fontSize,
       fontFamily: this.fontFamily,
       strokeWidth: this.strokeWidth,
+      customWidth: this.customWidth,
       inline: this.inline,
       bold: this.bold,
       italic: this.italic,

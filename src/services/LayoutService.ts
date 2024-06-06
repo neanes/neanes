@@ -887,57 +887,61 @@ export class LayoutService {
     let elementWidthPx = 0;
 
     if (textBoxElement.inline) {
-      textBoxElement.computedFontFamily = textBoxElement.useDefaultStyle
-        ? pageSetup.lyricsDefaultFontFamily
-        : textBoxElement.fontFamily;
+      if (textBoxElement.customWidth != null) {
+        elementWidthPx = textBoxElement.customWidth;
+      } else {
+        textBoxElement.computedFontFamily = textBoxElement.useDefaultStyle
+          ? pageSetup.lyricsDefaultFontFamily
+          : textBoxElement.fontFamily;
 
-      textBoxElement.computedFontSize = textBoxElement.useDefaultStyle
-        ? pageSetup.lyricsDefaultFontSize
-        : textBoxElement.fontSize;
+        textBoxElement.computedFontSize = textBoxElement.useDefaultStyle
+          ? pageSetup.lyricsDefaultFontSize
+          : textBoxElement.fontSize;
 
-      textBoxElement.computedColor = textBoxElement.useDefaultStyle
-        ? pageSetup.lyricsDefaultColor
-        : textBoxElement.color;
+        textBoxElement.computedColor = textBoxElement.useDefaultStyle
+          ? pageSetup.lyricsDefaultColor
+          : textBoxElement.color;
 
-      textBoxElement.computedStrokeWidth = textBoxElement.useDefaultStyle
-        ? pageSetup.lyricsDefaultStrokeWidth
-        : textBoxElement.strokeWidth;
+        textBoxElement.computedStrokeWidth = textBoxElement.useDefaultStyle
+          ? pageSetup.lyricsDefaultStrokeWidth
+          : textBoxElement.strokeWidth;
 
-      textBoxElement.computedFontWeight = textBoxElement.useDefaultStyle
-        ? pageSetup.lyricsDefaultFontWeight
-        : textBoxElement.bold
-          ? '700'
-          : '400';
+        textBoxElement.computedFontWeight = textBoxElement.useDefaultStyle
+          ? pageSetup.lyricsDefaultFontWeight
+          : textBoxElement.bold
+            ? '700'
+            : '400';
 
-      textBoxElement.computedFontStyle = textBoxElement.useDefaultStyle
-        ? pageSetup.lyricsDefaultFontStyle
-        : textBoxElement.italic
-          ? 'italic'
-          : 'normal';
+        textBoxElement.computedFontStyle = textBoxElement.useDefaultStyle
+          ? pageSetup.lyricsDefaultFontStyle
+          : textBoxElement.italic
+            ? 'italic'
+            : 'normal';
 
-      const lines = textBoxElement.content.split(/(?:\r\n|\r|\n)/g);
+        const lines = textBoxElement.content.split(/(?:\r\n|\r|\n)/g);
 
-      let maxWidth = 0;
+        let maxWidth = 0;
 
-      for (const line of lines) {
-        const lineWidth = TextMeasurementService.getTextWidth(
-          line,
+        for (const line of lines) {
+          const lineWidth = TextMeasurementService.getTextWidth(
+            line,
+            textBoxElement.computedFont,
+          );
+
+          if (lineWidth > maxWidth) {
+            maxWidth = lineWidth;
+          }
+        }
+
+        elementWidthPx = maxWidth;
+
+        const minimumWidth = TextMeasurementService.getTextWidth(
+          ' ',
           textBoxElement.computedFont,
         );
 
-        if (lineWidth > maxWidth) {
-          maxWidth = lineWidth;
-        }
+        elementWidthPx = Math.max(elementWidthPx, minimumWidth);
       }
-
-      elementWidthPx = maxWidth;
-
-      const minimumWidth = TextMeasurementService.getTextWidth(
-        ' ',
-        textBoxElement.computedFont,
-      );
-
-      elementWidthPx = Math.max(elementWidthPx, minimumWidth);
     } else {
       elementWidthPx = pageSetup.innerPageWidth;
 

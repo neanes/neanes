@@ -70,7 +70,21 @@
         :modelValue="element.strokeWidth"
         @update:modelValue="$emit('update:strokeWidth', $event)"
       />
+      <span class="divider" />
     </template>
+    <label class="right-space">{{ $t('toolbar:common.width') }}</label>
+    <InputUnit
+      class="drop-caps-input-width"
+      unit="pt"
+      :nullable="true"
+      :min="4"
+      :max="maxWidth"
+      :step="0.5"
+      :modelValue="element.customWidth"
+      :precision="1"
+      placeholder="auto"
+      @update:modelValue="$emit('update:customWidth', $event)"
+    />
   </div>
 </template>
 
@@ -82,12 +96,15 @@ import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import InputUnit from '@/components/InputUnit.vue';
 import { DropCapElement } from '@/models/Element';
+import { PageSetup } from '@/models/PageSetup';
+import { Unit } from '@/utils/Unit';
 
 @Component({
   components: { ColorPicker, InputFontSize, InputStrokeWidth, InputUnit },
   emits: [
     'update:bold',
     'update:color',
+    'update:customWidth',
     'update:fontFamily',
     'update:fontSize',
     'update:italic',
@@ -99,6 +116,7 @@ import { DropCapElement } from '@/models/Element';
 export default class ToolbarDropCap extends Vue {
   @Prop() element!: DropCapElement;
   @Prop() fonts!: string[];
+  @Prop() pageSetup!: PageSetup;
 
   get bold() {
     return this.element.fontWeight === '700';
@@ -119,6 +137,10 @@ export default class ToolbarDropCap extends Vue {
       ...this.fonts,
     ];
   }
+
+  get maxWidth() {
+    return Unit.toPt(this.pageSetup.innerPageWidth);
+  }
 }
 </script>
 
@@ -132,6 +154,10 @@ export default class ToolbarDropCap extends Vue {
   background-color: lightgray;
 
   padding: 0.25rem;
+}
+
+.drop-caps-input-width {
+  width: 8ch;
 }
 
 .icon-btn {

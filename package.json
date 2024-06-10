@@ -64,7 +64,7 @@
     "mitt": "^3.0.1",
     "register-service-worker": "^1.7.2",
     "tone": "^15.0.4",
-    "uuid": "^9.0.1",
+    "uuid": "^10.0.0",
     "vue": "^3.4.27",
     "vue-draggable-resizable": "^3.0.0",
     "vue-facing-decorator": "^3.0.4",

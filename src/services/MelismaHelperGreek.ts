@@ -33,6 +33,9 @@ export class MelismaHelperGreek {
 
     const initial = match ? match[1] + middle : '';
 
+    middle = middle.toLowerCase();
+    final = final.toLowerCase();
+
     return { initial, middle, final };
   }
 }

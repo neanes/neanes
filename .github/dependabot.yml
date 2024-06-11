@@ -10,11 +10,6 @@ updates:
       prefix: 'chore'
     labels:
       - 'Type: Dependencies'
-    ignore:
-      # Electron 30 segfaults on Linux. See:
-      # https://github.com/electron/electron/issues/41839
-      - dependency-name: 'electron'
-        versions: ['>=30.0.0']
   - package-ecosystem: 'github-actions'
     directory: '/'
     schedule:

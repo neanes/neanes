@@ -124,13 +124,13 @@
                     "
                     @update="
                       updateRichTextBox(
-                        getHeaderForPageIndex(pageIndex),
+                        getHeaderForPageIndex(pageIndex) as RichTextBoxElement,
                         $event,
                       )
                     "
                     @update:height="
                       updateRichTextBoxHeight(
-                        getHeaderForPageIndex(pageIndex),
+                        getHeaderForPageIndex(pageIndex) as RichTextBoxElement,
                         $event,
                       )
                     "
@@ -167,25 +167,25 @@
                     "
                     @update:content="
                       updateTextBoxContent(
-                        getHeaderForPageIndex(pageIndex)!,
+                        getHeaderForPageIndex(pageIndex)! as TextBoxElement,
                         $event,
                       )
                     "
                     @update:contentLeft="
                       updateTextBoxContentLeft(
-                        getHeaderForPageIndex(pageIndex)!,
+                        getHeaderForPageIndex(pageIndex)! as TextBoxElement,
                         $event,
                       )
                     "
                     @update:contentCenter="
                       updateTextBoxContentCenter(
-                        getHeaderForPageIndex(pageIndex)!,
+                        getHeaderForPageIndex(pageIndex)! as TextBoxElement,
                         $event,
                       )
                     "
                     @update:contentRight="
                       updateTextBoxContentRight(
-                        getHeaderForPageIndex(pageIndex)!,
+                        getHeaderForPageIndex(pageIndex)! as TextBoxElement,
                         $event,
                       )
                     "
@@ -578,13 +578,13 @@
                     "
                     @update="
                       updateRichTextBox(
-                        getFooterForPageIndex(pageIndex),
+                        getFooterForPageIndex(pageIndex) as RichTextBoxElement,
                         $event,
                       )
                     "
                     @update:height="
                       updateRichTextBoxHeight(
-                        getFooterForPageIndex(pageIndex),
+                        getFooterForPageIndex(pageIndex) as RichTextBoxElement,
                         $event,
                       )
                     "
@@ -621,25 +621,25 @@
                     "
                     @update:content="
                       updateTextBoxContent(
-                        getFooterForPageIndex(pageIndex)!,
+                        getFooterForPageIndex(pageIndex)! as TextBoxElement,
                         $event,
                       )
                     "
                     @update:contentLeft="
                       updateTextBoxContentLeft(
-                        getFooterForPageIndex(pageIndex)!,
+                        getFooterForPageIndex(pageIndex)! as TextBoxElement,
                         $event,
                       )
                     "
                     @update:contentCenter="
                       updateTextBoxContentCenter(
-                        getFooterForPageIndex(pageIndex)!,
+                        getFooterForPageIndex(pageIndex)! as TextBoxElement,
                         $event,
                       )
                     "
                     @update:contentRight="
                       updateTextBoxContentRight(
-                        getFooterForPageIndex(pageIndex)!,
+                        getFooterForPageIndex(pageIndex)! as TextBoxElement,
                         $event,
                       )
                     "

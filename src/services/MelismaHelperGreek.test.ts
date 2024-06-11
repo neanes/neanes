@@ -75,4 +75,16 @@ describe('MelismaHelperGreek', () => {
     expect(actual3.middle).toEqual('η');
     expect(actual3.final).toEqual('ηυ');
   });
+
+  it('should return lower case middle and final', () => {
+    const actual1 = MelismaHelperGreek.getMelismaSyllable('Ο');
+    expect(actual1.initial).toEqual('Ο');
+    expect(actual1.middle).toEqual('ο');
+    expect(actual1.final).toEqual('ο');
+
+    const actual2 = MelismaHelperGreek.getMelismaSyllable('Θε');
+    expect(actual2.initial).toEqual('Θε');
+    expect(actual2.middle).toEqual('ε');
+    expect(actual2.final).toEqual('ε');
+  });
 });

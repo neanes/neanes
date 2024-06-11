@@ -1991,7 +1991,7 @@ export default class Editor extends Vue {
     const header = this.score.getHeaderForPage(pageNumber);
 
     // Currently, headers only support a single text box element.
-    return header.elements[0] as TextBoxElement;
+    return header.elements[0] as TextBoxElement | RichTextBoxElement;
   }
 
   getFooterForPageIndex(pageIndex: number) {
@@ -2000,7 +2000,7 @@ export default class Editor extends Vue {
     const footer = this.score.getFooterForPage(pageNumber);
 
     // Currently, footers only support a single text box element.
-    return footer.elements[0] as TextBoxElement;
+    return footer.elements[0] as TextBoxElement | RichTextBoxElement;
   }
 
   getTokenMetadata(pageIndex: number): TokenMetadata {

@@ -689,6 +689,14 @@
         @insert:pelastikon="insertPelastikon"
       />
     </template>
+    <template v-if="selectedRichTextBoxElement != null">
+      <ToolbarTextBoxRich
+        :element="selectedRichTextBoxElement"
+        @update:rtl="
+          updateRichTextBox(selectedRichTextBoxElement, { rtl: $event })
+        "
+      />
+    </template>
     <template
       v-if="selectedElement != null && isDropCapElement(selectedElement)"
     >
@@ -1087,6 +1095,7 @@ import ToolbarModeKey from '@/components/ToolbarModeKey.vue';
 import ToolbarNeume from '@/components/ToolbarNeume.vue';
 import ToolbarTempo from '@/components/ToolbarTempo.vue';
 import ToolbarTextBox from '@/components/ToolbarTextBox.vue';
+import ToolbarTextBoxRich from '@/components/ToolbarTextBoxRich.vue';
 import { EventBus } from '@/eventBus';
 import {
   CloseWorkspacesArgs,
@@ -1199,6 +1208,7 @@ interface Vue3TabsChromeComponent {
     ModeKey,
     ToolbarImageBox,
     ToolbarTextBox,
+    ToolbarTextBoxRich,
     ToolbarLyrics,
     ToolbarLyricManager,
     ToolbarModeKey,
@@ -1699,6 +1709,15 @@ export default class Editor extends Vue {
 
     return selectedElement != null && this.isTextBoxElement(selectedElement)
       ? (selectedElement as TextBoxElement)
+      : null;
+  }
+
+  get selectedRichTextBoxElement() {
+    const selectedElement =
+      this.selectedElement || this.selectedHeaderFooterElement;
+
+    return selectedElement != null && this.isRichTextBoxElement(selectedElement)
+      ? (selectedElement as RichTextBoxElement)
       : null;
   }
 
@@ -4936,6 +4955,10 @@ export default class Editor extends Vue {
     element: RichTextBoxElement,
     newValues: Partial<RichTextBoxElement>,
   ) {
+    if (newValues.rtl != null) {
+      element.keyHelper++;
+    }
+
     this.commandService.execute(
       this.richTextBoxCommandFactory.create('update-properties', {
         target: element,
@@ -6140,7 +6163,7 @@ export default class Editor extends Vue {
 
   onFileMenuInsertRichTextBox() {
     const element = new RichTextBoxElement();
-    //element.inline = args.inline;
+    element.rtl = this.score.pageSetup.melkiteRtl;
 
     this.addScoreElement(element, this.selectedElementIndex);
 

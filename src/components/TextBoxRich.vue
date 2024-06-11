@@ -100,6 +100,9 @@ export default class TextBoxRich extends Vue {
         supportAllValues: true,
         options: ['default', ...fontSizeOptions],
       },
+      language: {
+        content: this.element.rtl ? 'ar' : 'en',
+      },
     };
   }
 

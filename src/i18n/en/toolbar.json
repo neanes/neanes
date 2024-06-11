@@ -81,6 +81,7 @@
     "acceptsLyricsMelismaOnly": "Melisma Only"
   },
   "textbox": {
-    "multipanel": "Multipanel"
+    "multipanel": "Multipanel",
+    "rtl": "RTL"
   }
 }

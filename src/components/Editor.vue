@@ -124,13 +124,13 @@
                     "
                     @update="
                       updateRichTextBox(
-                        getHeaderForPageIndex(pageIndex),
+                        getHeaderForPageIndex(pageIndex) as RichTextBoxElement,
                         $event,
                       )
                     "
                     @update:height="
                       updateRichTextBoxHeight(
-                        getHeaderForPageIndex(pageIndex),
+                        getHeaderForPageIndex(pageIndex) as RichTextBoxElement,
                         $event,
                       )
                     "
@@ -167,25 +167,25 @@
                     "
                     @update:content="
                       updateTextBoxContent(
-                        getHeaderForPageIndex(pageIndex)!,
+                        getHeaderForPageIndex(pageIndex)! as TextBoxElement,
                         $event,
                       )
                     "
                     @update:contentLeft="
                       updateTextBoxContentLeft(
-                        getHeaderForPageIndex(pageIndex)!,
+                        getHeaderForPageIndex(pageIndex)! as TextBoxElement,
                         $event,
                       )
                     "
                     @update:contentCenter="
                       updateTextBoxContentCenter(
-                        getHeaderForPageIndex(pageIndex)!,
+                        getHeaderForPageIndex(pageIndex)! as TextBoxElement,
                         $event,
                       )
                     "
                     @update:contentRight="
                       updateTextBoxContentRight(
-                        getHeaderForPageIndex(pageIndex)!,
+                        getHeaderForPageIndex(pageIndex)! as TextBoxElement,
                         $event,
                       )
                     "
@@ -578,13 +578,13 @@
                     "
                     @update="
                       updateRichTextBox(
-                        getFooterForPageIndex(pageIndex),
+                        getFooterForPageIndex(pageIndex) as RichTextBoxElement,
                         $event,
                       )
                     "
                     @update:height="
                       updateRichTextBoxHeight(
-                        getFooterForPageIndex(pageIndex),
+                        getFooterForPageIndex(pageIndex) as RichTextBoxElement,
                         $event,
                       )
                     "
@@ -621,25 +621,25 @@
                     "
                     @update:content="
                       updateTextBoxContent(
-                        getFooterForPageIndex(pageIndex)!,
+                        getFooterForPageIndex(pageIndex)! as TextBoxElement,
                         $event,
                       )
                     "
                     @update:contentLeft="
                       updateTextBoxContentLeft(
-                        getFooterForPageIndex(pageIndex)!,
+                        getFooterForPageIndex(pageIndex)! as TextBoxElement,
                         $event,
                       )
                     "
                     @update:contentCenter="
                       updateTextBoxContentCenter(
-                        getFooterForPageIndex(pageIndex)!,
+                        getFooterForPageIndex(pageIndex)! as TextBoxElement,
                         $event,
                       )
                     "
                     @update:contentRight="
                       updateTextBoxContentRight(
-                        getFooterForPageIndex(pageIndex)!,
+                        getFooterForPageIndex(pageIndex)! as TextBoxElement,
                         $event,
                       )
                     "
@@ -687,6 +687,14 @@
         "
         @insert:gorthmikon="insertGorthmikon"
         @insert:pelastikon="insertPelastikon"
+      />
+    </template>
+    <template v-if="selectedRichTextBoxElement != null">
+      <ToolbarTextBoxRich
+        :element="selectedRichTextBoxElement"
+        @update:rtl="
+          updateRichTextBox(selectedRichTextBoxElement, { rtl: $event })
+        "
       />
     </template>
     <template
@@ -1087,6 +1095,7 @@ import ToolbarModeKey from '@/components/ToolbarModeKey.vue';
 import ToolbarNeume from '@/components/ToolbarNeume.vue';
 import ToolbarTempo from '@/components/ToolbarTempo.vue';
 import ToolbarTextBox from '@/components/ToolbarTextBox.vue';
+import ToolbarTextBoxRich from '@/components/ToolbarTextBoxRich.vue';
 import { EventBus } from '@/eventBus';
 import {
   CloseWorkspacesArgs,
@@ -1199,6 +1208,7 @@ interface Vue3TabsChromeComponent {
     ModeKey,
     ToolbarImageBox,
     ToolbarTextBox,
+    ToolbarTextBoxRich,
     ToolbarLyrics,
     ToolbarLyricManager,
     ToolbarModeKey,
@@ -1702,6 +1712,15 @@ export default class Editor extends Vue {
       : null;
   }
 
+  get selectedRichTextBoxElement() {
+    const selectedElement =
+      this.selectedElement || this.selectedHeaderFooterElement;
+
+    return selectedElement != null && this.isRichTextBoxElement(selectedElement)
+      ? (selectedElement as RichTextBoxElement)
+      : null;
+  }
+
   get selectionRange() {
     return this.selectedWorkspace.selectionRange;
   }
@@ -1972,7 +1991,7 @@ export default class Editor extends Vue {
     const header = this.score.getHeaderForPage(pageNumber);
 
     // Currently, headers only support a single text box element.
-    return header.elements[0] as TextBoxElement;
+    return header.elements[0] as TextBoxElement | RichTextBoxElement;
   }
 
   getFooterForPageIndex(pageIndex: number) {
@@ -1981,7 +2000,7 @@ export default class Editor extends Vue {
     const footer = this.score.getFooterForPage(pageNumber);
 
     // Currently, footers only support a single text box element.
-    return footer.elements[0] as TextBoxElement;
+    return footer.elements[0] as TextBoxElement | RichTextBoxElement;
   }
 
   getTokenMetadata(pageIndex: number): TokenMetadata {
@@ -4936,6 +4955,10 @@ export default class Editor extends Vue {
     element: RichTextBoxElement,
     newValues: Partial<RichTextBoxElement>,
   ) {
+    if (newValues.rtl != null) {
+      element.keyHelper++;
+    }
+
     this.commandService.execute(
       this.richTextBoxCommandFactory.create('update-properties', {
         target: element,
@@ -6140,7 +6163,7 @@ export default class Editor extends Vue {
 
   onFileMenuInsertRichTextBox() {
     const element = new RichTextBoxElement();
-    //element.inline = args.inline;
+    element.rtl = this.score.pageSetup.melkiteRtl;
 
     this.addScoreElement(element, this.selectedElementIndex);
 

@@ -201,6 +201,7 @@ export class RichTextBoxElement extends ScoreElement {
   public contentRight: string = '';
   public contentCenter: string = '';
   public multipanel: boolean | undefined = undefined;
+  public rtl: boolean | undefined = undefined;
   public height: number = 20;
 }
 

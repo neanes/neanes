@@ -539,6 +539,7 @@ export class SaveService {
     }
 
     element.height = e.height;
+    element.rtl = e.rtl || undefined;
   }
 
   public static SaveModeKey(element: ModeKeyElement_v1, e: ModeKeyElement) {
@@ -1246,6 +1247,7 @@ export class SaveService {
     }
 
     element.multipanel = e.multipanel === true;
+    element.rtl = e.rtl === true;
   }
 
   public static LoadModeKey_v1(element: ModeKeyElement, e: ModeKeyElement_v1) {

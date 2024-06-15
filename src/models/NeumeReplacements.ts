@@ -302,11 +302,7 @@ export const timeReplacementMap = new Map<
     TimeNeume.Hapli,
     [
       {
-        isPairedWith: [
-          QuantitativeNeume.IsonPlusApostrophos,
-          QuantitativeNeume.DoubleApostrophos,
-          ...kentemataNeumes,
-        ],
+        isPairedWith: [...kentemataNeumes],
         replaceWith: null,
       },
     ],
@@ -316,12 +312,7 @@ export const timeReplacementMap = new Map<
     TimeNeume.Dipli,
     [
       {
-        isPairedWith: [
-          QuantitativeNeume.IsonPlusApostrophos,
-          QuantitativeNeume.DoubleApostrophos,
-          ...kentemataNeumes,
-          ...petastiNeumes,
-        ],
+        isPairedWith: [...kentemataNeumes, ...petastiNeumes],
         replaceWith: null,
       },
     ],
@@ -331,12 +322,7 @@ export const timeReplacementMap = new Map<
     TimeNeume.Tripli,
     [
       {
-        isPairedWith: [
-          QuantitativeNeume.IsonPlusApostrophos,
-          QuantitativeNeume.DoubleApostrophos,
-          ...kentemataNeumes,
-          ...petastiNeumes,
-        ],
+        isPairedWith: [...kentemataNeumes, ...petastiNeumes],
         replaceWith: null,
       },
     ],

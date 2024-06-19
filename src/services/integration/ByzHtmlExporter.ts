@@ -747,7 +747,16 @@ export class ByzHtmlExporter {
   exportRichTextBox(element: RichTextBoxElement, indentation: number) {
     const className = this.config.classRichTextBox;
 
-    return `<div class="${className}">${
+    let styleAttribute = '';
+    let style = '';
+
+    if (element.rtl) {
+      style += 'direction: rtl;';
+    }
+
+    styleAttribute = ` style="${style}"`;
+
+    return `<div class="${className}"${styleAttribute}>${
       element.content
     }</div\n${this.getIndentationString(indentation)}>`;
   }

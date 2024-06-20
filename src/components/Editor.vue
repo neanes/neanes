@@ -7016,6 +7016,7 @@ export default class Editor extends Vue {
     height: auto;
     margin-bottom: 0;
     padding: 0;
+    break-after: page;
   }
 
   .empty-neume-box {

@@ -39,7 +39,7 @@
     "@ckeditor/ckeditor5-find-and-replace": "41.4.2",
     "@ckeditor/ckeditor5-font": "41.4.2",
     "@ckeditor/ckeditor5-image": "41.4.2",
-    "@ckeditor/ckeditor5-indent": "41.4.2",
+    "@ckeditor/ckeditor5-indent": "42.0.0",
     "@ckeditor/ckeditor5-link": "41.4.2",
     "@ckeditor/ckeditor5-list": "41.4.2",
     "@ckeditor/ckeditor5-paragraph": "41.4.2",

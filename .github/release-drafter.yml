@@ -1,37 +1,48 @@
-name-template: '$RESOLVED_VERSION'
-tag-template: 'v$RESOLVED_VERSION'
+# https://github.com/release-drafter/release-drafter
+---
+name-template: '$NEXT_PATCH_VERSION'
+tag-template: 'v$NEXT_PATCH_VERSION'
+
+# Emoji reference: https://gitmoji.carloscuesta.me/
 categories:
+  - title: '🔒 Security Fixes'
+    labels:
+      - 'Type: Security'
+  - title: '💥 Breaking Changes'
+    labels:
+      - 'Type: Breaking Change'
   - title: '🚀 Features'
     labels:
-      - 'feat'
-      - 'feature'
-      - 'enhancement'
+      - 'Type: Feature'
   - title: '🐛 Bug Fixes'
     labels:
-      - 'fix'
-      - 'bugfix'
-      - 'bug'
+      - 'Type: Bug'
+  - title: '📝 Documentation'
+    labels:
+      - 'Type: Documentation'
+  - title: '♻️ Refactoring'
+    labels:
+      - 'Type: Refactoring'
+  - title: '✅ Testing'
+    labels:
+      - 'Type: Testing'
   - title: '🧰 Maintenance'
     labels:
-      - 'chore'
-      - 'dependencies'
-change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
-change-title-escapes: '\<*_&' # You can add # and @ to disable mentions, and add ` to disable code blocks.
-version-resolver:
-  major:
+      - 'Type: Maintenance'
+  - title: '👷 CI'
     labels:
-      - 'major'
-  minor:
+      - 'Type: CI'
+  - title: '📦 Dependency Updates'
     labels:
-      - 'minor'
-  patch:
-    labels:
-      - 'patch'
-  default: patch
+      - 'Type: Dependencies'
+    collapse-after: 5
+  - title: '✍ Other changes'
 exclude-labels:
   - 'skip-changelog'
-  - 'docs'
-template: |
-  ## Changes
+  - 'Type: Meta'
+  - 'Type: Question'
+  - 'Type: Release'
 
+template: |
+  <!-- Optional: add a release summary here -->
   $CHANGES

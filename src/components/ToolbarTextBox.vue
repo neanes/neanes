@@ -78,43 +78,45 @@
     >
       <u>U</u>
     </button>
-    <span class="space"></span>
-    <button
-      class="icon-btn"
-      :class="{ selected: element.alignment === TextBoxAlignment.Left }"
-      @click="$emit('update:alignment', TextBoxAlignment.Left)"
-    >
-      <img
-        src="@/assets/icons/alignleft.svg"
-        width="32"
-        height="32"
-        :title="$t('toolbar:common.alignLeft')"
-      />
-    </button>
-    <button
-      class="icon-btn"
-      :class="{ selected: element.alignment === TextBoxAlignment.Center }"
-      @click="$emit('update:alignment', TextBoxAlignment.Center)"
-    >
-      <img
-        src="@/assets/icons/aligncenter.svg"
-        width="32"
-        height="32"
-        :title="$t('toolbar:common.alignCenter')"
-      />
-    </button>
-    <button
-      class="icon-btn"
-      :class="{ selected: element.alignment === TextBoxAlignment.Right }"
-      @click="$emit('update:alignment', TextBoxAlignment.Right)"
-    >
-      <img
-        src="@/assets/icons/alignright.svg"
-        width="32"
-        height="32"
-        :title="$t('toolbar:common.alignRight')"
-      />
-    </button>
+    <template v-if="!element.multipanel">
+      <span class="space"></span>
+      <button
+        class="icon-btn"
+        :class="{ selected: element.alignment === TextBoxAlignment.Left }"
+        @click="$emit('update:alignment', TextBoxAlignment.Left)"
+      >
+        <img
+          src="@/assets/icons/alignleft.svg"
+          width="32"
+          height="32"
+          :title="$t('toolbar:common.alignLeft')"
+        />
+      </button>
+      <button
+        class="icon-btn"
+        :class="{ selected: element.alignment === TextBoxAlignment.Center }"
+        @click="$emit('update:alignment', TextBoxAlignment.Center)"
+      >
+        <img
+          src="@/assets/icons/aligncenter.svg"
+          width="32"
+          height="32"
+          :title="$t('toolbar:common.alignCenter')"
+        />
+      </button>
+      <button
+        class="icon-btn"
+        :class="{ selected: element.alignment === TextBoxAlignment.Right }"
+        @click="$emit('update:alignment', TextBoxAlignment.Right)"
+      >
+        <img
+          src="@/assets/icons/alignright.svg"
+          width="32"
+          height="32"
+          :title="$t('toolbar:common.alignRight')"
+        />
+      </button>
+    </template>
     <template v-if="!element.useDefaultStyle">
       <span class="space" />
       <label class="right-space">{{ $t('toolbar:common.outline') }}</label>
@@ -140,6 +142,57 @@
         :title="$t('toolbar:common.insertGorthmikon')"
       />
     </button>
+
+    <template v-if="!element.inline">
+      <span class="divider" />
+
+      <input
+        id="toolbar-text-box-multipanel"
+        type="checkbox"
+        :checked="element.multipanel"
+        @change="
+          $emit(
+            'update:multipanel',
+            ($event.target as HTMLInputElement).checked,
+          )
+        "
+      />
+      <label for="toolbar-text-box-multipanel">{{
+        $t('toolbar:textbox.multipanel')
+      }}</label>
+      <template v-if="!element.multipanel">
+        <span class="divider" />
+        <label class="right-space">{{ $t('toolbar:common.height') }}</label>
+        <InputUnit
+          class="text-box-input-width"
+          unit="pt"
+          :nullable="true"
+          :min="0.5"
+          :max="maxWidth"
+          :step="0.5"
+          :modelValue="element.customHeight"
+          :precision="1"
+          placeholder="auto"
+          @update:modelValue="$emit('update:customHeight', $event)"
+        />
+      </template>
+    </template>
+    <template v-else>
+      <span class="divider" />
+      <label class="right-space">{{ $t('toolbar:common.width') }}</label>
+      <InputUnit
+        class="text-box-input-width"
+        unit="pt"
+        :nullable="true"
+        :min="0.5"
+        :max="maxWidth"
+        :step="0.5"
+        :modelValue="element.customWidth"
+        :precision="1"
+        placeholder="auto"
+        @update:modelValue="$emit('update:customWidth', $event)"
+      />
+    </template>
   </div>
 </template>
 
@@ -151,6 +204,8 @@ import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import InputUnit from '@/components/InputUnit.vue';
 import { TextBoxAlignment, TextBoxElement } from '@/models/Element';
+import { PageSetup } from '@/models/PageSetup';
+import { Unit } from '@/utils/Unit';
 
 @Component({
   components: { ColorPicker, InputFontSize, InputUnit, InputStrokeWidth },
@@ -160,10 +215,13 @@ import { TextBoxAlignment, TextBoxElement } from '@/models/Element';
     'update:alignment',
     'update:bold',
     'update:color',
+    'update:customHeight',
+    'update:customWidth',
     'update:fontFamily',
     'update:fontSize',
     'update:italic',
     'update:lineHeight',
+    'update:multipanel',
     'update:strokeWidth',
     'update:underline',
     'update:useDefaultStyle',
@@ -172,8 +230,13 @@ import { TextBoxAlignment, TextBoxElement } from '@/models/Element';
 export default class ToolbarTextBox extends Vue {
   @Prop() element!: TextBoxElement;
   @Prop() fonts!: string;
+  @Prop() pageSetup!: PageSetup;
 
   TextBoxAlignment = TextBoxAlignment;
+
+  get maxWidth() {
+    return Unit.toPt(this.pageSetup.innerPageWidth);
+  }
 }
 </script>
 
@@ -213,5 +276,9 @@ label.right-space {
 
 .space {
   width: 16px;
+}
+
+.text-box-input-width {
+  width: 8ch;
 }
 </style>

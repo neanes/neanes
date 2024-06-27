@@ -4,11 +4,14 @@
     @click="$emit('select-single')"
     :style="containerStyle"
   >
+    <span class="handle"></span>
+
     <ContentEditable
       ref="text"
       class="drop-cap"
       :style="style"
       :content="element.content"
+      :editable="editable"
       @blur="updateContent"
     ></ContentEditable>
   </div>
@@ -31,8 +34,7 @@ import { withZoom } from '@/utils/withZoom';
 export default class DropCap extends Vue {
   @Prop() element!: DropCapElement;
   @Prop() pageSetup!: PageSetup;
-
-  editable: boolean = false;
+  @Prop() editable!: boolean;
 
   get textElement() {
     return this.$refs.text as ContentEditable;
@@ -80,5 +82,14 @@ export default class DropCap extends Vue {
 <style scoped>
 .drop-cap:focus {
   outline: none;
+}
+
+.drop-cap-container .handle {
+  bottom: calc(50% - 5px);
+  left: -10px;
+
+  z-index: 1;
+
+  display: none;
 }
 </style>

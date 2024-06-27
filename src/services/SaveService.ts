@@ -1,4 +1,5 @@
 import {
+  AcceptsLyricsOption,
   DropCapElement,
   ElementType,
   EmptyElement,
@@ -7,12 +8,14 @@ import {
   MartyriaElement,
   ModeKeyElement,
   NoteElement,
+  RichTextBoxElement,
   ScoreElement,
   TempoElement,
   TextBoxElement,
 } from '@/models/Element';
 import { Footer } from '@/models/Footer';
 import { Header } from '@/models/Header';
+import { LyricSetup } from '@/models/LyricSetup';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import { QuantitativeNeume } from '@/models/Neumes';
 import { PageSetup, pageSizes } from '@/models/PageSetup';
@@ -24,6 +27,7 @@ import {
   MartyriaElement as MartyriaElement_v1,
   ModeKeyElement as ModeKeyElement_v1,
   NoteElement as NoteElement_v1,
+  RichTextBoxElement as RichTextBoxElement_v1,
   ScoreElement as ScoreElement_v1,
   TempoElement as TempoElement_v1,
   TextBoxElement as TextBoxElement_v1,
@@ -31,7 +35,11 @@ import {
 import { Footer as Footer_v1 } from '@/models/save/v1/Footer';
 import { Header as Header_v1 } from '@/models/save/v1/Header';
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
-import { Score as Score_v1, Staff as Staff_v1 } from '@/models/save/v1/Score';
+import {
+  LyricSetup as LyricSetup_v1,
+  Score as Score_v1,
+  Staff as Staff_v1,
+} from '@/models/save/v1/Score';
 import { Score } from '@/models/Score';
 import { Staff } from '@/models/Staff';
 
@@ -65,6 +73,7 @@ export class SaveService {
     score.pageSetup = new PageSetup_v1();
 
     this.SavePageSetup(score.pageSetup, s.pageSetup);
+    this.SaveLyricSetup(score.staff.lyrics, s.staff.lyrics);
 
     this.SaveHeader(score.headers.default, s.headers.default);
     this.SaveHeader(score.headers.even, s.headers.even);
@@ -105,6 +114,13 @@ export class SaveService {
         case ElementType.TextBox:
           element = new TextBoxElement_v1();
           this.SaveTextBox(element as TextBoxElement_v1, e as TextBoxElement);
+          break;
+        case ElementType.RichTextBox:
+          element = new RichTextBoxElement_v1();
+          this.SaveRichTextBox(
+            element as RichTextBoxElement_v1,
+            e as RichTextBoxElement,
+          );
           break;
         case ElementType.ModeKey:
           element = new ModeKeyElement_v1();
@@ -199,6 +215,7 @@ export class SaveService {
 
     pageSetup.showHeader = p.showHeader || undefined;
     pageSetup.showFooter = p.showFooter || undefined;
+    pageSetup.richHeaderFooter = p.richHeaderFooter || undefined;
 
     pageSetup.firstPageNumber = p.firstPageNumber;
 
@@ -233,18 +250,53 @@ export class SaveService {
     pageSetup.noFthoraRestrictions = p.noFthoraRestrictions || undefined;
   }
 
+  public static SaveLyricSetup(lyricSetup: LyricSetup_v1, l: LyricSetup) {
+    lyricSetup.locked = l.locked || undefined;
+    lyricSetup.text = l.text;
+  }
+
   public static SaveHeader(header: Header_v1, h: Header) {
     // Currently, headers only support a single element
     const e = h.elements[0];
-    const element = header.elements[0];
-    this.SaveTextBox(element as TextBoxElement_v1, e as TextBoxElement);
+
+    if (e.elementType === ElementType.TextBox) {
+      const element = new TextBoxElement_v1();
+
+      this.SaveTextBox(element as TextBoxElement_v1, e as TextBoxElement);
+
+      header.elements[0] = element;
+    } else if (e.elementType === ElementType.RichTextBox) {
+      const element = new RichTextBoxElement_v1();
+
+      this.SaveRichTextBox(
+        element as RichTextBoxElement_v1,
+        e as RichTextBoxElement,
+      );
+
+      header.elements[0] = element;
+    }
   }
 
   public static SaveFooter(footer: Footer_v1, f: Footer) {
     // Currently, footers only support a single element
     const e = f.elements[0];
-    const element = footer.elements[0];
-    this.SaveTextBox(element as TextBoxElement_v1, e as TextBoxElement);
+
+    if (e.elementType === ElementType.TextBox) {
+      const element = new TextBoxElement_v1();
+
+      this.SaveTextBox(element as TextBoxElement_v1, e as TextBoxElement);
+
+      footer.elements[0] = element;
+    } else if (e.elementType === ElementType.RichTextBox) {
+      const element = new RichTextBoxElement_v1();
+
+      this.SaveRichTextBox(
+        element as RichTextBoxElement_v1,
+        e as RichTextBoxElement,
+      );
+
+      footer.elements[0] = element;
+    }
   }
 
   public static SaveDropCap(element: DropCapElement_v1, e: DropCapElement) {
@@ -256,6 +308,7 @@ export class SaveService {
     element.fontStyle = e.fontStyle;
     element.lineHeight = e.lineHeight ?? undefined;
     element.strokeWidth = e.strokeWidth;
+    element.customWidth = e.customWidth ?? undefined;
     element.useDefaultStyle = e.useDefaultStyle || undefined;
   }
 
@@ -442,12 +495,22 @@ export class SaveService {
     }
 
     element.ignoreAttractions = e.ignoreAttractions || undefined;
+
+    if (e.acceptsLyrics !== AcceptsLyricsOption.Default) {
+      element.acceptsLyrics = e.acceptsLyrics;
+    }
   }
 
   public static SaveTextBox(element: TextBoxElement_v1, e: TextBoxElement) {
     element.alignment = e.alignment;
     element.color = e.color;
     element.content = e.content;
+    if (e.multipanel) {
+      element.contentLeft = e.contentLeft;
+      element.contentCenter = e.contentCenter;
+      element.contentRight = e.contentRight;
+      element.multipanel = true;
+    }
     element.fontFamily = e.fontFamily;
     element.fontSize = e.fontSize;
     element.strokeWidth = e.strokeWidth;
@@ -457,7 +520,26 @@ export class SaveService {
     element.underline = e.underline || undefined;
     element.lineHeight = e.lineHeight ?? undefined;
     element.height = e.height;
+    element.customWidth = e.customWidth ?? undefined;
+    element.customHeight = e.customHeight ?? undefined;
     element.useDefaultStyle = e.useDefaultStyle || undefined;
+  }
+
+  public static SaveRichTextBox(
+    element: RichTextBoxElement_v1,
+    e: RichTextBoxElement,
+  ) {
+    element.content = e.content;
+
+    if (e.multipanel) {
+      element.contentLeft = e.contentLeft;
+      element.contentCenter = e.contentCenter;
+      element.contentRight = e.contentRight;
+      element.multipanel = true;
+    }
+
+    element.height = e.height;
+    element.rtl = e.rtl || undefined;
   }
 
   public static SaveModeKey(element: ModeKeyElement_v1, e: ModeKeyElement) {
@@ -502,6 +584,10 @@ export class SaveService {
     score.pageSetup = new PageSetup();
 
     this.LoadPageSetup_v1(score.pageSetup, s.pageSetup);
+    this.LoadLyricSetup_v1(
+      score.staff.lyrics,
+      s.staff.lyrics ?? new LyricSetup(),
+    );
 
     if (s.headers) {
       this.LoadHeader_v1(
@@ -596,6 +682,13 @@ export class SaveService {
             score.pageSetup,
           );
           break;
+        case ElementType_v1.RichTextBox:
+          element = new RichTextBoxElement();
+          this.LoadRichTextBox_v1(
+            element as RichTextBoxElement,
+            e as RichTextBoxElement_v1,
+          );
+          break;
         case ElementType_v1.ModeKey:
           element = new ModeKeyElement();
           this.LoadModeKey_v1(
@@ -652,6 +745,7 @@ export class SaveService {
     pageSetup.headerDifferentOddEven = p.headerDifferentOddEven === true;
     pageSetup.showHeader = p.showHeader === true;
     pageSetup.showFooter = p.showFooter === true;
+    pageSetup.richHeaderFooter = p.richHeaderFooter === true;
     pageSetup.firstPageNumber = p.firstPageNumber ?? pageSetup.firstPageNumber;
 
     pageSetup.lineHeight = p.lineHeight;
@@ -790,6 +884,11 @@ export class SaveService {
     }
   }
 
+  public static LoadLyricSetup_v1(lyricSetup: LyricSetup, l: LyricSetup_v1) {
+    lyricSetup.locked = l.locked === true;
+    lyricSetup.text = l.text;
+  }
+
   public static LoadHeader_v1(
     scoreVersion: string,
     header: Header,
@@ -798,13 +897,28 @@ export class SaveService {
   ) {
     // Currently, headers only support a single element
     const e = h.elements[0];
-    const element = header.elements[0];
-    this.LoadTextBox_v1(
-      scoreVersion,
-      element as TextBoxElement,
-      e as TextBoxElement_v1,
-      pageSetup,
-    );
+
+    if (e.elementType === ElementType.TextBox) {
+      const element = new TextBoxElement();
+
+      this.LoadTextBox_v1(
+        scoreVersion,
+        element as TextBoxElement,
+        e as TextBoxElement_v1,
+        pageSetup,
+      );
+
+      header.elements[0] = element;
+    } else if (e.elementType === ElementType.RichTextBox) {
+      const element = new RichTextBoxElement();
+
+      this.LoadRichTextBox_v1(
+        element as RichTextBoxElement,
+        e as RichTextBoxElement_v1,
+      );
+
+      header.elements[0] = element;
+    }
   }
 
   public static LoadFooter_v1(
@@ -815,13 +929,28 @@ export class SaveService {
   ) {
     // Currently, footers only support a single element
     const e = f.elements[0];
-    const element = footer.elements[0];
-    this.LoadTextBox_v1(
-      scoreVersion,
-      element as TextBoxElement,
-      e as TextBoxElement_v1,
-      pageSetup,
-    );
+
+    if (e.elementType === ElementType.TextBox) {
+      const element = new TextBoxElement();
+
+      this.LoadTextBox_v1(
+        scoreVersion,
+        element as TextBoxElement,
+        e as TextBoxElement_v1,
+        pageSetup,
+      );
+
+      footer.elements[0] = element;
+    } else if (e.elementType === ElementType.RichTextBox) {
+      const element = new RichTextBoxElement();
+
+      this.LoadRichTextBox_v1(
+        element as RichTextBoxElement,
+        e as RichTextBoxElement_v1,
+      );
+
+      footer.elements[0] = element;
+    }
   }
 
   public static LoadDropCap_v1(
@@ -838,6 +967,7 @@ export class SaveService {
     element.fontWeight = e.fontWeight ?? pageSetup.dropCapDefaultFontWeight;
     element.fontStyle = e.fontStyle ?? pageSetup.dropCapDefaultFontStyle;
     element.strokeWidth = e.strokeWidth ?? pageSetup.dropCapDefaultStrokeWidth;
+    element.customWidth = e.customWidth ?? null;
     element.useDefaultStyle = e.useDefaultStyle === true;
   }
 
@@ -1056,6 +1186,12 @@ export class SaveService {
       element.lyricsStrokeWidth =
         e.lyricsStrokeWidth ?? element.lyricsStrokeWidth;
     }
+
+    if (e.acceptsLyrics !== undefined) {
+      element.acceptsLyrics = e.acceptsLyrics;
+    } else {
+      element.acceptsLyrics = AcceptsLyricsOption.Default;
+    }
   }
 
   public static LoadTextBox_v1(
@@ -1067,6 +1203,15 @@ export class SaveService {
     element.alignment = e.alignment;
     element.color = e.color;
     element.content = e.content;
+
+    if (e.multipanel) {
+      element.contentLeft = e.contentLeft;
+      element.contentCenter = e.contentCenter;
+      element.contentRight = e.contentRight;
+    }
+
+    element.multipanel = e.multipanel === true;
+
     element.fontFamily = e.fontFamily;
     element.fontSize = e.fontSize;
     element.inline = e.inline === true;
@@ -1076,6 +1221,8 @@ export class SaveService {
     element.height = e.height;
     element.strokeWidth = e.strokeWidth ?? element.strokeWidth;
     element.lineHeight = e.lineHeight ?? pageSetup.textBoxDefaultLineHeight;
+    element.customWidth = e.customWidth ?? null;
+    element.customHeight = e.customHeight ?? null;
 
     if (scoreVersion === '1.0') {
       // In this version, use default was incorrectly set to true
@@ -1084,6 +1231,23 @@ export class SaveService {
     } else {
       element.useDefaultStyle = e.useDefaultStyle === true;
     }
+  }
+
+  public static LoadRichTextBox_v1(
+    element: RichTextBoxElement,
+    e: RichTextBoxElement_v1,
+  ) {
+    element.content = e.content;
+    element.height = e.height;
+
+    if (e.multipanel) {
+      element.contentLeft = e.contentLeft;
+      element.contentCenter = e.contentCenter;
+      element.contentRight = e.contentRight;
+    }
+
+    element.multipanel = e.multipanel === true;
+    element.rtl = e.rtl === true;
   }
 
   public static LoadModeKey_v1(element: ModeKeyElement, e: ModeKeyElement_v1) {

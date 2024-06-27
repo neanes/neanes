@@ -18,7 +18,9 @@
     "generalSharpDisabled": "General sharp may only be placed on Ga",
     "zygosDisabled": "Zygos may only be placed on Di",
     "klitonDisabled": "Kliton may only be placed on Di",
-    "spathiDisabled": "Spathi may only be placed on Ke or Ga"
+    "spathiDisabled": "Spathi may only be placed on Ke or Ga",
+    "width": "Width",
+    "height": "Height"
   },
   "main": {
     "auto": "Auto",
@@ -26,6 +28,8 @@
     "single": "Single",
     "martyria": "Martyria",
     "insertDropCapBefore": "Insert drop cap before",
+    "insertTextBox": "Insert Text Box",
+    "insertTextBoxRich": "Insert Rich Text Box",
     "insertImage": "Insert image",
     "insertOrRemoveLineBreakAfterSelectedElement": "Insert or remove line break after selected element",
     "insertOrRemoveJustifiedLineBreakAfterSelectedElement": "Insert or remove justified line break after selected element",
@@ -41,6 +45,10 @@
     "maintainAspectRatio": "Maintain Aspect Ratio",
     "width": "Width",
     "height": "Height"
+  },
+  "lyricManager": {
+    "locked": "Lock Lyrics",
+    "assignAcceptsLyrics": "Save Current Melismas"
   },
   "martyria": {
     "auto": "Auto",
@@ -65,6 +73,15 @@
     "sharp": "Sharp",
     "measureNumber": "Measure Number",
     "noteIndicator": "Note Indicator",
-    "isonIndicator": "Ison Indicator"
+    "isonIndicator": "Ison Indicator",
+    "acceptsLyrics": "Accepts Lyrics",
+    "acceptsLyricsDefault": "Default",
+    "acceptsLyricsYes": "Yes",
+    "acceptsLyricsNo": "No",
+    "acceptsLyricsMelismaOnly": "Melisma Only"
+  },
+  "textbox": {
+    "multipanel": "Multipanel",
+    "rtl": "RTL"
   }
 }

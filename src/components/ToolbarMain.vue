@@ -100,6 +100,20 @@
       <img src="@/assets/icons/drop-cap.svg" width="24" height="24" />
     </button>
     <button
+      :title="$t('toolbar:main.insertTextBox')"
+      class="icon-btn"
+      @click="$emit('add-text-box')"
+    >
+      <img src="@/assets/icons/text-box.svg" width="24" height="24" />
+    </button>
+    <button
+      :title="$t('toolbar:main.insertTextBoxRich')"
+      class="icon-btn"
+      @click="$emit('add-text-box-rich')"
+    >
+      <img src="@/assets/icons/text-box-rich.svg" width="24" height="24" />
+    </button>
+    <button
       :title="$t('toolbar:main.insertImage')"
       class="icon-btn"
       @click="$emit('add-image')"
@@ -192,28 +206,41 @@
       <button class="icon-btn config" @click="$emit('open-playback-settings')">
         <img src="@/assets/icons/config.svg" width="32" height="32" />
       </button>
+      <span class="divider"></span>
+
+      <span>{{ playbackTimeDisplay }}</span>
+      <span class="space" />
+      <span class="label-bpm">BPM = {{ playbackBpmDisplay }}</span>
+
       <span class="space" />
       <label class="right-space">{{ $t('toolbar:main.speed') }}</label>
-      <select
-        class="audio-speed"
-        :value="audioOptions.speed"
+      <input
+        class="audio-speed-slider"
+        type="range"
+        min=".1"
+        max="3"
+        step=".05"
         :disabled="audioState === AudioState.Playing"
-        @change="
+        :value="audioOptions.speed"
+        @input="
           $emit(
             'update:audioOptionsSpeed',
             ($event.target as HTMLInputElement).value,
           )
         "
-      >
-        <option value="0.25">0.25x</option>
-        <option value="0.5">0.5x</option>
-        <option value="0.75">0.75x</option>
-        <option value="1">1x</option>
-        <option value="1.25">1.25x</option>
-        <option value="1.5">1.5x</option>
-        <option value="1.75">1.75x</option>
-        <option value="2">2x</option>
-      </select>
+      />
+      <InputUnit
+        class="audio-speed"
+        unit="percent"
+        :min="10"
+        :max="300"
+        :step="1"
+        :precision="0"
+        :modelValue="audioOptions.speed"
+        :disabled="audioState === AudioState.Playing"
+        @update:modelValue="$emit('update:audioOptionsSpeed', $event)"
+      />
+      <span>%</span>
     </div>
     <span class="space"></span>
     <span class="space"></span>
@@ -226,6 +253,7 @@
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-facing-decorator';
 
+import InputUnit from '@/components/InputUnit.vue';
 import { LineBreakType } from '@/models/Element';
 import { EntryMode } from '@/models/EntryMode';
 import { Note, RootSign, TempoSign } from '@/models/Neumes';
@@ -236,12 +264,14 @@ import { NeumeKeyboard } from '@/services/NeumeKeyboard';
 import Neume from './Neume.vue';
 
 @Component({
-  components: { Neume },
+  components: { InputUnit, Neume },
   emits: [
     'add-auto-martyria',
     'add-drop-cap',
     'add-image',
     'add-tempo',
+    'add-text-box',
+    'add-text-box-rich',
     'delete-selected-element',
     'open-playback-settings',
     'play-audio',
@@ -262,6 +292,8 @@ export default class ToolbarMain extends Vue {
   @Prop() audioState!: AudioState;
   @Prop() audioOptions!: PlaybackOptions;
   @Prop() neumeKeyboard!: NeumeKeyboard;
+  @Prop() playbackTime!: number;
+  @Prop() playbackBpm!: number;
 
   Note = Note;
   RootSign = RootSign;
@@ -270,8 +302,8 @@ export default class ToolbarMain extends Vue {
   AudioState = AudioState;
   LineBreakType = LineBreakType;
 
-  showZoomMenu: boolean = false;
   showTempoMenu: boolean = false;
+  showZoomMenu: boolean = false;
 
   selectedTempoNeume: TempoSign | null = null;
 
@@ -281,10 +313,25 @@ export default class ToolbarMain extends Vue {
     return this.zoomToFit ? 'Fit' : (this.zoom * 100).toFixed(0) + '%';
   }
 
-  get playButtonSrc() {
-    return this.audioState === AudioState.Playing
-      ? '@/assets/icons/audio-play.svg'
-      : '@/assets/icons/audio-play.svg';
+  get speedDisplay() {
+    return (this.audioOptions.speed * 100).toFixed(0) + '%';
+  }
+
+  get playbackTimeDisplay() {
+    // Round to the nearest tenth to eliminate floating point errors
+    // E.g. 4.999999... should give 0:00:05:0, instead of 0:00:04:0
+    const roundedTime = Math.round(this.playbackTime * 10) / 10;
+
+    const hours = Math.floor(roundedTime / 3600);
+    const minutes = Math.floor((roundedTime % 3600) / 60);
+    const seconds = Math.floor(roundedTime % 60);
+    const tenths = roundedTime.toFixed(1).split('.')[1];
+
+    return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}:${tenths}`;
+  }
+
+  get playbackBpmDisplay() {
+    return this.playbackBpm.toFixed(0);
   }
 
   get martyriaTooltip() {
@@ -396,6 +443,12 @@ export default class ToolbarMain extends Vue {
   width: 16px;
 }
 
+.divider {
+  height: 32px;
+  border-right: 1px solid #666;
+  margin: 0 0.5rem;
+}
+
 .zoom {
   width: 40px;
   padding: 1px 2px;
@@ -477,6 +530,14 @@ label.right-space {
 }
 
 .audio-speed {
-  width: 3.5rem;
+  width: 2.5rem;
+}
+
+.audio-speed-slider {
+  width: 58px;
+}
+
+.label-bpm {
+  width: 5rem;
 }
 </style>

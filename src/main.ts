@@ -1,5 +1,6 @@
 import './registerServiceWorker';
 
+import CKEditor from '@ckeditor/ckeditor5-vue';
 import i18next from 'i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import Pseudo from 'i18next-pseudo';
@@ -15,6 +16,7 @@ import { defaultNS, resources } from './i18n';
 import { initalizeBrowserIpcListeners } from './ipc/browserIpcListeners';
 import { initializeIpcListeners } from './ipc/ipcListeners';
 import router from './router';
+import { LyricService } from './services/LyricService';
 import { TextSearchService } from './services/TextSearchService';
 import { isElectron } from './utils/isElectron';
 
@@ -53,9 +55,11 @@ i18next
 
 const app = createApp(App);
 app.use(VueObserveVisibility);
+app.use(CKEditor);
 app.provide('audioService', new AudioService());
 app.provide('playbackService', new PlaybackService());
 app.provide('textSearchService', new TextSearchService());
+app.provide('lyricService', new LyricService());
 app.use(router);
 app.use(I18NextVue, { i18next });
 app.mount('#app');

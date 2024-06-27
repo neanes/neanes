@@ -28,6 +28,7 @@ export interface PlaybackSequenceEvent {
   type: 'note' | 'rest';
   duration: number;
   transportTime: number;
+  absoluteTime: number;
   elementIndex: number;
   bpm: number;
 }
@@ -216,6 +217,7 @@ export class PlaybackService {
 
     // Calculate times
     let time = 0;
+    let absoluteTime = 0;
     let beats = 0;
     let currentBpm = defaultBpm;
     let currentBeatLength = this.beatLengthFromBpm(currentBpm);
@@ -229,6 +231,9 @@ export class PlaybackService {
       time = beats * currentBeatLength;
       event.transportTime = time;
       beats += event.duration / currentBeatLength;
+
+      event.absoluteTime = absoluteTime;
+      absoluteTime += event.duration;
     }
 
     return workspace.events;
@@ -586,6 +591,7 @@ export class PlaybackService {
       bpm: workspace.bpm,
       duration: noteAtomNode.duration * workspace.beat,
       transportTime: 0,
+      absoluteTime: 0,
       elementIndex: noteAtomNode.elementIndex,
     };
 
@@ -606,6 +612,7 @@ export class PlaybackService {
       bpm: workspace.bpm,
       duration: restNode.duration * workspace.beat,
       transportTime: 0,
+      absoluteTime: 0,
       elementIndex: restNode.elementIndex,
     };
 
@@ -809,6 +816,9 @@ export class PlaybackService {
     ScaleNote,
     number
   >([
+    [ScaleNote.ZoLow, 6],
+    [ScaleNote.NiLow, 0],
+    [ScaleNote.PaLow, 1],
     [ScaleNote.VouLow, 2],
     [ScaleNote.GaLow, 3],
     [ScaleNote.ThiLow, 4],
@@ -833,6 +843,9 @@ export class PlaybackService {
     ScaleNote,
     number
   >([
+    [ScaleNote.ZoLow, 1],
+    [ScaleNote.NiLow, 2],
+    [ScaleNote.PaLow, 3],
     [ScaleNote.VouLow, 0],
     [ScaleNote.GaLow, 1],
     [ScaleNote.ThiLow, 2],
@@ -857,6 +870,9 @@ export class PlaybackService {
     ScaleNote,
     number
   >([
+    [ScaleNote.ZoLow, 1],
+    [ScaleNote.NiLow, 2],
+    [ScaleNote.PaLow, 0],
     [ScaleNote.VouLow, 1],
     [ScaleNote.GaLow, 2],
     [ScaleNote.ThiLow, 0],
@@ -887,6 +903,9 @@ export class PlaybackService {
     name: PlaybackScaleName.HardChromatic,
     intervals: [6, 20, 4, 12],
     scaleNoteMap: new Map<ScaleNote, number>([
+      [ScaleNote.ZoLow, 3],
+      [ScaleNote.NiLow, 0],
+      [ScaleNote.PaLow, 1],
       [ScaleNote.VouLow, 2],
       [ScaleNote.GaLow, 3],
       [ScaleNote.ThiLow, 0],
@@ -913,6 +932,9 @@ export class PlaybackService {
 
     intervals: [8, 14, 8, 12],
     scaleNoteMap: new Map<ScaleNote, number>([
+      [ScaleNote.ZoLow, 0],
+      [ScaleNote.NiLow, 1],
+      [ScaleNote.PaLow, 2],
       [ScaleNote.VouLow, 3],
       [ScaleNote.GaLow, 0],
       [ScaleNote.ThiLow, 1],
@@ -938,6 +960,9 @@ export class PlaybackService {
     name: PlaybackScaleName.Legetos,
     intervals: [8, 10, 12, 12, 8, 10, 12],
     scaleNoteMap: new Map<ScaleNote, number>([
+      [ScaleNote.ZoLow, 5],
+      [ScaleNote.NiLow, 6],
+      [ScaleNote.PaLow, 0],
       [ScaleNote.VouLow, 1],
       [ScaleNote.GaLow, 2],
       [ScaleNote.ThiLow, 3],

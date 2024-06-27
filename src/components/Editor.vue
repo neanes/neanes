@@ -10,6 +10,8 @@
       :zoomToFit="zoomToFit"
       :audioState="audioService.state"
       :audioOptions="audioOptions"
+      :playbackTime="selectedWorkspace.playbackTime"
+      :playbackBpm="selectedWorkspace.playbackBpm"
       :currentPageNumber="currentPageNumber"
       :pageCount="pageCount"
       :neumeKeyboard="neumeKeyboard"
@@ -22,6 +24,8 @@
       @toggle-line-break="toggleLineBreak($event)"
       @add-tempo="addTempo"
       @add-drop-cap="addDropCap(false)"
+      @add-text-box="onFileMenuInsertTextBox"
+      @add-text-box-rich="onFileMenuInsertRichTextBox"
       @add-image="onClickAddImage"
       @delete-selected-element="deleteSelectedElement"
       @click="selectedLyrics = null"
@@ -88,39 +92,105 @@
                 <span class="guide-line-hb" :style="guideStyleBottom" />
               </template>
               <template v-if="score.pageSetup.showHeader">
-                <TextBox
-                  class="element-box"
-                  :key="`element-${getHeaderForPageIndex(pageIndex).id}-${
-                    getHeaderForPageIndex(pageIndex).keyHelper
-                  }`"
-                  :ref="`header-${pageIndex}`"
-                  :element="getHeaderForPageIndex(pageIndex)"
-                  :editMode="
-                    !printMode &&
-                    getHeaderForPageIndex(pageIndex) ==
-                      selectedHeaderFooterElement
-                  "
-                  :metadata="getTokenMetadata(pageIndex)"
-                  :pageSetup="score.pageSetup"
-                  :class="[
-                    {
-                      selectedTextbox:
-                        getHeaderForPageIndex(pageIndex) ==
-                        selectedHeaderFooterElement,
-                    },
-                  ]"
-                  :style="headerStyle"
-                  @click="
-                    selectedHeaderFooterElement =
-                      getHeaderForPageIndex(pageIndex)
-                  "
-                  @update:content="
-                    updateTextBoxContent(
-                      getHeaderForPageIndex(pageIndex)!,
-                      $event,
-                    )
-                  "
-                />
+                <template
+                  v-if="isRichTextBoxElement(getHeaderForPageIndex(pageIndex))"
+                >
+                  <TextBoxRich
+                    class="element-box"
+                    :key="`element-${getHeaderForPageIndex(pageIndex).id}-${
+                      getHeaderForPageIndex(pageIndex).keyHelper
+                    }`"
+                    :ref="`header-${pageIndex}`"
+                    :element="getHeaderForPageIndex(pageIndex)"
+                    :editMode="
+                      !printMode &&
+                      getHeaderForPageIndex(pageIndex) ==
+                        selectedHeaderFooterElement
+                    "
+                    :metadata="getTokenMetadata(pageIndex)"
+                    :pageSetup="score.pageSetup"
+                    :fonts="fonts"
+                    :class="[
+                      {
+                        selectedTextbox:
+                          getHeaderForPageIndex(pageIndex) ==
+                          selectedHeaderFooterElement,
+                      },
+                    ]"
+                    :style="headerStyle"
+                    @click="
+                      selectedHeaderFooterElement =
+                        getHeaderForPageIndex(pageIndex)
+                    "
+                    @update="
+                      updateRichTextBox(
+                        getHeaderForPageIndex(pageIndex) as RichTextBoxElement,
+                        $event,
+                      )
+                    "
+                    @update:height="
+                      updateRichTextBoxHeight(
+                        getHeaderForPageIndex(pageIndex) as RichTextBoxElement,
+                        $event,
+                      )
+                    "
+                  />
+                </template>
+                <template
+                  v-else-if="isTextBoxElement(getHeaderForPageIndex(pageIndex))"
+                >
+                  <TextBox
+                    class="element-box"
+                    :key="`element-${getHeaderForPageIndex(pageIndex).id}-${
+                      getHeaderForPageIndex(pageIndex).keyHelper
+                    }`"
+                    :ref="`header-${pageIndex}`"
+                    :element="getHeaderForPageIndex(pageIndex)"
+                    :editMode="
+                      !printMode &&
+                      getHeaderForPageIndex(pageIndex) ==
+                        selectedHeaderFooterElement
+                    "
+                    :metadata="getTokenMetadata(pageIndex)"
+                    :pageSetup="score.pageSetup"
+                    :class="[
+                      {
+                        selectedTextbox:
+                          getHeaderForPageIndex(pageIndex) ==
+                          selectedHeaderFooterElement,
+                      },
+                    ]"
+                    :style="headerStyle"
+                    @click="
+                      selectedHeaderFooterElement =
+                        getHeaderForPageIndex(pageIndex)
+                    "
+                    @update:content="
+                      updateTextBoxContent(
+                        getHeaderForPageIndex(pageIndex)! as TextBoxElement,
+                        $event,
+                      )
+                    "
+                    @update:contentLeft="
+                      updateTextBoxContentLeft(
+                        getHeaderForPageIndex(pageIndex)! as TextBoxElement,
+                        $event,
+                      )
+                    "
+                    @update:contentCenter="
+                      updateTextBoxContentCenter(
+                        getHeaderForPageIndex(pageIndex)! as TextBoxElement,
+                        $event,
+                      )
+                    "
+                    @update:contentRight="
+                      updateTextBoxContentRight(
+                        getHeaderForPageIndex(pageIndex)! as TextBoxElement,
+                        $event,
+                      )
+                    "
+                  />
+                </template>
               </template>
               <div
                 class="line"
@@ -177,6 +247,7 @@
                             selectedLyrics: element === selectedLyrics,
                           }"
                           :content="(element as NoteElement).lyrics"
+                          :editable="!lyricsLocked"
                           whiteSpace="nowrap"
                           :ref="`lyrics-${getElementIndex(element)}`"
                           @click="focusLyrics(getElementIndex(element))"
@@ -186,7 +257,8 @@
                         <template
                           v-if="
                             isMelisma(element as NoteElement) &&
-                            (element as NoteElement).isHyphen
+                            (element as NoteElement).isHyphen &&
+                            (element as NoteElement).melismaText === ''
                           "
                         >
                           <div
@@ -214,25 +286,69 @@
                         <template
                           v-else-if="
                             isMelisma(element as NoteElement) &&
-                            !(element as NoteElement).isHyphen
+                            !(element as NoteElement).isHyphen &&
+                            !rtl &&
+                            (element as NoteElement).melismaText === ''
+                          "
+                        >
+                          <div
+                            class="melisma-underscore"
+                            :class="{
+                              full: (element as NoteElement).isFullMelisma,
+                            }"
+                            :style="
+                              getMelismaUnderscoreStyleOuter(
+                                element as NoteElement,
+                              )
+                            "
+                          >
+                            <div
+                              class="melisma-inner"
+                              :style="
+                                getMelismaUnderscoreStyleInner(
+                                  element as NoteElement,
+                                )
+                              "
+                            ></div>
+                          </div>
+                        </template>
+                        <template
+                          v-else-if="
+                            isMelisma(element as NoteElement) &&
+                            !(element as NoteElement).isHyphen &&
+                            rtl
                           "
                         >
                           <div
                             class="melisma"
                             :class="{
-                              full:
-                                (element as NoteElement).isFullMelisma && !rtl,
-                              fullRtl:
-                                (element as NoteElement).isFullMelisma && rtl,
+                              fullRtl: (element as NoteElement).isFullMelisma,
                             }"
                             :style="getMelismaStyle(element as NoteElement)"
                             v-text="(element as NoteElement).melismaText"
                           ></div>
                         </template>
+                        <template
+                          v-else-if="
+                            (element as NoteElement).isMelisma &&
+                            (element as NoteElement).melismaText !== '' &&
+                            !rtl
+                          "
+                        >
+                          <span
+                            class="melisma-text"
+                            v-text="(element as NoteElement).melismaText"
+                            :class="{
+                              selectedMelisma: element === selectedLyrics,
+                            }"
+                            @click="focusLyrics(getElementIndex(element))"
+                            @focus="selectedLyrics = element as NoteElement"
+                          ></span>
+                        </template>
                       </div>
                     </div>
                   </template>
-                  <template v-if="isMartyriaElement(element)">
+                  <template v-else-if="isMartyriaElement(element)">
                     <div class="neume-box">
                       <span class="page-break" v-if="element.pageBreak">
                         <img src="@/assets/icons/page-break.svg"
@@ -256,7 +372,7 @@
                       <div class="lyrics"></div>
                     </div>
                   </template>
-                  <template v-if="isTempoElement(element)">
+                  <template v-else-if="isTempoElement(element)">
                     <div
                       :ref="`element-${getElementIndex(element)}`"
                       class="neume-box"
@@ -278,7 +394,7 @@
                       <div class="lyrics"></div>
                     </div>
                   </template>
-                  <template v-if="isEmptyElement(element)">
+                  <template v-else-if="isEmptyElement(element)">
                     <div
                       :ref="`element-${getElementIndex(element)}`"
                       class="neume-box"
@@ -298,7 +414,7 @@
                       <div class="lyrics"></div>
                     </div>
                   </template>
-                  <template v-if="isTextBoxElement(element)">
+                  <template v-else-if="isTextBoxElement(element)">
                     <span class="page-break-2" v-if="element.pageBreak"
                       ><img src="@/assets/icons/page-break.svg"
                     /></span>
@@ -316,9 +432,52 @@
                       @update:content="
                         updateTextBoxContent(element as TextBoxElement, $event)
                       "
+                      @update:contentLeft="
+                        updateTextBoxContentLeft(
+                          element as TextBoxElement,
+                          $event,
+                        )
+                      "
+                      @update:contentCenter="
+                        updateTextBoxContentCenter(
+                          element as TextBoxElement,
+                          $event,
+                        )
+                      "
+                      @update:contentRight="
+                        updateTextBoxContentRight(
+                          element as TextBoxElement,
+                          $event,
+                        )
+                      "
                     />
                   </template>
-                  <template v-if="isModeKeyElement(element)">
+                  <template v-else-if="isRichTextBoxElement(element)">
+                    <span class="page-break-2" v-if="element.pageBreak"
+                      ><img src="@/assets/icons/page-break.svg"
+                    /></span>
+                    <span class="line-break-2" v-if="element.lineBreak"
+                      ><img src="@/assets/icons/line-break.svg"
+                    /></span>
+                    <TextBoxRich
+                      :ref="`element-${getElementIndex(element)}`"
+                      :element="element"
+                      :pageSetup="score.pageSetup"
+                      :fonts="fonts"
+                      :class="[{ selectedTextbox: isSelected(element) }]"
+                      @select-single="selectedElement = element"
+                      @update="
+                        updateRichTextBox(element as RichTextBoxElement, $event)
+                      "
+                      @update:height="
+                        updateRichTextBoxHeight(
+                          element as RichTextBoxElement,
+                          $event,
+                        )
+                      "
+                    />
+                  </template>
+                  <template v-else-if="isModeKeyElement(element)">
                     <span class="page-break-2" v-if="element.pageBreak"
                       ><img src="@/assets/icons/page-break.svg"
                     /></span>
@@ -338,7 +497,7 @@
                       @dblclick="openModeKeyDialog"
                     />
                   </template>
-                  <template v-if="isDropCapElement(element)">
+                  <template v-else-if="isDropCapElement(element)">
                     <span class="page-break" v-if="element.pageBreak"
                       ><img src="@/assets/icons/page-break.svg"
                     /></span>
@@ -349,6 +508,7 @@
                       :ref="`element-${getElementIndex(element)}`"
                       :element="element"
                       :pageSetup="score.pageSetup"
+                      :editable="!lyricsLocked"
                       :class="[
                         {
                           selectedTextbox: isSelected(element),
@@ -360,7 +520,7 @@
                       "
                     />
                   </template>
-                  <template v-if="isImageBoxElement(element)">
+                  <template v-else-if="isImageBoxElement(element)">
                     <span class="page-break-2" v-if="element.pageBreak"
                       ><img src="@/assets/icons/page-break.svg"
                     /></span>
@@ -386,39 +546,104 @@
                 </div>
               </div>
               <template v-if="score.pageSetup.showFooter">
-                <TextBox
-                  class="element-box"
-                  :ref="`footer-${pageIndex}`"
-                  :key="`element-${getFooterForPageIndex(pageIndex).id}-${
-                    getFooterForPageIndex(pageIndex).keyHelper
-                  }`"
-                  :element="getFooterForPageIndex(pageIndex)"
-                  :editMode="
-                    !printMode &&
-                    getFooterForPageIndex(pageIndex) ==
-                      selectedHeaderFooterElement
-                  "
-                  :metadata="getTokenMetadata(pageIndex)"
-                  :pageSetup="score.pageSetup"
-                  :class="[
-                    {
-                      selectedTextbox:
-                        getFooterForPageIndex(pageIndex) ==
-                        selectedHeaderFooterElement,
-                    },
-                  ]"
-                  :style="footerStyle"
-                  @click="
-                    selectedHeaderFooterElement =
-                      getFooterForPageIndex(pageIndex)
-                  "
-                  @update:content="
-                    updateTextBoxContent(
-                      getFooterForPageIndex(pageIndex)!,
-                      $event,
-                    )
-                  "
-                />
+                <template
+                  v-if="isRichTextBoxElement(getFooterForPageIndex(pageIndex))"
+                >
+                  <TextBoxRich
+                    class="element-box"
+                    :key="`element-${getFooterForPageIndex(pageIndex).id}-${
+                      getFooterForPageIndex(pageIndex).keyHelper
+                    }`"
+                    :ref="`footer-${pageIndex}`"
+                    :element="getFooterForPageIndex(pageIndex)"
+                    :editMode="
+                      !printMode &&
+                      getFooterForPageIndex(pageIndex) ==
+                        selectedHeaderFooterElement
+                    "
+                    :metadata="getTokenMetadata(pageIndex)"
+                    :pageSetup="score.pageSetup"
+                    :fonts="fonts"
+                    :class="[
+                      {
+                        selectedTextbox:
+                          getFooterForPageIndex(pageIndex) ==
+                          selectedHeaderFooterElement,
+                      },
+                    ]"
+                    :style="footerStyle"
+                    @click="
+                      selectedHeaderFooterElement =
+                        getFooterForPageIndex(pageIndex)
+                    "
+                    @update="
+                      updateRichTextBox(
+                        getFooterForPageIndex(pageIndex) as RichTextBoxElement,
+                        $event,
+                      )
+                    "
+                    @update:height="
+                      updateRichTextBoxHeight(
+                        getFooterForPageIndex(pageIndex) as RichTextBoxElement,
+                        $event,
+                      )
+                    "
+                  />
+                </template>
+                <template
+                  v-else-if="isTextBoxElement(getHeaderForPageIndex(pageIndex))"
+                >
+                  <TextBox
+                    class="element-box"
+                    :ref="`footer-${pageIndex}`"
+                    :key="`element-${getFooterForPageIndex(pageIndex).id}-${
+                      getFooterForPageIndex(pageIndex).keyHelper
+                    }`"
+                    :element="getFooterForPageIndex(pageIndex)"
+                    :editMode="
+                      !printMode &&
+                      getFooterForPageIndex(pageIndex) ==
+                        selectedHeaderFooterElement
+                    "
+                    :metadata="getTokenMetadata(pageIndex)"
+                    :pageSetup="score.pageSetup"
+                    :class="[
+                      {
+                        selectedTextbox:
+                          getFooterForPageIndex(pageIndex) ==
+                          selectedHeaderFooterElement,
+                      },
+                    ]"
+                    :style="footerStyle"
+                    @click="
+                      selectedHeaderFooterElement =
+                        getFooterForPageIndex(pageIndex)
+                    "
+                    @update:content="
+                      updateTextBoxContent(
+                        getFooterForPageIndex(pageIndex)! as TextBoxElement,
+                        $event,
+                      )
+                    "
+                    @update:contentLeft="
+                      updateTextBoxContentLeft(
+                        getFooterForPageIndex(pageIndex)! as TextBoxElement,
+                        $event,
+                      )
+                    "
+                    @update:contentCenter="
+                      updateTextBoxContentCenter(
+                        getFooterForPageIndex(pageIndex)! as TextBoxElement,
+                        $event,
+                      )
+                    "
+                    @update:contentRight="
+                      updateTextBoxContentRight(
+                        getFooterForPageIndex(pageIndex)! as TextBoxElement,
+                        $event,
+                      )
+                    "
+                /></template>
               </template>
             </template>
           </div>
@@ -429,6 +654,10 @@
       <ToolbarTextBox
         :element="selectedTextBoxElement"
         :fonts="fonts"
+        :pageSetup="score.pageSetup"
+        @update:multipanel="
+          updateTextBoxMultipanel(selectedTextBoxElement, $event)
+        "
         @update:useDefaultStyle="
           updateTextBoxUseDefaultStyle(selectedTextBoxElement, $event)
         "
@@ -452,8 +681,20 @@
         @update:lineHeight="
           updateTextBoxLineHeight(selectedTextBoxElement, $event)
         "
+        @update:customWidth="updateTextBoxWidth(selectedTextBoxElement, $event)"
+        @update:customHeight="
+          updateTextBoxHeight(selectedTextBoxElement, $event)
+        "
         @insert:gorthmikon="insertGorthmikon"
         @insert:pelastikon="insertPelastikon"
+      />
+    </template>
+    <template v-if="selectedRichTextBoxElement != null">
+      <ToolbarTextBoxRich
+        :element="selectedRichTextBoxElement"
+        @update:rtl="
+          updateRichTextBox(selectedRichTextBoxElement, { rtl: $event })
+        "
       />
     </template>
     <template
@@ -462,6 +703,7 @@
       <ToolbarDropCap
         :element="selectedElement"
         :fonts="fonts"
+        :pageSetup="score.pageSetup"
         @update:useDefaultStyle="
           updateDropCapUseDefaultStyle(
             selectedElement as DropCapElement,
@@ -488,6 +730,9 @@
         "
         @update:lineHeight="
           updateDropCapLineHeight(selectedElement as DropCapElement, $event)
+        "
+        @update:customWidth="
+          updateDropCapWidth(selectedElement as DropCapElement, $event)
         "
       />
     </template>
@@ -673,6 +918,9 @@
         @update:ignoreAttractions="
           updateNoteIgnoreAttractions(selectedElement as NoteElement, $event)
         "
+        @update:acceptsLyrics="
+          updateNoteAcceptsLyrics(selectedElement as NoteElement, $event)
+        "
         @open-syllable-positioning-dialog="openSyllablePositioningDialog"
       />
     </template>
@@ -734,6 +982,19 @@
         "
       />
     </template>
+    <ToolbarLyricManager
+      v-if="lyricManagerIsOpen"
+      :lyrics="lyrics"
+      :locked="lyricsLocked"
+      @update:locked="updateLyricsLocked"
+      @update:lyrics="updateStaffLyrics"
+      @assignAcceptsLyrics="assignAcceptsLyricsFromCurrentLyrics"
+      @close="closeLyricManager"
+      @click="
+        selectedElement = null;
+        selectedLyrics = null;
+      "
+    ></ToolbarLyricManager>
     <ModeKeyDialog
       v-if="modeKeyDialogIsOpen"
       :element="selectedElement"
@@ -778,6 +1039,19 @@
       @exportAsPng="exportAsPng"
       @close="closeExportDialog"
     />
+    <template v-if="richTextBoxCalculation">
+      <TextBoxRich
+        class="richTextBoxCalculation"
+        v-for="element in richTextBoxElements"
+        :key="element.id"
+        :element="element"
+        :pageSetup="score.pageSetup"
+        :fonts="fonts"
+        @update:height="
+          updateRichTextBoxHeight(element as RichTextBoxElement, $event)
+        "
+      />
+    </template>
   </div>
 </template>
 
@@ -785,7 +1059,7 @@
 import 'vue3-tabs-chrome/dist/vue3-tabs-chrome.css';
 
 import { getFontEmbedCSS, toPng } from 'html-to-image';
-import { throttle } from 'throttle-debounce';
+import { debounce, throttle } from 'throttle-debounce';
 import { nextTick, StyleValue, toRaw } from 'vue';
 import { Component, Inject, Prop, Vue, Watch } from 'vue-facing-decorator';
 import Vue3TabsChrome, { Tab } from 'vue3-tabs-chrome';
@@ -810,8 +1084,10 @@ import PlaybackSettingsDialog from '@/components/PlaybackSettingsDialog.vue';
 import SearchText from '@/components/SearchText.vue';
 import SyllablePositioningDialog from '@/components/SyllablePositioningDialog.vue';
 import TextBox from '@/components/TextBox.vue';
+import TextBoxRich from '@/components/TextBoxRich.vue';
 import ToolbarDropCap from '@/components/ToolbarDropCap.vue';
 import ToolbarImageBox from '@/components/ToolbarImageBox.vue';
+import ToolbarLyricManager from '@/components/ToolbarLyricManager.vue';
 import ToolbarLyrics from '@/components/ToolbarLyrics.vue';
 import ToolbarMain from '@/components/ToolbarMain.vue';
 import ToolbarMartyria from '@/components/ToolbarMartyria.vue';
@@ -819,6 +1095,7 @@ import ToolbarModeKey from '@/components/ToolbarModeKey.vue';
 import ToolbarNeume from '@/components/ToolbarNeume.vue';
 import ToolbarTempo from '@/components/ToolbarTempo.vue';
 import ToolbarTextBox from '@/components/ToolbarTextBox.vue';
+import ToolbarTextBoxRich from '@/components/ToolbarTextBoxRich.vue';
 import { EventBus } from '@/eventBus';
 import {
   CloseWorkspacesArgs,
@@ -833,6 +1110,7 @@ import {
 } from '@/ipc/ipcChannels';
 import { EditorPreferences } from '@/models/EditorPreferences';
 import {
+  AcceptsLyricsOption,
   DropCapElement,
   ElementType,
   EmptyElement,
@@ -841,6 +1119,7 @@ import {
   MartyriaElement,
   ModeKeyElement,
   NoteElement,
+  RichTextBoxElement,
   ScoreElement,
   TempoElement,
   TextBoxAlignment,
@@ -893,6 +1172,7 @@ import { Command, CommandFactory } from '@/services/history/CommandService';
 import { ByzHtmlExporter } from '@/services/integration/ByzHtmlExporter';
 import { IIpcService } from '@/services/ipc/IIpcService';
 import { LayoutService } from '@/services/LayoutService';
+import { LyricService } from '@/services/LyricService';
 import { NeumeKeyboard } from '@/services/NeumeKeyboard';
 import { IPlatformService } from '@/services/platform/IPlatformService';
 import { SaveService } from '@/services/SaveService';
@@ -922,12 +1202,15 @@ interface Vue3TabsChromeComponent {
     NeumeSelector,
     ContentEditable,
     TextBox,
+    TextBoxRich,
     DropCap,
     ImageBox,
     ModeKey,
     ToolbarImageBox,
     ToolbarTextBox,
+    ToolbarTextBoxRich,
     ToolbarLyrics,
+    ToolbarLyricManager,
     ToolbarModeKey,
     ToolbarNeume,
     ToolbarMartyria,
@@ -953,6 +1236,7 @@ export default class Editor extends Vue {
   @Inject() readonly audioService!: AudioService;
   @Inject() readonly playbackService!: PlaybackService;
   @Inject() readonly textSearchService!: TextSearchService;
+  @Inject() readonly lyricService!: LyricService;
 
   searchTextQuery: string = '';
   searchTextPanelIsOpen = false;
@@ -1000,6 +1284,8 @@ export default class Editor extends Vue {
 
   clipboard: ScoreElement[] = [];
   textBoxFormat: Partial<TextBoxElement> | null = null;
+  richTextBoxCalculation = false;
+  richTextBoxCalculationCount = 0;
 
   fonts: string[] = [];
 
@@ -1010,6 +1296,7 @@ export default class Editor extends Vue {
 
   audioElement: ScoreElement | null = null;
   playbackEvents: PlaybackSequenceEvent[] = [];
+  playbackTimeInterval: ReturnType<typeof setTimeout> | null = null;
   audioOptions: PlaybackOptions = {
     useLegetos: false,
     useDefaultAttractionZo: true,
@@ -1063,6 +1350,9 @@ export default class Editor extends Vue {
   textBoxCommandFactory: CommandFactory<TextBoxElement> =
     new CommandFactory<TextBoxElement>();
 
+  richTextBoxCommandFactory: CommandFactory<RichTextBoxElement> =
+    new CommandFactory<RichTextBoxElement>();
+
   imageBoxCommandFactory: CommandFactory<ImageBoxElement> =
     new CommandFactory<ImageBoxElement>();
 
@@ -1084,6 +1374,11 @@ export default class Editor extends Vue {
 
   // Throttled Methods
   keydownThrottleIntervalMs: number = 100;
+
+  assignLyricsThrottled = throttle(
+    this.keydownThrottleIntervalMs,
+    this.assignLyrics,
+  );
 
   moveToPreviousLyricBoxThrottled = throttle(
     this.keydownThrottleIntervalMs,
@@ -1240,6 +1535,8 @@ export default class Editor extends Vue {
   onWindowResizeThrottled = throttle(250, this.onWindowResize);
   onScrollThrottled = throttle(250, this.onScroll);
 
+  saveDebounced = debounce(250, this.save);
+
   get selectedWorkspace() {
     return this.selectedWorkspaceValue;
   }
@@ -1273,7 +1570,37 @@ export default class Editor extends Vue {
   }
 
   get elements() {
-    return this.score != null ? this.score.staff.elements : [];
+    return this.score?.staff.elements ?? [];
+  }
+
+  get richTextBoxElements() {
+    return this.elements.filter(
+      (x) => x.elementType === ElementType.RichTextBox,
+    );
+  }
+
+  get lyrics() {
+    return this.score?.staff.lyrics.text ?? '';
+  }
+
+  set lyrics(value: string) {
+    this.score.staff.lyrics.text = value;
+  }
+
+  get lyricsLocked() {
+    return this.score?.staff.lyrics.locked ?? false;
+  }
+
+  set lyricsLocked(value: boolean) {
+    this.score.staff.lyrics.locked = value;
+  }
+
+  get lyricManagerIsOpen() {
+    return this.selectedWorkspace.lyricManagerIsOpen;
+  }
+
+  set lyricManagerIsOpen(value: boolean) {
+    this.selectedWorkspace.lyricManagerIsOpen = value;
   }
 
   get pageCount() {
@@ -1314,6 +1641,7 @@ export default class Editor extends Vue {
 
         if (event) {
           this.audioService.jumpToEvent(event);
+          this.selectedWorkspace.playbackTime = event.absoluteTime;
         }
       } else if (this.audioService.state === AudioState.Paused) {
         this.stopAudio();
@@ -1381,6 +1709,15 @@ export default class Editor extends Vue {
 
     return selectedElement != null && this.isTextBoxElement(selectedElement)
       ? (selectedElement as TextBoxElement)
+      : null;
+  }
+
+  get selectedRichTextBoxElement() {
+    const selectedElement =
+      this.selectedElement || this.selectedHeaderFooterElement;
+
+    return selectedElement != null && this.isRichTextBoxElement(selectedElement)
+      ? (selectedElement as RichTextBoxElement)
       : null;
   }
 
@@ -1548,8 +1885,12 @@ export default class Editor extends Vue {
       fontFamily: element.lyricsUseDefaultStyle
         ? getFontFamilyWithFallback(
             this.score.pageSetup.lyricsDefaultFontFamily,
+            this.score.pageSetup.neumeDefaultFontFamily,
           )
-        : getFontFamilyWithFallback(element.lyricsFontFamily),
+        : getFontFamilyWithFallback(
+            element.lyricsFontFamily,
+            this.score.pageSetup.neumeDefaultFontFamily,
+          ),
       fontWeight: element.lyricsUseDefaultStyle
         ? this.score.pageSetup.lyricsDefaultFontWeight
         : element.lyricsFontWeight,
@@ -1565,6 +1906,9 @@ export default class Editor extends Vue {
       webkitTextStrokeWidth: element.lyricsUseDefaultStyle
         ? withZoom(this.score.pageSetup.lyricsDefaultStrokeWidth)
         : withZoom(element.lyricsStrokeWidth),
+      lineHeight: withZoom(element.lyricsFontHeight),
+      left: element.alignLeft ? 0 : undefined,
+      textAlign: element.alignLeft ? 'left' : undefined,
     } as StyleValue;
   }
 
@@ -1590,6 +1934,32 @@ export default class Editor extends Vue {
         ? withZoom(this.score.pageSetup.lyricsDefaultFontSize)
         : withZoom(element.lyricsFontSize),
     } as StyleValue;
+  }
+
+  getMelismaUnderscoreStyleOuter(element: NoteElement) {
+    return {
+      top: withZoom(element.melismaOffsetTop),
+      height: withZoom(element.lyricsFontHeight),
+      width: withZoom(element.melismaWidth!),
+    };
+  }
+
+  getMelismaUnderscoreStyleInner(element: NoteElement) {
+    const thickness = this.score.pageSetup.lyricsMelismaThickeness;
+
+    const spacing = !element.isFullMelisma
+      ? this.score.pageSetup.lyricsMelismaSpacing
+      : 0;
+
+    return {
+      borderBottom: `${withZoom(thickness)} solid ${
+        element.lyricsUseDefaultStyle
+          ? this.score.pageSetup.lyricsDefaultColor
+          : element.lyricsColor
+      }`,
+      left: withZoom(spacing),
+      width: `calc(100% - ${withZoom(spacing)})`,
+    };
   }
 
   getMelismaHyphenStyle(element: NoteElement, index: number) {
@@ -1621,7 +1991,7 @@ export default class Editor extends Vue {
     const header = this.score.getHeaderForPage(pageNumber);
 
     // Currently, headers only support a single text box element.
-    return header.elements[0] as TextBoxElement;
+    return header.elements[0] as TextBoxElement | RichTextBoxElement;
   }
 
   getFooterForPageIndex(pageIndex: number) {
@@ -1630,7 +2000,7 @@ export default class Editor extends Vue {
     const footer = this.score.getFooterForPage(pageNumber);
 
     // Currently, footers only support a single text box element.
-    return footer.elements[0] as TextBoxElement;
+    return footer.elements[0] as TextBoxElement | RichTextBoxElement;
   }
 
   getTokenMetadata(pageIndex: number): TokenMetadata {
@@ -1664,6 +2034,7 @@ export default class Editor extends Vue {
         fontLoader.load('1rem Athonite'),
         fontLoader.load('1rem "GFS Didot"'),
         fontLoader.load('1rem Neanes'),
+        fontLoader.load('1rem NeanesStathisSeries'),
         fontLoader.load('1rem NeanesRTL'),
         fontLoader.load('1rem "Noto Naskh Arabic"'),
         fontLoader.load('1rem Omega'),
@@ -1742,6 +2113,7 @@ export default class Editor extends Vue {
       this.onFileMenuPasteFormat,
     );
     EventBus.$on(IpcMainChannels.FileMenuFind, this.onFileMenuFind);
+    EventBus.$on(IpcMainChannels.FileMenuLyrics, this.onFileMenuLyrics);
     EventBus.$on(
       IpcMainChannels.FileMenuPreferences,
       this.onFileMenuPreferences,
@@ -1749,6 +2121,10 @@ export default class Editor extends Vue {
     EventBus.$on(
       IpcMainChannels.FileMenuInsertTextBox,
       this.onFileMenuInsertTextBox,
+    );
+    EventBus.$on(
+      IpcMainChannels.FileMenuInsertRichTextBox,
+      this.onFileMenuInsertRichTextBox,
     );
     EventBus.$on(
       IpcMainChannels.FileMenuInsertModeKey,
@@ -1838,6 +2214,7 @@ export default class Editor extends Vue {
       this.onFileMenuPasteFormat,
     );
     EventBus.$off(IpcMainChannels.FileMenuFind, this.onFileMenuFind);
+    EventBus.$off(IpcMainChannels.FileMenuLyrics, this.onFileMenuLyrics);
     EventBus.$off(
       IpcMainChannels.FileMenuPreferences,
       this.onFileMenuPreferences,
@@ -1845,6 +2222,10 @@ export default class Editor extends Vue {
     EventBus.$off(
       IpcMainChannels.FileMenuInsertTextBox,
       this.onFileMenuInsertTextBox,
+    );
+    EventBus.$off(
+      IpcMainChannels.FileMenuInsertRichTextBox,
+      this.onFileMenuInsertRichTextBox,
     );
     EventBus.$off(
       IpcMainChannels.FileMenuInsertModeKey,
@@ -1958,6 +2339,15 @@ export default class Editor extends Vue {
 
   closeExportDialog() {
     this.exportDialogIsOpen = false;
+  }
+
+  openLyricManager() {
+    this.lyricManagerIsOpen = true;
+    this.refreshStaffLyrics();
+  }
+
+  closeLyricManager() {
+    this.lyricManagerIsOpen = false;
   }
 
   updateEditorPreferences(form: EditorPreferences) {
@@ -2329,9 +2719,11 @@ export default class Editor extends Vue {
   }
 
   setLyrics(index: number, lyrics: string) {
-    (this.$refs[`lyrics-${index}`] as ContentEditable[])[0].setInnerText(
-      lyrics,
-    );
+    const elements = this.$refs[`lyrics-${index}`] as ContentEditable[];
+
+    if (elements?.length > 0) {
+      elements[0].setInnerText(lyrics);
+    }
   }
 
   isSyllableElement(element: ScoreElement) {
@@ -2352,6 +2744,10 @@ export default class Editor extends Vue {
 
   isTextBoxElement(element: ScoreElement) {
     return element.elementType == ElementType.TextBox;
+  }
+
+  isRichTextBoxElement(element: ScoreElement) {
+    return element.elementType == ElementType.RichTextBox;
   }
 
   isDropCapElement(element: ScoreElement) {
@@ -2552,9 +2948,19 @@ export default class Editor extends Vue {
 
       if (quantitativeMapping != null) {
         handled = true;
-        this.addQuantitativeNeumeThrottled(
-          quantitativeMapping.neume as QuantitativeNeume,
-        );
+
+        if (quantitativeMapping.acceptsLyricsOption != null) {
+          if (this.selectedElement.elementType === ElementType.Note) {
+            this.updateNoteAcceptsLyrics(
+              this.selectedElement as NoteElement,
+              quantitativeMapping.acceptsLyricsOption,
+            );
+          }
+        } else {
+          this.addQuantitativeNeumeThrottled(
+            quantitativeMapping.neume as QuantitativeNeume,
+          );
+        }
       }
 
       const tempoMapping = this.neumeKeyboard.findTempoMapping(
@@ -3090,6 +3496,8 @@ export default class Editor extends Vue {
         ),
       );
 
+      this.refreshStaffLyrics();
+
       this.selectedElement =
         this.elements[Math.min(start, this.elements.length - 1)];
 
@@ -3308,8 +3716,10 @@ export default class Editor extends Vue {
 
     if (commands.length > 1) {
       this.commandService.executeAsBatch(commands);
+      this.refreshStaffLyrics();
     } else if (commands.length === 1) {
       this.commandService.execute(commands[0]);
+      this.refreshStaffLyrics();
     }
 
     this.save();
@@ -3707,6 +4117,22 @@ export default class Editor extends Vue {
     this.pages = LayoutService.processPages(this.score);
   }
 
+  async saveWorkspace(workspace: Workspace) {
+    if (!this.lyricsLocked) {
+      this.lyrics = this.lyricService.extractLyrics(this.elements);
+    }
+
+    return await this.ipcService.saveWorkspace(workspace);
+  }
+
+  async saveWorkspaceAs(workspace: Workspace) {
+    if (!this.lyricsLocked) {
+      this.lyrics = this.lyricService.extractLyrics(this.elements);
+    }
+
+    return await this.ipcService.saveWorkspaceAs(workspace);
+  }
+
   async closeWorkspace(workspace: Workspace) {
     let shouldClose = true;
 
@@ -3741,8 +4167,8 @@ export default class Editor extends Vue {
         // User chose "Save"
         const saveResult =
           workspace.filePath != null
-            ? await this.ipcService.saveWorkspace(workspace)
-            : await this.ipcService.saveWorkspaceAs(workspace);
+            ? await this.saveWorkspace(workspace)
+            : await this.saveWorkspaceAs(workspace);
 
         // If they successfully saved, then we can close the workspacce
         shouldClose = saveResult.success;
@@ -4110,6 +4536,8 @@ export default class Editor extends Vue {
         insertAtIndex,
       }),
     );
+
+    this.refreshStaffLyrics();
   }
 
   addScoreElements(elements: ScoreElement[], insertAtIndex?: number) {
@@ -4120,6 +4548,8 @@ export default class Editor extends Vue {
         insertAtIndex,
       }),
     );
+
+    this.refreshStaffLyrics();
   }
 
   replaceScoreElement(element: ScoreElement, replaceAtIndex: number) {
@@ -4130,6 +4560,8 @@ export default class Editor extends Vue {
         replaceAtIndex,
       }),
     );
+
+    this.refreshStaffLyrics();
   }
 
   removeScoreElement(element: ScoreElement) {
@@ -4139,6 +4571,8 @@ export default class Editor extends Vue {
         collection: this.elements,
       }),
     );
+
+    this.refreshStaffLyrics();
   }
 
   updatePageVisibility(page: Page, isVisible: boolean) {
@@ -4160,6 +4594,15 @@ export default class Editor extends Vue {
 
     // Force the element to update so that the neume toolbar updates
     element.keyHelper++;
+
+    // If we change certain fields, we need to refresh the staff lyrics
+    if (
+      newValues.quantitativeNeume !== undefined ||
+      newValues.tie !== undefined ||
+      newValues.acceptsLyrics !== undefined
+    ) {
+      this.refreshStaffLyrics();
+    }
   }
 
   updateNoteLyricsUseDefaultStyle(
@@ -4388,6 +4831,16 @@ export default class Editor extends Vue {
     this.save();
   }
 
+  updateNoteAcceptsLyrics(
+    element: NoteElement,
+    acceptsLyrics: AcceptsLyricsOption,
+  ) {
+    this.updateNote(element, {
+      acceptsLyrics: acceptsLyrics,
+    });
+    this.save();
+  }
+
   updateNoteChromaticFthoraNote(
     element: NoteElement,
     chromaticFthoraNote: ScaleNote | null,
@@ -4396,95 +4849,132 @@ export default class Editor extends Vue {
     this.save();
   }
 
+  updateLyricsLocked(locked: boolean) {
+    this.lyricsLocked = locked;
+    this.hasUnsavedChanges = true;
+  }
+
+  updateStaffLyrics(lyrics: string) {
+    this.lyrics = lyrics;
+    this.assignLyricsThrottled();
+    this.hasUnsavedChanges = true;
+  }
+
+  assignLyrics() {
+    const updateCommands: Command[] = [];
+
+    this.lyricService.assignLyrics(
+      this.lyrics,
+      this.elements,
+      this.rtl,
+      (note, lyrics) => this.setLyrics(this.getElementIndex(note), lyrics),
+      (note, newValues) => {
+        note.updated = true;
+        updateCommands.push(
+          this.noteElementCommandFactory.create('update-properties', {
+            target: note,
+            newValues,
+          }),
+        );
+      },
+      (dropCap, token) => {
+        updateCommands.push(
+          this.dropCapCommandFactory.create('update-properties', {
+            target: dropCap,
+            newValues: { content: token },
+          }),
+        );
+      },
+    );
+
+    if (updateCommands.length > 0) {
+      this.commandService.executeAsBatch(updateCommands, this.lyricsLocked);
+      this.save();
+    }
+  }
+
+  assignAcceptsLyricsFromCurrentLyrics() {
+    const commands: Command[] = [];
+
+    this.lyricService.assignAcceptsLyricsFromCurrentLyrics(
+      this.elements,
+      (note, acceptsLyrics) => {
+        commands.push(
+          this.noteElementCommandFactory.create('update-properties', {
+            target: note,
+            newValues: {
+              acceptsLyrics,
+            },
+          }),
+        );
+      },
+    );
+
+    if (commands.length > 0) {
+      this.commandService.executeAsBatch(commands);
+      this.refreshStaffLyrics();
+      this.save();
+    }
+  }
+
   updateLyrics(
     element: NoteElement,
     lyrics: string,
     clearMelisma: boolean = false,
   ) {
-    // Replace newlines. This should only happen if the user pastes
-    // text containing new lines.
-    const sanitizedLyrics = lyrics.replace(/(?:\r\n|\r|\n)/g, ' ');
-    if (sanitizedLyrics !== lyrics) {
-      lyrics = sanitizedLyrics;
+    const newValues = this.lyricService.getLyricUpdateValues(
+      element,
+      lyrics,
+      this.elements,
+      this.rtl,
+      (note, lyrics) => this.setLyrics(this.getElementIndex(note), lyrics),
+      clearMelisma,
+    );
 
-      this.setLyrics(this.getElementIndex(element), lyrics);
+    if (newValues != null) {
+      this.commandService.execute(
+        this.noteElementCommandFactory.create('update-properties', {
+          target: element,
+          newValues,
+        }),
+      );
+      this.refreshStaffLyrics();
+      this.save();
     }
+  }
 
-    if (element.lyrics === lyrics && !(element.isMelisma && clearMelisma)) {
-      return;
+  refreshStaffLyrics() {
+    if (this.lyricsLocked) {
+      this.assignLyrics();
+    } else if (this.lyricManagerIsOpen) {
+      this.lyrics = this.lyricService.extractLyrics(this.elements);
     }
+  }
 
-    // Calculate melisma properties
-    let isMelisma: boolean;
-    let isMelismaStart: boolean;
-    let isHyphen: boolean;
-
-    if (lyrics === '_' || lyrics === '-' || lyrics === TATWEEL) {
-      isMelisma = true;
-      isMelismaStart = false;
-      isHyphen = lyrics === '-';
-      lyrics = '';
-
-      this.setLyrics(this.getElementIndex(element), lyrics);
-    } else if (
-      lyrics.endsWith('_') ||
-      lyrics.endsWith('-') ||
-      lyrics.endsWith(TATWEEL)
-    ) {
-      isMelisma = true;
-      isMelismaStart = true;
-      isHyphen = lyrics.endsWith('-');
-
-      lyrics = !this.rtl ? lyrics.slice(0, -1) : lyrics;
-
-      this.setLyrics(this.getElementIndex(element), lyrics);
-    } else {
-      isMelisma = false;
-      isMelismaStart = false;
-      isHyphen = false;
-    }
-
-    if (this.rtl) {
-      const currentIndex = this.getElementIndex(element);
-
-      if (currentIndex > 0) {
-        const previousElement = this.elements[currentIndex - 1];
-
-        if (
-          previousElement.elementType === ElementType.Note &&
-          (previousElement as NoteElement).isMelisma &&
-          !lyrics.startsWith(TATWEEL)
-        ) {
-          lyrics = TATWEEL + lyrics;
-        }
-      }
-    }
-
-    // If nothing changed, return. This could happen if
-    // the user types in an underscore when the element is
-    // already a melisma.
-    if (
-      element.lyrics === lyrics &&
-      element.isMelismaStart === isMelismaStart &&
-      element.isMelisma === isMelisma &&
-      element.isHyphen === isHyphen
-    ) {
-      return;
+  updateRichTextBox(
+    element: RichTextBoxElement,
+    newValues: Partial<RichTextBoxElement>,
+  ) {
+    if (newValues.rtl != null) {
+      element.keyHelper++;
     }
 
     this.commandService.execute(
-      this.noteElementCommandFactory.create('update-properties', {
+      this.richTextBoxCommandFactory.create('update-properties', {
         target: element,
-        newValues: {
-          lyrics,
-          isMelisma,
-          isMelismaStart,
-          isHyphen,
-        },
+        newValues: newValues,
       }),
     );
 
     this.save();
+  }
+
+  updateRichTextBoxHeight(element: RichTextBoxElement, height: number) {
+    // The height could be updated by many rich text box elements at once
+    // (e.g. if PageSetup changes) so we debounce the save.
+    element.height = height;
+    this.richTextBoxCalculationCount++;
+    this.saveDebounced();
   }
 
   updateTextBox(element: TextBoxElement, newValues: Partial<TextBoxElement>) {
@@ -4502,11 +4992,27 @@ export default class Editor extends Vue {
     this.updateTextBox(element, { content });
   }
 
+  updateTextBoxContentLeft(element: TextBoxElement, contentLeft: string) {
+    this.updateTextBox(element, { contentLeft });
+  }
+
+  updateTextBoxContentCenter(element: TextBoxElement, contentCenter: string) {
+    this.updateTextBox(element, { contentCenter });
+  }
+
+  updateTextBoxContentRight(element: TextBoxElement, contentRight: string) {
+    this.updateTextBox(element, { contentRight });
+  }
+
   updateTextBoxUseDefaultStyle(
     element: TextBoxElement,
     useDefaultStyle: boolean,
   ) {
     this.updateTextBox(element, { useDefaultStyle });
+  }
+
+  updateTextBoxMultipanel(element: TextBoxElement, multipanel: boolean) {
+    this.updateTextBox(element, { multipanel });
   }
 
   updateTextBoxFontSize(element: TextBoxElement, fontSize: number) {
@@ -4547,6 +5053,14 @@ export default class Editor extends Vue {
 
   updateTextBoxLineHeight(element: TextBoxElement, lineHeight: number | null) {
     this.updateTextBox(element, { lineHeight });
+  }
+
+  updateTextBoxWidth(element: TextBoxElement, customWidth: number | null) {
+    this.updateTextBox(element, { customWidth });
+  }
+
+  updateTextBoxHeight(element: TextBoxElement, customHeight: number | null) {
+    this.updateTextBox(element, { customHeight });
   }
 
   updateModeKey(element: ModeKeyElement, newValues: Partial<ModeKeyElement>) {
@@ -4861,6 +5375,8 @@ export default class Editor extends Vue {
           newValues: { content },
         }),
       );
+
+      this.refreshStaffLyrics();
     }
 
     this.save();
@@ -4899,6 +5415,10 @@ export default class Editor extends Vue {
 
   updateDropCapLineHeight(element: DropCapElement, lineHeight: number | null) {
     this.updateDropCap(element, { lineHeight });
+  }
+
+  updateDropCapWidth(element: DropCapElement, customWidth: number | null) {
+    this.updateDropCap(element, { customWidth });
   }
 
   updateImageBox(
@@ -4967,6 +5487,8 @@ export default class Editor extends Vue {
         ),
       );
 
+      this.refreshStaffLyrics();
+
       const start = Math.min(
         this.selectionRange.start,
         this.selectionRange.end,
@@ -4994,18 +5516,183 @@ export default class Editor extends Vue {
   }
 
   updatePageSetup(pageSetup: PageSetup) {
-    pageSetup.neumeDefaultFontFamily = pageSetup.melkiteRtl
-      ? 'NeanesRTL'
-      : 'Neanes';
+    const needToRecalcRichTextBoxes =
+      pageSetup.textBoxDefaultFontFamily !=
+        this.score.pageSetup.textBoxDefaultFontFamily ||
+      pageSetup.textBoxDefaultFontSize !=
+        this.score.pageSetup.textBoxDefaultFontSize;
 
-    this.commandService.execute(
+    const updateCommands: Command[] = [
       this.pageSetupCommandFactory.create('update-properties', {
         target: this.score.pageSetup,
         newValues: pageSetup,
       }),
-    );
+    ];
+
+    if (pageSetup.richHeaderFooter && !this.score.pageSetup.richHeaderFooter) {
+      updateCommands.push(
+        this.scoreElementCommandFactory.create(
+          'replace-element-in-collection',
+          {
+            collection: this.score.headers.default.elements,
+            element: this.createRichHeaderFooter('', 'Title', '$p'),
+            replaceAtIndex: 0,
+          },
+        ),
+        this.scoreElementCommandFactory.create(
+          'replace-element-in-collection',
+          {
+            collection: this.score.headers.even.elements,
+            element: this.createRichHeaderFooter('$p', 'Title', ''),
+            replaceAtIndex: 0,
+          },
+        ),
+        this.scoreElementCommandFactory.create(
+          'replace-element-in-collection',
+          {
+            collection: this.score.headers.firstPage.elements,
+            element: this.createRichHeaderFooter('', 'Title', '$p'),
+            replaceAtIndex: 0,
+          },
+        ),
+        this.scoreElementCommandFactory.create(
+          'replace-element-in-collection',
+          {
+            collection: this.score.headers.odd.elements,
+            element: this.createRichHeaderFooter('', 'Title', '$p'),
+            replaceAtIndex: 0,
+          },
+        ),
+        this.scoreElementCommandFactory.create(
+          'replace-element-in-collection',
+          {
+            collection: this.score.footers.default.elements,
+            element: this.createRichHeaderFooter('', 'Footer', '$p'),
+            replaceAtIndex: 0,
+          },
+        ),
+        this.scoreElementCommandFactory.create(
+          'replace-element-in-collection',
+          {
+            collection: this.score.footers.even.elements,
+            element: this.createRichHeaderFooter('$p', 'Footer', ''),
+            replaceAtIndex: 0,
+          },
+        ),
+        this.scoreElementCommandFactory.create(
+          'replace-element-in-collection',
+          {
+            collection: this.score.footers.firstPage.elements,
+            element: this.createRichHeaderFooter('', 'Footer', '$p'),
+            replaceAtIndex: 0,
+          },
+        ),
+        this.scoreElementCommandFactory.create(
+          'replace-element-in-collection',
+          {
+            collection: this.score.footers.odd.elements,
+            element: this.createRichHeaderFooter('', 'Footer', '$p'),
+            replaceAtIndex: 0,
+          },
+        ),
+      );
+    } else if (
+      !pageSetup.richHeaderFooter &&
+      this.score.pageSetup.richHeaderFooter
+    ) {
+      updateCommands.push(
+        this.scoreElementCommandFactory.create(
+          'replace-element-in-collection',
+          {
+            collection: this.score.headers.default.elements,
+            element: this.createRegularHeaderFooter('', 'Title', '$p'),
+            replaceAtIndex: 0,
+          },
+        ),
+        this.scoreElementCommandFactory.create(
+          'replace-element-in-collection',
+          {
+            collection: this.score.headers.even.elements,
+            element: this.createRegularHeaderFooter('$p', 'Title', ''),
+            replaceAtIndex: 0,
+          },
+        ),
+        this.scoreElementCommandFactory.create(
+          'replace-element-in-collection',
+          {
+            collection: this.score.headers.firstPage.elements,
+            element: this.createRegularHeaderFooter('', 'Title', '$p'),
+            replaceAtIndex: 0,
+          },
+        ),
+        this.scoreElementCommandFactory.create(
+          'replace-element-in-collection',
+          {
+            collection: this.score.headers.odd.elements,
+            element: this.createRegularHeaderFooter('', 'Title', '$p'),
+            replaceAtIndex: 0,
+          },
+        ),
+        this.scoreElementCommandFactory.create(
+          'replace-element-in-collection',
+          {
+            collection: this.score.footers.default.elements,
+            element: this.createRegularHeaderFooter('', 'Footer', '$p'),
+            replaceAtIndex: 0,
+          },
+        ),
+        this.scoreElementCommandFactory.create(
+          'replace-element-in-collection',
+          {
+            collection: this.score.footers.even.elements,
+            element: this.createRegularHeaderFooter('$p', 'Footer', ''),
+            replaceAtIndex: 0,
+          },
+        ),
+        this.scoreElementCommandFactory.create(
+          'replace-element-in-collection',
+          {
+            collection: this.score.footers.firstPage.elements,
+            element: this.createRegularHeaderFooter('', 'Footer', '$p'),
+            replaceAtIndex: 0,
+          },
+        ),
+        this.scoreElementCommandFactory.create(
+          'replace-element-in-collection',
+          {
+            collection: this.score.footers.odd.elements,
+            element: this.createRegularHeaderFooter('', 'Footer', '$p'),
+            replaceAtIndex: 0,
+          },
+        ),
+      );
+    }
+
+    this.commandService.executeAsBatch(updateCommands);
+
+    if (needToRecalcRichTextBoxes) {
+      this.recalculateRichTextBoxHeights();
+    }
 
     this.save();
+  }
+
+  createRegularHeaderFooter(left: string, center: string, right: string) {
+    const textbox = new TextBoxElement();
+    textbox.multipanel = true;
+    textbox.contentLeft = left;
+    textbox.contentCenter = center;
+    textbox.contentRight = right;
+    return textbox;
+  }
+
+  createRichHeaderFooter(left: string, center: string, right: string) {
+    const textbox = new RichTextBoxElement();
+    textbox.multipanel = true;
+    textbox.contentLeft = `${left}`;
+    textbox.contentCenter = `<p style="text-align:center;">${center}</p>`;
+    textbox.contentRight = `<p style="text-align:right;">${right}</p>`;
+    return textbox;
   }
 
   updateEntryMode(mode: EntryMode) {
@@ -5056,6 +5743,12 @@ export default class Editor extends Vue {
         );
 
         this.audioService.play(this.playbackEvents, this.audioOptions, startAt);
+
+        if (startAt) {
+          this.selectedWorkspace.playbackTime = startAt.absoluteTime;
+        }
+
+        this.startPlaybackClock();
       } else {
         this.pauseAudio();
       }
@@ -5069,6 +5762,8 @@ export default class Editor extends Vue {
       this.audioService.stop();
 
       this.playbackEvents = [];
+
+      this.stopPlaybackClock();
     } catch (error) {
       console.error(error);
     }
@@ -5080,9 +5775,26 @@ export default class Editor extends Vue {
 
       if (this.audioService.state === AudioState.Paused) {
         this.audioElement = null;
+        this.stopPlaybackClock();
+      } else {
+        this.startPlaybackClock();
       }
     } catch (error) {
       console.error(error);
+    }
+  }
+
+  startPlaybackClock() {
+    this.stopPlaybackClock();
+
+    this.playbackTimeInterval = setInterval(() => {
+      this.selectedWorkspace.playbackTime += 0.1;
+    }, 100);
+  }
+
+  stopPlaybackClock() {
+    if (this.playbackTimeInterval != null) {
+      clearInterval(this.playbackTimeInterval);
     }
   }
 
@@ -5103,6 +5815,9 @@ export default class Editor extends Vue {
     speed = Math.min(3, speed);
     speed = +speed.toFixed(2);
 
+    this.selectedWorkspace.playbackBpm /= this.audioOptions.speed;
+    this.selectedWorkspace.playbackBpm *= speed;
+
     this.audioOptions.speed = speed;
 
     this.saveAudioOptions();
@@ -5117,6 +5832,9 @@ export default class Editor extends Vue {
 
   onAudioServiceEventPlay(event: PlaybackSequenceEvent) {
     if (this.audioService.state === AudioState.Playing) {
+      this.selectedWorkspace.playbackTime = event.absoluteTime;
+      this.selectedWorkspace.playbackBpm = event.bpm;
+
       this.audioElement = this.elements[event.elementIndex];
 
       // Scroll the currently playing element into view
@@ -5138,6 +5856,44 @@ export default class Editor extends Vue {
 
   onAudioServiceStop() {
     this.audioElement = null;
+
+    this.stopPlaybackClock();
+  }
+
+  recalculateRichTextBoxHeights() {
+    if (this.richTextBoxCalculation) {
+      this.richTextBoxCalculation = false;
+    }
+
+    nextTick(async () => {
+      const expectedCount = this.richTextBoxElements.length;
+      this.richTextBoxCalculationCount = 0;
+      this.richTextBoxCalculation = true;
+
+      const maxTries = 4 * 30; // 30 seconds
+      let tries = 1;
+      let lastCount = 0;
+
+      // Wait until all rich text boxes have updated
+      const poll = (resolve: (value: unknown) => void) => {
+        if (
+          this.richTextBoxCalculationCount === expectedCount ||
+          tries >= maxTries ||
+          this.richTextBoxCalculationCount < lastCount
+        ) {
+          resolve(true);
+        } else {
+          tries++;
+          lastCount = this.richTextBoxCalculationCount;
+          setTimeout(() => poll(resolve), 250);
+        }
+      };
+
+      await new Promise(poll);
+
+      this.richTextBoxCalculation = false;
+      this.saveDebounced();
+    });
   }
 
   onFileMenuNewScore() {
@@ -5370,9 +6126,9 @@ export default class Editor extends Vue {
     }
   }
 
-  onFileMenuInsertTextBox(args: FileMenuInsertTextboxArgs) {
+  onFileMenuInsertTextBox(args?: FileMenuInsertTextboxArgs) {
     const element = new TextBoxElement();
-    element.inline = args.inline;
+    element.inline = args?.inline ?? false;
 
     if (element.inline) {
       element.color = this.score.pageSetup.lyricsDefaultColor;
@@ -5391,6 +6147,23 @@ export default class Editor extends Vue {
       element.italic =
         this.score.pageSetup.textBoxDefaultFontStyle === 'italic';
     }
+
+    this.addScoreElement(element, this.selectedElementIndex);
+
+    this.selectedElement = element;
+
+    this.save();
+
+    nextTick(() => {
+      const index = this.elements.indexOf(element);
+
+      (this.$refs[`element-${index}`] as any)[0].focus();
+    });
+  }
+
+  onFileMenuInsertRichTextBox() {
+    const element = new RichTextBoxElement();
+    element.rtl = this.score.pageSetup.melkiteRtl;
 
     this.addScoreElement(element, this.selectedElementIndex);
 
@@ -5463,12 +6236,12 @@ export default class Editor extends Vue {
     const workspace = this.selectedWorkspace;
 
     if (workspace.filePath != null) {
-      const result = await this.ipcService.saveWorkspace(workspace);
+      const result = await this.saveWorkspace(workspace);
       if (result.success) {
         workspace.hasUnsavedChanges = false;
       }
     } else {
-      const result = await this.ipcService.saveWorkspaceAs(workspace);
+      const result = await this.saveWorkspaceAs(workspace);
       if (result.success) {
         workspace.filePath = result.filePath;
         workspace.hasUnsavedChanges = false;
@@ -5479,7 +6252,7 @@ export default class Editor extends Vue {
   async onFileMenuSaveAs() {
     const workspace = this.selectedWorkspace;
 
-    const result = await this.ipcService.saveWorkspaceAs(workspace);
+    const result = await this.saveWorkspaceAs(workspace);
     if (result.success) {
       workspace.filePath = result.filePath;
       workspace.hasUnsavedChanges = false;
@@ -5489,7 +6262,16 @@ export default class Editor extends Vue {
   onFileMenuUndo() {
     const currentIndex = this.selectedElementIndex;
 
+    const textBoxDefaultFontFamilyPrevious =
+      this.score.pageSetup.textBoxDefaultFontFamily;
+    const textBoxDefaultFontSizePrevious =
+      this.score.pageSetup.textBoxDefaultFontSize;
+
     this.commandService.undo();
+
+    // TODO this may be overkill, but the alternative is putting in place
+    // an event system to only refresh on certain undo actions
+    this.refreshStaffLyrics();
 
     if (currentIndex > -1) {
       // If the selected element was removed during the undo process, choose a new one
@@ -5501,13 +6283,31 @@ export default class Editor extends Vue {
       this.selectedElement.keyHelper++;
     }
 
+    if (
+      textBoxDefaultFontFamilyPrevious !=
+        this.score.pageSetup.textBoxDefaultFontFamily ||
+      textBoxDefaultFontSizePrevious !=
+        this.score.pageSetup.textBoxDefaultFontSize
+    ) {
+      this.recalculateRichTextBoxHeights();
+    }
+
     this.save();
   }
 
   onFileMenuRedo() {
     const currentIndex = this.selectedElementIndex;
 
+    const textBoxDefaultFontFamilyPrevious =
+      this.score.pageSetup.textBoxDefaultFontFamily;
+    const textBoxDefaultFontSizePrevious =
+      this.score.pageSetup.textBoxDefaultFontSize;
+
     this.commandService.redo();
+
+    // TODO this may be overkill, but the alternative is putting in place
+    // an event system to only refresh on certain undo actions
+    this.refreshStaffLyrics();
 
     if (currentIndex > -1) {
       // If the selected element was removed during the redo process, choose a new one
@@ -5517,6 +6317,15 @@ export default class Editor extends Vue {
       // Undo/redo could affect the note display in the neume toolbar (among other things),
       // so we force a refresh here
       this.selectedElement.keyHelper++;
+    }
+
+    if (
+      textBoxDefaultFontFamilyPrevious !=
+        this.score.pageSetup.textBoxDefaultFontFamily ||
+      textBoxDefaultFontSizePrevious !=
+        this.score.pageSetup.textBoxDefaultFontSize
+    ) {
+      this.recalculateRichTextBoxHeights();
     }
 
     this.save();
@@ -5602,6 +6411,16 @@ export default class Editor extends Vue {
       (this.$refs.searchText as SearchText).focus();
     } else {
       this.searchTextPanelIsOpen = true;
+    }
+  }
+
+  onFileMenuLyrics() {
+    if (!this.dialogOpen) {
+      if (this.lyricManagerIsOpen) {
+        this.closeLyricManager();
+      } else {
+        this.openLyricManager();
+      }
     }
   }
 
@@ -5829,6 +6648,14 @@ export default class Editor extends Vue {
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
+<style>
+@media print {
+  body * {
+    visibility: hidden;
+    overflow: visible !important;
+  }
+}
+</style>
 <style scoped>
 .loading-overlay {
   position: absolute;
@@ -5901,6 +6728,15 @@ export default class Editor extends Vue {
 
 .selectedLyrics {
   border: 1px solid goldenrod;
+}
+
+.selectedMelisma {
+  display: none;
+}
+
+.richTextBoxCalculation {
+  position: absolute;
+  left: -99999999px;
 }
 
 .line {
@@ -6050,7 +6886,17 @@ export default class Editor extends Vue {
   white-space: pre;
 }
 
+.melisma-underscore {
+  position: absolute;
+  display: inline;
+  white-space: pre;
+}
+
 .melisma.full {
+  left: 0;
+}
+
+.melisma-underscore.full {
   left: 0;
 }
 
@@ -6060,6 +6906,16 @@ export default class Editor extends Vue {
 
 .melisma-hyphen {
   position: absolute;
+}
+
+.melisma-inner {
+  height: 100%;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.melisma-text {
+  opacity: 0.5;
 }
 
 .page-break {
@@ -6110,35 +6966,41 @@ export default class Editor extends Vue {
   visibility: hidden;
 }
 
-.page.print .text-box-container {
-  border: none;
-}
-
-.page.print .mode-key-container {
-  border: none;
-}
-
-.page.print .image-box-container {
+.page.print .text-box-container,
+.page.print .rich-text-box-container,
+.page.print .drop-cap-container,
+.page.print .mode-key-container,
+.page.print .image-box-container,
+.page.print :deep(.text-box.multipanel) {
   border: none;
 }
 
 .page.print .page-break,
 .page.print .line-break,
 .page.print .page-break-2,
-.page.print .line-break-2 {
+.page.print .line-break-2,
+.page.print :deep(.handle),
+.page.print :deep(.ck-widget__type-around) {
   display: none !important;
+}
+
+.page.print :deep(.ck-widget) {
+  outline: none !important;
 }
 
 .page.print .neume-box .selected {
   background-color: initial;
 }
 
-@media print {
-  body * {
-    visibility: hidden;
-    overflow: visible !important;
-  }
+.page.print .melisma-text {
+  opacity: 1;
+}
 
+.page.print :deep(.rich-text-editor) {
+  overflow: hidden !important;
+}
+
+@media print {
   .page,
   .page * {
     visibility: visible;
@@ -6154,6 +7016,7 @@ export default class Editor extends Vue {
     height: auto;
     margin-bottom: 0;
     padding: 0;
+    break-after: page;
   }
 
   .empty-neume-box {
@@ -6161,6 +7024,10 @@ export default class Editor extends Vue {
   }
 
   .text-box-container {
+    border: none;
+  }
+
+  .drop-cap-container {
     border: none;
   }
 
@@ -6176,10 +7043,15 @@ export default class Editor extends Vue {
     border: none;
   }
 
+  .melisma-text {
+    opacity: 1;
+  }
+
   .file-menu-bar,
   .neume-selector-panel,
   .workspace-tab-container,
   .lyrics-toolbar,
+  .lyric-manager-toolbar,
   .main-toolbar,
   .martyria-toolbar,
   .mode-key-toolbar,

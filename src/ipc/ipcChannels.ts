@@ -26,9 +26,12 @@ export enum IpcMainChannels {
 
   FileMenuFind = 'FileMenuFind',
 
+  FileMenuLyrics = 'FileMenuLyrics',
+
   FileMenuPreferences = 'FileMenuPreferences',
 
   FileMenuInsertTextBox = 'FileMenuInsertTextBox',
+  FileMenuInsertRichTextBox = 'FileMenuInsertRichTextBox',
   FileMenuInsertModeKey = 'FileMenuInsertModeKey',
   FileMenuInsertDropCapBefore = 'FileMenuInsertDropCapBefore',
   FileMenuInsertDropCapAfter = 'FileMenuInsertDropCapAfter',

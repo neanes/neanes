@@ -6,6 +6,7 @@ import {
   MartyriaElement,
   ModeKeyElement,
   NoteElement,
+  RichTextBoxElement,
   ScoreElement,
   TempoElement,
   TextBoxElement,
@@ -23,6 +24,7 @@ import { GORTHMIKON, PELASTIKON } from '@/utils/constants';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { Unit } from '@/utils/Unit';
 
+import { MelismaHelperGreek } from '../MelismaHelperGreek';
 import { NeumeMappingService, SbmuflGlyphName } from '../NeumeMappingService';
 import { TextMeasurementService } from '../TextMeasurementService';
 
@@ -53,6 +55,7 @@ interface ByzHtmlExporterConfig {
   classNeumeParagraphCenter: string;
   classTextBox: string;
   classTextBoxInline: string;
+  classRichTextBox: string;
   classImageBox: string;
   classImageBoxInline: string;
   classModeKey: string;
@@ -90,6 +93,7 @@ export class ByzHtmlExporter {
     classNeumeParagraph: 'byz--neume-paragraph',
     classNeumeParagraphCenter: 'byz--neume-paragraph-center',
     classTextBox: 'byz--text-box',
+    classRichTextBox: 'byz---rich-text-box',
     classTextBoxInline: 'byz--text-box-inline',
     classImageBox: 'byz--image-box',
     classImageBoxInline: 'byz--image-box-inline',
@@ -118,6 +122,15 @@ export class ByzHtmlExporter {
 
     const body = this.exportElements(score.staff.elements, 4);
 
+    let injectRtl = '';
+
+    if (score.pageSetup.melkiteRtl) {
+      injectRtl = `<script>      
+  byzhtml.options.defaultFontFamily = 'NeanesRTL';
+  byzhtml.options.melkiteRtl = true;
+</script>`;
+    }
+
     const result = `<html>
   <head>
     <link
@@ -126,6 +139,8 @@ export class ByzHtmlExporter {
     />
     
     <script src="https://cdn.jsdelivr.net/gh/danielgarthur/byzhtml@${byzhtmlVersion}/dist/byzhtml.min.js"></script>
+
+    ${injectRtl}
 
     <meta
       name="viewport"
@@ -149,12 +164,15 @@ export class ByzHtmlExporter {
   exportPageSetup(pageSetup: PageSetup) {
     const orientation = pageSetup.landscape ? 'landscape' : 'portrait';
 
+    const rtlParagraph = pageSetup.melkiteRtl ? 'direction: rtl' : '';
+    const lyricOffsetH = pageSetup.melkiteRtl ? '0' : '3.6pt';
+
     const style = `:root {
         --byz-neume-font-size: ${Unit.toPt(pageSetup.neumeDefaultFontSize)}pt;
         
         --byz-lyric-font-family: ${pageSetup.lyricsDefaultFontFamily};
         --byz-lyric-font-size: ${Unit.toPt(pageSetup.lyricsDefaultFontSize)}pt;
-        --byz-lyric-offset-h: 3.6pt;
+        --byz-lyric-offset-h: ${lyricOffsetH};
         --byz-lyric-offset-v: ${Unit.toPt(pageSetup.lyricsVerticalOffset)}pt;
 
         --byz-drop-cap-font-family: ${pageSetup.dropCapDefaultFontFamily};
@@ -233,17 +251,22 @@ export class ByzHtmlExporter {
 
       .${this.config.classTextBox} {
         white-space: break-spaces;
-        font-family: ${pageSetup.lyricsDefaultFontFamily};
-        font-size: ${Unit.toPt(pageSetup.lyricsDefaultFontSize)}pt;
-        font-weight: ${pageSetup.lyricsDefaultFontWeight};
-        font-style: ${pageSetup.lyricsDefaultFontStyle};
-        color: ${pageSetup.lyricsDefaultColor};
-        -webkit-text-stroke-width: ${pageSetup.lyricsDefaultStrokeWidth};
+        font-family: ${pageSetup.textBoxDefaultFontFamily};
+        font-size: ${Unit.toPt(pageSetup.textBoxDefaultFontSize)}pt;
+        font-weight: ${pageSetup.textBoxDefaultFontWeight};
+        font-style: ${pageSetup.textBoxDefaultFontStyle};
+        color: ${pageSetup.textBoxDefaultColor};
+        -webkit-text-stroke-width: ${pageSetup.textBoxDefaultStrokeWidth};
       }
 
       .${this.config.classTextBoxInline} {
         display: flex;
         align-items: center;
+      }
+
+      .${this.config.classRichTextBox} {
+        font-family: ${pageSetup.textBoxDefaultFontFamily};
+        font-size: ${Unit.toPt(pageSetup.textBoxDefaultFontSize)}pt;
       }
 
       .${this.config.classImageBox} {
@@ -301,6 +324,7 @@ export class ByzHtmlExporter {
         flex-wrap: wrap;
         justify-content: space-between;
         margin-bottom: ${Unit.toPt(pageSetup.neumeDefaultFontSize)}pt;
+        ${rtlParagraph}
       }
 
       .${this.config.classNeumeParagraph}:last-child {
@@ -389,6 +413,18 @@ export class ByzHtmlExporter {
 
           result += this.exportTextBox(element as TextBoxElement, indentation);
           break;
+        case ElementType.RichTextBox:
+          if (insidePage) {
+            result += this.endPage(indentation + 2, needLineBreak);
+            insidePage = false;
+            needLineBreak = false;
+          }
+
+          result += this.exportRichTextBox(
+            element as RichTextBoxElement,
+            indentation,
+          );
+          break;
         case ElementType.ModeKey:
           if (insidePage) {
             result += this.endPage(indentation + 2, needLineBreak);
@@ -451,6 +487,17 @@ export class ByzHtmlExporter {
     }
 
     inner += this.exportNeume(element.quantitativeNeume, indentation + 2);
+
+    if (element.stavros) {
+      inner += this.exportNeume(
+        VocalExpressionNeume.Cross_Top,
+        indentation + 2,
+        {
+          x: element.stavrosOffsetX,
+          y: element.stavrosOffsetY,
+        },
+      );
+    }
 
     inner += this.exportNeume(element.vocalExpressionNeume, indentation + 2, {
       x: element.vocalExpressionNeumeOffsetX,
@@ -570,7 +617,10 @@ export class ByzHtmlExporter {
         this.config.tagLyric
       }\n${this.getIndentationString(indentation)}>`;
 
-      if (element.isMelismaStart) {
+      if (
+        element.isMelismaStart &&
+        !MelismaHelperGreek.isGreek(element.lyrics)
+      ) {
         const hyphenAttribute = element.isHyphen
           ? ` ${this.config.attributeMelismaHyphen}`
           : '';
@@ -581,6 +631,10 @@ export class ByzHtmlExporter {
           this.config.tagMelisma
         }\n${this.getIndentationString(indentation)}>`;
       }
+    } else if (element.melismaText.trim() != '') {
+      inner += `<${this.config.tagLyric}>${element.melismaText}</${
+        this.config.tagLyric
+      }\n${this.getIndentationString(indentation)}>`;
     }
 
     return `<${this.config.tagNote}\n${this.getIndentationString(
@@ -636,7 +690,7 @@ export class ByzHtmlExporter {
       style += `font-size: ${Unit.toPt(element.computedFontSize)}pt;`;
       style += `font-weight: ${element.computedFontWeight};`;
       style += `font-style: ${element.computedFontStyle};`;
-      style += `line-height: ${element.computedLineHeight ?? 'normal'};`;
+      style += `line-height: ${element.computedLineHeight};`;
       style += `-webkit-text-stroke-width: ${element.computedStrokeWidth};`;
 
       styleAttribute = ` style="${style}"`;
@@ -671,7 +725,7 @@ export class ByzHtmlExporter {
       style += `font-size: ${Unit.toPt(element.computedFontSize)}pt;`;
       style += `font-weight: ${element.computedFontWeight};`;
       style += `font-style: ${element.computedFontStyle};`;
-      style += `line-height: ${element.computedLineHeight ?? 'normal'};`;
+      style += `line-height: ${element.computedLineHeight};`;
       style += `-webkit-text-stroke-width: ${element.computedStrokeWidth};`;
       //style += `width: ${element.width};`;
       //style += `height: ${element.height};`;
@@ -684,6 +738,23 @@ export class ByzHtmlExporter {
     if (element.inline) {
       className += ` ${this.config.classTextBoxInline}`;
     }
+
+    return `<div class="${className}"${styleAttribute}>${
+      element.content
+    }</div\n${this.getIndentationString(indentation)}>`;
+  }
+
+  exportRichTextBox(element: RichTextBoxElement, indentation: number) {
+    const className = this.config.classRichTextBox;
+
+    let styleAttribute = '';
+    let style = '';
+
+    if (element.rtl) {
+      style += 'direction: rtl;';
+    }
+
+    styleAttribute = ` style="${style}"`;
 
     return `<div class="${className}"${styleAttribute}>${
       element.content
@@ -975,7 +1046,7 @@ export class ByzHtmlExporter {
     } "${pageSetup.dropCapDefaultFontFamily}"`;
 
     const fontBoundingBoxDescent =
-      TextMeasurementService.getFontBoundingBoxDescent('R', font);
+      TextMeasurementService.getFontBoundingBoxDescent(font);
 
     // TODO this doesn't work correctly for every font
     return (
@@ -1082,7 +1153,7 @@ export class ByzHtmlExporter {
     map.set('yfenBelow', 'x-yfen-below');
     map.set('stavros', 'x-stavros');
     map.set('breath', 'x-breath');
-    map.set('stavrosAbove', 'x-stavros-a');
+    map.set('stavrosAbove', 'x-stavros-above');
     map.set('klasmaAbove', 'x-kl');
     map.set('klasmaBelow', 'x-kl-b');
     map.set('apli', 'x-apli');
@@ -1285,12 +1356,12 @@ export class ByzHtmlExporter {
     map.set('barlineShortSingle', 'x-bar-s');
     map.set('barlineShortDouble', 'x-bar2-s');
     map.set('barlineShortTheseos', 'x-bar-th-s');
-    map.set('barlineSingleAbove', 'x-bar');
-    map.set('barlineDoubleAbove', 'x-bar2');
-    map.set('barlineTheseosAbove', 'x-bar-th');
-    map.set('barlineShortSingleAbove', 'x-bar-s');
-    map.set('barlineShortDoubleAbove', 'x-bar2-s');
-    map.set('barlineShortTheseosAbove', 'x-bar-th-s');
+    map.set('barlineSingleAbove', 'x-bar-a');
+    map.set('barlineDoubleAbove', 'x-bar2-a');
+    map.set('barlineTheseosAbove', 'x-bar-th-a');
+    map.set('barlineShortSingleAbove', 'x-bar-s-a');
+    map.set('barlineShortDoubleAbove', 'x-bar2-s-a');
+    map.set('barlineShortTheseosAbove', 'x-bar-th-s-a');
     map.set('measureNumber2', 'x-mn2');
     map.set('measureNumber3', 'x-mn3');
     map.set('measureNumber4', 'x-mn4');

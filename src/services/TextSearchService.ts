@@ -2,6 +2,7 @@ import {
   DropCapElement,
   ElementType,
   NoteElement,
+  RichTextBoxElement,
   ScoreElement,
   TextBoxElement,
 } from '@/models/Element';
@@ -84,6 +85,8 @@ export class TextSearchService {
       text = (element as DropCapElement).content;
     } else if (element.elementType === ElementType.TextBox) {
       text = (element as TextBoxElement).content;
+    } else if (element.elementType === ElementType.RichTextBox) {
+      text = (element as RichTextBoxElement).content;
     }
 
     return text.toLowerCase().replaceAll(TATWEEL, '');

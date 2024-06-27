@@ -1111,6 +1111,14 @@ function createMenu() {
         },
         { type: 'separator' },
         {
+          label: i18next.t('menu:edit.lyrics'),
+          accelerator: 'CmdOrCtrl+L',
+          click() {
+            win?.webContents.send(IpcMainChannels.FileMenuLyrics);
+          },
+        },
+        { type: 'separator' },
+        {
           label: i18next.t('menu:edit.preferences'),
           accelerator: 'CmdOrCtrl+,',
           click() {
@@ -1142,6 +1150,12 @@ function createMenu() {
             win?.webContents.send(IpcMainChannels.FileMenuInsertTextBox, {
               inline: false,
             } as FileMenuInsertTextboxArgs);
+          },
+        },
+        {
+          label: i18next.t('menu:insert.richTextBox'),
+          click() {
+            win?.webContents.send(IpcMainChannels.FileMenuInsertRichTextBox);
           },
         },
         {

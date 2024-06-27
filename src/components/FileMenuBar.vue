@@ -57,6 +57,8 @@
       <div class="separator" />
       <FileMenuItem :label="$t('menu:edit.find')" @click="onClickFind" />
       <div class="separator" />
+      <FileMenuItem :label="$t('menu:edit.lyrics')" @click="onClickLyrics" />
+      <div class="separator" />
       <FileMenuItem
         :label="$t('menu:edit.preferences')"
         @click="onClickPreferences"
@@ -79,6 +81,10 @@
       <FileMenuItem
         :label="$t('menu:insert.textBox')"
         @click="onClickAddTextBox"
+      />
+      <FileMenuItem
+        :label="$t('menu:insert.richTextBox')"
+        @click="onClickAddRichTextBox"
       />
       <FileMenuItem
         :label="$t('menu:insert.inlineTextBox')"
@@ -383,6 +389,11 @@ export default class FileMenuBar extends Vue {
     this.isMenuOpen = false;
   }
 
+  onClickLyrics() {
+    EventBus.$emit(IpcMainChannels.FileMenuLyrics);
+    this.isMenuOpen = false;
+  }
+
   onClickPreferences() {
     EventBus.$emit(IpcMainChannels.FileMenuPreferences);
     this.isMenuOpen = false;
@@ -402,6 +413,11 @@ export default class FileMenuBar extends Vue {
     EventBus.$emit(IpcMainChannels.FileMenuInsertTextBox, {
       inline: false,
     } as FileMenuInsertTextboxArgs);
+    this.isMenuOpen = false;
+  }
+
+  onClickAddRichTextBox() {
+    EventBus.$emit(IpcMainChannels.FileMenuInsertRichTextBox);
     this.isMenuOpen = false;
   }
 

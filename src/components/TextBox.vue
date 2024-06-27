@@ -5,7 +5,37 @@
     @click="$emit('select-single')"
   >
     <span class="handle"></span>
+    <div class="text-box-multipanel-container" v-if="element.multipanel">
+      <ContentEditable
+        ref="text"
+        class="text-box multipanel left"
+        :class="textBoxClass"
+        :style="textBoxStyle"
+        :content="contentLeft"
+        :editable="editMode"
+        @blur="updateContentLeft($event)"
+      ></ContentEditable>
+      <ContentEditable
+        ref="text"
+        class="text-box multipanel center"
+        :class="textBoxClass"
+        :style="textBoxStyle"
+        :content="contentCenter"
+        :editable="editMode"
+        @blur="updateContentCenter($event)"
+      ></ContentEditable>
+      <ContentEditable
+        ref="text"
+        class="text-box multipanel right"
+        :class="textBoxClass"
+        :style="textBoxStyle"
+        :content="contentRight"
+        :editable="editMode"
+        @blur="updateContentRight($event)"
+      ></ContentEditable>
+    </div>
     <ContentEditable
+      v-else
       ref="text"
       class="text-box"
       :class="textBoxClass"
@@ -22,7 +52,7 @@ import { StyleValue } from 'vue';
 import { Component, Prop, Vue } from 'vue-facing-decorator';
 
 import ContentEditable from '@/components/ContentEditable.vue';
-import { TextBoxElement } from '@/models/Element';
+import { TextBoxAlignment, TextBoxElement } from '@/models/Element';
 import { PageSetup } from '@/models/PageSetup';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { replaceTokens, TokenMetadata } from '@/utils/replaceTokens';
@@ -30,7 +60,13 @@ import { withZoom } from '@/utils/withZoom';
 
 @Component({
   components: { ContentEditable },
-  emits: ['update:content', 'select-single'],
+  emits: [
+    'update:content',
+    'update:contentLeft',
+    'update:contentCenter',
+    'update:contentRight',
+    'select-single',
+  ],
 })
 export default class TextBox extends Vue {
   @Prop() element!: TextBoxElement;
@@ -49,6 +85,36 @@ export default class TextBox extends Vue {
           this.element.content,
           this.metadata,
           this.element.alignment,
+        );
+  }
+
+  get contentLeft() {
+    return this.editMode
+      ? this.element.contentLeft
+      : replaceTokens(
+          this.element.contentLeft,
+          this.metadata,
+          TextBoxAlignment.Left,
+        );
+  }
+
+  get contentCenter() {
+    return this.editMode
+      ? this.element.contentCenter
+      : replaceTokens(
+          this.element.contentCenter,
+          this.metadata,
+          TextBoxAlignment.Center,
+        );
+  }
+
+  get contentRight() {
+    return this.editMode
+      ? this.element.contentRight
+      : replaceTokens(
+          this.element.contentRight,
+          this.metadata,
+          TextBoxAlignment.Right,
         );
   }
 
@@ -76,8 +142,12 @@ export default class TextBox extends Vue {
 
   get textBoxStyle() {
     const style: any = {
-      width: this.width,
-      height: withZoom(this.element.height),
+      width: !this.element.multipanel ? this.width : undefined,
+      height:
+        this.element.multipanel || this.element.inline
+          ? withZoom(this.element.height)
+          : undefined,
+      textWrap: this.element.alignment === 'center' ? 'balance' : 'pretty',
     };
 
     return style;
@@ -99,6 +169,33 @@ export default class TextBox extends Vue {
     this.$emit('update:content', content);
   }
 
+  updateContentLeft(content: string) {
+    // Nothing actually changed, so do nothing
+    if (this.element.contentLeft === content) {
+      return;
+    }
+
+    this.$emit('update:contentLeft', content);
+  }
+
+  updateContentCenter(content: string) {
+    // Nothing actually changed, so do nothing
+    if (this.element.contentCenter === content) {
+      return;
+    }
+
+    this.$emit('update:contentCenter', content);
+  }
+
+  updateContentRight(content: string) {
+    // Nothing actually changed, so do nothing
+    if (this.element.contentRight === content) {
+      return;
+    }
+
+    this.$emit('update:contentRight', content);
+  }
+
   blur() {
     this.textElement.blur();
   }
@@ -116,9 +213,13 @@ export default class TextBox extends Vue {
   min-height: 10px;
 }
 
+.text-box-multipanel-container {
+  display: flex;
+}
+
 .text-box {
   display: block;
-
+  box-sizing: border-box;
   min-height: 10px;
 }
 
@@ -126,14 +227,44 @@ export default class TextBox extends Vue {
   outline: none;
 }
 
+.text-box:focus:not(.multipanel) {
+  border: var(--ck-focus-ring);
+  background-color: white;
+  position: relative;
+  z-index: 1;
+}
+
 .text-box.inline {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  justify-content: center;
   white-space: nowrap;
 }
 
 .text-box.underline {
   text-decoration: underline;
+}
+
+.text-box.multipanel {
+  border: 1px dotted black;
+  box-sizing: border-box;
+  min-width: 2.5rem;
+}
+
+.text-box.left {
+  position: absolute;
+  left: 0;
+}
+
+.text-box.center {
+  flex: 1;
+  text-align: center;
+}
+
+.text-box.right {
+  position: absolute;
+  right: 0;
+  text-align: right;
 }
 
 .text-box-container .handle {
@@ -148,6 +279,10 @@ export default class TextBox extends Vue {
 @media print {
   .text-box-container .handle {
     display: none !important;
+  }
+
+  .text-box.multipanel {
+    border: none !important;
   }
 }
 </style>

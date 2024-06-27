@@ -1,5 +1,11 @@
+# https://github.com/release-drafter/release-drafter
+---
 name: Release Drafter
-on: workflow_dispatch
+
+on:
+  push:
+    branches:
+      - master
 
 jobs:
   update_release_draft:

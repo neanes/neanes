@@ -192,7 +192,7 @@
         "elementType": "TextBox",
         "alignment": "center",
         "color": "#000080",
-        "content": "Lord, I Have Cried",
+        "content": "“Lord, I have cried…”",
         "fontSize": 26.666666666666668,
         "fontFamily": "Source Serif",
         "strokeWidth": 0,
@@ -834,7 +834,7 @@
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusHypsiliRight",
         "vocalExpressionNeume": "Psifiston",
-        "lyrics": "cry_",
+        "lyrics": "cry",
         "isMelisma": true,
         "isMelismaStart": true
       },
@@ -951,7 +951,7 @@
         "elementType": "Note",
         "quantitativeNeume": "Oligon",
         "ison": "Ison.Ni",
-        "lyrics": "me",
+        "lyrics": "me,",
         "isMelisma": true,
         "isMelismaStart": true
       },

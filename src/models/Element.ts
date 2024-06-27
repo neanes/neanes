@@ -38,6 +38,7 @@ export enum ElementType {
   Tempo = 'Tempo',
   Empty = 'Empty',
   TextBox = 'TextBox',
+  RichTextBox = 'RichTextBox',
   DropCap = 'DropCap',
   ModeKey = 'ModeKey',
   ImageBox = 'ImageBox',
@@ -89,6 +90,13 @@ export abstract class ScoreElement {
   }
 }
 
+export enum AcceptsLyricsOption {
+  Default = 'Default',
+  Yes = 'Yes',
+  No = 'No',
+  MelismaOnly = 'MelismaOnly',
+}
+
 export class NoteElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.Note;
   public measureNumber: MeasureNumber | null = null;
@@ -107,6 +115,7 @@ export class NoteElement extends ScoreElement {
   public lyricsFontStyle: string = 'normal';
   public lyricsFontWeight: string = '400';
   public lyricsTextDecoration: string = 'none';
+  public acceptsLyrics: AcceptsLyricsOption = AcceptsLyricsOption.Default;
   public isMelisma: boolean = false;
   public isMelismaStart: boolean = false;
   public isHyphen: boolean = false;
@@ -197,6 +206,7 @@ export class NoteElement extends ScoreElement {
           }
         : null),
       quantitativeNeume: this.quantitativeNeume,
+      acceptsLyrics: this.acceptsLyrics,
       measureBarLeft: this.measureBarLeft,
       measureBarLeftOffsetX: this.measureBarLeftOffsetX,
       measureBarLeftOffsetY: this.measureBarLeftOffsetY,
@@ -379,6 +389,8 @@ export class NoteElement extends ScoreElement {
 
   // Used for display
   public melismaText: string = '';
+  public melismaOffsetTop: number = 0;
+  public lyricsFontHeight: number = 0;
   public hyphenOffsets: number[] = [];
   public isFullMelisma: boolean = false;
   public melismaWidth: number = 0;
@@ -386,6 +398,7 @@ export class NoteElement extends ScoreElement {
   public lyricsHorizontalOffset: number = 0;
   public neumeWidth: number = 0;
   public lyricsWidth: number = 0;
+  public alignLeft: boolean = false;
   public noteIndicatorNeume: NoteIndicator | null = null;
   public scaleNotes: ScaleNote[] = [];
   public computedMeasureBarLeft: MeasureBar | null = null;
@@ -714,9 +727,13 @@ export class TextBoxElement extends ScoreElement {
   public alignment: TextBoxAlignment = TextBoxAlignment.Left;
   public color: string = '#000000';
   public content: string = '';
+  public contentLeft: string = '';
+  public contentCenter: string = '';
+  public contentRight: string = '';
   public fontSize: number = 16;
   public fontFamily: string = 'Source Serif';
   public strokeWidth: number = 0;
+  public multipanel: boolean = false;
   public inline: boolean = false;
   public bold: boolean = false;
   public italic: boolean = false;
@@ -724,6 +741,8 @@ export class TextBoxElement extends ScoreElement {
   public lineHeight: number | null = null;
   public useDefaultStyle: boolean = true;
   public height: number = 20;
+  public customWidth: number | null = null;
+  public customHeight: number | null = null;
 
   // Values computed by the layout service
   public computedFontFamily: string = '';
@@ -761,14 +780,20 @@ export class TextBoxElement extends ScoreElement {
       alignment: this.alignment,
       color: this.color,
       content: this.content,
+      contentLeft: this.contentLeft,
+      contentCenter: this.contentCenter,
+      contentRight: this.contentRight,
       fontSize: this.fontSize,
       fontFamily: this.fontFamily,
       strokeWidth: this.strokeWidth,
+      customWidth: this.customWidth,
+      customHeight: this.customHeight,
       inline: this.inline,
       bold: this.bold,
       italic: this.italic,
       underline: this.underline,
       useDefaultStyle: this.useDefaultStyle,
+      multipanel: this.multipanel,
     } as Partial<TextBoxElement>;
   }
 
@@ -776,6 +801,33 @@ export class TextBoxElement extends ScoreElement {
     const format = this.getClipboardProperties();
     delete format.content;
     return format;
+  }
+}
+
+export class RichTextBoxElement extends ScoreElement {
+  public readonly elementType: ElementType = ElementType.RichTextBox;
+  public content: string = '';
+  public contentLeft: string = '';
+  public contentRight: string = '';
+  public contentCenter: string = '';
+  public multipanel: boolean = false;
+  public rtl: boolean = false;
+
+  public height: number = 20;
+
+  public clone() {
+    const clone = new RichTextBoxElement();
+
+    Object.assign(clone, this.getClipboardProperties());
+
+    return clone;
+  }
+
+  public getClipboardProperties() {
+    return {
+      content: this.content,
+      height: this.height,
+    } as Partial<RichTextBoxElement>;
   }
 }
 
@@ -915,6 +967,7 @@ export class DropCapElement extends ScoreElement {
   public strokeWidth: number = 0;
   public color: string = '#000000';
   public useDefaultStyle: boolean = true;
+  public customWidth: number | null = null;
 
   // Values computed by the layout service
   public computedFontFamily: string = '';
@@ -951,8 +1004,13 @@ export class DropCapElement extends ScoreElement {
       color: this.color,
       content: this.content,
       fontSize: this.fontSize,
+      fontStyle: this.fontStyle,
       fontFamily: this.fontFamily,
+      fontWeight: this.fontWeight,
       lineHeight: this.lineHeight,
+      strokeWidth: this.strokeWidth,
+      customWidth: this.customWidth,
+      useDefaultStyle: this.useDefaultStyle,
     } as Partial<DropCapElement>;
   }
 }

@@ -16,6 +16,9 @@ export enum Scale {
 }
 
 export enum ScaleNote {
+  ZoLow = 'ZoLow',
+  NiLow = 'NiLow',
+  PaLow = 'PaLow',
   VouLow = 'VouLow',
   GaLow = 'GaLow',
   ThiLow = 'ThiLow',
@@ -37,6 +40,9 @@ export enum ScaleNote {
 }
 
 const scaleNoteToNoteValueMap = new Map<ScaleNote, number>([
+  [ScaleNote.ZoLow, -9],
+  [ScaleNote.NiLow, -8],
+  [ScaleNote.PaLow, -7],
   [ScaleNote.VouLow, -6],
   [ScaleNote.GaLow, -5],
   [ScaleNote.ThiLow, -4],
@@ -58,6 +64,9 @@ const scaleNoteToNoteValueMap = new Map<ScaleNote, number>([
 ]);
 
 const noteToNoteValueMap = new Map<Note, number>([
+  [Note.ZoLow, -9],
+  [Note.NiLow, -8],
+  [Note.PaLow, -7],
   [Note.VouLow, -6],
   [Note.GaLow, -5],
   [Note.ThiLow, -4],
@@ -126,6 +135,9 @@ export const getIsonFromValue = (value: number) =>
   noteValueToIsonMap.get(value)!;
 
 export const getOrderedNotes = () => [
+  ScaleNote.ZoLow,
+  ScaleNote.NiLow,
+  ScaleNote.PaLow,
   ScaleNote.VouLow,
   ScaleNote.GaLow,
   ScaleNote.ThiLow,

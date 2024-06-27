@@ -100,6 +100,15 @@ Below is a list of modifiers.
 | <span class="neume"></span>        | <kbd>Shift</kbd> + <kbd>F</kbd> + <kbd>,</kbd> |
 | <span class="neume"></span>        | <kbd>Shift</kbd> + <kbd>F</kbd> + <kbd>.</kbd> |
 
+The following toggles are available for existing quantitative neumes.
+
+| Toggle                             | Keyboard Shortcut               |
+| ---------------------------------- | ------------------------------- |
+| Set Accepts Lyrics to Yes          | <kbd>Shift</kbd> + <kbd>7</kbd> |
+| Set Accepts Lyrics to Melisma Only | <kbd>Shift</kbd> + <kbd>8</kbd> |
+| Set Accepts Lyrics to Default      | <kbd>Shift</kbd> + <kbd>9</kbd> |
+| Set Accepts Lyrics to No           | <kbd>Shift</kbd> + <kbd>0</kbd> |
+
 ## Characters of Quality
 
 | Neume                                            | Keyboard Shortcut                              |
@@ -296,14 +305,12 @@ Note indicators can be toggled on and off with <kbd>Q</kbd>. The correct note is
 
 ## Measures
 
-| Neume                        | Keyboard Shortcut               |
-| ---------------------------- | ------------------------------- |
-| <span class="neume"></span> | <kbd>2</kbd>                    |
-| <span class="neume"></span> | <kbd>3</kbd>                    |
-| <span class="neume"></span> | <kbd>4</kbd>                    |
-| <span class="neume"></span> | <kbd>5</kbd>                    |
-| <span class="neume"></span> | <kbd>6</kbd>                    |
-| <span class="neume"></span> | <kbd>7</kbd>                    |
-| <span class="neume"></span> | <kbd>8</kbd>                    |
-| <span class="neume"></span> | <kbd>W</kbd>                    |
-| <span class="neume"></span> | <kbd>Shift</kbd> + <kbd>W</kbd> |
+| Neume                        | Keyboard Shortcut |
+| ---------------------------- | ----------------- |
+| <span class="neume"></span> | <kbd>2</kbd>      |
+| <span class="neume"></span> | <kbd>3</kbd>      |
+| <span class="neume"></span> | <kbd>4</kbd>      |
+| <span class="neume"></span> | <kbd>5</kbd>      |
+| <span class="neume"></span> | <kbd>6</kbd>      |
+| <span class="neume"></span> | <kbd>7</kbd>      |
+| <span class="neume"></span> | <kbd>8</kbd>      |

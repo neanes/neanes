@@ -23,6 +23,7 @@ export enum ElementType {
   Martyria = 'Martyria',
   Empty = 'Empty',
   TextBox = 'TextBox',
+  RichTextBox = 'RichTextBox',
   DropCap = 'DropCap',
   ModeKey = 'ModeKey',
   Tempo = 'Tempo',
@@ -40,6 +41,13 @@ export abstract class ScoreElement {
   public lineBreak: boolean | undefined = undefined;
   public pageBreak: boolean | undefined = undefined;
   public lineBreakType: LineBreakType | undefined = undefined;
+}
+
+export enum AcceptsLyricsOption {
+  Default = 'Default',
+  Yes = 'Yes',
+  No = 'No',
+  MelismaOnly = 'MelismaOnly',
 }
 
 export class NoteElement extends ScoreElement {
@@ -77,6 +85,7 @@ export class NoteElement extends ScoreElement {
   public lyricsFontWeight: string | undefined = undefined;
   public lyricsTextDecoration: string | undefined = undefined;
   public lyricsUseDefaultStyle: boolean | undefined = undefined;
+  public acceptsLyrics: AcceptsLyricsOption | undefined = undefined;
   public isMelisma: boolean | undefined = undefined;
   public isMelismaStart: boolean | undefined = undefined;
   public isHyphen: boolean | undefined = undefined;
@@ -167,16 +176,33 @@ export class TextBoxElement extends ScoreElement {
   public alignment: TextBoxAlignment = TextBoxAlignment.Left;
   public color: string = '#000000';
   public content: string = '';
+  public contentLeft: string = '';
+  public contentCenter: string = '';
+  public contentRight: string = '';
   public fontSize: number = 16;
   public fontFamily: string = 'Omega';
   public strokeWidth: number = 0;
+  public multipanel: boolean | undefined = undefined;
   public inline: boolean | undefined = undefined;
   public bold: boolean | undefined = undefined;
   public italic: boolean | undefined = undefined;
   public underline: boolean | undefined = undefined;
   public lineHeight: number | undefined = undefined;
   public height: number = 20;
+  public customWidth: number | undefined = undefined;
+  public customHeight: number | undefined = undefined;
   public useDefaultStyle: boolean | undefined = undefined;
+}
+
+export class RichTextBoxElement extends ScoreElement {
+  public readonly elementType: ElementType = ElementType.RichTextBox;
+  public content: string = '';
+  public contentLeft: string = '';
+  public contentRight: string = '';
+  public contentCenter: string = '';
+  public multipanel: boolean | undefined = undefined;
+  public rtl: boolean | undefined = undefined;
+  public height: number = 20;
 }
 
 export class ModeKeyElement extends ScoreElement {
@@ -225,6 +251,7 @@ export class DropCapElement extends ScoreElement {
   public strokeWidth: number = 0;
   public color: string = '#000000';
   public useDefaultStyle: boolean | undefined = undefined;
+  public customWidth: number | undefined = undefined;
 }
 
 export class ImageBoxElement extends ScoreElement {

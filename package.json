@@ -98,7 +98,7 @@
     "vite-plugin-electron-renderer": "^0.14.5",
     "vite-plugin-eslint": "^1.8.1",
     "vite-plugin-pwa": "^0.20.0",
-    "vite-plugin-vue-devtools": "^7.3.4",
+    "vite-plugin-vue-devtools": "^7.3.5",
     "vitepress": "^1.2.3",
     "vitest": "^1.6.0",
     "vue-tsc": "^2.0.22"

@@ -11,4 +11,5 @@ export enum TestFileType {
   Ison = 'Ison',
   ModeKey = 'ModeKey',
   Random = 'Random',
+  DropCaps = 'DropCaps',
 }

@@ -6441,7 +6441,7 @@ export default class Editor extends Vue {
 
     this.currentFilePath = null;
     this.score.staff.elements.unshift(
-      ...(TestFileGenerator.generateTestFile(testFileType) || []),
+      ...(TestFileGenerator.generateTestFile(testFileType, this.fonts) || []),
     );
     this.save();
   }

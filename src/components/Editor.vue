@@ -7056,6 +7056,7 @@ export default class Editor extends Vue {
   .martyria-toolbar,
   .mode-key-toolbar,
   .neume-toolbar,
+  .drop-cap-toolbar,
   .tempo-toolbar,
   .text-box-toolbar,
   .image-box-toolbar,

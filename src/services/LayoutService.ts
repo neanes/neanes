@@ -641,6 +641,11 @@ export class LayoutService {
         const adjustment =
           fontHeight - distanceFromTopToBottomOfLyrics - fontBoundingBoxDescent;
 
+        if (dropCapElement.computedLineHeight == null) {
+          dropCapElement.computedLineHeight =
+            fontHeight / dropCapElement.computedFontSize;
+        }
+
         element.y -= adjustment;
       }
 

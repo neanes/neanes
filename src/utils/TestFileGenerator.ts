@@ -1,6 +1,12 @@
 import { v4 as uuidv4 } from 'uuid';
 
-import { ModeKeyElement, NoteElement, ScoreElement } from '@/models/Element';
+import {
+  DropCapElement,
+  LineBreakType,
+  ModeKeyElement,
+  NoteElement,
+  ScoreElement,
+} from '@/models/Element';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import {
   Accidental,
@@ -16,7 +22,7 @@ import {
 import { TestFileType } from './TestFileType';
 
 export abstract class TestFileGenerator {
-  public static generateTestFile(type: TestFileType) {
+  public static generateTestFile(type: TestFileType, fonts: string[]) {
     switch (type) {
       case TestFileType.FthoraTop:
         return this.generateTestFile_Fthora('Top');
@@ -42,6 +48,8 @@ export abstract class TestFileGenerator {
         return this.generateTestFile_ModeKey();
       case TestFileType.Random:
         return this.generateTestFile_Random();
+      case TestFileType.DropCaps:
+        return this.generateTestFile_DropCaps(fonts);
       default:
         console.error(`Unknown test file type: ${type}`);
         return null;
@@ -589,6 +597,27 @@ export abstract class TestFileGenerator {
       const note = new NoteElement();
       note.quantitativeNeume = values[Math.floor(Math.random() * max)];
       note.lyrics = uuidv4();
+      elements.push(note);
+    }
+
+    return elements;
+  }
+
+  private static generateTestFile_DropCaps(fonts: string[]) {
+    const elements: ScoreElement[] = [];
+
+    for (const font of fonts) {
+      const dropCap = new DropCapElement();
+      dropCap.useDefaultStyle = false;
+      dropCap.fontFamily = font;
+      dropCap.fontSize = 80;
+      elements.push(dropCap);
+
+      const note = new NoteElement();
+      note.quantitativeNeume = QuantitativeNeume.Ison;
+      note.lyrics = 'A';
+      note.lineBreak = true;
+      note.lineBreakType = LineBreakType.Left;
       elements.push(note);
     }
 

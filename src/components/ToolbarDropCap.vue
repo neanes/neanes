@@ -41,7 +41,7 @@
         :step="0.1"
         :modelValue="element.lineHeight"
         :precision="2"
-        placeholder="normal"
+        placeholder="auto"
         @update:modelValue="$emit('update:lineHeight', $event)"
       />
       <span class="space"></span>

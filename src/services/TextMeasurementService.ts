@@ -32,4 +32,12 @@ export class TextMeasurementService {
     const metrics = context.measureText('');
     return metrics.fontBoundingBoxDescent;
   }
+
+  public static getFontBoundingBoxAscent(font: string) {
+    const canvas = this.canvas || document.createElement('canvas');
+    const context = canvas.getContext('2d')!;
+    context.font = font;
+    const metrics = context.measureText('');
+    return metrics.fontBoundingBoxAscent;
+  }
 }

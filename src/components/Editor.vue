@@ -3379,7 +3379,7 @@ export default class Editor extends Vue {
           handled = true;
         }
         break;
-      case 'KeyP':
+      case 'KeyV':
         if (this.platformService.isMac && event.metaKey) {
           document.execCommand('paste');
           handled = true;
@@ -3498,7 +3498,7 @@ export default class Editor extends Vue {
           handled = true;
         }
         break;
-      case 'KeyP':
+      case 'KeyV':
         if (this.platformService.isMac && event.metaKey) {
           document.execCommand('paste');
           handled = true;
@@ -3540,7 +3540,7 @@ export default class Editor extends Vue {
           handled = true;
         }
         break;
-      case 'KeyP':
+      case 'KeyV':
         if (this.platformService.isMac && event.metaKey) {
           document.execCommand('paste');
           handled = true;

@@ -2859,6 +2859,10 @@ export default class Editor extends Vue {
       return this.onKeydownTextBox(event);
     }
 
+    if (this.selectedElement?.elementType === ElementType.RichTextBox) {
+      return this.onKeydownRichTextBox(event);
+    }
+
     if (!this.isTextInputFocused() && !this.dialogOpen) {
       return this.onKeydownNeume(event);
     }
@@ -3249,6 +3253,9 @@ export default class Editor extends Vue {
       return;
     }
 
+    // Note the special copy/paste logic for macOS, which is necessary because
+    // Electron has several issues on macOS.
+
     switch (event.code) {
       case 'ArrowRight':
         if (event.ctrlKey || event.metaKey) {
@@ -3366,6 +3373,34 @@ export default class Editor extends Vue {
         handled = true;
         break;
       }
+      case 'KeyC':
+        if (this.platformService.isMac && event.metaKey) {
+          document.execCommand('copy');
+          handled = true;
+        }
+        break;
+      case 'KeyP':
+        if (this.platformService.isMac && event.metaKey) {
+          document.execCommand('paste');
+          handled = true;
+        }
+        break;
+      case 'KeyX':
+        if (this.platformService.isMac && event.metaKey) {
+          document.execCommand('cut');
+          handled = true;
+        }
+        break;
+      case 'KeyZ':
+        if (this.platformService.isMac && event.metaKey) {
+          if (event.shiftKey) {
+            document.execCommand('redo');
+          } else {
+            document.execCommand('undo');
+          }
+          handled = true;
+        }
+        break;
     }
 
     if (handled) {
@@ -3425,6 +3460,9 @@ export default class Editor extends Vue {
     const index = this.elements.indexOf(this.selectedElement!);
     const htmlElement = (this.$refs[`element-${index}`] as TextBox[])[0];
 
+    // Note the special copy/paste logic for macOS, which is necessary because
+    // Electron has several issues on macOS.
+
     switch (event.code) {
       case 'Tab':
         this.moveRightThrottled();
@@ -3451,6 +3489,76 @@ export default class Editor extends Vue {
           handled = true;
         } else if (this.rtl && getCursorPosition() === 0) {
           this.moveLeftThrottled();
+          handled = true;
+        }
+        break;
+      case 'KeyC':
+        if (this.platformService.isMac && event.metaKey) {
+          document.execCommand('copy');
+          handled = true;
+        }
+        break;
+      case 'KeyP':
+        if (this.platformService.isMac && event.metaKey) {
+          document.execCommand('paste');
+          handled = true;
+        }
+        break;
+      case 'KeyX':
+        if (this.platformService.isMac && event.metaKey) {
+          document.execCommand('cut');
+          handled = true;
+        }
+        break;
+      case 'KeyZ':
+        if (this.platformService.isMac && event.metaKey) {
+          if (event.shiftKey) {
+            document.execCommand('redo');
+          } else {
+            document.execCommand('undo');
+          }
+          handled = true;
+        }
+        break;
+    }
+
+    if (handled) {
+      event.preventDefault();
+    }
+  }
+
+  onKeydownRichTextBox(event: KeyboardEvent) {
+    let handled = false;
+
+    // Note the special copy/paste logic for macOS, which is necessary because
+    // Electron has several issues on macOS.
+
+    switch (event.code) {
+      case 'KeyC':
+        if (this.platformService.isMac && event.metaKey) {
+          document.execCommand('copy');
+          handled = true;
+        }
+        break;
+      case 'KeyP':
+        if (this.platformService.isMac && event.metaKey) {
+          document.execCommand('paste');
+          handled = true;
+        }
+        break;
+      case 'KeyX':
+        if (this.platformService.isMac && event.metaKey) {
+          document.execCommand('cut');
+          handled = true;
+        }
+        break;
+      case 'KeyZ':
+        if (this.platformService.isMac && event.metaKey) {
+          if (event.shiftKey) {
+            document.execCommand('redo');
+          } else {
+            document.execCommand('undo');
+          }
           handled = true;
         }
         break;

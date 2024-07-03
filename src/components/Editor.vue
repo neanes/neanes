@@ -3245,19 +3245,15 @@ export default class Editor extends Vue {
       return;
     }
 
-    if (!this.rtl && event.shiftKey && event.code !== 'Minus') {
-      return;
-    }
-
-    if (this.rtl && event.shiftKey && event.code !== 'KeyJ') {
-      return;
-    }
-
     // Note the special copy/paste logic for macOS, which is necessary because
     // Electron has several issues on macOS.
 
     switch (event.code) {
       case 'ArrowRight':
+        if (event.shiftKey) {
+          return;
+        }
+
         if (event.ctrlKey || event.metaKey) {
           !this.rtl
             ? this.moveToNextLyricBoxThrottled()
@@ -3275,6 +3271,10 @@ export default class Editor extends Vue {
         }
         break;
       case 'ArrowLeft':
+        if (event.shiftKey) {
+          return;
+        }
+
         if (event.ctrlKey || event.metaKey) {
           !this.rtl
             ? this.moveToPreviousLyricBoxThrottled()
@@ -3292,6 +3292,10 @@ export default class Editor extends Vue {
         }
         break;
       case 'ArrowUp':
+        if (event.shiftKey) {
+          return;
+        }
+
         if (event.ctrlKey || event.metaKey) {
           this.selectedElement = this.selectedLyrics;
           this.blurActiveElement();

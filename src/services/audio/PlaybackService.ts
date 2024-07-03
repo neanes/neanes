@@ -96,6 +96,9 @@ export interface PlaybackWorkspace {
 
   permanentEnharmonicZo: boolean;
 
+  zoFlatPivotActivated: boolean;
+  zoNaturalPivotActivated: boolean;
+
   // debug
   loggingEnabled: boolean;
 }
@@ -183,6 +186,9 @@ export class PlaybackService {
       lastAlterationNote: ScaleNote.Pa,
 
       permanentEnharmonicZo: false,
+
+      zoFlatPivotActivated: false,
+      zoNaturalPivotActivated: false,
 
       loggingEnabled: false,
     };
@@ -508,42 +514,72 @@ export class PlaybackService {
         scale.name === PlaybackScaleName.Kliton ||
         scale.name === PlaybackScaleName.Zygos)
     ) {
+      if (noteAtomNode.virtualNote === ScaleNote.ZoHigh) {
+        // If we are not in a pivot, check to see if we need to pivot
+        if (!workspace.zoFlatPivotActivated) {
+          this.setPivots(noteAtomNode, nodes, workspace);
+        }
+
+        // If we are in a pivot, then flatten zo
+        if (workspace.zoFlatPivotActivated) {
+          frequency = this.changeFrequency(
+            frequency,
+            workspace.options.defaultAttractionZoMoria,
+          );
+        }
+      } else {
+        // Clear zo flat pivot
+        workspace.zoFlatPivotActivated = false;
+      }
+
+      // Check whether ke is attracted toward zo
       if (
-        noteAtomNode.virtualNote === ScaleNote.ZoHigh &&
-        this.melodyDirection(noteAtomNode, nodes) < 0
+        noteAtomNode.virtualNote === ScaleNote.Ke &&
+        workspace.zoNaturalPivotActivated
       ) {
         frequency = this.changeFrequency(
           frequency,
-          workspace.options.defaultAttractionZoMoria,
+          -workspace.options.defaultAttractionZoMoria,
         );
+      }
+
+      // Clear the zo natural pivot if we descent below ke
+      if (
+        getScaleNoteValue(noteAtomNode.virtualNote) <
+        getScaleNoteValue(ScaleNote.Ke)
+      ) {
+        workspace.zoNaturalPivotActivated = false;
       }
     }
 
     return frequency;
   }
 
-  melodyDirection(
+  setPivots(
     noteAtomNode: Readonly<NoteAtomNode>,
     nodes: AnalysisNode[],
-  ): number {
-    let index: number = nodes.indexOf(noteAtomNode);
-    if (index === nodes.length - 1) {
-      return 0;
-    }
-    index += 1;
-    while (nodes[index].nodeType !== NodeType.NoteAtomNode) {
-      index += 1;
-    }
-    const next: number = getScaleNoteValue(
-      (nodes[index] as NoteAtomNode).virtualNote,
-    );
-    const cur: number = getScaleNoteValue(noteAtomNode.virtualNote);
-    if (cur < next) {
-      return 1;
-    } else if (cur > next) {
-      return -1;
-    } else {
-      return 0;
+    workspace: PlaybackWorkspace,
+  ) {
+    const index: number = nodes.indexOf(noteAtomNode);
+
+    for (let i = index + 1; i < nodes.length; i++) {
+      const nextNoteAtomNode = nodes[i] as NoteAtomNode;
+
+      const next: number = getScaleNoteValue(nextNoteAtomNode.virtualNote);
+
+      if (next < getScaleNoteValue(ScaleNote.Ke)) {
+        workspace.zoFlatPivotActivated = true;
+        workspace.zoNaturalPivotActivated = false;
+        return;
+      }
+
+      if (next >= getScaleNoteValue(ScaleNote.ZoHigh)) {
+        workspace.zoNaturalPivotActivated = true;
+      }
+
+      if (next > getScaleNoteValue(ScaleNote.ZoHigh)) {
+        return;
+      }
     }
   }
 

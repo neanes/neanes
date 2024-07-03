@@ -122,6 +122,10 @@ export class LayoutService {
       pageSetup.lyricsFont,
     );
 
+    const lyricAscent = TextMeasurementService.getFontBoundingBoxAscent(
+      pageSetup.lyricsFont,
+    );
+
     const vareiaMapping = NeumeMappingService.getMapping(
       VocalExpressionNeume.Vareia,
     )!;
@@ -627,7 +631,7 @@ export class LayoutService {
       // the bottom of the lyrics.
       if (element.elementType === ElementType.DropCap) {
         const distanceFromTopToBottomOfLyrics =
-          lyricsVerticalOffset + pageSetup.lyricsDefaultFontSize;
+          lyricsVerticalOffset + lyricAscent;
 
         const dropCapElement = element as DropCapElement;
 

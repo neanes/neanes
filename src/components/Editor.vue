@@ -1313,6 +1313,7 @@ export default class Editor extends Vue {
     klitonIntervals: [14, 12, 4],
 
     defaultAttractionZoMoria: -4,
+    defaultAttractionKeMoria: 5,
 
     volumeIson: -4,
     volumeMelody: 0,

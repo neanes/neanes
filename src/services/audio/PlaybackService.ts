@@ -54,6 +54,7 @@ export interface PlaybackOptions {
   alterationMoriaMap: { [key in Accidental]?: number };
 
   defaultAttractionZoMoria: number;
+  defaultAttractionKeMoria: number;
 
   volumeIson: number;
   volumeMelody: number;
@@ -151,6 +152,7 @@ export class PlaybackService {
         klitonIntervals: [14, 12, 4],
 
         defaultAttractionZoMoria: -4,
+        defaultAttractionKeMoria: 5,
 
         volumeIson: -4,
         volumeMelody: 0,
@@ -539,7 +541,7 @@ export class PlaybackService {
       ) {
         frequency = this.changeFrequency(
           frequency,
-          -workspace.options.defaultAttractionZoMoria,
+          workspace.options.defaultAttractionKeMoria,
         );
       }
 

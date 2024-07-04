@@ -699,7 +699,7 @@ describe('PlaybackService', () => {
         [
           getDiatonicFrequency(ScaleNote.NiHigh),
           getDiatonicFrequency(ScaleNote.ZoHigh),
-          getDiatonicFrequency(ScaleNote.Ke, 4),
+          getDiatonicFrequency(ScaleNote.Ke, 5),
           getDiatonicFrequency(ScaleNote.ZoHigh),
         ],
       ],
@@ -715,7 +715,7 @@ describe('PlaybackService', () => {
         [
           getDiatonicFrequency(ScaleNote.NiHigh),
           getDiatonicFrequency(ScaleNote.ZoHigh),
-          getDiatonicFrequency(ScaleNote.Ke, 4),
+          getDiatonicFrequency(ScaleNote.Ke, 5),
           getDiatonicFrequency(ScaleNote.ZoHigh),
           getDiatonicFrequency(ScaleNote.NiHigh),
         ],
@@ -750,7 +750,7 @@ describe('PlaybackService', () => {
         [
           getDiatonicFrequency(ScaleNote.ZoHigh),
           getDiatonicFrequency(ScaleNote.NiHigh),
-          getDiatonicFrequency(ScaleNote.Ke, 4),
+          getDiatonicFrequency(ScaleNote.Ke, 5),
           getDiatonicFrequency(ScaleNote.ZoHigh),
           getDiatonicFrequency(ScaleNote.NiHigh),
         ],
@@ -767,8 +767,8 @@ describe('PlaybackService', () => {
         [
           getDiatonicFrequency(ScaleNote.NiHigh),
           getDiatonicFrequency(ScaleNote.ZoHigh),
-          getDiatonicFrequency(ScaleNote.Ke, 4),
-          getDiatonicFrequency(ScaleNote.Ke, 4),
+          getDiatonicFrequency(ScaleNote.Ke, 5),
+          getDiatonicFrequency(ScaleNote.Ke, 5),
           getDiatonicFrequency(ScaleNote.ZoHigh),
         ],
       ],
@@ -821,7 +821,7 @@ describe('PlaybackService', () => {
         [
           getDiatonicFrequency(ScaleNote.NiHigh),
           getDiatonicFrequency(ScaleNote.ZoHigh),
-          getDiatonicFrequency(ScaleNote.Ke, 4),
+          getDiatonicFrequency(ScaleNote.Ke, 5),
           getDiatonicFrequency(ScaleNote.NiHigh),
         ],
       ],
@@ -874,6 +874,7 @@ function getDefaultWorkspaceOptions() {
     klitonIntervals: [14, 12, 4],
 
     defaultAttractionZoMoria: -4,
+    defaultAttractionKeMoria: 5,
 
     volumeIson: -4,
     volumeMelody: 0,

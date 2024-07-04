@@ -2848,6 +2848,14 @@ export default class Editor extends Vue {
       }
     }
 
+    if (
+      this.platformService.isMac &&
+      this.isTextInputFocused() &&
+      !this.dialogOpen
+    ) {
+      this.onKeydownMac(event);
+    }
+
     if (this.selectedLyrics != null) {
       return this.onKeydownLyrics(event);
     }
@@ -2858,10 +2866,6 @@ export default class Editor extends Vue {
 
     if (this.selectedElement?.elementType === ElementType.TextBox) {
       return this.onKeydownTextBox(event);
-    }
-
-    if (this.selectedElement?.elementType === ElementType.RichTextBox) {
-      return this.onKeydownRichTextBox(event);
     }
 
     if (!this.isTextInputFocused() && !this.dialogOpen) {
@@ -3246,9 +3250,6 @@ export default class Editor extends Vue {
       return;
     }
 
-    // Note the special copy/paste logic for macOS, which is necessary because
-    // Electron has several issues on macOS.
-
     switch (event.code) {
       case 'ArrowRight':
         if (event.shiftKey) {
@@ -3378,34 +3379,6 @@ export default class Editor extends Vue {
         handled = true;
         break;
       }
-      case 'KeyC':
-        if (this.platformService.isMac && event.metaKey) {
-          document.execCommand('copy');
-          handled = true;
-        }
-        break;
-      case 'KeyV':
-        if (this.platformService.isMac && event.metaKey) {
-          document.execCommand('paste');
-          handled = true;
-        }
-        break;
-      case 'KeyX':
-        if (this.platformService.isMac && event.metaKey) {
-          document.execCommand('cut');
-          handled = true;
-        }
-        break;
-      case 'KeyZ':
-        if (this.platformService.isMac && event.metaKey) {
-          if (event.shiftKey) {
-            document.execCommand('redo');
-          } else {
-            document.execCommand('undo');
-          }
-          handled = true;
-        }
-        break;
     }
 
     if (handled) {
@@ -3465,9 +3438,6 @@ export default class Editor extends Vue {
     const index = this.elements.indexOf(this.selectedElement!);
     const htmlElement = (this.$refs[`element-${index}`] as TextBox[])[0];
 
-    // Note the special copy/paste logic for macOS, which is necessary because
-    // Electron has several issues on macOS.
-
     switch (event.code) {
       case 'Tab':
         this.moveRightThrottled();
@@ -3497,34 +3467,6 @@ export default class Editor extends Vue {
           handled = true;
         }
         break;
-      case 'KeyC':
-        if (this.platformService.isMac && event.metaKey) {
-          document.execCommand('copy');
-          handled = true;
-        }
-        break;
-      case 'KeyV':
-        if (this.platformService.isMac && event.metaKey) {
-          document.execCommand('paste');
-          handled = true;
-        }
-        break;
-      case 'KeyX':
-        if (this.platformService.isMac && event.metaKey) {
-          document.execCommand('cut');
-          handled = true;
-        }
-        break;
-      case 'KeyZ':
-        if (this.platformService.isMac && event.metaKey) {
-          if (event.shiftKey) {
-            document.execCommand('redo');
-          } else {
-            document.execCommand('undo');
-          }
-          handled = true;
-        }
-        break;
     }
 
     if (handled) {
@@ -3532,40 +3474,40 @@ export default class Editor extends Vue {
     }
   }
 
-  onKeydownRichTextBox(event: KeyboardEvent) {
+  /**
+   * Handles text editing functionality for macOS
+   */
+  onKeydownMac(event: KeyboardEvent) {
     let handled = false;
 
-    // Note the special copy/paste logic for macOS, which is necessary because
-    // Electron has several issues on macOS.
+    if (!event.metaKey) {
+      return;
+    }
 
     switch (event.code) {
+      case 'KeyA':
+        document.execCommand('selectAll');
+        handled = true;
+        break;
       case 'KeyC':
-        if (this.platformService.isMac && event.metaKey) {
-          document.execCommand('copy');
-          handled = true;
-        }
+        document.execCommand('copy');
+        handled = true;
         break;
       case 'KeyV':
-        if (this.platformService.isMac && event.metaKey) {
-          document.execCommand('paste');
-          handled = true;
-        }
+        document.execCommand('paste');
+        handled = true;
         break;
       case 'KeyX':
-        if (this.platformService.isMac && event.metaKey) {
-          document.execCommand('cut');
-          handled = true;
-        }
+        document.execCommand('cut');
+        handled = true;
         break;
       case 'KeyZ':
-        if (this.platformService.isMac && event.metaKey) {
-          if (event.shiftKey) {
-            document.execCommand('redo');
-          } else {
-            document.execCommand('undo');
-          }
-          handled = true;
+        if (event.shiftKey) {
+          document.execCommand('redo');
+        } else {
+          document.execCommand('undo');
         }
+        handled = true;
         break;
     }
 

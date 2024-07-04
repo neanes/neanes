@@ -109,5 +109,5 @@
     }
   },
   "license": "GPL-3.0",
-  "packageManager": "npm@10.2.3"
+  "packageManager": "npm@10.7.0"
 }

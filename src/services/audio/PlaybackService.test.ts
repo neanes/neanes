@@ -609,6 +609,249 @@ describe('PlaybackService', () => {
         expect(events.map((x) => x.transportTime)).toEqual(expectedResult);
       },
     );
+
+    it.each([
+      [
+        Note.NiHigh,
+        [
+          QuantitativeNeume.Ison,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.Apostrophos,
+        ],
+        [
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.ZoHigh, -4),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.Thi),
+        ],
+      ],
+      [
+        Note.NiHigh,
+        [
+          QuantitativeNeume.Ison,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.Ison,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.Apostrophos,
+        ],
+        [
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.ZoHigh, -4),
+          getDiatonicFrequency(ScaleNote.ZoHigh, -4),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.Thi),
+        ],
+      ],
+      [
+        Note.NiHigh,
+        [
+          QuantitativeNeume.Ison,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.Oligon,
+        ],
+        [
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.NiHigh),
+        ],
+      ],
+      [
+        Note.Thi,
+        [
+          QuantitativeNeume.Ison,
+          QuantitativeNeume.Oligon,
+          QuantitativeNeume.Oligon,
+          QuantitativeNeume.Oligon,
+        ],
+        [
+          getDiatonicFrequency(ScaleNote.Thi),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.NiHigh),
+        ],
+      ],
+      [
+        Note.Thi,
+        [
+          QuantitativeNeume.Ison,
+          QuantitativeNeume.Oligon,
+          QuantitativeNeume.Oligon,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.Apostrophos,
+        ],
+        [
+          getDiatonicFrequency(ScaleNote.Thi),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.ZoHigh, -4),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.Thi),
+        ],
+      ],
+      [
+        Note.NiHigh,
+        [
+          QuantitativeNeume.Ison,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.Oligon,
+        ],
+        [
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.Ke, 4),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+        ],
+      ],
+      [
+        Note.NiHigh,
+        [
+          QuantitativeNeume.Ison,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.Oligon,
+          QuantitativeNeume.Oligon,
+        ],
+        [
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.Ke, 4),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.NiHigh),
+        ],
+      ],
+      [
+        // This is an unlikely case where zo was never hit
+        // before ni, so the attraction is not triggered.
+        // Perhaps additional logic should handle this case to sharpen ke?
+        Note.NiHigh,
+        [
+          QuantitativeNeume.Ison,
+          QuantitativeNeume.Elaphron,
+          QuantitativeNeume.Oligon,
+          QuantitativeNeume.Oligon,
+        ],
+        [
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.NiHigh),
+        ],
+      ],
+      [
+        Note.ZoHigh,
+        [
+          QuantitativeNeume.Ison,
+          QuantitativeNeume.Oligon,
+          QuantitativeNeume.Elaphron,
+          QuantitativeNeume.Oligon,
+          QuantitativeNeume.Oligon,
+        ],
+        [
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.Ke, 4),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.NiHigh),
+        ],
+      ],
+      [
+        Note.NiHigh,
+        [
+          QuantitativeNeume.Ison,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.Ison,
+          QuantitativeNeume.Oligon,
+        ],
+        [
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.Ke, 4),
+          getDiatonicFrequency(ScaleNote.Ke, 4),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+        ],
+      ],
+      [
+        Note.NiHigh,
+        [
+          QuantitativeNeume.Ison,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.Ison,
+          QuantitativeNeume.Apostrophos,
+        ],
+        [
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.ZoHigh, -4),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.Thi),
+        ],
+      ],
+      [
+        Note.NiHigh,
+        [
+          QuantitativeNeume.Ison,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.Ison,
+          QuantitativeNeume.Oligon,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.Apostrophos,
+        ],
+        [
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.ZoHigh, -4),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.ZoHigh, -4),
+          getDiatonicFrequency(ScaleNote.Ke),
+          getDiatonicFrequency(ScaleNote.Thi),
+        ],
+      ],
+      [
+        Note.NiHigh,
+        [
+          QuantitativeNeume.Ison,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.Apostrophos,
+          QuantitativeNeume.PetastiPlusOligon,
+        ],
+        [
+          getDiatonicFrequency(ScaleNote.NiHigh),
+          getDiatonicFrequency(ScaleNote.ZoHigh),
+          getDiatonicFrequency(ScaleNote.Ke, 4),
+          getDiatonicFrequency(ScaleNote.NiHigh),
+        ],
+      ],
+    ])(
+      'should calculate the correct zo attractions (%#)',
+      (
+        startingNote: Note,
+        notes: QuantitativeNeume[],
+        expectedFrequencies: number[],
+      ) => {
+        const service = new PlaybackService();
+
+        const options = getDefaultWorkspaceOptions();
+        options.diatonicIntervals = [12, 10, 8];
+
+        const elements: ScoreElement[] = [];
+
+        elements.push(getModeKey(4, Scale.Diatonic, ScaleNote.Vou));
+        elements.push(getMartyria({ auto: false, note: startingNote }));
+
+        notes.forEach((x) => elements.push(getNote(x)));
+
+        const events = service.computePlaybackSequence(elements, options, true);
+
+        expect(events.map((x) => x.frequency)).toBeDeepCloseTo(
+          expectedFrequencies,
+          2,
+        );
+      },
+    );
   });
 });
 
@@ -722,6 +965,10 @@ const diatonicFrequencyMap = new Map<ScaleNote, number>([
 /**
  * Returns the frequency for a note in the 12-10-8 diatonic scale
  */
-function getDiatonicFrequency(note: ScaleNote) {
-  return diatonicFrequencyMap.get(note)!;
+function getDiatonicFrequency(note: ScaleNote, alterationMoria: number = 0) {
+  return changeFrequency(diatonicFrequencyMap.get(note)!, alterationMoria);
+}
+
+function changeFrequency(currentFrequency: number, moria: number) {
+  return currentFrequency * Math.pow(2, moria / 72);
 }

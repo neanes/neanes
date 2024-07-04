@@ -3485,6 +3485,10 @@ export default class Editor extends Vue {
     }
 
     switch (event.code) {
+      case 'KeyA':
+        document.execCommand('selectAll');
+        handled = true;
+        break;
       case 'KeyC':
         document.execCommand('copy');
         handled = true;

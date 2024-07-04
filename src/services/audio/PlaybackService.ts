@@ -543,7 +543,7 @@ export class PlaybackService {
         );
       }
 
-      // Clear the zo natural pivot if we descent below ke
+      // Clear the zo natural pivot if we descend below ke
       if (
         getScaleNoteValue(noteAtomNode.virtualNote) <
         getScaleNoteValue(ScaleNote.Ke)

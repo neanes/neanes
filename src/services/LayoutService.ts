@@ -638,12 +638,12 @@ export class LayoutService {
         const fontHeight = TextMeasurementService.getFontHeight(
           dropCapElement.computedFont,
         );
-        const fontBoundingBoxDescent =
-          TextMeasurementService.getFontBoundingBoxDescent(
+        const fontBoundingBoxAscent =
+          TextMeasurementService.getFontBoundingBoxAscent(
             dropCapElement.computedFont,
           );
         const adjustment =
-          fontHeight - distanceFromTopToBottomOfLyrics - fontBoundingBoxDescent;
+          fontBoundingBoxAscent - distanceFromTopToBottomOfLyrics;
 
         if (dropCapElement.computedLineHeight == null) {
           dropCapElement.computedLineHeight =

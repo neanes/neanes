@@ -2848,8 +2848,6 @@ export default class Editor extends Vue {
       }
     }
 
-    console.log('isTextInputFocused', this.isTextInputFocused());
-
     if (
       this.platformService.isMac &&
       this.isTextInputFocused() &&

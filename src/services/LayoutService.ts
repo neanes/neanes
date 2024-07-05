@@ -359,7 +359,11 @@ export class LayoutService {
             (ties.includes(noteElement.vocalExpressionNeume!) ||
               ties.includes(noteElement.tie!));
 
-          if (nextElement?.elementType === ElementType.Martyria) {
+          if (
+            nextElement?.elementType === ElementType.Martyria &&
+            !noteElement.pageBreak &&
+            !noteElement.lineBreak
+          ) {
             additionalWidth =
               this.getMartyriaWidth(nextElement as MartyriaElement, pageSetup) +
               pageSetup.neumeDefaultSpacing;

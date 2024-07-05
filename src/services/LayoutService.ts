@@ -354,8 +354,10 @@ export class LayoutService {
           ];
 
           const noteTied =
-            ties.includes(noteElement.vocalExpressionNeume!) ||
-            ties.includes(noteElement.tie!);
+            !noteElement.pageBreak &&
+            !noteElement.lineBreak &&
+            (ties.includes(noteElement.vocalExpressionNeume!) ||
+              ties.includes(noteElement.tie!));
 
           if (nextElement?.elementType === ElementType.Martyria) {
             additionalWidth =

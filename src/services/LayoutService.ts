@@ -340,6 +340,7 @@ export class LayoutService {
           );
 
           const nextElement = elements[i + 1];
+          const nextNextElement = elements[i + 2];
 
           // Keep note and martyria together
           // and keep two tied notes together
@@ -356,23 +357,41 @@ export class LayoutService {
             ties.includes(noteElement.vocalExpressionNeume!) ||
             ties.includes(noteElement.tie!);
 
-          if (
-            nextElement != null &&
-            nextElement.elementType === ElementType.Martyria
-          ) {
+          if (nextElement?.elementType === ElementType.Martyria) {
             additionalWidth =
               this.getMartyriaWidth(nextElement as MartyriaElement, pageSetup) +
               pageSetup.neumeDefaultSpacing;
-          } else if (
-            noteTied &&
-            nextElement?.elementType === ElementType.Note
-          ) {
-            additionalWidth =
-              this.getNoteWidth(
-                nextElement as NoteElement,
-                pageSetup,
-                noteWidthArgs,
-              ) + pageSetup.neumeDefaultSpacing;
+          } else if (nextElement?.elementType === ElementType.Note) {
+            const nextNote = nextElement as NoteElement;
+
+            if (noteTied) {
+              additionalWidth =
+                this.getNoteWidth(nextNote, pageSetup, noteWidthArgs) +
+                pageSetup.neumeDefaultSpacing;
+
+              // If the note is tied, we must check to make sure the next note
+              // isn't potentially getting a measure bar added to it.
+              if (nextNextElement?.elementType === ElementType.Note) {
+                const nextNextNote = nextNextElement as NoteElement;
+                if (
+                  nextNextNote.measureBarLeft != null &&
+                  !nextNextNote.measureBarLeft.endsWith('Above') &&
+                  nextNote.computedMeasureBarRight == null
+                ) {
+                  additionalWidth +=
+                    measureBarWidthMap.get(nextNextNote.measureBarLeft) ?? 0;
+                }
+              }
+            }
+
+            if (
+              nextNote.measureBarLeft != null &&
+              !nextNote.measureBarLeft.endsWith('Above') &&
+              noteElement.computedMeasureBarRight == null
+            ) {
+              additionalWidth +=
+                measureBarWidthMap.get(nextNote.measureBarLeft) ?? 0;
+            }
           }
           break;
         }
@@ -481,8 +500,7 @@ export class LayoutService {
             const previousNoteElement = previousElement as NoteElement;
             if (
               noteElement.measureBarLeft &&
-              (noteElement.elementType === ElementType.Martyria ||
-                !noteElement.measureBarLeft.endsWith('Above'))
+              !noteElement.measureBarLeft.endsWith('Above')
             ) {
               previousNoteElement.computedMeasureBarRight =
                 noteElement.measureBarLeft;

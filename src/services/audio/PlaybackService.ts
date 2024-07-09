@@ -569,7 +569,7 @@ export class PlaybackService {
 
       const next: number = getScaleNoteValue(nextNoteAtomNode.virtualNote);
 
-      if (next < getScaleNoteValue(ScaleNote.Ke)) {
+      if (next <= getScaleNoteValue(ScaleNote.Ke)) {
         workspace.zoFlatPivotActivated = true;
         workspace.zoNaturalPivotActivated = false;
         return;

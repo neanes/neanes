@@ -575,9 +575,10 @@ export class PlaybackService {
         return;
       }
 
-      if (next >= getScaleNoteValue(ScaleNote.ZoHigh)) {
-        workspace.zoNaturalPivotActivated = true;
-      }
+      // TODO this is too simplistic. Disabling for now.
+      // if (next >= getScaleNoteValue(ScaleNote.ZoHigh)) {
+      //   workspace.zoNaturalPivotActivated = true;
+      // }
 
       if (next > getScaleNoteValue(ScaleNote.ZoHigh)) {
         return;

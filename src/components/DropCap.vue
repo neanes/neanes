@@ -61,7 +61,9 @@ export default class DropCap extends Vue {
   }
 
   focus() {
-    this.textElement.focus(true);
+    if (this.editable) {
+      this.textElement.focus(true);
+    }
   }
 
   blur() {

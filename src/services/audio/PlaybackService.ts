@@ -569,15 +569,16 @@ export class PlaybackService {
 
       const next: number = getScaleNoteValue(nextNoteAtomNode.virtualNote);
 
-      if (next < getScaleNoteValue(ScaleNote.Ke)) {
+      if (next <= getScaleNoteValue(ScaleNote.Ke)) {
         workspace.zoFlatPivotActivated = true;
         workspace.zoNaturalPivotActivated = false;
         return;
       }
 
-      if (next >= getScaleNoteValue(ScaleNote.ZoHigh)) {
-        workspace.zoNaturalPivotActivated = true;
-      }
+      // TODO this is too simplistic. Disabling for now.
+      // if (next >= getScaleNoteValue(ScaleNote.ZoHigh)) {
+      //   workspace.zoNaturalPivotActivated = true;
+      // }
 
       if (next > getScaleNoteValue(ScaleNote.ZoHigh)) {
         return;

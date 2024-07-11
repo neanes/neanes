@@ -46,7 +46,7 @@
     "@ckeditor/ckeditor5-paste-from-office": "^42.0.0",
     "@ckeditor/ckeditor5-remove-format": "^42.0.0",
     "@ckeditor/ckeditor5-select-all": "^42.0.0",
-    "@ckeditor/ckeditor5-table": "^42.0.0",
+    "@ckeditor/ckeditor5-table": "^42.0.1",
     "@ckeditor/ckeditor5-theme-lark": "^42.0.0",
     "@ckeditor/ckeditor5-typing": "^42.0.0",
     "@ckeditor/ckeditor5-undo": "^42.0.0",

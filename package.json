@@ -37,7 +37,7 @@
     "@ckeditor/ckeditor5-editor-inline": "^42.0.0",
     "@ckeditor/ckeditor5-essentials": "^42.0.0",
     "@ckeditor/ckeditor5-find-and-replace": "^42.0.0",
-    "@ckeditor/ckeditor5-font": "^42.0.0",
+    "@ckeditor/ckeditor5-font": "^42.0.1",
     "@ckeditor/ckeditor5-image": "^42.0.0",
     "@ckeditor/ckeditor5-indent": "^42.0.0",
     "@ckeditor/ckeditor5-link": "^42.0.0",

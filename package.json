@@ -42,7 +42,7 @@
     "@ckeditor/ckeditor5-indent": "^42.0.0",
     "@ckeditor/ckeditor5-link": "^42.0.0",
     "@ckeditor/ckeditor5-list": "^42.0.0",
-    "@ckeditor/ckeditor5-paragraph": "^42.0.0",
+    "@ckeditor/ckeditor5-paragraph": "^42.0.1",
     "@ckeditor/ckeditor5-paste-from-office": "^42.0.0",
     "@ckeditor/ckeditor5-remove-format": "^42.0.0",
     "@ckeditor/ckeditor5-select-all": "^42.0.0",

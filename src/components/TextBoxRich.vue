@@ -53,9 +53,9 @@
 </template>
 
 <script lang="ts">
-import { EditorConfig } from '@ckeditor/ckeditor5-core';
 import { FontSizeOption } from '@ckeditor/ckeditor5-font/src/fontconfig';
 import { CKEditorComponentData } from '@ckeditor/ckeditor5-vue/dist/ckeditor';
+import { EditorConfig } from 'ckeditor5';
 import { StyleValue } from 'vue';
 import { Component, Prop, Vue } from 'vue-facing-decorator';
 

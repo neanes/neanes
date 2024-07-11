@@ -84,11 +84,6 @@
     "vitest": "^2.0.2",
     "vue-tsc": "^2.0.26"
   },
-  "overrides": {
-    "vite-plugin-electron": {
-      "electron": "$electron"
-    }
-  },
   "license": "GPL-3.0",
   "packageManager": "npm@10.7.0"
 }

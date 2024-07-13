@@ -422,14 +422,6 @@ export default class ToolbarMartyria extends Vue {
         { label: 'model:note.pa', value: ScaleNote.Pa },
         { label: 'model:note.ga', value: ScaleNote.Ga },
       ];
-    } else if (
-      this.element.fthora === Fthora.Enharmonic_Top ||
-      this.element.fthora === Fthora.Enharmonic_Bottom
-    ) {
-      return [
-        { label: 'model:note.ga', value: ScaleNote.Ga },
-        { label: 'model:note.vou', value: ScaleNote.Vou },
-      ];
     }
 
     return [];

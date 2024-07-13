@@ -239,7 +239,11 @@
             )
           "
         >
-          <option v-for="note in fthoraNotes" :key="note" :value="note.value">
+          <option
+            v-for="note in fthoraNotes"
+            :key="note.value"
+            :value="note.value"
+          >
             {{ $t(note.label) }}
           </option>
         </select>

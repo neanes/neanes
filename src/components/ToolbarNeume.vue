@@ -478,7 +478,7 @@
             )
           "
         >
-          <option v-for="note in notes" :key="note" :value="note.value">
+          <option v-for="note in notes" :key="note.value" :value="note.value">
             {{ $t(note.label) }}
           </option>
         </select>

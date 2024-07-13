@@ -329,7 +329,7 @@ It is common to write hymns of the third mode and the grave mode without the pro
 
 #### Chromatic Fthora Note
 
-Chromatic fthoras are sometimes ambiguous. Use the `Chromatic Fthora` dropdown in the bottom toolbar to specify the correct note for audio playback.
+Chromatic fthoras are sometimes ambiguous. Use the `Chromatic Fthora` dropdown in the bottom toolbar to specify the correct note for audio playback. This selection will also determine the note indicator that appears above the note, if the note indicator has been enabled for that note.
 
 <style>
 kbd {

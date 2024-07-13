@@ -1737,8 +1737,8 @@ export default class Editor extends Vue {
   set zoom(zoom: number) {
     if (zoom < 0.5) {
       zoom = 0.5;
-    } else if (zoom > 2) {
-      zoom = 2;
+    } else if (zoom > 5) {
+      zoom = 5;
     }
 
     this.selectedWorkspace.zoom = zoom;

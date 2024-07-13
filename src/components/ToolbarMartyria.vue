@@ -240,7 +240,7 @@
           "
         >
           <option v-for="note in fthoraNotes" :key="note" :value="note.value">
-            {{ note.label }}
+            {{ $t(note.label) }}
           </option>
         </select>
       </template>
@@ -394,41 +394,41 @@ export default class ToolbarMartyria extends Vue {
       this.element.fthora === Fthora.SoftChromaticThi_Bottom
     ) {
       return [
-        { label: 'Di', value: ScaleNote.Thi },
-        { label: 'Vou', value: ScaleNote.Vou },
+        { label: 'model:note.di', value: ScaleNote.Thi },
+        { label: 'model:note.vou', value: ScaleNote.Vou },
       ];
     } else if (
       this.element.fthora === Fthora.SoftChromaticPa_Top ||
       this.element.fthora === Fthora.SoftChromaticPa_Bottom
     ) {
       return [
-        { label: `Ni'`, value: ScaleNote.NiHigh },
-        { label: 'Ke', value: ScaleNote.Ke },
-        { label: 'Ga', value: ScaleNote.Ga },
+        { label: `model:note.niHigh`, value: ScaleNote.NiHigh },
+        { label: 'model:note.ke', value: ScaleNote.Ke },
+        { label: 'model:note.ga', value: ScaleNote.Ga },
       ];
     } else if (
       this.element.fthora === Fthora.HardChromaticThi_Top ||
       this.element.fthora === Fthora.HardChromaticThi_Bottom
     ) {
       return [
-        { label: 'Di', value: ScaleNote.Thi },
-        { label: 'Vou', value: ScaleNote.Vou },
+        { label: 'model:note.di', value: ScaleNote.Thi },
+        { label: 'model:note.vou', value: ScaleNote.Vou },
       ];
     } else if (
       this.element.fthora === Fthora.HardChromaticPa_Top ||
       this.element.fthora === Fthora.HardChromaticPa_Bottom
     ) {
       return [
-        { label: 'Pa', value: ScaleNote.Pa },
-        { label: 'Ga', value: ScaleNote.Ga },
+        { label: 'model:note.pa', value: ScaleNote.Pa },
+        { label: 'model:note.ga', value: ScaleNote.Ga },
       ];
     } else if (
       this.element.fthora === Fthora.Enharmonic_Top ||
       this.element.fthora === Fthora.Enharmonic_Bottom
     ) {
       return [
-        { label: 'Ga', value: ScaleNote.Ga },
-        { label: 'Vou', value: ScaleNote.Vou },
+        { label: 'model:note.ga', value: ScaleNote.Ga },
+        { label: 'model:note.vou', value: ScaleNote.Vou },
       ];
     }
 

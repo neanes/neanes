@@ -239,8 +239,12 @@
             )
           "
         >
-          <option v-for="note in fthoraNotes" :key="note" :value="note">
-            {{ note }}
+          <option
+            v-for="note in fthoraNotes"
+            :key="note.value"
+            :value="note.value"
+          >
+            {{ $t(note.label) }}
           </option>
         </select>
       </template>
@@ -393,22 +397,35 @@ export default class ToolbarMartyria extends Vue {
       this.element.fthora === Fthora.SoftChromaticThi_Top ||
       this.element.fthora === Fthora.SoftChromaticThi_Bottom
     ) {
-      return [ScaleNote.Thi, ScaleNote.Vou];
+      return [
+        { label: 'model:note.di', value: ScaleNote.Thi },
+        { label: 'model:note.vou', value: ScaleNote.Vou },
+      ];
     } else if (
       this.element.fthora === Fthora.SoftChromaticPa_Top ||
       this.element.fthora === Fthora.SoftChromaticPa_Bottom
     ) {
-      return [ScaleNote.Ke, ScaleNote.Ga];
+      return [
+        { label: `model:note.niHigh`, value: ScaleNote.NiHigh },
+        { label: 'model:note.ke', value: ScaleNote.Ke },
+        { label: 'model:note.ga', value: ScaleNote.Ga },
+      ];
     } else if (
       this.element.fthora === Fthora.HardChromaticThi_Top ||
       this.element.fthora === Fthora.HardChromaticThi_Bottom
     ) {
-      return [ScaleNote.Thi, ScaleNote.Vou];
+      return [
+        { label: 'model:note.di', value: ScaleNote.Thi },
+        { label: 'model:note.vou', value: ScaleNote.Vou },
+      ];
     } else if (
       this.element.fthora === Fthora.HardChromaticPa_Top ||
       this.element.fthora === Fthora.HardChromaticPa_Bottom
     ) {
-      return [ScaleNote.Pa, ScaleNote.Ga];
+      return [
+        { label: 'model:note.pa', value: ScaleNote.Pa },
+        { label: 'model:note.ga', value: ScaleNote.Ga },
+      ];
     }
 
     return [];

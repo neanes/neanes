@@ -674,6 +674,7 @@
         @update:color="updateTextBoxColor(selectedTextBoxElement, $event)"
         @update:inline="updateTextBoxInline(selectedTextBoxElement, $event)"
         @update:bold="updateTextBoxBold(selectedTextBoxElement, $event)"
+        @update:caps="updateTextBoxCaps(selectedTextBoxElement, $event)"
         @update:italic="updateTextBoxItalic(selectedTextBoxElement, $event)"
         @update:underline="
           updateTextBoxUnderline(selectedTextBoxElement, $event)
@@ -1123,6 +1124,7 @@ import {
   ScoreElement,
   TempoElement,
   TextBoxAlignment,
+  TextBoxCaps,
   TextBoxElement,
 } from '@/models/Element';
 import { EntryMode } from '@/models/EntryMode';
@@ -5096,6 +5098,10 @@ export default class Editor extends Vue {
 
   updateTextBoxBold(element: TextBoxElement, bold: boolean) {
     this.updateTextBox(element, { bold });
+  }
+
+  updateTextBoxCaps(element: TextBoxElement, caps: TextBoxCaps | null) {
+    this.updateTextBox(element, { caps });
   }
 
   updateTextBoxItalic(element: TextBoxElement, italic: boolean) {

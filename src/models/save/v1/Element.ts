@@ -36,6 +36,12 @@ export enum LineBreakType {
   Left = 'Left',
 }
 
+export enum TextBoxCaps {
+  AllCaps = 'AllCaps',
+  SmallCaps = 'SmallCaps',
+  AllSmallCaps = 'AllSmallCaps',
+}
+
 export abstract class ScoreElement {
   abstract elementType: ElementType;
   public lineBreak: boolean | undefined = undefined;
@@ -174,6 +180,7 @@ export enum TextBoxAlignment {
 export class TextBoxElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.TextBox;
   public alignment: TextBoxAlignment = TextBoxAlignment.Left;
+  public caps: TextBoxCaps | undefined = undefined;
   public color: string = '#000000';
   public content: string = '';
   public contentLeft: string = '';

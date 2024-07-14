@@ -52,7 +52,11 @@ import { StyleValue } from 'vue';
 import { Component, Prop, Vue } from 'vue-facing-decorator';
 
 import ContentEditable from '@/components/ContentEditable.vue';
-import { TextBoxAlignment, TextBoxElement } from '@/models/Element';
+import {
+  TextBoxAlignment,
+  TextBoxCaps,
+  TextBoxElement,
+} from '@/models/Element';
 import { PageSetup } from '@/models/PageSetup';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { replaceTokens, TokenMetadata } from '@/utils/replaceTokens';
@@ -141,16 +145,59 @@ export default class TextBox extends Vue {
   }
 
   get textBoxStyle() {
-    const style: any = {
+    const style = {
       width: !this.element.multipanel ? this.width : undefined,
       height:
         this.element.multipanel || this.element.inline
           ? withZoom(this.element.height)
           : undefined,
+      fontVariant: this.getFontVariant(this.element.caps),
+      textTransform: this.getTextTransform(this.element.caps),
       textWrap: this.element.alignment === 'center' ? 'balance' : 'pretty',
-    };
+    } as StyleValue;
 
     return style;
+  }
+
+  getFontVariant(caps: TextBoxCaps | null): string | undefined {
+    const properties: string[] = [];
+
+    if (caps) {
+      switch (caps) {
+        case TextBoxCaps.AllCaps:
+          break;
+        case TextBoxCaps.SmallCaps:
+          properties.push('small-caps');
+          break;
+        case TextBoxCaps.AllSmallCaps:
+          properties.push('all-small-caps');
+          break;
+        default:
+          throw new Error(`Unknown caps: ${caps}`);
+      }
+    }
+
+    return properties.length > 0 ? properties.join(' ') : undefined;
+  }
+
+  getTextTransform(caps: TextBoxCaps | null): string | undefined {
+    const properties: string[] = [];
+
+    if (caps) {
+      switch (caps) {
+        case TextBoxCaps.AllCaps:
+          properties.push('uppercase');
+          break;
+        case TextBoxCaps.SmallCaps:
+          break;
+        case TextBoxCaps.AllSmallCaps:
+          break;
+        default:
+          throw new Error(`Unknown caps: ${caps}`);
+      }
+    }
+
+    return properties.length > 0 ? properties.join(' ') : undefined;
   }
 
   get textBoxClass() {

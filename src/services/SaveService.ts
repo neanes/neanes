@@ -503,6 +503,9 @@ export class SaveService {
 
   public static SaveTextBox(element: TextBoxElement_v1, e: TextBoxElement) {
     element.alignment = e.alignment;
+    if (e.caps) {
+      element.caps = e.caps;
+    }
     element.color = e.color;
     element.content = e.content;
     if (e.multipanel) {
@@ -1201,6 +1204,7 @@ export class SaveService {
     pageSetup: PageSetup,
   ) {
     element.alignment = e.alignment;
+    element.caps = e.caps ?? null;
     element.color = e.color;
     element.content = e.content;
 

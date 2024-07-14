@@ -722,9 +722,16 @@ export enum TextBoxAlignment {
   Right = 'right',
 }
 
+export enum TextBoxCaps {
+  AllCaps = 'AllCaps',
+  SmallCaps = 'SmallCaps',
+  AllSmallCaps = 'AllSmallCaps',
+}
+
 export class TextBoxElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.TextBox;
   public alignment: TextBoxAlignment = TextBoxAlignment.Left;
+  public caps: TextBoxCaps | null = null;
   public color: string = '#000000';
   public content: string = '';
   public contentLeft: string = '';
@@ -778,6 +785,7 @@ export class TextBoxElement extends ScoreElement {
   public getClipboardProperties() {
     return {
       alignment: this.alignment,
+      caps: this.caps,
       color: this.color,
       content: this.content,
       contentLeft: this.contentLeft,

@@ -82,6 +82,10 @@
   },
   "textbox": {
     "multipanel": "Multipanel",
-    "rtl": "RTL"
+    "rtl": "RTL",
+    "none": "None",
+    "allCaps": "All Caps",
+    "smallCaps": "Small Caps",
+    "allSmallCaps": "All Small Caps"
   }
 }

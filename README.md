@@ -40,87 +40,9 @@ A web version of the app with reduced functionality can be found [here](https://
 
 To learn how to use the software, read the [guide](https://neanes.github.io/neanes/guide).
 
-## Building
+## Contributing
 
-### Prerequisites
-
-- Node.js 20.x or later
-
-### Project Setup
-
-First install the project dependencies:
-
-```
-corepack enable npm
-npm install
-```
-
-### Release Build
-
-To create a release build, type:
-
-```
-npm run build
-```
-
-The build artifacts are found in `dist/`. For Windows, the installer will be called `Neanes Setup [version].exe`. The raw files can be found in `dist/win_unpacked`.
-
-### Development
-
-To run the development server, type:
-
-```
-npm run dev
-```
-
-This will launch the application in development mode. As changes are made to the source code, the app will reload automatically.
-
-The [Vue Devtools](https://devtools-next.vuejs.org/) extension is available in development mode.
-To enable it, add the following to `.env.local` and/or `.env.web.local`:
-
-```
-VITE_ENABLE_DEV_TOOLS=true
-```
-
-Any change that updates `package.json` _must_ include the corresponding update to `package-lock.json` after running `npm install`.
-
-### Linting
-
-To check that the code is linted, type:
-
-```
-npm run lint
-```
-
-To automatically fix any lint issues, type:
-
-```
-npm run lint:fix
-```
-
-### Tests
-
-To run tests before committing, type:
-
-```
-npm test
-```
-
-### IDE Support
-
-When using [Visual Studio Code](https://github.com/microsoft/vscode), install the following extension:
-
-- [Vue - Official](https://marketplace.visualstudio.com/items?itemName=Vue.volar)
-
-### Localization
-
-To test localization support, add the following to `.env.local` and/or `.env.web.local`:
-
-```
-VITE_PSEUDOLOCALIZATION=true
-```
-
-This enables [pseudolocalization](https://en.wikipedia.org/wiki/Pseudolocalization) for all localized strings.
+We encourage you to contribute to Neanes! Please check out the [Contributing to Neanes](./CONTRIBUTING.md) guide for guidelines about how to proceed. [Join us!](https://github.com/neanes/neanes/graphs/contributors)
 
 ## License
 

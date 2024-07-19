@@ -38,7 +38,8 @@
     "deleteSelectedElement": "Delete selected element",
     "fit": "Fit",
     "speed": "Speed",
-    "pageNumber": "Page {{ currentPageNumber }} of {{ pageCount }}"
+    "pageNumber": "Page {{ currentPageNumber }} of {{ pageCount }}",
+    "invalidZoom": "The value must be between 50% and 500%."
   },
   "imageBox": {
     "inline": "Inline",

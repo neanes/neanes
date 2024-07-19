@@ -1735,12 +1735,6 @@ export default class Editor extends Vue {
   }
 
   set zoom(zoom: number) {
-    if (zoom < 0.5) {
-      zoom = 0.5;
-    } else if (zoom > 5) {
-      zoom = 5;
-    }
-
     this.selectedWorkspace.zoom = zoom;
   }
 
@@ -5755,8 +5749,20 @@ export default class Editor extends Vue {
   }
 
   updateZoom(zoom: number) {
-    this.zoom = zoom;
-    this.zoomToFit = false;
+    if (zoom < 0.5 || zoom > 5) {
+      if (this.ipcService.isShowMessageBoxSupported()) {
+        this.ipcService.showMessageBox({
+          type: 'error',
+          title: 'Range overflow',
+          message: this.$t('toolbar:main:invalidZoom'),
+        });
+      } else {
+        alert(this.$t('toolbar:main:invalidZoom'));
+      }
+    } else {
+      this.zoom = zoom;
+      this.zoomToFit = false;
+    }
   }
 
   updateZoomToFit(zoomToFit: boolean) {

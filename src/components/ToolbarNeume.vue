@@ -1247,9 +1247,9 @@ export default class ToolbarNeume extends Vue {
       case Fthora.Enharmonic_Top:
         return 'model:neume.fthora.enharmonic';
       case Fthora.GeneralFlat_Top:
-        return 'model:neume.fthora.generalSharp';
-      case Fthora.GeneralSharp_Top:
         return 'model:neume.fthora.generalFlat';
+      case Fthora.GeneralSharp_Top:
+        return 'model:neume.fthora.generalSharp';
       case Fthora.Zygos_Top:
         return 'model:neume.fthora.zygos';
       case Fthora.Kliton_Top:

@@ -332,6 +332,10 @@ export class LyricService {
               ? this.getEffectiveAcceptsLyrics(nextNote, note) ===
                 AcceptsLyricsOption.MelismaOnly
               : false;
+          const nextNoteIsRunningElaphron =
+            nextNote != null
+              ? nextNote.quantitativeNeume === QuantitativeNeume.RunningElaphron
+              : false;
 
           // Finally, we check the next note to handle some special cases.
           // (Greek) Calculate melisma syllables.
@@ -362,7 +366,7 @@ export class LyricService {
           // If the next note only takes a melisma, then ensure that this token
           // ends in an underscore
           if (
-            nextNoteIsMelisma &&
+            (nextNoteIsMelisma || nextNoteIsRunningElaphron) &&
             !token.endsWith('_') &&
             !token.endsWith('-')
           ) {

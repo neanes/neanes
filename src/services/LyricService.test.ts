@@ -8,6 +8,7 @@ import {
   NoteElement,
   ScoreElement,
 } from '../models/Element';
+import { QuantitativeNeume } from '../models/Neumes';
 import { LyricService } from './LyricService';
 import { SaveService } from './SaveService';
 
@@ -220,6 +221,60 @@ describe('LyricService (English)', () => {
             : { content: (x as DropCapElement).content },
         ),
     ).toMatchSnapshot();
+  });
+
+  it('should assign running elafron correctly', () => {
+    const lyricService = new LyricService();
+
+    const scoreElements: ScoreElement[] = [];
+
+    const ison1 = new NoteElement();
+    ison1.quantitativeNeume = QuantitativeNeume.Ison;
+
+    const runningElafron1 = new NoteElement();
+    runningElafron1.quantitativeNeume = QuantitativeNeume.RunningElaphron;
+
+    const ison2 = new NoteElement();
+    ison2.quantitativeNeume = QuantitativeNeume.Ison;
+
+    const runningElafron2 = new NoteElement();
+    runningElafron2.quantitativeNeume = QuantitativeNeume.RunningElaphron;
+
+    scoreElements.push(ison1);
+    scoreElements.push(runningElafron1);
+    scoreElements.push(ison2);
+    scoreElements.push(runningElafron2);
+
+    const lyrics = 'test-ing one two';
+
+    lyricService.assignLyrics(
+      lyrics,
+      scoreElements,
+      false,
+      () => {},
+      (note, values) => {
+        Object.assign(note, values);
+      },
+      () => {},
+    );
+
+    expect(ison1.lyrics).toEqual('test');
+    expect(ison1.isMelisma).toEqual(true);
+    expect(ison1.isMelismaStart).toEqual(true);
+    expect(ison1.isHyphen).toEqual(true);
+    expect(runningElafron1.lyrics).toEqual('ing');
+    expect(runningElafron1.isMelisma).toEqual(false);
+    expect(runningElafron1.isMelismaStart).toEqual(false);
+    expect(runningElafron1.isHyphen).toEqual(false);
+
+    expect(ison2.lyrics).toEqual('one');
+    expect(ison2.isMelisma).toEqual(true);
+    expect(ison2.isMelismaStart).toEqual(true);
+    expect(ison2.isHyphen).toEqual(false);
+    expect(runningElafron2.lyrics).toEqual('two');
+    expect(runningElafron2.isMelisma).toEqual(false);
+    expect(runningElafron2.isMelismaStart).toEqual(false);
+    expect(runningElafron2.isHyphen).toEqual(false);
   });
 });
 

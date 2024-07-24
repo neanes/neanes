@@ -398,6 +398,7 @@ export default class ToolbarMartyria extends Vue {
       this.element.fthora === Fthora.SoftChromaticThi_Bottom
     ) {
       return [
+        { label: 'model:note.zoHigh', value: ScaleNote.ZoHigh },
         { label: 'model:note.di', value: ScaleNote.Thi },
         { label: 'model:note.vou', value: ScaleNote.Vou },
       ];
@@ -409,12 +410,14 @@ export default class ToolbarMartyria extends Vue {
         { label: `model:note.niHigh`, value: ScaleNote.NiHigh },
         { label: 'model:note.ke', value: ScaleNote.Ke },
         { label: 'model:note.ga', value: ScaleNote.Ga },
+        { label: 'model:note.pa', value: ScaleNote.Pa },
       ];
     } else if (
       this.element.fthora === Fthora.HardChromaticThi_Top ||
       this.element.fthora === Fthora.HardChromaticThi_Bottom
     ) {
       return [
+        { label: 'model:note.zoHigh', value: ScaleNote.ZoHigh },
         { label: 'model:note.di', value: ScaleNote.Thi },
         { label: 'model:note.vou', value: ScaleNote.Vou },
       ];
@@ -423,8 +426,10 @@ export default class ToolbarMartyria extends Vue {
       this.element.fthora === Fthora.HardChromaticPa_Bottom
     ) {
       return [
-        { label: 'model:note.pa', value: ScaleNote.Pa },
+        { label: `model:note.niHigh`, value: ScaleNote.NiHigh },
+        { label: 'model:note.ke', value: ScaleNote.Ke },
         { label: 'model:note.ga', value: ScaleNote.Ga },
+        { label: 'model:note.pa', value: ScaleNote.Pa },
       ];
     }
 

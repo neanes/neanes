@@ -1,7 +1,7 @@
 {
   "name": "neanes",
   "productName": "Neanes",
-  "version": "0.4.49",
+  "version": "0.4.50",
   "private": true,
   "description": "A Byzantine Chant Scorewriter",
   "author": "danielgarthur",

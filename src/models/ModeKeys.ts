@@ -30,6 +30,7 @@ export const modeKeyTemplates: ModeKeyTemplate[] = [
     scaleNote: ScaleNote.Pa,
     description: 'model:modeKey.heirmologicAndSticheraric',
     martyria: ModeSign.AlphaWithDeltaHat,
+    fthoraAboveNote: Fthora.DiatonicPa_Top,
     note: ModeSign.Pa,
   },
   {
@@ -39,6 +40,7 @@ export const modeKeyTemplates: ModeKeyTemplate[] = [
     scaleNote: ScaleNote.Ke,
     description: 'model:modeKey.tetraphonicPapadicAndOldSticheraric',
     martyria: ModeSign.AlphaWithDeltaHat,
+    fthoraAboveNote: Fthora.DiatonicKe_Top,
     note: ModeSign.Ke,
   },
   {
@@ -142,6 +144,7 @@ export const modeKeyTemplates: ModeKeyTemplate[] = [
     scaleNote: ScaleNote.Ga,
     description: 'model:modeKey.nana',
     martyria: ModeSign.Nana,
+    fthoraAboveNote: Fthora.DiatonicGa_Top,
     note: ModeSign.Ga,
   },
   {
@@ -151,6 +154,7 @@ export const modeKeyTemplates: ModeKeyTemplate[] = [
     scaleNote: ScaleNote.Ga,
     description: 'model:modeKey.heirmologicAndSticheraric',
     martyria: ModeSign.NanaOld,
+    fthoraAboveNote: Fthora.DiatonicGa_Top,
     note: ModeSign.Ga,
   },
   {
@@ -161,6 +165,7 @@ export const modeKeyTemplates: ModeKeyTemplate[] = [
     description: 'model:modeKey.middle',
     martyria: ModeSign.Nana,
     note: ModeSign.Ga,
+    fthoraAboveNote: Fthora.DiatonicGa_Top,
     quantitativeNeumeRight: QuantitativeNeume.RunningElaphron,
   },
   {
@@ -182,6 +187,7 @@ export const modeKeyTemplates: ModeKeyTemplate[] = [
     description: 'model:modeKey.papadicAgia',
     martyria: ModeSign.DeltaWithDeltaHat,
     note: ModeSign.Thi,
+    fthoraAboveNote: Fthora.DiatonicThi_Top,
   },
   {
     id: 401,
@@ -201,6 +207,7 @@ export const modeKeyTemplates: ModeKeyTemplate[] = [
     description: 'model:modeKey.sticheraric',
     martyria: ModeSign.DeltaWithDeltaHat,
     note: ModeSign.Pa,
+    fthoraAboveNote: Fthora.DiatonicPa_Top,
   },
   {
     id: 403,
@@ -247,6 +254,7 @@ export const modeKeyTemplates: ModeKeyTemplate[] = [
     scaleNote: ScaleNote.Pa,
     description: 'model:modeKey.sticheraricAndPapadic',
     martyria: ModeSign.Alpha,
+    fthoraAboveNote: Fthora.DiatonicPa_Top,
     note: ModeSign.Pa,
   },
   {
@@ -367,6 +375,7 @@ export const modeKeyTemplates: ModeKeyTemplate[] = [
     scaleNote: ScaleNote.Ga,
     description: 'model:modeKey.sticheraricAndHeirmologic',
     martyria: ModeSign.VarysZo,
+    fthoraAboveNote: Fthora.DiatonicGa_Top,
     note: ModeSign.Ga,
   },
   {
@@ -408,6 +417,7 @@ export const modeKeyTemplates: ModeKeyTemplate[] = [
     scaleNote: ScaleNote.Ni,
     description: 'model:modeKey.sticheraricAndPapadic',
     martyria: ModeSign.Delta,
+    fthoraAboveNote: Fthora.DiatonicNiLow_Top,
     note: ModeSign.Ni,
   },
   {

@@ -54,8 +54,10 @@
 
 <script lang="ts">
 import { FontSizeOption } from '@ckeditor/ckeditor5-font/src/fontconfig';
+import { Ckeditor } from '@ckeditor/ckeditor5-vue';
 import { EditorConfig } from 'ckeditor5';
 import { StyleValue } from 'vue';
+import type { ComponentExposed } from 'vue-component-type-helpers';
 import { Component, Prop, Vue } from 'vue-facing-decorator';
 
 import ContentEditable from '@/components/ContentEditable.vue';
@@ -106,19 +108,22 @@ export default class TextBoxRich extends Vue {
   }
 
   get editorInstance() {
-    return (this.$refs.editor as any)?.instance;
+    return (this.$refs.editor as ComponentExposed<typeof Ckeditor>)?.instance;
   }
 
   get editorInstanceLeft() {
-    return (this.$refs.editorLeft as any)?.instance;
+    return (this.$refs.editorLeft as ComponentExposed<typeof Ckeditor>)
+      ?.instance;
   }
 
   get editorInstanceCenter() {
-    return (this.$refs.editorCenter as any)?.instance;
+    return (this.$refs.editorCenter as ComponentExposed<typeof Ckeditor>)
+      ?.instance;
   }
 
   get editorInstanceRight() {
-    return (this.$refs.editorRight as any)?.instance;
+    return (this.$refs.editorRight as ComponentExposed<typeof Ckeditor>)
+      ?.instance;
   }
 
   get content() {

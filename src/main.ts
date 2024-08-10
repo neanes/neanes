@@ -1,6 +1,6 @@
 import './registerServiceWorker';
 
-import CKEditor from '@ckeditor/ckeditor5-vue';
+import { CkeditorPlugin } from '@ckeditor/ckeditor5-vue';
 import i18next from 'i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import Pseudo from 'i18next-pseudo';
@@ -55,7 +55,7 @@ i18next
 
 const app = createApp(App);
 app.use(VueObserveVisibility);
-app.use(CKEditor);
+app.use(CkeditorPlugin);
 app.provide('audioService', new AudioService());
 app.provide('playbackService', new PlaybackService());
 app.provide('textSearchService', new TextSearchService());

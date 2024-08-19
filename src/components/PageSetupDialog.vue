@@ -355,6 +355,17 @@
               $t('dialog:pageSetup.melkiteRtl')
             }}</label>
           </div>
+
+          <div class="form-group">
+            <input
+              id="page-setup-dialog-disable-melismata"
+              type="checkbox"
+              v-model="form.disableMelismata"
+            />
+            <label for="page-setup-dialog-melkite-rtl">{{
+              $t('dialog:pageSetup.disableMelismata')
+            }}</label>
+          </div>
         </div>
         <div class="right-pane">
           <div class="subheader">{{ $t('dialog:pageSetup.dropCaps') }}</div>

@@ -362,7 +362,7 @@
               type="checkbox"
               v-model="form.disableMelismata"
             />
-            <label for="page-setup-dialog-melkite-rtl">{{
+            <label for="page-setup-dialog-disable-melismata">{{
               $t('dialog:pageSetup.disableMelismata')
             }}</label>
           </div>

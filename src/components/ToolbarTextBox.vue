@@ -117,6 +117,21 @@
         />
       </button>
     </template>
+    <template v-if="!element.inline">
+      <span class="space" />
+      <label class="right-space">Case</label>
+      <select
+        :value="element.caps"
+        @change="
+          $emit('update:caps', ($event.target as HTMLInputElement).value)
+        "
+      >
+        <option value="">{{ $t('toolbar:textbox.none') }}</option>
+        <option v-for="caps in capsValues" :key="caps.key" :value="caps.key">
+          {{ $t(caps.displayName) }}
+        </option>
+      </select>
+    </template>
     <template v-if="!element.useDefaultStyle">
       <span class="space" />
       <label class="right-space">{{ $t('toolbar:common.outline') }}</label>
@@ -203,7 +218,11 @@ import ColorPicker from '@/components/ColorPicker.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import InputUnit from '@/components/InputUnit.vue';
-import { TextBoxAlignment, TextBoxElement } from '@/models/Element';
+import {
+  TextBoxAlignment,
+  TextBoxCaps,
+  TextBoxElement,
+} from '@/models/Element';
 import { PageSetup } from '@/models/PageSetup';
 import { Unit } from '@/utils/Unit';
 
@@ -214,6 +233,7 @@ import { Unit } from '@/utils/Unit';
     'insert:pelastikon',
     'update:alignment',
     'update:bold',
+    'update:caps',
     'update:color',
     'update:customHeight',
     'update:customWidth',
@@ -233,9 +253,28 @@ export default class ToolbarTextBox extends Vue {
   @Prop() pageSetup!: PageSetup;
 
   TextBoxAlignment = TextBoxAlignment;
+  TextBoxCaps = TextBoxCaps;
+
+  capsValues = Object.values(TextBoxCaps).map((x) => ({
+    key: x,
+    displayName: this.getDisplayName(x),
+  }));
 
   get maxWidth() {
     return Unit.toPt(this.pageSetup.innerPageWidth);
+  }
+
+  private getDisplayName(caps: TextBoxCaps) {
+    switch (caps) {
+      case TextBoxCaps.AllCaps:
+        return 'toolbar:textbox.allCaps';
+      case TextBoxCaps.SmallCaps:
+        return 'toolbar:textbox.smallCaps';
+      case TextBoxCaps.AllSmallCaps:
+        return 'toolbar:textbox.allSmallCaps';
+      default:
+        throw new Error(`Unknown caps: ${caps}`);
+    }
   }
 }
 </script>

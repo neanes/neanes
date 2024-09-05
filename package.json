@@ -82,7 +82,7 @@
     "vite-plugin-vue-devtools": "^7.4.4",
     "vitepress": "^1.3.4",
     "vitest": "^2.0.5",
-    "vue-component-type-helpers": "^2.1.4",
+    "vue-component-type-helpers": "^2.1.6",
     "vue-tsc": "^2.0.29"
   },
   "license": "GPL-3.0",

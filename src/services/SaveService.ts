@@ -523,6 +523,8 @@ export class SaveService {
     element.height = e.height;
     element.customWidth = e.customWidth ?? undefined;
     element.customHeight = e.customHeight ?? undefined;
+    element.marginTop = e.marginTop ?? undefined;
+    element.marginBottom = e.marginBottom ?? undefined;
     element.useDefaultStyle = e.useDefaultStyle || undefined;
   }
 
@@ -540,6 +542,8 @@ export class SaveService {
     }
 
     element.height = e.height;
+    element.marginTop = e.marginTop ?? undefined;
+    element.marginBottom = e.marginBottom ?? undefined;
     element.rtl = e.rtl || undefined;
   }
 
@@ -569,6 +573,8 @@ export class SaveService {
     element.strokeWidth = e.strokeWidth;
     element.height = e.height;
     element.heightAdjustment = e.heightAdjustment;
+    element.marginTop = e.marginTop ?? undefined;
+    element.marginBottom = e.marginBottom ?? undefined;
     element.bpm = e.bpm;
     element.ignoreAttractions = e.ignoreAttractions || undefined;
     element.showAmbitus = e.showAmbitus || undefined;
@@ -1226,6 +1232,8 @@ export class SaveService {
     element.lineHeight = e.lineHeight ?? pageSetup.textBoxDefaultLineHeight;
     element.customWidth = e.customWidth ?? null;
     element.customHeight = e.customHeight ?? null;
+    element.marginTop = e.marginTop ?? 0;
+    element.marginBottom = e.marginBottom ?? 0;
 
     if (scoreVersion === '1.0') {
       // In this version, use default was incorrectly set to true
@@ -1242,6 +1250,8 @@ export class SaveService {
   ) {
     element.content = e.content;
     element.height = e.height;
+    element.marginTop = e.marginTop ?? 0;
+    element.marginBottom = e.marginBottom ?? 0;
 
     if (e.multipanel) {
       element.contentLeft = e.contentLeft;
@@ -1275,6 +1285,8 @@ export class SaveService {
     element.fontSize = e.fontSize;
     element.strokeWidth = e.strokeWidth ?? element.strokeWidth;
     element.heightAdjustment = e.heightAdjustment ?? 0;
+    element.marginTop = e.marginTop ?? 0;
+    element.marginBottom = e.marginBottom ?? 0;
     element.bpm = e.bpm ?? 120;
     element.ignoreAttractions = e.ignoreAttractions === true;
     element.showAmbitus = e.showAmbitus === true;

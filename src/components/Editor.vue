@@ -24,6 +24,7 @@
       @toggle-line-break="toggleLineBreak($event)"
       @add-tempo="addTempo"
       @add-drop-cap="addDropCap(false)"
+      @add-mode-key="onFileMenuInsertModeKey"
       @add-text-box="onFileMenuInsertTextBox"
       @add-text-box-rich="onFileMenuInsertRichTextBox"
       @add-image="onClickAddImage"

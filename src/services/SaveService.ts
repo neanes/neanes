@@ -542,6 +542,8 @@ export class SaveService {
     }
 
     element.height = e.height;
+    element.marginTop = e.marginTop ?? undefined;
+    element.marginBottom = e.marginBottom ?? undefined;
     element.rtl = e.rtl || undefined;
   }
 
@@ -571,6 +573,8 @@ export class SaveService {
     element.strokeWidth = e.strokeWidth;
     element.height = e.height;
     element.heightAdjustment = e.heightAdjustment;
+    element.marginTop = e.marginTop ?? undefined;
+    element.marginBottom = e.marginBottom ?? undefined;
     element.bpm = e.bpm;
     element.ignoreAttractions = e.ignoreAttractions || undefined;
     element.showAmbitus = e.showAmbitus || undefined;
@@ -1246,6 +1250,8 @@ export class SaveService {
   ) {
     element.content = e.content;
     element.height = e.height;
+    element.marginTop = e.marginTop ?? 0;
+    element.marginBottom = e.marginBottom ?? 0;
 
     if (e.multipanel) {
       element.contentLeft = e.contentLeft;
@@ -1279,6 +1285,8 @@ export class SaveService {
     element.fontSize = e.fontSize;
     element.strokeWidth = e.strokeWidth ?? element.strokeWidth;
     element.heightAdjustment = e.heightAdjustment ?? 0;
+    element.marginTop = e.marginTop ?? 0;
+    element.marginBottom = e.marginBottom ?? 0;
     element.bpm = e.bpm ?? 120;
     element.ignoreAttractions = e.ignoreAttractions === true;
     element.showAmbitus = e.showAmbitus === true;

@@ -816,6 +816,8 @@ export class RichTextBoxElement extends ScoreElement {
   public rtl: boolean = false;
 
   public height: number = 20;
+  public marginTop: number = 0;
+  public marginBottom: number = 0;
 
   public clone() {
     const clone = new RichTextBoxElement();
@@ -867,6 +869,8 @@ export class ModeKeyElement extends ScoreElement {
   public ambitusHighRootSign: RootSign = RootSign.Alpha;
   public showAmbitus: boolean = false;
   public height: number = Unit.fromPt(37);
+  public marginTop: number = 0;
+  public marginBottom: number = 0;
 
   // Values computed by the layout service
   public computedFontFamily: string = '';

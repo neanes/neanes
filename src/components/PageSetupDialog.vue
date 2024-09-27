@@ -355,6 +355,19 @@
               $t('dialog:pageSetup.melkiteRtl')
             }}</label>
           </div>
+          <div class="form-group">
+            <label class="melisma-label">{{
+              $t('dialog:pageSetup.lyricsMelismaCutoffWidth')
+            }}</label>
+            <InputUnit
+              class="melisma-input"
+              unit="pt"
+              :min="0"
+              :step="1"
+              :precision="0"
+              v-model="form.lyricsMelismaCutoffWidth"
+            />
+          </div>
         </div>
         <div class="right-pane">
           <div class="subheader">{{ $t('dialog:pageSetup.dropCaps') }}</div>
@@ -1405,5 +1418,13 @@ export default class PageSetupDialog extends Vue {
 .ok-btn,
 .reset-btn {
   margin-right: 2rem;
+}
+
+.melisma-label {
+  margin-right: 0.5rem;
+}
+
+.melisma-input {
+  width: 2rem;
 }
 </style>

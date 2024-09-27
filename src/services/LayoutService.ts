@@ -1772,6 +1772,10 @@ export class LayoutService {
 
               element.melismaWidth = Math.max(end - start, 0);
 
+              if (element.melismaWidth < pageSetup.lyricsMelismaCutoffWidth) {
+                element.melismaWidth = 0;
+              }
+
               // Calculate the distance from the alphabetic baseline to the bottom of the font bounding box
               element.melismaOffsetTop =
                 -this.getLyricsFontBoundingBoxDescentFromCache(

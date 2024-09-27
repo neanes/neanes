@@ -174,6 +174,7 @@ export class SaveService {
     pageSetup.lyricsDefaultStrokeWidth = p.lyricsDefaultStrokeWidth;
     pageSetup.lyricsVerticalOffset = p.lyricsVerticalOffset;
     pageSetup.lyricsMinimumSpacing = p.lyricsMinimumSpacing;
+    pageSetup.lyricsMelismaCutoffWidth = p.lyricsMelismaCutoffWidth;
 
     pageSetup.textBoxDefaultColor = p.textBoxDefaultColor;
     pageSetup.textBoxDefaultFontFamily = p.textBoxDefaultFontFamily;
@@ -791,6 +792,8 @@ export class SaveService {
     pageSetup.lyricsVerticalOffset = p.lyricsVerticalOffset;
     pageSetup.lyricsMinimumSpacing =
       p.lyricsMinimumSpacing ?? pageSetup.lyricsMinimumSpacing;
+    pageSetup.lyricsMelismaCutoffWidth =
+      p.lyricsMelismaCutoffWidth ?? pageSetup.lyricsMelismaCutoffWidth;
 
     pageSetup.martyriaDefaultColor =
       p.martyriaDefaultColor ?? pageSetup.martyriaDefaultColor;

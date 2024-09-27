@@ -685,6 +685,12 @@
         @update:customHeight="
           updateTextBoxHeight(selectedTextBoxElement, $event)
         "
+        @update:marginTop="
+          updateTextBoxMarginTop(selectedTextBoxElement, $event)
+        "
+        @update:marginBottom="
+          updateTextBoxMarginBottom(selectedTextBoxElement, $event)
+        "
         @insert:gorthmikon="insertGorthmikon"
         @insert:pelastikon="insertPelastikon"
       />
@@ -5110,6 +5116,17 @@ export default class Editor extends Vue {
 
   updateTextBoxHeight(element: TextBoxElement, customHeight: number | null) {
     this.updateTextBox(element, { customHeight });
+  }
+
+  updateTextBoxMarginTop(element: TextBoxElement, marginTop: number | null) {
+    this.updateTextBox(element, { marginTop });
+  }
+
+  updateTextBoxMarginBottom(
+    element: TextBoxElement,
+    marginBottom: number | null,
+  ) {
+    this.updateTextBox(element, { marginBottom });
   }
 
   updateModeKey(element: ModeKeyElement, newValues: Partial<ModeKeyElement>) {

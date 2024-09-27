@@ -1071,6 +1071,10 @@ export class LayoutService {
 
       // Height should be at least the font height
       textBoxElement.height = Math.max(height, fontHeight);
+
+      // Add the margins
+      textBoxElement.height += textBoxElement.marginTop;
+      textBoxElement.height += textBoxElement.marginBottom;
     }
 
     return elementWidthPx;

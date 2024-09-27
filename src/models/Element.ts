@@ -743,6 +743,8 @@ export class TextBoxElement extends ScoreElement {
   public height: number = 20;
   public customWidth: number | null = null;
   public customHeight: number | null = null;
+  public marginTop: number = 0;
+  public marginBottom: number = 0;
 
   // Values computed by the layout service
   public computedFontFamily: string = '';

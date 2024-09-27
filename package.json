@@ -48,7 +48,7 @@
     "throttle-debounce": "^5.0.2",
     "tone": "^15.0.4",
     "uuid": "^10.0.0",
-    "vue": "^3.5.8",
+    "vue": "^3.5.10",
     "vue-draggable-resizable": "^3.0.0",
     "vue-facing-decorator": "^3.0.4",
     "vue-router": "^4.4.5",
@@ -58,7 +58,7 @@
   "devDependencies": {
     "@babel/preset-typescript": "^7.24.7",
     "@types/mime-types": "^2.1.4",
-    "@types/node": "^22.7.3",
+    "@types/node": "^22.7.4",
     "@types/throttle-debounce": "^5.0.2",
     "@types/uuid": "^10.0.0",
     "@vitejs/plugin-vue": "^5.1.4",

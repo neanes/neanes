@@ -248,6 +248,7 @@ export class LayoutService {
       let elementWidthPx = 0;
       let elementWidthWithLyricsPx = 0;
       let additionalWidth = 0;
+      let marginTop = 0;
 
       const currentPageNumber = pages.length;
 
@@ -281,9 +282,13 @@ export class LayoutService {
             pageSetup,
             neumeHeight,
           );
+
+          marginTop = (element as TextBoxElement).marginTop;
           break;
         case ElementType.RichTextBox:
           elementWidthPx = pageSetup.innerPageWidth;
+
+          marginTop = (element as TextBoxElement).marginTop;
           break;
         case ElementType.ImageBox:
           {
@@ -322,6 +327,9 @@ export class LayoutService {
             TextMeasurementService.getFontHeight(
               `${modeKeyElement.computedFontSize}px ${modeKeyElement.computedFontFamily}`,
             ) + modeKeyElement.computedHeightAdjustment;
+
+          marginTop = modeKeyElement.marginTop;
+
           break;
         }
         case ElementType.Note: {
@@ -564,6 +572,10 @@ export class LayoutService {
               (x) => x.elementType === ElementType.TextBox,
             ) as TextBoxElement;
             height = textbox.height;
+
+            // Add the margins
+            height += textbox.marginTop;
+            height += textbox.marginBottom;
           } else if (
             line.elements.some((x) => x.elementType === ElementType.RichTextBox)
           ) {
@@ -571,6 +583,10 @@ export class LayoutService {
               (x) => x.elementType === ElementType.RichTextBox,
             ) as RichTextBoxElement;
             height = textbox.height;
+
+            // Add the margins
+            height += textbox.marginTop;
+            height += textbox.marginBottom;
           } else if (
             line.elements.some((x) => x.elementType === ElementType.ModeKey)
           ) {
@@ -578,6 +594,10 @@ export class LayoutService {
               (x) => x.elementType === ElementType.ModeKey,
             ) as ModeKeyElement;
             height = modekey.height;
+
+            // Add the margins
+            height += modekey.marginTop;
+            height += modekey.marginBottom;
           } else if (
             line.elements.some((x) => x.elementType === ElementType.ImageBox)
           ) {
@@ -650,6 +670,7 @@ export class LayoutService {
       element.y =
         pageSetup.topMargin +
         extraHeaderHeightPx +
+        marginTop +
         currentPageHeightPx -
         lastLineHeightPx;
       element.width = elementWidthPx;

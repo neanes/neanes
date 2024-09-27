@@ -685,6 +685,12 @@
         @update:customHeight="
           updateTextBoxHeight(selectedTextBoxElement, $event)
         "
+        @update:marginTop="
+          updateTextBoxMarginTop(selectedTextBoxElement, $event)
+        "
+        @update:marginBottom="
+          updateTextBoxMarginBottom(selectedTextBoxElement, $event)
+        "
         @insert:gorthmikon="insertGorthmikon"
         @insert:pelastikon="insertPelastikon"
       />
@@ -692,8 +698,15 @@
     <template v-if="selectedRichTextBoxElement != null">
       <ToolbarTextBoxRich
         :element="selectedRichTextBoxElement"
+        :pageSetup="score.pageSetup"
         @update:rtl="
           updateRichTextBox(selectedRichTextBoxElement, { rtl: $event })
+        "
+        @update:marginTop="
+          updateRichTextBoxMarginTop(selectedRichTextBoxElement, $event)
+        "
+        @update:marginBottom="
+          updateRichTextBoxMarginBottom(selectedRichTextBoxElement, $event)
         "
       />
     </template>
@@ -844,6 +857,12 @@
             selectedElement as ModeKeyElement,
             $event,
           )
+        "
+        @update:marginTop="
+          updateModeKeyMarginTop(selectedElement as ModeKeyElement, $event)
+        "
+        @update:marginBottom="
+          updateModeKeyMarginBottom(selectedElement as ModeKeyElement, $event)
         "
         @update:permanentEnharmonicZo="
           updateModeKeyPermanentEnharmonicZo(
@@ -5026,6 +5045,17 @@ export default class Editor extends Vue {
     this.saveDebounced();
   }
 
+  updateRichTextBoxMarginTop(element: RichTextBoxElement, marginTop: number) {
+    this.updateRichTextBox(element, { marginTop });
+  }
+
+  updateRichTextBoxMarginBottom(
+    element: RichTextBoxElement,
+    marginBottom: number,
+  ) {
+    this.updateRichTextBox(element, { marginBottom });
+  }
+
   updateTextBox(element: TextBoxElement, newValues: Partial<TextBoxElement>) {
     this.commandService.execute(
       this.textBoxCommandFactory.create('update-properties', {
@@ -5112,6 +5142,14 @@ export default class Editor extends Vue {
     this.updateTextBox(element, { customHeight });
   }
 
+  updateTextBoxMarginTop(element: TextBoxElement, marginTop: number) {
+    this.updateTextBox(element, { marginTop });
+  }
+
+  updateTextBoxMarginBottom(element: TextBoxElement, marginBottom: number) {
+    this.updateTextBox(element, { marginBottom });
+  }
+
   updateModeKey(element: ModeKeyElement, newValues: Partial<ModeKeyElement>) {
     this.commandService.execute(
       this.modeKeyCommandFactory.create('update-properties', {
@@ -5121,6 +5159,14 @@ export default class Editor extends Vue {
     );
 
     this.save();
+  }
+
+  updateModeKeyMarginTop(element: ModeKeyElement, marginTop: number) {
+    this.updateModeKey(element, { marginTop });
+  }
+
+  updateModeKeyMarginBottom(element: ModeKeyElement, marginBottom: number) {
+    this.updateModeKey(element, { marginBottom });
   }
 
   updateModeKeyUseDefaultStyle(

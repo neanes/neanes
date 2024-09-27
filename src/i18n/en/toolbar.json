@@ -20,7 +20,9 @@
     "klitonDisabled": "Kliton may only be placed on Di",
     "spathiDisabled": "Spathi may only be placed on Ke or Ga",
     "width": "Width",
-    "height": "Height"
+    "height": "Height",
+    "marginTop": "Gap Above",
+    "marginBottom": "Gap Below"
   },
   "main": {
     "auto": "Auto",

@@ -191,6 +191,8 @@ export class TextBoxElement extends ScoreElement {
   public height: number = 20;
   public customWidth: number | undefined = undefined;
   public customHeight: number | undefined = undefined;
+  public marginTop: number | undefined = undefined;
+  public marginBottom: number | undefined = undefined;
   public useDefaultStyle: boolean | undefined = undefined;
 }
 
@@ -203,6 +205,8 @@ export class RichTextBoxElement extends ScoreElement {
   public multipanel: boolean | undefined = undefined;
   public rtl: boolean | undefined = undefined;
   public height: number = 20;
+  public marginTop: number | undefined = undefined;
+  public marginBottom: number | undefined = undefined;
 }
 
 export class ModeKeyElement extends ScoreElement {
@@ -229,6 +233,8 @@ export class ModeKeyElement extends ScoreElement {
   public strokeWidth: number = 0;
   public height: number = 20;
   public heightAdjustment: number = 0;
+  public marginTop: number | undefined = undefined;
+  public marginBottom: number | undefined = undefined;
   public bpm: number = 120;
   public useDefaultStyle: boolean | undefined = undefined;
   public ignoreAttractions: boolean | undefined = undefined;

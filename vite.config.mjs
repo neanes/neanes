@@ -36,6 +36,9 @@ export default defineConfig(({ command, mode }) => {
       mode === 'web'
         ? VitePWA({
             registerType: null, // We'll inject the service worker ourselves
+            workbox: {
+              maximumFileSizeToCacheInBytes: 3000000,
+            },
             includeAssets: [
               'favicon-32.png',
               'favicon-16.png',

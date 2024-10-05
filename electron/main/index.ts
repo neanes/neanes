@@ -158,7 +158,7 @@ const debouncedSaveWindowState = debounce(500, saveStore);
 async function loadStore() {
   try {
     Object.assign(store, JSON.parse(await fs.readFile(storeFilePath, 'utf8')));
-  } catch (error) {
+  } catch {
     // Return default file
     return defaultStore;
   }

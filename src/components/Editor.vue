@@ -2904,11 +2904,19 @@ export default class Editor extends Vue {
     } else {
       switch (event.code) {
         case 'ArrowLeft':
-          !this.rtl ? this.moveLeftThrottled() : this.moveRightThrottled();
+          if (!this.rtl) {
+            this.moveLeftThrottled();
+          } else {
+            this.moveRightThrottled();
+          }
           handled = true;
           break;
         case 'ArrowRight':
-          !this.rtl ? this.moveRightThrottled() : this.moveLeftThrottled();
+          if (!this.rtl) {
+            this.moveRightThrottled();
+          } else {
+            this.moveLeftThrottled();
+          }
           handled = true;
           break;
         case 'ArrowDown':
@@ -3271,9 +3279,11 @@ export default class Editor extends Vue {
         }
 
         if (event.ctrlKey || event.metaKey) {
-          !this.rtl
-            ? this.moveToNextLyricBoxThrottled()
-            : this.moveToPreviousLyricBoxThrottled();
+          if (!this.rtl) {
+            this.moveToNextLyricBoxThrottled();
+          } else {
+            this.moveToPreviousLyricBoxThrottled();
+          }
           handled = true;
         } else if (
           !this.rtl &&
@@ -3292,9 +3302,11 @@ export default class Editor extends Vue {
         }
 
         if (event.ctrlKey || event.metaKey) {
-          !this.rtl
-            ? this.moveToPreviousLyricBoxThrottled()
-            : this.moveToNextLyricBoxThrottled();
+          if (!this.rtl) {
+            this.moveToPreviousLyricBoxThrottled();
+          } else {
+            this.moveToNextLyricBoxThrottled();
+          }
           handled = true;
         } else if (!this.rtl && getCursorPosition() === 0) {
           this.moveToPreviousLyricBoxThrottled();

@@ -43,8 +43,10 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 export default {
+  // eslint-disable-next-line vue/multi-word-component-names
+  name: 'Downloads',
   data() {
     return {
       latestRelease: null,

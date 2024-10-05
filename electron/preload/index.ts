@@ -1,7 +1,8 @@
 import { contextBridge, ipcRenderer } from 'electron';
+
 import {
-  IpcRendererChannels,
   IpcMainChannels,
+  IpcRendererChannels,
 } from '../../src/ipc/ipcChannels';
 
 // Expose ipcRenderer to the client

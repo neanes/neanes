@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-
 import * as Tone from 'tone';
 import { ToneEvent } from 'tone';
 

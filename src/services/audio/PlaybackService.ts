@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-
 import { ScoreElement } from '@/models/Element';
 import { Accidental, Ison } from '@/models/Neumes';
 import {

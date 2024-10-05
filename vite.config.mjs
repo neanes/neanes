@@ -1,6 +1,3 @@
-import { createRequire } from 'node:module';
-const require = createRequire(import.meta.url);
-
 import { rmSync } from 'node:fs';
 
 import vue from '@vitejs/plugin-vue';

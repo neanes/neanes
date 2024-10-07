@@ -1132,7 +1132,10 @@ export default class ToolbarNeume extends Vue {
   }
 
   updateGorgon(args: string | string[]) {
-    if (this.innerNeume === 'Secondary') {
+    if (
+      this.innerNeume === 'Secondary' &&
+      this.element.quantitativeNeume !== QuantitativeNeume.Hyporoe
+    ) {
       if (Array.isArray(args)) {
         this.$emit('update:secondaryGorgon', GorgonNeume.GorgonSecondary);
       } else {

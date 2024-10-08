@@ -2236,6 +2236,10 @@ export class LayoutService {
       }
       if (currentNote === getScaleNoteValue(ScaleNote.VouHigh)) {
         return Scale.EnharmonicVouHigh;
+      } else {
+        // Default to enharmonic zo high if the fthora was placed on a non-standard note
+        // This helps with correct martyria calculation.
+        return Scale.EnharmonicZoHigh;
       }
     }
 
@@ -2316,6 +2320,16 @@ export class LayoutService {
       shift = getScaleNoteValue(ScaleNote.Ke) - currentNote;
     } else if (currentScale === Scale.SpathiGa) {
       shift = getScaleNoteValue(ScaleNote.Ga) - currentNote;
+    } else if (currentScale === Scale.EnharmonicGa) {
+      shift = getScaleNoteValue(ScaleNote.Ga) - currentNote;
+    } else if (currentScale === Scale.EnharmonicVou) {
+      shift = getScaleNoteValue(ScaleNote.Vou) - currentNote;
+    } else if (currentScale === Scale.EnharmonicVouHigh) {
+      shift = getScaleNoteValue(ScaleNote.VouHigh) - currentNote;
+    } else if (currentScale === Scale.EnharmonicZo) {
+      shift = getScaleNoteValue(ScaleNote.Zo) - currentNote;
+    } else if (currentScale === Scale.EnharmonicZoHigh) {
+      shift = getScaleNoteValue(ScaleNote.ZoHigh) - currentNote;
     }
 
     return shift;

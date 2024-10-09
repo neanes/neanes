@@ -401,6 +401,7 @@ export class NoteElement extends ScoreElement {
   public alignLeft: boolean = false;
   public noteIndicatorNeume: NoteIndicator | null = null;
   public scaleNotes: ScaleNote[] = [];
+  public scaleNotesVirtual: ScaleNote[] = [];
   public computedMeasureBarLeft: MeasureBar | null = null;
   public computedMeasureBarRight: MeasureBar | null = null;
 

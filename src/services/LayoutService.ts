@@ -2346,21 +2346,25 @@ export class LayoutService {
       let fthoraNote = currentNote;
 
       if (fthora.startsWith('DiatonicNiLow')) {
-        fthoraNote = -1;
+        fthoraNote = getScaleNoteValue(ScaleNote.Ni);
       } else if (fthora.startsWith('DiatonicPa')) {
-        fthoraNote = 0;
+        fthoraNote = getScaleNoteValue(ScaleNote.Pa);
       } else if (fthora.startsWith('DiatonicVou')) {
-        fthoraNote = 1;
+        fthoraNote = getScaleNoteValue(ScaleNote.Vou);
       } else if (fthora.startsWith('DiatonicGa')) {
-        fthoraNote = 2;
+        fthoraNote = getScaleNoteValue(ScaleNote.Ga);
       } else if (fthora.startsWith('DiatonicThi')) {
-        fthoraNote = 3;
+        fthoraNote = getScaleNoteValue(ScaleNote.Thi);
       } else if (fthora.startsWith('DiatonicKe')) {
-        fthoraNote = 4;
+        fthoraNote = getScaleNoteValue(ScaleNote.Ke);
       } else if (fthora.startsWith('DiatonicZo')) {
-        fthoraNote = 5;
+        fthoraNote = getScaleNoteValue(ScaleNote.Zo);
       } else if (fthora.startsWith('DiatonicNiHigh')) {
-        fthoraNote = 6;
+        fthoraNote = getScaleNoteValue(ScaleNote.NiHigh);
+      } else if (fthora.startsWith('GeneralFlat')) {
+        fthoraNote = getScaleNoteValue(ScaleNote.Ke);
+      } else if (fthora.startsWith('GeneralSharp')) {
+        fthoraNote = getScaleNoteValue(ScaleNote.Ga);
       }
 
       shift = fthoraNote - currentNote;

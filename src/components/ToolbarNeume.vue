@@ -978,8 +978,8 @@ export default class ToolbarNeume extends Vue {
   get spathiDisabled() {
     return (
       !this.pageSetup.noFthoraRestrictions &&
-      !this.element.scaleNotes.includes(ScaleNote.Ke) &&
-      !this.element.scaleNotes.includes(ScaleNote.Ga)
+      !this.element.scaleNotesVirtual.includes(ScaleNote.Ke) &&
+      !this.element.scaleNotesVirtual.includes(ScaleNote.Ga)
     );
   }
 
@@ -992,7 +992,7 @@ export default class ToolbarNeume extends Vue {
   get klitonDisabled() {
     return (
       !this.pageSetup.noFthoraRestrictions &&
-      !this.element.scaleNotes.includes(ScaleNote.Thi)
+      !this.element.scaleNotesVirtual.includes(ScaleNote.Thi)
     );
   }
 
@@ -1005,7 +1005,7 @@ export default class ToolbarNeume extends Vue {
   get zygosDisabled() {
     return (
       !this.pageSetup.noFthoraRestrictions &&
-      !this.element.scaleNotes.includes(ScaleNote.Thi)
+      !this.element.scaleNotesVirtual.includes(ScaleNote.Thi)
     );
   }
 
@@ -1018,11 +1018,11 @@ export default class ToolbarNeume extends Vue {
   get enharmonicDisabled() {
     return (
       !this.pageSetup.noFthoraRestrictions &&
-      !this.element.scaleNotes.includes(ScaleNote.Zo) &&
-      !this.element.scaleNotes.includes(ScaleNote.ZoHigh) &&
-      !this.element.scaleNotes.includes(ScaleNote.Vou) &&
-      !this.element.scaleNotes.includes(ScaleNote.VouHigh) &&
-      !this.element.scaleNotes.includes(ScaleNote.Ga)
+      !this.element.scaleNotesVirtual.includes(ScaleNote.Zo) &&
+      !this.element.scaleNotesVirtual.includes(ScaleNote.ZoHigh) &&
+      !this.element.scaleNotesVirtual.includes(ScaleNote.Vou) &&
+      !this.element.scaleNotesVirtual.includes(ScaleNote.VouHigh) &&
+      !this.element.scaleNotesVirtual.includes(ScaleNote.Ga)
     );
   }
 
@@ -1035,7 +1035,7 @@ export default class ToolbarNeume extends Vue {
   get generalFlatDisabled() {
     return (
       !this.pageSetup.noFthoraRestrictions &&
-      !this.element.scaleNotes.includes(ScaleNote.Ke)
+      !this.element.scaleNotesVirtual.includes(ScaleNote.Ke)
     );
   }
 
@@ -1048,7 +1048,7 @@ export default class ToolbarNeume extends Vue {
   get generalSharpDisabled() {
     return (
       !this.pageSetup.noFthoraRestrictions &&
-      !this.element.scaleNotes.includes(ScaleNote.Ga)
+      !this.element.scaleNotesVirtual.includes(ScaleNote.Ga)
     );
   }
 

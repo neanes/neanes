@@ -1867,6 +1867,7 @@ export class LayoutService {
     pageSetup: PageSetup,
   ) {
     let currentNote = 0;
+    let currentNoteVirtual = 0;
     let currentScale = Scale.Diatonic;
     let currentShift = 0;
 
@@ -1881,7 +1882,10 @@ export class LayoutService {
     for (const element of elements) {
       if (element.elementType === ElementType.Note) {
         const note = element as NoteElement;
+
         currentNote += getNeumeValue(note.quantitativeNeume)!;
+        currentNoteVirtual = currentNote + currentShift;
+
         note.noteIndicatorNeume = noteIndicatorMap.get(
           ((currentNote % 7) + 7) % 7,
         )!;
@@ -1889,15 +1893,22 @@ export class LayoutService {
         const noteSpread = getNoteSpread(note.quantitativeNeume);
 
         const currentNotes = noteSpread.map((x) => currentNote + x);
+        const currentNotesVirtual = noteSpread.map(
+          (x) => currentNoteVirtual + x,
+        );
 
         note.scaleNotes = noteSpread.map((x) =>
           getScaleNoteFromValue(currentNote + x),
         );
 
+        note.scaleNotesVirtual = noteSpread.map((x) =>
+          getScaleNoteFromValue(currentNoteVirtual + x),
+        );
+
         // Handle fthora carries
         if (
           note.fthoraCarry &&
-          this.fthoraIsValid(note.fthoraCarry, currentNotes, pageSetup)
+          this.fthoraIsValid(note.fthoraCarry, currentNotesVirtual, pageSetup)
         ) {
           note.fthora = note.fthoraCarry;
           note.fthoraCarry = null;
@@ -1905,7 +1916,11 @@ export class LayoutService {
 
         if (
           note.secondaryFthoraCarry &&
-          this.fthoraIsValid(note.secondaryFthoraCarry, currentNotes, pageSetup)
+          this.fthoraIsValid(
+            note.secondaryFthoraCarry,
+            currentNotesVirtual,
+            pageSetup,
+          )
         ) {
           note.secondaryFthora = note.secondaryFthoraCarry;
           note.secondaryFthoraCarry = null;
@@ -1913,14 +1928,18 @@ export class LayoutService {
 
         if (
           note.tertiaryFthoraCarry &&
-          this.fthoraIsValid(note.tertiaryFthoraCarry, currentNotes, pageSetup)
+          this.fthoraIsValid(
+            note.tertiaryFthoraCarry,
+            currentNotesVirtual,
+            pageSetup,
+          )
         ) {
           note.tertiaryFthora = note.tertiaryFthoraCarry;
           note.tertiaryFthoraCarry = null;
         }
 
         if (note.fthora) {
-          if (this.fthoraIsValid(note.fthora, currentNotes, pageSetup)) {
+          if (this.fthoraIsValid(note.fthora, currentNotesVirtual, pageSetup)) {
             const spreadIndex = getSpreadIndex(
               note.fthora,
               note.quantitativeNeume,
@@ -1929,9 +1948,17 @@ export class LayoutService {
             const fthoraNote =
               spreadIndex != -1 ? currentNotes[spreadIndex] : currentNote;
 
-            currentScale =
-              this.getScaleFromFthora(note.fthora, fthoraNote) || currentScale;
+            const fthoraNoteVirtual =
+              spreadIndex != -1
+                ? currentNotesVirtual[spreadIndex]
+                : currentNoteVirtual;
 
+            // Scale is based off the virtual note
+            currentScale =
+              this.getScaleFromFthora(note.fthora, fthoraNoteVirtual) ||
+              currentScale;
+
+            // Shift is based off the true note
             currentShift = this.getShift(
               fthoraNote,
               currentScale,
@@ -1949,20 +1976,34 @@ export class LayoutService {
           }
         } else if (note.secondaryFthora) {
           if (
-            this.fthoraIsValid(note.secondaryFthora, currentNotes, pageSetup)
+            this.fthoraIsValid(
+              note.secondaryFthora,
+              currentNotesVirtual,
+              pageSetup,
+            )
           ) {
             const spreadIndex = getSpreadIndex(
               note.secondaryFthora,
               note.quantitativeNeume,
               NeumeSelection.Secondary,
             );
+
             const fthoraNote =
               spreadIndex != -1 ? currentNotes[spreadIndex] : currentNote;
 
-            currentScale =
-              this.getScaleFromFthora(note.secondaryFthora, fthoraNote) ||
-              currentScale;
+            const fthoraNoteVirtual =
+              spreadIndex != -1
+                ? currentNotesVirtual[spreadIndex]
+                : currentNoteVirtual;
 
+            // Scale is based off the virtual note
+            currentScale =
+              this.getScaleFromFthora(
+                note.secondaryFthora,
+                fthoraNoteVirtual,
+              ) || currentScale;
+
+            // Shift is based off the true note
             currentShift = this.getShift(
               fthoraNote,
               currentScale,
@@ -1980,7 +2021,11 @@ export class LayoutService {
           }
         } else if (note.tertiaryFthora) {
           if (
-            this.fthoraIsValid(note.tertiaryFthora, currentNotes, pageSetup)
+            this.fthoraIsValid(
+              note.tertiaryFthora,
+              currentNotesVirtual,
+              pageSetup,
+            )
           ) {
             const spreadIndex = getSpreadIndex(
               note.tertiaryFthora,
@@ -1990,10 +2035,17 @@ export class LayoutService {
             const fthoraNote =
               spreadIndex != -1 ? currentNotes[spreadIndex] : currentNote;
 
+            const fthoraNoteVirtual =
+              spreadIndex != -1
+                ? currentNotesVirtual[spreadIndex]
+                : currentNoteVirtual;
+
+            // Scale is based off the virtual note
             currentScale =
-              this.getScaleFromFthora(note.tertiaryFthora, fthoraNote) ||
+              this.getScaleFromFthora(note.tertiaryFthora, fthoraNoteVirtual) ||
               currentScale;
 
+            // Shift is based off the true note
             currentShift = this.getShift(
               fthoraNote,
               currentScale,
@@ -2294,21 +2346,25 @@ export class LayoutService {
       let fthoraNote = currentNote;
 
       if (fthora.startsWith('DiatonicNiLow')) {
-        fthoraNote = -1;
+        fthoraNote = getScaleNoteValue(ScaleNote.Ni);
       } else if (fthora.startsWith('DiatonicPa')) {
-        fthoraNote = 0;
+        fthoraNote = getScaleNoteValue(ScaleNote.Pa);
       } else if (fthora.startsWith('DiatonicVou')) {
-        fthoraNote = 1;
+        fthoraNote = getScaleNoteValue(ScaleNote.Vou);
       } else if (fthora.startsWith('DiatonicGa')) {
-        fthoraNote = 2;
+        fthoraNote = getScaleNoteValue(ScaleNote.Ga);
       } else if (fthora.startsWith('DiatonicThi')) {
-        fthoraNote = 3;
+        fthoraNote = getScaleNoteValue(ScaleNote.Thi);
       } else if (fthora.startsWith('DiatonicKe')) {
-        fthoraNote = 4;
+        fthoraNote = getScaleNoteValue(ScaleNote.Ke);
       } else if (fthora.startsWith('DiatonicZo')) {
-        fthoraNote = 5;
+        fthoraNote = getScaleNoteValue(ScaleNote.Zo);
       } else if (fthora.startsWith('DiatonicNiHigh')) {
-        fthoraNote = 6;
+        fthoraNote = getScaleNoteValue(ScaleNote.NiHigh);
+      } else if (fthora.startsWith('GeneralFlat')) {
+        fthoraNote = getScaleNoteValue(ScaleNote.Ke);
+      } else if (fthora.startsWith('GeneralSharp')) {
+        fthoraNote = getScaleNoteValue(ScaleNote.Ga);
       }
 
       shift = fthoraNote - currentNote;

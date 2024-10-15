@@ -277,7 +277,7 @@ export class AnalysisService {
       this.handleFthora(
         noteAtomNodes[0].physicalNote,
         noteElement.secondaryFthora,
-        noteElement.chromaticFthoraNote,
+        noteElement.secondaryChromaticFthoraNote,
         noteElement.index,
         workspace,
       );
@@ -565,7 +565,7 @@ export class AnalysisService {
       this.handleFthora(
         noteAtomNodes[0].physicalNote,
         noteElement.secondaryFthora,
-        noteElement.chromaticFthoraNote,
+        noteElement.secondaryChromaticFthoraNote,
         noteElement.index,
         workspace,
       );
@@ -627,7 +627,7 @@ export class AnalysisService {
       this.handleFthora(
         noteAtomNodes[0].physicalNote,
         noteElement.tertiaryFthora,
-        noteElement.chromaticFthoraNote,
+        noteElement.tertiaryChromaticFthoraNote,
         noteElement.index,
         workspace,
       );
@@ -651,7 +651,7 @@ export class AnalysisService {
       this.handleFthora(
         noteAtomNodes[1].physicalNote,
         noteElement.secondaryFthora,
-        noteElement.chromaticFthoraNote,
+        noteElement.secondaryChromaticFthoraNote,
         noteElement.index,
         workspace,
       );
@@ -715,7 +715,7 @@ export class AnalysisService {
       this.handleFthora(
         noteAtomNodes[0].physicalNote,
         noteElement.secondaryFthora,
-        noteElement.chromaticFthoraNote,
+        noteElement.secondaryChromaticFthoraNote,
         noteElement.index,
         workspace,
       );

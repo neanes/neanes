@@ -903,6 +903,18 @@
         @update:chromaticFthoraNote="
           updateNoteChromaticFthoraNote(selectedElement as NoteElement, $event)
         "
+        @update:secondaryChromaticFthoraNote="
+          updateNoteSecondaryChromaticFthoraNote(
+            selectedElement as NoteElement,
+            $event,
+          )
+        "
+        @update:tertiaryChromaticFthoraNote="
+          updateNoteTertiaryChromaticFthoraNote(
+            selectedElement as NoteElement,
+            $event,
+          )
+        "
         @update:gorgon="setGorgon(selectedElement as NoteElement, $event)"
         @update:secondaryGorgon="
           setSecondaryGorgon(selectedElement as NoteElement, $event)
@@ -4927,6 +4939,22 @@ export default class Editor extends Vue {
     chromaticFthoraNote: ScaleNote | null,
   ) {
     this.updateNote(element, { chromaticFthoraNote });
+    this.save();
+  }
+
+  updateNoteSecondaryChromaticFthoraNote(
+    element: NoteElement,
+    secondaryChromaticFthoraNote: ScaleNote | null,
+  ) {
+    this.updateNote(element, { secondaryChromaticFthoraNote });
+    this.save();
+  }
+
+  updateNoteTertiaryChromaticFthoraNote(
+    element: NoteElement,
+    tertiaryChromaticFthoraNote: ScaleNote | null,
+  ) {
+    this.updateNote(element, { tertiaryChromaticFthoraNote });
     this.save();
   }
 

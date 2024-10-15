@@ -470,12 +470,9 @@
         <span class="space" />
         <label class="right-space">{{ $t('toolbar:common.fthoraNote') }}</label>
         <select
-          :value="element.chromaticFthoraNote"
+          :value="chromaticFthoraNote"
           @change="
-            $emit(
-              'update:chromaticFthoraNote',
-              ($event.target as HTMLInputElement).value,
-            )
+            updateChromaticFthoraNote(($event.target as HTMLInputElement).value)
           "
         >
           <option v-for="note in notes" :key="note.value" :value="note.value">
@@ -540,10 +537,12 @@ import { Unit } from '@/utils/Unit';
     'update:measureNumber',
     'update:noteIndicator',
     'update:secondaryAccidental',
+    'update:secondaryChromaticFthoraNote',
     'update:secondaryFthora',
     'update:secondaryGorgon',
     'update:spaceAfter',
     'update:tertiaryAccidental',
+    'update:tertiaryChromaticFthoraNote',
     'update:tertiaryFthora',
     'update:tie',
     'update:time',
@@ -1058,6 +1057,16 @@ export default class ToolbarNeume extends Vue {
       : this.tooltip(Fthora.GeneralSharp_Top);
   }
 
+  get chromaticFthoraNote() {
+    if (this.innerNeume === 'Secondary') {
+      return this.element.secondaryChromaticFthoraNote;
+    } else if (this.innerNeume === 'Tertiary') {
+      return this.element.tertiaryChromaticFthoraNote;
+    } else {
+      return this.element.chromaticFthoraNote;
+    }
+  }
+
   get noteDisplay() {
     return this.element.scaleNotes
       .map((x) => this.$t(this.getNoteName(x)))
@@ -1128,6 +1137,16 @@ export default class ToolbarNeume extends Vue {
       this.$emit('update:tertiaryFthora', args[0] + this.innerNeume);
     } else {
       this.$emit('update:fthora', args);
+    }
+  }
+
+  updateChromaticFthoraNote(note: string) {
+    if (this.innerNeume === 'Secondary') {
+      this.$emit('update:secondaryChromaticFthoraNote', note);
+    } else if (this.innerNeume === 'Tertiary') {
+      this.$emit('update:tertiaryChromaticFthoraNote', note);
+    } else {
+      this.$emit('update:chromaticFthoraNote', note);
     }
   }
 

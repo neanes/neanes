@@ -123,6 +123,8 @@ export class NoteElement extends ScoreElement {
   public ignoreAttractions: boolean = false;
 
   public chromaticFthoraNote: ScaleNote | null = null;
+  public secondaryChromaticFthoraNote: ScaleNote | null = null;
+  public tertiaryChromaticFthoraNote: ScaleNote | null = null;
 
   public accidentalOffsetX: number | null = null;
   public accidentalOffsetY: number | null = null;
@@ -241,6 +243,8 @@ export class NoteElement extends ScoreElement {
       tertiaryFthoraOffsetX: this.tertiaryFthoraOffsetX,
       tertiaryFthoraOffsetY: this.tertiaryFthoraOffsetY,
       chromaticFthoraNote: this.chromaticFthoraNote,
+      secondaryChromaticFthoraNote: this.secondaryChromaticFthoraNote,
+      tertiaryChromaticFthoraNote: this.tertiaryChromaticFthoraNote,
       gorgonNeume: this.gorgonNeume,
       gorgonNeumeOffsetX: this.gorgonNeumeOffsetX,
       gorgonNeumeOffsetY: this.gorgonNeumeOffsetY,

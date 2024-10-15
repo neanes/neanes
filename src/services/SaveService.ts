@@ -390,9 +390,11 @@ export class SaveService {
       element.tertiaryFthoraOffsetY = e.tertiaryFthoraOffsetY || undefined;
     }
 
-    if (e.chromaticFthoraNote != null) {
-      element.chromaticFthoraNote = e.chromaticFthoraNote;
-    }
+    element.chromaticFthoraNote = e.chromaticFthoraNote ?? undefined;
+    element.secondaryChromaticFthoraNote =
+      e.secondaryChromaticFthoraNote ?? undefined;
+    element.tertiaryChromaticFthoraNote =
+      e.tertiaryChromaticFthoraNote ?? undefined;
 
     if (e.accidental != null) {
       element.accidental = e.accidental;
@@ -1081,9 +1083,10 @@ export class SaveService {
       element.tertiaryFthoraOffsetY = e.tertiaryFthoraOffsetY ?? null;
     }
 
-    if (e.chromaticFthoraNote != null) {
-      element.chromaticFthoraNote = e.chromaticFthoraNote;
-    }
+    element.chromaticFthoraNote = e.chromaticFthoraNote ?? null;
+    element.secondaryChromaticFthoraNote =
+      e.secondaryChromaticFthoraNote ?? null;
+    element.tertiaryChromaticFthoraNote = e.tertiaryChromaticFthoraNote ?? null;
 
     if (e.accidental != null) {
       element.accidental = e.accidental;

@@ -940,11 +940,14 @@ export default class ToolbarNeume extends Vue {
 
   get showChromaticFthoraNote() {
     return (
-      (this.element.fthora != null &&
+      (this.innerNeume === 'Primary' &&
+        this.element.fthora != null &&
         this.chromaticFthoras.includes(this.element.fthora)) ||
-      (this.element.secondaryFthora != null &&
+      (this.innerNeume === 'Secondary' &&
+        this.element.secondaryFthora != null &&
         this.chromaticFthoras.includes(this.element.secondaryFthora)) ||
-      (this.element.tertiaryFthora != null &&
+      (this.innerNeume === 'Tertiary' &&
+        this.element.tertiaryFthora != null &&
         this.chromaticFthoras.includes(this.element.tertiaryFthora))
     );
   }

@@ -4819,13 +4819,13 @@ export default class Editor extends Vue {
   ) {
     let tertiaryChromaticFthoraNote: ScaleNote | null = null;
 
-    if (tertiaryFthora === Fthora.SoftChromaticThi_TopSecondary) {
+    if (tertiaryFthora === Fthora.SoftChromaticThi_TopTertiary) {
       tertiaryChromaticFthoraNote = ScaleNote.Thi;
-    } else if (tertiaryFthora === Fthora.SoftChromaticPa_TopSecondary) {
+    } else if (tertiaryFthora === Fthora.SoftChromaticPa_TopTertiary) {
       tertiaryChromaticFthoraNote = ScaleNote.Ga;
-    } else if (tertiaryFthora === Fthora.HardChromaticThi_TopSecondary) {
+    } else if (tertiaryFthora === Fthora.HardChromaticThi_TopTertiary) {
       tertiaryChromaticFthoraNote = ScaleNote.Thi;
-    } else if (tertiaryFthora === Fthora.HardChromaticPa_TopSecondary) {
+    } else if (tertiaryFthora === Fthora.HardChromaticPa_TopTertiary) {
       tertiaryChromaticFthoraNote = ScaleNote.Pa;
     }
 

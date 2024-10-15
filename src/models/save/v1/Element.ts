@@ -61,6 +61,8 @@ export class NoteElement extends ScoreElement {
   public secondaryFthora: Fthora | undefined = undefined;
   public tertiaryFthora: Fthora | undefined = undefined;
   public chromaticFthoraNote: ScaleNote | undefined = undefined;
+  public secondaryChromaticFthoraNote: ScaleNote | undefined = undefined;
+  public tertiaryChromaticFthoraNote: ScaleNote | undefined = undefined;
   public accidental: Accidental | undefined = undefined;
   public secondaryAccidental: Accidental | undefined = undefined;
   public tertiaryAccidental: Accidental | undefined = undefined;

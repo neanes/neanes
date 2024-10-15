@@ -2008,7 +2008,7 @@ export class LayoutService {
               fthoraNote,
               currentScale,
               note.secondaryFthora,
-              note.chromaticFthoraNote,
+              note.secondaryChromaticFthoraNote,
             );
 
             note.noteIndicatorNeume = noteIndicatorMap.get(
@@ -2050,7 +2050,7 @@ export class LayoutService {
               fthoraNote,
               currentScale,
               note.tertiaryFthora,
-              note.chromaticFthoraNote,
+              note.tertiaryChromaticFthoraNote,
             );
 
             note.noteIndicatorNeume = noteIndicatorMap.get(

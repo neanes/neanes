@@ -577,6 +577,16 @@ export default class ToolbarNeume extends Vue {
     Fthora.HardChromaticPa_Bottom,
     Fthora.HardChromaticThi_Top,
     Fthora.HardChromaticThi_Bottom,
+
+    Fthora.SoftChromaticPa_TopSecondary,
+    Fthora.SoftChromaticThi_TopSecondary,
+    Fthora.HardChromaticPa_TopSecondary,
+    Fthora.HardChromaticThi_TopSecondary,
+
+    Fthora.SoftChromaticPa_TopTertiary,
+    Fthora.SoftChromaticThi_TopTertiary,
+    Fthora.HardChromaticPa_TopTertiary,
+    Fthora.HardChromaticThi_TopTertiary,
   ];
 
   apliMenuOptions: ButtonWithMenuOption[] = [
@@ -879,7 +889,9 @@ export default class ToolbarNeume extends Vue {
   get notes() {
     if (
       this.element.fthora === Fthora.SoftChromaticThi_Top ||
-      this.element.fthora === Fthora.SoftChromaticThi_Bottom
+      this.element.fthora === Fthora.SoftChromaticThi_Bottom ||
+      this.element.secondaryFthora === Fthora.SoftChromaticThi_TopSecondary ||
+      this.element.tertiaryFthora === Fthora.SoftChromaticThi_TopTertiary
     ) {
       return [
         { label: 'model:note.zoHigh', value: ScaleNote.ZoHigh },
@@ -888,7 +900,9 @@ export default class ToolbarNeume extends Vue {
       ];
     } else if (
       this.element.fthora === Fthora.SoftChromaticPa_Top ||
-      this.element.fthora === Fthora.SoftChromaticPa_Bottom
+      this.element.fthora === Fthora.SoftChromaticPa_Bottom ||
+      this.element.secondaryFthora === Fthora.SoftChromaticPa_TopSecondary ||
+      this.element.tertiaryFthora === Fthora.SoftChromaticPa_TopTertiary
     ) {
       return [
         { label: `model:note.niHigh`, value: ScaleNote.NiHigh },
@@ -898,7 +912,9 @@ export default class ToolbarNeume extends Vue {
       ];
     } else if (
       this.element.fthora === Fthora.HardChromaticThi_Top ||
-      this.element.fthora === Fthora.HardChromaticThi_Bottom
+      this.element.fthora === Fthora.HardChromaticThi_Bottom ||
+      this.element.secondaryFthora === Fthora.HardChromaticThi_TopSecondary ||
+      this.element.tertiaryFthora === Fthora.HardChromaticThi_TopTertiary
     ) {
       return [
         { label: 'model:note.zoHigh', value: ScaleNote.ZoHigh },
@@ -907,7 +923,9 @@ export default class ToolbarNeume extends Vue {
       ];
     } else if (
       this.element.fthora === Fthora.HardChromaticPa_Top ||
-      this.element.fthora === Fthora.HardChromaticPa_Bottom
+      this.element.fthora === Fthora.HardChromaticPa_Bottom ||
+      this.element.secondaryFthora === Fthora.HardChromaticPa_TopSecondary ||
+      this.element.tertiaryFthora === Fthora.HardChromaticPa_TopTertiary
     ) {
       return [
         { label: `model:note.niHigh`, value: ScaleNote.NiHigh },
@@ -922,8 +940,12 @@ export default class ToolbarNeume extends Vue {
 
   get showChromaticFthoraNote() {
     return (
-      this.element.fthora != null &&
-      this.chromaticFthoras.includes(this.element.fthora)
+      (this.element.fthora != null &&
+        this.chromaticFthoras.includes(this.element.fthora)) ||
+      (this.element.secondaryFthora != null &&
+        this.chromaticFthoras.includes(this.element.secondaryFthora)) ||
+      (this.element.tertiaryFthora != null &&
+        this.chromaticFthoras.includes(this.element.tertiaryFthora))
     );
   }
 

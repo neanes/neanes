@@ -4797,7 +4797,19 @@ export default class Editor extends Vue {
     element: NoteElement,
     secondaryFthora: Fthora | null,
   ) {
-    this.updateNote(element, { secondaryFthora });
+    let secondaryChromaticFthoraNote: ScaleNote | null = null;
+
+    if (secondaryFthora === Fthora.SoftChromaticThi_TopSecondary) {
+      secondaryChromaticFthoraNote = ScaleNote.Thi;
+    } else if (secondaryFthora === Fthora.SoftChromaticPa_TopSecondary) {
+      secondaryChromaticFthoraNote = ScaleNote.Ga;
+    } else if (secondaryFthora === Fthora.HardChromaticThi_TopSecondary) {
+      secondaryChromaticFthoraNote = ScaleNote.Thi;
+    } else if (secondaryFthora === Fthora.HardChromaticPa_TopSecondary) {
+      secondaryChromaticFthoraNote = ScaleNote.Pa;
+    }
+
+    this.updateNote(element, { secondaryFthora, secondaryChromaticFthoraNote });
     this.save();
   }
 
@@ -4805,7 +4817,19 @@ export default class Editor extends Vue {
     element: NoteElement,
     tertiaryFthora: Fthora | null,
   ) {
-    this.updateNote(element, { tertiaryFthora });
+    let tertiaryChromaticFthoraNote: ScaleNote | null = null;
+
+    if (tertiaryFthora === Fthora.SoftChromaticThi_TopSecondary) {
+      tertiaryChromaticFthoraNote = ScaleNote.Thi;
+    } else if (tertiaryFthora === Fthora.SoftChromaticPa_TopSecondary) {
+      tertiaryChromaticFthoraNote = ScaleNote.Ga;
+    } else if (tertiaryFthora === Fthora.HardChromaticThi_TopSecondary) {
+      tertiaryChromaticFthoraNote = ScaleNote.Thi;
+    } else if (tertiaryFthora === Fthora.HardChromaticPa_TopSecondary) {
+      tertiaryChromaticFthoraNote = ScaleNote.Pa;
+    }
+
+    this.updateNote(element, { tertiaryFthora, tertiaryChromaticFthoraNote });
     this.save();
   }
 

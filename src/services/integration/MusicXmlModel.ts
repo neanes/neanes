@@ -1,0 +1,302 @@
+type YesNoType = 'yes' | 'no';
+type MusicXmlMeasureContentType = MusicXmlNote | MusicXmlBarline;
+
+class Token<T> {
+  tag: string;
+  value: T | null;
+
+  constructor(tag: string, value: T | null) {
+    this.tag = tag;
+    this.value = value;
+  }
+
+  toXml() {
+    return this.value != null ? `${this.tag}="${this.value}"` : '';
+  }
+}
+
+export class MusicXmlYesNo extends Token<YesNoType> {}
+
+export class MusicXmlMeasure {
+  number: number;
+  contents: MusicXmlMeasureContentType[] = [];
+  attributes?: MusicXmlAttributes;
+
+  constructor(number: number) {
+    this.number = number;
+  }
+
+  toXml() {
+    let contents = '';
+    this.contents.forEach((x) => (contents += x.toXml()));
+
+    const xml = `<measure number="${this.number}">
+      ${this.attributes?.toXml() ?? ''}
+      ${contents}
+    </measure>`;
+
+    return xml;
+  }
+}
+
+export class MusicXmlPrint {
+  newSystem: MusicXmlYesNo = new MusicXmlYesNo('new-system', null);
+
+  toXml() {
+    const xml = `<print ${this.newSystem.toXml() ?? ''}></print>`;
+
+    return xml;
+  }
+}
+
+export class MusicXmlAttributes {
+  divisions?: MusicXmlDivisions;
+  clef?: MusicXmlClef;
+  key?: MusicXmlKey;
+
+  toXml() {
+    const xml = `<attributes>
+        ${this.divisions?.toXml() ?? ''}
+        ${this.clef?.toXml() ?? ''}
+        ${this.key?.toXml() ?? ''}
+      </attributes>`;
+
+    return xml;
+  }
+}
+
+export class MusicXmlKey {
+  fifths?: MusicXmlFifths;
+
+  toXml() {
+    const xml = `<key>${this.fifths?.toXml()}</key>`;
+
+    return xml;
+  }
+}
+
+export class MusicXmlFifths {
+  contents: number;
+
+  constructor(contents: number) {
+    this.contents = contents;
+  }
+
+  toXml() {
+    const xml = `<fifths>${this.contents}</fifths>`;
+
+    return xml;
+  }
+}
+
+export class MusicXmlClef {
+  sign: MusicXmlSign;
+  line: MusicXmlLine;
+
+  constructor(sign: MusicXmlSign, line: MusicXmlLine) {
+    this.sign = sign;
+    this.line = line;
+  }
+
+  toXml() {
+    const xml = `<clef>${this.sign.toXml()}${this.line.toXml()}</clef>`;
+
+    return xml;
+  }
+}
+
+export class MusicXmlSign {
+  contents: string;
+
+  constructor(contents: string) {
+    this.contents = contents;
+  }
+
+  toXml() {
+    const xml = `<sign>${this.contents}</sign>`;
+
+    return xml;
+  }
+}
+
+export class MusicXmlLine {
+  contents: number;
+
+  constructor(contents: number) {
+    this.contents = contents;
+  }
+
+  toXml() {
+    const xml = `<line>${this.contents}</line>`;
+
+    return xml;
+  }
+}
+
+export class MusicXmlDivisions {
+  contents: number;
+
+  constructor(contents: number) {
+    this.contents = contents;
+  }
+
+  toXml() {
+    const xml = `<divisions>${this.contents}</divisions>`;
+
+    return xml;
+  }
+}
+
+export class MusicXmlNote {
+  pitch: MusicXmlPitch;
+  duration: number = 1;
+  type: string = 'quarter';
+  lyric?: MusicXmlLyric;
+
+  constructor(pitch: MusicXmlPitch, duration: number, type: string) {
+    this.pitch = pitch;
+    this.duration = duration;
+    this.type = type;
+  }
+
+  toXml() {
+    const xml = `<note>
+        ${this.pitch.toXml()}
+        <duration>${this.duration}</duration>
+        <type>${this.type}</type>
+        ${this.lyric?.toXml() ?? ''}
+      </note>`;
+
+    return xml;
+  }
+}
+
+export class MusicXmlPitch {
+  step: string;
+  octave: number;
+  alter?: MusicXmlAlter;
+
+  constructor(step: string, octave: number) {
+    this.step = step;
+    this.octave = octave;
+  }
+
+  toXml() {
+    const xml = `<pitch>
+          <step>${this.step}</step>
+          <octave>${this.octave}</octave>
+          ${this.alter?.toXml() ?? ''}
+        </pitch>`;
+
+    return xml;
+  }
+}
+
+export class MusicXmlAlter {
+  content: number;
+
+  constructor(content: number) {
+    this.content = content;
+  }
+
+  toXml() {
+    const xml = `<alter>${this.content}</alter>`;
+
+    return xml;
+  }
+}
+
+export class MusicXmlLyric {
+  text: MusicXmlText;
+  syllabic?: MusicXmlSyllabic;
+  extend?: MusicXmlExtend;
+
+  constructor(text: MusicXmlText) {
+    this.text = text;
+  }
+
+  toXml() {
+    const xml = `<lyric>
+          ${this.syllabic?.toXml() ?? ''}
+          ${this.text.toXml()}
+          ${this.extend?.toXml() ?? ''}
+        </lyric>`;
+
+    return xml;
+  }
+}
+
+type MusicXmlSyllabicType = 'begin' | 'end' | 'middle' | 'syllable';
+
+export class MusicXmlSyllabic {
+  contents: MusicXmlSyllabicType;
+
+  constructor(contents: MusicXmlSyllabicType) {
+    this.contents = contents;
+  }
+
+  toXml() {
+    const xml = `<syllabic>${this.contents}</syllabic>`;
+
+    return xml;
+  }
+}
+
+export class MusicXmlExtend {
+  toXml() {
+    const xml = `<extend></extend>`;
+
+    return xml;
+  }
+}
+
+export class MusicXmlText {
+  content: string;
+
+  constructor(content: string) {
+    this.content = content;
+  }
+
+  toXml() {
+    const xml = `<text>${this.content}</text>`;
+
+    return xml;
+  }
+}
+
+export class MusicXmlBarline {
+  barStyle?: MusicXmlBarStyle;
+
+  toXml() {
+    const xml = `<barline>${this.barStyle?.toXml() ?? ''}</barline>`;
+
+    return xml;
+  }
+}
+
+type MusicXmlBarStyleType =
+  | 'regular'
+  | 'dotted'
+  | 'dashed'
+  | 'heavy'
+  | 'light-light'
+  | 'light-heavy'
+  | 'heavy-light'
+  | 'heavy-heavy'
+  | 'tick'
+  | 'short'
+  | 'none';
+
+export class MusicXmlBarStyle {
+  contents: MusicXmlBarStyleType;
+
+  constructor(contents: MusicXmlBarStyleType) {
+    this.contents = contents;
+  }
+
+  toXml() {
+    const xml = `<bar-style>${this.contents}</bar-style>`;
+
+    return xml;
+  }
+}

@@ -6,7 +6,7 @@ import {
   ScoreElement,
 } from '@/models/Element';
 import { QuantitativeNeume } from '@/models/Neumes';
-import { Scale, ScaleNote } from '@/models/Scales';
+import { getScaleNoteValue, Scale, ScaleNote } from '@/models/Scales';
 import { Score } from '@/models/Score';
 
 import {
@@ -35,24 +35,29 @@ import {
   MusicXmlText,
 } from './MusicXmlModel';
 
-interface BuildNoteOutput {
-  notes: MusicXmlNote[];
-  isSyllabic: boolean;
-}
-
 interface FindNodesOutput {
   results: AnalysisNode[];
   index: number;
 }
 
+class MusicXmlExporterWorkspace {
+  nodes: AnalysisNode[] = [];
+  zoFlatPivotActivated: boolean = false;
+  zoNaturalPivotActivated: boolean = false;
+  dropCap: string = '';
+  isSyllabic: boolean = false;
+}
+
 export class MusicXmlExporter {
   export(score: Score) {
-    const nodes: AnalysisNode[] = AnalysisService.analyze(
+    const workspace = new MusicXmlExporterWorkspace();
+
+    workspace.nodes = AnalysisService.analyze(
       score.staff.elements,
       score.pageSetup.chrysanthineAccidentals,
     );
 
-    const measures = this.buildMeasures(score.staff.elements, nodes);
+    const measures = this.buildMeasures(score.staff.elements, workspace);
 
     let measureContents = '';
 
@@ -79,19 +84,21 @@ export class MusicXmlExporter {
 
   buildMeasures(
     elements: ScoreElement[],
-    nodes: AnalysisNode[],
+    workspace: MusicXmlExporterWorkspace,
   ): MusicXmlMeasure[] {
     const measures: MusicXmlMeasure[] = [];
 
     let measureNumber = 1;
     let lastIndex = 0;
-    let isSyllabic = false;
-    let dropCap = '';
 
     let currentMeasure: MusicXmlMeasure | null = null;
 
     for (const element of elements) {
-      const findResults = this.findNodes(nodes, element.index, lastIndex);
+      const findResults = this.findNodes(
+        workspace.nodes,
+        element.index,
+        lastIndex,
+      );
       const nodeGroup = findResults.results;
       lastIndex = findResults.index;
 
@@ -111,17 +118,15 @@ export class MusicXmlExporter {
             measures.push(currentMeasure);
           }
 
-          const buildNoteGroupResults = this.buildNoteGroup(
+          const notes = this.buildNoteGroup(
             element as NoteElement,
             nodeGroup as NoteAtomNode[],
-            isSyllabic,
-            dropCap,
+            workspace,
           );
 
-          isSyllabic = buildNoteGroupResults.isSyllabic;
-          dropCap = '';
+          workspace.dropCap = '';
 
-          currentMeasure.contents.push(...buildNoteGroupResults.notes);
+          currentMeasure.contents.push(...notes);
           break;
         case ElementType.ModeKey: {
           // End the current measure
@@ -175,7 +180,7 @@ export class MusicXmlExporter {
         }
         case ElementType.DropCap:
           const dropCapElement = element as DropCapElement;
-          dropCap = dropCapElement.content;
+          workspace.dropCap = dropCapElement.content;
       }
 
       // Naively, we put as close to four notes in each measure as we can.
@@ -199,9 +204,8 @@ export class MusicXmlExporter {
   buildNoteGroup(
     noteElement: Readonly<NoteElement>,
     nodes: readonly NoteAtomNode[],
-    isSyllabic: boolean,
-    dropCap: string,
-  ): BuildNoteOutput {
+    workspace: MusicXmlExporterWorkspace,
+  ) {
     const notes: MusicXmlNote[] = [];
 
     let lyricsIndex = 0;
@@ -222,31 +226,43 @@ export class MusicXmlExporter {
       const note = this.buildNote(node);
       notes.push(note);
 
-      if (i === lyricsIndex && (noteElement.lyrics !== '' || dropCap !== '')) {
+      if (note.pitch.alter === undefined) {
+        this.applyAttractions(node, note, workspace);
+      }
+
+      if (
+        i === lyricsIndex &&
+        (noteElement.lyrics !== '' || workspace.dropCap !== '')
+      ) {
         note.lyric = new MusicXmlLyric(
-          new MusicXmlText(dropCap + noteElement.lyrics),
+          new MusicXmlText(workspace.dropCap + noteElement.lyrics),
         );
 
         if (noteElement.isMelismaStart && noteElement.isHyphen) {
-          note.lyric.syllabic = isSyllabic
+          note.lyric.syllabic = workspace.isSyllabic
             ? new MusicXmlSyllabic('middle')
             : new MusicXmlSyllabic('begin');
-          isSyllabic = true;
+          workspace.isSyllabic = true;
         } else if (
-          isSyllabic &&
+          workspace.isSyllabic &&
           (!noteElement.isMelisma || noteElement.isMelismaStart)
         ) {
           note.lyric.syllabic = new MusicXmlSyllabic('end');
-          isSyllabic = false;
+          workspace.isSyllabic = false;
         }
 
-        if (noteElement.isMelisma && !noteElement.isHyphen) {
+        // Write melisma extend if this is a non-hyphen melisma.
+        // Note that this also applies if part of a multi-node neume.
+        if (
+          (noteElement.isMelisma || nodes.length > 1) &&
+          !noteElement.isHyphen
+        ) {
           note.lyric.extend = new MusicXmlExtend();
         }
       }
     }
 
-    return { notes, isSyllabic };
+    return notes;
   }
 
   buildNote(node: Readonly<NoteAtomNode>): MusicXmlNote {
@@ -288,6 +304,79 @@ export class MusicXmlExporter {
       return new MusicXmlAlter(-1);
     } else if (node.accidental.startsWith('Sharp')) {
       return new MusicXmlAlter(1);
+    }
+
+    // TODO keep track of last alterations
+  }
+
+  applyAttractions(
+    node: NoteAtomNode,
+    note: MusicXmlNote,
+    workspace: MusicXmlExporterWorkspace,
+  ) {
+    // If melody descends after zo, flatten zo
+    if (
+      node.scale === Scale.Diatonic ||
+      node.scale === Scale.Kliton ||
+      node.scale === Scale.Zygos
+    ) {
+      if (node.virtualNote === ScaleNote.ZoHigh) {
+        // If we are not in a pivot, check to see if we need to pivot
+        if (!workspace.zoFlatPivotActivated) {
+          this.setPivots(node, workspace);
+        }
+
+        // If we are in a pivot, then flatten zo
+        if (workspace.zoFlatPivotActivated) {
+          note.pitch.alter = new MusicXmlAlter(-1);
+        }
+      } else {
+        // Clear zo flat pivot
+        workspace.zoFlatPivotActivated = false;
+      }
+
+      // Check whether ke is attracted toward zo
+      if (
+        node.virtualNote === ScaleNote.Ke &&
+        workspace.zoNaturalPivotActivated
+      ) {
+        note.pitch.alter = new MusicXmlAlter(1);
+      }
+
+      // Clear the zo natural pivot if we descend below ke
+      if (
+        getScaleNoteValue(node.virtualNote) < getScaleNoteValue(ScaleNote.Ke)
+      ) {
+        workspace.zoNaturalPivotActivated = false;
+      }
+    }
+  }
+
+  setPivots(
+    noteAtomNode: Readonly<NoteAtomNode>,
+    workspace: MusicXmlExporterWorkspace,
+  ) {
+    const index: number = workspace.nodes.indexOf(noteAtomNode);
+
+    for (let i = index + 1; i < workspace.nodes.length; i++) {
+      const nextNoteAtomNode = workspace.nodes[i] as NoteAtomNode;
+
+      const next: number = getScaleNoteValue(nextNoteAtomNode.virtualNote);
+
+      if (next <= getScaleNoteValue(ScaleNote.Ke)) {
+        workspace.zoFlatPivotActivated = true;
+        workspace.zoNaturalPivotActivated = false;
+        return;
+      }
+
+      // TODO this is too simplistic. Disabling for now.
+      // if (next >= getScaleNoteValue(ScaleNote.ZoHigh)) {
+      //   workspace.zoNaturalPivotActivated = true;
+      // }
+
+      if (next > getScaleNoteValue(ScaleNote.ZoHigh)) {
+        return;
+      }
     }
   }
 

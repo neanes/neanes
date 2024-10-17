@@ -1270,6 +1270,7 @@ export default class Editor extends Vue {
   @Inject() readonly playbackService!: PlaybackService;
   @Inject() readonly textSearchService!: TextSearchService;
   @Inject() readonly lyricService!: LyricService;
+  @Inject() readonly musicXmlExporter!: MusicXmlExporter;
 
   searchTextQuery: string = '';
   searchTextPanelIsOpen = false;
@@ -1368,7 +1369,6 @@ export default class Editor extends Vue {
   editorPreferences: EditorPreferences = new EditorPreferences();
 
   byzHtmlExporter: ByzHtmlExporter = new ByzHtmlExporter();
-  musicXmlExporter: MusicXmlExporter = new MusicXmlExporter();
 
   exportInProgress: boolean = false;
 

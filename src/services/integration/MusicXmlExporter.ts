@@ -2,6 +2,7 @@ import {
   DropCapElement,
   ElementType,
   MartyriaElement,
+  ModeKeyElement,
   NoteElement,
   ScoreElement,
 } from '@/models/Element';
@@ -12,9 +13,12 @@ import { Score } from '@/models/Score';
 import {
   AnalysisNode,
   AnalysisService,
+  FthoraNode,
   ModeKeyNode,
+  NodeType,
   NoteAtomNode,
 } from '../audio/AnalysisService';
+import { IMusicXmlScaleProvider } from './IMusicXmlScaleProvider';
 import {
   MusicXmlAlter,
   MusicXmlAttributes,
@@ -24,6 +28,9 @@ import {
   MusicXmlExtend,
   MusicXmlFifths,
   MusicXmlKey,
+  MusicXmlKeyAlter,
+  MusicXmlKeyOctave,
+  MusicXmlKeyStep,
   MusicXmlLine,
   MusicXmlLyric,
   MusicXmlMeasure,
@@ -46,11 +53,24 @@ class MusicXmlExporterWorkspace {
   zoNaturalPivotActivated: boolean = false;
   dropCap: string = '';
   isSyllabic: boolean = false;
+  currentScale: Map<ScaleNote, MusicXmlPitch>;
+
+  constructor(currentScale: Map<ScaleNote, MusicXmlPitch>) {
+    this.currentScale = currentScale;
+  }
 }
 
 export class MusicXmlExporter {
+  scaleProvider: IMusicXmlScaleProvider;
+
+  constructor(scaleProvider: IMusicXmlScaleProvider) {
+    this.scaleProvider = scaleProvider;
+  }
+
   export(score: Score) {
-    const workspace = new MusicXmlExporterWorkspace();
+    const workspace = new MusicXmlExporterWorkspace(
+      this.scaleProvider.getDefaultScale(),
+    );
 
     workspace.nodes = AnalysisService.analyze(
       score.staff.elements,
@@ -118,6 +138,14 @@ export class MusicXmlExporter {
             measures.push(currentMeasure);
           }
 
+          // Naively, we put as close to four notes in each measure as we can.
+          // TODO if the score contains barlines, use those instead.
+          if (currentMeasure.contents.length >= 4) {
+            currentMeasure = new MusicXmlMeasure(measureNumber++);
+            measures.push(currentMeasure);
+          }
+
+          // Build the note group
           const notes = this.buildNoteGroup(
             element as NoteElement,
             nodeGroup as NoteAtomNode[],
@@ -129,6 +157,8 @@ export class MusicXmlExporter {
           currentMeasure.contents.push(...notes);
           break;
         case ElementType.ModeKey: {
+          const modeKeyElement = element as ModeKeyElement;
+
           // End the current measure
           if (currentMeasure != null) {
             const barline = new MusicXmlBarline();
@@ -154,6 +184,15 @@ export class MusicXmlExporter {
             new MusicXmlLine(2),
           );
           currentMeasure.attributes.key = key;
+
+          // Change the scale
+          // TODO calculate shift
+          this.scaleProvider.alterScale(
+            workspace.currentScale,
+            modeKeyElement.scale,
+            0,
+          );
+
           break;
         }
         case ElementType.Martyria: {
@@ -182,13 +221,6 @@ export class MusicXmlExporter {
           const dropCapElement = element as DropCapElement;
           workspace.dropCap = dropCapElement.content;
       }
-
-      // Naively, we put as close to four notes in each measure as we can.
-      // TODO if the score contains barlines, use those instead.
-      if (currentMeasure != null && currentMeasure.contents.length >= 4) {
-        currentMeasure = new MusicXmlMeasure(measureNumber++);
-        measures.push(currentMeasure);
-      }
     }
 
     // End the last measure
@@ -203,7 +235,7 @@ export class MusicXmlExporter {
 
   buildNoteGroup(
     noteElement: Readonly<NoteElement>,
-    nodes: readonly NoteAtomNode[],
+    nodes: readonly AnalysisNode[],
     workspace: MusicXmlExporterWorkspace,
   ) {
     const notes: MusicXmlNote[] = [];
@@ -223,51 +255,67 @@ export class MusicXmlExporter {
     for (let i = 0; i < nodes.length; i++) {
       const node = nodes[i];
 
-      const note = this.buildNote(node);
-      notes.push(note);
+      if (node.nodeType === NodeType.NoteAtomNode) {
+        const noteNode = node as NoteAtomNode;
+        const note = this.buildNote(noteNode, workspace);
+        notes.push(note);
 
-      if (note.pitch.alter === undefined) {
-        this.applyAttractions(node, note, workspace);
-      }
-
-      if (
-        i === lyricsIndex &&
-        (noteElement.lyrics !== '' || workspace.dropCap !== '')
-      ) {
-        note.lyric = new MusicXmlLyric(
-          new MusicXmlText(workspace.dropCap + noteElement.lyrics),
-        );
-
-        if (noteElement.isMelismaStart && noteElement.isHyphen) {
-          note.lyric.syllabic = workspace.isSyllabic
-            ? new MusicXmlSyllabic('middle')
-            : new MusicXmlSyllabic('begin');
-          workspace.isSyllabic = true;
-        } else if (
-          workspace.isSyllabic &&
-          (!noteElement.isMelisma || noteElement.isMelismaStart)
-        ) {
-          note.lyric.syllabic = new MusicXmlSyllabic('end');
-          workspace.isSyllabic = false;
+        if (note.pitch.alter === undefined) {
+          this.applyAttractions(noteNode, note, workspace);
         }
 
-        // Write melisma extend if this is a non-hyphen melisma.
-        // Note that this also applies if part of a multi-node neume.
         if (
-          (noteElement.isMelisma || nodes.length > 1) &&
-          !noteElement.isHyphen
+          i === lyricsIndex &&
+          (noteElement.lyrics !== '' || workspace.dropCap !== '')
         ) {
-          note.lyric.extend = new MusicXmlExtend();
+          note.lyric = new MusicXmlLyric(
+            new MusicXmlText(workspace.dropCap + noteElement.lyrics),
+          );
+
+          if (noteElement.isMelismaStart && noteElement.isHyphen) {
+            note.lyric.syllabic = workspace.isSyllabic
+              ? new MusicXmlSyllabic('middle')
+              : new MusicXmlSyllabic('begin');
+            workspace.isSyllabic = true;
+          } else if (
+            workspace.isSyllabic &&
+            (!noteElement.isMelisma || noteElement.isMelismaStart)
+          ) {
+            note.lyric.syllabic = new MusicXmlSyllabic('end');
+            workspace.isSyllabic = false;
+          }
+
+          // Write melisma extend if this is a non-hyphen melisma.
+          // Note that this also applies if part of a multi-node neume.
+          if (
+            (noteElement.isMelisma || nodes.length > 1) &&
+            !noteElement.isHyphen
+          ) {
+            note.lyric.extend = new MusicXmlExtend();
+          }
         }
+      } else if (node.nodeType === NodeType.FthoraNode) {
+        const fthoraNode = node as FthoraNode;
+
+        // TODO handle transposition
+        this.scaleProvider.alterScale(
+          workspace.currentScale,
+          fthoraNode.scale,
+          0,
+        );
       }
+      // TODO handle rests, ison, and tempo
     }
 
     return notes;
   }
 
-  buildNote(node: Readonly<NoteAtomNode>): MusicXmlNote {
+  buildNote(
+    node: Readonly<NoteAtomNode>,
+    workspace: MusicXmlExporterWorkspace,
+  ): MusicXmlNote {
     const note = new MusicXmlNote(
-      this.getPitch(node)!,
+      this.getPitch(node, workspace)!,
       node.duration,
       this.getType(node),
     );
@@ -282,16 +330,41 @@ export class MusicXmlExporter {
       key.fifths = new MusicXmlFifths(-1);
     } else if (node.scale === Scale.SoftChromatic) {
       key.fifths = new MusicXmlFifths(0);
+    } else if (node.scale === Scale.HardChromatic) {
+      key.stepsAndAlters.push(new MusicXmlKeyStep('B'));
+      key.stepsAndAlters.push(new MusicXmlKeyAlter(-1));
+      key.stepsAndAlters.push(new MusicXmlKeyStep('E'));
+      key.stepsAndAlters.push(new MusicXmlKeyAlter(-1));
+      key.stepsAndAlters.push(new MusicXmlKeyStep('F'));
+      key.stepsAndAlters.push(new MusicXmlKeyAlter(1));
+      key.stepsAndAlters.push(new MusicXmlKeyStep('C'));
+      key.stepsAndAlters.push(new MusicXmlKeyAlter(1));
+      key.octaves.push(new MusicXmlKeyOctave(1, 4));
+      key.octaves.push(new MusicXmlKeyOctave(2, 5));
+      key.octaves.push(new MusicXmlKeyOctave(3, 5));
+      key.octaves.push(new MusicXmlKeyOctave(4, 5));
     }
 
     return key;
   }
 
-  getPitch(node: NoteAtomNode): MusicXmlPitch {
-    // TODO this needs to take into account scales
-    const pitch = this.scaleNoteToPitchMap.get(node.physicalNote)!;
+  getPitch(
+    node: NoteAtomNode,
+    workspace: MusicXmlExporterWorkspace,
+  ): MusicXmlPitch {
+    const pitch = workspace.currentScale.get(node.physicalNote)!;
 
-    pitch.alter = this.getAlter(node);
+    const alter = this.getAlter(node);
+
+    if (alter) {
+      if (pitch.alter) {
+        // TODO this is not correct.
+        // We need to potentially change the step
+        pitch.alter.content -= alter.content;
+      } else {
+        pitch.alter = alter;
+      }
+    }
 
     return pitch;
   }
@@ -426,33 +499,6 @@ export class MusicXmlExporter {
 
     return { results, index: i };
   }
-
-  private scaleNoteToPitchMap: Map<ScaleNote, MusicXmlPitch> = new Map<
-    ScaleNote,
-    MusicXmlPitch
-  >([
-    [ScaleNote.ZoLow, new MusicXmlPitch('B', 2)],
-    [ScaleNote.NiLow, new MusicXmlPitch('C', 3)],
-    [ScaleNote.PaLow, new MusicXmlPitch('D', 3)],
-    [ScaleNote.VouLow, new MusicXmlPitch('E', 3)],
-    [ScaleNote.GaLow, new MusicXmlPitch('F', 3)],
-    [ScaleNote.ThiLow, new MusicXmlPitch('G', 3)],
-    [ScaleNote.KeLow, new MusicXmlPitch('A', 3)],
-    [ScaleNote.Zo, new MusicXmlPitch('B', 3)],
-    [ScaleNote.Ni, new MusicXmlPitch('C', 4)],
-    [ScaleNote.Pa, new MusicXmlPitch('D', 4)],
-    [ScaleNote.Vou, new MusicXmlPitch('E', 4)],
-    [ScaleNote.Ga, new MusicXmlPitch('F', 4)],
-    [ScaleNote.Thi, new MusicXmlPitch('G', 4)],
-    [ScaleNote.Ke, new MusicXmlPitch('A', 4)],
-    [ScaleNote.ZoHigh, new MusicXmlPitch('B', 4)],
-    [ScaleNote.NiHigh, new MusicXmlPitch('C', 5)],
-    [ScaleNote.PaHigh, new MusicXmlPitch('D', 5)],
-    [ScaleNote.VouHigh, new MusicXmlPitch('E', 5)],
-    [ScaleNote.GaHigh, new MusicXmlPitch('F', 5)],
-    [ScaleNote.ThiHigh, new MusicXmlPitch('G', 5)],
-    [ScaleNote.KeHigh, new MusicXmlPitch('A', 5)],
-  ]);
 
   /*
     <?xml version="1.0" encoding="UTF-8" standalone="no"?>

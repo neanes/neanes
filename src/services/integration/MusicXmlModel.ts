@@ -1,4 +1,5 @@
-type YesNoType = 'yes' | 'no';
+type MusicXmlYesNoType = 'yes' | 'no';
+type MusicXmlStepType = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G';
 type MusicXmlMeasureContentType = MusicXmlNote | MusicXmlBarline;
 
 class Token<T> {
@@ -15,7 +16,7 @@ class Token<T> {
   }
 }
 
-export class MusicXmlYesNo extends Token<YesNoType> {}
+export class MusicXmlYesNo extends Token<MusicXmlYesNoType> {}
 
 export class MusicXmlMeasure {
   number: number;
@@ -67,9 +68,17 @@ export class MusicXmlAttributes {
 
 export class MusicXmlKey {
   fifths?: MusicXmlFifths;
+  stepsAndAlters: Array<MusicXmlKeyStep | MusicXmlKeyAlter> = [];
+  octaves: MusicXmlKeyOctave[] = [];
 
   toXml() {
-    const xml = `<key>${this.fifths?.toXml()}</key>`;
+    let stepsAndAlters = '';
+    this.stepsAndAlters.forEach((x) => (stepsAndAlters += x.toXml()));
+
+    let octaves = '';
+    this.octaves.forEach((x) => (octaves += x.toXml()));
+
+    const xml = `<key>${this.fifths?.toXml() ?? ''}${stepsAndAlters}${octaves}</key>`;
 
     return xml;
   }
@@ -84,6 +93,49 @@ export class MusicXmlFifths {
 
   toXml() {
     const xml = `<fifths>${this.contents}</fifths>`;
+
+    return xml;
+  }
+}
+export class MusicXmlKeyStep {
+  contents: MusicXmlStepType;
+
+  constructor(contents: MusicXmlStepType) {
+    this.contents = contents;
+  }
+
+  toXml() {
+    const xml = `<key-step>${this.contents}</key-step>`;
+
+    return xml;
+  }
+}
+
+export class MusicXmlKeyAlter {
+  contents: number;
+
+  constructor(contents: number) {
+    this.contents = contents;
+  }
+
+  toXml() {
+    const xml = `<key-alter>${this.contents}</key-alter>`;
+
+    return xml;
+  }
+}
+
+export class MusicXmlKeyOctave {
+  number: number;
+  contents: number;
+
+  constructor(number: number, contents: number) {
+    this.number = number;
+    this.contents = contents;
+  }
+
+  toXml() {
+    const xml = `<key-octave number="${this.number}">${this.contents}</key-octave>`;
 
     return xml;
   }
@@ -172,13 +224,14 @@ export class MusicXmlNote {
 }
 
 export class MusicXmlPitch {
-  step: string;
+  step: MusicXmlStepType;
   octave: number;
   alter?: MusicXmlAlter;
 
-  constructor(step: string, octave: number) {
+  constructor(step: MusicXmlStepType, octave: number, alter?: MusicXmlAlter) {
     this.step = step;
     this.octave = octave;
+    this.alter = alter;
   }
 
   toXml() {

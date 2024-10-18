@@ -17,7 +17,6 @@ import { initalizeBrowserIpcListeners } from './ipc/browserIpcListeners';
 import { initializeIpcListeners } from './ipc/ipcListeners';
 import router from './router';
 import { MusicXmlExporter } from './services/integration/MusicXmlExporter';
-import { MusicXmlScaleProvider } from './services/integration/MusicXmlScaleProvider';
 import { LyricService } from './services/LyricService';
 import { TextSearchService } from './services/TextSearchService';
 import { isElectron } from './utils/isElectron';
@@ -62,10 +61,7 @@ app.provide('audioService', new AudioService());
 app.provide('playbackService', new PlaybackService());
 app.provide('textSearchService', new TextSearchService());
 app.provide('lyricService', new LyricService());
-app.provide(
-  'musicXmlExporter',
-  new MusicXmlExporter(new MusicXmlScaleProvider()),
-);
+app.provide('musicXmlExporter', new MusicXmlExporter());
 app.use(router);
 app.use(I18NextVue, { i18next });
 app.mount('#app');

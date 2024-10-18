@@ -86,6 +86,8 @@ export class FthoraNode implements PitchNode {
   public physicalNote: ScaleNote = ScaleNote.Pa;
   public virtualNote: ScaleNote = ScaleNote.Pa;
   public scale: Scale = Scale.Diatonic;
+  public fthora: Fthora = Fthora.DiatonicPa_Top;
+  public chromaticFthoraNote: ScaleNote | null = null;
 }
 
 export class IsonNode implements AnalysisNode {
@@ -942,6 +944,8 @@ export class AnalysisService {
       getScaleNoteValue(physicalNote) + workspace.currentShift,
     );
     fthoraNode.scale = workspace.currentScale;
+    fthoraNode.fthora = fthora;
+    fthoraNode.chromaticFthoraNote = chromaticFthoraNote;
     workspace.nodes.push(fthoraNode);
   }
 

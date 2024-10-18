@@ -3,14 +3,12 @@ import { Scale, ScaleNote } from '@/models/Scales';
 import { IMusicXmlScaleProvider } from './IMusicXmlScaleProvider';
 import { MusicXmlAlter, MusicXmlPitch } from './MusicXmlModel';
 
+type AlterMap = Map<ScaleNote, number>;
+
 export class MusicXmlScaleProvider implements IMusicXmlScaleProvider {
-  alterScale(
-    currentScale: Map<ScaleNote, MusicXmlPitch>,
-    newScale: Scale,
-    transposition: number,
-  ) {
-    let alters: Map<ScaleNote, MusicXmlAlter>;
-    switch (newScale) {
+  getScale(scale: Scale, transposition: number) {
+    let alters: AlterMap = this.hardChromaticFromDAlters;
+    switch (scale) {
       case Scale.Diatonic:
         alters = this.getDiatonicAlters(transposition);
         break;
@@ -18,7 +16,7 @@ export class MusicXmlScaleProvider implements IMusicXmlScaleProvider {
         alters = this.getHardChromaticAlters(transposition);
         break;
       case Scale.SoftChromatic:
-        alters = this.hardChromaticFromDAlters;
+        alters = this.getSoftChromaticAlters(transposition);
         break;
       case Scale.EnharmonicGa:
         alters = this.hardChromaticFromDAlters;
@@ -49,34 +47,51 @@ export class MusicXmlScaleProvider implements IMusicXmlScaleProvider {
         break;
     }
 
-    for (const [note, pitch] of currentScale) {
-      pitch.alter = alters.get(note);
+    const newScale = this.getDefaultScale();
+
+    for (const [note, pitch] of newScale) {
+      const alter = alters.get(note);
+
+      if (alter) {
+        pitch.alter = new MusicXmlAlter(alter);
+      } else {
+        pitch.alter = undefined;
+      }
     }
+
+    return newScale;
   }
 
-  private getDiatonicAlters(
-    transposition: number,
-  ): Map<ScaleNote, MusicXmlAlter> {
+  private getDiatonicAlters(transposition: number): AlterMap {
     switch (transposition) {
       case 0:
-        return new Map<ScaleNote, MusicXmlAlter>();
+        return new Map<ScaleNote, number>();
       default:
         throw Error(`Invalid transposition: ${transposition}`);
     }
   }
 
-  private getHardChromaticAlters(
-    transposition: number,
-  ): Map<ScaleNote, MusicXmlAlter> {
+  private getSoftChromaticAlters(transposition: number): AlterMap {
+    switch (transposition) {
+      case 0:
+        return new Map<ScaleNote, number>();
+      default:
+        throw Error(`Invalid transposition: ${transposition}`);
+    }
+  }
+
+  private getHardChromaticAlters(transposition: number): AlterMap {
     switch (transposition) {
       case 0:
         return this.hardChromaticFromDAlters;
+      case 1:
+        return this.hardChromaticFromCAlters;
       default:
         throw Error(`Invalid transposition: ${transposition}`);
     }
   }
 
-  getDefaultScale() {
+  private getDefaultScale() {
     return new Map<ScaleNote, MusicXmlPitch>([
       [ScaleNote.ZoLow, new MusicXmlPitch('B', 2)],
       [ScaleNote.NiLow, new MusicXmlPitch('C', 3)],
@@ -102,22 +117,29 @@ export class MusicXmlScaleProvider implements IMusicXmlScaleProvider {
     ]);
   }
 
+  // Db, Ab
+  private hardChromaticFromCAlters: AlterMap = new Map<ScaleNote, number>([
+    [ScaleNote.KeLow, -1],
+    [ScaleNote.Ke, -1],
+    [ScaleNote.KeHigh, -1],
+    [ScaleNote.PaLow, -1],
+    [ScaleNote.Pa, -1],
+    [ScaleNote.PaHigh, -1],
+  ]);
+
   // Bb, C#, Eb, F#
-  private hardChromaticFromDAlters: Map<ScaleNote, MusicXmlAlter> = new Map<
-    ScaleNote,
-    MusicXmlAlter
-  >([
-    [ScaleNote.ZoLow, new MusicXmlAlter(-1)],
-    [ScaleNote.NiLow, new MusicXmlAlter(1)],
-    [ScaleNote.VouLow, new MusicXmlAlter(-1)],
-    [ScaleNote.GaLow, new MusicXmlAlter(1)],
-    [ScaleNote.Zo, new MusicXmlAlter(-1)],
-    [ScaleNote.Ni, new MusicXmlAlter(1)],
-    [ScaleNote.Vou, new MusicXmlAlter(-1)],
-    [ScaleNote.Ga, new MusicXmlAlter(1)],
-    [ScaleNote.ZoHigh, new MusicXmlAlter(-1)],
-    [ScaleNote.NiHigh, new MusicXmlAlter(1)],
-    [ScaleNote.VouHigh, new MusicXmlAlter(-1)],
-    [ScaleNote.GaHigh, new MusicXmlAlter(1)],
+  private hardChromaticFromDAlters: AlterMap = new Map<ScaleNote, number>([
+    [ScaleNote.ZoLow, -1],
+    [ScaleNote.NiLow, 1],
+    [ScaleNote.VouLow, -1],
+    [ScaleNote.GaLow, 1],
+    [ScaleNote.Zo, -1],
+    [ScaleNote.Ni, 1],
+    [ScaleNote.Vou, -1],
+    [ScaleNote.Ga, 1],
+    [ScaleNote.ZoHigh, -1],
+    [ScaleNote.NiHigh, 1],
+    [ScaleNote.VouHigh, -1],
+    [ScaleNote.GaHigh, 1],
   ]);
 }

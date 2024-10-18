@@ -18,6 +18,7 @@ import {
   NodeType,
   NoteAtomNode,
 } from '../audio/AnalysisService';
+import { LayoutService } from '../LayoutService';
 import { IMusicXmlScaleProvider } from './IMusicXmlScaleProvider';
 import {
   MusicXmlAlter,
@@ -41,6 +42,7 @@ import {
   MusicXmlSyllabic,
   MusicXmlText,
 } from './MusicXmlModel';
+import { MusicXmlScaleProvider } from './MusicXmlScaleProvider';
 
 interface FindNodesOutput {
   results: AnalysisNode[];
@@ -53,23 +55,21 @@ class MusicXmlExporterWorkspace {
   zoNaturalPivotActivated: boolean = false;
   dropCap: string = '';
   isSyllabic: boolean = false;
-  currentScale: Map<ScaleNote, MusicXmlPitch>;
+  scale: Map<ScaleNote, MusicXmlPitch>;
 
-  constructor(currentScale: Map<ScaleNote, MusicXmlPitch>) {
-    this.currentScale = currentScale;
+  ignoreAttractions: boolean = false;
+
+  constructor(scale: Map<ScaleNote, MusicXmlPitch>) {
+    this.scale = scale;
   }
 }
 
 export class MusicXmlExporter {
-  scaleProvider: IMusicXmlScaleProvider;
-
-  constructor(scaleProvider: IMusicXmlScaleProvider) {
-    this.scaleProvider = scaleProvider;
-  }
+  scaleProvider: IMusicXmlScaleProvider = new MusicXmlScaleProvider();
 
   export(score: Score) {
     const workspace = new MusicXmlExporterWorkspace(
-      this.scaleProvider.getDefaultScale(),
+      this.scaleProvider.getScale(Scale.Diatonic, 0),
     );
 
     workspace.nodes = AnalysisService.analyze(
@@ -158,6 +158,7 @@ export class MusicXmlExporter {
           break;
         case ElementType.ModeKey: {
           const modeKeyElement = element as ModeKeyElement;
+          const modeKeyNode = nodeGroup[0] as ModeKeyNode;
 
           // End the current measure
           if (currentMeasure != null) {
@@ -176,7 +177,7 @@ export class MusicXmlExporter {
           currentMeasure.contents.push(print);
 
           // Set the key
-          const key = this.buildKey(nodeGroup[0] as ModeKeyNode);
+          const key = this.buildKey(modeKeyNode);
 
           currentMeasure.attributes = new MusicXmlAttributes();
           currentMeasure.attributes.clef = new MusicXmlClef(
@@ -185,20 +186,34 @@ export class MusicXmlExporter {
           );
           currentMeasure.attributes.key = key;
 
-          // Change the scale
-          // TODO calculate shift
-          this.scaleProvider.alterScale(
-            workspace.currentScale,
-            modeKeyElement.scale,
-            0,
-          );
+          // Set the scale
+          if (modeKeyElement.fthora) {
+            const fthoraNode = nodeGroup.find(
+              (x) => x.nodeType === NodeType.FthoraNode,
+            ) as FthoraNode;
+
+            this.handleFthora(fthoraNode, workspace);
+          } else {
+            workspace.scale = this.scaleProvider.getScale(
+              modeKeyElement.scale,
+              0,
+            );
+          }
 
           break;
         }
         case ElementType.Martyria: {
           const martyriaElement = element as MartyriaElement;
-          // If the martyria is right aligned,
+
+          if (martyriaElement.fthora) {
+            const fthoraNode = nodeGroup.find(
+              (x) => x.nodeType === NodeType.FthoraNode,
+            ) as FthoraNode;
+
+            this.handleFthora(fthoraNode, workspace);
+          }
           if (martyriaElement.alignRight) {
+            // If the martyria is right aligned,
             // end the current measure
             if (currentMeasure != null) {
               const barline = new MusicXmlBarline();
@@ -260,7 +275,11 @@ export class MusicXmlExporter {
         const note = this.buildNote(noteNode, workspace);
         notes.push(note);
 
-        if (note.pitch.alter === undefined) {
+        if (
+          !noteNode.accidental &&
+          !noteNode.ignoreAttractions &&
+          !workspace.ignoreAttractions
+        ) {
           this.applyAttractions(noteNode, note, workspace);
         }
 
@@ -297,12 +316,7 @@ export class MusicXmlExporter {
       } else if (node.nodeType === NodeType.FthoraNode) {
         const fthoraNode = node as FthoraNode;
 
-        // TODO handle transposition
-        this.scaleProvider.alterScale(
-          workspace.currentScale,
-          fthoraNode.scale,
-          0,
-        );
+        this.handleFthora(fthoraNode, workspace);
       }
       // TODO handle rests, ison, and tempo
     }
@@ -352,7 +366,7 @@ export class MusicXmlExporter {
     node: NoteAtomNode,
     workspace: MusicXmlExporterWorkspace,
   ): MusicXmlPitch {
-    const pitch = workspace.currentScale.get(node.physicalNote)!;
+    const pitch = workspace.scale.get(node.physicalNote)!;
 
     const alter = this.getAlter(node);
 
@@ -380,6 +394,16 @@ export class MusicXmlExporter {
     }
 
     // TODO keep track of last alterations
+  }
+
+  handleFthora(node: FthoraNode, workspace: MusicXmlExporterWorkspace) {
+    const transposition = LayoutService.getShift(
+      getScaleNoteValue(node.physicalNote),
+      node.scale,
+      node.fthora,
+      node.chromaticFthoraNote,
+    );
+    workspace.scale = this.scaleProvider.getScale(node.scale, transposition);
   }
 
   applyAttractions(

@@ -18,7 +18,6 @@ import {
   NodeType,
   NoteAtomNode,
 } from '../audio/AnalysisService';
-import { LayoutService } from '../LayoutService';
 import { IMusicXmlScaleProvider } from './IMusicXmlScaleProvider';
 import {
   MusicXmlAlter,
@@ -397,12 +396,10 @@ export class MusicXmlExporter {
   }
 
   handleFthora(node: FthoraNode, workspace: MusicXmlExporterWorkspace) {
-    const transposition = LayoutService.getShift(
-      getScaleNoteValue(node.physicalNote),
-      node.scale,
-      node.fthora,
-      node.chromaticFthoraNote,
-    );
+    const transposition =
+      getScaleNoteValue(node.physicalNote) -
+      getScaleNoteValue(node.virtualNote);
+
     workspace.scale = this.scaleProvider.getScale(node.scale, transposition);
   }
 

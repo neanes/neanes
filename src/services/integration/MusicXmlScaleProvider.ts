@@ -63,28 +63,77 @@ export class MusicXmlScaleProvider implements IMusicXmlScaleProvider {
   }
 
   private getDiatonicAlters(transposition: number): AlterMap {
+    transposition %= 7;
+    if (transposition < 0) {
+      transposition += 7;
+    }
+
     switch (transposition) {
       case 0:
-        return new Map<ScaleNote, number>();
+        return this.diatonicFromCAlters;
+      case 1:
+        return this.diatonicFromDAlters;
+      case 2:
+        return this.diatonicFromEAlters;
+      case 3:
+        return this.diatonicFromFAlters;
+      case 4:
+        return this.diatonicFromGAlters;
+      case 5:
+        return this.diatonicFromAAlters;
+      case 6:
+        return this.diatonicFromBAlters;
       default:
         throw Error(`Invalid transposition: ${transposition}`);
     }
   }
 
   private getSoftChromaticAlters(transposition: number): AlterMap {
+    transposition %= 7;
+    if (transposition < 0) {
+      transposition += 7;
+    }
+
     switch (transposition) {
       case 0:
-        return new Map<ScaleNote, number>();
+        return this.diatonicFromCAlters;
+      case 1:
+        return this.diatonicFromDAlters;
+      case 2:
+        return this.diatonicFromEAlters;
+      case 3:
+        return this.diatonicFromFAlters;
+      case 4:
+        return this.diatonicFromGAlters;
+      case 5:
+        return this.diatonicFromAAlters;
+      case 6:
+        return this.diatonicFromBAlters;
       default:
         throw Error(`Invalid transposition: ${transposition}`);
     }
   }
 
   private getHardChromaticAlters(transposition: number): AlterMap {
+    transposition %= 7;
+    if (transposition < 0) {
+      transposition += 7;
+    }
+
     switch (transposition) {
       case 0:
         return this.hardChromaticFromDAlters;
       case 1:
+        return this.hardChromaticFromEAlters;
+      case 2:
+        return this.hardChromaticFromFAlters;
+      case 3:
+        return this.hardChromaticFromGAlters;
+      case 4:
+        return this.hardChromaticFromAAlters;
+      case 5:
+        return this.hardChromaticFromBAlters;
+      case 6:
         return this.hardChromaticFromCAlters;
       default:
         throw Error(`Invalid transposition: ${transposition}`);
@@ -117,14 +166,79 @@ export class MusicXmlScaleProvider implements IMusicXmlScaleProvider {
     ]);
   }
 
-  // Db, Ab
-  private hardChromaticFromCAlters: AlterMap = new Map<ScaleNote, number>([
-    [ScaleNote.KeLow, -1],
-    [ScaleNote.Ke, -1],
-    [ScaleNote.KeHigh, -1],
-    [ScaleNote.PaLow, -1],
-    [ScaleNote.Pa, -1],
-    [ScaleNote.PaHigh, -1],
+  // N/A
+  private diatonicFromCAlters: AlterMap = new Map<ScaleNote, number>([]);
+
+  // F#
+  private diatonicFromGAlters: AlterMap = new Map<ScaleNote, number>([
+    [ScaleNote.GaLow, 1],
+    [ScaleNote.Ga, 1],
+    [ScaleNote.GaHigh, 1],
+  ]);
+
+  // F# C#
+  private diatonicFromDAlters: AlterMap = new Map<ScaleNote, number>([
+    [ScaleNote.GaLow, 1],
+    [ScaleNote.Ga, 1],
+    [ScaleNote.GaHigh, 1],
+    [ScaleNote.NiLow, 1],
+    [ScaleNote.Ni, 1],
+    [ScaleNote.NiHigh, 1],
+  ]);
+
+  // F# C# G#
+  private diatonicFromAAlters: AlterMap = new Map<ScaleNote, number>([
+    [ScaleNote.GaLow, 1],
+    [ScaleNote.Ga, 1],
+    [ScaleNote.GaHigh, 1],
+    [ScaleNote.NiLow, 1],
+    [ScaleNote.Ni, 1],
+    [ScaleNote.NiHigh, 1],
+    [ScaleNote.ThiLow, 1],
+    [ScaleNote.Thi, 1],
+    [ScaleNote.ThiHigh, 1],
+  ]);
+
+  // F# C# G# D#
+  private diatonicFromEAlters: AlterMap = new Map<ScaleNote, number>([
+    [ScaleNote.GaLow, 1],
+    [ScaleNote.Ga, 1],
+    [ScaleNote.GaHigh, 1],
+    [ScaleNote.NiLow, 1],
+    [ScaleNote.Ni, 1],
+    [ScaleNote.NiHigh, 1],
+    [ScaleNote.ThiLow, 1],
+    [ScaleNote.Thi, 1],
+    [ScaleNote.ThiHigh, 1],
+    [ScaleNote.PaLow, 1],
+    [ScaleNote.Pa, 1],
+    [ScaleNote.PaHigh, 1],
+  ]);
+
+  // F# C# G# D# A#
+  private diatonicFromBAlters: AlterMap = new Map<ScaleNote, number>([
+    [ScaleNote.GaLow, 1],
+    [ScaleNote.Ga, 1],
+    [ScaleNote.GaHigh, 1],
+    [ScaleNote.NiLow, 1],
+    [ScaleNote.Ni, 1],
+    [ScaleNote.NiHigh, 1],
+    [ScaleNote.ThiLow, 1],
+    [ScaleNote.Thi, 1],
+    [ScaleNote.ThiHigh, 1],
+    [ScaleNote.PaLow, 1],
+    [ScaleNote.Pa, 1],
+    [ScaleNote.PaHigh, 1],
+    [ScaleNote.KeLow, 1],
+    [ScaleNote.Ke, 1],
+    [ScaleNote.KeHigh, 1],
+  ]);
+
+  // Bb
+  private diatonicFromFAlters: AlterMap = new Map<ScaleNote, number>([
+    [ScaleNote.ZoLow, -1],
+    [ScaleNote.Zo, -1],
+    [ScaleNote.ZoHigh, -1],
   ]);
 
   // Bb, C#, Eb, F#
@@ -141,5 +255,77 @@ export class MusicXmlScaleProvider implements IMusicXmlScaleProvider {
     [ScaleNote.NiHigh, 1],
     [ScaleNote.VouHigh, -1],
     [ScaleNote.GaHigh, 1],
+  ]);
+
+  // D#, G#
+  private hardChromaticFromEAlters: AlterMap = new Map<ScaleNote, number>([
+    [ScaleNote.ThiLow, 1],
+    [ScaleNote.Thi, 1],
+    [ScaleNote.ThiHigh, 1],
+    [ScaleNote.PaLow, 1],
+    [ScaleNote.Pa, 1],
+    [ScaleNote.PaHigh, 1],
+  ]);
+
+  // Gb Bb Db
+  private hardChromaticFromFAlters: AlterMap = new Map<ScaleNote, number>([
+    [ScaleNote.ThiLow, -1],
+    [ScaleNote.Thi, -1],
+    [ScaleNote.ThiHigh, -1],
+    [ScaleNote.ZoLow, -1],
+    [ScaleNote.Zo, -1],
+    [ScaleNote.ZoHigh, -1],
+    [ScaleNote.PaLow, -1],
+    [ScaleNote.Pa, -1],
+    [ScaleNote.PaHigh, -1],
+  ]);
+
+  // Ab Eb F#
+  private hardChromaticFromGAlters: AlterMap = new Map<ScaleNote, number>([
+    [ScaleNote.KeLow, -1],
+    [ScaleNote.Ke, -1],
+    [ScaleNote.KeHigh, -1],
+    [ScaleNote.VouLow, -1],
+    [ScaleNote.Vou, -1],
+    [ScaleNote.VouHigh, -1],
+    [ScaleNote.GaLow, 1],
+    [ScaleNote.Ga, 1],
+    [ScaleNote.GaHigh, 1],
+  ]);
+
+  // Bb C# G#
+  private hardChromaticFromAAlters: AlterMap = new Map<ScaleNote, number>([
+    [ScaleNote.ZoLow, -1],
+    [ScaleNote.Zo, -1],
+    [ScaleNote.ZoHigh, -1],
+    [ScaleNote.NiLow, 1],
+    [ScaleNote.Ni, 1],
+    [ScaleNote.NiHigh, 1],
+    [ScaleNote.ThiLow, 1],
+    [ScaleNote.Thi, 1],
+    [ScaleNote.ThiHigh, 1],
+  ]);
+
+  // D# F# A#
+  private hardChromaticFromBAlters: AlterMap = new Map<ScaleNote, number>([
+    [ScaleNote.PaLow, 1],
+    [ScaleNote.Pa, 1],
+    [ScaleNote.PaHigh, 1],
+    [ScaleNote.GaLow, 1],
+    [ScaleNote.Ga, 1],
+    [ScaleNote.GaHigh, 1],
+    [ScaleNote.KeLow, 1],
+    [ScaleNote.Ke, 1],
+    [ScaleNote.KeHigh, 1],
+  ]);
+
+  // Db, Ab
+  private hardChromaticFromCAlters: AlterMap = new Map<ScaleNote, number>([
+    [ScaleNote.PaLow, -1],
+    [ScaleNote.Pa, -1],
+    [ScaleNote.PaHigh, -1],
+    [ScaleNote.KeLow, -1],
+    [ScaleNote.Ke, -1],
+    [ScaleNote.KeHigh, -1],
   ]);
 }

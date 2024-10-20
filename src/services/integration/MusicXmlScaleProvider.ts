@@ -5,6 +5,7 @@ import { MusicXmlAlter, MusicXmlPitch } from './MusicXmlModel';
 import { MusicXmlScaleAltersDiatonic } from './MusicXmlScaleAltersDiatonic';
 import { MusicXmlScaleAltersHardChromatic } from './MusicXmlScaleAltersHardChromatic';
 import { MusicXmlScaleAltersKliton } from './MusicXmlScaleAltersKliton';
+import { MusicXmlScaleAltersSpathi } from './MusicXmlScaleAltersSpathi';
 import { MusicXmlScaleAltersZygos } from './MusicXmlScaleAltersZygos';
 
 type AlterMap = Map<ScaleNote, number>;
@@ -41,7 +42,7 @@ export class MusicXmlScaleProvider implements IMusicXmlScaleProvider {
         alters = this.getKlitonAlters(transposition);
         break;
       case Scale.Spathi:
-        alters = MusicXmlScaleAltersHardChromatic.D;
+        alters = this.getSpathiAlters(transposition);
         break;
       case Scale.SpathiGa:
         alters = MusicXmlScaleAltersHardChromatic.D;
@@ -222,6 +223,32 @@ export class MusicXmlScaleProvider implements IMusicXmlScaleProvider {
         return MusicXmlScaleAltersKliton.A;
       case 6:
         return MusicXmlScaleAltersKliton.Bb;
+      default:
+        throw Error(`Invalid transposition: ${transposition}`);
+    }
+  }
+
+  private getSpathiAlters(transposition: number): AlterMap {
+    transposition %= 7;
+    if (transposition < 0) {
+      transposition += 7;
+    }
+
+    switch (transposition) {
+      case 0:
+        return MusicXmlScaleAltersSpathi.C;
+      case 1:
+        return MusicXmlScaleAltersSpathi.D;
+      case 2:
+        return MusicXmlScaleAltersSpathi.Eb;
+      case 3:
+        return MusicXmlScaleAltersSpathi.F;
+      case 4:
+        return MusicXmlScaleAltersSpathi.G;
+      case 5:
+        return MusicXmlScaleAltersSpathi.A;
+      case 6:
+        return MusicXmlScaleAltersSpathi.Bb;
       default:
         throw Error(`Invalid transposition: ${transposition}`);
     }

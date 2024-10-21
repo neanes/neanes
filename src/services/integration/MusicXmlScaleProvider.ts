@@ -291,7 +291,7 @@ export class MusicXmlScaleProvider implements IMusicXmlScaleProvider {
       case 0:
         return MusicXmlScaleAltersHardChromatic.D;
       case 1:
-        return MusicXmlScaleAltersHardChromatic.D;
+        return MusicXmlScaleAltersHardChromatic.E;
       case 2:
         return MusicXmlScaleAltersHardChromatic.F;
       case 3:

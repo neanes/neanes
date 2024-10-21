@@ -1,5 +1,5 @@
 type MusicXmlYesNoType = 'yes' | 'no';
-type MusicXmlStepType = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G';
+export type MusicXmlStepType = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G';
 type MusicXmlMeasureContentType = MusicXmlNote | MusicXmlBarline;
 
 class Token<T> {

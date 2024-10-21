@@ -18,7 +18,6 @@ import {
   NodeType,
   NoteAtomNode,
 } from '../audio/AnalysisService';
-import { IMusicXmlScaleProvider } from './IMusicXmlScaleProvider';
 import {
   MusicXmlAlter,
   MusicXmlAttributes,
@@ -38,14 +37,33 @@ import {
   MusicXmlPitch,
   MusicXmlPrint,
   MusicXmlSign,
+  MusicXmlStepType,
   MusicXmlSyllabic,
   MusicXmlText,
 } from './MusicXmlModel';
-import { MusicXmlScaleProvider } from './MusicXmlScaleProvider';
 
 interface FindNodesOutput {
   results: AnalysisNode[];
   index: number;
+}
+
+export enum PlaybackScaleName {
+  Diatonic,
+  SoftChromatic,
+  HardChromatic,
+  Legetos,
+  Kliton,
+  Zygos,
+  ZygosLegetos,
+  SpathiKe,
+  SpathiGa,
+  Enharmonic,
+}
+
+export interface PlaybackScale {
+  name: PlaybackScaleName;
+  intervals: number[];
+  scaleNoteMap: Map<ScaleNote, number>;
 }
 
 class MusicXmlExporterWorkspace {
@@ -54,22 +72,28 @@ class MusicXmlExporterWorkspace {
   zoNaturalPivotActivated: boolean = false;
   dropCap: string = '';
   isSyllabic: boolean = false;
-  scale: Map<ScaleNote, MusicXmlPitch>;
+  scale: PlaybackScale;
+  physicalNote: ScaleNote = ScaleNote.Pa;
+  pitch: MusicXmlPitch = new MusicXmlPitch('C', 4);
+  transpositionSemitones: number = 0;
 
   ignoreAttractions: boolean = false;
+  permanentEnharmonicZo: boolean = false;
+  legetos: boolean = false;
+  useLegetos: boolean = false;
 
-  constructor(scale: Map<ScaleNote, MusicXmlPitch>) {
+  loggingEnabled: boolean = true;
+
+  constructor(scale: PlaybackScale) {
     this.scale = scale;
   }
 }
 
 export class MusicXmlExporter {
-  scaleProvider: IMusicXmlScaleProvider = new MusicXmlScaleProvider();
+  pitchOfThi: number = this.getAbsolutePitch(new MusicXmlPitch('G', 4));
 
   export(score: Score) {
-    const workspace = new MusicXmlExporterWorkspace(
-      this.scaleProvider.getScale(Scale.Diatonic, 0),
-    );
+    const workspace = new MusicXmlExporterWorkspace(this.diatonicScale);
 
     workspace.nodes = AnalysisService.analyze(
       score.staff.elements,
@@ -186,6 +210,9 @@ export class MusicXmlExporter {
           currentMeasure.attributes.key = key;
 
           // Set the scale
+          workspace.pitch = new MusicXmlPitch('G', 4);
+          workspace.physicalNote = ScaleNote.Thi;
+
           if (modeKeyElement.fthora) {
             const fthoraNode = nodeGroup.find(
               (x) => x.nodeType === NodeType.FthoraNode,
@@ -193,9 +220,9 @@ export class MusicXmlExporter {
 
             this.handleFthora(fthoraNode, workspace);
           } else {
-            workspace.scale = this.scaleProvider.getScale(
-              modeKeyElement.scale,
-              0,
+            workspace.scale = this.getPlaybackScale(
+              modeKeyNode.scale,
+              workspace,
             );
           }
 
@@ -266,6 +293,8 @@ export class MusicXmlExporter {
       lyricsIndex = 1;
     }
 
+    const noteNodes = nodes.filter((x) => x.nodeType === NodeType.NoteAtomNode);
+
     for (let i = 0; i < nodes.length; i++) {
       const node = nodes[i];
 
@@ -283,7 +312,7 @@ export class MusicXmlExporter {
         }
 
         if (
-          i === lyricsIndex &&
+          noteNodes.indexOf(node) === lyricsIndex &&
           (noteElement.lyrics !== '' || workspace.dropCap !== '')
         ) {
           note.lyric = new MusicXmlLyric(
@@ -365,7 +394,7 @@ export class MusicXmlExporter {
     node: NoteAtomNode,
     workspace: MusicXmlExporterWorkspace,
   ): MusicXmlPitch {
-    const pitch = workspace.scale.get(node.physicalNote)!;
+    const pitch = this.moveTo(node.physicalNote, node.virtualNote, workspace);
 
     const alter = this.getAlter(node);
 
@@ -396,11 +425,41 @@ export class MusicXmlExporter {
   }
 
   handleFthora(node: FthoraNode, workspace: MusicXmlExporterWorkspace) {
-    const transposition =
-      getScaleNoteValue(node.physicalNote) -
-      getScaleNoteValue(node.virtualNote);
+    // const transposition =
+    //   getScaleNoteValue(node.physicalNote) -
+    //   getScaleNoteValue(node.virtualNote);
 
-    workspace.scale = this.scaleProvider.getScale(node.scale, transposition);
+    const currentShift =
+      getScaleNoteValue(node.virtualNote) -
+      getScaleNoteValue(node.physicalNote);
+    if (currentShift) {
+      // Compute distance from physical note to Di in the old scale
+      const semitones1 = this.semitonesBetweenNotes(
+        workspace.scale.scaleNoteMap.get(ScaleNote.Thi)!,
+        workspace.scale.intervals,
+        getScaleNoteValue(node.physicalNote) - getScaleNoteValue(ScaleNote.Thi),
+      );
+
+      // Scale change
+      workspace.scale = this.getPlaybackScale(node.scale, workspace);
+
+      // Compute distance from Di to virtual note in the new scale
+      const semitones2 = this.semitonesBetweenNotes(
+        workspace.scale.scaleNoteMap.get(node.virtualNote)!,
+        workspace.scale.intervals,
+        getScaleNoteValue(ScaleNote.Thi) - getScaleNoteValue(node.virtualNote),
+      );
+
+      workspace.transpositionSemitones = semitones1 + semitones2;
+
+      if (workspace.loggingEnabled) {
+        console.log('Entering transposition', workspace.transpositionSemitones);
+      }
+    } else {
+      workspace.scale = this.getPlaybackScale(node.scale, workspace);
+
+      workspace.transpositionSemitones = 0;
+    }
   }
 
   applyAttractions(
@@ -520,6 +579,484 @@ export class MusicXmlExporter {
 
     return { results, index: i };
   }
+
+  getPlaybackScale(
+    scale: Scale,
+    workspace: MusicXmlExporterWorkspace,
+  ): PlaybackScale {
+    let playbackScale: PlaybackScale;
+
+    switch (scale) {
+      case Scale.Diatonic:
+        playbackScale =
+          workspace.useLegetos && workspace.legetos
+            ? this.legetosScale
+            : this.diatonicScale;
+        break;
+      case Scale.SoftChromatic:
+        playbackScale = this.softChromaticScale;
+        break;
+      case Scale.HardChromatic:
+        playbackScale = this.hardChromaticScale;
+        break;
+      case Scale.EnharmonicGa:
+      case Scale.EnharmonicZo:
+      case Scale.EnharmonicZoHigh:
+      case Scale.EnharmonicVou:
+      case Scale.EnharmonicVouHigh:
+        playbackScale = this.enharmonicScale;
+        break;
+      case Scale.Zygos:
+        playbackScale =
+          workspace.useLegetos && workspace.legetos
+            ? this.zygosLegetosScale
+            : this.zygosScale;
+        break;
+      case Scale.Spathi:
+        playbackScale = this.spathiKeScale;
+        break;
+      case Scale.SpathiGa:
+        playbackScale = this.spathiGaScale;
+        break;
+      case Scale.Kliton:
+        playbackScale = this.klitonScale;
+        break;
+    }
+
+    if (workspace.permanentEnharmonicZo) {
+      playbackScale = this.enharmonicScale;
+    }
+
+    if (playbackScale.name === PlaybackScaleName.Enharmonic) {
+      this.enharmonicScale.intervals = this.constructEnharmonicScale(
+        scale,
+        workspace,
+      );
+      if (scale === Scale.EnharmonicZo || scale === Scale.EnharmonicVou) {
+        this.enharmonicScale.scaleNoteMap =
+          this.enharmonicZoScaleNoteToIntervalIndexMap;
+      } else if (
+        scale === Scale.EnharmonicGa ||
+        scale === Scale.EnharmonicVouHigh
+      ) {
+        this.enharmonicScale.scaleNoteMap =
+          this.enharmonicGaScaleNoteToIntervalIndexMap;
+      } else {
+        this.enharmonicScale.scaleNoteMap =
+          this.diatonicScaleNoteToIntervalIndexMap;
+      }
+    }
+
+    return playbackScale;
+  }
+
+  /**
+   * To move up, move up scale.intervals[intervalIndex] semitones
+   * To move down, move down scale.intervals[intervalIndex - 1] semitones,
+   * wrapping around to the end of the scale.intervals array, if necessary
+   */
+  semitonesBetweenNotes(
+    intervalIndex: number,
+    intervals: number[],
+    distance: number,
+  ) {
+    let semitones = 0;
+
+    const abs = Math.abs(distance);
+    const sign = Math.sign(distance);
+
+    for (let i = 0; i < abs; i++) {
+      const index =
+        sign > 0
+          ? intervalIndex
+          : this.mod(intervalIndex - 1, intervals.length);
+
+      semitones += intervals[index] * sign;
+
+      intervalIndex = this.mod(intervalIndex + sign, intervals.length);
+    }
+
+    return semitones;
+  }
+
+  mod(value: number, modulus: number) {
+    return ((value % modulus) + modulus) % modulus;
+  }
+
+  moveTo(
+    physicalNote: ScaleNote,
+    virtualNote: ScaleNote,
+    workspace: MusicXmlExporterWorkspace,
+  ) {
+    const { scale } = workspace;
+
+    let pivot: ScaleNote;
+    if (scale.name === PlaybackScaleName.SpathiGa) {
+      pivot = ScaleNote.Ga;
+    } else if (scale.name === PlaybackScaleName.SpathiKe) {
+      pivot = ScaleNote.Ke;
+    } else {
+      pivot = ScaleNote.Thi;
+    }
+
+    const intervalIndex = scale.scaleNoteMap.get(pivot)!;
+
+    const distance = getScaleNoteValue(virtualNote) - getScaleNoteValue(pivot);
+
+    let semitones = this.semitonesBetweenNotes(
+      intervalIndex,
+      scale.intervals,
+      distance,
+    );
+
+    semitones += this.semitonesBetweenNotes(
+      this.diatonicScale.scaleNoteMap.get(ScaleNote.Thi)!,
+      this.diatonicScale.intervals,
+      getScaleNoteValue(pivot) - getScaleNoteValue(ScaleNote.Thi),
+    );
+
+    semitones += workspace.transpositionSemitones;
+
+    const physicalDistance =
+      getScaleNoteValue(physicalNote) -
+      getScaleNoteValue(workspace.physicalNote);
+    const currentPitch = workspace.pitch;
+
+    const newAbsolutePitch = this.pitchOfThi + semitones;
+
+    let currentStep = currentPitch.step;
+    let currentOctave = currentPitch.octave;
+
+    const direction = Math.sign(physicalDistance);
+
+    for (let i = 0; i < Math.abs(physicalDistance); i++) {
+      if (direction === 1 && currentStep === 'B') {
+        currentOctave = currentOctave + 1;
+      } else if (direction === -1 && currentStep === 'C') {
+        currentOctave = currentOctave - 1;
+      }
+
+      currentStep =
+        direction === 1
+          ? this.getNextStep(currentStep)
+          : this.getPreviousStep(currentStep);
+    }
+
+    const newPitch = new MusicXmlPitch(currentStep, currentOctave);
+    const newScalePitch = new MusicXmlPitch(currentStep, currentOctave);
+
+    const newAlter = newAbsolutePitch - this.getAbsolutePitch(newPitch);
+
+    if (newAlter !== 0) {
+      newPitch.alter = new MusicXmlAlter(newAlter);
+      newScalePitch.alter = new MusicXmlAlter(newAlter);
+    }
+
+    workspace.pitch = newScalePitch;
+    workspace.physicalNote = physicalNote;
+
+    return newPitch;
+  }
+
+  getAbsolutePitch(pitch: MusicXmlPitch) {
+    const alter = pitch.alter?.content ?? 0;
+
+    return this.stepToValueMap.get(pitch.step)! + pitch.octave * 12 + alter;
+  }
+
+  getNextStep(step: MusicXmlStepType) {
+    switch (step) {
+      case 'A':
+        return 'B';
+      case 'B':
+        return 'C';
+      case 'C':
+        return 'D';
+      case 'D':
+        return 'E';
+      case 'E':
+        return 'F';
+      case 'F':
+        return 'G';
+      case 'G':
+        return 'A';
+    }
+  }
+
+  getPreviousStep(step: MusicXmlStepType) {
+    switch (step) {
+      case 'A':
+        return 'G';
+      case 'G':
+        return 'F';
+      case 'F':
+        return 'E';
+      case 'E':
+        return 'D';
+      case 'D':
+        return 'C';
+      case 'C':
+        return 'B';
+      case 'B':
+        return 'A';
+    }
+  }
+
+  stepToValueMap = new Map<MusicXmlStepType, number>([
+    ['C', 0],
+    ['D', 2],
+    ['E', 4],
+    ['F', 5],
+    ['G', 7],
+    ['A', 9],
+    ['B', 11],
+  ]);
+
+  constructTetrachordScale(intervals: number[]) {
+    return [...intervals, 2];
+  }
+
+  constructEnharmonicScale(scale: Scale, workspace: MusicXmlExporterWorkspace) {
+    if (scale === Scale.EnharmonicZo || scale === Scale.EnharmonicVou) {
+      return this.constructTetrachordScale([2, 2, 1]);
+    } else {
+      return this.constructEnharmonicScaleFromGa(scale, workspace);
+    }
+  }
+
+  constructEnharmonicScaleFromGa(
+    scale: Scale,
+    workspace: MusicXmlExporterWorkspace,
+  ) {
+    const result: number[] = [];
+
+    if (scale === Scale.EnharmonicGa || scale === Scale.EnharmonicVouHigh) {
+      return [2, 2, 1];
+    }
+
+    result.push(...[2, 2, 1]);
+
+    if (scale === Scale.EnharmonicZoHigh || workspace.permanentEnharmonicZo) {
+      result.push(2, 2, 1, 2);
+    } else {
+      result.push(2, ...[2, 2, 1]);
+    }
+
+    return result;
+  }
+
+  /////////////////////////
+  // Scales
+  /////////////////////////
+
+  diatonicScaleNoteToIntervalIndexMap: Map<ScaleNote, number> = new Map<
+    ScaleNote,
+    number
+  >([
+    [ScaleNote.ZoLow, 6],
+    [ScaleNote.NiLow, 0],
+    [ScaleNote.PaLow, 1],
+    [ScaleNote.VouLow, 2],
+    [ScaleNote.GaLow, 3],
+    [ScaleNote.ThiLow, 4],
+    [ScaleNote.KeLow, 5],
+    [ScaleNote.Zo, 6],
+    [ScaleNote.Ni, 0],
+    [ScaleNote.Pa, 1],
+    [ScaleNote.Vou, 2],
+    [ScaleNote.Ga, 3],
+    [ScaleNote.Thi, 4],
+    [ScaleNote.Ke, 5],
+    [ScaleNote.ZoHigh, 6],
+    [ScaleNote.NiHigh, 0],
+    [ScaleNote.PaHigh, 1],
+    [ScaleNote.VouHigh, 2],
+    [ScaleNote.GaHigh, 3],
+    [ScaleNote.ThiHigh, 4],
+    [ScaleNote.KeHigh, 5],
+  ]);
+
+  enharmonicZoScaleNoteToIntervalIndexMap: Map<ScaleNote, number> = new Map<
+    ScaleNote,
+    number
+  >([
+    [ScaleNote.ZoLow, 1],
+    [ScaleNote.NiLow, 2],
+    [ScaleNote.PaLow, 3],
+    [ScaleNote.VouLow, 0],
+    [ScaleNote.GaLow, 1],
+    [ScaleNote.ThiLow, 2],
+    [ScaleNote.KeLow, 3],
+    [ScaleNote.Zo, 0],
+    [ScaleNote.Ni, 1],
+    [ScaleNote.Pa, 2],
+    [ScaleNote.Vou, 3],
+    [ScaleNote.Ga, 0],
+    [ScaleNote.Thi, 1],
+    [ScaleNote.Ke, 2],
+    [ScaleNote.ZoHigh, 3],
+    [ScaleNote.NiHigh, 0],
+    [ScaleNote.PaHigh, 1],
+    [ScaleNote.VouHigh, 2],
+    [ScaleNote.GaHigh, 3],
+    [ScaleNote.ThiHigh, 0],
+    [ScaleNote.KeHigh, 1],
+  ]);
+
+  enharmonicGaScaleNoteToIntervalIndexMap: Map<ScaleNote, number> = new Map<
+    ScaleNote,
+    number
+  >([
+    [ScaleNote.ZoLow, 1],
+    [ScaleNote.NiLow, 2],
+    [ScaleNote.PaLow, 0],
+    [ScaleNote.VouLow, 1],
+    [ScaleNote.GaLow, 2],
+    [ScaleNote.ThiLow, 0],
+    [ScaleNote.KeLow, 1],
+    [ScaleNote.Zo, 2],
+    [ScaleNote.Ni, 0],
+    [ScaleNote.Pa, 1],
+    [ScaleNote.Vou, 2],
+    [ScaleNote.Ga, 0],
+    [ScaleNote.Thi, 1],
+    [ScaleNote.Ke, 2],
+    [ScaleNote.ZoHigh, 0],
+    [ScaleNote.NiHigh, 1],
+    [ScaleNote.PaHigh, 2],
+    [ScaleNote.VouHigh, 0],
+    [ScaleNote.GaHigh, 1],
+    [ScaleNote.ThiHigh, 2],
+    [ScaleNote.KeHigh, 0],
+  ]);
+
+  diatonicScale: PlaybackScale = {
+    name: PlaybackScaleName.Diatonic,
+    intervals: [2, 2, 1, 2, 2, 2, 1],
+    scaleNoteMap: this.diatonicScaleNoteToIntervalIndexMap,
+  };
+
+  hardChromaticScale: PlaybackScale = {
+    name: PlaybackScaleName.HardChromatic,
+    intervals: [1, 3, 1, 2],
+    scaleNoteMap: new Map<ScaleNote, number>([
+      [ScaleNote.ZoLow, 3],
+      [ScaleNote.NiLow, 0],
+      [ScaleNote.PaLow, 1],
+      [ScaleNote.VouLow, 2],
+      [ScaleNote.GaLow, 3],
+      [ScaleNote.ThiLow, 0],
+      [ScaleNote.KeLow, 1],
+      [ScaleNote.Zo, 2],
+      [ScaleNote.Ni, 3],
+      [ScaleNote.Pa, 0],
+      [ScaleNote.Vou, 1],
+      [ScaleNote.Ga, 2],
+      [ScaleNote.Thi, 3],
+      [ScaleNote.Ke, 0],
+      [ScaleNote.ZoHigh, 1],
+      [ScaleNote.NiHigh, 2],
+      [ScaleNote.PaHigh, 3],
+      [ScaleNote.VouHigh, 0],
+      [ScaleNote.GaHigh, 1],
+      [ScaleNote.ThiHigh, 2],
+      [ScaleNote.KeHigh, 3],
+    ]),
+  };
+
+  softChromaticScale: PlaybackScale = {
+    name: PlaybackScaleName.SoftChromatic,
+
+    intervals: [2, 2, 1, 2],
+    scaleNoteMap: new Map<ScaleNote, number>([
+      [ScaleNote.ZoLow, 0],
+      [ScaleNote.NiLow, 1],
+      [ScaleNote.PaLow, 2],
+      [ScaleNote.VouLow, 3],
+      [ScaleNote.GaLow, 0],
+      [ScaleNote.ThiLow, 1],
+      [ScaleNote.KeLow, 2],
+      [ScaleNote.Zo, 3],
+      [ScaleNote.Ni, 0],
+      [ScaleNote.Pa, 1],
+      [ScaleNote.Vou, 2],
+      [ScaleNote.Ga, 3],
+      [ScaleNote.Thi, 0],
+      [ScaleNote.Ke, 1],
+      [ScaleNote.ZoHigh, 2],
+      [ScaleNote.NiHigh, 3],
+      [ScaleNote.PaHigh, 0],
+      [ScaleNote.VouHigh, 1],
+      [ScaleNote.GaHigh, 2],
+      [ScaleNote.ThiHigh, 3],
+      [ScaleNote.KeHigh, 0],
+    ]),
+  };
+
+  legetosScale: PlaybackScale = {
+    name: PlaybackScaleName.Legetos,
+    intervals: [1, 2, 2, 2, 1, 2, 2],
+    scaleNoteMap: new Map<ScaleNote, number>([
+      [ScaleNote.ZoLow, 5],
+      [ScaleNote.NiLow, 6],
+      [ScaleNote.PaLow, 0],
+      [ScaleNote.VouLow, 1],
+      [ScaleNote.GaLow, 2],
+      [ScaleNote.ThiLow, 3],
+      [ScaleNote.KeLow, 4],
+      [ScaleNote.Zo, 5],
+      [ScaleNote.Ni, 6],
+      [ScaleNote.Pa, 0],
+      [ScaleNote.Vou, 1],
+      [ScaleNote.Ga, 2],
+      [ScaleNote.Thi, 3],
+      [ScaleNote.Ke, 4],
+      [ScaleNote.ZoHigh, 5],
+      [ScaleNote.NiHigh, 6],
+      [ScaleNote.PaHigh, 0],
+      [ScaleNote.VouHigh, 1],
+      [ScaleNote.GaHigh, 2],
+      [ScaleNote.ThiHigh, 3],
+      [ScaleNote.KeHigh, 4],
+    ]),
+  };
+
+  zygosScale: PlaybackScale = {
+    name: PlaybackScaleName.Zygos,
+    intervals: [3, 1, 3, 1, 2, 2, 1],
+    scaleNoteMap: this.diatonicScaleNoteToIntervalIndexMap,
+  };
+
+  zygosLegetosScale: PlaybackScale = {
+    name: PlaybackScaleName.ZygosLegetos,
+    intervals: [3, 1, 3, 1, 2, 1, 1],
+    scaleNoteMap: this.diatonicScaleNoteToIntervalIndexMap,
+  };
+
+  klitonScale: PlaybackScale = {
+    name: PlaybackScaleName.Kliton,
+    intervals: [2, 2, 2, 1, 2, 2, 1],
+    scaleNoteMap: this.diatonicScaleNoteToIntervalIndexMap,
+  };
+
+  spathiKeScale: PlaybackScale = {
+    name: PlaybackScaleName.SpathiKe,
+    intervals: [2, 2, 1, 3, 1, 1, 2],
+    scaleNoteMap: this.diatonicScaleNoteToIntervalIndexMap,
+  };
+
+  spathiGaScale: PlaybackScale = {
+    name: PlaybackScaleName.SpathiGa,
+    intervals: [2, 2, 1, 1, 3, 2, 1],
+    scaleNoteMap: this.diatonicScaleNoteToIntervalIndexMap,
+  };
+
+  // The intervals of this scale are constructed dynamically
+  enharmonicScale: PlaybackScale = {
+    name: PlaybackScaleName.Enharmonic,
+    intervals: [2, 2, 1, 2, 2, 2, 1],
+    scaleNoteMap: this.diatonicScaleNoteToIntervalIndexMap,
+  };
 
   /*
     <?xml version="1.0" encoding="UTF-8" standalone="no"?>

@@ -234,6 +234,10 @@ export class MusicXmlPitch {
     this.alter = alter;
   }
 
+  clone() {
+    return new MusicXmlPitch(this.step, this.octave, this.alter?.clone());
+  }
+
   toXml() {
     const xml = `<pitch>
           <step>${this.step}</step>
@@ -250,6 +254,10 @@ export class MusicXmlAlter {
 
   constructor(content: number) {
     this.content = content;
+  }
+
+  clone() {
+    return new MusicXmlAlter(this.content);
   }
 
   toXml() {

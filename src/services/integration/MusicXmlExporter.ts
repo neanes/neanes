@@ -743,19 +743,17 @@ export class MusicXmlExporter {
     }
 
     const newPitch = new MusicXmlPitch(currentStep, currentOctave);
-    const newScalePitch = new MusicXmlPitch(currentStep, currentOctave);
 
     const newAlter = newAbsolutePitch - this.getAbsolutePitch(newPitch);
 
     if (newAlter !== 0) {
       newPitch.alter = new MusicXmlAlter(newAlter);
-      newScalePitch.alter = new MusicXmlAlter(newAlter);
     }
 
-    workspace.pitch = newScalePitch;
+    workspace.pitch = newPitch;
     workspace.physicalNote = physicalNote;
 
-    return newPitch;
+    return newPitch.clone();
   }
 
   getAbsolutePitch(pitch: MusicXmlPitch) {

@@ -330,6 +330,16 @@ export class MusicXmlExporter {
 
     // End the last measure
     if (currentMeasure != null) {
+      // If the last measure is empty, and there is a measure before it,
+      // remove the empty measure
+      if (
+        currentMeasure.contents.filter((x) => x.tag === 'note').length === 0 &&
+        measures.length > 1
+      ) {
+        measures.pop();
+        currentMeasure = measures[measures.length - 1];
+      }
+
       const barline = new MusicXmlBarline();
       barline.barStyle = new MusicXmlBarStyle('light-heavy');
       currentMeasure.contents.push(barline);

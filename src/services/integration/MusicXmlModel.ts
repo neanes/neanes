@@ -1,6 +1,12 @@
 type MusicXmlYesNoType = 'yes' | 'no';
 export type MusicXmlStepType = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G';
-type MusicXmlMeasureContentType = MusicXmlNote | MusicXmlBarline;
+type MusicXmlMeasureContentType =
+  | MusicXmlNote
+  | MusicXmlBarline
+  | MusicXmlPrint
+  | MusicXmlSound;
+
+type MusicXmlTagType = 'note' | 'barline' | 'print' | 'sound';
 
 class Token<T> {
   tag: string;
@@ -41,10 +47,23 @@ export class MusicXmlMeasure {
 }
 
 export class MusicXmlPrint {
+  tag: MusicXmlTagType = 'print';
   newSystem: MusicXmlYesNo = new MusicXmlYesNo('new-system', null);
 
   toXml() {
     const xml = `<print ${this.newSystem.toXml() ?? ''}></print>`;
+
+    return xml;
+  }
+}
+
+export class MusicXmlSound {
+  tag: MusicXmlTagType = 'sound';
+  tempo?: number = 120;
+
+  toXml() {
+    const tempo = this.tempo != null ? `tempo="${this.tempo}"` : undefined;
+    const xml = `<sound ${tempo ?? ''}></sound>`;
 
     return xml;
   }
@@ -200,6 +219,7 @@ export class MusicXmlDivisions {
 }
 
 export class MusicXmlNote {
+  tag: MusicXmlTagType = 'note';
   pitch: MusicXmlPitch;
   duration: number = 1;
   type: string = 'quarter';
@@ -336,6 +356,7 @@ export class MusicXmlText {
 }
 
 export class MusicXmlBarline {
+  tag: MusicXmlTagType = 'barline';
   barStyle?: MusicXmlBarStyle;
 
   toXml() {

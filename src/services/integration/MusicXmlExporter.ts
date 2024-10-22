@@ -5,6 +5,7 @@ import {
   ModeKeyElement,
   NoteElement,
   ScoreElement,
+  TempoElement,
 } from '@/models/Element';
 import { QuantitativeNeume } from '@/models/Neumes';
 import { getScaleNoteValue, Scale, ScaleNote } from '@/models/Scales';
@@ -38,6 +39,7 @@ import {
   MusicXmlPitch,
   MusicXmlPrint,
   MusicXmlSign,
+  MusicXmlSound,
   MusicXmlStepType,
   MusicXmlSyllabic,
   MusicXmlText,
@@ -169,7 +171,9 @@ export class MusicXmlExporter {
 
           // Naively, we put as close to four notes in each measure as we can.
           // TODO if the score contains barlines, use those instead.
-          if (currentMeasure.contents.length >= 4) {
+          if (
+            currentMeasure.contents.filter((x) => x.tag === 'note').length >= 4
+          ) {
             currentMeasure = new MusicXmlMeasure(measureNumber++);
             measures.push(currentMeasure);
           }
@@ -215,6 +219,11 @@ export class MusicXmlExporter {
           );
           currentMeasure.attributes.key = key;
 
+          // Set the tempo
+          const sound = new MusicXmlSound();
+          sound.tempo = modeKeyElement.bpm;
+          currentMeasure.contents.push(sound);
+
           // Reset workspace flags
           workspace.legetos = modeKeyNode.legetos;
           workspace.lastAlteration = 0;
@@ -243,6 +252,7 @@ export class MusicXmlExporter {
         case ElementType.Martyria: {
           const martyriaElement = element as MartyriaElement;
 
+          // Handle the fthora
           if (martyriaElement.fthora) {
             const fthoraNode = nodeGroup.find(
               (x) => x.nodeType === NodeType.FthoraNode,
@@ -250,6 +260,26 @@ export class MusicXmlExporter {
 
             this.handleFthora(fthoraNode, workspace);
           }
+
+          // Handle the tempo
+          if (martyriaElement.tempo != null) {
+            if (currentMeasure == null) {
+              // Create a default measure.
+              currentMeasure = new MusicXmlMeasure(measureNumber++);
+              currentMeasure.attributes = new MusicXmlAttributes();
+              currentMeasure.attributes.clef = new MusicXmlClef(
+                new MusicXmlSign('G'),
+                new MusicXmlLine(2),
+              );
+              measures.push(currentMeasure);
+            }
+
+            const sound = new MusicXmlSound();
+            sound.tempo = martyriaElement.bpm;
+            currentMeasure.contents.push(sound);
+          }
+
+          // If aligned right, treat this as the end of the system
           if (martyriaElement.alignRight) {
             // If the martyria is right aligned,
             // end the current measure
@@ -273,6 +303,28 @@ export class MusicXmlExporter {
         case ElementType.DropCap:
           const dropCapElement = element as DropCapElement;
           workspace.dropCap = dropCapElement.content;
+          break;
+        case ElementType.Tempo:
+          const tempoElement = element as TempoElement;
+          const sound = new MusicXmlSound();
+          sound.tempo = tempoElement.bpm;
+
+          // Make sure we have a measure.
+          // We expect all scores to start with a mode key, so this
+          // should never happen. But just in case...
+          if (currentMeasure == null) {
+            // Create a default measure.
+            currentMeasure = new MusicXmlMeasure(measureNumber++);
+            currentMeasure.attributes = new MusicXmlAttributes();
+            currentMeasure.attributes.clef = new MusicXmlClef(
+              new MusicXmlSign('G'),
+              new MusicXmlLine(2),
+            );
+            measures.push(currentMeasure);
+          }
+
+          currentMeasure.contents.push(sound);
+          break;
       }
     }
 
@@ -358,7 +410,7 @@ export class MusicXmlExporter {
 
         this.handleFthora(fthoraNode, workspace);
       }
-      // TODO handle rests, ison, and tempo
+      // TODO handle rests, ison
     }
 
     return notes;

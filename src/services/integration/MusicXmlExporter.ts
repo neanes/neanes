@@ -8,7 +8,12 @@ import {
   TempoElement,
 } from '@/models/Element';
 import { QuantitativeNeume } from '@/models/Neumes';
-import { getScaleNoteValue, Scale, ScaleNote } from '@/models/Scales';
+import {
+  getScaleNoteFromValue,
+  getScaleNoteValue,
+  Scale,
+  ScaleNote,
+} from '@/models/Scales';
 import { Score } from '@/models/Score';
 
 import {
@@ -88,15 +93,17 @@ class MusicXmlExporterWorkspace {
   legetos: boolean = false;
   useLegetos: boolean = false;
 
-  loggingEnabled: boolean = true;
-
   constructor(scale: PlaybackScale) {
     this.scale = scale;
   }
 }
 
+type MusicXmlExporterLogLevel = 'none' | 'info' | 'debug' | 'trace';
+
 export class MusicXmlExporter {
   pitchOfThi: number = 0;
+
+  logLevel: MusicXmlExporterLogLevel = 'none';
 
   export(score: Score) {
     const workspace = new MusicXmlExporterWorkspace(this.diatonicScale);
@@ -523,15 +530,44 @@ export class MusicXmlExporter {
     //   getScaleNoteValue(node.physicalNote) -
     //   getScaleNoteValue(node.virtualNote);
 
+    let physicalNote = node.physicalNote;
+    let virtualNote = node.virtualNote;
+
+    // In the case of the enharmonic fthora,
+    // we must consider the the notes BEFORE the
+    // the note is changed.
+    if (
+      node.scale === Scale.EnharmonicZoHigh ||
+      node.scale === Scale.EnharmonicZo ||
+      node.scale === Scale.EnharmonicVou ||
+      node.scale === Scale.EnharmonicVouHigh
+    ) {
+      physicalNote = workspace.physicalNote;
+
+      const enharmonicShift =
+        getScaleNoteValue(workspace.physicalNote) -
+        getScaleNoteValue(node.physicalNote);
+      virtualNote = getScaleNoteFromValue(
+        getScaleNoteValue(node.virtualNote) + enharmonicShift,
+      );
+
+      if (this.logLevel === 'trace') {
+        console.group('handleFthora: enharmonic special case');
+        console.log('physicalNote', physicalNote);
+        console.log('virtualNote', virtualNote);
+        console.log('enharmonicShift', enharmonicShift);
+        console.groupEnd();
+      }
+    }
+
     const currentShift =
-      getScaleNoteValue(node.virtualNote) -
-      getScaleNoteValue(node.physicalNote);
+      getScaleNoteValue(virtualNote) - getScaleNoteValue(physicalNote);
     if (currentShift) {
       // Compute distance from physical note to Di in the old scale
       const semitones1 = this.semitonesBetweenNotes(
         workspace.scale.scaleNoteMap.get(ScaleNote.Thi)!,
         workspace.scale.intervals,
-        getScaleNoteValue(node.physicalNote) - getScaleNoteValue(ScaleNote.Thi),
+        getScaleNoteValue(physicalNote) - getScaleNoteValue(ScaleNote.Thi),
       );
 
       // Scale change
@@ -539,14 +575,14 @@ export class MusicXmlExporter {
 
       // Compute distance from Di to virtual note in the new scale
       const semitones2 = this.semitonesBetweenNotes(
-        workspace.scale.scaleNoteMap.get(node.virtualNote)!,
+        workspace.scale.scaleNoteMap.get(virtualNote)!,
         workspace.scale.intervals,
-        getScaleNoteValue(ScaleNote.Thi) - getScaleNoteValue(node.virtualNote),
+        getScaleNoteValue(ScaleNote.Thi) - getScaleNoteValue(virtualNote),
       );
 
       workspace.transpositionSemitones = semitones1 + semitones2;
 
-      if (workspace.loggingEnabled) {
+      if (this.logLevel === 'debug') {
         console.log('Entering transposition', workspace.transpositionSemitones);
       }
     } else {

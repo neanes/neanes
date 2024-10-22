@@ -435,7 +435,16 @@ export class MusicXmlExporter {
         const rest = this.buildRest(restNode);
         notes.push(rest);
       }
-      // TODO handle ison
+      // TODO handle ison.
+      // Use <harmony>
+      /*
+            <harmony print-frame="no">
+        <root>
+          <root-step>C</root-step>
+          </root>
+        <kind>major</kind>
+        </harmony>
+      */
     }
 
     return notes;

@@ -1183,7 +1183,7 @@ export class MusicXmlExporter {
 
   zygosScale: PlaybackScale = {
     name: PlaybackScaleName.Zygos,
-    intervals: [3, 1, 3, 1, 2, 2, 1],
+    intervals: [3, 1, 2, 1, 2, 2, 1],
     scaleNoteMap: this.diatonicScaleNoteToIntervalIndexMap,
   };
 

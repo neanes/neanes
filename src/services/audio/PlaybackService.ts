@@ -700,14 +700,29 @@ export class PlaybackService {
       fthoraNode.scale === Scale.EnharmonicVou ||
       fthoraNode.scale === Scale.EnharmonicVouHigh
     ) {
+      // Example: workspace is on THI and
+      // EnharmonicZoHigh fthora is on KE, Virtual Note = Zo
+
+      // Use the current physical note, BEFORE the jump
+      // Ex: physical note = THI
       physicalNote = workspace.physicalNote;
 
+      // Determine the distance between the current physical note
+      // and the next physical note
+      // Ex: enharmonic shift = THI - KE = -1
       const enharmonicShift =
         getScaleNoteValue(workspace.physicalNote) -
         getScaleNoteValue(fthoraNode.physicalNote);
+
+      // The virtual note is the virtual note of the current physical note
+      // in the new enharmonic scale
+      // Ex: virtual note = ZO - 1 = KE
       virtualNote = getScaleNoteFromValue(
         getScaleNoteValue(fthoraNode.virtualNote) + enharmonicShift,
       );
+
+      // Ex: So finally, we have physical note THI and virtual note KE,
+      // and we are ready to move to physical note KE, virtual note ZO
 
       if (workspace.loggingEnabled) {
         console.group('handleFthora: enharmonic special case');

@@ -633,6 +633,7 @@ export class MusicXmlExporter {
     switch (node.duration) {
       case 0.25:
         type = '16th';
+        break;
       case 0.5:
         type = 'eighth';
         break;

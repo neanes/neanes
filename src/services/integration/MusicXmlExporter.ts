@@ -78,6 +78,9 @@ class MusicXmlExporterWorkspace {
   pitch: MusicXmlPitch = new MusicXmlPitch('C', 4);
   transpositionSemitones: number = 0;
 
+  lastAlteration: number = 0;
+  lastAlterationNote: ScaleNote = ScaleNote.Pa;
+
   ignoreAttractions: boolean = false;
   permanentEnharmonicZo: boolean = false;
   legetos: boolean = false;
@@ -212,7 +215,13 @@ export class MusicXmlExporter {
           );
           currentMeasure.attributes.key = key;
 
-          // Set the scale
+          // Reset workspace flags
+          workspace.legetos = modeKeyNode.legetos;
+          workspace.lastAlteration = 0;
+          workspace.lastAlterationNote = ScaleNote.Pa;
+          workspace.permanentEnharmonicZo = modeKeyNode.permanentEnharmonicZo;
+          workspace.ignoreAttractions = modeKeyNode.ignoreAttractions;
+
           workspace.pitch = new MusicXmlPitch('G', 4);
           workspace.physicalNote = ScaleNote.Thi;
 
@@ -403,30 +412,48 @@ export class MusicXmlExporter {
 
     const alter = this.getAlter(node);
 
-    if (alter) {
+    if (alter !== 0) {
       if (pitch.alter) {
-        // TODO this is not correct.
-        // We need to potentially change the step
-        pitch.alter.content -= alter.content;
+        pitch.alter.content += alter;
       } else {
-        pitch.alter = alter;
+        pitch.alter = new MusicXmlAlter(alter);
       }
+
+      workspace.lastAlteration = alter;
+      workspace.lastAlterationNote = node.physicalNote;
+    } else if (
+      workspace.lastAlteration !== 0 &&
+      workspace.lastAlterationNote === node.physicalNote
+    ) {
+      if (pitch.alter) {
+        pitch.alter.content += workspace.lastAlteration;
+      } else {
+        pitch.alter = new MusicXmlAlter(workspace.lastAlteration);
+      }
+    } else if (
+      workspace.lastAlteration !== 0 &&
+      workspace.lastAlterationNote !== node.physicalNote
+    ) {
+      // Clear the last alteration as soon as we move away
+      // from the altered note
+      workspace.lastAlteration = 0;
+      workspace.lastAlterationNote = ScaleNote.Pa;
     }
 
     return pitch;
   }
 
-  getAlter(node: NoteAtomNode): MusicXmlAlter | undefined {
+  getAlter(node: NoteAtomNode) {
     // We do not consider microtones here.
     if (node.accidental == null) {
-      return undefined;
+      return 0;
     } else if (node.accidental.startsWith('Flat')) {
-      return new MusicXmlAlter(-1);
+      return -1;
     } else if (node.accidental.startsWith('Sharp')) {
-      return new MusicXmlAlter(1);
+      return 1;
     }
 
-    // TODO keep track of last alterations
+    return 0;
   }
 
   handleFthora(node: FthoraNode, workspace: MusicXmlExporterWorkspace) {
@@ -552,6 +579,7 @@ export class MusicXmlExporter {
         type = 'quarter';
         break;
       case 2:
+      case 3:
         type = 'half';
         break;
       case 4:
@@ -565,7 +593,7 @@ export class MusicXmlExporter {
   }
 
   getDot(node: NoteAtomNode) {
-    const dots = [1.5];
+    const dots = [1.5, 3];
 
     return dots.includes(node.duration) ? new MusicXmlDot() : undefined;
   }

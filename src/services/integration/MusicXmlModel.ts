@@ -203,6 +203,7 @@ export class MusicXmlNote {
   pitch: MusicXmlPitch;
   duration: number = 1;
   type: string = 'quarter';
+  dot?: MusicXmlDot;
   lyric?: MusicXmlLyric;
 
   constructor(pitch: MusicXmlPitch, duration: number, type: string) {
@@ -216,6 +217,7 @@ export class MusicXmlNote {
         ${this.pitch.toXml()}
         <duration>${this.duration}</duration>
         <type>${this.type}</type>
+        ${this.dot?.toXml() ?? ''}
         ${this.lyric?.toXml() ?? ''}
       </note>`;
 
@@ -262,6 +264,14 @@ export class MusicXmlAlter {
 
   toXml() {
     const xml = `<alter>${this.content}</alter>`;
+
+    return xml;
+  }
+}
+
+export class MusicXmlDot {
+  toXml() {
+    const xml = `<dot/>`;
 
     return xml;
   }

@@ -24,6 +24,7 @@ import {
   MusicXmlBarline,
   MusicXmlBarStyle,
   MusicXmlClef,
+  MusicXmlDot,
   MusicXmlExtend,
   MusicXmlFifths,
   MusicXmlKey,
@@ -90,10 +91,12 @@ class MusicXmlExporterWorkspace {
 }
 
 export class MusicXmlExporter {
-  pitchOfThi: number = this.getAbsolutePitch(new MusicXmlPitch('G', 4));
+  pitchOfThi: number = 0;
 
   export(score: Score) {
     const workspace = new MusicXmlExporterWorkspace(this.diatonicScale);
+
+    this.pitchOfThi = this.getAbsolutePitch(new MusicXmlPitch('G', 4));
 
     workspace.nodes = AnalysisService.analyze(
       score.staff.elements,
@@ -362,6 +365,8 @@ export class MusicXmlExporter {
       this.getType(node),
     );
 
+    note.dot = this.getDot(node);
+
     return note;
   }
 
@@ -543,6 +548,7 @@ export class MusicXmlExporter {
         type = 'eighth';
         break;
       case 1:
+      case 1.5:
         type = 'quarter';
         break;
       case 2:
@@ -556,6 +562,12 @@ export class MusicXmlExporter {
     }
 
     return type;
+  }
+
+  getDot(node: NoteAtomNode) {
+    const dots = [1.5];
+
+    return dots.includes(node.duration) ? new MusicXmlDot() : undefined;
   }
 
   findNodes(

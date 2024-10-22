@@ -23,6 +23,8 @@ import {
   ModeKeyNode,
   NodeType,
   NoteAtomNode,
+  RestNode,
+  TemporalNode,
 } from '../audio/AnalysisService';
 import {
   MusicXmlAlter,
@@ -43,6 +45,7 @@ import {
   MusicXmlNote,
   MusicXmlPitch,
   MusicXmlPrint,
+  MusicXmlRest,
   MusicXmlSign,
   MusicXmlSound,
   MusicXmlStepType,
@@ -426,8 +429,13 @@ export class MusicXmlExporter {
         const fthoraNode = node as FthoraNode;
 
         this.handleFthora(fthoraNode, workspace);
+      } else if (node.nodeType === NodeType.RestNode) {
+        const restNode = node as RestNode;
+
+        const rest = this.buildRest(restNode);
+        notes.push(rest);
       }
-      // TODO handle rests, ison
+      // TODO handle ison
     }
 
     return notes;
@@ -437,12 +445,18 @@ export class MusicXmlExporter {
     node: Readonly<NoteAtomNode>,
     workspace: MusicXmlExporterWorkspace,
   ): MusicXmlNote {
-    const note = new MusicXmlNote(
-      this.getPitch(node, workspace)!,
-      node.duration,
-      this.getType(node),
-    );
+    const note = new MusicXmlNote(node.duration, this.getType(node));
 
+    note.pitch = this.getPitch(node, workspace);
+    note.dot = this.getDot(node);
+
+    return note;
+  }
+
+  buildRest(node: Readonly<RestNode>): MusicXmlNote {
+    const note = new MusicXmlNote(node.duration, this.getType(node));
+
+    note.rest = new MusicXmlRest();
     note.dot = this.getDot(node);
 
     return note;
@@ -611,7 +625,7 @@ export class MusicXmlExporter {
 
         // If we are in a pivot, then flatten zo
         if (workspace.zoFlatPivotActivated) {
-          note.pitch.alter = new MusicXmlAlter(-1);
+          note.pitch!.alter = new MusicXmlAlter(-1);
         }
       } else {
         // Clear zo flat pivot
@@ -623,7 +637,7 @@ export class MusicXmlExporter {
         node.virtualNote === ScaleNote.Ke &&
         workspace.zoNaturalPivotActivated
       ) {
-        note.pitch.alter = new MusicXmlAlter(1);
+        note.pitch!.alter = new MusicXmlAlter(1);
       }
 
       // Clear the zo natural pivot if we descend below ke
@@ -663,7 +677,7 @@ export class MusicXmlExporter {
     }
   }
 
-  getType(node: NoteAtomNode) {
+  getType(node: TemporalNode) {
     let type = '';
 
     switch (node.duration) {
@@ -691,7 +705,7 @@ export class MusicXmlExporter {
     return type;
   }
 
-  getDot(node: NoteAtomNode) {
+  getDot(node: TemporalNode) {
     const dots = [1.5, 3];
 
     return dots.includes(node.duration) ? new MusicXmlDot() : undefined;

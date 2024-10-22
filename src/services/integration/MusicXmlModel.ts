@@ -220,26 +220,35 @@ export class MusicXmlDivisions {
 
 export class MusicXmlNote {
   tag: MusicXmlTagType = 'note';
-  pitch: MusicXmlPitch;
+  pitch?: MusicXmlPitch;
+  rest?: MusicXmlRest;
   duration: number = 1;
   type: string = 'quarter';
   dot?: MusicXmlDot;
   lyric?: MusicXmlLyric;
 
-  constructor(pitch: MusicXmlPitch, duration: number, type: string) {
-    this.pitch = pitch;
+  constructor(duration: number, type: string) {
     this.duration = duration;
     this.type = type;
   }
 
   toXml() {
     const xml = `<note>
-        ${this.pitch.toXml()}
+        ${this.pitch?.toXml() ?? ''}
+        ${this.rest?.toXml() ?? ''}
         <duration>${this.duration}</duration>
         <type>${this.type}</type>
         ${this.dot?.toXml() ?? ''}
         ${this.lyric?.toXml() ?? ''}
       </note>`;
+
+    return xml;
+  }
+}
+
+export class MusicXmlRest {
+  toXml() {
+    const xml = `<rest/>`;
 
     return xml;
   }

@@ -91,6 +91,8 @@ class MusicXmlExporterWorkspace {
   lastAlteration: number = 0;
   lastAlterationNote: ScaleNote = ScaleNote.Pa;
 
+  triplet: boolean = false;
+
   ignoreAttractions: boolean = false;
   permanentEnharmonicZo: boolean = false;
   legetos: boolean = false;
@@ -454,7 +456,9 @@ export class MusicXmlExporter {
     node: Readonly<NoteAtomNode>,
     workspace: MusicXmlExporterWorkspace,
   ): MusicXmlNote {
-    const note = new MusicXmlNote(node.duration, this.getType(node));
+    const duration = this.getDuration(node, workspace);
+
+    const note = new MusicXmlNote(duration, this.getType(duration));
 
     note.pitch = this.getPitch(node, workspace);
     note.dot = this.getDot(node);
@@ -463,7 +467,7 @@ export class MusicXmlExporter {
   }
 
   buildRest(node: Readonly<RestNode>): MusicXmlNote {
-    const note = new MusicXmlNote(node.duration, this.getType(node));
+    const note = new MusicXmlNote(node.duration, this.getType(node.duration));
 
     note.rest = new MusicXmlRest();
     note.dot = this.getDot(node);
@@ -686,10 +690,34 @@ export class MusicXmlExporter {
     }
   }
 
-  getType(node: TemporalNode) {
+  getDuration(node: TemporalNode, workspace: MusicXmlExporterWorkspace) {
+    const rounded = node.duration.toFixed(2);
+
+    let duration = node.duration;
+
+    // Digorgon is interpreted as 1/2 + 1/4 + 1/4
+    // This is primarily because it is easier for singers to sight sing,
+    // and is a convention used in St Anthony's Divine Music Project
+    // TODO support true triplets as an configurable option
+
+    switch (rounded) {
+      case '0.33':
+        duration = workspace.triplet ? 0.25 : 0.5;
+        workspace.triplet = true;
+        break;
+    }
+
+    if (!rounded.endsWith('.33')) {
+      workspace.triplet = false;
+    }
+
+    return duration;
+  }
+
+  getType(duration: number) {
     let type = '';
 
-    switch (node.duration) {
+    switch (duration) {
       case 0.25:
         type = '16th';
         break;
@@ -1217,44 +1245,4 @@ export class MusicXmlExporter {
     intervals: [2, 2, 1, 2, 2, 2, 1],
     scaleNoteMap: this.diatonicScaleNoteToIntervalIndexMap,
   };
-
-  /*
-    <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!DOCTYPE score-partwise PUBLIC
-    "-//Recordare//DTD MusicXML 4.0 Partwise//EN"
-    "http://www.musicxml.org/dtds/partwise.dtd">
-<score-partwise version="4.0">
-  <part-list>
-    <score-part id="P1">
-      <part-name>Music</part-name>
-    </score-part>
-  </part-list>
-  <part id="P1">
-    <measure number="1">
-      <attributes>
-        <divisions>1</divisions>
-        <key>
-          <fifths>0</fifths>
-        </key>
-        <time>
-          <beats>4</beats>
-          <beat-type>4</beat-type>
-        </time>
-        <clef>
-          <sign>G</sign>
-          <line>2</line>
-        </clef>
-      </attributes>
-      <note>
-        <pitch>
-          <step>C</step>
-          <octave>4</octave>
-        </pitch>
-        <duration>4</duration>
-        <type>whole</type>
-      </note>
-    </measure>
-  </part>
-</score-partwise>
-*/
 }

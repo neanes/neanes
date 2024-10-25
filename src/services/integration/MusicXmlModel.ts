@@ -1,12 +1,14 @@
 type MusicXmlYesNoType = 'yes' | 'no';
+type MusicXmlKindType = 'major' | 'none';
 export type MusicXmlStepType = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G';
 type MusicXmlMeasureContentType =
   | MusicXmlNote
+  | MusicXmlHarmony
   | MusicXmlBarline
   | MusicXmlPrint
   | MusicXmlSound;
 
-type MusicXmlTagType = 'note' | 'barline' | 'print' | 'sound';
+type MusicXmlTagType = 'note' | 'barline' | 'print' | 'sound' | 'harmony';
 
 class Token<T> {
   tag: string;
@@ -397,6 +399,91 @@ export class MusicXmlBarStyle {
 
   toXml() {
     const xml = `<bar-style>${this.contents}</bar-style>`;
+
+    return xml;
+  }
+}
+
+export class MusicXmlHarmony {
+  tag: MusicXmlTagType = 'harmony';
+
+  root: MusicXmlRoot;
+  kind: MusicXmlKind;
+
+  constructor(root: MusicXmlRoot, kind: MusicXmlKind) {
+    this.root = root;
+    this.kind = kind;
+  }
+
+  toXml() {
+    const xml = `<harmony>
+      ${this.root.toXml()}
+      ${this.kind.toXml()}
+      </harmony>`;
+
+    return xml;
+  }
+}
+
+export class MusicXmlRoot {
+  step: MusicXmlRootStep;
+  alter?: MusicXmlRootAlter;
+
+  constructor(step: MusicXmlRootStep, alter?: MusicXmlRootAlter) {
+    this.step = step;
+    this.alter = alter;
+  }
+
+  toXml() {
+    const xml = `<root>
+      ${this.step.toXml()}
+      ${this.alter?.toXml() ?? ''}
+      </root>`;
+
+    return xml;
+  }
+}
+
+export class MusicXmlRootStep {
+  contents: MusicXmlStepType;
+
+  constructor(contents: MusicXmlStepType) {
+    this.contents = contents;
+  }
+
+  toXml() {
+    const xml = `<root-step>${this.contents}</root-step>`;
+
+    return xml;
+  }
+}
+
+export class MusicXmlRootAlter {
+  contents: number;
+
+  constructor(contents: number) {
+    this.contents = contents;
+  }
+
+  toXml() {
+    const xml = `<root-alter>${this.contents}</root-alter>`;
+
+    return xml;
+  }
+}
+
+export class MusicXmlKind {
+  contents: MusicXmlKindType;
+  text?: string;
+
+  constructor(contents: MusicXmlKindType, text?: string) {
+    this.contents = contents;
+    this.text = text;
+  }
+
+  toXml() {
+    const text = this.text != null ? `text="${this.text}"` : '';
+    const xml = `<kind ${text}>${this.contents}</kind>`;
 
     return xml;
   }

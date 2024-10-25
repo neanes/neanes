@@ -7,8 +7,9 @@ import {
   ScoreElement,
   TempoElement,
 } from '@/models/Element';
-import { QuantitativeNeume } from '@/models/Neumes';
+import { Ison, QuantitativeNeume } from '@/models/Neumes';
 import {
+  getIsonValue,
   getScaleNoteFromValue,
   getScaleNoteValue,
   Scale,
@@ -20,6 +21,7 @@ import {
   AnalysisNode,
   AnalysisService,
   FthoraNode,
+  IsonNode,
   ModeKeyNode,
   NodeType,
   NoteAtomNode,
@@ -35,10 +37,12 @@ import {
   MusicXmlDot,
   MusicXmlExtend,
   MusicXmlFifths,
+  MusicXmlHarmony,
   MusicXmlKey,
   MusicXmlKeyAlter,
   MusicXmlKeyOctave,
   MusicXmlKeyStep,
+  MusicXmlKind,
   MusicXmlLine,
   MusicXmlLyric,
   MusicXmlMeasure,
@@ -46,6 +50,9 @@ import {
   MusicXmlPitch,
   MusicXmlPrint,
   MusicXmlRest,
+  MusicXmlRoot,
+  MusicXmlRootAlter,
+  MusicXmlRootStep,
   MusicXmlSign,
   MusicXmlSound,
   MusicXmlStepType,
@@ -365,7 +372,7 @@ export class MusicXmlExporter {
     nodes: readonly AnalysisNode[],
     workspace: MusicXmlExporterWorkspace,
   ) {
-    const notes: MusicXmlNote[] = [];
+    const notes: Array<MusicXmlNote | MusicXmlHarmony> = [];
 
     let lyricsIndex = 0;
 
@@ -436,6 +443,36 @@ export class MusicXmlExporter {
 
         const rest = this.buildRest(restNode);
         notes.push(rest);
+      } else if (node.nodeType === NodeType.IsonNode) {
+        const isonNode = node as IsonNode;
+
+        if (isonNode.physicalNote === Ison.Unison) {
+          const harmony = new MusicXmlHarmony(
+            new MusicXmlRoot(new MusicXmlRootStep('C')),
+            new MusicXmlKind('none', 'Un.'),
+          );
+
+          notes.push(harmony);
+        } else {
+          const isonPitch = this.moveTo(
+            getScaleNoteFromValue(getIsonValue(isonNode.physicalNote)),
+            getScaleNoteFromValue(getIsonValue(isonNode.virtualNote)),
+            workspace,
+          );
+
+          const step = isonPitch.step;
+          const alter = isonPitch.alter?.content ?? 0;
+
+          const harmony = new MusicXmlHarmony(
+            new MusicXmlRoot(
+              new MusicXmlRootStep(step),
+              alter !== 0 ? new MusicXmlRootAlter(alter) : undefined,
+            ),
+            new MusicXmlKind('major'),
+          );
+
+          notes.push(harmony);
+        }
       }
       // TODO handle ison.
       // Use <harmony>
@@ -504,7 +541,11 @@ export class MusicXmlExporter {
     node: NoteAtomNode,
     workspace: MusicXmlExporterWorkspace,
   ): MusicXmlPitch {
-    const pitch = this.moveTo(node.physicalNote, node.virtualNote, workspace);
+    const pitch = this.movePitch(
+      node.physicalNote,
+      node.virtualNote,
+      workspace,
+    );
 
     const alter = this.getAlter(node);
 
@@ -873,6 +914,17 @@ export class MusicXmlExporter {
     return ((value % modulus) + modulus) % modulus;
   }
 
+  movePitch(
+    physicalNote: ScaleNote,
+    virtualNote: ScaleNote,
+    workspace: MusicXmlExporterWorkspace,
+  ) {
+    const pitch = this.moveTo(physicalNote, virtualNote, workspace);
+    workspace.pitch = pitch.clone();
+    workspace.physicalNote = physicalNote;
+    return pitch;
+  }
+
   moveTo(
     physicalNote: ScaleNote,
     virtualNote: ScaleNote,
@@ -940,10 +992,7 @@ export class MusicXmlExporter {
       newPitch.alter = new MusicXmlAlter(newAlter);
     }
 
-    workspace.pitch = newPitch;
-    workspace.physicalNote = physicalNote;
-
-    return newPitch.clone();
+    return newPitch;
   }
 
   getAbsolutePitch(pitch: MusicXmlPitch) {

@@ -773,6 +773,10 @@ export class MusicXmlExporter {
         duration = workspace.triplet ? 0.25 : 0.5;
         workspace.triplet = true;
         break;
+      case '0.67':
+        // Round dotted gorgon to eighth note
+        duration = 0.5;
+        break;
     }
 
     if (!rounded.endsWith('.33')) {

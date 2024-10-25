@@ -1,5 +1,6 @@
 type MusicXmlYesNoType = 'yes' | 'no';
 type MusicXmlKindType = 'major' | 'none';
+type MusicXmlStartStopContinueType = 'start' | 'stop' | 'continue';
 export type MusicXmlStepType = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G';
 type MusicXmlMeasureContentType =
   | MusicXmlNote
@@ -7,6 +8,8 @@ type MusicXmlMeasureContentType =
   | MusicXmlBarline
   | MusicXmlPrint
   | MusicXmlSound;
+
+type MusicXmlNotationsType = MusicXmlSlur;
 
 type MusicXmlTagType = 'note' | 'barline' | 'print' | 'sound' | 'harmony';
 
@@ -228,10 +231,16 @@ export class MusicXmlNote {
   type: string = 'quarter';
   dot?: MusicXmlDot;
   lyric?: MusicXmlLyric;
+  notations?: MusicXmlNotations;
 
   constructor(duration: number, type: string) {
     this.duration = duration;
     this.type = type;
+  }
+
+  addNotation(notation: MusicXmlNotationsType) {
+    this.notations = this.notations ?? new MusicXmlNotations();
+    this.notations.contents.push(notation);
   }
 
   toXml() {
@@ -242,6 +251,7 @@ export class MusicXmlNote {
         <type>${this.type}</type>
         ${this.dot?.toXml() ?? ''}
         ${this.lyric?.toXml() ?? ''}
+        ${this.notations?.toXml() ?? ''}
       </note>`;
 
     return xml;
@@ -361,6 +371,33 @@ export class MusicXmlText {
 
   toXml() {
     const xml = `<text>${this.content}</text>`;
+
+    return xml;
+  }
+}
+
+export class MusicXmlNotations {
+  contents: MusicXmlNotationsType[] = [];
+
+  toXml() {
+    let contents = '';
+    this.contents.forEach((x) => (contents += x.toXml()));
+
+    const xml = `<notations>${contents}</notations>`;
+
+    return xml;
+  }
+}
+
+export class MusicXmlSlur {
+  type: MusicXmlStartStopContinueType;
+
+  constructor(type: MusicXmlStartStopContinueType) {
+    this.type = type;
+  }
+
+  toXml() {
+    const xml = `<slur type="${this.type}" />`;
 
     return xml;
   }

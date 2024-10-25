@@ -54,6 +54,7 @@ import {
   MusicXmlRootAlter,
   MusicXmlRootStep,
   MusicXmlSign,
+  MusicXmlSlur,
   MusicXmlSound,
   MusicXmlStepType,
   MusicXmlSyllabic,
@@ -90,16 +91,19 @@ class MusicXmlExporterWorkspace {
   zoNaturalPivotActivated: boolean = false;
   dropCap: string = '';
   isSyllabic: boolean = false;
+  isMelismatic: boolean = false;
   scale: PlaybackScale;
   physicalNote: ScaleNote = ScaleNote.Pa;
   pitch: MusicXmlPitch = new MusicXmlPitch('C', 4);
   transpositionSemitones: number = 0;
+  previousNote: MusicXmlNote | null = null;
 
   lastAlteration: number = 0;
   lastAlterationNote: ScaleNote = ScaleNote.Pa;
 
   triplet: boolean = false;
 
+  // Options
   ignoreAttractions: boolean = false;
   permanentEnharmonicZo: boolean = false;
   legetos: boolean = false;
@@ -416,13 +420,32 @@ export class MusicXmlExporter {
             note.lyric.syllabic = workspace.isSyllabic
               ? new MusicXmlSyllabic('middle')
               : new MusicXmlSyllabic('begin');
+
+            note.addNotation(new MusicXmlSlur('start'));
+
+            // If we are in the middle of multiple syllables
+            // stop the previous slur
+            if (workspace.isSyllabic) {
+              workspace.previousNote!.addNotation(new MusicXmlSlur('stop'));
+            }
+
             workspace.isSyllabic = true;
           } else if (
             workspace.isSyllabic &&
             (!noteElement.isMelisma || noteElement.isMelismaStart)
           ) {
             note.lyric.syllabic = new MusicXmlSyllabic('end');
+            workspace.previousNote!.addNotation(new MusicXmlSlur('stop'));
             workspace.isSyllabic = false;
+          }
+
+          // End previous melismatic slurs
+          if (
+            workspace.isMelismatic &&
+            (!noteElement.isMelisma || noteElement.isMelismaStart)
+          ) {
+            workspace.previousNote!.addNotation(new MusicXmlSlur('stop'));
+            workspace.isMelismatic = false;
           }
 
           // Write melisma extend if this is a non-hyphen melisma.
@@ -432,8 +455,12 @@ export class MusicXmlExporter {
             !noteElement.isHyphen
           ) {
             note.lyric.extend = new MusicXmlExtend();
+            note.addNotation(new MusicXmlSlur('start'));
+            workspace.isMelismatic = true;
           }
         }
+
+        workspace.previousNote = note;
       } else if (node.nodeType === NodeType.FthoraNode) {
         const fthoraNode = node as FthoraNode;
 

@@ -698,7 +698,7 @@ export class MusicXmlExporter {
     // Digorgon is interpreted as 1/2 + 1/4 + 1/4
     // This is primarily because it is easier for singers to sight sing,
     // and is a convention used in St Anthony's Divine Music Project
-    // TODO support true triplets as an configurable option
+    // TODO support true triplets as a configurable option
 
     switch (rounded) {
       case '0.33':

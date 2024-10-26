@@ -107,6 +107,8 @@ class MusicXmlExporterWorkspace {
 
   triplet: boolean = false;
 
+  needNewMeasure: boolean = false;
+
   // Options
   measureLength: number = 8;
   calculateTimeSignatures: boolean = false;
@@ -173,7 +175,14 @@ export class MusicXmlExporter {
     let measureNumber = 1;
     let lastIndex = 0;
 
-    let currentMeasure: MusicXmlMeasure | null = null;
+    let currentMeasure: MusicXmlMeasure = new MusicXmlMeasure(measureNumber++);
+    currentMeasure.attributes = new MusicXmlAttributes();
+    currentMeasure.attributes.clef = new MusicXmlClef(
+      new MusicXmlSign('G'),
+      new MusicXmlLine(2),
+    );
+    currentMeasure.attributes.divisions = new MusicXmlDivisions(1);
+    measures.push(currentMeasure);
 
     for (const element of elements) {
       const findResults = this.findNodes(
@@ -187,22 +196,6 @@ export class MusicXmlExporter {
       switch (element.elementType) {
         case ElementType.Note:
           const noteElement = element as NoteElement;
-
-          // Make sure we have a measure.
-          // We expect all scores to start with a mode key, so this
-          // should never happen. But just in case...
-          if (currentMeasure == null) {
-            // Create a default measure.
-            currentMeasure = new MusicXmlMeasure(measureNumber++);
-            currentMeasure.attributes = new MusicXmlAttributes();
-            currentMeasure.attributes.clef = new MusicXmlClef(
-              new MusicXmlSign('G'),
-              new MusicXmlLine(2),
-            );
-            currentMeasure.attributes.divisions = new MusicXmlDivisions(1);
-            measures.push(currentMeasure);
-          }
-
           // Cut of the measure as close to the configured measureLength
           // option as we can. If a left barline is present, end the measure
           // before processing the current note.
@@ -210,10 +203,12 @@ export class MusicXmlExporter {
             (currentMeasure.notes.length >= workspace.measureLength &&
               !workspace.triplet) ||
             (noteElement.measureBarLeft != null &&
-              currentMeasure.notes.length > 0)
+              currentMeasure.notes.length > 0) ||
+            (workspace.needNewMeasure && currentMeasure.notes.length > 0)
           ) {
             currentMeasure = new MusicXmlMeasure(measureNumber++);
             measures.push(currentMeasure);
+            workspace.needNewMeasure = false;
           }
 
           // Build the note group
@@ -230,8 +225,7 @@ export class MusicXmlExporter {
           // If a right barline is present, end the measure
           // before processing the next note
           if (noteElement.measureBarRight != null) {
-            currentMeasure = new MusicXmlMeasure(measureNumber++);
-            measures.push(currentMeasure);
+            workspace.needNewMeasure = true;
           }
           break;
         case ElementType.ModeKey: {
@@ -239,30 +233,26 @@ export class MusicXmlExporter {
           const modeKeyNode = nodeGroup[0] as ModeKeyNode;
 
           // End the current measure
-          if (currentMeasure != null) {
+          if (currentMeasure != null && currentMeasure.notes.length > 0) {
             const barline = new MusicXmlBarline();
             barline.barStyle = new MusicXmlBarStyle('light-heavy');
             currentMeasure.contents.push(barline);
+
+            // Create a new measure
+            currentMeasure = new MusicXmlMeasure(measureNumber++);
+            measures.push(currentMeasure);
+
+            // Add a system break
+            const print = new MusicXmlPrint();
+            print.newSystem.value = 'yes';
+            currentMeasure.contents.push(print);
           }
-
-          // Create a new measure
-          currentMeasure = new MusicXmlMeasure(measureNumber++);
-          measures.push(currentMeasure);
-
-          // Add a system break
-          const print = new MusicXmlPrint();
-          print.newSystem.value = 'yes';
-          currentMeasure.contents.push(print);
 
           // Set the key
           const key = this.buildKey(modeKeyNode, modeKeyElement);
 
-          currentMeasure.attributes = new MusicXmlAttributes();
-          currentMeasure.attributes.clef = new MusicXmlClef(
-            new MusicXmlSign('G'),
-            new MusicXmlLine(2),
-          );
-          currentMeasure.attributes.divisions = new MusicXmlDivisions(1);
+          currentMeasure.attributes =
+            currentMeasure.attributes ?? new MusicXmlAttributes();
           currentMeasure.attributes.key = key;
 
           // Set the tempo
@@ -305,12 +295,6 @@ export class MusicXmlExporter {
             currentMeasure != null &&
             currentMeasure.notes.length > 0
           ) {
-            console.log(
-              'ending measure',
-              martyriaElement,
-              currentMeasure.notes,
-            );
-
             currentMeasure = new MusicXmlMeasure(measureNumber++);
             measures.push(currentMeasure);
           }
@@ -326,18 +310,6 @@ export class MusicXmlExporter {
 
           // Handle the tempo
           if (martyriaElement.tempo != null) {
-            if (currentMeasure == null) {
-              // Create a default measure.
-              currentMeasure = new MusicXmlMeasure(measureNumber++);
-              currentMeasure.attributes = new MusicXmlAttributes();
-              currentMeasure.attributes.clef = new MusicXmlClef(
-                new MusicXmlSign('G'),
-                new MusicXmlLine(2),
-              );
-              currentMeasure.attributes.divisions = new MusicXmlDivisions(1);
-              measures.push(currentMeasure);
-            }
-
             const sound = new MusicXmlSound();
             sound.tempo = martyriaElement.bpm;
             currentMeasure.contents.push(sound);
@@ -347,32 +319,20 @@ export class MusicXmlExporter {
           if (martyriaElement.alignRight) {
             // If the martyria is right aligned,
             // end the current measure
-            if (currentMeasure != null) {
-              const barline = new MusicXmlBarline();
-              barline.barStyle = new MusicXmlBarStyle('light-light');
+            const barline = new MusicXmlBarline();
+            barline.barStyle = new MusicXmlBarStyle('light-light');
 
-              if (currentMeasure.notes.length > 0) {
-                currentMeasure.contents.push(barline);
+            if (currentMeasure.notes.length > 0) {
+              currentMeasure.contents.push(barline);
 
-                // Create a new measure
-                currentMeasure = new MusicXmlMeasure(measureNumber++);
-                measures.push(currentMeasure);
-              } else {
-                const index = measures.indexOf(currentMeasure);
-                if (index > 0) {
-                  measures[index - 1].contents.push(barline);
-                }
-              }
-            } else {
-              // Create a default measure.
+              // Create a new measure
               currentMeasure = new MusicXmlMeasure(measureNumber++);
-              currentMeasure.attributes = new MusicXmlAttributes();
-              currentMeasure.attributes.clef = new MusicXmlClef(
-                new MusicXmlSign('G'),
-                new MusicXmlLine(2),
-              );
-              currentMeasure.attributes.divisions = new MusicXmlDivisions(1);
               measures.push(currentMeasure);
+            } else {
+              const index = measures.indexOf(currentMeasure);
+              if (index > 0) {
+                measures[index - 1].contents.push(barline);
+              }
             }
 
             // Add a system break
@@ -390,40 +350,22 @@ export class MusicXmlExporter {
           const tempoElement = element as TempoElement;
           const sound = new MusicXmlSound();
           sound.tempo = tempoElement.bpm;
-
-          // Make sure we have a measure.
-          // We expect all scores to start with a mode key, so this
-          // should never happen. But just in case...
-          if (currentMeasure == null) {
-            // Create a default measure.
-            currentMeasure = new MusicXmlMeasure(measureNumber++);
-            currentMeasure.attributes = new MusicXmlAttributes();
-            currentMeasure.attributes.clef = new MusicXmlClef(
-              new MusicXmlSign('G'),
-              new MusicXmlLine(2),
-            );
-            currentMeasure.attributes.divisions = new MusicXmlDivisions(1);
-            measures.push(currentMeasure);
-          }
-
           currentMeasure.contents.push(sound);
           break;
       }
     }
 
     // End the last measure
-    if (currentMeasure != null) {
-      // If the last measure is empty, and there is a measure before it,
-      // remove the empty measure
-      if (currentMeasure.notes.length === 0 && measures.length > 1) {
-        measures.pop();
-        currentMeasure = measures[measures.length - 1];
-      }
-
-      const barline = new MusicXmlBarline();
-      barline.barStyle = new MusicXmlBarStyle('light-heavy');
-      currentMeasure.contents.push(barline);
+    // If the last measure is empty, and there is a measure before it,
+    // remove the empty measure
+    if (currentMeasure.notes.length === 0 && measures.length > 1) {
+      measures.pop();
+      currentMeasure = measures[measures.length - 1];
     }
+
+    const barline = new MusicXmlBarline();
+    barline.barStyle = new MusicXmlBarStyle('light-heavy');
+    currentMeasure.contents.push(barline);
 
     // Finalize time signatures
     if (workspace.calculateTimeSignatures) {

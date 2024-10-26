@@ -692,6 +692,14 @@ export class MusicXmlExporter {
     } else if (node.accidental.startsWith('Flat')) {
       return -1;
     } else if (node.accidental.startsWith('Sharp')) {
+      // If Vou is notated as sharp, such as in the Third Mode,
+      // render this as an E natural.
+      if (
+        node.virtualNote === ScaleNote.Vou ||
+        node.virtualNote === ScaleNote.Zo
+      ) {
+        return 0;
+      }
       return 1;
     }
 

@@ -30,6 +30,7 @@ import {
   ExportWorkspaceAsHtmlArgs,
   ExportWorkspaceAsImageArgs,
   ExportWorkspaceAsImageReplyArgs,
+  ExportWorkspaceAsMusicXmlArgs,
   ExportWorkspaceAsPdfArgs,
   FileMenuInsertTextboxArgs,
   FileMenuOpenImageArgs,
@@ -611,6 +612,66 @@ async function exportWorkspaceAsHtml(args: ExportWorkspaceAsHtmlArgs) {
   }
 }
 
+async function exportWorkspaceAsMusicXml(args: ExportWorkspaceAsMusicXmlArgs) {
+  try {
+    if (saving) {
+      return false;
+    }
+
+    saving = true;
+
+    const extension = args.compressed ? 'mxl' : 'musicxml';
+
+    const dialogResult = await dialog.showSaveDialog(win!, {
+      title: 'Export Score as MusicXML',
+      defaultPath: args.filePath || args.tempFileName,
+      filters: [
+        {
+          name: args.compressed
+            ? 'Compressed MusicXML File'
+            : 'Uncompressed MusicXML File',
+          extensions: [extension],
+        },
+      ],
+    });
+
+    if (!dialogResult.canceled) {
+      let filePath = dialogResult.filePath!;
+
+      // Hack for Linux: if the filepath doesn't end with the proper extension,
+      // then add it
+      // See https://github.com/electron/electron/issues/21935
+      let doWrite = true;
+
+      if (!filePath.endsWith(extension)) {
+        filePath += extension;
+
+        doWrite = await showReplaceFileDialog(filePath);
+      }
+
+      if (doWrite) {
+        await fs.writeFile(filePath!, args.data);
+
+        if (args.openFolder) {
+          await shell.showItemInFolder(filePath!);
+        }
+      }
+    }
+  } catch (error) {
+    console.error(error);
+
+    if (error instanceof Error) {
+      dialog.showMessageBox(win!, {
+        type: 'error',
+        title: 'Export as MusicXML failed',
+        message: error.message,
+      });
+    }
+  } finally {
+    saving = false;
+  }
+}
+
 async function exportWorkspaceAsImage(args: ExportWorkspaceAsImageArgs) {
   const result = {
     filePath: args.filePath,
@@ -966,6 +1027,12 @@ function createMenu() {
           accelerator: 'CmdOrCtrl+Shift+E',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuExportAsHtml);
+          },
+        },
+        {
+          label: i18next.t('menu:file.exportAsMusicXml'),
+          click() {
+            win?.webContents.send(IpcMainChannels.FileMenuExportAsMusicXml);
           },
         },
         {
@@ -1494,6 +1561,13 @@ ipcMain.handle(
   IpcRendererChannels.ExportWorkspaceAsHtml,
   async (event, args: ExportWorkspaceAsHtmlArgs) => {
     return await exportWorkspaceAsHtml(args);
+  },
+);
+
+ipcMain.handle(
+  IpcRendererChannels.ExportWorkspaceAsMusicXml,
+  async (event, args: ExportWorkspaceAsMusicXmlArgs) => {
+    return await exportWorkspaceAsMusicXml(args);
   },
 );
 

@@ -12,46 +12,86 @@
             <option :value="ExportFormat.PNG">
               {{ $t('dialog:export.pngImages') }}
             </option>
+            <option :value="ExportFormat.MusicXml">
+              {{ $t('dialog:export.musicXml') }}
+            </option>
             <!-- <option :value="ExportFormat.SVG">SVG images</option> -->
           </select>
         </div>
-        <div class="form-group row" v-if="format === ExportFormat.PNG">
-          <label class="medium">{{ $t('dialog:export.resolution') }}</label>
-          <InputUnit
-            unit="unitless"
-            class="dpi"
-            :min="32"
-            :max="999"
-            :step="1"
-            :round="round"
-            v-model="dpi"
-          />
-          <span class="unit-label">{{ $t('dialog:export.dpi') }}</span>
-        </div>
-        <div class="form-group row" v-if="format === ExportFormat.PNG">
-          <input
-            id="export-dialog-transparent-bg"
-            type="checkbox"
-            v-model="transparentBackground"
-          />
-          <label for="export-dialog-transparent-bg">{{
-            $t('dialog:export.transparentBackground')
-          }}</label>
-        </div>
-        <div class="form-group row" v-if="exportFormatIsImage">
-          {{ $t('dialog:export.separateImageFile') }}
-        </div>
-        <div class="separator"></div>
-        <div class="form-group row" v-if="exportFormatIsImage">
-          <input
-            id="export-dialog-open-folder"
-            type="checkbox"
-            v-model="openFolder"
-          />
-          <label for="export-dialog-open-folder">{{
-            $t('dialog:export.openDestinationFolderAfterExport')
-          }}</label>
-        </div>
+        <template v-if="exportFormatIsImage">
+          <div class="form-group row" v-if="format === ExportFormat.PNG">
+            <label class="medium">{{ $t('dialog:export.resolution') }}</label>
+            <InputUnit
+              unit="unitless"
+              class="dpi"
+              :min="32"
+              :max="999"
+              :step="1"
+              :round="round"
+              v-model="dpi"
+            />
+            <span class="unit-label">{{ $t('dialog:export.dpi') }}</span>
+          </div>
+          <div class="form-group row" v-if="format === ExportFormat.PNG">
+            <input
+              id="export-dialog-transparent-bg"
+              type="checkbox"
+              v-model="transparentBackground"
+            />
+            <label for="export-dialog-transparent-bg">{{
+              $t('dialog:export.transparentBackground')
+            }}</label>
+          </div>
+          <div class="form-group row">
+            {{ $t('dialog:export.separateImageFile') }}
+          </div>
+          <div class="separator"></div>
+          <div class="form-group row">
+            <input
+              id="export-dialog-open-folder"
+              type="checkbox"
+              v-model="openFolder"
+            />
+            <label for="export-dialog-open-folder">{{
+              $t('dialog:export.openDestinationFolderAfterExport')
+            }}</label>
+          </div>
+        </template>
+        <template v-if="format === ExportFormat.MusicXml">
+          <div class="form-group row">
+            <input
+              id="export-dialog-calculate-time-signatures"
+              type="checkbox"
+              v-model="musicXmlOptions.calculateTimeSignatures"
+            />
+            <label for="export-dialog-calculate-time-signatures">{{
+              $t('dialog:export.calculateTimeSignatures')
+            }}</label>
+          </div>
+          <div class="form-group row">
+            <input
+              id="export-dialog-display-time-signatures"
+              type="checkbox"
+              v-model="musicXmlOptions.displayTimeSignatures"
+            />
+            <label for="export-dialog-display-time-signatures">{{
+              $t('dialog:export.displayTimeSignatures')
+            }}</label>
+          </div>
+
+          <div class="separator"></div>
+
+          <div class="form-group row">
+            <input
+              id="export-dialog-open-folder"
+              type="checkbox"
+              v-model="openFolder"
+            />
+            <label for="export-dialog-open-folder">{{
+              $t('dialog:export.openDestinationFolderAfterExport')
+            }}</label>
+          </div>
+        </template>
       </div>
       <div class="button-container">
         <template v-if="loading">
@@ -77,12 +117,14 @@ import { Component, Prop, Vue } from 'vue-facing-decorator';
 
 import InputUnit from '@/components/InputUnit.vue';
 import ModalDialog from '@/components/ModalDialog.vue';
+import { MusicXmlExporterOptions } from '@/services/integration/MusicXmlExporter';
 
 export enum ExportFormat {
   HTML = 'HTML',
   PDF = 'PDF',
   PNG = 'PNG',
   SVG = 'SVG',
+  MusicXml = 'MusicXml',
 }
 
 export interface ExportAsPngSettings {
@@ -91,9 +133,15 @@ export interface ExportAsPngSettings {
   transparentBackground: boolean;
 }
 
+export interface ExportAsMusicXmlSettings {
+  options: MusicXmlExporterOptions;
+  openFolder: boolean;
+  compressed: boolean;
+}
+
 @Component({
   components: { ModalDialog, InputUnit },
-  emits: ['close', 'exportAsPng', 'exportAsSvg'],
+  emits: ['close', 'exportAsMusicXml', 'exportAsPng', 'exportAsSvg'],
 })
 export default class ExportDialog extends Vue {
   @Prop() defaultFormat: ExportFormat | undefined;
@@ -103,6 +151,8 @@ export default class ExportDialog extends Vue {
   dpi: number = 300;
   transparentBackground: boolean = false;
   openFolder: boolean = true;
+
+  musicXmlOptions = new MusicXmlExporterOptions();
 
   ExportFormat = ExportFormat;
 
@@ -142,6 +192,12 @@ export default class ExportDialog extends Vue {
       } as ExportAsPngSettings);
     } else if (this.format === ExportFormat.SVG) {
       this.$emit('exportAsSvg', this.openFolder);
+    } else if (this.format === ExportFormat.MusicXml) {
+      this.$emit('exportAsMusicXml', {
+        options: this.musicXmlOptions,
+        compressed: false,
+        openFolder: this.openFolder,
+      });
     }
   }
 

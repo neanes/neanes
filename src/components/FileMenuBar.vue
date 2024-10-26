@@ -18,6 +18,10 @@
         :label="$t('menu:file.exportAsHtml')"
         @click="onClickExportAsHtml"
       />
+      <FileMenuItem
+        :label="$t('menu:file.exportAsMusicXml')"
+        @click="onClickExportAsMusicXml"
+      />
       <div class="separator" />
       <FileMenuItem :label="$t('menu:file.close')" @click="onClickClose" />
       <FileMenuItem
@@ -252,6 +256,11 @@ export default class FileMenuBar extends Vue {
 
   onClickExportAsHtml() {
     EventBus.$emit(IpcMainChannels.FileMenuExportAsHtml);
+    this.isMenuOpen = false;
+  }
+
+  onClickExportAsMusicXml() {
+    EventBus.$emit(IpcMainChannels.FileMenuExportAsMusicXml);
     this.isMenuOpen = false;
   }
 

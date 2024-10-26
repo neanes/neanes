@@ -9,6 +9,7 @@
     "pageSetup": "Page Setup",
     "exportAsPdf": "Export as PDF",
     "exportAsHtml": "Export as HTML",
+    "exportAsMusicXml": "Export as MusicXML",
     "exportAsImage": "Export as Image",
     "print": "Print",
     "close": "Close",

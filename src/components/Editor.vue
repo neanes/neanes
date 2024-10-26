@@ -1202,7 +1202,10 @@ import {
 } from '@/services/audio/PlaybackService';
 import { Command, CommandFactory } from '@/services/history/CommandService';
 import { ByzHtmlExporter } from '@/services/integration/ByzHtmlExporter';
-import { MusicXmlExporter } from '@/services/integration/MusicXmlExporter';
+import {
+  MusicXmlExporter,
+  MusicXmlExporterOptions,
+} from '@/services/integration/MusicXmlExporter';
 import { IIpcService } from '@/services/ipc/IIpcService';
 import { LayoutService } from '@/services/LayoutService';
 import { LyricService } from '@/services/LyricService';
@@ -6285,7 +6288,10 @@ export default class Editor extends Vue {
   }
 
   async onFileMenuExportAsMusicXml() {
-    return this.musicXmlExporter.export(this.score);
+    return this.musicXmlExporter.export(
+      this.score,
+      new MusicXmlExporterOptions(),
+    );
     // await this.ipcService.exportWorkspaceAsHtml(
     //   this.selectedWorkspace,
     //   this.byzHtmlExporter.exportScore(this.score),

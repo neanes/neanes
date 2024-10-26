@@ -89,38 +89,74 @@ export interface PlaybackScale {
   scaleNoteMap: Map<ScaleNote, number>;
 }
 
+export class MusicXmlExporterOptions {
+  /** The target measure length if no barlines are present */
+  measureLength: number = 8;
+  /** Indicates whether the MusicXML `<time>` element should be included in the measures. */
+  calculateTimeSignatures: boolean = false;
+  /** Indicates whether the time signature should be printed in each measure */
+  displayTimeSignatures: boolean = false;
+  /** Indicates whether Vou should be extra flat in the legetos scale */
+  useLegetos: boolean = false;
+}
+
 class MusicXmlExporterWorkspace {
+  /////////////////
+  // State: Static
+  /////////////////
+
+  /** The list of nodes for the entire score */
   nodes: AnalysisNode[] = [];
+
+  /////////////////
+  // State: Dynamic
+  /////////////////
+
+  /** Indicates whether ZO should be attracted toward KE in the current phrase */
   zoFlatPivotActivated: boolean = false;
+  /** Indicates whether KE should be attracted toward ZO in the current phrase */
   zoNaturalPivotActivated: boolean = false;
-  dropCap: string = '';
+  /**  Indicates whether we are processing a hyphenated, multi-syllable phrase */
   isSyllabic: boolean = false;
+  /**  Indicates whether we are processing a non-hyphenated melismatic phrase */
   isMelismatic: boolean = false;
-  scale: PlaybackScale;
-  physicalNote: ScaleNote = ScaleNote.Pa;
-  pitch: MusicXmlPitch = new MusicXmlPitch('C', 4);
-  transpositionSemitones: number = 0;
-  previousNote: MusicXmlNote | null = null;
-
-  lastAlteration: number = 0;
-  lastAlterationNote: ScaleNote = ScaleNote.Pa;
-
-  triplet: boolean = false;
-
+  /**  Indicates whether we are processing a triplet */
+  isTriplet: boolean = false;
+  /**  Indicates that the next note we encounter should be placed into a new measure */
   needNewMeasure: boolean = false;
 
-  // Options
-  measureLength: number = 8;
-  calculateTimeSignatures: boolean = false;
-  displayTimeSignatures: boolean = false;
+  /** Keeps track of the last drop cap text so that it may be prepended to the next note's lyrics */
+  dropCap: string = '';
 
+  /** The current scale */
+  scale: PlaybackScale;
+  /** The current physical note */
+  physicalNote: ScaleNote = ScaleNote.Pa;
+  /** The current pitch */
+  pitch: MusicXmlPitch = new MusicXmlPitch('C', 4);
+  /** The previous MusicXML note that was created. */
+  previousNote: MusicXmlNote | null = null;
+  /** The number of semitones that we are transposed. That is, when the physical note and virtual note are different. */
+  transpositionSemitones: number = 0;
+
+  /** Indicates whether we should ignore attractions */
   ignoreAttractions: boolean = false;
+  /** Indicates whether Zo should be permanently flattened */
   permanentEnharmonicZo: boolean = false;
+  /** Indicates whether Vou should be extra flat in the legetos scale */
   legetos: boolean = false;
-  useLegetos: boolean = false;
 
-  constructor(scale: PlaybackScale) {
+  /** The number of semitones in the last alteration */
+  lastAlteration: number = 0;
+  /** The last note that had an alteration applied to it */
+  lastAlterationNote: ScaleNote = ScaleNote.Pa;
+
+  // Options
+  options: MusicXmlExporterOptions;
+
+  constructor(scale: PlaybackScale, options: MusicXmlExporterOptions) {
     this.scale = scale;
+    this.options = options;
   }
 }
 
@@ -131,8 +167,11 @@ export class MusicXmlExporter {
 
   logLevel: MusicXmlExporterLogLevel = 'none';
 
-  export(score: Score) {
-    const workspace = new MusicXmlExporterWorkspace(this.diatonicScale);
+  export(score: Score, options: MusicXmlExporterOptions) {
+    const workspace = new MusicXmlExporterWorkspace(
+      this.diatonicScale,
+      options,
+    );
 
     this.pitchOfThi = this.getAbsolutePitch(new MusicXmlPitch('G', 4));
 
@@ -200,8 +239,8 @@ export class MusicXmlExporter {
           // option as we can. If a left barline is present, end the measure
           // before processing the current note.
           if (
-            (currentMeasure.notes.length >= workspace.measureLength &&
-              !workspace.triplet) ||
+            (currentMeasure.notes.length >= workspace.options.measureLength &&
+              !workspace.isTriplet) ||
             (noteElement.measureBarLeft != null &&
               currentMeasure.notes.length > 0) ||
             (workspace.needNewMeasure && currentMeasure.notes.length > 0)
@@ -368,10 +407,12 @@ export class MusicXmlExporter {
     currentMeasure.contents.push(barline);
 
     // Finalize time signatures
-    if (workspace.calculateTimeSignatures) {
+    if (workspace.options.calculateTimeSignatures) {
       let lastDuration = 0;
 
-      const printObject = workspace.displayTimeSignatures ? 'yes' : 'no';
+      const printObject = workspace.options.displayTimeSignatures
+        ? 'yes'
+        : 'no';
 
       for (const measure of measures) {
         measure.attributes = measure.attributes ?? new MusicXmlAttributes();
@@ -855,8 +896,8 @@ export class MusicXmlExporter {
 
     switch (rounded) {
       case '0.33':
-        duration = workspace.triplet ? 0.25 : 0.5;
-        workspace.triplet = true;
+        duration = workspace.isTriplet ? 0.25 : 0.5;
+        workspace.isTriplet = true;
         break;
       case '0.67':
         // Round dotted gorgon to eighth note
@@ -865,7 +906,7 @@ export class MusicXmlExporter {
     }
 
     if (!rounded.endsWith('.33')) {
-      workspace.triplet = false;
+      workspace.isTriplet = false;
     }
 
     return duration;
@@ -936,7 +977,7 @@ export class MusicXmlExporter {
     switch (scale) {
       case Scale.Diatonic:
         playbackScale =
-          workspace.useLegetos && workspace.legetos
+          workspace.options.useLegetos && workspace.legetos
             ? this.legetosScale
             : this.diatonicScale;
         break;
@@ -955,7 +996,7 @@ export class MusicXmlExporter {
         break;
       case Scale.Zygos:
         playbackScale =
-          workspace.useLegetos && workspace.legetos
+          workspace.options.useLegetos && workspace.legetos
             ? this.zygosLegetosScale
             : this.zygosScale;
         break;

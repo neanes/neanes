@@ -89,9 +89,9 @@ export class MusicXmlAttributes {
   toXml() {
     const xml = `<attributes>
         ${this.divisions?.toXml() ?? ''}
+        ${this.key?.toXml() ?? ''}
         ${this.time?.toXml() ?? ''}
         ${this.clef?.toXml() ?? ''}
-        ${this.key?.toXml() ?? ''}
       </attributes>`;
 
     return xml;
@@ -310,8 +310,8 @@ export class MusicXmlNote {
         <duration>${this.duration}</duration>
         <type>${this.type}</type>
         ${this.dot?.toXml() ?? ''}
-        ${this.lyric?.toXml() ?? ''}
         ${this.notations?.toXml() ?? ''}
+        ${this.lyric?.toXml() ?? ''}
       </note>`;
 
     return xml;
@@ -344,8 +344,8 @@ export class MusicXmlPitch {
   toXml() {
     const xml = `<pitch>
           <step>${this.step}</step>
-          <octave>${this.octave}</octave>
           ${this.alter?.toXml() ?? ''}
+          <octave>${this.octave}</octave>
         </pitch>`;
 
     return xml;

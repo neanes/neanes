@@ -2,6 +2,7 @@ import {
   ExportPageAsImageArgs,
   ExportWorkspaceAsHtmlArgs,
   ExportWorkspaceAsImageArgs,
+  ExportWorkspaceAsMusicXmlArgs,
   ExportWorkspaceAsPdfArgs,
   FileMenuOpenScoreArgs,
   IpcRendererChannels,
@@ -94,6 +95,29 @@ export class IpcService implements IIpcService {
         tempFileName: `${workspace.tempFileName}.html`,
         data,
       } as ExportWorkspaceAsHtmlArgs,
+    );
+  }
+
+  public async exportWorkspaceAsMusicXml(
+    workspace: Workspace,
+    data: string,
+    compressed: boolean,
+    openFolder: boolean,
+  ) {
+    const extension = compressed ? 'mxl' : 'musicxml';
+
+    return await window.ipcRenderer.invoke(
+      IpcRendererChannels.ExportWorkspaceAsMusicXml,
+      {
+        filePath:
+          workspace.filePath != null
+            ? `${getFileNameFromPath(workspace.filePath)}.${extension}`
+            : null,
+        tempFileName: `${workspace.tempFileName}.${extension}`,
+        data,
+        compressed,
+        openFolder,
+      } as ExportWorkspaceAsMusicXmlArgs,
     );
   }
 

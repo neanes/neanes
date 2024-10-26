@@ -1068,7 +1068,9 @@
     <ExportDialog
       v-if="exportDialogIsOpen"
       :loading="exportInProgress"
+      :defaultFormat="exportFormat"
       @exportAsPng="exportAsPng"
+      @exportAsMusicXml="exportAsMusicXml"
       @close="closeExportDialog"
     />
     <template v-if="richTextBoxCalculation">
@@ -1100,7 +1102,9 @@ import ContentEditable from '@/components/ContentEditable.vue';
 import DropCap from '@/components/DropCap.vue';
 import EditorPreferencesDialog from '@/components/EditorPreferencesDialog.vue';
 import ExportDialog, {
+  ExportAsMusicXmlSettings,
   ExportAsPngSettings,
+  ExportFormat,
 } from '@/components/ExportDialog.vue';
 import FileMenuBar from '@/components/FileMenuBar.vue';
 import ImageBox from '@/components/ImageBox.vue';
@@ -1202,10 +1206,7 @@ import {
 } from '@/services/audio/PlaybackService';
 import { Command, CommandFactory } from '@/services/history/CommandService';
 import { ByzHtmlExporter } from '@/services/integration/ByzHtmlExporter';
-import {
-  MusicXmlExporter,
-  MusicXmlExporterOptions,
-} from '@/services/integration/MusicXmlExporter';
+import { MusicXmlExporter } from '@/services/integration/MusicXmlExporter';
 import { IIpcService } from '@/services/ipc/IIpcService';
 import { LayoutService } from '@/services/LayoutService';
 import { LyricService } from '@/services/LyricService';
@@ -1318,6 +1319,8 @@ export default class Editor extends Vue {
   pageSetupDialogIsOpen: boolean = false;
   editorPreferencesDialogIsOpen: boolean = false;
   exportDialogIsOpen: boolean = false;
+
+  exportFormat: ExportFormat = ExportFormat.PNG;
 
   clipboard: ScoreElement[] = [];
   textBoxFormat: Partial<TextBoxElement> | null = null;
@@ -2126,6 +2129,10 @@ export default class Editor extends Vue {
       this.onFileMenuExportAsHtml,
     );
     EventBus.$on(
+      IpcMainChannels.FileMenuExportAsMusicXml,
+      this.onFileMenuExportAsMusicXml,
+    );
+    EventBus.$on(
       IpcMainChannels.FileMenuExportAsImage,
       this.onFileMenuExportAsImage,
     );
@@ -2219,6 +2226,10 @@ export default class Editor extends Vue {
     EventBus.$off(
       IpcMainChannels.FileMenuExportAsHtml,
       this.onFileMenuExportAsHtml,
+    );
+    EventBus.$off(
+      IpcMainChannels.FileMenuExportAsMusicXml,
+      this.onFileMenuExportAsMusicXml,
     );
     EventBus.$off(
       IpcMainChannels.FileMenuExportAsImage,
@@ -6130,6 +6141,7 @@ export default class Editor extends Vue {
   }
 
   async onFileMenuExportAsImage() {
+    this.exportFormat = ExportFormat.PNG;
     this.exportDialogIsOpen = true;
   }
 
@@ -6287,15 +6299,20 @@ export default class Editor extends Vue {
     );
   }
 
-  async onFileMenuExportAsMusicXml() {
-    return this.musicXmlExporter.export(
-      this.score,
-      new MusicXmlExporterOptions(),
+  onFileMenuExportAsMusicXml() {
+    this.exportFormat = ExportFormat.MusicXml;
+    this.exportDialogIsOpen = true;
+  }
+
+  async exportAsMusicXml(args: ExportAsMusicXmlSettings) {
+    await this.ipcService.exportWorkspaceAsMusicXml(
+      this.selectedWorkspace,
+      this.musicXmlExporter.export(this.score, args.options),
+      args.compressed,
+      args.openFolder,
     );
-    // await this.ipcService.exportWorkspaceAsHtml(
-    //   this.selectedWorkspace,
-    //   this.byzHtmlExporter.exportScore(this.score),
-    // );
+
+    this.closeExportDialog();
   }
 
   blurActiveElement() {

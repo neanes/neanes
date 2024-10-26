@@ -38,6 +38,12 @@ export class MusicXmlMeasure {
     this.number = number;
   }
 
+  get notes() {
+    return this.contents.filter(
+      (x) => x.tag === 'note',
+    ) as ReadonlyArray<MusicXmlNote>;
+  }
+
   toXml() {
     let contents = '';
     this.contents.forEach((x) => (contents += x.toXml()));

@@ -104,6 +104,8 @@ class MusicXmlExporterWorkspace {
   triplet: boolean = false;
 
   // Options
+  measureLength: number = 8;
+
   ignoreAttractions: boolean = false;
   permanentEnharmonicZo: boolean = false;
   legetos: boolean = false;
@@ -178,6 +180,8 @@ export class MusicXmlExporter {
 
       switch (element.elementType) {
         case ElementType.Note:
+          const noteElement = element as NoteElement;
+
           // Make sure we have a measure.
           // We expect all scores to start with a mode key, so this
           // should never happen. But just in case...
@@ -192,10 +196,13 @@ export class MusicXmlExporter {
             measures.push(currentMeasure);
           }
 
-          // Naively, we put as close to four notes in each measure as we can.
-          // TODO if the score contains barlines, use those instead.
+          // Cut of the measure as close to the configured measureLength
+          // option as we can. If a left barline is present, end the measure
+          // before processing the current note
           if (
-            currentMeasure.contents.filter((x) => x.tag === 'note').length >= 4
+            currentMeasure.notes.length >= workspace.measureLength ||
+            (noteElement.measureBarLeft != null &&
+              currentMeasure.notes.length > 0)
           ) {
             currentMeasure = new MusicXmlMeasure(measureNumber++);
             measures.push(currentMeasure);
@@ -211,6 +218,13 @@ export class MusicXmlExporter {
           workspace.dropCap = '';
 
           currentMeasure.contents.push(...notes);
+
+          // If a right barline is present, end the measure
+          // before processing the next note
+          if (noteElement.measureBarRight != null) {
+            currentMeasure = new MusicXmlMeasure(measureNumber++);
+            measures.push(currentMeasure);
+          }
           break;
         case ElementType.ModeKey: {
           const modeKeyElement = element as ModeKeyElement;
@@ -233,7 +247,7 @@ export class MusicXmlExporter {
           currentMeasure.contents.push(print);
 
           // Set the key
-          const key = this.buildKey(modeKeyNode);
+          const key = this.buildKey(modeKeyNode, modeKeyElement);
 
           currentMeasure.attributes = new MusicXmlAttributes();
           currentMeasure.attributes.clef = new MusicXmlClef(
@@ -275,6 +289,23 @@ export class MusicXmlExporter {
         case ElementType.Martyria: {
           const martyriaElement = element as MartyriaElement;
 
+          // End the measure if barlines are present
+          if (
+            (martyriaElement.measureBarLeft != null ||
+              martyriaElement.measureBarRight != null) &&
+            currentMeasure != null &&
+            currentMeasure.notes.length > 0
+          ) {
+            console.log(
+              'ending measure',
+              martyriaElement,
+              currentMeasure.notes,
+            );
+
+            currentMeasure = new MusicXmlMeasure(measureNumber++);
+            measures.push(currentMeasure);
+          }
+
           // Handle the fthora
           if (martyriaElement.fthora) {
             const fthoraNode = nodeGroup.find(
@@ -309,12 +340,29 @@ export class MusicXmlExporter {
             if (currentMeasure != null) {
               const barline = new MusicXmlBarline();
               barline.barStyle = new MusicXmlBarStyle('light-light');
-              currentMeasure.contents.push(barline);
-            }
 
-            // Create a new measure
-            currentMeasure = new MusicXmlMeasure(measureNumber++);
-            measures.push(currentMeasure);
+              if (currentMeasure.notes.length > 0) {
+                currentMeasure.contents.push(barline);
+
+                // Create a new measure
+                currentMeasure = new MusicXmlMeasure(measureNumber++);
+                measures.push(currentMeasure);
+              } else {
+                const index = measures.indexOf(currentMeasure);
+                if (index > 0) {
+                  measures[index - 1].contents.push(barline);
+                }
+              }
+            } else {
+              // Create a default measure.
+              currentMeasure = new MusicXmlMeasure(measureNumber++);
+              currentMeasure.attributes = new MusicXmlAttributes();
+              currentMeasure.attributes.clef = new MusicXmlClef(
+                new MusicXmlSign('G'),
+                new MusicXmlLine(2),
+              );
+              measures.push(currentMeasure);
+            }
 
             // Add a system break
             const print = new MusicXmlPrint();
@@ -355,10 +403,7 @@ export class MusicXmlExporter {
     if (currentMeasure != null) {
       // If the last measure is empty, and there is a measure before it,
       // remove the empty measure
-      if (
-        currentMeasure.contents.filter((x) => x.tag === 'note').length === 0 &&
-        measures.length > 1
-      ) {
+      if (currentMeasure.notes.length === 0 && measures.length > 1) {
         measures.pop();
         currentMeasure = measures[measures.length - 1];
       }
@@ -501,16 +546,6 @@ export class MusicXmlExporter {
           notes.push(harmony);
         }
       }
-      // TODO handle ison.
-      // Use <harmony>
-      /*
-            <harmony print-frame="no">
-        <root>
-          <root-step>C</root-step>
-          </root>
-        <kind>major</kind>
-        </harmony>
-      */
     }
 
     return notes;
@@ -539,26 +574,69 @@ export class MusicXmlExporter {
     return note;
   }
 
-  buildKey(node: Readonly<ModeKeyNode>): MusicXmlKey {
+  buildKey(
+    node: Readonly<ModeKeyNode>,
+    modeKeyElement: Readonly<ModeKeyElement>,
+  ): MusicXmlKey {
     const key = new MusicXmlKey();
+
+    // First, we handle special cases by mode key ID
+    let handled = false;
+
+    if (
+      modeKeyElement.templateId === 101 ||
+      modeKeyElement.templateId === 501
+    ) {
+      // First Papadic and Plagal First from Ke should not use Bb
+      handled = true;
+    } else if (modeKeyElement.templateId === 103) {
+      // First Soft Chromatic
+      // TODO optionally allow users to transpose down to G?
+      key.fifths = new MusicXmlFifths(2);
+      handled = true;
+    } else if (modeKeyElement.templateId === 702) {
+      // Enharmonic Grave from Zo uses Bb major
+      key.fifths = new MusicXmlFifths(-2);
+      handled = true;
+    } else if (modeKeyElement.templateId === 804) {
+      // Plagal Fourth from Pa uses D major scale
+      key.fifths = new MusicXmlFifths(2);
+      handled = true;
+    }
+
+    if (handled) {
+      return key;
+    }
+
+    // Next we fall back to considering only the scale
 
     if (node.scale === Scale.Diatonic) {
       key.fifths = new MusicXmlFifths(-1);
     } else if (node.scale === Scale.SoftChromatic) {
       key.fifths = new MusicXmlFifths(0);
     } else if (node.scale === Scale.HardChromatic) {
-      key.stepsAndAlters.push(new MusicXmlKeyStep('B'));
-      key.stepsAndAlters.push(new MusicXmlKeyAlter(-1));
-      key.stepsAndAlters.push(new MusicXmlKeyStep('E'));
-      key.stepsAndAlters.push(new MusicXmlKeyAlter(-1));
-      key.stepsAndAlters.push(new MusicXmlKeyStep('F'));
-      key.stepsAndAlters.push(new MusicXmlKeyAlter(1));
-      key.stepsAndAlters.push(new MusicXmlKeyStep('C'));
-      key.stepsAndAlters.push(new MusicXmlKeyAlter(1));
-      key.octaves.push(new MusicXmlKeyOctave(1, 4));
-      key.octaves.push(new MusicXmlKeyOctave(2, 5));
-      key.octaves.push(new MusicXmlKeyOctave(3, 5));
-      key.octaves.push(new MusicXmlKeyOctave(4, 5));
+      if (node.physicalNote === ScaleNote.Vou) {
+        // Handle the special case for hard chromatic from vou
+        key.stepsAndAlters.push(new MusicXmlKeyStep('G'));
+        key.stepsAndAlters.push(new MusicXmlKeyAlter(1));
+        key.stepsAndAlters.push(new MusicXmlKeyStep('D'));
+        key.stepsAndAlters.push(new MusicXmlKeyAlter(1));
+        key.octaves.push(new MusicXmlKeyOctave(1, 4));
+        key.octaves.push(new MusicXmlKeyOctave(2, 5));
+      } else {
+        key.stepsAndAlters.push(new MusicXmlKeyStep('B'));
+        key.stepsAndAlters.push(new MusicXmlKeyAlter(-1));
+        key.stepsAndAlters.push(new MusicXmlKeyStep('E'));
+        key.stepsAndAlters.push(new MusicXmlKeyAlter(-1));
+        key.stepsAndAlters.push(new MusicXmlKeyStep('F'));
+        key.stepsAndAlters.push(new MusicXmlKeyAlter(1));
+        key.stepsAndAlters.push(new MusicXmlKeyStep('C'));
+        key.stepsAndAlters.push(new MusicXmlKeyAlter(1));
+        key.octaves.push(new MusicXmlKeyOctave(1, 4));
+        key.octaves.push(new MusicXmlKeyOctave(2, 5));
+        key.octaves.push(new MusicXmlKeyOctave(3, 5));
+        key.octaves.push(new MusicXmlKeyOctave(4, 5));
+      }
     }
 
     return key;

@@ -51,8 +51,34 @@ export class BrowserIpcService implements IIpcService {
     a.click();
   }
 
+  public async exportWorkspaceAsMusicXml(
+    workspace: Workspace,
+    data: string,
+    compressed: boolean,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    openFolder: boolean,
+  ) {
+    const type = compressed
+      ? 'application/vnd.recordare.musicxml'
+      : 'application/vnd.recordare.musicxml+xml';
+
+    const extension = compressed ? 'mxl' : 'musicxml';
+
+    const file = new Blob([data], { type });
+
+    const downloadFileName =
+      workspace.filePath != null
+        ? `${getFileNameFromPath(workspace.filePath)}.${extension}`
+        : `${workspace.tempFileName}.${extension}`;
+
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(file);
+    a.download = downloadFileName;
+    a.click();
+  }
+
   public async exportWorkspaceAsImage(): Promise<ExportWorkspaceAsImageReplyArgs> {
-    throw 'exportWorkspaceAsPdf is not available in the browser.';
+    throw 'exportWorkspaceAsImage is not available in the browser.';
   }
 
   public async exportPageAsImage(): Promise<boolean> {

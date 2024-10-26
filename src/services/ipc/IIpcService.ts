@@ -18,6 +18,13 @@ export interface IIpcService {
 
   exportWorkspaceAsHtml(workspace: Workspace, data: string): Promise<void>;
 
+  exportWorkspaceAsMusicXml(
+    workspace: Workspace,
+    data: string,
+    compressed: boolean,
+    openFolder: boolean,
+  ): Promise<void>;
+
   exportWorkspaceAsImage(
     workspace: Workspace,
     imageFormat: 'png' | 'svg',

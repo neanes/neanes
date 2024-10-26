@@ -82,15 +82,68 @@ export class MusicXmlSound {
 
 export class MusicXmlAttributes {
   divisions?: MusicXmlDivisions;
+  time?: MusicXmlTime;
   clef?: MusicXmlClef;
   key?: MusicXmlKey;
 
   toXml() {
     const xml = `<attributes>
         ${this.divisions?.toXml() ?? ''}
+        ${this.time?.toXml() ?? ''}
         ${this.clef?.toXml() ?? ''}
         ${this.key?.toXml() ?? ''}
       </attributes>`;
+
+    return xml;
+  }
+}
+
+export class MusicXmlTime {
+  beats: MusicXmlBeats;
+  beatType: MusicXmlBeatType;
+  printObject?: MusicXmlYesNoType;
+
+  constructor(beats: MusicXmlBeats, beatType: MusicXmlBeatType) {
+    this.beats = beats;
+    this.beatType = beatType;
+  }
+
+  toXml() {
+    const printObject =
+      this.printObject != null ? `print-object="${this.printObject}"` : '';
+
+    const xml = `<time ${printObject}>
+        ${this.beats.toXml()}
+        ${this.beatType.toXml()}
+      </time>`;
+
+    return xml;
+  }
+}
+
+export class MusicXmlBeats {
+  contents: string;
+
+  constructor(contents: string) {
+    this.contents = contents;
+  }
+
+  toXml() {
+    const xml = `<beats>${this.contents}</beats>`;
+
+    return xml;
+  }
+}
+
+export class MusicXmlBeatType {
+  contents: string;
+
+  constructor(contents: string) {
+    this.contents = contents;
+  }
+
+  toXml() {
+    const xml = `<beat-type>${this.contents}</beat-type>`;
 
     return xml;
   }
@@ -127,6 +180,7 @@ export class MusicXmlFifths {
     return xml;
   }
 }
+
 export class MusicXmlKeyStep {
   contents: MusicXmlStepType;
 
@@ -362,7 +416,7 @@ export class MusicXmlSyllabic {
 
 export class MusicXmlExtend {
   toXml() {
-    const xml = `<extend></extend>`;
+    const xml = `<extend/>`;
 
     return xml;
   }

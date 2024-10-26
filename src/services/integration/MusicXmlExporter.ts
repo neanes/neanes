@@ -33,7 +33,10 @@ import {
   MusicXmlAttributes,
   MusicXmlBarline,
   MusicXmlBarStyle,
+  MusicXmlBeats,
+  MusicXmlBeatType,
   MusicXmlClef,
+  MusicXmlDivisions,
   MusicXmlDot,
   MusicXmlExtend,
   MusicXmlFifths,
@@ -59,6 +62,7 @@ import {
   MusicXmlStepType,
   MusicXmlSyllabic,
   MusicXmlText,
+  MusicXmlTime,
 } from './MusicXmlModel';
 
 interface FindNodesOutput {
@@ -105,6 +109,8 @@ class MusicXmlExporterWorkspace {
 
   // Options
   measureLength: number = 8;
+  calculateTimeSignatures: boolean = false;
+  displayTimeSignatures: boolean = false;
 
   ignoreAttractions: boolean = false;
   permanentEnharmonicZo: boolean = false;
@@ -193,14 +199,16 @@ export class MusicXmlExporter {
               new MusicXmlSign('G'),
               new MusicXmlLine(2),
             );
+            currentMeasure.attributes.divisions = new MusicXmlDivisions(1);
             measures.push(currentMeasure);
           }
 
           // Cut of the measure as close to the configured measureLength
           // option as we can. If a left barline is present, end the measure
-          // before processing the current note
+          // before processing the current note.
           if (
-            currentMeasure.notes.length >= workspace.measureLength ||
+            (currentMeasure.notes.length >= workspace.measureLength &&
+              !workspace.triplet) ||
             (noteElement.measureBarLeft != null &&
               currentMeasure.notes.length > 0)
           ) {
@@ -254,6 +262,7 @@ export class MusicXmlExporter {
             new MusicXmlSign('G'),
             new MusicXmlLine(2),
           );
+          currentMeasure.attributes.divisions = new MusicXmlDivisions(1);
           currentMeasure.attributes.key = key;
 
           // Set the tempo
@@ -325,6 +334,7 @@ export class MusicXmlExporter {
                 new MusicXmlSign('G'),
                 new MusicXmlLine(2),
               );
+              currentMeasure.attributes.divisions = new MusicXmlDivisions(1);
               measures.push(currentMeasure);
             }
 
@@ -361,6 +371,7 @@ export class MusicXmlExporter {
                 new MusicXmlSign('G'),
                 new MusicXmlLine(2),
               );
+              currentMeasure.attributes.divisions = new MusicXmlDivisions(1);
               measures.push(currentMeasure);
             }
 
@@ -391,6 +402,7 @@ export class MusicXmlExporter {
               new MusicXmlSign('G'),
               new MusicXmlLine(2),
             );
+            currentMeasure.attributes.divisions = new MusicXmlDivisions(1);
             measures.push(currentMeasure);
           }
 
@@ -411,6 +423,51 @@ export class MusicXmlExporter {
       const barline = new MusicXmlBarline();
       barline.barStyle = new MusicXmlBarStyle('light-heavy');
       currentMeasure.contents.push(barline);
+    }
+
+    // Finalize time signatures
+    if (workspace.calculateTimeSignatures) {
+      let lastDuration = 0;
+
+      const printObject = workspace.displayTimeSignatures ? 'yes' : 'no';
+
+      for (const measure of measures) {
+        measure.attributes = measure.attributes ?? new MusicXmlAttributes();
+
+        let duration = 0;
+        measure.notes.map((x) => (duration += x.duration));
+
+        if (duration === lastDuration) {
+          // Don't waste bytes duplicating the time signature
+          // if it's the same as the previous measure.
+          continue;
+        }
+
+        lastDuration = duration;
+
+        if (duration % 1 === 0) {
+          measure.attributes.time = new MusicXmlTime(
+            new MusicXmlBeats(duration.toString()),
+            new MusicXmlBeatType('4'),
+          );
+          measure.attributes.time.printObject = printObject;
+        } else if ((duration * 2) % 1 === 0) {
+          measure.attributes.time = new MusicXmlTime(
+            new MusicXmlBeats((duration * 2).toString()),
+            new MusicXmlBeatType('8'),
+          );
+          measure.attributes.time.printObject = printObject;
+        } else if ((duration * 4) % 1 === 0) {
+          measure.attributes.time = new MusicXmlTime(
+            new MusicXmlBeats((duration * 4).toString()),
+            new MusicXmlBeatType('16'),
+          );
+          measure.attributes.time.printObject = printObject;
+        }
+
+        // It is possible that a user could create a measure that ends with a partial triplet,
+        // but we are not handling that case.
+      }
     }
 
     return measures;

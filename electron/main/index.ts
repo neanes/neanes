@@ -85,6 +85,9 @@ const storeFilePath = path.join(userDataPath, 'settings.json');
 
 const isMac = process.platform === 'darwin';
 
+const silentPdf = process.argv.includes('--silent-pdf');
+const silent = silentPdf;
+
 let win: BrowserWindow | null = null;
 let readyToExit = false;
 let creatingWindow = false;
@@ -313,6 +316,11 @@ async function openFileFromArgs(argv: string[]) {
   const parameters = argv.slice(2);
 
   for (const parameter of parameters) {
+    // Ignore CLI paramters
+    if (parameter.startsWith('--')) {
+      continue;
+    }
+
     try {
       result.push({
         data: await openFile(parameter),
@@ -332,7 +340,7 @@ async function openFileFromArgs(argv: string[]) {
     }
   }
 
-  return result;
+  return { files: result, silentPdf };
 }
 
 async function saveWorkspace(args: SaveWorkspaceArgs) {
@@ -503,9 +511,36 @@ async function openImage() {
   return result;
 }
 
+let silentPdfSuccessCount = 0;
+let silentPdfFailCount = 0;
+
 async function exportWorkspaceAsPdf(args: ExportWorkspaceAsPdfArgs) {
   try {
     if (exporting || !win) {
+      return;
+    }
+
+    if (silentPdf) {
+      try {
+        const data = await win.webContents.printToPDF({
+          pageSize: args.pageSize,
+          landscape: args.landscape,
+        });
+        let newPath = args.filePath!.replace(/\.byzx?$/, '.pdf');
+
+        // Check to make sure we don't accidentally overwrite the original file
+        if (newPath === args.filePath) {
+          newPath += '.pdf';
+        }
+
+        await fs.writeFile(newPath, data);
+        silentPdfSuccessCount++;
+        console.log(`DONE ${args.filePath} => ${newPath}`);
+      } catch (error) {
+        silentPdfFailCount++;
+        console.error(`FAIL ${args.filePath} | ${error}`);
+      }
+
       return;
     }
 
@@ -1397,9 +1432,11 @@ async function createWindow() {
   win.on('resize', debouncedSaveWindowState);
   win.on('move', debouncedSaveWindowState);
 
-  win.once('ready-to-show', () => {
-    win?.show();
-  });
+  if (!silent) {
+    win.once('ready-to-show', () => {
+      win?.show();
+    });
+  }
 
   win.webContents.once('did-finish-load', () => (loaded = true));
 
@@ -1428,7 +1465,10 @@ async function createWindow() {
     }
   } else {
     // Load the index.html when not in development
-    autoUpdater.checkForUpdatesAndNotify();
+    if (!silent) {
+      autoUpdater.checkForUpdatesAndNotify();
+    }
+
     await win.loadFile(indexHtml);
   }
 
@@ -1506,6 +1546,14 @@ ipcMain.on(
 
 ipcMain.handle(IpcRendererChannels.ExitApplication, async () => {
   readyToExit = true;
+
+  if (silentPdf) {
+    console.log(`Successfully wrote ${silentPdfSuccessCount} files`);
+
+    if (silentPdfFailCount > 0) {
+      console.log(`Failed to write ${silentPdfFailCount} files`);
+    }
+  }
 
   // In macOS, there is a distinction between "close" and "quit".
   if (quitting) {
@@ -1600,7 +1648,7 @@ ipcMain.handle(IpcRendererChannels.OpenWorkspaceFromArgv, async () => {
       success: true,
     };
 
-    return [result];
+    return { files: [result], silent: false };
   } else {
     return await openFileFromArgs(process.argv);
   }
@@ -1666,7 +1714,7 @@ app.on(
     );
 
     if (loaded) {
-      results
+      results.files
         .filter((x) => x.success)
         .forEach((x) =>
           win?.webContents.send(IpcMainChannels.FileMenuOpenScore, x),
@@ -1675,7 +1723,7 @@ app.on(
       win?.show();
     } else {
       win?.webContents.once('did-finish-load', () => {
-        results
+        results.files
           .filter((x) => x.success)
           .forEach((x) =>
             win?.webContents.send(IpcMainChannels.FileMenuOpenScore, x),

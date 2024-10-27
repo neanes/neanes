@@ -4189,11 +4189,21 @@ export default class Editor extends Vue {
     // If there are none, then create a default workspace.
     const openWorkspaceResults = await this.ipcService.openWorkspaceFromArgv();
 
-    openWorkspaceResults
+    if (openWorkspaceResults.silentPdf) {
+      for (const file of openWorkspaceResults.files.filter((x) => x.success)) {
+        this.openScore(file);
+        await this.onFileMenuExportAsPdf();
+        this.removeWorkspace(this.selectedWorkspace);
+      }
+
+      await this.ipcService.exitApplication();
+    }
+
+    openWorkspaceResults.files
       .filter((x) => x.success)
       .forEach((x) => this.openScore(x));
 
-    if (openWorkspaceResults.some((x) => x.success)) {
+    if (openWorkspaceResults.files.some((x) => x.success)) {
       return;
     }
 
@@ -4295,7 +4305,7 @@ export default class Editor extends Vue {
 
       // If the last tab has closed, then exit
       if (this.workspaces.length == 1) {
-        this.ipcService.exitApplication();
+        await this.ipcService.exitApplication();
       }
 
       this.removeWorkspace(workspace);
@@ -6131,13 +6141,12 @@ export default class Editor extends Vue {
     // blinking cursors don't show up in the printed page
     const activeElement = this.blurActiveElement();
 
-    nextTick(async () => {
-      await this.ipcService.exportWorkspaceAsPdf(this.selectedWorkspace);
-      this.printMode = false;
+    await nextTick();
+    await this.ipcService.exportWorkspaceAsPdf(this.selectedWorkspace);
+    this.printMode = false;
 
-      // Re-focus the active element
-      this.focusElement(activeElement);
-    });
+    // Re-focus the active element
+    this.focusElement(activeElement);
   }
 
   async onFileMenuExportAsImage() {

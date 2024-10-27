@@ -4,9 +4,9 @@ import {
   ExportWorkspaceAsImageArgs,
   ExportWorkspaceAsMusicXmlArgs,
   ExportWorkspaceAsPdfArgs,
-  FileMenuOpenScoreArgs,
   IpcRendererChannels,
   OpenContextMenuForTabArgs,
+  OpenWorkspaceFromArgvArgs,
   PrintWorkspaceArgs,
   SaveWorkspaceArgs,
   SaveWorkspaceAsArgs,
@@ -128,7 +128,7 @@ export class IpcService implements IIpcService {
     } as PrintWorkspaceArgs);
   }
 
-  public async openWorkspaceFromArgv(): Promise<FileMenuOpenScoreArgs[]> {
+  public async openWorkspaceFromArgv(): Promise<OpenWorkspaceFromArgvArgs> {
     return await window.ipcRenderer.invoke(
       IpcRendererChannels.OpenWorkspaceFromArgv,
     );

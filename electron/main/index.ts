@@ -294,9 +294,11 @@ async function readScoreFile(filePath: string) {
 async function openFile(filePath: string) {
   const data = await readScoreFile(filePath);
 
-  await addToRecentFiles(filePath);
+  if (!silent) {
+    await addToRecentFiles(filePath);
 
-  createMenu();
+    createMenu();
+  }
 
   return data;
 }

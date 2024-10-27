@@ -80,6 +80,11 @@ export interface FileMenuOpenScoreArgs {
   success: boolean;
 }
 
+export interface OpenWorkspaceFromArgvArgs {
+  files: FileMenuOpenScoreArgs[];
+  silentPdf: boolean;
+}
+
 export interface FileMenuOpenImageArgs {
   data: string;
   imageWidth: number;

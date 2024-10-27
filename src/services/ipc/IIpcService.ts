@@ -1,7 +1,7 @@
 import {
   ExportWorkspaceAsImageReplyArgs,
-  FileMenuOpenScoreArgs,
   OpenContextMenuForTabArgs,
+  OpenWorkspaceFromArgvArgs,
   SaveWorkspaceAsReplyArgs,
   SaveWorkspaceReplyArgs,
   ShowMessageBoxArgs,
@@ -34,7 +34,7 @@ export interface IIpcService {
 
   printWorkspace(workspace: Workspace): Promise<void>;
 
-  openWorkspaceFromArgv(): Promise<FileMenuOpenScoreArgs[]>;
+  openWorkspaceFromArgv(): Promise<OpenWorkspaceFromArgvArgs>;
 
   showMessageBox(args: ShowMessageBoxArgs): Promise<ShowMessageBoxReplyArgs>;
 

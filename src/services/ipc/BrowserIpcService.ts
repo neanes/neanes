@@ -2,7 +2,7 @@ import JSZip from 'jszip';
 
 import {
   ExportWorkspaceAsImageReplyArgs,
-  FileMenuOpenScoreArgs,
+  OpenWorkspaceFromArgvArgs,
   SaveWorkspaceAsReplyArgs,
   SaveWorkspaceReplyArgs,
   ShowMessageBoxReplyArgs,
@@ -97,8 +97,8 @@ export class BrowserIpcService implements IIpcService {
     });
   }
 
-  public async openWorkspaceFromArgv(): Promise<FileMenuOpenScoreArgs[]> {
-    return [];
+  public async openWorkspaceFromArgv(): Promise<OpenWorkspaceFromArgvArgs> {
+    return { files: [], silentPdf: false };
   }
 
   public async showMessageBox(): Promise<ShowMessageBoxReplyArgs> {

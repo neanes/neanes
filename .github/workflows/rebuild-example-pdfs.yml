@@ -1,4 +1,4 @@
-name: rebuild-example-pdfs
+name: Rebuild Example PDFs
 
 on: workflow_dispatch
 

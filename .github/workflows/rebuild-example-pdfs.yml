@@ -1,11 +1,9 @@
 name: Rebuild Example PDFs
 
-on:
-  pull_request:
-#on: workflow_dispatch
+on: workflow_dispatch
 
 jobs:
-  docs:
+  rebuild-example-pdfs:
     runs-on: ubuntu-latest
     env:
       DISPLAY: ':99.0'
@@ -18,14 +16,14 @@ jobs:
       - name: Xvfb
         run: Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
 
-      - name: Get AppImage
-        run: wget https://github.com/neanes/neanes/releases/download/v0.4.55/Neanes-0.4.55.AppImage
+      - name: Get the latest AppImage
+        run: wget -O neanes-cli $(curl -s https://api.github.com/repos/neanes/neanes/releases/latest | jq -r '.assets[] | select(.name | contains("AppImage")) | .browser_download_url')
 
       - name: Make AppImage Executable
-        run: chmod +x Neanes-0.4.55.AppImage
+        run: chmod +x neanes-cli
 
       - name: Generate PDFs
-        run: find ./examples -type f -name '*.byzx' -print0 | xargs -0 ./Neanes-0.4.55.AppImage --silent-pdf
+        run: find ./examples -type f -name '*.byzx' -print0 | xargs -0 ./neanes-cli --silent-pdf
 
       - name: Archive PDFs
         uses: actions/upload-artifact@v4

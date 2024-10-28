@@ -1,9 +1,7 @@
 name: Rebuild Example PDFs
 
-#test
 on:
-  push:
-    branches: [example-cli]
+  pull_request:
 #on: workflow_dispatch
 
 jobs:

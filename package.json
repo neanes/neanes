@@ -83,7 +83,7 @@
     "vitepress": "^1.4.2",
     "vitest": "^2.1.4",
     "vue-component-type-helpers": "^2.1.8",
-    "vue-tsc": "^2.1.8"
+    "vue-tsc": "^2.1.10"
   },
   "license": "GPL-3.0",
   "packageManager": "npm@10.7.0"

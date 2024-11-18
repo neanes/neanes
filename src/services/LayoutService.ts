@@ -123,7 +123,7 @@ export class LayoutService {
 
     const vareiaMapping = NeumeMappingService.getMapping(
       VocalExpressionNeume.Vareia,
-    )!;
+    );
     const vareiaWidth = TextMeasurementService.getTextWidth(
       vareiaMapping.text,
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
@@ -131,7 +131,7 @@ export class LayoutService {
 
     const measureBarRightMapping = NeumeMappingService.getMapping(
       MeasureBar.MeasureBarRight,
-    )!;
+    );
     const measureBarRightWidth = TextMeasurementService.getTextWidth(
       measureBarRightMapping.text,
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
@@ -139,7 +139,7 @@ export class LayoutService {
 
     const measureBarTopMapping = NeumeMappingService.getMapping(
       MeasureBar.MeasureBarTop,
-    )!;
+    );
     const measureBarTopWidth = TextMeasurementService.getTextWidth(
       measureBarTopMapping.text,
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
@@ -147,7 +147,7 @@ export class LayoutService {
 
     const measureBarDoubleMapping = NeumeMappingService.getMapping(
       MeasureBar.MeasureBarDouble,
-    )!;
+    );
     const measureBarDoubleWidth = TextMeasurementService.getTextWidth(
       measureBarDoubleMapping.text,
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
@@ -155,7 +155,7 @@ export class LayoutService {
 
     const measureBarTheseosMapping = NeumeMappingService.getMapping(
       MeasureBar.MeasureBarTheseos,
-    )!;
+    );
     const measureBarTheseosWidth = TextMeasurementService.getTextWidth(
       measureBarTheseosMapping.text,
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
@@ -163,7 +163,7 @@ export class LayoutService {
 
     const measureBarShortDoubleMapping = NeumeMappingService.getMapping(
       MeasureBar.MeasureBarShortDouble,
-    )!;
+    );
     const measureBarShortDoubleWidth = TextMeasurementService.getTextWidth(
       measureBarShortDoubleMapping.text,
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
@@ -171,7 +171,7 @@ export class LayoutService {
 
     const measureBarShortTheseosMapping = NeumeMappingService.getMapping(
       MeasureBar.MeasureBarShortTheseos,
-    )!;
+    );
     const measureBarShortTheseosWidth = TextMeasurementService.getTextWidth(
       measureBarShortTheseosMapping.text,
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
@@ -196,7 +196,7 @@ export class LayoutService {
 
     const elaphronMapping = NeumeMappingService.getMapping(
       QuantitativeNeume.Elaphron,
-    )!;
+    );
     const elaphronWidth = TextMeasurementService.getTextWidth(
       elaphronMapping.text,
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
@@ -204,7 +204,7 @@ export class LayoutService {
 
     const runningElaphronMapping = NeumeMappingService.getMapping(
       QuantitativeNeume.RunningElaphron,
-    )!;
+    );
     const runningElaphronWidth = TextMeasurementService.getTextWidth(
       runningElaphronMapping.text,
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
@@ -419,7 +419,7 @@ export class LayoutService {
           const tempoElement = element as TempoElement;
           const temoMapping = NeumeMappingService.getMapping(
             tempoElement.neume,
-          )!;
+          );
 
           elementWidthPx =
             TextMeasurementService.getTextWidth(
@@ -1320,16 +1320,16 @@ export class LayoutService {
     pageSetup: PageSetup,
   ) {
     const mappingNote = !martyriaElement.error
-      ? NeumeMappingService.getMapping(martyriaElement.note)!
-      : NeumeMappingService.getMapping(Note.Pa)!;
+      ? NeumeMappingService.getMapping(martyriaElement.note)
+      : NeumeMappingService.getMapping(Note.Pa);
     const mappingRoot = !martyriaElement.error
-      ? NeumeMappingService.getMapping(martyriaElement.rootSign)!
-      : NeumeMappingService.getMapping(RootSign.Alpha)!;
+      ? NeumeMappingService.getMapping(martyriaElement.rootSign)
+      : NeumeMappingService.getMapping(RootSign.Alpha);
     const mappingMeasureBarLeft = martyriaElement.measureBarLeft
-      ? NeumeMappingService.getMapping(martyriaElement.measureBarLeft)!
+      ? NeumeMappingService.getMapping(martyriaElement.measureBarLeft)
       : null;
     const mappingMeasureBarRight = martyriaElement.measureBarRight
-      ? NeumeMappingService.getMapping(martyriaElement.measureBarRight)!
+      ? NeumeMappingService.getMapping(martyriaElement.measureBarRight)
       : null;
 
     // Add in padding to give some extra space between
@@ -1451,7 +1451,7 @@ export class LayoutService {
 
     const elaphronMapping = NeumeMappingService.getMapping(
       QuantitativeNeume.Elaphron,
-    )!;
+    );
     const elaphronWidth = TextMeasurementService.getTextWidth(
       elaphronMapping.text,
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
@@ -1459,7 +1459,7 @@ export class LayoutService {
 
     const runningElaphronMapping = NeumeMappingService.getMapping(
       QuantitativeNeume.RunningElaphron,
-    )!;
+    );
     const runningElaphronWidth = TextMeasurementService.getTextWidth(
       runningElaphronMapping.text,
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
@@ -2461,7 +2461,7 @@ export class LayoutService {
     let width = cache.get(key);
 
     if (width == null) {
-      const neumeMapping = NeumeMappingService.getMapping(neume)!;
+      const neumeMapping = NeumeMappingService.getMapping(neume);
 
       width = TextMeasurementService.getTextWidth(
         neumeMapping.text,

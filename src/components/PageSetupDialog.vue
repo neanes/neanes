@@ -1119,91 +1119,91 @@ export default class PageSetupDialog extends Vue {
   }
 
   get topMargin() {
-    return this.toDisplayUnit(this.form!.topMargin).toFixed(2);
+    return this.toDisplayUnit(this.form.topMargin).toFixed(2);
   }
 
   updateTopMargin(value: number) {
-    this.form!.topMargin = Math.min(
+    this.form.topMargin = Math.min(
       Math.max(this.toStorageUnit(value), 0),
-      this.form!.pageHeight - this.form!.bottomMargin - Unit.fromInch(0.5),
+      this.form.pageHeight - this.form.bottomMargin - Unit.fromInch(0.5),
     );
 
     this.$forceUpdate();
   }
 
   get bottomMargin() {
-    return this.toDisplayUnit(this.form!.bottomMargin).toFixed(2);
+    return this.toDisplayUnit(this.form.bottomMargin).toFixed(2);
   }
 
   updateBottomMargin(value: number) {
-    this.form!.bottomMargin = Math.min(
+    this.form.bottomMargin = Math.min(
       Math.max(this.toStorageUnit(value), 0),
-      this.form!.pageHeight - this.form!.topMargin - Unit.fromInch(0.5),
+      this.form.pageHeight - this.form.topMargin - Unit.fromInch(0.5),
     );
 
     this.$forceUpdate();
   }
 
   get leftMargin() {
-    return this.toDisplayUnit(this.form!.leftMargin).toFixed(2);
+    return this.toDisplayUnit(this.form.leftMargin).toFixed(2);
   }
 
   updateLeftMargin(value: number) {
-    this.form!.leftMargin = Math.min(
+    this.form.leftMargin = Math.min(
       Math.max(this.toStorageUnit(value), 0),
-      this.form!.pageWidth - this.form!.rightMargin - Unit.fromInch(0.5),
+      this.form.pageWidth - this.form.rightMargin - Unit.fromInch(0.5),
     );
 
     this.$forceUpdate();
   }
 
   get rightMargin() {
-    return this.toDisplayUnit(this.form!.rightMargin).toFixed(2);
+    return this.toDisplayUnit(this.form.rightMargin).toFixed(2);
   }
 
   updateRightMargin(value: number) {
-    this.form!.rightMargin = Math.min(
+    this.form.rightMargin = Math.min(
       Math.max(this.toStorageUnit(value), 0),
-      this.form!.pageWidth - this.form!.leftMargin - Unit.fromInch(0.5),
+      this.form.pageWidth - this.form.leftMargin - Unit.fromInch(0.5),
     );
 
     this.$forceUpdate();
   }
 
   get headerMargin() {
-    return this.toDisplayUnit(this.form!.headerMargin).toFixed(2);
+    return this.toDisplayUnit(this.form.headerMargin).toFixed(2);
   }
 
   updateHeaderMargin(value: number) {
-    this.form!.headerMargin = Math.min(
+    this.form.headerMargin = Math.min(
       Math.max(this.toStorageUnit(value), 0),
-      this.form!.innerPageHeight,
+      this.form.innerPageHeight,
     );
 
     this.$forceUpdate();
   }
 
   get footerMargin() {
-    return this.toDisplayUnit(this.form!.footerMargin).toFixed(2);
+    return this.toDisplayUnit(this.form.footerMargin).toFixed(2);
   }
 
   updateFooterMargin(value: number) {
-    this.form!.footerMargin = Math.min(
+    this.form.footerMargin = Math.min(
       Math.max(this.toStorageUnit(value), 0),
-      this.form!.innerPageHeight,
+      this.form.innerPageHeight,
     );
 
     this.$forceUpdate();
   }
 
   get lyricsVerticalOffset() {
-    return this.toDisplayUnit(this.form!.lyricsVerticalOffset).toFixed(3);
+    return this.toDisplayUnit(this.form.lyricsVerticalOffset).toFixed(3);
   }
 
   updateLyricsVerticalOffset(value: number) {
-    this.form!.lyricsVerticalOffset = Math.min(
+    this.form.lyricsVerticalOffset = Math.min(
       this.toStorageUnit(value),
-      this.form!.innerPageHeight -
+      this.form.innerPageHeight -
         this.form.lyricsDefaultFontSize -
         this.form.neumeDefaultFontSize,
     );
@@ -1212,39 +1212,39 @@ export default class PageSetupDialog extends Vue {
   }
 
   get lyricsMinimumSpacing() {
-    return this.toDisplayUnit(this.form!.lyricsMinimumSpacing).toFixed(3);
+    return this.toDisplayUnit(this.form.lyricsMinimumSpacing).toFixed(3);
   }
 
   updateLyricsMinimumSpacing(value: number) {
-    this.form!.lyricsMinimumSpacing = Math.min(
+    this.form.lyricsMinimumSpacing = Math.min(
       this.toStorageUnit(value),
-      this.form!.innerPageWidth,
+      this.form.innerPageWidth,
     );
 
     this.$forceUpdate();
   }
 
   get lineHeight() {
-    return this.toDisplayUnit(this.form!.lineHeight).toFixed(3);
+    return this.toDisplayUnit(this.form.lineHeight).toFixed(3);
   }
 
   get hyphenSpacing() {
-    return this.toDisplayUnit(this.form!.hyphenSpacing).toFixed(3);
+    return this.toDisplayUnit(this.form.hyphenSpacing).toFixed(3);
   }
 
   updateLineHeight(value: number) {
-    this.form!.lineHeight = Math.min(
+    this.form.lineHeight = Math.min(
       Math.max(this.toStorageUnit(value), 0),
-      this.form!.innerPageHeight,
+      this.form.innerPageHeight,
     );
 
     this.$forceUpdate();
   }
 
   updateHyphenSpacing(value: number) {
-    this.form!.hyphenSpacing = Math.min(
+    this.form.hyphenSpacing = Math.min(
       Math.max(this.toStorageUnit(value), 0),
-      this.form!.innerPageWidth,
+      this.form.innerPageWidth,
     );
 
     this.$forceUpdate();

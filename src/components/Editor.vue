@@ -1964,7 +1964,7 @@ export default class Editor extends Vue {
 
   getMelismaStyle(element: NoteElement) {
     return {
-      width: withZoom(element.melismaWidth!),
+      width: withZoom(element.melismaWidth),
       minHeight: element.lyricsUseDefaultStyle
         ? withZoom(this.score.pageSetup.lyricsDefaultFontSize)
         : withZoom(element.lyricsFontSize),
@@ -1975,7 +1975,7 @@ export default class Editor extends Vue {
     return {
       top: withZoom(element.melismaOffsetTop),
       height: withZoom(element.lyricsFontHeight),
-      width: withZoom(element.melismaWidth!),
+      width: withZoom(element.melismaWidth),
     };
   }
 

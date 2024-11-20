@@ -418,9 +418,9 @@ async function saveWorkspaceAs(args: SaveWorkspaceAsArgs) {
       }
 
       if (doWrite) {
-        await writeScoreFile(result.filePath!, args.data);
+        await writeScoreFile(result.filePath, args.data);
 
-        await addToRecentFiles(result.filePath!);
+        await addToRecentFiles(result.filePath);
         createMenu();
 
         result.success = true;
@@ -548,7 +548,7 @@ async function exportWorkspaceAsPdf(args: ExportWorkspaceAsPdfArgs) {
 
     exporting = true;
 
-    const dialogResult = await dialog.showSaveDialog(win!, {
+    const dialogResult = await dialog.showSaveDialog(win, {
       title: 'Export Score as PDF',
       filters: [{ name: 'PDF File', extensions: ['pdf'] }],
       defaultPath:
@@ -558,7 +558,7 @@ async function exportWorkspaceAsPdf(args: ExportWorkspaceAsPdfArgs) {
     });
 
     if (!dialogResult.canceled) {
-      let filePath = dialogResult.filePath!;
+      let filePath = dialogResult.filePath;
 
       // Hack for Linux: if the filepath doesn't end with the proper extension,
       // then add it
@@ -576,9 +576,9 @@ async function exportWorkspaceAsPdf(args: ExportWorkspaceAsPdfArgs) {
           pageSize: args.pageSize,
           landscape: args.landscape,
         });
-        await fs.writeFile(filePath!, data);
+        await fs.writeFile(filePath, data);
 
-        await shell.openPath(filePath!);
+        await shell.openPath(filePath);
       }
     }
   } catch (error) {
@@ -616,7 +616,7 @@ async function exportWorkspaceAsHtml(args: ExportWorkspaceAsHtmlArgs) {
     });
 
     if (!dialogResult.canceled) {
-      let filePath = dialogResult.filePath!;
+      let filePath = dialogResult.filePath;
 
       // Hack for Linux: if the filepath doesn't end with the proper extension,
       // then add it
@@ -630,8 +630,8 @@ async function exportWorkspaceAsHtml(args: ExportWorkspaceAsHtmlArgs) {
       }
 
       if (doWrite) {
-        await fs.writeFile(filePath!, args.data);
-        await shell.openPath(filePath!);
+        await fs.writeFile(filePath, args.data);
+        await shell.openPath(filePath);
       }
     }
   } catch (error) {
@@ -673,7 +673,7 @@ async function exportWorkspaceAsMusicXml(args: ExportWorkspaceAsMusicXmlArgs) {
     });
 
     if (!dialogResult.canceled) {
-      let filePath = dialogResult.filePath!;
+      let filePath = dialogResult.filePath;
 
       // Hack for Linux: if the filepath doesn't end with the proper extension,
       // then add it
@@ -687,10 +687,10 @@ async function exportWorkspaceAsMusicXml(args: ExportWorkspaceAsMusicXmlArgs) {
       }
 
       if (doWrite) {
-        await fs.writeFile(filePath!, args.data);
+        await fs.writeFile(filePath, args.data);
 
         if (args.openFolder) {
-          await shell.showItemInFolder(filePath!);
+          await shell.showItemInFolder(filePath);
         }
       }
     }
@@ -734,7 +734,7 @@ async function exportWorkspaceAsImage(args: ExportWorkspaceAsImageArgs) {
     });
 
     if (!dialogResult.canceled) {
-      let filePath = dialogResult.filePath!;
+      let filePath = dialogResult.filePath;
       if (!filePath.endsWith(args.imageFormat)) {
         filePath += `.${args.imageFormat}`;
       }
@@ -946,7 +946,7 @@ function createMenu() {
 
                   dialog.showMessageBox(win!, {
                     title: app.name,
-                    message: app.name!,
+                    message: app.name,
                     detail: detail,
                     type: 'info',
                   });
@@ -1346,20 +1346,20 @@ function createMenu() {
         {
           label: i18next.t('menu:help.guide'),
           click() {
-            shell.openExternal(import.meta.env.VITE_GUIDE_URL!);
+            shell.openExternal(import.meta.env.VITE_GUIDE_URL);
           },
         },
         { type: 'separator' },
         {
           label: i18next.t('menu:help.requestAFeature'),
           click() {
-            shell.openExternal(import.meta.env.VITE_ISSUES_URL!);
+            shell.openExternal(import.meta.env.VITE_ISSUES_URL);
           },
         },
         {
           label: i18next.t('menu:help.reportAnIssue'),
           click() {
-            shell.openExternal(import.meta.env.VITE_ISSUES_URL!);
+            shell.openExternal(import.meta.env.VITE_ISSUES_URL);
           },
         },
         { type: 'separator' },
@@ -1377,7 +1377,7 @@ function createMenu() {
 
                   dialog.showMessageBox(win!, {
                     title: app.name,
-                    message: app.name!,
+                    message: app.name,
                     detail: detail,
                     type: 'info',
                   });
@@ -1796,7 +1796,7 @@ app.on('ready', async () => {
       });
 
       if (result.response === 0) {
-        shell.openExternal(import.meta.env.VITE_DOWNLOAD_URL!);
+        shell.openExternal(import.meta.env.VITE_DOWNLOAD_URL);
       }
     });
   }

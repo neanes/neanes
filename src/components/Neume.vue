@@ -28,7 +28,7 @@ export default class Neume extends Vue {
       };
     }
 
-    return mapping!;
+    return mapping;
   }
 
   get text() {

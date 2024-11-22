@@ -690,7 +690,7 @@ async function exportWorkspaceAsMusicXml(args: ExportWorkspaceAsMusicXmlArgs) {
         await fs.writeFile(filePath, args.data);
 
         if (args.openFolder) {
-          await shell.showItemInFolder(filePath);
+          shell.showItemInFolder(filePath);
         }
       }
     }

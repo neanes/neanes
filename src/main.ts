@@ -52,6 +52,9 @@ i18next
     postProcess: ['pseudo'],
     defaultNS,
     resources,
+  })
+  .catch((error) => {
+    console.error('Failed to initialize i18next', error);
   });
 
 const app = createApp(App);

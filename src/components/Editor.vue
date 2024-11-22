@@ -6191,6 +6191,7 @@ export default class Editor extends Vue {
             const options = {
               fontEmbedCSS,
               pixelRatio: args.dpi / 96,
+              style: { margin: '0' },
             } as any;
 
             if (args.transparentBackground) {

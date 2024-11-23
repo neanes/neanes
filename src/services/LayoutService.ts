@@ -646,6 +646,11 @@ export class LayoutService {
 
       // Check if we need a new page
       if (currentPageHeightPx > innerPageHeight || lastElementWasPageBreak) {
+        // If the line is empty, remove it from the page
+        if (line.elements.length === 0) {
+          page.lines.pop();
+        }
+
         page = new Page();
 
         line = new Line();
@@ -1369,8 +1374,22 @@ export class LayoutService {
   }
 
   public static justifyLines(pages: Page[], pageSetup: PageSetup) {
-    for (const page of pages) {
-      for (const line of page.lines) {
+    for (let pageIndex = 0; pageIndex < pages.length; pageIndex++) {
+      const page = pages[pageIndex];
+
+      const nextPage =
+        pageIndex + 1 < pages.length ? pages[pageIndex + 1] : null;
+
+      for (let lineIndex = 0; lineIndex < page.lines.length; lineIndex++) {
+        const line = page.lines[lineIndex];
+
+        let nextLine: Line | null =
+          lineIndex + 1 < page.lines.length ? page.lines[lineIndex + 1] : null;
+
+        if (nextLine == null && nextPage != null && nextPage.lines.length > 0) {
+          nextLine = nextPage.lines[0];
+        }
+
         if (
           pages.indexOf(page) === pages.length - 1 &&
           page.lines.indexOf(line) === page.lines.length - 1
@@ -1396,6 +1415,24 @@ export class LayoutService {
             (x) =>
               x.elementType === ElementType.Martyria &&
               (x as MartyriaElement).alignRight == true,
+          )
+        ) {
+          continue;
+        }
+
+        // We treat text boxes and mode keys as paragraph breaks,
+        // so we only justify if there is a justified line break
+        if (
+          !line.elements.some(
+            (x) =>
+              x.lineBreak == true && x.lineBreakType === LineBreakType.Justify,
+          ) &&
+          nextLine?.elements.some(
+            (x) =>
+              (x.elementType === ElementType.TextBox &&
+                !(x as TextBoxElement).inline) ||
+              x.elementType === ElementType.RichTextBox ||
+              x.elementType === ElementType.ModeKey,
           )
         ) {
           continue;

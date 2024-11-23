@@ -1425,7 +1425,9 @@ export class LayoutService {
         if (
           !line.elements.some(
             (x) =>
-              x.lineBreak == true && x.lineBreakType === LineBreakType.Justify,
+              x.lineBreak == true &&
+              (x.lineBreakType === LineBreakType.Justify ||
+                x.lineBreakType === LineBreakType.Center),
           ) &&
           nextLine?.elements.some(
             (x) =>

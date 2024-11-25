@@ -32,7 +32,7 @@
   },
   "main": "dist-electron/main/index.js",
   "dependencies": {
-    "@ckeditor/ckeditor5-vue": "^7.2.0",
+    "@ckeditor/ckeditor5-vue": "^7.3.0",
     "@ckpack/vue-color": "^1.6.0",
     "ckeditor5": "^43.3.1",
     "html-to-image": "^1.11.11",

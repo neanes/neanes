@@ -7,9 +7,8 @@ import {
   ScoreElement,
   TempoElement,
 } from '@/models/Element';
-import { Ison, QuantitativeNeume } from '@/models/Neumes';
+import { QuantitativeNeume } from '@/models/Neumes';
 import {
-  getIsonValue,
   getScaleNoteFromValue,
   getScaleNoteValue,
   Scale,
@@ -558,7 +557,7 @@ export class MusicXmlExporter {
       } else if (node.nodeType === NodeType.IsonNode) {
         const isonNode = node as IsonNode;
 
-        if (isonNode.physicalNote === Ison.Unison) {
+        if (isonNode.unison) {
           const harmony = new MusicXmlHarmony(
             new MusicXmlRoot(new MusicXmlRootStep('C')),
             new MusicXmlKind('none', 'Un.'),
@@ -567,8 +566,8 @@ export class MusicXmlExporter {
           notes.push(harmony);
         } else {
           const isonPitch = this.moveTo(
-            getScaleNoteFromValue(getIsonValue(isonNode.physicalNote)),
-            getScaleNoteFromValue(getIsonValue(isonNode.virtualNote)),
+            isonNode.physicalNote,
+            isonNode.virtualNote,
             workspace,
           );
 

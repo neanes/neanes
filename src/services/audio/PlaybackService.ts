@@ -1,7 +1,6 @@
 import { ScoreElement } from '@/models/Element';
-import { Accidental, Ison } from '@/models/Neumes';
+import { Accidental } from '@/models/Neumes';
 import {
-  getIsonValue,
   getScaleNoteFromValue,
   getScaleNoteValue,
   Scale,
@@ -848,18 +847,19 @@ export class PlaybackService {
   handleIson(isonNode: Readonly<IsonNode>, workspace: PlaybackWorkspace) {
     if (workspace.loggingEnabled) {
       console.groupCollapsed('PlaybackService', 'ison');
-      console.log('physicalNote', isonNode.physicalNote);
-      console.log('virtualNote', isonNode.virtualNote);
+      if (isonNode.unison) {
+        console.log('unison');
+      } else {
+        console.log('physicalNote', isonNode.physicalNote);
+        console.log('virtualNote', isonNode.virtualNote);
+      }
       console.groupEnd();
     }
 
     workspace.isonFrequency = -1;
 
-    if (isonNode.physicalNote !== Ison.Unison) {
-      workspace.isonFrequency = this.moveTo(
-        getScaleNoteFromValue(getIsonValue(isonNode.virtualNote)),
-        workspace,
-      );
+    if (!isonNode.unison) {
+      workspace.isonFrequency = this.moveTo(isonNode.virtualNote, workspace);
     }
   }
 

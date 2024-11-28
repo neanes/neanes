@@ -61,7 +61,7 @@
     "@types/node": "^22.9.3",
     "@types/throttle-debounce": "^5.0.2",
     "@types/uuid": "^10.0.0",
-    "@vitejs/plugin-vue": "^5.2.0",
+    "@vitejs/plugin-vue": "^5.2.1",
     "@vue/eslint-config-prettier": "^10.1.0",
     "@vue/eslint-config-typescript": "^14.1.4",
     "electron": "^33.2.0",

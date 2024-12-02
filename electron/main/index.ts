@@ -333,7 +333,7 @@ async function openFileFromArgs(argv: string[]) {
       console.error(error);
 
       if (error instanceof Error) {
-        dialog.showMessageBox(win!, {
+        await dialog.showMessageBox(win!, {
           type: 'error',
           title: 'Open failed',
           message: error.message,
@@ -362,7 +362,7 @@ async function saveWorkspace(args: SaveWorkspaceArgs) {
     console.error(error);
 
     if (error instanceof Error) {
-      dialog.showMessageBox(win!, {
+      await dialog.showMessageBox(win!, {
         type: 'error',
         title: 'Save failed',
         message: error.message,
@@ -430,7 +430,7 @@ async function saveWorkspaceAs(args: SaveWorkspaceAsArgs) {
     console.error(error);
 
     if (error instanceof Error) {
-      dialog.showMessageBox(win!, {
+      await dialog.showMessageBox(win!, {
         type: 'error',
         title: 'Save As failed',
         message: error.message,
@@ -502,7 +502,7 @@ async function openImage() {
     console.error(error);
 
     if (error instanceof Error) {
-      dialog.showMessageBox(win!, {
+      await dialog.showMessageBox(win!, {
         type: 'error',
         title: 'Open image failed',
         message: error.message,
@@ -585,7 +585,7 @@ async function exportWorkspaceAsPdf(args: ExportWorkspaceAsPdfArgs) {
     console.error(error);
 
     if (error instanceof Error) {
-      dialog.showMessageBox(win!, {
+      await dialog.showMessageBox(win!, {
         type: 'error',
         title: 'Export to PDF failed',
         message: error.message,
@@ -638,7 +638,7 @@ async function exportWorkspaceAsHtml(args: ExportWorkspaceAsHtmlArgs) {
     console.error(error);
 
     if (error instanceof Error) {
-      dialog.showMessageBox(win!, {
+      await dialog.showMessageBox(win!, {
         type: 'error',
         title: 'Export as HTML failed',
         message: error.message,
@@ -698,7 +698,7 @@ async function exportWorkspaceAsMusicXml(args: ExportWorkspaceAsMusicXmlArgs) {
     console.error(error);
 
     if (error instanceof Error) {
-      dialog.showMessageBox(win!, {
+      await dialog.showMessageBox(win!, {
         type: 'error',
         title: 'Export as MusicXML failed',
         message: error.message,
@@ -749,7 +749,7 @@ async function exportWorkspaceAsImage(args: ExportWorkspaceAsImageArgs) {
     console.error(error);
 
     if (error instanceof Error) {
-      dialog.showMessageBox(win!, {
+      await dialog.showMessageBox(win!, {
         type: 'error',
         title: 'Export as Image failed',
         message: error.message,
@@ -792,7 +792,7 @@ async function exportPageAsImage(args: ExportPageAsImageArgs) {
     console.error(error);
 
     if (error instanceof Error) {
-      dialog.showMessageBox(win!, {
+      await dialog.showMessageBox(win!, {
         type: 'error',
         title: 'Export as Image failed',
         message: error.message,
@@ -822,7 +822,7 @@ async function printWorkspace(args: PrintWorkspaceArgs) {
             failureReason !== 'cancelled' &&
             failureReason !== 'Print job canceled'
           ) {
-            dialog.showMessageBox(win!, {
+            void dialog.showMessageBox(win!, {
               type: 'error',
               title: 'Print failed',
               message: failureReason,
@@ -835,7 +835,7 @@ async function printWorkspace(args: PrintWorkspaceArgs) {
       console.error(error);
 
       if (error instanceof Error) {
-        dialog.showMessageBox(win!, {
+        void dialog.showMessageBox(win!, {
           type: 'error',
           title: 'Print failed',
           message: error.message,
@@ -875,7 +875,7 @@ async function openWorkspaces() {
     console.error(error);
 
     if (error instanceof Error) {
-      dialog.showMessageBox(win!, {
+      await dialog.showMessageBox(win!, {
         type: 'error',
         title: 'Open failed',
         message: error.message,
@@ -938,13 +938,13 @@ function createMenu() {
             submenu: [
               {
                 label: `About ${app.name}`,
-                click() {
+                async click() {
                   let detail = `Version: ${app.getVersion()}\n`;
                   detail += `Electron: ${process.versions.electron}\n`;
                   detail += `Chromium: ${process.versions.chrome}\n`;
                   detail += `Node.js: ${process.version}`;
 
-                  dialog.showMessageBox(win!, {
+                  await dialog.showMessageBox(win!, {
                     title: app.name,
                     message: app.name,
                     detail: detail,
@@ -970,9 +970,9 @@ function createMenu() {
         {
           label: i18next.t('menu:file.new'),
           accelerator: 'CmdOrCtrl+N',
-          click() {
+          async click() {
             if (!win) {
-              createWindow();
+              await createWindow();
             }
 
             win?.webContents.send(IpcMainChannels.FileMenuNewScore);
@@ -987,7 +987,7 @@ function createMenu() {
             for (const workspace of workspaces) {
               if (!win && workspace.success) {
                 darwinPath = workspace.filePath;
-                createWindow();
+                await createWindow();
               } else {
                 win?.webContents.send(
                   IpcMainChannels.FileMenuOpenScore,
@@ -1008,7 +1008,7 @@ function createMenu() {
 
                 if (!win) {
                   darwinPath = x;
-                  createWindow();
+                  await createWindow();
                 } else {
                   win?.webContents.send(IpcMainChannels.FileMenuOpenScore, {
                     filePath: x,
@@ -1020,7 +1020,7 @@ function createMenu() {
                 console.error(error);
 
                 if (error instanceof Error) {
-                  dialog.showMessageBox(win!, {
+                  await dialog.showMessageBox(win!, {
                     type: 'error',
                     title: 'Open failed',
                     message: error.message,
@@ -1326,9 +1326,9 @@ function createMenu() {
             label: i18next.t('menu:view.generateTestFiles'),
             submenu: Object.values(TestFileType).map((testFileType) => ({
               label: testFileType,
-              click() {
+              async click() {
                 if (!win) {
-                  createWindow();
+                  await createWindow();
                 }
 
                 win?.webContents.send(
@@ -1345,21 +1345,21 @@ function createMenu() {
       submenu: [
         {
           label: i18next.t('menu:help.guide'),
-          click() {
-            shell.openExternal(import.meta.env.VITE_GUIDE_URL);
+          async click() {
+            await shell.openExternal(import.meta.env.VITE_GUIDE_URL);
           },
         },
         { type: 'separator' },
         {
           label: i18next.t('menu:help.requestAFeature'),
-          click() {
-            shell.openExternal(import.meta.env.VITE_ISSUES_URL);
+          async click() {
+            await shell.openExternal(import.meta.env.VITE_ISSUES_URL);
           },
         },
         {
           label: i18next.t('menu:help.reportAnIssue'),
-          click() {
-            shell.openExternal(import.meta.env.VITE_ISSUES_URL);
+          async click() {
+            await shell.openExternal(import.meta.env.VITE_ISSUES_URL);
           },
         },
         { type: 'separator' },
@@ -1369,13 +1369,13 @@ function createMenu() {
           ? ([
               {
                 label: i18next.t('menu:help.about'),
-                click() {
+                async click() {
                   let detail = `Version: ${app.getVersion()}\n`;
                   detail += `Electron: ${process.versions.electron}\n`;
                   detail += `Chromium: ${process.versions.chrome}\n`;
                   detail += `Node.js: ${process.version}`;
 
-                  dialog.showMessageBox(win!, {
+                  await dialog.showMessageBox(win!, {
                     title: app.name,
                     message: app.name,
                     detail: detail,
@@ -1468,7 +1468,7 @@ async function createWindow() {
   } else {
     // Load the index.html when not in development
     if (!silent) {
-      autoUpdater.checkForUpdatesAndNotify();
+      await autoUpdater.checkForUpdatesAndNotify();
     }
 
     await win.loadFile(indexHtml);
@@ -1679,7 +1679,7 @@ app.on('open-file', async (event, path) => {
 
   try {
     if (!win) {
-      createWindow();
+      await createWindow();
     } else if (loaded) {
       const result = {
         data: await openFile(path),
@@ -1688,7 +1688,7 @@ app.on('open-file', async (event, path) => {
       };
 
       if (!win) {
-        createWindow();
+        await createWindow();
       }
 
       win?.webContents.send(IpcMainChannels.FileMenuOpenScore, result);
@@ -1699,7 +1699,7 @@ app.on('open-file', async (event, path) => {
     console.error(error);
 
     if (error instanceof Error) {
-      dialog.showMessageBox(win!, {
+      await dialog.showMessageBox(win!, {
         type: 'error',
         title: 'Open failed',
         message: error.message,
@@ -1748,17 +1748,19 @@ app.on('before-quit', () => {
   quitting = true;
 });
 
-app.on('activate', () => {
+app.on('activate', async () => {
   // On macOS it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
-  if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  if (BrowserWindow.getAllWindows().length === 0) {
+    await createWindow();
+  }
 });
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', async () => {
-  i18next
+  await i18next
     .use(
       new Pseudo({
         enabled:
@@ -1780,7 +1782,7 @@ app.on('ready', async () => {
     });
 
   if (!win) {
-    createWindow();
+    await createWindow();
   }
 
   if (isMac) {
@@ -1796,7 +1798,7 @@ app.on('ready', async () => {
       });
 
       if (result.response === 0) {
-        shell.openExternal(import.meta.env.VITE_DOWNLOAD_URL);
+        await shell.openExternal(import.meta.env.VITE_DOWNLOAD_URL);
       }
     });
   }

@@ -6,26 +6,9 @@ export interface MelismaSyllables {
 
 export class MelismaHelperGreek {
   public static isGreek(text: string) {
-    if (text.length === 0) {
-      return false;
-    }
-
-    // Special case for CHI
-    // A lone CHI should not trigger Greek melismataic rules
-    if (text.charCodeAt(0) === 0x03c7) {
-      for (let i = 1; i < text.length; i++) {
-        if (this.charCodeIsGreek(text.charCodeAt(i))) {
-          return true;
-        }
-      }
-
-      return false;
-    }
-
-    // Normal case
     for (let i = 0; i < text.length; i++) {
       if (this.charCodeIsGreek(text.charCodeAt(i))) {
-        return true;
+        return this.containsVowel(text);
       }
     }
 
@@ -60,5 +43,9 @@ export class MelismaHelperGreek {
 
   private static charCodeIsGreek(code: number) {
     return 0x370 <= code && code <= 0x3ff;
+  }
+
+  private static containsVowel(text: string) {
+    return text.match(/[αειουηω]+/i) !== null;
   }
 }

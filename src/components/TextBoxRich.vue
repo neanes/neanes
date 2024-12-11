@@ -104,6 +104,7 @@ export default class TextBoxRich extends Vue {
       language: {
         content: this.element.rtl ? 'ar' : 'en',
       },
+      licenseKey: 'GPL',
     };
   }
 

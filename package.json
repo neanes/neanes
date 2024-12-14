@@ -67,7 +67,7 @@
     "electron": "^33.2.1",
     "electron-builder": "^25.1.8",
     "electron-updater": "^6.3.9",
-    "eslint": "^9.16.0",
+    "eslint": "^9.17.0",
     "eslint-plugin-prettier": "^5.2.1",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "eslint-plugin-vue": "^9.32.0",

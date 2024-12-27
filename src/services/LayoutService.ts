@@ -1556,6 +1556,8 @@ export class LayoutService {
             }
 
             continue;
+          } else if (element.lyrics.length > 0) {
+            melismaSyllables = null;
           }
 
           if (melismaSyllables != null) {

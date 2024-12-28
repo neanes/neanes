@@ -162,6 +162,17 @@
             <label for="page-setup-dialog-unit-mm">{{
               $t('dialog:pageSetup.mm')
             }}</label>
+            <input
+              id="page-setup-dialog-unit-pt"
+              type="radio"
+              name="pageSizeUnit"
+              v-model="form.pageSizeUnit"
+              value="pt"
+              :checked="form.pageSizeUnit === 'pt'"
+            />
+            <label for="page-setup-dialog-unit-pt">{{
+              $t('dialog:pageSetup.pt')
+            }}</label>
           </div>
           <div class="subheader">
             {{ $t('dialog:pageSetup.spacing') }}
@@ -1060,6 +1071,8 @@ export default class PageSetupDialog extends Vue {
 
   get marginUnitLabel() {
     switch (this.form.pageSizeUnit) {
+      case 'pt':
+        return 'dialog:pageSetup.pt';
       case 'mm':
         return 'dialog:pageSetup.mm';
       case 'in':
@@ -1072,6 +1085,8 @@ export default class PageSetupDialog extends Vue {
 
   get marginStep() {
     switch (this.form.pageSizeUnit) {
+      case 'pt':
+        return 1;
       case 'mm':
         return 1;
       case 'in':
@@ -1084,6 +1099,8 @@ export default class PageSetupDialog extends Vue {
 
   get spacingStep() {
     switch (this.form.pageSizeUnit) {
+      case 'pt':
+        return 0.1;
       case 'mm':
         return 0.1;
       case 'in':
@@ -1096,6 +1113,8 @@ export default class PageSetupDialog extends Vue {
 
   toDisplayUnit(value: number) {
     switch (this.form.pageSizeUnit) {
+      case 'pt':
+        return Unit.toPt(value);
       case 'mm':
         return Unit.toMm(value);
       case 'in':
@@ -1108,6 +1127,8 @@ export default class PageSetupDialog extends Vue {
 
   toStorageUnit(value: number) {
     switch (this.form.pageSizeUnit) {
+      case 'pt':
+        return Unit.fromPt(value);
       case 'mm':
         return Unit.fromMm(value);
       case 'in':

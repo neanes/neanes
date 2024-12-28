@@ -23,8 +23,8 @@ export class Unit {
     return (points * 96) / 72;
   }
 
-  public static toPt(points: number) {
-    return (points * 72) / 96;
+  public static toPt(pixels: number) {
+    return (pixels * 72) / 96;
   }
 
   public static toPercent(value: number) {

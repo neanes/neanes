@@ -21,7 +21,7 @@ import { Unit } from '@/utils/Unit';
 })
 export default class InputUnit extends Vue {
   @Prop() modelValue!: number;
-  @Prop() unit!: 'pt' | 'in' | 'mm' | 'percent' | 'unitless';
+  @Prop() unit!: 'px' | 'pt' | 'in' | 'mm' | 'percent' | 'unitless';
   @Prop({ default: false }) nullable!: boolean;
   /**
    * The minimum value allowed, in display units.
@@ -107,6 +107,8 @@ export default class InputUnit extends Vue {
 
   toStorage(value: number) {
     switch (this.unit) {
+      case 'px':
+        return value;
       case 'pt':
         return Unit.fromPt(value);
       case 'in':
@@ -129,6 +131,8 @@ export default class InputUnit extends Vue {
     }
 
     switch (this.unit) {
+      case 'px':
+        return value;
       case 'pt':
         return Unit.toPt(value);
       case 'in':

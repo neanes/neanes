@@ -1,7 +1,7 @@
 import { Unit } from '../utils/Unit';
 
 export type PageSize = 'A3' | 'A4' | 'A5' | 'Legal' | 'Letter' | 'Tabloid';
-export type PageSizeUnit = 'pt' | 'mm' | 'in';
+export type PageSizeUnit = 'px' | 'pt' | 'mm' | 'in';
 
 export interface PageSizeOption {
   name: PageSize;

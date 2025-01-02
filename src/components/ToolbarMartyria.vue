@@ -221,7 +221,11 @@
     <div class="row">
       <label class="right-space">{{ $t('toolbar:common.bpm') }}</label>
       <InputBpm
-        :disabled="element.tempo == null"
+        :disabled="
+          element.tempo == null &&
+          element.tempoLeft == null &&
+          element.tempoRight == null
+        "
         :modelValue="element.bpm"
         @update:modelValue="$emit('update:bpm', $event)"
       />

@@ -1336,6 +1336,12 @@ export class LayoutService {
     const mappingMeasureBarRight = martyriaElement.measureBarRight
       ? NeumeMappingService.getMapping(martyriaElement.measureBarRight)
       : null;
+    const mappingTempoLeft = martyriaElement.tempoLeft
+      ? NeumeMappingService.getMapping(martyriaElement.tempoLeft)
+      : null;
+    const mappingTempoRight = martyriaElement.tempoRight
+      ? NeumeMappingService.getMapping(martyriaElement.tempoRight)
+      : null;
 
     // Add in padding to give some extra space between
     // the martyria and the next neume
@@ -1346,6 +1352,22 @@ export class LayoutService {
       martyriaElement.note,
       pageSetup,
     );
+
+    if (martyriaElement.tempoLeft) {
+      martyriaElement.neumeWidth += this.getNeumeWidthFromCache(
+        neumeWidthCache,
+        martyriaElement.tempoLeft,
+        pageSetup,
+      );
+    }
+
+    if (martyriaElement.tempoRight) {
+      martyriaElement.neumeWidth += this.getNeumeWidthFromCache(
+        neumeWidthCache,
+        martyriaElement.tempoRight,
+        pageSetup,
+      );
+    }
 
     return (
       martyriaElement.spaceAfter +
@@ -1358,15 +1380,27 @@ export class LayoutService {
           mappingRoot.text,
           `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
         ) +
-        (martyriaElement.measureBarLeft
+        (mappingMeasureBarLeft
           ? TextMeasurementService.getTextWidth(
-              mappingMeasureBarLeft!.text,
+              mappingMeasureBarLeft.text,
               `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
             )
           : 0) +
-        (martyriaElement.measureBarRight
+        (mappingMeasureBarRight
           ? TextMeasurementService.getTextWidth(
-              mappingMeasureBarRight!.text,
+              mappingMeasureBarRight.text,
+              `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
+            )
+          : 0) +
+        (mappingTempoLeft
+          ? TextMeasurementService.getTextWidth(
+              mappingTempoLeft.text,
+              `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
+            )
+          : 0) +
+        (mappingTempoRight
+          ? TextMeasurementService.getTextWidth(
+              mappingTempoRight.text,
               `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
             )
           : 0))

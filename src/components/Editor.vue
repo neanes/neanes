@@ -972,8 +972,14 @@
             $event,
           )
         "
+        @update:tempoLeft="
+          setMartyriaTempoLeft(selectedElement as MartyriaElement, $event)
+        "
         @update:tempo="
           setMartyriaTempo(selectedElement as MartyriaElement, $event)
+        "
+        @update:tempoRight="
+          setMartyriaTempoRight(selectedElement as MartyriaElement, $event)
         "
         @update:measureBar="
           setMeasureBarMartyria(selectedElement as MartyriaElement, $event)
@@ -4478,11 +4484,27 @@ export default class Editor extends Vue {
     }
   }
 
+  setMartyriaTempoLeft(element: MartyriaElement, neume: TempoSign) {
+    if (element.tempoLeft === neume) {
+      this.updateMartyriaTempoLeft(element, null);
+    } else {
+      this.updateMartyriaTempoLeft(element, neume);
+    }
+  }
+
   setMartyriaTempo(element: MartyriaElement, neume: TempoSign) {
     if (element.tempo === neume) {
       this.updateMartyriaTempo(element, null);
     } else {
       this.updateMartyriaTempo(element, neume);
+    }
+  }
+
+  setMartyriaTempoRight(element: MartyriaElement, neume: TempoSign) {
+    if (element.tempoRight === neume) {
+      this.updateMartyriaTempoRight(element, null);
+    } else {
+      this.updateMartyriaTempoRight(element, neume);
     }
   }
 
@@ -5418,6 +5440,26 @@ export default class Editor extends Vue {
     this.updateMartyria(element, { fthora, chromaticFthoraNote });
   }
 
+  updateMartyriaTempoLeft(
+    element: MartyriaElement,
+    tempoLeft: TempoSign | null,
+  ) {
+    let bpm = element.bpm;
+
+    if (tempoLeft != null) {
+      bpm =
+        this.editorPreferences.getDefaultTempo(tempoLeft) ??
+        TempoElement.getDefaultBpm(tempoLeft);
+    }
+
+    this.updateMartyria(element, {
+      tempoLeft,
+      bpm,
+      tempo: null,
+      tempoRight: null,
+    });
+  }
+
   updateMartyriaTempo(element: MartyriaElement, tempo: TempoSign | null) {
     let bpm = element.bpm;
 
@@ -5427,7 +5469,32 @@ export default class Editor extends Vue {
         TempoElement.getDefaultBpm(tempo);
     }
 
-    this.updateMartyria(element, { tempo, bpm });
+    this.updateMartyria(element, {
+      tempo,
+      bpm,
+      tempoLeft: null,
+      tempoRight: null,
+    });
+  }
+
+  updateMartyriaTempoRight(
+    element: MartyriaElement,
+    tempoRight: TempoSign | null,
+  ) {
+    let bpm = element.bpm;
+
+    if (tempoRight != null) {
+      bpm =
+        this.editorPreferences.getDefaultTempo(tempoRight) ??
+        TempoElement.getDefaultBpm(tempoRight);
+    }
+
+    this.updateMartyria(element, {
+      tempoRight,
+      bpm,
+      tempoLeft: null,
+      tempo: null,
+    });
   }
 
   updateMartyriaBpm(element: MartyriaElement, bpm: number) {

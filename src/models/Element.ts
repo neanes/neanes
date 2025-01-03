@@ -582,7 +582,9 @@ export class MartyriaElement extends ScoreElement {
   public scale: Scale = Scale.Diatonic;
   public fthora: Fthora | null = null;
   public chromaticFthoraNote: ScaleNote | null = null;
+  public tempoLeft: TempoSign | null = null;
   public tempo: TempoSign | null = null;
+  public tempoRight: TempoSign | null = null;
   public alignRight: boolean = false;
   public bpm: number = 0;
   public spaceAfter: number = 0;

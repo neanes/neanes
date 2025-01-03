@@ -324,12 +324,14 @@ export class SaveService {
     element.scale = e.scale;
     element.fthora = e.fthora || undefined;
     element.chromaticFthoraNote = e.chromaticFthoraNote || undefined;
+    element.tempoLeft = e.tempoLeft || undefined;
     element.tempo = e.tempo || undefined;
+    element.tempoRight = e.tempoRight || undefined;
     element.measureBarLeft = e.measureBarLeft || undefined;
     element.measureBarRight = e.measureBarRight || undefined;
     element.alignRight = e.alignRight || undefined;
 
-    if (e.tempo != null) {
+    if (e.tempo != null || e.tempoLeft != null || e.tempoRight != null) {
       element.bpm = e.bpm;
     }
 
@@ -1002,9 +1004,19 @@ export class SaveService {
       element.chromaticFthoraNote = e.chromaticFthoraNote;
     }
 
+    if (e.tempoLeft != null) {
+      element.tempoLeft = e.tempoLeft;
+      element.bpm = e.bpm ?? TempoElement.getDefaultBpm(element.tempoLeft);
+    }
+
     if (e.tempo != null) {
       element.tempo = e.tempo;
       element.bpm = e.bpm ?? TempoElement.getDefaultBpm(element.tempo);
+    }
+
+    if (e.tempoRight != null) {
+      element.tempoRight = e.tempoRight;
+      element.bpm = e.bpm ?? TempoElement.getDefaultBpm(element.tempoRight);
     }
 
     if (e.measureBarLeft != null) {

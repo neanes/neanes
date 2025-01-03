@@ -59,7 +59,10 @@
     "note": "Note",
     "scale": "Scale",
     "rootSignOverride": "Root Sign Override",
-    "none": "None"
+    "none": "None",
+    "tempoLeft": "Add Left Tempo",
+    "tempo": "Add Tempo Above",
+    "tempoRight": "Add Right Tempo"
   },
   "modeKey": {
     "size": "Size",

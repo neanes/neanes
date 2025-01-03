@@ -52,7 +52,10 @@
   "pageSetup": {
     "root": "Page Setup",
     "in": "in",
+    "cm": "cm",
     "mm": "mm",
+    "pt": "pt",
+    "pc": "pc",
     "margins": "Margins",
     "header": "Header",
     "footer": "Footer",

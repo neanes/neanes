@@ -225,15 +225,19 @@ export class LayoutService {
 
     // Process Header and Footers
     // Only a single text box is supported right now
-    this.processHeader(score.headers.default, pageSetup, neumeHeight);
-    this.processHeader(score.headers.odd, pageSetup, neumeHeight);
-    this.processHeader(score.headers.even, pageSetup, neumeHeight);
-    this.processHeader(score.headers.firstPage, pageSetup, neumeHeight);
+    if (score.pageSetup.showHeader) {
+      this.processHeader(score.headers.default, pageSetup, neumeHeight);
+      this.processHeader(score.headers.odd, pageSetup, neumeHeight);
+      this.processHeader(score.headers.even, pageSetup, neumeHeight);
+      this.processHeader(score.headers.firstPage, pageSetup, neumeHeight);
+    }
 
-    this.processFooter(score.footers.default, pageSetup, neumeHeight);
-    this.processFooter(score.footers.odd, pageSetup, neumeHeight);
-    this.processFooter(score.footers.even, pageSetup, neumeHeight);
-    this.processFooter(score.footers.firstPage, pageSetup, neumeHeight);
+    if (score.pageSetup.showFooter) {
+      this.processFooter(score.footers.default, pageSetup, neumeHeight);
+      this.processFooter(score.footers.odd, pageSetup, neumeHeight);
+      this.processFooter(score.footers.even, pageSetup, neumeHeight);
+      this.processFooter(score.footers.firstPage, pageSetup, neumeHeight);
+    }
 
     let currentLyricsEndPx =
       pageSetup.leftMargin - pageSetup.lyricsMinimumSpacing;
@@ -252,25 +256,34 @@ export class LayoutService {
 
       const currentPageNumber = pages.length;
 
-      const header = score.getHeaderForPage(currentPageNumber);
-      const footer = score.getFooterForPage(currentPageNumber);
+      let extraHeaderHeightPx = 0;
+      let extraFooterHeightPx = 0;
 
-      // Currently, headers and footers may only contain a single
-      // text box.
-      const headerHeightPx =
-        header != null ? (header.elements[0] as TextBoxElement).height : 0;
-      const footerHeightPx =
-        footer != null ? (footer.elements[0] as TextBoxElement).height : 0;
+      if (score.pageSetup.showHeader) {
+        const header = score.getHeaderForPage(currentPageNumber);
 
-      const extraHeaderHeightPx = Math.max(
-        0,
-        headerHeightPx - (pageSetup.topMargin - pageSetup.headerMargin),
-      );
+        // Currently, headers and footers may only contain a single
+        // text box.
+        const headerHeightPx = (header.elements[0] as TextBoxElement).height;
 
-      const extraFooterHeightPx = Math.max(
-        0,
-        footerHeightPx - (pageSetup.bottomMargin - pageSetup.footerMargin),
-      );
+        extraHeaderHeightPx = Math.max(
+          0,
+          headerHeightPx - (pageSetup.topMargin - pageSetup.headerMargin),
+        );
+      }
+
+      if (score.pageSetup.showFooter) {
+        const footer = score.getFooterForPage(currentPageNumber);
+
+        // Currently, headers and footers may only contain a single
+        // text box.
+        const footerHeightPx = (footer.elements[0] as TextBoxElement).height;
+
+        extraFooterHeightPx = Math.max(
+          0,
+          footerHeightPx - (pageSetup.bottomMargin - pageSetup.footerMargin),
+        );
+      }
 
       const innerPageHeight =
         pageSetup.innerPageHeight - extraHeaderHeightPx - extraFooterHeightPx;

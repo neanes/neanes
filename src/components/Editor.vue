@@ -6997,7 +6997,7 @@ export default class Editor extends Vue {
 }
 
 .selectedTextbox {
-  border: 1px solid goldenrod;
+  outline: 1px solid goldenrod;
 }
 
 .selectedTextbox:deep(.handle) {

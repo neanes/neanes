@@ -283,6 +283,7 @@ export default class TextBox extends Vue {
 
   .text-box.multipanel {
     border: none !important;
+    outline: none !important;
   }
 }
 </style>

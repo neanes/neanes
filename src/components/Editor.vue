@@ -7255,6 +7255,7 @@ export default class Editor extends Vue {
 .page.print .image-box-container,
 .page.print :deep(.text-box.multipanel) {
   border: none;
+  outline: none;
 }
 
 .page.print .page-break,
@@ -7307,22 +7308,27 @@ export default class Editor extends Vue {
 
   .text-box-container {
     border: none;
+    outline: none;
   }
 
   .drop-cap-container {
     border: none;
+    outline: none;
   }
 
   .mode-key-container {
     border: none;
+    outline: none;
   }
 
   .image-box-container {
     border: none;
+    outline: none;
   }
 
   .selectedLyrics {
     border: none;
+    outline: none;
   }
 
   .melisma-text {

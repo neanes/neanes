@@ -160,8 +160,9 @@
       <label for="toolbar-text-box-multipanel">{{
         $t('toolbar:textbox.multipanel')
       }}</label>
+      <span class="divider" />
+
       <template v-if="!element.multipanel">
-        <span class="divider" />
         <label class="right-space">{{ $t('toolbar:common.height') }}</label>
         <InputUnit
           class="text-box-input-width"
@@ -178,7 +179,6 @@
       </template>
     </template>
     <template v-else>
-      <span class="divider" />
       <label class="right-space">{{ $t('toolbar:common.width') }}</label>
       <InputUnit
         class="text-box-input-width"
@@ -193,6 +193,34 @@
         @update:modelValue="$emit('update:customWidth', $event)"
       />
     </template>
+    <span class="space"></span>
+    <div class="form-group">
+      <label class="right-space">{{ $t('toolbar:common.marginTop') }}</label>
+      <InputUnit
+        class="text-box-input-width"
+        unit="pt"
+        :min="0"
+        :max="maxHeight"
+        :step="0.5"
+        :modelValue="element.marginTop"
+        :precision="1"
+        @update:modelValue="$emit('update:marginTop', $event)"
+      />
+    </div>
+    <span class="space"></span>
+    <div class="form-group">
+      <label class="right-space">{{ $t('toolbar:common.marginBottom') }}</label>
+      <InputUnit
+        class="text-box-input-width"
+        unit="pt"
+        :min="0"
+        :max="maxHeight"
+        :step="0.5"
+        :modelValue="element.marginBottom"
+        :precision="1"
+        @update:modelValue="$emit('update:marginBottom', $event)"
+      />
+    </div>
   </div>
 </template>
 
@@ -221,6 +249,8 @@ import { Unit } from '@/utils/Unit';
     'update:fontSize',
     'update:italic',
     'update:lineHeight',
+    'update:marginBottom',
+    'update:marginTop',
     'update:multipanel',
     'update:strokeWidth',
     'update:underline',
@@ -236,6 +266,10 @@ export default class ToolbarTextBox extends Vue {
 
   get maxWidth() {
     return Unit.toPt(this.pageSetup.innerPageWidth);
+  }
+
+  get maxHeight() {
+    return Unit.toPt(this.pageSetup.innerPageHeight);
   }
 }
 </script>

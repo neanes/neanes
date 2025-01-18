@@ -1,7 +1,7 @@
 import { Unit } from '../utils/Unit';
 
 export type PageSize = 'A3' | 'A4' | 'A5' | 'Legal' | 'Letter' | 'Tabloid';
-export type PageSizeUnit = 'mm' | 'in';
+export type PageSizeUnit = 'pc' | 'pt' | 'cm' | 'mm' | 'in';
 
 export interface PageSizeOption {
   name: PageSize;
@@ -77,6 +77,7 @@ export class PageSetup {
   public lyricsDefaultStrokeWidth = 0;
   public lyricsVerticalOffset = -Unit.fromInch(0.05);
   public lyricsMinimumSpacing = Unit.fromInch(0.05);
+  public lyricsMelismaCutoffWidth = Unit.fromPt(5);
 
   // These two melisma properties are currently not exposed in the UI or saved
   // as part of the byzx format.

@@ -1,7 +1,7 @@
 import {
   ExportWorkspaceAsImageReplyArgs,
-  FileMenuOpenScoreArgs,
   OpenContextMenuForTabArgs,
+  OpenWorkspaceFromArgvArgs,
   SaveWorkspaceAsReplyArgs,
   SaveWorkspaceReplyArgs,
   ShowMessageBoxArgs,
@@ -18,6 +18,13 @@ export interface IIpcService {
 
   exportWorkspaceAsHtml(workspace: Workspace, data: string): Promise<void>;
 
+  exportWorkspaceAsMusicXml(
+    workspace: Workspace,
+    data: string,
+    compressed: boolean,
+    openFolder: boolean,
+  ): Promise<void>;
+
   exportWorkspaceAsImage(
     workspace: Workspace,
     imageFormat: 'png' | 'svg',
@@ -27,7 +34,7 @@ export interface IIpcService {
 
   printWorkspace(workspace: Workspace): Promise<void>;
 
-  openWorkspaceFromArgv(): Promise<FileMenuOpenScoreArgs[]>;
+  openWorkspaceFromArgv(): Promise<OpenWorkspaceFromArgvArgs>;
 
   showMessageBox(args: ShowMessageBoxArgs): Promise<ShowMessageBoxReplyArgs>;
 

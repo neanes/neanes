@@ -124,6 +124,36 @@
 
     <span class="space" />
 
+    <div class="form-group">
+      <label class="right-space">{{ $t('toolbar:common.marginTop') }}</label>
+      <InputUnit
+        class="text-box-input-width"
+        unit="pt"
+        :min="0"
+        :max="maxHeight"
+        :step="0.5"
+        :modelValue="element.marginTop"
+        :precision="1"
+        @update:modelValue="$emit('update:marginTop', $event)"
+      />
+    </div>
+    <span class="space"></span>
+    <div class="form-group">
+      <label class="right-space">{{ $t('toolbar:common.marginBottom') }}</label>
+      <InputUnit
+        class="text-box-input-width"
+        unit="pt"
+        :min="0"
+        :max="maxHeight"
+        :step="0.5"
+        :modelValue="element.marginBottom"
+        :precision="1"
+        @update:modelValue="$emit('update:marginBottom', $event)"
+      />
+    </div>
+
+    <span class="space" />
+
     <div style="display: flex; align-items: center">
       <input
         id="toolbar-mode-key-ignore-attractions"
@@ -221,6 +251,8 @@ import ButtonWithMenu, { ButtonWithMenuOption } from './ButtonWithMenu.vue';
     'update:fontSize',
     'update:heightAdjustment',
     'update:ignoreAttractions',
+    'update:marginBottom',
+    'update:marginTop',
     'update:permanentEnharmonicZo',
     'update:showAmbitus',
     'update:strokeWidth',
@@ -240,6 +272,10 @@ export default class ToolbarModeKey extends Vue {
 
   get heightAdjustmentMax() {
     return Unit.toPt(this.pageSetup.pageHeight);
+  }
+
+  get maxHeight() {
+    return Unit.toPt(this.pageSetup.innerPageHeight);
   }
 
   tempoMenuOptions: ButtonWithMenuOption[] = [

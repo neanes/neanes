@@ -2,10 +2,11 @@ import {
   ExportPageAsImageArgs,
   ExportWorkspaceAsHtmlArgs,
   ExportWorkspaceAsImageArgs,
+  ExportWorkspaceAsMusicXmlArgs,
   ExportWorkspaceAsPdfArgs,
-  FileMenuOpenScoreArgs,
   IpcRendererChannels,
   OpenContextMenuForTabArgs,
+  OpenWorkspaceFromArgvArgs,
   PrintWorkspaceArgs,
   SaveWorkspaceArgs,
   SaveWorkspaceAsArgs,
@@ -97,6 +98,29 @@ export class IpcService implements IIpcService {
     );
   }
 
+  public async exportWorkspaceAsMusicXml(
+    workspace: Workspace,
+    data: string,
+    compressed: boolean,
+    openFolder: boolean,
+  ) {
+    const extension = compressed ? 'mxl' : 'musicxml';
+
+    return await window.ipcRenderer.invoke(
+      IpcRendererChannels.ExportWorkspaceAsMusicXml,
+      {
+        filePath:
+          workspace.filePath != null
+            ? `${getFileNameFromPath(workspace.filePath)}.${extension}`
+            : null,
+        tempFileName: `${workspace.tempFileName}.${extension}`,
+        data,
+        compressed,
+        openFolder,
+      } as ExportWorkspaceAsMusicXmlArgs,
+    );
+  }
+
   public async printWorkspace(workspace: Workspace) {
     return await window.ipcRenderer.invoke(IpcRendererChannels.PrintWorkspace, {
       landscape: workspace.score.pageSetup.landscape,
@@ -104,7 +128,7 @@ export class IpcService implements IIpcService {
     } as PrintWorkspaceArgs);
   }
 
-  public async openWorkspaceFromArgv(): Promise<FileMenuOpenScoreArgs[]> {
+  public async openWorkspaceFromArgv(): Promise<OpenWorkspaceFromArgvArgs> {
     return await window.ipcRenderer.invoke(
       IpcRendererChannels.OpenWorkspaceFromArgv,
     );

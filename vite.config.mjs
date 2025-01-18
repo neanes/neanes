@@ -1,6 +1,3 @@
-import { createRequire } from 'node:module';
-const require = createRequire(import.meta.url);
-
 import { rmSync } from 'node:fs';
 
 import vue from '@vitejs/plugin-vue';
@@ -36,6 +33,9 @@ export default defineConfig(({ command, mode }) => {
       mode === 'web'
         ? VitePWA({
             registerType: null, // We'll inject the service worker ourselves
+            workbox: {
+              maximumFileSizeToCacheInBytes: 3000000,
+            },
             includeAssets: [
               'favicon-32.png',
               'favicon-16.png',

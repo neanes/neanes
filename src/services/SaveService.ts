@@ -174,6 +174,7 @@ export class SaveService {
     pageSetup.lyricsDefaultStrokeWidth = p.lyricsDefaultStrokeWidth;
     pageSetup.lyricsVerticalOffset = p.lyricsVerticalOffset;
     pageSetup.lyricsMinimumSpacing = p.lyricsMinimumSpacing;
+    pageSetup.lyricsMelismaCutoffWidth = p.lyricsMelismaCutoffWidth;
 
     pageSetup.textBoxDefaultColor = p.textBoxDefaultColor;
     pageSetup.textBoxDefaultFontFamily = p.textBoxDefaultFontFamily;
@@ -262,16 +263,13 @@ export class SaveService {
     if (e.elementType === ElementType.TextBox) {
       const element = new TextBoxElement_v1();
 
-      this.SaveTextBox(element as TextBoxElement_v1, e as TextBoxElement);
+      this.SaveTextBox(element, e as TextBoxElement);
 
       header.elements[0] = element;
     } else if (e.elementType === ElementType.RichTextBox) {
       const element = new RichTextBoxElement_v1();
 
-      this.SaveRichTextBox(
-        element as RichTextBoxElement_v1,
-        e as RichTextBoxElement,
-      );
+      this.SaveRichTextBox(element, e as RichTextBoxElement);
 
       header.elements[0] = element;
     }
@@ -284,16 +282,13 @@ export class SaveService {
     if (e.elementType === ElementType.TextBox) {
       const element = new TextBoxElement_v1();
 
-      this.SaveTextBox(element as TextBoxElement_v1, e as TextBoxElement);
+      this.SaveTextBox(element, e as TextBoxElement);
 
       footer.elements[0] = element;
     } else if (e.elementType === ElementType.RichTextBox) {
       const element = new RichTextBoxElement_v1();
 
-      this.SaveRichTextBox(
-        element as RichTextBoxElement_v1,
-        e as RichTextBoxElement,
-      );
+      this.SaveRichTextBox(element, e as RichTextBoxElement);
 
       footer.elements[0] = element;
     }
@@ -329,12 +324,14 @@ export class SaveService {
     element.scale = e.scale;
     element.fthora = e.fthora || undefined;
     element.chromaticFthoraNote = e.chromaticFthoraNote || undefined;
+    element.tempoLeft = e.tempoLeft || undefined;
     element.tempo = e.tempo || undefined;
+    element.tempoRight = e.tempoRight || undefined;
     element.measureBarLeft = e.measureBarLeft || undefined;
     element.measureBarRight = e.measureBarRight || undefined;
     element.alignRight = e.alignRight || undefined;
 
-    if (e.tempo != null) {
+    if (e.tempo != null || e.tempoLeft != null || e.tempoRight != null) {
       element.bpm = e.bpm;
     }
 
@@ -389,9 +386,11 @@ export class SaveService {
       element.tertiaryFthoraOffsetY = e.tertiaryFthoraOffsetY || undefined;
     }
 
-    if (e.chromaticFthoraNote != null) {
-      element.chromaticFthoraNote = e.chromaticFthoraNote;
-    }
+    element.chromaticFthoraNote = e.chromaticFthoraNote ?? undefined;
+    element.secondaryChromaticFthoraNote =
+      e.secondaryChromaticFthoraNote ?? undefined;
+    element.tertiaryChromaticFthoraNote =
+      e.tertiaryChromaticFthoraNote ?? undefined;
 
     if (e.accidental != null) {
       element.accidental = e.accidental;
@@ -522,6 +521,8 @@ export class SaveService {
     element.height = e.height;
     element.customWidth = e.customWidth ?? undefined;
     element.customHeight = e.customHeight ?? undefined;
+    element.marginTop = e.marginTop ?? undefined;
+    element.marginBottom = e.marginBottom ?? undefined;
     element.useDefaultStyle = e.useDefaultStyle || undefined;
   }
 
@@ -539,6 +540,8 @@ export class SaveService {
     }
 
     element.height = e.height;
+    element.marginTop = e.marginTop ?? undefined;
+    element.marginBottom = e.marginBottom ?? undefined;
     element.rtl = e.rtl || undefined;
   }
 
@@ -568,6 +571,8 @@ export class SaveService {
     element.strokeWidth = e.strokeWidth;
     element.height = e.height;
     element.heightAdjustment = e.heightAdjustment;
+    element.marginTop = e.marginTop ?? undefined;
+    element.marginBottom = e.marginBottom ?? undefined;
     element.bpm = e.bpm;
     element.ignoreAttractions = e.ignoreAttractions || undefined;
     element.showAmbitus = e.showAmbitus || undefined;
@@ -791,6 +796,8 @@ export class SaveService {
     pageSetup.lyricsVerticalOffset = p.lyricsVerticalOffset;
     pageSetup.lyricsMinimumSpacing =
       p.lyricsMinimumSpacing ?? pageSetup.lyricsMinimumSpacing;
+    pageSetup.lyricsMelismaCutoffWidth =
+      p.lyricsMelismaCutoffWidth ?? pageSetup.lyricsMelismaCutoffWidth;
 
     pageSetup.martyriaDefaultColor =
       p.martyriaDefaultColor ?? pageSetup.martyriaDefaultColor;
@@ -903,7 +910,7 @@ export class SaveService {
 
       this.LoadTextBox_v1(
         scoreVersion,
-        element as TextBoxElement,
+        element,
         e as TextBoxElement_v1,
         pageSetup,
       );
@@ -912,10 +919,7 @@ export class SaveService {
     } else if (e.elementType === ElementType.RichTextBox) {
       const element = new RichTextBoxElement();
 
-      this.LoadRichTextBox_v1(
-        element as RichTextBoxElement,
-        e as RichTextBoxElement_v1,
-      );
+      this.LoadRichTextBox_v1(element, e as RichTextBoxElement_v1);
 
       header.elements[0] = element;
     }
@@ -935,7 +939,7 @@ export class SaveService {
 
       this.LoadTextBox_v1(
         scoreVersion,
-        element as TextBoxElement,
+        element,
         e as TextBoxElement_v1,
         pageSetup,
       );
@@ -944,10 +948,7 @@ export class SaveService {
     } else if (e.elementType === ElementType.RichTextBox) {
       const element = new RichTextBoxElement();
 
-      this.LoadRichTextBox_v1(
-        element as RichTextBoxElement,
-        e as RichTextBoxElement_v1,
-      );
+      this.LoadRichTextBox_v1(element, e as RichTextBoxElement_v1);
 
       footer.elements[0] = element;
     }
@@ -1003,9 +1004,19 @@ export class SaveService {
       element.chromaticFthoraNote = e.chromaticFthoraNote;
     }
 
+    if (e.tempoLeft != null) {
+      element.tempoLeft = e.tempoLeft;
+      element.bpm = e.bpm ?? TempoElement.getDefaultBpm(element.tempoLeft);
+    }
+
     if (e.tempo != null) {
       element.tempo = e.tempo;
       element.bpm = e.bpm ?? TempoElement.getDefaultBpm(element.tempo);
+    }
+
+    if (e.tempoRight != null) {
+      element.tempoRight = e.tempoRight;
+      element.bpm = e.bpm ?? TempoElement.getDefaultBpm(element.tempoRight);
     }
 
     if (e.measureBarLeft != null) {
@@ -1072,9 +1083,10 @@ export class SaveService {
       element.tertiaryFthoraOffsetY = e.tertiaryFthoraOffsetY ?? null;
     }
 
-    if (e.chromaticFthoraNote != null) {
-      element.chromaticFthoraNote = e.chromaticFthoraNote;
-    }
+    element.chromaticFthoraNote = e.chromaticFthoraNote ?? null;
+    element.secondaryChromaticFthoraNote =
+      e.secondaryChromaticFthoraNote ?? null;
+    element.tertiaryChromaticFthoraNote = e.tertiaryChromaticFthoraNote ?? null;
 
     if (e.accidental != null) {
       element.accidental = e.accidental;
@@ -1223,6 +1235,8 @@ export class SaveService {
     element.lineHeight = e.lineHeight ?? pageSetup.textBoxDefaultLineHeight;
     element.customWidth = e.customWidth ?? null;
     element.customHeight = e.customHeight ?? null;
+    element.marginTop = e.marginTop ?? 0;
+    element.marginBottom = e.marginBottom ?? 0;
 
     if (scoreVersion === '1.0') {
       // In this version, use default was incorrectly set to true
@@ -1239,6 +1253,8 @@ export class SaveService {
   ) {
     element.content = e.content;
     element.height = e.height;
+    element.marginTop = e.marginTop ?? 0;
+    element.marginBottom = e.marginBottom ?? 0;
 
     if (e.multipanel) {
       element.contentLeft = e.contentLeft;
@@ -1272,6 +1288,8 @@ export class SaveService {
     element.fontSize = e.fontSize;
     element.strokeWidth = e.strokeWidth ?? element.strokeWidth;
     element.heightAdjustment = e.heightAdjustment ?? 0;
+    element.marginTop = e.marginTop ?? 0;
+    element.marginBottom = e.marginBottom ?? 0;
     element.bpm = e.bpm ?? 120;
     element.ignoreAttractions = e.ignoreAttractions === true;
     element.showAmbitus = e.showAmbitus === true;

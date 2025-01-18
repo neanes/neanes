@@ -1,7 +1,7 @@
 import { Unit } from '@/utils/Unit';
 
 export type PageSize = 'A3' | 'A4' | 'A5' | 'Legal' | 'Letter' | 'Tabloid';
-export type PageSizeUnit = 'mm' | 'in';
+export type PageSizeUnit = 'pc' | 'pt' | 'cm' | 'mm' | 'in';
 
 export class PageSetup {
   public pageSize: PageSize = 'Letter';
@@ -37,6 +37,7 @@ export class PageSetup {
   public lyricsDefaultStrokeWidth = 0;
   public lyricsVerticalOffset = -Unit.fromInch(0.05);
   public lyricsMinimumSpacing = Unit.fromInch(0.05);
+  public lyricsMelismaCutoffWidth = Unit.fromPt(5);
 
   public neumeDefaultFontFamily = 'Neanes';
   public neumeDefaultFontSize = Unit.fromPt(20);

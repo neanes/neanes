@@ -15,6 +15,7 @@ Neanes (pronounced neh-ah-ness) is a free and open source scorewriter for notati
 - Print or export to PDF
 - Export to HTML using [ByzHtml](https://danielgarthur.github.io/byzhtml) web components
 - Export to PNG
+- Export to MusicXML
 
 ## Purpose
 

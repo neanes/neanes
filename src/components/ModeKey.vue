@@ -127,12 +127,12 @@ export default class ModeKey extends Vue {
   }
 
   get tempoStyle() {
-    // TODO figure out a way to remove the hard-coded 12
-    // font metadata json?
+    // TODO figure out a way to remove the hard-coded -.45em
+    // maybe put it in the font metadata json?
     const style = {
       color: this.pageSetup.tempoDefaultColor,
       webkitTextStrokeWidth: withZoom(this.pageSetup.tempoDefaultStrokeWidth),
-      top: withZoom(-12),
+      top: '-0.45em',
       marginLeft: withZoom(8),
     } as StyleValue;
 
@@ -140,15 +140,15 @@ export default class ModeKey extends Vue {
   }
 
   get ambitusStyle() {
-    // TODO figure out a way to remove the hard-coded 12
-    // font metadata json?
+    // TODO figure out a way to remove the hard-coded -.45em
+    // maybe put it in the font metadata json?
     const style = {
       color: this.pageSetup.martyriaDefaultColor,
       webkitTextStrokeWidth: withZoom(
         this.pageSetup.martyriaDefaultStrokeWidth,
       ),
       position: 'relative',
-      top: withZoom(-12),
+      top: '-0.45em',
     } as StyleValue;
 
     return style;

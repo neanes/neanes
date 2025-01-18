@@ -10,7 +10,7 @@ export { ScoreVersion };
 
 export class Score {
   public version: string = ScoreVersion;
-  public appVersion: string = APP_VERSION!;
+  public appVersion: string = APP_VERSION;
   public pageSetup: PageSetup = new PageSetup();
   public headers: Headers = new Headers();
   public footers: Footers = new Footers();

@@ -1,9 +1,6 @@
-/* eslint-disable no-console */
-
 import { ScoreElement } from '@/models/Element';
-import { Accidental, Ison } from '@/models/Neumes';
+import { Accidental } from '@/models/Neumes';
 import {
-  getIsonValue,
   getScaleNoteFromValue,
   getScaleNoteValue,
   Scale,
@@ -72,6 +69,7 @@ export interface PlaybackWorkspace {
   beat: number;
 
   scale: PlaybackScale;
+  physicalNote: ScaleNote;
   legetos: boolean;
   chrysanthineAccidentals: boolean;
 
@@ -174,6 +172,7 @@ export class PlaybackService {
       frequency: defaultFrequencyDi,
       isonFrequency: 0,
       scale: this.diatonicScale,
+      physicalNote: ScaleNote.Pa,
       legetos: false,
       chrysanthineAccidentals: chrysanthineAccidentals,
 
@@ -605,6 +604,7 @@ export class PlaybackService {
     }
 
     workspace.frequency = this.moveTo(noteAtomNode.virtualNote, workspace);
+    workspace.physicalNote = noteAtomNode.physicalNote;
 
     if (
       workspace.lastAlterationMoria !== 0 &&
@@ -675,6 +675,7 @@ export class PlaybackService {
     workspace.scale = this.getPlaybackScale(modeKeyNode.scale, workspace);
 
     workspace.frequency = this.moveTo(modeKeyNode.virtualNote, workspace);
+    workspace.physicalNote = modeKeyNode.physicalNote;
   }
 
   handleFthora(fthoraNode: Readonly<FthoraNode>, workspace: PlaybackWorkspace) {
@@ -686,21 +687,64 @@ export class PlaybackService {
       console.groupEnd();
     }
 
+    let physicalNote = fthoraNode.physicalNote;
+    let virtualNote = fthoraNode.virtualNote;
+
+    // In the case of the enharmonic fthora,
+    // we must consider the the notes BEFORE the
+    // the note is changed.
+    if (
+      fthoraNode.scale === Scale.EnharmonicZoHigh ||
+      fthoraNode.scale === Scale.EnharmonicZo ||
+      fthoraNode.scale === Scale.EnharmonicVou ||
+      fthoraNode.scale === Scale.EnharmonicVouHigh
+    ) {
+      // Example: workspace is on THI and
+      // EnharmonicZoHigh fthora is on KE, Virtual Note = Zo
+
+      // Use the current physical note, BEFORE the jump
+      // Ex: physical note = THI
+      physicalNote = workspace.physicalNote;
+
+      // Determine the distance between the current physical note
+      // and the next physical note
+      // Ex: enharmonic shift = THI - KE = -1
+      const enharmonicShift =
+        getScaleNoteValue(workspace.physicalNote) -
+        getScaleNoteValue(fthoraNode.physicalNote);
+
+      // The virtual note is the virtual note of the current physical note
+      // in the new enharmonic scale
+      // Ex: virtual note = ZO - 1 = KE
+      virtualNote = getScaleNoteFromValue(
+        getScaleNoteValue(fthoraNode.virtualNote) + enharmonicShift,
+      );
+
+      // Ex: So finally, we have physical note THI and virtual note KE,
+      // and we are ready to move to physical note KE, virtual note ZO
+
+      if (workspace.loggingEnabled) {
+        console.group('handleFthora: enharmonic special case');
+        console.log('physicalNote', physicalNote);
+        console.log('virtualNote', virtualNote);
+        console.log('enharmonicShift', enharmonicShift);
+        console.groupEnd();
+      }
+    }
+
     const currentShift =
-      getScaleNoteValue(fthoraNode.virtualNote) -
-      getScaleNoteValue(fthoraNode.physicalNote);
+      getScaleNoteValue(virtualNote) - getScaleNoteValue(physicalNote);
     if (currentShift) {
       // Compute distance from physical note to Di in the old scale
       const moria = this.moriaBetweenNotes(
         workspace.scale.scaleNoteMap.get(ScaleNote.Thi)!,
         workspace.scale.intervals,
-        getScaleNoteValue(fthoraNode.physicalNote) -
-          getScaleNoteValue(ScaleNote.Thi),
+        getScaleNoteValue(physicalNote) - getScaleNoteValue(ScaleNote.Thi),
       );
       if (workspace.loggingEnabled) {
         console.log(
           'Moria from physical note ' +
-            fthoraNode.physicalNote +
+            physicalNote +
             ' to Di in the old scale',
           moria,
         );
@@ -711,16 +755,13 @@ export class PlaybackService {
 
       // Compute distance from Di to virtual note in the new scale
       const moria2 = this.moriaBetweenNotes(
-        workspace.scale.scaleNoteMap.get(fthoraNode.virtualNote)!,
+        workspace.scale.scaleNoteMap.get(virtualNote)!,
         workspace.scale.intervals,
-        getScaleNoteValue(ScaleNote.Thi) -
-          getScaleNoteValue(fthoraNode.virtualNote),
+        getScaleNoteValue(ScaleNote.Thi) - getScaleNoteValue(virtualNote),
       );
       if (workspace.loggingEnabled) {
         console.log(
-          'Moria from virtual note ' +
-            fthoraNode.virtualNote +
-            ' to Di in the new scale',
+          'Moria from virtual note ' + virtualNote + ' to Di in the new scale',
           moria2,
         );
       }
@@ -806,18 +847,19 @@ export class PlaybackService {
   handleIson(isonNode: Readonly<IsonNode>, workspace: PlaybackWorkspace) {
     if (workspace.loggingEnabled) {
       console.groupCollapsed('PlaybackService', 'ison');
-      console.log('physicalNote', isonNode.physicalNote);
-      console.log('virtualNote', isonNode.virtualNote);
+      if (isonNode.unison) {
+        console.log('unison');
+      } else {
+        console.log('physicalNote', isonNode.physicalNote);
+        console.log('virtualNote', isonNode.virtualNote);
+      }
       console.groupEnd();
     }
 
     workspace.isonFrequency = -1;
 
-    if (isonNode.physicalNote !== Ison.Unison) {
-      workspace.isonFrequency = this.moveTo(
-        getScaleNoteFromValue(getIsonValue(isonNode.virtualNote)),
-        workspace,
-      );
+    if (!isonNode.unison) {
+      workspace.isonFrequency = this.moveTo(isonNode.virtualNote, workspace);
     }
   }
 

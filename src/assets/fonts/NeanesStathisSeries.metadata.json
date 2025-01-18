@@ -1,6 +1,6 @@
 {
   "fontName": "NeanesStathisSeries",
-  "fontVersion": "1.000",
+  "fontVersion": "1.001",
   "metrics": {
     "winAscent": 1.4,
     "winDescent": 0.466
@@ -7435,6 +7435,10 @@
         0.763,
         0.505
       ],
+      "apli": [
+        0.803,
+        -0.227
+      ],
       "klasmaTop": [
         0.793,
         0.487
@@ -7444,12 +7448,20 @@
         0.619
       ],
       "diesis": [
-        0.4,
+        0.71,
         0.133
       ],
       "psifiston": [
         0.84,
         0.113
+      ],
+      "antikenoma": [
+        0.82,
+        -0.085
+      ],
+      "heteron": [
+        1.087,
+        0.227
       ],
       "fthoraTop": [
         0.743,
@@ -7463,6 +7475,18 @@
         0.262,
         0.561
       ],
+      "omalonConnecting": [
+        1.46,
+        -0.04
+      ],
+      "omalon": [
+        1.04,
+        -0.12
+      ],
+      "heteronConnecting": [
+        1.684,
+        -0.138
+      ],
       "measureNumber": [
         0.172,
         0.753
@@ -7471,13 +7495,33 @@
         0.71,
         0.877
       ],
+      "endofonon": [
+        0.772,
+        -0.277
+      ],
       "koronis": [
         0.686,
         0.801
       ],
+      "yfenAbove": [
+        0.93,
+        0.641
+      ],
+      "yfenBelow": [
+        0.929,
+        -0.2
+      ],
+      "yfesisSecondary": [
+        0.22,
+        -0.3
+      ],
       "barline": [
         0.277,
         0.59
+      ],
+      "diesisSecondary": [
+        1.596,
+        0.897
       ]
     },
     "oligonKentimataAbove.alt01": {
@@ -7905,7 +7949,7 @@
     "modeBetaCapital": 1.048,
     "modeGammaCapital": 1.117,
     "modeDeltaCapital": 1.063,
-    "oligonKentimataBelow.alt01": 1.465,
+    "oligonKentimataBelow.alt01": 1.515,
     "oligonKentimataAbove.alt01": 1.465,
     "antikenoma.alt01": 0.001,
     "modeFirst.salt01": 0.98,
@@ -8607,12 +8651,12 @@
     },
     "oligonKentimataBelow": {
       "bBoxNE": [
-        1.427,
+        1.428,
         0.388
       ],
       "bBoxSW": [
-        0.07,
-        -0.02
+        0.072,
+        -0.005
       ]
     },
     "oligonKentimataAbove": {
@@ -11537,12 +11581,12 @@
     },
     "oligonKentimataBelow.alt01": {
       "bBoxNE": [
-        1.404,
-        0.393
+        1.427,
+        0.388
       ],
       "bBoxSW": [
-        0.067,
-        -0.023
+        0.07,
+        -0.02
       ]
     },
     "oligonKentimataAbove.alt01": {

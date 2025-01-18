@@ -9,6 +9,7 @@
     "pageSetup": "Διαμόρφωση Σελίδας",
     "exportAsPdf": "Εξαγωγή ως PDF",
     "exportAsHtml": "Εξαγωγή ως HTML",
+    "exportAsMusicXml": "Εξαγωγή ως MusicXML",
     "exportAsImage": "Εξαγωγή ως Εικόνα",
     "print": "Εκτύπωση",
     "close": "Κλείσιμο",

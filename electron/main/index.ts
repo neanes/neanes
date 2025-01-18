@@ -30,6 +30,7 @@ import {
   ExportWorkspaceAsHtmlArgs,
   ExportWorkspaceAsImageArgs,
   ExportWorkspaceAsImageReplyArgs,
+  ExportWorkspaceAsMusicXmlArgs,
   ExportWorkspaceAsPdfArgs,
   FileMenuInsertTextboxArgs,
   FileMenuOpenImageArgs,
@@ -83,6 +84,9 @@ const maxRecentFiles = 20;
 const storeFilePath = path.join(userDataPath, 'settings.json');
 
 const isMac = process.platform === 'darwin';
+
+const silentPdf = process.argv.includes('--silent-pdf');
+const silent = silentPdf;
 
 let win: BrowserWindow | null = null;
 let readyToExit = false;
@@ -158,7 +162,7 @@ const debouncedSaveWindowState = debounce(500, saveStore);
 async function loadStore() {
   try {
     Object.assign(store, JSON.parse(await fs.readFile(storeFilePath, 'utf8')));
-  } catch (error) {
+  } catch {
     // Return default file
     return defaultStore;
   }
@@ -290,9 +294,11 @@ async function readScoreFile(filePath: string) {
 async function openFile(filePath: string) {
   const data = await readScoreFile(filePath);
 
-  await addToRecentFiles(filePath);
+  if (!silent) {
+    await addToRecentFiles(filePath);
 
-  createMenu();
+    createMenu();
+  }
 
   return data;
 }
@@ -312,6 +318,11 @@ async function openFileFromArgs(argv: string[]) {
   const parameters = argv.slice(2);
 
   for (const parameter of parameters) {
+    // Ignore CLI paramters
+    if (parameter.startsWith('--')) {
+      continue;
+    }
+
     try {
       result.push({
         data: await openFile(parameter),
@@ -331,7 +342,7 @@ async function openFileFromArgs(argv: string[]) {
     }
   }
 
-  return result;
+  return { files: result, silentPdf };
 }
 
 async function saveWorkspace(args: SaveWorkspaceArgs) {
@@ -407,9 +418,9 @@ async function saveWorkspaceAs(args: SaveWorkspaceAsArgs) {
       }
 
       if (doWrite) {
-        await writeScoreFile(result.filePath!, args.data);
+        await writeScoreFile(result.filePath, args.data);
 
-        await addToRecentFiles(result.filePath!);
+        await addToRecentFiles(result.filePath);
         createMenu();
 
         result.success = true;
@@ -502,15 +513,42 @@ async function openImage() {
   return result;
 }
 
+let silentPdfSuccessCount = 0;
+let silentPdfFailCount = 0;
+
 async function exportWorkspaceAsPdf(args: ExportWorkspaceAsPdfArgs) {
   try {
     if (exporting || !win) {
       return;
     }
 
+    if (silentPdf) {
+      try {
+        const data = await win.webContents.printToPDF({
+          pageSize: args.pageSize,
+          landscape: args.landscape,
+        });
+        let newPath = args.filePath!.replace(/\.byzx?$/, '.pdf');
+
+        // Check to make sure we don't accidentally overwrite the original file
+        if (newPath === args.filePath) {
+          newPath += '.pdf';
+        }
+
+        await fs.writeFile(newPath, data);
+        silentPdfSuccessCount++;
+        console.log(`DONE ${args.filePath} => ${newPath}`);
+      } catch (error) {
+        silentPdfFailCount++;
+        console.error(`FAIL ${args.filePath} | ${error}`);
+      }
+
+      return;
+    }
+
     exporting = true;
 
-    const dialogResult = await dialog.showSaveDialog(win!, {
+    const dialogResult = await dialog.showSaveDialog(win, {
       title: 'Export Score as PDF',
       filters: [{ name: 'PDF File', extensions: ['pdf'] }],
       defaultPath:
@@ -520,7 +558,7 @@ async function exportWorkspaceAsPdf(args: ExportWorkspaceAsPdfArgs) {
     });
 
     if (!dialogResult.canceled) {
-      let filePath = dialogResult.filePath!;
+      let filePath = dialogResult.filePath;
 
       // Hack for Linux: if the filepath doesn't end with the proper extension,
       // then add it
@@ -538,9 +576,9 @@ async function exportWorkspaceAsPdf(args: ExportWorkspaceAsPdfArgs) {
           pageSize: args.pageSize,
           landscape: args.landscape,
         });
-        await fs.writeFile(filePath!, data);
+        await fs.writeFile(filePath, data);
 
-        await shell.openPath(filePath!);
+        await shell.openPath(filePath);
       }
     }
   } catch (error) {
@@ -578,7 +616,7 @@ async function exportWorkspaceAsHtml(args: ExportWorkspaceAsHtmlArgs) {
     });
 
     if (!dialogResult.canceled) {
-      let filePath = dialogResult.filePath!;
+      let filePath = dialogResult.filePath;
 
       // Hack for Linux: if the filepath doesn't end with the proper extension,
       // then add it
@@ -592,8 +630,8 @@ async function exportWorkspaceAsHtml(args: ExportWorkspaceAsHtmlArgs) {
       }
 
       if (doWrite) {
-        await fs.writeFile(filePath!, args.data);
-        await shell.openPath(filePath!);
+        await fs.writeFile(filePath, args.data);
+        await shell.openPath(filePath);
       }
     }
   } catch (error) {
@@ -603,6 +641,66 @@ async function exportWorkspaceAsHtml(args: ExportWorkspaceAsHtmlArgs) {
       dialog.showMessageBox(win!, {
         type: 'error',
         title: 'Export as HTML failed',
+        message: error.message,
+      });
+    }
+  } finally {
+    saving = false;
+  }
+}
+
+async function exportWorkspaceAsMusicXml(args: ExportWorkspaceAsMusicXmlArgs) {
+  try {
+    if (saving) {
+      return false;
+    }
+
+    saving = true;
+
+    const extension = args.compressed ? 'mxl' : 'musicxml';
+
+    const dialogResult = await dialog.showSaveDialog(win!, {
+      title: 'Export Score as MusicXML',
+      defaultPath: args.filePath || args.tempFileName,
+      filters: [
+        {
+          name: args.compressed
+            ? 'Compressed MusicXML File'
+            : 'Uncompressed MusicXML File',
+          extensions: [extension],
+        },
+      ],
+    });
+
+    if (!dialogResult.canceled) {
+      let filePath = dialogResult.filePath;
+
+      // Hack for Linux: if the filepath doesn't end with the proper extension,
+      // then add it
+      // See https://github.com/electron/electron/issues/21935
+      let doWrite = true;
+
+      if (!filePath.endsWith(extension)) {
+        filePath += extension;
+
+        doWrite = await showReplaceFileDialog(filePath);
+      }
+
+      if (doWrite) {
+        await fs.writeFile(filePath, args.data);
+
+        if (args.openFolder) {
+          shell.showItemInFolder(filePath);
+        }
+      }
+    }
+  } catch (error) {
+    console.error(error);
+
+    if (error instanceof Error) {
+      dialog.showMessageBox(win!, {
+        type: 'error',
+        title: 'Export as MusicXML failed',
         message: error.message,
       });
     }
@@ -636,7 +734,7 @@ async function exportWorkspaceAsImage(args: ExportWorkspaceAsImageArgs) {
     });
 
     if (!dialogResult.canceled) {
-      let filePath = dialogResult.filePath!;
+      let filePath = dialogResult.filePath;
       if (!filePath.endsWith(args.imageFormat)) {
         filePath += `.${args.imageFormat}`;
       }
@@ -848,7 +946,7 @@ function createMenu() {
 
                   dialog.showMessageBox(win!, {
                     title: app.name,
-                    message: app.name!,
+                    message: app.name,
                     detail: detail,
                     type: 'info',
                   });
@@ -966,6 +1064,12 @@ function createMenu() {
           accelerator: 'CmdOrCtrl+Shift+E',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuExportAsHtml);
+          },
+        },
+        {
+          label: i18next.t('menu:file.exportAsMusicXml'),
+          click() {
+            win?.webContents.send(IpcMainChannels.FileMenuExportAsMusicXml);
           },
         },
         {
@@ -1242,20 +1346,20 @@ function createMenu() {
         {
           label: i18next.t('menu:help.guide'),
           click() {
-            shell.openExternal(import.meta.env.VITE_GUIDE_URL!);
+            shell.openExternal(import.meta.env.VITE_GUIDE_URL);
           },
         },
         { type: 'separator' },
         {
           label: i18next.t('menu:help.requestAFeature'),
           click() {
-            shell.openExternal(import.meta.env.VITE_ISSUES_URL!);
+            shell.openExternal(import.meta.env.VITE_ISSUES_URL);
           },
         },
         {
           label: i18next.t('menu:help.reportAnIssue'),
           click() {
-            shell.openExternal(import.meta.env.VITE_ISSUES_URL!);
+            shell.openExternal(import.meta.env.VITE_ISSUES_URL);
           },
         },
         { type: 'separator' },
@@ -1273,7 +1377,7 @@ function createMenu() {
 
                   dialog.showMessageBox(win!, {
                     title: app.name,
-                    message: app.name!,
+                    message: app.name,
                     detail: detail,
                     type: 'info',
                   });
@@ -1330,9 +1434,11 @@ async function createWindow() {
   win.on('resize', debouncedSaveWindowState);
   win.on('move', debouncedSaveWindowState);
 
-  win.once('ready-to-show', () => {
-    win?.show();
-  });
+  if (!silent) {
+    win.once('ready-to-show', () => {
+      win?.show();
+    });
+  }
 
   win.webContents.once('did-finish-load', () => (loaded = true));
 
@@ -1361,7 +1467,10 @@ async function createWindow() {
     }
   } else {
     // Load the index.html when not in development
-    autoUpdater.checkForUpdatesAndNotify();
+    if (!silent) {
+      autoUpdater.checkForUpdatesAndNotify();
+    }
+
     await win.loadFile(indexHtml);
   }
 
@@ -1440,6 +1549,14 @@ ipcMain.on(
 ipcMain.handle(IpcRendererChannels.ExitApplication, async () => {
   readyToExit = true;
 
+  if (silentPdf) {
+    console.log(`Successfully wrote ${silentPdfSuccessCount} files`);
+
+    if (silentPdfFailCount > 0) {
+      console.log(`Failed to write ${silentPdfFailCount} files`);
+    }
+  }
+
   // In macOS, there is a distinction between "close" and "quit".
   if (quitting) {
     app.exit();
@@ -1498,6 +1615,13 @@ ipcMain.handle(
 );
 
 ipcMain.handle(
+  IpcRendererChannels.ExportWorkspaceAsMusicXml,
+  async (event, args: ExportWorkspaceAsMusicXmlArgs) => {
+    return await exportWorkspaceAsMusicXml(args);
+  },
+);
+
+ipcMain.handle(
   IpcRendererChannels.ExportWorkspaceAsImage,
   async (event, args: ExportWorkspaceAsImageArgs) => {
     return await exportWorkspaceAsImage(args);
@@ -1526,7 +1650,7 @@ ipcMain.handle(IpcRendererChannels.OpenWorkspaceFromArgv, async () => {
       success: true,
     };
 
-    return [result];
+    return { files: [result], silent: false };
   } else {
     return await openFileFromArgs(process.argv);
   }
@@ -1592,7 +1716,7 @@ app.on(
     );
 
     if (loaded) {
-      results
+      results.files
         .filter((x) => x.success)
         .forEach((x) =>
           win?.webContents.send(IpcMainChannels.FileMenuOpenScore, x),
@@ -1601,7 +1725,7 @@ app.on(
       win?.show();
     } else {
       win?.webContents.once('did-finish-load', () => {
-        results
+        results.files
           .filter((x) => x.success)
           .forEach((x) =>
             win?.webContents.send(IpcMainChannels.FileMenuOpenScore, x),
@@ -1672,7 +1796,7 @@ app.on('ready', async () => {
       });
 
       if (result.response === 0) {
-        shell.openExternal(import.meta.env.VITE_DOWNLOAD_URL!);
+        shell.openExternal(import.meta.env.VITE_DOWNLOAD_URL);
       }
     });
   }

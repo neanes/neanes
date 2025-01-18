@@ -24,6 +24,7 @@
       @toggle-line-break="toggleLineBreak($event)"
       @add-tempo="addTempo"
       @add-drop-cap="addDropCap(false)"
+      @add-mode-key="onFileMenuInsertModeKey"
       @add-text-box="onFileMenuInsertTextBox"
       @add-text-box-rich="onFileMenuInsertRichTextBox"
       @add-image="onClickAddImage"
@@ -685,6 +686,12 @@
         @update:customHeight="
           updateTextBoxHeight(selectedTextBoxElement, $event)
         "
+        @update:marginTop="
+          updateTextBoxMarginTop(selectedTextBoxElement, $event)
+        "
+        @update:marginBottom="
+          updateTextBoxMarginBottom(selectedTextBoxElement, $event)
+        "
         @insert:gorthmikon="insertGorthmikon"
         @insert:pelastikon="insertPelastikon"
       />
@@ -692,8 +699,15 @@
     <template v-if="selectedRichTextBoxElement != null">
       <ToolbarTextBoxRich
         :element="selectedRichTextBoxElement"
+        :pageSetup="score.pageSetup"
         @update:rtl="
           updateRichTextBox(selectedRichTextBoxElement, { rtl: $event })
+        "
+        @update:marginTop="
+          updateRichTextBoxMarginTop(selectedRichTextBoxElement, $event)
+        "
+        @update:marginBottom="
+          updateRichTextBoxMarginBottom(selectedRichTextBoxElement, $event)
         "
       />
     </template>
@@ -845,6 +859,12 @@
             $event,
           )
         "
+        @update:marginTop="
+          updateModeKeyMarginTop(selectedElement as ModeKeyElement, $event)
+        "
+        @update:marginBottom="
+          updateModeKeyMarginBottom(selectedElement as ModeKeyElement, $event)
+        "
         @update:permanentEnharmonicZo="
           updateModeKeyPermanentEnharmonicZo(
             selectedElement as ModeKeyElement,
@@ -882,6 +902,18 @@
         "
         @update:chromaticFthoraNote="
           updateNoteChromaticFthoraNote(selectedElement as NoteElement, $event)
+        "
+        @update:secondaryChromaticFthoraNote="
+          updateNoteSecondaryChromaticFthoraNote(
+            selectedElement as NoteElement,
+            $event,
+          )
+        "
+        @update:tertiaryChromaticFthoraNote="
+          updateNoteTertiaryChromaticFthoraNote(
+            selectedElement as NoteElement,
+            $event,
+          )
         "
         @update:gorgon="setGorgon(selectedElement as NoteElement, $event)"
         @update:secondaryGorgon="
@@ -940,8 +972,14 @@
             $event,
           )
         "
+        @update:tempoLeft="
+          setMartyriaTempoLeft(selectedElement as MartyriaElement, $event)
+        "
         @update:tempo="
           setMartyriaTempo(selectedElement as MartyriaElement, $event)
+        "
+        @update:tempoRight="
+          setMartyriaTempoRight(selectedElement as MartyriaElement, $event)
         "
         @update:measureBar="
           setMeasureBarMartyria(selectedElement as MartyriaElement, $event)
@@ -1036,7 +1074,9 @@
     <ExportDialog
       v-if="exportDialogIsOpen"
       :loading="exportInProgress"
+      :defaultFormat="exportFormat"
       @exportAsPng="exportAsPng"
+      @exportAsMusicXml="exportAsMusicXml"
       @close="closeExportDialog"
     />
     <template v-if="richTextBoxCalculation">
@@ -1068,7 +1108,9 @@ import ContentEditable from '@/components/ContentEditable.vue';
 import DropCap from '@/components/DropCap.vue';
 import EditorPreferencesDialog from '@/components/EditorPreferencesDialog.vue';
 import ExportDialog, {
+  ExportAsMusicXmlSettings,
   ExportAsPngSettings,
+  ExportFormat,
 } from '@/components/ExportDialog.vue';
 import FileMenuBar from '@/components/FileMenuBar.vue';
 import ImageBox from '@/components/ImageBox.vue';
@@ -1170,6 +1212,7 @@ import {
 } from '@/services/audio/PlaybackService';
 import { Command, CommandFactory } from '@/services/history/CommandService';
 import { ByzHtmlExporter } from '@/services/integration/ByzHtmlExporter';
+import { MusicXmlExporter } from '@/services/integration/MusicXmlExporter';
 import { IIpcService } from '@/services/ipc/IIpcService';
 import { LayoutService } from '@/services/LayoutService';
 import { LyricService } from '@/services/LyricService';
@@ -1237,6 +1280,7 @@ export default class Editor extends Vue {
   @Inject() readonly playbackService!: PlaybackService;
   @Inject() readonly textSearchService!: TextSearchService;
   @Inject() readonly lyricService!: LyricService;
+  @Inject() readonly musicXmlExporter!: MusicXmlExporter;
 
   searchTextQuery: string = '';
   searchTextPanelIsOpen = false;
@@ -1281,6 +1325,8 @@ export default class Editor extends Vue {
   pageSetupDialogIsOpen: boolean = false;
   editorPreferencesDialogIsOpen: boolean = false;
   exportDialogIsOpen: boolean = false;
+
+  exportFormat: ExportFormat = ExportFormat.PNG;
 
   clipboard: ScoreElement[] = [];
   textBoxFormat: Partial<TextBoxElement> | null = null;
@@ -1924,7 +1970,7 @@ export default class Editor extends Vue {
 
   getMelismaStyle(element: NoteElement) {
     return {
-      width: withZoom(element.melismaWidth!),
+      width: withZoom(element.melismaWidth),
       minHeight: element.lyricsUseDefaultStyle
         ? withZoom(this.score.pageSetup.lyricsDefaultFontSize)
         : withZoom(element.lyricsFontSize),
@@ -1935,7 +1981,7 @@ export default class Editor extends Vue {
     return {
       top: withZoom(element.melismaOffsetTop),
       height: withZoom(element.lyricsFontHeight),
-      width: withZoom(element.melismaWidth!),
+      width: withZoom(element.melismaWidth),
     };
   }
 
@@ -2089,6 +2135,10 @@ export default class Editor extends Vue {
       this.onFileMenuExportAsHtml,
     );
     EventBus.$on(
+      IpcMainChannels.FileMenuExportAsMusicXml,
+      this.onFileMenuExportAsMusicXml,
+    );
+    EventBus.$on(
       IpcMainChannels.FileMenuExportAsImage,
       this.onFileMenuExportAsImage,
     );
@@ -2182,6 +2232,10 @@ export default class Editor extends Vue {
     EventBus.$off(
       IpcMainChannels.FileMenuExportAsHtml,
       this.onFileMenuExportAsHtml,
+    );
+    EventBus.$off(
+      IpcMainChannels.FileMenuExportAsMusicXml,
+      this.onFileMenuExportAsMusicXml,
     );
     EventBus.$off(
       IpcMainChannels.FileMenuExportAsImage,
@@ -2884,11 +2938,19 @@ export default class Editor extends Vue {
     } else {
       switch (event.code) {
         case 'ArrowLeft':
-          !this.rtl ? this.moveLeftThrottled() : this.moveRightThrottled();
+          if (!this.rtl) {
+            this.moveLeftThrottled();
+          } else {
+            this.moveRightThrottled();
+          }
           handled = true;
           break;
         case 'ArrowRight':
-          !this.rtl ? this.moveRightThrottled() : this.moveLeftThrottled();
+          if (!this.rtl) {
+            this.moveRightThrottled();
+          } else {
+            this.moveLeftThrottled();
+          }
           handled = true;
           break;
         case 'ArrowDown':
@@ -3251,9 +3313,11 @@ export default class Editor extends Vue {
         }
 
         if (event.ctrlKey || event.metaKey) {
-          !this.rtl
-            ? this.moveToNextLyricBoxThrottled()
-            : this.moveToPreviousLyricBoxThrottled();
+          if (!this.rtl) {
+            this.moveToNextLyricBoxThrottled();
+          } else {
+            this.moveToPreviousLyricBoxThrottled();
+          }
           handled = true;
         } else if (
           !this.rtl &&
@@ -3272,9 +3336,11 @@ export default class Editor extends Vue {
         }
 
         if (event.ctrlKey || event.metaKey) {
-          !this.rtl
-            ? this.moveToPreviousLyricBoxThrottled()
-            : this.moveToNextLyricBoxThrottled();
+          if (!this.rtl) {
+            this.moveToPreviousLyricBoxThrottled();
+          } else {
+            this.moveToNextLyricBoxThrottled();
+          }
           handled = true;
         } else if (!this.rtl && getCursorPosition() === 0) {
           this.moveToPreviousLyricBoxThrottled();
@@ -4129,11 +4195,21 @@ export default class Editor extends Vue {
     // If there are none, then create a default workspace.
     const openWorkspaceResults = await this.ipcService.openWorkspaceFromArgv();
 
-    openWorkspaceResults
+    if (openWorkspaceResults.silentPdf) {
+      for (const file of openWorkspaceResults.files.filter((x) => x.success)) {
+        this.openScore(file);
+        await this.onFileMenuExportAsPdf();
+        this.removeWorkspace(this.selectedWorkspace);
+      }
+
+      await this.ipcService.exitApplication();
+    }
+
+    openWorkspaceResults.files
       .filter((x) => x.success)
       .forEach((x) => this.openScore(x));
 
-    if (openWorkspaceResults.some((x) => x.success)) {
+    if (openWorkspaceResults.files.some((x) => x.success)) {
       return;
     }
 
@@ -4235,7 +4311,7 @@ export default class Editor extends Vue {
 
       // If the last tab has closed, then exit
       if (this.workspaces.length == 1) {
-        this.ipcService.exitApplication();
+        await this.ipcService.exitApplication();
       }
 
       this.removeWorkspace(workspace);
@@ -4408,11 +4484,27 @@ export default class Editor extends Vue {
     }
   }
 
+  setMartyriaTempoLeft(element: MartyriaElement, neume: TempoSign) {
+    if (element.tempoLeft === neume) {
+      this.updateMartyriaTempoLeft(element, null);
+    } else {
+      this.updateMartyriaTempoLeft(element, neume);
+    }
+  }
+
   setMartyriaTempo(element: MartyriaElement, neume: TempoSign) {
     if (element.tempo === neume) {
       this.updateMartyriaTempo(element, null);
     } else {
       this.updateMartyriaTempo(element, neume);
+    }
+  }
+
+  setMartyriaTempoRight(element: MartyriaElement, neume: TempoSign) {
+    if (element.tempoRight === neume) {
+      this.updateMartyriaTempoRight(element, null);
+    } else {
+      this.updateMartyriaTempoRight(element, neume);
     }
   }
 
@@ -4753,7 +4845,19 @@ export default class Editor extends Vue {
     element: NoteElement,
     secondaryFthora: Fthora | null,
   ) {
-    this.updateNote(element, { secondaryFthora });
+    let secondaryChromaticFthoraNote: ScaleNote | null = null;
+
+    if (secondaryFthora === Fthora.SoftChromaticThi_TopSecondary) {
+      secondaryChromaticFthoraNote = ScaleNote.Thi;
+    } else if (secondaryFthora === Fthora.SoftChromaticPa_TopSecondary) {
+      secondaryChromaticFthoraNote = ScaleNote.Ga;
+    } else if (secondaryFthora === Fthora.HardChromaticThi_TopSecondary) {
+      secondaryChromaticFthoraNote = ScaleNote.Thi;
+    } else if (secondaryFthora === Fthora.HardChromaticPa_TopSecondary) {
+      secondaryChromaticFthoraNote = ScaleNote.Pa;
+    }
+
+    this.updateNote(element, { secondaryFthora, secondaryChromaticFthoraNote });
     this.save();
   }
 
@@ -4761,7 +4865,19 @@ export default class Editor extends Vue {
     element: NoteElement,
     tertiaryFthora: Fthora | null,
   ) {
-    this.updateNote(element, { tertiaryFthora });
+    let tertiaryChromaticFthoraNote: ScaleNote | null = null;
+
+    if (tertiaryFthora === Fthora.SoftChromaticThi_TopTertiary) {
+      tertiaryChromaticFthoraNote = ScaleNote.Thi;
+    } else if (tertiaryFthora === Fthora.SoftChromaticPa_TopTertiary) {
+      tertiaryChromaticFthoraNote = ScaleNote.Ga;
+    } else if (tertiaryFthora === Fthora.HardChromaticThi_TopTertiary) {
+      tertiaryChromaticFthoraNote = ScaleNote.Thi;
+    } else if (tertiaryFthora === Fthora.HardChromaticPa_TopTertiary) {
+      tertiaryChromaticFthoraNote = ScaleNote.Pa;
+    }
+
+    this.updateNote(element, { tertiaryFthora, tertiaryChromaticFthoraNote });
     this.save();
   }
 
@@ -4898,6 +5014,22 @@ export default class Editor extends Vue {
     this.save();
   }
 
+  updateNoteSecondaryChromaticFthoraNote(
+    element: NoteElement,
+    secondaryChromaticFthoraNote: ScaleNote | null,
+  ) {
+    this.updateNote(element, { secondaryChromaticFthoraNote });
+    this.save();
+  }
+
+  updateNoteTertiaryChromaticFthoraNote(
+    element: NoteElement,
+    tertiaryChromaticFthoraNote: ScaleNote | null,
+  ) {
+    this.updateNote(element, { tertiaryChromaticFthoraNote });
+    this.save();
+  }
+
   updateLyricsLocked(locked: boolean) {
     this.lyricsLocked = locked;
     this.hasUnsavedChanges = true;
@@ -5026,6 +5158,17 @@ export default class Editor extends Vue {
     this.saveDebounced();
   }
 
+  updateRichTextBoxMarginTop(element: RichTextBoxElement, marginTop: number) {
+    this.updateRichTextBox(element, { marginTop });
+  }
+
+  updateRichTextBoxMarginBottom(
+    element: RichTextBoxElement,
+    marginBottom: number,
+  ) {
+    this.updateRichTextBox(element, { marginBottom });
+  }
+
   updateTextBox(element: TextBoxElement, newValues: Partial<TextBoxElement>) {
     this.commandService.execute(
       this.textBoxCommandFactory.create('update-properties', {
@@ -5112,6 +5255,14 @@ export default class Editor extends Vue {
     this.updateTextBox(element, { customHeight });
   }
 
+  updateTextBoxMarginTop(element: TextBoxElement, marginTop: number) {
+    this.updateTextBox(element, { marginTop });
+  }
+
+  updateTextBoxMarginBottom(element: TextBoxElement, marginBottom: number) {
+    this.updateTextBox(element, { marginBottom });
+  }
+
   updateModeKey(element: ModeKeyElement, newValues: Partial<ModeKeyElement>) {
     this.commandService.execute(
       this.modeKeyCommandFactory.create('update-properties', {
@@ -5121,6 +5272,14 @@ export default class Editor extends Vue {
     );
 
     this.save();
+  }
+
+  updateModeKeyMarginTop(element: ModeKeyElement, marginTop: number) {
+    this.updateModeKey(element, { marginTop });
+  }
+
+  updateModeKeyMarginBottom(element: ModeKeyElement, marginBottom: number) {
+    this.updateModeKey(element, { marginBottom });
   }
 
   updateModeKeyUseDefaultStyle(
@@ -5281,6 +5440,26 @@ export default class Editor extends Vue {
     this.updateMartyria(element, { fthora, chromaticFthoraNote });
   }
 
+  updateMartyriaTempoLeft(
+    element: MartyriaElement,
+    tempoLeft: TempoSign | null,
+  ) {
+    let bpm = element.bpm;
+
+    if (tempoLeft != null) {
+      bpm =
+        this.editorPreferences.getDefaultTempo(tempoLeft) ??
+        TempoElement.getDefaultBpm(tempoLeft);
+    }
+
+    this.updateMartyria(element, {
+      tempoLeft,
+      bpm,
+      tempo: null,
+      tempoRight: null,
+    });
+  }
+
   updateMartyriaTempo(element: MartyriaElement, tempo: TempoSign | null) {
     let bpm = element.bpm;
 
@@ -5290,7 +5469,32 @@ export default class Editor extends Vue {
         TempoElement.getDefaultBpm(tempo);
     }
 
-    this.updateMartyria(element, { tempo, bpm });
+    this.updateMartyria(element, {
+      tempo,
+      bpm,
+      tempoLeft: null,
+      tempoRight: null,
+    });
+  }
+
+  updateMartyriaTempoRight(
+    element: MartyriaElement,
+    tempoRight: TempoSign | null,
+  ) {
+    let bpm = element.bpm;
+
+    if (tempoRight != null) {
+      bpm =
+        this.editorPreferences.getDefaultTempo(tempoRight) ??
+        TempoElement.getDefaultBpm(tempoRight);
+    }
+
+    this.updateMartyria(element, {
+      tempoRight,
+      bpm,
+      tempoLeft: null,
+      tempo: null,
+    });
   }
 
   updateMartyriaBpm(element: MartyriaElement, bpm: number) {
@@ -6004,16 +6208,16 @@ export default class Editor extends Vue {
     // blinking cursors don't show up in the printed page
     const activeElement = this.blurActiveElement();
 
-    nextTick(async () => {
-      await this.ipcService.exportWorkspaceAsPdf(this.selectedWorkspace);
-      this.printMode = false;
+    await nextTick();
+    await this.ipcService.exportWorkspaceAsPdf(this.selectedWorkspace);
+    this.printMode = false;
 
-      // Re-focus the active element
-      this.focusElement(activeElement);
-    });
+    // Re-focus the active element
+    this.focusElement(activeElement);
   }
 
   async onFileMenuExportAsImage() {
+    this.exportFormat = ExportFormat.PNG;
     this.exportDialogIsOpen = true;
   }
 
@@ -6054,6 +6258,7 @@ export default class Editor extends Vue {
             const options = {
               fontEmbedCSS,
               pixelRatio: args.dpi / 96,
+              style: { margin: '0' },
             } as any;
 
             if (args.transparentBackground) {
@@ -6169,6 +6374,22 @@ export default class Editor extends Vue {
       this.selectedWorkspace,
       this.byzHtmlExporter.exportScore(this.score),
     );
+  }
+
+  onFileMenuExportAsMusicXml() {
+    this.exportFormat = ExportFormat.MusicXml;
+    this.exportDialogIsOpen = true;
+  }
+
+  async exportAsMusicXml(args: ExportAsMusicXmlSettings) {
+    await this.ipcService.exportWorkspaceAsMusicXml(
+      this.selectedWorkspace,
+      this.musicXmlExporter.export(this.score, args.options),
+      args.compressed,
+      args.openFolder,
+    );
+
+    this.closeExportDialog();
   }
 
   blurActiveElement() {
@@ -6776,7 +6997,7 @@ export default class Editor extends Vue {
 }
 
 .selectedTextbox {
-  border: 1px solid goldenrod;
+  outline: 1px solid goldenrod;
 }
 
 .selectedTextbox:deep(.handle) {
@@ -7034,6 +7255,7 @@ export default class Editor extends Vue {
 .page.print .image-box-container,
 .page.print :deep(.text-box.multipanel) {
   border: none;
+  outline: none;
 }
 
 .page.print .page-break,
@@ -7086,22 +7308,27 @@ export default class Editor extends Vue {
 
   .text-box-container {
     border: none;
+    outline: none;
   }
 
   .drop-cap-container {
     border: none;
+    outline: none;
   }
 
   .mode-key-container {
     border: none;
+    outline: none;
   }
 
   .image-box-container {
     border: none;
+    outline: none;
   }
 
   .selectedLyrics {
     border: none;
+    outline: none;
   }
 
   .melisma-text {

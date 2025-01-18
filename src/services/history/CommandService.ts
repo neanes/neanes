@@ -84,7 +84,7 @@ export class CommandService {
   }
 
   public execute(command: Command, noHistory: boolean = false) {
-    command!.execute();
+    command.execute();
 
     // Remove everything after the current index
     // and push the new command

@@ -1,26 +1,66 @@
 <template>
   <div class="text-box-toolbar">
-    <input
-      id="toolbar-text-box-rtl"
-      type="checkbox"
-      :checked="element.rtl"
-      @change="$emit('update:rtl', ($event.target as HTMLInputElement).checked)"
-    />
-    <label for="toolbar-text-box-rtl">{{ $t('toolbar:textbox.rtl') }}</label>
+    <div class="form-group">
+      <input
+        id="toolbar-text-box-rtl"
+        type="checkbox"
+        :checked="element.rtl"
+        @change="
+          $emit('update:rtl', ($event.target as HTMLInputElement).checked)
+        "
+      />
+      <label for="toolbar-text-box-rtl">{{ $t('toolbar:textbox.rtl') }}</label>
+    </div>
+    <span class="divider" />
+    <div class="form-group">
+      <label class="right-space">{{ $t('toolbar:common.marginTop') }}</label>
+      <InputUnit
+        class="text-box-input-width"
+        unit="pt"
+        :min="0"
+        :max="maxHeight"
+        :step="0.5"
+        :modelValue="element.marginTop"
+        :precision="1"
+        @update:modelValue="$emit('update:marginTop', $event)"
+      />
+    </div>
+    <span class="space"></span>
+    <div class="form-group">
+      <label class="right-space">{{ $t('toolbar:common.marginBottom') }}</label>
+      <InputUnit
+        class="text-box-input-width"
+        unit="pt"
+        :min="0"
+        :max="maxHeight"
+        :step="0.5"
+        :modelValue="element.marginBottom"
+        :precision="1"
+        @update:modelValue="$emit('update:marginBottom', $event)"
+      />
+    </div>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-facing-decorator';
 
+import InputUnit from '@/components/InputUnit.vue';
 import { RichTextBoxElement } from '@/models/Element';
+import { PageSetup } from '@/models/PageSetup';
+import { Unit } from '@/utils/Unit';
 
 @Component({
-  components: {},
-  emits: ['update:rtl'],
+  components: { InputUnit },
+  emits: ['update:marginBottom', 'update:marginTop', 'update:rtl'],
 })
 export default class ToolbarTextBoxRich extends Vue {
   @Prop() element!: RichTextBoxElement;
+  @Prop() pageSetup!: PageSetup;
+
+  get maxHeight() {
+    return Unit.toPt(this.pageSetup.innerPageHeight);
+  }
 }
 </script>
 

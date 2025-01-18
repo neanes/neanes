@@ -104,6 +104,7 @@ export default class TextBoxRich extends Vue {
       language: {
         content: this.element.rtl ? 'ar' : 'en',
       },
+      licenseKey: 'GPL',
     };
   }
 
@@ -363,6 +364,7 @@ export default class TextBoxRich extends Vue {
 
   .rich-text-editor.multipanel {
     border: none !important;
+    outline: none !important;
   }
 
   :deep(.ck-widget) {

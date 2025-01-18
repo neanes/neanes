@@ -114,6 +114,13 @@
       <img src="@/assets/icons/text-box-rich.svg" width="24" height="24" />
     </button>
     <button
+      :title="$t('toolbar:main.insertModeKey')"
+      class="icon-btn"
+      @click="$emit('add-mode-key')"
+    >
+      <img src="@/assets/icons/mode-key.svg" width="24" height="24" />
+    </button>
+    <button
       :title="$t('toolbar:main.insertImage')"
       class="icon-btn"
       @click="$emit('add-image')"
@@ -269,6 +276,7 @@ import Neume from './Neume.vue';
     'add-auto-martyria',
     'add-drop-cap',
     'add-image',
+    'add-mode-key',
     'add-tempo',
     'add-text-box',
     'add-text-box-rich',

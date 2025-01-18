@@ -406,10 +406,10 @@
             <input
               id="page-setup-dialog-disable-melismata"
               type="checkbox"
-              v-model="form.disableMelismata"
+              v-model="form.disableGreekMelismata"
             />
             <label for="page-setup-dialog-disable-melismata">{{
-              $t('dialog:pageSetup.disableMelismata')
+              $t('dialog:pageSetup.disableGreekMelismata')
             }}</label>
           </div>
         </div>

@@ -441,6 +441,67 @@ describe('LyricService (Greek)', () => {
   });
 });
 
+describe('LyricService (Arab phonetics)', () => {
+  it('should round trip (default)', () => {
+    const lyricService = new LyricService();
+
+    const scoreElements: ScoreElement[] = [];
+
+    for (let i = 0; i < 25; i++) {
+      scoreElements.push(new NoteElement());
+    }
+
+    const lyrics = 'al-la-δi---na θa--ba--ru ’aa-la ha----δα__ kul--la--hu__';
+
+    lyricService.assignLyrics(
+      lyrics,
+      scoreElements,
+      false,
+      true, // disable Greek melismata
+      () => {},
+      (note, values) => {
+        Object.assign(note, values);
+      },
+      () => {},
+    );
+
+    expect(lyricService.extractLyrics(scoreElements, false)).toEqual(lyrics);
+  });
+
+  it('should round trip (melisma-only)', () => {
+    const lyricService = new LyricService();
+
+    const scoreElements: ScoreElement[] = [];
+
+    for (let i = 0; i < 25; i++) {
+      scoreElements.push(new NoteElement());
+    }
+
+    const indices = [3, 4, 7, 9, 14, 15, 16, 18, 20, 22, 24];
+
+    for (const index of indices) {
+      (scoreElements[index] as NoteElement).acceptsLyrics =
+        AcceptsLyricsOption.MelismaOnly;
+    }
+
+    const lyrics = 'al-la-δi-na θa-ba-ru ’aa-la ha-δα kul-la-hu';
+
+    lyricService.assignLyrics(
+      lyrics,
+      scoreElements,
+      false,
+      true, // disable Greek melismata
+      () => {},
+      (note, values) => {
+        Object.assign(note, values);
+      },
+      () => {},
+    );
+
+    expect(lyricService.extractLyrics(scoreElements, false)).toEqual(lyrics);
+  });
+});
+
 function createNote(
   lyrics: string,
   isMelisma: boolean = false,

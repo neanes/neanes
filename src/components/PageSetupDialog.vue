@@ -389,6 +389,16 @@
             }}</label>
           </div>
           <div class="form-group">
+            <input
+              id="page-setup-dialog-disable-melismata"
+              type="checkbox"
+              v-model="form.disableGreekMelismata"
+            />
+            <label for="page-setup-dialog-disable-melismata">{{
+              $t('dialog:pageSetup.disableGreekMelismata')
+            }}</label>
+          </div>
+          <div class="form-group">
             <label class="melisma-label">{{
               $t('dialog:pageSetup.lyricsMelismaCutoffWidth')
             }}</label>

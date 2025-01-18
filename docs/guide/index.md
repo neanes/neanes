@@ -164,6 +164,9 @@ For example, to add a melisma to the word `των`, type <kbd>τω-</kbd> <kbd>-
 > [!IMPORTANT]
 > Although there is no visual distinction between using a hyphen or underscore, the character chosen is used to distinguish between `των` and `τω ων` in the [lyrics toolbar](./advanced.html#advanced-lyrics-entry). For example, the following will be interpreted as two words (`τω ων`) in the lyrics manager: <kbd>τω\_</kbd> <kbd>\_</kbd> <kbd>ων</kbd>.
 
+> [!NOTE]
+> If you do not want the usual behavior for Greek melismata, you can disable it in the Page Setup dialog by checking `Disable Greek Melismata`. If you do this, the melismata will instead work similar to English with hyphens and underscores.
+
 ## Page Breaks and Line Breaks
 
 To insert a page break or a line break, click the neume that you want the break to occur after, and press the `Page Break` or `Line Break` button in the main toolbar. To remove the page or line break, highlight the element with the break, and press the button page or line break button again.

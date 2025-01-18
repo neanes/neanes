@@ -142,7 +142,7 @@ export class PageSetup {
 
   public chrysanthineAccidentals: boolean = true;
   public noFthoraRestrictions: boolean = false;
-  public disableMelismata: boolean = false;
+  public disableGreekMelismata: boolean = false;
 
   public get innerPageWidth() {
     return this.pageWidth - this.leftMargin - this.rightMargin;

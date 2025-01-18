@@ -20,7 +20,7 @@ describe('LyricService (English)', () => {
 
     scoreElements.push(createNote('test'));
 
-    expect(lyricService.extractLyrics(scoreElements)).toEqual('test');
+    expect(lyricService.extractLyrics(scoreElements, false)).toEqual('test');
   });
 
   it('should extract two words', () => {
@@ -31,7 +31,7 @@ describe('LyricService (English)', () => {
     scoreElements.push(createNote('one'));
     scoreElements.push(createNote('two'));
 
-    expect(lyricService.extractLyrics(scoreElements)).toEqual('one two');
+    expect(lyricService.extractLyrics(scoreElements, false)).toEqual('one two');
   });
 
   it('should extract hyphenated word 2 syllables', () => {
@@ -42,7 +42,9 @@ describe('LyricService (English)', () => {
     scoreElements.push(createNote('test', true, true, true));
     scoreElements.push(createNote('ing'));
 
-    expect(lyricService.extractLyrics(scoreElements)).toEqual('test-ing');
+    expect(lyricService.extractLyrics(scoreElements, false)).toEqual(
+      'test-ing',
+    );
   });
 
   it('should extract hyphenated word 3 syllables', () => {
@@ -54,7 +56,9 @@ describe('LyricService (English)', () => {
     scoreElements.push(createNote('ti', true, true, true));
     scoreElements.push(createNote('fy'));
 
-    expect(lyricService.extractLyrics(scoreElements)).toEqual('tes-ti-fy');
+    expect(lyricService.extractLyrics(scoreElements, false)).toEqual(
+      'tes-ti-fy',
+    );
   });
 
   it('should extract hyphenated word 2 syllables with middle melisma', () => {
@@ -66,7 +70,9 @@ describe('LyricService (English)', () => {
     scoreElements.push(createNote('', true, false, true));
     scoreElements.push(createNote('ing'));
 
-    expect(lyricService.extractLyrics(scoreElements)).toEqual('test--ing');
+    expect(lyricService.extractLyrics(scoreElements, false)).toEqual(
+      'test--ing',
+    );
   });
 
   it('should extract melisma lasting 2 notes', () => {
@@ -77,7 +83,7 @@ describe('LyricService (English)', () => {
     scoreElements.push(createNote('test', true, true));
     scoreElements.push(createNote('', true, false));
 
-    expect(lyricService.extractLyrics(scoreElements)).toEqual('test__');
+    expect(lyricService.extractLyrics(scoreElements, false)).toEqual('test__');
   });
 
   it('should extract melisma lasting 3-notes', () => {
@@ -89,7 +95,7 @@ describe('LyricService (English)', () => {
     scoreElements.push(createNote('', true, false));
     scoreElements.push(createNote('', true, false));
 
-    expect(lyricService.extractLyrics(scoreElements)).toEqual('test___');
+    expect(lyricService.extractLyrics(scoreElements, false)).toEqual('test___');
   });
 
   it('should extract hyphenated word with melisma at end', () => {
@@ -101,7 +107,9 @@ describe('LyricService (English)', () => {
     scoreElements.push(createNote('ing', true, true));
     scoreElements.push(createNote('', true, false));
 
-    expect(lyricService.extractLyrics(scoreElements)).toEqual('test-ing__');
+    expect(lyricService.extractLyrics(scoreElements, false)).toEqual(
+      'test-ing__',
+    );
   });
 
   it('should extract word after melisma', () => {
@@ -113,7 +121,9 @@ describe('LyricService (English)', () => {
     scoreElements.push(createNote('', true, false));
     scoreElements.push(createNote('two'));
 
-    expect(lyricService.extractLyrics(scoreElements)).toEqual('one__ two');
+    expect(lyricService.extractLyrics(scoreElements, false)).toEqual(
+      'one__ two',
+    );
   });
 
   it('should round trip (default)', () => {
@@ -131,6 +141,7 @@ describe('LyricService (English)', () => {
       lyrics,
       scoreElements,
       false,
+      false,
       () => {},
       (note, values) => {
         Object.assign(note, values);
@@ -138,7 +149,7 @@ describe('LyricService (English)', () => {
       () => {},
     );
 
-    expect(lyricService.extractLyrics(scoreElements)).toEqual(lyrics);
+    expect(lyricService.extractLyrics(scoreElements, false)).toEqual(lyrics);
   });
 
   it('should round trip (melisma-only)', () => {
@@ -165,6 +176,7 @@ describe('LyricService (English)', () => {
       lyrics,
       scoreElements,
       false,
+      false,
       () => {},
       (note, values) => {
         Object.assign(note, values);
@@ -172,7 +184,7 @@ describe('LyricService (English)', () => {
       () => {},
     );
 
-    expect(lyricService.extractLyrics(scoreElements)).toEqual(lyrics);
+    expect(lyricService.extractLyrics(scoreElements, false)).toEqual(lyrics);
   });
 
   it('should create a prosomia', async () => {
@@ -192,6 +204,7 @@ describe('LyricService (English)', () => {
       newLyrics,
       scoreInput.staff.elements,
       false,
+      false,
       () => {},
       (note, values) => {
         Object.assign(note, values);
@@ -200,7 +213,7 @@ describe('LyricService (English)', () => {
     );
 
     // First make sure the lyrics round trip
-    expect(lyricService.extractLyrics(scoreInput.staff.elements)).toEqual(
+    expect(lyricService.extractLyrics(scoreInput.staff.elements, true)).toEqual(
       newLyrics,
     );
 
@@ -251,6 +264,7 @@ describe('LyricService (English)', () => {
       lyrics,
       scoreElements,
       false,
+      false,
       () => {},
       (note, values) => {
         Object.assign(note, values);
@@ -286,7 +300,7 @@ describe('LyricService (Greek)', () => {
 
     scoreElements.push(createNote('των'));
 
-    expect(lyricService.extractLyrics(scoreElements)).toEqual('των');
+    expect(lyricService.extractLyrics(scoreElements, false)).toEqual('των');
   });
 
   it('should extract two words', () => {
@@ -297,7 +311,7 @@ describe('LyricService (Greek)', () => {
     scoreElements.push(createNote('των'));
     scoreElements.push(createNote('γαρ'));
 
-    expect(lyricService.extractLyrics(scoreElements)).toEqual('των γαρ');
+    expect(lyricService.extractLyrics(scoreElements, false)).toEqual('των γαρ');
   });
 
   it('should extract melisma CV', () => {
@@ -308,7 +322,7 @@ describe('LyricService (Greek)', () => {
     scoreElements.push(createNote('τω', true, true));
     scoreElements.push(createNote('', true, false));
 
-    expect(lyricService.extractLyrics(scoreElements)).toEqual('τω__');
+    expect(lyricService.extractLyrics(scoreElements, false)).toEqual('τω__');
   });
 
   it('should extract hyphenated CVC', () => {
@@ -319,7 +333,7 @@ describe('LyricService (Greek)', () => {
     scoreElements.push(createNote('τω', true, true, true));
     scoreElements.push(createNote('ων'));
 
-    expect(lyricService.extractLyrics(scoreElements)).toEqual('των__');
+    expect(lyricService.extractLyrics(scoreElements, false)).toEqual('των__');
   });
 
   it('should extract melisma CVC with melisma', () => {
@@ -331,7 +345,7 @@ describe('LyricService (Greek)', () => {
     scoreElements.push(createNote('', true, true, true, 'ω'));
     scoreElements.push(createNote('ων'));
 
-    expect(lyricService.extractLyrics(scoreElements)).toEqual('των___');
+    expect(lyricService.extractLyrics(scoreElements, false)).toEqual('των___');
   });
 
   it('should extract word after melisma', () => {
@@ -343,7 +357,7 @@ describe('LyricService (Greek)', () => {
     scoreElements.push(createNote('', true, false, false, 'ω'));
     scoreElements.push(createNote('ων'));
 
-    expect(lyricService.extractLyrics(scoreElements)).toEqual('τω__ ων');
+    expect(lyricService.extractLyrics(scoreElements, false)).toEqual('τω__ ων');
   });
 
   it('should round trip (default)', () => {
@@ -368,6 +382,7 @@ describe('LyricService (Greek)', () => {
       lyrics,
       scoreElements,
       false,
+      false,
       () => {},
       (note, values) => {
         Object.assign(note, values);
@@ -379,7 +394,7 @@ describe('LyricService (Greek)', () => {
     // This process should probably be improved to be more testable.
     (scoreElements[8] as NoteElement).melismaText = 'α';
 
-    expect(lyricService.extractLyrics(scoreElements)).toEqual(lyrics);
+    expect(lyricService.extractLyrics(scoreElements, false)).toEqual(lyrics);
   });
 
   it('should round trip (melisma-only)', () => {
@@ -414,6 +429,7 @@ describe('LyricService (Greek)', () => {
       lyrics,
       scoreElements,
       false,
+      false,
       () => {},
       (note, values) => {
         Object.assign(note, values);
@@ -421,7 +437,7 @@ describe('LyricService (Greek)', () => {
       () => {},
     );
 
-    expect(lyricService.extractLyrics(scoreElements)).toEqual(lyrics);
+    expect(lyricService.extractLyrics(scoreElements, false)).toEqual(lyrics);
   });
 });
 

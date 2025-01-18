@@ -1588,7 +1588,7 @@ export class LayoutService {
           element.isFullMelisma = isIntermediateMelismaAtStartOfLine;
 
           if (
-            !pageSetup.disableMelismata &&
+            !pageSetup.disableGreekMelismata &&
             MelismaHelperGreek.isGreek(element.lyrics)
           ) {
             if (element.isMelismaStart) {

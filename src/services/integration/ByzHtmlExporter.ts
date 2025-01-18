@@ -120,7 +120,7 @@ export class ByzHtmlExporter {
   exportScore(score: Score) {
     const style = this.exportPageSetup(score.pageSetup);
 
-    const body = this.exportElements(score.staff.elements, 4);
+    const body = this.exportElements(score.staff.elements, score.pageSetup, 4);
 
     let injectRtl = '';
 
@@ -341,6 +341,7 @@ export class ByzHtmlExporter {
 
   exportElements(
     elements: ScoreElement[],
+    pageSetup: PageSetup,
     indentation: number,
     startInsidePage: boolean = false,
   ) {
@@ -359,7 +360,11 @@ export class ByzHtmlExporter {
             insidePage = true;
           }
 
-          result += this.exportNote(element as NoteElement, indentation + 2);
+          result += this.exportNote(
+            element as NoteElement,
+            pageSetup,
+            indentation + 2,
+          );
           needLineBreak = true;
           break;
         case ElementType.Martyria:
@@ -469,7 +474,7 @@ export class ByzHtmlExporter {
     return result;
   }
 
-  exportNote(element: NoteElement, indentation: number) {
+  exportNote(element: NoteElement, pageSetup: PageSetup, indentation: number) {
     let inner = '';
 
     if (element.vareia) {
@@ -618,6 +623,7 @@ export class ByzHtmlExporter {
       }\n${this.getIndentationString(indentation)}>`;
 
       if (
+        !pageSetup.disableGreekMelismata &&
         element.isMelismaStart &&
         !MelismaHelperGreek.isGreek(element.lyrics)
       ) {

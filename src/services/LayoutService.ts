@@ -1587,7 +1587,10 @@ export class LayoutService {
           element.melismaWidth = 0;
           element.isFullMelisma = isIntermediateMelismaAtStartOfLine;
 
-          if (MelismaHelperGreek.isGreek(element.lyrics)) {
+          if (
+            !pageSetup.disableGreekMelismata &&
+            MelismaHelperGreek.isGreek(element.lyrics)
+          ) {
             if (element.isMelismaStart) {
               melismaSyllables = MelismaHelperGreek.getMelismaSyllable(
                 element.lyrics,

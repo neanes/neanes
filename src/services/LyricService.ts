@@ -37,7 +37,10 @@ export class LyricService {
    * @param elements The elements from which lyrics are extracted
    * @returns A string containing the extracted lyrics.
    */
-  extractLyrics(elements: ScoreElement[]): string {
+  extractLyrics(
+    elements: ScoreElement[],
+    disableGreekMelismata: boolean,
+  ): string {
     let lyrics = '';
 
     // Set to true if we need to add a space before the next character
@@ -130,6 +133,7 @@ export class LyricService {
           // calculate the middle vowel(s) so we can merge later.
           // Also start keeping track of the underscores we need to add later.
           if (
+            !disableGreekMelismata &&
             mergeVowels == null &&
             note.isMelismaStart &&
             MelismaHelperGreek.isGreek(note.lyrics)
@@ -157,8 +161,9 @@ export class LyricService {
             // then we append a hyphen for non-Greek lyrics,
             // and an underscore for Greek lyrics.
             if (
-              MelismaHelperGreek.isGreek(note.lyrics) ||
-              MelismaHelperGreek.isGreek(note.melismaText)
+              !disableGreekMelismata &&
+              (MelismaHelperGreek.isGreek(note.lyrics) ||
+                MelismaHelperGreek.isGreek(note.melismaText))
             ) {
               mergeUnderscores += '_';
             } else {
@@ -230,6 +235,7 @@ export class LyricService {
     lyrics: string,
     elements: ScoreElement[],
     rtl: boolean,
+    disableGreekMelismata: boolean,
     setLyrics: UpdateNoteLyricsCallback,
     updateNote: UpdateNoteCallback,
     updateDropCap: UpdateDropCapCallback,
@@ -342,6 +348,7 @@ export class LyricService {
           // If the lyrics are Greek and the next note is a melisma,
           // then calculate the melismatic syllables.
           if (
+            !disableGreekMelismata &&
             (nextNoteIsMelisma || token.endsWith('_')) &&
             MelismaHelperGreek.isGreek(token)
           ) {
@@ -413,6 +420,7 @@ export class LyricService {
    */
   assignAcceptsLyricsFromCurrentLyrics(
     elements: ScoreElement[],
+    disableGreekMelismata: boolean,
     updateNote: UpdateNoteAcceptsLyricsCallback,
   ) {
     let previousNote: NoteElement | null = null;
@@ -426,7 +434,9 @@ export class LyricService {
 
       if (
         (note.isMelisma && !note.isMelismaStart) ||
-        (previousNote?.isHyphen && MelismaHelperGreek.isGreek(note.lyrics))
+        (previousNote?.isHyphen &&
+          !disableGreekMelismata &&
+          MelismaHelperGreek.isGreek(note.lyrics))
       ) {
         acceptsLyrics = AcceptsLyricsOption.MelismaOnly;
       } else if (note.lyrics.trim() === '') {

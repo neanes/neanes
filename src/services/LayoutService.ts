@@ -2052,6 +2052,7 @@ export class LayoutService {
             // Shift is based off the true note
             currentShift = this.getShift(
               fthoraNote,
+              fthoraNoteVirtual,
               currentScale,
               note.fthora,
               note.chromaticFthoraNote,
@@ -2097,6 +2098,7 @@ export class LayoutService {
             // Shift is based off the true note
             currentShift = this.getShift(
               fthoraNote,
+              fthoraNoteVirtual,
               currentScale,
               note.secondaryFthora,
               note.secondaryChromaticFthoraNote,
@@ -2139,6 +2141,7 @@ export class LayoutService {
             // Shift is based off the true note
             currentShift = this.getShift(
               fthoraNote,
+              fthoraNoteVirtual,
               currentScale,
               note.tertiaryFthora,
               note.tertiaryChromaticFthoraNote,
@@ -2207,6 +2210,7 @@ export class LayoutService {
 
           currentShift = this.getShift(
             currentNote,
+            currentNote,
             currentScale,
             modeKey.fthora,
             null,
@@ -2257,6 +2261,7 @@ export class LayoutService {
 
               currentShift = this.getShift(
                 currentNote,
+                currentScaleNote,
                 currentScale,
                 martyria.fthora,
                 martyria.chromaticFthoraNote,
@@ -2411,6 +2416,7 @@ export class LayoutService {
 
   public static getShift(
     currentNote: number,
+    currentNoteVirtual: number,
     currentScale: Scale,
     fthora: Fthora,
     chromaticFthoraNote: ScaleNote | null,
@@ -2453,9 +2459,9 @@ export class LayoutService {
       } else if (fthora.startsWith('DiatonicNiHigh')) {
         fthoraNote = getScaleNoteValue(ScaleNote.NiHigh);
       } else if (fthora.startsWith('GeneralFlat')) {
-        fthoraNote = getScaleNoteValue(ScaleNote.Ke);
+        fthoraNote = currentNoteVirtual;
       } else if (fthora.startsWith('GeneralSharp')) {
-        fthoraNote = getScaleNoteValue(ScaleNote.Ga);
+        fthoraNote = currentNoteVirtual;
       }
 
       shift = fthoraNote - currentNote;

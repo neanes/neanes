@@ -895,6 +895,7 @@ export class AnalysisService {
 
     workspace.currentShift = LayoutService.getShift(
       getScaleNoteValue(physicalNote),
+      getScaleNoteValue(physicalNote) + workspace.currentShift,
       workspace.currentScale,
       fthora,
       chromaticFthoraNote,

@@ -2452,10 +2452,6 @@ export class LayoutService {
         fthoraNote = getScaleNoteValue(ScaleNote.ZoHigh);
       } else if (fthora.startsWith('DiatonicNiHigh')) {
         fthoraNote = getScaleNoteValue(ScaleNote.NiHigh);
-      } else if (fthora.startsWith('GeneralFlat')) {
-        fthoraNote = getScaleNoteValue(ScaleNote.Ke);
-      } else if (fthora.startsWith('GeneralSharp')) {
-        fthoraNote = getScaleNoteValue(ScaleNote.Ga);
       }
 
       shift = fthoraNote - currentNote;

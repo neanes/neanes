@@ -80,7 +80,7 @@
     "vite-plugin-eslint": "^1.8.1",
     "vite-plugin-pwa": "^0.21.1",
     "vite-plugin-vue-devtools": "^7.7.0",
-    "vitepress": "^1.5.0",
+    "vitepress": "^1.6.1",
     "vitest": "^3.0.3",
     "vue-component-type-helpers": "^2.2.0",
     "vue-tsc": "^2.2.0"

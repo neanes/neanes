@@ -62,7 +62,7 @@
     "@types/throttle-debounce": "^5.0.2",
     "@types/uuid": "^10.0.0",
     "@vitejs/plugin-vue": "^5.2.1",
-    "@vue/eslint-config-prettier": "^10.1.0",
+    "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.3.0",
     "electron": "^34.0.0",
     "electron-builder": "^25.1.8",

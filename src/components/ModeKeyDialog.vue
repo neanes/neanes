@@ -59,6 +59,7 @@
           <ul class="mode-list">
             <li
               @click="selectedModeKey = template"
+              @dblclick="updateModeKey"
               v-for="(template, index) in modeKeyTemplatesForSelectedMode"
               :class="{
                 selected: selectedModeKey?.templateId === template.templateId,

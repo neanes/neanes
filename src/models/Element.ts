@@ -993,7 +993,7 @@ export class DropCapElement extends ScoreElement {
   public color: string = '#000000';
   public useDefaultStyle: boolean = true;
   public customWidth: number | null = null;
-  public lineSpan = 1;
+  public lineSpan: number = 1;
 
   // Values computed by the layout service
   public computedFontFamily: string = '';

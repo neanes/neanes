@@ -44,6 +44,9 @@
     "pageNumber": "Page {{ currentPageNumber }} of {{ pageCount }}",
     "invalidZoom": "The value must be between 50% and 500%."
   },
+  "dropCap": {
+    "lineSpan": "Lines to drop"
+  },
   "imageBox": {
     "inline": "Inline",
     "maintainAspectRatio": "Maintain Aspect Ratio",

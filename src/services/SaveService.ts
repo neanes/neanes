@@ -162,6 +162,7 @@ export class SaveService {
     pageSetup.dropCapDefaultStrokeWidth = p.dropCapDefaultStrokeWidth;
     pageSetup.dropCapDefaultLineHeight =
       p.dropCapDefaultLineHeight ?? undefined;
+    pageSetup.dropCapDefaultLineSpan = p.dropCapDefaultLineSpan;
 
     pageSetup.leftMargin = p.leftMargin;
     pageSetup.lineHeight = p.lineHeight;
@@ -306,6 +307,7 @@ export class SaveService {
     element.strokeWidth = e.strokeWidth;
     element.customWidth = e.customWidth ?? undefined;
     element.useDefaultStyle = e.useDefaultStyle || undefined;
+    element.lineSpan = e.lineSpan;
   }
 
   public static SaveImageBox(element: ImageBoxElement_v1, e: ImageBoxElement) {
@@ -768,6 +770,8 @@ export class SaveService {
       p.dropCapDefaultStrokeWidth ?? pageSetup.dropCapDefaultStrokeWidth;
     pageSetup.dropCapDefaultLineHeight =
       p.dropCapDefaultLineHeight ?? pageSetup.dropCapDefaultLineHeight;
+    pageSetup.dropCapDefaultLineSpan =
+      p.dropCapDefaultLineSpan ?? pageSetup.dropCapDefaultLineSpan;
 
     pageSetup.textBoxDefaultColor =
       p.textBoxDefaultColor ?? pageSetup.textBoxDefaultColor;
@@ -970,6 +974,7 @@ export class SaveService {
     element.fontWeight = e.fontWeight ?? pageSetup.dropCapDefaultFontWeight;
     element.fontStyle = e.fontStyle ?? pageSetup.dropCapDefaultFontStyle;
     element.strokeWidth = e.strokeWidth ?? pageSetup.dropCapDefaultStrokeWidth;
+    element.lineSpan = e.lineSpan ?? pageSetup.dropCapDefaultLineSpan;
     element.customWidth = e.customWidth ?? null;
     element.useDefaultStyle = e.useDefaultStyle === true;
   }

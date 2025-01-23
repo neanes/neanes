@@ -120,6 +120,12 @@ export class LayoutService {
       pageSetup.lyricsFont,
     );
 
+    // The expected height of a line containing only neumes
+    const neumeLineHeight = Math.max(
+      lyricsVerticalOffset + lyricHeight,
+      pageSetup.lineHeight,
+    );
+
     const lyricAscent = TextMeasurementService.getFontBoundingBoxAscent(
       pageSetup.lyricsFont,
     );
@@ -637,10 +643,7 @@ export class LayoutService {
               ].includes(x.elementType),
             )
           ) {
-            height = Math.max(
-              lyricsVerticalOffset + lyricHeight,
-              pageSetup.lineHeight,
-            );
+            height = neumeLineHeight;
           } else {
             height = pageSetup.lineHeight;
           }
@@ -688,7 +691,7 @@ export class LayoutService {
           dropCapElement.computedLineSpan = lineSpan;
 
           // Make sure we push the drop cap to the next page if necessary
-          additionalHeight = pageSetup.lineHeight * multilineDropCapCounter;
+          additionalHeight = neumeLineHeight * multilineDropCapCounter;
         }
       }
 
@@ -757,7 +760,7 @@ export class LayoutService {
         const dropCapElement = element as DropCapElement;
 
         const distanceFromTopToBottomOfLyrics =
-          (dropCapElement.computedLineSpan - 1) * pageSetup.lineHeight +
+          (dropCapElement.computedLineSpan - 1) * neumeLineHeight +
           lyricsVerticalOffset +
           lyricAscent;
 

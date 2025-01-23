@@ -98,6 +98,9 @@ export class LayoutService {
     let currentPageHeightPx = 0;
     let currentLineWidthPx = 0;
 
+    let multilineDropCapWidthPx = 0;
+    let multilineDropCapCounter = 0;
+
     let lastLineHeightPx = 0;
 
     let lastElementWasLineBreak = false;
@@ -252,6 +255,7 @@ export class LayoutService {
       let elementWidthPx = 0;
       let elementWidthWithLyricsPx = 0;
       let additionalWidth = 0;
+      let additionalHeight = 0;
       let marginTop = 0;
 
       const currentPageNumber = pages.length;
@@ -473,6 +477,8 @@ export class LayoutService {
             ? pageSetup.dropCapDefaultLineHeight
             : dropCapElement.lineHeight;
 
+          dropCapElement.computedLineSpan = 1;
+
           if (dropCapElement.customWidth != null) {
             elementWidthPx = dropCapElement.customWidth;
           } else {
@@ -655,10 +661,42 @@ export class LayoutService {
           elementWithTrailingSpace.width -= pageSetup.neumeDefaultSpacing;
           elementWithTrailingSpace = null;
         }
+
+        // Handle the special case of multiline drop caps
+        if (multilineDropCapCounter > 0) {
+          currentLineWidthPx += multilineDropCapWidthPx;
+          currentLyricsEndPx += multilineDropCapWidthPx;
+          line.indentation = multilineDropCapWidthPx;
+          multilineDropCapCounter--;
+        }
+
+        // A drop cap can only drop multiple lines if
+        // 1) it is the first element on the line, and
+        // 2) no other drop cap is already dropping
+        if (
+          element.elementType === ElementType.DropCap &&
+          multilineDropCapCounter === 0
+        ) {
+          const dropCapElement = element as DropCapElement;
+          multilineDropCapWidthPx = elementWidthPx;
+
+          const lineSpan = dropCapElement.useDefaultStyle
+            ? pageSetup.dropCapDefaultLineSpan
+            : dropCapElement.lineSpan;
+
+          multilineDropCapCounter = lineSpan - 1;
+          dropCapElement.computedLineSpan = lineSpan;
+
+          // Make sure we push the drop cap to the next page if necessary
+          additionalHeight = pageSetup.lineHeight * multilineDropCapCounter;
+        }
       }
 
       // Check if we need a new page
-      if (currentPageHeightPx > innerPageHeight || lastElementWasPageBreak) {
+      if (
+        currentPageHeightPx + additionalHeight > innerPageHeight ||
+        lastElementWasPageBreak
+      ) {
         // If the line is empty, remove it from the page
         if (line.elements.length === 0) {
           page.lines.pop();
@@ -682,6 +720,22 @@ export class LayoutService {
           elementWithTrailingSpace.width -= pageSetup.neumeDefaultSpacing;
           elementWithTrailingSpace = null;
         }
+
+        // Handle the special case of multiline drop caps
+        // A drop cap can only drop multiple lines if
+        // 1) it is the first element on the line, and
+        // 2) no other drop cap is already dropping
+        if (element.elementType === ElementType.DropCap) {
+          const dropCapElement = element as DropCapElement;
+          multilineDropCapWidthPx = elementWidthPx;
+
+          const lineSpan = dropCapElement.useDefaultStyle
+            ? pageSetup.dropCapDefaultLineSpan
+            : dropCapElement.lineSpan;
+
+          multilineDropCapCounter = lineSpan - 1;
+          dropCapElement.computedLineSpan = lineSpan;
+        }
       }
 
       element.x = pageSetup.leftMargin + currentLineWidthPx;
@@ -700,10 +754,12 @@ export class LayoutService {
       // This aligns the bottom of the drop cap with
       // the bottom of the lyrics.
       if (element.elementType === ElementType.DropCap) {
-        const distanceFromTopToBottomOfLyrics =
-          lyricsVerticalOffset + lyricAscent;
-
         const dropCapElement = element as DropCapElement;
+
+        const distanceFromTopToBottomOfLyrics =
+          (dropCapElement.computedLineSpan - 1) * pageSetup.lineHeight +
+          lyricsVerticalOffset +
+          lyricAscent;
 
         const fontHeight = TextMeasurementService.getFontHeight(
           dropCapElement.computedFont,
@@ -1500,7 +1556,8 @@ export class LayoutService {
           .map((x) => x.width)
           .reduce((sum, x) => sum + x, 0);
 
-        const extraSpace = pageSetup.innerPageWidth - currentWidthPx;
+        const extraSpace =
+          pageSetup.innerPageWidth - currentWidthPx - line.indentation;
 
         if (alignCenter) {
           for (let i = 0; i < line.elements.length; i++) {

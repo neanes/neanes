@@ -426,7 +426,22 @@
             }}</label>
             <InputFontSize
               class="drop-caps-input"
+              :max="500"
               v-model="form.dropCapDefaultFontSize"
+            />
+          </div>
+          <div class="form-group">
+            <label class="drop-caps-label">{{
+              $t('dialog:pageSetup.lineSpan')
+            }}</label>
+            <InputUnit
+              class="drop-caps-input"
+              unit="unitless"
+              :min="1"
+              :max="10"
+              :step="1"
+              :precision="0"
+              v-model="form.dropCapDefaultLineSpan"
             />
           </div>
           <div class="form-group">

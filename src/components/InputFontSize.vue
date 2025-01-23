@@ -2,7 +2,7 @@
   <InputUnit
     unit="pt"
     :min="4"
-    :max="100"
+    :max="max"
     :step="1"
     :round="round"
     :modelValue="modelValue"
@@ -21,6 +21,7 @@ import InputUnit from '@/components/InputUnit.vue';
 })
 export default class InputFontSize extends Vue {
   @Prop() modelValue!: number;
+  @Prop({ default: 100 }) max!: number;
 
   round(value: number) {
     return Math.round(value * 2) / 2;

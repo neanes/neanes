@@ -748,6 +748,9 @@
         @update:customWidth="
           updateDropCapWidth(selectedElement as DropCapElement, $event)
         "
+        @update:lineSpan="
+          updateDropCapLineSpan(selectedElement as DropCapElement, $event)
+        "
       />
     </template>
     <template
@@ -2665,6 +2668,7 @@ export default class Editor extends Vue {
     element.fontWeight = this.score.pageSetup.dropCapDefaultFontWeight;
     element.fontStyle = this.score.pageSetup.dropCapDefaultFontStyle;
     element.lineHeight = this.score.pageSetup.dropCapDefaultLineHeight;
+    element.lineSpan = this.score.pageSetup.dropCapDefaultLineSpan;
 
     if (after && !this.isLastElement(this.selectedElement)) {
       this.addScoreElement(element, this.selectedElementIndex + 1);
@@ -5679,6 +5683,10 @@ export default class Editor extends Vue {
 
   updateDropCapLineHeight(element: DropCapElement, lineHeight: number | null) {
     this.updateDropCap(element, { lineHeight });
+  }
+
+  updateDropCapLineSpan(element: DropCapElement, lineSpan: number) {
+    this.updateDropCap(element, { lineSpan });
   }
 
   updateDropCapWidth(element: DropCapElement, customWidth: number | null) {

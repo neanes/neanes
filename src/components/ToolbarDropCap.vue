@@ -29,6 +29,7 @@
       <span class="space"></span>
       <InputFontSize
         class="drop-caps-input"
+        :max="500"
         :modelValue="element.fontSize"
         @update:modelValue="$emit('update:fontSize', $event)"
       />
@@ -71,6 +72,18 @@
         @update:modelValue="$emit('update:strokeWidth', $event)"
       />
       <span class="divider" />
+      <label class="right-space">{{ $t('toolbar:dropCap.lineSpan') }}</label>
+      <InputUnit
+        class="drop-caps-input-width"
+        unit="unitless"
+        :min="1"
+        :max="10"
+        :step="1"
+        :modelValue="element.lineSpan"
+        :precision="0"
+        @update:modelValue="$emit('update:lineSpan', $event)"
+      />
+      <span class="divider" />
     </template>
     <label class="right-space">{{ $t('toolbar:common.width') }}</label>
     <InputUnit
@@ -111,6 +124,7 @@ import { Unit } from '@/utils/Unit';
     'update:strokeWidth',
     'update:useDefaultStyle',
     'update:lineHeight',
+    'update:lineSpan',
   ],
 })
 export default class ToolbarDropCap extends Vue {

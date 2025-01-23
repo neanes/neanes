@@ -64,7 +64,7 @@
     "@vitejs/plugin-vue": "^5.2.1",
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.3.0",
-    "electron": "^34.0.0",
+    "electron": "^34.0.1",
     "electron-builder": "^25.1.8",
     "electron-updater": "^6.3.9",
     "eslint": "^9.18.0",
@@ -80,7 +80,7 @@
     "vite-plugin-eslint": "^1.8.1",
     "vite-plugin-pwa": "^0.21.1",
     "vite-plugin-vue-devtools": "^7.7.0",
-    "vitepress": "^1.6.1",
+    "vitepress": "^1.6.3",
     "vitest": "^3.0.3",
     "vue-component-type-helpers": "^2.2.0",
     "vue-tsc": "^2.2.0"

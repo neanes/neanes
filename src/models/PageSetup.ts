@@ -129,6 +129,7 @@ export class PageSetup {
   public dropCapDefaultColor = '#000000';
   public dropCapDefaultStrokeWidth = 0;
   public dropCapDefaultLineHeight: number | null = null;
+  public dropCapDefaultLineSpan = 1;
 
   public textBoxDefaultFontFamily = 'Source Serif';
   public textBoxDefaultFontSize = Unit.fromPt(20);

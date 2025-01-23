@@ -262,6 +262,7 @@ export class DropCapElement extends ScoreElement {
   public color: string = '#000000';
   public useDefaultStyle: boolean | undefined = undefined;
   public customWidth: number | undefined = undefined;
+  public lineSpan: number | undefined = 1;
 }
 
 export class ImageBoxElement extends ScoreElement {

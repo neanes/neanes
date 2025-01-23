@@ -993,6 +993,7 @@ export class DropCapElement extends ScoreElement {
   public color: string = '#000000';
   public useDefaultStyle: boolean = true;
   public customWidth: number | null = null;
+  public lineSpan = 1;
 
   // Values computed by the layout service
   public computedFontFamily: string = '';
@@ -1002,6 +1003,7 @@ export class DropCapElement extends ScoreElement {
   public computedColor: string = '#000000';
   public computedStrokeWidth: number = 0;
   public computedLineHeight: number | null = null;
+  public computedLineSpan: number = 1;
 
   // Re-render helpers
   public computedFontFamilyPrevious: string = '';

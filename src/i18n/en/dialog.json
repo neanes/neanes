@@ -87,6 +87,7 @@
     "color": "Color",
     "size": "Size",
     "lineHeight": "Line Height",
+    "lineSpan": "Lines to Drop",
     "font": "Font",
     "style": "Style",
     "bold": "Bold",

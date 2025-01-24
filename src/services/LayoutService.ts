@@ -493,6 +493,20 @@ export class LayoutService {
               dropCapElement.computedFont,
             );
           }
+
+          // Handle the special case of multiline drop caps
+          // when it is the very first element
+          if (i == 0) {
+            multilineDropCapWidthPx = elementWidthPx;
+
+            const lineSpan = dropCapElement.useDefaultStyle
+              ? pageSetup.dropCapDefaultLineSpan
+              : dropCapElement.lineSpan;
+
+            multilineDropCapCounter = lineSpan - 1;
+            dropCapElement.computedLineSpan = lineSpan;
+          }
+
           break;
         }
         case ElementType.Empty: {

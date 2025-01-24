@@ -497,7 +497,8 @@ export class LayoutService {
           // Handle the special case of multiline drop caps
           // when it is the very first element
           if (i == 0) {
-            multilineDropCapWidthPx = elementWidthPx;
+            multilineDropCapWidthPx =
+              elementWidthPx + pageSetup.neumeDefaultSpacing;
 
             const lineSpan = dropCapElement.useDefaultStyle
               ? pageSetup.dropCapDefaultLineSpan
@@ -695,7 +696,8 @@ export class LayoutService {
           multilineDropCapCounter === 0
         ) {
           const dropCapElement = element as DropCapElement;
-          multilineDropCapWidthPx = elementWidthPx;
+          multilineDropCapWidthPx =
+            elementWidthPx + pageSetup.neumeDefaultSpacing;
 
           const lineSpan = dropCapElement.useDefaultStyle
             ? pageSetup.dropCapDefaultLineSpan
@@ -744,7 +746,8 @@ export class LayoutService {
         // 2) no other drop cap is already dropping
         if (element.elementType === ElementType.DropCap) {
           const dropCapElement = element as DropCapElement;
-          multilineDropCapWidthPx = elementWidthPx;
+          multilineDropCapWidthPx =
+            elementWidthPx + pageSetup.neumeDefaultSpacing;
 
           const lineSpan = dropCapElement.useDefaultStyle
             ? pageSetup.dropCapDefaultLineSpan

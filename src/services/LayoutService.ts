@@ -1651,11 +1651,20 @@ export class LayoutService {
           (x) => x.elementType === ElementType.Note,
         ) as NoteElement[];
 
+        const indexOfFirstNote = line.elements.findIndex(
+          (x) => x.elementType === ElementType.Note,
+        );
+
         for (const element of noteElements) {
           const index = line.elements.indexOf(element);
 
+          // We do not simply check for index === 0 because we also want
+          // to include the case where the first letter of the melisma
+          // is a drop cap at the beginning of the line
           const isIntermediateMelismaAtStartOfLine =
-            index === 0 && element.isMelisma && !element.isMelismaStart;
+            index === indexOfFirstNote &&
+            element.isMelisma &&
+            !element.isMelismaStart;
 
           // First, clear melisma fields, since
           // they may be stale

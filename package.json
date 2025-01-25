@@ -52,7 +52,7 @@
     "vue-draggable-resizable": "^3.0.0",
     "vue-facing-decorator": "^3.0.4",
     "vue-router": "^4.5.0",
-    "vue3-observe-visibility": "^1.0.2",
+    "vue3-observe-visibility": "^1.0.3",
     "vue3-tabs-chrome": "^0.3.3"
   },
   "devDependencies": {

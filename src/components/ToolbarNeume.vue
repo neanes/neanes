@@ -897,6 +897,7 @@ export default class ToolbarNeume extends Vue {
         { label: 'model:note.zoHigh', value: ScaleNote.ZoHigh },
         { label: 'model:note.di', value: ScaleNote.Thi },
         { label: 'model:note.vou', value: ScaleNote.Vou },
+        { label: 'model:note.ni', value: ScaleNote.Ni },
       ];
     } else if (
       this.element.fthora === Fthora.SoftChromaticPa_Top ||

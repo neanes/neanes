@@ -1458,6 +1458,22 @@ export class LayoutService {
       );
     }
 
+    if (martyriaElement.measureBarLeft) {
+      martyriaElement.neumeWidth += this.getNeumeWidthFromCache(
+        neumeWidthCache,
+        martyriaElement.measureBarLeft,
+        pageSetup,
+      );
+    }
+
+    if (martyriaElement.measureBarRight) {
+      martyriaElement.neumeWidth += this.getNeumeWidthFromCache(
+        neumeWidthCache,
+        martyriaElement.measureBarRight,
+        pageSetup,
+      );
+    }
+
     return (
       martyriaElement.spaceAfter +
       (padding +

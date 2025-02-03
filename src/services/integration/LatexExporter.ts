@@ -66,6 +66,8 @@ export class LatexExporter {
         gorgonDefaultColor: pageSetup.gorgonDefaultColor.substring(1),
         isonDefaultColor: pageSetup.isonDefaultColor.substring(1),
         martyriaDefaultColor: pageSetup.martyriaDefaultColor.substring(1),
+        measureNumberDefaultColor:
+          pageSetup.measureNumberDefaultColor.substring(1),
       },
       lines: [],
     };
@@ -138,6 +140,12 @@ export class LatexExporter {
                 note.ison,
                 note.isonOffsetX,
                 note.isonOffsetY,
+              ),
+              measureNumber: glyphName(note.measureNumber),
+              measureNumberOffset: getOffset(
+                note.measureNumber,
+                note.measureNumberOffsetX,
+                note.measureNumberOffsetY,
               ),
               measureBarLeft:
                 glyphName(note.measureBarLeft) ??

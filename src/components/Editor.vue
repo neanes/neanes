@@ -1215,6 +1215,7 @@ import {
 } from '@/services/audio/PlaybackService';
 import { Command, CommandFactory } from '@/services/history/CommandService';
 import { ByzHtmlExporter } from '@/services/integration/ByzHtmlExporter';
+import { LatexExporter } from '@/services/integration/LatexExporter';
 import { MusicXmlExporter } from '@/services/integration/MusicXmlExporter';
 import { IIpcService } from '@/services/ipc/IIpcService';
 import { LayoutService } from '@/services/LayoutService';
@@ -1283,6 +1284,7 @@ export default class Editor extends Vue {
   @Inject() readonly playbackService!: PlaybackService;
   @Inject() readonly textSearchService!: TextSearchService;
   @Inject() readonly lyricService!: LyricService;
+  @Inject() readonly latexExporter!: LatexExporter;
   @Inject() readonly musicXmlExporter!: MusicXmlExporter;
 
   searchTextQuery: string = '';
@@ -1989,7 +1991,7 @@ export default class Editor extends Vue {
   }
 
   getMelismaUnderscoreStyleInner(element: NoteElement) {
-    const thickness = this.score.pageSetup.lyricsMelismaThickeness;
+    const thickness = this.score.pageSetup.lyricsMelismaThickness;
 
     const spacing = !element.isFullMelisma
       ? this.score.pageSetup.lyricsMelismaSpacing
@@ -6409,6 +6411,10 @@ export default class Editor extends Vue {
     );
 
     this.closeExportDialog();
+  }
+
+  exportAsLatex() {
+    return this.latexExporter.export(this.pages, this.score.pageSetup);
   }
 
   blurActiveElement() {

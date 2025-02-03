@@ -81,7 +81,6 @@ export class LatexExporter {
             resultLine.elements.push({
               type: 'note',
               x: Unit.toPt(element.x - pageSetup.leftMargin),
-              y: Unit.toPt(element.y),
               width: Unit.toPt(note.neumeWidth),
               lyricsWidth: Unit.toPt(note.lyricsWidth),
               quantitativeNeume: glyphName(note.quantitativeNeume),
@@ -165,7 +164,6 @@ export class LatexExporter {
             resultLine.elements.push({
               type: 'martyria',
               x: Unit.toPt(element.x - pageSetup.leftMargin),
-              y: Unit.toPt(element.y - pageSetup.topMargin),
               width: Unit.toPt(martyria.neumeWidth),
               note: glyphName(martyria.note),
               rootSign: glyphName(martyria.rootSign),
@@ -181,7 +179,6 @@ export class LatexExporter {
             resultLine.elements.push({
               type: 'dropcap',
               x: Unit.toPt(element.x - pageSetup.leftMargin),
-              y: Unit.toPt(element.y - pageSetup.topMargin),
               width: Unit.toPt(dropCap.width),
               content: dropCap.content,
               fontSize: Unit.toPt(dropCap.computedFontSize),

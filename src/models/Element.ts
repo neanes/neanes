@@ -1004,6 +1004,7 @@ export class DropCapElement extends ScoreElement {
   public computedStrokeWidth: number = 0;
   public computedLineHeight: number | null = null;
   public computedLineSpan: number = 1;
+  public contentWidth: number = 0;
 
   // Re-render helpers
   public computedFontFamilyPrevious: string = '';

@@ -494,6 +494,8 @@ export class LayoutService {
             );
           }
 
+          dropCapElement.contentWidth = elementWidthPx;
+
           // Handle the special case of multiline drop caps
           // when it is the very first element
           if (i == 0) {

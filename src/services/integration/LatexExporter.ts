@@ -187,7 +187,7 @@ export class LatexExporter {
             resultLine.elements.push({
               type: 'dropcap',
               x: Unit.toPt(element.x - pageSetup.leftMargin),
-              width: Unit.toPt(dropCap.width),
+              width: Unit.toPt(dropCap.contentWidth),
               content: dropCap.content,
               fontSize: Unit.toPt(dropCap.computedFontSize),
               color: dropCap.computedColor.substring(1),

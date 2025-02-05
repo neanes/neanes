@@ -1916,11 +1916,11 @@ export default class Editor extends Vue {
       direction: this.rtl ? 'rtl' : undefined,
       top: withZoom(element.lyricsVerticalOffset),
       paddingLeft:
-        element.lyricsHorizontalOffset > 0
+        !element.isFullMelisma && element.lyricsHorizontalOffset > 0
           ? withZoom(element.lyricsHorizontalOffset)
           : undefined,
       paddingRight:
-        element.lyricsHorizontalOffset < 0
+        !element.isFullMelisma && element.lyricsHorizontalOffset < 0
           ? withZoom(-element.lyricsHorizontalOffset)
           : undefined,
       fontSize: element.lyricsUseDefaultStyle

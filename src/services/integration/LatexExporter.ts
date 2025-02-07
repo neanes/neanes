@@ -4,7 +4,7 @@ import {
   MartyriaElement,
   NoteElement,
 } from '@/models/Element';
-import { Neume } from '@/models/Neumes';
+import { Neume, TimeNeume, VocalExpressionNeume } from '@/models/Neumes';
 import { Page } from '@/models/Page';
 import { PageSetup } from '@/models/PageSetup';
 import { Unit } from '@/utils/Unit';
@@ -62,12 +62,22 @@ export class LatexExporter {
         lyricsMelismaSpacing: Unit.toPt(pageSetup.lyricsMelismaSpacing),
         lyricsMelismaThickness: Unit.toPt(pageSetup.lyricsMelismaThickness),
         accidentalDefaultColor: pageSetup.accidentalDefaultColor.substring(1),
+        dropCapDefaultColor: pageSetup.dropCapDefaultColor.substring(1),
         fthoraDefaultColor: pageSetup.fthoraDefaultColor.substring(1),
         gorgonDefaultColor: pageSetup.gorgonDefaultColor.substring(1),
+        heteronDefaultColor: pageSetup.heteronDefaultColor.substring(1),
         isonDefaultColor: pageSetup.isonDefaultColor.substring(1),
+        koronisDefaultColor: pageSetup.koronisDefaultColor.substring(1),
+        lyricsDefaultColor: pageSetup.lyricsDefaultColor.substring(1),
         martyriaDefaultColor: pageSetup.martyriaDefaultColor.substring(1),
+        measureBarDefaultColor: pageSetup.measureBarDefaultColor.substring(1),
         measureNumberDefaultColor:
           pageSetup.measureNumberDefaultColor.substring(1),
+        modeKeyDefaultColor: pageSetup.modeKeyDefaultColor.substring(1),
+        neumeDefaultColor: pageSetup.neumeDefaultColor.substring(1),
+        noteIndicatorDefaultColor:
+          pageSetup.noteIndicatorDefaultColor.substring(1),
+        tempoDefaultColor: pageSetup.tempoDefaultColor.substring(1),
       },
       lines: [],
     };
@@ -87,17 +97,36 @@ export class LatexExporter {
               lyricsWidth: Unit.toPt(note.lyricsWidth),
               quantitativeNeume: glyphName(note.quantitativeNeume),
               vareia: note.vareia || undefined,
+              vareiaOffset: getOffset(
+                VocalExpressionNeume.Vareia,
+                note.vareiaOffsetX,
+                note.vareiaOffsetY,
+              ),
               time: glyphName(note.timeNeume),
               timeOffset: getOffset(
                 note.timeNeume,
                 note.timeNeumeOffsetX,
                 note.timeNeumeOffsetY,
               ),
+              koronis: note.koronis || undefined,
+              koronisOffset: note.koronis
+                ? getOffset(
+                    TimeNeume.Koronis,
+                    note.koronisOffsetX,
+                    note.koronisOffsetY,
+                  )
+                : undefined,
               gorgon: glyphName(note.gorgonNeume),
               gorgonOffset: getOffset(
                 note.gorgonNeume,
                 note.gorgonNeumeOffsetX,
                 note.gorgonNeumeOffsetY,
+              ),
+              gorgonSecondary: glyphName(note.secondaryGorgonNeume),
+              gorgonSecondaryOffset: getOffset(
+                note.secondaryGorgonNeume,
+                note.secondaryGorgonNeumeOffsetX,
+                note.secondaryGorgonNeumeOffsetY,
               ),
               fthora: glyphName(note.fthora),
               fthoraOffset: getOffset(
@@ -105,32 +134,38 @@ export class LatexExporter {
                 note.fthoraOffsetX,
                 note.fthoraOffsetY,
               ),
-              secondaryFthora: glyphName(note.secondaryFthora),
-              secondaryFthoraOffset: getOffset(
+              fthoraSecondary: glyphName(note.secondaryFthora),
+              fthoraSecondaryOffset: getOffset(
                 note.secondaryFthora,
                 note.secondaryFthoraOffsetX,
                 note.secondaryFthoraOffsetY,
               ),
-              tertiaryFthora: glyphName(note.tertiaryFthora),
-              tertiaryFthoraOffset: getOffset(
+              fthoraTertiary: glyphName(note.tertiaryFthora),
+              fthoraTertiaryOffset: getOffset(
                 note.tertiaryFthora,
                 note.tertiaryFthoraOffsetX,
                 note.tertiaryFthoraOffsetY,
               ),
               vocalExpression: glyphName(note.vocalExpressionNeume),
+              vocalExpressionOffset: getOffset(
+                note.vocalExpressionNeume,
+                note.vocalExpressionNeumeOffsetX,
+                note.vocalExpressionNeumeOffsetY,
+              ),
               accidental: glyphName(note.accidental),
               accidentalOffset: getOffset(
                 note.accidental,
                 note.accidentalOffsetX,
                 note.accidentalOffsetY,
               ),
-              secondaryAccidental: glyphName(note.secondaryAccidental),
-              secondaryAccidentalOffset: getOffset(
+              accidentalSecondary: glyphName(note.secondaryAccidental),
+              accidentalSecondaryOffset: getOffset(
                 note.secondaryAccidental,
                 note.secondaryAccidentalOffsetX,
                 note.secondaryAccidentalOffsetY,
               ),
-              tertiaryAccidentalOffset: getOffset(
+              accidentalTertiary: glyphName(note.tertiaryAccidental),
+              accidentalTertiaryOffset: getOffset(
                 note.tertiaryAccidental,
                 note.tertiaryAccidentalOffsetX,
                 note.tertiaryAccidentalOffsetY,

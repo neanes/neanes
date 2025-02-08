@@ -3,6 +3,7 @@ import {
   ElementType,
   MartyriaElement,
   NoteElement,
+  TempoElement,
 } from '@/models/Element';
 import { Neume, TimeNeume, VocalExpressionNeume } from '@/models/Neumes';
 import { Page } from '@/models/Page';
@@ -230,6 +231,14 @@ export class LatexExporter {
                   : undefined,
               measureBarLeft: glyphName(martyria.measureBarLeft),
               measureBarRight: glyphName(martyria.measureBarRight),
+            });
+          } else if (element.elementType === ElementType.Tempo) {
+            const tempo = element as TempoElement;
+            resultLine.elements.push({
+              type: 'tempo',
+              x: Unit.toPt(element.x - pageSetup.leftMargin),
+              width: Unit.toPt(tempo.neumeWidth),
+              neume: glyphName(tempo.neume),
             });
           } else if (element.elementType === ElementType.DropCap) {
             const dropCap = element as DropCapElement;

@@ -225,12 +225,12 @@ export class LatexExporter {
               width: Unit.toPt(martyria.neumeWidth),
               note: glyphName(martyria.note),
               rootSign: glyphName(martyria.rootSign),
-              fthora:
-                martyria.fthora != null
-                  ? glyphName(martyria.fthora)
-                  : undefined,
+              fthora: glyphName(martyria.fthora),
               measureBarLeft: glyphName(martyria.measureBarLeft),
               measureBarRight: glyphName(martyria.measureBarRight),
+              tempoLeft: glyphName(martyria.tempoLeft),
+              tempo: glyphName(martyria.tempo),
+              tempoRight: glyphName(martyria.tempoRight),
             });
           } else if (element.elementType === ElementType.Tempo) {
             const tempo = element as TempoElement;

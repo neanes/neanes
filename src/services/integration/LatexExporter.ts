@@ -12,6 +12,8 @@ import { Unit } from '@/utils/Unit';
 import { NeumeMappingService } from '../NeumeMappingService';
 import { TextMeasurementService } from '../TextMeasurementService';
 
+const schemaVersion = 1;
+
 function glyphName(neume: Neume | null) {
   if (neume == null) {
     return undefined;
@@ -54,30 +56,40 @@ export class LatexExporter {
       pageSetup.lyricsVerticalOffset + lyricAscent - neumeAscent;
 
     const result: any = {
+      schemaVersion,
       pageSetup: {
         lineHeight: Unit.toPt(pageSetup.lineHeight),
+        dropCapDefaultFontSize: Unit.toPt(pageSetup.dropCapDefaultFontSize),
         neumeDefaultFontSize: Unit.toPt(pageSetup.neumeDefaultFontSize),
         lyricsDefaultFontSize: Unit.toPt(pageSetup.lyricsDefaultFontSize),
+        dropCapDefaultFontWeight:
+          pageSetup.dropCapDefaultFontWeight != '400'
+            ? pageSetup.dropCapDefaultFontWeight
+            : undefined,
+        dropCapDefaultFontStyle:
+          pageSetup.dropCapDefaultFontStyle != 'normal'
+            ? pageSetup.dropCapDefaultFontStyle
+            : undefined,
         lyricsVerticalOffset: Unit.toPt(lyricVerticalOffset),
         lyricsMelismaSpacing: Unit.toPt(pageSetup.lyricsMelismaSpacing),
         lyricsMelismaThickness: Unit.toPt(pageSetup.lyricsMelismaThickness),
-        accidentalDefaultColor: pageSetup.accidentalDefaultColor.substring(1),
-        dropCapDefaultColor: pageSetup.dropCapDefaultColor.substring(1),
-        fthoraDefaultColor: pageSetup.fthoraDefaultColor.substring(1),
-        gorgonDefaultColor: pageSetup.gorgonDefaultColor.substring(1),
-        heteronDefaultColor: pageSetup.heteronDefaultColor.substring(1),
-        isonDefaultColor: pageSetup.isonDefaultColor.substring(1),
-        koronisDefaultColor: pageSetup.koronisDefaultColor.substring(1),
-        lyricsDefaultColor: pageSetup.lyricsDefaultColor.substring(1),
-        martyriaDefaultColor: pageSetup.martyriaDefaultColor.substring(1),
-        measureBarDefaultColor: pageSetup.measureBarDefaultColor.substring(1),
-        measureNumberDefaultColor:
-          pageSetup.measureNumberDefaultColor.substring(1),
-        modeKeyDefaultColor: pageSetup.modeKeyDefaultColor.substring(1),
-        neumeDefaultColor: pageSetup.neumeDefaultColor.substring(1),
-        noteIndicatorDefaultColor:
-          pageSetup.noteIndicatorDefaultColor.substring(1),
-        tempoDefaultColor: pageSetup.tempoDefaultColor.substring(1),
+        defaultColors: {
+          accidental: pageSetup.accidentalDefaultColor.substring(1),
+          dropCap: pageSetup.dropCapDefaultColor.substring(1),
+          fthora: pageSetup.fthoraDefaultColor.substring(1),
+          gorgon: pageSetup.gorgonDefaultColor.substring(1),
+          heteron: pageSetup.heteronDefaultColor.substring(1),
+          ison: pageSetup.isonDefaultColor.substring(1),
+          koronis: pageSetup.koronisDefaultColor.substring(1),
+          lyrics: pageSetup.lyricsDefaultColor.substring(1),
+          martyria: pageSetup.martyriaDefaultColor.substring(1),
+          measureBar: pageSetup.measureBarDefaultColor.substring(1),
+          measureNumber: pageSetup.measureNumberDefaultColor.substring(1),
+          modeKey: pageSetup.modeKeyDefaultColor.substring(1),
+          neume: pageSetup.neumeDefaultColor.substring(1),
+          noteIndicator: pageSetup.noteIndicatorDefaultColor.substring(1),
+          tempo: pageSetup.tempoDefaultColor.substring(1),
+        },
       },
       lines: [],
     };
@@ -116,6 +128,8 @@ export class LatexExporter {
                     note.koronisOffsetY,
                   )
                 : undefined,
+              tie: glyphName(note.tie),
+              tieOffset: getOffset(note.tie, note.tieOffsetX, note.tieOffsetY),
               gorgon: glyphName(note.gorgonNeume),
               gorgonOffset: getOffset(
                 note.gorgonNeume,
@@ -225,6 +239,10 @@ export class LatexExporter {
               width: Unit.toPt(dropCap.contentWidth),
               content: dropCap.content,
               fontSize: Unit.toPt(dropCap.computedFontSize),
+              fontStyle:
+                dropCap.fontStyle !== 'normal' ? dropCap.fontStyle : undefined,
+              fontWeight:
+                dropCap.fontWeight !== '400' ? dropCap.fontWeight : undefined,
               color: dropCap.computedColor.substring(1),
             });
           }

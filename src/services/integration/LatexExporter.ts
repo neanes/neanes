@@ -22,7 +22,11 @@ function glyphName(neume: Neume | null) {
     return undefined;
   }
 
-  return NeumeMappingService.getMapping(neume).glyphName;
+  const mapping = NeumeMappingService.getMapping(neume);
+
+  return mapping.salt == null
+    ? mapping.glyphName
+    : `${mapping.glyphName}.salt${String(mapping.salt).padStart(2, '0')}`;
 }
 
 function getOffset(

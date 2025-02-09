@@ -107,7 +107,7 @@ export class NoteElement extends ScoreElement {
   public koronis: boolean = false;
   public stavros: boolean = false;
   public lyrics: string = '';
-  public lyricsColor: string = 'black';
+  public lyricsColor: string = '#000000';
   public lyricsFontFamily: string = 'Source Serif';
   public lyricsFontSize: number = Unit.fromPt(12);
   public lyricsStrokeWidth: number = 0;

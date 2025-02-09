@@ -2,8 +2,10 @@ import {
   DropCapElement,
   ElementType,
   MartyriaElement,
+  ModeKeyElement,
   NoteElement,
   TempoElement,
+  TextBoxAlignment,
 } from '@/models/Element';
 import { Neume, TimeNeume, VocalExpressionNeume } from '@/models/Neumes';
 import { Page } from '@/models/Page';
@@ -40,6 +42,17 @@ function getOffset(
   }
 
   return { x, y };
+}
+
+function convertAlignment(alignment: TextBoxAlignment) {
+  switch (alignment) {
+    case TextBoxAlignment.Center:
+      return 'c';
+    case TextBoxAlignment.Left:
+      return 'l';
+    case TextBoxAlignment.Right:
+      return 'r';
+  }
 }
 
 export class LatexExporter {
@@ -209,11 +222,39 @@ export class LatexExporter {
                 note.lyrics != ''
                   ? Unit.toPt(note.lyricsHorizontalOffset)
                   : undefined,
+              lyricsColor:
+                !note.lyricsUseDefaultStyle &&
+                note.lyricsColor != pageSetup.lyricsDefaultColor
+                  ? note.lyricsColor
+                  : undefined,
+              lyricsFontFamily:
+                !note.lyricsUseDefaultStyle &&
+                note.lyricsFontFamily != pageSetup.lyricsDefaultFontFamily
+                  ? note.lyricsFontFamily
+                  : undefined,
+              lyricsFontSize:
+                !note.lyricsUseDefaultStyle &&
+                note.lyricsFontSize != pageSetup.lyricsDefaultFontSize
+                  ? Unit.toPt(note.lyricsFontSize)
+                  : undefined,
+              lyricsFontStyle:
+                !note.lyricsUseDefaultStyle &&
+                note.lyricsFontStyle != pageSetup.lyricsDefaultFontStyle
+                  ? note.lyricsFontStyle
+                  : undefined,
+              lyricsFontWeight:
+                !note.lyricsUseDefaultStyle &&
+                note.lyricsFontWeight != pageSetup.lyricsDefaultFontWeight
+                  ? note.lyricsFontWeight
+                  : undefined,
               melismaWidth:
-                note.lyrics != '' ? Unit.toPt(note.melismaWidth) : undefined,
+                note.melismaWidth > 0
+                  ? Unit.toPt(note.melismaWidth)
+                  : undefined,
+              isFullMelisma: note.isFullMelisma || undefined,
               isHyphen: note.isHyphen || undefined,
               hyphenOffsets:
-                note.lyrics != ''
+                note.hyphenOffsets.length > 0
                   ? note.hyphenOffsets.map((x) => Unit.toPt(x))
                   : undefined,
             });
@@ -253,6 +294,33 @@ export class LatexExporter {
               fontWeight:
                 dropCap.fontWeight !== '400' ? dropCap.fontWeight : undefined,
               color: dropCap.computedColor.substring(1),
+            });
+          } else if (element.elementType === ElementType.ModeKey) {
+            const modeKey = element as ModeKeyElement;
+            resultLine.elements.push({
+              type: 'modekey',
+              x: Unit.toPt(element.x - pageSetup.leftMargin),
+              width: Unit.toPt(modeKey.width),
+              alignment: convertAlignment(modeKey.alignment),
+              isPlagal: modeKey.isPlagal || undefined,
+              isVarys: modeKey.isVarys || undefined,
+              martyria: glyphName(modeKey.martyria),
+              note: glyphName(modeKey.note),
+              fthoraAboveNote: glyphName(modeKey.fthoraAboveNote),
+              quantitativeNeumeAboveNote: glyphName(
+                modeKey.quantitativeNeumeAboveNote,
+              ),
+              note2: glyphName(modeKey.note2),
+              fthoraAboveNote2: glyphName(modeKey.fthoraAboveNote2),
+              quantitativeNeumeAboveNote2: glyphName(
+                modeKey.quantitativeNeumeAboveNote2,
+              ),
+              quantitativeNeumeRight: glyphName(modeKey.quantitativeNeumeRight),
+              fthoraAboveQuantitativeNeumeRight: glyphName(
+                modeKey.fthoraAboveQuantitativeNeumeRight,
+              ),
+              tempo: glyphName(modeKey.tempo),
+              tempoAlignRight: modeKey.tempoAlignRight || undefined,
             });
           }
         }

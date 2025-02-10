@@ -63,7 +63,7 @@
     "@types/uuid": "^10.0.0",
     "@vitejs/plugin-vue": "^5.2.1",
     "@vue/eslint-config-prettier": "^10.2.0",
-    "@vue/eslint-config-typescript": "^14.3.0",
+    "@vue/eslint-config-typescript": "^14.4.0",
     "electron": "^34.1.1",
     "electron-builder": "^25.1.8",
     "electron-updater": "^6.3.9",

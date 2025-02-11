@@ -70,7 +70,7 @@ export class LatexExporter {
     );
 
     // TODO document this with a picture diagram explaining why this works
-    const lyricVerticalOffset =
+    const lyricsVerticalOffset =
       pageSetup.lyricsVerticalOffset + lyricAscent - neumeAscent;
 
     const result: any = {
@@ -78,6 +78,7 @@ export class LatexExporter {
       pageSetup: {
         lineHeight: Unit.toPt(pageSetup.lineHeight),
         dropCapDefaultFontSize: Unit.toPt(pageSetup.dropCapDefaultFontSize),
+        modeKeyDefaultFontSize: Unit.toPt(pageSetup.modeKeyDefaultFontSize),
         neumeDefaultFontSize: Unit.toPt(pageSetup.neumeDefaultFontSize),
         lyricsDefaultFontSize: Unit.toPt(pageSetup.lyricsDefaultFontSize),
         dropCapDefaultFontWeight:
@@ -88,7 +89,7 @@ export class LatexExporter {
           pageSetup.dropCapDefaultFontStyle != 'normal'
             ? pageSetup.dropCapDefaultFontStyle
             : undefined,
-        lyricsVerticalOffset: Unit.toPt(lyricVerticalOffset),
+        lyricsVerticalOffset: Unit.toPt(lyricsVerticalOffset),
         lyricsMelismaSpacing: Unit.toPt(pageSetup.lyricsMelismaSpacing),
         lyricsMelismaThickness: Unit.toPt(pageSetup.lyricsMelismaThickness),
         defaultColors: {
@@ -305,7 +306,26 @@ export class LatexExporter {
               type: 'modekey',
               x: Unit.toPt(element.x - pageSetup.leftMargin),
               width: Unit.toPt(modeKey.width),
+              height: Unit.toPt(modeKey.height),
+              gapAbove:
+                modeKey.marginTop != 0
+                  ? Unit.toPt(modeKey.marginTop)
+                  : undefined,
+              gapBelow:
+                modeKey.marginBottom != 0
+                  ? Unit.toPt(modeKey.marginBottom)
+                  : undefined,
               alignment: convertAlignment(modeKey.alignment),
+              color:
+                !modeKey.useDefaultStyle &&
+                modeKey.color != pageSetup.modeKeyDefaultColor
+                  ? modeKey.color
+                  : undefined,
+              fontSize:
+                !modeKey.useDefaultStyle &&
+                modeKey.fontSize != pageSetup.modeKeyDefaultFontSize
+                  ? modeKey.fontSize
+                  : undefined,
               isPlagal: modeKey.isPlagal || undefined,
               isVarys: modeKey.isVarys || undefined,
               martyria: glyphName(modeKey.martyria),

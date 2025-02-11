@@ -7426,37 +7426,37 @@
     },
     "barlineShortSingleAbove": {
       "barline": [
-        0.075,
+        -0.001,
         0.59
       ]
     },
     "barlineSingleAbove": {
       "barline": [
-        0.107,
+        -0.007,
         0.004
       ]
     },
     "barlineDoubleAbove": {
       "barline": [
-        0.175,
+        0.005,
         0.004
       ]
     },
     "barlineTheseosAbove": {
       "barline": [
-        0.107,
+        -0.003,
         0.004
       ]
     },
     "barlineShortDoubleAbove": {
       "barline": [
-        0.129,
+        -0.001,
         0.59
       ]
     },
     "barlineShortTheseosAbove": {
       "barline": [
-        0.087,
+        -0.003,
         0.589
       ]
     },
@@ -7510,7 +7510,7 @@
     },
     "stavrosAbove": {
       "stavros": [
-        0.261,
+        -0.002,
         0.124
       ]
     }
@@ -7903,12 +7903,12 @@
     "digorgonDottedLeftSecondary": 0.0,
     "trigorgonDottedLeftSecondary": 0.0,
     "psifiston.alt01": 0.0,
-    "barlineShortSingleAbove": 0.152,
-    "barlineSingleAbove": 0.208,
-    "barlineDoubleAbove": 0.34,
-    "barlineTheseosAbove": 0.208,
-    "barlineShortDoubleAbove": 0.256,
-    "barlineShortTheseosAbove": 0.172,
+    "barlineShortSingleAbove": 0.0,
+    "barlineSingleAbove": 0.0,
+    "barlineDoubleAbove": 0.0,
+    "barlineTheseosAbove": 0.0,
+    "barlineShortDoubleAbove": 0.0,
+    "barlineShortTheseosAbove": 0.0,
     "diesis2Secondary": 0.0,
     "diesis4Secondary": 0.0,
     "diesis6Secondary": 0.0,
@@ -7917,7 +7917,7 @@
     "diesis4Tertiary": 0.0,
     "diesis6Tertiary": 0.0,
     "diesis8Tertiary": 0.0,
-    "stavrosAbove": 0.457
+    "stavrosAbove": 0.0
   },
   "optionalGlyphs": {
     "oligonKentimataBelow.alt01": {
@@ -11481,61 +11481,61 @@
     },
     "barlineShortSingleAbove": {
       "bBoxNE": [
-        0.091,
+        0.015,
         0.895
       ],
       "bBoxSW": [
-        0.059,
+        -0.017,
         0.59
       ]
     },
     "barlineSingleAbove": {
       "bBoxNE": [
-        0.123,
+        0.016,
         0.705
       ],
       "bBoxSW": [
-        0.091,
+        -0.016,
         0.004
       ]
     },
     "barlineDoubleAbove": {
       "bBoxNE": [
-        0.249,
+        0.079,
         0.705
       ],
       "bBoxSW": [
-        0.1,
+        -0.07,
         0.004
       ]
     },
     "barlineTheseosAbove": {
       "bBoxNE": [
-        0.306,
+        0.196,
         0.812
       ],
       "bBoxSW": [
-        -0.101,
+        -0.211,
         0.004
       ]
     },
     "barlineShortDoubleAbove": {
       "bBoxNE": [
-        0.192,
+        0.062,
         0.895
       ],
       "bBoxSW": [
-        0.067,
+        -0.063,
         0.59
       ]
     },
     "barlineShortTheseosAbove": {
       "bBoxNE": [
-        0.232,
+        0.142,
         0.989
       ],
       "bBoxSW": [
-        -0.062,
+        -0.152,
         0.589
       ]
     },
@@ -11621,11 +11621,11 @@
     },
     "stavrosAbove": {
       "bBoxNE": [
-        0.436,
+        0.173,
         0.471
       ],
       "bBoxSW": [
-        0.09,
+        -0.173,
         0.126
       ]
     }

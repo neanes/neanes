@@ -73,6 +73,8 @@ export class LatexExporter {
     const lyricsVerticalOffset =
       pageSetup.lyricsVerticalOffset + lyricAscent - neumeAscent;
 
+    console.log(pageSetup.lineHeight - neumeAscent);
+
     const result: any = {
       schemaVersion,
       pageSetup: {
@@ -304,14 +306,13 @@ export class LatexExporter {
             const modeKey = element as ModeKeyElement;
             resultLine.elements.push({
               type: 'modekey',
-              x: Unit.toPt(element.x - pageSetup.leftMargin),
               width: Unit.toPt(modeKey.width),
               height: Unit.toPt(modeKey.height),
-              gapAbove:
+              marginTop:
                 modeKey.marginTop != 0
                   ? Unit.toPt(modeKey.marginTop)
                   : undefined,
-              gapBelow:
+              marginBottom:
                 modeKey.marginBottom != 0
                   ? Unit.toPt(modeKey.marginBottom)
                   : undefined,

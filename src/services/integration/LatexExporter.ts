@@ -87,9 +87,17 @@ export class LatexExporter {
           pageSetup.dropCapDefaultFontWeight != '400'
             ? pageSetup.dropCapDefaultFontWeight
             : undefined,
+        lyricsDefaultFontWeight:
+          pageSetup.lyricsDefaultFontWeight != '400'
+            ? pageSetup.lyricsDefaultFontWeight
+            : undefined,
         dropCapDefaultFontStyle:
           pageSetup.dropCapDefaultFontStyle != 'normal'
             ? pageSetup.dropCapDefaultFontStyle
+            : undefined,
+        lyricsDefaultFontStyle:
+          pageSetup.lyricsDefaultFontStyle != 'normal'
+            ? pageSetup.lyricsDefaultFontStyle
             : undefined,
         lyricsVerticalOffset: Unit.toPt(lyricsVerticalOffset),
         lyricsMelismaSpacing: Unit.toPt(pageSetup.lyricsMelismaSpacing),

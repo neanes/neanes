@@ -73,8 +73,6 @@ export class LatexExporter {
     const lyricsVerticalOffset =
       pageSetup.lyricsVerticalOffset + lyricAscent - neumeAscent;
 
-    console.log(pageSetup.lineHeight - neumeAscent);
-
     const result: any = {
       schemaVersion,
       pageSetup: {
@@ -354,6 +352,11 @@ export class LatexExporter {
               ),
               tempo: glyphName(modeKey.tempo),
               tempoAlignRight: modeKey.tempoAlignRight || undefined,
+              showAmbitus: modeKey.showAmbitus || undefined,
+              ambitusHighNote: glyphName(modeKey.ambitusHighNote),
+              ambitusHighRootSign: glyphName(modeKey.ambitusHighRootSign),
+              ambitusLowNote: glyphName(modeKey.ambitusLowNote),
+              ambitusLowRootSign: glyphName(modeKey.ambitusLowRootSign),
             });
           }
         }

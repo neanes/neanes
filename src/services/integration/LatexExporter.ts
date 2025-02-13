@@ -6,6 +6,7 @@ import {
   NoteElement,
   TempoElement,
   TextBoxAlignment,
+  TextBoxElement,
 } from '@/models/Element';
 import { Neume, TimeNeume, VocalExpressionNeume } from '@/models/Neumes';
 import { Page } from '@/models/Page';
@@ -93,11 +94,13 @@ export class LatexExporter {
           dropCap: convertFontName(pageSetup.dropCapDefaultFontFamily),
           lyrics: convertFontName(pageSetup.lyricsDefaultFontFamily),
           neume: convertFontName(pageSetup.neumeDefaultFontFamily),
+          textBox: convertFontName(pageSetup.textBoxDefaultFontFamily),
         },
         dropCapDefaultFontSize: Unit.toPt(pageSetup.dropCapDefaultFontSize),
         modeKeyDefaultFontSize: Unit.toPt(pageSetup.modeKeyDefaultFontSize),
         neumeDefaultFontSize: Unit.toPt(pageSetup.neumeDefaultFontSize),
         lyricsDefaultFontSize: Unit.toPt(pageSetup.lyricsDefaultFontSize),
+        textBoxDefaultFontSize: Unit.toPt(pageSetup.textBoxDefaultFontSize),
         dropCapDefaultFontWeight:
           pageSetup.dropCapDefaultFontWeight != '400'
             ? pageSetup.dropCapDefaultFontWeight
@@ -106,6 +109,10 @@ export class LatexExporter {
           pageSetup.lyricsDefaultFontWeight != '400'
             ? pageSetup.lyricsDefaultFontWeight
             : undefined,
+        textBoxDefaultFontWeight:
+          pageSetup.textBoxDefaultFontWeight != '400'
+            ? pageSetup.textBoxDefaultFontWeight
+            : undefined,
         dropCapDefaultFontStyle:
           pageSetup.dropCapDefaultFontStyle != 'normal'
             ? pageSetup.dropCapDefaultFontStyle
@@ -113,6 +120,10 @@ export class LatexExporter {
         lyricsDefaultFontStyle:
           pageSetup.lyricsDefaultFontStyle != 'normal'
             ? pageSetup.lyricsDefaultFontStyle
+            : undefined,
+        textBoxDefaultFontStyle:
+          pageSetup.textBoxDefaultFontStyle != 'normal'
+            ? pageSetup.textBoxDefaultFontStyle
             : undefined,
         lyricsVerticalOffset: Unit.toPt(lyricsVerticalOffset),
         lyricsMelismaSpacing: Unit.toPt(pageSetup.lyricsMelismaSpacing),
@@ -133,6 +144,7 @@ export class LatexExporter {
           neume: pageSetup.neumeDefaultColor.substring(1),
           noteIndicator: pageSetup.noteIndicatorDefaultColor.substring(1),
           tempo: pageSetup.tempoDefaultColor.substring(1),
+          textBox: pageSetup.textBoxDefaultColor.substring(1),
         },
       },
       lines: [],
@@ -254,12 +266,12 @@ export class LatexExporter {
               lyricsColor:
                 !note.lyricsUseDefaultStyle &&
                 note.lyricsColor != pageSetup.lyricsDefaultColor
-                  ? note.lyricsColor
+                  ? note.lyricsColor.substring(1)
                   : undefined,
               lyricsFontFamily:
                 !note.lyricsUseDefaultStyle &&
                 note.lyricsFontFamily != pageSetup.lyricsDefaultFontFamily
-                  ? note.lyricsFontFamily
+                  ? convertFontName(note.lyricsFontFamily)
                   : undefined,
               lyricsFontSize:
                 !note.lyricsUseDefaultStyle &&
@@ -317,12 +329,31 @@ export class LatexExporter {
               x: Unit.toPt(element.x - pageSetup.leftMargin),
               width: Unit.toPt(dropCap.contentWidth),
               content: dropCap.content,
-              fontSize: Unit.toPt(dropCap.computedFontSize),
+              fontFamily:
+                !dropCap.useDefaultStyle &&
+                dropCap.fontFamily != pageSetup.dropCapDefaultFontFamily
+                  ? convertFontName(dropCap.fontFamily)
+                  : undefined,
+              fontSize:
+                !dropCap.useDefaultStyle &&
+                dropCap.fontSize != pageSetup.dropCapDefaultFontSize
+                  ? Unit.toPt(dropCap.fontSize)
+                  : undefined,
               fontStyle:
-                dropCap.fontStyle !== 'normal' ? dropCap.fontStyle : undefined,
+                !dropCap.useDefaultStyle &&
+                dropCap.computedFontStyle != pageSetup.dropCapDefaultFontStyle
+                  ? dropCap.computedFontStyle
+                  : undefined,
               fontWeight:
-                dropCap.fontWeight !== '400' ? dropCap.fontWeight : undefined,
-              color: dropCap.computedColor.substring(1),
+                !dropCap.useDefaultStyle &&
+                dropCap.computedFontWeight != pageSetup.dropCapDefaultFontWeight
+                  ? dropCap.computedFontWeight
+                  : undefined,
+              color:
+                !dropCap.useDefaultStyle &&
+                dropCap.color != pageSetup.dropCapDefaultColor
+                  ? dropCap.color.substring(1)
+                  : undefined,
             });
           } else if (element.elementType === ElementType.ModeKey) {
             const modeKey = element as ModeKeyElement;
@@ -381,6 +412,60 @@ export class LatexExporter {
               ambitusLowRootSign: modeKey.showAmbitus
                 ? glyphName(modeKey.ambitusLowRootSign)
                 : undefined,
+            });
+          } else if (element.elementType === ElementType.TextBox) {
+            const textBox = element as TextBoxElement;
+            resultLine.elements.push({
+              type: 'textbox',
+              x: Unit.toPt(element.x - pageSetup.leftMargin),
+              width: Unit.toPt(textBox.width),
+              height: Unit.toPt(textBox.height),
+              alignment: !textBox.multipanel
+                ? convertAlignment(textBox.alignment)
+                : undefined,
+              inline: textBox.inline || undefined,
+              content: textBox.content,
+              multipanel: textBox.multipanel || undefined,
+              contentLeft: textBox.multipanel ? textBox.contentLeft : undefined,
+              contentCenter: textBox.multipanel
+                ? textBox.contentCenter
+                : undefined,
+              contentRight: textBox.multipanel
+                ? textBox.contentRight
+                : undefined,
+              marginTop:
+                textBox.marginTop != 0
+                  ? Unit.toPt(textBox.marginTop)
+                  : undefined,
+              marginBottom:
+                textBox.marginBottom != 0
+                  ? Unit.toPt(textBox.marginBottom)
+                  : undefined,
+              fontFamily:
+                !textBox.useDefaultStyle &&
+                textBox.fontFamily != pageSetup.textBoxDefaultFontFamily
+                  ? convertFontName(textBox.fontFamily)
+                  : undefined,
+              fontSize:
+                !textBox.useDefaultStyle &&
+                textBox.fontSize != pageSetup.textBoxDefaultFontSize
+                  ? Unit.toPt(textBox.fontSize)
+                  : undefined,
+              fontStyle:
+                !textBox.useDefaultStyle &&
+                textBox.computedFontStyle != pageSetup.textBoxDefaultFontStyle
+                  ? textBox.computedFontStyle
+                  : undefined,
+              fontWeight:
+                !textBox.useDefaultStyle &&
+                textBox.computedFontWeight != pageSetup.textBoxDefaultFontWeight
+                  ? textBox.computedFontWeight
+                  : undefined,
+              color:
+                !textBox.useDefaultStyle &&
+                textBox.color != pageSetup.textBoxDefaultColor
+                  ? textBox.color.substring(1)
+                  : undefined,
             });
           }
         }

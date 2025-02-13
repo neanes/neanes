@@ -59,6 +59,18 @@ function convertAlignment(alignment: TextBoxAlignment) {
   }
 }
 
+function convertFontName(fontFamily: string) {
+  switch (fontFamily) {
+    case 'Source Serif':
+      return 'Source Serif 4';
+    case 'Omega':
+      return 'EZ Omega';
+    case 'PFGoudyInitials':
+      return 'PFGoudy Initials';
+    default:
+      return fontFamily;
+  }
+}
 export class LatexExporter {
   public export(pages: Page[], pageSetup: PageSetup) {
     const neumeAscent = TextMeasurementService.getFontBoundingBoxAscent(
@@ -77,6 +89,11 @@ export class LatexExporter {
       schemaVersion,
       pageSetup: {
         lineHeight: Unit.toPt(pageSetup.lineHeight),
+        fontFamilies: {
+          dropCap: convertFontName(pageSetup.dropCapDefaultFontFamily),
+          lyrics: convertFontName(pageSetup.lyricsDefaultFontFamily),
+          neume: convertFontName(pageSetup.neumeDefaultFontFamily),
+        },
         dropCapDefaultFontSize: Unit.toPt(pageSetup.dropCapDefaultFontSize),
         modeKeyDefaultFontSize: Unit.toPt(pageSetup.modeKeyDefaultFontSize),
         neumeDefaultFontSize: Unit.toPt(pageSetup.neumeDefaultFontSize),
@@ -100,7 +117,7 @@ export class LatexExporter {
         lyricsVerticalOffset: Unit.toPt(lyricsVerticalOffset),
         lyricsMelismaSpacing: Unit.toPt(pageSetup.lyricsMelismaSpacing),
         lyricsMelismaThickness: Unit.toPt(pageSetup.lyricsMelismaThickness),
-        defaultColors: {
+        colors: {
           accidental: pageSetup.accidentalDefaultColor.substring(1),
           dropCap: pageSetup.dropCapDefaultColor.substring(1),
           fthora: pageSetup.fthoraDefaultColor.substring(1),
@@ -124,7 +141,6 @@ export class LatexExporter {
     for (const page of pages) {
       for (const line of page.lines) {
         const resultLine: any = { elements: [] };
-        result.lines.push(resultLine);
 
         for (const element of line.elements) {
           if (element.elementType === ElementType.Note) {
@@ -353,12 +369,24 @@ export class LatexExporter {
               tempo: glyphName(modeKey.tempo),
               tempoAlignRight: modeKey.tempoAlignRight || undefined,
               showAmbitus: modeKey.showAmbitus || undefined,
-              ambitusHighNote: glyphName(modeKey.ambitusHighNote),
-              ambitusHighRootSign: glyphName(modeKey.ambitusHighRootSign),
-              ambitusLowNote: glyphName(modeKey.ambitusLowNote),
-              ambitusLowRootSign: glyphName(modeKey.ambitusLowRootSign),
+              ambitusHighNote: modeKey.showAmbitus
+                ? glyphName(modeKey.ambitusHighNote)
+                : undefined,
+              ambitusHighRootSign: modeKey.showAmbitus
+                ? glyphName(modeKey.ambitusHighRootSign)
+                : undefined,
+              ambitusLowNote: modeKey.showAmbitus
+                ? glyphName(modeKey.ambitusLowNote)
+                : undefined,
+              ambitusLowRootSign: modeKey.showAmbitus
+                ? glyphName(modeKey.ambitusLowRootSign)
+                : undefined,
             });
           }
+        }
+
+        if (resultLine.elements.length > 0) {
+          result.lines.push(resultLine);
         }
       }
     }

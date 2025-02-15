@@ -477,17 +477,17 @@ export class ByzHtmlExporter {
   exportNote(element: NoteElement, pageSetup: PageSetup, indentation: number) {
     let inner = '';
 
-    if (element.vareia) {
-      inner += this.exportNeume(VocalExpressionNeume.Vareia, indentation + 2, {
-        x: element.vareiaOffsetX,
-        y: element.vareiaOffsetY,
-      });
-    }
-
     if (element.measureBarLeft) {
       inner += this.exportNeume(MeasureBar.MeasureBarRight, indentation + 2, {
         x: element.measureBarRightOffsetX,
         y: element.measureBarRightOffsetY,
+      });
+    }
+
+    if (element.vareia) {
+      inner += this.exportNeume(VocalExpressionNeume.Vareia, indentation + 2, {
+        x: element.vareiaOffsetX,
+        y: element.vareiaOffsetY,
       });
     }
 

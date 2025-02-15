@@ -37,7 +37,7 @@
     "ckeditor5": "^44.2.0",
     "html-to-image": "^1.11.12",
     "i18next": "^24.2.2",
-    "i18next-browser-languagedetector": "^8.0.2",
+    "i18next-browser-languagedetector": "^8.0.3",
     "i18next-pseudo": "^2.2.1",
     "i18next-vue": "^5.1.0",
     "image-size": "^1.2.0",

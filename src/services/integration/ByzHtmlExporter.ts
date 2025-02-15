@@ -478,17 +478,10 @@ export class ByzHtmlExporter {
     let inner = '';
 
     if (element.measureBarLeft) {
-      if (ScoreElement.isShort(element.measureBarLeft)) {
-        inner += this.exportNeume(MeasureBar.MeasureBarTop, indentation + 2, {
-          x: element.measureBarRightOffsetX,
-          y: element.measureBarRightOffsetY,
-        });
-      } else {
-        inner += this.exportNeume(MeasureBar.MeasureBarRight, indentation + 2, {
-          x: element.measureBarRightOffsetX,
-          y: element.measureBarRightOffsetY,
-        });
-      }
+      inner += this.exportNeume(element.measureBarLeft, indentation + 2, {
+        x: element.measureBarRightOffsetX,
+        y: element.measureBarRightOffsetY,
+      });
     }
 
     if (element.vareia) {

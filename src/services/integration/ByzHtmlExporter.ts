@@ -126,7 +126,6 @@ export class ByzHtmlExporter {
 
     if (score.pageSetup.melkiteRtl) {
       injectRtl = `<script>      
-  byzhtml.options.defaultFontFamily = 'NeanesRTL';
   byzhtml.options.melkiteRtl = true;
 </script>`;
     }

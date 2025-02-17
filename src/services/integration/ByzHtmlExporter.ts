@@ -126,7 +126,6 @@ export class ByzHtmlExporter {
 
     if (score.pageSetup.melkiteRtl) {
       injectRtl = `<script>      
-  byzhtml.options.defaultFontFamily = 'NeanesRTL';
   byzhtml.options.melkiteRtl = true;
 </script>`;
     }
@@ -168,6 +167,7 @@ export class ByzHtmlExporter {
     const lyricOffsetH = pageSetup.melkiteRtl ? '0' : '3.6pt';
 
     const style = `:root {
+        --byz-neume-font-family: ${pageSetup.neumeDefaultFontFamily};
         --byz-neume-font-size: ${Unit.toPt(pageSetup.neumeDefaultFontSize)}pt;
         
         --byz-lyric-font-family: ${pageSetup.lyricsDefaultFontFamily};

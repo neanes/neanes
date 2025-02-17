@@ -479,8 +479,8 @@ export class ByzHtmlExporter {
 
     if (element.measureBarLeft) {
       inner += this.exportNeume(element.measureBarLeft, indentation + 2, {
-        x: element.measureBarRightOffsetX,
-        y: element.measureBarRightOffsetY,
+        x: element.measureBarLeftOffsetX,
+        y: element.measureBarLeftOffsetY,
       });
     }
 

@@ -81,7 +81,7 @@
     "vite-plugin-pwa": "^0.21.1",
     "vite-plugin-vue-devtools": "^7.7.2",
     "vitepress": "^1.6.3",
-    "vitest": "^3.0.5",
+    "vitest": "^3.0.6",
     "vue-component-type-helpers": "^2.2.2",
     "vue-tsc": "^2.2.2"
   },

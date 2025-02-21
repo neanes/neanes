@@ -1603,7 +1603,7 @@ export default class Editor extends Vue {
 
     // Scroll to the new workspace's saved scroll position
     // Use nextTick to scroll after the DOM has refreshed
-    nextTick(() => {
+    void nextTick(() => {
       pageBackgroundElement.scrollTo(
         this.selectedWorkspace.scrollLeft,
         this.selectedWorkspace.scrollTop,
@@ -2679,7 +2679,7 @@ export default class Editor extends Vue {
     this.selectedElement = element;
     this.save();
 
-    nextTick(() => {
+    void nextTick(() => {
       const index = this.elements.indexOf(element);
 
       (this.$refs[`element-${index}`] as any)[0].focus();
@@ -2968,7 +2968,7 @@ export default class Editor extends Vue {
 
             // Select All doesn't work until after the lyrics have been selected,
             // hence we call focus lyrics twice
-            nextTick(() => {
+            void nextTick(() => {
               this.focusLyrics(index, true);
             });
 
@@ -4027,7 +4027,7 @@ export default class Editor extends Vue {
 
       this.updateLyrics(noteElement, text, clearMelisma);
 
-      nextTick(() => {
+      void nextTick(() => {
         this.focusLyrics(nextIndex, true);
       });
 
@@ -5971,10 +5971,10 @@ export default class Editor extends Vue {
     this.entryMode = mode;
   }
 
-  updateZoom(zoom: number) {
+  async updateZoom(zoom: number) {
     if (zoom < 0.5 || zoom > 5) {
       if (this.ipcService.isShowMessageBoxSupported()) {
-        this.ipcService.showMessageBox({
+        await this.ipcService.showMessageBox({
           type: 'error',
           title: 'Range overflow',
           message: this.$t('toolbar:main:invalidZoom'),
@@ -6149,7 +6149,7 @@ export default class Editor extends Vue {
       this.richTextBoxCalculation = false;
     }
 
-    nextTick(async () => {
+    void nextTick(async () => {
       const expectedCount = this.richTextBoxElements.length;
       this.richTextBoxCalculationCount = 0;
       this.richTextBoxCalculation = true;
@@ -6211,7 +6211,7 @@ export default class Editor extends Vue {
     // blinking cursors don't show up in the printed page
     const activeElement = this.blurActiveElement();
 
-    nextTick(async () => {
+    void nextTick(async () => {
       await this.ipcService.printWorkspace(this.selectedWorkspace);
       this.printMode = false;
 
@@ -6264,7 +6264,7 @@ export default class Editor extends Vue {
     // blinking cursors don't show up in the printed page
     const activeElement = this.blurActiveElement();
 
-    nextTick(async () => {
+    void nextTick(async () => {
       try {
         const pages = this.$refs.pages as HTMLElement[];
 
@@ -6455,7 +6455,7 @@ export default class Editor extends Vue {
 
     this.save();
 
-    nextTick(() => {
+    void nextTick(() => {
       const index = this.elements.indexOf(element);
 
       (this.$refs[`element-${index}`] as any)[0].focus();
@@ -6472,7 +6472,7 @@ export default class Editor extends Vue {
 
     this.save();
 
-    nextTick(() => {
+    void nextTick(() => {
       const index = this.elements.indexOf(element);
 
       (this.$refs[`element-${index}`] as any)[0].focus();
@@ -6660,7 +6660,7 @@ export default class Editor extends Vue {
     }
   }
 
-  onFileMenuCopyAsHtml() {
+  async onFileMenuCopyAsHtml() {
     let elements: ScoreElement[] = [];
 
     if (this.selectionRange != null) {
@@ -6680,7 +6680,7 @@ export default class Editor extends Vue {
       true,
     );
 
-    navigator.clipboard.writeText(html);
+    await navigator.clipboard.writeText(html);
   }
 
   onFileMenuPaste() {
@@ -6769,7 +6769,7 @@ export default class Editor extends Vue {
 
       this.pages[this.selectedElement.page - 1].isVisible = true;
 
-      nextTick(() => {
+      void nextTick(() => {
         if (this.selectedElement?.elementType === ElementType.Note) {
           (
             this.$refs[`element-${this.selectedElementIndex}`] as HTMLElement[]
@@ -6843,7 +6843,7 @@ export default class Editor extends Vue {
     return score;
   }
 
-  openScore(args: FileMenuOpenScoreArgs) {
+  async openScore(args: FileMenuOpenScoreArgs) {
     if (!args.success) {
       return;
     }
@@ -6882,7 +6882,7 @@ export default class Editor extends Vue {
 
       if (error instanceof Error) {
         if (this.ipcService.isShowMessageBoxSupported()) {
-          this.ipcService.showMessageBox({
+          await this.ipcService.showMessageBox({
             type: 'error',
             title: 'Open failed',
             message: error.message,
@@ -6921,7 +6921,7 @@ export default class Editor extends Vue {
     }
   }
 
-  onTabClosed(tab: Tab) {
+  async onTabClosed(tab: Tab) {
     const workspace = this.workspaces.find((x) => x.id === tab.key);
 
     if (workspace) {
@@ -6929,7 +6929,7 @@ export default class Editor extends Vue {
       // closeWorkspace will decide whether to remove the tab and will
       // explicitly call removeTab. Returning false tells the tab component
       // to not close the tab, so that we can take care of it manually.
-      this.closeWorkspace(workspace);
+      await this.closeWorkspace(workspace);
       return false;
     } else {
       // If we got here, the workspace was already removed by closeWorkspace.

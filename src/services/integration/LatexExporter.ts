@@ -157,11 +157,10 @@ export class LatexExporter {
         for (const element of line.elements) {
           if (element.elementType === ElementType.Note) {
             const note = element as NoteElement;
-            resultLine.elements.push({
+            const noteInfo = {
               type: 'note',
               x: Unit.toPt(element.x - pageSetup.leftMargin),
               width: Unit.toPt(note.neumeWidth),
-              lyricsWidth: Unit.toPt(note.lyricsWidth),
               quantitativeNeume: glyphName(note.quantitativeNeume),
               vareia: note.vareia || undefined,
               vareiaOffset: getOffset(
@@ -257,48 +256,55 @@ export class LatexExporter {
               measureBarRight:
                 glyphName(note.measureBarRight) ??
                 glyphName(note.computedMeasureBarRight),
-              lyrics: note.lyrics != '' ? note.lyrics : undefined,
-              alignLeft: note.alignLeft || undefined,
-              lyricsHorizontalOffset:
-                note.lyrics != ''
-                  ? Unit.toPt(note.lyricsHorizontalOffset)
-                  : undefined,
-              lyricsColor:
-                !note.lyricsUseDefaultStyle &&
-                note.lyricsColor != pageSetup.lyricsDefaultColor
-                  ? note.lyricsColor.substring(1)
-                  : undefined,
-              lyricsFontFamily:
-                !note.lyricsUseDefaultStyle &&
-                note.lyricsFontFamily != pageSetup.lyricsDefaultFontFamily
-                  ? convertFontName(note.lyricsFontFamily)
-                  : undefined,
-              lyricsFontSize:
-                !note.lyricsUseDefaultStyle &&
-                note.lyricsFontSize != pageSetup.lyricsDefaultFontSize
-                  ? Unit.toPt(note.lyricsFontSize)
-                  : undefined,
-              lyricsFontStyle:
-                !note.lyricsUseDefaultStyle &&
-                note.lyricsFontStyle != pageSetup.lyricsDefaultFontStyle
-                  ? note.lyricsFontStyle
-                  : undefined,
-              lyricsFontWeight:
-                !note.lyricsUseDefaultStyle &&
-                note.lyricsFontWeight != pageSetup.lyricsDefaultFontWeight
-                  ? note.lyricsFontWeight
-                  : undefined,
               melismaWidth:
                 note.melismaWidth > 0
                   ? Unit.toPt(note.melismaWidth)
                   : undefined,
               isFullMelisma: note.isFullMelisma || undefined,
-              isHyphen: note.isHyphen || undefined,
+              isHyphen:
+                (note.hyphenOffsets.length > 0 && note.isHyphen) || undefined,
               hyphenOffsets:
                 note.hyphenOffsets.length > 0
                   ? note.hyphenOffsets.map((x) => Unit.toPt(x))
                   : undefined,
-            });
+            } as any;
+
+            if (note.lyrics != '' || note.melismaText != '') {
+              noteInfo.lyrics =
+                note.lyrics != '' ? note.lyrics : note.melismaText;
+              noteInfo.lyricsLeftAlign = note.alignLeft || undefined;
+              noteInfo.lyricsHorizontalOffset =
+                note.lyricsHorizontalOffset != 0
+                  ? Unit.toPt(note.lyricsHorizontalOffset)
+                  : undefined;
+              noteInfo.lyricsColor =
+                !note.lyricsUseDefaultStyle &&
+                note.lyricsColor != pageSetup.lyricsDefaultColor
+                  ? note.lyricsColor.substring(1)
+                  : undefined;
+              noteInfo.lyricsFontFamily =
+                !note.lyricsUseDefaultStyle &&
+                note.lyricsFontFamily != pageSetup.lyricsDefaultFontFamily
+                  ? convertFontName(note.lyricsFontFamily)
+                  : undefined;
+              noteInfo.lyricsFontSize =
+                !note.lyricsUseDefaultStyle &&
+                note.lyricsFontSize != pageSetup.lyricsDefaultFontSize
+                  ? Unit.toPt(note.lyricsFontSize)
+                  : undefined;
+              noteInfo.lyricsFontStyle =
+                !note.lyricsUseDefaultStyle &&
+                note.lyricsFontStyle != pageSetup.lyricsDefaultFontStyle
+                  ? note.lyricsFontStyle
+                  : undefined;
+              noteInfo.lyricsFontWeight =
+                !note.lyricsUseDefaultStyle &&
+                note.lyricsFontWeight != pageSetup.lyricsDefaultFontWeight
+                  ? note.lyricsFontWeight
+                  : undefined;
+            }
+
+            resultLine.elements.push(noteInfo);
           } else if (element.elementType === ElementType.Martyria) {
             const martyria = element as MartyriaElement;
             resultLine.elements.push({

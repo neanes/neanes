@@ -1,6 +1,14 @@
 import { Unit } from '../utils/Unit';
 
-export type PageSize = 'A3' | 'A4' | 'A5' | 'Legal' | 'Letter' | 'Tabloid';
+export type PageSize =
+  | 'A3'
+  | 'A4'
+  | 'A5'
+  | 'Legal'
+  | 'Letter'
+  | 'Tabloid'
+  | 'Half-Letter'
+  | 'Half-Legal';
 export type PageSizeUnit = 'pc' | 'pt' | 'cm' | 'mm' | 'in';
 
 export interface PageSizeOption {
@@ -24,6 +32,16 @@ export const pageSizes: PageSizeOption[] = [
     name: 'Legal',
     width: Unit.fromInch(8.5),
     height: Unit.fromInch(14),
+  },
+  {
+    name: 'Half-Letter',
+    width: Unit.fromInch(5.5),
+    height: Unit.fromInch(8.5),
+  },
+  {
+    name: 'Half-Legal',
+    width: Unit.fromInch(7),
+    height: Unit.fromInch(8.5),
   },
   {
     name: 'A3',

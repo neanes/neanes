@@ -1,6 +1,14 @@
 import { Unit } from '@/utils/Unit';
 
-export type PageSize = 'A3' | 'A4' | 'A5' | 'Legal' | 'Letter' | 'Tabloid';
+export type PageSize =
+  | 'A3'
+  | 'A4'
+  | 'A5'
+  | 'Legal'
+  | 'Letter'
+  | 'Tabloid'
+  | 'Half-Letter'
+  | 'Half-Legal';
 export type PageSizeUnit = 'pc' | 'pt' | 'cm' | 'mm' | 'in';
 
 export class PageSetup {

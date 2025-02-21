@@ -22,6 +22,8 @@ import path from 'path';
 import { debounce } from 'throttle-debounce';
 import { promisify } from 'util';
 
+import { PageSize } from '@/models/PageSetup';
+
 import { defaultNS, resources } from '../../src/i18n';
 import {
   CloseWorkspacesArgs,
@@ -516,6 +518,23 @@ async function openImage() {
 let silentPdfSuccessCount = 0;
 let silentPdfFailCount = 0;
 
+function getPageSize(pageSize: PageSize) {
+  switch (pageSize) {
+    case 'Half-Legal':
+      return {
+        width: 7,
+        height: 8.5,
+      };
+    case 'Half-Letter':
+      return {
+        width: 5.5,
+        height: 8.5,
+      };
+    default:
+      return pageSize;
+  }
+}
+
 async function exportWorkspaceAsPdf(args: ExportWorkspaceAsPdfArgs) {
   try {
     if (exporting || !win) {
@@ -525,7 +544,7 @@ async function exportWorkspaceAsPdf(args: ExportWorkspaceAsPdfArgs) {
     if (silentPdf) {
       try {
         const data = await win.webContents.printToPDF({
-          pageSize: args.pageSize,
+          pageSize: getPageSize(args.pageSize),
           landscape: args.landscape,
         });
         let newPath = args.filePath!.replace(/\.byzx?$/, '.pdf');
@@ -573,7 +592,7 @@ async function exportWorkspaceAsPdf(args: ExportWorkspaceAsPdfArgs) {
 
       if (doWrite) {
         const data = await win.webContents.printToPDF({
-          pageSize: args.pageSize,
+          pageSize: getPageSize(args.pageSize),
           landscape: args.landscape,
         });
         await fs.writeFile(filePath, data);
@@ -813,7 +832,7 @@ async function printWorkspace(args: PrintWorkspaceArgs) {
 
       win.webContents.print(
         {
-          pageSize: args.pageSize,
+          pageSize: getPageSize(args.pageSize),
           landscape: args.landscape,
         },
         (success, failureReason) => {

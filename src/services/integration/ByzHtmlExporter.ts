@@ -126,7 +126,6 @@ export class ByzHtmlExporter {
 
     if (score.pageSetup.melkiteRtl) {
       injectRtl = `<script>      
-  byzhtml.options.defaultFontFamily = 'NeanesRTL';
   byzhtml.options.melkiteRtl = true;
 </script>`;
     }
@@ -168,6 +167,7 @@ export class ByzHtmlExporter {
     const lyricOffsetH = pageSetup.melkiteRtl ? '0' : '3.6pt';
 
     const style = `:root {
+        --byz-neume-font-family: ${pageSetup.neumeDefaultFontFamily};
         --byz-neume-font-size: ${Unit.toPt(pageSetup.neumeDefaultFontSize)}pt;
         
         --byz-lyric-font-family: ${pageSetup.lyricsDefaultFontFamily};
@@ -477,17 +477,17 @@ export class ByzHtmlExporter {
   exportNote(element: NoteElement, pageSetup: PageSetup, indentation: number) {
     let inner = '';
 
+    if (element.measureBarLeft) {
+      inner += this.exportNeume(element.measureBarLeft, indentation + 2, {
+        x: element.measureBarLeftOffsetX,
+        y: element.measureBarLeftOffsetY,
+      });
+    }
+
     if (element.vareia) {
       inner += this.exportNeume(VocalExpressionNeume.Vareia, indentation + 2, {
         x: element.vareiaOffsetX,
         y: element.vareiaOffsetY,
-      });
-    }
-
-    if (element.measureBarLeft) {
-      inner += this.exportNeume(MeasureBar.MeasureBarRight, indentation + 2, {
-        x: element.measureBarRightOffsetX,
-        y: element.measureBarRightOffsetY,
       });
     }
 

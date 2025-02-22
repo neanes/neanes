@@ -13,7 +13,7 @@ import { Page } from '@/models/Page';
 import { PageSetup } from '@/models/PageSetup';
 import { Unit } from '@/utils/Unit';
 
-import { NeumeMappingService } from '../NeumeMappingService';
+import { NeumeMappingService, SbmuflGlyphName } from '../NeumeMappingService';
 import { TextMeasurementService } from '../TextMeasurementService';
 
 const schemaVersion = 1;
@@ -86,7 +86,7 @@ export class LatexExporter {
     const lyricsVerticalOffset =
       pageSetup.lyricsVerticalOffset + lyricAscent - neumeAscent;
 
-    const result: any = {
+    const result: LatexScore = {
       schemaVersion,
       pageSetup: {
         lineHeight: Unit.toPt(pageSetup.lineHeight),
@@ -152,7 +152,7 @@ export class LatexExporter {
 
     for (const page of pages) {
       for (const line of page.lines) {
-        const resultLine: any = { elements: [] };
+        const resultLine: LatexLine = { elements: [] };
 
         for (const element of line.elements) {
           if (element.elementType === ElementType.Note) {
@@ -267,7 +267,7 @@ export class LatexExporter {
                 note.hyphenOffsets.length > 0
                   ? note.hyphenOffsets.map((x) => Unit.toPt(x))
                   : undefined,
-            } as any;
+            } as LatexNoteElement;
 
             if (note.lyrics != '' || note.melismaText != '') {
               noteInfo.lyrics =
@@ -319,7 +319,7 @@ export class LatexExporter {
               tempoLeft: glyphName(martyria.tempoLeft),
               tempo: glyphName(martyria.tempo),
               tempoRight: glyphName(martyria.tempoRight),
-            });
+            } as LatexMartyriaElement);
           } else if (element.elementType === ElementType.Tempo) {
             const tempo = element as TempoElement;
             resultLine.elements.push({
@@ -327,7 +327,7 @@ export class LatexExporter {
               x: Unit.toPt(element.x - pageSetup.leftMargin),
               width: Unit.toPt(tempo.neumeWidth),
               neume: glyphName(tempo.neume),
-            });
+            } as LatexTempoElement);
           } else if (element.elementType === ElementType.DropCap) {
             const dropCap = element as DropCapElement;
             resultLine.elements.push({
@@ -360,7 +360,7 @@ export class LatexExporter {
                 dropCap.color != pageSetup.dropCapDefaultColor
                   ? dropCap.color.substring(1)
                   : undefined,
-            });
+            } as LatexDropCapElement);
           } else if (element.elementType === ElementType.ModeKey) {
             const modeKey = element as ModeKeyElement;
             resultLine.elements.push({
@@ -418,7 +418,7 @@ export class LatexExporter {
               ambitusLowRootSign: modeKey.showAmbitus
                 ? glyphName(modeKey.ambitusLowRootSign)
                 : undefined,
-            });
+            } as LatexModeKeyElement);
           } else if (element.elementType === ElementType.TextBox) {
             const textBox = element as TextBoxElement;
             resultLine.elements.push({
@@ -472,7 +472,7 @@ export class LatexExporter {
                 textBox.color != pageSetup.textBoxDefaultColor
                   ? textBox.color.substring(1)
                   : undefined,
-            });
+            } as LatexTextBoxElement);
           }
         }
 
@@ -483,4 +483,195 @@ export class LatexExporter {
     }
     return result;
   }
+}
+
+interface LatexScore {
+  schemaVersion: number;
+  pageSetup: LatexPageSetup;
+  lines: LatexLine[];
+}
+
+interface LatexPageSetup {
+  lineHeight: number;
+  fontFamilies: {
+    dropCap: string;
+    lyrics: string;
+    neume: string;
+    textBox: string;
+  };
+  dropCapDefaultFontSize: number;
+  modeKeyDefaultFontSize: number;
+  neumeDefaultFontSize: number;
+  lyricsDefaultFontSize: number;
+  textBoxDefaultFontSize: number;
+  dropCapDefaultFontWeight: string | undefined;
+  lyricsDefaultFontWeight: string | undefined;
+  textBoxDefaultFontWeight: string | undefined;
+  dropCapDefaultFontStyle: string | undefined;
+  lyricsDefaultFontStyle: string | undefined;
+  textBoxDefaultFontStyle: string | undefined;
+  lyricsVerticalOffset: number;
+  lyricsMelismaSpacing: number;
+  lyricsMelismaThickness: number;
+  colors: {
+    accidental: string;
+    dropCap: string;
+    fthora: string;
+    gorgon: string;
+    heteron: string;
+    ison: string;
+    koronis: string;
+    lyrics: string;
+    martyria: string;
+    measureBar: string;
+    measureNumber: string;
+    modeKey: string;
+    neume: string;
+    noteIndicator: string;
+    tempo: string;
+    textBox: string;
+  };
+}
+
+interface LatexLine {
+  elements: LatexElement[];
+}
+
+interface LatexOffset {
+  x: number;
+  y: number;
+}
+
+type LatexElement =
+  | LatexNoteElement
+  | LatexMartyriaElement
+  | LatexTempoElement
+  | LatexDropCapElement
+  | LatexTextBoxElement
+  | LatexModeKeyElement;
+
+interface LatexBaseElement {
+  type: 'note' | 'martyria' | 'tempo' | 'dropcap' | 'modekey' | 'textbox';
+  width: number;
+}
+
+interface LatexNoteElement extends LatexBaseElement {
+  x: number;
+  quantitativeNeume: SbmuflGlyphName;
+  vareia?: boolean;
+  vareiaOffset?: LatexOffset;
+  time?: SbmuflGlyphName;
+  timeOffset?: LatexOffset;
+  koronis?: boolean;
+  koronisOffset?: LatexOffset;
+  tie?: SbmuflGlyphName;
+  tieOffset?: LatexOffset;
+  gorgon?: SbmuflGlyphName;
+  gorgonOffset?: LatexOffset;
+  gorgonSecondary?: SbmuflGlyphName;
+  gorgonSecondaryOffset?: LatexOffset;
+  fthora?: SbmuflGlyphName;
+  fthoraOffset?: LatexOffset;
+  fthoraSecondary?: SbmuflGlyphName;
+  fthoraSecondaryOffset?: LatexOffset;
+  fthoraTertiary?: SbmuflGlyphName;
+  fthoraTertiaryOffset?: LatexOffset;
+  vocalExpression?: SbmuflGlyphName;
+  vocalExpressionOffset?: LatexOffset;
+  accidental?: SbmuflGlyphName;
+  accidentalOffset?: LatexOffset;
+  accidentalSecondary?: SbmuflGlyphName;
+  accidentalSecondaryOffset?: LatexOffset;
+  accidentalTertiary?: SbmuflGlyphName;
+  accidentalTertiaryOffset?: LatexOffset;
+  ison?: SbmuflGlyphName;
+  isonOffset?: LatexOffset;
+  measureNumber?: SbmuflGlyphName;
+  measureNumberOffset?: LatexOffset;
+  measureBarLeft?: SbmuflGlyphName;
+  measureBarRight?: SbmuflGlyphName;
+  melismaWidth?: number;
+  isFullMelisma?: boolean;
+  isHyphen?: boolean;
+  hyphenOffsets?: number[];
+  lyrics?: string;
+  lyricsLeftAlign?: boolean;
+  lyricsHorizontalOffset?: number;
+  lyricsColor?: string;
+  lyricsFontFamily?: string;
+  lyricsFontSize?: number;
+  lyricsFontStyle?: string;
+  lyricsFontWeight?: string;
+}
+
+interface LatexMartyriaElement extends LatexBaseElement {
+  x: number;
+  note: SbmuflGlyphName;
+  rootSign: SbmuflGlyphName;
+  fthora?: SbmuflGlyphName;
+  measureBarLeft?: SbmuflGlyphName;
+  measureBarRight?: SbmuflGlyphName;
+  tempoLeft?: SbmuflGlyphName;
+  tempo?: SbmuflGlyphName;
+  tempoRight?: SbmuflGlyphName;
+}
+
+interface LatexTempoElement extends LatexBaseElement {
+  x: number;
+  neume: SbmuflGlyphName;
+}
+
+interface LatexDropCapElement extends LatexBaseElement {
+  x: number;
+  content: string;
+  fontFamily?: string;
+  fontSize?: number;
+  fontStyle?: string;
+  fontWeight?: string;
+  color?: string;
+}
+
+interface LatexTextBoxElement extends LatexBaseElement {
+  x: number;
+  height: number;
+  alignment: 'l' | 'c' | 'r';
+  inline?: boolean;
+  content: string;
+  multipanel?: boolean;
+  contentLeft?: string;
+  contentCenter?: string;
+  contentRight?: string;
+  marginTop?: number;
+  marginBottom?: number;
+  fontFamily?: string;
+  fontSize?: number;
+  fontStyle?: string;
+  fontWeight?: string;
+  color?: string;
+}
+
+interface LatexModeKeyElement extends LatexBaseElement {
+  height: number;
+  marginTop?: number;
+  marginBottom?: number;
+  alignment: 'l' | 'c' | 'r';
+  color?: string;
+  fontSize?: number;
+  isPlagal?: boolean;
+  isVarys?: boolean;
+  martyria?: SbmuflGlyphName;
+  note?: SbmuflGlyphName;
+  fthoraAboveNote?: SbmuflGlyphName;
+  note2?: SbmuflGlyphName;
+  fthoraAboveNote2?: SbmuflGlyphName;
+  quantitativeNeumeAboveNote2?: SbmuflGlyphName;
+  quantitativeNeumeRight?: SbmuflGlyphName;
+  fthoraAboveQuantitativeNeumeRight?: SbmuflGlyphName;
+  tempo?: SbmuflGlyphName;
+  tempoAlignRight?: boolean;
+  showAmbitus?: boolean;
+  ambitusHighNote?: SbmuflGlyphName;
+  ambitusHighRootSign?: SbmuflGlyphName;
+  ambitusLowNote?: SbmuflGlyphName;
+  ambitusLowRootSign?: SbmuflGlyphName;
 }

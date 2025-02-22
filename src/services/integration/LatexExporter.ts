@@ -96,11 +96,13 @@ export class LatexExporter {
           neume: convertFontName(pageSetup.neumeDefaultFontFamily),
           textBox: convertFontName(pageSetup.textBoxDefaultFontFamily),
         },
-        dropCapDefaultFontSize: Unit.toPt(pageSetup.dropCapDefaultFontSize),
-        modeKeyDefaultFontSize: Unit.toPt(pageSetup.modeKeyDefaultFontSize),
-        neumeDefaultFontSize: Unit.toPt(pageSetup.neumeDefaultFontSize),
-        lyricsDefaultFontSize: Unit.toPt(pageSetup.lyricsDefaultFontSize),
-        textBoxDefaultFontSize: Unit.toPt(pageSetup.textBoxDefaultFontSize),
+        fontSizes: {
+          dropCap: Unit.toPt(pageSetup.dropCapDefaultFontSize),
+          lyrics: Unit.toPt(pageSetup.lyricsDefaultFontSize),
+          modeKey: Unit.toPt(pageSetup.modeKeyDefaultFontSize),
+          neume: Unit.toPt(pageSetup.neumeDefaultFontSize),
+          textBox: Unit.toPt(pageSetup.textBoxDefaultFontSize),
+        },
         dropCapDefaultFontWeight:
           pageSetup.dropCapDefaultFontWeight != '400'
             ? pageSetup.dropCapDefaultFontWeight
@@ -499,11 +501,13 @@ interface LatexPageSetup {
     neume: string;
     textBox: string;
   };
-  dropCapDefaultFontSize: number;
-  modeKeyDefaultFontSize: number;
-  neumeDefaultFontSize: number;
-  lyricsDefaultFontSize: number;
-  textBoxDefaultFontSize: number;
+  fontSizes: {
+    dropCap: number;
+    modeKey: number;
+    neume: number;
+    lyrics: number;
+    textBox: number;
+  };
   dropCapDefaultFontWeight: string | undefined;
   lyricsDefaultFontWeight: string | undefined;
   textBoxDefaultFontWeight: string | undefined;

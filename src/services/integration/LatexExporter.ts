@@ -332,10 +332,30 @@ export class LatexExporter {
             } as LatexTempoElement);
           } else if (element.elementType === ElementType.DropCap) {
             const dropCap = element as DropCapElement;
+
+            let verticalAdjustment = 0;
+
+            if (dropCap.lineHeight != null) {
+              const fontHeight = TextMeasurementService.getFontHeight(
+                dropCap.computedFont,
+              );
+
+              const originalLineHeight = fontHeight / dropCap.computedFontSize;
+
+              verticalAdjustment =
+                ((originalLineHeight - dropCap.lineHeight) *
+                  dropCap.computedFontSize) /
+                2;
+            }
+
             resultLine.elements.push({
               type: 'dropcap',
               x: Unit.toPt(element.x - pageSetup.leftMargin),
               width: Unit.toPt(dropCap.contentWidth),
+              verticalAdjustment:
+                verticalAdjustment != 0
+                  ? Unit.toPt(verticalAdjustment)
+                  : undefined,
               content: dropCap.content,
               fontFamily:
                 !dropCap.useDefaultStyle &&
@@ -628,6 +648,7 @@ interface LatexTempoElement extends LatexBaseElement {
 interface LatexDropCapElement extends LatexBaseElement {
   x: number;
   content: string;
+  verticalAdjustment?: number;
   fontFamily?: string;
   fontSize?: number;
   fontStyle?: string;

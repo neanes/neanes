@@ -72,6 +72,11 @@ function convertFontName(fontFamily: string) {
       return fontFamily;
   }
 }
+
+function toPt(value: number) {
+  return Number(Unit.toPt(value).toFixed(4));
+}
+
 export class LatexExporter {
   public export(pages: Page[], pageSetup: PageSetup) {
     const neumeAscent = TextMeasurementService.getFontBoundingBoxAscent(
@@ -89,7 +94,7 @@ export class LatexExporter {
     const result: LatexScore = {
       schemaVersion,
       pageSetup: {
-        lineHeight: Unit.toPt(pageSetup.lineHeight),
+        lineHeight: toPt(pageSetup.lineHeight),
         fontFamilies: {
           dropCap: convertFontName(pageSetup.dropCapDefaultFontFamily),
           lyrics: convertFontName(pageSetup.lyricsDefaultFontFamily),
@@ -97,11 +102,11 @@ export class LatexExporter {
           textBox: convertFontName(pageSetup.textBoxDefaultFontFamily),
         },
         fontSizes: {
-          dropCap: Unit.toPt(pageSetup.dropCapDefaultFontSize),
-          lyrics: Unit.toPt(pageSetup.lyricsDefaultFontSize),
-          modeKey: Unit.toPt(pageSetup.modeKeyDefaultFontSize),
-          neume: Unit.toPt(pageSetup.neumeDefaultFontSize),
-          textBox: Unit.toPt(pageSetup.textBoxDefaultFontSize),
+          dropCap: toPt(pageSetup.dropCapDefaultFontSize),
+          lyrics: toPt(pageSetup.lyricsDefaultFontSize),
+          modeKey: toPt(pageSetup.modeKeyDefaultFontSize),
+          neume: toPt(pageSetup.neumeDefaultFontSize),
+          textBox: toPt(pageSetup.textBoxDefaultFontSize),
         },
         dropCapDefaultFontWeight:
           pageSetup.dropCapDefaultFontWeight != '400'
@@ -127,9 +132,9 @@ export class LatexExporter {
           pageSetup.textBoxDefaultFontStyle != 'normal'
             ? pageSetup.textBoxDefaultFontStyle
             : undefined,
-        lyricsVerticalOffset: Unit.toPt(lyricsVerticalOffset),
-        lyricsMelismaSpacing: Unit.toPt(pageSetup.lyricsMelismaSpacing),
-        lyricsMelismaThickness: Unit.toPt(pageSetup.lyricsMelismaThickness),
+        lyricsVerticalOffset: toPt(lyricsVerticalOffset),
+        lyricsMelismaSpacing: toPt(pageSetup.lyricsMelismaSpacing),
+        lyricsMelismaThickness: toPt(pageSetup.lyricsMelismaThickness),
         colors: {
           accidental: pageSetup.accidentalDefaultColor.substring(1),
           dropCap: pageSetup.dropCapDefaultColor.substring(1),
@@ -161,8 +166,8 @@ export class LatexExporter {
             const note = element as NoteElement;
             const noteInfo = {
               type: 'note',
-              x: Unit.toPt(element.x - pageSetup.leftMargin),
-              width: Unit.toPt(note.neumeWidth),
+              x: toPt(element.x - pageSetup.leftMargin),
+              width: toPt(note.neumeWidth),
               quantitativeNeume: glyphName(note.quantitativeNeume),
               vareia: note.vareia || undefined,
               vareiaOffset: getOffset(
@@ -259,15 +264,13 @@ export class LatexExporter {
                 glyphName(note.measureBarRight) ??
                 glyphName(note.computedMeasureBarRight),
               melismaWidth:
-                note.melismaWidth > 0
-                  ? Unit.toPt(note.melismaWidth)
-                  : undefined,
+                note.melismaWidth > 0 ? toPt(note.melismaWidth) : undefined,
               isFullMelisma: note.isFullMelisma || undefined,
               isHyphen:
                 (note.hyphenOffsets.length > 0 && note.isHyphen) || undefined,
               hyphenOffsets:
                 note.hyphenOffsets.length > 0
-                  ? note.hyphenOffsets.map((x) => Unit.toPt(x))
+                  ? note.hyphenOffsets.map((x) => toPt(x))
                   : undefined,
             } as LatexNoteElement;
 
@@ -277,7 +280,7 @@ export class LatexExporter {
               noteInfo.lyricsLeftAlign = note.alignLeft || undefined;
               noteInfo.lyricsHorizontalOffset =
                 note.lyricsHorizontalOffset != 0
-                  ? Unit.toPt(note.lyricsHorizontalOffset)
+                  ? toPt(note.lyricsHorizontalOffset)
                   : undefined;
               noteInfo.lyricsColor =
                 !note.lyricsUseDefaultStyle &&
@@ -292,7 +295,7 @@ export class LatexExporter {
               noteInfo.lyricsFontSize =
                 !note.lyricsUseDefaultStyle &&
                 note.lyricsFontSize != pageSetup.lyricsDefaultFontSize
-                  ? Unit.toPt(note.lyricsFontSize)
+                  ? toPt(note.lyricsFontSize)
                   : undefined;
               noteInfo.lyricsFontStyle =
                 !note.lyricsUseDefaultStyle &&
@@ -311,8 +314,8 @@ export class LatexExporter {
             const martyria = element as MartyriaElement;
             resultLine.elements.push({
               type: 'martyria',
-              x: Unit.toPt(element.x - pageSetup.leftMargin),
-              width: Unit.toPt(martyria.neumeWidth),
+              x: toPt(element.x - pageSetup.leftMargin),
+              width: toPt(martyria.neumeWidth),
               note: glyphName(martyria.note),
               rootSign: glyphName(martyria.rootSign),
               fthora: glyphName(martyria.fthora),
@@ -326,8 +329,8 @@ export class LatexExporter {
             const tempo = element as TempoElement;
             resultLine.elements.push({
               type: 'tempo',
-              x: Unit.toPt(element.x - pageSetup.leftMargin),
-              width: Unit.toPt(tempo.neumeWidth),
+              x: toPt(element.x - pageSetup.leftMargin),
+              width: toPt(tempo.neumeWidth),
               neume: glyphName(tempo.neume),
             } as LatexTempoElement);
           } else if (element.elementType === ElementType.DropCap) {
@@ -350,12 +353,10 @@ export class LatexExporter {
 
             resultLine.elements.push({
               type: 'dropcap',
-              x: Unit.toPt(element.x - pageSetup.leftMargin),
-              width: Unit.toPt(dropCap.contentWidth),
+              x: toPt(element.x - pageSetup.leftMargin),
+              width: toPt(dropCap.contentWidth),
               verticalAdjustment:
-                verticalAdjustment != 0
-                  ? Unit.toPt(verticalAdjustment)
-                  : undefined,
+                verticalAdjustment != 0 ? toPt(verticalAdjustment) : undefined,
               content: dropCap.content,
               fontFamily:
                 !dropCap.useDefaultStyle &&
@@ -365,7 +366,7 @@ export class LatexExporter {
               fontSize:
                 !dropCap.useDefaultStyle &&
                 dropCap.fontSize != pageSetup.dropCapDefaultFontSize
-                  ? Unit.toPt(dropCap.fontSize)
+                  ? toPt(dropCap.fontSize)
                   : undefined,
               fontStyle:
                 !dropCap.useDefaultStyle &&
@@ -387,15 +388,13 @@ export class LatexExporter {
             const modeKey = element as ModeKeyElement;
             resultLine.elements.push({
               type: 'modekey',
-              width: Unit.toPt(modeKey.width),
-              height: Unit.toPt(modeKey.height),
+              width: toPt(modeKey.width),
+              height: toPt(modeKey.height),
               marginTop:
-                modeKey.marginTop != 0
-                  ? Unit.toPt(modeKey.marginTop)
-                  : undefined,
+                modeKey.marginTop != 0 ? toPt(modeKey.marginTop) : undefined,
               marginBottom:
                 modeKey.marginBottom != 0
-                  ? Unit.toPt(modeKey.marginBottom)
+                  ? toPt(modeKey.marginBottom)
                   : undefined,
               alignment: convertAlignment(modeKey.alignment),
               color:
@@ -445,9 +444,9 @@ export class LatexExporter {
             const textBox = element as TextBoxElement;
             resultLine.elements.push({
               type: 'textbox',
-              x: Unit.toPt(element.x - pageSetup.leftMargin),
-              width: Unit.toPt(textBox.width),
-              height: Unit.toPt(textBox.height),
+              x: toPt(element.x - pageSetup.leftMargin),
+              width: toPt(textBox.width),
+              height: toPt(textBox.height),
               alignment: !textBox.multipanel
                 ? convertAlignment(textBox.alignment)
                 : undefined,
@@ -462,12 +461,10 @@ export class LatexExporter {
                 ? textBox.contentRight
                 : undefined,
               marginTop:
-                textBox.marginTop != 0
-                  ? Unit.toPt(textBox.marginTop)
-                  : undefined,
+                textBox.marginTop != 0 ? toPt(textBox.marginTop) : undefined,
               marginBottom:
                 textBox.marginBottom != 0
-                  ? Unit.toPt(textBox.marginBottom)
+                  ? toPt(textBox.marginBottom)
                   : undefined,
               fontFamily:
                 !textBox.useDefaultStyle &&
@@ -477,7 +474,7 @@ export class LatexExporter {
               fontSize:
                 !textBox.useDefaultStyle &&
                 textBox.fontSize != pageSetup.textBoxDefaultFontSize
-                  ? Unit.toPt(textBox.fontSize)
+                  ? toPt(textBox.fontSize)
                   : undefined,
               fontStyle:
                 !textBox.useDefaultStyle &&

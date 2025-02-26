@@ -754,19 +754,19 @@ async function exportWorkspaceAsLatex(args: ExportWorkspaceAsLatexArgs) {
 
     if (silentLatex) {
       try {
-        let newPath = args.filePath!.replace(/\.byzx?$/, '.byztex');
+        let newPath = args.filePathFull!.replace(/\.byzx?$/, '.byztex');
 
         // Check to make sure we don't accidentally overwrite the original file
-        if (newPath === args.filePath) {
+        if (newPath === args.filePathFull) {
           newPath += '.byztex';
         }
 
         await fs.writeFile(newPath, args.data);
         silentLatexSuccessCount++;
-        console.log(`DONE ${args.filePath} => ${newPath}`);
+        console.log(`DONE ${args.filePathFull} => ${newPath}`);
       } catch (error) {
         silentLatexFailCount++;
-        console.error(`FAIL ${args.filePath} | ${error}`);
+        console.error(`FAIL ${args.filePathFull} | ${error}`);
       }
 
       return;

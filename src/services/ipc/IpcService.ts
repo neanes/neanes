@@ -126,6 +126,7 @@ export class IpcService implements IIpcService {
     return await window.ipcRenderer.invoke(
       IpcRendererChannels.ExportWorkspaceAsLatex,
       {
+        filePathFull: workspace.filePath,
         filePath:
           workspace.filePath != null
             ? `${getFileNameFromPath(workspace.filePath)}.byztex`

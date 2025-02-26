@@ -163,6 +163,7 @@ export interface ExportWorkspaceAsMusicXmlArgs {
 }
 
 export interface ExportWorkspaceAsLatexArgs {
+  filePathFull: string | null;
   filePath: string | null;
   tempFileName: string;
   data: string;

@@ -112,7 +112,7 @@ export class BrowserIpcService implements IIpcService {
   }
 
   public async openWorkspaceFromArgv(): Promise<OpenWorkspaceFromArgvArgs> {
-    return { files: [], silentPdf: false };
+    return { files: [] };
   }
 
   public async showMessageBox(): Promise<ShowMessageBoxReplyArgs> {

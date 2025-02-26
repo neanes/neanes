@@ -1313,7 +1313,10 @@ import {
 } from '@/services/audio/PlaybackService';
 import { Command, CommandFactory } from '@/services/history/CommandService';
 import { ByzHtmlExporter } from '@/services/integration/ByzHtmlExporter';
-import { LatexExporter } from '@/services/integration/LatexExporter';
+import {
+  LatexExporter,
+  LatexExporterOptions,
+} from '@/services/integration/LatexExporter';
 import { MusicXmlExporter } from '@/services/integration/MusicXmlExporter';
 import { IIpcService } from '@/services/ipc/IIpcService';
 import { LayoutService } from '@/services/LayoutService';
@@ -4333,7 +4336,31 @@ export default class Editor extends Vue {
         await this.onFileMenuExportAsPdf();
         this.removeWorkspace(this.selectedWorkspace);
       }
+    }
 
+    if (openWorkspaceResults.silentLatex) {
+      for (const file of openWorkspaceResults.files.filter((x) => x.success)) {
+        const options = new LatexExporterOptions();
+        options.includeModeKeys =
+          openWorkspaceResults.silentLatexIncludeModeKeys ?? false;
+        options.includeTextBoxes =
+          openWorkspaceResults.silentLatexIncludeTextBoxes ?? false;
+        this.openScore(file);
+        await this.ipcService.exportWorkspaceAsLatex(
+          this.selectedWorkspace,
+          JSON.stringify(
+            this.latexExporter.export(
+              this.pages,
+              this.score.pageSetup,
+              options,
+            ),
+          ),
+        );
+        this.removeWorkspace(this.selectedWorkspace);
+      }
+    }
+
+    if (openWorkspaceResults.silentPdf || openWorkspaceResults.silentLatex) {
       await this.ipcService.exitApplication();
     }
 

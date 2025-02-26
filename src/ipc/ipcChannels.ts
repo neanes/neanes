@@ -84,7 +84,10 @@ export interface FileMenuOpenScoreArgs {
 
 export interface OpenWorkspaceFromArgvArgs {
   files: FileMenuOpenScoreArgs[];
-  silentPdf: boolean;
+  silentPdf?: boolean;
+  silentLatex?: boolean;
+  silentLatexIncludeModeKeys?: boolean;
+  silentLatexIncludeTextBoxes?: boolean;
 }
 
 export interface FileMenuOpenImageArgs {

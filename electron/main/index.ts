@@ -41,6 +41,7 @@ import {
   IpcMainChannels,
   IpcRendererChannels,
   OpenContextMenuForTabArgs,
+  OpenWorkspaceFromArgvArgs,
   PrintWorkspaceArgs,
   SaveWorkspaceArgs,
   SaveWorkspaceAsArgs,
@@ -89,7 +90,14 @@ const storeFilePath = path.join(userDataPath, 'settings.json');
 const isMac = process.platform === 'darwin';
 
 const silentPdf = process.argv.includes('--silent-pdf');
-const silent = silentPdf;
+const silentLatex = process.argv.includes('--silent-latex');
+const silentLatexIncludeModeKeys = process.argv.includes(
+  '--latex-include-mode-keys',
+);
+const silentLatexIncludeTextBoxes = process.argv.includes(
+  '--latex-include-text-boxes',
+);
+const silent = silentPdf || silentLatex;
 
 let win: BrowserWindow | null = null;
 let readyToExit = false;
@@ -345,7 +353,13 @@ async function openFileFromArgs(argv: string[]) {
     }
   }
 
-  return { files: result, silentPdf };
+  return {
+    files: result,
+    silentPdf,
+    silentLatex,
+    silentLatexIncludeModeKeys,
+    silentLatexIncludeTextBoxes,
+  } as OpenWorkspaceFromArgvArgs;
 }
 
 async function saveWorkspace(args: SaveWorkspaceArgs) {
@@ -729,10 +743,33 @@ async function exportWorkspaceAsMusicXml(args: ExportWorkspaceAsMusicXmlArgs) {
   }
 }
 
+let silentLatexSuccessCount = 0;
+let silentLatexFailCount = 0;
+
 async function exportWorkspaceAsLatex(args: ExportWorkspaceAsLatexArgs) {
   try {
     if (saving) {
       return false;
+    }
+
+    if (silentLatex) {
+      try {
+        let newPath = args.filePath!.replace(/\.byzx?$/, '.byztex');
+
+        // Check to make sure we don't accidentally overwrite the original file
+        if (newPath === args.filePath) {
+          newPath += '.byztex';
+        }
+
+        await fs.writeFile(newPath, args.data);
+        silentLatexSuccessCount++;
+        console.log(`DONE ${args.filePath} => ${newPath}`);
+      } catch (error) {
+        silentLatexFailCount++;
+        console.error(`FAIL ${args.filePath} | ${error}`);
+      }
+
+      return;
     }
 
     saving = true;
@@ -1637,6 +1674,14 @@ ipcMain.handle(IpcRendererChannels.ExitApplication, async () => {
 
     if (silentPdfFailCount > 0) {
       console.log(`Failed to write ${silentPdfFailCount} files`);
+    }
+  }
+
+  if (silentLatex) {
+    console.log(`Successfully wrote ${silentLatexSuccessCount} files`);
+
+    if (silentLatexFailCount > 0) {
+      console.log(`Failed to write ${silentLatexFailCount} files`);
     }
   }
 

@@ -77,6 +77,20 @@ export class BrowserIpcService implements IIpcService {
     a.click();
   }
 
+  public async exportWorkspaceAsLatex(workspace: Workspace, data: string) {
+    const file = new Blob([data], { type: 'application/json' });
+
+    const downloadFileName =
+      workspace.filePath != null
+        ? `${getFileNameFromPath(workspace.filePath)}.byztex`
+        : `${workspace.tempFileName}.byztex`;
+
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(file);
+    a.download = downloadFileName;
+    a.click();
+  }
+
   public async exportWorkspaceAsImage(): Promise<ExportWorkspaceAsImageReplyArgs> {
     throw 'exportWorkspaceAsImage is not available in the browser.';
   }

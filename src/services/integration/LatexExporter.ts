@@ -18,6 +18,11 @@ import { TextMeasurementService } from '../TextMeasurementService';
 
 const schemaVersion = 1;
 
+export class LatexExporterOptions {
+  includeModeKeys: boolean = false;
+  includeTextBoxes: boolean = false;
+}
+
 function glyphName(neume: Neume | null) {
   if (neume == null) {
     return undefined;
@@ -78,7 +83,11 @@ function toPt(value: number) {
 }
 
 export class LatexExporter {
-  public export(pages: Page[], pageSetup: PageSetup) {
+  public export(
+    pages: Page[],
+    pageSetup: PageSetup,
+    options: LatexExporterOptions,
+  ) {
     const neumeAscent = TextMeasurementService.getFontBoundingBoxAscent(
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
     );
@@ -398,7 +407,10 @@ export class LatexExporter {
                   ? dropCap.color.substring(1)
                   : undefined,
             } as LatexDropCapElement);
-          } else if (element.elementType === ElementType.ModeKey) {
+          } else if (
+            element.elementType === ElementType.ModeKey &&
+            options.includeModeKeys
+          ) {
             const modeKey = element as ModeKeyElement;
             resultLine.elements.push({
               type: 'modekey',
@@ -454,7 +466,10 @@ export class LatexExporter {
                 ? glyphName(modeKey.ambitusLowRootSign)
                 : undefined,
             } as LatexModeKeyElement);
-          } else if (element.elementType === ElementType.TextBox) {
+          } else if (
+            element.elementType === ElementType.TextBox &&
+            options.includeTextBoxes
+          ) {
             const textBox = element as TextBoxElement;
             resultLine.elements.push({
               type: 'textbox',

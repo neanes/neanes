@@ -2,6 +2,7 @@ import {
   ExportPageAsImageArgs,
   ExportWorkspaceAsHtmlArgs,
   ExportWorkspaceAsImageArgs,
+  ExportWorkspaceAsLatexArgs,
   ExportWorkspaceAsMusicXmlArgs,
   ExportWorkspaceAsPdfArgs,
   IpcRendererChannels,
@@ -118,6 +119,20 @@ export class IpcService implements IIpcService {
         compressed,
         openFolder,
       } as ExportWorkspaceAsMusicXmlArgs,
+    );
+  }
+
+  public async exportWorkspaceAsLatex(workspace: Workspace, data: string) {
+    return await window.ipcRenderer.invoke(
+      IpcRendererChannels.ExportWorkspaceAsLatex,
+      {
+        filePath:
+          workspace.filePath != null
+            ? `${getFileNameFromPath(workspace.filePath)}.byztex`
+            : null,
+        tempFileName: `${workspace.tempFileName}.byztex`,
+        data,
+      } as ExportWorkspaceAsLatexArgs,
     );
   }
 

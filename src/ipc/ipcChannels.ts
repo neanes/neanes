@@ -10,6 +10,7 @@ export enum IpcMainChannels {
   FileMenuExportAsPdf = 'FileMenuExportAsPdf',
   FileMenuExportAsHtml = 'FileMenuExportAsHtml',
   FileMenuExportAsMusicXml = 'FileMenuExportAsMusicXml',
+  FileMenuExportAsLatex = 'FileMenuExportAsLatex',
   FileMenuExportAsImage = 'FileMenuExportAsImage',
 
   FileMenuPageSetup = 'FileMenuPageSetup',
@@ -60,6 +61,7 @@ export enum IpcRendererChannels {
   ExportWorkspaceAsPdf = 'ExportWorkspaceAsPdf',
   ExportWorkspaceAsHtml = 'ExportWorkspaceAsHtml',
   ExportWorkspaceAsMusicXml = 'ExportWorkspaceAsMusicXml',
+  ExportWorkspaceAsLatex = 'ExportWorkspaceAsLatex',
   ExportWorkspaceAsImage = 'ExportWorkspaceAsImage',
   ExportPageAsImage = 'ExportPageAsImage',
   PrintWorkspace = 'PrintWorkspace',
@@ -155,6 +157,12 @@ export interface ExportWorkspaceAsMusicXmlArgs {
   data: string;
   compressed: boolean;
   openFolder: boolean;
+}
+
+export interface ExportWorkspaceAsLatexArgs {
+  filePath: string | null;
+  tempFileName: string;
+  data: string;
 }
 
 export interface ExportWorkspaceAsImageArgs {

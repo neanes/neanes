@@ -32,6 +32,7 @@ import {
   ExportWorkspaceAsHtmlArgs,
   ExportWorkspaceAsImageArgs,
   ExportWorkspaceAsImageReplyArgs,
+  ExportWorkspaceAsLatexArgs,
   ExportWorkspaceAsMusicXmlArgs,
   ExportWorkspaceAsPdfArgs,
   FileMenuInsertTextboxArgs,
@@ -728,6 +729,58 @@ async function exportWorkspaceAsMusicXml(args: ExportWorkspaceAsMusicXmlArgs) {
   }
 }
 
+async function exportWorkspaceAsLatex(args: ExportWorkspaceAsLatexArgs) {
+  try {
+    if (saving) {
+      return false;
+    }
+
+    saving = true;
+
+    const dialogResult = await dialog.showSaveDialog(win!, {
+      title: 'Export Score as Latex',
+      defaultPath: args.filePath || args.tempFileName,
+      filters: [
+        {
+          name: 'JSON File',
+          extensions: ['byztex'],
+        },
+      ],
+    });
+
+    if (!dialogResult.canceled) {
+      let filePath = dialogResult.filePath;
+
+      // Hack for Linux: if the filepath doesn't end with the proper extension,
+      // then add it
+      // See https://github.com/electron/electron/issues/21935
+      let doWrite = true;
+
+      if (!filePath.endsWith('.byztex')) {
+        filePath += '.byztex';
+
+        doWrite = await showReplaceFileDialog(filePath);
+      }
+
+      if (doWrite) {
+        await fs.writeFile(filePath, args.data);
+      }
+    }
+  } catch (error) {
+    console.error(error);
+
+    if (error instanceof Error) {
+      dialog.showMessageBox(win!, {
+        type: 'error',
+        title: 'Export as Latex failed',
+        message: error.message,
+      });
+    }
+  } finally {
+    saving = false;
+  }
+}
+
 async function exportWorkspaceAsImage(args: ExportWorkspaceAsImageArgs) {
   const result = {
     filePath: args.filePath,
@@ -1079,23 +1132,34 @@ function createMenu() {
           },
         },
         {
-          label: i18next.t('menu:file.exportAsHtml'),
-          accelerator: 'CmdOrCtrl+Shift+E',
-          click() {
-            win?.webContents.send(IpcMainChannels.FileMenuExportAsHtml);
-          },
-        },
-        {
-          label: i18next.t('menu:file.exportAsMusicXml'),
-          click() {
-            win?.webContents.send(IpcMainChannels.FileMenuExportAsMusicXml);
-          },
-        },
-        {
-          label: i18next.t('menu:file.exportAsImage'),
-          click() {
-            win?.webContents.send(IpcMainChannels.FileMenuExportAsImage);
-          },
+          label: i18next.t('menu:file.exportAs'),
+          submenu: [
+            {
+              label: i18next.t('menu:file.exportAsHtml'),
+              accelerator: 'CmdOrCtrl+Shift+E',
+              click() {
+                win?.webContents.send(IpcMainChannels.FileMenuExportAsHtml);
+              },
+            },
+            {
+              label: i18next.t('menu:file.exportAsMusicXml'),
+              click() {
+                win?.webContents.send(IpcMainChannels.FileMenuExportAsMusicXml);
+              },
+            },
+            {
+              label: i18next.t('menu:file.exportAsLatex'),
+              click() {
+                win?.webContents.send(IpcMainChannels.FileMenuExportAsLatex);
+              },
+            },
+            {
+              label: i18next.t('menu:file.exportAsImage'),
+              click() {
+                win?.webContents.send(IpcMainChannels.FileMenuExportAsImage);
+              },
+            },
+          ],
         },
         {
           label: i18next.t('menu:file.print'),
@@ -1637,6 +1701,13 @@ ipcMain.handle(
   IpcRendererChannels.ExportWorkspaceAsMusicXml,
   async (event, args: ExportWorkspaceAsMusicXmlArgs) => {
     return await exportWorkspaceAsMusicXml(args);
+  },
+);
+
+ipcMain.handle(
+  IpcRendererChannels.ExportWorkspaceAsLatex,
+  async (event, args: ExportWorkspaceAsLatexArgs) => {
+    return await exportWorkspaceAsLatex(args);
   },
 );
 

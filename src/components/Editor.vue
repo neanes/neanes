@@ -1176,6 +1176,7 @@
       :defaultFormat="exportFormat"
       @exportAsPng="exportAsPng"
       @exportAsMusicXml="exportAsMusicXml"
+      @exportAsLatex="exportAsLatex"
       @close="closeExportDialog"
     />
     <template v-if="richTextBoxCalculation">
@@ -1207,6 +1208,7 @@ import ContentEditable from '@/components/ContentEditable.vue';
 import DropCap from '@/components/DropCap.vue';
 import EditorPreferencesDialog from '@/components/EditorPreferencesDialog.vue';
 import ExportDialog, {
+  ExportAsLatexSettings,
   ExportAsMusicXmlSettings,
   ExportAsPngSettings,
   ExportFormat,
@@ -2240,6 +2242,10 @@ export default class Editor extends Vue {
       this.onFileMenuExportAsMusicXml,
     );
     EventBus.$on(
+      IpcMainChannels.FileMenuExportAsLatex,
+      this.onFileMenuExportAsLatex,
+    );
+    EventBus.$on(
       IpcMainChannels.FileMenuExportAsImage,
       this.onFileMenuExportAsImage,
     );
@@ -2337,6 +2343,10 @@ export default class Editor extends Vue {
     EventBus.$off(
       IpcMainChannels.FileMenuExportAsMusicXml,
       this.onFileMenuExportAsMusicXml,
+    );
+    EventBus.$off(
+      IpcMainChannels.FileMenuExportAsLatex,
+      this.onFileMenuExportAsLatex,
     );
     EventBus.$off(
       IpcMainChannels.FileMenuExportAsImage,
@@ -6518,6 +6528,11 @@ export default class Editor extends Vue {
     this.exportDialogIsOpen = true;
   }
 
+  onFileMenuExportAsLatex() {
+    this.exportFormat = ExportFormat.Latex;
+    this.exportDialogIsOpen = true;
+  }
+
   async exportAsMusicXml(args: ExportAsMusicXmlSettings) {
     await this.ipcService.exportWorkspaceAsMusicXml(
       this.selectedWorkspace,
@@ -6529,8 +6544,19 @@ export default class Editor extends Vue {
     this.closeExportDialog();
   }
 
-  exportAsLatex() {
-    return this.latexExporter.export(this.pages, this.score.pageSetup);
+  async exportAsLatex(args: ExportAsLatexSettings) {
+    await this.ipcService.exportWorkspaceAsLatex(
+      this.selectedWorkspace,
+      JSON.stringify(
+        this.latexExporter.export(
+          this.pages,
+          this.score.pageSetup,
+          args.options,
+        ),
+      ),
+    );
+
+    this.closeExportDialog();
   }
 
   blurActiveElement() {

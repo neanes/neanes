@@ -62,6 +62,7 @@ export abstract class ScoreElement {
   public lineBreak: boolean = false;
   public lineBreakType: LineBreakType | null = null;
   public pageBreak: boolean = false;
+  public sectionName: string | null = null;
 
   // Give each element a unique ID for rendering in the UI
   public id: number = id++;

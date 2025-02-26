@@ -93,6 +93,7 @@ export class LatexExporter {
 
     const result: LatexScore = {
       schemaVersion,
+      sectionNames: [],
       pageSetup: {
         lineHeight: toPt(pageSetup.lineHeight),
         fontFamilies: {
@@ -154,14 +155,27 @@ export class LatexExporter {
           textBox: pageSetup.textBoxDefaultColor.substring(1),
         },
       },
-      lines: [],
+      sections: [],
     };
+
+    // Create the default section
+    let section: LatexSection = { default: true, lines: [] };
 
     for (const page of pages) {
       for (const line of page.lines) {
         const resultLine: LatexLine = { elements: [] };
 
         for (const element of line.elements) {
+          // Check for the start of a new section
+          if (element.sectionName != null) {
+            // If the previous section has lines, add it to the results
+            if (section.lines.length > 0) {
+              result.sections.push(section);
+            }
+
+            section = { name: element.sectionName, lines: [] };
+          }
+
           if (element.elementType === ElementType.Note) {
             const note = element as NoteElement;
             const noteInfo = {
@@ -496,17 +510,34 @@ export class LatexExporter {
         }
 
         if (resultLine.elements.length > 0) {
-          result.lines.push(resultLine);
+          section.lines.push(resultLine);
         }
       }
     }
+
+    // Add the last section
+    if (section.lines.length > 0) {
+      result.sections.push(section);
+    }
+
+    result.sectionNames = result.sections
+      .filter((x) => x.name != null)
+      .map((x) => x.name!);
+
     return result;
   }
 }
 
 interface LatexScore {
   schemaVersion: number;
+  sectionNames: string[];
   pageSetup: LatexPageSetup;
+  sections: LatexSection[];
+}
+
+interface LatexSection {
+  name?: string;
+  default?: boolean;
   lines: LatexLine[];
 }
 

@@ -210,6 +210,14 @@
                       :ref="`element-${getElementIndex(element)}`"
                       class="neume-box"
                     >
+                      <span
+                        class="section-name"
+                        v-if="
+                          element.sectionName != '' &&
+                          element.sectionName != null
+                        "
+                        >§</span
+                      >
                       <span class="page-break" v-if="element.pageBreak"
                         ><img src="@/assets/icons/page-break.svg"
                       /></span>
@@ -351,6 +359,14 @@
                   </template>
                   <template v-else-if="isMartyriaElement(element)">
                     <div class="neume-box">
+                      <span
+                        class="section-name"
+                        v-if="
+                          element.sectionName != '' &&
+                          element.sectionName != null
+                        "
+                        >§</span
+                      >
                       <span class="page-break" v-if="element.pageBreak">
                         <img src="@/assets/icons/page-break.svg"
                       /></span>
@@ -378,6 +394,14 @@
                       :ref="`element-${getElementIndex(element)}`"
                       class="neume-box"
                     >
+                      <span
+                        class="section-name"
+                        v-if="
+                          element.sectionName != '' &&
+                          element.sectionName != null
+                        "
+                        >§</span
+                      >
                       <span class="page-break" v-if="element.pageBreak">
                         <img src="@/assets/icons/page-break.svg"
                       /></span>
@@ -400,6 +424,14 @@
                       :ref="`element-${getElementIndex(element)}`"
                       class="neume-box"
                     >
+                      <span
+                        class="section-name"
+                        v-if="
+                          element.sectionName != '' &&
+                          element.sectionName != null
+                        "
+                        >§</span
+                      >
                       <span class="page-break" v-if="element.pageBreak">
                         <img src="@/assets/icons/page-break.svg"
                       /></span>
@@ -416,6 +448,13 @@
                     </div>
                   </template>
                   <template v-else-if="isTextBoxElement(element)">
+                    <span
+                      class="section-name-2"
+                      v-if="
+                        element.sectionName != '' && element.sectionName != null
+                      "
+                      >§</span
+                    >
                     <span class="page-break-2" v-if="element.pageBreak"
                       ><img src="@/assets/icons/page-break.svg"
                     /></span>
@@ -454,6 +493,13 @@
                     />
                   </template>
                   <template v-else-if="isRichTextBoxElement(element)">
+                    <span
+                      class="section-name-2"
+                      v-if="
+                        element.sectionName != '' && element.sectionName != null
+                      "
+                      >§</span
+                    >
                     <span class="page-break-2" v-if="element.pageBreak"
                       ><img src="@/assets/icons/page-break.svg"
                     /></span>
@@ -479,6 +525,13 @@
                     />
                   </template>
                   <template v-else-if="isModeKeyElement(element)">
+                    <span
+                      class="section-name-2"
+                      v-if="
+                        element.sectionName != '' && element.sectionName != null
+                      "
+                      >§</span
+                    >
                     <span class="page-break-2" v-if="element.pageBreak"
                       ><img src="@/assets/icons/page-break.svg"
                     /></span>
@@ -499,6 +552,13 @@
                     />
                   </template>
                   <template v-else-if="isDropCapElement(element)">
+                    <span
+                      class="section-name"
+                      v-if="
+                        element.sectionName != '' && element.sectionName != null
+                      "
+                      >§</span
+                    >
                     <span class="page-break" v-if="element.pageBreak"
                       ><img src="@/assets/icons/page-break.svg"
                     /></span>
@@ -692,6 +752,12 @@
         @update:marginBottom="
           updateTextBoxMarginBottom(selectedTextBoxElement, $event)
         "
+        @update:sectionName="
+          updateScoreElementSectionName(
+            selectedElement as TextBoxElement,
+            $event,
+          )
+        "
         @insert:gorthmikon="insertGorthmikon"
         @insert:pelastikon="insertPelastikon"
       />
@@ -708,6 +774,12 @@
         "
         @update:marginBottom="
           updateRichTextBoxMarginBottom(selectedRichTextBoxElement, $event)
+        "
+        @update:sectionName="
+          updateScoreElementSectionName(
+            selectedElement as RichTextBoxElement,
+            $event,
+          )
         "
       />
     </template>
@@ -750,6 +822,12 @@
         "
         @update:lineSpan="
           updateDropCapLineSpan(selectedElement as DropCapElement, $event)
+        "
+        @update:sectionName="
+          updateScoreElementSectionName(
+            selectedElement as DropCapElement,
+            $event,
+          )
         "
       />
     </template>
@@ -874,6 +952,12 @@
             $event,
           )
         "
+        @update:sectionName="
+          updateScoreElementSectionName(
+            selectedElement as ModeKeyElement,
+            $event,
+          )
+        "
         @open-mode-key-dialog="openModeKeyDialog"
       />
     </template>
@@ -956,6 +1040,9 @@
         @update:acceptsLyrics="
           updateNoteAcceptsLyrics(selectedElement as NoteElement, $event)
         "
+        @update:sectionName="
+          updateScoreElementSectionName(selectedElement as NoteElement, $event)
+        "
         @open-syllable-positioning-dialog="openSyllablePositioningDialog"
       />
     </template>
@@ -1011,6 +1098,12 @@
             $event,
           )
         "
+        @update:sectionName="
+          updateScoreElementSectionName(
+            selectedElement as MartyriaElement,
+            $event,
+          )
+        "
       />
     </template>
     <template v-if="selectedElement != null && isTempoElement(selectedElement)">
@@ -1020,6 +1113,9 @@
         @update:bpm="updateTempoBpm(selectedElement as TempoElement, $event)"
         @update:spaceAfter="
           updateTempoSpaceAfter(selectedElement as TempoElement, $event)
+        "
+        @update:sectionName="
+          updateScoreElementSectionName(selectedElement as TempoElement, $event)
         "
       />
     </template>
@@ -2733,6 +2829,26 @@ export default class Editor extends Vue {
 
       this.save();
     }
+  }
+
+  updateScoreElementSectionName(
+    element: ScoreElement,
+    sectionName: string | null,
+  ) {
+    if (sectionName != null && sectionName.trim() == '') {
+      sectionName = null;
+    }
+
+    this.commandService.execute(
+      this.scoreElementCommandFactory.create('update-properties', {
+        target: element,
+        newValues: {
+          sectionName,
+        },
+      }),
+    );
+
+    this.save();
   }
 
   switchToMartyria(element: ScoreElement) {
@@ -7270,6 +7386,22 @@ export default class Editor extends Vue {
   width: calc(16px * var(--zoom, 1));
 }
 
+.section-name {
+  position: absolute;
+  top: calc(-20px * var(--zoom, 1));
+  height: 100%;
+  font-weight: bold;
+}
+
+.section-name-2 {
+  position: absolute;
+  font-weight: bold;
+  left: calc(-22px * var(--zoom, 1));
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
 .print-only {
   display: none;
 }
@@ -7379,6 +7511,8 @@ export default class Editor extends Vue {
   .text-box-toolbar,
   .image-box-toolbar,
   .search-text-container,
+  .section-name,
+  .section-name-2,
   .page-break,
   .line-break,
   .page-break-2,

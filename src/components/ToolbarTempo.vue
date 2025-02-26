@@ -1,25 +1,44 @@
 <template>
   <div class="tempo-toolbar">
     <div class="row">
-      <label class="right-space">{{ $t('toolbar:common.bpm') }}</label>
-      <InputBpm
-        :modelValue="element.bpm"
-        @update:modelValue="$emit('update:bpm', $event)"
-      />
+      <div class="form-group">
+        <label class="right-space">{{ $t('toolbar:common.bpm') }}</label>
+        <InputBpm
+          :modelValue="element.bpm"
+          @update:modelValue="$emit('update:bpm', $event)"
+        />
+      </div>
 
       <span class="space" />
 
-      <label class="right-space">{{ $t('toolbar:common.spaceAfter') }}</label>
-
-      <InputUnit
-        unit="pt"
-        :min="-spaceAfterMax"
-        :max="spaceAfterMax"
-        :step="0.5"
-        :precision="2"
-        :modelValue="element.spaceAfter"
-        @update:modelValue="$emit('update:spaceAfter', $event)"
-      />
+      <div class="form-group">
+        <label class="right-space">{{ $t('toolbar:common.spaceAfter') }}</label>
+        <InputUnit
+          unit="pt"
+          :min="-spaceAfterMax"
+          :max="spaceAfterMax"
+          :step="0.5"
+          :precision="2"
+          :modelValue="element.spaceAfter"
+          @update:modelValue="$emit('update:spaceAfter', $event)"
+        />
+      </div>
+      <span class="space"></span>
+      <div class="form-group">
+        <label class="right-space">{{
+          $t('toolbar:common.sectionName')
+        }}</label>
+        <input
+          type="text"
+          :value="element.sectionName"
+          @change="
+            $emit(
+              'update:sectionName',
+              ($event.target as HTMLInputElement).value,
+            )
+          "
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -36,7 +55,7 @@ import InputUnit from './InputUnit.vue';
 
 @Component({
   components: { InputUnit, InputBpm },
-  emits: ['update:bpm', 'update:spaceAfter'],
+  emits: ['update:bpm', 'update:sectionName', 'update:spaceAfter'],
 })
 export default class ToolbarTempo extends Vue {
   @Prop() element!: TempoElement;

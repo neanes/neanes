@@ -39,6 +39,17 @@
         @update:modelValue="$emit('update:marginBottom', $event)"
       />
     </div>
+    <span class="space"></span>
+    <div class="form-group">
+      <label class="right-space">{{ $t('toolbar:common.sectionName') }}</label>
+      <input
+        type="text"
+        :value="element.sectionName"
+        @change="
+          $emit('update:sectionName', ($event.target as HTMLInputElement).value)
+        "
+      />
+    </div>
   </div>
 </template>
 
@@ -52,7 +63,12 @@ import { Unit } from '@/utils/Unit';
 
 @Component({
   components: { InputUnit },
-  emits: ['update:marginBottom', 'update:marginTop', 'update:rtl'],
+  emits: [
+    'update:marginBottom',
+    'update:marginTop',
+    'update:rtl',
+    'update:sectionName',
+  ],
 })
 export default class ToolbarTextBoxRich extends Vue {
   @Prop() element!: RichTextBoxElement;

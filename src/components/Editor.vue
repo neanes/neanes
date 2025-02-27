@@ -4354,6 +4354,8 @@ export default class Editor extends Vue {
               this.score.pageSetup,
               options,
             ),
+            null,
+            2,
           ),
         );
         this.removeWorkspace(this.selectedWorkspace);
@@ -6580,6 +6582,8 @@ export default class Editor extends Vue {
           this.score.pageSetup,
           args.options,
         ),
+        null,
+        2,
       ),
     );
 

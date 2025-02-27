@@ -13,6 +13,7 @@ import { Page } from '@/models/Page';
 import { PageSetup } from '@/models/PageSetup';
 import { Unit } from '@/utils/Unit';
 
+import { fontService } from '../FontService';
 import { NeumeMappingService, SbmuflGlyphName } from '../NeumeMappingService';
 import { TextMeasurementService } from '../TextMeasurementService';
 
@@ -101,8 +102,15 @@ export class LatexExporter {
       pageSetup.lyricsVerticalOffset + lyricAscent - neumeAscent;
 
     const result: LatexScore = {
+      appVersion: APP_VERSION,
       schemaVersion,
       sectionNames: [],
+      fontVersions: {
+        Neanes: fontService.getMetadata('Neanes').fontVersion,
+        NeanesRTL: fontService.getMetadata('NeanesRTL').fontVersion,
+        NeanesStathisSeries: fontService.getMetadata('NeanesStathisSeries')
+          .fontVersion,
+      },
       pageSetup: {
         lineHeight: toPt(pageSetup.lineHeight),
         fontFamilies: {
@@ -544,8 +552,10 @@ export class LatexExporter {
 }
 
 interface LatexScore {
+  appVersion: string;
   schemaVersion: number;
   sectionNames: string[];
+  fontVersions: Record<string, string>;
   pageSetup: LatexPageSetup;
   sections: LatexSection[];
 }

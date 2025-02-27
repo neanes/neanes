@@ -779,7 +779,7 @@ async function exportWorkspaceAsLatex(args: ExportWorkspaceAsLatexArgs) {
       defaultPath: args.filePath || args.tempFileName,
       filters: [
         {
-          name: 'JSON File',
+          name: 'neanestex File',
           extensions: ['byztex'],
         },
       ],

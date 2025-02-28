@@ -15,6 +15,9 @@
             <option :value="ExportFormat.MusicXml">
               {{ $t('dialog:export.musicXml') }}
             </option>
+            <option :value="ExportFormat.Latex">
+              {{ $t('dialog:export.latex') }}
+            </option>
             <!-- <option :value="ExportFormat.SVG">SVG images</option> -->
           </select>
         </div>
@@ -92,6 +95,28 @@
             }}</label>
           </div>
         </template>
+        <template v-if="format === ExportFormat.Latex">
+          <div class="form-group row">
+            <input
+              id="export-dialog-include-mode-keys"
+              type="checkbox"
+              v-model="latexOptions.includeModeKeys"
+            />
+            <label for="export-dialog-include-mode-keys">{{
+              $t('dialog:export.includeModeKeys')
+            }}</label>
+          </div>
+          <div class="form-group row">
+            <input
+              id="export-dialog-include-text-boxes"
+              type="checkbox"
+              v-model="latexOptions.includeTextBoxes"
+            />
+            <label for="export-dialog-include-text-boxes">{{
+              $t('dialog:export.includeTextBoxes')
+            }}</label>
+          </div>
+        </template>
       </div>
       <div class="button-container">
         <template v-if="loading">
@@ -117,6 +142,7 @@ import { Component, Prop, Vue } from 'vue-facing-decorator';
 
 import InputUnit from '@/components/InputUnit.vue';
 import ModalDialog from '@/components/ModalDialog.vue';
+import { LatexExporterOptions } from '@/services/integration/LatexExporter';
 import { MusicXmlExporterOptions } from '@/services/integration/MusicXmlExporter';
 
 export enum ExportFormat {
@@ -125,6 +151,7 @@ export enum ExportFormat {
   PNG = 'PNG',
   SVG = 'SVG',
   MusicXml = 'MusicXml',
+  Latex = 'Latex',
 }
 
 export interface ExportAsPngSettings {
@@ -139,9 +166,19 @@ export interface ExportAsMusicXmlSettings {
   compressed: boolean;
 }
 
+export interface ExportAsLatexSettings {
+  options: LatexExporterOptions;
+}
+
 @Component({
   components: { ModalDialog, InputUnit },
-  emits: ['close', 'exportAsMusicXml', 'exportAsPng', 'exportAsSvg'],
+  emits: [
+    'close',
+    'exportAsLatex',
+    'exportAsMusicXml',
+    'exportAsPng',
+    'exportAsSvg',
+  ],
 })
 export default class ExportDialog extends Vue {
   @Prop() defaultFormat: ExportFormat | undefined;
@@ -153,6 +190,7 @@ export default class ExportDialog extends Vue {
   openFolder: boolean = true;
 
   musicXmlOptions = new MusicXmlExporterOptions();
+  latexOptions = new LatexExporterOptions();
 
   ExportFormat = ExportFormat;
 
@@ -197,7 +235,11 @@ export default class ExportDialog extends Vue {
         options: this.musicXmlOptions,
         compressed: false,
         openFolder: this.openFolder,
-      });
+      } as ExportAsMusicXmlSettings);
+    } else if (this.format === ExportFormat.Latex) {
+      this.$emit('exportAsLatex', {
+        options: this.latexOptions,
+      } as ExportAsLatexSettings);
     }
   }
 

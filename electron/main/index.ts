@@ -32,6 +32,7 @@ import {
   ExportWorkspaceAsHtmlArgs,
   ExportWorkspaceAsImageArgs,
   ExportWorkspaceAsImageReplyArgs,
+  ExportWorkspaceAsLatexArgs,
   ExportWorkspaceAsMusicXmlArgs,
   ExportWorkspaceAsPdfArgs,
   FileMenuInsertTextboxArgs,
@@ -40,6 +41,7 @@ import {
   IpcMainChannels,
   IpcRendererChannels,
   OpenContextMenuForTabArgs,
+  OpenWorkspaceFromArgvArgs,
   PrintWorkspaceArgs,
   SaveWorkspaceArgs,
   SaveWorkspaceAsArgs,
@@ -88,7 +90,14 @@ const storeFilePath = path.join(userDataPath, 'settings.json');
 const isMac = process.platform === 'darwin';
 
 const silentPdf = process.argv.includes('--silent-pdf');
-const silent = silentPdf;
+const silentLatex = process.argv.includes('--silent-latex');
+const silentLatexIncludeModeKeys = process.argv.includes(
+  '--latex-include-mode-keys',
+);
+const silentLatexIncludeTextBoxes = process.argv.includes(
+  '--latex-include-text-boxes',
+);
+const silent = silentPdf || silentLatex;
 
 let win: BrowserWindow | null = null;
 let readyToExit = false;
@@ -344,7 +353,13 @@ async function openFileFromArgs(argv: string[]) {
     }
   }
 
-  return { files: result, silentPdf };
+  return {
+    files: result,
+    silentPdf,
+    silentLatex,
+    silentLatexIncludeModeKeys,
+    silentLatexIncludeTextBoxes,
+  } as OpenWorkspaceFromArgvArgs;
 }
 
 async function saveWorkspace(args: SaveWorkspaceArgs) {
@@ -728,6 +743,81 @@ async function exportWorkspaceAsMusicXml(args: ExportWorkspaceAsMusicXmlArgs) {
   }
 }
 
+let silentLatexSuccessCount = 0;
+let silentLatexFailCount = 0;
+
+async function exportWorkspaceAsLatex(args: ExportWorkspaceAsLatexArgs) {
+  try {
+    if (saving) {
+      return false;
+    }
+
+    if (silentLatex) {
+      try {
+        let newPath = args.filePathFull!.replace(/\.byzx?$/, '.byztex');
+
+        // Check to make sure we don't accidentally overwrite the original file
+        if (newPath === args.filePathFull) {
+          newPath += '.byztex';
+        }
+
+        await fs.writeFile(newPath, args.data);
+        silentLatexSuccessCount++;
+        console.log(`DONE ${args.filePathFull} => ${newPath}`);
+      } catch (error) {
+        silentLatexFailCount++;
+        console.error(`FAIL ${args.filePathFull} | ${error}`);
+      }
+
+      return;
+    }
+
+    saving = true;
+
+    const dialogResult = await dialog.showSaveDialog(win!, {
+      title: 'Export Score as Latex',
+      defaultPath: args.filePath || args.tempFileName,
+      filters: [
+        {
+          name: 'neanestex File',
+          extensions: ['byztex'],
+        },
+      ],
+    });
+
+    if (!dialogResult.canceled) {
+      let filePath = dialogResult.filePath;
+
+      // Hack for Linux: if the filepath doesn't end with the proper extension,
+      // then add it
+      // See https://github.com/electron/electron/issues/21935
+      let doWrite = true;
+
+      if (!filePath.endsWith('.byztex')) {
+        filePath += '.byztex';
+
+        doWrite = await showReplaceFileDialog(filePath);
+      }
+
+      if (doWrite) {
+        await fs.writeFile(filePath, args.data);
+      }
+    }
+  } catch (error) {
+    console.error(error);
+
+    if (error instanceof Error) {
+      dialog.showMessageBox(win!, {
+        type: 'error',
+        title: 'Export as Latex failed',
+        message: error.message,
+      });
+    }
+  } finally {
+    saving = false;
+  }
+}
+
 async function exportWorkspaceAsImage(args: ExportWorkspaceAsImageArgs) {
   const result = {
     filePath: args.filePath,
@@ -1079,23 +1169,34 @@ function createMenu() {
           },
         },
         {
-          label: i18next.t('menu:file.exportAsHtml'),
-          accelerator: 'CmdOrCtrl+Shift+E',
-          click() {
-            win?.webContents.send(IpcMainChannels.FileMenuExportAsHtml);
-          },
-        },
-        {
-          label: i18next.t('menu:file.exportAsMusicXml'),
-          click() {
-            win?.webContents.send(IpcMainChannels.FileMenuExportAsMusicXml);
-          },
-        },
-        {
-          label: i18next.t('menu:file.exportAsImage'),
-          click() {
-            win?.webContents.send(IpcMainChannels.FileMenuExportAsImage);
-          },
+          label: i18next.t('menu:file.exportAs'),
+          submenu: [
+            {
+              label: i18next.t('menu:file.exportAsHtml'),
+              accelerator: 'CmdOrCtrl+Shift+E',
+              click() {
+                win?.webContents.send(IpcMainChannels.FileMenuExportAsHtml);
+              },
+            },
+            {
+              label: i18next.t('menu:file.exportAsMusicXml'),
+              click() {
+                win?.webContents.send(IpcMainChannels.FileMenuExportAsMusicXml);
+              },
+            },
+            {
+              label: i18next.t('menu:file.exportAsLatex'),
+              click() {
+                win?.webContents.send(IpcMainChannels.FileMenuExportAsLatex);
+              },
+            },
+            {
+              label: i18next.t('menu:file.exportAsImage'),
+              click() {
+                win?.webContents.send(IpcMainChannels.FileMenuExportAsImage);
+              },
+            },
+          ],
         },
         {
           label: i18next.t('menu:file.print'),
@@ -1576,6 +1677,14 @@ ipcMain.handle(IpcRendererChannels.ExitApplication, async () => {
     }
   }
 
+  if (silentLatex) {
+    console.log(`Successfully wrote ${silentLatexSuccessCount} files`);
+
+    if (silentLatexFailCount > 0) {
+      console.log(`Failed to write ${silentLatexFailCount} files`);
+    }
+  }
+
   // In macOS, there is a distinction between "close" and "quit".
   if (quitting) {
     app.exit();
@@ -1637,6 +1746,13 @@ ipcMain.handle(
   IpcRendererChannels.ExportWorkspaceAsMusicXml,
   async (event, args: ExportWorkspaceAsMusicXmlArgs) => {
     return await exportWorkspaceAsMusicXml(args);
+  },
+);
+
+ipcMain.handle(
+  IpcRendererChannels.ExportWorkspaceAsLatex,
+  async (event, args: ExportWorkspaceAsLatexArgs) => {
+    return await exportWorkspaceAsLatex(args);
   },
 );
 

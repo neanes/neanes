@@ -210,6 +210,14 @@
                       :ref="`element-${getElementIndex(element)}`"
                       class="neume-box"
                     >
+                      <span
+                        class="section-name"
+                        v-if="
+                          element.sectionName != '' &&
+                          element.sectionName != null
+                        "
+                        >§</span
+                      >
                       <span class="page-break" v-if="element.pageBreak"
                         ><img src="@/assets/icons/page-break.svg"
                       /></span>
@@ -351,6 +359,14 @@
                   </template>
                   <template v-else-if="isMartyriaElement(element)">
                     <div class="neume-box">
+                      <span
+                        class="section-name"
+                        v-if="
+                          element.sectionName != '' &&
+                          element.sectionName != null
+                        "
+                        >§</span
+                      >
                       <span class="page-break" v-if="element.pageBreak">
                         <img src="@/assets/icons/page-break.svg"
                       /></span>
@@ -378,6 +394,14 @@
                       :ref="`element-${getElementIndex(element)}`"
                       class="neume-box"
                     >
+                      <span
+                        class="section-name"
+                        v-if="
+                          element.sectionName != '' &&
+                          element.sectionName != null
+                        "
+                        >§</span
+                      >
                       <span class="page-break" v-if="element.pageBreak">
                         <img src="@/assets/icons/page-break.svg"
                       /></span>
@@ -400,6 +424,14 @@
                       :ref="`element-${getElementIndex(element)}`"
                       class="neume-box"
                     >
+                      <span
+                        class="section-name"
+                        v-if="
+                          element.sectionName != '' &&
+                          element.sectionName != null
+                        "
+                        >§</span
+                      >
                       <span class="page-break" v-if="element.pageBreak">
                         <img src="@/assets/icons/page-break.svg"
                       /></span>
@@ -416,6 +448,13 @@
                     </div>
                   </template>
                   <template v-else-if="isTextBoxElement(element)">
+                    <span
+                      class="section-name-2"
+                      v-if="
+                        element.sectionName != '' && element.sectionName != null
+                      "
+                      >§</span
+                    >
                     <span class="page-break-2" v-if="element.pageBreak"
                       ><img src="@/assets/icons/page-break.svg"
                     /></span>
@@ -454,6 +493,13 @@
                     />
                   </template>
                   <template v-else-if="isRichTextBoxElement(element)">
+                    <span
+                      class="section-name-2"
+                      v-if="
+                        element.sectionName != '' && element.sectionName != null
+                      "
+                      >§</span
+                    >
                     <span class="page-break-2" v-if="element.pageBreak"
                       ><img src="@/assets/icons/page-break.svg"
                     /></span>
@@ -479,6 +525,13 @@
                     />
                   </template>
                   <template v-else-if="isModeKeyElement(element)">
+                    <span
+                      class="section-name-2"
+                      v-if="
+                        element.sectionName != '' && element.sectionName != null
+                      "
+                      >§</span
+                    >
                     <span class="page-break-2" v-if="element.pageBreak"
                       ><img src="@/assets/icons/page-break.svg"
                     /></span>
@@ -499,6 +552,13 @@
                     />
                   </template>
                   <template v-else-if="isDropCapElement(element)">
+                    <span
+                      class="section-name"
+                      v-if="
+                        element.sectionName != '' && element.sectionName != null
+                      "
+                      >§</span
+                    >
                     <span class="page-break" v-if="element.pageBreak"
                       ><img src="@/assets/icons/page-break.svg"
                     /></span>
@@ -692,6 +752,12 @@
         @update:marginBottom="
           updateTextBoxMarginBottom(selectedTextBoxElement, $event)
         "
+        @update:sectionName="
+          updateScoreElementSectionName(
+            selectedElement as TextBoxElement,
+            $event,
+          )
+        "
         @insert:gorthmikon="insertGorthmikon"
         @insert:pelastikon="insertPelastikon"
       />
@@ -708,6 +774,12 @@
         "
         @update:marginBottom="
           updateRichTextBoxMarginBottom(selectedRichTextBoxElement, $event)
+        "
+        @update:sectionName="
+          updateScoreElementSectionName(
+            selectedElement as RichTextBoxElement,
+            $event,
+          )
         "
       />
     </template>
@@ -750,6 +822,12 @@
         "
         @update:lineSpan="
           updateDropCapLineSpan(selectedElement as DropCapElement, $event)
+        "
+        @update:sectionName="
+          updateScoreElementSectionName(
+            selectedElement as DropCapElement,
+            $event,
+          )
         "
       />
     </template>
@@ -874,6 +952,12 @@
             $event,
           )
         "
+        @update:sectionName="
+          updateScoreElementSectionName(
+            selectedElement as ModeKeyElement,
+            $event,
+          )
+        "
         @open-mode-key-dialog="openModeKeyDialog"
       />
     </template>
@@ -956,6 +1040,9 @@
         @update:acceptsLyrics="
           updateNoteAcceptsLyrics(selectedElement as NoteElement, $event)
         "
+        @update:sectionName="
+          updateScoreElementSectionName(selectedElement as NoteElement, $event)
+        "
         @open-syllable-positioning-dialog="openSyllablePositioningDialog"
       />
     </template>
@@ -1011,6 +1098,12 @@
             $event,
           )
         "
+        @update:sectionName="
+          updateScoreElementSectionName(
+            selectedElement as MartyriaElement,
+            $event,
+          )
+        "
       />
     </template>
     <template v-if="selectedElement != null && isTempoElement(selectedElement)">
@@ -1020,6 +1113,9 @@
         @update:bpm="updateTempoBpm(selectedElement as TempoElement, $event)"
         @update:spaceAfter="
           updateTempoSpaceAfter(selectedElement as TempoElement, $event)
+        "
+        @update:sectionName="
+          updateScoreElementSectionName(selectedElement as TempoElement, $event)
         "
       />
     </template>
@@ -1080,6 +1176,7 @@
       :defaultFormat="exportFormat"
       @exportAsPng="exportAsPng"
       @exportAsMusicXml="exportAsMusicXml"
+      @exportAsLatex="exportAsLatex"
       @close="closeExportDialog"
     />
     <template v-if="richTextBoxCalculation">
@@ -1111,6 +1208,7 @@ import ContentEditable from '@/components/ContentEditable.vue';
 import DropCap from '@/components/DropCap.vue';
 import EditorPreferencesDialog from '@/components/EditorPreferencesDialog.vue';
 import ExportDialog, {
+  ExportAsLatexSettings,
   ExportAsMusicXmlSettings,
   ExportAsPngSettings,
   ExportFormat,
@@ -1215,6 +1313,10 @@ import {
 } from '@/services/audio/PlaybackService';
 import { Command, CommandFactory } from '@/services/history/CommandService';
 import { ByzHtmlExporter } from '@/services/integration/ByzHtmlExporter';
+import {
+  LatexExporter,
+  LatexExporterOptions,
+} from '@/services/integration/LatexExporter';
 import { MusicXmlExporter } from '@/services/integration/MusicXmlExporter';
 import { IIpcService } from '@/services/ipc/IIpcService';
 import { LayoutService } from '@/services/LayoutService';
@@ -1283,6 +1385,7 @@ export default class Editor extends Vue {
   @Inject() readonly playbackService!: PlaybackService;
   @Inject() readonly textSearchService!: TextSearchService;
   @Inject() readonly lyricService!: LyricService;
+  @Inject() readonly latexExporter!: LatexExporter;
   @Inject() readonly musicXmlExporter!: MusicXmlExporter;
 
   searchTextQuery: string = '';
@@ -1989,7 +2092,7 @@ export default class Editor extends Vue {
   }
 
   getMelismaUnderscoreStyleInner(element: NoteElement) {
-    const thickness = this.score.pageSetup.lyricsMelismaThickeness;
+    const thickness = this.score.pageSetup.lyricsMelismaThickness;
 
     const spacing = !element.isFullMelisma
       ? this.score.pageSetup.lyricsMelismaSpacing
@@ -2142,6 +2245,10 @@ export default class Editor extends Vue {
       this.onFileMenuExportAsMusicXml,
     );
     EventBus.$on(
+      IpcMainChannels.FileMenuExportAsLatex,
+      this.onFileMenuExportAsLatex,
+    );
+    EventBus.$on(
       IpcMainChannels.FileMenuExportAsImage,
       this.onFileMenuExportAsImage,
     );
@@ -2239,6 +2346,10 @@ export default class Editor extends Vue {
     EventBus.$off(
       IpcMainChannels.FileMenuExportAsMusicXml,
       this.onFileMenuExportAsMusicXml,
+    );
+    EventBus.$off(
+      IpcMainChannels.FileMenuExportAsLatex,
+      this.onFileMenuExportAsLatex,
     );
     EventBus.$off(
       IpcMainChannels.FileMenuExportAsImage,
@@ -2731,6 +2842,26 @@ export default class Editor extends Vue {
 
       this.save();
     }
+  }
+
+  updateScoreElementSectionName(
+    element: ScoreElement,
+    sectionName: string | null,
+  ) {
+    if (sectionName != null && sectionName.trim() == '') {
+      sectionName = null;
+    }
+
+    this.commandService.execute(
+      this.scoreElementCommandFactory.create('update-properties', {
+        target: element,
+        newValues: {
+          sectionName,
+        },
+      }),
+    );
+
+    this.save();
   }
 
   switchToMartyria(element: ScoreElement) {
@@ -4205,7 +4336,33 @@ export default class Editor extends Vue {
         await this.onFileMenuExportAsPdf();
         this.removeWorkspace(this.selectedWorkspace);
       }
+    }
 
+    if (openWorkspaceResults.silentLatex) {
+      for (const file of openWorkspaceResults.files.filter((x) => x.success)) {
+        const options = new LatexExporterOptions();
+        options.includeModeKeys =
+          openWorkspaceResults.silentLatexIncludeModeKeys ?? false;
+        options.includeTextBoxes =
+          openWorkspaceResults.silentLatexIncludeTextBoxes ?? false;
+        this.openScore(file);
+        await this.ipcService.exportWorkspaceAsLatex(
+          this.selectedWorkspace,
+          JSON.stringify(
+            this.latexExporter.export(
+              this.pages,
+              this.score.pageSetup,
+              options,
+            ),
+            null,
+            2,
+          ),
+        );
+        this.removeWorkspace(this.selectedWorkspace);
+      }
+    }
+
+    if (openWorkspaceResults.silentPdf || openWorkspaceResults.silentLatex) {
       await this.ipcService.exitApplication();
     }
 
@@ -6400,12 +6557,34 @@ export default class Editor extends Vue {
     this.exportDialogIsOpen = true;
   }
 
+  onFileMenuExportAsLatex() {
+    this.exportFormat = ExportFormat.Latex;
+    this.exportDialogIsOpen = true;
+  }
+
   async exportAsMusicXml(args: ExportAsMusicXmlSettings) {
     await this.ipcService.exportWorkspaceAsMusicXml(
       this.selectedWorkspace,
       this.musicXmlExporter.export(this.score, args.options),
       args.compressed,
       args.openFolder,
+    );
+
+    this.closeExportDialog();
+  }
+
+  async exportAsLatex(args: ExportAsLatexSettings) {
+    await this.ipcService.exportWorkspaceAsLatex(
+      this.selectedWorkspace,
+      JSON.stringify(
+        this.latexExporter.export(
+          this.pages,
+          this.score.pageSetup,
+          args.options,
+        ),
+        null,
+        2,
+      ),
     );
 
     this.closeExportDialog();
@@ -7264,6 +7443,22 @@ export default class Editor extends Vue {
   width: calc(16px * var(--zoom, 1));
 }
 
+.section-name {
+  position: absolute;
+  top: calc(-20px * var(--zoom, 1));
+  height: 100%;
+  font-weight: bold;
+}
+
+.section-name-2 {
+  position: absolute;
+  font-weight: bold;
+  left: calc(-22px * var(--zoom, 1));
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
 .print-only {
   display: none;
 }
@@ -7373,6 +7568,8 @@ export default class Editor extends Vue {
   .text-box-toolbar,
   .image-box-toolbar,
   .search-text-container,
+  .section-name,
+  .section-name-2,
   .page-break,
   .line-break,
   .page-break-2,

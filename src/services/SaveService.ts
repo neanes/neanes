@@ -144,6 +144,7 @@ export class SaveService {
       }
 
       element.pageBreak = e.pageBreak || undefined;
+      element.sectionName = e.sectionName || undefined;
 
       score.staff.elements.push(element);
     }
@@ -723,6 +724,7 @@ export class SaveService {
       element.lineBreak = e.lineBreak === true;
       element.lineBreakType = e.lineBreakType ?? LineBreakType.Left;
       element.pageBreak = e.pageBreak === true;
+      element.sectionName = e.sectionName ?? null;
 
       score.staff.elements.push(element);
     }

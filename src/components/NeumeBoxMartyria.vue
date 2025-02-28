@@ -18,14 +18,14 @@
       <Neume v-if="hasFthora" :neume="neume.fthora" :style="fthoraStyle" />
       <Neume v-if="hasTempo" :neume="neume.tempo" :style="tempoStyle" />
       <Neume
-        v-if="hasTempoRight"
-        :neume="neume.tempoRight"
-        :style="tempoStyle"
-      />
-      <Neume
         v-if="hasMeasureBarLeft && isMeasureBarAbove"
         :neume="neume.measureBarLeft"
         :style="measureBarStyle"
+      />
+      <Neume
+        v-if="hasTempoRight"
+        :neume="neume.tempoRight"
+        :style="tempoStyle"
       />
       <Neume
         v-if="hasMeasureBarRight"

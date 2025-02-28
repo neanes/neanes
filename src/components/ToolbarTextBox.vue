@@ -221,6 +221,17 @@
         @update:modelValue="$emit('update:marginBottom', $event)"
       />
     </div>
+    <span class="space"></span>
+    <div class="form-group">
+      <label class="right-space">{{ $t('toolbar:common.sectionName') }}</label>
+      <input
+        type="text"
+        :value="element.sectionName"
+        @change="
+          $emit('update:sectionName', ($event.target as HTMLInputElement).value)
+        "
+      />
+    </div>
   </div>
 </template>
 
@@ -252,6 +263,7 @@ import { Unit } from '@/utils/Unit';
     'update:marginBottom',
     'update:marginTop',
     'update:multipanel',
+    'update:sectionName',
     'update:strokeWidth',
     'update:underline',
     'update:useDefaultStyle',

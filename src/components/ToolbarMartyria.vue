@@ -283,6 +283,23 @@
           {{ $t(sign.name) }}
         </option>
       </select>
+
+      <span class="space"></span>
+      <div class="form-group">
+        <label class="right-space">{{
+          $t('toolbar:common.sectionName')
+        }}</label>
+        <input
+          type="text"
+          :value="element.sectionName"
+          @change="
+            $emit(
+              'update:sectionName',
+              ($event.target as HTMLInputElement).value,
+            )
+          "
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -320,6 +337,7 @@ import InputUnit from './InputUnit.vue';
     'update:note',
     'update:rootSignOverride',
     'update:scale',
+    'update:sectionName',
     'update:spaceAfter',
     'update:tempo',
     'update:tempoLeft',

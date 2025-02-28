@@ -494,6 +494,8 @@ export class LayoutService {
             );
           }
 
+          dropCapElement.contentWidth = elementWidthPx;
+
           // Handle the special case of multiline drop caps
           // when it is the very first element
           if (i == 0) {
@@ -1454,6 +1456,22 @@ export class LayoutService {
       martyriaElement.neumeWidth += this.getNeumeWidthFromCache(
         neumeWidthCache,
         martyriaElement.tempoRight,
+        pageSetup,
+      );
+    }
+
+    if (martyriaElement.measureBarLeft) {
+      martyriaElement.neumeWidth += this.getNeumeWidthFromCache(
+        neumeWidthCache,
+        martyriaElement.measureBarLeft,
+        pageSetup,
+      );
+    }
+
+    if (martyriaElement.measureBarRight) {
+      martyriaElement.neumeWidth += this.getNeumeWidthFromCache(
+        neumeWidthCache,
+        martyriaElement.measureBarRight,
         pageSetup,
       );
     }

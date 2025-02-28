@@ -480,6 +480,23 @@
           </option>
         </select>
       </template>
+
+      <span class="space"></span>
+      <div class="form-group">
+        <label class="right-space">{{
+          $t('toolbar:common.sectionName')
+        }}</label>
+        <input
+          type="text"
+          :value="element.sectionName"
+          @change="
+            $emit(
+              'update:sectionName',
+              ($event.target as HTMLInputElement).value,
+            )
+          "
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -540,6 +557,7 @@ import { Unit } from '@/utils/Unit';
     'update:secondaryChromaticFthoraNote',
     'update:secondaryFthora',
     'update:secondaryGorgon',
+    'update:sectionName',
     'update:spaceAfter',
     'update:tertiaryAccidental',
     'update:tertiaryChromaticFthoraNote',

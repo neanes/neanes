@@ -99,6 +99,8 @@ const silentLatexIncludeTextBoxes = process.argv.includes(
 );
 const silent = silentPdf || silentLatex;
 
+const disableUpdates = process.argv.includes('--no-update');
+
 let win: BrowserWindow | null = null;
 let readyToExit = false;
 let creatingWindow = false;
@@ -1587,7 +1589,7 @@ async function createWindow() {
     }
   } else {
     // Load the index.html when not in development
-    if (!silent) {
+    if (!silent && !disableUpdates) {
       autoUpdater.checkForUpdatesAndNotify();
     }
 

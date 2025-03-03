@@ -15,12 +15,11 @@ import { autoUpdater } from 'electron-updater';
 import { promises as fs } from 'fs';
 import i18next from 'i18next';
 import Pseudo from 'i18next-pseudo';
-import sizeOf from 'image-size';
+import { imageSizeFromFile } from 'image-size/fromFile';
 import JSZip from 'jszip';
 import mimetypes from 'mime-types';
 import path from 'path';
 import { debounce } from 'throttle-debounce';
-import { promisify } from 'util';
 
 import { PageSize } from '@/models/PageSetup';
 
@@ -77,8 +76,6 @@ const indexHtml = path.join(process.env.DIST, 'index.html');
 // This warning only shows in development mode
 // Read more on https://www.electronjs.org/docs/latest/tutorial/security
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
-
-const sizeOfAsync = promisify(sizeOf);
 
 const isDevelopment = import.meta.env.DEV;
 
@@ -505,7 +502,7 @@ async function openImage() {
       result.success = true;
 
       try {
-        const dimensions = await sizeOfAsync(filePath);
+        const dimensions = await imageSizeFromFile(filePath);
 
         result.imageHeight = dimensions?.height ?? 0;
         result.imageWidth = dimensions?.width ?? 0;

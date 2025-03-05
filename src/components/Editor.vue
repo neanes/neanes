@@ -3994,7 +3994,14 @@ export default class Editor extends Vue {
       // Find the index of the next note
       for (let i = currentIndex + 1; i < this.elements.length; i++) {
         if (this.elements[i].elementType === ElementType.Note) {
-          return i;
+          if (
+            this.lyricService.getEffectiveAcceptsLyrics(
+              this.elements[i] as NoteElement,
+              null,
+            ) != AcceptsLyricsOption.No
+          ) {
+            return i;
+          }
         }
       }
     }
@@ -4044,7 +4051,13 @@ export default class Editor extends Vue {
 
       // Find the index of the previous note
       for (let i = currentIndex - 1; i >= 0; i--) {
-        if (this.elements[i].elementType === ElementType.Note) {
+        if (
+          this.elements[i].elementType === ElementType.Note &&
+          this.lyricService.getEffectiveAcceptsLyrics(
+            this.elements[i] as NoteElement,
+            null,
+          ) != AcceptsLyricsOption.No
+        ) {
           nextIndex = i;
           break;
         }

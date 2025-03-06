@@ -10,6 +10,7 @@
     "insertPelastikon": "Insert Pelastikon",
     "measureBar": "Measure Bar",
     "outline": "Outline",
+    "sectionName": "Section Name",
     "spaceAfter": "Space After",
     "tempoSign": "Tempo Sign",
     "useDefaultStyle": "Use Default Style",
@@ -73,7 +74,8 @@
     "rightAlignTempo": "Right-align tempo",
     "showAmbitus": "Show Ambitus",
     "permanentEnharmonicZo": "Permanent Enharmonic Zo",
-    "changeKey": "Change Key"
+    "changeKey": "Change Key",
+    "useOptionalDiatonicFthoras": "Show Diatonic Fthoras"
   },
   "neume": {
     "neumeSelect": "Neume Select",

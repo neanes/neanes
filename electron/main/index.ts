@@ -15,12 +15,11 @@ import { autoUpdater } from 'electron-updater';
 import { promises as fs } from 'fs';
 import i18next from 'i18next';
 import Pseudo from 'i18next-pseudo';
-import sizeOf from 'image-size';
+import { imageSizeFromFile } from 'image-size/fromFile';
 import JSZip from 'jszip';
 import mimetypes from 'mime-types';
 import path from 'path';
 import { debounce } from 'throttle-debounce';
-import { promisify } from 'util';
 
 import { PageSize } from '@/models/PageSetup';
 
@@ -32,6 +31,7 @@ import {
   ExportWorkspaceAsHtmlArgs,
   ExportWorkspaceAsImageArgs,
   ExportWorkspaceAsImageReplyArgs,
+  ExportWorkspaceAsLatexArgs,
   ExportWorkspaceAsMusicXmlArgs,
   ExportWorkspaceAsPdfArgs,
   FileMenuInsertTextboxArgs,
@@ -40,6 +40,7 @@ import {
   IpcMainChannels,
   IpcRendererChannels,
   OpenContextMenuForTabArgs,
+  OpenWorkspaceFromArgvArgs,
   PrintWorkspaceArgs,
   SaveWorkspaceArgs,
   SaveWorkspaceAsArgs,
@@ -76,8 +77,6 @@ const indexHtml = path.join(process.env.DIST, 'index.html');
 // Read more on https://www.electronjs.org/docs/latest/tutorial/security
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
 
-const sizeOfAsync = promisify(sizeOf);
-
 const isDevelopment = import.meta.env.DEV;
 
 const userDataPath = app.getPath('userData');
@@ -88,7 +87,16 @@ const storeFilePath = path.join(userDataPath, 'settings.json');
 const isMac = process.platform === 'darwin';
 
 const silentPdf = process.argv.includes('--silent-pdf');
-const silent = silentPdf;
+const silentLatex = process.argv.includes('--silent-latex');
+const silentLatexIncludeModeKeys = process.argv.includes(
+  '--latex-include-mode-keys',
+);
+const silentLatexIncludeTextBoxes = process.argv.includes(
+  '--latex-include-text-boxes',
+);
+const silent = silentPdf || silentLatex;
+
+const disableUpdates = process.argv.includes('--no-update');
 
 let win: BrowserWindow | null = null;
 let readyToExit = false;
@@ -344,7 +352,13 @@ async function openFileFromArgs(argv: string[]) {
     }
   }
 
-  return { files: result, silentPdf };
+  return {
+    files: result,
+    silentPdf,
+    silentLatex,
+    silentLatexIncludeModeKeys,
+    silentLatexIncludeTextBoxes,
+  } as OpenWorkspaceFromArgvArgs;
 }
 
 async function saveWorkspace(args: SaveWorkspaceArgs) {
@@ -488,7 +502,7 @@ async function openImage() {
       result.success = true;
 
       try {
-        const dimensions = await sizeOfAsync(filePath);
+        const dimensions = await imageSizeFromFile(filePath);
 
         result.imageHeight = dimensions?.height ?? 0;
         result.imageWidth = dimensions?.width ?? 0;
@@ -518,7 +532,7 @@ async function openImage() {
 let silentPdfSuccessCount = 0;
 let silentPdfFailCount = 0;
 
-function getPageSize(pageSize: PageSize) {
+function getPageSize(pageSize: PageSize, width: number, height: number) {
   switch (pageSize) {
     case 'Half-Legal':
       return {
@@ -529,6 +543,11 @@ function getPageSize(pageSize: PageSize) {
       return {
         width: 5.5,
         height: 8.5,
+      };
+    case 'Custom':
+      return {
+        width,
+        height,
       };
     default:
       return pageSize;
@@ -544,7 +563,11 @@ async function exportWorkspaceAsPdf(args: ExportWorkspaceAsPdfArgs) {
     if (silentPdf) {
       try {
         const data = await win.webContents.printToPDF({
-          pageSize: getPageSize(args.pageSize),
+          pageSize: getPageSize(
+            args.pageSize,
+            args.pageWidthInches,
+            args.pageHeightInches,
+          ),
           landscape: args.landscape,
         });
         let newPath = args.filePath!.replace(/\.byzx?$/, '.pdf');
@@ -592,7 +615,11 @@ async function exportWorkspaceAsPdf(args: ExportWorkspaceAsPdfArgs) {
 
       if (doWrite) {
         const data = await win.webContents.printToPDF({
-          pageSize: getPageSize(args.pageSize),
+          pageSize: getPageSize(
+            args.pageSize,
+            args.pageWidthInches,
+            args.pageHeightInches,
+          ),
           landscape: args.landscape,
         });
         await fs.writeFile(filePath, data);
@@ -728,6 +755,81 @@ async function exportWorkspaceAsMusicXml(args: ExportWorkspaceAsMusicXmlArgs) {
   }
 }
 
+let silentLatexSuccessCount = 0;
+let silentLatexFailCount = 0;
+
+async function exportWorkspaceAsLatex(args: ExportWorkspaceAsLatexArgs) {
+  try {
+    if (saving) {
+      return false;
+    }
+
+    if (silentLatex) {
+      try {
+        let newPath = args.filePathFull!.replace(/\.byzx?$/, '.byztex');
+
+        // Check to make sure we don't accidentally overwrite the original file
+        if (newPath === args.filePathFull) {
+          newPath += '.byztex';
+        }
+
+        await fs.writeFile(newPath, args.data);
+        silentLatexSuccessCount++;
+        console.log(`DONE ${args.filePathFull} => ${newPath}`);
+      } catch (error) {
+        silentLatexFailCount++;
+        console.error(`FAIL ${args.filePathFull} | ${error}`);
+      }
+
+      return;
+    }
+
+    saving = true;
+
+    const dialogResult = await dialog.showSaveDialog(win!, {
+      title: 'Export Score as Latex',
+      defaultPath: args.filePath || args.tempFileName,
+      filters: [
+        {
+          name: 'neanestex File',
+          extensions: ['byztex'],
+        },
+      ],
+    });
+
+    if (!dialogResult.canceled) {
+      let filePath = dialogResult.filePath;
+
+      // Hack for Linux: if the filepath doesn't end with the proper extension,
+      // then add it
+      // See https://github.com/electron/electron/issues/21935
+      let doWrite = true;
+
+      if (!filePath.endsWith('.byztex')) {
+        filePath += '.byztex';
+
+        doWrite = await showReplaceFileDialog(filePath);
+      }
+
+      if (doWrite) {
+        await fs.writeFile(filePath, args.data);
+      }
+    }
+  } catch (error) {
+    console.error(error);
+
+    if (error instanceof Error) {
+      dialog.showMessageBox(win!, {
+        type: 'error',
+        title: 'Export as Latex failed',
+        message: error.message,
+      });
+    }
+  } finally {
+    saving = false;
+  }
+}
+
 async function exportWorkspaceAsImage(args: ExportWorkspaceAsImageArgs) {
   const result = {
     filePath: args.filePath,
@@ -832,7 +934,11 @@ async function printWorkspace(args: PrintWorkspaceArgs) {
 
       win.webContents.print(
         {
-          pageSize: getPageSize(args.pageSize),
+          pageSize: getPageSize(
+            args.pageSize,
+            args.pageWidthInches,
+            args.pageHeightInches,
+          ),
           landscape: args.landscape,
         },
         (success, failureReason) => {
@@ -1079,23 +1185,34 @@ function createMenu() {
           },
         },
         {
-          label: i18next.t('menu:file.exportAsHtml'),
-          accelerator: 'CmdOrCtrl+Shift+E',
-          click() {
-            win?.webContents.send(IpcMainChannels.FileMenuExportAsHtml);
-          },
-        },
-        {
-          label: i18next.t('menu:file.exportAsMusicXml'),
-          click() {
-            win?.webContents.send(IpcMainChannels.FileMenuExportAsMusicXml);
-          },
-        },
-        {
-          label: i18next.t('menu:file.exportAsImage'),
-          click() {
-            win?.webContents.send(IpcMainChannels.FileMenuExportAsImage);
-          },
+          label: i18next.t('menu:file.exportAs'),
+          submenu: [
+            {
+              label: i18next.t('menu:file.exportAsHtml'),
+              accelerator: 'CmdOrCtrl+Shift+E',
+              click() {
+                win?.webContents.send(IpcMainChannels.FileMenuExportAsHtml);
+              },
+            },
+            {
+              label: i18next.t('menu:file.exportAsMusicXml'),
+              click() {
+                win?.webContents.send(IpcMainChannels.FileMenuExportAsMusicXml);
+              },
+            },
+            {
+              label: i18next.t('menu:file.exportAsLatex'),
+              click() {
+                win?.webContents.send(IpcMainChannels.FileMenuExportAsLatex);
+              },
+            },
+            {
+              label: i18next.t('menu:file.exportAsImage'),
+              click() {
+                win?.webContents.send(IpcMainChannels.FileMenuExportAsImage);
+              },
+            },
+          ],
         },
         {
           label: i18next.t('menu:file.print'),
@@ -1486,7 +1603,7 @@ async function createWindow() {
     }
   } else {
     // Load the index.html when not in development
-    if (!silent) {
+    if (!silent && !disableUpdates) {
       autoUpdater.checkForUpdatesAndNotify();
     }
 
@@ -1576,6 +1693,14 @@ ipcMain.handle(IpcRendererChannels.ExitApplication, async () => {
     }
   }
 
+  if (silentLatex) {
+    console.log(`Successfully wrote ${silentLatexSuccessCount} files`);
+
+    if (silentLatexFailCount > 0) {
+      console.log(`Failed to write ${silentLatexFailCount} files`);
+    }
+  }
+
   // In macOS, there is a distinction between "close" and "quit".
   if (quitting) {
     app.exit();
@@ -1637,6 +1762,13 @@ ipcMain.handle(
   IpcRendererChannels.ExportWorkspaceAsMusicXml,
   async (event, args: ExportWorkspaceAsMusicXmlArgs) => {
     return await exportWorkspaceAsMusicXml(args);
+  },
+);
+
+ipcMain.handle(
+  IpcRendererChannels.ExportWorkspaceAsLatex,
+  async (event, args: ExportWorkspaceAsLatexArgs) => {
+    return await exportWorkspaceAsLatex(args);
   },
 );
 

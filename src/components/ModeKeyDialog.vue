@@ -58,11 +58,11 @@
         <div class="right-pane">
           <ul class="mode-list">
             <li
-              @click="selectedModeKey = template"
+              @click="selectedTemplateId = template.templateId"
               @dblclick="updateModeKey"
               v-for="(template, index) in modeKeyTemplatesForSelectedMode"
               :class="{
-                selected: selectedModeKey?.templateId === template.templateId,
+                selected: selectedTemplateId === template.templateId,
               }"
               :key="index"
             >
@@ -74,10 +74,26 @@
           </ul>
         </div>
       </div>
+      <div class="options-container">
+        <input
+          id="mode-key-dialog:use-optional-diatonic-fthoras"
+          type="checkbox"
+          :checked="pageSetup.useOptionalDiatonicFthoras"
+          @change="
+            $emit(
+              'update:useOptionalDiatonicFthoras',
+              ($event.target as HTMLInputElement).checked,
+            )
+          "
+        />
+        <label for="mode-key-dialog:use-optional-diatonic-fthoras">{{
+          $t('toolbar:modeKey.useOptionalDiatonicFthoras')
+        }}</label>
+      </div>
       <div class="button-container">
         <button
           class="ok-btn"
-          :disabled="selectedModeKey == null"
+          :disabled="selectedTemplateId == null"
           @click="updateModeKey"
         >
           {{ $t('dialog:common.update') }}
@@ -102,13 +118,13 @@ import { TextMeasurementService } from '@/services/TextMeasurementService';
 
 @Component({
   components: { ModalDialog, ModeKey },
-  emits: ['close', 'update'],
+  emits: ['close', 'update', 'update:useOptionalDiatonicFthoras'],
 })
 export default class ModeKeyDialog extends Vue {
   @Prop() element!: ModeKeyElement;
   @Prop() pageSetup!: PageSetup;
   selectedMode: number | null = null;
-  selectedModeKey: ModeKeyElement | null = null;
+  selectedTemplateId: number | null = null;
 
   created() {
     this.selectMode(this.element.mode);
@@ -123,7 +139,13 @@ export default class ModeKeyDialog extends Vue {
   get modeKeyTemplatesForSelectedMode() {
     const elements = modeKeyTemplates
       .filter((x) => x.mode === this.selectedMode)
-      .map((x) => ModeKeyElement.createFromTemplate(x, TextBoxAlignment.Left));
+      .map((x) =>
+        ModeKeyElement.createFromTemplate(
+          x,
+          this.pageSetup.useOptionalDiatonicFthoras,
+          TextBoxAlignment.Left,
+        ),
+      );
 
     const height = TextMeasurementService.getFontHeight(
       `${elements[0].fontSize}px ${this.pageSetup.neumeDefaultFontFamily}`,
@@ -145,14 +167,18 @@ export default class ModeKeyDialog extends Vue {
 
   selectMode(mode: number) {
     this.selectedMode = mode;
-    this.selectedModeKey =
+    this.selectedTemplateId =
       this.modeKeyTemplatesForSelectedMode.find(
         (x) => x.templateId === this.element.templateId,
-      ) || this.modeKeyTemplatesForSelectedMode[0];
+      )?.templateId || this.modeKeyTemplatesForSelectedMode[0].templateId;
   }
 
   updateModeKey() {
-    this.$emit('update', this.selectedModeKey);
+    const modeKey = this.modeKeyTemplatesForSelectedMode.find(
+      (x) => x.templateId === this.selectedTemplateId,
+    );
+
+    this.$emit('update', modeKey);
     this.$emit('close');
   }
 }
@@ -212,6 +238,18 @@ ul li {
 
 li.selected {
   background-color: lightblue;
+}
+
+.form-group.row {
+  display: flex;
+  align-items: center;
+}
+
+.options-container {
+  border-top: 1px solid lightgray;
+  border-bottom: 1px solid lightgray;
+  padding: 0.5rem 0;
+  margin-bottom: 1rem;
 }
 
 .ok-btn {

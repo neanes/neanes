@@ -19,7 +19,6 @@
     <template v-if="!element.useDefaultStyle">
       <label class="right-space">{{ $t('toolbar:modeKey.size') }}</label>
       <InputFontSize
-        class="drop-caps-input"
         :modelValue="element.fontSize"
         @update:modelValue="$emit('update:fontSize', $event)"
       />
@@ -216,6 +215,19 @@
     <button @click="$emit('open-mode-key-dialog')">
       {{ $t('toolbar:modeKey.changeKey') }}
     </button>
+
+    <span class="space" />
+
+    <div class="form-group">
+      <label class="right-space">{{ $t('toolbar:common.sectionName') }}</label>
+      <input
+        type="text"
+        :value="element.sectionName"
+        @change="
+          $emit('update:sectionName', ($event.target as HTMLInputElement).value)
+        "
+      />
+    </div>
   </div>
 </template>
 
@@ -254,6 +266,7 @@ import ButtonWithMenu, { ButtonWithMenuOption } from './ButtonWithMenu.vue';
     'update:marginBottom',
     'update:marginTop',
     'update:permanentEnharmonicZo',
+    'update:sectionName',
     'update:showAmbitus',
     'update:strokeWidth',
     'update:tempo',

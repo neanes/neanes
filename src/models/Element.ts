@@ -62,6 +62,7 @@ export abstract class ScoreElement {
   public lineBreak: boolean = false;
   public lineBreakType: LineBreakType | null = null;
   public pageBreak: boolean = false;
+  public sectionName: string | null = null;
 
   // Give each element a unique ID for rendering in the UI
   public id: number = id++;
@@ -107,7 +108,7 @@ export class NoteElement extends ScoreElement {
   public koronis: boolean = false;
   public stavros: boolean = false;
   public lyrics: string = '';
-  public lyricsColor: string = 'black';
+  public lyricsColor: string = '#000000';
   public lyricsFontFamily: string = 'Source Serif';
   public lyricsFontSize: number = Unit.fromPt(12);
   public lyricsStrokeWidth: number = 0;
@@ -912,6 +913,7 @@ export class ModeKeyElement extends ScoreElement {
 
   public static createFromTemplate(
     template: ModeKeyTemplate,
+    useOptionalDiatonicFthoras?: boolean,
     alignment?: TextBoxAlignment,
   ) {
     const element = new ModeKeyElement();
@@ -935,6 +937,13 @@ export class ModeKeyElement extends ScoreElement {
       template.quantitativeNeumeAboveNote2 || null;
     element.quantitativeNeumeRight = template.quantitativeNeumeRight || null;
     element.alignment = alignment || TextBoxAlignment.Center;
+
+    if (
+      useOptionalDiatonicFthoras &&
+      template.optionalFthoras?.fthoraAboveNote != null
+    ) {
+      element.fthoraAboveNote = template.optionalFthoras.fthoraAboveNote;
+    }
 
     element.ignoreAttractions = false;
     element.permanentEnharmonicZo = false;
@@ -1004,6 +1013,7 @@ export class DropCapElement extends ScoreElement {
   public computedStrokeWidth: number = 0;
   public computedLineHeight: number | null = null;
   public computedLineSpan: number = 1;
+  public contentWidth: number = 0;
 
   // Re-render helpers
   public computedFontFamilyPrevious: string = '';

@@ -144,6 +144,7 @@ export class SaveService {
       }
 
       element.pageBreak = e.pageBreak || undefined;
+      element.sectionName = e.sectionName || undefined;
 
       score.staff.elements.push(element);
     }
@@ -204,6 +205,8 @@ export class SaveService {
 
     pageSetup.pageHeight = p.pageHeight;
     pageSetup.pageWidth = p.pageWidth;
+    pageSetup.pageHeightCustom = p.pageHeightCustom;
+    pageSetup.pageWidthCustom = p.pageWidthCustom;
     pageSetup.rightMargin = p.rightMargin;
     pageSetup.topMargin = p.topMargin;
 
@@ -251,6 +254,8 @@ export class SaveService {
     pageSetup.chrysanthineAccidentals = p.chrysanthineAccidentals;
     pageSetup.noFthoraRestrictions = p.noFthoraRestrictions || undefined;
     pageSetup.disableGreekMelismata = p.disableGreekMelismata || undefined;
+    pageSetup.useOptionalDiatonicFthoras =
+      p.useOptionalDiatonicFthoras || undefined;
   }
 
   public static SaveLyricSetup(lyricSetup: LyricSetup_v1, l: LyricSetup) {
@@ -723,6 +728,7 @@ export class SaveService {
       element.lineBreak = e.lineBreak === true;
       element.lineBreakType = e.lineBreakType ?? LineBreakType.Left;
       element.pageBreak = e.pageBreak === true;
+      element.sectionName = e.sectionName ?? null;
 
       score.staff.elements.push(element);
     }
@@ -733,6 +739,10 @@ export class SaveService {
   public static LoadPageSetup_v1(pageSetup: PageSetup, p: PageSetup_v1) {
     pageSetup.pageHeight = p.pageHeight;
     pageSetup.pageWidth = p.pageWidth;
+
+    pageSetup.pageHeightCustom =
+      p.pageHeightCustom ?? pageSetup.pageHeightCustom;
+    pageSetup.pageWidthCustom = p.pageWidth ?? pageSetup.pageWidthCustom;
 
     pageSetup.topMargin = p.topMargin;
     pageSetup.bottomMargin = p.bottomMargin;
@@ -882,17 +892,21 @@ export class SaveService {
       p.chrysanthineAccidentals === undefined;
     pageSetup.noFthoraRestrictions = p.noFthoraRestrictions === true;
     pageSetup.disableGreekMelismata = p.disableGreekMelismata === true;
+    pageSetup.useOptionalDiatonicFthoras =
+      p.useOptionalDiatonicFthoras === true;
 
     // Fix pageWidth and pageHeight
     // Due to bug #71, A-series paper sizes had incorrect width and height
-    const pageSize = pageSizes.find((x) => x.name === pageSetup.pageSize);
-    if (pageSize) {
-      if (pageSetup.landscape) {
-        pageSetup.pageWidth = pageSize.height;
-        pageSetup.pageHeight = pageSize.width;
-      } else {
-        pageSetup.pageWidth = pageSize.width;
-        pageSetup.pageHeight = pageSize.height;
+    if (pageSetup.pageSize !== 'Custom') {
+      const pageSize = pageSizes.find((x) => x.name === pageSetup.pageSize);
+      if (pageSize) {
+        if (pageSetup.landscape) {
+          pageSetup.pageWidth = pageSize.height;
+          pageSetup.pageHeight = pageSize.width;
+        } else {
+          pageSetup.pageWidth = pageSize.width;
+          pageSetup.pageHeight = pageSize.height;
+        }
       }
     }
   }

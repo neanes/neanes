@@ -66,6 +66,8 @@
     "portrait": "Portrait",
     "landscape": "Landscape",
     "paperSize": "Paper Size",
+    "width": "Width",
+    "height": "Height",
     "unit": "Unit",
     "spacing": "Spacing",
     "neumes": "Neumes",

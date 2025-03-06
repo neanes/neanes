@@ -205,6 +205,8 @@ export class SaveService {
 
     pageSetup.pageHeight = p.pageHeight;
     pageSetup.pageWidth = p.pageWidth;
+    pageSetup.pageHeightCustom = p.pageHeightCustom;
+    pageSetup.pageWidthCustom = p.pageWidthCustom;
     pageSetup.rightMargin = p.rightMargin;
     pageSetup.topMargin = p.topMargin;
 
@@ -736,6 +738,10 @@ export class SaveService {
     pageSetup.pageHeight = p.pageHeight;
     pageSetup.pageWidth = p.pageWidth;
 
+    pageSetup.pageHeightCustom =
+      p.pageHeightCustom ?? pageSetup.pageHeightCustom;
+    pageSetup.pageWidthCustom = p.pageWidth ?? pageSetup.pageWidthCustom;
+
     pageSetup.topMargin = p.topMargin;
     pageSetup.bottomMargin = p.bottomMargin;
     pageSetup.leftMargin = p.leftMargin;
@@ -887,14 +893,16 @@ export class SaveService {
 
     // Fix pageWidth and pageHeight
     // Due to bug #71, A-series paper sizes had incorrect width and height
-    const pageSize = pageSizes.find((x) => x.name === pageSetup.pageSize);
-    if (pageSize) {
-      if (pageSetup.landscape) {
-        pageSetup.pageWidth = pageSize.height;
-        pageSetup.pageHeight = pageSize.width;
-      } else {
-        pageSetup.pageWidth = pageSize.width;
-        pageSetup.pageHeight = pageSize.height;
+    if (pageSetup.pageSize !== 'Custom') {
+      const pageSize = pageSizes.find((x) => x.name === pageSetup.pageSize);
+      if (pageSize) {
+        if (pageSetup.landscape) {
+          pageSetup.pageWidth = pageSize.height;
+          pageSetup.pageHeight = pageSize.width;
+        } else {
+          pageSetup.pageWidth = pageSize.width;
+          pageSetup.pageHeight = pageSize.height;
+        }
       }
     }
   }

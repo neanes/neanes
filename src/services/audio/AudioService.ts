@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-
 import * as Tone from 'tone';
 import { ToneEvent } from 'tone';
 
@@ -95,7 +93,7 @@ export class AudioService {
           }
 
           if (event.duration != null && event.frequency != null) {
-            synth.triggerAttackRelease(event.frequency!, event.duration, time);
+            synth.triggerAttackRelease(event.frequency, event.duration, time);
           } else {
             console.warn(
               'AudioService: note missing duration or frequency',
@@ -107,7 +105,7 @@ export class AudioService {
 
           if (isonUnison) {
             if (event.frequency != null) {
-              isonSynth.triggerAttack(event.frequency!, time);
+              isonSynth.triggerAttack(event.frequency, time);
             }
 
             currentIsonFrequency = 0;
@@ -118,7 +116,7 @@ export class AudioService {
             currentIsonFrequency = event.isonFrequency;
 
             if (event.isonFrequency != null) {
-              isonSynth.triggerAttack(event.isonFrequency!, time);
+              isonSynth.triggerAttack(event.isonFrequency, time);
             } else {
               console.warn('AudioService: missing ison frequency', event);
             }

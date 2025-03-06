@@ -470,12 +470,9 @@
         <span class="space" />
         <label class="right-space">{{ $t('toolbar:common.fthoraNote') }}</label>
         <select
-          :value="element.chromaticFthoraNote"
+          :value="chromaticFthoraNote"
           @change="
-            $emit(
-              'update:chromaticFthoraNote',
-              ($event.target as HTMLInputElement).value,
-            )
+            updateChromaticFthoraNote(($event.target as HTMLInputElement).value)
           "
         >
           <option v-for="note in notes" :key="note.value" :value="note.value">
@@ -483,6 +480,23 @@
           </option>
         </select>
       </template>
+
+      <span class="space"></span>
+      <div class="form-group">
+        <label class="right-space">{{
+          $t('toolbar:common.sectionName')
+        }}</label>
+        <input
+          type="text"
+          :value="element.sectionName"
+          @change="
+            $emit(
+              'update:sectionName',
+              ($event.target as HTMLInputElement).value,
+            )
+          "
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -540,10 +554,13 @@ import { Unit } from '@/utils/Unit';
     'update:measureNumber',
     'update:noteIndicator',
     'update:secondaryAccidental',
+    'update:secondaryChromaticFthoraNote',
     'update:secondaryFthora',
     'update:secondaryGorgon',
+    'update:sectionName',
     'update:spaceAfter',
     'update:tertiaryAccidental',
+    'update:tertiaryChromaticFthoraNote',
     'update:tertiaryFthora',
     'update:tie',
     'update:time',
@@ -578,6 +595,16 @@ export default class ToolbarNeume extends Vue {
     Fthora.HardChromaticPa_Bottom,
     Fthora.HardChromaticThi_Top,
     Fthora.HardChromaticThi_Bottom,
+
+    Fthora.SoftChromaticPa_TopSecondary,
+    Fthora.SoftChromaticThi_TopSecondary,
+    Fthora.HardChromaticPa_TopSecondary,
+    Fthora.HardChromaticThi_TopSecondary,
+
+    Fthora.SoftChromaticPa_TopTertiary,
+    Fthora.SoftChromaticThi_TopTertiary,
+    Fthora.HardChromaticPa_TopTertiary,
+    Fthora.HardChromaticThi_TopTertiary,
   ];
 
   apliMenuOptions: ButtonWithMenuOption[] = [
@@ -880,16 +907,21 @@ export default class ToolbarNeume extends Vue {
   get notes() {
     if (
       this.element.fthora === Fthora.SoftChromaticThi_Top ||
-      this.element.fthora === Fthora.SoftChromaticThi_Bottom
+      this.element.fthora === Fthora.SoftChromaticThi_Bottom ||
+      this.element.secondaryFthora === Fthora.SoftChromaticThi_TopSecondary ||
+      this.element.tertiaryFthora === Fthora.SoftChromaticThi_TopTertiary
     ) {
       return [
         { label: 'model:note.zoHigh', value: ScaleNote.ZoHigh },
         { label: 'model:note.di', value: ScaleNote.Thi },
         { label: 'model:note.vou', value: ScaleNote.Vou },
+        { label: 'model:note.ni', value: ScaleNote.Ni },
       ];
     } else if (
       this.element.fthora === Fthora.SoftChromaticPa_Top ||
-      this.element.fthora === Fthora.SoftChromaticPa_Bottom
+      this.element.fthora === Fthora.SoftChromaticPa_Bottom ||
+      this.element.secondaryFthora === Fthora.SoftChromaticPa_TopSecondary ||
+      this.element.tertiaryFthora === Fthora.SoftChromaticPa_TopTertiary
     ) {
       return [
         { label: `model:note.niHigh`, value: ScaleNote.NiHigh },
@@ -899,7 +931,9 @@ export default class ToolbarNeume extends Vue {
       ];
     } else if (
       this.element.fthora === Fthora.HardChromaticThi_Top ||
-      this.element.fthora === Fthora.HardChromaticThi_Bottom
+      this.element.fthora === Fthora.HardChromaticThi_Bottom ||
+      this.element.secondaryFthora === Fthora.HardChromaticThi_TopSecondary ||
+      this.element.tertiaryFthora === Fthora.HardChromaticThi_TopTertiary
     ) {
       return [
         { label: 'model:note.zoHigh', value: ScaleNote.ZoHigh },
@@ -908,7 +942,9 @@ export default class ToolbarNeume extends Vue {
       ];
     } else if (
       this.element.fthora === Fthora.HardChromaticPa_Top ||
-      this.element.fthora === Fthora.HardChromaticPa_Bottom
+      this.element.fthora === Fthora.HardChromaticPa_Bottom ||
+      this.element.secondaryFthora === Fthora.HardChromaticPa_TopSecondary ||
+      this.element.tertiaryFthora === Fthora.HardChromaticPa_TopTertiary
     ) {
       return [
         { label: `model:note.niHigh`, value: ScaleNote.NiHigh },
@@ -923,8 +959,15 @@ export default class ToolbarNeume extends Vue {
 
   get showChromaticFthoraNote() {
     return (
-      this.element.fthora != null &&
-      this.chromaticFthoras.includes(this.element.fthora)
+      (this.innerNeume === 'Primary' &&
+        this.element.fthora != null &&
+        this.chromaticFthoras.includes(this.element.fthora)) ||
+      (this.innerNeume === 'Secondary' &&
+        this.element.secondaryFthora != null &&
+        this.chromaticFthoras.includes(this.element.secondaryFthora)) ||
+      (this.innerNeume === 'Tertiary' &&
+        this.element.tertiaryFthora != null &&
+        this.chromaticFthoras.includes(this.element.tertiaryFthora))
     );
   }
 
@@ -978,8 +1021,8 @@ export default class ToolbarNeume extends Vue {
   get spathiDisabled() {
     return (
       !this.pageSetup.noFthoraRestrictions &&
-      !this.element.scaleNotes.includes(ScaleNote.Ke) &&
-      !this.element.scaleNotes.includes(ScaleNote.Ga)
+      !this.element.scaleNotesVirtual.includes(ScaleNote.Ke) &&
+      !this.element.scaleNotesVirtual.includes(ScaleNote.Ga)
     );
   }
 
@@ -992,7 +1035,7 @@ export default class ToolbarNeume extends Vue {
   get klitonDisabled() {
     return (
       !this.pageSetup.noFthoraRestrictions &&
-      !this.element.scaleNotes.includes(ScaleNote.Thi)
+      !this.element.scaleNotesVirtual.includes(ScaleNote.Thi)
     );
   }
 
@@ -1005,7 +1048,7 @@ export default class ToolbarNeume extends Vue {
   get zygosDisabled() {
     return (
       !this.pageSetup.noFthoraRestrictions &&
-      !this.element.scaleNotes.includes(ScaleNote.Thi)
+      !this.element.scaleNotesVirtual.includes(ScaleNote.Thi)
     );
   }
 
@@ -1018,11 +1061,11 @@ export default class ToolbarNeume extends Vue {
   get enharmonicDisabled() {
     return (
       !this.pageSetup.noFthoraRestrictions &&
-      !this.element.scaleNotes.includes(ScaleNote.Zo) &&
-      !this.element.scaleNotes.includes(ScaleNote.ZoHigh) &&
-      !this.element.scaleNotes.includes(ScaleNote.Vou) &&
-      !this.element.scaleNotes.includes(ScaleNote.VouHigh) &&
-      !this.element.scaleNotes.includes(ScaleNote.Ga)
+      !this.element.scaleNotesVirtual.includes(ScaleNote.Zo) &&
+      !this.element.scaleNotesVirtual.includes(ScaleNote.ZoHigh) &&
+      !this.element.scaleNotesVirtual.includes(ScaleNote.Vou) &&
+      !this.element.scaleNotesVirtual.includes(ScaleNote.VouHigh) &&
+      !this.element.scaleNotesVirtual.includes(ScaleNote.Ga)
     );
   }
 
@@ -1035,7 +1078,7 @@ export default class ToolbarNeume extends Vue {
   get generalFlatDisabled() {
     return (
       !this.pageSetup.noFthoraRestrictions &&
-      !this.element.scaleNotes.includes(ScaleNote.Ke)
+      !this.element.scaleNotesVirtual.includes(ScaleNote.Ke)
     );
   }
 
@@ -1048,7 +1091,7 @@ export default class ToolbarNeume extends Vue {
   get generalSharpDisabled() {
     return (
       !this.pageSetup.noFthoraRestrictions &&
-      !this.element.scaleNotes.includes(ScaleNote.Ga)
+      !this.element.scaleNotesVirtual.includes(ScaleNote.Ga)
     );
   }
 
@@ -1056,6 +1099,16 @@ export default class ToolbarNeume extends Vue {
     return this.generalSharpDisabled
       ? this.$t('toolbar:common.generalSharpDisabled')
       : this.tooltip(Fthora.GeneralSharp_Top);
+  }
+
+  get chromaticFthoraNote() {
+    if (this.innerNeume === 'Secondary') {
+      return this.element.secondaryChromaticFthoraNote;
+    } else if (this.innerNeume === 'Tertiary') {
+      return this.element.tertiaryChromaticFthoraNote;
+    } else {
+      return this.element.chromaticFthoraNote;
+    }
   }
 
   get noteDisplay() {
@@ -1131,8 +1184,21 @@ export default class ToolbarNeume extends Vue {
     }
   }
 
-  updateGorgon(args: string | string[]) {
+  updateChromaticFthoraNote(note: string) {
     if (this.innerNeume === 'Secondary') {
+      this.$emit('update:secondaryChromaticFthoraNote', note);
+    } else if (this.innerNeume === 'Tertiary') {
+      this.$emit('update:tertiaryChromaticFthoraNote', note);
+    } else {
+      this.$emit('update:chromaticFthoraNote', note);
+    }
+  }
+
+  updateGorgon(args: string | string[]) {
+    if (
+      this.innerNeume === 'Secondary' &&
+      this.element.quantitativeNeume !== QuantitativeNeume.Hyporoe
+    ) {
       if (Array.isArray(args)) {
         this.$emit('update:secondaryGorgon', GorgonNeume.GorgonSecondary);
       } else {

@@ -663,6 +663,7 @@ import { ElementType, NoteElement, ScoreElementOffset } from '@/models/Element';
 import { VocalExpressionNeume } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
 import { TimeNeume } from '@/models/save/v1/Neumes';
+import { TextMeasurementService } from '@/services/TextMeasurementService';
 
 @Component({
   components: {
@@ -799,8 +800,12 @@ export default class SyllablePositioningDialog extends Vue {
   }
 
   get topPaneStyle() {
+    const neumeHeight = TextMeasurementService.getFontHeight(
+      `${this.pageSetup.neumeDefaultFontSize}px ${this.pageSetup.neumeDefaultFontFamily}`,
+    );
+
     return {
-      height: this.pageSetup.lineHeight * this.zoom + 'px',
+      height: neumeHeight * this.zoom + 'px',
     } as StyleValue;
   }
 

@@ -17,7 +17,6 @@ import {
 } from '@/models/Neumes';
 import { getNeumeValue, getNoteSpread } from '@/models/NeumeValues';
 import {
-  getIsonFromValue,
   getIsonValue,
   getNoteValue,
   getScaleNoteFromValue,
@@ -86,13 +85,16 @@ export class FthoraNode implements PitchNode {
   public physicalNote: ScaleNote = ScaleNote.Pa;
   public virtualNote: ScaleNote = ScaleNote.Pa;
   public scale: Scale = Scale.Diatonic;
+  public fthora: Fthora = Fthora.DiatonicPa_Top;
+  public chromaticFthoraNote: ScaleNote | null = null;
 }
 
 export class IsonNode implements AnalysisNode {
   public readonly nodeType: NodeType = NodeType.IsonNode;
   public elementIndex: number = 0;
-  public physicalNote: Ison = Ison.Pa;
-  public virtualNote: Ison = Ison.Pa;
+  public physicalNote: ScaleNote = ScaleNote.Pa;
+  public virtualNote: ScaleNote = ScaleNote.Pa;
+  public unison: boolean = false;
 }
 
 export class TempoNode implements AnalysisNode {
@@ -277,21 +279,14 @@ export class AnalysisService {
       this.handleFthora(
         noteAtomNodes[0].physicalNote,
         noteElement.secondaryFthora,
-        noteElement.chromaticFthoraNote,
+        noteElement.secondaryChromaticFthoraNote,
         noteElement.index,
         workspace,
       );
     }
     // Ison applies to the first note of the spread
-    if (noteElement.ison) {
-      const isonNode: IsonNode = new IsonNode();
-      isonNode.elementIndex = noteElement.index;
-      isonNode.physicalNote = noteElement.ison;
-      isonNode.virtualNote = getIsonFromValue(
-        getIsonValue(isonNode.physicalNote) + workspace.currentShift,
-      );
-      workspace.nodes.push(isonNode);
-    }
+    this.handleIson(noteElement, workspace);
+
     // Secondary gorgon applies to the first note of the spread
     if (noteElement.secondaryGorgonNeume) {
       const gorgonIndex: GorgonIndex = {
@@ -389,15 +384,8 @@ export class AnalysisService {
       );
     }
     // Ison applies to the oligon
-    if (noteElement.ison) {
-      const isonNode: IsonNode = new IsonNode();
-      isonNode.elementIndex = noteElement.index;
-      isonNode.physicalNote = noteElement.ison;
-      isonNode.virtualNote = getIsonFromValue(
-        getIsonValue(isonNode.physicalNote) + workspace.currentShift,
-      );
-      workspace.nodes.push(isonNode);
-    }
+    this.handleIson(noteElement, workspace);
+
     this.finalizeNoteAtomNode(noteAtomNodes[1], workspace);
   }
 
@@ -471,15 +459,8 @@ export class AnalysisService {
       );
     }
     // Ison applies to the second note of the spread
-    if (noteElement.ison) {
-      const isonNode: IsonNode = new IsonNode();
-      isonNode.elementIndex = noteElement.index;
-      isonNode.physicalNote = noteElement.ison;
-      isonNode.virtualNote = getIsonFromValue(
-        getIsonValue(isonNode.physicalNote) + workspace.currentShift,
-      );
-      workspace.nodes.push(isonNode);
-    }
+    this.handleIson(noteElement, workspace);
+
     this.finalizeNoteAtomNode(noteAtomNodes[1], workspace);
   }
 
@@ -509,15 +490,8 @@ export class AnalysisService {
       );
     }
     // Ison applies to the first note of the spread
-    if (noteElement.ison) {
-      const isonNode: IsonNode = new IsonNode();
-      isonNode.elementIndex = noteElement.index;
-      isonNode.physicalNote = noteElement.ison;
-      isonNode.virtualNote = getIsonFromValue(
-        getIsonValue(isonNode.physicalNote) + workspace.currentShift,
-      );
-      workspace.nodes.push(isonNode);
-    }
+    this.handleIson(noteElement, workspace);
+
     // Secondary gorgon applies to the first note of the spread
     if (noteElement.secondaryGorgonNeume) {
       const gorgonIndex: GorgonIndex = {
@@ -565,7 +539,7 @@ export class AnalysisService {
       this.handleFthora(
         noteAtomNodes[0].physicalNote,
         noteElement.secondaryFthora,
-        noteElement.chromaticFthoraNote,
+        noteElement.secondaryChromaticFthoraNote,
         noteElement.index,
         workspace,
       );
@@ -595,15 +569,8 @@ export class AnalysisService {
       );
     }
     // Ison applies to the second note of the spread
-    if (noteElement.ison) {
-      const isonNode: IsonNode = new IsonNode();
-      isonNode.elementIndex = noteElement.index;
-      isonNode.physicalNote = noteElement.ison;
-      isonNode.virtualNote = getIsonFromValue(
-        getIsonValue(isonNode.physicalNote) + workspace.currentShift,
-      );
-      workspace.nodes.push(isonNode);
-    }
+    this.handleIson(noteElement, workspace);
+
     this.finalizeNoteAtomNode(noteAtomNodes[1], workspace);
   }
 
@@ -627,7 +594,7 @@ export class AnalysisService {
       this.handleFthora(
         noteAtomNodes[0].physicalNote,
         noteElement.tertiaryFthora,
-        noteElement.chromaticFthoraNote,
+        noteElement.tertiaryChromaticFthoraNote,
         noteElement.index,
         workspace,
       );
@@ -651,21 +618,14 @@ export class AnalysisService {
       this.handleFthora(
         noteAtomNodes[1].physicalNote,
         noteElement.secondaryFthora,
-        noteElement.chromaticFthoraNote,
+        noteElement.secondaryChromaticFthoraNote,
         noteElement.index,
         workspace,
       );
     }
     // Ison applies to the second note of the spread
-    if (noteElement.ison) {
-      const isonNode: IsonNode = new IsonNode();
-      isonNode.elementIndex = noteElement.index;
-      isonNode.physicalNote = noteElement.ison;
-      isonNode.virtualNote = getIsonFromValue(
-        getIsonValue(isonNode.physicalNote) + workspace.currentShift,
-      );
-      workspace.nodes.push(isonNode);
-    }
+    this.handleIson(noteElement, workspace);
+
     this.finalizeNoteAtomNode(noteAtomNodes[1], workspace);
 
     // Accidental applies to the third note of the spread
@@ -715,7 +675,7 @@ export class AnalysisService {
       this.handleFthora(
         noteAtomNodes[0].physicalNote,
         noteElement.secondaryFthora,
-        noteElement.chromaticFthoraNote,
+        noteElement.secondaryChromaticFthoraNote,
         noteElement.index,
         workspace,
       );
@@ -732,15 +692,7 @@ export class AnalysisService {
 
     this.finalizeNoteAtomNode(noteAtomNodes[1], workspace);
     // Ison applies to the second note of the spread
-    if (noteElement.ison) {
-      const isonNode: IsonNode = new IsonNode();
-      isonNode.elementIndex = noteElement.index;
-      isonNode.physicalNote = noteElement.ison;
-      isonNode.virtualNote = getIsonFromValue(
-        getIsonValue(isonNode.physicalNote) + workspace.currentShift,
-      );
-      workspace.nodes.push(isonNode);
-    }
+    this.handleIson(noteElement, workspace);
 
     // Accidental applies to the third note of the spread
     if (noteElement.accidental) {
@@ -792,15 +744,8 @@ export class AnalysisService {
         workspace,
       );
     }
-    if (noteElement.ison) {
-      const isonNode: IsonNode = new IsonNode();
-      isonNode.elementIndex = noteElement.index;
-      isonNode.physicalNote = noteElement.ison;
-      isonNode.virtualNote = getIsonFromValue(
-        getIsonValue(isonNode.physicalNote) + workspace.currentShift,
-      );
-      workspace.nodes.push(isonNode);
-    }
+    this.handleIson(noteElement, workspace);
+
     if (noteElement.gorgonNeume) {
       const gorgonIndex: GorgonIndex = {
         neume: noteElement.gorgonNeume,
@@ -809,6 +754,26 @@ export class AnalysisService {
       workspace.gorgonIndexes.push(gorgonIndex);
     }
     this.finalizeNoteAtomNode(noteAtomNodes[0], workspace);
+  }
+
+  private static handleIson(
+    noteElement: Readonly<NoteElement>,
+    workspace: AnalysisWorkspace,
+  ) {
+    if (noteElement.ison) {
+      const isonNode: IsonNode = new IsonNode();
+      isonNode.elementIndex = noteElement.index;
+      isonNode.unison = noteElement.ison === Ison.Unison;
+      if (!isonNode.unison) {
+        isonNode.physicalNote = getScaleNoteFromValue(
+          getIsonValue(noteElement.ison),
+        );
+        isonNode.virtualNote = getScaleNoteFromValue(
+          getScaleNoteValue(isonNode.physicalNote) + workspace.currentShift,
+        );
+      }
+      workspace.nodes.push(isonNode);
+    }
   }
 
   private static finalizeNoteAtomNode(
@@ -930,6 +895,7 @@ export class AnalysisService {
 
     workspace.currentShift = LayoutService.getShift(
       getScaleNoteValue(physicalNote),
+      getScaleNoteValue(physicalNote) + workspace.currentShift,
       workspace.currentScale,
       fthora,
       chromaticFthoraNote,
@@ -942,6 +908,8 @@ export class AnalysisService {
       getScaleNoteValue(physicalNote) + workspace.currentShift,
     );
     fthoraNode.scale = workspace.currentScale;
+    fthoraNode.fthora = fthora;
+    fthoraNode.chromaticFthoraNote = chromaticFthoraNote;
     workspace.nodes.push(fthoraNode);
   }
 

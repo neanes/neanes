@@ -1,7 +1,16 @@
 import { Unit } from '../utils/Unit';
 
-export type PageSize = 'A3' | 'A4' | 'A5' | 'Legal' | 'Letter' | 'Tabloid';
-export type PageSizeUnit = 'mm' | 'in';
+export type PageSize =
+  | 'A3'
+  | 'A4'
+  | 'A5'
+  | 'Legal'
+  | 'Letter'
+  | 'Tabloid'
+  | 'Half-Letter'
+  | 'Half-Legal'
+  | 'Custom';
+export type PageSizeUnit = 'pc' | 'pt' | 'cm' | 'mm' | 'in';
 
 export interface PageSizeOption {
   name: PageSize;
@@ -26,6 +35,16 @@ export const pageSizes: PageSizeOption[] = [
     height: Unit.fromInch(14),
   },
   {
+    name: 'Half-Letter',
+    width: Unit.fromInch(5.5),
+    height: Unit.fromInch(8.5),
+  },
+  {
+    name: 'Half-Legal',
+    width: Unit.fromInch(7),
+    height: Unit.fromInch(8.5),
+  },
+  {
     name: 'A3',
     width: Unit.fromMm(297),
     height: Unit.fromMm(420),
@@ -40,6 +59,11 @@ export const pageSizes: PageSizeOption[] = [
     width: Unit.fromMm(148),
     height: Unit.fromMm(210),
   },
+  {
+    name: 'Custom',
+    width: 0,
+    height: 0,
+  },
 ];
 
 export class PageSetup {
@@ -50,6 +74,9 @@ export class PageSetup {
 
   public pageWidth = Unit.fromInch(8.5);
   public pageHeight = Unit.fromInch(11);
+
+  public pageWidthCustom = Unit.fromInch(8.5);
+  public pageHeightCustom = Unit.fromInch(11);
 
   public topMargin = Unit.fromInch(1);
   public bottomMargin = Unit.fromInch(1);
@@ -77,11 +104,12 @@ export class PageSetup {
   public lyricsDefaultStrokeWidth = 0;
   public lyricsVerticalOffset = -Unit.fromInch(0.05);
   public lyricsMinimumSpacing = Unit.fromInch(0.05);
+  public lyricsMelismaCutoffWidth = Unit.fromPt(5);
 
   // These two melisma properties are currently not exposed in the UI or saved
   // as part of the byzx format.
   public lyricsMelismaSpacing = Unit.fromInch(0.025);
-  public lyricsMelismaThickeness = 1;
+  public lyricsMelismaThickness = 1;
 
   public get lyricsFont() {
     return `${this.lyricsDefaultFontStyle} normal ${this.lyricsDefaultFontWeight} ${this.lyricsDefaultFontSize}px "${this.lyricsDefaultFontFamily}"`;
@@ -128,6 +156,7 @@ export class PageSetup {
   public dropCapDefaultColor = '#000000';
   public dropCapDefaultStrokeWidth = 0;
   public dropCapDefaultLineHeight: number | null = null;
+  public dropCapDefaultLineSpan = 1;
 
   public textBoxDefaultFontFamily = 'Source Serif';
   public textBoxDefaultFontSize = Unit.fromPt(20);
@@ -141,6 +170,7 @@ export class PageSetup {
 
   public chrysanthineAccidentals: boolean = true;
   public noFthoraRestrictions: boolean = false;
+  public disableGreekMelismata: boolean = false;
 
   public get innerPageWidth() {
     return this.pageWidth - this.leftMargin - this.rightMargin;

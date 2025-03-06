@@ -1,7 +1,16 @@
 import { Unit } from '@/utils/Unit';
 
-export type PageSize = 'A3' | 'A4' | 'A5' | 'Legal' | 'Letter' | 'Tabloid';
-export type PageSizeUnit = 'mm' | 'in';
+export type PageSize =
+  | 'A3'
+  | 'A4'
+  | 'A5'
+  | 'Legal'
+  | 'Letter'
+  | 'Tabloid'
+  | 'Half-Letter'
+  | 'Half-Legal'
+  | 'Custom';
+export type PageSizeUnit = 'pc' | 'pt' | 'cm' | 'mm' | 'in';
 
 export class PageSetup {
   public pageSize: PageSize = 'Letter';
@@ -11,6 +20,8 @@ export class PageSetup {
 
   public pageWidth = Unit.fromInch(8.5);
   public pageHeight = Unit.fromInch(11);
+  public pageWidthCustom = Unit.fromInch(8.5);
+  public pageHeightCustom = Unit.fromInch(11);
   public topMargin = Unit.fromInch(1);
   public bottomMargin = Unit.fromInch(1);
   public leftMargin = Unit.fromInch(1);
@@ -37,6 +48,7 @@ export class PageSetup {
   public lyricsDefaultStrokeWidth = 0;
   public lyricsVerticalOffset = -Unit.fromInch(0.05);
   public lyricsMinimumSpacing = Unit.fromInch(0.05);
+  public lyricsMelismaCutoffWidth = Unit.fromPt(5);
 
   public neumeDefaultFontFamily = 'Neanes';
   public neumeDefaultFontSize = Unit.fromPt(20);
@@ -79,6 +91,7 @@ export class PageSetup {
   public dropCapDefaultColor = '#000000';
   public dropCapDefaultStrokeWidth = 0;
   public dropCapDefaultLineHeight: number | undefined = undefined;
+  public dropCapDefaultLineSpan = 1;
 
   public textBoxDefaultFontFamily = 'Source Serif';
   public textBoxDefaultFontSize = Unit.fromPt(20);
@@ -92,4 +105,5 @@ export class PageSetup {
 
   public chrysanthineAccidentals: boolean | undefined = undefined;
   public noFthoraRestrictions: boolean | undefined = undefined;
+  public disableGreekMelismata: boolean | undefined = undefined;
 }

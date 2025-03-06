@@ -62,6 +62,7 @@ export abstract class ScoreElement {
   public lineBreak: boolean = false;
   public lineBreakType: LineBreakType | null = null;
   public pageBreak: boolean = false;
+  public sectionName: string | null = null;
 
   // Give each element a unique ID for rendering in the UI
   public id: number = id++;
@@ -107,7 +108,7 @@ export class NoteElement extends ScoreElement {
   public koronis: boolean = false;
   public stavros: boolean = false;
   public lyrics: string = '';
-  public lyricsColor: string = 'black';
+  public lyricsColor: string = '#000000';
   public lyricsFontFamily: string = 'Source Serif';
   public lyricsFontSize: number = Unit.fromPt(12);
   public lyricsStrokeWidth: number = 0;
@@ -123,6 +124,8 @@ export class NoteElement extends ScoreElement {
   public ignoreAttractions: boolean = false;
 
   public chromaticFthoraNote: ScaleNote | null = null;
+  public secondaryChromaticFthoraNote: ScaleNote | null = null;
+  public tertiaryChromaticFthoraNote: ScaleNote | null = null;
 
   public accidentalOffsetX: number | null = null;
   public accidentalOffsetY: number | null = null;
@@ -241,6 +244,8 @@ export class NoteElement extends ScoreElement {
       tertiaryFthoraOffsetX: this.tertiaryFthoraOffsetX,
       tertiaryFthoraOffsetY: this.tertiaryFthoraOffsetY,
       chromaticFthoraNote: this.chromaticFthoraNote,
+      secondaryChromaticFthoraNote: this.secondaryChromaticFthoraNote,
+      tertiaryChromaticFthoraNote: this.tertiaryChromaticFthoraNote,
       gorgonNeume: this.gorgonNeume,
       gorgonNeumeOffsetX: this.gorgonNeumeOffsetX,
       gorgonNeumeOffsetY: this.gorgonNeumeOffsetY,
@@ -401,6 +406,7 @@ export class NoteElement extends ScoreElement {
   public alignLeft: boolean = false;
   public noteIndicatorNeume: NoteIndicator | null = null;
   public scaleNotes: ScaleNote[] = [];
+  public scaleNotesVirtual: ScaleNote[] = [];
   public computedMeasureBarLeft: MeasureBar | null = null;
   public computedMeasureBarRight: MeasureBar | null = null;
 
@@ -577,7 +583,9 @@ export class MartyriaElement extends ScoreElement {
   public scale: Scale = Scale.Diatonic;
   public fthora: Fthora | null = null;
   public chromaticFthoraNote: ScaleNote | null = null;
+  public tempoLeft: TempoSign | null = null;
   public tempo: TempoSign | null = null;
+  public tempoRight: TempoSign | null = null;
   public alignRight: boolean = false;
   public bpm: number = 0;
   public spaceAfter: number = 0;
@@ -743,6 +751,8 @@ export class TextBoxElement extends ScoreElement {
   public height: number = 20;
   public customWidth: number | null = null;
   public customHeight: number | null = null;
+  public marginTop: number = 0;
+  public marginBottom: number = 0;
 
   // Values computed by the layout service
   public computedFontFamily: string = '';
@@ -788,6 +798,8 @@ export class TextBoxElement extends ScoreElement {
       strokeWidth: this.strokeWidth,
       customWidth: this.customWidth,
       customHeight: this.customHeight,
+      marginTop: this.marginTop,
+      marginBottom: this.marginBottom,
       inline: this.inline,
       bold: this.bold,
       italic: this.italic,
@@ -814,6 +826,8 @@ export class RichTextBoxElement extends ScoreElement {
   public rtl: boolean = false;
 
   public height: number = 20;
+  public marginTop: number = 0;
+  public marginBottom: number = 0;
 
   public clone() {
     const clone = new RichTextBoxElement();
@@ -826,7 +840,14 @@ export class RichTextBoxElement extends ScoreElement {
   public getClipboardProperties() {
     return {
       content: this.content,
+      contentLeft: this.contentLeft,
+      contentRight: this.contentRight,
+      contentCenter: this.contentCenter,
+      rtl: this.rtl,
+      multipanel: this.multipanel,
       height: this.height,
+      marginBottom: this.marginBottom,
+      marginTop: this.marginTop,
     } as Partial<RichTextBoxElement>;
   }
 }
@@ -865,6 +886,8 @@ export class ModeKeyElement extends ScoreElement {
   public ambitusHighRootSign: RootSign = RootSign.Alpha;
   public showAmbitus: boolean = false;
   public height: number = Unit.fromPt(37);
+  public marginTop: number = 0;
+  public marginBottom: number = 0;
 
   // Values computed by the layout service
   public computedFontFamily: string = '';
@@ -949,9 +972,12 @@ export class ModeKeyElement extends ScoreElement {
       fontSize: this.fontSize,
       strokeWidth: this.strokeWidth,
       heightAdjustment: this.heightAdjustment,
+      marginBottom: this.marginBottom,
+      marginTop: this.marginTop,
       useDefaultStyle: this.useDefaultStyle,
       ignoreAttractions: this.ignoreAttractions,
       permanentEnharmonicZo: this.permanentEnharmonicZo,
+      showAmbitus: this.showAmbitus,
     } as Partial<ModeKeyElement>;
   }
 }
@@ -968,6 +994,7 @@ export class DropCapElement extends ScoreElement {
   public color: string = '#000000';
   public useDefaultStyle: boolean = true;
   public customWidth: number | null = null;
+  public lineSpan: number = 1;
 
   // Values computed by the layout service
   public computedFontFamily: string = '';
@@ -977,6 +1004,8 @@ export class DropCapElement extends ScoreElement {
   public computedColor: string = '#000000';
   public computedStrokeWidth: number = 0;
   public computedLineHeight: number | null = null;
+  public computedLineSpan: number = 1;
+  public contentWidth: number = 0;
 
   // Re-render helpers
   public computedFontFamilyPrevious: string = '';

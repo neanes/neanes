@@ -208,7 +208,7 @@ export default class TextBox extends Vue {
 
 <style scoped>
 .text-box-container {
-  border: 1px dotted black;
+  outline: 1px dotted black;
   box-sizing: border-box;
   min-height: 10px;
 }
@@ -228,7 +228,7 @@ export default class TextBox extends Vue {
 }
 
 .text-box:focus:not(.multipanel) {
-  border: var(--ck-focus-ring);
+  outline: var(--ck-focus-ring);
   background-color: white;
   position: relative;
   z-index: 1;
@@ -283,6 +283,7 @@ export default class TextBox extends Vue {
 
   .text-box.multipanel {
     border: none !important;
+    outline: none !important;
   }
 }
 </style>

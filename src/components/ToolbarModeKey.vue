@@ -19,7 +19,6 @@
     <template v-if="!element.useDefaultStyle">
       <label class="right-space">{{ $t('toolbar:modeKey.size') }}</label>
       <InputFontSize
-        class="drop-caps-input"
         :modelValue="element.fontSize"
         @update:modelValue="$emit('update:fontSize', $event)"
       />
@@ -124,6 +123,36 @@
 
     <span class="space" />
 
+    <div class="form-group">
+      <label class="right-space">{{ $t('toolbar:common.marginTop') }}</label>
+      <InputUnit
+        class="text-box-input-width"
+        unit="pt"
+        :min="0"
+        :max="maxHeight"
+        :step="0.5"
+        :modelValue="element.marginTop"
+        :precision="1"
+        @update:modelValue="$emit('update:marginTop', $event)"
+      />
+    </div>
+    <span class="space"></span>
+    <div class="form-group">
+      <label class="right-space">{{ $t('toolbar:common.marginBottom') }}</label>
+      <InputUnit
+        class="text-box-input-width"
+        unit="pt"
+        :min="0"
+        :max="maxHeight"
+        :step="0.5"
+        :modelValue="element.marginBottom"
+        :precision="1"
+        @update:modelValue="$emit('update:marginBottom', $event)"
+      />
+    </div>
+
+    <span class="space" />
+
     <div style="display: flex; align-items: center">
       <input
         id="toolbar-mode-key-ignore-attractions"
@@ -186,6 +215,19 @@
     <button @click="$emit('open-mode-key-dialog')">
       {{ $t('toolbar:modeKey.changeKey') }}
     </button>
+
+    <span class="space" />
+
+    <div class="form-group">
+      <label class="right-space">{{ $t('toolbar:common.sectionName') }}</label>
+      <input
+        type="text"
+        :value="element.sectionName"
+        @change="
+          $emit('update:sectionName', ($event.target as HTMLInputElement).value)
+        "
+      />
+    </div>
   </div>
 </template>
 
@@ -221,7 +263,10 @@ import ButtonWithMenu, { ButtonWithMenuOption } from './ButtonWithMenu.vue';
     'update:fontSize',
     'update:heightAdjustment',
     'update:ignoreAttractions',
+    'update:marginBottom',
+    'update:marginTop',
     'update:permanentEnharmonicZo',
+    'update:sectionName',
     'update:showAmbitus',
     'update:strokeWidth',
     'update:tempo',
@@ -240,6 +285,10 @@ export default class ToolbarModeKey extends Vue {
 
   get heightAdjustmentMax() {
     return Unit.toPt(this.pageSetup.pageHeight);
+  }
+
+  get maxHeight() {
+    return Unit.toPt(this.pageSetup.innerPageHeight);
   }
 
   tempoMenuOptions: ButtonWithMenuOption[] = [

@@ -41,6 +41,7 @@ export abstract class ScoreElement {
   public lineBreak: boolean | undefined = undefined;
   public pageBreak: boolean | undefined = undefined;
   public lineBreakType: LineBreakType | undefined = undefined;
+  public sectionName: string | undefined = undefined;
 }
 
 export enum AcceptsLyricsOption {
@@ -61,6 +62,8 @@ export class NoteElement extends ScoreElement {
   public secondaryFthora: Fthora | undefined = undefined;
   public tertiaryFthora: Fthora | undefined = undefined;
   public chromaticFthoraNote: ScaleNote | undefined = undefined;
+  public secondaryChromaticFthoraNote: ScaleNote | undefined = undefined;
+  public tertiaryChromaticFthoraNote: ScaleNote | undefined = undefined;
   public accidental: Accidental | undefined = undefined;
   public secondaryAccidental: Accidental | undefined = undefined;
   public tertiaryAccidental: Accidental | undefined = undefined;
@@ -141,7 +144,9 @@ export class MartyriaElement extends ScoreElement {
   public scale: Scale = Scale.Diatonic;
   public fthora: Fthora | undefined = undefined;
   public chromaticFthoraNote: ScaleNote | undefined = undefined;
+  public tempoLeft: TempoSign | undefined = undefined;
   public tempo: TempoSign | undefined = undefined;
+  public tempoRight: TempoSign | undefined = undefined;
   public measureBarLeft: MeasureBar | undefined = undefined;
   public measureBarRight: MeasureBar | undefined = undefined;
   // Deprecated
@@ -191,6 +196,8 @@ export class TextBoxElement extends ScoreElement {
   public height: number = 20;
   public customWidth: number | undefined = undefined;
   public customHeight: number | undefined = undefined;
+  public marginTop: number | undefined = undefined;
+  public marginBottom: number | undefined = undefined;
   public useDefaultStyle: boolean | undefined = undefined;
 }
 
@@ -203,6 +210,8 @@ export class RichTextBoxElement extends ScoreElement {
   public multipanel: boolean | undefined = undefined;
   public rtl: boolean | undefined = undefined;
   public height: number = 20;
+  public marginTop: number | undefined = undefined;
+  public marginBottom: number | undefined = undefined;
 }
 
 export class ModeKeyElement extends ScoreElement {
@@ -229,6 +238,8 @@ export class ModeKeyElement extends ScoreElement {
   public strokeWidth: number = 0;
   public height: number = 20;
   public heightAdjustment: number = 0;
+  public marginTop: number | undefined = undefined;
+  public marginBottom: number | undefined = undefined;
   public bpm: number = 120;
   public useDefaultStyle: boolean | undefined = undefined;
   public ignoreAttractions: boolean | undefined = undefined;
@@ -252,6 +263,7 @@ export class DropCapElement extends ScoreElement {
   public color: string = '#000000';
   public useDefaultStyle: boolean | undefined = undefined;
   public customWidth: number | undefined = undefined;
+  public lineSpan: number = 1;
 }
 
 export class ImageBoxElement extends ScoreElement {

@@ -1,6 +1,6 @@
 import metadata from '@/assets/fonts/neanes.metadata.json';
 import metadataRtl from '@/assets/fonts/neanesrtl.metadata.json';
-import metadataStathis from '@/assets/fonts/NeanesStathisSeries.metadata.json';
+import metadataStathis from '@/assets/fonts/neanesstathisseries.metadata.json';
 import { SbmuflGlyphName } from '@/services/NeumeMappingService';
 
 const metadataMap = new Map();
@@ -24,20 +24,20 @@ class FontService {
   ) {
     const metadata = this.getMetadata(fontFamily);
 
-    const markAnchorName = Object.keys(
-      (metadata.glyphsWithAnchors as any)[mark],
-    ).find((x) => (metadata.glyphsWithAnchors as any)[base][x] != null);
+    const markAnchorName = Object.keys(metadata.glyphsWithAnchors[mark]).find(
+      (x) => metadata.glyphsWithAnchors[base][x] != null,
+    );
 
     if (markAnchorName == null) {
       console.warn(`Missing anchor for base: ${base} mark: ${mark}`);
       return { x: 0, y: 0 };
     }
 
-    const markAnchor = (metadata.glyphsWithAnchors as any)[mark][
+    const markAnchor = metadata.glyphsWithAnchors[mark][
       markAnchorName
     ] as number[];
 
-    const baseAnchor = (metadata.glyphsWithAnchors as any)[base][
+    const baseAnchor = metadata.glyphsWithAnchors[base][
       markAnchorName
     ] as number[];
 
@@ -53,16 +53,16 @@ class FontService {
     mark: SbmuflGlyphName,
   ) {
     const metadata = this.getMetadata(fontFamily);
-    const markAnchorName = Object.keys(
-      (metadata.glyphsWithAnchors as any)[mark],
-    ).find((x) => (metadata.glyphsWithAnchors as any)[base][x] != null);
+    const markAnchorName = Object.keys(metadata.glyphsWithAnchors[mark]).find(
+      (x) => metadata.glyphsWithAnchors[base][x] != null,
+    );
 
     if (markAnchorName == null) {
       console.warn(`Missing anchor for base: ${base} mark: ${mark}`);
       return { x: 0, y: 0 };
     }
 
-    const baseAnchor = (metadata.glyphsWithAnchors as any)[base][
+    const baseAnchor = metadata.glyphsWithAnchors[base][
       markAnchorName
     ] as number[];
 

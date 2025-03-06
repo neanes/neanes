@@ -145,9 +145,22 @@
       />
       <span class="space" />
       <ButtonWithMenu
+        class="btnMenuTempoLeft"
         :options="tempoMenuOptions"
-        :title="tooltip(TempoSign.VerySlowAbove)"
+        :title="$t('toolbar:martyria:tempoLeft')"
+        @select="$emit('update:tempoLeft', $event)"
+      />
+      <ButtonWithMenu
+        class="btnMenuTempoAbove"
+        :options="tempoMenuOptionsAbove"
+        :title="$t('toolbar:martyria:tempo')"
         @select="$emit('update:tempo', $event)"
+      />
+      <ButtonWithMenu
+        class="btnMenuTempoRight"
+        :options="tempoMenuOptions"
+        :title="$t('toolbar:martyria:tempoRight')"
+        @select="$emit('update:tempoRight', $event)"
       />
       <span class="space"></span>
       <button
@@ -208,7 +221,11 @@
     <div class="row">
       <label class="right-space">{{ $t('toolbar:common.bpm') }}</label>
       <InputBpm
-        :disabled="element.tempo == null"
+        :disabled="
+          element.tempo == null &&
+          element.tempoLeft == null &&
+          element.tempoRight == null
+        "
         :modelValue="element.bpm"
         @update:modelValue="$emit('update:bpm', $event)"
       />
@@ -266,6 +283,23 @@
           {{ $t(sign.name) }}
         </option>
       </select>
+
+      <span class="space"></span>
+      <div class="form-group">
+        <label class="right-space">{{
+          $t('toolbar:common.sectionName')
+        }}</label>
+        <input
+          type="text"
+          :value="element.sectionName"
+          @change="
+            $emit(
+              'update:sectionName',
+              ($event.target as HTMLInputElement).value,
+            )
+          "
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -303,8 +337,11 @@ import InputUnit from './InputUnit.vue';
     'update:note',
     'update:rootSignOverride',
     'update:scale',
+    'update:sectionName',
     'update:spaceAfter',
     'update:tempo',
+    'update:tempoLeft',
+    'update:tempoRight',
   ],
 })
 export default class ToolbarMartyria extends Vue {
@@ -401,6 +438,7 @@ export default class ToolbarMartyria extends Vue {
         { label: 'model:note.zoHigh', value: ScaleNote.ZoHigh },
         { label: 'model:note.di', value: ScaleNote.Thi },
         { label: 'model:note.vou', value: ScaleNote.Vou },
+        { label: 'model:note.ni', value: ScaleNote.Ni },
       ];
     } else if (
       this.element.fthora === Fthora.SoftChromaticPa_Top ||
@@ -604,6 +642,42 @@ export default class ToolbarMartyria extends Vue {
 
   tempoMenuOptions: ButtonWithMenuOption[] = [
     {
+      neume: TempoSign.VeryQuick,
+      icon: new URL('@/assets/icons/agogi-poli-gorgi.svg', import.meta.url)
+        .href,
+    },
+    {
+      neume: TempoSign.Quicker,
+      icon: new URL('@/assets/icons/agogi-gorgoteri.svg', import.meta.url).href,
+    },
+    {
+      neume: TempoSign.Quick,
+      icon: new URL('@/assets/icons/agogi-gorgi.svg', import.meta.url).href,
+    },
+    {
+      neume: TempoSign.Medium,
+      icon: new URL('@/assets/icons/agogi-mesi.svg', import.meta.url).href,
+    },
+    {
+      neume: TempoSign.Moderate,
+      icon: new URL('@/assets/icons/agogi-metria.svg', import.meta.url).href,
+    },
+    {
+      neume: TempoSign.Slow,
+      icon: new URL('@/assets/icons/agogi-argi.svg', import.meta.url).href,
+    },
+    {
+      neume: TempoSign.Slower,
+      icon: new URL('@/assets/icons/agogi-argoteri.svg', import.meta.url).href,
+    },
+    {
+      neume: TempoSign.VerySlow,
+      icon: new URL('@/assets/icons/agogi-poli-argi.svg', import.meta.url).href,
+    },
+  ];
+
+  tempoMenuOptionsAbove: ButtonWithMenuOption[] = [
+    {
       neume: TempoSign.VeryQuickAbove,
       icon: new URL('@/assets/icons/agogi-poli-gorgi.svg', import.meta.url)
         .href,
@@ -726,8 +800,6 @@ export default class ToolbarMartyria extends Vue {
         return 'model:neume.fthora.spathi';
       case MeasureBar.MeasureBarRight:
         return 'toolbar:common.measureBar';
-      case TempoSign.VerySlowAbove:
-        return 'toolbar:common.tempoSign';
       default:
         return neume;
     }
@@ -788,5 +860,28 @@ label.right-space {
 
 .icon-btn-img {
   vertical-align: middle;
+}
+
+.btnMenuTempoLeft :deep(.neume-button) {
+  justify-content: right;
+}
+
+.btnMenuTempoAbove :deep(.neume-button) {
+  align-items: start;
+}
+
+.btnMenuTempoRight :deep(.neume-button) {
+  justify-content: left;
+}
+
+.btnMenuTempoLeft :deep(.neume-button img),
+.btnMenuTempoRight :deep(.neume-button img) {
+  height: 28px;
+  width: 28px;
+}
+
+.btnMenuTempoAbove :deep(.neume-button img) {
+  height: 24px;
+  width: 24px;
 }
 </style>

@@ -12,6 +12,7 @@
         :neume="neume.measureBarLeft"
         :style="measureBarStyle"
       />
+      <Neume v-if="hasTempoLeft" :neume="neume.tempoLeft" :style="tempoStyle" />
       <Neume :neume="neume.note" />
       <Neume :neume="neume.rootSign" />
       <Neume v-if="hasFthora" :neume="neume.fthora" :style="fthoraStyle" />
@@ -20,6 +21,11 @@
         v-if="hasMeasureBarLeft && isMeasureBarAbove"
         :neume="neume.measureBarLeft"
         :style="measureBarStyle"
+      />
+      <Neume
+        v-if="hasTempoRight"
+        :neume="neume.tempoRight"
+        :style="tempoStyle"
       />
       <Neume
         v-if="hasMeasureBarRight"
@@ -56,8 +62,16 @@ export default class NeumeBoxMartyria extends Vue {
     return this.neume.fthora != null;
   }
 
+  get hasTempoLeft() {
+    return this.neume.tempoLeft != null;
+  }
+
   get hasTempo() {
     return this.neume.tempo != null;
+  }
+
+  get hasTempoRight() {
+    return this.neume.tempoRight != null;
   }
 
   get hasMeasureBarLeft() {

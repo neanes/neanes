@@ -138,6 +138,40 @@
               </option>
             </select>
           </div>
+          <template v-if="form.pageSize === 'Custom'">
+            <div class="form-group">
+              <label class="margin-label">{{
+                $t('dialog:pageSetup.width')
+              }}</label>
+              <InputUnit
+                class="margin-input"
+                type="number"
+                :unit="form.pageSizeUnit"
+                :min="1"
+                :max="10000"
+                :step="marginStep"
+                :precision="2"
+                v-model="form.pageWidthCustom"
+                @change="updatePageSize"
+              />
+            </div>
+            <div class="form-group">
+              <label class="margin-label">{{
+                $t('dialog:pageSetup.height')
+              }}</label>
+              <InputUnit
+                class="margin-input"
+                type="number"
+                :unit="form.pageSizeUnit"
+                :min="1"
+                :max="10000"
+                :step="marginStep"
+                :precision="2"
+                v-model="form.pageHeightCustom"
+                @change="updatePageSize"
+              />
+            </div>
+          </template>
           <div class="form-group">
             <div class="subheader">{{ $t('dialog:pageSetup.unit') }}</div>
             <input
@@ -152,6 +186,17 @@
               $t('dialog:pageSetup.in')
             }}</label>
             <input
+              id="page-setup-dialog-unit-cm"
+              type="radio"
+              name="pageSizeUnit"
+              v-model="form.pageSizeUnit"
+              value="cm"
+              :checked="form.pageSizeUnit === 'cm'"
+            />
+            <label for="page-setup-dialog-unit-cm">{{
+              $t('dialog:pageSetup.cm')
+            }}</label>
+            <input
               id="page-setup-dialog-unit-mm"
               type="radio"
               name="pageSizeUnit"
@@ -161,6 +206,28 @@
             />
             <label for="page-setup-dialog-unit-mm">{{
               $t('dialog:pageSetup.mm')
+            }}</label>
+            <input
+              id="page-setup-dialog-unit-pt"
+              type="radio"
+              name="pageSizeUnit"
+              v-model="form.pageSizeUnit"
+              value="pt"
+              :checked="form.pageSizeUnit === 'pt'"
+            />
+            <label for="page-setup-dialog-unit-pt">{{
+              $t('dialog:pageSetup.pt')
+            }}</label>
+            <input
+              id="page-setup-dialog-unit-pc"
+              type="radio"
+              name="pageSizeUnit"
+              v-model="form.pageSizeUnit"
+              value="pc"
+              :checked="form.pageSizeUnit === 'pc'"
+            />
+            <label for="page-setup-dialog-unit-pc">{{
+              $t('dialog:pageSetup.pc')
             }}</label>
           </div>
           <div class="subheader">
@@ -355,6 +422,29 @@
               $t('dialog:pageSetup.melkiteRtl')
             }}</label>
           </div>
+          <div class="form-group">
+            <input
+              id="page-setup-dialog-disable-melismata"
+              type="checkbox"
+              v-model="form.disableGreekMelismata"
+            />
+            <label for="page-setup-dialog-disable-melismata">{{
+              $t('dialog:pageSetup.disableGreekMelismata')
+            }}</label>
+          </div>
+          <div class="form-group">
+            <label class="melisma-label">{{
+              $t('dialog:pageSetup.lyricsMelismaCutoffWidth')
+            }}</label>
+            <InputUnit
+              class="melisma-input"
+              unit="pt"
+              :min="0"
+              :step="1"
+              :precision="0"
+              v-model="form.lyricsMelismaCutoffWidth"
+            />
+          </div>
         </div>
         <div class="right-pane">
           <div class="subheader">{{ $t('dialog:pageSetup.dropCaps') }}</div>
@@ -370,7 +460,22 @@
             }}</label>
             <InputFontSize
               class="drop-caps-input"
+              :max="500"
               v-model="form.dropCapDefaultFontSize"
+            />
+          </div>
+          <div class="form-group">
+            <label class="drop-caps-label">{{
+              $t('dialog:pageSetup.lineSpan')
+            }}</label>
+            <InputUnit
+              class="drop-caps-input"
+              unit="unitless"
+              :min="1"
+              :max="10"
+              :step="1"
+              :precision="0"
+              v-model="form.dropCapDefaultLineSpan"
             />
           </div>
           <div class="form-group">
@@ -1047,6 +1152,12 @@ export default class PageSetupDialog extends Vue {
 
   get marginUnitLabel() {
     switch (this.form.pageSizeUnit) {
+      case 'pc':
+        return 'dialog:pageSetup.pc';
+      case 'pt':
+        return 'dialog:pageSetup.pt';
+      case 'cm':
+        return 'dialog:pageSetup.cm';
       case 'mm':
         return 'dialog:pageSetup.mm';
       case 'in':
@@ -1059,10 +1170,16 @@ export default class PageSetupDialog extends Vue {
 
   get marginStep() {
     switch (this.form.pageSizeUnit) {
+      case 'pc':
+        return 1;
+      case 'pt':
+        return 1;
+      case 'cm':
+        return 0.1;
       case 'mm':
         return 1;
       case 'in':
-        return 0.5;
+        return 0.1;
       default:
         console.warn(`Unknown page size unit: ${this.form.pageSizeUnit}`);
         return 1;
@@ -1071,6 +1188,12 @@ export default class PageSetupDialog extends Vue {
 
   get spacingStep() {
     switch (this.form.pageSizeUnit) {
+      case 'pc':
+        return 0.05;
+      case 'pt':
+        return 0.5;
+      case 'cm':
+        return 0.01;
       case 'mm':
         return 0.1;
       case 'in':
@@ -1083,6 +1206,12 @@ export default class PageSetupDialog extends Vue {
 
   toDisplayUnit(value: number) {
     switch (this.form.pageSizeUnit) {
+      case 'pc':
+        return Unit.toPc(value);
+      case 'pt':
+        return Unit.toPt(value);
+      case 'cm':
+        return Unit.toCm(value);
       case 'mm':
         return Unit.toMm(value);
       case 'in':
@@ -1095,6 +1224,12 @@ export default class PageSetupDialog extends Vue {
 
   toStorageUnit(value: number) {
     switch (this.form.pageSizeUnit) {
+      case 'pc':
+        return Unit.fromPc(value);
+      case 'pt':
+        return Unit.fromPt(value);
+      case 'cm':
+        return Unit.fromCm(value);
       case 'mm':
         return Unit.fromMm(value);
       case 'in':
@@ -1106,91 +1241,91 @@ export default class PageSetupDialog extends Vue {
   }
 
   get topMargin() {
-    return this.toDisplayUnit(this.form!.topMargin).toFixed(2);
+    return this.toDisplayUnit(this.form.topMargin).toFixed(2);
   }
 
   updateTopMargin(value: number) {
-    this.form!.topMargin = Math.min(
+    this.form.topMargin = Math.min(
       Math.max(this.toStorageUnit(value), 0),
-      this.form!.pageHeight - this.form!.bottomMargin - Unit.fromInch(0.5),
+      this.form.pageHeight - this.form.bottomMargin - Unit.fromInch(0.5),
     );
 
     this.$forceUpdate();
   }
 
   get bottomMargin() {
-    return this.toDisplayUnit(this.form!.bottomMargin).toFixed(2);
+    return this.toDisplayUnit(this.form.bottomMargin).toFixed(2);
   }
 
   updateBottomMargin(value: number) {
-    this.form!.bottomMargin = Math.min(
+    this.form.bottomMargin = Math.min(
       Math.max(this.toStorageUnit(value), 0),
-      this.form!.pageHeight - this.form!.topMargin - Unit.fromInch(0.5),
+      this.form.pageHeight - this.form.topMargin - Unit.fromInch(0.5),
     );
 
     this.$forceUpdate();
   }
 
   get leftMargin() {
-    return this.toDisplayUnit(this.form!.leftMargin).toFixed(2);
+    return this.toDisplayUnit(this.form.leftMargin).toFixed(2);
   }
 
   updateLeftMargin(value: number) {
-    this.form!.leftMargin = Math.min(
+    this.form.leftMargin = Math.min(
       Math.max(this.toStorageUnit(value), 0),
-      this.form!.pageWidth - this.form!.rightMargin - Unit.fromInch(0.5),
+      this.form.pageWidth - this.form.rightMargin - Unit.fromInch(0.5),
     );
 
     this.$forceUpdate();
   }
 
   get rightMargin() {
-    return this.toDisplayUnit(this.form!.rightMargin).toFixed(2);
+    return this.toDisplayUnit(this.form.rightMargin).toFixed(2);
   }
 
   updateRightMargin(value: number) {
-    this.form!.rightMargin = Math.min(
+    this.form.rightMargin = Math.min(
       Math.max(this.toStorageUnit(value), 0),
-      this.form!.pageWidth - this.form!.leftMargin - Unit.fromInch(0.5),
+      this.form.pageWidth - this.form.leftMargin - Unit.fromInch(0.5),
     );
 
     this.$forceUpdate();
   }
 
   get headerMargin() {
-    return this.toDisplayUnit(this.form!.headerMargin).toFixed(2);
+    return this.toDisplayUnit(this.form.headerMargin).toFixed(2);
   }
 
   updateHeaderMargin(value: number) {
-    this.form!.headerMargin = Math.min(
+    this.form.headerMargin = Math.min(
       Math.max(this.toStorageUnit(value), 0),
-      this.form!.innerPageHeight,
+      this.form.innerPageHeight,
     );
 
     this.$forceUpdate();
   }
 
   get footerMargin() {
-    return this.toDisplayUnit(this.form!.footerMargin).toFixed(2);
+    return this.toDisplayUnit(this.form.footerMargin).toFixed(2);
   }
 
   updateFooterMargin(value: number) {
-    this.form!.footerMargin = Math.min(
+    this.form.footerMargin = Math.min(
       Math.max(this.toStorageUnit(value), 0),
-      this.form!.innerPageHeight,
+      this.form.innerPageHeight,
     );
 
     this.$forceUpdate();
   }
 
   get lyricsVerticalOffset() {
-    return this.toDisplayUnit(this.form!.lyricsVerticalOffset).toFixed(3);
+    return this.toDisplayUnit(this.form.lyricsVerticalOffset).toFixed(3);
   }
 
   updateLyricsVerticalOffset(value: number) {
-    this.form!.lyricsVerticalOffset = Math.min(
+    this.form.lyricsVerticalOffset = Math.min(
       this.toStorageUnit(value),
-      this.form!.innerPageHeight -
+      this.form.innerPageHeight -
         this.form.lyricsDefaultFontSize -
         this.form.neumeDefaultFontSize,
     );
@@ -1199,39 +1334,39 @@ export default class PageSetupDialog extends Vue {
   }
 
   get lyricsMinimumSpacing() {
-    return this.toDisplayUnit(this.form!.lyricsMinimumSpacing).toFixed(3);
+    return this.toDisplayUnit(this.form.lyricsMinimumSpacing).toFixed(3);
   }
 
   updateLyricsMinimumSpacing(value: number) {
-    this.form!.lyricsMinimumSpacing = Math.min(
+    this.form.lyricsMinimumSpacing = Math.min(
       this.toStorageUnit(value),
-      this.form!.innerPageWidth,
+      this.form.innerPageWidth,
     );
 
     this.$forceUpdate();
   }
 
   get lineHeight() {
-    return this.toDisplayUnit(this.form!.lineHeight).toFixed(3);
+    return this.toDisplayUnit(this.form.lineHeight).toFixed(3);
   }
 
   get hyphenSpacing() {
-    return this.toDisplayUnit(this.form!.hyphenSpacing).toFixed(3);
+    return this.toDisplayUnit(this.form.hyphenSpacing).toFixed(3);
   }
 
   updateLineHeight(value: number) {
-    this.form!.lineHeight = Math.min(
+    this.form.lineHeight = Math.min(
       Math.max(this.toStorageUnit(value), 0),
-      this.form!.innerPageHeight,
+      this.form.innerPageHeight,
     );
 
     this.$forceUpdate();
   }
 
   updateHyphenSpacing(value: number) {
-    this.form!.hyphenSpacing = Math.min(
+    this.form.hyphenSpacing = Math.min(
       Math.max(this.toStorageUnit(value), 0),
-      this.form!.innerPageWidth,
+      this.form.innerPageWidth,
     );
 
     this.$forceUpdate();
@@ -1262,6 +1397,17 @@ export default class PageSetupDialog extends Vue {
   }
 
   updatePageSize() {
+    if (this.form.pageSize === 'Custom') {
+      if (this.form.landscape) {
+        this.form.pageWidth = this.form.pageHeightCustom;
+        this.form.pageHeight = this.form.pageWidthCustom;
+      } else {
+        this.form.pageWidth = this.form.pageWidthCustom;
+        this.form.pageHeight = this.form.pageHeightCustom;
+      }
+      return;
+    }
+
     const pageSize = pageSizes.find((x) => x.name === this.form.pageSize);
     if (pageSize) {
       if (this.form.landscape) {
@@ -1405,5 +1551,13 @@ export default class PageSetupDialog extends Vue {
 .ok-btn,
 .reset-btn {
   margin-right: 2rem;
+}
+
+.melisma-label {
+  margin-right: 0.5rem;
+}
+
+.melisma-input {
+  width: 2rem;
 }
 </style>

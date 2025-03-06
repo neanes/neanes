@@ -54,9 +54,10 @@
 
 <script lang="ts">
 import { FontSizeOption } from '@ckeditor/ckeditor5-font/src/fontconfig';
-import { CKEditorComponentData } from '@ckeditor/ckeditor5-vue/dist/ckeditor';
+import { Ckeditor } from '@ckeditor/ckeditor5-vue';
 import { EditorConfig } from 'ckeditor5';
 import { StyleValue } from 'vue';
+import type { ComponentExposed } from 'vue-component-type-helpers';
 import { Component, Prop, Vue } from 'vue-facing-decorator';
 
 import ContentEditable from '@/components/ContentEditable.vue';
@@ -103,23 +104,27 @@ export default class TextBoxRich extends Vue {
       language: {
         content: this.element.rtl ? 'ar' : 'en',
       },
+      licenseKey: 'GPL',
     };
   }
 
   get editorInstance() {
-    return (this.$refs.editor as CKEditorComponentData)?.instance;
+    return (this.$refs.editor as ComponentExposed<typeof Ckeditor>)?.instance;
   }
 
   get editorInstanceLeft() {
-    return (this.$refs.editorLeft as CKEditorComponentData)?.instance;
+    return (this.$refs.editorLeft as ComponentExposed<typeof Ckeditor>)
+      ?.instance;
   }
 
   get editorInstanceCenter() {
-    return (this.$refs.editorCenter as CKEditorComponentData)?.instance;
+    return (this.$refs.editorCenter as ComponentExposed<typeof Ckeditor>)
+      ?.instance;
   }
 
   get editorInstanceRight() {
-    return (this.$refs.editorRight as CKEditorComponentData)?.instance;
+    return (this.$refs.editorRight as ComponentExposed<typeof Ckeditor>)
+      ?.instance;
   }
 
   get content() {
@@ -359,6 +364,7 @@ export default class TextBoxRich extends Vue {
 
   .rich-text-editor.multipanel {
     border: none !important;
+    outline: none !important;
   }
 
   :deep(.ck-widget) {

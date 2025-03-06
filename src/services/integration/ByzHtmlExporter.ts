@@ -120,13 +120,12 @@ export class ByzHtmlExporter {
   exportScore(score: Score) {
     const style = this.exportPageSetup(score.pageSetup);
 
-    const body = this.exportElements(score.staff.elements, 4);
+    const body = this.exportElements(score.staff.elements, score.pageSetup, 4);
 
     let injectRtl = '';
 
     if (score.pageSetup.melkiteRtl) {
       injectRtl = `<script>      
-  byzhtml.options.defaultFontFamily = 'NeanesRTL';
   byzhtml.options.melkiteRtl = true;
 </script>`;
     }
@@ -168,6 +167,7 @@ export class ByzHtmlExporter {
     const lyricOffsetH = pageSetup.melkiteRtl ? '0' : '3.6pt';
 
     const style = `:root {
+        --byz-neume-font-family: ${pageSetup.neumeDefaultFontFamily};
         --byz-neume-font-size: ${Unit.toPt(pageSetup.neumeDefaultFontSize)}pt;
         
         --byz-lyric-font-family: ${pageSetup.lyricsDefaultFontFamily};
@@ -341,6 +341,7 @@ export class ByzHtmlExporter {
 
   exportElements(
     elements: ScoreElement[],
+    pageSetup: PageSetup,
     indentation: number,
     startInsidePage: boolean = false,
   ) {
@@ -359,7 +360,11 @@ export class ByzHtmlExporter {
             insidePage = true;
           }
 
-          result += this.exportNote(element as NoteElement, indentation + 2);
+          result += this.exportNote(
+            element as NoteElement,
+            pageSetup,
+            indentation + 2,
+          );
           needLineBreak = true;
           break;
         case ElementType.Martyria:
@@ -469,20 +474,20 @@ export class ByzHtmlExporter {
     return result;
   }
 
-  exportNote(element: NoteElement, indentation: number) {
+  exportNote(element: NoteElement, pageSetup: PageSetup, indentation: number) {
     let inner = '';
+
+    if (element.measureBarLeft) {
+      inner += this.exportNeume(element.measureBarLeft, indentation + 2, {
+        x: element.measureBarLeftOffsetX,
+        y: element.measureBarLeftOffsetY,
+      });
+    }
 
     if (element.vareia) {
       inner += this.exportNeume(VocalExpressionNeume.Vareia, indentation + 2, {
         x: element.vareiaOffsetX,
         y: element.vareiaOffsetY,
-      });
-    }
-
-    if (element.measureBarLeft) {
-      inner += this.exportNeume(MeasureBar.MeasureBarRight, indentation + 2, {
-        x: element.measureBarRightOffsetX,
-        y: element.measureBarRightOffsetY,
       });
     }
 
@@ -618,6 +623,7 @@ export class ByzHtmlExporter {
       }\n${this.getIndentationString(indentation)}>`;
 
       if (
+        !pageSetup.disableGreekMelismata &&
         element.isMelismaStart &&
         !MelismaHelperGreek.isGreek(element.lyrics)
       ) {

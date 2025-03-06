@@ -144,6 +144,7 @@ export class SaveService {
       }
 
       element.pageBreak = e.pageBreak || undefined;
+      element.sectionName = e.sectionName || undefined;
 
       score.staff.elements.push(element);
     }
@@ -162,6 +163,7 @@ export class SaveService {
     pageSetup.dropCapDefaultStrokeWidth = p.dropCapDefaultStrokeWidth;
     pageSetup.dropCapDefaultLineHeight =
       p.dropCapDefaultLineHeight ?? undefined;
+    pageSetup.dropCapDefaultLineSpan = p.dropCapDefaultLineSpan;
 
     pageSetup.leftMargin = p.leftMargin;
     pageSetup.lineHeight = p.lineHeight;
@@ -174,6 +176,7 @@ export class SaveService {
     pageSetup.lyricsDefaultStrokeWidth = p.lyricsDefaultStrokeWidth;
     pageSetup.lyricsVerticalOffset = p.lyricsVerticalOffset;
     pageSetup.lyricsMinimumSpacing = p.lyricsMinimumSpacing;
+    pageSetup.lyricsMelismaCutoffWidth = p.lyricsMelismaCutoffWidth;
 
     pageSetup.textBoxDefaultColor = p.textBoxDefaultColor;
     pageSetup.textBoxDefaultFontFamily = p.textBoxDefaultFontFamily;
@@ -202,6 +205,8 @@ export class SaveService {
 
     pageSetup.pageHeight = p.pageHeight;
     pageSetup.pageWidth = p.pageWidth;
+    pageSetup.pageHeightCustom = p.pageHeightCustom;
+    pageSetup.pageWidthCustom = p.pageWidthCustom;
     pageSetup.rightMargin = p.rightMargin;
     pageSetup.topMargin = p.topMargin;
 
@@ -248,6 +253,7 @@ export class SaveService {
 
     pageSetup.chrysanthineAccidentals = p.chrysanthineAccidentals;
     pageSetup.noFthoraRestrictions = p.noFthoraRestrictions || undefined;
+    pageSetup.disableGreekMelismata = p.disableGreekMelismata || undefined;
   }
 
   public static SaveLyricSetup(lyricSetup: LyricSetup_v1, l: LyricSetup) {
@@ -262,16 +268,13 @@ export class SaveService {
     if (e.elementType === ElementType.TextBox) {
       const element = new TextBoxElement_v1();
 
-      this.SaveTextBox(element as TextBoxElement_v1, e as TextBoxElement);
+      this.SaveTextBox(element, e as TextBoxElement);
 
       header.elements[0] = element;
     } else if (e.elementType === ElementType.RichTextBox) {
       const element = new RichTextBoxElement_v1();
 
-      this.SaveRichTextBox(
-        element as RichTextBoxElement_v1,
-        e as RichTextBoxElement,
-      );
+      this.SaveRichTextBox(element, e as RichTextBoxElement);
 
       header.elements[0] = element;
     }
@@ -284,16 +287,13 @@ export class SaveService {
     if (e.elementType === ElementType.TextBox) {
       const element = new TextBoxElement_v1();
 
-      this.SaveTextBox(element as TextBoxElement_v1, e as TextBoxElement);
+      this.SaveTextBox(element, e as TextBoxElement);
 
       footer.elements[0] = element;
     } else if (e.elementType === ElementType.RichTextBox) {
       const element = new RichTextBoxElement_v1();
 
-      this.SaveRichTextBox(
-        element as RichTextBoxElement_v1,
-        e as RichTextBoxElement,
-      );
+      this.SaveRichTextBox(element, e as RichTextBoxElement);
 
       footer.elements[0] = element;
     }
@@ -310,6 +310,7 @@ export class SaveService {
     element.strokeWidth = e.strokeWidth;
     element.customWidth = e.customWidth ?? undefined;
     element.useDefaultStyle = e.useDefaultStyle || undefined;
+    element.lineSpan = e.lineSpan;
   }
 
   public static SaveImageBox(element: ImageBoxElement_v1, e: ImageBoxElement) {
@@ -329,12 +330,14 @@ export class SaveService {
     element.scale = e.scale;
     element.fthora = e.fthora || undefined;
     element.chromaticFthoraNote = e.chromaticFthoraNote || undefined;
+    element.tempoLeft = e.tempoLeft || undefined;
     element.tempo = e.tempo || undefined;
+    element.tempoRight = e.tempoRight || undefined;
     element.measureBarLeft = e.measureBarLeft || undefined;
     element.measureBarRight = e.measureBarRight || undefined;
     element.alignRight = e.alignRight || undefined;
 
-    if (e.tempo != null) {
+    if (e.tempo != null || e.tempoLeft != null || e.tempoRight != null) {
       element.bpm = e.bpm;
     }
 
@@ -389,9 +392,11 @@ export class SaveService {
       element.tertiaryFthoraOffsetY = e.tertiaryFthoraOffsetY || undefined;
     }
 
-    if (e.chromaticFthoraNote != null) {
-      element.chromaticFthoraNote = e.chromaticFthoraNote;
-    }
+    element.chromaticFthoraNote = e.chromaticFthoraNote ?? undefined;
+    element.secondaryChromaticFthoraNote =
+      e.secondaryChromaticFthoraNote ?? undefined;
+    element.tertiaryChromaticFthoraNote =
+      e.tertiaryChromaticFthoraNote ?? undefined;
 
     if (e.accidental != null) {
       element.accidental = e.accidental;
@@ -522,6 +527,8 @@ export class SaveService {
     element.height = e.height;
     element.customWidth = e.customWidth ?? undefined;
     element.customHeight = e.customHeight ?? undefined;
+    element.marginTop = e.marginTop ?? undefined;
+    element.marginBottom = e.marginBottom ?? undefined;
     element.useDefaultStyle = e.useDefaultStyle || undefined;
   }
 
@@ -539,6 +546,8 @@ export class SaveService {
     }
 
     element.height = e.height;
+    element.marginTop = e.marginTop ?? undefined;
+    element.marginBottom = e.marginBottom ?? undefined;
     element.rtl = e.rtl || undefined;
   }
 
@@ -568,6 +577,8 @@ export class SaveService {
     element.strokeWidth = e.strokeWidth;
     element.height = e.height;
     element.heightAdjustment = e.heightAdjustment;
+    element.marginTop = e.marginTop ?? undefined;
+    element.marginBottom = e.marginBottom ?? undefined;
     element.bpm = e.bpm;
     element.ignoreAttractions = e.ignoreAttractions || undefined;
     element.showAmbitus = e.showAmbitus || undefined;
@@ -715,6 +726,7 @@ export class SaveService {
       element.lineBreak = e.lineBreak === true;
       element.lineBreakType = e.lineBreakType ?? LineBreakType.Left;
       element.pageBreak = e.pageBreak === true;
+      element.sectionName = e.sectionName ?? null;
 
       score.staff.elements.push(element);
     }
@@ -725,6 +737,10 @@ export class SaveService {
   public static LoadPageSetup_v1(pageSetup: PageSetup, p: PageSetup_v1) {
     pageSetup.pageHeight = p.pageHeight;
     pageSetup.pageWidth = p.pageWidth;
+
+    pageSetup.pageHeightCustom =
+      p.pageHeightCustom ?? pageSetup.pageHeightCustom;
+    pageSetup.pageWidthCustom = p.pageWidth ?? pageSetup.pageWidthCustom;
 
     pageSetup.topMargin = p.topMargin;
     pageSetup.bottomMargin = p.bottomMargin;
@@ -762,6 +778,8 @@ export class SaveService {
       p.dropCapDefaultStrokeWidth ?? pageSetup.dropCapDefaultStrokeWidth;
     pageSetup.dropCapDefaultLineHeight =
       p.dropCapDefaultLineHeight ?? pageSetup.dropCapDefaultLineHeight;
+    pageSetup.dropCapDefaultLineSpan =
+      p.dropCapDefaultLineSpan ?? pageSetup.dropCapDefaultLineSpan;
 
     pageSetup.textBoxDefaultColor =
       p.textBoxDefaultColor ?? pageSetup.textBoxDefaultColor;
@@ -791,6 +809,8 @@ export class SaveService {
     pageSetup.lyricsVerticalOffset = p.lyricsVerticalOffset;
     pageSetup.lyricsMinimumSpacing =
       p.lyricsMinimumSpacing ?? pageSetup.lyricsMinimumSpacing;
+    pageSetup.lyricsMelismaCutoffWidth =
+      p.lyricsMelismaCutoffWidth ?? pageSetup.lyricsMelismaCutoffWidth;
 
     pageSetup.martyriaDefaultColor =
       p.martyriaDefaultColor ?? pageSetup.martyriaDefaultColor;
@@ -869,17 +889,20 @@ export class SaveService {
       p.chrysanthineAccidentals === true ||
       p.chrysanthineAccidentals === undefined;
     pageSetup.noFthoraRestrictions = p.noFthoraRestrictions === true;
+    pageSetup.disableGreekMelismata = p.disableGreekMelismata === true;
 
     // Fix pageWidth and pageHeight
     // Due to bug #71, A-series paper sizes had incorrect width and height
-    const pageSize = pageSizes.find((x) => x.name === pageSetup.pageSize);
-    if (pageSize) {
-      if (pageSetup.landscape) {
-        pageSetup.pageWidth = pageSize.height;
-        pageSetup.pageHeight = pageSize.width;
-      } else {
-        pageSetup.pageWidth = pageSize.width;
-        pageSetup.pageHeight = pageSize.height;
+    if (pageSetup.pageSize !== 'Custom') {
+      const pageSize = pageSizes.find((x) => x.name === pageSetup.pageSize);
+      if (pageSize) {
+        if (pageSetup.landscape) {
+          pageSetup.pageWidth = pageSize.height;
+          pageSetup.pageHeight = pageSize.width;
+        } else {
+          pageSetup.pageWidth = pageSize.width;
+          pageSetup.pageHeight = pageSize.height;
+        }
       }
     }
   }
@@ -903,7 +926,7 @@ export class SaveService {
 
       this.LoadTextBox_v1(
         scoreVersion,
-        element as TextBoxElement,
+        element,
         e as TextBoxElement_v1,
         pageSetup,
       );
@@ -912,10 +935,7 @@ export class SaveService {
     } else if (e.elementType === ElementType.RichTextBox) {
       const element = new RichTextBoxElement();
 
-      this.LoadRichTextBox_v1(
-        element as RichTextBoxElement,
-        e as RichTextBoxElement_v1,
-      );
+      this.LoadRichTextBox_v1(element, e as RichTextBoxElement_v1);
 
       header.elements[0] = element;
     }
@@ -935,7 +955,7 @@ export class SaveService {
 
       this.LoadTextBox_v1(
         scoreVersion,
-        element as TextBoxElement,
+        element,
         e as TextBoxElement_v1,
         pageSetup,
       );
@@ -944,10 +964,7 @@ export class SaveService {
     } else if (e.elementType === ElementType.RichTextBox) {
       const element = new RichTextBoxElement();
 
-      this.LoadRichTextBox_v1(
-        element as RichTextBoxElement,
-        e as RichTextBoxElement_v1,
-      );
+      this.LoadRichTextBox_v1(element, e as RichTextBoxElement_v1);
 
       footer.elements[0] = element;
     }
@@ -967,6 +984,7 @@ export class SaveService {
     element.fontWeight = e.fontWeight ?? pageSetup.dropCapDefaultFontWeight;
     element.fontStyle = e.fontStyle ?? pageSetup.dropCapDefaultFontStyle;
     element.strokeWidth = e.strokeWidth ?? pageSetup.dropCapDefaultStrokeWidth;
+    element.lineSpan = e.lineSpan ?? pageSetup.dropCapDefaultLineSpan;
     element.customWidth = e.customWidth ?? null;
     element.useDefaultStyle = e.useDefaultStyle === true;
   }
@@ -1003,9 +1021,19 @@ export class SaveService {
       element.chromaticFthoraNote = e.chromaticFthoraNote;
     }
 
+    if (e.tempoLeft != null) {
+      element.tempoLeft = e.tempoLeft;
+      element.bpm = e.bpm ?? TempoElement.getDefaultBpm(element.tempoLeft);
+    }
+
     if (e.tempo != null) {
       element.tempo = e.tempo;
       element.bpm = e.bpm ?? TempoElement.getDefaultBpm(element.tempo);
+    }
+
+    if (e.tempoRight != null) {
+      element.tempoRight = e.tempoRight;
+      element.bpm = e.bpm ?? TempoElement.getDefaultBpm(element.tempoRight);
     }
 
     if (e.measureBarLeft != null) {
@@ -1072,9 +1100,10 @@ export class SaveService {
       element.tertiaryFthoraOffsetY = e.tertiaryFthoraOffsetY ?? null;
     }
 
-    if (e.chromaticFthoraNote != null) {
-      element.chromaticFthoraNote = e.chromaticFthoraNote;
-    }
+    element.chromaticFthoraNote = e.chromaticFthoraNote ?? null;
+    element.secondaryChromaticFthoraNote =
+      e.secondaryChromaticFthoraNote ?? null;
+    element.tertiaryChromaticFthoraNote = e.tertiaryChromaticFthoraNote ?? null;
 
     if (e.accidental != null) {
       element.accidental = e.accidental;
@@ -1223,6 +1252,8 @@ export class SaveService {
     element.lineHeight = e.lineHeight ?? pageSetup.textBoxDefaultLineHeight;
     element.customWidth = e.customWidth ?? null;
     element.customHeight = e.customHeight ?? null;
+    element.marginTop = e.marginTop ?? 0;
+    element.marginBottom = e.marginBottom ?? 0;
 
     if (scoreVersion === '1.0') {
       // In this version, use default was incorrectly set to true
@@ -1239,6 +1270,8 @@ export class SaveService {
   ) {
     element.content = e.content;
     element.height = e.height;
+    element.marginTop = e.marginTop ?? 0;
+    element.marginBottom = e.marginBottom ?? 0;
 
     if (e.multipanel) {
       element.contentLeft = e.contentLeft;
@@ -1272,6 +1305,8 @@ export class SaveService {
     element.fontSize = e.fontSize;
     element.strokeWidth = e.strokeWidth ?? element.strokeWidth;
     element.heightAdjustment = e.heightAdjustment ?? 0;
+    element.marginTop = e.marginTop ?? 0;
+    element.marginBottom = e.marginBottom ?? 0;
     element.bpm = e.bpm ?? 120;
     element.ignoreAttractions = e.ignoreAttractions === true;
     element.showAmbitus = e.showAmbitus === true;

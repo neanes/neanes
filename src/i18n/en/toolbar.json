@@ -10,6 +10,7 @@
     "insertPelastikon": "Insert Pelastikon",
     "measureBar": "Measure Bar",
     "outline": "Outline",
+    "sectionName": "Section Name",
     "spaceAfter": "Space After",
     "tempoSign": "Tempo Sign",
     "useDefaultStyle": "Use Default Style",
@@ -20,7 +21,9 @@
     "klitonDisabled": "Kliton may only be placed on Di",
     "spathiDisabled": "Spathi may only be placed on Ke or Ga",
     "width": "Width",
-    "height": "Height"
+    "height": "Height",
+    "marginTop": "Gap Above",
+    "marginBottom": "Gap Below"
   },
   "main": {
     "auto": "Auto",
@@ -28,6 +31,7 @@
     "single": "Single",
     "martyria": "Martyria",
     "insertDropCapBefore": "Insert drop cap before",
+    "insertModeKey": "Insert Mode Key",
     "insertTextBox": "Insert Text Box",
     "insertTextBoxRich": "Insert Rich Text Box",
     "insertImage": "Insert image",
@@ -40,6 +44,9 @@
     "speed": "Speed",
     "pageNumber": "Page {{ currentPageNumber }} of {{ pageCount }}",
     "invalidZoom": "The value must be between 50% and 500%."
+  },
+  "dropCap": {
+    "lineSpan": "Lines to drop"
   },
   "imageBox": {
     "inline": "Inline",
@@ -56,7 +63,10 @@
     "note": "Note",
     "scale": "Scale",
     "rootSignOverride": "Root Sign Override",
-    "none": "None"
+    "none": "None",
+    "tempoLeft": "Add Left Tempo",
+    "tempo": "Add Tempo Above",
+    "tempoRight": "Add Right Tempo"
   },
   "modeKey": {
     "size": "Size",

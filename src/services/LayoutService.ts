@@ -98,6 +98,9 @@ export class LayoutService {
     let currentPageHeightPx = 0;
     let currentLineWidthPx = 0;
 
+    let multilineDropCapWidthPx = 0;
+    let multilineDropCapCounter = 0;
+
     let lastLineHeightPx = 0;
 
     let lastElementWasLineBreak = false;
@@ -117,13 +120,19 @@ export class LayoutService {
       pageSetup.lyricsFont,
     );
 
+    // The expected height of a line containing only neumes
+    const neumeLineHeight = Math.max(
+      lyricsVerticalOffset + lyricHeight,
+      pageSetup.lineHeight,
+    );
+
     const lyricAscent = TextMeasurementService.getFontBoundingBoxAscent(
       pageSetup.lyricsFont,
     );
 
     const vareiaMapping = NeumeMappingService.getMapping(
       VocalExpressionNeume.Vareia,
-    )!;
+    );
     const vareiaWidth = TextMeasurementService.getTextWidth(
       vareiaMapping.text,
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
@@ -131,7 +140,7 @@ export class LayoutService {
 
     const measureBarRightMapping = NeumeMappingService.getMapping(
       MeasureBar.MeasureBarRight,
-    )!;
+    );
     const measureBarRightWidth = TextMeasurementService.getTextWidth(
       measureBarRightMapping.text,
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
@@ -139,7 +148,7 @@ export class LayoutService {
 
     const measureBarTopMapping = NeumeMappingService.getMapping(
       MeasureBar.MeasureBarTop,
-    )!;
+    );
     const measureBarTopWidth = TextMeasurementService.getTextWidth(
       measureBarTopMapping.text,
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
@@ -147,7 +156,7 @@ export class LayoutService {
 
     const measureBarDoubleMapping = NeumeMappingService.getMapping(
       MeasureBar.MeasureBarDouble,
-    )!;
+    );
     const measureBarDoubleWidth = TextMeasurementService.getTextWidth(
       measureBarDoubleMapping.text,
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
@@ -155,7 +164,7 @@ export class LayoutService {
 
     const measureBarTheseosMapping = NeumeMappingService.getMapping(
       MeasureBar.MeasureBarTheseos,
-    )!;
+    );
     const measureBarTheseosWidth = TextMeasurementService.getTextWidth(
       measureBarTheseosMapping.text,
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
@@ -163,7 +172,7 @@ export class LayoutService {
 
     const measureBarShortDoubleMapping = NeumeMappingService.getMapping(
       MeasureBar.MeasureBarShortDouble,
-    )!;
+    );
     const measureBarShortDoubleWidth = TextMeasurementService.getTextWidth(
       measureBarShortDoubleMapping.text,
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
@@ -171,7 +180,7 @@ export class LayoutService {
 
     const measureBarShortTheseosMapping = NeumeMappingService.getMapping(
       MeasureBar.MeasureBarShortTheseos,
-    )!;
+    );
     const measureBarShortTheseosWidth = TextMeasurementService.getTextWidth(
       measureBarShortTheseosMapping.text,
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
@@ -196,7 +205,7 @@ export class LayoutService {
 
     const elaphronMapping = NeumeMappingService.getMapping(
       QuantitativeNeume.Elaphron,
-    )!;
+    );
     const elaphronWidth = TextMeasurementService.getTextWidth(
       elaphronMapping.text,
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
@@ -204,7 +213,7 @@ export class LayoutService {
 
     const runningElaphronMapping = NeumeMappingService.getMapping(
       QuantitativeNeume.RunningElaphron,
-    )!;
+    );
     const runningElaphronWidth = TextMeasurementService.getTextWidth(
       runningElaphronMapping.text,
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
@@ -225,15 +234,19 @@ export class LayoutService {
 
     // Process Header and Footers
     // Only a single text box is supported right now
-    this.processHeader(score.headers.default, pageSetup, neumeHeight);
-    this.processHeader(score.headers.odd, pageSetup, neumeHeight);
-    this.processHeader(score.headers.even, pageSetup, neumeHeight);
-    this.processHeader(score.headers.firstPage, pageSetup, neumeHeight);
+    if (score.pageSetup.showHeader) {
+      this.processHeader(score.headers.default, pageSetup, neumeHeight);
+      this.processHeader(score.headers.odd, pageSetup, neumeHeight);
+      this.processHeader(score.headers.even, pageSetup, neumeHeight);
+      this.processHeader(score.headers.firstPage, pageSetup, neumeHeight);
+    }
 
-    this.processFooter(score.footers.default, pageSetup, neumeHeight);
-    this.processFooter(score.footers.odd, pageSetup, neumeHeight);
-    this.processFooter(score.footers.even, pageSetup, neumeHeight);
-    this.processFooter(score.footers.firstPage, pageSetup, neumeHeight);
+    if (score.pageSetup.showFooter) {
+      this.processFooter(score.footers.default, pageSetup, neumeHeight);
+      this.processFooter(score.footers.odd, pageSetup, neumeHeight);
+      this.processFooter(score.footers.even, pageSetup, neumeHeight);
+      this.processFooter(score.footers.firstPage, pageSetup, neumeHeight);
+    }
 
     let currentLyricsEndPx =
       pageSetup.leftMargin - pageSetup.lyricsMinimumSpacing;
@@ -248,28 +261,39 @@ export class LayoutService {
       let elementWidthPx = 0;
       let elementWidthWithLyricsPx = 0;
       let additionalWidth = 0;
+      let additionalHeight = 0;
+      let marginTop = 0;
 
       const currentPageNumber = pages.length;
 
-      const header = score.getHeaderForPage(currentPageNumber);
-      const footer = score.getFooterForPage(currentPageNumber);
+      let extraHeaderHeightPx = 0;
+      let extraFooterHeightPx = 0;
 
-      // Currently, headers and footers may only contain a single
-      // text box.
-      const headerHeightPx =
-        header != null ? (header.elements[0] as TextBoxElement).height : 0;
-      const footerHeightPx =
-        footer != null ? (footer.elements[0] as TextBoxElement).height : 0;
+      if (score.pageSetup.showHeader) {
+        const header = score.getHeaderForPage(currentPageNumber);
 
-      const extraHeaderHeightPx = Math.max(
-        0,
-        headerHeightPx - (pageSetup.topMargin - pageSetup.headerMargin),
-      );
+        // Currently, headers and footers may only contain a single
+        // text box.
+        const headerHeightPx = (header.elements[0] as TextBoxElement).height;
 
-      const extraFooterHeightPx = Math.max(
-        0,
-        footerHeightPx - (pageSetup.bottomMargin - pageSetup.footerMargin),
-      );
+        extraHeaderHeightPx = Math.max(
+          0,
+          headerHeightPx - (pageSetup.topMargin - pageSetup.headerMargin),
+        );
+      }
+
+      if (score.pageSetup.showFooter) {
+        const footer = score.getFooterForPage(currentPageNumber);
+
+        // Currently, headers and footers may only contain a single
+        // text box.
+        const footerHeightPx = (footer.elements[0] as TextBoxElement).height;
+
+        extraFooterHeightPx = Math.max(
+          0,
+          footerHeightPx - (pageSetup.bottomMargin - pageSetup.footerMargin),
+        );
+      }
 
       const innerPageHeight =
         pageSetup.innerPageHeight - extraHeaderHeightPx - extraFooterHeightPx;
@@ -281,9 +305,13 @@ export class LayoutService {
             pageSetup,
             neumeHeight,
           );
+
+          marginTop = (element as TextBoxElement).marginTop;
           break;
         case ElementType.RichTextBox:
           elementWidthPx = pageSetup.innerPageWidth;
+
+          marginTop = (element as TextBoxElement).marginTop;
           break;
         case ElementType.ImageBox:
           {
@@ -322,6 +350,9 @@ export class LayoutService {
             TextMeasurementService.getFontHeight(
               `${modeKeyElement.computedFontSize}px ${modeKeyElement.computedFontFamily}`,
             ) + modeKeyElement.computedHeightAdjustment;
+
+          marginTop = modeKeyElement.marginTop;
+
           break;
         }
         case ElementType.Note: {
@@ -411,7 +442,7 @@ export class LayoutService {
           const tempoElement = element as TempoElement;
           const temoMapping = NeumeMappingService.getMapping(
             tempoElement.neume,
-          )!;
+          );
 
           elementWidthPx =
             TextMeasurementService.getTextWidth(
@@ -452,6 +483,8 @@ export class LayoutService {
             ? pageSetup.dropCapDefaultLineHeight
             : dropCapElement.lineHeight;
 
+          dropCapElement.computedLineSpan = 1;
+
           if (dropCapElement.customWidth != null) {
             elementWidthPx = dropCapElement.customWidth;
           } else {
@@ -460,6 +493,23 @@ export class LayoutService {
               dropCapElement.computedFont,
             );
           }
+
+          dropCapElement.contentWidth = elementWidthPx;
+
+          // Handle the special case of multiline drop caps
+          // when it is the very first element
+          if (i == 0) {
+            multilineDropCapWidthPx =
+              elementWidthPx + pageSetup.neumeDefaultSpacing;
+
+            const lineSpan = dropCapElement.useDefaultStyle
+              ? pageSetup.dropCapDefaultLineSpan
+              : dropCapElement.lineSpan;
+
+            multilineDropCapCounter = lineSpan - 1;
+            dropCapElement.computedLineSpan = lineSpan;
+          }
+
           break;
         }
         case ElementType.Empty: {
@@ -564,6 +614,10 @@ export class LayoutService {
               (x) => x.elementType === ElementType.TextBox,
             ) as TextBoxElement;
             height = textbox.height;
+
+            // Add the margins
+            height += textbox.marginTop;
+            height += textbox.marginBottom;
           } else if (
             line.elements.some((x) => x.elementType === ElementType.RichTextBox)
           ) {
@@ -571,6 +625,10 @@ export class LayoutService {
               (x) => x.elementType === ElementType.RichTextBox,
             ) as RichTextBoxElement;
             height = textbox.height;
+
+            // Add the margins
+            height += textbox.marginTop;
+            height += textbox.marginBottom;
           } else if (
             line.elements.some((x) => x.elementType === ElementType.ModeKey)
           ) {
@@ -578,6 +636,10 @@ export class LayoutService {
               (x) => x.elementType === ElementType.ModeKey,
             ) as ModeKeyElement;
             height = modekey.height;
+
+            // Add the margins
+            height += modekey.marginTop;
+            height += modekey.marginBottom;
           } else if (
             line.elements.some((x) => x.elementType === ElementType.ImageBox)
           ) {
@@ -598,10 +660,7 @@ export class LayoutService {
               ].includes(x.elementType),
             )
           ) {
-            height = Math.max(
-              lyricsVerticalOffset + lyricHeight,
-              pageSetup.lineHeight,
-            );
+            height = neumeLineHeight;
           } else {
             height = pageSetup.lineHeight;
           }
@@ -622,10 +681,48 @@ export class LayoutService {
           elementWithTrailingSpace.width -= pageSetup.neumeDefaultSpacing;
           elementWithTrailingSpace = null;
         }
+
+        // Handle the special case of multiline drop caps
+        if (multilineDropCapCounter > 0) {
+          currentLineWidthPx += multilineDropCapWidthPx;
+          currentLyricsEndPx += multilineDropCapWidthPx;
+          line.indentation = multilineDropCapWidthPx;
+          multilineDropCapCounter--;
+        }
+
+        // A drop cap can only drop multiple lines if
+        // 1) it is the first element on the line, and
+        // 2) no other drop cap is already dropping
+        if (
+          element.elementType === ElementType.DropCap &&
+          multilineDropCapCounter === 0
+        ) {
+          const dropCapElement = element as DropCapElement;
+          multilineDropCapWidthPx =
+            elementWidthPx + pageSetup.neumeDefaultSpacing;
+
+          const lineSpan = dropCapElement.useDefaultStyle
+            ? pageSetup.dropCapDefaultLineSpan
+            : dropCapElement.lineSpan;
+
+          multilineDropCapCounter = lineSpan - 1;
+          dropCapElement.computedLineSpan = lineSpan;
+
+          // Make sure we push the drop cap to the next page if necessary
+          additionalHeight = neumeLineHeight * multilineDropCapCounter;
+        }
       }
 
       // Check if we need a new page
-      if (currentPageHeightPx > innerPageHeight || lastElementWasPageBreak) {
+      if (
+        currentPageHeightPx + additionalHeight > innerPageHeight ||
+        lastElementWasPageBreak
+      ) {
+        // If the line is empty, remove it from the page
+        if (line.elements.length === 0) {
+          page.lines.pop();
+        }
+
         page = new Page();
 
         line = new Line();
@@ -644,12 +741,30 @@ export class LayoutService {
           elementWithTrailingSpace.width -= pageSetup.neumeDefaultSpacing;
           elementWithTrailingSpace = null;
         }
+
+        // Handle the special case of multiline drop caps
+        // A drop cap can only drop multiple lines if
+        // 1) it is the first element on the line, and
+        // 2) no other drop cap is already dropping
+        if (element.elementType === ElementType.DropCap) {
+          const dropCapElement = element as DropCapElement;
+          multilineDropCapWidthPx =
+            elementWidthPx + pageSetup.neumeDefaultSpacing;
+
+          const lineSpan = dropCapElement.useDefaultStyle
+            ? pageSetup.dropCapDefaultLineSpan
+            : dropCapElement.lineSpan;
+
+          multilineDropCapCounter = lineSpan - 1;
+          dropCapElement.computedLineSpan = lineSpan;
+        }
       }
 
       element.x = pageSetup.leftMargin + currentLineWidthPx;
       element.y =
         pageSetup.topMargin +
         extraHeaderHeightPx +
+        marginTop +
         currentPageHeightPx -
         lastLineHeightPx;
       element.width = elementWidthPx;
@@ -661,10 +776,12 @@ export class LayoutService {
       // This aligns the bottom of the drop cap with
       // the bottom of the lyrics.
       if (element.elementType === ElementType.DropCap) {
-        const distanceFromTopToBottomOfLyrics =
-          lyricsVerticalOffset + lyricAscent;
-
         const dropCapElement = element as DropCapElement;
+
+        const distanceFromTopToBottomOfLyrics =
+          (dropCapElement.computedLineSpan - 1) * neumeLineHeight +
+          lyricsVerticalOffset +
+          lyricAscent;
 
         const fontHeight = TextMeasurementService.getFontHeight(
           dropCapElement.computedFont,
@@ -1299,16 +1416,22 @@ export class LayoutService {
     pageSetup: PageSetup,
   ) {
     const mappingNote = !martyriaElement.error
-      ? NeumeMappingService.getMapping(martyriaElement.note)!
-      : NeumeMappingService.getMapping(Note.Pa)!;
+      ? NeumeMappingService.getMapping(martyriaElement.note)
+      : NeumeMappingService.getMapping(Note.Pa);
     const mappingRoot = !martyriaElement.error
-      ? NeumeMappingService.getMapping(martyriaElement.rootSign)!
-      : NeumeMappingService.getMapping(RootSign.Alpha)!;
+      ? NeumeMappingService.getMapping(martyriaElement.rootSign)
+      : NeumeMappingService.getMapping(RootSign.Alpha);
     const mappingMeasureBarLeft = martyriaElement.measureBarLeft
-      ? NeumeMappingService.getMapping(martyriaElement.measureBarLeft)!
+      ? NeumeMappingService.getMapping(martyriaElement.measureBarLeft)
       : null;
     const mappingMeasureBarRight = martyriaElement.measureBarRight
-      ? NeumeMappingService.getMapping(martyriaElement.measureBarRight)!
+      ? NeumeMappingService.getMapping(martyriaElement.measureBarRight)
+      : null;
+    const mappingTempoLeft = martyriaElement.tempoLeft
+      ? NeumeMappingService.getMapping(martyriaElement.tempoLeft)
+      : null;
+    const mappingTempoRight = martyriaElement.tempoRight
+      ? NeumeMappingService.getMapping(martyriaElement.tempoRight)
       : null;
 
     // Add in padding to give some extra space between
@@ -1321,6 +1444,38 @@ export class LayoutService {
       pageSetup,
     );
 
+    if (martyriaElement.tempoLeft) {
+      martyriaElement.neumeWidth += this.getNeumeWidthFromCache(
+        neumeWidthCache,
+        martyriaElement.tempoLeft,
+        pageSetup,
+      );
+    }
+
+    if (martyriaElement.tempoRight) {
+      martyriaElement.neumeWidth += this.getNeumeWidthFromCache(
+        neumeWidthCache,
+        martyriaElement.tempoRight,
+        pageSetup,
+      );
+    }
+
+    if (martyriaElement.measureBarLeft) {
+      martyriaElement.neumeWidth += this.getNeumeWidthFromCache(
+        neumeWidthCache,
+        martyriaElement.measureBarLeft,
+        pageSetup,
+      );
+    }
+
+    if (martyriaElement.measureBarRight) {
+      martyriaElement.neumeWidth += this.getNeumeWidthFromCache(
+        neumeWidthCache,
+        martyriaElement.measureBarRight,
+        pageSetup,
+      );
+    }
+
     return (
       martyriaElement.spaceAfter +
       (padding +
@@ -1332,15 +1487,27 @@ export class LayoutService {
           mappingRoot.text,
           `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
         ) +
-        (martyriaElement.measureBarLeft
+        (mappingMeasureBarLeft
           ? TextMeasurementService.getTextWidth(
-              mappingMeasureBarLeft!.text,
+              mappingMeasureBarLeft.text,
               `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
             )
           : 0) +
-        (martyriaElement.measureBarRight
+        (mappingMeasureBarRight
           ? TextMeasurementService.getTextWidth(
-              mappingMeasureBarRight!.text,
+              mappingMeasureBarRight.text,
+              `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
+            )
+          : 0) +
+        (mappingTempoLeft
+          ? TextMeasurementService.getTextWidth(
+              mappingTempoLeft.text,
+              `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
+            )
+          : 0) +
+        (mappingTempoRight
+          ? TextMeasurementService.getTextWidth(
+              mappingTempoRight.text,
               `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
             )
           : 0))
@@ -1348,8 +1515,22 @@ export class LayoutService {
   }
 
   public static justifyLines(pages: Page[], pageSetup: PageSetup) {
-    for (const page of pages) {
-      for (const line of page.lines) {
+    for (let pageIndex = 0; pageIndex < pages.length; pageIndex++) {
+      const page = pages[pageIndex];
+
+      const nextPage =
+        pageIndex + 1 < pages.length ? pages[pageIndex + 1] : null;
+
+      for (let lineIndex = 0; lineIndex < page.lines.length; lineIndex++) {
+        const line = page.lines[lineIndex];
+
+        let nextLine: Line | null =
+          lineIndex + 1 < page.lines.length ? page.lines[lineIndex + 1] : null;
+
+        if (nextLine == null && nextPage != null && nextPage.lines.length > 0) {
+          nextLine = nextPage.lines[0];
+        }
+
         if (
           pages.indexOf(page) === pages.length - 1 &&
           page.lines.indexOf(line) === page.lines.length - 1
@@ -1380,6 +1561,26 @@ export class LayoutService {
           continue;
         }
 
+        // We treat text boxes and mode keys as paragraph breaks,
+        // so we only justify if there is a justified line break
+        if (
+          !line.elements.some(
+            (x) =>
+              x.lineBreak == true &&
+              (x.lineBreakType === LineBreakType.Justify ||
+                x.lineBreakType === LineBreakType.Center),
+          ) &&
+          nextLine?.elements.some(
+            (x) =>
+              (x.elementType === ElementType.TextBox &&
+                !(x as TextBoxElement).inline) ||
+              x.elementType === ElementType.RichTextBox ||
+              x.elementType === ElementType.ModeKey,
+          )
+        ) {
+          continue;
+        }
+
         if (line.elements.length < 2) {
           continue;
         }
@@ -1393,7 +1594,8 @@ export class LayoutService {
           .map((x) => x.width)
           .reduce((sum, x) => sum + x, 0);
 
-        const extraSpace = pageSetup.innerPageWidth - currentWidthPx;
+        const extraSpace =
+          pageSetup.innerPageWidth - currentWidthPx - line.indentation;
 
         if (alignCenter) {
           for (let i = 0; i < line.elements.length; i++) {
@@ -1430,7 +1632,7 @@ export class LayoutService {
 
     const elaphronMapping = NeumeMappingService.getMapping(
       QuantitativeNeume.Elaphron,
-    )!;
+    );
     const elaphronWidth = TextMeasurementService.getTextWidth(
       elaphronMapping.text,
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
@@ -1438,7 +1640,7 @@ export class LayoutService {
 
     const runningElaphronMapping = NeumeMappingService.getMapping(
       QuantitativeNeume.RunningElaphron,
-    )!;
+    );
     const runningElaphronWidth = TextMeasurementService.getTextWidth(
       runningElaphronMapping.text,
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
@@ -1467,11 +1669,20 @@ export class LayoutService {
           (x) => x.elementType === ElementType.Note,
         ) as NoteElement[];
 
+        const indexOfFirstNote = line.elements.findIndex(
+          (x) => x.elementType === ElementType.Note,
+        );
+
         for (const element of noteElements) {
           const index = line.elements.indexOf(element);
 
+          // We do not simply check for index === 0 because we also want
+          // to include the case where the first letter of the melisma
+          // is a drop cap at the beginning of the line
           const isIntermediateMelismaAtStartOfLine =
-            index === 0 && element.isMelisma && !element.isMelismaStart;
+            index === indexOfFirstNote &&
+            element.isMelisma &&
+            !element.isMelismaStart;
 
           // First, clear melisma fields, since
           // they may be stale
@@ -1480,7 +1691,10 @@ export class LayoutService {
           element.melismaWidth = 0;
           element.isFullMelisma = isIntermediateMelismaAtStartOfLine;
 
-          if (MelismaHelperGreek.isGreek(element.lyrics)) {
+          if (
+            !pageSetup.disableGreekMelismata &&
+            MelismaHelperGreek.isGreek(element.lyrics)
+          ) {
             if (element.isMelismaStart) {
               melismaSyllables = MelismaHelperGreek.getMelismaSyllable(
                 element.lyrics,
@@ -1496,6 +1710,8 @@ export class LayoutService {
             }
 
             continue;
+          } else if (element.lyrics.length > 0) {
+            melismaSyllables = null;
           }
 
           if (melismaSyllables != null) {
@@ -1772,6 +1988,10 @@ export class LayoutService {
 
               element.melismaWidth = Math.max(end - start, 0);
 
+              if (element.melismaWidth < pageSetup.lyricsMelismaCutoffWidth) {
+                element.melismaWidth = 0;
+              }
+
               // Calculate the distance from the alphabetic baseline to the bottom of the font bounding box
               element.melismaOffsetTop =
                 -this.getLyricsFontBoundingBoxDescentFromCache(
@@ -1842,6 +2062,7 @@ export class LayoutService {
     pageSetup: PageSetup,
   ) {
     let currentNote = 0;
+    let currentNoteVirtual = 0;
     let currentScale = Scale.Diatonic;
     let currentShift = 0;
 
@@ -1856,7 +2077,10 @@ export class LayoutService {
     for (const element of elements) {
       if (element.elementType === ElementType.Note) {
         const note = element as NoteElement;
+
         currentNote += getNeumeValue(note.quantitativeNeume)!;
+        currentNoteVirtual = currentNote + currentShift;
+
         note.noteIndicatorNeume = noteIndicatorMap.get(
           ((currentNote % 7) + 7) % 7,
         )!;
@@ -1864,15 +2088,22 @@ export class LayoutService {
         const noteSpread = getNoteSpread(note.quantitativeNeume);
 
         const currentNotes = noteSpread.map((x) => currentNote + x);
+        const currentNotesVirtual = noteSpread.map(
+          (x) => currentNoteVirtual + x,
+        );
 
         note.scaleNotes = noteSpread.map((x) =>
           getScaleNoteFromValue(currentNote + x),
         );
 
+        note.scaleNotesVirtual = noteSpread.map((x) =>
+          getScaleNoteFromValue(currentNoteVirtual + x),
+        );
+
         // Handle fthora carries
         if (
           note.fthoraCarry &&
-          this.fthoraIsValid(note.fthoraCarry, currentNotes, pageSetup)
+          this.fthoraIsValid(note.fthoraCarry, currentNotesVirtual, pageSetup)
         ) {
           note.fthora = note.fthoraCarry;
           note.fthoraCarry = null;
@@ -1880,7 +2111,11 @@ export class LayoutService {
 
         if (
           note.secondaryFthoraCarry &&
-          this.fthoraIsValid(note.secondaryFthoraCarry, currentNotes, pageSetup)
+          this.fthoraIsValid(
+            note.secondaryFthoraCarry,
+            currentNotesVirtual,
+            pageSetup,
+          )
         ) {
           note.secondaryFthora = note.secondaryFthoraCarry;
           note.secondaryFthoraCarry = null;
@@ -1888,14 +2123,18 @@ export class LayoutService {
 
         if (
           note.tertiaryFthoraCarry &&
-          this.fthoraIsValid(note.tertiaryFthoraCarry, currentNotes, pageSetup)
+          this.fthoraIsValid(
+            note.tertiaryFthoraCarry,
+            currentNotesVirtual,
+            pageSetup,
+          )
         ) {
           note.tertiaryFthora = note.tertiaryFthoraCarry;
           note.tertiaryFthoraCarry = null;
         }
 
         if (note.fthora) {
-          if (this.fthoraIsValid(note.fthora, currentNotes, pageSetup)) {
+          if (this.fthoraIsValid(note.fthora, currentNotesVirtual, pageSetup)) {
             const spreadIndex = getSpreadIndex(
               note.fthora,
               note.quantitativeNeume,
@@ -1904,11 +2143,20 @@ export class LayoutService {
             const fthoraNote =
               spreadIndex != -1 ? currentNotes[spreadIndex] : currentNote;
 
-            currentScale =
-              this.getScaleFromFthora(note.fthora, fthoraNote) || currentScale;
+            const fthoraNoteVirtual =
+              spreadIndex != -1
+                ? currentNotesVirtual[spreadIndex]
+                : currentNoteVirtual;
 
+            // Scale is based off the virtual note
+            currentScale =
+              this.getScaleFromFthora(note.fthora, fthoraNoteVirtual) ||
+              currentScale;
+
+            // Shift is based off the true note
             currentShift = this.getShift(
               fthoraNote,
+              fthoraNoteVirtual,
               currentScale,
               note.fthora,
               note.chromaticFthoraNote,
@@ -1924,25 +2172,40 @@ export class LayoutService {
           }
         } else if (note.secondaryFthora) {
           if (
-            this.fthoraIsValid(note.secondaryFthora, currentNotes, pageSetup)
+            this.fthoraIsValid(
+              note.secondaryFthora,
+              currentNotesVirtual,
+              pageSetup,
+            )
           ) {
             const spreadIndex = getSpreadIndex(
               note.secondaryFthora,
               note.quantitativeNeume,
               NeumeSelection.Secondary,
             );
+
             const fthoraNote =
               spreadIndex != -1 ? currentNotes[spreadIndex] : currentNote;
 
-            currentScale =
-              this.getScaleFromFthora(note.secondaryFthora, fthoraNote) ||
-              currentScale;
+            const fthoraNoteVirtual =
+              spreadIndex != -1
+                ? currentNotesVirtual[spreadIndex]
+                : currentNoteVirtual;
 
+            // Scale is based off the virtual note
+            currentScale =
+              this.getScaleFromFthora(
+                note.secondaryFthora,
+                fthoraNoteVirtual,
+              ) || currentScale;
+
+            // Shift is based off the true note
             currentShift = this.getShift(
               fthoraNote,
+              fthoraNoteVirtual,
               currentScale,
               note.secondaryFthora,
-              note.chromaticFthoraNote,
+              note.secondaryChromaticFthoraNote,
             );
 
             note.noteIndicatorNeume = noteIndicatorMap.get(
@@ -1955,7 +2218,11 @@ export class LayoutService {
           }
         } else if (note.tertiaryFthora) {
           if (
-            this.fthoraIsValid(note.tertiaryFthora, currentNotes, pageSetup)
+            this.fthoraIsValid(
+              note.tertiaryFthora,
+              currentNotesVirtual,
+              pageSetup,
+            )
           ) {
             const spreadIndex = getSpreadIndex(
               note.tertiaryFthora,
@@ -1965,15 +2232,23 @@ export class LayoutService {
             const fthoraNote =
               spreadIndex != -1 ? currentNotes[spreadIndex] : currentNote;
 
+            const fthoraNoteVirtual =
+              spreadIndex != -1
+                ? currentNotesVirtual[spreadIndex]
+                : currentNoteVirtual;
+
+            // Scale is based off the virtual note
             currentScale =
-              this.getScaleFromFthora(note.tertiaryFthora, fthoraNote) ||
+              this.getScaleFromFthora(note.tertiaryFthora, fthoraNoteVirtual) ||
               currentScale;
 
+            // Shift is based off the true note
             currentShift = this.getShift(
               fthoraNote,
+              fthoraNoteVirtual,
               currentScale,
               note.tertiaryFthora,
-              note.chromaticFthoraNote,
+              note.tertiaryChromaticFthoraNote,
             );
 
             note.noteIndicatorNeume = noteIndicatorMap.get(
@@ -2039,6 +2314,7 @@ export class LayoutService {
 
           currentShift = this.getShift(
             currentNote,
+            currentNote,
             currentScale,
             modeKey.fthora,
             null,
@@ -2089,6 +2365,7 @@ export class LayoutService {
 
               currentShift = this.getShift(
                 currentNote,
+                currentScaleNote,
                 currentScale,
                 martyria.fthora,
                 martyria.chromaticFthoraNote,
@@ -2211,6 +2488,10 @@ export class LayoutService {
       }
       if (currentNote === getScaleNoteValue(ScaleNote.VouHigh)) {
         return Scale.EnharmonicVouHigh;
+      } else {
+        // Default to enharmonic zo high if the fthora was placed on a non-standard note
+        // This helps with correct martyria calculation.
+        return Scale.EnharmonicZoHigh;
       }
     }
 
@@ -2239,6 +2520,7 @@ export class LayoutService {
 
   public static getShift(
     currentNote: number,
+    currentNoteVirtual: number,
     currentScale: Scale,
     fthora: Fthora,
     chromaticFthoraNote: ScaleNote | null,
@@ -2265,21 +2547,25 @@ export class LayoutService {
       let fthoraNote = currentNote;
 
       if (fthora.startsWith('DiatonicNiLow')) {
-        fthoraNote = -1;
+        fthoraNote = getScaleNoteValue(ScaleNote.Ni);
       } else if (fthora.startsWith('DiatonicPa')) {
-        fthoraNote = 0;
+        fthoraNote = getScaleNoteValue(ScaleNote.Pa);
       } else if (fthora.startsWith('DiatonicVou')) {
-        fthoraNote = 1;
+        fthoraNote = getScaleNoteValue(ScaleNote.Vou);
       } else if (fthora.startsWith('DiatonicGa')) {
-        fthoraNote = 2;
+        fthoraNote = getScaleNoteValue(ScaleNote.Ga);
       } else if (fthora.startsWith('DiatonicThi')) {
-        fthoraNote = 3;
+        fthoraNote = getScaleNoteValue(ScaleNote.Thi);
       } else if (fthora.startsWith('DiatonicKe')) {
-        fthoraNote = 4;
+        fthoraNote = getScaleNoteValue(ScaleNote.Ke);
       } else if (fthora.startsWith('DiatonicZo')) {
-        fthoraNote = 5;
+        fthoraNote = getScaleNoteValue(ScaleNote.ZoHigh);
       } else if (fthora.startsWith('DiatonicNiHigh')) {
-        fthoraNote = 6;
+        fthoraNote = getScaleNoteValue(ScaleNote.NiHigh);
+      } else if (fthora.startsWith('GeneralFlat')) {
+        fthoraNote = currentNoteVirtual;
+      } else if (fthora.startsWith('GeneralSharp')) {
+        fthoraNote = currentNoteVirtual;
       }
 
       shift = fthoraNote - currentNote;
@@ -2291,6 +2577,16 @@ export class LayoutService {
       shift = getScaleNoteValue(ScaleNote.Ke) - currentNote;
     } else if (currentScale === Scale.SpathiGa) {
       shift = getScaleNoteValue(ScaleNote.Ga) - currentNote;
+    } else if (currentScale === Scale.EnharmonicGa) {
+      shift = getScaleNoteValue(ScaleNote.Ga) - currentNote;
+    } else if (currentScale === Scale.EnharmonicVou) {
+      shift = getScaleNoteValue(ScaleNote.Vou) - currentNote;
+    } else if (currentScale === Scale.EnharmonicVouHigh) {
+      shift = getScaleNoteValue(ScaleNote.VouHigh) - currentNote;
+    } else if (currentScale === Scale.EnharmonicZo) {
+      shift = getScaleNoteValue(ScaleNote.Zo) - currentNote;
+    } else if (currentScale === Scale.EnharmonicZoHigh) {
+      shift = getScaleNoteValue(ScaleNote.ZoHigh) - currentNote;
     }
 
     return shift;
@@ -2366,7 +2662,7 @@ export class LayoutService {
     let width = cache.get(key);
 
     if (width == null) {
-      const neumeMapping = NeumeMappingService.getMapping(neume)!;
+      const neumeMapping = NeumeMappingService.getMapping(neume);
 
       width = TextMeasurementService.getTextWidth(
         neumeMapping.text,

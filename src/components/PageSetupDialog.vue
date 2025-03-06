@@ -138,6 +138,40 @@
               </option>
             </select>
           </div>
+          <template v-if="form.pageSize === 'Custom'">
+            <div class="form-group">
+              <label class="margin-label">{{
+                $t('dialog:pageSetup.width')
+              }}</label>
+              <InputUnit
+                class="margin-input"
+                type="number"
+                :unit="form.pageSizeUnit"
+                :min="1"
+                :max="10000"
+                :step="marginStep"
+                :precision="2"
+                v-model="form.pageWidthCustom"
+                @change="updatePageSize"
+              />
+            </div>
+            <div class="form-group">
+              <label class="margin-label">{{
+                $t('dialog:pageSetup.height')
+              }}</label>
+              <InputUnit
+                class="margin-input"
+                type="number"
+                :unit="form.pageSizeUnit"
+                :min="1"
+                :max="10000"
+                :step="marginStep"
+                :precision="2"
+                v-model="form.pageHeightCustom"
+                @change="updatePageSize"
+              />
+            </div>
+          </template>
           <div class="form-group">
             <div class="subheader">{{ $t('dialog:pageSetup.unit') }}</div>
             <input
@@ -1363,6 +1397,17 @@ export default class PageSetupDialog extends Vue {
   }
 
   updatePageSize() {
+    if (this.form.pageSize === 'Custom') {
+      if (this.form.landscape) {
+        this.form.pageWidth = this.form.pageHeightCustom;
+        this.form.pageHeight = this.form.pageWidthCustom;
+      } else {
+        this.form.pageWidth = this.form.pageWidthCustom;
+        this.form.pageHeight = this.form.pageHeightCustom;
+      }
+      return;
+    }
+
     const pageSize = pageSizes.find((x) => x.name === this.form.pageSize);
     if (pageSize) {
       if (this.form.landscape) {

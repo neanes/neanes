@@ -85,8 +85,8 @@ const maxRecentFiles = 20;
 const storeFilePath = path.join(userDataPath, 'settings.json');
 
 const isMac = process.platform === 'darwin';
-
 const silentPdf = process.argv.includes('--silent-pdf');
+const silentHtml = process.argv.includes('--silent-html');
 const silentLatex = process.argv.includes('--silent-latex');
 const silentLatexIncludeModeKeys = process.argv.includes(
   '--latex-include-mode-keys',
@@ -94,7 +94,7 @@ const silentLatexIncludeModeKeys = process.argv.includes(
 const silentLatexIncludeTextBoxes = process.argv.includes(
   '--latex-include-text-boxes',
 );
-const silent = silentPdf || silentLatex;
+const silent = silentPdf || silentLatex || silentHtml;
 
 const disableUpdates = process.argv.includes('--no-update');
 
@@ -355,6 +355,7 @@ async function openFileFromArgs(argv: string[]) {
   return {
     files: result,
     silentPdf,
+    silentHtml,
     silentLatex,
     silentLatexIncludeModeKeys,
     silentLatexIncludeTextBoxes,
@@ -529,9 +530,6 @@ async function openImage() {
   return result;
 }
 
-let silentPdfSuccessCount = 0;
-let silentPdfFailCount = 0;
-
 function getPageSize(pageSize: PageSize, width: number, height: number) {
   switch (pageSize) {
     case 'Half-Legal':
@@ -553,6 +551,9 @@ function getPageSize(pageSize: PageSize, width: number, height: number) {
       return pageSize;
   }
 }
+
+let silentPdfSuccessCount = 0;
+let silentPdfFailCount = 0;
 
 async function exportWorkspaceAsPdf(args: ExportWorkspaceAsPdfArgs) {
   try {
@@ -642,10 +643,33 @@ async function exportWorkspaceAsPdf(args: ExportWorkspaceAsPdfArgs) {
   }
 }
 
+let silentHtmlSuccessCount = 0;
+let silentHtmlFailCount = 0;
+
 async function exportWorkspaceAsHtml(args: ExportWorkspaceAsHtmlArgs) {
   try {
-    if (saving) {
+    if (saving || !win) {
       return false;
+    }
+
+    if (silentHtml) {
+      try {
+        let newPath = args.filePathFull!.replace(/\.byzx?$/, '.html');
+
+        // Check to make sure we don't accidentally overwrite the original file
+        if (newPath === args.filePathFull) {
+          newPath += '.html';
+        }
+
+        await fs.writeFile(newPath, args.data);
+        silentHtmlSuccessCount++;
+        console.log(`DONE ${args.filePathFull} => ${newPath}`);
+      } catch (error) {
+        silentHtmlFailCount++;
+        console.error(`FAIL ${args.filePathFull} | ${error}`);
+      }
+
+      return;
     }
 
     saving = true;
@@ -1690,6 +1714,14 @@ ipcMain.handle(IpcRendererChannels.ExitApplication, async () => {
 
     if (silentPdfFailCount > 0) {
       console.log(`Failed to write ${silentPdfFailCount} files`);
+    }
+  }
+
+  if (silentHtml) {
+    console.log(`Successfully wrote ${silentHtmlSuccessCount} files`);
+
+    if (silentHtmlFailCount > 0) {
+      console.log(`Failed to write ${silentHtmlFailCount} files`);
     }
   }
 

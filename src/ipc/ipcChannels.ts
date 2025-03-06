@@ -85,6 +85,7 @@ export interface FileMenuOpenScoreArgs {
 export interface OpenWorkspaceFromArgvArgs {
   files: FileMenuOpenScoreArgs[];
   silentPdf?: boolean;
+  silentHtml?: boolean;
   silentLatex?: boolean;
   silentLatexIncludeModeKeys?: boolean;
   silentLatexIncludeTextBoxes?: boolean;
@@ -152,6 +153,7 @@ export interface ExportWorkspaceAsPdfArgs {
 
 export interface ExportWorkspaceAsHtmlArgs {
   filePath: string | null;
+  filePathFull: string | null;
   tempFileName: string;
   data: string;
 }

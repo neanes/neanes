@@ -172,6 +172,8 @@ export class PageSetup {
   public noFthoraRestrictions: boolean = false;
   public disableGreekMelismata: boolean = false;
 
+  public useOptionalDiatonicFthoras: boolean = false;
+
   public get innerPageWidth() {
     return this.pageWidth - this.leftMargin - this.rightMargin;
   }

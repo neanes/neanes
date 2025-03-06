@@ -23,7 +23,8 @@
     "width": "Width",
     "height": "Height",
     "marginTop": "Gap Above",
-    "marginBottom": "Gap Below"
+    "marginBottom": "Gap Below",
+    "verticalOffset": "Vertical Offset"
   },
   "main": {
     "auto": "Auto",

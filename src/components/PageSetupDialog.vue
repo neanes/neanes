@@ -251,6 +251,21 @@
           </div>
           <div class="form-group">
             <label class="margin-label">{{
+              $t('dialog:pageSetup.martyriae')
+            }}</label>
+            <InputUnit
+              class="margin-input"
+              type="number"
+              :unit="form.pageSizeUnit"
+              :min="-neumeSpacingMax"
+              :max="neumeSpacingMax"
+              :step="spacingStep"
+              :precision="3"
+              v-model="form.martyriaVerticalOffset"
+            />
+          </div>
+          <div class="form-group">
+            <label class="margin-label">{{
               $t('dialog:pageSetup.lyricsV')
             }}</label>
             <input
@@ -1508,7 +1523,7 @@ export default class PageSetupDialog extends Vue {
 
 .margin-label {
   display: inline-block;
-  width: 4rem;
+  width: 4.25rem;
 }
 
 .margin-input {

@@ -254,6 +254,8 @@ export class SaveService {
     pageSetup.chrysanthineAccidentals = p.chrysanthineAccidentals;
     pageSetup.noFthoraRestrictions = p.noFthoraRestrictions || undefined;
     pageSetup.disableGreekMelismata = p.disableGreekMelismata || undefined;
+    pageSetup.useOptionalDiatonicFthoras =
+      p.useOptionalDiatonicFthoras || undefined;
   }
 
   public static SaveLyricSetup(lyricSetup: LyricSetup_v1, l: LyricSetup) {
@@ -890,6 +892,8 @@ export class SaveService {
       p.chrysanthineAccidentals === undefined;
     pageSetup.noFthoraRestrictions = p.noFthoraRestrictions === true;
     pageSetup.disableGreekMelismata = p.disableGreekMelismata === true;
+    pageSetup.useOptionalDiatonicFthoras =
+      p.useOptionalDiatonicFthoras === true;
 
     // Fix pageWidth and pageHeight
     // Due to bug #71, A-series paper sizes had incorrect width and height

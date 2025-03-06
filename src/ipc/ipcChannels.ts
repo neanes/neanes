@@ -145,6 +145,8 @@ export interface ExportWorkspaceAsPdfArgs {
   filePath: string | null;
   tempFileName: string;
   pageSize: PageSize;
+  pageWidthInches: number;
+  pageHeightInches: number;
   landscape: boolean;
 }
 
@@ -187,6 +189,8 @@ export interface ExportPageAsImageArgs {
 
 export interface PrintWorkspaceArgs {
   pageSize: PageSize;
+  pageWidthInches: number;
+  pageHeightInches: number;
   landscape: boolean;
 }
 

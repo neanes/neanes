@@ -18,6 +18,7 @@ import {
 } from '@/ipc/ipcChannels';
 import { Workspace } from '@/models/Workspace';
 import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
+import { Unit } from '@/utils/Unit';
 
 import { SaveService } from '../SaveService';
 import { IIpcService } from './IIpcService';
@@ -54,6 +55,10 @@ export class IpcService implements IIpcService {
         tempFileName: workspace.tempFileName,
         landscape: workspace.score.pageSetup.landscape,
         pageSize: workspace.score.pageSetup.pageSize,
+        pageWidthInches: Unit.toInch(workspace.score.pageSetup.pageWidthCustom),
+        pageHeightInches: Unit.toInch(
+          workspace.score.pageSetup.pageHeightCustom,
+        ),
       } as ExportWorkspaceAsPdfArgs,
     );
   }
@@ -141,6 +146,8 @@ export class IpcService implements IIpcService {
     return await window.ipcRenderer.invoke(IpcRendererChannels.PrintWorkspace, {
       landscape: workspace.score.pageSetup.landscape,
       pageSize: workspace.score.pageSetup.pageSize,
+      pageWidthInches: Unit.toInch(workspace.score.pageSetup.pageWidthCustom),
+      pageHeightInches: Unit.toInch(workspace.score.pageSetup.pageHeightCustom),
     } as PrintWorkspaceArgs);
   }
 

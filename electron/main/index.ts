@@ -532,7 +532,7 @@ async function openImage() {
 let silentPdfSuccessCount = 0;
 let silentPdfFailCount = 0;
 
-function getPageSize(pageSize: PageSize) {
+function getPageSize(pageSize: PageSize, width: number, height: number) {
   switch (pageSize) {
     case 'Half-Legal':
       return {
@@ -543,6 +543,11 @@ function getPageSize(pageSize: PageSize) {
       return {
         width: 5.5,
         height: 8.5,
+      };
+    case 'Custom':
+      return {
+        width,
+        height,
       };
     default:
       return pageSize;
@@ -558,7 +563,11 @@ async function exportWorkspaceAsPdf(args: ExportWorkspaceAsPdfArgs) {
     if (silentPdf) {
       try {
         const data = await win.webContents.printToPDF({
-          pageSize: getPageSize(args.pageSize),
+          pageSize: getPageSize(
+            args.pageSize,
+            args.pageWidthInches,
+            args.pageHeightInches,
+          ),
           landscape: args.landscape,
         });
         let newPath = args.filePath!.replace(/\.byzx?$/, '.pdf');
@@ -606,7 +615,11 @@ async function exportWorkspaceAsPdf(args: ExportWorkspaceAsPdfArgs) {
 
       if (doWrite) {
         const data = await win.webContents.printToPDF({
-          pageSize: getPageSize(args.pageSize),
+          pageSize: getPageSize(
+            args.pageSize,
+            args.pageWidthInches,
+            args.pageHeightInches,
+          ),
           landscape: args.landscape,
         });
         await fs.writeFile(filePath, data);
@@ -921,7 +934,11 @@ async function printWorkspace(args: PrintWorkspaceArgs) {
 
       win.webContents.print(
         {
-          pageSize: getPageSize(args.pageSize),
+          pageSize: getPageSize(
+            args.pageSize,
+            args.pageWidthInches,
+            args.pageHeightInches,
+          ),
           landscape: args.landscape,
         },
         (success, failureReason) => {

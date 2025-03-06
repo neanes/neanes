@@ -1139,6 +1139,9 @@
       @update="
         updateModeKeyFromTemplate(selectedElement as ModeKeyElement, $event)
       "
+      @update:useOptionalDiatonicFthoras="
+        updatePageSetupUseOptionalDiatonicFthoras($event)
+      "
       @close="closeModeKeyDialog"
     />
     <SyllablePositioningDialog
@@ -6106,6 +6109,19 @@ export default class Editor extends Vue {
     this.save();
   }
 
+  updatePageSetupUseOptionalDiatonicFthoras(
+    useOptionalDiatonicFthoras: boolean,
+  ) {
+    this.commandService.execute(
+      this.pageSetupCommandFactory.create('update-properties', {
+        target: this.score.pageSetup,
+        newValues: { useOptionalDiatonicFthoras },
+      }),
+    );
+
+    this.save();
+  }
+
   createRegularHeaderFooter(left: string, center: string, right: string) {
     const textbox = new TextBoxElement();
     textbox.multipanel = true;
@@ -6969,6 +6985,7 @@ export default class Editor extends Vue {
   createDefaultModeKey(pageSetup: PageSetup) {
     const defaultTemplate = ModeKeyElement.createFromTemplate(
       modeKeyTemplates[0],
+      this.score.pageSetup.useOptionalDiatonicFthoras,
     );
 
     defaultTemplate.color = pageSetup.modeKeyDefaultColor;

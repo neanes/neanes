@@ -94,6 +94,7 @@ export class IpcService implements IIpcService {
     return await window.ipcRenderer.invoke(
       IpcRendererChannels.ExportWorkspaceAsHtml,
       {
+        filePathFull: workspace.filePath,
         filePath:
           workspace.filePath != null
             ? `${getFileNameFromPath(workspace.filePath)}.html`

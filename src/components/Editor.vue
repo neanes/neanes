@@ -4341,6 +4341,14 @@ export default class Editor extends Vue {
       }
     }
 
+    if (openWorkspaceResults.silentHtml) {
+      for (const file of openWorkspaceResults.files.filter((x) => x.success)) {
+        this.openScore(file);
+        await this.onFileMenuExportAsHtml();
+        this.removeWorkspace(this.selectedWorkspace);
+      }
+    }
+
     if (openWorkspaceResults.silentLatex) {
       for (const file of openWorkspaceResults.files.filter((x) => x.success)) {
         const options = new LatexExporterOptions();
@@ -4365,7 +4373,11 @@ export default class Editor extends Vue {
       }
     }
 
-    if (openWorkspaceResults.silentPdf || openWorkspaceResults.silentLatex) {
+    if (
+      openWorkspaceResults.silentPdf ||
+      openWorkspaceResults.silentLatex ||
+      openWorkspaceResults.silentHtml
+    ) {
       await this.ipcService.exitApplication();
     }
 

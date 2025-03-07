@@ -97,7 +97,33 @@ export class LatexExporter {
       pageSetup.lyricsFont,
     );
 
-    // TODO document this with a picture diagram explaining why this works
+    /* 
+**Calculating Lyrics Vertical Offset**
+Latex and Electron align adjacent characters in different ways.
+  - The browser aligns adjacent divs of different sizes by aligning the tops of the divs.
+  - Latex aligns by font baseline. 
+So we must adjust our vertical offset by first aligning the baselines. 
+---------------------------------
+---                       +----------------+  +-----------------+  ---
+ |                        |     Neume      |  |     Lyrics      |   |  <-- Lyrics Ascent
+ | <-- Neume Ascent       |                |  |                 |   |
+ |                        |                |  |-----------------|  --- <-- Lyrics Baseline
+---   Neume Baseline -->  |----------------|  |                 |   
+                          |                |  +-----------------+
+                          +----------------+ 
+
+Distance Between Baselines = Neume Ascent - Lyrics Ascent 
+
+By making this adjustment, we end up with the same initial state as Latex, with the baselines aligned.
+
+                    +----------------+
+                    |     Neume      |  +-----------------+
+                    |                |  |     Lyrics      |
+                    |                |  |                 |
+Neume Baseline -->  |----------------|  |-----------------|   <-- Lyrics Baseline   
+                    |                |  |                 |
+                    +----------------+  +-----------------+
+*/
     const lyricsVerticalOffset =
       pageSetup.lyricsVerticalOffset + lyricAscent - neumeAscent;
 

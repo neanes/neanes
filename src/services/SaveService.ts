@@ -205,8 +205,12 @@ export class SaveService {
 
     pageSetup.pageHeight = p.pageHeight;
     pageSetup.pageWidth = p.pageWidth;
-    pageSetup.pageHeightCustom = p.pageHeightCustom;
-    pageSetup.pageWidthCustom = p.pageWidthCustom;
+
+    if (p.pageSize === 'Custom') {
+      pageSetup.pageHeightCustom = p.pageHeightCustom;
+      pageSetup.pageWidthCustom = p.pageWidthCustom;
+    }
+
     pageSetup.rightMargin = p.rightMargin;
     pageSetup.topMargin = p.topMargin;
 

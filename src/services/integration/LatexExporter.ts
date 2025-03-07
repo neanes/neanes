@@ -97,7 +97,33 @@ export class LatexExporter {
       pageSetup.lyricsFont,
     );
 
-    // TODO document this with a picture diagram explaining why this works
+    /* 
+**Calculating Lyrics Vertical Offset**
+Latex and Electron align adjacent characters in different ways.
+  - The browser aligns adjacent divs of different sizes by aligning the tops of the divs.
+  - Latex aligns by font baseline. 
+So we must adjust our vertical offset by first aligning the baselines. 
+---------------------------------
+---                       +----------------+  +-----------------+  ---
+ |                        |     Neume      |  |     Lyrics      |   |  <-- Lyrics Ascent
+ | <-- Neume Ascent       |                |  |                 |   |
+ |                        |                |  |-----------------|  --- <-- Lyrics Baseline
+---   Neume Baseline -->  |----------------|  |                 |   
+                          |                |  +-----------------+
+                          +----------------+ 
+
+Distance Between Baselines = Neume Ascent - Lyrics Ascent 
+
+By making this adjustment, we end up with the same initial state as Latex, with the baselines aligned.
+
+                    +----------------+
+                    |     Neume      |  +-----------------+
+                    |                |  |     Lyrics      |
+                    |                |  |                 |
+Neume Baseline -->  |----------------|  |-----------------|   <-- Lyrics Baseline   
+                    |                |  |                 |
+                    +----------------+  +-----------------+
+*/
     const lyricsVerticalOffset =
       pageSetup.lyricsVerticalOffset + lyricAscent - neumeAscent;
 
@@ -113,6 +139,10 @@ export class LatexExporter {
       },
       pageSetup: {
         lineHeight: toPt(pageSetup.lineHeight),
+        martyriaVerticalOffset:
+          pageSetup.martyriaVerticalOffset != 0
+            ? toPt(pageSetup.martyriaVerticalOffset)
+            : undefined,
         fontFamilies: {
           dropCap: convertFontName(pageSetup.dropCapDefaultFontFamily),
           lyrics: convertFontName(pageSetup.lyricsDefaultFontFamily),
@@ -343,10 +373,15 @@ export class LatexExporter {
             resultLine.elements.push(noteInfo);
           } else if (element.elementType === ElementType.Martyria) {
             const martyria = element as MartyriaElement;
+
             resultLine.elements.push({
               type: 'martyria',
               x: toPt(element.x - pageSetup.leftMargin),
               width: toPt(martyria.neumeWidth),
+              verticalOffset:
+                martyria.verticalOffset != 0
+                  ? toPt(martyria.verticalOffset)
+                  : undefined,
               note: glyphName(martyria.note),
               rootSign: glyphName(martyria.rootSign),
               fthora: glyphName(martyria.fthora),
@@ -568,6 +603,7 @@ interface LatexSection {
 
 interface LatexPageSetup {
   lineHeight: number;
+  martyriaVerticalOffset?: number;
   fontFamilies: {
     dropCap: string;
     lyrics: string;
@@ -683,6 +719,7 @@ interface LatexNoteElement extends LatexBaseElement {
 
 interface LatexMartyriaElement extends LatexBaseElement {
   x: number;
+  verticalOffset?: number;
   note: SbmuflGlyphName;
   rootSign: SbmuflGlyphName;
   fthora?: SbmuflGlyphName;

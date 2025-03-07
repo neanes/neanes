@@ -232,6 +232,22 @@
 
       <span class="space" />
 
+      <label class="right-space">{{
+        $t('toolbar:common.verticalOffset')
+      }}</label>
+
+      <InputUnit
+        unit="pt"
+        :min="-spaceAfterMax"
+        :max="spaceAfterMax"
+        :step="0.5"
+        :precision="2"
+        :modelValue="element.verticalOffset"
+        @update:modelValue="$emit('update:verticalOffset', $event)"
+      />
+
+      <span class="space" />
+
       <label class="right-space">{{ $t('toolbar:common.spaceAfter') }}</label>
 
       <InputUnit
@@ -342,6 +358,7 @@ import InputUnit from './InputUnit.vue';
     'update:tempo',
     'update:tempoLeft',
     'update:tempoRight',
+    'update:verticalOffset',
   ],
 })
 export default class ToolbarMartyria extends Vue {

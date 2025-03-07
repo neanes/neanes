@@ -375,6 +375,7 @@ export class ByzHtmlExporter {
 
           result += this.exportMartyria(
             element as MartyriaElement,
+            pageSetup,
             indentation + 2,
           );
 
@@ -650,9 +651,19 @@ export class ByzHtmlExporter {
     )}>`;
   }
 
-  exportMartyria(element: MartyriaElement, indentation: number) {
+  exportMartyria(
+    element: MartyriaElement,
+    pageSetup: PageSetup,
+    indentation: number,
+  ) {
     let inner = '';
 
+    inner += this.exportNeume(
+      element.tempoLeft,
+      indentation + 2,
+      NoOffset,
+      this.config.classTempo,
+    );
     inner += this.exportNeume(element.note, indentation + 2);
     inner += this.exportNeume(element.rootSign, indentation + 2);
     inner += this.exportNeume(
@@ -668,15 +679,34 @@ export class ByzHtmlExporter {
       this.config.classFthora,
     );
 
+    inner += this.exportNeume(
+      element.tempoRight,
+      indentation + 2,
+      NoOffset,
+      this.config.classTempo,
+    );
+
     let classAttribute = '';
 
     if (element.alignRight) {
       classAttribute = ` class="${this.config.classMartyriaAlignRight}"`;
     }
 
+    let styleAttribute = '';
+
+    const offset = pageSetup.martyriaVerticalOffset + element.verticalOffset;
+    if (offset != 0) {
+      let style = '';
+
+      style += 'position: relative;';
+      style += `top: ${Unit.toPt(offset)}pt;`;
+
+      styleAttribute = ` style="${style}"`;
+    }
+
     return `<${
       this.config.tagMartyria
-    }${classAttribute}\n${this.getIndentationString(
+    }${styleAttribute}${classAttribute}\n${this.getIndentationString(
       indentation + 2,
     )}>${inner}</${this.config.tagMartyria}\n${this.getIndentationString(
       indentation,

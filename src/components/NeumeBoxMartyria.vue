@@ -87,6 +87,9 @@ export default class NeumeBoxMartyria extends Vue {
   }
 
   get style() {
+    const verticalOffset =
+      this.pageSetup.martyriaVerticalOffset + this.neume.verticalOffset;
+
     return {
       color: this.pageSetup.martyriaDefaultColor,
       fontFamily: this.pageSetup.neumeDefaultFontFamily,
@@ -94,6 +97,8 @@ export default class NeumeBoxMartyria extends Vue {
       webkitTextStrokeWidth: withZoom(
         this.pageSetup.martyriaDefaultStrokeWidth,
       ),
+      position: verticalOffset != 0 ? 'relative' : undefined,
+      top: verticalOffset != 0 ? withZoom(verticalOffset) : undefined,
     } as StyleValue;
   }
 

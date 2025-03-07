@@ -20,8 +20,8 @@ export class PageSetup {
 
   public pageWidth = Unit.fromInch(8.5);
   public pageHeight = Unit.fromInch(11);
-  public pageWidthCustom = Unit.fromInch(8.5);
-  public pageHeightCustom = Unit.fromInch(11);
+  public pageWidthCustom: number | undefined = undefined;
+  public pageHeightCustom: number | undefined = undefined;
   public topMargin = Unit.fromInch(1);
   public bottomMargin = Unit.fromInch(1);
   public leftMargin = Unit.fromInch(1);
@@ -102,6 +102,8 @@ export class PageSetup {
   public textBoxDefaultLineHeight: number | undefined = undefined;
 
   public hyphenSpacing: number = Unit.fromInch(0.75);
+
+  public martyriaVerticalOffset: number = Unit.fromPt(3);
 
   public chrysanthineAccidentals: boolean | undefined = undefined;
   public noFthoraRestrictions: boolean | undefined = undefined;

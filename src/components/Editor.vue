@@ -1092,6 +1092,12 @@
         @update:spaceAfter="
           updateMartyriaSpaceAfter(selectedElement as MartyriaElement, $event)
         "
+        @update:verticalOffset="
+          updateMartyriaVerticalOffset(
+            selectedElement as MartyriaElement,
+            $event,
+          )
+        "
         @update:rootSignOverride="
           updateMartyriaRootSignOverride(
             selectedElement as MartyriaElement,
@@ -5756,6 +5762,14 @@ export default class Editor extends Vue {
 
   updateMartyriaSpaceAfter(element: MartyriaElement, spaceAfter: number) {
     this.updateMartyria(element, { spaceAfter });
+    this.save();
+  }
+
+  updateMartyriaVerticalOffset(
+    element: MartyriaElement,
+    verticalOffset: number,
+  ) {
+    this.updateMartyria(element, { verticalOffset });
     this.save();
   }
 

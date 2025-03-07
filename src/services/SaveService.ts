@@ -205,8 +205,12 @@ export class SaveService {
 
     pageSetup.pageHeight = p.pageHeight;
     pageSetup.pageWidth = p.pageWidth;
-    pageSetup.pageHeightCustom = p.pageHeightCustom;
-    pageSetup.pageWidthCustom = p.pageWidthCustom;
+
+    if (p.pageSize === 'Custom') {
+      pageSetup.pageHeightCustom = p.pageHeightCustom;
+      pageSetup.pageWidthCustom = p.pageWidthCustom;
+    }
+
     pageSetup.rightMargin = p.rightMargin;
     pageSetup.topMargin = p.topMargin;
 
@@ -250,6 +254,7 @@ export class SaveService {
     pageSetup.landscape = p.landscape || undefined;
 
     pageSetup.hyphenSpacing = p.hyphenSpacing;
+    pageSetup.martyriaVerticalOffset = p.martyriaVerticalOffset;
 
     pageSetup.chrysanthineAccidentals = p.chrysanthineAccidentals;
     pageSetup.noFthoraRestrictions = p.noFthoraRestrictions || undefined;
@@ -344,6 +349,7 @@ export class SaveService {
     }
 
     element.spaceAfter = e.spaceAfter || undefined;
+    element.verticalOffset = e.verticalOffset || undefined;
   }
 
   public static SaveTempo(element: TempoElement_v1, e: TempoElement) {
@@ -886,6 +892,7 @@ export class SaveService {
     pageSetup.landscape = p.landscape === true;
 
     pageSetup.hyphenSpacing = p.hyphenSpacing;
+    pageSetup.martyriaVerticalOffset = p.martyriaVerticalOffset ?? 0; // for old files, use 0 so that we don't change the them
 
     pageSetup.chrysanthineAccidentals =
       p.chrysanthineAccidentals === true ||
@@ -1016,6 +1023,7 @@ export class SaveService {
     element.rootSign = e.rootSign;
     element.rootSignOverride = e.rootSignOverride || null;
     element.spaceAfter = e.spaceAfter ?? 0;
+    element.verticalOffset = e.verticalOffset ?? 0;
 
     if (e.fthora != null) {
       element.fthora = e.fthora;

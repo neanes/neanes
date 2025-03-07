@@ -589,6 +589,7 @@ export class MartyriaElement extends ScoreElement {
   public alignRight: boolean = false;
   public bpm: number = 0;
   public spaceAfter: number = 0;
+  public verticalOffset: number = 0;
 
   public error: boolean = false;
 

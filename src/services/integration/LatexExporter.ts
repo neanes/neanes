@@ -46,7 +46,7 @@ function getOffset(
   }
 
   x = x ?? 0;
-  y = x ?? 0;
+  y = y ?? 0;
 
   if (x == 0 && y == 0) {
     return undefined;

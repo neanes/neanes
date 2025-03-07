@@ -155,6 +155,7 @@ export class MartyriaElement extends ScoreElement {
   public alignRight: boolean | undefined = undefined;
   public bpm: number | undefined = undefined;
   public spaceAfter: number | undefined = undefined;
+  public verticalOffset: number | undefined = undefined;
 }
 
 export class TempoElement extends ScoreElement {

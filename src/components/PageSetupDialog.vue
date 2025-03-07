@@ -251,7 +251,7 @@
           </div>
           <div class="form-group">
             <label class="margin-label">{{
-              $t('dialog:pageSetup.martyriae')
+              $t('dialog:pageSetup.martyriaVerticalOffset')
             }}</label>
             <InputUnit
               class="margin-input"
@@ -1523,7 +1523,7 @@ export default class PageSetupDialog extends Vue {
 
 .margin-label {
   display: inline-block;
-  width: 4.25rem;
+  width: 4.75rem;
 }
 
 .margin-input {

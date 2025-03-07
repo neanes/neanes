@@ -113,6 +113,10 @@ export class LatexExporter {
       },
       pageSetup: {
         lineHeight: toPt(pageSetup.lineHeight),
+        martyriaVerticalOffset:
+          pageSetup.martyriaVerticalOffset != 0
+            ? toPt(pageSetup.martyriaVerticalOffset)
+            : undefined,
         fontFamilies: {
           dropCap: convertFontName(pageSetup.dropCapDefaultFontFamily),
           lyrics: convertFontName(pageSetup.lyricsDefaultFontFamily),
@@ -343,10 +347,15 @@ export class LatexExporter {
             resultLine.elements.push(noteInfo);
           } else if (element.elementType === ElementType.Martyria) {
             const martyria = element as MartyriaElement;
+
             resultLine.elements.push({
               type: 'martyria',
               x: toPt(element.x - pageSetup.leftMargin),
               width: toPt(martyria.neumeWidth),
+              verticalOffset:
+                martyria.verticalOffset != 0
+                  ? toPt(martyria.verticalOffset)
+                  : undefined,
               note: glyphName(martyria.note),
               rootSign: glyphName(martyria.rootSign),
               fthora: glyphName(martyria.fthora),
@@ -568,6 +577,7 @@ interface LatexSection {
 
 interface LatexPageSetup {
   lineHeight: number;
+  martyriaVerticalOffset?: number;
   fontFamilies: {
     dropCap: string;
     lyrics: string;
@@ -683,6 +693,7 @@ interface LatexNoteElement extends LatexBaseElement {
 
 interface LatexMartyriaElement extends LatexBaseElement {
   x: number;
+  verticalOffset?: number;
   note: SbmuflGlyphName;
   rootSign: SbmuflGlyphName;
   fthora?: SbmuflGlyphName;

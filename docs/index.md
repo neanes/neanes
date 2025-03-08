@@ -28,5 +28,5 @@ features:
   - title: Rapid Entry of Neumes and Lyrics
     details: Neumes and lyrics are automatically aligned and martyria are automatically calculated.
   - title: Print or Export to PDF
-    details: Scores can be printed to paper or exported as a PDF, HTML, or image.
+    details: Scores can be printed on paper or exported as a PDF, with additional export options including HTML, LaTeX, and image formats.
 ---

@@ -10,6 +10,11 @@ updates:
       prefix: 'chore'
     labels:
       - 'Type: Dependencies'
+    ignore:
+      # Electron 35 crashes on Linux when printing. See:
+      # https://github.com/electron/electron/issues/45931
+      - dependency-name: 'electron'
+        versions: ['>=35.0.0']
   - package-ecosystem: 'github-actions'
     directory: '/'
     schedule:

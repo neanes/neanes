@@ -17,7 +17,10 @@ import { fontService } from '../FontService';
 import { NeumeMappingService, SbmuflGlyphName } from '../NeumeMappingService';
 import { TextMeasurementService } from '../TextMeasurementService';
 
-const schemaVersion = 1;
+const schemaVersion = 2;
+
+// Schema changes
+// 1 to 2: Positive lyricsVerticalOffset now moves lyrics down, making it consistent with other offsets in the schema
 
 export class LatexExporterOptions {
   includeModeKeys: boolean = false;
@@ -89,7 +92,7 @@ export class LatexExporter {
     pageSetup: PageSetup,
     options: LatexExporterOptions,
   ) {
-    const neumeAscent = TextMeasurementService.getFontBoundingBoxAscent(
+    const neumeDescent = TextMeasurementService.getFontBoundingBoxDescent(
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
     );
 
@@ -102,30 +105,34 @@ export class LatexExporter {
 Latex and Electron align adjacent characters in different ways.
   - The browser aligns adjacent divs of different sizes by aligning the tops of the divs.
   - Latex aligns by font baseline. 
-So we must adjust our vertical offset by first aligning the baselines. 
----------------------------------
----                       +----------------+  +-----------------+  ---
- |                        |     Neume      |  |     Lyrics      |   |  <-- Lyrics Ascent
- | <-- Neume Ascent       |                |  |                 |   |
- |                        |                |  |-----------------|  --- <-- Lyrics Baseline
----   Neume Baseline -->  |----------------|  |                 |   
-                          |                |  +-----------------+
-                          +----------------+ 
 
-Distance Between Baselines = Neume Ascent - Lyrics Ascent 
+Below is a diagram that shows how pageSetup.lyricsVerticalOffset affects
+the lyrics position in Neanes. To translate to Latex, we must measure
+the distance between the neume and lyrics baselines.
+-----------------------------------------------------------------------
+                     +----------------+
+                     |     Neume      |
+                     |                |
+                     |                |
+Neume Baseline -->   |----------------|  ---
+                     |                |   |   <-- Neume Descent
+                     +----------------+  ---
+                                         ---
+                                          |
+                                          |   <-- Lyrics Vertical Offset (Neanes)
+                                          |
+                                         ---                       
+                     +----------------+  ---
+                     |     Lyrics     |   |  <-- Lyrics Ascent
+                     |                |   |
+Lyrics Baseline -->  |----------------|  ---
+                     |                |   
+                     +----------------+ 
 
-By making this adjustment, we end up with the same initial state as Latex, with the baselines aligned.
-
-                    +----------------+
-                    |     Neume      |  +-----------------+
-                    |                |  |     Lyrics      |
-                    |                |  |                 |
-Neume Baseline -->  |----------------|  |-----------------|   <-- Lyrics Baseline   
-                    |                |  |                 |
-                    +----------------+  +-----------------+
+Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Ascent 
 */
     const lyricsVerticalOffset =
-      pageSetup.lyricsVerticalOffset + lyricAscent - neumeAscent;
+      pageSetup.lyricsVerticalOffset + neumeDescent + lyricAscent;
 
     const result: LatexScore = {
       appVersion: APP_VERSION,
@@ -412,7 +419,7 @@ Neume Baseline -->  |----------------|  |-----------------|   <-- Lyrics Baselin
               const originalLineHeight = fontHeight / dropCap.computedFontSize;
 
               verticalAdjustment =
-                ((originalLineHeight - dropCap.lineHeight) *
+                ((dropCap.lineHeight - originalLineHeight) *
                   dropCap.computedFontSize) /
                 2;
             }

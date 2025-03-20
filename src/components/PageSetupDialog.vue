@@ -1084,6 +1084,7 @@ export default class PageSetupDialog extends Vue {
       rootSign: 'DeltaDotted',
       scale: 'Diatonic',
       fthora: 'HardChromaticPa_Top',
+      verticalOffset: 0,
     },
   ];
 

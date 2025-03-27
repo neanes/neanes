@@ -112,24 +112,84 @@ const rests: Neume[] = [
   QuantitativeNeume.Cross,
 ];
 
-const secondaryNeumesAllowedNeumes: Neume[] = [
-  QuantitativeNeume.OligonPlusIsonPlusKentemata,
-  QuantitativeNeume.OligonPlusApostrophosPlusKentemata,
-  QuantitativeNeume.OligonPlusElaphronPlusKentemata,
-  QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
-  QuantitativeNeume.OligonPlusHamiliPlusKentemata,
-  QuantitativeNeume.OligonPlusHyporoePlusKentemata,
-  QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
-  QuantitativeNeume.OligonPlusKentemata,
-  QuantitativeNeume.RunningElaphron,
-  QuantitativeNeume.PetastiPlusRunningElaphron,
-  QuantitativeNeume.KentemataPlusOligon,
-  QuantitativeNeume.Hyporoe,
-];
+const secondaryNeumeMap: Map<QuantitativeNeume, QuantitativeNeume> = new Map<
+  QuantitativeNeume,
+  QuantitativeNeume
+>([
+  [QuantitativeNeume.OligonPlusIsonPlusKentemata, QuantitativeNeume.Ison],
+  [
+    QuantitativeNeume.OligonPlusApostrophosPlusKentemata,
+    QuantitativeNeume.Apostrophos,
+  ],
+  [
+    QuantitativeNeume.OligonPlusElaphronPlusKentemata,
+    QuantitativeNeume.Elaphron,
+  ],
+  [
+    QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
+    QuantitativeNeume.ElaphronPlusApostrophos,
+  ],
+  [QuantitativeNeume.OligonPlusHamiliPlusKentemata, QuantitativeNeume.Hamili],
+  [QuantitativeNeume.OligonPlusHyporoePlusKentemata, QuantitativeNeume.Hyporoe],
+  [
+    QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
+    QuantitativeNeume.Elaphron,
+  ],
+  [QuantitativeNeume.OligonPlusKentemata, QuantitativeNeume.Oligon],
+  [QuantitativeNeume.RunningElaphron, QuantitativeNeume.Apostrophos],
+  [QuantitativeNeume.PetastiPlusRunningElaphron, QuantitativeNeume.Apostrophos],
+  [QuantitativeNeume.KentemataPlusOligon, QuantitativeNeume.Kentemata],
+  [QuantitativeNeume.Hyporoe, QuantitativeNeume.Apostrophos],
+]);
 
-const tertiaryNeumesAllowedNeumes: Neume[] = [
-  QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
-];
+const tertiaryNeumeMap: Map<QuantitativeNeume, QuantitativeNeume> = new Map<
+  QuantitativeNeume,
+  QuantitativeNeume
+>([
+  [
+    QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
+    QuantitativeNeume.Apostrophos,
+  ],
+]);
+
+const primaryNeumeMap: Map<QuantitativeNeume, QuantitativeNeume> = new Map<
+  QuantitativeNeume,
+  QuantitativeNeume
+>([
+  [QuantitativeNeume.OligonPlusIsonPlusKentemata, QuantitativeNeume.Kentemata],
+  [
+    QuantitativeNeume.OligonPlusApostrophosPlusKentemata,
+    QuantitativeNeume.Kentemata,
+  ],
+  [
+    QuantitativeNeume.OligonPlusElaphronPlusKentemata,
+    QuantitativeNeume.Kentemata,
+  ],
+  [
+    QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
+    QuantitativeNeume.Kentemata,
+  ],
+  [
+    QuantitativeNeume.OligonPlusHamiliPlusKentemata,
+    QuantitativeNeume.Kentemata,
+  ],
+  [
+    QuantitativeNeume.OligonPlusHyporoePlusKentemata,
+    QuantitativeNeume.Kentemata,
+  ],
+  [
+    QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
+    QuantitativeNeume.Kentemata,
+  ],
+  [QuantitativeNeume.OligonPlusKentemata, QuantitativeNeume.Kentemata],
+  [QuantitativeNeume.RunningElaphron, QuantitativeNeume.Elaphron],
+  [
+    QuantitativeNeume.PetastiPlusRunningElaphron,
+    QuantitativeNeume.PetastiPlusElaphron,
+  ],
+  [QuantitativeNeume.KentemataPlusOligon, QuantitativeNeume.Oligon],
+  [QuantitativeNeume.Hyporoe, QuantitativeNeume.Apostrophos],
+]);
 
 const measureBarAboveNeumes: Neume[] = [
   QuantitativeNeume.Hyporoe,
@@ -590,11 +650,14 @@ export const onlyTakesBottomKlasma = (neume: QuantitativeNeume) =>
 export const onlyTakesTopGorgon = (neume: QuantitativeNeume) =>
   !bottomAllowedGorgonNeumes.includes(neume);
 
-export const takesSecondaryNeumes = (neume: QuantitativeNeume) =>
-  secondaryNeumesAllowedNeumes.includes(neume);
+export const getPrimaryNeume = (neume: QuantitativeNeume) =>
+  primaryNeumeMap.get(neume) ?? null;
 
-export const takesTertiaryNeumes = (neume: QuantitativeNeume) =>
-  tertiaryNeumesAllowedNeumes.includes(neume);
+export const getSecondaryNeume = (neume: QuantitativeNeume) =>
+  secondaryNeumeMap.get(neume) ?? null;
+
+export const getTertiaryNeume = (neume: QuantitativeNeume) =>
+  tertiaryNeumeMap.get(neume) ?? null;
 
 export const isMeasureBarAbove = (neume: QuantitativeNeume) =>
   measureBarAboveNeumes.includes(neume);

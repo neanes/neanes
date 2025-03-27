@@ -22,13 +22,13 @@ import {
   getFthoraReplacements,
   getGorgonReplacements,
   getQuantitativeReplacements,
+  getSecondaryNeume,
+  getTertiaryNeume,
   getTimeReplacements,
   getVocalExpressionReplacements,
   isMeasureBarAbove,
   measureBarAboveToLeft,
   measureBarLeftToAbove,
-  takesSecondaryNeumes,
-  takesTertiaryNeumes,
 } from './NeumeReplacements';
 import { Scale, ScaleNote } from './Scales';
 
@@ -272,13 +272,13 @@ export class NoteElement extends ScoreElement {
     this._quantitativeNeume = neume;
     this.replaceNeumes();
 
-    if (!takesSecondaryNeumes(this.quantitativeNeume)) {
+    if (getSecondaryNeume(this.quantitativeNeume) == null) {
       this._secondaryGorgonNeume = null;
       this._secondaryFthora = null;
       this._secondaryAccidental = null;
     }
 
-    if (!takesTertiaryNeumes(this.quantitativeNeume)) {
+    if (getTertiaryNeume(this.quantitativeNeume) == null) {
       this._tertiaryFthora = null;
       this._tertiaryAccidental = null;
     }

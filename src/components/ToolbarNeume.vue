@@ -1226,12 +1226,29 @@ export default class ToolbarNeume extends Vue {
   }
 
   updateAccidental(args: string) {
+    // There is some admittedly confusing logic here regarding the hyporoe.
+    // Compare to handleHyporoe in the Analysis Service.
+
     if (this.innerNeume === 'Secondary') {
-      this.$emit('update:secondaryAccidental', args + this.innerNeume);
+      if (
+        this.element.quantitativeNeume == QuantitativeNeume.Hyporoe &&
+        args.startsWith('Flat')
+      ) {
+        this.$emit('update:accidental', args);
+      } else {
+        this.$emit('update:secondaryAccidental', args + this.innerNeume);
+      }
     } else if (this.innerNeume === 'Tertiary') {
       this.$emit('update:tertiaryAccidental', args + this.innerNeume);
     } else {
-      this.$emit('update:accidental', args);
+      if (
+        this.element.quantitativeNeume == QuantitativeNeume.Hyporoe &&
+        args.startsWith('Flat')
+      ) {
+        this.$emit('update:secondaryAccidental', args + 'Secondary');
+      } else {
+        this.$emit('update:accidental', args);
+      }
     }
   }
 

@@ -1,29 +1,38 @@
 <template>
   <div class="neume-toolbar">
-    <div class="row" v-if="isMultiNeume">
+    <div class="row" v-if="secondaryNeume">
       <span>{{ $t('toolbar:neume.neumeSelect') }}</span>
       <span class="space"></span>
       <button
-        v-if="hasTertiaryNeume"
+        v-if="tertiaryNeume"
         class="btnNeumeSelect"
         @click="$emit('update:innerNeume', 'Tertiary')"
         :class="{ selected: innerNeume === 'Tertiary' }"
       >
-        1
+        <Neume
+          :neume="tertiaryNeume"
+          :fontFamily="pageSetup.neumeDefaultFontFamily"
+        />
       </button>
       <button
         @click="$emit('update:innerNeume', 'Secondary')"
         class="btnNeumeSelect"
         :class="{ selected: innerNeume === 'Secondary' }"
       >
-        {{ hasTertiaryNeume ? '2' : '1' }}
+        <Neume
+          :neume="secondaryNeume"
+          :fontFamily="pageSetup.neumeDefaultFontFamily"
+        />
       </button>
       <button
         @click="$emit('update:innerNeume', 'Primary')"
         class="btnNeumeSelect"
         :class="{ selected: innerNeume === 'Primary' }"
       >
-        {{ hasTertiaryNeume ? '3' : '2' }}
+        <Neume
+          :neume="primaryNeume"
+          :fontFamily="pageSetup.neumeDefaultFontFamily"
+        />
       </button>
     </div>
     <div class="row">
@@ -510,9 +519,10 @@ import ButtonWithMenu, {
 import InputUnit from '@/components/InputUnit.vue';
 import { AcceptsLyricsOption, NoteElement } from '@/models/Element';
 import {
+  getPrimaryNeume,
+  getSecondaryNeume,
+  getTertiaryNeume,
   kentemataNeumes,
-  takesSecondaryNeumes,
-  takesTertiaryNeumes,
 } from '@/models/NeumeReplacements';
 import {
   Accidental,
@@ -534,8 +544,10 @@ import { ScaleNote } from '@/models/Scales';
 import { NeumeKeyboard } from '@/services/NeumeKeyboard';
 import { Unit } from '@/utils/Unit';
 
+import NeumeVue from './Neume.vue';
+
 @Component({
-  components: { InputUnit, ButtonWithMenu },
+  components: { InputUnit, ButtonWithMenu, Neume: NeumeVue },
   emits: [
     'open-syllable-positioning-dialog',
     'update:accidental',
@@ -896,12 +908,16 @@ export default class ToolbarNeume extends Vue {
     },
   ];
 
-  get isMultiNeume() {
-    return takesSecondaryNeumes(this.element.quantitativeNeume);
+  get primaryNeume() {
+    return getPrimaryNeume(this.element.quantitativeNeume);
   }
 
-  get hasTertiaryNeume() {
-    return takesTertiaryNeumes(this.element.quantitativeNeume);
+  get secondaryNeume() {
+    return getSecondaryNeume(this.element.quantitativeNeume);
+  }
+
+  get tertiaryNeume() {
+    return getTertiaryNeume(this.element.quantitativeNeume);
   }
 
   get notes() {
@@ -1210,12 +1226,29 @@ export default class ToolbarNeume extends Vue {
   }
 
   updateAccidental(args: string) {
+    // There is some admittedly confusing logic here regarding the hyporoe.
+    // Compare to handleHyporoe in the Analysis Service.
+
     if (this.innerNeume === 'Secondary') {
-      this.$emit('update:secondaryAccidental', args + this.innerNeume);
+      if (
+        this.element.quantitativeNeume == QuantitativeNeume.Hyporoe &&
+        args.startsWith('Flat')
+      ) {
+        this.$emit('update:accidental', args);
+      } else {
+        this.$emit('update:secondaryAccidental', args + this.innerNeume);
+      }
     } else if (this.innerNeume === 'Tertiary') {
       this.$emit('update:tertiaryAccidental', args + this.innerNeume);
     } else {
-      this.$emit('update:accidental', args);
+      if (
+        this.element.quantitativeNeume == QuantitativeNeume.Hyporoe &&
+        args.startsWith('Flat')
+      ) {
+        this.$emit('update:secondaryAccidental', args + 'Secondary');
+      } else {
+        this.$emit('update:accidental', args);
+      }
     }
   }
 
@@ -1387,6 +1420,14 @@ label.right-space {
   margin: 0 16px;
   border-right: 1px solid black;
   height: 16px;
+}
+
+.btnNeumeSelect {
+  font-size: 24px;
+  height: 32px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .btnNeumeSelect.selected {

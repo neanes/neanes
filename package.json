@@ -42,7 +42,7 @@
     "i18next-vue": "^5.2.0",
     "image-size": "^2.0.1",
     "jszip": "^3.10.1",
-    "mime-types": "^2.1.35",
+    "mime-types": "^3.0.1",
     "mitt": "^3.0.1",
     "register-service-worker": "^1.7.2",
     "throttle-debounce": "^5.0.2",

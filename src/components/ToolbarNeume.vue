@@ -1422,6 +1422,14 @@ label.right-space {
   height: 16px;
 }
 
+.btnNeumeSelect {
+  font-size: 24px;
+  height: 32px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .btnNeumeSelect.selected {
   background-color: var(--btn-color-selected);
 }

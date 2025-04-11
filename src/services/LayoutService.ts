@@ -2830,11 +2830,15 @@ const lowRootSignMap = new Map<RootSign, RootSign>([
   [RootSign.Legetos, RootSign.LegetosLow],
   [RootSign.Nana, RootSign.NanaLow],
   [RootSign.Delta, RootSign.DeltaLow],
+  [RootSign.DeltaDotted, RootSign.DeltaDottedLow],
   [RootSign.Alpha, RootSign.AlphaLow],
+  [RootSign.AlphaDotted, RootSign.AlphaDottedLow],
+  [RootSign.Zo, RootSign.ZoLow],
   [RootSign.SoftChromaticPaRootSign, RootSign.SoftChromaticPaRootSignLow],
   [RootSign.SoftChromaticSquiggle, RootSign.SoftChromaticSquiggleLow],
   [RootSign.Tilt, RootSign.TiltLow],
   [RootSign.Squiggle, RootSign.SquiggleLow],
+  [RootSign.Zygos, RootSign.ZygosLow],
 ]);
 
 const highRootSignMap = new Map<RootSign, RootSign>();

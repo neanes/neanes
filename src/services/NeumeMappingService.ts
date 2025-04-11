@@ -493,6 +493,7 @@ mapNeumeToSbmufl(RootSign.Alpha, 'martyriaAlphaBelow');
 mapNeumeToSbmufl(RootSign.Legetos, 'martyriaLegetosBelow');
 mapNeumeToSbmufl(RootSign.Nana, 'martyriaNanaBelow');
 mapNeumeToSbmufl(RootSign.Zo, 'martyriaZoBelow');
+mapNeumeToSbmufl(RootSign.ZoLow, 'martyriaZoAbove');
 mapNeumeToSbmufl(RootSign.Squiggle, 'martyriaHardChromaticPaBelow');
 mapNeumeToSbmufl(RootSign.SquiggleLow, 'martyriaHardChromaticPaAbove');
 mapNeumeToSbmufl(RootSign.Tilt, 'martyriaHardChromaticDiBelow');
@@ -506,8 +507,11 @@ mapNeumeToSbmufl(
   'martyriaSoftChromaticDiAbove',
 );
 mapNeumeToSbmufl(RootSign.Zygos, 'martyriaZygosBelow');
+mapNeumeToSbmufl(RootSign.ZygosLow, 'martyriaZygosAbove');
 mapNeumeToSbmufl(RootSign.DeltaDotted, 'martyriaDeltaDottedBelow');
+mapNeumeToSbmufl(RootSign.DeltaDottedLow, 'martyriaDeltaDottedAbove');
 mapNeumeToSbmufl(RootSign.AlphaDotted, 'martyriaAlphaDottedBelow');
+mapNeumeToSbmufl(RootSign.AlphaDottedLow, 'martyriaAlphaDottedAbove');
 mapNeumeToSbmufl(
   RootSign.SoftChromaticPaRootSign,
   'martyriaSoftChromaticKeBelow',

@@ -1466,6 +1466,17 @@ function createMenu() {
         },
       ],
     },
+    {
+      label: i18next.t('menu:tools.root'),
+      submenu: [
+        {
+          label: i18next.t('menu:tools.copyElementLink'),
+          click() {
+            win?.webContents.send(IpcMainChannels.FileMenuToolsCopyElementLink);
+          },
+        },
+      ],
+    },
     ...(isDevelopment
       ? [
           {

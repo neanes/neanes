@@ -201,6 +201,7 @@
               >
                 <div
                   v-for="element in line.elements"
+                  :id="`element-${element.id}`"
                   :key="`element-${element.id}-${element.keyHelper}`"
                   class="element-box"
                   :style="getElementStyle(element)"
@@ -2315,6 +2316,10 @@ export default class Editor extends Vue {
       this.onFileMenuInsertFooter,
     );
     EventBus.$on(
+      IpcMainChannels.FileMenuToolsCopyElementLink,
+      this.onFileMenuToolsCopyElementLink,
+    );
+    EventBus.$on(
       IpcMainChannels.FileMenuGenerateTestFile,
       this.onFileMenuGenerateTestFile,
     );
@@ -2414,6 +2419,18 @@ export default class Editor extends Vue {
     EventBus.$off(
       IpcMainChannels.FileMenuInsertImage,
       this.onFileMenuInsertImage,
+    );
+    EventBus.$off(
+      IpcMainChannels.FileMenuInsertHeader,
+      this.onFileMenuInsertHeader,
+    );
+    EventBus.$off(
+      IpcMainChannels.FileMenuInsertFooter,
+      this.onFileMenuInsertFooter,
+    );
+    EventBus.$off(
+      IpcMainChannels.FileMenuToolsCopyElementLink,
+      this.onFileMenuToolsCopyElementLink,
     );
     EventBus.$off(
       IpcMainChannels.FileMenuGenerateTestFile,
@@ -4242,7 +4259,7 @@ export default class Editor extends Vue {
       .map((_, i) => i)
       .filter((i) => this.pages[i].isVisible);
 
-    const pages = LayoutService.processPages(toRaw(this.score));
+    const pages = LayoutService.processPages(toRaw(this.selectedWorkspace));
 
     // Set page visibility for the newly processed pages
     pages.forEach((x, index) => (x.isVisible = visiblePages.includes(index)));
@@ -4421,7 +4438,7 @@ export default class Editor extends Vue {
     this.selectedElement =
       this.score.staff.elements[this.score.staff.elements.length - 1];
 
-    this.pages = LayoutService.processPages(this.score);
+    this.pages = LayoutService.processPages(this.selectedWorkspace);
   }
 
   async saveWorkspace(workspace: Workspace) {
@@ -6752,6 +6769,14 @@ export default class Editor extends Vue {
     this.score.pageSetup.showFooter = true;
 
     this.updatePageSetup(this.score.pageSetup);
+  }
+
+  onFileMenuToolsCopyElementLink() {
+    if (this.selectedElement?.id != null) {
+      navigator.clipboard.writeText(
+        '#element-' + this.selectedElement.id.toString(),
+      );
+    }
   }
 
   async onFileMenuSave() {

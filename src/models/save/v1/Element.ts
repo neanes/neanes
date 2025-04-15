@@ -38,6 +38,7 @@ export enum LineBreakType {
 
 export abstract class ScoreElement {
   abstract elementType: ElementType;
+  public id: number | undefined = undefined;
   public lineBreak: boolean | undefined = undefined;
   public pageBreak: boolean | undefined = undefined;
   public lineBreakType: LineBreakType | undefined = undefined;

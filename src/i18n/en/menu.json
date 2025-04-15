@@ -45,6 +45,10 @@
     "header": "Header",
     "footer": "Footer"
   },
+  "tools": {
+    "root": "Tools",
+    "copyElementLink": "Copy Element Link"
+  },
   "view": {
     "root": "View (Debug)",
     "generateTestFiles": "Generate Test Files (Debug)"

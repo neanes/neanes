@@ -42,6 +42,8 @@ export enum IpcMainChannels {
   FileMenuInsertHeader = 'FileMenuInsertHeader',
   FileMenuInsertFooter = 'FileMenuInsertFooter',
 
+  FileMenuToolsCopyElementLink = 'FileMenuToolsCopyElementLink',
+
   FileMenuGenerateTestFile = 'GenerateTestFile',
 
   CloseWorkspaces = 'CloseWorkspaces',

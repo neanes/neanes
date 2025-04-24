@@ -137,6 +137,7 @@ export class SaveService {
           console.warn('Unrecognized element in score', e.elementType);
       }
 
+      element.id = e.id ?? undefined;
       element.lineBreak = e.lineBreak || undefined;
 
       if (e.lineBreak) {
@@ -731,6 +732,7 @@ export class SaveService {
           );
       }
 
+      element.id = e.id ?? null;
       element.lineBreak = e.lineBreak === true;
       element.lineBreakType = e.lineBreakType ?? LineBreakType.Left;
       element.pageBreak = e.pageBreak === true;

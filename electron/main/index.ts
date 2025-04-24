@@ -1604,6 +1604,10 @@ async function createWindow() {
 
   win.on('resize', debouncedSaveWindowState);
   win.on('move', debouncedSaveWindowState);
+  win.webContents.setWindowOpenHandler((details) => {
+    shell.openExternal(details.url);
+    return { action: 'deny' };
+  });
 
   if (!silent) {
     win.once('ready-to-show', () => {

@@ -42,7 +42,7 @@ import {
   Scale,
   ScaleNote,
 } from '@/models/Scales';
-import { Score } from '@/models/Score';
+import { Workspace } from '@/models/Workspace';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { TATWEEL } from '@/utils/constants';
 
@@ -63,12 +63,17 @@ interface GetNoteWidthArgs {
   elaphronWidth: number;
 }
 export class LayoutService {
-  public static processPages(score: Score): Page[] {
+  public static processPages(workspace: Workspace): Page[] {
+    const score = workspace.score;
     const pageSetup = score.pageSetup;
     const elements = score.staff.elements;
 
     elements.forEach((element, index) => {
       element.index = index;
+
+      if (element.id == null && element.elementType !== ElementType.Empty) {
+        element.id = workspace.nextId;
+      }
 
       this.saveElementState(element);
     });

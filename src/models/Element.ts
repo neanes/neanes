@@ -54,18 +54,14 @@ export interface ElementCloneArgs {
   includeLyrics?: boolean;
 }
 
-let id = 1;
-
 export abstract class ScoreElement {
   abstract elementType: ElementType;
   abstract clone(args?: ElementCloneArgs): ScoreElement;
+  public id: number | null = null;
   public lineBreak: boolean = false;
   public lineBreakType: LineBreakType | null = null;
   public pageBreak: boolean = false;
   public sectionName: string | null = null;
-
-  // Give each element a unique ID for rendering in the UI
-  public id: number = id++;
 
   public x: number = 0;
   public y: number = 0;

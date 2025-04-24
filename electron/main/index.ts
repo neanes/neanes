@@ -1466,6 +1466,17 @@ function createMenu() {
         },
       ],
     },
+    {
+      label: i18next.t('menu:tools.root'),
+      submenu: [
+        {
+          label: i18next.t('menu:tools.copyElementLink'),
+          click() {
+            win?.webContents.send(IpcMainChannels.FileMenuToolsCopyElementLink);
+          },
+        },
+      ],
+    },
     ...(isDevelopment
       ? [
           {
@@ -1593,6 +1604,10 @@ async function createWindow() {
 
   win.on('resize', debouncedSaveWindowState);
   win.on('move', debouncedSaveWindowState);
+  win.webContents.setWindowOpenHandler((details) => {
+    shell.openExternal(details.url);
+    return { action: 'deny' };
+  });
 
   if (!silent) {
     win.once('ready-to-show', () => {

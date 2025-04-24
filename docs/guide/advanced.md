@@ -27,6 +27,10 @@ Several other tokens are available. Below is a list of currently supported token
 | `$f`  | File Name (without extension) |
 | `$F`  | File Path                     |
 
+## Hyperlinks
+
+The link feature in the rich text editor can be used to insert hyperlinks to quickly jump to other sections of the exported PDF. To insert a hyperlink, click on the element you want to jump to, then choose `Tools -> Copy Element Link` in the file menu. This places the link URL on the clipboard. Next, create a link in the rich text editor by clicking the link button in the rich text editor's toolbar, and then paste the copied link URL into the `Link URL` field.
+
 ## Fine-tuning Neume Positions
 
 Sometimes the font is unable to properly position neumes when there are multiple supporting neumes. To fix collisions, either double-click the neume or click the `Positioning` button in the neume toolbar.

@@ -1750,49 +1750,16 @@ export class LayoutService {
           }
 
           if (element.isMelismaStart || isIntermediateMelismaAtStartOfLine) {
-            // The final element in the melisma, or the final
+            // finalElement: The final element in the melisma, or the final
             // element in the line
-            let finalElement:
-              | NoteElement
-              | MartyriaElement
-              | TempoElement
-              | null = null;
-
-            // The next element in the line after the final element,
+            // nextElement: The next element in the line after the final element,
             // if there is one.
-            let nextElement: ScoreElement | null = null;
-
-            for (let i = index + 1; i < line.elements.length; i++) {
-              if (
-                line.elements[i].elementType === ElementType.Note &&
-                (line.elements[i] as NoteElement).isMelisma &&
-                !(line.elements[i] as NoteElement).isMelismaStart
-              ) {
-                finalElement = line.elements[i] as NoteElement;
-              } else if (
-                (line.elements[i].elementType === ElementType.Martyria ||
-                  line.elements[i].elementType === ElementType.Tempo) &&
-                ((i + 1 === line.elements.length &&
-                  firstElementOnNextLine?.elementType === ElementType.Note &&
-                  (firstElementOnNextLine as NoteElement).isMelisma &&
-                  !(firstElementOnNextLine as NoteElement).isMelismaStart) ||
-                  (i + 1 < line.elements.length &&
-                    line.elements[i + 1].elementType === ElementType.Note &&
-                    (line.elements[i + 1] as NoteElement).isMelisma &&
-                    !(line.elements[i + 1] as NoteElement).isMelismaStart))
-              ) {
-                // If the next element is a martyria or tempo sign, then check
-                // the next note to see if the melisma should continue through
-                // the martyria or tempo sign.
-                finalElement =
-                  line.elements[i].elementType === ElementType.Martyria
-                    ? (line.elements[i] as MartyriaElement)
-                    : (line.elements[i] as TempoElement);
-              } else {
-                nextElement = line.elements[i];
-                break;
-              }
-            }
+            const { finalElement, nextElement } = this.findFinalAndNextElement(
+              line,
+              element,
+              firstElementOnNextLine,
+              index + 1,
+            );
 
             let start = 0;
             let end = 0;
@@ -1854,7 +1821,8 @@ export class LayoutService {
             if (element.isHyphen) {
               if (nextNoteElement == null) {
                 if (finalElement) {
-                  end = finalElement.x + finalElement.neumeWidth;
+                  end =
+                    finalElement.x + this.getFinalElementWidth(finalElement);
                 } else {
                   end = element.x + element.neumeWidth;
                 }
@@ -1962,7 +1930,8 @@ export class LayoutService {
                 if (finalElement == null) {
                   end = element.x + element.neumeWidth;
                 } else {
-                  end = finalElement.x + finalElement.neumeWidth;
+                  end =
+                    finalElement.x + this.getFinalElementWidth(finalElement);
                 }
 
                 if (nextNoteElement != null && nextNoteElement.alignLeft) {
@@ -2012,7 +1981,8 @@ export class LayoutService {
                 nextElement.elementType !== ElementType.Note
               ) {
                 if (finalElement) {
-                  end = finalElement.x + finalElement.neumeWidth;
+                  end =
+                    finalElement.x + this.getFinalElementWidth(finalElement);
                 } else {
                   end = element.x + element.neumeWidth;
                 }
@@ -2747,6 +2717,93 @@ export class LayoutService {
     }
 
     return height;
+  }
+
+  private static getFinalElementWidth(
+    element: NoteElement | MartyriaElement | TempoElement | TextBoxElement,
+  ) {
+    if (element.elementType === ElementType.Martyria) {
+      return (element as MartyriaElement).neumeWidth;
+    } else if (element.elementType === ElementType.Note) {
+      return (element as NoteElement).neumeWidth;
+    } else if (element.elementType === ElementType.Tempo) {
+      return (element as TempoElement).neumeWidth;
+    } else {
+      return (element as TextBoxElement).width;
+    }
+  }
+
+  /**
+   * For a given melismatic element on a line, this finds the final element of the melisma
+   * and the element after the final element, if there is one.
+   * @param line The line being processed
+   * @param element The element that started the melisma
+   * @param firstElementOnNextLine The first element on the next line
+   * @param startIndex The index to start searching at. Should be the element's index + 1.
+   * @returns The final element in the melisma, and the next element after the melisma.
+   */
+  public static findFinalAndNextElement(
+    line: Line,
+    element: NoteElement,
+    firstElementOnNextLine: ScoreElement | null,
+    startIndex: number,
+  ) {
+    let finalElement:
+      | NoteElement
+      | MartyriaElement
+      | TempoElement
+      | TextBoxElement
+      | null = null;
+
+    let nextElement: ScoreElement | null = null;
+
+    for (let i = startIndex; i < line.elements.length; i++) {
+      if (
+        line.elements[i].elementType === ElementType.Note &&
+        (line.elements[i] as NoteElement).isMelisma &&
+        !(line.elements[i] as NoteElement).isMelismaStart
+      ) {
+        finalElement = line.elements[i] as NoteElement;
+      } else if (
+        !element.isHyphen &&
+        (line.elements[i].elementType === ElementType.Martyria ||
+          line.elements[i].elementType === ElementType.Tempo ||
+          (line.elements[i].elementType === ElementType.TextBox &&
+            (line.elements[i] as TextBoxElement).inline)) &&
+        ((i + 1 === line.elements.length &&
+          firstElementOnNextLine?.elementType === ElementType.Note &&
+          (firstElementOnNextLine as NoteElement).isMelisma &&
+          !(firstElementOnNextLine as NoteElement).isMelismaStart) ||
+          (i + 1 < line.elements.length &&
+            line.elements[i + 1].elementType === ElementType.Note &&
+            (line.elements[i + 1] as NoteElement).isMelisma &&
+            !(line.elements[i + 1] as NoteElement).isMelismaStart))
+      ) {
+        // If the next element is a martyria, inline text box, or tempo sign, then check
+        // the next note to see if the melisma should continue through
+        // the martyria or tempo sign.
+        if (line.elements[i].elementType === ElementType.Martyria) {
+          finalElement = line.elements[i] as MartyriaElement;
+        } else if (line.elements[i].elementType === ElementType.Tempo) {
+          finalElement = line.elements[i] as TempoElement;
+        } else {
+          finalElement = line.elements[i] as TextBoxElement;
+        }
+      } else if (
+        element.isHyphen &&
+        (line.elements[i].elementType === ElementType.Martyria ||
+          line.elements[i].elementType === ElementType.Tempo ||
+          (line.elements[i].elementType === ElementType.TextBox &&
+            (line.elements[i] as TextBoxElement).inline))
+      ) {
+        continue;
+      } else {
+        nextElement = line.elements[i];
+        break;
+      }
+    }
+
+    return { finalElement, nextElement };
   }
 }
 

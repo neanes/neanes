@@ -10,6 +10,11 @@ updates:
       prefix: 'chore'
     labels:
       - 'Type: Dependencies'
+    ignore:
+      # Electron 36 has save issues on Fedora
+      # https://github.com/neanes/neanes/issues/1408
+      - dependency-name: 'electron'
+        versions: ['>=36.0.0']
   - package-ecosystem: 'github-actions'
     directory: '/'
     schedule:

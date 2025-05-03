@@ -401,6 +401,146 @@
           </div>
 
           <div class="subheader">
+            {{ $t('dialog:pageSetup.headerHorizontalRule') }}
+          </div>
+
+          <div class="form-group">
+            <input
+              id="page-setup-dialog-header-hr"
+              type="checkbox"
+              v-model="form.showHeaderHorizontalRule"
+            />
+            <label for="page-setup-dialog-header-hr">{{
+              $t('dialog:pageSetup.visible')
+            }}</label>
+          </div>
+
+          <div class="form-group row">
+            <label class="header-rule-label">{{
+              $t('dialog:pageSetup.color')
+            }}</label>
+            <ColorPicker
+              class="neume-colors-input"
+              v-model="form.headerHorizontalRuleColor"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="header-rule-label">{{
+              $t('dialog:pageSetup.thickness')
+            }}</label>
+            <InputUnit
+              class="margin-input"
+              unit="pt"
+              :min="0"
+              :max="100"
+              :step="0.5"
+              v-model="form.headerHorizontalRuleThickness"
+              :precision="1"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="header-rule-label">{{
+              $t('dialog:pageSetup.marginTop')
+            }}</label>
+            <InputUnit
+              class="margin-input"
+              unit="pt"
+              :min="0"
+              :max="1000"
+              :step="0.5"
+              v-model="form.headerHorizontalRuleMarginTop"
+              :precision="1"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="header-rule-label">{{
+              $t('dialog:pageSetup.marginBottom')
+            }}</label>
+            <InputUnit
+              class="margin-input"
+              unit="pt"
+              :min="0"
+              :max="1000"
+              :step="0.5"
+              v-model="form.headerHorizontalRuleMarginBottom"
+              :precision="1"
+            />
+          </div>
+
+          <div class="subheader">
+            {{ $t('dialog:pageSetup.footerHorizontalRule') }}
+          </div>
+
+          <div class="form-group">
+            <input
+              id="page-setup-dialog-header-hr"
+              type="checkbox"
+              v-model="form.showFooterHorizontalRule"
+            />
+            <label for="page-setup-dialog-header-hr">{{
+              $t('dialog:pageSetup.visible')
+            }}</label>
+          </div>
+
+          <div class="form-group row">
+            <label class="header-rule-label">{{
+              $t('dialog:pageSetup.color')
+            }}</label>
+            <ColorPicker
+              class="neume-colors-input"
+              v-model="form.footerHorizontalRuleColor"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="header-rule-label">{{
+              $t('dialog:pageSetup.thickness')
+            }}</label>
+            <InputUnit
+              class="margin-input"
+              unit="pt"
+              :min="0"
+              :max="100"
+              :step="0.5"
+              v-model="form.footerHorizontalRuleThickness"
+              :precision="1"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="header-rule-label">{{
+              $t('dialog:pageSetup.marginTop')
+            }}</label>
+            <InputUnit
+              class="margin-input"
+              unit="pt"
+              :min="0"
+              :max="1000"
+              :step="0.5"
+              v-model="form.footerHorizontalRuleMarginTop"
+              :precision="1"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="header-rule-label">{{
+              $t('dialog:pageSetup.marginBottom')
+            }}</label>
+            <InputUnit
+              class="margin-input"
+              unit="pt"
+              :min="0"
+              :max="1000"
+              :step="0.5"
+              v-model="form.footerHorizontalRuleMarginBottom"
+              :precision="1"
+            />
+          </div>
+
+          <div class="subheader">
             {{ $t('dialog:pageSetup.miscellaneous') }}
           </div>
 
@@ -1534,6 +1674,11 @@ export default class PageSetupDialog extends Vue {
 
 .left-pane {
   margin-right: 2rem;
+}
+
+.header-rule-label {
+  display: inline-block;
+  width: 6rem;
 }
 
 .drop-caps-label {

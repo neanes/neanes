@@ -77,6 +77,8 @@
     "line": "Line",
     "hyphens": "Hyphens",
     "headersAndFooters": "Headers and Footers",
+    "headerHorizontalRule": "Header Rule",
+    "footerHorizontalRule": "Footer Rule",
     "includeHeader": "Include Header",
     "includeFooter": "Include Footer",
     "differentFirstPage": "Different First Page",
@@ -116,7 +118,11 @@
     "measureNo": "Measure №",
     "noteIndicators": "Note Indicators",
     "tempos": "Tempos",
-    "preview": "Preview"
+    "preview": "Preview",
+    "visible": "Visible",
+    "marginTop": "Gap Above",
+    "marginBottom": "Gap Below",
+    "thickness": "Thickness"
   },
   "playbackSettings": {
     "root": "Playback Settings",

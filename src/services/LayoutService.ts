@@ -279,7 +279,14 @@ export class LayoutService {
 
         // Currently, headers and footers may only contain a single
         // text box.
-        const headerHeightPx = (header.elements[0] as TextBoxElement).height;
+        let headerHeightPx = (header.elements[0] as TextBoxElement).height;
+
+        if (score.pageSetup.showHeaderHorizontalRule) {
+          headerHeightPx +=
+            score.pageSetup.headerHorizontalRuleMarginBottom +
+            score.pageSetup.headerHorizontalRuleMarginTop +
+            score.pageSetup.headerHorizontalRuleThickness;
+        }
 
         extraHeaderHeightPx = Math.max(
           0,
@@ -292,7 +299,14 @@ export class LayoutService {
 
         // Currently, headers and footers may only contain a single
         // text box.
-        const footerHeightPx = (footer.elements[0] as TextBoxElement).height;
+        let footerHeightPx = (footer.elements[0] as TextBoxElement).height;
+
+        if (score.pageSetup.showFooterHorizontalRule) {
+          footerHeightPx +=
+            score.pageSetup.footerHorizontalRuleMarginBottom +
+            score.pageSetup.footerHorizontalRuleMarginTop +
+            score.pageSetup.footerHorizontalRuleThickness;
+        }
 
         extraFooterHeightPx = Math.max(
           0,

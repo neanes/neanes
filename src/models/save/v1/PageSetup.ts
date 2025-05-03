@@ -36,6 +36,18 @@ export class PageSetup {
   public richHeaderFooter: boolean | undefined = undefined;
   public firstPageNumber = 1;
 
+  public showHeaderHorizontalRule: boolean | undefined = undefined;
+  public headerHorizontalRuleMarginTop: number | undefined = undefined;
+  public headerHorizontalRuleMarginBottom: number | undefined = undefined;
+  public headerHorizontalRuleThickness: number | undefined = undefined;
+  public headerHorizontalRuleColor: string | undefined = undefined;
+
+  public showFooterHorizontalRule: boolean | undefined = undefined;
+  public footerHorizontalRuleMarginTop: number | undefined = undefined;
+  public footerHorizontalRuleMarginBottom: number | undefined = undefined;
+  public footerHorizontalRuleThickness: number | undefined = undefined;
+  public footerHorizontalRuleColor: string | undefined = undefined;
+
   public lineHeight = Unit.fromInch(0.76);
 
   public melkiteRtl: boolean | undefined = false;

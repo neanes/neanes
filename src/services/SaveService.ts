@@ -227,6 +227,24 @@ export class SaveService {
     pageSetup.showFooter = p.showFooter || undefined;
     pageSetup.richHeaderFooter = p.richHeaderFooter || undefined;
 
+    if (p.showHeaderHorizontalRule) {
+      pageSetup.showHeaderHorizontalRule = p.showHeaderHorizontalRule;
+      pageSetup.headerHorizontalRuleMarginTop = p.headerHorizontalRuleMarginTop;
+      pageSetup.headerHorizontalRuleMarginBottom =
+        p.headerHorizontalRuleMarginBottom;
+      pageSetup.headerHorizontalRuleThickness = p.headerHorizontalRuleThickness;
+      pageSetup.headerHorizontalRuleColor = p.headerHorizontalRuleColor;
+    }
+
+    if (p.showFooterHorizontalRule) {
+      pageSetup.showFooterHorizontalRule = p.showFooterHorizontalRule;
+      pageSetup.footerHorizontalRuleMarginTop = p.footerHorizontalRuleMarginTop;
+      pageSetup.footerHorizontalRuleMarginBottom =
+        p.footerHorizontalRuleMarginBottom;
+      pageSetup.footerHorizontalRuleThickness = p.footerHorizontalRuleThickness;
+      pageSetup.footerHorizontalRuleColor = p.footerHorizontalRuleColor;
+    }
+
     pageSetup.firstPageNumber = p.firstPageNumber;
 
     pageSetup.accidentalDefaultColor = p.accidentalDefaultColor;
@@ -773,6 +791,36 @@ export class SaveService {
     pageSetup.showFooter = p.showFooter === true;
     pageSetup.richHeaderFooter = p.richHeaderFooter === true;
     pageSetup.firstPageNumber = p.firstPageNumber ?? pageSetup.firstPageNumber;
+
+    if (p.showHeaderHorizontalRule === true) {
+      pageSetup.showHeaderHorizontalRule = p.showHeaderHorizontalRule;
+      pageSetup.headerHorizontalRuleMarginTop =
+        p.headerHorizontalRuleMarginTop ??
+        pageSetup.headerHorizontalRuleMarginTop;
+      pageSetup.headerHorizontalRuleMarginBottom =
+        p.headerHorizontalRuleMarginBottom ??
+        pageSetup.headerHorizontalRuleMarginBottom;
+      pageSetup.headerHorizontalRuleThickness =
+        p.headerHorizontalRuleThickness ??
+        pageSetup.headerHorizontalRuleThickness;
+      pageSetup.headerHorizontalRuleColor =
+        p.headerHorizontalRuleColor ?? pageSetup.headerHorizontalRuleColor;
+    }
+
+    if (p.showFooterHorizontalRule === true) {
+      pageSetup.showFooterHorizontalRule = p.showFooterHorizontalRule;
+      pageSetup.footerHorizontalRuleMarginTop =
+        p.footerHorizontalRuleMarginTop ??
+        pageSetup.footerHorizontalRuleMarginTop;
+      pageSetup.footerHorizontalRuleMarginBottom =
+        p.footerHorizontalRuleMarginBottom ??
+        pageSetup.footerHorizontalRuleMarginBottom;
+      pageSetup.footerHorizontalRuleThickness =
+        p.footerHorizontalRuleThickness ??
+        pageSetup.footerHorizontalRuleThickness;
+      pageSetup.footerHorizontalRuleColor =
+        p.footerHorizontalRuleColor ?? pageSetup.footerHorizontalRuleColor;
+    }
 
     pageSetup.lineHeight = p.lineHeight;
 

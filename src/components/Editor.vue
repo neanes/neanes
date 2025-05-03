@@ -192,6 +192,15 @@
                     "
                   />
                 </template>
+                <div
+                  v-if="score.pageSetup.showHeaderHorizontalRule"
+                  class="header-footer-hr"
+                  :style="
+                    getHeaderHorizontalRuleStyle(
+                      getHeaderForPageIndex(pageIndex).height,
+                    )
+                  "
+                ></div>
               </template>
               <div
                 class="line"
@@ -608,6 +617,15 @@
                 </div>
               </div>
               <template v-if="score.pageSetup.showFooter">
+                <div
+                  v-if="score.pageSetup.showFooterHorizontalRule"
+                  class="header-footer-hr"
+                  :style="
+                    getFooterHorizontalRuleStyle(
+                      getFooterForPageIndex(pageIndex).height,
+                    )
+                  "
+                ></div>
                 <template
                   v-if="isRichTextBoxElement(getFooterForPageIndex(pageIndex))"
                 >
@@ -1950,10 +1968,42 @@ export default class Editor extends Vue {
     } as StyleValue;
   }
 
+  getHeaderHorizontalRuleStyle(headerHeight: number) {
+    return {
+      left: withZoom(this.score.pageSetup.leftMargin),
+      top: withZoom(
+        this.score.pageSetup.headerMargin +
+          headerHeight +
+          this.score.pageSetup.headerHorizontalRuleMarginTop,
+      ),
+      color: this.score.pageSetup.headerHorizontalRuleColor,
+      borderTopWidth: withZoom(
+        this.score.pageSetup.headerHorizontalRuleThickness,
+      ),
+      width: withZoom(this.score.pageSetup.innerPageWidth),
+    } as StyleValue;
+  }
+
   get footerStyle() {
     return {
       left: withZoom(this.score.pageSetup.leftMargin),
       bottom: withZoom(this.score.pageSetup.footerMargin),
+    } as StyleValue;
+  }
+
+  getFooterHorizontalRuleStyle(footerHeight: number) {
+    return {
+      left: withZoom(this.score.pageSetup.leftMargin),
+      bottom: withZoom(
+        this.score.pageSetup.footerMargin +
+          footerHeight +
+          this.score.pageSetup.footerHorizontalRuleMarginBottom,
+      ),
+      color: this.score.pageSetup.footerHorizontalRuleColor,
+      borderTopWidth: withZoom(
+        this.score.pageSetup.footerHorizontalRuleThickness,
+      ),
+      width: withZoom(this.score.pageSetup.innerPageWidth),
     } as StyleValue;
   }
 
@@ -7253,6 +7303,11 @@ export default class Editor extends Vue {
 .guide-line-hb {
   border-bottom: 1px solid black;
   position: absolute;
+}
+
+.header-footer-hr {
+  position: absolute;
+  border-top-style: solid;
 }
 
 .red {

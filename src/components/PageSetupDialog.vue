@@ -476,11 +476,11 @@
 
           <div class="form-group">
             <input
-              id="page-setup-dialog-header-hr"
+              id="page-setup-dialog-footer-hr"
               type="checkbox"
               v-model="form.showFooterHorizontalRule"
             />
-            <label for="page-setup-dialog-header-hr">{{
+            <label for="page-setup-dialog-footer-hr">{{
               $t('dialog:pageSetup.visible')
             }}</label>
           </div>

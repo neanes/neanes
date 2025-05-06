@@ -117,6 +117,7 @@ interface WindowState {
 interface Store {
   recentFiles: string[];
   windowState: WindowState;
+  lastDirectory?: string;
 }
 
 const defaultWindowState: WindowState = {
@@ -168,6 +169,24 @@ if (
 }
 
 const debouncedSaveWindowState = debounce(500, saveStore);
+
+async function generateFilePath(filename: string) {
+  let targetDirectory = app.getPath('home');
+
+  if (store.lastDirectory != null) {
+    try {
+      const stat = await fs.stat(store.lastDirectory);
+
+      if (stat.isDirectory()) {
+        targetDirectory = store.lastDirectory;
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  return path.join(targetDirectory, filename);
+}
 
 async function loadStore() {
   try {
@@ -404,7 +423,7 @@ async function saveWorkspaceAs(args: SaveWorkspaceAsArgs) {
 
     const dialogResult = await dialog.showSaveDialog(win!, {
       title: 'Save Score',
-      defaultPath: args.filePath || args.tempFileName,
+      defaultPath: args.filePath || (await generateFilePath(args.tempFileName)),
       filters: [
         {
           name: `${app.name} File`,
@@ -441,6 +460,9 @@ async function saveWorkspaceAs(args: SaveWorkspaceAsArgs) {
         createMenu();
 
         result.success = true;
+
+        store.lastDirectory = path.dirname(result.filePath);
+        await saveStore();
       }
     }
   } catch (error) {
@@ -597,7 +619,7 @@ async function exportWorkspaceAsPdf(args: ExportWorkspaceAsPdfArgs) {
       defaultPath:
         args.filePath != null
           ? path.basename(args.filePath, path.extname(args.filePath))
-          : args.tempFileName,
+          : await generateFilePath(args.tempFileName),
     });
 
     if (!dialogResult.canceled) {
@@ -626,6 +648,9 @@ async function exportWorkspaceAsPdf(args: ExportWorkspaceAsPdfArgs) {
         await fs.writeFile(filePath, data);
 
         await shell.openPath(filePath);
+
+        store.lastDirectory = path.dirname(filePath);
+        await saveStore();
       }
     }
   } catch (error) {
@@ -676,7 +701,7 @@ async function exportWorkspaceAsHtml(args: ExportWorkspaceAsHtmlArgs) {
 
     const dialogResult = await dialog.showSaveDialog(win!, {
       title: 'Export Score as HTML',
-      defaultPath: args.filePath || args.tempFileName,
+      defaultPath: args.filePath || (await generateFilePath(args.tempFileName)),
       filters: [
         {
           name: `HTML File`,
@@ -702,6 +727,9 @@ async function exportWorkspaceAsHtml(args: ExportWorkspaceAsHtmlArgs) {
       if (doWrite) {
         await fs.writeFile(filePath, args.data);
         await shell.openPath(filePath);
+
+        store.lastDirectory = path.dirname(filePath);
+        await saveStore();
       }
     }
   } catch (error) {
@@ -731,7 +759,7 @@ async function exportWorkspaceAsMusicXml(args: ExportWorkspaceAsMusicXmlArgs) {
 
     const dialogResult = await dialog.showSaveDialog(win!, {
       title: 'Export Score as MusicXML',
-      defaultPath: args.filePath || args.tempFileName,
+      defaultPath: args.filePath || (await generateFilePath(args.tempFileName)),
       filters: [
         {
           name: args.compressed
@@ -762,6 +790,9 @@ async function exportWorkspaceAsMusicXml(args: ExportWorkspaceAsMusicXmlArgs) {
         if (args.openFolder) {
           shell.showItemInFolder(filePath);
         }
+
+        store.lastDirectory = path.dirname(filePath);
+        await saveStore();
       }
     }
   } catch (error) {
@@ -812,7 +843,7 @@ async function exportWorkspaceAsLatex(args: ExportWorkspaceAsLatexArgs) {
 
     const dialogResult = await dialog.showSaveDialog(win!, {
       title: 'Export Score as Latex',
-      defaultPath: args.filePath || args.tempFileName,
+      defaultPath: args.filePath || (await generateFilePath(args.tempFileName)),
       filters: [
         {
           name: 'neanestex File',
@@ -837,6 +868,9 @@ async function exportWorkspaceAsLatex(args: ExportWorkspaceAsLatexArgs) {
 
       if (doWrite) {
         await fs.writeFile(filePath, args.data);
+
+        store.lastDirectory = path.dirname(filePath);
+        await saveStore();
       }
     }
   } catch (error) {
@@ -869,7 +903,9 @@ async function exportWorkspaceAsImage(args: ExportWorkspaceAsImageArgs) {
 
     const dialogResult = await dialog.showSaveDialog(win!, {
       title: 'Export Score as Images',
-      defaultPath: args.filePath?.replace(/\.byzx?$/, '') || args.tempFileName,
+      defaultPath:
+        args.filePath?.replace(/\.byzx?$/, '') ||
+        (await generateFilePath(args.tempFileName)),
       filters: [
         {
           name: args.imageFormat === 'png' ? `PNG File` : `SVG File`,
@@ -887,6 +923,9 @@ async function exportWorkspaceAsImage(args: ExportWorkspaceAsImageArgs) {
       result.filePath = filePath;
       result.success = true;
       exportAsImageOnConflict = null;
+
+      store.lastDirectory = path.dirname(filePath);
+      await saveStore();
     }
 
     return result;

@@ -168,16 +168,12 @@ export class NoteElement extends ScoreElement {
   public tertiaryFthoraPrevious: Fthora | null = null;
   public computedMeasureBarLeftPrevious: MeasureBar | null = null;
   public computedMeasureBarRightPrevious: MeasureBar | null = null;
-  public isonOffsetYAdjustedPrevious: number | null = null;
+  public computedIsonOffsetYPrevious: number | null = null;
 
   // Fthora helper
   public fthoraCarry: Fthora | null = null;
   public secondaryFthoraCarry: Fthora | null = null;
   public tertiaryFthoraCarry: Fthora | null = null;
-
-  // Extra rendering properties
-  public isonOffsetYBeforeAdjustment: number = 0;
-  public isonOffsetYAdjusted: number | null = null;
 
   public get lyricsFont() {
     return `${this.lyricsFontStyle} normal ${this.lyricsFontWeight} ${this.lyricsFontSize}px "${this.lyricsFontFamily}"`;
@@ -410,6 +406,8 @@ export class NoteElement extends ScoreElement {
   public scaleNotesVirtual: ScaleNote[] = [];
   public computedMeasureBarLeft: MeasureBar | null = null;
   public computedMeasureBarRight: MeasureBar | null = null;
+  public computedIsonOffsetY: number | null = null;
+  public isonOffsetYBeforeAdjustment: number = 0;
 
   private _quantitativeNeume: QuantitativeNeume = QuantitativeNeume.Ison;
   private _timeNeume: TimeNeume | null = null;

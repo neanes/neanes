@@ -378,6 +378,8 @@ export class LayoutService {
         case ElementType.Note: {
           const noteElement = element as NoteElement;
 
+          noteElement.computedIsonOffsetY = noteElement.isonOffsetY;
+
           noteElement.lyricsFontHeight = this.getLyricsFontHeightFromCache(
             fontHeightCache,
             noteElement,
@@ -1250,7 +1252,7 @@ export class LayoutService {
       note.tertiaryFthoraPrevious = note.tertiaryFthora;
       note.computedMeasureBarLeftPrevious = note.computedMeasureBarLeft;
       note.computedMeasureBarRightPrevious = note.computedMeasureBarRight;
-      note.isonOffsetYAdjustedPrevious = note.isonOffsetYAdjusted;
+      note.computedIsonOffsetYPrevious = note.computedIsonOffsetY;
     } else if (element.elementType === ElementType.TextBox) {
       const textbox = element as TextBoxElement;
       textbox.heightPrevious = textbox.height;
@@ -1301,7 +1303,7 @@ export class LayoutService {
         note.tertiaryFthoraPrevious !== note.tertiaryFthora ||
         note.computedMeasureBarLeftPrevious !== note.computedMeasureBarLeft ||
         note.computedMeasureBarRightPrevious !== note.computedMeasureBarRight ||
-        note.isonOffsetYAdjustedPrevious !== note.isonOffsetYAdjusted;
+        note.computedIsonOffsetYPrevious !== note.computedIsonOffsetY;
     }
 
     if (!element.updated && element.elementType === ElementType.TextBox) {
@@ -2430,7 +2432,7 @@ export class LayoutService {
         }
 
         for (const note of notesWithIson) {
-          note.isonOffsetYAdjusted =
+          note.computedIsonOffsetY =
             minOffset -
             note.isonOffsetYBeforeAdjustment +
             (note.isonOffsetY ?? 0);

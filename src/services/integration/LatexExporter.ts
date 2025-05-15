@@ -317,7 +317,7 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
               isonOffset: getOffset(
                 note.ison,
                 note.isonOffsetX,
-                note.isonOffsetY,
+                note.computedIsonOffsetY,
               ),
               measureNumber: glyphName(note.measureNumber),
               measureNumberOffset: getOffset(

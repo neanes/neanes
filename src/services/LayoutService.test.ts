@@ -229,8 +229,8 @@ describe('LayoutService.alignIsonIndicators', () => {
 
     LayoutService.alignIsonIndicators([page], mockPageSetup);
 
-    expect(note1.isonOffsetYAdjusted).toBe(0); // minOffset - totalOffset + isonOffsetY
-    expect(note2.isonOffsetYAdjusted).toBe(-10); // minOffset - totalOffset + isonOffsetY
+    expect(note1.computedIsonOffsetY).toBe(0); // minOffset - totalOffset + isonOffsetY
+    expect(note2.computedIsonOffsetY).toBe(-10); // minOffset - totalOffset + isonOffsetY
   });
 
   it('should adjust isonOffsetYAdjusted for notes with ison indicators and ison offsets', () => {
@@ -277,8 +277,8 @@ describe('LayoutService.alignIsonIndicators', () => {
 
     LayoutService.alignIsonIndicators([page], mockPageSetup);
 
-    expect(note1.isonOffsetYAdjusted).toBe(-15); // minOffset - totalOffset + isonOffsetY
-    expect(note2.isonOffsetYAdjusted).toBe(-25); // minOffset - totalOffset + isonOffsetY
+    expect(note1.computedIsonOffsetY).toBe(-15); // minOffset - totalOffset + isonOffsetY
+    expect(note2.computedIsonOffsetY).toBe(-25); // minOffset - totalOffset + isonOffsetY
   });
 
   it('should handle cases with no notes having ison indicators', () => {
@@ -298,7 +298,7 @@ describe('LayoutService.alignIsonIndicators', () => {
 
     LayoutService.alignIsonIndicators([page], mockPageSetup);
 
-    expect(note.isonOffsetYAdjusted).toBeNull();
+    expect(note.computedIsonOffsetY).toBeNull();
   });
 
   it('should handle empty pages gracefully', () => {

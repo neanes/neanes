@@ -120,6 +120,7 @@ export class PageSetup {
   public chrysanthineAccidentals: boolean | undefined = undefined;
   public noFthoraRestrictions: boolean | undefined = undefined;
   public disableGreekMelismata: boolean | undefined = undefined;
+  public alignIsonIndicators: boolean | undefined = undefined;
 
   public useOptionalDiatonicFthoras: boolean | undefined = undefined;
 }

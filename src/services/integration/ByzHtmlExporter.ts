@@ -585,7 +585,7 @@ export class ByzHtmlExporter {
     inner += this.exportNeume(
       element.ison,
       indentation + 2,
-      { x: element.isonOffsetX, y: element.isonOffsetY },
+      { x: element.isonOffsetX, y: element.computedIsonOffsetY },
       this.config.classIson,
     );
 
@@ -962,8 +962,12 @@ export class ByzHtmlExporter {
     let classAttribute = '';
     let nameAttribute = '';
 
-    if (offset && offset.x != null && offset.y != null) {
-      styleAttribute = ` left="${offset.x}em" top="${offset.y}em";`;
+    if (offset?.x != null) {
+      styleAttribute = ` left="${offset.x}em"`;
+    }
+
+    if (offset?.y != null) {
+      styleAttribute += ` top="${offset.y}em"`;
     }
 
     if (tagInfo.salt != null) {

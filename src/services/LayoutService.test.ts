@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, Mock, vi } from 'vitest';
 
 import {
   MartyriaElement,
@@ -6,7 +6,13 @@ import {
   TempoElement,
   TextBoxElement,
 } from '../models/Element';
+import { Line, Page } from '../models/Page';
+import { fontService } from './FontService';
 import { LayoutService } from './LayoutService';
+import { NeumeMappingService } from './NeumeMappingService';
+
+vi.mock('./NeumeMappingService');
+vi.mock('./FontService');
 
 const itif = (condition) => (condition ? it : it.skip);
 
@@ -179,6 +185,135 @@ describe.each([true, false])(
     });
   },
 );
+
+describe('LayoutService.alignIsonIndicators', () => {
+  it('should adjust isonOffsetYAdjusted for notes with ison indicators', () => {
+    const mockPageSetup = {
+      neumeDefaultFontFamily: 'MockFont',
+    };
+
+    const mockBaseMapping1 = { glyphName: 'baseGlyph1' };
+    const mockBaseMapping2 = { glyphName: 'baseGlyph2' };
+    const mockMarkMapping = { glyphName: 'markGlyph' };
+
+    const mockOffset1 = { y: 10 };
+    const mockOffset2 = { y: 20 };
+
+    (NeumeMappingService.getMapping as Mock).mockImplementation((neume) => {
+      if (neume === 'base1') return mockBaseMapping1;
+      if (neume === 'base2') return mockBaseMapping2;
+      return mockMarkMapping;
+    });
+
+    (fontService.getMarkAnchorOffset as Mock).mockImplementation(
+      (fontFamily, base) => {
+        if (base === 'baseGlyph1') return mockOffset1;
+        if (base === 'baseGlyph2') return mockOffset2;
+        return { y: 0 };
+      },
+    );
+
+    const note1 = new NoteElement();
+    note1.quantitativeNeume = 'base1';
+    note1.ison = 'mark';
+
+    const note2 = new NoteElement();
+    note2.quantitativeNeume = 'base2';
+    note2.ison = 'mark';
+
+    const line = new Line();
+    line.elements = [note1, note2];
+
+    const page = new Page();
+    page.lines = [line];
+
+    LayoutService.alignIsonIndicators([page], mockPageSetup);
+
+    expect(note1.isonOffsetYAdjusted).toBe(0); // minOffset - totalOffset + isonOffsetY
+    expect(note2.isonOffsetYAdjusted).toBe(-10); // minOffset - totalOffset + isonOffsetY
+  });
+
+  it('should adjust isonOffsetYAdjusted for notes with ison indicators and ison offsets', () => {
+    const mockPageSetup = {
+      neumeDefaultFontFamily: 'MockFont',
+    };
+
+    const mockBaseMapping1 = { glyphName: 'baseGlyph1' };
+    const mockBaseMapping2 = { glyphName: 'baseGlyph2' };
+    const mockMarkMapping = { glyphName: 'markGlyph' };
+
+    const mockOffset1 = { y: 10 };
+    const mockOffset2 = { y: 20 };
+
+    (NeumeMappingService.getMapping as Mock).mockImplementation((neume) => {
+      if (neume === 'base1') return mockBaseMapping1;
+      if (neume === 'base2') return mockBaseMapping2;
+      return mockMarkMapping;
+    });
+
+    (fontService.getMarkAnchorOffset as Mock).mockImplementation(
+      (fontFamily, base) => {
+        if (base === 'baseGlyph1') return mockOffset1;
+        if (base === 'baseGlyph2') return mockOffset2;
+        return { y: 0 };
+      },
+    );
+
+    const note1 = new NoteElement();
+    note1.quantitativeNeume = 'base1';
+    note1.ison = 'mark';
+    note1.isonOffsetY = -5;
+
+    const note2 = new NoteElement();
+    note2.quantitativeNeume = 'base2';
+    note2.ison = 'mark';
+    note2.isonOffsetY = -25;
+
+    const line = new Line();
+    line.elements = [note1, note2];
+
+    const page = new Page();
+    page.lines = [line];
+
+    LayoutService.alignIsonIndicators([page], mockPageSetup);
+
+    expect(note1.isonOffsetYAdjusted).toBe(-15); // minOffset - totalOffset + isonOffsetY
+    expect(note2.isonOffsetYAdjusted).toBe(-25); // minOffset - totalOffset + isonOffsetY
+  });
+
+  it('should handle cases with no notes having ison indicators', () => {
+    const mockPageSetup = {
+      neumeDefaultFontFamily: 'MockFont',
+    };
+
+    const note = new NoteElement();
+    note.quantitativeNeume = 'base';
+    note.ison = null;
+
+    const line = new Line();
+    line.elements = [note];
+
+    const page = new Page();
+    page.lines = [line];
+
+    LayoutService.alignIsonIndicators([page], mockPageSetup);
+
+    expect(note.isonOffsetYAdjusted).toBeNull();
+  });
+
+  it('should handle empty pages gracefully', () => {
+    const mockPageSetup = {
+      neumeDefaultFontFamily: 'MockFont',
+    };
+
+    const page = new Page();
+    page.lines = [];
+
+    expect(() =>
+      LayoutService.alignIsonIndicators([page], mockPageSetup),
+    ).not.toThrow();
+  });
+});
 
 function getInlineTextBox() {
   const inlineTextBox = new TextBoxElement();

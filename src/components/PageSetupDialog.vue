@@ -568,6 +568,17 @@
 
           <div class="form-group">
             <input
+              id="page-setup-dialog-align-ison-indicators"
+              type="checkbox"
+              v-model="form.alignIsonIndicators"
+            />
+            <label for="page-setup-dialog-align-ison-indicators">{{
+              $t('dialog:pageSetup.alignIsonIndicators')
+            }}</label>
+          </div>
+
+          <div class="form-group">
+            <input
               id="page-setup-dialog-melkite-rtl"
               type="checkbox"
               v-model="form.melkiteRtl"

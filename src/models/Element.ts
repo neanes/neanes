@@ -168,11 +168,16 @@ export class NoteElement extends ScoreElement {
   public tertiaryFthoraPrevious: Fthora | null = null;
   public computedMeasureBarLeftPrevious: MeasureBar | null = null;
   public computedMeasureBarRightPrevious: MeasureBar | null = null;
+  public isonOffsetYAdjustedPrevious: number | null = null;
 
   // Fthora helper
   public fthoraCarry: Fthora | null = null;
   public secondaryFthoraCarry: Fthora | null = null;
   public tertiaryFthoraCarry: Fthora | null = null;
+
+  // Extra rendering properties
+  public isonOffsetYBeforeAdjustment: number = 0;
+  public isonOffsetYAdjusted: number | null = null;
 
   public get lyricsFont() {
     return `${this.lyricsFontStyle} normal ${this.lyricsFontWeight} ${this.lyricsFontSize}px "${this.lyricsFontFamily}"`;

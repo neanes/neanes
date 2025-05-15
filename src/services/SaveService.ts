@@ -278,6 +278,7 @@ export class SaveService {
     pageSetup.chrysanthineAccidentals = p.chrysanthineAccidentals;
     pageSetup.noFthoraRestrictions = p.noFthoraRestrictions || undefined;
     pageSetup.disableGreekMelismata = p.disableGreekMelismata || undefined;
+    pageSetup.alignIsonIndicators = p.alignIsonIndicators || undefined;
     pageSetup.useOptionalDiatonicFthoras =
       p.useOptionalDiatonicFthoras || undefined;
   }
@@ -949,6 +950,7 @@ export class SaveService {
       p.chrysanthineAccidentals === undefined;
     pageSetup.noFthoraRestrictions = p.noFthoraRestrictions === true;
     pageSetup.disableGreekMelismata = p.disableGreekMelismata === true;
+    pageSetup.alignIsonIndicators = p.alignIsonIndicators === true;
     pageSetup.useOptionalDiatonicFthoras =
       p.useOptionalDiatonicFthoras === true;
 

@@ -411,6 +411,10 @@ export default class NeumeBoxSyllable extends Vue {
   }
 
   get isonStyle() {
+    const isonOffsetY = this.pageSetup.alignIsonIndicators
+      ? this.note.isonOffsetYAdjusted
+      : this.note.isonOffsetY;
+
     return {
       color: this.pageSetup.isonDefaultColor,
       webkitTextStrokeWidth: withZoom(this.pageSetup.isonDefaultStrokeWidth),
@@ -418,10 +422,7 @@ export default class NeumeBoxSyllable extends Vue {
         this.note.isonOffsetX != null
           ? `${this.note.isonOffsetX}em`
           : undefined,
-      top:
-        this.note.isonOffsetY != null
-          ? `${this.note.isonOffsetY}em`
-          : undefined,
+      top: isonOffsetY != null ? `${isonOffsetY}em` : undefined,
     } as StyleValue;
   }
 

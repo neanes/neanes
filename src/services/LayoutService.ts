@@ -46,6 +46,7 @@ import { Workspace } from '@/models/Workspace';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { TATWEEL } from '@/utils/constants';
 
+import { fontService } from './FontService';
 import { MelismaHelperGreek, MelismaSyllables } from './MelismaHelperGreek';
 import { TextMeasurementService } from './TextMeasurementService';
 
@@ -987,6 +988,10 @@ export class LayoutService {
 
     this.addMelismas(pages, pageSetup);
 
+    if (pageSetup.alignIsonIndicators) {
+      this.alignIsonIndicators(pages, pageSetup);
+    }
+
     // Record element updates
     elements.forEach((element) => {
       this.checkElementState(element);
@@ -1245,6 +1250,7 @@ export class LayoutService {
       note.tertiaryFthoraPrevious = note.tertiaryFthora;
       note.computedMeasureBarLeftPrevious = note.computedMeasureBarLeft;
       note.computedMeasureBarRightPrevious = note.computedMeasureBarRight;
+      note.isonOffsetYAdjustedPrevious = note.isonOffsetYAdjusted;
     } else if (element.elementType === ElementType.TextBox) {
       const textbox = element as TextBoxElement;
       textbox.heightPrevious = textbox.height;
@@ -1294,7 +1300,8 @@ export class LayoutService {
         note.secondaryFthoraPrevious !== note.secondaryFthora ||
         note.tertiaryFthoraPrevious !== note.tertiaryFthora ||
         note.computedMeasureBarLeftPrevious !== note.computedMeasureBarLeft ||
-        note.computedMeasureBarRightPrevious !== note.computedMeasureBarRight;
+        note.computedMeasureBarRightPrevious !== note.computedMeasureBarRight ||
+        note.isonOffsetYAdjustedPrevious !== note.isonOffsetYAdjusted;
     }
 
     if (!element.updated && element.elementType === ElementType.TextBox) {
@@ -2389,6 +2396,46 @@ export class LayoutService {
               ambitusHigh,
             )
           : RootSign.Alpha;
+    }
+  }
+
+  public static alignIsonIndicators(pages: Page[], pageSetup: PageSetup) {
+    for (const page of pages) {
+      for (const line of page.lines) {
+        const notes = line.elements.filter(
+          (x) => x.elementType === ElementType.Note,
+        ) as NoteElement[];
+        const notesWithIson = notes.filter((x) => x.ison != null);
+
+        // The minOffset represents the highest position in this coordinate system.
+        // 0 is the default position, positive moves down, negative moves up.
+        let minOffset = Number.MAX_VALUE;
+
+        for (const note of notesWithIson) {
+          const base = NeumeMappingService.getMapping(note.quantitativeNeume);
+          const mark = NeumeMappingService.getMapping(note.ison!);
+          const offset = fontService.getMarkAnchorOffset(
+            pageSetup.neumeDefaultFontFamily,
+            base.glyphName,
+            mark.glyphName,
+          );
+
+          const totalOffset = offset.y + (note.isonOffsetY ?? 0);
+
+          if (totalOffset < minOffset) {
+            minOffset = totalOffset;
+          }
+
+          note.isonOffsetYBeforeAdjustment = totalOffset;
+        }
+
+        for (const note of notesWithIson) {
+          note.isonOffsetYAdjusted =
+            minOffset -
+            note.isonOffsetYBeforeAdjustment +
+            (note.isonOffsetY ?? 0);
+        }
+      }
     }
   }
 

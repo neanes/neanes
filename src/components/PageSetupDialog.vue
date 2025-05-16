@@ -661,39 +661,51 @@
           </div>
 
           <div class="form-group">
+            <div class="name">
+              {{ $t('dialog:pageSetup.useChrysanthineAccidentals') }}
+            </div>
             <input
               id="page-setup-dialog-chrysanthine-accidentals"
               type="checkbox"
               v-model="form.chrysanthineAccidentals"
             />
             <label for="page-setup-dialog-chrysanthine-accidentals">{{
-              $t('dialog:pageSetup.useChrysanthineAccidentals')
+              $t('dialog:pageSetup.useChrysanthineAccidentalsDescription')
             }}</label>
           </div>
 
           <div class="form-group">
+            <div class="name">
+              {{ $t('dialog:pageSetup.disableFthoraRestrictions') }}
+            </div>
             <input
               id="page-setup-dialog-no-fthora-restrictions"
               type="checkbox"
               v-model="form.noFthoraRestrictions"
             />
             <label for="page-setup-dialog-no-fthora-restrictions">{{
-              $t('dialog:pageSetup.disableFthoraRestrictions')
+              $t('dialog:pageSetup.disableFthoraRestrictionsDescription')
             }}</label>
           </div>
 
           <div class="form-group">
+            <div class="name">
+              {{ $t('dialog:pageSetup.alignIsonIndicators') }}
+            </div>
             <input
               id="page-setup-dialog-align-ison-indicators"
               type="checkbox"
               v-model="form.alignIsonIndicators"
             />
             <label for="page-setup-dialog-align-ison-indicators">{{
-              $t('dialog:pageSetup.alignIsonIndicators')
+              $t('dialog:pageSetup.alignIsonIndicatorsDescription')
             }}</label>
           </div>
 
           <div class="form-group">
+            <div class="name">
+              {{ $t('dialog:pageSetup.melkiteRtl') }}
+            </div>
             <input
               id="page-setup-dialog-melkite-rtl"
               type="checkbox"
@@ -701,17 +713,20 @@
               @change="onChangeMelkiteRtl"
             />
             <label for="page-setup-dialog-melkite-rtl">{{
-              $t('dialog:pageSetup.melkiteRtl')
+              $t('dialog:pageSetup.melkiteRtlDescription')
             }}</label>
           </div>
           <div class="form-group">
+            <div class="name">
+              {{ $t('dialog:pageSetup.disableGreekMelismata') }}
+            </div>
             <input
               id="page-setup-dialog-disable-melismata"
               type="checkbox"
               v-model="form.disableGreekMelismata"
             />
             <label for="page-setup-dialog-disable-melismata">{{
-              $t('dialog:pageSetup.disableGreekMelismata')
+              $t('dialog:pageSetup.disableGreekMelismataDescription')
             }}</label>
           </div>
           <div class="form-group">
@@ -1813,8 +1828,6 @@ export default class PageSetupDialog extends Vue {
       const el = this.$refs[id] as HTMLElement;
 
       const top = Math.abs(el.getBoundingClientRect().top - scrollParentTop);
-
-      console.log(id, closestDistance, closest);
 
       if (top < closestDistance) {
         closest = id;

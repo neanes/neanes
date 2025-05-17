@@ -142,28 +142,22 @@
               <div class="name">
                 {{ $t('dialog:pageSetup.orientation') }}
               </div>
-              <input
-                id="page-setup-dialog-landscape-false"
-                type="radio"
-                name="landscape"
-                v-model="landscape"
-                :value="false"
-                :checked="!landscape"
-              />
-              <label for="page-setup-dialog-landscape-false">{{
-                $t('dialog:pageSetup.portrait')
-              }}</label>
-              <input
-                id="page-setup-dialog-landscape-true"
-                type="radio"
-                name="landscape"
-                v-model="landscape"
-                :value="true"
-                :checked="landscape"
-              />
-              <label for="page-setup-dialog-landscape-true">{{
-                $t('dialog:pageSetup.landscape')
-              }}</label>
+              <div class="row">
+                <div
+                  class="radio-button page-orientation-button"
+                  :class="{ selected: !landscape }"
+                  @click="landscape = false"
+                >
+                  {{ $t('dialog:pageSetup.portrait') }}
+                </div>
+                <div
+                  class="radio-button page-orientation-button"
+                  :class="{ selected: landscape }"
+                  @click="landscape = true"
+                >
+                  {{ $t('dialog:pageSetup.landscape') }}
+                </div>
+              </div>
             </div>
             <div class="form-group full">
               <div class="name">{{ $t('dialog:pageSetup.unit') }}</div>
@@ -1946,7 +1940,7 @@ export default class PageSetupDialog extends Vue {
 }
 
 .nav-item {
-  cursor: pointer;
+  cursor: default;
   padding: 0.25rem;
 }
 
@@ -2007,5 +2001,21 @@ export default class PageSetupDialog extends Vue {
 
 .melisma-input {
   width: 2rem;
+}
+
+.radio-button {
+  padding: 0.5rem;
+  background-color: white;
+  border: 1px solid #ccc;
+  text-align: center;
+  cursor: default;
+}
+
+.radio-button.selected {
+  background-color: lightblue;
+}
+
+.page-orientation-button {
+  width: 5rem;
 }
 </style>

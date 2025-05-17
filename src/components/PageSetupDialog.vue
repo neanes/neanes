@@ -1086,6 +1086,7 @@
               {{ $t('dialog:pageSetup.neumeStyles') }}
             </div>
             <div class="form-group row">
+              <div class="neume-colors-checkbox-container"></div>
               <label class="neume-colors-label small-header">{{
                 $t('dialog:pageSetup.type')
               }}</label>
@@ -1097,6 +1098,14 @@
               }}</label>
             </div>
             <div class="form-group row">
+              <div class="neume-colors-checkbox-container">
+                <input
+                  type="checkbox"
+                  class="neume-colors-checkbox"
+                  :value="NeumeColorOptions.Accidentals"
+                  v-model="selectedNeumeColorOptions"
+                />
+              </div>
               <label class="neume-colors-label">{{
                 $t('dialog:pageSetup.accidentals')
               }}</label>
@@ -1110,6 +1119,14 @@
               />
             </div>
             <div class="form-group row">
+              <div class="neume-colors-checkbox-container">
+                <input
+                  type="checkbox"
+                  class="neume-colors-checkbox"
+                  :value="NeumeColorOptions.Fthoras"
+                  v-model="selectedNeumeColorOptions"
+                />
+              </div>
               <label class="neume-colors-label">{{
                 $t('dialog:pageSetup.fthoras')
               }}</label>
@@ -1123,6 +1140,14 @@
               />
             </div>
             <div class="form-group row">
+              <div class="neume-colors-checkbox-container">
+                <input
+                  type="checkbox"
+                  class="neume-colors-checkbox"
+                  :value="NeumeColorOptions.Gorgons"
+                  v-model="selectedNeumeColorOptions"
+                />
+              </div>
               <label class="neume-colors-label">{{
                 $t('dialog:pageSetup.gorgons')
               }}</label>
@@ -1136,6 +1161,14 @@
               />
             </div>
             <div class="form-group row">
+              <div class="neume-colors-checkbox-container">
+                <input
+                  type="checkbox"
+                  class="neume-colors-checkbox"
+                  :value="NeumeColorOptions.Heterons"
+                  v-model="selectedNeumeColorOptions"
+                />
+              </div>
               <label class="neume-colors-label">{{
                 $t('dialog:pageSetup.heterons')
               }}</label>
@@ -1149,6 +1182,14 @@
               />
             </div>
             <div class="form-group row">
+              <div class="neume-colors-checkbox-container">
+                <input
+                  type="checkbox"
+                  class="neume-colors-checkbox"
+                  :value="NeumeColorOptions.Ison"
+                  v-model="selectedNeumeColorOptions"
+                />
+              </div>
               <label class="neume-colors-label">{{
                 $t('dialog:pageSetup.ison')
               }}</label>
@@ -1162,6 +1203,14 @@
               />
             </div>
             <div class="form-group row">
+              <div class="neume-colors-checkbox-container">
+                <input
+                  type="checkbox"
+                  class="neume-colors-checkbox"
+                  :value="NeumeColorOptions.Koronis"
+                  v-model="selectedNeumeColorOptions"
+                />
+              </div>
               <label class="neume-colors-label">{{
                 $t('dialog:pageSetup.koronis')
               }}</label>
@@ -1175,6 +1224,14 @@
               />
             </div>
             <div class="form-group row">
+              <div class="neume-colors-checkbox-container">
+                <input
+                  type="checkbox"
+                  class="neume-colors-checkbox"
+                  :value="NeumeColorOptions.Martyria"
+                  v-model="selectedNeumeColorOptions"
+                />
+              </div>
               <label class="neume-colors-label">{{
                 $t('dialog:pageSetup.martyriae')
               }}</label>
@@ -1188,6 +1245,14 @@
               />
             </div>
             <div class="form-group row">
+              <div class="neume-colors-checkbox-container">
+                <input
+                  type="checkbox"
+                  class="neume-colors-checkbox"
+                  :value="NeumeColorOptions.MeasureBars"
+                  v-model="selectedNeumeColorOptions"
+                />
+              </div>
               <label class="neume-colors-label">{{
                 $t('dialog:pageSetup.measureBars')
               }}</label>
@@ -1201,6 +1266,14 @@
               />
             </div>
             <div class="form-group row">
+              <div class="neume-colors-checkbox-container">
+                <input
+                  type="checkbox"
+                  class="neume-colors-checkbox"
+                  :value="NeumeColorOptions.MeasureNumbers"
+                  v-model="selectedNeumeColorOptions"
+                />
+              </div>
               <label class="neume-colors-label">{{
                 $t('dialog:pageSetup.measureNo')
               }}</label>
@@ -1214,6 +1287,14 @@
               />
             </div>
             <div class="form-group row">
+              <div class="neume-colors-checkbox-container">
+                <input
+                  type="checkbox"
+                  class="neume-colors-checkbox"
+                  :value="NeumeColorOptions.NoteIndicators"
+                  v-model="selectedNeumeColorOptions"
+                />
+              </div>
               <label class="neume-colors-label">{{
                 $t('dialog:pageSetup.noteIndicators')
               }}</label>
@@ -1227,6 +1308,14 @@
               />
             </div>
             <div class="form-group row">
+              <div class="neume-colors-checkbox-container">
+                <input
+                  type="checkbox"
+                  class="neume-colors-checkbox"
+                  :value="NeumeColorOptions.Tempos"
+                  v-model="selectedNeumeColorOptions"
+                />
+              </div>
               <label class="neume-colors-label">{{
                 $t('dialog:pageSetup.tempos')
               }}</label>
@@ -1238,6 +1327,21 @@
                 class="drop-caps-input"
                 v-model="form.tempoDefaultStrokeWidth"
               />
+            </div>
+            <div class="form-group">
+              <div class="name">
+                {{ $t('dialog:pageSetup.neumeBulkColor') }}
+              </div>
+              <div class="description">
+                {{ $t('dialog:pageSetup.neumeBulkColorDescription') }}
+              </div>
+              <div class="row">
+                <ColorPicker
+                  class="neume-colors-input"
+                  v-model="neumeBulkColor"
+                />
+                <button @click="changeNeumeColorInBulk">Apply Color</button>
+              </div>
             </div>
           </div>
         </div>
@@ -1311,6 +1415,20 @@ import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
 import { SaveService } from '@/services/SaveService';
 import { Unit } from '@/utils/Unit';
 
+enum NeumeColorOptions {
+  Accidentals = 'Accidentals',
+  Fthoras = 'Fthoras',
+  Gorgons = 'Gorgons',
+  Heterons = 'Heterons',
+  Ison = 'Ison',
+  Koronis = 'Koronis',
+  Martyria = 'Martyria',
+  MeasureBars = 'MeasureBars',
+  MeasureNumbers = 'MeasureNumbers',
+  NoteIndicators = 'NoteIndicators',
+  Tempos = 'Tempos',
+}
+
 @Component({
   components: {
     ModalDialog,
@@ -1330,9 +1448,13 @@ export default class PageSetupDialog extends Vue {
   @Prop() fonts!: string[];
   form: PageSetup = new PageSetup();
   currentSection: string = 'pageSizeRef';
+  neumeBulkColor: string = '#000000';
 
   QuantitativeNeume = QuantitativeNeume;
   Accidental = Accidental;
+  NeumeColorOptions = NeumeColorOptions;
+
+  selectedNeumeColorOptions: NeumeColorOptions[] = [];
 
   previewNeumes = [
     {
@@ -1797,6 +1919,46 @@ export default class PageSetupDialog extends Vue {
       this.currentSection = closest;
     }
   }
+
+  changeNeumeColorInBulk() {
+    for (const neume of this.selectedNeumeColorOptions) {
+      switch (neume) {
+        case NeumeColorOptions.Accidentals:
+          this.form.accidentalDefaultColor = this.neumeBulkColor;
+          break;
+        case NeumeColorOptions.Fthoras:
+          this.form.fthoraDefaultColor = this.neumeBulkColor;
+          break;
+        case NeumeColorOptions.Gorgons:
+          this.form.gorgonDefaultColor = this.neumeBulkColor;
+          break;
+        case NeumeColorOptions.Heterons:
+          this.form.heteronDefaultColor = this.neumeBulkColor;
+          break;
+        case NeumeColorOptions.Ison:
+          this.form.isonDefaultColor = this.neumeBulkColor;
+          break;
+        case NeumeColorOptions.Koronis:
+          this.form.koronisDefaultColor = this.neumeBulkColor;
+          break;
+        case NeumeColorOptions.Martyria:
+          this.form.martyriaDefaultColor = this.neumeBulkColor;
+          break;
+        case NeumeColorOptions.MeasureBars:
+          this.form.measureBarDefaultColor = this.neumeBulkColor;
+          break;
+        case NeumeColorOptions.MeasureNumbers:
+          this.form.accidentalDefaultColor = this.neumeBulkColor;
+          break;
+        case NeumeColorOptions.NoteIndicators:
+          this.form.noteIndicatorDefaultColor = this.neumeBulkColor;
+          break;
+        case NeumeColorOptions.Tempos:
+          this.form.tempoDefaultColor = this.neumeBulkColor;
+          break;
+      }
+    }
+  }
 }
 </script>
 
@@ -1985,6 +2147,10 @@ export default class PageSetupDialog extends Vue {
   margin-right: 2rem;
 }
 
+.neume-colors-checkbox-container {
+  width: 2rem;
+}
+
 .button-container {
   display: flex;
   justify-content: center;
@@ -2006,13 +2172,14 @@ export default class PageSetupDialog extends Vue {
 .radio-button {
   padding: 0.25rem 0.5rem;
   background-color: white;
-  border: 1px solid #ccc;
+  border: 1px solid rgb(66, 139, 202);
   text-align: center;
   cursor: default;
 }
 
 .radio-button.selected {
-  background-color: #ccc;
+  background-color: rgb(66, 139, 202);
+  color: white;
 }
 
 .page-orientation-button {

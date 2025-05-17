@@ -148,7 +148,9 @@
     "visible": "Visible",
     "marginTop": "Gap Above",
     "marginBottom": "Gap Below",
-    "thickness": "Thickness"
+    "thickness": "Thickness",
+    "neumeBulkColor": "Change Color of Multiple Neumes",
+    "neumeBulkColorDescription": "To change the color of multiple neumes at once, select the neume types above, choose a color, and click the button to apply the color to all selected neumes."
   },
   "playbackSettings": {
     "root": "Playback Settings",

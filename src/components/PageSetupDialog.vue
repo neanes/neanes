@@ -2004,7 +2004,7 @@ export default class PageSetupDialog extends Vue {
 }
 
 .radio-button {
-  padding: 0.5rem;
+  padding: 0.25rem 0.5rem;
   background-color: white;
   border: 1px solid #ccc;
   text-align: center;
@@ -2012,7 +2012,7 @@ export default class PageSetupDialog extends Vue {
 }
 
 .radio-button.selected {
-  background-color: lightblue;
+  background-color: #ccc;
 }
 
 .page-orientation-button {

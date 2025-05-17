@@ -332,7 +332,6 @@
           </div>
           <div class="subheader" ref="spacingRef">
             {{ $t('dialog:pageSetup.spacing') }}
-            <span class="units">({{ $t(marginUnitLabel!) }})</span>
           </div>
           <div class="form-group full">
             <label class="name">{{
@@ -350,7 +349,7 @@
               :step="spacingStep"
               :precision="3"
               v-model="form.neumeDefaultSpacing"
-            />
+            /><span class="units">{{ $t(marginUnitLabel!) }}</span>
           </div>
           <div class="form-group full">
             <label class="name">{{
@@ -368,7 +367,7 @@
               :step="spacingStep"
               :precision="3"
               v-model="form.martyriaVerticalOffset"
-            />
+            /><span class="units">{{ $t(marginUnitLabel!) }}</span>
           </div>
           <div class="form-group full">
             <label class="name">{{ $t('dialog:pageSetup.lyricsV') }}</label>
@@ -385,7 +384,7 @@
                   Number(($event.target as HTMLInputElement).value),
                 )
               "
-            />
+            /><span class="units">{{ $t(marginUnitLabel!) }}</span>
           </div>
           <div class="form-group full">
             <label class="name">{{ $t('dialog:pageSetup.lyricsH') }}</label>
@@ -403,6 +402,7 @@
                 )
               "
             />
+            <span class="units">{{ $t(marginUnitLabel!) }}</span>
           </div>
           <div class="form-group full">
             <label class="name">{{ $t('dialog:pageSetup.line') }}</label>
@@ -420,7 +420,7 @@
                   Number(($event.target as HTMLInputElement).value),
                 )
               "
-            />
+            /><span class="units">{{ $t(marginUnitLabel!) }}</span>
           </div>
           <div class="form-group full">
             <label class="name">{{ $t('dialog:pageSetup.hyphens') }}</label>
@@ -438,7 +438,7 @@
                   Number(($event.target as HTMLInputElement).value),
                 )
               "
-            />
+            /><span class="units">{{ $t(marginUnitLabel!) }}</span>
           </div>
           <div class="subheader" ref="headersFootersRef">
             {{ $t('dialog:pageSetup.headersAndFooters') }}
@@ -737,7 +737,7 @@
               {{ $t('dialog:pageSetup.lyricsMelismaCutoffWidthDescription') }}
             </div>
             <InputUnit
-              class="melisma-input"
+              class="unit-input"
               unit="pt"
               :min="0"
               :step="1"

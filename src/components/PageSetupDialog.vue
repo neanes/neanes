@@ -95,7 +95,7 @@
               <div class="name">
                 {{ $t('dialog:pageSetup.paperSize') }}
               </div>
-              <select class="paper-size-select" v-model="pageSize">
+              <select class="standard-select" v-model="pageSize">
                 <!-- TODO localize -->
                 <option v-for="size in pageSizes" :key="size.name">
                   {{ size.name }}
@@ -108,7 +108,7 @@
                   $t('dialog:pageSetup.width')
                 }}</label>
                 <InputUnit
-                  class="margin-input"
+                  class="unit-input"
                   type="number"
                   :unit="form.pageSizeUnit"
                   :min="1"
@@ -125,7 +125,7 @@
                   $t('dialog:pageSetup.height')
                 }}</label>
                 <InputUnit
-                  class="margin-input"
+                  class="unit-input"
                   type="number"
                   :unit="form.pageSizeUnit"
                   :min="1"
@@ -170,61 +170,23 @@
               <div class="description">
                 {{ $t('dialog:pageSetup.unitDescription') }}
               </div>
-              <input
-                id="page-setup-dialog-unit-in"
-                type="radio"
-                name="pageSizeUnit"
-                v-model="form.pageSizeUnit"
-                value="in"
-                :checked="form.pageSizeUnit === 'in'"
-              />
-              <label for="page-setup-dialog-unit-in">{{
-                $t('dialog:pageSetup.in')
-              }}</label>
-              <input
-                id="page-setup-dialog-unit-cm"
-                type="radio"
-                name="pageSizeUnit"
-                v-model="form.pageSizeUnit"
-                value="cm"
-                :checked="form.pageSizeUnit === 'cm'"
-              />
-              <label for="page-setup-dialog-unit-cm">{{
-                $t('dialog:pageSetup.cm')
-              }}</label>
-              <input
-                id="page-setup-dialog-unit-mm"
-                type="radio"
-                name="pageSizeUnit"
-                v-model="form.pageSizeUnit"
-                value="mm"
-                :checked="form.pageSizeUnit === 'mm'"
-              />
-              <label for="page-setup-dialog-unit-mm">{{
-                $t('dialog:pageSetup.mm')
-              }}</label>
-              <input
-                id="page-setup-dialog-unit-pt"
-                type="radio"
-                name="pageSizeUnit"
-                v-model="form.pageSizeUnit"
-                value="pt"
-                :checked="form.pageSizeUnit === 'pt'"
-              />
-              <label for="page-setup-dialog-unit-pt">{{
-                $t('dialog:pageSetup.pt')
-              }}</label>
-              <input
-                id="page-setup-dialog-unit-pc"
-                type="radio"
-                name="pageSizeUnit"
-                v-model="form.pageSizeUnit"
-                value="pc"
-                :checked="form.pageSizeUnit === 'pc'"
-              />
-              <label for="page-setup-dialog-unit-pc">{{
-                $t('dialog:pageSetup.pc')
-              }}</label>
+              <select v-model="form.pageSizeUnit" class="standard-select">
+                <option value="in">
+                  {{ $t('dialog:pageSetup.in') }}
+                </option>
+                <option value="cm">
+                  {{ $t('dialog:pageSetup.cm') }}
+                </option>
+                <option value="mm">
+                  {{ $t('dialog:pageSetup.mm') }}
+                </option>
+                <option value="pt">
+                  {{ $t('dialog:pageSetup.pt') }}
+                </option>
+                <option value="pc">
+                  {{ $t('dialog:pageSetup.pc') }}
+                </option>
+              </select>
             </div>
             <div class="subheader" ref="marginsRef">
               {{ $t('dialog:pageSetup.margins') }}
@@ -1930,6 +1892,10 @@ export default class PageSetupDialog extends Vue {
   width: 5rem;
 }
 
+.form-group .standard-select {
+  width: 6.5rem;
+}
+
 .form-group input[type='checkbox'] {
   margin: 0 0.5rem 0 0;
 }
@@ -1943,6 +1909,7 @@ export default class PageSetupDialog extends Vue {
   font-weight: normal;
   color: gray;
   margin-left: 0.5rem;
+  font-size: 0.9rem;
 }
 
 .form-group {

@@ -219,31 +219,31 @@ Most of the options are self-explanatory, but a few are not.
 
 ### Spacing
 
-#### Neumes
+#### Neume Spacing
 
 The amount of extra space that is inserted between neumes. Some scores look better with more or less spacing.
 
 ![Page Setup Neume Spacing Example](./images/guide-page-setup-neume-spacing-example-1.png)
 
-#### Lyrics V
+#### Lyrics: Distance Below Neumes
 
 The vertical distance between the neumes and lyrics. This number can be negative, in which case the lyrics will be drawn closer to the neumes than they would be by default.
 
 ![Page Setup Lyric Spacing V Example](./images/guide-page-setup-lyric-spacing-example-1.png)
 
-#### Lyrics H
+#### Lyrics: Minimum Distance Between Adjacent Lyrics
 
 The minimum horizontal distance between the lyrics of two different notes.
 
 ![Page Setup Lyric Spacing H Example](./images/guide-page-setup-lyric-spacing-example-2.png)
 
-#### Line
+#### Line Spacing
 
 Increasing this number will increase the space between lines.
 
 ![Page Setup Line Spacing Example](./images/guide-page-setup-line-spacing-example-1.png)
 
-#### Hyphens
+#### Hyphen Spacing
 
 The amount of space between the hyphens that are automatically drawn between melismatic syllables. To draw more hyphens between syllables, decrease this number. To draw less hyphens between syllables, increase this number.
 

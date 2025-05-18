@@ -1876,10 +1876,6 @@ export class LayoutService {
 
               element.melismaWidth = Math.max(end - start, 0);
 
-              let numberOfHyphensNeeded = Math.floor(
-                element.melismaWidth / pageSetup.hyphenSpacing,
-              );
-
               const widthOfHyphenForThisElement = element.lyricsUseDefaultStyle
                 ? widthOfHyphen
                 : this.getTextWidthFromCache(
@@ -1889,6 +1885,14 @@ export class LayoutService {
                     '-',
                   );
 
+              const hyphenSpacing = Math.max(
+                pageSetup.hyphenSpacing,
+                widthOfHyphenForThisElement,
+              );
+
+              let numberOfHyphensNeeded = Math.floor(
+                element.melismaWidth / hyphenSpacing,
+              );
               // If this is the last note on the page, always show the hyphen
               if (numberOfHyphensNeeded == 0 && nextElement == null) {
                 numberOfHyphensNeeded = 1;

@@ -20,7 +20,7 @@
 <script lang="ts">
 import { Sketch } from '@ckpack/vue-color';
 import { StyleValue } from 'vue';
-import { Component, Prop, Vue } from 'vue-facing-decorator';
+import { Component, Prop, Vue, Watch } from 'vue-facing-decorator';
 
 interface Color {
   hex: string;
@@ -46,6 +46,11 @@ export default class ColorPicker extends Vue {
 
   created() {
     this.color = this.modelValue;
+  }
+
+  @Watch('modelValue')
+  onModelValueChanged(newValue: string) {
+    this.color = newValue;
   }
 
   get swatch() {

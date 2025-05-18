@@ -1887,7 +1887,7 @@ export class LayoutService {
 
               const hyphenSpacing = Math.max(
                 pageSetup.hyphenSpacing,
-                element.melismaWidth / widthOfHyphenForThisElement,
+                widthOfHyphenForThisElement,
               );
 
               let numberOfHyphensNeeded = Math.floor(

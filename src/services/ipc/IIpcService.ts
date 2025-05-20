@@ -51,4 +51,6 @@ export interface IIpcService {
   exitApplication(): Promise<void>;
 
   cancelExit(): Promise<void>;
+
+  paste(): Promise<void>;
 }

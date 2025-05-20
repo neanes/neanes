@@ -76,6 +76,8 @@ export enum IpcRendererChannels {
   CancelExit = 'CancelExit',
 
   OpenContextMenuForTab = 'OpenContextMenuForTab',
+
+  Paste = 'Paste',
 }
 
 export interface FileMenuOpenScoreArgs {

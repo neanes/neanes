@@ -177,4 +177,27 @@ export class BrowserIpcService implements IIpcService {
 
     return downloadFileName;
   }
+
+  public async paste(): Promise<void> {
+    try {
+      const text = await navigator.clipboard.readText();
+
+      const selection = window.getSelection();
+
+      if (!selection?.rangeCount) {
+        return;
+      }
+
+      const range = selection.getRangeAt(0);
+      range.deleteContents(); // remove any selected text
+      range.insertNode(document.createTextNode(text));
+
+      // Move the caret to the end of the inserted text
+      range.collapse(false);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    } catch (error) {
+      console.error('Failed to paste text from clipboard:', error);
+    }
+  }
 }

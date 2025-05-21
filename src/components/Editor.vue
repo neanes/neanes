@@ -3765,7 +3765,7 @@ export default class Editor extends Vue {
         handled = true;
         break;
       case 'KeyV':
-        document.execCommand('paste');
+        this.ipcService.paste();
         handled = true;
         break;
       case 'KeyX':
@@ -6983,7 +6983,7 @@ export default class Editor extends Vue {
     if (!this.isTextInputFocused() && !this.dialogOpen) {
       this.onPasteScoreElements(false);
     } else {
-      document.execCommand('paste');
+      this.ipcService.paste();
     }
   }
 
@@ -6991,7 +6991,7 @@ export default class Editor extends Vue {
     if (!this.isTextInputFocused() && !this.dialogOpen) {
       this.onPasteScoreElements(true);
     } else {
-      document.execCommand('paste');
+      this.ipcService.paste();
     }
   }
 

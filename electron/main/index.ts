@@ -1905,6 +1905,10 @@ ipcMain.handle(IpcRendererChannels.GetSystemFonts, async () => {
   return fonts;
 });
 
+ipcMain.handle(IpcRendererChannels.Paste, async () => {
+  return await win?.webContents.paste();
+});
+
 // macOS-only
 // This is called in two cases:
 // 1. The app is already running and the user opens a file

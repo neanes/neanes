@@ -2181,8 +2181,9 @@ export default class Editor extends Vue {
     return `Untitled-${this.untitledIndex++}`;
   }
 
-  getFileName(workspace: Workspace) {
-    const unsavedChangesMarker = workspace.hasUnsavedChanges ? '*' : '';
+  getFileName(workspace: Workspace, showUnsavedChanges: boolean = true) {
+    const unsavedChangesMarker =
+      workspace.hasUnsavedChanges && showUnsavedChanges ? '*' : '';
 
     if (workspace.filePath != null) {
       const fileName = getFileNameFromPath(workspace.filePath);
@@ -6477,9 +6478,13 @@ export default class Editor extends Vue {
     // blinking cursors don't show up in the printed page
     const activeElement = this.blurActiveElement();
 
+    const previousTitle = window.document.title;
+    window.document.title = this.getFileName(this.selectedWorkspace, false);
+
     nextTick(async () => {
       await this.ipcService.printWorkspace(this.selectedWorkspace);
       this.printMode = false;
+      window.document.title = previousTitle;
 
       // Re-focus the active element
       this.focusElement(activeElement);
@@ -6493,9 +6498,13 @@ export default class Editor extends Vue {
     // blinking cursors don't show up in the printed page
     const activeElement = this.blurActiveElement();
 
+    const previousTitle = window.document.title;
+    window.document.title = this.getFileName(this.selectedWorkspace, false);
+
     await nextTick();
     await this.ipcService.exportWorkspaceAsPdf(this.selectedWorkspace);
     this.printMode = false;
+    window.document.title = previousTitle;
 
     // Re-focus the active element
     this.focusElement(activeElement);

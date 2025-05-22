@@ -2064,6 +2064,11 @@ export default class Editor extends Vue {
     document.documentElement.style.setProperty('--zoom', this.zoom.toString());
   }
 
+  @Watch('currentFilePath')
+  onFilePathUpdated() {
+    window.document.title = this.windowTitle;
+  }
+
   @Watch('selectedWorkspaceId')
   onCurrentWorkspaceIdUpdated() {
     window.document.title = this.windowTitle;

@@ -2065,7 +2065,7 @@ export default class Editor extends Vue {
   }
 
   @Watch('selectedWorkspaceId')
-  onCurrentWorkspaceId() {
+  onCurrentWorkspaceIdUpdated() {
     window.document.title = this.windowTitle;
   }
 

@@ -27,6 +27,7 @@
     "postuninstall": "electron-builder install-app-deps",
     "test": "vitest --run",
     "test:dev": "vitest",
+    "coverage": "vitest run --coverage",
     "web:dev": "vite --mode web",
     "web:build": "vite build --mode web"
   },
@@ -62,6 +63,7 @@
     "@types/throttle-debounce": "^5.0.2",
     "@types/uuid": "^10.0.0",
     "@vitejs/plugin-vue": "^5.2.4",
+    "@vitest/coverage-istanbul": "^3.1.4",
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.5.1",
     "electron": "^36.5.0",

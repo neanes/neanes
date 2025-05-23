@@ -11,6 +11,7 @@ import {
   FontColor,
   FontFamily,
   FontSize,
+  GeneralHtmlSupport,
   Image,
   ImageCaption,
   ImageResize,
@@ -40,6 +41,8 @@ import {
   Undo,
 } from 'ckeditor5';
 
+import ShiftText from './ckeditor-plugins/shifttext/shifttext';
+
 export default class InlineEditor extends InlineEditorBase {}
 
 InlineEditor.builtinPlugins = [
@@ -53,6 +56,7 @@ InlineEditor.builtinPlugins = [
   FontColor,
   FontFamily,
   FontSize,
+  GeneralHtmlSupport,
   Image,
   ImageCaption,
   ImageResize,
@@ -68,6 +72,7 @@ InlineEditor.builtinPlugins = [
   PasteFromOffice,
   RemoveFormat,
   SelectAll,
+  ShiftText,
   Subscript,
   Superscript,
   Table,
@@ -117,6 +122,8 @@ InlineEditor.defaultConfig = {
       'selectAll',
       '|',
       'removeFormat',
+      '|',
+      'shiftText',
     ],
     shouldNotGroupWhenFull: true,
   },
@@ -137,6 +144,15 @@ InlineEditor.defaultConfig = {
       'mergeTableCells',
       'tableProperties',
       'tableCellProperties',
+    ],
+  },
+  htmlSupport: {
+    allow: [
+      {
+        name: 'span',
+        styles: true,
+        attributes: true,
+      },
     ],
   },
 };

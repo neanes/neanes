@@ -206,11 +206,13 @@ export class TextBoxElement extends ScoreElement {
 export class RichTextBoxElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.RichTextBox;
   public content: string = '';
+  public contentBottom: string = '';
   public contentLeft: string = '';
   public contentRight: string = '';
   public contentCenter: string = '';
   public multipanel: boolean | undefined = undefined;
   public rtl: boolean | undefined = undefined;
+  public inline: boolean | undefined = undefined;
   public height: number = 20;
   public marginTop: number | undefined = undefined;
   public marginBottom: number | undefined = undefined;

@@ -573,6 +573,11 @@ export class SaveService {
       element.multipanel = true;
     }
 
+    if (e.inline) {
+      element.inline = e.inline;
+      element.contentBottom = e.contentBottom;
+    }
+
     element.height = e.height;
     element.marginTop = e.marginTop ?? undefined;
     element.marginBottom = e.marginBottom ?? undefined;
@@ -1343,6 +1348,11 @@ export class SaveService {
       element.contentRight = e.contentRight;
     }
 
+    if (e.inline) {
+      element.contentBottom = e.contentBottom;
+    }
+
+    element.inline = e.inline === true;
     element.multipanel = e.multipanel === true;
     element.rtl = e.rtl === true;
   }

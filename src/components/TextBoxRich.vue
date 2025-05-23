@@ -50,11 +50,11 @@
         :config="editorConfig"
       />
       <ckeditor
-        ref="editor"
+        ref="editorBottom"
         class="rich-text-editor inline-bottom"
         :style="textBoxStyleBottom"
         :editor="editor"
-        :model-value="content"
+        :model-value="contentBottom"
         @blur="onBlur"
         @ready="onEditorReady"
         :config="editorConfig"
@@ -134,6 +134,11 @@ export default class TextBoxRich extends Vue {
     return (this.$refs.editor as ComponentExposed<typeof Ckeditor>)?.instance;
   }
 
+  get editorInstanceBottom() {
+    return (this.$refs.editorBottom as ComponentExposed<typeof Ckeditor>)
+      ?.instance;
+  }
+
   get editorInstanceLeft() {
     return (this.$refs.editorLeft as ComponentExposed<typeof Ckeditor>)
       ?.instance;
@@ -154,6 +159,16 @@ export default class TextBoxRich extends Vue {
       ? this.element.content
       : replaceTokens(
           this.element.content,
+          this.metadata,
+          TextBoxAlignment.Center,
+        );
+  }
+
+  get contentBottom() {
+    return this.editMode
+      ? this.element.contentBottom
+      : replaceTokens(
+          this.element.contentBottom,
           this.metadata,
           TextBoxAlignment.Center,
         );
@@ -197,7 +212,7 @@ export default class TextBoxRich extends Vue {
         this.pageSetup.textBoxDefaultFontFamily,
       ),
       fontSize: this.element.inline
-        ? `${this.pageSetup.lyricsDefaultFontFamily}px`
+        ? `${this.pageSetup.lyricsDefaultFontSize}px`
         : `${this.pageSetup.textBoxDefaultFontSize}px`, // no zoom because we will apply zooming on the whole editor
     } as StyleValue;
 
@@ -278,6 +293,7 @@ export default class TextBoxRich extends Vue {
     const height = this.getHeight();
 
     const content = this.editorInstance?.getData() ?? '';
+    const contentBottom = this.editorInstanceBottom?.getData() ?? '';
     const contentLeft = this.editorInstanceLeft?.getData() ?? '';
     const contentCenter = this.editorInstanceCenter?.getData() ?? '';
     const contentRight = this.editorInstanceRight?.getData() ?? '';
@@ -290,6 +306,11 @@ export default class TextBoxRich extends Vue {
 
     if (this.editMode && this.element.content !== content) {
       updates.content = content;
+      updated = true;
+    }
+
+    if (this.editMode && this.element.contentBottom !== contentBottom) {
+      updates.contentBottom = contentBottom;
       updated = true;
     }
 

@@ -753,6 +753,7 @@ export class TextBoxElement extends ScoreElement {
   public customHeight: number | null = null;
   public marginTop: number = 0;
   public marginBottom: number = 0;
+  public fillWidth: boolean = true;
 
   // Values computed by the layout service
   public computedFontFamily: string = '';
@@ -824,6 +825,7 @@ export class RichTextBoxElement extends ScoreElement {
   public contentCenter: string = '';
   public multipanel: boolean = false;
   public rtl: boolean = false;
+  public inline: boolean = true;
 
   public height: number = 20;
   public marginTop: number = 0;

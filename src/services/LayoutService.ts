@@ -319,20 +319,58 @@ export class LayoutService {
         pageSetup.innerPageHeight - extraHeaderHeightPx - extraFooterHeightPx;
 
       switch (element.elementType) {
-        case ElementType.TextBox:
+        case ElementType.TextBox: {
+          const nextElement = elements[i + 1];
+          let martyriaWidth = 0;
+
+          if (
+            nextElement?.elementType === ElementType.Martyria &&
+            (nextElement as MartyriaElement).alignRight
+          ) {
+            martyriaWidth = this.getMartyriaWidth(
+              nextElement as MartyriaElement,
+              pageSetup,
+            );
+          }
+
           elementWidthPx = LayoutService.processTextBoxElement(
             element as TextBoxElement,
             pageSetup,
             neumeHeight,
+            currentLineWidthPx,
+            martyriaWidth,
           );
 
           marginTop = (element as TextBoxElement).marginTop;
           break;
-        case ElementType.RichTextBox:
-          elementWidthPx = pageSetup.innerPageWidth;
+        }
+        case ElementType.RichTextBox: {
+          const richTextBoxElement = element as RichTextBoxElement;
 
-          marginTop = (element as TextBoxElement).marginTop;
+          const nextElement = elements[i + 1];
+          let martyriaWidth = 0;
+
+          if (
+            nextElement?.elementType === ElementType.Martyria &&
+            (nextElement as MartyriaElement).alignRight
+          ) {
+            martyriaWidth = this.getMartyriaWidth(
+              nextElement as MartyriaElement,
+              pageSetup,
+            );
+          }
+
+          if (richTextBoxElement.inline) {
+            elementWidthPx =
+              pageSetup.innerPageWidth - currentLineWidthPx - martyriaWidth;
+            richTextBoxElement.height = neumeHeight;
+          } else {
+            elementWidthPx = pageSetup.innerPageWidth;
+          }
+
+          marginTop = richTextBoxElement.marginTop;
           break;
+        }
         case ElementType.ImageBox:
           {
             const imageBox = element as ImageBoxElement;
@@ -641,7 +679,11 @@ export class LayoutService {
             height += textbox.marginTop;
             height += textbox.marginBottom;
           } else if (
-            line.elements.some((x) => x.elementType === ElementType.RichTextBox)
+            line.elements.some(
+              (x) =>
+                x.elementType === ElementType.RichTextBox &&
+                !(x as RichTextBoxElement).inline,
+            )
           ) {
             const textbox = line.elements.find(
               (x) => x.elementType === ElementType.RichTextBox,
@@ -1066,6 +1108,8 @@ export class LayoutService {
     textBoxElement: TextBoxElement,
     pageSetup: PageSetup,
     neumeHeight: number,
+    currentX: number = 0,
+    martyriaWidth: number = 0,
   ) {
     let elementWidthPx = 0;
 
@@ -1098,7 +1142,9 @@ export class LayoutService {
           ? 'italic'
           : 'normal';
 
-      if (textBoxElement.customWidth != null) {
+      if (textBoxElement.fillWidth) {
+        elementWidthPx = pageSetup.innerPageWidth - currentX - martyriaWidth;
+      } else if (textBoxElement.customWidth != null) {
         elementWidthPx = textBoxElement.customWidth;
       } else {
         const lines = textBoxElement.content.split(/(?:\r\n|\r|\n)/g);
@@ -1319,6 +1365,12 @@ export class LayoutService {
         textbox.computedColorPrevious !== textbox.computedColor ||
         textbox.computedStrokeWidthPrevious !== textbox.computedStrokeWidth ||
         textbox.computedLineHeightPrevious !== textbox.computedLineHeight;
+    }
+
+    if (!element.updated && element.elementType === ElementType.RichTextBox) {
+      const textbox = element as RichTextBoxElement;
+
+      textbox.updated = textbox.widthPrevious !== textbox.width;
     }
 
     if (!element.updated && element.elementType === ElementType.ModeKey) {

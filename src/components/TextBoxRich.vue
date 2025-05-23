@@ -38,6 +38,28 @@
         :config="editorConfig"
       />
     </div>
+    <div class="inline-container" v-else-if="element.inline">
+      <ckeditor
+        ref="editor"
+        class="rich-text-editor inline-top"
+        :style="textBoxStyleTop"
+        :editor="editor"
+        :model-value="content"
+        @blur="onBlur"
+        @ready="onEditorReady"
+        :config="editorConfig"
+      />
+      <ckeditor
+        ref="editor"
+        class="rich-text-editor inline-bottom"
+        :style="textBoxStyleBottom"
+        :editor="editor"
+        :model-value="content"
+        @blur="onBlur"
+        @ready="onEditorReady"
+        :config="editorConfig"
+      />
+    </div>
     <ckeditor
       v-else
       ref="editor"
@@ -96,7 +118,7 @@ export default class TextBoxRich extends Vue {
     }
 
     return {
-      fontFamily: { options: ['default', ...this.fonts] },
+      fontFamily: { options: ['default', 'Neanes', ...this.fonts] },
       fontSize: {
         supportAllValues: true,
         options: ['default', ...fontSizeOptions],
@@ -174,7 +196,9 @@ export default class TextBoxRich extends Vue {
       fontFamily: getFontFamilyWithFallback(
         this.pageSetup.textBoxDefaultFontFamily,
       ),
-      fontSize: `${this.pageSetup.textBoxDefaultFontSize}px`, // no zoom because we will apply zooming on the whole editor
+      fontSize: this.element.inline
+        ? `${this.pageSetup.lyricsDefaultFontFamily}px`
+        : `${this.pageSetup.textBoxDefaultFontSize}px`, // no zoom because we will apply zooming on the whole editor
     } as StyleValue;
 
     return style;
@@ -183,6 +207,32 @@ export default class TextBoxRich extends Vue {
   get textBoxStyle() {
     const style: StyleValue = {
       width: `${this.element.width}px`, // no zoom because we scale with the transform
+    };
+
+    return style;
+  }
+
+  get textBoxStyleTop() {
+    const style: any = {
+      width: !this.element.multipanel
+        ? withZoom(this.element.width)
+        : undefined,
+      height:
+        this.element.multipanel || this.element.inline
+          ? withZoom(this.element.height)
+          : undefined,
+    };
+
+    return style;
+  }
+
+  get textBoxStyleBottom() {
+    const style: any = {
+      width: !this.element.multipanel
+        ? withZoom(this.element.width)
+        : undefined,
+      height: withZoom(this.pageSetup.lyricsDefaultFontSize),
+      top: withZoom(this.pageSetup.lyricsVerticalOffset),
     };
 
     return style;
@@ -317,7 +367,7 @@ export default class TextBoxRich extends Vue {
 }
 
 .rich-text-box-container {
-  border: 1px dotted black;
+  outline: 1px dotted black;
   box-sizing: border-box;
   min-height: 10px;
 }
@@ -355,6 +405,27 @@ export default class TextBoxRich extends Vue {
   position: absolute;
   right: 0;
   transform-origin: top right;
+}
+
+.inline-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.rich-text-editor.inline-top {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  white-space: nowrap !important;
+  border: none !important;
+}
+
+.rich-text-editor.inline-bottom {
+  display: inline-block;
+  position: relative;
+  white-space: nowrap !important;
+  overflow: visible;
+  border: none !important;
 }
 
 @media print {

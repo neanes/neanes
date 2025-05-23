@@ -34,6 +34,26 @@
         @blur="updateContentRight($event)"
       ></ContentEditable>
     </div>
+    <div class="inline-container" v-else-if="element.inline">
+      <ContentEditable
+        ref="text"
+        class="text-box inline-top"
+        :class="textBoxClass"
+        :style="textBoxStyleTop"
+        :content="content"
+        :editable="editMode"
+        @blur="updateContent($event)"
+      ></ContentEditable>
+      <ContentEditable
+        ref="text"
+        class="text-box inline-bottom"
+        :class="textBoxClass"
+        :style="textBoxStyleBottom"
+        :content="content"
+        :editable="editMode"
+        @blur="updateContent($event)"
+      ></ContentEditable>
+    </div>
     <ContentEditable
       v-else
       ref="text"
@@ -153,9 +173,32 @@ export default class TextBox extends Vue {
     return style;
   }
 
+  get textBoxStyleTop() {
+    const style: any = {
+      width: !this.element.multipanel ? this.width : undefined,
+      height:
+        this.element.multipanel || this.element.inline
+          ? withZoom(this.element.height)
+          : undefined,
+      textWrap: this.element.alignment === 'center' ? 'balance' : 'pretty',
+    };
+
+    return style;
+  }
+
+  get textBoxStyleBottom() {
+    const style: any = {
+      width: !this.element.multipanel ? this.width : undefined,
+      height: withZoom(this.pageSetup.lyricsDefaultFontSize),
+      textWrap: this.element.alignment === 'center' ? 'balance' : 'pretty',
+      top: withZoom(this.pageSetup.lyricsVerticalOffset),
+    };
+
+    return style;
+  }
+
   get textBoxClass() {
     return {
-      inline: this.element.inline,
       underline: this.element.underline,
     };
   }
@@ -234,11 +277,17 @@ export default class TextBox extends Vue {
   z-index: 1;
 }
 
-.text-box.inline {
+.text-box.inline-top {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  white-space: nowrap;
+  white-space: nowrap !important;
+}
+
+.text-box.inline-bottom {
+  display: inline-block;
+  position: relative;
+  white-space: nowrap !important;
 }
 
 .text-box.underline {
@@ -274,6 +323,11 @@ export default class TextBox extends Vue {
   z-index: 1;
 
   display: none;
+}
+
+.inline-container {
+  display: flex;
+  flex-direction: column;
 }
 
 @media print {

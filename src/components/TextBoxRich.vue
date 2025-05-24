@@ -117,8 +117,24 @@ export default class TextBoxRich extends Vue {
       });
     }
 
+    // Add a fall back font to each font so that neumes "just work"
+    const fonts = this.fonts.map(
+      (x) => x + ',' + this.pageSetup.neumeDefaultFontFamily,
+    );
+
     return {
-      fontFamily: { options: ['default', 'Neanes', ...this.fonts] },
+      fontFamily: {
+        options: [
+          'default',
+          'Source Serif' + ',' + this.pageSetup.neumeDefaultFontFamily,
+          'GFS Didot' + ',' + this.pageSetup.neumeDefaultFontFamily,
+          'Noto Naskh Arabic' + ',' + this.pageSetup.neumeDefaultFontFamily,
+          'Omega' + ',' + this.pageSetup.neumeDefaultFontFamily,
+          'Neanes',
+          'NeanesStathisSeries',
+          ...fonts,
+        ],
+      },
       fontSize: {
         supportAllValues: true,
         options: ['default', ...fontSizeOptions],
@@ -210,6 +226,7 @@ export default class TextBoxRich extends Vue {
       height: withZoom(this.element.height),
       fontFamily: getFontFamilyWithFallback(
         this.pageSetup.textBoxDefaultFontFamily,
+        this.pageSetup.neumeDefaultFontFamily,
       ),
       fontSize: this.element.inline
         ? `${this.pageSetup.lyricsDefaultFontSize}px`

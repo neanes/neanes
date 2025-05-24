@@ -7,6 +7,10 @@ const SHIFT = 'shift';
 const UNSHIFT = 'unshift';
 
 export default class ShiftTextEditing extends Plugin {
+  static get pluginName() {
+    return 'ShiftTextEditing';
+  }
+
   init() {
     const editor = this.editor;
 

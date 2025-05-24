@@ -14,6 +14,10 @@ import {
 const SHIFT = 'shift';
 
 export default class ShiftTextUI extends Plugin {
+  static get pluginName() {
+    return 'ShiftTextUI';
+  }
+
   static get requires() {
     return [ContextualBalloon];
   }
@@ -124,7 +128,7 @@ export default class ShiftTextUI extends Plugin {
     const targetLink = this._getSelectedShiftElement();
 
     const target = targetLink
-      ? // When selection is inside link element, then attach panel to this element.
+      ? // When selection is inside shifted element, then attach panel to this element.
         view.domConverter.mapViewToDom(targetLink)
       : // Otherwise attach panel to the selection.
         view.domConverter.viewRangeToDom(

@@ -41,6 +41,7 @@ import {
   Undo,
 } from 'ckeditor5';
 
+import InsertNeume from './ckeditor-plugins/insertneume/insertneume';
 import ShiftText from './ckeditor-plugins/shifttext/shifttext';
 
 export default class InlineEditor extends InlineEditorBase {}
@@ -65,6 +66,7 @@ InlineEditor.builtinPlugins = [
   ImageUpload,
   Indent,
   IndentBlock,
+  InsertNeume,
   Italic,
   Link,
   List,
@@ -123,6 +125,7 @@ InlineEditor.defaultConfig = {
       '|',
       'removeFormat',
       '|',
+      'insertNeume',
       'shiftText',
     ],
     shouldNotGroupWhenFull: true,

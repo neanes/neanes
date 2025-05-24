@@ -1,0 +1,13 @@
+.special-char-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(30px, 1fr));
+  gap: 4px;
+  max-width: 300px;
+  max-height: 300px;
+  overflow: auto;
+  padding: 8px;
+}
+
+.special-char-grid .ck-button__label {
+  font-family: Neanes !important;
+}

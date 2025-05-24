@@ -11,3 +11,11 @@
 .special-char-grid .ck-button__label {
   font-family: Neanes !important;
 }
+
+.ck-dropdown__character-block {
+    width: 100% !important;
+}
+
+.ck-dropdown__character-block  .ck-button__label {
+    width: 100% !important;
+}

@@ -27,15 +27,11 @@ export default class InsertNeume extends Plugin {
       const balloon = editor.plugins.get(ContextualBalloon);
 
       view.on('execute', () => {
-        const gridView = new InsertNeumeView(
-          locale,
-          this._getCharList(),
-          (char) => {
-            editor.execute('insertNeume', char);
-            balloon.remove(gridView);
-            gridView.destroy();
-          },
-        );
+        const gridView = new InsertNeumeView(locale, (char) => {
+          editor.execute('insertNeume', char);
+          balloon.remove(gridView);
+          gridView.destroy();
+        });
 
         balloon.add({
           view: gridView,
@@ -47,15 +43,5 @@ export default class InsertNeume extends Plugin {
 
       return view;
     });
-  }
-
-  _getCharList(): string[] {
-    const start = 0xe000;
-    const end = 0xefff;
-    const chars: string[] = [];
-    for (let i = start; i <= end; i++) {
-      chars.push(String.fromCharCode(i));
-    }
-    return chars;
   }
 }

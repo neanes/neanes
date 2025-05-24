@@ -50,7 +50,7 @@
     "uuid": "^11.1.0",
     "vue": "^3.5.14",
     "vue-draggable-resizable": "^3.0.0",
-    "vue-facing-decorator": "^4.0.0",
+    "vue-facing-decorator": "^4.0.1",
     "vue-router": "^4.5.1",
     "vue3-observe-visibility": "^1.0.3",
     "vue3-tabs-chrome": "^0.3.3"

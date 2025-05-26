@@ -2,6 +2,7 @@
   <div
     class="text-box-container"
     :style="containerStyle"
+    :class="{ selected: selected }"
     @click="$emit('select-single')"
   >
     <span class="handle"></span>
@@ -57,7 +58,7 @@
     <ContentEditable
       v-else
       ref="text"
-      class="text-box"
+      class="text-box single"
       :class="textBoxClass"
       :style="textBoxStyle"
       :content="content"
@@ -92,6 +93,7 @@ export default class TextBox extends Vue {
   @Prop() element!: TextBoxElement;
   @Prop() pageSetup!: PageSetup;
   @Prop({ default: true }) editMode!: boolean;
+  @Prop() selected!: boolean;
   @Prop() metadata!: TokenMetadata;
 
   get textElement() {
@@ -189,7 +191,6 @@ export default class TextBox extends Vue {
   get textBoxStyleBottom() {
     const style: any = {
       width: !this.element.multipanel ? this.width : undefined,
-      height: withZoom(this.pageSetup.lyricsDefaultFontSize),
       textWrap: this.element.alignment === 'center' ? 'balance' : 'pretty',
       top: withZoom(this.pageSetup.lyricsVerticalOffset),
     };
@@ -251,7 +252,6 @@ export default class TextBox extends Vue {
 
 <style scoped>
 .text-box-container {
-  outline: 1px dotted black;
   box-sizing: border-box;
   min-height: 10px;
 }
@@ -328,6 +328,16 @@ export default class TextBox extends Vue {
 .inline-container {
   display: flex;
   flex-direction: column;
+}
+
+.inline-container,
+.text-box.single {
+  outline: 1px dotted black;
+}
+
+.selected .inline-container,
+.selected .text-box.single {
+  outline: 1px solid goldenrod;
 }
 
 @media print {

@@ -477,7 +477,7 @@
                       :editMode="true"
                       :metadata="getTokenMetadata(pageIndex)"
                       :pageSetup="score.pageSetup"
-                      :class="[{ selectedTextbox: isSelected(element) }]"
+                      :selected="isSelected(element)"
                       @select-single="selectedElement = element"
                       @update:content="
                         updateTextBoxContent(element as TextBoxElement, $event)
@@ -7358,10 +7358,6 @@ export default class Editor extends Vue {
 
 .neume-box .audio-selected {
   background-color: rgba(152, 251, 152, 0.5);
-}
-
-.selectedTextbox {
-  outline: 1px solid goldenrod;
 }
 
 .selectedTextbox:deep(.handle) {

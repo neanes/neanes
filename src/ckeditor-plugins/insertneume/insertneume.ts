@@ -18,10 +18,10 @@ export default class InsertNeume extends Plugin {
     editor.ui.componentFactory.add('insertNeume', (locale) => {
       const view = new ButtonView(locale);
       view.set({
-        label: 'Neumes',
+        label: '\ue000',
         withText: true,
-        //icon: specialCharIcon,
-        tooltip: true,
+        tooltip: 'Insert Neume',
+        class: 'ck-button__insert-neume',
       });
 
       const balloon = editor.plugins.get(ContextualBalloon);

@@ -1,6 +1,6 @@
 {
   "fontName": "Neanes",
-  "fontVersion": "1.0.0",
+  "fontVersion": "1.0.1",
   "metrics": {
     "winAscent": 1.4,
     "winDescent": 0.466
@@ -7917,7 +7917,9 @@
     "diesis4Tertiary": 0.0,
     "diesis6Tertiary": 0.0,
     "diesis8Tertiary": 0.0,
-    "stavrosAbove": 0.0
+    "stavrosAbove": 0.0,
+    "modeFirstShort": 0.945,
+    "modeFourthShort": 0.93
   },
   "optionalGlyphs": {
     "oligonKentimataBelow.alt01": {
@@ -11627,6 +11629,26 @@
       "bBoxSW": [
         -0.173,
         0.126
+      ]
+    },
+    "modeFirstShort": {
+      "bBoxNE": [
+        0.829,
+        1.255
+      ],
+      "bBoxSW": [
+        0.413,
+        0.074
+      ]
+    },
+    "modeFourthShort": {
+      "bBoxNE": [
+        0.887,
+        1.255
+      ],
+      "bBoxSW": [
+        0.312,
+        0.08
       ]
     }
   },

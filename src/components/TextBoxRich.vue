@@ -459,12 +459,14 @@ export default class TextBoxRich extends Vue {
   flex-direction: column;
   justify-content: center;
   white-space: nowrap !important;
+  border: none;
 }
 
 .rich-text-editor.inline-bottom {
   display: inline-block;
   position: relative;
   white-space: nowrap !important;
+  border: none;
   overflow: visible;
 }
 

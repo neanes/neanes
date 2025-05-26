@@ -837,6 +837,7 @@ export class RichTextBoxElement extends ScoreElement {
   public modeChangeVirtualNote: ScaleNote | null = null;
 
   public height: number = 20;
+  public customWidth: number | null = null;
   public marginTop: number = 0;
   public marginBottom: number = 0;
 

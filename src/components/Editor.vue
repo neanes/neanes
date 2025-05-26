@@ -788,6 +788,9 @@
         @update:inline="
           updateRichTextBox(selectedRichTextBoxElement, { inline: $event })
         "
+        @update:customWidth="
+          updateRichTextBox(selectedRichTextBoxElement, { customWidth: $event })
+        "
         @update:rtl="
           updateRichTextBox(selectedRichTextBoxElement, { rtl: $event })
         "

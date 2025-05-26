@@ -586,6 +586,7 @@ export class SaveService {
     }
 
     element.height = e.height;
+    element.customWidth = e.customWidth ?? undefined;
     element.marginTop = e.marginTop ?? undefined;
     element.marginBottom = e.marginBottom ?? undefined;
     element.rtl = e.rtl || undefined;
@@ -1364,6 +1365,8 @@ export class SaveService {
       element.modeChangeScale = e.modeChangeScale;
       element.modeChangeVirtualNote = e.modeChangeVirtualNote ?? null;
     }
+
+    element.customWidth = e.customWidth ?? null;
 
     element.modeChange = e.modeChange === true;
     element.inline = e.inline === true;

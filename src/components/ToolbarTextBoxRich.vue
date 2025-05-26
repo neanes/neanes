@@ -13,6 +13,24 @@
         $t('toolbar:common.inline')
       }}</label>
     </div>
+    <template v-if="element.inline">
+      <span class="space" />
+      <div class="form-group">
+        <label class="right-space">{{ $t('toolbar:common.width') }}</label>
+        <InputUnit
+          class="text-box-input-width"
+          unit="pt"
+          :nullable="true"
+          :min="0.5"
+          :max="maxWidth"
+          :step="0.5"
+          :modelValue="element.customWidth"
+          :precision="1"
+          placeholder="fill"
+          @update:modelValue="$emit('update:customWidth', $event)"
+        />
+      </div>
+    </template>
     <span class="divider" />
     <div class="form-group">
       <label class="right-space">{{ $t('toolbar:common.marginTop') }}</label>
@@ -152,6 +170,7 @@ import { Unit } from '@/utils/Unit';
 @Component({
   components: { InputUnit },
   emits: [
+    'update:customWidth',
     'update:inline',
     'update:marginBottom',
     'update:marginTop',
@@ -176,6 +195,10 @@ export default class ToolbarTextBoxRich extends Vue {
     key: x,
     displayName: this.getScaleDisplayName(x),
   }));
+
+  get maxWidth() {
+    return Unit.toPt(this.pageSetup.innerPageWidth);
+  }
 
   get maxHeight() {
     return Unit.toPt(this.pageSetup.innerPageHeight);

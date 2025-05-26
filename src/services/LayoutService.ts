@@ -361,15 +361,20 @@ export class LayoutService {
           }
 
           if (richTextBoxElement.inline) {
-            elementWidthPx =
-              pageSetup.innerPageWidth - currentLineWidthPx - martyriaWidth;
+            if (richTextBoxElement.customWidth != null) {
+              elementWidthPx = richTextBoxElement.customWidth;
+            } else {
+              elementWidthPx =
+                pageSetup.innerPageWidth - currentLineWidthPx - martyriaWidth;
 
-            if (elementWidthPx <= 0) {
-              // If there is not enough room for the text box, make it the full page width.
-              // This probably will only happen because of user error and we want to give the user
-              // the change to correct it without making a text box of zero width.
-              elementWidthPx = pageSetup.innerPageWidth;
+              if (elementWidthPx <= 0) {
+                // If there is not enough room for the text box, make it the full page width.
+                // This probably will only happen because of user error and we want to give the user
+                // the change to correct it without making a text box of zero width.
+                elementWidthPx = pageSetup.innerPageWidth;
+              }
             }
+
             richTextBoxElement.height = neumeHeight;
           } else {
             elementWidthPx = pageSetup.innerPageWidth;

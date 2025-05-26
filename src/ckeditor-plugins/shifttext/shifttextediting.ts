@@ -30,6 +30,7 @@ export default class ShiftTextEditing extends Plugin {
         const { writer } = conversionApi;
 
         const element = writer.createAttributeElement('span', {
+          class: 'shift-text',
           style: `position: relative; left: ${modelAttributeValue?.left ?? 0}em; top: ${modelAttributeValue?.top ?? 0}em;`,
         });
 
@@ -43,6 +44,7 @@ export default class ShiftTextEditing extends Plugin {
       view: {
         name: 'span',
         styles: { position: 'relative' },
+        classes: ['shift-text'],
       },
       model: {
         key: SHIFT,

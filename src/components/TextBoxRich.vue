@@ -263,7 +263,6 @@ export default class TextBoxRich extends Vue {
       width: !this.element.multipanel
         ? withZoom(this.element.width)
         : undefined,
-      height: withZoom(this.pageSetup.lyricsDefaultFontSize),
       top: withZoom(this.pageSetup.lyricsVerticalOffset),
     };
 

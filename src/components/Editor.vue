@@ -479,6 +479,12 @@
                       @update:content="
                         updateTextBoxContent(element as TextBoxElement, $event)
                       "
+                      @update:contentBottom="
+                        updateTextBoxContentBottom(
+                          element as TextBoxElement,
+                          $event,
+                        )
+                      "
                       @update:contentLeft="
                         updateTextBoxContentLeft(
                           element as TextBoxElement,
@@ -5466,6 +5472,10 @@ export default class Editor extends Vue {
 
   updateTextBoxContent(element: TextBoxElement, content: string) {
     this.updateTextBox(element, { content });
+  }
+
+  updateTextBoxContentBottom(element: TextBoxElement, contentBottom: string) {
+    this.updateTextBox(element, { contentBottom });
   }
 
   updateTextBoxContentLeft(element: TextBoxElement, contentLeft: string) {

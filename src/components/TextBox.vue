@@ -50,9 +50,9 @@
         class="text-box inline-bottom"
         :class="textBoxClass"
         :style="textBoxStyleBottom"
-        :content="content"
+        :content="contentBottom"
         :editable="editMode"
-        @blur="updateContent($event)"
+        @blur="updateContentBottom($event)"
       ></ContentEditable>
     </div>
     <ContentEditable
@@ -83,6 +83,7 @@ import { withZoom } from '@/utils/withZoom';
   components: { ContentEditable },
   emits: [
     'update:content',
+    'update:contentBottom',
     'update:contentLeft',
     'update:contentCenter',
     'update:contentRight',
@@ -105,6 +106,16 @@ export default class TextBox extends Vue {
       ? this.element.content
       : replaceTokens(
           this.element.content,
+          this.metadata,
+          this.element.alignment,
+        );
+  }
+
+  get contentBottom() {
+    return this.editMode
+      ? this.element.contentBottom
+      : replaceTokens(
+          this.element.contentBottom,
           this.metadata,
           this.element.alignment,
         );
@@ -211,6 +222,15 @@ export default class TextBox extends Vue {
     }
 
     this.$emit('update:content', content);
+  }
+
+  updateContentBottom(content: string) {
+    // Nothing actually changed, so do nothing
+    if (this.element.contentBottom === content) {
+      return;
+    }
+
+    this.$emit('update:contentBottom', content);
   }
 
   updateContentLeft(content: string) {

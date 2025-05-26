@@ -544,10 +544,15 @@ export class SaveService {
       element.contentRight = e.contentRight;
       element.multipanel = true;
     }
+
+    if (e.inline) {
+      element.inline = e.inline;
+      element.contentBottom = e.contentBottom;
+    }
+
     element.fontFamily = e.fontFamily;
     element.fontSize = e.fontSize;
     element.strokeWidth = e.strokeWidth;
-    element.inline = e.inline || undefined;
     element.bold = e.bold || undefined;
     element.italic = e.italic || undefined;
     element.underline = e.underline || undefined;
@@ -1314,6 +1319,10 @@ export class SaveService {
       element.contentLeft = e.contentLeft;
       element.contentCenter = e.contentCenter;
       element.contentRight = e.contentRight;
+    }
+
+    if (e.inline) {
+      element.contentBottom = e.contentBottom;
     }
 
     element.multipanel = e.multipanel === true;

@@ -1,6 +1,7 @@
 <template>
   <div
     class="rich-text-box-container"
+    :class="{ selected: selected }"
     :style="containerStyle"
     @click="$emit('select-single')"
   >
@@ -63,7 +64,7 @@
     <ckeditor
       v-else
       ref="editor"
-      class="rich-text-editor"
+      class="rich-text-editor single"
       :editor="editor"
       :model-value="content"
       @blur="onBlur"
@@ -99,6 +100,7 @@ export default class TextBoxRich extends Vue {
   @Prop() pageSetup!: PageSetup;
   @Prop() fonts!: string[];
   @Prop({ default: true }) editMode!: boolean;
+  @Prop() selected!: boolean;
   @Prop() metadata!: TokenMetadata;
 
   editor = InlineEditor;
@@ -404,8 +406,6 @@ export default class TextBoxRich extends Vue {
 }
 
 .rich-text-box-container {
-  outline: 1px dotted black;
-  box-sizing: border-box;
   min-height: 10px;
 }
 
@@ -449,12 +449,16 @@ export default class TextBoxRich extends Vue {
   flex-direction: column;
 }
 
+.inline-container,
+.rich-text-editor.single {
+  outline: 1px dotted black;
+}
+
 .rich-text-editor.inline-top {
   display: flex;
   flex-direction: column;
   justify-content: center;
   white-space: nowrap !important;
-  border: none !important;
 }
 
 .rich-text-editor.inline-bottom {
@@ -462,7 +466,6 @@ export default class TextBoxRich extends Vue {
   position: relative;
   white-space: nowrap !important;
   overflow: visible;
-  border: none !important;
 }
 
 @media print {

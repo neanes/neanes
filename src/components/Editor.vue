@@ -521,7 +521,7 @@
                       :element="element"
                       :pageSetup="score.pageSetup"
                       :fonts="fonts"
-                      :class="[{ selectedTextbox: isSelected(element) }]"
+                      :selected="isSelected(element)"
                       @select-single="selectedElement = element"
                       @update="
                         updateRichTextBox(element as RichTextBoxElement, $event)
@@ -7633,6 +7633,8 @@ export default class Editor extends Vue {
 .page.print .drop-cap-container,
 .page.print .mode-key-container,
 .page.print .image-box-container,
+.page.print :deep(.rich-text-editor),
+.page.print :deep(.inline-container),
 .page.print :deep(.text-box.multipanel) {
   border: none;
   outline: none;

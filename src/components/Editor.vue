@@ -785,8 +785,29 @@
       <ToolbarTextBoxRich
         :element="selectedRichTextBoxElement"
         :pageSetup="score.pageSetup"
+        @update:inline="
+          updateRichTextBox(selectedRichTextBoxElement, { inline: $event })
+        "
         @update:rtl="
           updateRichTextBox(selectedRichTextBoxElement, { rtl: $event })
+        "
+        @update:modeChange="
+          updateRichTextBox(selectedRichTextBoxElement, { modeChange: $event })
+        "
+        @update:modeChangePhysicalNote="
+          updateRichTextBox(selectedRichTextBoxElement, {
+            modeChangePhysicalNote: $event,
+          })
+        "
+        @update:modeChangeScale="
+          updateRichTextBox(selectedRichTextBoxElement, {
+            modeChangeScale: $event,
+          })
+        "
+        @update:modeChangeVirtualNote="
+          updateRichTextBox(selectedRichTextBoxElement, {
+            modeChangeVirtualNote: $event,
+          })
         "
         @update:marginTop="
           updateRichTextBoxMarginTop(selectedRichTextBoxElement, $event)

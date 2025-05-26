@@ -213,6 +213,10 @@ export class RichTextBoxElement extends ScoreElement {
   public multipanel: boolean | undefined = undefined;
   public rtl: boolean | undefined = undefined;
   public inline: boolean | undefined = undefined;
+  public modeChange: boolean | undefined = undefined;
+  public modeChangePhysicalNote: ScaleNote = ScaleNote.Pa;
+  public modeChangeScale: Scale = Scale.Diatonic;
+  public modeChangeVirtualNote: ScaleNote | undefined = undefined;
   public height: number = 20;
   public marginTop: number | undefined = undefined;
   public marginBottom: number | undefined = undefined;

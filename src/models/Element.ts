@@ -754,6 +754,10 @@ export class TextBoxElement extends ScoreElement {
   public marginTop: number = 0;
   public marginBottom: number = 0;
   public fillWidth: boolean = true;
+  public modeChange: boolean = true;
+  public modeChangeScaleNote: ScaleNote = ScaleNote.Pa;
+  public modeChangeScale: Scale = Scale.HardChromatic;
+  public modeChangeFthora: Fthora | null = null;
 
   // Values computed by the layout service
   public computedFontFamily: string = '';
@@ -826,7 +830,11 @@ export class RichTextBoxElement extends ScoreElement {
   public contentCenter: string = '';
   public multipanel: boolean = false;
   public rtl: boolean = false;
-  public inline: boolean = true;
+  public inline: boolean = false;
+  public modeChange: boolean = false;
+  public modeChangePhysicalNote: ScaleNote = ScaleNote.Pa;
+  public modeChangeScale: Scale = Scale.Diatonic;
+  public modeChangeVirtualNote: ScaleNote | null = null;
 
   public height: number = 20;
   public marginTop: number = 0;

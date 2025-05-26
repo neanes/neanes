@@ -363,6 +363,13 @@ export class LayoutService {
           if (richTextBoxElement.inline) {
             elementWidthPx =
               pageSetup.innerPageWidth - currentLineWidthPx - martyriaWidth;
+
+            if (elementWidthPx <= 0) {
+              // If there is not enough room for the text box, make it the full page width.
+              // This probably will only happen because of user error and we want to give the user
+              // the change to correct it without making a text box of zero width.
+              elementWidthPx = pageSetup.innerPageWidth;
+            }
             richTextBoxElement.height = neumeHeight;
           } else {
             elementWidthPx = pageSetup.innerPageWidth;
@@ -2331,26 +2338,17 @@ export class LayoutService {
         const modeKey = element as ModeKeyElement;
 
         if (currentModeKey) {
-          currentModeKey.ambitusLowNote =
-            getNoteFromValue(ambitusLow) ?? Note.Pa;
-          currentModeKey.ambitusHighNote =
-            getNoteFromValue(ambitusHigh) ?? Note.Pa;
-          currentModeKey.ambitusLowRootSign =
-            ambitusLow !== Number.MAX_SAFE_INTEGER
-              ? this.getRootSign(
-                  ambitusLowScale,
-                  ambitusLow + ambitusLowShift,
-                  ambitusLow,
-                )
-              : RootSign.Alpha;
-          currentModeKey.ambitusHighRootSign =
-            ambitusHigh !== Number.MIN_SAFE_INTEGER
-              ? this.getRootSign(
-                  ambitusHighScale,
-                  ambitusHigh + ambitusHighShift,
-                  ambitusHigh,
-                )
-              : RootSign.Alpha;
+          if (currentModeKey) {
+            this.assignAmbitus({
+              currentModeKey,
+              ambitusLow,
+              ambitusHigh,
+              ambitusLowScale,
+              ambitusLowShift,
+              ambitusHighScale,
+              ambitusHighShift,
+            });
+          }
         }
 
         ambitusLow = Number.MAX_SAFE_INTEGER;
@@ -2432,6 +2430,41 @@ export class LayoutService {
             }
           }
         }
+      } else if (
+        element.elementType === ElementType.RichTextBox &&
+        (element as RichTextBoxElement).modeChange
+      ) {
+        const modeKey = element as RichTextBoxElement;
+
+        if (currentModeKey) {
+          this.assignAmbitus({
+            currentModeKey,
+            ambitusLow,
+            ambitusHigh,
+            ambitusLowScale,
+            ambitusLowShift,
+            ambitusHighScale,
+            ambitusHighShift,
+          });
+        }
+
+        ambitusLow = Number.MAX_SAFE_INTEGER;
+        ambitusHigh = Number.MIN_SAFE_INTEGER;
+
+        currentModeKey = null;
+        currentNote = getScaleNoteValue(modeKey.modeChangePhysicalNote);
+        currentScale = modeKey.modeChangeScale;
+        currentShift = 0;
+
+        if (modeKey.modeChangeVirtualNote) {
+          currentNoteVirtual = getScaleNoteValue(modeKey.modeChangeVirtualNote);
+
+          currentShift = this.getShiftWithoutFthora(
+            currentNote,
+            currentNoteVirtual,
+            currentScale,
+          );
+        }
       }
     }
 
@@ -2455,6 +2488,43 @@ export class LayoutService {
             )
           : RootSign.Alpha;
     }
+  }
+
+  public static assignAmbitus({
+    currentModeKey,
+    ambitusLow,
+    ambitusHigh,
+    ambitusLowScale,
+    ambitusLowShift,
+    ambitusHighScale,
+    ambitusHighShift,
+  }: {
+    currentModeKey: ModeKeyElement;
+    ambitusLow: number;
+    ambitusHigh: number;
+    ambitusLowScale: Scale;
+    ambitusLowShift: number;
+    ambitusHighScale: Scale;
+    ambitusHighShift: number;
+  }) {
+    currentModeKey.ambitusLowNote = getNoteFromValue(ambitusLow) ?? Note.Pa;
+    currentModeKey.ambitusHighNote = getNoteFromValue(ambitusHigh) ?? Note.Pa;
+    currentModeKey.ambitusLowRootSign =
+      ambitusLow !== Number.MAX_SAFE_INTEGER
+        ? this.getRootSign(
+            ambitusLowScale,
+            ambitusLow + ambitusLowShift,
+            ambitusLow,
+          )
+        : RootSign.Alpha;
+    currentModeKey.ambitusHighRootSign =
+      ambitusHigh !== Number.MIN_SAFE_INTEGER
+        ? this.getRootSign(
+            ambitusHighScale,
+            ambitusHigh + ambitusHighShift,
+            ambitusHigh,
+          )
+        : RootSign.Alpha;
   }
 
   public static alignIsonIndicators(pages: Page[], pageSetup: PageSetup) {
@@ -2744,6 +2814,23 @@ export class LayoutService {
     }
 
     return true;
+  }
+
+  public static getShiftWithoutFthora(
+    currentNote: number,
+    currentNoteVirtual: number,
+    currentScale: Scale,
+  ) {
+    let shift = currentNoteVirtual - currentNote;
+
+    if (
+      currentScale === Scale.HardChromatic ||
+      currentScale === Scale.SoftChromatic
+    ) {
+      shift %= 4;
+    }
+
+    return shift;
   }
 
   private static getNeumeWidthFromCache(

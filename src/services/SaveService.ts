@@ -578,6 +578,13 @@ export class SaveService {
       element.contentBottom = e.contentBottom;
     }
 
+    if (e.modeChange) {
+      element.modeChange = e.modeChange;
+      element.modeChangePhysicalNote = e.modeChangePhysicalNote;
+      element.modeChangeScale = e.modeChangeScale;
+      element.modeChangeVirtualNote = e.modeChangeVirtualNote ?? undefined;
+    }
+
     element.height = e.height;
     element.marginTop = e.marginTop ?? undefined;
     element.marginBottom = e.marginBottom ?? undefined;
@@ -1352,6 +1359,13 @@ export class SaveService {
       element.contentBottom = e.contentBottom;
     }
 
+    if (e.modeChange) {
+      element.modeChangePhysicalNote = e.modeChangePhysicalNote;
+      element.modeChangeScale = e.modeChangeScale;
+      element.modeChangeVirtualNote = e.modeChangeVirtualNote ?? null;
+    }
+
+    element.modeChange = e.modeChange === true;
     element.inline = e.inline === true;
     element.multipanel = e.multipanel === true;
     element.rtl = e.rtl === true;

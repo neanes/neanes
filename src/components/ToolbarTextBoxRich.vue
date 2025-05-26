@@ -2,14 +2,16 @@
   <div class="text-box-toolbar">
     <div class="form-group">
       <input
-        id="toolbar-text-box-rtl"
+        id="toolbar-text-box-inline"
         type="checkbox"
-        :checked="element.rtl"
+        :checked="element.inline"
         @change="
-          $emit('update:rtl', ($event.target as HTMLInputElement).checked)
+          $emit('update:inline', ($event.target as HTMLInputElement).checked)
         "
       />
-      <label for="toolbar-text-box-rtl">{{ $t('toolbar:textbox.rtl') }}</label>
+      <label for="toolbar-text-box-inline">{{
+        $t('toolbar:common.inline')
+      }}</label>
     </div>
     <span class="divider" />
     <div class="form-group">
@@ -39,7 +41,92 @@
         @update:modelValue="$emit('update:marginBottom', $event)"
       />
     </div>
-    <span class="space"></span>
+    <span class="divider"></span>
+    <div class="form-group">
+      <input
+        id="toolbar-text-box-mode-change"
+        type="checkbox"
+        :checked="element.modeChange"
+        @change="
+          $emit(
+            'update:modeChange',
+            ($event.target as HTMLInputElement).checked,
+          )
+        "
+      />
+      <label for="toolbar-text-box-mode-change">{{
+        $t('toolbar:textbox.modeChange')
+      }}</label>
+    </div>
+    <template v-if="element.modeChange">
+      <span class="space"></span>
+      <div class="form-group">
+        <label class="right-space">{{ $t('toolbar:martyria.note') }}</label>
+        <select
+          :value="element.modeChangePhysicalNote"
+          @change="
+            $emit(
+              'update:modeChangePhysicalNote',
+              ($event.target as HTMLInputElement).value,
+            )
+          "
+        >
+          <option v-for="note in notes" :key="note.key" :value="note.key">
+            {{ $t(note.displayName) }}
+          </option>
+        </select>
+      </div>
+      <span class="space"></span>
+      <div class="form-group">
+        <label class="right-space">{{ $t('toolbar:martyria.scale') }}</label>
+        <select
+          :value="element.modeChangeScale"
+          @change="
+            $emit(
+              'update:modeChangeScale',
+              ($event.target as HTMLInputElement).value,
+            )
+          "
+        >
+          <option v-for="scale in scales" :key="scale.key" :value="scale.key">
+            {{ $t(scale.displayName) }}
+          </option>
+        </select>
+      </div>
+      <span class="space"></span>
+      <div class="form-group">
+        <label class="right-space">{{
+          $t('toolbar:textbox.virtualNote')
+        }}</label>
+        <select
+          :value="element.modeChangeVirtualNote"
+          @change="
+            $emit(
+              'update:modeChangeVirtualNote',
+              ($event.target as HTMLInputElement).value,
+            )
+          "
+        >
+          <option value="">{{ $t('toolbar:common.none') }}</option>
+          <option v-for="note in notes" :key="note.key" :value="note.key">
+            {{ $t(note.displayName) }}
+          </option>
+        </select>
+      </div>
+    </template>
+    <span class="divider"></span>
+    <div class="form-group">
+      <input
+        id="toolbar-text-box-rtl"
+        type="checkbox"
+        :checked="element.rtl"
+        @change="
+          $emit('update:rtl', ($event.target as HTMLInputElement).checked)
+        "
+      />
+      <label for="toolbar-text-box-rtl">{{ $t('toolbar:textbox.rtl') }}</label>
+    </div>
+    <span class="divider"></span>
     <div class="form-group">
       <label class="right-space">{{ $t('toolbar:common.sectionName') }}</label>
       <input
@@ -59,13 +146,19 @@ import { Component, Prop, Vue } from 'vue-facing-decorator';
 import InputUnit from '@/components/InputUnit.vue';
 import { RichTextBoxElement } from '@/models/Element';
 import { PageSetup } from '@/models/PageSetup';
+import { Scale, ScaleNote } from '@/models/Scales';
 import { Unit } from '@/utils/Unit';
 
 @Component({
   components: { InputUnit },
   emits: [
+    'update:inline',
     'update:marginBottom',
     'update:marginTop',
+    'update:modeChange',
+    'update:modeChangePhysicalNote',
+    'update:modeChangeScale',
+    'update:modeChangeVirtualNote',
     'update:rtl',
     'update:sectionName',
   ],
@@ -74,8 +167,98 @@ export default class ToolbarTextBoxRich extends Vue {
   @Prop() element!: RichTextBoxElement;
   @Prop() pageSetup!: PageSetup;
 
+  notes = Object.values(ScaleNote).map((x) => ({
+    key: x,
+    displayName: this.getNoteDisplayName(x),
+  }));
+
+  scales = Object.values(Scale).map((x) => ({
+    key: x,
+    displayName: this.getScaleDisplayName(x),
+  }));
+
   get maxHeight() {
     return Unit.toPt(this.pageSetup.innerPageHeight);
+  }
+
+  private getNoteDisplayName(note: ScaleNote) {
+    switch (note) {
+      case ScaleNote.ZoLow:
+        return 'model:note.zoLow';
+      case ScaleNote.NiLow:
+        return 'model:note.niLow';
+      case ScaleNote.PaLow:
+        return 'model:note.paLow';
+      case ScaleNote.VouLow:
+        return 'model:note.vouLow';
+      case ScaleNote.GaLow:
+        return 'model:note.gaLow';
+      case ScaleNote.ThiLow:
+        return 'model:note.diLow';
+      case ScaleNote.KeLow:
+        return 'model:note.keLow';
+      case ScaleNote.Zo:
+        return 'model:note.zo';
+      case ScaleNote.Ni:
+        return 'model:note.ni';
+      case ScaleNote.Pa:
+        return 'model:note.pa';
+      case ScaleNote.Vou:
+        return 'model:note.vou';
+      case ScaleNote.Ga:
+        return 'model:note.ga';
+      case ScaleNote.Thi:
+        return 'model:note.di';
+      case ScaleNote.Ke:
+        return 'model:note.ke';
+      case ScaleNote.ZoHigh:
+        return 'model:note.zoHigh';
+      case ScaleNote.NiHigh:
+        return 'model:note.niHigh';
+      case ScaleNote.PaHigh:
+        return 'model:note.paHigh';
+      case ScaleNote.VouHigh:
+        return 'model:note.vouHigh';
+      case ScaleNote.GaHigh:
+        return 'model:note.gaHigh';
+      case ScaleNote.ThiHigh:
+        return 'model:note.diHigh';
+      case ScaleNote.KeHigh:
+        return 'model:note.keHigh';
+      default:
+        return note;
+    }
+  }
+
+  private getScaleDisplayName(scale: Scale) {
+    switch (scale) {
+      case Scale.Diatonic:
+        return 'model:scale.diatonic';
+      case Scale.SoftChromatic:
+        return 'model:scale.softChromatic';
+      case Scale.HardChromatic:
+        return 'model:scale.hardChromatic';
+      case Scale.EnharmonicGa:
+        return 'model:scale.enharmonicGa';
+      case Scale.EnharmonicZoHigh:
+        return 'model:scale.enharmonicZoHigh';
+      case Scale.EnharmonicVou:
+        return 'model:scale.enharmonicVou';
+      case Scale.EnharmonicZo:
+        return 'model:scale.enharmonicZo';
+      case Scale.EnharmonicVouHigh:
+        return 'model:scale.enharmonicVouHigh';
+      case Scale.Zygos:
+        return 'model:scale.zygos';
+      case Scale.Spathi:
+        return 'model:scale.spathi';
+      case Scale.SpathiGa:
+        return 'model:scale.spathiGa';
+      case Scale.Kliton:
+        return 'model:scale.kliton';
+      default:
+        return scale;
+    }
   }
 }
 </script>

@@ -111,13 +111,10 @@
                     :metadata="getTokenMetadata(pageIndex)"
                     :pageSetup="score.pageSetup"
                     :fonts="fonts"
-                    :class="[
-                      {
-                        selectedTextbox:
-                          getHeaderForPageIndex(pageIndex) ==
-                          selectedHeaderFooterElement,
-                      },
-                    ]"
+                    :selected="
+                      getHeaderForPageIndex(pageIndex) ==
+                      selectedHeaderFooterElement
+                    "
                     :style="headerStyle"
                     @click="
                       selectedHeaderFooterElement =
@@ -644,13 +641,10 @@
                     :metadata="getTokenMetadata(pageIndex)"
                     :pageSetup="score.pageSetup"
                     :fonts="fonts"
-                    :class="[
-                      {
-                        selectedTextbox:
-                          getFooterForPageIndex(pageIndex) ==
-                          selectedHeaderFooterElement,
-                      },
-                    ]"
+                    :selected="
+                      getFooterForPageIndex(pageIndex) ==
+                      selectedHeaderFooterElement
+                    "
                     :style="footerStyle"
                     @click="
                       selectedHeaderFooterElement =
@@ -7358,6 +7352,10 @@ export default class Editor extends Vue {
 
 .neume-box .audio-selected {
   background-color: rgba(152, 251, 152, 0.5);
+}
+
+.selectedTextbox {
+  outline: 1px solid goldenrod;
 }
 
 .selectedTextbox:deep(.handle) {

@@ -7,13 +7,18 @@ import {
   ViewCollection,
 } from 'ckeditor5';
 
+import { InsertNeumeCommandParams } from './insertneumecommand';
+
 export default class InsertNeumeView extends View {
   gridView: View;
   locale: Locale;
   grid: ViewCollection;
-  onCharSelect: (char: string) => void;
+  onCharSelect: (char: InsertNeumeCommandParams) => void;
 
-  constructor(locale: Locale, onCharSelect: (char: string) => void) {
+  constructor(
+    locale: Locale,
+    onCharSelect: (args: InsertNeumeCommandParams) => void,
+  ) {
     super(locale);
 
     this.locale = locale;
@@ -61,32 +66,45 @@ export default class InsertNeumeView extends View {
     this._loadCharactersForBlock(CHARACTER_BLOCKS[0]);
   }
 
-  _loadCharactersForBlock(block: any) {
-    const characters = [];
+  _loadCharactersForBlock(block: CharacterBlock) {
+    const characters: GridButtonParams[] = [];
     for (const range of block.ranges) {
       for (let code = range.start; code <= range.end; code++) {
-        characters.push(String.fromCodePoint(code));
+        characters.push({
+          char: String.fromCodePoint(code),
+          attributes: range.attributes,
+        });
       }
     }
 
     this._renderGrid(characters);
   }
 
-  _renderGrid(characters: string[]) {
+  _renderGrid(characters: GridButtonParams[]) {
     this.grid.clear();
 
-    characters.forEach((char) => {
+    characters.forEach(({ char, attributes }) => {
       const button = new ButtonView(this.locale);
       button.set({
         label: char,
         withText: true,
       });
       button.on('execute', () => {
-        this.onCharSelect(char);
+        this.onCharSelect({ char, useDefaultStyle: true, attributes });
       });
       this.grid.add(button);
     });
   }
+}
+
+export interface CharacterBlock {
+  name: string;
+  ranges: Array<{ start: number; end: number; attributes?: string[] }>;
+}
+
+export interface GridButtonParams {
+  char: string;
+  attributes?: string[];
 }
 
 const CHARACTER_BLOCKS = [
@@ -103,11 +121,13 @@ const CHARACTER_BLOCKS = [
       { start: 0xe2d0, end: 0xe2d1 }, // mode 7
       { start: 0xe2d8, end: 0xe2d8 }, // mode 8
       { start: 0xe2f0, end: 0xe2f0 }, // plagal
-      { start: 0x1d0b6, end: 0x1d0b6 }, // Fthores
-      { start: 0x1d0ba, end: 0x1d0bb }, // Fthores
-      { start: 0x1d0bd, end: 0x1d0bd }, // Fthores
-      { start: 0x1d0bf, end: 0x1d0c5 }, // Fthores
-      { start: 0x1d0c7, end: 0x1d0cb }, // Fthores
+      { start: 0xe190, end: 0xe19f, attributes: ['fthora'] }, // Fthores
+
+      // { start: 0x1d0b6, end: 0x1d0b6, attributes: ['fthora'] }, // Fthores
+      // { start: 0x1d0ba, end: 0x1d0bb, attributes: ['fthora'] }, // Fthores
+      // { start: 0x1d0bd, end: 0x1d0bd, attributes: ['fthora'] }, // Fthores
+      // { start: 0x1d0bf, end: 0x1d0c5, attributes: ['fthora'] }, // Fthores
+      // { start: 0x1d0c7, end: 0x1d0cb, attributes: ['fthora'] }, // Fthores
       { start: 0xe004, end: 0xe005 }, // oligonKentimaAbove, oligonYpsiliRight
       { start: 0xe024, end: 0xe025 }, // elafron, runningElafron
       { start: 0xe120, end: 0xe127 }, // chronos

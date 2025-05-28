@@ -1,47 +1,37 @@
 import './insertneume.css';
 
-import { ButtonView, ContextualBalloon, Plugin } from 'ckeditor5';
+import { Plugin } from 'ckeditor5';
 
-import InsertNeumeCommand from './insertneumecommand';
-import InsertNeumeView from './insertneumeview';
+import InsertNeumeCommand, { INSERT_NEUME_COMMAND } from './insertneumecommand';
+import InsertNeumeEditing from './insertneumeediting';
+import InsertNeumeUI from './insertneumeui';
+import UpdateNeumeAttributesCommand, {
+  UPDATE_NEUME_ATTRIBUTES_COMMAND,
+} from './updateneumeattributescommand';
 
 export default class InsertNeume extends Plugin {
   static get pluginName() {
     return 'InsertNeume';
   }
 
+  static get requires() {
+    return [InsertNeumeEditing, InsertNeumeUI];
+  }
+
   init() {
     const editor = this.editor;
 
-    editor.commands.add('insertNeume', new InsertNeumeCommand(editor));
+    // editor.config.define('insertNeume', {
+    //   fthoraDefaultStyle: {
+    //     color: 'inherit',
+    //     fontSize: 'inherit',
+    //   },
+    // });
 
-    editor.ui.componentFactory.add('insertNeume', (locale) => {
-      const view = new ButtonView(locale);
-      view.set({
-        label: '\ue000',
-        withText: true,
-        tooltip: 'Insert Neume',
-        class: 'ck-button__insert-neume',
-      });
-
-      const balloon = editor.plugins.get(ContextualBalloon);
-
-      view.on('execute', () => {
-        const gridView = new InsertNeumeView(locale, (char) => {
-          editor.execute('insertNeume', char);
-          balloon.remove(gridView);
-          gridView.destroy();
-        });
-
-        balloon.add({
-          view: gridView,
-          position: {
-            target: view.element!,
-          },
-        });
-      });
-
-      return view;
-    });
+    editor.commands.add(INSERT_NEUME_COMMAND, new InsertNeumeCommand(editor));
+    editor.commands.add(
+      UPDATE_NEUME_ATTRIBUTES_COMMAND,
+      new UpdateNeumeAttributesCommand(editor),
+    );
   }
 }

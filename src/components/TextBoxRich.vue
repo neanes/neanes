@@ -145,6 +145,12 @@ export default class TextBoxRich extends Vue {
         content: this.element.rtl ? 'ar' : 'en',
       },
       licenseKey: 'GPL',
+      insertNeume: {
+        fthoraDefaultStyle: {
+          color: this.pageSetup.fthoraDefaultColor,
+          fontSize: this.pageSetup.neumeDefaultFontSize + 'px',
+        },
+      },
     };
   }
 
@@ -265,6 +271,8 @@ export default class TextBoxRich extends Vue {
       width: !this.element.multipanel
         ? withZoom(this.element.width)
         : undefined,
+      //lineHeight: `${this.pageSetup.lyricsDefaultFontSize}px`,
+      lineHeight: '22px',
       top: withZoom(this.pageSetup.lyricsVerticalOffset),
     };
 

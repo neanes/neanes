@@ -23,3 +23,7 @@
 .ck-button__insert-neume .ck-button__label {
   font-family: Neanes !important;
 }
+
+.neanes-ck-neume {
+  display: inline-block;
+}

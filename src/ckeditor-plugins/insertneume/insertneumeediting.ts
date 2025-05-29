@@ -20,7 +20,14 @@ export default class InsertNeumeEditing extends Plugin {
       isInline: true,
       isObject: true,
       allowWhere: '$text',
-      allowAttributes: ['char', 'top', 'left', 'width', 'color', 'fontSize'],
+      allowAttributes: [
+        'char',
+        'top',
+        'left',
+        'width',
+        'color',
+        'neumeFontSize',
+      ],
     });
 
     editor.conversion.for('downcast').elementToElement({
@@ -50,8 +57,8 @@ export default class InsertNeumeEditing extends Plugin {
           style += `color: ${modelElement.getAttribute('color')};`;
         }
 
-        if (modelElement.getAttribute('fontSize') != null) {
-          style += `font-size: ${modelElement.getAttribute('fontSize') ?? 1}em;`;
+        if (modelElement.getAttribute('neumeFontSize') != null) {
+          style += `font-size: ${modelElement.getAttribute('neumeFontSize') ?? 1}em;`;
         }
 
         const element = writer.createContainerElement(
@@ -96,7 +103,7 @@ export default class InsertNeumeEditing extends Plugin {
 
         const width = widthStyle?.slice(0, -2) ?? '';
 
-        const fontSize = parseFloat(
+        const neumeFontSize = parseFloat(
           viewElement.getStyle('font-size')?.slice(0, -2) ?? '1',
         );
 
@@ -106,7 +113,7 @@ export default class InsertNeumeEditing extends Plugin {
           top,
           width,
           color,
-          fontSize,
+          neumeFontSize,
         });
       },
     });
@@ -146,18 +153,21 @@ export default class InsertNeumeEditing extends Plugin {
         }
       });
 
-      dispatcher.on('attribute:fontSize:neume', (evt, data, conversionApi) => {
-        const viewWriter = conversionApi.writer;
-        const viewElement = conversionApi.mapper.toViewElement(data.item);
+      dispatcher.on(
+        'attribute:neumeFontSize:neume',
+        (evt, data, conversionApi) => {
+          const viewWriter = conversionApi.writer;
+          const viewElement = conversionApi.mapper.toViewElement(data.item);
 
-        if (viewElement) {
-          viewWriter.setStyle(
-            'font-size',
-            data.attributeNewValue + 'em',
-            viewElement,
-          );
-        }
-      });
+          if (viewElement) {
+            viewWriter.setStyle(
+              'font-size',
+              data.attributeNewValue + 'em',
+              viewElement,
+            );
+          }
+        },
+      );
 
       dispatcher.on('attribute:width:neume', (evt, data, conversionApi) => {
         const viewWriter = conversionApi.writer;

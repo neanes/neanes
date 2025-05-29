@@ -40,9 +40,9 @@ export default class InsertNeumeFormView extends View {
 
     const fontSizeInput = this._createNumberInput(
       'Font Size (em)',
-      (fontSize) => {
+      (neumeFontSize) => {
         this.fire('change:values', {
-          fontSize: !isNaN(fontSize) ? fontSize : 1,
+          neumeFontSize: !isNaN(neumeFontSize) ? neumeFontSize : 1,
         });
       },
     );

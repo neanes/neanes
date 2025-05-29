@@ -79,15 +79,18 @@ export default class InsertNeumeUI extends Plugin {
     const view = new InsertNeumeFormView(editor.locale);
     const command = editor.commands.get(UPDATE_NEUME_ATTRIBUTES_COMMAND);
 
-    view.on('change:values', (evt, { top, left, width, color, fontSize }) => {
-      editor.execute(UPDATE_NEUME_ATTRIBUTES_COMMAND, {
-        top,
-        left,
-        width,
-        color,
-        fontSize,
-      });
-    });
+    view.on(
+      'change:values',
+      (evt, { top, left, width, color, neumeFontSize }) => {
+        editor.execute(UPDATE_NEUME_ATTRIBUTES_COMMAND, {
+          top,
+          left,
+          width,
+          color,
+          neumeFontSize,
+        });
+      },
+    );
 
     view.on('unshift', () => {
       editor.execute('unshift');
@@ -96,7 +99,9 @@ export default class InsertNeumeUI extends Plugin {
     view.topInput.fieldView.bind('value').to(command as any, 'top');
     view.leftInput.fieldView.bind('value').to(command as any, 'left');
     view.widthInput.fieldView.bind('value').to(command as any, 'width');
-    view.fontSizeInput.fieldView.bind('value').to(command as any, 'fontSize');
+    view.fontSizeInput.fieldView
+      .bind('value')
+      .to(command as any, 'neumeFontSize');
     view.colorInput.bind('selectedColor').to(command as any, 'color');
 
     balloon.add({

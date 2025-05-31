@@ -50,16 +50,18 @@
         @ready="onEditorReady"
         :config="editorConfig"
       />
-      <ckeditor
-        ref="editorBottom"
-        class="rich-text-editor inline-bottom"
-        :style="textBoxStyleBottom"
-        :editor="editor"
-        :model-value="contentBottom"
-        @blur="onBlur"
-        @ready="onEditorReady"
-        :config="editorConfig"
-      />
+      <div class="inline-bottom-container" :style="textBoxBottomContainerStyle">
+        <ckeditor
+          ref="editorBottom"
+          class="rich-text-editor inline-bottom"
+          :style="textBoxStyleBottom"
+          :editor="editor"
+          :model-value="contentBottom"
+          @blur="onBlur"
+          @ready="onEditorReady"
+          :config="editorConfig"
+        />
+      </div>
     </div>
     <ckeditor
       v-else
@@ -108,6 +110,8 @@ export default class TextBoxRich extends Vue {
 
   focusOnReady = false;
   unmounting = false;
+
+  heightBottom: number = 0;
 
   get editorConfig(): EditorConfig {
     const fontSizeOptions: FontSizeOption[] = [];
@@ -271,9 +275,18 @@ export default class TextBoxRich extends Vue {
       width: !this.element.multipanel
         ? withZoom(this.element.width)
         : undefined,
-      //lineHeight: `${this.pageSetup.lyricsDefaultFontSize}px`,
-      lineHeight: '22px',
-      top: withZoom(this.pageSetup.lyricsVerticalOffset),
+    };
+
+    return style;
+  }
+
+  get textBoxBottomContainerStyle() {
+    const style: any = {
+      top: withZoom(
+        this.pageSetup.lyricsVerticalOffset -
+          (this.heightBottom - this.element.defaultLyricsFontHeight),
+      ),
+      lineHeight: `${this.element.defaultLyricsFontHeight}px`,
     };
 
     return style;
@@ -302,6 +315,10 @@ export default class TextBoxRich extends Vue {
     if (this.focusOnReady) {
       this.editorInstance?.editing.view.focus();
       this.focusOnReady = false;
+    }
+
+    if (this.element.inline) {
+      this.heightBottom = this.getHeightBottom() ?? 0;
     }
   }
 
@@ -360,6 +377,10 @@ export default class TextBoxRich extends Vue {
       updated = true;
     }
 
+    if (this.element.inline) {
+      this.heightBottom = this.getHeightBottom() ?? 0;
+    }
+
     if (updated) {
       this.$emit('update', updates);
     }
@@ -367,6 +388,12 @@ export default class TextBoxRich extends Vue {
 
   getHeight() {
     return (this.$el as HTMLElement).querySelector('.ck-content')?.scrollHeight;
+  }
+
+  getHeightBottom() {
+    return (this.$el as HTMLElement)
+      .querySelector('.ck-content.inline-bottom')
+      ?.getBoundingClientRect().height;
   }
 
   focus() {
@@ -478,6 +505,18 @@ export default class TextBoxRich extends Vue {
   overflow: visible;
 }
 
+.inline-bottom-container {
+  display: inline-block;
+  position: relative;
+  border: none;
+  overflow: visible;
+}
+
+:deep(.ck-editor__editable.ck-focused) {
+  border: none !important;
+  outline: var(--ck-focus-ring) !important;
+}
+
 @media print {
   .rich-text-box-container .handle {
     display: none !important;
@@ -489,6 +528,10 @@ export default class TextBoxRich extends Vue {
   }
 
   :deep(.ck-widget) {
+    outline: none !important;
+  }
+
+  :deep(.ck-editor__editable.ck-focused) {
     outline: none !important;
   }
 

@@ -7667,7 +7667,7 @@ export default class Editor extends Vue {
 }
 
 .page.print :deep(.rich-text-editor) {
-  overflow: hidden !important;
+  overflow: visible !important;
 }
 
 @media print {

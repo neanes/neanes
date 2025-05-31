@@ -361,6 +361,11 @@ export class LayoutService {
           }
 
           if (richTextBoxElement.inline) {
+            richTextBoxElement.defaultLyricsFontHeight =
+              this.getLyricsFontHeightFromCache(
+                fontHeightCache,
+                pageSetup.lyricsFont,
+              );
             if (richTextBoxElement.customWidth != null) {
               elementWidthPx = richTextBoxElement.customWidth;
             } else {
@@ -374,7 +379,7 @@ export class LayoutService {
                 elementWidthPx = pageSetup.innerPageWidth;
               }
             }
-
+            console.log(neumeHeight);
             richTextBoxElement.height = neumeHeight;
           } else {
             elementWidthPx = pageSetup.innerPageWidth;
@@ -430,7 +435,7 @@ export class LayoutService {
 
           noteElement.computedIsonOffsetY = noteElement.isonOffsetY;
 
-          noteElement.lyricsFontHeight = this.getLyricsFontHeightFromCache(
+          noteElement.lyricsFontHeight = this.getNoteLyricsFontHeightFromCache(
             fontHeightCache,
             noteElement,
             pageSetup,
@@ -2908,7 +2913,7 @@ export class LayoutService {
     return descent;
   }
 
-  private static getLyricsFontHeightFromCache(
+  private static getNoteLyricsFontHeightFromCache(
     cache: Map<string, number>,
     element: NoteElement,
     pageSetup: PageSetup,
@@ -2917,6 +2922,13 @@ export class LayoutService {
       ? pageSetup.lyricsFont
       : element.lyricsFont;
 
+    return this.getLyricsFontHeightFromCache(cache, font);
+  }
+
+  private static getLyricsFontHeightFromCache(
+    cache: Map<string, number>,
+    font: string,
+  ) {
     const key = font;
 
     let height = cache.get(key);

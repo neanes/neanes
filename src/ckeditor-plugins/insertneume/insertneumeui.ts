@@ -11,6 +11,10 @@ import {
 } from './insertneumecommand';
 import { NEUME_CUSTOM_PROPERTY } from './insertneumeediting';
 import InsertNeumeFormView from './insertneumeformview';
+import {
+  InsertNeumeAttributeSet,
+  InsertNeumeDefaultAttributesType,
+} from './insertneumeutil';
 import InsertNeumeView from './insertneumeview';
 import { UPDATE_NEUME_ATTRIBUTES_COMMAND } from './updateneumeattributescommand';
 
@@ -41,7 +45,23 @@ export default class InsertNeumeUI extends Plugin {
         const gridView = new InsertNeumeView(
           locale,
           (args: InsertNeumeCommandParams) => {
-            editor.execute(INSERT_NEUME_COMMAND, args);
+            const defaultAttributesConfig = editor.config.get(
+              'insertNeume.defaultAttributes',
+            ) as InsertNeumeDefaultAttributesType;
+
+            const neumeFont = editor.config.get<string>(
+              'insertNeume.neumeDefaultFontFamily',
+            ) as string;
+
+            const defaultAttributeSet = defaultAttributesConfig[
+              neumeFont
+            ] as InsertNeumeAttributeSet[];
+
+            args.defaultAttributes = defaultAttributeSet.find(
+              (x) => x.code === args.code,
+            )?.attributes;
+
+            if (defaultAttributeSet) editor.execute(INSERT_NEUME_COMMAND, args);
             balloon.remove(gridView);
             gridView.destroy();
           },

@@ -150,11 +150,9 @@ export default class TextBoxRich extends Vue {
       },
       licenseKey: 'GPL',
       insertNeume: {
+        neumeDefaultFontFamily: this.pageSetup.neumeDefaultFontFamily,
         lyricsDefaultFontSize: this.pageSetup.lyricsDefaultFontSize,
-        fthoraDefaultStyle: {
-          color: this.pageSetup.fthoraDefaultColor,
-          fontSize: this.pageSetup.neumeDefaultFontSize + 'px',
-        },
+        fthoraDefaultColor: this.pageSetup.fthoraDefaultColor,
       },
     };
   }

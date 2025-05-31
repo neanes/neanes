@@ -5,6 +5,7 @@ import { Plugin } from 'ckeditor5';
 import InsertNeumeCommand, { INSERT_NEUME_COMMAND } from './insertneumecommand';
 import InsertNeumeEditing from './insertneumeediting';
 import InsertNeumeUI from './insertneumeui';
+import { INSERT_NEUME_DEFAULT_ATTRIBUTES } from './insertneumeutil';
 import UpdateNeumeAttributesCommand, {
   UPDATE_NEUME_ATTRIBUTES_COMMAND,
 } from './updateneumeattributescommand';
@@ -23,6 +24,8 @@ export default class InsertNeume extends Plugin {
 
     editor.config.define('insertNeume', {
       lyricsDefaultFontSize: 16,
+      neumeDefaultFontFamily: 'Neanes',
+      defaultAttributes: INSERT_NEUME_DEFAULT_ATTRIBUTES,
     });
 
     editor.commands.add(INSERT_NEUME_COMMAND, new InsertNeumeCommand(editor));

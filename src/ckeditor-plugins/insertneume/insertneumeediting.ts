@@ -58,7 +58,12 @@ export default class InsertNeumeEditing extends Plugin {
         }
 
         if (modelElement.getAttribute('neumeFontSize') != null) {
-          style += `font-size: ${modelElement.getAttribute('neumeFontSize') ?? 1}em;`;
+          const fontSize = modelElement.getAttribute('neumeFontSize') as number;
+          const lyricsDefaultFontSize = this.editor.config.get(
+            'insertNeume.lyricsDefaultFontSize',
+          ) as number;
+
+          style += `font-size: ${fontSize * lyricsDefaultFontSize}px;`;
         }
 
         const element = writer.createContainerElement(
@@ -160,9 +165,13 @@ export default class InsertNeumeEditing extends Plugin {
           const viewElement = conversionApi.mapper.toViewElement(data.item);
 
           if (viewElement) {
+            const lyricsDefaultFontSize = this.editor.config.get(
+              'insertNeume.lyricsDefaultFontSize',
+            ) as number;
+
             viewWriter.setStyle(
               'font-size',
-              data.attributeNewValue + 'em',
+              data.attributeNewValue * lyricsDefaultFontSize + 'px',
               viewElement,
             );
           }

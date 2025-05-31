@@ -21,12 +21,9 @@ export default class InsertNeume extends Plugin {
   init() {
     const editor = this.editor;
 
-    // editor.config.define('insertNeume', {
-    //   fthoraDefaultStyle: {
-    //     color: 'inherit',
-    //     fontSize: 'inherit',
-    //   },
-    // });
+    editor.config.define('insertNeume', {
+      lyricsDefaultFontSize: 16,
+    });
 
     editor.commands.add(INSERT_NEUME_COMMAND, new InsertNeumeCommand(editor));
     editor.commands.add(

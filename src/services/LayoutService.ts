@@ -379,7 +379,6 @@ export class LayoutService {
                 elementWidthPx = pageSetup.innerPageWidth;
               }
             }
-            console.log(neumeHeight);
             richTextBoxElement.height = neumeHeight;
           } else {
             elementWidthPx = pageSetup.innerPageWidth;

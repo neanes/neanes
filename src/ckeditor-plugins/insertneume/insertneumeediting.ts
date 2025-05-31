@@ -108,9 +108,15 @@ export default class InsertNeumeEditing extends Plugin {
 
         const width = widthStyle?.slice(0, -2) ?? '';
 
-        const neumeFontSize = parseFloat(
-          viewElement.getStyle('font-size')?.slice(0, -2) ?? '1',
+        const fontSizePx = parseFloat(
+          viewElement.getStyle('font-size')?.slice(0, -2) ?? '16',
         );
+
+        const lyricsDefaultFontSize = this.editor.config.get(
+          'insertNeume.lyricsDefaultFontSize',
+        ) as number;
+
+        const neumeFontSize = fontSizePx / lyricsDefaultFontSize;
 
         return writer.createElement(NEUME_ELEMENT, {
           char,

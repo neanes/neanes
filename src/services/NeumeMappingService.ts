@@ -21,7 +21,8 @@ import {
 
 export type SbmuflGlyphName =
   | keyof typeof glyphnames
-  | keyof typeof metadata.optionalGlyphs;
+  | keyof typeof metadata.optionalGlyphs
+  | keyof typeof metadata.glyphAdvanceWidths;
 
 export interface NeumeMapping {
   glyphName: SbmuflGlyphName;

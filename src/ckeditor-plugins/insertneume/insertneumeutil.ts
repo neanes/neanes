@@ -1,3 +1,5 @@
+import { fontService } from '@/services/FontService';
+
 export interface InsertNeumeAttributes {
   top: number;
   left: number;
@@ -47,6 +49,7 @@ export const INSERT_NEUME_CHARACTER_BLOCKS = [
       { start: 0xe004, end: 0xe005 }, // oligonKentimaAbove, oligonYpsiliRight
       { start: 0xe024, end: 0xe025 }, // elafron, runningElafron
       { start: 0xe120, end: 0xe127 }, // chronos
+      { start: 0xe280, end: 0xe281 }, // n and double n
     ],
   },
   //   {
@@ -183,9 +186,121 @@ export const INSERT_NEUME_DEFAULT_ATTRIBUTES: InsertNeumeDefaultAttributesType =
           kerningLeft: -0.324,
         },
       },
+      {
+        code: 0x1d0b6,
+        attributes: {
+          neumeFontSize: defaultFontSizeAdjustment,
+          kerningRight: -fontService.getAdvanceWidth('Neanes', `U+1D0B6`),
+        },
+      },
+      {
+        code: 0x1d0ba,
+        attributes: {
+          neumeFontSize: defaultFontSizeAdjustment,
+          kerningRight: -fontService.getAdvanceWidth('Neanes', `U+1D0BA`),
+        },
+      },
+      {
+        code: 0x1d0bb,
+        attributes: {
+          neumeFontSize: defaultFontSizeAdjustment,
+          kerningRight: -fontService.getAdvanceWidth('Neanes', `U+1D0BB`),
+        },
+      },
+      {
+        code: 0x1d0bd,
+        attributes: {
+          neumeFontSize: defaultFontSizeAdjustment,
+          kerningRight: -fontService.getAdvanceWidth('Neanes', `U+1D0BD`),
+        },
+      },
+      {
+        code: 0x1d0bf,
+        attributes: {
+          neumeFontSize: defaultFontSizeAdjustment,
+          kerningRight: -fontService.getAdvanceWidth('Neanes', `U+1D0BF`),
+        },
+      },
+      {
+        code: 0x1d0c0,
+        attributes: {
+          neumeFontSize: defaultFontSizeAdjustment,
+          kerningRight: -fontService.getAdvanceWidth('Neanes', `U+1D0C0`),
+        },
+      },
+      {
+        code: 0x1d0c1,
+        attributes: {
+          neumeFontSize: defaultFontSizeAdjustment,
+          kerningRight: -fontService.getAdvanceWidth('Neanes', `U+1D0C1`),
+        },
+      },
+      {
+        code: 0x1d0c2,
+        attributes: {
+          neumeFontSize: defaultFontSizeAdjustment,
+          kerningRight: -fontService.getAdvanceWidth('Neanes', `U+1D0C2`),
+        },
+      },
+      {
+        code: 0x1d0c3,
+        attributes: {
+          neumeFontSize: defaultFontSizeAdjustment,
+          kerningRight: -fontService.getAdvanceWidth('Neanes', `U+1D0C3`),
+        },
+      },
+      {
+        code: 0x1d0c4,
+        attributes: {
+          neumeFontSize: defaultFontSizeAdjustment,
+          kerningRight: -fontService.getAdvanceWidth('Neanes', `U+1D0C4`),
+        },
+      },
+      {
+        code: 0x1d0c5,
+        attributes: {
+          neumeFontSize: defaultFontSizeAdjustment,
+          kerningRight: -fontService.getAdvanceWidth('Neanes', `U+1D0C5`),
+        },
+      },
+      {
+        code: 0x1d0c7,
+        attributes: {
+          neumeFontSize: defaultFontSizeAdjustment,
+          kerningRight: -fontService.getAdvanceWidth('Neanes', `U+1D0C7`),
+        },
+      },
+      {
+        code: 0x1d0c8,
+        attributes: {
+          neumeFontSize: defaultFontSizeAdjustment,
+          kerningRight: -fontService.getAdvanceWidth('Neanes', `U+1D0C8`),
+        },
+      },
+      {
+        code: 0x1d0c9,
+        attributes: {
+          neumeFontSize: defaultFontSizeAdjustment,
+          kerningRight: -fontService.getAdvanceWidth('Neanes', `U+1D0C9`),
+        },
+      },
+      {
+        code: 0x1d0ca,
+        attributes: {
+          neumeFontSize: defaultFontSizeAdjustment,
+          kerningRight: -fontService.getAdvanceWidth('Neanes', `U+1D0CA`),
+        },
+      },
+      {
+        code: 0x1d0cb,
+        attributes: {
+          neumeFontSize: defaultFontSizeAdjustment,
+          kerningRight: -fontService.getAdvanceWidth('Neanes', `U+1D0CB`),
+        },
+      },
     ],
   };
 
-// (Temporary?) Shortcut
+// Temporary Shortcut
 INSERT_NEUME_DEFAULT_ATTRIBUTES['NeanesStathisSeries'] =
   INSERT_NEUME_DEFAULT_ATTRIBUTES['Neanes'];

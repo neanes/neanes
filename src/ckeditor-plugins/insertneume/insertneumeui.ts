@@ -118,6 +118,12 @@ export default class InsertNeumeUI extends Plugin {
 
     view.topInput.fieldView.bind('value').to(command as any, 'top');
     view.leftInput.fieldView.bind('value').to(command as any, 'left');
+    view.kerningLeftInput.fieldView
+      .bind('value')
+      .to(command as any, 'kerningLeft');
+    view.kerningRightInput.fieldView
+      .bind('value')
+      .to(command as any, 'kerningRight');
     view.widthInput.fieldView.bind('value').to(command as any, 'width');
     view.fontSizeInput.fieldView
       .bind('value')

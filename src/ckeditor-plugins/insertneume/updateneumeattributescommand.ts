@@ -7,6 +7,8 @@ export const UPDATE_NEUME_ATTRIBUTES_COMMAND = 'updateNeumeAttributes';
 export default class UpdateNeumeAttributesCommand extends Command {
   top: number = 0;
   left: number = 0;
+  kerningLeft: number = 0;
+  kerningRight: number = 0;
   neumeFontSize: number = 1;
   width: number | null = null;
   color: string | null = null;
@@ -41,12 +43,16 @@ export default class UpdateNeumeAttributesCommand extends Command {
     if (neume) {
       this.top = (neume.getAttribute('top') as number) ?? 0;
       this.left = (neume.getAttribute('left') as number) ?? 0;
+      this.kerningLeft = (neume.getAttribute('kerningLeft') as number) ?? 0;
+      this.kerningRight = (neume.getAttribute('kerningRight') as number) ?? 0;
       this.neumeFontSize = (neume.getAttribute('neumeFontSize') as number) ?? 1;
       this.width = (neume.getAttribute('width') as number) ?? null;
       this.color = (neume.getAttribute('color') as string) ?? null;
     } else {
       this.top = 0;
       this.left = 0;
+      this.kerningLeft = 0;
+      this.kerningRight = 0;
       this.neumeFontSize = 1;
       this.width = null;
       this.color = null;

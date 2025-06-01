@@ -1,6 +1,8 @@
 export interface InsertNeumeAttributes {
   top: number;
   left: number;
+  kerningLeft: number;
+  kerningRight: number;
   neumeFontSize: number;
   width: number | null;
   color: string | null;
@@ -35,13 +37,13 @@ export const INSERT_NEUME_CHARACTER_BLOCKS = [
       { start: 0xe2d0, end: 0xe2d1 }, // mode 7
       { start: 0xe2d8, end: 0xe2d8 }, // mode 8
       { start: 0xe2f0, end: 0xe2f0 }, // plagal
-      { start: 0xe190, end: 0xe19f, attributes: ['fthora'] }, // Fthores
+      //{ start: 0xe190, end: 0xe19f, attributes: ['fthora'] }, // Fthores
 
-      // { start: 0x1d0b6, end: 0x1d0b6, attributes: ['fthora'] }, // Fthores
-      // { start: 0x1d0ba, end: 0x1d0bb, attributes: ['fthora'] }, // Fthores
-      // { start: 0x1d0bd, end: 0x1d0bd, attributes: ['fthora'] }, // Fthores
-      // { start: 0x1d0bf, end: 0x1d0c5, attributes: ['fthora'] }, // Fthores
-      // { start: 0x1d0c7, end: 0x1d0cb, attributes: ['fthora'] }, // Fthores
+      { start: 0x1d0b6, end: 0x1d0b6, attributes: ['fthora'] }, // Fthores
+      { start: 0x1d0ba, end: 0x1d0bb, attributes: ['fthora'] }, // Fthores
+      { start: 0x1d0bd, end: 0x1d0bd, attributes: ['fthora'] }, // Fthores
+      { start: 0x1d0bf, end: 0x1d0c5, attributes: ['fthora'] }, // Fthores
+      { start: 0x1d0c7, end: 0x1d0cb, attributes: ['fthora'] }, // Fthores
       { start: 0xe004, end: 0xe005 }, // oligonKentimaAbove, oligonYpsiliRight
       { start: 0xe024, end: 0xe025 }, // elafron, runningElafron
       { start: 0xe120, end: 0xe127 }, // chronos
@@ -69,24 +71,121 @@ export const INSERT_NEUME_CHARACTER_BLOCKS = [
 ];
 
 const defaultBaselineAdjustment = 0.366;
-const defaultFontSizeAdjustment = 1.2;
+const defaultFontSizeAdjustment = 1.3;
 
 export const INSERT_NEUME_DEFAULT_ATTRIBUTES: InsertNeumeDefaultAttributesType =
   {
     Neanes: [
       {
-        code: 0xe2a0,
+        code: 0xe2a0, // modeFirst
         attributes: {
-          top: defaultBaselineAdjustment,
           neumeFontSize: defaultFontSizeAdjustment,
+          top: 0.072,
+          kerningLeft: -0.266,
         },
       },
       {
-        code: 0xe2a1,
+        code: 0xe2a1, // modeFirstShort
         attributes: {
-          top: defaultBaselineAdjustment,
           neumeFontSize: defaultFontSizeAdjustment,
+          top: defaultBaselineAdjustment,
+          kerningLeft: -0.338,
+        },
+      },
+      {
+        code: 0xe2a8, // modeSecond
+        attributes: {
+          neumeFontSize: defaultFontSizeAdjustment,
+          top: defaultBaselineAdjustment,
+          kerningLeft: -0.249,
+        },
+      },
+      {
+        code: 0xe2b0, // modeThird
+        attributes: {
+          neumeFontSize: defaultFontSizeAdjustment,
+          kerningLeft: -0.3,
+          kerningRight: -0.3,
+        },
+      },
+      {
+        code: 0xe2b1, // modeThirdNana
+        attributes: {
+          neumeFontSize: defaultFontSizeAdjustment,
+          top: 0.095,
+          kerningLeft: -0.32,
+        },
+      },
+      {
+        code: 0xe2b8, // modeFourth
+        attributes: {
+          neumeFontSize: defaultFontSizeAdjustment,
+          top: 0.108,
+          kerningLeft: -0.202,
+        },
+      },
+      {
+        code: 0xe2b9, // modeFourthShort
+        attributes: {
+          neumeFontSize: defaultFontSizeAdjustment,
+          top: defaultBaselineAdjustment,
+          kerningLeft: -0.235,
+        },
+      },
+      {
+        code: 0xe2ba, // modeLegetos
+        attributes: {
+          neumeFontSize: defaultFontSizeAdjustment,
+          top: 0.036,
+          kerningLeft: -0.134,
+        },
+      },
+      {
+        code: 0xe2c0, // modePlagalFirst
+        attributes: {
+          neumeFontSize: defaultFontSizeAdjustment,
+          top: defaultBaselineAdjustment,
+          kerningLeft: -0.338,
+        },
+      },
+      {
+        code: 0xe2c8, // modePlagalSecond
+        attributes: {
+          neumeFontSize: defaultFontSizeAdjustment,
+          top: defaultBaselineAdjustment,
+          kerningLeft: -0.3,
+        },
+      },
+      {
+        code: 0xe2d0, // modeVarys
+        attributes: {
+          neumeFontSize: defaultFontSizeAdjustment,
+          kerningLeft: -0.241,
+        },
+      },
+      {
+        code: 0xe2d1, // modeVarys2
+        attributes: { neumeFontSize: defaultFontSizeAdjustment, top: -0.33 },
+      },
+      {
+        code: 0xe2d8, // modePlagalFourth
+        attributes: {
+          neumeFontSize: defaultFontSizeAdjustment,
+          top: defaultBaselineAdjustment,
+          kerningLeft: -0.25,
+        },
+      },
+      {
+        code: 0xe2f0, // modePlagal
+        attributes: {
+          neumeFontSize: defaultFontSizeAdjustment,
+          top: defaultBaselineAdjustment,
+          kerningLeft: -0.324,
         },
       },
     ],
   };
+
+// (Temporary?) Shortcut
+INSERT_NEUME_DEFAULT_ATTRIBUTES['NeanesStathisSeries'] =
+  INSERT_NEUME_DEFAULT_ATTRIBUTES['Neanes'];

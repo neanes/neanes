@@ -24,6 +24,8 @@ export default class InsertNeumeEditing extends Plugin {
         'char',
         'top',
         'left',
+        'kerningLeft',
+        'kerningRight',
         'width',
         'color',
         'neumeFontSize',
@@ -43,6 +45,14 @@ export default class InsertNeumeEditing extends Plugin {
 
         if (modelElement.getAttribute('left') != null) {
           style += `left: ${modelElement.getAttribute('left') ?? 0}em;`;
+        }
+
+        if (modelElement.getAttribute('kerningLeft') != null) {
+          style += `margin-left: ${modelElement.getAttribute('kerningLeft') ?? 0}em;`;
+        }
+
+        if (modelElement.getAttribute('kerningRight') != null) {
+          style += `margin-right: ${modelElement.getAttribute('kerningRight') ?? 0}em;`;
         }
 
         const width = modelElement.getAttribute('width');
@@ -100,6 +110,14 @@ export default class InsertNeumeEditing extends Plugin {
           viewElement.getStyle('left')?.slice(0, -2) ?? '0',
         );
 
+        const kerningLeft = parseFloat(
+          viewElement.getStyle('margin-left')?.slice(0, -2) ?? '0',
+        );
+
+        const kerningRight = parseFloat(
+          viewElement.getStyle('margin-right')?.slice(0, -2) ?? '0',
+        );
+
         const top = parseFloat(
           viewElement.getStyle('top')?.slice(0, -2) ?? '0',
         );
@@ -122,6 +140,8 @@ export default class InsertNeumeEditing extends Plugin {
           char,
           left,
           top,
+          kerningLeft: kerningLeft,
+          kerningRight: kerningRight,
           width,
           color,
           neumeFontSize,
@@ -163,6 +183,38 @@ export default class InsertNeumeEditing extends Plugin {
           );
         }
       });
+
+      dispatcher.on(
+        'attribute:kerningLeft:neume',
+        (evt, data, conversionApi) => {
+          const viewWriter = conversionApi.writer;
+          const viewElement = conversionApi.mapper.toViewElement(data.item);
+
+          if (viewElement) {
+            viewWriter.setStyle(
+              'margin-left',
+              data.attributeNewValue + 'em',
+              viewElement,
+            );
+          }
+        },
+      );
+
+      dispatcher.on(
+        'attribute:kerningRight:neume',
+        (evt, data, conversionApi) => {
+          const viewWriter = conversionApi.writer;
+          const viewElement = conversionApi.mapper.toViewElement(data.item);
+
+          if (viewElement) {
+            viewWriter.setStyle(
+              'margin-right',
+              data.attributeNewValue + 'em',
+              viewElement,
+            );
+          }
+        },
+      );
 
       dispatcher.on(
         'attribute:neumeFontSize:neume',

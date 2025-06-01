@@ -13,6 +13,8 @@ import {
 export default class InsertNeumeFormView extends View {
   public topInput: LabeledFieldView<InputNumberView>;
   public leftInput: LabeledFieldView<InputNumberView>;
+  public kerningLeftInput: LabeledFieldView<InputNumberView>;
+  public kerningRightInput: LabeledFieldView<InputNumberView>;
   public widthInput: LabeledFieldView<InputNumberView>;
   public fontSizeInput: LabeledFieldView<InputNumberView>;
   public colorInput: ColorSelectorView;
@@ -31,6 +33,24 @@ export default class InsertNeumeFormView extends View {
         left: !isNaN(left) ? left : 0,
       });
     });
+
+    const kerningLeftInput = this._createNumberInput(
+      'Left Kerning (em)',
+      (value) => {
+        this.fire('change:values', {
+          kerningLeft: !isNaN(value) ? value : 0,
+        });
+      },
+    );
+
+    const kerningRightInput = this._createNumberInput(
+      'Right Kerning (em)',
+      (value) => {
+        this.fire('change:values', {
+          kerningRight: !isNaN(value) ? value : 0,
+        });
+      },
+    );
 
     const widthInput = this._createNumberInput('Width (em)', (width) => {
       this.fire('change:values', {
@@ -59,12 +79,14 @@ export default class InsertNeumeFormView extends View {
     fontSizeInput.fieldView.min = 0;
     fontSizeInput.fieldView.placeholder = '1';
 
-    const unshiftBUtton = this._createButton('Unshift', () => {
+    const unshiftButton = this._createButton('Unshift', () => {
       this._emitUnshift();
     });
 
     this.topInput = topInput;
     this.leftInput = leftInput;
+    this.kerningLeftInput = kerningLeftInput;
+    this.kerningRightInput = kerningRightInput;
     this.widthInput = widthInput;
     this.colorInput = colorInput;
     this.fontSizeInput = fontSizeInput;
@@ -78,10 +100,11 @@ export default class InsertNeumeFormView extends View {
       children: [
         topInput,
         leftInput,
-        widthInput,
+        kerningLeftInput,
+        kerningRightInput,
         fontSizeInput,
         colorInput,
-        unshiftBUtton,
+        unshiftButton,
       ],
     });
   }

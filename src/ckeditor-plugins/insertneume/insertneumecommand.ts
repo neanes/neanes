@@ -1,15 +1,15 @@
 import { Command } from 'ckeditor5';
 
-import { NEUME_ELEMENT } from './insertneumeediting';
+import { InsertNeumeType, NEUME_ELEMENT } from './insertneumeediting';
 import { InsertNeumeAttributes } from './insertneumeutil';
 
 export const INSERT_NEUME_COMMAND = 'insertNeume';
 
 export interface InsertNeumeCommandParams {
-  char: string;
-  code: number;
-  useDefaultStyle: boolean;
-  attributes?: string[];
+  neumeType: InsertNeumeType;
+  neume?: number;
+  martyriaNote?: number;
+  martyriaRootSign?: number;
   defaultAttributes?: Partial<InsertNeumeAttributes>;
 }
 
@@ -18,7 +18,10 @@ export default class InsertNeumeCommand extends Command {
     const editor = this.editor;
     editor.model.change((writer) => {
       const element = writer.createElement(NEUME_ELEMENT, {
-        char: attributes.char,
+        neume: attributes.neume,
+        neumeType: attributes.neumeType,
+        martyriaNote: attributes.martyriaNote,
+        martyriaRootSign: attributes.martyriaRootSign,
         ...attributes.defaultAttributes,
       } as any);
       const insertPosition = editor.model.document.selection.getFirstPosition();

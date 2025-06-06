@@ -4,6 +4,8 @@ export const NEUME_ELEMENT = 'neume';
 export const NEUME_CLASS = 'neanes-ck-neume';
 export const NEUME_CUSTOM_PROPERTY = 'neume';
 
+export type InsertNeumeType = 'single' | 'martyria';
+
 export default class InsertNeumeEditing extends Plugin {
   static get pluginName() {
     return 'InsertNeumeEditing';
@@ -21,7 +23,7 @@ export default class InsertNeumeEditing extends Plugin {
       isObject: true,
       allowWhere: '$text',
       allowAttributes: [
-        'char',
+        'neume',
         'top',
         'left',
         'kerningLeft',
@@ -29,14 +31,28 @@ export default class InsertNeumeEditing extends Plugin {
         'width',
         'color',
         'neumeFontSize',
+        'neumeType',
+        'martyriaNote',
+        'martyriaRootSign',
       ],
     });
 
     editor.conversion.for('downcast').elementToElement({
       model: NEUME_ELEMENT,
       view: (modelElement, { writer }) => {
-        const char = modelElement.getAttribute('char') as string;
+        const neumeType = modelElement.getAttribute(
+          'neumeType',
+        ) as InsertNeumeType;
 
+        const neume = modelElement.getAttribute('neume') as number;
+        const martyriaNote = modelElement.getAttribute(
+          'martyriaNote',
+        ) as number;
+        const martyriaRootSign = modelElement.getAttribute(
+          'martyriaRootSign',
+        ) as number;
+
+        let text = '';
         let style = '';
 
         if (modelElement.getAttribute('top') != null) {
@@ -76,14 +92,31 @@ export default class InsertNeumeEditing extends Plugin {
           style += `font-size: ${fontSize * lyricsDefaultFontSize}px;`;
         }
 
-        const element = writer.createContainerElement(
-          'span',
-          {
-            class: NEUME_CLASS,
-            style,
-          },
-          [writer.createText(char)],
-        );
+        const attributes: Record<string, unknown> = {
+          class: NEUME_CLASS,
+          style,
+          neumeType,
+        };
+
+        switch (neumeType) {
+          case 'single':
+            text = String.fromCodePoint(neume);
+            attributes['neume'] = neume;
+            break;
+          case 'martyria':
+            text =
+              String.fromCodePoint(martyriaNote) +
+              String.fromCodePoint(martyriaRootSign);
+            attributes['martyriaNote'] = martyriaNote;
+            attributes['martyriaRootSign'] = martyriaRootSign;
+            break;
+          default:
+            break;
+        }
+
+        const element = writer.createContainerElement('span', attributes, [
+          writer.createText(text),
+        ]);
 
         writer.setCustomProperty(NEUME_CUSTOM_PROPERTY, true, element);
 
@@ -97,12 +130,9 @@ export default class InsertNeumeEditing extends Plugin {
         classes: NEUME_CLASS,
       },
       model: (viewElement, { writer }) => {
-        let char = '';
-        for (const child of viewElement.getChildren()) {
-          if (child.is('$text')) {
-            char += child.data;
-          }
-        }
+        const neume = viewElement.getAttribute('neume');
+        const martyriaNote = viewElement.getAttribute('martyrianote');
+        const martyriaRootSign = viewElement.getAttribute('martyriarootsign');
 
         const color = viewElement.getStyle('color') ?? '';
 
@@ -136,15 +166,20 @@ export default class InsertNeumeEditing extends Plugin {
 
         const neumeFontSize = fontSizePx / lyricsDefaultFontSize;
 
+        const neumeType = viewElement.getAttribute('neumetype');
+
         return writer.createElement(NEUME_ELEMENT, {
-          char,
+          neume,
           left,
           top,
-          kerningLeft: kerningLeft,
-          kerningRight: kerningRight,
+          kerningLeft,
+          kerningRight,
           width,
           color,
           neumeFontSize,
+          neumeType,
+          martyriaNote,
+          martyriaRootSign,
         });
       },
     });

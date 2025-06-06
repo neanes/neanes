@@ -126,7 +126,7 @@ InlineEditor.defaultConfig = {
       'removeFormat',
       '|',
       'insertNeume',
-      'shiftText',
+      'insertMartyria',
     ],
     shouldNotGroupWhenFull: true,
   },

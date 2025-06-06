@@ -25,6 +25,11 @@ export type InsertNeumeDefaultAttributesType = Record<
   InsertNeumeAttributeSet[]
 >;
 
+export type InsertNeumeDefaultAttributesMartyriaType = Record<
+  string,
+  Partial<InsertNeumeAttributes>
+>;
+
 export const INSERT_NEUME_CHARACTER_BLOCKS = [
   {
     name: 'Mode Keys - Common',
@@ -301,6 +306,18 @@ export const INSERT_NEUME_DEFAULT_ATTRIBUTES: InsertNeumeDefaultAttributesType =
     ],
   };
 
+export const INSERT_NEUME_DEFAULT_ATTRIBUTES_MARTYRIA: InsertNeumeDefaultAttributesMartyriaType =
+  {
+    Neanes: {
+      neumeFontSize: 1.5,
+      top: -0.29,
+      kerningLeft: -0.3,
+    },
+  };
+
 // Temporary Shortcut
 INSERT_NEUME_DEFAULT_ATTRIBUTES['NeanesStathisSeries'] =
   INSERT_NEUME_DEFAULT_ATTRIBUTES['Neanes'];
+
+INSERT_NEUME_DEFAULT_ATTRIBUTES_MARTYRIA['NeanesStathisSeries'] =
+  INSERT_NEUME_DEFAULT_ATTRIBUTES_MARTYRIA['Neanes'];

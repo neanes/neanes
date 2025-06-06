@@ -79,10 +79,6 @@ export default class InsertNeumeFormView extends View {
     fontSizeInput.fieldView.min = 0;
     fontSizeInput.fieldView.placeholder = '1';
 
-    const unshiftButton = this._createButton('Unshift', () => {
-      this._emitUnshift();
-    });
-
     this.topInput = topInput;
     this.leftInput = leftInput;
     this.kerningLeftInput = kerningLeftInput;
@@ -104,13 +100,8 @@ export default class InsertNeumeFormView extends View {
         kerningRightInput,
         fontSizeInput,
         colorInput,
-        unshiftButton,
       ],
     });
-  }
-
-  _emitUnshift() {
-    this.fire('unshift');
   }
 
   _createNumberInput(labelText: string, onChange: (value: number) => void) {

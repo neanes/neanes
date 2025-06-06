@@ -58,10 +58,10 @@ export default class InsertNeumeUI extends Plugin {
             ] as InsertNeumeAttributeSet[];
 
             args.defaultAttributes = defaultAttributeSet.find(
-              (x) => x.code === args.code,
+              (x) => x.code === args.neume,
             )?.attributes;
 
-            if (defaultAttributeSet) editor.execute(INSERT_NEUME_COMMAND, args);
+            editor.execute(INSERT_NEUME_COMMAND, args);
             balloon.remove(gridView);
             gridView.destroy();
           },
@@ -73,6 +73,39 @@ export default class InsertNeumeUI extends Plugin {
             target: view.element!,
           },
         });
+      });
+
+      return view;
+    });
+
+    editor.ui.componentFactory.add('insertMartyria', (locale) => {
+      const view = new ButtonView(locale);
+      view.set({
+        label: '\ue139\ue152',
+        withText: true,
+        tooltip: 'Insert Martyria',
+        class: 'ck-button__insert-neume',
+      });
+
+      view.on('execute', () => {
+        const defaultAttributesConfig = editor.config.get(
+          'insertNeume.defaultAttributesMartyria',
+        ) as InsertNeumeDefaultAttributesType;
+
+        const neumeFont = editor.config.get<string>(
+          'insertNeume.neumeDefaultFontFamily',
+        ) as string;
+
+        const defaultAttributes = defaultAttributesConfig[
+          neumeFont
+        ] as InsertNeumeAttributeSet[];
+
+        editor.execute(INSERT_NEUME_COMMAND, {
+          neumeType: 'martyria',
+          martyriaNote: 0xe139,
+          martyriaRootSign: 0xe152,
+          defaultAttributes,
+        } as InsertNeumeCommandParams);
       });
 
       return view;
@@ -99,21 +132,8 @@ export default class InsertNeumeUI extends Plugin {
     const view = new InsertNeumeFormView(editor.locale);
     const command = editor.commands.get(UPDATE_NEUME_ATTRIBUTES_COMMAND);
 
-    view.on(
-      'change:values',
-      (evt, { top, left, width, color, neumeFontSize }) => {
-        editor.execute(UPDATE_NEUME_ATTRIBUTES_COMMAND, {
-          top,
-          left,
-          width,
-          color,
-          neumeFontSize,
-        });
-      },
-    );
-
-    view.on('unshift', () => {
-      editor.execute('unshift');
+    view.on('change:values', (evt, args) => {
+      editor.execute(UPDATE_NEUME_ATTRIBUTES_COMMAND, args);
     });
 
     view.topInput.fieldView.bind('value').to(command as any, 'top');

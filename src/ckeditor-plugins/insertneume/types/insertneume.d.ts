@@ -9,6 +9,7 @@ declare module 'ckeditor5' {
       lyricsDefaultFontSize?: number;
       fthoraDefaultColor?: string;
       defaultAttributes?: InsertNeumeDefaultAttributesType;
+      defaultAttributesMartyria?: Partial<InsertNeumeAttributes>;
     };
   }
 }

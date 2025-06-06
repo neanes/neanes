@@ -88,14 +88,17 @@ export default class InsertNeumeView extends View {
   _renderGrid(characters: GridButtonParams[]) {
     this.grid.clear();
 
-    characters.forEach(({ char, code, attributes }) => {
+    characters.forEach(({ char, code }) => {
       const button = new ButtonView(this.locale);
       button.set({
         label: char,
         withText: true,
       });
       button.on('execute', () => {
-        this.onCharSelect({ char, code, useDefaultStyle: true, attributes });
+        this.onCharSelect({
+          neumeType: 'single',
+          neume: code,
+        });
       });
       this.grid.add(button);
     });

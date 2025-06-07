@@ -258,13 +258,9 @@ export default class TextBoxRich extends Vue {
 
   get textBoxStyleTop() {
     const style: any = {
-      width: !this.element.multipanel
-        ? withZoom(this.element.width)
-        : undefined,
-      height:
-        this.element.multipanel || this.element.inline
-          ? withZoom(this.element.height)
-          : undefined,
+      width: withZoom(this.element.width),
+      height: withZoom(this.element.height),
+      lineHeight: `${this.element.defaultLyricsFontHeight}px`,
     };
 
     return style;

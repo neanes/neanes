@@ -1,6 +1,6 @@
 import { Plugin, toWidget, ViewNode } from 'ckeditor5';
 
-import { Note, RootSign } from '@/models/Neumes';
+import { Neume, Note, RootSign } from '@/models/Neumes';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { normalizeRootSign } from '@/utils/NeumeUtils';
 
@@ -48,7 +48,7 @@ export default class InsertNeumeEditing extends Plugin {
           'neumeType',
         ) as InsertNeumeType;
 
-        const neume = modelElement.getAttribute('neume') as number;
+        const neume = modelElement.getAttribute('neume') as Neume;
         const martyriaNote = modelElement.getAttribute('martyriaNote') as Note;
         const martyriaRootSign = modelElement.getAttribute(
           'martyriaRootSign',
@@ -102,7 +102,7 @@ export default class InsertNeumeEditing extends Plugin {
 
         switch (neumeType) {
           case 'single':
-            text = String.fromCodePoint(neume);
+            text = NeumeMappingService.getMapping(neume)?.text ?? '';
             attributes['neume'] = neume;
             break;
           case 'martyria':
@@ -362,8 +362,8 @@ export default class InsertNeumeEditing extends Plugin {
     martyriaRootSign = normalizeRootSign(martyriaNote, martyriaRootSign);
 
     return (
-      NeumeMappingService.getMapping(martyriaNote).text +
-      NeumeMappingService.getMapping(martyriaRootSign).text
+      (NeumeMappingService.getMapping(martyriaNote)?.text ?? '') +
+      (NeumeMappingService.getMapping(martyriaRootSign)?.text ?? '')
     );
   }
 }

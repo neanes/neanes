@@ -7,6 +7,9 @@ import {
   ViewCollection,
 } from 'ckeditor5';
 
+import { Neume } from '@/models/Neumes';
+import { NeumeMappingService } from '@/services/NeumeMappingService';
+
 import { InsertNeumeCommandParams } from './insertneumecommand';
 import {
   CharacterBlock,
@@ -17,7 +20,7 @@ export default class InsertNeumeView extends View {
   gridView: View;
   locale: Locale;
   grid: ViewCollection;
-  onCharSelect: (char: InsertNeumeCommandParams) => void;
+  onCharSelect: (args: InsertNeumeCommandParams) => void;
 
   constructor(
     locale: Locale,
@@ -72,14 +75,11 @@ export default class InsertNeumeView extends View {
 
   _loadCharactersForBlock(block: CharacterBlock) {
     const characters: GridButtonParams[] = [];
-    for (const range of block.ranges) {
-      for (let code = range.start; code <= range.end; code++) {
-        characters.push({
-          char: String.fromCodePoint(code),
-          code,
-          attributes: range.attributes,
-        });
-      }
+    for (const neume of block.neumes) {
+      characters.push({
+        label: NeumeMappingService.getMapping(neume)?.text ?? '',
+        neume: neume,
+      });
     }
 
     this._renderGrid(characters);
@@ -88,7 +88,7 @@ export default class InsertNeumeView extends View {
   _renderGrid(characters: GridButtonParams[]) {
     this.grid.clear();
 
-    characters.forEach(({ char, code }) => {
+    characters.forEach(({ label: char, neume }) => {
       const button = new ButtonView(this.locale);
       button.set({
         label: char,
@@ -97,7 +97,7 @@ export default class InsertNeumeView extends View {
       button.on('execute', () => {
         this.onCharSelect({
           neumeType: 'single',
-          neume: code,
+          neume,
         });
       });
       this.grid.add(button);
@@ -106,7 +106,6 @@ export default class InsertNeumeView extends View {
 }
 
 export interface GridButtonParams {
-  char: string;
-  code: number;
-  attributes?: string[];
+  label: string;
+  neume: Neume;
 }

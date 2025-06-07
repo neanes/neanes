@@ -16,6 +16,7 @@ import {
   TempoSign,
   Tie,
   TimeNeume,
+  UnicodeNeume,
   VocalExpressionNeume,
 } from '@/models/Neumes';
 
@@ -558,14 +559,14 @@ mapNeumeToSbmufl(ModeSign.ThirdCapital, 'modeGammaCapital');
 mapNeumeToSbmufl(ModeSign.FourthCapital, 'modeDeltaCapital');
 mapNeumeToSbmufl(ModeSign.Varys, 'modeWordVarys');
 mapNeumeToSbmufl(ModeSign.Alpha, 'modePlagalFirst');
-mapNeumeToSbmufl(ModeSign.AlphaWithDeltaHat, 'modeFirst', 1);
+mapNeumeToSbmufl(ModeSign.AlphaWithDeltaHat, 'modeFirstShort');
 mapNeumeToSbmufl(ModeSign.AlphaWithHypsili, 'modeFirst');
 mapNeumeToSbmufl(ModeSign.SoftChromatic6, 'modePlagalSecond');
 mapNeumeToSbmufl(ModeSign.SoftChromatic2, 'modeSecond');
 mapNeumeToSbmufl(ModeSign.Nana, 'modeThirdNana');
 mapNeumeToSbmufl(ModeSign.VarysZo, 'modeVarys');
 mapNeumeToSbmufl(ModeSign.Delta, 'modePlagalFourth');
-mapNeumeToSbmufl(ModeSign.DeltaWithDeltaHat, 'modeFourth', 1);
+mapNeumeToSbmufl(ModeSign.DeltaWithDeltaHat, 'modeFourthShort');
 mapNeumeToSbmufl(ModeSign.DeltaWithHypsili, 'modeFourth');
 mapNeumeToSbmufl(ModeSign.NanaOld, 'modeThird');
 mapNeumeToSbmufl(ModeSign.Legetos, 'modeLegetos');
@@ -626,6 +627,15 @@ mapNeumeToSbmufl(Ison.ZoHigh, 'isonIndicatorZoHigh');
 
 mapNeumeToSbmufl(Tie.YfenAbove, 'yfenAbove');
 mapNeumeToSbmufl(Tie.YfenBelow, 'yfenBelow');
+
+// Add the unicode 1d000-1d00ff block
+for (const neume of Object.values(UnicodeNeume)) {
+  const codepoint = Number('0x' + neume.substring(3));
+  neumeToSbmuflGlyphMap.set(neume, {
+    glyphName: ('U' + neume.substring(3)) as SbmuflGlyphName,
+    text: String.fromCodePoint(codepoint),
+  });
+}
 
 export class NeumeMappingService {
   public static getMapping(neume: Neume): NeumeMapping {

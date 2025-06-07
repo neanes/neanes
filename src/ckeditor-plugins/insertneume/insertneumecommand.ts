@@ -1,6 +1,6 @@
 import { Command } from 'ckeditor5';
 
-import { Note, RootSign } from '@/models/Neumes';
+import { Neume, Note, RootSign } from '@/models/Neumes';
 
 import { InsertNeumeType, NEUME_ELEMENT } from './insertneumeediting';
 import { InsertNeumeAttributes } from './insertneumeutil';
@@ -9,7 +9,7 @@ export const INSERT_NEUME_COMMAND = 'insertNeume';
 
 export interface InsertNeumeCommandParams {
   neumeType: InsertNeumeType;
-  neume?: number;
+  neume?: Neume;
   martyriaNote?: Note;
   martyriaRootSign?: RootSign;
   defaultAttributes?: Partial<InsertNeumeAttributes>;

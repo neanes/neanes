@@ -60,7 +60,7 @@ export default class InsertNeumeUI extends Plugin {
             ] as InsertNeumeAttributeSet[];
 
             args.defaultAttributes = defaultAttributeSet.find(
-              (x) => x.code === args.neume,
+              (x) => x.neume === args.neume,
             )?.attributes;
 
             editor.execute(INSERT_NEUME_COMMAND, args);

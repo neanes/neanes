@@ -1054,6 +1054,9 @@
   "modeFirst": {
     "codepoint": "U+E2A0"
   },
+    "modeFirstShort": {
+    "codepoint": "U+E2A1"
+  },
   "modeSecond": {
     "codepoint": "U+E2A8"
   },
@@ -1066,6 +1069,9 @@
   },
   "modeFourth": {
     "codepoint": "U+E2B8"
+  },
+  "modeFourthShort": {
+    "codepoint": "U+E2B9"
   },
   "modeLegetos": {
     "alternateCodepoint": "U+1D0AA",

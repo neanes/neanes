@@ -1,8 +1,8 @@
 .special-char-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(30px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
   gap: 4px;
-  max-width: 300px;
+  max-width: 360px;
   max-height: 300px;
   overflow: auto;
   padding: 8px;
@@ -10,6 +10,7 @@
 
 .special-char-grid .ck-button__label {
   font-family: Neanes !important;
+  font-size: 16pt !important;
 }
 
 .ck-dropdown__character-block {
@@ -22,6 +23,14 @@
 
 .ck-button__insert-neume .ck-button__label {
   font-family: Neanes !important;
+  font-size: 16pt !important;
+}
+
+.ck-button__insert-martyria .ck-button__label {
+  font-family: Neanes !important;
+  font-size: 16pt !important;
+  position: relative;
+  top: -0.366em;
 }
 
 .neanes-ck-neume {

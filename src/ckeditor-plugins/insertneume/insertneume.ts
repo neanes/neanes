@@ -28,6 +28,7 @@ export default class InsertNeume extends Plugin {
     editor.config.define('insertNeume', {
       lyricsDefaultFontSize: 16,
       neumeDefaultFontFamily: 'Neanes',
+      fthoraDefaultColor: 'red',
       defaultAttributes: INSERT_NEUME_DEFAULT_ATTRIBUTES,
       defaultAttributesMartyria: INSERT_NEUME_DEFAULT_ATTRIBUTES_MARTYRIA,
     });

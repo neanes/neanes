@@ -75,6 +75,16 @@ export default class InsertNeumeUI extends Plugin {
             target: view.element!,
           },
         });
+
+        clickOutsideHandler({
+          emitter: gridView,
+          activator: () => balloon.visibleView === gridView,
+          contextElements: [gridView.element!],
+          callback: () => {
+            balloon.remove(gridView);
+            gridView.destroy();
+          },
+        });
       });
 
       return view;
@@ -86,7 +96,7 @@ export default class InsertNeumeUI extends Plugin {
         label: '\ue139\ue152',
         withText: true,
         tooltip: 'Insert Martyria',
-        class: 'ck-button__insert-neume',
+        class: 'ck-button__insert-martyria',
       });
 
       view.on('execute', () => {
@@ -131,7 +141,7 @@ export default class InsertNeumeUI extends Plugin {
   _showFormUI(element: any) {
     const editor = this.editor;
     const balloon = editor.plugins.get(ContextualBalloon);
-    const view = new InsertNeumeFormView(editor.locale, element);
+    const view = new InsertNeumeFormView(editor.locale, editor.config, element);
     const command = editor.commands.get(UPDATE_NEUME_ATTRIBUTES_COMMAND);
 
     view.on('change:values', (evt, args) => {

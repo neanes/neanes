@@ -3,8 +3,10 @@ import {
   ColorSelectorColorPickerCancelEvent,
   ColorSelectorExecuteEvent,
   ColorSelectorView,
+  Config,
   createDropdown,
   createLabeledInputNumber,
+  EditorConfig,
   Element,
   InputNumberView,
   LabeledFieldView,
@@ -30,9 +32,12 @@ export default class InsertNeumeFormView extends View {
   public widthInput: LabeledFieldView<InputNumberView>;
   public fontSizeInput: LabeledFieldView<InputNumberView>;
   public colorInput: ColorSelectorView;
+  public config: Config<EditorConfig>;
 
-  constructor(locale: Locale, element: Element) {
+  constructor(locale: Locale, config: Config<EditorConfig>, element: Element) {
     super(locale);
+
+    this.config = config;
 
     const topInput = this._createNumberInput('Top (em)', (top) => {
       this.fire('change:values', {
@@ -179,12 +184,12 @@ export default class InsertNeumeFormView extends View {
     const colorDefinitions = [
       { color: '#000', label: 'Black', options: { hasBorder: false } },
       {
-        color: 'rgb(255, 255, 255)',
-        label: 'White',
-        options: { hasBorder: true },
+        color: this.config.get('insertNeume.fthoraDefaultColor')!,
+        label: 'Fthora',
+        options: { hasBorder: false },
       },
-      { color: 'red', label: 'Red', options: { hasBorder: false } },
     ];
+
     const input = new ColorSelectorView(this.locale!, {
       colors: colorDefinitions,
       colorPickerLabel: 'Color',
@@ -205,7 +210,10 @@ export default class InsertNeumeFormView extends View {
     input.updateSelectedColors();
 
     input.on<ColorSelectorExecuteEvent>('execute', (evt, data) => {
-      if (data.source === 'colorPickerSaveButton') {
+      if (
+        data.source === 'colorPickerSaveButton' ||
+        data.source === 'staticColorsGrid'
+      ) {
         onChange(data.value);
         input.showColorGridsFragment();
         input.updateSelectedColors();

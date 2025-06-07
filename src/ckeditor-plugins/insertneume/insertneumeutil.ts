@@ -51,7 +51,6 @@ export const INSERT_NEUME_CHARACTER_BLOCKS = [
       ModeSign.Legetos,
       ModeSign.Alpha,
       ModeSign.SoftChromatic6,
-      ModeSign.Varys,
       ModeSign.VarysZo,
       ModeSign.Delta,
       ModeSign.Plagal,
@@ -173,13 +172,6 @@ export const INSERT_NEUME_DEFAULT_ATTRIBUTES: InsertNeumeDefaultAttributesType =
           neumeFontSize: defaultFontSizeAdjustment,
           top: defaultBaselineAdjustment,
           kerningLeft: -0.3,
-        },
-      },
-      {
-        neume: ModeSign.Varys, // modeVarys
-        attributes: {
-          neumeFontSize: defaultFontSizeAdjustment,
-          kerningLeft: -0.241,
         },
       },
       {

@@ -525,6 +525,7 @@ export default class TextBoxRich extends Vue {
   justify-content: center;
   white-space: nowrap !important;
   border: none;
+  overflow: visible;
 }
 
 .rich-text-editor.inline-bottom {

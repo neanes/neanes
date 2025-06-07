@@ -47,7 +47,7 @@
         :editor="editor"
         :model-value="content"
         @blur="onBlur"
-        @ready="onEditorReady"
+        @ready="onEditorReadyInline"
         :config="editorConfig"
       />
       <div class="inline-bottom-container" :style="textBoxBottomContainerStyle">
@@ -58,7 +58,7 @@
           :editor="editor"
           :model-value="contentBottom"
           @blur="onBlur"
-          @ready="onEditorReady"
+          @ready="onEditorReadyInlineBottom"
           :config="editorConfig"
         />
       </div>
@@ -112,6 +112,7 @@ export default class TextBoxRich extends Vue {
   unmounting = false;
 
   heightBottom: number = 0;
+  inlineBottomObserver: ResizeObserver | null = null;
 
   get editorConfig(): EditorConfig {
     const fontSizeOptions: FontSizeOption[] = [];
@@ -302,6 +303,10 @@ export default class TextBoxRich extends Vue {
   beforeUnmount() {
     this.unmounting = true;
     this.update();
+
+    if (this.inlineBottomObserver != null) {
+      this.inlineBottomObserver.disconnect();
+    }
   }
 
   onEditorReady() {
@@ -315,10 +320,36 @@ export default class TextBoxRich extends Vue {
       this.editorInstance?.editing.view.focus();
       this.focusOnReady = false;
     }
+  }
 
-    if (this.element.inline) {
-      this.heightBottom = this.getHeightBottom() ?? 0;
+  onEditorReadyInline() {
+    if (this.focusOnReady) {
+      this.editorInstance?.editing.view.focus();
+      this.focusOnReady = false;
     }
+
+    this.heightBottom = this.getHeightBottom() ?? 0;
+  }
+
+  onEditorReadyInlineBottom() {
+    if (this.focusOnReady) {
+      this.editorInstance?.editing.view.focus();
+      this.focusOnReady = false;
+    }
+
+    this.heightBottom = this.getHeightBottom() ?? 0;
+
+    const element = (this.editorInstanceBottom as any).sourceElement;
+
+    if (this.inlineBottomObserver != null) {
+      this.inlineBottomObserver.disconnect();
+    }
+
+    this.inlineBottomObserver = new ResizeObserver(() => {
+      this.heightBottom = this.getHeightBottom() ?? 0;
+    });
+
+    this.inlineBottomObserver.observe(element);
   }
 
   onBlur() {

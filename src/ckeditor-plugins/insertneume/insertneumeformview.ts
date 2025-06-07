@@ -3,12 +3,24 @@ import {
   ColorSelectorColorPickerCancelEvent,
   ColorSelectorExecuteEvent,
   ColorSelectorView,
+  createDropdown,
   createLabeledInputNumber,
+  Element,
   InputNumberView,
   LabeledFieldView,
+  ListView,
   Locale,
   View,
 } from 'ckeditor5';
+import i18next from 'i18next';
+
+import {
+  NOTE_LABEL_KEYS,
+  ROOT_SIGN_LABEL_KEYS,
+} from '@/models/NeumeI18nMappings';
+import { Note, RootSign } from '@/models/Neumes';
+
+import { InsertNeumeType } from './insertneumeediting';
 
 export default class InsertNeumeFormView extends View {
   public topInput: LabeledFieldView<InputNumberView>;
@@ -19,7 +31,7 @@ export default class InsertNeumeFormView extends View {
   public fontSizeInput: LabeledFieldView<InputNumberView>;
   public colorInput: ColorSelectorView;
 
-  constructor(locale: Locale) {
+  constructor(locale: Locale, element: Element) {
     super(locale);
 
     const topInput = this._createNumberInput('Top (em)', (top) => {
@@ -87,20 +99,68 @@ export default class InsertNeumeFormView extends View {
     this.colorInput = colorInput;
     this.fontSizeInput = fontSizeInput;
 
+    const children: View[] = [
+      topInput,
+      leftInput,
+      kerningLeftInput,
+      kerningRightInput,
+      fontSizeInput,
+      colorInput,
+    ];
+
+    const neumeType = element.getAttribute('neumeType') as InsertNeumeType;
+
+    if (neumeType === 'martyria') {
+      const martyriaNote = element.getAttribute('martyriaNote') as Note;
+      const martyriaRootSign = element.getAttribute(
+        'martyriaRootSign',
+      ) as RootSign;
+
+      const noteOptions = Object.entries(NOTE_LABEL_KEYS).map(
+        ([key, value]) => ({
+          label: i18next.t(value),
+          value: key,
+        }),
+      );
+
+      const martyriaNoteDropdown = this._createDropdown(
+        i18next.t(martyriaNote),
+        noteOptions,
+        (martyriaNote: string) => {
+          this.fire('change:values', {
+            martyriaNote,
+          });
+        },
+      );
+
+      const rootSignOptions = Object.entries(ROOT_SIGN_LABEL_KEYS)
+        .filter(([key]) => !key.endsWith('Low'))
+        .map(([key, value]) => ({
+          label: i18next.t(value),
+          value: key,
+        }));
+
+      const martyriaRootSignDropdown = this._createDropdown(
+        i18next.t(martyriaRootSign),
+        rootSignOptions,
+        (martyriaRootSign: string) => {
+          this.fire('change:values', {
+            martyriaRootSign,
+          });
+        },
+      );
+
+      children.unshift(martyriaRootSignDropdown);
+      children.unshift(martyriaNoteDropdown);
+    }
+
     this.setTemplate({
       tag: 'div',
       attributes: {
         class: 'ck ck-reset_all',
         style: 'padding: 10px;',
       },
-      children: [
-        topInput,
-        leftInput,
-        kerningLeftInput,
-        kerningRightInput,
-        fontSizeInput,
-        colorInput,
-      ],
+      children,
     });
   }
 
@@ -157,6 +217,34 @@ export default class InsertNeumeFormView extends View {
     });
 
     return input;
+  }
+
+  _createDropdown(
+    label: string,
+    options: Array<{ label: string; value: string }>,
+    onChange: (optionText: string) => void,
+  ) {
+    const dropdownView = createDropdown(this.locale);
+    dropdownView.buttonView.set({
+      label,
+      withText: true,
+    });
+
+    const listView = new ListView(this.locale);
+    options.forEach(({ label, value }) => {
+      const button = new ButtonView(this.locale);
+      button.set({ label, withText: true });
+      button.on('execute', () => {
+        onChange(value);
+        dropdownView.buttonView.label = label;
+        dropdownView.isOpen = false;
+      });
+      listView.items.add(button);
+    });
+
+    dropdownView.panelView.children.add(listView);
+
+    return dropdownView;
   }
 
   _createButton(label: string, onExecute: () => void) {

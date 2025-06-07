@@ -1,4 +1,8 @@
-import { Plugin, toWidget } from 'ckeditor5';
+import { Plugin, toWidget, ViewNode } from 'ckeditor5';
+
+import { Note, RootSign } from '@/models/Neumes';
+import { NeumeMappingService } from '@/services/NeumeMappingService';
+import { normalizeRootSign } from '@/utils/NeumeUtils';
 
 export const NEUME_ELEMENT = 'neume';
 export const NEUME_CLASS = 'neanes-ck-neume';
@@ -45,12 +49,10 @@ export default class InsertNeumeEditing extends Plugin {
         ) as InsertNeumeType;
 
         const neume = modelElement.getAttribute('neume') as number;
-        const martyriaNote = modelElement.getAttribute(
-          'martyriaNote',
-        ) as number;
+        const martyriaNote = modelElement.getAttribute('martyriaNote') as Note;
         const martyriaRootSign = modelElement.getAttribute(
           'martyriaRootSign',
-        ) as number;
+        ) as RootSign;
 
         let text = '';
         let style = '';
@@ -104,9 +106,7 @@ export default class InsertNeumeEditing extends Plugin {
             attributes['neume'] = neume;
             break;
           case 'martyria':
-            text =
-              String.fromCodePoint(martyriaNote) +
-              String.fromCodePoint(martyriaRootSign);
+            text = this._getMartyriaText(martyriaNote, martyriaRootSign);
             attributes['martyriaNote'] = martyriaNote;
             attributes['martyriaRootSign'] = martyriaRootSign;
             break;
@@ -287,6 +287,83 @@ export default class InsertNeumeEditing extends Plugin {
           }
         }
       });
+
+      dispatcher.on(
+        'attribute:martyriaNote:neume',
+        (evt, data, conversionApi) => {
+          const viewWriter = conversionApi.writer;
+          const viewElement = conversionApi.mapper.toViewElement(data.item);
+
+          if (viewElement && data.attributeNewValue != null) {
+            const martyriaRootSign = data.item.getAttribute('martyriaRootSign');
+            const martyriaNote = data.attributeNewValue;
+
+            viewWriter.setAttribute('martyrianote', martyriaNote, viewElement);
+
+            for (const child of Array.from(
+              viewElement.getChildren(),
+            ) as ViewNode[]) {
+              if (child.is('$text')) {
+                viewWriter.remove(child);
+              }
+            }
+
+            const textNode = viewWriter.createText(
+              this._getMartyriaText(martyriaNote, martyriaRootSign),
+            );
+
+            viewWriter.insert(
+              viewWriter.createPositionAt(viewElement, 0),
+              textNode,
+            );
+          }
+        },
+      );
+
+      dispatcher.on(
+        'attribute:martyriaRootSign:neume',
+        (evt, data, conversionApi) => {
+          const viewWriter = conversionApi.writer;
+          const viewElement = conversionApi.mapper.toViewElement(data.item);
+
+          if (viewElement && data.attributeNewValue != null) {
+            const martyriaNote = data.item.getAttribute('martyriaNote');
+            const martyriaRootSign = data.attributeNewValue;
+
+            viewWriter.setAttribute(
+              'martyriarootsign',
+              martyriaRootSign,
+              viewElement,
+            );
+
+            for (const child of Array.from(
+              viewElement.getChildren(),
+            ) as ViewNode[]) {
+              if (child.is('$text')) {
+                viewWriter.remove(child);
+              }
+            }
+
+            const textNode = viewWriter.createText(
+              this._getMartyriaText(martyriaNote, martyriaRootSign),
+            );
+
+            viewWriter.insert(
+              viewWriter.createPositionAt(viewElement, 0),
+              textNode,
+            );
+          }
+        },
+      );
     });
+  }
+
+  _getMartyriaText(martyriaNote: Note, martyriaRootSign: RootSign) {
+    martyriaRootSign = normalizeRootSign(martyriaNote, martyriaRootSign);
+
+    return (
+      NeumeMappingService.getMapping(martyriaNote).text +
+      NeumeMappingService.getMapping(martyriaRootSign).text
+    );
   }
 }

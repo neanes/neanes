@@ -5,6 +5,8 @@ import {
   Plugin,
 } from 'ckeditor5';
 
+import { Note, RootSign } from '@/models/Neumes';
+
 import {
   INSERT_NEUME_COMMAND,
   InsertNeumeCommandParams,
@@ -102,8 +104,8 @@ export default class InsertNeumeUI extends Plugin {
 
         editor.execute(INSERT_NEUME_COMMAND, {
           neumeType: 'martyria',
-          martyriaNote: 0xe139,
-          martyriaRootSign: 0xe152,
+          martyriaNote: Note.Pa,
+          martyriaRootSign: RootSign.Alpha,
           defaultAttributes,
         } as InsertNeumeCommandParams);
       });
@@ -129,7 +131,7 @@ export default class InsertNeumeUI extends Plugin {
   _showFormUI(element: any) {
     const editor = this.editor;
     const balloon = editor.plugins.get(ContextualBalloon);
-    const view = new InsertNeumeFormView(editor.locale);
+    const view = new InsertNeumeFormView(editor.locale, element);
     const command = editor.commands.get(UPDATE_NEUME_ATTRIBUTES_COMMAND);
 
     view.on('change:values', (evt, args) => {

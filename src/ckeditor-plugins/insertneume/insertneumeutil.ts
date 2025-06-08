@@ -198,112 +198,112 @@ export const INSERT_NEUME_DEFAULT_ATTRIBUTES: InsertNeumeDefaultAttributesType =
         neume: UnicodeNeume.Uni1d0b6,
         attributes: {
           neumeFontSize: defaultFontSizeAdjustment,
-          kerningRight: -fontService.getAdvanceWidth('Neanes', `U+1D0B6`),
+          kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0b6`),
         },
       },
       {
         neume: UnicodeNeume.Uni1d0ba,
         attributes: {
           neumeFontSize: defaultFontSizeAdjustment,
-          kerningRight: -fontService.getAdvanceWidth('Neanes', `U+1D0BA`),
+          kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0ba`),
         },
       },
       {
         neume: UnicodeNeume.Uni1d0bb,
         attributes: {
           neumeFontSize: defaultFontSizeAdjustment,
-          kerningRight: -fontService.getAdvanceWidth('Neanes', `U+1D0BB`),
+          kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0bb`),
         },
       },
       {
         neume: UnicodeNeume.Uni1d0bd,
         attributes: {
           neumeFontSize: defaultFontSizeAdjustment,
-          kerningRight: -fontService.getAdvanceWidth('Neanes', `U+1D0BD`),
+          kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0bd`),
         },
       },
       {
         neume: UnicodeNeume.Uni1d0bf,
         attributes: {
           neumeFontSize: defaultFontSizeAdjustment,
-          kerningRight: -fontService.getAdvanceWidth('Neanes', `U+1D0BF`),
+          kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0bf`),
         },
       },
       {
         neume: UnicodeNeume.Uni1d0c0,
         attributes: {
           neumeFontSize: defaultFontSizeAdjustment,
-          kerningRight: -fontService.getAdvanceWidth('Neanes', `U+1D0C0`),
+          kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0c0`),
         },
       },
       {
         neume: UnicodeNeume.Uni1d0c1,
         attributes: {
           neumeFontSize: defaultFontSizeAdjustment,
-          kerningRight: -fontService.getAdvanceWidth('Neanes', `U+1D0C1`),
+          kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0c1`),
         },
       },
       {
         neume: UnicodeNeume.Uni1d0c2,
         attributes: {
           neumeFontSize: defaultFontSizeAdjustment,
-          kerningRight: -fontService.getAdvanceWidth('Neanes', `U+1D0C2`),
+          kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0c2`),
         },
       },
       {
         neume: UnicodeNeume.Uni1d0c3,
         attributes: {
           neumeFontSize: defaultFontSizeAdjustment,
-          kerningRight: -fontService.getAdvanceWidth('Neanes', `U+1D0C3`),
+          kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0c3`),
         },
       },
       {
         neume: UnicodeNeume.Uni1d0c4,
         attributes: {
           neumeFontSize: defaultFontSizeAdjustment,
-          kerningRight: -fontService.getAdvanceWidth('Neanes', `U+1D0C4`),
+          kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0c4`),
         },
       },
       {
         neume: UnicodeNeume.Uni1d0c5,
         attributes: {
           neumeFontSize: defaultFontSizeAdjustment,
-          kerningRight: -fontService.getAdvanceWidth('Neanes', `U+1D0C5`),
+          kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0c5`),
         },
       },
       {
         neume: UnicodeNeume.Uni1d0c7,
         attributes: {
           neumeFontSize: defaultFontSizeAdjustment,
-          kerningRight: -fontService.getAdvanceWidth('Neanes', `U+1D0C7`),
+          kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0c7`),
         },
       },
       {
         neume: UnicodeNeume.Uni1d0c8,
         attributes: {
           neumeFontSize: defaultFontSizeAdjustment,
-          kerningRight: -fontService.getAdvanceWidth('Neanes', `U+1D0C8`),
+          kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0c8`),
         },
       },
       {
         neume: UnicodeNeume.Uni1d0c9,
         attributes: {
           neumeFontSize: defaultFontSizeAdjustment,
-          kerningRight: -fontService.getAdvanceWidth('Neanes', `U+1D0C9`),
+          kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0c9`),
         },
       },
       {
         neume: UnicodeNeume.Uni1d0ca,
         attributes: {
           neumeFontSize: defaultFontSizeAdjustment,
-          kerningRight: -fontService.getAdvanceWidth('Neanes', `U+1D0CA`),
+          kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0ca`),
         },
       },
       {
         neume: UnicodeNeume.Uni1d0cb,
         attributes: {
           neumeFontSize: defaultFontSizeAdjustment,
-          kerningRight: -fontService.getAdvanceWidth('Neanes', `U+1D0CB`),
+          kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0cb`),
         },
       },
     ],

@@ -844,6 +844,8 @@ export class RichTextBoxElement extends ScoreElement {
 
   // Values computed by the layout service
   public defaultLyricsFontHeight: number = 0;
+  public defaultNeumeFontAscent: number = 0;
+  public oligonMidpoint: number = 0;
 
   public clone() {
     const clone = new RichTextBoxElement();

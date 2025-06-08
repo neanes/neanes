@@ -120,6 +120,14 @@ export class LayoutService {
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
     );
 
+    const neumeAscent = TextMeasurementService.getFontBoundingBoxAscent(
+      `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
+    );
+
+    const oligonMidpoint = fontService.getMetrics(
+      pageSetup.neumeDefaultFontFamily,
+    ).oligonMidpoint;
+
     const lyricsVerticalOffset = neumeHeight + pageSetup.lyricsVerticalOffset;
 
     const lyricHeight = TextMeasurementService.getFontHeight(
@@ -361,11 +369,21 @@ export class LayoutService {
           }
 
           if (richTextBoxElement.inline) {
+            // TODO Why is the same information being added to each text box element, you might ask?
+            // Because theoretically we should use the values for the previous neume/lyrics
+            // immediately before the inline text box. However, currently it's not possible to mix
+            // and match neume fonts, so it doesn't matter. If it were possible, it would be necessary to put the
+            // information on each text box because it could be different for each box.
             richTextBoxElement.defaultLyricsFontHeight =
               this.getLyricsFontHeightFromCache(
                 fontHeightCache,
                 pageSetup.lyricsFont,
               );
+
+            richTextBoxElement.defaultNeumeFontAscent = neumeAscent;
+
+            richTextBoxElement.oligonMidpoint = oligonMidpoint;
+
             if (richTextBoxElement.customWidth != null) {
               elementWidthPx = richTextBoxElement.customWidth;
             } else {

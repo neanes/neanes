@@ -40,16 +40,23 @@
       />
     </div>
     <div class="inline-container" v-else-if="element.inline">
-      <ckeditor
-        ref="editor"
-        class="rich-text-editor inline-top"
-        :style="textBoxStyleTop"
-        :editor="editor"
-        :model-value="content"
-        @blur="onBlur"
-        @ready="onEditorReadyInline"
-        :config="editorConfig"
-      />
+      <div class="inline-top-container" :style="textBoxTopContainerStyle">
+        <div
+          class="inline-top-inner-container"
+          :style="textBoxTopInnerContainerStyle"
+        >
+          <ckeditor
+            ref="editor"
+            class="rich-text-editor inline-top"
+            :style="textBoxStyleTop"
+            :editor="editor"
+            :model-value="content"
+            @blur="onBlur"
+            @ready="onEditorReadyInline"
+            :config="editorConfig"
+          />
+        </div>
+      </div>
       <div class="inline-bottom-container" :style="textBoxBottomContainerStyle">
         <ckeditor
           ref="editorBottom"
@@ -112,7 +119,9 @@ export default class TextBoxRich extends Vue {
   unmounting = false;
 
   heightBottom: number = 0;
+  heightTop: number = 0;
   inlineBottomObserver: ResizeObserver | null = null;
+  inlineTopObserver: ResizeObserver | null = null;
 
   get editorConfig(): EditorConfig {
     const fontSizeOptions: FontSizeOption[] = [];
@@ -256,11 +265,23 @@ export default class TextBoxRich extends Vue {
     return style;
   }
 
+  get textBoxTopInnerContainerStyle() {
+    const style: any = {
+      top: withZoom(
+        this.element.defaultNeumeFontAscent -
+          this.pageSetup.neumeDefaultFontSize * this.element.oligonMidpoint -
+          this.element.defaultLyricsFontHeight / 2 -
+          (this.heightTop - this.element.defaultLyricsFontHeight),
+      ),
+      lineHeight: `${this.element.defaultLyricsFontHeight}px`,
+    };
+
+    return style;
+  }
+
   get textBoxStyleTop() {
     const style: any = {
       width: withZoom(this.element.width),
-      height: withZoom(this.element.height),
-      lineHeight: `${this.element.defaultLyricsFontHeight}px`,
     };
 
     return style;
@@ -271,6 +292,16 @@ export default class TextBoxRich extends Vue {
       width: !this.element.multipanel
         ? withZoom(this.element.width)
         : undefined,
+    };
+
+    return style;
+  }
+
+  get textBoxTopContainerStyle() {
+    const style: any = {
+      height: withZoom(this.element.height),
+
+      //lineHeight: `${this.element.defaultLyricsFontHeight}px`,
     };
 
     return style;
@@ -300,6 +331,10 @@ export default class TextBoxRich extends Vue {
     this.unmounting = true;
     this.update();
 
+    if (this.inlineTopObserver != null) {
+      this.inlineTopObserver.disconnect();
+    }
+
     if (this.inlineBottomObserver != null) {
       this.inlineBottomObserver.disconnect();
     }
@@ -324,7 +359,19 @@ export default class TextBoxRich extends Vue {
       this.focusOnReady = false;
     }
 
-    this.heightBottom = this.getHeightBottom() ?? 0;
+    this.heightTop = this.getHeightTop() ?? 0;
+
+    const element = (this.editorInstance as any).sourceElement;
+
+    if (this.inlineTopObserver != null) {
+      this.inlineTopObserver.disconnect();
+    }
+
+    this.inlineTopObserver = new ResizeObserver(() => {
+      this.heightTop = this.getHeightTop() ?? 0;
+    });
+
+    this.inlineTopObserver.observe(element);
   }
 
   onEditorReadyInlineBottom() {
@@ -405,6 +452,7 @@ export default class TextBoxRich extends Vue {
 
     if (this.element.inline) {
       this.heightBottom = this.getHeightBottom() ?? 0;
+      this.heightTop = this.getHeightTop() ?? 0;
     }
 
     if (updated) {
@@ -419,6 +467,12 @@ export default class TextBoxRich extends Vue {
   getHeightBottom() {
     return (this.$el as HTMLElement)
       .querySelector('.ck-content.inline-bottom')
+      ?.getBoundingClientRect().height;
+  }
+
+  getHeightTop() {
+    return (this.$el as HTMLElement)
+      .querySelector('.ck-content.inline-top')
       ?.getBoundingClientRect().height;
   }
 
@@ -516,10 +570,8 @@ export default class TextBoxRich extends Vue {
 }
 
 .rich-text-editor.inline-top {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
   white-space: nowrap !important;
+  position: relative;
   border: none;
   overflow: visible;
 }
@@ -532,7 +584,9 @@ export default class TextBoxRich extends Vue {
   overflow: visible;
 }
 
-.inline-bottom-container {
+.inline-bottom-container,
+.inline-top-container,
+.inline-top-inner-container {
   display: inline-block;
   position: relative;
   border: none;

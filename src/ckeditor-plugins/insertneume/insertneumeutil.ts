@@ -89,7 +89,7 @@ export const INSERT_NEUME_CHARACTER_BLOCKS = [
 ];
 
 const defaultBaselineAdjustment = 0.366;
-const defaultFontSizeAdjustment = 1.3;
+const defaultFontSizeAdjustment = 1.7;
 
 export const INSERT_NEUME_DEFAULT_ATTRIBUTES: InsertNeumeDefaultAttributesType =
   {
@@ -312,7 +312,7 @@ export const INSERT_NEUME_DEFAULT_ATTRIBUTES: InsertNeumeDefaultAttributesType =
 export const INSERT_NEUME_DEFAULT_ATTRIBUTES_MARTYRIA: InsertNeumeDefaultAttributesMartyriaType =
   {
     Neanes: {
-      neumeFontSize: 1.5,
+      neumeFontSize: 1.7,
       top: -0.29,
       kerningLeft: -0.3,
     },

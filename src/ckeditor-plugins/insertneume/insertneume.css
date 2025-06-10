@@ -13,7 +13,34 @@
   font-size: 16pt !important;
 }
 
+.martyria-root-sign-grid .ck-button__label {
+  font-family: Neanes !important;
+  font-size: 20pt !important;
+  line-height: 20pt;
+  margin-left: 10px;
+  position: relative;
+  top: -0.4em;
+  overflow: visible !important;
+}
+
+.ck-dropdown__martyria-root-sign .ck-dropdown__button .ck-button__label {
+  font-family: Neanes !important;
+  font-size: 20pt !important;
+  line-height: 20pt;
+  margin-left: 10px;
+  position: relative;
+  top: -0.4em;
+  overflow: visible !important;
+  width: 4rem !important;
+}
+
 .martyria-note-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+}
+
+.martyria-root-sign-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 10px;

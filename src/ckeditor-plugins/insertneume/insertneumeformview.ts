@@ -17,11 +17,9 @@ import {
 } from 'ckeditor5';
 import i18next from 'i18next';
 
-import {
-  NOTE_LABEL_KEYS,
-  ROOT_SIGN_LABEL_KEYS,
-} from '@/models/NeumeI18nMappings';
+import { NOTE_LABEL_KEYS } from '@/models/NeumeI18nMappings';
 import { Note, RootSign } from '@/models/Neumes';
+import { NeumeMappingService } from '@/services/NeumeMappingService';
 
 import { InsertNeumeType } from './insertneumeediting';
 
@@ -129,8 +127,9 @@ export default class InsertNeumeFormView extends View {
         }),
       );
 
-      const martyriaNoteDropdown = this._createDropdownForMartyriaNote(
+      const martyriaNoteDropdown = this._createGridDropdown(
         i18next.t(martyriaNote),
+        ['martyria-note-grid'],
         noteOptions,
         (martyriaNote: string) => {
           this.fire('change:values', {
@@ -143,15 +142,15 @@ export default class InsertNeumeFormView extends View {
         class: 'ck-dropdown__martyria-note',
       });
 
-      const rootSignOptions = Object.entries(ROOT_SIGN_LABEL_KEYS)
-        .filter(([key]) => !key.endsWith('Low'))
-        .map(([key, value]) => ({
-          label: i18next.t(value),
-          value: key,
-        }));
+      const rootSignOptions = ROOT_SIGNS.map((key) => ({
+        label: NeumeMappingService.getMapping((key + 'Low') as RootSign).text,
+        value: key,
+      }));
 
-      const martyriaRootSignDropdown = this._createDropdown(
-        i18next.t(martyriaRootSign),
+      const martyriaRootSignDropdown = this._createGridDropdown(
+        NeumeMappingService.getMapping((martyriaRootSign + 'Low') as RootSign)
+          .text,
+        ['martyria-root-sign-grid'],
         rootSignOptions,
         (martyriaRootSign: string) => {
           this.fire('change:values', {
@@ -159,6 +158,10 @@ export default class InsertNeumeFormView extends View {
           });
         },
       );
+
+      martyriaRootSignDropdown.set({
+        class: 'ck-dropdown__martyria-root-sign',
+      });
 
       children.unshift(martyriaRootSignDropdown);
       children.unshift(martyriaNoteDropdown);
@@ -260,8 +263,9 @@ export default class InsertNeumeFormView extends View {
     return dropdownView;
   }
 
-  _createDropdownForMartyriaNote(
+  _createGridDropdown(
     label: string,
+    classes: string[],
     options: Array<{ label: string; value: string }>,
     onChange: (optionText: string) => void,
   ) {
@@ -286,7 +290,7 @@ export default class InsertNeumeFormView extends View {
     const gridView = new View();
     gridView.setTemplate({
       tag: 'div',
-      attributes: { class: ['martyria-note-grid'] },
+      attributes: { class: classes },
       children: grid,
     });
 
@@ -310,3 +314,18 @@ export default class InsertNeumeFormView extends View {
     return button;
   }
 }
+
+const ROOT_SIGNS: RootSign[] = [
+  RootSign.Zo,
+  RootSign.Delta,
+  RootSign.Alpha,
+  RootSign.Legetos,
+  RootSign.Nana,
+  RootSign.DeltaDotted,
+  RootSign.AlphaDotted,
+  RootSign.SoftChromaticSquiggle,
+  RootSign.Squiggle,
+  RootSign.Tilt,
+  RootSign.SoftChromaticPaRootSign,
+  RootSign.Zygos,
+];

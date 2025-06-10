@@ -138,6 +138,10 @@ export default class InsertNeumeFormView extends View {
         },
       );
 
+      martyriaNoteDropdown.set({
+        class: 'ck-dropdown__martyria-note',
+      });
+
       const rootSignOptions = Object.entries(ROOT_SIGN_LABEL_KEYS)
         .filter(([key]) => !key.endsWith('Low'))
         .map(([key, value]) => ({

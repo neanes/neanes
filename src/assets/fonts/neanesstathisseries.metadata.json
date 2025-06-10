@@ -1,9 +1,10 @@
 {
   "fontName": "NeanesStathisSeries",
-  "fontVersion": "1.0.0",
+  "fontVersion": "1.0.1",
   "metrics": {
     "winAscent": 1.4,
-    "winDescent": 0.466
+    "winDescent": 0.466,
+    "oligonMidpoint": 0.309
   },
   "glyphsWithAnchors": {
     "ison": {
@@ -7957,7 +7958,59 @@
     "oligonKentimataBelow.alt02": 1.75,
     "psifiston.salt01": 0.0,
     "heteronConnecting.salt01": 0.0,
-    "psifiston.alt01": -0.004
+    "psifiston.alt01": -0.004,
+    "modeFirstShort": 0.98,
+    "modeFourthShort": 0.98,
+    "uni1d046": 1.524,
+    "uni1d047": 1.515,
+    "uni1d049": 1.243,
+    "uni1d04e": 0.738,
+    "uni1d04f": 0.279,
+    "uni1d050": 1.515,
+    "uni1d051": 0.703,
+    "uni1d053": 0.4,
+    "uni1d055": 1.243,
+    "uni1d056": 1.113,
+    "uni1d058": 0.534,
+    "uni1d05a": 0.0,
+    "uni1d05b": 0.0,
+    "uni1d05c": 0.0,
+    "uni1d07e": 0.457,
+    "uni1d07f": 0.0,
+    "uni1d085": 0.0,
+    "uni1d086": 0.008,
+    "uni1d08f": 0.0,
+    "uni1d0a3": 0.0,
+    "uni1d0a5": 0.826,
+    "uni1d0a7": 0.652,
+    "uni1d0a8": 0.657,
+    "uni1d0a9": 0.564,
+    "uni1d0d0": 0.46,
+    "uni1d0d4": 0.588,
+    "uni1d0f0": 0.738,
+    "uni1d0f1": 0.279,
+    "uni1d0f2": 0.738,
+    "uni1d0f3": 0.279,
+    "uni1d0f4": 0.004,
+    "uni1d0f5": 0.0,
+    "uni1d0b5": 0.612,
+    "uni1d0b4": 0.62,
+    "uni1d0b6": 0.602,
+    "uni1d0ba": 0.385,
+    "uni1d0bb": 0.376,
+    "uni1d0bd": 0.52,
+    "uni1d0bf": 0.392,
+    "uni1d0c0": 0.63,
+    "uni1d0c1": 0.56,
+    "uni1d0c2": 0.568,
+    "uni1d0c3": 1.056,
+    "uni1d0c4": 0.632,
+    "uni1d0c5": 1.072,
+    "uni1d0c7": 0.512,
+    "uni1d0c8": 0.632,
+    "uni1d0c9": 0.664,
+    "uni1d0ca": 1.104,
+    "uni1d0cb": 0.492
   },
   "optionalGlyphs": {
     "oligonKentimataBelow.alt01": {
@@ -11667,6 +11720,26 @@
       "bBoxSW": [
         -0.838,
         0.161
+      ]
+    },
+    "modeFirstShort": {
+      "bBoxNE": [
+        0.975,
+        1.266
+      ],
+      "bBoxSW": [
+        0.274,
+        -0.23
+      ]
+    },
+    "modeFourthShort": {
+      "bBoxNE": [
+        0.938,
+        1.224
+      ],
+      "bBoxSW": [
+        0.25,
+        -0.169
       ]
     }
   },

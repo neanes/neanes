@@ -21,6 +21,11 @@
   width: 100% !important;
 }
 
+.ck-dropdown__martyria-note .ck-dropdown__panel {
+  max-height: 300px;
+  overflow: auto;
+}
+
 .ck-button__insert-neume .ck-button__label {
   font-family: Neanes !important;
   font-size: 16pt !important;

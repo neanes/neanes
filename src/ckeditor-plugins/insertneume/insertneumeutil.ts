@@ -91,223 +91,281 @@ export const INSERT_NEUME_CHARACTER_BLOCKS = [
 const defaultBaselineAdjustment = 0.366;
 const defaultFontSizeAdjustment = 1.7;
 
-export const INSERT_NEUME_DEFAULT_ATTRIBUTES: InsertNeumeDefaultAttributesType =
+const defaultTempoTopAdjustmentStathis = -0.1;
+
+const defaultTempoTopAdjustmentPsaltica = -0.15;
+const defaultTempoFontSizeAdjustmentPsaltica = 1.05;
+
+const DEFAULT_ATTRIBUTES_PSALTICA: InsertNeumeAttributeSet[] = [
   {
-    Neanes: [
-      {
-        neume: ModeSign.AlphaWithHypsili, // modeFirst
-        attributes: {
-          neumeFontSize: defaultFontSizeAdjustment,
-          top: 0.072,
-          kerningLeft: -0.266,
-        },
-      },
-      {
-        neume: ModeSign.AlphaWithDeltaHat, // modeFirstShort
-        attributes: {
-          neumeFontSize: defaultFontSizeAdjustment,
-          top: defaultBaselineAdjustment,
-          kerningLeft: -0.338,
-        },
-      },
-      {
-        neume: ModeSign.SoftChromatic2, // modeSecond
-        attributes: {
-          neumeFontSize: defaultFontSizeAdjustment,
-          top: defaultBaselineAdjustment,
-          kerningLeft: -0.249,
-        },
-      },
-      {
-        neume: ModeSign.NanaOld, // modeThird
-        attributes: {
-          neumeFontSize: defaultFontSizeAdjustment,
-          kerningLeft: -0.3,
-          kerningRight: -0.3,
-        },
-      },
-      {
-        neume: ModeSign.Nana, // modeThirdNana
-        attributes: {
-          neumeFontSize: defaultFontSizeAdjustment,
-          top: 0.095,
-          kerningLeft: -0.32,
-        },
-      },
-      {
-        neume: ModeSign.DeltaWithHypsili, // modeFourth
-        attributes: {
-          neumeFontSize: defaultFontSizeAdjustment,
-          top: 0.108,
-          kerningLeft: -0.202,
-        },
-      },
-      {
-        neume: ModeSign.DeltaWithDeltaHat, // modeFourthShort
-        attributes: {
-          neumeFontSize: defaultFontSizeAdjustment,
-          top: defaultBaselineAdjustment,
-          kerningLeft: -0.235,
-        },
-      },
-      {
-        neume: ModeSign.Legetos, // modeLegetos
-        attributes: {
-          neumeFontSize: defaultFontSizeAdjustment,
-          top: 0.036,
-          kerningLeft: -0.134,
-        },
-      },
-      {
-        neume: ModeSign.Alpha, // modePlagalFirst
-        attributes: {
-          neumeFontSize: defaultFontSizeAdjustment,
-          top: defaultBaselineAdjustment,
-          kerningLeft: -0.338,
-        },
-      },
-      {
-        neume: ModeSign.SoftChromatic6, // modePlagalSecond
-        attributes: {
-          neumeFontSize: defaultFontSizeAdjustment,
-          top: defaultBaselineAdjustment,
-          kerningLeft: -0.3,
-        },
-      },
-      {
-        neume: ModeSign.VarysZo, // modeVarys2
-        attributes: { neumeFontSize: defaultFontSizeAdjustment, top: -0.33 },
-      },
-      {
-        neume: ModeSign.Delta, // modePlagalFourth
-        attributes: {
-          neumeFontSize: defaultFontSizeAdjustment,
-          top: defaultBaselineAdjustment,
-          kerningLeft: -0.25,
-        },
-      },
-      {
-        neume: ModeSign.Plagal, // modePlagal
-        attributes: {
-          neumeFontSize: defaultFontSizeAdjustment,
-          top: defaultBaselineAdjustment,
-          kerningLeft: -0.324,
-        },
-      },
-      {
-        neume: UnicodeNeume.Uni1d0b6,
-        attributes: {
-          neumeFontSize: defaultFontSizeAdjustment,
-          kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0b6`),
-        },
-      },
-      {
-        neume: UnicodeNeume.Uni1d0ba,
-        attributes: {
-          neumeFontSize: defaultFontSizeAdjustment,
-          kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0ba`),
-        },
-      },
-      {
-        neume: UnicodeNeume.Uni1d0bb,
-        attributes: {
-          neumeFontSize: defaultFontSizeAdjustment,
-          kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0bb`),
-        },
-      },
-      {
-        neume: UnicodeNeume.Uni1d0bd,
-        attributes: {
-          neumeFontSize: defaultFontSizeAdjustment,
-          kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0bd`),
-        },
-      },
-      {
-        neume: UnicodeNeume.Uni1d0bf,
-        attributes: {
-          neumeFontSize: defaultFontSizeAdjustment,
-          kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0bf`),
-        },
-      },
-      {
-        neume: UnicodeNeume.Uni1d0c0,
-        attributes: {
-          neumeFontSize: defaultFontSizeAdjustment,
-          kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0c0`),
-        },
-      },
-      {
-        neume: UnicodeNeume.Uni1d0c1,
-        attributes: {
-          neumeFontSize: defaultFontSizeAdjustment,
-          kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0c1`),
-        },
-      },
-      {
-        neume: UnicodeNeume.Uni1d0c2,
-        attributes: {
-          neumeFontSize: defaultFontSizeAdjustment,
-          kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0c2`),
-        },
-      },
-      {
-        neume: UnicodeNeume.Uni1d0c3,
-        attributes: {
-          neumeFontSize: defaultFontSizeAdjustment,
-          kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0c3`),
-        },
-      },
-      {
-        neume: UnicodeNeume.Uni1d0c4,
-        attributes: {
-          neumeFontSize: defaultFontSizeAdjustment,
-          kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0c4`),
-        },
-      },
-      {
-        neume: UnicodeNeume.Uni1d0c5,
-        attributes: {
-          neumeFontSize: defaultFontSizeAdjustment,
-          kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0c5`),
-        },
-      },
-      {
-        neume: UnicodeNeume.Uni1d0c7,
-        attributes: {
-          neumeFontSize: defaultFontSizeAdjustment,
-          kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0c7`),
-        },
-      },
-      {
-        neume: UnicodeNeume.Uni1d0c8,
-        attributes: {
-          neumeFontSize: defaultFontSizeAdjustment,
-          kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0c8`),
-        },
-      },
-      {
-        neume: UnicodeNeume.Uni1d0c9,
-        attributes: {
-          neumeFontSize: defaultFontSizeAdjustment,
-          kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0c9`),
-        },
-      },
-      {
-        neume: UnicodeNeume.Uni1d0ca,
-        attributes: {
-          neumeFontSize: defaultFontSizeAdjustment,
-          kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0ca`),
-        },
-      },
-      {
-        neume: UnicodeNeume.Uni1d0cb,
-        attributes: {
-          neumeFontSize: defaultFontSizeAdjustment,
-          kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0cb`),
-        },
-      },
-    ],
-  };
+    neume: ModeSign.AlphaWithHypsili, // modeFirst
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: 0.072,
+      kerningLeft: -0.266,
+    },
+  },
+  {
+    neume: ModeSign.AlphaWithDeltaHat, // modeFirstShort
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+      kerningLeft: -0.338,
+    },
+  },
+  {
+    neume: ModeSign.SoftChromatic2, // modeSecond
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+      kerningLeft: -0.249,
+    },
+  },
+  {
+    neume: ModeSign.NanaOld, // modeThird
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      kerningLeft: -0.3,
+      kerningRight: -0.3,
+    },
+  },
+  {
+    neume: ModeSign.Nana, // modeThirdNana
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: 0.095,
+      kerningLeft: -0.32,
+    },
+  },
+  {
+    neume: ModeSign.DeltaWithHypsili, // modeFourth
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: 0.108,
+      kerningLeft: -0.202,
+    },
+  },
+  {
+    neume: ModeSign.DeltaWithDeltaHat, // modeFourthShort
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+      kerningLeft: -0.235,
+    },
+  },
+  {
+    neume: ModeSign.Legetos, // modeLegetos
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: 0.036,
+      kerningLeft: -0.134,
+    },
+  },
+  {
+    neume: ModeSign.Alpha, // modePlagalFirst
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+      kerningLeft: -0.338,
+    },
+  },
+  {
+    neume: ModeSign.SoftChromatic6, // modePlagalSecond
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+      kerningLeft: -0.3,
+    },
+  },
+  {
+    neume: ModeSign.VarysZo, // modeVarys2
+    attributes: { neumeFontSize: defaultFontSizeAdjustment, top: -0.33 },
+  },
+  {
+    neume: ModeSign.Delta, // modePlagalFourth
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+      kerningLeft: -0.25,
+    },
+  },
+  {
+    neume: ModeSign.Plagal, // modePlagal
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+      kerningLeft: -0.324,
+    },
+  },
+  {
+    neume: UnicodeNeume.Uni1d0b6,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0b6`),
+    },
+  },
+  {
+    neume: UnicodeNeume.Uni1d0ba,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0ba`),
+    },
+  },
+  {
+    neume: UnicodeNeume.Uni1d0bb,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0bb`),
+    },
+  },
+  {
+    neume: UnicodeNeume.Uni1d0bd,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0bd`),
+    },
+  },
+  {
+    neume: UnicodeNeume.Uni1d0bf,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0bf`),
+    },
+  },
+  {
+    neume: UnicodeNeume.Uni1d0c0,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0c0`),
+    },
+  },
+  {
+    neume: UnicodeNeume.Uni1d0c1,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0c1`),
+    },
+  },
+  {
+    neume: UnicodeNeume.Uni1d0c2,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0c2`),
+    },
+  },
+  {
+    neume: UnicodeNeume.Uni1d0c3,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0c3`),
+    },
+  },
+  {
+    neume: UnicodeNeume.Uni1d0c4,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0c4`),
+    },
+  },
+  {
+    neume: UnicodeNeume.Uni1d0c5,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0c5`),
+    },
+  },
+  {
+    neume: UnicodeNeume.Uni1d0c7,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0c7`),
+    },
+  },
+  {
+    neume: UnicodeNeume.Uni1d0c8,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0c8`),
+    },
+  },
+  {
+    neume: UnicodeNeume.Uni1d0c9,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0c9`),
+    },
+  },
+  {
+    neume: UnicodeNeume.Uni1d0ca,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0ca`),
+    },
+  },
+  {
+    neume: UnicodeNeume.Uni1d0cb,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0cb`),
+    },
+  },
+  {
+    neume: TempoSign.Medium,
+    attributes: {
+      neumeFontSize: defaultTempoFontSizeAdjustmentPsaltica,
+      top: defaultTempoTopAdjustmentPsaltica,
+    },
+  },
+  {
+    neume: TempoSign.Moderate,
+    attributes: {
+      neumeFontSize: defaultTempoFontSizeAdjustmentPsaltica,
+      top: defaultTempoTopAdjustmentPsaltica,
+    },
+  },
+  {
+    neume: TempoSign.Quick,
+    attributes: {
+      neumeFontSize: defaultTempoFontSizeAdjustmentPsaltica,
+      top: defaultTempoTopAdjustmentPsaltica,
+    },
+  },
+  {
+    neume: TempoSign.Quicker,
+    attributes: {
+      neumeFontSize: defaultTempoFontSizeAdjustmentPsaltica,
+      top: defaultTempoTopAdjustmentPsaltica,
+    },
+  },
+  {
+    neume: TempoSign.Slow,
+    attributes: {
+      neumeFontSize: defaultTempoFontSizeAdjustmentPsaltica,
+      top: defaultTempoTopAdjustmentPsaltica,
+    },
+  },
+  {
+    neume: TempoSign.Slower,
+    attributes: {
+      neumeFontSize: defaultTempoFontSizeAdjustmentPsaltica,
+      top: defaultTempoTopAdjustmentPsaltica,
+    },
+  },
+  {
+    neume: TempoSign.VeryQuick,
+    attributes: {
+      neumeFontSize: defaultTempoFontSizeAdjustmentPsaltica,
+      top: defaultTempoTopAdjustmentPsaltica,
+    },
+  },
+  {
+    neume: TempoSign.VerySlow,
+    attributes: {
+      neumeFontSize: defaultTempoFontSizeAdjustmentPsaltica,
+      top: defaultTempoTopAdjustmentPsaltica,
+    },
+  },
+];
 
 export const INSERT_NEUME_DEFAULT_ATTRIBUTES_MARTYRIA: InsertNeumeDefaultAttributesMartyriaType =
   {
@@ -316,11 +374,340 @@ export const INSERT_NEUME_DEFAULT_ATTRIBUTES_MARTYRIA: InsertNeumeDefaultAttribu
       top: -0.29,
       kerningLeft: -0.3,
     },
+    NeanesRTL: {
+      neumeFontSize: 1.7,
+      top: -0.29,
+      kerningLeft: -0.3,
+    },
+    NeanesStathisSeries: {
+      neumeFontSize: 1.7,
+      top: -0.29,
+      kerningLeft: -0.3,
+    },
   };
 
-// Temporary Shortcut
-INSERT_NEUME_DEFAULT_ATTRIBUTES['NeanesStathisSeries'] =
-  INSERT_NEUME_DEFAULT_ATTRIBUTES['Neanes'];
+const DEFAULT_ATTRIBUTES_STATHIS: InsertNeumeAttributeSet[] = [
+  {
+    neume: ModeSign.AlphaWithHypsili, // modeFirst
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: 0.2,
+      kerningLeft: -0.266,
+    },
+  },
+  {
+    neume: ModeSign.AlphaWithDeltaHat, // modeFirstShort
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: 0.2,
+      kerningLeft: -0.266,
+    },
+  },
+  {
+    neume: ModeSign.SoftChromatic2, // modeSecond
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+      kerningLeft: -0.249,
+    },
+  },
+  {
+    neume: ModeSign.NanaOld, // modeThird
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      kerningLeft: -0.3,
+      kerningRight: -0.3,
+    },
+  },
+  {
+    neume: ModeSign.Nana, // modeThirdNana
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: 0.095,
+      kerningLeft: -0.32,
+    },
+  },
+  {
+    neume: ModeSign.DeltaWithHypsili, // modeFourth
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: 0.108,
+      kerningLeft: -0.202,
+    },
+  },
+  {
+    neume: ModeSign.DeltaWithDeltaHat, // modeFourthShort
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: 0.108,
+      kerningLeft: -0.235,
+    },
+  },
+  {
+    neume: ModeSign.Legetos, // modeLegetos
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: 0.23,
+      kerningLeft: -0.4,
+    },
+  },
+  {
+    neume: ModeSign.Alpha, // modePlagalFirst
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+      kerningLeft: -0.338,
+    },
+  },
+  {
+    neume: ModeSign.SoftChromatic6, // modePlagalSecond
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+      kerningLeft: -0.3,
+    },
+  },
+  {
+    neume: ModeSign.VarysZo, // modeVarys2
+    attributes: { neumeFontSize: defaultFontSizeAdjustment },
+  },
+  {
+    neume: ModeSign.Delta, // modePlagalFourth
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+      kerningLeft: -0.25,
+    },
+  },
+  {
+    neume: ModeSign.Plagal, // modePlagal
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+      kerningLeft: -0.324,
+    },
+  },
+  {
+    neume: UnicodeNeume.Uni1d0b6,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      kerningRight: -fontService.getAdvanceWidth(
+        'NeanesStathisSeries',
+        `uni1d0b6`,
+      ),
+    },
+  },
+  {
+    neume: UnicodeNeume.Uni1d0ba,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      kerningRight: -fontService.getAdvanceWidth(
+        'NeanesStathisSeries',
+        `uni1d0ba`,
+      ),
+    },
+  },
+  {
+    neume: UnicodeNeume.Uni1d0bb,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      kerningRight: -fontService.getAdvanceWidth(
+        'NeanesStathisSeries',
+        `uni1d0bb`,
+      ),
+    },
+  },
+  {
+    neume: UnicodeNeume.Uni1d0bd,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      kerningRight: -fontService.getAdvanceWidth(
+        'NeanesStathisSeries',
+        `uni1d0bd`,
+      ),
+    },
+  },
+  {
+    neume: UnicodeNeume.Uni1d0bf,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      kerningRight: -fontService.getAdvanceWidth(
+        'NeanesStathisSeries',
+        `uni1d0bf`,
+      ),
+    },
+  },
+  {
+    neume: UnicodeNeume.Uni1d0c0,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      kerningRight: -fontService.getAdvanceWidth(
+        'NeanesStathisSeries',
+        `uni1d0c0`,
+      ),
+    },
+  },
+  {
+    neume: UnicodeNeume.Uni1d0c1,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      kerningRight: -fontService.getAdvanceWidth(
+        'NeanesStathisSeries',
+        `uni1d0c1`,
+      ),
+    },
+  },
+  {
+    neume: UnicodeNeume.Uni1d0c2,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      kerningRight: -fontService.getAdvanceWidth(
+        'NeanesStathisSeries',
+        `uni1d0c2`,
+      ),
+    },
+  },
+  {
+    neume: UnicodeNeume.Uni1d0c3,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      kerningRight: -fontService.getAdvanceWidth(
+        'NeanesStathisSeries',
+        `uni1d0c3`,
+      ),
+    },
+  },
+  {
+    neume: UnicodeNeume.Uni1d0c4,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      kerningRight: -fontService.getAdvanceWidth(
+        'NeanesStathisSeries',
+        `uni1d0c4`,
+      ),
+    },
+  },
+  {
+    neume: UnicodeNeume.Uni1d0c5,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      kerningRight: -fontService.getAdvanceWidth(
+        'NeanesStathisSeries',
+        `uni1d0c5`,
+      ),
+    },
+  },
+  {
+    neume: UnicodeNeume.Uni1d0c7,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      kerningRight: -fontService.getAdvanceWidth(
+        'NeanesStathisSeries',
+        `uni1d0c7`,
+      ),
+    },
+  },
+  {
+    neume: UnicodeNeume.Uni1d0c8,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      kerningRight: -fontService.getAdvanceWidth(
+        'NeanesStathisSeries',
+        `uni1d0c8`,
+      ),
+    },
+  },
+  {
+    neume: UnicodeNeume.Uni1d0c9,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      kerningRight: -fontService.getAdvanceWidth(
+        'NeanesStathisSeries',
+        `uni1d0c9`,
+      ),
+    },
+  },
+  {
+    neume: UnicodeNeume.Uni1d0ca,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      kerningRight: -fontService.getAdvanceWidth(
+        'NeanesStathisSeries',
+        `uni1d0ca`,
+      ),
+    },
+  },
+  {
+    neume: UnicodeNeume.Uni1d0cb,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      kerningRight: -fontService.getAdvanceWidth(
+        'NeanesStathisSeries',
+        `uni1d0cb`,
+      ),
+    },
+  },
+  {
+    neume: TempoSign.Medium,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultTempoTopAdjustmentStathis,
+    },
+  },
+  {
+    neume: TempoSign.Moderate,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultTempoTopAdjustmentStathis,
+    },
+  },
+  {
+    neume: TempoSign.Quick,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultTempoTopAdjustmentStathis,
+    },
+  },
+  {
+    neume: TempoSign.Quicker,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultTempoTopAdjustmentStathis,
+    },
+  },
+  {
+    neume: TempoSign.Slow,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultTempoTopAdjustmentStathis,
+    },
+  },
+  {
+    neume: TempoSign.Slower,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultTempoTopAdjustmentStathis,
+    },
+  },
+  {
+    neume: TempoSign.VeryQuick,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultTempoTopAdjustmentStathis,
+    },
+  },
+  {
+    neume: TempoSign.VerySlow,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultTempoTopAdjustmentStathis,
+    },
+  },
+];
 
-INSERT_NEUME_DEFAULT_ATTRIBUTES_MARTYRIA['NeanesStathisSeries'] =
-  INSERT_NEUME_DEFAULT_ATTRIBUTES_MARTYRIA['Neanes'];
+export const INSERT_NEUME_DEFAULT_ATTRIBUTES: InsertNeumeDefaultAttributesType =
+  {
+    Neanes: DEFAULT_ATTRIBUTES_PSALTICA,
+    NeanesRTL: DEFAULT_ATTRIBUTES_PSALTICA,
+    NeanesStathisSeries: DEFAULT_ATTRIBUTES_STATHIS,
+  };

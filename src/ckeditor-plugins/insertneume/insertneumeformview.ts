@@ -13,6 +13,7 @@ import {
   ListView,
   Locale,
   View,
+  ViewCollection,
 } from 'ckeditor5';
 import i18next from 'i18next';
 
@@ -128,7 +129,7 @@ export default class InsertNeumeFormView extends View {
         }),
       );
 
-      const martyriaNoteDropdown = this._createDropdown(
+      const martyriaNoteDropdown = this._createDropdownForMartyriaNote(
         i18next.t(martyriaNote),
         noteOptions,
         (martyriaNote: string) => {
@@ -255,6 +256,41 @@ export default class InsertNeumeFormView extends View {
     });
 
     dropdownView.panelView.children.add(listView);
+
+    return dropdownView;
+  }
+
+  _createDropdownForMartyriaNote(
+    label: string,
+    options: Array<{ label: string; value: string }>,
+    onChange: (optionText: string) => void,
+  ) {
+    const dropdownView = createDropdown(this.locale);
+    dropdownView.buttonView.set({
+      label,
+      withText: true,
+    });
+
+    const grid = new ViewCollection();
+    options.forEach(({ label, value }) => {
+      const button = new ButtonView(this.locale);
+      button.set({ label, withText: true });
+      button.on('execute', () => {
+        onChange(value);
+        dropdownView.buttonView.label = label;
+        dropdownView.isOpen = false;
+      });
+      grid.add(button);
+    });
+
+    const gridView = new View();
+    gridView.setTemplate({
+      tag: 'div',
+      attributes: { class: ['martyria-note-grid'] },
+      children: grid,
+    });
+
+    dropdownView.panelView.children.add(gridView);
 
     return dropdownView;
   }

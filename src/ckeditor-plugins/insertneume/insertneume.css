@@ -13,6 +13,12 @@
   font-size: 16pt !important;
 }
 
+.martyria-note-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+}
+
 .ck-dropdown__character-block {
   width: 100% !important;
 }

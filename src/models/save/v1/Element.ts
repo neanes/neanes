@@ -218,6 +218,9 @@ export class RichTextBoxElement extends ScoreElement {
   public modeChangePhysicalNote: ScaleNote = ScaleNote.Pa;
   public modeChangeScale: Scale = Scale.Diatonic;
   public modeChangeVirtualNote: ScaleNote | undefined = undefined;
+  public modeChangeIgnoreAttractions: boolean | undefined = undefined;
+  public modeChangePermanentEnharmonicZo: boolean | undefined = undefined;
+  public modeChangeBpm: number = 120;
   public height: number = 20;
   public customWidth: number | undefined = undefined;
   public marginTop: number | undefined = undefined;

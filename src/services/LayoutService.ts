@@ -39,6 +39,7 @@ import {
   getNoteValue,
   getScaleNoteFromValue,
   getScaleNoteValue,
+  getShiftWithoutFthora,
   Scale,
   ScaleNote,
 } from '@/models/Scales';
@@ -2486,7 +2487,7 @@ export class LayoutService {
         if (modeKey.modeChangeVirtualNote) {
           currentNoteVirtual = getScaleNoteValue(modeKey.modeChangeVirtualNote);
 
-          currentShift = this.getShiftWithoutFthora(
+          currentShift = getShiftWithoutFthora(
             currentNote,
             currentNoteVirtual,
             currentScale,
@@ -2841,23 +2842,6 @@ export class LayoutService {
     }
 
     return true;
-  }
-
-  public static getShiftWithoutFthora(
-    currentNote: number,
-    currentNoteVirtual: number,
-    currentScale: Scale,
-  ) {
-    let shift = currentNoteVirtual - currentNote;
-
-    if (
-      currentScale === Scale.HardChromatic ||
-      currentScale === Scale.SoftChromatic
-    ) {
-      shift %= 4;
-    }
-
-    return shift;
   }
 
   private static getNeumeWidthFromCache(

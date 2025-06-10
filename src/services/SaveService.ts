@@ -588,6 +588,11 @@ export class SaveService {
       element.modeChangePhysicalNote = e.modeChangePhysicalNote;
       element.modeChangeScale = e.modeChangeScale;
       element.modeChangeVirtualNote = e.modeChangeVirtualNote ?? undefined;
+      element.modeChangeBpm = e.modeChangeBpm;
+      element.modeChangeIgnoreAttractions =
+        e.modeChangeIgnoreAttractions ?? undefined;
+      element.modeChangePermanentEnharmonicZo =
+        e.modeChangePermanentEnharmonicZo ?? undefined;
     }
 
     element.height = e.height;
@@ -1373,6 +1378,11 @@ export class SaveService {
       element.modeChangePhysicalNote = e.modeChangePhysicalNote;
       element.modeChangeScale = e.modeChangeScale;
       element.modeChangeVirtualNote = e.modeChangeVirtualNote ?? null;
+      element.modeChangeBpm = e.modeChangeBpm;
+      element.modeChangeIgnoreAttractions =
+        e.modeChangeIgnoreAttractions === true;
+      element.modeChangePermanentEnharmonicZo =
+        e.modeChangePermanentEnharmonicZo === true;
     }
 
     element.customWidth = e.customWidth ?? null;

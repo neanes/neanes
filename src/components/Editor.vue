@@ -812,6 +812,21 @@
             modeChangeVirtualNote: $event,
           })
         "
+        @update:modeChangeIgnoreAttractions="
+          updateRichTextBox(selectedRichTextBoxElement, {
+            modeChangeIgnoreAttractions: $event,
+          })
+        "
+        @update:modeChangePermanentEnharmonicZo="
+          updateRichTextBox(selectedRichTextBoxElement, {
+            modeChangePermanentEnharmonicZo: $event,
+          })
+        "
+        @update:modeChangeBpm="
+          updateRichTextBox(selectedRichTextBoxElement, {
+            modeChangeBpm: $event,
+          })
+        "
         @update:marginTop="
           updateRichTextBoxMarginTop(selectedRichTextBoxElement, $event)
         "

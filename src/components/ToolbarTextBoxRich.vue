@@ -131,6 +131,48 @@
           </option>
         </select>
       </div>
+      <span class="space"></span>
+      <div class="form-group">
+        <label class="right-space">{{ $t('toolbar:common.bpm') }}</label>
+        <InputBpm
+          :modelValue="element.modeChangeBpm"
+          @update:modelValue="$emit('update:modeChangeBpm', $event)"
+        />
+      </div>
+      <span class="space"></span>
+      <div class="form-group">
+        <input
+          id="toolbar-rich-text-box-ignore-attractions"
+          type="checkbox"
+          :checked="element.modeChangeIgnoreAttractions"
+          @change="
+            $emit(
+              'update:modeChangeIgnoreAttractions',
+              ($event.target as HTMLInputElement).checked,
+            )
+          "
+        />
+        <label for="toolbar-rich-text-box-ignore-attractions">{{
+          $t('toolbar:common.ignoreAttractions')
+        }}</label>
+      </div>
+      <span class="space"></span>
+      <div class="form-group">
+        <input
+          id="toolbar-rich-text-box-permanent-enharmonic-zo"
+          type="checkbox"
+          :checked="element.modeChangePermanentEnharmonicZo"
+          @change="
+            $emit(
+              'update:modeChangePermanentEnharmonicZo',
+              ($event.target as HTMLInputElement).checked,
+            )
+          "
+        />
+        <label for="toolbar-rich-text-box-permanent-enharmonic-zo">{{
+          $t('toolbar:modeKey.permanentEnharmonicZo')
+        }}</label>
+      </div>
     </template>
     <span class="divider"></span>
     <div class="form-group">
@@ -161,6 +203,7 @@
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-facing-decorator';
 
+import InputBpm from '@/components/InputBpm.vue';
 import InputUnit from '@/components/InputUnit.vue';
 import { RichTextBoxElement } from '@/models/Element';
 import { PageSetup } from '@/models/PageSetup';
@@ -168,16 +211,19 @@ import { Scale, ScaleNote } from '@/models/Scales';
 import { Unit } from '@/utils/Unit';
 
 @Component({
-  components: { InputUnit },
+  components: { InputBpm, InputUnit },
   emits: [
     'update:customWidth',
     'update:inline',
     'update:marginBottom',
     'update:marginTop',
     'update:modeChange',
+    'update:modeChangeBpm',
+    'update:modeChangeIgnoreAttractions',
     'update:modeChangePhysicalNote',
     'update:modeChangeScale',
     'update:modeChangeVirtualNote',
+    'update:modeChangePermanentEnharmonicZo',
     'update:rtl',
     'update:sectionName',
   ],

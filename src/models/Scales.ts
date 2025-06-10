@@ -157,3 +157,20 @@ export const getOrderedNotes = () => [
   ScaleNote.ThiHigh,
   ScaleNote.KeHigh,
 ];
+
+export function getShiftWithoutFthora(
+  currentNote: number,
+  currentNoteVirtual: number,
+  currentScale: Scale,
+) {
+  let shift = currentNoteVirtual - currentNote;
+
+  if (
+    currentScale === Scale.HardChromatic ||
+    currentScale === Scale.SoftChromatic
+  ) {
+    shift %= 4;
+  }
+
+  return shift;
+}

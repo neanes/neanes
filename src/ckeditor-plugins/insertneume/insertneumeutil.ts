@@ -375,8 +375,7 @@ const DEFAULT_ATTRIBUTES_PSALTICA: InsertNeumeAttributeSet[] = [
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
       width: 1.444,
-      kerningLeft: 0.7,
-      kerningRight: -0.7,
+      kerningRight: -1.444,
     },
   },
   {
@@ -770,8 +769,7 @@ const DEFAULT_ATTRIBUTES_STATHIS: InsertNeumeAttributeSet[] = [
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
       width: 1.444,
-      kerningLeft: 0.7,
-      kerningRight: -0.7,
+      kerningRight: -1.444,
     },
   },
   {

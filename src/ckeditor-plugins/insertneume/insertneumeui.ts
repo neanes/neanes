@@ -176,10 +176,6 @@ export default class InsertNeumeUI extends Plugin {
       callback: () => {
         balloon.remove(view);
         view.destroy();
-
-        // Force a blur on the editor so that an update is triggered
-        const domRoot = editor.ui.getEditableElement();
-        domRoot?.dispatchEvent(new FocusEvent('blur'));
       },
     });
   }

@@ -70,8 +70,13 @@ export const INSERT_NEUME_CHARACTER_BLOCKS = [
       UnicodeNeume.Uni1d0c9,
       UnicodeNeume.Uni1d0ca,
       UnicodeNeume.Uni1d0cb, // end fthoras
+      QuantitativeNeume.KentemataPlusOligon,
+      QuantitativeNeume.OligonPlusKentima,
       QuantitativeNeume.OligonPlusKentimaAbove,
       QuantitativeNeume.OligonPlusHypsiliRight,
+      ModeSign.OligonPlusHypsili,
+      QuantitativeNeume.OligonPlusHypsiliLeft,
+      QuantitativeNeume.OligonPlusHypsiliPlusKentimaVertical,
       QuantitativeNeume.Elaphron,
       QuantitativeNeume.RunningElaphron,
       TempoSign.VerySlow,
@@ -363,6 +368,63 @@ const DEFAULT_ATTRIBUTES_PSALTICA: InsertNeumeAttributeSet[] = [
     attributes: {
       neumeFontSize: defaultTempoFontSizeAdjustmentPsaltica,
       top: defaultTempoTopAdjustmentPsaltica,
+    },
+  },
+  {
+    neume: ModeSign.OligonPlusHypsili,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      width: 1.444,
+      kerningLeft: 0.7,
+      kerningRight: -0.7,
+    },
+  },
+  {
+    neume: QuantitativeNeume.KentemataPlusOligon,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+    },
+  },
+  {
+    neume: QuantitativeNeume.OligonPlusKentima,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+    },
+  },
+  {
+    neume: QuantitativeNeume.OligonPlusKentimaAbove,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+    },
+  },
+  {
+    neume: QuantitativeNeume.OligonPlusHypsiliRight,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+    },
+  },
+  {
+    neume: QuantitativeNeume.OligonPlusHypsiliLeft,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+    },
+  },
+  {
+    neume: QuantitativeNeume.OligonPlusHypsiliPlusKentimaVertical,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+    },
+  },
+  {
+    neume: QuantitativeNeume.Elaphron,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+    },
+  },
+  {
+    neume: QuantitativeNeume.RunningElaphron,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
     },
   },
 ];
@@ -701,6 +763,63 @@ const DEFAULT_ATTRIBUTES_STATHIS: InsertNeumeAttributeSet[] = [
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
       top: defaultTempoTopAdjustmentStathis,
+    },
+  },
+  {
+    neume: ModeSign.OligonPlusHypsili,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      width: 1.444,
+      kerningLeft: 0.7,
+      kerningRight: -0.7,
+    },
+  },
+  {
+    neume: QuantitativeNeume.KentemataPlusOligon,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+    },
+  },
+  {
+    neume: QuantitativeNeume.OligonPlusKentima,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+    },
+  },
+  {
+    neume: QuantitativeNeume.OligonPlusKentimaAbove,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+    },
+  },
+  {
+    neume: QuantitativeNeume.OligonPlusHypsiliRight,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+    },
+  },
+  {
+    neume: QuantitativeNeume.OligonPlusHypsiliLeft,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+    },
+  },
+  {
+    neume: QuantitativeNeume.OligonPlusHypsiliPlusKentimaVertical,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+    },
+  },
+  {
+    neume: QuantitativeNeume.Elaphron,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+    },
+  },
+  {
+    neume: QuantitativeNeume.RunningElaphron,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
     },
   },
 ];

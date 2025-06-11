@@ -857,14 +857,24 @@ export class RichTextBoxElement extends ScoreElement {
   public getClipboardProperties() {
     return {
       content: this.content,
+      contentBottom: this.contentBottom,
       contentLeft: this.contentLeft,
       contentRight: this.contentRight,
       contentCenter: this.contentCenter,
       rtl: this.rtl,
       multipanel: this.multipanel,
+      inline: this.inline,
       height: this.height,
+      customWidth: this.customWidth,
       marginBottom: this.marginBottom,
       marginTop: this.marginTop,
+      modeChange: this.modeChange,
+      modeChangePhysicalNote: this.modeChangePhysicalNote,
+      modeChangeScale: this.modeChangeScale,
+      modeChangeVirtualNote: this.modeChangeVirtualNote,
+      modeChangeIgnoreAttractions: this.modeChangeIgnoreAttractions,
+      modeChangePermanentEnharmonicZo: this.modeChangePermanentEnharmonicZo,
+      modeChangeBpm: this.modeChangeBpm,
     } as Partial<RichTextBoxElement>;
   }
 }

@@ -174,6 +174,14 @@ export default class InsertNeumeUI extends Plugin {
       activator: () => balloon.visibleView === view,
       contextElements: [view.element!],
       callback: () => {
+        const editorElement = editor.ui.element;
+
+        if (editorElement) {
+          editorElement.dispatchEvent(
+            new FocusEvent('blur', { bubbles: true }),
+          );
+        }
+
         balloon.remove(view);
         view.destroy();
       },

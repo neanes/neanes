@@ -161,7 +161,9 @@ export default class TextBoxRich extends Vue {
       licenseKey: 'GPL',
       insertNeume: {
         neumeDefaultFontFamily: this.pageSetup.neumeDefaultFontFamily,
-        lyricsDefaultFontSize: this.pageSetup.lyricsDefaultFontSize,
+        defaultFontSize: this.element.inline
+          ? this.pageSetup.lyricsDefaultFontSize
+          : this.pageSetup.textBoxDefaultFontSize,
         fthoraDefaultColor: this.pageSetup.fthoraDefaultColor,
       },
     };
@@ -461,7 +463,9 @@ export default class TextBoxRich extends Vue {
   }
 
   getHeight() {
-    return (this.$el as HTMLElement).querySelector('.ck-content')?.scrollHeight;
+    return (this.$el as HTMLElement)
+      .querySelector('.ck-content')
+      ?.getBoundingClientRect().height;
   }
 
   getHeightBottom() {
@@ -515,7 +519,7 @@ export default class TextBoxRich extends Vue {
 .rich-text-editor {
   padding: 0;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: visible;
   transform-origin: 0 0;
   transform: scale(var(--zoom, 1));
 }

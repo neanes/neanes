@@ -26,7 +26,7 @@ export default class InsertNeume extends Plugin {
     const editor = this.editor;
 
     editor.config.define('insertNeume', {
-      lyricsDefaultFontSize: 16,
+      defaultFontSize: 16,
       neumeDefaultFontFamily: 'Neanes',
       fthoraDefaultColor: 'red',
       defaultAttributes: INSERT_NEUME_DEFAULT_ATTRIBUTES,

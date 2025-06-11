@@ -87,11 +87,12 @@ export default class InsertNeumeEditing extends Plugin {
 
         if (modelElement.getAttribute('neumeFontSize') != null) {
           const fontSize = modelElement.getAttribute('neumeFontSize') as number;
-          const lyricsDefaultFontSize = this.editor.config.get(
-            'insertNeume.lyricsDefaultFontSize',
+          const defaultFontSize = this.editor.config.get(
+            'insertNeume.defaultFontSize',
           ) as number;
 
-          style += `font-size: ${fontSize * lyricsDefaultFontSize}px;`;
+          style += `font-size: ${fontSize * defaultFontSize}px;`;
+          style += `line-height: ${defaultFontSize}px;`;
         }
 
         const attributes: Record<string, unknown> = {
@@ -160,11 +161,11 @@ export default class InsertNeumeEditing extends Plugin {
           viewElement.getStyle('font-size')?.slice(0, -2) ?? '16',
         );
 
-        const lyricsDefaultFontSize = this.editor.config.get(
-          'insertNeume.lyricsDefaultFontSize',
+        const defaultFontSize = this.editor.config.get(
+          'insertNeume.defaultFontSize',
         ) as number;
 
-        const neumeFontSize = fontSizePx / lyricsDefaultFontSize;
+        const neumeFontSize = fontSizePx / defaultFontSize;
 
         const neumeType = viewElement.getAttribute('neumetype');
 
@@ -258,13 +259,13 @@ export default class InsertNeumeEditing extends Plugin {
           const viewElement = conversionApi.mapper.toViewElement(data.item);
 
           if (viewElement) {
-            const lyricsDefaultFontSize = this.editor.config.get(
-              'insertNeume.lyricsDefaultFontSize',
+            const defaultFontSize = this.editor.config.get(
+              'insertNeume.defaultFontSize',
             ) as number;
 
             viewWriter.setStyle(
               'font-size',
-              data.attributeNewValue * lyricsDefaultFontSize + 'px',
+              data.attributeNewValue * defaultFontSize + 'px',
               viewElement,
             );
           }

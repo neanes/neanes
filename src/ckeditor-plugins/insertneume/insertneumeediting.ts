@@ -6,9 +6,10 @@ import { normalizeRootSign } from '@/utils/NeumeUtils';
 
 export const NEUME_ELEMENT = 'neume';
 export const NEUME_CLASS = 'neanes-ck-neume';
+export const NEUME_PLAGAL_CLASS = 'neanes-ck-neume-plagal';
 export const NEUME_CUSTOM_PROPERTY = 'neume';
 
-export type InsertNeumeType = 'single' | 'martyria';
+export type InsertNeumeType = 'single' | 'martyria' | 'plagal';
 
 export default class InsertNeumeEditing extends Plugin {
   static get pluginName() {
@@ -35,9 +36,13 @@ export default class InsertNeumeEditing extends Plugin {
         'width',
         'color',
         'neumeFontSize',
+        'neumeLineHeight',
         'neumeType',
         'martyriaNote',
         'martyriaRootSign',
+        'fontFamily',
+        'bold',
+        'italic',
       ],
     });
 
@@ -54,7 +59,6 @@ export default class InsertNeumeEditing extends Plugin {
           'martyriaRootSign',
         ) as RootSign;
 
-        let text = '';
         let style = '';
 
         if (modelElement.getAttribute('top') != null) {
@@ -91,8 +95,19 @@ export default class InsertNeumeEditing extends Plugin {
             'insertNeume.defaultFontSize',
           ) as number;
 
-          style += `font-size: ${fontSize * defaultFontSize}px;`;
-          style += `line-height: ${defaultFontSize}px;`;
+          const actualFontSize = fontSize * defaultFontSize;
+
+          style += `font-size: ${actualFontSize}px;`;
+
+          if (neumeType === 'plagal') {
+            const lineHeight = modelElement.getAttribute(
+              'neumeLineHeight',
+            ) as number;
+
+            style += `line-height: ${lineHeight};`;
+          } else {
+            style += `line-height: ${defaultFontSize}px;`;
+          }
         }
 
         const attributes: Record<string, unknown> = {
@@ -101,23 +116,41 @@ export default class InsertNeumeEditing extends Plugin {
           neumeType,
         };
 
+        const children: ViewNode[] = [];
+
         switch (neumeType) {
           case 'single':
-            text = NeumeMappingService.getMapping(neume)?.text ?? '';
+            const singleText =
+              NeumeMappingService.getMapping(neume)?.text ?? '';
+            children.push(writer.createText(singleText));
             attributes['neume'] = neume;
             break;
           case 'martyria':
-            text = this._getMartyriaText(martyriaNote, martyriaRootSign);
+            const martyriaText = this._getMartyriaText(
+              martyriaNote,
+              martyriaRootSign,
+            );
+            children.push(writer.createText(martyriaText));
             attributes['martyriaNote'] = martyriaNote;
             attributes['martyriaRootSign'] = martyriaRootSign;
             break;
+          case 'plagal':
+            children.push(
+              writer.createContainerElement('span', {}, writer.createText('λ')),
+            );
+            children.push(
+              writer.createContainerElement('span', {}, writer.createText('π')),
+            );
+            attributes.class += ` ${NEUME_PLAGAL_CLASS}`;
           default:
             break;
         }
 
-        const element = writer.createContainerElement('span', attributes, [
-          writer.createText(text),
-        ]);
+        const element = writer.createContainerElement(
+          'span',
+          attributes,
+          children,
+        );
 
         writer.setCustomProperty(NEUME_CUSTOM_PROPERTY, true, element);
 
@@ -131,6 +164,8 @@ export default class InsertNeumeEditing extends Plugin {
         classes: NEUME_CLASS,
       },
       model: (viewElement, { writer }) => {
+        const neumeType = viewElement.getAttribute('neumetype');
+
         const neume = viewElement.getAttribute('neume');
         const martyriaNote = viewElement.getAttribute('martyrianote');
         const martyriaRootSign = viewElement.getAttribute('martyriarootsign');
@@ -165,9 +200,12 @@ export default class InsertNeumeEditing extends Plugin {
           'insertNeume.defaultFontSize',
         ) as number;
 
-        const neumeFontSize = fontSizePx / defaultFontSize;
+        const neumeLineHeight =
+          neumeType === 'plagal'
+            ? viewElement.getStyle('line-height')
+            : undefined;
 
-        const neumeType = viewElement.getAttribute('neumetype');
+        const neumeFontSize = fontSizePx / defaultFontSize;
 
         return writer.createElement(NEUME_ELEMENT, {
           neume,
@@ -178,6 +216,7 @@ export default class InsertNeumeEditing extends Plugin {
           width,
           color,
           neumeFontSize,
+          neumeLineHeight,
           neumeType,
           martyriaNote,
           martyriaRootSign,
@@ -268,6 +307,28 @@ export default class InsertNeumeEditing extends Plugin {
               data.attributeNewValue * defaultFontSize + 'px',
               viewElement,
             );
+          }
+        },
+      );
+
+      dispatcher.on(
+        'attribute:neumeLineHeight:neume',
+        (evt, data, conversionApi) => {
+          const viewWriter = conversionApi.writer;
+          const viewElement = conversionApi.mapper.toViewElement(data.item);
+
+          if (viewElement) {
+            const neumeType = data.item.getAttribute(
+              'neumeType',
+            ) as InsertNeumeType;
+
+            if (neumeType === 'plagal') {
+              viewWriter.setStyle(
+                'line-height',
+                data.attributeNewValue,
+                viewElement,
+              );
+            }
           }
         },
       );

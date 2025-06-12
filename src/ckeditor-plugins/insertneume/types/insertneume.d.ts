@@ -6,6 +6,7 @@ declare module 'ckeditor5' {
   interface EditorConfig {
     insertNeume?: {
       neumeDefaultFontFamily?: string;
+      defaultFontFamily?: string;
       defaultFontSize?: number;
       fthoraDefaultColor?: string;
       defaultAttributes?: InsertNeumeDefaultAttributesType;

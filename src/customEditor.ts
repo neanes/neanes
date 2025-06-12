@@ -42,7 +42,6 @@ import {
 } from 'ckeditor5';
 
 import InsertNeume from './ckeditor-plugins/insertneume/insertneume';
-import ShiftText from './ckeditor-plugins/shifttext/shifttext';
 
 export default class InlineEditor extends InlineEditorBase {}
 
@@ -74,7 +73,6 @@ InlineEditor.builtinPlugins = [
   PasteFromOffice,
   RemoveFormat,
   SelectAll,
-  ShiftText,
   Subscript,
   Superscript,
   Table,
@@ -127,6 +125,7 @@ InlineEditor.defaultConfig = {
       '|',
       'insertNeume',
       'insertMartyria',
+      'insertPlagal',
     ],
     shouldNotGroupWhenFull: true,
   },

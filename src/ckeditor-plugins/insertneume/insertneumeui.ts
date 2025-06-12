@@ -6,6 +6,7 @@ import {
 } from 'ckeditor5';
 
 import { Note, RootSign } from '@/models/Neumes';
+import { TextMeasurementService } from '@/services/TextMeasurementService';
 
 import {
   INSERT_NEUME_COMMAND,
@@ -59,9 +60,14 @@ export default class InsertNeumeUI extends Plugin {
               neumeFont
             ] as InsertNeumeAttributeSet[];
 
-            args.defaultAttributes = defaultAttributeSet.find(
+            const defaultAttributes = defaultAttributeSet.find(
               (x) => x.neume === args.neume,
             )?.attributes;
+
+            if (defaultAttributes) {
+              args = { ...args, ...defaultAttributes };
+              console.log(defaultAttributeSet, args);
+            }
 
             editor.execute(INSERT_NEUME_COMMAND, args);
             balloon.remove(gridView);
@@ -116,7 +122,43 @@ export default class InsertNeumeUI extends Plugin {
           neumeType: 'martyria',
           martyriaNote: Note.Pa,
           martyriaRootSign: RootSign.Alpha,
-          defaultAttributes,
+          ...defaultAttributes,
+        } as InsertNeumeCommandParams);
+      });
+
+      return view;
+    });
+
+    editor.ui.componentFactory.add('insertPlagal', (locale) => {
+      const view = new ButtonView(locale);
+      view.set({
+        label: 'πλ',
+        withText: true,
+        tooltip: 'Insert Plagal',
+        class: 'ck-button__insert-plagal',
+      });
+
+      view.on('execute', () => {
+        const neumeFont = editor.config.get<string>(
+          'insertNeume.defaultFontFamily',
+        ) as string;
+
+        const piHeight = TextMeasurementService.getTextHeight(
+          'π',
+          `12px "${neumeFont}"`,
+        );
+
+        const fontHeight = TextMeasurementService.getFontHeight(
+          `12px "${neumeFont}"`,
+        );
+
+        const adjustment = 0.2;
+        const neumeLineHeight = piHeight / fontHeight + adjustment;
+
+        editor.execute(INSERT_NEUME_COMMAND, {
+          neumeType: 'plagal',
+          neumeFontSize: 1,
+          neumeLineHeight,
         } as InsertNeumeCommandParams);
       });
 

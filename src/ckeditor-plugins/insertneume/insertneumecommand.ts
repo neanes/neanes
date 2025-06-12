@@ -7,25 +7,23 @@ import { InsertNeumeAttributes } from './insertneumeutil';
 
 export const INSERT_NEUME_COMMAND = 'insertNeume';
 
-export interface InsertNeumeCommandParams {
+export interface InsertNeumeCommandParams
+  extends Partial<InsertNeumeAttributes> {
   neumeType: InsertNeumeType;
   neume?: Neume;
   martyriaNote?: Note;
   martyriaRootSign?: RootSign;
-  defaultAttributes?: Partial<InsertNeumeAttributes>;
+  neumeLineHeight?: number;
 }
 
 export default class InsertNeumeCommand extends Command {
   execute(attributes: InsertNeumeCommandParams) {
     const editor = this.editor;
     editor.model.change((writer) => {
-      const element = writer.createElement(NEUME_ELEMENT, {
-        neume: attributes.neume,
-        neumeType: attributes.neumeType,
-        martyriaNote: attributes.martyriaNote,
-        martyriaRootSign: attributes.martyriaRootSign,
-        ...attributes.defaultAttributes,
-      } as any);
+      const element = writer.createElement(
+        NEUME_ELEMENT,
+        attributes as unknown as Record<string, unknown>,
+      );
       const insertPosition = editor.model.document.selection.getFirstPosition();
 
       editor.model.insertContent(element, insertPosition);

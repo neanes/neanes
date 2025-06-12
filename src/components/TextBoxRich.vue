@@ -164,6 +164,9 @@ export default class TextBoxRich extends Vue {
         defaultFontSize: this.element.inline
           ? this.pageSetup.lyricsDefaultFontSize
           : this.pageSetup.textBoxDefaultFontSize,
+        defaultFontFamily: this.element.inline
+          ? this.pageSetup.lyricsDefaultFontFamily
+          : this.pageSetup.textBoxDefaultFontFamily,
         fthoraDefaultColor: this.pageSetup.fthoraDefaultColor,
       },
     };

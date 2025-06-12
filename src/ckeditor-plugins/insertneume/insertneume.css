@@ -74,3 +74,9 @@
 .neanes-ck-neume {
   display: inline-block;
 }
+
+.neanes-ck-neume-plagal {
+  display: inline-flex;
+  flex-direction: column;
+  vertical-align: middle;
+}

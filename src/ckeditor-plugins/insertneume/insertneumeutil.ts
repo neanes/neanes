@@ -184,7 +184,7 @@ const DEFAULT_ATTRIBUTES_PSALTICA: InsertNeumeAttributeSet[] = [
   },
   {
     neume: ModeSign.VarysZo, // modeVarys2
-    attributes: { neumeFontSize: defaultFontSizeAdjustment, top: -0.33 },
+    attributes: { neumeFontSize: defaultFontSizeAdjustment, top: 0.33 },
   },
   {
     neume: ModeSign.Delta, // modePlagalFourth

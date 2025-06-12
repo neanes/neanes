@@ -10,6 +10,7 @@ export default class UpdateNeumeAttributesCommand extends Command {
   kerningLeft: number = 0;
   kerningRight: number = 0;
   neumeFontSize: number = 1;
+  neumeLineHeight: number = 1;
   width: number | null = null;
   color: string | null = null;
 
@@ -46,6 +47,8 @@ export default class UpdateNeumeAttributesCommand extends Command {
       this.kerningLeft = (neume.getAttribute('kerningLeft') as number) ?? 0;
       this.kerningRight = (neume.getAttribute('kerningRight') as number) ?? 0;
       this.neumeFontSize = (neume.getAttribute('neumeFontSize') as number) ?? 1;
+      this.neumeLineHeight =
+        (neume.getAttribute('neumeLineHeight') as number) ?? 1;
       this.width = (neume.getAttribute('width') as number) ?? null;
       this.color = (neume.getAttribute('color') as string) ?? null;
     } else {
@@ -54,6 +57,7 @@ export default class UpdateNeumeAttributesCommand extends Command {
       this.kerningLeft = 0;
       this.kerningRight = 0;
       this.neumeFontSize = 1;
+      this.neumeLineHeight = 1;
       this.width = null;
       this.color = null;
     }

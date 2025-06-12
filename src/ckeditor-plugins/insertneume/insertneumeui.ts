@@ -66,7 +66,6 @@ export default class InsertNeumeUI extends Plugin {
 
             if (defaultAttributes) {
               args = { ...args, ...defaultAttributes };
-              console.log(defaultAttributeSet, args);
             }
 
             editor.execute(INSERT_NEUME_COMMAND, args);
@@ -202,6 +201,9 @@ export default class InsertNeumeUI extends Plugin {
     view.fontSizeInput.fieldView
       .bind('value')
       .to(command as any, 'neumeFontSize');
+    view.lineHeightInput.fieldView
+      .bind('value')
+      .to(command as any, 'neumeLineHeight');
     view.colorInput.bind('selectedColor').to(command as any, 'color');
 
     balloon.add({

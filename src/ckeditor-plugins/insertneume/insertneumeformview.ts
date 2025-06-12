@@ -30,6 +30,7 @@ export default class InsertNeumeFormView extends View {
   public kerningRightInput: LabeledFieldView<InputNumberView>;
   public widthInput: LabeledFieldView<InputNumberView>;
   public fontSizeInput: LabeledFieldView<InputNumberView>;
+  public lineHeightInput: LabeledFieldView<InputNumberView>;
   public colorInput: ColorSelectorView;
   public config: Config<EditorConfig>;
 
@@ -37,6 +38,8 @@ export default class InsertNeumeFormView extends View {
     super(locale);
 
     this.config = config;
+
+    const neumeType = element.getAttribute('neumeType') as InsertNeumeType;
 
     const topInput = this._createNumberInput('Top (em)', (top) => {
       this.fire('change:values', {
@@ -89,11 +92,21 @@ export default class InsertNeumeFormView extends View {
       });
     });
 
+    const lineHeightInput = this._createNumberInput('Line Height', (value) => {
+      this.fire('change:values', {
+        neumeLineHeight: !isNaN(value) ? value : 1,
+      });
+    });
+
     widthInput.fieldView.min = 0;
     widthInput.fieldView.placeholder = 'auto';
 
     fontSizeInput.fieldView.min = 0;
     fontSizeInput.fieldView.placeholder = '1';
+
+    lineHeightInput.fieldView.min = 0;
+    lineHeightInput.fieldView.placeholder = '1';
+    lineHeightInput.fieldView.step = 0.05;
 
     this.topInput = topInput;
     this.leftInput = leftInput;
@@ -102,6 +115,7 @@ export default class InsertNeumeFormView extends View {
     this.widthInput = widthInput;
     this.colorInput = colorInput;
     this.fontSizeInput = fontSizeInput;
+    this.lineHeightInput = lineHeightInput;
 
     const children: View[] = [
       topInput,
@@ -109,10 +123,13 @@ export default class InsertNeumeFormView extends View {
       kerningLeftInput,
       kerningRightInput,
       fontSizeInput,
-      colorInput,
     ];
 
-    const neumeType = element.getAttribute('neumeType') as InsertNeumeType;
+    if (neumeType === 'plagal') {
+      children.push(lineHeightInput);
+    }
+
+    children.push(colorInput);
 
     if (neumeType === 'martyria') {
       const martyriaNote = element.getAttribute('martyriaNote') as Note;

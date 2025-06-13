@@ -111,6 +111,7 @@ export default class InsertNeumeFormView extends View {
     const alignRightInput = this._createSwitchButton('Align Right', (value) => {
       this.fire('change:values', {
         alignRight: value,
+        right: 0,
       });
     });
 

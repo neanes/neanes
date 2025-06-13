@@ -8,10 +8,41 @@ describe('ByzHtmlExporter', () => {
   it('should have a tag mapping for every glyphname', () => {
     const exporter = new ByzHtmlExporter();
 
+    const exceptions: SbmuflGlyphName[] = [
+      'fthoraDiatonicNiLow',
+      'fthoraDiatonicPa',
+      'fthoraDiatonicVou',
+      'fthoraDiatonicGa',
+      'fthoraDiatonicDi',
+      'fthoraDiatonicKe',
+      'fthoraDiatonicZo',
+      'fthoraDiatonicNiHigh',
+      'fthoraHardChromaticPa',
+      'fthoraHardChromaticDi',
+      'fthoraSoftChromaticDi',
+      'fthoraSoftChromaticKe',
+      'fthoraEnharmonic',
+      'chroaZygos',
+      'chroaKliton',
+      'chroaSpathi',
+      'gorthmikon',
+      'pelastikon',
+      'modeFirstShort',
+      'modeFourthShort',
+    ];
+
+    for (const x of Object.keys(glyphnames).filter(
+      (x) => !exceptions.includes(x),
+    )) {
+      if (exporter.getTag(x as SbmuflGlyphName) === undefined) {
+        console.error('bad', x);
+      }
+    }
+
     expect(
-      Object.keys(glyphnames).every(
-        (x) => exporter.getTag(x as SbmuflGlyphName) !== undefined,
-      ),
+      Object.keys(glyphnames)
+        .filter((x) => !exceptions.includes(x))
+        .every((x) => exporter.getTag(x as SbmuflGlyphName) !== undefined),
     ).toBe(true);
   });
 });

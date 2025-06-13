@@ -5,6 +5,7 @@ import {
   Fthora,
   GorgonNeume,
   Ison,
+  Letter,
   MeasureBar,
   MeasureNumber,
   ModeSign,
@@ -16,7 +17,6 @@ import {
   TempoSign,
   Tie,
   TimeNeume,
-  UnicodeNeume,
   VocalExpressionNeume,
 } from '@/models/Neumes';
 
@@ -436,6 +436,24 @@ mapNeumeToSbmufl(Fthora.Kliton_Bottom, 'chroaKlitonBelow');
 mapNeumeToSbmufl(Fthora.Spathi_Bottom, 'chroaSpathiBelow');
 mapNeumeToSbmufl(Fthora.GeneralSharp_Bottom, 'diesisGenikiBelow');
 mapNeumeToSbmufl(Fthora.GeneralFlat_Bottom, 'yfesisGenikiBelow');
+
+mapNeumeToSbmufl(Fthora.DiatonicNiLow, 'fthoraDiatonicNiLow');
+mapNeumeToSbmufl(Fthora.DiatonicPa, 'fthoraDiatonicPa');
+mapNeumeToSbmufl(Fthora.DiatonicVou, 'fthoraDiatonicVou');
+mapNeumeToSbmufl(Fthora.DiatonicGa, 'fthoraDiatonicGa');
+mapNeumeToSbmufl(Fthora.DiatonicThi, 'fthoraDiatonicDi');
+mapNeumeToSbmufl(Fthora.DiatonicKe, 'fthoraDiatonicKe');
+mapNeumeToSbmufl(Fthora.DiatonicZo, 'fthoraDiatonicZo');
+mapNeumeToSbmufl(Fthora.DiatonicNiHigh, 'fthoraDiatonicNiHigh');
+mapNeumeToSbmufl(Fthora.HardChromaticPa, 'fthoraHardChromaticPa');
+mapNeumeToSbmufl(Fthora.HardChromaticThi, 'fthoraHardChromaticDi');
+mapNeumeToSbmufl(Fthora.SoftChromaticThi, 'fthoraSoftChromaticDi');
+mapNeumeToSbmufl(Fthora.SoftChromaticPa, 'fthoraSoftChromaticKe');
+mapNeumeToSbmufl(Fthora.Enharmonic, 'fthoraEnharmonic');
+mapNeumeToSbmufl(Fthora.Zygos, 'chroaZygos');
+mapNeumeToSbmufl(Fthora.Kliton, 'chroaKliton');
+mapNeumeToSbmufl(Fthora.Spathi, 'chroaSpathi');
+
 mapNeumeToSbmufl(Accidental.Sharp_2_Left, 'diesis2');
 mapNeumeToSbmufl(Accidental.Sharp_4_Left, 'diesis4');
 mapNeumeToSbmufl(Accidental.Sharp_6_Left, 'diesis6');
@@ -559,14 +577,14 @@ mapNeumeToSbmufl(ModeSign.ThirdCapital, 'modeGammaCapital');
 mapNeumeToSbmufl(ModeSign.FourthCapital, 'modeDeltaCapital');
 mapNeumeToSbmufl(ModeSign.Varys, 'modeWordVarys');
 mapNeumeToSbmufl(ModeSign.Alpha, 'modePlagalFirst');
-mapNeumeToSbmufl(ModeSign.AlphaWithDeltaHat, 'modeFirstShort');
+mapNeumeToSbmufl(ModeSign.AlphaWithDeltaHat, 'modeFirst', 1);
 mapNeumeToSbmufl(ModeSign.AlphaWithHypsili, 'modeFirst');
 mapNeumeToSbmufl(ModeSign.SoftChromatic6, 'modePlagalSecond');
 mapNeumeToSbmufl(ModeSign.SoftChromatic2, 'modeSecond');
 mapNeumeToSbmufl(ModeSign.Nana, 'modeThirdNana');
 mapNeumeToSbmufl(ModeSign.VarysZo, 'modeVarys');
 mapNeumeToSbmufl(ModeSign.Delta, 'modePlagalFourth');
-mapNeumeToSbmufl(ModeSign.DeltaWithDeltaHat, 'modeFourthShort');
+mapNeumeToSbmufl(ModeSign.DeltaWithDeltaHat, 'modeFourth', 1);
 mapNeumeToSbmufl(ModeSign.DeltaWithHypsili, 'modeFourth');
 mapNeumeToSbmufl(ModeSign.NanaOld, 'modeThird');
 mapNeumeToSbmufl(ModeSign.Legetos, 'modeLegetos');
@@ -628,14 +646,8 @@ mapNeumeToSbmufl(Ison.ZoHigh, 'isonIndicatorZoHigh');
 mapNeumeToSbmufl(Tie.YfenAbove, 'yfenAbove');
 mapNeumeToSbmufl(Tie.YfenBelow, 'yfenBelow');
 
-// Add the unicode 1d000-1d00ff block
-for (const neume of Object.values(UnicodeNeume)) {
-  const codepoint = Number('0x' + neume.substring(3));
-  neumeToSbmuflGlyphMap.set(neume, {
-    glyphName: ('U' + neume.substring(3)) as SbmuflGlyphName,
-    text: String.fromCodePoint(codepoint),
-  });
-}
+mapNeumeToSbmufl(Letter.Gorthmikon, 'gorthmikon');
+mapNeumeToSbmufl(Letter.Pelastikon, 'pelastikon');
 
 export class NeumeMappingService {
   public static getMapping(neume: Neume): NeumeMapping {

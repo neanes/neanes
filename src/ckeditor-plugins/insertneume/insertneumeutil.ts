@@ -1,11 +1,13 @@
 import {
+  Fthora,
+  Letter,
   ModeSign,
   Neume,
   QuantitativeNeume,
   TempoSign,
-  UnicodeNeume,
 } from '@/models/Neumes';
 import { fontService } from '@/services/FontService';
+import { NeumeMappingService } from '@/services/NeumeMappingService';
 
 export interface InsertNeumeAttributes {
   top: number;
@@ -54,22 +56,22 @@ export const INSERT_NEUME_CHARACTER_BLOCKS = [
       ModeSign.VarysZo,
       ModeSign.Delta,
       ModeSign.Plagal,
-      UnicodeNeume.Uni1d0b6, // fthora start
-      UnicodeNeume.Uni1d0ba,
-      UnicodeNeume.Uni1d0bb,
-      UnicodeNeume.Uni1d0bd,
-      UnicodeNeume.Uni1d0bf,
-      UnicodeNeume.Uni1d0c0,
-      UnicodeNeume.Uni1d0c1,
-      UnicodeNeume.Uni1d0c2,
-      UnicodeNeume.Uni1d0c3,
-      UnicodeNeume.Uni1d0c4,
-      UnicodeNeume.Uni1d0c5,
-      UnicodeNeume.Uni1d0c7,
-      UnicodeNeume.Uni1d0c8,
-      UnicodeNeume.Uni1d0c9,
-      UnicodeNeume.Uni1d0ca,
-      UnicodeNeume.Uni1d0cb, // end fthoras
+      Fthora.DiatonicNiLow,
+      Fthora.DiatonicPa,
+      Fthora.DiatonicVou,
+      Fthora.DiatonicGa,
+      Fthora.DiatonicThi,
+      Fthora.DiatonicKe,
+      Fthora.DiatonicZo,
+      Fthora.DiatonicNiHigh,
+      Fthora.HardChromaticPa,
+      Fthora.HardChromaticThi,
+      Fthora.SoftChromaticThi,
+      Fthora.SoftChromaticPa,
+      Fthora.Enharmonic,
+      Fthora.Zygos,
+      Fthora.Kliton,
+      Fthora.Spathi,
       QuantitativeNeume.KentemataPlusOligon,
       QuantitativeNeume.OligonPlusKentima,
       QuantitativeNeume.OligonPlusKentimaAbove,
@@ -87,8 +89,8 @@ export const INSERT_NEUME_CHARACTER_BLOCKS = [
       TempoSign.Quick,
       TempoSign.Quicker,
       TempoSign.VeryQuick,
-      UnicodeNeume.Uni1d0b4, // pelastikon
-      UnicodeNeume.Uni1d0b5, // gorthmikon
+      Letter.Pelastikon, // pelastikon
+      Letter.Gorthmikon, // gorthmikon
     ],
   },
 ];
@@ -203,115 +205,163 @@ const DEFAULT_ATTRIBUTES_PSALTICA: InsertNeumeAttributeSet[] = [
     },
   },
   {
-    neume: UnicodeNeume.Uni1d0b6,
+    neume: Fthora.DiatonicNiLow,
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
-      kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0b6`),
+      kerningRight: -fontService.getAdvanceWidth(
+        'Neanes',
+        NeumeMappingService.getMapping(Fthora.DiatonicNiLow).glyphName,
+      ),
     },
   },
   {
-    neume: UnicodeNeume.Uni1d0ba,
+    neume: Fthora.DiatonicPa,
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
-      kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0ba`),
+      kerningRight: -fontService.getAdvanceWidth(
+        'Neanes',
+        NeumeMappingService.getMapping(Fthora.DiatonicNiLow).glyphName,
+      ),
     },
   },
   {
-    neume: UnicodeNeume.Uni1d0bb,
+    neume: Fthora.DiatonicVou,
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
-      kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0bb`),
+      kerningRight: -fontService.getAdvanceWidth(
+        'Neanes',
+        NeumeMappingService.getMapping(Fthora.DiatonicVou).glyphName,
+      ),
     },
   },
   {
-    neume: UnicodeNeume.Uni1d0bd,
+    neume: Fthora.DiatonicGa,
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
-      kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0bd`),
+      kerningRight: -fontService.getAdvanceWidth(
+        'Neanes',
+        NeumeMappingService.getMapping(Fthora.DiatonicGa).glyphName,
+      ),
     },
   },
   {
-    neume: UnicodeNeume.Uni1d0bf,
+    neume: Fthora.DiatonicThi,
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
-      kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0bf`),
+      kerningRight: -fontService.getAdvanceWidth(
+        'Neanes',
+        NeumeMappingService.getMapping(Fthora.DiatonicThi).glyphName,
+      ),
     },
   },
   {
-    neume: UnicodeNeume.Uni1d0c0,
+    neume: Fthora.DiatonicKe,
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
-      kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0c0`),
+      kerningRight: -fontService.getAdvanceWidth(
+        'Neanes',
+        NeumeMappingService.getMapping(Fthora.DiatonicKe).glyphName,
+      ),
     },
   },
   {
-    neume: UnicodeNeume.Uni1d0c1,
+    neume: Fthora.DiatonicZo,
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
-      kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0c1`),
+      kerningRight: -fontService.getAdvanceWidth(
+        'Neanes',
+        NeumeMappingService.getMapping(Fthora.DiatonicZo).glyphName,
+      ),
     },
   },
   {
-    neume: UnicodeNeume.Uni1d0c2,
+    neume: Fthora.DiatonicNiHigh,
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
-      kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0c2`),
+      kerningRight: -fontService.getAdvanceWidth(
+        'Neanes',
+        NeumeMappingService.getMapping(Fthora.DiatonicNiHigh).glyphName,
+      ),
     },
   },
   {
-    neume: UnicodeNeume.Uni1d0c3,
+    neume: Fthora.HardChromaticPa,
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
-      kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0c3`),
+      kerningRight: -fontService.getAdvanceWidth(
+        'Neanes',
+        NeumeMappingService.getMapping(Fthora.HardChromaticPa).glyphName,
+      ),
     },
   },
   {
-    neume: UnicodeNeume.Uni1d0c4,
+    neume: Fthora.HardChromaticThi,
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
-      kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0c4`),
+      kerningRight: -fontService.getAdvanceWidth(
+        'Neanes',
+        NeumeMappingService.getMapping(Fthora.HardChromaticThi).glyphName,
+      ),
     },
   },
   {
-    neume: UnicodeNeume.Uni1d0c5,
+    neume: Fthora.SoftChromaticThi,
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
-      kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0c5`),
+      kerningRight: -fontService.getAdvanceWidth(
+        'Neanes',
+        NeumeMappingService.getMapping(Fthora.SoftChromaticThi).glyphName,
+      ),
     },
   },
   {
-    neume: UnicodeNeume.Uni1d0c7,
+    neume: Fthora.SoftChromaticPa,
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
-      kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0c7`),
+      kerningRight: -fontService.getAdvanceWidth(
+        'Neanes',
+        NeumeMappingService.getMapping(Fthora.SoftChromaticPa).glyphName,
+      ),
     },
   },
   {
-    neume: UnicodeNeume.Uni1d0c8,
+    neume: Fthora.Enharmonic,
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
-      kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0c8`),
+      kerningRight: -fontService.getAdvanceWidth(
+        'Neanes',
+        NeumeMappingService.getMapping(Fthora.Enharmonic).glyphName,
+      ),
     },
   },
   {
-    neume: UnicodeNeume.Uni1d0c9,
+    neume: Fthora.Zygos,
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
-      kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0c9`),
+      kerningRight: -fontService.getAdvanceWidth(
+        'Neanes',
+        NeumeMappingService.getMapping(Fthora.Zygos).glyphName,
+      ),
     },
   },
   {
-    neume: UnicodeNeume.Uni1d0ca,
+    neume: Fthora.Kliton,
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
-      kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0ca`),
+      kerningRight: -fontService.getAdvanceWidth(
+        'Neanes',
+        NeumeMappingService.getMapping(Fthora.Kliton).glyphName,
+      ),
     },
   },
   {
-    neume: UnicodeNeume.Uni1d0cb,
+    neume: Fthora.Spathi,
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
-      kerningRight: -fontService.getAdvanceWidth('Neanes', `uni1d0cb`),
+      kerningRight: -fontService.getAdvanceWidth(
+        'Neanes',
+        NeumeMappingService.getMapping(Fthora.Spathi).glyphName,
+      ),
     },
   },
   {
@@ -549,162 +599,162 @@ const DEFAULT_ATTRIBUTES_STATHIS: InsertNeumeAttributeSet[] = [
     },
   },
   {
-    neume: UnicodeNeume.Uni1d0b6,
+    neume: Fthora.DiatonicNiLow,
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
       kerningRight: -fontService.getAdvanceWidth(
-        'NeanesStathisSeries',
-        `uni1d0b6`,
+        'Neanes',
+        NeumeMappingService.getMapping(Fthora.DiatonicNiLow).glyphName,
       ),
     },
   },
   {
-    neume: UnicodeNeume.Uni1d0ba,
+    neume: Fthora.DiatonicPa,
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
       kerningRight: -fontService.getAdvanceWidth(
-        'NeanesStathisSeries',
-        `uni1d0ba`,
+        'Neanes',
+        NeumeMappingService.getMapping(Fthora.DiatonicNiLow).glyphName,
       ),
     },
   },
   {
-    neume: UnicodeNeume.Uni1d0bb,
+    neume: Fthora.DiatonicVou,
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
       kerningRight: -fontService.getAdvanceWidth(
-        'NeanesStathisSeries',
-        `uni1d0bb`,
+        'Neanes',
+        NeumeMappingService.getMapping(Fthora.DiatonicVou).glyphName,
       ),
     },
   },
   {
-    neume: UnicodeNeume.Uni1d0bd,
+    neume: Fthora.DiatonicGa,
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
       kerningRight: -fontService.getAdvanceWidth(
-        'NeanesStathisSeries',
-        `uni1d0bd`,
+        'Neanes',
+        NeumeMappingService.getMapping(Fthora.DiatonicGa).glyphName,
       ),
     },
   },
   {
-    neume: UnicodeNeume.Uni1d0bf,
+    neume: Fthora.DiatonicThi,
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
       kerningRight: -fontService.getAdvanceWidth(
-        'NeanesStathisSeries',
-        `uni1d0bf`,
+        'Neanes',
+        NeumeMappingService.getMapping(Fthora.DiatonicThi).glyphName,
       ),
     },
   },
   {
-    neume: UnicodeNeume.Uni1d0c0,
+    neume: Fthora.DiatonicKe,
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
       kerningRight: -fontService.getAdvanceWidth(
-        'NeanesStathisSeries',
-        `uni1d0c0`,
+        'Neanes',
+        NeumeMappingService.getMapping(Fthora.DiatonicKe).glyphName,
       ),
     },
   },
   {
-    neume: UnicodeNeume.Uni1d0c1,
+    neume: Fthora.DiatonicZo,
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
       kerningRight: -fontService.getAdvanceWidth(
-        'NeanesStathisSeries',
-        `uni1d0c1`,
+        'Neanes',
+        NeumeMappingService.getMapping(Fthora.DiatonicZo).glyphName,
       ),
     },
   },
   {
-    neume: UnicodeNeume.Uni1d0c2,
+    neume: Fthora.DiatonicNiHigh,
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
       kerningRight: -fontService.getAdvanceWidth(
-        'NeanesStathisSeries',
-        `uni1d0c2`,
+        'Neanes',
+        NeumeMappingService.getMapping(Fthora.DiatonicNiHigh).glyphName,
       ),
     },
   },
   {
-    neume: UnicodeNeume.Uni1d0c3,
+    neume: Fthora.HardChromaticPa,
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
       kerningRight: -fontService.getAdvanceWidth(
-        'NeanesStathisSeries',
-        `uni1d0c3`,
+        'Neanes',
+        NeumeMappingService.getMapping(Fthora.HardChromaticPa).glyphName,
       ),
     },
   },
   {
-    neume: UnicodeNeume.Uni1d0c4,
+    neume: Fthora.HardChromaticThi,
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
       kerningRight: -fontService.getAdvanceWidth(
-        'NeanesStathisSeries',
-        `uni1d0c4`,
+        'Neanes',
+        NeumeMappingService.getMapping(Fthora.HardChromaticThi).glyphName,
       ),
     },
   },
   {
-    neume: UnicodeNeume.Uni1d0c5,
+    neume: Fthora.SoftChromaticThi,
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
       kerningRight: -fontService.getAdvanceWidth(
-        'NeanesStathisSeries',
-        `uni1d0c5`,
+        'Neanes',
+        NeumeMappingService.getMapping(Fthora.SoftChromaticThi).glyphName,
       ),
     },
   },
   {
-    neume: UnicodeNeume.Uni1d0c7,
+    neume: Fthora.SoftChromaticPa,
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
       kerningRight: -fontService.getAdvanceWidth(
-        'NeanesStathisSeries',
-        `uni1d0c7`,
+        'Neanes',
+        NeumeMappingService.getMapping(Fthora.SoftChromaticPa).glyphName,
       ),
     },
   },
   {
-    neume: UnicodeNeume.Uni1d0c8,
+    neume: Fthora.Enharmonic,
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
       kerningRight: -fontService.getAdvanceWidth(
-        'NeanesStathisSeries',
-        `uni1d0c8`,
+        'Neanes',
+        NeumeMappingService.getMapping(Fthora.Enharmonic).glyphName,
       ),
     },
   },
   {
-    neume: UnicodeNeume.Uni1d0c9,
+    neume: Fthora.Zygos,
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
       kerningRight: -fontService.getAdvanceWidth(
-        'NeanesStathisSeries',
-        `uni1d0c9`,
+        'Neanes',
+        NeumeMappingService.getMapping(Fthora.Zygos).glyphName,
       ),
     },
   },
   {
-    neume: UnicodeNeume.Uni1d0ca,
+    neume: Fthora.Kliton,
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
       kerningRight: -fontService.getAdvanceWidth(
-        'NeanesStathisSeries',
-        `uni1d0ca`,
+        'Neanes',
+        NeumeMappingService.getMapping(Fthora.Kliton).glyphName,
       ),
     },
   },
   {
-    neume: UnicodeNeume.Uni1d0cb,
+    neume: Fthora.Spathi,
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
       kerningRight: -fontService.getAdvanceWidth(
-        'NeanesStathisSeries',
-        `uni1d0cb`,
+        'Neanes',
+        NeumeMappingService.getMapping(Fthora.Spathi).glyphName,
       ),
     },
   },

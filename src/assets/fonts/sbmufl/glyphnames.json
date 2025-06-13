@@ -824,6 +824,54 @@
   "chroaSpathiBelow": {
     "codepoint": "U+E1CF"
   },
+  "fthoraDiatonicNiLow": {
+    "codepoint": "U+E1D0"
+  },
+  "fthoraDiatonicPa": {
+    "codepoint": "U+E1D1"
+  },
+  "fthoraDiatonicVou": {
+    "codepoint": "U+E1D2"
+  },
+  "fthoraDiatonicGa": {
+    "codepoint": "U+E1D3"
+  },
+  "fthoraDiatonicDi": {
+    "codepoint": "U+E1D4"
+  },
+  "fthoraDiatonicKe": {
+    "codepoint": "U+E1D5"
+  },
+  "fthoraDiatonicZo": {
+    "codepoint": "U+E1D6"
+  },
+  "fthoraDiatonicNiHigh": {
+    "codepoint": "U+E1D7"
+  },
+  "fthoraHardChromaticPa": {
+    "codepoint": "U+E1D8"
+  },
+  "fthoraHardChromaticDi": {
+    "codepoint": "U+E1D9"
+  },
+  "fthoraSoftChromaticDi": {
+    "codepoint": "U+E1DA"
+  },
+  "fthoraSoftChromaticKe": {
+    "codepoint": "U+E1DB"
+  },
+  "fthoraEnharmonic": {
+    "codepoint": "U+E1DC"
+  },
+  "chroaZygos": {
+    "codepoint": "U+E1DD"
+  },
+  "chroaKliton": {
+    "codepoint": "U+E1DE"
+  },
+  "chroaSpathi": {
+    "codepoint": "U+E1DF"
+  },
   "diesis2": {
     "alternateCodepoint": "U+1D0D0",
     "codepoint": "U+E1F0"
@@ -1054,7 +1102,7 @@
   "modeFirst": {
     "codepoint": "U+E2A0"
   },
-    "modeFirstShort": {
+  "modeFirstShort": {
     "codepoint": "U+E2A1"
   },
   "modeSecond": {

@@ -76,8 +76,10 @@ export default class InsertNeumeView extends View {
   _loadCharactersForBlock(block: CharacterBlock) {
     const characters: GridButtonParams[] = [];
     for (const neume of block.neumes) {
+      const mapping = NeumeMappingService.getMapping(neume);
       characters.push({
-        label: NeumeMappingService.getMapping(neume)?.text ?? '',
+        label: mapping?.text ?? '',
+        salt: mapping?.salt,
         neume: neume,
       });
     }
@@ -88,12 +90,20 @@ export default class InsertNeumeView extends View {
   _renderGrid(characters: GridButtonParams[]) {
     this.grid.clear();
 
-    characters.forEach(({ label: char, neume }) => {
+    characters.forEach(({ label: char, neume, salt }) => {
       const button = new ButtonView(this.locale);
       button.set({
         label: char,
         withText: true,
       });
+
+      if (salt) {
+        console.log('adding salt');
+        button.set({
+          class: 'salt',
+        });
+      }
+
       button.on('execute', () => {
         this.onCharSelect({
           neumeType: 'single',
@@ -108,4 +118,5 @@ export default class InsertNeumeView extends View {
 export interface GridButtonParams {
   label: string;
   neume: Neume;
+  salt?: number;
 }

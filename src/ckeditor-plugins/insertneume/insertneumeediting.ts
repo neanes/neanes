@@ -133,10 +133,15 @@ export default class InsertNeumeEditing extends Plugin {
 
         switch (neumeType) {
           case 'single':
-            const singleText =
-              NeumeMappingService.getMapping(neume)?.text ?? '';
+            const singleMapping = NeumeMappingService.getMapping(neume);
+            const singleText = singleMapping?.text ?? '';
             children.push(writer.createText(singleText));
             attributes['neume'] = neume;
+
+            if (singleMapping?.salt) {
+              attributes.style += 'font-feature-settings: "salt";';
+              console.log('salt');
+            }
             break;
           case 'martyria':
             const martyriaText = this._getMartyriaText(

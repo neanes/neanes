@@ -828,6 +828,7 @@ export class RichTextBoxElement extends ScoreElement {
   public multipanel: boolean = false;
   public rtl: boolean = false;
   public inline: boolean = false;
+  public centerOnPage: boolean = false;
   public modeChange: boolean = false;
   public modeChangePhysicalNote: ScaleNote = ScaleNote.Pa;
   public modeChangeScale: Scale = Scale.Diatonic;

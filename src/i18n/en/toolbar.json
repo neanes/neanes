@@ -97,6 +97,7 @@
     "multipanel": "Multipanel",
     "rtl": "RTL",
     "modeChange": "Change Mode",
-    "virtualNote": "Parallage Note"
+    "virtualNote": "Parallage Note",
+    "centerOnPage": "Center on Page"
   }
 }

@@ -87,10 +87,10 @@
 <script lang="ts">
 import { FontSizeOption } from '@ckeditor/ckeditor5-font/src/fontconfig';
 import { Ckeditor } from '@ckeditor/ckeditor5-vue';
-import { EditorConfig } from 'ckeditor5';
+import { Editor, EditorConfig } from 'ckeditor5';
 import { StyleValue } from 'vue';
 import type { ComponentExposed } from 'vue-component-type-helpers';
-import { Component, Prop, Vue } from 'vue-facing-decorator';
+import { Component, Prop, Vue, Watch } from 'vue-facing-decorator';
 
 import ContentEditable from '@/components/ContentEditable.vue';
 import InlineEditor from '@/customEditor';
@@ -294,9 +294,7 @@ export default class TextBoxRich extends Vue {
 
   get textBoxStyleBottom() {
     const style: any = {
-      width: !this.element.multipanel
-        ? withZoom(this.element.width)
-        : undefined,
+      width: withZoom(this.element.width),
     };
 
     return style;
@@ -305,8 +303,6 @@ export default class TextBoxRich extends Vue {
   get textBoxTopContainerStyle() {
     const style: any = {
       height: withZoom(this.element.height),
-
-      //lineHeight: `${this.element.defaultLyricsFontHeight}px`,
     };
 
     return style;
@@ -345,6 +341,12 @@ export default class TextBoxRich extends Vue {
     }
   }
 
+  @Watch('element.centerOnPage')
+  onCenterOnPageChange() {
+    this.setPadding(this.editorInstance);
+    this.setPadding(this.editorInstanceBottom);
+  }
+
   onEditorReady() {
     const height = this.getHeight();
 
@@ -377,6 +379,8 @@ export default class TextBoxRich extends Vue {
     });
 
     this.inlineTopObserver.observe(element);
+
+    this.setPadding(this.editorInstance);
   }
 
   onEditorReadyInlineBottom() {
@@ -398,6 +402,8 @@ export default class TextBoxRich extends Vue {
     });
 
     this.inlineBottomObserver.observe(element);
+
+    this.setPadding(this.editorInstanceBottom);
   }
 
   onBlur() {
@@ -481,6 +487,26 @@ export default class TextBoxRich extends Vue {
     return (this.$el as HTMLElement)
       .querySelector('.ck-content.inline-top')
       ?.getBoundingClientRect().height;
+  }
+
+  setPadding(editor: Editor | undefined) {
+    if (editor == null) {
+      return;
+    }
+
+    editor.editing.view.change((writer) => {
+      const editable = editor.editing.view.document.getRoot();
+
+      if (this.element.centerOnPage) {
+        writer.setStyle(
+          'padding-right',
+          withZoom(this.pageSetup.innerPageWidth - this.element.width),
+          editable!,
+        );
+      } else {
+        writer.removeStyle('padding-right', editable!);
+      }
+    });
   }
 
   focus() {

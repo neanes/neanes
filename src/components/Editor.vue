@@ -794,6 +794,11 @@
         @update:rtl="
           updateRichTextBox(selectedRichTextBoxElement, { rtl: $event })
         "
+        @update:centerOnPage="
+          updateRichTextBox(selectedRichTextBoxElement, {
+            centerOnPage: $event,
+          })
+        "
         @update:modeChange="
           updateRichTextBox(selectedRichTextBoxElement, { modeChange: $event })
         "

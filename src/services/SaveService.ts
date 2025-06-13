@@ -581,6 +581,7 @@ export class SaveService {
     if (e.inline) {
       element.inline = e.inline;
       element.contentBottom = e.contentBottom;
+      element.centerOnPage = e.centerOnPage;
     }
 
     if (e.modeChange) {
@@ -1372,6 +1373,7 @@ export class SaveService {
 
     if (e.inline) {
       element.contentBottom = e.contentBottom;
+      element.centerOnPage = e.centerOnPage === true;
     }
 
     if (e.modeChange) {

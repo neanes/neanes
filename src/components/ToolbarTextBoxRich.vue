@@ -30,6 +30,23 @@
           @update:modelValue="$emit('update:customWidth', $event)"
         />
       </div>
+
+      <div class="form-group">
+        <input
+          id="toolbar-text-box-center-on-page"
+          type="checkbox"
+          :checked="element.centerOnPage"
+          @change="
+            $emit(
+              'update:centerOnPage',
+              ($event.target as HTMLInputElement).checked,
+            )
+          "
+        />
+        <label for="toolbar-text-box-center-on-page">{{
+          $t('toolbar:textbox.centerOnPage')
+        }}</label>
+      </div>
     </template>
     <span class="divider" />
     <div class="form-group">
@@ -213,6 +230,7 @@ import { Unit } from '@/utils/Unit';
 @Component({
   components: { InputBpm, InputUnit },
   emits: [
+    'update:centerOnPage',
     'update:customWidth',
     'update:inline',
     'update:marginBottom',

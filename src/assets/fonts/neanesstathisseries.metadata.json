@@ -7959,8 +7959,6 @@
     "psifiston.salt01": 0.0,
     "heteronConnecting.salt01": 0.0,
     "psifiston.alt01": -0.004,
-    "modeFirstShort": 0.98,
-    "modeFourthShort": 0.98,
     "fthoraDiatonicNiLow": 0.56,
     "fthoraDiatonicPa": 0.385,
     "fthoraDiatonicVou": 0.602,
@@ -11686,26 +11684,6 @@
       "bBoxSW": [
         -0.838,
         0.161
-      ]
-    },
-    "modeFirstShort": {
-      "bBoxNE": [
-        0.975,
-        1.266
-      ],
-      "bBoxSW": [
-        0.274,
-        -0.23
-      ]
-    },
-    "modeFourthShort": {
-      "bBoxNE": [
-        0.938,
-        1.224
-      ],
-      "bBoxSW": [
-        0.25,
-        -0.169
       ]
     },
     "fthoraDiatonicNiLow": {

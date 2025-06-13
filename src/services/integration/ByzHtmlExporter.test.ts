@@ -25,19 +25,7 @@ describe('ByzHtmlExporter', () => {
       'chroaZygos',
       'chroaKliton',
       'chroaSpathi',
-      'gorthmikon',
-      'pelastikon',
-      'modeFirstShort',
-      'modeFourthShort',
     ];
-
-    for (const x of Object.keys(glyphnames).filter(
-      (x) => !exceptions.includes(x),
-    )) {
-      if (exporter.getTag(x as SbmuflGlyphName) === undefined) {
-        console.error('bad', x);
-      }
-    }
 
     expect(
       Object.keys(glyphnames)

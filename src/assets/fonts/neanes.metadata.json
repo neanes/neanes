@@ -7919,8 +7919,6 @@
     "diesis6Tertiary": 0.0,
     "diesis8Tertiary": 0.0,
     "stavrosAbove": 0.0,
-    "modeFirstShort": 0.945,
-    "modeFourthShort": 0.93,
     "fthoraDiatonicNiLow": 0.488,
     "fthoraDiatonicPa": 0.364,
     "fthoraDiatonicVou": 0.492,
@@ -11646,26 +11644,6 @@
       "bBoxSW": [
         -0.173,
         0.126
-      ]
-    },
-    "modeFirstShort": {
-      "bBoxNE": [
-        0.829,
-        1.255
-      ],
-      "bBoxSW": [
-        0.413,
-        0.074
-      ]
-    },
-    "modeFourthShort": {
-      "bBoxNE": [
-        0.887,
-        1.255
-      ],
-      "bBoxSW": [
-        0.312,
-        0.08
       ]
     },
     "fthoraDiatonicNiLow": {

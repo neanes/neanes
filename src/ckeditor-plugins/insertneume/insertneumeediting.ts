@@ -140,7 +140,6 @@ export default class InsertNeumeEditing extends Plugin {
 
             if (singleMapping?.salt) {
               attributes.style += 'font-feature-settings: "salt";';
-              console.log('salt');
             }
             break;
           case 'martyria':

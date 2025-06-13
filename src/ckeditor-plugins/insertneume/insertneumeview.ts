@@ -98,7 +98,6 @@ export default class InsertNeumeView extends View {
       });
 
       if (salt) {
-        console.log('adding salt');
         button.set({
           class: 'salt',
         });

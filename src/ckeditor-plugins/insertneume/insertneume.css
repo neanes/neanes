@@ -75,6 +75,11 @@
   display: inline-block;
 }
 
+.neanes-ck-neume-align-right {
+  position: absolute !important;
+  left: initial !important;
+}
+
 .neanes-ck-neume-plagal {
   display: inline-flex;
   flex-direction: column;

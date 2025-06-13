@@ -7,6 +7,7 @@ import { normalizeRootSign } from '@/utils/NeumeUtils';
 export const NEUME_ELEMENT = 'neume';
 export const NEUME_CLASS = 'neanes-ck-neume';
 export const NEUME_PLAGAL_CLASS = 'neanes-ck-neume-plagal';
+export const NEUME_ALIGN_RIGHT_CLASS = 'neanes-ck-neume-align-right';
 export const NEUME_CUSTOM_PROPERTY = 'neume';
 
 export type InsertNeumeType = 'single' | 'martyria' | 'plagal';
@@ -33,6 +34,8 @@ export default class InsertNeumeEditing extends Plugin {
         'left',
         'kerningLeft',
         'kerningRight',
+        'alignRight',
+        'right',
         'width',
         'color',
         'neumeFontSize',
@@ -65,8 +68,14 @@ export default class InsertNeumeEditing extends Plugin {
           style += `top: ${modelElement.getAttribute('top') ?? 0}em;`;
         }
 
-        if (modelElement.getAttribute('left') != null) {
+        const alignRight = modelElement.getAttribute('alignRight') as boolean;
+
+        if (!alignRight && modelElement.getAttribute('left') != null) {
           style += `left: ${modelElement.getAttribute('left') ?? 0}em;`;
+        }
+
+        if (alignRight && modelElement.getAttribute('right') != null) {
+          style += `right: ${modelElement.getAttribute('right') ?? 0}em;`;
         }
 
         if (modelElement.getAttribute('kerningLeft') != null) {
@@ -116,6 +125,10 @@ export default class InsertNeumeEditing extends Plugin {
           neumeType,
         };
 
+        if (alignRight) {
+          attributes['alignRight'] = true;
+        }
+
         const children: ViewNode[] = [];
 
         switch (neumeType) {
@@ -146,6 +159,10 @@ export default class InsertNeumeEditing extends Plugin {
             break;
         }
 
+        if (alignRight) {
+          attributes.class += ` ${NEUME_ALIGN_RIGHT_CLASS}`;
+        }
+
         const element = writer.createContainerElement(
           'span',
           attributes,
@@ -170,10 +187,16 @@ export default class InsertNeumeEditing extends Plugin {
         const martyriaNote = viewElement.getAttribute('martyrianote');
         const martyriaRootSign = viewElement.getAttribute('martyriarootsign');
 
+        const alignRight = viewElement.getAttribute('alignright') === 'true';
+
         const color = viewElement.getStyle('color') ?? '';
 
         const left = parseFloat(
           viewElement.getStyle('left')?.slice(0, -2) ?? '0',
+        );
+
+        const right = parseFloat(
+          viewElement.getStyle('right')?.slice(0, -2) ?? '0',
         );
 
         const kerningLeft = parseFloat(
@@ -213,6 +236,8 @@ export default class InsertNeumeEditing extends Plugin {
           top,
           kerningLeft,
           kerningRight,
+          alignRight,
+          right,
           width,
           color,
           neumeFontSize,
@@ -258,6 +283,37 @@ export default class InsertNeumeEditing extends Plugin {
           );
         }
       });
+
+      dispatcher.on('attribute:right:neume', (evt, data, conversionApi) => {
+        const viewWriter = conversionApi.writer;
+        const viewElement = conversionApi.mapper.toViewElement(data.item);
+
+        if (viewElement) {
+          viewWriter.setStyle(
+            'right',
+            data.attributeNewValue + 'em',
+            viewElement,
+          );
+        }
+      });
+
+      dispatcher.on(
+        'attribute:alignRight:neume',
+        (evt, data, conversionApi) => {
+          const viewWriter = conversionApi.writer;
+          const viewElement = conversionApi.mapper.toViewElement(data.item);
+
+          if (viewElement) {
+            if (data.attributeNewValue === true) {
+              viewWriter.setAttribute('alignRight', true, viewElement);
+              viewWriter.addClass(NEUME_ALIGN_RIGHT_CLASS, viewElement);
+            } else {
+              viewWriter.removeClass(NEUME_ALIGN_RIGHT_CLASS, viewElement);
+              viewWriter.removeAttribute('alignRight', viewElement);
+            }
+          }
+        },
+      );
 
       dispatcher.on(
         'attribute:kerningLeft:neume',

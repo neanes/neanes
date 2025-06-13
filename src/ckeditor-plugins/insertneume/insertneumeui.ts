@@ -182,15 +182,31 @@ export default class InsertNeumeUI extends Plugin {
   _showFormUI(element: any) {
     const editor = this.editor;
     const balloon = editor.plugins.get(ContextualBalloon);
+
     const view = new InsertNeumeFormView(editor.locale, editor.config, element);
     const command = editor.commands.get(UPDATE_NEUME_ATTRIBUTES_COMMAND);
 
+    const closeUI = () => {
+      const editorElement = editor.ui.element;
+
+      if (editorElement) {
+        editorElement.dispatchEvent(new FocusEvent('blur', { bubbles: true }));
+      }
+
+      balloon.remove(view);
+      view.destroy();
+    };
+
     view.on('change:values', (evt, args) => {
       editor.execute(UPDATE_NEUME_ATTRIBUTES_COMMAND, args);
+      if (args['alignRight'] !== undefined) {
+        closeUI();
+      }
     });
 
     view.topInput.fieldView.bind('value').to(command as any, 'top');
     view.leftInput.fieldView.bind('value').to(command as any, 'left');
+    view.rightInput.fieldView.bind('value').to(command as any, 'right');
     view.kerningLeftInput.fieldView
       .bind('value')
       .to(command as any, 'kerningLeft');
@@ -205,6 +221,7 @@ export default class InsertNeumeUI extends Plugin {
       .bind('value')
       .to(command as any, 'neumeLineHeight');
     view.colorInput.bind('selectedColor').to(command as any, 'color');
+    view.alignRightInput.bind('isOn').to(command as any, 'alignRight');
 
     balloon.add({
       view,
@@ -217,18 +234,7 @@ export default class InsertNeumeUI extends Plugin {
       emitter: view,
       activator: () => balloon.visibleView === view,
       contextElements: [view.element!],
-      callback: () => {
-        const editorElement = editor.ui.element;
-
-        if (editorElement) {
-          editorElement.dispatchEvent(
-            new FocusEvent('blur', { bubbles: true }),
-          );
-        }
-
-        balloon.remove(view);
-        view.destroy();
-      },
+      callback: closeUI,
     });
   }
 }

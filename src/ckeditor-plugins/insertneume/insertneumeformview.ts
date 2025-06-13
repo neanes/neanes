@@ -12,6 +12,7 @@ import {
   LabeledFieldView,
   ListView,
   Locale,
+  SwitchButtonView,
   View,
   ViewCollection,
 } from 'ckeditor5';
@@ -26,6 +27,8 @@ import { InsertNeumeType } from './insertneumeediting';
 export default class InsertNeumeFormView extends View {
   public topInput: LabeledFieldView<InputNumberView>;
   public leftInput: LabeledFieldView<InputNumberView>;
+  public rightInput: LabeledFieldView<InputNumberView>;
+  public alignRightInput: SwitchButtonView;
   public kerningLeftInput: LabeledFieldView<InputNumberView>;
   public kerningRightInput: LabeledFieldView<InputNumberView>;
   public widthInput: LabeledFieldView<InputNumberView>;
@@ -40,6 +43,7 @@ export default class InsertNeumeFormView extends View {
     this.config = config;
 
     const neumeType = element.getAttribute('neumeType') as InsertNeumeType;
+    const alignRight = element.getAttribute('alignRight') as boolean;
 
     const topInput = this._createNumberInput('Top (em)', (top) => {
       this.fire('change:values', {
@@ -50,6 +54,12 @@ export default class InsertNeumeFormView extends View {
     const leftInput = this._createNumberInput('Left (em)', (left) => {
       this.fire('change:values', {
         left: !isNaN(left) ? left : 0,
+      });
+    });
+
+    const rightInput = this._createNumberInput('Right (em)', (right) => {
+      this.fire('change:values', {
+        right: !isNaN(right) ? right : 0,
       });
     });
 
@@ -98,6 +108,12 @@ export default class InsertNeumeFormView extends View {
       });
     });
 
+    const alignRightInput = this._createSwitchButton('Align Right', (value) => {
+      this.fire('change:values', {
+        alignRight: value,
+      });
+    });
+
     widthInput.fieldView.min = 0;
     widthInput.fieldView.placeholder = 'auto';
 
@@ -110,6 +126,8 @@ export default class InsertNeumeFormView extends View {
 
     this.topInput = topInput;
     this.leftInput = leftInput;
+    this.rightInput = rightInput;
+    this.alignRightInput = alignRightInput;
     this.kerningLeftInput = kerningLeftInput;
     this.kerningRightInput = kerningRightInput;
     this.widthInput = widthInput;
@@ -118,8 +136,9 @@ export default class InsertNeumeFormView extends View {
     this.lineHeightInput = lineHeightInput;
 
     const children: View[] = [
+      alignRightInput,
       topInput,
-      leftInput,
+      alignRight ? rightInput : leftInput,
       kerningLeftInput,
       kerningRightInput,
       fontSizeInput,
@@ -203,6 +222,19 @@ export default class InsertNeumeFormView extends View {
     });
 
     return input;
+  }
+
+  _createSwitchButton(label: string, onChange: (value: boolean) => void) {
+    const button = new SwitchButtonView(this.locale);
+
+    button.set({
+      label,
+      withText: true,
+      tooltip: true,
+    });
+
+    button.on('execute', () => onChange(!button.isOn));
+    return button;
   }
 
   _createColorInput(onChange: (value: string) => void) {

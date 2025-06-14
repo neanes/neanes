@@ -98,7 +98,7 @@
                 >
                   <TextBoxRich
                     class="element-box"
-                    :key="`element-${getHeaderForPageIndex(pageIndex).id}-${
+                    :key="`element-${this.selectedWorkspaceId}-${getHeaderForPageIndex(pageIndex).id}-${
                       getHeaderForPageIndex(pageIndex).keyHelper
                     }`"
                     :ref="`header-${pageIndex}`"
@@ -139,7 +139,7 @@
                 >
                   <TextBox
                     class="element-box"
-                    :key="`element-${getHeaderForPageIndex(pageIndex).id}-${
+                    :key="`element-${this.selectedWorkspaceId}-${getHeaderForPageIndex(pageIndex).id}-${
                       getHeaderForPageIndex(pageIndex).keyHelper
                     }`"
                     :ref="`header-${pageIndex}`"
@@ -593,7 +593,7 @@
                 >
                   <TextBoxRich
                     class="element-box"
-                    :key="`element-${getFooterForPageIndex(pageIndex).id}-${
+                    :key="`element-${this.selectedWorkspaceId}-${getFooterForPageIndex(pageIndex).id}-${
                       getFooterForPageIndex(pageIndex).keyHelper
                     }`"
                     :ref="`footer-${pageIndex}`"
@@ -635,7 +635,7 @@
                   <TextBox
                     class="element-box"
                     :ref="`footer-${pageIndex}`"
-                    :key="`element-${getFooterForPageIndex(pageIndex).id}-${
+                    :key="`element-${this.selectedWorkspaceId}-${getFooterForPageIndex(pageIndex).id}-${
                       getFooterForPageIndex(pageIndex).keyHelper
                     }`"
                     :element="getFooterForPageIndex(pageIndex)"
@@ -980,7 +980,7 @@
         :element="selectedElement"
         :pageSetup="score.pageSetup"
         :neumeKeyboard="neumeKeyboard"
-        :key="`toolbar-neume-${selectedElement.id}-${selectedElement.keyHelper}`"
+        :key="`toolbar-neume-${this.selectedWorkspaceId}-${selectedElement.id}-${selectedElement.keyHelper}`"
         :innerNeume="toolbarInnerNeume"
         @update:innerNeume="toolbarInnerNeume = $event"
         @update:accidental="

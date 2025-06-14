@@ -14,7 +14,7 @@
         :style="textBoxStyle"
         :content="contentLeft"
         :editable="editMode"
-        @blur="update"
+        @blur="onBlur"
       ></ContentEditable>
       <ContentEditable
         ref="textCenter"
@@ -23,7 +23,7 @@
         :style="textBoxStyle"
         :content="contentCenter"
         :editable="editMode"
-        @blur="update"
+        @blur="onBlur"
       ></ContentEditable>
       <ContentEditable
         ref="textRight"
@@ -32,7 +32,7 @@
         :style="textBoxStyle"
         :content="contentRight"
         :editable="editMode"
-        @blur="update"
+        @blur="onBlur"
       ></ContentEditable>
     </div>
     <div class="inline-container" v-else-if="element.inline">
@@ -43,7 +43,7 @@
         :style="textBoxStyleTop"
         :content="content"
         :editable="editMode"
-        @blur="update"
+        @blur="onBlur"
       ></ContentEditable>
       <ContentEditable
         ref="textBottom"
@@ -52,7 +52,7 @@
         :style="textBoxStyleBottom"
         :content="contentBottom"
         :editable="editMode"
-        @blur="update"
+        @blur="onBlur"
       ></ContentEditable>
     </div>
     <ContentEditable
@@ -63,7 +63,7 @@
       :style="textBoxStyle"
       :content="content"
       :editable="editMode"
-      @blur="update"
+      @blur="onBlur"
     ></ContentEditable>
   </div>
 </template>
@@ -91,6 +91,7 @@ export default class TextBox extends Vue {
   @Prop() metadata!: TokenMetadata;
 
   resizeObserver: ResizeObserver | null = null;
+  unmounting = false;
 
   get textElement() {
     return this.$refs.text as ContentEditable;
@@ -248,6 +249,15 @@ export default class TextBox extends Vue {
     }
   }
 
+  beforeUnmount() {
+    this.unmounting = true;
+    this.update();
+
+    if (this.resizeObserver != null) {
+      this.resizeObserver.disconnect();
+    }
+  }
+
   getHeight() {
     if (this.element.multipanel) {
       return Math.max(
@@ -258,6 +268,12 @@ export default class TextBox extends Vue {
     }
 
     return this.textElement.htmlElement.getBoundingClientRect().height;
+  }
+
+  onBlur() {
+    if (!this.unmounting) {
+      this.update();
+    }
   }
 
   update() {

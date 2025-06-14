@@ -284,7 +284,7 @@
         "modeChangeIgnoreAttractions": false,
         "modeChangePermanentEnharmonicZo": false,
         "modeChangeBpm": 120,
-        "height": 62,
+        "height": 42.953125,
         "marginTop": 0,
         "marginBottom": 0
       },
@@ -1090,7 +1090,7 @@
         "modeChangeIgnoreAttractions": false,
         "modeChangePermanentEnharmonicZo": false,
         "modeChangeBpm": 120,
-        "height": 22,
+        "height": 20,
         "marginTop": 0,
         "marginBottom": 0
       },

@@ -13,6 +13,10 @@ class FontService {
     return metadataMap.get(fontFamily);
   }
 
+  getMetrics(fontFamily: string) {
+    return this.getMetadata(fontFamily).metrics;
+  }
+
   getAdvanceWidth(fontFamily: string, glyph: SbmuflGlyphName) {
     return this.getMetadata(fontFamily).glyphAdvanceWidths[glyph];
   }

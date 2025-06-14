@@ -98,7 +98,7 @@
                 >
                   <TextBoxRich
                     class="element-box"
-                    :key="`element-${getHeaderForPageIndex(pageIndex).id}-${
+                    :key="`element-${this.selectedWorkspaceId}-${getHeaderForPageIndex(pageIndex).id}-${
                       getHeaderForPageIndex(pageIndex).keyHelper
                     }`"
                     :ref="`header-${pageIndex}`"
@@ -111,13 +111,10 @@
                     :metadata="getTokenMetadata(pageIndex)"
                     :pageSetup="score.pageSetup"
                     :fonts="fonts"
-                    :class="[
-                      {
-                        selectedTextbox:
-                          getHeaderForPageIndex(pageIndex) ==
-                          selectedHeaderFooterElement,
-                      },
-                    ]"
+                    :selected="
+                      getHeaderForPageIndex(pageIndex) ==
+                      selectedHeaderFooterElement
+                    "
                     :style="headerStyle"
                     @click="
                       selectedHeaderFooterElement =
@@ -142,7 +139,7 @@
                 >
                   <TextBox
                     class="element-box"
-                    :key="`element-${getHeaderForPageIndex(pageIndex).id}-${
+                    :key="`element-${this.selectedWorkspaceId}-${getHeaderForPageIndex(pageIndex).id}-${
                       getHeaderForPageIndex(pageIndex).keyHelper
                     }`"
                     :ref="`header-${pageIndex}`"
@@ -166,26 +163,8 @@
                       selectedHeaderFooterElement =
                         getHeaderForPageIndex(pageIndex)
                     "
-                    @update:content="
-                      updateTextBoxContent(
-                        getHeaderForPageIndex(pageIndex)! as TextBoxElement,
-                        $event,
-                      )
-                    "
-                    @update:contentLeft="
-                      updateTextBoxContentLeft(
-                        getHeaderForPageIndex(pageIndex)! as TextBoxElement,
-                        $event,
-                      )
-                    "
-                    @update:contentCenter="
-                      updateTextBoxContentCenter(
-                        getHeaderForPageIndex(pageIndex)! as TextBoxElement,
-                        $event,
-                      )
-                    "
-                    @update:contentRight="
-                      updateTextBoxContentRight(
+                    @update="
+                      updateTextBox(
                         getHeaderForPageIndex(pageIndex)! as TextBoxElement,
                         $event,
                       )
@@ -211,7 +190,7 @@
                 <div
                   v-for="element in line.elements"
                   :id="`element-${element.id}`"
-                  :key="`element-${element.id}-${element.keyHelper}`"
+                  :key="`element-${this.selectedWorkspaceId}-${element.id}-${element.keyHelper}`"
                   class="element-box"
                   :style="getElementStyle(element)"
                 >
@@ -477,28 +456,11 @@
                       :editMode="true"
                       :metadata="getTokenMetadata(pageIndex)"
                       :pageSetup="score.pageSetup"
-                      :class="[{ selectedTextbox: isSelected(element) }]"
+                      :selected="isSelected(element)"
                       @select-single="selectedElement = element"
-                      @update:content="
-                        updateTextBoxContent(element as TextBoxElement, $event)
-                      "
-                      @update:contentLeft="
-                        updateTextBoxContentLeft(
-                          element as TextBoxElement,
-                          $event,
-                        )
-                      "
-                      @update:contentCenter="
-                        updateTextBoxContentCenter(
-                          element as TextBoxElement,
-                          $event,
-                        )
-                      "
-                      @update:contentRight="
-                        updateTextBoxContentRight(
-                          element as TextBoxElement,
-                          $event,
-                        )
+                      @update="updateTextBox(element as TextBoxElement, $event)"
+                      @update:height="
+                        updateTextBoxHeight(element as TextBoxElement, $event)
                       "
                     />
                   </template>
@@ -521,7 +483,7 @@
                       :element="element"
                       :pageSetup="score.pageSetup"
                       :fonts="fonts"
-                      :class="[{ selectedTextbox: isSelected(element) }]"
+                      :selected="isSelected(element)"
                       @select-single="selectedElement = element"
                       @update="
                         updateRichTextBox(element as RichTextBoxElement, $event)
@@ -631,7 +593,7 @@
                 >
                   <TextBoxRich
                     class="element-box"
-                    :key="`element-${getFooterForPageIndex(pageIndex).id}-${
+                    :key="`element-${this.selectedWorkspaceId}-${getFooterForPageIndex(pageIndex).id}-${
                       getFooterForPageIndex(pageIndex).keyHelper
                     }`"
                     :ref="`footer-${pageIndex}`"
@@ -644,13 +606,10 @@
                     :metadata="getTokenMetadata(pageIndex)"
                     :pageSetup="score.pageSetup"
                     :fonts="fonts"
-                    :class="[
-                      {
-                        selectedTextbox:
-                          getFooterForPageIndex(pageIndex) ==
-                          selectedHeaderFooterElement,
-                      },
-                    ]"
+                    :selected="
+                      getFooterForPageIndex(pageIndex) ==
+                      selectedHeaderFooterElement
+                    "
                     :style="footerStyle"
                     @click="
                       selectedHeaderFooterElement =
@@ -676,7 +635,7 @@
                   <TextBox
                     class="element-box"
                     :ref="`footer-${pageIndex}`"
-                    :key="`element-${getFooterForPageIndex(pageIndex).id}-${
+                    :key="`element-${this.selectedWorkspaceId}-${getFooterForPageIndex(pageIndex).id}-${
                       getFooterForPageIndex(pageIndex).keyHelper
                     }`"
                     :element="getFooterForPageIndex(pageIndex)"
@@ -699,26 +658,8 @@
                       selectedHeaderFooterElement =
                         getFooterForPageIndex(pageIndex)
                     "
-                    @update:content="
-                      updateTextBoxContent(
-                        getFooterForPageIndex(pageIndex)! as TextBoxElement,
-                        $event,
-                      )
-                    "
-                    @update:contentLeft="
-                      updateTextBoxContentLeft(
-                        getFooterForPageIndex(pageIndex)! as TextBoxElement,
-                        $event,
-                      )
-                    "
-                    @update:contentCenter="
-                      updateTextBoxContentCenter(
-                        getFooterForPageIndex(pageIndex)! as TextBoxElement,
-                        $event,
-                      )
-                    "
-                    @update:contentRight="
-                      updateTextBoxContentRight(
+                    @update="
+                      updateTextBox(
                         getFooterForPageIndex(pageIndex)! as TextBoxElement,
                         $event,
                       )
@@ -763,7 +704,7 @@
         "
         @update:customWidth="updateTextBoxWidth(selectedTextBoxElement, $event)"
         @update:customHeight="
-          updateTextBoxHeight(selectedTextBoxElement, $event)
+          updateTextBoxCustomHeight(selectedTextBoxElement, $event)
         "
         @update:marginTop="
           updateTextBoxMarginTop(selectedTextBoxElement, $event)
@@ -785,8 +726,60 @@
       <ToolbarTextBoxRich
         :element="selectedRichTextBoxElement"
         :pageSetup="score.pageSetup"
+        @update:inline="
+          updateRichTextBox(selectedRichTextBoxElement, { inline: $event })
+        "
+        @update:customWidth="
+          updateRichTextBox(selectedRichTextBoxElement, { customWidth: $event })
+        "
+        @update:offsetYTop="
+          updateRichTextBox(selectedRichTextBoxElement, { offsetYTop: $event })
+        "
+        @update:offsetYBottom="
+          updateRichTextBox(selectedRichTextBoxElement, {
+            offsetYBottom: $event,
+          })
+        "
         @update:rtl="
           updateRichTextBox(selectedRichTextBoxElement, { rtl: $event })
+        "
+        @update:centerOnPage="
+          updateRichTextBox(selectedRichTextBoxElement, {
+            centerOnPage: $event,
+          })
+        "
+        @update:modeChange="
+          updateRichTextBox(selectedRichTextBoxElement, { modeChange: $event })
+        "
+        @update:modeChangePhysicalNote="
+          updateRichTextBox(selectedRichTextBoxElement, {
+            modeChangePhysicalNote: $event,
+          })
+        "
+        @update:modeChangeScale="
+          updateRichTextBox(selectedRichTextBoxElement, {
+            modeChangeScale: $event,
+          })
+        "
+        @update:modeChangeVirtualNote="
+          updateRichTextBox(selectedRichTextBoxElement, {
+            modeChangeVirtualNote: $event,
+          })
+        "
+        @update:modeChangeIgnoreAttractions="
+          updateRichTextBox(selectedRichTextBoxElement, {
+            modeChangeIgnoreAttractions: $event,
+          })
+        "
+        @update:modeChangePermanentEnharmonicZo="
+          updateRichTextBox(selectedRichTextBoxElement, {
+            modeChangePermanentEnharmonicZo: $event,
+          })
+        "
+        @update:modeChangeBpm="
+          updateRichTextBox(selectedRichTextBoxElement, {
+            modeChangeBpm: $event,
+          })
         "
         @update:marginTop="
           updateRichTextBoxMarginTop(selectedRichTextBoxElement, $event)
@@ -987,7 +980,7 @@
         :element="selectedElement"
         :pageSetup="score.pageSetup"
         :neumeKeyboard="neumeKeyboard"
-        :key="`toolbar-neume-${selectedElement.id}-${selectedElement.keyHelper}`"
+        :key="`toolbar-neume-${this.selectedWorkspaceId}-${selectedElement.id}-${selectedElement.keyHelper}`"
         :innerNeume="toolbarInnerNeume"
         @update:innerNeume="toolbarInnerNeume = $event"
         @update:accidental="
@@ -1220,6 +1213,17 @@
         "
       />
     </template>
+    <template v-if="textBoxCalculation">
+      <TextBoxRich
+        class="textBoxCalculation"
+        v-for="element in textBoxElements"
+        :key="element.id"
+        :element="element"
+        :pageSetup="score.pageSetup"
+        :fonts="fonts"
+        @update:height="updateTextBoxHeight(element as TextBoxElement, $event)"
+      />
+    </template>
   </div>
 </template>
 
@@ -1352,6 +1356,7 @@ import { LyricService } from '@/services/LyricService';
 import { NeumeKeyboard } from '@/services/NeumeKeyboard';
 import { IPlatformService } from '@/services/platform/IPlatformService';
 import { SaveService } from '@/services/SaveService';
+import { TextMeasurementService } from '@/services/TextMeasurementService';
 import { TextSearchService } from '@/services/TextSearchService';
 import { GORTHMIKON, PELASTIKON, TATWEEL } from '@/utils/constants';
 import { getCursorPosition } from '@/utils/getCursorPosition';
@@ -1466,6 +1471,8 @@ export default class Editor extends Vue {
   textBoxFormat: Partial<TextBoxElement> | null = null;
   richTextBoxCalculation = false;
   richTextBoxCalculationCount = 0;
+  textBoxCalculation = false;
+  textBoxCalculationCount = 0;
 
   fonts: string[] = [];
 
@@ -1758,6 +1765,10 @@ export default class Editor extends Vue {
     return this.elements.filter(
       (x) => x.elementType === ElementType.RichTextBox,
     );
+  }
+
+  get textBoxElements() {
+    return this.elements.filter((x) => x.elementType === ElementType.TextBox);
   }
 
   get lyrics() {
@@ -5446,20 +5457,12 @@ export default class Editor extends Vue {
     this.save();
   }
 
-  updateTextBoxContent(element: TextBoxElement, content: string) {
-    this.updateTextBox(element, { content });
-  }
-
-  updateTextBoxContentLeft(element: TextBoxElement, contentLeft: string) {
-    this.updateTextBox(element, { contentLeft });
-  }
-
-  updateTextBoxContentCenter(element: TextBoxElement, contentCenter: string) {
-    this.updateTextBox(element, { contentCenter });
-  }
-
-  updateTextBoxContentRight(element: TextBoxElement, contentRight: string) {
-    this.updateTextBox(element, { contentRight });
+  updateTextBoxHeight(element: TextBoxElement, height: number) {
+    // The height could be updated by many rich text box elements at once
+    // (e.g. if PageSetup changes) so we debounce the save.
+    element.height = height;
+    this.textBoxCalculationCount++;
+    this.saveDebounced();
   }
 
   updateTextBoxUseDefaultStyle(
@@ -5517,7 +5520,10 @@ export default class Editor extends Vue {
     this.updateTextBox(element, { customWidth });
   }
 
-  updateTextBoxHeight(element: TextBoxElement, customHeight: number | null) {
+  updateTextBoxCustomHeight(
+    element: TextBoxElement,
+    customHeight: number | null,
+  ) {
     this.updateTextBox(element, { customHeight });
   }
 
@@ -6203,6 +6209,7 @@ export default class Editor extends Vue {
 
     if (needToRecalcRichTextBoxes) {
       this.recalculateRichTextBoxHeights();
+      this.recalculateTextBoxHeights();
     }
 
     this.save();
@@ -6448,6 +6455,42 @@ export default class Editor extends Vue {
       await new Promise(poll);
 
       this.richTextBoxCalculation = false;
+      this.saveDebounced();
+    });
+  }
+
+  recalculateTextBoxHeights() {
+    if (this.textBoxCalculation) {
+      this.textBoxCalculation = false;
+    }
+
+    nextTick(async () => {
+      const expectedCount = this.richTextBoxElements.length;
+      this.textBoxCalculationCount = 0;
+      this.textBoxCalculation = true;
+
+      const maxTries = 4 * 30; // 30 seconds
+      let tries = 1;
+      let lastCount = 0;
+
+      // Wait until all rich text boxes have updated
+      const poll = (resolve: (value: unknown) => void) => {
+        if (
+          this.textBoxCalculationCount === expectedCount ||
+          tries >= maxTries ||
+          this.textBoxCalculationCount < lastCount
+        ) {
+          resolve(true);
+        } else {
+          tries++;
+          lastCount = this.textBoxCalculationCount;
+          setTimeout(() => poll(resolve), 250);
+        }
+      };
+
+      await new Promise(poll);
+
+      this.textBoxCalculation = false;
       this.saveDebounced();
     });
   }
@@ -6901,6 +6944,7 @@ export default class Editor extends Vue {
         this.score.pageSetup.textBoxDefaultFontSize
     ) {
       this.recalculateRichTextBoxHeights();
+      this.recalculateTextBoxHeights();
     }
 
     this.save();
@@ -6937,6 +6981,7 @@ export default class Editor extends Vue {
         this.score.pageSetup.textBoxDefaultFontSize
     ) {
       this.recalculateRichTextBoxHeights();
+      this.recalculateTextBoxHeights();
     }
 
     this.save();
@@ -7136,7 +7181,9 @@ export default class Editor extends Vue {
     title.lineHeight = score.pageSetup.textBoxDefaultLineHeight;
     title.bold = score.pageSetup.textBoxDefaultFontWeight === '700';
     title.italic = score.pageSetup.textBoxDefaultFontStyle === 'italic';
-
+    title.height = Math.round(
+      TextMeasurementService.getFontHeight(title.computedFont) * 1.2,
+    );
     score.staff.elements.unshift(
       title,
       this.createDefaultModeKey(score.pageSetup),
@@ -7356,7 +7403,8 @@ export default class Editor extends Vue {
   display: none;
 }
 
-.richTextBoxCalculation {
+.richTextBoxCalculation,
+.textBoxCalculation {
   position: absolute;
   left: -99999999px;
 }
@@ -7609,6 +7657,9 @@ export default class Editor extends Vue {
 .page.print .drop-cap-container,
 .page.print .mode-key-container,
 .page.print .image-box-container,
+.page.print :deep(.text-box),
+.page.print :deep(.rich-text-editor),
+.page.print :deep(.inline-container),
 .page.print :deep(.text-box.multipanel) {
   border: none;
   outline: none;
@@ -7636,7 +7687,7 @@ export default class Editor extends Vue {
 }
 
 .page.print :deep(.rich-text-editor) {
-  overflow: hidden !important;
+  overflow: visible !important;
 }
 
 @media print {

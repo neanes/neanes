@@ -46,8 +46,12 @@ export default class ContentEditable extends Vue {
     return this.htmlElement.innerText;
   }
 
+  getContent() {
+    return this.escapeHtml(this.htmlElement.innerText);
+  }
+
   onBlur() {
-    this.$emit('blur', this.escapeHtml(this.htmlElement.innerText));
+    this.$emit('blur', this.getContent());
   }
 
   focus(selectAll: boolean) {

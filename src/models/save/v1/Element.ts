@@ -183,6 +183,7 @@ export class TextBoxElement extends ScoreElement {
   public alignment: TextBoxAlignment = TextBoxAlignment.Left;
   public color: string = '#000000';
   public content: string = '';
+  public contentBottom: string = '';
   public contentLeft: string = '';
   public contentCenter: string = '';
   public contentRight: string = '';
@@ -206,14 +207,27 @@ export class TextBoxElement extends ScoreElement {
 export class RichTextBoxElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.RichTextBox;
   public content: string = '';
+  public contentBottom: string = '';
   public contentLeft: string = '';
   public contentRight: string = '';
   public contentCenter: string = '';
   public multipanel: boolean | undefined = undefined;
   public rtl: boolean | undefined = undefined;
+  public inline: boolean | undefined = undefined;
+  public centerOnPage: boolean | undefined = undefined;
+  public modeChange: boolean | undefined = undefined;
+  public modeChangePhysicalNote: ScaleNote = ScaleNote.Pa;
+  public modeChangeScale: Scale = Scale.Diatonic;
+  public modeChangeVirtualNote: ScaleNote | undefined = undefined;
+  public modeChangeIgnoreAttractions: boolean | undefined = undefined;
+  public modeChangePermanentEnharmonicZo: boolean | undefined = undefined;
+  public modeChangeBpm: number = 120;
   public height: number = 20;
+  public customWidth: number | undefined = undefined;
   public marginTop: number | undefined = undefined;
   public marginBottom: number | undefined = undefined;
+  public offsetYTop: number | undefined = undefined;
+  public offsetYBottom: number | undefined = undefined;
 }
 
 export class ModeKeyElement extends ScoreElement {

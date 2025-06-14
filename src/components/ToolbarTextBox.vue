@@ -199,7 +199,7 @@
       <InputUnit
         class="text-box-input-width"
         unit="pt"
-        :min="0"
+        :min="-maxHeight"
         :max="maxHeight"
         :step="0.5"
         :modelValue="element.marginTop"

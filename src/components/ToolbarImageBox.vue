@@ -10,7 +10,7 @@
         "
       />
       <label for="toolbar-image-box-inline">{{
-        $t('toolbar:imageBox.inline')
+        $t('toolbar:common.inline')
       }}</label>
     </div>
 

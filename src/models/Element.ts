@@ -735,6 +735,7 @@ export class TextBoxElement extends ScoreElement {
   public alignment: TextBoxAlignment = TextBoxAlignment.Left;
   public color: string = '#000000';
   public content: string = '';
+  public contentBottom: string = '';
   public contentLeft: string = '';
   public contentCenter: string = '';
   public contentRight: string = '';
@@ -753,6 +754,7 @@ export class TextBoxElement extends ScoreElement {
   public customHeight: number | null = null;
   public marginTop: number = 0;
   public marginBottom: number = 0;
+  public fillWidth: boolean = true;
 
   // Values computed by the layout service
   public computedFontFamily: string = '';
@@ -762,6 +764,7 @@ export class TextBoxElement extends ScoreElement {
   public computedColor: string = '#000000';
   public computedStrokeWidth: number = 0;
   public computedLineHeight: number | null = null;
+  public minHeight: number = 10;
 
   // Re-render helpers
   public heightPrevious: number = 0;
@@ -819,15 +822,33 @@ export class TextBoxElement extends ScoreElement {
 export class RichTextBoxElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.RichTextBox;
   public content: string = '';
+  public contentBottom: string = '';
   public contentLeft: string = '';
   public contentRight: string = '';
   public contentCenter: string = '';
   public multipanel: boolean = false;
   public rtl: boolean = false;
+  public inline: boolean = false;
+  public centerOnPage: boolean = false;
+  public modeChange: boolean = false;
+  public modeChangePhysicalNote: ScaleNote = ScaleNote.Pa;
+  public modeChangeScale: Scale = Scale.Diatonic;
+  public modeChangeVirtualNote: ScaleNote | null = null;
+  public modeChangeIgnoreAttractions: boolean = false;
+  public modeChangePermanentEnharmonicZo: boolean = false;
+  public modeChangeBpm: number = 120;
 
   public height: number = 20;
+  public customWidth: number | null = null;
   public marginTop: number = 0;
   public marginBottom: number = 0;
+  public offsetYTop: number = 0;
+  public offsetYBottom: number = 0;
+
+  // Values computed by the layout service
+  public defaultLyricsFontHeight: number = 0;
+  public defaultNeumeFontAscent: number = 0;
+  public oligonMidpoint: number = 0;
 
   public clone() {
     const clone = new RichTextBoxElement();
@@ -840,14 +861,24 @@ export class RichTextBoxElement extends ScoreElement {
   public getClipboardProperties() {
     return {
       content: this.content,
+      contentBottom: this.contentBottom,
       contentLeft: this.contentLeft,
       contentRight: this.contentRight,
       contentCenter: this.contentCenter,
       rtl: this.rtl,
       multipanel: this.multipanel,
+      inline: this.inline,
       height: this.height,
+      customWidth: this.customWidth,
       marginBottom: this.marginBottom,
       marginTop: this.marginTop,
+      modeChange: this.modeChange,
+      modeChangePhysicalNote: this.modeChangePhysicalNote,
+      modeChangeScale: this.modeChangeScale,
+      modeChangeVirtualNote: this.modeChangeVirtualNote,
+      modeChangeIgnoreAttractions: this.modeChangeIgnoreAttractions,
+      modeChangePermanentEnharmonicZo: this.modeChangePermanentEnharmonicZo,
+      modeChangeBpm: this.modeChangeBpm,
     } as Partial<RichTextBoxElement>;
   }
 }

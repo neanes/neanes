@@ -3,6 +3,7 @@ import {
   MartyriaElement,
   ModeKeyElement,
   NoteElement,
+  RichTextBoxElement,
   ScoreElement,
   TempoElement,
 } from '@/models/Element';
@@ -21,6 +22,7 @@ import {
   getNoteValue,
   getScaleNoteFromValue,
   getScaleNoteValue,
+  getShiftWithoutFthora,
   Scale,
   ScaleNote,
 } from '@/models/Scales';
@@ -146,6 +148,14 @@ export class AnalysisService {
         this.handleNote(element as NoteElement, workspace);
       } else if (element.elementType === ElementType.ModeKey) {
         this.handleModeKey(element as ModeKeyElement, workspace);
+      } else if (
+        element.elementType === ElementType.RichTextBox &&
+        (element as RichTextBoxElement).modeChange
+      ) {
+        this.handleRichTextBoxAsModeKey(
+          element as RichTextBoxElement,
+          workspace,
+        );
       } else if (element.elementType === ElementType.Martyria) {
         this.handleMartyria(element as MartyriaElement, workspace);
       } else if (element.elementType === ElementType.Tempo) {
@@ -860,6 +870,57 @@ export class AnalysisService {
     const tempoNode: TempoNode = new TempoNode();
     tempoNode.elementIndex = modeKeyElement.index;
     tempoNode.bpm = modeKeyElement.bpm ?? 120;
+    workspace.nodes.push(tempoNode);
+  }
+
+  private static handleRichTextBoxAsModeKey(
+    modeKeyElement: Readonly<RichTextBoxElement>,
+    workspace: AnalysisWorkspace,
+  ) {
+    // Reset workspace flags
+    workspace.currentNote = getScaleNoteValue(
+      modeKeyElement.modeChangePhysicalNote,
+    );
+    workspace.currentScale = modeKeyElement.modeChangeScale;
+    workspace.currentShift = 0;
+
+    if (modeKeyElement.modeChangeVirtualNote) {
+      workspace.currentShift = getShiftWithoutFthora(
+        workspace.currentNote,
+        getScaleNoteValue(modeKeyElement.modeChangeVirtualNote),
+        workspace.currentScale,
+      );
+    }
+
+    workspace.generalFlat = false;
+    workspace.generalSharp = false;
+
+    const modeKeyNode: ModeKeyNode = new ModeKeyNode();
+    modeKeyNode.elementIndex = modeKeyElement.index;
+    modeKeyNode.physicalNote = getScaleNoteFromValue(workspace.currentNote);
+    modeKeyNode.virtualNote = getScaleNoteFromValue(
+      workspace.currentNote + workspace.currentShift,
+    );
+    modeKeyNode.scale = workspace.currentScale;
+    modeKeyNode.ignoreAttractions = modeKeyElement.modeChangeIgnoreAttractions;
+    modeKeyNode.permanentEnharmonicZo =
+      modeKeyElement.modeChangePermanentEnharmonicZo;
+
+    // TODO support this somehow, maybe with a legetos flag?
+    // if (
+    //   modeKeyElement.mode === 4 &&
+    //   modeKeyElement.modeChangeScale === Scale.Diatonic &&
+    //   (modeKeyElement.modeChangePhysicalNote === ScaleNote.Pa ||
+    //     modeKeyElement.modeChangePhysicalNote === ScaleNote.Vou)
+    // ) {
+    //   modeKeyNode.legetos = true;
+    // }
+
+    workspace.nodes.push(modeKeyNode);
+
+    const tempoNode: TempoNode = new TempoNode();
+    tempoNode.elementIndex = modeKeyElement.index;
+    tempoNode.bpm = modeKeyElement.modeChangeBpm ?? 120;
     workspace.nodes.push(tempoNode);
   }
 

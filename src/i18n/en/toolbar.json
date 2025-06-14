@@ -24,7 +24,9 @@
     "height": "Height",
     "marginTop": "Gap Above",
     "marginBottom": "Gap Below",
-    "verticalOffset": "Vertical Offset"
+    "verticalOffset": "Vertical Offset",
+    "none": "None",
+    "inline": "Inline"
   },
   "main": {
     "auto": "Auto",
@@ -50,7 +52,6 @@
     "lineSpan": "Lines to drop"
   },
   "imageBox": {
-    "inline": "Inline",
     "maintainAspectRatio": "Maintain Aspect Ratio",
     "width": "Width",
     "height": "Height"
@@ -64,7 +65,6 @@
     "note": "Note",
     "scale": "Scale",
     "rootSignOverride": "Root Sign Override",
-    "none": "None",
     "tempoLeft": "Add Left Tempo",
     "tempo": "Add Tempo Above",
     "tempoRight": "Add Right Tempo"
@@ -95,6 +95,11 @@
   },
   "textbox": {
     "multipanel": "Multipanel",
-    "rtl": "RTL"
+    "rtl": "RTL",
+    "modeChange": "Change Mode",
+    "virtualNote": "Parallage Note",
+    "centerOnPage": "Center on Page",
+    "offsetYTop": "Top Y Offset",
+    "offsetYBottom": "Bottom Y Offset"
   }
 }

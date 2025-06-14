@@ -90,6 +90,8 @@ export default class TextBox extends Vue {
   @Prop() selected!: boolean;
   @Prop() metadata!: TokenMetadata;
 
+  resizeObserver: ResizeObserver | null = null;
+
   get textElement() {
     return this.$refs.text as ContentEditable;
   }
@@ -225,6 +227,24 @@ export default class TextBox extends Vue {
 
     if (height != null && this.element.height !== height) {
       this.$emit('update:height', height);
+    }
+
+    if (this.textElement) {
+      const element = this.textElement.htmlElement;
+
+      if (this.resizeObserver != null) {
+        this.resizeObserver.disconnect();
+      }
+
+      this.resizeObserver = new ResizeObserver(() => {
+        const resizedHeight = this.getHeight();
+
+        if (resizedHeight != null && this.element.height !== resizedHeight) {
+          this.$emit('update:height', resizedHeight);
+        }
+      });
+
+      this.resizeObserver.observe(element);
     }
   }
 

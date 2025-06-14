@@ -346,6 +346,23 @@ export enum Fthora {
   GeneralFlat_TopSecondary = 'GeneralFlat_TopSecondary',
   GeneralFlat_TopTertiary = 'GeneralFlat_TopTertiary',
   GeneralFlat_Bottom = 'GeneralFlat_Bottom',
+
+  DiatonicNiLow = 'DiatonicNiLow',
+  DiatonicPa = 'DiatonicPa',
+  DiatonicVou = 'DiatonicVou',
+  DiatonicGa = 'DiatonicGa',
+  DiatonicThi = 'DiatonicThi',
+  DiatonicKe = 'DiatonicKe',
+  DiatonicZo = 'DiatonicZo',
+  DiatonicNiHigh = 'DiatonicNiHigh',
+  HardChromaticPa = 'HardChromaticPa',
+  HardChromaticThi = 'HardChromaticThi',
+  SoftChromaticPa = 'SoftChromaticPa',
+  SoftChromaticThi = 'SoftChromaticThi',
+  Enharmonic = 'Enharmonic',
+  Zygos = 'Zygos',
+  Kliton = 'Kliton',
+  Spathi = 'Spathi',
 }
 
 export enum Accidental {

@@ -582,6 +582,8 @@ export class SaveService {
       element.inline = e.inline;
       element.contentBottom = e.contentBottom;
       element.centerOnPage = e.centerOnPage;
+      element.offsetYBottom = e.offsetYBottom || undefined;
+      element.offsetYTop = e.offsetYTop || undefined;
     }
 
     if (e.modeChange) {
@@ -1374,6 +1376,8 @@ export class SaveService {
     if (e.inline) {
       element.contentBottom = e.contentBottom;
       element.centerOnPage = e.centerOnPage === true;
+      element.offsetYBottom = e.offsetYBottom ?? 0;
+      element.offsetYTop = e.offsetYTop ?? 0;
     }
 
     if (e.modeChange) {

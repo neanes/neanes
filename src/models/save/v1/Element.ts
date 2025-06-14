@@ -226,6 +226,8 @@ export class RichTextBoxElement extends ScoreElement {
   public customWidth: number | undefined = undefined;
   public marginTop: number | undefined = undefined;
   public marginBottom: number | undefined = undefined;
+  public offsetYTop: number | undefined = undefined;
+  public offsetYBottom: number | undefined = undefined;
 }
 
 export class ModeKeyElement extends ScoreElement {

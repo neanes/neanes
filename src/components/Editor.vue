@@ -791,6 +791,14 @@
         @update:customWidth="
           updateRichTextBox(selectedRichTextBoxElement, { customWidth: $event })
         "
+        @update:offsetYTop="
+          updateRichTextBox(selectedRichTextBoxElement, { offsetYTop: $event })
+        "
+        @update:offsetYBottom="
+          updateRichTextBox(selectedRichTextBoxElement, {
+            offsetYBottom: $event,
+          })
+        "
         @update:rtl="
           updateRichTextBox(selectedRichTextBoxElement, { rtl: $event })
         "

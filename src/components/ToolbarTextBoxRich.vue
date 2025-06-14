@@ -30,7 +30,39 @@
           @update:modelValue="$emit('update:customWidth', $event)"
         />
       </div>
-
+      <span class="space" />
+      <div class="form-group">
+        <label class="right-space">{{
+          $t('toolbar:textbox.offsetYTop')
+        }}</label>
+        <InputUnit
+          class="text-box-input-width"
+          unit="pt"
+          :min="-maxHeight"
+          :max="maxHeight"
+          :step="0.5"
+          :modelValue="element.offsetYTop"
+          :precision="1"
+          @update:modelValue="$emit('update:offsetYTop', $event)"
+        />
+      </div>
+      <span class="space"></span>
+      <div class="form-group">
+        <label class="right-space">{{
+          $t('toolbar:textbox.offsetYBottom')
+        }}</label>
+        <InputUnit
+          class="text-box-input-width"
+          unit="pt"
+          :min="-maxHeight"
+          :max="maxHeight"
+          :step="0.5"
+          :modelValue="element.offsetYBottom"
+          :precision="1"
+          @update:modelValue="$emit('update:offsetYBottom', $event)"
+        />
+      </div>
+      <span class="space" />
       <div class="form-group">
         <input
           id="toolbar-text-box-center-on-page"

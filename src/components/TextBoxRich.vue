@@ -271,12 +271,14 @@ export default class TextBoxRich extends Vue {
   }
 
   get textBoxTopInnerContainerStyle() {
+    // The top text box is aligned such that the middle of the oligon sits in middle of the font.
     const style: any = {
       top: withZoom(
         this.element.defaultNeumeFontAscent -
           this.pageSetup.neumeDefaultFontSize * this.element.oligonMidpoint -
           this.element.defaultLyricsFontHeight / 2 -
-          (this.heightTop - this.element.defaultLyricsFontHeight),
+          (this.heightTop - this.element.defaultLyricsFontHeight) +
+          this.element.offsetYTop,
       ),
       lineHeight: `${this.element.defaultLyricsFontHeight}px`,
     };
@@ -309,10 +311,12 @@ export default class TextBoxRich extends Vue {
   }
 
   get textBoxBottomContainerStyle() {
+    // The bottom text box is aligned so that the baseline of the font is aligned with the lyrics baseline.
     const style: any = {
       top: withZoom(
         this.pageSetup.lyricsVerticalOffset -
-          (this.heightBottom - this.element.defaultLyricsFontHeight),
+          (this.heightBottom - this.element.defaultLyricsFontHeight) +
+          this.element.offsetYBottom,
       ),
       lineHeight: `${this.element.defaultLyricsFontHeight}px`,
     };

@@ -841,6 +841,8 @@ export class RichTextBoxElement extends ScoreElement {
   public customWidth: number | null = null;
   public marginTop: number = 0;
   public marginBottom: number = 0;
+  public offsetYTop: number = 0;
+  public offsetYBottom: number = 0;
 
   // Values computed by the layout service
   public defaultLyricsFontHeight: number = 0;

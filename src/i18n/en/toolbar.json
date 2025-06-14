@@ -98,6 +98,8 @@
     "rtl": "RTL",
     "modeChange": "Change Mode",
     "virtualNote": "Parallage Note",
-    "centerOnPage": "Center on Page"
+    "centerOnPage": "Center on Page",
+    "offsetYTop": "Top Y Offset",
+    "offsetYBottom": "Bottom Y Offset"
   }
 }

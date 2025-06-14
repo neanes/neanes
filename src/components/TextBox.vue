@@ -8,31 +8,31 @@
     <span class="handle"></span>
     <div class="text-box-multipanel-container" v-if="element.multipanel">
       <ContentEditable
-        ref="text"
+        ref="textLeft"
         class="text-box multipanel left"
         :class="textBoxClass"
         :style="textBoxStyle"
         :content="contentLeft"
         :editable="editMode"
-        @blur="updateContentLeft($event)"
+        @blur="update"
       ></ContentEditable>
       <ContentEditable
-        ref="text"
+        ref="textCenter"
         class="text-box multipanel center"
         :class="textBoxClass"
         :style="textBoxStyle"
         :content="contentCenter"
         :editable="editMode"
-        @blur="updateContentCenter($event)"
+        @blur="update"
       ></ContentEditable>
       <ContentEditable
-        ref="text"
+        ref="textRight"
         class="text-box multipanel right"
         :class="textBoxClass"
         :style="textBoxStyle"
         :content="contentRight"
         :editable="editMode"
-        @blur="updateContentRight($event)"
+        @blur="update"
       ></ContentEditable>
     </div>
     <div class="inline-container" v-else-if="element.inline">
@@ -43,16 +43,16 @@
         :style="textBoxStyleTop"
         :content="content"
         :editable="editMode"
-        @blur="updateContent($event)"
+        @blur="update"
       ></ContentEditable>
       <ContentEditable
-        ref="text"
+        ref="textBottom"
         class="text-box inline-bottom"
         :class="textBoxClass"
         :style="textBoxStyleBottom"
         :content="contentBottom"
         :editable="editMode"
-        @blur="updateContentBottom($event)"
+        @blur="update"
       ></ContentEditable>
     </div>
     <ContentEditable
@@ -63,7 +63,7 @@
       :style="textBoxStyle"
       :content="content"
       :editable="editMode"
-      @blur="updateContent($event)"
+      @blur="update"
     ></ContentEditable>
   </div>
 </template>
@@ -81,14 +81,7 @@ import { withZoom } from '@/utils/withZoom';
 
 @Component({
   components: { ContentEditable },
-  emits: [
-    'update:content',
-    'update:contentBottom',
-    'update:contentLeft',
-    'update:contentCenter',
-    'update:contentRight',
-    'select-single',
-  ],
+  emits: ['update', 'update:height', 'select-single'],
 })
 export default class TextBox extends Vue {
   @Prop() element!: TextBoxElement;
@@ -99,6 +92,22 @@ export default class TextBox extends Vue {
 
   get textElement() {
     return this.$refs.text as ContentEditable;
+  }
+
+  get textElementLeft() {
+    return this.$refs.textLeft as ContentEditable;
+  }
+
+  get textElementRight() {
+    return this.$refs.textRight as ContentEditable;
+  }
+
+  get textElementCenter() {
+    return this.$refs.textCenter as ContentEditable;
+  }
+
+  get textElementBottom() {
+    return this.$refs.textBottom as ContentEditable;
   }
 
   get content() {
@@ -165,6 +174,7 @@ export default class TextBox extends Vue {
       textAlign: this.element.alignment,
       width: this.width,
       height: withZoom(this.element.height),
+      minHeight: withZoom(this.element.minHeight),
       webkitTextStrokeWidth: withZoom(this.element.computedStrokeWidth),
       lineHeight: `${this.element.computedLineHeight ?? 'normal'}`,
       direction: this.pageSetup.melkiteRtl ? 'rtl' : undefined,
@@ -176,10 +186,8 @@ export default class TextBox extends Vue {
   get textBoxStyle() {
     const style: any = {
       width: !this.element.multipanel ? this.width : undefined,
-      height:
-        this.element.multipanel || this.element.inline
-          ? withZoom(this.element.height)
-          : undefined,
+      height: this.element.inline ? withZoom(this.element.height) : undefined,
+      minHeight: withZoom(this.element.minHeight),
       textWrap: this.element.alignment === 'center' ? 'balance' : 'pretty',
     };
 
@@ -188,11 +196,8 @@ export default class TextBox extends Vue {
 
   get textBoxStyleTop() {
     const style: any = {
-      width: !this.element.multipanel ? this.width : undefined,
-      height:
-        this.element.multipanel || this.element.inline
-          ? withZoom(this.element.height)
-          : undefined,
+      width: this.width,
+      height: withZoom(this.element.height),
       textWrap: this.element.alignment === 'center' ? 'balance' : 'pretty',
     };
 
@@ -201,7 +206,7 @@ export default class TextBox extends Vue {
 
   get textBoxStyleBottom() {
     const style: any = {
-      width: !this.element.multipanel ? this.width : undefined,
+      width: this.width,
       textWrap: this.element.alignment === 'center' ? 'balance' : 'pretty',
       top: withZoom(this.pageSetup.lyricsVerticalOffset),
     };
@@ -215,49 +220,79 @@ export default class TextBox extends Vue {
     };
   }
 
-  updateContent(content: string) {
-    // Nothing actually changed, so do nothing
-    if (this.element.content === content) {
-      return;
-    }
+  mounted() {
+    const height = this.getHeight();
 
-    this.$emit('update:content', content);
+    if (height != null && this.element.height !== height) {
+      this.$emit('update:height', height);
+    }
   }
 
-  updateContentBottom(content: string) {
-    // Nothing actually changed, so do nothing
-    if (this.element.contentBottom === content) {
-      return;
+  getHeight() {
+    if (this.element.multipanel) {
+      return Math.max(
+        this.textElementLeft.htmlElement.getBoundingClientRect().height,
+        this.textElementCenter.htmlElement.getBoundingClientRect().height,
+        this.textElementRight.htmlElement.getBoundingClientRect().height,
+      );
     }
 
-    this.$emit('update:contentBottom', content);
+    return this.textElement.htmlElement.getBoundingClientRect().height;
   }
 
-  updateContentLeft(content: string) {
-    // Nothing actually changed, so do nothing
-    if (this.element.contentLeft === content) {
+  update() {
+    const updates: Partial<TextBoxElement> = {};
+
+    let updated = false;
+
+    const height = this.getHeight();
+
+    const content = this.textElement?.getContent() ?? '';
+    const contentBottom = this.textElementBottom?.getContent() ?? '';
+    const contentLeft = this.textElementLeft?.getContent() ?? '';
+    const contentRight = this.textElementRight?.getContent() ?? '';
+    const contentCenter = this.textElementCenter?.getContent() ?? '';
+
+    // This should never happen, but if it does, we don't want
+    // to save garbage values.
+    if (height == null) {
       return;
     }
 
-    this.$emit('update:contentLeft', content);
-  }
-
-  updateContentCenter(content: string) {
     // Nothing actually changed, so do nothing
-    if (this.element.contentCenter === content) {
-      return;
+    if (this.editMode && this.element.content !== content) {
+      updates.content = content;
+      updated = true;
     }
 
-    this.$emit('update:contentCenter', content);
-  }
-
-  updateContentRight(content: string) {
-    // Nothing actually changed, so do nothing
-    if (this.element.contentRight === content) {
-      return;
+    if (this.editMode && this.element.contentBottom !== contentBottom) {
+      updates.contentBottom = contentBottom;
+      updated = true;
     }
 
-    this.$emit('update:contentRight', content);
+    if (this.editMode && this.element.contentLeft !== contentLeft) {
+      updates.contentLeft = contentLeft;
+      updated = true;
+    }
+
+    if (this.editMode && this.element.contentRight !== contentRight) {
+      updates.contentRight = contentRight;
+      updated = true;
+    }
+
+    if (this.editMode && this.element.contentCenter !== contentCenter) {
+      updates.contentCenter = contentCenter;
+      updated = true;
+    }
+
+    if (this.element.height != height) {
+      updates.height = height;
+      updated = true;
+    }
+
+    if (updated) {
+      this.$emit('update', updates);
+    }
   }
 
   blur() {

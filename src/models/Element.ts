@@ -764,6 +764,7 @@ export class TextBoxElement extends ScoreElement {
   public computedColor: string = '#000000';
   public computedStrokeWidth: number = 0;
   public computedLineHeight: number | null = null;
+  public minHeight: number = 10;
 
   // Re-render helpers
   public heightPrevious: number = 0;

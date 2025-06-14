@@ -1,9 +1,10 @@
 {
   "fontName": "NeanesStathisSeries",
-  "fontVersion": "1.0.0",
+  "fontVersion": "1.0.1",
   "metrics": {
     "winAscent": 1.4,
-    "winDescent": 0.466
+    "winDescent": 0.466,
+    "oligonMidpoint": 0.309
   },
   "glyphsWithAnchors": {
     "ison": {
@@ -7957,7 +7958,23 @@
     "oligonKentimataBelow.alt02": 1.75,
     "psifiston.salt01": 0.0,
     "heteronConnecting.salt01": 0.0,
-    "psifiston.alt01": -0.004
+    "psifiston.alt01": -0.004,
+    "fthoraDiatonicNiLow": 0.56,
+    "fthoraDiatonicPa": 0.385,
+    "fthoraDiatonicVou": 0.602,
+    "fthoraDiatonicGa": 0.376,
+    "fthoraDiatonicDi": 0.52,
+    "fthoraDiatonicZo": 0.63,
+    "fthoraDiatonicNiHigh": 0.568,
+    "fthoraHardChromaticPa": 1.072,
+    "fthoraHardChromaticDi": 0.512,
+    "fthoraSoftChromaticDi": 1.056,
+    "fthoraSoftChromaticKe": 0.632,
+    "fthoraEnharmonic": 0.492,
+    "chroaZygos": 0.632,
+    "chroaKliton": 0.664,
+    "chroaSpathi": 1.104,
+    "fthoraDiatonicKe": 0.342
   },
   "optionalGlyphs": {
     "oligonKentimataBelow.alt01": {
@@ -11667,6 +11684,166 @@
       "bBoxSW": [
         -0.838,
         0.161
+      ]
+    },
+    "fthoraDiatonicNiLow": {
+      "bBoxNE": [
+        0.498,
+        1.108
+      ],
+      "bBoxSW": [
+        0.103,
+        0.762
+      ]
+    },
+    "fthoraDiatonicPa": {
+      "bBoxNE": [
+        0.324,
+        0.997
+      ],
+      "bBoxSW": [
+        0.065,
+        0.686
+      ]
+    },
+    "fthoraDiatonicVou": {
+      "bBoxNE": [
+        0.522,
+        1.164
+      ],
+      "bBoxSW": [
+        0.064,
+        0.687
+      ]
+    },
+    "fthoraDiatonicGa": {
+      "bBoxNE": [
+        0.319,
+        1.146
+      ],
+      "bBoxSW": [
+        0.051,
+        0.713
+      ]
+    },
+    "fthoraDiatonicDi": {
+      "bBoxNE": [
+        0.448,
+        1.125
+      ],
+      "bBoxSW": [
+        0.073,
+        0.72
+      ]
+    },
+    "fthoraDiatonicZo": {
+      "bBoxNE": [
+        0.53,
+        1.184
+      ],
+      "bBoxSW": [
+        0.071,
+        0.686
+      ]
+    },
+    "fthoraDiatonicNiHigh": {
+      "bBoxNE": [
+        0.502,
+        1.213
+      ],
+      "bBoxSW": [
+        0.106,
+        0.756
+      ]
+    },
+    "fthoraHardChromaticPa": {
+      "bBoxNE": [
+        1.014,
+        1.1
+      ],
+      "bBoxSW": [
+        0.067,
+        0.797
+      ]
+    },
+    "fthoraHardChromaticDi": {
+      "bBoxNE": [
+        0.446,
+        1.12
+      ],
+      "bBoxSW": [
+        0.077,
+        0.722
+      ]
+    },
+    "fthoraSoftChromaticDi": {
+      "bBoxNE": [
+        0.935,
+        1.113
+      ],
+      "bBoxSW": [
+        0.079,
+        0.788
+      ]
+    },
+    "fthoraSoftChromaticKe": {
+      "bBoxNE": [
+        0.548,
+        1.137
+      ],
+      "bBoxSW": [
+        0.094,
+        0.714
+      ]
+    },
+    "fthoraEnharmonic": {
+      "bBoxNE": [
+        0.449,
+        1.09
+      ],
+      "bBoxSW": [
+        0.08,
+        0.773
+      ]
+    },
+    "chroaZygos": {
+      "bBoxNE": [
+        0.52,
+        1.165
+      ],
+      "bBoxSW": [
+        0.106,
+        0.693
+      ]
+    },
+    "chroaKliton": {
+      "bBoxNE": [
+        0.597,
+        1.172
+      ],
+      "bBoxSW": [
+        0.141,
+        0.768
+      ]
+    },
+    "chroaSpathi": {
+      "bBoxNE": [
+        1.007,
+        1.136
+      ],
+      "bBoxSW": [
+        0.118,
+        0.786
+      ]
+    },
+    "fthoraDiatonicKe": {
+      "bBoxNE": [
+        0.295,
+        1.136
+      ],
+      "bBoxSW": [
+        0.051,
+        0.832
       ]
     }
   },

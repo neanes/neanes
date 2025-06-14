@@ -73,6 +73,10 @@ export default class App extends Vue {
   body {
     overflow: visible !important;
   }
+
+  .ck-body-wrapper {
+    display: none !important;
+  }
 }
 
 @page {

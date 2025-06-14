@@ -294,7 +294,7 @@
           )
         "
       >
-        <option value="">{{ $t('toolbar:martyria.none') }}</option>
+        <option value="">{{ $t('toolbar:common.none') }}</option>
         <option v-for="sign in rootSigns" :key="sign.value" :value="sign.value">
           {{ $t(sign.name) }}
         </option>

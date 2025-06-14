@@ -2,47 +2,68 @@
   <div
     class="text-box-container"
     :style="containerStyle"
+    :class="{ selected: selected }"
     @click="$emit('select-single')"
   >
     <span class="handle"></span>
     <div class="text-box-multipanel-container" v-if="element.multipanel">
       <ContentEditable
-        ref="text"
+        ref="textLeft"
         class="text-box multipanel left"
         :class="textBoxClass"
         :style="textBoxStyle"
         :content="contentLeft"
         :editable="editMode"
-        @blur="updateContentLeft($event)"
+        @blur="onBlur"
       ></ContentEditable>
       <ContentEditable
-        ref="text"
+        ref="textCenter"
         class="text-box multipanel center"
         :class="textBoxClass"
         :style="textBoxStyle"
         :content="contentCenter"
         :editable="editMode"
-        @blur="updateContentCenter($event)"
+        @blur="onBlur"
       ></ContentEditable>
       <ContentEditable
-        ref="text"
+        ref="textRight"
         class="text-box multipanel right"
         :class="textBoxClass"
         :style="textBoxStyle"
         :content="contentRight"
         :editable="editMode"
-        @blur="updateContentRight($event)"
+        @blur="onBlur"
+      ></ContentEditable>
+    </div>
+    <div class="inline-container" v-else-if="element.inline">
+      <ContentEditable
+        ref="text"
+        class="text-box inline-top"
+        :class="textBoxClass"
+        :style="textBoxStyleTop"
+        :content="content"
+        :editable="editMode"
+        @blur="onBlur"
+      ></ContentEditable>
+      <ContentEditable
+        ref="textBottom"
+        class="text-box inline-bottom"
+        :class="textBoxClass"
+        :style="textBoxStyleBottom"
+        :content="contentBottom"
+        :editable="editMode"
+        @blur="onBlur"
       ></ContentEditable>
     </div>
     <ContentEditable
       v-else
       ref="text"
-      class="text-box"
+      class="text-box single"
       :class="textBoxClass"
       :style="textBoxStyle"
       :content="content"
       :editable="editMode"
-      @blur="updateContent($event)"
+      @blur="onBlur"
     ></ContentEditable>
   </div>
 </template>
@@ -60,22 +81,36 @@ import { withZoom } from '@/utils/withZoom';
 
 @Component({
   components: { ContentEditable },
-  emits: [
-    'update:content',
-    'update:contentLeft',
-    'update:contentCenter',
-    'update:contentRight',
-    'select-single',
-  ],
+  emits: ['update', 'update:height', 'select-single'],
 })
 export default class TextBox extends Vue {
   @Prop() element!: TextBoxElement;
   @Prop() pageSetup!: PageSetup;
   @Prop({ default: true }) editMode!: boolean;
+  @Prop() selected!: boolean;
   @Prop() metadata!: TokenMetadata;
+
+  resizeObserver: ResizeObserver | null = null;
+  unmounting = false;
 
   get textElement() {
     return this.$refs.text as ContentEditable;
+  }
+
+  get textElementLeft() {
+    return this.$refs.textLeft as ContentEditable;
+  }
+
+  get textElementRight() {
+    return this.$refs.textRight as ContentEditable;
+  }
+
+  get textElementCenter() {
+    return this.$refs.textCenter as ContentEditable;
+  }
+
+  get textElementBottom() {
+    return this.$refs.textBottom as ContentEditable;
   }
 
   get content() {
@@ -83,6 +118,16 @@ export default class TextBox extends Vue {
       ? this.element.content
       : replaceTokens(
           this.element.content,
+          this.metadata,
+          this.element.alignment,
+        );
+  }
+
+  get contentBottom() {
+    return this.editMode
+      ? this.element.contentBottom
+      : replaceTokens(
+          this.element.contentBottom,
           this.metadata,
           this.element.alignment,
         );
@@ -132,6 +177,7 @@ export default class TextBox extends Vue {
       textAlign: this.element.alignment,
       width: this.width,
       height: withZoom(this.element.height),
+      minHeight: withZoom(this.element.minHeight),
       webkitTextStrokeWidth: withZoom(this.element.computedStrokeWidth),
       lineHeight: `${this.element.computedLineHeight ?? 'normal'}`,
       direction: this.pageSetup.melkiteRtl ? 'rtl' : undefined,
@@ -143,11 +189,29 @@ export default class TextBox extends Vue {
   get textBoxStyle() {
     const style: any = {
       width: !this.element.multipanel ? this.width : undefined,
-      height:
-        this.element.multipanel || this.element.inline
-          ? withZoom(this.element.height)
-          : undefined,
+      height: this.element.inline ? withZoom(this.element.height) : undefined,
+      minHeight: withZoom(this.element.minHeight),
       textWrap: this.element.alignment === 'center' ? 'balance' : 'pretty',
+    };
+
+    return style;
+  }
+
+  get textBoxStyleTop() {
+    const style: any = {
+      width: this.width,
+      height: withZoom(this.element.height),
+      textWrap: this.element.alignment === 'center' ? 'balance' : 'pretty',
+    };
+
+    return style;
+  }
+
+  get textBoxStyleBottom() {
+    const style: any = {
+      width: this.width,
+      textWrap: this.element.alignment === 'center' ? 'balance' : 'pretty',
+      top: withZoom(this.pageSetup.lyricsVerticalOffset),
     };
 
     return style;
@@ -155,45 +219,116 @@ export default class TextBox extends Vue {
 
   get textBoxClass() {
     return {
-      inline: this.element.inline,
       underline: this.element.underline,
     };
   }
 
-  updateContent(content: string) {
-    // Nothing actually changed, so do nothing
-    if (this.element.content === content) {
-      return;
+  mounted() {
+    const height = this.getHeight();
+
+    if (height != null && this.element.height !== height) {
+      this.$emit('update:height', height);
     }
 
-    this.$emit('update:content', content);
+    if (this.textElement) {
+      const element = this.textElement.htmlElement;
+
+      if (this.resizeObserver != null) {
+        this.resizeObserver.disconnect();
+      }
+
+      this.resizeObserver = new ResizeObserver(() => {
+        const resizedHeight = this.getHeight();
+
+        if (resizedHeight != null && this.element.height !== resizedHeight) {
+          this.$emit('update:height', resizedHeight);
+        }
+      });
+
+      this.resizeObserver.observe(element);
+    }
   }
 
-  updateContentLeft(content: string) {
-    // Nothing actually changed, so do nothing
-    if (this.element.contentLeft === content) {
-      return;
-    }
+  beforeUnmount() {
+    this.unmounting = true;
+    this.update();
 
-    this.$emit('update:contentLeft', content);
+    if (this.resizeObserver != null) {
+      this.resizeObserver.disconnect();
+    }
   }
 
-  updateContentCenter(content: string) {
-    // Nothing actually changed, so do nothing
-    if (this.element.contentCenter === content) {
-      return;
+  getHeight() {
+    if (this.element.multipanel) {
+      return Math.max(
+        this.textElementLeft.htmlElement.getBoundingClientRect().height,
+        this.textElementCenter.htmlElement.getBoundingClientRect().height,
+        this.textElementRight.htmlElement.getBoundingClientRect().height,
+      );
     }
 
-    this.$emit('update:contentCenter', content);
+    return this.textElement.htmlElement.getBoundingClientRect().height;
   }
 
-  updateContentRight(content: string) {
-    // Nothing actually changed, so do nothing
-    if (this.element.contentRight === content) {
+  onBlur() {
+    if (!this.unmounting) {
+      this.update();
+    }
+  }
+
+  update() {
+    const updates: Partial<TextBoxElement> = {};
+
+    let updated = false;
+
+    const height = this.getHeight();
+
+    const content = this.textElement?.getContent() ?? '';
+    const contentBottom = this.textElementBottom?.getContent() ?? '';
+    const contentLeft = this.textElementLeft?.getContent() ?? '';
+    const contentRight = this.textElementRight?.getContent() ?? '';
+    const contentCenter = this.textElementCenter?.getContent() ?? '';
+
+    // This should never happen, but if it does, we don't want
+    // to save garbage values.
+    if (height == null) {
       return;
     }
 
-    this.$emit('update:contentRight', content);
+    // Nothing actually changed, so do nothing
+    if (this.editMode && this.element.content !== content) {
+      updates.content = content;
+      updated = true;
+    }
+
+    if (this.editMode && this.element.contentBottom !== contentBottom) {
+      updates.contentBottom = contentBottom;
+      updated = true;
+    }
+
+    if (this.editMode && this.element.contentLeft !== contentLeft) {
+      updates.contentLeft = contentLeft;
+      updated = true;
+    }
+
+    if (this.editMode && this.element.contentRight !== contentRight) {
+      updates.contentRight = contentRight;
+      updated = true;
+    }
+
+    if (this.editMode && this.element.contentCenter !== contentCenter) {
+      updates.contentCenter = contentCenter;
+      updated = true;
+    }
+
+    if (this.element.height != height) {
+      updates.height = height;
+      updated = true;
+    }
+
+    if (updated) {
+      this.$emit('update', updates);
+    }
   }
 
   blur() {
@@ -208,7 +343,6 @@ export default class TextBox extends Vue {
 
 <style scoped>
 .text-box-container {
-  outline: 1px dotted black;
   box-sizing: border-box;
   min-height: 10px;
 }
@@ -234,11 +368,17 @@ export default class TextBox extends Vue {
   z-index: 1;
 }
 
-.text-box.inline {
+.text-box.inline-top {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  white-space: nowrap;
+  white-space: nowrap !important;
+}
+
+.text-box.inline-bottom {
+  display: inline-block;
+  position: relative;
+  white-space: nowrap !important;
 }
 
 .text-box.underline {
@@ -274,6 +414,21 @@ export default class TextBox extends Vue {
   z-index: 1;
 
   display: none;
+}
+
+.inline-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.inline-container,
+.text-box.single {
+  outline: 1px dotted black;
+}
+
+.selected .inline-container,
+.selected .text-box.single {
+  outline: 1px solid goldenrod;
 }
 
 @media print {

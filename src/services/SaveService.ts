@@ -544,10 +544,15 @@ export class SaveService {
       element.contentRight = e.contentRight;
       element.multipanel = true;
     }
+
+    if (e.inline) {
+      element.inline = e.inline;
+      element.contentBottom = e.contentBottom;
+    }
+
     element.fontFamily = e.fontFamily;
     element.fontSize = e.fontSize;
     element.strokeWidth = e.strokeWidth;
-    element.inline = e.inline || undefined;
     element.bold = e.bold || undefined;
     element.italic = e.italic || undefined;
     element.underline = e.underline || undefined;
@@ -573,7 +578,28 @@ export class SaveService {
       element.multipanel = true;
     }
 
+    if (e.inline) {
+      element.inline = e.inline;
+      element.contentBottom = e.contentBottom;
+      element.centerOnPage = e.centerOnPage;
+      element.offsetYBottom = e.offsetYBottom || undefined;
+      element.offsetYTop = e.offsetYTop || undefined;
+    }
+
+    if (e.modeChange) {
+      element.modeChange = e.modeChange;
+      element.modeChangePhysicalNote = e.modeChangePhysicalNote;
+      element.modeChangeScale = e.modeChangeScale;
+      element.modeChangeVirtualNote = e.modeChangeVirtualNote ?? undefined;
+      element.modeChangeBpm = e.modeChangeBpm;
+      element.modeChangeIgnoreAttractions =
+        e.modeChangeIgnoreAttractions ?? undefined;
+      element.modeChangePermanentEnharmonicZo =
+        e.modeChangePermanentEnharmonicZo ?? undefined;
+    }
+
     element.height = e.height;
+    element.customWidth = e.customWidth ?? undefined;
     element.marginTop = e.marginTop ?? undefined;
     element.marginBottom = e.marginBottom ?? undefined;
     element.rtl = e.rtl || undefined;
@@ -1303,6 +1329,10 @@ export class SaveService {
       element.contentRight = e.contentRight;
     }
 
+    if (e.inline) {
+      element.contentBottom = e.contentBottom;
+    }
+
     element.multipanel = e.multipanel === true;
 
     element.fontFamily = e.fontFamily;
@@ -1343,6 +1373,28 @@ export class SaveService {
       element.contentRight = e.contentRight;
     }
 
+    if (e.inline) {
+      element.contentBottom = e.contentBottom;
+      element.centerOnPage = e.centerOnPage === true;
+      element.offsetYBottom = e.offsetYBottom ?? 0;
+      element.offsetYTop = e.offsetYTop ?? 0;
+    }
+
+    if (e.modeChange) {
+      element.modeChangePhysicalNote = e.modeChangePhysicalNote;
+      element.modeChangeScale = e.modeChangeScale;
+      element.modeChangeVirtualNote = e.modeChangeVirtualNote ?? null;
+      element.modeChangeBpm = e.modeChangeBpm;
+      element.modeChangeIgnoreAttractions =
+        e.modeChangeIgnoreAttractions === true;
+      element.modeChangePermanentEnharmonicZo =
+        e.modeChangePermanentEnharmonicZo === true;
+    }
+
+    element.customWidth = e.customWidth ?? null;
+
+    element.modeChange = e.modeChange === true;
+    element.inline = e.inline === true;
     element.multipanel = e.multipanel === true;
     element.rtl = e.rtl === true;
   }

@@ -5,6 +5,7 @@ import {
   Fthora,
   GorgonNeume,
   Ison,
+  Letter,
   MeasureBar,
   MeasureNumber,
   ModeSign,
@@ -21,7 +22,8 @@ import {
 
 export type SbmuflGlyphName =
   | keyof typeof glyphnames
-  | keyof typeof metadata.optionalGlyphs;
+  | keyof typeof metadata.optionalGlyphs
+  | keyof typeof metadata.glyphAdvanceWidths;
 
 export interface NeumeMapping {
   glyphName: SbmuflGlyphName;
@@ -434,6 +436,24 @@ mapNeumeToSbmufl(Fthora.Kliton_Bottom, 'chroaKlitonBelow');
 mapNeumeToSbmufl(Fthora.Spathi_Bottom, 'chroaSpathiBelow');
 mapNeumeToSbmufl(Fthora.GeneralSharp_Bottom, 'diesisGenikiBelow');
 mapNeumeToSbmufl(Fthora.GeneralFlat_Bottom, 'yfesisGenikiBelow');
+
+mapNeumeToSbmufl(Fthora.DiatonicNiLow, 'fthoraDiatonicNiLow');
+mapNeumeToSbmufl(Fthora.DiatonicPa, 'fthoraDiatonicPa');
+mapNeumeToSbmufl(Fthora.DiatonicVou, 'fthoraDiatonicVou');
+mapNeumeToSbmufl(Fthora.DiatonicGa, 'fthoraDiatonicGa');
+mapNeumeToSbmufl(Fthora.DiatonicThi, 'fthoraDiatonicDi');
+mapNeumeToSbmufl(Fthora.DiatonicKe, 'fthoraDiatonicKe');
+mapNeumeToSbmufl(Fthora.DiatonicZo, 'fthoraDiatonicZo');
+mapNeumeToSbmufl(Fthora.DiatonicNiHigh, 'fthoraDiatonicNiHigh');
+mapNeumeToSbmufl(Fthora.HardChromaticPa, 'fthoraHardChromaticPa');
+mapNeumeToSbmufl(Fthora.HardChromaticThi, 'fthoraHardChromaticDi');
+mapNeumeToSbmufl(Fthora.SoftChromaticThi, 'fthoraSoftChromaticDi');
+mapNeumeToSbmufl(Fthora.SoftChromaticPa, 'fthoraSoftChromaticKe');
+mapNeumeToSbmufl(Fthora.Enharmonic, 'fthoraEnharmonic');
+mapNeumeToSbmufl(Fthora.Zygos, 'chroaZygos');
+mapNeumeToSbmufl(Fthora.Kliton, 'chroaKliton');
+mapNeumeToSbmufl(Fthora.Spathi, 'chroaSpathi');
+
 mapNeumeToSbmufl(Accidental.Sharp_2_Left, 'diesis2');
 mapNeumeToSbmufl(Accidental.Sharp_4_Left, 'diesis4');
 mapNeumeToSbmufl(Accidental.Sharp_6_Left, 'diesis6');
@@ -625,6 +645,9 @@ mapNeumeToSbmufl(Ison.ZoHigh, 'isonIndicatorZoHigh');
 
 mapNeumeToSbmufl(Tie.YfenAbove, 'yfenAbove');
 mapNeumeToSbmufl(Tie.YfenBelow, 'yfenBelow');
+
+mapNeumeToSbmufl(Letter.Gorthmikon, 'gorthmikon');
+mapNeumeToSbmufl(Letter.Pelastikon, 'pelastikon');
 
 export class NeumeMappingService {
   public static getMapping(neume: Neume): NeumeMapping {

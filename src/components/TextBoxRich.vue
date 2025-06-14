@@ -120,6 +120,7 @@ export default class TextBoxRich extends Vue {
 
   heightBottom: number = 0;
   heightTop: number = 0;
+  resizeObserver: ResizeObserver | null = null;
   inlineBottomObserver: ResizeObserver | null = null;
   inlineTopObserver: ResizeObserver | null = null;
 
@@ -343,6 +344,10 @@ export default class TextBoxRich extends Vue {
     if (this.inlineBottomObserver != null) {
       this.inlineBottomObserver.disconnect();
     }
+
+    if (this.resizeObserver != null) {
+      this.resizeObserver.disconnect();
+    }
   }
 
   @Watch('element.centerOnPage')
@@ -362,6 +367,22 @@ export default class TextBoxRich extends Vue {
       this.editorInstance?.editing.view.focus();
       this.focusOnReady = false;
     }
+
+    const element = (this.editorInstance as any).sourceElement;
+
+    if (this.resizeObserver != null) {
+      this.resizeObserver.disconnect();
+    }
+
+    this.resizeObserver = new ResizeObserver(() => {
+      const resizedHeight = this.getHeight();
+
+      if (resizedHeight != null && this.element.height !== resizedHeight) {
+        this.$emit('update:height', resizedHeight);
+      }
+    });
+
+    this.resizeObserver.observe(element);
   }
 
   onEditorReadyInline() {
@@ -555,6 +576,7 @@ export default class TextBoxRich extends Vue {
   overflow: visible;
   transform-origin: 0 0;
   transform: scale(var(--zoom, 1));
+  border: none !important;
 }
 
 .rich-text-box-container {
@@ -575,7 +597,7 @@ export default class TextBoxRich extends Vue {
 }
 
 .rich-text-editor.multipanel {
-  border: 1px dotted black;
+  outline: 1px dotted black;
   box-sizing: border-box;
   min-width: 2.5rem;
 }

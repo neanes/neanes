@@ -456,6 +456,7 @@
                       :editMode="true"
                       :metadata="getTokenMetadata(pageIndex)"
                       :pageSetup="score.pageSetup"
+                      :zoom="zoom"
                       :selected="isSelected(element)"
                       @select-single="selectedElement = element"
                       @update="updateTextBox(element as TextBoxElement, $event)"
@@ -482,6 +483,7 @@
                       :ref="`element-${getElementIndex(element)}`"
                       :element="element"
                       :pageSetup="score.pageSetup"
+                      :zoom="zoom"
                       :fonts="fonts"
                       :selected="isSelected(element)"
                       @select-single="selectedElement = element"
@@ -605,6 +607,7 @@
                     "
                     :metadata="getTokenMetadata(pageIndex)"
                     :pageSetup="score.pageSetup"
+                    :zoom="zoom"
                     :fonts="fonts"
                     :selected="
                       getFooterForPageIndex(pageIndex) ==
@@ -646,6 +649,7 @@
                     "
                     :metadata="getTokenMetadata(pageIndex)"
                     :pageSetup="score.pageSetup"
+                    :zoom="zoom"
                     :class="[
                       {
                         selectedTextbox:
@@ -1210,6 +1214,7 @@
         :key="element.id"
         :element="element"
         :pageSetup="score.pageSetup"
+        :zoom="zoom"
         :fonts="fonts"
         @update:height="
           updateRichTextBoxHeight(element as RichTextBoxElement, $event)
@@ -1223,6 +1228,7 @@
         :key="element.id"
         :element="element"
         :pageSetup="score.pageSetup"
+        :zoom="zoom"
         :fonts="fonts"
         @update:height="updateTextBoxHeight(element as TextBoxElement, $event)"
       />

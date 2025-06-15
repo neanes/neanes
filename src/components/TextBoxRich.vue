@@ -317,7 +317,7 @@ export default class TextBoxRich extends Vue {
     const style: any = {
       top: withZoom(
         this.pageSetup.lyricsVerticalOffset -
-          (this.heightBottom / 2 - this.element.defaultLyricsFontHeight) +
+          (this.heightBottom - this.element.defaultLyricsFontHeight) +
           this.element.offsetYBottom,
       ),
       lineHeight: withZoom(this.element.defaultLyricsFontHeight),

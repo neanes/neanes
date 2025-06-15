@@ -703,6 +703,9 @@
           updateTextBoxLineHeight(selectedTextBoxElement, $event)
         "
         @update:customWidth="updateTextBoxWidth(selectedTextBoxElement, $event)"
+        @update:fillWidth="
+          updateTextBoxFillWidth(selectedTextBoxElement, $event)
+        "
         @update:customHeight="
           updateTextBoxCustomHeight(selectedTextBoxElement, $event)
         "
@@ -5518,6 +5521,10 @@ export default class Editor extends Vue {
 
   updateTextBoxWidth(element: TextBoxElement, customWidth: number | null) {
     this.updateTextBox(element, { customWidth });
+  }
+
+  updateTextBoxFillWidth(element: TextBoxElement, fillWidth: boolean) {
+    this.updateTextBox(element, { fillWidth });
   }
 
   updateTextBoxCustomHeight(

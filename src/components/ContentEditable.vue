@@ -15,7 +15,7 @@ import { StyleValue } from 'vue';
 import { Component, Prop, Vue } from 'vue-facing-decorator';
 
 @Component({
-  emits: ['click', 'focus', 'blur'],
+  emits: ['click', 'focus', 'blur', 'onEditorReady'],
 })
 export default class ContentEditable extends Vue {
   @Prop() content!: string;
@@ -40,6 +40,10 @@ export default class ContentEditable extends Vue {
     return {
       whiteSpace: this.whiteSpace,
     } as StyleValue;
+  }
+
+  mounted() {
+    this.$emit('onEditorReady');
   }
 
   getInnerText() {

@@ -15,6 +15,7 @@
         :content="contentLeft"
         :editable="editMode"
         @blur="onBlur"
+        @onEditorReady="onEditorReady"
       ></ContentEditable>
       <ContentEditable
         ref="textCenter"
@@ -24,6 +25,7 @@
         :content="contentCenter"
         :editable="editMode"
         @blur="onBlur"
+        @onEditorReady="onEditorReady"
       ></ContentEditable>
       <ContentEditable
         ref="textRight"
@@ -33,6 +35,7 @@
         :content="contentRight"
         :editable="editMode"
         @blur="onBlur"
+        @onEditorReady="onEditorReady"
       ></ContentEditable>
     </div>
     <div class="inline-container" v-else-if="element.inline">
@@ -64,12 +67,13 @@
       :content="content"
       :editable="editMode"
       @blur="onBlur"
+      @onEditorReady="onEditorReady"
     ></ContentEditable>
   </div>
 </template>
 
 <script lang="ts">
-import { throttle } from 'throttle-debounce';
+import { debounce, throttle } from 'throttle-debounce';
 import { StyleValue } from 'vue';
 import { Component, Prop, Vue } from 'vue-facing-decorator';
 
@@ -94,23 +98,23 @@ export default class TextBox extends Vue {
   resizeObserver: ResizeObserver | null = null;
   unmounting = false;
 
-  get textElement() {
+  getTextElement() {
     return this.$refs.text as ContentEditable;
   }
 
-  get textElementLeft() {
+  getTextElementLeft() {
     return this.$refs.textLeft as ContentEditable;
   }
 
-  get textElementRight() {
+  getTextElementRight() {
     return this.$refs.textRight as ContentEditable;
   }
 
-  get textElementCenter() {
+  getTextElementCenter() {
     return this.$refs.textCenter as ContentEditable;
   }
 
-  get textElementBottom() {
+  getTextElementBottom() {
     return this.$refs.textBottom as ContentEditable;
   }
 
@@ -245,10 +249,10 @@ export default class TextBox extends Vue {
 
   setupResizeObserver() {
     if (
-      this.textElement ||
-      this.textElementLeft ||
-      this.textElementCenter ||
-      this.textElementRight
+      this.getTextElement() ||
+      (this.getTextElementLeft() &&
+        this.getTextElementCenter() &&
+        this.getTextElementRight())
     ) {
       if (this.resizeObserver != null) {
         this.resizeObserver.disconnect();
@@ -267,18 +271,18 @@ export default class TextBox extends Vue {
         }),
       );
 
-      if (this.textElement) {
-        this.resizeObserver.observe(this.textElement.htmlElement);
+      if (this.getTextElement()) {
+        this.resizeObserver.observe(this.getTextElement().htmlElement);
       }
 
-      if (this.textElementLeft) {
-        this.resizeObserver.observe(this.textElementLeft.htmlElement);
+      if (this.getTextElementLeft()) {
+        this.resizeObserver.observe(this.getTextElementLeft().htmlElement);
       }
-      if (this.textElementCenter) {
-        this.resizeObserver.observe(this.textElementCenter.htmlElement);
+      if (this.getTextElementCenter()) {
+        this.resizeObserver.observe(this.getTextElementCenter().htmlElement);
       }
-      if (this.textElementRight) {
-        this.resizeObserver.observe(this.textElementRight.htmlElement);
+      if (this.getTextElementRight()) {
+        this.resizeObserver.observe(this.getTextElementRight().htmlElement);
       }
     }
   }
@@ -286,43 +290,54 @@ export default class TextBox extends Vue {
   getHeight() {
     if (this.element.multipanel) {
       if (
-        this.textElementLeft == null ||
-        this.textElementCenter == null ||
-        this.textElementRight == null
+        this.getTextElementLeft() == null ||
+        this.getTextElementCenter() == null ||
+        this.getTextElementRight() == null
       ) {
         return null;
       }
 
       const zoom = Number(
-        getComputedStyle(this.textElementCenter.htmlElement).getPropertyValue(
-          '--zoom',
-        ),
+        getComputedStyle(
+          this.getTextElementCenter().htmlElement,
+        ).getPropertyValue('--zoom'),
       );
 
       return (
         Math.max(
-          this.textElementLeft.htmlElement.getBoundingClientRect().height,
-          this.textElementCenter.htmlElement.getBoundingClientRect().height,
-          this.textElementRight.htmlElement.getBoundingClientRect().height,
+          this.getTextElementLeft().htmlElement.getBoundingClientRect().height,
+          this.getTextElementCenter().htmlElement.getBoundingClientRect()
+            .height,
+          this.getTextElementRight().htmlElement.getBoundingClientRect().height,
         ) / zoom
       );
     }
 
-    if (this.textElement == null) {
+    if (this.getTextElement() == null) {
       return null;
     }
 
     const zoom = Number(
-      getComputedStyle(this.textElement.htmlElement).getPropertyValue('--zoom'),
+      getComputedStyle(this.getTextElement().htmlElement).getPropertyValue(
+        '--zoom',
+      ),
     );
 
-    return this.textElement.htmlElement.getBoundingClientRect().height / zoom;
+    return (
+      this.getTextElement().htmlElement.getBoundingClientRect().height / zoom
+    );
   }
 
   onBlur() {
     if (!this.unmounting) {
       this.update();
     }
+  }
+
+  setupResizeObserverDebounced = debounce(100, this.setupResizeObserver);
+
+  onEditorReady() {
+    this.setupResizeObserverDebounced();
   }
 
   update() {
@@ -332,11 +347,11 @@ export default class TextBox extends Vue {
 
     const height = this.getHeight();
 
-    const content = this.textElement?.getContent() ?? '';
-    const contentBottom = this.textElementBottom?.getContent() ?? '';
-    const contentLeft = this.textElementLeft?.getContent() ?? '';
-    const contentRight = this.textElementRight?.getContent() ?? '';
-    const contentCenter = this.textElementCenter?.getContent() ?? '';
+    const content = this.getTextElement()?.getContent() ?? '';
+    const contentBottom = this.getTextElementBottom()?.getContent() ?? '';
+    const contentLeft = this.getTextElementLeft()?.getContent() ?? '';
+    const contentRight = this.getTextElementRight()?.getContent() ?? '';
+    const contentCenter = this.getTextElementCenter()?.getContent() ?? '';
 
     // This should never happen, but if it does, we don't want
     // to save garbage values.
@@ -381,11 +396,11 @@ export default class TextBox extends Vue {
   }
 
   blur() {
-    this.textElement?.blur();
+    this.getTextElement()?.blur();
   }
 
   focus() {
-    this.textElement?.focus(true);
+    this.getTextElement()?.focus(true);
   }
 }
 </script>

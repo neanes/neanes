@@ -3740,7 +3740,8 @@ export default class Editor extends Vue {
           handled = true;
         } else if (
           this.rtl &&
-          getCursorPosition() === htmlElement.textElement.getInnerText().length
+          getCursorPosition() ===
+            htmlElement.getTextElement().getInnerText().length
         ) {
           this.moveRightThrottled();
           handled = true;
@@ -3749,7 +3750,8 @@ export default class Editor extends Vue {
       case 'ArrowRight':
         if (
           !this.rtl &&
-          getCursorPosition() === htmlElement.textElement.getInnerText().length
+          getCursorPosition() ===
+            htmlElement.getTextElement().getInnerText().length
         ) {
           this.moveRightThrottled();
           handled = true;

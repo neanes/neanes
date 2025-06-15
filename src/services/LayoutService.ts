@@ -1647,7 +1647,8 @@ export class LayoutService {
             (x) =>
               (x.elementType === ElementType.TextBox &&
                 !(x as TextBoxElement).inline) ||
-              x.elementType === ElementType.RichTextBox ||
+              (x.elementType === ElementType.RichTextBox &&
+                !(x as RichTextBoxElement).inline) ||
               x.elementType === ElementType.ModeKey,
           )
         ) {

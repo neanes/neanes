@@ -462,6 +462,12 @@
                       @update:height="
                         updateTextBoxHeight(element as TextBoxElement, $event)
                       "
+                      @update:trueWidth="
+                        updateTextBoxTrueWidth(
+                          element as TextBoxElement,
+                          $event,
+                        )
+                      "
                     />
                   </template>
                   <template v-else-if="isRichTextBoxElement(element)">
@@ -702,7 +708,9 @@
         @update:lineHeight="
           updateTextBoxLineHeight(selectedTextBoxElement, $event)
         "
-        @update:customWidth="updateTextBoxWidth(selectedTextBoxElement, $event)"
+        @update:customWidth="
+          updateTextBoxCustomWidth(selectedTextBoxElement, $event)
+        "
         @update:fillWidth="
           updateTextBoxFillWidth(selectedTextBoxElement, $event)
         "
@@ -5519,8 +5527,15 @@ export default class Editor extends Vue {
     this.updateTextBox(element, { lineHeight });
   }
 
-  updateTextBoxWidth(element: TextBoxElement, customWidth: number | null) {
+  updateTextBoxCustomWidth(
+    element: TextBoxElement,
+    customWidth: number | null,
+  ) {
     this.updateTextBox(element, { customWidth });
+  }
+
+  updateTextBoxTrueWidth(element: TextBoxElement, trueWidth: number) {
+    this.updateTextBox(element, { trueWidth });
   }
 
   updateTextBoxFillWidth(element: TextBoxElement, fillWidth: boolean) {

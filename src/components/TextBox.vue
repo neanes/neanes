@@ -70,7 +70,7 @@
 
 <script lang="ts">
 import { StyleValue } from 'vue';
-import { Component, Prop, Vue } from 'vue-facing-decorator';
+import { Component, Prop, Vue, Watch } from 'vue-facing-decorator';
 
 import ContentEditable from '@/components/ContentEditable.vue';
 import { TextBoxAlignment, TextBoxElement } from '@/models/Element';
@@ -90,7 +90,8 @@ export default class TextBox extends Vue {
   @Prop() selected!: boolean;
   @Prop() metadata!: TokenMetadata;
 
-  resizeObserver: ResizeObserver | null = null;
+  resizeObserverHeight: ResizeObserver | null = null;
+  resizeObserverWidth: ResizeObserver | null = null;
   unmounting = false;
 
   get textElement() {
@@ -175,7 +176,10 @@ export default class TextBox extends Vue {
       fontWeight: this.element.computedFontWeight,
       fontStyle: this.element.computedFontStyle,
       textAlign: this.element.alignment,
-      width: this.width,
+      width:
+        this.element.fillWidth || this.element.customWidth != null
+          ? this.width
+          : undefined,
       height: withZoom(this.element.height),
       minHeight: withZoom(this.element.minHeight),
       webkitTextStrokeWidth: withZoom(this.element.computedStrokeWidth),
@@ -199,7 +203,10 @@ export default class TextBox extends Vue {
 
   get textBoxStyleTop() {
     const style: any = {
-      width: this.width,
+      width:
+        this.element.fillWidth || this.element.customWidth != null
+          ? this.width
+          : undefined,
       height: withZoom(this.element.height),
       textWrap: this.element.alignment === 'center' ? 'balance' : 'pretty',
     };
@@ -209,7 +216,10 @@ export default class TextBox extends Vue {
 
   get textBoxStyleBottom() {
     const style: any = {
-      width: this.width,
+      width:
+        this.element.fillWidth || this.element.customWidth != null
+          ? this.width
+          : undefined,
       textWrap: this.element.alignment === 'center' ? 'balance' : 'pretty',
       top: withZoom(this.pageSetup.lyricsVerticalOffset),
     };
@@ -233,11 +243,11 @@ export default class TextBox extends Vue {
     if (this.textElement) {
       const element = this.textElement.htmlElement;
 
-      if (this.resizeObserver != null) {
-        this.resizeObserver.disconnect();
+      if (this.resizeObserverHeight != null) {
+        this.resizeObserverHeight.disconnect();
       }
 
-      this.resizeObserver = new ResizeObserver(() => {
+      this.resizeObserverHeight = new ResizeObserver(() => {
         const resizedHeight = this.getHeight();
 
         if (resizedHeight != null && this.element.height !== resizedHeight) {
@@ -245,7 +255,9 @@ export default class TextBox extends Vue {
         }
       });
 
-      this.resizeObserver.observe(element);
+      this.resizeObserverHeight.observe(element);
+
+      this.configureResizeObserverWidth();
     }
   }
 
@@ -253,9 +265,47 @@ export default class TextBox extends Vue {
     this.unmounting = true;
     this.update();
 
-    if (this.resizeObserver != null) {
-      this.resizeObserver.disconnect();
+    if (this.resizeObserverHeight != null) {
+      this.resizeObserverHeight.disconnect();
     }
+
+    if (this.resizeObserverWidth != null) {
+      this.resizeObserverWidth.disconnect();
+    }
+  }
+
+  configureResizeObserverWidth() {
+    const element = this.textElement.htmlElement;
+
+    if (this.resizeObserverWidth != null) {
+      this.resizeObserverWidth.disconnect();
+    }
+    if (
+      this.element.inline &&
+      !this.element.fillWidth &&
+      this.element.customWidth == null
+    ) {
+      this.resizeObserverWidth = new ResizeObserver(() => {
+        const resizedWidth = this.getWidth();
+
+        if (resizedWidth != null && this.element.trueWidth !== resizedWidth) {
+          console.log(this.element.trueWidth, resizedWidth);
+          this.$emit('update:trueWidth', resizedWidth);
+        }
+      });
+
+      this.resizeObserverWidth.observe(element);
+    }
+  }
+
+  @Watch('element.fillWidth')
+  onFillWidthChange() {
+    this.configureResizeObserverWidth();
+  }
+
+  @Watch('element.customWidth')
+  onCustomWidthChange() {
+    this.configureResizeObserverWidth();
   }
 
   getHeight() {
@@ -268,6 +318,10 @@ export default class TextBox extends Vue {
     }
 
     return this.textElement.htmlElement.getBoundingClientRect().height;
+  }
+
+  getWidth() {
+    return this.textElement.htmlElement.getBoundingClientRect().width;
   }
 
   onBlur() {

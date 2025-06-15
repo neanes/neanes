@@ -69,6 +69,7 @@
 </template>
 
 <script lang="ts">
+import { throttle } from 'throttle-debounce';
 import { StyleValue } from 'vue';
 import { Component, Prop, Vue } from 'vue-facing-decorator';
 
@@ -237,13 +238,15 @@ export default class TextBox extends Vue {
         this.resizeObserver.disconnect();
       }
 
-      this.resizeObserver = new ResizeObserver(() => {
-        const resizedHeight = this.getHeight();
+      this.resizeObserver = new ResizeObserver(
+        throttle(100, () => {
+          const resizedHeight = this.getHeight();
 
-        if (resizedHeight != null && this.element.height !== resizedHeight) {
-          this.$emit('update:height', resizedHeight);
-        }
-      });
+          if (resizedHeight != null && this.element.height !== resizedHeight) {
+            this.$emit('update', { height: resizedHeight });
+          }
+        }),
+      );
 
       this.resizeObserver.observe(element);
     }

@@ -1348,7 +1348,6 @@ export class LayoutService {
 
       textbox.updated =
         textbox.widthPrevious !== textbox.width ||
-        textbox.heightPrevious !== textbox.height ||
         textbox.computedFontFamilyPrevious !== textbox.computedFontFamily ||
         textbox.computedFontSizePrevious !== textbox.computedFontSize ||
         textbox.computedFontWeightPrevious !== textbox.computedFontWeight ||

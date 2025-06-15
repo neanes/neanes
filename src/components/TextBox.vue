@@ -227,7 +227,7 @@ export default class TextBox extends Vue {
   mounted() {
     const height = this.getHeight();
 
-    if (height != null && this.element.height !== height) {
+    if (height != null && Math.abs(this.element.height - height) > 0.001) {
       this.$emit('update:height', height);
     }
 
@@ -242,7 +242,10 @@ export default class TextBox extends Vue {
         throttle(100, () => {
           const resizedHeight = this.getHeight();
 
-          if (resizedHeight != null && this.element.height !== resizedHeight) {
+          if (
+            resizedHeight != null &&
+            Math.abs(this.element.height - resizedHeight) > 0.001
+          ) {
             this.$emit('update', { height: resizedHeight });
           }
         }),
@@ -263,6 +266,14 @@ export default class TextBox extends Vue {
 
   getHeight() {
     if (this.element.multipanel) {
+      if (
+        this.textElementLeft == null ||
+        this.textElementCenter == null ||
+        this.textElementRight == null
+      ) {
+        return null;
+      }
+
       const zoom = Number(
         getComputedStyle(this.textElementCenter.htmlElement).getPropertyValue(
           '--zoom',
@@ -276,6 +287,10 @@ export default class TextBox extends Vue {
           this.textElementRight.htmlElement.getBoundingClientRect().height,
         ) / zoom
       );
+    }
+
+    if (this.textElement == null) {
+      return null;
     }
 
     const zoom = Number(
@@ -336,7 +351,7 @@ export default class TextBox extends Vue {
       updated = true;
     }
 
-    if (this.element.height != height) {
+    if (Math.abs(this.element.height - height) > 0.001) {
       updates.height = height;
       updated = true;
     }

@@ -1182,29 +1182,8 @@ export class LayoutService {
       } else if (textBoxElement.customWidth != null) {
         elementWidthPx = textBoxElement.customWidth;
       } else {
-        const lines = textBoxElement.content.split(/(?:\r\n|\r|\n)/g);
-
-        let maxWidth = 0;
-
-        for (const line of lines) {
-          const lineWidth = TextMeasurementService.getTextWidth(
-            line,
-            textBoxElement.computedFont,
-          );
-
-          if (lineWidth > maxWidth) {
-            maxWidth = lineWidth;
-          }
-        }
-
-        elementWidthPx = maxWidth;
-
-        const minimumWidth = TextMeasurementService.getTextWidth(
-          ' ',
-          textBoxElement.computedFont,
-        );
-
-        elementWidthPx = Math.max(elementWidthPx, minimumWidth);
+        elementWidthPx = textBoxElement.trueWidth;
+        textBoxElement.trueWidth = elementWidthPx;
       }
     } else {
       elementWidthPx = pageSetup.innerPageWidth;
@@ -1347,7 +1326,6 @@ export class LayoutService {
       const textbox = element as TextBoxElement;
 
       textbox.updated =
-        textbox.widthPrevious !== textbox.width ||
         textbox.heightPrevious !== textbox.height ||
         textbox.computedFontFamilyPrevious !== textbox.computedFontFamily ||
         textbox.computedFontSizePrevious !== textbox.computedFontSize ||
@@ -1356,6 +1334,11 @@ export class LayoutService {
         textbox.computedColorPrevious !== textbox.computedColor ||
         textbox.computedStrokeWidthPrevious !== textbox.computedStrokeWidth ||
         textbox.computedLineHeightPrevious !== textbox.computedLineHeight;
+
+      if (textbox.customWidth != null) {
+        textbox.updated =
+          textbox.updated || textbox.widthPrevious !== textbox.width;
+      }
     }
 
     if (!element.updated && element.elementType === ElementType.RichTextBox) {

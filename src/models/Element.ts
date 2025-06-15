@@ -765,6 +765,7 @@ export class TextBoxElement extends ScoreElement {
   public computedStrokeWidth: number = 0;
   public computedLineHeight: number | null = null;
   public minHeight: number = 10;
+  public trueWidth: number = 0;
 
   // Re-render helpers
   public heightPrevious: number = 0;

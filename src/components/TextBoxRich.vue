@@ -290,7 +290,7 @@ export default class TextBoxRich extends Vue {
 
   get textBoxStyleTop() {
     const style: any = {
-      width: withZoom(this.element.width),
+      width: `${this.element.width}px`, // no zoom because we scale with the transform
     };
 
     return style;
@@ -298,7 +298,7 @@ export default class TextBoxRich extends Vue {
 
   get textBoxStyleBottom() {
     const style: any = {
-      width: withZoom(this.element.width),
+      width: `${this.element.width}px`, // no zoom because we scale with the transform
     };
 
     return style;
@@ -539,6 +539,8 @@ export default class TextBoxRich extends Vue {
     }
 
     const zoom = Number(getComputedStyle(element).getPropertyValue('--zoom'));
+
+    console.log(zoom);
 
     return element.getBoundingClientRect().height / zoom;
   }

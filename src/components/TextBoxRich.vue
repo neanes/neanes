@@ -111,6 +111,7 @@ export default class TextBoxRich extends Vue {
   @Prop({ default: true }) editMode!: boolean;
   @Prop() selected!: boolean;
   @Prop() metadata!: TokenMetadata;
+  @Prop({ default: 1 }) zoom!: number;
 
   editor = InlineEditor;
   editorData = '';
@@ -281,7 +282,7 @@ export default class TextBoxRich extends Vue {
           (this.heightTop - this.element.defaultLyricsFontHeight) +
           this.element.offsetYTop,
       ),
-      lineHeight: `${this.element.defaultLyricsFontHeight}px`,
+      lineHeight: withZoom(this.element.defaultLyricsFontHeight),
     };
 
     return style;
@@ -316,10 +317,10 @@ export default class TextBoxRich extends Vue {
     const style: any = {
       top: withZoom(
         this.pageSetup.lyricsVerticalOffset -
-          (this.heightBottom - this.element.defaultLyricsFontHeight) +
+          (this.heightBottom / 2 - this.element.defaultLyricsFontHeight) +
           this.element.offsetYBottom,
       ),
-      lineHeight: `${this.element.defaultLyricsFontHeight}px`,
+      lineHeight: withZoom(this.element.defaultLyricsFontHeight),
     };
 
     return style;
@@ -497,21 +498,30 @@ export default class TextBoxRich extends Vue {
   }
 
   getHeight() {
-    return (this.$el as HTMLElement)
-      .querySelector('.ck-content')
-      ?.getBoundingClientRect().height;
+    const element = (this.$el as HTMLElement).querySelector('.ck-content');
+    return element != null
+      ? element.getBoundingClientRect().height / this.zoom
+      : null;
   }
 
   getHeightBottom() {
-    return (this.$el as HTMLElement)
-      .querySelector('.ck-content.inline-bottom')
-      ?.getBoundingClientRect().height;
+    const element = (this.$el as HTMLElement).querySelector(
+      '.ck-content.inline-bottom',
+    );
+
+    return element != null
+      ? element.getBoundingClientRect().height / this.zoom
+      : null;
   }
 
   getHeightTop() {
-    return (this.$el as HTMLElement)
-      .querySelector('.ck-content.inline-top')
-      ?.getBoundingClientRect().height;
+    const element = (this.$el as HTMLElement).querySelector(
+      '.ck-content.inline-top',
+    );
+
+    return element != null
+      ? element.getBoundingClientRect().height / this.zoom
+      : null;
   }
 
   setPadding(editor: Editor | undefined) {

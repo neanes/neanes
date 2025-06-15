@@ -114,6 +114,7 @@ export default class InsertNeumeEditing extends Plugin {
             ) as number;
 
             style += `line-height: ${lineHeight};`;
+            style += `height: ${defaultFontSize}px;`;
           } else {
             style += `line-height: ${defaultFontSize}px;`;
           }

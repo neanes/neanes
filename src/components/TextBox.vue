@@ -75,7 +75,7 @@
 <script lang="ts">
 import { debounce, throttle } from 'throttle-debounce';
 import { StyleValue } from 'vue';
-import { Component, Prop, Vue } from 'vue-facing-decorator';
+import { Component, Prop, Vue, Watch } from 'vue-facing-decorator';
 
 import ContentEditable from '@/components/ContentEditable.vue';
 import { TextBoxAlignment, TextBoxElement } from '@/models/Element';
@@ -284,6 +284,13 @@ export default class TextBox extends Vue {
       if (this.getTextElementRight()) {
         this.resizeObserver.observe(this.getTextElementRight().htmlElement);
       }
+    }
+  }
+
+  @Watch('element.customHeight')
+  onCustomHeightChange() {
+    if (this.element.customHeight == null) {
+      this.update();
     }
   }
 

@@ -5422,11 +5422,15 @@ export default class Editor extends Vue {
       element.keyHelper++;
     }
 
+    const noHistory =
+      Object.keys(newValues).length === 1 && 'height' in newValues;
+
     this.commandService.execute(
       this.richTextBoxCommandFactory.create('update-properties', {
         target: element,
         newValues: newValues,
       }),
+      noHistory,
     );
 
     this.save();
@@ -5452,11 +5456,15 @@ export default class Editor extends Vue {
   }
 
   updateTextBox(element: TextBoxElement, newValues: Partial<TextBoxElement>) {
+    const noHistory =
+      Object.keys(newValues).length === 1 && 'height' in newValues;
+
     this.commandService.execute(
       this.textBoxCommandFactory.create('update-properties', {
         target: element,
         newValues: newValues,
       }),
+      noHistory,
     );
 
     this.save();

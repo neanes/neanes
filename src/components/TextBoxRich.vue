@@ -505,15 +505,23 @@ export default class TextBoxRich extends Vue {
   }
 
   getHeightBottom() {
-    return (this.$el as HTMLElement)
-      .querySelector('.ck-content.inline-bottom')
-      ?.getBoundingClientRect().height;
+    const element = (this.$el as HTMLElement).querySelector(
+      '.ck-content.inline-bottom',
+    );
+
+    return element != null
+      ? element.getBoundingClientRect().height / this.zoom
+      : null;
   }
 
   getHeightTop() {
-    return (this.$el as HTMLElement)
-      .querySelector('.ck-content.inline-top')
-      ?.getBoundingClientRect().height;
+    const element = (this.$el as HTMLElement).querySelector(
+      '.ck-content.inline-top',
+    );
+
+    return element != null
+      ? element.getBoundingClientRect().height / this.zoom
+      : null;
   }
 
   setPadding(editor: Editor | undefined) {

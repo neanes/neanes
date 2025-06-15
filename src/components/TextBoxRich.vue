@@ -360,7 +360,7 @@ export default class TextBoxRich extends Vue {
   onEditorReady() {
     const height = this.getHeight();
 
-    if (height != null && this.element.height !== height) {
+    if (height != null && Math.abs(this.element.height - height) > 0.001) {
       this.$emit('update:height', height);
     }
 
@@ -379,7 +379,10 @@ export default class TextBoxRich extends Vue {
       throttle(100, () => {
         const resizedHeight = this.getHeight();
 
-        if (resizedHeight != null && this.element.height !== resizedHeight) {
+        if (
+          resizedHeight != null &&
+          Math.abs(this.element.height - resizedHeight) > 0.001
+        ) {
           this.$emit('update', { height: resizedHeight });
         }
       }),

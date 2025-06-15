@@ -1507,7 +1507,9 @@ export class LayoutService {
 
     // Add in padding to give some extra space between
     // the martyria and the next neume
-    const padding = pageSetup.neumeDefaultFontSize * 0.148;
+    const padding = martyriaElement.alignRight
+      ? 0
+      : pageSetup.neumeDefaultFontSize * 0.148;
 
     martyriaElement.neumeWidth = this.getNeumeWidthFromCache(
       neumeWidthCache,

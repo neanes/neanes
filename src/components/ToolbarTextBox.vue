@@ -179,6 +179,7 @@
       </template>
     </template>
     <template v-else>
+      <span class="divider" />
       <label class="right-space">{{ $t('toolbar:common.width') }}</label>
       <InputUnit
         class="text-box-input-width"
@@ -192,6 +193,17 @@
         placeholder="auto"
         @update:modelValue="$emit('update:customWidth', $event)"
       />
+      <input
+        id="toolbar-text-box-fill-width"
+        type="checkbox"
+        :checked="element.fillWidth"
+        @change="
+          $emit('update:fillWidth', ($event.target as HTMLInputElement).checked)
+        "
+      />
+      <label for="toolbar-text-box-fill-width">{{
+        $t('toolbar:textbox.fillWidth')
+      }}</label>
     </template>
     <span class="space"></span>
     <div class="form-group">
@@ -256,6 +268,7 @@ import { Unit } from '@/utils/Unit';
     'update:color',
     'update:customHeight',
     'update:customWidth',
+    'update:fillWidth',
     'update:fontFamily',
     'update:fontSize',
     'update:italic',

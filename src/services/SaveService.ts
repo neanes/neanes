@@ -559,6 +559,7 @@ export class SaveService {
     element.lineHeight = e.lineHeight ?? undefined;
     element.height = e.height;
     element.customWidth = e.customWidth ?? undefined;
+    element.fillWidth = e.fillWidth ?? undefined;
     element.customHeight = e.customHeight ?? undefined;
     element.marginTop = e.marginTop ?? undefined;
     element.marginBottom = e.marginBottom ?? undefined;
@@ -1345,6 +1346,7 @@ export class SaveService {
     element.strokeWidth = e.strokeWidth ?? element.strokeWidth;
     element.lineHeight = e.lineHeight ?? pageSetup.textBoxDefaultLineHeight;
     element.customWidth = e.customWidth ?? null;
+    element.fillWidth = e.fillWidth === true;
     element.customHeight = e.customHeight ?? null;
     element.marginTop = e.marginTop ?? 0;
     element.marginBottom = e.marginBottom ?? 0;

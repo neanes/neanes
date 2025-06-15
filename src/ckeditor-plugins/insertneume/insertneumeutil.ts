@@ -89,8 +89,25 @@ export const INSERT_NEUME_CHARACTER_BLOCKS = [
       TempoSign.Quick,
       TempoSign.Quicker,
       TempoSign.VeryQuick,
-      Letter.Pelastikon, // pelastikon
-      Letter.Gorthmikon, // gorthmikon
+      Letter.Pelastikon,
+      Letter.Gorthmikon,
+      ModeSign.Ekhos,
+      ModeSign.Varys,
+      ModeSign.Zo,
+      ModeSign.Ni,
+      ModeSign.Pa,
+      ModeSign.Vou,
+      ModeSign.Ga,
+      ModeSign.Thi,
+      ModeSign.Ke,
+      ModeSign.First,
+      ModeSign.FirstCapital,
+      ModeSign.Second,
+      ModeSign.SecondCapital,
+      ModeSign.Third,
+      ModeSign.ThirdCapital,
+      ModeSign.Fourth,
+      ModeSign.FourthCapital,
     ],
   },
 ];
@@ -474,6 +491,125 @@ const DEFAULT_ATTRIBUTES_PSALTICA: InsertNeumeAttributeSet[] = [
     neume: QuantitativeNeume.RunningElaphron,
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
+    },
+  },
+  {
+    neume: ModeSign.Ekhos,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+    },
+  },
+  {
+    neume: ModeSign.Varys,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+    },
+  },
+  {
+    neume: ModeSign.Ni,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+    },
+  },
+  {
+    neume: ModeSign.Pa,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+    },
+  },
+  {
+    neume: ModeSign.Vou,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+    },
+  },
+  {
+    neume: ModeSign.Ga,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+    },
+  },
+  {
+    neume: ModeSign.Thi,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+    },
+  },
+  {
+    neume: ModeSign.Ke,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+    },
+  },
+  {
+    neume: ModeSign.Zo,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+    },
+  },
+  {
+    neume: ModeSign.First,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+    },
+  },
+  {
+    neume: ModeSign.FirstCapital,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+    },
+  },
+  {
+    neume: ModeSign.Second,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+    },
+  },
+  {
+    neume: ModeSign.SecondCapital,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+    },
+  },
+  {
+    neume: ModeSign.Third,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+    },
+  },
+  {
+    neume: ModeSign.ThirdCapital,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+    },
+  },
+  {
+    neume: ModeSign.Fourth,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+    },
+  },
+  {
+    neume: ModeSign.FourthCapital,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
     },
   },
 ];
@@ -868,6 +1004,125 @@ const DEFAULT_ATTRIBUTES_STATHIS: InsertNeumeAttributeSet[] = [
     neume: QuantitativeNeume.RunningElaphron,
     attributes: {
       neumeFontSize: defaultFontSizeAdjustment,
+    },
+  },
+  {
+    neume: ModeSign.Ekhos,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+    },
+  },
+  {
+    neume: ModeSign.Varys,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+    },
+  },
+  {
+    neume: ModeSign.Ni,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+    },
+  },
+  {
+    neume: ModeSign.Pa,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+    },
+  },
+  {
+    neume: ModeSign.Vou,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+    },
+  },
+  {
+    neume: ModeSign.Ga,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+    },
+  },
+  {
+    neume: ModeSign.Thi,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+    },
+  },
+  {
+    neume: ModeSign.Ke,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+    },
+  },
+  {
+    neume: ModeSign.Zo,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+    },
+  },
+  {
+    neume: ModeSign.First,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+    },
+  },
+  {
+    neume: ModeSign.FirstCapital,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+    },
+  },
+  {
+    neume: ModeSign.Second,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+    },
+  },
+  {
+    neume: ModeSign.SecondCapital,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+    },
+  },
+  {
+    neume: ModeSign.Third,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+    },
+  },
+  {
+    neume: ModeSign.ThirdCapital,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+    },
+  },
+  {
+    neume: ModeSign.Fourth,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
+    },
+  },
+  {
+    neume: ModeSign.FourthCapital,
+    attributes: {
+      neumeFontSize: defaultFontSizeAdjustment,
+      top: defaultBaselineAdjustment,
     },
   },
 ];

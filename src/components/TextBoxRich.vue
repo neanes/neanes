@@ -282,7 +282,7 @@ export default class TextBoxRich extends Vue {
           (this.heightTop - this.element.defaultLyricsFontHeight) +
           this.element.offsetYTop,
       ),
-      lineHeight: withZoom(this.element.defaultLyricsFontHeight),
+      lineHeight: this.element.defaultLyricsFontHeight + 'px',
     };
 
     return style;
@@ -320,7 +320,7 @@ export default class TextBoxRich extends Vue {
           (this.heightBottom - this.element.defaultLyricsFontHeight) +
           this.element.offsetYBottom,
       ),
-      lineHeight: withZoom(this.element.defaultLyricsFontHeight),
+      lineHeight: this.element.defaultLyricsFontHeight + 'px',
     };
 
     return style;

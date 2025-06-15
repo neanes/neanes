@@ -89,7 +89,6 @@ export default class TextBox extends Vue {
   @Prop({ default: true }) editMode!: boolean;
   @Prop() selected!: boolean;
   @Prop() metadata!: TokenMetadata;
-  @Prop({ default: 1 }) zoom!: number;
 
   resizeObserver: ResizeObserver | null = null;
   unmounting = false;
@@ -261,18 +260,26 @@ export default class TextBox extends Vue {
 
   getHeight() {
     if (this.element.multipanel) {
+      const zoom = Number(
+        getComputedStyle(this.textElementCenter.htmlElement).getPropertyValue(
+          '--zoom',
+        ),
+      );
+
       return (
         Math.max(
           this.textElementLeft.htmlElement.getBoundingClientRect().height,
           this.textElementCenter.htmlElement.getBoundingClientRect().height,
           this.textElementRight.htmlElement.getBoundingClientRect().height,
-        ) / this.zoom
+        ) / zoom
       );
     }
 
-    return (
-      this.textElement.htmlElement.getBoundingClientRect().height / this.zoom
+    const zoom = Number(
+      getComputedStyle(this.textElement.htmlElement).getPropertyValue('--zoom'),
     );
+
+    return this.textElement.htmlElement.getBoundingClientRect().height / zoom;
   }
 
   onBlur() {

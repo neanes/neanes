@@ -88,6 +88,7 @@
 import { FontSizeOption } from '@ckeditor/ckeditor5-font/src/fontconfig';
 import { Ckeditor } from '@ckeditor/ckeditor5-vue';
 import { Editor, EditorConfig } from 'ckeditor5';
+import { throttle } from 'throttle-debounce';
 import { StyleValue } from 'vue';
 import type { ComponentExposed } from 'vue-component-type-helpers';
 import { Component, Prop, Vue, Watch } from 'vue-facing-decorator';
@@ -374,13 +375,15 @@ export default class TextBoxRich extends Vue {
       this.resizeObserver.disconnect();
     }
 
-    this.resizeObserver = new ResizeObserver(() => {
-      const resizedHeight = this.getHeight();
+    this.resizeObserver = new ResizeObserver(
+      throttle(100, () => {
+        const resizedHeight = this.getHeight();
 
-      if (resizedHeight != null && this.element.height !== resizedHeight) {
-        this.$emit('update:height', resizedHeight);
-      }
-    });
+        if (resizedHeight != null && this.element.height !== resizedHeight) {
+          this.$emit('update', { height: resizedHeight });
+        }
+      }),
+    );
 
     this.resizeObserver.observe(element);
   }
@@ -399,9 +402,11 @@ export default class TextBoxRich extends Vue {
       this.inlineTopObserver.disconnect();
     }
 
-    this.inlineTopObserver = new ResizeObserver(() => {
-      this.heightTop = this.getHeightTop() ?? 0;
-    });
+    this.inlineTopObserver = new ResizeObserver(
+      throttle(100, () => {
+        this.heightTop = this.getHeightTop() ?? 0;
+      }),
+    );
 
     this.inlineTopObserver.observe(element);
 
@@ -422,9 +427,11 @@ export default class TextBoxRich extends Vue {
       this.inlineBottomObserver.disconnect();
     }
 
-    this.inlineBottomObserver = new ResizeObserver(() => {
-      this.heightBottom = this.getHeightBottom() ?? 0;
-    });
+    this.inlineBottomObserver = new ResizeObserver(
+      throttle(100, () => {
+        this.heightBottom = this.getHeightBottom() ?? 0;
+      }),
+    );
 
     this.inlineBottomObserver.observe(element);
 

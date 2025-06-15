@@ -231,9 +231,25 @@ export default class TextBox extends Vue {
       this.$emit('update:height', height);
     }
 
-    if (this.textElement) {
-      const element = this.textElement.htmlElement;
+    this.setupResizeObserver();
+  }
 
+  beforeUnmount() {
+    this.unmounting = true;
+    this.update();
+
+    if (this.resizeObserver != null) {
+      this.resizeObserver.disconnect();
+    }
+  }
+
+  setupResizeObserver() {
+    if (
+      this.textElement ||
+      this.textElementLeft ||
+      this.textElementCenter ||
+      this.textElementRight
+    ) {
       if (this.resizeObserver != null) {
         this.resizeObserver.disconnect();
       }
@@ -251,16 +267,19 @@ export default class TextBox extends Vue {
         }),
       );
 
-      this.resizeObserver.observe(element);
-    }
-  }
+      if (this.textElement) {
+        this.resizeObserver.observe(this.textElement.htmlElement);
+      }
 
-  beforeUnmount() {
-    this.unmounting = true;
-    this.update();
-
-    if (this.resizeObserver != null) {
-      this.resizeObserver.disconnect();
+      if (this.textElementLeft) {
+        this.resizeObserver.observe(this.textElementLeft.htmlElement);
+      }
+      if (this.textElementCenter) {
+        this.resizeObserver.observe(this.textElementCenter.htmlElement);
+      }
+      if (this.textElementRight) {
+        this.resizeObserver.observe(this.textElementRight.htmlElement);
+      }
     }
   }
 
@@ -362,11 +381,11 @@ export default class TextBox extends Vue {
   }
 
   blur() {
-    this.textElement.blur();
+    this.textElement?.blur();
   }
 
   focus() {
-    this.textElement.focus(true);
+    this.textElement?.focus(true);
   }
 }
 </script>

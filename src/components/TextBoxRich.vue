@@ -540,8 +540,6 @@ export default class TextBoxRich extends Vue {
 
     const zoom = Number(getComputedStyle(element).getPropertyValue('--zoom'));
 
-    console.log(zoom);
-
     return element.getBoundingClientRect().height / zoom;
   }
 

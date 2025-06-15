@@ -111,7 +111,6 @@ export default class TextBoxRich extends Vue {
   @Prop({ default: true }) editMode!: boolean;
   @Prop() selected!: boolean;
   @Prop() metadata!: TokenMetadata;
-  @Prop({ default: 1 }) zoom!: number;
 
   editor = InlineEditor;
   editorData = '';
@@ -499,9 +498,14 @@ export default class TextBoxRich extends Vue {
 
   getHeight() {
     const element = (this.$el as HTMLElement).querySelector('.ck-content');
-    return element != null
-      ? element.getBoundingClientRect().height / this.zoom
-      : null;
+
+    if (element == null) {
+      return null;
+    }
+
+    const zoom = Number(getComputedStyle(element).getPropertyValue('--zoom'));
+
+    return element.getBoundingClientRect().height / zoom;
   }
 
   getHeightBottom() {
@@ -509,9 +513,13 @@ export default class TextBoxRich extends Vue {
       '.ck-content.inline-bottom',
     );
 
-    return element != null
-      ? element.getBoundingClientRect().height / this.zoom
-      : null;
+    if (element == null) {
+      return null;
+    }
+
+    const zoom = Number(getComputedStyle(element).getPropertyValue('--zoom'));
+
+    return element.getBoundingClientRect().height / zoom;
   }
 
   getHeightTop() {
@@ -519,9 +527,13 @@ export default class TextBoxRich extends Vue {
       '.ck-content.inline-top',
     );
 
-    return element != null
-      ? element.getBoundingClientRect().height / this.zoom
-      : null;
+    if (element == null) {
+      return null;
+    }
+
+    const zoom = Number(getComputedStyle(element).getPropertyValue('--zoom'));
+
+    return element.getBoundingClientRect().height / zoom;
   }
 
   setPadding(editor: Editor | undefined) {

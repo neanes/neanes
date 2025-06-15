@@ -1217,7 +1217,7 @@
       />
     </template>
     <template v-if="textBoxCalculation">
-      <TextBoxRich
+      <TextBox
         class="textBoxCalculation"
         v-for="element in textBoxElements"
         :key="element.id"

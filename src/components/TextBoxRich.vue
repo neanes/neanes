@@ -498,7 +498,6 @@ export default class TextBoxRich extends Vue {
   }
 
   getHeight() {
-    console.log(this.zoom);
     const element = (this.$el as HTMLElement).querySelector('.ck-content');
     return element != null
       ? element.getBoundingClientRect().height / this.zoom

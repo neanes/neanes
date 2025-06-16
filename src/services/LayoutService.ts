@@ -1032,7 +1032,6 @@ export class LayoutService {
       }
 
       currentLineWidthPx += elementWidthPx;
-      console.log('Current line width:', currentLineWidthPx, elementWidthPx);
       // Add extra space between neumes
       if (
         [

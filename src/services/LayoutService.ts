@@ -1010,7 +1010,14 @@ export class LayoutService {
         }
       } else {
         // Ensure that there is at least a small width between other elements
-        if (element.x <= currentLyricsEndPx + pageSetup.neumeDefaultSpacing) {
+        if (
+          element.x <= currentLyricsEndPx + pageSetup.neumeDefaultSpacing &&
+          !(
+            element.elementType === ElementType.RichTextBox &&
+            (element as RichTextBoxElement).inline &&
+            (element as RichTextBoxElement).customWidth == null
+          )
+        ) {
           const adjustment =
             currentLyricsEndPx - element.x + pageSetup.neumeDefaultSpacing;
           element.x += adjustment;
@@ -1025,7 +1032,7 @@ export class LayoutService {
       }
 
       currentLineWidthPx += elementWidthPx;
-
+      console.log('Current line width:', currentLineWidthPx, elementWidthPx);
       // Add extra space between neumes
       if (
         [

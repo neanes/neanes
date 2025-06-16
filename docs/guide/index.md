@@ -26,6 +26,9 @@ While the mode key is selected, a toolbar at the bottom the screen will be visib
 
 ![Mode Key Toolbar](./images/guide-mode-key-toolbar.png)
 
+> [!NOTE]
+> For more complex configurations, see the [Custom Mode Keys](./advanced.md#custom-mode-keys) section in the advanced guide.
+
 ## Entering Neumes
 
 Quantitative neumes are inserted by clicking the desired neume in the panel on the left side of the window. Some buttons in this panel will open a menu containing more options. To operate this menu, click and hold the mouse button, select the desired neume, and then release the mouse button.

@@ -1123,6 +1123,27 @@
                 <input
                   type="checkbox"
                   class="neume-colors-checkbox"
+                  :value="NeumeColorOptions.Cross"
+                  v-model="selectedNeumeColorOptions"
+                />
+              </div>
+              <label class="neume-colors-label">{{
+                $t('dialog:pageSetup.cross')
+              }}</label>
+              <ColorPicker
+                class="neume-colors-input"
+                v-model="form.crossDefaultColor"
+              />
+              <InputStrokeWidth
+                class="drop-caps-input"
+                v-model="form.crossDefaultStrokeWidth"
+              />
+            </div>
+            <div class="form-group row">
+              <div class="neume-colors-checkbox-container">
+                <input
+                  type="checkbox"
+                  class="neume-colors-checkbox"
                   :value="NeumeColorOptions.Fthoras"
                   v-model="selectedNeumeColorOptions"
                 />
@@ -1417,6 +1438,7 @@ import { Unit } from '@/utils/Unit';
 
 enum NeumeColorOptions {
   Accidentals = 'Accidentals',
+  Cross = 'Cross',
   Fthoras = 'Fthoras',
   Gorgons = 'Gorgons',
   Heterons = 'Heterons',

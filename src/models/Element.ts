@@ -261,6 +261,19 @@ export class NoteElement extends ScoreElement {
     } as Partial<NoteElement>;
   }
 
+  public cloneFormat() {
+    return {
+      lyricsColor: this.lyricsColor,
+      lyricsFontFamily: this.lyricsFontFamily,
+      lyricsFontSize: this.lyricsFontSize,
+      lyricsStrokeWidth: this.lyricsStrokeWidth,
+      lyricsUseDefaultStyle: this.lyricsUseDefaultStyle,
+      lyricsFontStyle: this.lyricsFontStyle,
+      lyricsFontWeight: this.lyricsFontWeight,
+      lyricsTextDecoration: this.lyricsTextDecoration,
+    };
+  }
+
   public get quantitativeNeume() {
     return this._quantitativeNeume;
   }

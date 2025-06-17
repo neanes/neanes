@@ -1471,7 +1471,9 @@ export default class Editor extends Vue {
   exportFormat: ExportFormat = ExportFormat.PNG;
 
   clipboard: ScoreElement[] = [];
+  formatType: ElementType | null = null;
   textBoxFormat: Partial<TextBoxElement> | null = null;
+  noteFormat: Partial<NoteElement> | null = null;
   richTextBoxCalculation = false;
   richTextBoxCalculationCount = 0;
   textBoxCalculation = false;
@@ -2534,6 +2536,20 @@ export default class Editor extends Vue {
     } else if (this.selectionRange != null) {
       this.selectionRange.end = elementIndex;
     }
+  }
+
+  getNormalizedSelectionRange() {
+    if (this.selectionRange == null) {
+      return null;
+    }
+
+    const start = Math.min(this.selectionRange.start, this.selectionRange.end);
+    const end = Math.max(this.selectionRange.start, this.selectionRange.end);
+
+    return {
+      start,
+      end,
+    } as ScoreElementSelectionRange;
   }
 
   isSelected(element: ScoreElement) {
@@ -7026,9 +7042,13 @@ export default class Editor extends Vue {
     }
 
     if (this.selectedElement.elementType === ElementType.TextBox) {
+      this.formatType = ElementType.TextBox;
       this.textBoxFormat = (
         this.selectedElement as TextBoxElement
       ).cloneFormat();
+    } else if (this.selectedElement.elementType === ElementType.Note) {
+      this.formatType = ElementType.Note;
+      this.noteFormat = (this.selectedElement as NoteElement).cloneFormat();
     }
   }
 
@@ -7072,14 +7092,46 @@ export default class Editor extends Vue {
   }
 
   onFileMenuPasteFormat() {
-    if (this.selectedElement == null || this.textBoxFormat == null) {
-      return;
+    const normalizedRange = this.getNormalizedSelectionRange();
+
+    const commands: Command[] = [];
+
+    if (normalizedRange != null) {
+      for (let i = normalizedRange.start; i <= normalizedRange.end; i++) {
+        if (this.elements[i].elementType === this.formatType) {
+          this.applyCopiedFormat(this.elements[i], commands);
+        }
+      }
+    } else if (this.selectedElement != null) {
+      this.applyCopiedFormat(this.selectedElement, commands);
     }
 
-    if (this.selectedElement.elementType === ElementType.TextBox) {
-      this.updateTextBox(
-        this.selectedElement as TextBoxElement,
-        this.textBoxFormat,
+    if (commands.length > 0) {
+      this.commandService.executeAsBatch(commands);
+      this.save();
+    }
+  }
+
+  applyCopiedFormat(element: ScoreElement, commands: Command[]) {
+    if (
+      element.elementType === ElementType.TextBox &&
+      this.textBoxFormat != null
+    ) {
+      commands.push(
+        this.textBoxCommandFactory.create('update-properties', {
+          target: element as TextBoxElement,
+          newValues: this.textBoxFormat,
+        }),
+      );
+    } else if (
+      element.elementType === ElementType.Note &&
+      this.noteFormat != null
+    ) {
+      commands.push(
+        this.noteElementCommandFactory.create('update-properties', {
+          target: element as NoteElement,
+          newValues: this.noteFormat,
+        }),
       );
     }
   }

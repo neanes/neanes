@@ -174,26 +174,26 @@ export default class TextBoxRich extends Vue {
     };
   }
 
-  get editorInstance() {
+  getEditorInstance() {
     return (this.$refs.editor as ComponentExposed<typeof Ckeditor>)?.instance;
   }
 
-  get editorInstanceBottom() {
+  getEditorInstanceBottom() {
     return (this.$refs.editorBottom as ComponentExposed<typeof Ckeditor>)
       ?.instance;
   }
 
-  get editorInstanceLeft() {
+  getEditorInstanceLeft() {
     return (this.$refs.editorLeft as ComponentExposed<typeof Ckeditor>)
       ?.instance;
   }
 
-  get editorInstanceCenter() {
+  getEditorInstanceCenter() {
     return (this.$refs.editorCenter as ComponentExposed<typeof Ckeditor>)
       ?.instance;
   }
 
-  get editorInstanceRight() {
+  getEditorInstanceRight() {
     return (this.$refs.editorRight as ComponentExposed<typeof Ckeditor>)
       ?.instance;
   }
@@ -353,8 +353,8 @@ export default class TextBoxRich extends Vue {
 
   @Watch('element.centerOnPage')
   onCenterOnPageChange() {
-    this.setPadding(this.editorInstance);
-    this.setPadding(this.editorInstanceBottom);
+    this.setPadding(this.getEditorInstance());
+    this.setPadding(this.getEditorInstanceBottom());
   }
 
   onEditorReady() {
@@ -365,11 +365,11 @@ export default class TextBoxRich extends Vue {
     }
 
     if (this.focusOnReady) {
-      this.editorInstance?.editing.view.focus();
+      this.getEditorInstance()?.editing.view.focus();
       this.focusOnReady = false;
     }
 
-    const element = (this.editorInstance as any).sourceElement;
+    const element = (this.getEditorInstance() as any).sourceElement;
 
     if (this.resizeObserver != null) {
       this.resizeObserver.disconnect();
@@ -392,14 +392,9 @@ export default class TextBoxRich extends Vue {
   }
 
   onEditorReadyInline() {
-    if (this.focusOnReady) {
-      this.editorInstance?.editing.view.focus();
-      this.focusOnReady = false;
-    }
-
     this.heightTop = this.getHeightTop() ?? 0;
 
-    const element = (this.editorInstance as any).sourceElement;
+    const element = (this.getEditorInstance() as any).sourceElement;
 
     if (this.inlineTopObserver != null) {
       this.inlineTopObserver.disconnect();
@@ -413,18 +408,18 @@ export default class TextBoxRich extends Vue {
 
     this.inlineTopObserver.observe(element);
 
-    this.setPadding(this.editorInstance);
+    this.setPadding(this.getEditorInstance());
   }
 
   onEditorReadyInlineBottom() {
     if (this.focusOnReady) {
-      this.editorInstance?.editing.view.focus();
+      this.getEditorInstanceBottom()?.editing.view.focus();
       this.focusOnReady = false;
     }
 
     this.heightBottom = this.getHeightBottom() ?? 0;
 
-    const element = (this.editorInstanceBottom as any).sourceElement;
+    const element = (this.getEditorInstanceBottom() as any).sourceElement;
 
     if (this.inlineBottomObserver != null) {
       this.inlineBottomObserver.disconnect();
@@ -438,7 +433,7 @@ export default class TextBoxRich extends Vue {
 
     this.inlineBottomObserver.observe(element);
 
-    this.setPadding(this.editorInstanceBottom);
+    this.setPadding(this.getEditorInstanceBottom());
   }
 
   onBlur() {
@@ -454,11 +449,11 @@ export default class TextBoxRich extends Vue {
 
     const height = this.getHeight();
 
-    const content = this.editorInstance?.getData() ?? '';
-    const contentBottom = this.editorInstanceBottom?.getData() ?? '';
-    const contentLeft = this.editorInstanceLeft?.getData() ?? '';
-    const contentCenter = this.editorInstanceCenter?.getData() ?? '';
-    const contentRight = this.editorInstanceRight?.getData() ?? '';
+    const content = this.getEditorInstance()?.getData() ?? '';
+    const contentBottom = this.getEditorInstanceBottom()?.getData() ?? '';
+    const contentLeft = this.getEditorInstanceLeft()?.getData() ?? '';
+    const contentCenter = this.getEditorInstanceCenter()?.getData() ?? '';
+    const contentRight = this.getEditorInstanceRight()?.getData() ?? '';
 
     // This should never happen, but if it does, we don't want
     // to save garbage values.
@@ -662,6 +657,11 @@ export default class TextBoxRich extends Vue {
 .inline-container,
 .rich-text-editor.single {
   outline: 1px dotted black;
+}
+
+.selected .inline-container,
+.selected .rich-text-editor.single {
+  outline: 1px solid goldenrod;
 }
 
 .rich-text-editor.inline-top {

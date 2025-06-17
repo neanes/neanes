@@ -15,7 +15,7 @@
       :neume="VocalExpressionNeume.Vareia"
       :style="vareiaStyle"
     />
-    <Neume :neume="note.quantitativeNeume" />
+    <Neume :neume="note.quantitativeNeume" :style="neumeStyle" />
     <Neume
       v-if="note.stavros"
       :neume="VocalExpressionNeume.Cross_Top"
@@ -104,7 +104,11 @@ import { Component, Prop, Vue } from 'vue-facing-decorator';
 
 import NeumeVue from '@/components/Neume.vue';
 import { NoteElement } from '@/models/Element';
-import { TimeNeume, VocalExpressionNeume } from '@/models/Neumes';
+import {
+  QuantitativeNeume,
+  TimeNeume,
+  VocalExpressionNeume,
+} from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
 import { withZoom } from '@/utils/withZoom';
 
@@ -438,6 +442,17 @@ export default class NeumeBoxSyllable extends Vue {
     } as StyleValue;
   }
 
+  get neumeStyle() {
+    if (this.note.quantitativeNeume == QuantitativeNeume.Cross) {
+      return {
+        color: this.pageSetup.crossDefaultColor,
+        webkitTextStrokeWidth: withZoom(this.pageSetup.crossDefaultStrokeWidth),
+      } as StyleValue;
+    }
+
+    return {};
+  }
+
   get koronisStyle() {
     return {
       color: this.pageSetup.koronisDefaultColor,
@@ -455,6 +470,8 @@ export default class NeumeBoxSyllable extends Vue {
 
   get stavrosStyle() {
     return {
+      color: this.pageSetup.crossDefaultColor,
+      webkitTextStrokeWidth: withZoom(this.pageSetup.crossDefaultStrokeWidth),
       left:
         this.note.stavrosOffsetX != null
           ? `${this.note.stavrosOffsetX}em`

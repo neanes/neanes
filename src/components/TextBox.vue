@@ -487,6 +487,10 @@ export default class TextBox extends Vue {
   display: none;
 }
 
+.text-box-container.selected .handle {
+  display: inline;
+}
+
 .inline-container {
   display: flex;
   flex-direction: column;

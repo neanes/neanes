@@ -624,6 +624,10 @@ export default class TextBoxRich extends Vue {
   display: none;
 }
 
+.rich-text-box-container.selected .handle {
+  display: inline;
+}
+
 .rich-text-box-multipanel-container {
   display: flex;
 }

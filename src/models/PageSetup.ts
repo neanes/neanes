@@ -154,6 +154,8 @@ export class PageSetup {
   public noteIndicatorDefaultStrokeWidth = 0;
   public isonDefaultColor = '#ED0000';
   public isonDefaultStrokeWidth = 0;
+  public breathDefaultColor = '#000000';
+  public breathDefaultStrokeWidth = 0;
   public crossDefaultColor = '#000000';
   public crossDefaultStrokeWidth = 0;
   public koronisDefaultColor = '#ED0000';

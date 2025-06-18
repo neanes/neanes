@@ -265,6 +265,8 @@ export class SaveService {
       p.noteIndicatorDefaultStrokeWidth;
     pageSetup.isonDefaultColor = p.isonDefaultColor;
     pageSetup.isonDefaultStrokeWidth = p.isonDefaultStrokeWidth;
+    pageSetup.breathDefaultColor = p.breathDefaultColor;
+    pageSetup.breathDefaultStrokeWidth = p.breathDefaultStrokeWidth;
     pageSetup.crossDefaultColor = p.crossDefaultColor;
     pageSetup.crossDefaultStrokeWidth = p.crossDefaultStrokeWidth;
     pageSetup.koronisDefaultColor = p.koronisDefaultColor;
@@ -962,6 +964,10 @@ export class SaveService {
       p.isonDefaultColor ?? pageSetup.isonDefaultColor;
     pageSetup.isonDefaultStrokeWidth =
       p.isonDefaultStrokeWidth ?? pageSetup.isonDefaultStrokeWidth;
+    pageSetup.breathDefaultColor =
+      p.breathDefaultColor ?? pageSetup.breathDefaultColor;
+    pageSetup.breathDefaultStrokeWidth =
+      p.breathDefaultStrokeWidth ?? pageSetup.breathDefaultStrokeWidth;
     pageSetup.crossDefaultColor =
       p.crossDefaultColor ?? pageSetup.crossDefaultColor;
     pageSetup.crossDefaultStrokeWidth =

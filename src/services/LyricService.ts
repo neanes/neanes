@@ -4,6 +4,7 @@ import {
   ElementType,
   MartyriaElement,
   NoteElement,
+  RichTextBoxElement,
   ScoreElement,
 } from '@/models/Element';
 import { QuantitativeNeume } from '@/models/Neumes';
@@ -60,6 +61,7 @@ export class LyricService {
         x.elementType === ElementType.Note ||
         x.elementType === ElementType.DropCap ||
         x.elementType === ElementType.ModeKey ||
+        x.elementType === ElementType.RichTextBox ||
         x.elementType === ElementType.Martyria,
     );
 
@@ -205,6 +207,14 @@ export class LyricService {
         // Start a new paragraph when a mode key is encountered since this
         // typically separates a hymn.
         if (lyrics.trim() !== '') {
+          lyrics += '\n\n';
+          needSpace = false;
+        }
+      } else if (filteredElements[i].elementType === ElementType.RichTextBox) {
+        const textBox = filteredElements[i] as RichTextBoxElement;
+        // Start a new paragraph when a mode-changing text box is encountered since this
+        // typically separates a hymn.
+        if (textBox.modeChange && lyrics.trim() !== '') {
           lyrics += '\n\n';
           needSpace = false;
         }

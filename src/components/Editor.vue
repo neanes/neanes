@@ -5438,8 +5438,10 @@ export default class Editor extends Vue {
       element.keyHelper++;
     }
 
+    const heightProp: keyof RichTextBoxElement = 'height';
+
     const noHistory =
-      Object.keys(newValues).length === 1 && 'height' in newValues;
+      Object.keys(newValues).length === 1 && heightProp in newValues;
 
     this.commandService.execute(
       this.richTextBoxCommandFactory.create('update-properties', {
@@ -5448,6 +5450,12 @@ export default class Editor extends Vue {
       }),
       noHistory,
     );
+
+    const modeChangeProp: keyof RichTextBoxElement = 'modeChange';
+
+    if (modeChangeProp in newValues) {
+      this.refreshStaffLyrics();
+    }
 
     this.save();
   }

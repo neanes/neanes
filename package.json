@@ -48,7 +48,7 @@
     "throttle-debounce": "^5.0.2",
     "tone": "^15.1.22",
     "uuid": "^11.1.0",
-    "vue": "^3.5.16",
+    "vue": "^3.5.17",
     "vue-draggable-resizable": "^3.0.0",
     "vue-facing-decorator": "^4.0.1",
     "vue-router": "^4.5.1",

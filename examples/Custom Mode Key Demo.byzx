@@ -1,6 +1,6 @@
 {
   "version": "1.1",
-  "appVersion": "0.4.94",
+  "appVersion": "0.4.100",
   "pageSetup": {
     "pageSize": "Letter",
     "pageSizeUnit": "pt",
@@ -48,6 +48,10 @@
     "noteIndicatorDefaultStrokeWidth": 0,
     "isonDefaultColor": "#800000",
     "isonDefaultStrokeWidth": 0,
+    "breathDefaultColor": "#000000",
+    "breathDefaultStrokeWidth": 0,
+    "crossDefaultColor": "#000000",
+    "crossDefaultStrokeWidth": 0,
     "koronisDefaultColor": "#800000",
     "koronisDefaultStrokeWidth": 0,
     "martyriaDefaultColor": "#800000",
@@ -273,7 +277,7 @@
       {
         "id": 3,
         "elementType": "RichTextBox",
-        "content": "<p style=\"text-align:center;\"><span style=\"color:hsl(0,100%,25%);font-family:'GFS Didot', Neanes;\"><strong>Τη Τετάρτη της Μεσοπεντηκοστής. Πέτρου του</strong></span></p><p style=\"text-align:center;\"><span style=\"color:hsl(0,100%,25%);font-family:'GFS Didot', Neanes;\"><strong>Βυζαντίου. &nbsp; Ωδή. α. &nbsp; ήχος. &nbsp;&nbsp;</strong></span><strong><span class=\"neanes-ck-neume neanes-ck-neume-plagal ck-widget\" style=\"color:#800000;font-size:16px;left:0em;line-height:0.6020000525883267;margin-left:0em;margin-right:0em;top:0em;\" neumetype=\"plagal\" contenteditable=\"false\"><span>λ</span><span>π</span></span>&nbsp;</strong><span class=\"neanes-ck-neume ck-widget\" style=\"color:#800000;font-size:27.2px;left:0em;line-height:16px;margin-left:-0.25em;margin-right:0em;top:0.366em;\" neumetype=\"single\" neume=\"ModeSign.Delta\" contenteditable=\"false\"></span><span style=\"color:hsl(0,100%,25%);\"><strong>. &nbsp;&nbsp;</strong></span><span style=\"color:hsl(0,100%,25%);font-family:'GFS Didot', Neanes;\"><strong>Νη.</strong></span></p>",
+        "content": "<p style=\"text-align:center;\"><span style=\"color:hsl(0,100%,25%);font-family:'GFS Didot', Neanes;\"><strong>Τη Τετάρτη της Μεσοπεντηκοστής. Πέτρου του</strong></span></p><p style=\"text-align:center;\"><span style=\"color:hsl(0,100%,25%);font-family:'GFS Didot', Neanes;\"><strong>Βυζαντίου. &nbsp; Ωδή. α. &nbsp; ήχος. &nbsp;&nbsp;</strong></span><strong><span class=\"neanes-ck-neume neanes-ck-neume-plagal ck-widget\" style=\"color:#800000;font-size:16px;height:16px;left:0em;line-height:0.6020000525883267;margin-left:0em;margin-right:0em;top:0em;\" neumetype=\"plagal\" contenteditable=\"false\"><span>λ</span><span>π</span></span>&nbsp;</strong><span class=\"neanes-ck-neume ck-widget\" style=\"color:#800000;font-size:27.2px;height:16px;left:0em;line-height:16px;margin-left:-0.25em;margin-right:0em;top:0.366em;\" neumetype=\"single\" neume=\"ModeSign.Delta\" contenteditable=\"false\"></span><span style=\"color:hsl(0,100%,25%);\"><strong>. &nbsp;&nbsp;</strong></span><span style=\"color:hsl(0,100%,25%);font-family:'GFS Didot', Neanes;\"><strong>Νη.</strong></span></p>",
         "contentBottom": "",
         "contentLeft": "",
         "contentRight": "",
@@ -284,7 +288,7 @@
         "modeChangeIgnoreAttractions": false,
         "modeChangePermanentEnharmonicZo": false,
         "modeChangeBpm": 120,
-        "height": 42.953125,
+        "height": 42,
         "marginTop": 0,
         "marginBottom": 0
       },
@@ -1516,7 +1520,7 @@
       }
     ],
     "lyrics": {
-      "text": "θΑ λασ σαν _ ε πη__ ξας α ζο____ με εν ΤΩν πα θω ω ω ων του Κυ ριου___ η__σου______ ΤΩ τη ην α βα__ τον__ κυ μαι νο με νην___ θα λα ασ σαν ΒΟυ λευ τη ρι ο____ ον\n\nΒΟυ λευ τη ρι ο____ ον ΒΟυ λευ τη ρι ο____ ον Α_ γι__ ος ο Θε__ ος Α γι__ ος Ι σχυρος___ Α γι ος Α θα νατος___ ο σμου Δευ___ τεχρι___ στο φο ροι λα οικα___ τι ι ι δω _ ω__ μεν"
+      "text": "θΑ λασ σαν _ ε πη__ ξας α ζο____ με εν\n\nΤΩν πα θω ω ω ων του Κυ ριου___ η__σου______\n\nΤΩ τη ην α βα__ τον__ κυ μαι νο με νην___ θα λα ασ σαν ΒΟυ λευ τη ρι ο____ ον\n\n\n\nΒΟυ λευ τη ρι ο____ ον\n\nΒΟυ λευ τη ρι ο____ ον\n\n\n\nΑ_ γι__ ος ο Θε__ ος Α γι__ ος Ι σχυρος___ Α γι ος Α θα νατος___ ο σμου\n\nΔευ___ τεχρι___ στο φο ροι λα οικα___ τι ι ι δω _ ω__ μεν"
     }
   }
 }

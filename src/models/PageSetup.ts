@@ -118,10 +118,10 @@ export class PageSetup {
   public lyricsMinimumSpacing = Unit.fromInch(0.05);
   public lyricsMelismaCutoffWidth = Unit.fromPt(5);
 
-  // These two melisma properties are currently not exposed in the UI or saved
-  // as part of the byzx format.
+  // These properties are currently not exposed in the UI or saved as part of the byzx format.
   public lyricsMelismaSpacing = Unit.fromInch(0.025);
   public lyricsMelismaThickness = 1;
+  public spaceAfterMartyriaFactor = 0.148;
 
   public get lyricsFont() {
     return `${this.lyricsDefaultFontStyle} normal ${this.lyricsDefaultFontWeight} ${this.lyricsDefaultFontSize}px "${this.lyricsDefaultFontFamily}"`;

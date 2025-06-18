@@ -448,6 +448,13 @@ export default class NeumeBoxSyllable extends Vue {
         color: this.pageSetup.crossDefaultColor,
         webkitTextStrokeWidth: withZoom(this.pageSetup.crossDefaultStrokeWidth),
       } as StyleValue;
+    } else if (this.note.quantitativeNeume == QuantitativeNeume.Breath) {
+      return {
+        color: this.pageSetup.breathDefaultColor,
+        webkitTextStrokeWidth: withZoom(
+          this.pageSetup.breathDefaultStrokeWidth,
+        ),
+      } as StyleValue;
     }
 
     return {};

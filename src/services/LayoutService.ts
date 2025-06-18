@@ -1514,7 +1514,7 @@ export class LayoutService {
     // the martyria and the next neume
     const padding = martyriaElement.alignRight
       ? 0
-      : pageSetup.neumeDefaultFontSize * 0.148;
+      : pageSetup.neumeDefaultFontSize * pageSetup.spaceAfterMartyriaFactor;
 
     martyriaElement.neumeWidth = this.getNeumeWidthFromCache(
       neumeWidthCache,
@@ -1668,6 +1668,21 @@ export class LayoutService {
           (x) =>
             x.lineBreak == true && x.lineBreakType === LineBreakType.Center,
         );
+
+        // If the last element is a martyria, we remove any unnecessary padding
+        // to the right of the martyria, so that it does not affect the justification
+        // of the line. This causes the martyria to be aligned flush to the right side of the page.
+        const lastElementOnLine = line.elements[line.elements.length - 1];
+
+        if (lastElementOnLine.elementType === ElementType.Martyria) {
+          const martyriaElement = lastElementOnLine as MartyriaElement;
+
+          if (!martyriaElement.alignRight) {
+            martyriaElement.width -=
+              pageSetup.neumeDefaultFontSize *
+              pageSetup.spaceAfterMartyriaFactor;
+          }
+        }
 
         const currentWidthPx = line.elements
           .map((x) => x.width)

@@ -563,7 +563,7 @@ export class SaveService {
     element.lineHeight = e.lineHeight ?? undefined;
     element.height = e.height;
     element.customWidth = e.customWidth ?? undefined;
-    element.fillWidth = e.fillWidth ?? undefined;
+    element.fillWidth = e.fillWidth || undefined;
     element.customHeight = e.customHeight ?? undefined;
     element.marginTop = e.marginTop ?? undefined;
     element.marginBottom = e.marginBottom ?? undefined;

@@ -237,7 +237,7 @@ const DEFAULT_ATTRIBUTES_PSALTICA: InsertNeumeAttributeSet[] = [
       neumeFontSize: defaultFontSizeAdjustment,
       kerningRight: -fontService.getAdvanceWidth(
         'Neanes',
-        NeumeMappingService.getMapping(Fthora.DiatonicNiLow).glyphName,
+        NeumeMappingService.getMapping(Fthora.DiatonicPa).glyphName,
       ),
     },
   },
@@ -750,7 +750,7 @@ const DEFAULT_ATTRIBUTES_STATHIS: InsertNeumeAttributeSet[] = [
       neumeFontSize: defaultFontSizeAdjustment,
       kerningRight: -fontService.getAdvanceWidth(
         'Neanes',
-        NeumeMappingService.getMapping(Fthora.DiatonicNiLow).glyphName,
+        NeumeMappingService.getMapping(Fthora.DiatonicPa).glyphName,
       ),
     },
   },

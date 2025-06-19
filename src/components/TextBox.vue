@@ -392,7 +392,10 @@ export default class TextBox extends Vue {
       updated = true;
     }
 
-    if (Math.abs(this.element.height - height) > 0.001) {
+    if (
+      !this.element.inline &&
+      Math.abs(this.element.height - height) > 0.001
+    ) {
       updates.height = height;
       updated = true;
     }

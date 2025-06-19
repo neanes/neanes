@@ -486,7 +486,10 @@ export default class TextBoxRich extends Vue {
       updated = true;
     }
 
-    if (this.element.height != height) {
+    if (
+      !this.element.inline &&
+      Math.abs(this.element.height - height) > 0.001
+    ) {
       updates.height = height;
       updated = true;
     }

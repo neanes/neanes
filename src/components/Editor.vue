@@ -1206,11 +1206,12 @@
     <template v-if="richTextBoxCalculation">
       <TextBoxRich
         class="richTextBoxCalculation"
-        v-for="element in richTextBoxElements"
+        v-for="element in resizableRichTextBoxElements"
         :key="element.id"
         :element="element"
         :pageSetup="score.pageSetup"
         :fonts="fonts"
+        :recalc="true"
         @update:height="
           updateRichTextBoxHeight(element as RichTextBoxElement, $event)
         "
@@ -1219,7 +1220,7 @@
     <template v-if="textBoxCalculation">
       <TextBox
         class="textBoxCalculation"
-        v-for="element in textBoxElements"
+        v-for="element in resizableTextBoxElements"
         :key="element.id"
         :element="element"
         :pageSetup="score.pageSetup"
@@ -1766,14 +1767,19 @@ export default class Editor extends Vue {
     return this.score?.staff.elements ?? [];
   }
 
-  get richTextBoxElements() {
+  get resizableRichTextBoxElements() {
     return this.elements.filter(
-      (x) => x.elementType === ElementType.RichTextBox,
+      (x) =>
+        x.elementType === ElementType.RichTextBox &&
+        !(x as RichTextBoxElement).inline,
     );
   }
 
-  get textBoxElements() {
-    return this.elements.filter((x) => x.elementType === ElementType.TextBox);
+  get resizableTextBoxElements() {
+    return this.elements.filter(
+      (x) =>
+        x.elementType === ElementType.TextBox && !(x as TextBoxElement).inline,
+    );
   }
 
   get lyrics() {
@@ -6470,7 +6476,7 @@ export default class Editor extends Vue {
     }
 
     nextTick(async () => {
-      const expectedCount = this.richTextBoxElements.length;
+      const expectedCount = this.resizableRichTextBoxElements.length;
       this.richTextBoxCalculationCount = 0;
       this.richTextBoxCalculation = true;
 
@@ -6506,7 +6512,7 @@ export default class Editor extends Vue {
     }
 
     nextTick(async () => {
-      const expectedCount = this.richTextBoxElements.length;
+      const expectedCount = this.resizableRichTextBoxElements.length;
       this.textBoxCalculationCount = 0;
       this.textBoxCalculation = true;
 

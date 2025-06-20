@@ -88,7 +88,7 @@
 import { FontSizeOption } from '@ckeditor/ckeditor5-font/src/fontconfig';
 import { Ckeditor } from '@ckeditor/ckeditor5-vue';
 import { Editor, EditorConfig } from 'ckeditor5';
-import { throttle } from 'throttle-debounce';
+import { debounce, throttle } from 'throttle-debounce';
 import { StyleValue } from 'vue';
 import type { ComponentExposed } from 'vue-component-type-helpers';
 import { Component, Prop, Vue, Watch } from 'vue-facing-decorator';
@@ -112,6 +112,7 @@ export default class TextBoxRich extends Vue {
   @Prop({ default: true }) editMode!: boolean;
   @Prop() selected!: boolean;
   @Prop() metadata!: TokenMetadata;
+  @Prop({ default: false }) recalc!: boolean;
 
   editor = InlineEditor;
   editorData = '';
@@ -357,11 +358,19 @@ export default class TextBoxRich extends Vue {
     this.setPadding(this.getEditorInstanceBottom());
   }
 
-  onEditorReady() {
-    const height = this.getHeight();
+  phoneHome(height: number) {
+    this.$emit('update:height', height);
+  }
 
-    if (height != null && Math.abs(this.element.height - height) > 0.001) {
-      this.$emit('update:height', height);
+  debouncedPhoneHome = debounce(100, this.phoneHome);
+
+  onEditorReady() {
+    if (this.recalc) {
+      const height = this.getHeight();
+
+      if (height != null && Math.abs(this.element.height - height) > 0.001) {
+        this.debouncedPhoneHome(height);
+      }
     }
 
     if (this.focusOnReady) {
@@ -376,14 +385,18 @@ export default class TextBoxRich extends Vue {
     }
 
     this.resizeObserver = new ResizeObserver(
-      throttle(100, () => {
+      debounce(100, () => {
         const resizedHeight = this.getHeight();
 
         if (
           resizedHeight != null &&
           Math.abs(this.element.height - resizedHeight) > 0.001
         ) {
-          this.$emit('update', { height: resizedHeight });
+          if (this.recalc) {
+            this.debouncedPhoneHome(resizedHeight);
+          } else {
+            this.$emit('update', { height: resizedHeight });
+          }
         }
       }),
     );
@@ -486,7 +499,10 @@ export default class TextBoxRich extends Vue {
       updated = true;
     }
 
-    if (this.element.height != height) {
+    if (
+      !this.element.inline &&
+      Math.abs(this.element.height - height) > 0.001
+    ) {
       updates.height = height;
       updated = true;
     }
@@ -552,7 +568,7 @@ export default class TextBoxRich extends Vue {
       if (this.element.centerOnPage) {
         writer.setStyle(
           'padding-right',
-          withZoom(this.pageSetup.innerPageWidth - this.element.width),
+          `${this.pageSetup.innerPageWidth - this.element.width}px`,
           editable!,
         );
       } else {

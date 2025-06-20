@@ -568,7 +568,7 @@ export default class TextBoxRich extends Vue {
       if (this.element.centerOnPage) {
         writer.setStyle(
           'padding-right',
-          withZoom(this.pageSetup.innerPageWidth - this.element.width),
+          `${this.pageSetup.innerPageWidth - this.element.width}px`,
           editable!,
         );
       } else {

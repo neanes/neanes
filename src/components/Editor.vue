@@ -34,12 +34,30 @@
       @open-playback-settings="openPlaybackSettingsDialog"
     />
     <div class="content">
-      <NeumeSelector
-        class="neume-selector"
-        :pageSetup="score.pageSetup"
-        :neumeKeyboard="neumeKeyboard"
-        @select-quantitative-neume="addQuantitativeNeume"
-      />
+      <div class="left-panel">
+        <NeumeSelector
+          class="neume-selector"
+          :pageSetup="score.pageSetup"
+          :neumeKeyboard="neumeKeyboard"
+          @select-quantitative-neume="addQuantitativeNeume"
+        />
+        <div
+          class="neume-combo-header"
+          @click="neumeComboPanelIsExpanded = !neumeComboPanelIsExpanded"
+        >
+          {{ $t('editor:common.neumeComboHeader') }}
+          <span class="neume-combo-expand-collapse">{{
+            neumeComboPanelIsExpanded ? '\u2796' : '\u2795'
+          }}</span>
+        </div>
+        <NeumeComboSelector
+          v-if="neumeComboPanelIsExpanded"
+          class="neume-combo-selector"
+          :pageSetup="score.pageSetup"
+          @select-neume-combo="addNeumeCombination"
+        />
+      </div>
+
       <div class="page-container">
         <Vue3TabsChrome
           class="workspace-tab-container"
@@ -1257,6 +1275,7 @@ import EmptyNeumeBox from '@/components/NeumeBoxEmpty.vue';
 import MartyriaNeumeBox from '@/components/NeumeBoxMartyria.vue';
 import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
 import TempoNeumeBox from '@/components/NeumeBoxTempo.vue';
+import NeumeComboSelector from '@/components/NeumeComboSelector.vue';
 import NeumeSelector from '@/components/NeumeSelector.vue';
 import PageSetupDialog from '@/components/PageSetupDialog.vue';
 import PlaybackSettingsDialog from '@/components/PlaybackSettingsDialog.vue';
@@ -1308,6 +1327,7 @@ import { EntryMode } from '@/models/EntryMode';
 import { Footer } from '@/models/Footer';
 import { Header } from '@/models/Header';
 import { modeKeyTemplates } from '@/models/ModeKeys';
+import { NeumeCombination } from '@/models/NeumeCommonCombinations';
 import {
   areVocalExpressionsEquivalent,
   getSecondaryNeume,
@@ -1384,6 +1404,7 @@ interface Vue3TabsChromeComponent {
     MartyriaNeumeBox,
     TempoNeumeBox,
     EmptyNeumeBox,
+    NeumeComboSelector,
     NeumeSelector,
     ContentEditable,
     TextBox,
@@ -1468,6 +1489,8 @@ export default class Editor extends Vue {
   pageSetupDialogIsOpen: boolean = false;
   editorPreferencesDialogIsOpen: boolean = false;
   exportDialogIsOpen: boolean = false;
+
+  neumeComboPanelIsExpanded: boolean = false;
 
   exportFormat: ExportFormat = ExportFormat.PNG;
 
@@ -2773,6 +2796,14 @@ export default class Editor extends Vue {
     }
 
     this.save();
+  }
+
+  addNeumeCombination(combo: NeumeCombination) {
+    const backup = this.clipboard.slice();
+    this.clipboard = combo.elements;
+    this.onPasteScoreElements(false);
+
+    this.clipboard = backup;
   }
 
   addAutoMartyria(alignRight?: boolean, note?: Note) {
@@ -7615,8 +7646,37 @@ export default class Editor extends Vue {
   overflow: auto;
 }
 
+.left-panel {
+  display: flex;
+  flex-direction: column;
+}
+
 .neume-selector {
+  flex: 2;
   overflow: auto;
+}
+
+.neume-combo-selector {
+  flex: 1;
+  overflow: auto;
+}
+
+.neume-combo-header {
+  display: flex;
+  justify-content: center;
+  cursor: default;
+  user-select: none;
+  padding: 0.5rem 0.25rem;
+  background-color: #eee;
+}
+
+.neume-combo-header:hover {
+  background-color: #ddd;
+}
+
+.neume-combo-expand-collapse {
+  margin-left: auto;
+  margin-right: 0.25rem;
 }
 
 .mode-header {

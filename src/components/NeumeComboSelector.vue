@@ -45,12 +45,6 @@ export default class NeumeComboSelector extends Vue {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-.neume-selector-panel {
-  display: flex;
-
-  --neume-height: 2.5rem;
-}
-
 .row {
   display: flex;
   align-items: center;

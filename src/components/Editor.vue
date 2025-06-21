@@ -7886,7 +7886,7 @@ export default class Editor extends Vue {
   }
 
   .file-menu-bar,
-  .neume-selector-panel,
+  .left-panel,
   .workspace-tab-container,
   .lyrics-toolbar,
   .lyric-manager-toolbar,

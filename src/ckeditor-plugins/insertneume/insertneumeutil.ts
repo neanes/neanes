@@ -7,7 +7,7 @@ import {
   TempoSign,
 } from '@/models/Neumes';
 
-import { DEFAULT_ATTRIBUTES_PSALTICA } from './insertneumeutil Neanes';
+import { DEFAULT_ATTRIBUTES_PSALTICA } from './insertneumeutil.Neanes';
 import { DEFAULT_ATTRIBUTES_STATHIS } from './insertneumeutil.NeanesStathisSeries';
 
 export interface InsertNeumeAttributes {

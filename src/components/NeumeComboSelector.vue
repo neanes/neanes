@@ -53,6 +53,7 @@ export default class NeumeComboSelector extends Vue {
 
 .neume {
   margin: 0 0.125rem;
+  --zoom: 1;
 }
 
 .row:hover {

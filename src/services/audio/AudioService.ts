@@ -35,7 +35,7 @@ export class AudioService {
 
   currentEvent: PlaybackSequenceEvent | null = null;
 
-  loggingEnabled: boolean = false;
+  loggingEnabled: boolean = true;
 
   constructor() {
     this.synth = new Tone.Synth().toDestination();

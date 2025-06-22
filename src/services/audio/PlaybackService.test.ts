@@ -897,6 +897,78 @@ describe('PlaybackService', () => {
     //   },
     // );
   });
+
+  {
+    const service = new PlaybackService();
+    const elements: ScoreElement[] = [];
+
+    const skippedFthoras = [
+      'Spathi',
+      'GeneralSharp',
+      'GeneralFlat',
+      'Secondary',
+      'Tertiary',
+      'Bottom',
+      'DiatonicZo',
+      'Zygos',
+      'Kliton',
+      'Enharmonic',
+    ];
+
+    elements.push(getModeKey(1, Scale.Diatonic, ScaleNote.Pa));
+    elements.push(getNote(QuantitativeNeume.Ison));
+    elements.push(getNote(QuantitativeNeume.Ison));
+    const options = getDefaultWorkspaceOptions();
+
+    for (const a of Object.values(Fthora)) {
+      for (const b of Object.values(Fthora)) {
+        if (skippedFthoras.some((x) => a.includes(x) || b.includes(x))) {
+          continue; // Skip cases where no fthora is present
+        }
+
+        if (!a.endsWith('_Top') || !b.endsWith('_Top')) {
+          continue; // Skip cases where fthora is not on top
+        }
+
+        it(`should calculate the correct transposition moria: ${a} - ${b}`, () => {
+          (elements[1] as NoteElement).fthora = a;
+          (elements[2] as NoteElement).fthora = b;
+
+          if (a === Fthora.SoftChromaticPa_Top) {
+            (elements[1] as NoteElement).chromaticFthoraNote = ScaleNote.Ke;
+          }
+
+          if (a === Fthora.SoftChromaticThi_Top) {
+            (elements[1] as NoteElement).chromaticFthoraNote = ScaleNote.Thi;
+          }
+
+          if (a === Fthora.HardChromaticPa_Top) {
+            (elements[1] as NoteElement).chromaticFthoraNote = ScaleNote.Pa;
+          }
+
+          if (b === Fthora.SoftChromaticPa_Top) {
+            (elements[2] as NoteElement).chromaticFthoraNote = ScaleNote.Ke;
+          }
+
+          if (b === Fthora.SoftChromaticThi_Top) {
+            (elements[2] as NoteElement).chromaticFthoraNote = ScaleNote.Thi;
+          }
+
+          if (b === Fthora.HardChromaticPa_Top) {
+            (elements[2] as NoteElement).chromaticFthoraNote = ScaleNote.Pa;
+          }
+
+          const events = service.computePlaybackSequence(
+            elements,
+            options,
+            true,
+          );
+
+          expect(events[0].frequency).toBeCloseTo(events[1].frequency!, 2);
+        });
+      }
+    }
+  }
 });
 
 const defaultFrequencyDi = 196;

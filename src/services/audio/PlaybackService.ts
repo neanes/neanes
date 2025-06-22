@@ -191,7 +191,7 @@ export class PlaybackService {
       zoFlatPivotActivated: false,
       zoNaturalPivotActivated: false,
 
-      loggingEnabled: false,
+      loggingEnabled: true,
     };
 
     Object.assign(workspace.options, options);

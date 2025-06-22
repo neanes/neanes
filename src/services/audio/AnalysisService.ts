@@ -745,15 +745,15 @@ export class AnalysisService {
         noteElement.accidental,
       );
     }
-    if (noteElement.fthora) {
-      this.handleFthora(
-        noteAtomNodes[0].physicalNote,
-        noteElement.fthora,
-        noteElement.chromaticFthoraNote,
-        noteElement.index,
-        workspace,
-      );
-    }
+    // if (noteElement.fthora) {
+    //   this.handleFthora(
+    //     noteAtomNodes[0].physicalNote,
+    //     noteElement.fthora,
+    //     noteElement.chromaticFthoraNote,
+    //     noteElement.index,
+    //     workspace,
+    //   );
+    // }
     this.handleIson(noteElement, workspace);
 
     if (noteElement.gorgonNeume) {
@@ -764,6 +764,16 @@ export class AnalysisService {
       workspace.gorgonIndexes.push(gorgonIndex);
     }
     this.finalizeNoteAtomNode(noteAtomNodes[0], workspace);
+
+    if (noteElement.fthora) {
+      this.handleFthora(
+        noteAtomNodes[0].physicalNote,
+        noteElement.fthora,
+        noteElement.chromaticFthoraNote,
+        noteElement.index,
+        workspace,
+      );
+    }
   }
 
   private static handleIson(

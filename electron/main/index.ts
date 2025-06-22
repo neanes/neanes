@@ -1338,6 +1338,10 @@ function createMenu() {
           label: i18next.t('menu:edit.cut'),
           accelerator: 'CmdOrCtrl+X',
           click(menuItem, browserWindow, event) {
+            if (win?.webContents?.isDevToolsFocused()) {
+              win.webContents.devToolsWebContents?.cut();
+            }
+
             // The accelerator is handled in the renderer process because of
             // https://github.com/electron/electron/issues/3682.
             if (!event.triggeredByAccelerator) {
@@ -1349,6 +1353,9 @@ function createMenu() {
           label: i18next.t('menu:edit.copy'),
           accelerator: 'CmdOrCtrl+C',
           click(menuItem, browserWindow, event) {
+            if (win?.webContents?.isDevToolsFocused()) {
+              win.webContents.devToolsWebContents?.copy();
+            }
             // The accelerator is handled in the renderer process because of
             // https://github.com/electron/electron/issues/3682.
             if (!event.triggeredByAccelerator) {
@@ -1371,6 +1378,10 @@ function createMenu() {
           label: i18next.t('menu:edit.paste'),
           accelerator: 'CmdOrCtrl+V',
           click(menuItem, browserWindow, event) {
+            if (win?.webContents?.isDevToolsFocused()) {
+              win.webContents.devToolsWebContents?.paste();
+            }
+
             // The accelerator is handled in the renderer process because of
             // https://github.com/electron/electron/issues/3682.
             if (!event.triggeredByAccelerator) {

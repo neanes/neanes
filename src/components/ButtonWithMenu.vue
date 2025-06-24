@@ -5,7 +5,8 @@
     @mouseleave="selectedOption = null"
   >
     <button class="neume-button" :disabled="disabled">
-      <img draggable="false" :src="mainIcon" />
+      <img draggable="false" :src="mainIcon" v-if="mainIcon" />
+      <span :style="textStyle" v-if="mainText">{{ mainText }}</span>
     </button>
     <div class="menu" v-if="showMenu">
       <div
@@ -14,19 +15,22 @@
         class="menu-item"
         @mouseenter="selectedOption = option.neume"
       >
-        <img draggable="false" :src="option.icon" />
+        <img draggable="false" :src="option.icon" v-if="option.icon" />
+        <span :style="textStyle" v-if="option.text">{{ option.text }}</span>
       </div>
     </div>
   </div>
 </template>
 
 <script lang="ts">
+import { StyleValue } from 'vue';
 import { Component, Prop, Vue } from 'vue-facing-decorator';
 
 import { Neume } from '@/models/Neumes';
 
 export interface ButtonWithMenuOption {
-  icon: string;
+  icon?: string;
+  text?: string;
   neume: Neume | Neume[];
 }
 
@@ -38,6 +42,7 @@ export default class ButtonWithMenu extends Vue {
   @Prop({ default: 'up' }) direction!: 'up' | 'down';
   @Prop({ required: true }) options!: ButtonWithMenuOption[];
   @Prop({ default: false }) disabled!: boolean;
+  @Prop({ default: 'Neanes' }) fontFamily!: string;
 
   showMenu: boolean = false;
   selectedOption: Neume | Neume[] | null = null;
@@ -46,6 +51,18 @@ export default class ButtonWithMenu extends Vue {
     return this.direction === 'up'
       ? this.options.at(-1)!.icon
       : this.options[0].icon;
+  }
+
+  get mainText() {
+    return this.direction === 'up'
+      ? this.options.at(-1)!.text
+      : this.options[0].text;
+  }
+
+  get textStyle() {
+    return {
+      fontFamily: this.fontFamily,
+    } as StyleValue;
   }
 
   getKey(option: ButtonWithMenuOption) {

@@ -2453,6 +2453,11 @@ export class LayoutService {
               martyria.fthora = null;
             }
           }
+
+          if (martyria.alignRight && martyria.quantitativeNeume) {
+            currentNote += getNeumeValue(martyria.quantitativeNeume)!;
+            currentNoteVirtual = currentNote + currentShift;
+          }
         }
       } else if (
         element.elementType === ElementType.RichTextBox &&

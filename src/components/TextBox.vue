@@ -194,7 +194,10 @@ export default class TextBox extends Vue {
   get textBoxStyle() {
     const style: any = {
       width: !this.element.multipanel ? this.width : undefined,
-      height: this.element.inline ? withZoom(this.element.height) : undefined,
+      height:
+        this.element.inline || this.element.customHeight
+          ? withZoom(this.element.height)
+          : undefined,
       minHeight: withZoom(this.element.minHeight),
       textWrap: this.element.alignment === 'center' ? 'balance' : 'pretty',
     };

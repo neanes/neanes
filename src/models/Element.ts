@@ -598,6 +598,7 @@ export class MartyriaElement extends ScoreElement {
   public tempoLeft: TempoSign | null = null;
   public tempo: TempoSign | null = null;
   public tempoRight: TempoSign | null = null;
+  public quantitativeNeume: QuantitativeNeume | null = null;
   public alignRight: boolean = false;
   public bpm: number = 0;
   public spaceAfter: number = 0;
@@ -625,6 +626,7 @@ export class MartyriaElement extends ScoreElement {
 
   // Used for display
   public neumeWidth: number = 0;
+  public padding: number = 0;
 
   private _measureBarLeft: MeasureBar | null = null;
   private _measureBarRight: MeasureBar | null = null;

@@ -994,6 +994,12 @@ export class AnalysisService {
       );
     }
 
+    if (martyriaElement.alignRight && martyriaElement.quantitativeNeume) {
+      workspace.currentNote += getNeumeValue(
+        martyriaElement.quantitativeNeume,
+      )!;
+    }
+
     if (martyriaElement.tempo) {
       const tempoNode: TempoNode = new TempoNode();
       tempoNode.elementIndex = martyriaElement.index;

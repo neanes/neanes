@@ -176,6 +176,14 @@
           class="icon-btn-img"
         />
       </button>
+      <template v-if="element.alignRight">
+        <span class="space" />
+        <ButtonWithMenu
+          :options="quantitativeNeumeOptions"
+          :title="$t('toolbar:common:neume')"
+          @select="$emit('update:quantitativeNeume', $event)"
+        />
+      </template>
       <span class="space" />
       <div style="display: flex; align-items: center">
         <input
@@ -329,12 +337,14 @@ import {
   MeasureBar,
   Neume,
   Note,
+  QuantitativeNeume,
   RootSign,
   TempoSign,
 } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
 import { Scale, ScaleNote } from '@/models/Scales';
 import { NeumeKeyboard } from '@/services/NeumeKeyboard';
+import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { Unit } from '@/utils/Unit';
 
 import ButtonWithMenu, { ButtonWithMenuOption } from './ButtonWithMenu.vue';
@@ -351,6 +361,7 @@ import InputUnit from './InputUnit.vue';
     'update:fthora',
     'update:measureBar',
     'update:note',
+    'update:quantitativeNeume',
     'update:rootSignOverride',
     'update:scale',
     'update:sectionName',
@@ -445,6 +456,22 @@ export default class ToolbarMartyria extends Vue {
       value: RootSign.Delta,
     },
   ];
+
+  quantitativeNeumeOptionsList = [
+    QuantitativeNeume.Elaphron,
+    QuantitativeNeume.RunningElaphron,
+    QuantitativeNeume.OligonPlusHypsiliPlusKentimaVertical,
+    QuantitativeNeume.OligonPlusHypsiliLeft,
+    QuantitativeNeume.OligonPlusHypsiliRight,
+    QuantitativeNeume.OligonPlusKentimaAbove,
+    QuantitativeNeume.OligonPlusKentima,
+    QuantitativeNeume.KentemataPlusOligon,
+  ];
+
+  quantitativeNeumeOptions: ButtonWithMenuOption[] =
+    this.quantitativeNeumeOptionsList.map((x) => {
+      return { neume: x, text: NeumeMappingService.getMapping(x).text };
+    });
 
   get fthoraNotes() {
     if (

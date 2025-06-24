@@ -364,6 +364,7 @@ export class SaveService {
     element.tempoLeft = e.tempoLeft || undefined;
     element.tempo = e.tempo || undefined;
     element.tempoRight = e.tempoRight || undefined;
+    element.quantitativeNeume = e.quantitativeNeume || undefined;
     element.measureBarLeft = e.measureBarLeft || undefined;
     element.measureBarRight = e.measureBarRight || undefined;
     element.alignRight = e.alignRight || undefined;
@@ -1150,6 +1151,8 @@ export class SaveService {
     if (e.measureBarRight != null) {
       element.measureBarRight = e.measureBarRight ?? e.measureBar;
     }
+
+    element.quantitativeNeume = e.quantitativeNeume ?? null;
   }
 
   public static LoadTempo_v1(element: TempoElement, e: TempoElement_v1) {

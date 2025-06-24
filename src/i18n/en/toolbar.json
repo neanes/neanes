@@ -26,7 +26,8 @@
     "marginBottom": "Gap Below",
     "verticalOffset": "Vertical Offset",
     "none": "None",
-    "inline": "Inline"
+    "inline": "Inline",
+    "neume": "Neume"
   },
   "main": {
     "auto": "Auto",

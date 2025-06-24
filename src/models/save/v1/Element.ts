@@ -148,6 +148,7 @@ export class MartyriaElement extends ScoreElement {
   public tempoLeft: TempoSign | undefined = undefined;
   public tempo: TempoSign | undefined = undefined;
   public tempoRight: TempoSign | undefined = undefined;
+  public quantitativeNeume: QuantitativeNeume | undefined = undefined;
   public measureBarLeft: MeasureBar | undefined = undefined;
   public measureBarRight: MeasureBar | undefined = undefined;
   // Deprecated

@@ -287,6 +287,18 @@ export const modeKeyTemplates: ModeKeyTemplate[] = [
     quantitativeNeumeAboveNote: ModeSign.OligonPlusHypsili,
   },
   {
+    id: 506,
+    mode: 5,
+    scale: Scale.Diatonic,
+    scaleNote: ScaleNote.Ke,
+    description: 'model:modeKey.heirmologicAsFromPa',
+    fthora: Fthora.DiatonicPa_Top,
+    martyria: ModeSign.Alpha,
+    note: ModeSign.Pa,
+    quantitativeNeumeRight: QuantitativeNeume.OligonPlusHypsiliRight,
+    fthoraAboveQuantitativeNeumeRight: Fthora.DiatonicPa_Top,
+  },
+  {
     id: 502,
     mode: 5,
     scale: Scale.Spathi,

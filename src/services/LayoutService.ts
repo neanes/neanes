@@ -46,6 +46,7 @@ import {
 import { Workspace } from '@/models/Workspace';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { TATWEEL } from '@/utils/constants';
+import { Unit } from '@/utils/Unit';
 
 import { fontService } from './FontService';
 import { MelismaHelperGreek, MelismaSyllables } from './MelismaHelperGreek';
@@ -1250,8 +1251,10 @@ export class LayoutService {
 
     if (textBoxElement.inline) {
       textBoxElement.height = neumeHeight;
+      textBoxElement.minHeight = Unit.fromPt(0.5);
     } else if (textBoxElement.customHeight != null) {
       textBoxElement.height = textBoxElement.customHeight;
+      textBoxElement.minHeight = textBoxElement.customHeight;
     } else {
       const fontHeight = TextMeasurementService.getFontHeight(
         textBoxElement.computedFont,

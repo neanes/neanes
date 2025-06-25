@@ -59,7 +59,7 @@
   "devDependencies": {
     "@babel/preset-typescript": "^7.27.1",
     "@types/mime-types": "^3.0.1",
-    "@types/node": "^24.0.3",
+    "@types/node": "^24.0.4",
     "@types/throttle-debounce": "^5.0.2",
     "@types/uuid": "^10.0.0",
     "@vitejs/plugin-vue": "^5.2.4",

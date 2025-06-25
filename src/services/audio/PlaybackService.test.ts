@@ -903,15 +903,12 @@ describe('PlaybackService', () => {
     const elements: ScoreElement[] = [];
 
     const skippedFthoras = [
-      'Spathi',
       'GeneralSharp',
       'GeneralFlat',
       'Secondary',
       'Tertiary',
       'Bottom',
       'DiatonicZo',
-      'Zygos',
-      'Kliton',
       'Enharmonic',
     ];
 

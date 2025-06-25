@@ -769,16 +769,21 @@ export class PlaybackService {
     } else {
       workspace.scale = this.getPlaybackScale(fthoraNode.scale, workspace);
 
-      const intervalIndex = workspace.scale.scaleNoteMap.get(physicalNote)!;
+      const intervalIndex = workspace.scale.scaleNoteMap.get(
+        workspace.physicalNote,
+      )!;
 
       const distance =
-        getScaleNoteValue(ScaleNote.Thi) - getScaleNoteValue(physicalNote);
+        getScaleNoteValue(ScaleNote.Thi) -
+        getScaleNoteValue(workspace.physicalNote);
 
       const moria = this.moriaBetweenNotes(
         intervalIndex,
         workspace.scale.intervals,
         distance,
       );
+
+      console.log(distance, moria);
 
       const frequencyDiNew = this.changeFrequency(workspace.frequency, moria);
 

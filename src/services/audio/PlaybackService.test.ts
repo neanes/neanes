@@ -908,13 +908,11 @@ describe('PlaybackService', () => {
       'Secondary',
       'Tertiary',
       'Bottom',
-      'DiatonicZo',
-      'Enharmonic',
     ];
 
     elements.push(getModeKey(1, Scale.Diatonic, ScaleNote.Pa));
-    elements.push(getNote(QuantitativeNeume.Ison));
-    elements.push(getNote(QuantitativeNeume.Ison));
+    elements.push(getNote(QuantitativeNeume.Ison, { ignoreAttractions: true }));
+    elements.push(getNote(QuantitativeNeume.Ison, { ignoreAttractions: true }));
     const options = getDefaultWorkspaceOptions();
 
     for (const a of Object.values(Fthora)) {

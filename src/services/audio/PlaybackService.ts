@@ -261,6 +261,10 @@ export class PlaybackService {
     return (1 / bpm) * 60;
   }
 
+  moriaBetweenFrequencies(f1: number, f2: number) {
+    return Math.round(72 * Math.log2(f2 / f1));
+  }
+
   /**
    * To move up, move up scale.intervals[intervalIndex] moria
    * To move down, move down scale.intervals[intervalIndex - 1] moria,
@@ -293,14 +297,7 @@ export class PlaybackService {
   moveTo(scaleNote: ScaleNote, workspace: PlaybackWorkspace): number {
     const { scale } = workspace;
 
-    let pivot: ScaleNote;
-    if (scale.name === PlaybackScaleName.SpathiGa) {
-      pivot = ScaleNote.Ga;
-    } else if (scale.name === PlaybackScaleName.SpathiKe) {
-      pivot = ScaleNote.Ke;
-    } else {
-      pivot = ScaleNote.Thi;
-    }
+    const pivot = ScaleNote.Thi;
 
     const intervalIndex = scale.scaleNoteMap.get(pivot)!;
 
@@ -735,11 +732,10 @@ export class PlaybackService {
     const currentShift =
       getScaleNoteValue(virtualNote) - getScaleNoteValue(physicalNote);
     if (currentShift) {
-      // Compute distance from physical note to Di in the old scale
-      const moria = this.moriaBetweenNotes(
-        workspace.scale.scaleNoteMap.get(ScaleNote.Thi)!,
-        workspace.scale.intervals,
-        getScaleNoteValue(physicalNote) - getScaleNoteValue(ScaleNote.Thi),
+      // Compute distance from the current frequency to the referecnce frequency of Di
+      const moria = this.moriaBetweenFrequencies(
+        workspace.options.frequencyDi,
+        workspace.frequency,
       );
       if (workspace.loggingEnabled) {
         console.log(
@@ -773,7 +769,30 @@ export class PlaybackService {
     } else {
       workspace.scale = this.getPlaybackScale(fthoraNode.scale, workspace);
 
-      workspace.transpositionMoria = 0;
+      const intervalIndex = workspace.scale.scaleNoteMap.get(physicalNote)!;
+
+      const distance =
+        getScaleNoteValue(ScaleNote.Thi) - getScaleNoteValue(physicalNote);
+
+      const moria = this.moriaBetweenNotes(
+        intervalIndex,
+        workspace.scale.intervals,
+        distance,
+      );
+
+      const frequencyDiNew = this.changeFrequency(workspace.frequency, moria);
+
+      workspace.transpositionMoria = this.moriaBetweenFrequencies(
+        workspace.options.frequencyDi,
+        frequencyDiNew,
+      );
+
+      if (workspace.loggingEnabled && workspace.transpositionMoria != 0) {
+        console.log(
+          'Moria from scale Di to refrence Di',
+          workspace.transpositionMoria,
+        );
+      }
     }
   }
 

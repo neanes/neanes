@@ -46,6 +46,7 @@ import {
 import { Workspace } from '@/models/Workspace';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { TATWEEL } from '@/utils/constants';
+import { Unit } from '@/utils/Unit';
 
 import { fontService } from './FontService';
 import { MelismaHelperGreek, MelismaSyllables } from './MelismaHelperGreek';
@@ -1250,8 +1251,10 @@ export class LayoutService {
 
     if (textBoxElement.inline) {
       textBoxElement.height = neumeHeight;
+      textBoxElement.minHeight = Unit.fromPt(0.5);
     } else if (textBoxElement.customHeight != null) {
       textBoxElement.height = textBoxElement.customHeight;
+      textBoxElement.minHeight = textBoxElement.customHeight;
     } else {
       const fontHeight = TextMeasurementService.getFontHeight(
         textBoxElement.computedFont,
@@ -1509,12 +1512,17 @@ export class LayoutService {
     const mappingTempoRight = martyriaElement.tempoRight
       ? NeumeMappingService.getMapping(martyriaElement.tempoRight)
       : null;
+    const mappingQuantitativeNeume =
+      martyriaElement.alignRight && martyriaElement.quantitativeNeume
+        ? NeumeMappingService.getMapping(martyriaElement.quantitativeNeume)
+        : null;
 
     // Add in padding to give some extra space between
     // the martyria and the next neume
-    const padding = martyriaElement.alignRight
-      ? 0
-      : pageSetup.neumeDefaultFontSize * pageSetup.spaceAfterMartyriaFactor;
+    martyriaElement.padding =
+      martyriaElement.alignRight && !martyriaElement.quantitativeNeume
+        ? 0
+        : pageSetup.neumeDefaultFontSize * pageSetup.spaceAfterMartyriaFactor;
 
     martyriaElement.neumeWidth = this.getNeumeWidthFromCache(
       neumeWidthCache,
@@ -1554,9 +1562,17 @@ export class LayoutService {
       );
     }
 
+    if (martyriaElement.alignRight && martyriaElement.quantitativeNeume) {
+      martyriaElement.neumeWidth += this.getNeumeWidthFromCache(
+        neumeWidthCache,
+        martyriaElement.quantitativeNeume,
+        pageSetup,
+      );
+    }
+
     return (
       martyriaElement.spaceAfter +
-      (padding +
+      (martyriaElement.padding +
         TextMeasurementService.getTextWidth(
           mappingNote.text,
           `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
@@ -1586,6 +1602,12 @@ export class LayoutService {
         (mappingTempoRight
           ? TextMeasurementService.getTextWidth(
               mappingTempoRight.text,
+              `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
+            )
+          : 0) +
+        (mappingQuantitativeNeume
+          ? TextMeasurementService.getTextWidth(
+              mappingQuantitativeNeume.text,
               `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
             )
           : 0))
@@ -1678,9 +1700,7 @@ export class LayoutService {
           const martyriaElement = lastElementOnLine as MartyriaElement;
 
           if (!martyriaElement.alignRight) {
-            martyriaElement.width -=
-              pageSetup.neumeDefaultFontSize *
-              pageSetup.spaceAfterMartyriaFactor;
+            martyriaElement.width -= martyriaElement.padding;
           }
         }
 
@@ -2435,6 +2455,11 @@ export class LayoutService {
               martyria.fthoraCarry = martyria.fthora;
               martyria.fthora = null;
             }
+          }
+
+          if (martyria.alignRight && martyria.quantitativeNeume) {
+            currentNote += getNeumeValue(martyria.quantitativeNeume)!;
+            currentNoteVirtual = currentNote + currentShift;
           }
         }
       } else if (

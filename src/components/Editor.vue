@@ -1110,6 +1110,12 @@
         @update:alignRight="
           updateMartyriaAlignRight(selectedElement as MartyriaElement, $event)
         "
+        @update:quantitativeNeume="
+          setMartyriaQuantitativeNeume(
+            selectedElement as MartyriaElement,
+            $event,
+          )
+        "
         @update:auto="
           updateMartyriaAuto(selectedElement as MartyriaElement, $event)
         "
@@ -4838,6 +4844,17 @@ export default class Editor extends Vue {
     }
   }
 
+  setMartyriaQuantitativeNeume(
+    element: MartyriaElement,
+    neume: QuantitativeNeume,
+  ) {
+    if (element.quantitativeNeume === neume) {
+      this.updateMartyriaQuantitativeNeume(element, null);
+    } else {
+      this.updateMartyriaQuantitativeNeume(element, neume);
+    }
+  }
+
   setModeKeyTempo(element: ModeKeyElement, neume: TempoSign) {
     if (element.tempo === neume) {
       this.updateModeKeyTempo(element, null);
@@ -5870,7 +5887,14 @@ export default class Editor extends Vue {
   }
 
   updateMartyriaAlignRight(element: MartyriaElement, alignRight: boolean) {
-    this.updateMartyria(element, { alignRight });
+    this.updateMartyria(element, { alignRight, quantitativeNeume: null });
+  }
+
+  updateMartyriaQuantitativeNeume(
+    element: MartyriaElement,
+    quantitativeNeume: QuantitativeNeume | null,
+  ) {
+    this.updateMartyria(element, { quantitativeNeume });
   }
 
   updateMartyriaChromaticFthoraNote(

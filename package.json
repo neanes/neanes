@@ -1,7 +1,7 @@
 {
   "name": "neanes",
   "productName": "Neanes",
-  "version": "0.4.103",
+  "version": "0.4.104",
   "private": true,
   "description": "A Byzantine Chant Scorewriter",
   "author": "danielgarthur",
@@ -74,7 +74,7 @@
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "eslint-plugin-vue": "^10.2.0",
     "jest-matcher-deep-close-to": "^3.0.2",
-    "prettier": "^3.5.3",
+    "prettier": "^3.6.0",
     "typescript": "^5.8.3",
     "vite": "^6.3.5",
     "vite-plugin-electron": "^0.29.0",

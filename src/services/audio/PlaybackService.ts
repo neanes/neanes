@@ -70,6 +70,7 @@ export interface PlaybackWorkspace {
 
   scale: PlaybackScale;
   physicalNote: ScaleNote;
+  virtualNote: ScaleNote;
   legetos: boolean;
   chrysanthineAccidentals: boolean;
 
@@ -78,7 +79,8 @@ export interface PlaybackWorkspace {
    * need to be transposed to reach their physical targets.
    */
   transpositionMoria: number;
-
+  cancelNextMoveTo: boolean;
+  usePhysicalNote: boolean;
   /**
    * If true, attractions will be ignored
    */
@@ -172,11 +174,14 @@ export class PlaybackService {
       frequency: defaultFrequencyDi,
       isonFrequency: 0,
       scale: this.diatonicScale,
-      physicalNote: ScaleNote.Pa,
+      physicalNote: ScaleNote.Thi,
+      virtualNote: ScaleNote.Thi,
       legetos: false,
       chrysanthineAccidentals: chrysanthineAccidentals,
 
       transpositionMoria: 0,
+      cancelNextMoveTo: false,
+      usePhysicalNote: false,
 
       bpm: 0,
       beat: 0,
@@ -294,30 +299,29 @@ export class PlaybackService {
     return moria;
   }
 
-  moveTo(scaleNote: ScaleNote, workspace: PlaybackWorkspace): number {
+  moveTo(physicalNote: ScaleNote, workspace: PlaybackWorkspace): number {
+    if (workspace.cancelNextMoveTo) {
+      workspace.cancelNextMoveTo = false;
+      return workspace.frequency;
+    }
+
     const { scale } = workspace;
 
-    const pivot = ScaleNote.Thi;
+    const intervalIndex = workspace.usePhysicalNote
+      ? scale.scaleNoteMap.get(workspace.physicalNote)!
+      : scale.scaleNoteMap.get(workspace.virtualNote)!;
 
-    const intervalIndex = scale.scaleNoteMap.get(pivot)!;
+    const distance =
+      getScaleNoteValue(physicalNote) -
+      getScaleNoteValue(workspace.physicalNote);
 
-    const distance = getScaleNoteValue(scaleNote) - getScaleNoteValue(pivot);
-
-    let moria = this.moriaBetweenNotes(
+    const moria = this.moriaBetweenNotes(
       intervalIndex,
       scale.intervals,
       distance,
     );
 
-    moria += this.moriaBetweenNotes(
-      this.diatonicScale.scaleNoteMap.get(ScaleNote.Thi)!,
-      this.diatonicScale.intervals,
-      getScaleNoteValue(pivot) - getScaleNoteValue(ScaleNote.Thi),
-    );
-
-    moria += workspace.transpositionMoria;
-
-    return this.changeFrequency(workspace.options.frequencyDi, moria);
+    return this.changeFrequency(workspace.frequency, moria);
   }
 
   constructScales(workspace: PlaybackWorkspace) {
@@ -600,8 +604,9 @@ export class PlaybackService {
       console.groupEnd();
     }
 
-    workspace.frequency = this.moveTo(noteAtomNode.virtualNote, workspace);
+    workspace.frequency = this.moveTo(noteAtomNode.physicalNote, workspace);
     workspace.physicalNote = noteAtomNode.physicalNote;
+    workspace.virtualNote = noteAtomNode.virtualNote;
 
     if (
       workspace.lastAlterationMoria !== 0 &&
@@ -671,8 +676,9 @@ export class PlaybackService {
 
     workspace.scale = this.getPlaybackScale(modeKeyNode.scale, workspace);
 
-    workspace.frequency = this.moveTo(modeKeyNode.virtualNote, workspace);
+    workspace.frequency = this.moveTo(modeKeyNode.physicalNote, workspace);
     workspace.physicalNote = modeKeyNode.physicalNote;
+    workspace.virtualNote = modeKeyNode.virtualNote;
   }
 
   handleFthora(fthoraNode: Readonly<FthoraNode>, workspace: PlaybackWorkspace) {
@@ -729,76 +735,45 @@ export class PlaybackService {
       }
     }
 
-    const currentShift =
-      getScaleNoteValue(virtualNote) - getScaleNoteValue(physicalNote);
-    if (currentShift) {
-      // Compute distance from the current frequency to the referecnce frequency of Di
-      const moria = this.moriaBetweenFrequencies(
-        workspace.options.frequencyDi,
-        workspace.frequency,
+    workspace.usePhysicalNote = false;
+
+    if (fthoraNode.physicalNote !== workspace.physicalNote) {
+      const fthoraScale = this.getPlaybackScale(fthoraNode.scale, workspace);
+      const distanceToDiCurrentScale = this.distanceToDi(
+        fthoraNode.physicalNote,
+        workspace.scale,
       );
-      if (workspace.loggingEnabled) {
-        console.log(
-          'Moria from physical note ' +
-            physicalNote +
-            ' to Di in the old scale',
-          moria,
-        );
-      }
-
-      // Scale change
-      workspace.scale = this.getPlaybackScale(fthoraNode.scale, workspace);
-
-      // Compute distance from Di to virtual note in the new scale
-      const moria2 = this.moriaBetweenNotes(
-        workspace.scale.scaleNoteMap.get(virtualNote)!,
-        workspace.scale.intervals,
-        getScaleNoteValue(ScaleNote.Thi) - getScaleNoteValue(virtualNote),
-      );
-      if (workspace.loggingEnabled) {
-        console.log(
-          'Moria from virtual note ' + virtualNote + ' to Di in the new scale',
-          moria2,
-        );
-      }
-
-      workspace.transpositionMoria = moria + moria2;
-      if (workspace.loggingEnabled) {
-        console.log('Entering transposition', workspace.transpositionMoria);
-      }
-    } else {
-      workspace.scale = this.getPlaybackScale(fthoraNode.scale, workspace);
-
-      const intervalIndex = workspace.scale.scaleNoteMap.get(
-        workspace.physicalNote,
-      )!;
-
-      const distance =
-        getScaleNoteValue(ScaleNote.Thi) -
-        getScaleNoteValue(workspace.physicalNote);
-
-      const moria = this.moriaBetweenNotes(
-        intervalIndex,
-        workspace.scale.intervals,
-        distance,
+      const distanceToDiNewScale = this.distanceToDi(
+        fthoraNode.physicalNote,
+        fthoraScale,
       );
 
-      console.log(distance, moria);
+      if (distanceToDiCurrentScale === distanceToDiNewScale) {
+        workspace.usePhysicalNote = true;
 
-      const frequencyDiNew = this.changeFrequency(workspace.frequency, moria);
+        console.log('moving early to', fthoraNode.physicalNote);
+        workspace.frequency = this.moveTo(fthoraNode.physicalNote, workspace);
 
-      workspace.transpositionMoria = this.moriaBetweenFrequencies(
-        workspace.options.frequencyDi,
-        frequencyDiNew,
-      );
-
-      if (workspace.loggingEnabled && workspace.transpositionMoria != 0) {
-        console.log(
-          'Moria from scale Di to refrence Di',
-          workspace.transpositionMoria,
-        );
+        workspace.cancelNextMoveTo = true;
       }
     }
+
+    workspace.scale = this.getPlaybackScale(fthoraNode.scale, workspace);
+  }
+
+  distanceToDi(targetNote: ScaleNote, scale: PlaybackScale) {
+    const intervalIndex = scale.scaleNoteMap.get(ScaleNote.Thi)!;
+
+    const distance =
+      getScaleNoteValue(targetNote) - getScaleNoteValue(ScaleNote.Thi);
+
+    const moria = this.moriaBetweenNotes(
+      intervalIndex,
+      scale.intervals,
+      distance,
+    );
+
+    return moria;
   }
 
   getPlaybackScale(scale: Scale, workspace: PlaybackWorkspace): PlaybackScale {
@@ -883,7 +858,7 @@ export class PlaybackService {
     workspace.isonFrequency = -1;
 
     if (!isonNode.unison) {
-      workspace.isonFrequency = this.moveTo(isonNode.virtualNote, workspace);
+      workspace.isonFrequency = this.moveTo(isonNode.physicalNote, workspace);
     }
   }
 

@@ -783,7 +783,7 @@ export class PlaybackService {
       }
 
       // Scale change
-      workspace.scale = this.getPlaybackScale(fthoraNode.scale, workspace);
+      workspace.scale = newScale;
 
       // Compute distance from Di to virtual note in the new scale
       const moria2 = this.moriaBetweenNotes(

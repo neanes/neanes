@@ -78,6 +78,7 @@ export interface PlaybackWorkspace {
    * need to be transposed to reach their physical targets.
    */
   transpositionMoria: number;
+  previousPivot: ScaleNote | null;
 
   /**
    * If true, attractions will be ignored
@@ -177,6 +178,7 @@ export class PlaybackService {
       chrysanthineAccidentals: chrysanthineAccidentals,
 
       transpositionMoria: 0,
+      previousPivot: null,
 
       bpm: 0,
       beat: 0,
@@ -294,12 +296,20 @@ export class PlaybackService {
     const { scale } = workspace;
 
     let pivot: ScaleNote;
+
     if (scale.name === PlaybackScaleName.SpathiGa) {
       pivot = ScaleNote.Ga;
+      workspace.previousPivot = pivot;
     } else if (scale.name === PlaybackScaleName.SpathiKe) {
       pivot = ScaleNote.Ke;
+      workspace.previousPivot = pivot;
     } else {
       pivot = ScaleNote.Thi;
+
+      if (workspace.previousPivot != null) {
+        pivot = workspace.previousPivot;
+        workspace.previousPivot = null;
+      }
     }
 
     const intervalIndex = scale.scaleNoteMap.get(pivot)!;
@@ -735,11 +745,33 @@ export class PlaybackService {
     const currentShift =
       getScaleNoteValue(virtualNote) - getScaleNoteValue(physicalNote);
     if (currentShift) {
+      const newScale = this.getPlaybackScale(fthoraNode.scale, workspace);
+
+      let pivot: ScaleNote;
+
+      if (
+        newScale.name === PlaybackScaleName.SpathiGa ||
+        workspace.previousPivot === ScaleNote.Ga
+      ) {
+        pivot = ScaleNote.Ga;
+      } else if (
+        newScale.name === PlaybackScaleName.SpathiKe ||
+        workspace.previousPivot === ScaleNote.Ke
+      ) {
+        pivot = ScaleNote.Ke;
+      } else {
+        pivot = ScaleNote.Thi;
+      }
+
+      if (workspace.loggingEnabled) {
+        console.log('Pivot', pivot);
+      }
+
       // Compute distance from physical note to Di in the old scale
       const moria = this.moriaBetweenNotes(
-        workspace.scale.scaleNoteMap.get(ScaleNote.Thi)!,
+        workspace.scale.scaleNoteMap.get(pivot)!,
         workspace.scale.intervals,
-        getScaleNoteValue(physicalNote) - getScaleNoteValue(ScaleNote.Thi),
+        getScaleNoteValue(physicalNote) - getScaleNoteValue(pivot),
       );
       if (workspace.loggingEnabled) {
         console.log(
@@ -757,7 +789,7 @@ export class PlaybackService {
       const moria2 = this.moriaBetweenNotes(
         workspace.scale.scaleNoteMap.get(virtualNote)!,
         workspace.scale.intervals,
-        getScaleNoteValue(ScaleNote.Thi) - getScaleNoteValue(virtualNote),
+        getScaleNoteValue(pivot) - getScaleNoteValue(virtualNote),
       );
       if (workspace.loggingEnabled) {
         console.log(

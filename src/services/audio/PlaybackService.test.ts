@@ -240,28 +240,28 @@ describe('PlaybackService', () => {
     );
 
     it.each`
-      scaleNote            | expectedFrequency
-      ${ScaleNote.VouLow}  | ${77.78}
-      ${ScaleNote.GaLow}   | ${87.31}
-      ${ScaleNote.ThiLow}  | ${94.3}
-      ${ScaleNote.KeLow}   | ${107.9}
-      ${ScaleNote.Zo}      | ${116.54}
-      ${ScaleNote.Ni}      | ${130.81}
-      ${ScaleNote.Pa}      | ${141.29}
-      ${ScaleNote.Vou}     | ${161.67}
-      ${ScaleNote.Ga}      | ${174.62}
-      ${ScaleNote.Thi}     | ${196}
-      ${ScaleNote.Ke}      | ${211.69}
-      ${ScaleNote.ZoHigh}  | ${242.24}
-      ${ScaleNote.NiHigh}  | ${261.63}
-      ${ScaleNote.PaHigh}  | ${293.67}
-      ${ScaleNote.VouHigh} | ${317.18}
-      ${ScaleNote.GaHigh}  | ${362.94}
-      ${ScaleNote.ThiHigh} | ${392}
-      ${ScaleNote.KeHigh}  | ${440.01}
+      neume                                                       | expectedFrequency
+      ${QuantitativeNeume.DoubleHamiliApostrofos}                 | ${77.78}
+      ${QuantitativeNeume.DoubleHamili}                           | ${87.31}
+      ${QuantitativeNeume.HamiliPlusElaphronPlusApostrophos}      | ${94.3}
+      ${QuantitativeNeume.HamiliPlusElaphron}                     | ${107.9}
+      ${QuantitativeNeume.HamiliPlusApostrophos}                  | ${116.54}
+      ${QuantitativeNeume.Hamili}                                 | ${130.81}
+      ${QuantitativeNeume.ElaphronPlusApostrophos}                | ${141.29}
+      ${QuantitativeNeume.Elaphron}                               | ${161.67}
+      ${QuantitativeNeume.Apostrophos}                            | ${174.62}
+      ${QuantitativeNeume.Ison}                                   | ${196}
+      ${QuantitativeNeume.Oligon}                                 | ${211.69}
+      ${QuantitativeNeume.OligonPlusKentima}                      | ${242.24}
+      ${QuantitativeNeume.OligonPlusKentimaAbove}                 | ${261.63}
+      ${QuantitativeNeume.OligonPlusHypsiliRight}                 | ${293.67}
+      ${QuantitativeNeume.OligonPlusHypsiliLeft}                  | ${317.18}
+      ${QuantitativeNeume.OligonPlusHypsiliPlusKentimaHorizontal} | ${362.94}
+      ${QuantitativeNeume.OligonPlusHypsiliPlusKentimaVertical}   | ${392}
+      ${QuantitativeNeume.OligonPlusDoubleHypsili}                | ${440.01}
     `(
       'should play the correct starting note for the 8-14-8 soft chromatic scale when no fthora is present',
-      ({ scaleNote, expectedFrequency }) => {
+      ({ neume, expectedFrequency }) => {
         const service = new PlaybackService();
 
         const options = getDefaultWorkspaceOptions();
@@ -269,8 +269,8 @@ describe('PlaybackService', () => {
 
         const elements: ScoreElement[] = [];
 
-        elements.push(getModeKey(2, Scale.SoftChromatic, scaleNote));
-        elements.push(getNote(QuantitativeNeume.Ison));
+        elements.push(getModeKey(2, Scale.SoftChromatic, ScaleNote.Thi));
+        elements.push(getNote(neume));
 
         const events = service.computePlaybackSequence(elements, options, true);
 
@@ -286,8 +286,8 @@ describe('PlaybackService', () => {
 
       const elements: ScoreElement[] = [];
 
-      elements.push(getModeKey(2, Scale.SoftChromatic, ScaleNote.VouLow));
-      elements.push(getNote(QuantitativeNeume.Ison));
+      elements.push(getModeKey(2, Scale.SoftChromatic, ScaleNote.Thi));
+      elements.push(getNote(QuantitativeNeume.DoubleHamiliApostrofos));
       elements.push(getNote(QuantitativeNeume.Oligon));
       elements.push(getNote(QuantitativeNeume.Oligon));
       elements.push(getNote(QuantitativeNeume.Oligon));
@@ -319,28 +319,28 @@ describe('PlaybackService', () => {
     });
 
     it.each`
-      scaleNote            | expectedFrequency
-      ${ScaleNote.VouLow}  | ${84.01}
-      ${ScaleNote.GaLow}   | ${87.31}
-      ${ScaleNote.ThiLow}  | ${98}
-      ${ScaleNote.KeLow}   | ${103.83}
-      ${ScaleNote.Zo}      | ${125.87}
-      ${ScaleNote.Ni}      | ${130.81}
-      ${ScaleNote.Pa}      | ${146.83}
-      ${ScaleNote.Vou}     | ${155.57}
-      ${ScaleNote.Ga}      | ${188.6}
-      ${ScaleNote.Thi}     | ${196}
-      ${ScaleNote.Ke}      | ${220}
-      ${ScaleNote.ZoHigh}  | ${233.08}
-      ${ScaleNote.NiHigh}  | ${282.57}
-      ${ScaleNote.PaHigh}  | ${293.67}
-      ${ScaleNote.VouHigh} | ${329.63}
-      ${ScaleNote.GaHigh}  | ${349.23}
-      ${ScaleNote.ThiHigh} | ${423.38}
-      ${ScaleNote.KeHigh}  | ${440.01}
+      neume                                                       | expectedFrequency
+      ${QuantitativeNeume.HamiliPlusElaphron}                     | ${84.01}
+      ${QuantitativeNeume.HamiliPlusApostrophos}                  | ${87.31}
+      ${QuantitativeNeume.Hamili}                                 | ${98}
+      ${QuantitativeNeume.ElaphronPlusApostrophos}                | ${103.83}
+      ${QuantitativeNeume.Elaphron}                               | ${125.87}
+      ${QuantitativeNeume.Apostrophos}                            | ${130.81}
+      ${QuantitativeNeume.Ison}                                   | ${146.83}
+      ${QuantitativeNeume.Oligon}                                 | ${155.57}
+      ${QuantitativeNeume.OligonKentimaMiddleKentimata}           | ${188.6}
+      ${QuantitativeNeume.OligonPlusKentimaAbove}                 | ${196}
+      ${QuantitativeNeume.OligonPlusHypsiliRight}                 | ${220}
+      ${QuantitativeNeume.OligonPlusHypsiliLeft}                  | ${233.08}
+      ${QuantitativeNeume.OligonPlusHypsiliPlusKentimaHorizontal} | ${282.57}
+      ${QuantitativeNeume.OligonPlusHypsiliPlusKentimaVertical}   | ${293.67}
+      ${QuantitativeNeume.OligonPlusDoubleHypsili}                | ${329.63}
+      ${QuantitativeNeume.OligonKentimataDoubleYpsili}            | ${349.23}
+      ${QuantitativeNeume.OligonKentimaDoubleYpsiliRight}         | ${423.38}
+      ${QuantitativeNeume.OligonKentimaDoubleYpsiliLeft}          | ${440.01}
     `(
       'should play the correct starting note for the 6-20-4 hard chromatic scale when no fthora is present',
-      ({ scaleNote, expectedFrequency }) => {
+      ({ neume, expectedFrequency }) => {
         const service = new PlaybackService();
 
         const options = getDefaultWorkspaceOptions();
@@ -348,8 +348,8 @@ describe('PlaybackService', () => {
 
         const elements: ScoreElement[] = [];
 
-        elements.push(getModeKey(2, Scale.HardChromatic, scaleNote));
-        elements.push(getNote(QuantitativeNeume.Ison));
+        elements.push(getModeKey(2, Scale.HardChromatic, ScaleNote.Pa));
+        elements.push(getNote(neume));
 
         const events = service.computePlaybackSequence(elements, options, true);
 

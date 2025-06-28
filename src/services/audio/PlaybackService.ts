@@ -78,6 +78,7 @@ export interface PlaybackWorkspace {
    * need to be transposed to reach their physical targets.
    */
   transpositionMoria: number;
+  previousPivot: ScaleNote | null;
 
   /**
    * If true, attractions will be ignored
@@ -177,6 +178,7 @@ export class PlaybackService {
       chrysanthineAccidentals: chrysanthineAccidentals,
 
       transpositionMoria: 0,
+      previousPivot: null,
 
       bpm: 0,
       beat: 0,
@@ -293,14 +295,7 @@ export class PlaybackService {
   moveTo(scaleNote: ScaleNote, workspace: PlaybackWorkspace): number {
     const { scale } = workspace;
 
-    let pivot: ScaleNote;
-    if (scale.name === PlaybackScaleName.SpathiGa) {
-      pivot = ScaleNote.Ga;
-    } else if (scale.name === PlaybackScaleName.SpathiKe) {
-      pivot = ScaleNote.Ke;
-    } else {
-      pivot = ScaleNote.Thi;
-    }
+    const pivot = workspace.previousPivot ?? ScaleNote.Thi;
 
     const intervalIndex = scale.scaleNoteMap.get(pivot)!;
 
@@ -672,7 +667,21 @@ export class PlaybackService {
     workspace.isonFrequency = 0;
     workspace.transpositionMoria = 0;
 
-    workspace.scale = this.getPlaybackScale(modeKeyNode.scale, workspace);
+    const newScale = this.getPlaybackScale(modeKeyNode.scale, workspace);
+
+    const currentShift =
+      getScaleNoteValue(modeKeyNode.virtualNote) -
+      getScaleNoteValue(modeKeyNode.physicalNote);
+
+    workspace.previousPivot =
+      this.findPivot(
+        workspace,
+        newScale,
+        modeKeyNode.virtualNote,
+        currentShift,
+      ) ?? ScaleNote.Thi;
+
+    workspace.scale = newScale;
 
     workspace.frequency = this.moveTo(modeKeyNode.virtualNote, workspace);
     workspace.physicalNote = modeKeyNode.physicalNote;
@@ -734,12 +743,21 @@ export class PlaybackService {
 
     const currentShift =
       getScaleNoteValue(virtualNote) - getScaleNoteValue(physicalNote);
+
+    const newScale = this.getPlaybackScale(fthoraNode.scale, workspace);
+
+    const pivot =
+      this.findPivot(workspace, newScale, virtualNote, currentShift) ??
+      ScaleNote.Thi;
+
+    workspace.previousPivot = pivot;
+
     if (currentShift) {
       // Compute distance from physical note to Di in the old scale
       const moria = this.moriaBetweenNotes(
-        workspace.scale.scaleNoteMap.get(ScaleNote.Thi)!,
+        workspace.scale.scaleNoteMap.get(pivot)!,
         workspace.scale.intervals,
-        getScaleNoteValue(physicalNote) - getScaleNoteValue(ScaleNote.Thi),
+        getScaleNoteValue(physicalNote) - getScaleNoteValue(pivot),
       );
       if (workspace.loggingEnabled) {
         console.log(
@@ -751,13 +769,13 @@ export class PlaybackService {
       }
 
       // Scale change
-      workspace.scale = this.getPlaybackScale(fthoraNode.scale, workspace);
+      workspace.scale = newScale;
 
       // Compute distance from Di to virtual note in the new scale
       const moria2 = this.moriaBetweenNotes(
         workspace.scale.scaleNoteMap.get(virtualNote)!,
         workspace.scale.intervals,
-        getScaleNoteValue(ScaleNote.Thi) - getScaleNoteValue(virtualNote),
+        getScaleNoteValue(pivot) - getScaleNoteValue(virtualNote),
       );
       if (workspace.loggingEnabled) {
         console.log(
@@ -774,6 +792,52 @@ export class PlaybackService {
       workspace.scale = this.getPlaybackScale(fthoraNode.scale, workspace);
 
       workspace.transpositionMoria = 0;
+    }
+  }
+
+  findPivot(
+    workspace: PlaybackWorkspace,
+    newScale: PlaybackScale,
+    virtualNote: ScaleNote,
+    shift: number,
+  ) {
+    for (
+      let i = getScaleNoteValue(ScaleNote.Ni);
+      i <= getScaleNoteValue(ScaleNote.NiHigh);
+      i++
+    ) {
+      const pivot = getScaleNoteFromValue(i);
+
+      if (pivot === virtualNote) {
+        continue;
+      }
+
+      const intervalIndex = newScale.scaleNoteMap.get(pivot)!;
+
+      const distance =
+        getScaleNoteValue(virtualNote) - getScaleNoteValue(pivot);
+
+      const moria1 = this.moriaBetweenNotes(
+        intervalIndex,
+        newScale.intervals,
+        distance,
+      );
+
+      const moria2 = this.moriaBetweenNotes(
+        intervalIndex,
+        workspace.scale.intervals,
+        distance,
+      );
+
+      if (moria1 === moria2) {
+        const transposedPivot = getScaleNoteFromValue(
+          getScaleNoteValue(pivot) - shift,
+        );
+        if (workspace.loggingEnabled) {
+          console.log('found pivot', transposedPivot);
+        }
+        return transposedPivot;
+      }
     }
   }
 

@@ -295,22 +295,7 @@ export class PlaybackService {
   moveTo(scaleNote: ScaleNote, workspace: PlaybackWorkspace): number {
     const { scale } = workspace;
 
-    let pivot: ScaleNote;
-
-    if (scale.name === PlaybackScaleName.SpathiGa) {
-      pivot = ScaleNote.Ga;
-      workspace.previousPivot = pivot;
-    } else if (scale.name === PlaybackScaleName.SpathiKe) {
-      pivot = ScaleNote.Ke;
-      workspace.previousPivot = pivot;
-    } else {
-      pivot = ScaleNote.Thi;
-
-      if (workspace.previousPivot != null) {
-        pivot = workspace.previousPivot;
-        workspace.previousPivot = null;
-      }
-    }
+    const pivot = workspace.previousPivot ?? ScaleNote.Thi;
 
     const intervalIndex = scale.scaleNoteMap.get(pivot)!;
 
@@ -682,7 +667,21 @@ export class PlaybackService {
     workspace.isonFrequency = 0;
     workspace.transpositionMoria = 0;
 
-    workspace.scale = this.getPlaybackScale(modeKeyNode.scale, workspace);
+    const newScale = this.getPlaybackScale(modeKeyNode.scale, workspace);
+
+    const currentShift =
+      getScaleNoteValue(modeKeyNode.virtualNote) -
+      getScaleNoteValue(modeKeyNode.physicalNote);
+
+    workspace.previousPivot =
+      this.findPivot(
+        workspace,
+        newScale,
+        modeKeyNode.virtualNote,
+        currentShift,
+      ) ?? ScaleNote.Thi;
+
+    workspace.scale = newScale;
 
     workspace.frequency = this.moveTo(modeKeyNode.virtualNote, workspace);
     workspace.physicalNote = modeKeyNode.physicalNote;
@@ -744,29 +743,16 @@ export class PlaybackService {
 
     const currentShift =
       getScaleNoteValue(virtualNote) - getScaleNoteValue(physicalNote);
+
+    const newScale = this.getPlaybackScale(fthoraNode.scale, workspace);
+
+    const pivot =
+      this.findPivot(workspace, newScale, virtualNote, currentShift) ??
+      ScaleNote.Thi;
+
+    workspace.previousPivot = pivot;
+
     if (currentShift) {
-      const newScale = this.getPlaybackScale(fthoraNode.scale, workspace);
-
-      let pivot: ScaleNote;
-
-      if (
-        newScale.name === PlaybackScaleName.SpathiGa ||
-        workspace.previousPivot === ScaleNote.Ga
-      ) {
-        pivot = ScaleNote.Ga;
-      } else if (
-        newScale.name === PlaybackScaleName.SpathiKe ||
-        workspace.previousPivot === ScaleNote.Ke
-      ) {
-        pivot = ScaleNote.Ke;
-      } else {
-        pivot = ScaleNote.Thi;
-      }
-
-      if (workspace.loggingEnabled) {
-        console.log('Pivot', pivot);
-      }
-
       // Compute distance from physical note to Di in the old scale
       const moria = this.moriaBetweenNotes(
         workspace.scale.scaleNoteMap.get(pivot)!,
@@ -806,6 +792,52 @@ export class PlaybackService {
       workspace.scale = this.getPlaybackScale(fthoraNode.scale, workspace);
 
       workspace.transpositionMoria = 0;
+    }
+  }
+
+  findPivot(
+    workspace: PlaybackWorkspace,
+    newScale: PlaybackScale,
+    virtualNote: ScaleNote,
+    shift: number,
+  ) {
+    for (
+      let i = getScaleNoteValue(ScaleNote.Ni);
+      i <= getScaleNoteValue(ScaleNote.NiHigh);
+      i++
+    ) {
+      const pivot = getScaleNoteFromValue(i);
+
+      if (pivot === virtualNote) {
+        continue;
+      }
+
+      const intervalIndex = newScale.scaleNoteMap.get(pivot)!;
+
+      const distance =
+        getScaleNoteValue(virtualNote) - getScaleNoteValue(pivot);
+
+      const moria1 = this.moriaBetweenNotes(
+        intervalIndex,
+        newScale.intervals,
+        distance,
+      );
+
+      const moria2 = this.moriaBetweenNotes(
+        intervalIndex,
+        workspace.scale.intervals,
+        distance,
+      );
+
+      if (moria1 === moria2) {
+        const transposedPivot = getScaleNoteFromValue(
+          getScaleNoteValue(pivot) - shift,
+        );
+        if (workspace.loggingEnabled) {
+          console.log('found pivot', transposedPivot);
+        }
+        return transposedPivot;
+      }
     }
   }
 

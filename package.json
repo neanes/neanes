@@ -84,8 +84,13 @@
     "vite-plugin-vue-devtools": "^7.7.7",
     "vitepress": "^1.6.3",
     "vitest": "^3.2.4",
-    "vue-component-type-helpers": "^3.0.0",
+    "vue-component-type-helpers": "^2.2.10",
     "vue-tsc": "^2.2.10"
+  },
+  "overrides": {
+    "vite-plugin-vue-devtools": {
+      "vite-plugin-inspect": "^11.3.0"
+    }
   },
   "license": "GPL-3.0",
   "packageManager": "npm@11.4.2"

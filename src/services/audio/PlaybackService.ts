@@ -678,13 +678,40 @@ export class PlaybackService {
 
       if (workspace.scale.name === PlaybackScaleName.SpathiKe) {
         workspace.physicalNote = ScaleNote.Ke;
-        workspace.virtualNote = ScaleNote.Ke; // TODO use the actual scale
-        workspace.frequency = this.changeFrequency(workspace.frequency, 12);
+        workspace.virtualNote = ScaleNote.Ke;
+
+        const intervalIndex = this.diatonicScale.scaleNoteMap.get(
+          ScaleNote.Thi,
+        )!;
+
+        const distance =
+          getScaleNoteValue(ScaleNote.Ke) - getScaleNoteValue(ScaleNote.Thi);
+
+        const moria = this.moriaBetweenNotes(
+          intervalIndex,
+          this.diatonicScale.intervals,
+          distance,
+        );
+
+        workspace.frequency = this.changeFrequency(workspace.frequency, moria);
       } else if (workspace.scale.name === PlaybackScaleName.SpathiGa) {
         workspace.physicalNote = ScaleNote.Ga;
         workspace.virtualNote = ScaleNote.Ga;
-        // TODO use the actual scale
-        workspace.frequency = this.changeFrequency(workspace.frequency, -12);
+
+        const intervalIndex = this.diatonicScale.scaleNoteMap.get(
+          ScaleNote.Thi,
+        )!;
+
+        const distance =
+          getScaleNoteValue(ScaleNote.Ga) - getScaleNoteValue(ScaleNote.Thi);
+
+        const moria = this.moriaBetweenNotes(
+          intervalIndex,
+          this.diatonicScale.intervals,
+          distance,
+        );
+
+        workspace.frequency = this.changeFrequency(workspace.frequency, moria);
       }
 
       workspace.frequency = this.moveTo(modeKeyNode.physicalNote, workspace);
@@ -745,12 +772,43 @@ export class PlaybackService {
 
         if (newScale.name === PlaybackScaleName.SpathiKe) {
           pivot = ScaleNote.Ke;
-          // TODO use the actual scale
-          workspace.frequency = this.changeFrequency(workspace.frequency, 12);
+
+          const intervalIndex = this.diatonicScale.scaleNoteMap.get(
+            ScaleNote.Thi,
+          )!;
+
+          const distance =
+            getScaleNoteValue(ScaleNote.Ke) - getScaleNoteValue(ScaleNote.Thi);
+
+          const moria = this.moriaBetweenNotes(
+            intervalIndex,
+            this.diatonicScale.intervals,
+            distance,
+          );
+
+          workspace.frequency = this.changeFrequency(
+            workspace.frequency,
+            moria,
+          );
         } else if (newScale.name === PlaybackScaleName.SpathiGa) {
           pivot = ScaleNote.Ga;
-          // TODO use the actual scale
-          workspace.frequency = this.changeFrequency(workspace.frequency, -12);
+          const intervalIndex = this.diatonicScale.scaleNoteMap.get(
+            ScaleNote.Thi,
+          )!;
+
+          const distance =
+            getScaleNoteValue(ScaleNote.Ga) - getScaleNoteValue(ScaleNote.Thi);
+
+          const moria = this.moriaBetweenNotes(
+            intervalIndex,
+            this.diatonicScale.intervals,
+            distance,
+          );
+
+          workspace.frequency = this.changeFrequency(
+            workspace.frequency,
+            moria,
+          );
         }
 
         const shiftedPivot = getScaleNoteFromValue(

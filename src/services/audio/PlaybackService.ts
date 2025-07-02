@@ -658,6 +658,7 @@ export class PlaybackService {
       console.log('physicalNote', modeKeyNode.physicalNote);
       console.log('virtualNote', modeKeyNode.virtualNote);
       console.log('scale', modeKeyNode.scale);
+      console.log('skipScaleChange', modeKeyNode.skipScaleChange);
       console.groupEnd();
     }
 
@@ -671,11 +672,13 @@ export class PlaybackService {
     workspace.isonFrequency = 0;
     workspace.transpositionMoria = 0;
 
-    // TODO probably need to reset current note in workspace (and frequency)
-
     if (!modeKeyNode.skipScaleChange) {
-      workspace.scale = this.getPlaybackScale(modeKeyNode.scale, workspace);
+      // Reset back to DI
+      workspace.physicalNote = ScaleNote.Thi;
+      workspace.virtualNote = ScaleNote.Thi;
+      workspace.frequency = workspace.options.frequencyDi;
 
+      // If the scale is Spathi, reset to KE or GA
       if (workspace.scale.name === PlaybackScaleName.SpathiKe) {
         workspace.physicalNote = ScaleNote.Ke;
         workspace.virtualNote = ScaleNote.Ke;
@@ -714,6 +717,8 @@ export class PlaybackService {
         workspace.frequency = this.changeFrequency(workspace.frequency, moria);
       }
 
+      // Move to the mode's starting note
+      workspace.scale = this.getPlaybackScale(modeKeyNode.scale, workspace);
       workspace.frequency = this.moveTo(modeKeyNode.physicalNote, workspace);
 
       workspace.physicalNote = modeKeyNode.physicalNote;

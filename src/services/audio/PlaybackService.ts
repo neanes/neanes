@@ -79,7 +79,6 @@ export interface PlaybackWorkspace {
    * need to be transposed to reach their physical targets.
    */
   transpositionMoria: number;
-  cancelNextMoveTo: boolean;
   /**
    * If true, attractions will be ignored
    */
@@ -179,7 +178,6 @@ export class PlaybackService {
       chrysanthineAccidentals: chrysanthineAccidentals,
 
       transpositionMoria: 0,
-      cancelNextMoveTo: false,
 
       bpm: 0,
       beat: 0,
@@ -297,16 +295,7 @@ export class PlaybackService {
     return moria;
   }
 
-  moveTo(
-    physicalNote: ScaleNote,
-    workspace: PlaybackWorkspace,
-    cancellable: boolean,
-  ): number {
-    if (workspace.cancelNextMoveTo && cancellable) {
-      workspace.cancelNextMoveTo = false;
-      return workspace.frequency;
-    }
-
+  moveTo(physicalNote: ScaleNote, workspace: PlaybackWorkspace): number {
     const { scale } = workspace;
 
     const intervalIndex = scale.scaleNoteMap.get(workspace.virtualNote)!;
@@ -604,11 +593,7 @@ export class PlaybackService {
       console.groupEnd();
     }
 
-    workspace.frequency = this.moveTo(
-      noteAtomNode.physicalNote,
-      workspace,
-      true,
-    );
+    workspace.frequency = this.moveTo(noteAtomNode.physicalNote, workspace);
     workspace.physicalNote = noteAtomNode.physicalNote;
     workspace.virtualNote = noteAtomNode.virtualNote;
 
@@ -702,16 +687,10 @@ export class PlaybackService {
         workspace.frequency = this.changeFrequency(workspace.frequency, -12);
       }
 
-      workspace.frequency = this.moveTo(
-        modeKeyNode.physicalNote,
-        workspace,
-        false,
-      );
+      workspace.frequency = this.moveTo(modeKeyNode.physicalNote, workspace);
 
       workspace.physicalNote = modeKeyNode.physicalNote;
       workspace.virtualNote = modeKeyNode.virtualNote;
-    } else {
-      workspace.cancelNextMoveTo = false;
     }
   }
 
@@ -755,13 +734,7 @@ export class PlaybackService {
       );
 
       if (moria1 === moria2 && oldScale.name !== newScale.name) {
-        workspace.frequency = this.moveTo(
-          fthoraNode.physicalNote,
-          workspace,
-          false,
-        );
-
-        workspace.cancelNextMoveTo = true;
+        workspace.frequency = this.moveTo(fthoraNode.physicalNote, workspace);
       } else if (physicalNote != workspace.physicalNote) {
         // console.log('case 2: moving early to', fthoraNode.physicalNote);
 
@@ -787,17 +760,15 @@ export class PlaybackService {
         workspace.physicalNote = pivot;
         workspace.virtualNote = pivot;
         workspace.scale = this.diatonicScale;
-        workspace.frequency = this.moveTo(shiftedPivot, workspace, false);
+        workspace.frequency = this.moveTo(shiftedPivot, workspace);
 
         workspace.scale = newScale;
         workspace.physicalNote = shiftedPivot;
         workspace.virtualNote = pivot;
-        workspace.frequency = this.moveTo(physicalNote, workspace, false);
+        workspace.frequency = this.moveTo(physicalNote, workspace);
         console.log(
           `moving from ${workspace.physicalNote} (${workspace.virtualNote}) to ${physicalNote} (${virtualNote})`,
         );
-
-        workspace.cancelNextMoveTo = true;
       }
     }
 
@@ -903,14 +874,8 @@ export class PlaybackService {
     workspace.isonFrequency = -1;
 
     if (!isonNode.unison) {
-      workspace.isonFrequency = this.moveTo(
-        isonNode.physicalNote,
-        workspace,
-        false,
-      );
+      workspace.isonFrequency = this.moveTo(isonNode.physicalNote, workspace);
     }
-    // TODO fix ison
-    //workspace.isonFrequency = 0;
   }
 
   handleTempo(tempoNode: Readonly<TempoNode>, workspace: PlaybackWorkspace) {

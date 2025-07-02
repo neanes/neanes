@@ -673,6 +673,8 @@ export class PlaybackService {
     workspace.transpositionMoria = 0;
 
     if (!modeKeyNode.skipScaleChange) {
+      workspace.scale = this.getPlaybackScale(modeKeyNode.scale, workspace);
+
       // Reset back to DI
       workspace.physicalNote = ScaleNote.Thi;
       workspace.virtualNote = ScaleNote.Thi;
@@ -718,7 +720,6 @@ export class PlaybackService {
       }
 
       // Move to the mode's starting note
-      workspace.scale = this.getPlaybackScale(modeKeyNode.scale, workspace);
       workspace.frequency = this.moveTo(modeKeyNode.physicalNote, workspace);
 
       workspace.physicalNote = modeKeyNode.physicalNote;

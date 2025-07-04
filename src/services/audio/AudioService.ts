@@ -92,7 +92,11 @@ export class AudioService {
             Tone.getTransport().bpm.value = event.bpm!;
           }
 
-          if (event.duration != null && event.frequency != null) {
+          if (
+            event.duration != null &&
+            event.frequency != null &&
+            !isNaN(event.frequency)
+          ) {
             synth.triggerAttackRelease(event.frequency, event.duration, time);
           } else {
             console.warn(
@@ -115,7 +119,7 @@ export class AudioService {
           } else if (event.isonFrequency !== currentIsonFrequency) {
             currentIsonFrequency = event.isonFrequency;
 
-            if (event.isonFrequency != null) {
+            if (event.isonFrequency != null && !isNaN(event.isonFrequency)) {
               isonSynth.triggerAttack(event.isonFrequency, time);
             } else {
               console.warn('AudioService: missing ison frequency', event);

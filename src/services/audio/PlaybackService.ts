@@ -837,21 +837,6 @@ export class PlaybackService {
     workspace.virtualNote = virtualNote;
   }
 
-  distanceToDi(targetNote: ScaleNote, scale: PlaybackScale) {
-    const intervalIndex = scale.scaleNoteMap.get(ScaleNote.Thi)!;
-
-    const distance =
-      getScaleNoteValue(targetNote) - getScaleNoteValue(ScaleNote.Thi);
-
-    const moria = this.moriaBetweenNotes(
-      intervalIndex,
-      scale.intervals,
-      distance,
-    );
-
-    return moria;
-  }
-
   getPlaybackScale(scale: Scale, workspace: PlaybackWorkspace): PlaybackScale {
     let playbackScale: PlaybackScale;
 

@@ -17,7 +17,23 @@
     }
   ],
   "mac": {
-    "category": "public.app-category.graphics-design"
+    "category": "public.app-category.graphics-design",
+     "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+                {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ]
   },
   "linux": {
     "target": ["AppImage"]

@@ -192,7 +192,8 @@ export class PlaybackService {
       zoFlatPivotActivated: false,
       zoNaturalPivotActivated: false,
 
-      loggingEnabled: true,
+      loggingEnabled:
+        import.meta.env.VITE_PLAYBACK_SERVICE_LOGGING_ENABLED === 'true',
     };
 
     Object.assign(workspace.options, options);
@@ -769,8 +770,6 @@ export class PlaybackService {
       if (moria1 === moria2 && oldScale.name !== newScale.name) {
         workspace.frequency = this.moveTo(fthoraNode.physicalNote, workspace);
       } else if (physicalNote != workspace.physicalNote) {
-        // console.log('case 2: moving early to', fthoraNode.physicalNote);
-
         // Reset to reference DI and move to current physical note in old scale
         workspace.frequency = workspace.options.frequencyDi;
 
@@ -830,9 +829,6 @@ export class PlaybackService {
         workspace.physicalNote = shiftedPivot;
         workspace.virtualNote = pivot;
         workspace.frequency = this.moveTo(physicalNote, workspace);
-        console.log(
-          `moving from ${workspace.physicalNote} (${workspace.virtualNote}) to ${physicalNote} (${virtualNote})`,
-        );
       }
     }
 

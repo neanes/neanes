@@ -35,7 +35,8 @@ export class AudioService {
 
   currentEvent: PlaybackSequenceEvent | null = null;
 
-  loggingEnabled: boolean = true;
+  loggingEnabled: boolean =
+    import.meta.env.VITE_AUDIO_SERVICE_LOGGING_ENABLED === 'true';
 
   constructor() {
     this.synth = new Tone.Synth().toDestination();

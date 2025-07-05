@@ -679,6 +679,8 @@ export class MartyriaElement extends ScoreElement {
       chromaticFthoraNote: this.chromaticFthoraNote,
       tempo: this.tempo,
       bpm: this.bpm,
+      lineBreak: this.lineBreak,
+      lineBreakType: this.lineBreakType,
     } as Partial<MartyriaElement>;
   }
 }

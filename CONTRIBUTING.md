@@ -44,6 +44,15 @@ VITE_ENABLE_DEV_TOOLS=true
 
 Any change that updates `package.json` _must_ include the corresponding update to `package-lock.json` after running `npm install`.
 
+#### Debugging the Audio and Playback services
+
+To turn on log messages for the audio and playback services, add the following to `.env.local`.
+
+```
+VITE_AUDIO_SERVICE_LOGGING_ENABLED=true
+VITE_PLAYBACK_SERVICE_LOGGING_ENABLED=true
+```
+
 ## Linting
 
 To check that the code is linted, type:

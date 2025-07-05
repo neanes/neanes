@@ -79,6 +79,7 @@ export class ModeKeyNode implements PitchNode {
   public ignoreAttractions: boolean = false;
   public permanentEnharmonicZo: boolean = false;
   public legetos: boolean = false;
+  public skipScaleChange: boolean = false;
 }
 
 export class FthoraNode implements PitchNode {
@@ -855,9 +856,8 @@ export class AnalysisService {
     ) {
       modeKeyNode.legetos = true;
     }
-    workspace.nodes.push(modeKeyNode);
 
-    if (modeKeyElement.fthora) {
+    if (modeKeyElement.fthora === Fthora.Enharmonic_Top) {
       this.handleFthora(
         modeKeyNode.physicalNote,
         modeKeyElement.fthora,
@@ -865,6 +865,20 @@ export class AnalysisService {
         modeKeyElement.index,
         workspace,
       );
+      modeKeyNode.skipScaleChange = true;
+      workspace.nodes.push(modeKeyNode);
+    } else {
+      workspace.nodes.push(modeKeyNode);
+
+      if (modeKeyElement.fthora) {
+        this.handleFthora(
+          modeKeyNode.physicalNote,
+          modeKeyElement.fthora,
+          null,
+          modeKeyElement.index,
+          workspace,
+        );
+      }
     }
 
     const tempoNode: TempoNode = new TempoNode();

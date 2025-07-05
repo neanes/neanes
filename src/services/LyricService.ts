@@ -222,7 +222,7 @@ export class LyricService {
         // Start a new paragraph when a right-aligned marytyria is encountered
         // since this typically separates a hymn or verse
         const martyria = filteredElements[i] as MartyriaElement;
-        if (martyria.alignRight) {
+        if (martyria.alignRight || martyria.lineBreak) {
           lyrics += '\n\n';
           needSpace = false;
         }

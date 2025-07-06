@@ -989,7 +989,7 @@ export class LayoutService {
           pageSetup.neumeDefaultSpacing;
 
         currentLyricsEndPx = noteElement.isMelismaStart
-          ? neumeEnd
+          ? noteElement.spaceAfter + neumeEnd
           : noteElement.spaceAfter + lyricsEnd;
 
         if (noteElement.isMelismaStart && noteElement.isHyphen) {

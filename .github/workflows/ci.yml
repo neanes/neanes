@@ -46,7 +46,7 @@ jobs:
 
       - name: Build macOS
         if: runner.os == 'macOS'
-        run: npm run build --x64 && npm run build --arm64
+        run: npm run build -- --x64 && npm run build -- --arm64
         env:
           GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
 

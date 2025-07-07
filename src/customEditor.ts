@@ -41,6 +41,8 @@ import {
   Undo,
 } from 'ckeditor5';
 
+import FontFamilyDropdown from './ckeditor-plugins/fontfamilydropdown/fontfamilydropdown';
+import FontSizeDropdown from './ckeditor-plugins/fontsizedropdown/fontsizedropdown';
 import InsertNeume from './ckeditor-plugins/insertneume/insertneume';
 
 export default class InlineEditor extends InlineEditorBase {}
@@ -55,7 +57,9 @@ InlineEditor.builtinPlugins = [
   FindAndReplace,
   FontColor,
   FontFamily,
+  FontFamilyDropdown,
   FontSize,
+  FontSizeDropdown,
   GeneralHtmlSupport,
   Image,
   ImageCaption,
@@ -89,8 +93,8 @@ InlineEditor.builtinPlugins = [
 InlineEditor.defaultConfig = {
   toolbar: {
     items: [
-      'fontFamily',
-      'fontSize',
+      'fontFamilyDropdown',
+      'fontSizeDropdown',
       '|',
       'bold',
       'italic',

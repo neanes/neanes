@@ -2282,7 +2282,7 @@ export default class Editor extends Vue {
   async getSystemFonts(): Promise<string[]> {
     const systemFonts: string[] = [];
 
-    if (!('queryLocalFonts' in window)) {
+    if (typeof window.queryLocalFonts !== 'function') {
       console.error('Error accessing local fonts');
       return systemFonts;
     }

@@ -2281,7 +2281,7 @@ export default class Editor extends Vue {
 
   async getSystemFonts(): Promise<string[]> {
     if (typeof window.queryLocalFonts !== 'function') {
-      console.error('Error accessing local fonts');
+      console.info('Failed to query local fonts');
       return [];
     }
 
@@ -2292,7 +2292,7 @@ export default class Editor extends Vue {
         systemFontsSet.add(localFont.family);
       });
     } catch (error) {
-      console.error('Error accessing local fonts:', error);
+      console.info('Failed to query local fonts:', error);
     }
     return Array.from(systemFontsSet).sort();
   }

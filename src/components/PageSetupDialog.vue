@@ -1562,6 +1562,7 @@ export default class PageSetupDialog extends Vue {
       'Athonite',
       'GFS Didot',
       'Noto Naskh Arabic',
+      'Old Standard',
       'Omega',
       'PFGoudyInitials',
       ...this.fonts,
@@ -1573,6 +1574,7 @@ export default class PageSetupDialog extends Vue {
       'Source Serif',
       'GFS Didot',
       'Noto Naskh Arabic',
+      'Old Standard',
       'Omega',
       ...this.fonts,
     ];

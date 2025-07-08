@@ -70,8 +70,6 @@ export enum IpcRendererChannels {
   OpenWorkspaceFromArgv = 'OpenWorkspaceFromArgv',
   OpenImageDialog = 'OpenImageDialog',
 
-  GetSystemFonts = 'GetSystemFonts',
-
   ExitApplication = 'ExitApplication',
   CancelExit = 'CancelExit',
 

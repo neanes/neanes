@@ -182,10 +182,6 @@ export class IpcService implements IIpcService {
     return true;
   }
 
-  public async getSystemFonts(): Promise<string[]> {
-    return await window.ipcRenderer.invoke(IpcRendererChannels.GetSystemFonts);
-  }
-
   public async exitApplication(): Promise<void> {
     return await window.ipcRenderer.invoke(IpcRendererChannels.ExitApplication);
   }

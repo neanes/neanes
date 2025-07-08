@@ -2279,6 +2279,29 @@ export default class Editor extends Vue {
     };
   }
 
+  async getSystemFonts(): Promise<string[]> {
+    const systemFonts: string[] = [];
+
+    if (!('queryLocalFonts' in window)) {
+      console.error('Error accessing local fonts');
+      return systemFonts;
+    }
+
+    try {
+      const localFonts = await window.queryLocalFonts();
+      localFonts.forEach((localFont: FontData) => {
+        if (!systemFonts.includes(localFont.family)) {
+          systemFonts.push(localFont.family);
+        }
+      });
+      systemFonts.sort();
+    } catch (error) {
+      console.error('Error accessing local fonts:', error);
+    }
+
+    return systemFonts;
+  }
+
   async created() {
     // Attach the editor component to the window variable
     // so that it can be used for debugging
@@ -2287,9 +2310,9 @@ export default class Editor extends Vue {
     try {
       const fontLoader = (document as any).fonts;
 
-      const loadSystemFontsPromise = this.ipcService
-        .getSystemFonts()
-        .then((fonts) => (this.fonts = fonts));
+      const loadSystemFontsPromise = this.getSystemFonts().then(
+        (fonts) => (this.fonts = fonts),
+      );
 
       // Must load all fonts before loading any documents,
       // otherwise the text measurements will be wrong

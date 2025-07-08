@@ -131,10 +131,6 @@ export class BrowserIpcService implements IIpcService {
     return false;
   }
 
-  public async getSystemFonts(): Promise<string[]> {
-    return Promise.resolve([]);
-  }
-
   public async exitApplication(): Promise<void> {
     return Promise.resolve();
   }

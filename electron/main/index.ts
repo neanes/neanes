@@ -49,7 +49,6 @@ import {
   ShowMessageBoxArgs,
 } from '../../src/ipc/ipcChannels';
 import { Score } from '../../src/models/save/v1/Score';
-import { getSystemFonts } from '../../src/utils/getSystemFonts';
 import { TestFileType } from '../../src/utils/TestFileType';
 
 // The built directory structure
@@ -1902,18 +1901,6 @@ ipcMain.handle(IpcRendererChannels.OpenWorkspaceFromArgv, async () => {
   } else {
     return await openFileFromArgs(process.argv);
   }
-});
-
-ipcMain.handle(IpcRendererChannels.GetSystemFonts, async () => {
-  let fonts: string[] = [];
-
-  try {
-    fonts = await getSystemFonts();
-  } catch (error) {
-    console.error(error);
-  }
-
-  return fonts;
 });
 
 ipcMain.handle(IpcRendererChannels.Paste, async () => {

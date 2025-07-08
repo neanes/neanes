@@ -2285,16 +2285,16 @@ export default class Editor extends Vue {
       return [];
     }
 
-    const systemFontsSet: Set<string> = new Set();
+    const systemFonts: Set<string> = new Set();
     try {
       const localFonts = await window.queryLocalFonts();
       localFonts.forEach((localFont: FontData) => {
-        systemFontsSet.add(localFont.family);
+        systemFonts.add(localFont.family);
       });
     } catch (error) {
       console.info('Failed to query local fonts:', error);
     }
-    return Array.from(systemFontsSet).sort();
+    return Array.from(systemFonts).sort();
   }
 
   async created() {

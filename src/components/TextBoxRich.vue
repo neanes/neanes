@@ -148,6 +148,7 @@ export default class TextBoxRich extends Vue {
           'Source Serif' + ',' + this.pageSetup.neumeDefaultFontFamily,
           'GFS Didot' + ',' + this.pageSetup.neumeDefaultFontFamily,
           'Noto Naskh Arabic' + ',' + this.pageSetup.neumeDefaultFontFamily,
+          'Old Standard' + ',' + this.pageSetup.neumeDefaultFontFamily,
           'Omega' + ',' + this.pageSetup.neumeDefaultFontFamily,
           'Neanes',
           'NeanesStathisSeries',

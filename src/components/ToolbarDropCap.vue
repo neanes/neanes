@@ -159,6 +159,7 @@ export default class ToolbarDropCap extends Vue {
       'Athonite',
       'GFS Didot',
       'Noto Naskh Arabic',
+      'Old Standard',
       'Omega',
       'PFGoudyInitials',
       ...this.fonts,

@@ -254,7 +254,7 @@ The amount of space between the hyphens that are automatically drawn between mel
 
 ### Fonts
 
-The default font is Source Serif, which supports the Adobe Latin-4 character set, as well as Cyrillic and Greek writing systems. GFS Didot is bundled for use with Greek texts, and Noto Naskh Arabic is bundled for use with Arabic texts.
+The default font is Source Serif, which (along with Old Standard) supports the Adobe Latin-4 character set, as well as Cyrillic and Greek writing systems. GFS Didot is bundled for use with Greek texts, and Noto Naskh Arabic is bundled for use with Arabic texts.
 
 ## Audio Playback
 

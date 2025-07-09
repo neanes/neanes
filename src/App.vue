@@ -138,6 +138,30 @@ export default class App extends Vue {
 }
 
 @font-face {
+  font-family: 'Old Standard';
+  src: url('./assets/fonts/OldStandard-Bold.otf');
+  font-weight: bold;
+}
+
+@font-face {
+  font-family: 'Old Standard';
+  src: url('./assets/fonts/OldStandard-BoldItalic.otf');
+  font-weight: bold;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Old Standard';
+  src: url('./assets/fonts/OldStandard-Italic.otf');
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Old Standard';
+  src: url('./assets/fonts/OldStandard-Regular.otf');
+}
+
+@font-face {
   font-family: 'Noto Naskh Arabic';
   src: url('./assets/fonts/NotoNaskhArabic-Regular.otf');
 }

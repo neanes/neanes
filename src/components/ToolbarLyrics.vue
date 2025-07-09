@@ -170,6 +170,7 @@ export default class ToolbarLyrics extends Vue {
       'Source Serif',
       'GFS Didot',
       'Noto Naskh Arabic',
+      'Old Standard',
       'Omega',
       ...this.fonts,
     ];

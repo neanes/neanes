@@ -2302,6 +2302,7 @@ export default class Editor extends Vue {
         fontLoader.load('1rem NeanesRTL'),
         fontLoader.load('1rem "Noto Naskh Arabic"'),
         fontLoader.load('1rem Omega'),
+        fontLoader.load('1rem "Old Standard"'),
         fontLoader.load('1rem PFGoudyInitials'),
         fontLoader.load('1rem "Source Serif"'),
         fontLoader.ready,

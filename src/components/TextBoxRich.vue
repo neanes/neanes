@@ -254,13 +254,14 @@ export default class TextBoxRich extends Vue {
     const style = {
       width: withZoom(this.element.width),
       height: withZoom(this.element.height),
-      fontFamily: getFontFamilyWithFallback(
+      '--ck-content-font-family': getFontFamilyWithFallback(
         this.pageSetup.textBoxDefaultFontFamily,
         this.pageSetup.neumeDefaultFontFamily,
       ),
-      fontSize: this.element.inline
+      '--ck-content-font-size': this.element.inline
         ? `${this.pageSetup.lyricsDefaultFontSize}px`
         : `${this.pageSetup.textBoxDefaultFontSize}px`, // no zoom because we will apply zooming on the whole editor
+      '--ck-content-line-height': 'normal',
     } as StyleValue;
 
     return style;

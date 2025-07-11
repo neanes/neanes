@@ -1,6 +1,6 @@
 {
   "fontName": "Neanes",
-  "fontVersion": "1.0.1",
+  "fontVersion": "1.0.2",
   "metrics": {
     "winAscent": 1.4,
     "winDescent": 0.466,
@@ -5561,8 +5561,8 @@
         -0.04
       ],
       "fthoraTop": [
-        0.517,
-        0.446
+        0.515,
+        0.59
       ]
     },
     "martyriaNoteNiLow": {
@@ -5579,8 +5579,8 @@
         -0.078
       ],
       "fthoraTop": [
-        0.517,
-        0.376
+        0.515,
+        0.592
       ]
     },
     "martyriaNotePaLow": {
@@ -5597,8 +5597,8 @@
         -0.044
       ],
       "fthoraTop": [
-        0.512,
-        0.474
+        0.516,
+        0.67
       ]
     },
     "martyriaNoteVouLow": {
@@ -5616,7 +5616,7 @@
       ],
       "fthoraTop": [
         0.517,
-        0.456
+        0.59
       ]
     },
     "martyriaNoteGaLow": {
@@ -5630,7 +5630,7 @@
       ],
       "fthoraTop": [
         0.517,
-        0.446
+        0.59
       ],
       "martyriaTop": [
         0.467,
@@ -5648,7 +5648,7 @@
       ],
       "fthoraTop": [
         0.517,
-        0.446
+        0.673
       ],
       "martyriaTop": [
         0.533,
@@ -5665,8 +5665,8 @@
         0.444
       ],
       "fthoraTop": [
-        0.517,
-        0.446
+        0.559,
+        0.672
       ],
       "martyriaTop": [
         0.56,
@@ -5688,7 +5688,7 @@
       ],
       "fthoraTop": [
         0.517,
-        0.54
+        0.64
       ]
     },
     "martyriaNotePa": {
@@ -5706,7 +5706,7 @@
       ],
       "fthoraTop": [
         0.517,
-        0.45
+        0.59
       ]
     },
     "martyriaNoteNi": {
@@ -5724,7 +5724,7 @@
       ],
       "fthoraTop": [
         0.517,
-        0.416
+        0.588
       ]
     },
     "martyriaNoteVou": {
@@ -5742,7 +5742,7 @@
       ],
       "fthoraTop": [
         0.517,
-        0.525
+        0.651
       ]
     },
     "martyriaNoteNiHigh": {
@@ -5760,7 +5760,7 @@
       ],
       "fthoraTop": [
         0.517,
-        0.376
+        0.608
       ]
     },
     "martyriaNoteGa": {
@@ -5777,8 +5777,8 @@
         -0.027
       ],
       "fthoraTop": [
-        0.517,
-        0.53
+        0.515,
+        0.613
       ]
     },
     "martyriaNoteDi": {
@@ -5796,7 +5796,7 @@
       ],
       "fthoraTop": [
         0.54,
-        0.55
+        0.653
       ]
     },
     "martyriaNoteKe": {
@@ -5810,7 +5810,7 @@
       ],
       "fthoraTop": [
         0.517,
-        0.45
+        0.59
       ],
       "martyriaBottom": [
         0.507,
@@ -5832,7 +5832,7 @@
       ],
       "fthoraTop": [
         0.517,
-        0.446
+        0.64
       ]
     },
     "martyriaNotePaHigh": {
@@ -5850,7 +5850,7 @@
       ],
       "fthoraTop": [
         0.517,
-        0.376
+        0.61
       ]
     },
     "martyriaNoteVouHigh": {
@@ -5868,7 +5868,7 @@
       ],
       "fthoraTop": [
         0.517,
-        0.456
+        0.651
       ]
     },
     "martyriaNoteGaHigh": {
@@ -5886,7 +5886,7 @@
       ],
       "fthoraTop": [
         0.517,
-        0.436
+        0.613
       ]
     },
     "martyriaNoteDiHigh": {
@@ -5903,8 +5903,8 @@
         -0.027
       ],
       "fthoraTop": [
-        0.54,
-        0.454
+        0.538,
+        0.653
       ]
     },
     "martyriaNoteKeHigh": {
@@ -5917,8 +5917,8 @@
         0.449
       ],
       "fthoraTop": [
-        0.517,
-        0.376
+        0.515,
+        0.59
       ],
       "martyriaBottom": [
         0.507,

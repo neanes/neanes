@@ -1,6 +1,6 @@
 {
   "fontName": "NeanesStathisSeries",
-  "fontVersion": "1.0.1",
+  "fontVersion": "1.0.2",
   "metrics": {
     "winAscent": 1.4,
     "winDescent": 0.466,
@@ -5991,8 +5991,8 @@
     },
     "martyriaNoteZoLow": {
       "fthoraTop": [
-        0.517,
-        0.446
+        0.515,
+        0.59
       ],
       "martyriaTop": [
         0.547,
@@ -6009,8 +6009,8 @@
     },
     "martyriaNoteNiLow": {
       "fthoraTop": [
-        0.517,
-        0.376
+        0.515,
+        0.592
       ],
       "martyriaTop": [
         0.515,
@@ -6027,8 +6027,8 @@
     },
     "martyriaNotePaLow": {
       "fthoraTop": [
-        0.512,
-        0.474
+        0.516,
+        0.67
       ],
       "martyriaTop": [
         0.517,
@@ -6046,7 +6046,7 @@
     "martyriaNoteVouLow": {
       "fthoraTop": [
         0.517,
-        0.456
+        0.59
       ],
       "martyriaTop": [
         0.467,
@@ -6064,7 +6064,7 @@
     "martyriaNoteGaLow": {
       "fthoraTop": [
         0.517,
-        0.446
+        0.59
       ],
       "martyriaTop": [
         0.467,
@@ -6082,7 +6082,7 @@
     "martyriaNoteDiLow": {
       "fthoraTop": [
         0.517,
-        0.446
+        0.673
       ],
       "martyriaTop": [
         0.533,
@@ -6099,8 +6099,8 @@
     },
     "martyriaNoteKeLow": {
       "fthoraTop": [
-        0.517,
-        0.446
+        0.559,
+        0.672
       ],
       "martyriaTop": [
         0.56,
@@ -6118,7 +6118,7 @@
     "martyriaNoteZo": {
       "fthoraTop": [
         0.517,
-        0.54
+        0.64
       ],
       "martyriaBottom": [
         0.527,
@@ -6136,7 +6136,7 @@
     "martyriaNoteNi": {
       "fthoraTop": [
         0.517,
-        0.416
+        0.588
       ],
       "martyriaBottom": [
         0.487,
@@ -6154,7 +6154,7 @@
     "martyriaNotePa": {
       "fthoraTop": [
         0.517,
-        0.45
+        0.59
       ],
       "martyriaBottom": [
         0.52,
@@ -6172,7 +6172,7 @@
     "martyriaNoteVou": {
       "fthoraTop": [
         0.517,
-        0.525
+        0.651
       ],
       "martyriaBottom": [
         0.453,
@@ -6189,8 +6189,8 @@
     },
     "martyriaNoteGa": {
       "fthoraTop": [
-        0.517,
-        0.53
+        0.515,
+        0.613
       ],
       "martyriaBottom": [
         0.493,
@@ -6208,7 +6208,7 @@
     "martyriaNoteDi": {
       "fthoraTop": [
         0.54,
-        0.55
+        0.653
       ],
       "martyriaBottom": [
         0.533,
@@ -6226,7 +6226,7 @@
     "martyriaNoteKe": {
       "fthoraTop": [
         0.517,
-        0.45
+        0.59
       ],
       "martyriaBottom": [
         0.507,
@@ -6244,7 +6244,7 @@
     "martyriaNoteZoHigh": {
       "fthoraTop": [
         0.517,
-        0.446
+        0.64
       ],
       "martyriaBottom": [
         0.527,
@@ -6262,7 +6262,7 @@
     "martyriaNoteNiHigh": {
       "fthoraTop": [
         0.517,
-        0.376
+        0.608
       ],
       "martyriaBottom": [
         0.487,
@@ -6280,7 +6280,7 @@
     "martyriaNotePaHigh": {
       "fthoraTop": [
         0.517,
-        0.376
+        0.61
       ],
       "martyriaBottom": [
         0.52,
@@ -6298,7 +6298,7 @@
     "martyriaNoteVouHigh": {
       "fthoraTop": [
         0.517,
-        0.456
+        0.651
       ],
       "martyriaBottom": [
         0.453,
@@ -6316,7 +6316,7 @@
     "martyriaNoteGaHigh": {
       "fthoraTop": [
         0.517,
-        0.436
+        0.613
       ],
       "martyriaBottom": [
         0.493,
@@ -6333,8 +6333,8 @@
     },
     "martyriaNoteDiHigh": {
       "fthoraTop": [
-        0.54,
-        0.454
+        0.538,
+        0.653
       ],
       "martyriaBottom": [
         0.533,
@@ -6351,8 +6351,8 @@
     },
     "martyriaNoteKeHigh": {
       "fthoraTop": [
-        0.517,
-        0.376
+        0.515,
+        0.59
       ],
       "martyriaBottom": [
         0.507,

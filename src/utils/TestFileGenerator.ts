@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import {
   DropCapElement,
   LineBreakType,
+  MartyriaElement,
   ModeKeyElement,
   NoteElement,
   ScoreElement,
@@ -14,6 +15,7 @@ import {
   GorgonNeume,
   Ison,
   MeasureNumber,
+  Note,
   QuantitativeNeume,
   TimeNeume,
   VocalExpressionNeume,
@@ -28,6 +30,8 @@ export abstract class TestFileGenerator {
         return this.generateTestFile_Fthora('Top');
       case TestFileType.FthoraBottom:
         return this.generateTestFile_Fthora('Bottom');
+      case TestFileType.MartyriaFthora:
+        return this.generateTestFile_MartyriaFthora();
       case TestFileType.Gorgon:
         return this.generateTestFile_Gorgon();
       case TestFileType.Klasma:
@@ -92,6 +96,38 @@ export abstract class TestFileGenerator {
         note.fthora = fthora;
         note.lyrics = (counter++).toString();
         elements.push(note);
+      }
+    }
+
+    return elements;
+  }
+
+  private static generateTestFile_MartyriaFthora() {
+    const elements: ScoreElement[] = [];
+
+    for (const n in Note) {
+      const note = n as Note;
+
+      for (const f in Fthora) {
+        const fthora = f as Fthora;
+
+        if (
+          fthora.startsWith('Zygos') ||
+          fthora.startsWith('Kliton') ||
+          fthora.startsWith('Spathi') ||
+          fthora.startsWith('Enharmonic') ||
+          fthora.startsWith('GeneralSharp') ||
+          fthora.startsWith('GeneralFlat') ||
+          !fthora.endsWith('_Top')
+        ) {
+          continue;
+        }
+
+        const martyria = new MartyriaElement();
+        martyria.auto = false;
+        martyria.note = note;
+        martyria.fthora = fthora;
+        elements.push(martyria);
       }
     }
 

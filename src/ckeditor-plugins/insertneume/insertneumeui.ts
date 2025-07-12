@@ -77,7 +77,11 @@ export default class InsertNeumeUI extends Plugin {
         balloon.add({
           view: gridView,
           position: {
-            target: view.element!,
+            target: editor.editing.view.domConverter.viewRangeToDom(
+              editor.editing.mapper.toViewRange(
+                editor.model.document.selection.getFirstRange()!,
+              ),
+            ),
           },
         });
 

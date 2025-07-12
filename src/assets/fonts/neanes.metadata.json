@@ -1,6 +1,6 @@
 {
   "fontName": "Neanes",
-  "fontVersion": "1.0.3",
+  "fontVersion": "1.0.2",
   "metrics": {
     "winAscent": 1.4,
     "winDescent": 0.466,
@@ -6328,10 +6328,6 @@
       ]
     },
     "fthoraDiatonicNiLowAbove": {
-      "fthoraAboveBarline": [
-        0.0,
-        0.734
-      ],
       "agogiAboveFthora": [
         -0.001,
         1.126
@@ -6349,10 +6345,6 @@
       "fthoraTop": [
         0.0,
         0.644
-      ],
-      "fthoraAboveBarline": [
-        0.0,
-        0.644
       ]
     },
     "fthoraDiatonicVouAbove": {
@@ -6361,10 +6353,6 @@
         1.296
       ],
       "fthoraTop": [
-        0.0,
-        0.634
-      ],
-      "fthoraAboveBarline": [
         0.0,
         0.634
       ]
@@ -6377,10 +6365,6 @@
       "fthoraTop": [
         0.0,
         0.684
-      ],
-      "fthoraAboveBarline": [
-        0.0,
-        0.684
       ]
     },
     "fthoraDiatonicDiAbove": {
@@ -6389,10 +6373,6 @@
         1.146
       ],
       "fthoraTop": [
-        0.0,
-        0.744
-      ],
-      "fthoraAboveBarline": [
         0.0,
         0.744
       ]
@@ -6405,10 +6385,6 @@
       "fthoraTop": [
         0.0,
         0.804
-      ],
-      "fthoraAboveBarline": [
-        0.0,
-        0.804
       ]
     },
     "fthoraDiatonicZoAbove": {
@@ -6417,10 +6393,6 @@
         1.356
       ],
       "fthoraTop": [
-        0.0,
-        0.624
-      ],
-      "fthoraAboveBarline": [
         0.0,
         0.624
       ]
@@ -6433,10 +6405,6 @@
       "fthoraTop": [
         0.0,
         0.754
-      ],
-      "fthoraAboveBarline": [
-        0.0,
-        0.754
       ]
     },
     "fthoraHardChromaticPaAbove": {
@@ -6445,10 +6413,6 @@
         1.125
       ],
       "fthoraTop": [
-        0.0,
-        0.804
-      ],
-      "fthoraAboveBarline": [
         0.0,
         0.804
       ]
@@ -6461,10 +6425,6 @@
       "fthoraTop": [
         0.0,
         0.744
-      ],
-      "fthoraAboveBarline": [
-        0.0,
-        0.744
       ]
     },
     "fthoraSoftChromaticDiAbove": {
@@ -6473,10 +6433,6 @@
         1.146
       ],
       "fthoraTop": [
-        0.0,
-        0.804
-      ],
-      "fthoraAboveBarline": [
         0.0,
         0.804
       ]
@@ -6489,10 +6445,6 @@
       "fthoraTop": [
         0.0,
         0.714
-      ],
-      "fthoraAboveBarline": [
-        0.0,
-        0.714
       ]
     },
     "fthoraEnharmonicAbove": {
@@ -6501,10 +6453,6 @@
         1.146
       ],
       "fthoraTop": [
-        0.0,
-        0.734
-      ],
-      "fthoraAboveBarline": [
         0.0,
         0.734
       ]
@@ -6517,10 +6465,6 @@
       "fthoraTop": [
         0.0,
         0.704
-      ],
-      "fthoraAboveBarline": [
-        0.0,
-        0.704
       ]
     },
     "chroaKlitonAbove": {
@@ -6529,10 +6473,6 @@
         1.225
       ],
       "fthoraTop": [
-        0.0,
-        0.734
-      ],
-      "fthoraAboveBarline": [
         0.0,
         0.734
       ]
@@ -6679,18 +6619,10 @@
       "fthoraTop": [
         0.0,
         0.804
-      ],
-      "fthoraAboveBarline": [
-        0.0,
-        0.804
       ]
     },
     "yfesisGenikiAbove": {
       "fthoraTop": [
-        0.0,
-        0.634
-      ],
-      "fthoraAboveBarline": [
         0.0,
         0.634
       ]
@@ -6761,10 +6693,6 @@
         1.136
       ],
       "fthoraTop": [
-        0.0,
-        0.804
-      ],
-      "fthoraAboveBarline": [
         0.0,
         0.804
       ]
@@ -7498,60 +7426,36 @@
       ]
     },
     "barlineShortSingleAbove": {
-      "fthoraAboveBarline": [
-        0.0,
-        1.096
-      ],
       "barline": [
         -0.001,
         0.59
       ]
     },
     "barlineSingleAbove": {
-      "fthoraAboveBarline": [
-        0.0,
-        0.904
-      ],
       "barline": [
         -0.007,
         0.004
       ]
     },
     "barlineDoubleAbove": {
-      "fthoraAboveBarline": [
-        0.0,
-        0.904
-      ],
       "barline": [
         0.005,
         0.004
       ]
     },
     "barlineTheseosAbove": {
-      "fthoraAboveBarline": [
-        0.0,
-        1.008
-      ],
       "barline": [
         -0.003,
         0.004
       ]
     },
     "barlineShortDoubleAbove": {
-      "fthoraAboveBarline": [
-        0.0,
-        1.096
-      ],
       "barline": [
         -0.001,
         0.59
       ]
     },
     "barlineShortTheseosAbove": {
-      "fthoraAboveBarline": [
-        0.0,
-        1.196
-      ],
       "barline": [
         -0.003,
         0.589

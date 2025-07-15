@@ -239,6 +239,18 @@
                           v-else
                           src="@/assets/icons/line-break.svg"
                       /></span>
+                      <Annotation
+                        v-for="(annotation, index) in (element as NoteElement)
+                          .annotations"
+                        :key="index"
+                        :element="annotation"
+                        :pageSetup="score.pageSetup"
+                        :fonts="fonts"
+                        @update="updateAnnotation(annotation, $event)"
+                        @delete="
+                          removeAnnotation(element as NoteElement, annotation)
+                        "
+                      />
                       <SyllableNeumeBox
                         class="syllable-box"
                         :note="element"
@@ -1264,6 +1276,7 @@ import { nextTick, StyleValue, toRaw } from 'vue';
 import { Component, Inject, Prop, Vue, Watch } from 'vue-facing-decorator';
 import Vue3TabsChrome, { Tab } from 'vue3-tabs-chrome';
 
+import Annotation from '@/components/Annotation.vue';
 import ContentEditable from '@/components/ContentEditable.vue';
 import DropCap from '@/components/DropCap.vue';
 import EditorPreferencesDialog from '@/components/EditorPreferencesDialog.vue';
@@ -1315,6 +1328,7 @@ import {
 import { EditorPreferences } from '@/models/EditorPreferences';
 import {
   AcceptsLyricsOption,
+  AnnotationElement,
   DropCapElement,
   ElementType,
   EmptyElement,
@@ -1406,6 +1420,7 @@ interface Vue3TabsChromeComponent {
 
 @Component({
   components: {
+    Annotation,
     SyllableNeumeBox,
     MartyriaNeumeBox,
     TempoNeumeBox,
@@ -1469,6 +1484,17 @@ export default class Editor extends Vue {
 
   workspaces: Workspace[] = [];
   selectedWorkspaceValue: Workspace = new Workspace();
+
+  // TODO remove
+  DEBUG_add_staff_text() {
+    if (this.selectedElement?.elementType === ElementType.Note) {
+      const el = new AnnotationElement();
+      el.x = 20;
+      el.y = 20;
+      (this.selectedElement as NoteElement).annotations.push(el);
+      this.save();
+    }
+  }
 
   get selectedWorkspaceId() {
     return this.selectedWorkspace.id;
@@ -1569,6 +1595,9 @@ export default class Editor extends Vue {
 
   tempoCommandFactory: CommandFactory<TempoElement> =
     new CommandFactory<TempoElement>();
+
+  annotationCommandFactory: CommandFactory<AnnotationElement> =
+    new CommandFactory<AnnotationElement>();
 
   textBoxCommandFactory: CommandFactory<TextBoxElement> =
     new CommandFactory<TextBoxElement>();
@@ -5483,6 +5512,31 @@ export default class Editor extends Vue {
         this.score.pageSetup.disableGreekMelismata,
       );
     }
+  }
+
+  updateAnnotation(
+    element: AnnotationElement,
+    newValues: Partial<AnnotationElement>,
+  ) {
+    this.commandService.execute(
+      this.annotationCommandFactory.create('update-properties', {
+        target: element,
+        newValues: newValues,
+      }),
+    );
+
+    this.save();
+  }
+
+  removeAnnotation(note: NoteElement, annotation: AnnotationElement) {
+    this.commandService.execute(
+      this.annotationCommandFactory.create('remove-from-collection', {
+        element: annotation,
+        collection: note.annotations,
+      }),
+    );
+
+    this.save();
   }
 
   updateRichTextBox(

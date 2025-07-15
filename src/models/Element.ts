@@ -42,6 +42,7 @@ export enum ElementType {
   DropCap = 'DropCap',
   ModeKey = 'ModeKey',
   ImageBox = 'ImageBox',
+  Annotation = 'Annotation',
 }
 
 export enum LineBreakType {
@@ -118,6 +119,8 @@ export class NoteElement extends ScoreElement {
   public isHyphen: boolean = false;
   public spaceAfter: number = 0;
   public ignoreAttractions: boolean = false;
+
+  public annotations: AnnotationElement[] = [];
 
   public chromaticFthoraNote: ScaleNote | null = null;
   public secondaryChromaticFthoraNote: ScaleNote | null = null;
@@ -1048,6 +1051,27 @@ export class ModeKeyElement extends ScoreElement {
       permanentEnharmonicZo: this.permanentEnharmonicZo,
       showAmbitus: this.showAmbitus,
     } as Partial<ModeKeyElement>;
+  }
+}
+
+export class AnnotationElement extends ScoreElement {
+  public readonly elementType: ElementType = ElementType.Annotation;
+  public x: number = 0;
+  public y: number = 0;
+  public text: string = 'annotation';
+
+  public clone() {
+    const clone = new ModeKeyElement();
+
+    Object.assign(clone, this.getClipboardProperties());
+
+    return clone;
+  }
+
+  public getClipboardProperties() {
+    return {
+      text: this.text,
+    } as Partial<AnnotationElement>;
   }
 }
 

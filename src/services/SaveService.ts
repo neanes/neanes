@@ -1,5 +1,6 @@
 import {
   AcceptsLyricsOption,
+  AnnotationElement,
   DropCapElement,
   ElementType,
   EmptyElement,
@@ -20,6 +21,7 @@ import { modeKeyTemplates } from '@/models/ModeKeys';
 import { QuantitativeNeume } from '@/models/Neumes';
 import { PageSetup, pageSizes } from '@/models/PageSetup';
 import {
+  AnnotationElement as AnnotationElement_v1,
   DropCapElement as DropCapElement_v1,
   ElementType as ElementType_v1,
   EmptyElement as EmptyElement_v1,
@@ -536,6 +538,16 @@ export class SaveService {
 
     if (e.acceptsLyrics !== AcceptsLyricsOption.Default) {
       element.acceptsLyrics = e.acceptsLyrics;
+    }
+
+    if (e.annotations.length > 0) {
+      element.annotations = e.annotations.map((a) => {
+        const annotation = new AnnotationElement_v1();
+        annotation.x = a.x;
+        annotation.y = a.y;
+        annotation.text = a.text;
+        return annotation;
+      });
     }
   }
 
@@ -1326,6 +1338,22 @@ export class SaveService {
       element.acceptsLyrics = e.acceptsLyrics;
     } else {
       element.acceptsLyrics = AcceptsLyricsOption.Default;
+    }
+
+    try {
+      if (e.annotations) {
+        element.annotations = e.annotations.map((a) => {
+          const annotation = new AnnotationElement();
+          annotation.text = a.text;
+          annotation.x = a.x;
+          annotation.y = a.y;
+
+          return annotation;
+        });
+      }
+    } catch (error) {
+      console.warn('Error loading annotations:', error);
+      element.annotations = [];
     }
   }
 

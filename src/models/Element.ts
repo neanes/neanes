@@ -1056,8 +1056,6 @@ export class ModeKeyElement extends ScoreElement {
 
 export class AnnotationElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.Annotation;
-  public x: number = 0;
-  public y: number = 0;
   public text: string = 'annotation';
 
   public clone() {

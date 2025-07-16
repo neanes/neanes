@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { EntryMode } from '@/models/EntryMode';
 import { CommandService } from '@/services/history/CommandService';
 
-import { NoteElement, ScoreElement } from './Element';
+import { AnnotationElement, NoteElement, ScoreElement } from './Element';
 import { Score } from './Score';
 import { ScoreElementSelectionRange } from './ScoreElementSelectionRange';
 
@@ -15,6 +15,7 @@ export class Workspace {
   public hasUnsavedChanges: boolean = false;
   public commandService: CommandService = new CommandService();
   public selectedElement: ScoreElement | null = null;
+  public selectedAnnotationElement: AnnotationElement | null = null;
   public selectedHeaderFooterElement: ScoreElement | null = null;
   public selectedLyrics: NoteElement | null = null;
   public selectionRange: ScoreElementSelectionRange | null = null;

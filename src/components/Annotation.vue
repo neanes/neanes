@@ -111,6 +111,27 @@ export default class Annotation extends Vue {
         defaultFontFamily: this.pageSetup.lyricsDefaultFontFamily,
         fthoraDefaultColor: this.pageSetup.fthoraDefaultColor,
       },
+      toolbar: {
+        items: [
+          'fontFamily',
+          'fontSize',
+          '|',
+          'bold',
+          'italic',
+          'underline',
+          '|',
+          'fontColor',
+          '|',
+          'link',
+          '|',
+          'removeFormat',
+          '|',
+          'insertNeume',
+          'insertMartyria',
+          'insertPlagal',
+        ],
+        shouldNotGroupWhenFull: true,
+      },
     };
   }
 
@@ -132,17 +153,18 @@ export default class Annotation extends Vue {
 
         const text = editor.getData();
 
-        if (this.element.text !== text) {
-          if (text === '') {
-            this.$emit('delete');
-          } else {
-            this.element.text = text;
-          }
-
+        if (text.trim() === '') {
+          this.$emit('delete');
+        } else if (this.element.text !== text) {
           this.$emit('update', { text });
         }
       }
     });
+
+    const toolbarEl = editor.ui.view.toolbar.element;
+    if (toolbarEl) {
+      toolbarEl.style.maxWidth = '400px';
+    }
   }
 
   async handleDoubleClick() {
@@ -192,5 +214,27 @@ export default class Annotation extends Vue {
   position: absolute;
   white-space: nowrap;
   z-index: 1000;
+  cursor: default;
+}
+
+.rich-text-editor {
+  padding: 0;
+  box-sizing: border-box;
+  overflow: visible;
+  transform-origin: 0 0;
+  transform: scale(var(--zoom, 1));
+  border: none !important;
+}
+
+:deep(p) {
+  margin: 0;
+}
+
+.ck.ck-editor__editable_inline > *:first-child {
+  margin-top: 0;
+}
+
+.ck.ck-editor__editable_inline > *:last-child {
+  margin-bottom: 0;
 }
 </style>

@@ -246,10 +246,16 @@
                         :element="annotation"
                         :pageSetup="score.pageSetup"
                         :fonts="fonts"
+                        :class="{
+                          selectedAnnotation:
+                            this.selectedWorkspace.selectedAnnotationElement ===
+                            annotation,
+                        }"
                         @update="updateAnnotation(annotation, $event)"
                         @delete="
                           removeAnnotation(element as NoteElement, annotation)
                         "
+                        @mousedown="setSelectedAnnotation(element, annotation)"
                       />
                       <SyllableNeumeBox
                         class="syllable-box"
@@ -1489,8 +1495,11 @@ export default class Editor extends Vue {
   DEBUG_add_staff_text() {
     if (this.selectedElement?.elementType === ElementType.Note) {
       const el = new AnnotationElement();
-      el.x = 20;
-      el.y = 20;
+      const fontHeight = TextMeasurementService.getFontHeight(
+        this.score.pageSetup.lyricsFont,
+      );
+      el.x = 0;
+      el.y = -fontHeight;
       (this.selectedElement as NoteElement).annotations.push(el);
       this.save();
     }
@@ -1910,6 +1919,7 @@ export default class Editor extends Vue {
     }
 
     this.selectedWorkspace.selectedElement = element;
+    this.selectedWorkspace.selectedAnnotationElement = null;
   }
 
   get previousElementOnLine() {
@@ -2635,6 +2645,14 @@ export default class Editor extends Vue {
     }
 
     return false;
+  }
+
+  setSelectedAnnotation(
+    parent: ScoreElement | null,
+    annotation: AnnotationElement,
+  ) {
+    this.selectedElement = parent;
+    this.selectedWorkspace.selectedAnnotationElement = annotation;
   }
 
   isAudioSelected(element: ScoreElement) {
@@ -5536,6 +5554,8 @@ export default class Editor extends Vue {
       }),
     );
 
+    this.selectedWorkspace.selectedAnnotationElement = null;
+
     this.save();
   }
 
@@ -6156,6 +6176,18 @@ export default class Editor extends Vue {
   }
 
   deleteSelectedElement() {
+    if (
+      this.selectedWorkspace.selectedAnnotationElement != null &&
+      this.selectedElement?.elementType === ElementType.Note
+    ) {
+      this.removeAnnotation(
+        this.selectedElement as NoteElement,
+        this.selectedWorkspace.selectedAnnotationElement,
+      );
+
+      return;
+    }
+
     if (
       this.selectedElement != null &&
       !this.isLastElement(this.selectedElement)
@@ -7586,6 +7618,10 @@ export default class Editor extends Vue {
 
 .selectedImagebox {
   border: 1px solid goldenrod;
+}
+
+.selectedAnnotation {
+  outline: 1px solid goldenrod;
 }
 
 .selectedLyrics {

@@ -1491,20 +1491,6 @@ export default class Editor extends Vue {
   workspaces: Workspace[] = [];
   selectedWorkspaceValue: Workspace = new Workspace();
 
-  // TODO remove
-  DEBUG_add_staff_text() {
-    if (this.selectedElement?.elementType === ElementType.Note) {
-      const el = new AnnotationElement();
-      const fontHeight = TextMeasurementService.getFontHeight(
-        this.score.pageSetup.lyricsFont,
-      );
-      el.x = 0;
-      el.y = -fontHeight;
-      (this.selectedElement as NoteElement).annotations.push(el);
-      this.save();
-    }
-  }
-
   get selectedWorkspaceId() {
     return this.selectedWorkspace.id;
   }
@@ -2431,6 +2417,10 @@ export default class Editor extends Vue {
       this.onFileMenuPreferences,
     );
     EventBus.$on(
+      IpcMainChannels.FileMenuInsertAnnotation,
+      this.onFileMenuInsertAnnotation,
+    );
+    EventBus.$on(
       IpcMainChannels.FileMenuInsertTextBox,
       this.onFileMenuInsertTextBox,
     );
@@ -2542,6 +2532,10 @@ export default class Editor extends Vue {
     EventBus.$off(
       IpcMainChannels.FileMenuPreferences,
       this.onFileMenuPreferences,
+    );
+    EventBus.$off(
+      IpcMainChannels.FileMenuInsertAnnotation,
+      this.onFileMenuInsertAnnotation,
     );
     EventBus.$off(
       IpcMainChannels.FileMenuInsertTextBox,
@@ -6961,6 +6955,19 @@ export default class Editor extends Vue {
     }
   }
 
+  onFileMenuInsertAnnotation() {
+    if (this.selectedElement?.elementType === ElementType.Note) {
+      const el = new AnnotationElement();
+      const fontHeight = TextMeasurementService.getFontHeight(
+        this.score.pageSetup.lyricsFont,
+      );
+      el.x = 0;
+      el.y = -fontHeight;
+      (this.selectedElement as NoteElement).annotations.push(el);
+      this.save();
+    }
+  }
+
   onFileMenuInsertTextBox(args?: FileMenuInsertTextboxArgs) {
     const element = new TextBoxElement();
     element.inline = args?.inline ?? false;
@@ -7915,6 +7922,7 @@ export default class Editor extends Vue {
 .page.print .drop-cap-container,
 .page.print .mode-key-container,
 .page.print .image-box-container,
+.page.print .selectedAnnotation,
 .page.print :deep(.text-box),
 .page.print :deep(.rich-text-editor),
 .page.print :deep(.inline-container),

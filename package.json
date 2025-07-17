@@ -85,7 +85,7 @@
     "vitepress": "^1.6.3",
     "vitest": "^3.2.4",
     "vue-component-type-helpers": "^3.0.1",
-    "vue-tsc": "^3.0.1"
+    "vue-tsc": "^3.0.2"
   },
   "overrides": {
     "vite-plugin-vue-devtools": {

@@ -76,7 +76,7 @@
     "jest-matcher-deep-close-to": "^3.0.2",
     "prettier": "^3.6.2",
     "typescript": "^5.8.3",
-    "vite": "^7.0.4",
+    "vite": "^7.0.5",
     "vite-plugin-electron": "^0.28.8",
     "vite-plugin-electron-renderer": "^0.14.6",
     "vite-plugin-eslint": "^1.8.1",

@@ -29,7 +29,7 @@ import { PageSetup } from '@/models/PageSetup';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { withZoom } from '@/utils/withZoom';
 
-const STAFF_TEXT_LOCK_ID = 'staff-text-ro-lock';
+const ANNOTATION_LOCK_ID = 'ANNOTATION_LOCK_ID';
 
 @Component({
   components: {
@@ -145,11 +145,18 @@ export default class Annotation extends Vue {
   }
 
   onEditorReady(editor: InlineEditor) {
-    editor.enableReadOnlyMode(STAFF_TEXT_LOCK_ID);
+    // If the text is empty, we want to focus the editor
+    // because this is a new annotation
+    if (this.element.text.trim() === '') {
+      editor.editing.view.focus();
+    } else {
+      // Otherwise, we want to enable read-only mode
+      editor.enableReadOnlyMode(ANNOTATION_LOCK_ID);
+    }
 
     editor.ui.focusTracker.on('change:isFocused', (evt, name, isFocused) => {
       if (!isFocused) {
-        editor.enableReadOnlyMode(STAFF_TEXT_LOCK_ID);
+        editor.enableReadOnlyMode(ANNOTATION_LOCK_ID);
 
         const text = editor.getData();
 
@@ -175,7 +182,7 @@ export default class Annotation extends Vue {
     }
 
     if (editor.isReadOnly) {
-      editor.disableReadOnlyMode(STAFF_TEXT_LOCK_ID);
+      editor.disableReadOnlyMode(ANNOTATION_LOCK_ID);
       editor.editing.view.focus();
     }
   }
@@ -215,6 +222,7 @@ export default class Annotation extends Vue {
   white-space: nowrap;
   z-index: 1000;
   cursor: default;
+  padding: 0 10px;
 }
 
 .rich-text-editor {

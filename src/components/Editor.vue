@@ -6964,6 +6964,7 @@ export default class Editor extends Vue {
       el.x = 0;
       el.y = -fontHeight;
       (this.selectedElement as NoteElement).annotations.push(el);
+      this.selectedWorkspace.selectedAnnotationElement = el;
       this.save();
     }
   }

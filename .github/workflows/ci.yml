@@ -15,7 +15,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest, macos-13]
+        os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - uses: actions/checkout@v4
 
@@ -38,7 +38,15 @@ jobs:
 
       - run: npm test
       - run: npm run lint
-      - run: npm run build
+      - name: Build Windows and Linux
+        if: runner.os != 'macOS'
+        run: npm run build
+        env:
+          GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+      - name: Build macOS
+        if: runner.os == 'macOS'
+        run: npm run build -- --x64 && npm run build -- --arm64
         env:
           GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
 

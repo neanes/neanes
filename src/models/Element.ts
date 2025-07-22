@@ -249,6 +249,15 @@ export class NoteElement extends ScoreElement {
       secondaryGorgonNeume: this.secondaryGorgonNeume,
       secondaryGorgonNeumeOffsetX: this.secondaryGorgonNeumeOffsetX,
       secondaryGorgonNeumeOffsetY: this.secondaryGorgonNeumeOffsetY,
+      koronis: this.koronis,
+      koronisOffsetX: this.koronisOffsetX,
+      koronisOffsetY: this.koronisOffsetY,
+      stavros: this.stavros,
+      stavrosOffsetX: this.stavrosOffsetX,
+      stavrosOffsetY: this.stavrosOffsetY,
+      tie: this.tie,
+      tieOffsetX: this.tieOffsetX,
+      tieOffsetY: this.tieOffsetY,
       timeNeume: this.timeNeume,
       timeNeumeOffsetX: this.timeNeumeOffsetX,
       timeNeumeOffsetY: this.timeNeumeOffsetY,
@@ -676,6 +685,8 @@ export class MartyriaElement extends ScoreElement {
       chromaticFthoraNote: this.chromaticFthoraNote,
       tempo: this.tempo,
       bpm: this.bpm,
+      lineBreak: this.lineBreak,
+      lineBreakType: this.lineBreakType,
     } as Partial<MartyriaElement>;
   }
 }

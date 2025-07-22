@@ -16,16 +16,16 @@
       <Neume :neume="neume.note" />
       <Neume :neume="neume.rootSign" />
       <Neume v-if="hasFthora" :neume="neume.fthora" :style="fthoraStyle" />
-      <Neume
-        v-if="hasQuantitativeNeume"
-        :neume="neume.quantitativeNeume"
-        :style="quantitativeNeumeStyle"
-      />
       <Neume v-if="hasTempo" :neume="neume.tempo" :style="tempoStyle" />
       <Neume
         v-if="hasMeasureBarLeft && isMeasureBarAbove"
         :neume="neume.measureBarLeft"
         :style="measureBarStyle"
+      />
+      <Neume
+        v-if="hasQuantitativeNeume"
+        :neume="neume.quantitativeNeume"
+        :style="quantitativeNeumeStyle"
       />
       <Neume
         v-if="hasTempoRight"

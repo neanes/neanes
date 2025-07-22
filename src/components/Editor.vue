@@ -2302,6 +2302,7 @@ export default class Editor extends Vue {
         fontLoader.load('1rem NeanesRTL'),
         fontLoader.load('1rem "Noto Naskh Arabic"'),
         fontLoader.load('1rem Omega'),
+        fontLoader.load('1rem "Old Standard"'),
         fontLoader.load('1rem PFGoudyInitials'),
         fontLoader.load('1rem "Source Serif"'),
         fontLoader.ready,
@@ -5511,7 +5512,7 @@ export default class Editor extends Vue {
       this.refreshStaffLyrics();
     }
 
-    this.save();
+    this.save(!noHistory);
   }
 
   updateRichTextBoxHeight(element: RichTextBoxElement, height: number) {
@@ -5519,7 +5520,7 @@ export default class Editor extends Vue {
     // (e.g. if PageSetup changes) so we debounce the save.
     element.height = height;
     this.richTextBoxCalculationCount++;
-    this.saveDebounced();
+    this.saveDebounced(false);
   }
 
   updateRichTextBoxMarginTop(element: RichTextBoxElement, marginTop: number) {
@@ -5545,7 +5546,7 @@ export default class Editor extends Vue {
       noHistory,
     );
 
-    this.save();
+    this.save(!noHistory);
   }
 
   updateTextBoxHeight(element: TextBoxElement, height: number) {
@@ -5553,7 +5554,7 @@ export default class Editor extends Vue {
     // (e.g. if PageSetup changes) so we debounce the save.
     element.height = height;
     this.textBoxCalculationCount++;
-    this.saveDebounced();
+    this.saveDebounced(false);
   }
 
   updateTextBoxUseDefaultStyle(
@@ -6557,7 +6558,7 @@ export default class Editor extends Vue {
       await new Promise(poll);
 
       this.richTextBoxCalculation = false;
-      this.saveDebounced();
+      this.saveDebounced(false);
     });
   }
 
@@ -6593,7 +6594,7 @@ export default class Editor extends Vue {
       await new Promise(poll);
 
       this.textBoxCalculation = false;
-      this.saveDebounced();
+      this.saveDebounced(false);
     });
   }
 

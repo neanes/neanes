@@ -7,11 +7,11 @@ import {
   createDropdown,
   createLabeledInputNumber,
   EditorConfig,
-  Element,
   InputNumberView,
   LabeledFieldView,
   ListView,
   Locale,
+  ModelElement,
   SwitchButtonView,
   View,
   ViewCollection,
@@ -37,7 +37,11 @@ export default class InsertNeumeFormView extends View {
   public colorInput: ColorSelectorView;
   public config: Config<EditorConfig>;
 
-  constructor(locale: Locale, config: Config<EditorConfig>, element: Element) {
+  constructor(
+    locale: Locale,
+    config: Config<EditorConfig>,
+    element: ModelElement,
+  ) {
     super(locale);
 
     this.config = config;

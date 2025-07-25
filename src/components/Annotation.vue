@@ -22,7 +22,6 @@ import { EditorConfig, FontSizeOption } from 'ckeditor5';
 import { ComponentExposed } from 'vue-component-type-helpers';
 import { Component, Prop, Vue } from 'vue-facing-decorator';
 
-import ContentEditable from '@/components/ContentEditable.vue';
 import InlineEditor from '@/customEditor';
 import { AnnotationElement } from '@/models/Element';
 import { PageSetup } from '@/models/PageSetup';
@@ -34,7 +33,6 @@ const ANNOTATION_LOCK_ID = 'ANNOTATION_LOCK_ID';
 @Component({
   components: {
     Ckeditor,
-    ContentEditable,
   },
   emits: ['update', 'delete'],
 })
@@ -43,16 +41,10 @@ export default class Annotation extends Vue {
   @Prop({ required: true }) pageSetup!: PageSetup;
   @Prop({ required: true }) fonts!: string[];
 
-  editable: boolean = false;
-
   startX: number = 0;
   startY: number = 0;
 
   editor = InlineEditor;
-
-  get textElement() {
-    return this.$refs.text as ContentEditable;
-  }
 
   get style() {
     return {

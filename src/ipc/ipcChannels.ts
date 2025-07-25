@@ -33,6 +33,7 @@ export enum IpcMainChannels {
   FileMenuPreferences = 'FileMenuPreferences',
 
   FileMenuInsertAnnotation = 'FileMenuInsertAnnotation',
+  FileMenuInsertAlternateLine = 'FileMenuInsertAlternateLine',
   FileMenuInsertTextBox = 'FileMenuInsertTextBox',
   FileMenuInsertRichTextBox = 'FileMenuInsertRichTextBox',
   FileMenuInsertModeKey = 'FileMenuInsertModeKey',

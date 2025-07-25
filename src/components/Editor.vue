@@ -239,6 +239,29 @@
                           v-else
                           src="@/assets/icons/line-break.svg"
                       /></span>
+                      <AlternateLine
+                        v-for="(alternateLine, index) in (
+                          element as NoteElement
+                        ).alternateLines"
+                        :key="index"
+                        :element="alternateLine"
+                        :pageSetup="score.pageSetup"
+                        :class="{
+                          selectedAnnotation:
+                            this.selectedWorkspace
+                              .selectedAlternateLineElement === alternateLine,
+                        }"
+                        @update="updateAlternateLine(alternateLine, $event)"
+                        @delete="
+                          removeAlternateLine(
+                            element as NoteElement,
+                            alternateLine,
+                          )
+                        "
+                        @mousedown="
+                          setSelectedAlternateLine(element, alternateLine)
+                        "
+                      />
                       <Annotation
                         v-for="(annotation, index) in (element as NoteElement)
                           .annotations"
@@ -253,7 +276,11 @@
                         }"
                         @update="updateAnnotation(annotation, $event)"
                         @delete="
-                          removeAnnotation(element as NoteElement, annotation)
+                          removeAnnotation(
+                            element as NoteElement,
+                            annotation,
+                            true,
+                          )
                         "
                         @mousedown="setSelectedAnnotation(element, annotation)"
                       />
@@ -1013,86 +1040,153 @@
       />
     </template>
     <template
-      v-if="selectedElement != null && isSyllableElement(selectedElement)"
+      v-if="
+        selectedElement != null &&
+        selectedElementForNeumeToolbar != null &&
+        isSyllableElement(selectedElementForNeumeToolbar)
+      "
     >
       <ToolbarNeume
-        :element="selectedElement"
+        :element="selectedElementForNeumeToolbar"
         :pageSetup="score.pageSetup"
         :neumeKeyboard="neumeKeyboard"
         :key="`toolbar-neume-${this.selectedWorkspaceId}-${selectedElement.id}-${selectedElement.keyHelper}`"
         :innerNeume="toolbarInnerNeume"
         @update:innerNeume="toolbarInnerNeume = $event"
         @update:accidental="
-          setAccidental(selectedElement as NoteElement, $event)
+          setAccidental(selectedElementForNeumeToolbar as NoteElement, $event)
         "
         @update:secondaryAccidental="
-          setSecondaryAccidental(selectedElement as NoteElement, $event)
+          setSecondaryAccidental(
+            selectedElementForNeumeToolbar as NoteElement,
+            $event,
+          )
         "
         @update:tertiaryAccidental="
-          setTertiaryAccidental(selectedElement as NoteElement, $event)
+          setTertiaryAccidental(
+            selectedElementForNeumeToolbar as NoteElement,
+            $event,
+          )
         "
-        @update:fthora="setFthoraNote(selectedElement as NoteElement, $event)"
+        @update:fthora="
+          setFthoraNote(selectedElementForNeumeToolbar as NoteElement, $event)
+        "
         @update:secondaryFthora="
-          setSecondaryFthora(selectedElement as NoteElement, $event)
+          setSecondaryFthora(
+            selectedElementForNeumeToolbar as NoteElement,
+            $event,
+          )
         "
         @update:tertiaryFthora="
-          setTertiaryFthora(selectedElement as NoteElement, $event)
+          setTertiaryFthora(
+            selectedElementForNeumeToolbar as NoteElement,
+            $event,
+          )
         "
         @update:chromaticFthoraNote="
-          updateNoteChromaticFthoraNote(selectedElement as NoteElement, $event)
+          updateNoteChromaticFthoraNote(
+            selectedElementForNeumeToolbar as NoteElement,
+            $event,
+          )
         "
         @update:secondaryChromaticFthoraNote="
           updateNoteSecondaryChromaticFthoraNote(
-            selectedElement as NoteElement,
+            selectedElementForNeumeToolbar as NoteElement,
             $event,
           )
         "
         @update:tertiaryChromaticFthoraNote="
           updateNoteTertiaryChromaticFthoraNote(
-            selectedElement as NoteElement,
+            selectedElementForNeumeToolbar as NoteElement,
             $event,
           )
         "
-        @update:gorgon="setGorgon(selectedElement as NoteElement, $event)"
-        @update:secondaryGorgon="
-          setSecondaryGorgon(selectedElement as NoteElement, $event)
+        @update:gorgon="
+          setGorgon(selectedElementForNeumeToolbar as NoteElement, $event)
         "
-        @update:klasma="setKlasma(selectedElement as NoteElement)"
-        @update:time="setTimeNeume(selectedElement as NoteElement, $event)"
+        @update:secondaryGorgon="
+          setSecondaryGorgon(
+            selectedElementForNeumeToolbar as NoteElement,
+            $event,
+          )
+        "
+        @update:klasma="
+          setKlasma(selectedElementForNeumeToolbar as NoteElement)
+        "
+        @update:time="
+          setTimeNeume(selectedElementForNeumeToolbar as NoteElement, $event)
+        "
         @update:expression="
-          setVocalExpression(selectedElement as NoteElement, $event)
+          setVocalExpression(
+            selectedElementForNeumeToolbar as NoteElement,
+            $event,
+          )
         "
         @update:measureBar="
-          setMeasureBarNote(selectedElement as NoteElement, $event)
+          setMeasureBarNote(
+            selectedElementForNeumeToolbar as NoteElement,
+            $event,
+          )
         "
         @update:measureNumber="
-          setMeasureNumber(selectedElement as NoteElement, $event)
+          setMeasureNumber(
+            selectedElementForNeumeToolbar as NoteElement,
+            $event,
+          )
         "
         @update:noteIndicator="
-          updateNoteNoteIndicator(selectedElement as NoteElement, $event)
+          updateNoteNoteIndicator(
+            selectedElementForNeumeToolbar as NoteElement,
+            $event,
+          )
         "
-        @update:ison="setIson(selectedElement as NoteElement, $event)"
+        @update:ison="
+          setIson(selectedElementForNeumeToolbar as NoteElement, $event)
+        "
         @update:koronis="
-          updateNoteKoronis(selectedElement as NoteElement, $event)
+          updateNoteKoronis(
+            selectedElementForNeumeToolbar as NoteElement,
+            $event,
+          )
         "
         @update:stavros="
-          updateNoteStavros(selectedElement as NoteElement, $event)
+          updateNoteStavros(
+            selectedElementForNeumeToolbar as NoteElement,
+            $event,
+          )
         "
         @update:vareia="
-          updateNoteVareia(selectedElement as NoteElement, $event)
+          updateNoteVareia(
+            selectedElementForNeumeToolbar as NoteElement,
+            $event,
+          )
         "
-        @update:tie="setTie(selectedElement as NoteElement, $event)"
+        @update:tie="
+          setTie(selectedElementForNeumeToolbar as NoteElement, $event)
+        "
         @update:spaceAfter="
-          updateNoteSpaceAfter(selectedElement as NoteElement, $event)
+          updateNoteSpaceAfter(
+            selectedElementForNeumeToolbar as NoteElement,
+            $event,
+          )
         "
         @update:ignoreAttractions="
-          updateNoteIgnoreAttractions(selectedElement as NoteElement, $event)
+          updateNoteIgnoreAttractions(
+            selectedElementForNeumeToolbar as NoteElement,
+            $event,
+          )
         "
         @update:acceptsLyrics="
-          updateNoteAcceptsLyrics(selectedElement as NoteElement, $event)
+          updateNoteAcceptsLyrics(
+            selectedElementForNeumeToolbar as NoteElement,
+            $event,
+          )
         "
         @update:sectionName="
-          updateScoreElementSectionName(selectedElement as NoteElement, $event)
+          updateScoreElementSectionName(
+            selectedElementForNeumeToolbar as NoteElement,
+            $event,
+          )
         "
         @open-syllable-positioning-dialog="openSyllablePositioningDialog"
       />
@@ -1282,6 +1376,7 @@ import { nextTick, StyleValue, toRaw } from 'vue';
 import { Component, Inject, Prop, Vue, Watch } from 'vue-facing-decorator';
 import Vue3TabsChrome, { Tab } from 'vue3-tabs-chrome';
 
+import AlternateLine from '@/components/AlternateLine.vue';
 import Annotation from '@/components/Annotation.vue';
 import ContentEditable from '@/components/ContentEditable.vue';
 import DropCap from '@/components/DropCap.vue';
@@ -1334,6 +1429,7 @@ import {
 import { EditorPreferences } from '@/models/EditorPreferences';
 import {
   AcceptsLyricsOption,
+  AlternateLineElement,
   AnnotationElement,
   DropCapElement,
   ElementType,
@@ -1426,6 +1522,7 @@ interface Vue3TabsChromeComponent {
 
 @Component({
   components: {
+    AlternateLine,
     Annotation,
     SyllableNeumeBox,
     MartyriaNeumeBox,
@@ -1593,6 +1690,9 @@ export default class Editor extends Vue {
 
   annotationCommandFactory: CommandFactory<AnnotationElement> =
     new CommandFactory<AnnotationElement>();
+
+  alternateLineCommandFactory: CommandFactory<AlternateLineElement> =
+    new CommandFactory<AlternateLineElement>();
 
   textBoxCommandFactory: CommandFactory<TextBoxElement> =
     new CommandFactory<TextBoxElement>();
@@ -1904,8 +2004,32 @@ export default class Editor extends Vue {
       }
     }
 
+    if (
+      this.selectedWorkspace.selectedAlternateLineElement != null &&
+      this.selectedWorkspace.selectedAlternateLineElement.elements.length === 0
+    ) {
+      this.removeAlternateLine(
+        this.selectedElement as NoteElement,
+        this.selectedWorkspace.selectedAlternateLineElement,
+        true,
+      );
+    }
+
     this.selectedWorkspace.selectedElement = element;
     this.selectedWorkspace.selectedAnnotationElement = null;
+    this.selectedWorkspace.selectedAlternateLineElement = null;
+  }
+
+  get selectedElementForNeumeToolbar() {
+    if (
+      this.selectedWorkspace.selectedAlternateLineElement != null &&
+      this.selectedWorkspace.selectedAlternateLineElement.elements.length > 0
+    ) {
+      return this.selectedWorkspace.selectedAlternateLineElement.elements[
+        this.selectedWorkspace.selectedAlternateLineElement.elements.length - 1
+      ];
+    }
+    return this.selectedWorkspace.selectedElement;
   }
 
   get previousElementOnLine() {
@@ -2421,6 +2545,10 @@ export default class Editor extends Vue {
       this.onFileMenuInsertAnnotation,
     );
     EventBus.$on(
+      IpcMainChannels.FileMenuInsertAlternateLine,
+      this.onFileMenuInsertAlternateLine,
+    );
+    EventBus.$on(
       IpcMainChannels.FileMenuInsertTextBox,
       this.onFileMenuInsertTextBox,
     );
@@ -2538,6 +2666,10 @@ export default class Editor extends Vue {
       this.onFileMenuInsertAnnotation,
     );
     EventBus.$off(
+      IpcMainChannels.FileMenuInsertAlternateLine,
+      this.onFileMenuInsertAlternateLine,
+    );
+    EventBus.$off(
       IpcMainChannels.FileMenuInsertTextBox,
       this.onFileMenuInsertTextBox,
     );
@@ -2649,6 +2781,14 @@ export default class Editor extends Vue {
     this.selectedWorkspace.selectedAnnotationElement = annotation;
   }
 
+  setSelectedAlternateLine(
+    parent: ScoreElement | null,
+    alternateLine: AlternateLineElement,
+  ) {
+    this.selectedElement = parent;
+    this.selectedWorkspace.selectedAlternateLineElement = alternateLine;
+  }
+
   isAudioSelected(element: ScoreElement) {
     return this.audioElement === element;
   }
@@ -2757,6 +2897,19 @@ export default class Editor extends Vue {
     // Special case for neumes with secondary gorgon
     if (getSecondaryNeume(quantitativeNeume) != null) {
       element.secondaryGorgonNeume = secondaryGorgonNeume;
+    }
+
+    // If the selected element is an alternate line element,
+    // add the new element to the alternate line's elements
+    // and return immediately. Alternate lines do not support
+    // different entry modes.
+    if (this.selectedWorkspace.selectedAlternateLineElement != null) {
+      this.selectedWorkspace.selectedAlternateLineElement.elements.push(
+        element,
+      );
+
+      this.save();
+      return;
     }
 
     switch (this.entryMode) {
@@ -5058,11 +5211,17 @@ export default class Editor extends Vue {
     }
   }
 
-  addScoreElement(element: ScoreElement, insertAtIndex?: number) {
+  addScoreElement(
+    element: ScoreElement,
+    insertAtIndex?: number,
+    collection?: ScoreElement[],
+  ) {
+    collection = collection ?? this.elements;
+
     this.commandService.execute(
       this.scoreElementCommandFactory.create('add-to-collection', {
         elements: [element],
-        collection: this.elements,
+        collection,
         insertAtIndex,
       }),
     );
@@ -5094,11 +5253,14 @@ export default class Editor extends Vue {
     this.refreshStaffLyrics();
   }
 
-  removeScoreElement(element: ScoreElement) {
+  removeScoreElement(
+    element: ScoreElement,
+    collection: ScoreElement[] = this.elements,
+  ) {
     this.commandService.execute(
       this.scoreElementCommandFactory.create('remove-from-collection', {
         element,
-        collection: this.elements,
+        collection,
       }),
     );
 
@@ -5540,15 +5702,52 @@ export default class Editor extends Vue {
     this.save();
   }
 
-  removeAnnotation(note: NoteElement, annotation: AnnotationElement) {
+  removeAnnotation(
+    note: NoteElement,
+    annotation: AnnotationElement,
+    noHistory: boolean = false,
+  ) {
     this.commandService.execute(
       this.annotationCommandFactory.create('remove-from-collection', {
         element: annotation,
         collection: note.annotations,
       }),
+      noHistory,
     );
 
     this.selectedWorkspace.selectedAnnotationElement = null;
+
+    this.save();
+  }
+
+  updateAlternateLine(
+    element: AlternateLineElement,
+    newValues: Partial<AlternateLineElement>,
+  ) {
+    this.commandService.execute(
+      this.alternateLineCommandFactory.create('update-properties', {
+        target: element,
+        newValues: newValues,
+      }),
+    );
+
+    this.save();
+  }
+
+  removeAlternateLine(
+    note: NoteElement,
+    annotation: AlternateLineElement,
+    noHistory: boolean = false,
+  ) {
+    this.commandService.execute(
+      this.alternateLineCommandFactory.create('remove-from-collection', {
+        element: annotation,
+        collection: note.alternateLines,
+      }),
+      noHistory,
+    );
+
+    this.selectedWorkspace.selectedAlternateLineElement = null;
 
     this.save();
   }
@@ -6183,6 +6382,18 @@ export default class Editor extends Vue {
     }
 
     if (
+      this.selectedWorkspace.selectedAlternateLineElement != null &&
+      this.selectedElement?.elementType === ElementType.Note
+    ) {
+      this.removeAlternateLine(
+        this.selectedElement as NoteElement,
+        this.selectedWorkspace.selectedAlternateLineElement,
+      );
+
+      return;
+    }
+
+    if (
       this.selectedElement != null &&
       !this.isLastElement(this.selectedElement)
     ) {
@@ -6222,6 +6433,14 @@ export default class Editor extends Vue {
   }
 
   deletePreviousElement() {
+    if (this.selectedWorkspace.selectedAlternateLineElement) {
+      const elements =
+        this.selectedWorkspace.selectedAlternateLineElement.elements;
+      this.removeScoreElement(elements[this.elements.length - 1], elements);
+
+      return;
+    }
+
     if (
       this.selectedElement &&
       this.selectedElementIndex > 0 &&
@@ -6965,6 +7184,20 @@ export default class Editor extends Vue {
       el.y = -fontHeight;
       (this.selectedElement as NoteElement).annotations.push(el);
       this.selectedWorkspace.selectedAnnotationElement = el;
+      this.save();
+    }
+  }
+
+  onFileMenuInsertAlternateLine() {
+    if (this.selectedElement?.elementType === ElementType.Note) {
+      const el = new AlternateLineElement();
+      const fontHeight = TextMeasurementService.getFontHeight(
+        this.score.pageSetup.lyricsFont,
+      );
+      el.x = 0;
+      el.y = -fontHeight;
+      (this.selectedElement as NoteElement).alternateLines.push(el);
+      this.selectedWorkspace.selectedAlternateLineElement = el;
       this.save();
     }
   }

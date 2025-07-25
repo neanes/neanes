@@ -1,5 +1,6 @@
 import {
   AcceptsLyricsOption,
+  AlternateLineElement,
   AnnotationElement,
   DropCapElement,
   ElementType,
@@ -21,6 +22,7 @@ import { modeKeyTemplates } from '@/models/ModeKeys';
 import { QuantitativeNeume } from '@/models/Neumes';
 import { PageSetup, pageSizes } from '@/models/PageSetup';
 import {
+  AlternateLineElement as AlternateLineElement_v1,
   AnnotationElement as AnnotationElement_v1,
   DropCapElement as DropCapElement_v1,
   ElementType as ElementType_v1,
@@ -200,6 +202,9 @@ export class SaveService {
     pageSetup.neumeDefaultStrokeWidth = p.neumeDefaultStrokeWidth;
     pageSetup.neumeDefaultFontSize = p.neumeDefaultFontSize;
     pageSetup.neumeDefaultSpacing = p.neumeDefaultSpacing;
+
+    pageSetup.alternateLineDefaultColor = p.alternateLineDefaultColor;
+    pageSetup.alternateLineDefaultFontSize = p.alternateLineDefaultFontSize;
 
     pageSetup.modeKeyDefaultColor = p.modeKeyDefaultColor;
     pageSetup.modeKeyDefaultStrokeWidth = p.modeKeyDefaultStrokeWidth;
@@ -541,13 +546,35 @@ export class SaveService {
     }
 
     if (e.annotations.length > 0) {
-      element.annotations = e.annotations.map((a) => {
-        const annotation = new AnnotationElement_v1();
-        annotation.x = a.x;
-        annotation.y = a.y;
-        annotation.text = a.text;
-        return annotation;
-      });
+      element.annotations = e.annotations
+        .filter((x) => x.text?.trim() !== '')
+        .map((a) => {
+          const annotation = new AnnotationElement_v1();
+          annotation.x = a.x;
+          annotation.y = a.y;
+          annotation.text = a.text;
+          return annotation;
+        });
+    }
+
+    if (e.alternateLines.length > 0) {
+      element.alternateLines = e.alternateLines
+        .filter((x) => x.elements.length > 0)
+        .map((a) => {
+          const alternateLine = new AlternateLineElement_v1();
+          alternateLine.x = a.x;
+          alternateLine.y = a.y;
+
+          // Only note elements are supported in alternate lines
+          alternateLine.elements = a.elements
+            .filter((x) => x.elementType === ElementType.Note)
+            .map((x) => {
+              const e = new NoteElement_v1();
+              this.SaveNote(e, x as NoteElement);
+              return e;
+            });
+          return alternateLine;
+        });
     }
   }
 
@@ -923,15 +950,20 @@ export class SaveService {
       p.tempoDefaultColor ?? pageSetup.tempoDefaultColor;
     pageSetup.tempoDefaultStrokeWidth =
       p.tempoDefaultStrokeWidth ?? pageSetup.tempoDefaultStrokeWidth;
+
     pageSetup.neumeDefaultColor =
       p.neumeDefaultColor ?? pageSetup.neumeDefaultColor;
-
     pageSetup.neumeDefaultFontFamily =
       p.neumeDefaultFontFamily ?? pageSetup.neumeDefaultFontFamily;
     pageSetup.neumeDefaultFontSize = p.neumeDefaultFontSize;
     pageSetup.neumeDefaultStrokeWidth =
       p.neumeDefaultStrokeWidth ?? pageSetup.neumeDefaultStrokeWidth;
     pageSetup.neumeDefaultSpacing = p.neumeDefaultSpacing;
+
+    pageSetup.alternateLineDefaultColor =
+      p.alternateLineDefaultColor ?? pageSetup.alternateLineDefaultColor;
+    pageSetup.alternateLineDefaultFontSize =
+      p.alternateLineDefaultFontSize ?? pageSetup.alternateLineDefaultFontSize;
 
     pageSetup.modeKeyDefaultColor =
       p.modeKeyDefaultColor ?? pageSetup.modeKeyDefaultColor;
@@ -1354,6 +1386,29 @@ export class SaveService {
     } catch (error) {
       console.warn('Error loading annotations:', error);
       element.annotations = [];
+    }
+
+    try {
+      if (e.alternateLines) {
+        element.alternateLines = e.alternateLines.map((a) => {
+          const alternateLine = new AlternateLineElement();
+          alternateLine.x = a.x;
+          alternateLine.y = a.y;
+
+          alternateLine.elements = a.elements
+            .filter((x) => x.elementType === ElementType.Note)
+            .map((x) => {
+              const e = new NoteElement();
+              this.LoadNote_v1(e, x as NoteElement_v1);
+              return e;
+            });
+
+          return alternateLine;
+        });
+      }
+    } catch (error) {
+      console.warn('Error loading alternate lines:', error);
+      element.alternateLines = [];
     }
   }
 

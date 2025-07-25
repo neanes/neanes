@@ -43,6 +43,7 @@ export enum ElementType {
   ModeKey = 'ModeKey',
   ImageBox = 'ImageBox',
   Annotation = 'Annotation',
+  AlternateLine = 'AlternateLine',
 }
 
 export enum LineBreakType {
@@ -121,6 +122,7 @@ export class NoteElement extends ScoreElement {
   public ignoreAttractions: boolean = false;
 
   public annotations: AnnotationElement[] = [];
+  public alternateLines: AlternateLineElement[] = [];
 
   public chromaticFthoraNote: ScaleNote | null = null;
   public secondaryChromaticFthoraNote: ScaleNote | null = null;
@@ -1059,7 +1061,7 @@ export class AnnotationElement extends ScoreElement {
   public text: string = '';
 
   public clone() {
-    const clone = new ModeKeyElement();
+    const clone = new AnnotationElement();
 
     Object.assign(clone, this.getClipboardProperties());
 
@@ -1073,6 +1075,24 @@ export class AnnotationElement extends ScoreElement {
   }
 }
 
+export class AlternateLineElement extends ScoreElement {
+  public readonly elementType: ElementType = ElementType.AlternateLine;
+  public elements: ScoreElement[] = [];
+
+  public clone() {
+    const clone = new AlternateLineElement();
+
+    Object.assign(clone, this.getClipboardProperties());
+
+    return clone;
+  }
+
+  public getClipboardProperties() {
+    return {
+      elements: this.elements.map((note) => note.clone()),
+    } as Partial<AlternateLineElement>;
+  }
+}
 export class DropCapElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.DropCap;
   public content: string = 'A';

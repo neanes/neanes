@@ -1445,6 +1445,12 @@ function createMenu() {
       label: i18next.t('menu:insert.root'),
       submenu: [
         {
+          label: i18next.t('menu:insert.alternateLine'),
+          click() {
+            win?.webContents.send(IpcMainChannels.FileMenuInsertAlternateLine);
+          },
+        },
+        {
           label: i18next.t('menu:insert.annotation'),
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuInsertAnnotation);

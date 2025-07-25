@@ -29,6 +29,7 @@ export enum ElementType {
   Tempo = 'Tempo',
   ImageBox = 'ImageBox',
   Annotation = 'Annotation',
+  AlternateLine = 'AlternateLine',
 }
 
 export enum LineBreakType {
@@ -98,6 +99,7 @@ export class NoteElement extends ScoreElement {
   public ignoreAttractions: boolean | undefined = undefined;
 
   public annotations: AnnotationElement[] | undefined = undefined;
+  public alternateLines: AlternateLineElement[] | undefined = undefined;
 
   public accidentalOffsetX: number | undefined = undefined;
   public accidentalOffsetY: number | undefined = undefined;
@@ -277,6 +279,13 @@ export class AnnotationElement extends ScoreElement {
   public x: number = 0;
   public y: number = 0;
   public text: string = '';
+}
+
+export class AlternateLineElement extends ScoreElement {
+  public readonly elementType: ElementType = ElementType.AlternateLine;
+  public x: number = 0;
+  public y: number = 0;
+  public elements: ScoreElement[] = [];
 }
 
 export class DropCapElement extends ScoreElement {

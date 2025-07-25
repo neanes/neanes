@@ -252,12 +252,6 @@
                               .selectedAlternateLineElement === alternateLine,
                         }"
                         @update="updateAlternateLine(alternateLine, $event)"
-                        @delete="
-                          removeAlternateLine(
-                            element as NoteElement,
-                            alternateLine,
-                          )
-                        "
                         @mousedown="
                           setSelectedAlternateLine(element, alternateLine)
                         "
@@ -2904,10 +2898,11 @@ export default class Editor extends Vue {
     // and return immediately. Alternate lines do not support
     // different entry modes.
     if (this.selectedWorkspace.selectedAlternateLineElement != null) {
-      this.selectedWorkspace.selectedAlternateLineElement.elements.push(
+      this.addScoreElement(
         element,
+        this.selectedWorkspace.selectedAlternateLineElement.elements.length,
+        this.selectedWorkspace.selectedAlternateLineElement.elements,
       );
-
       this.save();
       return;
     }
@@ -5214,10 +5209,8 @@ export default class Editor extends Vue {
   addScoreElement(
     element: ScoreElement,
     insertAtIndex?: number,
-    collection?: ScoreElement[],
+    collection: ScoreElement[] = this.elements,
   ) {
-    collection = collection ?? this.elements;
-
     this.commandService.execute(
       this.scoreElementCommandFactory.create('add-to-collection', {
         elements: [element],
@@ -7359,8 +7352,11 @@ export default class Editor extends Vue {
 
     if (currentIndex > -1) {
       // If the selected element was removed during the undo process, choose a new one
-      this.selectedElement =
-        this.elements[Math.min(currentIndex, this.elements.length - 1)];
+      const clampedIndex = Math.min(currentIndex, this.elements.length - 1);
+
+      if (this.selectedElement !== this.elements[clampedIndex]) {
+        this.selectedElement = this.elements[clampedIndex];
+      }
 
       // Undo/redo could affect the note display in the neume toolbar (among other things),
       // so we force a refresh here
@@ -7396,8 +7392,11 @@ export default class Editor extends Vue {
 
     if (currentIndex > -1) {
       // If the selected element was removed during the redo process, choose a new one
-      this.selectedElement =
-        this.elements[Math.min(currentIndex, this.elements.length - 1)];
+      const clampedIndex = Math.min(currentIndex, this.elements.length - 1);
+
+      if (this.selectedElement !== this.elements[clampedIndex]) {
+        this.selectedElement = this.elements[clampedIndex];
+      }
 
       // Undo/redo could affect the note display in the neume toolbar (among other things),
       // so we force a refresh here

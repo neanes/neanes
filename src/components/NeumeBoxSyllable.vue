@@ -69,7 +69,7 @@
       :style="tertiaryAccidentalStyle"
     />
     <Neume
-      v-if="note.noteIndicator"
+      v-if="note.noteIndicator && note.noteIndicatorNeume"
       :neume="note.noteIndicatorNeume"
       :style="noteIndicatorStyle"
     />

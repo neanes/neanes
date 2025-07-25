@@ -3,7 +3,6 @@
     class="alternate-line-container"
     :style="style"
     @mousedown="handleMouseDown"
-    @dblclick="handleDoubleClick"
   >
     <template v-for="(element, index) in element.elements" :key="index">
       <NeumeBoxSyllable
@@ -12,10 +11,6 @@
         :note="element"
         :pageSetup="pageSetup"
         :alternateLine="true"
-      />
-      <NeumeBoxEmpty
-        v-else-if="element.elementType === ElementType.Empty"
-        class="empty-neume-box"
       />
     </template>
   </div>
@@ -47,10 +42,13 @@ export default class Annotation extends Vue {
   startX: number = 0;
   startY: number = 0;
 
+  zoom: number = 1;
+
   get style() {
     return {
       left: withZoom(this.element.x),
       top: withZoom(this.element.y),
+      minHeight: withZoom(this.pageSetup.alternateLineDefaultFontSize),
     };
   }
 
@@ -59,13 +57,13 @@ export default class Annotation extends Vue {
     document.removeEventListener('mousemove', this.handleMouseMove);
   }
 
-  async handleDoubleClick() {
-    // TODO
-  }
-
   handleMouseDown(e: MouseEvent) {
-    this.startX = e.clientX - this.element.x;
-    this.startY = e.clientY - this.element.y;
+    // We only calculate zoom once when the mouse is pressed down
+    // to avoid recalculating it on every mouse move
+    this.zoom = Number(getComputedStyle(this.$el).getPropertyValue('--zoom'));
+
+    this.startX = e.clientX / this.zoom - this.element.x;
+    this.startY = e.clientY / this.zoom - this.element.y;
 
     document.addEventListener('mouseup', this.handleMouseUp);
     document.addEventListener('mousemove', this.handleMouseMove);
@@ -74,8 +72,8 @@ export default class Annotation extends Vue {
   handleMouseMove(e: MouseEvent) {
     e.preventDefault();
 
-    this.element.x = e.clientX - this.startX;
-    this.element.y = e.clientY - this.startY;
+    this.element.x = e.clientX / this.zoom - this.startX;
+    this.element.y = e.clientY / this.zoom - this.startY;
   }
 
   handleMouseUp() {

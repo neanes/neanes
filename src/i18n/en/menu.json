@@ -34,6 +34,8 @@
   },
   "insert": {
     "root": "Insert",
+    "alternateLine": "Alternate Line",
+    "annotation": "Annotation",
     "dropCapBefore": "Drop Cap Before",
     "dropCapAfter": "Drop Cap After",
     "textBox": "Text Box",

@@ -133,6 +133,9 @@ export class PageSetup {
   public neumeDefaultSpacing = Unit.fromInch(0.03);
   public neumeDefaultStrokeWidth = 0;
 
+  public alternateLineDefaultFontSize = Unit.fromPt(12);
+  public alternateLineDefaultColor = '#ED0000';
+
   public modeKeyDefaultColor = '#ED0000';
   public modeKeyDefaultStrokeWidth = 0;
   public modeKeyDefaultFontSize = Unit.fromPt(20);
@@ -189,7 +192,7 @@ export class PageSetup {
   public chrysanthineAccidentals: boolean = true;
   public noFthoraRestrictions: boolean = false;
   public disableGreekMelismata: boolean = false;
-  public alignIsonIndicators: boolean = false;
+  public alignIsonIndicators: boolean = true;
 
   public useOptionalDiatonicFthoras: boolean = false;
 

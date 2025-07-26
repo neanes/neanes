@@ -28,6 +28,8 @@ export enum ElementType {
   ModeKey = 'ModeKey',
   Tempo = 'Tempo',
   ImageBox = 'ImageBox',
+  Annotation = 'Annotation',
+  AlternateLine = 'AlternateLine',
 }
 
 export enum LineBreakType {
@@ -95,6 +97,9 @@ export class NoteElement extends ScoreElement {
   public isHyphen: boolean | undefined = undefined;
   public spaceAfter: number | undefined = undefined;
   public ignoreAttractions: boolean | undefined = undefined;
+
+  public annotations: AnnotationElement[] | undefined = undefined;
+  public alternateLines: AlternateLineElement[] | undefined = undefined;
 
   public accidentalOffsetX: number | undefined = undefined;
   public accidentalOffsetY: number | undefined = undefined;
@@ -267,6 +272,20 @@ export class ModeKeyElement extends ScoreElement {
   public ambitusHighNote: Note = Note.Pa;
   public ambitusHighRootSign: RootSign = RootSign.Alpha;
   public showAmbitus: boolean | undefined = undefined;
+}
+
+export class AnnotationElement extends ScoreElement {
+  public readonly elementType: ElementType = ElementType.Annotation;
+  public x: number = 0;
+  public y: number = 0;
+  public text: string = '';
+}
+
+export class AlternateLineElement extends ScoreElement {
+  public readonly elementType: ElementType = ElementType.AlternateLine;
+  public x: number = 0;
+  public y: number = 0;
+  public elements: ScoreElement[] = [];
 }
 
 export class DropCapElement extends ScoreElement {

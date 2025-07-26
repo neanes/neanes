@@ -41,8 +41,8 @@ export default class Annotation extends Vue {
   @Prop({ required: true }) pageSetup!: PageSetup;
   @Prop({ required: true }) fonts!: string[];
 
-  startX: number = 0;
-  startY: number = 0;
+  offsetX: number = 0;
+  offsetY: number = 0;
 
   zoom: number = 1;
 
@@ -190,8 +190,12 @@ export default class Annotation extends Vue {
     // to avoid recalculating it on every mouse move
     this.zoom = Number(getComputedStyle(this.$el).getPropertyValue('--zoom'));
 
-    this.startX = e.clientX / this.zoom - this.element.x;
-    this.startY = e.clientY / this.zoom - this.element.y;
+    const draggedEl = this.$el as HTMLElement;
+    const rect = draggedEl.getBoundingClientRect();
+
+    // Calculate the offset of the mouse click relative to the element
+    this.offsetX = e.clientX - rect.left;
+    this.offsetY = e.clientY - rect.top;
 
     document.addEventListener('mouseup', this.handleMouseUp);
     document.addEventListener('mousemove', this.handleMouseMove);
@@ -200,8 +204,42 @@ export default class Annotation extends Vue {
   handleMouseMove(e: MouseEvent) {
     e.preventDefault();
 
-    this.element.x = e.clientX / this.zoom - this.startX;
-    this.element.y = e.clientY / this.zoom - this.startY;
+    const draggedEl = this.$el as HTMLElement;
+    const pageEl = draggedEl.closest('.page') as HTMLElement;
+    if (!draggedEl || !pageEl) {
+      console.warn('Could not find dragged element or page element');
+      return;
+    }
+
+    const elRect = draggedEl.getBoundingClientRect();
+    const pageRect = pageEl.getBoundingClientRect();
+
+    const elWidth = elRect.width;
+    const elHeight = elRect.height;
+
+    // Compute desired top-left corner of element in viewport space
+    const desiredLeft = e.clientX - this.offsetX;
+    const desiredTop = e.clientY - this.offsetY;
+
+    // Clamp those values to page bounds
+    const clampedLeft = Math.max(
+      pageRect.left,
+      Math.min(desiredLeft, pageRect.right - elWidth),
+    );
+    const clampedTop = Math.max(
+      pageRect.top,
+      Math.min(desiredTop, pageRect.bottom - elHeight),
+    );
+
+    // Convert clamped screen coords into coordinates relative to the element's offsetParent
+    const offsetParent = draggedEl.offsetParent as HTMLElement;
+    const parentRect = offsetParent.getBoundingClientRect();
+
+    const newX = clampedLeft - parentRect.left;
+    const newY = clampedTop - parentRect.top;
+
+    this.element.x = newX / this.zoom;
+    this.element.y = newY / this.zoom;
   }
 
   handleMouseUp() {

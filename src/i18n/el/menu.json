@@ -31,6 +31,8 @@
   },
   "insert": {
     "root": "Εισαγωγή",
+    "alternateLine": "Εναλλακτική Γραμμή",
+    "annotation": "Επισήμανση",
     "dropCapBefore": "Αρχιγράμμα Πριν",
     "dropCapAfter": "Αρχιγράμμα Μετά",
     "textBox": "Πλαίσιο Κειμένου",

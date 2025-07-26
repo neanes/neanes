@@ -31,6 +31,7 @@
   },
   "insert": {
     "root": "Inserare",
+    "alternateLine": "Linie Alternativă",
     "annotation": "Anotare",
     "dropCapBefore": "Majusculă Înainte",
     "dropCapAfter": "Majusculă După",

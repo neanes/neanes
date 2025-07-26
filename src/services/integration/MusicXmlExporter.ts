@@ -7,7 +7,7 @@ import {
   ScoreElement,
   TempoElement,
 } from '@/models/Element';
-import { QuantitativeNeume } from '@/models/Neumes';
+import { MeasureBar, QuantitativeNeume } from '@/models/Neumes';
 import {
   getScaleNoteFromValue,
   getScaleNoteValue,
@@ -95,6 +95,8 @@ export class MusicXmlExporterOptions {
   calculateTimeSignatures: boolean = false;
   /** Indicates whether the time signature should be printed in each measure */
   displayTimeSignatures: boolean = false;
+  /** Indicates whether subdivisions should be printed in each measure */
+  displayMeasureSubdivisions: boolean = false;
   /** Indicates whether Vou should be extra flat in the legetos scale */
   useLegetos: boolean = false;
 }
@@ -244,6 +246,23 @@ export class MusicXmlExporter {
               currentMeasure.notes.length > 0) ||
             (workspace.needNewMeasure && currentMeasure.notes.length > 0)
           ) {
+            if (
+              noteElement.measureBarLeft &&
+              [
+                MeasureBar.MeasureBarTheseos,
+                MeasureBar.MeasureBarShortTheseos,
+                MeasureBar.MeasureBarTheseosAbove,
+                MeasureBar.MeasureBarShortTheseosAbove,
+              ].includes(noteElement.measureBarLeft)
+            ) {
+              const barline = new MusicXmlBarline();
+              barline.barStyle = new MusicXmlBarStyle(
+                workspace.options.displayMeasureSubdivisions
+                  ? 'dashed'
+                  : 'none',
+              );
+              currentMeasure.contents.push(barline);
+            }
             currentMeasure = new MusicXmlMeasure(measureNumber++);
             measures.push(currentMeasure);
             workspace.needNewMeasure = false;

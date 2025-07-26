@@ -624,7 +624,8 @@ export class MusicXmlExporter {
 
     if (
       modeKeyElement.templateId === 101 ||
-      modeKeyElement.templateId === 501
+      modeKeyElement.templateId === 501 ||
+      modeKeyElement.templateId === 506
     ) {
       // First Papadic and Plagal First from Ke should not use Bb
       handled = true;

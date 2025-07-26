@@ -22,6 +22,7 @@
     "openDestinationFolderAfterExport": "Open Destination Folder After Export",
     "calculateTimeSignatures": "Include Time Signatures",
     "displayTimeSignatures": "Display Time Signatures",
+    "displayMeasureSubdivisions": "Display Measure Subdivisions",
     "includeModeKeys": "Include Mode Keys",
     "includeTextBoxes": "Include Text Boxes",
     "exporting": "Exporting…",

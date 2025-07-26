@@ -112,6 +112,8 @@
     "disableGreekMelismata": "Disable Greek Melismata",
     "disableGreekMelismataDescription": "Prevents automatic use of the Greek melismatic convention, even when Greek text is detected. Useful for languages that use the Greek script but follow different notational conventions.",
     "defaultStyling": "Default Styling",
+    "alternateLineStyling": "Alternate Line Styling",
+    "alternateLineDescription": "The default styling for all alternate lines in the score.",
     "dropCaps": "Drop Caps",
     "dropCapsDescription": "The default styling for all drop caps in the score.",
     "color": "Color",

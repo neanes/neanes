@@ -1082,6 +1082,30 @@
               </div>
             </div>
 
+            <div class="form-group">
+              <div class="name">
+                {{ $t('dialog:pageSetup.alternateLineStyling') }}
+              </div>
+              <div class="description">
+                {{ $t('dialog:pageSetup.alternateLineDescription') }}
+              </div>
+              <div class="form-group row">
+                <label class="drop-caps-label name">{{
+                  $t('dialog:pageSetup.color')
+                }}</label>
+                <ColorPicker v-model="form.alternateLineDefaultColor" />
+              </div>
+              <div class="form-group">
+                <label class="drop-caps-label name">{{
+                  $t('dialog:pageSetup.size')
+                }}</label>
+                <InputFontSize
+                  class="drop-caps-input"
+                  v-model="form.alternateLineDefaultFontSize"
+                />
+              </div>
+            </div>
+
             <div class="subheader" ref="neumeStylesRef">
               {{ $t('dialog:pageSetup.neumeStyles') }}
             </div>

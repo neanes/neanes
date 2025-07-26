@@ -69,7 +69,7 @@
       :style="tertiaryAccidentalStyle"
     />
     <Neume
-      v-if="note.noteIndicator"
+      v-if="note.noteIndicator && note.noteIndicatorNeume"
       :neume="note.noteIndicatorNeume"
       :style="noteIndicatorStyle"
     />
@@ -121,6 +121,7 @@ import { withZoom } from '@/utils/withZoom';
 export default class NeumeBoxSyllable extends Vue {
   @Prop() note!: NoteElement;
   @Prop() pageSetup!: PageSetup;
+  @Prop({ default: false }) alternateLine!: boolean;
 
   TimeNeume = TimeNeume;
   VocalExpressionNeume = VocalExpressionNeume;
@@ -214,8 +215,12 @@ export default class NeumeBoxSyllable extends Vue {
   get style() {
     return {
       fontFamily: this.pageSetup.neumeDefaultFontFamily,
-      fontSize: withZoom(this.pageSetup.neumeDefaultFontSize),
-      color: this.pageSetup.neumeDefaultColor,
+      fontSize: this.alternateLine
+        ? withZoom(this.pageSetup.alternateLineDefaultFontSize)
+        : withZoom(this.pageSetup.neumeDefaultFontSize),
+      color: this.alternateLine
+        ? this.pageSetup.alternateLineDefaultColor
+        : this.pageSetup.neumeDefaultColor,
       webkitTextStrokeWidth: withZoom(this.pageSetup.neumeDefaultStrokeWidth),
     } as StyleValue;
   }

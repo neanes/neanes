@@ -23,12 +23,10 @@ import { AlternateLineElement, ElementType } from '@/models/Element';
 import { PageSetup } from '@/models/PageSetup';
 import { withZoom } from '@/utils/withZoom';
 
-import NeumeBoxEmpty from './NeumeBoxEmpty.vue';
 import NeumeBoxSyllable from './NeumeBoxSyllable.vue';
 
 @Component({
   components: {
-    NeumeBoxEmpty,
     NeumeBoxSyllable,
   },
   emits: ['update'],

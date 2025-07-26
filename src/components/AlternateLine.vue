@@ -44,6 +44,8 @@ export default class Annotation extends Vue {
 
   zoom: number = 1;
 
+  clampingInterval: ReturnType<typeof setTimeout> | null = null;
+
   get style() {
     return {
       left: withZoom(this.element.x),
@@ -52,9 +54,17 @@ export default class Annotation extends Vue {
     };
   }
 
+  mounted() {
+    this.clampingInterval = setInterval(this.clampToPageBounds, 250);
+  }
+
   beforeDestroy() {
     document.removeEventListener('mouseup', this.handleMouseUp);
     document.removeEventListener('mousemove', this.handleMouseMove);
+
+    if (this.clampingInterval != null) {
+      clearInterval(this.clampingInterval);
+    }
   }
 
   handleMouseDown(e: MouseEvent) {
@@ -120,6 +130,39 @@ export default class Annotation extends Vue {
 
     document.removeEventListener('mouseup', this.handleMouseUp);
     document.removeEventListener('mousemove', this.handleMouseMove);
+  }
+
+  clampToPageBounds() {
+    const el = this.$el as HTMLElement;
+    const pageEl = el.closest('.page') as HTMLElement;
+    const offsetParent = el.offsetParent as HTMLElement;
+
+    if (!el || !pageEl || !offsetParent) {
+      return;
+    }
+
+    const zoom = Number(getComputedStyle(this.$el).getPropertyValue('--zoom'));
+
+    const elRect = el.getBoundingClientRect();
+    const pageRect = pageEl.getBoundingClientRect();
+    const parentRect = offsetParent.getBoundingClientRect();
+
+    const elWidth = elRect.width;
+    const elHeight = elRect.height;
+
+    // Current position relative to offset parent
+    const currentX = this.element.x * zoom;
+    const currentY = this.element.y * zoom;
+
+    // Convert .page bounds into offsetParent-relative coordinates
+    const minX = pageRect.left - parentRect.left;
+    const minY = pageRect.top - parentRect.top;
+    const maxX = pageRect.right - parentRect.left - elWidth;
+    const maxY = pageRect.bottom - parentRect.top - elHeight;
+
+    // Clamp
+    this.element.x = Math.max(minX, Math.min(currentX, maxX)) / zoom;
+    this.element.y = Math.max(minY, Math.min(currentY, maxY)) / zoom;
   }
 }
 </script>

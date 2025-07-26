@@ -1,6 +1,7 @@
 <template>
   <div
     class="annotation-container"
+    :class="{ selectedAnnotation: selected }"
     :style="style"
     @mousedown="handleMouseDown"
     @dblclick="handleDoubleClick"
@@ -40,6 +41,7 @@ export default class Annotation extends Vue {
   @Prop({ required: true }) element!: AnnotationElement;
   @Prop({ required: true }) pageSetup!: PageSetup;
   @Prop({ required: true }) fonts!: string[];
+  @Prop({ default: false }) selected!: boolean;
 
   offsetX: number = 0;
   offsetY: number = 0;
@@ -259,14 +261,19 @@ export default class Annotation extends Vue {
   z-index: 1000;
   cursor: default;
   padding: 0 10px;
+  transform-origin: 0 0;
+  transform: scale(var(--zoom, 1));
+}
+
+.selectedAnnotation {
+  outline: 1px solid goldenrod;
 }
 
 .rich-text-editor {
   padding: 0;
   box-sizing: border-box;
   overflow: visible;
-  transform-origin: 0 0;
-  transform: scale(var(--zoom, 1));
+
   border: none !important;
 }
 

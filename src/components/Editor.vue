@@ -247,7 +247,7 @@
                         :element="alternateLine"
                         :pageSetup="score.pageSetup"
                         :class="{
-                          selectedAnnotation:
+                          selectedAlternateLine:
                             this.selectedWorkspace
                               .selectedAlternateLineElement === alternateLine,
                         }"
@@ -263,11 +263,10 @@
                         :element="annotation"
                         :pageSetup="score.pageSetup"
                         :fonts="fonts"
-                        :class="{
-                          selectedAnnotation:
-                            this.selectedWorkspace.selectedAnnotationElement ===
-                            annotation,
-                        }"
+                        :selected="
+                          this.selectedWorkspace.selectedAnnotationElement ===
+                          annotation
+                        "
                         @update="updateAnnotation(annotation, $event)"
                         @delete="
                           removeAnnotation(
@@ -7860,7 +7859,7 @@ export default class Editor extends Vue {
   border: 1px solid goldenrod;
 }
 
-.selectedAnnotation {
+.selectedAlternateLine {
   outline: 1px solid goldenrod;
 }
 
@@ -7981,7 +7980,7 @@ export default class Editor extends Vue {
   margin-right: auto;
 
   background-color: white;
-  overflow: hidden;
+  overflow: clip;
 
   position: relative;
 }
@@ -8156,6 +8155,7 @@ export default class Editor extends Vue {
 .page.print .mode-key-container,
 .page.print .image-box-container,
 .page.print .selectedAnnotation,
+.page.print .selectedAlternateLine,
 .page.print :deep(.text-box),
 .page.print :deep(.rich-text-editor),
 .page.print :deep(.inline-container),

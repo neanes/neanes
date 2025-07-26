@@ -192,7 +192,7 @@ export class PageSetup {
   public chrysanthineAccidentals: boolean = true;
   public noFthoraRestrictions: boolean = false;
   public disableGreekMelismata: boolean = false;
-  public alignIsonIndicators: boolean = false;
+  public alignIsonIndicators: boolean = true;
 
   public useOptionalDiatonicFthoras: boolean = false;
 

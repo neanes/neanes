@@ -87,7 +87,7 @@
               type="checkbox"
               v-model="musicXmlOptions.displayMeasureSubdivisions"
             />
-            <label for="export-dialog-display-time-signatures">{{
+            <label for="export-dialog-display-measure-subdivisions">{{
               $t('dialog:export.displayMeasureSubdivisions')
             }}</label>
           </div>

@@ -81,6 +81,16 @@
               $t('dialog:export.displayTimeSignatures')
             }}</label>
           </div>
+          <div class="form-group row">
+            <input
+              id="export-dialog-display-measure-subdivisions"
+              type="checkbox"
+              v-model="musicXmlOptions.displayMeasureSubdivisions"
+            />
+            <label for="export-dialog-display-measure-subdivisions">{{
+              $t('dialog:export.displayMeasureSubdivisions')
+            }}</label>
+          </div>
 
           <div class="separator"></div>
 

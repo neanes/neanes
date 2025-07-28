@@ -7,7 +7,7 @@ import {
   ScoreElement,
   TempoElement,
 } from '@/models/Element';
-import { QuantitativeNeume } from '@/models/Neumes';
+import { MeasureBar, QuantitativeNeume } from '@/models/Neumes';
 import {
   getScaleNoteFromValue,
   getScaleNoteValue,
@@ -102,6 +102,8 @@ export class MusicXmlExporterOptions {
   calculateTimeSignatures: boolean = false;
   /** Indicates whether the time signature should be printed in each measure */
   displayTimeSignatures: boolean = false;
+  /** Indicates whether subdivisions should be printed in each measure */
+  displayMeasureSubdivisions: boolean = false;
   /** Indicates whether Vou should be extra flat in the legetos scale */
   useLegetos: boolean = false;
 }
@@ -287,19 +289,20 @@ export class MusicXmlExporter {
       switch (element.elementType) {
         case ElementType.Note:
           const noteElement = element as NoteElement;
-          // Cut of the measure as close to the configured measureLength
-          // option as we can. If a left barline is present, end the measure
-          // before processing the current note.
-          if (
-            currentMeasure.notes.length >= workspace.options.measureLength ||
-            (noteElement.measureBarLeft != null &&
-              currentMeasure.notes.length > 0) ||
-            (workspace.needNewMeasure && currentMeasure.notes.length > 0)
-          ) {
-            currentMeasure = new MusicXmlMeasure(measureNumber++);
-            measures.push(currentMeasure);
-            workspace.needNewMeasure = false;
-          }
+
+          // Determine whether the left barline should be before the first or
+          // second note in the group
+          const leftBarIndex = [
+            QuantitativeNeume.Hyporoe,
+            QuantitativeNeume.OligonPlusHyporoe,
+            QuantitativeNeume.OligonPlusHyporoePlusKentemata,
+            QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
+            QuantitativeNeume.PetastiPlusHyporoe,
+            QuantitativeNeume.PetastiPlusRunningElaphron,
+            QuantitativeNeume.RunningElaphron,
+          ].includes(noteElement.quantitativeNeume)
+            ? 1
+            : 0;
 
           // Build the note group
           const notes = this.buildNoteGroup(
@@ -309,8 +312,40 @@ export class MusicXmlExporter {
           );
 
           workspace.dropCap = '';
-
-          currentMeasure.contents.push(...notes);
+          for (let i = 0; i < notes.length; i++) {
+            if (
+              i == leftBarIndex &&
+              (currentMeasure.notes.length >= workspace.options.measureLength ||
+                (noteElement.measureBarLeft != null &&
+                  currentMeasure.notes.length > 0) ||
+                (workspace.needNewMeasure && currentMeasure.notes.length > 0))
+            ) {
+              // Cut off the measure as close to the configured measureLength
+              // option as we can. If a left barline is present, end the measure
+              // before processing the current note.
+              if (
+                noteElement.measureBarLeft &&
+                [
+                  MeasureBar.MeasureBarTheseos,
+                  MeasureBar.MeasureBarShortTheseos,
+                  MeasureBar.MeasureBarTheseosAbove,
+                  MeasureBar.MeasureBarShortTheseosAbove,
+                ].includes(noteElement.measureBarLeft)
+              ) {
+                const barline = new MusicXmlBarline();
+                barline.barStyle = new MusicXmlBarStyle(
+                  workspace.options.displayMeasureSubdivisions
+                    ? 'dashed'
+                    : 'none',
+                );
+                currentMeasure.contents.push(barline);
+              }
+              currentMeasure = new MusicXmlMeasure(measureNumber++);
+              measures.push(currentMeasure);
+              workspace.needNewMeasure = false;
+            }
+            currentMeasure.contents.push(notes[i]);
+          }
 
           // If a right barline is present, end the measure
           // before processing the next note

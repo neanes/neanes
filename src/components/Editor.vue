@@ -7560,6 +7560,12 @@ export default class Editor extends Vue {
     workspace.tempFileName = this.getTempFilename();
     workspace.score = new Score();
 
+    // The ison test page can be used to inspect the ison alignment
+    // provided by the font, so we disable the automatic ison alignment
+    if (testFileType === TestFileType.Ison) {
+      workspace.score.pageSetup.alignIsonIndicators = false;
+    }
+
     this.addWorkspace(workspace);
 
     this.selectedWorkspace = workspace;

@@ -487,11 +487,23 @@ export const petastiNeumes: ReadonlyArray<QuantitativeNeume> = [
   QuantitativeNeume.PetastiPlusHypsiliPlusKentimaHorizontal,
   QuantitativeNeume.PetastiPlusHypsiliPlusKentimaVertical,
   QuantitativeNeume.PetastiPlusDoubleHypsili,
+  QuantitativeNeume.PetastiKentimataDoubleYpsili,
+  QuantitativeNeume.PetastiKentimaDoubleYpsiliRight,
+  QuantitativeNeume.PetastiKentimaDoubleYpsiliLeft,
+  QuantitativeNeume.PetastiTripleYpsili,
+  QuantitativeNeume.PetastiKentimataTripleYpsili,
+  QuantitativeNeume.PetastiKentimaTripleYpsili,
   QuantitativeNeume.PetastiPlusApostrophos,
   QuantitativeNeume.PetastiPlusElaphron,
   QuantitativeNeume.PetastiPlusElaphronPlusApostrophos,
   QuantitativeNeume.PetastiPlusHyporoe,
   QuantitativeNeume.PetastiPlusRunningElaphron,
+  QuantitativeNeume.PetastiHamili,
+  QuantitativeNeume.PetastiHamiliApostrofos,
+  QuantitativeNeume.PetastiHamiliElafron,
+  QuantitativeNeume.PetastiHamiliElafronApostrofos,
+  QuantitativeNeume.PetastiDoubleHamili,
+  QuantitativeNeume.PetastiDoubleHamiliApostrofos,
 ];
 
 export const oligonNeumes: ReadonlyArray<QuantitativeNeume> = [

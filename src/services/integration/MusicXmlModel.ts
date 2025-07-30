@@ -290,6 +290,7 @@ export class MusicXmlNote {
   duration: number = 1;
   type: string = 'quarter';
   dot?: MusicXmlDot;
+  tie?: MusicXmlTie;
   lyric?: MusicXmlLyric;
   notations?: MusicXmlNotations;
 
@@ -310,6 +311,7 @@ export class MusicXmlNote {
         <duration>${this.duration}</duration>
         <type>${this.type}</type>
         ${this.dot?.toXml() ?? ''}
+        ${this.tie?.toXml() ?? ''}
         ${this.notations?.toXml() ?? ''}
         ${this.lyric?.toXml() ?? ''}
       </note>`;
@@ -371,8 +373,41 @@ export class MusicXmlAlter {
 }
 
 export class MusicXmlDot {
+  count: number;
+
+  constructor(count: number) {
+    this.count = count;
+  }
+
   toXml() {
-    const xml = `<dot/>`;
+    const xml = Array(this.count).fill('<dot/>').join('');
+    return xml;
+  }
+}
+
+export class MusicXmlTie {
+  type: MusicXmlStartStopContinueType;
+
+  constructor(type: MusicXmlStartStopContinueType) {
+    this.type = type;
+  }
+
+  toXml() {
+    const xml = `<tie type="${this.type}" />`;
+
+    return xml;
+  }
+}
+
+export class MusicXmlTied {
+  type: MusicXmlStartStopContinueType;
+
+  constructor(type: MusicXmlStartStopContinueType) {
+    this.type = type;
+  }
+
+  toXml() {
+    const xml = `<tied type="${this.type}" />`;
 
     return xml;
   }

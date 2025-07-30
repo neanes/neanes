@@ -7,7 +7,7 @@ import {
   ScoreElement,
   TempoElement,
 } from '@/models/Element';
-import { QuantitativeNeume } from '@/models/Neumes';
+import { MeasureBar, QuantitativeNeume } from '@/models/Neumes';
 import {
   getScaleNoteFromValue,
   getScaleNoteValue,
@@ -25,7 +25,6 @@ import {
   NodeType,
   NoteAtomNode,
   RestNode,
-  TemporalNode,
 } from '../audio/AnalysisService';
 import {
   MusicXmlAlter,
@@ -61,6 +60,8 @@ import {
   MusicXmlStepType,
   MusicXmlSyllabic,
   MusicXmlText,
+  MusicXmlTie,
+  MusicXmlTied,
   MusicXmlTime,
 } from './MusicXmlModel';
 
@@ -88,6 +89,12 @@ export interface PlaybackScale {
   scaleNoteMap: Map<ScaleNote, number>;
 }
 
+export interface DottedNote {
+  type: string;
+  dots: 0 | 1 | 2 | 3;
+  duration: number;
+}
+
 export class MusicXmlExporterOptions {
   /** The target measure length if no barlines are present */
   measureLength: number = 8;
@@ -95,6 +102,8 @@ export class MusicXmlExporterOptions {
   calculateTimeSignatures: boolean = false;
   /** Indicates whether the time signature should be printed in each measure */
   displayTimeSignatures: boolean = false;
+  /** Indicates whether subdivisions should be printed in each measure */
+  displayMeasureSubdivisions: boolean = false;
   /** Indicates whether Vou should be extra flat in the legetos scale */
   useLegetos: boolean = false;
 }
@@ -119,8 +128,6 @@ class MusicXmlExporterWorkspace {
   isSyllabic: boolean = false;
   /**  Indicates whether we are processing a non-hyphenated melismatic phrase */
   isMelismatic: boolean = false;
-  /**  Indicates whether we are processing a triplet */
-  isTriplet: boolean = false;
   /**  Indicates that the next note we encounter should be placed into a new measure */
   needNewMeasure: boolean = false;
 
@@ -166,6 +173,47 @@ export class MusicXmlExporter {
 
   logLevel: MusicXmlExporterLogLevel = 'none';
 
+  epsilon: number = 1e-6;
+
+  // base durations in beats
+  noteTypes: Map<string, number> = new Map([
+    ['maxima', 32.0],
+    ['long', 16.0],
+    ['breve', 8.0],
+    ['whole', 4.0],
+    ['half', 2.0],
+    ['quarter', 1.0],
+    ['eighth', 0.5],
+    ['16th', 0.25],
+    ['32nd', 0.125],
+    ['64th', 0.0625],
+    ['128th', 0.03125],
+    ['256th', 0.015625],
+    ['512th', 0.0078125],
+    ['1024th', 0.00390625],
+  ]);
+
+  dottedNotes: DottedNote[] = [];
+
+  constructor() {
+    for (const [type, duration] of this.noteTypes.entries()) {
+      for (let dots = 0; dots <= 3; dots++) {
+        // sum = duration * (1 + 1/2 + 1/4 + ... up to dots)
+        let factor = 0;
+        for (let i = 0; i <= dots; i++) {
+          factor += 1 / 2 ** i;
+        }
+        this.dottedNotes.push({
+          type,
+          dots: dots as 0 | 1 | 2 | 3,
+          duration: duration * factor,
+        });
+      }
+    }
+    // sort descending by duration so we can do a simple greedy search
+    this.dottedNotes.sort((a, b) => b.duration - a.duration);
+  }
+
   export(score: Score, options: MusicXmlExporterOptions) {
     const workspace = new MusicXmlExporterWorkspace(
       this.diatonicScale,
@@ -178,6 +226,13 @@ export class MusicXmlExporter {
       score.staff.elements,
       score.pageSetup.chrysanthineAccidentals,
     );
+
+    // Quantize the score to sixteenth notes. Global quantization is necessarily
+    // lossy, so in the future it would be desirable to implement a
+    // context-aware analysis system that could perform accurate quantization of
+    // specific formulae. It would also be desirable to allow the user to
+    // disable quantization/analysis and get a score that uses triplets.
+    this.quantize(workspace, 0.25);
 
     const measures = this.buildMeasures(score.staff.elements, workspace);
 
@@ -234,20 +289,20 @@ export class MusicXmlExporter {
       switch (element.elementType) {
         case ElementType.Note:
           const noteElement = element as NoteElement;
-          // Cut of the measure as close to the configured measureLength
-          // option as we can. If a left barline is present, end the measure
-          // before processing the current note.
-          if (
-            (currentMeasure.notes.length >= workspace.options.measureLength &&
-              !workspace.isTriplet) ||
-            (noteElement.measureBarLeft != null &&
-              currentMeasure.notes.length > 0) ||
-            (workspace.needNewMeasure && currentMeasure.notes.length > 0)
-          ) {
-            currentMeasure = new MusicXmlMeasure(measureNumber++);
-            measures.push(currentMeasure);
-            workspace.needNewMeasure = false;
-          }
+
+          // Determine whether the left barline should be before the first or
+          // second note in the group
+          const leftBarIndex = [
+            QuantitativeNeume.Hyporoe,
+            QuantitativeNeume.OligonPlusHyporoe,
+            QuantitativeNeume.OligonPlusHyporoePlusKentemata,
+            QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
+            QuantitativeNeume.PetastiPlusHyporoe,
+            QuantitativeNeume.PetastiPlusRunningElaphron,
+            QuantitativeNeume.RunningElaphron,
+          ].includes(noteElement.quantitativeNeume)
+            ? 1
+            : 0;
 
           // Build the note group
           const notes = this.buildNoteGroup(
@@ -257,8 +312,40 @@ export class MusicXmlExporter {
           );
 
           workspace.dropCap = '';
-
-          currentMeasure.contents.push(...notes);
+          for (let i = 0; i < notes.length; i++) {
+            if (
+              i == leftBarIndex &&
+              (currentMeasure.notes.length >= workspace.options.measureLength ||
+                (noteElement.measureBarLeft != null &&
+                  currentMeasure.notes.length > 0) ||
+                (workspace.needNewMeasure && currentMeasure.notes.length > 0))
+            ) {
+              // Cut off the measure as close to the configured measureLength
+              // option as we can. If a left barline is present, end the measure
+              // before processing the current note.
+              if (
+                noteElement.measureBarLeft &&
+                [
+                  MeasureBar.MeasureBarTheseos,
+                  MeasureBar.MeasureBarShortTheseos,
+                  MeasureBar.MeasureBarTheseosAbove,
+                  MeasureBar.MeasureBarShortTheseosAbove,
+                ].includes(noteElement.measureBarLeft)
+              ) {
+                const barline = new MusicXmlBarline();
+                barline.barStyle = new MusicXmlBarStyle(
+                  workspace.options.displayMeasureSubdivisions
+                    ? 'dashed'
+                    : 'none',
+                );
+                currentMeasure.contents.push(barline);
+              }
+              currentMeasure = new MusicXmlMeasure(measureNumber++);
+              measures.push(currentMeasure);
+              workspace.needNewMeasure = false;
+            }
+            currentMeasure.contents.push(notes[i]);
+          }
 
           // If a right barline is present, end the measure
           // before processing the next note
@@ -277,6 +364,7 @@ export class MusicXmlExporter {
             currentMeasure.contents.push(barline);
 
             // Create a new measure
+            this.finalizeMeasure(currentMeasure);
             currentMeasure = new MusicXmlMeasure(measureNumber++);
             measures.push(currentMeasure);
 
@@ -333,6 +421,7 @@ export class MusicXmlExporter {
             currentMeasure != null &&
             currentMeasure.notes.length > 0
           ) {
+            this.finalizeMeasure(currentMeasure);
             currentMeasure = new MusicXmlMeasure(measureNumber++);
             measures.push(currentMeasure);
           }
@@ -364,6 +453,7 @@ export class MusicXmlExporter {
               currentMeasure.contents.push(barline);
 
               // Create a new measure
+              this.finalizeMeasure(currentMeasure);
               currentMeasure = new MusicXmlMeasure(measureNumber++);
               measures.push(currentMeasure);
             } else {
@@ -481,8 +571,9 @@ export class MusicXmlExporter {
 
       if (node.nodeType === NodeType.NoteAtomNode) {
         const noteNode = node as NoteAtomNode;
-        const note = this.buildNote(noteNode, workspace);
-        notes.push(note);
+        const builtNotes = this.buildNotes(noteNode, workspace);
+        notes.push(...builtNotes);
+        const note = builtNotes[0];
 
         if (
           !noteNode.accidental &&
@@ -544,7 +635,7 @@ export class MusicXmlExporter {
           }
         }
 
-        workspace.previousNote = note;
+        workspace.previousNote = builtNotes[builtNotes.length - 1];
       } else if (node.nodeType === NodeType.FthoraNode) {
         const fthoraNode = node as FthoraNode;
 
@@ -552,8 +643,7 @@ export class MusicXmlExporter {
       } else if (node.nodeType === NodeType.RestNode) {
         const restNode = node as RestNode;
 
-        const rest = this.buildRest(restNode);
-        notes.push(rest);
+        notes.push(...this.buildRests(restNode));
       } else if (node.nodeType === NodeType.IsonNode) {
         const isonNode = node as IsonNode;
 
@@ -590,27 +680,212 @@ export class MusicXmlExporter {
     return notes;
   }
 
-  buildNote(
+  /**
+   * Convert a (possibly fractional) beat count into the minimal list of tied
+   * notes (with up to 3 dots) whose sum matches. This does not attempt to
+   * order the tied notes in a manner that reflects the metrical structure of
+   * the measure. It is expected that the caller will sort the results once
+   * measure boundaries are established.
+   */
+  buildNotes(
     node: Readonly<NoteAtomNode>,
     workspace: MusicXmlExporterWorkspace,
-  ): MusicXmlNote {
-    const duration = this.getDuration(node, workspace);
+  ): MusicXmlNote[] {
+    let remaining = node.duration;
+    const result: MusicXmlNote[] = [];
 
-    const note = new MusicXmlNote(duration, this.getType(duration));
+    while (remaining > this.epsilon) {
+      // find the largest variant that fits in `remaining`
+      const v = this.dottedNotes.find(
+        (v) => v.duration <= remaining + this.epsilon,
+      );
+      if (!v) {
+        throw new Error(
+          `Cannot fit remainder ${remaining.toFixed(2)} into any note.`,
+        );
+      }
 
-    note.pitch = this.getPitch(node, workspace);
-    note.dot = this.getDot(node);
+      // create a note
+      const note = new MusicXmlNote(v.duration, v.type);
+      note.pitch = this.getPitch(node, workspace);
+      if (v.dots > 0) {
+        note.dot = new MusicXmlDot(v.dots);
+      }
+      result.push(note);
+      remaining -= v.duration;
+    }
 
-    return note;
+    for (let i = 0; i < result.length; i++) {
+      // tie each pair of two notes together
+      if (i < result.length - 1) {
+        result[i].tie = new MusicXmlTie('start');
+        result[i].addNotation(new MusicXmlTied('start'));
+      }
+      if (i > 0) {
+        result[i].tie = new MusicXmlTie('stop');
+        result[i].addNotation(new MusicXmlTied('stop'));
+      }
+    }
+
+    return result;
   }
 
-  buildRest(node: Readonly<RestNode>): MusicXmlNote {
-    const note = new MusicXmlNote(node.duration, this.getType(node.duration));
+  /**
+   * Break a possibly long rest into the minimal list of dotted rest notes that
+   * sum to the total duration. This does not attempt to order the rests in a
+   * manner that reflects the metrical structure of the measure. It is expected
+   * that the caller will sort the results once measure boundaries are
+   * established.
+   */
+  buildRests(node: Readonly<RestNode>): MusicXmlNote[] {
+    let remaining = node.duration;
+    const result: MusicXmlNote[] = [];
 
-    note.rest = new MusicXmlRest();
-    note.dot = this.getDot(node);
+    while (remaining > this.epsilon) {
+      // find the largest variant that fits in `remaining`
+      const v = this.dottedNotes.find(
+        (v) => v.duration <= remaining + this.epsilon,
+      );
+      if (!v) {
+        throw new Error(
+          `Cannot fit remainder ${remaining.toFixed(2)} into any rest.`,
+        );
+      }
 
-    return note;
+      // create a rest
+      const rest = new MusicXmlNote(v.duration, v.type);
+      rest.rest = new MusicXmlRest();
+      if (v.dots > 0) {
+        rest.dot = new MusicXmlDot(v.dots);
+      }
+      result.push(rest);
+      remaining -= v.duration;
+    }
+
+    return result;
+  }
+
+  finalizeMeasure(measure: MusicXmlMeasure): void {
+    this.fixTiedNoteOrder(measure);
+    this.fixRestOrder(measure);
+  }
+
+  fixTiedNoteOrder(measure: MusicXmlMeasure): void {
+    // Compute each note’s offset from the start of the measure. offsets[i] is
+    // the beat‐offset of measure.notes[i]
+    const notes = measure.notes; // only MusicXmlNote entries, in content order
+    const offsets: number[] = [];
+    let acc = 0;
+    for (const n of notes) {
+      offsets.push(acc);
+      acc += n.duration;
+    }
+
+    // scan for adjacent tie‐start/tie‐stop pairs
+    for (let i = 0; i + 1 < notes.length; i++) {
+      const n1 = notes[i];
+      const n2 = notes[i + 1];
+      if (n1.tie?.type === 'start' && n2.tie?.type === 'stop') {
+        // if n1 does NOT begin on a whole‐beat boundary, we flip
+        const frac = offsets[i] - Math.floor(offsets[i]);
+        if (frac > this.epsilon) {
+          this.swapTiePairInMeasure(measure, n1, n2);
+          // advance past the pair so we don't re‐flip
+          i++;
+        }
+      }
+    }
+  }
+
+  /**
+   * Given two MusicXmlNotes n1 (start) and n2 (stop), both present in
+   * measure.contents, swap their positions in that array and swap their tie
+   * markers so that the first one now has a "start" tie and the second a "stop"
+   * tie.
+   */
+  swapTiePairInMeasure(
+    measure: MusicXmlMeasure,
+    originalStart: MusicXmlNote,
+    originalStop: MusicXmlNote,
+  ) {
+    const c = measure.contents as any[]; // union of all content types
+
+    // find their indexes in contents[]
+    const idx1 = c.indexOf(originalStart);
+    const idx2 = c.indexOf(originalStop);
+    if (idx1 < 0 || idx2 < 0) {
+      return; // should not happen
+    }
+
+    // swap them
+    c[idx1] = originalStop;
+    c[idx2] = originalStart;
+
+    // now re‐assign ties:
+    //   the note now at idx1 (originalStop) becomes the new start,
+    //   the note now at idx2 (originalStart) becomes the new stop.
+    const newStart = originalStop;
+    const newStop = originalStart;
+
+    // strip any existing <tied> notation from both
+    for (const nn of [newStart, newStop]) {
+      if (nn.notations) {
+        nn.notations.contents = nn.notations.contents.filter(
+          (x) => !(x instanceof MusicXmlTied),
+        );
+      }
+    }
+
+    // attach the correct <tie> and <tied> markers
+    newStart.tie = new MusicXmlTie('start');
+    newStart.addNotation(new MusicXmlTied('start'));
+    newStop.tie = new MusicXmlTie('stop');
+    newStop.addNotation(new MusicXmlTied('stop'));
+  }
+
+  fixRestOrder(measure: MusicXmlMeasure): void {
+    // gather only the MusicXmlNotes (including rests), and their running offsets
+    const notes = measure.notes;
+    const offsets: number[] = [];
+    let acc = 0;
+    for (const n of notes) {
+      offsets.push(acc);
+      acc += n.duration;
+    }
+
+    // scan for adjacent rest‐pairs
+    for (let i = 0; i + 1 < notes.length; i++) {
+      const r1 = notes[i];
+      const r2 = notes[i + 1];
+      // both must be rests, and r1 longer than r2
+      if (r1.rest && r2.rest && r1.duration > r2.duration) {
+        // if r1 does NOT begin on an integer beat
+        const frac = offsets[i] - Math.floor(offsets[i]);
+        if (frac > this.epsilon) {
+          this.swapRestPairInMeasure(measure, r1, r2);
+          i++; // skip past the swapped pair
+        }
+      }
+    }
+  }
+
+  /**
+   * swap two rest‐notes in measure.contents
+   */
+  swapRestPairInMeasure(
+    measure: MusicXmlMeasure,
+    r1: MusicXmlNote,
+    r2: MusicXmlNote,
+  ): void {
+    const c = measure.contents as any[];
+    const i1 = c.indexOf(r1);
+    const i2 = c.indexOf(r2);
+    if (i1 < 0 || i2 < 0) {
+      return;
+    }
+    // simple swap
+    c[i1] = r2;
+    c[i2] = r1;
   }
 
   buildKey(
@@ -884,68 +1159,6 @@ export class MusicXmlExporter {
     }
   }
 
-  getDuration(node: TemporalNode, workspace: MusicXmlExporterWorkspace) {
-    const rounded = node.duration.toFixed(2);
-
-    let duration = node.duration;
-
-    // Digorgon is interpreted as 1/2 + 1/4 + 1/4
-    // This is primarily because it is easier for singers to sight sing,
-    // and is a convention used in St Anthony's Divine Music Project
-    // TODO support true triplets as a configurable option
-
-    switch (rounded) {
-      case '0.33':
-        duration = workspace.isTriplet ? 0.25 : 0.5;
-        workspace.isTriplet = true;
-        break;
-      case '0.67':
-        // Round dotted gorgon to eighth note
-        duration = 0.5;
-        break;
-    }
-
-    if (!rounded.endsWith('.33')) {
-      workspace.isTriplet = false;
-    }
-
-    return duration;
-  }
-
-  getType(duration: number) {
-    let type = '';
-
-    switch (duration) {
-      case 0.25:
-        type = '16th';
-        break;
-      case 0.5:
-        type = 'eighth';
-        break;
-      case 1:
-      case 1.5:
-        type = 'quarter';
-        break;
-      case 2:
-      case 3:
-        type = 'half';
-        break;
-      case 4:
-        type = 'whole';
-        break;
-      default:
-        type = 'quarter';
-    }
-
-    return type;
-  }
-
-  getDot(node: TemporalNode) {
-    const dots = [1.5, 3];
-
-    return dots.includes(node.duration) ? new MusicXmlDot() : undefined;
-  }
-
   findNodes(
     nodes: readonly AnalysisNode[],
     elementIndex: number,
@@ -1156,6 +1369,45 @@ export class MusicXmlExporter {
     const alter = pitch.alter?.content ?? 0;
 
     return this.stepToValueMap.get(pitch.step)! + pitch.octave * 12 + alter;
+  }
+
+  /**
+   * Quantize a list of note‐durations (in quarter‐notes) to the nearest
+   * sixteenth (step = 0.25), snapping ends upward so that we never go behind
+   * the beat, and preserving the streamwise beat structure.
+   */
+  quantize(workspace: MusicXmlExporterWorkspace, step: number) {
+    const nodes = workspace.nodes.filter(
+      (x) => x.nodeType === NodeType.NoteAtomNode,
+    ) as NoteAtomNode[];
+    const durations = nodes.map((x) => x.duration);
+
+    // build raw cumulative offsets in beats
+    const rawOffsets = durations.reduce<number[]>(
+      (offs, d) => {
+        offs.push(offs[offs.length - 1] + d);
+        return offs;
+      },
+      [0],
+    );
+
+    // snap each offset upward (Math.ceil) to the grid, using a small epsilon to
+    // avoid float artifacts
+    const gridOffsets = rawOffsets.map(
+      (o) => Math.ceil((o - this.epsilon) / step) * step,
+    );
+
+    // take differences between successive snapped offsets
+    const q: number[] = [];
+    for (let i = 1; i < gridOffsets.length; i++) {
+      // round off any tiny floating point residue
+      q.push(+(gridOffsets[i] - gridOffsets[i - 1]).toFixed(2));
+    }
+
+    // save quantized durations
+    for (let i = 0; i < nodes.length; i++) {
+      nodes[i].duration = q[i];
+    }
   }
 
   getNextStep(step: MusicXmlStepType) {

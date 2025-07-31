@@ -8209,7 +8209,7 @@ export default class Editor extends Vue {
   .page {
     width: auto;
     height: auto;
-    margin-bottom: 0;
+    margin: 0;
     padding: 0;
     break-after: page;
   }

@@ -6998,9 +6998,7 @@ export default class Editor extends Vue {
             } as any;
 
             if (args.transparentBackground) {
-              options.style = {
-                backgroundColor: 'transparent',
-              };
+              options.style.backgroundColor = 'transparent';
             }
 
             let data = await toPng(page, options);

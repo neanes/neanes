@@ -4,6 +4,9 @@ import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import pluginVue from 'eslint-plugin-vue';
 
 export default [
+  {
+    ignores: ['dist/**/*', 'dist-electron/**/*'],
+  },
   ...pluginVue.configs['flat/essential'],
   ...vueTsEslintConfig({
     extends: ['recommended'],

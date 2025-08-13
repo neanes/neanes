@@ -4,7 +4,7 @@
 
 ### Prerequisites
 
-- Node.js 20.x or later
+- Node.js 22.x or later
 
 ### Project Setup
 

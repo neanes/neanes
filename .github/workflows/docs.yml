@@ -16,7 +16,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           # choose node.js version to use
-          node-version: '20'
+          node-version: '22'
 
       - name: Cache dependencies
         id: cache

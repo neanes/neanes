@@ -1810,9 +1810,18 @@ export class LayoutService {
             MelismaHelperGreek.isGreek(element.lyrics)
           ) {
             if (element.isMelismaStart) {
-              melismaSyllables = MelismaHelperGreek.getMelismaSyllable(
-                element.lyrics,
-              );
+              let text = element.lyrics;
+
+              // If the previous element is a drop cap, we need to
+              // prepend the drop cap content to the melisma text
+              if (index > 0) {
+                const previousElement = line.elements[index - 1];
+                if (previousElement.elementType === ElementType.DropCap) {
+                  text = `${(previousElement as DropCapElement).content}${text}`;
+                }
+              }
+
+              melismaSyllables = MelismaHelperGreek.getMelismaSyllable(text);
 
               melismaLyricsEnd =
                 element.x +

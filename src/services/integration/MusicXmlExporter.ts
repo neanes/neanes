@@ -4,6 +4,7 @@ import {
   MartyriaElement,
   ModeKeyElement,
   NoteElement,
+  RichTextBoxElement,
   ScoreElement,
   TempoElement,
 } from '@/models/Element';
@@ -375,7 +376,7 @@ export class MusicXmlExporter {
           }
 
           // Set the key
-          const key = this.buildKey(modeKeyNode, modeKeyElement);
+          const key = this.buildKey(modeKeyNode, modeKeyElement.templateId);
 
           currentMeasure.attributes =
             currentMeasure.attributes ?? new MusicXmlAttributes();
@@ -408,6 +409,58 @@ export class MusicXmlExporter {
               workspace,
             );
           }
+
+          break;
+        }
+        case ElementType.RichTextBox: {
+          const richTextElement = element as RichTextBoxElement;
+
+          if (!richTextElement.modeChange) {
+            break;
+          }
+
+          const modeKeyNode = nodeGroup[0] as ModeKeyNode;
+
+          // End the current measure
+          if (currentMeasure != null && currentMeasure.notes.length > 0) {
+            const barline = new MusicXmlBarline();
+            barline.barStyle = new MusicXmlBarStyle('light-heavy');
+            currentMeasure.contents.push(barline);
+
+            // Create a new measure
+            this.finalizeMeasure(currentMeasure);
+            currentMeasure = new MusicXmlMeasure(measureNumber++);
+            measures.push(currentMeasure);
+
+            // Add a system break
+            const print = new MusicXmlPrint();
+            print.newSystem.value = 'yes';
+            currentMeasure.contents.push(print);
+          }
+
+          // Set the key
+          const key = this.buildKey(modeKeyNode);
+
+          currentMeasure.attributes =
+            currentMeasure.attributes ?? new MusicXmlAttributes();
+          currentMeasure.attributes.key = key;
+
+          // Set the tempo
+          const sound = new MusicXmlSound();
+          sound.tempo = richTextElement.modeChangeBpm;
+          currentMeasure.contents.push(sound);
+
+          // Reset workspace flags
+          workspace.legetos = modeKeyNode.legetos;
+          workspace.lastAlteration = 0;
+          workspace.lastAlterationNote = ScaleNote.Pa;
+          workspace.permanentEnharmonicZo = modeKeyNode.permanentEnharmonicZo;
+          workspace.ignoreAttractions = modeKeyNode.ignoreAttractions;
+
+          workspace.pitch = new MusicXmlPitch('G', 4);
+          workspace.physicalNote = ScaleNote.Thi;
+
+          workspace.scale = this.getPlaybackScale(modeKeyNode.scale, workspace);
 
           break;
         }
@@ -890,30 +943,26 @@ export class MusicXmlExporter {
 
   buildKey(
     node: Readonly<ModeKeyNode>,
-    modeKeyElement: Readonly<ModeKeyElement>,
+    templateId: number | null = null,
   ): MusicXmlKey {
     const key = new MusicXmlKey();
 
     // First, we handle special cases by mode key ID
     let handled = false;
 
-    if (
-      modeKeyElement.templateId === 101 ||
-      modeKeyElement.templateId === 501 ||
-      modeKeyElement.templateId === 506
-    ) {
+    if (templateId === 101 || templateId === 501 || templateId === 506) {
       // First Papadic and Plagal First from Ke should not use Bb
       handled = true;
-    } else if (modeKeyElement.templateId === 103) {
+    } else if (templateId === 103) {
       // First Soft Chromatic
       // TODO optionally allow users to transpose down to G?
       key.fifths = new MusicXmlFifths(2);
       handled = true;
-    } else if (modeKeyElement.templateId === 702) {
+    } else if (templateId === 702) {
       // Enharmonic Grave from Zo uses Bb major
       key.fifths = new MusicXmlFifths(-2);
       handled = true;
-    } else if (modeKeyElement.templateId === 804) {
+    } else if (templateId === 804) {
       // Plagal Fourth from Pa uses D major scale
       key.fifths = new MusicXmlFifths(2);
       handled = true;

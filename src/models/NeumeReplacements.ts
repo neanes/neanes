@@ -371,7 +371,10 @@ export const timeReplacementMap = new Map<
     TimeNeume.Hapli,
     [
       {
-        isPairedWith: [...kentemataNeumes],
+        isPairedWith: [
+          ...kentemataNeumes,
+          QuantitativeNeume.PetastiPlusRunningElaphron,
+        ],
         replaceWith: null,
       },
     ],

@@ -1,6 +1,7 @@
 <template>
   <div
     class="rich-text-box-container"
+    :class="{ selected: selected }"
     :style="containerStyle"
     @click="$emit('select-single')"
   >
@@ -38,10 +39,41 @@
         :config="editorConfig"
       />
     </div>
+    <div class="inline-container" v-else-if="element.inline">
+      <div class="inline-top-container" :style="textBoxTopContainerStyle">
+        <div
+          class="inline-top-inner-container"
+          :style="textBoxTopInnerContainerStyle"
+        >
+          <ckeditor
+            ref="editor"
+            class="rich-text-editor inline-top"
+            :style="textBoxStyleTop"
+            :editor="editor"
+            :model-value="content"
+            @blur="onBlur"
+            @ready="onEditorReadyInline"
+            :config="editorConfig"
+          />
+        </div>
+      </div>
+      <div class="inline-bottom-container" :style="textBoxBottomContainerStyle">
+        <ckeditor
+          ref="editorBottom"
+          class="rich-text-editor inline-bottom"
+          :style="textBoxStyleBottom"
+          :editor="editor"
+          :model-value="contentBottom"
+          @blur="onBlur"
+          @ready="onEditorReadyInlineBottom"
+          :config="editorConfig"
+        />
+      </div>
+    </div>
     <ckeditor
       v-else
       ref="editor"
-      class="rich-text-editor"
+      class="rich-text-editor single"
       :editor="editor"
       :model-value="content"
       @blur="onBlur"
@@ -55,10 +87,11 @@
 <script lang="ts">
 import { FontSizeOption } from '@ckeditor/ckeditor5-font/src/fontconfig';
 import { Ckeditor } from '@ckeditor/ckeditor5-vue';
-import { EditorConfig } from 'ckeditor5';
+import { Editor, EditorConfig } from 'ckeditor5';
+import { debounce, throttle } from 'throttle-debounce';
 import { StyleValue } from 'vue';
 import type { ComponentExposed } from 'vue-component-type-helpers';
-import { Component, Prop, Vue } from 'vue-facing-decorator';
+import { Component, Prop, Vue, Watch } from 'vue-facing-decorator';
 
 import ContentEditable from '@/components/ContentEditable.vue';
 import InlineEditor from '@/customEditor';
@@ -77,13 +110,21 @@ export default class TextBoxRich extends Vue {
   @Prop() pageSetup!: PageSetup;
   @Prop() fonts!: string[];
   @Prop({ default: true }) editMode!: boolean;
+  @Prop() selected!: boolean;
   @Prop() metadata!: TokenMetadata;
+  @Prop({ default: false }) recalc!: boolean;
 
   editor = InlineEditor;
   editorData = '';
 
   focusOnReady = false;
   unmounting = false;
+
+  heightBottom: number = 0;
+  heightTop: number = 0;
+  resizeObserver: ResizeObserver | null = null;
+  inlineBottomObserver: ResizeObserver | null = null;
+  inlineTopObserver: ResizeObserver | null = null;
 
   get editorConfig(): EditorConfig {
     const fontSizeOptions: FontSizeOption[] = [];
@@ -95,8 +136,25 @@ export default class TextBoxRich extends Vue {
       });
     }
 
+    // Add a fall back font to each font so that neumes "just work"
+    const fonts = this.fonts.map(
+      (x) => x + ',' + this.pageSetup.neumeDefaultFontFamily,
+    );
+
     return {
-      fontFamily: { options: ['default', ...this.fonts] },
+      fontFamily: {
+        options: [
+          'default',
+          'Source Serif' + ',' + this.pageSetup.neumeDefaultFontFamily,
+          'GFS Didot' + ',' + this.pageSetup.neumeDefaultFontFamily,
+          'Noto Naskh Arabic' + ',' + this.pageSetup.neumeDefaultFontFamily,
+          'Old Standard' + ',' + this.pageSetup.neumeDefaultFontFamily,
+          'Omega' + ',' + this.pageSetup.neumeDefaultFontFamily,
+          'Neanes',
+          'NeanesStathisSeries',
+          ...fonts,
+        ],
+      },
       fontSize: {
         supportAllValues: true,
         options: ['default', ...fontSizeOptions],
@@ -105,24 +163,39 @@ export default class TextBoxRich extends Vue {
         content: this.element.rtl ? 'ar' : 'en',
       },
       licenseKey: 'GPL',
+      insertNeume: {
+        neumeDefaultFontFamily: this.pageSetup.neumeDefaultFontFamily,
+        defaultFontSize: this.element.inline
+          ? this.pageSetup.lyricsDefaultFontSize
+          : this.pageSetup.textBoxDefaultFontSize,
+        defaultFontFamily: this.element.inline
+          ? this.pageSetup.lyricsDefaultFontFamily
+          : this.pageSetup.textBoxDefaultFontFamily,
+        fthoraDefaultColor: this.pageSetup.fthoraDefaultColor,
+      },
     };
   }
 
-  get editorInstance() {
+  getEditorInstance() {
     return (this.$refs.editor as ComponentExposed<typeof Ckeditor>)?.instance;
   }
 
-  get editorInstanceLeft() {
+  getEditorInstanceBottom() {
+    return (this.$refs.editorBottom as ComponentExposed<typeof Ckeditor>)
+      ?.instance;
+  }
+
+  getEditorInstanceLeft() {
     return (this.$refs.editorLeft as ComponentExposed<typeof Ckeditor>)
       ?.instance;
   }
 
-  get editorInstanceCenter() {
+  getEditorInstanceCenter() {
     return (this.$refs.editorCenter as ComponentExposed<typeof Ckeditor>)
       ?.instance;
   }
 
-  get editorInstanceRight() {
+  getEditorInstanceRight() {
     return (this.$refs.editorRight as ComponentExposed<typeof Ckeditor>)
       ?.instance;
   }
@@ -132,6 +205,16 @@ export default class TextBoxRich extends Vue {
       ? this.element.content
       : replaceTokens(
           this.element.content,
+          this.metadata,
+          TextBoxAlignment.Center,
+        );
+  }
+
+  get contentBottom() {
+    return this.editMode
+      ? this.element.contentBottom
+      : replaceTokens(
+          this.element.contentBottom,
           this.metadata,
           TextBoxAlignment.Center,
         );
@@ -171,10 +254,14 @@ export default class TextBoxRich extends Vue {
     const style = {
       width: withZoom(this.element.width),
       height: withZoom(this.element.height),
-      fontFamily: getFontFamilyWithFallback(
+      '--ck-content-font-family': getFontFamilyWithFallback(
         this.pageSetup.textBoxDefaultFontFamily,
+        this.pageSetup.neumeDefaultFontFamily,
       ),
-      fontSize: `${this.pageSetup.textBoxDefaultFontSize}px`, // no zoom because we will apply zooming on the whole editor
+      '--ck-content-font-size': this.element.inline
+        ? `${this.pageSetup.lyricsDefaultFontSize}px`
+        : `${this.pageSetup.textBoxDefaultFontSize}px`, // no zoom because we will apply zooming on the whole editor
+      '--ck-content-line-height': 'normal',
     } as StyleValue;
 
     return style;
@@ -183,6 +270,60 @@ export default class TextBoxRich extends Vue {
   get textBoxStyle() {
     const style: StyleValue = {
       width: `${this.element.width}px`, // no zoom because we scale with the transform
+    };
+
+    return style;
+  }
+
+  get textBoxTopInnerContainerStyle() {
+    // The top text box is aligned such that the middle of the oligon sits in middle of the font.
+    const style: any = {
+      top: withZoom(
+        this.element.defaultNeumeFontAscent -
+          this.pageSetup.neumeDefaultFontSize * this.element.oligonMidpoint -
+          this.element.defaultLyricsFontHeight / 2 -
+          (this.heightTop - this.element.defaultLyricsFontHeight) +
+          this.element.offsetYTop,
+      ),
+      lineHeight: this.element.defaultLyricsFontHeight + 'px',
+    };
+
+    return style;
+  }
+
+  get textBoxStyleTop() {
+    const style: any = {
+      width: `${this.element.width}px`, // no zoom because we scale with the transform
+    };
+
+    return style;
+  }
+
+  get textBoxStyleBottom() {
+    const style: any = {
+      width: `${this.element.width}px`, // no zoom because we scale with the transform
+    };
+
+    return style;
+  }
+
+  get textBoxTopContainerStyle() {
+    const style: any = {
+      height: withZoom(this.element.height),
+    };
+
+    return style;
+  }
+
+  get textBoxBottomContainerStyle() {
+    // The bottom text box is aligned so that the baseline of the font is aligned with the lyrics baseline.
+    const style: any = {
+      top: withZoom(
+        this.pageSetup.lyricsVerticalOffset -
+          (this.heightBottom - this.element.defaultLyricsFontHeight) +
+          this.element.offsetYBottom,
+      ),
+      lineHeight: this.element.defaultLyricsFontHeight + 'px',
     };
 
     return style;
@@ -199,19 +340,115 @@ export default class TextBoxRich extends Vue {
   beforeUnmount() {
     this.unmounting = true;
     this.update();
+
+    if (this.inlineTopObserver != null) {
+      this.inlineTopObserver.disconnect();
+    }
+
+    if (this.inlineBottomObserver != null) {
+      this.inlineBottomObserver.disconnect();
+    }
+
+    if (this.resizeObserver != null) {
+      this.resizeObserver.disconnect();
+    }
   }
 
-  onEditorReady() {
-    const height = this.getHeight();
+  @Watch('element.centerOnPage')
+  onCenterOnPageChange() {
+    this.setPadding(this.getEditorInstance());
+    this.setPadding(this.getEditorInstanceBottom());
+  }
 
-    if (height != null && this.element.height !== height) {
-      this.$emit('update:height', height);
+  phoneHome(height: number) {
+    this.$emit('update:height', height);
+  }
+
+  debouncedPhoneHome = debounce(100, this.phoneHome);
+
+  onEditorReady() {
+    if (this.recalc) {
+      const height = this.getHeight();
+
+      if (height != null && Math.abs(this.element.height - height) > 0.001) {
+        this.debouncedPhoneHome(height);
+      }
     }
 
     if (this.focusOnReady) {
-      this.editorInstance?.editing.view.focus();
+      this.getEditorInstance()?.editing.view.focus();
       this.focusOnReady = false;
     }
+
+    const element = (this.getEditorInstance() as any).sourceElement;
+
+    if (this.resizeObserver != null) {
+      this.resizeObserver.disconnect();
+    }
+
+    this.resizeObserver = new ResizeObserver(
+      debounce(100, () => {
+        const resizedHeight = this.getHeight();
+
+        if (
+          resizedHeight != null &&
+          Math.abs(this.element.height - resizedHeight) > 0.001
+        ) {
+          if (this.recalc) {
+            this.debouncedPhoneHome(resizedHeight);
+          } else {
+            this.$emit('update', { height: resizedHeight });
+          }
+        }
+      }),
+    );
+
+    this.resizeObserver.observe(element);
+  }
+
+  onEditorReadyInline() {
+    this.heightTop = this.getHeightTop() ?? 0;
+
+    const element = (this.getEditorInstance() as any).sourceElement;
+
+    if (this.inlineTopObserver != null) {
+      this.inlineTopObserver.disconnect();
+    }
+
+    this.inlineTopObserver = new ResizeObserver(
+      throttle(100, () => {
+        this.heightTop = this.getHeightTop() ?? 0;
+      }),
+    );
+
+    this.inlineTopObserver.observe(element);
+
+    this.setPadding(this.getEditorInstance());
+  }
+
+  onEditorReadyInlineBottom() {
+    if (this.focusOnReady) {
+      this.getEditorInstanceBottom()?.editing.view.focus();
+      this.focusOnReady = false;
+    }
+
+    this.heightBottom = this.getHeightBottom() ?? 0;
+
+    const element = (this.getEditorInstanceBottom() as any).sourceElement;
+
+    if (this.inlineBottomObserver != null) {
+      this.inlineBottomObserver.disconnect();
+    }
+
+    this.inlineBottomObserver = new ResizeObserver(
+      throttle(100, () => {
+        this.heightBottom = this.getHeightBottom() ?? 0;
+      }),
+    );
+
+    this.inlineBottomObserver.observe(element);
+
+    this.setPadding(this.getEditorInstanceBottom());
   }
 
   onBlur() {
@@ -227,10 +464,11 @@ export default class TextBoxRich extends Vue {
 
     const height = this.getHeight();
 
-    const content = this.editorInstance?.getData() ?? '';
-    const contentLeft = this.editorInstanceLeft?.getData() ?? '';
-    const contentCenter = this.editorInstanceCenter?.getData() ?? '';
-    const contentRight = this.editorInstanceRight?.getData() ?? '';
+    const content = this.getEditorInstance()?.getData() ?? '';
+    const contentBottom = this.getEditorInstanceBottom()?.getData() ?? '';
+    const contentLeft = this.getEditorInstanceLeft()?.getData() ?? '';
+    const contentCenter = this.getEditorInstanceCenter()?.getData() ?? '';
+    const contentRight = this.getEditorInstanceRight()?.getData() ?? '';
 
     // This should never happen, but if it does, we don't want
     // to save garbage values.
@@ -240,6 +478,11 @@ export default class TextBoxRich extends Vue {
 
     if (this.editMode && this.element.content !== content) {
       updates.content = content;
+      updated = true;
+    }
+
+    if (this.editMode && this.element.contentBottom !== contentBottom) {
+      updates.contentBottom = contentBottom;
       updated = true;
     }
 
@@ -258,9 +501,17 @@ export default class TextBoxRich extends Vue {
       updated = true;
     }
 
-    if (this.element.height != height) {
+    if (
+      !this.element.inline &&
+      Math.abs(this.element.height - height) > 0.001
+    ) {
       updates.height = height;
       updated = true;
+    }
+
+    if (this.element.inline) {
+      this.heightBottom = this.getHeightBottom() ?? 0;
+      this.heightTop = this.getHeightTop() ?? 0;
     }
 
     if (updated) {
@@ -269,7 +520,63 @@ export default class TextBoxRich extends Vue {
   }
 
   getHeight() {
-    return (this.$el as HTMLElement).querySelector('.ck-content')?.scrollHeight;
+    const element = (this.$el as HTMLElement).querySelector('.ck-content');
+
+    if (element == null) {
+      return null;
+    }
+
+    const zoom = Number(getComputedStyle(element).getPropertyValue('--zoom'));
+
+    return element.getBoundingClientRect().height / zoom;
+  }
+
+  getHeightBottom() {
+    const element = (this.$el as HTMLElement).querySelector(
+      '.ck-content.inline-bottom',
+    );
+
+    if (element == null) {
+      return null;
+    }
+
+    const zoom = Number(getComputedStyle(element).getPropertyValue('--zoom'));
+
+    return element.getBoundingClientRect().height / zoom;
+  }
+
+  getHeightTop() {
+    const element = (this.$el as HTMLElement).querySelector(
+      '.ck-content.inline-top',
+    );
+
+    if (element == null) {
+      return null;
+    }
+
+    const zoom = Number(getComputedStyle(element).getPropertyValue('--zoom'));
+
+    return element.getBoundingClientRect().height / zoom;
+  }
+
+  setPadding(editor: Editor | undefined) {
+    if (editor == null) {
+      return;
+    }
+
+    editor.editing.view.change((writer) => {
+      const editable = editor.editing.view.document.getRoot();
+
+      if (this.element.centerOnPage) {
+        writer.setStyle(
+          'padding-right',
+          `${this.pageSetup.innerPageWidth - this.element.width}px`,
+          editable!,
+        );
+      } else {
+        writer.removeStyle('padding-right', editable!);
+      }
+    });
   }
 
   focus() {
@@ -311,14 +618,13 @@ export default class TextBoxRich extends Vue {
 .rich-text-editor {
   padding: 0;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: visible;
   transform-origin: 0 0;
   transform: scale(var(--zoom, 1));
+  border: none !important;
 }
 
 .rich-text-box-container {
-  border: 1px dotted black;
-  box-sizing: border-box;
   min-height: 10px;
 }
 
@@ -331,12 +637,16 @@ export default class TextBoxRich extends Vue {
   display: none;
 }
 
+.rich-text-box-container.selected .handle {
+  display: inline;
+}
+
 .rich-text-box-multipanel-container {
   display: flex;
 }
 
 .rich-text-editor.multipanel {
-  border: 1px dotted black;
+  outline: 1px dotted black;
   box-sizing: border-box;
   min-width: 2.5rem;
 }
@@ -357,6 +667,50 @@ export default class TextBoxRich extends Vue {
   transform-origin: top right;
 }
 
+.inline-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.inline-container,
+.rich-text-editor.single {
+  outline: 1px dotted black;
+}
+
+.selected .inline-container,
+.selected .rich-text-editor.single {
+  outline: 1px solid goldenrod;
+}
+
+.rich-text-editor.inline-top {
+  white-space: nowrap !important;
+  position: relative;
+  border: none;
+  overflow: visible;
+}
+
+.rich-text-editor.inline-bottom {
+  display: inline-block;
+  position: relative;
+  white-space: nowrap !important;
+  border: none;
+  overflow: visible;
+}
+
+.inline-bottom-container,
+.inline-top-container,
+.inline-top-inner-container {
+  display: inline-block;
+  position: relative;
+  border: none;
+  overflow: visible;
+}
+
+:deep(.ck-editor__editable.ck-focused) {
+  border: none !important;
+  outline: var(--ck-focus-ring) !important;
+}
+
 @media print {
   .rich-text-box-container .handle {
     display: none !important;
@@ -368,6 +722,10 @@ export default class TextBoxRich extends Vue {
   }
 
   :deep(.ck-widget) {
+    outline: none !important;
+  }
+
+  :deep(.ck-editor__editable.ck-focused) {
     outline: none !important;
   }
 

@@ -1,0 +1,92 @@
+.special-char-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+  gap: 4px;
+  max-width: 360px;
+  max-height: 300px;
+  overflow: auto;
+  padding: 8px;
+}
+
+.special-char-grid .ck-button__label {
+  font-family: Neanes !important;
+  font-size: 16pt !important;
+}
+
+.special-char-grid .salt .ck-button__label {
+  font-feature-settings: 'salt';
+}
+
+.martyria-root-sign-grid .ck-button__label {
+  font-family: Neanes !important;
+  font-size: 20pt !important;
+  line-height: 20pt;
+  margin-left: 10px;
+  position: relative;
+  top: -0.4em;
+  overflow: visible !important;
+}
+
+.ck-dropdown__martyria-root-sign .ck-dropdown__button .ck-button__label {
+  font-family: Neanes !important;
+  font-size: 20pt !important;
+  line-height: 20pt;
+  margin-left: 10px;
+  position: relative;
+  top: -0.4em;
+  overflow: visible !important;
+  width: 4rem !important;
+}
+
+.martyria-note-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+}
+
+.martyria-root-sign-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+}
+
+.ck-dropdown__character-block {
+  width: 100% !important;
+}
+
+.ck-dropdown__character-block .ck-button__label {
+  width: 100% !important;
+}
+
+.ck-dropdown__martyria-note .ck-dropdown__panel {
+  max-height: 300px;
+  overflow: auto;
+}
+
+.ck-button__insert-neume .ck-button__label {
+  font-family: Neanes !important;
+  font-size: 16pt !important;
+}
+
+.ck-button__insert-martyria .ck-button__label {
+  font-family: Neanes !important;
+  font-size: 16pt !important;
+  position: relative;
+  top: -0.366em;
+}
+
+.neanes-ck-neume {
+  display: inline-block;
+}
+
+.neanes-ck-neume-align-right {
+  position: absolute !important;
+  left: initial !important;
+}
+
+.neanes-ck-neume-plagal {
+  display: inline-flex;
+  flex-direction: column;
+  vertical-align: middle;
+  align-items: center;
+}

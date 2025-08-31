@@ -126,7 +126,6 @@ export class ByzHtmlExporter {
 
     if (score.pageSetup.melkiteRtl) {
       injectRtl = `<script>      
-  byzhtml.options.defaultFontFamily = 'NeanesRTL';
   byzhtml.options.melkiteRtl = true;
 </script>`;
     }
@@ -168,6 +167,7 @@ export class ByzHtmlExporter {
     const lyricOffsetH = pageSetup.melkiteRtl ? '0' : '3.6pt';
 
     const style = `:root {
+        --byz-neume-font-family: ${pageSetup.neumeDefaultFontFamily};
         --byz-neume-font-size: ${Unit.toPt(pageSetup.neumeDefaultFontSize)}pt;
         
         --byz-lyric-font-family: ${pageSetup.lyricsDefaultFontFamily};
@@ -375,6 +375,7 @@ export class ByzHtmlExporter {
 
           result += this.exportMartyria(
             element as MartyriaElement,
+            pageSetup,
             indentation + 2,
           );
 
@@ -477,17 +478,17 @@ export class ByzHtmlExporter {
   exportNote(element: NoteElement, pageSetup: PageSetup, indentation: number) {
     let inner = '';
 
+    if (element.measureBarLeft) {
+      inner += this.exportNeume(element.measureBarLeft, indentation + 2, {
+        x: element.measureBarLeftOffsetX,
+        y: element.measureBarLeftOffsetY,
+      });
+    }
+
     if (element.vareia) {
       inner += this.exportNeume(VocalExpressionNeume.Vareia, indentation + 2, {
         x: element.vareiaOffsetX,
         y: element.vareiaOffsetY,
-      });
-    }
-
-    if (element.measureBarLeft) {
-      inner += this.exportNeume(MeasureBar.MeasureBarRight, indentation + 2, {
-        x: element.measureBarRightOffsetX,
-        y: element.measureBarRightOffsetY,
       });
     }
 
@@ -584,7 +585,7 @@ export class ByzHtmlExporter {
     inner += this.exportNeume(
       element.ison,
       indentation + 2,
-      { x: element.isonOffsetX, y: element.isonOffsetY },
+      { x: element.isonOffsetX, y: element.computedIsonOffsetY },
       this.config.classIson,
     );
 
@@ -650,9 +651,19 @@ export class ByzHtmlExporter {
     )}>`;
   }
 
-  exportMartyria(element: MartyriaElement, indentation: number) {
+  exportMartyria(
+    element: MartyriaElement,
+    pageSetup: PageSetup,
+    indentation: number,
+  ) {
     let inner = '';
 
+    inner += this.exportNeume(
+      element.tempoLeft,
+      indentation + 2,
+      NoOffset,
+      this.config.classTempo,
+    );
     inner += this.exportNeume(element.note, indentation + 2);
     inner += this.exportNeume(element.rootSign, indentation + 2);
     inner += this.exportNeume(
@@ -668,15 +679,34 @@ export class ByzHtmlExporter {
       this.config.classFthora,
     );
 
+    inner += this.exportNeume(
+      element.tempoRight,
+      indentation + 2,
+      NoOffset,
+      this.config.classTempo,
+    );
+
     let classAttribute = '';
 
     if (element.alignRight) {
       classAttribute = ` class="${this.config.classMartyriaAlignRight}"`;
     }
 
+    let styleAttribute = '';
+
+    const offset = pageSetup.martyriaVerticalOffset + element.verticalOffset;
+    if (offset != 0) {
+      let style = '';
+
+      style += 'position: relative;';
+      style += `top: ${Unit.toPt(offset)}pt;`;
+
+      styleAttribute = ` style="${style}"`;
+    }
+
     return `<${
       this.config.tagMartyria
-    }${classAttribute}\n${this.getIndentationString(
+    }${styleAttribute}${classAttribute}\n${this.getIndentationString(
       indentation + 2,
     )}>${inner}</${this.config.tagMartyria}\n${this.getIndentationString(
       indentation,
@@ -932,8 +962,12 @@ export class ByzHtmlExporter {
     let classAttribute = '';
     let nameAttribute = '';
 
-    if (offset && offset.x != null && offset.y != null) {
-      styleAttribute = ` left="${offset.x}em" top="${offset.y}em";`;
+    if (offset?.x != null) {
+      styleAttribute = ` left="${offset.x}em"`;
+    }
+
+    if (offset?.y != null) {
+      styleAttribute += ` top="${offset.y}em"`;
     }
 
     if (tagInfo.salt != null) {

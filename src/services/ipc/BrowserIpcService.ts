@@ -77,6 +77,20 @@ export class BrowserIpcService implements IIpcService {
     a.click();
   }
 
+  public async exportWorkspaceAsLatex(workspace: Workspace, data: string) {
+    const file = new Blob([data], { type: 'application/json' });
+
+    const downloadFileName =
+      workspace.filePath != null
+        ? `${getFileNameFromPath(workspace.filePath)}.byztex`
+        : `${workspace.tempFileName}.byztex`;
+
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(file);
+    a.download = downloadFileName;
+    a.click();
+  }
+
   public async exportWorkspaceAsImage(): Promise<ExportWorkspaceAsImageReplyArgs> {
     throw 'exportWorkspaceAsImage is not available in the browser.';
   }
@@ -98,7 +112,7 @@ export class BrowserIpcService implements IIpcService {
   }
 
   public async openWorkspaceFromArgv(): Promise<OpenWorkspaceFromArgvArgs> {
-    return { files: [], silentPdf: false };
+    return { files: [] };
   }
 
   public async showMessageBox(): Promise<ShowMessageBoxReplyArgs> {
@@ -162,5 +176,28 @@ export class BrowserIpcService implements IIpcService {
     a.click();
 
     return downloadFileName;
+  }
+
+  public async paste(): Promise<void> {
+    try {
+      const text = await navigator.clipboard.readText();
+
+      const selection = window.getSelection();
+
+      if (!selection?.rangeCount) {
+        return;
+      }
+
+      const range = selection.getRangeAt(0);
+      range.deleteContents(); // remove any selected text
+      range.insertNode(document.createTextNode(text));
+
+      // Move the caret to the end of the inserted text
+      range.collapse(false);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    } catch (error) {
+      console.error('Failed to paste text from clipboard:', error);
+    }
   }
 }

@@ -10,6 +10,7 @@
     "insertPelastikon": "Insert Pelastikon",
     "measureBar": "Measure Bar",
     "outline": "Outline",
+    "sectionName": "Section Name",
     "spaceAfter": "Space After",
     "tempoSign": "Tempo Sign",
     "useDefaultStyle": "Use Default Style",
@@ -22,7 +23,11 @@
     "width": "Width",
     "height": "Height",
     "marginTop": "Gap Above",
-    "marginBottom": "Gap Below"
+    "marginBottom": "Gap Below",
+    "verticalOffset": "Vertical Offset",
+    "none": "None",
+    "inline": "Inline",
+    "neume": "Neume"
   },
   "main": {
     "auto": "Auto",
@@ -48,7 +53,6 @@
     "lineSpan": "Lines to drop"
   },
   "imageBox": {
-    "inline": "Inline",
     "maintainAspectRatio": "Maintain Aspect Ratio",
     "width": "Width",
     "height": "Height"
@@ -62,7 +66,6 @@
     "note": "Note",
     "scale": "Scale",
     "rootSignOverride": "Root Sign Override",
-    "none": "None",
     "tempoLeft": "Add Left Tempo",
     "tempo": "Add Tempo Above",
     "tempoRight": "Add Right Tempo"
@@ -73,7 +76,8 @@
     "rightAlignTempo": "Right-align tempo",
     "showAmbitus": "Show Ambitus",
     "permanentEnharmonicZo": "Permanent Enharmonic Zo",
-    "changeKey": "Change Key"
+    "changeKey": "Change Key",
+    "useOptionalDiatonicFthoras": "Show Diatonic Fthoras"
   },
   "neume": {
     "neumeSelect": "Neume Select",
@@ -92,6 +96,12 @@
   },
   "textbox": {
     "multipanel": "Multipanel",
-    "rtl": "RTL"
+    "rtl": "RTL",
+    "modeChange": "Change Mode",
+    "virtualNote": "Parallage Note",
+    "centerOnPage": "Center on Page",
+    "offsetYTop": "Top Y Offset",
+    "offsetYBottom": "Bottom Y Offset",
+    "fillWidth": "Fill Width"
   }
 }

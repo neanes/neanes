@@ -15,14 +15,14 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-13]
+        os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - name: Use Node.js 20.x
+      - name: Use Node.js 22.x
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 22.x
 
       - name: Cache dependencies
         id: cache
@@ -31,13 +31,28 @@ jobs:
           path: ./node_modules
           key: ${{ runner.os }}-${{ runner.arch }}-modules-${{ hashFiles('package-lock.json') }}
 
-      - run: corepack enable npm
+      - run: corepack enable npm && corepack prepare --activate
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: npm ci
 
       - run: npm test
       - run: npm run lint
-      - run: npm run build
+      - name: Build Windows and Linux
+        if: runner.os != 'macOS'
+        run: npm run build
         env:
           GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+      - name: Build macOS
+        if: runner.os == 'macOS'
+        run: npm run build -- --x64 && npm run build -- --arm64
+        env:
+          GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+      - name: Publish
+        uses: actions/upload-artifact@v4
+        with:
+          name: Neanes-${{ matrix.os }}
+          path: dist/Neanes-*
+          retention-days: 3

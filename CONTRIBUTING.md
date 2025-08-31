@@ -4,7 +4,7 @@
 
 ### Prerequisites
 
-- Node.js 20.x or later
+- Node.js 22.x or later
 
 ### Project Setup
 
@@ -43,6 +43,15 @@ VITE_ENABLE_DEV_TOOLS=true
 ```
 
 Any change that updates `package.json` _must_ include the corresponding update to `package-lock.json` after running `npm install`.
+
+#### Debugging the Audio and Playback services
+
+To turn on log messages for the audio and playback services, add the following to `.env.local`.
+
+```
+VITE_AUDIO_SERVICE_LOGGING_ENABLED=true
+VITE_PLAYBACK_SERVICE_LOGGING_ENABLED=true
+```
 
 ## Linting
 

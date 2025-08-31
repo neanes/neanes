@@ -28,6 +28,8 @@ export enum ElementType {
   ModeKey = 'ModeKey',
   Tempo = 'Tempo',
   ImageBox = 'ImageBox',
+  Annotation = 'Annotation',
+  AlternateLine = 'AlternateLine',
 }
 
 export enum LineBreakType {
@@ -38,9 +40,11 @@ export enum LineBreakType {
 
 export abstract class ScoreElement {
   abstract elementType: ElementType;
+  public id: number | undefined = undefined;
   public lineBreak: boolean | undefined = undefined;
   public pageBreak: boolean | undefined = undefined;
   public lineBreakType: LineBreakType | undefined = undefined;
+  public sectionName: string | undefined = undefined;
 }
 
 export enum AcceptsLyricsOption {
@@ -94,6 +98,9 @@ export class NoteElement extends ScoreElement {
   public spaceAfter: number | undefined = undefined;
   public ignoreAttractions: boolean | undefined = undefined;
 
+  public annotations: AnnotationElement[] | undefined = undefined;
+  public alternateLines: AlternateLineElement[] | undefined = undefined;
+
   public accidentalOffsetX: number | undefined = undefined;
   public accidentalOffsetY: number | undefined = undefined;
   public fthoraOffsetX: number | undefined = undefined;
@@ -146,6 +153,7 @@ export class MartyriaElement extends ScoreElement {
   public tempoLeft: TempoSign | undefined = undefined;
   public tempo: TempoSign | undefined = undefined;
   public tempoRight: TempoSign | undefined = undefined;
+  public quantitativeNeume: QuantitativeNeume | undefined = undefined;
   public measureBarLeft: MeasureBar | undefined = undefined;
   public measureBarRight: MeasureBar | undefined = undefined;
   // Deprecated
@@ -154,6 +162,7 @@ export class MartyriaElement extends ScoreElement {
   public alignRight: boolean | undefined = undefined;
   public bpm: number | undefined = undefined;
   public spaceAfter: number | undefined = undefined;
+  public verticalOffset: number | undefined = undefined;
 }
 
 export class TempoElement extends ScoreElement {
@@ -180,6 +189,7 @@ export class TextBoxElement extends ScoreElement {
   public alignment: TextBoxAlignment = TextBoxAlignment.Left;
   public color: string = '#000000';
   public content: string = '';
+  public contentBottom: string = '';
   public contentLeft: string = '';
   public contentCenter: string = '';
   public contentRight: string = '';
@@ -195,6 +205,7 @@ export class TextBoxElement extends ScoreElement {
   public height: number = 20;
   public customWidth: number | undefined = undefined;
   public customHeight: number | undefined = undefined;
+  public fillWidth: boolean | undefined = undefined;
   public marginTop: number | undefined = undefined;
   public marginBottom: number | undefined = undefined;
   public useDefaultStyle: boolean | undefined = undefined;
@@ -203,14 +214,27 @@ export class TextBoxElement extends ScoreElement {
 export class RichTextBoxElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.RichTextBox;
   public content: string = '';
+  public contentBottom: string = '';
   public contentLeft: string = '';
   public contentRight: string = '';
   public contentCenter: string = '';
   public multipanel: boolean | undefined = undefined;
   public rtl: boolean | undefined = undefined;
+  public inline: boolean | undefined = undefined;
+  public centerOnPage: boolean | undefined = undefined;
+  public modeChange: boolean | undefined = undefined;
+  public modeChangePhysicalNote: ScaleNote = ScaleNote.Pa;
+  public modeChangeScale: Scale = Scale.Diatonic;
+  public modeChangeVirtualNote: ScaleNote | undefined = undefined;
+  public modeChangeIgnoreAttractions: boolean | undefined = undefined;
+  public modeChangePermanentEnharmonicZo: boolean | undefined = undefined;
+  public modeChangeBpm: number = 120;
   public height: number = 20;
+  public customWidth: number | undefined = undefined;
   public marginTop: number | undefined = undefined;
   public marginBottom: number | undefined = undefined;
+  public offsetYTop: number | undefined = undefined;
+  public offsetYBottom: number | undefined = undefined;
 }
 
 export class ModeKeyElement extends ScoreElement {
@@ -248,6 +272,20 @@ export class ModeKeyElement extends ScoreElement {
   public ambitusHighNote: Note = Note.Pa;
   public ambitusHighRootSign: RootSign = RootSign.Alpha;
   public showAmbitus: boolean | undefined = undefined;
+}
+
+export class AnnotationElement extends ScoreElement {
+  public readonly elementType: ElementType = ElementType.Annotation;
+  public x: number = 0;
+  public y: number = 0;
+  public text: string = '';
+}
+
+export class AlternateLineElement extends ScoreElement {
+  public readonly elementType: ElementType = ElementType.AlternateLine;
+  public x: number = 0;
+  public y: number = 0;
+  public elements: ScoreElement[] = [];
 }
 
 export class DropCapElement extends ScoreElement {

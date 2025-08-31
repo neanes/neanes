@@ -98,6 +98,18 @@
       placeholder="auto"
       @update:modelValue="$emit('update:customWidth', $event)"
     />
+
+    <span class="space"></span>
+    <div class="form-group">
+      <label class="right-space">{{ $t('toolbar:common.sectionName') }}</label>
+      <input
+        type="text"
+        :value="element.sectionName"
+        @change="
+          $emit('update:sectionName', ($event.target as HTMLInputElement).value)
+        "
+      />
+    </div>
   </div>
 </template>
 
@@ -125,6 +137,7 @@ import { Unit } from '@/utils/Unit';
     'update:useDefaultStyle',
     'update:lineHeight',
     'update:lineSpan',
+    'update:sectionName',
   ],
 })
 export default class ToolbarDropCap extends Vue {
@@ -146,6 +159,7 @@ export default class ToolbarDropCap extends Vue {
       'Athonite',
       'GFS Didot',
       'Noto Naskh Arabic',
+      'Old Standard',
       'Omega',
       'PFGoudyInitials',
       ...this.fonts,

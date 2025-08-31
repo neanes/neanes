@@ -215,7 +215,7 @@
       </button>
       <span class="divider"></span>
 
-      <span>{{ playbackTimeDisplay }}</span>
+      <span class="playback-time">{{ playbackTimeDisplay }}</span>
       <span class="space" />
       <span class="label-bpm">BPM = {{ playbackBpmDisplay }}</span>
 
@@ -545,7 +545,11 @@ label.right-space {
   width: 58px;
 }
 
-.label-bpm {
+.playback-time {
   width: 5rem;
+}
+
+.label-bpm {
+  width: 5.5rem;
 }
 </style>

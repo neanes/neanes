@@ -70,6 +70,7 @@ export interface PlaybackWorkspace {
 
   scale: PlaybackScale;
   physicalNote: ScaleNote;
+  virtualNote: ScaleNote;
   legetos: boolean;
   chrysanthineAccidentals: boolean;
 
@@ -78,7 +79,6 @@ export interface PlaybackWorkspace {
    * need to be transposed to reach their physical targets.
    */
   transpositionMoria: number;
-
   /**
    * If true, attractions will be ignored
    */
@@ -172,7 +172,8 @@ export class PlaybackService {
       frequency: defaultFrequencyDi,
       isonFrequency: 0,
       scale: this.diatonicScale,
-      physicalNote: ScaleNote.Pa,
+      physicalNote: ScaleNote.Thi,
+      virtualNote: ScaleNote.Thi,
       legetos: false,
       chrysanthineAccidentals: chrysanthineAccidentals,
 
@@ -191,7 +192,8 @@ export class PlaybackService {
       zoFlatPivotActivated: false,
       zoNaturalPivotActivated: false,
 
-      loggingEnabled: false,
+      loggingEnabled:
+        import.meta.env.VITE_PLAYBACK_SERVICE_LOGGING_ENABLED === 'true',
     };
 
     Object.assign(workspace.options, options);
@@ -261,6 +263,10 @@ export class PlaybackService {
     return (1 / bpm) * 60;
   }
 
+  moriaBetweenFrequencies(f1: number, f2: number) {
+    return Math.round(72 * Math.log2(f2 / f1));
+  }
+
   /**
    * To move up, move up scale.intervals[intervalIndex] moria
    * To move down, move down scale.intervals[intervalIndex - 1] moria,
@@ -290,37 +296,22 @@ export class PlaybackService {
     return moria;
   }
 
-  moveTo(scaleNote: ScaleNote, workspace: PlaybackWorkspace): number {
+  moveTo(physicalNote: ScaleNote, workspace: PlaybackWorkspace): number {
     const { scale } = workspace;
 
-    let pivot: ScaleNote;
-    if (scale.name === PlaybackScaleName.SpathiGa) {
-      pivot = ScaleNote.Ga;
-    } else if (scale.name === PlaybackScaleName.SpathiKe) {
-      pivot = ScaleNote.Ke;
-    } else {
-      pivot = ScaleNote.Thi;
-    }
+    const intervalIndex = scale.scaleNoteMap.get(workspace.virtualNote)!;
 
-    const intervalIndex = scale.scaleNoteMap.get(pivot)!;
+    const distance =
+      getScaleNoteValue(physicalNote) -
+      getScaleNoteValue(workspace.physicalNote);
 
-    const distance = getScaleNoteValue(scaleNote) - getScaleNoteValue(pivot);
-
-    let moria = this.moriaBetweenNotes(
+    const moria = this.moriaBetweenNotes(
       intervalIndex,
       scale.intervals,
       distance,
     );
 
-    moria += this.moriaBetweenNotes(
-      this.diatonicScale.scaleNoteMap.get(ScaleNote.Thi)!,
-      this.diatonicScale.intervals,
-      getScaleNoteValue(pivot) - getScaleNoteValue(ScaleNote.Thi),
-    );
-
-    moria += workspace.transpositionMoria;
-
-    return this.changeFrequency(workspace.options.frequencyDi, moria);
+    return this.changeFrequency(workspace.frequency, moria);
   }
 
   constructScales(workspace: PlaybackWorkspace) {
@@ -603,8 +594,9 @@ export class PlaybackService {
       console.groupEnd();
     }
 
-    workspace.frequency = this.moveTo(noteAtomNode.virtualNote, workspace);
+    workspace.frequency = this.moveTo(noteAtomNode.physicalNote, workspace);
     workspace.physicalNote = noteAtomNode.physicalNote;
+    workspace.virtualNote = noteAtomNode.virtualNote;
 
     if (
       workspace.lastAlterationMoria !== 0 &&
@@ -662,6 +654,15 @@ export class PlaybackService {
     modeKeyNode: Readonly<ModeKeyNode>,
     workspace: PlaybackWorkspace,
   ) {
+    if (workspace.loggingEnabled) {
+      console.groupCollapsed('PlaybackService', 'mode key');
+      console.log('physicalNote', modeKeyNode.physicalNote);
+      console.log('virtualNote', modeKeyNode.virtualNote);
+      console.log('scale', modeKeyNode.scale);
+      console.log('skipScaleChange', modeKeyNode.skipScaleChange);
+      console.groupEnd();
+    }
+
     // Reset workspace flags
     workspace.legetos = modeKeyNode.legetos;
     workspace.lastAlterationMoria = 0;
@@ -672,10 +673,59 @@ export class PlaybackService {
     workspace.isonFrequency = 0;
     workspace.transpositionMoria = 0;
 
-    workspace.scale = this.getPlaybackScale(modeKeyNode.scale, workspace);
+    if (!modeKeyNode.skipScaleChange) {
+      workspace.scale = this.getPlaybackScale(modeKeyNode.scale, workspace);
 
-    workspace.frequency = this.moveTo(modeKeyNode.virtualNote, workspace);
-    workspace.physicalNote = modeKeyNode.physicalNote;
+      // Reset back to DI
+      workspace.physicalNote = ScaleNote.Thi;
+      workspace.virtualNote = ScaleNote.Thi;
+      workspace.frequency = workspace.options.frequencyDi;
+
+      // If the scale is Spathi, reset to KE or GA
+      if (workspace.scale.name === PlaybackScaleName.SpathiKe) {
+        workspace.physicalNote = ScaleNote.Ke;
+        workspace.virtualNote = ScaleNote.Ke;
+
+        const intervalIndex = this.diatonicScale.scaleNoteMap.get(
+          ScaleNote.Thi,
+        )!;
+
+        const distance =
+          getScaleNoteValue(ScaleNote.Ke) - getScaleNoteValue(ScaleNote.Thi);
+
+        const moria = this.moriaBetweenNotes(
+          intervalIndex,
+          this.diatonicScale.intervals,
+          distance,
+        );
+
+        workspace.frequency = this.changeFrequency(workspace.frequency, moria);
+      } else if (workspace.scale.name === PlaybackScaleName.SpathiGa) {
+        workspace.physicalNote = ScaleNote.Ga;
+        workspace.virtualNote = ScaleNote.Ga;
+
+        const intervalIndex = this.diatonicScale.scaleNoteMap.get(
+          ScaleNote.Thi,
+        )!;
+
+        const distance =
+          getScaleNoteValue(ScaleNote.Ga) - getScaleNoteValue(ScaleNote.Thi);
+
+        const moria = this.moriaBetweenNotes(
+          intervalIndex,
+          this.diatonicScale.intervals,
+          distance,
+        );
+
+        workspace.frequency = this.changeFrequency(workspace.frequency, moria);
+      }
+
+      // Move to the mode's starting note
+      workspace.frequency = this.moveTo(modeKeyNode.physicalNote, workspace);
+
+      workspace.physicalNote = modeKeyNode.physicalNote;
+      workspace.virtualNote = modeKeyNode.virtualNote;
+    }
   }
 
   handleFthora(fthoraNode: Readonly<FthoraNode>, workspace: PlaybackWorkspace) {
@@ -687,94 +737,104 @@ export class PlaybackService {
       console.groupEnd();
     }
 
-    let physicalNote = fthoraNode.physicalNote;
-    let virtualNote = fthoraNode.virtualNote;
-
-    // In the case of the enharmonic fthora,
-    // we must consider the the notes BEFORE the
-    // the note is changed.
-    if (
-      fthoraNode.scale === Scale.EnharmonicZoHigh ||
-      fthoraNode.scale === Scale.EnharmonicZo ||
-      fthoraNode.scale === Scale.EnharmonicVou ||
-      fthoraNode.scale === Scale.EnharmonicVouHigh
-    ) {
-      // Example: workspace is on THI and
-      // EnharmonicZoHigh fthora is on KE, Virtual Note = Zo
-
-      // Use the current physical note, BEFORE the jump
-      // Ex: physical note = THI
-      physicalNote = workspace.physicalNote;
-
-      // Determine the distance between the current physical note
-      // and the next physical note
-      // Ex: enharmonic shift = THI - KE = -1
-      const enharmonicShift =
-        getScaleNoteValue(workspace.physicalNote) -
-        getScaleNoteValue(fthoraNode.physicalNote);
-
-      // The virtual note is the virtual note of the current physical note
-      // in the new enharmonic scale
-      // Ex: virtual note = ZO - 1 = KE
-      virtualNote = getScaleNoteFromValue(
-        getScaleNoteValue(fthoraNode.virtualNote) + enharmonicShift,
-      );
-
-      // Ex: So finally, we have physical note THI and virtual note KE,
-      // and we are ready to move to physical note KE, virtual note ZO
-
-      if (workspace.loggingEnabled) {
-        console.group('handleFthora: enharmonic special case');
-        console.log('physicalNote', physicalNote);
-        console.log('virtualNote', virtualNote);
-        console.log('enharmonicShift', enharmonicShift);
-        console.groupEnd();
-      }
-    }
+    const physicalNote = fthoraNode.physicalNote;
+    const virtualNote = fthoraNode.virtualNote;
 
     const currentShift =
       getScaleNoteValue(virtualNote) - getScaleNoteValue(physicalNote);
-    if (currentShift) {
-      // Compute distance from physical note to Di in the old scale
-      const moria = this.moriaBetweenNotes(
-        workspace.scale.scaleNoteMap.get(ScaleNote.Thi)!,
-        workspace.scale.intervals,
-        getScaleNoteValue(physicalNote) - getScaleNoteValue(ScaleNote.Thi),
+
+    if (fthoraNode.physicalNote !== workspace.physicalNote) {
+      const newScale = this.getPlaybackScale(fthoraNode.scale, workspace);
+      const oldScale = workspace.scale;
+
+      const distance =
+        getScaleNoteValue(physicalNote) -
+        getScaleNoteValue(workspace.physicalNote);
+
+      const moria1 = this.moriaBetweenNotes(
+        oldScale.scaleNoteMap.get(workspace.virtualNote)!,
+        oldScale.intervals,
+        distance,
       );
-      if (workspace.loggingEnabled) {
-        console.log(
-          'Moria from physical note ' +
-            physicalNote +
-            ' to Di in the old scale',
-          moria,
-        );
-      }
 
-      // Scale change
-      workspace.scale = this.getPlaybackScale(fthoraNode.scale, workspace);
-
-      // Compute distance from Di to virtual note in the new scale
       const moria2 = this.moriaBetweenNotes(
-        workspace.scale.scaleNoteMap.get(virtualNote)!,
-        workspace.scale.intervals,
-        getScaleNoteValue(ScaleNote.Thi) - getScaleNoteValue(virtualNote),
+        newScale.scaleNoteMap.get(
+          getScaleNoteFromValue(
+            getScaleNoteValue(workspace.physicalNote)! + currentShift,
+          ),
+        )!,
+        newScale.intervals,
+        distance,
       );
-      if (workspace.loggingEnabled) {
-        console.log(
-          'Moria from virtual note ' + virtualNote + ' to Di in the new scale',
-          moria2,
+
+      if (moria1 === moria2 && oldScale.name !== newScale.name) {
+        workspace.frequency = this.moveTo(fthoraNode.physicalNote, workspace);
+      } else if (physicalNote != workspace.physicalNote) {
+        // Reset to reference DI and move to current physical note in old scale
+        workspace.frequency = workspace.options.frequencyDi;
+
+        let pivot = ScaleNote.Thi;
+
+        if (newScale.name === PlaybackScaleName.SpathiKe) {
+          pivot = ScaleNote.Ke;
+
+          const intervalIndex = this.diatonicScale.scaleNoteMap.get(
+            ScaleNote.Thi,
+          )!;
+
+          const distance =
+            getScaleNoteValue(ScaleNote.Ke) - getScaleNoteValue(ScaleNote.Thi);
+
+          const moria = this.moriaBetweenNotes(
+            intervalIndex,
+            this.diatonicScale.intervals,
+            distance,
+          );
+
+          workspace.frequency = this.changeFrequency(
+            workspace.frequency,
+            moria,
+          );
+        } else if (newScale.name === PlaybackScaleName.SpathiGa) {
+          pivot = ScaleNote.Ga;
+          const intervalIndex = this.diatonicScale.scaleNoteMap.get(
+            ScaleNote.Thi,
+          )!;
+
+          const distance =
+            getScaleNoteValue(ScaleNote.Ga) - getScaleNoteValue(ScaleNote.Thi);
+
+          const moria = this.moriaBetweenNotes(
+            intervalIndex,
+            this.diatonicScale.intervals,
+            distance,
+          );
+
+          workspace.frequency = this.changeFrequency(
+            workspace.frequency,
+            moria,
+          );
+        }
+
+        const shiftedPivot = getScaleNoteFromValue(
+          getScaleNoteValue(pivot) - currentShift,
         );
-      }
 
-      workspace.transpositionMoria = moria + moria2;
-      if (workspace.loggingEnabled) {
-        console.log('Entering transposition', workspace.transpositionMoria);
-      }
-    } else {
-      workspace.scale = this.getPlaybackScale(fthoraNode.scale, workspace);
+        workspace.physicalNote = pivot;
+        workspace.virtualNote = pivot;
+        workspace.scale = this.diatonicScale;
+        workspace.frequency = this.moveTo(shiftedPivot, workspace);
 
-      workspace.transpositionMoria = 0;
+        workspace.scale = newScale;
+        workspace.physicalNote = shiftedPivot;
+        workspace.virtualNote = pivot;
+        workspace.frequency = this.moveTo(physicalNote, workspace);
+      }
     }
+
+    workspace.scale = this.getPlaybackScale(fthoraNode.scale, workspace);
+    workspace.physicalNote = physicalNote;
+    workspace.virtualNote = virtualNote;
   }
 
   getPlaybackScale(scale: Scale, workspace: PlaybackWorkspace): PlaybackScale {
@@ -859,7 +919,7 @@ export class PlaybackService {
     workspace.isonFrequency = -1;
 
     if (!isonNode.unison) {
-      workspace.isonFrequency = this.moveTo(isonNode.virtualNote, workspace);
+      workspace.isonFrequency = this.moveTo(isonNode.physicalNote, workspace);
     }
   }
 

@@ -34,12 +34,30 @@
       @open-playback-settings="openPlaybackSettingsDialog"
     />
     <div class="content">
-      <NeumeSelector
-        class="neume-selector"
-        :pageSetup="score.pageSetup"
-        :neumeKeyboard="neumeKeyboard"
-        @select-quantitative-neume="addQuantitativeNeume"
-      />
+      <div class="left-panel">
+        <NeumeSelector
+          class="neume-selector"
+          :pageSetup="score.pageSetup"
+          :neumeKeyboard="neumeKeyboard"
+          @select-quantitative-neume="addQuantitativeNeume"
+        />
+        <div
+          class="neume-combo-header"
+          @click="neumeComboPanelIsExpanded = !neumeComboPanelIsExpanded"
+        >
+          {{ $t('editor:common.neumeComboHeader') }}
+          <span class="neume-combo-expand-collapse">{{
+            neumeComboPanelIsExpanded ? '\u2796' : '\u2795'
+          }}</span>
+        </div>
+        <NeumeComboSelector
+          v-if="neumeComboPanelIsExpanded"
+          class="neume-combo-selector"
+          :pageSetup="score.pageSetup"
+          @select-neume-combo="addNeumeCombination"
+        />
+      </div>
+
       <div class="page-container">
         <Vue3TabsChrome
           class="workspace-tab-container"
@@ -98,7 +116,7 @@
                 >
                   <TextBoxRich
                     class="element-box"
-                    :key="`element-${getHeaderForPageIndex(pageIndex).id}-${
+                    :key="`element-${this.selectedWorkspaceId}-${getHeaderForPageIndex(pageIndex).id}-${
                       getHeaderForPageIndex(pageIndex).keyHelper
                     }`"
                     :ref="`header-${pageIndex}`"
@@ -111,13 +129,10 @@
                     :metadata="getTokenMetadata(pageIndex)"
                     :pageSetup="score.pageSetup"
                     :fonts="fonts"
-                    :class="[
-                      {
-                        selectedTextbox:
-                          getHeaderForPageIndex(pageIndex) ==
-                          selectedHeaderFooterElement,
-                      },
-                    ]"
+                    :selected="
+                      getHeaderForPageIndex(pageIndex) ==
+                      selectedHeaderFooterElement
+                    "
                     :style="headerStyle"
                     @click="
                       selectedHeaderFooterElement =
@@ -142,7 +157,7 @@
                 >
                   <TextBox
                     class="element-box"
-                    :key="`element-${getHeaderForPageIndex(pageIndex).id}-${
+                    :key="`element-${this.selectedWorkspaceId}-${getHeaderForPageIndex(pageIndex).id}-${
                       getHeaderForPageIndex(pageIndex).keyHelper
                     }`"
                     :ref="`header-${pageIndex}`"
@@ -166,32 +181,23 @@
                       selectedHeaderFooterElement =
                         getHeaderForPageIndex(pageIndex)
                     "
-                    @update:content="
-                      updateTextBoxContent(
-                        getHeaderForPageIndex(pageIndex)! as TextBoxElement,
-                        $event,
-                      )
-                    "
-                    @update:contentLeft="
-                      updateTextBoxContentLeft(
-                        getHeaderForPageIndex(pageIndex)! as TextBoxElement,
-                        $event,
-                      )
-                    "
-                    @update:contentCenter="
-                      updateTextBoxContentCenter(
-                        getHeaderForPageIndex(pageIndex)! as TextBoxElement,
-                        $event,
-                      )
-                    "
-                    @update:contentRight="
-                      updateTextBoxContentRight(
+                    @update="
+                      updateTextBox(
                         getHeaderForPageIndex(pageIndex)! as TextBoxElement,
                         $event,
                       )
                     "
                   />
                 </template>
+                <div
+                  v-if="score.pageSetup.showHeaderHorizontalRule"
+                  class="header-footer-hr"
+                  :style="
+                    getHeaderHorizontalRuleStyle(
+                      getHeaderForPageIndex(pageIndex).height,
+                    )
+                  "
+                ></div>
               </template>
               <div
                 class="line"
@@ -201,7 +207,8 @@
               >
                 <div
                   v-for="element in line.elements"
-                  :key="`element-${element.id}-${element.keyHelper}`"
+                  :id="`element-${element.id}`"
+                  :key="`element-${this.selectedWorkspaceId}-${element.id}-${element.keyHelper}`"
                   class="element-box"
                   :style="getElementStyle(element)"
                 >
@@ -210,6 +217,14 @@
                       :ref="`element-${getElementIndex(element)}`"
                       class="neume-box"
                     >
+                      <span
+                        class="section-name"
+                        v-if="
+                          element.sectionName != '' &&
+                          element.sectionName != null
+                        "
+                        >§</span
+                      >
                       <span class="page-break" v-if="element.pageBreak"
                         ><img src="@/assets/icons/page-break.svg"
                       /></span>
@@ -224,6 +239,44 @@
                           v-else
                           src="@/assets/icons/line-break.svg"
                       /></span>
+                      <AlternateLine
+                        v-for="(alternateLine, index) in (
+                          element as NoteElement
+                        ).alternateLines"
+                        :key="index"
+                        :element="alternateLine"
+                        :pageSetup="score.pageSetup"
+                        :class="{
+                          selectedAlternateLine:
+                            this.selectedWorkspace
+                              .selectedAlternateLineElement === alternateLine,
+                        }"
+                        @update="updateAlternateLine(alternateLine, $event)"
+                        @mousedown="
+                          setSelectedAlternateLine(element, alternateLine)
+                        "
+                      />
+                      <Annotation
+                        v-for="(annotation, index) in (element as NoteElement)
+                          .annotations"
+                        :key="index"
+                        :element="annotation"
+                        :pageSetup="score.pageSetup"
+                        :fonts="fonts"
+                        :selected="
+                          this.selectedWorkspace.selectedAnnotationElement ===
+                          annotation
+                        "
+                        @update="updateAnnotation(annotation, $event)"
+                        @delete="
+                          removeAnnotation(
+                            element as NoteElement,
+                            annotation,
+                            true,
+                          )
+                        "
+                        @mousedown="setSelectedAnnotation(element, annotation)"
+                      />
                       <SyllableNeumeBox
                         class="syllable-box"
                         :note="element"
@@ -351,6 +404,14 @@
                   </template>
                   <template v-else-if="isMartyriaElement(element)">
                     <div class="neume-box">
+                      <span
+                        class="section-name"
+                        v-if="
+                          element.sectionName != '' &&
+                          element.sectionName != null
+                        "
+                        >§</span
+                      >
                       <span class="page-break" v-if="element.pageBreak">
                         <img src="@/assets/icons/page-break.svg"
                       /></span>
@@ -378,6 +439,14 @@
                       :ref="`element-${getElementIndex(element)}`"
                       class="neume-box"
                     >
+                      <span
+                        class="section-name"
+                        v-if="
+                          element.sectionName != '' &&
+                          element.sectionName != null
+                        "
+                        >§</span
+                      >
                       <span class="page-break" v-if="element.pageBreak">
                         <img src="@/assets/icons/page-break.svg"
                       /></span>
@@ -400,6 +469,14 @@
                       :ref="`element-${getElementIndex(element)}`"
                       class="neume-box"
                     >
+                      <span
+                        class="section-name"
+                        v-if="
+                          element.sectionName != '' &&
+                          element.sectionName != null
+                        "
+                        >§</span
+                      >
                       <span class="page-break" v-if="element.pageBreak">
                         <img src="@/assets/icons/page-break.svg"
                       /></span>
@@ -416,6 +493,13 @@
                     </div>
                   </template>
                   <template v-else-if="isTextBoxElement(element)">
+                    <span
+                      class="section-name-2"
+                      v-if="
+                        element.sectionName != '' && element.sectionName != null
+                      "
+                      >§</span
+                    >
                     <span class="page-break-2" v-if="element.pageBreak"
                       ><img src="@/assets/icons/page-break.svg"
                     /></span>
@@ -428,32 +512,22 @@
                       :editMode="true"
                       :metadata="getTokenMetadata(pageIndex)"
                       :pageSetup="score.pageSetup"
-                      :class="[{ selectedTextbox: isSelected(element) }]"
+                      :selected="isSelected(element)"
                       @select-single="selectedElement = element"
-                      @update:content="
-                        updateTextBoxContent(element as TextBoxElement, $event)
-                      "
-                      @update:contentLeft="
-                        updateTextBoxContentLeft(
-                          element as TextBoxElement,
-                          $event,
-                        )
-                      "
-                      @update:contentCenter="
-                        updateTextBoxContentCenter(
-                          element as TextBoxElement,
-                          $event,
-                        )
-                      "
-                      @update:contentRight="
-                        updateTextBoxContentRight(
-                          element as TextBoxElement,
-                          $event,
-                        )
+                      @update="updateTextBox(element as TextBoxElement, $event)"
+                      @update:height="
+                        updateTextBoxHeight(element as TextBoxElement, $event)
                       "
                     />
                   </template>
                   <template v-else-if="isRichTextBoxElement(element)">
+                    <span
+                      class="section-name-2"
+                      v-if="
+                        element.sectionName != '' && element.sectionName != null
+                      "
+                      >§</span
+                    >
                     <span class="page-break-2" v-if="element.pageBreak"
                       ><img src="@/assets/icons/page-break.svg"
                     /></span>
@@ -465,7 +539,7 @@
                       :element="element"
                       :pageSetup="score.pageSetup"
                       :fonts="fonts"
-                      :class="[{ selectedTextbox: isSelected(element) }]"
+                      :selected="isSelected(element)"
                       @select-single="selectedElement = element"
                       @update="
                         updateRichTextBox(element as RichTextBoxElement, $event)
@@ -479,6 +553,13 @@
                     />
                   </template>
                   <template v-else-if="isModeKeyElement(element)">
+                    <span
+                      class="section-name-2"
+                      v-if="
+                        element.sectionName != '' && element.sectionName != null
+                      "
+                      >§</span
+                    >
                     <span class="page-break-2" v-if="element.pageBreak"
                       ><img src="@/assets/icons/page-break.svg"
                     /></span>
@@ -499,6 +580,13 @@
                     />
                   </template>
                   <template v-else-if="isDropCapElement(element)">
+                    <span
+                      class="section-name"
+                      v-if="
+                        element.sectionName != '' && element.sectionName != null
+                      "
+                      >§</span
+                    >
                     <span class="page-break" v-if="element.pageBreak"
                       ><img src="@/assets/icons/page-break.svg"
                     /></span>
@@ -547,12 +635,21 @@
                 </div>
               </div>
               <template v-if="score.pageSetup.showFooter">
+                <div
+                  v-if="score.pageSetup.showFooterHorizontalRule"
+                  class="header-footer-hr"
+                  :style="
+                    getFooterHorizontalRuleStyle(
+                      getFooterForPageIndex(pageIndex).height,
+                    )
+                  "
+                ></div>
                 <template
                   v-if="isRichTextBoxElement(getFooterForPageIndex(pageIndex))"
                 >
                   <TextBoxRich
                     class="element-box"
-                    :key="`element-${getFooterForPageIndex(pageIndex).id}-${
+                    :key="`element-${this.selectedWorkspaceId}-${getFooterForPageIndex(pageIndex).id}-${
                       getFooterForPageIndex(pageIndex).keyHelper
                     }`"
                     :ref="`footer-${pageIndex}`"
@@ -565,13 +662,10 @@
                     :metadata="getTokenMetadata(pageIndex)"
                     :pageSetup="score.pageSetup"
                     :fonts="fonts"
-                    :class="[
-                      {
-                        selectedTextbox:
-                          getFooterForPageIndex(pageIndex) ==
-                          selectedHeaderFooterElement,
-                      },
-                    ]"
+                    :selected="
+                      getFooterForPageIndex(pageIndex) ==
+                      selectedHeaderFooterElement
+                    "
                     :style="footerStyle"
                     @click="
                       selectedHeaderFooterElement =
@@ -597,7 +691,7 @@
                   <TextBox
                     class="element-box"
                     :ref="`footer-${pageIndex}`"
-                    :key="`element-${getFooterForPageIndex(pageIndex).id}-${
+                    :key="`element-${this.selectedWorkspaceId}-${getFooterForPageIndex(pageIndex).id}-${
                       getFooterForPageIndex(pageIndex).keyHelper
                     }`"
                     :element="getFooterForPageIndex(pageIndex)"
@@ -620,26 +714,8 @@
                       selectedHeaderFooterElement =
                         getFooterForPageIndex(pageIndex)
                     "
-                    @update:content="
-                      updateTextBoxContent(
-                        getFooterForPageIndex(pageIndex)! as TextBoxElement,
-                        $event,
-                      )
-                    "
-                    @update:contentLeft="
-                      updateTextBoxContentLeft(
-                        getFooterForPageIndex(pageIndex)! as TextBoxElement,
-                        $event,
-                      )
-                    "
-                    @update:contentCenter="
-                      updateTextBoxContentCenter(
-                        getFooterForPageIndex(pageIndex)! as TextBoxElement,
-                        $event,
-                      )
-                    "
-                    @update:contentRight="
-                      updateTextBoxContentRight(
+                    @update="
+                      updateTextBox(
                         getFooterForPageIndex(pageIndex)! as TextBoxElement,
                         $event,
                       )
@@ -683,14 +759,23 @@
           updateTextBoxLineHeight(selectedTextBoxElement, $event)
         "
         @update:customWidth="updateTextBoxWidth(selectedTextBoxElement, $event)"
+        @update:fillWidth="
+          updateTextBoxFillWidth(selectedTextBoxElement, $event)
+        "
         @update:customHeight="
-          updateTextBoxHeight(selectedTextBoxElement, $event)
+          updateTextBoxCustomHeight(selectedTextBoxElement, $event)
         "
         @update:marginTop="
           updateTextBoxMarginTop(selectedTextBoxElement, $event)
         "
         @update:marginBottom="
           updateTextBoxMarginBottom(selectedTextBoxElement, $event)
+        "
+        @update:sectionName="
+          updateScoreElementSectionName(
+            selectedElement as TextBoxElement,
+            $event,
+          )
         "
         @insert:gorthmikon="insertGorthmikon"
         @insert:pelastikon="insertPelastikon"
@@ -700,14 +785,72 @@
       <ToolbarTextBoxRich
         :element="selectedRichTextBoxElement"
         :pageSetup="score.pageSetup"
+        @update:inline="
+          updateRichTextBox(selectedRichTextBoxElement, { inline: $event })
+        "
+        @update:customWidth="
+          updateRichTextBox(selectedRichTextBoxElement, { customWidth: $event })
+        "
+        @update:offsetYTop="
+          updateRichTextBox(selectedRichTextBoxElement, { offsetYTop: $event })
+        "
+        @update:offsetYBottom="
+          updateRichTextBox(selectedRichTextBoxElement, {
+            offsetYBottom: $event,
+          })
+        "
         @update:rtl="
           updateRichTextBox(selectedRichTextBoxElement, { rtl: $event })
+        "
+        @update:centerOnPage="
+          updateRichTextBox(selectedRichTextBoxElement, {
+            centerOnPage: $event,
+          })
+        "
+        @update:modeChange="
+          updateRichTextBox(selectedRichTextBoxElement, { modeChange: $event })
+        "
+        @update:modeChangePhysicalNote="
+          updateRichTextBox(selectedRichTextBoxElement, {
+            modeChangePhysicalNote: $event,
+          })
+        "
+        @update:modeChangeScale="
+          updateRichTextBox(selectedRichTextBoxElement, {
+            modeChangeScale: $event,
+          })
+        "
+        @update:modeChangeVirtualNote="
+          updateRichTextBox(selectedRichTextBoxElement, {
+            modeChangeVirtualNote: $event,
+          })
+        "
+        @update:modeChangeIgnoreAttractions="
+          updateRichTextBox(selectedRichTextBoxElement, {
+            modeChangeIgnoreAttractions: $event,
+          })
+        "
+        @update:modeChangePermanentEnharmonicZo="
+          updateRichTextBox(selectedRichTextBoxElement, {
+            modeChangePermanentEnharmonicZo: $event,
+          })
+        "
+        @update:modeChangeBpm="
+          updateRichTextBox(selectedRichTextBoxElement, {
+            modeChangeBpm: $event,
+          })
         "
         @update:marginTop="
           updateRichTextBoxMarginTop(selectedRichTextBoxElement, $event)
         "
         @update:marginBottom="
           updateRichTextBoxMarginBottom(selectedRichTextBoxElement, $event)
+        "
+        @update:sectionName="
+          updateScoreElementSectionName(
+            selectedElement as RichTextBoxElement,
+            $event,
+          )
         "
       />
     </template>
@@ -750,6 +893,12 @@
         "
         @update:lineSpan="
           updateDropCapLineSpan(selectedElement as DropCapElement, $event)
+        "
+        @update:sectionName="
+          updateScoreElementSectionName(
+            selectedElement as DropCapElement,
+            $event,
+          )
         "
       />
     </template>
@@ -874,87 +1023,163 @@
             $event,
           )
         "
+        @update:sectionName="
+          updateScoreElementSectionName(
+            selectedElement as ModeKeyElement,
+            $event,
+          )
+        "
         @open-mode-key-dialog="openModeKeyDialog"
       />
     </template>
     <template
-      v-if="selectedElement != null && isSyllableElement(selectedElement)"
+      v-if="
+        selectedElement != null &&
+        selectedElementForNeumeToolbar != null &&
+        isSyllableElement(selectedElementForNeumeToolbar)
+      "
     >
       <ToolbarNeume
-        :element="selectedElement"
+        :element="selectedElementForNeumeToolbar"
         :pageSetup="score.pageSetup"
         :neumeKeyboard="neumeKeyboard"
-        :key="`toolbar-neume-${selectedElement.id}-${selectedElement.keyHelper}`"
+        :key="`toolbar-neume-${this.selectedWorkspaceId}-${selectedElement.id}-${selectedElement.keyHelper}`"
         :innerNeume="toolbarInnerNeume"
         @update:innerNeume="toolbarInnerNeume = $event"
         @update:accidental="
-          setAccidental(selectedElement as NoteElement, $event)
+          setAccidental(selectedElementForNeumeToolbar as NoteElement, $event)
         "
         @update:secondaryAccidental="
-          setSecondaryAccidental(selectedElement as NoteElement, $event)
+          setSecondaryAccidental(
+            selectedElementForNeumeToolbar as NoteElement,
+            $event,
+          )
         "
         @update:tertiaryAccidental="
-          setTertiaryAccidental(selectedElement as NoteElement, $event)
+          setTertiaryAccidental(
+            selectedElementForNeumeToolbar as NoteElement,
+            $event,
+          )
         "
-        @update:fthora="setFthoraNote(selectedElement as NoteElement, $event)"
+        @update:fthora="
+          setFthoraNote(selectedElementForNeumeToolbar as NoteElement, $event)
+        "
         @update:secondaryFthora="
-          setSecondaryFthora(selectedElement as NoteElement, $event)
+          setSecondaryFthora(
+            selectedElementForNeumeToolbar as NoteElement,
+            $event,
+          )
         "
         @update:tertiaryFthora="
-          setTertiaryFthora(selectedElement as NoteElement, $event)
+          setTertiaryFthora(
+            selectedElementForNeumeToolbar as NoteElement,
+            $event,
+          )
         "
         @update:chromaticFthoraNote="
-          updateNoteChromaticFthoraNote(selectedElement as NoteElement, $event)
+          updateNoteChromaticFthoraNote(
+            selectedElementForNeumeToolbar as NoteElement,
+            $event,
+          )
         "
         @update:secondaryChromaticFthoraNote="
           updateNoteSecondaryChromaticFthoraNote(
-            selectedElement as NoteElement,
+            selectedElementForNeumeToolbar as NoteElement,
             $event,
           )
         "
         @update:tertiaryChromaticFthoraNote="
           updateNoteTertiaryChromaticFthoraNote(
-            selectedElement as NoteElement,
+            selectedElementForNeumeToolbar as NoteElement,
             $event,
           )
         "
-        @update:gorgon="setGorgon(selectedElement as NoteElement, $event)"
-        @update:secondaryGorgon="
-          setSecondaryGorgon(selectedElement as NoteElement, $event)
+        @update:gorgon="
+          setGorgon(selectedElementForNeumeToolbar as NoteElement, $event)
         "
-        @update:klasma="setKlasma(selectedElement as NoteElement)"
-        @update:time="setTimeNeume(selectedElement as NoteElement, $event)"
+        @update:secondaryGorgon="
+          setSecondaryGorgon(
+            selectedElementForNeumeToolbar as NoteElement,
+            $event,
+          )
+        "
+        @update:klasma="
+          setKlasma(selectedElementForNeumeToolbar as NoteElement)
+        "
+        @update:time="
+          setTimeNeume(selectedElementForNeumeToolbar as NoteElement, $event)
+        "
         @update:expression="
-          setVocalExpression(selectedElement as NoteElement, $event)
+          setVocalExpression(
+            selectedElementForNeumeToolbar as NoteElement,
+            $event,
+          )
         "
         @update:measureBar="
-          setMeasureBarNote(selectedElement as NoteElement, $event)
+          setMeasureBarNote(
+            selectedElementForNeumeToolbar as NoteElement,
+            $event,
+          )
         "
         @update:measureNumber="
-          setMeasureNumber(selectedElement as NoteElement, $event)
+          setMeasureNumber(
+            selectedElementForNeumeToolbar as NoteElement,
+            $event,
+          )
         "
         @update:noteIndicator="
-          updateNoteNoteIndicator(selectedElement as NoteElement, $event)
+          updateNoteNoteIndicator(
+            selectedElementForNeumeToolbar as NoteElement,
+            $event,
+          )
         "
-        @update:ison="setIson(selectedElement as NoteElement, $event)"
+        @update:ison="
+          setIson(selectedElementForNeumeToolbar as NoteElement, $event)
+        "
         @update:koronis="
-          updateNoteKoronis(selectedElement as NoteElement, $event)
+          updateNoteKoronis(
+            selectedElementForNeumeToolbar as NoteElement,
+            $event,
+          )
         "
         @update:stavros="
-          updateNoteStavros(selectedElement as NoteElement, $event)
+          updateNoteStavros(
+            selectedElementForNeumeToolbar as NoteElement,
+            $event,
+          )
         "
         @update:vareia="
-          updateNoteVareia(selectedElement as NoteElement, $event)
+          updateNoteVareia(
+            selectedElementForNeumeToolbar as NoteElement,
+            $event,
+          )
         "
-        @update:tie="setTie(selectedElement as NoteElement, $event)"
+        @update:tie="
+          setTie(selectedElementForNeumeToolbar as NoteElement, $event)
+        "
         @update:spaceAfter="
-          updateNoteSpaceAfter(selectedElement as NoteElement, $event)
+          updateNoteSpaceAfter(
+            selectedElementForNeumeToolbar as NoteElement,
+            $event,
+          )
         "
         @update:ignoreAttractions="
-          updateNoteIgnoreAttractions(selectedElement as NoteElement, $event)
+          updateNoteIgnoreAttractions(
+            selectedElementForNeumeToolbar as NoteElement,
+            $event,
+          )
         "
         @update:acceptsLyrics="
-          updateNoteAcceptsLyrics(selectedElement as NoteElement, $event)
+          updateNoteAcceptsLyrics(
+            selectedElementForNeumeToolbar as NoteElement,
+            $event,
+          )
+        "
+        @update:sectionName="
+          updateScoreElementSectionName(
+            selectedElementForNeumeToolbar as NoteElement,
+            $event,
+          )
         "
         @open-syllable-positioning-dialog="openSyllablePositioningDialog"
       />
@@ -990,6 +1215,12 @@
         @update:alignRight="
           updateMartyriaAlignRight(selectedElement as MartyriaElement, $event)
         "
+        @update:quantitativeNeume="
+          setMartyriaQuantitativeNeume(
+            selectedElement as MartyriaElement,
+            $event,
+          )
+        "
         @update:auto="
           updateMartyriaAuto(selectedElement as MartyriaElement, $event)
         "
@@ -1005,8 +1236,20 @@
         @update:spaceAfter="
           updateMartyriaSpaceAfter(selectedElement as MartyriaElement, $event)
         "
+        @update:verticalOffset="
+          updateMartyriaVerticalOffset(
+            selectedElement as MartyriaElement,
+            $event,
+          )
+        "
         @update:rootSignOverride="
           updateMartyriaRootSignOverride(
+            selectedElement as MartyriaElement,
+            $event,
+          )
+        "
+        @update:sectionName="
+          updateScoreElementSectionName(
             selectedElement as MartyriaElement,
             $event,
           )
@@ -1020,6 +1263,9 @@
         @update:bpm="updateTempoBpm(selectedElement as TempoElement, $event)"
         @update:spaceAfter="
           updateTempoSpaceAfter(selectedElement as TempoElement, $event)
+        "
+        @update:sectionName="
+          updateScoreElementSectionName(selectedElement as TempoElement, $event)
         "
       />
     </template>
@@ -1042,6 +1288,9 @@
       :pageSetup="score.pageSetup"
       @update="
         updateModeKeyFromTemplate(selectedElement as ModeKeyElement, $event)
+      "
+      @update:useOptionalDiatonicFthoras="
+        updatePageSetupUseOptionalDiatonicFthoras($event)
       "
       @close="closeModeKeyDialog"
     />
@@ -1080,19 +1329,32 @@
       :defaultFormat="exportFormat"
       @exportAsPng="exportAsPng"
       @exportAsMusicXml="exportAsMusicXml"
+      @exportAsLatex="exportAsLatex"
       @close="closeExportDialog"
     />
     <template v-if="richTextBoxCalculation">
       <TextBoxRich
         class="richTextBoxCalculation"
-        v-for="element in richTextBoxElements"
+        v-for="element in resizableRichTextBoxElements"
         :key="element.id"
         :element="element"
         :pageSetup="score.pageSetup"
         :fonts="fonts"
+        :recalc="true"
         @update:height="
           updateRichTextBoxHeight(element as RichTextBoxElement, $event)
         "
+      />
+    </template>
+    <template v-if="textBoxCalculation">
+      <TextBox
+        class="textBoxCalculation"
+        v-for="element in resizableTextBoxElements"
+        :key="element.id"
+        :element="element"
+        :pageSetup="score.pageSetup"
+        :fonts="fonts"
+        @update:height="updateTextBoxHeight(element as TextBoxElement, $event)"
       />
     </template>
   </div>
@@ -1107,10 +1369,13 @@ import { nextTick, StyleValue, toRaw } from 'vue';
 import { Component, Inject, Prop, Vue, Watch } from 'vue-facing-decorator';
 import Vue3TabsChrome, { Tab } from 'vue3-tabs-chrome';
 
+import AlternateLine from '@/components/AlternateLine.vue';
+import Annotation from '@/components/Annotation.vue';
 import ContentEditable from '@/components/ContentEditable.vue';
 import DropCap from '@/components/DropCap.vue';
 import EditorPreferencesDialog from '@/components/EditorPreferencesDialog.vue';
 import ExportDialog, {
+  ExportAsLatexSettings,
   ExportAsMusicXmlSettings,
   ExportAsPngSettings,
   ExportFormat,
@@ -1123,6 +1388,7 @@ import EmptyNeumeBox from '@/components/NeumeBoxEmpty.vue';
 import MartyriaNeumeBox from '@/components/NeumeBoxMartyria.vue';
 import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
 import TempoNeumeBox from '@/components/NeumeBoxTempo.vue';
+import NeumeComboSelector from '@/components/NeumeComboSelector.vue';
 import NeumeSelector from '@/components/NeumeSelector.vue';
 import PageSetupDialog from '@/components/PageSetupDialog.vue';
 import PlaybackSettingsDialog from '@/components/PlaybackSettingsDialog.vue';
@@ -1156,6 +1422,8 @@ import {
 import { EditorPreferences } from '@/models/EditorPreferences';
 import {
   AcceptsLyricsOption,
+  AlternateLineElement,
+  AnnotationElement,
   DropCapElement,
   ElementType,
   EmptyElement,
@@ -1174,13 +1442,14 @@ import { EntryMode } from '@/models/EntryMode';
 import { Footer } from '@/models/Footer';
 import { Header } from '@/models/Header';
 import { modeKeyTemplates } from '@/models/ModeKeys';
+import { NeumeCombination } from '@/models/NeumeCommonCombinations';
 import {
   areVocalExpressionsEquivalent,
+  getSecondaryNeume,
   measureBarAboveToLeft,
   onlyTakesBottomKlasma,
   onlyTakesTopGorgon,
   onlyTakesTopKlasma,
-  takesSecondaryNeumes,
 } from '@/models/NeumeReplacements';
 import {
   Accidental,
@@ -1215,6 +1484,10 @@ import {
 } from '@/services/audio/PlaybackService';
 import { Command, CommandFactory } from '@/services/history/CommandService';
 import { ByzHtmlExporter } from '@/services/integration/ByzHtmlExporter';
+import {
+  LatexExporter,
+  LatexExporterOptions,
+} from '@/services/integration/LatexExporter';
 import { MusicXmlExporter } from '@/services/integration/MusicXmlExporter';
 import { IIpcService } from '@/services/ipc/IIpcService';
 import { LayoutService } from '@/services/LayoutService';
@@ -1222,6 +1495,7 @@ import { LyricService } from '@/services/LyricService';
 import { NeumeKeyboard } from '@/services/NeumeKeyboard';
 import { IPlatformService } from '@/services/platform/IPlatformService';
 import { SaveService } from '@/services/SaveService';
+import { TextMeasurementService } from '@/services/TextMeasurementService';
 import { TextSearchService } from '@/services/TextSearchService';
 import { GORTHMIKON, PELASTIKON, TATWEEL } from '@/utils/constants';
 import { getCursorPosition } from '@/utils/getCursorPosition';
@@ -1241,10 +1515,13 @@ interface Vue3TabsChromeComponent {
 
 @Component({
   components: {
+    AlternateLine,
+    Annotation,
     SyllableNeumeBox,
     MartyriaNeumeBox,
     TempoNeumeBox,
     EmptyNeumeBox,
+    NeumeComboSelector,
     NeumeSelector,
     ContentEditable,
     TextBox,
@@ -1283,6 +1560,7 @@ export default class Editor extends Vue {
   @Inject() readonly playbackService!: PlaybackService;
   @Inject() readonly textSearchService!: TextSearchService;
   @Inject() readonly lyricService!: LyricService;
+  @Inject() readonly latexExporter!: LatexExporter;
   @Inject() readonly musicXmlExporter!: MusicXmlExporter;
 
   searchTextQuery: string = '';
@@ -1329,12 +1607,18 @@ export default class Editor extends Vue {
   editorPreferencesDialogIsOpen: boolean = false;
   exportDialogIsOpen: boolean = false;
 
+  neumeComboPanelIsExpanded: boolean = false;
+
   exportFormat: ExportFormat = ExportFormat.PNG;
 
   clipboard: ScoreElement[] = [];
+  formatType: ElementType | null = null;
   textBoxFormat: Partial<TextBoxElement> | null = null;
+  noteFormat: Partial<NoteElement> | null = null;
   richTextBoxCalculation = false;
   richTextBoxCalculationCount = 0;
+  textBoxCalculation = false;
+  textBoxCalculationCount = 0;
 
   fonts: string[] = [];
 
@@ -1396,6 +1680,12 @@ export default class Editor extends Vue {
 
   tempoCommandFactory: CommandFactory<TempoElement> =
     new CommandFactory<TempoElement>();
+
+  annotationCommandFactory: CommandFactory<AnnotationElement> =
+    new CommandFactory<AnnotationElement>();
+
+  alternateLineCommandFactory: CommandFactory<AlternateLineElement> =
+    new CommandFactory<AlternateLineElement>();
 
   textBoxCommandFactory: CommandFactory<TextBoxElement> =
     new CommandFactory<TextBoxElement>();
@@ -1623,9 +1913,18 @@ export default class Editor extends Vue {
     return this.score?.staff.elements ?? [];
   }
 
-  get richTextBoxElements() {
+  get resizableRichTextBoxElements() {
     return this.elements.filter(
-      (x) => x.elementType === ElementType.RichTextBox,
+      (x) =>
+        x.elementType === ElementType.RichTextBox &&
+        !(x as RichTextBoxElement).inline,
+    );
+  }
+
+  get resizableTextBoxElements() {
+    return this.elements.filter(
+      (x) =>
+        x.elementType === ElementType.TextBox && !(x as TextBoxElement).inline,
     );
   }
 
@@ -1698,7 +1997,32 @@ export default class Editor extends Vue {
       }
     }
 
+    if (
+      this.selectedWorkspace.selectedAlternateLineElement != null &&
+      this.selectedWorkspace.selectedAlternateLineElement.elements.length === 0
+    ) {
+      this.removeAlternateLine(
+        this.selectedElement as NoteElement,
+        this.selectedWorkspace.selectedAlternateLineElement,
+        true,
+      );
+    }
+
     this.selectedWorkspace.selectedElement = element;
+    this.selectedWorkspace.selectedAnnotationElement = null;
+    this.selectedWorkspace.selectedAlternateLineElement = null;
+  }
+
+  get selectedElementForNeumeToolbar() {
+    if (
+      this.selectedWorkspace.selectedAlternateLineElement != null &&
+      this.selectedWorkspace.selectedAlternateLineElement.elements.length > 0
+    ) {
+      return this.selectedWorkspace.selectedAlternateLineElement.elements[
+        this.selectedWorkspace.selectedAlternateLineElement.elements.length - 1
+      ];
+    }
+    return this.selectedWorkspace.selectedElement;
   }
 
   get previousElementOnLine() {
@@ -1837,10 +2161,42 @@ export default class Editor extends Vue {
     } as StyleValue;
   }
 
+  getHeaderHorizontalRuleStyle(headerHeight: number) {
+    return {
+      left: withZoom(this.score.pageSetup.leftMargin),
+      top: withZoom(
+        this.score.pageSetup.headerMargin +
+          headerHeight +
+          this.score.pageSetup.headerHorizontalRuleMarginTop,
+      ),
+      color: this.score.pageSetup.headerHorizontalRuleColor,
+      borderTopWidth: withZoom(
+        this.score.pageSetup.headerHorizontalRuleThickness,
+      ),
+      width: withZoom(this.score.pageSetup.innerPageWidth),
+    } as StyleValue;
+  }
+
   get footerStyle() {
     return {
       left: withZoom(this.score.pageSetup.leftMargin),
       bottom: withZoom(this.score.pageSetup.footerMargin),
+    } as StyleValue;
+  }
+
+  getFooterHorizontalRuleStyle(footerHeight: number) {
+    return {
+      left: withZoom(this.score.pageSetup.leftMargin),
+      bottom: withZoom(
+        this.score.pageSetup.footerMargin +
+          footerHeight +
+          this.score.pageSetup.footerHorizontalRuleMarginBottom,
+      ),
+      color: this.score.pageSetup.footerHorizontalRuleColor,
+      borderTopWidth: withZoom(
+        this.score.pageSetup.footerHorizontalRuleThickness,
+      ),
+      width: withZoom(this.score.pageSetup.innerPageWidth),
     } as StyleValue;
   }
 
@@ -1906,6 +2262,11 @@ export default class Editor extends Vue {
     window.document.title = this.windowTitle;
   }
 
+  @Watch('selectedWorkspaceId')
+  onCurrentWorkspaceIdUpdated() {
+    window.document.title = this.windowTitle;
+  }
+
   @Watch('hasUnsavedChanges')
   onUnsavedChangesUpdated() {
     window.document.title = this.windowTitle;
@@ -1916,11 +2277,11 @@ export default class Editor extends Vue {
       direction: this.rtl ? 'rtl' : undefined,
       top: withZoom(element.lyricsVerticalOffset),
       paddingLeft:
-        element.lyricsHorizontalOffset > 0
+        !element.isFullMelisma && element.lyricsHorizontalOffset > 0
           ? withZoom(element.lyricsHorizontalOffset)
           : undefined,
       paddingRight:
-        element.lyricsHorizontalOffset < 0
+        !element.isFullMelisma && element.lyricsHorizontalOffset < 0
           ? withZoom(-element.lyricsHorizontalOffset)
           : undefined,
       fontSize: element.lyricsUseDefaultStyle
@@ -1989,7 +2350,7 @@ export default class Editor extends Vue {
   }
 
   getMelismaUnderscoreStyleInner(element: NoteElement) {
-    const thickness = this.score.pageSetup.lyricsMelismaThickeness;
+    const thickness = this.score.pageSetup.lyricsMelismaThickness;
 
     const spacing = !element.isFullMelisma
       ? this.score.pageSetup.lyricsMelismaSpacing
@@ -2018,8 +2379,9 @@ export default class Editor extends Vue {
     return `Untitled-${this.untitledIndex++}`;
   }
 
-  getFileName(workspace: Workspace) {
-    const unsavedChangesMarker = workspace.hasUnsavedChanges ? '*' : '';
+  getFileName(workspace: Workspace, showUnsavedChanges: boolean = true) {
+    const unsavedChangesMarker =
+      workspace.hasUnsavedChanges && showUnsavedChanges ? '*' : '';
 
     if (workspace.filePath != null) {
       const fileName = getFileNameFromPath(workspace.filePath);
@@ -2082,6 +2444,7 @@ export default class Editor extends Vue {
         fontLoader.load('1rem NeanesRTL'),
         fontLoader.load('1rem "Noto Naskh Arabic"'),
         fontLoader.load('1rem Omega'),
+        fontLoader.load('1rem "Old Standard"'),
         fontLoader.load('1rem PFGoudyInitials'),
         fontLoader.load('1rem "Source Serif"'),
         fontLoader.ready,
@@ -2142,6 +2505,10 @@ export default class Editor extends Vue {
       this.onFileMenuExportAsMusicXml,
     );
     EventBus.$on(
+      IpcMainChannels.FileMenuExportAsLatex,
+      this.onFileMenuExportAsLatex,
+    );
+    EventBus.$on(
       IpcMainChannels.FileMenuExportAsImage,
       this.onFileMenuExportAsImage,
     );
@@ -2165,6 +2532,14 @@ export default class Editor extends Vue {
     EventBus.$on(
       IpcMainChannels.FileMenuPreferences,
       this.onFileMenuPreferences,
+    );
+    EventBus.$on(
+      IpcMainChannels.FileMenuInsertAnnotation,
+      this.onFileMenuInsertAnnotation,
+    );
+    EventBus.$on(
+      IpcMainChannels.FileMenuInsertAlternateLine,
+      this.onFileMenuInsertAlternateLine,
     );
     EventBus.$on(
       IpcMainChannels.FileMenuInsertTextBox,
@@ -2197,6 +2572,10 @@ export default class Editor extends Vue {
     EventBus.$on(
       IpcMainChannels.FileMenuInsertFooter,
       this.onFileMenuInsertFooter,
+    );
+    EventBus.$on(
+      IpcMainChannels.FileMenuToolsCopyElementLink,
+      this.onFileMenuToolsCopyElementLink,
     );
     EventBus.$on(
       IpcMainChannels.FileMenuGenerateTestFile,
@@ -2241,6 +2620,10 @@ export default class Editor extends Vue {
       this.onFileMenuExportAsMusicXml,
     );
     EventBus.$off(
+      IpcMainChannels.FileMenuExportAsLatex,
+      this.onFileMenuExportAsLatex,
+    );
+    EventBus.$off(
       IpcMainChannels.FileMenuExportAsImage,
       this.onFileMenuExportAsImage,
     );
@@ -2272,6 +2655,14 @@ export default class Editor extends Vue {
       this.onFileMenuPreferences,
     );
     EventBus.$off(
+      IpcMainChannels.FileMenuInsertAnnotation,
+      this.onFileMenuInsertAnnotation,
+    );
+    EventBus.$off(
+      IpcMainChannels.FileMenuInsertAlternateLine,
+      this.onFileMenuInsertAlternateLine,
+    );
+    EventBus.$off(
       IpcMainChannels.FileMenuInsertTextBox,
       this.onFileMenuInsertTextBox,
     );
@@ -2294,6 +2685,18 @@ export default class Editor extends Vue {
     EventBus.$off(
       IpcMainChannels.FileMenuInsertImage,
       this.onFileMenuInsertImage,
+    );
+    EventBus.$off(
+      IpcMainChannels.FileMenuInsertHeader,
+      this.onFileMenuInsertHeader,
+    );
+    EventBus.$off(
+      IpcMainChannels.FileMenuInsertFooter,
+      this.onFileMenuInsertFooter,
+    );
+    EventBus.$off(
+      IpcMainChannels.FileMenuToolsCopyElementLink,
+      this.onFileMenuToolsCopyElementLink,
     );
     EventBus.$off(
       IpcMainChannels.FileMenuGenerateTestFile,
@@ -2329,6 +2732,20 @@ export default class Editor extends Vue {
     }
   }
 
+  getNormalizedSelectionRange() {
+    if (this.selectionRange == null) {
+      return null;
+    }
+
+    const start = Math.min(this.selectionRange.start, this.selectionRange.end);
+    const end = Math.max(this.selectionRange.start, this.selectionRange.end);
+
+    return {
+      start,
+      end,
+    } as ScoreElementSelectionRange;
+  }
+
   isSelected(element: ScoreElement) {
     if (this.selectedElement === element) {
       return true;
@@ -2347,6 +2764,22 @@ export default class Editor extends Vue {
     }
 
     return false;
+  }
+
+  setSelectedAnnotation(
+    parent: ScoreElement | null,
+    annotation: AnnotationElement,
+  ) {
+    this.selectedElement = parent;
+    this.selectedWorkspace.selectedAnnotationElement = annotation;
+  }
+
+  setSelectedAlternateLine(
+    parent: ScoreElement | null,
+    alternateLine: AlternateLineElement,
+  ) {
+    this.selectedElement = parent;
+    this.selectedWorkspace.selectedAlternateLineElement = alternateLine;
   }
 
   isAudioSelected(element: ScoreElement) {
@@ -2455,8 +2888,22 @@ export default class Editor extends Vue {
 
     element.quantitativeNeume = quantitativeNeume;
     // Special case for neumes with secondary gorgon
-    if (takesSecondaryNeumes(quantitativeNeume)) {
+    if (getSecondaryNeume(quantitativeNeume) != null) {
       element.secondaryGorgonNeume = secondaryGorgonNeume;
+    }
+
+    // If the selected element is an alternate line element,
+    // add the new element to the alternate line's elements
+    // and return immediately. Alternate lines do not support
+    // different entry modes.
+    if (this.selectedWorkspace.selectedAlternateLineElement != null) {
+      this.addScoreElement(
+        element,
+        this.selectedWorkspace.selectedAlternateLineElement.elements.length,
+        this.selectedWorkspace.selectedAlternateLineElement.elements,
+      );
+      this.save();
+      return;
     }
 
     switch (this.entryMode) {
@@ -2544,6 +2991,14 @@ export default class Editor extends Vue {
     }
 
     this.save();
+  }
+
+  addNeumeCombination(combo: NeumeCombination) {
+    const backup = this.clipboard.slice();
+    this.clipboard = combo.elements;
+    this.onPasteScoreElements(false);
+
+    this.clipboard = backup;
   }
 
   addAutoMartyria(alignRight?: boolean, note?: Note) {
@@ -2731,6 +3186,26 @@ export default class Editor extends Vue {
 
       this.save();
     }
+  }
+
+  updateScoreElementSectionName(
+    element: ScoreElement,
+    sectionName: string | null,
+  ) {
+    if (sectionName != null && sectionName.trim() == '') {
+      sectionName = null;
+    }
+
+    this.commandService.execute(
+      this.scoreElementCommandFactory.create('update-properties', {
+        target: element,
+        newValues: {
+          sectionName,
+        },
+      }),
+    );
+
+    this.save();
   }
 
   switchToMartyria(element: ScoreElement) {
@@ -3513,7 +3988,8 @@ export default class Editor extends Vue {
           handled = true;
         } else if (
           this.rtl &&
-          getCursorPosition() === htmlElement.textElement.getInnerText().length
+          getCursorPosition() ===
+            htmlElement.getTextElement().getInnerText().length
         ) {
           this.moveRightThrottled();
           handled = true;
@@ -3522,7 +3998,8 @@ export default class Editor extends Vue {
       case 'ArrowRight':
         if (
           !this.rtl &&
-          getCursorPosition() === htmlElement.textElement.getInnerText().length
+          getCursorPosition() ===
+            htmlElement.getTextElement().getInnerText().length
         ) {
           this.moveRightThrottled();
           handled = true;
@@ -3558,7 +4035,7 @@ export default class Editor extends Vue {
         handled = true;
         break;
       case 'KeyV':
-        document.execCommand('paste');
+        this.ipcService.paste();
         handled = true;
         break;
       case 'KeyX':
@@ -4102,7 +4579,7 @@ export default class Editor extends Vue {
       .map((_, i) => i)
       .filter((i) => this.pages[i].isVisible);
 
-    const pages = LayoutService.processPages(toRaw(this.score));
+    const pages = LayoutService.processPages(toRaw(this.selectedWorkspace));
 
     // Set page visibility for the newly processed pages
     pages.forEach((x, index) => (x.isVisible = visiblePages.includes(index)));
@@ -4205,7 +4682,45 @@ export default class Editor extends Vue {
         await this.onFileMenuExportAsPdf();
         this.removeWorkspace(this.selectedWorkspace);
       }
+    }
 
+    if (openWorkspaceResults.silentHtml) {
+      for (const file of openWorkspaceResults.files.filter((x) => x.success)) {
+        this.openScore(file);
+        await this.onFileMenuExportAsHtml();
+        this.removeWorkspace(this.selectedWorkspace);
+      }
+    }
+
+    if (openWorkspaceResults.silentLatex) {
+      for (const file of openWorkspaceResults.files.filter((x) => x.success)) {
+        const options = new LatexExporterOptions();
+        options.includeModeKeys =
+          openWorkspaceResults.silentLatexIncludeModeKeys ?? false;
+        options.includeTextBoxes =
+          openWorkspaceResults.silentLatexIncludeTextBoxes ?? false;
+        this.openScore(file);
+        await this.ipcService.exportWorkspaceAsLatex(
+          this.selectedWorkspace,
+          JSON.stringify(
+            this.latexExporter.export(
+              this.pages,
+              this.score.pageSetup,
+              options,
+            ),
+            null,
+            2,
+          ),
+        );
+        this.removeWorkspace(this.selectedWorkspace);
+      }
+    }
+
+    if (
+      openWorkspaceResults.silentPdf ||
+      openWorkspaceResults.silentLatex ||
+      openWorkspaceResults.silentHtml
+    ) {
       await this.ipcService.exitApplication();
     }
 
@@ -4243,7 +4758,7 @@ export default class Editor extends Vue {
     this.selectedElement =
       this.score.staff.elements[this.score.staff.elements.length - 1];
 
-    this.pages = LayoutService.processPages(this.score);
+    this.pages = LayoutService.processPages(this.selectedWorkspace);
   }
 
   async saveWorkspace(workspace: Workspace) {
@@ -4518,6 +5033,17 @@ export default class Editor extends Vue {
     }
   }
 
+  setMartyriaQuantitativeNeume(
+    element: MartyriaElement,
+    neume: QuantitativeNeume,
+  ) {
+    if (element.quantitativeNeume === neume) {
+      this.updateMartyriaQuantitativeNeume(element, null);
+    } else {
+      this.updateMartyriaQuantitativeNeume(element, neume);
+    }
+  }
+
   setModeKeyTempo(element: ModeKeyElement, neume: TempoSign) {
     if (element.tempo === neume) {
       this.updateModeKeyTempo(element, null);
@@ -4679,11 +5205,15 @@ export default class Editor extends Vue {
     }
   }
 
-  addScoreElement(element: ScoreElement, insertAtIndex?: number) {
+  addScoreElement(
+    element: ScoreElement,
+    insertAtIndex?: number,
+    collection: ScoreElement[] = this.elements,
+  ) {
     this.commandService.execute(
       this.scoreElementCommandFactory.create('add-to-collection', {
         elements: [element],
-        collection: this.elements,
+        collection,
         insertAtIndex,
       }),
     );
@@ -4715,11 +5245,14 @@ export default class Editor extends Vue {
     this.refreshStaffLyrics();
   }
 
-  removeScoreElement(element: ScoreElement) {
+  removeScoreElement(
+    element: ScoreElement,
+    collection: ScoreElement[] = this.elements,
+  ) {
     this.commandService.execute(
       this.scoreElementCommandFactory.create('remove-from-collection', {
         element,
-        collection: this.elements,
+        collection,
       }),
     );
 
@@ -5147,16 +5680,12 @@ export default class Editor extends Vue {
     }
   }
 
-  updateRichTextBox(
-    element: RichTextBoxElement,
-    newValues: Partial<RichTextBoxElement>,
+  updateAnnotation(
+    element: AnnotationElement,
+    newValues: Partial<AnnotationElement>,
   ) {
-    if (newValues.rtl != null) {
-      element.keyHelper++;
-    }
-
     this.commandService.execute(
-      this.richTextBoxCommandFactory.create('update-properties', {
+      this.annotationCommandFactory.create('update-properties', {
         target: element,
         newValues: newValues,
       }),
@@ -5165,12 +5694,92 @@ export default class Editor extends Vue {
     this.save();
   }
 
+  removeAnnotation(
+    note: NoteElement,
+    annotation: AnnotationElement,
+    noHistory: boolean = false,
+  ) {
+    this.commandService.execute(
+      this.annotationCommandFactory.create('remove-from-collection', {
+        element: annotation,
+        collection: note.annotations,
+      }),
+      noHistory,
+    );
+
+    this.selectedWorkspace.selectedAnnotationElement = null;
+
+    this.save();
+  }
+
+  updateAlternateLine(
+    element: AlternateLineElement,
+    newValues: Partial<AlternateLineElement>,
+  ) {
+    this.commandService.execute(
+      this.alternateLineCommandFactory.create('update-properties', {
+        target: element,
+        newValues: newValues,
+      }),
+    );
+
+    this.save();
+  }
+
+  removeAlternateLine(
+    note: NoteElement,
+    annotation: AlternateLineElement,
+    noHistory: boolean = false,
+  ) {
+    this.commandService.execute(
+      this.alternateLineCommandFactory.create('remove-from-collection', {
+        element: annotation,
+        collection: note.alternateLines,
+      }),
+      noHistory,
+    );
+
+    this.selectedWorkspace.selectedAlternateLineElement = null;
+
+    this.save();
+  }
+
+  updateRichTextBox(
+    element: RichTextBoxElement,
+    newValues: Partial<RichTextBoxElement>,
+  ) {
+    if (newValues.rtl != null) {
+      element.keyHelper++;
+    }
+
+    const heightProp: keyof RichTextBoxElement = 'height';
+
+    const noHistory =
+      Object.keys(newValues).length === 1 && heightProp in newValues;
+
+    this.commandService.execute(
+      this.richTextBoxCommandFactory.create('update-properties', {
+        target: element,
+        newValues: newValues,
+      }),
+      noHistory,
+    );
+
+    const modeChangeProp: keyof RichTextBoxElement = 'modeChange';
+
+    if (modeChangeProp in newValues) {
+      this.refreshStaffLyrics();
+    }
+
+    this.save(!noHistory);
+  }
+
   updateRichTextBoxHeight(element: RichTextBoxElement, height: number) {
     // The height could be updated by many rich text box elements at once
     // (e.g. if PageSetup changes) so we debounce the save.
     element.height = height;
     this.richTextBoxCalculationCount++;
-    this.saveDebounced();
+    this.saveDebounced(false);
   }
 
   updateRichTextBoxMarginTop(element: RichTextBoxElement, marginTop: number) {
@@ -5185,30 +5794,26 @@ export default class Editor extends Vue {
   }
 
   updateTextBox(element: TextBoxElement, newValues: Partial<TextBoxElement>) {
+    const noHistory =
+      Object.keys(newValues).length === 1 && 'height' in newValues;
+
     this.commandService.execute(
       this.textBoxCommandFactory.create('update-properties', {
         target: element,
         newValues: newValues,
       }),
+      noHistory,
     );
 
-    this.save();
+    this.save(!noHistory);
   }
 
-  updateTextBoxContent(element: TextBoxElement, content: string) {
-    this.updateTextBox(element, { content });
-  }
-
-  updateTextBoxContentLeft(element: TextBoxElement, contentLeft: string) {
-    this.updateTextBox(element, { contentLeft });
-  }
-
-  updateTextBoxContentCenter(element: TextBoxElement, contentCenter: string) {
-    this.updateTextBox(element, { contentCenter });
-  }
-
-  updateTextBoxContentRight(element: TextBoxElement, contentRight: string) {
-    this.updateTextBox(element, { contentRight });
+  updateTextBoxHeight(element: TextBoxElement, height: number) {
+    // The height could be updated by many rich text box elements at once
+    // (e.g. if PageSetup changes) so we debounce the save.
+    element.height = height;
+    this.textBoxCalculationCount++;
+    this.saveDebounced(false);
   }
 
   updateTextBoxUseDefaultStyle(
@@ -5266,7 +5871,14 @@ export default class Editor extends Vue {
     this.updateTextBox(element, { customWidth });
   }
 
-  updateTextBoxHeight(element: TextBoxElement, customHeight: number | null) {
+  updateTextBoxFillWidth(element: TextBoxElement, fillWidth: boolean) {
+    this.updateTextBox(element, { fillWidth });
+  }
+
+  updateTextBoxCustomHeight(
+    element: TextBoxElement,
+    customHeight: number | null,
+  ) {
     this.updateTextBox(element, { customHeight });
   }
 
@@ -5535,7 +6147,14 @@ export default class Editor extends Vue {
   }
 
   updateMartyriaAlignRight(element: MartyriaElement, alignRight: boolean) {
-    this.updateMartyria(element, { alignRight });
+    this.updateMartyria(element, { alignRight, quantitativeNeume: null });
+  }
+
+  updateMartyriaQuantitativeNeume(
+    element: MartyriaElement,
+    quantitativeNeume: QuantitativeNeume | null,
+  ) {
+    this.updateMartyria(element, { quantitativeNeume });
   }
 
   updateMartyriaChromaticFthoraNote(
@@ -5571,6 +6190,14 @@ export default class Editor extends Vue {
 
   updateMartyriaSpaceAfter(element: MartyriaElement, spaceAfter: number) {
     this.updateMartyria(element, { spaceAfter });
+    this.save();
+  }
+
+  updateMartyriaVerticalOffset(
+    element: MartyriaElement,
+    verticalOffset: number,
+  ) {
+    this.updateMartyria(element, { verticalOffset });
     this.save();
   }
 
@@ -5735,6 +6362,30 @@ export default class Editor extends Vue {
 
   deleteSelectedElement() {
     if (
+      this.selectedWorkspace.selectedAnnotationElement != null &&
+      this.selectedElement?.elementType === ElementType.Note
+    ) {
+      this.removeAnnotation(
+        this.selectedElement as NoteElement,
+        this.selectedWorkspace.selectedAnnotationElement,
+      );
+
+      return;
+    }
+
+    if (
+      this.selectedWorkspace.selectedAlternateLineElement != null &&
+      this.selectedElement?.elementType === ElementType.Note
+    ) {
+      this.removeAlternateLine(
+        this.selectedElement as NoteElement,
+        this.selectedWorkspace.selectedAlternateLineElement,
+      );
+
+      return;
+    }
+
+    if (
       this.selectedElement != null &&
       !this.isLastElement(this.selectedElement)
     ) {
@@ -5774,6 +6425,14 @@ export default class Editor extends Vue {
   }
 
   deletePreviousElement() {
+    if (this.selectedWorkspace.selectedAlternateLineElement) {
+      const elements =
+        this.selectedWorkspace.selectedAlternateLineElement.elements;
+      this.removeScoreElement(elements[this.elements.length - 1], elements);
+
+      return;
+    }
+
     if (
       this.selectedElement &&
       this.selectedElementIndex > 0 &&
@@ -5944,7 +6603,21 @@ export default class Editor extends Vue {
 
     if (needToRecalcRichTextBoxes) {
       this.recalculateRichTextBoxHeights();
+      this.recalculateTextBoxHeights();
     }
+
+    this.save();
+  }
+
+  updatePageSetupUseOptionalDiatonicFthoras(
+    useOptionalDiatonicFthoras: boolean,
+  ) {
+    this.commandService.execute(
+      this.pageSetupCommandFactory.create('update-properties', {
+        target: this.score.pageSetup,
+        newValues: { useOptionalDiatonicFthoras },
+      }),
+    );
 
     this.save();
   }
@@ -6150,7 +6823,7 @@ export default class Editor extends Vue {
     }
 
     nextTick(async () => {
-      const expectedCount = this.richTextBoxElements.length;
+      const expectedCount = this.resizableRichTextBoxElements.length;
       this.richTextBoxCalculationCount = 0;
       this.richTextBoxCalculation = true;
 
@@ -6176,7 +6849,43 @@ export default class Editor extends Vue {
       await new Promise(poll);
 
       this.richTextBoxCalculation = false;
-      this.saveDebounced();
+      this.saveDebounced(false);
+    });
+  }
+
+  recalculateTextBoxHeights() {
+    if (this.textBoxCalculation) {
+      this.textBoxCalculation = false;
+    }
+
+    nextTick(async () => {
+      const expectedCount = this.resizableRichTextBoxElements.length;
+      this.textBoxCalculationCount = 0;
+      this.textBoxCalculation = true;
+
+      const maxTries = 4 * 30; // 30 seconds
+      let tries = 1;
+      let lastCount = 0;
+
+      // Wait until all rich text boxes have updated
+      const poll = (resolve: (value: unknown) => void) => {
+        if (
+          this.textBoxCalculationCount === expectedCount ||
+          tries >= maxTries ||
+          this.textBoxCalculationCount < lastCount
+        ) {
+          resolve(true);
+        } else {
+          tries++;
+          lastCount = this.textBoxCalculationCount;
+          setTimeout(() => poll(resolve), 250);
+        }
+      };
+
+      await new Promise(poll);
+
+      this.textBoxCalculation = false;
+      this.saveDebounced(false);
     });
   }
 
@@ -6211,9 +6920,13 @@ export default class Editor extends Vue {
     // blinking cursors don't show up in the printed page
     const activeElement = this.blurActiveElement();
 
+    const previousTitle = window.document.title;
+    window.document.title = this.getFileName(this.selectedWorkspace, false);
+
     nextTick(async () => {
       await this.ipcService.printWorkspace(this.selectedWorkspace);
       this.printMode = false;
+      window.document.title = previousTitle;
 
       // Re-focus the active element
       this.focusElement(activeElement);
@@ -6227,9 +6940,13 @@ export default class Editor extends Vue {
     // blinking cursors don't show up in the printed page
     const activeElement = this.blurActiveElement();
 
+    const previousTitle = window.document.title;
+    window.document.title = this.getFileName(this.selectedWorkspace, false);
+
     await nextTick();
     await this.ipcService.exportWorkspaceAsPdf(this.selectedWorkspace);
     this.printMode = false;
+    window.document.title = previousTitle;
 
     // Re-focus the active element
     this.focusElement(activeElement);
@@ -6281,9 +6998,7 @@ export default class Editor extends Vue {
             } as any;
 
             if (args.transparentBackground) {
-              options.style = {
-                backgroundColor: 'transparent',
-              };
+              options.style.backgroundColor = 'transparent';
             }
 
             let data = await toPng(page, options);
@@ -6400,12 +7115,34 @@ export default class Editor extends Vue {
     this.exportDialogIsOpen = true;
   }
 
+  onFileMenuExportAsLatex() {
+    this.exportFormat = ExportFormat.Latex;
+    this.exportDialogIsOpen = true;
+  }
+
   async exportAsMusicXml(args: ExportAsMusicXmlSettings) {
     await this.ipcService.exportWorkspaceAsMusicXml(
       this.selectedWorkspace,
       this.musicXmlExporter.export(this.score, args.options),
       args.compressed,
       args.openFolder,
+    );
+
+    this.closeExportDialog();
+  }
+
+  async exportAsLatex(args: ExportAsLatexSettings) {
+    await this.ipcService.exportWorkspaceAsLatex(
+      this.selectedWorkspace,
+      JSON.stringify(
+        this.latexExporter.export(
+          this.pages,
+          this.score.pageSetup,
+          args.options,
+        ),
+        null,
+        2,
+      ),
     );
 
     this.closeExportDialog();
@@ -6424,6 +7161,34 @@ export default class Editor extends Vue {
   focusElement(element: Element | null) {
     if (element instanceof HTMLElement) {
       element.focus();
+    }
+  }
+
+  onFileMenuInsertAnnotation() {
+    if (this.selectedElement?.elementType === ElementType.Note) {
+      const el = new AnnotationElement();
+      const fontHeight = TextMeasurementService.getFontHeight(
+        this.score.pageSetup.lyricsFont,
+      );
+      el.x = 0;
+      el.y = -fontHeight;
+      (this.selectedElement as NoteElement).annotations.push(el);
+      this.selectedWorkspace.selectedAnnotationElement = el;
+      this.save();
+    }
+  }
+
+  onFileMenuInsertAlternateLine() {
+    if (this.selectedElement?.elementType === ElementType.Note) {
+      const el = new AlternateLineElement();
+      const fontHeight = TextMeasurementService.getFontHeight(
+        this.score.pageSetup.lyricsFont,
+      );
+      el.x = 0;
+      el.y = -fontHeight;
+      (this.selectedElement as NoteElement).alternateLines.push(el);
+      this.selectedWorkspace.selectedAlternateLineElement = el;
+      this.save();
     }
   }
 
@@ -6533,6 +7298,14 @@ export default class Editor extends Vue {
     this.updatePageSetup(this.score.pageSetup);
   }
 
+  onFileMenuToolsCopyElementLink() {
+    if (this.selectedElement?.id != null) {
+      navigator.clipboard.writeText(
+        '#element-' + this.selectedElement.id.toString(),
+      );
+    }
+  }
+
   async onFileMenuSave() {
     const workspace = this.selectedWorkspace;
 
@@ -6576,8 +7349,11 @@ export default class Editor extends Vue {
 
     if (currentIndex > -1) {
       // If the selected element was removed during the undo process, choose a new one
-      this.selectedElement =
-        this.elements[Math.min(currentIndex, this.elements.length - 1)];
+      const clampedIndex = Math.min(currentIndex, this.elements.length - 1);
+
+      if (this.selectedElement !== this.elements[clampedIndex]) {
+        this.selectedElement = this.elements[clampedIndex];
+      }
 
       // Undo/redo could affect the note display in the neume toolbar (among other things),
       // so we force a refresh here
@@ -6591,6 +7367,7 @@ export default class Editor extends Vue {
         this.score.pageSetup.textBoxDefaultFontSize
     ) {
       this.recalculateRichTextBoxHeights();
+      this.recalculateTextBoxHeights();
     }
 
     this.save();
@@ -6612,8 +7389,11 @@ export default class Editor extends Vue {
 
     if (currentIndex > -1) {
       // If the selected element was removed during the redo process, choose a new one
-      this.selectedElement =
-        this.elements[Math.min(currentIndex, this.elements.length - 1)];
+      const clampedIndex = Math.min(currentIndex, this.elements.length - 1);
+
+      if (this.selectedElement !== this.elements[clampedIndex]) {
+        this.selectedElement = this.elements[clampedIndex];
+      }
 
       // Undo/redo could affect the note display in the neume toolbar (among other things),
       // so we force a refresh here
@@ -6627,6 +7407,7 @@ export default class Editor extends Vue {
         this.score.pageSetup.textBoxDefaultFontSize
     ) {
       this.recalculateRichTextBoxHeights();
+      this.recalculateTextBoxHeights();
     }
 
     this.save();
@@ -6654,9 +7435,13 @@ export default class Editor extends Vue {
     }
 
     if (this.selectedElement.elementType === ElementType.TextBox) {
+      this.formatType = ElementType.TextBox;
       this.textBoxFormat = (
         this.selectedElement as TextBoxElement
       ).cloneFormat();
+    } else if (this.selectedElement.elementType === ElementType.Note) {
+      this.formatType = ElementType.Note;
+      this.noteFormat = (this.selectedElement as NoteElement).cloneFormat();
     }
   }
 
@@ -6687,7 +7472,7 @@ export default class Editor extends Vue {
     if (!this.isTextInputFocused() && !this.dialogOpen) {
       this.onPasteScoreElements(false);
     } else {
-      document.execCommand('paste');
+      this.ipcService.paste();
     }
   }
 
@@ -6695,19 +7480,51 @@ export default class Editor extends Vue {
     if (!this.isTextInputFocused() && !this.dialogOpen) {
       this.onPasteScoreElements(true);
     } else {
-      document.execCommand('paste');
+      this.ipcService.paste();
     }
   }
 
   onFileMenuPasteFormat() {
-    if (this.selectedElement == null || this.textBoxFormat == null) {
-      return;
+    const normalizedRange = this.getNormalizedSelectionRange();
+
+    const commands: Command[] = [];
+
+    if (normalizedRange != null) {
+      for (let i = normalizedRange.start; i <= normalizedRange.end; i++) {
+        if (this.elements[i].elementType === this.formatType) {
+          this.applyCopiedFormat(this.elements[i], commands);
+        }
+      }
+    } else if (this.selectedElement != null) {
+      this.applyCopiedFormat(this.selectedElement, commands);
     }
 
-    if (this.selectedElement.elementType === ElementType.TextBox) {
-      this.updateTextBox(
-        this.selectedElement as TextBoxElement,
-        this.textBoxFormat,
+    if (commands.length > 0) {
+      this.commandService.executeAsBatch(commands);
+      this.save();
+    }
+  }
+
+  applyCopiedFormat(element: ScoreElement, commands: Command[]) {
+    if (
+      element.elementType === ElementType.TextBox &&
+      this.textBoxFormat != null
+    ) {
+      commands.push(
+        this.textBoxCommandFactory.create('update-properties', {
+          target: element as TextBoxElement,
+          newValues: this.textBoxFormat,
+        }),
+      );
+    } else if (
+      element.elementType === ElementType.Note &&
+      this.noteFormat != null
+    ) {
+      commands.push(
+        this.noteElementCommandFactory.create('update-properties', {
+          target: element as NoteElement,
+          newValues: this.noteFormat,
+        }),
       );
     }
   }
@@ -6740,6 +7557,12 @@ export default class Editor extends Vue {
     const workspace = new Workspace();
     workspace.tempFileName = this.getTempFilename();
     workspace.score = new Score();
+
+    // The ison test page can be used to inspect the ison alignment
+    // provided by the font, so we disable the automatic ison alignment
+    if (testFileType === TestFileType.Ison) {
+      workspace.score.pageSetup.alignIsonIndicators = false;
+    }
 
     this.addWorkspace(workspace);
 
@@ -6790,6 +7613,7 @@ export default class Editor extends Vue {
   createDefaultModeKey(pageSetup: PageSetup) {
     const defaultTemplate = ModeKeyElement.createFromTemplate(
       modeKeyTemplates[0],
+      this.score.pageSetup.useOptionalDiatonicFthoras,
     );
 
     defaultTemplate.color = pageSetup.modeKeyDefaultColor;
@@ -6825,7 +7649,9 @@ export default class Editor extends Vue {
     title.lineHeight = score.pageSetup.textBoxDefaultLineHeight;
     title.bold = score.pageSetup.textBoxDefaultFontWeight === '700';
     title.italic = score.pageSetup.textBoxDefaultFontStyle === 'italic';
-
+    title.height = Math.round(
+      TextMeasurementService.getFontHeight(title.computedFont) * 1.2,
+    );
     score.staff.elements.unshift(
       title,
       this.createDefaultModeKey(score.pageSetup),
@@ -7008,6 +7834,11 @@ export default class Editor extends Vue {
   position: absolute;
 }
 
+.header-footer-hr {
+  position: absolute;
+  border-top-style: solid;
+}
+
 .red {
   color: #ed0000;
 }
@@ -7032,6 +7863,10 @@ export default class Editor extends Vue {
   border: 1px solid goldenrod;
 }
 
+.selectedAlternateLine {
+  outline: 1px solid goldenrod;
+}
+
 .selectedLyrics {
   border: 1px solid goldenrod;
 }
@@ -7040,7 +7875,8 @@ export default class Editor extends Vue {
   display: none;
 }
 
-.richTextBoxCalculation {
+.richTextBoxCalculation,
+.textBoxCalculation {
   position: absolute;
   left: -99999999px;
 }
@@ -7148,7 +7984,7 @@ export default class Editor extends Vue {
   margin-right: auto;
 
   background-color: white;
-  overflow: hidden;
+  overflow: clip;
 
   position: relative;
 }
@@ -7168,8 +8004,37 @@ export default class Editor extends Vue {
   overflow: auto;
 }
 
+.left-panel {
+  display: flex;
+  flex-direction: column;
+}
+
 .neume-selector {
+  flex: 2;
   overflow: auto;
+}
+
+.neume-combo-selector {
+  flex: 1;
+  overflow: auto;
+}
+
+.neume-combo-header {
+  display: flex;
+  justify-content: center;
+  cursor: default;
+  user-select: none;
+  padding: 0.5rem 0.25rem;
+  background-color: #eee;
+}
+
+.neume-combo-header:hover {
+  background-color: #ddd;
+}
+
+.neume-combo-expand-collapse {
+  margin-left: auto;
+  margin-right: 0.25rem;
 }
 
 .mode-header {
@@ -7264,6 +8129,22 @@ export default class Editor extends Vue {
   width: calc(16px * var(--zoom, 1));
 }
 
+.section-name {
+  position: absolute;
+  top: calc(-20px * var(--zoom, 1));
+  height: 100%;
+  font-weight: bold;
+}
+
+.section-name-2 {
+  position: absolute;
+  font-weight: bold;
+  left: calc(-22px * var(--zoom, 1));
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
 .print-only {
   display: none;
 }
@@ -7277,6 +8158,11 @@ export default class Editor extends Vue {
 .page.print .drop-cap-container,
 .page.print .mode-key-container,
 .page.print .image-box-container,
+.page.print .selectedAnnotation,
+.page.print .selectedAlternateLine,
+.page.print :deep(.text-box),
+.page.print :deep(.rich-text-editor),
+.page.print :deep(.inline-container),
 .page.print :deep(.text-box.multipanel) {
   border: none;
   outline: none;
@@ -7304,7 +8190,7 @@ export default class Editor extends Vue {
 }
 
 .page.print :deep(.rich-text-editor) {
-  overflow: hidden !important;
+  overflow: visible !important;
 }
 
 @media print {
@@ -7360,7 +8246,7 @@ export default class Editor extends Vue {
   }
 
   .file-menu-bar,
-  .neume-selector-panel,
+  .left-panel,
   .workspace-tab-container,
   .lyrics-toolbar,
   .lyric-manager-toolbar,
@@ -7373,6 +8259,8 @@ export default class Editor extends Vue {
   .text-box-toolbar,
   .image-box-toolbar,
   .search-text-container,
+  .section-name,
+  .section-name-2,
   .page-break,
   .line-break,
   .page-break-2,

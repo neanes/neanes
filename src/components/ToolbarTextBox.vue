@@ -26,6 +26,7 @@
         <option>Athonite</option>
         <option>GFS Didot</option>
         <option>Noto Naskh Arabic</option>
+        <option>Old Standard</option>
         <option>Omega</option>
 
         <option v-for="font in fonts" :key="font" :value="font">
@@ -179,6 +180,7 @@
       </template>
     </template>
     <template v-else>
+      <span class="divider" />
       <label class="right-space">{{ $t('toolbar:common.width') }}</label>
       <InputUnit
         class="text-box-input-width"
@@ -192,6 +194,17 @@
         placeholder="auto"
         @update:modelValue="$emit('update:customWidth', $event)"
       />
+      <input
+        id="toolbar-text-box-fill-width"
+        type="checkbox"
+        :checked="element.fillWidth"
+        @change="
+          $emit('update:fillWidth', ($event.target as HTMLInputElement).checked)
+        "
+      />
+      <label for="toolbar-text-box-fill-width">{{
+        $t('toolbar:textbox.fillWidth')
+      }}</label>
     </template>
     <span class="space"></span>
     <div class="form-group">
@@ -199,7 +212,7 @@
       <InputUnit
         class="text-box-input-width"
         unit="pt"
-        :min="0"
+        :min="-maxHeight"
         :max="maxHeight"
         :step="0.5"
         :modelValue="element.marginTop"
@@ -219,6 +232,17 @@
         :modelValue="element.marginBottom"
         :precision="1"
         @update:modelValue="$emit('update:marginBottom', $event)"
+      />
+    </div>
+    <span class="space"></span>
+    <div class="form-group">
+      <label class="right-space">{{ $t('toolbar:common.sectionName') }}</label>
+      <input
+        type="text"
+        :value="element.sectionName"
+        @change="
+          $emit('update:sectionName', ($event.target as HTMLInputElement).value)
+        "
       />
     </div>
   </div>
@@ -245,6 +269,7 @@ import { Unit } from '@/utils/Unit';
     'update:color',
     'update:customHeight',
     'update:customWidth',
+    'update:fillWidth',
     'update:fontFamily',
     'update:fontSize',
     'update:italic',
@@ -252,6 +277,7 @@ import { Unit } from '@/utils/Unit';
     'update:marginBottom',
     'update:marginTop',
     'update:multipanel',
+    'update:sectionName',
     'update:strokeWidth',
     'update:underline',
     'update:useDefaultStyle',

@@ -2,6 +2,7 @@ import {
   ExportPageAsImageArgs,
   ExportWorkspaceAsHtmlArgs,
   ExportWorkspaceAsImageArgs,
+  ExportWorkspaceAsLatexArgs,
   ExportWorkspaceAsMusicXmlArgs,
   ExportWorkspaceAsPdfArgs,
   IpcRendererChannels,
@@ -17,6 +18,7 @@ import {
 } from '@/ipc/ipcChannels';
 import { Workspace } from '@/models/Workspace';
 import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
+import { Unit } from '@/utils/Unit';
 
 import { SaveService } from '../SaveService';
 import { IIpcService } from './IIpcService';
@@ -53,6 +55,10 @@ export class IpcService implements IIpcService {
         tempFileName: workspace.tempFileName,
         landscape: workspace.score.pageSetup.landscape,
         pageSize: workspace.score.pageSetup.pageSize,
+        pageWidthInches: Unit.toInch(workspace.score.pageSetup.pageWidthCustom),
+        pageHeightInches: Unit.toInch(
+          workspace.score.pageSetup.pageHeightCustom,
+        ),
       } as ExportWorkspaceAsPdfArgs,
     );
   }
@@ -88,6 +94,7 @@ export class IpcService implements IIpcService {
     return await window.ipcRenderer.invoke(
       IpcRendererChannels.ExportWorkspaceAsHtml,
       {
+        filePathFull: workspace.filePath,
         filePath:
           workspace.filePath != null
             ? `${getFileNameFromPath(workspace.filePath)}.html`
@@ -121,10 +128,27 @@ export class IpcService implements IIpcService {
     );
   }
 
+  public async exportWorkspaceAsLatex(workspace: Workspace, data: string) {
+    return await window.ipcRenderer.invoke(
+      IpcRendererChannels.ExportWorkspaceAsLatex,
+      {
+        filePathFull: workspace.filePath,
+        filePath:
+          workspace.filePath != null
+            ? `${getFileNameFromPath(workspace.filePath)}.byztex`
+            : null,
+        tempFileName: `${workspace.tempFileName}.byztex`,
+        data,
+      } as ExportWorkspaceAsLatexArgs,
+    );
+  }
+
   public async printWorkspace(workspace: Workspace) {
     return await window.ipcRenderer.invoke(IpcRendererChannels.PrintWorkspace, {
       landscape: workspace.score.pageSetup.landscape,
       pageSize: workspace.score.pageSetup.pageSize,
+      pageWidthInches: Unit.toInch(workspace.score.pageSetup.pageWidthCustom),
+      pageHeightInches: Unit.toInch(workspace.score.pageSetup.pageHeightCustom),
     } as PrintWorkspaceArgs);
   }
 
@@ -168,5 +192,9 @@ export class IpcService implements IIpcService {
 
   public async cancelExit(): Promise<void> {
     return await window.ipcRenderer.invoke(IpcRendererChannels.CancelExit);
+  }
+
+  public async paste(): Promise<void> {
+    return await window.ipcRenderer.invoke(IpcRendererChannels.Paste);
   }
 }

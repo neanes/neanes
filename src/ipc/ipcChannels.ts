@@ -10,6 +10,7 @@ export enum IpcMainChannels {
   FileMenuExportAsPdf = 'FileMenuExportAsPdf',
   FileMenuExportAsHtml = 'FileMenuExportAsHtml',
   FileMenuExportAsMusicXml = 'FileMenuExportAsMusicXml',
+  FileMenuExportAsLatex = 'FileMenuExportAsLatex',
   FileMenuExportAsImage = 'FileMenuExportAsImage',
 
   FileMenuPageSetup = 'FileMenuPageSetup',
@@ -31,6 +32,8 @@ export enum IpcMainChannels {
 
   FileMenuPreferences = 'FileMenuPreferences',
 
+  FileMenuInsertAnnotation = 'FileMenuInsertAnnotation',
+  FileMenuInsertAlternateLine = 'FileMenuInsertAlternateLine',
   FileMenuInsertTextBox = 'FileMenuInsertTextBox',
   FileMenuInsertRichTextBox = 'FileMenuInsertRichTextBox',
   FileMenuInsertModeKey = 'FileMenuInsertModeKey',
@@ -40,6 +43,8 @@ export enum IpcMainChannels {
 
   FileMenuInsertHeader = 'FileMenuInsertHeader',
   FileMenuInsertFooter = 'FileMenuInsertFooter',
+
+  FileMenuToolsCopyElementLink = 'FileMenuToolsCopyElementLink',
 
   FileMenuGenerateTestFile = 'GenerateTestFile',
 
@@ -60,6 +65,7 @@ export enum IpcRendererChannels {
   ExportWorkspaceAsPdf = 'ExportWorkspaceAsPdf',
   ExportWorkspaceAsHtml = 'ExportWorkspaceAsHtml',
   ExportWorkspaceAsMusicXml = 'ExportWorkspaceAsMusicXml',
+  ExportWorkspaceAsLatex = 'ExportWorkspaceAsLatex',
   ExportWorkspaceAsImage = 'ExportWorkspaceAsImage',
   ExportPageAsImage = 'ExportPageAsImage',
   PrintWorkspace = 'PrintWorkspace',
@@ -72,6 +78,8 @@ export enum IpcRendererChannels {
   CancelExit = 'CancelExit',
 
   OpenContextMenuForTab = 'OpenContextMenuForTab',
+
+  Paste = 'Paste',
 }
 
 export interface FileMenuOpenScoreArgs {
@@ -82,7 +90,11 @@ export interface FileMenuOpenScoreArgs {
 
 export interface OpenWorkspaceFromArgvArgs {
   files: FileMenuOpenScoreArgs[];
-  silentPdf: boolean;
+  silentPdf?: boolean;
+  silentHtml?: boolean;
+  silentLatex?: boolean;
+  silentLatexIncludeModeKeys?: boolean;
+  silentLatexIncludeTextBoxes?: boolean;
 }
 
 export interface FileMenuOpenImageArgs {
@@ -140,11 +152,14 @@ export interface ExportWorkspaceAsPdfArgs {
   filePath: string | null;
   tempFileName: string;
   pageSize: PageSize;
+  pageWidthInches: number;
+  pageHeightInches: number;
   landscape: boolean;
 }
 
 export interface ExportWorkspaceAsHtmlArgs {
   filePath: string | null;
+  filePathFull: string | null;
   tempFileName: string;
   data: string;
 }
@@ -155,6 +170,13 @@ export interface ExportWorkspaceAsMusicXmlArgs {
   data: string;
   compressed: boolean;
   openFolder: boolean;
+}
+
+export interface ExportWorkspaceAsLatexArgs {
+  filePathFull: string | null;
+  filePath: string | null;
+  tempFileName: string;
+  data: string;
 }
 
 export interface ExportWorkspaceAsImageArgs {
@@ -175,6 +197,8 @@ export interface ExportPageAsImageArgs {
 
 export interface PrintWorkspaceArgs {
   pageSize: PageSize;
+  pageWidthInches: number;
+  pageHeightInches: number;
   landscape: boolean;
 }
 

@@ -72,13 +72,16 @@ export default {
       const macAsset = this.latestRelease.assets.find(
         (x) => x.name.endsWith('.dmg') && !x.name.endsWith('arm64.dmg'),
       );
-
+      const macArm64Asset = this.latestRelease.assets.find((x) =>
+        x.name.endsWith('arm64.dmg'),
+      );
       const windowsAsset = this.latestRelease.assets.find((x) =>
         x.name.endsWith('.exe'),
       );
 
       this.rows.push({ asset: linuxAsset, os: 'Linux' });
-      this.rows.push({ asset: macAsset, os: 'macOS' });
+      this.rows.push({ asset: macArm64Asset, os: 'macOS on Apple Silicon' });
+      this.rows.push({ asset: macAsset, os: 'macOS on Intel' });
       this.rows.push({ asset: windowsAsset, os: 'Windows' });
     } catch (e) {
       console.error(e);

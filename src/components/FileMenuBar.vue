@@ -22,6 +22,10 @@
         :label="$t('menu:file.exportAsMusicXml')"
         @click="onClickExportAsMusicXml"
       />
+      <FileMenuItem
+        :label="$t('menu:file.exportAsLatex')"
+        @click="onClickExportAsLatex"
+      />
       <div class="separator" />
       <FileMenuItem :label="$t('menu:file.close')" @click="onClickClose" />
       <FileMenuItem
@@ -74,6 +78,14 @@
       @mouseenter="selectedMenu = 'Insert'"
       :isOpen="isMenuOpen && selectedMenu === 'Insert'"
     >
+      <FileMenuItem
+        :label="$t('menu:insert.alternateLine')"
+        @click="onClickAddAlternateLine"
+      />
+      <FileMenuItem
+        :label="$t('menu:insert.annotation')"
+        @click="onClickAddAnnotation"
+      />
       <FileMenuItem
         :label="$t('menu:insert.dropCapBefore')"
         @click="onClickAddDropCapBefore"
@@ -264,6 +276,11 @@ export default class FileMenuBar extends Vue {
     this.isMenuOpen = false;
   }
 
+  onClickExportAsLatex() {
+    EventBus.$emit(IpcMainChannels.FileMenuExportAsLatex);
+    this.isMenuOpen = false;
+  }
+
   onClickPageSetup() {
     EventBus.$emit(IpcMainChannels.FileMenuPageSetup);
     this.isMenuOpen = false;
@@ -439,6 +456,16 @@ export default class FileMenuBar extends Vue {
 
   onClickAddModeKey() {
     EventBus.$emit(IpcMainChannels.FileMenuInsertModeKey);
+    this.isMenuOpen = false;
+  }
+
+  onClickAddAlternateLine() {
+    EventBus.$emit(IpcMainChannels.FileMenuInsertAlternateLine);
+    this.isMenuOpen = false;
+  }
+
+  onClickAddAnnotation() {
+    EventBus.$emit(IpcMainChannels.FileMenuInsertAnnotation);
     this.isMenuOpen = false;
   }
 

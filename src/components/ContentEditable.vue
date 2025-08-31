@@ -15,7 +15,7 @@ import { StyleValue } from 'vue';
 import { Component, Prop, Vue } from 'vue-facing-decorator';
 
 @Component({
-  emits: ['click', 'focus', 'blur'],
+  emits: ['click', 'focus', 'blur', 'onEditorReady'],
 })
 export default class ContentEditable extends Vue {
   @Prop() content!: string;
@@ -42,12 +42,20 @@ export default class ContentEditable extends Vue {
     } as StyleValue;
   }
 
+  mounted() {
+    this.$emit('onEditorReady');
+  }
+
   getInnerText() {
     return this.htmlElement.innerText;
   }
 
+  getContent() {
+    return this.escapeHtml(this.htmlElement.innerText);
+  }
+
   onBlur() {
-    this.$emit('blur', this.escapeHtml(this.htmlElement.innerText));
+    this.$emit('blur', this.getContent());
   }
 
   focus(selectAll: boolean) {

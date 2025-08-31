@@ -18,14 +18,19 @@
       <Neume v-if="hasFthora" :neume="neume.fthora" :style="fthoraStyle" />
       <Neume v-if="hasTempo" :neume="neume.tempo" :style="tempoStyle" />
       <Neume
-        v-if="hasTempoRight"
-        :neume="neume.tempoRight"
-        :style="tempoStyle"
-      />
-      <Neume
         v-if="hasMeasureBarLeft && isMeasureBarAbove"
         :neume="neume.measureBarLeft"
         :style="measureBarStyle"
+      />
+      <Neume
+        v-if="hasQuantitativeNeume"
+        :neume="neume.quantitativeNeume"
+        :style="quantitativeNeumeStyle"
+      />
+      <Neume
+        v-if="hasTempoRight"
+        :neume="neume.tempoRight"
+        :style="tempoStyle"
       />
       <Neume
         v-if="hasMeasureBarRight"
@@ -82,11 +87,18 @@ export default class NeumeBoxMartyria extends Vue {
     return this.neume.measureBarRight != null;
   }
 
+  get hasQuantitativeNeume() {
+    return this.neume.quantitativeNeume != null && this.neume.alignRight;
+  }
+
   get isMeasureBarAbove() {
     return this.neume.measureBarLeft?.endsWith('Above');
   }
 
   get style() {
+    const verticalOffset =
+      this.pageSetup.martyriaVerticalOffset + this.neume.verticalOffset;
+
     return {
       color: this.pageSetup.martyriaDefaultColor,
       fontFamily: this.pageSetup.neumeDefaultFontFamily,
@@ -94,6 +106,8 @@ export default class NeumeBoxMartyria extends Vue {
       webkitTextStrokeWidth: withZoom(
         this.pageSetup.martyriaDefaultStrokeWidth,
       ),
+      position: verticalOffset != 0 ? 'relative' : undefined,
+      top: verticalOffset != 0 ? withZoom(verticalOffset) : undefined,
     } as StyleValue;
   }
 
@@ -101,6 +115,14 @@ export default class NeumeBoxMartyria extends Vue {
     return {
       color: this.pageSetup.fthoraDefaultColor,
       webkitTextStrokeWidth: withZoom(this.pageSetup.fthoraDefaultStrokeWidth),
+    } as StyleValue;
+  }
+
+  get quantitativeNeumeStyle() {
+    return {
+      marginLeft: withZoom(this.neume.padding),
+      color: this.pageSetup.neumeDefaultColor,
+      webkitTextStrokeWidth: withZoom(this.pageSetup.neumeDefaultStrokeWidth),
     } as StyleValue;
   }
 

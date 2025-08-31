@@ -4,6 +4,7 @@ import {
   ElementType,
   MartyriaElement,
   NoteElement,
+  RichTextBoxElement,
   ScoreElement,
 } from '@/models/Element';
 import { QuantitativeNeume } from '@/models/Neumes';
@@ -60,6 +61,7 @@ export class LyricService {
         x.elementType === ElementType.Note ||
         x.elementType === ElementType.DropCap ||
         x.elementType === ElementType.ModeKey ||
+        x.elementType === ElementType.RichTextBox ||
         x.elementType === ElementType.Martyria,
     );
 
@@ -208,11 +210,19 @@ export class LyricService {
           lyrics += '\n\n';
           needSpace = false;
         }
+      } else if (filteredElements[i].elementType === ElementType.RichTextBox) {
+        const textBox = filteredElements[i] as RichTextBoxElement;
+        // Start a new paragraph when a mode-changing text box is encountered since this
+        // typically separates a hymn.
+        if (textBox.modeChange && lyrics.trim() !== '') {
+          lyrics += '\n\n';
+          needSpace = false;
+        }
       } else if (filteredElements[i].elementType === ElementType.Martyria) {
         // Start a new paragraph when a right-aligned marytyria is encountered
         // since this typically separates a hymn or verse
         const martyria = filteredElements[i] as MartyriaElement;
-        if (martyria.alignRight) {
+        if (martyria.alignRight || martyria.lineBreak) {
           lyrics += '\n\n';
           needSpace = false;
         }

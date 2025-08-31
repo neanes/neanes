@@ -11,6 +11,7 @@ import {
   FontColor,
   FontFamily,
   FontSize,
+  GeneralHtmlSupport,
   Image,
   ImageCaption,
   ImageResize,
@@ -40,6 +41,8 @@ import {
   Undo,
 } from 'ckeditor5';
 
+import InsertNeume from './ckeditor-plugins/insertneume/insertneume';
+
 export default class InlineEditor extends InlineEditorBase {}
 
 InlineEditor.builtinPlugins = [
@@ -53,6 +56,7 @@ InlineEditor.builtinPlugins = [
   FontColor,
   FontFamily,
   FontSize,
+  GeneralHtmlSupport,
   Image,
   ImageCaption,
   ImageResize,
@@ -61,6 +65,7 @@ InlineEditor.builtinPlugins = [
   ImageUpload,
   Indent,
   IndentBlock,
+  InsertNeume,
   Italic,
   Link,
   List,
@@ -117,6 +122,10 @@ InlineEditor.defaultConfig = {
       'selectAll',
       '|',
       'removeFormat',
+      '|',
+      'insertNeume',
+      'insertMartyria',
+      'insertPlagal',
     ],
     shouldNotGroupWhenFull: true,
   },
@@ -137,6 +146,15 @@ InlineEditor.defaultConfig = {
       'mergeTableCells',
       'tableProperties',
       'tableCellProperties',
+    ],
+  },
+  htmlSupport: {
+    allow: [
+      {
+        name: 'span',
+        styles: true,
+        attributes: true,
+      },
     ],
   },
 };

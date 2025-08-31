@@ -16,6 +16,7 @@ Neanes (pronounced neh-ah-ness) is a free and open source scorewriter for notati
 - Export to HTML using [ByzHtml](https://danielgarthur.github.io/byzhtml) web components
 - Export to PNG
 - Export to MusicXML
+- Scores can be embedded into LaTeX documents using [neanestex](https://github.com/neanes/neanestex)
 
 ## Purpose
 
@@ -53,6 +54,7 @@ The following bundled fonts are licensed under the [SIL Open Font License (OFL),
 
 - [GFS Didot](https://www.greekfontsociety-gfs.gr/)
 - [Noto Naskh Arabic](https://github.com/notofonts/arabic)
+- [Old Standard](https://sr.ht/~ralessi/oldstandard/)
 - [Source Serif](https://github.com/adobe-fonts/source-serif)
 
 ## Acknowledgements

@@ -1,6 +1,7 @@
 export enum TestFileType {
   FthoraTop = 'FthoraTop',
   FthoraBottom = 'FthoraBottom',
+  MartyriaFthora = 'MartyriaFthora',
   Gorgon = 'Gorgon',
   Klasma = 'Klasma',
   Hapli = 'Hapli',

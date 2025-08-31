@@ -1,6 +1,15 @@
 import { Unit } from '@/utils/Unit';
 
-export type PageSize = 'A3' | 'A4' | 'A5' | 'Legal' | 'Letter' | 'Tabloid';
+export type PageSize =
+  | 'A3'
+  | 'A4'
+  | 'A5'
+  | 'Legal'
+  | 'Letter'
+  | 'Tabloid'
+  | 'Half-Letter'
+  | 'Half-Legal'
+  | 'Custom';
 export type PageSizeUnit = 'pc' | 'pt' | 'cm' | 'mm' | 'in';
 
 export class PageSetup {
@@ -11,6 +20,8 @@ export class PageSetup {
 
   public pageWidth = Unit.fromInch(8.5);
   public pageHeight = Unit.fromInch(11);
+  public pageWidthCustom: number | undefined = undefined;
+  public pageHeightCustom: number | undefined = undefined;
   public topMargin = Unit.fromInch(1);
   public bottomMargin = Unit.fromInch(1);
   public leftMargin = Unit.fromInch(1);
@@ -24,6 +35,18 @@ export class PageSetup {
   public showFooter: boolean | undefined = undefined;
   public richHeaderFooter: boolean | undefined = undefined;
   public firstPageNumber = 1;
+
+  public showHeaderHorizontalRule: boolean | undefined = undefined;
+  public headerHorizontalRuleMarginTop: number | undefined = undefined;
+  public headerHorizontalRuleMarginBottom: number | undefined = undefined;
+  public headerHorizontalRuleThickness: number | undefined = undefined;
+  public headerHorizontalRuleColor: string | undefined = undefined;
+
+  public showFooterHorizontalRule: boolean | undefined = undefined;
+  public footerHorizontalRuleMarginTop: number | undefined = undefined;
+  public footerHorizontalRuleMarginBottom: number | undefined = undefined;
+  public footerHorizontalRuleThickness: number | undefined = undefined;
+  public footerHorizontalRuleColor: string | undefined = undefined;
 
   public lineHeight = Unit.fromInch(0.76);
 
@@ -44,6 +67,9 @@ export class PageSetup {
   public neumeDefaultColor = '#000000';
   public neumeDefaultSpacing = Unit.fromInch(0.03);
   public neumeDefaultStrokeWidth = 0;
+
+  public alternateLineDefaultFontSize = Unit.fromPt(12);
+  public alternateLineDefaultColor = '#ED0000';
 
   public modeKeyDefaultColor = '#ED0000';
   public modeKeyDefaultStrokeWidth = 0;
@@ -66,6 +92,10 @@ export class PageSetup {
   public noteIndicatorDefaultStrokeWidth = 0;
   public isonDefaultColor = '#ED0000';
   public isonDefaultStrokeWidth = 0;
+  public breathDefaultColor = '#000000';
+  public breathDefaultStrokeWidth = 0;
+  public crossDefaultColor = '#000000';
+  public crossDefaultStrokeWidth = 0;
   public koronisDefaultColor = '#ED0000';
   public koronisDefaultStrokeWidth = 0;
   public martyriaDefaultColor = '#ED0000';
@@ -92,7 +122,12 @@ export class PageSetup {
 
   public hyphenSpacing: number = Unit.fromInch(0.75);
 
+  public martyriaVerticalOffset: number = Unit.fromPt(3);
+
   public chrysanthineAccidentals: boolean | undefined = undefined;
   public noFthoraRestrictions: boolean | undefined = undefined;
   public disableGreekMelismata: boolean | undefined = undefined;
+  public alignIsonIndicators: boolean | undefined = undefined;
+
+  public useOptionalDiatonicFthoras: boolean | undefined = undefined;
 }

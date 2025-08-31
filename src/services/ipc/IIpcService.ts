@@ -25,6 +25,8 @@ export interface IIpcService {
     openFolder: boolean,
   ): Promise<void>;
 
+  exportWorkspaceAsLatex(workspace: Workspace, data: string): Promise<void>;
+
   exportWorkspaceAsImage(
     workspace: Workspace,
     imageFormat: 'png' | 'svg',
@@ -49,4 +51,6 @@ export interface IIpcService {
   exitApplication(): Promise<void>;
 
   cancelExit(): Promise<void>;
+
+  paste(): Promise<void>;
 }

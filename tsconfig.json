@@ -6,7 +6,7 @@
     "skipLibCheck": true,
     "jsx": "preserve",
     "importHelpers": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "experimentalDecorators": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -16,7 +16,7 @@
     "types": [
       "vite/client"
     ],
-    "typeRoots": ["./node_modules/@types/", "./types", "./node_modules"],
+    "typeRoots": ["./node_modules/@types/", "./types", "./node_modules", "./src/**/types"],
     "paths": {
       "@/*": [
         "src/*"

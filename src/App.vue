@@ -73,6 +73,10 @@ export default class App extends Vue {
   body {
     overflow: visible !important;
   }
+
+  .ck-body-wrapper {
+    display: none !important;
+  }
 }
 
 @page {
@@ -134,6 +138,30 @@ export default class App extends Vue {
 }
 
 @font-face {
+  font-family: 'Old Standard';
+  src: url('./assets/fonts/OldStandard-Bold.otf');
+  font-weight: bold;
+}
+
+@font-face {
+  font-family: 'Old Standard';
+  src: url('./assets/fonts/OldStandard-BoldItalic.otf');
+  font-weight: bold;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Old Standard';
+  src: url('./assets/fonts/OldStandard-Italic.otf');
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Old Standard';
+  src: url('./assets/fonts/OldStandard-Regular.otf');
+}
+
+@font-face {
   font-family: 'Noto Naskh Arabic';
   src: url('./assets/fonts/NotoNaskhArabic-Regular.otf');
 }
@@ -188,8 +216,9 @@ button,
 input,
 select,
 textarea {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans',
-    Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica,
+    Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
 }
 
 .ok-btn {

@@ -165,13 +165,17 @@ export enum RootSign {
   Tilt = 'Tilt',
   TiltLow = 'TiltLow',
   Zo = 'Varys',
+  ZoLow = 'VarysLow',
   Squiggle = 'Squiggle',
   SquiggleLow = 'SquiggleLow',
   Zygos = 'Zygos',
+  ZygosLow = 'ZygosLow',
   SoftChromaticSquiggle = 'SoftChromaticSquiggle',
   SoftChromaticSquiggleLow = 'SoftChromaticSquiggleLow',
   DeltaDotted = 'DeltaDotted',
+  DeltaDottedLow = 'DeltaDottedLow',
   AlphaDotted = 'AlphaDotted',
+  AlphaDottedLow = 'AlphaDottedLow',
   SoftChromaticPaRootSign = 'SoftChromaticPaRootSign',
   SoftChromaticPaRootSignLow = 'SoftChromaticPaRootSignLow',
   NanaLow = 'NanaLow',
@@ -339,6 +343,23 @@ export enum Fthora {
   GeneralFlat_TopSecondary = 'GeneralFlat_TopSecondary',
   GeneralFlat_TopTertiary = 'GeneralFlat_TopTertiary',
   GeneralFlat_Bottom = 'GeneralFlat_Bottom',
+
+  DiatonicNiLow = 'DiatonicNiLow',
+  DiatonicPa = 'DiatonicPa',
+  DiatonicVou = 'DiatonicVou',
+  DiatonicGa = 'DiatonicGa',
+  DiatonicThi = 'DiatonicThi',
+  DiatonicKe = 'DiatonicKe',
+  DiatonicZo = 'DiatonicZo',
+  DiatonicNiHigh = 'DiatonicNiHigh',
+  HardChromaticPa = 'HardChromaticPa',
+  HardChromaticThi = 'HardChromaticThi',
+  SoftChromaticPa = 'SoftChromaticPa',
+  SoftChromaticThi = 'SoftChromaticThi',
+  Enharmonic = 'Enharmonic',
+  Zygos = 'Zygos',
+  Kliton = 'Kliton',
+  Spathi = 'Spathi',
 }
 
 export enum Accidental {
@@ -427,6 +448,11 @@ export enum Tie {
   YfenBelow = 'YfenBelow',
 }
 
+export enum Letter {
+  Gorthmikon = 'Gorthmikon',
+  Pelastikon = 'Pelastikon',
+}
+
 export enum NeumeSelection {
   Primary = 'Primary',
   Secondary = 'Secondary',
@@ -448,7 +474,8 @@ export type Neume =
   | MeasureNumber
   | NoteIndicator
   | Ison
-  | Tie;
+  | Tie
+  | Letter;
 
 export const petastiNeumes: ReadonlyArray<QuantitativeNeume> = [
   QuantitativeNeume.PetastiWithIson,
@@ -460,11 +487,23 @@ export const petastiNeumes: ReadonlyArray<QuantitativeNeume> = [
   QuantitativeNeume.PetastiPlusHypsiliPlusKentimaHorizontal,
   QuantitativeNeume.PetastiPlusHypsiliPlusKentimaVertical,
   QuantitativeNeume.PetastiPlusDoubleHypsili,
+  QuantitativeNeume.PetastiKentimataDoubleYpsili,
+  QuantitativeNeume.PetastiKentimaDoubleYpsiliRight,
+  QuantitativeNeume.PetastiKentimaDoubleYpsiliLeft,
+  QuantitativeNeume.PetastiTripleYpsili,
+  QuantitativeNeume.PetastiKentimataTripleYpsili,
+  QuantitativeNeume.PetastiKentimaTripleYpsili,
   QuantitativeNeume.PetastiPlusApostrophos,
   QuantitativeNeume.PetastiPlusElaphron,
   QuantitativeNeume.PetastiPlusElaphronPlusApostrophos,
   QuantitativeNeume.PetastiPlusHyporoe,
   QuantitativeNeume.PetastiPlusRunningElaphron,
+  QuantitativeNeume.PetastiHamili,
+  QuantitativeNeume.PetastiHamiliApostrofos,
+  QuantitativeNeume.PetastiHamiliElafron,
+  QuantitativeNeume.PetastiHamiliElafronApostrofos,
+  QuantitativeNeume.PetastiDoubleHamili,
+  QuantitativeNeume.PetastiDoubleHamiliApostrofos,
 ];
 
 export const oligonNeumes: ReadonlyArray<QuantitativeNeume> = [

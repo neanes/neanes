@@ -176,6 +176,14 @@
           class="icon-btn-img"
         />
       </button>
+      <template v-if="element.alignRight">
+        <span class="space" />
+        <ButtonWithMenu
+          :options="quantitativeNeumeOptions"
+          :title="$t('toolbar:common:neume')"
+          @select="$emit('update:quantitativeNeume', $event)"
+        />
+      </template>
       <span class="space" />
       <div style="display: flex; align-items: center">
         <input
@@ -232,6 +240,22 @@
 
       <span class="space" />
 
+      <label class="right-space">{{
+        $t('toolbar:common.verticalOffset')
+      }}</label>
+
+      <InputUnit
+        unit="pt"
+        :min="-spaceAfterMax"
+        :max="spaceAfterMax"
+        :step="0.5"
+        :precision="2"
+        :modelValue="element.verticalOffset"
+        @update:modelValue="$emit('update:verticalOffset', $event)"
+      />
+
+      <span class="space" />
+
       <label class="right-space">{{ $t('toolbar:common.spaceAfter') }}</label>
 
       <InputUnit
@@ -278,11 +302,28 @@
           )
         "
       >
-        <option value="">{{ $t('toolbar:martyria.none') }}</option>
+        <option value="">{{ $t('toolbar:common.none') }}</option>
         <option v-for="sign in rootSigns" :key="sign.value" :value="sign.value">
           {{ $t(sign.name) }}
         </option>
       </select>
+
+      <span class="space"></span>
+      <div class="form-group">
+        <label class="right-space">{{
+          $t('toolbar:common.sectionName')
+        }}</label>
+        <input
+          type="text"
+          :value="element.sectionName"
+          @change="
+            $emit(
+              'update:sectionName',
+              ($event.target as HTMLInputElement).value,
+            )
+          "
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -296,12 +337,14 @@ import {
   MeasureBar,
   Neume,
   Note,
+  QuantitativeNeume,
   RootSign,
   TempoSign,
 } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
 import { Scale, ScaleNote } from '@/models/Scales';
 import { NeumeKeyboard } from '@/services/NeumeKeyboard';
+import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { Unit } from '@/utils/Unit';
 
 import ButtonWithMenu, { ButtonWithMenuOption } from './ButtonWithMenu.vue';
@@ -318,12 +361,15 @@ import InputUnit from './InputUnit.vue';
     'update:fthora',
     'update:measureBar',
     'update:note',
+    'update:quantitativeNeume',
     'update:rootSignOverride',
     'update:scale',
+    'update:sectionName',
     'update:spaceAfter',
     'update:tempo',
     'update:tempoLeft',
     'update:tempoRight',
+    'update:verticalOffset',
   ],
 })
 export default class ToolbarMartyria extends Vue {
@@ -411,6 +457,22 @@ export default class ToolbarMartyria extends Vue {
     },
   ];
 
+  quantitativeNeumeOptionsList = [
+    QuantitativeNeume.Elaphron,
+    QuantitativeNeume.RunningElaphron,
+    QuantitativeNeume.OligonPlusHypsiliPlusKentimaVertical,
+    QuantitativeNeume.OligonPlusHypsiliLeft,
+    QuantitativeNeume.OligonPlusHypsiliRight,
+    QuantitativeNeume.OligonPlusKentimaAbove,
+    QuantitativeNeume.OligonPlusKentima,
+    QuantitativeNeume.KentemataPlusOligon,
+  ];
+
+  quantitativeNeumeOptions: ButtonWithMenuOption[] =
+    this.quantitativeNeumeOptionsList.map((x) => {
+      return { neume: x, text: NeumeMappingService.getMapping(x).text };
+    });
+
   get fthoraNotes() {
     if (
       this.element.fthora === Fthora.SoftChromaticThi_Top ||
@@ -420,6 +482,7 @@ export default class ToolbarMartyria extends Vue {
         { label: 'model:note.zoHigh', value: ScaleNote.ZoHigh },
         { label: 'model:note.di', value: ScaleNote.Thi },
         { label: 'model:note.vou', value: ScaleNote.Vou },
+        { label: 'model:note.ni', value: ScaleNote.Ni },
       ];
     } else if (
       this.element.fthora === Fthora.SoftChromaticPa_Top ||

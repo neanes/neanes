@@ -1,6 +1,6 @@
 import metadata from '@/assets/fonts/neanes.metadata.json';
 import metadataRtl from '@/assets/fonts/neanesrtl.metadata.json';
-import metadataStathis from '@/assets/fonts/NeanesStathisSeries.metadata.json';
+import metadataStathis from '@/assets/fonts/neanesstathisseries.metadata.json';
 import { SbmuflGlyphName } from '@/services/NeumeMappingService';
 
 const metadataMap = new Map();
@@ -11,6 +11,10 @@ metadataMap.set('NeanesStathisSeries', metadataStathis);
 class FontService {
   getMetadata(fontFamily: string) {
     return metadataMap.get(fontFamily);
+  }
+
+  getMetrics(fontFamily: string) {
+    return this.getMetadata(fontFamily).metrics;
   }
 
   getAdvanceWidth(fontFamily: string, glyph: SbmuflGlyphName) {

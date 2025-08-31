@@ -35,7 +35,8 @@ export class AudioService {
 
   currentEvent: PlaybackSequenceEvent | null = null;
 
-  loggingEnabled: boolean = false;
+  loggingEnabled: boolean =
+    import.meta.env.VITE_AUDIO_SERVICE_LOGGING_ENABLED === 'true';
 
   constructor() {
     this.synth = new Tone.Synth().toDestination();
@@ -73,11 +74,11 @@ export class AudioService {
 
     this.state = AudioState.Playing;
 
-    Tone.Transport.bpm.value = startAt?.bpm ?? 60;
+    Tone.getTransport().bpm.value = startAt?.bpm ?? 60;
 
     for (const event of events) {
       if (currentBpm !== event.bpm) {
-        Tone.Transport.bpm.value = event.bpm!;
+        Tone.getTransport().bpm.value = event.bpm!;
       }
 
       if (event.type === 'note') {
@@ -89,10 +90,14 @@ export class AudioService {
           this.currentEvent = event;
 
           if (currentBpm !== event.bpm) {
-            Tone.Transport.bpm.value = event.bpm!;
+            Tone.getTransport().bpm.value = event.bpm!;
           }
 
-          if (event.duration != null && event.frequency != null) {
+          if (
+            event.duration != null &&
+            event.frequency != null &&
+            !isNaN(event.frequency)
+          ) {
             synth.triggerAttackRelease(event.frequency, event.duration, time);
           } else {
             console.warn(
@@ -115,7 +120,7 @@ export class AudioService {
           } else if (event.isonFrequency !== currentIsonFrequency) {
             currentIsonFrequency = event.isonFrequency;
 
-            if (event.isonFrequency != null) {
+            if (event.isonFrequency != null && !isNaN(event.isonFrequency)) {
               isonSynth.triggerAttack(event.isonFrequency, time);
             } else {
               console.warn('AudioService: missing ison frequency', event);
@@ -159,7 +164,7 @@ export class AudioService {
         console.log('AudioService', 'playback finished', time);
       }
 
-      Tone.Transport.stop();
+      Tone.getTransport().stop();
 
       this.isonSynth.triggerRelease('+0.1');
       this.synth.triggerRelease('+0.1');
@@ -175,12 +180,12 @@ export class AudioService {
 
     const startTime = startAt != null ? startAt.transportTime : 0;
 
-    Tone.Transport.bpm.value = startAt?.bpm ?? 60;
-    currentBpm = Tone.Transport.bpm.value;
+    Tone.getTransport().bpm.value = startAt?.bpm ?? 60;
+    currentBpm = Tone.getTransport().bpm.value;
 
-    Tone.Transport.seconds = Math.max(startTime, 0);
+    Tone.getTransport().seconds = Math.max(startTime, 0);
 
-    Tone.Transport.start();
+    Tone.getTransport().start();
   }
 
   stop() {
@@ -189,9 +194,9 @@ export class AudioService {
     }
 
     // Reset the transport
-    Tone.Transport.stop();
-    Tone.Transport.position = 0;
-    Tone.Transport.cancel();
+    Tone.getTransport().stop();
+    Tone.getTransport().position = 0;
+    Tone.getTransport().cancel();
 
     // Stop the synths
     this.isonSynth.triggerRelease('+0.1');
@@ -208,11 +213,11 @@ export class AudioService {
     if (this.state === AudioState.Playing) {
       if (this.loggingEnabled) {
         console.groupCollapsed('AudioService', 'pause');
-        console.log('transport position', Tone.Transport.seconds);
+        console.log('transport position', Tone.getTransport().seconds);
         console.groupEnd();
       }
 
-      Tone.Transport.stop();
+      Tone.getTransport().stop();
 
       this.isonSynth.triggerRelease('+0.1');
       this.synth.triggerRelease('+0.1');
@@ -223,15 +228,15 @@ export class AudioService {
 
   resume() {
     if (this.state === AudioState.Paused) {
-      Tone.Transport.position = this.currentEvent?.transportTime ?? 0;
+      Tone.getTransport().position = this.currentEvent?.transportTime ?? 0;
 
       if (this.loggingEnabled) {
         console.group('AudioService', 'resume');
-        console.log('transport position', Tone.Transport.seconds);
+        console.log('transport position', Tone.getTransport().seconds);
         console.groupEnd();
       }
 
-      Tone.Transport.start();
+      Tone.getTransport().start();
 
       this.state = AudioState.Playing;
     }
@@ -253,8 +258,8 @@ export class AudioService {
       console.groupEnd();
     }
 
-    Tone.Transport.bpm.value = event.bpm;
-    Tone.Transport.position = event.transportTime;
+    Tone.getTransport().bpm.value = event.bpm;
+    Tone.getTransport().position = event.transportTime;
   }
 
   nextNote(currentFrequency: number, moria: number) {
@@ -291,7 +296,7 @@ export class AudioService {
 
   playTestTone(frequency: number) {
     this.synth.volume.value = 0;
-    Tone.Transport.bpm.value = 120;
+    Tone.getTransport().bpm.value = 120;
     const now = Tone.now();
 
     this.synth.triggerAttackRelease(frequency, '2n', now);

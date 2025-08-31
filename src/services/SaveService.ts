@@ -1,5 +1,7 @@
 import {
   AcceptsLyricsOption,
+  AlternateLineElement,
+  AnnotationElement,
   DropCapElement,
   ElementType,
   EmptyElement,
@@ -20,6 +22,8 @@ import { modeKeyTemplates } from '@/models/ModeKeys';
 import { QuantitativeNeume } from '@/models/Neumes';
 import { PageSetup, pageSizes } from '@/models/PageSetup';
 import {
+  AlternateLineElement as AlternateLineElement_v1,
+  AnnotationElement as AnnotationElement_v1,
   DropCapElement as DropCapElement_v1,
   ElementType as ElementType_v1,
   EmptyElement as EmptyElement_v1,
@@ -137,6 +141,7 @@ export class SaveService {
           console.warn('Unrecognized element in score', e.elementType);
       }
 
+      element.id = e.id ?? undefined;
       element.lineBreak = e.lineBreak || undefined;
 
       if (e.lineBreak) {
@@ -144,6 +149,7 @@ export class SaveService {
       }
 
       element.pageBreak = e.pageBreak || undefined;
+      element.sectionName = e.sectionName || undefined;
 
       score.staff.elements.push(element);
     }
@@ -197,6 +203,9 @@ export class SaveService {
     pageSetup.neumeDefaultFontSize = p.neumeDefaultFontSize;
     pageSetup.neumeDefaultSpacing = p.neumeDefaultSpacing;
 
+    pageSetup.alternateLineDefaultColor = p.alternateLineDefaultColor;
+    pageSetup.alternateLineDefaultFontSize = p.alternateLineDefaultFontSize;
+
     pageSetup.modeKeyDefaultColor = p.modeKeyDefaultColor;
     pageSetup.modeKeyDefaultStrokeWidth = p.modeKeyDefaultStrokeWidth;
     pageSetup.modeKeyDefaultFontSize = p.modeKeyDefaultFontSize;
@@ -204,6 +213,12 @@ export class SaveService {
 
     pageSetup.pageHeight = p.pageHeight;
     pageSetup.pageWidth = p.pageWidth;
+
+    if (p.pageSize === 'Custom') {
+      pageSetup.pageHeightCustom = p.pageHeightCustom;
+      pageSetup.pageWidthCustom = p.pageWidthCustom;
+    }
+
     pageSetup.rightMargin = p.rightMargin;
     pageSetup.topMargin = p.topMargin;
 
@@ -218,6 +233,24 @@ export class SaveService {
     pageSetup.showHeader = p.showHeader || undefined;
     pageSetup.showFooter = p.showFooter || undefined;
     pageSetup.richHeaderFooter = p.richHeaderFooter || undefined;
+
+    if (p.showHeaderHorizontalRule) {
+      pageSetup.showHeaderHorizontalRule = p.showHeaderHorizontalRule;
+      pageSetup.headerHorizontalRuleMarginTop = p.headerHorizontalRuleMarginTop;
+      pageSetup.headerHorizontalRuleMarginBottom =
+        p.headerHorizontalRuleMarginBottom;
+      pageSetup.headerHorizontalRuleThickness = p.headerHorizontalRuleThickness;
+      pageSetup.headerHorizontalRuleColor = p.headerHorizontalRuleColor;
+    }
+
+    if (p.showFooterHorizontalRule) {
+      pageSetup.showFooterHorizontalRule = p.showFooterHorizontalRule;
+      pageSetup.footerHorizontalRuleMarginTop = p.footerHorizontalRuleMarginTop;
+      pageSetup.footerHorizontalRuleMarginBottom =
+        p.footerHorizontalRuleMarginBottom;
+      pageSetup.footerHorizontalRuleThickness = p.footerHorizontalRuleThickness;
+      pageSetup.footerHorizontalRuleColor = p.footerHorizontalRuleColor;
+    }
 
     pageSetup.firstPageNumber = p.firstPageNumber;
 
@@ -239,6 +272,10 @@ export class SaveService {
       p.noteIndicatorDefaultStrokeWidth;
     pageSetup.isonDefaultColor = p.isonDefaultColor;
     pageSetup.isonDefaultStrokeWidth = p.isonDefaultStrokeWidth;
+    pageSetup.breathDefaultColor = p.breathDefaultColor;
+    pageSetup.breathDefaultStrokeWidth = p.breathDefaultStrokeWidth;
+    pageSetup.crossDefaultColor = p.crossDefaultColor;
+    pageSetup.crossDefaultStrokeWidth = p.crossDefaultStrokeWidth;
     pageSetup.koronisDefaultColor = p.koronisDefaultColor;
     pageSetup.koronisDefaultStrokeWidth = p.koronisDefaultStrokeWidth;
 
@@ -247,10 +284,14 @@ export class SaveService {
     pageSetup.landscape = p.landscape || undefined;
 
     pageSetup.hyphenSpacing = p.hyphenSpacing;
+    pageSetup.martyriaVerticalOffset = p.martyriaVerticalOffset;
 
     pageSetup.chrysanthineAccidentals = p.chrysanthineAccidentals;
     pageSetup.noFthoraRestrictions = p.noFthoraRestrictions || undefined;
     pageSetup.disableGreekMelismata = p.disableGreekMelismata || undefined;
+    pageSetup.alignIsonIndicators = p.alignIsonIndicators || undefined;
+    pageSetup.useOptionalDiatonicFthoras =
+      p.useOptionalDiatonicFthoras || undefined;
   }
 
   public static SaveLyricSetup(lyricSetup: LyricSetup_v1, l: LyricSetup) {
@@ -330,6 +371,7 @@ export class SaveService {
     element.tempoLeft = e.tempoLeft || undefined;
     element.tempo = e.tempo || undefined;
     element.tempoRight = e.tempoRight || undefined;
+    element.quantitativeNeume = e.quantitativeNeume || undefined;
     element.measureBarLeft = e.measureBarLeft || undefined;
     element.measureBarRight = e.measureBarRight || undefined;
     element.alignRight = e.alignRight || undefined;
@@ -339,6 +381,7 @@ export class SaveService {
     }
 
     element.spaceAfter = e.spaceAfter || undefined;
+    element.verticalOffset = e.verticalOffset || undefined;
   }
 
   public static SaveTempo(element: TempoElement_v1, e: TempoElement) {
@@ -501,6 +544,38 @@ export class SaveService {
     if (e.acceptsLyrics !== AcceptsLyricsOption.Default) {
       element.acceptsLyrics = e.acceptsLyrics;
     }
+
+    if (e.annotations.length > 0) {
+      element.annotations = e.annotations
+        .filter((x) => x.text?.trim() !== '')
+        .map((a) => {
+          const annotation = new AnnotationElement_v1();
+          annotation.x = a.x;
+          annotation.y = a.y;
+          annotation.text = a.text;
+          return annotation;
+        });
+    }
+
+    if (e.alternateLines.length > 0) {
+      element.alternateLines = e.alternateLines
+        .filter((x) => x.elements.length > 0)
+        .map((a) => {
+          const alternateLine = new AlternateLineElement_v1();
+          alternateLine.x = a.x;
+          alternateLine.y = a.y;
+
+          // Only note elements are supported in alternate lines
+          alternateLine.elements = a.elements
+            .filter((x) => x.elementType === ElementType.Note)
+            .map((x) => {
+              const e = new NoteElement_v1();
+              this.SaveNote(e, x as NoteElement);
+              return e;
+            });
+          return alternateLine;
+        });
+    }
   }
 
   public static SaveTextBox(element: TextBoxElement_v1, e: TextBoxElement) {
@@ -513,16 +588,22 @@ export class SaveService {
       element.contentRight = e.contentRight;
       element.multipanel = true;
     }
+
+    if (e.inline) {
+      element.inline = e.inline;
+      element.contentBottom = e.contentBottom;
+    }
+
     element.fontFamily = e.fontFamily;
     element.fontSize = e.fontSize;
     element.strokeWidth = e.strokeWidth;
-    element.inline = e.inline || undefined;
     element.bold = e.bold || undefined;
     element.italic = e.italic || undefined;
     element.underline = e.underline || undefined;
     element.lineHeight = e.lineHeight ?? undefined;
     element.height = e.height;
     element.customWidth = e.customWidth ?? undefined;
+    element.fillWidth = e.fillWidth || undefined;
     element.customHeight = e.customHeight ?? undefined;
     element.marginTop = e.marginTop ?? undefined;
     element.marginBottom = e.marginBottom ?? undefined;
@@ -542,7 +623,28 @@ export class SaveService {
       element.multipanel = true;
     }
 
+    if (e.inline) {
+      element.inline = e.inline;
+      element.contentBottom = e.contentBottom;
+      element.centerOnPage = e.centerOnPage;
+      element.offsetYBottom = e.offsetYBottom || undefined;
+      element.offsetYTop = e.offsetYTop || undefined;
+    }
+
+    if (e.modeChange) {
+      element.modeChange = e.modeChange;
+      element.modeChangePhysicalNote = e.modeChangePhysicalNote;
+      element.modeChangeScale = e.modeChangeScale;
+      element.modeChangeVirtualNote = e.modeChangeVirtualNote ?? undefined;
+      element.modeChangeBpm = e.modeChangeBpm;
+      element.modeChangeIgnoreAttractions =
+        e.modeChangeIgnoreAttractions ?? undefined;
+      element.modeChangePermanentEnharmonicZo =
+        e.modeChangePermanentEnharmonicZo ?? undefined;
+    }
+
     element.height = e.height;
+    element.customWidth = e.customWidth ?? undefined;
     element.marginTop = e.marginTop ?? undefined;
     element.marginBottom = e.marginBottom ?? undefined;
     element.rtl = e.rtl || undefined;
@@ -720,9 +822,11 @@ export class SaveService {
           );
       }
 
+      element.id = e.id ?? null;
       element.lineBreak = e.lineBreak === true;
       element.lineBreakType = e.lineBreakType ?? LineBreakType.Left;
       element.pageBreak = e.pageBreak === true;
+      element.sectionName = e.sectionName ?? null;
 
       score.staff.elements.push(element);
     }
@@ -733,6 +837,10 @@ export class SaveService {
   public static LoadPageSetup_v1(pageSetup: PageSetup, p: PageSetup_v1) {
     pageSetup.pageHeight = p.pageHeight;
     pageSetup.pageWidth = p.pageWidth;
+
+    pageSetup.pageHeightCustom =
+      p.pageHeightCustom ?? pageSetup.pageHeightCustom;
+    pageSetup.pageWidthCustom = p.pageWidth ?? pageSetup.pageWidthCustom;
 
     pageSetup.topMargin = p.topMargin;
     pageSetup.bottomMargin = p.bottomMargin;
@@ -755,6 +863,36 @@ export class SaveService {
     pageSetup.showFooter = p.showFooter === true;
     pageSetup.richHeaderFooter = p.richHeaderFooter === true;
     pageSetup.firstPageNumber = p.firstPageNumber ?? pageSetup.firstPageNumber;
+
+    if (p.showHeaderHorizontalRule === true) {
+      pageSetup.showHeaderHorizontalRule = p.showHeaderHorizontalRule;
+      pageSetup.headerHorizontalRuleMarginTop =
+        p.headerHorizontalRuleMarginTop ??
+        pageSetup.headerHorizontalRuleMarginTop;
+      pageSetup.headerHorizontalRuleMarginBottom =
+        p.headerHorizontalRuleMarginBottom ??
+        pageSetup.headerHorizontalRuleMarginBottom;
+      pageSetup.headerHorizontalRuleThickness =
+        p.headerHorizontalRuleThickness ??
+        pageSetup.headerHorizontalRuleThickness;
+      pageSetup.headerHorizontalRuleColor =
+        p.headerHorizontalRuleColor ?? pageSetup.headerHorizontalRuleColor;
+    }
+
+    if (p.showFooterHorizontalRule === true) {
+      pageSetup.showFooterHorizontalRule = p.showFooterHorizontalRule;
+      pageSetup.footerHorizontalRuleMarginTop =
+        p.footerHorizontalRuleMarginTop ??
+        pageSetup.footerHorizontalRuleMarginTop;
+      pageSetup.footerHorizontalRuleMarginBottom =
+        p.footerHorizontalRuleMarginBottom ??
+        pageSetup.footerHorizontalRuleMarginBottom;
+      pageSetup.footerHorizontalRuleThickness =
+        p.footerHorizontalRuleThickness ??
+        pageSetup.footerHorizontalRuleThickness;
+      pageSetup.footerHorizontalRuleColor =
+        p.footerHorizontalRuleColor ?? pageSetup.footerHorizontalRuleColor;
+    }
 
     pageSetup.lineHeight = p.lineHeight;
 
@@ -812,15 +950,20 @@ export class SaveService {
       p.tempoDefaultColor ?? pageSetup.tempoDefaultColor;
     pageSetup.tempoDefaultStrokeWidth =
       p.tempoDefaultStrokeWidth ?? pageSetup.tempoDefaultStrokeWidth;
+
     pageSetup.neumeDefaultColor =
       p.neumeDefaultColor ?? pageSetup.neumeDefaultColor;
-
     pageSetup.neumeDefaultFontFamily =
       p.neumeDefaultFontFamily ?? pageSetup.neumeDefaultFontFamily;
     pageSetup.neumeDefaultFontSize = p.neumeDefaultFontSize;
     pageSetup.neumeDefaultStrokeWidth =
       p.neumeDefaultStrokeWidth ?? pageSetup.neumeDefaultStrokeWidth;
     pageSetup.neumeDefaultSpacing = p.neumeDefaultSpacing;
+
+    pageSetup.alternateLineDefaultColor =
+      p.alternateLineDefaultColor ?? pageSetup.alternateLineDefaultColor;
+    pageSetup.alternateLineDefaultFontSize =
+      p.alternateLineDefaultFontSize ?? pageSetup.alternateLineDefaultFontSize;
 
     pageSetup.modeKeyDefaultColor =
       p.modeKeyDefaultColor ?? pageSetup.modeKeyDefaultColor;
@@ -866,6 +1009,14 @@ export class SaveService {
       p.isonDefaultColor ?? pageSetup.isonDefaultColor;
     pageSetup.isonDefaultStrokeWidth =
       p.isonDefaultStrokeWidth ?? pageSetup.isonDefaultStrokeWidth;
+    pageSetup.breathDefaultColor =
+      p.breathDefaultColor ?? pageSetup.breathDefaultColor;
+    pageSetup.breathDefaultStrokeWidth =
+      p.breathDefaultStrokeWidth ?? pageSetup.breathDefaultStrokeWidth;
+    pageSetup.crossDefaultColor =
+      p.crossDefaultColor ?? pageSetup.crossDefaultColor;
+    pageSetup.crossDefaultStrokeWidth =
+      p.crossDefaultStrokeWidth ?? pageSetup.crossDefaultStrokeWidth;
     pageSetup.koronisDefaultColor =
       p.koronisDefaultColor ?? pageSetup.koronisDefaultColor;
     pageSetup.koronisDefaultStrokeWidth =
@@ -876,23 +1027,29 @@ export class SaveService {
     pageSetup.landscape = p.landscape === true;
 
     pageSetup.hyphenSpacing = p.hyphenSpacing;
+    pageSetup.martyriaVerticalOffset = p.martyriaVerticalOffset ?? 0; // for old files, use 0 so that we don't change the them
 
     pageSetup.chrysanthineAccidentals =
       p.chrysanthineAccidentals === true ||
       p.chrysanthineAccidentals === undefined;
     pageSetup.noFthoraRestrictions = p.noFthoraRestrictions === true;
     pageSetup.disableGreekMelismata = p.disableGreekMelismata === true;
+    pageSetup.alignIsonIndicators = p.alignIsonIndicators === true;
+    pageSetup.useOptionalDiatonicFthoras =
+      p.useOptionalDiatonicFthoras === true;
 
     // Fix pageWidth and pageHeight
     // Due to bug #71, A-series paper sizes had incorrect width and height
-    const pageSize = pageSizes.find((x) => x.name === pageSetup.pageSize);
-    if (pageSize) {
-      if (pageSetup.landscape) {
-        pageSetup.pageWidth = pageSize.height;
-        pageSetup.pageHeight = pageSize.width;
-      } else {
-        pageSetup.pageWidth = pageSize.width;
-        pageSetup.pageHeight = pageSize.height;
+    if (pageSetup.pageSize !== 'Custom') {
+      const pageSize = pageSizes.find((x) => x.name === pageSetup.pageSize);
+      if (pageSize) {
+        if (pageSetup.landscape) {
+          pageSetup.pageWidth = pageSize.height;
+          pageSetup.pageHeight = pageSize.width;
+        } else {
+          pageSetup.pageWidth = pageSize.width;
+          pageSetup.pageHeight = pageSize.height;
+        }
       }
     }
   }
@@ -1002,6 +1159,7 @@ export class SaveService {
     element.rootSign = e.rootSign;
     element.rootSignOverride = e.rootSignOverride || null;
     element.spaceAfter = e.spaceAfter ?? 0;
+    element.verticalOffset = e.verticalOffset ?? 0;
 
     if (e.fthora != null) {
       element.fthora = e.fthora;
@@ -1037,6 +1195,8 @@ export class SaveService {
     if (e.measureBarRight != null) {
       element.measureBarRight = e.measureBarRight ?? e.measureBar;
     }
+
+    element.quantitativeNeume = e.quantitativeNeume ?? null;
   }
 
   public static LoadTempo_v1(element: TempoElement, e: TempoElement_v1) {
@@ -1211,6 +1371,45 @@ export class SaveService {
     } else {
       element.acceptsLyrics = AcceptsLyricsOption.Default;
     }
+
+    try {
+      if (e.annotations) {
+        element.annotations = e.annotations.map((a) => {
+          const annotation = new AnnotationElement();
+          annotation.text = a.text;
+          annotation.x = a.x;
+          annotation.y = a.y;
+
+          return annotation;
+        });
+      }
+    } catch (error) {
+      console.warn('Error loading annotations:', error);
+      element.annotations = [];
+    }
+
+    try {
+      if (e.alternateLines) {
+        element.alternateLines = e.alternateLines.map((a) => {
+          const alternateLine = new AlternateLineElement();
+          alternateLine.x = a.x;
+          alternateLine.y = a.y;
+
+          alternateLine.elements = a.elements
+            .filter((x) => x.elementType === ElementType.Note)
+            .map((x) => {
+              const e = new NoteElement();
+              this.LoadNote_v1(e, x as NoteElement_v1);
+              return e;
+            });
+
+          return alternateLine;
+        });
+      }
+    } catch (error) {
+      console.warn('Error loading alternate lines:', error);
+      element.alternateLines = [];
+    }
   }
 
   public static LoadTextBox_v1(
@@ -1229,6 +1428,10 @@ export class SaveService {
       element.contentRight = e.contentRight;
     }
 
+    if (e.inline) {
+      element.contentBottom = e.contentBottom;
+    }
+
     element.multipanel = e.multipanel === true;
 
     element.fontFamily = e.fontFamily;
@@ -1241,6 +1444,7 @@ export class SaveService {
     element.strokeWidth = e.strokeWidth ?? element.strokeWidth;
     element.lineHeight = e.lineHeight ?? pageSetup.textBoxDefaultLineHeight;
     element.customWidth = e.customWidth ?? null;
+    element.fillWidth = e.fillWidth === true;
     element.customHeight = e.customHeight ?? null;
     element.marginTop = e.marginTop ?? 0;
     element.marginBottom = e.marginBottom ?? 0;
@@ -1269,6 +1473,28 @@ export class SaveService {
       element.contentRight = e.contentRight;
     }
 
+    if (e.inline) {
+      element.contentBottom = e.contentBottom;
+      element.centerOnPage = e.centerOnPage === true;
+      element.offsetYBottom = e.offsetYBottom ?? 0;
+      element.offsetYTop = e.offsetYTop ?? 0;
+    }
+
+    if (e.modeChange) {
+      element.modeChangePhysicalNote = e.modeChangePhysicalNote;
+      element.modeChangeScale = e.modeChangeScale;
+      element.modeChangeVirtualNote = e.modeChangeVirtualNote ?? null;
+      element.modeChangeBpm = e.modeChangeBpm;
+      element.modeChangeIgnoreAttractions =
+        e.modeChangeIgnoreAttractions === true;
+      element.modeChangePermanentEnharmonicZo =
+        e.modeChangePermanentEnharmonicZo === true;
+    }
+
+    element.customWidth = e.customWidth ?? null;
+
+    element.modeChange = e.modeChange === true;
+    element.inline = e.inline === true;
     element.multipanel = e.multipanel === true;
     element.rtl = e.rtl === true;
   }

@@ -1,9 +1,10 @@
 {
   "fontName": "NeanesStathisSeries",
-  "fontVersion": "1.001",
+  "fontVersion": "1.0.3",
   "metrics": {
     "winAscent": 1.4,
-    "winDescent": 0.466
+    "winDescent": 0.466,
+    "oligonMidpoint": 0.309
   },
   "glyphsWithAnchors": {
     "ison": {
@@ -5700,7 +5701,7 @@
     },
     "stavrosAbove": {
       "stavros": [
-        0.261,
+        -0.001,
         0.124
       ]
     },
@@ -5910,88 +5911,88 @@
     },
     "agogiPoliArgiAbove": {
       "agogiAboveFthora": [
-        0.433,
+        -0.047,
         -0.203
       ],
       "agogi": [
-        0.433,
+        -0.047,
         -0.202
       ]
     },
     "agogiArgoteriAbove": {
       "agogiAboveFthora": [
-        0.466,
+        -0.014,
         -0.208
       ],
       "agogi": [
-        0.467,
+        -0.013,
         -0.203
       ]
     },
     "agogiArgiAbove": {
       "agogiAboveFthora": [
-        0.458,
+        -0.002,
         -0.226
       ],
       "agogi": [
-        0.459,
+        -0.001,
         -0.229
       ]
     },
     "agogiMetriaAbove": {
       "agogiAboveFthora": [
-        0.332,
+        -0.003,
         -0.226
       ],
       "agogi": [
-        0.333,
+        -0.002,
         -0.225
       ]
     },
     "agogiMesiAbove": {
       "agogiAboveFthora": [
-        0.333,
+        0.001,
         -0.226
       ],
       "agogi": [
-        0.334,
+        0.002,
         -0.225
       ]
     },
     "agogiGorgiAbove": {
       "agogiAboveFthora": [
-        0.333,
+        0.002,
         -0.226
       ],
       "agogi": [
-        0.332,
+        0.001,
         -0.225
       ]
     },
     "agogiGorgoteriAbove": {
       "agogiAboveFthora": [
-        0.359,
+        -0.001,
         -0.214
       ],
       "agogi": [
-        0.359,
+        -0.001,
         -0.214
       ]
     },
     "agogiPoliGorgiAbove": {
       "agogiAboveFthora": [
-        0.388,
+        -0.002,
         -0.208
       ],
       "agogi": [
-        0.39,
+        0.0,
         -0.207
       ]
     },
     "martyriaNoteZoLow": {
       "fthoraTop": [
-        0.517,
-        0.446
+        0.515,
+        0.59
       ],
       "martyriaTop": [
         0.547,
@@ -6008,8 +6009,8 @@
     },
     "martyriaNoteNiLow": {
       "fthoraTop": [
-        0.517,
-        0.376
+        0.515,
+        0.592
       ],
       "martyriaTop": [
         0.515,
@@ -6026,8 +6027,8 @@
     },
     "martyriaNotePaLow": {
       "fthoraTop": [
-        0.512,
-        0.474
+        0.516,
+        0.67
       ],
       "martyriaTop": [
         0.517,
@@ -6045,7 +6046,7 @@
     "martyriaNoteVouLow": {
       "fthoraTop": [
         0.517,
-        0.456
+        0.59
       ],
       "martyriaTop": [
         0.467,
@@ -6063,7 +6064,7 @@
     "martyriaNoteGaLow": {
       "fthoraTop": [
         0.517,
-        0.446
+        0.59
       ],
       "martyriaTop": [
         0.467,
@@ -6081,7 +6082,7 @@
     "martyriaNoteDiLow": {
       "fthoraTop": [
         0.517,
-        0.446
+        0.673
       ],
       "martyriaTop": [
         0.533,
@@ -6098,8 +6099,8 @@
     },
     "martyriaNoteKeLow": {
       "fthoraTop": [
-        0.517,
-        0.446
+        0.559,
+        0.672
       ],
       "martyriaTop": [
         0.56,
@@ -6117,7 +6118,7 @@
     "martyriaNoteZo": {
       "fthoraTop": [
         0.517,
-        0.54
+        0.64
       ],
       "martyriaBottom": [
         0.527,
@@ -6135,7 +6136,7 @@
     "martyriaNoteNi": {
       "fthoraTop": [
         0.517,
-        0.416
+        0.588
       ],
       "martyriaBottom": [
         0.487,
@@ -6153,7 +6154,7 @@
     "martyriaNotePa": {
       "fthoraTop": [
         0.517,
-        0.45
+        0.59
       ],
       "martyriaBottom": [
         0.52,
@@ -6171,7 +6172,7 @@
     "martyriaNoteVou": {
       "fthoraTop": [
         0.517,
-        0.525
+        0.651
       ],
       "martyriaBottom": [
         0.453,
@@ -6188,8 +6189,8 @@
     },
     "martyriaNoteGa": {
       "fthoraTop": [
-        0.517,
-        0.53
+        0.515,
+        0.613
       ],
       "martyriaBottom": [
         0.493,
@@ -6207,7 +6208,7 @@
     "martyriaNoteDi": {
       "fthoraTop": [
         0.54,
-        0.55
+        0.653
       ],
       "martyriaBottom": [
         0.533,
@@ -6225,7 +6226,7 @@
     "martyriaNoteKe": {
       "fthoraTop": [
         0.517,
-        0.45
+        0.59
       ],
       "martyriaBottom": [
         0.507,
@@ -6243,7 +6244,7 @@
     "martyriaNoteZoHigh": {
       "fthoraTop": [
         0.517,
-        0.446
+        0.64
       ],
       "martyriaBottom": [
         0.527,
@@ -6261,7 +6262,7 @@
     "martyriaNoteNiHigh": {
       "fthoraTop": [
         0.517,
-        0.376
+        0.608
       ],
       "martyriaBottom": [
         0.487,
@@ -6279,7 +6280,7 @@
     "martyriaNotePaHigh": {
       "fthoraTop": [
         0.517,
-        0.376
+        0.61
       ],
       "martyriaBottom": [
         0.52,
@@ -6297,7 +6298,7 @@
     "martyriaNoteVouHigh": {
       "fthoraTop": [
         0.517,
-        0.456
+        0.651
       ],
       "martyriaBottom": [
         0.453,
@@ -6315,7 +6316,7 @@
     "martyriaNoteGaHigh": {
       "fthoraTop": [
         0.517,
-        0.436
+        0.613
       ],
       "martyriaBottom": [
         0.493,
@@ -6332,8 +6333,8 @@
     },
     "martyriaNoteDiHigh": {
       "fthoraTop": [
-        0.54,
-        0.454
+        0.538,
+        0.653
       ],
       "martyriaBottom": [
         0.533,
@@ -6350,8 +6351,8 @@
     },
     "martyriaNoteKeHigh": {
       "fthoraTop": [
-        0.517,
-        0.376
+        0.515,
+        0.59
       ],
       "martyriaBottom": [
         0.507,
@@ -6511,8 +6512,12 @@
       ]
     },
     "fthoraDiatonicNiLowAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        1.3
+      ],
       "agogiAboveFthora": [
-        -0.001,
+        0.0,
         1.126
       ],
       "fthoraTop": [
@@ -6521,8 +6526,12 @@
       ]
     },
     "fthoraDiatonicPaAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        1.24
+      ],
       "agogiAboveFthora": [
-        -0.001,
+        0.0,
         1.076
       ],
       "fthoraTop": [
@@ -6531,8 +6540,12 @@
       ]
     },
     "fthoraDiatonicVouAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        1.457
+      ],
       "agogiAboveFthora": [
-        -0.001,
+        0.0,
         1.296
       ],
       "fthoraTop": [
@@ -6541,8 +6554,12 @@
       ]
     },
     "fthoraDiatonicGaAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        1.366
+      ],
       "agogiAboveFthora": [
-        -0.001,
+        0.0,
         1.216
       ],
       "fthoraTop": [
@@ -6551,8 +6568,12 @@
       ]
     },
     "fthoraDiatonicDiAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        1.249
+      ],
       "agogiAboveFthora": [
-        -0.001,
+        0.0,
         1.146
       ],
       "fthoraTop": [
@@ -6561,8 +6582,12 @@
       ]
     },
     "fthoraDiatonicKeAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        1.387
+      ],
       "agogiAboveFthora": [
-        -0.001,
+        0.0,
         1.226
       ],
       "fthoraTop": [
@@ -6571,8 +6596,12 @@
       ]
     },
     "fthoraDiatonicZoAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        1.453
+      ],
       "agogiAboveFthora": [
-        -0.001,
+        0.0,
         1.356
       ],
       "fthoraTop": [
@@ -6581,8 +6610,12 @@
       ]
     },
     "fthoraDiatonicNiHighAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        1.305
+      ],
       "agogiAboveFthora": [
-        -0.001,
+        0.0,
         1.226
       ],
       "fthoraTop": [
@@ -6591,8 +6624,12 @@
       ]
     },
     "fthoraHardChromaticPaAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        1.285
+      ],
       "agogiAboveFthora": [
-        -0.001,
+        0.0,
         1.125
       ],
       "fthoraTop": [
@@ -6601,8 +6638,12 @@
       ]
     },
     "fthoraHardChromaticDiAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        1.24
+      ],
       "agogiAboveFthora": [
-        -0.001,
+        0.0,
         1.126
       ],
       "fthoraTop": [
@@ -6611,8 +6652,12 @@
       ]
     },
     "fthoraSoftChromaticDiAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        1.305
+      ],
       "agogiAboveFthora": [
-        -0.001,
+        0.0,
         1.146
       ],
       "fthoraTop": [
@@ -6621,8 +6666,12 @@
       ]
     },
     "fthoraSoftChromaticKeAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        1.242
+      ],
       "agogiAboveFthora": [
-        -0.001,
+        0.0,
         1.196
       ],
       "fthoraTop": [
@@ -6631,8 +6680,12 @@
       ]
     },
     "fthoraEnharmonicAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        1.298
+      ],
       "agogiAboveFthora": [
-        -0.001,
+        0.0,
         1.146
       ],
       "fthoraTop": [
@@ -6641,8 +6694,12 @@
       ]
     },
     "chroaZygosAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        1.241
+      ],
       "agogiAboveFthora": [
-        -0.001,
+        0.0,
         1.196
       ],
       "fthoraTop": [
@@ -6651,8 +6708,12 @@
       ]
     },
     "chroaKlitonAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        1.305
+      ],
       "agogiAboveFthora": [
-        -0.001,
+        0.0,
         1.225
       ],
       "fthoraTop": [
@@ -6661,8 +6722,12 @@
       ]
     },
     "chroaSpathiAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        1.3
+      ],
       "agogiAboveFthora": [
-        -0.001,
+        0.0,
         1.136
       ],
       "fthoraTop": [
@@ -6983,6 +7048,14 @@
       ]
     },
     "diesisGenikiAbove": {
+      "agogiAboveFthora": [
+        0.0,
+        1.306
+      ],
+      "barlineAboveFthora": [
+        0.0,
+        1.43
+      ],
       "fthoraTop": [
         0.0,
         0.804
@@ -7079,6 +7152,14 @@
       ]
     },
     "yfesisGenikiAbove": {
+      "agogiAboveFthora": [
+        0.0,
+        1.176
+      ],
+      "barlineAboveFthora": [
+        0.0,
+        1.262
+      ],
       "fthoraTop": [
         0.0,
         0.634
@@ -7152,38 +7233,54 @@
     },
     "barlineSingleAbove": {
       "barline": [
-        0.107,
+        -0.003,
         0.004
       ]
     },
     "barlineDoubleAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        0.0
+      ],
       "barline": [
-        0.175,
-        0.004
+        0.0,
+        0.0
       ]
     },
     "barlineTheseosAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        0.0
+      ],
       "barline": [
-        0.107,
-        0.004
+        0.0,
+        0.0
       ]
     },
     "barlineShortSingleAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        0.59
+      ],
       "barline": [
-        0.075,
+        0.0,
         0.59
       ]
     },
     "barlineShortDoubleAbove": {
       "barline": [
-        0.129,
+        0.0,
         0.59
       ]
     },
     "barlineShortTheseosAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        0.59
+      ],
       "barline": [
-        0.087,
-        0.589
+        0.0,
+        0.59
       ]
     },
     "measureNumber2": {
@@ -7680,7 +7777,7 @@
     "yfenBelow": 0.0,
     "stavros": 0.457,
     "breath": 0.214,
-    "stavrosAbove": 0.457,
+    "stavrosAbove": 0.0,
     "klasmaAbove": 0.0,
     "klasmaBelow": 0.0,
     "apli": 0.0,
@@ -7727,14 +7824,14 @@
     "agogiGorgi": 0.618,
     "agogiGorgoteri": 0.826,
     "agogiPoliGorgi": 1.02,
-    "agogiPoliArgiAbove": 0.766,
-    "agogiArgoteriAbove": 0.766,
-    "agogiArgiAbove": 0.766,
-    "agogiMetriaAbove": 0.608,
-    "agogiMesiAbove": 0.709,
-    "agogiGorgiAbove": 0.618,
-    "agogiGorgoteriAbove": 0.826,
-    "agogiPoliGorgiAbove": 1.02,
+    "agogiPoliArgiAbove": 0.0,
+    "agogiArgoteriAbove": 0.0,
+    "agogiArgiAbove": 0.0,
+    "agogiMetriaAbove": 0.0,
+    "agogiMesiAbove": 0.0,
+    "agogiGorgiAbove": 0.0,
+    "agogiGorgoteriAbove": 0.0,
+    "agogiPoliGorgiAbove": 0.0,
     "martyriaNoteZoLow": 0.783,
     "martyriaNoteNiLow": 0.731,
     "martyriaNotePaLow": 0.737,
@@ -7883,12 +7980,12 @@
     "barlineShortSingle": 0.152,
     "barlineShortDouble": 0.256,
     "barlineShortTheseos": 0.172,
-    "barlineSingleAbove": 0.208,
-    "barlineDoubleAbove": 0.34,
-    "barlineTheseosAbove": 0.208,
-    "barlineShortSingleAbove": 0.152,
-    "barlineShortDoubleAbove": 0.256,
-    "barlineShortTheseosAbove": 0.172,
+    "barlineSingleAbove": 0.0,
+    "barlineDoubleAbove": 0.0,
+    "barlineTheseosAbove": 0.0,
+    "barlineShortSingleAbove": 0.0,
+    "barlineShortDoubleAbove": 0.0,
+    "barlineShortTheseosAbove": 0.0,
     "measureNumber2": 0.0,
     "measureNumber3": 0.0,
     "measureNumber4": 0.0,
@@ -7957,7 +8054,23 @@
     "oligonKentimataBelow.alt02": 1.75,
     "psifiston.salt01": 0.0,
     "heteronConnecting.salt01": 0.0,
-    "psifiston.alt01": -0.004
+    "psifiston.alt01": -0.004,
+    "fthoraDiatonicNiLow": 0.56,
+    "fthoraDiatonicPa": 0.385,
+    "fthoraDiatonicVou": 0.602,
+    "fthoraDiatonicGa": 0.376,
+    "fthoraDiatonicDi": 0.52,
+    "fthoraDiatonicZo": 0.63,
+    "fthoraDiatonicNiHigh": 0.568,
+    "fthoraHardChromaticPa": 1.072,
+    "fthoraHardChromaticDi": 0.512,
+    "fthoraSoftChromaticDi": 1.056,
+    "fthoraSoftChromaticKe": 0.632,
+    "fthoraEnharmonic": 0.492,
+    "chroaZygos": 0.632,
+    "chroaKliton": 0.664,
+    "chroaSpathi": 1.104,
+    "fthoraDiatonicKe": 0.342
   },
   "optionalGlyphs": {
     "oligonKentimataBelow.alt01": {
@@ -8891,11 +9004,11 @@
     },
     "stavrosAbove": {
       "bBoxNE": [
-        0.436,
+        0.174,
         0.471
       ],
       "bBoxSW": [
-        0.09,
+        -0.172,
         0.126
       ]
     },
@@ -9361,81 +9474,81 @@
     },
     "agogiPoliArgiAbove": {
       "bBoxNE": [
-        0.616,
+        0.136,
         0.746
       ],
       "bBoxSW": [
-        -0.058,
+        -0.538,
         -0.196
       ]
     },
     "agogiArgoteriAbove": {
       "bBoxNE": [
-        0.607,
+        0.127,
         0.616
       ],
       "bBoxSW": [
-        0.253,
+        -0.227,
         -0.196
       ]
     },
     "agogiArgiAbove": {
       "bBoxNE": [
-        0.593,
+        0.133,
         0.604
       ],
       "bBoxSW": [
-        0.089,
+        -0.371,
         -0.198
       ]
     },
     "agogiMetriaAbove": {
       "bBoxNE": [
-        0.463,
+        0.128,
         0.475
       ],
       "bBoxSW": [
-        0.11,
+        -0.225,
         -0.197
       ]
     },
     "agogiMesiAbove": {
       "bBoxNE": [
-        0.604,
+        0.272,
         0.473
       ],
       "bBoxSW": [
-        0.042,
+        -0.29,
         -0.199
       ]
     },
     "agogiGorgiAbove": {
       "bBoxNE": [
-        0.511,
+        0.18,
         0.466
       ],
       "bBoxSW": [
-        0.197,
+        -0.134,
         -0.206
       ]
     },
     "agogiGorgoteriAbove": {
       "bBoxNE": [
-        0.692,
+        0.332,
         0.611
       ],
       "bBoxSW": [
-        0.223,
+        -0.137,
         -0.191
       ]
     },
     "agogiPoliGorgiAbove": {
       "bBoxNE": [
-        0.883,
+        0.493,
         0.751
       ],
       "bBoxSW": [
-        0.244,
+        -0.146,
         -0.191
       ]
     },
@@ -10921,61 +11034,61 @@
     },
     "barlineSingleAbove": {
       "bBoxNE": [
-        0.141,
+        0.031,
         0.714
       ],
       "bBoxSW": [
-        0.079,
+        -0.031,
         0.01
       ]
     },
     "barlineDoubleAbove": {
       "bBoxNE": [
-        0.264,
+        0.093,
         0.715
       ],
       "bBoxSW": [
-        0.093,
+        -0.078,
         0.003
       ]
     },
     "barlineTheseosAbove": {
       "bBoxNE": [
-        0.319,
+        0.211,
         0.81
       ],
       "bBoxSW": [
-        -0.098,
+        -0.206,
         0.001
       ]
     },
     "barlineShortSingleAbove": {
       "bBoxNE": [
-        0.111,
+        0.033,
         0.889
       ],
       "bBoxSW": [
-        0.052,
+        -0.026,
         0.579
       ]
     },
     "barlineShortDoubleAbove": {
       "bBoxNE": [
-        0.206,
+        0.076,
         0.96
       ],
       "bBoxSW": [
-        0.054,
+        -0.076,
         0.585
       ]
     },
     "barlineShortTheseosAbove": {
       "bBoxNE": [
-        0.284,
+        0.214,
         0.954
       ],
       "bBoxSW": [
-        -0.134,
+        -0.204,
         0.657
       ]
     },
@@ -11667,6 +11780,166 @@
       "bBoxSW": [
         -0.838,
         0.161
+      ]
+    },
+    "fthoraDiatonicNiLow": {
+      "bBoxNE": [
+        0.498,
+        1.108
+      ],
+      "bBoxSW": [
+        0.103,
+        0.762
+      ]
+    },
+    "fthoraDiatonicPa": {
+      "bBoxNE": [
+        0.324,
+        0.997
+      ],
+      "bBoxSW": [
+        0.065,
+        0.686
+      ]
+    },
+    "fthoraDiatonicVou": {
+      "bBoxNE": [
+        0.522,
+        1.164
+      ],
+      "bBoxSW": [
+        0.064,
+        0.687
+      ]
+    },
+    "fthoraDiatonicGa": {
+      "bBoxNE": [
+        0.319,
+        1.146
+      ],
+      "bBoxSW": [
+        0.051,
+        0.713
+      ]
+    },
+    "fthoraDiatonicDi": {
+      "bBoxNE": [
+        0.448,
+        1.125
+      ],
+      "bBoxSW": [
+        0.073,
+        0.72
+      ]
+    },
+    "fthoraDiatonicZo": {
+      "bBoxNE": [
+        0.53,
+        1.184
+      ],
+      "bBoxSW": [
+        0.071,
+        0.686
+      ]
+    },
+    "fthoraDiatonicNiHigh": {
+      "bBoxNE": [
+        0.502,
+        1.213
+      ],
+      "bBoxSW": [
+        0.106,
+        0.756
+      ]
+    },
+    "fthoraHardChromaticPa": {
+      "bBoxNE": [
+        1.014,
+        1.1
+      ],
+      "bBoxSW": [
+        0.067,
+        0.797
+      ]
+    },
+    "fthoraHardChromaticDi": {
+      "bBoxNE": [
+        0.446,
+        1.12
+      ],
+      "bBoxSW": [
+        0.077,
+        0.722
+      ]
+    },
+    "fthoraSoftChromaticDi": {
+      "bBoxNE": [
+        0.935,
+        1.113
+      ],
+      "bBoxSW": [
+        0.079,
+        0.788
+      ]
+    },
+    "fthoraSoftChromaticKe": {
+      "bBoxNE": [
+        0.548,
+        1.137
+      ],
+      "bBoxSW": [
+        0.094,
+        0.714
+      ]
+    },
+    "fthoraEnharmonic": {
+      "bBoxNE": [
+        0.449,
+        1.09
+      ],
+      "bBoxSW": [
+        0.08,
+        0.773
+      ]
+    },
+    "chroaZygos": {
+      "bBoxNE": [
+        0.52,
+        1.165
+      ],
+      "bBoxSW": [
+        0.106,
+        0.693
+      ]
+    },
+    "chroaKliton": {
+      "bBoxNE": [
+        0.597,
+        1.172
+      ],
+      "bBoxSW": [
+        0.141,
+        0.768
+      ]
+    },
+    "chroaSpathi": {
+      "bBoxNE": [
+        1.007,
+        1.136
+      ],
+      "bBoxSW": [
+        0.118,
+        0.786
+      ]
+    },
+    "fthoraDiatonicKe": {
+      "bBoxNE": [
+        0.295,
+        1.136
+      ],
+      "bBoxSW": [
+        0.051,
+        0.832
       ]
     }
   },

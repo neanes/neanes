@@ -102,7 +102,6 @@ export class NoteElement extends ScoreElement {
   public tie: Tie | null = null;
   public noteIndicator: boolean = false;
   public ison: Ison | null = null;
-  public vareia: boolean = false;
   public koronis: boolean = false;
   public stavros: boolean = false;
   public lyrics: string = '';
@@ -344,6 +343,15 @@ export class NoteElement extends ScoreElement {
     this.replaceNeumes();
   }
 
+  public get vareia() {
+    return this._vareia;
+  }
+
+  public set vareia(vareia: boolean | false) {
+    this._vareia = vareia;
+    this.replaceNeumes();
+  }
+
   public get accidental() {
     return this._accidental;
   }
@@ -441,6 +449,7 @@ export class NoteElement extends ScoreElement {
   private _gorgonNeume: GorgonNeume | null = null;
   private _secondaryGorgonNeume: GorgonNeume | null = null;
   private _vocalExpressionNeume: VocalExpressionNeume | null = null;
+  private _vareia: boolean = false;
   private _fthora: Fthora | null = null;
   private _secondaryFthora: Fthora | null = null;
   private _tertiaryFthora: Fthora | null = null;
@@ -455,6 +464,7 @@ export class NoteElement extends ScoreElement {
     this.replaceGorgons();
     this.replaceTimeNeumes();
     this.replaceVocalExpressions();
+    this.replaceVareia();
     this.replaceFthora();
     this.replaceMeasureBars();
   }
@@ -548,6 +558,31 @@ export class NoteElement extends ScoreElement {
 
         if (replacement) {
           this.vocalExpressionNeume = replacement.replaceWith;
+        }
+      }
+    }
+  }
+
+  private replaceVareia() {
+    if (this.vareia) {
+      const replacements = getVocalExpressionReplacements(
+        VocalExpressionNeume.Vareia,
+      );
+
+      if (replacements) {
+        const replacement =
+          replacements.find(
+            (x) =>
+              x.isPairedWith && x.isPairedWith.includes(this.quantitativeNeume),
+          ) ||
+          replacements.find(
+            (x) =>
+              x.isNotPairedWith &&
+              !x.isNotPairedWith.includes(this.quantitativeNeume),
+          );
+
+        if (replacement) {
+          this.vareia = replacement.replaceWith != null;
         }
       }
     }

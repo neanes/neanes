@@ -444,6 +444,16 @@ export const modeKeyTemplates: ModeKeyTemplate[] = [
     fthoraAboveQuantitativeNeumeRight: Fthora.DiatonicNiLow_Top,
   },
   {
+    id: 704,
+    mode: 7,
+    scale: Scale.Diatonic,
+    scaleNote: ScaleNote.Ga,
+    description: 'model:modeKey.tetraphonic',
+    martyria: ModeSign.VarysZo,
+    note: ModeSign.Zo,
+    quantitativeNeumeRight: QuantitativeNeume.OligonPlusHypsiliRight,
+  },
+  {
     id: 800,
     mode: 8,
     scale: Scale.Diatonic,

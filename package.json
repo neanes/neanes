@@ -85,7 +85,7 @@
     "vitepress": "^1.6.4",
     "vitest": "^3.2.4",
     "vue-component-type-helpers": "^3.0.7",
-    "vue-tsc": "^3.0.7"
+    "vue-tsc": "^3.0.8"
   },
   "license": "GPL-3.0",
   "packageManager": "npm@11.5.2"

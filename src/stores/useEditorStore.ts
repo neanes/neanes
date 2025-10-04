@@ -1,7 +1,6 @@
 // stores/editor.ts
 import { defineStore } from 'pinia';
 import { StyleValue } from 'vue';
-import { Tab } from 'vue3-tabs-chrome';
 
 import { ExportFormat } from '@/components/ExportDialog.vue';
 import { EditorPreferences } from '@/models/EditorPreferences';
@@ -35,8 +34,6 @@ export const useEditorStore = defineStore('editor', {
 
     workspaces: [] as Workspace[],
     selectedWorkspace: new Workspace(),
-
-    tabs: [] as Tab[],
 
     pages: [] as Page[],
 
@@ -212,11 +209,11 @@ export const useEditorStore = defineStore('editor', {
     selectionRange(): ScoreElementSelectionRange | null {
       return this.selectedWorkspace.selectionRange;
     },
-    zoom(state) {
-      return state.selectedWorkspace.zoom;
+    zoom(): number {
+      return this.selectedWorkspace.zoom;
     },
-    selectedHeaderFooterElement(state) {
-      return state.selectedWorkspace.selectedHeaderFooterElement;
+    selectedHeaderFooterElement(): ScoreElement | null {
+      return this.selectedWorkspace.selectedHeaderFooterElement;
     },
     selectedTextBoxElement(): TextBoxElement | null {
       const selectedElement =

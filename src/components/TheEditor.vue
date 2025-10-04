@@ -9,8 +9,10 @@ import {
   computed,
   inject,
   nextTick,
+  onBeforeMount,
   onBeforeUnmount,
   onMounted,
+  reactive,
   ref,
   StyleValue,
   toRaw,
@@ -193,9 +195,22 @@ const neumeKeyboard = inject<NeumeKeyboard>(
 );
 
 const pageBackgroundRef = useTemplateRef('page-background');
-const tabsRef = useTemplateRef('tabs');
+const tabsRef = useTemplateRef<Vue3TabsChromeComponent>('tabs');
+const searchTextRef = useTemplateRef<SearchText>('searchText');
 const lyricsRef = ref<Record<number, ContentEditable>>({});
-const elementRef = ref<Record<number, HTMLElement | DropCap | TextBox>>({});
+const pagesRef = ref<Record<number, HTMLElement>>({});
+const elementsRef = ref<
+  Record<
+    number,
+    | HTMLElement
+    | DropCap
+    | ImageBox
+    | MartyriaNeumeBox
+    | ModeKey
+    | TextBox
+    | TextBoxRich
+  >
+>({});
 
 const showFileMenuBar = isElectron();
 const isDevelopment: boolean = import.meta.env.DEV;
@@ -210,6 +225,9 @@ let noteFormat: Partial<NoteElement> | null = null;
 let richTextBoxCalculationCount = 0;
 let textBoxCalculationCount = 0;
 let playbackTimeInterval: ReturnType<typeof setTimeout> | null = null;
+
+const tab = ref<string | null>(null);
+const tabs = reactive([] as Tab[]);
 
 const editor = useEditorStore();
 
@@ -424,6 +442,8 @@ function setSelectedWorkspace(value: Workspace) {
   editor.selectedWorkspace.commandService.notify();
   save(false);
 
+  tab.value = value.id;
+
   // Scroll to the new workspace's saved scroll position
   // Use nextTick to scroll after the DOM has refreshed
   nextTick(() => {
@@ -440,9 +460,9 @@ function setSelectedWorkspace(value: Workspace) {
 
 function setSelectedElement(element: ScoreElement | null) {
   if (element != null) {
-    editor.selectedLyrics = null;
-    editor.selectionRange = null;
-    editor.selectedHeaderFooterElement = null;
+    setSelectedLyrics(null);
+    editor.setSelectionRange(null);
+    setSelectedHeaderFooterElement(null);
     editor.toolbarInnerNeume = 'Primary';
 
     if (audioService.state === AudioState.Playing) {
@@ -475,27 +495,25 @@ function setSelectedElement(element: ScoreElement | null) {
   editor.selectedWorkspace.selectedAlternateLineElement = null;
 }
 
-// TODO VUE 3
+function setSelectedLyrics(element: NoteElement | null) {
+  if (element != null) {
+    setSelectedElement(null);
+    setSelectedHeaderFooterElement(null);
+    editor.setSelectionRange(null);
+  }
 
-// set selectedLyrics(element: NoteElement | null) {
-//   if (element != null) {
-//     editor.selectedElement = null;
-//     editor.selectedHeaderFooterElement = null;
-//     editor.selectionRange = null;
-//   }
+  editor.selectedWorkspace.selectedLyrics = element;
+}
 
-//   editor.selectedWorkspace.selectedLyrics = element;
-// }
+function setSelectedHeaderFooterElement(element: ScoreElement | null) {
+  if (element != null) {
+    setSelectedElement(null);
+    editor.selectedWorkspace.selectedLyrics = null;
+    editor.setSelectionRange(null);
+  }
 
-// set selectedHeaderFooterElement(element: ScoreElement | null) {
-//   if (element != null) {
-//     editor.selectedElement = null;
-//     editor.selectedLyrics = null;
-//     editor.selectionRange = null;
-//   }
-
-//   editor.selectedWorkspace.selectedHeaderFooterElement = element;
-// }
+  editor.selectedWorkspace.selectedHeaderFooterElement = element;
+}
 
 function getHeaderHorizontalRuleStyle(headerHeight: number) {
   return {
@@ -888,12 +906,12 @@ function setSelectionRange(element: ScoreElement) {
   const elementIndex = getElementIndex(element);
 
   if (editor.selectedElement != null) {
-    editor.selectionRange = {
+    editor.setSelectionRange({
       start: editor.selectedElementIndex,
       end: elementIndex,
-    };
+    });
 
-    editor.selectedElement = null;
+    setSelectedElement(null);
   } else if (editor.selectionRange != null) {
     editor.selectionRange.end = elementIndex;
   }
@@ -940,7 +958,7 @@ function setSelectedAnnotation(
   parent: ScoreElement | null,
   annotation: AnnotationElement,
 ) {
-  editor.selectedElement = parent;
+  setSelectedElement(parent);
   editor.selectedWorkspace.selectedAnnotationElement = annotation;
 }
 
@@ -948,7 +966,7 @@ function setSelectedAlternateLine(
   parent: ScoreElement | null,
   alternateLine: AlternateLineElement,
 ) {
-  editor.selectedElement = parent;
+  setSelectedElement(parent);
   editor.selectedWorkspace.selectedAlternateLineElement = alternateLine;
 }
 
@@ -1025,7 +1043,7 @@ function saveEditorPreferences() {
 }
 
 function isLastElement(element: ScoreElement) {
-  return editor.elements.indexOf(element) === editor.elements.length - 1;
+  return element.index === editor.elements.length - 1;
 }
 
 function insertPelastikon() {
@@ -1084,7 +1102,7 @@ function addQuantitativeNeume(
 
       if (isLastElement(editor.selectedElement)) {
         addScoreElement(element, editor.selectedElementIndex);
-        editor.selectedElement = element;
+        setSelectedElement(element);
       } else {
         if (editor.selectedElement.elementType === ElementType.Note) {
           if (
@@ -1105,10 +1123,7 @@ function addQuantitativeNeume(
             });
           }
         } else {
-          editor.selectedElement = switchToSyllable(
-            editor.selectedElement,
-            element,
-          );
+          setSelectedElement(switchToSyllable(editor.selectedElement, element));
         }
       }
       break;
@@ -1125,7 +1140,7 @@ function addQuantitativeNeume(
 
         addScoreElement(element, editor.selectedElementIndex + 1);
       }
-      editor.selectedElement = element;
+      setSelectedElement(element);
       break;
 
     case EntryMode.Edit:
@@ -1152,10 +1167,7 @@ function addQuantitativeNeume(
       } else if (
         navigableElements.includes(editor.selectedElement.elementType)
       ) {
-        editor.selectedElement = switchToSyllable(
-          editor.selectedElement,
-          element,
-        );
+        setSelectedElement(switchToSyllable(editor.selectedElement, element));
       }
       break;
   }
@@ -1190,10 +1202,10 @@ function addAutoMartyria(alignRight?: boolean, note?: Note) {
 
       if (isLastElement(editor.selectedElement)) {
         addScoreElement(element, editor.selectedElementIndex);
-        editor.selectedElement = element;
+        setSelectedElement(element);
       } else {
         if (editor.selectedElement.elementType != ElementType.Martyria) {
-          editor.selectedElement = switchToMartyria(editor.selectedElement);
+          setSelectedElement(switchToMartyria(editor.selectedElement));
         }
       }
       break;
@@ -1203,13 +1215,13 @@ function addAutoMartyria(alignRight?: boolean, note?: Note) {
       } else {
         addScoreElement(element, editor.selectedElementIndex + 1);
       }
-      editor.selectedElement = element;
+      setSelectedElement(element);
       break;
     case EntryMode.Edit:
       if (isLastElement(editor.selectedElement)) {
         addScoreElement(element, editor.selectedElementIndex);
       } else if (editor.selectedElement.elementType != ElementType.Martyria) {
-        editor.selectedElement = switchToMartyria(editor.selectedElement);
+        setSelectedElement(switchToMartyria(editor.selectedElement));
       }
       break;
   }
@@ -1234,7 +1246,7 @@ function addTempo(neume: TempoSign) {
 
       if (isLastElement(editor.selectedElement)) {
         addScoreElement(element, editor.selectedElementIndex);
-        editor.selectedElement = element;
+        setSelectedElement(element);
       } else {
         if (editor.selectedElement.elementType === ElementType.Tempo) {
           if ((editor.selectedElement as TempoElement).neume !== neume) {
@@ -1243,10 +1255,7 @@ function addTempo(neume: TempoSign) {
             });
           }
         } else {
-          editor.selectedElement = switchToTempo(
-            editor.selectedElement,
-            element,
-          );
+          setSelectedElement(switchToTempo(editor.selectedElement, element));
         }
       }
       break;
@@ -1256,7 +1265,7 @@ function addTempo(neume: TempoSign) {
       } else {
         addScoreElement(element, editor.selectedElementIndex + 1);
       }
-      editor.selectedElement = element;
+      setSelectedElement(element);
       break;
     case EntryMode.Edit:
       if (isLastElement(editor.selectedElement)) {
@@ -1268,7 +1277,7 @@ function addTempo(neume: TempoSign) {
           });
         }
       } else {
-        editor.selectedElement = switchToTempo(editor.selectedElement, element);
+        setSelectedElement(switchToTempo(editor.selectedElement, element));
       }
       break;
   }
@@ -1298,13 +1307,11 @@ function addDropCap(after: boolean) {
     addScoreElement(element, editor.selectedElementIndex);
   }
 
-  editor.selectedElement = element;
+  setSelectedElement(element);
   save();
 
   nextTick(() => {
-    const index = editor.elements.indexOf(element);
-
-    elementRef.value[index].focus();
+    (elementsRef.value[element.index] as DropCap).focus();
   });
 }
 
@@ -1376,35 +1383,29 @@ function updateScoreElementSectionName(
 }
 
 function switchToMartyria(element: ScoreElement) {
-  const index = editor.elements.indexOf(element);
-
   const newElement = new MartyriaElement();
   newElement.pageBreak = element.pageBreak;
   newElement.lineBreak = element.lineBreak;
 
-  replaceScoreElement(newElement, index);
+  replaceScoreElement(newElement, element.index);
 
   return newElement;
 }
 
 function switchToTempo(oldElement: ScoreElement, newElement: TempoElement) {
-  const index = editor.elements.indexOf(oldElement);
-
   newElement.pageBreak = oldElement.pageBreak;
   newElement.lineBreak = oldElement.lineBreak;
 
-  replaceScoreElement(newElement, index);
+  replaceScoreElement(newElement, oldElement.index);
 
   return newElement;
 }
 
 function switchToSyllable(oldElement: ScoreElement, newElement: NoteElement) {
-  const index = editor.elements.indexOf(oldElement);
-
   newElement.pageBreak = oldElement.pageBreak;
   newElement.lineBreak = oldElement.lineBreak;
 
-  replaceScoreElement(newElement, index);
+  replaceScoreElement(newElement, oldElement.index);
 
   return newElement;
 }
@@ -1980,7 +1981,7 @@ function onKeydownLyrics(event: KeyboardEvent) {
       }
 
       if (event.ctrlKey || event.metaKey) {
-        editor.selectedElement = editor.selectedLyrics;
+        setSelectedElement(editor.selectedLyrics);
         blurActiveElement();
         window.getSelection()?.removeAllRanges();
         handled = true;
@@ -2018,8 +2019,7 @@ function onKeydownLyrics(event: KeyboardEvent) {
           // so that the melisma is registered and
           // the user doesn't accidentally type more
           // characters into box
-          const index = editor.elements.indexOf(editor.selectedLyrics!);
-          lyricsRef.value[index].blur();
+          lyricsRef.value[editor.selectedLyrics!.index].blur();
         }
       }
 
@@ -2052,8 +2052,7 @@ function onKeydownLyrics(event: KeyboardEvent) {
           // so that the melisma is registered and
           // the user doesn't accidentally type more
           // characters into box
-          const index = editor.elements.indexOf(editor.selectedLyrics!);
-          lyricsRef.value[index].blur();
+          lyricsRef.value[editor.selectedLyrics!.index].blur();
         }
       }
 
@@ -2070,8 +2069,8 @@ function onKeydownLyrics(event: KeyboardEvent) {
 function onKeydownDropCap(event: KeyboardEvent) {
   let handled = false;
 
-  const index = editor.elements.indexOf(editor.selectedElement!);
-  const htmlElement = elementRef.value[index] as DropCap;
+  const index = editor.selectedElement!.index;
+  const htmlElement = elementsRef.value[index] as DropCap;
 
   switch (event.code) {
     case 'Enter':
@@ -2116,8 +2115,8 @@ function onKeydownDropCap(event: KeyboardEvent) {
 function onKeydownTextBox(event: KeyboardEvent) {
   let handled = false;
 
-  const index = editor.elements.indexOf(editor.selectedElement!);
-  const htmlElement = elementRef.value[index] as TextBox;
+  const index = editor.selectedElement!.index;
+  const htmlElement = elementsRef.value[index] as TextBox;
 
   switch (event.code) {
     case 'Tab':
@@ -2236,8 +2235,9 @@ function onCutScoreElements() {
 
     refreshStaffLyrics();
 
-    editor.selectedElement =
-      editor.elements[Math.min(start, editor.elements.length - 1)];
+    setSelectedElement(
+      editor.elements[Math.min(start, editor.elements.length - 1)],
+    );
 
     save();
   } else if (
@@ -2250,8 +2250,9 @@ function onCutScoreElements() {
 
     removeScoreElement(editor.selectedElement);
 
-    editor.selectedElement =
-      editor.elements[Math.min(currentIndex, editor.elements.length - 1)];
+    setSelectedElement(
+      editor.elements[Math.min(currentIndex, editor.elements.length - 1)],
+    );
 
     save();
   }
@@ -2299,7 +2300,7 @@ function onPasteScoreElementsInsert(includeLyrics: boolean) {
 
   addScoreElements(newElements, insertAtIndex);
 
-  editor.selectedElement = newElements.at(-1)!;
+  setSelectedElement(newElements.at(-1)!);
   save();
 }
 
@@ -2465,7 +2466,7 @@ function onPasteScoreElementsAuto(includeLyrics: boolean) {
   onPasteScoreElementsEdit(includeLyrics);
 
   // Set the selected element to the last element that was pasted
-  editor.selectedElement = editor.elements[currentIndex + clipboard.length - 1];
+  setSelectedElement(editor.elements[currentIndex + clipboard.length - 1]);
 }
 
 function getLyricLength(element: NoteElement) {
@@ -2487,29 +2488,28 @@ function moveLeft() {
   let index = -1;
 
   if (editor.selectedElement) {
-    index = editor.elements.indexOf(editor.selectedElement);
+    index = editor.selectedElement.index;
   } else if (editor.selectionRange) {
     index = editor.selectionRange.end;
   }
 
-  if (
-    index - 1 >= 0 &&
-    navigableElements.includes(editor.elements[index - 1].elementType)
-  ) {
+  const element = editor.elements[index - 1];
+
+  if (index - 1 >= 0 && navigableElements.includes(element.elementType)) {
     // If the currently selected element is a drop cap or text box, blur it first
     if (editor.selectedElement?.elementType === ElementType.DropCap) {
-      (elementRef.value[index] as DropCap).blur();
+      (elementsRef.value[index] as DropCap).blur();
     } else if (editor.selectedElement?.elementType === ElementType.TextBox) {
-      (elementRef.value[index] as TextBox).blur();
+      (elementsRef.value[index] as TextBox).blur();
     }
 
-    editor.selectedElement = editor.elements[index - 1];
+    setSelectedElement(element);
 
     // If the newly selected element is a drop cap or text box, focus it
-    if (editor.selectedElement.elementType === ElementType.DropCap) {
-      (elementRef.value[index - 1] as DropCap).focus();
-    } else if (editor.selectedElement.elementType === ElementType.TextBox) {
-      (elementRef.value[index - 1] as TextBox).focus();
+    if (element.elementType === ElementType.DropCap) {
+      (elementsRef.value[index - 1] as DropCap).focus();
+    } else if (element.elementType === ElementType.TextBox) {
+      (elementsRef.value[index - 1] as TextBox).focus();
     }
 
     return true;
@@ -2522,30 +2522,32 @@ function moveRight() {
   let index = -1;
 
   if (editor.selectedElement) {
-    index = editor.elements.indexOf(editor.selectedElement);
+    index = editor.selectedElement.index;
   } else if (editor.selectionRange) {
     index = editor.selectionRange.end;
   }
 
+  const element = editor.elements[index + 1];
+
   if (
     index >= 0 &&
     index + 1 < editor.elements.length &&
-    navigableElements.includes(editor.elements[index + 1].elementType)
+    navigableElements.includes(element.elementType)
   ) {
     // If the currently selected element is a drop cap, blur it first
     if (editor.selectedElement?.elementType === ElementType.DropCap) {
-      (elementRef.value[index] as DropCap).blur();
+      (elementsRef.value[index] as DropCap).blur();
     } else if (editor.selectedElement?.elementType === ElementType.TextBox) {
-      (elementRef.value[index] as TextBox).blur();
+      (elementsRef.value[index] as TextBox).blur();
     }
 
-    editor.selectedElement = editor.elements[index + 1];
+    setSelectedElement(element);
 
     // If the newly selected element is a drop cap, focus it
-    if (editor.selectedElement.elementType === ElementType.DropCap) {
-      (elementRef.value[index] as DropCap).focus();
-    } else if (editor.selectedElement.elementType === ElementType.TextBox) {
-      (elementRef.value[index] as TextBox).focus();
+    if (element.elementType === ElementType.DropCap) {
+      (elementsRef.value[index] as DropCap).focus();
+    } else if (element.elementType === ElementType.TextBox) {
+      (elementsRef.value[index] as TextBox).focus();
     }
 
     return true;
@@ -2598,7 +2600,7 @@ function moveSelectionRight() {
 
 function getNextLyricBoxIndex() {
   if (editor.selectedLyrics) {
-    const currentIndex = editor.elements.indexOf(editor.selectedLyrics);
+    const currentIndex = editor.selectedLyrics.index;
 
     // Find the index of the next note
     for (let i = currentIndex + 1; i < editor.elements.length; i++) {
@@ -2644,7 +2646,7 @@ function moveToNextLyricBox(clearMelisma: boolean = false) {
 
 function moveToPreviousLyricBox() {
   if (editor.selectedLyrics) {
-    const currentIndex = editor.elements.indexOf(editor.selectedLyrics);
+    const currentIndex = editor.selectedLyrics.index;
     let nextIndex = -1;
 
     // Find the index of the previous note
@@ -2672,9 +2674,7 @@ function calculatePageNumber() {
     window.innerHeight || document.documentElement.clientHeight;
 
   for (let pageIndex = 0; pageIndex < editor.pageCount; pageIndex++) {
-    const rect = (editor.$refs.pages as Element[])[
-      pageIndex
-    ].getBoundingClientRect();
+    const rect = pagesRef.value[pageIndex].getBoundingClientRect();
 
     const percentage =
       Math.max(
@@ -2707,9 +2707,8 @@ function save(markUnsavedChanges: boolean = true) {
     .map((_, i) => i)
     .filter((i) => editor.pages[i].isVisible);
 
-  // TODO VUE 3 make sure this doesn't create a proxy object (use toRaw if so)
   const pages = LayoutService.processPages(
-    editor.selectedWorkspace as Workspace,
+    toRaw(editor.selectedWorkspace) as Workspace,
   );
 
   // Set page visibility for the newly processed pages
@@ -2797,7 +2796,7 @@ async function load() {
     });
 
     if (editor.workspaces.length > 0) {
-      editor.selectedWorkspace = editor.workspaces[0];
+      setSelectedWorkspace(editor.workspaces[0] as Workspace);
       return;
     }
   }
@@ -2879,10 +2878,11 @@ async function load() {
     }
   }
 
-  editor.selectedWorkspace = workspace;
+  setSelectedWorkspace(workspace);
 
-  editor.selectedElement =
-    editor.score.staff.elements[editor.score.staff.elements.length - 1];
+  setSelectedElement(
+    editor.score.staff.elements[editor.score.staff.elements.length - 1],
+  );
 
   editor.pages = LayoutService.processPages(
     editor.selectedWorkspace as Workspace,
@@ -2980,13 +2980,11 @@ async function closeWorkspace(workspace: Workspace) {
 async function onCloseWorkspaces(args: CloseWorkspacesArgs) {
   const workspacesToClose: Workspace[] = editor.workspaces.filter(
     (workspace) => {
-      const index: number = editor.tabs.findIndex(
-        (x) => x.key === workspace.id,
-      );
+      const index: number = tabs.findIndex((x) => x.key === workspace.id);
 
       const pivot: number = args.workspaceId
-        ? editor.tabs.findIndex((x) => x.key === args.workspaceId)
-        : editor.tabs.findIndex((x) => x.key === editor.selectedWorkspace.id);
+        ? tabs.findIndex((x) => x.key === args.workspaceId)
+        : tabs.findIndex((x) => x.key === editor.selectedWorkspace.id);
 
       switch (args.disposition) {
         case CloseWorkspacesDisposition.SELF:
@@ -3933,7 +3931,7 @@ function updateRichTextBoxHeight(element: RichTextBoxElement, height: number) {
   // The height could be updated by many rich text box elements at once
   // (e.g. if PageSetup changes) so we debounce the save.
   element.height = height;
-  editor.richTextBoxCalculationCount++;
+  richTextBoxCalculationCount++;
   saveDebounced(false);
 }
 
@@ -4460,11 +4458,11 @@ function updateDropCapContent(element: DropCapElement, content: string) {
   }
 
   if (content === '') {
-    const index = editor.elements.indexOf(element);
+    const index = element.index;
 
     if (index > -1) {
       if (editor.selectedElement === element) {
-        editor.selectedElement = null;
+        setSelectedElement(null);
       }
 
       removeScoreElement(element);
@@ -4608,7 +4606,7 @@ function deleteSelectedElement() {
 
     removeScoreElement(editor.selectedElement);
 
-    editor.selectedElement = editor.elements[index];
+    setSelectedElement(editor.elements[index]);
 
     save();
   } else if (editor.selectionRange != null) {
@@ -4632,8 +4630,9 @@ function deleteSelectedElement() {
       editor.selectionRange.end,
     );
 
-    editor.selectedElement =
-      editor.elements[Math.min(start, editor.elements.length - 1)];
+    setSelectedElement(
+      editor.elements[Math.min(start, editor.elements.length - 1)],
+    );
 
     save();
   }
@@ -4841,7 +4840,7 @@ function updateZoomToFit(zoomToFit: boolean) {
 }
 
 function performZoomToFit() {
-  const pageBackgroundElement = editor.$refs['page-background'] as HTMLElement;
+  const pageBackgroundElement = pageBackgroundRef.value as HTMLElement;
 
   const computedStyle = getComputedStyle(pageBackgroundElement);
 
@@ -4969,15 +4968,11 @@ function onAudioServiceEventPlay(event: PlaybackSequenceEvent) {
     // Scroll the currently playing element into view
     const lyrics = lyricsRef.value[event.elementIndex];
 
-    const neumeBox = elementRef.value[event.elementIndex];
+    const neumeBox = elementsRef.value[event.elementIndex] as HTMLElement;
 
-    if (lyrics?.$el.scrollIntoViewIfNeeded) {
-      lyrics.$el.scrollIntoViewIfNeeded(false);
-    }
+    lyrics?.$el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
 
-    if (neumeBox?.scrollIntoViewIfNeeded) {
-      neumeBox.scrollIntoViewIfNeeded(false);
-    }
+    neumeBox?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   }
 }
 
@@ -5068,8 +5063,9 @@ function onFileMenuNewScore() {
 
   editor.selectedWorkspace = workspace;
 
-  editor.selectedElement =
-    editor.score.staff.elements[editor.score.staff.elements.length - 1];
+  setSelectedElement(
+    editor.score.staff.elements[editor.score.staff.elements.length - 1],
+  );
   save(false);
 }
 
@@ -5159,7 +5155,7 @@ async function exportAsPng(args: ExportAsPngSettings) {
 
   nextTick(async () => {
     try {
-      const pages = editor.$refs.pages as HTMLElement[];
+      const pages = pagesRef.value as HTMLElement[];
 
       if (pages.length > 0) {
         const fontEmbedCSS = await getFontEmbedCSS(pages[0]);
@@ -5320,14 +5316,12 @@ function onFileMenuInsertTextBox(args?: FileMenuInsertTextboxArgs) {
 
   addScoreElement(element, editor.selectedElementIndex);
 
-  editor.selectedElement = element;
+  setSelectedElement(element);
 
   save();
 
   nextTick(() => {
-    const index = editor.elements.indexOf(element);
-
-    (editor.$refs[`element-${index}`] as any)[0].focus();
+    (elementsRef.value[element.index] as TextBox).focus();
   });
 }
 
@@ -5337,14 +5331,12 @@ function onFileMenuInsertRichTextBox() {
 
   addScoreElement(element, editor.selectedElementIndex);
 
-  editor.selectedElement = element;
+  setSelectedElement(element);
 
   save();
 
   nextTick(() => {
-    const index = editor.elements.indexOf(element);
-
-    (editor.$refs[`element-${index}`] as any)[0].focus();
+    (elementsRef.value[element.index] as TextBoxRich).focus();
   });
 }
 
@@ -5353,7 +5345,7 @@ function onFileMenuInsertModeKey() {
 
   addScoreElement(element, editor.selectedElementIndex);
 
-  editor.selectedElement = element;
+  setSelectedElement(element);
 
   openModeKeyDialog();
 
@@ -5377,7 +5369,7 @@ function onFileMenuInsertImage(args: FileMenuOpenImageArgs) {
 
   addScoreElement(element, editor.selectedElementIndex);
 
-  editor.selectedElement = element;
+  setSelectedElement(element);
 
   save();
 }
@@ -5456,12 +5448,12 @@ function onFileMenuUndo() {
     const clampedIndex = Math.min(currentIndex, editor.elements.length - 1);
 
     if (editor.selectedElement !== editor.elements[clampedIndex]) {
-      editor.selectedElement = editor.elements[clampedIndex];
+      setSelectedElement(editor.elements[clampedIndex]);
     }
 
     // Undo/redo could affect the note display in the neume toolbar (among other things),
     // so we force a refresh here
-    editor.selectedElement.keyHelper++;
+    editor.elements[clampedIndex].keyHelper++;
   }
 
   if (
@@ -5496,12 +5488,12 @@ function onFileMenuRedo() {
     const clampedIndex = Math.min(currentIndex, editor.elements.length - 1);
 
     if (editor.selectedElement !== editor.elements[clampedIndex]) {
-      editor.selectedElement = editor.elements[clampedIndex];
+      setSelectedElement(editor.elements[clampedIndex]);
     }
 
     // Undo/redo could affect the note display in the neume toolbar (among other things),
     // so we force a refresh here
-    editor.selectedElement.keyHelper++;
+    editor.elements[clampedIndex].keyHelper++;
   }
 
   if (
@@ -5627,7 +5619,7 @@ function applyCopiedFormat(element: ScoreElement, commands: Command[]) {
 
 function onFileMenuFind() {
   if (editor.searchTextPanelIsOpen) {
-    (editor.$refs.searchText as SearchText).focus();
+    searchTextRef.value?.focus();
   } else {
     editor.searchTextPanelIsOpen = true;
   }
@@ -5680,29 +5672,25 @@ function onSearchText(args: { query: string; reverse?: boolean }) {
   );
 
   if (result != null) {
-    editor.selectedElement = result;
+    setSelectedElement(result);
 
-    (editor.$refs.pages as HTMLElement[])[
-      editor.selectedElement.page - 1
-    ].scrollIntoView();
+    pagesRef.value[result.page - 1].scrollIntoView();
 
-    editor.pages[editor.selectedElement.page - 1].isVisible = true;
+    editor.pages[result.page - 1].isVisible = true;
 
     nextTick(() => {
       if (editor.selectedElement?.elementType === ElementType.Note) {
         (
-          editor.$refs[
-            `element-${editor.selectedElementIndex}`
-          ] as HTMLElement[]
-        )[0].scrollIntoView();
+          elementsRef.value[editor.selectedElementIndex] as HTMLElement
+        ).scrollIntoView();
       } else if (editor.selectedElement?.elementType === ElementType.DropCap) {
         (
-          editor.$refs[`element-${editor.selectedElementIndex}`] as DropCap[]
-        )[0].$el.scrollIntoView();
+          elementsRef.value[editor.selectedElementIndex] as DropCap
+        ).$el.scrollIntoView();
       } else if (editor.selectedElement?.elementType === ElementType.TextBox) {
         (
-          editor.$refs[`element-${editor.selectedElementIndex}`] as TextBox[]
-        )[0].$el.scrollIntoView();
+          elementsRef.value[editor.selectedElementIndex] as TextBox
+        ).$el.scrollIntoView();
       }
     });
   }
@@ -5794,7 +5782,7 @@ function openScore(args: FileMenuOpenScoreArgs) {
 
     editor.selectedWorkspace = workspace;
 
-    editor.selectedElement = null;
+    setSelectedElement(null);
 
     save(false);
   } catch (error) {
@@ -5818,7 +5806,7 @@ function openScore(args: FileMenuOpenScoreArgs) {
 function addWorkspace(workspace: Workspace) {
   editor.workspaces.push(workspace);
 
-  (editor.$refs.tabs as Vue3TabsChromeComponent).addTab({
+  tabsRef.value?.addTab({
     label: getFileName(workspace),
     key: workspace.id,
   });
@@ -5829,7 +5817,7 @@ function removeWorkspace(workspace: Workspace) {
 
   editor.workspaces.splice(index, 1);
 
-  (editor.$refs.tabs as Vue3TabsChromeComponent).removeTab(workspace.id);
+  tabsRef.value?.removeTab(workspace.id);
 
   if (editor.selectedWorkspace === workspace) {
     if (editor.workspaces.length > 0) {
@@ -5872,7 +5860,7 @@ function renderTabLabel(tab: Tab) {
   return workspace ? getFileName(workspace as Workspace) : '';
 }
 
-async function onCreated() {
+onBeforeMount(async () => {
   // Attach the editor component to the window variable
   // so that it can be used for debugging
   (window as any)._editor = editor;
@@ -5907,9 +5895,7 @@ async function onCreated() {
   } finally {
     editor.isLoading = false;
   }
-}
-
-await onCreated();
+});
 
 const {
   audioOptions,
@@ -5956,7 +5942,6 @@ const {
   selectedTextBoxElement,
   showGuides,
   syllablePositioningDialogIsOpen,
-  tabs,
   textBoxCalculation,
   toolbarInnerNeume,
   selectedWorkspace,
@@ -5995,7 +5980,7 @@ const {
       @add-text-box-rich="onFileMenuInsertRichTextBox"
       @add-image="onClickAddImage"
       @delete-selected-element="deleteSelectedElement"
-      @click="selectedLyrics = null"
+      @click="setSelectedLyrics(null)"
       @play-audio="playAudio"
       @open-playback-settings="openPlaybackSettingsDialog"
     />
@@ -6066,7 +6051,7 @@ const {
             }"
             v-for="(page, pageIndex) in filteredPages"
             :key="`page-${pageIndex}`"
-            ref="pages"
+            :ref="(el: HTMLElement) => (pagesRef[pageIndex] = el)"
             :class="{ print: printMode }"
           >
             <template v-if="page.isVisible || printMode">
@@ -6101,8 +6086,9 @@ const {
                     "
                     :style="headerStyle"
                     @click="
-                      selectedHeaderFooterElement =
-                        getHeaderForPageIndex(pageIndex)
+                      setSelectedHeaderFooterElement(
+                        getHeaderForPageIndex(pageIndex),
+                      )
                     "
                     @update="
                       updateRichTextBox(
@@ -6144,8 +6130,9 @@ const {
                     ]"
                     :style="headerStyle"
                     @click="
-                      selectedHeaderFooterElement =
-                        getHeaderForPageIndex(pageIndex)
+                      setSelectedHeaderFooterElement(
+                        getHeaderForPageIndex(pageIndex),
+                      )
                     "
                     @update="
                       updateTextBox(
@@ -6253,7 +6240,7 @@ const {
                             'audio-selected': isAudioSelected(element),
                           },
                         ]"
-                        @select-single="selectedElement = element"
+                        @select-single="setSelectedElement(element)"
                         @select-range="setSelectionRange(element)"
                         @dblclick="openSyllablePositioningDialog"
                       />
@@ -6270,7 +6257,8 @@ const {
                           :editable="!lyricsLocked"
                           whiteSpace="nowrap"
                           :ref="
-                            (el) => (lyricsRef[getElementIndex(element)] = el)
+                            (el: ContentEditable) =>
+                              (lyricsRef[getElementIndex(element)] = el)
                           "
                           @click="focusLyrics(getElementIndex(element))"
                           @focus="selectedLyrics = element as NoteElement"
@@ -6388,7 +6376,8 @@ const {
                       /></span>
                       <MartyriaNeumeBox
                         :ref="
-                          (el) => (elementRef[getElementIndex(element)] = el)
+                          (el: MartyriaNeumeBox) =>
+                            (elementsRef[getElementIndex(element)] = el)
                         "
                         class="marytria-neume-box"
                         :neume="element"
@@ -6398,7 +6387,7 @@ const {
                             selected: isSelected(element),
                           },
                         ]"
-                        @select-single="selectedElement = element"
+                        @select-single="setSelectedElement(element)"
                         @select-range="setSelectionRange(element)"
                       />
                       <div class="lyrics"></div>
@@ -6406,7 +6395,9 @@ const {
                   </template>
                   <template v-else-if="isTempoElement(element)">
                     <div
-                      :ref="(el) => (elementRef[getElementIndex(element)] = el)"
+                      :ref="
+                        (el) => (elementsRef[getElementIndex(element)] = el)
+                      "
                       class="neume-box"
                     >
                       <span
@@ -6428,7 +6419,7 @@ const {
                         :neume="element"
                         :pageSetup="score.pageSetup"
                         :class="[{ selected: isSelected(element) }]"
-                        @select-single="selectedElement = element"
+                        @select-single="setSelectedElement(element)"
                         @select-range="setSelectionRange(element)"
                       />
                       <div class="lyrics"></div>
@@ -6436,7 +6427,10 @@ const {
                   </template>
                   <template v-else-if="isEmptyElement(element)">
                     <div
-                      :ref="(el) => (elementRef[getElementIndex(element)] = el)"
+                      :ref="
+                        (el: any) =>
+                          (elementsRef[getElementIndex(element)] = el)
+                      "
                       class="neume-box"
                     >
                       <span
@@ -6457,7 +6451,7 @@ const {
                         class="empty-neume-box"
                         :class="[{ selected: isSelected(element) }]"
                         :style="getEmptyBoxStyle(element as EmptyElement)"
-                        @select-single="selectedElement = element"
+                        @select-single="setSelectedElement(element)"
                       ></EmptyNeumeBox>
                       <div class="lyrics"></div>
                     </div>
@@ -6477,13 +6471,16 @@ const {
                       ><img src="@/assets/icons/line-break.svg"
                     /></span>
                     <TextBox
-                      :ref="(el) => (elementRef[getElementIndex(element)] = el)"
+                      :ref="
+                        (el: TextBox) =>
+                          (elementsRef[getElementIndex(element)] = el)
+                      "
                       :element="element"
                       :editMode="true"
                       :metadata="getTokenMetadata(pageIndex)"
                       :pageSetup="score.pageSetup"
                       :selected="isSelected(element)"
-                      @select-single="selectedElement = element"
+                      @select-single="setSelectedElement(element)"
                       @update="updateTextBox(element as TextBoxElement, $event)"
                       @update:height="
                         updateTextBoxHeight(element as TextBoxElement, $event)
@@ -6505,12 +6502,15 @@ const {
                       ><img src="@/assets/icons/line-break.svg"
                     /></span>
                     <TextBoxRich
-                      :ref="(el) => (elementRef[getElementIndex(element)] = el)"
+                      :ref="
+                        (el: TextBoxRich) =>
+                          (elementsRef[getElementIndex(element)] = el)
+                      "
                       :element="element"
                       :pageSetup="score.pageSetup"
                       :fonts="fonts"
                       :selected="isSelected(element)"
-                      @select-single="selectedElement = element"
+                      @select-single="setSelectedElement(element)"
                       @update="
                         updateRichTextBox(element as RichTextBoxElement, $event)
                       "
@@ -6537,7 +6537,10 @@ const {
                       ><img src="@/assets/icons/line-break.svg"
                     /></span>
                     <ModeKey
-                      :ref="(el) => (elementRef[getElementIndex(element)] = el)"
+                      :ref="
+                        (el: ModeKey) =>
+                          (elementsRef[getElementIndex(element)] = el)
+                      "
                       :element="element"
                       :pageSetup="score.pageSetup"
                       :class="[
@@ -6545,7 +6548,7 @@ const {
                           selectedTextbox: isSelected(element),
                         },
                       ]"
-                      @select-single="selectedElement = element"
+                      @select-single="setSelectedElement(element)"
                       @dblclick="openModeKeyDialog"
                     />
                   </template>
@@ -6564,7 +6567,10 @@ const {
                       ><img src="@/assets/icons/line-break.svg"
                     /></span>
                     <DropCap
-                      :ref="(el) => (elementRef[getElementIndex(element)] = el)"
+                      :ref="
+                        (el: DropCap) =>
+                          (elementsRef[getElementIndex(element)] = el)
+                      "
                       :element="element"
                       :pageSetup="score.pageSetup"
                       :editable="!lyricsLocked"
@@ -6573,7 +6579,7 @@ const {
                           selectedTextbox: isSelected(element),
                         },
                       ]"
-                      @select-single="selectedElement = element"
+                      @select-single="setSelectedElement(element)"
                       @update:content="
                         updateDropCapContent(element as DropCapElement, $event)
                       "
@@ -6587,12 +6593,15 @@ const {
                       ><img src="@/assets/icons/line-break.svg"
                     /></span>
                     <ImageBox
-                      :ref="(el) => (elementRef[getElementIndex(element)] = el)"
+                      :ref="
+                        (el: ImageBox) =>
+                          (elementsRef[getElementIndex(element)] = el)
+                      "
                       :element="element"
                       :zoom="zoom"
                       :printMode="printMode"
                       :class="[{ selectedImagebox: isSelected(element) }]"
-                      @select-single="selectedElement = element"
+                      @select-single="setSelectedElement(element)"
                       @update:size="
                         updateImageBoxSize(
                           selectedElement as ImageBoxElement,
@@ -6638,8 +6647,9 @@ const {
                     "
                     :style="footerStyle"
                     @click="
-                      selectedHeaderFooterElement =
-                        getFooterForPageIndex(pageIndex)
+                      setSelectedHeaderFooterElement(
+                        getFooterForPageIndex(pageIndex),
+                      )
                     "
                     @update="
                       updateRichTextBox(
@@ -6681,8 +6691,9 @@ const {
                     ]"
                     :style="footerStyle"
                     @click="
-                      selectedHeaderFooterElement =
-                        getFooterForPageIndex(pageIndex)
+                      setSelectedHeaderFooterElement(
+                        getFooterForPageIndex(pageIndex),
+                      )
                     "
                     @update="
                       updateTextBox(
@@ -7248,8 +7259,8 @@ const {
       @assignAcceptsLyrics="assignAcceptsLyricsFromCurrentLyrics"
       @close="closeLyricManager"
       @click="
-        selectedElement = null;
-        selectedLyrics = null;
+        setSelectedElement(null);
+        setSelectedLyrics(null);
       "
     ></ToolbarLyricManager>
     <ModeKeyDialog

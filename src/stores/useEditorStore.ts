@@ -105,10 +105,6 @@ export const useEditorStore = defineStore('editor', {
       return this.score.staff.elements ?? [];
     },
 
-    selectedWorkspaceId(): string {
-      return this.selectedWorkspace.id;
-    },
-
     lyrics(): string {
       return this.score?.staff.lyrics.text ?? '';
     },

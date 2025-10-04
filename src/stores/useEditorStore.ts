@@ -37,6 +37,8 @@ export const useEditorStore = defineStore('editor', {
 
     pages: [] as Page[],
 
+    audioElement: null as ScoreElement | null,
+
     currentPageNumber: 0,
 
     modeKeyDialogIsOpen: false,

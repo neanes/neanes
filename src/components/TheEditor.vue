@@ -59,6 +59,7 @@ import ToolbarNeume from '@/components/ToolbarNeume.vue';
 import ToolbarTempo from '@/components/ToolbarTempo.vue';
 import ToolbarTextBox from '@/components/ToolbarTextBox.vue';
 import ToolbarTextBoxRich from '@/components/ToolbarTextBoxRich.vue';
+import { useAudioPlayback } from '@/composables/useAudioPlayback';
 import { EventBus } from '@/eventBus';
 import {
   CloseWorkspacesArgs,
@@ -127,10 +128,7 @@ import {
   AudioServiceEventNames,
   AudioState,
 } from '@/services/audio/AudioService';
-import {
-  PlaybackSequenceEvent,
-  PlaybackService,
-} from '@/services/audio/PlaybackService';
+import { PlaybackSequenceEvent } from '@/services/audio/PlaybackService';
 import { Command, CommandFactory } from '@/services/history/CommandService';
 import { ByzHtmlExporter } from '@/services/integration/ByzHtmlExporter';
 import {
@@ -168,10 +166,6 @@ const platformService = inject<IPlatformService>(
   new PlatformService(),
 );
 const audioService = inject<AudioService>('audioService', new AudioService());
-const playbackService = inject<PlaybackService>(
-  'playbackService',
-  new PlaybackService(),
-);
 const textSearchService = inject<TextSearchService>(
   'textSearchService',
   new TextSearchService(),
@@ -193,6 +187,8 @@ const neumeKeyboard = inject<NeumeKeyboard>(
   'neumeKeyboard',
   new NeumeKeyboard(),
 );
+
+const audioPlayback = useAudioPlayback();
 
 const pageBackgroundRef = useTemplateRef('page-background');
 const tabsRef = useTemplateRef<Vue3TabsChromeComponent>('tabs-ui');
@@ -216,15 +212,12 @@ const showFileMenuBar = isElectron();
 const isDevelopment: boolean = import.meta.env.DEV;
 const isBrowser: boolean = !isElectron();
 
-let playbackEvents = [] as PlaybackSequenceEvent[];
-let audioElement = null as ScoreElement | null;
 let clipboard: ScoreElement[] = [];
 let formatType: ElementType | null = null;
 let textBoxFormat: Partial<TextBoxElement> | null = null;
 let noteFormat: Partial<NoteElement> | null = null;
 let richTextBoxCalculationCount = 0;
 let textBoxCalculationCount = 0;
-let playbackTimeInterval: ReturnType<typeof setTimeout> | null = null;
 
 const tab = ref<string | null>(null);
 const tabs = reactive([] as Tab[]);
@@ -455,7 +448,7 @@ function setSelectedWorkspace(value: Workspace) {
     calculatePageNumber();
   });
 
-  stopAudio();
+  audioPlayback.stopAudio();
 }
 
 function setSelectedElement(element: ScoreElement | null) {
@@ -465,18 +458,7 @@ function setSelectedElement(element: ScoreElement | null) {
     setSelectedHeaderFooterElement(null);
     editor.toolbarInnerNeume = 'Primary';
 
-    if (audioService.state === AudioState.Playing) {
-      const event = playbackEvents.find(
-        (x) => x.elementIndex === getElementIndex(element),
-      );
-
-      if (event) {
-        audioService.jumpToEvent(event);
-        editor.selectedWorkspace.playbackTime = event.absoluteTime;
-      }
-    } else if (audioService.state === AudioState.Paused) {
-      stopAudio();
-    }
+    audioPlayback.onSetSelectedElement(element);
   }
 
   if (
@@ -825,8 +807,6 @@ onMounted(() => {
   );
 
   EventBus.$on(AudioServiceEventNames.EventPlay, onAudioServiceEventPlay);
-
-  EventBus.$on(AudioServiceEventNames.Stop, onAudioServiceStop);
 });
 
 onBeforeUnmount(() => {
@@ -904,10 +884,6 @@ onBeforeUnmount(() => {
   );
 
   EventBus.$off(AudioServiceEventNames.EventPlay, onAudioServiceEventPlay);
-
-  EventBus.$off(AudioServiceEventNames.Stop, onAudioServiceStop);
-
-  audioService.dispose();
 });
 
 function getElementIndex(element: ScoreElement) {
@@ -983,7 +959,7 @@ function setSelectedAlternateLine(
 }
 
 function isAudioSelected(element: ScoreElement) {
-  return audioElement === element;
+  return editor.audioElement === element;
 }
 
 function isMelisma(element: NoteElement) {
@@ -1009,13 +985,13 @@ function closeSyllablePositioningDialog() {
 function openPlaybackSettingsDialog() {
   editor.playbackSettingsDialogIsOpen = true;
 
-  stopAudio();
+  audioPlayback.stopAudio();
 }
 
 function closePlaybackSettingsDialog() {
   editor.playbackSettingsDialogIsOpen = false;
 
-  saveAudioOptions();
+  audioPlayback.saveAudioOptions();
 }
 
 function closePageSetupDialog() {
@@ -1627,9 +1603,9 @@ function onKeydownNeume(event: KeyboardEvent) {
       case 'Space':
         if (!event.repeat) {
           if (audioService.state === AudioState.Stopped || event.ctrlKey) {
-            playAudio();
+            audioPlayback.playAudio();
           } else {
-            pauseAudio();
+            audioPlayback.pauseAudio();
           }
           handled = true;
         }
@@ -4865,118 +4841,8 @@ function performZoomToFit() {
     availableWidth / editor.score.pageSetup.pageWidth;
 }
 
-function playAudio() {
-  try {
-    if (audioService.state === AudioState.Stopped) {
-      playbackEvents = playbackService.computePlaybackSequence(
-        editor.elements,
-        editor.audioOptions,
-        editor.score.pageSetup.chrysanthineAccidentals,
-      );
-
-      if (playbackEvents.length === 0) {
-        return;
-      }
-
-      const startAt = playbackEvents.find(
-        (x) => x.elementIndex >= editor.selectedElementIndex,
-      );
-
-      audioService.play(playbackEvents, editor.audioOptions, startAt);
-
-      if (startAt) {
-        editor.selectedWorkspace.playbackTime = startAt.absoluteTime;
-      }
-
-      startPlaybackClock();
-    } else {
-      pauseAudio();
-    }
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-function stopAudio() {
-  try {
-    audioService.stop();
-
-    playbackEvents = [];
-
-    stopPlaybackClock();
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-function pauseAudio() {
-  try {
-    audioService.togglePause();
-
-    if (audioService.state === AudioState.Paused) {
-      audioElement = null;
-      stopPlaybackClock();
-    } else {
-      startPlaybackClock();
-    }
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-function startPlaybackClock() {
-  stopPlaybackClock();
-
-  playbackTimeInterval = setInterval(() => {
-    editor.selectedWorkspace.playbackTime += 0.1;
-  }, 100);
-}
-
-function stopPlaybackClock() {
-  if (playbackTimeInterval != null) {
-    clearInterval(playbackTimeInterval);
-  }
-}
-
-function playTestTone() {
-  try {
-    audioService.playTestTone(editor.audioOptions.frequencyDi);
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-function updateAudioOptionsSpeed(speed: number) {
-  if (audioService.state === AudioState.Paused) {
-    stopAudio();
-  }
-
-  speed = Math.max(0.1, speed);
-  speed = Math.min(3, speed);
-  speed = +speed.toFixed(2);
-
-  editor.selectedWorkspace.playbackBpm /= editor.audioOptions.speed;
-  editor.selectedWorkspace.playbackBpm *= speed;
-
-  editor.audioOptions.speed = speed;
-
-  saveAudioOptions();
-}
-
-function saveAudioOptions() {
-  localStorage.setItem(
-    'audioOptionsDefault',
-    JSON.stringify(editor.audioOptions),
-  );
-}
-
 function onAudioServiceEventPlay(event: PlaybackSequenceEvent) {
   if (audioService.state === AudioState.Playing) {
-    editor.selectedWorkspace.playbackTime = event.absoluteTime;
-    editor.selectedWorkspace.playbackBpm = event.bpm;
-
-    audioElement = editor.elements[event.elementIndex];
-
     // Scroll the currently playing element into view
     const lyrics = lyricsRef.value[event.elementIndex];
 
@@ -4986,12 +4852,6 @@ function onAudioServiceEventPlay(event: PlaybackSequenceEvent) {
 
     neumeBox?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   }
-}
-
-function onAudioServiceStop() {
-  audioElement = null;
-
-  stopPlaybackClock();
 }
 
 function recalculateRichTextBoxHeights() {
@@ -5979,7 +5839,7 @@ const {
       :neumeKeyboard="neumeKeyboard"
       @update:zoom="updateZoom"
       @update:zoomToFit="updateZoomToFit"
-      @update:audioOptionsSpeed="updateAudioOptionsSpeed"
+      @update:audioOptionsSpeed="audioPlayback.updateAudioOptionsSpeed"
       @add-auto-martyria="addAutoMartyria"
       @update:entryMode="updateEntryMode"
       @toggle-page-break="togglePageBreak"
@@ -5992,7 +5852,7 @@ const {
       @add-image="onClickAddImage"
       @delete-selected-element="deleteSelectedElement"
       @click="setSelectedLyrics(null)"
-      @play-audio="playAudio"
+      @play-audio="audioPlayback.playAudio"
       @open-playback-settings="openPlaybackSettingsDialog"
     />
     <div class="content">
@@ -7299,7 +7159,7 @@ const {
       v-if="playbackSettingsDialogIsOpen"
       :options="audioOptions"
       @close="closePlaybackSettingsDialog"
-      @play-test-tone="playTestTone"
+      @play-test-tone="audioPlayback.playTestTone"
     />
     <EditorPreferencesDialog
       v-if="editorPreferencesDialogIsOpen"

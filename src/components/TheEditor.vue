@@ -195,7 +195,7 @@ const neumeKeyboard = inject<NeumeKeyboard>(
 );
 
 const pageBackgroundRef = useTemplateRef('page-background');
-const tabsRef = useTemplateRef<Vue3TabsChromeComponent>('tabs');
+const tabsRef = useTemplateRef<Vue3TabsChromeComponent>('tabs-ui');
 const searchTextRef = useTemplateRef<SearchText>('searchText');
 const lyricsRef = ref<Record<number, ContentEditable>>({});
 const pagesRef = ref<Record<number, HTMLElement>>({});
@@ -557,14 +557,26 @@ const pageVisibilityIntersection = computed(() => {
   } as IntersectionObserver;
 });
 
-const { zoom, selectedWorkspaceId, currentFilePath, hasUnsavedChanges } =
+const { zoom, currentFilePath, hasUnsavedChanges, selectedWorkspace } =
   storeToRefs(editor);
 watch(zoom, () =>
   document.documentElement.style.setProperty('--zoom', editor.zoom.toString()),
 );
 watch(currentFilePath, updateWindowTitle);
-watch(selectedWorkspaceId, updateWindowTitle);
 watch(hasUnsavedChanges, updateWindowTitle);
+watch(selectedWorkspace, (value) => {
+  if (value != null) {
+    tab.value = value.id;
+  }
+});
+watch(tab, (value) => {
+  if (value != null && editor.selectedWorkspace.id !== value) {
+    const workspace = editor.workspaces.find((x) => x.id === value);
+    if (workspace) {
+      setSelectedWorkspace(workspace as Workspace);
+    }
+  }
+});
 
 function updateWindowTitle() {
   window.document.title = windowTitle.value;
@@ -5944,7 +5956,6 @@ const {
   syllablePositioningDialogIsOpen,
   textBoxCalculation,
   toolbarInnerNeume,
-  selectedWorkspace,
   zoomToFit,
 } = storeToRefs(editor);
 </script>
@@ -6012,9 +6023,9 @@ const {
       <div class="page-container">
         <Vue3TabsChrome
           class="workspace-tab-container"
-          ref="tabs"
+          ref="tabs-ui"
           :tabs="tabs"
-          v-model="selectedWorkspaceId"
+          v-model="tab"
           :gap="0"
           :on-close="onTabClosed"
           :render-label="renderTabLabel"
@@ -6067,7 +6078,7 @@ const {
                 >
                   <TextBoxRich
                     class="element-box"
-                    :key="`element-${editor.selectedWorkspaceId}-${getHeaderForPageIndex(pageIndex).id}-${
+                    :key="`element-${editor.selectedWorkspace.id}-${getHeaderForPageIndex(pageIndex).id}-${
                       getHeaderForPageIndex(pageIndex).keyHelper
                     }`"
                     :ref="`header-${pageIndex}`"
@@ -6109,7 +6120,7 @@ const {
                 >
                   <TextBox
                     class="element-box"
-                    :key="`element-${editor.selectedWorkspaceId}-${getHeaderForPageIndex(pageIndex).id}-${
+                    :key="`element-${editor.selectedWorkspace.id}-${getHeaderForPageIndex(pageIndex).id}-${
                       getHeaderForPageIndex(pageIndex).keyHelper
                     }`"
                     :ref="`header-${pageIndex}`"
@@ -6161,7 +6172,7 @@ const {
                 <div
                   v-for="element in line.elements"
                   :id="`element-${element.id}`"
-                  :key="`element-${editor.selectedWorkspaceId}-${element.id}-${element.keyHelper}`"
+                  :key="`element-${editor.selectedWorkspace.id}-${element.id}-${element.keyHelper}`"
                   class="element-box"
                   :style="getElementStyle(element)"
                 >
@@ -6628,7 +6639,7 @@ const {
                 >
                   <TextBoxRich
                     class="element-box"
-                    :key="`element-${editor.selectedWorkspaceId}-${getFooterForPageIndex(pageIndex).id}-${
+                    :key="`element-${editor.selectedWorkspace.id}-${getFooterForPageIndex(pageIndex).id}-${
                       getFooterForPageIndex(pageIndex).keyHelper
                     }`"
                     :ref="`footer-${pageIndex}`"
@@ -6671,7 +6682,7 @@ const {
                   <TextBox
                     class="element-box"
                     :ref="`footer-${pageIndex}`"
-                    :key="`element-${editor.selectedWorkspaceId}-${getFooterForPageIndex(pageIndex).id}-${
+                    :key="`element-${editor.selectedWorkspace.id}-${getFooterForPageIndex(pageIndex).id}-${
                       getFooterForPageIndex(pageIndex).keyHelper
                     }`"
                     :element="getFooterForPageIndex(pageIndex)"
@@ -7024,7 +7035,7 @@ const {
         :element="selectedElementForNeumeToolbar"
         :pageSetup="score.pageSetup"
         :neumeKeyboard="neumeKeyboard"
-        :key="`toolbar-neume-${editor.selectedWorkspaceId}-${selectedElement.id}-${selectedElement.keyHelper}`"
+        :key="`toolbar-neume-${editor.selectedWorkspace.id}-${selectedElement.id}-${selectedElement.keyHelper}`"
         :innerNeume="toolbarInnerNeume"
         @update:innerNeume="toolbarInnerNeume = $event"
         @update:accidental="

@@ -1,6 +1,6 @@
 <template>
   <div class="home">
-    <Editor
+    <TheEditor
       :ipcService="ipcService"
       :platformService="platformService"
       :showFileMenuBar="showFileMenuBar"
@@ -10,7 +10,7 @@
 
 <script lang="ts">
 // @ is an alias to /src
-import Editor from '@/components/Editor.vue';
+import TheEditor from '@/components/TheEditor.vue';
 import { BrowserIpcService } from '@/services/ipc/BrowserIpcService';
 import { IIpcService } from '@/services/ipc/IIpcService';
 import { IpcService } from '@/services/ipc/IpcService';
@@ -29,7 +29,7 @@ export default {
   // eslint-disable-next-line vue/multi-word-component-names
   name: 'home',
   components: {
-    Editor,
+    TheEditor,
   },
   data(): Data {
     let ipcService: IpcService;

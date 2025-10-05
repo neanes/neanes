@@ -33,7 +33,7 @@ import { Component, Prop, Vue } from 'vue-facing-decorator';
 @Component({
   emits: ['close', 'search', 'update:query'],
 })
-export default class TextBox extends Vue {
+export default class SearchText extends Vue {
   @Prop() query!: string;
 
   mounted() {

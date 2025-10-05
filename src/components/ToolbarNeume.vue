@@ -54,7 +54,7 @@
         class="neume-button"
         :disabled="koronisDisabled"
         :title="tooltip(TimeNeume.Koronis)"
-        @click="$emit('update:koronis', !element.koronis)"
+        @click="$emit('update', { koronis: !element.koronis })"
       >
         <img src="@/assets/icons/time-koronis.svg" />
       </button>
@@ -62,7 +62,7 @@
         class="neume-button"
         :disabled="stavrosDisabled"
         :title="tooltip(VocalExpressionNeume.Cross_Top)"
-        @click="$emit('update:stavros', !element.stavros)"
+        @click="$emit('update', { stavros: !element.stavros })"
       >
         <img src="@/assets/icons/time-stavros.svg" />
       </button>
@@ -88,7 +88,7 @@
         class="neume-button"
         :disabled="expressionsDisabled"
         :title="tooltip(VocalExpressionNeume.Vareia)"
-        @click="$emit('update:vareia', !element.vareia)"
+        @click="$emit('update', { vareia: !element.vareia })"
       >
         <img src="@/assets/icons/quality-vareia.svg" />
       </button>
@@ -206,7 +206,7 @@
       <button
         class="neume-button"
         :title="tooltip(NoteIndicator.Pa)"
-        @click="$emit('update:noteIndicator', !element.noteIndicator)"
+        @click="$emit('update', { noteIndicator: !element.noteIndicator })"
       >
         <img draggable="false" src="@/assets/icons/note-ni.svg" />
       </button>
@@ -214,7 +214,7 @@
         :options="isonMenuOptions"
         :disabled="isonDisabled"
         :title="tooltip(Ison.Unison)"
-        @select="$emit('update:ison', $event)"
+        @select="$emit('update', { ison: $event })"
       />
     </div>
     <div class="row">
@@ -418,7 +418,7 @@
         :step="0.5"
         :precision="2"
         :modelValue="element.spaceAfter"
-        @update:modelValue="$emit('update:spaceAfter', $event)"
+        @update:modelValue="$emit('update', { spaceAfter: $event })"
       />
       <span class="space"></span>
 
@@ -558,19 +558,14 @@ import NeumeVue from './Neume.vue';
     'update:gorgon',
     'update:ignoreAttractions',
     'update:innerNeume',
-    'update:ison',
     'update:klasma',
-    'update:koronis',
-    'update:stavros',
     'update:measureBar',
     'update:measureNumber',
-    'update:noteIndicator',
     'update:secondaryAccidental',
     'update:secondaryChromaticFthoraNote',
     'update:secondaryFthora',
     'update:secondaryGorgon',
     'update:sectionName',
-    'update:spaceAfter',
     'update:tertiaryAccidental',
     'update:tertiaryChromaticFthoraNote',
     'update:tertiaryFthora',

@@ -1135,7 +1135,7 @@ function onFileMenuNewScore() {
 
   addWorkspace(workspace);
 
-  editor.selectedWorkspace = workspace;
+  setSelectedWorkspace(workspace);
 
   setSelectedElement(
     editor.score.staff.elements[editor.score.staff.elements.length - 1],
@@ -1355,7 +1355,7 @@ function onFileMenuGenerateTestFile(testFileType: TestFileType) {
 
   addWorkspace(workspace);
 
-  editor.selectedWorkspace = workspace;
+  setSelectedWorkspace(workspace);
 
   editor.selectedWorkspace.filePath = null;
   editor.score.staff.elements.unshift(
@@ -1463,7 +1463,7 @@ function openScore(args: FileMenuOpenScoreArgs) {
     (x) => x.filePath === args.filePath,
   );
   if (existingWorkspace != null) {
-    editor.selectedWorkspace = existingWorkspace;
+    setSelectedWorkspace(existingWorkspace as Workspace);
     return;
   }
 
@@ -1481,7 +1481,7 @@ function openScore(args: FileMenuOpenScoreArgs) {
 
     addWorkspace(workspace);
 
-    editor.selectedWorkspace = workspace;
+    setSelectedWorkspace(workspace);
 
     setSelectedElement(null);
 
@@ -1522,8 +1522,11 @@ function removeWorkspace(workspace: Workspace) {
 
   if (editor.selectedWorkspace === workspace) {
     if (editor.workspaces.length > 0) {
-      editor.selectedWorkspace =
-        editor.workspaces[Math.min(index, editor.workspaces.length - 1)];
+      setSelectedWorkspace(
+        editor.workspaces[
+          Math.min(index, editor.workspaces.length - 1)
+        ] as Workspace,
+      );
     } else {
       // TODO support closing all workspaces
       onFileMenuNewScore();

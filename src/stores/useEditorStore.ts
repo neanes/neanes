@@ -2,7 +2,14 @@
 import { defineStore } from 'pinia';
 import { StyleValue } from 'vue';
 
+import ContentEditable from '@/components/ContentEditable.vue';
+import DropCap from '@/components/DropCap.vue';
 import { ExportFormat } from '@/components/ExportDialog.vue';
+import ImageBox from '@/components/ImageBox.vue';
+import ModeKey from '@/components/ModeKey.vue';
+import MartyriaNeumeBox from '@/components/NeumeBoxMartyria.vue';
+import TextBox from '@/components/TextBox.vue';
+import TextBoxRich from '@/components/TextBoxRich.vue';
 import { EditorPreferences } from '@/models/EditorPreferences';
 import {
   ElementType,
@@ -37,6 +44,8 @@ export const useEditorStore = defineStore('editor', {
 
     pages: [] as Page[],
 
+    clipboard: [] as ScoreElement[],
+
     audioElement: null as ScoreElement | null,
 
     currentPageNumber: 0,
@@ -54,6 +63,19 @@ export const useEditorStore = defineStore('editor', {
 
     fonts: [] as string[],
     toolbarInnerNeume: 'Primary',
+
+    pagesRef: {} as Record<number, HTMLElement>,
+    lyricsRef: {} as Record<number, ContentEditable>,
+    elementsRef: {} as Record<
+      number,
+      | HTMLElement
+      | DropCap
+      | ImageBox
+      | MartyriaNeumeBox
+      | ModeKey
+      | TextBox
+      | TextBoxRich
+    >,
 
     audioOptions: {
       useLegetos: false,
@@ -96,6 +118,13 @@ export const useEditorStore = defineStore('editor', {
     searchTextPanelIsOpen: false,
 
     keyboardModifier: null as string | null,
+
+    richTextBoxCalculationCount: 0,
+    textBoxCalculationCount: 0,
+
+    formatType: null as ElementType | null,
+    textBoxFormat: null as Partial<TextBoxElement> | null,
+    noteFormat: null as Partial<NoteElement> | null,
   }),
 
   getters: {
@@ -330,10 +359,6 @@ export const useEditorStore = defineStore('editor', {
 
     setZoomToFit(value: boolean) {
       this.selectedWorkspace.zoomToFit = value;
-    },
-
-    setEntryMode(value: EntryMode) {
-      this.selectedWorkspace.entryMode = value;
     },
 
     setCurrentFilePath(path: string | null) {

@@ -17,7 +17,7 @@ import {
   ShowMessageBoxReplyArgs,
 } from '@/ipc/ipcChannels';
 import { Workspace } from '@/models/Workspace';
-import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
+import { getFileNameFromPath } from '@/utils/filenames';
 import { Unit } from '@/utils/Unit';
 
 import { SaveService } from '../SaveService';

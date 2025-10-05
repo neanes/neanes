@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import 'vue3-tabs-chrome/dist/vue3-tabs-chrome.css';
 
-import { getFontEmbedCSS, toPng } from 'html-to-image';
 import i18next from 'i18next';
 import { storeToRefs } from 'pinia';
-import { debounce, throttle } from 'throttle-debounce';
+import { throttle } from 'throttle-debounce';
 import {
   computed,
   inject,
@@ -15,7 +14,6 @@ import {
   reactive,
   ref,
   StyleValue,
-  toRaw,
   useTemplateRef,
   watch,
 } from 'vue';
@@ -26,12 +24,7 @@ import Annotation from '@/components/Annotation.vue';
 import ContentEditable from '@/components/ContentEditable.vue';
 import DropCap from '@/components/DropCap.vue';
 import EditorPreferencesDialog from '@/components/EditorPreferencesDialog.vue';
-import ExportDialog, {
-  ExportAsLatexSettings,
-  ExportAsMusicXmlSettings,
-  ExportAsPngSettings,
-  ExportFormat,
-} from '@/components/ExportDialog.vue';
+import ExportDialog from '@/components/ExportDialog.vue';
 import FileMenuBar from '@/components/FileMenuBar.vue';
 import ImageBox from '@/components/ImageBox.vue';
 import ModeKey from '@/components/ModeKey.vue';
@@ -60,11 +53,20 @@ import ToolbarTempo from '@/components/ToolbarTempo.vue';
 import ToolbarTextBox from '@/components/ToolbarTextBox.vue';
 import ToolbarTextBoxRich from '@/components/ToolbarTextBoxRich.vue';
 import { useAudioPlayback } from '@/composables/useAudioPlayback';
+import { useClipboard } from '@/composables/useClipboard';
+import { useCommandFactories } from '@/composables/useCommandFactories';
+import { useEditing } from '@/composables/useEditing';
+import { useFocus } from '@/composables/useFocus';
+import { useHistory } from '@/composables/useHistory';
+import { useKeyboard } from '@/composables/useKeyboard';
+import { useSave } from '@/composables/useSave';
+import { useScoreExport } from '@/composables/useScoreExport';
+import { useSelection } from '@/composables/useSelection';
+import { useStyles } from '@/composables/useStyles';
 import { EventBus } from '@/eventBus';
 import {
   CloseWorkspacesArgs,
   CloseWorkspacesDisposition,
-  ExportWorkspaceAsImageReplyArgs,
   FileMenuInsertTextboxArgs,
   FileMenuOpenImageArgs,
   FileMenuOpenScoreArgs,
@@ -74,7 +76,6 @@ import {
 } from '@/ipc/ipcChannels';
 import { EditorPreferences } from '@/models/EditorPreferences';
 import {
-  AcceptsLyricsOption,
   AlternateLineElement,
   AnnotationElement,
   DropCapElement,
@@ -93,67 +94,33 @@ import {
 } from '@/models/Element';
 import { EntryMode } from '@/models/EntryMode';
 import { modeKeyTemplates } from '@/models/ModeKeys';
-import { NeumeCombination } from '@/models/NeumeCommonCombinations';
-import {
-  areVocalExpressionsEquivalent,
-  getSecondaryNeume,
-  measureBarAboveToLeft,
-  onlyTakesBottomKlasma,
-  onlyTakesTopGorgon,
-  onlyTakesTopKlasma,
-} from '@/models/NeumeReplacements';
-import {
-  Accidental,
-  Fthora,
-  GorgonNeume,
-  Ison,
-  MeasureBar,
-  MeasureNumber,
-  Note,
-  QuantitativeNeume,
-  RootSign,
-  TempoSign,
-  Tie,
-  TimeNeume,
-  VocalExpressionNeume,
-} from '@/models/Neumes';
 import { Page } from '@/models/Page';
 import { PageSetup } from '@/models/PageSetup';
-import { Scale, ScaleNote } from '@/models/Scales';
 import { Score } from '@/models/Score';
-import { ScoreElementSelectionRange } from '@/models/ScoreElementSelectionRange';
 import { Workspace, WorkspaceLocalStorage } from '@/models/Workspace';
-import {
-  AudioService,
-  AudioServiceEventNames,
-  AudioState,
-} from '@/services/audio/AudioService';
-import { PlaybackSequenceEvent } from '@/services/audio/PlaybackService';
-import { Command, CommandFactory } from '@/services/history/CommandService';
-import { ByzHtmlExporter } from '@/services/integration/ByzHtmlExporter';
+import { AudioService } from '@/services/audio/AudioService';
+import { Command } from '@/services/history/CommandService';
 import {
   LatexExporter,
   LatexExporterOptions,
 } from '@/services/integration/LatexExporter';
-import { MusicXmlExporter } from '@/services/integration/MusicXmlExporter';
 import { IIpcService } from '@/services/ipc/IIpcService';
 import { IpcService } from '@/services/ipc/IpcService';
 import { LayoutService } from '@/services/LayoutService';
 import { LyricService } from '@/services/LyricService';
 import { NeumeKeyboard } from '@/services/NeumeKeyboard';
-import { IPlatformService } from '@/services/platform/IPlatformService';
-import { PlatformService } from '@/services/platform/PlatformService';
 import { SaveService } from '@/services/SaveService';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
 import { TextSearchService } from '@/services/TextSearchService';
 import { useEditorStore } from '@/stores/useEditorStore';
-import { GORTHMIKON, PELASTIKON, TATWEEL } from '@/utils/constants';
-import { getCursorPosition } from '@/utils/getCursorPosition';
-import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
-import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
+import { GORTHMIKON, PELASTIKON } from '@/utils/constants';
+import {
+  getFileName,
+  getFileNameFromPath,
+  getTempFilename,
+} from '@/utils/filenames';
 import { isElectron } from '@/utils/isElectron';
 import { TokenMetadata } from '@/utils/replaceTokens';
-import { shallowEquals } from '@/utils/shallowEquals';
 import { TestFileGenerator } from '@/utils/TestFileGenerator';
 import { TestFileType } from '@/utils/TestFileType';
 import { withZoom } from '@/utils/withZoom';
@@ -161,10 +128,6 @@ import { withZoom } from '@/utils/withZoom';
 import { Vue3TabsChromeComponent } from './Editor/Vue3TabsChromeComponent';
 
 const ipcService = inject<IIpcService>('ipcService', new IpcService());
-const platformService = inject<IPlatformService>(
-  'platformService',
-  new PlatformService(),
-);
 const audioService = inject<AudioService>('audioService', new AudioService());
 const textSearchService = inject<TextSearchService>(
   'textSearchService',
@@ -175,249 +138,49 @@ const latexExporter = inject<LatexExporter>(
   'latexExporter',
   new LatexExporter(),
 );
-const musicXmlExporter = inject<MusicXmlExporter>(
-  'musicXmlExporter',
-  new MusicXmlExporter(),
-);
-const byzHtmlExporter = inject<ByzHtmlExporter>(
-  'byzHtmlExporter',
-  new ByzHtmlExporter(),
-);
 const neumeKeyboard = inject<NeumeKeyboard>(
   'neumeKeyboard',
   new NeumeKeyboard(),
 );
 
 const audioPlayback = useAudioPlayback();
+const { save } = useSave();
+const exporting = useScoreExport();
+const { scoreElementCommandFactory, pageSetupCommandFactory } =
+  useCommandFactories();
+const { focusLyrics } = useFocus();
+const history = useHistory();
+const editing = useEditing();
+useKeyboard();
 
 const pageBackgroundRef = useTemplateRef('page-background');
 const tabsRef = useTemplateRef<Vue3TabsChromeComponent>('tabs-ui');
 const searchTextRef = useTemplateRef<SearchText>('searchText');
-const lyricsRef = ref<Record<number, ContentEditable>>({});
-const pagesRef = ref<Record<number, HTMLElement>>({});
-const elementsRef = ref<
-  Record<
-    number,
-    | HTMLElement
-    | DropCap
-    | ImageBox
-    | MartyriaNeumeBox
-    | ModeKey
-    | TextBox
-    | TextBoxRich
-  >
->({});
 
 const showFileMenuBar = isElectron();
 const isDevelopment: boolean = import.meta.env.DEV;
 const isBrowser: boolean = !isElectron();
 
-let clipboard: ScoreElement[] = [];
-let formatType: ElementType | null = null;
-let textBoxFormat: Partial<TextBoxElement> | null = null;
-let noteFormat: Partial<NoteElement> | null = null;
-let richTextBoxCalculationCount = 0;
-let textBoxCalculationCount = 0;
-
 const tab = ref<string | null>(null);
 const tabs = reactive([] as Tab[]);
 
 const editor = useEditorStore();
+const {
+  setSelectedElement,
+  setSelectedHeaderFooterElement,
+  setSelectedAlternateLine,
+  setSelectedAnnotation,
+  setSelectedLyrics,
+  isSelected,
+  isAudioSelected,
+  setSelectionRange,
+} = useSelection();
 
-const noteElementCommandFactory: CommandFactory<NoteElement> =
-  new CommandFactory<NoteElement>();
-
-const martyriaCommandFactory: CommandFactory<MartyriaElement> =
-  new CommandFactory<MartyriaElement>();
-
-const tempoCommandFactory: CommandFactory<TempoElement> =
-  new CommandFactory<TempoElement>();
-
-const annotationCommandFactory: CommandFactory<AnnotationElement> =
-  new CommandFactory<AnnotationElement>();
-
-const alternateLineCommandFactory: CommandFactory<AlternateLineElement> =
-  new CommandFactory<AlternateLineElement>();
-
-const textBoxCommandFactory: CommandFactory<TextBoxElement> =
-  new CommandFactory<TextBoxElement>();
-
-const richTextBoxCommandFactory: CommandFactory<RichTextBoxElement> =
-  new CommandFactory<RichTextBoxElement>();
-
-const imageBoxCommandFactory: CommandFactory<ImageBoxElement> =
-  new CommandFactory<ImageBoxElement>();
-
-const modeKeyCommandFactory: CommandFactory<ModeKeyElement> =
-  new CommandFactory<ModeKeyElement>();
-
-const dropCapCommandFactory: CommandFactory<DropCapElement> =
-  new CommandFactory<DropCapElement>();
-
-const scoreElementCommandFactory: CommandFactory<ScoreElement> =
-  new CommandFactory<ScoreElement>();
-
-const pageSetupCommandFactory: CommandFactory<PageSetup> =
-  new CommandFactory<PageSetup>();
+const clipboard = useClipboard();
 
 // Throttled Methods
-const keydownThrottleIntervalMs = 100;
-
-const assignLyricsThrottled = throttle(keydownThrottleIntervalMs, assignLyrics);
-
-const moveToPreviousLyricBoxThrottled = throttle(
-  keydownThrottleIntervalMs,
-  moveToPreviousLyricBox,
-);
-
-const moveToNextLyricBoxThrottled = throttle(
-  keydownThrottleIntervalMs,
-  moveToNextLyricBox,
-);
-
-const moveLeftThrottled = throttle(keydownThrottleIntervalMs, moveLeft);
-
-const moveRightThrottled = throttle(keydownThrottleIntervalMs, moveRight);
-
-const moveSelectionLeftThrottled = throttle(
-  keydownThrottleIntervalMs,
-  moveSelectionLeft,
-);
-
-const moveSelectionRightThrottled = throttle(
-  keydownThrottleIntervalMs,
-  moveSelectionRight,
-);
-
-const deleteSelectedElementThrottled = throttle(
-  keydownThrottleIntervalMs,
-  deleteSelectedElement,
-);
-
-const deletePreviousElementThrottled = throttle(
-  keydownThrottleIntervalMs,
-  deletePreviousElement,
-);
-
-const onFileMenuUndoThrottled = throttle(
-  keydownThrottleIntervalMs,
-  onFileMenuUndo,
-);
-
-const onFileMenuRedoThrottled = throttle(
-  keydownThrottleIntervalMs,
-  onFileMenuRedo,
-);
-
-const onCutScoreElementsThrottled = throttle(
-  keydownThrottleIntervalMs,
-  onCutScoreElements,
-);
-
-const onCopyScoreElementsThrottled = throttle(
-  keydownThrottleIntervalMs,
-  onCopyScoreElements,
-);
-
-const onFileMenuCopyAsHtmlThrottled = throttle(
-  keydownThrottleIntervalMs,
-  onFileMenuCopyAsHtml,
-);
-
-const onPasteScoreElementsThrottled = throttle(
-  keydownThrottleIntervalMs,
-  onPasteScoreElements,
-);
-
-const addQuantitativeNeumeThrottled = throttle(
-  keydownThrottleIntervalMs,
-  addQuantitativeNeume,
-);
-
-const addTempoThrottled = throttle(keydownThrottleIntervalMs, addTempo);
-
-const addAutoMartyriaThrottled = throttle(
-  keydownThrottleIntervalMs,
-  addAutoMartyria,
-);
-
-const setKlasmaThrottled = throttle(keydownThrottleIntervalMs, setKlasma);
-const setGorgonThrottled = throttle(keydownThrottleIntervalMs, setGorgon);
-const setFthoraNoteThrottled = throttle(
-  keydownThrottleIntervalMs,
-  setFthoraNote,
-);
-const setFthoraMartyriaThrottled = throttle(
-  keydownThrottleIntervalMs,
-  setFthoraMartyria,
-);
-const setMartyriaTempoThrottled = throttle(
-  keydownThrottleIntervalMs,
-  setMartyriaTempo,
-);
-const setAccidentalThrottled = throttle(
-  keydownThrottleIntervalMs,
-  setAccidental,
-);
-const setTimeNeumeThrottled = throttle(keydownThrottleIntervalMs, setTimeNeume);
-const setMeasureNumberThrottled = throttle(
-  keydownThrottleIntervalMs,
-  setMeasureNumber,
-);
-const setMeasureBarNoteThrottled = throttle(
-  keydownThrottleIntervalMs,
-  setMeasureBarNote,
-);
-const setMeasureBarMartyriaThrottled = throttle(
-  keydownThrottleIntervalMs,
-  setMeasureBarMartyria,
-);
-const setIsonThrottled = throttle(keydownThrottleIntervalMs, setIson);
-const setTieThrottled = throttle(keydownThrottleIntervalMs, setTie);
-const setVocalExpressionThrottled = throttle(
-  keydownThrottleIntervalMs,
-  setVocalExpression,
-);
-
-const updateMartyriaNoteThrottled = throttle(
-  keydownThrottleIntervalMs,
-  updateMartyriaNote,
-);
-
-const updateMartyriaScaleThrottled = throttle(
-  keydownThrottleIntervalMs,
-  updateMartyriaScale,
-);
-
-const updateMartyriaAutoThrottled = throttle(
-  keydownThrottleIntervalMs,
-  updateMartyriaAuto,
-);
-
-const updateMartyriaAlignRightThrottled = throttle(
-  keydownThrottleIntervalMs,
-  updateMartyriaAlignRight,
-);
-
-const updateNoteNoteIndicatorThrottled = throttle(
-  keydownThrottleIntervalMs,
-  updateNoteNoteIndicator,
-);
-
-const updateNoteKoronisThrottled = throttle(
-  keydownThrottleIntervalMs,
-  updateNoteKoronis,
-);
-
-const updateNoteVareiaThrottled = throttle(
-  keydownThrottleIntervalMs,
-  updateNoteVareia,
-);
-
 const onWindowResizeThrottled = throttle(250, onWindowResize);
 const onScrollThrottled = throttle(250, onScroll);
-
-const saveDebounced = debounce(250, save);
 
 const windowTitle = computed(() => {
   return `${getFileName(editor.selectedWorkspace as Workspace)} - ${
@@ -449,52 +212,6 @@ function setSelectedWorkspace(value: Workspace) {
   });
 
   audioPlayback.stopAudio();
-}
-
-function setSelectedElement(element: ScoreElement | null) {
-  if (element != null) {
-    setSelectedLyrics(null);
-    editor.setSelectionRange(null);
-    setSelectedHeaderFooterElement(null);
-    editor.toolbarInnerNeume = 'Primary';
-
-    audioPlayback.onSetSelectedElement(element);
-  }
-
-  if (
-    editor.selectedWorkspace.selectedAlternateLineElement != null &&
-    editor.selectedWorkspace.selectedAlternateLineElement.elements.length === 0
-  ) {
-    removeAlternateLine(
-      editor.selectedElement as NoteElement,
-      editor.selectedWorkspace.selectedAlternateLineElement,
-      true,
-    );
-  }
-
-  editor.selectedWorkspace.selectedElement = element;
-  editor.selectedWorkspace.selectedAnnotationElement = null;
-  editor.selectedWorkspace.selectedAlternateLineElement = null;
-}
-
-function setSelectedLyrics(element: NoteElement | null) {
-  if (element != null) {
-    setSelectedElement(null);
-    setSelectedHeaderFooterElement(null);
-    editor.setSelectionRange(null);
-  }
-
-  editor.selectedWorkspace.selectedLyrics = element;
-}
-
-function setSelectedHeaderFooterElement(element: ScoreElement | null) {
-  if (element != null) {
-    setSelectedElement(null);
-    editor.selectedWorkspace.selectedLyrics = null;
-    editor.setSelectionRange(null);
-  }
-
-  editor.selectedWorkspace.selectedHeaderFooterElement = element;
 }
 
 function getHeaderHorizontalRuleStyle(headerHeight: number) {
@@ -564,125 +281,6 @@ function updateWindowTitle() {
   window.document.title = windowTitle.value;
 }
 
-function getLyricStyle(element: NoteElement) {
-  return {
-    direction: editor.rtl ? 'rtl' : undefined,
-    top: withZoom(element.lyricsVerticalOffset),
-    paddingLeft:
-      !element.isFullMelisma && element.lyricsHorizontalOffset > 0
-        ? withZoom(element.lyricsHorizontalOffset)
-        : undefined,
-    paddingRight:
-      !element.isFullMelisma && element.lyricsHorizontalOffset < 0
-        ? withZoom(-element.lyricsHorizontalOffset)
-        : undefined,
-    fontSize: element.lyricsUseDefaultStyle
-      ? withZoom(editor.score.pageSetup.lyricsDefaultFontSize)
-      : withZoom(element.lyricsFontSize),
-    fontFamily: element.lyricsUseDefaultStyle
-      ? getFontFamilyWithFallback(
-          editor.score.pageSetup.lyricsDefaultFontFamily,
-          editor.score.pageSetup.neumeDefaultFontFamily,
-        )
-      : getFontFamilyWithFallback(
-          element.lyricsFontFamily,
-          editor.score.pageSetup.neumeDefaultFontFamily,
-        ),
-    fontWeight: element.lyricsUseDefaultStyle
-      ? editor.score.pageSetup.lyricsDefaultFontWeight
-      : element.lyricsFontWeight,
-    fontStyle: element.lyricsUseDefaultStyle
-      ? editor.score.pageSetup.lyricsDefaultFontStyle
-      : element.lyricsFontStyle,
-    textDecoration: element.lyricsUseDefaultStyle
-      ? undefined
-      : element.lyricsTextDecoration,
-    color: element.lyricsUseDefaultStyle
-      ? editor.score.pageSetup.lyricsDefaultColor
-      : element.lyricsColor,
-    webkitTextStrokeWidth: element.lyricsUseDefaultStyle
-      ? withZoom(editor.score.pageSetup.lyricsDefaultStrokeWidth)
-      : withZoom(element.lyricsStrokeWidth),
-    lineHeight: withZoom(element.lyricsFontHeight),
-    left: element.alignLeft ? 0 : undefined,
-    textAlign: element.alignLeft ? 'left' : undefined,
-  } as StyleValue;
-}
-
-function getEmptyBoxStyle(element: EmptyElement) {
-  return {
-    width: withZoom(element.width),
-    height: withZoom(element.height),
-  } as StyleValue;
-}
-
-function getElementStyle(element: ScoreElement) {
-  return {
-    left: !editor.rtl ? withZoom(element.x) : undefined,
-    right: editor.rtl ? withZoom(element.x) : undefined,
-    top: withZoom(element.y),
-  } as StyleValue;
-}
-
-function getMelismaStyle(element: NoteElement) {
-  return {
-    width: withZoom(element.melismaWidth),
-    minHeight: element.lyricsUseDefaultStyle
-      ? withZoom(editor.score.pageSetup.lyricsDefaultFontSize)
-      : withZoom(element.lyricsFontSize),
-  } as StyleValue;
-}
-
-function getMelismaUnderscoreStyleOuter(element: NoteElement) {
-  return {
-    top: withZoom(element.melismaOffsetTop),
-    height: withZoom(element.lyricsFontHeight),
-    width: withZoom(element.melismaWidth),
-  };
-}
-
-function getMelismaUnderscoreStyleInner(element: NoteElement) {
-  const thickness = editor.score.pageSetup.lyricsMelismaThickness;
-
-  const spacing = !element.isFullMelisma
-    ? editor.score.pageSetup.lyricsMelismaSpacing
-    : 0;
-
-  return {
-    borderBottom: `${withZoom(thickness)} solid ${
-      element.lyricsUseDefaultStyle
-        ? editor.score.pageSetup.lyricsDefaultColor
-        : element.lyricsColor
-    }`,
-    left: withZoom(spacing),
-    width: `calc(100% - ${withZoom(spacing)})`,
-  };
-}
-
-function getMelismaHyphenStyle(element: NoteElement, index: number) {
-  return {
-    left: withZoom(element.hyphenOffsets[index]),
-  } as StyleValue;
-}
-
-let untitledIndex = 1;
-
-function getTempFilename() {
-  return `Untitled-${untitledIndex++}`;
-}
-
-function getFileName(workspace: Workspace, showUnsavedChanges: boolean = true) {
-  const unsavedChangesMarker =
-    workspace.hasUnsavedChanges && showUnsavedChanges ? '*' : '';
-
-  if (workspace.filePath != null) {
-    const fileName = getFileNameFromPath(workspace.filePath);
-    return `${unsavedChangesMarker}${fileName}`;
-  } else {
-    return `${unsavedChangesMarker}${workspace.tempFileName}`;
-  }
-}
-
 function getHeaderForPageIndex(pageIndex: number) {
   const pageNumber = pageIndex + 1;
 
@@ -736,8 +334,6 @@ onMounted(() => {
     );
   }
 
-  window.addEventListener('keydown', onKeydown);
-  window.addEventListener('keyup', onKeyup);
   window.addEventListener('resize', onWindowResizeThrottled);
 
   EventBus.$on(IpcMainChannels.CloseWorkspaces, onCloseWorkspaces);
@@ -745,30 +341,51 @@ onMounted(() => {
 
   EventBus.$on(IpcMainChannels.FileMenuNewScore, onFileMenuNewScore);
   EventBus.$on(IpcMainChannels.FileMenuOpenScore, onFileMenuOpenScore);
-  EventBus.$on(IpcMainChannels.FileMenuPrint, onFileMenuPrint);
+  EventBus.$on(IpcMainChannels.FileMenuPrint, exporting.onFileMenuPrint);
   EventBus.$on(IpcMainChannels.FileMenuSave, onFileMenuSave);
   EventBus.$on(IpcMainChannels.FileMenuSaveAs, onFileMenuSaveAs);
   EventBus.$on(IpcMainChannels.FileMenuPageSetup, onFileMenuPageSetup);
-  EventBus.$on(IpcMainChannels.FileMenuExportAsPdf, onFileMenuExportAsPdf);
-  EventBus.$on(IpcMainChannels.FileMenuExportAsHtml, onFileMenuExportAsHtml);
+  EventBus.$on(
+    IpcMainChannels.FileMenuExportAsPdf,
+    exporting.onFileMenuExportAsPdf,
+  );
+  EventBus.$on(
+    IpcMainChannels.FileMenuExportAsHtml,
+    exporting.onFileMenuExportAsHtml,
+  );
   EventBus.$on(
     IpcMainChannels.FileMenuExportAsMusicXml,
-    onFileMenuExportAsMusicXml,
+    exporting.onFileMenuExportAsMusicXml,
   );
-  EventBus.$on(IpcMainChannels.FileMenuExportAsLatex, onFileMenuExportAsLatex);
-  EventBus.$on(IpcMainChannels.FileMenuExportAsImage, onFileMenuExportAsImage);
-  EventBus.$on(IpcMainChannels.FileMenuUndo, onFileMenuUndo);
-  EventBus.$on(IpcMainChannels.FileMenuRedo, onFileMenuRedo);
-  EventBus.$on(IpcMainChannels.FileMenuCut, onFileMenuCut);
-  EventBus.$on(IpcMainChannels.FileMenuCopy, onFileMenuCopy);
-  EventBus.$on(IpcMainChannels.FileMenuCopyAsHtml, onFileMenuCopyAsHtml);
-  EventBus.$on(IpcMainChannels.FileMenuCopyFormat, onFileMenuCopyFormat);
-  EventBus.$on(IpcMainChannels.FileMenuPaste, onFileMenuPaste);
+  EventBus.$on(
+    IpcMainChannels.FileMenuExportAsLatex,
+    exporting.onFileMenuExportAsLatex,
+  );
+  EventBus.$on(
+    IpcMainChannels.FileMenuExportAsImage,
+    exporting.onFileMenuExportAsImage,
+  );
+  EventBus.$on(IpcMainChannels.FileMenuUndo, history.onFileMenuUndo);
+  EventBus.$on(IpcMainChannels.FileMenuRedo, history.onFileMenuRedo);
+  EventBus.$on(IpcMainChannels.FileMenuCut, clipboard.onFileMenuCut);
+  EventBus.$on(IpcMainChannels.FileMenuCopy, clipboard.onFileMenuCopy);
+  EventBus.$on(
+    IpcMainChannels.FileMenuCopyAsHtml,
+    exporting.onFileMenuCopyAsHtml,
+  );
+  EventBus.$on(
+    IpcMainChannels.FileMenuCopyFormat,
+    clipboard.onFileMenuCopyFormat,
+  );
+  EventBus.$on(IpcMainChannels.FileMenuPaste, clipboard.onFileMenuPaste);
   EventBus.$on(
     IpcMainChannels.FileMenuPasteWithLyrics,
-    onFileMenuPasteWithLyrics,
+    clipboard.onFileMenuPasteWithLyrics,
   );
-  EventBus.$on(IpcMainChannels.FileMenuPasteFormat, onFileMenuPasteFormat);
+  EventBus.$on(
+    IpcMainChannels.FileMenuPasteFormat,
+    clipboard.onFileMenuPasteFormat,
+  );
   EventBus.$on(IpcMainChannels.FileMenuFind, onFileMenuFind);
   EventBus.$on(IpcMainChannels.FileMenuLyrics, onFileMenuLyrics);
   EventBus.$on(IpcMainChannels.FileMenuPreferences, onFileMenuPreferences);
@@ -805,16 +422,12 @@ onMounted(() => {
     IpcMainChannels.FileMenuGenerateTestFile,
     onFileMenuGenerateTestFile,
   );
-
-  EventBus.$on(AudioServiceEventNames.EventPlay, onAudioServiceEventPlay);
 });
 
 onBeforeUnmount(() => {
   // Remove the debugging variable from window
   (window as any)._editor = undefined;
 
-  window.removeEventListener('keydown', onKeydown);
-  window.removeEventListener('keyup', onKeyup);
   window.removeEventListener('resize', onWindowResizeThrottled);
 
   EventBus.$off(IpcMainChannels.CloseWorkspaces, onCloseWorkspaces);
@@ -822,30 +435,51 @@ onBeforeUnmount(() => {
 
   EventBus.$off(IpcMainChannels.FileMenuNewScore, onFileMenuNewScore);
   EventBus.$off(IpcMainChannels.FileMenuOpenScore, onFileMenuOpenScore);
-  EventBus.$off(IpcMainChannels.FileMenuPrint, onFileMenuPrint);
+  EventBus.$off(IpcMainChannels.FileMenuPrint, exporting.onFileMenuPrint);
   EventBus.$off(IpcMainChannels.FileMenuSave, onFileMenuSave);
   EventBus.$off(IpcMainChannels.FileMenuSaveAs, onFileMenuSaveAs);
   EventBus.$off(IpcMainChannels.FileMenuPageSetup, onFileMenuPageSetup);
-  EventBus.$off(IpcMainChannels.FileMenuExportAsPdf, onFileMenuExportAsPdf);
-  EventBus.$off(IpcMainChannels.FileMenuExportAsHtml, onFileMenuExportAsHtml);
+  EventBus.$off(
+    IpcMainChannels.FileMenuExportAsPdf,
+    exporting.onFileMenuExportAsPdf,
+  );
+  EventBus.$off(
+    IpcMainChannels.FileMenuExportAsHtml,
+    exporting.onFileMenuExportAsHtml,
+  );
   EventBus.$off(
     IpcMainChannels.FileMenuExportAsMusicXml,
-    onFileMenuExportAsMusicXml,
+    exporting.onFileMenuExportAsMusicXml,
   );
-  EventBus.$off(IpcMainChannels.FileMenuExportAsLatex, onFileMenuExportAsLatex);
-  EventBus.$off(IpcMainChannels.FileMenuExportAsImage, onFileMenuExportAsImage);
-  EventBus.$off(IpcMainChannels.FileMenuUndo, onFileMenuUndo);
-  EventBus.$off(IpcMainChannels.FileMenuRedo, onFileMenuRedo);
-  EventBus.$off(IpcMainChannels.FileMenuCut, onFileMenuCut);
-  EventBus.$off(IpcMainChannels.FileMenuCopy, onFileMenuCopy);
-  EventBus.$off(IpcMainChannels.FileMenuCopyAsHtml, onFileMenuCopyAsHtml);
-  EventBus.$off(IpcMainChannels.FileMenuCopyFormat, onFileMenuCopyFormat);
-  EventBus.$off(IpcMainChannels.FileMenuPaste, onFileMenuPaste);
+  EventBus.$off(
+    IpcMainChannels.FileMenuExportAsLatex,
+    exporting.onFileMenuExportAsLatex,
+  );
+  EventBus.$off(
+    IpcMainChannels.FileMenuExportAsImage,
+    exporting.onFileMenuExportAsImage,
+  );
+  EventBus.$off(IpcMainChannels.FileMenuUndo, history.onFileMenuUndo);
+  EventBus.$off(IpcMainChannels.FileMenuRedo, history.onFileMenuRedo);
+  EventBus.$off(IpcMainChannels.FileMenuCut, clipboard.onFileMenuCut);
+  EventBus.$off(IpcMainChannels.FileMenuCopy, clipboard.onFileMenuCopy);
+  EventBus.$off(
+    IpcMainChannels.FileMenuCopyAsHtml,
+    exporting.onFileMenuCopyAsHtml,
+  );
+  EventBus.$off(
+    IpcMainChannels.FileMenuCopyFormat,
+    clipboard.onFileMenuCopyFormat,
+  );
+  EventBus.$off(IpcMainChannels.FileMenuPaste, clipboard.onFileMenuPaste);
   EventBus.$off(
     IpcMainChannels.FileMenuPasteWithLyrics,
-    onFileMenuPasteWithLyrics,
+    clipboard.onFileMenuPasteWithLyrics,
   );
-  EventBus.$off(IpcMainChannels.FileMenuPasteFormat, onFileMenuPasteFormat);
+  EventBus.$off(
+    IpcMainChannels.FileMenuPasteFormat,
+    clipboard.onFileMenuPasteFormat,
+  );
   EventBus.$off(IpcMainChannels.FileMenuFind, onFileMenuFind);
   EventBus.$off(IpcMainChannels.FileMenuLyrics, onFileMenuLyrics);
   EventBus.$off(IpcMainChannels.FileMenuPreferences, onFileMenuPreferences);
@@ -882,85 +516,7 @@ onBeforeUnmount(() => {
     IpcMainChannels.FileMenuGenerateTestFile,
     onFileMenuGenerateTestFile,
   );
-
-  EventBus.$off(AudioServiceEventNames.EventPlay, onAudioServiceEventPlay);
 });
-
-function getElementIndex(element: ScoreElement) {
-  return element.index;
-}
-
-function setSelectionRange(element: ScoreElement) {
-  const elementIndex = getElementIndex(element);
-
-  if (editor.selectedElement != null) {
-    editor.setSelectionRange({
-      start: editor.selectedElementIndex,
-      end: elementIndex,
-    });
-
-    setSelectedElement(null);
-  } else if (editor.selectionRange != null) {
-    editor.selectionRange.end = elementIndex;
-  }
-}
-
-function getNormalizedSelectionRange() {
-  if (editor.selectionRange == null) {
-    return null;
-  }
-
-  const start = Math.min(
-    editor.selectionRange.start,
-    editor.selectionRange.end,
-  );
-  const end = Math.max(editor.selectionRange.start, editor.selectionRange.end);
-
-  return {
-    start,
-    end,
-  } as ScoreElementSelectionRange;
-}
-
-function isSelected(element: ScoreElement) {
-  if (editor.selectedElement === element) {
-    return true;
-  }
-  if (editor.selectionRange != null) {
-    const start = Math.min(
-      editor.selectionRange.start,
-      editor.selectionRange.end,
-    );
-    const end = Math.max(
-      editor.selectionRange.start,
-      editor.selectionRange.end,
-    );
-
-    return start <= getElementIndex(element) && getElementIndex(element) <= end;
-  }
-
-  return false;
-}
-
-function setSelectedAnnotation(
-  parent: ScoreElement | null,
-  annotation: AnnotationElement,
-) {
-  setSelectedElement(parent);
-  editor.selectedWorkspace.selectedAnnotationElement = annotation;
-}
-
-function setSelectedAlternateLine(
-  parent: ScoreElement | null,
-  alternateLine: AlternateLineElement,
-) {
-  setSelectedElement(parent);
-  editor.selectedWorkspace.selectedAlternateLineElement = alternateLine;
-}
-
-function isAudioSelected(element: ScoreElement) {
-  return editor.audioElement === element;
-}
 
 function isMelisma(element: NoteElement) {
   return element.melismaWidth > 0;
@@ -998,10 +554,6 @@ function closePageSetupDialog() {
   editor.pageSetupDialogIsOpen = false;
 }
 
-function closeExportDialog() {
-  editor.exportDialogIsOpen = false;
-}
-
 function openLyricManager() {
   editor.setLyricManagerIsOpen(true);
   refreshStaffLyrics();
@@ -1030,10 +582,6 @@ function saveEditorPreferences() {
   );
 }
 
-function isLastElement(element: ScoreElement) {
-  return element.index === editor.elements.length - 1;
-}
-
 function insertPelastikon() {
   document.execCommand('insertText', false, PELASTIKON);
 }
@@ -1046,366 +594,8 @@ function insertSpecialCharacter(character: string) {
   document.execCommand('insertText', false, character);
 }
 
-function addQuantitativeNeume(
-  quantitativeNeume: QuantitativeNeume,
-  secondaryGorgonNeume: GorgonNeume | null = null,
-) {
-  if (editor.selectedElement == null) {
-    return;
-  }
-
-  const element = new NoteElement();
-  element.lyricsColor = editor.score.pageSetup.lyricsDefaultColor;
-  element.lyricsFontFamily = editor.score.pageSetup.lyricsDefaultFontFamily;
-  element.lyricsFontSize = editor.score.pageSetup.lyricsDefaultFontSize;
-  element.lyricsFontStyle = editor.score.pageSetup.lyricsDefaultFontStyle;
-  element.lyricsFontWeight = editor.score.pageSetup.lyricsDefaultFontWeight;
-  element.lyricsStrokeWidth = editor.score.pageSetup.lyricsDefaultStrokeWidth;
-
-  element.quantitativeNeume = quantitativeNeume;
-  // Special case for neumes with secondary gorgon
-  if (getSecondaryNeume(quantitativeNeume) != null) {
-    element.secondaryGorgonNeume = secondaryGorgonNeume;
-  }
-
-  // If the selected element is an alternate line element,
-  // add the new element to the alternate line's elements
-  // and return immediately. Alternate lines do not support
-  // different entry modes.
-  if (editor.selectedWorkspace.selectedAlternateLineElement != null) {
-    addScoreElement(
-      element,
-      editor.selectedWorkspace.selectedAlternateLineElement.elements.length,
-      editor.selectedWorkspace.selectedAlternateLineElement.elements,
-    );
-    save();
-    return;
-  }
-
-  switch (editor.entryMode) {
-    case EntryMode.Auto:
-      if (!isLastElement(editor.selectedElement) && !moveRight()) {
-        return;
-      }
-
-      if (isLastElement(editor.selectedElement)) {
-        addScoreElement(element, editor.selectedElementIndex);
-        setSelectedElement(element);
-      } else {
-        if (editor.selectedElement.elementType === ElementType.Note) {
-          if (
-            (editor.selectedElement as NoteElement).quantitativeNeume !==
-            quantitativeNeume
-          ) {
-            updateNote(editor.selectedElement as NoteElement, {
-              quantitativeNeume,
-              secondaryGorgonNeume,
-            });
-          } else if (
-            (editor.selectedElement as NoteElement).secondaryGorgonNeume !==
-            secondaryGorgonNeume
-          ) {
-            // Special case for hyporoe gorgon
-            updateNote(editor.selectedElement as NoteElement, {
-              secondaryGorgonNeume,
-            });
-          }
-        } else {
-          setSelectedElement(switchToSyllable(editor.selectedElement, element));
-        }
-      }
-      break;
-    case EntryMode.Insert:
-      if (isLastElement(editor.selectedElement)) {
-        addScoreElement(element, editor.selectedElementIndex);
-      } else {
-        if (editor.selectedElement.elementType === ElementType.Note) {
-          const selectedElementAsNote = editor.selectedElement as NoteElement;
-
-          element.isMelisma = selectedElementAsNote.isMelisma;
-          element.isHyphen = selectedElementAsNote.isHyphen;
-        }
-
-        addScoreElement(element, editor.selectedElementIndex + 1);
-      }
-      setSelectedElement(element);
-      break;
-
-    case EntryMode.Edit:
-      if (isLastElement(editor.selectedElement)) {
-        addScoreElement(element, editor.selectedElementIndex);
-      } else if (editor.selectedElement.elementType === ElementType.Note) {
-        if (
-          (editor.selectedElement as NoteElement).quantitativeNeume !==
-          quantitativeNeume
-        ) {
-          updateNote(editor.selectedElement as NoteElement, {
-            quantitativeNeume,
-            secondaryGorgonNeume,
-          });
-        } else if (
-          (editor.selectedElement as NoteElement).secondaryGorgonNeume !==
-          secondaryGorgonNeume
-        ) {
-          // Special case for hyporoe gorgon
-          updateNote(editor.selectedElement as NoteElement, {
-            secondaryGorgonNeume,
-          });
-        }
-      } else if (
-        navigableElements.includes(editor.selectedElement.elementType)
-      ) {
-        setSelectedElement(switchToSyllable(editor.selectedElement, element));
-      }
-      break;
-  }
-
-  save();
-}
-
-function addNeumeCombination(combo: NeumeCombination) {
-  const backup = clipboard.slice();
-  clipboard = combo.elements;
-  onPasteScoreElements(false);
-
-  clipboard = backup;
-}
-
-function addAutoMartyria(alignRight?: boolean, note?: Note) {
-  if (editor.selectedElement == null) {
-    return;
-  }
-
-  const element = new MartyriaElement();
-  element.alignRight = alignRight === true;
-
-  if (note != null) {
-    element.note = note;
-    element.auto = false;
-  }
-
-  switch (editor.entryMode) {
-    case EntryMode.Auto:
-      moveRight();
-
-      if (isLastElement(editor.selectedElement)) {
-        addScoreElement(element, editor.selectedElementIndex);
-        setSelectedElement(element);
-      } else {
-        if (editor.selectedElement.elementType != ElementType.Martyria) {
-          setSelectedElement(switchToMartyria(editor.selectedElement));
-        }
-      }
-      break;
-    case EntryMode.Insert:
-      if (isLastElement(editor.selectedElement)) {
-        addScoreElement(element, editor.selectedElementIndex);
-      } else {
-        addScoreElement(element, editor.selectedElementIndex + 1);
-      }
-      setSelectedElement(element);
-      break;
-    case EntryMode.Edit:
-      if (isLastElement(editor.selectedElement)) {
-        addScoreElement(element, editor.selectedElementIndex);
-      } else if (editor.selectedElement.elementType != ElementType.Martyria) {
-        setSelectedElement(switchToMartyria(editor.selectedElement));
-      }
-      break;
-  }
-
-  save();
-}
-
-function addTempo(neume: TempoSign) {
-  if (editor.selectedElement == null) {
-    return;
-  }
-
-  const element = new TempoElement();
-  element.neume = neume;
-  element.bpm =
-    editor.editorPreferences.getDefaultTempo(neume) ??
-    TempoElement.getDefaultBpm(neume);
-
-  switch (editor.entryMode) {
-    case EntryMode.Auto:
-      moveRight();
-
-      if (isLastElement(editor.selectedElement)) {
-        addScoreElement(element, editor.selectedElementIndex);
-        setSelectedElement(element);
-      } else {
-        if (editor.selectedElement.elementType === ElementType.Tempo) {
-          if ((editor.selectedElement as TempoElement).neume !== neume) {
-            updateTempo(editor.selectedElement as TempoElement, {
-              neume,
-            });
-          }
-        } else {
-          setSelectedElement(switchToTempo(editor.selectedElement, element));
-        }
-      }
-      break;
-    case EntryMode.Insert:
-      if (isLastElement(editor.selectedElement)) {
-        addScoreElement(element, editor.selectedElementIndex);
-      } else {
-        addScoreElement(element, editor.selectedElementIndex + 1);
-      }
-      setSelectedElement(element);
-      break;
-    case EntryMode.Edit:
-      if (isLastElement(editor.selectedElement)) {
-        addScoreElement(element, editor.selectedElementIndex);
-      } else if (editor.selectedElement.elementType === ElementType.Tempo) {
-        if ((editor.selectedElement as TempoElement).neume !== neume) {
-          updateTempo(editor.selectedElement as TempoElement, {
-            neume,
-          });
-        }
-      } else {
-        setSelectedElement(switchToTempo(editor.selectedElement, element));
-      }
-      break;
-  }
-
-  save();
-}
-
-function addDropCap(after: boolean) {
-  if (editor.selectedElement == null) {
-    return;
-  }
-
-  const element = new DropCapElement();
-
-  element.color = editor.score.pageSetup.dropCapDefaultColor;
-  element.fontFamily = editor.score.pageSetup.dropCapDefaultFontFamily;
-  element.fontSize = editor.score.pageSetup.dropCapDefaultFontSize;
-  element.strokeWidth = editor.score.pageSetup.dropCapDefaultStrokeWidth;
-  element.fontWeight = editor.score.pageSetup.dropCapDefaultFontWeight;
-  element.fontStyle = editor.score.pageSetup.dropCapDefaultFontStyle;
-  element.lineHeight = editor.score.pageSetup.dropCapDefaultLineHeight;
-  element.lineSpan = editor.score.pageSetup.dropCapDefaultLineSpan;
-
-  if (after && !isLastElement(editor.selectedElement)) {
-    addScoreElement(element, editor.selectedElementIndex + 1);
-  } else {
-    addScoreElement(element, editor.selectedElementIndex);
-  }
-
-  setSelectedElement(element);
-  save();
-
-  nextTick(() => {
-    (elementsRef.value[element.index] as DropCap).focus();
-  });
-}
-
 function onClickAddImage() {
   EventBus.$emit(IpcRendererChannels.OpenImageDialog);
-}
-
-function togglePageBreak() {
-  if (editor.selectedElement && !isLastElement(editor.selectedElement)) {
-    editor.commandService.execute(
-      scoreElementCommandFactory.create('update-properties', {
-        target: editor.selectedElement,
-        newValues: {
-          pageBreak: !editor.selectedElement.pageBreak,
-          lineBreak: false,
-        },
-      }),
-    );
-
-    save();
-  }
-}
-
-function toggleLineBreak(lineBreakType: LineBreakType | null) {
-  if (editor.selectedElement && !isLastElement(editor.selectedElement)) {
-    let lineBreak = !editor.selectedElement.lineBreak;
-
-    if (lineBreakType != editor.selectedElement.lineBreakType) {
-      lineBreak = true;
-    }
-
-    if (!lineBreak) {
-      lineBreakType = null;
-    }
-
-    editor.commandService.execute(
-      scoreElementCommandFactory.create('update-properties', {
-        target: editor.selectedElement,
-        newValues: {
-          lineBreak,
-          pageBreak: false,
-          lineBreakType,
-        },
-      }),
-    );
-
-    save();
-  }
-}
-
-function updateScoreElementSectionName(
-  element: ScoreElement,
-  sectionName: string | null,
-) {
-  if (sectionName != null && sectionName.trim() == '') {
-    sectionName = null;
-  }
-
-  editor.commandService.execute(
-    scoreElementCommandFactory.create('update-properties', {
-      target: element,
-      newValues: {
-        sectionName,
-      },
-    }),
-  );
-
-  save();
-}
-
-function switchToMartyria(element: ScoreElement) {
-  const newElement = new MartyriaElement();
-  newElement.pageBreak = element.pageBreak;
-  newElement.lineBreak = element.lineBreak;
-
-  replaceScoreElement(newElement, element.index);
-
-  return newElement;
-}
-
-function switchToTempo(oldElement: ScoreElement, newElement: TempoElement) {
-  newElement.pageBreak = oldElement.pageBreak;
-  newElement.lineBreak = oldElement.lineBreak;
-
-  replaceScoreElement(newElement, oldElement.index);
-
-  return newElement;
-}
-
-function switchToSyllable(oldElement: ScoreElement, newElement: NoteElement) {
-  newElement.pageBreak = oldElement.pageBreak;
-  newElement.lineBreak = oldElement.lineBreak;
-
-  replaceScoreElement(newElement, oldElement.index);
-
-  return newElement;
-}
-
-function focusLyrics(index: number, selectAll: boolean = false) {
-  lyricsRef.value[index].focus(selectAll);
-}
-
-function setLyrics(index: number, lyrics: string) {
-  if (lyricsRef.value[index]) {
-    lyricsRef.value[index].setInnerText(lyrics);
-  }
 }
 
 function isSyllableElement(element: ScoreElement) {
@@ -1444,15 +634,6 @@ function isImageBoxElement(element: ScoreElement) {
   return element.elementType == ElementType.ImageBox;
 }
 
-function isTextInputFocused() {
-  return (
-    document.activeElement instanceof HTMLInputElement ||
-    document.activeElement instanceof HTMLTextAreaElement ||
-    (document.activeElement instanceof HTMLElement &&
-      document.activeElement.isContentEditable)
-  );
-}
-
 function onWindowResize() {
   if (editor.zoomToFit) {
     performZoomToFit();
@@ -1463,1197 +644,6 @@ function onScroll() {
   calculatePageNumber();
 }
 
-function onKeydown(event: KeyboardEvent) {
-  // Handle undo / redo
-  // See https://github.com/electron/electron/issues/3682.
-  if (
-    (event.ctrlKey || event.metaKey) &&
-    !isTextInputFocused() &&
-    !editor.dialogOpen
-  ) {
-    if (event.code === 'KeyZ') {
-      if (platformService.isMac && event.shiftKey) {
-        onFileMenuRedoThrottled();
-      } else {
-        onFileMenuUndoThrottled();
-      }
-      event.preventDefault();
-      return;
-    } else if (event.code === 'KeyY') {
-      onFileMenuRedoThrottled();
-      event.preventDefault();
-      return;
-    } else if (event.code === 'KeyX') {
-      onCutScoreElementsThrottled();
-      event.preventDefault();
-      return;
-    } else if (event.code === 'KeyC') {
-      if (event.shiftKey) {
-        onFileMenuCopyAsHtmlThrottled();
-      } else {
-        onCopyScoreElementsThrottled();
-      }
-      event.preventDefault();
-      return;
-    } else if (event.code === 'KeyV') {
-      const includeLyrics = event.shiftKey;
-      onPasteScoreElementsThrottled(includeLyrics);
-      event.preventDefault();
-      return;
-    } else if (event.code === 'KeyI' && !event.shiftKey) {
-      switch (editor.entryMode) {
-        case EntryMode.Auto:
-          updateEntryMode(EntryMode.Insert);
-          break;
-        case EntryMode.Insert:
-          updateEntryMode(EntryMode.Edit);
-          break;
-        case EntryMode.Edit:
-          updateEntryMode(EntryMode.Auto);
-          break;
-      }
-      return;
-    } else if (event.code === 'KeyU' && !event.shiftKey) {
-      switch (editor.entryMode) {
-        case EntryMode.Auto:
-          updateEntryMode(EntryMode.Edit);
-          break;
-        case EntryMode.Edit:
-          updateEntryMode(EntryMode.Insert);
-          break;
-        case EntryMode.Insert:
-          updateEntryMode(EntryMode.Auto);
-          break;
-      }
-      return;
-    }
-  }
-
-  if (platformService.isMac && isTextInputFocused() && !editor.dialogOpen) {
-    onKeydownMac(event);
-  }
-
-  if (editor.selectedLyrics != null) {
-    return onKeydownLyrics(event);
-  }
-
-  if (editor.selectedElement?.elementType === ElementType.DropCap) {
-    return onKeydownDropCap(event);
-  }
-
-  if (editor.selectedElement?.elementType === ElementType.TextBox) {
-    return onKeydownTextBox(event);
-  }
-
-  if (!isTextInputFocused() && !editor.dialogOpen) {
-    return onKeydownNeume(event);
-  }
-}
-
-function onKeydownNeume(event: KeyboardEvent) {
-  let handled = false;
-
-  if (event.shiftKey) {
-    switch (event.code) {
-      case 'ArrowLeft':
-        moveSelectionLeftThrottled();
-        handled = true;
-        break;
-      case 'ArrowRight':
-        moveSelectionRightThrottled();
-        handled = true;
-        break;
-    }
-  } else {
-    switch (event.code) {
-      case 'ArrowLeft':
-        if (!editor.rtl) {
-          moveLeftThrottled();
-        } else {
-          moveRightThrottled();
-        }
-        handled = true;
-        break;
-      case 'ArrowRight':
-        if (!editor.rtl) {
-          moveRightThrottled();
-        } else {
-          moveLeftThrottled();
-        }
-        handled = true;
-        break;
-      case 'ArrowDown':
-        if (
-          (event.ctrlKey || event.metaKey) &&
-          editor.selectedElement?.elementType === ElementType.Note
-        ) {
-          const index = editor.selectedElementIndex;
-
-          focusLyrics(index, true);
-
-          // Select All doesn't work until after the lyrics have been selected,
-          // hence we call focus lyrics twice
-          nextTick(() => {
-            focusLyrics(index, true);
-          });
-
-          handled = true;
-        }
-        break;
-      case 'Space':
-        if (!event.repeat) {
-          if (audioService.state === AudioState.Stopped || event.ctrlKey) {
-            audioPlayback.playAudio();
-          } else {
-            audioPlayback.pauseAudio();
-          }
-          handled = true;
-        }
-        break;
-      case 'Backspace':
-        handled = true;
-        deletePreviousElementThrottled();
-        break;
-      case 'Delete':
-        handled = true;
-        deleteSelectedElementThrottled();
-        break;
-    }
-  }
-
-  if (
-    editor.selectedElement != null &&
-    !event.ctrlKey &&
-    !event.metaKey &&
-    !event.altKey
-  ) {
-    if (neumeKeyboard.isModifier(event.code)) {
-      editor.keyboardModifier = event.code;
-      handled = true;
-    }
-
-    const quantitativeMapping = neumeKeyboard.findQuantitativeMapping(
-      event,
-      editor.keyboardModifier,
-    );
-
-    if (quantitativeMapping != null) {
-      handled = true;
-
-      if (quantitativeMapping.acceptsLyricsOption != null) {
-        if (editor.selectedElement.elementType === ElementType.Note) {
-          updateNoteAcceptsLyrics(
-            editor.selectedElement as NoteElement,
-            quantitativeMapping.acceptsLyricsOption,
-          );
-        }
-      } else {
-        addQuantitativeNeumeThrottled(
-          quantitativeMapping.neume as QuantitativeNeume,
-        );
-      }
-    }
-
-    const tempoMapping = neumeKeyboard.findTempoMapping(
-      event,
-      editor.keyboardModifier,
-    );
-
-    if (tempoMapping != null) {
-      handled = true;
-      addTempoThrottled(tempoMapping.neume as TempoSign);
-    }
-
-    if (
-      editor.keyboardModifier == null &&
-      neumeKeyboard.isMartyria(event.code)
-    ) {
-      handled = true;
-      addAutoMartyriaThrottled(event.shiftKey);
-    }
-
-    const martyriaConfigMapping = neumeKeyboard.findMartyriaConfigMapping(
-      event,
-      editor.keyboardModifier,
-    );
-
-    if (martyriaConfigMapping != null) {
-      if (martyriaConfigMapping.note != null) {
-        handled = true;
-
-        addAutoMartyriaThrottled(
-          martyriaConfigMapping.martyriaAlignmentToggle,
-          martyriaConfigMapping.note,
-        );
-      }
-    }
-
-    if (
-      editor.selectedElement.elementType === ElementType.Note &&
-      !event.repeat
-    ) {
-      const noteElement = editor.selectedElement as NoteElement;
-
-      const gorgonMapping = neumeKeyboard.findGorgonMapping(
-        event,
-        editor.keyboardModifier,
-      );
-
-      if (gorgonMapping != null) {
-        handled = true;
-        setGorgonThrottled(noteElement, gorgonMapping.neumes as GorgonNeume[]);
-      }
-
-      const vocalExpressionMapping = neumeKeyboard.findVocalExpressionMapping(
-        event,
-        editor.keyboardModifier,
-      );
-
-      if (vocalExpressionMapping != null) {
-        handled = true;
-
-        if (vocalExpressionMapping.neume === VocalExpressionNeume.Vareia) {
-          updateNoteVareiaThrottled(noteElement, !noteElement.vareia);
-        } else {
-          setVocalExpressionThrottled(
-            noteElement,
-            vocalExpressionMapping.neume as VocalExpressionNeume,
-          );
-        }
-      }
-
-      const tieMapping = neumeKeyboard.findTieMapping(
-        event,
-        editor.keyboardModifier,
-      );
-
-      if (tieMapping != null) {
-        handled = true;
-
-        setTieThrottled(noteElement, tieMapping.neumes as Tie[]);
-      }
-
-      const fthoraMapping = neumeKeyboard.findFthoraMapping(
-        event,
-        editor.keyboardModifier,
-      );
-
-      if (fthoraMapping != null) {
-        handled = true;
-        setFthoraNoteThrottled(noteElement, fthoraMapping.neumes as Fthora[]);
-      }
-
-      const accidentalMapping = neumeKeyboard.findAccidentalMapping(
-        event,
-        editor.keyboardModifier,
-      );
-
-      if (accidentalMapping != null) {
-        handled = true;
-        setAccidentalThrottled(
-          noteElement,
-          accidentalMapping.neume as Accidental,
-        );
-      }
-
-      const hapliMapping = neumeKeyboard.findHapliMapping(
-        event,
-        editor.keyboardModifier,
-      );
-
-      if (hapliMapping != null) {
-        handled = true;
-
-        if (hapliMapping.neume === TimeNeume.Koronis) {
-          updateNoteKoronisThrottled(noteElement, !noteElement.koronis);
-        } else {
-          setTimeNeumeThrottled(noteElement, hapliMapping.neume as TimeNeume);
-        }
-      }
-
-      const measureNumberMapping = neumeKeyboard.findMeasureNumberMapping(
-        event,
-        editor.keyboardModifier,
-      );
-
-      if (measureNumberMapping != null) {
-        handled = true;
-        setMeasureNumberThrottled(
-          noteElement,
-          measureNumberMapping.neume as MeasureNumber,
-        );
-      }
-
-      const measureBarMapping = neumeKeyboard.findMeasureBarMapping(
-        event,
-        editor.keyboardModifier,
-      );
-
-      if (measureBarMapping != null) {
-        handled = true;
-        setMeasureBarNoteThrottled(
-          noteElement,
-          measureBarMapping.neume as MeasureBar,
-        );
-      }
-
-      const isonMapping = neumeKeyboard.findIsonMapping(
-        event,
-        editor.keyboardModifier,
-      );
-
-      if (isonMapping != null) {
-        handled = true;
-        setIsonThrottled(noteElement, isonMapping.neume as Ison);
-      }
-
-      if (
-        editor.keyboardModifier == null &&
-        neumeKeyboard.isMartyria(event.code)
-      ) {
-        addAutoMartyriaThrottled();
-      } else if (
-        editor.keyboardModifier == null &&
-        neumeKeyboard.isKlasma(event.code)
-      ) {
-        setKlasmaThrottled(noteElement);
-      } else if (
-        editor.keyboardModifier == null &&
-        neumeKeyboard.isNoteIndicator(event.code)
-      ) {
-        updateNoteNoteIndicatorThrottled(
-          noteElement,
-          !noteElement.noteIndicator,
-        );
-      }
-    } else if (
-      editor.selectedElement.elementType === ElementType.Martyria &&
-      !event.repeat
-    ) {
-      const martyriaElement = editor.selectedElement as MartyriaElement;
-
-      const fthoraMapping = neumeKeyboard.findFthoraMapping(
-        event,
-        editor.keyboardModifier,
-      );
-
-      if (fthoraMapping != null) {
-        handled = true;
-        setFthoraMartyriaThrottled(
-          martyriaElement,
-          fthoraMapping.neumes![0] as Fthora,
-        );
-      }
-
-      const tempoMapping = neumeKeyboard.findMartyriaTempoMapping(
-        event,
-        editor.keyboardModifier,
-      );
-
-      if (tempoMapping != null) {
-        handled = true;
-        setMartyriaTempoThrottled(
-          martyriaElement,
-          tempoMapping.neume as TempoSign,
-        );
-      }
-
-      const measureBarMapping = neumeKeyboard.findMeasureBarMapping(
-        event,
-        editor.keyboardModifier,
-      );
-
-      if (measureBarMapping != null) {
-        handled = true;
-        setMeasureBarMartyriaThrottled(
-          martyriaElement,
-          measureBarMapping.neume as MeasureBar,
-        );
-      }
-
-      const martyriaConfigMapping = neumeKeyboard.findMartyriaConfigMapping(
-        event,
-        editor.keyboardModifier,
-      );
-
-      if (martyriaConfigMapping != null) {
-        handled = true;
-
-        if (martyriaConfigMapping.note != null) {
-          // This case will not currently happen
-          // because no keyboard mapping exist for it
-          updateMartyriaNoteThrottled(
-            martyriaElement,
-            martyriaConfigMapping.note,
-          );
-        } else if (martyriaConfigMapping.scale != null) {
-          updateMartyriaScaleThrottled(
-            martyriaElement,
-            martyriaConfigMapping.scale,
-          );
-        } else if (martyriaConfigMapping.martyriaAlignmentToggle === true) {
-          updateMartyriaAlignRightThrottled(
-            martyriaElement,
-            !martyriaElement.alignRight,
-          );
-        } else if (martyriaConfigMapping.martyriaAutoToggle === true) {
-          updateMartyriaAutoThrottled(martyriaElement, !martyriaElement.auto);
-        }
-      }
-    }
-  }
-  if (handled) {
-    event.preventDefault();
-  }
-}
-
-function onKeydownLyrics(event: KeyboardEvent) {
-  let handled = false;
-
-  // Do not allow enter key in lyrics
-  if (event.code === 'Enter') {
-    event.preventDefault();
-    return;
-  }
-
-  switch (event.code) {
-    case 'ArrowRight':
-      if (event.shiftKey) {
-        return;
-      }
-
-      if (event.ctrlKey || event.metaKey) {
-        if (!editor.rtl) {
-          moveToNextLyricBoxThrottled();
-        } else {
-          moveToPreviousLyricBoxThrottled();
-        }
-        handled = true;
-      } else if (
-        !editor.rtl &&
-        getCursorPosition() === getLyricLength(editor.selectedLyrics!)
-      ) {
-        moveToNextLyricBoxThrottled();
-        handled = true;
-      } else if (editor.rtl && getCursorPosition() === 0) {
-        moveToPreviousLyricBoxThrottled();
-        handled = true;
-      }
-      break;
-    case 'ArrowLeft':
-      if (event.shiftKey) {
-        return;
-      }
-
-      if (event.ctrlKey || event.metaKey) {
-        if (!editor.rtl) {
-          moveToPreviousLyricBoxThrottled();
-        } else {
-          moveToNextLyricBoxThrottled();
-        }
-        handled = true;
-      } else if (!editor.rtl && getCursorPosition() === 0) {
-        moveToPreviousLyricBoxThrottled();
-        handled = true;
-      } else if (
-        editor.rtl &&
-        getCursorPosition() === getLyricLength(editor.selectedLyrics!)
-      ) {
-        moveToNextLyricBoxThrottled();
-        handled = true;
-      }
-      break;
-    case 'ArrowUp':
-      if (event.shiftKey) {
-        return;
-      }
-
-      if (event.ctrlKey || event.metaKey) {
-        setSelectedElement(editor.selectedLyrics);
-        blurActiveElement();
-        window.getSelection()?.removeAllRanges();
-        handled = true;
-      }
-      break;
-    case 'Space':
-      // Ctrl + Space should add a normal space character
-      if (event.ctrlKey || event.metaKey) {
-        document.execCommand('insertText', false, ' ');
-      } else {
-        moveToNextLyricBoxThrottled(true);
-      }
-      handled = true;
-      break;
-    case 'Minus': {
-      if (event.shiftKey) {
-        document.execCommand('insertText', false, '_');
-      } else {
-        document.execCommand('insertText', false, '-');
-      }
-
-      // Ctrl key overrides the "go to next lyrics" (Alt key for mac)
-      const overridden =
-        (platformService.isMac && event.altKey) ||
-        (!platformService.isMac && event.ctrlKey);
-
-      if (
-        !overridden &&
-        getCursorPosition() === getLyricLength(editor.selectedLyrics!)
-      ) {
-        if (getNextLyricBoxIndex() >= 0) {
-          moveToNextLyricBoxThrottled();
-        } else {
-          // If this is the last lyric box, blur
-          // so that the melisma is registered and
-          // the user doesn't accidentally type more
-          // characters into box
-          lyricsRef.value[editor.selectedLyrics!.index].blur();
-        }
-      }
-
-      handled = true;
-      break;
-    }
-    case 'KeyJ': {
-      if (!editor.rtl) {
-        return;
-      }
-      if (event.shiftKey) {
-        document.execCommand('insertText', false, TATWEEL);
-      } else {
-        return;
-      }
-
-      // Ctrl key overrides the "go to next lyrics" (Alt key for mac)
-      const overridden =
-        (platformService.isMac && event.altKey) ||
-        (!platformService.isMac && event.ctrlKey);
-
-      if (
-        !overridden &&
-        getCursorPosition() === getLyricLength(editor.selectedLyrics!)
-      ) {
-        if (getNextLyricBoxIndex() >= 0) {
-          moveToNextLyricBoxThrottled();
-        } else {
-          // If this is the last lyric box, blur
-          // so that the melisma is registered and
-          // the user doesn't accidentally type more
-          // characters into box
-          lyricsRef.value[editor.selectedLyrics!.index].blur();
-        }
-      }
-
-      handled = true;
-      break;
-    }
-  }
-
-  if (handled) {
-    event.preventDefault();
-  }
-}
-
-function onKeydownDropCap(event: KeyboardEvent) {
-  let handled = false;
-
-  const index = editor.selectedElement!.index;
-  const htmlElement = elementsRef.value[index] as DropCap;
-
-  switch (event.code) {
-    case 'Enter':
-      // Do not allow enter key in drop caps
-      handled = true;
-      break;
-    case 'Tab':
-      moveRightThrottled();
-      handled = true;
-      break;
-    case 'ArrowLeft':
-      if (!editor.rtl && getCursorPosition() === 0) {
-        moveLeftThrottled();
-        handled = true;
-      } else if (
-        editor.rtl &&
-        getCursorPosition() === htmlElement.textElement.getInnerText().length
-      ) {
-        moveRightThrottled();
-        handled = true;
-      }
-      break;
-    case 'ArrowRight':
-      if (
-        !editor.rtl &&
-        getCursorPosition() === htmlElement.textElement.getInnerText().length
-      ) {
-        moveRightThrottled();
-        handled = true;
-      } else if (editor.rtl && getCursorPosition() === 0) {
-        moveLeftThrottled();
-        handled = true;
-      }
-      break;
-  }
-
-  if (handled) {
-    event.preventDefault();
-  }
-}
-
-function onKeydownTextBox(event: KeyboardEvent) {
-  let handled = false;
-
-  const index = editor.selectedElement!.index;
-  const htmlElement = elementsRef.value[index] as TextBox;
-
-  switch (event.code) {
-    case 'Tab':
-      moveRightThrottled();
-      handled = true;
-      break;
-    case 'ArrowLeft':
-      if (!editor.rtl && getCursorPosition() === 0) {
-        moveLeftThrottled();
-        handled = true;
-      } else if (
-        editor.rtl &&
-        getCursorPosition() ===
-          htmlElement.getTextElement().getInnerText().length
-      ) {
-        moveRightThrottled();
-        handled = true;
-      }
-      break;
-    case 'ArrowRight':
-      if (
-        !editor.rtl &&
-        getCursorPosition() ===
-          htmlElement.getTextElement().getInnerText().length
-      ) {
-        moveRightThrottled();
-        handled = true;
-      } else if (editor.rtl && getCursorPosition() === 0) {
-        moveLeftThrottled();
-        handled = true;
-      }
-      break;
-  }
-
-  if (handled) {
-    event.preventDefault();
-  }
-}
-
-/**
- * Handles text editing functionality for macOS
- */
-function onKeydownMac(event: KeyboardEvent) {
-  let handled = false;
-
-  if (!event.metaKey) {
-    return;
-  }
-
-  switch (event.code) {
-    case 'KeyA':
-      document.execCommand('selectAll');
-      handled = true;
-      break;
-    case 'KeyC':
-      document.execCommand('copy');
-      handled = true;
-      break;
-    case 'KeyV':
-      ipcService.paste();
-      handled = true;
-      break;
-    case 'KeyX':
-      document.execCommand('cut');
-      handled = true;
-      break;
-    case 'KeyZ':
-      if (event.shiftKey) {
-        document.execCommand('redo');
-      } else {
-        document.execCommand('undo');
-      }
-      handled = true;
-      break;
-  }
-
-  if (handled) {
-    event.preventDefault();
-  }
-}
-
-function onKeyup(event: KeyboardEvent) {
-  let handled = false;
-
-  if (editor.keyboardModifier === event.code) {
-    editor.keyboardModifier = null;
-    handled = true;
-  }
-
-  if (handled) {
-    event.preventDefault();
-  }
-}
-
-function onCutScoreElements() {
-  if (editor.selectionRange != null) {
-    const start = Math.min(
-      editor.selectionRange.start,
-      editor.selectionRange.end,
-    );
-
-    const elementsToCut = editor.elements.filter(
-      (x) => x.elementType != ElementType.Empty && isSelected(x),
-    );
-
-    clipboard = elementsToCut.map((x) => x.clone());
-
-    editor.commandService.executeAsBatch(
-      elementsToCut.map((element) =>
-        scoreElementCommandFactory.create('remove-from-collection', {
-          element,
-          collection: editor.elements,
-        }),
-      ),
-    );
-
-    refreshStaffLyrics();
-
-    setSelectedElement(
-      editor.elements[Math.min(start, editor.elements.length - 1)],
-    );
-
-    save();
-  } else if (
-    editor.selectedElement != null &&
-    editor.selectedElement.elementType !== ElementType.Empty
-  ) {
-    const currentIndex = editor.selectedElementIndex;
-
-    clipboard = [editor.selectedElement.clone()];
-
-    removeScoreElement(editor.selectedElement);
-
-    setSelectedElement(
-      editor.elements[Math.min(currentIndex, editor.elements.length - 1)],
-    );
-
-    save();
-  }
-}
-
-function onCopyScoreElements() {
-  if (editor.selectionRange != null) {
-    clipboard = editor.elements
-      .filter((x) => x.elementType != ElementType.Empty && isSelected(x))
-      .map((x) => x.clone());
-  } else if (
-    editor.selectedElement != null &&
-    editor.selectedElement.elementType !== ElementType.Empty
-  ) {
-    clipboard = [editor.selectedElement.clone()];
-  }
-}
-
-function onPasteScoreElements(includeLyrics: boolean) {
-  if (clipboard.length > 0 && editor.selectedElement != null) {
-    switch (editor.entryMode) {
-      case EntryMode.Insert:
-        onPasteScoreElementsInsert(includeLyrics);
-        break;
-      case EntryMode.Auto:
-        onPasteScoreElementsAuto(includeLyrics);
-        break;
-      case EntryMode.Edit:
-        onPasteScoreElementsEdit(includeLyrics);
-        break;
-    }
-  }
-}
-
-function onPasteScoreElementsInsert(includeLyrics: boolean) {
-  if (editor.selectedElement == null || clipboard.length === 0) {
-    return;
-  }
-
-  const insertAtIndex = isLastElement(editor.selectedElement)
-    ? editor.selectedElementIndex
-    : editor.selectedElementIndex + 1;
-
-  const newElements = clipboard.map((x) => x.clone({ includeLyrics }));
-
-  addScoreElements(newElements, insertAtIndex);
-
-  setSelectedElement(newElements.at(-1)!);
-  save();
-}
-
-function onPasteScoreElementsEdit(includeLyrics: boolean) {
-  if (editor.selectedElement == null || clipboard.length === 0) {
-    return;
-  }
-
-  const commands: Command[] = [];
-
-  let currentIndex = editor.selectedElementIndex;
-
-  for (const clipboardElement of clipboard) {
-    const currentElement = editor.elements[currentIndex];
-
-    if (currentIndex >= editor.elements.length - 1) {
-      commands.push(
-        scoreElementCommandFactory.create('add-to-collection', {
-          elements: [clipboardElement.clone({ includeLyrics })],
-          collection: editor.elements,
-          insertAtIndex: currentIndex,
-        }),
-      );
-    } else {
-      if (currentElement.elementType === clipboardElement.elementType) {
-        switch (currentElement.elementType) {
-          case ElementType.Note:
-            if (
-              !shallowEquals(
-                (currentElement as NoteElement).getClipboardProperties(
-                  includeLyrics,
-                ),
-                (clipboardElement as NoteElement).getClipboardProperties(
-                  includeLyrics,
-                ),
-              )
-            ) {
-              commands.push(
-                noteElementCommandFactory.create('update-properties', {
-                  target: currentElement as NoteElement,
-                  newValues: (
-                    clipboardElement as NoteElement
-                  ).getClipboardProperties(includeLyrics),
-                }),
-              );
-            }
-            break;
-          case ElementType.Tempo:
-            if (
-              !shallowEquals(
-                (currentElement as TempoElement).getClipboardProperties(),
-                (clipboardElement as TempoElement).getClipboardProperties(),
-              )
-            ) {
-              commands.push(
-                tempoCommandFactory.create('update-properties', {
-                  target: currentElement as TempoElement,
-                  newValues: (
-                    clipboardElement as TempoElement
-                  ).getClipboardProperties(),
-                }),
-              );
-            }
-            break;
-          case ElementType.Martyria:
-            if (
-              !shallowEquals(
-                (currentElement as MartyriaElement).getClipboardProperties(),
-                (clipboardElement as MartyriaElement).getClipboardProperties(),
-              )
-            ) {
-              commands.push(
-                martyriaCommandFactory.create('update-properties', {
-                  target: currentElement as MartyriaElement,
-                  newValues: (
-                    clipboardElement as MartyriaElement
-                  ).getClipboardProperties(),
-                }),
-              );
-            }
-            break;
-          case ElementType.DropCap:
-            if (
-              !shallowEquals(
-                (currentElement as DropCapElement).getClipboardProperties(),
-                (clipboardElement as DropCapElement).getClipboardProperties(),
-              )
-            ) {
-              commands.push(
-                dropCapCommandFactory.create('update-properties', {
-                  target: currentElement as DropCapElement,
-                  newValues: (
-                    clipboardElement as DropCapElement
-                  ).getClipboardProperties(),
-                }),
-              );
-            }
-            break;
-          case ElementType.ModeKey:
-            if (
-              !shallowEquals(
-                (currentElement as ModeKeyElement).getClipboardProperties(),
-                (clipboardElement as ModeKeyElement).getClipboardProperties(),
-              )
-            ) {
-              commands.push(
-                modeKeyCommandFactory.create('update-properties', {
-                  target: currentElement as ModeKeyElement,
-                  newValues: (
-                    clipboardElement as ModeKeyElement
-                  ).getClipboardProperties(),
-                }),
-              );
-            }
-            break;
-          case ElementType.TextBox:
-            if (
-              !shallowEquals(
-                (currentElement as TextBoxElement).getClipboardProperties(),
-                (clipboardElement as TextBoxElement).getClipboardProperties(),
-              )
-            ) {
-              commands.push(
-                textBoxCommandFactory.create('update-properties', {
-                  target: currentElement as TextBoxElement,
-                  newValues: (
-                    clipboardElement as TextBoxElement
-                  ).getClipboardProperties(),
-                }),
-              );
-            }
-            break;
-        }
-      } else {
-        commands.push(
-          scoreElementCommandFactory.create('replace-element-in-collection', {
-            element: clipboardElement.clone(),
-            collection: editor.elements,
-            replaceAtIndex: currentIndex,
-          }),
-        );
-      }
-    }
-
-    currentIndex++;
-  }
-
-  if (commands.length > 1) {
-    editor.commandService.executeAsBatch(commands);
-    refreshStaffLyrics();
-  } else if (commands.length === 1) {
-    editor.commandService.execute(commands[0]);
-    refreshStaffLyrics();
-  }
-
-  save();
-}
-
-function onPasteScoreElementsAuto(includeLyrics: boolean) {
-  moveRight();
-  const currentIndex = editor.selectedElementIndex;
-
-  onPasteScoreElementsEdit(includeLyrics);
-
-  // Set the selected element to the last element that was pasted
-  setSelectedElement(editor.elements[currentIndex + clipboard.length - 1]);
-}
-
-function getLyricLength(element: NoteElement) {
-  return lyricsRef.value[element.index].getInnerText().length;
-}
-
-const navigableElements = [
-  ElementType.Note,
-  ElementType.Martyria,
-  ElementType.Tempo,
-  ElementType.Empty,
-  ElementType.DropCap,
-  ElementType.TextBox,
-  ElementType.ImageBox,
-  ElementType.ModeKey,
-];
-
-function moveLeft() {
-  let index = -1;
-
-  if (editor.selectedElement) {
-    index = editor.selectedElement.index;
-  } else if (editor.selectionRange) {
-    index = editor.selectionRange.end;
-  }
-
-  const element = editor.elements[index - 1];
-
-  if (index - 1 >= 0 && navigableElements.includes(element.elementType)) {
-    // If the currently selected element is a drop cap or text box, blur it first
-    if (editor.selectedElement?.elementType === ElementType.DropCap) {
-      (elementsRef.value[index] as DropCap).blur();
-    } else if (editor.selectedElement?.elementType === ElementType.TextBox) {
-      (elementsRef.value[index] as TextBox).blur();
-    }
-
-    setSelectedElement(element);
-
-    // If the newly selected element is a drop cap or text box, focus it
-    if (element.elementType === ElementType.DropCap) {
-      (elementsRef.value[index - 1] as DropCap).focus();
-    } else if (element.elementType === ElementType.TextBox) {
-      (elementsRef.value[index - 1] as TextBox).focus();
-    }
-
-    return true;
-  }
-
-  return false;
-}
-
-function moveRight() {
-  let index = -1;
-
-  if (editor.selectedElement) {
-    index = editor.selectedElement.index;
-  } else if (editor.selectionRange) {
-    index = editor.selectionRange.end;
-  }
-
-  const element = editor.elements[index + 1];
-
-  if (
-    index >= 0 &&
-    index + 1 < editor.elements.length &&
-    navigableElements.includes(element.elementType)
-  ) {
-    // If the currently selected element is a drop cap, blur it first
-    if (editor.selectedElement?.elementType === ElementType.DropCap) {
-      (elementsRef.value[index] as DropCap).blur();
-    } else if (editor.selectedElement?.elementType === ElementType.TextBox) {
-      (elementsRef.value[index] as TextBox).blur();
-    }
-
-    setSelectedElement(element);
-
-    // If the newly selected element is a drop cap, focus it
-    if (element.elementType === ElementType.DropCap) {
-      (elementsRef.value[index] as DropCap).focus();
-    } else if (element.elementType === ElementType.TextBox) {
-      (elementsRef.value[index] as TextBox).focus();
-    }
-
-    return true;
-  }
-
-  return false;
-}
-
-function moveSelectionLeft() {
-  if (editor.selectionRange != null) {
-    if (
-      editor.selectionRange.end > 0 &&
-      navigableElements.includes(
-        editor.elements[editor.selectionRange.end - 1].elementType,
-      )
-    ) {
-      setSelectionRange(editor.elements[editor.selectionRange.end - 1]);
-    }
-  } else if (
-    editor.selectedElement != null &&
-    editor.selectedElementIndex > 0 &&
-    navigableElements.includes(
-      editor.elements[editor.selectedElementIndex - 1].elementType,
-    )
-  ) {
-    setSelectionRange(editor.elements[editor.selectedElementIndex - 1]);
-  }
-}
-
-function moveSelectionRight() {
-  if (editor.selectionRange != null) {
-    if (
-      editor.selectionRange.end + 1 < editor.elements.length - 1 &&
-      navigableElements.includes(
-        editor.elements[editor.selectionRange.end + 1].elementType,
-      )
-    ) {
-      setSelectionRange(editor.elements[editor.selectionRange.end + 1]);
-    }
-  } else if (
-    editor.selectedElement != null &&
-    editor.selectedElementIndex + 1 < editor.elements.length - 1 &&
-    navigableElements.includes(
-      editor.elements[editor.selectedElementIndex + 1].elementType,
-    )
-  ) {
-    setSelectionRange(editor.elements[editor.selectedElementIndex + 1]);
-  }
-}
-
-function getNextLyricBoxIndex() {
-  if (editor.selectedLyrics) {
-    const currentIndex = editor.selectedLyrics.index;
-
-    // Find the index of the next note
-    for (let i = currentIndex + 1; i < editor.elements.length; i++) {
-      if (editor.elements[i].elementType === ElementType.Note) {
-        return i;
-      }
-    }
-  }
-
-  return -1;
-}
-
-function moveToNextLyricBox(clearMelisma: boolean = false) {
-  const nextIndex = getNextLyricBoxIndex();
-
-  if (nextIndex >= 0) {
-    // If the lyrics for the last neume on the line have been updated to be so long
-    // that the neume is moved to the next line by processPages(), then focusLyrics()
-    // will fail if called on its own. This is because the order of events would
-    // be the following:
-    // focus next element => blur previous element => updateLyrics => processPages
-    // and finally the newly selected element would lose focus because processPages
-    // moves the element to the next line.
-
-    // To prevent this we, preemptively call updateLyrics and then use nextTick
-    // to only focus the next lyrics after the UI has been redrawn.
-
-    const noteElement = editor.selectedLyrics!;
-
-    const text = lyricsRef.value[noteElement.index].getInnerText();
-
-    updateLyrics(noteElement, text, clearMelisma);
-
-    nextTick(() => {
-      focusLyrics(nextIndex, true);
-    });
-
-    return true;
-  }
-
-  return false;
-}
-
-function moveToPreviousLyricBox() {
-  if (editor.selectedLyrics) {
-    const currentIndex = editor.selectedLyrics.index;
-    let nextIndex = -1;
-
-    // Find the index of the previous note
-    for (let i = currentIndex - 1; i >= 0; i--) {
-      if (editor.elements[i].elementType === ElementType.Note) {
-        nextIndex = i;
-        break;
-      }
-    }
-
-    if (nextIndex >= 0) {
-      focusLyrics(nextIndex, true);
-      return true;
-    }
-  }
-
-  return false;
-}
-
 function calculatePageNumber() {
   let maxPercentage = 0;
   let maxPercentageIndex = -1;
@@ -2662,7 +652,7 @@ function calculatePageNumber() {
     window.innerHeight || document.documentElement.clientHeight;
 
   for (let pageIndex = 0; pageIndex < editor.pageCount; pageIndex++) {
-    const rect = pagesRef.value[pageIndex].getBoundingClientRect();
+    const rect = editor.pagesRef[pageIndex].getBoundingClientRect();
 
     const percentage =
       Math.max(
@@ -2682,78 +672,6 @@ function calculatePageNumber() {
 
   if (maxPercentageIndex >= 0) {
     editor.currentPageNumber = maxPercentageIndex + 1;
-  }
-}
-
-function save(markUnsavedChanges: boolean = true) {
-  if (markUnsavedChanges) {
-    editor.selectedWorkspace.hasUnsavedChanges = true;
-  }
-
-  // Save the indexes of the visible pages
-  const visiblePages = editor.pages
-    .map((_, i) => i)
-    .filter((i) => editor.pages[i].isVisible);
-
-  const pages = LayoutService.processPages(
-    toRaw(editor.selectedWorkspace) as Workspace,
-  );
-
-  // Set page visibility for the newly processed pages
-  pages.forEach((x, index) => (x.isVisible = visiblePages.includes(index)));
-
-  // Only re-render elements that are visible and that have been updated by processPages
-  pages
-    .filter((x) => x.isVisible)
-    .forEach((page) => {
-      page.lines.forEach((line) =>
-        line.elements
-          .filter((x) => x.updated)
-          .forEach((element) => {
-            element.keyHelper++;
-          }),
-      );
-    });
-
-  // Re-render headers and footers if they changed
-  editor.score.headersAndFooters
-    .filter((x) => x.updated)
-    .forEach((element) => {
-      element.keyHelper++;
-    });
-
-  editor.pages = pages;
-
-  // If using the browser, save the workspace to local storage
-  if (isBrowser) {
-    const workspaceLocalStorage = {
-      id: editor.selectedWorkspace.id,
-      score: JSON.stringify(SaveService.SaveScoreToJson(editor.score)),
-      filePath: editor.currentFilePath,
-      tempFileName: editor.selectedWorkspace.tempFileName,
-      hasUnsavedChanges: editor.selectedWorkspace.hasUnsavedChanges,
-    } as WorkspaceLocalStorage;
-
-    localStorage.setItem(
-      `workspace-${editor.selectedWorkspace.id}`,
-      JSON.stringify(workspaceLocalStorage),
-    );
-  } else if (isDevelopment) {
-    localStorage.setItem(
-      'score',
-      JSON.stringify(SaveService.SaveScoreToJson(editor.score)),
-    );
-
-    if (editor.currentFilePath != null) {
-      localStorage.setItem('filePath', editor.currentFilePath);
-    } else {
-      localStorage.removeItem('filePath');
-    }
-
-    localStorage.setItem(
-      'hasUnsavedChanges',
-      editor.selectedWorkspace.hasUnsavedChanges.toString(),
-    );
   }
 }
 
@@ -2796,7 +714,7 @@ async function load() {
   if (openWorkspaceResults.silentPdf) {
     for (const file of openWorkspaceResults.files.filter((x) => x.success)) {
       openScore(file);
-      await onFileMenuExportAsPdf();
+      await exporting.onFileMenuExportAsPdf();
       removeWorkspace(editor.selectedWorkspace as Workspace);
     }
   }
@@ -2804,7 +722,7 @@ async function load() {
   if (openWorkspaceResults.silentHtml) {
     for (const file of openWorkspaceResults.files.filter((x) => x.success)) {
       openScore(file);
-      await onFileMenuExportAsHtml();
+      await exporting.onFileMenuExportAsHtml();
       removeWorkspace(editor.selectedWorkspace as Workspace);
     }
   }
@@ -3013,1639 +931,8 @@ async function onCloseApplication() {
   await ipcService.exitApplication();
 }
 
-function setKlasma(element: NoteElement) {
-  if (onlyTakesBottomKlasma(element.quantitativeNeume)) {
-    if (element.timeNeume === TimeNeume.Klasma_Bottom) {
-      updateNoteTime(element, null);
-    } else {
-      updateNoteTime(element, TimeNeume.Klasma_Bottom);
-    }
-    return;
-  } else if (onlyTakesTopKlasma(element.quantitativeNeume)) {
-    if (element.timeNeume === TimeNeume.Klasma_Top) {
-      updateNoteTime(element, null);
-    } else {
-      updateNoteTime(element, TimeNeume.Klasma_Top);
-    }
-    return;
-  } else if (element.timeNeume == null) {
-    updateNoteTime(element, TimeNeume.Klasma_Top);
-  } else if (element.timeNeume === TimeNeume.Klasma_Top) {
-    updateNoteTime(element, TimeNeume.Klasma_Bottom);
-  } else if (element.timeNeume === TimeNeume.Klasma_Bottom) {
-    updateNoteTime(element, null);
-  }
-}
-
-function setGorgon(element: NoteElement, neumes: GorgonNeume | GorgonNeume[]) {
-  let equivalent = false;
-
-  // Force neumes to be an array if it's not
-  neumes = Array.isArray(neumes) ? neumes : [neumes];
-
-  for (const neume of neumes) {
-    if (
-      neume === GorgonNeume.Gorgon_Bottom &&
-      onlyTakesTopGorgon(element.quantitativeNeume)
-    ) {
-      continue;
-    }
-
-    // If previous neume was matched, set to the next neume in the cycle
-    if (equivalent) {
-      updateNoteGorgon(element, neume);
-      return;
-    }
-
-    equivalent = element.gorgonNeume === neume;
-  }
-
-  // We've cycled through all the neumes.
-  // If we got to the end of the cycle, remove all
-  // gorgon neumes. Otherwise set gorgon to the first neume
-  // in the cycle.
-  if (equivalent) {
-    updateNoteGorgon(element, null);
-  } else {
-    updateNoteGorgon(element, neumes[0]);
-  }
-}
-
-function setSecondaryGorgon(element: NoteElement, neume: GorgonNeume) {
-  if (element.secondaryGorgonNeume === neume) {
-    updateNoteGorgonSecondary(element, null);
-  } else {
-    updateNoteGorgonSecondary(element, neume);
-  }
-}
-
-function setFthoraNote(element: NoteElement, neumes: Fthora[]) {
-  let equivalent = false;
-
-  for (const neume of neumes) {
-    // If previous neume was matched, set to the next neume in the cycle
-    if (equivalent) {
-      updateNoteFthora(element, neume);
-      return;
-    }
-
-    equivalent = element.fthora === neume;
-  }
-
-  // We've cycled through all the neumes.
-  // If we got to the end of the cycle, remove all
-  // fthora neumes. Otherwise set fthora to the first neume
-  // in the cycle.
-  if (equivalent) {
-    updateNoteFthora(element, null);
-  } else {
-    updateNoteFthora(element, neumes[0]);
-  }
-}
-
-function setSecondaryFthora(element: NoteElement, neume: Fthora) {
-  if (element.secondaryFthora === neume) {
-    updateNoteFthoraSecondary(element, null);
-  } else {
-    updateNoteFthoraSecondary(element, neume);
-  }
-}
-
-function setTertiaryFthora(element: NoteElement, neume: Fthora) {
-  if (element.tertiaryFthora === neume) {
-    updateNoteFthoraTertiary(element, null);
-  } else {
-    updateNoteFthoraTertiary(element, neume);
-  }
-}
-
-function setFthoraMartyria(element: MartyriaElement, neume: Fthora) {
-  if (element.fthora === neume) {
-    updateMartyriaFthora(element, null);
-  } else {
-    updateMartyriaFthora(element, neume);
-  }
-}
-
-function setMartyriaTempoLeft(element: MartyriaElement, neume: TempoSign) {
-  if (element.tempoLeft === neume) {
-    updateMartyriaTempoLeft(element, null);
-  } else {
-    updateMartyriaTempoLeft(element, neume);
-  }
-}
-
-function setMartyriaTempo(element: MartyriaElement, neume: TempoSign) {
-  if (element.tempo === neume) {
-    updateMartyriaTempo(element, null);
-  } else {
-    updateMartyriaTempo(element, neume);
-  }
-}
-
-function setMartyriaTempoRight(element: MartyriaElement, neume: TempoSign) {
-  if (element.tempoRight === neume) {
-    updateMartyriaTempoRight(element, null);
-  } else {
-    updateMartyriaTempoRight(element, neume);
-  }
-}
-
-function setMartyriaQuantitativeNeume(
-  element: MartyriaElement,
-  neume: QuantitativeNeume,
-) {
-  if (element.quantitativeNeume === neume) {
-    updateMartyriaQuantitativeNeume(element, null);
-  } else {
-    updateMartyriaQuantitativeNeume(element, neume);
-  }
-}
-
-function setModeKeyTempo(element: ModeKeyElement, neume: TempoSign) {
-  if (element.tempo === neume) {
-    updateModeKeyTempo(element, null);
-  } else {
-    updateModeKeyTempo(element, neume);
-  }
-}
-
-function setAccidental(element: NoteElement, neume: Accidental) {
-  if (element.accidental != null && element.accidental === neume) {
-    updateNoteAccidental(element, null);
-  } else {
-    updateNoteAccidental(element, neume);
-  }
-}
-
-function setSecondaryAccidental(element: NoteElement, neume: Accidental) {
-  if (
-    element.secondaryAccidental != null &&
-    element.secondaryAccidental === neume
-  ) {
-    updateNoteAccidentalSecondary(element, null);
-  } else {
-    updateNoteAccidentalSecondary(element, neume);
-  }
-}
-
-function setTertiaryAccidental(element: NoteElement, neume: Accidental) {
-  if (
-    element.tertiaryAccidental != null &&
-    element.tertiaryAccidental === neume
-  ) {
-    updateNoteAccidentalTertiary(element, null);
-  } else {
-    updateNoteAccidentalTertiary(element, neume);
-  }
-}
-
-function setTimeNeume(element: NoteElement, neume: TimeNeume) {
-  if (element.timeNeume === neume) {
-    updateNoteTime(element, null);
-  } else {
-    updateNoteTime(element, neume);
-  }
-}
-
-function setMeasureNumber(element: NoteElement, neume: MeasureNumber) {
-  if (neume === element.measureNumber) {
-    updateNoteMeasureNumber(element, null);
-  } else {
-    updateNoteMeasureNumber(element, neume);
-  }
-}
-
-function setMeasureBarNote(element: NoteElement, neume: MeasureBar) {
-  // Cycle through
-  // Left
-  // Right
-  // Both Sides
-  // None
-  const normalizedMeasureBar = element.measureBarLeft?.endsWith('Above')
-    ? measureBarAboveToLeft.get(element.measureBarLeft)
-    : element.measureBarLeft;
-  if (neume === normalizedMeasureBar && neume === element.measureBarRight) {
-    updateNoteMeasureBar(element, {
-      measureBarLeft: null,
-      measureBarRight: null,
-    });
-  } else if (neume === normalizedMeasureBar) {
-    updateNoteMeasureBar(element, {
-      measureBarLeft: null,
-      measureBarRight: neume,
-    });
-  } else if (neume === element.measureBarRight) {
-    updateNoteMeasureBar(element, {
-      measureBarLeft: neume,
-      measureBarRight: neume,
-    });
-  } else {
-    updateNoteMeasureBar(element, {
-      measureBarLeft: neume,
-      measureBarRight: null,
-    });
-  }
-}
-
-function setMeasureBarMartyria(element: MartyriaElement, neume: MeasureBar) {
-  // Cycle through
-  // Left
-  // Right
-  // Both Sides
-  // None
-  const normalizedMeasureBar = element.measureBarLeft?.endsWith('Above')
-    ? measureBarAboveToLeft.get(element.measureBarLeft)
-    : element.measureBarLeft;
-  if (neume === normalizedMeasureBar && neume === element.measureBarRight) {
-    updateMartyriaMeasureBar(element, {
-      measureBarLeft: null,
-      measureBarRight: null,
-    });
-  } else if (neume === normalizedMeasureBar) {
-    updateMartyriaMeasureBar(element, {
-      measureBarLeft: null,
-      measureBarRight: neume,
-    });
-  } else if (neume === element.measureBarRight) {
-    updateMartyriaMeasureBar(element, {
-      measureBarLeft: neume,
-      measureBarRight: neume,
-    });
-  } else {
-    updateMartyriaMeasureBar(element, {
-      measureBarLeft: neume,
-      measureBarRight: null,
-    });
-  }
-}
-
-function setIson(element: NoteElement, neume: Ison) {
-  if (neume === element.ison) {
-    updateNoteIson(element, null);
-  } else {
-    updateNoteIson(element, neume);
-  }
-}
-
-function setVocalExpression(element: NoteElement, neume: VocalExpressionNeume) {
-  if (
-    element.vocalExpressionNeume != null &&
-    areVocalExpressionsEquivalent(neume, element.vocalExpressionNeume)
-  ) {
-    updateNoteExpression(element, null);
-  } else {
-    updateNoteExpression(element, neume);
-  }
-}
-
-function setTie(element: NoteElement, neumes: Tie[]) {
-  let equivalent = false;
-
-  for (const neume of neumes) {
-    // If previous neume was matched, set to the next neume in the cycle
-    if (equivalent) {
-      updateNoteTie(element, neume);
-      return;
-    }
-
-    equivalent = element.tie === neume;
-  }
-
-  // We've cycled through all the neumes.
-  // If we got to the end of the cycle, remove all
-  // fthora neumes. Otherwise set fthora to the first neume
-  // in the cycle.
-  if (equivalent) {
-    updateNoteTie(element, null);
-  } else {
-    updateNoteTie(element, neumes[0]);
-  }
-}
-
-function addScoreElement(
-  element: ScoreElement,
-  insertAtIndex?: number,
-  collection: ScoreElement[] = editor.elements,
-) {
-  editor.commandService.execute(
-    scoreElementCommandFactory.create('add-to-collection', {
-      elements: [element],
-      collection,
-      insertAtIndex,
-    }),
-  );
-
-  refreshStaffLyrics();
-}
-
-function addScoreElements(elements: ScoreElement[], insertAtIndex?: number) {
-  editor.commandService.execute(
-    scoreElementCommandFactory.create('add-to-collection', {
-      elements,
-      collection: editor.elements,
-      insertAtIndex,
-    }),
-  );
-
-  refreshStaffLyrics();
-}
-
-function replaceScoreElement(element: ScoreElement, replaceAtIndex: number) {
-  editor.commandService.execute(
-    scoreElementCommandFactory.create('replace-element-in-collection', {
-      element,
-      collection: editor.elements,
-      replaceAtIndex,
-    }),
-  );
-
-  refreshStaffLyrics();
-}
-
-function removeScoreElement(
-  element: ScoreElement,
-  collection: ScoreElement[] = editor.elements,
-) {
-  editor.commandService.execute(
-    scoreElementCommandFactory.create('remove-from-collection', {
-      element,
-      collection,
-    }),
-  );
-
-  refreshStaffLyrics();
-}
-
 function updatePageVisibility(page: Page, isVisible: boolean) {
   page.isVisible = isVisible;
-}
-
-function updateNoteAndSave(
-  element: NoteElement,
-  newValues: Partial<NoteElement>,
-) {
-  updateNote(element, newValues);
-  save();
-}
-
-function updateNote(element: NoteElement, newValues: Partial<NoteElement>) {
-  editor.commandService.execute(
-    noteElementCommandFactory.create('update-properties', {
-      target: element,
-      newValues: newValues,
-    }),
-  );
-
-  // Force the element to update so that the neume toolbar updates
-  element.keyHelper++;
-
-  // If we change certain fields, we need to refresh the staff lyrics
-  if (
-    newValues.quantitativeNeume !== undefined ||
-    newValues.tie !== undefined ||
-    newValues.acceptsLyrics !== undefined
-  ) {
-    refreshStaffLyrics();
-  }
-}
-
-function updateNoteLyricsUseDefaultStyle(
-  element: NoteElement,
-  lyricsUseDefaultStyle: boolean,
-) {
-  updateNote(element, { lyricsUseDefaultStyle });
-  save();
-}
-
-function updateNoteLyricsColor(element: NoteElement, lyricsColor: string) {
-  updateNote(element, { lyricsColor });
-  save();
-}
-
-function updateNoteLyricsFontFamily(
-  element: NoteElement,
-  lyricsFontFamily: string,
-) {
-  updateNote(element, { lyricsFontFamily });
-  save();
-}
-
-function updateNoteLyricsFontSize(
-  element: NoteElement,
-  lyricsFontSize: number,
-) {
-  updateNote(element, { lyricsFontSize });
-  save();
-}
-
-function updateNoteLyricsStrokeWidth(
-  element: NoteElement,
-  lyricsStrokeWidth: number,
-) {
-  updateNote(element, { lyricsStrokeWidth });
-  save();
-}
-
-function updateNoteLyricsFontWeight(element: NoteElement, bold: boolean) {
-  updateNote(element, { lyricsFontWeight: bold ? '700' : '400' });
-  save();
-}
-
-function updateNoteLyricsFontStyle(element: NoteElement, italic: boolean) {
-  updateNote(element, { lyricsFontStyle: italic ? 'italic' : 'normal' });
-  save();
-}
-
-function updateNoteLyricsTextDecoration(
-  element: NoteElement,
-  underline: boolean,
-) {
-  updateNote(element, {
-    lyricsTextDecoration: underline ? 'underline' : 'none',
-  });
-  save();
-}
-
-function updateNoteAccidental(
-  element: NoteElement,
-  accidental: Accidental | null,
-) {
-  updateNote(element, { accidental });
-  save();
-}
-
-function updateNoteAccidentalSecondary(
-  element: NoteElement,
-  secondaryAccidental: Accidental | null,
-) {
-  updateNote(element, { secondaryAccidental });
-  save();
-}
-
-function updateNoteAccidentalTertiary(
-  element: NoteElement,
-  tertiaryAccidental: Accidental | null,
-) {
-  updateNote(element, { tertiaryAccidental });
-  save();
-}
-
-function updateNoteFthora(element: NoteElement, fthora: Fthora | null) {
-  let chromaticFthoraNote: ScaleNote | null = null;
-
-  if (
-    fthora === Fthora.SoftChromaticThi_Top ||
-    fthora === Fthora.SoftChromaticThi_Bottom
-  ) {
-    chromaticFthoraNote = ScaleNote.Thi;
-  } else if (
-    fthora === Fthora.SoftChromaticPa_Top ||
-    fthora === Fthora.SoftChromaticPa_Bottom
-  ) {
-    chromaticFthoraNote = ScaleNote.Ga;
-  } else if (
-    fthora === Fthora.HardChromaticThi_Top ||
-    fthora === Fthora.HardChromaticThi_Bottom
-  ) {
-    chromaticFthoraNote = ScaleNote.Thi;
-  } else if (
-    fthora === Fthora.HardChromaticPa_Top ||
-    fthora === Fthora.HardChromaticPa_Bottom
-  ) {
-    chromaticFthoraNote = ScaleNote.Pa;
-  }
-
-  updateNote(element, { fthora, chromaticFthoraNote });
-  save();
-}
-
-function updateNoteFthoraSecondary(
-  element: NoteElement,
-  secondaryFthora: Fthora | null,
-) {
-  let secondaryChromaticFthoraNote: ScaleNote | null = null;
-
-  if (secondaryFthora === Fthora.SoftChromaticThi_TopSecondary) {
-    secondaryChromaticFthoraNote = ScaleNote.Thi;
-  } else if (secondaryFthora === Fthora.SoftChromaticPa_TopSecondary) {
-    secondaryChromaticFthoraNote = ScaleNote.Ga;
-  } else if (secondaryFthora === Fthora.HardChromaticThi_TopSecondary) {
-    secondaryChromaticFthoraNote = ScaleNote.Thi;
-  } else if (secondaryFthora === Fthora.HardChromaticPa_TopSecondary) {
-    secondaryChromaticFthoraNote = ScaleNote.Pa;
-  }
-
-  updateNote(element, { secondaryFthora, secondaryChromaticFthoraNote });
-  save();
-}
-
-function updateNoteFthoraTertiary(
-  element: NoteElement,
-  tertiaryFthora: Fthora | null,
-) {
-  let tertiaryChromaticFthoraNote: ScaleNote | null = null;
-
-  if (tertiaryFthora === Fthora.SoftChromaticThi_TopTertiary) {
-    tertiaryChromaticFthoraNote = ScaleNote.Thi;
-  } else if (tertiaryFthora === Fthora.SoftChromaticPa_TopTertiary) {
-    tertiaryChromaticFthoraNote = ScaleNote.Ga;
-  } else if (tertiaryFthora === Fthora.HardChromaticThi_TopTertiary) {
-    tertiaryChromaticFthoraNote = ScaleNote.Thi;
-  } else if (tertiaryFthora === Fthora.HardChromaticPa_TopTertiary) {
-    tertiaryChromaticFthoraNote = ScaleNote.Pa;
-  }
-
-  updateNote(element, { tertiaryFthora, tertiaryChromaticFthoraNote });
-  save();
-}
-
-function updateNoteExpression(
-  element: NoteElement,
-  vocalExpressionNeume: VocalExpressionNeume | null,
-) {
-  // Replace the psifiston with a slanted psifiston if the previous neume
-  // contains a long heteron
-  if (vocalExpressionNeume === VocalExpressionNeume.Psifiston) {
-    const index = getElementIndex(element);
-
-    if (index > 0) {
-      const previousElement = editor.elements[index - 1];
-
-      if (previousElement.elementType === ElementType.Note) {
-        const previousNote = previousElement as NoteElement;
-
-        if (
-          previousNote.vocalExpressionNeume ===
-          VocalExpressionNeume.HeteronConnectingLong
-        ) {
-          vocalExpressionNeume = VocalExpressionNeume.PsifistonSlanted;
-        }
-      }
-    }
-  }
-
-  updateNote(element, { vocalExpressionNeume });
-  save();
-}
-
-function updateNoteTime(element: NoteElement, timeNeume: TimeNeume | null) {
-  updateNote(element, { timeNeume });
-  save();
-}
-
-function updateNoteGorgon(
-  element: NoteElement,
-  gorgonNeume: GorgonNeume | null,
-) {
-  updateNote(element, { gorgonNeume });
-  save();
-}
-
-function updateNoteGorgonSecondary(
-  element: NoteElement,
-  secondaryGorgonNeume: GorgonNeume | null,
-) {
-  updateNote(element, { secondaryGorgonNeume });
-  save();
-}
-
-function updateNoteMeasureBar(
-  element: NoteElement,
-  {
-    measureBarLeft,
-    measureBarRight,
-  }: {
-    measureBarLeft: MeasureBar | null;
-    measureBarRight: MeasureBar | null;
-  },
-) {
-  updateNote(element, {
-    measureBarLeft,
-    measureBarRight,
-  });
-  save();
-}
-
-function updateNoteMeasureNumber(
-  element: NoteElement,
-  measureNumber: MeasureNumber | null,
-) {
-  updateNote(element, { measureNumber });
-  save();
-}
-
-function updateNoteNoteIndicator(element: NoteElement, noteIndicator: boolean) {
-  updateNote(element, { noteIndicator });
-  save();
-}
-
-function updateNoteIson(element: NoteElement, ison: Ison | null) {
-  updateNote(element, { ison });
-  save();
-}
-
-function updateNoteKoronis(element: NoteElement, koronis: boolean) {
-  updateNote(element, { koronis });
-  save();
-}
-
-function updateNoteStavros(element: NoteElement, stavros: boolean) {
-  updateNote(element, { stavros });
-  save();
-}
-
-function updateNoteVareia(element: NoteElement, vareia: boolean) {
-  updateNote(element, { vareia });
-  save();
-}
-
-function updateNoteTie(element: NoteElement, tie: Tie | null) {
-  updateNote(element, { tie });
-  save();
-}
-
-function updateNoteSpaceAfter(element: NoteElement, spaceAfter: number) {
-  updateNote(element, { spaceAfter });
-  save();
-}
-
-function updateNoteIgnoreAttractions(
-  element: NoteElement,
-  ignoreAttractions: boolean,
-) {
-  updateNote(element, { ignoreAttractions });
-  save();
-}
-
-function updateNoteAcceptsLyrics(
-  element: NoteElement,
-  acceptsLyrics: AcceptsLyricsOption,
-) {
-  updateNote(element, {
-    acceptsLyrics: acceptsLyrics,
-  });
-  save();
-}
-
-function updateNoteChromaticFthoraNote(
-  element: NoteElement,
-  chromaticFthoraNote: ScaleNote | null,
-) {
-  updateNote(element, { chromaticFthoraNote });
-  save();
-}
-
-function updateNoteSecondaryChromaticFthoraNote(
-  element: NoteElement,
-  secondaryChromaticFthoraNote: ScaleNote | null,
-) {
-  updateNote(element, { secondaryChromaticFthoraNote });
-  save();
-}
-
-function updateNoteTertiaryChromaticFthoraNote(
-  element: NoteElement,
-  tertiaryChromaticFthoraNote: ScaleNote | null,
-) {
-  updateNote(element, { tertiaryChromaticFthoraNote });
-  save();
-}
-
-function updateLyricsLocked(locked: boolean) {
-  editor.setLyricsLocked(locked);
-  editor.selectedWorkspace.hasUnsavedChanges = true;
-}
-
-function updateStaffLyrics(lyrics: string) {
-  editor.setLyrics(lyrics);
-  assignLyricsThrottled();
-  editor.selectedWorkspace.hasUnsavedChanges = true;
-}
-
-function assignLyrics() {
-  const updateCommands: Command[] = [];
-
-  lyricService.assignLyrics(
-    editor.lyrics,
-    editor.elements,
-    editor.rtl,
-    editor.score.pageSetup.disableGreekMelismata,
-    (note, lyrics) => setLyrics(getElementIndex(note), lyrics),
-    (note, newValues) => {
-      note.updated = true;
-      updateCommands.push(
-        noteElementCommandFactory.create('update-properties', {
-          target: note,
-          newValues,
-        }),
-      );
-    },
-    (dropCap, token) => {
-      updateCommands.push(
-        dropCapCommandFactory.create('update-properties', {
-          target: dropCap,
-          newValues: { content: token },
-        }),
-      );
-    },
-  );
-
-  if (updateCommands.length > 0) {
-    editor.commandService.executeAsBatch(updateCommands, editor.lyricsLocked);
-    save();
-  }
-}
-
-function assignAcceptsLyricsFromCurrentLyrics() {
-  const commands: Command[] = [];
-
-  lyricService.assignAcceptsLyricsFromCurrentLyrics(
-    editor.elements,
-    editor.score.pageSetup.disableGreekMelismata,
-    (note, acceptsLyrics) => {
-      commands.push(
-        noteElementCommandFactory.create('update-properties', {
-          target: note,
-          newValues: {
-            acceptsLyrics,
-          },
-        }),
-      );
-    },
-  );
-
-  if (commands.length > 0) {
-    editor.commandService.executeAsBatch(commands);
-    refreshStaffLyrics();
-    save();
-  }
-}
-
-function updateLyrics(
-  element: NoteElement,
-  lyrics: string,
-  clearMelisma: boolean = false,
-) {
-  const newValues = lyricService.getLyricUpdateValues(
-    element,
-    lyrics,
-    editor.elements,
-    editor.rtl,
-    (note, lyrics) => setLyrics(getElementIndex(note), lyrics),
-    clearMelisma,
-  );
-
-  if (newValues != null) {
-    editor.commandService.execute(
-      noteElementCommandFactory.create('update-properties', {
-        target: element,
-        newValues,
-      }),
-    );
-    refreshStaffLyrics();
-    save();
-  }
-}
-
-function refreshStaffLyrics() {
-  if (editor.lyricsLocked) {
-    assignLyrics();
-  } else if (editor.lyricManagerIsOpen) {
-    editor.setLyrics(
-      lyricService.extractLyrics(
-        editor.elements,
-        editor.score.pageSetup.disableGreekMelismata,
-      ),
-    );
-  }
-}
-
-function updateAnnotation(
-  element: AnnotationElement,
-  newValues: Partial<AnnotationElement>,
-) {
-  editor.commandService.execute(
-    annotationCommandFactory.create('update-properties', {
-      target: element,
-      newValues: newValues,
-    }),
-  );
-
-  save();
-}
-
-function removeAnnotation(
-  note: NoteElement,
-  annotation: AnnotationElement,
-  noHistory: boolean = false,
-) {
-  editor.commandService.execute(
-    annotationCommandFactory.create('remove-from-collection', {
-      element: annotation,
-      collection: note.annotations,
-    }),
-    noHistory,
-  );
-
-  editor.selectedWorkspace.selectedAnnotationElement = null;
-
-  save();
-}
-
-function updateAlternateLine(
-  element: AlternateLineElement,
-  newValues: Partial<AlternateLineElement>,
-) {
-  editor.commandService.execute(
-    alternateLineCommandFactory.create('update-properties', {
-      target: element,
-      newValues: newValues,
-    }),
-  );
-
-  save();
-}
-
-function removeAlternateLine(
-  note: NoteElement,
-  annotation: AlternateLineElement,
-  noHistory: boolean = false,
-) {
-  editor.commandService.execute(
-    alternateLineCommandFactory.create('remove-from-collection', {
-      element: annotation,
-      collection: note.alternateLines,
-    }),
-    noHistory,
-  );
-
-  editor.selectedWorkspace.selectedAlternateLineElement = null;
-
-  save();
-}
-
-function updateRichTextBox(
-  element: RichTextBoxElement,
-  newValues: Partial<RichTextBoxElement>,
-) {
-  if (newValues.rtl != null) {
-    element.keyHelper++;
-  }
-
-  const heightProp: keyof RichTextBoxElement = 'height';
-
-  const noHistory =
-    Object.keys(newValues).length === 1 && heightProp in newValues;
-
-  editor.commandService.execute(
-    richTextBoxCommandFactory.create('update-properties', {
-      target: element,
-      newValues: newValues,
-    }),
-    noHistory,
-  );
-
-  const modeChangeProp: keyof RichTextBoxElement = 'modeChange';
-
-  if (modeChangeProp in newValues) {
-    refreshStaffLyrics();
-  }
-
-  save(!noHistory);
-}
-
-function updateRichTextBoxHeight(element: RichTextBoxElement, height: number) {
-  // The height could be updated by many rich text box elements at once
-  // (e.g. if PageSetup changes) so we debounce the save.
-  element.height = height;
-  richTextBoxCalculationCount++;
-  saveDebounced(false);
-}
-
-function updateRichTextBoxMarginTop(
-  element: RichTextBoxElement,
-  marginTop: number,
-) {
-  updateRichTextBox(element, { marginTop });
-}
-
-function updateRichTextBoxMarginBottom(
-  element: RichTextBoxElement,
-  marginBottom: number,
-) {
-  updateRichTextBox(element, { marginBottom });
-}
-
-function updateTextBox(
-  element: TextBoxElement,
-  newValues: Partial<TextBoxElement>,
-) {
-  const noHistory =
-    Object.keys(newValues).length === 1 && 'height' in newValues;
-
-  editor.commandService.execute(
-    textBoxCommandFactory.create('update-properties', {
-      target: element,
-      newValues: newValues,
-    }),
-    noHistory,
-  );
-
-  save(!noHistory);
-}
-
-function updateTextBoxHeight(element: TextBoxElement, height: number) {
-  // The height could be updated by many rich text box elements at once
-  // (e.g. if PageSetup changes) so we debounce the save.
-  element.height = height;
-  textBoxCalculationCount++;
-  saveDebounced(false);
-}
-
-function updateTextBoxUseDefaultStyle(
-  element: TextBoxElement,
-  useDefaultStyle: boolean,
-) {
-  updateTextBox(element, { useDefaultStyle });
-}
-
-function updateTextBoxMultipanel(element: TextBoxElement, multipanel: boolean) {
-  updateTextBox(element, { multipanel });
-}
-
-function updateTextBoxFontSize(element: TextBoxElement, fontSize: number) {
-  updateTextBox(element, { fontSize });
-}
-
-function updateTextBoxFontFamily(element: TextBoxElement, fontFamily: string) {
-  updateTextBox(element, { fontFamily });
-}
-
-function updateTextBoxStrokeWidth(
-  element: TextBoxElement,
-  strokeWidth: number,
-) {
-  updateTextBox(element, { strokeWidth });
-}
-
-function updateTextBoxColor(element: TextBoxElement, color: string) {
-  updateTextBox(element, { color });
-}
-
-function updateTextBoxAlignment(
-  element: TextBoxElement,
-  alignment: TextBoxAlignment,
-) {
-  updateTextBox(element, { alignment });
-}
-
-function updateTextBoxInline(element: TextBoxElement, inline: boolean) {
-  updateTextBox(element, { inline });
-}
-
-function updateTextBoxBold(element: TextBoxElement, bold: boolean) {
-  updateTextBox(element, { bold });
-}
-
-function updateTextBoxItalic(element: TextBoxElement, italic: boolean) {
-  updateTextBox(element, { italic });
-}
-
-function updateTextBoxUnderline(element: TextBoxElement, underline: boolean) {
-  updateTextBox(element, { underline });
-}
-
-function updateTextBoxLineHeight(
-  element: TextBoxElement,
-  lineHeight: number | null,
-) {
-  updateTextBox(element, { lineHeight });
-}
-
-function updateTextBoxWidth(
-  element: TextBoxElement,
-  customWidth: number | null,
-) {
-  updateTextBox(element, { customWidth });
-}
-
-function updateTextBoxFillWidth(element: TextBoxElement, fillWidth: boolean) {
-  updateTextBox(element, { fillWidth });
-}
-
-function updateTextBoxCustomHeight(
-  element: TextBoxElement,
-  customHeight: number | null,
-) {
-  updateTextBox(element, { customHeight });
-}
-
-function updateTextBoxMarginTop(element: TextBoxElement, marginTop: number) {
-  updateTextBox(element, { marginTop });
-}
-
-function updateTextBoxMarginBottom(
-  element: TextBoxElement,
-  marginBottom: number,
-) {
-  updateTextBox(element, { marginBottom });
-}
-
-function updateModeKey(
-  element: ModeKeyElement,
-  newValues: Partial<ModeKeyElement>,
-) {
-  editor.commandService.execute(
-    modeKeyCommandFactory.create('update-properties', {
-      target: element,
-      newValues: newValues,
-    }),
-  );
-
-  save();
-}
-
-function updateModeKeyMarginTop(element: ModeKeyElement, marginTop: number) {
-  updateModeKey(element, { marginTop });
-}
-
-function updateModeKeyMarginBottom(
-  element: ModeKeyElement,
-  marginBottom: number,
-) {
-  updateModeKey(element, { marginBottom });
-}
-
-function updateModeKeyUseDefaultStyle(
-  element: ModeKeyElement,
-  useDefaultStyle: boolean,
-) {
-  updateModeKey(element, { useDefaultStyle });
-}
-
-function updateModeKeyFontSize(element: ModeKeyElement, fontSize: number) {
-  updateModeKey(element, { fontSize });
-}
-
-function updateModeKeyStrokeWidth(
-  element: ModeKeyElement,
-  strokeWidth: number,
-) {
-  updateModeKey(element, { strokeWidth });
-}
-
-function updateModeKeyColor(element: ModeKeyElement, color: string) {
-  updateModeKey(element, { color });
-}
-
-function updateModeKeyAlignment(
-  element: ModeKeyElement,
-  alignment: TextBoxAlignment,
-) {
-  updateModeKey(element, { alignment });
-}
-
-function updateModeKeyHeightAdjustment(
-  element: ModeKeyElement,
-  heightAdjustment: number,
-) {
-  updateModeKey(element, { heightAdjustment });
-}
-
-function updateModeKeyTempo(element: ModeKeyElement, tempo: TempoSign | null) {
-  let bpm = element.bpm;
-
-  if (tempo != null) {
-    bpm =
-      editor.editorPreferences.getDefaultTempo(tempo) ??
-      TempoElement.getDefaultBpm(tempo);
-  }
-
-  updateModeKey(element, { tempo, bpm });
-}
-
-function updateModeKeyBpm(element: ModeKeyElement, bpm: number) {
-  updateModeKey(element, { bpm });
-  save();
-}
-
-function updateModeKeyIgnoreAttractions(
-  element: ModeKeyElement,
-  ignoreAttractions: boolean,
-) {
-  updateModeKey(element, { ignoreAttractions });
-  save();
-}
-
-function updateModeKeyShowAmbitus(
-  element: ModeKeyElement,
-  showAmbitus: boolean,
-) {
-  updateModeKey(element, { showAmbitus });
-  save();
-}
-
-function updateModeKeyTempoAlignRight(
-  element: ModeKeyElement,
-  tempoAlignRight: boolean,
-) {
-  updateModeKey(element, { tempoAlignRight });
-  save();
-}
-
-function updateModeKeyPermanentEnharmonicZo(
-  element: ModeKeyElement,
-  permanentEnharmonicZo: boolean,
-) {
-  updateModeKey(element, { permanentEnharmonicZo });
-  save();
-}
-
-function updateModeKeyFromTemplate(
-  element: ModeKeyElement,
-  template: ModeKeyElement,
-) {
-  const {
-    templateId,
-    mode,
-    scale,
-    scaleNote,
-    fthora,
-    martyria,
-    fthoraAboveNote,
-    fthoraAboveNote2,
-    fthoraAboveQuantitativeNeumeRight,
-    note,
-    note2,
-    quantitativeNeumeAboveNote,
-    quantitativeNeumeAboveNote2,
-    quantitativeNeumeRight,
-  } = template;
-
-  const newValues = {
-    templateId,
-    mode,
-    scale,
-    scaleNote,
-    fthora,
-    martyria,
-    fthoraAboveNote,
-    fthoraAboveNote2,
-    fthoraAboveQuantitativeNeumeRight,
-    note,
-    note2,
-    quantitativeNeumeAboveNote,
-    quantitativeNeumeAboveNote2,
-    quantitativeNeumeRight,
-  };
-
-  updateModeKey(element, newValues);
-
-  save();
-}
-
-function updateMartyria(
-  element: MartyriaElement,
-  newValues: Partial<MartyriaElement>,
-) {
-  editor.commandService.execute(
-    martyriaCommandFactory.create('update-properties', {
-      target: element,
-      newValues: newValues,
-    }),
-  );
-
-  save();
-}
-
-function updateMartyriaFthora(element: MartyriaElement, fthora: Fthora | null) {
-  let chromaticFthoraNote: ScaleNote | null = null;
-
-  if (
-    fthora === Fthora.SoftChromaticThi_Top ||
-    fthora === Fthora.SoftChromaticThi_Bottom
-  ) {
-    chromaticFthoraNote = ScaleNote.Thi;
-  } else if (
-    fthora === Fthora.SoftChromaticPa_Top ||
-    fthora === Fthora.SoftChromaticPa_Bottom
-  ) {
-    chromaticFthoraNote = ScaleNote.Ga;
-  } else if (
-    fthora === Fthora.HardChromaticThi_Top ||
-    fthora === Fthora.HardChromaticThi_Bottom
-  ) {
-    chromaticFthoraNote = ScaleNote.Thi;
-  } else if (
-    fthora === Fthora.HardChromaticPa_Top ||
-    fthora === Fthora.HardChromaticPa_Bottom
-  ) {
-    chromaticFthoraNote = ScaleNote.Pa;
-  }
-
-  updateMartyria(element, { fthora, chromaticFthoraNote });
-}
-
-function updateMartyriaTempoLeft(
-  element: MartyriaElement,
-  tempoLeft: TempoSign | null,
-) {
-  let bpm = element.bpm;
-
-  if (tempoLeft != null) {
-    bpm =
-      editor.editorPreferences.getDefaultTempo(tempoLeft) ??
-      TempoElement.getDefaultBpm(tempoLeft);
-  }
-
-  updateMartyria(element, {
-    tempoLeft,
-    bpm,
-    tempo: null,
-    tempoRight: null,
-  });
-}
-
-function updateMartyriaTempo(
-  element: MartyriaElement,
-  tempo: TempoSign | null,
-) {
-  let bpm = element.bpm;
-
-  if (tempo != null) {
-    bpm =
-      editor.editorPreferences.getDefaultTempo(tempo) ??
-      TempoElement.getDefaultBpm(tempo);
-  }
-
-  updateMartyria(element, {
-    tempo,
-    bpm,
-    tempoLeft: null,
-    tempoRight: null,
-  });
-}
-
-function updateMartyriaTempoRight(
-  element: MartyriaElement,
-  tempoRight: TempoSign | null,
-) {
-  let bpm = element.bpm;
-
-  if (tempoRight != null) {
-    bpm =
-      editor.editorPreferences.getDefaultTempo(tempoRight) ??
-      TempoElement.getDefaultBpm(tempoRight);
-  }
-
-  updateMartyria(element, {
-    tempoRight,
-    bpm,
-    tempoLeft: null,
-    tempo: null,
-  });
-}
-
-function updateMartyriaBpm(element: MartyriaElement, bpm: number) {
-  updateMartyria(element, { bpm });
-  save();
-}
-
-function updateMartyriaMeasureBar(
-  element: MartyriaElement,
-  {
-    measureBarLeft,
-    measureBarRight,
-  }: {
-    measureBarLeft: MeasureBar | null;
-    measureBarRight: MeasureBar | null;
-  },
-) {
-  updateMartyria(element, {
-    measureBarLeft,
-    measureBarRight,
-  });
-  save();
-}
-
-function updateMartyriaAlignRight(
-  element: MartyriaElement,
-  alignRight: boolean,
-) {
-  updateMartyria(element, { alignRight, quantitativeNeume: null });
-}
-
-function updateMartyriaQuantitativeNeume(
-  element: MartyriaElement,
-  quantitativeNeume: QuantitativeNeume | null,
-) {
-  updateMartyria(element, { quantitativeNeume });
-}
-
-function updateMartyriaChromaticFthoraNote(
-  element: MartyriaElement,
-  chromaticFthoraNote: ScaleNote | null,
-) {
-  updateMartyria(element, { chromaticFthoraNote });
-}
-
-function updateMartyriaAuto(element: MartyriaElement, auto: boolean) {
-  if (element.auto === auto) {
-    return;
-  }
-
-  updateMartyria(element, { auto });
-}
-
-function updateMartyriaNote(element: MartyriaElement, note: Note) {
-  if (element.note === note) {
-    return;
-  }
-
-  updateMartyria(element, { note, auto: false });
-}
-
-function updateMartyriaScale(element: MartyriaElement, scale: Scale) {
-  if (element.scale === scale) {
-    return;
-  }
-
-  updateMartyria(element, { scale, auto: false });
-}
-
-function updateMartyriaSpaceAfter(
-  element: MartyriaElement,
-  spaceAfter: number,
-) {
-  updateMartyria(element, { spaceAfter });
-  save();
-}
-
-function updateMartyriaVerticalOffset(
-  element: MartyriaElement,
-  verticalOffset: number,
-) {
-  updateMartyria(element, { verticalOffset });
-  save();
-}
-
-function updateMartyriaRootSignOverride(
-  element: MartyriaElement,
-  rootSignOverride: RootSign,
-) {
-  rootSignOverride = rootSignOverride || null;
-  updateMartyria(element, { rootSignOverride });
-  save();
-}
-
-function updateTempo(element: TempoElement, newValues: Partial<TempoElement>) {
-  editor.commandService.execute(
-    tempoCommandFactory.create('update-properties', {
-      target: element,
-      newValues: newValues,
-    }),
-  );
-
-  save();
-}
-
-function updateTempoSpaceAfter(element: TempoElement, spaceAfter: number) {
-  updateTempo(element, { spaceAfter });
-  save();
-}
-
-function updateTempoBpm(element: TempoElement, bpm: number) {
-  updateTempo(element, { bpm });
-  save();
-}
-
-function updateDropCap(
-  element: DropCapElement,
-  newValues: Partial<DropCapElement>,
-) {
-  editor.commandService.execute(
-    dropCapCommandFactory.create('update-properties', {
-      target: element,
-      newValues: newValues,
-    }),
-  );
-
-  save();
-}
-
-function updateDropCapContent(element: DropCapElement, content: string) {
-  // Replace newlines. This should only happen if the user pastes
-  // text containing new lines.
-  const sanitizedContent = content.replace(/(?:\r\n|\r|\n)/g, ' ');
-  if (sanitizedContent !== content) {
-    content = sanitizedContent;
-
-    // Force the lyrics to re-render
-    element.keyHelper++;
-  }
-
-  if (content === '') {
-    const index = element.index;
-
-    if (index > -1) {
-      if (editor.selectedElement === element) {
-        setSelectedElement(null);
-      }
-
-      removeScoreElement(element);
-    }
-  } else if (element.content !== content) {
-    editor.commandService.execute(
-      dropCapCommandFactory.create('update-properties', {
-        target: element,
-        newValues: { content },
-      }),
-    );
-
-    refreshStaffLyrics();
-  }
-
-  save();
-}
-
-function updateDropCapUseDefaultStyle(
-  element: DropCapElement,
-  useDefaultStyle: boolean,
-) {
-  updateDropCap(element, { useDefaultStyle });
-}
-
-function updateDropCapFontSize(element: DropCapElement, fontSize: number) {
-  updateDropCap(element, { fontSize });
-}
-
-function updateDropCapFontFamily(element: DropCapElement, fontFamily: string) {
-  updateDropCap(element, { fontFamily });
-}
-
-function updateDropCapStrokeWidth(
-  element: DropCapElement,
-  strokeWidth: number,
-) {
-  updateDropCap(element, { strokeWidth });
-}
-
-function updateDropCapColor(element: DropCapElement, color: string) {
-  updateDropCap(element, { color });
-}
-
-function updateDropCapFontWeight(element: DropCapElement, bold: boolean) {
-  updateDropCap(element, { fontWeight: bold ? '700' : '400' });
-}
-
-function updateDropCapFontStyle(element: DropCapElement, italic: boolean) {
-  updateDropCap(element, { fontStyle: italic ? 'italic' : 'normal' });
-}
-
-function updateDropCapLineHeight(
-  element: DropCapElement,
-  lineHeight: number | null,
-) {
-  updateDropCap(element, { lineHeight });
-}
-
-function updateDropCapLineSpan(element: DropCapElement, lineSpan: number) {
-  updateDropCap(element, { lineSpan });
-}
-
-function updateDropCapWidth(
-  element: DropCapElement,
-  customWidth: number | null,
-) {
-  updateDropCap(element, { customWidth });
-}
-
-function updateImageBox(
-  element: ImageBoxElement,
-  newValues: Partial<ImageBoxElement>,
-) {
-  editor.commandService.execute(
-    imageBoxCommandFactory.create('update-properties', {
-      target: element,
-      newValues: newValues,
-    }),
-  );
-
-  save();
-}
-
-function updateImageBoxInline(element: ImageBoxElement, inline: boolean) {
-  updateImageBox(element, { inline });
-}
-
-function updateImageBoxLockAspectRatio(
-  element: ImageBoxElement,
-  lockAspectRatio: boolean,
-) {
-  updateImageBox(element, { lockAspectRatio });
-}
-
-function updateImageBoxAlignment(
-  element: ImageBoxElement,
-  alignment: TextBoxAlignment,
-) {
-  updateImageBox(element, { alignment });
-}
-
-function updateImageBoxSize(
-  element: ImageBoxElement,
-  imageWidth: number,
-  imageHeight: number,
-) {
-  updateImageBox(element, { imageWidth, imageHeight });
-}
-
-function deleteSelectedElement() {
-  if (
-    editor.selectedWorkspace.selectedAnnotationElement != null &&
-    editor.selectedElement?.elementType === ElementType.Note
-  ) {
-    removeAnnotation(
-      editor.selectedElement as NoteElement,
-      editor.selectedWorkspace.selectedAnnotationElement,
-    );
-
-    return;
-  }
-
-  if (
-    editor.selectedWorkspace.selectedAlternateLineElement != null &&
-    editor.selectedElement?.elementType === ElementType.Note
-  ) {
-    removeAlternateLine(
-      editor.selectedElement as NoteElement,
-      editor.selectedWorkspace.selectedAlternateLineElement,
-    );
-
-    return;
-  }
-
-  if (
-    editor.selectedElement != null &&
-    !isLastElement(editor.selectedElement)
-  ) {
-    const index = editor.selectedElementIndex;
-
-    removeScoreElement(editor.selectedElement);
-
-    setSelectedElement(editor.elements[index]);
-
-    save();
-  } else if (editor.selectionRange != null) {
-    const elementsToDelete = editor.elements.filter(
-      (x) => x.elementType != ElementType.Empty && isSelected(x),
-    );
-
-    editor.commandService.executeAsBatch(
-      elementsToDelete.map((element) =>
-        scoreElementCommandFactory.create('remove-from-collection', {
-          element,
-          collection: editor.elements,
-        }),
-      ),
-    );
-
-    refreshStaffLyrics();
-
-    const start = Math.min(
-      editor.selectionRange.start,
-      editor.selectionRange.end,
-    );
-
-    setSelectedElement(
-      editor.elements[Math.min(start, editor.elements.length - 1)],
-    );
-
-    save();
-  }
-}
-
-function deletePreviousElement() {
-  if (editor.selectedWorkspace.selectedAlternateLineElement) {
-    const elements =
-      editor.selectedWorkspace.selectedAlternateLineElement.elements;
-    removeScoreElement(elements[editor.elements.length - 1], elements);
-
-    return;
-  }
-
-  if (
-    editor.selectedElement &&
-    editor.selectedElementIndex > 0 &&
-    navigableElements.includes(
-      editor.elements[editor.selectedElementIndex - 1].elementType,
-    )
-  ) {
-    removeScoreElement(editor.elements[editor.selectedElementIndex - 1]);
-
-    save();
-  }
 }
 
 function updatePageSetup(pageSetup: PageSetup) {
@@ -4756,8 +1043,8 @@ function updatePageSetup(pageSetup: PageSetup) {
   editor.commandService.executeAsBatch(updateCommands);
 
   if (needToRecalcRichTextBoxes) {
-    recalculateRichTextBoxHeights();
-    recalculateTextBoxHeights();
+    editing.recalculateRichTextBoxHeights();
+    editing.recalculateTextBoxHeights();
   }
 
   save();
@@ -4799,7 +1086,7 @@ function createRichHeaderFooter(left: string, center: string, right: string) {
 }
 
 function updateEntryMode(mode: EntryMode) {
-  editor.setEntryMode(mode);
+  editor.selectedWorkspace.entryMode = mode;
 }
 
 function updateZoom(zoom: number) {
@@ -4841,91 +1128,6 @@ function performZoomToFit() {
     availableWidth / editor.score.pageSetup.pageWidth;
 }
 
-function onAudioServiceEventPlay(event: PlaybackSequenceEvent) {
-  if (audioService.state === AudioState.Playing) {
-    // Scroll the currently playing element into view
-    const lyrics = lyricsRef.value[event.elementIndex];
-
-    const neumeBox = elementsRef.value[event.elementIndex] as HTMLElement;
-
-    lyrics?.$el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-
-    neumeBox?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-  }
-}
-
-function recalculateRichTextBoxHeights() {
-  if (editor.richTextBoxCalculation) {
-    editor.richTextBoxCalculation = false;
-  }
-
-  nextTick(async () => {
-    const expectedCount = editor.resizableRichTextBoxElements.length;
-    richTextBoxCalculationCount = 0;
-    editor.richTextBoxCalculation = true;
-
-    const maxTries = 4 * 30; // 30 seconds
-    let tries = 1;
-    let lastCount = 0;
-
-    // Wait until all rich text boxes have updated
-    const poll = (resolve: (value: unknown) => void) => {
-      if (
-        richTextBoxCalculationCount === expectedCount ||
-        tries >= maxTries ||
-        richTextBoxCalculationCount < lastCount
-      ) {
-        resolve(true);
-      } else {
-        tries++;
-        lastCount = richTextBoxCalculationCount;
-        setTimeout(() => poll(resolve), 250);
-      }
-    };
-
-    await new Promise(poll);
-
-    editor.richTextBoxCalculation = false;
-    saveDebounced(false);
-  });
-}
-
-function recalculateTextBoxHeights() {
-  if (editor.textBoxCalculation) {
-    editor.textBoxCalculation = false;
-  }
-
-  nextTick(async () => {
-    const expectedCount = editor.resizableRichTextBoxElements.length;
-    textBoxCalculationCount = 0;
-    editor.textBoxCalculation = true;
-
-    const maxTries = 4 * 30; // 30 seconds
-    let tries = 1;
-    let lastCount = 0;
-
-    // Wait until all rich text boxes have updated
-    const poll = (resolve: (value: unknown) => void) => {
-      if (
-        textBoxCalculationCount === expectedCount ||
-        tries >= maxTries ||
-        textBoxCalculationCount < lastCount
-      ) {
-        resolve(true);
-      } else {
-        tries++;
-        lastCount = textBoxCalculationCount;
-        setTimeout(() => poll(resolve), 250);
-      }
-    };
-
-    await new Promise(poll);
-
-    editor.textBoxCalculation = false;
-    saveDebounced(false);
-  });
-}
-
 function onFileMenuNewScore() {
   const workspace = new Workspace();
   workspace.tempFileName = getTempFilename();
@@ -4949,191 +1151,6 @@ async function onFileMenuOpenScore(args: FileMenuOpenScoreArgs) {
 
 function onFileMenuPageSetup() {
   editor.pageSetupDialogIsOpen = true;
-}
-
-async function onFileMenuPrint() {
-  editor.printMode = true;
-
-  // Blur the active element so that focus outlines and
-  // blinking cursors don't show up in the printed page
-  const activeElement = blurActiveElement();
-
-  const previousTitle = window.document.title;
-  window.document.title = getFileName(
-    editor.selectedWorkspace as Workspace,
-    false,
-  );
-
-  nextTick(async () => {
-    await ipcService.printWorkspace(editor.selectedWorkspace as Workspace);
-    editor.printMode = false;
-    window.document.title = previousTitle;
-
-    // Re-focus the active element
-    focusElement(activeElement);
-  });
-}
-
-async function onFileMenuExportAsPdf() {
-  editor.printMode = true;
-
-  // Blur the active element so that focus outlines and
-  // blinking cursors don't show up in the printed page
-  const activeElement = blurActiveElement();
-
-  const previousTitle = window.document.title;
-  window.document.title = getFileName(
-    editor.selectedWorkspace as Workspace,
-    false,
-  );
-
-  await nextTick();
-  await ipcService.exportWorkspaceAsPdf(editor.selectedWorkspace as Workspace);
-  editor.printMode = false;
-  window.document.title = previousTitle;
-
-  // Re-focus the active element
-  focusElement(activeElement);
-}
-
-async function onFileMenuExportAsImage() {
-  editor.exportFormat = ExportFormat.PNG;
-  editor.exportDialogIsOpen = true;
-}
-
-async function exportAsPng(args: ExportAsPngSettings) {
-  let reply: ExportWorkspaceAsImageReplyArgs;
-
-  try {
-    reply = await ipcService.exportWorkspaceAsImage(
-      editor.selectedWorkspace as Workspace,
-      'png',
-    );
-
-    if (!reply.success) {
-      return;
-    }
-  } catch (error) {
-    console.error(error);
-    return;
-  }
-
-  editor.printMode = true;
-  editor.exportInProgress = true;
-
-  // Blur the active element so that focus outlines and
-  // blinking cursors don't show up in the printed page
-  const activeElement = blurActiveElement();
-
-  nextTick(async () => {
-    try {
-      const pages = pagesRef.value as HTMLElement[];
-
-      if (pages.length > 0) {
-        const fontEmbedCSS = await getFontEmbedCSS(pages[0]);
-
-        let pageNumber = 1;
-
-        for (const page of pages) {
-          const options = {
-            fontEmbedCSS,
-            pixelRatio: args.dpi / 96,
-            style: { margin: '0' },
-          } as any;
-
-          if (args.transparentBackground) {
-            options.style.backgroundColor = 'transparent';
-          }
-
-          let data = await toPng(page, options);
-
-          if (data != null) {
-            const fileName = reply.filePath.replace(
-              /\.png$/,
-              `-${pageNumber++}.png`,
-            );
-
-            data = data.replace(/^data:image\/png;base64,/, '');
-
-            if (!(await ipcService.exportPageAsImage(fileName, data))) {
-              break;
-            }
-          }
-        }
-      }
-
-      if (args.openFolder) {
-        await ipcService.showItemInFolder(
-          reply.filePath.replace(/\.png$/, '-1.png'),
-        );
-      }
-    } catch (error) {
-      console.error(error);
-    } finally {
-      editor.printMode = false;
-      editor.exportInProgress = false;
-      closeExportDialog();
-      // Re-focus the active element
-      focusElement(activeElement);
-    }
-  });
-}
-
-async function onFileMenuExportAsHtml() {
-  await ipcService.exportWorkspaceAsHtml(
-    editor.selectedWorkspace as Workspace,
-    byzHtmlExporter.exportScore(editor.score),
-  );
-}
-
-function onFileMenuExportAsMusicXml() {
-  editor.exportFormat = ExportFormat.MusicXml;
-  editor.exportDialogIsOpen = true;
-}
-
-function onFileMenuExportAsLatex() {
-  editor.exportFormat = ExportFormat.Latex;
-  editor.exportDialogIsOpen = true;
-}
-
-async function exportAsMusicXml(args: ExportAsMusicXmlSettings) {
-  await ipcService.exportWorkspaceAsMusicXml(
-    editor.selectedWorkspace as Workspace,
-    musicXmlExporter.export(editor.score, args.options),
-    args.compressed,
-    args.openFolder,
-  );
-
-  closeExportDialog();
-}
-
-async function exportAsLatex(args: ExportAsLatexSettings) {
-  await ipcService.exportWorkspaceAsLatex(
-    editor.selectedWorkspace as Workspace,
-    JSON.stringify(
-      latexExporter.export(editor.pages, editor.score.pageSetup, args.options),
-      null,
-      2,
-    ),
-  );
-
-  closeExportDialog();
-}
-
-function blurActiveElement() {
-  const activeElement = document.activeElement;
-
-  if (activeElement instanceof HTMLElement) {
-    activeElement.blur();
-  }
-
-  return activeElement;
-}
-
-function focusElement(element: Element | null) {
-  if (element instanceof HTMLElement) {
-    element.focus();
-  }
 }
 
 function onFileMenuInsertAnnotation() {
@@ -5193,7 +1210,7 @@ function onFileMenuInsertTextBox(args?: FileMenuInsertTextboxArgs) {
   save();
 
   nextTick(() => {
-    (elementsRef.value[element.index] as TextBox).focus();
+    (editor.elementsRef[element.index] as TextBox).focus();
   });
 }
 
@@ -5208,7 +1225,7 @@ function onFileMenuInsertRichTextBox() {
   save();
 
   nextTick(() => {
-    (elementsRef.value[element.index] as TextBoxRich).focus();
+    (editor.elementsRef[element.index] as TextBoxRich).focus();
   });
 }
 
@@ -5301,194 +1318,6 @@ async function onFileMenuSaveAs() {
   }
 }
 
-function onFileMenuUndo() {
-  const currentIndex = editor.selectedElementIndex;
-
-  const textBoxDefaultFontFamilyPrevious =
-    editor.score.pageSetup.textBoxDefaultFontFamily;
-  const textBoxDefaultFontSizePrevious =
-    editor.score.pageSetup.textBoxDefaultFontSize;
-
-  editor.commandService.undo();
-
-  // TODO this may be overkill, but the alternative is putting in place
-  // an event system to only refresh on certain undo actions
-  refreshStaffLyrics();
-
-  if (currentIndex > -1) {
-    // If the selected element was removed during the undo process, choose a new one
-    const clampedIndex = Math.min(currentIndex, editor.elements.length - 1);
-
-    if (editor.selectedElement !== editor.elements[clampedIndex]) {
-      setSelectedElement(editor.elements[clampedIndex]);
-    }
-
-    // Undo/redo could affect the note display in the neume toolbar (among other things),
-    // so we force a refresh here
-    editor.elements[clampedIndex].keyHelper++;
-  }
-
-  if (
-    textBoxDefaultFontFamilyPrevious !=
-      editor.score.pageSetup.textBoxDefaultFontFamily ||
-    textBoxDefaultFontSizePrevious !=
-      editor.score.pageSetup.textBoxDefaultFontSize
-  ) {
-    recalculateRichTextBoxHeights();
-    recalculateTextBoxHeights();
-  }
-
-  save();
-}
-
-function onFileMenuRedo() {
-  const currentIndex = editor.selectedElementIndex;
-
-  const textBoxDefaultFontFamilyPrevious =
-    editor.score.pageSetup.textBoxDefaultFontFamily;
-  const textBoxDefaultFontSizePrevious =
-    editor.score.pageSetup.textBoxDefaultFontSize;
-
-  editor.commandService.redo();
-
-  // TODO this may be overkill, but the alternative is putting in place
-  // an event system to only refresh on certain undo actions
-  refreshStaffLyrics();
-
-  if (currentIndex > -1) {
-    // If the selected element was removed during the redo process, choose a new one
-    const clampedIndex = Math.min(currentIndex, editor.elements.length - 1);
-
-    if (editor.selectedElement !== editor.elements[clampedIndex]) {
-      setSelectedElement(editor.elements[clampedIndex]);
-    }
-
-    // Undo/redo could affect the note display in the neume toolbar (among other things),
-    // so we force a refresh here
-    editor.elements[clampedIndex].keyHelper++;
-  }
-
-  if (
-    textBoxDefaultFontFamilyPrevious !=
-      editor.score.pageSetup.textBoxDefaultFontFamily ||
-    textBoxDefaultFontSizePrevious !=
-      editor.score.pageSetup.textBoxDefaultFontSize
-  ) {
-    recalculateRichTextBoxHeights();
-    recalculateTextBoxHeights();
-  }
-
-  save();
-}
-
-function onFileMenuCut() {
-  if (!isTextInputFocused() && !editor.dialogOpen) {
-    onCutScoreElements();
-  } else {
-    document.execCommand('cut');
-  }
-}
-
-function onFileMenuCopy() {
-  if (!isTextInputFocused() && !editor.dialogOpen) {
-    onCopyScoreElements();
-  } else {
-    document.execCommand('copy');
-  }
-}
-
-function onFileMenuCopyFormat() {
-  if (editor.selectedElement == null) {
-    return;
-  }
-
-  if (editor.selectedElement.elementType === ElementType.TextBox) {
-    formatType = ElementType.TextBox;
-    textBoxFormat = (editor.selectedElement as TextBoxElement).cloneFormat();
-  } else if (editor.selectedElement.elementType === ElementType.Note) {
-    formatType = ElementType.Note;
-    noteFormat = (editor.selectedElement as NoteElement).cloneFormat();
-  }
-}
-
-function onFileMenuCopyAsHtml() {
-  let elements: ScoreElement[] = [];
-
-  if (editor.selectionRange != null) {
-    elements = editor.elements.filter(
-      (x) => x.elementType != ElementType.Empty && isSelected(x),
-    );
-  } else if (editor.selectedElement != null) {
-    elements = [editor.selectedElement];
-  } else if (editor.selectedLyrics != null) {
-    elements = [editor.selectedLyrics];
-  }
-
-  const html = byzHtmlExporter.exportElements(
-    elements,
-    editor.score.pageSetup,
-    0,
-    true,
-  );
-
-  navigator.clipboard.writeText(html);
-}
-
-function onFileMenuPaste() {
-  if (!isTextInputFocused() && !editor.dialogOpen) {
-    onPasteScoreElements(false);
-  } else {
-    ipcService.paste();
-  }
-}
-
-function onFileMenuPasteWithLyrics() {
-  if (!isTextInputFocused() && !editor.dialogOpen) {
-    onPasteScoreElements(true);
-  } else {
-    ipcService.paste();
-  }
-}
-
-function onFileMenuPasteFormat() {
-  const normalizedRange = getNormalizedSelectionRange();
-
-  const commands: Command[] = [];
-
-  if (normalizedRange != null) {
-    for (let i = normalizedRange.start; i <= normalizedRange.end; i++) {
-      if (editor.elements[i].elementType === formatType) {
-        applyCopiedFormat(editor.elements[i], commands);
-      }
-    }
-  } else if (editor.selectedElement != null) {
-    applyCopiedFormat(editor.selectedElement, commands);
-  }
-
-  if (commands.length > 0) {
-    editor.commandService.executeAsBatch(commands);
-    save();
-  }
-}
-
-function applyCopiedFormat(element: ScoreElement, commands: Command[]) {
-  if (element.elementType === ElementType.TextBox && textBoxFormat != null) {
-    commands.push(
-      textBoxCommandFactory.create('update-properties', {
-        target: element as TextBoxElement,
-        newValues: textBoxFormat,
-      }),
-    );
-  } else if (element.elementType === ElementType.Note && noteFormat != null) {
-    commands.push(
-      noteElementCommandFactory.create('update-properties', {
-        target: element as NoteElement,
-        newValues: noteFormat,
-      }),
-    );
-  }
-}
-
 function onFileMenuFind() {
   if (editor.searchTextPanelIsOpen) {
     searchTextRef.value?.focus();
@@ -5546,22 +1375,22 @@ function onSearchText(args: { query: string; reverse?: boolean }) {
   if (result != null) {
     setSelectedElement(result);
 
-    pagesRef.value[result.page - 1].scrollIntoView();
+    editor.pagesRef[result.page - 1].scrollIntoView();
 
     editor.pages[result.page - 1].isVisible = true;
 
     nextTick(() => {
       if (editor.selectedElement?.elementType === ElementType.Note) {
         (
-          elementsRef.value[editor.selectedElementIndex] as HTMLElement
+          editor.elementsRef[editor.selectedElementIndex] as HTMLElement
         ).scrollIntoView();
       } else if (editor.selectedElement?.elementType === ElementType.DropCap) {
         (
-          elementsRef.value[editor.selectedElementIndex] as DropCap
+          editor.elementsRef[editor.selectedElementIndex] as DropCap
         ).$el.scrollIntoView();
       } else if (editor.selectedElement?.elementType === ElementType.TextBox) {
         (
-          elementsRef.value[editor.selectedElementIndex] as TextBox
+          editor.elementsRef[editor.selectedElementIndex] as TextBox
         ).$el.scrollIntoView();
       }
     });
@@ -5774,6 +1603,7 @@ const {
   currentPageNumber,
   editorPreferencesDialogIsOpen,
   editorPreferences,
+  elementsRef,
   entryMode,
   exportDialogIsOpen,
   exportFormat,
@@ -5790,6 +1620,7 @@ const {
   lyricManagerIsOpen,
   lyrics,
   lyricsLocked,
+  lyricsRef,
   modeKeyDialogIsOpen,
   neumeComboPanelIsExpanded,
   nextElementOnLine,
@@ -5817,7 +1648,144 @@ const {
   textBoxCalculation,
   toolbarInnerNeume,
   zoomToFit,
+  pagesRef,
 } = storeToRefs(editor);
+
+const {
+  updateNoteAndSave,
+  updateNoteLyricsUseDefaultStyle,
+  updateNoteLyricsColor,
+  updateNoteLyricsFontFamily,
+  updateNoteLyricsFontSize,
+  updateNoteLyricsStrokeWidth,
+  updateNoteLyricsFontWeight,
+  updateNoteLyricsFontStyle,
+  updateNoteLyricsTextDecoration,
+  updateNoteNoteIndicator,
+  updateNoteKoronis,
+  updateNoteStavros,
+  updateNoteVareia,
+  updateNoteSpaceAfter,
+  updateNoteIgnoreAttractions,
+  updateNoteAcceptsLyrics,
+  updateNoteChromaticFthoraNote,
+  updateNoteSecondaryChromaticFthoraNote,
+  updateNoteTertiaryChromaticFthoraNote,
+  updateLyricsLocked,
+  updateStaffLyrics,
+  updateLyrics,
+  assignAcceptsLyricsFromCurrentLyrics,
+  updateAnnotation,
+  removeAnnotation,
+  updateAlternateLine,
+  updateRichTextBox,
+  updateRichTextBoxHeight,
+  updateRichTextBoxMarginTop,
+  updateRichTextBoxMarginBottom,
+  updateTextBox,
+  updateTextBoxHeight,
+  updateTextBoxUseDefaultStyle,
+  updateTextBoxMultipanel,
+  updateTextBoxFontSize,
+  updateTextBoxFontFamily,
+  updateTextBoxStrokeWidth,
+  updateTextBoxColor,
+  updateTextBoxAlignment,
+  updateTextBoxInline,
+  updateTextBoxBold,
+  updateTextBoxItalic,
+  updateTextBoxUnderline,
+  updateTextBoxLineHeight,
+  updateTextBoxWidth,
+  updateTextBoxFillWidth,
+  updateTextBoxCustomHeight,
+  updateTextBoxMarginTop,
+  updateTextBoxMarginBottom,
+  updateModeKeyMarginTop,
+  updateModeKeyMarginBottom,
+  updateModeKeyUseDefaultStyle,
+  updateModeKeyFontSize,
+  updateModeKeyStrokeWidth,
+  updateModeKeyColor,
+  updateModeKeyAlignment,
+  updateModeKeyHeightAdjustment,
+  updateModeKeyBpm,
+  updateModeKeyIgnoreAttractions,
+  updateModeKeyShowAmbitus,
+  updateModeKeyTempoAlignRight,
+  updateModeKeyPermanentEnharmonicZo,
+  updateModeKeyFromTemplate,
+  updateMartyriaBpm,
+  updateMartyriaAlignRight,
+  updateMartyriaChromaticFthoraNote,
+  updateMartyriaAuto,
+  updateMartyriaNote,
+  updateMartyriaScale,
+  updateMartyriaSpaceAfter,
+  setAccidental,
+  setFthoraMartyria,
+  updateMartyriaVerticalOffset,
+  updateMartyriaRootSignOverride,
+  updateTempoSpaceAfter,
+  updateTempoBpm,
+  updateDropCapContent,
+  updateDropCapUseDefaultStyle,
+  updateDropCapFontSize,
+  updateDropCapFontFamily,
+  updateDropCapStrokeWidth,
+  updateDropCapColor,
+  updateDropCapFontWeight,
+  updateDropCapFontStyle,
+  updateDropCapLineHeight,
+  updateDropCapLineSpan,
+  updateDropCapWidth,
+  updateImageBoxInline,
+  updateImageBoxLockAspectRatio,
+  updateImageBoxAlignment,
+  updateImageBoxSize,
+  setGorgon,
+  setVocalExpression,
+  setTie,
+  setIson,
+  setKlasma,
+  setFthoraNote,
+  setMartyriaTempo,
+  setModeKeyTempo,
+  setTimeNeume,
+  setMeasureBarMartyria,
+  setMeasureBarNote,
+  setSecondaryAccidental,
+  setSecondaryFthora,
+  setSecondaryGorgon,
+  setTertiaryAccidental,
+  setTertiaryFthora,
+  setMartyriaQuantitativeNeume,
+  setMartyriaTempoLeft,
+  setMartyriaTempoRight,
+  setMeasureNumber,
+  addTempo,
+  addScoreElement,
+  deleteSelectedElement,
+  addQuantitativeNeume,
+  addAutoMartyria,
+  addDropCap,
+  refreshStaffLyrics,
+  updateScoreElementSectionName,
+  toggleLineBreak,
+  togglePageBreak,
+} = useEditing();
+
+const {
+  getMelismaHyphenStyle,
+  getMelismaUnderscoreStyleInner,
+  getMelismaUnderscoreStyleOuter,
+  getMelismaStyle,
+  getLyricStyle,
+  getElementStyle,
+  getEmptyBoxStyle,
+} = useStyles();
+
+const { addNeumeCombination } = useClipboard();
 </script>
 
 <template>
@@ -5922,7 +1890,7 @@ const {
             }"
             v-for="(page, pageIndex) in filteredPages"
             :key="`page-${pageIndex}`"
-            :ref="(el: HTMLElement) => (pagesRef[pageIndex] = el)"
+            :ref="(el: any) => (pagesRef[pageIndex] = el)"
             :class="{ print: printMode }"
           >
             <template v-if="page.isVisible || printMode">
@@ -6037,10 +2005,7 @@ const {
                   :style="getElementStyle(element)"
                 >
                   <template v-if="isSyllableElement(element)">
-                    <div
-                      :ref="`element-${getElementIndex(element)}`"
-                      class="neume-box"
-                    >
+                    <div :ref="`element-${element.index}`" class="neume-box">
                       <span
                         class="section-name"
                         v-if="
@@ -6129,10 +2094,10 @@ const {
                           whiteSpace="nowrap"
                           :ref="
                             (el: ContentEditable) =>
-                              (lyricsRef[getElementIndex(element)] = el)
+                              (lyricsRef[element.index] = el)
                           "
-                          @click="focusLyrics(getElementIndex(element))"
-                          @focus="selectedLyrics = element as NoteElement"
+                          @click="focusLyrics(element.index)"
+                          @focus="setSelectedLyrics(element as NoteElement)"
                           @blur="updateLyrics(element as NoteElement, $event)"
                         />
                         <template
@@ -6222,8 +2187,8 @@ const {
                             :class="{
                               selectedMelisma: element === selectedLyrics,
                             }"
-                            @click="focusLyrics(getElementIndex(element))"
-                            @focus="selectedLyrics = element as NoteElement"
+                            @click="focusLyrics(element.index)"
+                            @focus="setSelectedLyrics(element as NoteElement)"
                           ></span>
                         </template>
                       </div>
@@ -6248,7 +2213,7 @@ const {
                       <MartyriaNeumeBox
                         :ref="
                           (el: MartyriaNeumeBox) =>
-                            (elementsRef[getElementIndex(element)] = el)
+                            (elementsRef[element.index] = el)
                         "
                         class="marytria-neume-box"
                         :neume="element"
@@ -6267,7 +2232,7 @@ const {
                   <template v-else-if="isTempoElement(element)">
                     <div
                       :ref="
-                        (el) => (elementsRef[getElementIndex(element)] = el)
+                        (el) => (elementsRef[element.index] = el as HTMLElement)
                       "
                       class="neume-box"
                     >
@@ -6298,10 +2263,7 @@ const {
                   </template>
                   <template v-else-if="isEmptyElement(element)">
                     <div
-                      :ref="
-                        (el: any) =>
-                          (elementsRef[getElementIndex(element)] = el)
-                      "
+                      :ref="(el: any) => (elementsRef[element.index] = el)"
                       class="neume-box"
                     >
                       <span
@@ -6342,10 +2304,7 @@ const {
                       ><img src="@/assets/icons/line-break.svg"
                     /></span>
                     <TextBox
-                      :ref="
-                        (el: TextBox) =>
-                          (elementsRef[getElementIndex(element)] = el)
-                      "
+                      :ref="(el: TextBox) => (elementsRef[element.index] = el)"
                       :element="element"
                       :editMode="true"
                       :metadata="getTokenMetadata(pageIndex)"
@@ -6374,8 +2333,7 @@ const {
                     /></span>
                     <TextBoxRich
                       :ref="
-                        (el: TextBoxRich) =>
-                          (elementsRef[getElementIndex(element)] = el)
+                        (el: TextBoxRich) => (elementsRef[element.index] = el)
                       "
                       :element="element"
                       :pageSetup="score.pageSetup"
@@ -6408,10 +2366,7 @@ const {
                       ><img src="@/assets/icons/line-break.svg"
                     /></span>
                     <ModeKey
-                      :ref="
-                        (el: ModeKey) =>
-                          (elementsRef[getElementIndex(element)] = el)
-                      "
+                      :ref="(el: ModeKey) => (elementsRef[element.index] = el)"
                       :element="element"
                       :pageSetup="score.pageSetup"
                       :class="[
@@ -6438,10 +2393,7 @@ const {
                       ><img src="@/assets/icons/line-break.svg"
                     /></span>
                     <DropCap
-                      :ref="
-                        (el: DropCap) =>
-                          (elementsRef[getElementIndex(element)] = el)
-                      "
+                      :ref="(el: DropCap) => (elementsRef[element.index] = el)"
                       :element="element"
                       :pageSetup="score.pageSetup"
                       :editable="!lyricsLocked"
@@ -6464,10 +2416,7 @@ const {
                       ><img src="@/assets/icons/line-break.svg"
                     /></span>
                     <ImageBox
-                      :ref="
-                        (el: ImageBox) =>
-                          (elementsRef[getElementIndex(element)] = el)
-                      "
+                      :ref="(el: ImageBox) => (elementsRef[element.index] = el)"
                       :element="element"
                       :zoom="zoom"
                       :printMode="printMode"
@@ -7179,10 +3128,10 @@ const {
       v-if="exportDialogIsOpen"
       :loading="exportInProgress"
       :defaultFormat="exportFormat"
-      @exportAsPng="exportAsPng"
-      @exportAsMusicXml="exportAsMusicXml"
-      @exportAsLatex="exportAsLatex"
-      @close="closeExportDialog"
+      @exportAsPng="exporting.exportAsPng"
+      @exportAsMusicXml="exporting.exportAsMusicXml"
+      @exportAsLatex="exporting.exportAsLatex"
+      @close="exporting.closeExportDialog"
     />
     <template v-if="richTextBoxCalculation">
       <TextBoxRich

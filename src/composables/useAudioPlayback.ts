@@ -136,6 +136,17 @@ export function useAudioPlayback() {
       editor.selectedWorkspace.playbackBpm = event.bpm;
 
       editor.audioElement = editor.elements[event.elementIndex];
+
+      if (audioService.state === AudioState.Playing) {
+        // Scroll the currently playing element into view
+        const lyrics = editor.lyricsRef[event.elementIndex];
+
+        const neumeBox = editor.elementsRef[event.elementIndex] as HTMLElement;
+
+        lyrics?.$el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+
+        neumeBox?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      }
     }
   }
 

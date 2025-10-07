@@ -20,7 +20,6 @@ import {
 import Vue3TabsChrome, { Tab } from 'vue3-tabs-chrome';
 
 import AlternateLine from '@/components/AlternateLine.vue';
-import Annotation from '@/components/Annotation.vue';
 import ContentEditable from '@/components/ContentEditable.vue';
 import DropCap from '@/components/DropCap.vue';
 import EditorPreferencesDialog from '@/components/EditorPreferencesDialog.vue';
@@ -39,6 +38,7 @@ import PageSetupDialog from '@/components/PageSetupDialog.vue';
 import PlaybackSettingsDialog from '@/components/PlaybackSettingsDialog.vue';
 import SearchText from '@/components/SearchText.vue';
 import SyllablePositioningDialog from '@/components/SyllablePositioningDialog.vue';
+import Annotation from '@/components/TextAnnotation.vue';
 import TextBox from '@/components/TextBox.vue';
 import TextBoxRich from '@/components/TextBoxRich.vue';
 import ToolbarDropCap from '@/components/ToolbarDropCap.vue';

@@ -1,85 +1,108 @@
 <template>
   <span
     class="contenteditable"
-    :contenteditable="contentEditable as any"
+    :contenteditable="contentEditable"
     :style="style"
     @blur="onBlur"
     @focus="$emit('focus')"
     @click="$emit('click')"
     v-html="content"
-  ></span>
+  />
 </template>
 
 <script lang="ts">
-import { StyleValue } from 'vue';
-import { Component, Prop, Vue } from 'vue-facing-decorator';
+import { defineComponent, StyleValue } from 'vue';
 
-@Component({
+export default defineComponent({
+  components: {},
   emits: ['click', 'focus', 'blur', 'onEditorReady'],
-})
-export default class ContentEditable extends Vue {
-  @Prop() content!: string;
-  @Prop({ default: true }) selectAllOnFocus!: boolean;
-  @Prop({ default: true }) editable!: boolean;
-  @Prop({ default: true }) plaintextOnly!: boolean;
-  @Prop({ default: 'break-spaces' }) whiteSpace!: string;
+  props: {
+    content: {
+      type: String,
+      required: true,
+    },
+    selectAllOnFocus: {
+      type: Boolean,
+      default: true,
+    },
+    editable: {
+      type: Boolean,
+      default: true,
+    },
+    plaintextOnly: {
+      type: Boolean,
+      default: true,
+    },
+    whiteSpace: {
+      type: String,
+      default: 'break-spaces',
+    },
+  },
 
-  get contentEditable() {
-    return this.editable
-      ? this.plaintextOnly
-        ? 'plaintext-only'
-        : 'true'
-      : 'false';
-  }
-
-  get htmlElement() {
-    return this.$el as HTMLElement;
-  }
-
-  get style() {
-    return {
-      whiteSpace: this.whiteSpace,
-    } as StyleValue;
-  }
+  data() {
+    return {};
+  },
 
   mounted() {
     this.$emit('onEditorReady');
-  }
+  },
 
-  getInnerText() {
-    return this.htmlElement.innerText;
-  }
+  computed: {
+    contentEditable() {
+      return this.editable
+        ? this.plaintextOnly
+          ? 'plaintext-only'
+          : 'true'
+        : 'false';
+    },
 
-  getContent() {
-    return this.escapeHtml(this.htmlElement.innerText);
-  }
+    htmlElement() {
+      return this.$el as HTMLElement;
+    },
 
-  onBlur() {
-    this.$emit('blur', this.getContent());
-  }
+    style() {
+      return {
+        whiteSpace: this.whiteSpace,
+      } as StyleValue;
+    },
+  },
 
-  focus(selectAll: boolean) {
-    this.htmlElement.focus();
+  methods: {
+    getInnerText() {
+      return this.htmlElement.innerText;
+    },
 
-    if (selectAll) {
-      document.execCommand('selectAll', false);
-    }
-  }
+    getContent() {
+      return this.escapeHtml(this.htmlElement.innerText);
+    },
 
-  blur() {
-    this.htmlElement.blur();
-  }
+    onBlur() {
+      this.$emit('blur', this.getContent());
+    },
 
-  setInnerText(text: string) {
-    this.htmlElement.innerText = text;
-  }
+    focus(selectAll: boolean) {
+      this.htmlElement.focus();
 
-  escapeHtml(text: string) {
-    const p = document.createElement('p');
-    p.appendChild(document.createTextNode(text));
-    return p.innerHTML;
-  }
-}
+      if (selectAll) {
+        document.execCommand('selectAll', false);
+      }
+    },
+
+    blur() {
+      this.htmlElement.blur();
+    },
+
+    setInnerText(text: string) {
+      this.htmlElement.innerText = text;
+    },
+
+    escapeHtml(text: string) {
+      const p = document.createElement('p');
+      p.appendChild(document.createTextNode(text));
+      return p.innerHTML;
+    },
+  },
+});
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

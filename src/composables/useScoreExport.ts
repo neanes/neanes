@@ -122,7 +122,7 @@ export function useScoreExport() {
 
     nextTick(async () => {
       try {
-        const pages = editor.pagesRef as HTMLElement[];
+        const pages = editor.pageRefs;
 
         if (pages.length > 0) {
           const fontEmbedCSS = await getFontEmbedCSS(pages[0]);

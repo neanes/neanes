@@ -1,6 +1,6 @@
 // stores/editor.ts
 import { defineStore } from 'pinia';
-import { StyleValue } from 'vue';
+import { ShallowRef, shallowRef, StyleValue } from 'vue';
 
 import ContentEditable from '@/components/ContentEditable.vue';
 import DropCap from '@/components/DropCap.vue';
@@ -64,17 +64,20 @@ export const useEditorStore = defineStore('editor', {
     fonts: [] as string[],
     toolbarInnerNeume: 'Primary',
 
-    pagesRef: {} as Record<number, HTMLElement>,
-    lyricsRef: {} as Record<number, ContentEditable>,
-    elementsRef: {} as Record<
-      number,
-      | HTMLElement
-      | DropCap
-      | ImageBox
-      | MartyriaNeumeBox
-      | ModeKey
-      | TextBox
-      | TextBoxRich
+    pageRefs: shallowRef([]) as ShallowRef<HTMLElement[]>,
+    lyricRefs: shallowRef([]) as ShallowRef<
+      Array<InstanceType<typeof ContentEditable>>
+    >,
+    elementRefs: shallowRef([]) as ShallowRef<
+      Array<
+        | HTMLElement
+        | InstanceType<typeof DropCap>
+        | ImageBox
+        | MartyriaNeumeBox
+        | ModeKey
+        | TextBox
+        | TextBoxRich
+      >
     >,
 
     audioOptions: {

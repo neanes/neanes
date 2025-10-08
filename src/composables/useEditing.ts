@@ -809,8 +809,8 @@ export function useEditing() {
   }
 
   function setLyricsOnHtmlElement(index: number, lyrics: string) {
-    if (editor.lyricsRef[index]) {
-      editor.lyricsRef[index].setInnerText(lyrics);
+    if (editor.lyricRefs[index]) {
+      editor.lyricRefs[index].setInnerText(lyrics);
     }
   }
 
@@ -1845,7 +1845,9 @@ export function useEditing() {
     save();
 
     nextTick(() => {
-      (editor.elementsRef[element.index] as DropCap).focus();
+      (
+        editor.elementRefs[element.index] as InstanceType<typeof DropCap>
+      ).focus();
     });
   }
 

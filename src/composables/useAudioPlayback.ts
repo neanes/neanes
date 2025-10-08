@@ -139,9 +139,9 @@ export function useAudioPlayback() {
 
       if (audioService.state === AudioState.Playing) {
         // Scroll the currently playing element into view
-        const lyrics = editor.lyricsRef[event.elementIndex];
+        const lyrics = editor.lyricRefs[event.elementIndex];
 
-        const neumeBox = editor.elementsRef[event.elementIndex] as HTMLElement;
+        const neumeBox = editor.elementRefs[event.elementIndex] as HTMLElement;
 
         lyrics?.$el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
 

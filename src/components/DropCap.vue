@@ -18,8 +18,7 @@
 </template>
 
 <script lang="ts">
-import { StyleValue } from 'vue';
-import { Component, Prop, Vue } from 'vue-facing-decorator';
+import { defineComponent, PropType, StyleValue } from 'vue';
 
 import ContentEditable from '@/components/ContentEditable.vue';
 import { DropCapElement } from '@/models/Element';
@@ -27,58 +26,75 @@ import { PageSetup } from '@/models/PageSetup';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { withZoom } from '@/utils/withZoom';
 
-@Component({
+export default defineComponent({
   components: { ContentEditable },
   emits: ['update:content', 'select-single'],
-})
-export default class DropCap extends Vue {
-  @Prop() element!: DropCapElement;
-  @Prop() pageSetup!: PageSetup;
-  @Prop() editable!: boolean;
+  props: {
+    element: {
+      type: Object as PropType<DropCapElement>,
+      required: true,
+    },
+    pageSetup: {
+      type: Object as PropType<PageSetup>,
+      required: true,
+    },
+    editable: {
+      type: Boolean,
+      required: true,
+    },
+  },
 
-  get textElement() {
-    return this.$refs.text as ContentEditable;
-  }
+  data() {
+    return {};
+  },
 
-  get style() {
-    const style = {
-      color: this.element.computedColor,
-      fontFamily: getFontFamilyWithFallback(this.element.computedFontFamily),
-      fontSize: withZoom(this.element.computedFontSize),
-      fontWeight: this.element.computedFontWeight,
-      fontStyle: this.element.computedFontStyle,
-      lineHeight: `${this.element.computedLineHeight ?? 'normal'}`,
-      webkitTextStrokeWidth: withZoom(this.element.computedStrokeWidth),
-    } as StyleValue;
+  computed: {
+    textElement() {
+      return this.$refs.text as InstanceType<typeof ContentEditable>;
+    },
 
-    return style;
-  }
+    style() {
+      const style = {
+        color: this.element.computedColor,
+        fontFamily: getFontFamilyWithFallback(this.element.computedFontFamily),
+        fontSize: withZoom(this.element.computedFontSize),
+        fontWeight: this.element.computedFontWeight,
+        fontStyle: this.element.computedFontStyle,
+        lineHeight: `${this.element.computedLineHeight ?? 'normal'}`,
+        webkitTextStrokeWidth: withZoom(this.element.computedStrokeWidth),
+      } as StyleValue;
 
-  get containerStyle() {
-    return {
-      direction: this.pageSetup.melkiteRtl ? 'rtl' : undefined,
-    } as StyleValue;
-  }
+      return style;
+    },
 
-  focus() {
-    if (this.editable) {
-      this.textElement.focus(true);
-    }
-  }
+    containerStyle() {
+      return {
+        direction: this.pageSetup.melkiteRtl ? 'rtl' : undefined,
+      } as StyleValue;
+    },
+  },
 
-  blur() {
-    this.textElement.blur();
-  }
+  methods: {
+    focus() {
+      if (this.editable) {
+        this.textElement.focus(true);
+      }
+    },
 
-  updateContent(content: string) {
-    // Nothing actually changed, so do nothing
-    if (this.element.content === content) {
-      return;
-    }
+    blur() {
+      this.textElement.blur();
+    },
 
-    this.$emit('update:content', content);
-  }
-}
+    updateContent(content: string) {
+      // Nothing actually changed, so do nothing
+      if (this.element.content === content) {
+        return;
+      }
+
+      this.$emit('update:content', content);
+    },
+  },
+});
 </script>
 
 <style scoped>

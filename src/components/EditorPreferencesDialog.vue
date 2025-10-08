@@ -35,7 +35,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-facing-decorator';
+import { defineComponent, PropType } from 'vue';
 
 import ModalDialog from '@/components/ModalDialog.vue';
 import Neume from '@/components/Neume.vue';
@@ -45,51 +45,64 @@ import { PageSetup } from '@/models/PageSetup';
 
 import InputBpm from './InputBpm.vue';
 
-@Component({
+export default defineComponent({
   components: { ModalDialog, Neume, InputBpm },
   emits: ['close', 'update'],
-})
-export default class PreferencesDialog extends Vue {
-  @Prop() options!: EditorPreferences;
-  @Prop() pageSetup!: PageSetup;
+  props: {
+    options: {
+      type: Object as PropType<EditorPreferences>,
+      required: true,
+    },
+    pageSetup: {
+      type: Object as PropType<PageSetup>,
+      required: true,
+    },
+  },
 
-  form: EditorPreferences = new EditorPreferences();
-
-  tempoSigns = [
-    TempoSign.VerySlow,
-    TempoSign.Slower,
-    TempoSign.Slow,
-    TempoSign.Moderate,
-    TempoSign.Medium,
-    TempoSign.Quick,
-    TempoSign.Quicker,
-    TempoSign.VeryQuick,
-  ];
+  data() {
+    return {
+      form: new EditorPreferences(),
+      tempoSigns: [
+        TempoSign.VerySlow,
+        TempoSign.Slower,
+        TempoSign.Slow,
+        TempoSign.Moderate,
+        TempoSign.Medium,
+        TempoSign.Quick,
+        TempoSign.Quicker,
+        TempoSign.VeryQuick,
+      ],
+    };
+  },
 
   mounted() {
     this.form = JSON.parse(JSON.stringify(this.options));
 
     window.addEventListener('keydown', this.onKeyDown);
-  }
+  },
 
   beforeUnmount() {
     window.removeEventListener('keydown', this.onKeyDown);
-  }
+  },
 
-  onKeyDown(event: KeyboardEvent) {
-    if (event.code === 'Escape') {
-      this.$emit('close');
-    }
-  }
+  computed: {},
 
-  onTempoChanged(neume: TempoSign, bpm: number) {
-    this.form.tempoDefaults[neume] = bpm;
-  }
+  methods: {
+    onKeyDown(event: KeyboardEvent) {
+      if (event.code === 'Escape') {
+        this.$emit('close');
+      }
+    },
 
-  resetToSystemDefaults() {
-    this.form = new EditorPreferences();
-  }
-}
+    onTempoChanged(neume: TempoSign, bpm: number) {
+      this.form.tempoDefaults[neume] = bpm;
+    },
+
+    resetToSystemDefaults() {
+      this.form = new EditorPreferences();
+    },
+  },
+});
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

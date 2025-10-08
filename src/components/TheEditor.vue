@@ -63,6 +63,7 @@ import { useSave } from '@/composables/useSave';
 import { useScoreExport } from '@/composables/useScoreExport';
 import { useSelection } from '@/composables/useSelection';
 import { useStyles } from '@/composables/useStyles';
+import { useTemplateRefsArray } from '@/composables/useTemplateRefsArray';
 import { EventBus } from '@/eventBus';
 import {
   CloseWorkspacesArgs,
@@ -143,6 +144,17 @@ const neumeKeyboard = inject<NeumeKeyboard>(
   new NeumeKeyboard(),
 );
 
+const editor = useEditorStore();
+
+const { pageRefs, elementRefs, lyricRefs } = storeToRefs(editor);
+
+const { setRefByIndex: setPageRefByIndex } = useTemplateRefsArray(pageRefs);
+
+const { setRefByIndex: setElementRefByIndex } =
+  useTemplateRefsArray(elementRefs);
+
+const { setRefByIndex: setLyricRefByIndex } = useTemplateRefsArray(lyricRefs);
+
 const audioPlayback = useAudioPlayback();
 const { save } = useSave();
 const exporting = useScoreExport();
@@ -164,7 +176,6 @@ const isBrowser: boolean = !isElectron();
 const tab = ref<string | null>(null);
 const tabs = reactive([] as Tab[]);
 
-const editor = useEditorStore();
 const {
   setSelectedElement,
   setSelectedHeaderFooterElement,
@@ -652,7 +663,7 @@ function calculatePageNumber() {
     window.innerHeight || document.documentElement.clientHeight;
 
   for (let pageIndex = 0; pageIndex < editor.pageCount; pageIndex++) {
-    const rect = editor.pagesRef[pageIndex].getBoundingClientRect();
+    const rect = editor.pageRefs[pageIndex].getBoundingClientRect();
 
     const percentage =
       Math.max(
@@ -1210,7 +1221,7 @@ function onFileMenuInsertTextBox(args?: FileMenuInsertTextboxArgs) {
   save();
 
   nextTick(() => {
-    (editor.elementsRef[element.index] as TextBox).focus();
+    (editor.elementRefs[element.index] as TextBox).focus();
   });
 }
 
@@ -1225,7 +1236,7 @@ function onFileMenuInsertRichTextBox() {
   save();
 
   nextTick(() => {
-    (editor.elementsRef[element.index] as TextBoxRich).focus();
+    (editor.elementRefs[element.index] as TextBoxRich).focus();
   });
 }
 
@@ -1375,22 +1386,22 @@ function onSearchText(args: { query: string; reverse?: boolean }) {
   if (result != null) {
     setSelectedElement(result);
 
-    editor.pagesRef[result.page - 1].scrollIntoView();
+    editor.pageRefs[result.page - 1].scrollIntoView();
 
     editor.pages[result.page - 1].isVisible = true;
 
     nextTick(() => {
       if (editor.selectedElement?.elementType === ElementType.Note) {
         (
-          editor.elementsRef[editor.selectedElementIndex] as HTMLElement
+          editor.elementRefs[editor.selectedElementIndex] as HTMLElement
         ).scrollIntoView();
       } else if (editor.selectedElement?.elementType === ElementType.DropCap) {
         (
-          editor.elementsRef[editor.selectedElementIndex] as DropCap
+          editor.elementRefs[editor.selectedElementIndex] as DropCap
         ).$el.scrollIntoView();
       } else if (editor.selectedElement?.elementType === ElementType.TextBox) {
         (
-          editor.elementsRef[editor.selectedElementIndex] as TextBox
+          editor.elementRefs[editor.selectedElementIndex] as TextBox
         ).$el.scrollIntoView();
       }
     });
@@ -1606,7 +1617,6 @@ const {
   currentPageNumber,
   editorPreferencesDialogIsOpen,
   editorPreferences,
-  elementsRef,
   entryMode,
   exportDialogIsOpen,
   exportFormat,
@@ -1623,7 +1633,6 @@ const {
   lyricManagerIsOpen,
   lyrics,
   lyricsLocked,
-  lyricsRef,
   modeKeyDialogIsOpen,
   neumeComboPanelIsExpanded,
   nextElementOnLine,
@@ -1651,7 +1660,6 @@ const {
   textBoxCalculation,
   toolbarInnerNeume,
   zoomToFit,
-  pagesRef,
 } = storeToRefs(editor);
 
 const {
@@ -1893,7 +1901,7 @@ const { addNeumeCombination } = useClipboard();
             }"
             v-for="(page, pageIndex) in filteredPages"
             :key="`page-${pageIndex}`"
-            :ref="(el: any) => (pagesRef[pageIndex] = el)"
+            :ref="setPageRefByIndex(pageIndex)"
             :class="{ print: printMode }"
           >
             <template v-if="page.isVisible || printMode">
@@ -2095,10 +2103,7 @@ const { addNeumeCombination } = useClipboard();
                           :content="(element as NoteElement).lyrics"
                           :editable="!lyricsLocked"
                           whiteSpace="nowrap"
-                          :ref="
-                            (el: ContentEditable) =>
-                              (lyricsRef[element.index] = el)
-                          "
+                          :ref="setLyricRefByIndex"
                           @click="focusLyrics(element.index)"
                           @focus="setSelectedLyrics(element as NoteElement)"
                           @blur="updateLyrics(element as NoteElement, $event)"
@@ -2214,10 +2219,7 @@ const { addNeumeCombination } = useClipboard();
                         ><img src="@/assets/icons/line-break.svg"
                       /></span>
                       <MartyriaNeumeBox
-                        :ref="
-                          (el: MartyriaNeumeBox) =>
-                            (elementsRef[element.index] = el)
-                        "
+                        :ref="setElementRefByIndex(element.index)"
                         class="marytria-neume-box"
                         :neume="element"
                         :pageSetup="score.pageSetup"
@@ -2234,9 +2236,7 @@ const { addNeumeCombination } = useClipboard();
                   </template>
                   <template v-else-if="isTempoElement(element)">
                     <div
-                      :ref="
-                        (el) => (elementsRef[element.index] = el as HTMLElement)
-                      "
+                      :ref="setElementRefByIndex(element.index)"
                       class="neume-box"
                     >
                       <span
@@ -2266,7 +2266,7 @@ const { addNeumeCombination } = useClipboard();
                   </template>
                   <template v-else-if="isEmptyElement(element)">
                     <div
-                      :ref="(el: any) => (elementsRef[element.index] = el)"
+                      :ref="setElementRefByIndex(element.index)"
                       class="neume-box"
                     >
                       <span
@@ -2307,7 +2307,7 @@ const { addNeumeCombination } = useClipboard();
                       ><img src="@/assets/icons/line-break.svg"
                     /></span>
                     <TextBox
-                      :ref="(el: TextBox) => (elementsRef[element.index] = el)"
+                      :ref="setElementRefByIndex(element.index)"
                       :element="element"
                       :editMode="true"
                       :metadata="getTokenMetadata(pageIndex)"
@@ -2335,9 +2335,7 @@ const { addNeumeCombination } = useClipboard();
                       ><img src="@/assets/icons/line-break.svg"
                     /></span>
                     <TextBoxRich
-                      :ref="
-                        (el: TextBoxRich) => (elementsRef[element.index] = el)
-                      "
+                      :ref="setElementRefByIndex(element.index)"
                       :element="element"
                       :pageSetup="score.pageSetup"
                       :fonts="fonts"
@@ -2369,7 +2367,7 @@ const { addNeumeCombination } = useClipboard();
                       ><img src="@/assets/icons/line-break.svg"
                     /></span>
                     <ModeKey
-                      :ref="(el: ModeKey) => (elementsRef[element.index] = el)"
+                      :ref="setElementRefByIndex(element.index)"
                       :element="element"
                       :pageSetup="score.pageSetup"
                       :class="[
@@ -2396,8 +2394,8 @@ const { addNeumeCombination } = useClipboard();
                       ><img src="@/assets/icons/line-break.svg"
                     /></span>
                     <DropCap
-                      :ref="(el: DropCap) => (elementsRef[element.index] = el)"
-                      :element="element"
+                      :ref="setElementRefByIndex(element.index)"
+                      :element="element as DropCapElement"
                       :pageSetup="score.pageSetup"
                       :editable="!lyricsLocked"
                       :class="[
@@ -2419,7 +2417,7 @@ const { addNeumeCombination } = useClipboard();
                       ><img src="@/assets/icons/line-break.svg"
                     /></span>
                     <ImageBox
-                      :ref="(el: ImageBox) => (elementsRef[element.index] = el)"
+                      :ref="setElementRefByIndex(element.index)"
                       :element="element"
                       :zoom="zoom"
                       :printMode="printMode"

@@ -233,7 +233,7 @@ export function useKeyboard() {
   );
 
   function getLyricLength(element: NoteElement) {
-    return editor.lyricsRef[element.index].getInnerText().length;
+    return editor.lyricRefs[element.index].getInnerText().length;
   }
 
   function deletePreviousElement() {
@@ -810,7 +810,7 @@ export function useKeyboard() {
             // so that the melisma is registered and
             // the user doesn't accidentally type more
             // characters into box
-            editor.lyricsRef[editor.selectedLyrics!.index].blur();
+            editor.lyricRefs[editor.selectedLyrics!.index].blur();
           }
         }
 
@@ -843,7 +843,7 @@ export function useKeyboard() {
             // so that the melisma is registered and
             // the user doesn't accidentally type more
             // characters into box
-            editor.lyricsRef[editor.selectedLyrics!.index].blur();
+            editor.lyricRefs[editor.selectedLyrics!.index].blur();
           }
         }
 
@@ -861,7 +861,9 @@ export function useKeyboard() {
     let handled = false;
 
     const index = editor.selectedElement!.index;
-    const htmlElement = editor.elementsRef[index] as DropCap;
+    const htmlElement = editor.elementRefs[index] as InstanceType<
+      typeof DropCap
+    >;
 
     switch (event.code) {
       case 'Enter':
@@ -907,7 +909,7 @@ export function useKeyboard() {
     let handled = false;
 
     const index = editor.selectedElement!.index;
-    const htmlElement = editor.elementsRef[index] as TextBox;
+    const htmlElement = editor.elementRefs[index] as TextBox;
 
     switch (event.code) {
       case 'Tab':
@@ -1034,7 +1036,7 @@ export function useKeyboard() {
 
       const noteElement = editor.selectedLyrics!;
 
-      const text = editor.lyricsRef[noteElement.index].getInnerText();
+      const text = editor.lyricRefs[noteElement.index].getInnerText();
 
       editing.updateLyrics(noteElement, text, clearMelisma);
 

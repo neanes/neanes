@@ -20,7 +20,7 @@ export function useFocus() {
   }
 
   function focusLyrics(index: number, selectAll: boolean = false) {
-    editor.lyricsRef[index].focus(selectAll);
+    editor.lyricRefs[index].focus(selectAll);
   }
 
   function isTextInputFocused() {

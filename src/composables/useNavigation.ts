@@ -34,18 +34,18 @@ export function useNavigation() {
     if (index - 1 >= 0 && navigableElements.includes(element.elementType)) {
       // If the currently selected element is a drop cap or text box, blur it first
       if (editor.selectedElement?.elementType === ElementType.DropCap) {
-        (editor.elementsRef[index] as DropCap).blur();
+        (editor.elementRefs[index] as InstanceType<typeof DropCap>).blur();
       } else if (editor.selectedElement?.elementType === ElementType.TextBox) {
-        (editor.elementsRef[index] as TextBox).blur();
+        (editor.elementRefs[index] as TextBox).blur();
       }
 
       setSelectedElement(element);
 
       // If the newly selected element is a drop cap or text box, focus it
       if (element.elementType === ElementType.DropCap) {
-        (editor.elementsRef[index - 1] as DropCap).focus();
+        (editor.elementRefs[index - 1] as InstanceType<typeof DropCap>).focus();
       } else if (element.elementType === ElementType.TextBox) {
-        (editor.elementsRef[index - 1] as TextBox).focus();
+        (editor.elementRefs[index - 1] as TextBox).focus();
       }
 
       return true;
@@ -72,18 +72,18 @@ export function useNavigation() {
     ) {
       // If the currently selected element is a drop cap, blur it first
       if (editor.selectedElement?.elementType === ElementType.DropCap) {
-        (editor.elementsRef[index] as DropCap).blur();
+        (editor.elementRefs[index] as InstanceType<typeof DropCap>).blur();
       } else if (editor.selectedElement?.elementType === ElementType.TextBox) {
-        (editor.elementsRef[index] as TextBox).blur();
+        (editor.elementRefs[index] as TextBox).blur();
       }
 
       setSelectedElement(element);
 
       // If the newly selected element is a drop cap, focus it
       if (element.elementType === ElementType.DropCap) {
-        (editor.elementsRef[index] as DropCap).focus();
+        (editor.elementRefs[index] as InstanceType<typeof DropCap>).focus();
       } else if (element.elementType === ElementType.TextBox) {
-        (editor.elementsRef[index] as TextBox).focus();
+        (editor.elementRefs[index] as TextBox).focus();
       }
 
       return true;

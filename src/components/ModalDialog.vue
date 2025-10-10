@@ -8,14 +8,7 @@
   </div>
 </template>
 
-<script lang="ts">
-import { Component, Vue } from 'vue-facing-decorator';
-
-@Component({
-  components: {},
-})
-export default class ModalDialog extends Vue {}
-</script>
+<script setup lang="ts"></script>
 
 <style scoped>
 .overlay {

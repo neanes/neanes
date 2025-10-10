@@ -544,7 +544,7 @@ import { ScaleNote } from '@/models/Scales';
 import { NeumeKeyboard } from '@/services/NeumeKeyboard';
 import { Unit } from '@/utils/Unit';
 
-import NeumeVue from './Neume.vue';
+import NeumeVue from './NeumeGlyph.vue';
 
 @Component({
   components: { InputUnit, ButtonWithMenu, Neume: NeumeVue },

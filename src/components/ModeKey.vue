@@ -58,102 +58,114 @@
 </template>
 
 <script lang="ts">
-import { StyleValue } from 'vue';
-import { Component, Prop, Vue } from 'vue-facing-decorator';
+import { defineComponent, PropType, StyleValue } from 'vue';
 
-import Neume from '@/components/Neume.vue';
+import Neume from '@/components/NeumeGlyph.vue';
 import { ModeKeyElement } from '@/models/Element';
 import { ModeSign } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
 import { withZoom } from '@/utils/withZoom';
 
-@Component({
-  components: {
-    Neume,
-  },
+export default defineComponent({
+  components: { Neume },
   emits: ['select-single'],
-})
-export default class ModeKey extends Vue {
-  @Prop() element!: ModeKeyElement;
-  @Prop() pageSetup!: PageSetup;
-  ModeSign = ModeSign;
+  props: {
+    element: {
+      type: Object as PropType<ModeKeyElement>,
+      required: true,
+    },
+    pageSetup: {
+      type: Object as PropType<PageSetup>,
+      required: true,
+    },
+  },
 
-  get hasFthoraAboveNote() {
-    return this.element.fthoraAboveNote != null;
-  }
-
-  get hasNote() {
-    return this.element.note != null;
-  }
-
-  get hasNote2() {
-    return this.element.note2 != null;
-  }
-
-  get hasFthoraAboveNote2() {
-    return this.element.fthoraAboveNote2 != null;
-  }
-
-  get hasFthoraAboveQuantitativeNeumeRight() {
-    return this.element.fthoraAboveQuantitativeNeumeRight != null;
-  }
-
-  get hasQuantitativeNeumeAboveNote() {
-    return this.element.quantitativeNeumeAboveNote != null;
-  }
-
-  get hasQuantitativeNeumeAboveNote2() {
-    return this.element.quantitativeNeumeAboveNote2 != null;
-  }
-
-  get hasQuantitativeNeumeRight() {
-    return this.element.quantitativeNeumeRight != null;
-  }
-
-  get hasTempo() {
-    return this.element.tempo != null;
-  }
-
-  get style() {
+  data() {
     return {
-      color: this.element.computedColor,
-      fontFamily: this.element.computedFontFamily,
-      fontSize: withZoom(this.element.computedFontSize),
-      textAlign: this.element.alignment,
-      width: withZoom(this.element.width),
-      height: withZoom(this.element.height),
-      webkitTextStrokeWidth: withZoom(this.element.computedStrokeWidth),
-    } as StyleValue;
-  }
+      ModeSign,
+    };
+  },
 
-  get tempoStyle() {
-    // TODO figure out a way to remove the hard-coded -.45em
-    // maybe put it in the font metadata json?
-    const style = {
-      color: this.pageSetup.tempoDefaultColor,
-      webkitTextStrokeWidth: withZoom(this.pageSetup.tempoDefaultStrokeWidth),
-      top: '-0.45em',
-      marginLeft: withZoom(8),
-    } as StyleValue;
+  computed: {
+    hasFthoraAboveNote() {
+      return this.element.fthoraAboveNote != null;
+    },
 
-    return style;
-  }
+    hasNote() {
+      return this.element.note != null;
+    },
 
-  get ambitusStyle() {
-    // TODO figure out a way to remove the hard-coded -.45em
-    // maybe put it in the font metadata json?
-    const style = {
-      color: this.pageSetup.martyriaDefaultColor,
-      webkitTextStrokeWidth: withZoom(
-        this.pageSetup.martyriaDefaultStrokeWidth,
-      ),
-      position: 'relative',
-      top: '-0.45em',
-    } as StyleValue;
+    hasNote2() {
+      return this.element.note2 != null;
+    },
 
-    return style;
-  }
-}
+    hasFthoraAboveNote2() {
+      return this.element.fthoraAboveNote2 != null;
+    },
+
+    hasFthoraAboveQuantitativeNeumeRight() {
+      return this.element.fthoraAboveQuantitativeNeumeRight != null;
+    },
+
+    hasQuantitativeNeumeAboveNote() {
+      return this.element.quantitativeNeumeAboveNote != null;
+    },
+
+    hasQuantitativeNeumeAboveNote2() {
+      return this.element.quantitativeNeumeAboveNote2 != null;
+    },
+
+    hasQuantitativeNeumeRight() {
+      return this.element.quantitativeNeumeRight != null;
+    },
+
+    hasTempo() {
+      return this.element.tempo != null;
+    },
+
+    style() {
+      return {
+        color: this.element.computedColor,
+        fontFamily: this.element.computedFontFamily,
+        fontSize: withZoom(this.element.computedFontSize),
+        textAlign: this.element.alignment,
+        width: withZoom(this.element.width),
+        height: withZoom(this.element.height),
+        webkitTextStrokeWidth: withZoom(this.element.computedStrokeWidth),
+      } as StyleValue;
+    },
+
+    tempoStyle() {
+      // TODO figure out a way to remove the hard-coded -.45em
+      // maybe put it in the font metadata json?
+      const style = {
+        color: this.pageSetup.tempoDefaultColor,
+        webkitTextStrokeWidth: withZoom(this.pageSetup.tempoDefaultStrokeWidth),
+        top: '-0.45em',
+        marginLeft: withZoom(8),
+      } as StyleValue;
+
+      return style;
+    },
+
+    ambitusStyle() {
+      // TODO figure out a way to remove the hard-coded -.45em
+      // maybe put it in the font metadata json?
+      const style = {
+        color: this.pageSetup.martyriaDefaultColor,
+        webkitTextStrokeWidth: withZoom(
+          this.pageSetup.martyriaDefaultStrokeWidth,
+        ),
+        position: 'relative',
+        top: '-0.45em',
+      } as StyleValue;
+
+      return style;
+    },
+  },
+
+  methods: {},
+});
 </script>
 
 <style scoped>

@@ -268,7 +268,7 @@ import { AudioState } from '@/services/audio/AudioService';
 import { PlaybackOptions } from '@/services/audio/PlaybackService';
 import { NeumeKeyboard } from '@/services/NeumeKeyboard';
 
-import Neume from './Neume.vue';
+import Neume from './NeumeGlyph.vue';
 
 @Component({
   components: { InputUnit, Neume },

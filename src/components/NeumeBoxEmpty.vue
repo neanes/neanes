@@ -2,14 +2,8 @@
   <div @click="$emit('select-single')"></div>
 </template>
 
-<script lang="ts">
-import { Component, Vue } from 'vue-facing-decorator';
-
-@Component({
-  components: {},
-  emits: ['select-single'],
-})
-export default class NeumeBoxEmpty extends Vue {}
+<script setup lang="ts">
+defineEmits(['select-single']);
 </script>
 
 <style scoped>

@@ -13,7 +13,7 @@
             :fontFamily="pageSetup.neumeDefaultFontFamily"
           />
           <InputBpm
-            :modelValue="form.tempoDefaults[tempo]"
+            :modelValue="form.tempoDefaults[tempo]!"
             @update:modelValue="onTempoChanged(tempo, $event)"
           />
           <span class="unit-label">{{ $t('dialog:preferences.bpm') }}</span>
@@ -38,7 +38,7 @@
 import { defineComponent, PropType } from 'vue';
 
 import ModalDialog from '@/components/ModalDialog.vue';
-import Neume from '@/components/Neume.vue';
+import Neume from '@/components/NeumeGlyph.vue';
 import { EditorPreferences } from '@/models/EditorPreferences';
 import { TempoSign } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';

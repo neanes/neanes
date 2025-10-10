@@ -57,7 +57,7 @@ export default defineComponent({
     this.color = this.modelValue;
   },
 
-  watchers: {
+  watch: {
     modelValue(newValue: string) {
       this.color = newValue;
     },

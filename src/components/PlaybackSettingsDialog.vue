@@ -1,3 +1,4 @@
+<!-- eslint-disable vue/no-mutating-props -->
 <template>
   <ModalDialog>
     <div class="container">
@@ -632,7 +633,11 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-facing-decorator';
+/* eslint-disable vue/no-mutating-props */
+// TODO don't rely on this eslint-disable line
+// Instead, make a copy of the options prop (a la Page Setup Dialog)
+// and have TheEditor update the actual options.
+import { defineComponent, PropType } from 'vue';
 
 import ModalDialog from '@/components/ModalDialog.vue';
 import { Accidental } from '@/models/Neumes';
@@ -640,34 +645,45 @@ import { PlaybackOptions } from '@/services/audio/PlaybackService';
 
 const FREQUENCY_G3 = 196;
 
-@Component({
+export default defineComponent({
   components: { ModalDialog },
   emits: ['close', 'play-test-tone'],
-})
-export default class PlaybackSettingsDialog extends Vue {
-  @Prop() options!: PlaybackOptions;
+  props: {
+    options: {
+      type: Object as PropType<PlaybackOptions>,
+      required: true,
+    },
+  },
 
-  Accidental = Accidental;
+  data() {
+    return {
+      Accidental,
 
-  tuning: number = 0;
+      tuning: 0,
 
-  error: string | null = null;
+      error: null as string | null,
+    };
+  },
 
-  get volumeIson() {
-    return 100 * Math.pow(10, this.options.volumeIson / 20);
-  }
+  computed: {
+    volumeIson: {
+      get() {
+        return 100 * Math.pow(10, this.options.volumeIson / 20);
+      },
+      set(value: number) {
+        this.options.volumeIson = 20 * Math.log10(value / 100);
+      },
+    },
 
-  set volumeIson(value: number) {
-    this.options.volumeIson = 20 * Math.log10(value / 100);
-  }
-
-  get volumeMelody() {
-    return 100 * Math.pow(10, this.options.volumeMelody / 20);
-  }
-
-  set volumeMelody(value: number) {
-    this.options.volumeMelody = 20 * Math.log10(value / 100);
-  }
+    volumeMelody: {
+      get() {
+        return 100 * Math.pow(10, this.options.volumeMelody / 20);
+      },
+      set(value: number) {
+        this.options.volumeMelody = 20 * Math.log10(value / 100);
+      },
+    },
+  },
 
   mounted() {
     window.addEventListener('keydown', this.onKeyDown);
@@ -675,146 +691,148 @@ export default class PlaybackSettingsDialog extends Vue {
     this.tuning = Math.round(
       1200 * Math.log2(this.options.frequencyDi / FREQUENCY_G3),
     );
-  }
+  },
 
   beforeUnmount() {
     window.removeEventListener('keydown', this.onKeyDown);
-  }
+  },
 
-  onKeyDown(event: KeyboardEvent) {
-    if (event.code === 'Escape') {
-      this.close();
-    }
-  }
+  methods: {
+    onKeyDown(event: KeyboardEvent) {
+      if (event.code === 'Escape') {
+        this.close();
+      }
+    },
 
-  onIntervalChanged(intervals: number[], index: number, value: number) {
-    value = Math.max(1, value);
-    value = Math.min(27, value);
-    value = Math.round(value);
+    onIntervalChanged(intervals: number[], index: number, value: number) {
+      value = Math.max(1, value);
+      value = Math.min(27, value);
+      value = Math.round(value);
 
-    intervals[index] = value;
+      intervals[index] = value;
 
-    this.validateIntervals();
+      this.validateIntervals();
 
-    this.$forceUpdate();
-  }
+      this.$forceUpdate();
+    },
 
-  validateIntervals() {
-    this.error = null;
+    validateIntervals() {
+      this.error = null;
 
-    if (!this.validateTetrachord(this.options.diatonicIntervals)) {
-      this.error = 'The diatonic intervals do not sum to 30.';
-    }
+      if (!this.validateTetrachord(this.options.diatonicIntervals)) {
+        this.error = 'The diatonic intervals do not sum to 30.';
+      }
 
-    if (!this.validateTetrachord(this.options.softChromaticIntervals)) {
-      this.error = 'The soft chromatic intervals do not sum to 30.';
-    }
+      if (!this.validateTetrachord(this.options.softChromaticIntervals)) {
+        this.error = 'The soft chromatic intervals do not sum to 30.';
+      }
 
-    if (!this.validateTetrachord(this.options.hardChromaticIntervals)) {
-      this.error = 'The hard chromatic intervals do not sum to 30.';
-    }
+      if (!this.validateTetrachord(this.options.hardChromaticIntervals)) {
+        this.error = 'The hard chromatic intervals do not sum to 30.';
+      }
 
-    if (!this.validateTetrachord(this.options.legetosIntervals)) {
-      this.error = 'The legetos intervals do not sum to 30.';
-    }
-  }
+      if (!this.validateTetrachord(this.options.legetosIntervals)) {
+        this.error = 'The legetos intervals do not sum to 30.';
+      }
+    },
 
-  validateTetrachord(intervals: number[]) {
-    let sum = 0;
+    validateTetrachord(intervals: number[]) {
+      let sum = 0;
 
-    intervals.map((x) => (sum += x));
+      intervals.map((x) => (sum += x));
 
-    return sum === 30;
-  }
+      return sum === 30;
+    },
 
-  resetIntervals() {
-    this.options.diatonicIntervals = [12, 10, 8];
-    this.options.hardChromaticIntervals = [6, 20, 4];
-    this.options.softChromaticIntervals = [8, 14, 8];
-    this.options.legetosIntervals = [8, 10, 12];
-    this.options.zygosIntervals = [18, 4, 16, 4];
-    this.options.zygosLegetosIntervals = [18, 4, 20, 4];
-    this.options.spathiIntervals = [20, 4, 4, 14];
-    this.options.klitonIntervals = [14, 12, 4];
-  }
+    resetIntervals() {
+      this.options.diatonicIntervals = [12, 10, 8];
+      this.options.hardChromaticIntervals = [6, 20, 4];
+      this.options.softChromaticIntervals = [8, 14, 8];
+      this.options.legetosIntervals = [8, 10, 12];
+      this.options.zygosIntervals = [18, 4, 16, 4];
+      this.options.zygosLegetosIntervals = [18, 4, 20, 4];
+      this.options.spathiIntervals = [20, 4, 4, 14];
+      this.options.klitonIntervals = [14, 12, 4];
+    },
 
-  resetAlterationMultipliers() {
-    this.options.alterationMultipliers = [0.5, 0.25, 0.75];
-  }
+    resetAlterationMultipliers() {
+      this.options.alterationMultipliers = [0.5, 0.25, 0.75];
+    },
 
-  resetAlterationMoria() {
-    this.options.alterationMoriaMap = {
-      [Accidental.Flat_2_Right]: -2,
-      [Accidental.Flat_4_Right]: -4,
-      [Accidental.Flat_6_Right]: -6,
-      [Accidental.Flat_8_Right]: -8,
-      [Accidental.Sharp_2_Left]: 2,
-      [Accidental.Sharp_4_Left]: 4,
-      [Accidental.Sharp_6_Left]: 6,
-      [Accidental.Sharp_8_Left]: 8,
-    };
-  }
+    resetAlterationMoria() {
+      this.options.alterationMoriaMap = {
+        [Accidental.Flat_2_Right]: -2,
+        [Accidental.Flat_4_Right]: -4,
+        [Accidental.Flat_6_Right]: -6,
+        [Accidental.Flat_8_Right]: -8,
+        [Accidental.Sharp_2_Left]: 2,
+        [Accidental.Sharp_4_Left]: 4,
+        [Accidental.Sharp_6_Left]: 6,
+        [Accidental.Sharp_8_Left]: 8,
+      };
+    },
 
-  resetDefaultAttractionZoMoria() {
-    this.options.defaultAttractionZoMoria = -4;
-  }
+    resetDefaultAttractionZoMoria() {
+      this.options.defaultAttractionZoMoria = -4;
+    },
 
-  onDiesisChanged(neume: Accidental, moria: number) {
-    moria = Math.round(moria);
+    onDiesisChanged(neume: Accidental, moria: number) {
+      moria = Math.round(moria);
 
-    moria = Math.max(0, moria);
-    moria = Math.min(72, moria);
+      moria = Math.max(0, moria);
+      moria = Math.min(72, moria);
 
-    this.options.alterationMoriaMap[neume] = moria;
+      this.options.alterationMoriaMap[neume] = moria;
 
-    this.$forceUpdate();
-  }
+      this.$forceUpdate();
+    },
 
-  onYfesisChanged(neume: Accidental, moria: number) {
-    moria = Math.round(moria);
+    onYfesisChanged(neume: Accidental, moria: number) {
+      moria = Math.round(moria);
 
-    moria = Math.max(-72, moria);
-    moria = Math.min(0, moria);
+      moria = Math.max(-72, moria);
+      moria = Math.min(0, moria);
 
-    this.options.alterationMoriaMap[neume] = moria;
+      this.options.alterationMoriaMap[neume] = moria;
 
-    this.$forceUpdate();
-  }
+      this.$forceUpdate();
+    },
 
-  onDefaultAttractionZoMoriaChanged(value: number) {
-    value = Math.max(-72, value);
-    value = Math.min(0, value);
-    value = Math.round(value);
+    onDefaultAttractionZoMoriaChanged(value: number) {
+      value = Math.max(-72, value);
+      value = Math.min(0, value);
+      value = Math.round(value);
 
-    this.options.defaultAttractionZoMoria = value;
+      this.options.defaultAttractionZoMoria = value;
 
-    this.$forceUpdate();
-  }
+      this.$forceUpdate();
+    },
 
-  onTuningChanged(value: number) {
-    this.tuning = Math.max(-2400, value);
-    this.tuning = Math.min(2400, this.tuning);
-    this.tuning = Math.round(this.tuning);
-    this.options.frequencyDi = +(
-      FREQUENCY_G3 * Math.pow(2, this.tuning / 1200)
-    ).toFixed(1);
+    onTuningChanged(value: number) {
+      this.tuning = Math.max(-2400, value);
+      this.tuning = Math.min(2400, this.tuning);
+      this.tuning = Math.round(this.tuning);
+      this.options.frequencyDi = +(
+        FREQUENCY_G3 * Math.pow(2, this.tuning / 1200)
+      ).toFixed(1);
 
-    this.$forceUpdate();
-  }
+      this.$forceUpdate();
+    },
 
-  onAlterationMultiplierChanged(index: number, multiplier: number) {
-    multiplier = Math.max(0, multiplier);
-    multiplier = Math.min(1, multiplier);
+    onAlterationMultiplierChanged(index: number, multiplier: number) {
+      multiplier = Math.max(0, multiplier);
+      multiplier = Math.min(1, multiplier);
 
-    this.options.alterationMultipliers[index] = multiplier;
+      this.options.alterationMultipliers[index] = multiplier;
 
-    this.$forceUpdate();
-  }
+      this.$forceUpdate();
+    },
 
-  close() {
-    this.$emit('close');
-  }
-}
+    close() {
+      this.$emit('close');
+    },
+  },
+});
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

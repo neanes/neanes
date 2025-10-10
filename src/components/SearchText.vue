@@ -28,22 +28,34 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-facing-decorator';
+import { defineComponent } from 'vue';
 
-@Component({
+export default defineComponent({
+  components: {},
   emits: ['close', 'search', 'update:query'],
-})
-export default class SearchText extends Vue {
-  @Prop() query!: string;
+  props: {
+    query: {
+      type: String,
+      required: true,
+    },
+  },
+
+  data() {
+    return {};
+  },
+
+  computed: {},
 
   mounted() {
     this.focus();
-  }
+  },
 
-  focus() {
-    (this.$refs.input as HTMLInputElement).select();
-  }
-}
+  methods: {
+    focus() {
+      (this.$refs.input as HTMLInputElement).select();
+    },
+  },
+});
 </script>
 
 <style scoped>

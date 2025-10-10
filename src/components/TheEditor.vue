@@ -2017,7 +2017,10 @@ const { addNeumeCombination } = useClipboard();
                   :style="getElementStyle(element)"
                 >
                   <template v-if="isSyllableElement(element)">
-                    <div :ref="`element-${element.index}`" class="neume-box">
+                    <div
+                      :ref="setElementRefByIndex(element.index)"
+                      class="neume-box"
+                    >
                       <span
                         class="section-name"
                         v-if="
@@ -2104,7 +2107,7 @@ const { addNeumeCombination } = useClipboard();
                           :content="(element as NoteElement).lyrics"
                           :editable="!lyricsLocked"
                           whiteSpace="nowrap"
-                          :ref="setLyricRefByIndex"
+                          :ref="setLyricRefByIndex(element.index)"
                           @click="focusLyrics(element.index)"
                           @focus="setSelectedLyrics(element as NoteElement)"
                           @blur="updateLyrics(element as NoteElement, $event)"

@@ -11,153 +11,188 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue, Watch } from 'vue-facing-decorator';
+import { defineComponent, PropType } from 'vue';
 
 import { Unit } from '@/utils/Unit';
 
-@Component({
+export default defineComponent({
   components: {},
   emits: ['update:modelValue'],
-})
-export default class InputUnit extends Vue {
-  @Prop() modelValue!: number;
-  @Prop() unit!: 'pc' | 'pt' | 'in' | 'cm' | 'mm' | 'percent' | 'unitless';
-  @Prop({ default: false }) nullable!: boolean;
-  /**
-   * The minimum value allowed, in display units.
-   */
-  @Prop() min!: number | undefined;
-  /**
-   * The maximum value allowed, in display units.
-   */
-  @Prop() max!: number | undefined;
-  /**
-   * The step size, in display units.
-   */
-  @Prop() step!: number | undefined;
-  /**
-   * The number of decimal places that will be displayed.
-   */
-  @Prop() precision!: number | undefined;
-  /**
-   * The default value if the value is cleared
-   */
-  @Prop({ default: 0 }) defaultValue!: number;
-  /**
-   * Whether the input is disabled
-   */
-  @Prop({ default: false }) disabled!: boolean;
-  /**
-   * A special rounding function applied to the display value
-   * before it is converted to the stored value.
-   */
-  @Prop() round!: ((x: number) => number) | undefined;
+  props: {
+    modelValue: {
+      type: [Number, null],
+      required: true,
+    },
+    unit: {
+      type: String as PropType<
+        'pc' | 'pt' | 'in' | 'cm' | 'mm' | 'percent' | 'unitless'
+      >,
+      required: true,
+    },
+    nullable: {
+      type: Boolean,
+      default: false,
+    },
+    /**
+     * The minimum value allowed, in display units.
+     */
+    min: {
+      type: Number,
+      required: false,
+    },
+    /**
+     * The maximum value allowed, in display units.
+     */
+    max: {
+      type: Number,
+      required: false,
+    },
+    /**
+     * The step size, in display units.
+     */
+    step: {
+      type: Number,
+      required: false,
+    },
+    /**
+     * The number of decimal places that will be displayed.
+     */
+    precision: {
+      type: Number,
+      required: false,
+    },
+    /**
+     * The default value if the value is cleared
+     */
+    defaultValue: {
+      type: Number,
+      default: 0,
+    },
+    /**
+     * Whether the input is disabled
+     */
+    disabled: {
+      type: Boolean,
+      default: false,
+    },
+    /**
+     * A special rounding function applied to the display value
+     * before it is converted to the stored value.
+     */
+    round: {
+      type: Function as PropType<(x: number) => number>,
+      required: false,
+    },
+  },
 
-  get htmlElement() {
-    return this.$el as HTMLInputElement;
-  }
+  data() {
+    return {};
+  },
 
-  get displayValue() {
-    const convertedValue = this.toDisplay(this.modelValue);
+  computed: {
+    htmlElement() {
+      return this.$el as HTMLInputElement;
+    },
 
-    if (convertedValue == null) {
-      return this.nullable ? '' : this.defaultValue.toString();
-    }
+    displayValue() {
+      const convertedValue = this.toDisplay(this.modelValue);
 
-    return this.precision != null
-      ? convertedValue.toFixed(this.precision)
-      : convertedValue.toString();
-  }
+      if (convertedValue == null) {
+        return this.nullable ? '' : this.defaultValue.toString();
+      }
 
-  emitValue(v: number | null) {
-    if (this.modelValue !== v) {
-      this.$emit('update:modelValue', v);
-    } else {
-      this.htmlElement.value = this.displayValue;
-    }
-  }
+      return this.precision != null
+        ? convertedValue.toFixed(this.precision)
+        : convertedValue.toString();
+    },
+  },
 
-  onChange(input: string) {
-    if (input.trim() === '' && this.nullable) {
-      return this.emitValue(null);
-    }
+  methods: {
+    emitValue(v: number | null) {
+      if (this.modelValue !== v) {
+        this.$emit('update:modelValue', v);
+      } else {
+        this.htmlElement.value = this.displayValue;
+      }
+    },
 
-    let newValue = parseFloat(input);
+    onChange(input: string) {
+      if (input.trim() === '' && this.nullable) {
+        return this.emitValue(null);
+      }
 
-    if (isNaN(newValue)) {
-      newValue = this.defaultValue;
-    }
+      let newValue = parseFloat(input);
 
-    if (this.round != null) {
-      newValue = this.round(newValue);
-    }
+      if (isNaN(newValue)) {
+        newValue = this.defaultValue;
+      }
 
-    let storageValue = this.toStorage(newValue);
+      if (this.round != null) {
+        newValue = this.round(newValue);
+      }
 
-    if (this.min != null) {
-      storageValue = Math.max(this.toStorage(this.min), storageValue);
-    }
+      let storageValue = this.toStorage(newValue);
 
-    if (this.max != null) {
-      storageValue = Math.min(this.toStorage(this.max), storageValue);
-    }
+      if (this.min != null) {
+        storageValue = Math.max(this.toStorage(this.min), storageValue);
+      }
 
-    this.emitValue(storageValue);
-  }
+      if (this.max != null) {
+        storageValue = Math.min(this.toStorage(this.max), storageValue);
+      }
 
-  toStorage(value: number) {
-    switch (this.unit) {
-      case 'pc':
-        return Unit.fromPc(value);
-      case 'pt':
-        return Unit.fromPt(value);
-      case 'in':
-        return Unit.fromInch(value);
-      case 'cm':
-        return Unit.fromCm(value);
-      case 'mm':
-        return Unit.fromMm(value);
-      case 'percent':
-        return Unit.fromPercent(value);
-      case 'unitless':
-        return value;
-      default:
-        console.error(`Unsupported unit ${this.unit}`);
-        return value;
-    }
-  }
+      this.emitValue(storageValue);
+    },
 
-  toDisplay(value: number | null) {
-    if (value == null) {
-      return null;
-    }
+    toStorage(value: number) {
+      switch (this.unit) {
+        case 'pc':
+          return Unit.fromPc(value);
+        case 'pt':
+          return Unit.fromPt(value);
+        case 'in':
+          return Unit.fromInch(value);
+        case 'cm':
+          return Unit.fromCm(value);
+        case 'mm':
+          return Unit.fromMm(value);
+        case 'percent':
+          return Unit.fromPercent(value);
+        case 'unitless':
+          return value;
+        default:
+          console.error(`Unsupported unit ${this.unit}`);
+          return value;
+      }
+    },
 
-    switch (this.unit) {
-      case 'pc':
-        return Unit.toPc(value);
-      case 'pt':
-        return Unit.toPt(value);
-      case 'in':
-        return Unit.toInch(value);
-      case 'cm':
-        return Unit.toCm(value);
-      case 'mm':
-        return Unit.toMm(value);
-      case 'percent':
-        return Unit.toPercent(value);
-      case 'unitless':
-        return value;
-      default:
-        console.error(`Unsupported unit ${this.unit}`);
-        return value;
-    }
-  }
+    toDisplay(value: number | null) {
+      if (value == null) {
+        return null;
+      }
 
-  @Watch('value')
-  onValueChanged() {
-    this.htmlElement.value = this.displayValue;
-  }
-}
+      switch (this.unit) {
+        case 'pc':
+          return Unit.toPc(value);
+        case 'pt':
+          return Unit.toPt(value);
+        case 'in':
+          return Unit.toInch(value);
+        case 'cm':
+          return Unit.toCm(value);
+        case 'mm':
+          return Unit.toMm(value);
+        case 'percent':
+          return Unit.toPercent(value);
+        case 'unitless':
+          return value;
+        default:
+          console.error(`Unsupported unit ${this.unit}`);
+          return value;
+      }
+    },
+  },
+});
 </script>
 
 <style scoped></style>

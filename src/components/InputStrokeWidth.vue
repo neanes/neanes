@@ -11,21 +11,40 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-facing-decorator';
+import { defineComponent } from 'vue';
 
 import InputUnit from '@/components/InputUnit.vue';
 
-@Component({
+const strokeWidthMax = 5;
+const strokeWidthStep = 0.1;
+const strokeWidthPrecision = 2;
+
+export default defineComponent({
   components: { InputUnit },
   emits: ['update:modelValue'],
-})
-export default class InputStrokeWidth extends Vue {
-  @Prop() modelValue!: number;
+  props: {
+    modelValue: {
+      type: Number,
+      required: true,
+    },
+    max: {
+      type: Number,
+      default: 100,
+    },
+  },
 
-  strokeWidthMax = 5;
-  strokeWidthStep = 0.1;
-  strokeWidthPrecision = 2;
-}
+  data() {
+    return {
+      strokeWidthMax,
+      strokeWidthStep,
+      strokeWidthPrecision,
+    };
+  },
+
+  computed: {},
+
+  methods: {},
+});
 </script>
 
 <style scoped></style>

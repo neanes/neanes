@@ -72,9 +72,9 @@ export const useEditorStore = defineStore('editor', {
       Array<
         | HTMLElement
         | InstanceType<typeof DropCap>
-        | ImageBox
-        | MartyriaNeumeBox
-        | ModeKey
+        | InstanceType<typeof ImageBox>
+        | InstanceType<typeof MartyriaNeumeBox>
+        | InstanceType<typeof ModeKey>
         | TextBox
         | TextBoxRich
       >

@@ -167,7 +167,8 @@ useKeyboard();
 
 const pageBackgroundRef = useTemplateRef('page-background');
 const tabsRef = useTemplateRef<Vue3TabsChromeComponent>('tabs-ui');
-const searchTextRef = useTemplateRef<SearchText>('searchText');
+const searchTextRef =
+  useTemplateRef<InstanceType<typeof SearchText>>('searchText');
 
 const showFileMenuBar = !isElectron();
 const isDevelopment: boolean = import.meta.env.DEV;

@@ -1715,17 +1715,9 @@ const {
   updateModeKeyTempoAlignRight,
   updateModeKeyPermanentEnharmonicZo,
   updateModeKeyFromTemplate,
-  updateMartyriaBpm,
-  updateMartyriaAlignRight,
-  updateMartyriaChromaticFthoraNote,
-  updateMartyriaAuto,
-  updateMartyriaNote,
-  updateMartyriaScale,
-  updateMartyriaSpaceAfter,
+  updateMartyria,
   setAccidental,
   setFthoraMartyria,
-  updateMartyriaVerticalOffset,
-  updateMartyriaRootSignOverride,
   updateTempoSpaceAfter,
   updateTempoBpm,
   updateDropCap,
@@ -2858,17 +2850,12 @@ const { addNeumeCombination } = useClipboard();
       v-if="selectedElement != null && isMartyriaElement(selectedElement)"
     >
       <ToolbarMartyria
-        :element="selectedElement"
+        :element="selectedElement as MartyriaElement"
         :pageSetup="score.pageSetup"
         :neumeKeyboard="neumeKeyboard"
+        @update="updateMartyria(selectedElement as MartyriaElement, $event)"
         @update:fthora="
           setFthoraMartyria(selectedElement as MartyriaElement, $event)
-        "
-        @update:chromaticFthoraNote="
-          updateMartyriaChromaticFthoraNote(
-            selectedElement as MartyriaElement,
-            $event,
-          )
         "
         @update:tempoLeft="
           setMartyriaTempoLeft(selectedElement as MartyriaElement, $event)
@@ -2882,38 +2869,8 @@ const { addNeumeCombination } = useClipboard();
         @update:measureBar="
           setMeasureBarMartyria(selectedElement as MartyriaElement, $event)
         "
-        @update:alignRight="
-          updateMartyriaAlignRight(selectedElement as MartyriaElement, $event)
-        "
         @update:quantitativeNeume="
           setMartyriaQuantitativeNeume(
-            selectedElement as MartyriaElement,
-            $event,
-          )
-        "
-        @update:auto="
-          updateMartyriaAuto(selectedElement as MartyriaElement, $event)
-        "
-        @update:note="
-          updateMartyriaNote(selectedElement as MartyriaElement, $event)
-        "
-        @update:scale="
-          updateMartyriaScale(selectedElement as MartyriaElement, $event)
-        "
-        @update:bpm="
-          updateMartyriaBpm(selectedElement as MartyriaElement, $event)
-        "
-        @update:spaceAfter="
-          updateMartyriaSpaceAfter(selectedElement as MartyriaElement, $event)
-        "
-        @update:verticalOffset="
-          updateMartyriaVerticalOffset(
-            selectedElement as MartyriaElement,
-            $event,
-          )
-        "
-        @update:rootSignOverride="
-          updateMartyriaRootSignOverride(
             selectedElement as MartyriaElement,
             $event,
           )

@@ -36,13 +36,12 @@ import {
   MeasureNumber,
   Note,
   QuantitativeNeume,
-  RootSign,
   TempoSign,
   Tie,
   TimeNeume,
   VocalExpressionNeume,
 } from '@/models/Neumes';
-import { Scale, ScaleNote } from '@/models/Scales';
+import { ScaleNote } from '@/models/Scales';
 import { Command } from '@/services/history/CommandService';
 import { LyricService } from '@/services/LyricService';
 import { useEditorStore } from '@/stores/useEditorStore';
@@ -241,9 +240,9 @@ export function useEditing() {
     neume: QuantitativeNeume,
   ) {
     if (element.quantitativeNeume === neume) {
-      updateMartyriaQuantitativeNeume(element, null);
+      updateMartyria(element, { quantitativeNeume: null });
     } else {
-      updateMartyriaQuantitativeNeume(element, neume);
+      updateMartyria(element, { quantitativeNeume: neume });
     }
   }
 
@@ -343,22 +342,22 @@ export function useEditing() {
       ? measureBarAboveToLeft.get(element.measureBarLeft)
       : element.measureBarLeft;
     if (neume === normalizedMeasureBar && neume === element.measureBarRight) {
-      updateMartyriaMeasureBar(element, {
+      updateMartyria(element, {
         measureBarLeft: null,
         measureBarRight: null,
       });
     } else if (neume === normalizedMeasureBar) {
-      updateMartyriaMeasureBar(element, {
+      updateMartyria(element, {
         measureBarLeft: null,
         measureBarRight: neume,
       });
     } else if (neume === element.measureBarRight) {
-      updateMartyriaMeasureBar(element, {
+      updateMartyria(element, {
         measureBarLeft: neume,
         measureBarRight: neume,
       });
     } else {
-      updateMartyriaMeasureBar(element, {
+      updateMartyria(element, {
         measureBarLeft: neume,
         measureBarRight: null,
       });
@@ -1136,98 +1135,6 @@ export function useEditing() {
     });
   }
 
-  function updateMartyriaBpm(element: MartyriaElement, bpm: number) {
-    updateMartyria(element, { bpm });
-    save();
-  }
-
-  function updateMartyriaMeasureBar(
-    element: MartyriaElement,
-    {
-      measureBarLeft,
-      measureBarRight,
-    }: {
-      measureBarLeft: MeasureBar | null;
-      measureBarRight: MeasureBar | null;
-    },
-  ) {
-    updateMartyria(element, {
-      measureBarLeft,
-      measureBarRight,
-    });
-    save();
-  }
-
-  function updateMartyriaAlignRight(
-    element: MartyriaElement,
-    alignRight: boolean,
-  ) {
-    updateMartyria(element, { alignRight, quantitativeNeume: null });
-  }
-
-  function updateMartyriaQuantitativeNeume(
-    element: MartyriaElement,
-    quantitativeNeume: QuantitativeNeume | null,
-  ) {
-    updateMartyria(element, { quantitativeNeume });
-  }
-
-  function updateMartyriaChromaticFthoraNote(
-    element: MartyriaElement,
-    chromaticFthoraNote: ScaleNote | null,
-  ) {
-    updateMartyria(element, { chromaticFthoraNote });
-  }
-
-  function updateMartyriaAuto(element: MartyriaElement, auto: boolean) {
-    if (element.auto === auto) {
-      return;
-    }
-
-    updateMartyria(element, { auto });
-  }
-
-  function updateMartyriaNote(element: MartyriaElement, note: Note) {
-    if (element.note === note) {
-      return;
-    }
-
-    updateMartyria(element, { note, auto: false });
-  }
-
-  function updateMartyriaScale(element: MartyriaElement, scale: Scale) {
-    if (element.scale === scale) {
-      return;
-    }
-
-    updateMartyria(element, { scale, auto: false });
-  }
-
-  function updateMartyriaSpaceAfter(
-    element: MartyriaElement,
-    spaceAfter: number,
-  ) {
-    updateMartyria(element, { spaceAfter });
-    save();
-  }
-
-  function updateMartyriaVerticalOffset(
-    element: MartyriaElement,
-    verticalOffset: number,
-  ) {
-    updateMartyria(element, { verticalOffset });
-    save();
-  }
-
-  function updateMartyriaRootSignOverride(
-    element: MartyriaElement,
-    rootSignOverride: RootSign,
-  ) {
-    rootSignOverride = rootSignOverride || null;
-    updateMartyria(element, { rootSignOverride });
-    save();
-  }
-
   function updateTempo(
     element: TempoElement,
     newValues: Partial<TempoElement>,
@@ -1910,19 +1817,8 @@ export function useEditing() {
     updateMartyriaTempoLeft,
     updateMartyriaTempo,
     updateMartyriaTempoRight,
-    updateMartyriaBpm,
-    updateMartyriaMeasureBar,
-    updateMartyriaAlignRight,
-    updateMartyriaQuantitativeNeume,
-    updateMartyriaChromaticFthoraNote,
-    updateMartyriaAuto,
-    updateMartyriaNote,
-    updateMartyriaScale,
-    updateMartyriaSpaceAfter,
     setAccidental,
     setFthoraMartyria,
-    updateMartyriaVerticalOffset,
-    updateMartyriaRootSignOverride,
     updateTempo,
     updateTempoSpaceAfter,
     updateTempoBpm,

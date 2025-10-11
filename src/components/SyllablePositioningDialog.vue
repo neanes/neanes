@@ -4,7 +4,7 @@
       <div class="header">{{ $t('dialog:neumePositioning.root') }}</div>
       <div class="pane-container" :style="paneContainerStyle">
         <div class="top-pane" :style="topPaneStyle">
-          <template v-if="hasPreviousElement">
+          <template v-if="previousElement != null">
             <NeumeBoxSyllable
               v-if="previousElement.elementType === ElementType.Note"
               class="other-neume"
@@ -35,7 +35,7 @@
             <DragHandle
               v-if="hasAccidental"
               :note="form"
-              :mark="form.accidental"
+              :mark="form.accidental!"
               :fontFamily="pageSetup.neumeDefaultFontFamily"
               :fontSize="pageSetup.neumeDefaultFontSize"
               :zoom="zoom"
@@ -46,7 +46,7 @@
             <DragHandle
               v-if="hasSecondaryAccidental"
               :note="form"
-              :mark="form.secondaryAccidental"
+              :mark="form.secondaryAccidental!"
               :fontFamily="pageSetup.neumeDefaultFontFamily"
               :fontSize="pageSetup.neumeDefaultFontSize"
               :zoom="zoom"
@@ -57,7 +57,7 @@
             <DragHandle
               v-if="hasTertiaryAccidental"
               :note="form"
-              :mark="form.tertiaryAccidental"
+              :mark="form.tertiaryAccidental!"
               :fontFamily="pageSetup.neumeDefaultFontFamily"
               :fontSize="pageSetup.neumeDefaultFontSize"
               :zoom="zoom"
@@ -90,7 +90,7 @@
             <DragHandle
               v-if="hasFthora"
               :note="form"
-              :mark="form.fthora"
+              :mark="form.fthora!"
               :fontFamily="pageSetup.neumeDefaultFontFamily"
               :fontSize="pageSetup.neumeDefaultFontSize"
               :zoom="zoom"
@@ -101,7 +101,7 @@
             <DragHandle
               v-if="hasSecondaryFthora"
               :note="form"
-              :mark="form.secondaryFthora"
+              :mark="form.secondaryFthora!"
               :fontFamily="pageSetup.neumeDefaultFontFamily"
               :fontSize="pageSetup.neumeDefaultFontSize"
               :zoom="zoom"
@@ -112,7 +112,7 @@
             <DragHandle
               v-if="hasTertiaryFthora"
               :note="form"
-              :mark="form.tertiaryFthora"
+              :mark="form.tertiaryFthora!"
               :fontFamily="pageSetup.neumeDefaultFontFamily"
               :fontSize="pageSetup.neumeDefaultFontSize"
               :zoom="zoom"
@@ -123,7 +123,7 @@
             <DragHandle
               v-if="hasGorgonNeume"
               :note="form"
-              :mark="form.gorgonNeume"
+              :mark="form.gorgonNeume!"
               :fontFamily="pageSetup.neumeDefaultFontFamily"
               :fontSize="pageSetup.neumeDefaultFontSize"
               :zoom="zoom"
@@ -134,7 +134,7 @@
             <DragHandle
               v-if="hasSecondaryGorgonNeume"
               :note="form"
-              :mark="form.secondaryGorgonNeume"
+              :mark="form.secondaryGorgonNeume!"
               :fontFamily="pageSetup.neumeDefaultFontFamily"
               :fontSize="pageSetup.neumeDefaultFontSize"
               :zoom="zoom"
@@ -145,7 +145,7 @@
             <DragHandle
               v-if="hasIson"
               :note="form"
-              :mark="form.ison"
+              :mark="form.ison!"
               :fontFamily="pageSetup.neumeDefaultFontFamily"
               :fontSize="pageSetup.neumeDefaultFontSize"
               :zoom="zoom"
@@ -167,7 +167,7 @@
             <DragHandle
               v-if="hasMeasureNumber"
               :note="form"
-              :mark="form.measureNumber"
+              :mark="form.measureNumber!"
               :fontFamily="pageSetup.neumeDefaultFontFamily"
               :fontSize="pageSetup.neumeDefaultFontSize"
               :zoom="zoom"
@@ -178,7 +178,7 @@
             <DragHandle
               v-if="form.noteIndicator"
               :note="form"
-              :mark="form.noteIndicatorNeume"
+              :mark="form.noteIndicatorNeume!"
               :fontFamily="pageSetup.neumeDefaultFontFamily"
               :fontSize="pageSetup.neumeDefaultFontSize"
               :zoom="zoom"
@@ -200,7 +200,7 @@
             <DragHandle
               v-if="hasTie"
               :note="form"
-              :mark="form.tie"
+              :mark="form.tie!"
               :fontFamily="pageSetup.neumeDefaultFontFamily"
               :fontSize="pageSetup.neumeDefaultFontSize"
               :zoom="zoom"
@@ -211,7 +211,7 @@
             <DragHandle
               v-if="hasTimeNeume"
               :note="form"
-              :mark="form.timeNeume"
+              :mark="form.timeNeume!"
               :fontFamily="pageSetup.neumeDefaultFontFamily"
               :fontSize="pageSetup.neumeDefaultFontSize"
               :zoom="zoom"
@@ -233,7 +233,7 @@
             <DragHandle
               v-if="hasVocalExpressionNeume"
               :note="form"
-              :mark="form.vocalExpressionNeume"
+              :mark="form.vocalExpressionNeume!"
               :fontFamily="pageSetup.neumeDefaultFontFamily"
               :fontSize="pageSetup.neumeDefaultFontSize"
               :zoom="zoom"
@@ -242,7 +242,7 @@
               @update="updateQualityOffset($event)"
             />
           </div>
-          <template v-if="hasNextElement">
+          <template v-if="nextElement != null">
             <NeumeBoxSyllable
               v-if="nextElement.elementType === ElementType.Note"
               class="other-neume"
@@ -650,22 +650,26 @@
 </template>
 
 <script lang="ts">
-import { StyleValue } from 'vue';
-import { Component, Prop, Vue } from 'vue-facing-decorator';
+import { defineComponent, PropType, StyleValue } from 'vue';
 
 import DragHandle from '@/components/DragHandle.vue';
-import InputUnit from '@/components/InputUnit.vue';
+import InputUnit, { UnitOfMeasure } from '@/components/InputUnit.vue';
 import ModalDialog from '@/components/ModalDialog.vue';
 import NeumeBoxMartyria from '@/components/NeumeBoxMartyria.vue';
 import NeumeBoxSyllable from '@/components/NeumeBoxSyllable.vue';
 import NeumeBoxTempo from '@/components/NeumeBoxTempo.vue';
-import { ElementType, NoteElement, ScoreElementOffset } from '@/models/Element';
+import {
+  ElementType,
+  NoteElement,
+  ScoreElement,
+  ScoreElementOffset,
+} from '@/models/Element';
 import { VocalExpressionNeume } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
 import { TimeNeume } from '@/models/save/v1/Neumes';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
 
-@Component({
+export default defineComponent({
   components: {
     ModalDialog,
     NeumeBoxSyllable,
@@ -675,262 +679,260 @@ import { TextMeasurementService } from '@/services/TextMeasurementService';
     DragHandle,
   },
   emits: ['close', 'update'],
-})
-export default class SyllablePositioningDialog extends Vue {
-  @Prop() element!: NoteElement;
-  @Prop() previousElement!: NoteElement;
-  @Prop() nextElement!: NoteElement;
-  @Prop() pageSetup!: PageSetup;
+  props: {
+    element: {
+      type: Object as PropType<NoteElement>,
+      required: true,
+    },
+    previousElement: Object as PropType<ScoreElement>,
+    nextElement: Object as PropType<ScoreElement>,
+    pageSetup: {
+      type: Object as PropType<PageSetup>,
+      required: true,
+    },
+  },
 
-  TimeNeume = TimeNeume;
-  VocalExpressionNeume = VocalExpressionNeume;
-  ElementType = ElementType;
-
-  form: NoteElement = new NoteElement();
-  stepSize: number = 0.01;
-  min: number = -10;
-  max: number = 10;
-  precision: number = 2;
-  unit: string = 'unitless';
-
-  paneContainerWidthPx = 420;
-
-  zoom = 2;
-
-  get hasNextElement() {
-    return (
-      this.nextElement?.elementType === ElementType.Note ||
-      this.nextElement?.elementType === ElementType.Martyria ||
-      this.nextElement?.elementType === ElementType.Tempo
-    );
-  }
-
-  get hasPreviousElement() {
-    return (
-      this.previousElement?.elementType === ElementType.Note ||
-      this.previousElement?.elementType === ElementType.Martyria ||
-      this.previousElement?.elementType === ElementType.Tempo
-    );
-  }
-
-  get hasVocalExpressionNeume() {
-    return this.form.vocalExpressionNeume != null;
-  }
-
-  get hasTimeNeume() {
-    return this.form.timeNeume != null;
-  }
-
-  get hasGorgonNeume() {
-    return this.form.gorgonNeume != null;
-  }
-
-  get hasSecondaryGorgonNeume() {
-    return this.form.secondaryGorgonNeume != null;
-  }
-
-  get hasFthora() {
-    return this.form.fthora != null;
-  }
-
-  get hasSecondaryFthora() {
-    return this.form.secondaryFthora != null;
-  }
-
-  get hasTertiaryFthora() {
-    return this.form.tertiaryFthora != null;
-  }
-
-  get hasAccidental() {
-    return this.form.accidental != null;
-  }
-
-  get hasSecondaryAccidental() {
-    return this.form.secondaryAccidental != null;
-  }
-
-  get hasTertiaryAccidental() {
-    return this.form.tertiaryAccidental != null;
-  }
-
-  get hasMeasureBarLeft() {
-    return this.form.measureBarLeft != null;
-  }
-
-  get hasMeasureBarRight() {
-    return this.form.measureBarRight != null;
-  }
-
-  get hasMeasureNumber() {
-    return this.form.measureNumber != null;
-  }
-
-  get hasIson() {
-    return this.form.ison != null;
-  }
-
-  get hasTie() {
-    return this.form.tie != null;
-  }
-
-  get centerLeft() {
-    return this.paneContainerWidthPx / 2;
-  }
-
-  get previousElementStyle() {
+  data() {
     return {
-      left: `calc(${this.centerLeft}px - ${
-        this.element.x - this.previousElement.x
-      }px * var(--zoom, 1))`,
-    } as StyleValue;
-  }
+      TimeNeume,
+      VocalExpressionNeume,
+      ElementType,
 
-  get nextElementStyle() {
-    return {
-      left: `calc(${this.centerLeft}px + ${
-        this.nextElement.x - this.element.x
-      }px * var(--zoom, 1))`,
-    } as StyleValue;
-  }
+      form: new NoteElement(),
+      stepSize: 0.01,
+      min: -10,
+      max: 10,
+      precision: 2,
+      unit: 'unitless' as UnitOfMeasure,
 
-  get mainStyle() {
-    return {
-      left: this.centerLeft + 'px',
-    } as StyleValue;
-  }
+      paneContainerWidthPx: 420,
 
-  get topPaneStyle() {
-    const neumeHeight = TextMeasurementService.getFontHeight(
-      `${this.pageSetup.neumeDefaultFontSize}px ${this.pageSetup.neumeDefaultFontFamily}`,
-    );
+      zoom: 2,
+    };
+  },
 
-    return {
-      height: neumeHeight * this.zoom + 'px',
-    } as StyleValue;
-  }
+  computed: {
+    hasVocalExpressionNeume() {
+      return this.form.vocalExpressionNeume != null;
+    },
 
-  get paneContainerStyle() {
-    return {
-      width: this.paneContainerWidthPx + 'px',
-    } as StyleValue;
-  }
+    hasTimeNeume() {
+      return this.form.timeNeume != null;
+    },
+
+    hasGorgonNeume() {
+      return this.form.gorgonNeume != null;
+    },
+
+    hasSecondaryGorgonNeume() {
+      return this.form.secondaryGorgonNeume != null;
+    },
+
+    hasFthora() {
+      return this.form.fthora != null;
+    },
+
+    hasSecondaryFthora() {
+      return this.form.secondaryFthora != null;
+    },
+
+    hasTertiaryFthora() {
+      return this.form.tertiaryFthora != null;
+    },
+
+    hasAccidental() {
+      return this.form.accidental != null;
+    },
+
+    hasSecondaryAccidental() {
+      return this.form.secondaryAccidental != null;
+    },
+
+    hasTertiaryAccidental() {
+      return this.form.tertiaryAccidental != null;
+    },
+
+    hasMeasureBarLeft() {
+      return this.form.measureBarLeft != null;
+    },
+
+    hasMeasureBarRight() {
+      return this.form.measureBarRight != null;
+    },
+
+    hasMeasureNumber() {
+      return this.form.measureNumber != null;
+    },
+
+    hasIson() {
+      return this.form.ison != null;
+    },
+
+    hasTie() {
+      return this.form.tie != null;
+    },
+
+    centerLeft() {
+      return this.paneContainerWidthPx / 2;
+    },
+
+    previousElementStyle() {
+      return {
+        left: `calc(${this.centerLeft}px - ${
+          this.element.x - this.previousElement.x
+        }px * var(--zoom, 1))`,
+      } as StyleValue;
+    },
+
+    nextElementStyle() {
+      return {
+        left: `calc(${this.centerLeft}px + ${
+          this.nextElement.x - this.element.x
+        }px * var(--zoom, 1))`,
+      } as StyleValue;
+    },
+
+    mainStyle() {
+      return {
+        left: this.centerLeft + 'px',
+      } as StyleValue;
+    },
+
+    topPaneStyle() {
+      const neumeHeight = TextMeasurementService.getFontHeight(
+        `${this.pageSetup.neumeDefaultFontSize}px ${this.pageSetup.neumeDefaultFontFamily}`,
+      );
+
+      return {
+        height: neumeHeight * this.zoom + 'px',
+      } as StyleValue;
+    },
+
+    paneContainerStyle() {
+      return {
+        width: this.paneContainerWidthPx + 'px',
+      } as StyleValue;
+    },
+  },
 
   created() {
     Object.assign(this.form, this.element);
 
     window.addEventListener('keydown', this.onKeyDown);
-  }
+  },
 
   beforeUnmount() {
     window.removeEventListener('keydown', this.onKeyDown);
-  }
+  },
 
-  onKeyDown(event: KeyboardEvent) {
-    if (event.code === 'Escape') {
+  methods: {
+    onKeyDown(event: KeyboardEvent) {
+      if (event.code === 'Escape') {
+        this.$emit('close');
+      }
+    },
+
+    update() {
+      this.$emit('update', this.form);
       this.$emit('close');
-    }
-  }
+    },
 
-  update() {
-    this.$emit('update', this.form);
-    this.$emit('close');
-  }
+    updateAccidentalOffset(args: ScoreElementOffset) {
+      this.form.accidentalOffsetX = args.x;
+      this.form.accidentalOffsetY = args.y;
+    },
 
-  updateAccidentalOffset(args: ScoreElementOffset) {
-    this.form.accidentalOffsetX = args.x;
-    this.form.accidentalOffsetY = args.y;
-  }
+    updateSecondaryAccidentalOffset(args: ScoreElementOffset) {
+      this.form.secondaryAccidentalOffsetX = args.x;
+      this.form.secondaryAccidentalOffsetY = args.y;
+    },
 
-  updateSecondaryAccidentalOffset(args: ScoreElementOffset) {
-    this.form.secondaryAccidentalOffsetX = args.x;
-    this.form.secondaryAccidentalOffsetY = args.y;
-  }
+    updateTertiaryAccidentalOffset(args: ScoreElementOffset) {
+      this.form.tertiaryAccidentalOffsetX = args.x;
+      this.form.tertiaryAccidentalOffsetY = args.y;
+    },
 
-  updateTertiaryAccidentalOffset(args: ScoreElementOffset) {
-    this.form.tertiaryAccidentalOffsetX = args.x;
-    this.form.tertiaryAccidentalOffsetY = args.y;
-  }
+    updateMeasureBarLeftOffset(args: ScoreElementOffset) {
+      this.form.measureBarLeftOffsetX = args.x;
+      this.form.measureBarLeftOffsetY = args.y;
+    },
 
-  updateMeasureBarLeftOffset(args: ScoreElementOffset) {
-    this.form.measureBarLeftOffsetX = args.x;
-    this.form.measureBarLeftOffsetY = args.y;
-  }
+    updateMeasureBarRightOffset(args: ScoreElementOffset) {
+      this.form.measureBarRightOffsetX = args.x;
+      this.form.measureBarRightOffsetY = args.y;
+    },
 
-  updateMeasureBarRightOffset(args: ScoreElementOffset) {
-    this.form.measureBarRightOffsetX = args.x;
-    this.form.measureBarRightOffsetY = args.y;
-  }
+    updateFthoraOffset(args: ScoreElementOffset) {
+      this.form.fthoraOffsetX = args.x;
+      this.form.fthoraOffsetY = args.y;
+    },
 
-  updateFthoraOffset(args: ScoreElementOffset) {
-    this.form.fthoraOffsetX = args.x;
-    this.form.fthoraOffsetY = args.y;
-  }
+    updateSecondaryFthoraOffset(args: ScoreElementOffset) {
+      this.form.secondaryFthoraOffsetX = args.x;
+      this.form.secondaryFthoraOffsetY = args.y;
+    },
 
-  updateSecondaryFthoraOffset(args: ScoreElementOffset) {
-    this.form.secondaryFthoraOffsetX = args.x;
-    this.form.secondaryFthoraOffsetY = args.y;
-  }
+    updateTertiaryFthoraOffset(args: ScoreElementOffset) {
+      this.form.tertiaryFthoraOffsetX = args.x;
+      this.form.tertiaryFthoraOffsetY = args.y;
+    },
 
-  updateTertiaryFthoraOffset(args: ScoreElementOffset) {
-    this.form.tertiaryFthoraOffsetX = args.x;
-    this.form.tertiaryFthoraOffsetY = args.y;
-  }
+    updateGorgonOffset(args: ScoreElementOffset) {
+      this.form.gorgonNeumeOffsetX = args.x;
+      this.form.gorgonNeumeOffsetY = args.y;
+    },
 
-  updateGorgonOffset(args: ScoreElementOffset) {
-    this.form.gorgonNeumeOffsetX = args.x;
-    this.form.gorgonNeumeOffsetY = args.y;
-  }
+    updateGorgon2Offset(args: ScoreElementOffset) {
+      this.form.secondaryGorgonNeumeOffsetX = args.x;
+      this.form.secondaryGorgonNeumeOffsetY = args.y;
+    },
 
-  updateGorgon2Offset(args: ScoreElementOffset) {
-    this.form.secondaryGorgonNeumeOffsetX = args.x;
-    this.form.secondaryGorgonNeumeOffsetY = args.y;
-  }
+    updateIsonOffset(args: ScoreElementOffset) {
+      this.form.isonOffsetX = args.x;
+      this.form.isonOffsetY = args.y;
+    },
 
-  updateIsonOffset(args: ScoreElementOffset) {
-    this.form.isonOffsetX = args.x;
-    this.form.isonOffsetY = args.y;
-  }
+    updateKoronisOffset(args: ScoreElementOffset) {
+      this.form.koronisOffsetX = args.x;
+      this.form.koronisOffsetY = args.y;
+    },
 
-  updateKoronisOffset(args: ScoreElementOffset) {
-    this.form.koronisOffsetX = args.x;
-    this.form.koronisOffsetY = args.y;
-  }
+    updateMeasureNumberOffset(args: ScoreElementOffset) {
+      this.form.measureNumberOffsetX = args.x;
+      this.form.measureNumberOffsetY = args.y;
+    },
 
-  updateMeasureNumberOffset(args: ScoreElementOffset) {
-    this.form.measureNumberOffsetX = args.x;
-    this.form.measureNumberOffsetY = args.y;
-  }
+    updateNoteIndicatorOffset(args: ScoreElementOffset) {
+      this.form.noteIndicatorOffsetX = args.x;
+      this.form.noteIndicatorOffsetY = args.y;
+    },
 
-  updateNoteIndicatorOffset(args: ScoreElementOffset) {
-    this.form.noteIndicatorOffsetX = args.x;
-    this.form.noteIndicatorOffsetY = args.y;
-  }
+    updateStavrosOffset(args: ScoreElementOffset) {
+      this.form.stavrosOffsetX = args.x;
+      this.form.stavrosOffsetY = args.y;
+    },
 
-  updateStavrosOffset(args: ScoreElementOffset) {
-    this.form.stavrosOffsetX = args.x;
-    this.form.stavrosOffsetY = args.y;
-  }
+    updateTieOffset(args: ScoreElementOffset) {
+      this.form.tieOffsetX = args.x;
+      this.form.tieOffsetY = args.y;
+    },
 
-  updateTieOffset(args: ScoreElementOffset) {
-    this.form.tieOffsetX = args.x;
-    this.form.tieOffsetY = args.y;
-  }
+    updateTimeOffset(args: ScoreElementOffset) {
+      this.form.timeNeumeOffsetX = args.x;
+      this.form.timeNeumeOffsetY = args.y;
+    },
 
-  updateTimeOffset(args: ScoreElementOffset) {
-    this.form.timeNeumeOffsetX = args.x;
-    this.form.timeNeumeOffsetY = args.y;
-  }
+    updateVareiaOffset(args: ScoreElementOffset) {
+      this.form.vareiaOffsetX = args.x;
+      this.form.vareiaOffsetY = args.y;
+    },
 
-  updateVareiaOffset(args: ScoreElementOffset) {
-    this.form.vareiaOffsetX = args.x;
-    this.form.vareiaOffsetY = args.y;
-  }
-
-  updateQualityOffset(args: ScoreElementOffset) {
-    this.form.vocalExpressionNeumeOffsetX = args.x;
-    this.form.vocalExpressionNeumeOffsetY = args.y;
-  }
-}
+    updateQualityOffset(args: ScoreElementOffset) {
+      this.form.vocalExpressionNeumeOffsetX = args.x;
+      this.form.vocalExpressionNeumeOffsetY = args.y;
+    },
+  },
+});
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

@@ -15,6 +15,15 @@ import { defineComponent, PropType } from 'vue';
 
 import { Unit } from '@/utils/Unit';
 
+export type UnitOfMeasure =
+  | 'pc'
+  | 'pt'
+  | 'in'
+  | 'cm'
+  | 'mm'
+  | 'percent'
+  | 'unitless';
+
 export default defineComponent({
   components: {},
   emits: ['update:modelValue'],
@@ -24,9 +33,7 @@ export default defineComponent({
       required: true,
     },
     unit: {
-      type: String as PropType<
-        'pc' | 'pt' | 'in' | 'cm' | 'mm' | 'percent' | 'unitless'
-      >,
+      type: String as PropType<UnitOfMeasure>,
       required: true,
     },
     nullable: {

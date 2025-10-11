@@ -101,12 +101,11 @@ export default defineComponent({
   },
 
   watch: {
-    element: {
-      handler(newValue: ImageBoxElement) {
-        this.imageWidth = newValue.imageWidth;
-        this.imageHeight = newValue.imageHeight;
-      },
-      deep: true,
+    'element.imageWidth'(newValue: number) {
+      this.imageWidth = newValue;
+    },
+    'element.imageHeight'(newValue: number) {
+      this.imageHeight = newValue;
     },
   },
 

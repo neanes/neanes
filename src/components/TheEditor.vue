@@ -1748,10 +1748,7 @@ const {
   updateTempoBpm,
   updateDropCap,
   updateDropCapContent,
-  updateImageBoxInline,
-  updateImageBoxLockAspectRatio,
-  updateImageBoxAlignment,
-  updateImageBoxSize,
+  updateImageBox,
   setGorgon,
   setVocalExpression,
   setTie,
@@ -2433,11 +2430,10 @@ const { addNeumeCombination } = useClipboard();
                       :class="[{ selectedImagebox: isSelected(element) }]"
                       @select-single="setSelectedElement(element)"
                       @update:size="
-                        updateImageBoxSize(
-                          selectedElement as ImageBoxElement,
-                          $event.width,
-                          $event.height,
-                        )
+                        updateImageBox(selectedElement as ImageBoxElement, {
+                          imageWidth: $event.width,
+                          imageHeight: $event.height,
+                        })
                       "
                     />
                   </template>
@@ -2680,12 +2676,7 @@ const { addNeumeCombination } = useClipboard();
         :element="selectedElement as DropCapElement"
         :fonts="fonts"
         :pageSetup="score.pageSetup"
-        @update="
-          updateDropCap(
-            selectedElement as DropCapElement,
-            $event as Partial<DropCapElement>,
-          )
-        "
+        @update="updateDropCap(selectedElement as DropCapElement, $event)"
         @update:sectionName="
           updateScoreElementSectionName(
             selectedElement as DropCapElement,
@@ -2698,27 +2689,9 @@ const { addNeumeCombination } = useClipboard();
       v-if="selectedElement != null && isImageBoxElement(selectedElement)"
     >
       <ToolbarImageBox
-        :element="selectedElement"
+        :element="selectedElement as ImageBoxElement"
         :pageSetup="score.pageSetup"
-        @update:alignment="
-          updateImageBoxAlignment(selectedElement as ImageBoxElement, $event)
-        "
-        @update:inline="
-          updateImageBoxInline(selectedElement as ImageBoxElement, $event)
-        "
-        @update:lockAspectRatio="
-          updateImageBoxLockAspectRatio(
-            selectedElement as ImageBoxElement,
-            $event,
-          )
-        "
-        @update:size="
-          updateImageBoxSize(
-            selectedElement as ImageBoxElement,
-            $event.width,
-            $event.height,
-          )
-        "
+        @update="updateImageBox(selectedElement as ImageBoxElement, $event)"
       />
     </template>
     <template v-if="selectedLyrics != null">

@@ -1680,8 +1680,6 @@ const {
   updateAlternateLine,
   updateRichTextBox,
   updateRichTextBoxHeight,
-  updateRichTextBoxMarginTop,
-  updateRichTextBoxMarginBottom,
   updateTextBox,
   updateTextBoxHeight,
   updateModeKey,
@@ -2506,67 +2504,7 @@ const { addNeumeCombination } = useClipboard();
       <ToolbarTextBoxRich
         :element="selectedRichTextBoxElement"
         :pageSetup="score.pageSetup"
-        @update:inline="
-          updateRichTextBox(selectedRichTextBoxElement, { inline: $event })
-        "
-        @update:customWidth="
-          updateRichTextBox(selectedRichTextBoxElement, { customWidth: $event })
-        "
-        @update:offsetYTop="
-          updateRichTextBox(selectedRichTextBoxElement, { offsetYTop: $event })
-        "
-        @update:offsetYBottom="
-          updateRichTextBox(selectedRichTextBoxElement, {
-            offsetYBottom: $event,
-          })
-        "
-        @update:rtl="
-          updateRichTextBox(selectedRichTextBoxElement, { rtl: $event })
-        "
-        @update:centerOnPage="
-          updateRichTextBox(selectedRichTextBoxElement, {
-            centerOnPage: $event,
-          })
-        "
-        @update:modeChange="
-          updateRichTextBox(selectedRichTextBoxElement, { modeChange: $event })
-        "
-        @update:modeChangePhysicalNote="
-          updateRichTextBox(selectedRichTextBoxElement, {
-            modeChangePhysicalNote: $event,
-          })
-        "
-        @update:modeChangeScale="
-          updateRichTextBox(selectedRichTextBoxElement, {
-            modeChangeScale: $event,
-          })
-        "
-        @update:modeChangeVirtualNote="
-          updateRichTextBox(selectedRichTextBoxElement, {
-            modeChangeVirtualNote: $event,
-          })
-        "
-        @update:modeChangeIgnoreAttractions="
-          updateRichTextBox(selectedRichTextBoxElement, {
-            modeChangeIgnoreAttractions: $event,
-          })
-        "
-        @update:modeChangePermanentEnharmonicZo="
-          updateRichTextBox(selectedRichTextBoxElement, {
-            modeChangePermanentEnharmonicZo: $event,
-          })
-        "
-        @update:modeChangeBpm="
-          updateRichTextBox(selectedRichTextBoxElement, {
-            modeChangeBpm: $event,
-          })
-        "
-        @update:marginTop="
-          updateRichTextBoxMarginTop(selectedRichTextBoxElement, $event)
-        "
-        @update:marginBottom="
-          updateRichTextBoxMarginBottom(selectedRichTextBoxElement, $event)
-        "
+        @update="updateRichTextBox(selectedRichTextBoxElement, $event)"
         @update:sectionName="
           updateScoreElementSectionName(
             selectedElement as RichTextBoxElement,

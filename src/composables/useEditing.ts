@@ -738,20 +738,6 @@ export function useEditing() {
     saveDebounced(false);
   }
 
-  function updateRichTextBoxMarginTop(
-    element: RichTextBoxElement,
-    marginTop: number,
-  ) {
-    updateRichTextBox(element, { marginTop });
-  }
-
-  function updateRichTextBoxMarginBottom(
-    element: RichTextBoxElement,
-    marginBottom: number,
-  ) {
-    updateRichTextBox(element, { marginBottom });
-  }
-
   function updateTextBox(
     element: TextBoxElement,
     newValues: Partial<TextBoxElement>,
@@ -1585,8 +1571,6 @@ export function useEditing() {
     updateAlternateLine,
     updateRichTextBox,
     updateRichTextBoxHeight,
-    updateRichTextBoxMarginTop,
-    updateRichTextBoxMarginBottom,
     updateTextBox,
     updateTextBoxHeight,
     updateModeKey,

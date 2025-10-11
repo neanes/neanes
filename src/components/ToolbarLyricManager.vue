@@ -29,17 +29,12 @@
   </div>
 </template>
 
-<script lang="ts">
-import { Component, Prop, Vue } from 'vue-facing-decorator';
-
-@Component({
-  components: {},
-  emits: ['assignAcceptsLyrics', 'update:locked', 'update:lyrics'],
-})
-export default class ToolbarLyricManager extends Vue {
-  @Prop() lyrics!: string;
-  @Prop() locked!: boolean;
-}
+<script setup lang="ts">
+defineEmits(['assignAcceptsLyrics', 'update:locked', 'update:lyrics', 'close']);
+defineProps({
+  lyrics: { type: String, required: true },
+  locked: { type: Boolean, required: true },
+});
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

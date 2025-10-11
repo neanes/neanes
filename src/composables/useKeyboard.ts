@@ -197,24 +197,9 @@ export function useKeyboard() {
     editing.setVocalExpression,
   );
 
-  const updateMartyriaNoteThrottled = throttle(
+  const updateMartyriaThrottled = throttle(
     keydownThrottleIntervalMs,
-    editing.updateMartyriaNote,
-  );
-
-  const updateMartyriaScaleThrottled = throttle(
-    keydownThrottleIntervalMs,
-    editing.updateMartyriaScale,
-  );
-
-  const updateMartyriaAutoThrottled = throttle(
-    keydownThrottleIntervalMs,
-    editing.updateMartyriaAuto,
-  );
-
-  const updateMartyriaAlignRightThrottled = throttle(
-    keydownThrottleIntervalMs,
-    editing.updateMartyriaAlignRight,
+    editing.updateMartyria,
   );
 
   const updateNoteAndSaveThrottled = throttle(
@@ -677,22 +662,21 @@ export function useKeyboard() {
           if (martyriaConfigMapping.note != null) {
             // This case will not currently happen
             // because no keyboard mapping exist for it
-            updateMartyriaNoteThrottled(
-              martyriaElement,
-              martyriaConfigMapping.note,
-            );
+            updateMartyriaThrottled(martyriaElement, {
+              note: martyriaConfigMapping.note,
+            });
           } else if (martyriaConfigMapping.scale != null) {
-            updateMartyriaScaleThrottled(
-              martyriaElement,
-              martyriaConfigMapping.scale,
-            );
+            updateMartyriaThrottled(martyriaElement, {
+              scale: martyriaConfigMapping.scale,
+            });
           } else if (martyriaConfigMapping.martyriaAlignmentToggle === true) {
-            updateMartyriaAlignRightThrottled(
-              martyriaElement,
-              !martyriaElement.alignRight,
-            );
+            updateMartyriaThrottled(martyriaElement, {
+              alignRight: !martyriaElement.alignRight,
+            });
           } else if (martyriaConfigMapping.martyriaAutoToggle === true) {
-            updateMartyriaAutoThrottled(martyriaElement, !martyriaElement.auto);
+            updateMartyriaThrottled(martyriaElement, {
+              auto: !martyriaElement.auto,
+            });
           }
         }
       }

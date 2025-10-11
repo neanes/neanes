@@ -5,10 +5,9 @@
       type="checkbox"
       :checked="element.lyricsUseDefaultStyle"
       @change="
-        $emit(
-          'update:lyricsUseDefaultStyle',
-          ($event.target as HTMLInputElement).checked,
-        )
+        $emit('update', {
+          lyricsUseDefaultStyle: ($event.target as HTMLInputElement).checked,
+        } as Partial<NoteElement>)
       "
     />
     <label for="toolbar-lyrics-use-default-style">{{
@@ -19,10 +18,9 @@
       <select
         :value="element.lyricsFontFamily"
         @change="
-          $emit(
-            'update:lyricsFontFamily',
-            ($event.target as HTMLInputElement).value,
-          )
+          $emit('update', {
+            lyricsFontFamily: ($event.target as HTMLInputElement).value,
+          } as Partial<NoteElement>)
         "
       >
         <option v-for="font in lyricsFontFamilies" :key="font" :value="font">
@@ -33,32 +31,52 @@
       <InputFontSize
         class="lyrics-input"
         :modelValue="element.lyricsFontSize"
-        @update:modelValue="$emit('update:lyricsFontSize', $event)"
+        @update:modelValue="
+          $emit('update', {
+            lyricsFontSize: $event,
+          } as Partial<NoteElement>)
+        "
       />
       <span class="space"></span>
       <ColorPicker
         :modelValue="element.lyricsColor"
-        @update:modelValue="$emit('update:lyricsColor', $event)"
+        @update:modelValue="
+          $emit('update', {
+            lyricsColor: $event,
+          } as Partial<NoteElement>)
+        "
       />
       <span class="space"></span>
       <button
         class="icon-btn"
         :class="{ selected: bold }"
-        @click="$emit('update:lyricsFontWeight', !bold)"
+        @click="
+          $emit('update', {
+            lyricsFontWeight: !bold ? '700' : '400',
+          } as Partial<NoteElement>)
+        "
       >
         <b>B</b>
       </button>
       <button
         class="icon-btn"
         :class="{ selected: italic }"
-        @click="$emit('update:lyricsFontStyle', !italic)"
+        @click="
+          $emit('update', {
+            lyricsFontStyle: !italic ? 'italic' : 'normal',
+          } as Partial<NoteElement>)
+        "
       >
         <i>I</i>
       </button>
       <button
         class="icon-btn"
         :class="{ selected: underline }"
-        @click="$emit('update:lyricsTextDecoration', !underline)"
+        @click="
+          $emit('update', {
+            lyricsTextDecoration: !underline ? 'underline' : 'none',
+          } as Partial<NoteElement>)
+        "
       >
         <u>U</u>
       </button>
@@ -66,7 +84,11 @@
       <label class="right-space">{{ $t('toolbar:common.outline') }}</label>
       <InputStrokeWidth
         :modelValue="element.lyricsStrokeWidth"
-        @update:modelValue="$emit('update:lyricsStrokeWidth', $event)"
+        @update:modelValue="
+          $emit('update', {
+            lyricsStrokeWidth: $event,
+          } as Partial<NoteElement>)
+        "
       />
     </template>
     <span class="space" />
@@ -106,7 +128,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-facing-decorator';
+import { defineComponent, PropType } from 'vue';
 
 import ColorPicker from '@/components/ColorPicker.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
@@ -123,59 +145,64 @@ import {
   STIGMA_SMALL,
 } from '@/utils/constants';
 
-@Component({
+const specialCharacters = [
+  { value: E_MACRON_SMALL, language: 'english' },
+  { value: E_MACRON, language: 'english' },
+  { value: STIGMA_SMALL, language: 'greek' },
+  { value: STIGMA, language: 'greek' },
+  { value: GREEK_OU_SMALL, language: 'greek' },
+  { value: GREEK_OU, language: 'greek' },
+];
+
+export default defineComponent({
   components: { ColorPicker, InputFontSize, InputStrokeWidth },
-  emits: [
-    'insert:specialCharacter',
-    'update:lyricsColor',
-    'update:lyricsFontFamily',
-    'update:lyricsFontSize',
-    'update:lyricsFontStyle',
-    'update:lyricsFontWeight',
-    'update:lyricsStrokeWidth',
-    'update:lyricsTextDecoration',
-    'update:lyricsUseDefaultStyle',
-  ],
-})
-export default class ToolbarLyrics extends Vue {
-  @Prop() element!: NoteElement;
-  @Prop() fonts!: string[];
+  emits: ['insert:specialCharacter', 'update'],
+  props: {
+    element: {
+      type: Object as PropType<NoteElement>,
+      required: true,
+    },
+    fonts: {
+      type: Array as PropType<string[]>,
+      required: true,
+    },
+  },
 
-  GORTHMIKON = GORTHMIKON;
-  PELASTIKON = PELASTIKON;
+  data() {
+    return {
+      GORTHMIKON,
+      PELASTIKON,
+      specialCharacters,
+    };
+  },
 
-  specialCharacters = [
-    { value: E_MACRON_SMALL, language: 'english' },
-    { value: E_MACRON, language: 'english' },
-    { value: STIGMA_SMALL, language: 'greek' },
-    { value: STIGMA, language: 'greek' },
-    { value: GREEK_OU_SMALL, language: 'greek' },
-    { value: GREEK_OU, language: 'greek' },
-  ];
+  computed: {
+    bold() {
+      return this.element.lyricsFontWeight === '700';
+    },
 
-  get bold() {
-    return this.element.lyricsFontWeight === '700';
-  }
+    italic() {
+      return this.element.lyricsFontStyle === 'italic';
+    },
 
-  get italic() {
-    return this.element.lyricsFontStyle === 'italic';
-  }
+    underline() {
+      return this.element.lyricsTextDecoration === 'underline';
+    },
 
-  get underline() {
-    return this.element.lyricsTextDecoration === 'underline';
-  }
+    lyricsFontFamilies() {
+      return [
+        'Source Serif',
+        'GFS Didot',
+        'Noto Naskh Arabic',
+        'Old Standard',
+        'Omega',
+        ...this.fonts,
+      ];
+    },
+  },
 
-  get lyricsFontFamilies() {
-    return [
-      'Source Serif',
-      'GFS Didot',
-      'Noto Naskh Arabic',
-      'Old Standard',
-      'Omega',
-      ...this.fonts,
-    ];
-  }
-}
+  methods: {},
+});
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

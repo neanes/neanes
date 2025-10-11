@@ -1222,7 +1222,7 @@ function onFileMenuInsertTextBox(args?: FileMenuInsertTextboxArgs) {
   save();
 
   nextTick(() => {
-    (editor.elementRefs[element.index] as TextBox).focus();
+    (editor.elementRefs[element.index] as InstanceType<typeof TextBox>).focus();
   });
 }
 
@@ -1237,7 +1237,9 @@ function onFileMenuInsertRichTextBox() {
   save();
 
   nextTick(() => {
-    (editor.elementRefs[element.index] as TextBoxRich).focus();
+    (
+      editor.elementRefs[element.index] as InstanceType<typeof TextBoxRich>
+    ).focus();
   });
 }
 
@@ -1398,11 +1400,15 @@ function onSearchText(args: { query: string; reverse?: boolean }) {
         ).scrollIntoView();
       } else if (editor.selectedElement?.elementType === ElementType.DropCap) {
         (
-          editor.elementRefs[editor.selectedElementIndex] as DropCap
+          editor.elementRefs[editor.selectedElementIndex] as InstanceType<
+            typeof DropCap
+          >
         ).$el.scrollIntoView();
       } else if (editor.selectedElement?.elementType === ElementType.TextBox) {
         (
-          editor.elementRefs[editor.selectedElementIndex] as TextBox
+          editor.elementRefs[editor.selectedElementIndex] as InstanceType<
+            typeof TextBox
+          >
         ).$el.scrollIntoView();
       }
     });
@@ -1922,7 +1928,9 @@ const { addNeumeCombination } = useClipboard();
                       getHeaderForPageIndex(pageIndex).keyHelper
                     }`"
                     :ref="`header-${pageIndex}`"
-                    :element="getHeaderForPageIndex(pageIndex)"
+                    :element="
+                      getHeaderForPageIndex(pageIndex) as RichTextBoxElement
+                    "
                     :editMode="
                       !printMode &&
                       getHeaderForPageIndex(pageIndex) ==
@@ -1964,7 +1972,9 @@ const { addNeumeCombination } = useClipboard();
                       getHeaderForPageIndex(pageIndex).keyHelper
                     }`"
                     :ref="`header-${pageIndex}`"
-                    :element="getHeaderForPageIndex(pageIndex)"
+                    :element="
+                      getHeaderForPageIndex(pageIndex) as TextBoxElement
+                    "
                     :editMode="
                       !printMode &&
                       getHeaderForPageIndex(pageIndex) ==
@@ -1972,6 +1982,10 @@ const { addNeumeCombination } = useClipboard();
                     "
                     :metadata="getTokenMetadata(pageIndex)"
                     :pageSetup="score.pageSetup"
+                    :selected="
+                      getHeaderForPageIndex(pageIndex) ==
+                      selectedHeaderFooterElement
+                    "
                     :class="[
                       {
                         selectedTextbox:
@@ -2083,7 +2097,7 @@ const { addNeumeCombination } = useClipboard();
                       />
                       <SyllableNeumeBox
                         class="syllable-box"
-                        :note="element"
+                        :note="element as NoteElement"
                         :pageSetup="score.pageSetup"
                         :class="[
                           {
@@ -2225,7 +2239,7 @@ const { addNeumeCombination } = useClipboard();
                       <MartyriaNeumeBox
                         :ref="setElementRefByIndex(element.index)"
                         class="marytria-neume-box"
-                        :neume="element"
+                        :neume="element as MartyriaElement"
                         :pageSetup="score.pageSetup"
                         :class="[
                           {
@@ -2259,7 +2273,7 @@ const { addNeumeCombination } = useClipboard();
                       /></span>
                       <TempoNeumeBox
                         class="tempo-neume-box"
-                        :neume="element"
+                        :neume="element as TempoElement"
                         :pageSetup="score.pageSetup"
                         :class="[{ selected: isSelected(element) }]"
                         @select-single="setSelectedElement(element)"
@@ -2312,7 +2326,7 @@ const { addNeumeCombination } = useClipboard();
                     /></span>
                     <TextBox
                       :ref="setElementRefByIndex(element.index)"
-                      :element="element"
+                      :element="element as TextBoxElement"
                       :editMode="true"
                       :metadata="getTokenMetadata(pageIndex)"
                       :pageSetup="score.pageSetup"
@@ -2340,7 +2354,7 @@ const { addNeumeCombination } = useClipboard();
                     /></span>
                     <TextBoxRich
                       :ref="setElementRefByIndex(element.index)"
-                      :element="element"
+                      :element="element as RichTextBoxElement"
                       :pageSetup="score.pageSetup"
                       :fonts="fonts"
                       :selected="isSelected(element)"
@@ -2372,7 +2386,7 @@ const { addNeumeCombination } = useClipboard();
                     /></span>
                     <ModeKey
                       :ref="setElementRefByIndex(element.index)"
-                      :element="element"
+                      :element="element as ModeKeyElement"
                       :pageSetup="score.pageSetup"
                       :class="[
                         {
@@ -2422,7 +2436,7 @@ const { addNeumeCombination } = useClipboard();
                     /></span>
                     <ImageBox
                       :ref="setElementRefByIndex(element.index)"
-                      :element="element"
+                      :element="element as ImageBoxElement"
                       :zoom="zoom"
                       :printMode="printMode"
                       :class="[{ selectedImagebox: isSelected(element) }]"
@@ -2457,7 +2471,9 @@ const { addNeumeCombination } = useClipboard();
                       getFooterForPageIndex(pageIndex).keyHelper
                     }`"
                     :ref="`footer-${pageIndex}`"
-                    :element="getFooterForPageIndex(pageIndex)"
+                    :element="
+                      getFooterForPageIndex(pageIndex) as RichTextBoxElement
+                    "
                     :editMode="
                       !printMode &&
                       getFooterForPageIndex(pageIndex) ==
@@ -2499,7 +2515,9 @@ const { addNeumeCombination } = useClipboard();
                     :key="`element-${editor.selectedWorkspace.id}-${getFooterForPageIndex(pageIndex).id}-${
                       getFooterForPageIndex(pageIndex).keyHelper
                     }`"
-                    :element="getFooterForPageIndex(pageIndex)"
+                    :element="
+                      getFooterForPageIndex(pageIndex) as TextBoxElement
+                    "
                     :editMode="
                       !printMode &&
                       getFooterForPageIndex(pageIndex) ==
@@ -2507,6 +2525,10 @@ const { addNeumeCombination } = useClipboard();
                     "
                     :metadata="getTokenMetadata(pageIndex)"
                     :pageSetup="score.pageSetup"
+                    :selected="
+                      getFooterForPageIndex(pageIndex) ==
+                      selectedHeaderFooterElement
+                    "
                     :class="[
                       {
                         selectedTextbox:
@@ -3090,7 +3112,7 @@ const { addNeumeCombination } = useClipboard();
     ></ToolbarLyricManager>
     <ModeKeyDialog
       v-if="modeKeyDialogIsOpen"
-      :element="selectedElement"
+      :element="selectedElement as ModeKeyElement"
       :pageSetup="score.pageSetup"
       @update="
         updateModeKeyFromTemplate(selectedElement as ModeKeyElement, $event)
@@ -3102,9 +3124,9 @@ const { addNeumeCombination } = useClipboard();
     />
     <SyllablePositioningDialog
       v-if="syllablePositioningDialogIsOpen"
-      :element="selectedElement"
-      :previousElement="previousElementOnLine"
-      :nextElement="nextElementOnLine"
+      :element="selectedElement as NoteElement"
+      :previousElement="previousElementOnLine ?? undefined"
+      :nextElement="nextElementOnLine ?? undefined"
       :pageSetup="score.pageSetup"
       @update="updateNoteAndSave(selectedElement as NoteElement, $event)"
       @close="closeSyllablePositioningDialog"
@@ -3142,8 +3164,8 @@ const { addNeumeCombination } = useClipboard();
       <TextBoxRich
         class="richTextBoxCalculation"
         v-for="element in resizableRichTextBoxElements"
-        :key="element.id"
-        :element="element"
+        :key="element.id!"
+        :element="element as RichTextBoxElement"
         :pageSetup="score.pageSetup"
         :fonts="fonts"
         :recalc="true"
@@ -3156,8 +3178,8 @@ const { addNeumeCombination } = useClipboard();
       <TextBox
         class="textBoxCalculation"
         v-for="element in resizableTextBoxElements"
-        :key="element.id"
-        :element="element"
+        :key="element.id!"
+        :element="element as TextBoxElement"
         :pageSetup="score.pageSetup"
         :fonts="fonts"
         @update:height="updateTextBoxHeight(element as TextBoxElement, $event)"

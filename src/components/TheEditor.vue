@@ -1689,8 +1689,7 @@ const {
   updateMartyria,
   setAccidental,
   setFthoraMartyria,
-  updateTempoSpaceAfter,
-  updateTempoBpm,
+  updateTempo,
   updateDropCap,
   updateDropCapContent,
   updateImageBox,
@@ -2765,12 +2764,9 @@ const { addNeumeCombination } = useClipboard();
     </template>
     <template v-if="selectedElement != null && isTempoElement(selectedElement)">
       <ToolbarTempo
-        :element="selectedElement"
+        :element="selectedElement as TempoElement"
         :pageSetup="score.pageSetup"
-        @update:bpm="updateTempoBpm(selectedElement as TempoElement, $event)"
-        @update:spaceAfter="
-          updateTempoSpaceAfter(selectedElement as TempoElement, $event)
-        "
+        @update="updateTempo(selectedElement as TempoElement, $event)"
         @update:sectionName="
           updateScoreElementSectionName(selectedElement as TempoElement, $event)
         "

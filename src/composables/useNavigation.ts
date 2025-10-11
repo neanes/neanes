@@ -36,7 +36,7 @@ export function useNavigation() {
       if (editor.selectedElement?.elementType === ElementType.DropCap) {
         (editor.elementRefs[index] as InstanceType<typeof DropCap>).blur();
       } else if (editor.selectedElement?.elementType === ElementType.TextBox) {
-        (editor.elementRefs[index] as TextBox).blur();
+        (editor.elementRefs[index] as InstanceType<typeof TextBox>).blur();
       }
 
       setSelectedElement(element);
@@ -45,7 +45,7 @@ export function useNavigation() {
       if (element.elementType === ElementType.DropCap) {
         (editor.elementRefs[index - 1] as InstanceType<typeof DropCap>).focus();
       } else if (element.elementType === ElementType.TextBox) {
-        (editor.elementRefs[index - 1] as TextBox).focus();
+        (editor.elementRefs[index - 1] as InstanceType<typeof TextBox>).focus();
       }
 
       return true;
@@ -74,7 +74,7 @@ export function useNavigation() {
       if (editor.selectedElement?.elementType === ElementType.DropCap) {
         (editor.elementRefs[index] as InstanceType<typeof DropCap>).blur();
       } else if (editor.selectedElement?.elementType === ElementType.TextBox) {
-        (editor.elementRefs[index] as TextBox).blur();
+        (editor.elementRefs[index] as InstanceType<typeof TextBox>).blur();
       }
 
       setSelectedElement(element);
@@ -83,7 +83,7 @@ export function useNavigation() {
       if (element.elementType === ElementType.DropCap) {
         (editor.elementRefs[index] as InstanceType<typeof DropCap>).focus();
       } else if (element.elementType === ElementType.TextBox) {
-        (editor.elementRefs[index] as TextBox).focus();
+        (editor.elementRefs[index] as InstanceType<typeof TextBox>).focus();
       }
 
       return true;

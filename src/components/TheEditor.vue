@@ -2573,7 +2573,7 @@ const { addNeumeCombination } = useClipboard();
       "
     >
       <ToolbarNeume
-        :element="selectedElementForNeumeToolbar"
+        :element="selectedElementForNeumeToolbar as NoteElement"
         :pageSetup="score.pageSetup"
         :neumeKeyboard="neumeKeyboard"
         :key="`toolbar-neume-${editor.selectedWorkspace.id}-${selectedElement.id}-${selectedElement.keyHelper}`"

@@ -888,53 +888,6 @@ export function useEditing() {
     save();
   }
 
-  function updateModeKeyMarginTop(element: ModeKeyElement, marginTop: number) {
-    updateModeKey(element, { marginTop });
-  }
-
-  function updateModeKeyMarginBottom(
-    element: ModeKeyElement,
-    marginBottom: number,
-  ) {
-    updateModeKey(element, { marginBottom });
-  }
-
-  function updateModeKeyUseDefaultStyle(
-    element: ModeKeyElement,
-    useDefaultStyle: boolean,
-  ) {
-    updateModeKey(element, { useDefaultStyle });
-  }
-
-  function updateModeKeyFontSize(element: ModeKeyElement, fontSize: number) {
-    updateModeKey(element, { fontSize });
-  }
-
-  function updateModeKeyStrokeWidth(
-    element: ModeKeyElement,
-    strokeWidth: number,
-  ) {
-    updateModeKey(element, { strokeWidth });
-  }
-
-  function updateModeKeyColor(element: ModeKeyElement, color: string) {
-    updateModeKey(element, { color });
-  }
-
-  function updateModeKeyAlignment(
-    element: ModeKeyElement,
-    alignment: TextBoxAlignment,
-  ) {
-    updateModeKey(element, { alignment });
-  }
-
-  function updateModeKeyHeightAdjustment(
-    element: ModeKeyElement,
-    heightAdjustment: number,
-  ) {
-    updateModeKey(element, { heightAdjustment });
-  }
-
   function updateModeKeyTempo(
     element: ModeKeyElement,
     tempo: TempoSign | null,
@@ -948,43 +901,6 @@ export function useEditing() {
     }
 
     updateModeKey(element, { tempo, bpm });
-  }
-
-  function updateModeKeyBpm(element: ModeKeyElement, bpm: number) {
-    updateModeKey(element, { bpm });
-    save();
-  }
-
-  function updateModeKeyIgnoreAttractions(
-    element: ModeKeyElement,
-    ignoreAttractions: boolean,
-  ) {
-    updateModeKey(element, { ignoreAttractions });
-    save();
-  }
-
-  function updateModeKeyShowAmbitus(
-    element: ModeKeyElement,
-    showAmbitus: boolean,
-  ) {
-    updateModeKey(element, { showAmbitus });
-    save();
-  }
-
-  function updateModeKeyTempoAlignRight(
-    element: ModeKeyElement,
-    tempoAlignRight: boolean,
-  ) {
-    updateModeKey(element, { tempoAlignRight });
-    save();
-  }
-
-  function updateModeKeyPermanentEnharmonicZo(
-    element: ModeKeyElement,
-    permanentEnharmonicZo: boolean,
-  ) {
-    updateModeKey(element, { permanentEnharmonicZo });
-    save();
   }
 
   function updateModeKeyFromTemplate(
@@ -1797,20 +1713,7 @@ export function useEditing() {
     updateTextBoxMarginTop,
     updateTextBoxMarginBottom,
     updateModeKey,
-    updateModeKeyMarginTop,
-    updateModeKeyMarginBottom,
-    updateModeKeyUseDefaultStyle,
-    updateModeKeyFontSize,
-    updateModeKeyStrokeWidth,
-    updateModeKeyColor,
-    updateModeKeyAlignment,
-    updateModeKeyHeightAdjustment,
     updateModeKeyTempo,
-    updateModeKeyBpm,
-    updateModeKeyIgnoreAttractions,
-    updateModeKeyShowAmbitus,
-    updateModeKeyTempoAlignRight,
-    updateModeKeyPermanentEnharmonicZo,
     updateModeKeyFromTemplate,
     updateMartyria,
     updateMartyriaFthora,

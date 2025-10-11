@@ -1501,61 +1501,6 @@ export function useEditing() {
     save();
   }
 
-  function updateDropCapUseDefaultStyle(
-    element: DropCapElement,
-    useDefaultStyle: boolean,
-  ) {
-    updateDropCap(element, { useDefaultStyle });
-  }
-
-  function updateDropCapFontSize(element: DropCapElement, fontSize: number) {
-    updateDropCap(element, { fontSize });
-  }
-
-  function updateDropCapFontFamily(
-    element: DropCapElement,
-    fontFamily: string,
-  ) {
-    updateDropCap(element, { fontFamily });
-  }
-
-  function updateDropCapStrokeWidth(
-    element: DropCapElement,
-    strokeWidth: number,
-  ) {
-    updateDropCap(element, { strokeWidth });
-  }
-
-  function updateDropCapColor(element: DropCapElement, color: string) {
-    updateDropCap(element, { color });
-  }
-
-  function updateDropCapFontWeight(element: DropCapElement, bold: boolean) {
-    updateDropCap(element, { fontWeight: bold ? '700' : '400' });
-  }
-
-  function updateDropCapFontStyle(element: DropCapElement, italic: boolean) {
-    updateDropCap(element, { fontStyle: italic ? 'italic' : 'normal' });
-  }
-
-  function updateDropCapLineHeight(
-    element: DropCapElement,
-    lineHeight: number | null,
-  ) {
-    updateDropCap(element, { lineHeight });
-  }
-
-  function updateDropCapLineSpan(element: DropCapElement, lineSpan: number) {
-    updateDropCap(element, { lineSpan });
-  }
-
-  function updateDropCapWidth(
-    element: DropCapElement,
-    customWidth: number | null,
-  ) {
-    updateDropCap(element, { customWidth });
-  }
-
   function updateImageBox(
     element: ImageBoxElement,
     newValues: Partial<ImageBoxElement>,
@@ -2237,16 +2182,6 @@ export function useEditing() {
     updateTempoBpm,
     updateDropCap,
     updateDropCapContent,
-    updateDropCapUseDefaultStyle,
-    updateDropCapFontSize,
-    updateDropCapFontFamily,
-    updateDropCapStrokeWidth,
-    updateDropCapColor,
-    updateDropCapFontWeight,
-    updateDropCapFontStyle,
-    updateDropCapLineHeight,
-    updateDropCapLineSpan,
-    updateDropCapWidth,
     updateImageBox,
     updateImageBoxInline,
     updateImageBoxLockAspectRatio,

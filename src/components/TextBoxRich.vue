@@ -414,7 +414,6 @@ export default defineComponent({
       this.resizeObserver = new ResizeObserver(
         debounce(100, () => {
           const resizedHeight = this.getHeight();
-          console.log('update', resizedHeight, this.element.height);
 
           if (
             resizedHeight != null &&
@@ -430,7 +429,6 @@ export default defineComponent({
       );
 
       this.resizeObserver.observe(element!);
-      console.log(element);
     },
 
     onEditorReadyInline() {

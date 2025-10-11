@@ -16,11 +16,11 @@ export default defineComponent({
   emits: ['update'],
   props: {
     x: {
-      type: Number as PropType<number | null>,
+      type: [Number, null],
       required: true,
     },
     y: {
-      type: Number as PropType<number | null>,
+      type: [Number, null],
       required: true,
     },
     fontSize: {
@@ -36,7 +36,7 @@ export default defineComponent({
       required: true,
     },
     mark: {
-      type: Object as PropType<Neume>,
+      type: String as PropType<Neume>,
       required: true,
     },
     height: {

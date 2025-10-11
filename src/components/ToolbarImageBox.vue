@@ -6,7 +6,9 @@
         type="checkbox"
         :checked="element.inline"
         @change="
-          $emit('update:inline', ($event.target as HTMLInputElement).checked)
+          $emit('update', {
+            inline: ($event.target as HTMLInputElement).checked,
+          } as Partial<ImageBoxElement>)
         "
       />
       <label for="toolbar-image-box-inline">{{
@@ -22,10 +24,9 @@
         type="checkbox"
         :checked="element.lockAspectRatio"
         @change="
-          $emit(
-            'update:lockAspectRatio',
-            ($event.target as HTMLInputElement).checked,
-          )
+          $emit('update', {
+            lockAspectRatio: ($event.target as HTMLInputElement).checked,
+          } as Partial<ImageBoxElement>)
         "
       />
       <label for="toolbar-image-box-lock-aspect-ratio">{{
@@ -67,7 +68,11 @@
       <button
         class="icon-btn"
         :class="{ selected: element.alignment === TextBoxAlignment.Left }"
-        @click="$emit('update:alignment', TextBoxAlignment.Left)"
+        @click="
+          $emit('update', {
+            alignment: TextBoxAlignment.Left,
+          } as Partial<ImageBoxElement>)
+        "
       >
         <img
           src="@/assets/icons/alignleft.svg"
@@ -79,7 +84,11 @@
       <button
         class="icon-btn"
         :class="{ selected: element.alignment === TextBoxAlignment.Center }"
-        @click="$emit('update:alignment', TextBoxAlignment.Center)"
+        @click="
+          $emit('update', {
+            alignment: TextBoxAlignment.Center,
+          } as Partial<ImageBoxElement>)
+        "
       >
         <img
           src="@/assets/icons/aligncenter.svg"
@@ -91,7 +100,11 @@
       <button
         class="icon-btn"
         :class="{ selected: element.alignment === TextBoxAlignment.Right }"
-        @click="$emit('update:alignment', TextBoxAlignment.Right)"
+        @click="
+          $emit('update', {
+            alignment: TextBoxAlignment.Right,
+          } as Partial<ImageBoxElement>)
+        "
       >
         <img
           src="@/assets/icons/alignright.svg"
@@ -105,58 +118,67 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-facing-decorator';
+import { defineComponent, PropType } from 'vue';
 
 import { ImageBoxElement, TextBoxAlignment } from '@/models/Element';
 import { PageSetup } from '@/models/PageSetup';
 
 import InputUnit from './InputUnit.vue';
 
-@Component({
+export default defineComponent({
   components: { InputUnit },
-  emits: [
-    'update:alignment',
-    'update:inline',
-    'update:lockAspectRatio',
-    'update:size',
-  ],
-})
-export default class ToolbarImageBox extends Vue {
-  @Prop() element!: ImageBoxElement;
-  @Prop() pageSetup!: PageSetup;
+  emits: ['update'],
+  props: {
+    element: {
+      type: Object as PropType<ImageBoxElement>,
+      required: true,
+    },
+    pageSetup: {
+      type: Object as PropType<PageSetup>,
+      required: true,
+    },
+  },
 
-  TextBoxAlignment = TextBoxAlignment;
+  data() {
+    return {
+      TextBoxAlignment,
+    };
+  },
 
-  onChangeHeight(value: number) {
-    const aspectRatio = this.element.aspectRatio;
+  computed: {},
 
-    this.element.imageHeight = value;
+  methods: {
+    onChangeHeight(height: number) {
+      const aspectRatio = this.element.aspectRatio;
 
-    if (this.element.lockAspectRatio) {
-      this.element.imageWidth = this.element.imageHeight * aspectRatio;
-    }
+      let width = this.element.imageWidth;
 
-    this.$emit('update:size', {
-      width: this.element.imageWidth,
-      height: this.element.imageHeight,
-    });
-  }
+      if (this.element.lockAspectRatio) {
+        width = height * aspectRatio;
+      }
 
-  onChangeWidth(value: number) {
-    const aspectRatio = this.element.aspectRatio;
+      this.$emit('update', {
+        imageWidth: width,
+        imageHeight: height,
+      } as Partial<ImageBoxElement>);
+    },
 
-    this.element.imageWidth = value;
+    onChangeWidth(width: number) {
+      const aspectRatio = this.element.aspectRatio;
 
-    if (this.element.lockAspectRatio) {
-      this.element.imageHeight = this.element.imageWidth / aspectRatio;
-    }
+      let height = this.element.imageHeight;
 
-    this.$emit('update:size', {
-      width: this.element.imageWidth,
-      height: this.element.imageHeight,
-    });
-  }
-}
+      if (this.element.lockAspectRatio) {
+        height = width / aspectRatio;
+      }
+
+      this.$emit('update', {
+        imageWidth: width,
+        imageHeight: height,
+      } as Partial<ImageBoxElement>);
+    },
+  },
+});
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

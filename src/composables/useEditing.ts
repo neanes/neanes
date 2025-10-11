@@ -1515,32 +1515,6 @@ export function useEditing() {
     save();
   }
 
-  function updateImageBoxInline(element: ImageBoxElement, inline: boolean) {
-    updateImageBox(element, { inline });
-  }
-
-  function updateImageBoxLockAspectRatio(
-    element: ImageBoxElement,
-    lockAspectRatio: boolean,
-  ) {
-    updateImageBox(element, { lockAspectRatio });
-  }
-
-  function updateImageBoxAlignment(
-    element: ImageBoxElement,
-    alignment: TextBoxAlignment,
-  ) {
-    updateImageBox(element, { alignment });
-  }
-
-  function updateImageBoxSize(
-    element: ImageBoxElement,
-    imageWidth: number,
-    imageHeight: number,
-  ) {
-    updateImageBox(element, { imageWidth, imageHeight });
-  }
-
   function addQuantitativeNeume(
     quantitativeNeume: QuantitativeNeume,
     secondaryGorgonNeume: GorgonNeume | null = null,
@@ -2183,10 +2157,6 @@ export function useEditing() {
     updateDropCap,
     updateDropCapContent,
     updateImageBox,
-    updateImageBoxInline,
-    updateImageBoxLockAspectRatio,
-    updateImageBoxAlignment,
-    updateImageBoxSize,
     setGorgon,
     setVocalExpression,
     setTie,

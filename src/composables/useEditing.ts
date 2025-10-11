@@ -3,7 +3,6 @@ import { inject, nextTick } from 'vue';
 
 import DropCap from '@/components/DropCap.vue';
 import {
-  AcceptsLyricsOption,
   AlternateLineElement,
   AnnotationElement,
   DropCapElement,
@@ -91,24 +90,32 @@ export function useEditing() {
   function setKlasma(element: NoteElement) {
     if (onlyTakesBottomKlasma(element.quantitativeNeume)) {
       if (element.timeNeume === TimeNeume.Klasma_Bottom) {
-        updateNoteTime(element, null);
+        updateNoteAndSave(element, { timeNeume: null });
       } else {
-        updateNoteTime(element, TimeNeume.Klasma_Bottom);
+        updateNoteAndSave(element, {
+          timeNeume: TimeNeume.Klasma_Bottom,
+        });
       }
       return;
     } else if (onlyTakesTopKlasma(element.quantitativeNeume)) {
       if (element.timeNeume === TimeNeume.Klasma_Top) {
-        updateNoteTime(element, null);
+        updateNoteAndSave(element, { timeNeume: null });
       } else {
-        updateNoteTime(element, TimeNeume.Klasma_Top);
+        updateNoteAndSave(element, {
+          timeNeume: TimeNeume.Klasma_Top,
+        });
       }
       return;
     } else if (element.timeNeume == null) {
-      updateNoteTime(element, TimeNeume.Klasma_Top);
+      updateNoteAndSave(element, {
+        timeNeume: TimeNeume.Klasma_Top,
+      });
     } else if (element.timeNeume === TimeNeume.Klasma_Top) {
-      updateNoteTime(element, TimeNeume.Klasma_Bottom);
+      updateNoteAndSave(element, {
+        timeNeume: TimeNeume.Klasma_Bottom,
+      });
     } else if (element.timeNeume === TimeNeume.Klasma_Bottom) {
-      updateNoteTime(element, null);
+      updateNoteAndSave(element, { timeNeume: null });
     }
   }
 
@@ -131,7 +138,7 @@ export function useEditing() {
 
       // If previous neume was matched, set to the next neume in the cycle
       if (equivalent) {
-        updateNoteGorgon(element, neume);
+        updateNoteAndSave(element, { gorgonNeume: neume });
         return;
       }
 
@@ -143,17 +150,17 @@ export function useEditing() {
     // gorgon neumes. Otherwise set gorgon to the first neume
     // in the cycle.
     if (equivalent) {
-      updateNoteGorgon(element, null);
+      updateNoteAndSave(element, { gorgonNeume: null });
     } else {
-      updateNoteGorgon(element, neumes[0]);
+      updateNoteAndSave(element, { gorgonNeume: neumes[0] });
     }
   }
 
   function setSecondaryGorgon(element: NoteElement, neume: GorgonNeume) {
     if (element.secondaryGorgonNeume === neume) {
-      updateNoteGorgonSecondary(element, null);
+      updateNoteAndSave(element, { secondaryGorgonNeume: null });
     } else {
-      updateNoteGorgonSecondary(element, neume);
+      updateNoteAndSave(element, { secondaryGorgonNeume: neume });
     }
   }
 
@@ -250,9 +257,9 @@ export function useEditing() {
 
   function setAccidental(element: NoteElement, neume: Accidental) {
     if (element.accidental != null && element.accidental === neume) {
-      updateNoteAccidental(element, null);
+      updateNoteAndSave(element, { accidental: null });
     } else {
-      updateNoteAccidental(element, neume);
+      updateNoteAndSave(element, { accidental: neume });
     }
   }
 
@@ -261,9 +268,9 @@ export function useEditing() {
       element.secondaryAccidental != null &&
       element.secondaryAccidental === neume
     ) {
-      updateNoteAccidentalSecondary(element, null);
+      updateNoteAndSave(element, { secondaryAccidental: null });
     } else {
-      updateNoteAccidentalSecondary(element, neume);
+      updateNoteAndSave(element, { secondaryAccidental: neume });
     }
   }
 
@@ -272,25 +279,25 @@ export function useEditing() {
       element.tertiaryAccidental != null &&
       element.tertiaryAccidental === neume
     ) {
-      updateNoteAccidentalTertiary(element, null);
+      updateNoteAndSave(element, { tertiaryAccidental: null });
     } else {
-      updateNoteAccidentalTertiary(element, neume);
+      updateNoteAndSave(element, { tertiaryAccidental: neume });
     }
   }
 
   function setTimeNeume(element: NoteElement, neume: TimeNeume) {
     if (element.timeNeume === neume) {
-      updateNoteTime(element, null);
+      updateNoteAndSave(element, { timeNeume: null });
     } else {
-      updateNoteTime(element, neume);
+      updateNoteAndSave(element, { timeNeume: neume });
     }
   }
 
   function setMeasureNumber(element: NoteElement, neume: MeasureNumber) {
     if (neume === element.measureNumber) {
-      updateNoteMeasureNumber(element, null);
+      updateNoteAndSave(element, { measureNumber: null });
     } else {
-      updateNoteMeasureNumber(element, neume);
+      updateNoteAndSave(element, { measureNumber: neume });
     }
   }
 
@@ -304,22 +311,22 @@ export function useEditing() {
       ? measureBarAboveToLeft.get(element.measureBarLeft)
       : element.measureBarLeft;
     if (neume === normalizedMeasureBar && neume === element.measureBarRight) {
-      updateNoteMeasureBar(element, {
+      updateNoteAndSave(element, {
         measureBarLeft: null,
         measureBarRight: null,
       });
     } else if (neume === normalizedMeasureBar) {
-      updateNoteMeasureBar(element, {
+      updateNoteAndSave(element, {
         measureBarLeft: null,
         measureBarRight: neume,
       });
     } else if (neume === element.measureBarRight) {
-      updateNoteMeasureBar(element, {
+      updateNoteAndSave(element, {
         measureBarLeft: neume,
         measureBarRight: neume,
       });
     } else {
-      updateNoteMeasureBar(element, {
+      updateNoteAndSave(element, {
         measureBarLeft: neume,
         measureBarRight: null,
       });
@@ -360,9 +367,9 @@ export function useEditing() {
 
   function setIson(element: NoteElement, neume: Ison) {
     if (neume === element.ison) {
-      updateNoteIson(element, null);
+      updateNoteAndSave(element, { ison: null });
     } else {
-      updateNoteIson(element, neume);
+      updateNoteAndSave(element, { ison: neume });
     }
   }
 
@@ -386,7 +393,7 @@ export function useEditing() {
     for (const neume of neumes) {
       // If previous neume was matched, set to the next neume in the cycle
       if (equivalent) {
-        updateNoteTie(element, neume);
+        updateNoteAndSave(element, { tie: neume });
         return;
       }
 
@@ -398,9 +405,9 @@ export function useEditing() {
     // fthora neumes. Otherwise set fthora to the first neume
     // in the cycle.
     if (equivalent) {
-      updateNoteTie(element, null);
+      updateNoteAndSave(element, { tie: null });
     } else {
-      updateNoteTie(element, neumes[0]);
+      updateNoteAndSave(element, { tie: neumes[0] });
     }
   }
 
@@ -431,87 +438,6 @@ export function useEditing() {
     ) {
       refreshStaffLyrics();
     }
-  }
-
-  function updateNoteLyricsUseDefaultStyle(
-    element: NoteElement,
-    lyricsUseDefaultStyle: boolean,
-  ) {
-    updateNote(element, { lyricsUseDefaultStyle });
-    save();
-  }
-
-  function updateNoteLyricsColor(element: NoteElement, lyricsColor: string) {
-    updateNote(element, { lyricsColor });
-    save();
-  }
-
-  function updateNoteLyricsFontFamily(
-    element: NoteElement,
-    lyricsFontFamily: string,
-  ) {
-    updateNote(element, { lyricsFontFamily });
-    save();
-  }
-
-  function updateNoteLyricsFontSize(
-    element: NoteElement,
-    lyricsFontSize: number,
-  ) {
-    updateNote(element, { lyricsFontSize });
-    save();
-  }
-
-  function updateNoteLyricsStrokeWidth(
-    element: NoteElement,
-    lyricsStrokeWidth: number,
-  ) {
-    updateNote(element, { lyricsStrokeWidth });
-    save();
-  }
-
-  function updateNoteLyricsFontWeight(element: NoteElement, bold: boolean) {
-    updateNote(element, { lyricsFontWeight: bold ? '700' : '400' });
-    save();
-  }
-
-  function updateNoteLyricsFontStyle(element: NoteElement, italic: boolean) {
-    updateNote(element, { lyricsFontStyle: italic ? 'italic' : 'normal' });
-    save();
-  }
-
-  function updateNoteLyricsTextDecoration(
-    element: NoteElement,
-    underline: boolean,
-  ) {
-    updateNote(element, {
-      lyricsTextDecoration: underline ? 'underline' : 'none',
-    });
-    save();
-  }
-
-  function updateNoteAccidental(
-    element: NoteElement,
-    accidental: Accidental | null,
-  ) {
-    updateNote(element, { accidental });
-    save();
-  }
-
-  function updateNoteAccidentalSecondary(
-    element: NoteElement,
-    secondaryAccidental: Accidental | null,
-  ) {
-    updateNote(element, { secondaryAccidental });
-    save();
-  }
-
-  function updateNoteAccidentalTertiary(
-    element: NoteElement,
-    tertiaryAccidental: Accidental | null,
-  ) {
-    updateNote(element, { tertiaryAccidental });
-    save();
   }
 
   function updateNoteFthora(element: NoteElement, fthora: Fthora | null) {
@@ -609,132 +535,6 @@ export function useEditing() {
     }
 
     updateNote(element, { vocalExpressionNeume });
-    save();
-  }
-
-  function updateNoteTime(element: NoteElement, timeNeume: TimeNeume | null) {
-    updateNote(element, { timeNeume });
-    save();
-  }
-
-  function updateNoteGorgon(
-    element: NoteElement,
-    gorgonNeume: GorgonNeume | null,
-  ) {
-    updateNote(element, { gorgonNeume });
-    save();
-  }
-
-  function updateNoteGorgonSecondary(
-    element: NoteElement,
-    secondaryGorgonNeume: GorgonNeume | null,
-  ) {
-    updateNote(element, { secondaryGorgonNeume });
-    save();
-  }
-
-  function updateNoteMeasureBar(
-    element: NoteElement,
-    {
-      measureBarLeft,
-      measureBarRight,
-    }: {
-      measureBarLeft: MeasureBar | null;
-      measureBarRight: MeasureBar | null;
-    },
-  ) {
-    updateNote(element, {
-      measureBarLeft,
-      measureBarRight,
-    });
-    save();
-  }
-
-  function updateNoteMeasureNumber(
-    element: NoteElement,
-    measureNumber: MeasureNumber | null,
-  ) {
-    updateNote(element, { measureNumber });
-    save();
-  }
-
-  function updateNoteNoteIndicator(
-    element: NoteElement,
-    noteIndicator: boolean,
-  ) {
-    updateNote(element, { noteIndicator });
-    save();
-  }
-
-  function updateNoteIson(element: NoteElement, ison: Ison | null) {
-    updateNote(element, { ison });
-    save();
-  }
-
-  function updateNoteKoronis(element: NoteElement, koronis: boolean) {
-    updateNote(element, { koronis });
-    save();
-  }
-
-  function updateNoteStavros(element: NoteElement, stavros: boolean) {
-    updateNote(element, { stavros });
-    save();
-  }
-
-  function updateNoteVareia(element: NoteElement, vareia: boolean) {
-    updateNote(element, { vareia });
-    save();
-  }
-
-  function updateNoteTie(element: NoteElement, tie: Tie | null) {
-    updateNote(element, { tie });
-    save();
-  }
-
-  function updateNoteSpaceAfter(element: NoteElement, spaceAfter: number) {
-    updateNote(element, { spaceAfter });
-    save();
-  }
-
-  function updateNoteIgnoreAttractions(
-    element: NoteElement,
-    ignoreAttractions: boolean,
-  ) {
-    updateNote(element, { ignoreAttractions });
-    save();
-  }
-
-  function updateNoteAcceptsLyrics(
-    element: NoteElement,
-    acceptsLyrics: AcceptsLyricsOption,
-  ) {
-    updateNote(element, {
-      acceptsLyrics: acceptsLyrics,
-    });
-    save();
-  }
-
-  function updateNoteChromaticFthoraNote(
-    element: NoteElement,
-    chromaticFthoraNote: ScaleNote | null,
-  ) {
-    updateNote(element, { chromaticFthoraNote });
-    save();
-  }
-
-  function updateNoteSecondaryChromaticFthoraNote(
-    element: NoteElement,
-    secondaryChromaticFthoraNote: ScaleNote | null,
-  ) {
-    updateNote(element, { secondaryChromaticFthoraNote });
-    save();
-  }
-
-  function updateNoteTertiaryChromaticFthoraNote(
-    element: NoteElement,
-    tertiaryChromaticFthoraNote: ScaleNote | null,
-  ) {
-    updateNote(element, { tertiaryChromaticFthoraNote });
     save();
   }
 
@@ -2054,38 +1854,10 @@ export function useEditing() {
 
   return {
     updateNoteAndSave,
-    updateNoteLyricsUseDefaultStyle,
-    updateNoteLyricsColor,
-    updateNoteLyricsFontFamily,
-    updateNoteLyricsFontSize,
-    updateNoteLyricsStrokeWidth,
-    updateNoteLyricsFontWeight,
-    updateNoteLyricsFontStyle,
-    updateNoteLyricsTextDecoration,
-    updateNoteAccidental,
-    updateNoteAccidentalSecondary,
-    updateNoteAccidentalTertiary,
     updateNoteFthora,
     updateNoteFthoraSecondary,
     updateNoteFthoraTertiary,
     updateNoteExpression,
-    updateNoteTime,
-    updateNoteGorgon,
-    updateNoteGorgonSecondary,
-    updateNoteMeasureBar,
-    updateNoteMeasureNumber,
-    updateNoteNoteIndicator,
-    updateNoteIson,
-    updateNoteKoronis,
-    updateNoteStavros,
-    updateNoteVareia,
-    updateNoteTie,
-    updateNoteSpaceAfter,
-    updateNoteIgnoreAttractions,
-    updateNoteAcceptsLyrics,
-    updateNoteChromaticFthoraNote,
-    updateNoteSecondaryChromaticFthoraNote,
-    updateNoteTertiaryChromaticFthoraNote,
     updateLyricsLocked,
     updateStaffLyrics,
     updateLyrics,

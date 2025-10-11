@@ -1671,24 +1671,6 @@ const {
 
 const {
   updateNoteAndSave,
-  updateNoteLyricsUseDefaultStyle,
-  updateNoteLyricsColor,
-  updateNoteLyricsFontFamily,
-  updateNoteLyricsFontSize,
-  updateNoteLyricsStrokeWidth,
-  updateNoteLyricsFontWeight,
-  updateNoteLyricsFontStyle,
-  updateNoteLyricsTextDecoration,
-  updateNoteNoteIndicator,
-  updateNoteKoronis,
-  updateNoteStavros,
-  updateNoteVareia,
-  updateNoteSpaceAfter,
-  updateNoteIgnoreAttractions,
-  updateNoteAcceptsLyrics,
-  updateNoteChromaticFthoraNote,
-  updateNoteSecondaryChromaticFthoraNote,
-  updateNoteTertiaryChromaticFthoraNote,
   updateLyricsLocked,
   updateStaffLyrics,
   updateLyrics,
@@ -2698,30 +2680,7 @@ const { addNeumeCombination } = useClipboard();
       <ToolbarLyrics
         :element="selectedLyrics"
         :fonts="fonts"
-        @update:lyricsColor="
-          updateNoteLyricsColor(selectedLyrics as NoteElement, $event)
-        "
-        @update:lyricsFontFamily="
-          updateNoteLyricsFontFamily(selectedLyrics as NoteElement, $event)
-        "
-        @update:lyricsFontSize="
-          updateNoteLyricsFontSize(selectedLyrics as NoteElement, $event)
-        "
-        @update:lyricsFontStyle="
-          updateNoteLyricsFontStyle(selectedLyrics as NoteElement, $event)
-        "
-        @update:lyricsFontWeight="
-          updateNoteLyricsFontWeight(selectedLyrics as NoteElement, $event)
-        "
-        @update:lyricsTextDecoration="
-          updateNoteLyricsTextDecoration(selectedLyrics as NoteElement, $event)
-        "
-        @update:lyricsStrokeWidth="
-          updateNoteLyricsStrokeWidth(selectedLyrics as NoteElement, $event)
-        "
-        @update:lyricsUseDefaultStyle="
-          updateNoteLyricsUseDefaultStyle(selectedLyrics as NoteElement, $event)
-        "
+        @update="updateNoteAndSave(selectedLyrics as NoteElement, $event)"
         @insert:specialCharacter="insertSpecialCharacter"
       />
     </template>
@@ -2810,6 +2769,12 @@ const { addNeumeCombination } = useClipboard();
         :neumeKeyboard="neumeKeyboard"
         :key="`toolbar-neume-${editor.selectedWorkspace.id}-${selectedElement.id}-${selectedElement.keyHelper}`"
         :innerNeume="toolbarInnerNeume"
+        @update="
+          updateNoteAndSave(
+            selectedElementForNeumeToolbar as NoteElement,
+            $event,
+          )
+        "
         @update:innerNeume="toolbarInnerNeume = $event"
         @update:accidental="
           setAccidental(selectedElementForNeumeToolbar as NoteElement, $event)
@@ -2837,24 +2802,6 @@ const { addNeumeCombination } = useClipboard();
         "
         @update:tertiaryFthora="
           setTertiaryFthora(
-            selectedElementForNeumeToolbar as NoteElement,
-            $event,
-          )
-        "
-        @update:chromaticFthoraNote="
-          updateNoteChromaticFthoraNote(
-            selectedElementForNeumeToolbar as NoteElement,
-            $event,
-          )
-        "
-        @update:secondaryChromaticFthoraNote="
-          updateNoteSecondaryChromaticFthoraNote(
-            selectedElementForNeumeToolbar as NoteElement,
-            $event,
-          )
-        "
-        @update:tertiaryChromaticFthoraNote="
-          updateNoteTertiaryChromaticFthoraNote(
             selectedElementForNeumeToolbar as NoteElement,
             $event,
           )
@@ -2892,53 +2839,11 @@ const { addNeumeCombination } = useClipboard();
             $event,
           )
         "
-        @update:noteIndicator="
-          updateNoteNoteIndicator(
-            selectedElementForNeumeToolbar as NoteElement,
-            $event,
-          )
-        "
         @update:ison="
           setIson(selectedElementForNeumeToolbar as NoteElement, $event)
         "
-        @update:koronis="
-          updateNoteKoronis(
-            selectedElementForNeumeToolbar as NoteElement,
-            $event,
-          )
-        "
-        @update:stavros="
-          updateNoteStavros(
-            selectedElementForNeumeToolbar as NoteElement,
-            $event,
-          )
-        "
-        @update:vareia="
-          updateNoteVareia(
-            selectedElementForNeumeToolbar as NoteElement,
-            $event,
-          )
-        "
         @update:tie="
           setTie(selectedElementForNeumeToolbar as NoteElement, $event)
-        "
-        @update:spaceAfter="
-          updateNoteSpaceAfter(
-            selectedElementForNeumeToolbar as NoteElement,
-            $event,
-          )
-        "
-        @update:ignoreAttractions="
-          updateNoteIgnoreAttractions(
-            selectedElementForNeumeToolbar as NoteElement,
-            $event,
-          )
-        "
-        @update:acceptsLyrics="
-          updateNoteAcceptsLyrics(
-            selectedElementForNeumeToolbar as NoteElement,
-            $event,
-          )
         "
         @update:sectionName="
           updateScoreElementSectionName(

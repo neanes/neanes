@@ -1684,23 +1684,6 @@ const {
   updateRichTextBoxMarginBottom,
   updateTextBox,
   updateTextBoxHeight,
-  updateTextBoxUseDefaultStyle,
-  updateTextBoxMultipanel,
-  updateTextBoxFontSize,
-  updateTextBoxFontFamily,
-  updateTextBoxStrokeWidth,
-  updateTextBoxColor,
-  updateTextBoxAlignment,
-  updateTextBoxInline,
-  updateTextBoxBold,
-  updateTextBoxItalic,
-  updateTextBoxUnderline,
-  updateTextBoxLineHeight,
-  updateTextBoxWidth,
-  updateTextBoxFillWidth,
-  updateTextBoxCustomHeight,
-  updateTextBoxMarginTop,
-  updateTextBoxMarginBottom,
   updateModeKey,
   updateModeKeyFromTemplate,
   updateMartyria,
@@ -2506,48 +2489,10 @@ const { addNeumeCombination } = useClipboard();
     </div>
     <template v-if="selectedTextBoxElement">
       <ToolbarTextBox
-        :element="selectedTextBoxElement"
+        :element="selectedTextBoxElement as TextBoxElement"
         :fonts="fonts"
         :pageSetup="score.pageSetup"
-        @update:multipanel="
-          updateTextBoxMultipanel(selectedTextBoxElement, $event)
-        "
-        @update:useDefaultStyle="
-          updateTextBoxUseDefaultStyle(selectedTextBoxElement, $event)
-        "
-        @update:fontSize="updateTextBoxFontSize(selectedTextBoxElement, $event)"
-        @update:fontFamily="
-          updateTextBoxFontFamily(selectedTextBoxElement, $event)
-        "
-        @update:strokeWidth="
-          updateTextBoxStrokeWidth(selectedTextBoxElement, $event)
-        "
-        @update:alignment="
-          updateTextBoxAlignment(selectedTextBoxElement, $event)
-        "
-        @update:color="updateTextBoxColor(selectedTextBoxElement, $event)"
-        @update:inline="updateTextBoxInline(selectedTextBoxElement, $event)"
-        @update:bold="updateTextBoxBold(selectedTextBoxElement, $event)"
-        @update:italic="updateTextBoxItalic(selectedTextBoxElement, $event)"
-        @update:underline="
-          updateTextBoxUnderline(selectedTextBoxElement, $event)
-        "
-        @update:lineHeight="
-          updateTextBoxLineHeight(selectedTextBoxElement, $event)
-        "
-        @update:customWidth="updateTextBoxWidth(selectedTextBoxElement, $event)"
-        @update:fillWidth="
-          updateTextBoxFillWidth(selectedTextBoxElement, $event)
-        "
-        @update:customHeight="
-          updateTextBoxCustomHeight(selectedTextBoxElement, $event)
-        "
-        @update:marginTop="
-          updateTextBoxMarginTop(selectedTextBoxElement, $event)
-        "
-        @update:marginBottom="
-          updateTextBoxMarginBottom(selectedTextBoxElement, $event)
-        "
+        @update="updateTextBox(selectedTextBoxElement, $event)"
         @update:sectionName="
           updateScoreElementSectionName(
             selectedElement as TextBoxElement,

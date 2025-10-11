@@ -15,7 +15,6 @@ import {
   RichTextBoxElement,
   ScoreElement,
   TempoElement,
-  TextBoxAlignment,
   TextBoxElement,
 } from '@/models/Element';
 import { EntryMode } from '@/models/EntryMode';
@@ -777,101 +776,6 @@ export function useEditing() {
     element.height = height;
     editor.textBoxCalculationCount++;
     saveDebounced(false);
-  }
-
-  function updateTextBoxUseDefaultStyle(
-    element: TextBoxElement,
-    useDefaultStyle: boolean,
-  ) {
-    updateTextBox(element, { useDefaultStyle });
-  }
-
-  function updateTextBoxMultipanel(
-    element: TextBoxElement,
-    multipanel: boolean,
-  ) {
-    updateTextBox(element, { multipanel });
-  }
-
-  function updateTextBoxFontSize(element: TextBoxElement, fontSize: number) {
-    updateTextBox(element, { fontSize });
-  }
-
-  function updateTextBoxFontFamily(
-    element: TextBoxElement,
-    fontFamily: string,
-  ) {
-    updateTextBox(element, { fontFamily });
-  }
-
-  function updateTextBoxStrokeWidth(
-    element: TextBoxElement,
-    strokeWidth: number,
-  ) {
-    updateTextBox(element, { strokeWidth });
-  }
-
-  function updateTextBoxColor(element: TextBoxElement, color: string) {
-    updateTextBox(element, { color });
-  }
-
-  function updateTextBoxAlignment(
-    element: TextBoxElement,
-    alignment: TextBoxAlignment,
-  ) {
-    updateTextBox(element, { alignment });
-  }
-
-  function updateTextBoxInline(element: TextBoxElement, inline: boolean) {
-    updateTextBox(element, { inline });
-  }
-
-  function updateTextBoxBold(element: TextBoxElement, bold: boolean) {
-    updateTextBox(element, { bold });
-  }
-
-  function updateTextBoxItalic(element: TextBoxElement, italic: boolean) {
-    updateTextBox(element, { italic });
-  }
-
-  function updateTextBoxUnderline(element: TextBoxElement, underline: boolean) {
-    updateTextBox(element, { underline });
-  }
-
-  function updateTextBoxLineHeight(
-    element: TextBoxElement,
-    lineHeight: number | null,
-  ) {
-    updateTextBox(element, { lineHeight });
-  }
-
-  function updateTextBoxWidth(
-    element: TextBoxElement,
-    customWidth: number | null,
-  ) {
-    updateTextBox(element, { customWidth });
-  }
-
-  function updateTextBoxFillWidth(element: TextBoxElement, fillWidth: boolean) {
-    updateTextBox(element, { fillWidth });
-  }
-
-  function updateTextBoxCustomHeight(
-    element: TextBoxElement,
-    customHeight: number | null,
-  ) {
-    updateTextBox(element, { customHeight });
-  }
-
-  function updateTextBoxMarginTop(element: TextBoxElement, marginTop: number) {
-    updateTextBox(element, { marginTop });
-  }
-
-  function updateTextBoxMarginBottom(
-    element: TextBoxElement,
-    marginBottom: number,
-  ) {
-    updateTextBox(element, { marginBottom });
   }
 
   function updateModeKey(
@@ -1695,23 +1599,6 @@ export function useEditing() {
     updateRichTextBoxMarginBottom,
     updateTextBox,
     updateTextBoxHeight,
-    updateTextBoxUseDefaultStyle,
-    updateTextBoxMultipanel,
-    updateTextBoxFontSize,
-    updateTextBoxFontFamily,
-    updateTextBoxStrokeWidth,
-    updateTextBoxColor,
-    updateTextBoxAlignment,
-    updateTextBoxInline,
-    updateTextBoxBold,
-    updateTextBoxItalic,
-    updateTextBoxUnderline,
-    updateTextBoxLineHeight,
-    updateTextBoxWidth,
-    updateTextBoxFillWidth,
-    updateTextBoxCustomHeight,
-    updateTextBoxMarginTop,
-    updateTextBoxMarginBottom,
     updateModeKey,
     updateModeKeyTempo,
     updateModeKeyFromTemplate,

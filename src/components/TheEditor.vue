@@ -1701,19 +1701,7 @@ const {
   updateTextBoxCustomHeight,
   updateTextBoxMarginTop,
   updateTextBoxMarginBottom,
-  updateModeKeyMarginTop,
-  updateModeKeyMarginBottom,
-  updateModeKeyUseDefaultStyle,
-  updateModeKeyFontSize,
-  updateModeKeyStrokeWidth,
-  updateModeKeyColor,
-  updateModeKeyAlignment,
-  updateModeKeyHeightAdjustment,
-  updateModeKeyBpm,
-  updateModeKeyIgnoreAttractions,
-  updateModeKeyShowAmbitus,
-  updateModeKeyTempoAlignRight,
-  updateModeKeyPermanentEnharmonicZo,
+  updateModeKey,
   updateModeKeyFromTemplate,
   updateMartyria,
   setAccidental,
@@ -2680,64 +2668,11 @@ const { addNeumeCombination } = useClipboard();
       v-if="selectedElement != null && isModeKeyElement(selectedElement)"
     >
       <ToolbarModeKey
-        :element="selectedElement"
+        :element="selectedElement as ModeKeyElement"
         :pageSetup="score.pageSetup"
-        @update:useDefaultStyle="
-          updateModeKeyUseDefaultStyle(
-            selectedElement as ModeKeyElement,
-            $event,
-          )
-        "
-        @update:fontSize="
-          updateModeKeyFontSize(selectedElement as ModeKeyElement, $event)
-        "
-        @update:strokeWidth="
-          updateModeKeyStrokeWidth(selectedElement as ModeKeyElement, $event)
-        "
-        @update:alignment="
-          updateModeKeyAlignment(selectedElement as ModeKeyElement, $event)
-        "
-        @update:color="
-          updateModeKeyColor(selectedElement as ModeKeyElement, $event)
-        "
-        @update:bpm="
-          updateModeKeyBpm(selectedElement as ModeKeyElement, $event)
-        "
-        @update:ignoreAttractions="
-          updateModeKeyIgnoreAttractions(
-            selectedElement as ModeKeyElement,
-            $event,
-          )
-        "
-        @update:showAmbitus="
-          updateModeKeyShowAmbitus(selectedElement as ModeKeyElement, $event)
-        "
-        @update:tempoAlignRight="
-          updateModeKeyTempoAlignRight(
-            selectedElement as ModeKeyElement,
-            $event,
-          )
-        "
+        @update="updateModeKey(selectedElement as ModeKeyElement, $event)"
         @update:tempo="
           setModeKeyTempo(selectedElement as ModeKeyElement, $event)
-        "
-        @update:heightAdjustment="
-          updateModeKeyHeightAdjustment(
-            selectedElement as ModeKeyElement,
-            $event,
-          )
-        "
-        @update:marginTop="
-          updateModeKeyMarginTop(selectedElement as ModeKeyElement, $event)
-        "
-        @update:marginBottom="
-          updateModeKeyMarginBottom(selectedElement as ModeKeyElement, $event)
-        "
-        @update:permanentEnharmonicZo="
-          updateModeKeyPermanentEnharmonicZo(
-            selectedElement as ModeKeyElement,
-            $event,
-          )
         "
         @update:sectionName="
           updateScoreElementSectionName(

@@ -217,19 +217,9 @@ export function useKeyboard() {
     editing.updateMartyriaAlignRight,
   );
 
-  const updateNoteNoteIndicatorThrottled = throttle(
+  const updateNoteAndSaveThrottled = throttle(
     keydownThrottleIntervalMs,
-    editing.updateNoteNoteIndicator,
-  );
-
-  const updateNoteKoronisThrottled = throttle(
-    keydownThrottleIntervalMs,
-    editing.updateNoteKoronis,
-  );
-
-  const updateNoteVareiaThrottled = throttle(
-    keydownThrottleIntervalMs,
-    editing.updateNoteVareia,
+    editing.updateNoteAndSave,
   );
 
   function getLyricLength(element: NoteElement) {
@@ -442,10 +432,9 @@ export function useKeyboard() {
 
         if (quantitativeMapping.acceptsLyricsOption != null) {
           if (editor.selectedElement.elementType === ElementType.Note) {
-            editing.updateNoteAcceptsLyrics(
-              editor.selectedElement as NoteElement,
-              quantitativeMapping.acceptsLyricsOption,
-            );
+            updateNoteAndSaveThrottled(editor.selectedElement as NoteElement, {
+              acceptsLyrics: quantitativeMapping.acceptsLyricsOption,
+            });
           }
         } else {
           addQuantitativeNeumeThrottled(
@@ -516,7 +505,9 @@ export function useKeyboard() {
           handled = true;
 
           if (vocalExpressionMapping.neume === VocalExpressionNeume.Vareia) {
-            updateNoteVareiaThrottled(noteElement, !noteElement.vareia);
+            updateNoteAndSaveThrottled(noteElement, {
+              vareia: !noteElement.vareia,
+            });
           } else {
             setVocalExpressionThrottled(
               noteElement,
@@ -568,7 +559,9 @@ export function useKeyboard() {
           handled = true;
 
           if (hapliMapping.neume === TimeNeume.Koronis) {
-            updateNoteKoronisThrottled(noteElement, !noteElement.koronis);
+            updateNoteAndSaveThrottled(noteElement, {
+              koronis: !noteElement.koronis,
+            });
           } else {
             setTimeNeumeThrottled(noteElement, hapliMapping.neume as TimeNeume);
           }
@@ -624,10 +617,9 @@ export function useKeyboard() {
           editor.keyboardModifier == null &&
           neumeKeyboard.isNoteIndicator(event.code)
         ) {
-          updateNoteNoteIndicatorThrottled(
-            noteElement,
-            !noteElement.noteIndicator,
-          );
+          updateNoteAndSaveThrottled(noteElement, {
+            noteIndicator: !noteElement.noteIndicator,
+          });
         }
       } else if (
         editor.selectedElement.elementType === ElementType.Martyria &&
@@ -909,7 +901,9 @@ export function useKeyboard() {
     let handled = false;
 
     const index = editor.selectedElement!.index;
-    const htmlElement = editor.elementRefs[index] as TextBox;
+    const htmlElement = editor.elementRefs[index] as InstanceType<
+      typeof TextBox
+    >;
 
     switch (event.code) {
       case 'Tab':

@@ -1746,17 +1746,8 @@ const {
   updateMartyriaRootSignOverride,
   updateTempoSpaceAfter,
   updateTempoBpm,
+  updateDropCap,
   updateDropCapContent,
-  updateDropCapUseDefaultStyle,
-  updateDropCapFontSize,
-  updateDropCapFontFamily,
-  updateDropCapStrokeWidth,
-  updateDropCapColor,
-  updateDropCapFontWeight,
-  updateDropCapFontStyle,
-  updateDropCapLineHeight,
-  updateDropCapLineSpan,
-  updateDropCapWidth,
   updateImageBoxInline,
   updateImageBoxLockAspectRatio,
   updateImageBoxAlignment,
@@ -2686,41 +2677,14 @@ const { addNeumeCombination } = useClipboard();
       v-if="selectedElement != null && isDropCapElement(selectedElement)"
     >
       <ToolbarDropCap
-        :element="selectedElement"
+        :element="selectedElement as DropCapElement"
         :fonts="fonts"
         :pageSetup="score.pageSetup"
-        @update:useDefaultStyle="
-          updateDropCapUseDefaultStyle(
+        @update="
+          updateDropCap(
             selectedElement as DropCapElement,
-            $event,
+            $event as Partial<DropCapElement>,
           )
-        "
-        @update:fontSize="
-          updateDropCapFontSize(selectedElement as DropCapElement, $event)
-        "
-        @update:fontFamily="
-          updateDropCapFontFamily(selectedElement as DropCapElement, $event)
-        "
-        @update:strokeWidth="
-          updateDropCapStrokeWidth(selectedElement as DropCapElement, $event)
-        "
-        @update:color="
-          updateDropCapColor(selectedElement as DropCapElement, $event)
-        "
-        @update:bold="
-          updateDropCapFontWeight(selectedElement as DropCapElement, $event)
-        "
-        @update:italic="
-          updateDropCapFontStyle(selectedElement as DropCapElement, $event)
-        "
-        @update:lineHeight="
-          updateDropCapLineHeight(selectedElement as DropCapElement, $event)
-        "
-        @update:customWidth="
-          updateDropCapWidth(selectedElement as DropCapElement, $event)
-        "
-        @update:lineSpan="
-          updateDropCapLineSpan(selectedElement as DropCapElement, $event)
         "
         @update:sectionName="
           updateScoreElementSectionName(

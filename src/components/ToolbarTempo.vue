@@ -5,7 +5,9 @@
         <label class="right-space">{{ $t('toolbar:common.bpm') }}</label>
         <InputBpm
           :modelValue="element.bpm"
-          @update:modelValue="$emit('update:bpm', $event)"
+          @update:modelValue="
+            $emit('update', { bpm: $event } as Partial<TempoElement>)
+          "
         />
       </div>
 
@@ -20,7 +22,9 @@
           :step="0.5"
           :precision="2"
           :modelValue="element.spaceAfter"
-          @update:modelValue="$emit('update:spaceAfter', $event)"
+          @update:modelValue="
+            $emit('update', { spaceAfter: $event } as Partial<TempoElement>)
+          "
         />
       </div>
       <span class="space"></span>
@@ -44,7 +48,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-facing-decorator';
+import { defineComponent, PropType } from 'vue';
 
 import { TempoElement } from '@/models/Element';
 import { PageSetup } from '@/models/PageSetup';
@@ -53,18 +57,32 @@ import { Unit } from '@/utils/Unit';
 import InputBpm from './InputBpm.vue';
 import InputUnit from './InputUnit.vue';
 
-@Component({
+export default defineComponent({
   components: { InputUnit, InputBpm },
-  emits: ['update:bpm', 'update:sectionName', 'update:spaceAfter'],
-})
-export default class ToolbarTempo extends Vue {
-  @Prop() element!: TempoElement;
-  @Prop() pageSetup!: PageSetup;
+  emits: ['update', 'update:sectionName'],
+  props: {
+    element: {
+      type: Object as PropType<TempoElement>,
+      required: true,
+    },
+    pageSetup: {
+      type: Object as PropType<PageSetup>,
+      required: true,
+    },
+  },
 
-  get spaceAfterMax() {
-    return Math.round(Unit.toPt(this.pageSetup.pageWidth));
-  }
-}
+  data() {
+    return {};
+  },
+
+  computed: {
+    spaceAfterMax() {
+      return Math.round(Unit.toPt(this.pageSetup.pageWidth));
+    },
+  },
+
+  methods: {},
+});
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

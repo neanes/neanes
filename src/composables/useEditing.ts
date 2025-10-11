@@ -969,16 +969,6 @@ export function useEditing() {
     save();
   }
 
-  function updateTempoSpaceAfter(element: TempoElement, spaceAfter: number) {
-    updateTempo(element, { spaceAfter });
-    save();
-  }
-
-  function updateTempoBpm(element: TempoElement, bpm: number) {
-    updateTempo(element, { bpm });
-    save();
-  }
-
   function updateDropCap(
     element: DropCapElement,
     newValues: Partial<DropCapElement>,
@@ -1610,8 +1600,6 @@ export function useEditing() {
     setAccidental,
     setFthoraMartyria,
     updateTempo,
-    updateTempoSpaceAfter,
-    updateTempoBpm,
     updateDropCap,
     updateDropCapContent,
     updateImageBox,

@@ -109,7 +109,41 @@ export function useStyles() {
     } as StyleValue;
   }
 
+  function getHeaderHorizontalRuleStyle(headerHeight: number) {
+    return {
+      left: withZoom(editor.score.pageSetup.leftMargin),
+      top: withZoom(
+        editor.score.pageSetup.headerMargin +
+          headerHeight +
+          editor.score.pageSetup.headerHorizontalRuleMarginTop,
+      ),
+      color: editor.score.pageSetup.headerHorizontalRuleColor,
+      borderTopWidth: withZoom(
+        editor.score.pageSetup.headerHorizontalRuleThickness,
+      ),
+      width: withZoom(editor.score.pageSetup.innerPageWidth),
+    } as StyleValue;
+  }
+
+  function getFooterHorizontalRuleStyle(footerHeight: number) {
+    return {
+      left: withZoom(editor.score.pageSetup.leftMargin),
+      bottom: withZoom(
+        editor.score.pageSetup.footerMargin +
+          footerHeight +
+          editor.score.pageSetup.footerHorizontalRuleMarginBottom,
+      ),
+      color: editor.score.pageSetup.footerHorizontalRuleColor,
+      borderTopWidth: withZoom(
+        editor.score.pageSetup.footerHorizontalRuleThickness,
+      ),
+      width: withZoom(editor.score.pageSetup.innerPageWidth),
+    } as StyleValue;
+  }
+
   return {
+    getHeaderHorizontalRuleStyle,
+    getFooterHorizontalRuleStyle,
     getMelismaHyphenStyle,
     getMelismaUnderscoreStyleInner,
     getMelismaUnderscoreStyleOuter,

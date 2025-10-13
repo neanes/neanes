@@ -13,7 +13,6 @@ import {
   onMounted,
   reactive,
   ref,
-  StyleValue,
   useTemplateRef,
   watch,
 } from 'vue';
@@ -124,7 +123,6 @@ import { isElectron } from '@/utils/isElectron';
 import { TokenMetadata } from '@/utils/replaceTokens';
 import { TestFileGenerator } from '@/utils/TestFileGenerator';
 import { TestFileType } from '@/utils/TestFileType';
-import { withZoom } from '@/utils/withZoom';
 
 import { Vue3TabsChromeComponent } from './Editor/Vue3TabsChromeComponent';
 
@@ -224,38 +222,6 @@ function setSelectedWorkspace(value: Workspace) {
   });
 
   audioPlayback.stopAudio();
-}
-
-function getHeaderHorizontalRuleStyle(headerHeight: number) {
-  return {
-    left: withZoom(editor.score.pageSetup.leftMargin),
-    top: withZoom(
-      editor.score.pageSetup.headerMargin +
-        headerHeight +
-        editor.score.pageSetup.headerHorizontalRuleMarginTop,
-    ),
-    color: editor.score.pageSetup.headerHorizontalRuleColor,
-    borderTopWidth: withZoom(
-      editor.score.pageSetup.headerHorizontalRuleThickness,
-    ),
-    width: withZoom(editor.score.pageSetup.innerPageWidth),
-  } as StyleValue;
-}
-
-function getFooterHorizontalRuleStyle(footerHeight: number) {
-  return {
-    left: withZoom(editor.score.pageSetup.leftMargin),
-    bottom: withZoom(
-      editor.score.pageSetup.footerMargin +
-        footerHeight +
-        editor.score.pageSetup.footerHorizontalRuleMarginBottom,
-    ),
-    color: editor.score.pageSetup.footerHorizontalRuleColor,
-    borderTopWidth: withZoom(
-      editor.score.pageSetup.footerHorizontalRuleThickness,
-    ),
-    width: withZoom(editor.score.pageSetup.innerPageWidth),
-  } as StyleValue;
 }
 
 const pageVisibilityIntersection = computed(() => {
@@ -1724,6 +1690,8 @@ const {
 } = useEditing();
 
 const {
+  getHeaderHorizontalRuleStyle,
+  getFooterHorizontalRuleStyle,
   getMelismaHyphenStyle,
   getMelismaUnderscoreStyleInner,
   getMelismaUnderscoreStyleOuter,

@@ -9,18 +9,15 @@ import { createPinia } from 'pinia';
 import { createApp } from 'vue';
 import VueObserveVisibility from 'vue3-observe-visibility';
 
-import { AudioService } from '@/services/audio/AudioService';
-import { PlaybackService } from '@/services/audio/PlaybackService';
-
 import App from './App.vue';
 import { defaultNS, resources } from './i18n';
 import { initalizeBrowserIpcListeners } from './ipc/browserIpcListeners';
 import { initializeIpcListeners } from './ipc/ipcListeners';
 import router from './router';
-import { LatexExporter } from './services/integration/LatexExporter';
-import { MusicXmlExporter } from './services/integration/MusicXmlExporter';
-import { LyricService } from './services/LyricService';
-import { TextSearchService } from './services/TextSearchService';
+import { BrowserIpcService } from './services/ipc/BrowserIpcService';
+import { IpcService } from './services/ipc/IpcService';
+import { BrowserPlatformService } from './services/platform/BrowserPlatformService';
+import { PlatformService } from './services/platform/PlatformService';
 import { isElectron } from './utils/isElectron';
 
 if (isElectron()) {
@@ -60,12 +57,15 @@ const app = createApp(App);
 const pinia = createPinia();
 app.use(VueObserveVisibility);
 app.use(CkeditorPlugin);
-app.provide('audioService', new AudioService());
-app.provide('playbackService', new PlaybackService());
-app.provide('textSearchService', new TextSearchService());
-app.provide('lyricService', new LyricService());
-app.provide('latexExporter', new LatexExporter());
-app.provide('musicXmlExporter', new MusicXmlExporter());
+
+if (isElectron()) {
+  app.provide('ipcService', new IpcService());
+  app.provide('platformService', new PlatformService());
+} else {
+  app.provide('ipcService', new BrowserIpcService());
+  app.provide('platformService', new BrowserPlatformService());
+}
+
 app.use(router);
 app.use(I18NextVue, { i18next });
 app.use(pinia);

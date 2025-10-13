@@ -52,7 +52,7 @@ import { useSave } from './useSave';
 import { useSelection } from './useSelection';
 
 export function useEditing() {
-  const lyricService = inject<LyricService>('lyricService')!;
+  const lyricService = inject<LyricService>('lyricService', new LyricService());
 
   const editor = useEditorStore();
   const navigation = useNavigation();

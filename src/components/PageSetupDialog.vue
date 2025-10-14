@@ -1420,7 +1420,7 @@
               <NeumeBoxSyllable
                 class="syllable-box"
                 :key="index"
-                :note="element"
+                :note="element as NoteElement"
                 :pageSetup="form"
               />
             </template>
@@ -1428,7 +1428,7 @@
               <NeumeBoxMartyria
                 class="marytria-neume-box"
                 :key="index"
-                :neume="element"
+                :neume="element as MartyriaElement"
                 :pageSetup="form"
               />
             </template>
@@ -1436,7 +1436,7 @@
               <NeumeBoxTempo
                 class="tempo-neume-box"
                 :key="index"
-                :neume="element"
+                :neume="element as TempoElement"
                 :pageSetup="form"
               />
             </template>
@@ -1473,7 +1473,12 @@ import ModalDialog from '@/components/ModalDialog.vue';
 import NeumeBoxMartyria from '@/components/NeumeBoxMartyria.vue';
 import NeumeBoxSyllable from '@/components/NeumeBoxSyllable.vue';
 import NeumeBoxTempo from '@/components/NeumeBoxTempo.vue';
-import { ElementType } from '@/models/Element';
+import {
+  ElementType,
+  MartyriaElement,
+  NoteElement,
+  TempoElement,
+} from '@/models/Element';
 import { Accidental, QuantitativeNeume } from '@/models/Neumes';
 import { PageSetup, PageSize, pageSizes } from '@/models/PageSetup';
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
@@ -1551,7 +1556,7 @@ const previewNeumes = [
     fthora: 'HardChromaticPa_Top',
     verticalOffset: 0,
   },
-];
+] as any;
 
 export default defineComponent({
   components: {
@@ -1585,6 +1590,10 @@ export default defineComponent({
       QuantitativeNeume,
       Accidental,
       NeumeColorOptions,
+
+      MartyriaElement,
+      NoteElement,
+      TempoElement,
 
       previewNeumes,
 

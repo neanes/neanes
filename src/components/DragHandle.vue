@@ -5,8 +5,8 @@
 <script lang="ts">
 import { defineComponent, PropType, StyleValue } from 'vue';
 
+import { NoteElement, ScoreElementOffset } from '@/models/Element';
 import { Neume, VocalExpressionNeume } from '@/models/Neumes';
-import { NoteElement, ScoreElementOffset } from '@/models/save/v1/Element';
 import { fontService } from '@/services/FontService';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { withZoom } from '@/utils/withZoom';

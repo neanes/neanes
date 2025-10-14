@@ -6193,6 +6193,7 @@ export default defineComponent({
       </div>
 
       <div class="page-container">
+        <!-- @vue-ignore -->
         <Vue3TabsChrome
           class="workspace-tab-container"
           ref="tabs"

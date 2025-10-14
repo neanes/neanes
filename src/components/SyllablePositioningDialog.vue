@@ -8,7 +8,7 @@
             <NeumeBoxSyllable
               v-if="previousElement.elementType === ElementType.Note"
               class="other-neume"
-              :note="previousElement"
+              :note="previousElement as NoteElement"
               :pageSetup="pageSetup"
               :style="previousElementStyle"
             />
@@ -16,7 +16,7 @@
             <NeumeBoxMartyria
               v-if="previousElement.elementType === ElementType.Martyria"
               class="other-neume"
-              :neume="previousElement"
+              :neume="previousElement as MartyriaElement"
               :pageSetup="pageSetup"
               :style="previousElementStyle"
             />
@@ -24,17 +24,20 @@
             <NeumeBoxTempo
               v-if="previousElement.elementType === ElementType.Tempo"
               class="other-neume"
-              :neume="previousElement"
+              :neume="previousElement as TempoElement"
               :pageSetup="pageSetup"
               :style="previousElementStyle"
             />
           </template>
 
           <div class="neume-container" :style="mainStyle">
-            <NeumeBoxSyllable :note="form" :pageSetup="pageSetup" />
+            <NeumeBoxSyllable
+              :note="form as NoteElement"
+              :pageSetup="pageSetup"
+            />
             <DragHandle
               v-if="hasAccidental"
-              :note="form"
+              :note="form as NoteElement"
               :mark="form.accidental!"
               :fontFamily="pageSetup.neumeDefaultFontFamily"
               :fontSize="pageSetup.neumeDefaultFontSize"
@@ -45,7 +48,7 @@
             />
             <DragHandle
               v-if="hasSecondaryAccidental"
-              :note="form"
+              :note="form as NoteElement"
               :mark="form.secondaryAccidental!"
               :fontFamily="pageSetup.neumeDefaultFontFamily"
               :fontSize="pageSetup.neumeDefaultFontSize"
@@ -56,7 +59,7 @@
             />
             <DragHandle
               v-if="hasTertiaryAccidental"
-              :note="form"
+              :note="form as NoteElement"
               :mark="form.tertiaryAccidental!"
               :fontFamily="pageSetup.neumeDefaultFontFamily"
               :fontSize="pageSetup.neumeDefaultFontSize"
@@ -67,7 +70,7 @@
             />
             <!-- <DragHandle
               v-if="hasMeasureBarLeft"
-              :note="form"
+              :note="form as NoteElement"
               :mark="form.measureBarLeft"
               :fontFamily="pageSetup.neumeDefaultFontFamily"
               :fontSize="pageSetup.neumeDefaultFontSize"
@@ -78,7 +81,7 @@
             />
             <DragHandle
               v-if="hasMeasureBarRight"
-              :note="form"
+              :note="form as NoteElement"
               :mark="form.measureBarRight"
               :fontFamily="pageSetup.neumeDefaultFontFamily"
               :fontSize="pageSetup.neumeDefaultFontSize"
@@ -89,7 +92,7 @@
             /> -->
             <DragHandle
               v-if="hasFthora"
-              :note="form"
+              :note="form as NoteElement"
               :mark="form.fthora!"
               :fontFamily="pageSetup.neumeDefaultFontFamily"
               :fontSize="pageSetup.neumeDefaultFontSize"
@@ -100,7 +103,7 @@
             />
             <DragHandle
               v-if="hasSecondaryFthora"
-              :note="form"
+              :note="form as NoteElement"
               :mark="form.secondaryFthora!"
               :fontFamily="pageSetup.neumeDefaultFontFamily"
               :fontSize="pageSetup.neumeDefaultFontSize"
@@ -111,7 +114,7 @@
             />
             <DragHandle
               v-if="hasTertiaryFthora"
-              :note="form"
+              :note="form as NoteElement"
               :mark="form.tertiaryFthora!"
               :fontFamily="pageSetup.neumeDefaultFontFamily"
               :fontSize="pageSetup.neumeDefaultFontSize"
@@ -122,7 +125,7 @@
             />
             <DragHandle
               v-if="hasGorgonNeume"
-              :note="form"
+              :note="form as NoteElement"
               :mark="form.gorgonNeume!"
               :fontFamily="pageSetup.neumeDefaultFontFamily"
               :fontSize="pageSetup.neumeDefaultFontSize"
@@ -133,7 +136,7 @@
             />
             <DragHandle
               v-if="hasSecondaryGorgonNeume"
-              :note="form"
+              :note="form as NoteElement"
               :mark="form.secondaryGorgonNeume!"
               :fontFamily="pageSetup.neumeDefaultFontFamily"
               :fontSize="pageSetup.neumeDefaultFontSize"
@@ -144,7 +147,7 @@
             />
             <DragHandle
               v-if="hasIson"
-              :note="form"
+              :note="form as NoteElement"
               :mark="form.ison!"
               :fontFamily="pageSetup.neumeDefaultFontFamily"
               :fontSize="pageSetup.neumeDefaultFontSize"
@@ -155,7 +158,7 @@
             />
             <DragHandle
               v-if="form.koronis"
-              :note="form"
+              :note="form as NoteElement"
               :mark="TimeNeume.Koronis"
               :fontFamily="pageSetup.neumeDefaultFontFamily"
               :fontSize="pageSetup.neumeDefaultFontSize"
@@ -166,7 +169,7 @@
             />
             <DragHandle
               v-if="hasMeasureNumber"
-              :note="form"
+              :note="form as NoteElement"
               :mark="form.measureNumber!"
               :fontFamily="pageSetup.neumeDefaultFontFamily"
               :fontSize="pageSetup.neumeDefaultFontSize"
@@ -177,7 +180,7 @@
             />
             <DragHandle
               v-if="form.noteIndicator"
-              :note="form"
+              :note="form as NoteElement"
               :mark="form.noteIndicatorNeume!"
               :fontFamily="pageSetup.neumeDefaultFontFamily"
               :fontSize="pageSetup.neumeDefaultFontSize"
@@ -188,7 +191,7 @@
             />
             <DragHandle
               v-if="form.stavros"
-              :note="form"
+              :note="form as NoteElement"
               :mark="VocalExpressionNeume.Cross_Top"
               :fontFamily="pageSetup.neumeDefaultFontFamily"
               :fontSize="pageSetup.neumeDefaultFontSize"
@@ -199,7 +202,7 @@
             />
             <DragHandle
               v-if="hasTie"
-              :note="form"
+              :note="form as NoteElement"
               :mark="form.tie!"
               :fontFamily="pageSetup.neumeDefaultFontFamily"
               :fontSize="pageSetup.neumeDefaultFontSize"
@@ -210,7 +213,7 @@
             />
             <DragHandle
               v-if="hasTimeNeume"
-              :note="form"
+              :note="form as NoteElement"
               :mark="form.timeNeume!"
               :fontFamily="pageSetup.neumeDefaultFontFamily"
               :fontSize="pageSetup.neumeDefaultFontSize"
@@ -221,7 +224,7 @@
             />
             <!-- <DragHandle
               v-if="form.vareia"
-              :note="form"
+              :note="form as NoteElement"
               :mark="VocalExpressionNeume.Vareia"
               :fontFamily="pageSetup.neumeDefaultFontFamily"
               :fontSize="pageSetup.neumeDefaultFontSize"
@@ -232,7 +235,7 @@
             /> -->
             <DragHandle
               v-if="hasVocalExpressionNeume"
-              :note="form"
+              :note="form as NoteElement"
               :mark="form.vocalExpressionNeume!"
               :fontFamily="pageSetup.neumeDefaultFontFamily"
               :fontSize="pageSetup.neumeDefaultFontSize"
@@ -246,7 +249,7 @@
             <NeumeBoxSyllable
               v-if="nextElement.elementType === ElementType.Note"
               class="other-neume"
-              :note="nextElement"
+              :note="nextElement as NoteElement"
               :pageSetup="pageSetup"
               :style="nextElementStyle"
             />
@@ -254,7 +257,7 @@
             <NeumeBoxMartyria
               v-if="nextElement.elementType === ElementType.Martyria"
               class="other-neume"
-              :neume="nextElement"
+              :neume="nextElement as MartyriaElement"
               :pageSetup="pageSetup"
               :style="nextElementStyle"
             />
@@ -262,7 +265,7 @@
             <NeumeBoxTempo
               v-if="nextElement.elementType === ElementType.Tempo"
               class="other-neume"
-              :neume="nextElement"
+              :neume="nextElement as TempoElement"
               :pageSetup="pageSetup"
               :style="nextElementStyle"
             />
@@ -660,13 +663,14 @@ import NeumeBoxSyllable from '@/components/NeumeBoxSyllable.vue';
 import NeumeBoxTempo from '@/components/NeumeBoxTempo.vue';
 import {
   ElementType,
+  MartyriaElement,
   NoteElement,
   ScoreElement,
   ScoreElementOffset,
+  TempoElement,
 } from '@/models/Element';
-import { VocalExpressionNeume } from '@/models/Neumes';
+import { TimeNeume, VocalExpressionNeume } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
-import { TimeNeume } from '@/models/save/v1/Neumes';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
 
 export default defineComponent({
@@ -697,6 +701,8 @@ export default defineComponent({
       TimeNeume,
       VocalExpressionNeume,
       ElementType,
+      TempoElement,
+      MartyriaElement,
 
       form: new NoteElement(),
       stepSize: 0.01,
@@ -779,7 +785,7 @@ export default defineComponent({
     previousElementStyle() {
       return {
         left: `calc(${this.centerLeft}px - ${
-          this.element.x - this.previousElement.x
+          this.element.x - this.previousElement!.x
         }px * var(--zoom, 1))`,
       } as StyleValue;
     },
@@ -787,7 +793,7 @@ export default defineComponent({
     nextElementStyle() {
       return {
         left: `calc(${this.centerLeft}px + ${
-          this.nextElement.x - this.element.x
+          this.nextElement!.x - this.element.x
         }px * var(--zoom, 1))`,
       } as StyleValue;
     },

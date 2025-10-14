@@ -8,7 +8,7 @@
       <NeumeBoxSyllable
         v-if="element.elementType === ElementType.Note"
         class="syllable-box"
-        :note="element"
+        :note="element as NoteElement"
         :pageSetup="pageSetup"
         :alternateLine="true"
       />
@@ -19,7 +19,11 @@
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
 
-import { AlternateLineElement, ElementType } from '@/models/Element';
+import {
+  AlternateLineElement,
+  ElementType,
+  NoteElement,
+} from '@/models/Element';
 import { PageSetup } from '@/models/PageSetup';
 import { withZoom } from '@/utils/withZoom';
 
@@ -48,6 +52,8 @@ export default defineComponent({
 
       zoom: 1,
       ElementType,
+
+      NoteElement,
 
       clampingInterval: null as ReturnType<typeof setTimeout> | null,
     };

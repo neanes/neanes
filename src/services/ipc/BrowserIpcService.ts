@@ -9,7 +9,7 @@ import {
 } from '@/ipc/ipcChannels';
 import { Workspace } from '@/models/Workspace';
 import { SaveService } from '@/services/SaveService';
-import { getFileNameFromPath } from '@/utils/filenames';
+import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
 
 import { IIpcService } from './IIpcService';
 

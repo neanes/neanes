@@ -5,7 +5,6 @@ import i18next from 'i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import Pseudo from 'i18next-pseudo';
 import I18NextVue from 'i18next-vue';
-import { createPinia } from 'pinia';
 import { createApp } from 'vue';
 import VueObserveVisibility from 'vue3-observe-visibility';
 
@@ -54,7 +53,6 @@ i18next
   });
 
 const app = createApp(App);
-const pinia = createPinia();
 app.use(VueObserveVisibility);
 app.use(CkeditorPlugin);
 
@@ -68,5 +66,4 @@ if (isElectron()) {
 
 app.use(router);
 app.use(I18NextVue, { i18next });
-app.use(pinia);
 app.mount('#app');

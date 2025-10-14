@@ -1,28 +1,21 @@
-<script setup lang="ts">
+<script lang="ts">
 import 'vue3-tabs-chrome/dist/vue3-tabs-chrome.css';
 
-import i18next from 'i18next';
-import { storeToRefs } from 'pinia';
-import { throttle } from 'throttle-debounce';
-import {
-  computed,
-  inject,
-  nextTick,
-  onBeforeMount,
-  onBeforeUnmount,
-  onMounted,
-  reactive,
-  ref,
-  useTemplateRef,
-  watch,
-} from 'vue';
+import { getFontEmbedCSS, toPng } from 'html-to-image';
+import { debounce, throttle } from 'throttle-debounce';
+import { defineComponent, inject, nextTick, StyleValue, toRaw } from 'vue';
 import Vue3TabsChrome, { Tab } from 'vue3-tabs-chrome';
 
 import AlternateLine from '@/components/AlternateLine.vue';
 import ContentEditable from '@/components/ContentEditable.vue';
 import DropCap from '@/components/DropCap.vue';
 import EditorPreferencesDialog from '@/components/EditorPreferencesDialog.vue';
-import ExportDialog from '@/components/ExportDialog.vue';
+import ExportDialog, {
+  ExportAsLatexSettings,
+  ExportAsMusicXmlSettings,
+  ExportAsPngSettings,
+  ExportFormat,
+} from '@/components/ExportDialog.vue';
 import FileMenuBar from '@/components/FileMenuBar.vue';
 import ImageBox from '@/components/ImageBox.vue';
 import ModeKey from '@/components/ModeKey.vue';
@@ -51,22 +44,21 @@ import ToolbarNeume from '@/components/ToolbarNeume.vue';
 import ToolbarTempo from '@/components/ToolbarTempo.vue';
 import ToolbarTextBox from '@/components/ToolbarTextBox.vue';
 import ToolbarTextBoxRich from '@/components/ToolbarTextBoxRich.vue';
-import { useAudioPlayback } from '@/composables/useAudioPlayback';
-import { useClipboard } from '@/composables/useClipboard';
-import { useCommandFactories } from '@/composables/useCommandFactories';
-import { useEditing } from '@/composables/useEditing';
-import { useFocus } from '@/composables/useFocus';
-import { useHistory } from '@/composables/useHistory';
-import { useKeyboard } from '@/composables/useKeyboard';
-import { useSave } from '@/composables/useSave';
-import { useScoreExport } from '@/composables/useScoreExport';
-import { useSelection } from '@/composables/useSelection';
-import { useStyles } from '@/composables/useStyles';
-import { useTemplateRefsArray } from '@/composables/useTemplateRefsArray';
 import { EventBus } from '@/eventBus';
+import {
+  audioServiceKey,
+  ipcServiceKey,
+  latexExporterKey,
+  musicXmlExporterKey,
+  neumeKeyboardKey,
+  platformServiceKey,
+  playbackServiceKey,
+  textSearchServiceKey,
+} from '@/injectionKeys';
 import {
   CloseWorkspacesArgs,
   CloseWorkspacesDisposition,
+  ExportWorkspaceAsImageReplyArgs,
   FileMenuInsertTextboxArgs,
   FileMenuOpenImageArgs,
   FileMenuOpenScoreArgs,
@@ -76,6 +68,7 @@ import {
 } from '@/ipc/ipcChannels';
 import { EditorPreferences } from '@/models/EditorPreferences';
 import {
+  AcceptsLyricsOption,
   AlternateLineElement,
   AnnotationElement,
   DropCapElement,
@@ -94,1614 +87,6585 @@ import {
 } from '@/models/Element';
 import { EntryMode } from '@/models/EntryMode';
 import { modeKeyTemplates } from '@/models/ModeKeys';
+import { NeumeCombination } from '@/models/NeumeCommonCombinations';
+import {
+  areVocalExpressionsEquivalent,
+  getSecondaryNeume,
+  measureBarAboveToLeft,
+  onlyTakesBottomKlasma,
+  onlyTakesTopGorgon,
+  onlyTakesTopKlasma,
+} from '@/models/NeumeReplacements';
+import {
+  Accidental,
+  Fthora,
+  GorgonNeume,
+  Ison,
+  MeasureBar,
+  MeasureNumber,
+  Note,
+  QuantitativeNeume,
+  RootSign,
+  TempoSign,
+  Tie,
+  TimeNeume,
+  VocalExpressionNeume,
+} from '@/models/Neumes';
 import { Page } from '@/models/Page';
 import { PageSetup } from '@/models/PageSetup';
+import { Scale, ScaleNote } from '@/models/Scales';
 import { Score } from '@/models/Score';
+import { ScoreElementSelectionRange } from '@/models/ScoreElementSelectionRange';
 import { Workspace, WorkspaceLocalStorage } from '@/models/Workspace';
-import { AudioService } from '@/services/audio/AudioService';
-import { Command } from '@/services/history/CommandService';
+import {
+  AudioService,
+  AudioServiceEventNames,
+  AudioState,
+} from '@/services/audio/AudioService';
+import {
+  PlaybackOptions,
+  PlaybackSequenceEvent,
+  PlaybackService,
+} from '@/services/audio/PlaybackService';
+import { Command, CommandFactory } from '@/services/history/CommandService';
+import { ByzHtmlExporter } from '@/services/integration/ByzHtmlExporter';
 import {
   LatexExporter,
   LatexExporterOptions,
 } from '@/services/integration/LatexExporter';
+import { MusicXmlExporter } from '@/services/integration/MusicXmlExporter';
 import { IIpcService } from '@/services/ipc/IIpcService';
 import { IpcService } from '@/services/ipc/IpcService';
 import { LayoutService } from '@/services/LayoutService';
 import { LyricService } from '@/services/LyricService';
 import { NeumeKeyboard } from '@/services/NeumeKeyboard';
+import { IPlatformService } from '@/services/platform/IPlatformService';
+import { PlatformService } from '@/services/platform/PlatformService';
 import { SaveService } from '@/services/SaveService';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
 import { TextSearchService } from '@/services/TextSearchService';
-import { useEditorStore } from '@/stores/useEditorStore';
-import { GORTHMIKON, PELASTIKON } from '@/utils/constants';
-import {
-  getFileName,
-  getFileNameFromPath,
-  getTempFilename,
-} from '@/utils/filenames';
+import { GORTHMIKON, PELASTIKON, TATWEEL } from '@/utils/constants';
+import { getFileNameFromPath } from '@/utils/filenames';
+import { getCursorPosition } from '@/utils/getCursorPosition';
+import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { isElectron } from '@/utils/isElectron';
 import { TokenMetadata } from '@/utils/replaceTokens';
+import { shallowEquals } from '@/utils/shallowEquals';
 import { TestFileGenerator } from '@/utils/TestFileGenerator';
 import { TestFileType } from '@/utils/TestFileType';
+import { withZoom } from '@/utils/withZoom';
 
-import { Vue3TabsChromeComponent } from './Editor/Vue3TabsChromeComponent';
-
-const ipcService = inject<IIpcService>('ipcService', new IpcService());
-const audioService = inject<AudioService>('audioService', new AudioService());
-const textSearchService = inject<TextSearchService>(
-  'textSearchService',
-  new TextSearchService(),
-);
-const lyricService = inject<LyricService>('lyricService', new LyricService());
-const latexExporter = inject<LatexExporter>(
-  'latexExporter',
-  new LatexExporter(),
-);
-const neumeKeyboard = inject<NeumeKeyboard>(
-  'neumeKeyboard',
-  new NeumeKeyboard(),
-);
-
-const editor = useEditorStore();
-
-const { pageRefs, elementRefs, lyricRefs } = storeToRefs(editor);
-
-const { setRefByIndex: setPageRefByIndex } = useTemplateRefsArray(pageRefs);
-
-const { setRefByIndex: setElementRefByIndex } =
-  useTemplateRefsArray(elementRefs);
-
-const { setRefByIndex: setLyricRefByIndex } = useTemplateRefsArray(lyricRefs);
-
-const audioPlayback = useAudioPlayback();
-const { save } = useSave();
-const exporting = useScoreExport();
-const { scoreElementCommandFactory, pageSetupCommandFactory } =
-  useCommandFactories();
-const { focusLyrics } = useFocus();
-const history = useHistory();
-const editing = useEditing();
-useKeyboard();
-
-const pageBackgroundRef = useTemplateRef('page-background');
-const tabsRef = useTemplateRef<Vue3TabsChromeComponent>('tabs-ui');
-const searchTextRef =
-  useTemplateRef<InstanceType<typeof SearchText>>('searchText');
-
-const showFileMenuBar = !isElectron();
-const isDevelopment: boolean = import.meta.env.DEV;
-const isBrowser: boolean = !isElectron();
-
-const tab = ref<string | null>(null);
-const tabs = reactive([] as Tab[]);
-
-const {
-  setSelectedElement,
-  setSelectedHeaderFooterElement,
-  setSelectedAlternateLine,
-  setSelectedAnnotation,
-  setSelectedLyrics,
-  isSelected,
-  isAudioSelected,
-  setSelectionRange,
-} = useSelection();
-
-const clipboard = useClipboard();
-
-// Throttled Methods
-const onWindowResizeThrottled = throttle(250, onWindowResize);
-const onScrollThrottled = throttle(250, onScroll);
-
-const windowTitle = computed(() => {
-  return `${getFileName(editor.selectedWorkspace as Workspace)} - ${
-    import.meta.env.VITE_TITLE
-  }`;
-});
-
-function setSelectedWorkspace(value: Workspace) {
-  // Save the scroll position
-  const pageBackgroundElement = pageBackgroundRef.value as HTMLElement;
-  editor.selectedWorkspace.scrollLeft = pageBackgroundElement.scrollLeft;
-  editor.selectedWorkspace.scrollTop = pageBackgroundElement.scrollTop;
-
-  editor.selectedWorkspace = value;
-  editor.selectedWorkspace.commandService.notify();
-  save(false);
-
-  tab.value = value.id;
-
-  // Scroll to the new workspace's saved scroll position
-  // Use nextTick to scroll after the DOM has refreshed
-  nextTick(() => {
-    pageBackgroundElement.scrollTo(
-      editor.selectedWorkspace.scrollLeft,
-      editor.selectedWorkspace.scrollTop,
-    );
-
-    calculatePageNumber();
-  });
-
-  audioPlayback.stopAudio();
+interface Vue3TabsChromeComponent {
+  addTab: (...newTabs: Array<Tab>) => void;
+  removeTab: (tabKey: string | number) => void;
 }
 
-const pageVisibilityIntersection = computed(() => {
-  // look ahead/behind 1 page
-  const margin = editor.score.pageSetup.pageHeight * editor.zoom;
+const noteElementCommandFactory: CommandFactory<NoteElement> =
+  new CommandFactory<NoteElement>();
 
-  return {
-    root: pageBackgroundRef.value,
-    rootMargin: `${margin}px 0px ${margin}px 0px`,
-  } as IntersectionObserver;
-});
+const martyriaCommandFactory: CommandFactory<MartyriaElement> =
+  new CommandFactory<MartyriaElement>();
 
-const { zoom, currentFilePath, hasUnsavedChanges, selectedWorkspace } =
-  storeToRefs(editor);
-watch(zoom, () =>
-  document.documentElement.style.setProperty('--zoom', editor.zoom.toString()),
-);
-watch(currentFilePath, updateWindowTitle);
-watch(hasUnsavedChanges, updateWindowTitle);
-watch(selectedWorkspace, (value) => {
-  if (value != null) {
-    tab.value = value.id;
-  }
-});
-watch(tab, (value) => {
-  if (value != null && editor.selectedWorkspace.id !== value) {
-    const workspace = editor.workspaces.find((x) => x.id === value);
-    if (workspace) {
-      setSelectedWorkspace(workspace as Workspace);
-    }
-  }
-});
+const tempoCommandFactory: CommandFactory<TempoElement> =
+  new CommandFactory<TempoElement>();
 
-function updateWindowTitle() {
-  window.document.title = windowTitle.value;
-}
+const annotationCommandFactory: CommandFactory<AnnotationElement> =
+  new CommandFactory<AnnotationElement>();
 
-function getHeaderForPageIndex(pageIndex: number) {
-  const pageNumber = pageIndex + 1;
+const alternateLineCommandFactory: CommandFactory<AlternateLineElement> =
+  new CommandFactory<AlternateLineElement>();
 
-  const header = editor.score.getHeaderForPage(pageNumber);
+const textBoxCommandFactory: CommandFactory<TextBoxElement> =
+  new CommandFactory<TextBoxElement>();
 
-  // Currently, headers only support a single text box element.
-  return header.elements[0] as TextBoxElement | RichTextBoxElement;
-}
+const richTextBoxCommandFactory: CommandFactory<RichTextBoxElement> =
+  new CommandFactory<RichTextBoxElement>();
 
-function getFooterForPageIndex(pageIndex: number) {
-  const pageNumber = pageIndex + 1;
+const imageBoxCommandFactory: CommandFactory<ImageBoxElement> =
+  new CommandFactory<ImageBoxElement>();
 
-  const footer = editor.score.getFooterForPage(pageNumber);
+const modeKeyCommandFactory: CommandFactory<ModeKeyElement> =
+  new CommandFactory<ModeKeyElement>();
 
-  // Currently, footers only support a single text box element.
-  return footer.elements[0] as TextBoxElement | RichTextBoxElement;
-}
+const dropCapCommandFactory: CommandFactory<DropCapElement> =
+  new CommandFactory<DropCapElement>();
 
-function getTokenMetadata(pageIndex: number): TokenMetadata {
-  return {
-    pageNumber: pageIndex + editor.score.pageSetup.firstPageNumber,
-    numberOfPages:
-      editor.pageCount + editor.score.pageSetup.firstPageNumber - 1,
-    fileName:
-      editor.selectedWorkspace.filePath != null
-        ? getFileNameFromPath(editor.selectedWorkspace.filePath)
-        : editor.selectedWorkspace.tempFileName,
-    filePath: editor.currentFilePath || '',
-  };
-}
+const scoreElementCommandFactory: CommandFactory<ScoreElement> =
+  new CommandFactory<ScoreElement>();
 
-onMounted(() => {
-  const savedAudioOptions = localStorage.getItem('audioOptionsDefault');
+const pageSetupCommandFactory: CommandFactory<PageSetup> =
+  new CommandFactory<PageSetup>();
 
-  if (savedAudioOptions != null) {
-    Object.assign(editor.audioOptions, JSON.parse(savedAudioOptions));
+let untitledIndex = 1;
 
-    // -Infinity is not valid JSON, so it is serialized as null.
-    // Deserialize as -Infinity
-    editor.audioOptions.volumeIson =
-      editor.audioOptions.volumeIson ?? -Infinity;
-    editor.audioOptions.volumeMelody =
-      editor.audioOptions.volumeMelody ?? -Infinity;
-  }
+const navigableElements = [
+  ElementType.Note,
+  ElementType.Martyria,
+  ElementType.Tempo,
+  ElementType.Empty,
+  ElementType.DropCap,
+  ElementType.TextBox,
+  ElementType.ImageBox,
+  ElementType.ModeKey,
+];
 
-  const savedEditorPreferences = localStorage.getItem('editorPreferences');
+const keydownThrottleIntervalMs = 100;
 
-  if (savedEditorPreferences != null) {
-    editor.editorPreferences = EditorPreferences.createFrom(
-      JSON.parse(savedEditorPreferences),
-    );
-  }
+export default defineComponent({
+  components: {
+    AlternateLine,
+    Annotation,
+    SyllableNeumeBox,
+    MartyriaNeumeBox,
+    TempoNeumeBox,
+    EmptyNeumeBox,
+    NeumeComboSelector,
+    NeumeSelector,
+    ContentEditable,
+    TextBox,
+    TextBoxRich,
+    DropCap,
+    ImageBox,
+    ModeKey,
+    ToolbarImageBox,
+    ToolbarTextBox,
+    ToolbarTextBoxRich,
+    ToolbarLyrics,
+    ToolbarLyricManager,
+    ToolbarModeKey,
+    ToolbarNeume,
+    ToolbarMartyria,
+    ToolbarTempo,
+    ToolbarDropCap,
+    ToolbarMain,
+    ModeKeyDialog,
+    SyllablePositioningDialog,
+    PlaybackSettingsDialog,
+    EditorPreferencesDialog,
+    ExportDialog,
+    PageSetupDialog,
+    FileMenuBar,
+    Vue3TabsChrome,
+    SearchText,
+  },
+  setup() {
+    return {
+      audioService: inject<AudioService>(audioServiceKey, new AudioService()),
+      latexExporter: inject<LatexExporter>(
+        latexExporterKey,
+        new LatexExporter(),
+      ),
+      lyricService: inject<LyricService>(latexExporterKey, new LyricService()),
+      musicXmlExporter: inject<MusicXmlExporter>(
+        musicXmlExporterKey,
+        new MusicXmlExporter(),
+      ),
+      neumeKeyboard: inject<NeumeKeyboard>(
+        neumeKeyboardKey,
+        new NeumeKeyboard(),
+      ),
+      platformService: inject<IPlatformService>(
+        platformServiceKey,
+        new PlatformService(),
+      ),
+      playbackService: inject<PlaybackService>(
+        playbackServiceKey,
+        new PlaybackService(),
+      ),
+      textSearchService: inject<TextSearchService>(
+        textSearchServiceKey,
+        new TextSearchService(),
+      ),
+      ipcService: inject<IIpcService>(ipcServiceKey, new IpcService()),
+    };
+  },
+  emits: [],
+  data() {
+    return {
+      searchTextQuery: '',
+      searchTextPanelIsOpen: false,
 
-  window.addEventListener('resize', onWindowResizeThrottled);
+      showFileMenuBar: !isElectron(),
 
-  EventBus.$on(IpcMainChannels.CloseWorkspaces, onCloseWorkspaces);
-  EventBus.$on(IpcMainChannels.CloseApplication, onCloseApplication);
+      LineBreakType,
 
-  EventBus.$on(IpcMainChannels.FileMenuNewScore, onFileMenuNewScore);
-  EventBus.$on(IpcMainChannels.FileMenuOpenScore, onFileMenuOpenScore);
-  EventBus.$on(IpcMainChannels.FileMenuPrint, exporting.onFileMenuPrint);
-  EventBus.$on(IpcMainChannels.FileMenuSave, onFileMenuSave);
-  EventBus.$on(IpcMainChannels.FileMenuSaveAs, onFileMenuSaveAs);
-  EventBus.$on(IpcMainChannels.FileMenuPageSetup, onFileMenuPageSetup);
-  EventBus.$on(
-    IpcMainChannels.FileMenuExportAsPdf,
-    exporting.onFileMenuExportAsPdf,
-  );
-  EventBus.$on(
-    IpcMainChannels.FileMenuExportAsHtml,
-    exporting.onFileMenuExportAsHtml,
-  );
-  EventBus.$on(
-    IpcMainChannels.FileMenuExportAsMusicXml,
-    exporting.onFileMenuExportAsMusicXml,
-  );
-  EventBus.$on(
-    IpcMainChannels.FileMenuExportAsLatex,
-    exporting.onFileMenuExportAsLatex,
-  );
-  EventBus.$on(
-    IpcMainChannels.FileMenuExportAsImage,
-    exporting.onFileMenuExportAsImage,
-  );
-  EventBus.$on(IpcMainChannels.FileMenuUndo, history.onFileMenuUndo);
-  EventBus.$on(IpcMainChannels.FileMenuRedo, history.onFileMenuRedo);
-  EventBus.$on(IpcMainChannels.FileMenuCut, clipboard.onFileMenuCut);
-  EventBus.$on(IpcMainChannels.FileMenuCopy, clipboard.onFileMenuCopy);
-  EventBus.$on(
-    IpcMainChannels.FileMenuCopyAsHtml,
-    exporting.onFileMenuCopyAsHtml,
-  );
-  EventBus.$on(
-    IpcMainChannels.FileMenuCopyFormat,
-    clipboard.onFileMenuCopyFormat,
-  );
-  EventBus.$on(IpcMainChannels.FileMenuPaste, clipboard.onFileMenuPaste);
-  EventBus.$on(
-    IpcMainChannels.FileMenuPasteWithLyrics,
-    clipboard.onFileMenuPasteWithLyrics,
-  );
-  EventBus.$on(
-    IpcMainChannels.FileMenuPasteFormat,
-    clipboard.onFileMenuPasteFormat,
-  );
-  EventBus.$on(IpcMainChannels.FileMenuFind, onFileMenuFind);
-  EventBus.$on(IpcMainChannels.FileMenuLyrics, onFileMenuLyrics);
-  EventBus.$on(IpcMainChannels.FileMenuPreferences, onFileMenuPreferences);
-  EventBus.$on(
-    IpcMainChannels.FileMenuInsertAnnotation,
-    onFileMenuInsertAnnotation,
-  );
-  EventBus.$on(
-    IpcMainChannels.FileMenuInsertAlternateLine,
-    onFileMenuInsertAlternateLine,
-  );
-  EventBus.$on(IpcMainChannels.FileMenuInsertTextBox, onFileMenuInsertTextBox);
-  EventBus.$on(
-    IpcMainChannels.FileMenuInsertRichTextBox,
-    onFileMenuInsertRichTextBox,
-  );
-  EventBus.$on(IpcMainChannels.FileMenuInsertModeKey, onFileMenuInsertModeKey);
-  EventBus.$on(
-    IpcMainChannels.FileMenuInsertDropCapBefore,
-    onFileMenuInsertDropCapBefore,
-  );
-  EventBus.$on(
-    IpcMainChannels.FileMenuInsertDropCapAfter,
-    onFileMenuInsertDropCapAfter,
-  );
-  EventBus.$on(IpcMainChannels.FileMenuInsertImage, onFileMenuInsertImage);
-  EventBus.$on(IpcMainChannels.FileMenuInsertHeader, onFileMenuInsertHeader);
-  EventBus.$on(IpcMainChannels.FileMenuInsertFooter, onFileMenuInsertFooter);
-  EventBus.$on(
-    IpcMainChannels.FileMenuToolsCopyElementLink,
-    onFileMenuToolsCopyElementLink,
-  );
-  EventBus.$on(
-    IpcMainChannels.FileMenuGenerateTestFile,
-    onFileMenuGenerateTestFile,
-  );
-});
+      isDevelopment: import.meta.env.DEV,
 
-onBeforeUnmount(() => {
-  // Remove the debugging variable from window
-  (window as any)._editor = undefined;
+      isBrowser: !isElectron(),
 
-  window.removeEventListener('resize', onWindowResizeThrottled);
+      isLoading: true,
 
-  EventBus.$off(IpcMainChannels.CloseWorkspaces, onCloseWorkspaces);
-  EventBus.$off(IpcMainChannels.CloseApplication, onCloseApplication);
+      printMode: false,
 
-  EventBus.$off(IpcMainChannels.FileMenuNewScore, onFileMenuNewScore);
-  EventBus.$off(IpcMainChannels.FileMenuOpenScore, onFileMenuOpenScore);
-  EventBus.$off(IpcMainChannels.FileMenuPrint, exporting.onFileMenuPrint);
-  EventBus.$off(IpcMainChannels.FileMenuSave, onFileMenuSave);
-  EventBus.$off(IpcMainChannels.FileMenuSaveAs, onFileMenuSaveAs);
-  EventBus.$off(IpcMainChannels.FileMenuPageSetup, onFileMenuPageSetup);
-  EventBus.$off(
-    IpcMainChannels.FileMenuExportAsPdf,
-    exporting.onFileMenuExportAsPdf,
-  );
-  EventBus.$off(
-    IpcMainChannels.FileMenuExportAsHtml,
-    exporting.onFileMenuExportAsHtml,
-  );
-  EventBus.$off(
-    IpcMainChannels.FileMenuExportAsMusicXml,
-    exporting.onFileMenuExportAsMusicXml,
-  );
-  EventBus.$off(
-    IpcMainChannels.FileMenuExportAsLatex,
-    exporting.onFileMenuExportAsLatex,
-  );
-  EventBus.$off(
-    IpcMainChannels.FileMenuExportAsImage,
-    exporting.onFileMenuExportAsImage,
-  );
-  EventBus.$off(IpcMainChannels.FileMenuUndo, history.onFileMenuUndo);
-  EventBus.$off(IpcMainChannels.FileMenuRedo, history.onFileMenuRedo);
-  EventBus.$off(IpcMainChannels.FileMenuCut, clipboard.onFileMenuCut);
-  EventBus.$off(IpcMainChannels.FileMenuCopy, clipboard.onFileMenuCopy);
-  EventBus.$off(
-    IpcMainChannels.FileMenuCopyAsHtml,
-    exporting.onFileMenuCopyAsHtml,
-  );
-  EventBus.$off(
-    IpcMainChannels.FileMenuCopyFormat,
-    clipboard.onFileMenuCopyFormat,
-  );
-  EventBus.$off(IpcMainChannels.FileMenuPaste, clipboard.onFileMenuPaste);
-  EventBus.$off(
-    IpcMainChannels.FileMenuPasteWithLyrics,
-    clipboard.onFileMenuPasteWithLyrics,
-  );
-  EventBus.$off(
-    IpcMainChannels.FileMenuPasteFormat,
-    clipboard.onFileMenuPasteFormat,
-  );
-  EventBus.$off(IpcMainChannels.FileMenuFind, onFileMenuFind);
-  EventBus.$off(IpcMainChannels.FileMenuLyrics, onFileMenuLyrics);
-  EventBus.$off(IpcMainChannels.FileMenuPreferences, onFileMenuPreferences);
-  EventBus.$off(
-    IpcMainChannels.FileMenuInsertAnnotation,
-    onFileMenuInsertAnnotation,
-  );
-  EventBus.$off(
-    IpcMainChannels.FileMenuInsertAlternateLine,
-    onFileMenuInsertAlternateLine,
-  );
-  EventBus.$off(IpcMainChannels.FileMenuInsertTextBox, onFileMenuInsertTextBox);
-  EventBus.$off(
-    IpcMainChannels.FileMenuInsertRichTextBox,
-    onFileMenuInsertRichTextBox,
-  );
-  EventBus.$off(IpcMainChannels.FileMenuInsertModeKey, onFileMenuInsertModeKey);
-  EventBus.$off(
-    IpcMainChannels.FileMenuInsertDropCapBefore,
-    onFileMenuInsertDropCapBefore,
-  );
-  EventBus.$off(
-    IpcMainChannels.FileMenuInsertDropCapAfter,
-    onFileMenuInsertDropCapAfter,
-  );
-  EventBus.$off(IpcMainChannels.FileMenuInsertImage, onFileMenuInsertImage);
-  EventBus.$off(IpcMainChannels.FileMenuInsertHeader, onFileMenuInsertHeader);
-  EventBus.$off(IpcMainChannels.FileMenuInsertFooter, onFileMenuInsertFooter);
-  EventBus.$off(
-    IpcMainChannels.FileMenuToolsCopyElementLink,
-    onFileMenuToolsCopyElementLink,
-  );
-  EventBus.$off(
-    IpcMainChannels.FileMenuGenerateTestFile,
-    onFileMenuGenerateTestFile,
-  );
-});
+      showGuides: false,
 
-function isMelisma(element: NoteElement) {
-  return element.melismaWidth > 0;
-}
+      workspaces: [] as Workspace[],
+      selectedWorkspaceValue: new Workspace(),
 
-function openModeKeyDialog() {
-  editor.modeKeyDialogIsOpen = true;
-}
+      tabs: [] as Tab[],
 
-function closeModeKeyDialog() {
-  editor.modeKeyDialogIsOpen = false;
-}
+      pages: [] as Page[],
 
-function openSyllablePositioningDialog() {
-  editor.syllablePositioningDialogIsOpen = true;
-}
+      currentPageNumber: 0,
 
-function closeSyllablePositioningDialog() {
-  editor.syllablePositioningDialogIsOpen = false;
-}
+      modeKeyDialogIsOpen: false,
+      syllablePositioningDialogIsOpen: false,
+      playbackSettingsDialogIsOpen: false,
+      pageSetupDialogIsOpen: false,
+      editorPreferencesDialogIsOpen: false,
+      exportDialogIsOpen: false,
 
-function openPlaybackSettingsDialog() {
-  editor.playbackSettingsDialogIsOpen = true;
+      neumeComboPanelIsExpanded: false,
 
-  audioPlayback.stopAudio();
-}
+      exportFormat: ExportFormat.PNG,
 
-function closePlaybackSettingsDialog() {
-  editor.playbackSettingsDialogIsOpen = false;
+      clipboard: [] as ScoreElement[],
+      formatType: null as ElementType | null,
+      textBoxFormat: null as Partial<TextBoxElement> | null,
+      noteFormat: null as Partial<NoteElement> | null,
+      richTextBoxCalculation: false,
+      richTextBoxCalculationCount: 0,
+      textBoxCalculation: false,
+      textBoxCalculationCount: 0,
 
-  audioPlayback.saveAudioOptions();
-}
+      fonts: [] as string[],
 
-function closePageSetupDialog() {
-  editor.pageSetupDialogIsOpen = false;
-}
+      toolbarInnerNeume: 'Primary',
 
-function openLyricManager() {
-  editor.setLyricManagerIsOpen(true);
-  refreshStaffLyrics();
-}
+      keyboardModifier: null as string | null,
 
-function closeLyricManager() {
-  editor.setLyricManagerIsOpen(false);
-}
+      audioElement: null as ScoreElement | null,
+      playbackEvents: [] as PlaybackSequenceEvent[],
+      playbackTimeInterval: null as ReturnType<typeof setTimeout> | null,
+      audioOptions: {
+        useLegetos: false,
+        useDefaultAttractionZo: true,
+        frequencyDi: 196,
+        speed: 1,
 
-function updateEditorPreferences(form: EditorPreferences) {
-  Object.assign(editor.editorPreferences, form);
+        diatonicIntervals: [12, 10, 8],
+        hardChromaticIntervals: [6, 20, 4],
+        softChromaticIntervals: [8, 14, 8],
+        legetosIntervals: [8, 10, 12],
+        zygosIntervals: [18, 4, 16, 4],
+        zygosLegetosIntervals: [18, 4, 20, 4],
+        spathiIntervals: [20, 4, 4, 14],
+        klitonIntervals: [14, 12, 4],
 
-  saveEditorPreferences();
+        defaultAttractionZoMoria: -4,
+        defaultAttractionKeMoria: 5,
 
-  editor.editorPreferencesDialogIsOpen = false;
-}
+        volumeIson: -4,
+        volumeMelody: 0,
 
-function closeEditorPreferencesDialog() {
-  editor.editorPreferencesDialogIsOpen = false;
-}
+        alterationMultipliers: [0.5, 0.25, 0.75],
 
-function saveEditorPreferences() {
-  localStorage.setItem(
-    'editorPreferences',
-    JSON.stringify(editor.editorPreferences),
-  );
-}
+        alterationMoriaMap: {
+          [Accidental.Flat_2_Right]: -2,
+          [Accidental.Flat_4_Right]: -4,
+          [Accidental.Flat_6_Right]: -6,
+          [Accidental.Flat_8_Right]: -8,
+          [Accidental.Sharp_2_Left]: 2,
+          [Accidental.Sharp_4_Left]: 4,
+          [Accidental.Sharp_6_Left]: 6,
+          [Accidental.Sharp_8_Left]: 8,
+        },
+      } as PlaybackOptions,
 
-function insertPelastikon() {
-  document.execCommand('insertText', false, PELASTIKON);
-}
+      editorPreferences: new EditorPreferences(),
 
-function insertGorthmikon() {
-  document.execCommand('insertText', false, GORTHMIKON);
-}
+      byzHtmlExporter: new ByzHtmlExporter(),
 
-function insertSpecialCharacter(character: string) {
-  document.execCommand('insertText', false, character);
-}
+      exportInProgress: false,
 
-function onClickAddImage() {
-  EventBus.$emit(IpcRendererChannels.OpenImageDialog);
-}
+      updateCurrentSectionThrottled: null! as () => void,
+      assignLyricsThrottled: null! as () => void,
+      moveToPreviousLyricBoxThrottled: null! as () => void,
+      moveToNextLyricBoxThrottled: null! as (clearMelisma?: boolean) => void,
+      moveLeftThrottled: null! as () => void,
+      moveRightThrottled: null! as () => void,
+      moveSelectionLeftThrottled: null! as () => void,
+      moveSelectionRightThrottled: null! as () => void,
+      deleteSelectedElementThrottled: null! as () => void,
+      deletePreviousElementThrottled: null! as () => void,
+      onFileMenuUndoThrottled: null! as () => void,
+      onFileMenuRedoThrottled: null! as () => void,
+      onCutScoreElementsThrottled: null! as () => void,
+      onCopyScoreElementsThrottled: null! as () => void,
+      onFileMenuCopyAsHtmlThrottled: null! as () => void,
+      onPasteScoreElementsThrottled: null! as (includeLyrics: boolean) => void,
+      addQuantitativeNeumeThrottled: null! as (
+        quantitativeNeume: QuantitativeNeume,
+        secondaryGorgonNeume?: GorgonNeume,
+      ) => void,
+      addTempoThrottled: null! as (neume: TempoSign) => void,
+      addAutoMartyriaThrottled: null! as (
+        alignRight?: boolean,
+        note?: Note,
+      ) => void,
+      setKlasmaThrottled: null! as (element: NoteElement) => void,
+      setGorgonThrottled: null! as (
+        element: NoteElement,
+        neumes: GorgonNeume | GorgonNeume[],
+      ) => void,
+      setFthoraNoteThrottled: null! as (
+        element: NoteElement,
+        neumes: Fthora[],
+      ) => void,
+      setFthoraMartyriaThrottled: null! as (
+        element: MartyriaElement,
+        neume: Fthora,
+      ) => void,
+      setMartyriaTempoThrottled: null! as (
+        element: MartyriaElement,
+        neume: TempoSign,
+      ) => void,
+      setAccidentalThrottled: null! as (
+        element: NoteElement,
+        neume: Accidental,
+      ) => void,
+      setTimeNeumeThrottled: null! as (
+        element: NoteElement,
+        neume: TimeNeume,
+      ) => void,
+      setMeasureNumberThrottled: null! as (
+        element: NoteElement,
+        neume: MeasureNumber,
+      ) => void,
+      setMeasureBarNoteThrottled: null! as (
+        element: NoteElement,
+        neume: MeasureBar,
+      ) => void,
+      setMeasureBarMartyriaThrottled: null! as (
+        element: MartyriaElement,
+        neume: MeasureBar,
+      ) => void,
+      setIsonThrottled: null! as (element: NoteElement, neume: Ison) => void,
+      setTieThrottled: null! as (element: NoteElement, neumes: Tie[]) => void,
+      setVocalExpressionThrottled: null! as (
+        element: NoteElement,
+        neume: VocalExpressionNeume,
+      ) => void,
+      updateMartyriaNoteThrottled: null! as (
+        element: MartyriaElement,
+        note: Note,
+      ) => void,
+      updateMartyriaScaleThrottled: null! as (
+        element: MartyriaElement,
+        scale: Scale,
+      ) => void,
+      updateMartyriaAutoThrottled: null! as (
+        element: MartyriaElement,
+        auto: boolean,
+      ) => void,
+      updateMartyriaAlignRightThrottled: null! as (
+        element: MartyriaElement,
+        alignRight: boolean,
+      ) => void,
+      updateNoteNoteIndicatorThrottled: null! as (
+        element: NoteElement,
+        noteIndicator: boolean,
+      ) => void,
+      updateNoteKoronisThrottled: null! as (
+        element: NoteElement,
+        koronis: boolean,
+      ) => void,
+      updateNoteVareiaThrottled: null! as (
+        element: NoteElement,
+        vareia: boolean,
+      ) => void,
+      onWindowResizeThrottled: null! as () => void,
+      onScrollThrottled: null! as () => void,
+      saveDebounced: null! as (markUnsavedChanges?: boolean) => void,
+    };
+  },
 
-function isSyllableElement(element: ScoreElement) {
-  return element.elementType == ElementType.Note;
-}
+  computed: {
+    selectedWorkspaceId: {
+      get() {
+        return this.selectedWorkspace.id;
+      },
 
-function isMartyriaElement(element: ScoreElement) {
-  return element.elementType == ElementType.Martyria;
-}
+      set(value: string) {
+        this.selectedWorkspace =
+          (this.workspaces.find((x) => x.id === value) as Workspace) ??
+          new Workspace();
+      },
+    },
 
-function isTempoElement(element: ScoreElement) {
-  return element.elementType == ElementType.Tempo;
-}
+    rtl() {
+      return this.score.pageSetup.melkiteRtl;
+    },
 
-function isEmptyElement(element: ScoreElement) {
-  return element.elementType == ElementType.Empty;
-}
+    selectedWorkspace: {
+      get() {
+        return this.selectedWorkspaceValue as Workspace;
+      },
 
-function isTextBoxElement(element: ScoreElement) {
-  return element.elementType == ElementType.TextBox;
-}
+      set(value: Workspace) {
+        // Save the scroll position
+        const pageBackgroundElement = this.$refs[
+          'page-background'
+        ] as HTMLElement;
+        this.selectedWorkspace.scrollLeft = pageBackgroundElement.scrollLeft;
+        this.selectedWorkspace.scrollTop = pageBackgroundElement.scrollTop;
 
-function isRichTextBoxElement(element: ScoreElement) {
-  return element.elementType == ElementType.RichTextBox;
-}
+        this.selectedWorkspaceValue = value;
+        this.selectedWorkspace.commandService.notify();
+        this.save(false);
 
-function isDropCapElement(element: ScoreElement) {
-  return element.elementType == ElementType.DropCap;
-}
-
-function isModeKeyElement(element: ScoreElement) {
-  return element.elementType == ElementType.ModeKey;
-}
-
-function isImageBoxElement(element: ScoreElement) {
-  return element.elementType == ElementType.ImageBox;
-}
-
-function onWindowResize() {
-  if (editor.zoomToFit) {
-    performZoomToFit();
-  }
-}
-
-function onScroll() {
-  calculatePageNumber();
-}
-
-function calculatePageNumber() {
-  let maxPercentage = 0;
-  let maxPercentageIndex = -1;
-
-  const viewportHeight =
-    window.innerHeight || document.documentElement.clientHeight;
-
-  for (let pageIndex = 0; pageIndex < editor.pageCount; pageIndex++) {
-    const rect = editor.pageRefs[pageIndex].getBoundingClientRect();
-
-    const percentage =
-      Math.max(
-        0,
-        rect.top > 0
-          ? Math.min(rect.height, viewportHeight - rect.top)
-          : rect.bottom < viewportHeight
-            ? rect.bottom
-            : viewportHeight,
-      ) / rect.height;
-
-    if (percentage > maxPercentage) {
-      maxPercentage = percentage;
-      maxPercentageIndex = pageIndex;
-    }
-  }
-
-  if (maxPercentageIndex >= 0) {
-    editor.currentPageNumber = maxPercentageIndex + 1;
-  }
-}
-
-async function load() {
-  if (isBrowser) {
-    Object.keys(localStorage).forEach((key) => {
-      if (key.startsWith('workspace-')) {
-        try {
-          const localStorageWorkspace: WorkspaceLocalStorage = JSON.parse(
-            localStorage.getItem(key)!,
-          );
-          const workspace = new Workspace();
-          workspace.id = localStorageWorkspace.id;
-          workspace.hasUnsavedChanges = localStorageWorkspace.hasUnsavedChanges;
-          workspace.filePath = localStorageWorkspace.filePath;
-          workspace.tempFileName = localStorageWorkspace.tempFileName;
-          workspace.score = SaveService.LoadScoreFromJson(
-            JSON.parse(localStorageWorkspace.score),
+        // Scroll to the new workspace's saved scroll position
+        // Use nextTick to scroll after the DOM has refreshed
+        nextTick(() => {
+          pageBackgroundElement.scrollTo(
+            this.selectedWorkspace.scrollLeft,
+            this.selectedWorkspace.scrollTop,
           );
 
-          addWorkspace(workspace);
-        } catch (error) {
-          // We couldn't load this workspace for some reason. Remove it from storage.
-          localStorage.removeItem(key);
-          console.error(error);
+          this.calculatePageNumber();
+        });
+
+        this.stopAudio();
+      },
+    },
+
+    score() {
+      return this.selectedWorkspace.score;
+    },
+
+    elements() {
+      return this.score?.staff.elements ?? [];
+    },
+
+    resizableRichTextBoxElements() {
+      return this.elements.filter(
+        (x) =>
+          x.elementType === ElementType.RichTextBox &&
+          !(x as RichTextBoxElement).inline,
+      );
+    },
+
+    resizableTextBoxElements() {
+      return this.elements.filter(
+        (x) =>
+          x.elementType === ElementType.TextBox &&
+          !(x as TextBoxElement).inline,
+      );
+    },
+
+    lyrics: {
+      get() {
+        return this.score?.staff.lyrics.text ?? '';
+      },
+
+      set(value: string) {
+        this.score.staff.lyrics.text = value;
+      },
+    },
+
+    lyricsLocked: {
+      get() {
+        return this.score?.staff.lyrics.locked ?? false;
+      },
+
+      set(value: boolean) {
+        this.score.staff.lyrics.locked = value;
+      },
+    },
+
+    lyricManagerIsOpen: {
+      get() {
+        return this.selectedWorkspace.lyricManagerIsOpen;
+      },
+
+      set(value: boolean) {
+        this.selectedWorkspace.lyricManagerIsOpen = value;
+      },
+    },
+
+    pageCount() {
+      return this.pages.length;
+    },
+
+    commandService() {
+      return this.selectedWorkspace.commandService;
+    },
+
+    selectedElementIndex() {
+      return this.selectedElement != null
+        ? this.elements.indexOf(this.selectedElement)
+        : -1;
+    },
+
+    windowTitle() {
+      return `${this.getFileName(this.selectedWorkspace)} - ${
+        import.meta.env.VITE_TITLE
+      }`;
+    },
+
+    selectedElement: {
+      get() {
+        return this.selectedWorkspace.selectedElement;
+      },
+
+      set(element: ScoreElement | null) {
+        if (element != null) {
+          this.selectedLyrics = null;
+          this.selectionRange = null;
+          this.selectedHeaderFooterElement = null;
+          this.toolbarInnerNeume = 'Primary';
+
+          if (this.audioService.state === AudioState.Playing) {
+            const event = this.playbackEvents.find(
+              (x) => x.elementIndex === this.getElementIndex(element),
+            );
+
+            if (event) {
+              this.audioService.jumpToEvent(event);
+              this.selectedWorkspace.playbackTime = event.absoluteTime;
+            }
+          } else if (this.audioService.state === AudioState.Paused) {
+            this.stopAudio();
+          }
+        }
+
+        if (
+          this.selectedWorkspace.selectedAlternateLineElement != null &&
+          this.selectedWorkspace.selectedAlternateLineElement.elements
+            .length === 0
+        ) {
+          this.removeAlternateLine(
+            this.selectedElement as NoteElement,
+            this.selectedWorkspace.selectedAlternateLineElement,
+            true,
+          );
+        }
+
+        this.selectedWorkspace.selectedElement = element;
+        this.selectedWorkspace.selectedAnnotationElement = null;
+        this.selectedWorkspace.selectedAlternateLineElement = null;
+      },
+    },
+
+    selectedElementForNeumeToolbar() {
+      if (
+        this.selectedWorkspace.selectedAlternateLineElement != null &&
+        this.selectedWorkspace.selectedAlternateLineElement.elements.length > 0
+      ) {
+        return this.selectedWorkspace.selectedAlternateLineElement.elements[
+          this.selectedWorkspace.selectedAlternateLineElement.elements.length -
+            1
+        ];
+      }
+      return this.selectedWorkspace.selectedElement;
+    },
+
+    previousElementOnLine() {
+      const index = this.selectedElementIndex;
+
+      if (index - 1 < 0) {
+        return null;
+      }
+
+      return this.elements[index - 1].line === this.selectedElement?.line
+        ? this.elements[index - 1]
+        : null;
+    },
+
+    nextElementOnLine() {
+      const index = this.selectedElementIndex;
+
+      if (index + 1 >= this.elements.length - 1) {
+        return null;
+      }
+
+      return this.elements[index + 1].line === this.selectedElement?.line
+        ? this.elements[index + 1]
+        : null;
+    },
+
+    selectedLyrics: {
+      get() {
+        return this.selectedWorkspace.selectedLyrics;
+      },
+
+      set(element: NoteElement | null) {
+        if (element != null) {
+          this.selectedElement = null;
+          this.selectedHeaderFooterElement = null;
+          this.selectionRange = null;
+        }
+
+        this.selectedWorkspace.selectedLyrics = element;
+      },
+    },
+
+    selectedHeaderFooterElement: {
+      get() {
+        return this.selectedWorkspace.selectedHeaderFooterElement;
+      },
+
+      set(element: ScoreElement | null) {
+        if (element != null) {
+          this.selectedElement = null;
+          this.selectedLyrics = null;
+          this.selectionRange = null;
+        }
+
+        this.selectedWorkspace.selectedHeaderFooterElement = element;
+      },
+    },
+
+    selectedTextBoxElement() {
+      const selectedElement =
+        this.selectedElement || this.selectedHeaderFooterElement;
+
+      return selectedElement != null && this.isTextBoxElement(selectedElement)
+        ? (selectedElement as TextBoxElement)
+        : null;
+    },
+
+    selectedRichTextBoxElement() {
+      const selectedElement =
+        this.selectedElement || this.selectedHeaderFooterElement;
+
+      return selectedElement != null &&
+        this.isRichTextBoxElement(selectedElement)
+        ? (selectedElement as RichTextBoxElement)
+        : null;
+    },
+
+    selectionRange: {
+      get() {
+        return this.selectedWorkspace.selectionRange;
+      },
+
+      set(value: ScoreElementSelectionRange | null) {
+        this.selectedWorkspace.selectionRange = value;
+      },
+    },
+
+    zoom: {
+      get() {
+        return this.selectedWorkspace.zoom;
+      },
+
+      set(zoom: number) {
+        this.selectedWorkspace.zoom = zoom;
+      },
+    },
+
+    zoomToFit: {
+      get() {
+        return this.selectedWorkspace.zoomToFit;
+      },
+
+      set(value: boolean) {
+        this.selectedWorkspace.zoomToFit = value;
+      },
+    },
+
+    entryMode: {
+      get() {
+        return this.selectedWorkspace.entryMode;
+      },
+
+      set(value: EntryMode) {
+        this.selectedWorkspace.entryMode = value;
+      },
+    },
+
+    currentFilePath: {
+      get() {
+        return this.selectedWorkspace.filePath;
+      },
+
+      set(path: string | null) {
+        this.selectedWorkspace.filePath = path;
+      },
+    },
+
+    hasUnsavedChanges: {
+      get() {
+        return this.selectedWorkspace.hasUnsavedChanges;
+      },
+
+      set(hasUnsavedChanges: boolean) {
+        this.selectedWorkspace.hasUnsavedChanges = hasUnsavedChanges;
+      },
+    },
+
+    pageStyle() {
+      return {
+        minWidth: withZoom(this.score.pageSetup.pageWidth),
+        maxWidth: withZoom(this.score.pageSetup.pageWidth),
+        width: withZoom(this.score.pageSetup.pageWidth),
+        height: withZoom(this.score.pageSetup.pageHeight),
+        minHeight: withZoom(this.score.pageSetup.pageHeight),
+        maxHeight: withZoom(this.score.pageSetup.pageHeight),
+      } as StyleValue;
+    },
+
+    headerStyle() {
+      return {
+        left: withZoom(this.score.pageSetup.leftMargin),
+        top: withZoom(this.score.pageSetup.headerMargin),
+      } as StyleValue;
+    },
+
+    footerStyle() {
+      return {
+        left: withZoom(this.score.pageSetup.leftMargin),
+        bottom: withZoom(this.score.pageSetup.footerMargin),
+      } as StyleValue;
+    },
+
+    guideStyleLeft() {
+      return {
+        left: withZoom(this.score.pageSetup.leftMargin - 1),
+        height: withZoom(this.score.pageSetup.pageHeight),
+      } as StyleValue;
+    },
+
+    guideStyleRight() {
+      return {
+        right: withZoom(this.score.pageSetup.rightMargin - 1),
+        height: withZoom(this.score.pageSetup.pageHeight),
+      } as StyleValue;
+    },
+
+    guideStyleTop() {
+      return {
+        top: withZoom(this.score.pageSetup.topMargin - 1),
+        width: withZoom(this.score.pageSetup.pageWidth),
+      } as StyleValue;
+    },
+
+    guideStyleBottom() {
+      return {
+        bottom: withZoom(this.score.pageSetup.bottomMargin - 1),
+        width: withZoom(this.score.pageSetup.pageWidth),
+      } as StyleValue;
+    },
+
+    pageVisibilityIntersection() {
+      // look ahead/behind 1 page
+      const margin = this.score.pageSetup.pageHeight * this.zoom;
+
+      return {
+        root: this.$refs['page-background'],
+        rootMargin: `${margin}px 0px ${margin}px 0px`,
+      } as IntersectionObserver;
+    },
+
+    dialogOpen() {
+      return (
+        this.modeKeyDialogIsOpen ||
+        this.pageSetupDialogIsOpen ||
+        this.playbackSettingsDialogIsOpen ||
+        this.syllablePositioningDialogIsOpen ||
+        this.editorPreferencesDialogIsOpen
+      );
+    },
+
+    filteredPages() {
+      return this.printMode ? this.pages.filter((x) => !x.isEmpty) : this.pages;
+    },
+  },
+
+  watch: {
+    zoom() {
+      document.documentElement.style.setProperty(
+        '--zoom',
+        this.zoom.toString(),
+      );
+    },
+
+    currentFilePath() {
+      window.document.title = this.windowTitle;
+    },
+
+    selectedWorkspaceId() {
+      window.document.title = this.windowTitle;
+    },
+
+    hasUnsavedChanges() {
+      window.document.title = this.windowTitle;
+    },
+  },
+
+  async created() {
+    // Attach the editor component to the window variable
+    // so that it can be used for debugging
+    (window as any)._editor = this;
+
+    this.createThrottledMethods();
+
+    try {
+      const fontLoader = (document as any).fonts;
+
+      const loadSystemFontsPromise = this.ipcService
+        .getSystemFonts()
+        .then((fonts) => (this.fonts = fonts));
+
+      // Must load all fonts before loading any documents,
+      // otherwise the text measurements will be wrong
+      await Promise.all([
+        loadSystemFontsPromise,
+        fontLoader.load('1rem Athonite'),
+        fontLoader.load('1rem "GFS Didot"'),
+        fontLoader.load('1rem Neanes'),
+        fontLoader.load('1rem NeanesStathisSeries'),
+        fontLoader.load('1rem NeanesRTL'),
+        fontLoader.load('1rem "Noto Naskh Arabic"'),
+        fontLoader.load('1rem Omega'),
+        fontLoader.load('1rem "Old Standard"'),
+        fontLoader.load('1rem PFGoudyInitials'),
+        fontLoader.load('1rem "Source Serif"'),
+        fontLoader.ready,
+      ]);
+
+      await this.load();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      this.isLoading = false;
+    }
+  },
+
+  mounted() {
+    const savedAudioOptions = localStorage.getItem('audioOptionsDefault');
+
+    if (savedAudioOptions != null) {
+      Object.assign(this.audioOptions, JSON.parse(savedAudioOptions));
+
+      // -Infinity is not valid JSON, so it is serialized as null.
+      // Deserialize as -Infinity
+      this.audioOptions.volumeIson = this.audioOptions.volumeIson ?? -Infinity;
+      this.audioOptions.volumeMelody =
+        this.audioOptions.volumeMelody ?? -Infinity;
+    }
+
+    const savedEditorPreferences = localStorage.getItem('editorPreferences');
+
+    if (savedEditorPreferences != null) {
+      this.editorPreferences = EditorPreferences.createFrom(
+        JSON.parse(savedEditorPreferences),
+      );
+    }
+
+    window.addEventListener('keydown', this.onKeydown);
+    window.addEventListener('keyup', this.onKeyup);
+    window.addEventListener('resize', this.onWindowResizeThrottled);
+
+    EventBus.$on(IpcMainChannels.CloseWorkspaces, this.onCloseWorkspaces);
+    EventBus.$on(IpcMainChannels.CloseApplication, this.onCloseApplication);
+
+    EventBus.$on(IpcMainChannels.FileMenuNewScore, this.onFileMenuNewScore);
+    EventBus.$on(IpcMainChannels.FileMenuOpenScore, this.onFileMenuOpenScore);
+    EventBus.$on(IpcMainChannels.FileMenuPrint, this.onFileMenuPrint);
+    EventBus.$on(IpcMainChannels.FileMenuSave, this.onFileMenuSave);
+    EventBus.$on(IpcMainChannels.FileMenuSaveAs, this.onFileMenuSaveAs);
+    EventBus.$on(IpcMainChannels.FileMenuPageSetup, this.onFileMenuPageSetup);
+    EventBus.$on(
+      IpcMainChannels.FileMenuExportAsPdf,
+      this.onFileMenuExportAsPdf,
+    );
+    EventBus.$on(
+      IpcMainChannels.FileMenuExportAsHtml,
+      this.onFileMenuExportAsHtml,
+    );
+    EventBus.$on(
+      IpcMainChannels.FileMenuExportAsMusicXml,
+      this.onFileMenuExportAsMusicXml,
+    );
+    EventBus.$on(
+      IpcMainChannels.FileMenuExportAsLatex,
+      this.onFileMenuExportAsLatex,
+    );
+    EventBus.$on(
+      IpcMainChannels.FileMenuExportAsImage,
+      this.onFileMenuExportAsImage,
+    );
+    EventBus.$on(IpcMainChannels.FileMenuUndo, this.onFileMenuUndo);
+    EventBus.$on(IpcMainChannels.FileMenuRedo, this.onFileMenuRedo);
+    EventBus.$on(IpcMainChannels.FileMenuCut, this.onFileMenuCut);
+    EventBus.$on(IpcMainChannels.FileMenuCopy, this.onFileMenuCopy);
+    EventBus.$on(IpcMainChannels.FileMenuCopyAsHtml, this.onFileMenuCopyAsHtml);
+    EventBus.$on(IpcMainChannels.FileMenuCopyFormat, this.onFileMenuCopyFormat);
+    EventBus.$on(IpcMainChannels.FileMenuPaste, this.onFileMenuPaste);
+    EventBus.$on(
+      IpcMainChannels.FileMenuPasteWithLyrics,
+      this.onFileMenuPasteWithLyrics,
+    );
+    EventBus.$on(
+      IpcMainChannels.FileMenuPasteFormat,
+      this.onFileMenuPasteFormat,
+    );
+    EventBus.$on(IpcMainChannels.FileMenuFind, this.onFileMenuFind);
+    EventBus.$on(IpcMainChannels.FileMenuLyrics, this.onFileMenuLyrics);
+    EventBus.$on(
+      IpcMainChannels.FileMenuPreferences,
+      this.onFileMenuPreferences,
+    );
+    EventBus.$on(
+      IpcMainChannels.FileMenuInsertAnnotation,
+      this.onFileMenuInsertAnnotation,
+    );
+    EventBus.$on(
+      IpcMainChannels.FileMenuInsertAlternateLine,
+      this.onFileMenuInsertAlternateLine,
+    );
+    EventBus.$on(
+      IpcMainChannels.FileMenuInsertTextBox,
+      this.onFileMenuInsertTextBox,
+    );
+    EventBus.$on(
+      IpcMainChannels.FileMenuInsertRichTextBox,
+      this.onFileMenuInsertRichTextBox,
+    );
+    EventBus.$on(
+      IpcMainChannels.FileMenuInsertModeKey,
+      this.onFileMenuInsertModeKey,
+    );
+    EventBus.$on(
+      IpcMainChannels.FileMenuInsertDropCapBefore,
+      this.onFileMenuInsertDropCapBefore,
+    );
+    EventBus.$on(
+      IpcMainChannels.FileMenuInsertDropCapAfter,
+      this.onFileMenuInsertDropCapAfter,
+    );
+    EventBus.$on(
+      IpcMainChannels.FileMenuInsertImage,
+      this.onFileMenuInsertImage,
+    );
+    EventBus.$on(
+      IpcMainChannels.FileMenuInsertHeader,
+      this.onFileMenuInsertHeader,
+    );
+    EventBus.$on(
+      IpcMainChannels.FileMenuInsertFooter,
+      this.onFileMenuInsertFooter,
+    );
+    EventBus.$on(
+      IpcMainChannels.FileMenuToolsCopyElementLink,
+      this.onFileMenuToolsCopyElementLink,
+    );
+    EventBus.$on(
+      IpcMainChannels.FileMenuGenerateTestFile,
+      this.onFileMenuGenerateTestFile,
+    );
+
+    EventBus.$on(
+      AudioServiceEventNames.EventPlay,
+      this.onAudioServiceEventPlay,
+    );
+
+    EventBus.$on(AudioServiceEventNames.Stop, this.onAudioServiceStop);
+  },
+
+  beforeUnmount() {
+    // Remove the debugging variable from window
+    (window as any)._editor = undefined;
+
+    window.removeEventListener('keydown', this.onKeydown);
+    window.removeEventListener('keyup', this.onKeyup);
+    window.removeEventListener('resize', this.onWindowResizeThrottled);
+
+    EventBus.$off(IpcMainChannels.CloseWorkspaces, this.onCloseWorkspaces);
+    EventBus.$off(IpcMainChannels.CloseApplication, this.onCloseApplication);
+
+    EventBus.$off(IpcMainChannels.FileMenuNewScore, this.onFileMenuNewScore);
+    EventBus.$off(IpcMainChannels.FileMenuOpenScore, this.onFileMenuOpenScore);
+    EventBus.$off(IpcMainChannels.FileMenuPrint, this.onFileMenuPrint);
+    EventBus.$off(IpcMainChannels.FileMenuSave, this.onFileMenuSave);
+    EventBus.$off(IpcMainChannels.FileMenuSaveAs, this.onFileMenuSaveAs);
+    EventBus.$off(IpcMainChannels.FileMenuPageSetup, this.onFileMenuPageSetup);
+    EventBus.$off(
+      IpcMainChannels.FileMenuExportAsPdf,
+      this.onFileMenuExportAsPdf,
+    );
+    EventBus.$off(
+      IpcMainChannels.FileMenuExportAsHtml,
+      this.onFileMenuExportAsHtml,
+    );
+    EventBus.$off(
+      IpcMainChannels.FileMenuExportAsMusicXml,
+      this.onFileMenuExportAsMusicXml,
+    );
+    EventBus.$off(
+      IpcMainChannels.FileMenuExportAsLatex,
+      this.onFileMenuExportAsLatex,
+    );
+    EventBus.$off(
+      IpcMainChannels.FileMenuExportAsImage,
+      this.onFileMenuExportAsImage,
+    );
+    EventBus.$off(IpcMainChannels.FileMenuUndo, this.onFileMenuUndo);
+    EventBus.$off(IpcMainChannels.FileMenuRedo, this.onFileMenuRedo);
+    EventBus.$off(IpcMainChannels.FileMenuCut, this.onFileMenuCut);
+    EventBus.$off(IpcMainChannels.FileMenuCopy, this.onFileMenuCopy);
+    EventBus.$off(
+      IpcMainChannels.FileMenuCopyAsHtml,
+      this.onFileMenuCopyAsHtml,
+    );
+    EventBus.$off(
+      IpcMainChannels.FileMenuCopyFormat,
+      this.onFileMenuCopyFormat,
+    );
+    EventBus.$off(IpcMainChannels.FileMenuPaste, this.onFileMenuPaste);
+    EventBus.$off(
+      IpcMainChannels.FileMenuPasteWithLyrics,
+      this.onFileMenuPasteWithLyrics,
+    );
+    EventBus.$off(
+      IpcMainChannels.FileMenuPasteFormat,
+      this.onFileMenuPasteFormat,
+    );
+    EventBus.$off(IpcMainChannels.FileMenuFind, this.onFileMenuFind);
+    EventBus.$off(IpcMainChannels.FileMenuLyrics, this.onFileMenuLyrics);
+    EventBus.$off(
+      IpcMainChannels.FileMenuPreferences,
+      this.onFileMenuPreferences,
+    );
+    EventBus.$off(
+      IpcMainChannels.FileMenuInsertAnnotation,
+      this.onFileMenuInsertAnnotation,
+    );
+    EventBus.$off(
+      IpcMainChannels.FileMenuInsertAlternateLine,
+      this.onFileMenuInsertAlternateLine,
+    );
+    EventBus.$off(
+      IpcMainChannels.FileMenuInsertTextBox,
+      this.onFileMenuInsertTextBox,
+    );
+    EventBus.$off(
+      IpcMainChannels.FileMenuInsertRichTextBox,
+      this.onFileMenuInsertRichTextBox,
+    );
+    EventBus.$off(
+      IpcMainChannels.FileMenuInsertModeKey,
+      this.onFileMenuInsertModeKey,
+    );
+    EventBus.$off(
+      IpcMainChannels.FileMenuInsertDropCapBefore,
+      this.onFileMenuInsertDropCapBefore,
+    );
+    EventBus.$off(
+      IpcMainChannels.FileMenuInsertDropCapAfter,
+      this.onFileMenuInsertDropCapAfter,
+    );
+    EventBus.$off(
+      IpcMainChannels.FileMenuInsertImage,
+      this.onFileMenuInsertImage,
+    );
+    EventBus.$off(
+      IpcMainChannels.FileMenuInsertHeader,
+      this.onFileMenuInsertHeader,
+    );
+    EventBus.$off(
+      IpcMainChannels.FileMenuInsertFooter,
+      this.onFileMenuInsertFooter,
+    );
+    EventBus.$off(
+      IpcMainChannels.FileMenuToolsCopyElementLink,
+      this.onFileMenuToolsCopyElementLink,
+    );
+    EventBus.$off(
+      IpcMainChannels.FileMenuGenerateTestFile,
+      this.onFileMenuGenerateTestFile,
+    );
+
+    EventBus.$off(
+      AudioServiceEventNames.EventPlay,
+      this.onAudioServiceEventPlay,
+    );
+
+    EventBus.$off(AudioServiceEventNames.Stop, this.onAudioServiceStop);
+
+    this.audioService.dispose();
+  },
+
+  methods: {
+    createThrottledMethods() {
+      this.assignLyricsThrottled = throttle(
+        keydownThrottleIntervalMs,
+        this.assignLyrics,
+      );
+
+      this.moveToPreviousLyricBoxThrottled = throttle(
+        keydownThrottleIntervalMs,
+        this.moveToPreviousLyricBox,
+      );
+
+      this.moveToNextLyricBoxThrottled = throttle(
+        keydownThrottleIntervalMs,
+        this.moveToNextLyricBox,
+      );
+
+      this.moveLeftThrottled = throttle(
+        keydownThrottleIntervalMs,
+        this.moveLeft,
+      );
+
+      this.moveRightThrottled = throttle(
+        keydownThrottleIntervalMs,
+        this.moveRight,
+      );
+
+      this.moveSelectionLeftThrottled = throttle(
+        keydownThrottleIntervalMs,
+        this.moveSelectionLeft,
+      );
+
+      this.moveSelectionRightThrottled = throttle(
+        keydownThrottleIntervalMs,
+        this.moveSelectionRight,
+      );
+
+      this.deleteSelectedElementThrottled = throttle(
+        keydownThrottleIntervalMs,
+        this.deleteSelectedElement,
+      );
+
+      this.deletePreviousElementThrottled = throttle(
+        keydownThrottleIntervalMs,
+        this.deletePreviousElement,
+      );
+
+      this.onFileMenuUndoThrottled = throttle(
+        keydownThrottleIntervalMs,
+        this.onFileMenuUndo,
+      );
+
+      this.onFileMenuRedoThrottled = throttle(
+        keydownThrottleIntervalMs,
+        this.onFileMenuRedo,
+      );
+
+      this.onCutScoreElementsThrottled = throttle(
+        keydownThrottleIntervalMs,
+        this.onCutScoreElements,
+      );
+
+      this.onCopyScoreElementsThrottled = throttle(
+        keydownThrottleIntervalMs,
+        this.onCopyScoreElements,
+      );
+
+      this.onFileMenuCopyAsHtmlThrottled = throttle(
+        keydownThrottleIntervalMs,
+        this.onFileMenuCopyAsHtml,
+      );
+
+      this.onPasteScoreElementsThrottled = throttle(
+        keydownThrottleIntervalMs,
+        this.onPasteScoreElements,
+      );
+
+      this.addQuantitativeNeumeThrottled = throttle(
+        keydownThrottleIntervalMs,
+        this.addQuantitativeNeume,
+      );
+
+      this.addTempoThrottled = throttle(
+        keydownThrottleIntervalMs,
+        this.addTempo,
+      );
+
+      this.addAutoMartyriaThrottled = throttle(
+        keydownThrottleIntervalMs,
+        this.addAutoMartyria,
+      );
+
+      this.setKlasmaThrottled = throttle(
+        keydownThrottleIntervalMs,
+        this.setKlasma,
+      );
+      this.setGorgonThrottled = throttle(
+        keydownThrottleIntervalMs,
+        this.setGorgon,
+      );
+      this.setFthoraNoteThrottled = throttle(
+        keydownThrottleIntervalMs,
+        this.setFthoraNote,
+      );
+      this.setFthoraMartyriaThrottled = throttle(
+        keydownThrottleIntervalMs,
+        this.setFthoraMartyria,
+      );
+      this.setMartyriaTempoThrottled = throttle(
+        keydownThrottleIntervalMs,
+        this.setMartyriaTempo,
+      );
+      this.setAccidentalThrottled = throttle(
+        keydownThrottleIntervalMs,
+        this.setAccidental,
+      );
+      this.setTimeNeumeThrottled = throttle(
+        keydownThrottleIntervalMs,
+        this.setTimeNeume,
+      );
+      this.setMeasureNumberThrottled = throttle(
+        keydownThrottleIntervalMs,
+        this.setMeasureNumber,
+      );
+      this.setMeasureBarNoteThrottled = throttle(
+        keydownThrottleIntervalMs,
+        this.setMeasureBarNote,
+      );
+      this.setMeasureBarMartyriaThrottled = throttle(
+        keydownThrottleIntervalMs,
+        this.setMeasureBarMartyria,
+      );
+      this.setIsonThrottled = throttle(keydownThrottleIntervalMs, this.setIson);
+      this.setTieThrottled = throttle(keydownThrottleIntervalMs, this.setTie);
+      this.setVocalExpressionThrottled = throttle(
+        keydownThrottleIntervalMs,
+        this.setVocalExpression,
+      );
+
+      this.updateMartyriaNoteThrottled = throttle(
+        keydownThrottleIntervalMs,
+        this.updateMartyriaNote,
+      );
+
+      this.updateMartyriaScaleThrottled = throttle(
+        keydownThrottleIntervalMs,
+        this.updateMartyriaScale,
+      );
+
+      this.updateMartyriaAutoThrottled = throttle(
+        keydownThrottleIntervalMs,
+        this.updateMartyriaAuto,
+      );
+
+      this.updateMartyriaAlignRightThrottled = throttle(
+        keydownThrottleIntervalMs,
+        this.updateMartyriaAlignRight,
+      );
+
+      this.updateNoteNoteIndicatorThrottled = throttle(
+        keydownThrottleIntervalMs,
+        this.updateNoteNoteIndicator,
+      );
+
+      this.updateNoteKoronisThrottled = throttle(
+        keydownThrottleIntervalMs,
+        this.updateNoteKoronis,
+      );
+
+      this.updateNoteVareiaThrottled = throttle(
+        keydownThrottleIntervalMs,
+        this.updateNoteVareia,
+      );
+
+      this.onWindowResizeThrottled = throttle(250, this.onWindowResize);
+      this.onScrollThrottled = throttle(250, this.onScroll);
+
+      this.saveDebounced = debounce(250, this.save);
+    },
+    getHeaderHorizontalRuleStyle(headerHeight: number) {
+      return {
+        left: withZoom(this.score.pageSetup.leftMargin),
+        top: withZoom(
+          this.score.pageSetup.headerMargin +
+            headerHeight +
+            this.score.pageSetup.headerHorizontalRuleMarginTop,
+        ),
+        color: this.score.pageSetup.headerHorizontalRuleColor,
+        borderTopWidth: withZoom(
+          this.score.pageSetup.headerHorizontalRuleThickness,
+        ),
+        width: withZoom(this.score.pageSetup.innerPageWidth),
+      } as StyleValue;
+    },
+
+    getFooterHorizontalRuleStyle(footerHeight: number) {
+      return {
+        left: withZoom(this.score.pageSetup.leftMargin),
+        bottom: withZoom(
+          this.score.pageSetup.footerMargin +
+            footerHeight +
+            this.score.pageSetup.footerHorizontalRuleMarginBottom,
+        ),
+        color: this.score.pageSetup.footerHorizontalRuleColor,
+        borderTopWidth: withZoom(
+          this.score.pageSetup.footerHorizontalRuleThickness,
+        ),
+        width: withZoom(this.score.pageSetup.innerPageWidth),
+      } as StyleValue;
+    },
+
+    getLyricStyle(element: NoteElement) {
+      return {
+        direction: this.rtl ? 'rtl' : undefined,
+        top: withZoom(element.lyricsVerticalOffset),
+        paddingLeft:
+          !element.isFullMelisma && element.lyricsHorizontalOffset > 0
+            ? withZoom(element.lyricsHorizontalOffset)
+            : undefined,
+        paddingRight:
+          !element.isFullMelisma && element.lyricsHorizontalOffset < 0
+            ? withZoom(-element.lyricsHorizontalOffset)
+            : undefined,
+        fontSize: element.lyricsUseDefaultStyle
+          ? withZoom(this.score.pageSetup.lyricsDefaultFontSize)
+          : withZoom(element.lyricsFontSize),
+        fontFamily: element.lyricsUseDefaultStyle
+          ? getFontFamilyWithFallback(
+              this.score.pageSetup.lyricsDefaultFontFamily,
+              this.score.pageSetup.neumeDefaultFontFamily,
+            )
+          : getFontFamilyWithFallback(
+              element.lyricsFontFamily,
+              this.score.pageSetup.neumeDefaultFontFamily,
+            ),
+        fontWeight: element.lyricsUseDefaultStyle
+          ? this.score.pageSetup.lyricsDefaultFontWeight
+          : element.lyricsFontWeight,
+        fontStyle: element.lyricsUseDefaultStyle
+          ? this.score.pageSetup.lyricsDefaultFontStyle
+          : element.lyricsFontStyle,
+        textDecoration: element.lyricsUseDefaultStyle
+          ? undefined
+          : element.lyricsTextDecoration,
+        color: element.lyricsUseDefaultStyle
+          ? this.score.pageSetup.lyricsDefaultColor
+          : element.lyricsColor,
+        webkitTextStrokeWidth: element.lyricsUseDefaultStyle
+          ? withZoom(this.score.pageSetup.lyricsDefaultStrokeWidth)
+          : withZoom(element.lyricsStrokeWidth),
+        lineHeight: withZoom(element.lyricsFontHeight),
+        left: element.alignLeft ? 0 : undefined,
+        textAlign: element.alignLeft ? 'left' : undefined,
+      } as StyleValue;
+    },
+
+    getEmptyBoxStyle(element: EmptyElement) {
+      return {
+        width: withZoom(element.width),
+        height: withZoom(element.height),
+      } as StyleValue;
+    },
+
+    getElementStyle(element: ScoreElement) {
+      return {
+        left: !this.rtl ? withZoom(element.x) : undefined,
+        right: this.rtl ? withZoom(element.x) : undefined,
+        top: withZoom(element.y),
+      } as StyleValue;
+    },
+
+    getMelismaStyle(element: NoteElement) {
+      return {
+        width: withZoom(element.melismaWidth),
+        minHeight: element.lyricsUseDefaultStyle
+          ? withZoom(this.score.pageSetup.lyricsDefaultFontSize)
+          : withZoom(element.lyricsFontSize),
+      } as StyleValue;
+    },
+
+    getMelismaUnderscoreStyleOuter(element: NoteElement) {
+      return {
+        top: withZoom(element.melismaOffsetTop),
+        height: withZoom(element.lyricsFontHeight),
+        width: withZoom(element.melismaWidth),
+      };
+    },
+
+    getMelismaUnderscoreStyleInner(element: NoteElement) {
+      const thickness = this.score.pageSetup.lyricsMelismaThickness;
+
+      const spacing = !element.isFullMelisma
+        ? this.score.pageSetup.lyricsMelismaSpacing
+        : 0;
+
+      return {
+        borderBottom: `${withZoom(thickness)} solid ${
+          element.lyricsUseDefaultStyle
+            ? this.score.pageSetup.lyricsDefaultColor
+            : element.lyricsColor
+        }`,
+        left: withZoom(spacing),
+        width: `calc(100% - ${withZoom(spacing)})`,
+      };
+    },
+
+    getMelismaHyphenStyle(element: NoteElement, index: number) {
+      return {
+        left: withZoom(element.hyphenOffsets[index]),
+      } as StyleValue;
+    },
+
+    getTempFilename() {
+      return `Untitled-${untitledIndex++}`;
+    },
+
+    getFileName(workspace: Workspace, showUnsavedChanges: boolean = true) {
+      const unsavedChangesMarker =
+        workspace.hasUnsavedChanges && showUnsavedChanges ? '*' : '';
+
+      if (workspace.filePath != null) {
+        const fileName = getFileNameFromPath(workspace.filePath);
+        return `${unsavedChangesMarker}${fileName}`;
+      } else {
+        return `${unsavedChangesMarker}${workspace.tempFileName}`;
+      }
+    },
+
+    getHeaderForPageIndex(pageIndex: number) {
+      const pageNumber = pageIndex + 1;
+
+      const header = this.score.getHeaderForPage(pageNumber);
+
+      // Currently, headers only support a single text box element.
+      return header.elements[0] as TextBoxElement | RichTextBoxElement;
+    },
+
+    getFooterForPageIndex(pageIndex: number) {
+      const pageNumber = pageIndex + 1;
+
+      const footer = this.score.getFooterForPage(pageNumber);
+
+      // Currently, footers only support a single text box element.
+      return footer.elements[0] as TextBoxElement | RichTextBoxElement;
+    },
+
+    getTokenMetadata(pageIndex: number): TokenMetadata {
+      return {
+        pageNumber: pageIndex + this.score.pageSetup.firstPageNumber,
+        numberOfPages:
+          this.pageCount + this.score.pageSetup.firstPageNumber - 1,
+        fileName:
+          this.selectedWorkspace.filePath != null
+            ? getFileNameFromPath(this.selectedWorkspace.filePath)
+            : this.selectedWorkspace.tempFileName,
+        filePath: this.currentFilePath || '',
+      };
+    },
+
+    getElementIndex(element: ScoreElement) {
+      return element.index;
+    },
+
+    setSelectionRange(element: ScoreElement) {
+      const elementIndex = this.getElementIndex(element);
+
+      if (this.selectedElement != null) {
+        this.selectionRange = {
+          start: this.selectedElementIndex,
+          end: elementIndex,
+        };
+
+        this.selectedElement = null;
+      } else if (this.selectionRange != null) {
+        this.selectionRange.end = elementIndex;
+      }
+    },
+
+    getNormalizedSelectionRange() {
+      if (this.selectionRange == null) {
+        return null;
+      }
+
+      const start = Math.min(
+        this.selectionRange.start,
+        this.selectionRange.end,
+      );
+      const end = Math.max(this.selectionRange.start, this.selectionRange.end);
+
+      return {
+        start,
+        end,
+      } as ScoreElementSelectionRange;
+    },
+
+    isSelected(element: ScoreElement) {
+      if (this.selectedElement === element) {
+        return true;
+      }
+      if (this.selectionRange != null) {
+        const start = Math.min(
+          this.selectionRange.start,
+          this.selectionRange.end,
+        );
+        const end = Math.max(
+          this.selectionRange.start,
+          this.selectionRange.end,
+        );
+
+        return (
+          start <= this.getElementIndex(element) &&
+          this.getElementIndex(element) <= end
+        );
+      }
+
+      return false;
+    },
+
+    setSelectedAnnotation(
+      parent: ScoreElement | null,
+      annotation: AnnotationElement,
+    ) {
+      this.selectedElement = parent;
+      this.selectedWorkspace.selectedAnnotationElement = annotation;
+    },
+
+    setSelectedAlternateLine(
+      parent: ScoreElement | null,
+      alternateLine: AlternateLineElement,
+    ) {
+      this.selectedElement = parent;
+      this.selectedWorkspace.selectedAlternateLineElement = alternateLine;
+    },
+
+    isAudioSelected(element: ScoreElement) {
+      return this.audioElement === element;
+    },
+
+    isMelisma(element: NoteElement) {
+      return element.melismaWidth > 0;
+    },
+
+    openModeKeyDialog() {
+      this.modeKeyDialogIsOpen = true;
+    },
+
+    closeModeKeyDialog() {
+      this.modeKeyDialogIsOpen = false;
+    },
+
+    openSyllablePositioningDialog() {
+      this.syllablePositioningDialogIsOpen = true;
+    },
+
+    closeSyllablePositioningDialog() {
+      this.syllablePositioningDialogIsOpen = false;
+    },
+
+    openPlaybackSettingsDialog() {
+      this.playbackSettingsDialogIsOpen = true;
+
+      this.stopAudio();
+    },
+
+    closePlaybackSettingsDialog() {
+      this.playbackSettingsDialogIsOpen = false;
+
+      this.saveAudioOptions();
+    },
+
+    closePageSetupDialog() {
+      this.pageSetupDialogIsOpen = false;
+    },
+
+    closeExportDialog() {
+      this.exportDialogIsOpen = false;
+    },
+
+    openLyricManager() {
+      this.lyricManagerIsOpen = true;
+      this.refreshStaffLyrics();
+    },
+
+    closeLyricManager() {
+      this.lyricManagerIsOpen = false;
+    },
+
+    updateEditorPreferences(form: EditorPreferences) {
+      Object.assign(this.editorPreferences, form);
+
+      this.saveEditorPreferences();
+
+      this.editorPreferencesDialogIsOpen = false;
+    },
+
+    closeEditorPreferencesDialog() {
+      this.editorPreferencesDialogIsOpen = false;
+    },
+
+    saveEditorPreferences() {
+      localStorage.setItem(
+        'editorPreferences',
+        JSON.stringify(this.editorPreferences),
+      );
+    },
+
+    isLastElement(element: ScoreElement) {
+      return this.elements.indexOf(element) === this.elements.length - 1;
+    },
+
+    insertPelastikon() {
+      document.execCommand('insertText', false, PELASTIKON);
+    },
+
+    insertGorthmikon() {
+      document.execCommand('insertText', false, GORTHMIKON);
+    },
+
+    insertSpecialCharacter(character: string) {
+      document.execCommand('insertText', false, character);
+    },
+
+    addQuantitativeNeume(
+      quantitativeNeume: QuantitativeNeume,
+      secondaryGorgonNeume: GorgonNeume | null = null,
+    ) {
+      if (this.selectedElement == null) {
+        return;
+      }
+
+      const element = new NoteElement();
+      element.lyricsColor = this.score.pageSetup.lyricsDefaultColor;
+      element.lyricsFontFamily = this.score.pageSetup.lyricsDefaultFontFamily;
+      element.lyricsFontSize = this.score.pageSetup.lyricsDefaultFontSize;
+      element.lyricsFontStyle = this.score.pageSetup.lyricsDefaultFontStyle;
+      element.lyricsFontWeight = this.score.pageSetup.lyricsDefaultFontWeight;
+      element.lyricsStrokeWidth = this.score.pageSetup.lyricsDefaultStrokeWidth;
+
+      element.quantitativeNeume = quantitativeNeume;
+      // Special case for neumes with secondary gorgon
+      if (getSecondaryNeume(quantitativeNeume) != null) {
+        element.secondaryGorgonNeume = secondaryGorgonNeume;
+      }
+
+      // If the selected element is an alternate line element,
+      // add the new element to the alternate line's elements
+      // and return immediately. Alternate lines do not support
+      // different entry modes.
+      if (this.selectedWorkspace.selectedAlternateLineElement != null) {
+        this.addScoreElement(
+          element,
+          this.selectedWorkspace.selectedAlternateLineElement.elements.length,
+          this.selectedWorkspace.selectedAlternateLineElement.elements,
+        );
+        this.save();
+        return;
+      }
+
+      switch (this.entryMode) {
+        case EntryMode.Auto:
+          if (!this.isLastElement(this.selectedElement) && !this.moveRight()) {
+            return;
+          }
+
+          if (this.isLastElement(this.selectedElement)) {
+            this.addScoreElement(element, this.selectedElementIndex);
+            this.selectedElement = element;
+          } else {
+            if (this.selectedElement.elementType === ElementType.Note) {
+              if (
+                (this.selectedElement as NoteElement).quantitativeNeume !==
+                quantitativeNeume
+              ) {
+                this.updateNote(this.selectedElement as NoteElement, {
+                  quantitativeNeume,
+                  secondaryGorgonNeume,
+                });
+              } else if (
+                (this.selectedElement as NoteElement).secondaryGorgonNeume !==
+                secondaryGorgonNeume
+              ) {
+                // Special case for hyporoe gorgon
+                this.updateNote(this.selectedElement as NoteElement, {
+                  secondaryGorgonNeume,
+                });
+              }
+            } else {
+              this.selectedElement = this.switchToSyllable(
+                this.selectedElement,
+                element,
+              );
+            }
+          }
+          break;
+        case EntryMode.Insert:
+          if (this.isLastElement(this.selectedElement)) {
+            this.addScoreElement(element, this.selectedElementIndex);
+          } else {
+            if (this.selectedElement.elementType === ElementType.Note) {
+              const selectedElementAsNote = this.selectedElement as NoteElement;
+
+              element.isMelisma = selectedElementAsNote.isMelisma;
+              element.isHyphen = selectedElementAsNote.isHyphen;
+            }
+
+            this.addScoreElement(element, this.selectedElementIndex + 1);
+          }
+          this.selectedElement = element;
+          break;
+
+        case EntryMode.Edit:
+          if (this.isLastElement(this.selectedElement)) {
+            this.addScoreElement(element, this.selectedElementIndex);
+          } else if (this.selectedElement.elementType === ElementType.Note) {
+            if (
+              (this.selectedElement as NoteElement).quantitativeNeume !==
+              quantitativeNeume
+            ) {
+              this.updateNote(this.selectedElement as NoteElement, {
+                quantitativeNeume,
+                secondaryGorgonNeume,
+              });
+            } else if (
+              (this.selectedElement as NoteElement).secondaryGorgonNeume !==
+              secondaryGorgonNeume
+            ) {
+              // Special case for hyporoe gorgon
+              this.updateNote(this.selectedElement as NoteElement, {
+                secondaryGorgonNeume,
+              });
+            }
+          } else if (
+            navigableElements.includes(this.selectedElement.elementType)
+          ) {
+            this.selectedElement = this.switchToSyllable(
+              this.selectedElement,
+              element,
+            );
+          }
+          break;
+      }
+
+      this.save();
+    },
+
+    addNeumeCombination(combo: NeumeCombination) {
+      const backup = this.clipboard.slice();
+      this.clipboard = combo.elements;
+      this.onPasteScoreElements(false);
+
+      this.clipboard = backup;
+    },
+
+    addAutoMartyria(alignRight?: boolean, note?: Note) {
+      if (this.selectedElement == null) {
+        return;
+      }
+
+      const element = new MartyriaElement();
+      element.alignRight = alignRight === true;
+
+      if (note != null) {
+        element.note = note;
+        element.auto = false;
+      }
+
+      switch (this.entryMode) {
+        case EntryMode.Auto:
+          this.moveRight();
+
+          if (this.isLastElement(this.selectedElement)) {
+            this.addScoreElement(element, this.selectedElementIndex);
+            this.selectedElement = element;
+          } else {
+            if (this.selectedElement.elementType != ElementType.Martyria) {
+              this.selectedElement = this.switchToMartyria(
+                this.selectedElement,
+              );
+            }
+          }
+          break;
+        case EntryMode.Insert:
+          if (this.isLastElement(this.selectedElement)) {
+            this.addScoreElement(element, this.selectedElementIndex);
+          } else {
+            this.addScoreElement(element, this.selectedElementIndex + 1);
+          }
+          this.selectedElement = element;
+          break;
+        case EntryMode.Edit:
+          if (this.isLastElement(this.selectedElement)) {
+            this.addScoreElement(element, this.selectedElementIndex);
+          } else if (this.selectedElement.elementType != ElementType.Martyria) {
+            this.selectedElement = this.switchToMartyria(this.selectedElement);
+          }
+          break;
+      }
+
+      this.save();
+    },
+
+    addTempo(neume: TempoSign) {
+      if (this.selectedElement == null) {
+        return;
+      }
+
+      const element = new TempoElement();
+      element.neume = neume;
+      element.bpm =
+        this.editorPreferences.getDefaultTempo(neume) ??
+        TempoElement.getDefaultBpm(neume);
+
+      switch (this.entryMode) {
+        case EntryMode.Auto:
+          this.moveRight();
+
+          if (this.isLastElement(this.selectedElement)) {
+            this.addScoreElement(element, this.selectedElementIndex);
+            this.selectedElement = element;
+          } else {
+            if (this.selectedElement.elementType === ElementType.Tempo) {
+              if ((this.selectedElement as TempoElement).neume !== neume) {
+                this.updateTempo(this.selectedElement as TempoElement, {
+                  neume,
+                });
+              }
+            } else {
+              this.selectedElement = this.switchToTempo(
+                this.selectedElement,
+                element,
+              );
+            }
+          }
+          break;
+        case EntryMode.Insert:
+          if (this.isLastElement(this.selectedElement)) {
+            this.addScoreElement(element, this.selectedElementIndex);
+          } else {
+            this.addScoreElement(element, this.selectedElementIndex + 1);
+          }
+          this.selectedElement = element;
+          break;
+        case EntryMode.Edit:
+          if (this.isLastElement(this.selectedElement)) {
+            this.addScoreElement(element, this.selectedElementIndex);
+          } else if (this.selectedElement.elementType === ElementType.Tempo) {
+            if ((this.selectedElement as TempoElement).neume !== neume) {
+              this.updateTempo(this.selectedElement as TempoElement, {
+                neume,
+              });
+            }
+          } else {
+            this.selectedElement = this.switchToTempo(
+              this.selectedElement,
+              element,
+            );
+          }
+          break;
+      }
+
+      this.save();
+    },
+
+    addDropCap(after: boolean) {
+      if (this.selectedElement == null) {
+        return;
+      }
+
+      const element = new DropCapElement();
+
+      element.color = this.score.pageSetup.dropCapDefaultColor;
+      element.fontFamily = this.score.pageSetup.dropCapDefaultFontFamily;
+      element.fontSize = this.score.pageSetup.dropCapDefaultFontSize;
+      element.strokeWidth = this.score.pageSetup.dropCapDefaultStrokeWidth;
+      element.fontWeight = this.score.pageSetup.dropCapDefaultFontWeight;
+      element.fontStyle = this.score.pageSetup.dropCapDefaultFontStyle;
+      element.lineHeight = this.score.pageSetup.dropCapDefaultLineHeight;
+      element.lineSpan = this.score.pageSetup.dropCapDefaultLineSpan;
+
+      if (after && !this.isLastElement(this.selectedElement)) {
+        this.addScoreElement(element, this.selectedElementIndex + 1);
+      } else {
+        this.addScoreElement(element, this.selectedElementIndex);
+      }
+
+      this.selectedElement = element;
+      this.save();
+
+      nextTick(() => {
+        const index = this.elements.indexOf(element);
+
+        (this.$refs[`element-${index}`] as any)[0].focus();
+      });
+    },
+
+    onClickAddImage() {
+      EventBus.$emit(IpcRendererChannels.OpenImageDialog);
+    },
+
+    togglePageBreak() {
+      if (this.selectedElement && !this.isLastElement(this.selectedElement)) {
+        this.commandService.execute(
+          scoreElementCommandFactory.create('update-properties', {
+            target: this.selectedElement,
+            newValues: {
+              pageBreak: !this.selectedElement.pageBreak,
+              lineBreak: false,
+            },
+          }),
+        );
+
+        this.save();
+      }
+    },
+
+    toggleLineBreak(lineBreakType: LineBreakType | null) {
+      if (this.selectedElement && !this.isLastElement(this.selectedElement)) {
+        let lineBreak = !this.selectedElement.lineBreak;
+
+        if (lineBreakType != this.selectedElement.lineBreakType) {
+          lineBreak = true;
+        }
+
+        if (!lineBreak) {
+          lineBreakType = null;
+        }
+
+        this.commandService.execute(
+          scoreElementCommandFactory.create('update-properties', {
+            target: this.selectedElement,
+            newValues: {
+              lineBreak,
+              pageBreak: false,
+              lineBreakType,
+            },
+          }),
+        );
+
+        this.save();
+      }
+    },
+
+    updateScoreElementSectionName(
+      element: ScoreElement,
+      sectionName: string | null,
+    ) {
+      if (sectionName != null && sectionName.trim() == '') {
+        sectionName = null;
+      }
+
+      this.commandService.execute(
+        scoreElementCommandFactory.create('update-properties', {
+          target: element,
+          newValues: {
+            sectionName,
+          },
+        }),
+      );
+
+      this.save();
+    },
+
+    switchToMartyria(element: ScoreElement) {
+      const index = this.elements.indexOf(element);
+
+      const newElement = new MartyriaElement();
+      newElement.pageBreak = element.pageBreak;
+      newElement.lineBreak = element.lineBreak;
+
+      this.replaceScoreElement(newElement, index);
+
+      return newElement;
+    },
+
+    switchToTempo(oldElement: ScoreElement, newElement: TempoElement) {
+      const index = this.elements.indexOf(oldElement);
+
+      newElement.pageBreak = oldElement.pageBreak;
+      newElement.lineBreak = oldElement.lineBreak;
+
+      this.replaceScoreElement(newElement, index);
+
+      return newElement;
+    },
+
+    switchToSyllable(oldElement: ScoreElement, newElement: NoteElement) {
+      const index = this.elements.indexOf(oldElement);
+
+      newElement.pageBreak = oldElement.pageBreak;
+      newElement.lineBreak = oldElement.lineBreak;
+
+      this.replaceScoreElement(newElement, index);
+
+      return newElement;
+    },
+
+    focusLyrics(index: number, selectAll: boolean = false) {
+      (
+        this.$refs[`lyrics-${index}`] as InstanceType<typeof ContentEditable>[]
+      )[0].focus(selectAll);
+    },
+
+    setLyrics(index: number, lyrics: string) {
+      const elements = this.$refs[`lyrics-${index}`] as InstanceType<
+        typeof ContentEditable
+      >[];
+
+      if (elements?.length > 0) {
+        elements[0].setInnerText(lyrics);
+      }
+    },
+
+    isSyllableElement(element: ScoreElement) {
+      return element.elementType == ElementType.Note;
+    },
+
+    isMartyriaElement(element: ScoreElement) {
+      return element.elementType == ElementType.Martyria;
+    },
+
+    isTempoElement(element: ScoreElement) {
+      return element.elementType == ElementType.Tempo;
+    },
+
+    isEmptyElement(element: ScoreElement) {
+      return element.elementType == ElementType.Empty;
+    },
+
+    isTextBoxElement(element: ScoreElement) {
+      return element.elementType == ElementType.TextBox;
+    },
+
+    isRichTextBoxElement(element: ScoreElement) {
+      return element.elementType == ElementType.RichTextBox;
+    },
+
+    isDropCapElement(element: ScoreElement) {
+      return element.elementType == ElementType.DropCap;
+    },
+
+    isModeKeyElement(element: ScoreElement) {
+      return element.elementType == ElementType.ModeKey;
+    },
+
+    isImageBoxElement(element: ScoreElement) {
+      return element.elementType == ElementType.ImageBox;
+    },
+
+    isTextInputFocused() {
+      return (
+        document.activeElement instanceof HTMLInputElement ||
+        document.activeElement instanceof HTMLTextAreaElement ||
+        (document.activeElement instanceof HTMLElement &&
+          document.activeElement.isContentEditable)
+      );
+    },
+
+    onWindowResize() {
+      if (this.zoomToFit) {
+        this.performZoomToFit();
+      }
+    },
+
+    onScroll() {
+      this.calculatePageNumber();
+    },
+
+    onKeydown(event: KeyboardEvent) {
+      // Handle undo / redo
+      // See https://github.com/electron/electron/issues/3682.
+      if (
+        (event.ctrlKey || event.metaKey) &&
+        !this.isTextInputFocused() &&
+        !this.dialogOpen
+      ) {
+        if (event.code === 'KeyZ') {
+          if (this.platformService.isMac && event.shiftKey) {
+            this.onFileMenuRedoThrottled();
+          } else {
+            this.onFileMenuUndoThrottled();
+          }
+          event.preventDefault();
+          return;
+        } else if (event.code === 'KeyY') {
+          this.onFileMenuRedoThrottled();
+          event.preventDefault();
+          return;
+        } else if (event.code === 'KeyX') {
+          this.onCutScoreElementsThrottled();
+          event.preventDefault();
+          return;
+        } else if (event.code === 'KeyC') {
+          if (event.shiftKey) {
+            this.onFileMenuCopyAsHtmlThrottled();
+          } else {
+            this.onCopyScoreElementsThrottled();
+          }
+          event.preventDefault();
+          return;
+        } else if (event.code === 'KeyV') {
+          const includeLyrics = event.shiftKey;
+          this.onPasteScoreElementsThrottled(includeLyrics);
+          event.preventDefault();
+          return;
+        } else if (event.code === 'KeyI' && !event.shiftKey) {
+          switch (this.entryMode) {
+            case EntryMode.Auto:
+              this.updateEntryMode(EntryMode.Insert);
+              break;
+            case EntryMode.Insert:
+              this.updateEntryMode(EntryMode.Edit);
+              break;
+            case EntryMode.Edit:
+              this.updateEntryMode(EntryMode.Auto);
+              break;
+          }
+          return;
+        } else if (event.code === 'KeyU' && !event.shiftKey) {
+          switch (this.entryMode) {
+            case EntryMode.Auto:
+              this.updateEntryMode(EntryMode.Edit);
+              break;
+            case EntryMode.Edit:
+              this.updateEntryMode(EntryMode.Insert);
+              break;
+            case EntryMode.Insert:
+              this.updateEntryMode(EntryMode.Auto);
+              break;
+          }
+          return;
         }
       }
-    });
 
-    if (editor.workspaces.length > 0) {
-      setSelectedWorkspace(editor.workspaces[0] as Workspace);
-      return;
-    }
-  }
+      if (
+        this.platformService.isMac &&
+        this.isTextInputFocused() &&
+        !this.dialogOpen
+      ) {
+        this.onKeydownMac(event);
+      }
 
-  // First, try to load files passed in on the command line.
-  // If there are none, then create a default workspace.
-  const openWorkspaceResults = await ipcService.openWorkspaceFromArgv();
+      if (this.selectedLyrics != null) {
+        return this.onKeydownLyrics(event);
+      }
 
-  if (openWorkspaceResults.silentPdf) {
-    for (const file of openWorkspaceResults.files.filter((x) => x.success)) {
-      openScore(file);
-      await exporting.onFileMenuExportAsPdf();
-      removeWorkspace(editor.selectedWorkspace as Workspace);
-    }
-  }
+      if (this.selectedElement?.elementType === ElementType.DropCap) {
+        return this.onKeydownDropCap(event);
+      }
 
-  if (openWorkspaceResults.silentHtml) {
-    for (const file of openWorkspaceResults.files.filter((x) => x.success)) {
-      openScore(file);
-      await exporting.onFileMenuExportAsHtml();
-      removeWorkspace(editor.selectedWorkspace as Workspace);
-    }
-  }
+      if (this.selectedElement?.elementType === ElementType.TextBox) {
+        return this.onKeydownTextBox(event);
+      }
 
-  if (openWorkspaceResults.silentLatex) {
-    for (const file of openWorkspaceResults.files.filter((x) => x.success)) {
-      const options = new LatexExporterOptions();
-      options.includeModeKeys =
-        openWorkspaceResults.silentLatexIncludeModeKeys ?? false;
-      options.includeTextBoxes =
-        openWorkspaceResults.silentLatexIncludeTextBoxes ?? false;
-      openScore(file);
-      await ipcService.exportWorkspaceAsLatex(
-        editor.selectedWorkspace as Workspace,
+      if (!this.isTextInputFocused() && !this.dialogOpen) {
+        return this.onKeydownNeume(event);
+      }
+    },
+
+    onKeydownNeume(event: KeyboardEvent) {
+      let handled = false;
+
+      if (event.shiftKey) {
+        switch (event.code) {
+          case 'ArrowLeft':
+            this.moveSelectionLeftThrottled();
+            handled = true;
+            break;
+          case 'ArrowRight':
+            this.moveSelectionRightThrottled();
+            handled = true;
+            break;
+        }
+      } else {
+        switch (event.code) {
+          case 'ArrowLeft':
+            if (!this.rtl) {
+              this.moveLeftThrottled();
+            } else {
+              this.moveRightThrottled();
+            }
+            handled = true;
+            break;
+          case 'ArrowRight':
+            if (!this.rtl) {
+              this.moveRightThrottled();
+            } else {
+              this.moveLeftThrottled();
+            }
+            handled = true;
+            break;
+          case 'ArrowDown':
+            if (
+              (event.ctrlKey || event.metaKey) &&
+              this.selectedElement?.elementType === ElementType.Note
+            ) {
+              const index = this.selectedElementIndex;
+
+              this.focusLyrics(index, true);
+
+              // Select All doesn't work until after the lyrics have been selected,
+              // hence we call focus lyrics twice
+              nextTick(() => {
+                this.focusLyrics(index, true);
+              });
+
+              handled = true;
+            }
+            break;
+          case 'Space':
+            if (!event.repeat) {
+              if (
+                this.audioService.state === AudioState.Stopped ||
+                event.ctrlKey
+              ) {
+                this.playAudio();
+              } else {
+                this.pauseAudio();
+              }
+              handled = true;
+            }
+            break;
+          case 'Backspace':
+            handled = true;
+            this.deletePreviousElementThrottled();
+            break;
+          case 'Delete':
+            handled = true;
+            this.deleteSelectedElementThrottled();
+            break;
+        }
+      }
+
+      if (
+        this.selectedElement != null &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        !event.altKey
+      ) {
+        if (this.neumeKeyboard.isModifier(event.code)) {
+          this.keyboardModifier = event.code;
+          handled = true;
+        }
+
+        const quantitativeMapping = this.neumeKeyboard.findQuantitativeMapping(
+          event,
+          this.keyboardModifier,
+        );
+
+        if (quantitativeMapping != null) {
+          handled = true;
+
+          if (quantitativeMapping.acceptsLyricsOption != null) {
+            if (this.selectedElement.elementType === ElementType.Note) {
+              this.updateNoteAcceptsLyrics(
+                this.selectedElement as NoteElement,
+                quantitativeMapping.acceptsLyricsOption,
+              );
+            }
+          } else {
+            this.addQuantitativeNeumeThrottled(
+              quantitativeMapping.neume as QuantitativeNeume,
+            );
+          }
+        }
+
+        const tempoMapping = this.neumeKeyboard.findTempoMapping(
+          event,
+          this.keyboardModifier,
+        );
+
+        if (tempoMapping != null) {
+          handled = true;
+          this.addTempoThrottled(tempoMapping.neume as TempoSign);
+        }
+
+        if (
+          this.keyboardModifier == null &&
+          this.neumeKeyboard.isMartyria(event.code)
+        ) {
+          handled = true;
+          this.addAutoMartyriaThrottled(event.shiftKey);
+        }
+
+        const martyriaConfigMapping =
+          this.neumeKeyboard.findMartyriaConfigMapping(
+            event,
+            this.keyboardModifier,
+          );
+
+        if (martyriaConfigMapping != null) {
+          if (martyriaConfigMapping.note != null) {
+            handled = true;
+
+            this.addAutoMartyriaThrottled(
+              martyriaConfigMapping.martyriaAlignmentToggle,
+              martyriaConfigMapping.note,
+            );
+          }
+        }
+
+        if (
+          this.selectedElement.elementType === ElementType.Note &&
+          !event.repeat
+        ) {
+          const noteElement = this.selectedElement as NoteElement;
+
+          const gorgonMapping = this.neumeKeyboard.findGorgonMapping(
+            event,
+            this.keyboardModifier,
+          );
+
+          if (gorgonMapping != null) {
+            handled = true;
+            this.setGorgonThrottled(
+              noteElement,
+              gorgonMapping.neumes as GorgonNeume[],
+            );
+          }
+
+          const vocalExpressionMapping =
+            this.neumeKeyboard.findVocalExpressionMapping(
+              event,
+              this.keyboardModifier,
+            );
+
+          if (vocalExpressionMapping != null) {
+            handled = true;
+
+            if (vocalExpressionMapping.neume === VocalExpressionNeume.Vareia) {
+              this.updateNoteVareiaThrottled(noteElement, !noteElement.vareia);
+            } else {
+              this.setVocalExpressionThrottled(
+                noteElement,
+                vocalExpressionMapping.neume as VocalExpressionNeume,
+              );
+            }
+          }
+
+          const tieMapping = this.neumeKeyboard.findTieMapping(
+            event,
+            this.keyboardModifier,
+          );
+
+          if (tieMapping != null) {
+            handled = true;
+
+            this.setTieThrottled(noteElement, tieMapping.neumes as Tie[]);
+          }
+
+          const fthoraMapping = this.neumeKeyboard.findFthoraMapping(
+            event,
+            this.keyboardModifier,
+          );
+
+          if (fthoraMapping != null) {
+            handled = true;
+            this.setFthoraNoteThrottled(
+              noteElement,
+              fthoraMapping.neumes as Fthora[],
+            );
+          }
+
+          const accidentalMapping = this.neumeKeyboard.findAccidentalMapping(
+            event,
+            this.keyboardModifier,
+          );
+
+          if (accidentalMapping != null) {
+            handled = true;
+            this.setAccidentalThrottled(
+              noteElement,
+              accidentalMapping.neume as Accidental,
+            );
+          }
+
+          const hapliMapping = this.neumeKeyboard.findHapliMapping(
+            event,
+            this.keyboardModifier,
+          );
+
+          if (hapliMapping != null) {
+            handled = true;
+
+            if (hapliMapping.neume === TimeNeume.Koronis) {
+              this.updateNoteKoronisThrottled(
+                noteElement,
+                !noteElement.koronis,
+              );
+            } else {
+              this.setTimeNeumeThrottled(
+                noteElement,
+                hapliMapping.neume as TimeNeume,
+              );
+            }
+          }
+
+          const measureNumberMapping =
+            this.neumeKeyboard.findMeasureNumberMapping(
+              event,
+              this.keyboardModifier,
+            );
+
+          if (measureNumberMapping != null) {
+            handled = true;
+            this.setMeasureNumberThrottled(
+              noteElement,
+              measureNumberMapping.neume as MeasureNumber,
+            );
+          }
+
+          const measureBarMapping = this.neumeKeyboard.findMeasureBarMapping(
+            event,
+            this.keyboardModifier,
+          );
+
+          if (measureBarMapping != null) {
+            handled = true;
+            this.setMeasureBarNoteThrottled(
+              noteElement,
+              measureBarMapping.neume as MeasureBar,
+            );
+          }
+
+          const isonMapping = this.neumeKeyboard.findIsonMapping(
+            event,
+            this.keyboardModifier,
+          );
+
+          if (isonMapping != null) {
+            handled = true;
+            this.setIsonThrottled(noteElement, isonMapping.neume as Ison);
+          }
+
+          if (
+            this.keyboardModifier == null &&
+            this.neumeKeyboard.isMartyria(event.code)
+          ) {
+            this.addAutoMartyriaThrottled();
+          } else if (
+            this.keyboardModifier == null &&
+            this.neumeKeyboard.isKlasma(event.code)
+          ) {
+            this.setKlasmaThrottled(noteElement);
+          } else if (
+            this.keyboardModifier == null &&
+            this.neumeKeyboard.isNoteIndicator(event.code)
+          ) {
+            this.updateNoteNoteIndicatorThrottled(
+              noteElement,
+              !noteElement.noteIndicator,
+            );
+          }
+        } else if (
+          this.selectedElement.elementType === ElementType.Martyria &&
+          !event.repeat
+        ) {
+          const martyriaElement = this.selectedElement as MartyriaElement;
+
+          const fthoraMapping = this.neumeKeyboard.findFthoraMapping(
+            event,
+            this.keyboardModifier,
+          );
+
+          if (fthoraMapping != null) {
+            handled = true;
+            this.setFthoraMartyriaThrottled(
+              martyriaElement,
+              fthoraMapping.neumes![0] as Fthora,
+            );
+          }
+
+          const tempoMapping = this.neumeKeyboard.findMartyriaTempoMapping(
+            event,
+            this.keyboardModifier,
+          );
+
+          if (tempoMapping != null) {
+            handled = true;
+            this.setMartyriaTempoThrottled(
+              martyriaElement,
+              tempoMapping.neume as TempoSign,
+            );
+          }
+
+          const measureBarMapping = this.neumeKeyboard.findMeasureBarMapping(
+            event,
+            this.keyboardModifier,
+          );
+
+          if (measureBarMapping != null) {
+            handled = true;
+            this.setMeasureBarMartyriaThrottled(
+              martyriaElement,
+              measureBarMapping.neume as MeasureBar,
+            );
+          }
+
+          const martyriaConfigMapping =
+            this.neumeKeyboard.findMartyriaConfigMapping(
+              event,
+              this.keyboardModifier,
+            );
+
+          if (martyriaConfigMapping != null) {
+            handled = true;
+
+            if (martyriaConfigMapping.note != null) {
+              // This case will not currently happen
+              // because no keyboard mapping exist for it
+              this.updateMartyriaNoteThrottled(
+                martyriaElement,
+                martyriaConfigMapping.note,
+              );
+            } else if (martyriaConfigMapping.scale != null) {
+              this.updateMartyriaScaleThrottled(
+                martyriaElement,
+                martyriaConfigMapping.scale,
+              );
+            } else if (martyriaConfigMapping.martyriaAlignmentToggle === true) {
+              this.updateMartyriaAlignRightThrottled(
+                martyriaElement,
+                !martyriaElement.alignRight,
+              );
+            } else if (martyriaConfigMapping.martyriaAutoToggle === true) {
+              this.updateMartyriaAutoThrottled(
+                martyriaElement,
+                !martyriaElement.auto,
+              );
+            }
+          }
+        }
+      }
+      if (handled) {
+        event.preventDefault();
+      }
+    },
+
+    onKeydownLyrics(event: KeyboardEvent) {
+      let handled = false;
+
+      // Do not allow enter key in lyrics
+      if (event.code === 'Enter') {
+        event.preventDefault();
+        return;
+      }
+
+      switch (event.code) {
+        case 'ArrowRight':
+          if (event.shiftKey) {
+            return;
+          }
+
+          if (event.ctrlKey || event.metaKey) {
+            if (!this.rtl) {
+              this.moveToNextLyricBoxThrottled();
+            } else {
+              this.moveToPreviousLyricBoxThrottled();
+            }
+            handled = true;
+          } else if (
+            !this.rtl &&
+            getCursorPosition() === this.getLyricLength(this.selectedLyrics!)
+          ) {
+            this.moveToNextLyricBoxThrottled();
+            handled = true;
+          } else if (this.rtl && getCursorPosition() === 0) {
+            this.moveToPreviousLyricBoxThrottled();
+            handled = true;
+          }
+          break;
+        case 'ArrowLeft':
+          if (event.shiftKey) {
+            return;
+          }
+
+          if (event.ctrlKey || event.metaKey) {
+            if (!this.rtl) {
+              this.moveToPreviousLyricBoxThrottled();
+            } else {
+              this.moveToNextLyricBoxThrottled();
+            }
+            handled = true;
+          } else if (!this.rtl && getCursorPosition() === 0) {
+            this.moveToPreviousLyricBoxThrottled();
+            handled = true;
+          } else if (
+            this.rtl &&
+            getCursorPosition() === this.getLyricLength(this.selectedLyrics!)
+          ) {
+            this.moveToNextLyricBoxThrottled();
+            handled = true;
+          }
+          break;
+        case 'ArrowUp':
+          if (event.shiftKey) {
+            return;
+          }
+
+          if (event.ctrlKey || event.metaKey) {
+            this.selectedElement = this.selectedLyrics;
+            this.blurActiveElement();
+            window.getSelection()?.removeAllRanges();
+            handled = true;
+          }
+          break;
+        case 'Space':
+          // Ctrl + Space should add a normal space character
+          if (event.ctrlKey || event.metaKey) {
+            document.execCommand('insertText', false, ' ');
+          } else {
+            this.moveToNextLyricBoxThrottled(true);
+          }
+          handled = true;
+          break;
+        case 'Minus': {
+          if (event.shiftKey) {
+            document.execCommand('insertText', false, '_');
+          } else {
+            document.execCommand('insertText', false, '-');
+          }
+
+          // Ctrl key overrides the "go to next lyrics" (Alt key for mac)
+          const overridden =
+            (this.platformService.isMac && event.altKey) ||
+            (!this.platformService.isMac && event.ctrlKey);
+
+          if (
+            !overridden &&
+            getCursorPosition() === this.getLyricLength(this.selectedLyrics!)
+          ) {
+            if (this.getNextLyricBoxIndex() >= 0) {
+              this.moveToNextLyricBoxThrottled();
+            } else {
+              // If this is the last lyric box, blur
+              // so that the melisma is registered and
+              // the user doesn't accidentally type more
+              // characters into box
+              const index = this.elements.indexOf(this.selectedLyrics!);
+              (
+                this.$refs[`lyrics-${index}`] as InstanceType<
+                  typeof ContentEditable
+                >[]
+              )[0].blur();
+            }
+          }
+
+          handled = true;
+          break;
+        }
+        case 'KeyJ': {
+          if (!this.rtl) {
+            return;
+          }
+          if (event.shiftKey) {
+            document.execCommand('insertText', false, TATWEEL);
+          } else {
+            return;
+          }
+
+          // Ctrl key overrides the "go to next lyrics" (Alt key for mac)
+          const overridden =
+            (this.platformService.isMac && event.altKey) ||
+            (!this.platformService.isMac && event.ctrlKey);
+
+          if (
+            !overridden &&
+            getCursorPosition() === this.getLyricLength(this.selectedLyrics!)
+          ) {
+            if (this.getNextLyricBoxIndex() >= 0) {
+              this.moveToNextLyricBoxThrottled();
+            } else {
+              // If this is the last lyric box, blur
+              // so that the melisma is registered and
+              // the user doesn't accidentally type more
+              // characters into box
+              const index = this.elements.indexOf(this.selectedLyrics!);
+              (
+                this.$refs[`lyrics-${index}`] as InstanceType<
+                  typeof ContentEditable
+                >[]
+              )[0].blur();
+            }
+          }
+
+          handled = true;
+          break;
+        }
+      }
+
+      if (handled) {
+        event.preventDefault();
+      }
+    },
+
+    onKeydownDropCap(event: KeyboardEvent) {
+      let handled = false;
+
+      const index = this.elements.indexOf(this.selectedElement!);
+      const htmlElement = (
+        this.$refs[`element-${index}`] as InstanceType<typeof DropCap>[]
+      )[0];
+
+      switch (event.code) {
+        case 'Enter':
+          // Do not allow enter key in drop caps
+          handled = true;
+          break;
+        case 'Tab':
+          this.moveRightThrottled();
+          handled = true;
+          break;
+        case 'ArrowLeft':
+          if (!this.rtl && getCursorPosition() === 0) {
+            this.moveLeftThrottled();
+            handled = true;
+          } else if (
+            this.rtl &&
+            getCursorPosition() ===
+              htmlElement.textElement.getInnerText().length
+          ) {
+            this.moveRightThrottled();
+            handled = true;
+          }
+          break;
+        case 'ArrowRight':
+          if (
+            !this.rtl &&
+            getCursorPosition() ===
+              htmlElement.textElement.getInnerText().length
+          ) {
+            this.moveRightThrottled();
+            handled = true;
+          } else if (this.rtl && getCursorPosition() === 0) {
+            this.moveLeftThrottled();
+            handled = true;
+          }
+          break;
+      }
+
+      if (handled) {
+        event.preventDefault();
+      }
+    },
+
+    onKeydownTextBox(event: KeyboardEvent) {
+      let handled = false;
+
+      const index = this.elements.indexOf(this.selectedElement!);
+      const htmlElement = (
+        this.$refs[`element-${index}`] as InstanceType<typeof TextBox>[]
+      )[0];
+
+      switch (event.code) {
+        case 'Tab':
+          this.moveRightThrottled();
+          handled = true;
+          break;
+        case 'ArrowLeft':
+          if (!this.rtl && getCursorPosition() === 0) {
+            this.moveLeftThrottled();
+            handled = true;
+          } else if (
+            this.rtl &&
+            getCursorPosition() ===
+              htmlElement.getTextElement().getInnerText().length
+          ) {
+            this.moveRightThrottled();
+            handled = true;
+          }
+          break;
+        case 'ArrowRight':
+          if (
+            !this.rtl &&
+            getCursorPosition() ===
+              htmlElement.getTextElement().getInnerText().length
+          ) {
+            this.moveRightThrottled();
+            handled = true;
+          } else if (this.rtl && getCursorPosition() === 0) {
+            this.moveLeftThrottled();
+            handled = true;
+          }
+          break;
+      }
+
+      if (handled) {
+        event.preventDefault();
+      }
+    },
+
+    /**
+     * Handles text editing functionality for macOS
+     */
+    onKeydownMac(event: KeyboardEvent) {
+      let handled = false;
+
+      if (!event.metaKey) {
+        return;
+      }
+
+      switch (event.code) {
+        case 'KeyA':
+          document.execCommand('selectAll');
+          handled = true;
+          break;
+        case 'KeyC':
+          document.execCommand('copy');
+          handled = true;
+          break;
+        case 'KeyV':
+          this.ipcService.paste();
+          handled = true;
+          break;
+        case 'KeyX':
+          document.execCommand('cut');
+          handled = true;
+          break;
+        case 'KeyZ':
+          if (event.shiftKey) {
+            document.execCommand('redo');
+          } else {
+            document.execCommand('undo');
+          }
+          handled = true;
+          break;
+      }
+
+      if (handled) {
+        event.preventDefault();
+      }
+    },
+
+    onKeyup(event: KeyboardEvent) {
+      let handled = false;
+
+      if (this.keyboardModifier === event.code) {
+        this.keyboardModifier = null;
+        handled = true;
+      }
+
+      if (handled) {
+        event.preventDefault();
+      }
+    },
+
+    onCutScoreElements() {
+      if (this.selectionRange != null) {
+        const start = Math.min(
+          this.selectionRange.start,
+          this.selectionRange.end,
+        );
+
+        const elementsToCut = this.elements.filter(
+          (x) => x.elementType != ElementType.Empty && this.isSelected(x),
+        );
+
+        this.clipboard = elementsToCut.map((x) => x.clone());
+
+        this.commandService.executeAsBatch(
+          elementsToCut.map((element) =>
+            scoreElementCommandFactory.create('remove-from-collection', {
+              element,
+              collection: this.elements,
+            }),
+          ),
+        );
+
+        this.refreshStaffLyrics();
+
+        this.selectedElement =
+          this.elements[Math.min(start, this.elements.length - 1)];
+
+        this.save();
+      } else if (
+        this.selectedElement != null &&
+        this.selectedElement.elementType !== ElementType.Empty
+      ) {
+        const currentIndex = this.selectedElementIndex;
+
+        this.clipboard = [this.selectedElement.clone()];
+
+        this.removeScoreElement(this.selectedElement);
+
+        this.selectedElement =
+          this.elements[Math.min(currentIndex, this.elements.length - 1)];
+
+        this.save();
+      }
+    },
+
+    onCopyScoreElements() {
+      if (this.selectionRange != null) {
+        this.clipboard = this.elements
+          .filter(
+            (x) => x.elementType != ElementType.Empty && this.isSelected(x),
+          )
+          .map((x) => x.clone());
+      } else if (
+        this.selectedElement != null &&
+        this.selectedElement.elementType !== ElementType.Empty
+      ) {
+        this.clipboard = [this.selectedElement.clone()];
+      }
+    },
+
+    onPasteScoreElements(includeLyrics: boolean) {
+      if (this.clipboard.length > 0 && this.selectedElement != null) {
+        switch (this.entryMode) {
+          case EntryMode.Insert:
+            this.onPasteScoreElementsInsert(includeLyrics);
+            break;
+          case EntryMode.Auto:
+            this.onPasteScoreElementsAuto(includeLyrics);
+            break;
+          case EntryMode.Edit:
+            this.onPasteScoreElementsEdit(includeLyrics);
+            break;
+        }
+      }
+    },
+
+    onPasteScoreElementsInsert(includeLyrics: boolean) {
+      if (this.selectedElement == null || this.clipboard.length === 0) {
+        return;
+      }
+
+      const insertAtIndex = this.isLastElement(this.selectedElement)
+        ? this.selectedElementIndex
+        : this.selectedElementIndex + 1;
+
+      const newElements = this.clipboard.map((x) => x.clone({ includeLyrics }));
+
+      this.addScoreElements(newElements, insertAtIndex);
+
+      this.selectedElement = newElements.at(-1)!;
+      this.save();
+    },
+
+    onPasteScoreElementsEdit(includeLyrics: boolean) {
+      if (this.selectedElement == null || this.clipboard.length === 0) {
+        return;
+      }
+
+      const commands: Command[] = [];
+
+      let currentIndex = this.selectedElementIndex;
+
+      for (const clipboardElement of this.clipboard) {
+        const currentElement = this.elements[currentIndex];
+
+        if (currentIndex >= this.elements.length - 1) {
+          commands.push(
+            scoreElementCommandFactory.create('add-to-collection', {
+              elements: [clipboardElement.clone({ includeLyrics })],
+              collection: this.elements,
+              insertAtIndex: currentIndex,
+            }),
+          );
+        } else {
+          if (currentElement.elementType === clipboardElement.elementType) {
+            switch (currentElement.elementType) {
+              case ElementType.Note:
+                if (
+                  !shallowEquals(
+                    (currentElement as NoteElement).getClipboardProperties(
+                      includeLyrics,
+                    ),
+                    (clipboardElement as NoteElement).getClipboardProperties(
+                      includeLyrics,
+                    ),
+                  )
+                ) {
+                  commands.push(
+                    noteElementCommandFactory.create('update-properties', {
+                      target: currentElement as NoteElement,
+                      newValues: (
+                        clipboardElement as NoteElement
+                      ).getClipboardProperties(includeLyrics),
+                    }),
+                  );
+                }
+                break;
+              case ElementType.Tempo:
+                if (
+                  !shallowEquals(
+                    (currentElement as TempoElement).getClipboardProperties(),
+                    (clipboardElement as TempoElement).getClipboardProperties(),
+                  )
+                ) {
+                  commands.push(
+                    tempoCommandFactory.create('update-properties', {
+                      target: currentElement as TempoElement,
+                      newValues: (
+                        clipboardElement as TempoElement
+                      ).getClipboardProperties(),
+                    }),
+                  );
+                }
+                break;
+              case ElementType.Martyria:
+                if (
+                  !shallowEquals(
+                    (
+                      currentElement as MartyriaElement
+                    ).getClipboardProperties(),
+                    (
+                      clipboardElement as MartyriaElement
+                    ).getClipboardProperties(),
+                  )
+                ) {
+                  commands.push(
+                    martyriaCommandFactory.create('update-properties', {
+                      target: currentElement as MartyriaElement,
+                      newValues: (
+                        clipboardElement as MartyriaElement
+                      ).getClipboardProperties(),
+                    }),
+                  );
+                }
+                break;
+              case ElementType.DropCap:
+                if (
+                  !shallowEquals(
+                    (currentElement as DropCapElement).getClipboardProperties(),
+                    (
+                      clipboardElement as DropCapElement
+                    ).getClipboardProperties(),
+                  )
+                ) {
+                  commands.push(
+                    dropCapCommandFactory.create('update-properties', {
+                      target: currentElement as DropCapElement,
+                      newValues: (
+                        clipboardElement as DropCapElement
+                      ).getClipboardProperties(),
+                    }),
+                  );
+                }
+                break;
+              case ElementType.ModeKey:
+                if (
+                  !shallowEquals(
+                    (currentElement as ModeKeyElement).getClipboardProperties(),
+                    (
+                      clipboardElement as ModeKeyElement
+                    ).getClipboardProperties(),
+                  )
+                ) {
+                  commands.push(
+                    modeKeyCommandFactory.create('update-properties', {
+                      target: currentElement as ModeKeyElement,
+                      newValues: (
+                        clipboardElement as ModeKeyElement
+                      ).getClipboardProperties(),
+                    }),
+                  );
+                }
+                break;
+              case ElementType.TextBox:
+                if (
+                  !shallowEquals(
+                    (currentElement as TextBoxElement).getClipboardProperties(),
+                    (
+                      clipboardElement as TextBoxElement
+                    ).getClipboardProperties(),
+                  )
+                ) {
+                  commands.push(
+                    textBoxCommandFactory.create('update-properties', {
+                      target: currentElement as TextBoxElement,
+                      newValues: (
+                        clipboardElement as TextBoxElement
+                      ).getClipboardProperties(),
+                    }),
+                  );
+                }
+                break;
+            }
+          } else {
+            commands.push(
+              scoreElementCommandFactory.create(
+                'replace-element-in-collection',
+                {
+                  element: clipboardElement.clone(),
+                  collection: this.elements,
+                  replaceAtIndex: currentIndex,
+                },
+              ),
+            );
+          }
+        }
+
+        currentIndex++;
+      }
+
+      if (commands.length > 1) {
+        this.commandService.executeAsBatch(commands);
+        this.refreshStaffLyrics();
+      } else if (commands.length === 1) {
+        this.commandService.execute(commands[0]);
+        this.refreshStaffLyrics();
+      }
+
+      this.save();
+    },
+
+    onPasteScoreElementsAuto(includeLyrics: boolean) {
+      this.moveRight();
+      const currentIndex = this.selectedElementIndex;
+
+      this.onPasteScoreElementsEdit(includeLyrics);
+
+      // Set the selected element to the last element that was pasted
+      this.selectedElement =
+        this.elements[currentIndex + this.clipboard.length - 1];
+    },
+
+    getLyricLength(element: NoteElement) {
+      return (
+        this.$refs[`lyrics-${this.elements.indexOf(element)}`] as InstanceType<
+          typeof ContentEditable
+        >[]
+      )[0].getInnerText().length;
+    },
+
+    moveLeft() {
+      let index = -1;
+
+      if (this.selectedElement) {
+        index = this.elements.indexOf(this.selectedElement);
+      } else if (this.selectionRange) {
+        index = this.selectionRange.end;
+      }
+
+      if (
+        index - 1 >= 0 &&
+        navigableElements.includes(this.elements[index - 1].elementType)
+      ) {
+        // If the currently selected element is a drop cap or text box, blur it first
+        if (this.selectedElement?.elementType === ElementType.DropCap) {
+          (
+            this.$refs[`element-${index}`] as InstanceType<typeof DropCap>[]
+          )[0].blur();
+        } else if (this.selectedElement?.elementType === ElementType.TextBox) {
+          (
+            this.$refs[`element-${index}`] as InstanceType<typeof TextBox>[]
+          )[0].blur();
+        }
+
+        this.selectedElement = this.elements[index - 1];
+
+        // If the newly selected element is a drop cap or text box, focus it
+        if (this.selectedElement.elementType === ElementType.DropCap) {
+          (
+            this.$refs[`element-${index - 1}`] as InstanceType<typeof DropCap>[]
+          )[0].focus();
+        } else if (this.selectedElement.elementType === ElementType.TextBox) {
+          (
+            this.$refs[`element-${index - 1}`] as InstanceType<typeof TextBox>[]
+          )[0].focus();
+        }
+
+        return true;
+      }
+
+      return false;
+    },
+
+    moveRight() {
+      let index = -1;
+
+      if (this.selectedElement) {
+        index = this.elements.indexOf(this.selectedElement);
+      } else if (this.selectionRange) {
+        index = this.selectionRange.end;
+      }
+
+      if (
+        index >= 0 &&
+        index + 1 < this.elements.length &&
+        navigableElements.includes(this.elements[index + 1].elementType)
+      ) {
+        // If the currently selected element is a drop cap, blur it first
+        if (this.selectedElement?.elementType === ElementType.DropCap) {
+          (
+            this.$refs[`element-${index}`] as InstanceType<typeof DropCap>[]
+          )[0].blur();
+        } else if (this.selectedElement?.elementType === ElementType.TextBox) {
+          (
+            this.$refs[`element-${index}`] as InstanceType<typeof TextBox>[]
+          )[0].blur();
+        }
+
+        this.selectedElement = this.elements[index + 1];
+
+        // If the newly selected element is a drop cap, focus it
+        if (this.selectedElement.elementType === ElementType.DropCap) {
+          (
+            this.$refs[`element-${index + 1}`] as InstanceType<typeof DropCap>[]
+          )[0].focus();
+        } else if (this.selectedElement.elementType === ElementType.TextBox) {
+          (
+            this.$refs[`element-${index + 1}`] as InstanceType<typeof TextBox>[]
+          )[0].focus();
+        }
+
+        return true;
+      }
+
+      return false;
+    },
+
+    moveSelectionLeft() {
+      if (this.selectionRange != null) {
+        if (
+          this.selectionRange.end > 0 &&
+          navigableElements.includes(
+            this.elements[this.selectionRange.end - 1].elementType,
+          )
+        ) {
+          this.setSelectionRange(this.elements[this.selectionRange.end - 1]);
+        }
+      } else if (
+        this.selectedElement != null &&
+        this.selectedElementIndex > 0 &&
+        navigableElements.includes(
+          this.elements[this.selectedElementIndex - 1].elementType,
+        )
+      ) {
+        this.setSelectionRange(this.elements[this.selectedElementIndex - 1]);
+      }
+    },
+
+    moveSelectionRight() {
+      if (this.selectionRange != null) {
+        if (
+          this.selectionRange.end + 1 < this.elements.length - 1 &&
+          navigableElements.includes(
+            this.elements[this.selectionRange.end + 1].elementType,
+          )
+        ) {
+          this.setSelectionRange(this.elements[this.selectionRange.end + 1]);
+        }
+      } else if (
+        this.selectedElement != null &&
+        this.selectedElementIndex + 1 < this.elements.length - 1 &&
+        navigableElements.includes(
+          this.elements[this.selectedElementIndex + 1].elementType,
+        )
+      ) {
+        this.setSelectionRange(this.elements[this.selectedElementIndex + 1]);
+      }
+    },
+
+    getNextLyricBoxIndex() {
+      if (this.selectedLyrics) {
+        const currentIndex = this.elements.indexOf(this.selectedLyrics);
+
+        // Find the index of the next note
+        for (let i = currentIndex + 1; i < this.elements.length; i++) {
+          if (this.elements[i].elementType === ElementType.Note) {
+            return i;
+          }
+        }
+      }
+
+      return -1;
+    },
+
+    moveToNextLyricBox(clearMelisma: boolean = false) {
+      const nextIndex = this.getNextLyricBoxIndex();
+
+      if (nextIndex >= 0) {
+        // If the lyrics for the last neume on the line have been updated to be so long
+        // that the neume is moved to the next line by processPages(), then focusLyrics()
+        // will fail if called on its own. This is because the order of events would
+        // be the following:
+        // focus next element => blur previous element => updateLyrics => processPages
+        // and finally the newly selected element would lose focus because processPages
+        // moves the element to the next line.
+
+        // To prevent this we, preemptively call updateLyrics and then use nextTick
+        // to only focus the next lyrics after the UI has been redrawn.
+
+        const noteElement = this.selectedLyrics!;
+
+        const text = (
+          this.$refs[
+            `lyrics-${this.elements.indexOf(noteElement)}`
+          ] as InstanceType<typeof ContentEditable>[]
+        )[0].getInnerText();
+
+        this.updateLyrics(noteElement, text, clearMelisma);
+
+        nextTick(() => {
+          this.focusLyrics(nextIndex, true);
+        });
+
+        return true;
+      }
+
+      return false;
+    },
+
+    moveToPreviousLyricBox() {
+      if (this.selectedLyrics) {
+        const currentIndex = this.elements.indexOf(this.selectedLyrics);
+        let nextIndex = -1;
+
+        // Find the index of the previous note
+        for (let i = currentIndex - 1; i >= 0; i--) {
+          if (this.elements[i].elementType === ElementType.Note) {
+            nextIndex = i;
+            break;
+          }
+        }
+
+        if (nextIndex >= 0) {
+          this.focusLyrics(nextIndex, true);
+          return true;
+        }
+      }
+
+      return false;
+    },
+
+    calculatePageNumber() {
+      let maxPercentage = 0;
+      let maxPercentageIndex = -1;
+
+      const viewportHeight =
+        window.innerHeight || document.documentElement.clientHeight;
+
+      for (let pageIndex = 0; pageIndex < this.pageCount; pageIndex++) {
+        const rect = (this.$refs.pages as Element[])[
+          pageIndex
+        ].getBoundingClientRect();
+
+        const percentage =
+          Math.max(
+            0,
+            rect.top > 0
+              ? Math.min(rect.height, viewportHeight - rect.top)
+              : rect.bottom < viewportHeight
+                ? rect.bottom
+                : viewportHeight,
+          ) / rect.height;
+
+        if (percentage > maxPercentage) {
+          maxPercentage = percentage;
+          maxPercentageIndex = pageIndex;
+        }
+      }
+
+      if (maxPercentageIndex >= 0) {
+        this.currentPageNumber = maxPercentageIndex + 1;
+      }
+    },
+
+    save(markUnsavedChanges: boolean = true) {
+      if (markUnsavedChanges) {
+        this.hasUnsavedChanges = true;
+      }
+
+      // Save the indexes of the visible pages
+      const visiblePages = this.pages
+        .map((_, i) => i)
+        .filter((i) => this.pages[i].isVisible);
+
+      const pages = LayoutService.processPages(toRaw(this.selectedWorkspace));
+
+      // Set page visibility for the newly processed pages
+      pages.forEach((x, index) => (x.isVisible = visiblePages.includes(index)));
+
+      // Only re-render elements that are visible and that have been updated by processPages
+      pages
+        .filter((x) => x.isVisible)
+        .forEach((page) => {
+          page.lines.forEach((line) =>
+            line.elements
+              .filter((x) => x.updated)
+              .forEach((element) => {
+                element.keyHelper++;
+              }),
+          );
+        });
+
+      // Re-render headers and footers if they changed
+      this.score.headersAndFooters
+        .filter((x) => x.updated)
+        .forEach((element) => {
+          element.keyHelper++;
+        });
+
+      this.pages = pages;
+
+      // If using the browser, save the workspace to local storage
+      if (this.isBrowser) {
+        const workspaceLocalStorage = {
+          id: this.selectedWorkspace.id,
+          score: JSON.stringify(SaveService.SaveScoreToJson(this.score)),
+          filePath: this.currentFilePath,
+          tempFileName: this.selectedWorkspace.tempFileName,
+          hasUnsavedChanges: this.hasUnsavedChanges,
+        } as WorkspaceLocalStorage;
+
+        localStorage.setItem(
+          `workspace-${this.selectedWorkspace.id}`,
+          JSON.stringify(workspaceLocalStorage),
+        );
+      } else if (this.isDevelopment) {
+        localStorage.setItem(
+          'score',
+          JSON.stringify(SaveService.SaveScoreToJson(this.score)),
+        );
+
+        if (this.currentFilePath != null) {
+          localStorage.setItem('filePath', this.currentFilePath);
+        } else {
+          localStorage.removeItem('filePath');
+        }
+
+        localStorage.setItem(
+          'hasUnsavedChanges',
+          this.hasUnsavedChanges.toString(),
+        );
+      }
+    },
+
+    async load() {
+      if (this.isBrowser) {
+        Object.keys(localStorage).forEach((key) => {
+          if (key.startsWith('workspace-')) {
+            try {
+              const localStorageWorkspace: WorkspaceLocalStorage = JSON.parse(
+                localStorage.getItem(key)!,
+              );
+              const workspace = new Workspace();
+              workspace.id = localStorageWorkspace.id;
+              workspace.hasUnsavedChanges =
+                localStorageWorkspace.hasUnsavedChanges;
+              workspace.filePath = localStorageWorkspace.filePath;
+              workspace.tempFileName = localStorageWorkspace.tempFileName;
+              workspace.score = SaveService.LoadScoreFromJson(
+                JSON.parse(localStorageWorkspace.score),
+              );
+
+              this.addWorkspace(workspace);
+            } catch (error) {
+              // We couldn't load this workspace for some reason. Remove it from storage.
+              localStorage.removeItem(key);
+              console.error(error);
+            }
+          }
+        });
+
+        if (this.workspaces.length > 0) {
+          this.selectedWorkspace = this.workspaces[0] as Workspace;
+          return;
+        }
+      }
+
+      // First, try to load files passed in on the command line.
+      // If there are none, then create a default workspace.
+      const openWorkspaceResults =
+        await this.ipcService.openWorkspaceFromArgv();
+
+      if (openWorkspaceResults.silentPdf) {
+        for (const file of openWorkspaceResults.files.filter(
+          (x) => x.success,
+        )) {
+          this.openScore(file);
+          await this.onFileMenuExportAsPdf();
+          this.removeWorkspace(this.selectedWorkspace);
+        }
+      }
+
+      if (openWorkspaceResults.silentHtml) {
+        for (const file of openWorkspaceResults.files.filter(
+          (x) => x.success,
+        )) {
+          this.openScore(file);
+          await this.onFileMenuExportAsHtml();
+          this.removeWorkspace(this.selectedWorkspace);
+        }
+      }
+
+      if (openWorkspaceResults.silentLatex) {
+        for (const file of openWorkspaceResults.files.filter(
+          (x) => x.success,
+        )) {
+          const options = new LatexExporterOptions();
+          options.includeModeKeys =
+            openWorkspaceResults.silentLatexIncludeModeKeys ?? false;
+          options.includeTextBoxes =
+            openWorkspaceResults.silentLatexIncludeTextBoxes ?? false;
+          this.openScore(file);
+          await this.ipcService.exportWorkspaceAsLatex(
+            this.selectedWorkspace,
+            JSON.stringify(
+              this.latexExporter.export(
+                this.pages,
+                this.score.pageSetup,
+                options,
+              ),
+              null,
+              2,
+            ),
+          );
+          this.removeWorkspace(this.selectedWorkspace);
+        }
+      }
+
+      if (
+        openWorkspaceResults.silentPdf ||
+        openWorkspaceResults.silentLatex ||
+        openWorkspaceResults.silentHtml
+      ) {
+        await this.ipcService.exitApplication();
+      }
+
+      openWorkspaceResults.files
+        .filter((x) => x.success)
+        .forEach((x) => this.openScore(x));
+
+      if (openWorkspaceResults.files.some((x) => x.success)) {
+        return;
+      }
+
+      const workspace = new Workspace();
+      workspace.tempFileName = this.getTempFilename();
+      workspace.score = this.createDefaultScore();
+
+      this.addWorkspace(workspace);
+
+      if (this.isDevelopment) {
+        const scoreString = localStorage.getItem('score');
+
+        if (scoreString) {
+          const score: Score = SaveService.LoadScoreFromJson(
+            JSON.parse(scoreString),
+          );
+          this.currentFilePath = localStorage.getItem('filePath');
+          this.hasUnsavedChanges =
+            localStorage.getItem('hasUnsavedChanges') === 'true';
+
+          workspace.score = score;
+        }
+      }
+
+      this.selectedWorkspace = workspace;
+
+      this.selectedElement =
+        this.score.staff.elements[this.score.staff.elements.length - 1];
+
+      this.pages = LayoutService.processPages(this.selectedWorkspace);
+    },
+
+    async saveWorkspace(workspace: Workspace) {
+      if (!this.lyricsLocked) {
+        this.lyrics = this.lyricService.extractLyrics(
+          this.elements,
+          this.score.pageSetup.disableGreekMelismata,
+        );
+      }
+
+      return await this.ipcService.saveWorkspace(workspace);
+    },
+
+    async saveWorkspaceAs(workspace: Workspace) {
+      if (!this.lyricsLocked) {
+        this.lyrics = this.lyricService.extractLyrics(
+          this.elements,
+          this.score.pageSetup.disableGreekMelismata,
+        );
+      }
+
+      return await this.ipcService.saveWorkspaceAs(workspace);
+    },
+
+    async closeWorkspace(workspace: Workspace) {
+      let shouldClose = true;
+
+      if (workspace.hasUnsavedChanges) {
+        const fileName =
+          workspace.filePath != null
+            ? getFileNameFromPath(workspace.filePath)
+            : workspace.tempFileName;
+
+        let dialogResult: ShowMessageBoxReplyArgs;
+
+        if (this.ipcService.isShowMessageBoxSupported()) {
+          dialogResult = await this.ipcService.showMessageBox({
+            title: import.meta.env.VITE_TITLE,
+            message: `Do you want to save the changes you made to ${fileName}?`,
+            detail: "Your changes will be lost if you don't save them.",
+            type: 'warning',
+            buttons: ['Save', "Don't Save", 'Cancel'],
+          });
+        } else {
+          dialogResult = {
+            response: confirm(
+              `${fileName} has unsaved changes. Are you sure you want to close it?`,
+            )
+              ? 1
+              : 2,
+            checkboxChecked: false,
+          };
+        }
+
+        if (dialogResult.response === 0) {
+          // User chose "Save"
+          const saveResult =
+            workspace.filePath != null
+              ? await this.saveWorkspace(workspace)
+              : await this.saveWorkspaceAs(workspace);
+
+          // If they successfully saved, then we can close the workspacce
+          shouldClose = saveResult.success;
+        } else if (dialogResult.response === 2) {
+          // User chose "Cancel", so don't close the workspace.
+          shouldClose = false;
+        }
+      }
+
+      if (shouldClose) {
+        // If using the browser, remove the item from local storage
+        if (this.isBrowser) {
+          localStorage.removeItem(`workspace-${workspace.id}`);
+        }
+
+        // If the last tab has closed, then exit
+        if (this.workspaces.length == 1) {
+          await this.ipcService.exitApplication();
+        }
+
+        this.removeWorkspace(workspace);
+      }
+
+      return shouldClose;
+    },
+
+    async onCloseWorkspaces(args: CloseWorkspacesArgs) {
+      const workspacesToClose: Workspace[] = this.workspaces.filter(
+        (workspace) => {
+          const index: number = this.tabs.findIndex(
+            (x) => x.key === workspace.id,
+          );
+
+          const pivot: number = args.workspaceId
+            ? this.tabs.findIndex((x) => x.key === args.workspaceId)
+            : this.tabs.findIndex((x) => x.key === this.selectedWorkspace.id);
+
+          switch (args.disposition) {
+            case CloseWorkspacesDisposition.SELF:
+              return index === pivot;
+            case CloseWorkspacesDisposition.OTHERS:
+              return index !== pivot;
+            case CloseWorkspacesDisposition.LEFT:
+              return index < pivot;
+            case CloseWorkspacesDisposition.RIGHT:
+              return index > pivot;
+            default:
+              throw new Error(
+                `Error: Unknown disposition ${args.disposition}.`,
+              );
+          }
+        },
+      ) as Workspace[];
+
+      for (const workspaceToClose of workspacesToClose) {
+        if (!(await this.closeWorkspace(workspaceToClose))) {
+          // The user vetoed the operation.
+          break;
+        }
+      }
+    },
+
+    async onCloseApplication() {
+      // Give the user a chance to save their changes before exiting
+      const unsavedWorkspaces = this.workspaces.filter(
+        (x) => x.hasUnsavedChanges,
+      ) as Workspace[];
+
+      for (const workspace of unsavedWorkspaces) {
+        if (!(await this.closeWorkspace(workspace))) {
+          await this.ipcService.cancelExit();
+          return false;
+        }
+      }
+
+      await this.ipcService.exitApplication();
+    },
+
+    setKlasma(element: NoteElement) {
+      if (onlyTakesBottomKlasma(element.quantitativeNeume)) {
+        if (element.timeNeume === TimeNeume.Klasma_Bottom) {
+          this.updateNoteTime(element, null);
+        } else {
+          this.updateNoteTime(element, TimeNeume.Klasma_Bottom);
+        }
+        return;
+      } else if (onlyTakesTopKlasma(element.quantitativeNeume)) {
+        if (element.timeNeume === TimeNeume.Klasma_Top) {
+          this.updateNoteTime(element, null);
+        } else {
+          this.updateNoteTime(element, TimeNeume.Klasma_Top);
+        }
+        return;
+      } else if (element.timeNeume == null) {
+        this.updateNoteTime(element, TimeNeume.Klasma_Top);
+      } else if (element.timeNeume === TimeNeume.Klasma_Top) {
+        this.updateNoteTime(element, TimeNeume.Klasma_Bottom);
+      } else if (element.timeNeume === TimeNeume.Klasma_Bottom) {
+        this.updateNoteTime(element, null);
+      }
+    },
+
+    setGorgon(element: NoteElement, neumes: GorgonNeume | GorgonNeume[]) {
+      let equivalent = false;
+
+      // Force neumes to be an array if it's not
+      neumes = Array.isArray(neumes) ? neumes : [neumes];
+
+      for (const neume of neumes) {
+        if (
+          neume === GorgonNeume.Gorgon_Bottom &&
+          onlyTakesTopGorgon(element.quantitativeNeume)
+        ) {
+          continue;
+        }
+
+        // If previous neume was matched, set to the next neume in the cycle
+        if (equivalent) {
+          this.updateNoteGorgon(element, neume);
+          return;
+        }
+
+        equivalent = element.gorgonNeume === neume;
+      }
+
+      // We've cycled through all the neumes.
+      // If we got to the end of the cycle, remove all
+      // gorgon neumes. Otherwise set gorgon to the first neume
+      // in the cycle.
+      if (equivalent) {
+        this.updateNoteGorgon(element, null);
+      } else {
+        this.updateNoteGorgon(element, neumes[0]);
+      }
+    },
+
+    setSecondaryGorgon(element: NoteElement, neume: GorgonNeume) {
+      if (element.secondaryGorgonNeume === neume) {
+        this.updateNoteGorgonSecondary(element, null);
+      } else {
+        this.updateNoteGorgonSecondary(element, neume);
+      }
+    },
+
+    setFthoraNote(element: NoteElement, neumes: Fthora[]) {
+      let equivalent = false;
+
+      for (const neume of neumes) {
+        // If previous neume was matched, set to the next neume in the cycle
+        if (equivalent) {
+          this.updateNoteFthora(element, neume);
+          return;
+        }
+
+        equivalent = element.fthora === neume;
+      }
+
+      // We've cycled through all the neumes.
+      // If we got to the end of the cycle, remove all
+      // fthora neumes. Otherwise set fthora to the first neume
+      // in the cycle.
+      if (equivalent) {
+        this.updateNoteFthora(element, null);
+      } else {
+        this.updateNoteFthora(element, neumes[0]);
+      }
+    },
+
+    setSecondaryFthora(element: NoteElement, neume: Fthora) {
+      if (element.secondaryFthora === neume) {
+        this.updateNoteFthoraSecondary(element, null);
+      } else {
+        this.updateNoteFthoraSecondary(element, neume);
+      }
+    },
+
+    setTertiaryFthora(element: NoteElement, neume: Fthora) {
+      if (element.tertiaryFthora === neume) {
+        this.updateNoteFthoraTertiary(element, null);
+      } else {
+        this.updateNoteFthoraTertiary(element, neume);
+      }
+    },
+
+    setFthoraMartyria(element: MartyriaElement, neume: Fthora) {
+      if (element.fthora === neume) {
+        this.updateMartyriaFthora(element, null);
+      } else {
+        this.updateMartyriaFthora(element, neume);
+      }
+    },
+
+    setMartyriaTempoLeft(element: MartyriaElement, neume: TempoSign) {
+      if (element.tempoLeft === neume) {
+        this.updateMartyriaTempoLeft(element, null);
+      } else {
+        this.updateMartyriaTempoLeft(element, neume);
+      }
+    },
+
+    setMartyriaTempo(element: MartyriaElement, neume: TempoSign) {
+      if (element.tempo === neume) {
+        this.updateMartyriaTempo(element, null);
+      } else {
+        this.updateMartyriaTempo(element, neume);
+      }
+    },
+
+    setMartyriaTempoRight(element: MartyriaElement, neume: TempoSign) {
+      if (element.tempoRight === neume) {
+        this.updateMartyriaTempoRight(element, null);
+      } else {
+        this.updateMartyriaTempoRight(element, neume);
+      }
+    },
+
+    setMartyriaQuantitativeNeume(
+      element: MartyriaElement,
+      neume: QuantitativeNeume,
+    ) {
+      if (element.quantitativeNeume === neume) {
+        this.updateMartyriaQuantitativeNeume(element, null);
+      } else {
+        this.updateMartyriaQuantitativeNeume(element, neume);
+      }
+    },
+
+    setModeKeyTempo(element: ModeKeyElement, neume: TempoSign) {
+      if (element.tempo === neume) {
+        this.updateModeKeyTempo(element, null);
+      } else {
+        this.updateModeKeyTempo(element, neume);
+      }
+    },
+
+    setAccidental(element: NoteElement, neume: Accidental) {
+      if (element.accidental != null && element.accidental === neume) {
+        this.updateNoteAccidental(element, null);
+      } else {
+        this.updateNoteAccidental(element, neume);
+      }
+    },
+
+    setSecondaryAccidental(element: NoteElement, neume: Accidental) {
+      if (
+        element.secondaryAccidental != null &&
+        element.secondaryAccidental === neume
+      ) {
+        this.updateNoteAccidentalSecondary(element, null);
+      } else {
+        this.updateNoteAccidentalSecondary(element, neume);
+      }
+    },
+
+    setTertiaryAccidental(element: NoteElement, neume: Accidental) {
+      if (
+        element.tertiaryAccidental != null &&
+        element.tertiaryAccidental === neume
+      ) {
+        this.updateNoteAccidentalTertiary(element, null);
+      } else {
+        this.updateNoteAccidentalTertiary(element, neume);
+      }
+    },
+
+    setTimeNeume(element: NoteElement, neume: TimeNeume) {
+      if (element.timeNeume === neume) {
+        this.updateNoteTime(element, null);
+      } else {
+        this.updateNoteTime(element, neume);
+      }
+    },
+
+    setMeasureNumber(element: NoteElement, neume: MeasureNumber) {
+      if (neume === element.measureNumber) {
+        this.updateNoteMeasureNumber(element, null);
+      } else {
+        this.updateNoteMeasureNumber(element, neume);
+      }
+    },
+
+    setMeasureBarNote(element: NoteElement, neume: MeasureBar) {
+      // Cycle through
+      // Left
+      // Right
+      // Both Sides
+      // None
+      const normalizedMeasureBar = element.measureBarLeft?.endsWith('Above')
+        ? measureBarAboveToLeft.get(element.measureBarLeft)
+        : element.measureBarLeft;
+      if (neume === normalizedMeasureBar && neume === element.measureBarRight) {
+        this.updateNoteMeasureBar(element, {
+          measureBarLeft: null,
+          measureBarRight: null,
+        });
+      } else if (neume === normalizedMeasureBar) {
+        this.updateNoteMeasureBar(element, {
+          measureBarLeft: null,
+          measureBarRight: neume,
+        });
+      } else if (neume === element.measureBarRight) {
+        this.updateNoteMeasureBar(element, {
+          measureBarLeft: neume,
+          measureBarRight: neume,
+        });
+      } else {
+        this.updateNoteMeasureBar(element, {
+          measureBarLeft: neume,
+          measureBarRight: null,
+        });
+      }
+    },
+
+    setMeasureBarMartyria(element: MartyriaElement, neume: MeasureBar) {
+      // Cycle through
+      // Left
+      // Right
+      // Both Sides
+      // None
+      const normalizedMeasureBar = element.measureBarLeft?.endsWith('Above')
+        ? measureBarAboveToLeft.get(element.measureBarLeft)
+        : element.measureBarLeft;
+      if (neume === normalizedMeasureBar && neume === element.measureBarRight) {
+        this.updateMartyriaMeasureBar(element, {
+          measureBarLeft: null,
+          measureBarRight: null,
+        });
+      } else if (neume === normalizedMeasureBar) {
+        this.updateMartyriaMeasureBar(element, {
+          measureBarLeft: null,
+          measureBarRight: neume,
+        });
+      } else if (neume === element.measureBarRight) {
+        this.updateMartyriaMeasureBar(element, {
+          measureBarLeft: neume,
+          measureBarRight: neume,
+        });
+      } else {
+        this.updateMartyriaMeasureBar(element, {
+          measureBarLeft: neume,
+          measureBarRight: null,
+        });
+      }
+    },
+
+    setIson(element: NoteElement, neume: Ison) {
+      if (neume === element.ison) {
+        this.updateNoteIson(element, null);
+      } else {
+        this.updateNoteIson(element, neume);
+      }
+    },
+
+    setVocalExpression(element: NoteElement, neume: VocalExpressionNeume) {
+      if (
+        element.vocalExpressionNeume != null &&
+        areVocalExpressionsEquivalent(neume, element.vocalExpressionNeume)
+      ) {
+        this.updateNoteExpression(element, null);
+      } else {
+        this.updateNoteExpression(element, neume);
+      }
+    },
+
+    setTie(element: NoteElement, neumes: Tie[]) {
+      let equivalent = false;
+
+      for (const neume of neumes) {
+        // If previous neume was matched, set to the next neume in the cycle
+        if (equivalent) {
+          this.updateNoteTie(element, neume);
+          return;
+        }
+
+        equivalent = element.tie === neume;
+      }
+
+      // We've cycled through all the neumes.
+      // If we got to the end of the cycle, remove all
+      // fthora neumes. Otherwise set fthora to the first neume
+      // in the cycle.
+      if (equivalent) {
+        this.updateNoteTie(element, null);
+      } else {
+        this.updateNoteTie(element, neumes[0]);
+      }
+    },
+
+    addScoreElement(
+      element: ScoreElement,
+      insertAtIndex?: number,
+      collection?: ScoreElement[],
+    ) {
+      this.commandService.execute(
+        scoreElementCommandFactory.create('add-to-collection', {
+          elements: [element],
+          collection: collection ?? this.elements,
+          insertAtIndex,
+        }),
+      );
+
+      this.refreshStaffLyrics();
+    },
+
+    addScoreElements(elements: ScoreElement[], insertAtIndex?: number) {
+      this.commandService.execute(
+        scoreElementCommandFactory.create('add-to-collection', {
+          elements,
+          collection: this.elements,
+          insertAtIndex,
+        }),
+      );
+
+      this.refreshStaffLyrics();
+    },
+
+    replaceScoreElement(element: ScoreElement, replaceAtIndex: number) {
+      this.commandService.execute(
+        scoreElementCommandFactory.create('replace-element-in-collection', {
+          element,
+          collection: this.elements,
+          replaceAtIndex,
+        }),
+      );
+
+      this.refreshStaffLyrics();
+    },
+
+    removeScoreElement(element: ScoreElement, collection?: ScoreElement[]) {
+      this.commandService.execute(
+        scoreElementCommandFactory.create('remove-from-collection', {
+          element,
+          collection: collection ?? this.elements,
+        }),
+      );
+
+      this.refreshStaffLyrics();
+    },
+
+    updatePageVisibility(page: Page, isVisible: boolean) {
+      page.isVisible = isVisible;
+    },
+
+    updateNoteAndSave(element: NoteElement, newValues: Partial<NoteElement>) {
+      this.updateNote(element, newValues);
+      this.save();
+    },
+
+    updateNote(element: NoteElement, newValues: Partial<NoteElement>) {
+      this.commandService.execute(
+        noteElementCommandFactory.create('update-properties', {
+          target: element,
+          newValues: newValues,
+        }),
+      );
+
+      // Force the element to update so that the neume toolbar updates
+      element.keyHelper++;
+
+      // If we change certain fields, we need to refresh the staff lyrics
+      if (
+        newValues.quantitativeNeume !== undefined ||
+        newValues.tie !== undefined ||
+        newValues.acceptsLyrics !== undefined
+      ) {
+        this.refreshStaffLyrics();
+      }
+    },
+
+    updateNoteLyricsUseDefaultStyle(
+      element: NoteElement,
+      lyricsUseDefaultStyle: boolean,
+    ) {
+      this.updateNote(element, { lyricsUseDefaultStyle });
+      this.save();
+    },
+
+    updateNoteLyricsColor(element: NoteElement, lyricsColor: string) {
+      this.updateNote(element, { lyricsColor });
+      this.save();
+    },
+
+    updateNoteLyricsFontFamily(element: NoteElement, lyricsFontFamily: string) {
+      this.updateNote(element, { lyricsFontFamily });
+      this.save();
+    },
+
+    updateNoteLyricsFontSize(element: NoteElement, lyricsFontSize: number) {
+      this.updateNote(element, { lyricsFontSize });
+      this.save();
+    },
+
+    updateNoteLyricsStrokeWidth(
+      element: NoteElement,
+      lyricsStrokeWidth: number,
+    ) {
+      this.updateNote(element, { lyricsStrokeWidth });
+      this.save();
+    },
+
+    updateNoteLyricsFontWeight(element: NoteElement, bold: boolean) {
+      this.updateNote(element, { lyricsFontWeight: bold ? '700' : '400' });
+      this.save();
+    },
+
+    updateNoteLyricsFontStyle(element: NoteElement, italic: boolean) {
+      this.updateNote(element, {
+        lyricsFontStyle: italic ? 'italic' : 'normal',
+      });
+      this.save();
+    },
+
+    updateNoteLyricsTextDecoration(element: NoteElement, underline: boolean) {
+      this.updateNote(element, {
+        lyricsTextDecoration: underline ? 'underline' : 'none',
+      });
+      this.save();
+    },
+
+    updateNoteAccidental(element: NoteElement, accidental: Accidental | null) {
+      this.updateNote(element, { accidental });
+      this.save();
+    },
+
+    updateNoteAccidentalSecondary(
+      element: NoteElement,
+      secondaryAccidental: Accidental | null,
+    ) {
+      this.updateNote(element, { secondaryAccidental });
+      this.save();
+    },
+
+    updateNoteAccidentalTertiary(
+      element: NoteElement,
+      tertiaryAccidental: Accidental | null,
+    ) {
+      this.updateNote(element, { tertiaryAccidental });
+      this.save();
+    },
+
+    updateNoteFthora(element: NoteElement, fthora: Fthora | null) {
+      let chromaticFthoraNote: ScaleNote | null = null;
+
+      if (
+        fthora === Fthora.SoftChromaticThi_Top ||
+        fthora === Fthora.SoftChromaticThi_Bottom
+      ) {
+        chromaticFthoraNote = ScaleNote.Thi;
+      } else if (
+        fthora === Fthora.SoftChromaticPa_Top ||
+        fthora === Fthora.SoftChromaticPa_Bottom
+      ) {
+        chromaticFthoraNote = ScaleNote.Ga;
+      } else if (
+        fthora === Fthora.HardChromaticThi_Top ||
+        fthora === Fthora.HardChromaticThi_Bottom
+      ) {
+        chromaticFthoraNote = ScaleNote.Thi;
+      } else if (
+        fthora === Fthora.HardChromaticPa_Top ||
+        fthora === Fthora.HardChromaticPa_Bottom
+      ) {
+        chromaticFthoraNote = ScaleNote.Pa;
+      }
+
+      this.updateNote(element, { fthora, chromaticFthoraNote });
+      this.save();
+    },
+
+    updateNoteFthoraSecondary(
+      element: NoteElement,
+      secondaryFthora: Fthora | null,
+    ) {
+      let secondaryChromaticFthoraNote: ScaleNote | null = null;
+
+      if (secondaryFthora === Fthora.SoftChromaticThi_TopSecondary) {
+        secondaryChromaticFthoraNote = ScaleNote.Thi;
+      } else if (secondaryFthora === Fthora.SoftChromaticPa_TopSecondary) {
+        secondaryChromaticFthoraNote = ScaleNote.Ga;
+      } else if (secondaryFthora === Fthora.HardChromaticThi_TopSecondary) {
+        secondaryChromaticFthoraNote = ScaleNote.Thi;
+      } else if (secondaryFthora === Fthora.HardChromaticPa_TopSecondary) {
+        secondaryChromaticFthoraNote = ScaleNote.Pa;
+      }
+
+      this.updateNote(element, {
+        secondaryFthora,
+        secondaryChromaticFthoraNote,
+      });
+      this.save();
+    },
+
+    updateNoteFthoraTertiary(
+      element: NoteElement,
+      tertiaryFthora: Fthora | null,
+    ) {
+      let tertiaryChromaticFthoraNote: ScaleNote | null = null;
+
+      if (tertiaryFthora === Fthora.SoftChromaticThi_TopTertiary) {
+        tertiaryChromaticFthoraNote = ScaleNote.Thi;
+      } else if (tertiaryFthora === Fthora.SoftChromaticPa_TopTertiary) {
+        tertiaryChromaticFthoraNote = ScaleNote.Ga;
+      } else if (tertiaryFthora === Fthora.HardChromaticThi_TopTertiary) {
+        tertiaryChromaticFthoraNote = ScaleNote.Thi;
+      } else if (tertiaryFthora === Fthora.HardChromaticPa_TopTertiary) {
+        tertiaryChromaticFthoraNote = ScaleNote.Pa;
+      }
+
+      this.updateNote(element, { tertiaryFthora, tertiaryChromaticFthoraNote });
+      this.save();
+    },
+
+    updateNoteExpression(
+      element: NoteElement,
+      vocalExpressionNeume: VocalExpressionNeume | null,
+    ) {
+      // Replace the psifiston with a slanted psifiston if the previous neume
+      // contains a long heteron
+      if (vocalExpressionNeume === VocalExpressionNeume.Psifiston) {
+        const index = this.getElementIndex(element);
+
+        if (index > 0) {
+          const previousElement = this.elements[index - 1];
+
+          if (previousElement.elementType === ElementType.Note) {
+            const previousNote = previousElement as NoteElement;
+
+            if (
+              previousNote.vocalExpressionNeume ===
+              VocalExpressionNeume.HeteronConnectingLong
+            ) {
+              vocalExpressionNeume = VocalExpressionNeume.PsifistonSlanted;
+            }
+          }
+        }
+      }
+
+      this.updateNote(element, { vocalExpressionNeume });
+      this.save();
+    },
+
+    updateNoteTime(element: NoteElement, timeNeume: TimeNeume | null) {
+      this.updateNote(element, { timeNeume });
+      this.save();
+    },
+
+    updateNoteGorgon(element: NoteElement, gorgonNeume: GorgonNeume | null) {
+      this.updateNote(element, { gorgonNeume });
+      this.save();
+    },
+
+    updateNoteGorgonSecondary(
+      element: NoteElement,
+      secondaryGorgonNeume: GorgonNeume | null,
+    ) {
+      this.updateNote(element, { secondaryGorgonNeume });
+      this.save();
+    },
+
+    updateNoteMeasureBar(
+      element: NoteElement,
+      {
+        measureBarLeft,
+        measureBarRight,
+      }: {
+        measureBarLeft: MeasureBar | null;
+        measureBarRight: MeasureBar | null;
+      },
+    ) {
+      this.updateNote(element, {
+        measureBarLeft,
+        measureBarRight,
+      });
+      this.save();
+    },
+
+    updateNoteMeasureNumber(
+      element: NoteElement,
+      measureNumber: MeasureNumber | null,
+    ) {
+      this.updateNote(element, { measureNumber });
+      this.save();
+    },
+
+    updateNoteNoteIndicator(element: NoteElement, noteIndicator: boolean) {
+      this.updateNote(element, { noteIndicator });
+      this.save();
+    },
+
+    updateNoteIson(element: NoteElement, ison: Ison | null) {
+      this.updateNote(element, { ison });
+      this.save();
+    },
+
+    updateNoteKoronis(element: NoteElement, koronis: boolean) {
+      this.updateNote(element, { koronis });
+      this.save();
+    },
+
+    updateNoteStavros(element: NoteElement, stavros: boolean) {
+      this.updateNote(element, { stavros });
+      this.save();
+    },
+
+    updateNoteVareia(element: NoteElement, vareia: boolean) {
+      this.updateNote(element, { vareia });
+      this.save();
+    },
+
+    updateNoteTie(element: NoteElement, tie: Tie | null) {
+      this.updateNote(element, { tie });
+      this.save();
+    },
+
+    updateNoteSpaceAfter(element: NoteElement, spaceAfter: number) {
+      this.updateNote(element, { spaceAfter });
+      this.save();
+    },
+
+    updateNoteIgnoreAttractions(
+      element: NoteElement,
+      ignoreAttractions: boolean,
+    ) {
+      this.updateNote(element, { ignoreAttractions });
+      this.save();
+    },
+
+    updateNoteAcceptsLyrics(
+      element: NoteElement,
+      acceptsLyrics: AcceptsLyricsOption,
+    ) {
+      this.updateNote(element, {
+        acceptsLyrics: acceptsLyrics,
+      });
+      this.save();
+    },
+
+    updateNoteChromaticFthoraNote(
+      element: NoteElement,
+      chromaticFthoraNote: ScaleNote | null,
+    ) {
+      this.updateNote(element, { chromaticFthoraNote });
+      this.save();
+    },
+
+    updateNoteSecondaryChromaticFthoraNote(
+      element: NoteElement,
+      secondaryChromaticFthoraNote: ScaleNote | null,
+    ) {
+      this.updateNote(element, { secondaryChromaticFthoraNote });
+      this.save();
+    },
+
+    updateNoteTertiaryChromaticFthoraNote(
+      element: NoteElement,
+      tertiaryChromaticFthoraNote: ScaleNote | null,
+    ) {
+      this.updateNote(element, { tertiaryChromaticFthoraNote });
+      this.save();
+    },
+
+    updateLyricsLocked(locked: boolean) {
+      this.lyricsLocked = locked;
+      this.hasUnsavedChanges = true;
+    },
+
+    updateStaffLyrics(lyrics: string) {
+      this.lyrics = lyrics;
+      this.assignLyricsThrottled();
+      this.hasUnsavedChanges = true;
+    },
+
+    assignLyrics() {
+      const updateCommands: Command[] = [];
+
+      this.lyricService.assignLyrics(
+        this.lyrics,
+        this.elements,
+        this.rtl,
+        this.score.pageSetup.disableGreekMelismata,
+        (note, lyrics) => this.setLyrics(this.getElementIndex(note), lyrics),
+        (note, newValues) => {
+          note.updated = true;
+          updateCommands.push(
+            noteElementCommandFactory.create('update-properties', {
+              target: note,
+              newValues,
+            }),
+          );
+        },
+        (dropCap, token) => {
+          updateCommands.push(
+            dropCapCommandFactory.create('update-properties', {
+              target: dropCap,
+              newValues: { content: token },
+            }),
+          );
+        },
+      );
+
+      if (updateCommands.length > 0) {
+        this.commandService.executeAsBatch(updateCommands, this.lyricsLocked);
+        this.save();
+      }
+    },
+
+    assignAcceptsLyricsFromCurrentLyrics() {
+      const commands: Command[] = [];
+
+      this.lyricService.assignAcceptsLyricsFromCurrentLyrics(
+        this.elements,
+        this.score.pageSetup.disableGreekMelismata,
+        (note, acceptsLyrics) => {
+          commands.push(
+            noteElementCommandFactory.create('update-properties', {
+              target: note,
+              newValues: {
+                acceptsLyrics,
+              },
+            }),
+          );
+        },
+      );
+
+      if (commands.length > 0) {
+        this.commandService.executeAsBatch(commands);
+        this.refreshStaffLyrics();
+        this.save();
+      }
+    },
+
+    updateLyrics(
+      element: NoteElement,
+      lyrics: string,
+      clearMelisma: boolean = false,
+    ) {
+      const newValues = this.lyricService.getLyricUpdateValues(
+        element,
+        lyrics,
+        this.elements,
+        this.rtl,
+        (note, lyrics) => this.setLyrics(this.getElementIndex(note), lyrics),
+        clearMelisma,
+      );
+
+      if (newValues != null) {
+        this.commandService.execute(
+          noteElementCommandFactory.create('update-properties', {
+            target: element,
+            newValues,
+          }),
+        );
+        this.refreshStaffLyrics();
+        this.save();
+      }
+    },
+
+    refreshStaffLyrics() {
+      if (this.lyricsLocked) {
+        this.assignLyrics();
+      } else if (this.lyricManagerIsOpen) {
+        this.lyrics = this.lyricService.extractLyrics(
+          this.elements,
+          this.score.pageSetup.disableGreekMelismata,
+        );
+      }
+    },
+
+    updateAnnotation(
+      element: AnnotationElement,
+      newValues: Partial<AnnotationElement>,
+    ) {
+      this.commandService.execute(
+        annotationCommandFactory.create('update-properties', {
+          target: element,
+          newValues: newValues,
+        }),
+      );
+
+      this.save();
+    },
+
+    removeAnnotation(
+      note: NoteElement,
+      annotation: AnnotationElement,
+      noHistory: boolean = false,
+    ) {
+      this.commandService.execute(
+        annotationCommandFactory.create('remove-from-collection', {
+          element: annotation,
+          collection: note.annotations,
+        }),
+        noHistory,
+      );
+
+      this.selectedWorkspace.selectedAnnotationElement = null;
+
+      this.save();
+    },
+
+    updateAlternateLine(
+      element: AlternateLineElement,
+      newValues: Partial<AlternateLineElement>,
+    ) {
+      this.commandService.execute(
+        alternateLineCommandFactory.create('update-properties', {
+          target: element,
+          newValues: newValues,
+        }),
+      );
+
+      this.save();
+    },
+
+    removeAlternateLine(
+      note: NoteElement,
+      annotation: AlternateLineElement,
+      noHistory: boolean = false,
+    ) {
+      this.commandService.execute(
+        alternateLineCommandFactory.create('remove-from-collection', {
+          element: annotation,
+          collection: note.alternateLines,
+        }),
+        noHistory,
+      );
+
+      this.selectedWorkspace.selectedAlternateLineElement = null;
+
+      this.save();
+    },
+
+    updateRichTextBox(
+      element: RichTextBoxElement,
+      newValues: Partial<RichTextBoxElement>,
+    ) {
+      if (newValues.rtl != null) {
+        element.keyHelper++;
+      }
+
+      const heightProp: keyof RichTextBoxElement = 'height';
+
+      const noHistory =
+        Object.keys(newValues).length === 1 && heightProp in newValues;
+
+      this.commandService.execute(
+        richTextBoxCommandFactory.create('update-properties', {
+          target: element,
+          newValues: newValues,
+        }),
+        noHistory,
+      );
+
+      const modeChangeProp: keyof RichTextBoxElement = 'modeChange';
+
+      if (modeChangeProp in newValues) {
+        this.refreshStaffLyrics();
+      }
+
+      this.save(!noHistory);
+    },
+
+    updateRichTextBoxHeight(element: RichTextBoxElement, height: number) {
+      // The height could be updated by many rich text box elements at once
+      // (e.g. if PageSetup changes) so we debounce the save.
+      element.height = height;
+      this.richTextBoxCalculationCount++;
+      this.saveDebounced(false);
+    },
+
+    updateRichTextBoxMarginTop(element: RichTextBoxElement, marginTop: number) {
+      this.updateRichTextBox(element, { marginTop });
+    },
+
+    updateRichTextBoxMarginBottom(
+      element: RichTextBoxElement,
+      marginBottom: number,
+    ) {
+      this.updateRichTextBox(element, { marginBottom });
+    },
+
+    updateTextBox(element: TextBoxElement, newValues: Partial<TextBoxElement>) {
+      const noHistory =
+        Object.keys(newValues).length === 1 && 'height' in newValues;
+
+      this.commandService.execute(
+        textBoxCommandFactory.create('update-properties', {
+          target: element,
+          newValues: newValues,
+        }),
+        noHistory,
+      );
+
+      this.save(!noHistory);
+    },
+
+    updateTextBoxHeight(element: TextBoxElement, height: number) {
+      // The height could be updated by many rich text box elements at once
+      // (e.g. if PageSetup changes) so we debounce the save.
+      element.height = height;
+      this.textBoxCalculationCount++;
+      this.saveDebounced(false);
+    },
+
+    updateTextBoxUseDefaultStyle(
+      element: TextBoxElement,
+      useDefaultStyle: boolean,
+    ) {
+      this.updateTextBox(element, { useDefaultStyle });
+    },
+
+    updateTextBoxMultipanel(element: TextBoxElement, multipanel: boolean) {
+      this.updateTextBox(element, { multipanel });
+    },
+
+    updateTextBoxFontSize(element: TextBoxElement, fontSize: number) {
+      this.updateTextBox(element, { fontSize });
+    },
+
+    updateTextBoxFontFamily(element: TextBoxElement, fontFamily: string) {
+      this.updateTextBox(element, { fontFamily });
+    },
+
+    updateTextBoxStrokeWidth(element: TextBoxElement, strokeWidth: number) {
+      this.updateTextBox(element, { strokeWidth });
+    },
+
+    updateTextBoxColor(element: TextBoxElement, color: string) {
+      this.updateTextBox(element, { color });
+    },
+
+    updateTextBoxAlignment(
+      element: TextBoxElement,
+      alignment: TextBoxAlignment,
+    ) {
+      this.updateTextBox(element, { alignment });
+    },
+
+    updateTextBoxInline(element: TextBoxElement, inline: boolean) {
+      this.updateTextBox(element, { inline });
+    },
+
+    updateTextBoxBold(element: TextBoxElement, bold: boolean) {
+      this.updateTextBox(element, { bold });
+    },
+
+    updateTextBoxItalic(element: TextBoxElement, italic: boolean) {
+      this.updateTextBox(element, { italic });
+    },
+
+    updateTextBoxUnderline(element: TextBoxElement, underline: boolean) {
+      this.updateTextBox(element, { underline });
+    },
+
+    updateTextBoxLineHeight(
+      element: TextBoxElement,
+      lineHeight: number | null,
+    ) {
+      this.updateTextBox(element, { lineHeight });
+    },
+
+    updateTextBoxWidth(element: TextBoxElement, customWidth: number | null) {
+      this.updateTextBox(element, { customWidth });
+    },
+
+    updateTextBoxFillWidth(element: TextBoxElement, fillWidth: boolean) {
+      this.updateTextBox(element, { fillWidth });
+    },
+
+    updateTextBoxCustomHeight(
+      element: TextBoxElement,
+      customHeight: number | null,
+    ) {
+      this.updateTextBox(element, { customHeight });
+    },
+
+    updateTextBoxMarginTop(element: TextBoxElement, marginTop: number) {
+      this.updateTextBox(element, { marginTop });
+    },
+
+    updateTextBoxMarginBottom(element: TextBoxElement, marginBottom: number) {
+      this.updateTextBox(element, { marginBottom });
+    },
+
+    updateModeKey(element: ModeKeyElement, newValues: Partial<ModeKeyElement>) {
+      this.commandService.execute(
+        modeKeyCommandFactory.create('update-properties', {
+          target: element,
+          newValues: newValues,
+        }),
+      );
+
+      this.save();
+    },
+
+    updateModeKeyMarginTop(element: ModeKeyElement, marginTop: number) {
+      this.updateModeKey(element, { marginTop });
+    },
+
+    updateModeKeyMarginBottom(element: ModeKeyElement, marginBottom: number) {
+      this.updateModeKey(element, { marginBottom });
+    },
+
+    updateModeKeyUseDefaultStyle(
+      element: ModeKeyElement,
+      useDefaultStyle: boolean,
+    ) {
+      this.updateModeKey(element, { useDefaultStyle });
+    },
+
+    updateModeKeyFontSize(element: ModeKeyElement, fontSize: number) {
+      this.updateModeKey(element, { fontSize });
+    },
+
+    updateModeKeyStrokeWidth(element: ModeKeyElement, strokeWidth: number) {
+      this.updateModeKey(element, { strokeWidth });
+    },
+
+    updateModeKeyColor(element: ModeKeyElement, color: string) {
+      this.updateModeKey(element, { color });
+    },
+
+    updateModeKeyAlignment(
+      element: ModeKeyElement,
+      alignment: TextBoxAlignment,
+    ) {
+      this.updateModeKey(element, { alignment });
+    },
+
+    updateModeKeyHeightAdjustment(
+      element: ModeKeyElement,
+      heightAdjustment: number,
+    ) {
+      this.updateModeKey(element, { heightAdjustment });
+    },
+
+    updateModeKeyTempo(element: ModeKeyElement, tempo: TempoSign | null) {
+      let bpm = element.bpm;
+
+      if (tempo != null) {
+        bpm =
+          this.editorPreferences.getDefaultTempo(tempo) ??
+          TempoElement.getDefaultBpm(tempo);
+      }
+
+      this.updateModeKey(element, { tempo, bpm });
+    },
+
+    updateModeKeyBpm(element: ModeKeyElement, bpm: number) {
+      this.updateModeKey(element, { bpm });
+      this.save();
+    },
+
+    updateModeKeyIgnoreAttractions(
+      element: ModeKeyElement,
+      ignoreAttractions: boolean,
+    ) {
+      this.updateModeKey(element, { ignoreAttractions });
+      this.save();
+    },
+
+    updateModeKeyShowAmbitus(element: ModeKeyElement, showAmbitus: boolean) {
+      this.updateModeKey(element, { showAmbitus });
+      this.save();
+    },
+
+    updateModeKeyTempoAlignRight(
+      element: ModeKeyElement,
+      tempoAlignRight: boolean,
+    ) {
+      this.updateModeKey(element, { tempoAlignRight });
+      this.save();
+    },
+
+    updateModeKeyPermanentEnharmonicZo(
+      element: ModeKeyElement,
+      permanentEnharmonicZo: boolean,
+    ) {
+      this.updateModeKey(element, { permanentEnharmonicZo });
+      this.save();
+    },
+
+    updateModeKeyFromTemplate(
+      element: ModeKeyElement,
+      template: ModeKeyElement,
+    ) {
+      const {
+        templateId,
+        mode,
+        scale,
+        scaleNote,
+        fthora,
+        martyria,
+        fthoraAboveNote,
+        fthoraAboveNote2,
+        fthoraAboveQuantitativeNeumeRight,
+        note,
+        note2,
+        quantitativeNeumeAboveNote,
+        quantitativeNeumeAboveNote2,
+        quantitativeNeumeRight,
+      } = template;
+
+      const newValues = {
+        templateId,
+        mode,
+        scale,
+        scaleNote,
+        fthora,
+        martyria,
+        fthoraAboveNote,
+        fthoraAboveNote2,
+        fthoraAboveQuantitativeNeumeRight,
+        note,
+        note2,
+        quantitativeNeumeAboveNote,
+        quantitativeNeumeAboveNote2,
+        quantitativeNeumeRight,
+      };
+
+      this.updateModeKey(element, newValues);
+
+      this.save();
+    },
+
+    updateMartyria(
+      element: MartyriaElement,
+      newValues: Partial<MartyriaElement>,
+    ) {
+      this.commandService.execute(
+        martyriaCommandFactory.create('update-properties', {
+          target: element,
+          newValues: newValues,
+        }),
+      );
+
+      this.save();
+    },
+
+    updateMartyriaFthora(element: MartyriaElement, fthora: Fthora | null) {
+      let chromaticFthoraNote: ScaleNote | null = null;
+
+      if (
+        fthora === Fthora.SoftChromaticThi_Top ||
+        fthora === Fthora.SoftChromaticThi_Bottom
+      ) {
+        chromaticFthoraNote = ScaleNote.Thi;
+      } else if (
+        fthora === Fthora.SoftChromaticPa_Top ||
+        fthora === Fthora.SoftChromaticPa_Bottom
+      ) {
+        chromaticFthoraNote = ScaleNote.Ga;
+      } else if (
+        fthora === Fthora.HardChromaticThi_Top ||
+        fthora === Fthora.HardChromaticThi_Bottom
+      ) {
+        chromaticFthoraNote = ScaleNote.Thi;
+      } else if (
+        fthora === Fthora.HardChromaticPa_Top ||
+        fthora === Fthora.HardChromaticPa_Bottom
+      ) {
+        chromaticFthoraNote = ScaleNote.Pa;
+      }
+
+      this.updateMartyria(element, { fthora, chromaticFthoraNote });
+    },
+
+    updateMartyriaTempoLeft(
+      element: MartyriaElement,
+      tempoLeft: TempoSign | null,
+    ) {
+      let bpm = element.bpm;
+
+      if (tempoLeft != null) {
+        bpm =
+          this.editorPreferences.getDefaultTempo(tempoLeft) ??
+          TempoElement.getDefaultBpm(tempoLeft);
+      }
+
+      this.updateMartyria(element, {
+        tempoLeft,
+        bpm,
+        tempo: null,
+        tempoRight: null,
+      });
+    },
+
+    updateMartyriaTempo(element: MartyriaElement, tempo: TempoSign | null) {
+      let bpm = element.bpm;
+
+      if (tempo != null) {
+        bpm =
+          this.editorPreferences.getDefaultTempo(tempo) ??
+          TempoElement.getDefaultBpm(tempo);
+      }
+
+      this.updateMartyria(element, {
+        tempo,
+        bpm,
+        tempoLeft: null,
+        tempoRight: null,
+      });
+    },
+
+    updateMartyriaTempoRight(
+      element: MartyriaElement,
+      tempoRight: TempoSign | null,
+    ) {
+      let bpm = element.bpm;
+
+      if (tempoRight != null) {
+        bpm =
+          this.editorPreferences.getDefaultTempo(tempoRight) ??
+          TempoElement.getDefaultBpm(tempoRight);
+      }
+
+      this.updateMartyria(element, {
+        tempoRight,
+        bpm,
+        tempoLeft: null,
+        tempo: null,
+      });
+    },
+
+    updateMartyriaBpm(element: MartyriaElement, bpm: number) {
+      this.updateMartyria(element, { bpm });
+      this.save();
+    },
+
+    updateMartyriaMeasureBar(
+      element: MartyriaElement,
+      {
+        measureBarLeft,
+        measureBarRight,
+      }: {
+        measureBarLeft: MeasureBar | null;
+        measureBarRight: MeasureBar | null;
+      },
+    ) {
+      this.updateMartyria(element, {
+        measureBarLeft,
+        measureBarRight,
+      });
+      this.save();
+    },
+
+    updateMartyriaAlignRight(element: MartyriaElement, alignRight: boolean) {
+      this.updateMartyria(element, { alignRight, quantitativeNeume: null });
+    },
+
+    updateMartyriaQuantitativeNeume(
+      element: MartyriaElement,
+      quantitativeNeume: QuantitativeNeume | null,
+    ) {
+      this.updateMartyria(element, { quantitativeNeume });
+    },
+
+    updateMartyriaChromaticFthoraNote(
+      element: MartyriaElement,
+      chromaticFthoraNote: ScaleNote | null,
+    ) {
+      this.updateMartyria(element, { chromaticFthoraNote });
+    },
+
+    updateMartyriaAuto(element: MartyriaElement, auto: boolean) {
+      if (element.auto === auto) {
+        return;
+      }
+
+      this.updateMartyria(element, { auto });
+    },
+
+    updateMartyriaNote(element: MartyriaElement, note: Note) {
+      if (element.note === note) {
+        return;
+      }
+
+      this.updateMartyria(element, { note, auto: false });
+    },
+
+    updateMartyriaScale(element: MartyriaElement, scale: Scale) {
+      if (element.scale === scale) {
+        return;
+      }
+
+      this.updateMartyria(element, { scale, auto: false });
+    },
+
+    updateMartyriaSpaceAfter(element: MartyriaElement, spaceAfter: number) {
+      this.updateMartyria(element, { spaceAfter });
+      this.save();
+    },
+
+    updateMartyriaVerticalOffset(
+      element: MartyriaElement,
+      verticalOffset: number,
+    ) {
+      this.updateMartyria(element, { verticalOffset });
+      this.save();
+    },
+
+    updateMartyriaRootSignOverride(
+      element: MartyriaElement,
+      rootSignOverride: RootSign,
+    ) {
+      rootSignOverride = rootSignOverride || null;
+      this.updateMartyria(element, { rootSignOverride });
+      this.save();
+    },
+
+    updateTempo(element: TempoElement, newValues: Partial<TempoElement>) {
+      this.commandService.execute(
+        tempoCommandFactory.create('update-properties', {
+          target: element,
+          newValues: newValues,
+        }),
+      );
+
+      this.save();
+    },
+
+    updateTempoSpaceAfter(element: TempoElement, spaceAfter: number) {
+      this.updateTempo(element, { spaceAfter });
+      this.save();
+    },
+
+    updateTempoBpm(element: TempoElement, bpm: number) {
+      this.updateTempo(element, { bpm });
+      this.save();
+    },
+
+    updateDropCap(element: DropCapElement, newValues: Partial<DropCapElement>) {
+      this.commandService.execute(
+        dropCapCommandFactory.create('update-properties', {
+          target: element,
+          newValues: newValues,
+        }),
+      );
+
+      this.save();
+    },
+
+    updateDropCapContent(element: DropCapElement, content: string) {
+      // Replace newlines. This should only happen if the user pastes
+      // text containing new lines.
+      const sanitizedContent = content.replace(/(?:\r\n|\r|\n)/g, ' ');
+      if (sanitizedContent !== content) {
+        content = sanitizedContent;
+
+        // Force the lyrics to re-render
+        element.keyHelper++;
+      }
+
+      if (content === '') {
+        const index = this.elements.indexOf(element);
+
+        if (index > -1) {
+          if (this.selectedElement === element) {
+            this.selectedElement = null;
+          }
+
+          this.removeScoreElement(element);
+        }
+      } else if (element.content !== content) {
+        this.commandService.execute(
+          dropCapCommandFactory.create('update-properties', {
+            target: element,
+            newValues: { content },
+          }),
+        );
+
+        this.refreshStaffLyrics();
+      }
+
+      this.save();
+    },
+
+    updateDropCapUseDefaultStyle(
+      element: DropCapElement,
+      useDefaultStyle: boolean,
+    ) {
+      this.updateDropCap(element, { useDefaultStyle });
+    },
+
+    updateDropCapFontSize(element: DropCapElement, fontSize: number) {
+      this.updateDropCap(element, { fontSize });
+    },
+
+    updateDropCapFontFamily(element: DropCapElement, fontFamily: string) {
+      this.updateDropCap(element, { fontFamily });
+    },
+
+    updateDropCapStrokeWidth(element: DropCapElement, strokeWidth: number) {
+      this.updateDropCap(element, { strokeWidth });
+    },
+
+    updateDropCapColor(element: DropCapElement, color: string) {
+      this.updateDropCap(element, { color });
+    },
+
+    updateDropCapFontWeight(element: DropCapElement, bold: boolean) {
+      this.updateDropCap(element, { fontWeight: bold ? '700' : '400' });
+    },
+
+    updateDropCapFontStyle(element: DropCapElement, italic: boolean) {
+      this.updateDropCap(element, { fontStyle: italic ? 'italic' : 'normal' });
+    },
+
+    updateDropCapLineHeight(
+      element: DropCapElement,
+      lineHeight: number | null,
+    ) {
+      this.updateDropCap(element, { lineHeight });
+    },
+
+    updateDropCapLineSpan(element: DropCapElement, lineSpan: number) {
+      this.updateDropCap(element, { lineSpan });
+    },
+
+    updateDropCapWidth(element: DropCapElement, customWidth: number | null) {
+      this.updateDropCap(element, { customWidth });
+    },
+
+    updateImageBox(
+      element: ImageBoxElement,
+      newValues: Partial<ImageBoxElement>,
+    ) {
+      this.commandService.execute(
+        imageBoxCommandFactory.create('update-properties', {
+          target: element,
+          newValues: newValues,
+        }),
+      );
+
+      this.save();
+    },
+
+    updateImageBoxInline(element: ImageBoxElement, inline: boolean) {
+      this.updateImageBox(element, { inline });
+    },
+
+    updateImageBoxLockAspectRatio(
+      element: ImageBoxElement,
+      lockAspectRatio: boolean,
+    ) {
+      this.updateImageBox(element, { lockAspectRatio });
+    },
+
+    updateImageBoxAlignment(
+      element: ImageBoxElement,
+      alignment: TextBoxAlignment,
+    ) {
+      this.updateImageBox(element, { alignment });
+    },
+
+    updateImageBoxSize(
+      element: ImageBoxElement,
+      imageWidth: number,
+      imageHeight: number,
+    ) {
+      this.updateImageBox(element, { imageWidth, imageHeight });
+    },
+
+    deleteSelectedElement() {
+      if (
+        this.selectedWorkspace.selectedAnnotationElement != null &&
+        this.selectedElement?.elementType === ElementType.Note
+      ) {
+        this.removeAnnotation(
+          this.selectedElement as NoteElement,
+          this.selectedWorkspace.selectedAnnotationElement,
+        );
+
+        return;
+      }
+
+      if (
+        this.selectedWorkspace.selectedAlternateLineElement != null &&
+        this.selectedElement?.elementType === ElementType.Note
+      ) {
+        this.removeAlternateLine(
+          this.selectedElement as NoteElement,
+          this.selectedWorkspace.selectedAlternateLineElement,
+        );
+
+        return;
+      }
+
+      if (
+        this.selectedElement != null &&
+        !this.isLastElement(this.selectedElement)
+      ) {
+        const index = this.selectedElementIndex;
+
+        this.removeScoreElement(this.selectedElement);
+
+        this.selectedElement = this.elements[index];
+
+        this.save();
+      } else if (this.selectionRange != null) {
+        const elementsToDelete = this.elements.filter(
+          (x) => x.elementType != ElementType.Empty && this.isSelected(x),
+        );
+
+        this.commandService.executeAsBatch(
+          elementsToDelete.map((element) =>
+            scoreElementCommandFactory.create('remove-from-collection', {
+              element,
+              collection: this.elements,
+            }),
+          ),
+        );
+
+        this.refreshStaffLyrics();
+
+        const start = Math.min(
+          this.selectionRange.start,
+          this.selectionRange.end,
+        );
+
+        this.selectedElement =
+          this.elements[Math.min(start, this.elements.length - 1)];
+
+        this.save();
+      }
+    },
+
+    deletePreviousElement() {
+      if (this.selectedWorkspace.selectedAlternateLineElement) {
+        const elements =
+          this.selectedWorkspace.selectedAlternateLineElement.elements;
+        this.removeScoreElement(elements[this.elements.length - 1], elements);
+
+        return;
+      }
+
+      if (
+        this.selectedElement &&
+        this.selectedElementIndex > 0 &&
+        navigableElements.includes(
+          this.elements[this.selectedElementIndex - 1].elementType,
+        )
+      ) {
+        this.removeScoreElement(this.elements[this.selectedElementIndex - 1]);
+
+        this.save();
+      }
+    },
+
+    updatePageSetup(pageSetup: PageSetup) {
+      const needToRecalcRichTextBoxes =
+        pageSetup.textBoxDefaultFontFamily !=
+          this.score.pageSetup.textBoxDefaultFontFamily ||
+        pageSetup.textBoxDefaultFontSize !=
+          this.score.pageSetup.textBoxDefaultFontSize;
+
+      const updateCommands: Command[] = [
+        pageSetupCommandFactory.create('update-properties', {
+          target: this.score.pageSetup,
+          newValues: pageSetup,
+        }),
+      ];
+
+      if (
+        pageSetup.richHeaderFooter &&
+        !this.score.pageSetup.richHeaderFooter
+      ) {
+        updateCommands.push(
+          scoreElementCommandFactory.create('replace-element-in-collection', {
+            collection: this.score.headers.default.elements,
+            element: this.createRichHeaderFooter('', 'Title', '$p'),
+            replaceAtIndex: 0,
+          }),
+          scoreElementCommandFactory.create('replace-element-in-collection', {
+            collection: this.score.headers.even.elements,
+            element: this.createRichHeaderFooter('$p', 'Title', ''),
+            replaceAtIndex: 0,
+          }),
+          scoreElementCommandFactory.create('replace-element-in-collection', {
+            collection: this.score.headers.firstPage.elements,
+            element: this.createRichHeaderFooter('', 'Title', '$p'),
+            replaceAtIndex: 0,
+          }),
+          scoreElementCommandFactory.create('replace-element-in-collection', {
+            collection: this.score.headers.odd.elements,
+            element: this.createRichHeaderFooter('', 'Title', '$p'),
+            replaceAtIndex: 0,
+          }),
+          scoreElementCommandFactory.create('replace-element-in-collection', {
+            collection: this.score.footers.default.elements,
+            element: this.createRichHeaderFooter('', 'Footer', '$p'),
+            replaceAtIndex: 0,
+          }),
+          scoreElementCommandFactory.create('replace-element-in-collection', {
+            collection: this.score.footers.even.elements,
+            element: this.createRichHeaderFooter('$p', 'Footer', ''),
+            replaceAtIndex: 0,
+          }),
+          scoreElementCommandFactory.create('replace-element-in-collection', {
+            collection: this.score.footers.firstPage.elements,
+            element: this.createRichHeaderFooter('', 'Footer', '$p'),
+            replaceAtIndex: 0,
+          }),
+          scoreElementCommandFactory.create('replace-element-in-collection', {
+            collection: this.score.footers.odd.elements,
+            element: this.createRichHeaderFooter('', 'Footer', '$p'),
+            replaceAtIndex: 0,
+          }),
+        );
+      } else if (
+        !pageSetup.richHeaderFooter &&
+        this.score.pageSetup.richHeaderFooter
+      ) {
+        updateCommands.push(
+          scoreElementCommandFactory.create('replace-element-in-collection', {
+            collection: this.score.headers.default.elements,
+            element: this.createRegularHeaderFooter('', 'Title', '$p'),
+            replaceAtIndex: 0,
+          }),
+          scoreElementCommandFactory.create('replace-element-in-collection', {
+            collection: this.score.headers.even.elements,
+            element: this.createRegularHeaderFooter('$p', 'Title', ''),
+            replaceAtIndex: 0,
+          }),
+          scoreElementCommandFactory.create('replace-element-in-collection', {
+            collection: this.score.headers.firstPage.elements,
+            element: this.createRegularHeaderFooter('', 'Title', '$p'),
+            replaceAtIndex: 0,
+          }),
+          scoreElementCommandFactory.create('replace-element-in-collection', {
+            collection: this.score.headers.odd.elements,
+            element: this.createRegularHeaderFooter('', 'Title', '$p'),
+            replaceAtIndex: 0,
+          }),
+          scoreElementCommandFactory.create('replace-element-in-collection', {
+            collection: this.score.footers.default.elements,
+            element: this.createRegularHeaderFooter('', 'Footer', '$p'),
+            replaceAtIndex: 0,
+          }),
+          scoreElementCommandFactory.create('replace-element-in-collection', {
+            collection: this.score.footers.even.elements,
+            element: this.createRegularHeaderFooter('$p', 'Footer', ''),
+            replaceAtIndex: 0,
+          }),
+          scoreElementCommandFactory.create('replace-element-in-collection', {
+            collection: this.score.footers.firstPage.elements,
+            element: this.createRegularHeaderFooter('', 'Footer', '$p'),
+            replaceAtIndex: 0,
+          }),
+          scoreElementCommandFactory.create('replace-element-in-collection', {
+            collection: this.score.footers.odd.elements,
+            element: this.createRegularHeaderFooter('', 'Footer', '$p'),
+            replaceAtIndex: 0,
+          }),
+        );
+      }
+
+      this.commandService.executeAsBatch(updateCommands);
+
+      if (needToRecalcRichTextBoxes) {
+        this.recalculateRichTextBoxHeights();
+        this.recalculateTextBoxHeights();
+      }
+
+      this.save();
+    },
+
+    updatePageSetupUseOptionalDiatonicFthoras(
+      useOptionalDiatonicFthoras: boolean,
+    ) {
+      this.commandService.execute(
+        pageSetupCommandFactory.create('update-properties', {
+          target: this.score.pageSetup,
+          newValues: { useOptionalDiatonicFthoras },
+        }),
+      );
+
+      this.save();
+    },
+
+    createRegularHeaderFooter(left: string, center: string, right: string) {
+      const textbox = new TextBoxElement();
+      textbox.multipanel = true;
+      textbox.contentLeft = left;
+      textbox.contentCenter = center;
+      textbox.contentRight = right;
+      return textbox;
+    },
+
+    createRichHeaderFooter(left: string, center: string, right: string) {
+      const textbox = new RichTextBoxElement();
+      textbox.multipanel = true;
+      textbox.contentLeft = `${left}`;
+      textbox.contentCenter = `<p style="text-align:center;">${center}</p>`;
+      textbox.contentRight = `<p style="text-align:right;">${right}</p>`;
+      return textbox;
+    },
+
+    updateEntryMode(mode: EntryMode) {
+      this.entryMode = mode;
+    },
+
+    updateZoom(zoom: number) {
+      if (zoom < 0.5 || zoom > 5) {
+        if (this.ipcService.isShowMessageBoxSupported()) {
+          this.ipcService.showMessageBox({
+            type: 'error',
+            title: 'Range overflow',
+            message: this.$t('toolbar:main:invalidZoom'),
+          });
+        } else {
+          alert(this.$t('toolbar:main:invalidZoom'));
+        }
+      } else {
+        this.zoom = zoom;
+        this.zoomToFit = false;
+      }
+    },
+
+    updateZoomToFit(zoomToFit: boolean) {
+      this.zoomToFit = zoomToFit;
+
+      if (zoomToFit) {
+        this.performZoomToFit();
+      }
+    },
+
+    performZoomToFit() {
+      const pageBackgroundElement = this.$refs[
+        'page-background'
+      ] as HTMLElement;
+
+      const computedStyle = getComputedStyle(pageBackgroundElement);
+
+      const availableWidth =
+        pageBackgroundElement.clientWidth -
+        parseFloat(computedStyle.paddingLeft) -
+        parseFloat(computedStyle.paddingRight);
+
+      this.zoom = availableWidth / this.score.pageSetup.pageWidth;
+    },
+
+    playAudio() {
+      try {
+        if (this.audioService.state === AudioState.Stopped) {
+          this.playbackEvents = this.playbackService.computePlaybackSequence(
+            this.elements,
+            this.audioOptions,
+            this.score.pageSetup.chrysanthineAccidentals,
+          );
+
+          if (this.playbackEvents.length === 0) {
+            return;
+          }
+
+          const startAt = this.playbackEvents.find(
+            (x) => x.elementIndex >= this.selectedElementIndex,
+          );
+
+          this.audioService.play(
+            this.playbackEvents,
+            this.audioOptions,
+            startAt,
+          );
+
+          if (startAt) {
+            this.selectedWorkspace.playbackTime = startAt.absoluteTime;
+          }
+
+          this.startPlaybackClock();
+        } else {
+          this.pauseAudio();
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    },
+
+    stopAudio() {
+      try {
+        this.audioService.stop();
+
+        this.playbackEvents = [];
+
+        this.stopPlaybackClock();
+      } catch (error) {
+        console.error(error);
+      }
+    },
+
+    pauseAudio() {
+      try {
+        this.audioService.togglePause();
+
+        if (this.audioService.state === AudioState.Paused) {
+          this.audioElement = null;
+          this.stopPlaybackClock();
+        } else {
+          this.startPlaybackClock();
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    },
+
+    startPlaybackClock() {
+      this.stopPlaybackClock();
+
+      this.playbackTimeInterval = setInterval(() => {
+        this.selectedWorkspace.playbackTime += 0.1;
+      }, 100);
+    },
+
+    stopPlaybackClock() {
+      if (this.playbackTimeInterval != null) {
+        clearInterval(this.playbackTimeInterval);
+      }
+    },
+
+    playTestTone() {
+      try {
+        this.audioService.playTestTone(this.audioOptions.frequencyDi);
+      } catch (error) {
+        console.error(error);
+      }
+    },
+
+    updateAudioOptionsSpeed(speed: number) {
+      if (this.audioService.state === AudioState.Paused) {
+        this.stopAudio();
+      }
+
+      speed = Math.max(0.1, speed);
+      speed = Math.min(3, speed);
+      speed = +speed.toFixed(2);
+
+      this.selectedWorkspace.playbackBpm /= this.audioOptions.speed;
+      this.selectedWorkspace.playbackBpm *= speed;
+
+      this.audioOptions.speed = speed;
+
+      this.saveAudioOptions();
+    },
+
+    saveAudioOptions() {
+      localStorage.setItem(
+        'audioOptionsDefault',
+        JSON.stringify(this.audioOptions),
+      );
+    },
+
+    onAudioServiceEventPlay(event: PlaybackSequenceEvent) {
+      if (this.audioService.state === AudioState.Playing) {
+        this.selectedWorkspace.playbackTime = event.absoluteTime;
+        this.selectedWorkspace.playbackBpm = event.bpm;
+
+        this.audioElement = this.elements[event.elementIndex];
+
+        // Scroll the currently playing element into view
+        const lyrics = (this.$refs[`lyrics-${event.elementIndex}`] as any[])[0];
+
+        const neumeBox = (
+          this.$refs[`element-${event.elementIndex}`] as any[]
+        )[0];
+
+        if (lyrics?.$el.scrollIntoViewIfNeeded) {
+          lyrics.$el.scrollIntoViewIfNeeded(false);
+        }
+
+        if (neumeBox?.scrollIntoViewIfNeeded) {
+          neumeBox.scrollIntoViewIfNeeded(false);
+        }
+      }
+    },
+
+    onAudioServiceStop() {
+      this.audioElement = null;
+
+      this.stopPlaybackClock();
+    },
+
+    recalculateRichTextBoxHeights() {
+      if (this.richTextBoxCalculation) {
+        this.richTextBoxCalculation = false;
+      }
+
+      nextTick(async () => {
+        const expectedCount = this.resizableRichTextBoxElements.length;
+        this.richTextBoxCalculationCount = 0;
+        this.richTextBoxCalculation = true;
+
+        const maxTries = 4 * 30; // 30 seconds
+        let tries = 1;
+        let lastCount = 0;
+
+        // Wait until all rich text boxes have updated
+        const poll = (resolve: (value: unknown) => void) => {
+          if (
+            this.richTextBoxCalculationCount === expectedCount ||
+            tries >= maxTries ||
+            this.richTextBoxCalculationCount < lastCount
+          ) {
+            resolve(true);
+          } else {
+            tries++;
+            lastCount = this.richTextBoxCalculationCount;
+            setTimeout(() => poll(resolve), 250);
+          }
+        };
+
+        await new Promise(poll);
+
+        this.richTextBoxCalculation = false;
+        this.saveDebounced(false);
+      });
+    },
+
+    recalculateTextBoxHeights() {
+      if (this.textBoxCalculation) {
+        this.textBoxCalculation = false;
+      }
+
+      nextTick(async () => {
+        const expectedCount = this.resizableRichTextBoxElements.length;
+        this.textBoxCalculationCount = 0;
+        this.textBoxCalculation = true;
+
+        const maxTries = 4 * 30; // 30 seconds
+        let tries = 1;
+        let lastCount = 0;
+
+        // Wait until all rich text boxes have updated
+        const poll = (resolve: (value: unknown) => void) => {
+          if (
+            this.textBoxCalculationCount === expectedCount ||
+            tries >= maxTries ||
+            this.textBoxCalculationCount < lastCount
+          ) {
+            resolve(true);
+          } else {
+            tries++;
+            lastCount = this.textBoxCalculationCount;
+            setTimeout(() => poll(resolve), 250);
+          }
+        };
+
+        await new Promise(poll);
+
+        this.textBoxCalculation = false;
+        this.saveDebounced(false);
+      });
+    },
+
+    onFileMenuNewScore() {
+      const workspace = new Workspace();
+      workspace.tempFileName = this.getTempFilename();
+      workspace.score = this.createDefaultScore();
+
+      this.addWorkspace(workspace);
+
+      this.selectedWorkspace = workspace;
+
+      this.selectedElement =
+        this.score.staff.elements[this.score.staff.elements.length - 1];
+      this.save(false);
+    },
+
+    async onFileMenuOpenScore(args: FileMenuOpenScoreArgs) {
+      if (!this.dialogOpen && args.success) {
+        this.openScore(args);
+      }
+    },
+
+    onFileMenuPageSetup() {
+      this.pageSetupDialogIsOpen = true;
+    },
+
+    async onFileMenuPrint() {
+      this.printMode = true;
+
+      // Blur the active element so that focus outlines and
+      // blinking cursors don't show up in the printed page
+      const activeElement = this.blurActiveElement();
+
+      const previousTitle = window.document.title;
+      window.document.title = this.getFileName(this.selectedWorkspace, false);
+
+      nextTick(async () => {
+        await this.ipcService.printWorkspace(this.selectedWorkspace);
+        this.printMode = false;
+        window.document.title = previousTitle;
+
+        // Re-focus the active element
+        this.focusElement(activeElement);
+      });
+    },
+
+    async onFileMenuExportAsPdf() {
+      this.printMode = true;
+
+      // Blur the active element so that focus outlines and
+      // blinking cursors don't show up in the printed page
+      const activeElement = this.blurActiveElement();
+
+      const previousTitle = window.document.title;
+      window.document.title = this.getFileName(this.selectedWorkspace, false);
+
+      await nextTick();
+      await this.ipcService.exportWorkspaceAsPdf(this.selectedWorkspace);
+      this.printMode = false;
+      window.document.title = previousTitle;
+
+      // Re-focus the active element
+      this.focusElement(activeElement);
+    },
+
+    async onFileMenuExportAsImage() {
+      this.exportFormat = ExportFormat.PNG;
+      this.exportDialogIsOpen = true;
+    },
+
+    async exportAsPng(args: ExportAsPngSettings) {
+      let reply: ExportWorkspaceAsImageReplyArgs;
+
+      try {
+        reply = await this.ipcService.exportWorkspaceAsImage(
+          this.selectedWorkspace,
+          'png',
+        );
+
+        if (!reply.success) {
+          return;
+        }
+      } catch (error) {
+        console.error(error);
+        return;
+      }
+
+      this.printMode = true;
+      this.exportInProgress = true;
+
+      // Blur the active element so that focus outlines and
+      // blinking cursors don't show up in the printed page
+      const activeElement = this.blurActiveElement();
+
+      nextTick(async () => {
+        try {
+          const pages = this.$refs.pages as HTMLElement[];
+
+          if (pages.length > 0) {
+            const fontEmbedCSS = await getFontEmbedCSS(pages[0]);
+
+            let pageNumber = 1;
+
+            for (const page of pages) {
+              const options = {
+                fontEmbedCSS,
+                pixelRatio: args.dpi / 96,
+                style: { margin: '0' },
+              } as any;
+
+              if (args.transparentBackground) {
+                options.style.backgroundColor = 'transparent';
+              }
+
+              let data = await toPng(page, options);
+
+              if (data != null) {
+                const fileName = reply.filePath.replace(
+                  /\.png$/,
+                  `-${pageNumber++}.png`,
+                );
+
+                data = data.replace(/^data:image\/png;base64,/, '');
+
+                if (
+                  !(await this.ipcService.exportPageAsImage(fileName, data))
+                ) {
+                  break;
+                }
+              }
+            }
+          }
+
+          if (args.openFolder) {
+            await this.ipcService.showItemInFolder(
+              reply.filePath.replace(/\.png$/, '-1.png'),
+            );
+          }
+        } catch (error) {
+          console.error(error);
+        } finally {
+          this.printMode = false;
+          this.exportInProgress = false;
+          this.closeExportDialog();
+          // Re-focus the active element
+          this.focusElement(activeElement);
+        }
+      });
+    },
+
+    // async exportAsSvg(openFolder: boolean) {
+    //   let reply: ExportWorkspaceAsImageReplyArgs;
+
+    //   try {
+    //     reply = await this.ipcService.exportWorkspaceAsImage(
+    //       this.selectedWorkspace,
+    //       'svg',
+    //     );
+
+    //     if (!reply.success) {
+    //       return;
+    //     }
+    //   } catch (error) {
+    //     console.error(error);
+    //     return;
+    //   }
+
+    //   this.printMode = true;
+    //   this.exportInProgress = true;
+
+    //   // Blur the active element so that focus outlines and
+    //   // blinking cursors don't show up in the printed page
+    //   const activeElement = this.blurActiveElement();
+
+    //   nextTick(async () => {
+    //     try {
+    //       const pages = this.$refs.pages as HTMLElement[];
+
+    //       if (pages.length > 0) {
+    //         const fontEmbedCSS = await getFontEmbedCSS(pages[0]);
+
+    //         let pageNumber = 1;
+
+    //         for (let page of pages) {
+    //           const data = await toSvg(page, {
+    //             fontEmbedCSS,
+    //           });
+
+    //           if (data != null) {
+    //             const fileName = reply.filePath.replace(
+    //               /.svg$/,
+    //               `-${pageNumber++}.svg`,
+    //             );
+
+    //             if (!(await this.ipcService.exportPageAsImage(fileName, data))) {
+    //               break;
+    //             }
+    //           }
+    //         }
+    //       }
+
+    //       if (openFolder) {
+    //         await this.ipcService.showItemInFolder(
+    //           reply.filePath.replace(/\.svg$/, '-1.svg'),
+    //         );
+    //       }
+    //     } catch (error) {
+    //       console.error(error);
+    //     } finally {
+    //       this.printMode = false;
+    //       this.exportInProgress = false;
+    //       this.closeExportDialog();
+    //       // Re-focus the active element
+    //       this.focusElement(activeElement);
+    //     }
+    //   });
+    // }
+
+    async onFileMenuExportAsHtml() {
+      await this.ipcService.exportWorkspaceAsHtml(
+        this.selectedWorkspace,
+        this.byzHtmlExporter.exportScore(this.score),
+      );
+    },
+
+    onFileMenuExportAsMusicXml() {
+      this.exportFormat = ExportFormat.MusicXml;
+      this.exportDialogIsOpen = true;
+    },
+
+    onFileMenuExportAsLatex() {
+      this.exportFormat = ExportFormat.Latex;
+      this.exportDialogIsOpen = true;
+    },
+
+    async exportAsMusicXml(args: ExportAsMusicXmlSettings) {
+      await this.ipcService.exportWorkspaceAsMusicXml(
+        this.selectedWorkspace,
+        this.musicXmlExporter.export(this.score, args.options),
+        args.compressed,
+        args.openFolder,
+      );
+
+      this.closeExportDialog();
+    },
+
+    async exportAsLatex(args: ExportAsLatexSettings) {
+      await this.ipcService.exportWorkspaceAsLatex(
+        this.selectedWorkspace,
         JSON.stringify(
-          latexExporter.export(editor.pages, editor.score.pageSetup, options),
+          this.latexExporter.export(
+            this.pages,
+            this.score.pageSetup,
+            args.options,
+          ),
           null,
           2,
         ),
       );
-      removeWorkspace(editor.selectedWorkspace as Workspace);
-    }
-  }
 
-  if (
-    openWorkspaceResults.silentPdf ||
-    openWorkspaceResults.silentLatex ||
-    openWorkspaceResults.silentHtml
-  ) {
-    await ipcService.exitApplication();
-  }
+      this.closeExportDialog();
+    },
 
-  openWorkspaceResults.files
-    .filter((x) => x.success)
-    .forEach((x) => openScore(x));
+    blurActiveElement() {
+      const activeElement = document.activeElement;
 
-  if (openWorkspaceResults.files.some((x) => x.success)) {
-    return;
-  }
+      if (activeElement instanceof HTMLElement) {
+        activeElement.blur();
+      }
 
-  const workspace = new Workspace();
-  workspace.tempFileName = getTempFilename();
-  workspace.score = createDefaultScore();
+      return activeElement;
+    },
 
-  addWorkspace(workspace);
-
-  if (isDevelopment) {
-    const scoreString = localStorage.getItem('score');
-
-    if (scoreString) {
-      const score: Score = SaveService.LoadScoreFromJson(
-        JSON.parse(scoreString),
-      );
-      editor.selectedWorkspace.filePath = localStorage.getItem('filePath');
-      editor.selectedWorkspace.hasUnsavedChanges =
-        localStorage.getItem('hasUnsavedChanges') === 'true';
-
-      workspace.score = score;
-    }
-  }
-
-  setSelectedWorkspace(workspace);
-
-  setSelectedElement(
-    editor.score.staff.elements[editor.score.staff.elements.length - 1],
-  );
-
-  editor.pages = LayoutService.processPages(
-    editor.selectedWorkspace as Workspace,
-  );
-}
-
-async function saveWorkspace(workspace: Workspace) {
-  if (!editor.lyricsLocked) {
-    editor.setLyrics(
-      lyricService.extractLyrics(
-        editor.elements,
-        editor.score.pageSetup.disableGreekMelismata,
-      ),
-    );
-  }
-
-  return await ipcService.saveWorkspace(workspace);
-}
-
-async function saveWorkspaceAs(workspace: Workspace) {
-  if (!editor.lyricsLocked) {
-    editor.setLyrics(
-      lyricService.extractLyrics(
-        editor.elements,
-        editor.score.pageSetup.disableGreekMelismata,
-      ),
-    );
-  }
-
-  return await ipcService.saveWorkspaceAs(workspace);
-}
-
-async function closeWorkspace(workspace: Workspace) {
-  let shouldClose = true;
-
-  if (workspace.hasUnsavedChanges) {
-    const fileName =
-      workspace.filePath != null
-        ? getFileNameFromPath(workspace.filePath)
-        : workspace.tempFileName;
-
-    let dialogResult: ShowMessageBoxReplyArgs;
-
-    if (ipcService.isShowMessageBoxSupported()) {
-      dialogResult = await ipcService.showMessageBox({
-        title: import.meta.env.VITE_TITLE,
-        message: `Do you want to save the changes you made to ${fileName}?`,
-        detail: "Your changes will be lost if you don't save them.",
-        type: 'warning',
-        buttons: ['Save', "Don't Save", 'Cancel'],
-      });
-    } else {
-      dialogResult = {
-        response: confirm(
-          `${fileName} has unsaved changes. Are you sure you want to close it?`,
-        )
-          ? 1
-          : 2,
-        checkboxChecked: false,
-      };
-    }
-
-    if (dialogResult.response === 0) {
-      // User chose "Save"
-      const saveResult =
-        workspace.filePath != null
-          ? await saveWorkspace(workspace)
-          : await saveWorkspaceAs(workspace);
-
-      // If they successfully saved, then we can close the workspacce
-      shouldClose = saveResult.success;
-    } else if (dialogResult.response === 2) {
-      // User chose "Cancel", so don't close the workspace.
-      shouldClose = false;
-    }
-  }
-
-  if (shouldClose) {
-    // If using the browser, remove the item from local storage
-    if (isBrowser) {
-      localStorage.removeItem(`workspace-${workspace.id}`);
-    }
-
-    // If the last tab has closed, then exit
-    if (editor.workspaces.length == 1) {
-      await ipcService.exitApplication();
-    }
-
-    removeWorkspace(workspace);
-  }
-
-  return shouldClose;
-}
-
-async function onCloseWorkspaces(args: CloseWorkspacesArgs) {
-  const workspacesToClose: Workspace[] = editor.workspaces.filter(
-    (workspace) => {
-      const index: number = tabs.findIndex((x) => x.key === workspace.id);
-
-      const pivot: number = args.workspaceId
-        ? tabs.findIndex((x) => x.key === args.workspaceId)
-        : tabs.findIndex((x) => x.key === editor.selectedWorkspace.id);
-
-      switch (args.disposition) {
-        case CloseWorkspacesDisposition.SELF:
-          return index === pivot;
-        case CloseWorkspacesDisposition.OTHERS:
-          return index !== pivot;
-        case CloseWorkspacesDisposition.LEFT:
-          return index < pivot;
-        case CloseWorkspacesDisposition.RIGHT:
-          return index > pivot;
-        default:
-          throw new Error(`Error: Unknown disposition ${args.disposition}.`);
+    focusElement(element: Element | null) {
+      if (element instanceof HTMLElement) {
+        element.focus();
       }
     },
-  ) as Workspace[];
 
-  for (const workspaceToClose of workspacesToClose) {
-    if (!(await closeWorkspace(workspaceToClose))) {
-      // The user vetoed the operation.
-      break;
-    }
-  }
-}
-
-async function onCloseApplication() {
-  // Give the user a chance to save their changes before exiting
-  const unsavedWorkspaces = editor.workspaces.filter(
-    (x) => x.hasUnsavedChanges,
-  );
-
-  for (const workspace of unsavedWorkspaces) {
-    if (!(await closeWorkspace(workspace as Workspace))) {
-      await ipcService.cancelExit();
-      return false;
-    }
-  }
-
-  await ipcService.exitApplication();
-}
-
-function updatePageVisibility(page: Page, isVisible: boolean) {
-  page.isVisible = isVisible;
-}
-
-function updatePageSetup(pageSetup: PageSetup) {
-  const needToRecalcRichTextBoxes =
-    pageSetup.textBoxDefaultFontFamily !=
-      editor.score.pageSetup.textBoxDefaultFontFamily ||
-    pageSetup.textBoxDefaultFontSize !=
-      editor.score.pageSetup.textBoxDefaultFontSize;
-
-  const updateCommands: Command[] = [
-    pageSetupCommandFactory.create('update-properties', {
-      target: editor.score.pageSetup,
-      newValues: pageSetup,
-    }),
-  ];
-
-  if (pageSetup.richHeaderFooter && !editor.score.pageSetup.richHeaderFooter) {
-    updateCommands.push(
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: editor.score.headers.default.elements,
-        element: createRichHeaderFooter('', 'Title', '$p'),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: editor.score.headers.even.elements,
-        element: createRichHeaderFooter('$p', 'Title', ''),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: editor.score.headers.firstPage.elements,
-        element: createRichHeaderFooter('', 'Title', '$p'),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: editor.score.headers.odd.elements,
-        element: createRichHeaderFooter('', 'Title', '$p'),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: editor.score.footers.default.elements,
-        element: createRichHeaderFooter('', 'Footer', '$p'),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: editor.score.footers.even.elements,
-        element: createRichHeaderFooter('$p', 'Footer', ''),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: editor.score.footers.firstPage.elements,
-        element: createRichHeaderFooter('', 'Footer', '$p'),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: editor.score.footers.odd.elements,
-        element: createRichHeaderFooter('', 'Footer', '$p'),
-        replaceAtIndex: 0,
-      }),
-    );
-  } else if (
-    !pageSetup.richHeaderFooter &&
-    editor.score.pageSetup.richHeaderFooter
-  ) {
-    updateCommands.push(
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: editor.score.headers.default.elements,
-        element: createRegularHeaderFooter('', 'Title', '$p'),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: editor.score.headers.even.elements,
-        element: createRegularHeaderFooter('$p', 'Title', ''),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: editor.score.headers.firstPage.elements,
-        element: createRegularHeaderFooter('', 'Title', '$p'),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: editor.score.headers.odd.elements,
-        element: createRegularHeaderFooter('', 'Title', '$p'),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: editor.score.footers.default.elements,
-        element: createRegularHeaderFooter('', 'Footer', '$p'),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: editor.score.footers.even.elements,
-        element: createRegularHeaderFooter('$p', 'Footer', ''),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: editor.score.footers.firstPage.elements,
-        element: createRegularHeaderFooter('', 'Footer', '$p'),
-        replaceAtIndex: 0,
-      }),
-      scoreElementCommandFactory.create('replace-element-in-collection', {
-        collection: editor.score.footers.odd.elements,
-        element: createRegularHeaderFooter('', 'Footer', '$p'),
-        replaceAtIndex: 0,
-      }),
-    );
-  }
-
-  editor.commandService.executeAsBatch(updateCommands);
-
-  if (needToRecalcRichTextBoxes) {
-    editing.recalculateRichTextBoxHeights();
-    editing.recalculateTextBoxHeights();
-  }
-
-  save();
-}
-
-function updatePageSetupUseOptionalDiatonicFthoras(
-  useOptionalDiatonicFthoras: boolean,
-) {
-  editor.commandService.execute(
-    pageSetupCommandFactory.create('update-properties', {
-      target: editor.score.pageSetup,
-      newValues: { useOptionalDiatonicFthoras },
-    }),
-  );
-
-  save();
-}
-
-function createRegularHeaderFooter(
-  left: string,
-  center: string,
-  right: string,
-) {
-  const textbox = new TextBoxElement();
-  textbox.multipanel = true;
-  textbox.contentLeft = left;
-  textbox.contentCenter = center;
-  textbox.contentRight = right;
-  return textbox;
-}
-
-function createRichHeaderFooter(left: string, center: string, right: string) {
-  const textbox = new RichTextBoxElement();
-  textbox.multipanel = true;
-  textbox.contentLeft = `${left}`;
-  textbox.contentCenter = `<p style="text-align:center;">${center}</p>`;
-  textbox.contentRight = `<p style="text-align:right;">${right}</p>`;
-  return textbox;
-}
-
-function updateEntryMode(mode: EntryMode) {
-  editor.selectedWorkspace.entryMode = mode;
-}
-
-function updateZoom(zoom: number) {
-  if (zoom < 0.5 || zoom > 5) {
-    if (ipcService.isShowMessageBoxSupported()) {
-      ipcService.showMessageBox({
-        type: 'error',
-        title: 'Range overflow',
-        message: i18next.t('toolbar:main:invalidZoom'),
-      });
-    } else {
-      alert(i18next.t('toolbar:main:invalidZoom'));
-    }
-  } else {
-    editor.selectedWorkspace.zoom = zoom;
-    editor.selectedWorkspace.zoomToFit = false;
-  }
-}
-
-function updateZoomToFit(zoomToFit: boolean) {
-  editor.selectedWorkspace.zoomToFit = zoomToFit;
-
-  if (zoomToFit) {
-    performZoomToFit();
-  }
-}
-
-function performZoomToFit() {
-  const pageBackgroundElement = pageBackgroundRef.value as HTMLElement;
-
-  const computedStyle = getComputedStyle(pageBackgroundElement);
-
-  const availableWidth =
-    pageBackgroundElement.clientWidth -
-    parseFloat(computedStyle.paddingLeft) -
-    parseFloat(computedStyle.paddingRight);
-
-  editor.selectedWorkspace.zoom =
-    availableWidth / editor.score.pageSetup.pageWidth;
-}
-
-function onFileMenuNewScore() {
-  const workspace = new Workspace();
-  workspace.tempFileName = getTempFilename();
-  workspace.score = createDefaultScore();
-
-  addWorkspace(workspace);
-
-  setSelectedWorkspace(workspace);
-
-  setSelectedElement(
-    editor.score.staff.elements[editor.score.staff.elements.length - 1],
-  );
-  save(false);
-}
-
-async function onFileMenuOpenScore(args: FileMenuOpenScoreArgs) {
-  if (!editor.dialogOpen && args.success) {
-    openScore(args);
-  }
-}
-
-function onFileMenuPageSetup() {
-  editor.pageSetupDialogIsOpen = true;
-}
-
-function onFileMenuInsertAnnotation() {
-  if (editor.selectedElement?.elementType === ElementType.Note) {
-    const el = new AnnotationElement();
-    const fontHeight = TextMeasurementService.getFontHeight(
-      editor.score.pageSetup.lyricsFont,
-    );
-    el.x = 0;
-    el.y = -fontHeight;
-    (editor.selectedElement as NoteElement).annotations.push(el);
-    editor.selectedWorkspace.selectedAnnotationElement = el;
-    save();
-  }
-}
-
-function onFileMenuInsertAlternateLine() {
-  if (editor.selectedElement?.elementType === ElementType.Note) {
-    const el = new AlternateLineElement();
-    const fontHeight = TextMeasurementService.getFontHeight(
-      editor.score.pageSetup.lyricsFont,
-    );
-    el.x = 0;
-    el.y = -fontHeight;
-    (editor.selectedElement as NoteElement).alternateLines.push(el);
-    editor.selectedWorkspace.selectedAlternateLineElement = el;
-    save();
-  }
-}
-
-function onFileMenuInsertTextBox(args?: FileMenuInsertTextboxArgs) {
-  const element = new TextBoxElement();
-  element.inline = args?.inline ?? false;
-
-  if (element.inline) {
-    element.color = editor.score.pageSetup.lyricsDefaultColor;
-    element.fontFamily = editor.score.pageSetup.lyricsDefaultFontFamily;
-    element.fontSize = editor.score.pageSetup.lyricsDefaultFontSize;
-    element.strokeWidth = editor.score.pageSetup.lyricsDefaultStrokeWidth;
-    element.bold = editor.score.pageSetup.lyricsDefaultFontWeight === '700';
-    element.italic = editor.score.pageSetup.lyricsDefaultFontStyle === 'italic';
-  } else {
-    element.color = editor.score.pageSetup.textBoxDefaultColor;
-    element.fontFamily = editor.score.pageSetup.textBoxDefaultFontFamily;
-    element.fontSize = editor.score.pageSetup.textBoxDefaultFontSize;
-    element.strokeWidth = editor.score.pageSetup.textBoxDefaultStrokeWidth;
-    element.lineHeight = editor.score.pageSetup.textBoxDefaultLineHeight;
-    element.bold = editor.score.pageSetup.textBoxDefaultFontWeight === '700';
-    element.italic =
-      editor.score.pageSetup.textBoxDefaultFontStyle === 'italic';
-  }
-
-  addScoreElement(element, editor.selectedElementIndex);
-
-  setSelectedElement(element);
-
-  save();
-
-  nextTick(() => {
-    (editor.elementRefs[element.index] as InstanceType<typeof TextBox>).focus();
-  });
-}
-
-function onFileMenuInsertRichTextBox() {
-  const element = new RichTextBoxElement();
-  element.rtl = editor.score.pageSetup.melkiteRtl;
-
-  addScoreElement(element, editor.selectedElementIndex);
-
-  setSelectedElement(element);
-
-  save();
-
-  nextTick(() => {
-    (
-      editor.elementRefs[element.index] as InstanceType<typeof TextBoxRich>
-    ).focus();
-  });
-}
-
-function onFileMenuInsertModeKey() {
-  const element = createDefaultModeKey(editor.score.pageSetup);
-
-  addScoreElement(element, editor.selectedElementIndex);
-
-  setSelectedElement(element);
-
-  openModeKeyDialog();
-
-  save();
-}
-
-function onFileMenuInsertDropCapBefore() {
-  addDropCap(false);
-}
-
-function onFileMenuInsertDropCapAfter() {
-  addDropCap(true);
-}
-
-function onFileMenuInsertImage(args: FileMenuOpenImageArgs) {
-  const element = new ImageBoxElement();
-
-  element.data = args.data;
-  element.imageWidth = args.imageWidth;
-  element.imageHeight = args.imageHeight;
-
-  addScoreElement(element, editor.selectedElementIndex);
-
-  setSelectedElement(element);
-
-  save();
-}
-
-function onFileMenuInsertHeader() {
-  if (editor.score.pageSetup.showHeader) {
-    return;
-  }
-
-  editor.score.pageSetup.showHeader = true;
-
-  updatePageSetup(editor.score.pageSetup);
-}
-
-function onFileMenuInsertFooter() {
-  if (editor.score.pageSetup.showFooter) {
-    return;
-  }
-
-  editor.score.pageSetup.showFooter = true;
-
-  updatePageSetup(editor.score.pageSetup);
-}
-
-function onFileMenuToolsCopyElementLink() {
-  if (editor.selectedElement?.id != null) {
-    navigator.clipboard.writeText(
-      '#element-' + editor.selectedElement.id.toString(),
-    );
-  }
-}
-
-async function onFileMenuSave() {
-  const workspace = editor.selectedWorkspace;
-
-  if (workspace.filePath != null) {
-    const result = await saveWorkspace(workspace as Workspace);
-    if (result.success) {
-      workspace.hasUnsavedChanges = false;
-    }
-  } else {
-    const result = await saveWorkspaceAs(workspace as Workspace);
-    if (result.success) {
-      workspace.filePath = result.filePath;
-      workspace.hasUnsavedChanges = false;
-    }
-  }
-}
-
-async function onFileMenuSaveAs() {
-  const workspace = editor.selectedWorkspace;
-
-  const result = await saveWorkspaceAs(workspace as Workspace);
-  if (result.success) {
-    workspace.filePath = result.filePath;
-    workspace.hasUnsavedChanges = false;
-  }
-}
-
-function onFileMenuFind() {
-  if (editor.searchTextPanelIsOpen) {
-    searchTextRef.value?.focus();
-  } else {
-    editor.searchTextPanelIsOpen = true;
-  }
-}
-
-function onFileMenuLyrics() {
-  if (!editor.dialogOpen) {
-    if (editor.lyricManagerIsOpen) {
-      closeLyricManager();
-    } else {
-      openLyricManager();
-    }
-  }
-}
-
-function onFileMenuPreferences() {
-  if (!editor.dialogOpen) {
-    editor.editorPreferencesDialogIsOpen = true;
-  }
-}
-
-function onFileMenuGenerateTestFile(testFileType: TestFileType) {
-  const workspace = new Workspace();
-  workspace.tempFileName = getTempFilename();
-  workspace.score = new Score();
-
-  // The ison test page can be used to inspect the ison alignment
-  // provided by the font, so we disable the automatic ison alignment
-  if (testFileType === TestFileType.Ison) {
-    workspace.score.pageSetup.alignIsonIndicators = false;
-  }
-
-  addWorkspace(workspace);
-
-  setSelectedWorkspace(workspace);
-
-  editor.selectedWorkspace.filePath = null;
-  editor.score.staff.elements.unshift(
-    ...(TestFileGenerator.generateTestFile(testFileType, editor.fonts) || []),
-  );
-  save();
-}
-
-function onSearchText(args: { query: string; reverse?: boolean }) {
-  const result = textSearchService.findTextInElements(
-    args.query,
-    editor.elements,
-    editor.selectedElementIndex,
-    args.reverse ?? false,
-  );
-
-  if (result != null) {
-    setSelectedElement(result);
-
-    editor.pageRefs[result.page - 1].scrollIntoView();
-
-    editor.pages[result.page - 1].isVisible = true;
-
-    nextTick(() => {
-      if (editor.selectedElement?.elementType === ElementType.Note) {
-        (
-          editor.elementRefs[editor.selectedElementIndex] as HTMLElement
-        ).scrollIntoView();
-      } else if (editor.selectedElement?.elementType === ElementType.DropCap) {
-        (
-          editor.elementRefs[editor.selectedElementIndex] as InstanceType<
-            typeof DropCap
-          >
-        ).$el.scrollIntoView();
-      } else if (editor.selectedElement?.elementType === ElementType.TextBox) {
-        (
-          editor.elementRefs[editor.selectedElementIndex] as InstanceType<
-            typeof TextBox
-          >
-        ).$el.scrollIntoView();
+    onFileMenuInsertAnnotation() {
+      if (this.selectedElement?.elementType === ElementType.Note) {
+        const el = new AnnotationElement();
+        const fontHeight = TextMeasurementService.getFontHeight(
+          this.score.pageSetup.lyricsFont,
+        );
+        el.x = 0;
+        el.y = -fontHeight;
+        (this.selectedElement as NoteElement).annotations.push(el);
+        this.selectedWorkspace.selectedAnnotationElement = el;
+        this.save();
       }
-    });
-  }
-}
+    },
 
-function createDefaultModeKey(pageSetup: PageSetup) {
-  const defaultTemplate = ModeKeyElement.createFromTemplate(
-    modeKeyTemplates[0],
-    editor.score.pageSetup.useOptionalDiatonicFthoras,
-  );
+    onFileMenuInsertAlternateLine() {
+      if (this.selectedElement?.elementType === ElementType.Note) {
+        const el = new AlternateLineElement();
+        const fontHeight = TextMeasurementService.getFontHeight(
+          this.score.pageSetup.lyricsFont,
+        );
+        el.x = 0;
+        el.y = -fontHeight;
+        (this.selectedElement as NoteElement).alternateLines.push(el);
+        this.selectedWorkspace.selectedAlternateLineElement = el;
+        this.save();
+      }
+    },
 
-  defaultTemplate.color = pageSetup.modeKeyDefaultColor;
-  defaultTemplate.fontSize = pageSetup.modeKeyDefaultFontSize;
-  defaultTemplate.strokeWidth = pageSetup.modeKeyDefaultStrokeWidth;
+    onFileMenuInsertTextBox(args?: FileMenuInsertTextboxArgs) {
+      const element = new TextBoxElement();
+      element.inline = args?.inline ?? false;
 
-  return defaultTemplate;
-}
-
-function createDefaultScore() {
-  const score = new Score();
-
-  try {
-    const pageSetupDefault = localStorage.getItem('pageSetupDefault');
-
-    if (pageSetupDefault) {
-      SaveService.LoadPageSetup_v1(
-        score.pageSetup,
-        JSON.parse(pageSetupDefault),
-      );
-    }
-  } catch (error) {
-    console.error(error);
-  }
-
-  const title = new TextBoxElement();
-  title.content = 'Title';
-  title.alignment = TextBoxAlignment.Center;
-  title.color = score.pageSetup.textBoxDefaultColor;
-  title.fontFamily = score.pageSetup.textBoxDefaultFontFamily;
-  title.fontSize = score.pageSetup.textBoxDefaultFontSize;
-  title.strokeWidth = score.pageSetup.textBoxDefaultStrokeWidth;
-  title.lineHeight = score.pageSetup.textBoxDefaultLineHeight;
-  title.bold = score.pageSetup.textBoxDefaultFontWeight === '700';
-  title.italic = score.pageSetup.textBoxDefaultFontStyle === 'italic';
-  title.height = Math.round(
-    TextMeasurementService.getFontHeight(title.computedFont) * 1.2,
-  );
-  score.staff.elements.unshift(title, createDefaultModeKey(score.pageSetup));
-
-  for (const element of score.headersAndFooters) {
-    if (element.elementType === ElementType.TextBox) {
-      (element as TextBoxElement).fontFamily =
-        score.pageSetup.lyricsDefaultFontFamily;
-      (element as TextBoxElement).strokeWidth =
-        score.pageSetup.lyricsDefaultStrokeWidth;
-    }
-  }
-
-  return score;
-}
-
-function openScore(args: FileMenuOpenScoreArgs) {
-  if (!args.success) {
-    return;
-  }
-
-  // First make sure we don't already have the score open
-  const existingWorkspace = editor.workspaces.find(
-    (x) => x.filePath === args.filePath,
-  );
-  if (existingWorkspace != null) {
-    setSelectedWorkspace(existingWorkspace as Workspace);
-    return;
-  }
-
-  try {
-    const score: Score = SaveService.LoadScoreFromJson(JSON.parse(args.data));
-
-    // if (score.version !== ScoreVersion) {
-    //   alert('This score was created by an older version of the application. It may not work properly');
-    // }
-
-    const workspace = new Workspace();
-    workspace.filePath = args.filePath;
-    workspace.tempFileName = getTempFilename();
-    workspace.score = score;
-
-    addWorkspace(workspace);
-
-    setSelectedWorkspace(workspace);
-
-    setSelectedElement(null);
-
-    save(false);
-  } catch (error) {
-    args.success = false;
-    console.error(error);
-
-    if (error instanceof Error) {
-      if (ipcService.isShowMessageBoxSupported()) {
-        ipcService.showMessageBox({
-          type: 'error',
-          title: 'Open failed',
-          message: error.message,
-        });
+      if (element.inline) {
+        element.color = this.score.pageSetup.lyricsDefaultColor;
+        element.fontFamily = this.score.pageSetup.lyricsDefaultFontFamily;
+        element.fontSize = this.score.pageSetup.lyricsDefaultFontSize;
+        element.strokeWidth = this.score.pageSetup.lyricsDefaultStrokeWidth;
+        element.bold = this.score.pageSetup.lyricsDefaultFontWeight === '700';
+        element.italic =
+          this.score.pageSetup.lyricsDefaultFontStyle === 'italic';
       } else {
-        alert(error.message);
+        element.color = this.score.pageSetup.textBoxDefaultColor;
+        element.fontFamily = this.score.pageSetup.textBoxDefaultFontFamily;
+        element.fontSize = this.score.pageSetup.textBoxDefaultFontSize;
+        element.strokeWidth = this.score.pageSetup.textBoxDefaultStrokeWidth;
+        element.lineHeight = this.score.pageSetup.textBoxDefaultLineHeight;
+        element.bold = this.score.pageSetup.textBoxDefaultFontWeight === '700';
+        element.italic =
+          this.score.pageSetup.textBoxDefaultFontStyle === 'italic';
       }
-    }
-  }
-}
 
-function addWorkspace(workspace: Workspace) {
-  editor.workspaces.push(workspace);
+      this.addScoreElement(element, this.selectedElementIndex);
 
-  tabsRef.value?.addTab({
-    label: getFileName(workspace),
-    key: workspace.id,
-  });
-}
+      this.selectedElement = element;
 
-function removeWorkspace(workspace: Workspace) {
-  const index = editor.workspaces.indexOf(workspace);
+      this.save();
 
-  editor.workspaces.splice(index, 1);
+      nextTick(() => {
+        const index = this.elements.indexOf(element);
 
-  tabsRef.value?.removeTab(workspace.id);
+        (this.$refs[`element-${index}`] as any)[0].focus();
+      });
+    },
 
-  if (editor.selectedWorkspace === workspace) {
-    if (editor.workspaces.length > 0) {
-      setSelectedWorkspace(
-        editor.workspaces[
-          Math.min(index, editor.workspaces.length - 1)
-        ] as Workspace,
+    onFileMenuInsertRichTextBox() {
+      const element = new RichTextBoxElement();
+      element.rtl = this.score.pageSetup.melkiteRtl;
+
+      this.addScoreElement(element, this.selectedElementIndex);
+
+      this.selectedElement = element;
+
+      this.save();
+
+      nextTick(() => {
+        const index = this.elements.indexOf(element);
+
+        (this.$refs[`element-${index}`] as any)[0].focus();
+      });
+    },
+
+    onFileMenuInsertModeKey() {
+      const element = this.createDefaultModeKey(this.score.pageSetup);
+
+      this.addScoreElement(element, this.selectedElementIndex);
+
+      this.selectedElement = element;
+
+      this.openModeKeyDialog();
+
+      this.save();
+    },
+
+    onFileMenuInsertDropCapBefore() {
+      this.addDropCap(false);
+    },
+
+    onFileMenuInsertDropCapAfter() {
+      this.addDropCap(true);
+    },
+
+    onFileMenuInsertImage(args: FileMenuOpenImageArgs) {
+      const element = new ImageBoxElement();
+
+      element.data = args.data;
+      element.imageWidth = args.imageWidth;
+      element.imageHeight = args.imageHeight;
+
+      this.addScoreElement(element, this.selectedElementIndex);
+
+      this.selectedElement = element;
+
+      this.save();
+    },
+
+    onFileMenuInsertHeader() {
+      if (this.score.pageSetup.showHeader) {
+        return;
+      }
+
+      this.score.pageSetup.showHeader = true;
+
+      this.updatePageSetup(this.score.pageSetup);
+    },
+
+    onFileMenuInsertFooter() {
+      if (this.score.pageSetup.showFooter) {
+        return;
+      }
+
+      this.score.pageSetup.showFooter = true;
+
+      this.updatePageSetup(this.score.pageSetup);
+    },
+
+    onFileMenuToolsCopyElementLink() {
+      if (this.selectedElement?.id != null) {
+        navigator.clipboard.writeText(
+          '#element-' + this.selectedElement.id.toString(),
+        );
+      }
+    },
+
+    async onFileMenuSave() {
+      const workspace = this.selectedWorkspace;
+
+      if (workspace.filePath != null) {
+        const result = await this.saveWorkspace(workspace);
+        if (result.success) {
+          workspace.hasUnsavedChanges = false;
+        }
+      } else {
+        const result = await this.saveWorkspaceAs(workspace);
+        if (result.success) {
+          workspace.filePath = result.filePath;
+          workspace.hasUnsavedChanges = false;
+        }
+      }
+    },
+
+    async onFileMenuSaveAs() {
+      const workspace = this.selectedWorkspace;
+
+      const result = await this.saveWorkspaceAs(workspace);
+      if (result.success) {
+        workspace.filePath = result.filePath;
+        workspace.hasUnsavedChanges = false;
+      }
+    },
+
+    onFileMenuUndo() {
+      const currentIndex = this.selectedElementIndex;
+
+      const textBoxDefaultFontFamilyPrevious =
+        this.score.pageSetup.textBoxDefaultFontFamily;
+      const textBoxDefaultFontSizePrevious =
+        this.score.pageSetup.textBoxDefaultFontSize;
+
+      this.commandService.undo();
+
+      // TODO this may be overkill, but the alternative is putting in place
+      // an event system to only refresh on certain undo actions
+      this.refreshStaffLyrics();
+
+      if (currentIndex > -1) {
+        // If the selected element was removed during the undo process, choose a new one
+        const clampedIndex = Math.min(currentIndex, this.elements.length - 1);
+
+        if (this.selectedElement !== this.elements[clampedIndex]) {
+          this.selectedElement = this.elements[clampedIndex];
+        }
+
+        // Undo/redo could affect the note display in the neume toolbar (among other things),
+        // so we force a refresh here
+        this.selectedElement.keyHelper++;
+      }
+
+      if (
+        textBoxDefaultFontFamilyPrevious !=
+          this.score.pageSetup.textBoxDefaultFontFamily ||
+        textBoxDefaultFontSizePrevious !=
+          this.score.pageSetup.textBoxDefaultFontSize
+      ) {
+        this.recalculateRichTextBoxHeights();
+        this.recalculateTextBoxHeights();
+      }
+
+      this.save();
+    },
+
+    onFileMenuRedo() {
+      const currentIndex = this.selectedElementIndex;
+
+      const textBoxDefaultFontFamilyPrevious =
+        this.score.pageSetup.textBoxDefaultFontFamily;
+      const textBoxDefaultFontSizePrevious =
+        this.score.pageSetup.textBoxDefaultFontSize;
+
+      this.commandService.redo();
+
+      // TODO this may be overkill, but the alternative is putting in place
+      // an event system to only refresh on certain undo actions
+      this.refreshStaffLyrics();
+
+      if (currentIndex > -1) {
+        // If the selected element was removed during the redo process, choose a new one
+        const clampedIndex = Math.min(currentIndex, this.elements.length - 1);
+
+        if (this.selectedElement !== this.elements[clampedIndex]) {
+          this.selectedElement = this.elements[clampedIndex];
+        }
+
+        // Undo/redo could affect the note display in the neume toolbar (among other things),
+        // so we force a refresh here
+        this.selectedElement.keyHelper++;
+      }
+
+      if (
+        textBoxDefaultFontFamilyPrevious !=
+          this.score.pageSetup.textBoxDefaultFontFamily ||
+        textBoxDefaultFontSizePrevious !=
+          this.score.pageSetup.textBoxDefaultFontSize
+      ) {
+        this.recalculateRichTextBoxHeights();
+        this.recalculateTextBoxHeights();
+      }
+
+      this.save();
+    },
+
+    onFileMenuCut() {
+      if (!this.isTextInputFocused() && !this.dialogOpen) {
+        this.onCutScoreElements();
+      } else {
+        document.execCommand('cut');
+      }
+    },
+
+    onFileMenuCopy() {
+      if (!this.isTextInputFocused() && !this.dialogOpen) {
+        this.onCopyScoreElements();
+      } else {
+        document.execCommand('copy');
+      }
+    },
+
+    onFileMenuCopyFormat() {
+      if (this.selectedElement == null) {
+        return;
+      }
+
+      if (this.selectedElement.elementType === ElementType.TextBox) {
+        this.formatType = ElementType.TextBox;
+        this.textBoxFormat = (
+          this.selectedElement as TextBoxElement
+        ).cloneFormat();
+      } else if (this.selectedElement.elementType === ElementType.Note) {
+        this.formatType = ElementType.Note;
+        this.noteFormat = (this.selectedElement as NoteElement).cloneFormat();
+      }
+    },
+
+    onFileMenuCopyAsHtml() {
+      let elements: ScoreElement[] = [];
+
+      if (this.selectionRange != null) {
+        elements = this.elements.filter(
+          (x) => x.elementType != ElementType.Empty && this.isSelected(x),
+        );
+      } else if (this.selectedElement != null) {
+        elements = [this.selectedElement];
+      } else if (this.selectedLyrics != null) {
+        elements = [this.selectedLyrics];
+      }
+
+      const html = this.byzHtmlExporter.exportElements(
+        elements,
+        this.score.pageSetup,
+        0,
+        true,
       );
-    } else {
-      // TODO support closing all workspaces
-      onFileMenuNewScore();
-    }
-  }
-}
 
-function onTabClosed(tab: Tab) {
-  const workspace = editor.workspaces.find((x) => x.id === tab.key);
+      navigator.clipboard.writeText(html);
+    },
 
-  if (workspace) {
-    // If the workspace is still in our list, then call closeWorkspace.
-    // closeWorkspace will decide whether to remove the tab and will
-    // explicitly call removeTab. Returning false tells the tab component
-    // to not close the tab, so that we can take care of it manually.
-    closeWorkspace(workspace as Workspace);
-    return false;
-  } else {
-    // If we got here, the workspace was already removed by closeWorkspace.
-    // We allow the tab component to close the tab by returning true.
-    return true;
-  }
-}
+    onFileMenuPaste() {
+      if (!this.isTextInputFocused() && !this.dialogOpen) {
+        this.onPasteScoreElements(false);
+      } else {
+        this.ipcService.paste();
+      }
+    },
 
-function openContextMenuForTab(event: PointerEvent, tab: Tab) {
-  // TODO for browser version, show a custom (non-native) context menu.
-  if (!isBrowser) {
-    ipcService.openContextMenuForTab({ workspaceId: tab.key });
-  }
-}
+    onFileMenuPasteWithLyrics() {
+      if (!this.isTextInputFocused() && !this.dialogOpen) {
+        this.onPasteScoreElements(true);
+      } else {
+        this.ipcService.paste();
+      }
+    },
 
-function renderTabLabel(tab: Tab) {
-  const workspace = editor.workspaces.find((x) => x.id === tab.key);
+    onFileMenuPasteFormat() {
+      const normalizedRange = this.getNormalizedSelectionRange();
 
-  return workspace ? getFileName(workspace as Workspace) : '';
-}
+      const commands: Command[] = [];
 
-onBeforeMount(async () => {
-  // Attach the editor component to the window variable
-  // so that it can be used for debugging
-  (window as any)._editor = editor;
+      if (normalizedRange != null) {
+        for (let i = normalizedRange.start; i <= normalizedRange.end; i++) {
+          if (this.elements[i].elementType === this.formatType) {
+            this.applyCopiedFormat(this.elements[i], commands);
+          }
+        }
+      } else if (this.selectedElement != null) {
+        this.applyCopiedFormat(this.selectedElement, commands);
+      }
 
-  try {
-    const fontLoader = (document as any).fonts;
+      if (commands.length > 0) {
+        this.commandService.executeAsBatch(commands);
+        this.save();
+      }
+    },
 
-    const loadSystemFontsPromise = ipcService
-      .getSystemFonts()
-      .then((fonts) => (editor.fonts = fonts));
+    applyCopiedFormat(element: ScoreElement, commands: Command[]) {
+      if (
+        element.elementType === ElementType.TextBox &&
+        this.textBoxFormat != null
+      ) {
+        commands.push(
+          textBoxCommandFactory.create('update-properties', {
+            target: element as TextBoxElement,
+            newValues: this.textBoxFormat,
+          }),
+        );
+      } else if (
+        element.elementType === ElementType.Note &&
+        this.noteFormat != null
+      ) {
+        commands.push(
+          noteElementCommandFactory.create('update-properties', {
+            target: element as NoteElement,
+            newValues: this.noteFormat,
+          }),
+        );
+      }
+    },
 
-    // Must load all fonts before loading any documents,
-    // otherwise the text measurements will be wrong
-    await Promise.all([
-      loadSystemFontsPromise,
-      fontLoader.load('1rem Athonite'),
-      fontLoader.load('1rem "GFS Didot"'),
-      fontLoader.load('1rem Neanes'),
-      fontLoader.load('1rem NeanesStathisSeries'),
-      fontLoader.load('1rem NeanesRTL'),
-      fontLoader.load('1rem "Noto Naskh Arabic"'),
-      fontLoader.load('1rem Omega'),
-      fontLoader.load('1rem "Old Standard"'),
-      fontLoader.load('1rem PFGoudyInitials'),
-      fontLoader.load('1rem "Source Serif"'),
-      fontLoader.ready,
-    ]);
+    onFileMenuFind() {
+      if (this.searchTextPanelIsOpen) {
+        (this.$refs.searchText as InstanceType<typeof SearchText>).focus();
+      } else {
+        this.searchTextPanelIsOpen = true;
+      }
+    },
 
-    await load();
-  } catch (error) {
-    console.error(error);
-  } finally {
-    editor.isLoading = false;
-  }
+    onFileMenuLyrics() {
+      if (!this.dialogOpen) {
+        if (this.lyricManagerIsOpen) {
+          this.closeLyricManager();
+        } else {
+          this.openLyricManager();
+        }
+      }
+    },
+
+    onFileMenuPreferences() {
+      if (!this.dialogOpen) {
+        this.editorPreferencesDialogIsOpen = true;
+      }
+    },
+
+    onFileMenuGenerateTestFile(testFileType: TestFileType) {
+      const workspace = new Workspace();
+      workspace.tempFileName = this.getTempFilename();
+      workspace.score = new Score();
+
+      // The ison test page can be used to inspect the ison alignment
+      // provided by the font, so we disable the automatic ison alignment
+      if (testFileType === TestFileType.Ison) {
+        workspace.score.pageSetup.alignIsonIndicators = false;
+      }
+
+      this.addWorkspace(workspace);
+
+      this.selectedWorkspace = workspace;
+
+      this.currentFilePath = null;
+      this.score.staff.elements.unshift(
+        ...(TestFileGenerator.generateTestFile(testFileType, this.fonts) || []),
+      );
+      this.save();
+    },
+
+    onSearchText(args: { query: string; reverse?: boolean }) {
+      const result = this.textSearchService.findTextInElements(
+        args.query,
+        this.elements,
+        this.selectedElementIndex,
+        args.reverse ?? false,
+      );
+
+      if (result != null) {
+        this.selectedElement = result;
+
+        (this.$refs.pages as HTMLElement[])[
+          this.selectedElement.page - 1
+        ].scrollIntoView();
+
+        this.pages[this.selectedElement.page - 1].isVisible = true;
+
+        nextTick(() => {
+          if (this.selectedElement?.elementType === ElementType.Note) {
+            (
+              this.$refs[
+                `element-${this.selectedElementIndex}`
+              ] as HTMLElement[]
+            )[0].scrollIntoView();
+          } else if (
+            this.selectedElement?.elementType === ElementType.DropCap
+          ) {
+            (
+              this.$refs[
+                `element-${this.selectedElementIndex}`
+              ] as InstanceType<typeof DropCap>[]
+            )[0].$el.scrollIntoView();
+          } else if (
+            this.selectedElement?.elementType === ElementType.TextBox
+          ) {
+            (
+              this.$refs[
+                `element-${this.selectedElementIndex}`
+              ] as InstanceType<typeof TextBox>[]
+            )[0].$el.scrollIntoView();
+          }
+        });
+      }
+    },
+
+    createDefaultModeKey(pageSetup: PageSetup) {
+      const defaultTemplate = ModeKeyElement.createFromTemplate(
+        modeKeyTemplates[0],
+        this.score.pageSetup.useOptionalDiatonicFthoras,
+      );
+
+      defaultTemplate.color = pageSetup.modeKeyDefaultColor;
+      defaultTemplate.fontSize = pageSetup.modeKeyDefaultFontSize;
+      defaultTemplate.strokeWidth = pageSetup.modeKeyDefaultStrokeWidth;
+
+      return defaultTemplate;
+    },
+
+    createDefaultScore() {
+      const score = new Score();
+
+      try {
+        const pageSetupDefault = localStorage.getItem('pageSetupDefault');
+
+        if (pageSetupDefault) {
+          SaveService.LoadPageSetup_v1(
+            score.pageSetup,
+            JSON.parse(pageSetupDefault),
+          );
+        }
+      } catch (error) {
+        console.error(error);
+      }
+
+      const title = new TextBoxElement();
+      title.content = 'Title';
+      title.alignment = TextBoxAlignment.Center;
+      title.color = score.pageSetup.textBoxDefaultColor;
+      title.fontFamily = score.pageSetup.textBoxDefaultFontFamily;
+      title.fontSize = score.pageSetup.textBoxDefaultFontSize;
+      title.strokeWidth = score.pageSetup.textBoxDefaultStrokeWidth;
+      title.lineHeight = score.pageSetup.textBoxDefaultLineHeight;
+      title.bold = score.pageSetup.textBoxDefaultFontWeight === '700';
+      title.italic = score.pageSetup.textBoxDefaultFontStyle === 'italic';
+      title.height = Math.round(
+        TextMeasurementService.getFontHeight(title.computedFont) * 1.2,
+      );
+      score.staff.elements.unshift(
+        title,
+        this.createDefaultModeKey(score.pageSetup),
+      );
+
+      for (const element of score.headersAndFooters) {
+        if (element.elementType === ElementType.TextBox) {
+          (element as TextBoxElement).fontFamily =
+            score.pageSetup.lyricsDefaultFontFamily;
+          (element as TextBoxElement).strokeWidth =
+            score.pageSetup.lyricsDefaultStrokeWidth;
+        }
+      }
+
+      return score;
+    },
+
+    openScore(args: FileMenuOpenScoreArgs) {
+      if (!args.success) {
+        return;
+      }
+
+      // First make sure we don't already have the score open
+      const existingWorkspace = this.workspaces.find(
+        (x) => x.filePath === args.filePath,
+      ) as Workspace;
+      if (existingWorkspace != null) {
+        this.selectedWorkspace = existingWorkspace;
+        return;
+      }
+
+      try {
+        const score: Score = SaveService.LoadScoreFromJson(
+          JSON.parse(args.data),
+        );
+
+        // if (score.version !== ScoreVersion) {
+        //   alert('This score was created by an older version of the application. It may not work properly');
+        // }
+
+        const workspace = new Workspace();
+        workspace.filePath = args.filePath;
+        workspace.tempFileName = this.getTempFilename();
+        workspace.score = score;
+
+        this.addWorkspace(workspace);
+
+        this.selectedWorkspace = workspace;
+
+        this.selectedElement = null;
+
+        this.save(false);
+      } catch (error) {
+        args.success = false;
+        console.error(error);
+
+        if (error instanceof Error) {
+          if (this.ipcService.isShowMessageBoxSupported()) {
+            this.ipcService.showMessageBox({
+              type: 'error',
+              title: 'Open failed',
+              message: error.message,
+            });
+          } else {
+            alert(error.message);
+          }
+        }
+      }
+    },
+
+    addWorkspace(workspace: Workspace) {
+      this.workspaces.push(workspace);
+
+      (this.$refs.tabs as Vue3TabsChromeComponent).addTab({
+        label: this.getFileName(workspace),
+        key: workspace.id,
+      });
+    },
+
+    removeWorkspace(workspace: Workspace) {
+      const index = this.workspaces.indexOf(workspace);
+
+      this.workspaces.splice(index, 1);
+
+      (this.$refs.tabs as Vue3TabsChromeComponent).removeTab(workspace.id);
+
+      if (this.selectedWorkspace === workspace) {
+        if (this.workspaces.length > 0) {
+          this.selectedWorkspace = this.workspaces[
+            Math.min(index, this.workspaces.length - 1)
+          ] as Workspace;
+        } else {
+          // TODO support closing all workspaces
+          this.onFileMenuNewScore();
+        }
+      }
+    },
+
+    onTabClosed(tab: Tab) {
+      const workspace = this.workspaces.find(
+        (x) => x.id === tab.key,
+      ) as Workspace;
+
+      if (workspace) {
+        // If the workspace is still in our list, then call closeWorkspace.
+        // closeWorkspace will decide whether to remove the tab and will
+        // explicitly call removeTab. Returning false tells the tab component
+        // to not close the tab, so that we can take care of it manually.
+        this.closeWorkspace(workspace);
+        return false;
+      } else {
+        // If we got here, the workspace was already removed by closeWorkspace.
+        // We allow the tab component to close the tab by returning true.
+        return true;
+      }
+    },
+
+    openContextMenuForTab(event: PointerEvent, tab: Tab) {
+      // TODO for browser version, show a custom (non-native) context menu.
+      if (!this.isBrowser) {
+        this.ipcService.openContextMenuForTab({ workspaceId: tab.key });
+      }
+    },
+
+    renderTabLabel(tab: Tab) {
+      const workspace = this.workspaces.find(
+        (x) => x.id === tab.key,
+      ) as Workspace;
+
+      return workspace ? this.getFileName(workspace) : '';
+    },
+  },
 });
-
-const {
-  audioOptions,
-  currentPageNumber,
-  editorPreferencesDialogIsOpen,
-  editorPreferences,
-  entryMode,
-  exportDialogIsOpen,
-  exportFormat,
-  exportInProgress,
-  filteredPages,
-  fonts,
-  footerStyle,
-  guideStyleBottom,
-  guideStyleLeft,
-  guideStyleRight,
-  guideStyleTop,
-  headerStyle,
-  isLoading,
-  lyricManagerIsOpen,
-  lyrics,
-  lyricsLocked,
-  modeKeyDialogIsOpen,
-  neumeComboPanelIsExpanded,
-  nextElementOnLine,
-  pageCount,
-  previousElementOnLine,
-  pageStyle,
-  pageSetupDialogIsOpen,
-  playbackSettingsDialogIsOpen,
-  printMode,
-  resizableRichTextBoxElements,
-  resizableTextBoxElements,
-  richTextBoxCalculation,
-  rtl,
-  searchTextQuery,
-  score,
-  searchTextPanelIsOpen,
-  selectedElement,
-  selectedElementForNeumeToolbar,
-  selectedHeaderFooterElement,
-  selectedLyrics,
-  selectedRichTextBoxElement,
-  selectedTextBoxElement,
-  showGuides,
-  syllablePositioningDialogIsOpen,
-  textBoxCalculation,
-  toolbarInnerNeume,
-  zoomToFit,
-} = storeToRefs(editor);
-
-const {
-  updateNoteAndSave,
-  updateLyricsLocked,
-  updateStaffLyrics,
-  updateLyrics,
-  assignAcceptsLyricsFromCurrentLyrics,
-  updateAnnotation,
-  removeAnnotation,
-  updateAlternateLine,
-  updateRichTextBox,
-  updateRichTextBoxHeight,
-  updateTextBox,
-  updateTextBoxHeight,
-  updateModeKey,
-  updateModeKeyFromTemplate,
-  updateMartyria,
-  setAccidental,
-  setFthoraMartyria,
-  updateTempo,
-  updateDropCap,
-  updateDropCapContent,
-  updateImageBox,
-  setGorgon,
-  setVocalExpression,
-  setTie,
-  setIson,
-  setKlasma,
-  setFthoraNote,
-  setMartyriaTempo,
-  setModeKeyTempo,
-  setTimeNeume,
-  setMeasureBarMartyria,
-  setMeasureBarNote,
-  setSecondaryAccidental,
-  setSecondaryFthora,
-  setSecondaryGorgon,
-  setTertiaryAccidental,
-  setTertiaryFthora,
-  setMartyriaQuantitativeNeume,
-  setMartyriaTempoLeft,
-  setMartyriaTempoRight,
-  setMeasureNumber,
-  addTempo,
-  addScoreElement,
-  deleteSelectedElement,
-  addQuantitativeNeume,
-  addAutoMartyria,
-  addDropCap,
-  refreshStaffLyrics,
-  updateScoreElementSectionName,
-  toggleLineBreak,
-  togglePageBreak,
-} = useEditing();
-
-const {
-  getHeaderHorizontalRuleStyle,
-  getFooterHorizontalRuleStyle,
-  getMelismaHyphenStyle,
-  getMelismaUnderscoreStyleInner,
-  getMelismaUnderscoreStyleOuter,
-  getMelismaStyle,
-  getLyricStyle,
-  getElementStyle,
-  getEmptyBoxStyle,
-} = useStyles();
-
-const { addNeumeCombination } = useClipboard();
 </script>
 
 <template>
@@ -1723,7 +6687,7 @@ const { addNeumeCombination } = useClipboard();
       :neumeKeyboard="neumeKeyboard"
       @update:zoom="updateZoom"
       @update:zoomToFit="updateZoomToFit"
-      @update:audioOptionsSpeed="audioPlayback.updateAudioOptionsSpeed"
+      @update:audioOptionsSpeed="updateAudioOptionsSpeed"
       @add-auto-martyria="addAutoMartyria"
       @update:entryMode="updateEntryMode"
       @toggle-page-break="togglePageBreak"
@@ -1735,8 +6699,8 @@ const { addNeumeCombination } = useClipboard();
       @add-text-box-rich="onFileMenuInsertRichTextBox"
       @add-image="onClickAddImage"
       @delete-selected-element="deleteSelectedElement"
-      @click="setSelectedLyrics(null)"
-      @play-audio="audioPlayback.playAudio"
+      @click="selectedLyrics = null"
+      @play-audio="playAudio"
       @open-playback-settings="openPlaybackSettingsDialog"
     />
     <div class="content">
@@ -1767,9 +6731,9 @@ const { addNeumeCombination } = useClipboard();
       <div class="page-container">
         <Vue3TabsChrome
           class="workspace-tab-container"
-          ref="tabs-ui"
+          ref="tabs"
           :tabs="tabs"
-          v-model="tab"
+          v-model="selectedWorkspaceId"
           :gap="0"
           :on-close="onTabClosed"
           :render-label="renderTabLabel"
@@ -1806,7 +6770,7 @@ const { addNeumeCombination } = useClipboard();
             }"
             v-for="(page, pageIndex) in filteredPages"
             :key="`page-${pageIndex}`"
-            :ref="setPageRefByIndex(pageIndex)"
+            ref="pages"
             :class="{ print: printMode }"
           >
             <template v-if="page.isVisible || printMode">
@@ -1822,7 +6786,7 @@ const { addNeumeCombination } = useClipboard();
                 >
                   <TextBoxRich
                     class="element-box"
-                    :key="`element-${editor.selectedWorkspace.id}-${getHeaderForPageIndex(pageIndex).id}-${
+                    :key="`element-${selectedWorkspace.id}-${getHeaderForPageIndex(pageIndex).id}-${
                       getHeaderForPageIndex(pageIndex).keyHelper
                     }`"
                     :ref="`header-${pageIndex}`"
@@ -1843,9 +6807,8 @@ const { addNeumeCombination } = useClipboard();
                     "
                     :style="headerStyle"
                     @click="
-                      setSelectedHeaderFooterElement(
-                        getHeaderForPageIndex(pageIndex),
-                      )
+                      selectedHeaderFooterElement =
+                        getHeaderForPageIndex(pageIndex)
                     "
                     @update="
                       updateRichTextBox(
@@ -1866,7 +6829,7 @@ const { addNeumeCombination } = useClipboard();
                 >
                   <TextBox
                     class="element-box"
-                    :key="`element-${editor.selectedWorkspace.id}-${getHeaderForPageIndex(pageIndex).id}-${
+                    :key="`element-${selectedWorkspace.id}-${getHeaderForPageIndex(pageIndex).id}-${
                       getHeaderForPageIndex(pageIndex).keyHelper
                     }`"
                     :ref="`header-${pageIndex}`"
@@ -1893,9 +6856,8 @@ const { addNeumeCombination } = useClipboard();
                     ]"
                     :style="headerStyle"
                     @click="
-                      setSelectedHeaderFooterElement(
-                        getHeaderForPageIndex(pageIndex),
-                      )
+                      selectedHeaderFooterElement =
+                        getHeaderForPageIndex(pageIndex)
                     "
                     @update="
                       updateTextBox(
@@ -1924,13 +6886,13 @@ const { addNeumeCombination } = useClipboard();
                 <div
                   v-for="element in line.elements"
                   :id="`element-${element.id}`"
-                  :key="`element-${editor.selectedWorkspace.id}-${element.id}-${element.keyHelper}`"
+                  :key="`element-${selectedWorkspace.id}-${element.id}-${element.keyHelper}`"
                   class="element-box"
                   :style="getElementStyle(element)"
                 >
                   <template v-if="isSyllableElement(element)">
                     <div
-                      :ref="setElementRefByIndex(element.index)"
+                      :ref="`element-${getElementIndex(element)}`"
                       class="neume-box"
                     >
                       <span
@@ -1964,8 +6926,8 @@ const { addNeumeCombination } = useClipboard();
                         :pageSetup="score.pageSetup"
                         :class="{
                           selectedAlternateLine:
-                            editor.selectedWorkspace
-                              .selectedAlternateLineElement === alternateLine,
+                            selectedWorkspace.selectedAlternateLineElement ===
+                            alternateLine,
                         }"
                         @update="updateAlternateLine(alternateLine, $event)"
                         @mousedown="
@@ -1980,7 +6942,7 @@ const { addNeumeCombination } = useClipboard();
                         :pageSetup="score.pageSetup"
                         :fonts="fonts"
                         :selected="
-                          editor.selectedWorkspace.selectedAnnotationElement ===
+                          selectedWorkspace.selectedAnnotationElement ===
                           annotation
                         "
                         @update="updateAnnotation(annotation, $event)"
@@ -2003,7 +6965,7 @@ const { addNeumeCombination } = useClipboard();
                             'audio-selected': isAudioSelected(element),
                           },
                         ]"
-                        @select-single="setSelectedElement(element)"
+                        @select-single="selectedElement = element"
                         @select-range="setSelectionRange(element)"
                         @dblclick="openSyllablePositioningDialog"
                       />
@@ -2019,9 +6981,9 @@ const { addNeumeCombination } = useClipboard();
                           :content="(element as NoteElement).lyrics"
                           :editable="!lyricsLocked"
                           whiteSpace="nowrap"
-                          :ref="setLyricRefByIndex(element.index)"
+                          :ref="`lyrics-${getElementIndex(element)}`"
                           @click="focusLyrics(element.index)"
-                          @focus="setSelectedLyrics(element as NoteElement)"
+                          @focus="selectedLyrics = element as NoteElement"
                           @blur="updateLyrics(element as NoteElement, $event)"
                         />
                         <template
@@ -2112,7 +7074,7 @@ const { addNeumeCombination } = useClipboard();
                               selectedMelisma: element === selectedLyrics,
                             }"
                             @click="focusLyrics(element.index)"
-                            @focus="setSelectedLyrics(element as NoteElement)"
+                            @focus="selectedLyrics = element as NoteElement"
                           ></span>
                         </template>
                       </div>
@@ -2135,7 +7097,7 @@ const { addNeumeCombination } = useClipboard();
                         ><img src="@/assets/icons/line-break.svg"
                       /></span>
                       <MartyriaNeumeBox
-                        :ref="setElementRefByIndex(element.index)"
+                        :ref="`element-${getElementIndex(element)}`"
                         class="marytria-neume-box"
                         :neume="element as MartyriaElement"
                         :pageSetup="score.pageSetup"
@@ -2144,7 +7106,7 @@ const { addNeumeCombination } = useClipboard();
                             selected: isSelected(element),
                           },
                         ]"
-                        @select-single="setSelectedElement(element)"
+                        @select-single="selectedElement = element"
                         @select-range="setSelectionRange(element)"
                       />
                       <div class="lyrics"></div>
@@ -2152,7 +7114,7 @@ const { addNeumeCombination } = useClipboard();
                   </template>
                   <template v-else-if="isTempoElement(element)">
                     <div
-                      :ref="setElementRefByIndex(element.index)"
+                      :ref="`element-${getElementIndex(element)}`"
                       class="neume-box"
                     >
                       <span
@@ -2174,7 +7136,7 @@ const { addNeumeCombination } = useClipboard();
                         :neume="element as TempoElement"
                         :pageSetup="score.pageSetup"
                         :class="[{ selected: isSelected(element) }]"
-                        @select-single="setSelectedElement(element)"
+                        @select-single="selectedElement = element"
                         @select-range="setSelectionRange(element)"
                       />
                       <div class="lyrics"></div>
@@ -2182,7 +7144,7 @@ const { addNeumeCombination } = useClipboard();
                   </template>
                   <template v-else-if="isEmptyElement(element)">
                     <div
-                      :ref="setElementRefByIndex(element.index)"
+                      :ref="`element-${getElementIndex(element)}`"
                       class="neume-box"
                     >
                       <span
@@ -2203,7 +7165,7 @@ const { addNeumeCombination } = useClipboard();
                         class="empty-neume-box"
                         :class="[{ selected: isSelected(element) }]"
                         :style="getEmptyBoxStyle(element as EmptyElement)"
-                        @select-single="setSelectedElement(element)"
+                        @select-single="selectedElement = element"
                       ></EmptyNeumeBox>
                       <div class="lyrics"></div>
                     </div>
@@ -2223,13 +7185,13 @@ const { addNeumeCombination } = useClipboard();
                       ><img src="@/assets/icons/line-break.svg"
                     /></span>
                     <TextBox
-                      :ref="setElementRefByIndex(element.index)"
+                      :ref="`element-${getElementIndex(element)}`"
                       :element="element as TextBoxElement"
                       :editMode="true"
                       :metadata="getTokenMetadata(pageIndex)"
                       :pageSetup="score.pageSetup"
                       :selected="isSelected(element)"
-                      @select-single="setSelectedElement(element)"
+                      @select-single="selectedElement = element"
                       @update="updateTextBox(element as TextBoxElement, $event)"
                       @update:height="
                         updateTextBoxHeight(element as TextBoxElement, $event)
@@ -2251,12 +7213,12 @@ const { addNeumeCombination } = useClipboard();
                       ><img src="@/assets/icons/line-break.svg"
                     /></span>
                     <TextBoxRich
-                      :ref="setElementRefByIndex(element.index)"
+                      :ref="`element-${getElementIndex(element)}`"
                       :element="element as RichTextBoxElement"
                       :pageSetup="score.pageSetup"
                       :fonts="fonts"
                       :selected="isSelected(element)"
-                      @select-single="setSelectedElement(element)"
+                      @select-single="selectedElement = element"
                       @update="
                         updateRichTextBox(element as RichTextBoxElement, $event)
                       "
@@ -2283,7 +7245,7 @@ const { addNeumeCombination } = useClipboard();
                       ><img src="@/assets/icons/line-break.svg"
                     /></span>
                     <ModeKey
-                      :ref="setElementRefByIndex(element.index)"
+                      :ref="`element-${getElementIndex(element)}`"
                       :element="element as ModeKeyElement"
                       :pageSetup="score.pageSetup"
                       :class="[
@@ -2291,7 +7253,7 @@ const { addNeumeCombination } = useClipboard();
                           selectedTextbox: isSelected(element),
                         },
                       ]"
-                      @select-single="setSelectedElement(element)"
+                      @select-single="selectedElement = element"
                       @dblclick="openModeKeyDialog"
                     />
                   </template>
@@ -2310,7 +7272,7 @@ const { addNeumeCombination } = useClipboard();
                       ><img src="@/assets/icons/line-break.svg"
                     /></span>
                     <DropCap
-                      :ref="setElementRefByIndex(element.index)"
+                      :ref="`element-${getElementIndex(element)}`"
                       :element="element as DropCapElement"
                       :pageSetup="score.pageSetup"
                       :editable="!lyricsLocked"
@@ -2319,7 +7281,7 @@ const { addNeumeCombination } = useClipboard();
                           selectedTextbox: isSelected(element),
                         },
                       ]"
-                      @select-single="setSelectedElement(element)"
+                      @select-single="selectedElement = element"
                       @update:content="
                         updateDropCapContent(element as DropCapElement, $event)
                       "
@@ -2333,12 +7295,12 @@ const { addNeumeCombination } = useClipboard();
                       ><img src="@/assets/icons/line-break.svg"
                     /></span>
                     <ImageBox
-                      :ref="setElementRefByIndex(element.index)"
+                      :ref="`element-${getElementIndex(element)}`"
                       :element="element as ImageBoxElement"
                       :zoom="zoom"
                       :printMode="printMode"
                       :class="[{ selectedImagebox: isSelected(element) }]"
-                      @select-single="setSelectedElement(element)"
+                      @select-single="selectedElement = element"
                       @update:size="
                         updateImageBox(selectedElement as ImageBoxElement, {
                           imageWidth: $event.width,
@@ -2364,7 +7326,7 @@ const { addNeumeCombination } = useClipboard();
                 >
                   <TextBoxRich
                     class="element-box"
-                    :key="`element-${editor.selectedWorkspace.id}-${getFooterForPageIndex(pageIndex).id}-${
+                    :key="`element-${selectedWorkspace.id}-${getFooterForPageIndex(pageIndex).id}-${
                       getFooterForPageIndex(pageIndex).keyHelper
                     }`"
                     :ref="`footer-${pageIndex}`"
@@ -2385,9 +7347,8 @@ const { addNeumeCombination } = useClipboard();
                     "
                     :style="footerStyle"
                     @click="
-                      setSelectedHeaderFooterElement(
-                        getFooterForPageIndex(pageIndex),
-                      )
+                      selectedHeaderFooterElement =
+                        getFooterForPageIndex(pageIndex)
                     "
                     @update="
                       updateRichTextBox(
@@ -2409,7 +7370,7 @@ const { addNeumeCombination } = useClipboard();
                   <TextBox
                     class="element-box"
                     :ref="`footer-${pageIndex}`"
-                    :key="`element-${editor.selectedWorkspace.id}-${getFooterForPageIndex(pageIndex).id}-${
+                    :key="`element-${selectedWorkspace.id}-${getFooterForPageIndex(pageIndex).id}-${
                       getFooterForPageIndex(pageIndex).keyHelper
                     }`"
                     :element="
@@ -2435,9 +7396,8 @@ const { addNeumeCombination } = useClipboard();
                     ]"
                     :style="footerStyle"
                     @click="
-                      setSelectedHeaderFooterElement(
-                        getFooterForPageIndex(pageIndex),
-                      )
+                      selectedHeaderFooterElement =
+                        getFooterForPageIndex(pageIndex)
                     "
                     @update="
                       updateTextBox(
@@ -2544,7 +7504,7 @@ const { addNeumeCombination } = useClipboard();
         :element="selectedElementForNeumeToolbar as NoteElement"
         :pageSetup="score.pageSetup"
         :neumeKeyboard="neumeKeyboard"
-        :key="`toolbar-neume-${editor.selectedWorkspace.id}-${selectedElement.id}-${selectedElement.keyHelper}`"
+        :key="`toolbar-neume-${selectedWorkspace.id}-${selectedElement.id}-${selectedElement.keyHelper}`"
         :innerNeume="toolbarInnerNeume"
         @update="
           updateNoteAndSave(
@@ -2687,8 +7647,8 @@ const { addNeumeCombination } = useClipboard();
       @assignAcceptsLyrics="assignAcceptsLyricsFromCurrentLyrics"
       @close="closeLyricManager"
       @click="
-        setSelectedElement(null);
-        setSelectedLyrics(null);
+        selectedElement = null;
+        selectedLyrics = null;
       "
     ></ToolbarLyricManager>
     <ModeKeyDialog
@@ -2716,7 +7676,7 @@ const { addNeumeCombination } = useClipboard();
       v-if="playbackSettingsDialogIsOpen"
       :options="audioOptions"
       @close="closePlaybackSettingsDialog"
-      @play-test-tone="audioPlayback.playTestTone"
+      @play-test-tone="playTestTone"
     />
     <EditorPreferencesDialog
       v-if="editorPreferencesDialogIsOpen"
@@ -2736,10 +7696,10 @@ const { addNeumeCombination } = useClipboard();
       v-if="exportDialogIsOpen"
       :loading="exportInProgress"
       :defaultFormat="exportFormat"
-      @exportAsPng="exporting.exportAsPng"
-      @exportAsMusicXml="exporting.exportAsMusicXml"
-      @exportAsLatex="exporting.exportAsLatex"
-      @close="exporting.closeExportDialog"
+      @exportAsPng="exportAsPng"
+      @exportAsMusicXml="exportAsMusicXml"
+      @exportAsLatex="exportAsLatex"
+      @close="closeExportDialog"
     />
     <template v-if="richTextBoxCalculation">
       <TextBoxRich

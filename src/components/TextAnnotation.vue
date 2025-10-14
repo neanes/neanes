@@ -65,6 +65,12 @@ export default defineComponent({
     };
   },
 
+  mounted() {
+    this.elementX = this.element.x;
+    this.elementY = this.element.y;
+    this.clampingInterval = setInterval(this.clampToPageBounds, 250);
+  },
+
   beforeUnmount() {
     document.removeEventListener('mouseup', this.handleMouseUp);
     document.removeEventListener('mousemove', this.handleMouseMove);
@@ -77,8 +83,8 @@ export default defineComponent({
   computed: {
     style() {
       return {
-        left: withZoom(this.element.x),
-        top: withZoom(this.element.y),
+        left: withZoom(this.elementX),
+        top: withZoom(this.elementY),
         '--ck-content-font-family': getFontFamilyWithFallback(
           this.pageSetup.textBoxDefaultFontFamily,
           this.pageSetup.neumeDefaultFontFamily,

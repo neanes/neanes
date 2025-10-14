@@ -49,6 +49,7 @@ import {
   audioServiceKey,
   ipcServiceKey,
   latexExporterKey,
+  lyricServiceKey,
   musicXmlExporterKey,
   neumeKeyboardKey,
   platformServiceKey,
@@ -253,7 +254,7 @@ export default defineComponent({
         latexExporterKey,
         new LatexExporter(),
       ),
-      lyricService: inject<LyricService>(latexExporterKey, new LyricService()),
+      lyricService: inject<LyricService>(lyricServiceKey, new LyricService()),
       musicXmlExporter: inject<MusicXmlExporter>(
         musicXmlExporterKey,
         new MusicXmlExporter(),

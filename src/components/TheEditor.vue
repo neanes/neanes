@@ -68,7 +68,6 @@ import {
 } from '@/ipc/ipcChannels';
 import { EditorPreferences } from '@/models/EditorPreferences';
 import {
-  AcceptsLyricsOption,
   AlternateLineElement,
   AnnotationElement,
   DropCapElement,
@@ -105,7 +104,6 @@ import {
   MeasureNumber,
   Note,
   QuantitativeNeume,
-  RootSign,
   TempoSign,
   Tie,
   TimeNeume,
@@ -113,7 +111,7 @@ import {
 } from '@/models/Neumes';
 import { Page } from '@/models/Page';
 import { PageSetup } from '@/models/PageSetup';
-import { Scale, ScaleNote } from '@/models/Scales';
+import { ScaleNote } from '@/models/Scales';
 import { Score } from '@/models/Score';
 import { ScoreElementSelectionRange } from '@/models/ScoreElementSelectionRange';
 import { Workspace, WorkspaceLocalStorage } from '@/models/Workspace';
@@ -378,104 +376,79 @@ export default defineComponent({
 
       exportInProgress: false,
 
-      updateCurrentSectionThrottled: null! as () => void,
-      assignLyricsThrottled: null! as () => void,
-      moveToPreviousLyricBoxThrottled: null! as () => void,
-      moveToNextLyricBoxThrottled: null! as (clearMelisma?: boolean) => void,
-      moveLeftThrottled: null! as () => void,
-      moveRightThrottled: null! as () => void,
-      moveSelectionLeftThrottled: null! as () => void,
-      moveSelectionRightThrottled: null! as () => void,
-      deleteSelectedElementThrottled: null! as () => void,
-      deletePreviousElementThrottled: null! as () => void,
-      onFileMenuUndoThrottled: null! as () => void,
-      onFileMenuRedoThrottled: null! as () => void,
-      onCutScoreElementsThrottled: null! as () => void,
-      onCopyScoreElementsThrottled: null! as () => void,
-      onFileMenuCopyAsHtmlThrottled: null! as () => void,
-      onPasteScoreElementsThrottled: null! as (includeLyrics: boolean) => void,
-      addQuantitativeNeumeThrottled: null! as (
-        quantitativeNeume: QuantitativeNeume,
-        secondaryGorgonNeume?: GorgonNeume,
-      ) => void,
-      addTempoThrottled: null! as (neume: TempoSign) => void,
-      addAutoMartyriaThrottled: null! as (
-        alignRight?: boolean,
-        note?: Note,
-      ) => void,
-      setKlasmaThrottled: null! as (element: NoteElement) => void,
-      setGorgonThrottled: null! as (
-        element: NoteElement,
-        neumes: GorgonNeume | GorgonNeume[],
-      ) => void,
-      setFthoraNoteThrottled: null! as (
-        element: NoteElement,
-        neumes: Fthora[],
-      ) => void,
-      setFthoraMartyriaThrottled: null! as (
-        element: MartyriaElement,
-        neume: Fthora,
-      ) => void,
-      setMartyriaTempoThrottled: null! as (
-        element: MartyriaElement,
-        neume: TempoSign,
-      ) => void,
-      setAccidentalThrottled: null! as (
-        element: NoteElement,
-        neume: Accidental,
-      ) => void,
-      setTimeNeumeThrottled: null! as (
-        element: NoteElement,
-        neume: TimeNeume,
-      ) => void,
-      setMeasureNumberThrottled: null! as (
-        element: NoteElement,
-        neume: MeasureNumber,
-      ) => void,
-      setMeasureBarNoteThrottled: null! as (
-        element: NoteElement,
-        neume: MeasureBar,
-      ) => void,
-      setMeasureBarMartyriaThrottled: null! as (
-        element: MartyriaElement,
-        neume: MeasureBar,
-      ) => void,
-      setIsonThrottled: null! as (element: NoteElement, neume: Ison) => void,
-      setTieThrottled: null! as (element: NoteElement, neumes: Tie[]) => void,
-      setVocalExpressionThrottled: null! as (
-        element: NoteElement,
-        neume: VocalExpressionNeume,
-      ) => void,
-      updateMartyriaNoteThrottled: null! as (
-        element: MartyriaElement,
-        note: Note,
-      ) => void,
-      updateMartyriaScaleThrottled: null! as (
-        element: MartyriaElement,
-        scale: Scale,
-      ) => void,
-      updateMartyriaAutoThrottled: null! as (
-        element: MartyriaElement,
-        auto: boolean,
-      ) => void,
-      updateMartyriaAlignRightThrottled: null! as (
-        element: MartyriaElement,
-        alignRight: boolean,
-      ) => void,
-      updateNoteNoteIndicatorThrottled: null! as (
-        element: NoteElement,
-        noteIndicator: boolean,
-      ) => void,
-      updateNoteKoronisThrottled: null! as (
-        element: NoteElement,
-        koronis: boolean,
-      ) => void,
-      updateNoteVareiaThrottled: null! as (
-        element: NoteElement,
-        vareia: boolean,
-      ) => void,
-      onWindowResizeThrottled: null! as () => void,
-      onScrollThrottled: null! as () => void,
+      throttled: {
+        assignLyrics: null! as () => void,
+        moveToPreviousLyricBox: null! as () => void,
+        moveToNextLyricBox: null! as (clearMelisma?: boolean) => void,
+        moveLeft: null! as () => void,
+        moveRight: null! as () => void,
+        moveSelectionLeft: null! as () => void,
+        moveSelectionRight: null! as () => void,
+        deleteSelectedElement: null! as () => void,
+        deletePreviousElement: null! as () => void,
+        onFileMenuUndo: null! as () => void,
+        onFileMenuRedo: null! as () => void,
+        onCutScoreElements: null! as () => void,
+        onCopyScoreElements: null! as () => void,
+        onFileMenuCopyAsHtml: null! as () => void,
+        onPasteScoreElements: null! as (includeLyrics: boolean) => void,
+        addQuantitativeNeume: null! as (
+          quantitativeNeume: QuantitativeNeume,
+          secondaryGorgonNeume?: GorgonNeume,
+        ) => void,
+        addTempo: null! as (neume: TempoSign) => void,
+        addAutoMartyria: null! as (alignRight?: boolean, note?: Note) => void,
+        updateNoteAndSave: null! as (
+          element: NoteElement,
+          values: Partial<NoteElement>,
+        ) => void,
+        setKlasma: null! as (element: NoteElement) => void,
+        setGorgon: null! as (
+          element: NoteElement,
+          neumes: GorgonNeume | GorgonNeume[],
+        ) => void,
+        setFthoraNote: null! as (
+          element: NoteElement,
+          neumes: Fthora[],
+        ) => void,
+        setFthoraMartyria: null! as (
+          element: MartyriaElement,
+          neume: Fthora,
+        ) => void,
+        setMartyriaTempo: null! as (
+          element: MartyriaElement,
+          neume: TempoSign,
+        ) => void,
+        setAccidental: null! as (
+          element: NoteElement,
+          neume: Accidental,
+        ) => void,
+        setTimeNeume: null! as (element: NoteElement, neume: TimeNeume) => void,
+        setMeasureNumber: null! as (
+          element: NoteElement,
+          neume: MeasureNumber,
+        ) => void,
+        setMeasureBarNote: null! as (
+          element: NoteElement,
+          neume: MeasureBar,
+        ) => void,
+        setMeasureBarMartyria: null! as (
+          element: MartyriaElement,
+          neume: MeasureBar,
+        ) => void,
+        setIson: null! as (element: NoteElement, neume: Ison) => void,
+        setTie: null! as (element: NoteElement, neumes: Tie[]) => void,
+        setVocalExpression: null! as (
+          element: NoteElement,
+          neume: VocalExpressionNeume,
+        ) => void,
+        updateMartyria: null! as (
+          element: MartyriaElement,
+          values: Partial<MartyriaElement>,
+        ) => void,
+        onWindowResize: null! as () => void,
+        onScroll: null! as () => void,
+      },
       saveDebounced: null! as (markUnsavedChanges?: boolean) => void,
     };
   },
@@ -956,7 +929,7 @@ export default defineComponent({
 
     window.addEventListener('keydown', this.onKeydown);
     window.addEventListener('keyup', this.onKeyup);
-    window.addEventListener('resize', this.onWindowResizeThrottled);
+    window.addEventListener('resize', this.throttled.onWindowResize);
 
     EventBus.$on(IpcMainChannels.CloseWorkspaces, this.onCloseWorkspaces);
     EventBus.$on(IpcMainChannels.CloseApplication, this.onCloseApplication);
@@ -1071,7 +1044,7 @@ export default defineComponent({
 
     window.removeEventListener('keydown', this.onKeydown);
     window.removeEventListener('keyup', this.onKeyup);
-    window.removeEventListener('resize', this.onWindowResizeThrottled);
+    window.removeEventListener('resize', this.throttled.onWindowResize);
 
     EventBus.$off(IpcMainChannels.CloseWorkspaces, this.onCloseWorkspaces);
     EventBus.$off(IpcMainChannels.CloseApplication, this.onCloseApplication);
@@ -1190,182 +1163,170 @@ export default defineComponent({
 
   methods: {
     createThrottledMethods() {
-      this.assignLyricsThrottled = throttle(
+      this.throttled.assignLyrics = throttle(
         keydownThrottleIntervalMs,
         this.assignLyrics,
       );
 
-      this.moveToPreviousLyricBoxThrottled = throttle(
+      this.throttled.moveToPreviousLyricBox = throttle(
         keydownThrottleIntervalMs,
         this.moveToPreviousLyricBox,
       );
 
-      this.moveToNextLyricBoxThrottled = throttle(
+      this.throttled.moveToNextLyricBox = throttle(
         keydownThrottleIntervalMs,
         this.moveToNextLyricBox,
       );
 
-      this.moveLeftThrottled = throttle(
+      this.throttled.moveLeft = throttle(
         keydownThrottleIntervalMs,
         this.moveLeft,
       );
 
-      this.moveRightThrottled = throttle(
+      this.throttled.moveRight = throttle(
         keydownThrottleIntervalMs,
         this.moveRight,
       );
 
-      this.moveSelectionLeftThrottled = throttle(
+      this.throttled.moveSelectionLeft = throttle(
         keydownThrottleIntervalMs,
         this.moveSelectionLeft,
       );
 
-      this.moveSelectionRightThrottled = throttle(
+      this.throttled.moveSelectionRight = throttle(
         keydownThrottleIntervalMs,
         this.moveSelectionRight,
       );
 
-      this.deleteSelectedElementThrottled = throttle(
+      this.throttled.deleteSelectedElement = throttle(
         keydownThrottleIntervalMs,
         this.deleteSelectedElement,
       );
 
-      this.deletePreviousElementThrottled = throttle(
+      this.throttled.deletePreviousElement = throttle(
         keydownThrottleIntervalMs,
         this.deletePreviousElement,
       );
 
-      this.onFileMenuUndoThrottled = throttle(
+      this.throttled.onFileMenuUndo = throttle(
         keydownThrottleIntervalMs,
         this.onFileMenuUndo,
       );
 
-      this.onFileMenuRedoThrottled = throttle(
+      this.throttled.onFileMenuRedo = throttle(
         keydownThrottleIntervalMs,
         this.onFileMenuRedo,
       );
 
-      this.onCutScoreElementsThrottled = throttle(
+      this.throttled.onCutScoreElements = throttle(
         keydownThrottleIntervalMs,
         this.onCutScoreElements,
       );
 
-      this.onCopyScoreElementsThrottled = throttle(
+      this.throttled.onCopyScoreElements = throttle(
         keydownThrottleIntervalMs,
         this.onCopyScoreElements,
       );
 
-      this.onFileMenuCopyAsHtmlThrottled = throttle(
+      this.throttled.onFileMenuCopyAsHtml = throttle(
         keydownThrottleIntervalMs,
         this.onFileMenuCopyAsHtml,
       );
 
-      this.onPasteScoreElementsThrottled = throttle(
+      this.throttled.onPasteScoreElements = throttle(
         keydownThrottleIntervalMs,
         this.onPasteScoreElements,
       );
 
-      this.addQuantitativeNeumeThrottled = throttle(
+      this.throttled.addQuantitativeNeume = throttle(
         keydownThrottleIntervalMs,
         this.addQuantitativeNeume,
       );
 
-      this.addTempoThrottled = throttle(
+      this.throttled.addTempo = throttle(
         keydownThrottleIntervalMs,
         this.addTempo,
       );
 
-      this.addAutoMartyriaThrottled = throttle(
+      this.throttled.addAutoMartyria = throttle(
         keydownThrottleIntervalMs,
         this.addAutoMartyria,
       );
 
-      this.setKlasmaThrottled = throttle(
+      this.throttled.updateNoteAndSave = throttle(
+        keydownThrottleIntervalMs,
+        this.updateNoteAndSave,
+      );
+
+      this.throttled.updateMartyria = throttle(
+        keydownThrottleIntervalMs,
+        this.updateMartyria,
+      );
+
+      this.throttled.setKlasma = throttle(
         keydownThrottleIntervalMs,
         this.setKlasma,
       );
-      this.setGorgonThrottled = throttle(
+      this.throttled.setGorgon = throttle(
         keydownThrottleIntervalMs,
         this.setGorgon,
       );
-      this.setFthoraNoteThrottled = throttle(
+      this.throttled.setFthoraNote = throttle(
         keydownThrottleIntervalMs,
         this.setFthoraNote,
       );
-      this.setFthoraMartyriaThrottled = throttle(
+      this.throttled.setFthoraMartyria = throttle(
         keydownThrottleIntervalMs,
         this.setFthoraMartyria,
       );
-      this.setMartyriaTempoThrottled = throttle(
+      this.throttled.setMartyriaTempo = throttle(
         keydownThrottleIntervalMs,
         this.setMartyriaTempo,
       );
-      this.setAccidentalThrottled = throttle(
+      this.throttled.setAccidental = throttle(
         keydownThrottleIntervalMs,
         this.setAccidental,
       );
-      this.setTimeNeumeThrottled = throttle(
+      this.throttled.setTimeNeume = throttle(
         keydownThrottleIntervalMs,
         this.setTimeNeume,
       );
-      this.setMeasureNumberThrottled = throttle(
+      this.throttled.setMeasureNumber = throttle(
         keydownThrottleIntervalMs,
         this.setMeasureNumber,
       );
-      this.setMeasureBarNoteThrottled = throttle(
+      this.throttled.setMeasureBarNote = throttle(
         keydownThrottleIntervalMs,
         this.setMeasureBarNote,
       );
-      this.setMeasureBarMartyriaThrottled = throttle(
+      this.throttled.setMeasureBarMartyria = throttle(
         keydownThrottleIntervalMs,
         this.setMeasureBarMartyria,
       );
-      this.setIsonThrottled = throttle(keydownThrottleIntervalMs, this.setIson);
-      this.setTieThrottled = throttle(keydownThrottleIntervalMs, this.setTie);
-      this.setVocalExpressionThrottled = throttle(
+      this.throttled.setIson = throttle(
+        keydownThrottleIntervalMs,
+        this.setIson,
+      );
+      this.throttled.setTie = throttle(keydownThrottleIntervalMs, this.setTie);
+      this.throttled.setVocalExpression = throttle(
         keydownThrottleIntervalMs,
         this.setVocalExpression,
       );
 
-      this.updateMartyriaNoteThrottled = throttle(
-        keydownThrottleIntervalMs,
-        this.updateMartyriaNote,
-      );
-
-      this.updateMartyriaScaleThrottled = throttle(
-        keydownThrottleIntervalMs,
-        this.updateMartyriaScale,
-      );
-
-      this.updateMartyriaAutoThrottled = throttle(
-        keydownThrottleIntervalMs,
-        this.updateMartyriaAuto,
-      );
-
-      this.updateMartyriaAlignRightThrottled = throttle(
-        keydownThrottleIntervalMs,
-        this.updateMartyriaAlignRight,
-      );
-
-      this.updateNoteNoteIndicatorThrottled = throttle(
-        keydownThrottleIntervalMs,
-        this.updateNoteNoteIndicator,
-      );
-
-      this.updateNoteKoronisThrottled = throttle(
-        keydownThrottleIntervalMs,
-        this.updateNoteKoronis,
-      );
-
-      this.updateNoteVareiaThrottled = throttle(
-        keydownThrottleIntervalMs,
-        this.updateNoteVareia,
-      );
-
-      this.onWindowResizeThrottled = throttle(250, this.onWindowResize);
-      this.onScrollThrottled = throttle(250, this.onScroll);
+      this.throttled.onWindowResize = throttle(250, this.onWindowResize);
+      this.throttled.onScroll = throttle(250, this.onScroll);
 
       this.saveDebounced = debounce(250, this.save);
+
+      // Make sure we initialized all the throttled methods
+      if (this.isDevelopment) {
+        for (const [key, val] of Object.entries(this.throttled)) {
+          if (val == null)
+            throw new Error(
+              `Missing initialization for throttled method '${key}'`,
+            );
+        }
+      }
     },
     getHeaderHorizontalRuleStyle(headerHeight: number) {
       return {
@@ -2165,31 +2126,31 @@ export default defineComponent({
       ) {
         if (event.code === 'KeyZ') {
           if (this.platformService.isMac && event.shiftKey) {
-            this.onFileMenuRedoThrottled();
+            this.throttled.onFileMenuRedo();
           } else {
-            this.onFileMenuUndoThrottled();
+            this.throttled.onFileMenuUndo();
           }
           event.preventDefault();
           return;
         } else if (event.code === 'KeyY') {
-          this.onFileMenuRedoThrottled();
+          this.throttled.onFileMenuRedo();
           event.preventDefault();
           return;
         } else if (event.code === 'KeyX') {
-          this.onCutScoreElementsThrottled();
+          this.throttled.onCutScoreElements();
           event.preventDefault();
           return;
         } else if (event.code === 'KeyC') {
           if (event.shiftKey) {
-            this.onFileMenuCopyAsHtmlThrottled();
+            this.throttled.onFileMenuCopyAsHtml();
           } else {
-            this.onCopyScoreElementsThrottled();
+            this.throttled.onCopyScoreElements();
           }
           event.preventDefault();
           return;
         } else if (event.code === 'KeyV') {
           const includeLyrics = event.shiftKey;
-          this.onPasteScoreElementsThrottled(includeLyrics);
+          this.throttled.onPasteScoreElements(includeLyrics);
           event.preventDefault();
           return;
         } else if (event.code === 'KeyI' && !event.shiftKey) {
@@ -2252,11 +2213,11 @@ export default defineComponent({
       if (event.shiftKey) {
         switch (event.code) {
           case 'ArrowLeft':
-            this.moveSelectionLeftThrottled();
+            this.throttled.moveSelectionLeft();
             handled = true;
             break;
           case 'ArrowRight':
-            this.moveSelectionRightThrottled();
+            this.throttled.moveSelectionRight();
             handled = true;
             break;
         }
@@ -2264,17 +2225,17 @@ export default defineComponent({
         switch (event.code) {
           case 'ArrowLeft':
             if (!this.rtl) {
-              this.moveLeftThrottled();
+              this.throttled.moveLeft();
             } else {
-              this.moveRightThrottled();
+              this.throttled.moveRight();
             }
             handled = true;
             break;
           case 'ArrowRight':
             if (!this.rtl) {
-              this.moveRightThrottled();
+              this.throttled.moveRight();
             } else {
-              this.moveLeftThrottled();
+              this.throttled.moveLeft();
             }
             handled = true;
             break;
@@ -2311,11 +2272,11 @@ export default defineComponent({
             break;
           case 'Backspace':
             handled = true;
-            this.deletePreviousElementThrottled();
+            this.throttled.deletePreviousElement();
             break;
           case 'Delete':
             handled = true;
-            this.deleteSelectedElementThrottled();
+            this.throttled.deleteSelectedElement();
             break;
         }
       }
@@ -2341,13 +2302,15 @@ export default defineComponent({
 
           if (quantitativeMapping.acceptsLyricsOption != null) {
             if (this.selectedElement.elementType === ElementType.Note) {
-              this.updateNoteAcceptsLyrics(
+              this.throttled.updateNoteAndSave(
                 this.selectedElement as NoteElement,
-                quantitativeMapping.acceptsLyricsOption,
+                {
+                  acceptsLyrics: quantitativeMapping.acceptsLyricsOption,
+                },
               );
             }
           } else {
-            this.addQuantitativeNeumeThrottled(
+            this.throttled.addQuantitativeNeume(
               quantitativeMapping.neume as QuantitativeNeume,
             );
           }
@@ -2360,7 +2323,7 @@ export default defineComponent({
 
         if (tempoMapping != null) {
           handled = true;
-          this.addTempoThrottled(tempoMapping.neume as TempoSign);
+          this.throttled.addTempo(tempoMapping.neume as TempoSign);
         }
 
         if (
@@ -2368,7 +2331,7 @@ export default defineComponent({
           this.neumeKeyboard.isMartyria(event.code)
         ) {
           handled = true;
-          this.addAutoMartyriaThrottled(event.shiftKey);
+          this.throttled.addAutoMartyria(event.shiftKey);
         }
 
         const martyriaConfigMapping =
@@ -2381,7 +2344,7 @@ export default defineComponent({
           if (martyriaConfigMapping.note != null) {
             handled = true;
 
-            this.addAutoMartyriaThrottled(
+            this.throttled.addAutoMartyria(
               martyriaConfigMapping.martyriaAlignmentToggle,
               martyriaConfigMapping.note,
             );
@@ -2401,7 +2364,7 @@ export default defineComponent({
 
           if (gorgonMapping != null) {
             handled = true;
-            this.setGorgonThrottled(
+            this.throttled.setGorgon(
               noteElement,
               gorgonMapping.neumes as GorgonNeume[],
             );
@@ -2417,9 +2380,11 @@ export default defineComponent({
             handled = true;
 
             if (vocalExpressionMapping.neume === VocalExpressionNeume.Vareia) {
-              this.updateNoteVareiaThrottled(noteElement, !noteElement.vareia);
+              this.throttled.updateNoteAndSave(noteElement, {
+                vareia: !noteElement.vareia,
+              });
             } else {
-              this.setVocalExpressionThrottled(
+              this.throttled.setVocalExpression(
                 noteElement,
                 vocalExpressionMapping.neume as VocalExpressionNeume,
               );
@@ -2434,7 +2399,7 @@ export default defineComponent({
           if (tieMapping != null) {
             handled = true;
 
-            this.setTieThrottled(noteElement, tieMapping.neumes as Tie[]);
+            this.throttled.setTie(noteElement, tieMapping.neumes as Tie[]);
           }
 
           const fthoraMapping = this.neumeKeyboard.findFthoraMapping(
@@ -2444,7 +2409,7 @@ export default defineComponent({
 
           if (fthoraMapping != null) {
             handled = true;
-            this.setFthoraNoteThrottled(
+            this.throttled.setFthoraNote(
               noteElement,
               fthoraMapping.neumes as Fthora[],
             );
@@ -2457,7 +2422,7 @@ export default defineComponent({
 
           if (accidentalMapping != null) {
             handled = true;
-            this.setAccidentalThrottled(
+            this.throttled.setAccidental(
               noteElement,
               accidentalMapping.neume as Accidental,
             );
@@ -2472,12 +2437,11 @@ export default defineComponent({
             handled = true;
 
             if (hapliMapping.neume === TimeNeume.Koronis) {
-              this.updateNoteKoronisThrottled(
-                noteElement,
-                !noteElement.koronis,
-              );
+              this.throttled.updateNoteAndSave(noteElement, {
+                koronis: !noteElement.koronis,
+              });
             } else {
-              this.setTimeNeumeThrottled(
+              this.throttled.setTimeNeume(
                 noteElement,
                 hapliMapping.neume as TimeNeume,
               );
@@ -2492,7 +2456,7 @@ export default defineComponent({
 
           if (measureNumberMapping != null) {
             handled = true;
-            this.setMeasureNumberThrottled(
+            this.throttled.setMeasureNumber(
               noteElement,
               measureNumberMapping.neume as MeasureNumber,
             );
@@ -2505,7 +2469,7 @@ export default defineComponent({
 
           if (measureBarMapping != null) {
             handled = true;
-            this.setMeasureBarNoteThrottled(
+            this.throttled.setMeasureBarNote(
               noteElement,
               measureBarMapping.neume as MeasureBar,
             );
@@ -2518,27 +2482,26 @@ export default defineComponent({
 
           if (isonMapping != null) {
             handled = true;
-            this.setIsonThrottled(noteElement, isonMapping.neume as Ison);
+            this.throttled.setIson(noteElement, isonMapping.neume as Ison);
           }
 
           if (
             this.keyboardModifier == null &&
             this.neumeKeyboard.isMartyria(event.code)
           ) {
-            this.addAutoMartyriaThrottled();
+            this.throttled.addAutoMartyria();
           } else if (
             this.keyboardModifier == null &&
             this.neumeKeyboard.isKlasma(event.code)
           ) {
-            this.setKlasmaThrottled(noteElement);
+            this.throttled.setKlasma(noteElement);
           } else if (
             this.keyboardModifier == null &&
             this.neumeKeyboard.isNoteIndicator(event.code)
           ) {
-            this.updateNoteNoteIndicatorThrottled(
-              noteElement,
-              !noteElement.noteIndicator,
-            );
+            this.throttled.updateNoteAndSave(noteElement, {
+              noteIndicator: !noteElement.noteIndicator,
+            });
           }
         } else if (
           this.selectedElement.elementType === ElementType.Martyria &&
@@ -2553,7 +2516,7 @@ export default defineComponent({
 
           if (fthoraMapping != null) {
             handled = true;
-            this.setFthoraMartyriaThrottled(
+            this.throttled.setFthoraMartyria(
               martyriaElement,
               fthoraMapping.neumes![0] as Fthora,
             );
@@ -2566,7 +2529,7 @@ export default defineComponent({
 
           if (tempoMapping != null) {
             handled = true;
-            this.setMartyriaTempoThrottled(
+            this.throttled.setMartyriaTempo(
               martyriaElement,
               tempoMapping.neume as TempoSign,
             );
@@ -2579,7 +2542,7 @@ export default defineComponent({
 
           if (measureBarMapping != null) {
             handled = true;
-            this.setMeasureBarMartyriaThrottled(
+            this.throttled.setMeasureBarMartyria(
               martyriaElement,
               measureBarMapping.neume as MeasureBar,
             );
@@ -2597,25 +2560,21 @@ export default defineComponent({
             if (martyriaConfigMapping.note != null) {
               // This case will not currently happen
               // because no keyboard mapping exist for it
-              this.updateMartyriaNoteThrottled(
-                martyriaElement,
-                martyriaConfigMapping.note,
-              );
+              this.throttled.updateMartyria(martyriaElement, {
+                note: martyriaConfigMapping.note,
+              });
             } else if (martyriaConfigMapping.scale != null) {
-              this.updateMartyriaScaleThrottled(
-                martyriaElement,
-                martyriaConfigMapping.scale,
-              );
+              this.throttled.updateMartyria(martyriaElement, {
+                scale: martyriaConfigMapping.scale,
+              });
             } else if (martyriaConfigMapping.martyriaAlignmentToggle === true) {
-              this.updateMartyriaAlignRightThrottled(
-                martyriaElement,
-                !martyriaElement.alignRight,
-              );
+              this.throttled.updateMartyria(martyriaElement, {
+                alignRight: !martyriaElement.alignRight,
+              });
             } else if (martyriaConfigMapping.martyriaAutoToggle === true) {
-              this.updateMartyriaAutoThrottled(
-                martyriaElement,
-                !martyriaElement.auto,
-              );
+              this.throttled.updateMartyria(martyriaElement, {
+                auto: !martyriaElement.auto,
+              });
             }
           }
         }
@@ -2642,19 +2601,19 @@ export default defineComponent({
 
           if (event.ctrlKey || event.metaKey) {
             if (!this.rtl) {
-              this.moveToNextLyricBoxThrottled();
+              this.throttled.moveToNextLyricBox();
             } else {
-              this.moveToPreviousLyricBoxThrottled();
+              this.throttled.moveToPreviousLyricBox();
             }
             handled = true;
           } else if (
             !this.rtl &&
             getCursorPosition() === this.getLyricLength(this.selectedLyrics!)
           ) {
-            this.moveToNextLyricBoxThrottled();
+            this.throttled.moveToNextLyricBox();
             handled = true;
           } else if (this.rtl && getCursorPosition() === 0) {
-            this.moveToPreviousLyricBoxThrottled();
+            this.throttled.moveToPreviousLyricBox();
             handled = true;
           }
           break;
@@ -2665,19 +2624,19 @@ export default defineComponent({
 
           if (event.ctrlKey || event.metaKey) {
             if (!this.rtl) {
-              this.moveToPreviousLyricBoxThrottled();
+              this.throttled.moveToPreviousLyricBox();
             } else {
-              this.moveToNextLyricBoxThrottled();
+              this.throttled.moveToNextLyricBox();
             }
             handled = true;
           } else if (!this.rtl && getCursorPosition() === 0) {
-            this.moveToPreviousLyricBoxThrottled();
+            this.throttled.moveToPreviousLyricBox();
             handled = true;
           } else if (
             this.rtl &&
             getCursorPosition() === this.getLyricLength(this.selectedLyrics!)
           ) {
-            this.moveToNextLyricBoxThrottled();
+            this.throttled.moveToNextLyricBox();
             handled = true;
           }
           break;
@@ -2698,7 +2657,7 @@ export default defineComponent({
           if (event.ctrlKey || event.metaKey) {
             document.execCommand('insertText', false, ' ');
           } else {
-            this.moveToNextLyricBoxThrottled(true);
+            this.throttled.moveToNextLyricBox(true);
           }
           handled = true;
           break;
@@ -2719,7 +2678,7 @@ export default defineComponent({
             getCursorPosition() === this.getLyricLength(this.selectedLyrics!)
           ) {
             if (this.getNextLyricBoxIndex() >= 0) {
-              this.moveToNextLyricBoxThrottled();
+              this.throttled.moveToNextLyricBox();
             } else {
               // If this is the last lyric box, blur
               // so that the melisma is registered and
@@ -2757,7 +2716,7 @@ export default defineComponent({
             getCursorPosition() === this.getLyricLength(this.selectedLyrics!)
           ) {
             if (this.getNextLyricBoxIndex() >= 0) {
-              this.moveToNextLyricBoxThrottled();
+              this.throttled.moveToNextLyricBox();
             } else {
               // If this is the last lyric box, blur
               // so that the melisma is registered and
@@ -2796,19 +2755,19 @@ export default defineComponent({
           handled = true;
           break;
         case 'Tab':
-          this.moveRightThrottled();
+          this.throttled.moveRight();
           handled = true;
           break;
         case 'ArrowLeft':
           if (!this.rtl && getCursorPosition() === 0) {
-            this.moveLeftThrottled();
+            this.throttled.moveLeft();
             handled = true;
           } else if (
             this.rtl &&
             getCursorPosition() ===
               htmlElement.textElement.getInnerText().length
           ) {
-            this.moveRightThrottled();
+            this.throttled.moveRight();
             handled = true;
           }
           break;
@@ -2818,10 +2777,10 @@ export default defineComponent({
             getCursorPosition() ===
               htmlElement.textElement.getInnerText().length
           ) {
-            this.moveRightThrottled();
+            this.throttled.moveRight();
             handled = true;
           } else if (this.rtl && getCursorPosition() === 0) {
-            this.moveLeftThrottled();
+            this.throttled.moveLeft();
             handled = true;
           }
           break;
@@ -2842,19 +2801,19 @@ export default defineComponent({
 
       switch (event.code) {
         case 'Tab':
-          this.moveRightThrottled();
+          this.throttled.moveRight();
           handled = true;
           break;
         case 'ArrowLeft':
           if (!this.rtl && getCursorPosition() === 0) {
-            this.moveLeftThrottled();
+            this.throttled.moveLeft();
             handled = true;
           } else if (
             this.rtl &&
             getCursorPosition() ===
               htmlElement.getTextElement().getInnerText().length
           ) {
-            this.moveRightThrottled();
+            this.throttled.moveRight();
             handled = true;
           }
           break;
@@ -2864,10 +2823,10 @@ export default defineComponent({
             getCursorPosition() ===
               htmlElement.getTextElement().getInnerText().length
           ) {
-            this.moveRightThrottled();
+            this.throttled.moveRight();
             handled = true;
           } else if (this.rtl && getCursorPosition() === 0) {
-            this.moveLeftThrottled();
+            this.throttled.moveLeft();
             handled = true;
           }
           break;
@@ -3785,24 +3744,32 @@ export default defineComponent({
     setKlasma(element: NoteElement) {
       if (onlyTakesBottomKlasma(element.quantitativeNeume)) {
         if (element.timeNeume === TimeNeume.Klasma_Bottom) {
-          this.updateNoteTime(element, null);
+          this.updateNoteAndSave(element, { timeNeume: null });
         } else {
-          this.updateNoteTime(element, TimeNeume.Klasma_Bottom);
+          this.updateNoteAndSave(element, {
+            timeNeume: TimeNeume.Klasma_Bottom,
+          });
         }
         return;
       } else if (onlyTakesTopKlasma(element.quantitativeNeume)) {
         if (element.timeNeume === TimeNeume.Klasma_Top) {
-          this.updateNoteTime(element, null);
+          this.updateNoteAndSave(element, { timeNeume: null });
         } else {
-          this.updateNoteTime(element, TimeNeume.Klasma_Top);
+          this.updateNoteAndSave(element, {
+            timeNeume: TimeNeume.Klasma_Top,
+          });
         }
         return;
       } else if (element.timeNeume == null) {
-        this.updateNoteTime(element, TimeNeume.Klasma_Top);
+        this.updateNoteAndSave(element, {
+          timeNeume: TimeNeume.Klasma_Top,
+        });
       } else if (element.timeNeume === TimeNeume.Klasma_Top) {
-        this.updateNoteTime(element, TimeNeume.Klasma_Bottom);
+        this.updateNoteAndSave(element, {
+          timeNeume: TimeNeume.Klasma_Bottom,
+        });
       } else if (element.timeNeume === TimeNeume.Klasma_Bottom) {
-        this.updateNoteTime(element, null);
+        this.updateNoteAndSave(element, { timeNeume: null });
       }
     },
 
@@ -3822,7 +3789,7 @@ export default defineComponent({
 
         // If previous neume was matched, set to the next neume in the cycle
         if (equivalent) {
-          this.updateNoteGorgon(element, neume);
+          this.updateNoteAndSave(element, { gorgonNeume: neume });
           return;
         }
 
@@ -3834,17 +3801,17 @@ export default defineComponent({
       // gorgon neumes. Otherwise set gorgon to the first neume
       // in the cycle.
       if (equivalent) {
-        this.updateNoteGorgon(element, null);
+        this.updateNoteAndSave(element, { gorgonNeume: null });
       } else {
-        this.updateNoteGorgon(element, neumes[0]);
+        this.updateNoteAndSave(element, { gorgonNeume: neumes[0] });
       }
     },
 
     setSecondaryGorgon(element: NoteElement, neume: GorgonNeume) {
       if (element.secondaryGorgonNeume === neume) {
-        this.updateNoteGorgonSecondary(element, null);
+        this.updateNoteAndSave(element, { secondaryGorgonNeume: null });
       } else {
-        this.updateNoteGorgonSecondary(element, neume);
+        this.updateNoteAndSave(element, { secondaryGorgonNeume: neume });
       }
     },
 
@@ -3925,9 +3892,9 @@ export default defineComponent({
       neume: QuantitativeNeume,
     ) {
       if (element.quantitativeNeume === neume) {
-        this.updateMartyriaQuantitativeNeume(element, null);
+        this.updateMartyria(element, { quantitativeNeume: null });
       } else {
-        this.updateMartyriaQuantitativeNeume(element, neume);
+        this.updateMartyria(element, { quantitativeNeume: neume });
       }
     },
 
@@ -3941,9 +3908,9 @@ export default defineComponent({
 
     setAccidental(element: NoteElement, neume: Accidental) {
       if (element.accidental != null && element.accidental === neume) {
-        this.updateNoteAccidental(element, null);
+        this.updateNoteAndSave(element, { accidental: null });
       } else {
-        this.updateNoteAccidental(element, neume);
+        this.updateNoteAndSave(element, { accidental: neume });
       }
     },
 
@@ -3952,9 +3919,9 @@ export default defineComponent({
         element.secondaryAccidental != null &&
         element.secondaryAccidental === neume
       ) {
-        this.updateNoteAccidentalSecondary(element, null);
+        this.updateNoteAndSave(element, { secondaryAccidental: null });
       } else {
-        this.updateNoteAccidentalSecondary(element, neume);
+        this.updateNoteAndSave(element, { secondaryAccidental: neume });
       }
     },
 
@@ -3963,25 +3930,25 @@ export default defineComponent({
         element.tertiaryAccidental != null &&
         element.tertiaryAccidental === neume
       ) {
-        this.updateNoteAccidentalTertiary(element, null);
+        this.updateNoteAndSave(element, { tertiaryAccidental: null });
       } else {
-        this.updateNoteAccidentalTertiary(element, neume);
+        this.updateNoteAndSave(element, { tertiaryAccidental: neume });
       }
     },
 
     setTimeNeume(element: NoteElement, neume: TimeNeume) {
       if (element.timeNeume === neume) {
-        this.updateNoteTime(element, null);
+        this.updateNoteAndSave(element, { timeNeume: null });
       } else {
-        this.updateNoteTime(element, neume);
+        this.updateNoteAndSave(element, { timeNeume: neume });
       }
     },
 
     setMeasureNumber(element: NoteElement, neume: MeasureNumber) {
       if (neume === element.measureNumber) {
-        this.updateNoteMeasureNumber(element, null);
+        this.updateNoteAndSave(element, { measureNumber: null });
       } else {
-        this.updateNoteMeasureNumber(element, neume);
+        this.updateNoteAndSave(element, { measureNumber: neume });
       }
     },
 
@@ -3995,22 +3962,22 @@ export default defineComponent({
         ? measureBarAboveToLeft.get(element.measureBarLeft)
         : element.measureBarLeft;
       if (neume === normalizedMeasureBar && neume === element.measureBarRight) {
-        this.updateNoteMeasureBar(element, {
+        this.updateNoteAndSave(element, {
           measureBarLeft: null,
           measureBarRight: null,
         });
       } else if (neume === normalizedMeasureBar) {
-        this.updateNoteMeasureBar(element, {
+        this.updateNoteAndSave(element, {
           measureBarLeft: null,
           measureBarRight: neume,
         });
       } else if (neume === element.measureBarRight) {
-        this.updateNoteMeasureBar(element, {
+        this.updateNoteAndSave(element, {
           measureBarLeft: neume,
           measureBarRight: neume,
         });
       } else {
-        this.updateNoteMeasureBar(element, {
+        this.updateNoteAndSave(element, {
           measureBarLeft: neume,
           measureBarRight: null,
         });
@@ -4027,22 +3994,22 @@ export default defineComponent({
         ? measureBarAboveToLeft.get(element.measureBarLeft)
         : element.measureBarLeft;
       if (neume === normalizedMeasureBar && neume === element.measureBarRight) {
-        this.updateMartyriaMeasureBar(element, {
+        this.updateMartyria(element, {
           measureBarLeft: null,
           measureBarRight: null,
         });
       } else if (neume === normalizedMeasureBar) {
-        this.updateMartyriaMeasureBar(element, {
+        this.updateMartyria(element, {
           measureBarLeft: null,
           measureBarRight: neume,
         });
       } else if (neume === element.measureBarRight) {
-        this.updateMartyriaMeasureBar(element, {
+        this.updateMartyria(element, {
           measureBarLeft: neume,
           measureBarRight: neume,
         });
       } else {
-        this.updateMartyriaMeasureBar(element, {
+        this.updateMartyria(element, {
           measureBarLeft: neume,
           measureBarRight: null,
         });
@@ -4051,9 +4018,9 @@ export default defineComponent({
 
     setIson(element: NoteElement, neume: Ison) {
       if (neume === element.ison) {
-        this.updateNoteIson(element, null);
+        this.updateNoteAndSave(element, { ison: null });
       } else {
-        this.updateNoteIson(element, neume);
+        this.updateNoteAndSave(element, { ison: neume });
       }
     },
 
@@ -4074,7 +4041,7 @@ export default defineComponent({
       for (const neume of neumes) {
         // If previous neume was matched, set to the next neume in the cycle
         if (equivalent) {
-          this.updateNoteTie(element, neume);
+          this.updateNoteAndSave(element, { tie: neume });
           return;
         }
 
@@ -4086,9 +4053,9 @@ export default defineComponent({
       // fthora neumes. Otherwise set fthora to the first neume
       // in the cycle.
       if (equivalent) {
-        this.updateNoteTie(element, null);
+        this.updateNoteAndSave(element, { tie: null });
       } else {
-        this.updateNoteTie(element, neumes[0]);
+        this.updateNoteAndSave(element, { tie: neumes[0] });
       }
     },
 
@@ -4171,77 +4138,6 @@ export default defineComponent({
       ) {
         this.refreshStaffLyrics();
       }
-    },
-
-    updateNoteLyricsUseDefaultStyle(
-      element: NoteElement,
-      lyricsUseDefaultStyle: boolean,
-    ) {
-      this.updateNote(element, { lyricsUseDefaultStyle });
-      this.save();
-    },
-
-    updateNoteLyricsColor(element: NoteElement, lyricsColor: string) {
-      this.updateNote(element, { lyricsColor });
-      this.save();
-    },
-
-    updateNoteLyricsFontFamily(element: NoteElement, lyricsFontFamily: string) {
-      this.updateNote(element, { lyricsFontFamily });
-      this.save();
-    },
-
-    updateNoteLyricsFontSize(element: NoteElement, lyricsFontSize: number) {
-      this.updateNote(element, { lyricsFontSize });
-      this.save();
-    },
-
-    updateNoteLyricsStrokeWidth(
-      element: NoteElement,
-      lyricsStrokeWidth: number,
-    ) {
-      this.updateNote(element, { lyricsStrokeWidth });
-      this.save();
-    },
-
-    updateNoteLyricsFontWeight(element: NoteElement, bold: boolean) {
-      this.updateNote(element, { lyricsFontWeight: bold ? '700' : '400' });
-      this.save();
-    },
-
-    updateNoteLyricsFontStyle(element: NoteElement, italic: boolean) {
-      this.updateNote(element, {
-        lyricsFontStyle: italic ? 'italic' : 'normal',
-      });
-      this.save();
-    },
-
-    updateNoteLyricsTextDecoration(element: NoteElement, underline: boolean) {
-      this.updateNote(element, {
-        lyricsTextDecoration: underline ? 'underline' : 'none',
-      });
-      this.save();
-    },
-
-    updateNoteAccidental(element: NoteElement, accidental: Accidental | null) {
-      this.updateNote(element, { accidental });
-      this.save();
-    },
-
-    updateNoteAccidentalSecondary(
-      element: NoteElement,
-      secondaryAccidental: Accidental | null,
-    ) {
-      this.updateNote(element, { secondaryAccidental });
-      this.save();
-    },
-
-    updateNoteAccidentalTertiary(
-      element: NoteElement,
-      tertiaryAccidental: Accidental | null,
-    ) {
-      this.updateNote(element, { tertiaryAccidental });
-      this.save();
     },
 
     updateNoteFthora(element: NoteElement, fthora: Fthora | null) {
@@ -4345,126 +4241,6 @@ export default defineComponent({
       this.save();
     },
 
-    updateNoteTime(element: NoteElement, timeNeume: TimeNeume | null) {
-      this.updateNote(element, { timeNeume });
-      this.save();
-    },
-
-    updateNoteGorgon(element: NoteElement, gorgonNeume: GorgonNeume | null) {
-      this.updateNote(element, { gorgonNeume });
-      this.save();
-    },
-
-    updateNoteGorgonSecondary(
-      element: NoteElement,
-      secondaryGorgonNeume: GorgonNeume | null,
-    ) {
-      this.updateNote(element, { secondaryGorgonNeume });
-      this.save();
-    },
-
-    updateNoteMeasureBar(
-      element: NoteElement,
-      {
-        measureBarLeft,
-        measureBarRight,
-      }: {
-        measureBarLeft: MeasureBar | null;
-        measureBarRight: MeasureBar | null;
-      },
-    ) {
-      this.updateNote(element, {
-        measureBarLeft,
-        measureBarRight,
-      });
-      this.save();
-    },
-
-    updateNoteMeasureNumber(
-      element: NoteElement,
-      measureNumber: MeasureNumber | null,
-    ) {
-      this.updateNote(element, { measureNumber });
-      this.save();
-    },
-
-    updateNoteNoteIndicator(element: NoteElement, noteIndicator: boolean) {
-      this.updateNote(element, { noteIndicator });
-      this.save();
-    },
-
-    updateNoteIson(element: NoteElement, ison: Ison | null) {
-      this.updateNote(element, { ison });
-      this.save();
-    },
-
-    updateNoteKoronis(element: NoteElement, koronis: boolean) {
-      this.updateNote(element, { koronis });
-      this.save();
-    },
-
-    updateNoteStavros(element: NoteElement, stavros: boolean) {
-      this.updateNote(element, { stavros });
-      this.save();
-    },
-
-    updateNoteVareia(element: NoteElement, vareia: boolean) {
-      this.updateNote(element, { vareia });
-      this.save();
-    },
-
-    updateNoteTie(element: NoteElement, tie: Tie | null) {
-      this.updateNote(element, { tie });
-      this.save();
-    },
-
-    updateNoteSpaceAfter(element: NoteElement, spaceAfter: number) {
-      this.updateNote(element, { spaceAfter });
-      this.save();
-    },
-
-    updateNoteIgnoreAttractions(
-      element: NoteElement,
-      ignoreAttractions: boolean,
-    ) {
-      this.updateNote(element, { ignoreAttractions });
-      this.save();
-    },
-
-    updateNoteAcceptsLyrics(
-      element: NoteElement,
-      acceptsLyrics: AcceptsLyricsOption,
-    ) {
-      this.updateNote(element, {
-        acceptsLyrics: acceptsLyrics,
-      });
-      this.save();
-    },
-
-    updateNoteChromaticFthoraNote(
-      element: NoteElement,
-      chromaticFthoraNote: ScaleNote | null,
-    ) {
-      this.updateNote(element, { chromaticFthoraNote });
-      this.save();
-    },
-
-    updateNoteSecondaryChromaticFthoraNote(
-      element: NoteElement,
-      secondaryChromaticFthoraNote: ScaleNote | null,
-    ) {
-      this.updateNote(element, { secondaryChromaticFthoraNote });
-      this.save();
-    },
-
-    updateNoteTertiaryChromaticFthoraNote(
-      element: NoteElement,
-      tertiaryChromaticFthoraNote: ScaleNote | null,
-    ) {
-      this.updateNote(element, { tertiaryChromaticFthoraNote });
-      this.save();
-    },
-
     updateLyricsLocked(locked: boolean) {
       this.lyricsLocked = locked;
       this.hasUnsavedChanges = true;
@@ -4472,7 +4248,7 @@ export default defineComponent({
 
     updateStaffLyrics(lyrics: string) {
       this.lyrics = lyrics;
-      this.assignLyricsThrottled();
+      this.throttled.assignLyrics();
       this.hasUnsavedChanges = true;
     },
 
@@ -4674,17 +4450,6 @@ export default defineComponent({
       this.saveDebounced(false);
     },
 
-    updateRichTextBoxMarginTop(element: RichTextBoxElement, marginTop: number) {
-      this.updateRichTextBox(element, { marginTop });
-    },
-
-    updateRichTextBoxMarginBottom(
-      element: RichTextBoxElement,
-      marginBottom: number,
-    ) {
-      this.updateRichTextBox(element, { marginBottom });
-    },
-
     updateTextBox(element: TextBoxElement, newValues: Partial<TextBoxElement>) {
       const noHistory =
         Object.keys(newValues).length === 1 && 'height' in newValues;
@@ -4708,86 +4473,6 @@ export default defineComponent({
       this.saveDebounced(false);
     },
 
-    updateTextBoxUseDefaultStyle(
-      element: TextBoxElement,
-      useDefaultStyle: boolean,
-    ) {
-      this.updateTextBox(element, { useDefaultStyle });
-    },
-
-    updateTextBoxMultipanel(element: TextBoxElement, multipanel: boolean) {
-      this.updateTextBox(element, { multipanel });
-    },
-
-    updateTextBoxFontSize(element: TextBoxElement, fontSize: number) {
-      this.updateTextBox(element, { fontSize });
-    },
-
-    updateTextBoxFontFamily(element: TextBoxElement, fontFamily: string) {
-      this.updateTextBox(element, { fontFamily });
-    },
-
-    updateTextBoxStrokeWidth(element: TextBoxElement, strokeWidth: number) {
-      this.updateTextBox(element, { strokeWidth });
-    },
-
-    updateTextBoxColor(element: TextBoxElement, color: string) {
-      this.updateTextBox(element, { color });
-    },
-
-    updateTextBoxAlignment(
-      element: TextBoxElement,
-      alignment: TextBoxAlignment,
-    ) {
-      this.updateTextBox(element, { alignment });
-    },
-
-    updateTextBoxInline(element: TextBoxElement, inline: boolean) {
-      this.updateTextBox(element, { inline });
-    },
-
-    updateTextBoxBold(element: TextBoxElement, bold: boolean) {
-      this.updateTextBox(element, { bold });
-    },
-
-    updateTextBoxItalic(element: TextBoxElement, italic: boolean) {
-      this.updateTextBox(element, { italic });
-    },
-
-    updateTextBoxUnderline(element: TextBoxElement, underline: boolean) {
-      this.updateTextBox(element, { underline });
-    },
-
-    updateTextBoxLineHeight(
-      element: TextBoxElement,
-      lineHeight: number | null,
-    ) {
-      this.updateTextBox(element, { lineHeight });
-    },
-
-    updateTextBoxWidth(element: TextBoxElement, customWidth: number | null) {
-      this.updateTextBox(element, { customWidth });
-    },
-
-    updateTextBoxFillWidth(element: TextBoxElement, fillWidth: boolean) {
-      this.updateTextBox(element, { fillWidth });
-    },
-
-    updateTextBoxCustomHeight(
-      element: TextBoxElement,
-      customHeight: number | null,
-    ) {
-      this.updateTextBox(element, { customHeight });
-    },
-
-    updateTextBoxMarginTop(element: TextBoxElement, marginTop: number) {
-      this.updateTextBox(element, { marginTop });
-    },
-
-    updateTextBoxMarginBottom(element: TextBoxElement, marginBottom: number) {
-      this.updateTextBox(element, { marginBottom });
-    },
-
     updateModeKey(element: ModeKeyElement, newValues: Partial<ModeKeyElement>) {
       this.commandService.execute(
         modeKeyCommandFactory.create('update-properties', {
@@ -4797,47 +4482,6 @@ export default defineComponent({
       );
 
       this.save();
-    },
-
-    updateModeKeyMarginTop(element: ModeKeyElement, marginTop: number) {
-      this.updateModeKey(element, { marginTop });
-    },
-
-    updateModeKeyMarginBottom(element: ModeKeyElement, marginBottom: number) {
-      this.updateModeKey(element, { marginBottom });
-    },
-
-    updateModeKeyUseDefaultStyle(
-      element: ModeKeyElement,
-      useDefaultStyle: boolean,
-    ) {
-      this.updateModeKey(element, { useDefaultStyle });
-    },
-
-    updateModeKeyFontSize(element: ModeKeyElement, fontSize: number) {
-      this.updateModeKey(element, { fontSize });
-    },
-
-    updateModeKeyStrokeWidth(element: ModeKeyElement, strokeWidth: number) {
-      this.updateModeKey(element, { strokeWidth });
-    },
-
-    updateModeKeyColor(element: ModeKeyElement, color: string) {
-      this.updateModeKey(element, { color });
-    },
-
-    updateModeKeyAlignment(
-      element: ModeKeyElement,
-      alignment: TextBoxAlignment,
-    ) {
-      this.updateModeKey(element, { alignment });
-    },
-
-    updateModeKeyHeightAdjustment(
-      element: ModeKeyElement,
-      heightAdjustment: number,
-    ) {
-      this.updateModeKey(element, { heightAdjustment });
     },
 
     updateModeKeyTempo(element: ModeKeyElement, tempo: TempoSign | null) {
@@ -4850,40 +4494,6 @@ export default defineComponent({
       }
 
       this.updateModeKey(element, { tempo, bpm });
-    },
-
-    updateModeKeyBpm(element: ModeKeyElement, bpm: number) {
-      this.updateModeKey(element, { bpm });
-      this.save();
-    },
-
-    updateModeKeyIgnoreAttractions(
-      element: ModeKeyElement,
-      ignoreAttractions: boolean,
-    ) {
-      this.updateModeKey(element, { ignoreAttractions });
-      this.save();
-    },
-
-    updateModeKeyShowAmbitus(element: ModeKeyElement, showAmbitus: boolean) {
-      this.updateModeKey(element, { showAmbitus });
-      this.save();
-    },
-
-    updateModeKeyTempoAlignRight(
-      element: ModeKeyElement,
-      tempoAlignRight: boolean,
-    ) {
-      this.updateModeKey(element, { tempoAlignRight });
-      this.save();
-    },
-
-    updateModeKeyPermanentEnharmonicZo(
-      element: ModeKeyElement,
-      permanentEnharmonicZo: boolean,
-    ) {
-      this.updateModeKey(element, { permanentEnharmonicZo });
-      this.save();
     },
 
     updateModeKeyFromTemplate(
@@ -5050,70 +4660,6 @@ export default defineComponent({
       this.save();
     },
 
-    updateMartyriaAlignRight(element: MartyriaElement, alignRight: boolean) {
-      this.updateMartyria(element, { alignRight, quantitativeNeume: null });
-    },
-
-    updateMartyriaQuantitativeNeume(
-      element: MartyriaElement,
-      quantitativeNeume: QuantitativeNeume | null,
-    ) {
-      this.updateMartyria(element, { quantitativeNeume });
-    },
-
-    updateMartyriaChromaticFthoraNote(
-      element: MartyriaElement,
-      chromaticFthoraNote: ScaleNote | null,
-    ) {
-      this.updateMartyria(element, { chromaticFthoraNote });
-    },
-
-    updateMartyriaAuto(element: MartyriaElement, auto: boolean) {
-      if (element.auto === auto) {
-        return;
-      }
-
-      this.updateMartyria(element, { auto });
-    },
-
-    updateMartyriaNote(element: MartyriaElement, note: Note) {
-      if (element.note === note) {
-        return;
-      }
-
-      this.updateMartyria(element, { note, auto: false });
-    },
-
-    updateMartyriaScale(element: MartyriaElement, scale: Scale) {
-      if (element.scale === scale) {
-        return;
-      }
-
-      this.updateMartyria(element, { scale, auto: false });
-    },
-
-    updateMartyriaSpaceAfter(element: MartyriaElement, spaceAfter: number) {
-      this.updateMartyria(element, { spaceAfter });
-      this.save();
-    },
-
-    updateMartyriaVerticalOffset(
-      element: MartyriaElement,
-      verticalOffset: number,
-    ) {
-      this.updateMartyria(element, { verticalOffset });
-      this.save();
-    },
-
-    updateMartyriaRootSignOverride(
-      element: MartyriaElement,
-      rootSignOverride: RootSign,
-    ) {
-      rootSignOverride = rootSignOverride || null;
-      this.updateMartyria(element, { rootSignOverride });
-      this.save();
-    },
-
     updateTempo(element: TempoElement, newValues: Partial<TempoElement>) {
       this.commandService.execute(
         tempoCommandFactory.create('update-properties', {
@@ -5122,16 +4668,6 @@ export default defineComponent({
         }),
       );
 
-      this.save();
-    },
-
-    updateTempoSpaceAfter(element: TempoElement, spaceAfter: number) {
-      this.updateTempo(element, { spaceAfter });
-      this.save();
-    },
-
-    updateTempoBpm(element: TempoElement, bpm: number) {
-      this.updateTempo(element, { bpm });
       this.save();
     },
 
@@ -5181,52 +4717,6 @@ export default defineComponent({
       this.save();
     },
 
-    updateDropCapUseDefaultStyle(
-      element: DropCapElement,
-      useDefaultStyle: boolean,
-    ) {
-      this.updateDropCap(element, { useDefaultStyle });
-    },
-
-    updateDropCapFontSize(element: DropCapElement, fontSize: number) {
-      this.updateDropCap(element, { fontSize });
-    },
-
-    updateDropCapFontFamily(element: DropCapElement, fontFamily: string) {
-      this.updateDropCap(element, { fontFamily });
-    },
-
-    updateDropCapStrokeWidth(element: DropCapElement, strokeWidth: number) {
-      this.updateDropCap(element, { strokeWidth });
-    },
-
-    updateDropCapColor(element: DropCapElement, color: string) {
-      this.updateDropCap(element, { color });
-    },
-
-    updateDropCapFontWeight(element: DropCapElement, bold: boolean) {
-      this.updateDropCap(element, { fontWeight: bold ? '700' : '400' });
-    },
-
-    updateDropCapFontStyle(element: DropCapElement, italic: boolean) {
-      this.updateDropCap(element, { fontStyle: italic ? 'italic' : 'normal' });
-    },
-
-    updateDropCapLineHeight(
-      element: DropCapElement,
-      lineHeight: number | null,
-    ) {
-      this.updateDropCap(element, { lineHeight });
-    },
-
-    updateDropCapLineSpan(element: DropCapElement, lineSpan: number) {
-      this.updateDropCap(element, { lineSpan });
-    },
-
-    updateDropCapWidth(element: DropCapElement, customWidth: number | null) {
-      this.updateDropCap(element, { customWidth });
-    },
-
     updateImageBox(
       element: ImageBoxElement,
       newValues: Partial<ImageBoxElement>,
@@ -5239,32 +4729,6 @@ export default defineComponent({
       );
 
       this.save();
-    },
-
-    updateImageBoxInline(element: ImageBoxElement, inline: boolean) {
-      this.updateImageBox(element, { inline });
-    },
-
-    updateImageBoxLockAspectRatio(
-      element: ImageBoxElement,
-      lockAspectRatio: boolean,
-    ) {
-      this.updateImageBox(element, { lockAspectRatio });
-    },
-
-    updateImageBoxAlignment(
-      element: ImageBoxElement,
-      alignment: TextBoxAlignment,
-    ) {
-      this.updateImageBox(element, { alignment });
-    },
-
-    updateImageBoxSize(
-      element: ImageBoxElement,
-      imageWidth: number,
-      imageHeight: number,
-    ) {
-      this.updateImageBox(element, { imageWidth, imageHeight });
     },
 
     deleteSelectedElement() {
@@ -6758,7 +6222,7 @@ export default defineComponent({
         <div
           class="page-background"
           ref="page-background"
-          @scroll="onScrollThrottled"
+          @scroll="throttled.onScroll"
         >
           <div
             class="page"

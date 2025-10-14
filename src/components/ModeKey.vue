@@ -8,28 +8,34 @@
     <Neume v-if="element.isPlagal" :neume="ModeSign.Plagal" />
     <Neume v-if="element.isVarys" :neume="ModeSign.Varys" />
     <Neume :neume="element.martyria" />
-    <Neume v-if="hasNote" :neume="element.note" />
-    <Neume v-if="hasFthoraAboveNote" :neume="element.fthoraAboveNote" />
+    <Neume v-if="element.note != null" :neume="element.note" />
     <Neume
-      v-if="hasQuantitativeNeumeAboveNote"
+      v-if="element.fthoraAboveNote != null"
+      :neume="element.fthoraAboveNote"
+    />
+    <Neume
+      v-if="element.quantitativeNeumeAboveNote != null"
       :neume="element.quantitativeNeumeAboveNote"
     />
-    <Neume v-if="hasNote2" :neume="element.note2" />
-    <Neume v-if="hasFthoraAboveNote2" :neume="element.fthoraAboveNote2" />
+    <Neume v-if="element.note2 != null" :neume="element.note2" />
     <Neume
-      v-if="hasQuantitativeNeumeAboveNote2"
+      v-if="element.fthoraAboveNote2 != null"
+      :neume="element.fthoraAboveNote2"
+    />
+    <Neume
+      v-if="element.quantitativeNeumeAboveNote2 != null"
       :neume="element.quantitativeNeumeAboveNote2"
     />
     <Neume
-      v-if="hasQuantitativeNeumeRight"
+      v-if="element.quantitativeNeumeRight != null"
       :neume="element.quantitativeNeumeRight"
     />
     <Neume
-      v-if="hasFthoraAboveQuantitativeNeumeRight"
+      v-if="element.fthoraAboveQuantitativeNeumeRight != null"
       :neume="element.fthoraAboveQuantitativeNeumeRight"
     />
     <Neume
-      v-if="hasTempo && !element.tempoAlignRight"
+      v-if="element.tempo != null && !element.tempoAlignRight"
       :neume="element.tempo"
       :style="tempoStyle"
     />
@@ -49,7 +55,7 @@
       </span>
 
       <Neume
-        v-if="hasTempo && element.tempoAlignRight"
+        v-if="element.tempo != null && element.tempoAlignRight"
         :neume="element.tempo"
         :style="tempoStyle"
       />
@@ -87,42 +93,6 @@ export default defineComponent({
   },
 
   computed: {
-    hasFthoraAboveNote() {
-      return this.element.fthoraAboveNote != null;
-    },
-
-    hasNote() {
-      return this.element.note != null;
-    },
-
-    hasNote2() {
-      return this.element.note2 != null;
-    },
-
-    hasFthoraAboveNote2() {
-      return this.element.fthoraAboveNote2 != null;
-    },
-
-    hasFthoraAboveQuantitativeNeumeRight() {
-      return this.element.fthoraAboveQuantitativeNeumeRight != null;
-    },
-
-    hasQuantitativeNeumeAboveNote() {
-      return this.element.quantitativeNeumeAboveNote != null;
-    },
-
-    hasQuantitativeNeumeAboveNote2() {
-      return this.element.quantitativeNeumeAboveNote2 != null;
-    },
-
-    hasQuantitativeNeumeRight() {
-      return this.element.quantitativeNeumeRight != null;
-    },
-
-    hasTempo() {
-      return this.element.tempo != null;
-    },
-
     style() {
       return {
         color: this.element.computedColor,

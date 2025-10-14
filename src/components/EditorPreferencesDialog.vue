@@ -45,6 +45,17 @@ import { PageSetup } from '@/models/PageSetup';
 
 import InputBpm from './InputBpm.vue';
 
+const tempoSigns = [
+  TempoSign.VerySlow,
+  TempoSign.Slower,
+  TempoSign.Slow,
+  TempoSign.Moderate,
+  TempoSign.Medium,
+  TempoSign.Quick,
+  TempoSign.Quicker,
+  TempoSign.VeryQuick,
+];
+
 export default defineComponent({
   components: { ModalDialog, Neume, InputBpm },
   emits: ['close', 'update'],
@@ -62,16 +73,7 @@ export default defineComponent({
   data() {
     return {
       form: new EditorPreferences(),
-      tempoSigns: [
-        TempoSign.VerySlow,
-        TempoSign.Slower,
-        TempoSign.Slow,
-        TempoSign.Moderate,
-        TempoSign.Medium,
-        TempoSign.Quick,
-        TempoSign.Quicker,
-        TempoSign.VeryQuick,
-      ],
+      tempoSigns,
     };
   },
 

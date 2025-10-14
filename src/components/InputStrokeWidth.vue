@@ -27,10 +27,6 @@ export default defineComponent({
       type: Number,
       required: true,
     },
-    max: {
-      type: Number,
-      default: 100,
-    },
   },
 
   data() {

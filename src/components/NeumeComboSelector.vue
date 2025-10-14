@@ -17,8 +17,8 @@
   </div>
 </template>
 
-<script lang="ts">
-import { Component, Prop, Vue } from 'vue-facing-decorator';
+<script setup lang="ts">
+import { PropType } from 'vue';
 
 import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
 import {
@@ -27,20 +27,20 @@ import {
 } from '@/models/NeumeCommonCombinations';
 import { PageSetup } from '@/models/PageSetup';
 
-@Component({
-  components: { SyllableNeumeBox },
-  emits: ['select-neume-combo'],
-})
-export default class NeumeComboSelector extends Vue {
-  @Prop() pageSetup!: PageSetup;
+defineEmits(['select-neume-combo']);
+defineProps({
+  pageSetup: {
+    type: Object as PropType<PageSetup>,
+    required: true,
+  },
+});
 
-  combos: NeumeCombination[] = [
-    NeumeCommonCombinations.ending1,
-    NeumeCommonCombinations.ending2,
-    NeumeCommonCombinations.ornament1,
-    NeumeCommonCombinations.ornament1Alt,
-  ];
-}
+const combos: NeumeCombination[] = [
+  NeumeCommonCombinations.ending1,
+  NeumeCommonCombinations.ending2,
+  NeumeCommonCombinations.ornament1,
+  NeumeCommonCombinations.ornament1Alt,
+];
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

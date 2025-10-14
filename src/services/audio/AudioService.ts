@@ -13,9 +13,9 @@ export enum AudioServiceEventNames {
 }
 
 export enum AudioState {
-  Playing,
-  Stopped,
-  Paused,
+  Playing = 'Playing',
+  Stopped = 'Stopped',
+  Paused = 'Paused',
 }
 
 export class AudioService {

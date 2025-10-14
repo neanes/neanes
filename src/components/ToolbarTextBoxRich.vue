@@ -6,7 +6,9 @@
         type="checkbox"
         :checked="element.inline"
         @change="
-          $emit('update:inline', ($event.target as HTMLInputElement).checked)
+          $emit('update', {
+            inline: ($event.target as HTMLInputElement).checked,
+          } as Partial<RichTextBoxElement>)
         "
       />
       <label for="toolbar-text-box-inline">{{
@@ -27,7 +29,11 @@
           :modelValue="element.customWidth"
           :precision="1"
           placeholder="fill"
-          @update:modelValue="$emit('update:customWidth', $event)"
+          @update:modelValue="
+            $emit('update', {
+              customWidth: $event,
+            } as Partial<RichTextBoxElement>)
+          "
         />
       </div>
       <span class="space" />
@@ -43,7 +49,11 @@
           :step="0.5"
           :modelValue="element.offsetYTop"
           :precision="1"
-          @update:modelValue="$emit('update:offsetYTop', $event)"
+          @update:modelValue="
+            $emit('update', {
+              offsetYTop: $event,
+            } as Partial<RichTextBoxElement>)
+          "
         />
       </div>
       <span class="space"></span>
@@ -59,7 +69,11 @@
           :step="0.5"
           :modelValue="element.offsetYBottom"
           :precision="1"
-          @update:modelValue="$emit('update:offsetYBottom', $event)"
+          @update:modelValue="
+            $emit('update', {
+              offsetYBottom: $event,
+            } as Partial<RichTextBoxElement>)
+          "
         />
       </div>
       <span class="space" />
@@ -69,10 +83,9 @@
           type="checkbox"
           :checked="element.centerOnPage"
           @change="
-            $emit(
-              'update:centerOnPage',
-              ($event.target as HTMLInputElement).checked,
-            )
+            $emit('update', {
+              centerOnPage: ($event.target as HTMLInputElement).checked,
+            } as Partial<RichTextBoxElement>)
           "
         />
         <label for="toolbar-text-box-center-on-page">{{
@@ -91,7 +104,9 @@
         :step="0.5"
         :modelValue="element.marginTop"
         :precision="1"
-        @update:modelValue="$emit('update:marginTop', $event)"
+        @update:modelValue="
+          $emit('update', { marginTop: $event } as Partial<RichTextBoxElement>)
+        "
       />
     </div>
     <span class="space"></span>
@@ -105,7 +120,11 @@
         :step="0.5"
         :modelValue="element.marginBottom"
         :precision="1"
-        @update:modelValue="$emit('update:marginBottom', $event)"
+        @update:modelValue="
+          $emit('update', {
+            marginBottom: $event,
+          } as Partial<RichTextBoxElement>)
+        "
       />
     </div>
     <span class="divider"></span>
@@ -115,10 +134,9 @@
         type="checkbox"
         :checked="element.modeChange"
         @change="
-          $emit(
-            'update:modeChange',
-            ($event.target as HTMLInputElement).checked,
-          )
+          $emit('update', {
+            modeChange: ($event.target as HTMLInputElement).checked,
+          } as Partial<RichTextBoxElement>)
         "
       />
       <label for="toolbar-text-box-mode-change">{{
@@ -132,10 +150,9 @@
         <select
           :value="element.modeChangePhysicalNote"
           @change="
-            $emit(
-              'update:modeChangePhysicalNote',
-              ($event.target as HTMLInputElement).value,
-            )
+            $emit('update', {
+              modeChangePhysicalNote: ($event.target as HTMLInputElement).value,
+            } as Partial<RichTextBoxElement>)
           "
         >
           <option v-for="note in notes" :key="note.key" :value="note.key">
@@ -149,10 +166,9 @@
         <select
           :value="element.modeChangeScale"
           @change="
-            $emit(
-              'update:modeChangeScale',
-              ($event.target as HTMLInputElement).value,
-            )
+            $emit('update', {
+              modeChangeScale: ($event.target as HTMLInputElement).value,
+            } as Partial<RichTextBoxElement>)
           "
         >
           <option v-for="scale in scales" :key="scale.key" :value="scale.key">
@@ -168,10 +184,9 @@
         <select
           :value="element.modeChangeVirtualNote"
           @change="
-            $emit(
-              'update:modeChangeVirtualNote',
-              ($event.target as HTMLInputElement).value,
-            )
+            $emit('update', {
+              modeChangeVirtualNote: ($event.target as HTMLInputElement).value,
+            } as Partial<RichTextBoxElement>)
           "
         >
           <option value="">{{ $t('toolbar:common.none') }}</option>
@@ -185,7 +200,11 @@
         <label class="right-space">{{ $t('toolbar:common.bpm') }}</label>
         <InputBpm
           :modelValue="element.modeChangeBpm"
-          @update:modelValue="$emit('update:modeChangeBpm', $event)"
+          @update:modelValue="
+            $emit('update', {
+              modeChangeBpm: $event,
+            } as Partial<RichTextBoxElement>)
+          "
         />
       </div>
       <span class="space"></span>
@@ -195,10 +214,10 @@
           type="checkbox"
           :checked="element.modeChangeIgnoreAttractions"
           @change="
-            $emit(
-              'update:modeChangeIgnoreAttractions',
-              ($event.target as HTMLInputElement).checked,
-            )
+            $emit('update', {
+              modeChangeIgnoreAttractions: ($event.target as HTMLInputElement)
+                .checked,
+            } as Partial<RichTextBoxElement>)
           "
         />
         <label for="toolbar-rich-text-box-ignore-attractions">{{
@@ -212,10 +231,11 @@
           type="checkbox"
           :checked="element.modeChangePermanentEnharmonicZo"
           @change="
-            $emit(
-              'update:modeChangePermanentEnharmonicZo',
-              ($event.target as HTMLInputElement).checked,
-            )
+            $emit('update', {
+              modeChangePermanentEnharmonicZo: (
+                $event.target as HTMLInputElement
+              ).checked,
+            } as Partial<RichTextBoxElement>)
           "
         />
         <label for="toolbar-rich-text-box-permanent-enharmonic-zo">{{
@@ -230,7 +250,9 @@
         type="checkbox"
         :checked="element.rtl"
         @change="
-          $emit('update:rtl', ($event.target as HTMLInputElement).checked)
+          $emit('update', {
+            rtl: ($event.target as HTMLInputElement).checked,
+          } as Partial<RichTextBoxElement>)
         "
       />
       <label for="toolbar-text-box-rtl">{{ $t('toolbar:textbox.rtl') }}</label>
@@ -250,7 +272,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-facing-decorator';
+import { defineComponent, PropType } from 'vue';
 
 import InputBpm from '@/components/InputBpm.vue';
 import InputUnit from '@/components/InputUnit.vue';
@@ -259,127 +281,129 @@ import { PageSetup } from '@/models/PageSetup';
 import { Scale, ScaleNote } from '@/models/Scales';
 import { Unit } from '@/utils/Unit';
 
-@Component({
-  components: { InputBpm, InputUnit },
-  emits: [
-    'update:centerOnPage',
-    'update:customWidth',
-    'update:inline',
-    'update:marginBottom',
-    'update:marginTop',
-    'update:modeChange',
-    'update:modeChangeBpm',
-    'update:modeChangeIgnoreAttractions',
-    'update:modeChangePhysicalNote',
-    'update:modeChangeScale',
-    'update:modeChangeVirtualNote',
-    'update:modeChangePermanentEnharmonicZo',
-    'update:rtl',
-    'update:sectionName',
-  ],
-})
-export default class ToolbarTextBoxRich extends Vue {
-  @Prop() element!: RichTextBoxElement;
-  @Prop() pageSetup!: PageSetup;
+const notes = Object.values(ScaleNote).map((x) => ({
+  key: x,
+  displayName: getNoteDisplayName(x),
+}));
 
-  notes = Object.values(ScaleNote).map((x) => ({
-    key: x,
-    displayName: this.getNoteDisplayName(x),
-  }));
+const scales = Object.values(Scale).map((x) => ({
+  key: x,
+  displayName: getScaleDisplayName(x),
+}));
 
-  scales = Object.values(Scale).map((x) => ({
-    key: x,
-    displayName: this.getScaleDisplayName(x),
-  }));
-
-  get maxWidth() {
-    return Unit.toPt(this.pageSetup.innerPageWidth);
-  }
-
-  get maxHeight() {
-    return Unit.toPt(this.pageSetup.innerPageHeight);
-  }
-
-  private getNoteDisplayName(note: ScaleNote) {
-    switch (note) {
-      case ScaleNote.ZoLow:
-        return 'model:note.zoLow';
-      case ScaleNote.NiLow:
-        return 'model:note.niLow';
-      case ScaleNote.PaLow:
-        return 'model:note.paLow';
-      case ScaleNote.VouLow:
-        return 'model:note.vouLow';
-      case ScaleNote.GaLow:
-        return 'model:note.gaLow';
-      case ScaleNote.ThiLow:
-        return 'model:note.diLow';
-      case ScaleNote.KeLow:
-        return 'model:note.keLow';
-      case ScaleNote.Zo:
-        return 'model:note.zo';
-      case ScaleNote.Ni:
-        return 'model:note.ni';
-      case ScaleNote.Pa:
-        return 'model:note.pa';
-      case ScaleNote.Vou:
-        return 'model:note.vou';
-      case ScaleNote.Ga:
-        return 'model:note.ga';
-      case ScaleNote.Thi:
-        return 'model:note.di';
-      case ScaleNote.Ke:
-        return 'model:note.ke';
-      case ScaleNote.ZoHigh:
-        return 'model:note.zoHigh';
-      case ScaleNote.NiHigh:
-        return 'model:note.niHigh';
-      case ScaleNote.PaHigh:
-        return 'model:note.paHigh';
-      case ScaleNote.VouHigh:
-        return 'model:note.vouHigh';
-      case ScaleNote.GaHigh:
-        return 'model:note.gaHigh';
-      case ScaleNote.ThiHigh:
-        return 'model:note.diHigh';
-      case ScaleNote.KeHigh:
-        return 'model:note.keHigh';
-      default:
-        return note;
-    }
-  }
-
-  private getScaleDisplayName(scale: Scale) {
-    switch (scale) {
-      case Scale.Diatonic:
-        return 'model:scale.diatonic';
-      case Scale.SoftChromatic:
-        return 'model:scale.softChromatic';
-      case Scale.HardChromatic:
-        return 'model:scale.hardChromatic';
-      case Scale.EnharmonicGa:
-        return 'model:scale.enharmonicGa';
-      case Scale.EnharmonicZoHigh:
-        return 'model:scale.enharmonicZoHigh';
-      case Scale.EnharmonicVou:
-        return 'model:scale.enharmonicVou';
-      case Scale.EnharmonicZo:
-        return 'model:scale.enharmonicZo';
-      case Scale.EnharmonicVouHigh:
-        return 'model:scale.enharmonicVouHigh';
-      case Scale.Zygos:
-        return 'model:scale.zygos';
-      case Scale.Spathi:
-        return 'model:scale.spathi';
-      case Scale.SpathiGa:
-        return 'model:scale.spathiGa';
-      case Scale.Kliton:
-        return 'model:scale.kliton';
-      default:
-        return scale;
-    }
+function getNoteDisplayName(note: ScaleNote) {
+  switch (note) {
+    case ScaleNote.ZoLow:
+      return 'model:note.zoLow';
+    case ScaleNote.NiLow:
+      return 'model:note.niLow';
+    case ScaleNote.PaLow:
+      return 'model:note.paLow';
+    case ScaleNote.VouLow:
+      return 'model:note.vouLow';
+    case ScaleNote.GaLow:
+      return 'model:note.gaLow';
+    case ScaleNote.ThiLow:
+      return 'model:note.diLow';
+    case ScaleNote.KeLow:
+      return 'model:note.keLow';
+    case ScaleNote.Zo:
+      return 'model:note.zo';
+    case ScaleNote.Ni:
+      return 'model:note.ni';
+    case ScaleNote.Pa:
+      return 'model:note.pa';
+    case ScaleNote.Vou:
+      return 'model:note.vou';
+    case ScaleNote.Ga:
+      return 'model:note.ga';
+    case ScaleNote.Thi:
+      return 'model:note.di';
+    case ScaleNote.Ke:
+      return 'model:note.ke';
+    case ScaleNote.ZoHigh:
+      return 'model:note.zoHigh';
+    case ScaleNote.NiHigh:
+      return 'model:note.niHigh';
+    case ScaleNote.PaHigh:
+      return 'model:note.paHigh';
+    case ScaleNote.VouHigh:
+      return 'model:note.vouHigh';
+    case ScaleNote.GaHigh:
+      return 'model:note.gaHigh';
+    case ScaleNote.ThiHigh:
+      return 'model:note.diHigh';
+    case ScaleNote.KeHigh:
+      return 'model:note.keHigh';
+    default:
+      return note;
   }
 }
+
+function getScaleDisplayName(scale: Scale) {
+  switch (scale) {
+    case Scale.Diatonic:
+      return 'model:scale.diatonic';
+    case Scale.SoftChromatic:
+      return 'model:scale.softChromatic';
+    case Scale.HardChromatic:
+      return 'model:scale.hardChromatic';
+    case Scale.EnharmonicGa:
+      return 'model:scale.enharmonicGa';
+    case Scale.EnharmonicZoHigh:
+      return 'model:scale.enharmonicZoHigh';
+    case Scale.EnharmonicVou:
+      return 'model:scale.enharmonicVou';
+    case Scale.EnharmonicZo:
+      return 'model:scale.enharmonicZo';
+    case Scale.EnharmonicVouHigh:
+      return 'model:scale.enharmonicVouHigh';
+    case Scale.Zygos:
+      return 'model:scale.zygos';
+    case Scale.Spathi:
+      return 'model:scale.spathi';
+    case Scale.SpathiGa:
+      return 'model:scale.spathiGa';
+    case Scale.Kliton:
+      return 'model:scale.kliton';
+    default:
+      return scale;
+  }
+}
+
+export default defineComponent({
+  components: { InputBpm, InputUnit },
+  emits: ['update', 'update:sectionName'],
+  props: {
+    element: {
+      type: Object as PropType<RichTextBoxElement>,
+      required: true,
+    },
+    pageSetup: {
+      type: Object as PropType<PageSetup>,
+      required: true,
+    },
+  },
+
+  data() {
+    return {
+      notes,
+      scales,
+    };
+  },
+
+  computed: {
+    maxWidth() {
+      return Unit.toPt(this.pageSetup.innerPageWidth);
+    },
+
+    maxHeight() {
+      return Unit.toPt(this.pageSetup.innerPageHeight);
+    },
+  },
+
+  methods: {},
+});
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

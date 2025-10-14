@@ -3,117 +3,153 @@
 </template>
 
 <script lang="ts">
-import { StyleValue } from 'vue';
-import { Component, Prop, Vue } from 'vue-facing-decorator';
+import { defineComponent, PropType, StyleValue } from 'vue';
 
-import ContentEditable from '@/components/ContentEditable.vue';
+import { NoteElement, ScoreElementOffset } from '@/models/Element';
 import { Neume, VocalExpressionNeume } from '@/models/Neumes';
-import { NoteElement, ScoreElementOffset } from '@/models/save/v1/Element';
 import { fontService } from '@/services/FontService';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { withZoom } from '@/utils/withZoom';
 
-@Component({
-  components: { ContentEditable },
+export default defineComponent({
+  components: {},
   emits: ['update'],
-})
-export default class DragHandle extends Vue {
-  @Prop() x!: number | null;
-  @Prop() y!: number | null;
-  @Prop() fontSize!: number;
-  @Prop({ default: 1 }) zoom!: number;
-  @Prop() note!: NoteElement;
-  @Prop() mark!: Neume;
-  @Prop({ default: 8 }) height!: number;
-  @Prop({ default: 8 }) width!: number;
-  @Prop() fontFamily!: string;
+  props: {
+    x: {
+      type: [Number, null],
+      required: true,
+    },
+    y: {
+      type: [Number, null],
+      required: true,
+    },
+    fontSize: {
+      type: Number,
+      required: true,
+    },
+    zoom: {
+      type: Number,
+      default: 1,
+    },
+    note: {
+      type: Object as PropType<NoteElement>,
+      required: true,
+    },
+    mark: {
+      type: String as PropType<Neume>,
+      required: true,
+    },
+    height: {
+      type: Number,
+      default: 8,
+    },
+    width: {
+      type: Number,
+      default: 8,
+    },
+    fontFamily: {
+      type: String,
+      required: true,
+    },
+  },
 
-  startX: number = 0;
-  startY: number = 0;
+  data() {
+    return {
+      startX: 0,
+      startY: 0,
 
-  offset: ScoreElementOffset = { x: 0, y: 0 };
+      offset: { x: 0, y: 0 } as ScoreElementOffset,
+    };
+  },
 
   created() {
     this.offset = this.getOffset(this.mark);
-  }
+  },
 
   beforeUnmount() {
     document.removeEventListener('mouseup', this.handleMouseUp);
     document.removeEventListener('mousemove', this.handleMouseMove);
-  }
+  },
 
-  handleMouseDown(e: MouseEvent) {
-    e.preventDefault();
+  computed: {
+    handleStyle() {
+      const left = this.offset.x + (this.x ?? 0);
+      const top = this.offset.y + (this.y ?? 0);
 
-    this.startX = e.clientX - (this.x ?? 0) * this.fontSize * this.zoom;
-    this.startY = e.clientY - (this.y ?? 0) * this.fontSize * this.zoom;
+      return {
+        position: 'absolute',
+        left: `calc(${left}em - ${(this.zoom * this.width) / 2}px)`,
+        top: `calc(${top}em - ${(this.zoom * this.height) / 2}px)`,
+        fontSize: withZoom(this.fontSize),
+        height: withZoom(this.height),
+        width: withZoom(this.width),
+      } as StyleValue;
+    },
+  },
 
-    document.addEventListener('mouseup', this.handleMouseUp);
-    document.addEventListener('mousemove', this.handleMouseMove);
-  }
+  methods: {
+    handleMouseDown(e: MouseEvent) {
+      e.preventDefault();
 
-  handleMouseMove(e: MouseEvent) {
-    e.preventDefault();
+      this.startX = e.clientX - (this.x ?? 0) * this.fontSize * this.zoom;
+      this.startY = e.clientY - (this.y ?? 0) * this.fontSize * this.zoom;
 
-    const x = (e.clientX - this.startX) / this.fontSize / this.zoom;
-    const y = (e.clientY - this.startY) / this.fontSize / this.zoom;
+      document.addEventListener('mouseup', this.handleMouseUp);
+      document.addEventListener('mousemove', this.handleMouseMove);
+    },
 
-    this.$emit('update', { x, y });
-  }
+    handleMouseMove(e: MouseEvent) {
+      e.preventDefault();
 
-  handleMouseUp() {
-    document.removeEventListener('mouseup', this.handleMouseUp);
-    document.removeEventListener('mousemove', this.handleMouseMove);
-  }
+      const x = (e.clientX - this.startX) / this.fontSize / this.zoom;
+      const y = (e.clientY - this.startY) / this.fontSize / this.zoom;
 
-  get handleStyle() {
-    const left = this.offset.x + (this.x ?? 0);
-    const top = this.offset.y + (this.y ?? 0);
+      this.$emit('update', { x, y });
+    },
 
-    return {
-      position: 'absolute',
-      left: `calc(${left}em - ${(this.zoom * this.width) / 2}px)`,
-      top: `calc(${top}em - ${(this.zoom * this.height) / 2}px)`,
-      fontSize: withZoom(this.fontSize),
-      height: withZoom(this.height),
-      width: withZoom(this.width),
-    } as StyleValue;
-  }
+    handleMouseUp() {
+      document.removeEventListener('mouseup', this.handleMouseUp);
+      document.removeEventListener('mousemove', this.handleMouseMove);
+    },
+    getOffset(neume: Neume) {
+      const mark = this.getMapping(neume).glyphName;
+      const base = this.getMapping(this.note.quantitativeNeume).glyphName;
 
-  getOffset(neume: Neume) {
-    const mark = this.getMapping(neume).glyphName;
-    const base = this.getMapping(this.note.quantitativeNeume).glyphName;
-
-    const offset = fontService.getMarkAnchorOffset(this.fontFamily, base, mark);
-
-    // Shift offset for vareia
-    if (this.note.vareia) {
-      const vareiaGlyphName = this.getMapping(
-        VocalExpressionNeume.Vareia,
-      ).glyphName;
-
-      const vareiaWidth = fontService.getAdvanceWidth(
+      const offset = fontService.getMarkAnchorOffset(
         this.fontFamily,
-        vareiaGlyphName,
+        base,
+        mark,
       );
-      offset.x += vareiaWidth;
-    }
 
-    // Shift offset for measure bar
-    if (this.note.measureBarLeft) {
-      const glyphName = this.getMapping(this.note.measureBarLeft).glyphName;
+      // Shift offset for vareia
+      if (this.note.vareia) {
+        const vareiaGlyphName = this.getMapping(
+          VocalExpressionNeume.Vareia,
+        ).glyphName;
 
-      const width = fontService.getAdvanceWidth(this.fontFamily, glyphName);
-      offset.x += width;
-    }
+        const vareiaWidth = fontService.getAdvanceWidth(
+          this.fontFamily,
+          vareiaGlyphName,
+        );
+        offset.x += vareiaWidth;
+      }
 
-    return offset;
-  }
+      // Shift offset for measure bar
+      if (this.note.measureBarLeft) {
+        const glyphName = this.getMapping(this.note.measureBarLeft).glyphName;
 
-  getMapping(neume: Neume) {
-    return NeumeMappingService.getMapping(neume);
-  }
-}
+        const width = fontService.getAdvanceWidth(this.fontFamily, glyphName);
+        offset.x += width;
+      }
+
+      return offset;
+    },
+
+    getMapping(neume: Neume) {
+      return NeumeMappingService.getMapping(neume);
+    },
+  },
+});
 </script>
 
 <style scoped>

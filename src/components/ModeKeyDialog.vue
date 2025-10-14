@@ -66,7 +66,7 @@
               }"
               :key="index"
             >
-              <ModeKey :element="template" />
+              <ModeKey :element="template" :pageSetup="pageSetup" />
               <div class="mode-key-description">
                 {{ $t(template.description) }}
               </div>
@@ -107,7 +107,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-facing-decorator';
+import { defineComponent, PropType } from 'vue';
 
 import ModalDialog from '@/components/ModalDialog.vue';
 import ModeKey from '@/components/ModeKey.vue';
@@ -116,72 +116,87 @@ import { modeKeyTemplates } from '@/models/ModeKeys';
 import { PageSetup } from '@/models/PageSetup';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
 
-@Component({
+export default defineComponent({
   components: { ModalDialog, ModeKey },
   emits: ['close', 'update', 'update:useOptionalDiatonicFthoras'],
-})
-export default class ModeKeyDialog extends Vue {
-  @Prop() element!: ModeKeyElement;
-  @Prop() pageSetup!: PageSetup;
-  selectedMode: number | null = null;
-  selectedTemplateId: number | null = null;
+  props: {
+    element: {
+      type: Object as PropType<ModeKeyElement>,
+      required: true,
+    },
+    pageSetup: {
+      type: Object as PropType<PageSetup>,
+      required: true,
+    },
+  },
+
+  data() {
+    return {
+      selectedMode: null as number | null,
+      selectedTemplateId: null as number | null,
+    };
+  },
+
+  computed: {
+    modeKeyTemplatesForSelectedMode() {
+      const elements = modeKeyTemplates
+        .filter((x) => x.mode === this.selectedMode)
+        .map((x) =>
+          ModeKeyElement.createFromTemplate(
+            x,
+            this.pageSetup.useOptionalDiatonicFthoras,
+            TextBoxAlignment.Left,
+          ),
+        );
+
+      const height = TextMeasurementService.getFontHeight(
+        `${elements[0].fontSize}px ${this.pageSetup.neumeDefaultFontFamily}`,
+      );
+
+      for (const element of elements) {
+        element.height = height;
+        element.computedFontFamily = this.pageSetup.neumeDefaultFontFamily;
+      }
+
+      return elements;
+    },
+  },
 
   created() {
     this.selectMode(this.element.mode);
 
     window.addEventListener('keydown', this.onKeyDown);
-  }
+  },
 
   beforeUnmount() {
     window.removeEventListener('keydown', this.onKeyDown);
-  }
+  },
 
-  get modeKeyTemplatesForSelectedMode() {
-    const elements = modeKeyTemplates
-      .filter((x) => x.mode === this.selectedMode)
-      .map((x) =>
-        ModeKeyElement.createFromTemplate(
-          x,
-          this.pageSetup.useOptionalDiatonicFthoras,
-          TextBoxAlignment.Left,
-        ),
+  methods: {
+    onKeyDown(event: KeyboardEvent) {
+      if (event.code === 'Escape') {
+        this.$emit('close');
+      }
+    },
+
+    selectMode(mode: number) {
+      this.selectedMode = mode;
+      this.selectedTemplateId =
+        this.modeKeyTemplatesForSelectedMode.find(
+          (x) => x.templateId === this.element.templateId,
+        )?.templateId || this.modeKeyTemplatesForSelectedMode[0].templateId;
+    },
+
+    updateModeKey() {
+      const modeKey = this.modeKeyTemplatesForSelectedMode.find(
+        (x) => x.templateId === this.selectedTemplateId,
       );
 
-    const height = TextMeasurementService.getFontHeight(
-      `${elements[0].fontSize}px ${this.pageSetup.neumeDefaultFontFamily}`,
-    );
-
-    for (const element of elements) {
-      element.height = height;
-      element.computedFontFamily = this.pageSetup.neumeDefaultFontFamily;
-    }
-
-    return elements;
-  }
-
-  onKeyDown(event: KeyboardEvent) {
-    if (event.code === 'Escape') {
+      this.$emit('update', modeKey);
       this.$emit('close');
-    }
-  }
-
-  selectMode(mode: number) {
-    this.selectedMode = mode;
-    this.selectedTemplateId =
-      this.modeKeyTemplatesForSelectedMode.find(
-        (x) => x.templateId === this.element.templateId,
-      )?.templateId || this.modeKeyTemplatesForSelectedMode[0].templateId;
-  }
-
-  updateModeKey() {
-    const modeKey = this.modeKeyTemplatesForSelectedMode.find(
-      (x) => x.templateId === this.selectedTemplateId,
-    );
-
-    this.$emit('update', modeKey);
-    this.$emit('close');
-  }
-}
+    },
+  },
+});
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

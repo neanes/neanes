@@ -148,7 +148,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-facing-decorator';
+import { defineComponent, PropType } from 'vue';
 
 import InputUnit from '@/components/InputUnit.vue';
 import ModalDialog from '@/components/ModalDialog.vue';
@@ -180,7 +180,7 @@ export interface ExportAsLatexSettings {
   options: LatexExporterOptions;
 }
 
-@Component({
+export default defineComponent({
   components: { ModalDialog, InputUnit },
   emits: [
     'close',
@@ -189,24 +189,30 @@ export interface ExportAsLatexSettings {
     'exportAsPng',
     'exportAsSvg',
   ],
-})
-export default class ExportDialog extends Vue {
-  @Prop() defaultFormat: ExportFormat | undefined;
-  @Prop() loading!: boolean;
+  props: {
+    defaultFormat: {
+      type: String as PropType<ExportFormat>,
+      required: true,
+    },
+    loading: {
+      type: Boolean,
+      required: true,
+    },
+  },
 
-  format: ExportFormat = ExportFormat.PNG;
-  dpi: number = 300;
-  transparentBackground: boolean = false;
-  openFolder: boolean = true;
+  data() {
+    return {
+      format: ExportFormat.PNG,
+      dpi: 300,
+      transparentBackground: false,
+      openFolder: true,
 
-  musicXmlOptions = new MusicXmlExporterOptions();
-  latexOptions = new LatexExporterOptions();
+      musicXmlOptions: new MusicXmlExporterOptions(),
+      latexOptions: new LatexExporterOptions(),
 
-  ExportFormat = ExportFormat;
-
-  get exportFormatIsImage() {
-    return this.format === ExportFormat.PNG || this.format === ExportFormat.SVG;
-  }
+      ExportFormat,
+    };
+  },
 
   mounted() {
     if (this.defaultFormat != null) {
@@ -214,49 +220,59 @@ export default class ExportDialog extends Vue {
     }
 
     window.addEventListener('keydown', this.onKeyDown);
-  }
+  },
 
   beforeUnmount() {
     window.removeEventListener('keydown', this.onKeyDown);
-  }
+  },
 
-  onKeyDown(event: KeyboardEvent) {
-    if (event.code === 'Escape') {
-      this.close();
-    }
-  }
+  computed: {
+    exportFormatIsImage() {
+      return (
+        this.format === ExportFormat.PNG || this.format === ExportFormat.SVG
+      );
+    },
+  },
 
-  round(value: number) {
-    return Math.round(value);
-  }
+  methods: {
+    onKeyDown(event: KeyboardEvent) {
+      if (event.code === 'Escape') {
+        this.close();
+      }
+    },
 
-  doExport() {
-    if (this.format === ExportFormat.PNG) {
-      const { dpi, openFolder, transparentBackground } = this;
-      this.$emit('exportAsPng', {
-        dpi,
-        openFolder,
-        transparentBackground,
-      } as ExportAsPngSettings);
-    } else if (this.format === ExportFormat.SVG) {
-      this.$emit('exportAsSvg', this.openFolder);
-    } else if (this.format === ExportFormat.MusicXml) {
-      this.$emit('exportAsMusicXml', {
-        options: this.musicXmlOptions,
-        compressed: false,
-        openFolder: this.openFolder,
-      } as ExportAsMusicXmlSettings);
-    } else if (this.format === ExportFormat.Latex) {
-      this.$emit('exportAsLatex', {
-        options: this.latexOptions,
-      } as ExportAsLatexSettings);
-    }
-  }
+    round(value: number) {
+      return Math.round(value);
+    },
 
-  close() {
-    this.$emit('close');
-  }
-}
+    doExport() {
+      if (this.format === ExportFormat.PNG) {
+        const { dpi, openFolder, transparentBackground } = this;
+        this.$emit('exportAsPng', {
+          dpi,
+          openFolder,
+          transparentBackground,
+        } as ExportAsPngSettings);
+      } else if (this.format === ExportFormat.SVG) {
+        this.$emit('exportAsSvg', this.openFolder);
+      } else if (this.format === ExportFormat.MusicXml) {
+        this.$emit('exportAsMusicXml', {
+          options: this.musicXmlOptions,
+          compressed: false,
+          openFolder: this.openFolder,
+        } as ExportAsMusicXmlSettings);
+      } else if (this.format === ExportFormat.Latex) {
+        this.$emit('exportAsLatex', {
+          options: this.latexOptions,
+        } as ExportAsLatexSettings);
+      }
+    },
+
+    close() {
+      this.$emit('close');
+    },
+  },
+});
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

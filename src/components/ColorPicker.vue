@@ -19,99 +19,111 @@
 
 <script lang="ts">
 import { Sketch } from '@ckpack/vue-color';
-import { StyleValue } from 'vue';
-import { Component, Prop, Vue, Watch } from 'vue-facing-decorator';
+import { defineComponent, StyleValue } from 'vue';
 
 interface Color {
   hex: string;
 }
 
-@Component({
+export default defineComponent({
   components: { Sketch },
   emits: ['update:modelValue'],
-})
-export default class ColorPicker extends Vue {
-  @Prop() modelValue!: string;
-  @Prop({ default: 'colorPicker_presetColors' }) historyKey!: string;
+  props: {
+    modelValue: {
+      type: String,
+      required: true,
+    },
+    historyKey: {
+      type: String,
+      default: 'colorPicker_presetColors',
+    },
+  },
 
-  isOpen: boolean = false;
+  data() {
+    return {
+      isOpen: false,
 
-  presetColors: string[] = [];
+      presetColors: [] as string[],
 
-  popupPositionTop: number = 0;
+      popupPositionTop: 0,
 
-  maxHistorySize = 8;
+      maxHistorySize: 8,
 
-  color: string = '#000000';
+      color: '#000000',
+    };
+  },
 
   created() {
     this.color = this.modelValue;
-  }
+  },
 
-  @Watch('modelValue')
-  onModelValueChanged(newValue: string) {
-    this.color = newValue;
-  }
+  watch: {
+    modelValue(newValue: string) {
+      this.color = newValue;
+    },
+  },
 
-  get swatch() {
-    return this.$refs.swatch as HTMLElement;
-  }
+  computed: {
+    swatch() {
+      return this.$refs.swatch as HTMLElement;
+    },
 
-  get colorStyle() {
-    return {
-      backgroundColor: this.color,
-    } as StyleValue;
-  }
+    colorStyle() {
+      return {
+        backgroundColor: this.color,
+      } as StyleValue;
+    },
 
-  get popupStyle() {
-    return {
-      top: `${this.popupPositionTop}px`,
-    } as StyleValue;
-  }
+    popupStyle() {
+      return {
+        top: `${this.popupPositionTop}px`,
+      } as StyleValue;
+    },
+  },
 
-  open() {
-    this.presetColors = JSON.parse(localStorage.getItem(this.historyKey)!) || [
-      '#000000',
-      '#800000',
-      '#FF0000',
-    ];
+  methods: {
+    open() {
+      this.presetColors = JSON.parse(
+        localStorage.getItem(this.historyKey)!,
+      ) || ['#000000', '#800000', '#FF0000'];
 
-    // Fist, try to position the popup underneath the swatch
-    this.popupPositionTop =
-      this.swatch.getBoundingClientRect().top + this.swatch.offsetHeight;
+      // Fist, try to position the popup underneath the swatch
+      this.popupPositionTop =
+        this.swatch.getBoundingClientRect().top + this.swatch.offsetHeight;
 
-    // If the popover goes off the bottom of the screen, position above the swatch
-    const popoverHeightPx = 260;
+      // If the popover goes off the bottom of the screen, position above the swatch
+      const popoverHeightPx = 260;
 
-    if (this.popupPositionTop + popoverHeightPx > window.innerHeight) {
-      this.popupPositionTop -= popoverHeightPx + this.swatch.offsetHeight;
-    }
+      if (this.popupPositionTop + popoverHeightPx > window.innerHeight) {
+        this.popupPositionTop -= popoverHeightPx + this.swatch.offsetHeight;
+      }
 
-    this.isOpen = true;
-  }
+      this.isOpen = true;
+    },
 
-  onColorChanged(color: Color) {
-    this.color = color.hex;
-  }
+    onColorChanged(color: Color) {
+      this.color = color.hex;
+    },
 
-  close() {
-    const index = this.presetColors.indexOf(this.color);
+    close() {
+      const index = this.presetColors.indexOf(this.color);
 
-    if (index >= 0) {
-      this.presetColors.splice(index, 1);
-    }
+      if (index >= 0) {
+        this.presetColors.splice(index, 1);
+      }
 
-    this.presetColors.unshift(this.color);
-    this.presetColors = this.presetColors.slice(0, this.maxHistorySize);
-    localStorage.setItem(this.historyKey, JSON.stringify(this.presetColors));
+      this.presetColors.unshift(this.color);
+      this.presetColors = this.presetColors.slice(0, this.maxHistorySize);
+      localStorage.setItem(this.historyKey, JSON.stringify(this.presetColors));
 
-    this.isOpen = false;
+      this.isOpen = false;
 
-    if (this.color !== this.modelValue) {
-      this.$emit('update:modelValue', this.color);
-    }
-  }
-}
+      if (this.color !== this.modelValue) {
+        this.$emit('update:modelValue', this.color);
+      }
+    },
+  },
+});
 </script>
 
 <style scoped>

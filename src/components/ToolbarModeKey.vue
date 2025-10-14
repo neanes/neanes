@@ -5,10 +5,9 @@
       type="checkbox"
       :checked="element.useDefaultStyle"
       @change="
-        $emit(
-          'update:useDefaultStyle',
-          ($event.target as HTMLInputElement).checked,
-        )
+        $emit('update', {
+          useDefaultStyle: ($event.target as HTMLInputElement).checked,
+        } as Partial<ModeKeyElement>)
       "
     />
     <label for="toolbar-mode-key-use-default-style">{{
@@ -20,19 +19,27 @@
       <label class="right-space">{{ $t('toolbar:modeKey.size') }}</label>
       <InputFontSize
         :modelValue="element.fontSize"
-        @update:modelValue="$emit('update:fontSize', $event)"
+        @update:modelValue="
+          $emit('update', { fontSize: $event } as Partial<ModeKeyElement>)
+        "
       />
       <span class="space"></span>
       <ColorPicker
         :modelValue="element.color"
-        @update:modelValue="$emit('update:color', $event)"
+        @update:modelValue="
+          $emit('update', { color: $event } as Partial<ModeKeyElement>)
+        "
       />
       <span class="space"></span>
     </template>
     <button
       class="icon-btn"
       :class="{ selected: element.alignment === TextBoxAlignment.Left }"
-      @click="$emit('update:alignment', TextBoxAlignment.Left)"
+      @click="
+        $emit('update', {
+          alignment: TextBoxAlignment.Left,
+        } as Partial<ModeKeyElement>)
+      "
     >
       <img
         class="icon-btn-img"
@@ -45,7 +52,11 @@
     <button
       class="icon-btn"
       :class="{ selected: element.alignment === TextBoxAlignment.Center }"
-      @click="$emit('update:alignment', TextBoxAlignment.Center)"
+      @click="
+        $emit('update', {
+          alignment: TextBoxAlignment.Center,
+        } as Partial<ModeKeyElement>)
+      "
     >
       <img
         class="icon-btn-img"
@@ -58,7 +69,11 @@
     <button
       class="icon-btn"
       :class="{ selected: element.alignment === TextBoxAlignment.Right }"
-      @click="$emit('update:alignment', TextBoxAlignment.Right)"
+      @click="
+        $emit('update', {
+          alignment: TextBoxAlignment.Right,
+        } as Partial<ModeKeyElement>)
+      "
     >
       <img
         class="icon-btn-img"
@@ -73,7 +88,9 @@
       <label class="right-space">{{ $t('toolbar:common.outline') }}</label>
       <InputStrokeWidth
         :modelValue="element.strokeWidth"
-        @update:modelValue="$emit('update:strokeWidth', $event)"
+        @update:modelValue="
+          $emit('update', { strokeWidth: $event } as Partial<ModeKeyElement>)
+        "
       />
       <span class="space" />
 
@@ -89,20 +106,28 @@
         :step="0.5"
         :precision="2"
         :modelValue="element.heightAdjustment"
-        @update:modelValue="$emit('update:heightAdjustment', $event)"
+        @update:modelValue="
+          $emit('update', {
+            heightAdjustment: $event,
+          } as Partial<ModeKeyElement>)
+        "
       />
       <span class="space" />
     </template>
     <ButtonWithMenu
       :options="tempoMenuOptions"
-      @select="$emit('update:tempo', $event)"
+      @select="$emit('update', { tempo: $event } as Partial<ModeKeyElement>)"
     />
     <span class="space" />
 
     <button
       class="icon-btn"
       :class="{ selected: element.tempoAlignRight }"
-      @click="$emit('update:tempoAlignRight', !element.tempoAlignRight)"
+      @click="
+        $emit('update', {
+          tempoAlignRight: !element.tempoAlignRight,
+        } as Partial<ModeKeyElement>)
+      "
     >
       <img
         :title="$t('toolbar:modeKey.rightAlignTempo')"
@@ -118,7 +143,9 @@
     <label class="right-space">{{ $t('toolbar:common.bpm') }}</label>
     <InputBpm
       :modelValue="element.bpm"
-      @update:modelValue="$emit('update:bpm', $event)"
+      @update:modelValue="
+        $emit('update', { bpm: $event } as Partial<ModeKeyElement>)
+      "
     />
 
     <span class="space" />
@@ -133,7 +160,9 @@
         :step="0.5"
         :modelValue="element.marginTop"
         :precision="1"
-        @update:modelValue="$emit('update:marginTop', $event)"
+        @update:modelValue="
+          $emit('update', { marginTop: $event } as Partial<ModeKeyElement>)
+        "
       />
     </div>
     <span class="space"></span>
@@ -147,7 +176,9 @@
         :step="0.5"
         :modelValue="element.marginBottom"
         :precision="1"
-        @update:modelValue="$emit('update:marginBottom', $event)"
+        @update:modelValue="
+          $emit('update', { marginBottom: $event } as Partial<ModeKeyElement>)
+        "
       />
     </div>
 
@@ -159,10 +190,9 @@
         type="checkbox"
         :checked="element.ignoreAttractions"
         @change="
-          $emit(
-            'update:ignoreAttractions',
-            ($event.target as HTMLInputElement).checked,
-          )
+          $emit('update', {
+            ignoreAttractions: ($event.target as HTMLInputElement).checked,
+          } as Partial<ModeKeyElement>)
         "
       />
       <label for="toolbar-mode-key-ignore-attractions">{{
@@ -178,10 +208,9 @@
         type="checkbox"
         :checked="element.showAmbitus"
         @change="
-          $emit(
-            'update:showAmbitus',
-            ($event.target as HTMLInputElement).checked,
-          )
+          $emit('update', {
+            showAmbitus: ($event.target as HTMLInputElement).checked,
+          } as Partial<ModeKeyElement>)
         "
       />
       <label for="toolbar-mode-key-show-ambitus">{{
@@ -200,10 +229,9 @@
         type="checkbox"
         :checked="element.permanentEnharmonicZo"
         @change="
-          $emit(
-            'update:permanentEnharmonicZo',
-            ($event.target as HTMLInputElement).checked,
-          )
+          $emit('update', {
+            permanentEnharmonicZo: ($event.target as HTMLInputElement).checked,
+          } as Partial<ModeKeyElement>)
         "
       />
       <label for="toolbar-mode-key-permanent-enharmonic-zo">{{
@@ -232,7 +260,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-facing-decorator';
+import { defineComponent, PropType } from 'vue';
 
 import ColorPicker from '@/components/ColorPicker.vue';
 import InputBpm from '@/components/InputBpm.vue';
@@ -246,7 +274,42 @@ import { Unit } from '@/utils/Unit';
 
 import ButtonWithMenu, { ButtonWithMenuOption } from './ButtonWithMenu.vue';
 
-@Component({
+const tempoMenuOptions: ButtonWithMenuOption[] = [
+  {
+    neume: TempoSign.VeryQuick,
+    icon: new URL('@/assets/icons/agogi-poli-gorgi.svg', import.meta.url).href,
+  },
+  {
+    neume: TempoSign.Quicker,
+    icon: new URL('@/assets/icons/agogi-gorgoteri.svg', import.meta.url).href,
+  },
+  {
+    neume: TempoSign.Quick,
+    icon: new URL('@/assets/icons/agogi-gorgi.svg', import.meta.url).href,
+  },
+  {
+    neume: TempoSign.Medium,
+    icon: new URL('@/assets/icons/agogi-mesi.svg', import.meta.url).href,
+  },
+  {
+    neume: TempoSign.Moderate,
+    icon: new URL('@/assets/icons/agogi-metria.svg', import.meta.url).href,
+  },
+  {
+    neume: TempoSign.Slow,
+    icon: new URL('@/assets/icons/agogi-argi.svg', import.meta.url).href,
+  },
+  {
+    neume: TempoSign.Slower,
+    icon: new URL('@/assets/icons/agogi-argoteri.svg', import.meta.url).href,
+  },
+  {
+    neume: TempoSign.VerySlow,
+    icon: new URL('@/assets/icons/agogi-poli-argi.svg', import.meta.url).href,
+  },
+];
+
+export default defineComponent({
   components: {
     ColorPicker,
     InputUnit,
@@ -257,76 +320,44 @@ import ButtonWithMenu, { ButtonWithMenuOption } from './ButtonWithMenu.vue';
   },
   emits: [
     'open-mode-key-dialog',
-    'update:alignment',
-    'update:bpm',
-    'update:color',
-    'update:fontSize',
-    'update:heightAdjustment',
-    'update:ignoreAttractions',
-    'update:marginBottom',
-    'update:marginTop',
-    'update:permanentEnharmonicZo',
+    'update',
     'update:sectionName',
-    'update:showAmbitus',
-    'update:strokeWidth',
     'update:tempo',
-    'update:tempoAlignRight',
-    'update:useDefaultStyle',
   ],
-})
-export default class ToolbarModeKey extends Vue {
-  @Prop() element!: ModeKeyElement;
-  @Prop() pageSetup!: PageSetup;
-  TextBoxAlignment = TextBoxAlignment;
+  props: {
+    element: {
+      type: Object as PropType<ModeKeyElement>,
+      required: true,
+    },
+    pageSetup: {
+      type: Object as PropType<PageSetup>,
+      required: true,
+    },
+  },
 
-  get heightAdjustmentMin() {
-    return -Math.round(Unit.fromPt(this.element.height));
-  }
+  data() {
+    return {
+      TextBoxAlignment,
+      tempoMenuOptions,
+    };
+  },
 
-  get heightAdjustmentMax() {
-    return Unit.toPt(this.pageSetup.pageHeight);
-  }
+  computed: {
+    heightAdjustmentMin() {
+      return -Math.round(Unit.fromPt(this.element.height));
+    },
 
-  get maxHeight() {
-    return Unit.toPt(this.pageSetup.innerPageHeight);
-  }
+    heightAdjustmentMax() {
+      return Unit.toPt(this.pageSetup.pageHeight);
+    },
 
-  tempoMenuOptions: ButtonWithMenuOption[] = [
-    {
-      neume: TempoSign.VeryQuick,
-      icon: new URL('@/assets/icons/agogi-poli-gorgi.svg', import.meta.url)
-        .href,
+    maxHeight() {
+      return Unit.toPt(this.pageSetup.innerPageHeight);
     },
-    {
-      neume: TempoSign.Quicker,
-      icon: new URL('@/assets/icons/agogi-gorgoteri.svg', import.meta.url).href,
-    },
-    {
-      neume: TempoSign.Quick,
-      icon: new URL('@/assets/icons/agogi-gorgi.svg', import.meta.url).href,
-    },
-    {
-      neume: TempoSign.Medium,
-      icon: new URL('@/assets/icons/agogi-mesi.svg', import.meta.url).href,
-    },
-    {
-      neume: TempoSign.Moderate,
-      icon: new URL('@/assets/icons/agogi-metria.svg', import.meta.url).href,
-    },
-    {
-      neume: TempoSign.Slow,
-      icon: new URL('@/assets/icons/agogi-argi.svg', import.meta.url).href,
-    },
-    {
-      neume: TempoSign.Slower,
-      icon: new URL('@/assets/icons/agogi-argoteri.svg', import.meta.url).href,
-    },
-    {
-      neume: TempoSign.VerySlow,
-      icon: new URL('@/assets/icons/agogi-poli-argi.svg', import.meta.url).href,
-    },
-  ];
-}
+  },
+
+  methods: {},
+});
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

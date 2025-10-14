@@ -5,10 +5,9 @@
       type="checkbox"
       :checked="element.useDefaultStyle"
       @change="
-        $emit(
-          'update:useDefaultStyle',
-          ($event.target as HTMLInputElement).checked,
-        )
+        $emit('update', {
+          useDefaultStyle: ($event.target as HTMLInputElement).checked,
+        } as Partial<TextBoxElement>)
       "
     />
     <label for="toolbar-text-box-use-default-style">{{
@@ -19,7 +18,9 @@
       <select
         :value="element.fontFamily"
         @change="
-          $emit('update:fontFamily', ($event.target as HTMLInputElement).value)
+          $emit('update', {
+            fontFamily: ($event.target as HTMLInputElement).value,
+          } as Partial<TextBoxElement>)
         "
       >
         <option>Source Serif</option>
@@ -37,7 +38,9 @@
       <InputFontSize
         class="drop-caps-input"
         :modelValue="element.fontSize"
-        @update:modelValue="$emit('update:fontSize', $event)"
+        @update:modelValue="
+          $emit('update', { fontSize: $event } as Partial<TextBoxElement>)
+        "
       />
       <span class="space" style="text-align: center">&#47;</span>
       <InputUnit
@@ -49,25 +52,35 @@
         :modelValue="element.lineHeight"
         :precision="2"
         placeholder="normal"
-        @update:modelValue="$emit('update:lineHeight', $event)"
+        @update:modelValue="
+          $emit('update', { lineHeight: $event } as Partial<TextBoxElement>)
+        "
       />
       <span class="space"></span>
       <ColorPicker
         :modelValue="element.color"
-        @update:modelValue="$emit('update:color', $event)"
+        @update:modelValue="
+          $emit('update', { color: $event } as Partial<TextBoxElement>)
+        "
       />
       <span class="space"></span>
       <button
         class="icon-btn"
         :class="{ selected: element.bold }"
-        @click="$emit('update:bold', !element.bold)"
+        @click="
+          $emit('update', { bold: !element.bold } as Partial<TextBoxElement>)
+        "
       >
         <b>B</b>
       </button>
       <button
         class="icon-btn"
         :class="{ selected: element.italic }"
-        @click="$emit('update:italic', !element.italic)"
+        @click="
+          $emit('update', {
+            italic: !element.italic,
+          } as Partial<TextBoxElement>)
+        "
       >
         <i>I</i>
       </button>
@@ -75,7 +88,11 @@
     <button
       class="icon-btn"
       :class="{ selected: element.underline }"
-      @click="$emit('update:underline', !element.underline)"
+      @click="
+        $emit('update', {
+          underline: !element.underline,
+        } as Partial<TextBoxElement>)
+      "
     >
       <u>U</u>
     </button>
@@ -84,7 +101,11 @@
       <button
         class="icon-btn"
         :class="{ selected: element.alignment === TextBoxAlignment.Left }"
-        @click="$emit('update:alignment', TextBoxAlignment.Left)"
+        @click="
+          $emit('update', {
+            alignment: TextBoxAlignment.Left,
+          } as Partial<TextBoxElement>)
+        "
       >
         <img
           src="@/assets/icons/alignleft.svg"
@@ -96,7 +117,11 @@
       <button
         class="icon-btn"
         :class="{ selected: element.alignment === TextBoxAlignment.Center }"
-        @click="$emit('update:alignment', TextBoxAlignment.Center)"
+        @click="
+          $emit('update', {
+            alignment: TextBoxAlignment.Center,
+          } as Partial<TextBoxElement>)
+        "
       >
         <img
           src="@/assets/icons/aligncenter.svg"
@@ -108,7 +133,11 @@
       <button
         class="icon-btn"
         :class="{ selected: element.alignment === TextBoxAlignment.Right }"
-        @click="$emit('update:alignment', TextBoxAlignment.Right)"
+        @click="
+          $emit('update', {
+            alignment: TextBoxAlignment.Right,
+          } as Partial<TextBoxElement>)
+        "
       >
         <img
           src="@/assets/icons/alignright.svg"
@@ -123,7 +152,9 @@
       <label class="right-space">{{ $t('toolbar:common.outline') }}</label>
       <InputStrokeWidth
         :modelValue="element.strokeWidth"
-        @update:modelValue="$emit('update:strokeWidth', $event)"
+        @update:modelValue="
+          $emit('update', { strokeWidth: $event } as Partial<TextBoxElement>)
+        "
       />
     </template>
     <span class="space" />
@@ -152,10 +183,9 @@
         type="checkbox"
         :checked="element.multipanel"
         @change="
-          $emit(
-            'update:multipanel',
-            ($event.target as HTMLInputElement).checked,
-          )
+          $emit('update', {
+            multipanel: ($event.target as HTMLInputElement).checked,
+          } as Partial<TextBoxElement>)
         "
       />
       <label for="toolbar-text-box-multipanel">{{
@@ -175,7 +205,9 @@
           :modelValue="element.customHeight"
           :precision="1"
           placeholder="auto"
-          @update:modelValue="$emit('update:customHeight', $event)"
+          @update:modelValue="
+            $emit('update', { customHeight: $event } as Partial<TextBoxElement>)
+          "
         />
       </template>
     </template>
@@ -192,14 +224,18 @@
         :modelValue="element.customWidth"
         :precision="1"
         placeholder="auto"
-        @update:modelValue="$emit('update:customWidth', $event)"
+        @update:modelValue="
+          $emit('update', { customWidth: $event } as Partial<TextBoxElement>)
+        "
       />
       <input
         id="toolbar-text-box-fill-width"
         type="checkbox"
         :checked="element.fillWidth"
         @change="
-          $emit('update:fillWidth', ($event.target as HTMLInputElement).checked)
+          $emit('update', {
+            fillWidth: ($event.target as HTMLInputElement).checked,
+          } as Partial<TextBoxElement>)
         "
       />
       <label for="toolbar-text-box-fill-width">{{
@@ -217,7 +253,9 @@
         :step="0.5"
         :modelValue="element.marginTop"
         :precision="1"
-        @update:modelValue="$emit('update:marginTop', $event)"
+        @update:modelValue="
+          $emit('update', { marginTop: $event } as Partial<TextBoxElement>)
+        "
       />
     </div>
     <span class="space"></span>
@@ -231,7 +269,9 @@
         :step="0.5"
         :modelValue="element.marginBottom"
         :precision="1"
-        @update:modelValue="$emit('update:marginBottom', $event)"
+        @update:modelValue="
+          $emit('update', { marginBottom: $event } as Partial<TextBoxElement>)
+        "
       />
     </div>
     <span class="space"></span>
@@ -249,7 +289,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-facing-decorator';
+import { defineComponent, PropType } from 'vue';
 
 import ColorPicker from '@/components/ColorPicker.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
@@ -259,45 +299,47 @@ import { TextBoxAlignment, TextBoxElement } from '@/models/Element';
 import { PageSetup } from '@/models/PageSetup';
 import { Unit } from '@/utils/Unit';
 
-@Component({
+export default defineComponent({
   components: { ColorPicker, InputFontSize, InputUnit, InputStrokeWidth },
   emits: [
     'insert:gorthmikon',
     'insert:pelastikon',
-    'update:alignment',
-    'update:bold',
-    'update:color',
-    'update:customHeight',
-    'update:customWidth',
-    'update:fillWidth',
-    'update:fontFamily',
-    'update:fontSize',
-    'update:italic',
-    'update:lineHeight',
-    'update:marginBottom',
-    'update:marginTop',
-    'update:multipanel',
+    'update',
     'update:sectionName',
-    'update:strokeWidth',
-    'update:underline',
-    'update:useDefaultStyle',
   ],
-})
-export default class ToolbarTextBox extends Vue {
-  @Prop() element!: TextBoxElement;
-  @Prop() fonts!: string;
-  @Prop() pageSetup!: PageSetup;
+  props: {
+    element: {
+      type: Object as PropType<TextBoxElement>,
+      required: true,
+    },
+    pageSetup: {
+      type: Object as PropType<PageSetup>,
+      required: true,
+    },
+    fonts: {
+      type: Array as PropType<string[]>,
+      required: true,
+    },
+  },
 
-  TextBoxAlignment = TextBoxAlignment;
+  data() {
+    return {
+      TextBoxAlignment,
+    };
+  },
 
-  get maxWidth() {
-    return Unit.toPt(this.pageSetup.innerPageWidth);
-  }
+  computed: {
+    maxWidth() {
+      return Unit.toPt(this.pageSetup.innerPageWidth);
+    },
 
-  get maxHeight() {
-    return Unit.toPt(this.pageSetup.innerPageHeight);
-  }
-}
+    maxHeight() {
+      return Unit.toPt(this.pageSetup.innerPageHeight);
+    },
+  },
+
+  methods: {},
+});
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

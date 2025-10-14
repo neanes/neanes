@@ -12,22 +12,36 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-facing-decorator';
+import { defineComponent } from 'vue';
 
 import InputUnit from '@/components/InputUnit.vue';
 
-@Component({
+export default defineComponent({
   components: { InputUnit },
   emits: ['update:modelValue'],
-})
-export default class InputBpm extends Vue {
-  @Prop() modelValue!: number;
-  @Prop({ default: false }) disabled!: boolean;
+  props: {
+    modelValue: {
+      type: Number,
+      required: true,
+    },
+    disabled: {
+      type: Boolean,
+      default: false,
+    },
+  },
 
-  round(value: number) {
-    return Math.round(value);
-  }
-}
+  data() {
+    return {};
+  },
+
+  computed: {},
+
+  methods: {
+    round(value: number) {
+      return Math.round(value);
+    },
+  },
+});
 </script>
 
 <style scoped></style>

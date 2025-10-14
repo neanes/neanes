@@ -8,12 +8,21 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-facing-decorator';
+import { defineComponent } from 'vue';
 
-@Component
-export default class App extends Vue {
-  registration: ServiceWorkerRegistration | null = null;
-  updateExists: boolean = false;
+export default defineComponent({
+  components: {},
+  emits: [],
+  props: {},
+
+  data() {
+    return {
+      registration: null as ServiceWorkerRegistration | null,
+      updateExists: false,
+    };
+  },
+
+  computed: {},
 
   created() {
     if (navigator.serviceWorker) {
@@ -34,20 +43,22 @@ export default class App extends Vue {
         }
       });
     }
-  }
+  },
 
-  onUpdateAvailable(event: CustomEvent) {
-    this.registration = event.detail;
-    this.updateExists = true;
-  }
+  methods: {
+    onUpdateAvailable(event: CustomEvent) {
+      this.registration = event.detail;
+      this.updateExists = true;
+    },
 
-  refreshApp() {
-    this.updateExists = false;
-    if (this.registration && this.registration.waiting) {
-      this.registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-    }
-  }
-}
+    refreshApp() {
+      this.updateExists = false;
+      if (this.registration && this.registration.waiting) {
+        this.registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+      }
+    },
+  },
+});
 </script>
 
 <style>

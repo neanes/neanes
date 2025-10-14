@@ -11,22 +11,36 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-facing-decorator';
+import { defineComponent } from 'vue';
 
 import InputUnit from '@/components/InputUnit.vue';
 
-@Component({
+export default defineComponent({
   components: { InputUnit },
   emits: ['update:modelValue'],
-})
-export default class InputFontSize extends Vue {
-  @Prop() modelValue!: number;
-  @Prop({ default: 100 }) max!: number;
+  props: {
+    modelValue: {
+      type: Number,
+      required: true,
+    },
+    max: {
+      type: Number,
+      default: 100,
+    },
+  },
 
-  round(value: number) {
-    return Math.round(value * 2) / 2;
-  }
-}
+  data() {
+    return {};
+  },
+
+  computed: {},
+
+  methods: {
+    round(value: number) {
+      return Math.round(value * 2) / 2;
+    },
+  },
+});
 </script>
 
 <style scoped></style>

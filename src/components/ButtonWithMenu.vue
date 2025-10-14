@@ -23,8 +23,7 @@
 </template>
 
 <script lang="ts">
-import { StyleValue } from 'vue';
-import { Component, Prop, Vue } from 'vue-facing-decorator';
+import { defineComponent, PropType, StyleValue } from 'vue';
 
 import { Neume } from '@/models/Neumes';
 
@@ -34,64 +33,84 @@ export interface ButtonWithMenuOption {
   neume: Neume | Neume[];
 }
 
-@Component({
+export default defineComponent({
   components: {},
   emits: ['select'],
-})
-export default class ButtonWithMenu extends Vue {
-  @Prop({ default: 'up' }) direction!: 'up' | 'down';
-  @Prop({ required: true }) options!: ButtonWithMenuOption[];
-  @Prop({ default: false }) disabled!: boolean;
-  @Prop({ default: 'Neanes' }) fontFamily!: string;
+  props: {
+    direction: {
+      type: String as PropType<'up' | 'down'>,
+      default: 'up',
+    },
+    options: {
+      type: Array as PropType<ButtonWithMenuOption[]>,
+      required: true,
+    },
+    disabled: {
+      type: Boolean,
+      default: false,
+    },
+    fontFamily: {
+      type: String,
+      default: 'Neanes',
+    },
+  },
 
-  showMenu: boolean = false;
-  selectedOption: Neume | Neume[] | null = null;
-
-  get mainIcon() {
-    return this.direction === 'up'
-      ? this.options.at(-1)!.icon
-      : this.options[0].icon;
-  }
-
-  get mainText() {
-    return this.direction === 'up'
-      ? this.options.at(-1)!.text
-      : this.options[0].text;
-  }
-
-  get textStyle() {
+  data() {
     return {
-      fontFamily: this.fontFamily,
-    } as StyleValue;
-  }
-
-  getKey(option: ButtonWithMenuOption) {
-    return Array.isArray(option.neume) ? option.neume[0] : option.neume;
-  }
+      showMenu: false,
+      selectedOption: null as Neume | Neume[] | null,
+    };
+  },
 
   beforeUnmount() {
     window.removeEventListener('mouseup', this.onMouseUp);
-  }
+  },
 
-  openMenu() {
-    if (this.disabled) {
-      return;
-    }
+  computed: {
+    mainIcon() {
+      return this.direction === 'up'
+        ? this.options.at(-1)!.icon
+        : this.options[0].icon;
+    },
 
-    this.showMenu = true;
-    window.addEventListener('mouseup', this.onMouseUp);
-  }
+    mainText() {
+      return this.direction === 'up'
+        ? this.options.at(-1)!.text
+        : this.options[0].text;
+    },
 
-  onMouseUp() {
-    if (this.selectedOption) {
-      this.$emit('select', this.selectedOption);
-    }
+    textStyle() {
+      return {
+        fontFamily: this.fontFamily,
+      } as StyleValue;
+    },
+  },
 
-    this.showMenu = false;
+  methods: {
+    getKey(option: ButtonWithMenuOption) {
+      return Array.isArray(option.neume) ? option.neume[0] : option.neume;
+    },
 
-    window.removeEventListener('mouseup', this.onMouseUp);
-  }
-}
+    openMenu() {
+      if (this.disabled) {
+        return;
+      }
+
+      this.showMenu = true;
+      window.addEventListener('mouseup', this.onMouseUp);
+    },
+
+    onMouseUp() {
+      if (this.selectedOption) {
+        this.$emit('select', this.selectedOption);
+      }
+
+      this.showMenu = false;
+
+      window.removeEventListener('mouseup', this.onMouseUp);
+    },
+  },
+});
 </script>
 
 <style scoped>

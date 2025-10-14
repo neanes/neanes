@@ -12,15 +12,30 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-facing-decorator';
+import { defineComponent } from 'vue';
 
-@Component({
+export default defineComponent({
+  components: {},
   emits: ['click', 'mouseenter'],
-})
-export default class FileMenuBarItem extends Vue {
-  @Prop() label!: string;
-  @Prop() isOpen!: boolean;
-}
+  props: {
+    label: {
+      type: String,
+      required: true,
+    },
+    isOpen: {
+      type: Boolean,
+      required: true,
+    },
+  },
+
+  data() {
+    return {};
+  },
+
+  computed: {},
+
+  methods: {},
+});
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

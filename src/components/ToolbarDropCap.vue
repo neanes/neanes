@@ -5,10 +5,9 @@
       type="checkbox"
       :checked="element.useDefaultStyle"
       @change="
-        $emit(
-          'update:useDefaultStyle',
-          ($event.target as HTMLInputElement).checked,
-        )
+        $emit('update', {
+          useDefaultStyle: ($event.target as HTMLInputElement).checked,
+        } as Partial<DropCapElement>)
       "
     />
     <label for="toolbar-drop-cap-use-default-style">{{
@@ -19,7 +18,9 @@
       <select
         :value="element.fontFamily"
         @change="
-          $emit('update:fontFamily', ($event.target as HTMLInputElement).value)
+          $emit('update', {
+            fontFamily: ($event.target as HTMLInputElement).value,
+          } as Partial<DropCapElement>)
         "
       >
         <option v-for="font in dropCapFontFamilies" :key="font" :value="font">
@@ -31,7 +32,11 @@
         class="drop-caps-input"
         :max="500"
         :modelValue="element.fontSize"
-        @update:modelValue="$emit('update:fontSize', $event)"
+        @update:modelValue="
+          $emit('update', {
+            fontSize: $event,
+          } as Partial<DropCapElement>)
+        "
       />
       <span class="space" style="text-align: center">&#47;</span>
       <InputUnit
@@ -43,25 +48,41 @@
         :modelValue="element.lineHeight"
         :precision="2"
         placeholder="auto"
-        @update:modelValue="$emit('update:lineHeight', $event)"
+        @update:modelValue="
+          $emit('update', {
+            lineHeight: $event,
+          } as Partial<DropCapElement>)
+        "
       />
       <span class="space"></span>
       <ColorPicker
         :modelValue="element.color"
-        @update:modelValue="$emit('update:color', $event)"
+        @update:modelValue="
+          $emit('update', {
+            color: $event,
+          } as Partial<DropCapElement>)
+        "
       />
       <span class="space"></span>
       <button
         class="icon-btn"
         :class="{ selected: bold }"
-        @click="$emit('update:bold', !bold)"
+        @click="
+          $emit('update', {
+            fontWeight: !bold ? '700' : '400',
+          } as Partial<DropCapElement>)
+        "
       >
         <b>B</b>
       </button>
       <button
         class="icon-btn"
         :class="{ selected: italic }"
-        @click="$emit('update:italic', !italic)"
+        @click="
+          $emit('update', {
+            fontStyle: !italic ? 'italic' : 'normal',
+          } as Partial<DropCapElement>)
+        "
       >
         <i>I</i>
       </button>
@@ -69,7 +90,11 @@
       <label class="right-space">{{ $t('toolbar:common.outline') }}</label>
       <InputStrokeWidth
         :modelValue="element.strokeWidth"
-        @update:modelValue="$emit('update:strokeWidth', $event)"
+        @update:modelValue="
+          $emit('update', {
+            strokeWidth: $event,
+          } as Partial<DropCapElement>)
+        "
       />
       <span class="divider" />
       <label class="right-space">{{ $t('toolbar:dropCap.lineSpan') }}</label>
@@ -81,7 +106,11 @@
         :step="1"
         :modelValue="element.lineSpan"
         :precision="0"
-        @update:modelValue="$emit('update:lineSpan', $event)"
+        @update:modelValue="
+          $emit('update', {
+            lineSpan: $event,
+          } as Partial<DropCapElement>)
+        "
       />
       <span class="divider" />
     </template>
@@ -96,7 +125,11 @@
       :modelValue="element.customWidth"
       :precision="1"
       placeholder="auto"
-      @update:modelValue="$emit('update:customWidth', $event)"
+      @update:modelValue="
+        $emit('update', {
+          customWidth: $event,
+        } as Partial<DropCapElement>)
+      "
     />
 
     <span class="space"></span>
@@ -114,7 +147,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-facing-decorator';
+import { defineComponent, PropType } from 'vue';
 
 import ColorPicker from '@/components/ColorPicker.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
@@ -124,52 +157,57 @@ import { DropCapElement } from '@/models/Element';
 import { PageSetup } from '@/models/PageSetup';
 import { Unit } from '@/utils/Unit';
 
-@Component({
+export default defineComponent({
   components: { ColorPicker, InputFontSize, InputStrokeWidth, InputUnit },
-  emits: [
-    'update:bold',
-    'update:color',
-    'update:customWidth',
-    'update:fontFamily',
-    'update:fontSize',
-    'update:italic',
-    'update:strokeWidth',
-    'update:useDefaultStyle',
-    'update:lineHeight',
-    'update:lineSpan',
-    'update:sectionName',
-  ],
-})
-export default class ToolbarDropCap extends Vue {
-  @Prop() element!: DropCapElement;
-  @Prop() fonts!: string[];
-  @Prop() pageSetup!: PageSetup;
+  emits: ['update', 'update:sectionName'],
+  props: {
+    element: {
+      type: Object as PropType<DropCapElement>,
+      required: true,
+    },
+    pageSetup: {
+      type: Object as PropType<PageSetup>,
+      required: true,
+    },
+    fonts: {
+      type: Array as PropType<string[]>,
+      required: true,
+    },
+  },
 
-  get bold() {
-    return this.element.fontWeight === '700';
-  }
+  data() {
+    return {};
+  },
 
-  get italic() {
-    return this.element.fontStyle === 'italic';
-  }
+  computed: {
+    bold() {
+      return this.element.fontWeight === '700';
+    },
 
-  get dropCapFontFamilies() {
-    return [
-      'Source Serif',
-      'Athonite',
-      'GFS Didot',
-      'Noto Naskh Arabic',
-      'Old Standard',
-      'Omega',
-      'PFGoudyInitials',
-      ...this.fonts,
-    ];
-  }
+    italic() {
+      return this.element.fontStyle === 'italic';
+    },
 
-  get maxWidth() {
-    return Unit.toPt(this.pageSetup.innerPageWidth);
-  }
-}
+    dropCapFontFamilies() {
+      return [
+        'Source Serif',
+        'Athonite',
+        'GFS Didot',
+        'Noto Naskh Arabic',
+        'Old Standard',
+        'Omega',
+        'PFGoudyInitials',
+        ...this.fonts,
+      ];
+    },
+
+    maxWidth() {
+      return Unit.toPt(this.pageSetup.innerPageWidth);
+    },
+  },
+
+  methods: {},
+});
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

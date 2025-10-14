@@ -5,12 +5,26 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-facing-decorator';
+import { defineComponent } from 'vue';
 
-@Component({ emits: ['click'] })
-export default class FileMenuItem extends Vue {
-  @Prop() label!: string;
-}
+export default defineComponent({
+  components: {},
+  emits: ['click'],
+  props: {
+    label: {
+      type: String,
+      required: true,
+    },
+  },
+
+  data() {
+    return {};
+  },
+
+  computed: {},
+
+  methods: {},
+});
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

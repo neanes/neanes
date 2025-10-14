@@ -167,7 +167,11 @@
         class="icon-btn"
         :class="{ selected: element.alignRight }"
         :title="alignRightTooltip"
-        @click="$emit('update:alignRight', !element.alignRight)"
+        @click="
+          $emit('update', {
+            alignRight: !element.alignRight,
+          } as Partial<MartyriaElement>)
+        "
       >
         <img
           src="@/assets/icons/alignright2.svg"
@@ -191,7 +195,9 @@
           type="checkbox"
           :checked="element.auto"
           @change="
-            $emit('update:auto', ($event.target as HTMLInputElement).checked)
+            $emit('update', {
+              auto: ($event.target as HTMLInputElement).checked,
+            } as Partial<MartyriaElement>)
           "
         />
         <label for="toolbar:martyria-auto">{{
@@ -204,7 +210,9 @@
         <select
           :value="element.note"
           @change="
-            $emit('update:note', ($event.target as HTMLInputElement).value)
+            $emit('update', {
+              note: ($event.target as HTMLInputElement).value,
+            } as Partial<MartyriaElement>)
           "
         >
           <option v-for="note in notes" :key="note.key" :value="note.key">
@@ -217,7 +225,9 @@
         <select
           :value="element.scale"
           @change="
-            $emit('update:scale', ($event.target as HTMLInputElement).value)
+            $emit('update', {
+              scale: ($event.target as HTMLInputElement).value,
+            } as Partial<MartyriaElement>)
           "
         >
           <option v-for="scale in scales" :key="scale.key" :value="scale.key">
@@ -235,7 +245,11 @@
           element.tempoRight == null
         "
         :modelValue="element.bpm"
-        @update:modelValue="$emit('update:bpm', $event)"
+        @update:modelValue="
+          $emit('update', {
+            bpm: $event,
+          } as Partial<MartyriaElement>)
+        "
       />
 
       <span class="space" />
@@ -251,7 +265,11 @@
         :step="0.5"
         :precision="2"
         :modelValue="element.verticalOffset"
-        @update:modelValue="$emit('update:verticalOffset', $event)"
+        @update:modelValue="
+          $emit('update', {
+            verticalOffset: $event,
+          } as Partial<MartyriaElement>)
+        "
       />
 
       <span class="space" />
@@ -265,7 +283,11 @@
         :step="0.5"
         :precision="2"
         :modelValue="element.spaceAfter"
-        @update:modelValue="$emit('update:spaceAfter', $event)"
+        @update:modelValue="
+          $emit('update', {
+            spaceAfter: $event,
+          } as Partial<MartyriaElement>)
+        "
       />
 
       <template v-if="showChromaticFthoraNote">
@@ -274,10 +296,9 @@
         <select
           :value="element.chromaticFthoraNote"
           @change="
-            $emit(
-              'update:chromaticFthoraNote',
-              ($event.target as HTMLInputElement).value,
-            )
+            $emit('update', {
+              chromaticFthoraNote: ($event.target as HTMLInputElement).value,
+            } as Partial<MartyriaElement>)
           "
         >
           <option
@@ -296,10 +317,9 @@
       <select
         :value="element.rootSignOverride"
         @change="
-          $emit(
-            'update:rootSignOverride',
-            ($event.target as HTMLInputElement).value,
-          )
+          $emit('update', {
+            rootSignOverride: ($event.target as HTMLInputElement).value || null,
+          } as Partial<MartyriaElement>)
         "
       >
         <option value="">{{ $t('toolbar:common.none') }}</option>
@@ -329,7 +349,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-facing-decorator';
+import { defineComponent, PropType } from 'vue';
 
 import { MartyriaElement } from '@/models/Element';
 import {
@@ -351,504 +371,518 @@ import ButtonWithMenu, { ButtonWithMenuOption } from './ButtonWithMenu.vue';
 import InputBpm from './InputBpm.vue';
 import InputUnit from './InputUnit.vue';
 
-@Component({
-  components: { InputUnit, InputBpm, ButtonWithMenu },
-  emits: [
-    'update:alignRight',
-    'update:auto',
-    'update:bpm',
-    'update:chromaticFthoraNote',
-    'update:fthora',
-    'update:measureBar',
-    'update:note',
-    'update:quantitativeNeume',
-    'update:rootSignOverride',
-    'update:scale',
-    'update:sectionName',
-    'update:spaceAfter',
-    'update:tempo',
-    'update:tempoLeft',
-    'update:tempoRight',
-    'update:verticalOffset',
-  ],
-})
-export default class ToolbarMartyria extends Vue {
-  @Prop() element!: MartyriaElement;
-  @Prop() pageSetup!: PageSetup;
-  @Prop() neumeKeyboard!: NeumeKeyboard;
+const notes = Object.values(Note).map((x) => ({
+  key: x,
+  displayName: getNoteDisplayName(x),
+}));
 
-  Fthora = Fthora;
-  MeasureBar = MeasureBar;
-  TempoSign = TempoSign;
+const scales = Object.values(Scale).map((x) => ({
+  key: x,
+  displayName: getScaleDisplayName(x),
+}));
 
-  notes = Object.values(Note).map((x) => ({
-    key: x,
-    displayName: this.getNoteDisplayName(x),
-  }));
+const chromaticFthoras = [
+  Fthora.SoftChromaticPa_Top,
+  Fthora.SoftChromaticPa_Bottom,
+  Fthora.SoftChromaticThi_Top,
+  Fthora.SoftChromaticThi_Bottom,
+  Fthora.HardChromaticPa_Top,
+  Fthora.HardChromaticPa_Bottom,
+  Fthora.HardChromaticThi_Top,
+  Fthora.HardChromaticThi_Bottom,
+];
 
-  scales = Object.values(Scale).map((x) => ({
-    key: x,
-    displayName: this.getScaleDisplayName(x),
-  }));
+const rootSigns = [
+  {
+    name: 'model:neume.rootSign.ananes',
+    value: RootSign.Alpha,
+  },
+  {
+    name: 'model:neume.rootSign.neanes',
+    value: RootSign.SoftChromaticSquiggle,
+  },
+  {
+    name: 'model:neume.rootSign.softChromaticGa',
+    value: RootSign.SoftChromaticPaRootSign,
+  },
+  {
+    name: 'model:neume.rootSign.nana',
+    value: RootSign.Nana,
+  },
+  {
+    name: 'model:neume.rootSign.legetos',
+    value: RootSign.Legetos,
+  },
+  {
+    name: 'model:neume.rootSign.agia',
+    value: RootSign.DeltaDotted,
+  },
+  {
+    name: 'model:neume.rootSign.zygos',
+    value: RootSign.Zygos,
+  },
+  {
+    name: 'model:neume.rootSign.aneanes',
+    value: RootSign.AlphaDotted,
+  },
+  {
+    name: 'model:neume.rootSign.necheanes',
+    value: RootSign.Squiggle,
+  },
+  {
+    name: 'model:neume.rootSign.nenano',
+    value: RootSign.Tilt,
+  },
+  {
+    name: 'model:neume.rootSign.varys',
+    value: RootSign.Zo,
+  },
+  {
+    name: 'model:neume.rootSign.neagie',
+    value: RootSign.Delta,
+  },
+];
 
-  get spaceAfterMax() {
-    return Math.round(Unit.toPt(this.pageSetup.pageWidth));
-  }
+const quantitativeNeumeOptionsList = [
+  QuantitativeNeume.Elaphron,
+  QuantitativeNeume.RunningElaphron,
+  QuantitativeNeume.OligonPlusHypsiliPlusKentimaVertical,
+  QuantitativeNeume.OligonPlusHypsiliLeft,
+  QuantitativeNeume.OligonPlusHypsiliRight,
+  QuantitativeNeume.OligonPlusKentimaAbove,
+  QuantitativeNeume.OligonPlusKentima,
+  QuantitativeNeume.KentemataPlusOligon,
+];
 
-  chromaticFthoras = [
-    Fthora.SoftChromaticPa_Top,
-    Fthora.SoftChromaticPa_Bottom,
-    Fthora.SoftChromaticThi_Top,
-    Fthora.SoftChromaticThi_Bottom,
-    Fthora.HardChromaticPa_Top,
-    Fthora.HardChromaticPa_Bottom,
-    Fthora.HardChromaticThi_Top,
-    Fthora.HardChromaticThi_Bottom,
-  ];
+const quantitativeNeumeOptions: ButtonWithMenuOption[] =
+  quantitativeNeumeOptionsList.map((x) => {
+    return { neume: x, text: NeumeMappingService.getMapping(x).text };
+  });
 
-  rootSigns = [
-    {
-      name: 'model:neume.rootSign.ananes',
-      value: RootSign.Alpha,
-    },
-    {
-      name: 'model:neume.rootSign.neanes',
-      value: RootSign.SoftChromaticSquiggle,
-    },
-    {
-      name: 'model:neume.rootSign.softChromaticGa',
-      value: RootSign.SoftChromaticPaRootSign,
-    },
-    {
-      name: 'model:neume.rootSign.nana',
-      value: RootSign.Nana,
-    },
-    {
-      name: 'model:neume.rootSign.legetos',
-      value: RootSign.Legetos,
-    },
-    {
-      name: 'model:neume.rootSign.agia',
-      value: RootSign.DeltaDotted,
-    },
-    {
-      name: 'model:neume.rootSign.zygos',
-      value: RootSign.Zygos,
-    },
-    {
-      name: 'model:neume.rootSign.aneanes',
-      value: RootSign.AlphaDotted,
-    },
-    {
-      name: 'model:neume.rootSign.necheanes',
-      value: RootSign.Squiggle,
-    },
-    {
-      name: 'model:neume.rootSign.nenano',
-      value: RootSign.Tilt,
-    },
-    {
-      name: 'model:neume.rootSign.varys',
-      value: RootSign.Zo,
-    },
-    {
-      name: 'model:neume.rootSign.neagie',
-      value: RootSign.Delta,
-    },
-  ];
+const tempoMenuOptions: ButtonWithMenuOption[] = [
+  {
+    neume: TempoSign.VeryQuick,
+    icon: new URL('@/assets/icons/agogi-poli-gorgi.svg', import.meta.url).href,
+  },
+  {
+    neume: TempoSign.Quicker,
+    icon: new URL('@/assets/icons/agogi-gorgoteri.svg', import.meta.url).href,
+  },
+  {
+    neume: TempoSign.Quick,
+    icon: new URL('@/assets/icons/agogi-gorgi.svg', import.meta.url).href,
+  },
+  {
+    neume: TempoSign.Medium,
+    icon: new URL('@/assets/icons/agogi-mesi.svg', import.meta.url).href,
+  },
+  {
+    neume: TempoSign.Moderate,
+    icon: new URL('@/assets/icons/agogi-metria.svg', import.meta.url).href,
+  },
+  {
+    neume: TempoSign.Slow,
+    icon: new URL('@/assets/icons/agogi-argi.svg', import.meta.url).href,
+  },
+  {
+    neume: TempoSign.Slower,
+    icon: new URL('@/assets/icons/agogi-argoteri.svg', import.meta.url).href,
+  },
+  {
+    neume: TempoSign.VerySlow,
+    icon: new URL('@/assets/icons/agogi-poli-argi.svg', import.meta.url).href,
+  },
+];
 
-  quantitativeNeumeOptionsList = [
-    QuantitativeNeume.Elaphron,
-    QuantitativeNeume.RunningElaphron,
-    QuantitativeNeume.OligonPlusHypsiliPlusKentimaVertical,
-    QuantitativeNeume.OligonPlusHypsiliLeft,
-    QuantitativeNeume.OligonPlusHypsiliRight,
-    QuantitativeNeume.OligonPlusKentimaAbove,
-    QuantitativeNeume.OligonPlusKentima,
-    QuantitativeNeume.KentemataPlusOligon,
-  ];
+const tempoMenuOptionsAbove: ButtonWithMenuOption[] = [
+  {
+    neume: TempoSign.VeryQuickAbove,
+    icon: new URL('@/assets/icons/agogi-poli-gorgi.svg', import.meta.url).href,
+  },
+  {
+    neume: TempoSign.QuickerAbove,
+    icon: new URL('@/assets/icons/agogi-gorgoteri.svg', import.meta.url).href,
+  },
+  {
+    neume: TempoSign.QuickAbove,
+    icon: new URL('@/assets/icons/agogi-gorgi.svg', import.meta.url).href,
+  },
+  {
+    neume: TempoSign.MediumAbove,
+    icon: new URL('@/assets/icons/agogi-mesi.svg', import.meta.url).href,
+  },
+  {
+    neume: TempoSign.ModerateAbove,
+    icon: new URL('@/assets/icons/agogi-metria.svg', import.meta.url).href,
+  },
+  {
+    neume: TempoSign.SlowAbove,
+    icon: new URL('@/assets/icons/agogi-argi.svg', import.meta.url).href,
+  },
+  {
+    neume: TempoSign.SlowerAbove,
+    icon: new URL('@/assets/icons/agogi-argoteri.svg', import.meta.url).href,
+  },
+  {
+    neume: TempoSign.VerySlowAbove,
+    icon: new URL('@/assets/icons/agogi-poli-argi.svg', import.meta.url).href,
+  },
+];
 
-  quantitativeNeumeOptions: ButtonWithMenuOption[] =
-    this.quantitativeNeumeOptionsList.map((x) => {
-      return { neume: x, text: NeumeMappingService.getMapping(x).text };
-    });
+const barlineMenuOptions: ButtonWithMenuOption[] = [
+  {
+    neume: MeasureBar.MeasureBarShortTheseos,
+    icon: new URL('@/assets/icons/barline-short-theseos.svg', import.meta.url)
+      .href,
+  },
+  {
+    neume: MeasureBar.MeasureBarShortDouble,
+    icon: new URL('@/assets/icons/barline-short-double.svg', import.meta.url)
+      .href,
+  },
+  {
+    neume: MeasureBar.MeasureBarTop,
+    icon: new URL('@/assets/icons/barline-short-single.svg', import.meta.url)
+      .href,
+  },
+  {
+    neume: MeasureBar.MeasureBarTheseos,
+    icon: new URL('@/assets/icons/barline-theseos.svg', import.meta.url).href,
+  },
+  {
+    neume: MeasureBar.MeasureBarDouble,
+    icon: new URL('@/assets/icons/barline-double.svg', import.meta.url).href,
+  },
+  {
+    neume: MeasureBar.MeasureBarRight,
+    icon: new URL('@/assets/icons/barline-single.svg', import.meta.url).href,
+  },
+];
 
-  get fthoraNotes() {
-    if (
-      this.element.fthora === Fthora.SoftChromaticThi_Top ||
-      this.element.fthora === Fthora.SoftChromaticThi_Bottom
-    ) {
-      return [
-        { label: 'model:note.zoHigh', value: ScaleNote.ZoHigh },
-        { label: 'model:note.di', value: ScaleNote.Thi },
-        { label: 'model:note.vou', value: ScaleNote.Vou },
-        { label: 'model:note.ni', value: ScaleNote.Ni },
-      ];
-    } else if (
-      this.element.fthora === Fthora.SoftChromaticPa_Top ||
-      this.element.fthora === Fthora.SoftChromaticPa_Bottom
-    ) {
-      return [
-        { label: `model:note.niHigh`, value: ScaleNote.NiHigh },
-        { label: 'model:note.ke', value: ScaleNote.Ke },
-        { label: 'model:note.ga', value: ScaleNote.Ga },
-        { label: 'model:note.pa', value: ScaleNote.Pa },
-      ];
-    } else if (
-      this.element.fthora === Fthora.HardChromaticThi_Top ||
-      this.element.fthora === Fthora.HardChromaticThi_Bottom
-    ) {
-      return [
-        { label: 'model:note.zoHigh', value: ScaleNote.ZoHigh },
-        { label: 'model:note.di', value: ScaleNote.Thi },
-        { label: 'model:note.vou', value: ScaleNote.Vou },
-      ];
-    } else if (
-      this.element.fthora === Fthora.HardChromaticPa_Top ||
-      this.element.fthora === Fthora.HardChromaticPa_Bottom
-    ) {
-      return [
-        { label: `model:note.niHigh`, value: ScaleNote.NiHigh },
-        { label: 'model:note.ke', value: ScaleNote.Ke },
-        { label: 'model:note.ga', value: ScaleNote.Ga },
-        { label: 'model:note.pa', value: ScaleNote.Pa },
-      ];
-    }
-
-    return [];
-  }
-
-  get showChromaticFthoraNote() {
-    return (
-      this.element.fthora != null &&
-      this.chromaticFthoras.includes(this.element.fthora)
-    );
-  }
-
-  private getNoteDisplayName(note: Note) {
-    switch (note) {
-      case Note.ZoLow:
-        return 'model:note.zoLow';
-      case Note.NiLow:
-        return 'model:note.niLow';
-      case Note.PaLow:
-        return 'model:note.paLow';
-      case Note.VouLow:
-        return 'model:note.vouLow';
-      case Note.GaLow:
-        return 'model:note.gaLow';
-      case Note.ThiLow:
-        return 'model:note.diLow';
-      case Note.KeLow:
-        return 'model:note.keLow';
-      case Note.Zo:
-        return 'model:note.zo';
-      case Note.Ni:
-        return 'model:note.ni';
-      case Note.Pa:
-        return 'model:note.pa';
-      case Note.Vou:
-        return 'model:note.vou';
-      case Note.Ga:
-        return 'model:note.ga';
-      case Note.Thi:
-        return 'model:note.di';
-      case Note.Ke:
-        return 'model:note.ke';
-      case Note.ZoHigh:
-        return 'model:note.zoHigh';
-      case Note.NiHigh:
-        return 'model:note.niHigh';
-      case Note.PaHigh:
-        return 'model:note.paHigh';
-      case Note.VouHigh:
-        return 'model:note.vouHigh';
-      case Note.GaHigh:
-        return 'model:note.gaHigh';
-      case Note.ThiHigh:
-        return 'model:note.diHigh';
-      case Note.KeHigh:
-        return 'model:note.keHigh';
-      default:
-        return note;
-    }
-  }
-
-  private getScaleDisplayName(scale: Scale) {
-    switch (scale) {
-      case Scale.Diatonic:
-        return 'model:scale.diatonic';
-      case Scale.SoftChromatic:
-        return 'model:scale.softChromatic';
-      case Scale.HardChromatic:
-        return 'model:scale.hardChromatic';
-      case Scale.EnharmonicGa:
-        return 'model:scale.enharmonicGa';
-      case Scale.EnharmonicZoHigh:
-        return 'model:scale.enharmonicZoHigh';
-      case Scale.EnharmonicVou:
-        return 'model:scale.enharmonicVou';
-      case Scale.EnharmonicZo:
-        return 'model:scale.enharmonicZo';
-      case Scale.EnharmonicVouHigh:
-        return 'model:scale.enharmonicVouHigh';
-      case Scale.Zygos:
-        return 'model:scale.zygos';
-      case Scale.Spathi:
-        return 'model:scale.spathi';
-      case Scale.SpathiGa:
-        return 'model:scale.spathiGa';
-      case Scale.Kliton:
-        return 'model:scale.kliton';
-      default:
-        return scale;
-    }
-  }
-
-  get spathiDisabled() {
-    return (
-      !this.pageSetup.noFthoraRestrictions &&
-      this.element.note !== Note.Ke &&
-      this.element.note !== Note.Ga
-    );
-  }
-
-  get spathiTitle() {
-    return this.spathiDisabled
-      ? this.$t('toolbar:common.spathiDisabled')
-      : this.tooltip(Fthora.Spathi_Top);
-  }
-
-  get klitonDisabled() {
-    return (
-      !this.pageSetup.noFthoraRestrictions && this.element.note !== Note.Thi
-    );
-  }
-
-  get klitonTitle() {
-    return this.klitonDisabled
-      ? this.$t('toolbar:common.klitonDisabled')
-      : this.tooltip(Fthora.Kliton_Top);
-  }
-
-  get zygosDisabled() {
-    return (
-      !this.pageSetup.noFthoraRestrictions && this.element.note !== Note.Thi
-    );
-  }
-
-  get zygosTitle() {
-    return this.zygosDisabled
-      ? this.$t('toolbar:common.zygosDisabled')
-      : this.tooltip(Fthora.Zygos_Top);
-  }
-
-  get enharmonicDisabled() {
-    return (
-      !this.pageSetup.noFthoraRestrictions &&
-      this.element.note !== Note.Zo &&
-      this.element.note !== Note.ZoHigh &&
-      this.element.note !== Note.Vou &&
-      this.element.note !== Note.VouHigh &&
-      this.element.note !== Note.Ga
-    );
-  }
-
-  get enharmonicTitle() {
-    return this.enharmonicDisabled
-      ? this.$t('toolbar:common.enharmonicDisabled')
-      : this.tooltip(Fthora.Enharmonic_Top);
-  }
-
-  get generalFlatDisabled() {
-    return (
-      !this.pageSetup.noFthoraRestrictions && this.element.note !== Note.Ke
-    );
-  }
-
-  get generalFlatTitle() {
-    return this.generalFlatDisabled
-      ? this.$t('toolbar:common.generalFlatDisabled')
-      : this.tooltip(Fthora.GeneralFlat_Top);
-  }
-
-  get generalSharpDisabled() {
-    return (
-      !this.pageSetup.noFthoraRestrictions && this.element.note !== Note.Ga
-    );
-  }
-
-  get generalSharpTitle() {
-    return this.generalSharpDisabled
-      ? this.$t('toolbar:common.generalSharpDisabled')
-      : this.tooltip(Fthora.GeneralSharp_Top);
-  }
-
-  tempoMenuOptions: ButtonWithMenuOption[] = [
-    {
-      neume: TempoSign.VeryQuick,
-      icon: new URL('@/assets/icons/agogi-poli-gorgi.svg', import.meta.url)
-        .href,
-    },
-    {
-      neume: TempoSign.Quicker,
-      icon: new URL('@/assets/icons/agogi-gorgoteri.svg', import.meta.url).href,
-    },
-    {
-      neume: TempoSign.Quick,
-      icon: new URL('@/assets/icons/agogi-gorgi.svg', import.meta.url).href,
-    },
-    {
-      neume: TempoSign.Medium,
-      icon: new URL('@/assets/icons/agogi-mesi.svg', import.meta.url).href,
-    },
-    {
-      neume: TempoSign.Moderate,
-      icon: new URL('@/assets/icons/agogi-metria.svg', import.meta.url).href,
-    },
-    {
-      neume: TempoSign.Slow,
-      icon: new URL('@/assets/icons/agogi-argi.svg', import.meta.url).href,
-    },
-    {
-      neume: TempoSign.Slower,
-      icon: new URL('@/assets/icons/agogi-argoteri.svg', import.meta.url).href,
-    },
-    {
-      neume: TempoSign.VerySlow,
-      icon: new URL('@/assets/icons/agogi-poli-argi.svg', import.meta.url).href,
-    },
-  ];
-
-  tempoMenuOptionsAbove: ButtonWithMenuOption[] = [
-    {
-      neume: TempoSign.VeryQuickAbove,
-      icon: new URL('@/assets/icons/agogi-poli-gorgi.svg', import.meta.url)
-        .href,
-    },
-    {
-      neume: TempoSign.QuickerAbove,
-      icon: new URL('@/assets/icons/agogi-gorgoteri.svg', import.meta.url).href,
-    },
-    {
-      neume: TempoSign.QuickAbove,
-      icon: new URL('@/assets/icons/agogi-gorgi.svg', import.meta.url).href,
-    },
-    {
-      neume: TempoSign.MediumAbove,
-      icon: new URL('@/assets/icons/agogi-mesi.svg', import.meta.url).href,
-    },
-    {
-      neume: TempoSign.ModerateAbove,
-      icon: new URL('@/assets/icons/agogi-metria.svg', import.meta.url).href,
-    },
-    {
-      neume: TempoSign.SlowAbove,
-      icon: new URL('@/assets/icons/agogi-argi.svg', import.meta.url).href,
-    },
-    {
-      neume: TempoSign.SlowerAbove,
-      icon: new URL('@/assets/icons/agogi-argoteri.svg', import.meta.url).href,
-    },
-    {
-      neume: TempoSign.VerySlowAbove,
-      icon: new URL('@/assets/icons/agogi-poli-argi.svg', import.meta.url).href,
-    },
-  ];
-
-  barlineMenuOptions: ButtonWithMenuOption[] = [
-    {
-      neume: MeasureBar.MeasureBarShortTheseos,
-      icon: new URL('@/assets/icons/barline-short-theseos.svg', import.meta.url)
-        .href,
-    },
-    {
-      neume: MeasureBar.MeasureBarShortDouble,
-      icon: new URL('@/assets/icons/barline-short-double.svg', import.meta.url)
-        .href,
-    },
-    {
-      neume: MeasureBar.MeasureBarTop,
-      icon: new URL('@/assets/icons/barline-short-single.svg', import.meta.url)
-        .href,
-    },
-    {
-      neume: MeasureBar.MeasureBarTheseos,
-      icon: new URL('@/assets/icons/barline-theseos.svg', import.meta.url).href,
-    },
-    {
-      neume: MeasureBar.MeasureBarDouble,
-      icon: new URL('@/assets/icons/barline-double.svg', import.meta.url).href,
-    },
-    {
-      neume: MeasureBar.MeasureBarRight,
-      icon: new URL('@/assets/icons/barline-single.svg', import.meta.url).href,
-    },
-  ];
-
-  get alignRightTooltip() {
-    return `${this.$t(
-      'toolbar:common.alignRight',
-    )}(${this.neumeKeyboard.getMaryriaRightAlignTooltip()})`;
-  }
-
-  tooltip(neume: Neume) {
-    const displayName = this.getDisplayName(neume);
-    const mapping = this.neumeKeyboard.findMappingForNeume(neume);
-    if (mapping) {
-      return `${this.$t(displayName)} (${this.neumeKeyboard.generateTooltip(
-        mapping,
-      )})`;
-    } else {
-      return `${this.$t(displayName)}`;
-    }
-  }
-
-  getDisplayName(neume: Neume) {
-    switch (neume) {
-      case Fthora.DiatonicNiLow_Top:
-        return 'model:neume.fthora.diatonicNiLow';
-      case Fthora.DiatonicPa_Top:
-        return 'model:neume.fthora.diatonicPa';
-      case Fthora.DiatonicVou_Top:
-        return 'model:neume.fthora.diatonicVou';
-      case Fthora.DiatonicGa_Top:
-        return 'model:neume.fthora.diatonicGa';
-      case Fthora.DiatonicThi_Top:
-        return 'model:neume.fthora.diatonicDi';
-      case Fthora.DiatonicKe_Top:
-        return 'model:neume.fthora.diatonicKe';
-      case Fthora.DiatonicZo_Top:
-        return 'model:neume.fthora.diatonicZo';
-      case Fthora.DiatonicNiHigh_Top:
-        return 'model:neume.fthora.diatonicNiHigh';
-      case Fthora.SoftChromaticThi_Top:
-        return 'model:neume.fthora.softChromaticDi';
-      case Fthora.SoftChromaticPa_Top:
-        return 'model:neume.fthora.softChromaticGa';
-      case Fthora.HardChromaticPa_Top:
-        return 'model:neume.fthora.hardChromaticPa';
-      case Fthora.HardChromaticThi_Top:
-        return 'model:neume.fthora.hardChromaticDi';
-      case Fthora.Enharmonic_Top:
-        return 'model:neume.fthora.enharmonic';
-      case Fthora.GeneralFlat_Top:
-        return 'model:neume.fthora.generalFlat';
-      case Fthora.GeneralSharp_Top:
-        return 'model:neume.fthora.generalSharp';
-      case Fthora.Zygos_Top:
-        return 'model:neume.fthora.zygos';
-      case Fthora.Kliton_Top:
-        return 'model:neume.fthora.kliton';
-      case Fthora.Spathi_Top:
-        return 'model:neume.fthora.spathi';
-      case MeasureBar.MeasureBarRight:
-        return 'toolbar:common.measureBar';
-      default:
-        return neume;
-    }
+function getNoteDisplayName(note: Note) {
+  switch (note) {
+    case Note.ZoLow:
+      return 'model:note.zoLow';
+    case Note.NiLow:
+      return 'model:note.niLow';
+    case Note.PaLow:
+      return 'model:note.paLow';
+    case Note.VouLow:
+      return 'model:note.vouLow';
+    case Note.GaLow:
+      return 'model:note.gaLow';
+    case Note.ThiLow:
+      return 'model:note.diLow';
+    case Note.KeLow:
+      return 'model:note.keLow';
+    case Note.Zo:
+      return 'model:note.zo';
+    case Note.Ni:
+      return 'model:note.ni';
+    case Note.Pa:
+      return 'model:note.pa';
+    case Note.Vou:
+      return 'model:note.vou';
+    case Note.Ga:
+      return 'model:note.ga';
+    case Note.Thi:
+      return 'model:note.di';
+    case Note.Ke:
+      return 'model:note.ke';
+    case Note.ZoHigh:
+      return 'model:note.zoHigh';
+    case Note.NiHigh:
+      return 'model:note.niHigh';
+    case Note.PaHigh:
+      return 'model:note.paHigh';
+    case Note.VouHigh:
+      return 'model:note.vouHigh';
+    case Note.GaHigh:
+      return 'model:note.gaHigh';
+    case Note.ThiHigh:
+      return 'model:note.diHigh';
+    case Note.KeHigh:
+      return 'model:note.keHigh';
+    default:
+      return note;
   }
 }
+
+function getScaleDisplayName(scale: Scale) {
+  switch (scale) {
+    case Scale.Diatonic:
+      return 'model:scale.diatonic';
+    case Scale.SoftChromatic:
+      return 'model:scale.softChromatic';
+    case Scale.HardChromatic:
+      return 'model:scale.hardChromatic';
+    case Scale.EnharmonicGa:
+      return 'model:scale.enharmonicGa';
+    case Scale.EnharmonicZoHigh:
+      return 'model:scale.enharmonicZoHigh';
+    case Scale.EnharmonicVou:
+      return 'model:scale.enharmonicVou';
+    case Scale.EnharmonicZo:
+      return 'model:scale.enharmonicZo';
+    case Scale.EnharmonicVouHigh:
+      return 'model:scale.enharmonicVouHigh';
+    case Scale.Zygos:
+      return 'model:scale.zygos';
+    case Scale.Spathi:
+      return 'model:scale.spathi';
+    case Scale.SpathiGa:
+      return 'model:scale.spathiGa';
+    case Scale.Kliton:
+      return 'model:scale.kliton';
+    default:
+      return scale;
+  }
+}
+
+function getDisplayName(neume: Neume) {
+  switch (neume) {
+    case Fthora.DiatonicNiLow_Top:
+      return 'model:neume.fthora.diatonicNiLow';
+    case Fthora.DiatonicPa_Top:
+      return 'model:neume.fthora.diatonicPa';
+    case Fthora.DiatonicVou_Top:
+      return 'model:neume.fthora.diatonicVou';
+    case Fthora.DiatonicGa_Top:
+      return 'model:neume.fthora.diatonicGa';
+    case Fthora.DiatonicThi_Top:
+      return 'model:neume.fthora.diatonicDi';
+    case Fthora.DiatonicKe_Top:
+      return 'model:neume.fthora.diatonicKe';
+    case Fthora.DiatonicZo_Top:
+      return 'model:neume.fthora.diatonicZo';
+    case Fthora.DiatonicNiHigh_Top:
+      return 'model:neume.fthora.diatonicNiHigh';
+    case Fthora.SoftChromaticThi_Top:
+      return 'model:neume.fthora.softChromaticDi';
+    case Fthora.SoftChromaticPa_Top:
+      return 'model:neume.fthora.softChromaticGa';
+    case Fthora.HardChromaticPa_Top:
+      return 'model:neume.fthora.hardChromaticPa';
+    case Fthora.HardChromaticThi_Top:
+      return 'model:neume.fthora.hardChromaticDi';
+    case Fthora.Enharmonic_Top:
+      return 'model:neume.fthora.enharmonic';
+    case Fthora.GeneralFlat_Top:
+      return 'model:neume.fthora.generalFlat';
+    case Fthora.GeneralSharp_Top:
+      return 'model:neume.fthora.generalSharp';
+    case Fthora.Zygos_Top:
+      return 'model:neume.fthora.zygos';
+    case Fthora.Kliton_Top:
+      return 'model:neume.fthora.kliton';
+    case Fthora.Spathi_Top:
+      return 'model:neume.fthora.spathi';
+    case MeasureBar.MeasureBarRight:
+      return 'toolbar:common.measureBar';
+    default:
+      return neume;
+  }
+}
+
+export default defineComponent({
+  components: { InputUnit, InputBpm, ButtonWithMenu },
+  emits: [
+    'update',
+    'update:fthora',
+    'update:measureBar',
+    'update:quantitativeNeume',
+    'update:sectionName',
+    'update:tempoLeft',
+    'update:tempo',
+    'update:tempoRight',
+  ],
+  props: {
+    element: {
+      type: Object as PropType<MartyriaElement>,
+      required: true,
+    },
+    pageSetup: {
+      type: Object as PropType<PageSetup>,
+      required: true,
+    },
+    neumeKeyboard: {
+      type: Object as PropType<NeumeKeyboard>,
+      required: true,
+    },
+  },
+
+  data() {
+    return {
+      Fthora,
+      MeasureBar,
+      TempoSign,
+      rootSigns,
+      notes,
+      scales,
+      chromaticFthoras,
+      quantitativeNeumeOptions,
+      tempoMenuOptions,
+      tempoMenuOptionsAbove,
+      barlineMenuOptions,
+    };
+  },
+
+  computed: {
+    spaceAfterMax() {
+      return Math.round(Unit.toPt(this.pageSetup.pageWidth));
+    },
+    spathiDisabled() {
+      return (
+        !this.pageSetup.noFthoraRestrictions &&
+        this.element.note !== Note.Ke &&
+        this.element.note !== Note.Ga
+      );
+    },
+
+    spathiTitle() {
+      return this.spathiDisabled
+        ? this.$t('toolbar:common.spathiDisabled')
+        : this.tooltip(Fthora.Spathi_Top);
+    },
+
+    klitonDisabled() {
+      return (
+        !this.pageSetup.noFthoraRestrictions && this.element.note !== Note.Thi
+      );
+    },
+
+    klitonTitle() {
+      return this.klitonDisabled
+        ? this.$t('toolbar:common.klitonDisabled')
+        : this.tooltip(Fthora.Kliton_Top);
+    },
+
+    zygosDisabled() {
+      return (
+        !this.pageSetup.noFthoraRestrictions && this.element.note !== Note.Thi
+      );
+    },
+
+    zygosTitle() {
+      return this.zygosDisabled
+        ? this.$t('toolbar:common.zygosDisabled')
+        : this.tooltip(Fthora.Zygos_Top);
+    },
+
+    enharmonicDisabled() {
+      return (
+        !this.pageSetup.noFthoraRestrictions &&
+        this.element.note !== Note.Zo &&
+        this.element.note !== Note.ZoHigh &&
+        this.element.note !== Note.Vou &&
+        this.element.note !== Note.VouHigh &&
+        this.element.note !== Note.Ga
+      );
+    },
+
+    enharmonicTitle() {
+      return this.enharmonicDisabled
+        ? this.$t('toolbar:common.enharmonicDisabled')
+        : this.tooltip(Fthora.Enharmonic_Top);
+    },
+
+    generalFlatDisabled() {
+      return (
+        !this.pageSetup.noFthoraRestrictions && this.element.note !== Note.Ke
+      );
+    },
+
+    generalFlatTitle() {
+      return this.generalFlatDisabled
+        ? this.$t('toolbar:common.generalFlatDisabled')
+        : this.tooltip(Fthora.GeneralFlat_Top);
+    },
+
+    generalSharpDisabled() {
+      return (
+        !this.pageSetup.noFthoraRestrictions && this.element.note !== Note.Ga
+      );
+    },
+
+    generalSharpTitle() {
+      return this.generalSharpDisabled
+        ? this.$t('toolbar:common.generalSharpDisabled')
+        : this.tooltip(Fthora.GeneralSharp_Top);
+    },
+
+    showChromaticFthoraNote() {
+      return (
+        this.element.fthora != null &&
+        this.chromaticFthoras.includes(this.element.fthora)
+      );
+    },
+
+    alignRightTooltip() {
+      return `${this.$t(
+        'toolbar:common.alignRight',
+      )}(${this.neumeKeyboard.getMaryriaRightAlignTooltip()})`;
+    },
+
+    fthoraNotes() {
+      if (
+        this.element.fthora === Fthora.SoftChromaticThi_Top ||
+        this.element.fthora === Fthora.SoftChromaticThi_Bottom
+      ) {
+        return [
+          { label: 'model:note.zoHigh', value: ScaleNote.ZoHigh },
+          { label: 'model:note.di', value: ScaleNote.Thi },
+          { label: 'model:note.vou', value: ScaleNote.Vou },
+          { label: 'model:note.ni', value: ScaleNote.Ni },
+        ];
+      } else if (
+        this.element.fthora === Fthora.SoftChromaticPa_Top ||
+        this.element.fthora === Fthora.SoftChromaticPa_Bottom
+      ) {
+        return [
+          { label: `model:note.niHigh`, value: ScaleNote.NiHigh },
+          { label: 'model:note.ke', value: ScaleNote.Ke },
+          { label: 'model:note.ga', value: ScaleNote.Ga },
+          { label: 'model:note.pa', value: ScaleNote.Pa },
+        ];
+      } else if (
+        this.element.fthora === Fthora.HardChromaticThi_Top ||
+        this.element.fthora === Fthora.HardChromaticThi_Bottom
+      ) {
+        return [
+          { label: 'model:note.zoHigh', value: ScaleNote.ZoHigh },
+          { label: 'model:note.di', value: ScaleNote.Thi },
+          { label: 'model:note.vou', value: ScaleNote.Vou },
+        ];
+      } else if (
+        this.element.fthora === Fthora.HardChromaticPa_Top ||
+        this.element.fthora === Fthora.HardChromaticPa_Bottom
+      ) {
+        return [
+          { label: `model:note.niHigh`, value: ScaleNote.NiHigh },
+          { label: 'model:note.ke', value: ScaleNote.Ke },
+          { label: 'model:note.ga', value: ScaleNote.Ga },
+          { label: 'model:note.pa', value: ScaleNote.Pa },
+        ];
+      }
+
+      return [];
+    },
+  },
+
+  methods: {
+    tooltip(neume: Neume) {
+      const displayName = getDisplayName(neume);
+      const mapping = this.neumeKeyboard.findMappingForNeume(neume);
+      if (mapping) {
+        return `${this.$t(displayName)} (${this.neumeKeyboard.generateTooltip(
+          mapping,
+        )})`;
+      } else {
+        return `${this.$t(displayName)}`;
+      }
+    },
+  },
+});
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

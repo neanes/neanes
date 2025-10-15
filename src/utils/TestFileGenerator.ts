@@ -571,6 +571,29 @@ export abstract class TestFileGenerator {
       elements.push(ison);
     }
 
+    for (const q in QuantitativeNeume) {
+      const quantitativeNeume = q as QuantitativeNeume;
+      if (
+        [
+          QuantitativeNeume.VareiaDotted,
+          QuantitativeNeume.VareiaDotted2,
+          QuantitativeNeume.VareiaDotted3,
+          QuantitativeNeume.VareiaDotted4,
+          QuantitativeNeume.Cross,
+          QuantitativeNeume.Kentima,
+          QuantitativeNeume.Breath,
+        ].includes(quantitativeNeume)
+      ) {
+        continue;
+      }
+
+      const note = new NoteElement();
+      note.quantitativeNeume = quantitativeNeume;
+      note.vareia = true;
+      note.lyrics = (counter++).toString();
+      elements.push(note);
+    }
+
     return elements;
   }
 

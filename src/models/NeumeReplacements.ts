@@ -547,7 +547,20 @@ export const vocalExpressionReplacementMap = new Map<
     VocalExpressionNeume.Vareia,
     [
       {
-        isPairedWith: [...petastiNeumes, ...kentemataNeumes, ...rests],
+        isPairedWith: [
+          ...kentemataNeumes,
+          ...rests,
+          QuantitativeNeume.KentemataPlusOligon,
+          QuantitativeNeume.RunningElaphron,
+          QuantitativeNeume.PetastiPlusRunningElaphron,
+          QuantitativeNeume.Hyporoe,
+          QuantitativeNeume.OligonPlusIson,
+          QuantitativeNeume.OligonPlusApostrophos,
+          QuantitativeNeume.OligonPlusElaphron,
+          QuantitativeNeume.OligonPlusHyporoe,
+          QuantitativeNeume.OligonPlusElaphronPlusApostrophos,
+          QuantitativeNeume.OligonPlusHamili,
+        ],
         replaceWith: null,
       },
     ],

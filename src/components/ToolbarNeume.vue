@@ -214,7 +214,7 @@
         :options="isonMenuOptions"
         :disabled="isonDisabled"
         :title="tooltip(Ison.Unison)"
-        @select="$emit('update', { ison: $event })"
+        @select="$emit('update:ison', $event)"
       />
     </div>
     <div class="row">
@@ -1000,6 +1000,7 @@ export default defineComponent({
     'update:fthora',
     'update:gorgon',
     'update:innerNeume',
+    'update:ison',
     'update:klasma',
     'update:measureBar',
     'update:measureNumber',

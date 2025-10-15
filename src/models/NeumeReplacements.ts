@@ -535,6 +535,7 @@ export const vocalExpressionReplacementMap = new Map<
           QuantitativeNeume.Hyporoe,
           QuantitativeNeume.Elaphron,
           QuantitativeNeume.ElaphronPlusApostrophos,
+          QuantitativeNeume.RunningElaphron,
           QuantitativeNeume.Hamili,
           QuantitativeNeume.HamiliPlusApostrophos,
           QuantitativeNeume.HamiliPlusElaphron,

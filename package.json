@@ -35,7 +35,7 @@
   "dependencies": {
     "@ckeditor/ckeditor5-vue": "^7.3.0",
     "@ckpack/vue-color": "^1.6.0",
-    "ckeditor5": "^47.0.0",
+    "ckeditor5": "^47.1.0",
     "html-to-image": "^1.11.13",
     "i18next": "^25.6.0",
     "i18next-browser-languagedetector": "^8.2.0",

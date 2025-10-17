@@ -97,6 +97,7 @@
   "textbox": {
     "multipanel": "Multipanel",
     "rtl": "RTL",
+    "scrollable": "Scrollable",
     "modeChange": "Change Mode",
     "virtualNote": "Parallage Note",
     "centerOnPage": "Center on Page",

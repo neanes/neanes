@@ -69,6 +69,17 @@
       </div>
     </div>
     <ckeditor
+      v-if="element.scrollable"
+      ref="editor"
+      class="rich-text-editor single scrollable"
+      :editor="editor"
+      :model-value="content"
+      @blur="onBlur"
+      @ready="onEditorReady"
+      :config="editorConfig"
+      :style="textBoxStyle"
+    />
+    <ckeditor
       v-else
       ref="editor"
       class="rich-text-editor single"
@@ -254,7 +265,7 @@ export default defineComponent({
     },
 
     containerStyle() {
-      const style = {
+      const style: StyleValue = {
         width: withZoom(this.element.width),
         height: withZoom(this.element.height),
         '--ck-content-font-family': getFontFamilyWithFallback(
@@ -265,7 +276,7 @@ export default defineComponent({
           ? `${this.pageSetup.lyricsDefaultFontSize}px`
           : `${this.pageSetup.textBoxDefaultFontSize}px`, // no zoom because we will apply zooming on the whole editor
         '--ck-content-line-height': 'normal',
-      } as StyleValue;
+      };
 
       return style;
     },
@@ -273,6 +284,11 @@ export default defineComponent({
     textBoxStyle() {
       const style: StyleValue = {
         width: `${this.element.width}px`, // no zoom because we scale with the transform
+        maxHeight: withZoom(
+          this.pageSetup.pageHeight -
+            this.element.y -
+            this.pageSetup.bottomMargin,
+        ),
       };
 
       return style;
@@ -706,6 +722,10 @@ export default defineComponent({
 .selected .inline-container,
 .selected .rich-text-editor.single {
   outline: 1px solid goldenrod;
+}
+
+.rich-text-editor.scrollable {
+  overflow-y: auto;
 }
 
 .rich-text-editor.inline-top {

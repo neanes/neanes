@@ -893,6 +893,7 @@ export class RichTextBoxElement extends ScoreElement {
   public contentLeft: string = '';
   public contentRight: string = '';
   public contentCenter: string = '';
+  public scrollable: boolean = false;
   public multipanel: boolean = false;
   public rtl: boolean = false;
   public inline: boolean = false;

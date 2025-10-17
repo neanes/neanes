@@ -259,6 +259,22 @@
     </div>
     <span class="divider"></span>
     <div class="form-group">
+      <input
+        id="toolbar-text-box-scrollable"
+        type="checkbox"
+        :checked="element.scrollable"
+        @change="
+          $emit('update', {
+            scrollable: ($event.target as HTMLInputElement).checked,
+          } as Partial<RichTextBoxElement>)
+        "
+      />
+      <label for="toolbar-text-box-scrollable">{{
+        $t('toolbar:textbox.scrollable')
+      }}</label>
+    </div>
+    <span class="divider"></span>
+    <div class="form-group">
       <label class="right-space">{{ $t('toolbar:common.sectionName') }}</label>
       <input
         type="text"

@@ -583,7 +583,7 @@ export const vocalExpressionReplacementMap = new Map<
     [
       {
         isPairedWith: [
-          ...kentemataNeumes,
+          ...kentemataNeumesNoOmalon,
           ...rests,
           QuantitativeNeume.KentemataPlusOligon,
           QuantitativeNeume.RunningElaphron,

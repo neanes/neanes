@@ -648,6 +648,7 @@ export class SaveService {
     element.marginTop = e.marginTop ?? undefined;
     element.marginBottom = e.marginBottom ?? undefined;
     element.rtl = e.rtl || undefined;
+    element.scrollable = e.scrollable || undefined;
   }
 
   public static SaveModeKey(element: ModeKeyElement_v1, e: ModeKeyElement) {
@@ -1497,6 +1498,7 @@ export class SaveService {
     element.inline = e.inline === true;
     element.multipanel = e.multipanel === true;
     element.rtl = e.rtl === true;
+    element.scrollable = e.scrollable === true;
   }
 
   public static LoadModeKey_v1(element: ModeKeyElement, e: ModeKeyElement_v1) {

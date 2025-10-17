@@ -69,7 +69,7 @@
       </div>
     </div>
     <ckeditor
-      v-if="element.scrollable"
+      v-else-if="element.scrollable"
       ref="editor"
       class="rich-text-editor single scrollable"
       :editor="editor"
@@ -447,10 +447,10 @@ export default defineComponent({
       this.resizeObserver.observe(element!);
     },
 
-    onEditorReadyInline() {
+    onEditorReadyInline(editor: InlineEditor) {
       this.heightTop = this.getHeightTop() ?? 0;
 
-      const element = (this.getEditorInstance() as any).sourceElement;
+      const element = editor.sourceElement;
 
       if (this.inlineTopObserver != null) {
         this.inlineTopObserver.disconnect();
@@ -462,20 +462,20 @@ export default defineComponent({
         }),
       );
 
-      this.inlineTopObserver.observe(element);
+      this.inlineTopObserver.observe(element!);
 
-      this.setPadding(this.getEditorInstance());
+      this.setPadding(editor);
     },
 
-    onEditorReadyInlineBottom() {
+    onEditorReadyInlineBottom(editor: InlineEditor) {
       if (this.focusOnReady) {
-        this.getEditorInstanceBottom()?.editing.view.focus();
+        editor.editing.view.focus();
         this.focusOnReady = false;
       }
 
       this.heightBottom = this.getHeightBottom() ?? 0;
 
-      const element = (this.getEditorInstanceBottom() as any).sourceElement;
+      const element = editor.sourceElement;
 
       if (this.inlineBottomObserver != null) {
         this.inlineBottomObserver.disconnect();
@@ -487,9 +487,9 @@ export default defineComponent({
         }),
       );
 
-      this.inlineBottomObserver.observe(element);
+      this.inlineBottomObserver.observe(element!);
 
-      this.setPadding(this.getEditorInstanceBottom());
+      this.setPadding(editor);
     },
 
     onBlur() {

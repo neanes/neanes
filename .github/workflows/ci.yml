@@ -51,7 +51,7 @@ jobs:
           GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
       - name: Publish
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: Neanes-${{ matrix.os }}
           path: dist/Neanes-*

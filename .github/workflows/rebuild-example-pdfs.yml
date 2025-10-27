@@ -26,7 +26,7 @@ jobs:
         run: find ./examples -type f -name '*.byzx' -print0 | xargs -0 ./neanes-cli --silent-pdf
 
       - name: Archive PDFs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: PDFs
           path: examples/*.pdf

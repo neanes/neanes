@@ -1,3 +1,6 @@
 dist
 dist-electron
 node_modules
+.scripts
+.vscode
+.vitepress/cache

@@ -1496,6 +1496,18 @@ export default defineComponent({
       return footer.elements[0] as TextBoxElement | RichTextBoxElement;
     },
 
+    shouldShowHeaderForPageIndex(pageIndex: number) {
+      const pageNumber = pageIndex + 1;
+
+      return this.score.shouldShowHeaderOnPage(pageNumber);
+    },
+
+    shouldShowFooterForPageIndex(pageIndex: number) {
+      const pageNumber = pageIndex + 1;
+
+      return this.score.shouldShowFooterOnPage(pageNumber);
+    },
+
     getTokenMetadata(pageIndex: number): TokenMetadata {
       return {
         pageNumber: pageIndex + this.score.pageSetup.firstPageNumber,
@@ -6334,7 +6346,7 @@ export default defineComponent({
                   />
                 </template>
                 <div
-                  v-if="score.pageSetup.showHeaderHorizontalRule"
+                  v-if="shouldShowHeaderForPageIndex(pageIndex)"
                   class="header-footer-hr"
                   :style="
                     getHeaderHorizontalRuleStyle(
@@ -6779,7 +6791,7 @@ export default defineComponent({
               </div>
               <template v-if="score.pageSetup.showFooter">
                 <div
-                  v-if="score.pageSetup.showFooterHorizontalRule"
+                  v-if="shouldShowFooterForPageIndex(pageIndex)"
                   class="header-footer-hr"
                   :style="
                     getFooterHorizontalRuleStyle(

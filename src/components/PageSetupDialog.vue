@@ -539,6 +539,62 @@
                     :precision="1"
                   />
                 </div>
+
+                <template v-if="form.headerDifferentFirstPage">
+                  <div class="form-group">
+                    <input
+                      id="page-setup-dialog-header-excludeHeaderHorizontalRuleFirstPage"
+                      class="header-rule-checkbox"
+                      type="checkbox"
+                      v-model="form.excludeHeaderHorizontalRuleFirstPage"
+                    />
+                    <label
+                      for="page-setup-dialog-header-excludeHeaderHorizontalRuleFirstPage"
+                    >
+                      {{
+                        $t(
+                          'dialog:pageSetup.excludeHorizontalRuleFirstPageDescription',
+                        )
+                      }}
+                    </label>
+                  </div>
+                </template>
+                <template v-if="form.headerDifferentOddEven">
+                  <div class="form-group">
+                    <input
+                      id="page-setup-dialog-header-excludeHeaderHorizontalRuleOddPage"
+                      class="header-rule-checkbox"
+                      type="checkbox"
+                      v-model="form.excludeHeaderHorizontalRuleOddPage"
+                    />
+                    <label
+                      for="page-setup-dialog-header-excludeHeaderHorizontalRuleOddPage"
+                    >
+                      {{
+                        $t(
+                          'dialog:pageSetup.excludeHorizontalRuleOddPageDescription',
+                        )
+                      }}
+                    </label>
+                  </div>
+                  <div class="form-group">
+                    <input
+                      id="page-setup-dialog-header-excludeHeaderHorizontalRuleEvenPage"
+                      class="header-rule-checkbox"
+                      type="checkbox"
+                      v-model="form.excludeHeaderHorizontalRuleEvenPage"
+                    />
+                    <label
+                      for="page-setup-dialog-header-excludeHeaderHorizontalRuleEvenPage"
+                    >
+                      {{
+                        $t(
+                          'dialog:pageSetup.excludeHorizontalRuleEvenPageDescription',
+                        )
+                      }}
+                    </label>
+                  </div>
+                </template>
               </template>
             </div>
 
@@ -610,6 +666,61 @@
                     :precision="1"
                   />
                 </div>
+                <template v-if="form.headerDifferentFirstPage">
+                  <div class="form-group">
+                    <input
+                      id="page-setup-dialog-header-excludeFooterHorizontalRuleFirstPage"
+                      class="header-rule-checkbox"
+                      type="checkbox"
+                      v-model="form.excludeFooterHorizontalRuleFirstPage"
+                    />
+                    <label
+                      for="page-setup-dialog-header-excludeFooterHorizontalRuleFirstPage"
+                    >
+                      {{
+                        $t(
+                          'dialog:pageSetup.excludeHorizontalRuleFirstPageDescription',
+                        )
+                      }}
+                    </label>
+                  </div>
+                </template>
+                <template v-if="form.headerDifferentOddEven">
+                  <div class="form-group">
+                    <input
+                      id="page-setup-dialog-footer-excludeFooterHorizontalRuleOddPage"
+                      class="header-rule-checkbox"
+                      type="checkbox"
+                      v-model="form.excludeFooterHorizontalRuleOddPage"
+                    />
+                    <label
+                      for="page-setup-dialog-footer-excludeFooterHorizontalRuleOddPage"
+                    >
+                      {{
+                        $t(
+                          'dialog:pageSetup.excludeHorizontalRuleOddPageDescription',
+                        )
+                      }}
+                    </label>
+                  </div>
+                  <div class="form-group">
+                    <input
+                      id="page-setup-dialog-footer-excludeFooterHorizontalRuleEvenPage"
+                      class="header-rule-checkbox"
+                      type="checkbox"
+                      v-model="form.excludeFooterHorizontalRuleEvenPage"
+                    />
+                    <label
+                      for="page-setup-dialog-footer-excludeFooterHorizontalRuleEvenPage"
+                    >
+                      {{
+                        $t(
+                          'dialog:pageSetup.excludeHorizontalRuleEvenPageDescription',
+                        )
+                      }}
+                    </label>
+                  </div>
+                </template>
               </template>
             </div>
 
@@ -2214,6 +2325,10 @@ export default defineComponent({
   display: inline-block;
   width: 6rem;
   padding-left: 2rem;
+}
+
+.header-rule-checkbox {
+  margin-left: 2rem !important;
 }
 
 .checkbox-spacer {

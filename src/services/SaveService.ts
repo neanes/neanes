@@ -236,6 +236,12 @@ export class SaveService {
 
     if (p.showHeaderHorizontalRule) {
       pageSetup.showHeaderHorizontalRule = p.showHeaderHorizontalRule;
+      pageSetup.excludeHeaderHorizontalRuleEvenPage =
+        p.excludeHeaderHorizontalRuleEvenPage;
+      pageSetup.excludeHeaderHorizontalRuleFirstPage =
+        p.excludeHeaderHorizontalRuleFirstPage;
+      pageSetup.excludeHeaderHorizontalRuleOddPage =
+        p.excludeHeaderHorizontalRuleOddPage;
       pageSetup.headerHorizontalRuleMarginTop = p.headerHorizontalRuleMarginTop;
       pageSetup.headerHorizontalRuleMarginBottom =
         p.headerHorizontalRuleMarginBottom;
@@ -245,6 +251,12 @@ export class SaveService {
 
     if (p.showFooterHorizontalRule) {
       pageSetup.showFooterHorizontalRule = p.showFooterHorizontalRule;
+      pageSetup.excludeFooterHorizontalRuleEvenPage =
+        p.excludeFooterHorizontalRuleEvenPage;
+      pageSetup.excludeFooterHorizontalRuleFirstPage =
+        p.excludeFooterHorizontalRuleFirstPage;
+      pageSetup.excludeFooterHorizontalRuleOddPage =
+        p.excludeFooterHorizontalRuleOddPage;
       pageSetup.footerHorizontalRuleMarginTop = p.footerHorizontalRuleMarginTop;
       pageSetup.footerHorizontalRuleMarginBottom =
         p.footerHorizontalRuleMarginBottom;
@@ -867,6 +879,12 @@ export class SaveService {
 
     if (p.showHeaderHorizontalRule === true) {
       pageSetup.showHeaderHorizontalRule = p.showHeaderHorizontalRule;
+      pageSetup.excludeHeaderHorizontalRuleEvenPage =
+        p.excludeHeaderHorizontalRuleEvenPage === true;
+      pageSetup.excludeHeaderHorizontalRuleFirstPage =
+        p.excludeHeaderHorizontalRuleFirstPage === true;
+      pageSetup.excludeHeaderHorizontalRuleOddPage =
+        p.excludeHeaderHorizontalRuleOddPage === true;
       pageSetup.headerHorizontalRuleMarginTop =
         p.headerHorizontalRuleMarginTop ??
         pageSetup.headerHorizontalRuleMarginTop;
@@ -882,6 +900,12 @@ export class SaveService {
 
     if (p.showFooterHorizontalRule === true) {
       pageSetup.showFooterHorizontalRule = p.showFooterHorizontalRule;
+      pageSetup.excludeFooterHorizontalRuleEvenPage =
+        p.excludeFooterHorizontalRuleEvenPage === true;
+      pageSetup.excludeFooterHorizontalRuleFirstPage =
+        p.excludeFooterHorizontalRuleFirstPage === true;
+      pageSetup.excludeFooterHorizontalRuleOddPage =
+        p.excludeFooterHorizontalRuleOddPage === true;
       pageSetup.footerHorizontalRuleMarginTop =
         p.footerHorizontalRuleMarginTop ??
         pageSetup.footerHorizontalRuleMarginTop;

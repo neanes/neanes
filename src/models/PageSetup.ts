@@ -93,12 +93,18 @@ export class PageSetup {
   public firstPageNumber = 1;
 
   public showHeaderHorizontalRule = false;
+  public excludeHeaderHorizontalRuleFirstPage = false;
+  public excludeHeaderHorizontalRuleEvenPage = false;
+  public excludeHeaderHorizontalRuleOddPage = false;
   public headerHorizontalRuleMarginTop = 0;
   public headerHorizontalRuleMarginBottom = 0;
   public headerHorizontalRuleThickness = Unit.fromPt(1);
   public headerHorizontalRuleColor = '#000000';
 
   public showFooterHorizontalRule = false;
+  public excludeFooterHorizontalRuleFirstPage = false;
+  public excludeFooterHorizontalRuleEvenPage = false;
+  public excludeFooterHorizontalRuleOddPage = false;
   public footerHorizontalRuleMarginTop = 0;
   public footerHorizontalRuleMarginBottom = 0;
   public footerHorizontalRuleThickness = Unit.fromPt(1);

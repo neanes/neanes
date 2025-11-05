@@ -55,4 +55,46 @@ export class Score {
 
     return footer;
   }
+
+  public shouldShowHeaderOnPage(pageNumber: number): boolean {
+    if (this.pageSetup.showHeaderHorizontalRule) {
+      if (
+        (this.pageSetup.headerDifferentFirstPage &&
+          this.pageSetup.excludeHeaderHorizontalRuleFirstPage &&
+          pageNumber === 1) ||
+        (this.pageSetup.headerDifferentOddEven &&
+          this.pageSetup.excludeHeaderHorizontalRuleEvenPage &&
+          pageNumber % 2 === 0) ||
+        (this.pageSetup.headerDifferentOddEven &&
+          this.pageSetup.excludeHeaderHorizontalRuleOddPage &&
+          pageNumber % 2 !== 0)
+      ) {
+        return false;
+      }
+      return true;
+    }
+
+    return false;
+  }
+
+  public shouldShowFooterOnPage(pageNumber: number): boolean {
+    if (this.pageSetup.showFooterHorizontalRule) {
+      if (
+        (this.pageSetup.headerDifferentFirstPage &&
+          this.pageSetup.excludeFooterHorizontalRuleFirstPage &&
+          pageNumber === 1) ||
+        (this.pageSetup.headerDifferentOddEven &&
+          this.pageSetup.excludeFooterHorizontalRuleEvenPage &&
+          pageNumber % 2 === 0) ||
+        (this.pageSetup.headerDifferentOddEven &&
+          this.pageSetup.excludeFooterHorizontalRuleOddPage &&
+          pageNumber % 2 !== 0)
+      ) {
+        return false;
+      }
+      return true;
+    }
+
+    return false;
+  }
 }

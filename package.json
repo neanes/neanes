@@ -65,7 +65,7 @@
     "@vitest/coverage-istanbul": "^4.0.8",
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.6.0",
-    "electron": "^39.1.2",
+    "electron": "^39.2.0",
     "electron-builder": "^26.1.0",
     "electron-updater": "^6.6.2",
     "eslint": "^9.39.1",

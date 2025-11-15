@@ -34,6 +34,7 @@ import {
   ExportWorkspaceAsLatexArgs,
   ExportWorkspaceAsMusicXmlArgs,
   ExportWorkspaceAsPdfArgs,
+  FileMenuImportOcrArgs,
   FileMenuInsertTextboxArgs,
   FileMenuOpenImageArgs,
   FileMenuOpenScoreArgs,
@@ -544,6 +545,48 @@ async function openImage() {
       dialog.showMessageBox(win!, {
         type: 'error',
         title: 'Open image failed',
+        message: error.message,
+      });
+    }
+  }
+
+  return result;
+}
+
+async function openOcrFile() {
+  const result: FileMenuImportOcrArgs = {
+    filePath: '',
+    data: '',
+    success: false,
+  };
+
+  try {
+    const dialogResult = await dialog.showOpenDialog(win!, {
+      properties: ['openFile'],
+      title: 'Insert Image',
+      filters: [
+        {
+          name: `OCR File`,
+          extensions: ['byzocr'],
+        },
+      ],
+    });
+
+    if (!dialogResult.canceled) {
+      const filePath = dialogResult.filePaths[0];
+
+      result.data = await fs.readFile(filePath, { encoding: 'utf8' });
+
+      result.filePath = filePath;
+      result.success = true;
+    }
+  } catch (error) {
+    console.error(error);
+
+    if (error instanceof Error) {
+      await dialog.showMessageBox(win!, {
+        type: 'error',
+        title: 'Open OCR file failed',
         message: error.message,
       });
     }
@@ -1238,6 +1281,16 @@ function createMenu() {
           accelerator: 'CmdOrCtrl+Shift+P',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuPageSetup);
+          },
+        },
+        {
+          label: i18next.t('menu:file.importFromOcr'),
+          async click() {
+            const data = await openOcrFile();
+
+            if (data.success) {
+              win?.webContents.send(IpcMainChannels.FileMenuImportOcr, data);
+            }
           },
         },
         {

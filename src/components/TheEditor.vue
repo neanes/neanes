@@ -52,6 +52,7 @@ import {
   lyricServiceKey,
   musicXmlExporterKey,
   neumeKeyboardKey,
+  ocrImporterKey,
   platformServiceKey,
   playbackServiceKey,
   textSearchServiceKey,
@@ -60,6 +61,7 @@ import {
   CloseWorkspacesArgs,
   CloseWorkspacesDisposition,
   ExportWorkspaceAsImageReplyArgs,
+  FileMenuImportOcrArgs,
   FileMenuInsertTextboxArgs,
   FileMenuOpenImageArgs,
   FileMenuOpenScoreArgs,
@@ -133,6 +135,7 @@ import {
   LatexExporterOptions,
 } from '@/services/integration/LatexExporter';
 import { MusicXmlExporter } from '@/services/integration/MusicXmlExporter';
+import { OcrImporter } from '@/services/integration/OcrImporter';
 import { IIpcService } from '@/services/ipc/IIpcService';
 import { IpcService } from '@/services/ipc/IpcService';
 import { LayoutService } from '@/services/LayoutService';
@@ -263,6 +266,7 @@ export default defineComponent({
         neumeKeyboardKey,
         new NeumeKeyboard(),
       ),
+      ocrImporter: inject<OcrImporter>(ocrImporterKey, new OcrImporter()),
       platformService: inject<IPlatformService>(
         platformServiceKey,
         new PlatformService(),
@@ -941,6 +945,7 @@ export default defineComponent({
     EventBus.$on(IpcMainChannels.FileMenuSave, this.onFileMenuSave);
     EventBus.$on(IpcMainChannels.FileMenuSaveAs, this.onFileMenuSaveAs);
     EventBus.$on(IpcMainChannels.FileMenuPageSetup, this.onFileMenuPageSetup);
+    EventBus.$on(IpcMainChannels.FileMenuImportOcr, this.onFileMenuImportOcr);
     EventBus.$on(
       IpcMainChannels.FileMenuExportAsPdf,
       this.onFileMenuExportAsPdf,
@@ -5251,6 +5256,25 @@ export default defineComponent({
     async onFileMenuOpenScore(args: FileMenuOpenScoreArgs) {
       if (!this.dialogOpen && args.success) {
         this.openScore(args);
+      }
+    },
+
+    onFileMenuImportOcr(args: FileMenuImportOcrArgs) {
+      if (!this.dialogOpen && args.success) {
+        const elements = this.ocrImporter.import(args.data);
+
+        const workspace = new Workspace();
+        workspace.tempFileName = this.getTempFilename();
+        workspace.score = new Score();
+
+        this.addWorkspace(workspace);
+
+        this.selectedWorkspace = workspace;
+
+        this.currentFilePath = null;
+        this.score.staff.elements.unshift(...elements);
+
+        this.save();
       }
     },
 

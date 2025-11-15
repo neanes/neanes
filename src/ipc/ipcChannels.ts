@@ -7,6 +7,7 @@ export enum IpcMainChannels {
   FileMenuPrint = 'FileMenuPrint',
   FileMenuSave = 'FileMenuSave',
   FileMenuSaveAs = 'FileMenuSaveAs',
+  FileMenuImportOcr = 'FileMenuImportOcr',
   FileMenuExportAsPdf = 'FileMenuExportAsPdf',
   FileMenuExportAsHtml = 'FileMenuExportAsHtml',
   FileMenuExportAsMusicXml = 'FileMenuExportAsMusicXml',
@@ -101,6 +102,12 @@ export interface FileMenuOpenImageArgs {
   data: string;
   imageWidth: number;
   imageHeight: number;
+  filePath: string;
+  success: boolean;
+}
+
+export interface FileMenuImportOcrArgs {
+  data: string;
   filePath: string;
   success: boolean;
 }

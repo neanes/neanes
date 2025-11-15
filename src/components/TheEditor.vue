@@ -5261,20 +5261,36 @@ export default defineComponent({
 
     onFileMenuImportOcr(args: FileMenuImportOcrArgs) {
       if (!this.dialogOpen && args.success) {
-        const elements = this.ocrImporter.import(args.data);
+        try {
+          const elements = this.ocrImporter.import(args.data);
 
-        const workspace = new Workspace();
-        workspace.tempFileName = this.getTempFilename();
-        workspace.score = new Score();
+          const workspace = new Workspace();
+          workspace.tempFileName = this.getTempFilename();
+          workspace.score = new Score();
 
-        this.addWorkspace(workspace);
+          this.addWorkspace(workspace);
 
-        this.selectedWorkspace = workspace;
+          this.selectedWorkspace = workspace;
 
-        this.currentFilePath = null;
-        this.score.staff.elements.unshift(...elements);
+          this.currentFilePath = null;
+          this.score.staff.elements.unshift(...elements);
 
-        this.save();
+          this.save();
+        } catch (error) {
+          console.error(error);
+
+          if (error instanceof Error) {
+            if (this.ipcService.isShowMessageBoxSupported()) {
+              this.ipcService.showMessageBox({
+                type: 'error',
+                title: 'OCR import failed',
+                message: error.message,
+              });
+            } else {
+              alert(error.message);
+            }
+          }
+        }
       }
     },
 

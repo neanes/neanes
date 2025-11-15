@@ -1262,6 +1262,24 @@ function createMenu() {
           })),
         },
         {
+          label: i18next.t('menu:file.import'),
+          submenu: [
+            {
+              label: i18next.t('menu:file.importFromOcr'),
+              async click() {
+                const data = await openOcrFile();
+
+                if (data.success) {
+                  win?.webContents.send(
+                    IpcMainChannels.FileMenuImportOcr,
+                    data,
+                  );
+                }
+              },
+            },
+          ],
+        },
+        {
           label: i18next.t('menu:file.save'),
           accelerator: 'CmdOrCtrl+S',
           click() {
@@ -1281,16 +1299,6 @@ function createMenu() {
           accelerator: 'CmdOrCtrl+Shift+P',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuPageSetup);
-          },
-        },
-        {
-          label: i18next.t('menu:file.importFromOcr'),
-          async click() {
-            const data = await openOcrFile();
-
-            if (data.success) {
-              win?.webContents.send(IpcMainChannels.FileMenuImportOcr, data);
-            }
           },
         },
         {

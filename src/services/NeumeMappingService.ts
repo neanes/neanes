@@ -151,7 +151,6 @@ mapNeumeToSbmufl(
 
 mapNeumeToSbmufl(QuantitativeNeume.Apostrophos, 'apostrofos');
 mapNeumeToSbmufl(QuantitativeNeume.Elaphron, 'elafron');
-mapNeumeToSbmufl(QuantitativeNeume.Apostrophos, 'apostrofos');
 mapNeumeToSbmufl(
   QuantitativeNeume.ElaphronPlusApostrophos,
   'elafronApostrofos',

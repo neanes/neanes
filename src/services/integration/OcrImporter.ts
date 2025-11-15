@@ -25,7 +25,19 @@ export class OcrImporter {
     const elements: ScoreElement[] = [];
 
     for (const page of analysis.pages) {
-      for (const group of page.interpreted_groups) {
+      for (let i = 0; i < page.interpreted_groups.length; i++) {
+        const group = page.interpreted_groups[i];
+        let prev: InterpretedNeumeGroup | null = null;
+        let next: InterpretedNeumeGroup | null = null;
+
+        if (i - 1 >= 0) {
+          prev = page.interpreted_groups[i - 1];
+        }
+
+        if (i + 1 < page.interpreted_groups.length) {
+          next = page.interpreted_groups[i + 1];
+        }
+
         if (group.type === 'note') {
           const noteGroup = group as NoteGroup;
           const element = new NoteElement();
@@ -76,6 +88,30 @@ export class OcrImporter {
             ) as Fthora;
           }
 
+          const curBase = page.matches.find(
+            (m) => m.id === group.components.base,
+          );
+
+          const prevBase = page.matches.find(
+            (m) => m.id === prev?.components.base,
+          );
+
+          // If the martyria is the last neume group on the line,
+          // and if it is more than 2 * oligon_width away from the previous neume,
+          // we assume it is a right aligned martyria.
+          if (
+            martyriaGroup.line !== next?.line &&
+            curBase != null &&
+            prevBase != null &&
+            prev != null &&
+            group.line === prev.line &&
+            curBase.bounding_rect.x -
+              (prevBase.bounding_rect.x + prevBase.bounding_rect.w) >=
+              page.segmentation.oligon_width * 2
+          ) {
+            element.alignRight = true;
+          }
+
           // TODO handle line break and alignRight
         } else if (group.type === 'tempo') {
           const tempoGroup = group as TempoGroup;
@@ -93,6 +129,7 @@ export class OcrImporter {
 }
 
 export class OcrAnalysis {
+  public schema_version: number = 0;
   public model_metadata: ModelMetadata = new ModelMetadata();
   public pages: PageAnalysis[] = [];
 }
@@ -114,7 +151,12 @@ export class PageAnalysis {
 
 export class InterpretedNeumeGroup {
   public id: number = 0;
+  public line: number = 0;
   public type: 'note' | 'martyria' | 'tempo' = 'note';
+  public components: {
+    base: number;
+    support?: number[];
+  } = { base: 0 };
 }
 
 export class NoteGroup extends InterpretedNeumeGroup {

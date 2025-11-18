@@ -70,10 +70,10 @@ export class OcrImporter {
             ) as TimeNeume;
           }
 
-          if (noteGroup.vocal_expression) {
+          if (noteGroup.quality) {
             element.vocalExpressionNeume =
               NeumeMappingService.getReverseMapping(
-                noteGroup.vocal_expression,
+                noteGroup.quality,
               ) as VocalExpressionNeume;
           }
 
@@ -165,7 +165,7 @@ export class NoteGroup extends InterpretedNeumeGroup {
   public fthora?: SbmuflGlyphName;
   public gorgon?: SbmuflGlyphName;
   public time?: SbmuflGlyphName;
-  public vocal_expression?: SbmuflGlyphName;
+  public quality?: SbmuflGlyphName;
   public vareia?: boolean = false;
 }
 

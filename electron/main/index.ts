@@ -563,7 +563,7 @@ async function openOcrFile() {
   try {
     const dialogResult = await dialog.showOpenDialog(win!, {
       properties: ['openFile'],
-      title: 'Insert Image',
+      title: 'Import OCR Result',
       filters: [
         {
           name: `OCR File`,

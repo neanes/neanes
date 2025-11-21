@@ -117,7 +117,6 @@ export default defineComponent({
             'GFS Didot' + ',' + this.pageSetup.neumeDefaultFontFamily,
             'Noto Naskh Arabic' + ',' + this.pageSetup.neumeDefaultFontFamily,
             'Old Standard' + ',' + this.pageSetup.neumeDefaultFontFamily,
-            'Omega' + ',' + this.pageSetup.neumeDefaultFontFamily,
             'Neanes',
             'NeanesStathisSeries',
             ...fonts,

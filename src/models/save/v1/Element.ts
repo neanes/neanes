@@ -194,7 +194,7 @@ export class TextBoxElement extends ScoreElement {
   public contentCenter: string = '';
   public contentRight: string = '';
   public fontSize: number = 16;
-  public fontFamily: string = 'Omega';
+  public fontFamily: string = 'Source Serif';
   public strokeWidth: number = 0;
   public multipanel: boolean | undefined = undefined;
   public inline: boolean | undefined = undefined;
@@ -292,7 +292,7 @@ export class AlternateLineElement extends ScoreElement {
 export class DropCapElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.DropCap;
   public content: string = 'A';
-  public fontFamily: string = 'Athonite';
+  public fontFamily: string = 'Source Serif';
   public fontSize: number = Unit.fromPt(60);
   public fontWeight: string = '400';
   public fontStyle: string = 'normal';

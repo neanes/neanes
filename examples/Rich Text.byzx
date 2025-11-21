@@ -261,7 +261,7 @@
       {
         "elementType": "DropCap",
         "content": "Ν",
-        "fontFamily": "Athonite",
+        "fontFamily": "GFS Didot",
         "fontSize": 80,
         "fontWeight": "400",
         "fontStyle": "normal",

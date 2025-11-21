@@ -1757,12 +1757,9 @@ export default defineComponent({
     dropCapFontFamilies() {
       return [
         'Source Serif',
-        'Athonite',
         'GFS Didot',
         'Noto Naskh Arabic',
         'Old Standard',
-        'Omega',
-        'PFGoudyInitials',
         ...this.fonts,
       ];
     },
@@ -1773,7 +1770,6 @@ export default defineComponent({
         'GFS Didot',
         'Noto Naskh Arabic',
         'Old Standard',
-        'Omega',
         ...this.fonts,
       ];
     },

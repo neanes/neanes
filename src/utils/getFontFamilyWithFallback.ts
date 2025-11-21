@@ -1,6 +1,6 @@
 export function getFontFamilyWithFallback(
   family: string,
-  fallback: string = 'Omega',
+  fallback: string = 'Source Serif',
 ) {
   return family === fallback ? `"${family}"` : `"${family}", "${fallback}"`;
 }

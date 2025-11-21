@@ -110,21 +110,6 @@ export default defineComponent({
 }
 
 @font-face {
-  font-family: Omega;
-  src: url('./assets/fonts/EZ Omega.ttf');
-}
-
-@font-face {
-  font-family: Athonite;
-  src: url('./assets/fonts/Athonite.ttf');
-}
-
-@font-face {
-  font-family: PFGoudyInitials;
-  src: url('./assets/fonts/PFGoudyInitials.ttf');
-}
-
-@font-face {
   font-family: 'GFS Didot';
   src: url('./assets/fonts/GFSDidot.otf');
 }

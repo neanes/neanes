@@ -24,11 +24,9 @@
         "
       >
         <option>Source Serif</option>
-        <option>Athonite</option>
         <option>GFS Didot</option>
         <option>Noto Naskh Arabic</option>
         <option>Old Standard</option>
-        <option>Omega</option>
 
         <option v-for="font in fonts" :key="font" :value="font">
           {{ font }}

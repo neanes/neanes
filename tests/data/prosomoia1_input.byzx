@@ -54,7 +54,7 @@
     "martyriaDefaultStrokeWidth": 0,
     "tempoDefaultColor": "#800000",
     "tempoDefaultStrokeWidth": 0,
-    "dropCapDefaultFontFamily": "Athonite",
+    "dropCapDefaultFontFamily": "Source Serif",
     "dropCapDefaultFontSize": 80,
     "dropCapDefaultFontWeight": "400",
     "dropCapDefaultFontStyle": "normal",
@@ -81,7 +81,7 @@
           "contentCenter": "",
           "contentRight": "",
           "fontSize": 16,
-          "fontFamily": "Omega",
+          "fontFamily": "Source Serif",
           "strokeWidth": 0,
           "height": 19
         }
@@ -98,7 +98,7 @@
           "contentCenter": "",
           "contentRight": "",
           "fontSize": 16,
-          "fontFamily": "Omega",
+          "fontFamily": "Source Serif",
           "strokeWidth": 0,
           "height": 19
         }
@@ -115,7 +115,7 @@
           "contentCenter": "",
           "contentRight": "",
           "fontSize": 16,
-          "fontFamily": "Omega",
+          "fontFamily": "Source Serif",
           "strokeWidth": 0,
           "height": 19
         }
@@ -132,7 +132,7 @@
           "contentCenter": "",
           "contentRight": "",
           "fontSize": 16,
-          "fontFamily": "Omega",
+          "fontFamily": "Source Serif",
           "strokeWidth": 0,
           "height": 19
         }
@@ -168,7 +168,7 @@
           "contentCenter": "",
           "contentRight": "",
           "fontSize": 16,
-          "fontFamily": "Omega",
+          "fontFamily": "Source Serif",
           "strokeWidth": 0,
           "height": 19
         }
@@ -185,7 +185,7 @@
           "contentCenter": "",
           "contentRight": "",
           "fontSize": 16,
-          "fontFamily": "Omega",
+          "fontFamily": "Source Serif",
           "strokeWidth": 0,
           "height": 19
         }
@@ -202,7 +202,7 @@
           "contentCenter": "",
           "contentRight": "",
           "fontSize": 16,
-          "fontFamily": "Omega",
+          "fontFamily": "Source Serif",
           "strokeWidth": 0,
           "height": 19
         }
@@ -220,7 +220,7 @@
         "contentCenter": "",
         "contentRight": "",
         "fontSize": 26.666666666666668,
-        "fontFamily": "Omega",
+        "fontFamily": "Source Serif",
         "strokeWidth": 0,
         "height": 37,
         "useDefaultStyle": true
@@ -263,7 +263,7 @@
       {
         "elementType": "DropCap",
         "content": "W",
-        "fontFamily": "Athonite",
+        "fontFamily": "Source Serif",
         "fontSize": 80,
         "fontWeight": "400",
         "fontStyle": "normal",

@@ -890,15 +890,12 @@ export default defineComponent({
       // otherwise the text measurements will be wrong
       await Promise.all([
         loadSystemFontsPromise,
-        fontLoader.load('1rem Athonite'),
         fontLoader.load('1rem "GFS Didot"'),
         fontLoader.load('1rem Neanes'),
         fontLoader.load('1rem NeanesStathisSeries'),
         fontLoader.load('1rem NeanesRTL'),
         fontLoader.load('1rem "Noto Naskh Arabic"'),
-        fontLoader.load('1rem Omega'),
         fontLoader.load('1rem "Old Standard"'),
-        fontLoader.load('1rem PFGoudyInitials'),
         fontLoader.load('1rem "Source Serif"'),
         fontLoader.ready,
       ]);

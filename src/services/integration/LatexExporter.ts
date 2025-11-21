@@ -73,10 +73,6 @@ function convertFontName(fontFamily: string) {
   switch (fontFamily) {
     case 'Source Serif':
       return 'Source Serif 4';
-    case 'Omega':
-      return 'EZ Omega';
-    case 'PFGoudyInitials':
-      return 'PFGoudy Initials';
     default:
       return fontFamily;
   }

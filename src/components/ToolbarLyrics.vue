@@ -195,7 +195,6 @@ export default defineComponent({
         'GFS Didot',
         'Noto Naskh Arabic',
         'Old Standard',
-        'Omega',
         ...this.fonts,
       ];
     },

@@ -429,6 +429,27 @@ export const timeReplacementMap = new Map<
   ],
 
   [
+    TimeNeume.Tetrapli,
+    [
+      {
+        isPairedWith: [
+          ...kentemataNeumes,
+          ...petastiNeumes,
+          QuantitativeNeume.KentemataPlusOligon,
+          QuantitativeNeume.OligonPlusKentimaBelow,
+          QuantitativeNeume.OligonPlusIson,
+          QuantitativeNeume.OligonPlusApostrophos,
+          QuantitativeNeume.OligonPlusElaphron,
+          QuantitativeNeume.OligonPlusHyporoe,
+          QuantitativeNeume.OligonPlusElaphronPlusApostrophos,
+          QuantitativeNeume.OligonPlusHamili,
+        ],
+        replaceWith: null,
+      },
+    ],
+  ],
+
+  [
     TimeNeume.Klasma_Top,
     [
       {

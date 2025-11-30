@@ -390,7 +390,18 @@ export const timeReplacementMap = new Map<
     TimeNeume.Dipli,
     [
       {
-        isPairedWith: [...kentemataNeumes, ...petastiNeumes],
+        isPairedWith: [
+          ...kentemataNeumes,
+          ...petastiNeumes,
+          QuantitativeNeume.KentemataPlusOligon,
+          QuantitativeNeume.OligonPlusKentimaBelow,
+          QuantitativeNeume.OligonPlusIson,
+          QuantitativeNeume.OligonPlusApostrophos,
+          QuantitativeNeume.OligonPlusElaphron,
+          QuantitativeNeume.OligonPlusHyporoe,
+          QuantitativeNeume.OligonPlusElaphronPlusApostrophos,
+          QuantitativeNeume.OligonPlusHamili,
+        ],
         replaceWith: null,
       },
     ],
@@ -400,7 +411,39 @@ export const timeReplacementMap = new Map<
     TimeNeume.Tripli,
     [
       {
-        isPairedWith: [...kentemataNeumes, ...petastiNeumes],
+        isPairedWith: [
+          ...kentemataNeumes,
+          ...petastiNeumes,
+          QuantitativeNeume.KentemataPlusOligon,
+          QuantitativeNeume.OligonPlusKentimaBelow,
+          QuantitativeNeume.OligonPlusIson,
+          QuantitativeNeume.OligonPlusApostrophos,
+          QuantitativeNeume.OligonPlusElaphron,
+          QuantitativeNeume.OligonPlusHyporoe,
+          QuantitativeNeume.OligonPlusElaphronPlusApostrophos,
+          QuantitativeNeume.OligonPlusHamili,
+        ],
+        replaceWith: null,
+      },
+    ],
+  ],
+
+  [
+    TimeNeume.Tetrapli,
+    [
+      {
+        isPairedWith: [
+          ...kentemataNeumes,
+          ...petastiNeumes,
+          QuantitativeNeume.KentemataPlusOligon,
+          QuantitativeNeume.OligonPlusKentimaBelow,
+          QuantitativeNeume.OligonPlusIson,
+          QuantitativeNeume.OligonPlusApostrophos,
+          QuantitativeNeume.OligonPlusElaphron,
+          QuantitativeNeume.OligonPlusHyporoe,
+          QuantitativeNeume.OligonPlusElaphronPlusApostrophos,
+          QuantitativeNeume.OligonPlusHamili,
+        ],
         replaceWith: null,
       },
     ],

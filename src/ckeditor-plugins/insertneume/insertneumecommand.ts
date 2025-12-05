@@ -7,8 +7,7 @@ import { InsertNeumeAttributes } from './insertneumeutil';
 
 export const INSERT_NEUME_COMMAND = 'insertNeume';
 
-export interface InsertNeumeCommandParams
-  extends Partial<InsertNeumeAttributes> {
+export interface InsertNeumeCommandParams extends Partial<InsertNeumeAttributes> {
   neumeType: InsertNeumeType;
   neume?: Neume;
   martyriaNote?: Note;

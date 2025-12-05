@@ -15,8 +15,8 @@ updates:
     groups:
       vitest:
         patterns:
-          - "vitest"
-          - "@vitest/coverage-istanbul"
+          - 'vitest'
+          - '@vitest/coverage-istanbul'
   - package-ecosystem: 'github-actions'
     directory: '/'
     schedule:

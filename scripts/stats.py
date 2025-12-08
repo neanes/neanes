@@ -22,7 +22,7 @@ def infer_os_from_name(name: str) -> str:
     if n.endswith(".zip") and "arm64" in n and "mac" in n:
         return "Mac (Silicon)"
     if n.endswith(".zip") and "mac" in n:
-        return "Mac (Silicon)"
+        return "Mac (Intel)"
     if n.endswith(".dmg"):
         return "Mac (Intel)"
     if n.endswith(".AppImage".lower()):

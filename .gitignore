@@ -1,7 +1,8 @@
 .DS_Store
 node_modules
-.scripts
+lic.json
 .test-files
+.venv
 
 # local env files
 .env.local

@@ -54,7 +54,7 @@
     "vue-router": "^4.6.3",
     "vue3-observe-visibility": "^1.0.3",
     "vue3-tabs-chrome": "^0.3.3",
-    "yaml": "^2.8.1"
+    "yaml": "^2.8.2"
   },
   "devDependencies": {
     "@babel/preset-typescript": "^7.28.5",

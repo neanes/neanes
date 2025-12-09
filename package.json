@@ -67,7 +67,7 @@
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.6.0",
     "electron": "^39.2.4",
-    "electron-builder": "^26.3.2",
+    "electron-builder": "^26.3.3",
     "electron-updater": "^6.6.2",
     "eslint": "^9.39.1",
     "eslint-plugin-prettier": "^5.5.4",

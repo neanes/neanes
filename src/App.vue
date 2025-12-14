@@ -217,9 +217,7 @@ button,
 input,
 select,
 textarea {
-  font-family:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica,
-    Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: system-ui, Helvetica, Arial, sans-serif;
 }
 
 .ok-btn {

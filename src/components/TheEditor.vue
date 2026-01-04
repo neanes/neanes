@@ -1368,12 +1368,14 @@ export default defineComponent({
         direction: this.rtl ? 'rtl' : undefined,
         top: withZoom(element.lyricsVerticalOffset),
         paddingLeft:
-          (!element.isFullMelisma || element.melismaText) &&
+          (!element.isFullMelisma ||
+            (element.melismaText && !element.melismaText.endsWith(TATWEEL))) &&
           element.lyricsHorizontalOffset > 0
             ? withZoom(element.lyricsHorizontalOffset)
             : undefined,
         paddingRight:
-          (!element.isFullMelisma || element.melismaText) &&
+          (!element.isFullMelisma ||
+            (element.melismaText && !element.melismaText.endsWith(TATWEEL))) &&
           element.lyricsHorizontalOffset < 0
             ? withZoom(-element.lyricsHorizontalOffset)
             : undefined,

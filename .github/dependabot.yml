@@ -17,6 +17,10 @@ updates:
         patterns:
           - 'vitest'
           - '@vitest/coverage-istanbul'
+      vuejs-language-tools:
+        patterns:
+          - 'vue-component-type-helpers'
+          - 'vue-tsc'
   - package-ecosystem: 'github-actions'
     directory: '/'
     schedule:

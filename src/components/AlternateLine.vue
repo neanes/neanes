@@ -4,11 +4,11 @@
     :style="style"
     @mousedown="handleMouseDown"
   >
-    <template v-for="(element, index) in element.elements" :key="index">
+    <template v-for="(childElement, index) in element.elements" :key="index">
       <NeumeBoxSyllable
-        v-if="element.elementType === ElementType.Note"
+        v-if="childElement.elementType === ElementType.Note"
         class="syllable-box"
-        :note="element as NoteElement"
+        :note="childElement as NoteElement"
         :pageSetup="pageSetup"
         :alternateLine="true"
       />

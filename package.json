@@ -68,7 +68,7 @@
     "@vue/eslint-config-typescript": "^14.6.0",
     "electron": "^39.2.7",
     "electron-builder": "^26.4.0",
-    "electron-updater": "^6.6.2",
+    "electron-updater": "^6.7.3",
     "eslint": "^9.39.2",
     "eslint-plugin-prettier": "^5.5.4",
     "eslint-plugin-simple-import-sort": "^12.1.1",

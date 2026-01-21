@@ -148,6 +148,100 @@ describe.each([true, false])(
       expect(nextElement).toBe(expectedNextElement);
     });
 
+    it.each([
+      { type: 'martyria', expectedNextElement: new MartyriaElement() },
+      { type: 'tempo', expectedNextElement: new TempoElement() },
+      { type: 'inline text box', expectedNextElement: getInlineTextBox() },
+    ])(
+      `skips $type (with next and consecutive continouous elements) [isHyphen=${isHyphen}]`,
+      () => {
+        const melismaStart = new NoteElement();
+        melismaStart.isHyphen = isHyphen;
+        melismaStart.isMelisma = true;
+        melismaStart.isMelismaStart = true;
+
+        const martyriaElement = new MartyriaElement();
+        const tempoElement = new TempoElement();
+
+        const expectedFinalElement = new NoteElement();
+        expectedFinalElement.isMelisma = true;
+
+        const expectedNextElement = new NoteElement();
+        expectedNextElement.isMelisma = true;
+        expectedNextElement.isMelismaStart = true;
+
+        const element = melismaStart;
+        const line = {
+          elements: [
+            melismaStart,
+            martyriaElement,
+            tempoElement,
+            expectedFinalElement,
+            expectedNextElement,
+          ],
+        };
+        const firstElementOnNextLine = null;
+
+        const { finalElement, nextElement } =
+          LayoutService.findFinalAndNextElement(
+            line,
+            element,
+            firstElementOnNextLine,
+            1,
+          );
+
+        expect(finalElement).toBe(expectedFinalElement);
+        expect(nextElement).toBe(expectedNextElement);
+      },
+    );
+
+    itif(!isHyphen).each([
+      { type: 'martyria', expectedNextElement: new MartyriaElement() },
+      { type: 'tempo', expectedNextElement: new TempoElement() },
+      { type: 'inline text box', expectedNextElement: getInlineTextBox() },
+    ])(
+      `skips $type and ends in correct place (with next and consecutive continouous elements) [isHyphen=${isHyphen}]`,
+      () => {
+        const melismaStart = new NoteElement();
+        melismaStart.isHyphen = isHyphen;
+        melismaStart.isMelisma = true;
+        melismaStart.isMelismaStart = true;
+
+        const expectedNextElement = new TempoElement();
+        const martyriaNote = new MartyriaElement();
+
+        const expectedFinalElement = new NoteElement();
+        expectedFinalElement.isMelisma = true;
+
+        const newNote = new NoteElement();
+        newNote.isMelisma = true;
+        newNote.isMelismaStart = true;
+
+        const element = melismaStart;
+        const line = {
+          elements: [
+            melismaStart,
+            expectedFinalElement,
+            expectedNextElement,
+            martyriaNote,
+            newNote,
+          ],
+        };
+        const firstElementOnNextLine = null;
+
+        const { finalElement, nextElement } =
+          LayoutService.findFinalAndNextElement(
+            line,
+            element,
+            firstElementOnNextLine,
+            1,
+          );
+
+        expect(finalElement).toBe(expectedFinalElement);
+        expect(nextElement).toBe(expectedNextElement);
+      },
+    );
+
     itif(!isHyphen).each([
       { type: 'martyria', expectedNextElement: new MartyriaElement() },
       { type: 'tempo', expectedNextElement: new TempoElement() },

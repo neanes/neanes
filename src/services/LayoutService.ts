@@ -1265,22 +1265,6 @@ export class LayoutService {
     return elementWidthPx;
   }
 
-  private static calculateTextBoxHeight(content: string, fontHeight: number) {
-    const lines = content.split(/(?:\r\n|\r|\n)/g);
-
-    let height = 0;
-
-    for (let i = 0; i < lines.length; i++) {
-      // If the last line is blank, don't include the height
-      if (i === lines.length - 1 && lines[i] === '') {
-        continue;
-      }
-      height += fontHeight;
-    }
-
-    return height;
-  }
-
   private static saveElementState(element: ScoreElement) {
     // Save the current element state so we can determine which elements updated
     element.updated = false;
@@ -2970,6 +2954,57 @@ export class LayoutService {
     }
   }
 
+  private static isPartOfSameMelisma(element: ScoreElement | null) {
+    return (
+      element?.elementType === ElementType.Note &&
+      (element as NoteElement).isMelisma &&
+      !(element as NoteElement).isMelismaStart
+    );
+  }
+
+  /**
+   * Returns true if a melisma can continue through this element.
+   */
+  private static isMelismaContinuationElement(element: ScoreElement) {
+    return (
+      element.elementType === ElementType.Martyria ||
+      element.elementType === ElementType.Tempo ||
+      (element.elementType === ElementType.TextBox &&
+        (element as TextBoxElement).inline)
+    );
+  }
+
+  private static nextNoteElement(
+    line: Line,
+    startIndex: number,
+    firstElementOnNextLine: ScoreElement | null = null,
+  ) {
+    for (let i = startIndex + 1; i < line.elements.length; i++) {
+      if (line.elements[i].elementType === ElementType.Note) {
+        return line.elements[i];
+      }
+    }
+
+    return firstElementOnNextLine;
+  }
+
+  private static previousNoteElement(line: Line, startIndex: number) {
+    for (let i = startIndex - 1; i >= 0; i--) {
+      if (line.elements[i].elementType === ElementType.Note) {
+        return line.elements[i];
+      }
+    }
+
+    return null;
+  }
+
+  private static isBreakElement(element: ScoreElement) {
+    return (
+      !this.isMelismaContinuationElement(element) &&
+      element.elementType !== ElementType.Note
+    );
+  }
+
   /**
    * For a given melismatic element on a line, this finds the final element of the melisma
    * and the element after the final element, if there is one.
@@ -2995,48 +3030,46 @@ export class LayoutService {
     let nextElement: ScoreElement | null = null;
 
     for (let i = startIndex; i < line.elements.length; i++) {
+      const nextNoteElement = this.nextNoteElement(
+        line,
+        i,
+        firstElementOnNextLine,
+      );
+
+      // Break if we find an element that is not part of the same melisma
+      // or we find a group of continuation elements followed by a note that is not part of the same melisma
       if (
-        line.elements[i].elementType === ElementType.Note &&
-        (line.elements[i] as NoteElement).isMelisma &&
-        !(line.elements[i] as NoteElement).isMelismaStart
+        (line.elements[i].elementType === ElementType.Note &&
+          !this.isPartOfSameMelisma(line.elements[i])) ||
+        (this.isMelismaContinuationElement(line.elements[i]) &&
+          nextNoteElement != null &&
+          !this.isPartOfSameMelisma(nextNoteElement)) ||
+        this.isBreakElement(line.elements[i])
       ) {
-        finalElement = line.elements[i] as NoteElement;
-      } else if (
-        !element.isHyphen &&
-        (line.elements[i].elementType === ElementType.Martyria ||
-          line.elements[i].elementType === ElementType.Tempo ||
-          (line.elements[i].elementType === ElementType.TextBox &&
-            (line.elements[i] as TextBoxElement).inline)) &&
-        ((i + 1 === line.elements.length &&
-          firstElementOnNextLine?.elementType === ElementType.Note &&
-          (firstElementOnNextLine as NoteElement).isMelisma &&
-          !(firstElementOnNextLine as NoteElement).isMelismaStart) ||
-          (i + 1 < line.elements.length &&
-            line.elements[i + 1].elementType === ElementType.Note &&
-            (line.elements[i + 1] as NoteElement).isMelisma &&
-            !(line.elements[i + 1] as NoteElement).isMelismaStart))
-      ) {
-        // If the next element is a martyria, inline text box, or tempo sign, then check
-        // the next note to see if the melisma should continue through
-        // the martyria or tempo sign.
-        if (line.elements[i].elementType === ElementType.Martyria) {
-          finalElement = line.elements[i] as MartyriaElement;
-        } else if (line.elements[i].elementType === ElementType.Tempo) {
-          finalElement = line.elements[i] as TempoElement;
-        } else {
-          finalElement = line.elements[i] as TextBoxElement;
-        }
-      } else if (
-        element.isHyphen &&
-        (line.elements[i].elementType === ElementType.Martyria ||
-          line.elements[i].elementType === ElementType.Tempo ||
-          (line.elements[i].elementType === ElementType.TextBox &&
-            (line.elements[i] as TextBoxElement).inline))
-      ) {
-        continue;
-      } else {
+        finalElement = (line.elements[i - 1] as NoteElement) ?? null;
         nextElement = line.elements[i];
         break;
+      }
+    }
+
+    if (finalElement == null) {
+      if (
+        element.isHyphen ||
+        !this.isPartOfSameMelisma(firstElementOnNextLine)
+      ) {
+        finalElement = this.previousNoteElement(line, line.elements.length) as
+          | NoteElement
+          | MartyriaElement
+          | TempoElement
+          | TextBoxElement;
+        nextElement = null;
+      } else {
+        finalElement = line.elements[line.elements.length - 1] as
+          | NoteElement
+          | MartyriaElement
+          | TempoElement
+          | TextBoxElement;
+        nextElement = firstElementOnNextLine;
       }
     }
 

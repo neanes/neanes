@@ -1265,22 +1265,6 @@ export class LayoutService {
     return elementWidthPx;
   }
 
-  private static calculateTextBoxHeight(content: string, fontHeight: number) {
-    const lines = content.split(/(?:\r\n|\r|\n)/g);
-
-    let height = 0;
-
-    for (let i = 0; i < lines.length; i++) {
-      // If the last line is blank, don't include the height
-      if (i === lines.length - 1 && lines[i] === '') {
-        continue;
-      }
-      height += fontHeight;
-    }
-
-    return height;
-  }
-
   private static saveElementState(element: ScoreElement) {
     // Save the current element state so we can determine which elements updated
     element.updated = false;
@@ -2970,9 +2954,9 @@ export class LayoutService {
     }
   }
 
-  private static isPartOfSameMelisma(element: ScoreElement) {
+  private static isPartOfSameMelisma(element: ScoreElement | null) {
     return (
-      element.elementType === ElementType.Note &&
+      element?.elementType === ElementType.Note &&
       (element as NoteElement).isMelisma &&
       !(element as NoteElement).isMelismaStart
     );
@@ -2987,6 +2971,37 @@ export class LayoutService {
       element.elementType === ElementType.Tempo ||
       (element.elementType === ElementType.TextBox &&
         (element as TextBoxElement).inline)
+    );
+  }
+
+  private static nextNoteElement(
+    line: Line,
+    startIndex: number,
+    firstElementOnNextLine: ScoreElement | null = null,
+  ) {
+    for (let i = startIndex + 1; i < line.elements.length; i++) {
+      if (line.elements[i].elementType === ElementType.Note) {
+        return line.elements[i];
+      }
+    }
+
+    return firstElementOnNextLine;
+  }
+
+  private static previousNoteElement(line: Line, startIndex: number) {
+    for (let i = startIndex - 1; i >= 0; i--) {
+      if (line.elements[i].elementType === ElementType.Note) {
+        return line.elements[i];
+      }
+    }
+
+    return null;
+  }
+
+  private static isBreakElement(element: ScoreElement) {
+    return (
+      !this.isMelismaContinuationElement(element) &&
+      element.elementType !== ElementType.Note
     );
   }
 
@@ -3015,60 +3030,46 @@ export class LayoutService {
     let nextElement: ScoreElement | null = null;
 
     for (let i = startIndex; i < line.elements.length; i++) {
+      const nextNoteElement = this.nextNoteElement(
+        line,
+        i,
+        firstElementOnNextLine,
+      );
+
+      // Break if we find an element that is not part of the same melisma
+      // or we find a group of continuation elements followed by a note that is not part of the same melisma
       if (
-        line.elements[i].elementType === ElementType.Note &&
-        !this.isPartOfSameMelisma(line.elements[i])
+        (line.elements[i].elementType === ElementType.Note &&
+          !this.isPartOfSameMelisma(line.elements[i])) ||
+        (this.isMelismaContinuationElement(line.elements[i]) &&
+          nextNoteElement != null &&
+          !this.isPartOfSameMelisma(nextNoteElement)) ||
+        this.isBreakElement(line.elements[i])
       ) {
         finalElement = (line.elements[i - 1] as NoteElement) ?? null;
         nextElement = line.elements[i];
         break;
       }
+    }
 
-      if (this.isPartOfSameMelisma(line.elements[i])) {
-        finalElement = line.elements[i] as NoteElement;
-      } else if (
-        !element.isHyphen &&
-        this.isMelismaContinuationElement(line.elements[i]) &&
-        ((i + 1 === line.elements.length &&
-          firstElementOnNextLine != null &&
-          this.isPartOfSameMelisma(firstElementOnNextLine)) ||
-          (i + 1 < line.elements.length &&
-            this.isPartOfSameMelisma(line.elements[i + 1])) ||
-          this.isMelismaContinuationElement(line.elements[i + 1]))
+    if (finalElement == null) {
+      if (
+        element.isHyphen ||
+        !this.isPartOfSameMelisma(firstElementOnNextLine)
       ) {
-        // If the next element is a martyria, inline text box, or tempo sign, then check
-        // the next note to see if the melisma should continue through
-        // the martyria or tempo sign.
-        finalElement = line.elements[i] as
+        finalElement = this.previousNoteElement(line, line.elements.length) as
           | NoteElement
           | MartyriaElement
           | TempoElement
           | TextBoxElement;
-      } else if (
-        element.isHyphen &&
-        this.isMelismaContinuationElement(line.elements[i])
-      ) {
-        continue;
+        nextElement = null;
       } else {
-        nextElement = line.elements[i];
-        break;
-      }
-    }
-
-    if (
-      finalElement != null &&
-      this.isMelismaContinuationElement(finalElement)
-    ) {
-      for (let i = line.elements.indexOf(finalElement) - 1; i >= 0; i--) {
-        if (!this.isMelismaContinuationElement(line.elements[i])) {
-          finalElement = line.elements[i] as
-            | NoteElement
-            | MartyriaElement
-            | TempoElement
-            | TextBoxElement;
-          nextElement = line.elements[i + 1];
-          break;
-        }
+        finalElement = line.elements[line.elements.length - 1] as
+          | NoteElement
+          | MartyriaElement
+          | TempoElement
+          | TextBoxElement;
+        nextElement = firstElementOnNextLine;
       }
     }
 

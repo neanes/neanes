@@ -1,0 +1,1140 @@
+{
+  "version": "1.1",
+  "appVersion": "0.5.6",
+  "pageSetup": {
+    "pageSize": "Letter",
+    "pageSizeUnit": "in",
+    "pageWidth": 816,
+    "pageHeight": 1056,
+    "topMargin": 96,
+    "bottomMargin": 96,
+    "leftMargin": 96,
+    "rightMargin": 96,
+    "headerMargin": 48,
+    "footerMargin": 48,
+    "firstPageNumber": 1,
+    "lineHeight": 72.96000000000001,
+    "lyricsDefaultFontFamily": "Source Serif",
+    "lyricsDefaultFontSize": 16,
+    "lyricsDefaultFontWeight": "400",
+    "lyricsDefaultFontStyle": "normal",
+    "lyricsDefaultColor": "#000000",
+    "lyricsDefaultStrokeWidth": 0,
+    "lyricsVerticalOffset": -4.800000000000001,
+    "lyricsMinimumSpacing": 4.800000000000001,
+    "lyricsMelismaCutoffWidth": 6.666666666666667,
+    "neumeDefaultFontFamily": "Neanes",
+    "neumeDefaultFontSize": 26.666666666666668,
+    "neumeDefaultColor": "#000000",
+    "neumeDefaultSpacing": 2.88,
+    "neumeDefaultStrokeWidth": 0,
+    "alternateLineDefaultFontSize": 16,
+    "alternateLineDefaultColor": "#ED0000",
+    "modeKeyDefaultColor": "#ED0000",
+    "modeKeyDefaultStrokeWidth": 0,
+    "modeKeyDefaultFontSize": 26.666666666666668,
+    "modeKeyDefaultHeightAdjustment": 0,
+    "accidentalDefaultColor": "#ED0000",
+    "accidentalDefaultStrokeWidth": 0,
+    "fthoraDefaultColor": "#ED0000",
+    "fthoraDefaultStrokeWidth": 0,
+    "heteronDefaultColor": "#ED0000",
+    "heteronDefaultStrokeWidth": 0,
+    "gorgonDefaultColor": "#ED0000",
+    "gorgonDefaultStrokeWidth": 0,
+    "measureBarDefaultColor": "#ED0000",
+    "measureBarDefaultStrokeWidth": 0,
+    "measureNumberDefaultColor": "#000000",
+    "measureNumberDefaultStrokeWidth": 0,
+    "noteIndicatorDefaultColor": "#ED0000",
+    "noteIndicatorDefaultStrokeWidth": 0,
+    "isonDefaultColor": "#ED0000",
+    "isonDefaultStrokeWidth": 0,
+    "breathDefaultColor": "#000000",
+    "breathDefaultStrokeWidth": 0,
+    "crossDefaultColor": "#000000",
+    "crossDefaultStrokeWidth": 0,
+    "koronisDefaultColor": "#ED0000",
+    "koronisDefaultStrokeWidth": 0,
+    "martyriaDefaultColor": "#ED0000",
+    "martyriaDefaultStrokeWidth": 0,
+    "tempoDefaultColor": "#ED0000",
+    "tempoDefaultStrokeWidth": 0,
+    "dropCapDefaultFontFamily": "Source Serif",
+    "dropCapDefaultFontSize": 80,
+    "dropCapDefaultFontWeight": "400",
+    "dropCapDefaultFontStyle": "normal",
+    "dropCapDefaultColor": "#000000",
+    "dropCapDefaultStrokeWidth": 0,
+    "dropCapDefaultLineSpan": 1,
+    "textBoxDefaultFontFamily": "Source Serif",
+    "textBoxDefaultFontSize": 26.666666666666668,
+    "textBoxDefaultFontWeight": "400",
+    "textBoxDefaultFontStyle": "normal",
+    "textBoxDefaultColor": "#000000",
+    "textBoxDefaultStrokeWidth": 0,
+    "hyphenSpacing": 72,
+    "martyriaVerticalOffset": 4,
+    "chrysanthineAccidentals": true,
+    "alignIsonIndicators": true
+  },
+  "headers": {
+    "default": {
+      "elements": [
+        {
+          "elementType": "TextBox",
+          "alignment": "left",
+          "color": "#000000",
+          "content": "",
+          "contentBottom": "",
+          "contentLeft": "",
+          "contentCenter": "",
+          "contentRight": "",
+          "fontSize": 16,
+          "fontFamily": "Source Serif",
+          "strokeWidth": 0,
+          "multipanel": true,
+          "height": 20,
+          "marginTop": 0,
+          "marginBottom": 0,
+          "useDefaultStyle": true
+        }
+      ]
+    },
+    "odd": {
+      "elements": [
+        {
+          "elementType": "TextBox",
+          "alignment": "left",
+          "color": "#000000",
+          "content": "",
+          "contentBottom": "",
+          "contentLeft": "",
+          "contentCenter": "",
+          "contentRight": "",
+          "fontSize": 16,
+          "fontFamily": "Source Serif",
+          "strokeWidth": 0,
+          "multipanel": true,
+          "height": 20,
+          "marginTop": 0,
+          "marginBottom": 0,
+          "useDefaultStyle": true
+        }
+      ]
+    },
+    "even": {
+      "elements": [
+        {
+          "elementType": "TextBox",
+          "alignment": "left",
+          "color": "#000000",
+          "content": "",
+          "contentBottom": "",
+          "contentLeft": "",
+          "contentCenter": "",
+          "contentRight": "",
+          "fontSize": 16,
+          "fontFamily": "Source Serif",
+          "strokeWidth": 0,
+          "multipanel": true,
+          "height": 20,
+          "marginTop": 0,
+          "marginBottom": 0,
+          "useDefaultStyle": true
+        }
+      ]
+    },
+    "firstPage": {
+      "elements": [
+        {
+          "elementType": "TextBox",
+          "alignment": "left",
+          "color": "#000000",
+          "content": "",
+          "contentBottom": "",
+          "contentLeft": "",
+          "contentCenter": "",
+          "contentRight": "",
+          "fontSize": 16,
+          "fontFamily": "Source Serif",
+          "strokeWidth": 0,
+          "multipanel": true,
+          "height": 20,
+          "marginTop": 0,
+          "marginBottom": 0,
+          "useDefaultStyle": true
+        }
+      ]
+    }
+  },
+  "footers": {
+    "default": {
+      "elements": [
+        {
+          "elementType": "TextBox",
+          "alignment": "left",
+          "color": "#000000",
+          "content": "",
+          "contentBottom": "",
+          "contentLeft": "",
+          "contentCenter": "",
+          "contentRight": "",
+          "fontSize": 16,
+          "fontFamily": "Source Serif",
+          "strokeWidth": 0,
+          "multipanel": true,
+          "height": 20,
+          "marginTop": 0,
+          "marginBottom": 0,
+          "useDefaultStyle": true
+        }
+      ]
+    },
+    "odd": {
+      "elements": [
+        {
+          "elementType": "TextBox",
+          "alignment": "left",
+          "color": "#000000",
+          "content": "",
+          "contentBottom": "",
+          "contentLeft": "",
+          "contentCenter": "",
+          "contentRight": "",
+          "fontSize": 16,
+          "fontFamily": "Source Serif",
+          "strokeWidth": 0,
+          "multipanel": true,
+          "height": 20,
+          "marginTop": 0,
+          "marginBottom": 0,
+          "useDefaultStyle": true
+        }
+      ]
+    },
+    "even": {
+      "elements": [
+        {
+          "elementType": "TextBox",
+          "alignment": "left",
+          "color": "#000000",
+          "content": "",
+          "contentBottom": "",
+          "contentLeft": "",
+          "contentCenter": "",
+          "contentRight": "",
+          "fontSize": 16,
+          "fontFamily": "Source Serif",
+          "strokeWidth": 0,
+          "multipanel": true,
+          "height": 20,
+          "marginTop": 0,
+          "marginBottom": 0,
+          "useDefaultStyle": true
+        }
+      ]
+    },
+    "firstPage": {
+      "elements": [
+        {
+          "elementType": "TextBox",
+          "alignment": "left",
+          "color": "#000000",
+          "content": "",
+          "contentBottom": "",
+          "contentLeft": "",
+          "contentCenter": "",
+          "contentRight": "",
+          "fontSize": 16,
+          "fontFamily": "Source Serif",
+          "strokeWidth": 0,
+          "multipanel": true,
+          "height": 20,
+          "marginTop": 0,
+          "marginBottom": 0,
+          "useDefaultStyle": true
+        }
+      ]
+    }
+  },
+  "staff": {
+    "elements": [
+      {
+        "id": 1,
+        "elementType": "TextBox",
+        "alignment": "center",
+        "color": "#000000",
+        "content": "Melisma Tests",
+        "contentBottom": "",
+        "contentLeft": "",
+        "contentCenter": "",
+        "contentRight": "",
+        "fontSize": 26.666666666666668,
+        "fontFamily": "Source Serif",
+        "strokeWidth": 0,
+        "height": 36.9969482421875,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "useDefaultStyle": true
+      },
+      {
+        "id": 2,
+        "elementType": "ModeKey",
+        "templateId": 100,
+        "alignment": "center",
+        "mode": 1,
+        "scale": "Diatonic",
+        "scaleNote": "Pa",
+        "martyria": "ModeSign.AlphaWithDeltaHat",
+        "note": "ModeSign.Pa",
+        "color": "#ED0000",
+        "fontSize": 26.666666666666668,
+        "strokeWidth": 0,
+        "height": 49,
+        "heightAdjustment": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "bpm": 120,
+        "useDefaultStyle": true,
+        "ambitusLowNote": "Pa",
+        "ambitusLowRootSign": "Alpha",
+        "ambitusHighNote": "Pa",
+        "ambitusHighRootSign": "Alpha"
+      },
+      {
+        "id": 3,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "lyrics": "test",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "annotations": [
+          {
+            "elementType": "Annotation",
+            "x": 194,
+            "y": 23.005508422851562,
+            "text": "<p>Should pass through multiple continuation elements</p>"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "elementType": "Martyria",
+        "auto": true,
+        "note": "Pa",
+        "rootSign": "Alpha",
+        "scale": "Diatonic"
+      },
+      {
+        "id": 12,
+        "elementType": "Tempo",
+        "neume": "VerySlow",
+        "bpm": 40,
+        "error": false
+      },
+      {
+        "id": 5,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 13,
+        "lineBreak": true,
+        "lineBreakType": "Left",
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "lyrics": "test"
+      },
+      {
+        "id": 14,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "lyrics": "test",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "annotations": [
+          {
+            "elementType": "Annotation",
+            "x": 233,
+            "y": 23.005523681640625,
+            "text": "<p>Should pause at the right place</p>"
+          }
+        ]
+      },
+      {
+        "id": 15,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 16,
+        "elementType": "Martyria",
+        "auto": true,
+        "note": "Pa",
+        "rootSign": "Alpha",
+        "scale": "Diatonic"
+      },
+      {
+        "id": 17,
+        "elementType": "Tempo",
+        "neume": "VerySlow",
+        "bpm": 40,
+        "error": false
+      },
+      {
+        "id": 18,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "lyrics": "test",
+        "isMelisma": true,
+        "isMelismaStart": true
+      },
+      {
+        "id": 19,
+        "lineBreak": true,
+        "lineBreakType": "Left",
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 21,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "lyrics": "test",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "annotations": [
+          {
+            "elementType": "Annotation",
+            "x": 183.9932861328125,
+            "y": 19.0030517578125,
+            "text": "<p>Should pass through single continuation element</p>"
+          }
+        ]
+      },
+      {
+        "id": 22,
+        "elementType": "Martyria",
+        "auto": true,
+        "note": "Pa",
+        "rootSign": "Alpha",
+        "scale": "Diatonic"
+      },
+      {
+        "id": 24,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 25,
+        "lineBreak": true,
+        "lineBreakType": "Left",
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 26,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "lyrics": "test",
+        "isMelisma": true,
+        "isMelismaStart": true
+      },
+      {
+        "id": 27,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true,
+        "annotations": [
+          {
+            "elementType": "Annotation",
+            "x": 202.99603271484375,
+            "y": 22.00433349609375,
+            "text": "<p>Should pause at the right place</p>"
+          }
+        ]
+      },
+      {
+        "id": 28,
+        "elementType": "Martyria",
+        "auto": true,
+        "note": "Pa",
+        "rootSign": "Alpha",
+        "scale": "Diatonic"
+      },
+      {
+        "id": 30,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "lyrics": "test",
+        "isMelisma": true,
+        "isMelismaStart": true
+      },
+      {
+        "id": 31,
+        "lineBreak": true,
+        "lineBreakType": "Left",
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 32,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "lyrics": "test",
+        "isMelisma": true,
+        "isMelismaStart": true
+      },
+      {
+        "id": 33,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true,
+        "annotations": [
+          {
+            "elementType": "Annotation",
+            "x": 125.99114990234375,
+            "y": 91.0030517578125,
+            "text": "<p>Should pass through martyria at end of line</p>"
+          }
+        ]
+      },
+      {
+        "id": 34,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 35,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 36,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 41,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 42,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 43,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 44,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 45,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 46,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 51,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 47,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 48,
+        "elementType": "Martyria",
+        "auto": true,
+        "note": "Pa",
+        "rootSign": "Alpha",
+        "scale": "Diatonic"
+      },
+      {
+        "id": 49,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 50,
+        "lineBreak": true,
+        "lineBreakType": "Left",
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 68,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "lyrics": "test",
+        "isMelisma": true,
+        "isMelismaStart": true
+      },
+      {
+        "id": 69,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true,
+        "annotations": [
+          {
+            "elementType": "Annotation",
+            "x": 125.98480224609375,
+            "y": 90.99896240234375,
+            "text": "<p>Should end before martyria at end of line</p>"
+          }
+        ]
+      },
+      {
+        "id": 70,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 71,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 72,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 73,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 74,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 75,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 76,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 77,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 78,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 79,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 80,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 81,
+        "elementType": "Martyria",
+        "auto": true,
+        "note": "Pa",
+        "rootSign": "Alpha",
+        "scale": "Diatonic"
+      },
+      {
+        "id": 82,
+        "lineBreak": true,
+        "lineBreakType": "Left",
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "lyrics": "test"
+      },
+      {
+        "id": 84,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "lyrics": "test",
+        "isMelisma": true,
+        "isMelismaStart": true
+      },
+      {
+        "id": 85,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true,
+        "annotations": [
+          {
+            "elementType": "Annotation",
+            "x": 125.98480224609375,
+            "y": 90.99896240234375,
+            "text": "<p>Should end before martyria at end of line</p>"
+          }
+        ]
+      },
+      {
+        "id": 86,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 87,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 88,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 89,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 90,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 91,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 92,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 93,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 94,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 95,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 96,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 97,
+        "elementType": "Martyria",
+        "auto": true,
+        "note": "Pa",
+        "rootSign": "Alpha",
+        "scale": "Diatonic"
+      },
+      {
+        "id": 99,
+        "elementType": "Tempo",
+        "neume": "VerySlow",
+        "bpm": 40,
+        "error": false
+      },
+      {
+        "id": 98,
+        "lineBreak": true,
+        "lineBreakType": "Left",
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "lyrics": "test"
+      },
+      {
+        "id": 100,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "lyrics": "test",
+        "isMelisma": true,
+        "isMelismaStart": true
+      },
+      {
+        "id": 101,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true,
+        "annotations": [
+          {
+            "elementType": "Annotation",
+            "x": 125.98480224609375,
+            "y": 90.99896240234375,
+            "text": "<p>Should pass through martyria and tempo at end of line</p>"
+          }
+        ]
+      },
+      {
+        "id": 102,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 103,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 104,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 105,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 106,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 107,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 108,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 109,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 110,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 111,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 112,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 113,
+        "elementType": "Martyria",
+        "auto": true,
+        "note": "Pa",
+        "rootSign": "Alpha",
+        "scale": "Diatonic"
+      },
+      {
+        "id": 115,
+        "elementType": "Tempo",
+        "neume": "VerySlow",
+        "bpm": 40,
+        "error": false
+      },
+      {
+        "id": 114,
+        "lineBreak": true,
+        "lineBreakType": "Left",
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true
+      },
+      {
+        "id": 116,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "lyrics": "test",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true,
+        "annotations": [
+          {
+            "elementType": "Annotation",
+            "x": 193.9964599609375,
+            "y": 23.00439453125,
+            "text": "<p>Should pass through multiple continuation elements</p>"
+          }
+        ]
+      },
+      {
+        "id": 117,
+        "elementType": "Martyria",
+        "auto": true,
+        "note": "Pa",
+        "rootSign": "Alpha",
+        "scale": "Diatonic"
+      },
+      {
+        "id": 118,
+        "elementType": "Tempo",
+        "neume": "VerySlow",
+        "bpm": 40,
+        "error": false
+      },
+      {
+        "id": 119,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true,
+        "isHyphen": true
+      },
+      {
+        "id": 120,
+        "lineBreak": true,
+        "lineBreakType": "Left",
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "lyrics": "ing"
+      },
+      {
+        "id": 121,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "lyrics": "test",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true,
+        "annotations": [
+          {
+            "elementType": "Annotation",
+            "x": 194.9879150390625,
+            "y": 23.00433349609375,
+            "text": "<p>Should pass through martyria</p>"
+          }
+        ]
+      },
+      {
+        "id": 122,
+        "elementType": "Martyria",
+        "auto": true,
+        "note": "Pa",
+        "rootSign": "Alpha",
+        "scale": "Diatonic"
+      },
+      {
+        "id": 124,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true,
+        "isHyphen": true
+      },
+      {
+        "id": 125,
+        "lineBreak": true,
+        "lineBreakType": "Left",
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "lyrics": "ing"
+      },
+      {
+        "id": 126,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "lyrics": "test",
+        "isMelisma": true,
+        "isMelismaStart": true,
+        "isHyphen": true
+      },
+      {
+        "id": 127,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true,
+        "isHyphen": true,
+        "annotations": [
+          {
+            "elementType": "Annotation",
+            "x": 125.99114990234375,
+            "y": 91.0030517578125,
+            "text": "<p>Should pass through martyria at end of line</p>"
+          }
+        ]
+      },
+      {
+        "id": 128,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true,
+        "isHyphen": true
+      },
+      {
+        "id": 129,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true,
+        "isHyphen": true
+      },
+      {
+        "id": 130,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true,
+        "isHyphen": true
+      },
+      {
+        "id": 131,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true,
+        "isHyphen": true
+      },
+      {
+        "id": 132,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true,
+        "isHyphen": true
+      },
+      {
+        "id": 133,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true,
+        "isHyphen": true
+      },
+      {
+        "id": 134,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true,
+        "isHyphen": true
+      },
+      {
+        "id": 135,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true,
+        "isHyphen": true
+      },
+      {
+        "id": 136,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true,
+        "isHyphen": true
+      },
+      {
+        "id": 137,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true,
+        "isHyphen": true
+      },
+      {
+        "id": 138,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true,
+        "isHyphen": true
+      },
+      {
+        "id": 139,
+        "elementType": "Martyria",
+        "auto": true,
+        "note": "Pa",
+        "rootSign": "Alpha",
+        "scale": "Diatonic"
+      },
+      {
+        "id": 140,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "isMelisma": true,
+        "isHyphen": true
+      },
+      {
+        "id": 141,
+        "elementType": "Note",
+        "quantitativeNeume": "Ison",
+        "lyrics": "ing"
+      },
+      {
+        "elementType": "Empty"
+      }
+    ],
+    "lyrics": {
+      "text": "test__ test test__ test__ test___ test__ test__ test_______________ test_____________ test test_____________ test test______________ test--ing test--ing test--------------ing"
+    }
+  }
+}

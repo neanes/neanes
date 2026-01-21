@@ -2970,6 +2970,26 @@ export class LayoutService {
     }
   }
 
+  private static isPartOfSameMelisma(element: ScoreElement) {
+    return (
+      element.elementType === ElementType.Note &&
+      (element as NoteElement).isMelisma &&
+      !(element as NoteElement).isMelismaStart
+    );
+  }
+
+  /**
+   * Returns true if a melisma can continue through this element.
+   */
+  private static isMelismaContinuationElement(element: ScoreElement) {
+    return (
+      element.elementType === ElementType.Martyria ||
+      element.elementType === ElementType.Tempo ||
+      (element.elementType === ElementType.TextBox &&
+        (element as TextBoxElement).inline)
+    );
+  }
+
   /**
    * For a given melismatic element on a line, this finds the final element of the melisma
    * and the element after the final element, if there is one.
@@ -2997,46 +3017,58 @@ export class LayoutService {
     for (let i = startIndex; i < line.elements.length; i++) {
       if (
         line.elements[i].elementType === ElementType.Note &&
-        (line.elements[i] as NoteElement).isMelisma &&
-        !(line.elements[i] as NoteElement).isMelismaStart
+        !this.isPartOfSameMelisma(line.elements[i])
       ) {
+        finalElement = (line.elements[i - 1] as NoteElement) ?? null;
+        nextElement = line.elements[i];
+        break;
+      }
+
+      if (this.isPartOfSameMelisma(line.elements[i])) {
         finalElement = line.elements[i] as NoteElement;
       } else if (
         !element.isHyphen &&
-        (line.elements[i].elementType === ElementType.Martyria ||
-          line.elements[i].elementType === ElementType.Tempo ||
-          (line.elements[i].elementType === ElementType.TextBox &&
-            (line.elements[i] as TextBoxElement).inline)) &&
+        this.isMelismaContinuationElement(line.elements[i]) &&
         ((i + 1 === line.elements.length &&
-          firstElementOnNextLine?.elementType === ElementType.Note &&
-          (firstElementOnNextLine as NoteElement).isMelisma &&
-          !(firstElementOnNextLine as NoteElement).isMelismaStart) ||
+          firstElementOnNextLine != null &&
+          this.isPartOfSameMelisma(firstElementOnNextLine)) ||
           (i + 1 < line.elements.length &&
-            line.elements[i + 1].elementType === ElementType.Note &&
-            (line.elements[i + 1] as NoteElement).isMelisma &&
-            !(line.elements[i + 1] as NoteElement).isMelismaStart))
+            this.isPartOfSameMelisma(line.elements[i + 1])) ||
+          this.isMelismaContinuationElement(line.elements[i + 1]))
       ) {
         // If the next element is a martyria, inline text box, or tempo sign, then check
         // the next note to see if the melisma should continue through
         // the martyria or tempo sign.
-        if (line.elements[i].elementType === ElementType.Martyria) {
-          finalElement = line.elements[i] as MartyriaElement;
-        } else if (line.elements[i].elementType === ElementType.Tempo) {
-          finalElement = line.elements[i] as TempoElement;
-        } else {
-          finalElement = line.elements[i] as TextBoxElement;
-        }
+        finalElement = line.elements[i] as
+          | NoteElement
+          | MartyriaElement
+          | TempoElement
+          | TextBoxElement;
       } else if (
         element.isHyphen &&
-        (line.elements[i].elementType === ElementType.Martyria ||
-          line.elements[i].elementType === ElementType.Tempo ||
-          (line.elements[i].elementType === ElementType.TextBox &&
-            (line.elements[i] as TextBoxElement).inline))
+        this.isMelismaContinuationElement(line.elements[i])
       ) {
         continue;
       } else {
         nextElement = line.elements[i];
         break;
+      }
+    }
+
+    if (
+      finalElement != null &&
+      this.isMelismaContinuationElement(finalElement)
+    ) {
+      for (let i = line.elements.indexOf(finalElement) - 1; i >= 0; i--) {
+        if (!this.isMelismaContinuationElement(line.elements[i])) {
+          finalElement = line.elements[i] as
+            | NoteElement
+            | MartyriaElement
+            | TempoElement
+            | TextBoxElement;
+          nextElement = line.elements[i + 1];
+          break;
+        }
       }
     }
 

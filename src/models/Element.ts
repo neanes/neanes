@@ -271,6 +271,8 @@ export class NoteElement extends ScoreElement {
       vareia: this.vareia,
       vareiaOffsetX: this.vareiaOffsetX,
       vareiaOffsetY: this.vareiaOffsetY,
+      alternateLines: this.alternateLines.map((x) => x.clone()),
+      annotations: this.annotations.map((x) => x.clone()),
     } as Partial<NoteElement>;
   }
 
@@ -1107,6 +1109,8 @@ export class AnnotationElement extends ScoreElement {
   public getClipboardProperties() {
     return {
       text: this.text,
+      x: this.x,
+      y: this.y,
     } as Partial<AnnotationElement>;
   }
 }
@@ -1126,6 +1130,8 @@ export class AlternateLineElement extends ScoreElement {
   public getClipboardProperties() {
     return {
       elements: this.elements.map((note) => note.clone()),
+      x: this.x,
+      y: this.y,
     } as Partial<AlternateLineElement>;
   }
 }

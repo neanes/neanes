@@ -337,6 +337,10 @@ export default defineComponent({
 
       keyboardModifier: null as string | null,
 
+      ctrlPressed: false,
+      altPressed: false,
+      metaPressed: false,
+
       audioElement: null as ScoreElement | null,
       playbackEvents: [] as PlaybackSequenceEvent[],
       playbackTimeInterval: null as ReturnType<typeof setTimeout> | null,
@@ -932,6 +936,7 @@ export default defineComponent({
     window.addEventListener('keydown', this.onKeydown);
     window.addEventListener('keyup', this.onKeyup);
     window.addEventListener('resize', this.throttled.onWindowResize);
+    window.addEventListener('input', this.onWindowInput);
 
     EventBus.$on(IpcMainChannels.CloseWorkspaces, this.onCloseWorkspaces);
     EventBus.$on(IpcMainChannels.CloseApplication, this.onCloseApplication);
@@ -1048,6 +1053,7 @@ export default defineComponent({
     window.removeEventListener('keydown', this.onKeydown);
     window.removeEventListener('keyup', this.onKeyup);
     window.removeEventListener('resize', this.throttled.onWindowResize);
+    window.removeEventListener('input', this.onWindowInput);
 
     EventBus.$off(IpcMainChannels.CloseWorkspaces, this.onCloseWorkspaces);
     EventBus.$off(IpcMainChannels.CloseApplication, this.onCloseApplication);
@@ -2136,6 +2142,13 @@ export default defineComponent({
     },
 
     onKeydown(event: KeyboardEvent) {
+      if (event.key === 'Control') {
+        this.ctrlPressed = true;
+      } else if (event.key === 'Alt') {
+        this.altPressed = true;
+      } else if (event.key === 'Meta') {
+        this.metaPressed = true;
+      }
       // Handle undo / redo
       // See https://github.com/electron/electron/issues/3682.
       if (
@@ -2671,92 +2684,115 @@ export default defineComponent({
             handled = true;
           }
           break;
-        case 'Space':
-          // Ctrl + Space should add a normal space character
-          if (event.ctrlKey || event.metaKey) {
-            document.execCommand('insertText', false, ' ');
-          } else {
-            this.throttled.moveToNextLyricBox(true);
-          }
-          handled = true;
-          break;
-        case 'Minus': {
-          if (event.shiftKey) {
-            document.execCommand('insertText', false, '_');
-          } else {
-            document.execCommand('insertText', false, '-');
-          }
-
-          // Ctrl key overrides the "go to next lyrics" (Alt key for mac)
-          const overridden =
-            (this.platformService.isMac && event.altKey) ||
-            (!this.platformService.isMac && event.ctrlKey);
-
-          if (
-            !overridden &&
-            getCursorPosition() === this.getLyricLength(this.selectedLyrics!)
-          ) {
-            if (this.getNextLyricBoxIndex() >= 0) {
-              this.throttled.moveToNextLyricBox();
-            } else {
-              // If this is the last lyric box, blur
-              // so that the melisma is registered and
-              // the user doesn't accidentally type more
-              // characters into box
-              const index = this.elements.indexOf(this.selectedLyrics!);
-              (
-                this.$refs[`lyrics-${index}`] as InstanceType<
-                  typeof ContentEditable
-                >[]
-              )[0].blur();
-            }
-          }
-
-          handled = true;
-          break;
-        }
-        case 'KeyJ': {
-          if (!this.rtl) {
-            return;
-          }
-          if (event.shiftKey) {
-            document.execCommand('insertText', false, TATWEEL);
-          } else {
-            return;
-          }
-
-          // Ctrl key overrides the "go to next lyrics" (Alt key for mac)
-          const overridden =
-            (this.platformService.isMac && event.altKey) ||
-            (!this.platformService.isMac && event.ctrlKey);
-
-          if (
-            !overridden &&
-            getCursorPosition() === this.getLyricLength(this.selectedLyrics!)
-          ) {
-            if (this.getNextLyricBoxIndex() >= 0) {
-              this.throttled.moveToNextLyricBox();
-            } else {
-              // If this is the last lyric box, blur
-              // so that the melisma is registered and
-              // the user doesn't accidentally type more
-              // characters into box
-              const index = this.elements.indexOf(this.selectedLyrics!);
-              (
-                this.$refs[`lyrics-${index}`] as InstanceType<
-                  typeof ContentEditable
-                >[]
-              )[0].blur();
-            }
-          }
-
-          handled = true;
-          break;
-        }
       }
 
       if (handled) {
         event.preventDefault();
+      }
+    },
+
+    onWindowInput(e: Event) {
+      const inputEvent = e as InputEvent;
+
+      // Only care when a lyrics box is active
+      if (!this.selectedLyrics) {
+        return;
+      }
+
+      const target = inputEvent.target as HTMLElement | null;
+      if (
+        !target ||
+        !target.isContentEditable ||
+        !target.classList.contains('lyrics')
+      ) {
+        // Not our lyrics contenteditable
+        return;
+      }
+
+      // Only react while some text input is focused
+      if (!this.isTextInputFocused()) {
+        return;
+      }
+
+      // We only care about text insertion
+      if (
+        inputEvent.inputType !== 'insertText' &&
+        inputEvent.inputType !== 'insertCompositionText'
+      ) {
+        return;
+      }
+
+      const data = inputEvent.data;
+      if (!data) {
+        return;
+      }
+
+      const cursorPos = getCursorPosition()!;
+      const textAfter = target.innerText;
+      const lenAfter = textAfter.length;
+
+      // Helper: revert the character that was just inserted at cursor-1
+      const revertInsertedChar = () => {
+        const insertIndex = Math.max(0, cursorPos - 1);
+        const before = textAfter.slice(0, insertIndex);
+        const after = textAfter.slice(insertIndex + 1);
+        target.innerText = before + after;
+      };
+
+      // Ctrl + Space should add a normal space character
+      if (data === ' ') {
+        const override = this.ctrlPressed || this.metaPressed;
+
+        if (!override) {
+          revertInsertedChar();
+          this.throttled.moveToNextLyricBox(true);
+        }
+
+        return;
+      }
+
+      if (data === '-' || data === '_') {
+        // Ctrl key overrides the "go to next lyrics" (Alt key for mac)
+        const overridden =
+          (this.platformService.isMac && this.altPressed) ||
+          (!this.platformService.isMac && this.ctrlPressed);
+
+        if (!overridden && cursorPos === lenAfter) {
+          if (this.getNextLyricBoxIndex() >= 0) {
+            this.throttled.moveToNextLyricBox();
+          } else {
+            // If this is the last lyric box, blur
+            // so that the melisma is registered and
+            // the user doesn't accidentally type more
+            // characters into box
+            target.blur();
+          }
+        }
+
+        return;
+      }
+
+      if (data === TATWEEL) {
+        if (!this.rtl) {
+          return;
+        }
+
+        // Ctrl key overrides the "go to next lyrics" (Alt key for mac)
+        const overridden =
+          (this.platformService.isMac && this.altPressed) ||
+          (!this.platformService.isMac && this.ctrlPressed);
+
+        if (!overridden && cursorPos === lenAfter) {
+          if (this.getNextLyricBoxIndex() >= 0) {
+            this.throttled.moveToNextLyricBox();
+          } else {
+            // If this is the last lyric box, blur
+            // so that the melisma is registered and
+            // the user doesn't accidentally type more
+            // characters into box
+            target.blur();
+          }
+        }
       }
     },
 
@@ -2904,6 +2940,14 @@ export default defineComponent({
       if (this.keyboardModifier === event.code) {
         this.keyboardModifier = null;
         handled = true;
+      }
+
+      if (event.key === 'Control') {
+        this.ctrlPressed = false;
+      } else if (event.key === 'Alt') {
+        this.altPressed = false;
+      } else if (event.key === 'Meta') {
+        this.metaPressed = false;
       }
 
       if (handled) {

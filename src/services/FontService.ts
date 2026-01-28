@@ -1,3 +1,4 @@
+import metadataAlmouzios from '@/assets/fonts/almouzios.metadata.json';
 import metadata from '@/assets/fonts/neanes.metadata.json';
 import metadataRtl from '@/assets/fonts/neanesrtl.metadata.json';
 import metadataStathis from '@/assets/fonts/neanesstathisseries.metadata.json';
@@ -7,6 +8,7 @@ const metadataMap = new Map();
 metadataMap.set('Neanes', metadata);
 metadataMap.set('NeanesRTL', metadataRtl);
 metadataMap.set('NeanesStathisSeries', metadataStathis);
+metadataMap.set('Almouzios', metadataAlmouzios);
 
 class FontService {
   getMetadata(fontFamily: string) {

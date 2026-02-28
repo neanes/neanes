@@ -1,0 +1,11831 @@
+{
+  "fontName": "Almouzios",
+  "fontVersion": "1.0.3",
+  "metrics": {
+    "winAscent": 0.88,
+    "winDescent": 0.44,
+    "oligonMidpoint": 0.113
+  },
+  "glyphsWithAnchors": {
+    "ison": {
+      "yfenAbove": [
+        0.879,
+        0.409
+      ],
+      "yfenBelow": [
+        0.878,
+        -0.272
+      ],
+      "koronis": [
+        0.732,
+        0.569
+      ],
+      "endofonon": [
+        0.751,
+        -0.294
+      ],
+      "measureNumber": [
+        0.03,
+        0.5
+      ],
+      "isonIndicator": [
+        0.03,
+        0.7
+      ],
+      "gorgonBottom": [
+        0.78,
+        -0.08
+      ],
+      "heteronConnecting": [
+        1.649,
+        -0.251
+      ],
+      "heteron": [
+        0.976,
+        -0.025
+      ],
+      "omalonConnecting": [
+        1.3,
+        -0.1
+      ],
+      "omalon": [
+        0.78,
+        -0.1
+      ],
+      "apli": [
+        0.71,
+        -0.15
+      ],
+      "antikenoma": [
+        0.71,
+        -0.05
+      ],
+      "noteTop": [
+        0.06,
+        0.4
+      ],
+      "fthoraBottom": [
+        0.738,
+        -0.023
+      ],
+      "fthoraTop": [
+        0.737,
+        0.275
+      ],
+      "diesis": [
+        0.349,
+        -0.099
+      ],
+      "yfesis": [
+        1.265,
+        0.387
+      ],
+      "psifiston": [
+        0.78,
+        -0.12
+      ],
+      "klasmaTop": [
+        0.75,
+        0.25
+      ],
+      "gorgonTop": [
+        0.78,
+        0.22
+      ]
+    },
+    "oligonKentimaBelow": {
+      "apli": [
+        0.75,
+        -0.38
+      ],
+      "gorgonBottom": [
+        0.5,
+        -0.08
+      ],
+      "yfenAbove": [
+        0.879,
+        0.409
+      ],
+      "yfenBelow": [
+        0.878,
+        -0.432
+      ],
+      "koronis": [
+        0.732,
+        0.569
+      ],
+      "endofonon": [
+        0.751,
+        -0.294
+      ],
+      "measureNumber": [
+        0.03,
+        0.5
+      ],
+      "isonIndicator": [
+        0.03,
+        0.7
+      ],
+      "heteronConnecting": [
+        1.641,
+        -0.283
+      ],
+      "heteron": [
+        0.976,
+        -0.265
+      ],
+      "omalon": [
+        0.8,
+        -0.3
+      ],
+      "omalonConnecting": [
+        1.3,
+        -0.3
+      ],
+      "antikenoma": [
+        0.75,
+        -0.28
+      ],
+      "noteTop": [
+        0.06,
+        0.4
+      ],
+      "fthoraTop": [
+        0.737,
+        0.275
+      ],
+      "fthoraBottom": [
+        0.369,
+        -0.125
+      ],
+      "diesis": [
+        0.349,
+        -0.099
+      ],
+      "yfesis": [
+        1.265,
+        0.387
+      ],
+      "klasmaTop": [
+        0.65,
+        0.25
+      ],
+      "gorgonTop": [
+        0.65,
+        0.22
+      ],
+      "psifiston": [
+        0.88,
+        -0.16
+      ]
+    },
+    "oligon": {
+      "yfenAbove": [
+        0.879,
+        0.409
+      ],
+      "yfenBelow": [
+        0.878,
+        -0.272
+      ],
+      "koronis": [
+        0.635,
+        0.569
+      ],
+      "endofonon": [
+        0.751,
+        -0.294
+      ],
+      "measureNumber": [
+        0.03,
+        0.5
+      ],
+      "isonIndicator": [
+        0.03,
+        0.7
+      ],
+      "gorgonBottom": [
+        0.7,
+        -0.08
+      ],
+      "heteronConnecting": [
+        1.641,
+        -0.251
+      ],
+      "heteron": [
+        1.036,
+        -0.005
+      ],
+      "omalon": [
+        0.8,
+        -0.1
+      ],
+      "omalonConnecting": [
+        1.3,
+        -0.1
+      ],
+      "apli": [
+        0.73,
+        -0.15
+      ],
+      "antikenoma": [
+        0.73,
+        -0.05
+      ],
+      "noteTop": [
+        0.06,
+        0.4
+      ],
+      "fthoraTop": [
+        0.737,
+        0.275
+      ],
+      "fthoraBottom": [
+        0.738,
+        -0.023
+      ],
+      "diesis": [
+        0.349,
+        -0.099
+      ],
+      "yfesis": [
+        1.265,
+        0.387
+      ],
+      "klasmaTop": [
+        0.62,
+        0.25
+      ],
+      "psifiston": [
+        0.8,
+        -0.12
+      ],
+      "gorgonTop": [
+        0.68,
+        0.22
+      ]
+    },
+    "oligonKentimaAbove": {
+      "gorgonBottom": [
+        0.7,
+        -0.08
+      ],
+      "yfenAbove": [
+        0.879,
+        0.679
+      ],
+      "yfenBelow": [
+        0.878,
+        -0.272
+      ],
+      "koronis": [
+        0.732,
+        0.659
+      ],
+      "endofonon": [
+        0.751,
+        -0.294
+      ],
+      "measureNumber": [
+        0.03,
+        0.5
+      ],
+      "isonIndicator": [
+        0.03,
+        0.7
+      ],
+      "heteronConnecting": [
+        1.641,
+        -0.251
+      ],
+      "heteron": [
+        1.036,
+        -0.005
+      ],
+      "omalon": [
+        0.8,
+        -0.1
+      ],
+      "omalonConnecting": [
+        1.3,
+        -0.1
+      ],
+      "antikenoma": [
+        0.73,
+        -0.05
+      ],
+      "apli": [
+        0.73,
+        -0.15
+      ],
+      "noteTop": [
+        0.06,
+        0.4
+      ],
+      "fthoraTop": [
+        1.202,
+        0.208
+      ],
+      "fthoraBottom": [
+        0.738,
+        -0.023
+      ],
+      "diesis": [
+        0.349,
+        -0.099
+      ],
+      "yfesis": [
+        1.265,
+        0.387
+      ],
+      "klasmaTop": [
+        0.2,
+        0.25
+      ],
+      "klasmaBottom": [
+        0.68,
+        -0.07
+      ],
+      "gorgonTop": [
+        1.09,
+        0.22
+      ],
+      "psifiston": [
+        0.8,
+        -0.12
+      ]
+    },
+    "oligonYpsiliRight": {
+      "gorgonBottom": [
+        0.7,
+        -0.08
+      ],
+      "yfenAbove": [
+        0.879,
+        0.971
+      ],
+      "yfenBelow": [
+        0.878,
+        -0.272
+      ],
+      "koronis": [
+        0.732,
+        0.569
+      ],
+      "endofonon": [
+        0.751,
+        -0.294
+      ],
+      "measureNumber": [
+        0.03,
+        0.5
+      ],
+      "isonIndicator": [
+        0.03,
+        0.7
+      ],
+      "heteronConnecting": [
+        1.641,
+        -0.251
+      ],
+      "heteron": [
+        1.036,
+        -0.005
+      ],
+      "omalon": [
+        0.8,
+        -0.1
+      ],
+      "omalonConnecting": [
+        1.3,
+        -0.1
+      ],
+      "antikenoma": [
+        0.73,
+        -0.05
+      ],
+      "apli": [
+        0.73,
+        -0.15
+      ],
+      "noteTop": [
+        0.06,
+        0.4
+      ],
+      "fthoraTop": [
+        0.506,
+        0.257
+      ],
+      "fthoraBottom": [
+        0.738,
+        -0.023
+      ],
+      "diesis": [
+        0.349,
+        -0.099
+      ],
+      "yfesis": [
+        1.265,
+        0.387
+      ],
+      "klasmaTop": [
+        0.5,
+        0.25
+      ],
+      "klasmaBottom": [
+        0.68,
+        -0.07
+      ],
+      "gorgonTop": [
+        0.4,
+        0.22
+      ],
+      "psifiston": [
+        0.8,
+        -0.12
+      ]
+    },
+    "oligonYpsiliLeft": {
+      "gorgonBottom": [
+        0.7,
+        -0.08
+      ],
+      "yfenAbove": [
+        0.88,
+        1.053
+      ],
+      "yfenBelow": [
+        0.879,
+        -0.272
+      ],
+      "koronis": [
+        0.901,
+        0.623
+      ],
+      "endofonon": [
+        0.752,
+        -0.294
+      ],
+      "measureNumber": [
+        0.03,
+        0.5
+      ],
+      "isonIndicator": [
+        0.7,
+        0.7
+      ],
+      "heteronConnecting": [
+        1.642,
+        -0.251
+      ],
+      "heteron": [
+        1.037,
+        -0.005
+      ],
+      "omalon": [
+        0.8,
+        -0.1
+      ],
+      "omalonConnecting": [
+        1.3,
+        -0.1
+      ],
+      "antikenoma": [
+        0.73,
+        -0.05
+      ],
+      "apli": [
+        0.73,
+        -0.15
+      ],
+      "noteTop": [
+        0.06,
+        0.55
+      ],
+      "fthoraTop": [
+        0.839,
+        0.269
+      ],
+      "fthoraBottom": [
+        0.739,
+        -0.023
+      ],
+      "diesis": [
+        0.35,
+        -0.099
+      ],
+      "yfesis": [
+        1.266,
+        0.387
+      ],
+      "klasmaTop": [
+        0.75,
+        0.25
+      ],
+      "klasmaBottom": [
+        0.68,
+        -0.07
+      ],
+      "gorgonTop": [
+        0.8,
+        0.22
+      ],
+      "psifiston": [
+        0.8,
+        -0.12
+      ]
+    },
+    "oligonKentimaYpsiliRight": {
+      "gorgonBottom": [
+        0.7,
+        -0.08
+      ],
+      "yfenAbove": [
+        0.879,
+        0.97
+      ],
+      "yfenBelow": [
+        0.878,
+        -0.272
+      ],
+      "koronis": [
+        0.732,
+        0.679
+      ],
+      "endofonon": [
+        0.751,
+        -0.294
+      ],
+      "measureNumber": [
+        0.03,
+        0.5
+      ],
+      "isonIndicator": [
+        0.03,
+        0.7
+      ],
+      "heteronConnecting": [
+        1.641,
+        -0.251
+      ],
+      "heteron": [
+        1.036,
+        -0.005
+      ],
+      "omalon": [
+        0.8,
+        -0.1
+      ],
+      "omalonConnecting": [
+        1.3,
+        -0.1
+      ],
+      "antikenoma": [
+        0.73,
+        -0.05
+      ],
+      "apli": [
+        0.73,
+        -0.15
+      ],
+      "noteTop": [
+        0.06,
+        0.4
+      ],
+      "fthoraTop": [
+        0.307,
+        0.275
+      ],
+      "fthoraBottom": [
+        0.738,
+        -0.023
+      ],
+      "diesis": [
+        0.349,
+        -0.099
+      ],
+      "yfesis": [
+        1.265,
+        0.387
+      ],
+      "klasmaTop": [
+        0.16,
+        0.25
+      ],
+      "klasmaBottom": [
+        0.68,
+        -0.07
+      ],
+      "gorgonTop": [
+        0.2,
+        0.22
+      ],
+      "psifiston": [
+        0.8,
+        -0.13
+      ]
+    },
+    "oligonKentimaYpsiliMiddle": {
+      "gorgonBottom": [
+        0.7,
+        -0.08
+      ],
+      "yfenAbove": [
+        0.879,
+        1.171
+      ],
+      "yfenBelow": [
+        0.878,
+        -0.272
+      ],
+      "koronis": [
+        0.224,
+        0.603
+      ],
+      "klasmaTop": [
+        0.2,
+        0.25
+      ],
+      "measureNumber": [
+        0.03,
+        0.5
+      ],
+      "isonIndicator": [
+        0.03,
+        0.75
+      ],
+      "heteronConnecting": [
+        1.641,
+        -0.251
+      ],
+      "heteron": [
+        1.036,
+        -0.005
+      ],
+      "omalon": [
+        0.8,
+        -0.1
+      ],
+      "omalonConnecting": [
+        1.3,
+        -0.1
+      ],
+      "antikenoma": [
+        0.73,
+        -0.05
+      ],
+      "apli": [
+        0.73,
+        -0.15
+      ],
+      "noteTop": [
+        0.06,
+        0.4
+      ],
+      "fthoraTop": [
+        1.176,
+        0.215
+      ],
+      "fthoraBottom": [
+        0.738,
+        -0.023
+      ],
+      "diesis": [
+        0.349,
+        -0.099
+      ],
+      "yfesis": [
+        1.265,
+        0.387
+      ],
+      "klasmaBottom": [
+        0.68,
+        -0.07
+      ],
+      "gorgonTop": [
+        1.09,
+        0.22
+      ],
+      "psifiston": [
+        0.8,
+        -0.12
+      ]
+    },
+    "oligonDoubleYpsili": {
+      "gorgonBottom": [
+        0.7,
+        -0.08
+      ],
+      "yfenAbove": [
+        0.88,
+        1.039
+      ],
+      "yfenBelow": [
+        0.879,
+        -0.272
+      ],
+      "koronis": [
+        0.733,
+        1.029
+      ],
+      "endofonon": [
+        0.752,
+        -0.294
+      ],
+      "measureNumber": [
+        0.03,
+        0.5
+      ],
+      "isonIndicator": [
+        0.03,
+        1.05
+      ],
+      "heteronConnecting": [
+        1.642,
+        -0.251
+      ],
+      "heteron": [
+        1.037,
+        -0.005
+      ],
+      "omalon": [
+        0.8,
+        -0.1
+      ],
+      "omalonConnecting": [
+        1.3,
+        -0.1
+      ],
+      "antikenoma": [
+        0.73,
+        -0.05
+      ],
+      "apli": [
+        0.73,
+        -0.15
+      ],
+      "noteTop": [
+        0.06,
+        0.5
+      ],
+      "fthoraTop": [
+        0.628,
+        0.275
+      ],
+      "fthoraBottom": [
+        0.739,
+        -0.023
+      ],
+      "diesis": [
+        0.35,
+        -0.099
+      ],
+      "yfesis": [
+        1.266,
+        0.387
+      ],
+      "klasmaBottom": [
+        0.68,
+        -0.07
+      ],
+      "gorgonTop": [
+        0.6,
+        0.22
+      ],
+      "psifiston": [
+        0.8,
+        -0.12
+      ]
+    },
+    "oligonKentimataDoubleYpsili": {
+      "gorgonBottom": [
+        0.78,
+        -0.08
+      ],
+      "yfenAbove": [
+        0.879,
+        1.139
+      ],
+      "yfenBelow": [
+        0.878,
+        -0.272
+      ],
+      "koronis": [
+        0.732,
+        1.139
+      ],
+      "endofonon": [
+        0.751,
+        -0.294
+      ],
+      "measureNumber": [
+        0.03,
+        0.5
+      ],
+      "isonIndicator": [
+        0.03,
+        0.75
+      ],
+      "heteronConnecting": [
+        1.641,
+        -0.251
+      ],
+      "heteron": [
+        1.036,
+        -0.005
+      ],
+      "omalon": [
+        0.88,
+        -0.1
+      ],
+      "omalonConnecting": [
+        1.4,
+        -0.1
+      ],
+      "antikenoma": [
+        0.83,
+        -0.05
+      ],
+      "apli": [
+        0.78,
+        -0.15
+      ],
+      "noteTop": [
+        0.06,
+        0.4
+      ],
+      "fthoraTop": [
+        0.263,
+        0.839
+      ],
+      "fthoraBottom": [
+        0.738,
+        -0.023
+      ],
+      "diesis": [
+        0.349,
+        -0.099
+      ],
+      "yfesis": [
+        1.317,
+        0.387
+      ],
+      "klasmaBottom": [
+        0.73,
+        -0.07
+      ],
+      "psifiston": [
+        0.88,
+        -0.12
+      ]
+    },
+    "isonApostrofos": {
+      "yfenAbove": [
+        0.639,
+        0.659
+      ],
+      "yfenBelow": [
+        0.703,
+        -0.468
+      ],
+      "koronis": [
+        0.579,
+        0.649
+      ],
+      "apli": [
+        1.35,
+        -0.48
+      ],
+      "measureNumber": [
+        0.03,
+        0.5
+      ],
+      "isonIndicator": [
+        0.03,
+        0.7
+      ],
+      "noteTop": [
+        0.06,
+        0.4
+      ],
+      "fthoraTop": [
+        0.593,
+        0.275
+      ],
+      "fthoraBottom": [
+        0.369,
+        -0.079
+      ],
+      "diesis": [
+        0.349,
+        -0.099
+      ]
+    },
+    "apostrofosSyndesmos": {
+      "yfenAbove": [
+        0.869,
+        0.659
+      ],
+      "yfenBelow": [
+        1.326,
+        -0.346
+      ],
+      "koronis": [
+        0.569,
+        0.649
+      ],
+      "apli": [
+        1.34,
+        -0.37
+      ],
+      "measureNumber": [
+        0.02,
+        0.5
+      ],
+      "isonIndicator": [
+        0.02,
+        0.7
+      ],
+      "noteTop": [
+        0.05,
+        0.4
+      ],
+      "fthoraTop": [
+        0.526,
+        0.41
+      ],
+      "fthoraBottom": [
+        0.312,
+        -0.139
+      ],
+      "gorgonTop": [
+        1.29,
+        0.1
+      ],
+      "diesis": [
+        0.272,
+        -0.105
+      ]
+    },
+    "yporroi": {
+      "diesisSecondary": [
+        0.524,
+        0.655
+      ],
+      "yfesisSecondary": [
+        -0.082,
+        -0.455
+      ],
+      "yfesis": [
+        0.245,
+        0.377
+      ],
+      "barline": [
+        0.223,
+        0.358
+      ],
+      "yfenAbove": [
+        0.154,
+        0.655
+      ],
+      "yfenBelow": [
+        0.096,
+        -0.272
+      ],
+      "koronis": [
+        0.147,
+        0.649
+      ],
+      "endofonon": [
+        0.129,
+        -0.378
+      ],
+      "heteronConnecting": [
+        0.52,
+        -0.251
+      ],
+      "measureNumber": [
+        0.03,
+        0.5
+      ],
+      "isonIndicator": [
+        0.0,
+        0.7
+      ],
+      "heteron": [
+        0.253,
+        -0.318
+      ],
+      "apli": [
+        0.15,
+        -0.2
+      ],
+      "antikenoma": [
+        0.15,
+        -0.1
+      ],
+      "noteTop": [
+        0.06,
+        0.4
+      ],
+      "fthoraTop": [
+        0.245,
+        0.377
+      ],
+      "fthoraBottom": [
+        0.085,
+        -0.131
+      ],
+      "diesis": [
+        0.204,
+        -0.172
+      ],
+      "gorgonTop": [
+        0.25,
+        0.29
+      ]
+    },
+    "runningElafron": {
+      "stavros": [
+        0.496,
+        0.255
+      ],
+      "diesisSecondary": [
+        0.662,
+        0.663
+      ],
+      "barline": [
+        0.532,
+        0.358
+      ],
+      "fthoraTopSecondary": [
+        0.239,
+        0.433
+      ],
+      "yfesisSecondary": [
+        0.337,
+        0.338
+      ],
+      "yfenAbove": [
+        1.009,
+        0.659
+      ],
+      "yfenBelow": [
+        1.058,
+        -0.272
+      ],
+      "koronis": [
+        0.979,
+        0.514
+      ],
+      "endofonon": [
+        1.061,
+        -0.269
+      ],
+      "measureNumber": [
+        0.73,
+        0.5
+      ],
+      "isonIndicator": [
+        0.73,
+        0.7
+      ],
+      "heteronConnecting": [
+        1.878,
+        -0.251
+      ],
+      "omalonConnecting": [
+        2.0,
+        -0.15
+      ],
+      "apli": [
+        1.42,
+        -0.25
+      ],
+      "antikenoma": [
+        1.42,
+        -0.15
+      ],
+      "noteTop": [
+        0.7,
+        0.4
+      ],
+      "fthoraTop": [
+        1.047,
+        0.428
+      ],
+      "fthoraBottom": [
+        1.088,
+        -0.162
+      ],
+      "gorgonTop": [
+        1.35,
+        0.32
+      ],
+      "diesis": [
+        0.886,
+        -0.212
+      ],
+      "yfesis": [
+        1.439,
+        0.304
+      ],
+      "klasmaTop": [
+        1.35,
+        0.34
+      ]
+    },
+    "elafron": {
+      "yfenAbove": [
+        0.599,
+        0.669
+      ],
+      "yfenBelow": [
+        0.608,
+        -0.272
+      ],
+      "koronis": [
+        0.509,
+        0.514
+      ],
+      "endofonon": [
+        0.581,
+        -0.269
+      ],
+      "measureNumber": [
+        0.03,
+        0.5
+      ],
+      "isonIndicator": [
+        0.03,
+        0.7
+      ],
+      "gorgonBottom": [
+        0.73,
+        -0.15
+      ],
+      "heteronConnecting": [
+        1.369,
+        -0.251
+      ],
+      "omalonConnecting": [
+        1.3,
+        -0.15
+      ],
+      "apli": [
+        0.71,
+        -0.25
+      ],
+      "antikenoma": [
+        0.71,
+        -0.15
+      ],
+      "noteTop": [
+        0.06,
+        0.4
+      ],
+      "fthoraTop": [
+        0.467,
+        0.428
+      ],
+      "fthoraBottom": [
+        0.558,
+        -0.162
+      ],
+      "gorgonTop": [
+        0.65,
+        0.32
+      ],
+      "diesis": [
+        0.376,
+        -0.212
+      ],
+      "yfesis": [
+        0.929,
+        0.304
+      ],
+      "klasmaTop": [
+        0.65,
+        0.34
+      ]
+    },
+    "elafronApostrofos": {
+      "gorgonBottom": [
+        0.73,
+        -0.15
+      ],
+      "yfenAbove": [
+        0.579,
+        0.659
+      ],
+      "yfenBelow": [
+        0.608,
+        -0.442
+      ],
+      "koronis": [
+        0.509,
+        0.514
+      ],
+      "endofonon": [
+        0.581,
+        -0.269
+      ],
+      "measureNumber": [
+        0.03,
+        0.5
+      ],
+      "isonIndicator": [
+        0.03,
+        0.7
+      ],
+      "heteronConnecting": [
+        1.369,
+        -0.251
+      ],
+      "omalonConnecting": [
+        1.2,
+        -0.15
+      ],
+      "apli": [
+        0.71,
+        -0.25
+      ],
+      "antikenoma": [
+        0.71,
+        -0.15
+      ],
+      "noteTop": [
+        0.06,
+        0.4
+      ],
+      "fthoraTop": [
+        0.467,
+        0.428
+      ],
+      "fthoraBottom": [
+        0.558,
+        -0.262
+      ],
+      "gorgonTop": [
+        0.65,
+        0.32
+      ],
+      "diesis": [
+        0.376,
+        -0.212
+      ],
+      "yfesis": [
+        0.929,
+        0.304
+      ],
+      "klasmaTop": [
+        0.65,
+        0.34
+      ]
+    },
+    "chamiliApostrofos": {
+      "yfenAbove": [
+        0.58,
+        0.689
+      ],
+      "yfenBelow": [
+        0.609,
+        -0.532
+      ],
+      "koronis": [
+        0.67,
+        0.678
+      ],
+      "endofonon": [
+        0.582,
+        -0.489
+      ],
+      "measureNumber": [
+        0.03,
+        0.7
+      ],
+      "isonIndicator": [
+        0.03,
+        0.7
+      ],
+      "heteronConnecting": [
+        1.234,
+        -0.412
+      ],
+      "omalonConnecting": [
+        1.3,
+        -0.35
+      ],
+      "apli": [
+        0.75,
+        -0.45
+      ],
+      "antikenoma": [
+        0.75,
+        -0.35
+      ],
+      "noteTop": [
+        0.06,
+        0.7
+      ],
+      "fthoraTop": [
+        0.723,
+        0.533
+      ],
+      "fthoraBottom": [
+        0.559,
+        -0.362
+      ],
+      "gorgonTop": [
+        0.9,
+        0.35
+      ],
+      "diesis": [
+        0.278,
+        -0.216
+      ],
+      "yfesis": [
+        0.903,
+        0.515
+      ],
+      "klasmaTop": [
+        0.95,
+        0.31
+      ]
+    },
+    "chamili": {
+      "yfenAbove": [
+        0.579,
+        0.689
+      ],
+      "yfenBelow": [
+        0.608,
+        -0.272
+      ],
+      "koronis": [
+        0.719,
+        0.684
+      ],
+      "endofonon": [
+        0.581,
+        -0.269
+      ],
+      "measureNumber": [
+        0.031,
+        0.7
+      ],
+      "isonIndicator": [
+        0.03,
+        0.7
+      ],
+      "gorgonBottom": [
+        0.83,
+        -0.1
+      ],
+      "heteronConnecting": [
+        1.233,
+        -0.251
+      ],
+      "omalonConnecting": [
+        1.3,
+        -0.15
+      ],
+      "apli": [
+        0.75,
+        -0.2
+      ],
+      "antikenoma": [
+        0.75,
+        -0.1
+      ],
+      "noteTop": [
+        0.06,
+        0.65
+      ],
+      "fthoraTop": [
+        0.722,
+        0.533
+      ],
+      "fthoraBottom": [
+        0.558,
+        0.008
+      ],
+      "gorgonTop": [
+        0.9,
+        0.3
+      ],
+      "diesis": [
+        0.342,
+        -0.031
+      ],
+      "yfesis": [
+        0.902,
+        0.515
+      ],
+      "klasmaTop": [
+        0.95,
+        0.26
+      ]
+    },
+    "chamiliElafron": {
+      "yfenAbove": [
+        0.579,
+        1.069
+      ],
+      "yfenBelow": [
+        0.608,
+        -0.272
+      ],
+      "koronis": [
+        0.719,
+        0.994
+      ],
+      "endofonon": [
+        0.581,
+        -0.269
+      ],
+      "measureNumber": [
+        0.03,
+        1.0
+      ],
+      "isonIndicator": [
+        0.03,
+        1.0
+      ],
+      "heteronConnecting": [
+        1.369,
+        -0.251
+      ],
+      "omalonConnecting": [
+        1.3,
+        -0.15
+      ],
+      "apli": [
+        0.78,
+        -0.25
+      ],
+      "antikenoma": [
+        0.78,
+        -0.15
+      ],
+      "noteTop": [
+        0.06,
+        1.0
+      ],
+      "fthoraTop": [
+        0.722,
+        0.833
+      ],
+      "fthoraBottom": [
+        0.558,
+        -0.142
+      ],
+      "gorgonTop": [
+        0.9,
+        0.67
+      ],
+      "diesis": [
+        0.407,
+        -0.216
+      ],
+      "yfesis": [
+        0.954,
+        0.819
+      ],
+      "klasmaTop": [
+        0.95,
+        0.63
+      ]
+    },
+    "chamiliElafronApostrofos": {
+      "yfenAbove": [
+        0.579,
+        1.019
+      ],
+      "yfenBelow": [
+        0.608,
+        -0.462
+      ],
+      "koronis": [
+        0.719,
+        0.984
+      ],
+      "endofonon": [
+        0.581,
+        -0.339
+      ],
+      "measureNumber": [
+        0.03,
+        1.0
+      ],
+      "isonIndicator": [
+        0.03,
+        1.0
+      ],
+      "heteronConnecting": [
+        1.369,
+        -0.251
+      ],
+      "omalonConnecting": [
+        1.3,
+        -0.15
+      ],
+      "apli": [
+        0.78,
+        -0.25
+      ],
+      "antikenoma": [
+        0.78,
+        -0.15
+      ],
+      "noteTop": [
+        0.06,
+        1.0
+      ],
+      "fthoraTop": [
+        0.722,
+        0.853
+      ],
+      "fthoraBottom": [
+        0.558,
+        -0.252
+      ],
+      "gorgonTop": [
+        0.9,
+        0.67
+      ],
+      "diesis": [
+        0.407,
+        -0.216
+      ],
+      "yfesis": [
+        0.954,
+        0.819
+      ],
+      "klasmaTop": [
+        0.95,
+        0.63
+      ]
+    },
+    "doubleChamili": {
+      "yfenAbove": [
+        0.579,
+        1.009
+      ],
+      "yfenBelow": [
+        0.608,
+        -0.272
+      ],
+      "koronis": [
+        0.719,
+        0.994
+      ],
+      "endofonon": [
+        0.581,
+        -0.269
+      ],
+      "measureNumber": [
+        0.03,
+        1.0
+      ],
+      "isonIndicator": [
+        0.03,
+        1.0
+      ],
+      "heteronConnecting": [
+        1.233,
+        -0.251
+      ],
+      "omalonConnecting": [
+        1.3,
+        -0.15
+      ],
+      "apli": [
+        0.75,
+        -0.2
+      ],
+      "antikenoma": [
+        0.75,
+        -0.1
+      ],
+      "noteTop": [
+        0.06,
+        0.95
+      ],
+      "fthoraTop": [
+        0.722,
+        0.873
+      ],
+      "fthoraBottom": [
+        0.558,
+        0.008
+      ],
+      "gorgonTop": [
+        1.0,
+        0.65
+      ],
+      "diesis": [
+        0.413,
+        -0.071
+      ],
+      "yfesis": [
+        0.914,
+        0.865
+      ],
+      "klasmaTop": [
+        1.05,
+        0.63
+      ]
+    },
+    "petastiIson": {
+      "yfenAbove": [
+        0.741,
+        0.817
+      ],
+      "yfenBelow": [
+        0.678,
+        -0.272
+      ],
+      "koronis": [
+        0.679,
+        0.814
+      ],
+      "endofonon": [
+        0.721,
+        -0.359
+      ],
+      "heteronConnecting": [
+        1.265,
+        -0.251
+      ],
+      "yfesis": [
+        1.128,
+        0.683
+      ],
+      "psifiston": [
+        0.87,
+        -0.12
+      ],
+      "measureNumber": [
+        0.03,
+        0.7
+      ],
+      "isonIndicator": [
+        0.03,
+        0.7
+      ],
+      "apli": [
+        0.72,
+        -0.22
+      ],
+      "antikenoma": [
+        0.72,
+        -0.12
+      ],
+      "fthoraBottom": [
+        0.301,
+        -0.07
+      ],
+      "noteTop": [
+        0.06,
+        0.7
+      ],
+      "fthoraTop": [
+        0.683,
+        0.614
+      ],
+      "diesis": [
+        0.413,
+        -0.085
+      ],
+      "klasmaBottom": [
+        0.68,
+        -0.15
+      ]
+    },
+    "petasti": {
+      "yfenAbove": [
+        0.741,
+        0.817
+      ],
+      "yfenBelow": [
+        0.718,
+        -0.272
+      ],
+      "koronis": [
+        0.679,
+        0.814
+      ],
+      "endofonon": [
+        0.721,
+        -0.359
+      ],
+      "heteronConnecting": [
+        1.265,
+        -0.251
+      ],
+      "yfesis": [
+        1.062,
+        0.459
+      ],
+      "measureNumber": [
+        0.03,
+        0.5
+      ],
+      "isonIndicator": [
+        0.03,
+        0.7
+      ],
+      "apli": [
+        0.72,
+        -0.22
+      ],
+      "antikenoma": [
+        0.72,
+        -0.12
+      ],
+      "fthoraBottom": [
+        0.301,
+        -0.07
+      ],
+      "noteTop": [
+        0.08,
+        0.4
+      ],
+      "fthoraTop": [
+        0.605,
+        0.368
+      ],
+      "diesis": [
+        0.413,
+        -0.085
+      ],
+      "psifiston": [
+        0.87,
+        -0.12
+      ],
+      "klasmaBottom": [
+        0.68,
+        -0.15
+      ]
+    },
+    "petastiOligon": {
+      "yfenAbove": [
+        0.741,
+        0.817
+      ],
+      "yfenBelow": [
+        0.738,
+        -0.272
+      ],
+      "koronis": [
+        0.679,
+        0.814
+      ],
+      "endofonon": [
+        0.721,
+        -0.359
+      ],
+      "heteronConnecting": [
+        1.265,
+        -0.251
+      ],
+      "yfesis": [
+        1.062,
+        0.759
+      ],
+      "psifiston": [
+        0.87,
+        -0.12
+      ],
+      "measureNumber": [
+        0.03,
+        0.7
+      ],
+      "isonIndicator": [
+        0.03,
+        0.7
+      ],
+      "apli": [
+        0.72,
+        -0.22
+      ],
+      "antikenoma": [
+        0.72,
+        -0.12
+      ],
+      "fthoraBottom": [
+        0.301,
+        -0.07
+      ],
+      "noteTop": [
+        0.06,
+        0.6
+      ],
+      "fthoraTop": [
+        0.683,
+        0.614
+      ],
+      "klasmaBottom": [
+        0.68,
+        -0.15
+      ],
+      "diesis": [
+        0.413,
+        -0.085
+      ]
+    },
+    "petastiKentima": {
+      "yfenAbove": [
+        0.741,
+        0.817
+      ],
+      "yfenBelow": [
+        0.678,
+        -0.272
+      ],
+      "koronis": [
+        0.679,
+        0.814
+      ],
+      "endofonon": [
+        0.721,
+        -0.359
+      ],
+      "heteronConnecting": [
+        1.265,
+        -0.251
+      ],
+      "yfesis": [
+        1.062,
+        0.459
+      ],
+      "psifiston": [
+        0.87,
+        -0.12
+      ],
+      "measureNumber": [
+        0.03,
+        0.5
+      ],
+      "isonIndicator": [
+        0.03,
+        0.7
+      ],
+      "apli": [
+        0.72,
+        -0.22
+      ],
+      "antikenoma": [
+        0.72,
+        -0.12
+      ],
+      "fthoraBottom": [
+        0.301,
+        -0.07
+      ],
+      "noteTop": [
+        0.06,
+        0.4
+      ],
+      "fthoraTop": [
+        1.04,
+        0.428
+      ],
+      "diesis": [
+        0.413,
+        -0.085
+      ],
+      "klasmaBottom": [
+        0.68,
+        -0.15
+      ]
+    },
+    "petastiYpsiliRight": {
+      "yfenAbove": [
+        0.741,
+        1.077
+      ],
+      "yfenBelow": [
+        0.678,
+        -0.272
+      ],
+      "koronis": [
+        0.379,
+        0.644
+      ],
+      "endofonon": [
+        0.721,
+        -0.359
+      ],
+      "heteronConnecting": [
+        1.265,
+        -0.251
+      ],
+      "yfesis": [
+        1.062,
+        0.459
+      ],
+      "psifiston": [
+        0.87,
+        -0.12
+      ],
+      "measureNumber": [
+        0.03,
+        0.5
+      ],
+      "isonIndicator": [
+        0.03,
+        0.7
+      ],
+      "apli": [
+        0.72,
+        -0.22
+      ],
+      "antikenoma": [
+        0.72,
+        -0.12
+      ],
+      "fthoraBottom": [
+        0.301,
+        -0.07
+      ],
+      "noteTop": [
+        0.06,
+        0.4
+      ],
+      "fthoraTop": [
+        0.543,
+        0.636
+      ],
+      "diesis": [
+        0.413,
+        -0.085
+      ],
+      "klasmaBottom": [
+        0.68,
+        -0.15
+      ]
+    },
+    "petastiYpsiliLeft": {
+      "yfenAbove": [
+        0.741,
+        1.067
+      ],
+      "yfenBelow": [
+        0.678,
+        -0.272
+      ],
+      "koronis": [
+        0.874,
+        0.575
+      ],
+      "endofonon": [
+        0.721,
+        -0.359
+      ],
+      "heteronConnecting": [
+        1.265,
+        -0.251
+      ],
+      "yfesis": [
+        1.062,
+        0.459
+      ],
+      "psifiston": [
+        0.87,
+        -0.12
+      ],
+      "measureNumber": [
+        0.03,
+        0.5
+      ],
+      "isonIndicator": [
+        0.7,
+        0.7
+      ],
+      "apli": [
+        0.72,
+        -0.22
+      ],
+      "antikenoma": [
+        0.72,
+        -0.12
+      ],
+      "fthoraBottom": [
+        0.301,
+        -0.07
+      ],
+      "noteTop": [
+        0.06,
+        0.6
+      ],
+      "fthoraTop": [
+        0.907,
+        0.416
+      ],
+      "diesis": [
+        0.413,
+        -0.085
+      ],
+      "klasmaBottom": [
+        0.68,
+        -0.15
+      ]
+    },
+    "petastiKentimaYpsiliRight": {
+      "yfenAbove": [
+        0.741,
+        1.067
+      ],
+      "yfenBelow": [
+        0.678,
+        -0.272
+      ],
+      "koronis": [
+        0.548,
+        0.737
+      ],
+      "endofonon": [
+        0.721,
+        -0.359
+      ],
+      "heteronConnecting": [
+        1.265,
+        -0.251
+      ],
+      "yfesis": [
+        1.062,
+        0.459
+      ],
+      "psifiston": [
+        0.87,
+        -0.12
+      ],
+      "measureNumber": [
+        0.03,
+        0.5
+      ],
+      "isonIndicator": [
+        0.03,
+        0.7
+      ],
+      "apli": [
+        0.72,
+        -0.22
+      ],
+      "antikenoma": [
+        0.72,
+        -0.12
+      ],
+      "fthoraBottom": [
+        0.301,
+        -0.07
+      ],
+      "noteTop": [
+        0.06,
+        0.4
+      ],
+      "fthoraTop": [
+        0.431,
+        0.658
+      ],
+      "diesis": [
+        0.413,
+        -0.085
+      ],
+      "klasmaBottom": [
+        0.68,
+        -0.15
+      ]
+    },
+    "petastiKentimaYpsiliMiddle": {
+      "yfenAbove": [
+        0.741,
+        1.067
+      ],
+      "yfenBelow": [
+        0.678,
+        -0.272
+      ],
+      "koronis": [
+        0.262,
+        0.731
+      ],
+      "endofonon": [
+        0.721,
+        -0.359
+      ],
+      "heteronConnecting": [
+        1.265,
+        -0.251
+      ],
+      "yfesis": [
+        1.062,
+        0.459
+      ],
+      "psifiston": [
+        0.87,
+        -0.12
+      ],
+      "measureNumber": [
+        0.03,
+        0.5
+      ],
+      "isonIndicator": [
+        0.03,
+        0.7
+      ],
+      "apli": [
+        0.72,
+        -0.22
+      ],
+      "antikenoma": [
+        0.72,
+        -0.12
+      ],
+      "fthoraBottom": [
+        0.301,
+        -0.07
+      ],
+      "noteTop": [
+        0.06,
+        0.4
+      ],
+      "fthoraTop": [
+        0.969,
+        0.448
+      ],
+      "diesis": [
+        0.413,
+        -0.085
+      ],
+      "klasmaBottom": [
+        0.68,
+        -0.15
+      ]
+    },
+    "petastiApostrofos": {
+      "yfenAbove": [
+        0.741,
+        0.817
+      ],
+      "yfenBelow": [
+        0.678,
+        -0.272
+      ],
+      "koronis": [
+        0.612,
+        0.729
+      ],
+      "endofonon": [
+        0.721,
+        -0.359
+      ],
+      "heteronConnecting": [
+        1.265,
+        -0.251
+      ],
+      "psifiston": [
+        0.87,
+        -0.12
+      ],
+      "measureNumber": [
+        0.03,
+        0.5
+      ],
+      "isonIndicator": [
+        0.03,
+        0.7
+      ],
+      "apli": [
+        0.72,
+        -0.22
+      ],
+      "antikenoma": [
+        0.72,
+        -0.12
+      ],
+      "fthoraBottom": [
+        0.301,
+        -0.07
+      ],
+      "fthoraTop": [
+        0.438,
+        0.679
+      ],
+      "noteTop": [
+        0.06,
+        0.6
+      ],
+      "diesis": [
+        0.413,
+        -0.085
+      ],
+      "yfesis": [
+        0.751,
+        0.647
+      ],
+      "klasmaBottom": [
+        0.68,
+        -0.15
+      ]
+    },
+    "petastiElafron": {
+      "yfenAbove": [
+        0.661,
+        0.877
+      ],
+      "yfenBelow": [
+        0.678,
+        -0.272
+      ],
+      "koronis": [
+        0.612,
+        0.859
+      ],
+      "endofonon": [
+        0.721,
+        -0.359
+      ],
+      "heteronConnecting": [
+        1.265,
+        -0.251
+      ],
+      "psifiston": [
+        0.87,
+        -0.12
+      ],
+      "measureNumber": [
+        0.03,
+        0.7
+      ],
+      "isonIndicator": [
+        0.03,
+        0.7
+      ],
+      "apli": [
+        0.72,
+        -0.22
+      ],
+      "antikenoma": [
+        0.72,
+        -0.12
+      ],
+      "fthoraBottom": [
+        0.301,
+        -0.07
+      ],
+      "fthoraTop": [
+        0.438,
+        0.819
+      ],
+      "noteTop": [
+        0.06,
+        0.7
+      ],
+      "diesis": [
+        0.413,
+        -0.085
+      ],
+      "yfesis": [
+        0.977,
+        0.793
+      ],
+      "klasmaBottom": [
+        0.68,
+        -0.15
+      ]
+    },
+    "petastiElafronApostrofos": {
+      "yfenAbove": [
+        0.651,
+        0.857
+      ],
+      "yfenBelow": [
+        0.678,
+        -0.272
+      ],
+      "koronis": [
+        0.612,
+        0.859
+      ],
+      "endofonon": [
+        0.721,
+        -0.359
+      ],
+      "heteronConnecting": [
+        1.265,
+        -0.251
+      ],
+      "psifiston": [
+        0.87,
+        -0.12
+      ],
+      "measureNumber": [
+        0.03,
+        0.7
+      ],
+      "isonIndicator": [
+        0.03,
+        0.7
+      ],
+      "apli": [
+        0.72,
+        -0.22
+      ],
+      "antikenoma": [
+        0.72,
+        -0.12
+      ],
+      "fthoraBottom": [
+        0.301,
+        -0.07
+      ],
+      "fthoraTop": [
+        0.438,
+        0.799
+      ],
+      "noteTop": [
+        0.06,
+        0.7
+      ],
+      "diesis": [
+        0.413,
+        -0.085
+      ],
+      "yfesis": [
+        0.977,
+        0.793
+      ],
+      "klasmaBottom": [
+        0.68,
+        -0.15
+      ]
+    },
+    "petastiChamili": {
+      "yfenAbove": [
+        0.779,
+        0.997
+      ],
+      "yfenBelow": [
+        0.726,
+        -0.272
+      ],
+      "koronis": [
+        0.76,
+        0.899
+      ],
+      "endofonon": [
+        0.769,
+        -0.359
+      ],
+      "heteronConnecting": [
+        1.313,
+        -0.251
+      ],
+      "psifiston": [
+        0.91,
+        -0.12
+      ],
+      "measureNumber": [
+        0.03,
+        1.0
+      ],
+      "isonIndicator": [
+        0.03,
+        1.0
+      ],
+      "apli": [
+        0.76,
+        -0.22
+      ],
+      "antikenoma": [
+        0.76,
+        -0.12
+      ],
+      "fthoraBottom": [
+        0.349,
+        -0.07
+      ],
+      "fthoraTop": [
+        0.646,
+        0.739
+      ],
+      "noteTop": [
+        0.06,
+        0.9
+      ],
+      "diesis": [
+        0.461,
+        -0.085
+      ],
+      "yfesis": [
+        1.025,
+        0.793
+      ],
+      "klasmaBottom": [
+        0.72,
+        -0.15
+      ]
+    },
+    "kentimata": {
+      "heteronConnecting": [
+        0.755,
+        -0.198
+      ],
+      "yfenAbove": [
+        0.362,
+        0.643
+      ],
+      "yfenBelow": [
+        0.408,
+        -0.272
+      ],
+      "endofonon": [
+        0.401,
+        -0.509
+      ],
+      "measureNumber": [
+        0.03,
+        0.5
+      ],
+      "gorgonBottom": [
+        0.33,
+        -0.14
+      ],
+      "isonIndicator": [
+        0.03,
+        0.7
+      ],
+      "noteTop": [
+        0.06,
+        0.3
+      ],
+      "fthoraBottom": [
+        0.414,
+        -0.135
+      ],
+      "fthoraTop": [
+        0.176,
+        0.527
+      ],
+      "diesis": [
+        0.282,
+        -0.139
+      ],
+      "yfesis": [
+        0.573,
+        0.319
+      ],
+      "gorgonTop": [
+        0.25,
+        0.23
+      ]
+    },
+    "oligonKentimataAbove": {
+      "fthoraTopSecondary": [
+        0.189,
+        0.248
+      ],
+      "yfenAbove": [
+        0.739,
+        0.669
+      ],
+      "yfenBelow": [
+        0.878,
+        -0.272
+      ],
+      "endofonon": [
+        0.721,
+        -0.279
+      ],
+      "heteronConnecting": [
+        1.543,
+        -0.251
+      ],
+      "omalonConnecting": [
+        1.3,
+        -0.1
+      ],
+      "measureNumber": [
+        0.03,
+        0.5
+      ],
+      "isonIndicator": [
+        0.03,
+        0.7
+      ],
+      "noteTop": [
+        0.06,
+        0.4
+      ],
+      "fthoraBottom": [
+        0.695,
+        -0.038
+      ],
+      "fthoraTop": [
+        0.576,
+        0.559
+      ],
+      "diesis": [
+        0.349,
+        -0.099
+      ],
+      "yfesis": [
+        1.265,
+        0.387
+      ],
+      "psifiston": [
+        0.8,
+        -0.12
+      ],
+      "gorgonTop": [
+        0.58,
+        0.53
+      ]
+    },
+    "oligonIsonKentimata": {
+      "diesisSecondary": [
+        0.824,
+        0.869
+      ],
+      "yfesisSecondary": [
+        0.819,
+        0.544
+      ],
+      "fthoraTopSecondary": [
+        0.571,
+        0.668
+      ],
+      "yfenAbove": [
+        0.919,
+        0.729
+      ],
+      "yfenBelow": [
+        0.988,
+        -0.272
+      ],
+      "endofonon": [
+        0.701,
+        -0.309
+      ],
+      "heteronConnecting": [
+        1.419,
+        -0.251
+      ],
+      "gorgonSecondary": [
+        0.6,
+        0.47
+      ],
+      "measureNumber": [
+        0.03,
+        0.7
+      ],
+      "isonIndicator": [
+        0.03,
+        0.7
+      ],
+      "noteTop": [
+        0.06,
+        0.6
+      ],
+      "fthoraBottom": [
+        1.045,
+        -0.038
+      ],
+      "fthoraTop": [
+        1.022,
+        0.669
+      ],
+      "diesis": [
+        0.349,
+        -0.099
+      ],
+      "yfesis": [
+        1.388,
+        0.588
+      ],
+      "psifiston": [
+        0.88,
+        -0.12
+      ],
+      "gorgonTop": [
+        1.07,
+        0.53
+      ]
+    },
+    "oligonYpsiliLeftKentimata": {
+      "yfenAbove": [
+        0.88,
+        0.969
+      ],
+      "yfenBelow": [
+        0.879,
+        -0.272
+      ],
+      "endofonon": [
+        0.752,
+        -0.269
+      ],
+      "heteronConnecting": [
+        1.544,
+        -0.251
+      ],
+      "measureNumber": [
+        0.03,
+        0.5
+      ],
+      "isonIndicator": [
+        0.9,
+        0.7
+      ],
+      "noteTop": [
+        0.06,
+        0.55
+      ],
+      "fthoraBottom": [
+        0.696,
+        -0.038
+      ],
+      "fthoraTop": [
+        0.643,
+        0.657
+      ],
+      "diesis": [
+        0.35,
+        -0.099
+      ],
+      "yfesis": [
+        1.266,
+        0.387
+      ],
+      "psifiston": [
+        0.88,
+        -0.12
+      ],
+      "gorgonTop": [
+        0.75,
+        0.53
+      ]
+    },
+    "oligonApostrofosKentimata": {
+      "diesisSecondary": [
+        0.915,
+        0.922
+      ],
+      "yfesisSecondary": [
+        0.59,
+        0.596
+      ],
+      "fthoraTopSecondary": [
+        0.36,
+        0.581
+      ],
+      "yfenAbove": [
+        0.88,
+        0.879
+      ],
+      "yfenBelow": [
+        0.879,
+        -0.272
+      ],
+      "endofonon": [
+        0.812,
+        -0.269
+      ],
+      "heteronConnecting": [
+        1.544,
+        -0.251
+      ],
+      "gorgonSecondary": [
+        0.37,
+        0.58
+      ],
+      "measureNumber": [
+        0.03,
+        0.7
+      ],
+      "isonIndicator": [
+        0.03,
+        0.7
+      ],
+      "noteTop": [
+        0.06,
+        0.6
+      ],
+      "fthoraBottom": [
+        0.826,
+        -0.038
+      ],
+      "fthoraTop": [
+        1.007,
+        0.557
+      ],
+      "diesis": [
+        0.35,
+        -0.099
+      ],
+      "yfesis": [
+        1.387,
+        0.528
+      ],
+      "psifiston": [
+        0.88,
+        -0.12
+      ],
+      "gorgonTop": [
+        1.065,
+        0.53
+      ]
+    },
+    "oligonElafronKentimata": {
+      "diesisSecondary": [
+        0.854,
+        0.931
+      ],
+      "yfesisSecondary": [
+        0.659,
+        0.606
+      ],
+      "fthoraTopSecondary": [
+        0.271,
+        0.68
+      ],
+      "gorgonSecondary": [
+        0.45,
+        0.51
+      ],
+      "yfenAbove": [
+        0.809,
+        0.829
+      ],
+      "yfenBelow": [
+        0.938,
+        -0.272
+      ],
+      "endofonon": [
+        0.731,
+        -0.269
+      ],
+      "heteronConnecting": [
+        1.419,
+        -0.251
+      ],
+      "gorgonTop": [
+        1.12,
+        0.5
+      ],
+      "measureNumber": [
+        0.03,
+        0.7
+      ],
+      "isonIndicator": [
+        0.03,
+        0.7
+      ],
+      "noteTop": [
+        0.06,
+        0.6
+      ],
+      "fthoraBottom": [
+        0.725,
+        -0.038
+      ],
+      "fthoraTop": [
+        1.052,
+        0.593
+      ],
+      "diesis": [
+        0.349,
+        -0.099
+      ],
+      "yfesis": [
+        1.358,
+        0.529
+      ],
+      "psifiston": [
+        0.88,
+        -0.12
+      ]
+    },
+    "oligonYporroiKentimata": {
+      "diesisSecondary": [
+        0.914,
+        0.921
+      ],
+      "barline": [
+        0.451,
+        0.63
+      ],
+      "yfesisSecondary": [
+        0.589,
+        0.596
+      ],
+      "fthoraTopSecondary": [
+        0.441,
+        0.603
+      ],
+      "yfenAbove": [
+        0.879,
+        0.909
+      ],
+      "yfenBelow": [
+        0.878,
+        -0.272
+      ],
+      "endofonon": [
+        0.801,
+        -0.269
+      ],
+      "heteronConnecting": [
+        1.543,
+        -0.251
+      ],
+      "measureNumber": [
+        0.03,
+        0.7
+      ],
+      "isonIndicator": [
+        0.03,
+        0.7
+      ],
+      "noteTop": [
+        0.06,
+        0.6
+      ],
+      "fthoraBottom": [
+        0.795,
+        -0.038
+      ],
+      "fthoraTop": [
+        0.962,
+        0.535
+      ],
+      "diesis": [
+        0.349,
+        -0.099
+      ],
+      "yfesis": [
+        1.382,
+        0.487
+      ],
+      "psifiston": [
+        0.88,
+        -0.12
+      ],
+      "gorgonSecondary": [
+        0.5,
+        0.55
+      ],
+      "gorgonTop": [
+        1.02,
+        0.53
+      ]
+    },
+    "oligonKentimataBelow": {
+      "diesisSecondary": [
+        1.545,
+        0.665
+      ],
+      "yfesisSecondary": [
+        0.374,
+        -0.377
+      ],
+      "barline": [
+        0.226,
+        0.358
+      ],
+      "yfenAbove": [
+        0.879,
+        0.409
+      ],
+      "yfenBelow": [
+        0.878,
+        -0.432
+      ],
+      "koronis": [
+        0.635,
+        0.569
+      ],
+      "endofonon": [
+        0.721,
+        -0.509
+      ],
+      "heteron": [
+        1.036,
+        -0.005
+      ],
+      "heteronConnecting": [
+        1.633,
+        -0.37
+      ],
+      "apli": [
+        0.75,
+        -0.4
+      ],
+      "measureNumber": [
+        0.03,
+        0.5
+      ],
+      "diesis": [
+        0.659,
+        -0.099
+      ],
+      "isonIndicator": [
+        0.03,
+        0.7
+      ],
+      "omalonConnecting": [
+        1.3,
+        -0.3
+      ],
+      "omalon": [
+        0.8,
+        -0.3
+      ],
+      "antikenoma": [
+        0.75,
+        -0.3
+      ],
+      "noteTop": [
+        0.06,
+        0.4
+      ],
+      "fthoraBottom": [
+        0.333,
+        -0.072
+      ],
+      "fthoraTop": [
+        0.692,
+        0.283
+      ],
+      "yfesis": [
+        1.265,
+        0.387
+      ],
+      "klasmaTop": [
+        0.65,
+        0.25
+      ],
+      "gorgonTop": [
+        0.68,
+        0.22
+      ],
+      "psifiston": [
+        1.08,
+        -0.16
+      ]
+    },
+    "oligonKentimaTripleYpsili": {
+      "gorgonBottom": [
+        0.78,
+        -0.08
+      ],
+      "yfenAbove": [
+        0.88,
+        1.229
+      ],
+      "yfenBelow": [
+        0.879,
+        -0.272
+      ],
+      "koronis": [
+        0.733,
+        1.229
+      ],
+      "endofonon": [
+        0.752,
+        -0.294
+      ],
+      "measureNumber": [
+        0.03,
+        0.5
+      ],
+      "isonIndicator": [
+        0.03,
+        1.05
+      ],
+      "heteronConnecting": [
+        1.642,
+        -0.251
+      ],
+      "heteron": [
+        1.037,
+        -0.005
+      ],
+      "omalon": [
+        0.88,
+        -0.1
+      ],
+      "omalonConnecting": [
+        1.4,
+        -0.1
+      ],
+      "antikenoma": [
+        0.8,
+        -0.05
+      ],
+      "apli": [
+        0.75,
+        -0.15
+      ],
+      "noteTop": [
+        0.06,
+        0.6
+      ],
+      "fthoraTop": [
+        1.29,
+        1.061
+      ],
+      "fthoraBottom": [
+        0.739,
+        -0.023
+      ],
+      "diesis": [
+        0.35,
+        -0.099
+      ],
+      "yfesis": [
+        1.328,
+        0.387
+      ],
+      "klasmaBottom": [
+        0.73,
+        -0.07
+      ],
+      "psifiston": [
+        0.88,
+        -0.12
+      ]
+    },
+    "oligonIson": {
+      "gorgonBottom": [
+        0.7,
+        -0.08
+      ],
+      "yfenAbove": [
+        0.88,
+        0.679
+      ],
+      "yfenBelow": [
+        0.879,
+        -0.272
+      ],
+      "koronis": [
+        0.733,
+        0.679
+      ],
+      "endofonon": [
+        0.752,
+        -0.294
+      ],
+      "measureNumber": [
+        0.03,
+        0.7
+      ],
+      "isonIndicator": [
+        0.03,
+        0.7
+      ],
+      "heteronConnecting": [
+        1.642,
+        -0.251
+      ],
+      "heteron": [
+        1.037,
+        -0.005
+      ],
+      "noteTop": [
+        0.06,
+        0.6
+      ],
+      "fthoraTop": [
+        0.738,
+        0.485
+      ],
+      "fthoraBottom": [
+        0.739,
+        -0.023
+      ],
+      "klasmaBottom": [
+        0.68,
+        -0.07
+      ],
+      "diesis": [
+        0.35,
+        -0.099
+      ],
+      "yfesis": [
+        1.266,
+        0.387
+      ],
+      "psifiston": [
+        0.8,
+        -0.12
+      ]
+    },
+    "oligonElafron": {
+      "gorgonBottom": [
+        0.7,
+        -0.08
+      ],
+      "yfenAbove": [
+        0.88,
+        0.859
+      ],
+      "yfenBelow": [
+        0.879,
+        -0.272
+      ],
+      "koronis": [
+        0.733,
+        0.809
+      ],
+      "endofonon": [
+        0.752,
+        -0.294
+      ],
+      "measureNumber": [
+        0.03,
+        0.7
+      ],
+      "isonIndicator": [
+        0.03,
+        0.7
+      ],
+      "heteronConnecting": [
+        1.642,
+        -0.251
+      ],
+      "heteron": [
+        1.037,
+        -0.005
+      ],
+      "noteTop": [
+        0.06,
+        0.6
+      ],
+      "fthoraTop": [
+        0.552,
+        0.803
+      ],
+      "fthoraBottom": [
+        0.739,
+        -0.023
+      ],
+      "diesis": [
+        0.35,
+        -0.099
+      ],
+      "yfesis": [
+        1.266,
+        0.387
+      ],
+      "klasmaBottom": [
+        0.68,
+        -0.07
+      ],
+      "psifiston": [
+        0.8,
+        -0.12
+      ]
+    },
+    "petastiRunningElafron": {
+      "diesisSecondary": [
+        0.612,
+        1.003
+      ],
+      "barline": [
+        0.346,
+        0.708
+      ],
+      "yfesisSecondary": [
+        0.287,
+        0.678
+      ],
+      "fthoraTopSecondary": [
+        0.099,
+        0.674
+      ],
+      "yfenAbove": [
+        0.881,
+        0.817
+      ],
+      "yfenBelow": [
+        0.978,
+        -0.272
+      ],
+      "koronis": [
+        0.782,
+        0.809
+      ],
+      "endofonon": [
+        1.001,
+        -0.359
+      ],
+      "heteronConnecting": [
+        1.535,
+        -0.251
+      ],
+      "measureNumber": [
+        0.73,
+        0.7
+      ],
+      "isonIndicator": [
+        0.73,
+        0.7
+      ],
+      "fthoraBottom": [
+        0.491,
+        -0.07
+      ],
+      "fthoraTop": [
+        0.708,
+        0.679
+      ],
+      "noteTop": [
+        0.75,
+        0.7
+      ],
+      "diesis": [
+        0.703,
+        -0.085
+      ],
+      "yfesis": [
+        1.171,
+        0.679
+      ],
+      "psifiston": [
+        1.5,
+        -0.12
+      ],
+      "klasmaBottom": [
+        1.36,
+        -0.15
+      ]
+    },
+    "oligonApostrofos": {
+      "gorgonBottom": [
+        0.7,
+        -0.08
+      ],
+      "yfenAbove": [
+        0.88,
+        0.679
+      ],
+      "yfenBelow": [
+        0.879,
+        -0.272
+      ],
+      "koronis": [
+        0.733,
+        0.679
+      ],
+      "endofonon": [
+        0.752,
+        -0.294
+      ],
+      "measureNumber": [
+        0.03,
+        0.7
+      ],
+      "isonIndicator": [
+        0.03,
+        0.7
+      ],
+      "heteronConnecting": [
+        1.642,
+        -0.251
+      ],
+      "heteron": [
+        1.037,
+        -0.005
+      ],
+      "noteTop": [
+        0.06,
+        0.6
+      ],
+      "fthoraTop": [
+        0.696,
+        0.65
+      ],
+      "fthoraBottom": [
+        0.739,
+        -0.023
+      ],
+      "diesis": [
+        0.35,
+        -0.099
+      ],
+      "yfesis": [
+        1.266,
+        0.387
+      ],
+      "klasmaBottom": [
+        0.68,
+        -0.07
+      ],
+      "psifiston": [
+        0.8,
+        -0.12
+      ]
+    },
+    "oligonYporroi": {
+      "barline": [
+        0.947,
+        0.646
+      ],
+      "gorgonBottom": [
+        0.7,
+        -0.08
+      ],
+      "yfenAbove": [
+        0.88,
+        0.739
+      ],
+      "yfenBelow": [
+        0.879,
+        -0.272
+      ],
+      "koronis": [
+        0.733,
+        0.679
+      ],
+      "endofonon": [
+        0.752,
+        -0.294
+      ],
+      "measureNumber": [
+        0.03,
+        0.7
+      ],
+      "isonIndicator": [
+        0.03,
+        0.7
+      ],
+      "heteronConnecting": [
+        1.642,
+        -0.251
+      ],
+      "heteron": [
+        1.037,
+        -0.005
+      ],
+      "noteTop": [
+        0.06,
+        0.4
+      ],
+      "fthoraTop": [
+        0.939,
+        0.692
+      ],
+      "fthoraBottom": [
+        0.739,
+        -0.023
+      ],
+      "diesis": [
+        0.35,
+        -0.099
+      ],
+      "yfesis": [
+        1.266,
+        0.387
+      ],
+      "klasmaBottom": [
+        0.68,
+        -0.07
+      ],
+      "psifiston": [
+        0.8,
+        -0.12
+      ]
+    },
+    "petastiYporroi": {
+      "barline": [
+        0.651,
+        0.584
+      ],
+      "gorgonTop": [
+        0.72,
+        0.45
+      ],
+      "yfenAbove": [
+        0.651,
+        0.817
+      ],
+      "yfenBelow": [
+        0.678,
+        -0.272
+      ],
+      "koronis": [
+        0.612,
+        0.729
+      ],
+      "endofonon": [
+        0.721,
+        -0.359
+      ],
+      "heteronConnecting": [
+        1.265,
+        -0.251
+      ],
+      "psifiston": [
+        0.87,
+        -0.12
+      ],
+      "measureNumber": [
+        0.03,
+        0.5
+      ],
+      "isonIndicator": [
+        0.03,
+        0.7
+      ],
+      "apli": [
+        0.72,
+        -0.22
+      ],
+      "antikenoma": [
+        0.72,
+        -0.12
+      ],
+      "fthoraBottom": [
+        0.301,
+        -0.07
+      ],
+      "fthoraTop": [
+        0.638,
+        0.549
+      ],
+      "noteTop": [
+        0.06,
+        0.4
+      ],
+      "diesis": [
+        0.413,
+        -0.085
+      ],
+      "yfesis": [
+        0.885,
+        0.625
+      ],
+      "klasmaBottom": [
+        0.68,
+        -0.15
+      ]
+    },
+    "oligonRunningElafronKentimata": {
+      "diesisTertiary": [
+        0.652,
+        0.951
+      ],
+      "diesisSecondary": [
+        1.346,
+        0.901
+      ],
+      "barline": [
+        0.41,
+        0.624
+      ],
+      "yfesisTertiary": [
+        0.327,
+        0.626
+      ],
+      "yfesisSecondary": [
+        1.071,
+        0.576
+      ],
+      "fthoraTopTertiary": [
+        0.139,
+        0.622
+      ],
+      "fthoraTopSecondary": [
+        0.783,
+        0.62
+      ],
+      "gorgonSecondary": [
+        0.85,
+        0.51
+      ],
+      "yfenAbove": [
+        1.121,
+        0.829
+      ],
+      "yfenBelow": [
+        1.34,
+        -0.272
+      ],
+      "endofonon": [
+        1.163,
+        -0.269
+      ],
+      "heteronConnecting": [
+        1.921,
+        -0.251
+      ],
+      "measureNumber": [
+        0.53,
+        0.7
+      ],
+      "isonIndicator": [
+        0.5,
+        0.7
+      ],
+      "noteTop": [
+        0.55,
+        0.6
+      ],
+      "fthoraBottom": [
+        1.157,
+        -0.038
+      ],
+      "fthoraTop": [
+        1.486,
+        0.511
+      ],
+      "diesis": [
+        0.351,
+        -0.099
+      ],
+      "yfesis": [
+        1.834,
+        0.597
+      ],
+      "psifiston": [
+        1.4,
+        -0.12
+      ],
+      "gorgonTop": [
+        1.55,
+        0.5
+      ]
+    },
+    "oligonElafronApostrofosKentimata": {
+      "diesisSecondary": [
+        0.866,
+        0.905
+      ],
+      "yfesisSecondary": [
+        0.711,
+        0.58
+      ],
+      "fthoraTopSecondary": [
+        0.341,
+        0.68
+      ],
+      "gorgonSecondary": [
+        0.45,
+        0.51
+      ],
+      "yfenAbove": [
+        0.779,
+        0.829
+      ],
+      "yfenBelow": [
+        0.948,
+        -0.272
+      ],
+      "endofonon": [
+        0.801,
+        -0.269
+      ],
+      "heteronConnecting": [
+        1.429,
+        -0.251
+      ],
+      "measureNumber": [
+        0.03,
+        0.7
+      ],
+      "isonIndicator": [
+        0.03,
+        0.7
+      ],
+      "noteTop": [
+        0.06,
+        0.6
+      ],
+      "fthoraBottom": [
+        0.805,
+        -0.038
+      ],
+      "fthoraTop": [
+        1.066,
+        0.513
+      ],
+      "diesis": [
+        0.349,
+        -0.099
+      ],
+      "yfesis": [
+        1.407,
+        0.534
+      ],
+      "psifiston": [
+        0.88,
+        -0.12
+      ],
+      "gorgonTop": [
+        1.12,
+        0.5
+      ]
+    },
+    "oligonKentimaMiddleKentimata": {
+      "yfenAbove": [
+        0.93,
+        0.869
+      ],
+      "yfenBelow": [
+        1.109,
+        -0.272
+      ],
+      "endofonon": [
+        0.802,
+        -0.269
+      ],
+      "heteronConnecting": [
+        1.92,
+        -0.251
+      ],
+      "measureNumber": [
+        0.03,
+        0.5
+      ],
+      "isonIndicator": [
+        0.03,
+        0.7
+      ],
+      "noteTop": [
+        0.06,
+        0.4
+      ],
+      "fthoraBottom": [
+        0.746,
+        -0.038
+      ],
+      "fthoraTop": [
+        0.627,
+        0.559
+      ],
+      "diesis": [
+        0.4,
+        -0.099
+      ],
+      "yfesis": [
+        1.316,
+        0.387
+      ],
+      "psifiston": [
+        0.88,
+        -0.12
+      ],
+      "gorgonTop": [
+        0.58,
+        0.53
+      ]
+    },
+    "oligonYpsiliRightKentimata": {
+      "yfenAbove": [
+        0.879,
+        1.019
+      ],
+      "yfenBelow": [
+        0.878,
+        -0.272
+      ],
+      "endofonon": [
+        0.751,
+        -0.269
+      ],
+      "heteronConnecting": [
+        1.543,
+        -0.251
+      ],
+      "measureNumber": [
+        0.03,
+        0.5
+      ],
+      "isonIndicator": [
+        0.03,
+        0.7
+      ],
+      "noteTop": [
+        0.06,
+        0.4
+      ],
+      "fthoraBottom": [
+        0.695,
+        -0.038
+      ],
+      "fthoraTop": [
+        0.602,
+        0.623
+      ],
+      "diesis": [
+        0.349,
+        -0.099
+      ],
+      "yfesis": [
+        1.464,
+        0.707
+      ],
+      "psifiston": [
+        0.88,
+        -0.12
+      ],
+      "gorgonTop": [
+        0.67,
+        0.53
+      ]
+    },
+    "petastiChamiliApostrofos": {
+      "yfenAbove": [
+        0.731,
+        0.997
+      ],
+      "yfenBelow": [
+        0.678,
+        -0.312
+      ],
+      "koronis": [
+        0.712,
+        0.899
+      ],
+      "endofonon": [
+        0.721,
+        -0.359
+      ],
+      "heteronConnecting": [
+        1.265,
+        -0.251
+      ],
+      "psifiston": [
+        0.87,
+        -0.12
+      ],
+      "measureNumber": [
+        0.03,
+        1.1
+      ],
+      "isonIndicator": [
+        0.03,
+        1.15
+      ],
+      "apli": [
+        0.72,
+        -0.22
+      ],
+      "antikenoma": [
+        0.72,
+        -0.12
+      ],
+      "fthoraBottom": [
+        0.301,
+        -0.07
+      ],
+      "fthoraTop": [
+        0.598,
+        0.739
+      ],
+      "noteTop": [
+        0.06,
+        1.1
+      ],
+      "diesis": [
+        0.413,
+        -0.085
+      ],
+      "yfesis": [
+        0.977,
+        0.793
+      ],
+      "klasmaBottom": [
+        0.68,
+        -0.15
+      ]
+    },
+    "apostrofos": {
+      "omalonConnecting": [
+        0.73,
+        -0.1
+      ],
+      "yfenAbove": [
+        0.419,
+        0.659
+      ],
+      "yfenBelow": [
+        0.448,
+        -0.272
+      ],
+      "koronis": [
+        0.319,
+        0.659
+      ],
+      "endofonon": [
+        0.441,
+        -0.358
+      ],
+      "heteronConnecting": [
+        0.818,
+        -0.251
+      ],
+      "measureNumber": [
+        0.02,
+        0.5
+      ],
+      "isonIndicator": [
+        0.03,
+        0.7
+      ],
+      "gorgonBottom": [
+        0.44,
+        -0.14
+      ],
+      "apli": [
+        0.44,
+        -0.2
+      ],
+      "antikenoma": [
+        0.39,
+        -0.1
+      ],
+      "noteTop": [
+        0.05,
+        0.4
+      ],
+      "fthoraTop": [
+        0.325,
+        0.41
+      ],
+      "fthoraBottom": [
+        0.279,
+        -0.133
+      ],
+      "gorgonTop": [
+        0.36,
+        0.3
+      ],
+      "diesis": [
+        0.172,
+        -0.132
+      ],
+      "yfesis": [
+        0.587,
+        0.325
+      ],
+      "klasmaTop": [
+        0.34,
+        0.32
+      ]
+    },
+    "oligonKentimataTripleYpsili": {
+      "gorgonBottom": [
+        0.78,
+        -0.08
+      ],
+      "yfenAbove": [
+        0.88,
+        1.229
+      ],
+      "yfenBelow": [
+        0.879,
+        -0.272
+      ],
+      "koronis": [
+        0.733,
+        1.229
+      ],
+      "endofonon": [
+        0.752,
+        -0.294
+      ],
+      "measureNumber": [
+        0.03,
+        0.5
+      ],
+      "isonIndicator": [
+        0.03,
+        1.05
+      ],
+      "heteronConnecting": [
+        1.642,
+        -0.251
+      ],
+      "heteron": [
+        1.037,
+        -0.005
+      ],
+      "omalon": [
+        0.88,
+        -0.1
+      ],
+      "omalonConnecting": [
+        1.4,
+        -0.1
+      ],
+      "antikenoma": [
+        0.8,
+        -0.05
+      ],
+      "apli": [
+        0.75,
+        -0.15
+      ],
+      "noteTop": [
+        0.06,
+        0.55
+      ],
+      "fthoraTop": [
+        1.23,
+        1.097
+      ],
+      "fthoraBottom": [
+        0.739,
+        -0.023
+      ],
+      "diesis": [
+        0.35,
+        -0.099
+      ],
+      "yfesis": [
+        1.327,
+        0.387
+      ],
+      "klasmaBottom": [
+        0.73,
+        -0.07
+      ],
+      "psifiston": [
+        0.88,
+        -0.12
+      ]
+    },
+    "doubleChamiliElafronApostrofos": {
+      "yfenAbove": [
+        0.579,
+        0.999
+      ],
+      "yfenBelow": [
+        0.608,
+        -0.542
+      ],
+      "koronis": [
+        0.719,
+        1.004
+      ],
+      "endofonon": [
+        0.581,
+        -0.579
+      ],
+      "measureNumber": [
+        0.03,
+        1.0
+      ],
+      "isonIndicator": [
+        0.03,
+        1.05
+      ],
+      "heteronConnecting": [
+        1.233,
+        -0.472
+      ],
+      "omalonConnecting": [
+        1.4,
+        -0.4
+      ],
+      "apli": [
+        0.78,
+        -0.55
+      ],
+      "antikenoma": [
+        0.78,
+        -0.44
+      ],
+      "noteTop": [
+        0.06,
+        1.0
+      ],
+      "fthoraTop": [
+        0.722,
+        0.873
+      ],
+      "fthoraBottom": [
+        0.558,
+        -0.462
+      ],
+      "gorgonTop": [
+        1.0,
+        0.7
+      ],
+      "diesis": [
+        0.411,
+        -0.423
+      ],
+      "yfesis": [
+        0.914,
+        0.865
+      ],
+      "klasmaTop": [
+        1.05,
+        0.7
+      ]
+    },
+    "doubleChamiliElafron": {
+      "yfenAbove": [
+        0.579,
+        0.999
+      ],
+      "yfenBelow": [
+        0.608,
+        -0.542
+      ],
+      "koronis": [
+        0.719,
+        0.994
+      ],
+      "endofonon": [
+        0.581,
+        -0.499
+      ],
+      "measureNumber": [
+        0.03,
+        1.0
+      ],
+      "isonIndicator": [
+        0.03,
+        1.05
+      ],
+      "heteronConnecting": [
+        1.233,
+        -0.472
+      ],
+      "omalonConnecting": [
+        1.4,
+        -0.4
+      ],
+      "apli": [
+        0.78,
+        -0.55
+      ],
+      "antikenoma": [
+        0.78,
+        -0.44
+      ],
+      "noteTop": [
+        0.06,
+        1.0
+      ],
+      "fthoraTop": [
+        0.722,
+        0.873
+      ],
+      "fthoraBottom": [
+        0.558,
+        -0.352
+      ],
+      "gorgonTop": [
+        1.0,
+        0.7
+      ],
+      "diesis": [
+        0.411,
+        -0.423
+      ],
+      "yfesis": [
+        0.914,
+        0.865
+      ],
+      "klasmaTop": [
+        1.05,
+        0.7
+      ]
+    },
+    "doubleChamiliApostrofos": {
+      "yfenAbove": [
+        0.579,
+        0.999
+      ],
+      "yfenBelow": [
+        0.608,
+        -0.542
+      ],
+      "koronis": [
+        0.719,
+        1.004
+      ],
+      "endofonon": [
+        0.581,
+        -0.529
+      ],
+      "measureNumber": [
+        0.03,
+        1.0
+      ],
+      "isonIndicator": [
+        0.03,
+        1.05
+      ],
+      "heteronConnecting": [
+        1.233,
+        -0.412
+      ],
+      "omalonConnecting": [
+        1.3,
+        -0.35
+      ],
+      "apli": [
+        0.75,
+        -0.45
+      ],
+      "antikenoma": [
+        0.75,
+        -0.35
+      ],
+      "noteTop": [
+        0.06,
+        1.0
+      ],
+      "fthoraTop": [
+        0.722,
+        0.873
+      ],
+      "fthoraBottom": [
+        0.558,
+        -0.352
+      ],
+      "gorgonTop": [
+        1.0,
+        0.7
+      ],
+      "diesis": [
+        0.407,
+        -0.216
+      ],
+      "yfesis": [
+        0.914,
+        0.865
+      ],
+      "klasmaTop": [
+        1.05,
+        0.7
+      ]
+    },
+    "petastiKentimataDoubleYpsili": {
+      "yfenAbove": [
+        0.741,
+        1.187
+      ],
+      "yfenBelow": [
+        0.678,
+        -0.272
+      ],
+      "koronis": [
+        0.184,
+        1.101
+      ],
+      "endofonon": [
+        0.721,
+        -0.359
+      ],
+      "heteronConnecting": [
+        1.265,
+        -0.251
+      ],
+      "yfesis": [
+        1.169,
+        0.395
+      ],
+      "psifiston": [
+        0.87,
+        -0.12
+      ],
+      "measureNumber": [
+        0.03,
+        0.5
+      ],
+      "isonIndicator": [
+        0.03,
+        0.7
+      ],
+      "apli": [
+        0.72,
+        -0.22
+      ],
+      "antikenoma": [
+        0.72,
+        -0.12
+      ],
+      "fthoraBottom": [
+        0.301,
+        -0.07
+      ],
+      "noteTop": [
+        0.06,
+        0.4
+      ],
+      "fthoraTop": [
+        0.141,
+        0.518
+      ],
+      "diesis": [
+        0.413,
+        -0.085
+      ],
+      "klasmaBottom": [
+        0.68,
+        -0.15
+      ]
+    },
+    "petastiKentimaDoubleYpsiliRight": {
+      "yfenAbove": [
+        0.741,
+        1.217
+      ],
+      "yfenBelow": [
+        0.678,
+        -0.272
+      ],
+      "koronis": [
+        0.289,
+        1.098
+      ],
+      "endofonon": [
+        0.721,
+        -0.359
+      ],
+      "heteronConnecting": [
+        1.265,
+        -0.251
+      ],
+      "yfesis": [
+        1.062,
+        0.459
+      ],
+      "psifiston": [
+        0.87,
+        -0.12
+      ],
+      "measureNumber": [
+        0.03,
+        0.5
+      ],
+      "isonIndicator": [
+        0.03,
+        0.7
+      ],
+      "apli": [
+        0.72,
+        -0.22
+      ],
+      "antikenoma": [
+        0.72,
+        -0.12
+      ],
+      "fthoraBottom": [
+        0.301,
+        -0.07
+      ],
+      "noteTop": [
+        0.06,
+        0.4
+      ],
+      "fthoraTop": [
+        0.141,
+        0.518
+      ],
+      "diesis": [
+        0.413,
+        -0.085
+      ],
+      "klasmaBottom": [
+        0.68,
+        -0.15
+      ]
+    },
+    "petastiKentimaDoubleYpsiliLeft": {
+      "yfenAbove": [
+        0.781,
+        1.217
+      ],
+      "yfenBelow": [
+        0.718,
+        -0.272
+      ],
+      "koronis": [
+        0.659,
+        1.228
+      ],
+      "endofonon": [
+        0.761,
+        -0.359
+      ],
+      "heteronConnecting": [
+        1.305,
+        -0.251
+      ],
+      "yfesis": [
+        1.102,
+        0.459
+      ],
+      "psifiston": [
+        0.91,
+        -0.12
+      ],
+      "measureNumber": [
+        0.03,
+        0.5
+      ],
+      "isonIndicator": [
+        0.03,
+        1.1
+      ],
+      "apli": [
+        0.76,
+        -0.22
+      ],
+      "antikenoma": [
+        0.76,
+        -0.12
+      ],
+      "fthoraBottom": [
+        0.341,
+        -0.07
+      ],
+      "noteTop": [
+        0.06,
+        0.6
+      ],
+      "fthoraTop": [
+        1.075,
+        0.416
+      ],
+      "diesis": [
+        0.453,
+        -0.085
+      ],
+      "klasmaBottom": [
+        0.72,
+        -0.15
+      ]
+    },
+    "petastiKentimataTripleYpsili": {
+      "yfenAbove": [
+        0.781,
+        1.207
+      ],
+      "yfenBelow": [
+        0.718,
+        -0.272
+      ],
+      "koronis": [
+        0.652,
+        1.151
+      ],
+      "endofonon": [
+        0.761,
+        -0.359
+      ],
+      "heteronConnecting": [
+        1.305,
+        -0.251
+      ],
+      "yfesis": [
+        1.216,
+        0.368
+      ],
+      "psifiston": [
+        0.91,
+        -0.12
+      ],
+      "measureNumber": [
+        0.03,
+        0.5
+      ],
+      "isonIndicator": [
+        0.03,
+        1.1
+      ],
+      "apli": [
+        0.76,
+        -0.22
+      ],
+      "antikenoma": [
+        0.76,
+        -0.12
+      ],
+      "fthoraBottom": [
+        0.341,
+        -0.07
+      ],
+      "noteTop": [
+        0.06,
+        0.6
+      ],
+      "fthoraTop": [
+        1.213,
+        1.064
+      ],
+      "diesis": [
+        0.453,
+        -0.085
+      ],
+      "klasmaBottom": [
+        0.72,
+        -0.15
+      ]
+    },
+    "petastiTripleYpsili": {
+      "yfenAbove": [
+        0.741,
+        1.147
+      ],
+      "yfenBelow": [
+        0.678,
+        -0.272
+      ],
+      "koronis": [
+        0.612,
+        1.081
+      ],
+      "endofonon": [
+        0.721,
+        -0.359
+      ],
+      "heteronConnecting": [
+        1.265,
+        -0.251
+      ],
+      "yfesis": [
+        1.142,
+        0.428
+      ],
+      "psifiston": [
+        0.87,
+        -0.12
+      ],
+      "measureNumber": [
+        0.03,
+        0.5
+      ],
+      "isonIndicator": [
+        0.03,
+        1.1
+      ],
+      "apli": [
+        0.72,
+        -0.22
+      ],
+      "antikenoma": [
+        0.72,
+        -0.12
+      ],
+      "fthoraBottom": [
+        0.301,
+        -0.07
+      ],
+      "noteTop": [
+        0.06,
+        0.6
+      ],
+      "fthoraTop": [
+        0.783,
+        1.05
+      ],
+      "diesis": [
+        0.413,
+        -0.085
+      ],
+      "klasmaBottom": [
+        0.68,
+        -0.15
+      ]
+    },
+    "oligonKentimaDoubleYpsiliRight": {
+      "gorgonBottom": [
+        0.7,
+        -0.08
+      ],
+      "yfenAbove": [
+        0.879,
+        1.209
+      ],
+      "yfenBelow": [
+        0.878,
+        -0.272
+      ],
+      "koronis": [
+        0.732,
+        1.209
+      ],
+      "endofonon": [
+        0.751,
+        -0.294
+      ],
+      "measureNumber": [
+        0.03,
+        0.5
+      ],
+      "isonIndicator": [
+        0.03,
+        0.75
+      ],
+      "heteronConnecting": [
+        1.641,
+        -0.251
+      ],
+      "heteron": [
+        1.036,
+        -0.005
+      ],
+      "omalon": [
+        0.8,
+        -0.1
+      ],
+      "omalonConnecting": [
+        1.3,
+        -0.1
+      ],
+      "antikenoma": [
+        0.73,
+        -0.05
+      ],
+      "apli": [
+        0.65,
+        -0.15
+      ],
+      "noteTop": [
+        0.06,
+        0.4
+      ],
+      "fthoraTop": [
+        0.194,
+        0.824
+      ],
+      "fthoraBottom": [
+        0.738,
+        -0.023
+      ],
+      "diesis": [
+        0.349,
+        -0.099
+      ],
+      "yfesis": [
+        1.317,
+        0.387
+      ],
+      "klasmaBottom": [
+        0.68,
+        -0.07
+      ],
+      "psifiston": [
+        0.8,
+        -0.12
+      ]
+    },
+    "oligonKentimaDoubleYpsiliLeft": {
+      "gorgonBottom": [
+        0.78,
+        -0.08
+      ],
+      "yfenAbove": [
+        0.88,
+        1.209
+      ],
+      "yfenBelow": [
+        0.879,
+        -0.272
+      ],
+      "koronis": [
+        0.733,
+        1.209
+      ],
+      "endofonon": [
+        0.752,
+        -0.294
+      ],
+      "measureNumber": [
+        0.03,
+        0.5
+      ],
+      "isonIndicator": [
+        0.03,
+        1.05
+      ],
+      "heteronConnecting": [
+        1.642,
+        -0.251
+      ],
+      "heteron": [
+        1.037,
+        -0.005
+      ],
+      "omalon": [
+        0.88,
+        -0.1
+      ],
+      "omalonConnecting": [
+        1.4,
+        -0.1
+      ],
+      "antikenoma": [
+        0.8,
+        -0.05
+      ],
+      "apli": [
+        0.75,
+        -0.15
+      ],
+      "noteTop": [
+        0.06,
+        0.55
+      ],
+      "fthoraTop": [
+        1.212,
+        0.629
+      ],
+      "fthoraBottom": [
+        0.739,
+        -0.023
+      ],
+      "diesis": [
+        0.35,
+        -0.099
+      ],
+      "yfesis": [
+        1.266,
+        0.387
+      ],
+      "klasmaBottom": [
+        0.73,
+        -0.07
+      ],
+      "psifiston": [
+        0.88,
+        -0.12
+      ]
+    },
+    "oligonTripleYpsili": {
+      "gorgonBottom": [
+        0.78,
+        -0.08
+      ],
+      "yfenAbove": [
+        0.88,
+        1.049
+      ],
+      "yfenBelow": [
+        0.879,
+        -0.272
+      ],
+      "koronis": [
+        0.733,
+        1.049
+      ],
+      "endofonon": [
+        0.752,
+        -0.294
+      ],
+      "measureNumber": [
+        0.03,
+        0.5
+      ],
+      "isonIndicator": [
+        0.03,
+        1.05
+      ],
+      "heteronConnecting": [
+        1.642,
+        -0.251
+      ],
+      "heteron": [
+        1.037,
+        -0.005
+      ],
+      "omalon": [
+        0.88,
+        -0.1
+      ],
+      "omalonConnecting": [
+        1.4,
+        -0.1
+      ],
+      "antikenoma": [
+        0.8,
+        -0.05
+      ],
+      "apli": [
+        0.75,
+        -0.15
+      ],
+      "noteTop": [
+        0.06,
+        0.55
+      ],
+      "fthoraTop": [
+        0.813,
+        1.007
+      ],
+      "fthoraBottom": [
+        0.739,
+        -0.023
+      ],
+      "diesis": [
+        0.35,
+        -0.099
+      ],
+      "yfesis": [
+        1.318,
+        0.387
+      ],
+      "klasmaBottom": [
+        0.73,
+        -0.07
+      ],
+      "psifiston": [
+        0.88,
+        -0.12
+      ]
+    },
+    "oligonElafronApostrofos": {
+      "gorgonBottom": [
+        0.7,
+        -0.08
+      ],
+      "yfenAbove": [
+        0.88,
+        0.859
+      ],
+      "yfenBelow": [
+        0.879,
+        -0.272
+      ],
+      "koronis": [
+        0.733,
+        0.809
+      ],
+      "endofonon": [
+        0.752,
+        -0.294
+      ],
+      "measureNumber": [
+        0.03,
+        0.7
+      ],
+      "isonIndicator": [
+        0.03,
+        0.7
+      ],
+      "heteronConnecting": [
+        1.642,
+        -0.251
+      ],
+      "heteron": [
+        1.037,
+        -0.005
+      ],
+      "noteTop": [
+        0.06,
+        0.6
+      ],
+      "fthoraTop": [
+        0.552,
+        0.803
+      ],
+      "fthoraBottom": [
+        0.739,
+        -0.023
+      ],
+      "diesis": [
+        0.35,
+        -0.099
+      ],
+      "yfesis": [
+        1.266,
+        0.387
+      ],
+      "klasmaBottom": [
+        0.68,
+        -0.07
+      ],
+      "psifiston": [
+        0.8,
+        -0.12
+      ]
+    },
+    "petastiDoubleYpsili": {
+      "yfenAbove": [
+        0.741,
+        1.067
+      ],
+      "yfenBelow": [
+        0.678,
+        -0.272
+      ],
+      "koronis": [
+        0.816,
+        1.051
+      ],
+      "endofonon": [
+        0.721,
+        -0.359
+      ],
+      "heteronConnecting": [
+        1.265,
+        -0.251
+      ],
+      "yfesis": [
+        1.062,
+        0.459
+      ],
+      "psifiston": [
+        0.87,
+        -0.12
+      ],
+      "measureNumber": [
+        0.03,
+        0.5
+      ],
+      "isonIndicator": [
+        0.03,
+        1.1
+      ],
+      "apli": [
+        0.72,
+        -0.22
+      ],
+      "antikenoma": [
+        0.72,
+        -0.12
+      ],
+      "fthoraBottom": [
+        0.301,
+        -0.07
+      ],
+      "noteTop": [
+        0.06,
+        0.6
+      ],
+      "fthoraTop": [
+        0.153,
+        0.61
+      ],
+      "diesis": [
+        0.413,
+        -0.085
+      ],
+      "klasmaBottom": [
+        0.68,
+        -0.15
+      ]
+    },
+    "oligonChamili": {
+      "gorgonBottom": [
+        0.88,
+        -0.08
+      ],
+      "yfenAbove": [
+        0.88,
+        0.799
+      ],
+      "yfenBelow": [
+        0.879,
+        -0.272
+      ],
+      "koronis": [
+        0.733,
+        0.809
+      ],
+      "endofonon": [
+        0.752,
+        -0.294
+      ],
+      "measureNumber": [
+        0.03,
+        1.0
+      ],
+      "isonIndicator": [
+        0.03,
+        1.0
+      ],
+      "heteronConnecting": [
+        1.642,
+        -0.251
+      ],
+      "heteron": [
+        1.037,
+        -0.005
+      ],
+      "noteTop": [
+        0.06,
+        0.9
+      ],
+      "fthoraTop": [
+        0.708,
+        0.695
+      ],
+      "fthoraBottom": [
+        0.739,
+        -0.023
+      ],
+      "diesis": [
+        0.35,
+        -0.099
+      ],
+      "yfesis": [
+        1.266,
+        0.387
+      ],
+      "klasmaBottom": [
+        0.8,
+        -0.07
+      ],
+      "psifiston": [
+        0.88,
+        -0.12
+      ]
+    },
+    "petastiChamiliElafron": {
+      "yfenAbove": [
+        0.731,
+        1.197
+      ],
+      "yfenBelow": [
+        0.678,
+        -0.272
+      ],
+      "koronis": [
+        0.712,
+        1.189
+      ],
+      "endofonon": [
+        0.721,
+        -0.359
+      ],
+      "heteronConnecting": [
+        1.265,
+        -0.251
+      ],
+      "psifiston": [
+        0.87,
+        -0.12
+      ],
+      "measureNumber": [
+        0.03,
+        1.33
+      ],
+      "isonIndicator": [
+        0.03,
+        1.4
+      ],
+      "apli": [
+        0.72,
+        -0.22
+      ],
+      "antikenoma": [
+        0.72,
+        -0.12
+      ],
+      "fthoraBottom": [
+        0.301,
+        -0.07
+      ],
+      "fthoraTop": [
+        0.598,
+        0.989
+      ],
+      "noteTop": [
+        0.06,
+        1.3
+      ],
+      "diesis": [
+        0.413,
+        -0.085
+      ],
+      "yfesis": [
+        0.917,
+        1.105
+      ],
+      "klasmaBottom": [
+        0.68,
+        -0.15
+      ]
+    },
+    "petastiChamiliElafronApostrofos": {
+      "yfenAbove": [
+        0.731,
+        1.197
+      ],
+      "yfenBelow": [
+        0.678,
+        -0.272
+      ],
+      "koronis": [
+        0.712,
+        1.189
+      ],
+      "endofonon": [
+        0.721,
+        -0.359
+      ],
+      "heteronConnecting": [
+        1.265,
+        -0.251
+      ],
+      "psifiston": [
+        0.87,
+        -0.12
+      ],
+      "measureNumber": [
+        0.03,
+        1.33
+      ],
+      "isonIndicator": [
+        0.03,
+        1.4
+      ],
+      "apli": [
+        0.72,
+        -0.22
+      ],
+      "antikenoma": [
+        0.72,
+        -0.12
+      ],
+      "fthoraBottom": [
+        0.301,
+        -0.07
+      ],
+      "fthoraTop": [
+        0.598,
+        1.029
+      ],
+      "noteTop": [
+        0.06,
+        1.3
+      ],
+      "diesis": [
+        0.413,
+        -0.085
+      ],
+      "yfesis": [
+        0.917,
+        1.105
+      ],
+      "klasmaBottom": [
+        0.68,
+        -0.15
+      ]
+    },
+    "petastiDoubleChamili": {
+      "yfenAbove": [
+        0.779,
+        1.057
+      ],
+      "yfenBelow": [
+        0.726,
+        -0.442
+      ],
+      "koronis": [
+        0.76,
+        1.059
+      ],
+      "endofonon": [
+        0.769,
+        -0.509
+      ],
+      "heteronConnecting": [
+        1.313,
+        -0.281
+      ],
+      "psifiston": [
+        0.91,
+        -0.26
+      ],
+      "measureNumber": [
+        0.03,
+        1.1
+      ],
+      "isonIndicator": [
+        0.03,
+        1.2
+      ],
+      "apli": [
+        0.76,
+        -0.36
+      ],
+      "antikenoma": [
+        0.76,
+        -0.26
+      ],
+      "fthoraBottom": [
+        0.349,
+        -0.19
+      ],
+      "fthoraTop": [
+        0.646,
+        0.869
+      ],
+      "noteTop": [
+        0.06,
+        1.1
+      ],
+      "diesis": [
+        0.461,
+        -0.228
+      ],
+      "yfesis": [
+        0.965,
+        1.105
+      ],
+      "klasmaBottom": [
+        0.72,
+        -0.29
+      ]
+    },
+    "petastiDoubleChamiliApostrofos": {
+      "yfenAbove": [
+        0.731,
+        1.057
+      ],
+      "yfenBelow": [
+        0.678,
+        -0.442
+      ],
+      "koronis": [
+        0.712,
+        1.059
+      ],
+      "endofonon": [
+        0.721,
+        -0.519
+      ],
+      "heteronConnecting": [
+        1.265,
+        -0.251
+      ],
+      "psifiston": [
+        0.87,
+        -0.26
+      ],
+      "measureNumber": [
+        0.03,
+        1.33
+      ],
+      "isonIndicator": [
+        0.03,
+        1.35
+      ],
+      "apli": [
+        0.72,
+        -0.36
+      ],
+      "antikenoma": [
+        0.72,
+        -0.26
+      ],
+      "fthoraBottom": [
+        0.301,
+        -0.19
+      ],
+      "fthoraTop": [
+        0.598,
+        0.869
+      ],
+      "noteTop": [
+        0.06,
+        1.3
+      ],
+      "diesis": [
+        0.413,
+        -0.228
+      ],
+      "yfesis": [
+        0.917,
+        1.105
+      ],
+      "klasmaBottom": [
+        0.68,
+        -0.29
+      ]
+    },
+    "gorgonAbove": {
+      "gorgonTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "gorgonBelow": {
+      "gorgonBottom": [
+        0.0,
+        0.0
+      ]
+    },
+    "gorgonDottedLeft": {
+      "gorgonTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "digorgon": {
+      "gorgonTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "oligonKentimaMiddle": {
+      "gorgonBottom": [
+        0.7,
+        -0.08
+      ],
+      "yfenAbove": [
+        0.93,
+        0.409
+      ],
+      "yfenBelow": [
+        0.929,
+        -0.272
+      ],
+      "koronis": [
+        0.783,
+        0.569
+      ],
+      "endofonon": [
+        0.802,
+        -0.294
+      ],
+      "measureNumber": [
+        0.03,
+        0.5
+      ],
+      "isonIndicator": [
+        0.03,
+        0.7
+      ],
+      "heteronConnecting": [
+        1.97,
+        -0.251
+      ],
+      "heteron": [
+        1.087,
+        -0.005
+      ],
+      "omalon": [
+        0.98,
+        -0.1
+      ],
+      "omalonConnecting": [
+        1.5,
+        -0.1
+      ],
+      "antikenoma": [
+        0.73,
+        -0.05
+      ],
+      "apli": [
+        0.73,
+        -0.15
+      ],
+      "noteTop": [
+        0.06,
+        0.4
+      ],
+      "fthoraTop": [
+        0.788,
+        0.275
+      ],
+      "fthoraBottom": [
+        0.789,
+        -0.023
+      ],
+      "diesis": [
+        0.4,
+        -0.099
+      ],
+      "yfesis": [
+        1.316,
+        0.387
+      ],
+      "klasmaTop": [
+        0.65,
+        0.25
+      ],
+      "gorgonTop": [
+        0.68,
+        0.22
+      ],
+      "psifiston": [
+        0.88,
+        -0.12
+      ]
+    },
+    "gorgonDottedRight": {
+      "gorgonTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "digorgonDottedLeftBelow": {
+      "gorgonTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "tripleChamili": {
+      "yfenAbove": [
+        0.579,
+        1.089
+      ],
+      "yfenBelow": [
+        0.608,
+        -0.272
+      ],
+      "koronis": [
+        0.619,
+        1.098
+      ],
+      "endofonon": [
+        0.581,
+        -0.269
+      ],
+      "measureNumber": [
+        0.03,
+        1.3
+      ],
+      "isonIndicator": [
+        0.03,
+        1.3
+      ],
+      "heteronConnecting": [
+        1.233,
+        -0.251
+      ],
+      "omalonConnecting": [
+        1.3,
+        -0.15
+      ],
+      "apli": [
+        0.75,
+        -0.25
+      ],
+      "antikenoma": [
+        0.75,
+        -0.15
+      ],
+      "noteTop": [
+        0.06,
+        1.3
+      ],
+      "fthoraTop": [
+        0.722,
+        1.003
+      ],
+      "fthoraBottom": [
+        0.558,
+        -0.112
+      ],
+      "gorgonTop": [
+        1.08,
+        0.96
+      ],
+      "diesis": [
+        0.413,
+        -0.065
+      ],
+      "yfesis": [
+        0.842,
+        0.995
+      ],
+      "klasmaTop": [
+        1.15,
+        0.95
+      ]
+    },
+    "digorgonDottedLeftAbove": {
+      "gorgonTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "martyriaNoteZoLow": {
+      "barline": [
+        0.35,
+        0.2
+      ],
+      "agogi": [
+        0.35,
+        0.0
+      ],
+      "martyriaTop": [
+        0.35,
+        -0.5
+      ],
+      "fthoraTop": [
+        0.35,
+        0.1
+      ]
+    },
+    "martyriaNoteNiLow": {
+      "barline": [
+        0.35,
+        0.2
+      ],
+      "agogi": [
+        0.35,
+        0.0
+      ],
+      "martyriaTop": [
+        0.35,
+        -0.5
+      ],
+      "fthoraTop": [
+        0.35,
+        0.1
+      ]
+    },
+    "martyriaNotePaLow": {
+      "barline": [
+        0.35,
+        0.2
+      ],
+      "agogi": [
+        0.35,
+        0.0
+      ],
+      "martyriaTop": [
+        0.35,
+        -0.5
+      ],
+      "fthoraTop": [
+        0.35,
+        0.1
+      ]
+    },
+    "martyriaNoteVouLow": {
+      "barline": [
+        0.35,
+        0.2
+      ],
+      "agogi": [
+        0.35,
+        0.0
+      ],
+      "martyriaTop": [
+        0.35,
+        -0.5
+      ],
+      "fthoraTop": [
+        0.35,
+        0.1
+      ]
+    },
+    "martyriaNoteGaLow": {
+      "barline": [
+        0.35,
+        0.2
+      ],
+      "agogi": [
+        0.35,
+        0.0
+      ],
+      "fthoraTop": [
+        0.35,
+        0.1
+      ],
+      "martyriaTop": [
+        0.35,
+        -0.5
+      ]
+    },
+    "martyriaNoteDiLow": {
+      "barline": [
+        0.35,
+        0.2
+      ],
+      "agogi": [
+        0.35,
+        0.0
+      ],
+      "fthoraTop": [
+        0.35,
+        0.1
+      ],
+      "martyriaTop": [
+        0.35,
+        -0.5
+      ]
+    },
+    "martyriaNoteKeLow": {
+      "barline": [
+        0.35,
+        0.2
+      ],
+      "agogi": [
+        0.35,
+        0.0
+      ],
+      "fthoraTop": [
+        0.35,
+        0.1
+      ],
+      "martyriaTop": [
+        0.35,
+        -0.5
+      ]
+    },
+    "martyriaNoteZo": {
+      "barline": [
+        0.35,
+        0.2
+      ],
+      "agogi": [
+        0.35,
+        0.0
+      ],
+      "martyriaBottom": [
+        0.35,
+        -0.5
+      ],
+      "fthoraTop": [
+        0.35,
+        0.1
+      ]
+    },
+    "martyriaNotePa": {
+      "barline": [
+        0.35,
+        0.2
+      ],
+      "agogi": [
+        0.35,
+        0.0
+      ],
+      "martyriaBottom": [
+        0.35,
+        -0.5
+      ],
+      "fthoraTop": [
+        0.35,
+        0.1
+      ]
+    },
+    "martyriaNoteNi": {
+      "barline": [
+        0.35,
+        0.2
+      ],
+      "agogi": [
+        0.35,
+        0.0
+      ],
+      "martyriaBottom": [
+        0.35,
+        -0.5
+      ],
+      "fthoraTop": [
+        0.35,
+        0.1
+      ]
+    },
+    "martyriaNoteVou": {
+      "barline": [
+        0.35,
+        0.2
+      ],
+      "agogi": [
+        0.35,
+        0.0
+      ],
+      "martyriaBottom": [
+        0.35,
+        -0.5
+      ],
+      "fthoraTop": [
+        0.35,
+        0.1
+      ]
+    },
+    "martyriaNoteNiHigh": {
+      "barline": [
+        0.35,
+        0.2
+      ],
+      "agogi": [
+        0.35,
+        0.0
+      ],
+      "martyriaBottom": [
+        0.35,
+        -0.5
+      ],
+      "fthoraTop": [
+        0.35,
+        0.1
+      ]
+    },
+    "martyriaNoteGa": {
+      "barline": [
+        0.35,
+        0.2
+      ],
+      "agogi": [
+        0.35,
+        0.0
+      ],
+      "martyriaBottom": [
+        0.35,
+        -0.5
+      ],
+      "fthoraTop": [
+        0.35,
+        0.1
+      ]
+    },
+    "martyriaNoteDi": {
+      "barline": [
+        0.35,
+        0.2
+      ],
+      "agogi": [
+        0.35,
+        0.0
+      ],
+      "martyriaBottom": [
+        0.35,
+        -0.5
+      ],
+      "fthoraTop": [
+        0.35,
+        0.1
+      ]
+    },
+    "martyriaNoteKe": {
+      "barline": [
+        0.35,
+        0.2
+      ],
+      "agogi": [
+        0.35,
+        0.0
+      ],
+      "fthoraTop": [
+        0.35,
+        0.1
+      ],
+      "martyriaBottom": [
+        0.35,
+        -0.5
+      ]
+    },
+    "martyriaNoteZoHigh": {
+      "barline": [
+        0.35,
+        0.2
+      ],
+      "agogi": [
+        0.35,
+        0.0
+      ],
+      "martyriaBottom": [
+        0.35,
+        -0.5
+      ],
+      "fthoraTop": [
+        0.35,
+        0.1
+      ]
+    },
+    "martyriaNotePaHigh": {
+      "barline": [
+        0.35,
+        0.2
+      ],
+      "agogi": [
+        0.35,
+        0.0
+      ],
+      "martyriaBottom": [
+        0.35,
+        -0.5
+      ],
+      "fthoraTop": [
+        0.35,
+        0.1
+      ]
+    },
+    "martyriaNoteVouHigh": {
+      "barline": [
+        0.35,
+        0.2
+      ],
+      "agogi": [
+        0.35,
+        0.0
+      ],
+      "martyriaBottom": [
+        0.35,
+        -0.5
+      ],
+      "fthoraTop": [
+        0.35,
+        0.1
+      ]
+    },
+    "martyriaNoteGaHigh": {
+      "barline": [
+        0.35,
+        0.2
+      ],
+      "agogi": [
+        0.35,
+        0.0
+      ],
+      "martyriaBottom": [
+        0.35,
+        -0.5
+      ],
+      "fthoraTop": [
+        0.35,
+        0.1
+      ]
+    },
+    "martyriaNoteDiHigh": {
+      "barline": [
+        0.35,
+        0.2
+      ],
+      "agogi": [
+        0.35,
+        0.0
+      ],
+      "martyriaBottom": [
+        0.35,
+        -0.5
+      ],
+      "fthoraTop": [
+        0.35,
+        0.1
+      ]
+    },
+    "martyriaNoteKeHigh": {
+      "barline": [
+        0.35,
+        0.2
+      ],
+      "agogi": [
+        0.35,
+        0.0
+      ],
+      "fthoraTop": [
+        0.35,
+        0.1
+      ],
+      "martyriaBottom": [
+        0.35,
+        -0.5
+      ]
+    },
+    "oligonKentimataBelow.alt01": {
+      "barline": [
+        0.227,
+        0.358
+      ],
+      "koronis": [
+        0.636,
+        0.569
+      ],
+      "measureNumber": [
+        0.03,
+        0.5
+      ],
+      "fthoraBottom": [
+        0.334,
+        -0.072
+      ],
+      "diesis": [
+        0.35,
+        -0.099
+      ],
+      "gorgonTop": [
+        0.68,
+        0.22
+      ],
+      "klasmaTop": [
+        0.65,
+        0.25
+      ],
+      "yfesis": [
+        1.266,
+        0.387
+      ],
+      "fthoraTop": [
+        0.693,
+        0.283
+      ],
+      "noteTop": [
+        0.06,
+        0.4
+      ],
+      "isonIndicator": [
+        0.03,
+        0.7
+      ],
+      "psifiston": [
+        0.88,
+        -0.16
+      ]
+    },
+    "oligonKentimataAbove.alt01": {
+      "psifiston": [
+        0.8,
+        -0.12
+      ]
+    },
+    "antikenoma.alt01": {
+      "antikenoma": [
+        0.0,
+        0.0
+      ]
+    },
+    "petastiKentimaTripleYpsili": {
+      "yfenAbove": [
+        0.781,
+        1.207
+      ],
+      "yfenBelow": [
+        0.718,
+        -0.272
+      ],
+      "koronis": [
+        0.652,
+        1.151
+      ],
+      "endofonon": [
+        0.761,
+        -0.359
+      ],
+      "heteronConnecting": [
+        1.305,
+        -0.251
+      ],
+      "yfesis": [
+        1.202,
+        0.381
+      ],
+      "psifiston": [
+        0.91,
+        -0.12
+      ],
+      "measureNumber": [
+        0.03,
+        0.5
+      ],
+      "isonIndicator": [
+        0.03,
+        1.1
+      ],
+      "fthoraTop": [
+        1.213,
+        1.064
+      ],
+      "noteTop": [
+        0.06,
+        0.6
+      ],
+      "diesis": [
+        0.453,
+        -0.085
+      ],
+      "fthoraBottom": [
+        0.341,
+        -0.07
+      ],
+      "klasmaBottom": [
+        0.72,
+        -0.15
+      ],
+      "antikenoma": [
+        0.76,
+        -0.12
+      ],
+      "apli": [
+        0.76,
+        -0.22
+      ]
+    },
+    "psifiston": {
+      "psifiston": [
+        0.0,
+        0.0
+      ]
+    },
+    "antikenoma": {
+      "antikenoma": [
+        0.0,
+        0.0
+      ]
+    },
+    "omalon": {
+      "omalon": [
+        0.0,
+        0.0
+      ]
+    },
+    "omalonConnecting": {
+      "omalonConnecting": [
+        0.0,
+        0.0
+      ]
+    },
+    "heteron": {
+      "heteron": [
+        0.0,
+        0.0
+      ]
+    },
+    "heteronConnecting": {
+      "heteronConnecting": [
+        0.0,
+        0.0
+      ]
+    },
+    "klasmaAbove": {
+      "klasmaTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "klasmaBelow": {
+      "klasmaBottom": [
+        0.0,
+        0.0
+      ]
+    },
+    "apli": {
+      "apli": [
+        0.0,
+        0.0
+      ]
+    },
+    "dipli": {
+      "apli": [
+        0.0,
+        0.0
+      ]
+    },
+    "tripli": {
+      "apli": [
+        0.0,
+        0.0
+      ]
+    },
+    "tetrapli": {
+      "apli": [
+        0.0,
+        0.0
+      ]
+    },
+    "leimma1": {
+      "gorgonTop": [
+        0.7,
+        0.19
+      ]
+    },
+    "digorgonDottedRight": {
+      "gorgonTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "trigorgon": {
+      "gorgonTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "trigorgonDottedLeftBelow": {
+      "gorgonTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "trigorgonDottedLeftAbove": {
+      "gorgonTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "trigorgonDottedRight": {
+      "gorgonTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "argon": {
+      "gorgonTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "diargon": {
+      "gorgonTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "triargon": {
+      "gorgonTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "martyriaZoBelow": {
+      "martyriaBottom": [
+        0.0,
+        0.0
+      ]
+    },
+    "martyriaDeltaBelow": {
+      "martyriaBottom": [
+        0.0,
+        0.0
+      ]
+    },
+    "martyriaAlphaBelow": {
+      "martyriaBottom": [
+        0.0,
+        0.0
+      ]
+    },
+    "martyriaLegetosBelow": {
+      "martyriaBottom": [
+        0.0,
+        0.0
+      ]
+    },
+    "martyriaNanaBelow": {
+      "martyriaBottom": [
+        0.0,
+        0.0
+      ]
+    },
+    "martyriaDeltaDottedBelow": {
+      "martyriaBottom": [
+        0.0,
+        0.0
+      ]
+    },
+    "martyriaAlphaDottedBelow": {
+      "martyriaBottom": [
+        0.0,
+        0.0
+      ]
+    },
+    "martyriaHardChromaticPaBelow": {
+      "martyriaBottom": [
+        0.0,
+        0.0
+      ]
+    },
+    "martyriaHardChromaticDiBelow": {
+      "martyriaBottom": [
+        0.0,
+        0.0
+      ]
+    },
+    "martyriaSoftChromaticDiBelow": {
+      "martyriaBottom": [
+        0.0,
+        0.0
+      ]
+    },
+    "martyriaSoftChromaticKeBelow": {
+      "martyriaBottom": [
+        0.0,
+        0.0
+      ]
+    },
+    "martyriaZygosBelow": {
+      "martyriaBottom": [
+        0.0,
+        0.0
+      ]
+    },
+    "martyriaZoAbove": {
+      "martyriaTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "martyriaDeltaAbove": {
+      "martyriaTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "martyriaAlphaAbove": {
+      "martyriaTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "martyriaLegetosAbove": {
+      "martyriaTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "martyriaNanaAbove": {
+      "martyriaTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "martyriaDeltaDottedAbove": {
+      "martyriaTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "martyriaAlphaDottedAbove": {
+      "martyriaTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "martyriaHardChromaticPaAbove": {
+      "martyriaTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "martyriaHardChromaticDiAbove": {
+      "martyriaTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "martyriaSoftChromaticDiAbove": {
+      "martyriaTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "martyriaSoftChromaticKeAbove": {
+      "martyriaTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "martyriaZygosAbove": {
+      "martyriaTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraDiatonicNiLowAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        0.28
+      ],
+      "agogiAboveFthora": [
+        0.0,
+        0.31
+      ],
+      "fthoraTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraDiatonicPaAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        0.42
+      ],
+      "agogiAboveFthora": [
+        0.0,
+        0.45
+      ],
+      "fthoraTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraDiatonicVouAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        0.47
+      ],
+      "agogiAboveFthora": [
+        0.0,
+        0.5
+      ],
+      "fthoraTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraDiatonicGaAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        0.7
+      ],
+      "agogiAboveFthora": [
+        0.0,
+        0.73
+      ],
+      "fthoraTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraDiatonicDiAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        0.36
+      ],
+      "agogiAboveFthora": [
+        0.0,
+        0.39
+      ],
+      "fthoraTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraDiatonicKeAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        0.37
+      ],
+      "agogiAboveFthora": [
+        0.0,
+        0.4
+      ],
+      "fthoraTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraDiatonicZoAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        0.46
+      ],
+      "agogiAboveFthora": [
+        0.0,
+        0.49
+      ],
+      "fthoraTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraDiatonicNiHighAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        0.36
+      ],
+      "agogiAboveFthora": [
+        0.0,
+        0.39
+      ],
+      "fthoraTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraHardChromaticPaAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        0.23
+      ],
+      "agogiAboveFthora": [
+        0.0,
+        0.26
+      ],
+      "fthoraTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraHardChromaticDiAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        0.36
+      ],
+      "agogiAboveFthora": [
+        0.0,
+        0.39
+      ],
+      "fthoraTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraSoftChromaticDiAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        0.25
+      ],
+      "agogiAboveFthora": [
+        0.0,
+        0.28
+      ],
+      "fthoraTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraSoftChromaticKeAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        0.39
+      ],
+      "agogiAboveFthora": [
+        0.0,
+        0.42
+      ],
+      "fthoraTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraEnharmonicAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        0.3
+      ],
+      "agogiAboveFthora": [
+        0.0,
+        0.33
+      ],
+      "fthoraTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "chroaZygosAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        0.37
+      ],
+      "agogiAboveFthora": [
+        0.0,
+        0.4
+      ],
+      "fthoraTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "chroaKlitonAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        0.35
+      ],
+      "agogiAboveFthora": [
+        0.0,
+        0.38
+      ],
+      "fthoraTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraDiatonicNiLowBelow": {
+      "fthoraBottom": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraDiatonicPaBelow": {
+      "fthoraBottom": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraDiatonicVouBelow": {
+      "fthoraBottom": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraDiatonicGaBelow": {
+      "fthoraBottom": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraDiatonicDiBelow": {
+      "fthoraBottom": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraDiatonicKeBelow": {
+      "fthoraBottom": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraDiatonicZoBelow": {
+      "fthoraBottom": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraDiatonicNiHighBelow": {
+      "fthoraBottom": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraHardChromaticPaBelow": {
+      "fthoraBottom": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraHardChromaticDiBelow": {
+      "fthoraBottom": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraSoftChromaticDiBelow": {
+      "fthoraBottom": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraSoftChromaticKeBelow": {
+      "fthoraBottom": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraEnharmonicBelow": {
+      "fthoraBottom": [
+        0.0,
+        0.0
+      ]
+    },
+    "chroaZygosBelow": {
+      "fthoraBottom": [
+        0.0,
+        0.0
+      ]
+    },
+    "chroaKlitonBelow": {
+      "fthoraBottom": [
+        0.0,
+        0.0
+      ]
+    },
+    "diesis2": {
+      "diesis": [
+        0.0,
+        0.0
+      ]
+    },
+    "diesis4": {
+      "diesis": [
+        0.0,
+        0.0
+      ]
+    },
+    "diesis6": {
+      "diesis": [
+        0.0,
+        0.0
+      ]
+    },
+    "diesis8": {
+      "diesis": [
+        0.0,
+        0.0
+      ]
+    },
+    "yfesis2": {
+      "yfesis": [
+        0.0,
+        0.0
+      ]
+    },
+    "yfesis4": {
+      "yfesis": [
+        0.0,
+        0.0
+      ]
+    },
+    "yfesis6": {
+      "yfesis": [
+        0.0,
+        0.0
+      ]
+    },
+    "yfesis8": {
+      "yfesis": [
+        0.0,
+        0.0
+      ]
+    },
+    "diesisGenikiAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        0.42
+      ],
+      "agogiAboveFthora": [
+        0.0,
+        0.45
+      ],
+      "fthoraTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "yfesisGenikiAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        0.42
+      ],
+      "agogiAboveFthora": [
+        0.0,
+        0.45
+      ],
+      "fthoraTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "diesisGenikiBelow": {
+      "fthoraBottom": [
+        0.0,
+        0.0
+      ]
+    },
+    "yfesisGenikiBelow": {
+      "fthoraBottom": [
+        0.0,
+        0.0
+      ]
+    },
+    "noteIndicatorNi": {
+      "noteTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "noteIndicatorPa": {
+      "noteTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "noteIndicatorVou": {
+      "noteTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "noteIndicatorGa": {
+      "noteTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "noteIndicatorDi": {
+      "noteTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "noteIndicatorKe": {
+      "noteTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "noteIndicatorZo": {
+      "noteTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "chroaSpathiBelow": {
+      "fthoraBottom": [
+        0.0,
+        0.0
+      ]
+    },
+    "chroaSpathiAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        0.25
+      ],
+      "agogiAboveFthora": [
+        0.0,
+        0.28
+      ],
+      "fthoraTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "measureNumber3": {
+      "measureNumber": [
+        0.0,
+        0.0
+      ]
+    },
+    "measureNumber4": {
+      "measureNumber": [
+        0.0,
+        0.0
+      ]
+    },
+    "measureNumber5": {
+      "measureNumber": [
+        0.0,
+        0.0
+      ]
+    },
+    "measureNumber6": {
+      "measureNumber": [
+        0.0,
+        0.0
+      ]
+    },
+    "measureNumber7": {
+      "measureNumber": [
+        0.0,
+        0.0
+      ]
+    },
+    "measureNumber8": {
+      "measureNumber": [
+        0.0,
+        0.0
+      ]
+    },
+    "measureNumber2": {
+      "measureNumber": [
+        0.0,
+        0.0
+      ]
+    },
+    "isonIndicatorDiLow": {
+      "isonIndicator": [
+        0.0,
+        0.0
+      ]
+    },
+    "isonIndicatorUnison": {
+      "isonIndicator": [
+        0.0,
+        0.0
+      ]
+    },
+    "isonIndicatorKeLow": {
+      "isonIndicator": [
+        0.0,
+        0.0
+      ]
+    },
+    "isonIndicatorZo": {
+      "isonIndicator": [
+        0.0,
+        0.0
+      ]
+    },
+    "isonIndicatorNi": {
+      "isonIndicator": [
+        0.0,
+        0.0
+      ]
+    },
+    "isonIndicatorPa": {
+      "isonIndicator": [
+        0.0,
+        0.0
+      ]
+    },
+    "isonIndicatorVou": {
+      "isonIndicator": [
+        0.0,
+        0.0
+      ]
+    },
+    "isonIndicatorGa": {
+      "isonIndicator": [
+        0.0,
+        0.0
+      ]
+    },
+    "isonIndicatorDi": {
+      "isonIndicator": [
+        0.0,
+        0.0
+      ]
+    },
+    "isonIndicatorKe": {
+      "isonIndicator": [
+        0.0,
+        0.0
+      ]
+    },
+    "isonIndicatorZoHigh": {
+      "isonIndicator": [
+        0.0,
+        0.0
+      ]
+    },
+    "modeOligonYpsili": {
+      "modeTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "modeNi": {
+      "fthoraTop": [
+        0.55,
+        0.48
+      ],
+      "modeTop": [
+        0.55,
+        0.52
+      ]
+    },
+    "modePa": {
+      "fthoraTop": [
+        0.55,
+        0.48
+      ],
+      "modeTop": [
+        0.55,
+        0.52
+      ]
+    },
+    "modeVou": {
+      "fthoraTop": [
+        0.64,
+        0.48
+      ],
+      "modeTop": [
+        0.64,
+        0.52
+      ]
+    },
+    "modeGa": {
+      "fthoraTop": [
+        0.48,
+        0.48
+      ],
+      "modeTop": [
+        0.48,
+        0.52
+      ]
+    },
+    "modeDi": {
+      "fthoraTop": [
+        0.45,
+        0.48
+      ],
+      "modeTop": [
+        0.45,
+        0.52
+      ]
+    },
+    "modeKe": {
+      "fthoraTop": [
+        0.5,
+        0.48
+      ],
+      "modeTop": [
+        0.5,
+        0.52
+      ]
+    },
+    "modeZo": {
+      "fthoraTop": [
+        0.55,
+        0.48
+      ],
+      "modeTop": [
+        0.55,
+        0.52
+      ]
+    },
+    "modeOligonKentimaAbove": {
+      "modeTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "modeElafron": {
+      "modeTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "modeRunningElafron": {
+      "modeTop": [
+        0.0,
+        0.0
+      ]
+    },
+    "koronis": {
+      "koronis": [
+        0.0,
+        0.0
+      ]
+    },
+    "gorgonSecondary": {
+      "gorgonSecondary": [
+        0.0,
+        0.0
+      ]
+    },
+    "endofonon": {
+      "endofonon": [
+        0.0,
+        0.0
+      ]
+    },
+    "yfenAbove": {
+      "yfenAbove": [
+        0.0,
+        0.0
+      ]
+    },
+    "yfenBelow": {
+      "yfenBelow": [
+        0.0,
+        0.0
+      ]
+    },
+    "gorgonDottedLeftSecondary": {
+      "gorgonSecondary": [
+        0.0,
+        0.0
+      ]
+    },
+    "gorgonDottedRightSecondary": {
+      "gorgonSecondary": [
+        0.0,
+        0.0
+      ]
+    },
+    "digorgonSecondary": {
+      "gorgonSecondary": [
+        0.0,
+        0.0
+      ]
+    },
+    "digorgonDottedLeftBelowSecondary": {
+      "gorgonSecondary": [
+        0.0,
+        0.0
+      ]
+    },
+    "digorgonDottedRightSecondary": {
+      "gorgonSecondary": [
+        0.0,
+        0.0
+      ]
+    },
+    "trigorgonSecondary": {
+      "gorgonSecondary": [
+        0.0,
+        0.0
+      ]
+    },
+    "trigorgonDottedLeftBelowSecondary": {
+      "gorgonSecondary": [
+        0.0,
+        0.0
+      ]
+    },
+    "trigorgonDottedRightSecondary": {
+      "gorgonSecondary": [
+        0.0,
+        0.0
+      ]
+    },
+    "oligonChamiliKentimata": {
+      "diesisSecondary": [
+        1.047,
+        0.905
+      ],
+      "yfesisSecondary": [
+        0.812,
+        0.58
+      ],
+      "fthoraTopSecondary": [
+        0.604,
+        0.67
+      ],
+      "gorgonSecondary": [
+        0.8,
+        0.48
+      ],
+      "yfenAbove": [
+        0.98,
+        0.829
+      ],
+      "yfenBelow": [
+        1.009,
+        -0.272
+      ],
+      "endofonon": [
+        0.822,
+        -0.269
+      ],
+      "heteronConnecting": [
+        1.56,
+        -0.251
+      ],
+      "measureNumber": [
+        0.03,
+        0.7
+      ],
+      "isonIndicator": [
+        0.03,
+        0.8
+      ],
+      "noteTop": [
+        0.06,
+        0.7
+      ],
+      "fthoraBottom": [
+        0.826,
+        -0.038
+      ],
+      "fthoraTop": [
+        1.179,
+        0.519
+      ],
+      "diesis": [
+        0.35,
+        -0.099
+      ],
+      "yfesis": [
+        1.548,
+        0.504
+      ],
+      "psifiston": [
+        0.98,
+        -0.12
+      ],
+      "gorgonTop": [
+        1.25,
+        0.5
+      ]
+    },
+    "psifiston.salt01": {
+      "psifiston": [
+        0.0,
+        0.0
+      ]
+    },
+    "heteronConnecting.salt01": {
+      "heteronConnecting": [
+        0.0,
+        0.0
+      ]
+    },
+    "agogiPoliArgiAbove": {
+      "agogiAboveFthora": [
+        0.0,
+        0.03
+      ],
+      "agogi": [
+        0.0,
+        0.0
+      ]
+    },
+    "agogiArgoteriAbove": {
+      "agogi": [
+        0.0,
+        0.0
+      ],
+      "agogiAboveFthora": [
+        0.0,
+        0.03
+      ]
+    },
+    "agogiArgiAbove": {
+      "agogi": [
+        0.0,
+        0.0
+      ],
+      "agogiAboveFthora": [
+        0.0,
+        0.03
+      ]
+    },
+    "agogiMetriaAbove": {
+      "agogi": [
+        0.0,
+        0.0
+      ],
+      "agogiAboveFthora": [
+        0.0,
+        0.03
+      ]
+    },
+    "agogiMesiAbove": {
+      "agogi": [
+        0.0,
+        0.0
+      ],
+      "agogiAboveFthora": [
+        0.0,
+        0.03
+      ]
+    },
+    "agogiGorgiAbove": {
+      "agogi": [
+        0.0,
+        0.0
+      ],
+      "agogiAboveFthora": [
+        0.0,
+        0.03
+      ]
+    },
+    "agogiGorgoteriAbove": {
+      "agogi": [
+        0.0,
+        0.0
+      ],
+      "agogiAboveFthora": [
+        0.0,
+        0.03
+      ]
+    },
+    "agogiPoliGorgiAbove": {
+      "agogi": [
+        0.0,
+        0.0
+      ],
+      "agogiAboveFthora": [
+        0.0,
+        0.03
+      ]
+    },
+    "fthoraDiatonicNiLowSecondary": {
+      "fthoraTopSecondary": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraDiatonicPaSecondary": {
+      "fthoraTopSecondary": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraDiatonicVouSecondary": {
+      "fthoraTopSecondary": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraDiatonicGaSecondary": {
+      "fthoraTopSecondary": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraDiatonicDiSecondary": {
+      "fthoraTopSecondary": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraDiatonicKeSecondary": {
+      "fthoraTopSecondary": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraDiatonicZoSecondary": {
+      "fthoraTopSecondary": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraDiatonicNiHighSecondary": {
+      "fthoraTopSecondary": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraHardChromaticPaSecondary": {
+      "fthoraTopSecondary": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraHardChromaticDiSecondary": {
+      "fthoraTopSecondary": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraSoftChromaticDiSecondary": {
+      "fthoraTopSecondary": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraSoftChromaticKeSecondary": {
+      "fthoraTopSecondary": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraEnharmonicSecondary": {
+      "fthoraTopSecondary": [
+        0.0,
+        0.0
+      ]
+    },
+    "chroaZygosSecondary": {
+      "fthoraTopSecondary": [
+        0.0,
+        0.0
+      ]
+    },
+    "chroaKlitonSecondary": {
+      "fthoraTopSecondary": [
+        0.0,
+        0.0
+      ]
+    },
+    "chroaSpathiSecondary": {
+      "fthoraTopSecondary": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraDiatonicNiLowTertiary": {
+      "fthoraTopTertiary": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraDiatonicPaTertiary": {
+      "fthoraTopTertiary": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraDiatonicVouTertiary": {
+      "fthoraTopTertiary": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraDiatonicGaTertiary": {
+      "fthoraTopTertiary": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraDiatonicDiTertiary": {
+      "fthoraTopTertiary": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraDiatonicKeTertiary": {
+      "fthoraTopTertiary": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraDiatonicZoTertiary": {
+      "fthoraTopTertiary": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraDiatonicNiHighTertiary": {
+      "fthoraTopTertiary": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraHardChromaticPaTertiary": {
+      "fthoraTopTertiary": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraHardChromaticDiTertiary": {
+      "fthoraTopTertiary": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraSoftChromaticDiTertiary": {
+      "fthoraTopTertiary": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraSoftChromaticKeTertiary": {
+      "fthoraTopTertiary": [
+        0.0,
+        0.0
+      ]
+    },
+    "fthoraEnharmonicTertiary": {
+      "fthoraTopTertiary": [
+        0.0,
+        0.0
+      ]
+    },
+    "chroaZygosTertiary": {
+      "fthoraTopTertiary": [
+        0.0,
+        0.0
+      ]
+    },
+    "chroaKlitonTertiary": {
+      "fthoraTopTertiary": [
+        0.0,
+        0.0
+      ]
+    },
+    "chroaSpathiTertiary": {
+      "fthoraTopTertiary": [
+        0.0,
+        0.0
+      ]
+    },
+    "yfesis2Secondary": {
+      "yfesisSecondary": [
+        0.0,
+        0.0
+      ]
+    },
+    "yfesis4Secondary": {
+      "yfesisSecondary": [
+        0.0,
+        0.0
+      ]
+    },
+    "yfesis6Secondary": {
+      "yfesisSecondary": [
+        0.0,
+        0.0
+      ]
+    },
+    "yfesis8Secondary": {
+      "yfesisSecondary": [
+        0.0,
+        0.0
+      ]
+    },
+    "yfesis2Tertiary": {
+      "yfesisTertiary": [
+        0.0,
+        0.0
+      ]
+    },
+    "yfesis4Tertiary": {
+      "yfesisTertiary": [
+        0.0,
+        0.0
+      ]
+    },
+    "yfesis6Tertiary": {
+      "yfesisTertiary": [
+        0.0,
+        0.0
+      ]
+    },
+    "yfesis8Tertiary": {
+      "yfesisTertiary": [
+        0.0,
+        0.0
+      ]
+    },
+    "yfesisGenikiSecondary": {
+      "fthoraTopSecondary": [
+        0.0,
+        0.0
+      ]
+    },
+    "yfesisGenikiTertiary": {
+      "fthoraTopTertiary": [
+        0.0,
+        0.0
+      ]
+    },
+    "diesisGenikiSecondary": {
+      "fthoraTopSecondary": [
+        0.0,
+        0.0
+      ]
+    },
+    "diesisGenikiTertiary": {
+      "fthoraTopTertiary": [
+        0.0,
+        0.0
+      ]
+    },
+    "digorgonDottedLeftSecondary": {
+      "gorgonSecondary": [
+        0.0,
+        0.0
+      ]
+    },
+    "trigorgonDottedLeftSecondary": {
+      "gorgonSecondary": [
+        0.0,
+        0.0
+      ]
+    },
+    "psifiston.alt01": {
+      "psifiston": [
+        0.0,
+        0.0
+      ]
+    },
+    "barlineShortSingleAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        0.0
+      ],
+      "barline": [
+        0.0,
+        0.03
+      ]
+    },
+    "barlineSingleAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        0.0
+      ],
+      "barline": [
+        0.0,
+        0.03
+      ]
+    },
+    "barlineDoubleAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        0.0
+      ],
+      "barline": [
+        0.0,
+        0.03
+      ]
+    },
+    "barlineTheseosAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        0.0
+      ],
+      "barline": [
+        0.0,
+        0.03
+      ]
+    },
+    "barlineShortDoubleAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        0.0
+      ],
+      "barline": [
+        0.0,
+        0.03
+      ]
+    },
+    "barlineShortTheseosAbove": {
+      "barlineAboveFthora": [
+        0.0,
+        0.0
+      ],
+      "barline": [
+        0.0,
+        0.03
+      ]
+    },
+    "diesis2Secondary": {
+      "diesisSecondary": [
+        0.0,
+        0.0
+      ]
+    },
+    "diesis4Secondary": {
+      "diesisSecondary": [
+        0.0,
+        0.0
+      ]
+    },
+    "diesis6Secondary": {
+      "diesisSecondary": [
+        0.0,
+        0.0
+      ]
+    },
+    "diesis8Secondary": {
+      "diesisSecondary": [
+        0.0,
+        0.0
+      ]
+    },
+    "diesis2Tertiary": {
+      "diesisTertiary": [
+        0.0,
+        0.0
+      ]
+    },
+    "diesis4Tertiary": {
+      "diesisTertiary": [
+        0.0,
+        0.0
+      ]
+    },
+    "diesis6Tertiary": {
+      "diesisTertiary": [
+        0.0,
+        0.0
+      ]
+    },
+    "diesis8Tertiary": {
+      "diesisTertiary": [
+        0.0,
+        0.0
+      ]
+    },
+    "stavrosAbove": {
+      "stavros": [
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "glyphsWithAlternates": {
+    "psifiston": {
+      "alternates": [
+        {
+          "codepoint": "U+F006",
+          "name": "psifiston.salt01"
+        }
+      ]
+    },
+    "heteronConnecting": {
+      "alternates": [
+        {
+          "codepoint": "U+F007",
+          "name": "heteronConnecting.salt01"
+        }
+      ]
+    },
+    "modeFourth": {
+      "alternates": [
+        {
+          "codepoint": "U+F004",
+          "name": "modeFourth.salt01"
+        }
+      ]
+    },
+    "modeFirst": {
+      "alternates": [
+        {
+          "codepoint": "U+F003",
+          "name": "modeFirst.salt01"
+        }
+      ]
+    }
+  },
+  "glyphAdvanceWidths": {
+    "ison": 1.268,
+    "oligonKentimaBelow": 1.298,
+    "oligon": 1.298,
+    "oligonKentimaAbove": 1.298,
+    "oligonYpsiliRight": 1.316,
+    "oligonYpsiliLeft": 1.299,
+    "oligonKentimaYpsiliRight": 1.316,
+    "oligonKentimaYpsiliMiddle": 1.298,
+    "oligonDoubleYpsili": 1.317,
+    "oligonKentimataDoubleYpsili": 1.478,
+    "isonApostrofos": 1.592,
+    "apostrofosSyndesmos": 1.615,
+    "yporroi": 0.37,
+    "runningElafron": 2.004,
+    "elafron": 1.297,
+    "elafronApostrofos": 1.297,
+    "chamiliApostrofos": 1.343,
+    "chamili": 1.342,
+    "chamiliElafron": 1.4,
+    "chamiliElafronApostrofos": 1.401,
+    "doubleChamili": 1.435,
+    "petastiIson": 1.301,
+    "petasti": 1.301,
+    "petastiOligon": 1.301,
+    "petastiKentima": 1.301,
+    "petastiYpsiliRight": 1.403,
+    "petastiYpsiliLeft": 1.301,
+    "petastiKentimaYpsiliRight": 1.403,
+    "petastiKentimaYpsiliMiddle": 1.301,
+    "petastiApostrofos": 1.301,
+    "petastiElafron": 1.301,
+    "petastiElafronApostrofos": 1.301,
+    "petastiChamili": 1.349,
+    "kentima": 0.285,
+    "kentimata": 0.564,
+    "oligonKentimataAbove": 1.298,
+    "oligonIsonKentimata": 1.448,
+    "oligonYpsiliLeftKentimata": 1.484,
+    "oligonApostrofosKentimata": 1.449,
+    "oligonElafronKentimata": 1.45,
+    "oligonYporroiKentimata": 1.448,
+    "oligonKentimataBelow": 1.298,
+    "oligonKentimaTripleYpsili": 1.449,
+    "oligonIson": 1.299,
+    "oligonElafron": 1.298,
+    "petastiRunningElafron": 1.974,
+    "oligonApostrofos": 1.298,
+    "oligonYporroi": 1.298,
+    "petastiYporroi": 1.301,
+    "oligonRunningElafronKentimata": 1.913,
+    "oligonElafronApostrofosKentimata": 1.448,
+    "oligonKentimaMiddleKentimata": 1.583,
+    "oligonYpsiliRightKentimata": 1.478,
+    "petastiChamiliApostrofos": 1.301,
+    "apostrofos": 0.733,
+    "oligonKentimataTripleYpsili": 1.479,
+    "doubleChamiliElafronApostrofos": 1.435,
+    "doubleChamiliElafron": 1.435,
+    "doubleChamiliApostrofos": 1.344,
+    "petastiKentimataDoubleYpsili": 1.403,
+    "petastiKentimaDoubleYpsiliRight": 1.403,
+    "petastiKentimaDoubleYpsiliLeft": 1.341,
+    "petastiKentimataTripleYpsili": 1.443,
+    "petastiTripleYpsili": 1.403,
+    "oligonKentimaDoubleYpsiliRight": 1.316,
+    "oligonKentimaDoubleYpsiliLeft": 1.449,
+    "oligonTripleYpsili": 1.571,
+    "oligonElafronApostrofos": 1.298,
+    "petastiDoubleYpsili": 1.403,
+    "oligonChamili": 1.449,
+    "petastiChamiliElafron": 1.301,
+    "petastiChamiliElafronApostrofos": 1.301,
+    "petastiDoubleChamili": 1.349,
+    "petastiDoubleChamiliApostrofos": 1.304,
+    "gorgonAbove": 0.0,
+    "gorgonBelow": 0.0,
+    "gorgonDottedLeft": 0.0,
+    "digorgon": 0.0,
+    "agogiPoliArgi": 0.8,
+    "agogiMesi": 0.8,
+    "oligonKentimaMiddle": 1.583,
+    "gorgonDottedRight": 0.0,
+    "digorgonDottedLeftBelow": 0.0,
+    "tripleChamili": 1.441,
+    "agogiArgoteri": 0.8,
+    "agogiGorgi": 0.8,
+    "agogiArgi": 0.8,
+    "agogiGorgoteri": 0.8,
+    "agogiPoliGorgi": 0.8,
+    "agogiMetria": 0.8,
+    "digorgonDottedLeftAbove": 0.0,
+    "martyriaNoteZoLow": 0.7,
+    "martyriaNoteNiLow": 0.7,
+    "martyriaNotePaLow": 0.7,
+    "martyriaNoteVouLow": 0.7,
+    "martyriaNoteGaLow": 0.7,
+    "martyriaNoteDiLow": 0.7,
+    "martyriaNoteKeLow": 0.7,
+    "martyriaNoteZo": 0.7,
+    "martyriaNotePa": 0.7,
+    "martyriaNoteNi": 0.7,
+    "martyriaNoteVou": 0.7,
+    "martyriaNoteNiHigh": 0.7,
+    "martyriaNoteGa": 0.7,
+    "martyriaNoteDi": 0.7,
+    "martyriaNoteKe": 0.7,
+    "martyriaNoteZoHigh": 0.7,
+    "martyriaNotePaHigh": 0.7,
+    "martyriaNoteVouHigh": 0.7,
+    "martyriaNoteGaHigh": 0.7,
+    "martyriaNoteDiHigh": 0.7,
+    "martyriaNoteKeHigh": 0.7,
+    "martyriaTick": 0.0,
+    "oligonKentimataBelow.alt01": 1.298,
+    "oligonKentimataAbove.alt01": 1.298,
+    "antikenoma.alt01": 0.0,
+    "petastiKentimaTripleYpsili": 1.443,
+    "vareia": 0.423,
+    "psifiston": 0.0,
+    "antikenoma": 0.0,
+    "omalon": 0.0,
+    "omalonConnecting": 0.0,
+    "heteron": 0.0,
+    "heteronConnecting": 0.0,
+    "stavros": 0.41,
+    "klasmaAbove": 0.0,
+    "klasmaBelow": 0.0,
+    "apli": 0.0,
+    "dipli": 0.0,
+    "tripli": 0.0,
+    "tetrapli": 0.0,
+    "leimma1": 0.854,
+    "leimma2": 0.986,
+    "leimma3": 1.184,
+    "leimma4": 1.381,
+    "digorgonDottedRight": 0.0,
+    "trigorgon": 0.0,
+    "trigorgonDottedLeftBelow": 0.0,
+    "trigorgonDottedLeftAbove": 0.0,
+    "trigorgonDottedRight": 0.0,
+    "argon": 0.0,
+    "diargon": 0.0,
+    "triargon": 0.0,
+    "martyriaZoBelow": 0.0,
+    "martyriaDeltaBelow": 0.0,
+    "martyriaAlphaBelow": 0.0,
+    "martyriaLegetosBelow": 0.0,
+    "martyriaNanaBelow": 0.0,
+    "martyriaDeltaDottedBelow": 0.0,
+    "martyriaAlphaDottedBelow": 0.0,
+    "martyriaHardChromaticPaBelow": 0.0,
+    "martyriaHardChromaticDiBelow": 0.0,
+    "martyriaSoftChromaticDiBelow": 0.0,
+    "martyriaSoftChromaticKeBelow": 0.0,
+    "martyriaZygosBelow": 0.0,
+    "martyriaZoAbove": 0.0,
+    "martyriaDeltaAbove": 0.0,
+    "martyriaAlphaAbove": 0.0,
+    "martyriaLegetosAbove": 0.0,
+    "martyriaNanaAbove": 0.0,
+    "martyriaDeltaDottedAbove": 0.0,
+    "martyriaAlphaDottedAbove": 0.0,
+    "martyriaHardChromaticPaAbove": 0.0,
+    "martyriaHardChromaticDiAbove": 0.0,
+    "martyriaSoftChromaticDiAbove": 0.0,
+    "martyriaSoftChromaticKeAbove": 0.0,
+    "martyriaZygosAbove": 0.0,
+    "fthoraDiatonicNiLowAbove": 0.0,
+    "fthoraDiatonicPaAbove": 0.0,
+    "fthoraDiatonicVouAbove": 0.0,
+    "fthoraDiatonicGaAbove": 0.0,
+    "fthoraDiatonicDiAbove": 0.0,
+    "fthoraDiatonicKeAbove": 0.0,
+    "fthoraDiatonicZoAbove": 0.0,
+    "fthoraDiatonicNiHighAbove": 0.0,
+    "fthoraHardChromaticPaAbove": 0.0,
+    "fthoraHardChromaticDiAbove": 0.0,
+    "fthoraSoftChromaticDiAbove": 0.0,
+    "fthoraSoftChromaticKeAbove": 0.0,
+    "fthoraEnharmonicAbove": 0.0,
+    "chroaZygosAbove": 0.0,
+    "chroaKlitonAbove": 0.0,
+    "fthoraDiatonicNiLowBelow": 0.0,
+    "fthoraDiatonicPaBelow": 0.0,
+    "fthoraDiatonicVouBelow": 0.0,
+    "fthoraDiatonicGaBelow": 0.0,
+    "fthoraDiatonicDiBelow": 0.0,
+    "fthoraDiatonicKeBelow": 0.0,
+    "fthoraDiatonicZoBelow": 0.0,
+    "fthoraDiatonicNiHighBelow": 0.0,
+    "fthoraHardChromaticPaBelow": 0.0,
+    "fthoraHardChromaticDiBelow": 0.0,
+    "fthoraSoftChromaticDiBelow": 0.0,
+    "fthoraSoftChromaticKeBelow": 0.0,
+    "fthoraEnharmonicBelow": 0.0,
+    "chroaZygosBelow": 0.0,
+    "chroaKlitonBelow": 0.0,
+    "diesis2": 0.0,
+    "diesis4": 0.0,
+    "diesis6": 0.0,
+    "diesis8": 0.0,
+    "yfesis2": 0.0,
+    "yfesis4": 0.0,
+    "yfesis6": 0.0,
+    "yfesis8": 0.0,
+    "diesisGenikiAbove": 0.0,
+    "yfesisGenikiAbove": 0.0,
+    "diesisGenikiBelow": 0.0,
+    "yfesisGenikiBelow": 0.0,
+    "noteIndicatorNi": 0.0,
+    "noteIndicatorPa": 0.0,
+    "noteIndicatorVou": 0.0,
+    "noteIndicatorGa": 0.0,
+    "noteIndicatorDi": 0.0,
+    "noteIndicatorKe": 0.0,
+    "noteIndicatorZo": 0.0,
+    "chroaSpathiBelow": 0.0,
+    "chroaSpathiAbove": 0.0,
+    "measureNumber3": 0.0,
+    "measureNumber4": 0.0,
+    "measureNumber5": 0.0,
+    "measureNumber6": 0.0,
+    "measureNumber7": 0.0,
+    "measureNumber8": 0.0,
+    "measureNumber2": 0.0,
+    "isonIndicatorDiLow": 0.0,
+    "isonIndicatorUnison": 0.0,
+    "isonIndicatorKeLow": 0.0,
+    "isonIndicatorZo": 0.0,
+    "isonIndicatorNi": 0.0,
+    "isonIndicatorPa": 0.0,
+    "isonIndicatorVou": 0.0,
+    "isonIndicatorGa": 0.0,
+    "isonIndicatorDi": 0.0,
+    "isonIndicatorKe": 0.0,
+    "isonIndicatorZoHigh": 0.0,
+    "modeThirdNana": 0.904,
+    "modeThird": 1.523,
+    "modePlagalFirst": 0.774,
+    "modeFourth": 0.802,
+    "modeOligonYpsili": 0.0,
+    "modePlagalSecond": 0.931,
+    "modePlagalFourth": 0.802,
+    "modeNi": 1.048,
+    "modePa": 1.08,
+    "modeAlphaCapital": 1.06,
+    "modeBetaCapital": 1.027,
+    "modeGammaCapital": 0.962,
+    "modeDeltaCapital": 1.026,
+    "modeVarys": 1.334,
+    "modePlagal": 0.681,
+    "modeWordVarys": 1.703,
+    "modeAlpha": 0.986,
+    "modeBeta": 0.955,
+    "modeWordEchos": 1.544,
+    "modeGamma": 0.963,
+    "modeDelta": 0.97,
+    "modeFirst": 0.774,
+    "modeSecond": 1.455,
+    "modeLegetos": 1.571,
+    "modeVarys2": 0.944,
+    "modeVou": 1.257,
+    "modeGa": 0.95,
+    "modeDi": 0.859,
+    "modeKe": 0.958,
+    "modeZo": 1.063,
+    "modeOligonKentimaAbove": 0.0,
+    "modeElafron": 0.0,
+    "modeRunningElafron": 0.0,
+    "gorthmikon": 0.612,
+    "pelastikon": 0.62,
+    "barlineSingle": 0.09,
+    "barlineDouble": 0.18,
+    "barlineTheseos": 0.09,
+    "barlineShortSingle": 0.09,
+    "barlineShortDouble": 0.18,
+    "barlineShortTheseos": 0.09,
+    "breath": 0.234,
+    "koronis": 0.0,
+    "leimmaDot": 0.26,
+    "gorgonSecondary": 0.0,
+    "endofonon": 0.0,
+    "yfenAbove": 0.0,
+    "yfenBelow": 0.0,
+    "modeFirst.salt01": 0.774,
+    "modeFourth.salt01": 0.802,
+    "oligonKentimataBelow.alt02": 1.298,
+    "gorgonDottedLeftSecondary": 0.0,
+    "gorgonDottedRightSecondary": 0.0,
+    "digorgonSecondary": 0.0,
+    "digorgonDottedLeftBelowSecondary": 0.0,
+    "digorgonDottedRightSecondary": 0.0,
+    "trigorgonSecondary": 0.0,
+    "trigorgonDottedLeftBelowSecondary": 0.0,
+    "trigorgonDottedRightSecondary": 0.0,
+    "oligonChamiliKentimata": 1.572,
+    "psifiston.salt01": 0.0,
+    "heteronConnecting.salt01": 0.0,
+    "agogiPoliArgiAbove": 0.0,
+    "agogiArgoteriAbove": 0.0,
+    "agogiArgiAbove": 0.0,
+    "agogiMetriaAbove": 0.0,
+    "agogiMesiAbove": 0.0,
+    "agogiGorgiAbove": 0.0,
+    "agogiGorgoteriAbove": 0.0,
+    "agogiPoliGorgiAbove": 0.0,
+    "fthoraDiatonicNiLowSecondary": 0.0,
+    "fthoraDiatonicPaSecondary": 0.0,
+    "fthoraDiatonicVouSecondary": 0.0,
+    "fthoraDiatonicGaSecondary": 0.0,
+    "fthoraDiatonicDiSecondary": 0.0,
+    "fthoraDiatonicKeSecondary": 0.0,
+    "fthoraDiatonicZoSecondary": 0.0,
+    "fthoraDiatonicNiHighSecondary": 0.0,
+    "fthoraHardChromaticPaSecondary": 0.0,
+    "fthoraHardChromaticDiSecondary": 0.0,
+    "fthoraSoftChromaticDiSecondary": 0.0,
+    "fthoraSoftChromaticKeSecondary": 0.0,
+    "fthoraEnharmonicSecondary": 0.0,
+    "chroaZygosSecondary": 0.0,
+    "chroaKlitonSecondary": 0.0,
+    "chroaSpathiSecondary": 0.0,
+    "fthoraDiatonicNiLowTertiary": 0.0,
+    "fthoraDiatonicPaTertiary": 0.0,
+    "fthoraDiatonicVouTertiary": 0.0,
+    "fthoraDiatonicGaTertiary": 0.0,
+    "fthoraDiatonicDiTertiary": 0.0,
+    "fthoraDiatonicKeTertiary": 0.0,
+    "fthoraDiatonicZoTertiary": 0.0,
+    "fthoraDiatonicNiHighTertiary": 0.0,
+    "fthoraHardChromaticPaTertiary": 0.0,
+    "fthoraHardChromaticDiTertiary": 0.0,
+    "fthoraSoftChromaticDiTertiary": 0.0,
+    "fthoraSoftChromaticKeTertiary": 0.0,
+    "fthoraEnharmonicTertiary": 0.0,
+    "chroaZygosTertiary": 0.0,
+    "chroaKlitonTertiary": 0.0,
+    "chroaSpathiTertiary": 0.0,
+    "yfesis2Secondary": 0.0,
+    "yfesis4Secondary": 0.0,
+    "yfesis6Secondary": 0.0,
+    "yfesis8Secondary": 0.0,
+    "yfesis2Tertiary": 0.0,
+    "yfesis4Tertiary": 0.0,
+    "yfesis6Tertiary": 0.0,
+    "yfesis8Tertiary": 0.0,
+    "yfesisGenikiSecondary": 0.0,
+    "yfesisGenikiTertiary": 0.0,
+    "diesisGenikiSecondary": 0.0,
+    "diesisGenikiTertiary": 0.0,
+    "digorgonDottedLeftSecondary": 0.0,
+    "trigorgonDottedLeftSecondary": 0.0,
+    "psifiston.alt01": 0.0,
+    "barlineShortSingleAbove": 0.0,
+    "barlineSingleAbove": 0.0,
+    "barlineDoubleAbove": 0.0,
+    "barlineTheseosAbove": 0.0,
+    "barlineShortDoubleAbove": 0.0,
+    "barlineShortTheseosAbove": 0.0,
+    "diesis2Secondary": 0.0,
+    "diesis4Secondary": 0.0,
+    "diesis6Secondary": 0.0,
+    "diesis8Secondary": 0.0,
+    "diesis2Tertiary": 0.0,
+    "diesis4Tertiary": 0.0,
+    "diesis6Tertiary": 0.0,
+    "diesis8Tertiary": 0.0,
+    "stavrosAbove": 0.0,
+    "fthoraDiatonicNiLow": 0.9,
+    "fthoraDiatonicPa": 0.9,
+    "fthoraDiatonicVou": 0.9,
+    "fthoraDiatonicGa": 0.9,
+    "fthoraDiatonicDi": 0.9,
+    "fthoraDiatonicKe": 0.9,
+    "fthoraDiatonicZo": 0.9,
+    "fthoraDiatonicNiHigh": 0.9,
+    "fthoraHardChromaticPa": 0.9,
+    "fthoraHardChromaticDi": 0.9,
+    "fthoraSoftChromaticDi": 0.9,
+    "fthoraSoftChromaticKe": 0.9,
+    "fthoraEnharmonic": 0.9,
+    "chroaZygos": 0.9,
+    "chroaKliton": 0.9,
+    "chroaSpathi": 0.9
+  },
+  "optionalGlyphs": {
+    "oligonKentimataBelow.alt01": {
+      "codepoint": "U+F000"
+    },
+    "oligonKentimataAbove.alt01": {
+      "codepoint": "U+F001"
+    },
+    "antikenoma.alt01": {
+      "codepoint": "U+F002"
+    },
+    "modeFirst.salt01": {
+      "codepoint": "U+F003"
+    },
+    "modeFourth.salt01": {
+      "codepoint": "U+F004"
+    },
+    "oligonKentimataBelow.alt02": {
+      "codepoint": "U+F005"
+    },
+    "psifiston.salt01": {
+      "codepoint": "U+F006"
+    },
+    "heteronConnecting.salt01": {
+      "codepoint": "U+F007"
+    },
+    "psifiston.alt01": {
+      "codepoint": "U+F008"
+    }
+  },
+  "glyphBBoxes": {
+    "ison": {
+      "bBoxNE": [
+        1.238,
+        0.27
+      ],
+      "bBoxSW": [
+        0.03,
+        -0.045
+      ]
+    },
+    "oligonKentimaBelow": {
+      "bBoxNE": [
+        1.268,
+        0.172
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.259
+      ]
+    },
+    "oligon": {
+      "bBoxNE": [
+        1.268,
+        0.172
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.06
+      ]
+    },
+    "oligonKentimaAbove": {
+      "bBoxNE": [
+        1.268,
+        0.451
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.06
+      ]
+    },
+    "oligonYpsiliRight": {
+      "bBoxNE": [
+        1.285,
+        0.913
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.06
+      ]
+    },
+    "oligonYpsiliLeft": {
+      "bBoxNE": [
+        1.269,
+        0.913
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.06
+      ]
+    },
+    "oligonKentimaYpsiliRight": {
+      "bBoxNE": [
+        1.285,
+        0.913
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.06
+      ]
+    },
+    "oligonKentimaYpsiliMiddle": {
+      "bBoxNE": [
+        1.268,
+        1.18
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.06
+      ]
+    },
+    "oligonDoubleYpsili": {
+      "bBoxNE": [
+        1.286,
+        0.913
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.06
+      ]
+    },
+    "oligonKentimataDoubleYpsili": {
+      "bBoxNE": [
+        1.448,
+        1.226
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.06
+      ]
+    },
+    "isonApostrofos": {
+      "bBoxNE": [
+        1.562,
+        0.27
+      ],
+      "bBoxSW": [
+        0.03,
+        -0.37
+      ]
+    },
+    "apostrofosSyndesmos": {
+      "bBoxNE": [
+        1.576,
+        0.222
+      ],
+      "bBoxSW": [
+        0.02,
+        -0.254
+      ]
+    },
+    "yporroi": {
+      "bBoxNE": [
+        0.34,
+        0.208
+      ],
+      "bBoxSW": [
+        0.03,
+        -0.08
+      ]
+    },
+    "runningElafron": {
+      "bBoxNE": [
+        1.975,
+        0.229
+      ],
+      "bBoxSW": [
+        0.03,
+        -0.09
+      ]
+    },
+    "elafron": {
+      "bBoxNE": [
+        1.267,
+        0.229
+      ],
+      "bBoxSW": [
+        0.03,
+        -0.09
+      ]
+    },
+    "elafronApostrofos": {
+      "bBoxNE": [
+        1.267,
+        0.229
+      ],
+      "bBoxSW": [
+        0.03,
+        -0.136
+      ]
+    },
+    "chamiliApostrofos": {
+      "bBoxNE": [
+        1.313,
+        0.567
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.328
+      ]
+    },
+    "chamili": {
+      "bBoxNE": [
+        1.312,
+        0.502
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.065
+      ]
+    },
+    "chamiliElafron": {
+      "bBoxNE": [
+        1.37,
+        0.873
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.09
+      ]
+    },
+    "chamiliElafronApostrofos": {
+      "bBoxNE": [
+        1.37,
+        0.873
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.136
+      ]
+    },
+    "doubleChamili": {
+      "bBoxNE": [
+        1.404,
+        0.862
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.065
+      ]
+    },
+    "petastiIson": {
+      "bBoxNE": [
+        1.271,
+        0.595
+      ],
+      "bBoxSW": [
+        0.03,
+        -0.088
+      ]
+    },
+    "petasti": {
+      "bBoxNE": [
+        1.271,
+        0.204
+      ],
+      "bBoxSW": [
+        0.03,
+        -0.088
+      ]
+    },
+    "petastiOligon": {
+      "bBoxNE": [
+        1.271,
+        0.473
+      ],
+      "bBoxSW": [
+        0.03,
+        -0.088
+      ]
+    },
+    "petastiKentima": {
+      "bBoxNE": [
+        1.271,
+        0.37
+      ],
+      "bBoxSW": [
+        0.03,
+        -0.088
+      ]
+    },
+    "petastiYpsiliRight": {
+      "bBoxNE": [
+        1.373,
+        0.959
+      ],
+      "bBoxSW": [
+        0.03,
+        -0.088
+      ]
+    },
+    "petastiYpsiliLeft": {
+      "bBoxNE": [
+        1.271,
+        0.959
+      ],
+      "bBoxSW": [
+        0.03,
+        -0.088
+      ]
+    },
+    "petastiKentimaYpsiliRight": {
+      "bBoxNE": [
+        1.373,
+        0.959
+      ],
+      "bBoxSW": [
+        0.03,
+        -0.088
+      ]
+    },
+    "petastiKentimaYpsiliMiddle": {
+      "bBoxNE": [
+        1.271,
+        1.104
+      ],
+      "bBoxSW": [
+        0.03,
+        -0.088
+      ]
+    },
+    "petastiApostrofos": {
+      "bBoxNE": [
+        1.271,
+        0.419
+      ],
+      "bBoxSW": [
+        0.03,
+        -0.088
+      ]
+    },
+    "petastiElafron": {
+      "bBoxNE": [
+        1.271,
+        0.587
+      ],
+      "bBoxSW": [
+        0.03,
+        -0.088
+      ]
+    },
+    "petastiElafronApostrofos": {
+      "bBoxNE": [
+        1.271,
+        0.587
+      ],
+      "bBoxSW": [
+        0.03,
+        -0.088
+      ]
+    },
+    "petastiChamili": {
+      "bBoxNE": [
+        1.319,
+        0.815
+      ],
+      "bBoxSW": [
+        -0.06,
+        -0.088
+      ]
+    },
+    "kentima": {
+      "bBoxNE": [
+        0.255,
+        0.173
+      ],
+      "bBoxSW": [
+        -0.015,
+        -0.079
+      ]
+    },
+    "kentimata": {
+      "bBoxNE": [
+        0.533,
+        0.173
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.079
+      ]
+    },
+    "oligonKentimataAbove": {
+      "bBoxNE": [
+        1.268,
+        0.451
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.06
+      ]
+    },
+    "oligonIsonKentimata": {
+      "bBoxNE": [
+        1.418,
+        0.505
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.06
+      ]
+    },
+    "oligonYpsiliLeftKentimata": {
+      "bBoxNE": [
+        1.453,
+        0.913
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.06
+      ]
+    },
+    "oligonApostrofosKentimata": {
+      "bBoxNE": [
+        1.418,
+        0.506
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.06
+      ]
+    },
+    "oligonElafronKentimata": {
+      "bBoxNE": [
+        1.42,
+        0.449
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.06
+      ]
+    },
+    "oligonYporroiKentimata": {
+      "bBoxNE": [
+        1.418,
+        0.486
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.06
+      ]
+    },
+    "oligonKentimataBelow": {
+      "bBoxNE": [
+        1.268,
+        0.172
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.262
+      ]
+    },
+    "oligonKentimaTripleYpsili": {
+      "bBoxNE": [
+        1.418,
+        1.192
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.06
+      ]
+    },
+    "oligonIson": {
+      "bBoxNE": [
+        1.269,
+        0.525
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.06
+      ]
+    },
+    "oligonElafron": {
+      "bBoxNE": [
+        1.268,
+        0.505
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.06
+      ]
+    },
+    "petastiRunningElafron": {
+      "bBoxNE": [
+        1.944,
+        0.586
+      ],
+      "bBoxSW": [
+        0.03,
+        -0.088
+      ]
+    },
+    "oligonApostrofos": {
+      "bBoxNE": [
+        1.268,
+        0.523
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.06
+      ]
+    },
+    "oligonYporroi": {
+      "bBoxNE": [
+        1.268,
+        0.509
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.06
+      ]
+    },
+    "petastiYporroi": {
+      "bBoxNE": [
+        1.271,
+        0.358
+      ],
+      "bBoxSW": [
+        0.03,
+        -0.088
+      ]
+    },
+    "oligonRunningElafronKentimata": {
+      "bBoxNE": [
+        1.882,
+        0.45
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.06
+      ]
+    },
+    "oligonElafronApostrofosKentimata": {
+      "bBoxNE": [
+        1.418,
+        0.449
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.06
+      ]
+    },
+    "oligonKentimaMiddleKentimata": {
+      "bBoxNE": [
+        1.553,
+        0.451
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.079
+      ]
+    },
+    "oligonYpsiliRightKentimata": {
+      "bBoxNE": [
+        1.448,
+        0.913
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.06
+      ]
+    },
+    "petastiChamiliApostrofos": {
+      "bBoxNE": [
+        1.312,
+        1.024
+      ],
+      "bBoxSW": [
+        0.03,
+        -0.088
+      ]
+    },
+    "apostrofos": {
+      "bBoxNE": [
+        0.694,
+        0.222
+      ],
+      "bBoxSW": [
+        0.02,
+        -0.068
+      ]
+    },
+    "oligonKentimataTripleYpsili": {
+      "bBoxNE": [
+        1.449,
+        1.226
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.06
+      ]
+    },
+    "doubleChamiliElafronApostrofos": {
+      "bBoxNE": [
+        1.404,
+        0.927
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.426
+      ]
+    },
+    "doubleChamiliElafron": {
+      "bBoxNE": [
+        1.404,
+        0.927
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.38
+      ]
+    },
+    "doubleChamiliApostrofos": {
+      "bBoxNE": [
+        1.404,
+        0.927
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.328
+      ]
+    },
+    "petastiKentimataDoubleYpsili": {
+      "bBoxNE": [
+        1.373,
+        1.104
+      ],
+      "bBoxSW": [
+        0.03,
+        -0.088
+      ]
+    },
+    "petastiKentimaDoubleYpsiliRight": {
+      "bBoxNE": [
+        1.373,
+        1.104
+      ],
+      "bBoxSW": [
+        0.03,
+        -0.088
+      ]
+    },
+    "petastiKentimaDoubleYpsiliLeft": {
+      "bBoxNE": [
+        1.311,
+        1.104
+      ],
+      "bBoxSW": [
+        0.03,
+        -0.088
+      ]
+    },
+    "petastiKentimataTripleYpsili": {
+      "bBoxNE": [
+        1.413,
+        1.104
+      ],
+      "bBoxSW": [
+        0.03,
+        -0.088
+      ]
+    },
+    "petastiTripleYpsili": {
+      "bBoxNE": [
+        1.373,
+        0.959
+      ],
+      "bBoxSW": [
+        0.03,
+        -0.088
+      ]
+    },
+    "oligonKentimaDoubleYpsiliRight": {
+      "bBoxNE": [
+        1.285,
+        1.18
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.06
+      ]
+    },
+    "oligonKentimaDoubleYpsiliLeft": {
+      "bBoxNE": [
+        1.418,
+        1.192
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.06
+      ]
+    },
+    "oligonTripleYpsili": {
+      "bBoxNE": [
+        1.541,
+        0.913
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.06
+      ]
+    },
+    "oligonElafronApostrofos": {
+      "bBoxNE": [
+        1.268,
+        0.519
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.06
+      ]
+    },
+    "petastiDoubleYpsili": {
+      "bBoxNE": [
+        1.373,
+        0.959
+      ],
+      "bBoxSW": [
+        0.03,
+        -0.088
+      ]
+    },
+    "oligonChamili": {
+      "bBoxNE": [
+        1.418,
+        0.804
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.06
+      ]
+    },
+    "petastiChamiliElafron": {
+      "bBoxNE": [
+        1.312,
+        1.256
+      ],
+      "bBoxSW": [
+        0.03,
+        -0.088
+      ]
+    },
+    "petastiChamiliElafronApostrofos": {
+      "bBoxNE": [
+        1.312,
+        1.256
+      ],
+      "bBoxSW": [
+        0.03,
+        -0.088
+      ]
+    },
+    "petastiDoubleChamili": {
+      "bBoxNE": [
+        1.319,
+        1.047
+      ],
+      "bBoxSW": [
+        -0.06,
+        -0.228
+      ]
+    },
+    "petastiDoubleChamiliApostrofos": {
+      "bBoxNE": [
+        1.405,
+        1.232
+      ],
+      "bBoxSW": [
+        0.03,
+        -0.228
+      ]
+    },
+    "gorgonAbove": {
+      "bBoxNE": [
+        0.202,
+        0.171
+      ],
+      "bBoxSW": [
+        -0.202,
+        0.018
+      ]
+    },
+    "gorgonBelow": {
+      "bBoxNE": [
+        0.202,
+        -0.042
+      ],
+      "bBoxSW": [
+        -0.202,
+        -0.195
+      ]
+    },
+    "gorgonDottedLeft": {
+      "bBoxNE": [
+        0.201,
+        0.172
+      ],
+      "bBoxSW": [
+        -0.365,
+        0.018
+      ]
+    },
+    "digorgon": {
+      "bBoxNE": [
+        0.254,
+        0.312
+      ],
+      "bBoxSW": [
+        -0.254,
+        0.02
+      ]
+    },
+    "agogiPoliArgi": {
+      "bBoxNE": [
+        0.787,
+        0.574
+      ],
+      "bBoxSW": [
+        0.013,
+        -0.519
+      ]
+    },
+    "agogiMesi": {
+      "bBoxNE": [
+        0.726,
+        0.261
+      ],
+      "bBoxSW": [
+        0.074,
+        -0.519
+      ]
+    },
+    "oligonKentimaMiddle": {
+      "bBoxNE": [
+        1.553,
+        0.173
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.079
+      ]
+    },
+    "gorgonDottedRight": {
+      "bBoxNE": [
+        0.366,
+        0.184
+      ],
+      "bBoxSW": [
+        -0.202,
+        0.018
+      ]
+    },
+    "digorgonDottedLeftBelow": {
+      "bBoxNE": [
+        0.254,
+        0.312
+      ],
+      "bBoxSW": [
+        -0.398,
+        0.02
+      ]
+    },
+    "tripleChamili": {
+      "bBoxNE": [
+        1.502,
+        1.182
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.115
+      ]
+    },
+    "agogiArgoteri": {
+      "bBoxNE": [
+        0.604,
+        0.423
+      ],
+      "bBoxSW": [
+        0.196,
+        -0.519
+      ]
+    },
+    "agogiGorgi": {
+      "bBoxNE": [
+        0.582,
+        0.261
+      ],
+      "bBoxSW": [
+        0.218,
+        -0.519
+      ]
+    },
+    "agogiArgi": {
+      "bBoxNE": [
+        0.69,
+        0.411
+      ],
+      "bBoxSW": [
+        0.11,
+        -0.519
+      ]
+    },
+    "agogiGorgoteri": {
+      "bBoxNE": [
+        0.672,
+        0.411
+      ],
+      "bBoxSW": [
+        0.128,
+        -0.519
+      ]
+    },
+    "agogiPoliGorgi": {
+      "bBoxNE": [
+        0.771,
+        0.574
+      ],
+      "bBoxSW": [
+        0.029,
+        -0.519
+      ]
+    },
+    "agogiMetria": {
+      "bBoxNE": [
+        0.604,
+        0.261
+      ],
+      "bBoxSW": [
+        0.196,
+        -0.519
+      ]
+    },
+    "digorgonDottedLeftAbove": {
+      "bBoxNE": [
+        0.254,
+        0.326
+      ],
+      "bBoxSW": [
+        -0.254,
+        0.02
+      ]
+    },
+    "martyriaNoteZoLow": {
+      "bBoxNE": [
+        0.538,
+        -0.641
+      ],
+      "bBoxSW": [
+        0.162,
+        -0.975
+      ]
+    },
+    "martyriaNoteNiLow": {
+      "bBoxNE": [
+        0.525,
+        -0.638
+      ],
+      "bBoxSW": [
+        0.135,
+        -0.951
+      ]
+    },
+    "martyriaNotePaLow": {
+      "bBoxNE": [
+        0.537,
+        -0.665
+      ],
+      "bBoxSW": [
+        0.123,
+        -0.913
+      ]
+    },
+    "martyriaNoteVouLow": {
+      "bBoxNE": [
+        0.517,
+        -0.616
+      ],
+      "bBoxSW": [
+        0.223,
+        -1.028
+      ]
+    },
+    "martyriaNoteGaLow": {
+      "bBoxNE": [
+        0.534,
+        -0.619
+      ],
+      "bBoxSW": [
+        0.166,
+        -0.962
+      ]
+    },
+    "martyriaNoteDiLow": {
+      "bBoxNE": [
+        0.486,
+        -0.624
+      ],
+      "bBoxSW": [
+        0.154,
+        -0.953
+      ]
+    },
+    "martyriaNoteKeLow": {
+      "bBoxNE": [
+        0.515,
+        -0.621
+      ],
+      "bBoxSW": [
+        0.185,
+        -0.957
+      ]
+    },
+    "martyriaNoteZo": {
+      "bBoxNE": [
+        0.538,
+        -0.031
+      ],
+      "bBoxSW": [
+        0.162,
+        -0.365
+      ]
+    },
+    "martyriaNotePa": {
+      "bBoxNE": [
+        0.537,
+        -0.091
+      ],
+      "bBoxSW": [
+        0.123,
+        -0.339
+      ]
+    },
+    "martyriaNoteNi": {
+      "bBoxNE": [
+        0.525,
+        -0.051
+      ],
+      "bBoxSW": [
+        0.135,
+        -0.364
+      ]
+    },
+    "martyriaNoteVou": {
+      "bBoxNE": [
+        0.517,
+        0.039
+      ],
+      "bBoxSW": [
+        0.223,
+        -0.373
+      ]
+    },
+    "martyriaNoteNiHigh": {
+      "bBoxNE": [
+        0.661,
+        0.037
+      ],
+      "bBoxSW": [
+        0.135,
+        -0.364
+      ]
+    },
+    "martyriaNoteGa": {
+      "bBoxNE": [
+        0.534,
+        -0.027
+      ],
+      "bBoxSW": [
+        0.166,
+        -0.37
+      ]
+    },
+    "martyriaNoteDi": {
+      "bBoxNE": [
+        0.486,
+        -0.021
+      ],
+      "bBoxSW": [
+        0.154,
+        -0.35
+      ]
+    },
+    "martyriaNoteKe": {
+      "bBoxNE": [
+        0.515,
+        -0.013
+      ],
+      "bBoxSW": [
+        0.185,
+        -0.349
+      ]
+    },
+    "martyriaNoteZoHigh": {
+      "bBoxNE": [
+        0.661,
+        0.037
+      ],
+      "bBoxSW": [
+        0.162,
+        -0.365
+      ]
+    },
+    "martyriaNotePaHigh": {
+      "bBoxNE": [
+        0.661,
+        0.037
+      ],
+      "bBoxSW": [
+        0.123,
+        -0.339
+      ]
+    },
+    "martyriaNoteVouHigh": {
+      "bBoxNE": [
+        0.661,
+        0.039
+      ],
+      "bBoxSW": [
+        0.223,
+        -0.373
+      ]
+    },
+    "martyriaNoteGaHigh": {
+      "bBoxNE": [
+        0.661,
+        0.037
+      ],
+      "bBoxSW": [
+        0.166,
+        -0.37
+      ]
+    },
+    "martyriaNoteDiHigh": {
+      "bBoxNE": [
+        0.661,
+        0.037
+      ],
+      "bBoxSW": [
+        0.154,
+        -0.35
+      ]
+    },
+    "martyriaNoteKeHigh": {
+      "bBoxNE": [
+        0.661,
+        0.037
+      ],
+      "bBoxSW": [
+        0.185,
+        -0.349
+      ]
+    },
+    "martyriaTick": {
+      "bBoxNE": [
+        -0.039,
+        0.037
+      ],
+      "bBoxSW": [
+        -0.15,
+        -0.105
+      ]
+    },
+    "oligonKentimataBelow.alt01": {
+      "bBoxNE": [
+        1.268,
+        0.172
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.258
+      ]
+    },
+    "oligonKentimataAbove.alt01": {
+      "bBoxNE": [
+        1.268,
+        0.404
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.06
+      ]
+    },
+    "antikenoma.alt01": {
+      "bBoxNE": [
+        0.533,
+        -0.007
+      ],
+      "bBoxSW": [
+        -0.551,
+        -0.231
+      ]
+    },
+    "petastiKentimaTripleYpsili": {
+      "bBoxNE": [
+        1.413,
+        1.104
+      ],
+      "bBoxSW": [
+        0.03,
+        -0.088
+      ]
+    },
+    "vareia": {
+      "bBoxNE": [
+        0.693,
+        0.299
+      ],
+      "bBoxSW": [
+        -0.1,
+        -0.325
+      ]
+    },
+    "psifiston": {
+      "bBoxNE": [
+        0.621,
+        0.003
+      ],
+      "bBoxSW": [
+        -0.609,
+        -0.377
+      ]
+    },
+    "antikenoma": {
+      "bBoxNE": [
+        0.62,
+        -0.016
+      ],
+      "bBoxSW": [
+        -0.59,
+        -0.239
+      ]
+    },
+    "omalon": {
+      "bBoxNE": [
+        0.608,
+        -0.045
+      ],
+      "bBoxSW": [
+        -0.507,
+        -0.297
+      ]
+    },
+    "omalonConnecting": {
+      "bBoxNE": [
+        0.608,
+        -0.045
+      ],
+      "bBoxSW": [
+        -0.507,
+        -0.297
+      ]
+    },
+    "heteron": {
+      "bBoxNE": [
+        0.93,
+        -0.097
+      ],
+      "bBoxSW": [
+        -0.817,
+        -0.334
+      ]
+    },
+    "heteronConnecting": {
+      "bBoxNE": [
+        0.93,
+        -0.097
+      ],
+      "bBoxSW": [
+        -0.817,
+        -0.334
+      ]
+    },
+    "stavros": {
+      "bBoxNE": [
+        0.379,
+        0.222
+      ],
+      "bBoxSW": [
+        0.03,
+        -0.107
+      ]
+    },
+    "klasmaAbove": {
+      "bBoxNE": [
+        0.225,
+        0.156
+      ],
+      "bBoxSW": [
+        -0.225,
+        0.006
+      ]
+    },
+    "klasmaBelow": {
+      "bBoxNE": [
+        0.225,
+        -0.024
+      ],
+      "bBoxSW": [
+        -0.225,
+        -0.174
+      ]
+    },
+    "apli": {
+      "bBoxNE": [
+        0.102,
+        -0.011
+      ],
+      "bBoxSW": [
+        -0.098,
+        -0.115
+      ]
+    },
+    "dipli": {
+      "bBoxNE": [
+        0.2,
+        -0.013
+      ],
+      "bBoxSW": [
+        -0.19,
+        -0.117
+      ]
+    },
+    "tripli": {
+      "bBoxNE": [
+        0.301,
+        -0.013
+      ],
+      "bBoxSW": [
+        -0.29,
+        -0.117
+      ]
+    },
+    "tetrapli": {
+      "bBoxNE": [
+        0.398,
+        -0.013
+      ],
+      "bBoxSW": [
+        -0.386,
+        -0.118
+      ]
+    },
+    "leimma1": {
+      "bBoxNE": [
+        0.823,
+        0.299
+      ],
+      "bBoxSW": [
+        0.03,
+        -0.325
+      ]
+    },
+    "leimma2": {
+      "bBoxNE": [
+        0.956,
+        0.299
+      ],
+      "bBoxSW": [
+        0.03,
+        -0.325
+      ]
+    },
+    "leimma3": {
+      "bBoxNE": [
+        1.153,
+        0.299
+      ],
+      "bBoxSW": [
+        0.03,
+        -0.325
+      ]
+    },
+    "leimma4": {
+      "bBoxNE": [
+        1.35,
+        0.299
+      ],
+      "bBoxSW": [
+        0.03,
+        -0.325
+      ]
+    },
+    "digorgonDottedRight": {
+      "bBoxNE": [
+        0.408,
+        0.313
+      ],
+      "bBoxSW": [
+        -0.254,
+        0.02
+      ]
+    },
+    "trigorgon": {
+      "bBoxNE": [
+        0.324,
+        0.41
+      ],
+      "bBoxSW": [
+        -0.324,
+        0.013
+      ]
+    },
+    "trigorgonDottedLeftBelow": {
+      "bBoxNE": [
+        0.324,
+        0.41
+      ],
+      "bBoxSW": [
+        -0.479,
+        0.013
+      ]
+    },
+    "trigorgonDottedLeftAbove": {
+      "bBoxNE": [
+        0.324,
+        0.426
+      ],
+      "bBoxSW": [
+        -0.324,
+        0.013
+      ]
+    },
+    "trigorgonDottedRight": {
+      "bBoxNE": [
+        0.483,
+        0.41
+      ],
+      "bBoxSW": [
+        -0.324,
+        0.013
+      ]
+    },
+    "argon": {
+      "bBoxNE": [
+        0.19,
+        0.155
+      ],
+      "bBoxSW": [
+        -0.19,
+        0.002
+      ]
+    },
+    "diargon": {
+      "bBoxNE": [
+        0.191,
+        0.295
+      ],
+      "bBoxSW": [
+        -0.191,
+        0.002
+      ]
+    },
+    "triargon": {
+      "bBoxNE": [
+        0.254,
+        0.296
+      ],
+      "bBoxSW": [
+        -0.254,
+        0.003
+      ]
+    },
+    "martyriaZoBelow": {
+      "bBoxNE": [
+        0.308,
+        -0.043
+      ],
+      "bBoxSW": [
+        -0.337,
+        -0.402
+      ]
+    },
+    "martyriaDeltaBelow": {
+      "bBoxNE": [
+        0.235,
+        0.003
+      ],
+      "bBoxSW": [
+        -0.267,
+        -0.546
+      ]
+    },
+    "martyriaAlphaBelow": {
+      "bBoxNE": [
+        0.24,
+        0.009
+      ],
+      "bBoxSW": [
+        -0.153,
+        -0.596
+      ]
+    },
+    "martyriaLegetosBelow": {
+      "bBoxNE": [
+        0.235,
+        0.002
+      ],
+      "bBoxSW": [
+        -0.2,
+        -0.413
+      ]
+    },
+    "martyriaNanaBelow": {
+      "bBoxNE": [
+        0.304,
+        -0.056
+      ],
+      "bBoxSW": [
+        -0.3,
+        -0.397
+      ]
+    },
+    "martyriaDeltaDottedBelow": {
+      "bBoxNE": [
+        0.235,
+        0.122
+      ],
+      "bBoxSW": [
+        -0.267,
+        -0.546
+      ]
+    },
+    "martyriaAlphaDottedBelow": {
+      "bBoxNE": [
+        0.24,
+        0.122
+      ],
+      "bBoxSW": [
+        -0.159,
+        -0.596
+      ]
+    },
+    "martyriaHardChromaticPaBelow": {
+      "bBoxNE": [
+        0.241,
+        -0.086
+      ],
+      "bBoxSW": [
+        -0.281,
+        -0.243
+      ]
+    },
+    "martyriaHardChromaticDiBelow": {
+      "bBoxNE": [
+        0.342,
+        0.05
+      ],
+      "bBoxSW": [
+        -0.341,
+        -0.345
+      ]
+    },
+    "martyriaSoftChromaticDiBelow": {
+      "bBoxNE": [
+        0.241,
+        0.002
+      ],
+      "bBoxSW": [
+        -0.281,
+        -0.243
+      ]
+    },
+    "martyriaSoftChromaticKeBelow": {
+      "bBoxNE": [
+        0.195,
+        0.044
+      ],
+      "bBoxSW": [
+        -0.207,
+        -0.302
+      ]
+    },
+    "martyriaZygosBelow": {
+      "bBoxNE": [
+        0.206,
+        0.049
+      ],
+      "bBoxSW": [
+        -0.218,
+        -0.314
+      ]
+    },
+    "martyriaZoAbove": {
+      "bBoxNE": [
+        0.308,
+        0.357
+      ],
+      "bBoxSW": [
+        -0.337,
+        -0.002
+      ]
+    },
+    "martyriaDeltaAbove": {
+      "bBoxNE": [
+        0.235,
+        0.503
+      ],
+      "bBoxSW": [
+        -0.267,
+        -0.046
+      ]
+    },
+    "martyriaAlphaAbove": {
+      "bBoxNE": [
+        0.24,
+        0.509
+      ],
+      "bBoxSW": [
+        -0.153,
+        -0.096
+      ]
+    },
+    "martyriaLegetosAbove": {
+      "bBoxNE": [
+        0.235,
+        0.452
+      ],
+      "bBoxSW": [
+        -0.2,
+        0.037
+      ]
+    },
+    "martyriaNanaAbove": {
+      "bBoxNE": [
+        0.304,
+        0.404
+      ],
+      "bBoxSW": [
+        -0.3,
+        0.063
+      ]
+    },
+    "martyriaDeltaDottedAbove": {
+      "bBoxNE": [
+        0.235,
+        0.622
+      ],
+      "bBoxSW": [
+        -0.267,
+        -0.046
+      ]
+    },
+    "martyriaAlphaDottedAbove": {
+      "bBoxNE": [
+        0.24,
+        0.622
+      ],
+      "bBoxSW": [
+        -0.159,
+        -0.096
+      ]
+    },
+    "martyriaHardChromaticPaAbove": {
+      "bBoxNE": [
+        0.257,
+        0.234
+      ],
+      "bBoxSW": [
+        -0.265,
+        0.077
+      ]
+    },
+    "martyriaHardChromaticDiAbove": {
+      "bBoxNE": [
+        0.342,
+        0.33
+      ],
+      "bBoxSW": [
+        -0.341,
+        -0.065
+      ]
+    },
+    "martyriaSoftChromaticDiAbove": {
+      "bBoxNE": [
+        0.257,
+        0.322
+      ],
+      "bBoxSW": [
+        -0.265,
+        0.077
+      ]
+    },
+    "martyriaSoftChromaticKeAbove": {
+      "bBoxNE": [
+        0.195,
+        0.314
+      ],
+      "bBoxSW": [
+        -0.207,
+        -0.032
+      ]
+    },
+    "martyriaZygosAbove": {
+      "bBoxNE": [
+        0.206,
+        0.319
+      ],
+      "bBoxSW": [
+        -0.218,
+        -0.044
+      ]
+    },
+    "fthoraDiatonicNiLowAbove": {
+      "bBoxNE": [
+        0.16,
+        0.272
+      ],
+      "bBoxSW": [
+        -0.138,
+        0.012
+      ]
+    },
+    "fthoraDiatonicPaAbove": {
+      "bBoxNE": [
+        0.102,
+        0.417
+      ],
+      "bBoxSW": [
+        -0.1,
+        0.013
+      ]
+    },
+    "fthoraDiatonicVouAbove": {
+      "bBoxNE": [
+        0.114,
+        0.462
+      ],
+      "bBoxSW": [
+        -0.134,
+        0.033
+      ]
+    },
+    "fthoraDiatonicGaAbove": {
+      "bBoxNE": [
+        0.109,
+        0.695
+      ],
+      "bBoxSW": [
+        -0.108,
+        0.004
+      ]
+    },
+    "fthoraDiatonicDiAbove": {
+      "bBoxNE": [
+        0.341,
+        0.387
+      ],
+      "bBoxSW": [
+        -0.341,
+        -0.009
+      ]
+    },
+    "fthoraDiatonicKeAbove": {
+      "bBoxNE": [
+        0.121,
+        0.36
+      ],
+      "bBoxSW": [
+        -0.119,
+        0.015
+      ]
+    },
+    "fthoraDiatonicZoAbove": {
+      "bBoxNE": [
+        0.13,
+        0.456
+      ],
+      "bBoxSW": [
+        -0.126,
+        0.029
+      ]
+    },
+    "fthoraDiatonicNiHighAbove": {
+      "bBoxNE": [
+        0.161,
+        0.36
+      ],
+      "bBoxSW": [
+        -0.137,
+        0.013
+      ]
+    },
+    "fthoraHardChromaticPaAbove": {
+      "bBoxNE": [
+        0.332,
+        0.224
+      ],
+      "bBoxSW": [
+        -0.334,
+        0.025
+      ]
+    },
+    "fthoraHardChromaticDiAbove": {
+      "bBoxNE": [
+        0.349,
+        0.379
+      ],
+      "bBoxSW": [
+        -0.333,
+        -0.016
+      ]
+    },
+    "fthoraSoftChromaticDiAbove": {
+      "bBoxNE": [
+        0.397,
+        0.245
+      ],
+      "bBoxSW": [
+        -0.43,
+        0.02
+      ]
+    },
+    "fthoraSoftChromaticKeAbove": {
+      "bBoxNE": [
+        0.302,
+        0.384
+      ],
+      "bBoxSW": [
+        -0.308,
+        0.022
+      ]
+    },
+    "fthoraEnharmonicAbove": {
+      "bBoxNE": [
+        0.17,
+        0.294
+      ],
+      "bBoxSW": [
+        -0.158,
+        0.028
+      ]
+    },
+    "chroaZygosAbove": {
+      "bBoxNE": [
+        0.347,
+        0.39
+      ],
+      "bBoxSW": [
+        -0.286,
+        0.012
+      ]
+    },
+    "chroaKlitonAbove": {
+      "bBoxNE": [
+        0.211,
+        0.363
+      ],
+      "bBoxSW": [
+        -0.19,
+        0.03
+      ]
+    },
+    "fthoraDiatonicNiLowBelow": {
+      "bBoxNE": [
+        0.16,
+        -0.018
+      ],
+      "bBoxSW": [
+        -0.138,
+        -0.278
+      ]
+    },
+    "fthoraDiatonicPaBelow": {
+      "bBoxNE": [
+        0.102,
+        -0.002
+      ],
+      "bBoxSW": [
+        -0.1,
+        -0.406
+      ]
+    },
+    "fthoraDiatonicVouBelow": {
+      "bBoxNE": [
+        0.114,
+        -0.013
+      ],
+      "bBoxSW": [
+        -0.134,
+        -0.442
+      ]
+    },
+    "fthoraDiatonicGaBelow": {
+      "bBoxNE": [
+        0.109,
+        -0.005
+      ],
+      "bBoxSW": [
+        -0.108,
+        -0.696
+      ]
+    },
+    "fthoraDiatonicDiBelow": {
+      "bBoxNE": [
+        0.341,
+        -0.01
+      ],
+      "bBoxSW": [
+        -0.341,
+        -0.406
+      ]
+    },
+    "fthoraDiatonicKeBelow": {
+      "bBoxNE": [
+        0.121,
+        -0.013
+      ],
+      "bBoxSW": [
+        -0.119,
+        -0.358
+      ]
+    },
+    "fthoraDiatonicZoBelow": {
+      "bBoxNE": [
+        0.13,
+        -0.014
+      ],
+      "bBoxSW": [
+        -0.126,
+        -0.441
+      ]
+    },
+    "fthoraDiatonicNiHighBelow": {
+      "bBoxNE": [
+        0.161,
+        -0.017
+      ],
+      "bBoxSW": [
+        -0.137,
+        -0.364
+      ]
+    },
+    "fthoraHardChromaticPaBelow": {
+      "bBoxNE": [
+        0.332,
+        -0.008
+      ],
+      "bBoxSW": [
+        -0.334,
+        -0.207
+      ]
+    },
+    "fthoraHardChromaticDiBelow": {
+      "bBoxNE": [
+        0.349,
+        -0.021
+      ],
+      "bBoxSW": [
+        -0.333,
+        -0.416
+      ]
+    },
+    "fthoraSoftChromaticDiBelow": {
+      "bBoxNE": [
+        0.397,
+        -0.005
+      ],
+      "bBoxSW": [
+        -0.43,
+        -0.23
+      ]
+    },
+    "fthoraSoftChromaticKeBelow": {
+      "bBoxNE": [
+        0.302,
+        -0.015
+      ],
+      "bBoxSW": [
+        -0.308,
+        -0.377
+      ]
+    },
+    "fthoraEnharmonicBelow": {
+      "bBoxNE": [
+        0.17,
+        -0.006
+      ],
+      "bBoxSW": [
+        -0.158,
+        -0.272
+      ]
+    },
+    "chroaZygosBelow": {
+      "bBoxNE": [
+        0.347,
+        -0.011
+      ],
+      "bBoxSW": [
+        -0.286,
+        -0.389
+      ]
+    },
+    "chroaKlitonBelow": {
+      "bBoxNE": [
+        0.211,
+        -0.007
+      ],
+      "bBoxSW": [
+        -0.19,
+        -0.34
+      ]
+    },
+    "diesis2": {
+      "bBoxNE": [
+        -0.005,
+        0.006
+      ],
+      "bBoxSW": [
+        -0.382,
+        -0.23
+      ]
+    },
+    "diesis4": {
+      "bBoxNE": [
+        0.0,
+        0.005
+      ],
+      "bBoxSW": [
+        -0.377,
+        -0.23
+      ]
+    },
+    "diesis6": {
+      "bBoxNE": [
+        -0.003,
+        0.018
+      ],
+      "bBoxSW": [
+        -0.434,
+        -0.259
+      ]
+    },
+    "diesis8": {
+      "bBoxNE": [
+        0.001,
+        0.03
+      ],
+      "bBoxSW": [
+        -0.482,
+        -0.285
+      ]
+    },
+    "yfesis2": {
+      "bBoxNE": [
+        0.379,
+        0.229
+      ],
+      "bBoxSW": [
+        0.002,
+        -0.006
+      ]
+    },
+    "yfesis4": {
+      "bBoxNE": [
+        0.378,
+        0.231
+      ],
+      "bBoxSW": [
+        0.001,
+        -0.004
+      ]
+    },
+    "yfesis6": {
+      "bBoxNE": [
+        0.428,
+        0.255
+      ],
+      "bBoxSW": [
+        -0.003,
+        -0.022
+      ]
+    },
+    "yfesis8": {
+      "bBoxNE": [
+        0.481,
+        0.287
+      ],
+      "bBoxSW": [
+        -0.002,
+        -0.028
+      ]
+    },
+    "diesisGenikiAbove": {
+      "bBoxNE": [
+        0.103,
+        0.411
+      ],
+      "bBoxSW": [
+        -0.099,
+        0.008
+      ]
+    },
+    "yfesisGenikiAbove": {
+      "bBoxNE": [
+        0.103,
+        0.414
+      ],
+      "bBoxSW": [
+        -0.099,
+        0.011
+      ]
+    },
+    "diesisGenikiBelow": {
+      "bBoxNE": [
+        0.103,
+        -0.012
+      ],
+      "bBoxSW": [
+        -0.099,
+        -0.415
+      ]
+    },
+    "yfesisGenikiBelow": {
+      "bBoxNE": [
+        0.103,
+        -0.009
+      ],
+      "bBoxSW": [
+        -0.099,
+        -0.412
+      ]
+    },
+    "noteIndicatorNi": {
+      "bBoxNE": [
+        0.191,
+        0.209
+      ],
+      "bBoxSW": [
+        0.0,
+        0.023
+      ]
+    },
+    "noteIndicatorPa": {
+      "bBoxNE": [
+        0.265,
+        0.166
+      ],
+      "bBoxSW": [
+        0.0,
+        0.005
+      ]
+    },
+    "noteIndicatorVou": {
+      "bBoxNE": [
+        0.152,
+        0.252
+      ],
+      "bBoxSW": [
+        0.0,
+        0.013
+      ]
+    },
+    "noteIndicatorGa": {
+      "bBoxNE": [
+        0.17,
+        0.205
+      ],
+      "bBoxSW": [
+        0.0,
+        0.008
+      ]
+    },
+    "noteIndicatorDi": {
+      "bBoxNE": [
+        0.215,
+        0.222
+      ],
+      "bBoxSW": [
+        0.0,
+        0.011
+      ]
+    },
+    "noteIndicatorKe": {
+      "bBoxNE": [
+        0.212,
+        0.233
+      ],
+      "bBoxSW": [
+        0.0,
+        0.016
+      ]
+    },
+    "noteIndicatorZo": {
+      "bBoxNE": [
+        0.243,
+        0.232
+      ],
+      "bBoxSW": [
+        -0.0,
+        0.018
+      ]
+    },
+    "chroaSpathiBelow": {
+      "bBoxNE": [
+        0.395,
+        -0.005
+      ],
+      "bBoxSW": [
+        -0.431,
+        -0.23
+      ]
+    },
+    "chroaSpathiAbove": {
+      "bBoxNE": [
+        0.395,
+        0.245
+      ],
+      "bBoxSW": [
+        -0.431,
+        0.02
+      ]
+    },
+    "measureNumber3": {
+      "bBoxNE": [
+        0.124,
+        0.176
+      ],
+      "bBoxSW": [
+        0.0,
+        -0.038
+      ]
+    },
+    "measureNumber4": {
+      "bBoxNE": [
+        0.15,
+        0.176
+      ],
+      "bBoxSW": [
+        0.0,
+        -0.038
+      ]
+    },
+    "measureNumber5": {
+      "bBoxNE": [
+        0.132,
+        0.187
+      ],
+      "bBoxSW": [
+        0.0,
+        -0.038
+      ]
+    },
+    "measureNumber6": {
+      "bBoxNE": [
+        0.138,
+        0.208
+      ],
+      "bBoxSW": [
+        0.0,
+        -0.006
+      ]
+    },
+    "measureNumber7": {
+      "bBoxNE": [
+        0.137,
+        0.173
+      ],
+      "bBoxSW": [
+        0.0,
+        -0.038
+      ]
+    },
+    "measureNumber8": {
+      "bBoxNE": [
+        0.135,
+        0.208
+      ],
+      "bBoxSW": [
+        0.0,
+        -0.006
+      ]
+    },
+    "measureNumber2": {
+      "bBoxNE": [
+        0.153,
+        0.176
+      ],
+      "bBoxSW": [
+        0.0,
+        -0.005
+      ]
+    },
+    "isonIndicatorDiLow": {
+      "bBoxNE": [
+        0.443,
+        0.342
+      ],
+      "bBoxSW": [
+        0.0,
+        -0.067
+      ]
+    },
+    "isonIndicatorUnison": {
+      "bBoxNE": [
+        0.602,
+        0.299
+      ],
+      "bBoxSW": [
+        0.0,
+        -0.067
+      ]
+    },
+    "isonIndicatorKeLow": {
+      "bBoxNE": [
+        0.455,
+        0.299
+      ],
+      "bBoxSW": [
+        0.0,
+        -0.067
+      ]
+    },
+    "isonIndicatorZo": {
+      "bBoxNE": [
+        0.482,
+        0.301
+      ],
+      "bBoxSW": [
+        0.0,
+        -0.067
+      ]
+    },
+    "isonIndicatorNi": {
+      "bBoxNE": [
+        0.55,
+        0.299
+      ],
+      "bBoxSW": [
+        0.0,
+        -0.067
+      ]
+    },
+    "isonIndicatorPa": {
+      "bBoxNE": [
+        0.548,
+        0.299
+      ],
+      "bBoxSW": [
+        0.0,
+        -0.067
+      ]
+    },
+    "isonIndicatorVou": {
+      "bBoxNE": [
+        0.504,
+        0.299
+      ],
+      "bBoxSW": [
+        0.0,
+        -0.067
+      ]
+    },
+    "isonIndicatorGa": {
+      "bBoxNE": [
+        0.456,
+        0.301
+      ],
+      "bBoxSW": [
+        0.0,
+        -0.067
+      ]
+    },
+    "isonIndicatorDi": {
+      "bBoxNE": [
+        0.493,
+        0.301
+      ],
+      "bBoxSW": [
+        0.0,
+        -0.067
+      ]
+    },
+    "isonIndicatorKe": {
+      "bBoxNE": [
+        0.517,
+        0.299
+      ],
+      "bBoxSW": [
+        0.0,
+        -0.067
+      ]
+    },
+    "isonIndicatorZoHigh": {
+      "bBoxNE": [
+        0.546,
+        0.34
+      ],
+      "bBoxSW": [
+        0.0,
+        -0.067
+      ]
+    },
+    "modeThirdNana": {
+      "bBoxNE": [
+        0.754,
+        0.447
+      ],
+      "bBoxSW": [
+        0.15,
+        -0.083
+      ]
+    },
+    "modeThird": {
+      "bBoxNE": [
+        1.374,
+        0.381
+      ],
+      "bBoxSW": [
+        0.15,
+        -0.283
+      ]
+    },
+    "modePlagalFirst": {
+      "bBoxNE": [
+        0.624,
+        0.482
+      ],
+      "bBoxSW": [
+        0.15,
+        -0.347
+      ]
+    },
+    "modeFourth": {
+      "bBoxNE": [
+        0.652,
+        0.824
+      ],
+      "bBoxSW": [
+        0.15,
+        -0.396
+      ]
+    },
+    "modeOligonYpsili": {
+      "bBoxNE": [
+        0.646,
+        0.935
+      ],
+      "bBoxSW": [
+        -0.608,
+        -0.038
+      ]
+    },
+    "modePlagalSecond": {
+      "bBoxNE": [
+        0.781,
+        0.243
+      ],
+      "bBoxSW": [
+        0.15,
+        -0.066
+      ]
+    },
+    "modePlagalFourth": {
+      "bBoxNE": [
+        0.652,
+        0.461
+      ],
+      "bBoxSW": [
+        0.15,
+        -0.258
+      ]
+    },
+    "modeNi": {
+      "bBoxNE": [
+        0.848,
+        0.401
+      ],
+      "bBoxSW": [
+        0.15,
+        -0.146
+      ]
+    },
+    "modePa": {
+      "bBoxNE": [
+        0.881,
+        0.401
+      ],
+      "bBoxSW": [
+        0.15,
+        -0.007
+      ]
+    },
+    "modeAlphaCapital": {
+      "bBoxNE": [
+        0.911,
+        0.45
+      ],
+      "bBoxSW": [
+        0.15,
+        -0.007
+      ]
+    },
+    "modeBetaCapital": {
+      "bBoxNE": [
+        0.877,
+        0.45
+      ],
+      "bBoxSW": [
+        0.15,
+        -0.007
+      ]
+    },
+    "modeGammaCapital": {
+      "bBoxNE": [
+        0.813,
+        0.45
+      ],
+      "bBoxSW": [
+        0.15,
+        -0.007
+      ]
+    },
+    "modeDeltaCapital": {
+      "bBoxNE": [
+        0.876,
+        0.45
+      ],
+      "bBoxSW": [
+        0.15,
+        -0.007
+      ]
+    },
+    "modeVarys": {
+      "bBoxNE": [
+        1.184,
+        0.331
+      ],
+      "bBoxSW": [
+        0.15,
+        -0.271
+      ]
+    },
+    "modePlagal": {
+      "bBoxNE": [
+        0.532,
+        0.597
+      ],
+      "bBoxSW": [
+        0.15,
+        -0.279
+      ]
+    },
+    "modeWordVarys": {
+      "bBoxNE": [
+        1.554,
+        0.458
+      ],
+      "bBoxSW": [
+        0.15,
+        -0.147
+      ]
+    },
+    "modeAlpha": {
+      "bBoxNE": [
+        0.836,
+        0.45
+      ],
+      "bBoxSW": [
+        0.15,
+        -0.007
+      ]
+    },
+    "modeBeta": {
+      "bBoxNE": [
+        0.805,
+        0.458
+      ],
+      "bBoxSW": [
+        0.15,
+        -0.147
+      ]
+    },
+    "modeWordEchos": {
+      "bBoxNE": [
+        1.395,
+        0.469
+      ],
+      "bBoxSW": [
+        -0.02,
+        -0.149
+      ]
+    },
+    "modeGamma": {
+      "bBoxNE": [
+        0.813,
+        0.45
+      ],
+      "bBoxSW": [
+        0.15,
+        -0.147
+      ]
+    },
+    "modeDelta": {
+      "bBoxNE": [
+        0.82,
+        0.461
+      ],
+      "bBoxSW": [
+        0.15,
+        -0.007
+      ]
+    },
+    "modeFirst": {
+      "bBoxNE": [
+        0.624,
+        0.882
+      ],
+      "bBoxSW": [
+        0.15,
+        -0.445
+      ]
+    },
+    "modeSecond": {
+      "bBoxNE": [
+        1.305,
+        0.353
+      ],
+      "bBoxSW": [
+        0.15,
+        -0.112
+      ]
+    },
+    "modeLegetos": {
+      "bBoxNE": [
+        1.422,
+        0.429
+      ],
+      "bBoxSW": [
+        0.15,
+        -0.027
+      ]
+    },
+    "modeVarys2": {
+      "bBoxNE": [
+        0.795,
+        0.321
+      ],
+      "bBoxSW": [
+        0.15,
+        -0.481
+      ]
+    },
+    "modeVou": {
+      "bBoxNE": [
+        1.057,
+        0.399
+      ],
+      "bBoxSW": [
+        0.15,
+        -0.007
+      ]
+    },
+    "modeGa": {
+      "bBoxNE": [
+        0.751,
+        0.404
+      ],
+      "bBoxSW": [
+        0.15,
+        -0.007
+      ]
+    },
+    "modeDi": {
+      "bBoxNE": [
+        0.659,
+        0.404
+      ],
+      "bBoxSW": [
+        0.15,
+        -0.006
+      ]
+    },
+    "modeKe": {
+      "bBoxNE": [
+        0.758,
+        0.401
+      ],
+      "bBoxSW": [
+        0.15,
+        -0.009
+      ]
+    },
+    "modeZo": {
+      "bBoxNE": [
+        0.864,
+        0.404
+      ],
+      "bBoxSW": [
+        0.15,
+        -0.006
+      ]
+    },
+    "modeOligonKentimaAbove": {
+      "bBoxNE": [
+        0.629,
+        0.473
+      ],
+      "bBoxSW": [
+        -0.608,
+        -0.038
+      ]
+    },
+    "modeElafron": {
+      "bBoxNE": [
+        0.639,
+        0.331
+      ],
+      "bBoxSW": [
+        -0.599,
+        0.012
+      ]
+    },
+    "modeRunningElafron": {
+      "bBoxNE": [
+        1.006,
+        0.331
+      ],
+      "bBoxSW": [
+        -0.939,
+        0.012
+      ]
+    },
+    "gorthmikon": {
+      "bBoxNE": [
+        0.585,
+        0.516
+      ],
+      "bBoxSW": [
+        0.058,
+        -0.002
+      ]
+    },
+    "pelastikon": {
+      "bBoxNE": [
+        0.573,
+        0.447
+      ],
+      "bBoxSW": [
+        0.052,
+        0.004
+      ]
+    },
+    "barlineSingle": {
+      "bBoxNE": [
+        0.065,
+        0.217
+      ],
+      "bBoxSW": [
+        0.025,
+        -0.102
+      ]
+    },
+    "barlineDouble": {
+      "bBoxNE": [
+        0.155,
+        0.217
+      ],
+      "bBoxSW": [
+        0.025,
+        -0.102
+      ]
+    },
+    "barlineTheseos": {
+      "bBoxNE": [
+        0.254,
+        0.349
+      ],
+      "bBoxSW": [
+        -0.164,
+        -0.102
+      ]
+    },
+    "barlineShortSingle": {
+      "bBoxNE": [
+        0.065,
+        0.621
+      ],
+      "bBoxSW": [
+        0.025,
+        0.358
+      ]
+    },
+    "barlineShortDouble": {
+      "bBoxNE": [
+        0.151,
+        0.621
+      ],
+      "bBoxSW": [
+        0.029,
+        0.358
+      ]
+    },
+    "barlineShortTheseos": {
+      "bBoxNE": [
+        0.254,
+        0.759
+      ],
+      "bBoxSW": [
+        -0.164,
+        0.358
+      ]
+    },
+    "breath": {
+      "bBoxNE": [
+        0.204,
+        0.972
+      ],
+      "bBoxSW": [
+        0.03,
+        0.617
+      ]
+    },
+    "koronis": {
+      "bBoxNE": [
+        0.446,
+        0.258
+      ],
+      "bBoxSW": [
+        -0.45,
+        -0.021
+      ]
+    },
+    "leimmaDot": {
+      "bBoxNE": [
+        0.23,
+        0.238
+      ],
+      "bBoxSW": [
+        0.03,
+        0.134
+      ]
+    },
+    "gorgonSecondary": {
+      "bBoxNE": [
+        0.202,
+        0.171
+      ],
+      "bBoxSW": [
+        -0.202,
+        0.018
+      ]
+    },
+    "endofonon": {
+      "bBoxNE": [
+        0.93,
+        -0.059
+      ],
+      "bBoxSW": [
+        -0.817,
+        -0.337
+      ]
+    },
+    "yfenAbove": {
+      "bBoxNE": [
+        1.266,
+        0.442
+      ],
+      "bBoxSW": [
+        -0.005,
+        0.011
+      ]
+    },
+    "yfenBelow": {
+      "bBoxNE": [
+        1.266,
+        -0.009
+      ],
+      "bBoxSW": [
+        -0.005,
+        -0.44
+      ]
+    },
+    "modeFirst.salt01": {
+      "bBoxNE": [
+        0.624,
+        0.882
+      ],
+      "bBoxSW": [
+        0.15,
+        -0.445
+      ]
+    },
+    "modeFourth.salt01": {
+      "bBoxNE": [
+        0.652,
+        0.824
+      ],
+      "bBoxSW": [
+        0.15,
+        -0.396
+      ]
+    },
+    "oligonKentimataBelow.alt02": {
+      "bBoxNE": [
+        1.268,
+        0.172
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.262
+      ]
+    },
+    "gorgonDottedLeftSecondary": {
+      "bBoxNE": [
+        0.201,
+        0.172
+      ],
+      "bBoxSW": [
+        -0.365,
+        0.018
+      ]
+    },
+    "gorgonDottedRightSecondary": {
+      "bBoxNE": [
+        0.366,
+        0.184
+      ],
+      "bBoxSW": [
+        -0.202,
+        0.018
+      ]
+    },
+    "digorgonSecondary": {
+      "bBoxNE": [
+        0.254,
+        0.312
+      ],
+      "bBoxSW": [
+        -0.254,
+        0.02
+      ]
+    },
+    "digorgonDottedLeftBelowSecondary": {
+      "bBoxNE": [
+        0.254,
+        0.312
+      ],
+      "bBoxSW": [
+        -0.398,
+        0.02
+      ]
+    },
+    "digorgonDottedRightSecondary": {
+      "bBoxNE": [
+        0.408,
+        0.313
+      ],
+      "bBoxSW": [
+        -0.254,
+        0.02
+      ]
+    },
+    "trigorgonSecondary": {
+      "bBoxNE": [
+        0.324,
+        0.41
+      ],
+      "bBoxSW": [
+        -0.324,
+        0.013
+      ]
+    },
+    "trigorgonDottedLeftBelowSecondary": {
+      "bBoxNE": [
+        0.324,
+        0.41
+      ],
+      "bBoxSW": [
+        -0.479,
+        0.013
+      ]
+    },
+    "trigorgonDottedRightSecondary": {
+      "bBoxNE": [
+        0.483,
+        0.41
+      ],
+      "bBoxSW": [
+        -0.324,
+        0.013
+      ]
+    },
+    "oligonChamiliKentimata": {
+      "bBoxNE": [
+        1.541,
+        0.638
+      ],
+      "bBoxSW": [
+        0.031,
+        -0.06
+      ]
+    },
+    "psifiston.salt01": {
+      "bBoxNE": [
+        0.84,
+        0.011
+      ],
+      "bBoxSW": [
+        -0.39,
+        -0.369
+      ]
+    },
+    "heteronConnecting.salt01": {
+      "bBoxNE": [
+        0.93,
+        -0.097
+      ],
+      "bBoxSW": [
+        -0.817,
+        -0.334
+      ]
+    },
+    "agogiPoliArgiAbove": {
+      "bBoxNE": [
+        0.15,
+        1.126
+      ],
+      "bBoxSW": [
+        -0.625,
+        0.033
+      ]
+    },
+    "agogiArgoteriAbove": {
+      "bBoxNE": [
+        0.15,
+        0.975
+      ],
+      "bBoxSW": [
+        -0.259,
+        0.033
+      ]
+    },
+    "agogiArgiAbove": {
+      "bBoxNE": [
+        0.149,
+        0.963
+      ],
+      "bBoxSW": [
+        -0.43,
+        0.033
+      ]
+    },
+    "agogiMetriaAbove": {
+      "bBoxNE": [
+        0.149,
+        0.813
+      ],
+      "bBoxSW": [
+        -0.259,
+        0.033
+      ]
+    },
+    "agogiMesiAbove": {
+      "bBoxNE": [
+        0.3,
+        0.813
+      ],
+      "bBoxSW": [
+        -0.352,
+        0.033
+      ]
+    },
+    "agogiGorgiAbove": {
+      "bBoxNE": [
+        0.219,
+        0.813
+      ],
+      "bBoxSW": [
+        -0.145,
+        0.033
+      ]
+    },
+    "agogiGorgoteriAbove": {
+      "bBoxNE": [
+        0.4,
+        0.963
+      ],
+      "bBoxSW": [
+        -0.145,
+        0.033
+      ]
+    },
+    "agogiPoliGorgiAbove": {
+      "bBoxNE": [
+        0.596,
+        1.126
+      ],
+      "bBoxSW": [
+        -0.145,
+        0.033
+      ]
+    },
+    "fthoraDiatonicNiLowSecondary": {
+      "bBoxNE": [
+        0.16,
+        0.272
+      ],
+      "bBoxSW": [
+        -0.138,
+        0.012
+      ]
+    },
+    "fthoraDiatonicPaSecondary": {
+      "bBoxNE": [
+        0.102,
+        0.417
+      ],
+      "bBoxSW": [
+        -0.1,
+        0.013
+      ]
+    },
+    "fthoraDiatonicVouSecondary": {
+      "bBoxNE": [
+        0.114,
+        0.462
+      ],
+      "bBoxSW": [
+        -0.134,
+        0.033
+      ]
+    },
+    "fthoraDiatonicGaSecondary": {
+      "bBoxNE": [
+        0.109,
+        0.695
+      ],
+      "bBoxSW": [
+        -0.108,
+        0.004
+      ]
+    },
+    "fthoraDiatonicDiSecondary": {
+      "bBoxNE": [
+        0.341,
+        0.387
+      ],
+      "bBoxSW": [
+        -0.341,
+        -0.009
+      ]
+    },
+    "fthoraDiatonicKeSecondary": {
+      "bBoxNE": [
+        0.121,
+        0.36
+      ],
+      "bBoxSW": [
+        -0.119,
+        0.015
+      ]
+    },
+    "fthoraDiatonicZoSecondary": {
+      "bBoxNE": [
+        0.13,
+        0.456
+      ],
+      "bBoxSW": [
+        -0.126,
+        0.029
+      ]
+    },
+    "fthoraDiatonicNiHighSecondary": {
+      "bBoxNE": [
+        0.161,
+        0.36
+      ],
+      "bBoxSW": [
+        -0.137,
+        0.013
+      ]
+    },
+    "fthoraHardChromaticPaSecondary": {
+      "bBoxNE": [
+        0.332,
+        0.224
+      ],
+      "bBoxSW": [
+        -0.334,
+        0.025
+      ]
+    },
+    "fthoraHardChromaticDiSecondary": {
+      "bBoxNE": [
+        0.349,
+        0.379
+      ],
+      "bBoxSW": [
+        -0.333,
+        -0.016
+      ]
+    },
+    "fthoraSoftChromaticDiSecondary": {
+      "bBoxNE": [
+        0.397,
+        0.245
+      ],
+      "bBoxSW": [
+        -0.43,
+        0.02
+      ]
+    },
+    "fthoraSoftChromaticKeSecondary": {
+      "bBoxNE": [
+        0.302,
+        0.384
+      ],
+      "bBoxSW": [
+        -0.308,
+        0.022
+      ]
+    },
+    "fthoraEnharmonicSecondary": {
+      "bBoxNE": [
+        0.17,
+        0.294
+      ],
+      "bBoxSW": [
+        -0.158,
+        0.028
+      ]
+    },
+    "chroaZygosSecondary": {
+      "bBoxNE": [
+        0.347,
+        0.39
+      ],
+      "bBoxSW": [
+        -0.286,
+        0.012
+      ]
+    },
+    "chroaKlitonSecondary": {
+      "bBoxNE": [
+        0.211,
+        0.363
+      ],
+      "bBoxSW": [
+        -0.19,
+        0.03
+      ]
+    },
+    "chroaSpathiSecondary": {
+      "bBoxNE": [
+        0.395,
+        0.245
+      ],
+      "bBoxSW": [
+        -0.431,
+        0.02
+      ]
+    },
+    "fthoraDiatonicNiLowTertiary": {
+      "bBoxNE": [
+        0.16,
+        0.272
+      ],
+      "bBoxSW": [
+        -0.138,
+        0.012
+      ]
+    },
+    "fthoraDiatonicPaTertiary": {
+      "bBoxNE": [
+        0.102,
+        0.417
+      ],
+      "bBoxSW": [
+        -0.1,
+        0.013
+      ]
+    },
+    "fthoraDiatonicVouTertiary": {
+      "bBoxNE": [
+        0.114,
+        0.462
+      ],
+      "bBoxSW": [
+        -0.134,
+        0.033
+      ]
+    },
+    "fthoraDiatonicGaTertiary": {
+      "bBoxNE": [
+        0.109,
+        0.695
+      ],
+      "bBoxSW": [
+        -0.108,
+        0.004
+      ]
+    },
+    "fthoraDiatonicDiTertiary": {
+      "bBoxNE": [
+        0.341,
+        0.387
+      ],
+      "bBoxSW": [
+        -0.341,
+        -0.009
+      ]
+    },
+    "fthoraDiatonicKeTertiary": {
+      "bBoxNE": [
+        0.121,
+        0.36
+      ],
+      "bBoxSW": [
+        -0.119,
+        0.015
+      ]
+    },
+    "fthoraDiatonicZoTertiary": {
+      "bBoxNE": [
+        0.13,
+        0.456
+      ],
+      "bBoxSW": [
+        -0.126,
+        0.029
+      ]
+    },
+    "fthoraDiatonicNiHighTertiary": {
+      "bBoxNE": [
+        0.161,
+        0.36
+      ],
+      "bBoxSW": [
+        -0.137,
+        0.013
+      ]
+    },
+    "fthoraHardChromaticPaTertiary": {
+      "bBoxNE": [
+        0.332,
+        0.224
+      ],
+      "bBoxSW": [
+        -0.334,
+        0.025
+      ]
+    },
+    "fthoraHardChromaticDiTertiary": {
+      "bBoxNE": [
+        0.349,
+        0.379
+      ],
+      "bBoxSW": [
+        -0.333,
+        -0.016
+      ]
+    },
+    "fthoraSoftChromaticDiTertiary": {
+      "bBoxNE": [
+        0.397,
+        0.245
+      ],
+      "bBoxSW": [
+        -0.43,
+        0.02
+      ]
+    },
+    "fthoraSoftChromaticKeTertiary": {
+      "bBoxNE": [
+        0.302,
+        0.384
+      ],
+      "bBoxSW": [
+        -0.308,
+        0.022
+      ]
+    },
+    "fthoraEnharmonicTertiary": {
+      "bBoxNE": [
+        0.17,
+        0.294
+      ],
+      "bBoxSW": [
+        -0.158,
+        0.028
+      ]
+    },
+    "chroaZygosTertiary": {
+      "bBoxNE": [
+        0.347,
+        0.39
+      ],
+      "bBoxSW": [
+        -0.286,
+        0.012
+      ]
+    },
+    "chroaKlitonTertiary": {
+      "bBoxNE": [
+        0.211,
+        0.363
+      ],
+      "bBoxSW": [
+        -0.19,
+        0.03
+      ]
+    },
+    "chroaSpathiTertiary": {
+      "bBoxNE": [
+        0.395,
+        0.245
+      ],
+      "bBoxSW": [
+        -0.431,
+        0.02
+      ]
+    },
+    "yfesis2Secondary": {
+      "bBoxNE": [
+        0.379,
+        0.229
+      ],
+      "bBoxSW": [
+        0.002,
+        -0.006
+      ]
+    },
+    "yfesis4Secondary": {
+      "bBoxNE": [
+        0.378,
+        0.231
+      ],
+      "bBoxSW": [
+        0.001,
+        -0.004
+      ]
+    },
+    "yfesis6Secondary": {
+      "bBoxNE": [
+        0.428,
+        0.255
+      ],
+      "bBoxSW": [
+        -0.003,
+        -0.022
+      ]
+    },
+    "yfesis8Secondary": {
+      "bBoxNE": [
+        0.481,
+        0.287
+      ],
+      "bBoxSW": [
+        -0.002,
+        -0.028
+      ]
+    },
+    "yfesis2Tertiary": {
+      "bBoxNE": [
+        0.379,
+        0.229
+      ],
+      "bBoxSW": [
+        0.002,
+        -0.006
+      ]
+    },
+    "yfesis4Tertiary": {
+      "bBoxNE": [
+        0.378,
+        0.231
+      ],
+      "bBoxSW": [
+        0.001,
+        -0.004
+      ]
+    },
+    "yfesis6Tertiary": {
+      "bBoxNE": [
+        0.428,
+        0.255
+      ],
+      "bBoxSW": [
+        -0.003,
+        -0.022
+      ]
+    },
+    "yfesis8Tertiary": {
+      "bBoxNE": [
+        0.481,
+        0.287
+      ],
+      "bBoxSW": [
+        -0.002,
+        -0.028
+      ]
+    },
+    "yfesisGenikiSecondary": {
+      "bBoxNE": [
+        0.103,
+        0.414
+      ],
+      "bBoxSW": [
+        -0.099,
+        0.011
+      ]
+    },
+    "yfesisGenikiTertiary": {
+      "bBoxNE": [
+        0.103,
+        0.414
+      ],
+      "bBoxSW": [
+        -0.099,
+        0.011
+      ]
+    },
+    "diesisGenikiSecondary": {
+      "bBoxNE": [
+        0.103,
+        0.411
+      ],
+      "bBoxSW": [
+        -0.099,
+        0.008
+      ]
+    },
+    "diesisGenikiTertiary": {
+      "bBoxNE": [
+        0.103,
+        0.411
+      ],
+      "bBoxSW": [
+        -0.099,
+        0.008
+      ]
+    },
+    "digorgonDottedLeftSecondary": {
+      "bBoxNE": [
+        0.254,
+        0.326
+      ],
+      "bBoxSW": [
+        -0.254,
+        0.02
+      ]
+    },
+    "trigorgonDottedLeftSecondary": {
+      "bBoxNE": [
+        0.324,
+        0.426
+      ],
+      "bBoxSW": [
+        -0.324,
+        0.013
+      ]
+    },
+    "psifiston.alt01": {
+      "bBoxNE": [
+        0.84,
+        0.011
+      ],
+      "bBoxSW": [
+        -0.39,
+        -0.369
+      ]
+    },
+    "barlineShortSingleAbove": {
+      "bBoxNE": [
+        0.02,
+        0.293
+      ],
+      "bBoxSW": [
+        -0.02,
+        0.03
+      ]
+    },
+    "barlineSingleAbove": {
+      "bBoxNE": [
+        0.02,
+        0.349
+      ],
+      "bBoxSW": [
+        -0.02,
+        0.03
+      ]
+    },
+    "barlineDoubleAbove": {
+      "bBoxNE": [
+        0.065,
+        0.349
+      ],
+      "bBoxSW": [
+        -0.065,
+        0.03
+      ]
+    },
+    "barlineTheseosAbove": {
+      "bBoxNE": [
+        0.208,
+        0.481
+      ],
+      "bBoxSW": [
+        -0.208,
+        0.03
+      ]
+    },
+    "barlineShortDoubleAbove": {
+      "bBoxNE": [
+        0.061,
+        0.293
+      ],
+      "bBoxSW": [
+        -0.061,
+        0.03
+      ]
+    },
+    "barlineShortTheseosAbove": {
+      "bBoxNE": [
+        0.208,
+        0.431
+      ],
+      "bBoxSW": [
+        -0.208,
+        0.03
+      ]
+    },
+    "diesis2Secondary": {
+      "bBoxNE": [
+        -0.005,
+        0.006
+      ],
+      "bBoxSW": [
+        -0.382,
+        -0.23
+      ]
+    },
+    "diesis4Secondary": {
+      "bBoxNE": [
+        0.0,
+        0.005
+      ],
+      "bBoxSW": [
+        -0.377,
+        -0.23
+      ]
+    },
+    "diesis6Secondary": {
+      "bBoxNE": [
+        -0.003,
+        0.018
+      ],
+      "bBoxSW": [
+        -0.434,
+        -0.259
+      ]
+    },
+    "diesis8Secondary": {
+      "bBoxNE": [
+        0.001,
+        0.03
+      ],
+      "bBoxSW": [
+        -0.482,
+        -0.285
+      ]
+    },
+    "diesis2Tertiary": {
+      "bBoxNE": [
+        -0.005,
+        0.006
+      ],
+      "bBoxSW": [
+        -0.382,
+        -0.23
+      ]
+    },
+    "diesis4Tertiary": {
+      "bBoxNE": [
+        0.0,
+        0.005
+      ],
+      "bBoxSW": [
+        -0.377,
+        -0.23
+      ]
+    },
+    "diesis6Tertiary": {
+      "bBoxNE": [
+        -0.003,
+        0.018
+      ],
+      "bBoxSW": [
+        -0.434,
+        -0.259
+      ]
+    },
+    "diesis8Tertiary": {
+      "bBoxNE": [
+        0.001,
+        0.03
+      ],
+      "bBoxSW": [
+        -0.482,
+        -0.285
+      ]
+    },
+    "stavrosAbove": {
+      "bBoxNE": [
+        0.182,
+        0.334
+      ],
+      "bBoxSW": [
+        -0.167,
+        0.005
+      ]
+    },
+    "fthoraDiatonicNiLow": {
+      "bBoxNE": [
+        0.599,
+        1.052
+      ],
+      "bBoxSW": [
+        0.301,
+        0.792
+      ]
+    },
+    "fthoraDiatonicPa": {
+      "bBoxNE": [
+        0.551,
+        1.047
+      ],
+      "bBoxSW": [
+        0.349,
+        0.643
+      ]
+    },
+    "fthoraDiatonicVou": {
+      "bBoxNE": [
+        0.574,
+        1.162
+      ],
+      "bBoxSW": [
+        0.326,
+        0.733
+      ]
+    },
+    "fthoraDiatonicGa": {
+      "bBoxNE": [
+        0.558,
+        1.285
+      ],
+      "bBoxSW": [
+        0.342,
+        0.594
+      ]
+    },
+    "fthoraDiatonicDi": {
+      "bBoxNE": [
+        0.791,
+        1.127
+      ],
+      "bBoxSW": [
+        0.109,
+        0.731
+      ]
+    },
+    "fthoraDiatonicKe": {
+      "bBoxNE": [
+        0.57,
+        1.16
+      ],
+      "bBoxSW": [
+        0.33,
+        0.815
+      ]
+    },
+    "fthoraDiatonicZo": {
+      "bBoxNE": [
+        0.578,
+        1.176
+      ],
+      "bBoxSW": [
+        0.322,
+        0.749
+      ]
+    },
+    "fthoraDiatonicNiHigh": {
+      "bBoxNE": [
+        0.599,
+        1.14
+      ],
+      "bBoxSW": [
+        0.301,
+        0.793
+      ]
+    },
+    "fthoraHardChromaticPa": {
+      "bBoxNE": [
+        0.783,
+        1.044
+      ],
+      "bBoxSW": [
+        0.117,
+        0.845
+      ]
+    },
+    "fthoraHardChromaticDi": {
+      "bBoxNE": [
+        0.791,
+        1.119
+      ],
+      "bBoxSW": [
+        0.109,
+        0.724
+      ]
+    },
+    "fthoraSoftChromaticDi": {
+      "bBoxNE": [
+        0.863,
+        1.065
+      ],
+      "bBoxSW": [
+        0.037,
+        0.84
+      ]
+    },
+    "fthoraSoftChromaticKe": {
+      "bBoxNE": [
+        0.755,
+        1.094
+      ],
+      "bBoxSW": [
+        0.145,
+        0.732
+      ]
+    },
+    "fthoraEnharmonic": {
+      "bBoxNE": [
+        0.614,
+        1.044
+      ],
+      "bBoxSW": [
+        0.286,
+        0.778
+      ]
+    },
+    "chroaZygos": {
+      "bBoxNE": [
+        0.767,
+        1.12
+      ],
+      "bBoxSW": [
+        0.133,
+        0.742
+      ]
+    },
+    "chroaKliton": {
+      "bBoxNE": [
+        0.65,
+        1.113
+      ],
+      "bBoxSW": [
+        0.25,
+        0.78
+      ]
+    },
+    "chroaSpathi": {
+      "bBoxNE": [
+        0.863,
+        1.065
+      ],
+      "bBoxSW": [
+        0.037,
+        0.84
+      ]
+    }
+  },
+  "ligatures": {
+    "oligonKentimaMiddleKentimata": {
+      "codepoint": "U+E085",
+      "componentGlyphs": [
+        "oligonKentimataAbove",
+        "kentima"
+      ]
+    },
+    "oligonKentimaMiddle": {
+      "codepoint": "U+E002",
+      "componentGlyphs": [
+        "oligon",
+        "kentima"
+      ]
+    },
+    "martyriaNoteNiHigh": {
+      "codepoint": "U+E13F",
+      "componentGlyphs": [
+        "martyriaNoteNi",
+        "martyriaTick"
+      ]
+    },
+    "martyriaNoteZoHigh": {
+      "codepoint": "U+E13E",
+      "componentGlyphs": [
+        "martyriaNoteZo",
+        "martyriaTick"
+      ]
+    },
+    "martyriaNotePaHigh": {
+      "codepoint": "U+E140",
+      "componentGlyphs": [
+        "martyriaNotePa",
+        "martyriaTick"
+      ]
+    },
+    "martyriaNoteVouHigh": {
+      "codepoint": "U+E141",
+      "componentGlyphs": [
+        "martyriaNoteVou",
+        "martyriaTick"
+      ]
+    },
+    "martyriaNoteGaHigh": {
+      "codepoint": "U+E142",
+      "componentGlyphs": [
+        "martyriaNoteGa",
+        "martyriaTick"
+      ]
+    },
+    "martyriaNoteDiHigh": {
+      "codepoint": "U+E143",
+      "componentGlyphs": [
+        "martyriaNoteDi",
+        "martyriaTick"
+      ]
+    },
+    "martyriaNoteKeHigh": {
+      "codepoint": "U+E144",
+      "componentGlyphs": [
+        "martyriaNoteKe",
+        "martyriaTick"
+      ]
+    }
+  }
+}

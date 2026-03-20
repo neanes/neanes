@@ -1781,6 +1781,7 @@ export default defineComponent({
         return [
           { displayName: 'EZ Psaltica', value: 'Neanes' },
           { displayName: 'Stathis Series', value: 'NeanesStathisSeries' },
+          { displayName: 'Almouzios', value: 'Almouzios' },
         ];
       }
     },

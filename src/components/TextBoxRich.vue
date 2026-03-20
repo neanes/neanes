@@ -189,6 +189,7 @@ export default defineComponent({
             'Old Standard' + ',' + this.pageSetup.neumeDefaultFontFamily,
             'Neanes',
             'NeanesStathisSeries',
+            'Almouzios',
             ...fonts,
           ],
         },

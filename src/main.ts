@@ -68,6 +68,7 @@ i18next
     },
     ns: Object.keys(resources['en']),
     postProcess: ['pseudo'],
+    showSupportNotice: false,
     defaultNS,
     resources,
   });

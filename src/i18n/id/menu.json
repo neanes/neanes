@@ -1,68 +1,74 @@
 {
   "file": {
-    "root": "Fișier",
-    "new": "Nou",
-    "open": "Deschide…",
-    "openRecent": "Deschide Recent",
-    "import": "Importă",
-    "importFromOcr": "Rezultat OCR…",
-    "save": "Salvează",
-    "saveAs": "Salvează Ca…",
-    "pageSetup": "Configurare Pagină",
-    "exportAs": "Exportă",
-    "exportAsPdf": "Exportă ca PDF…",
-    "exportAsHtml": "Exportă ca HTML…",
-    "exportAsLatex": "Exportă ca LaTeX…",
-    "exportAsMusicXml": "Exportă ca MusicXML…",
-    "exportAsImage": "Exportă ca Imagine…",
-    "print": "Tipărește…",
-    "close": "Închide",
-    "closeOthers": "Închide Celelalte"
+    "root": "File",
+    "new": "New",
+    "open": "Open…",
+    "openRecent": "Open Recent",
+    "import": "Import",
+    "importFromOcr": "OCR Result…",
+    "save": "Save",
+    "saveAs": "Save As…",
+    "pageSetup": "Page Setup",
+    "exportAs": "Export",
+    "exportAsPdf": "Export as PDF…",
+    "exportAsHtml": "Export as HTML…",
+    "exportAsLatex": "Export as LaTeX…",
+    "exportAsMusicXml": "Export as MusicXML…",
+    "exportAsImage": "Export as Image…",
+    "print": "Print…",
+    "close": "Close",
+    "closeOthers": "Close Others"
   },
   "edit": {
-    "root": "Editare",
-    "undo": "Anulează",
-    "redo": "Refă",
-    "cut": "Taie",
-    "copy": "Copiază",
-    "copyAsHtml": "Copiază ca HTML",
-    "paste": "Lipire",
-    "pasteWithLyrics": "Lipire cu Versuri",
-    "copyFormat": "Copiază Formatul",
-    "pasteFormat": "Lipire Formatul",
-    "find": "Căutare",
-    "preferences": "Preferințe"
+    "root": "Edit",
+    "undo": "Undo",
+    "redo": "Redo",
+    "cut": "Cut",
+    "copy": "Copy",
+    "copyAsHtml": "Copy as HTML",
+    "paste": "Paste",
+    "pasteWithLyrics": "Paste with Lyrics",
+    "copyFormat": "Copy Format",
+    "pasteFormat": "Paste Format",
+    "find": "Find",
+    "lyrics": "Lyrics",
+    "preferences": "Preferences"
   },
   "insert": {
-    "root": "Inserare",
-    "alternateLine": "Linie Alternativă",
-    "annotation": "Anotare",
-    "dropCapBefore": "Majusculă Înainte",
-    "dropCapAfter": "Majusculă După",
-    "textBox": "Caseta de Text",
-    "inlineTextBox": "Caseta de Text în Linie",
-    "modeKey": "Initial Mărturia",
-    "image": "Imagine",
-    "headersAndFooters": "Antete și Subsoluri",
-    "header": "Antet",
-    "footer": "Subsol"
+    "root": "Insert",
+    "alternateLine": "Alternate Line",
+    "annotation": "Annotation",
+    "dropCapBefore": "Drop Cap Before",
+    "dropCapAfter": "Drop Cap After",
+    "textBox": "Text Box",
+    "richTextBox": "Rich Text Box",
+    "inlineTextBox": "Inline Text Box",
+    "modeKey": "Mode Key",
+    "image": "Image",
+    "headersAndFooters": "Headers and Footers",
+    "header": "Header",
+    "footer": "Footer"
+  },
+  "tools": {
+    "root": "Tools",
+    "copyElementLink": "Copy Element Link"
   },
   "view": {
-    "root": "Vizualizare (Debugare)",
-    "generateTestFiles": "Generare Fișiere de Test (Debugare)"
+    "root": "View (Debug)",
+    "generateTestFiles": "Generate Test Files (Debug)"
   },
   "help": {
-    "root": "Ajutor",
-    "guide": "Ghid",
-    "requestAFeature": "Solicită o Caracteristică",
-    "reportAnIssue": "Raportează o Problemă",
-    "about": "Despre"
+    "root": "Help",
+    "guide": "Guide",
+    "requestAFeature": "Request a Feature",
+    "reportAnIssue": "Report an Issue",
+    "about": "About"
   },
   "tab": {
-    "close": "Închide",
-    "closeOthers": "Închide Celelalte",
-    "closeToTheLeft": "Închide la Stânga",
-    "closeToTheRight": "Închide la Dreapta"
+    "close": "Close",
+    "closeOthers": "Close Others",
+    "closeToTheLeft": "Close to the Left",
+    "closeToTheRight": "Close to the Right"
   },
-  "warning": "Atenție: Această aplicație funcționează cel mai bine în browsere bazate pe Chromium. S-ar putea să întâmpinați funcționalitate redusă sau erori în browsere care nu sunt bazate pe Chromium."
+  "warning": "Warning: This application works best in Chromium-based browsers. You may experience reduced functionality or errors in non-Chromium-based browsers."
 }

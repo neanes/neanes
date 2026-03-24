@@ -1,1 +1,108 @@
-{}
+{
+  "common": {
+    "alignLeft": "Align Left",
+    "alignCenter": "Align Center",
+    "alignRight": "Align Right",
+    "bpm": "BPM",
+    "fthoraNote": "Fthora Note",
+    "ignoreAttractions": "Ignore Attractions",
+    "insertGorthmikon": "Insert Gorthmikon",
+    "insertPelastikon": "Insert Pelastikon",
+    "measureBar": "Measure Bar",
+    "outline": "Outline",
+    "sectionName": "Section Name",
+    "spaceAfter": "Space After",
+    "tempoSign": "Tempo Sign",
+    "useDefaultStyle": "Use Default Style",
+    "enharmonicDisabled": "Enharmonic fthora may only be placed on Ga, Zo, or Vou",
+    "generalFlatDisabled": "General flat may only be placed on Ke",
+    "generalSharpDisabled": "General sharp may only be placed on Ga",
+    "zygosDisabled": "Zygos may only be placed on Di",
+    "klitonDisabled": "Kliton may only be placed on Di",
+    "spathiDisabled": "Spathi may only be placed on Ke or Ga",
+    "width": "Width",
+    "height": "Height",
+    "marginTop": "Gap Above",
+    "marginBottom": "Gap Below",
+    "verticalOffset": "Vertical Offset",
+    "none": "None",
+    "inline": "Inline",
+    "neume": "Neume"
+  },
+  "main": {
+    "auto": "Auto",
+    "insert": "Insert",
+    "single": "Single",
+    "martyria": "Martyria",
+    "insertDropCapBefore": "Insert drop cap before",
+    "insertModeKey": "Insert Mode Key",
+    "insertTextBox": "Insert Text Box",
+    "insertTextBoxRich": "Insert Rich Text Box",
+    "insertImage": "Insert image",
+    "insertOrRemoveLineBreakAfterSelectedElement": "Insert or remove line break after selected element",
+    "insertOrRemoveJustifiedLineBreakAfterSelectedElement": "Insert or remove justified line break after selected element",
+    "insertOrRemoveCenteredLineBreakAfterSelectedElement": "Insert or remove centered line break after selected element",
+    "insertOrRemovePageBreakAfterSelectedElement": "Insert or remove page break after selected element",
+    "deleteSelectedElement": "Delete selected element",
+    "fit": "Fit",
+    "speed": "Speed",
+    "pageNumber": "Page {{ currentPageNumber }} of {{ pageCount }}",
+    "invalidZoom": "The value must be between 50% and 500%."
+  },
+  "dropCap": {
+    "lineSpan": "Lines to drop"
+  },
+  "imageBox": {
+    "maintainAspectRatio": "Maintain Aspect Ratio",
+    "width": "Width",
+    "height": "Height"
+  },
+  "lyricManager": {
+    "locked": "Lock Lyrics",
+    "assignAcceptsLyrics": "Save Current Melismas"
+  },
+  "martyria": {
+    "auto": "Auto",
+    "note": "Note",
+    "scale": "Scale",
+    "rootSignOverride": "Root Sign Override",
+    "tempoLeft": "Add Left Tempo",
+    "tempo": "Add Tempo Above",
+    "tempoRight": "Add Right Tempo"
+  },
+  "modeKey": {
+    "size": "Size",
+    "heightAdjustment": "Height Adjustment",
+    "rightAlignTempo": "Right-align tempo",
+    "showAmbitus": "Show Ambitus",
+    "permanentEnharmonicZo": "Permanent Enharmonic Zo",
+    "changeKey": "Change Key",
+    "useOptionalDiatonicFthoras": "Show Diatonic Fthoras"
+  },
+  "neume": {
+    "neumeSelect": "Neume Select",
+    "positioning": "Positioning",
+    "yfen": "Yfen",
+    "flat": "Flat",
+    "sharp": "Sharp",
+    "measureNumber": "Measure Number",
+    "noteIndicator": "Note Indicator",
+    "isonIndicator": "Ison Indicator",
+    "acceptsLyrics": "Accepts Lyrics",
+    "acceptsLyricsDefault": "Default",
+    "acceptsLyricsYes": "Yes",
+    "acceptsLyricsNo": "No",
+    "acceptsLyricsMelismaOnly": "Melisma Only"
+  },
+  "textbox": {
+    "multipanel": "Multipanel",
+    "rtl": "RTL",
+    "scrollable": "Scrollable",
+    "modeChange": "Change Mode",
+    "virtualNote": "Parallage Note",
+    "centerOnPage": "Center on Page",
+    "offsetYTop": "Top Y Offset",
+    "offsetYBottom": "Bottom Y Offset",
+    "fillWidth": "Fill Width"
+  }
+}

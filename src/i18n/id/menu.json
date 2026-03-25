@@ -1,74 +1,74 @@
 {
   "file": {
     "root": "File",
-    "new": "New",
-    "open": "Open…",
-    "openRecent": "Open Recent",
-    "import": "Import",
-    "importFromOcr": "OCR Result…",
-    "save": "Save",
-    "saveAs": "Save As…",
-    "pageSetup": "Page Setup",
-    "exportAs": "Export",
-    "exportAsPdf": "Export as PDF…",
-    "exportAsHtml": "Export as HTML…",
-    "exportAsLatex": "Export as LaTeX…",
-    "exportAsMusicXml": "Export as MusicXML…",
-    "exportAsImage": "Export as Image…",
-    "print": "Print…",
-    "close": "Close",
-    "closeOthers": "Close Others"
+    "new": "Baru",
+    "open": "Buka…",
+    "openRecent": "Buka Terbaru",
+    "import": "Impor",
+    "importFromOcr": "Hasil OCR…",
+    "save": "Simpan",
+    "saveAs": "Simpan Sebagai…",
+    "pageSetup": "Pengaturan Halaman",
+    "exportAs": "Ekspor",
+    "exportAsPdf": "Ekspor sebagai PDF…",
+    "exportAsHtml": "Ekspor sebagai HTML…",
+    "exportAsLatex": "Ekspor sebagai LaTeX…",
+    "exportAsMusicXml": "Ekspor sebagai MusicXML…",
+    "exportAsImage": "Ekspor sebagai Gambar…",
+    "print": "Cetak…",
+    "close": "Tutup",
+    "closeOthers": "Tutup Lainnya"
   },
   "edit": {
-    "root": "Edit",
-    "undo": "Undo",
-    "redo": "Redo",
-    "cut": "Cut",
-    "copy": "Copy",
-    "copyAsHtml": "Copy as HTML",
-    "paste": "Paste",
-    "pasteWithLyrics": "Paste with Lyrics",
-    "copyFormat": "Copy Format",
-    "pasteFormat": "Paste Format",
-    "find": "Find",
-    "lyrics": "Lyrics",
-    "preferences": "Preferences"
+    "root": "Sunting",
+    "undo": "Urungkan",
+    "redo": "Ulangi",
+    "cut": "Potong",
+    "copy": "Salin",
+    "copyAsHtml": "Salin sebagai HTML",
+    "paste": "Tempel",
+    "pasteWithLyrics": "Tempel dengan Lirik",
+    "copyFormat": "Salin Format",
+    "pasteFormat": "Tempel Format",
+    "find": "Cari",
+    "lyrics": "Lirik",
+    "preferences": "Preferensi"
   },
   "insert": {
-    "root": "Insert",
-    "alternateLine": "Alternate Line",
-    "annotation": "Annotation",
-    "dropCapBefore": "Drop Cap Before",
-    "dropCapAfter": "Drop Cap After",
-    "textBox": "Text Box",
-    "richTextBox": "Rich Text Box",
-    "inlineTextBox": "Inline Text Box",
-    "modeKey": "Mode Key",
-    "image": "Image",
-    "headersAndFooters": "Headers and Footers",
-    "header": "Header",
-    "footer": "Footer"
+    "root": "Sisipkan",
+    "alternateLine": "Baris Alternatif",
+    "annotation": "Anotasi",
+    "dropCapBefore": "Huruf Awal Besar Sebelum",
+    "dropCapAfter": "Huruf Awal Besar Setelah",
+    "textBox": "Kotak Teks",
+    "richTextBox": "Kotak Teks Kaya",
+    "inlineTextBox": "Kotak Teks Inline",
+    "modeKey": "Kunci Mode",
+    "image": "Gambar",
+    "headersAndFooters": "Kepala dan Kaki",
+    "header": "Kepala",
+    "footer": "Kaki"
   },
   "tools": {
-    "root": "Tools",
-    "copyElementLink": "Copy Element Link"
+    "root": "Alat",
+    "copyElementLink": "Salin Tautan Elemen"
   },
   "view": {
-    "root": "View (Debug)",
-    "generateTestFiles": "Generate Test Files (Debug)"
+    "root": "Tampilan (Debug)",
+    "generateTestFiles": "Hasilkan File Uji (Debug)"
   },
   "help": {
-    "root": "Help",
-    "guide": "Guide",
-    "requestAFeature": "Request a Feature",
-    "reportAnIssue": "Report an Issue",
-    "about": "About"
+    "root": "Bantuan",
+    "guide": "Panduan",
+    "requestAFeature": "Minta Fitur",
+    "reportAnIssue": "Laporkan Masalah",
+    "about": "Tentang"
   },
   "tab": {
-    "close": "Close",
-    "closeOthers": "Close Others",
-    "closeToTheLeft": "Close to the Left",
-    "closeToTheRight": "Close to the Right"
+    "close": "Tutup",
+    "closeOthers": "Tutup Lainnya",
+    "closeToTheLeft": "Tutup ke Kiri",
+    "closeToTheRight": "Tutup ke Kanan"
   },
-  "warning": "Warning: This application works best in Chromium-based browsers. You may experience reduced functionality or errors in non-Chromium-based browsers."
+  "warning": "Peringatan: Aplikasi ini bekerja paling baik di browser berbasis Chromium. Anda mungkin mengalami fungsionalitas yang berkurang atau kesalahan di browser non-Chromium."
 }

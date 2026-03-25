@@ -114,7 +114,7 @@ export default defineComponent({
     },
 
     handleMouseEnter(selectedOption: Neume | Neume[]) {
-      if (this.menuMode === ButtonMenuMode.Click) {
+      if (this.menuMode === ButtonMenuMode.Hold) {
         this.selectedOption = selectedOption;
       }
     },

@@ -4,7 +4,7 @@
     @mousedown="handleMouseDown"
     @mouseleave="handleMouseLeave"
   >
-    <button class="neume-button" :disabled="disabled" @click="handleClick">
+    <button class="neume-button" :disabled="disabled">
       <img draggable="false" :src="mainIcon" v-if="mainIcon" />
       <span :style="textStyle" v-if="mainText">{{ mainText }}</span>
     </button>
@@ -103,12 +103,13 @@ export default defineComponent({
     },
 
     handleMouseDown() {
-      if (this.menuMode === ButtonMenuMode.Hold) {
-        if (this.disabled) {
-          return;
-        }
+      if (this.disabled) {
+        return;
+      }
 
-        this.showMenu = true;
+      this.showMenu = true;
+
+      if (this.menuMode === ButtonMenuMode.Hold) {
         window.addEventListener('mouseup', this.onMouseUp);
       }
     },
@@ -131,16 +132,6 @@ export default defineComponent({
         !this.$el.contains(e.target)
       ) {
         this.showMenu = false;
-      }
-    },
-
-    handleClick() {
-      if (this.menuMode === ButtonMenuMode.Click) {
-        if (this.disabled) {
-          return;
-        }
-
-        this.showMenu = true;
       }
     },
 

@@ -1,7 +1,8 @@
 <template>
   <div
     class="menu-container"
-    @mousedown="openMenu"
+    @mousedown="handleMouseDown"
+    @click="handleClick"
     @mouseleave="selectedOption = null"
   >
     <button class="neume-button" :disabled="disabled">
@@ -13,6 +14,7 @@
         v-for="option in options"
         :key="getKey(option)"
         class="menu-item"
+        @click="handleChoiceClick(option.neume)"
         @mouseenter="selectedOption = option.neume"
       >
         <img draggable="false" :src="option.icon" v-if="option.icon" />
@@ -25,6 +27,7 @@
 <script lang="ts">
 import { defineComponent, PropType, StyleValue } from 'vue';
 
+import { ButtonMenuMode, EditorPreferences } from '@/models/EditorPreferences';
 import { Neume } from '@/models/Neumes';
 
 export interface ButtonWithMenuOption {
@@ -34,6 +37,7 @@ export interface ButtonWithMenuOption {
 }
 
 export default defineComponent({
+  inject: ['editorPreferences'],
   components: {},
   emits: ['select'],
   props: {
@@ -67,6 +71,9 @@ export default defineComponent({
   },
 
   computed: {
+    menuMode() {
+      return (this.editorPreferences as EditorPreferences).buttonMenuMode;
+    },
     mainIcon() {
       return this.direction === 'up'
         ? this.options.at(-1)!.icon
@@ -91,13 +98,33 @@ export default defineComponent({
       return Array.isArray(option.neume) ? option.neume[0] : option.neume;
     },
 
-    openMenu() {
-      if (this.disabled) {
-        return;
-      }
+    handleMouseDown() {
+      if (this.menuMode === ButtonMenuMode.Hold) {
+        if (this.disabled) {
+          return;
+        }
 
-      this.showMenu = true;
-      window.addEventListener('mouseup', this.onMouseUp);
+        this.showMenu = true;
+        window.addEventListener('mouseup', this.onMouseUp);
+      }
+    },
+
+    handleClick() {
+      if (this.menuMode === ButtonMenuMode.Click) {
+        if (this.disabled) {
+          return;
+        }
+
+        this.showMenu = true;
+      }
+    },
+
+    handleChoiceClick(selectedOption: Neume | Neume[]) {
+      if (this.menuMode === ButtonMenuMode.Click) {
+        this.$emit('select', selectedOption);
+
+        this.showMenu = false;
+      }
     },
 
     onMouseUp() {

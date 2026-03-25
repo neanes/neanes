@@ -3,7 +3,14 @@ import 'vue3-tabs-chrome/dist/vue3-tabs-chrome.css';
 
 import { getFontEmbedCSS, toPng } from 'html-to-image';
 import { debounce, throttle } from 'throttle-debounce';
-import { defineComponent, inject, nextTick, StyleValue, toRaw } from 'vue';
+import {
+  computed,
+  defineComponent,
+  inject,
+  nextTick,
+  StyleValue,
+  toRaw,
+} from 'vue';
 import Vue3TabsChrome, { Tab } from 'vue3-tabs-chrome';
 
 import AlternateLine from '@/components/AlternateLine.vue';
@@ -457,7 +464,11 @@ export default defineComponent({
       saveDebounced: null! as (markUnsavedChanges?: boolean) => void,
     };
   },
-
+  provide() {
+    return {
+      editorPreferences: computed(() => this.editorPreferences),
+    };
+  },
   computed: {
     selectedWorkspaceId: {
       get() {
@@ -6499,6 +6510,7 @@ export default defineComponent({
                           }"
                           :content="(element as NoteElement).lyrics"
                           :editable="!lyricsLocked"
+                          autocapitalize="none"
                           whiteSpace="nowrap"
                           :ref="`lyrics-${getElementIndex(element)}`"
                           @click="focusLyrics(element.index)"

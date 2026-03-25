@@ -3,6 +3,7 @@
     class="contenteditable"
     :contenteditable="contentEditable"
     :style="style"
+    :autocapitalize="autocapitalize"
     @blur="onBlur"
     @focus="$emit('focus')"
     @click="$emit('click')"
@@ -36,6 +37,10 @@ export default defineComponent({
     whiteSpace: {
       type: String,
       default: 'break-spaces',
+    },
+    autocapitalize: {
+      type: String,
+      default: 'sentences',
     },
   },
 

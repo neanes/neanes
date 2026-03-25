@@ -6510,7 +6510,6 @@ export default defineComponent({
                           }"
                           :content="(element as NoteElement).lyrics"
                           :editable="!lyricsLocked"
-                          autocapitalize="none"
                           whiteSpace="nowrap"
                           :ref="`lyrics-${getElementIndex(element)}`"
                           @click="focusLyrics(element.index)"

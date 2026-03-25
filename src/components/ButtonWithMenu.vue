@@ -2,10 +2,9 @@
   <div
     class="menu-container"
     @mousedown="handleMouseDown"
-    @click="handleClick"
-    @mouseleave="selectedOption = null"
+    @mouseleave="handleMouseLeave"
   >
-    <button class="neume-button" :disabled="disabled">
+    <button class="neume-button" :disabled="disabled" @click="handleClick">
       <img draggable="false" :src="mainIcon" v-if="mainIcon" />
       <span :style="textStyle" v-if="mainText">{{ mainText }}</span>
     </button>
@@ -15,7 +14,7 @@
         :key="getKey(option)"
         class="menu-item"
         @click="handleChoiceClick(option.neume)"
-        @mouseenter="selectedOption = option.neume"
+        @mouseenter="handleMouseEnter(option.neume)"
       >
         <img draggable="false" :src="option.icon" v-if="option.icon" />
         <span :style="textStyle" v-if="option.text">{{ option.text }}</span>
@@ -66,8 +65,13 @@ export default defineComponent({
     };
   },
 
+  mounted() {
+    window.addEventListener('pointerdown', this.handleGlobalPointerDown);
+  },
+
   beforeUnmount() {
     window.removeEventListener('mouseup', this.onMouseUp);
+    window.removeEventListener('pointerdown', this.handleGlobalPointerDown);
   },
 
   computed: {
@@ -106,6 +110,27 @@ export default defineComponent({
 
         this.showMenu = true;
         window.addEventListener('mouseup', this.onMouseUp);
+      }
+    },
+
+    handleMouseEnter(selectedOption: Neume | Neume[]) {
+      if (this.menuMode === ButtonMenuMode.Click) {
+        this.selectedOption = selectedOption;
+      }
+    },
+
+    handleMouseLeave() {
+      if (this.menuMode === ButtonMenuMode.Hold) {
+        this.selectedOption = null;
+      }
+    },
+
+    handleGlobalPointerDown(e: MouseEvent) {
+      if (
+        this.menuMode === ButtonMenuMode.Click &&
+        !this.$el.contains(e.target)
+      ) {
+        this.showMenu = false;
       }
     },
 

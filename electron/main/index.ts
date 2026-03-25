@@ -2100,6 +2100,7 @@ app.on('ready', async () => {
       fallbackLng: 'en',
       ns: Object.keys(resources['en']),
       postProcess: ['pseudo'],
+      showSupportNotice: false,
       defaultNS,
       resources,
     });

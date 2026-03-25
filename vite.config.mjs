@@ -103,7 +103,9 @@ export default defineConfig(({ command, mode }) => {
         : undefined,
       vue(),
       process.env.VITE_ENABLE_DEV_TOOLS === 'true' ? VueDevTools() : undefined,
-      eslintPlugin(),
+      eslintPlugin({
+        overrideConfigFile: 'eslint.config.mjs',
+      }),
       !mode.includes('web')
         ? electron([
             {

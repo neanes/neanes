@@ -452,6 +452,13 @@ export class LayoutService {
         case ElementType.Note: {
           const noteElement = element as NoteElement;
 
+          // Reset computed barlines before getNoteWidth so that stale
+          // values from the previous processPages call don't inflate
+          // the width used for line breaking. Page placement will
+          // recompute these based on the new line break positions.
+          noteElement.computedMeasureBarLeft = null;
+          noteElement.computedMeasureBarRight = null;
+
           noteElement.computedIsonOffsetY = noteElement.isonOffsetY;
 
           noteElement.lyricsFontHeight = this.getNoteLyricsFontHeightFromCache(
@@ -508,8 +515,7 @@ export class LayoutService {
                 const nextNextNote = nextNextElement as NoteElement;
                 if (
                   nextNextNote.measureBarLeft != null &&
-                  !nextNextNote.measureBarLeft.endsWith('Above') &&
-                  nextNote.computedMeasureBarRight == null
+                  !nextNextNote.measureBarLeft.endsWith('Above')
                 ) {
                   additionalWidth +=
                     measureBarWidthMap.get(nextNextNote.measureBarLeft) ?? 0;
@@ -519,8 +525,7 @@ export class LayoutService {
 
             if (
               nextNote.measureBarLeft != null &&
-              !nextNote.measureBarLeft.endsWith('Above') &&
-              noteElement.computedMeasureBarRight == null
+              !nextNote.measureBarLeft.endsWith('Above')
             ) {
               additionalWidth +=
                 measureBarWidthMap.get(nextNote.measureBarLeft) ?? 0;
@@ -629,12 +634,6 @@ export class LayoutService {
         );
       } else {
         elementWidthWithLyricsPx = elementWidthPx;
-      }
-
-      if (element.elementType === ElementType.Note) {
-        const noteElement = element as NoteElement;
-        noteElement.computedMeasureBarLeft = null;
-        noteElement.computedMeasureBarRight = null;
       }
 
       // Check if we need a new line
@@ -1433,8 +1432,7 @@ export class LayoutService {
     // Handle special case for measure bars:
     // Shift the lyrics to the right so that they
     // are centered under the main neume
-    const measureBarLeft =
-      noteElement.measureBarLeft || noteElement.computedMeasureBarLeft;
+    const measureBarLeft = noteElement.measureBarLeft;
 
     const measureBarLeftWidth =
       measureBarLeft != null ? measureBarWidthMap.get(measureBarLeft) : null;
@@ -1444,8 +1442,7 @@ export class LayoutService {
       noteElement.neumeWidth += measureBarLeftWidth;
     }
 
-    const measureBarRight =
-      noteElement.measureBarRight || noteElement.computedMeasureBarRight;
+    const measureBarRight = noteElement.measureBarRight;
 
     const measureBarRightWidth =
       measureBarRight != null ? measureBarWidthMap.get(measureBarRight) : null;

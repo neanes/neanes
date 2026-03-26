@@ -1741,6 +1741,23 @@ export class LayoutService {
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
     );
 
+    const neumeFont = `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`;
+    const melismaMeasureBarWidthMap = new Map<MeasureBar, number>();
+    for (const bar of [
+      MeasureBar.MeasureBarRight,
+      MeasureBar.MeasureBarTop,
+      MeasureBar.MeasureBarDouble,
+      MeasureBar.MeasureBarTheseos,
+      MeasureBar.MeasureBarShortDouble,
+      MeasureBar.MeasureBarShortTheseos,
+    ]) {
+      const mapping = NeumeMappingService.getMapping(bar);
+      melismaMeasureBarWidthMap.set(
+        bar,
+        TextMeasurementService.getTextWidth(mapping.text, neumeFont),
+      );
+    }
+
     let melismaSyllables: MelismaSyllables | null = null;
     let melismaLyricsEnd: number | null = null;
 
@@ -1921,7 +1938,12 @@ export class LayoutService {
               if (nextNoteElement == null) {
                 if (finalElement) {
                   end =
-                    finalElement.x + this.getFinalElementWidth(finalElement);
+                    finalElement.x +
+                    this.getFinalElementWidth(finalElement) -
+                    this.getFinalElementMeasureBarRightWidth(
+                      finalElement,
+                      melismaMeasureBarWidthMap,
+                    );
                 } else {
                   end = element.x + element.neumeWidth;
                 }
@@ -2034,7 +2056,12 @@ export class LayoutService {
                   end = element.x + element.neumeWidth;
                 } else {
                   end =
-                    finalElement.x + this.getFinalElementWidth(finalElement);
+                    finalElement.x +
+                    this.getFinalElementWidth(finalElement) -
+                    this.getFinalElementMeasureBarRightWidth(
+                      finalElement,
+                      melismaMeasureBarWidthMap,
+                    );
                 }
 
                 if (nextNoteElement != null && nextNoteElement.alignLeft) {
@@ -2085,7 +2112,12 @@ export class LayoutService {
               ) {
                 if (finalElement) {
                   end =
-                    finalElement.x + this.getFinalElementWidth(finalElement);
+                    finalElement.x +
+                    this.getFinalElementWidth(finalElement) -
+                    this.getFinalElementMeasureBarRightWidth(
+                      finalElement,
+                      melismaMeasureBarWidthMap,
+                    );
                 } else {
                   end = element.x + element.neumeWidth;
                 }
@@ -2949,6 +2981,26 @@ export class LayoutService {
     } else {
       return (element as TextBoxElement).width;
     }
+  }
+
+  private static getFinalElementMeasureBarRightWidth(
+    element: NoteElement | MartyriaElement | TempoElement | TextBoxElement,
+    measureBarWidthMap: Map<MeasureBar, number>,
+  ) {
+    let measureBarRight: MeasureBar | null = null;
+
+    if (element.elementType === ElementType.Note) {
+      const note = element as NoteElement;
+      measureBarRight = note.measureBarRight;
+    } else if (element.elementType === ElementType.Martyria) {
+      measureBarRight = (element as MartyriaElement).measureBarRight;
+    }
+
+    if (measureBarRight != null) {
+      return measureBarWidthMap.get(measureBarRight) ?? 0;
+    }
+
+    return 0;
   }
 
   private static isPartOfSameMelisma(element: ScoreElement | null) {

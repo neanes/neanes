@@ -4,6 +4,19 @@
       <div class="header">{{ $t('dialog:preferences.root') }}</div>
       <div class="pane-container">
         <div class="subheader">
+          {{ $t('dialog:preferences.menuInteraction') }}
+        </div>
+        <div class="form-group">
+          <select v-model="form.buttonMenuMode">
+            <option :value="ButtonMenuMode.Hold">
+              {{ $t('dialog:preferences.menuInteractionHold') }}
+            </option>
+            <option :value="ButtonMenuMode.Click">
+              {{ $t('dialog:preferences.menuInteractionClick') }}
+            </option>
+          </select>
+        </div>
+        <div class="subheader">
           {{ $t('dialog:preferences.tempoDefaults') }}
         </div>
         <div v-for="tempo in tempoSigns" :key="tempo" class="form-group row">
@@ -39,7 +52,7 @@ import { defineComponent, PropType } from 'vue';
 
 import ModalDialog from '@/components/ModalDialog.vue';
 import Neume from '@/components/NeumeGlyph.vue';
-import { EditorPreferences } from '@/models/EditorPreferences';
+import { ButtonMenuMode, EditorPreferences } from '@/models/EditorPreferences';
 import { TempoSign } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
 
@@ -74,6 +87,7 @@ export default defineComponent({
     return {
       form: new EditorPreferences(),
       tempoSigns,
+      ButtonMenuMode,
     };
   },
 

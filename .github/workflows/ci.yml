@@ -50,5 +50,5 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: Neanes-${{ matrix.os }}
-          path: dist/Neanes-*
+          path: dist/Neanes*
           retention-days: 3

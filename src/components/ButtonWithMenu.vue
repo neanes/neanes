@@ -5,10 +5,15 @@
     @mouseleave="handleMouseLeave"
   >
     <button class="neume-button" :disabled="disabled">
-      <img draggable="false" :src="mainIcon" v-if="mainIcon" />
+      <img
+        draggable="false"
+        :src="mainIcon"
+        v-if="mainIcon"
+        :style="imgStyle"
+      />
       <span :style="textStyle" v-if="mainText">{{ mainText }}</span>
     </button>
-    <div class="menu" v-if="showMenu">
+    <div class="menu" :class="direction" v-if="showMenu">
       <div
         v-for="option in options"
         :key="getKey(option)"
@@ -16,7 +21,12 @@
         @click="handleChoiceClick(option.neume)"
         @mouseenter="handleMouseEnter(option.neume)"
       >
-        <img draggable="false" :src="option.icon" v-if="option.icon" />
+        <img
+          draggable="false"
+          :src="option.icon"
+          v-if="option.icon"
+          :style="imgStyle"
+        />
         <span :style="textStyle" v-if="option.text">{{ option.text }}</span>
       </div>
     </div>
@@ -56,6 +66,10 @@ export default defineComponent({
       type: String,
       default: 'Neanes',
     },
+    imgSize: {
+      type: String,
+      required: false,
+    },
   },
 
   data() {
@@ -93,6 +107,13 @@ export default defineComponent({
     textStyle() {
       return {
         fontFamily: this.fontFamily,
+      } as StyleValue;
+    },
+
+    imgStyle() {
+      return {
+        height: this.imgSize ?? undefined,
+        width: this.imgSize ?? undefined,
       } as StyleValue;
     },
   },
@@ -190,13 +211,20 @@ export default defineComponent({
   border: 1px solid black;
   box-sizing: border-box;
   width: var(--btn-size);
+}
+
+.menu.up {
   bottom: 0;
+}
+
+.menu.down {
+  top: 0;
 }
 
 .menu-item {
   height: var(--btn-size);
   width: 100%;
-  padding: 3px 0;
+  padding: 1px 0;
   box-sizing: border-box;
   text-align: center;
   user-select: none;

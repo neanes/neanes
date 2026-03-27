@@ -524,6 +524,8 @@ export class LayoutService {
             }
 
             if (
+              !noteElement.pageBreak &&
+              !noteElement.lineBreak &&
               nextNote.measureBarLeft != null &&
               !nextNote.measureBarLeft.endsWith('Above')
             ) {

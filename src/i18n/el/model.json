@@ -132,7 +132,7 @@
       "generalSharp": "Γενική Δίεση",
       "zygos": "Ζυγός",
       "kliton": "Κλιτόν",
-      "spathi": "Σπαθή"
+      "spathi": "Σπάθη"
     },
     "measureBar": {
       "right": "Δεξιά",
@@ -187,8 +187,8 @@
     "enharmonicVouHigh": "Εναρμόνιο από Βου Υψηλό",
     "zygos": "Ζυγός",
     "kliton": "Κλιτόν",
-    "spathi": "Σπαθή",
-    "spathiGa": "Σπαθή από Γα"
+    "spathi": "Σπάθη",
+    "spathiGa": "Σπάθη από Γα"
   },
   "mode": {
     "first": "Πρώτος Ήχος",
@@ -216,14 +216,14 @@
     "nana": "Νανά",
     "middle": "Μέσος",
     "papadic": "Παπαδικό",
-    "papadicAgia": "Παπαδικό (Αγία)",
+    "papadicAgia": "Παπαδικό (Άγια)",
     "heirmologicSoftChromatic": "Ειρμολογικό (Μαλακό Χρωματικό)",
     "sticheraric": "Στιχηραρικό",
     "heirmologicLegetos": "Ειρμολογικό (Λέγετος)",
     "heirmologicNenano": "Ειρμολογικό (Νενανώ)",
     "kliton": "Κλιτόν",
     "heirmologic": "Ειρμολογικό",
-    "spathi": "Σπαθή",
+    "spathi": "Σπάθη",
     "pentaphonic": "Πεντάφωνο",
     "minorMakamBuselik": "Ελάσσων (Μακάμ Μπουσελίκ)",
     "triphonic": "Τρίφωνο",

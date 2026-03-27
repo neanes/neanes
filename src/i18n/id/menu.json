@@ -1,6 +1,6 @@
 {
   "file": {
-    "root": "File",
+    "root": "Berkas",
     "new": "Baru",
     "open": "Buka…",
     "openRecent": "Buka Terbaru",
@@ -42,12 +42,12 @@
     "dropCapAfter": "Huruf Awal Besar Setelah",
     "textBox": "Kotak Teks",
     "richTextBox": "Kotak Teks Kaya",
-    "inlineTextBox": "Kotak Teks Inline",
+    "inlineTextBox": "Kotak Teks Sebaris",
     "modeKey": "Kunci Mode",
     "image": "Gambar",
-    "headersAndFooters": "Kepala dan Kaki",
-    "header": "Kepala",
-    "footer": "Kaki"
+    "headersAndFooters": "Header dan Footer",
+    "header": "Header",
+    "footer": "Footer"
   },
   "tools": {
     "root": "Alat",

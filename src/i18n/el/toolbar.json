@@ -1,1 +1,108 @@
-{}
+{
+  "common": {
+    "alignLeft": "Στοίχιση Αριστερά",
+    "alignCenter": "Στοίχιση στο Κέντρο",
+    "alignRight": "Στοίχιση Δεξιά",
+    "bpm": "BPM",
+    "fthoraNote": "Νότα Φθοράς",
+    "ignoreAttractions": "Αγνόηση Ελκυσμών",
+    "insertGorthmikon": "Εισαγωγή Γορθμικόν",
+    "insertPelastikon": "Εισαγωγή Πελαστικόν",
+    "measureBar": "Γραμμή Μέτρου",
+    "outline": "Περίγραμμα",
+    "sectionName": "Όνομα Ενότητας",
+    "spaceAfter": "Κενό Μετά",
+    "tempoSign": "Σημείο Αγωγής",
+    "useDefaultStyle": "Χρήση Προεπιλεγμένου Στυλ",
+    "enharmonicDisabled": "Η εναρμόνια φθορά μπορεί να τοποθετηθεί μόνο σε Γα, Ζω ή Βου",
+    "generalFlatDisabled": "Η γενική ύφεση μπορεί να τοποθετηθεί μόνο σε Κε",
+    "generalSharpDisabled": "Η γενική δίεση μπορεί να τοποθετηθεί μόνο σε Γα",
+    "zygosDisabled": "Ο ζυγός μπορεί να τοποθετηθεί μόνο σε Δι",
+    "klitonDisabled": "Το κλιτόν μπορεί να τοποθετηθεί μόνο σε Δι",
+    "spathiDisabled": "Η σπαθή μπορεί να τοποθετηθεί μόνο σε Κε ή Γα",
+    "width": "Πλάτος",
+    "height": "Ύψος",
+    "marginTop": "Κενό Πάνω",
+    "marginBottom": "Κενό Κάτω",
+    "verticalOffset": "Κάθετη Μετατόπιση",
+    "none": "Κανένα",
+    "inline": "Ενσωματωμένο",
+    "neume": "Νεύμα"
+  },
+  "main": {
+    "auto": "Αυτόματο",
+    "insert": "Εισαγωγή",
+    "single": "Μονό",
+    "martyria": "Μαρτυρία",
+    "insertDropCapBefore": "Εισαγωγή αρχιγράμματος πριν",
+    "insertModeKey": "Εισαγωγή Αρκτικής Μαρτυρίας",
+    "insertTextBox": "Εισαγωγή Πλαισίου Κειμένου",
+    "insertTextBoxRich": "Εισαγωγή Πλαισίου Εμπλουτισμένου Κειμένου",
+    "insertImage": "Εισαγωγή εικόνας",
+    "insertOrRemoveLineBreakAfterSelectedElement": "Εισαγωγή ή αφαίρεση αλλαγής γραμμής μετά το επιλεγμένο στοιχείο",
+    "insertOrRemoveJustifiedLineBreakAfterSelectedElement": "Εισαγωγή ή αφαίρεση πλήρους αλλαγής γραμμής μετά το επιλεγμένο στοιχείο",
+    "insertOrRemoveCenteredLineBreakAfterSelectedElement": "Εισαγωγή ή αφαίρεση κεντραρισμένης αλλαγής γραμμής μετά το επιλεγμένο στοιχείο",
+    "insertOrRemovePageBreakAfterSelectedElement": "Εισαγωγή ή αφαίρεση αλλαγής σελίδας μετά το επιλεγμένο στοιχείο",
+    "deleteSelectedElement": "Διαγραφή επιλεγμένου στοιχείου",
+    "fit": "Προσαρμογή",
+    "speed": "Ταχύτητα",
+    "pageNumber": "Σελίδα {{ currentPageNumber }} από {{ pageCount }}",
+    "invalidZoom": "Η τιμή πρέπει να είναι μεταξύ 50% και 500%."
+  },
+  "dropCap": {
+    "lineSpan": "Γραμμές πτώσης"
+  },
+  "imageBox": {
+    "maintainAspectRatio": "Διατήρηση Αναλογίας",
+    "width": "Πλάτος",
+    "height": "Ύψος"
+  },
+  "lyricManager": {
+    "locked": "Κλείδωμα Στίχων",
+    "assignAcceptsLyrics": "Αποθήκευση Τρεχόντων Μελισμάτων"
+  },
+  "martyria": {
+    "auto": "Αυτόματο",
+    "note": "Νότα",
+    "scale": "Κλίμακα",
+    "rootSignOverride": "Παράκαμψη Αρκτικής Μαρτυρίας",
+    "tempoLeft": "Προσθήκη Αριστερής Αγωγής",
+    "tempo": "Προσθήκη Αγωγής Πάνω",
+    "tempoRight": "Προσθήκη Δεξιάς Αγωγής"
+  },
+  "modeKey": {
+    "size": "Μέγεθος",
+    "heightAdjustment": "Ρύθμιση Ύψους",
+    "rightAlignTempo": "Δεξιά στοίχιση αγωγής",
+    "showAmbitus": "Εμφάνιση Αμβίτου",
+    "permanentEnharmonicZo": "Μόνιμο Εναρμόνιο Ζω",
+    "changeKey": "Αλλαγή Μαρτυρίας",
+    "useOptionalDiatonicFthoras": "Εμφάνιση Διατονικών Φθορών"
+  },
+  "neume": {
+    "neumeSelect": "Επιλογή Νεύματος",
+    "positioning": "Τοποθέτηση",
+    "yfen": "Υφέν",
+    "flat": "Ύφεση",
+    "sharp": "Δίεση",
+    "measureNumber": "Αριθμός Μέτρου",
+    "noteIndicator": "Δείκτης Νότας",
+    "isonIndicator": "Δείκτης Ισοκρατήματος",
+    "acceptsLyrics": "Δέχεται Στίχους",
+    "acceptsLyricsDefault": "Προεπιλογή",
+    "acceptsLyricsYes": "Ναι",
+    "acceptsLyricsNo": "Όχι",
+    "acceptsLyricsMelismaOnly": "Μόνο Μέλισμα"
+  },
+  "textbox": {
+    "multipanel": "Πολλαπλά Πάνελ",
+    "rtl": "ΔπΑ",
+    "scrollable": "Κυλιόμενο",
+    "modeChange": "Αλλαγή Ήχου",
+    "virtualNote": "Νότα Παραλλαγής",
+    "centerOnPage": "Κεντράρισμα στη Σελίδα",
+    "offsetYTop": "Μετατόπιση Y Πάνω",
+    "offsetYBottom": "Μετατόπιση Y Κάτω",
+    "fillWidth": "Γέμισμα Πλάτους"
+  }
+}

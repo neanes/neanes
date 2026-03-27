@@ -1,7 +1,7 @@
 import el from './el';
 import en from './en';
-import ro from './ro';
 import id from './id';
+import ro from './ro';
 
 export const defaultNS = 'model';
 export const resources = {

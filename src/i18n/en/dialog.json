@@ -199,6 +199,9 @@
   },
   "preferences": {
     "root": "Preferences",
+    "menuInteraction": "Menu Interaction",
+    "menuInteractionHold": "Press and hold to select",
+    "menuInteractionClick": "Click to open menu",
     "tempoDefaults": "Tempo Defaults",
     "bpm": "BPM"
   }

@@ -452,6 +452,13 @@ export class LayoutService {
         case ElementType.Note: {
           const noteElement = element as NoteElement;
 
+          // Reset computed barlines before getNoteWidth so that stale
+          // values from the previous processPages call don't inflate
+          // the width used for line breaking. Page placement will
+          // recompute these based on the new line break positions.
+          noteElement.computedMeasureBarLeft = null;
+          noteElement.computedMeasureBarRight = null;
+
           noteElement.computedIsonOffsetY = noteElement.isonOffsetY;
 
           noteElement.lyricsFontHeight = this.getNoteLyricsFontHeightFromCache(
@@ -508,8 +515,7 @@ export class LayoutService {
                 const nextNextNote = nextNextElement as NoteElement;
                 if (
                   nextNextNote.measureBarLeft != null &&
-                  !nextNextNote.measureBarLeft.endsWith('Above') &&
-                  nextNote.computedMeasureBarRight == null
+                  !nextNextNote.measureBarLeft.endsWith('Above')
                 ) {
                   additionalWidth +=
                     measureBarWidthMap.get(nextNextNote.measureBarLeft) ?? 0;
@@ -519,8 +525,7 @@ export class LayoutService {
 
             if (
               nextNote.measureBarLeft != null &&
-              !nextNote.measureBarLeft.endsWith('Above') &&
-              noteElement.computedMeasureBarRight == null
+              !nextNote.measureBarLeft.endsWith('Above')
             ) {
               additionalWidth +=
                 measureBarWidthMap.get(nextNote.measureBarLeft) ?? 0;
@@ -629,12 +634,6 @@ export class LayoutService {
         );
       } else {
         elementWidthWithLyricsPx = elementWidthPx;
-      }
-
-      if (element.elementType === ElementType.Note) {
-        const noteElement = element as NoteElement;
-        noteElement.computedMeasureBarLeft = null;
-        noteElement.computedMeasureBarRight = null;
       }
 
       // Check if we need a new line
@@ -1433,8 +1432,7 @@ export class LayoutService {
     // Handle special case for measure bars:
     // Shift the lyrics to the right so that they
     // are centered under the main neume
-    const measureBarLeft =
-      noteElement.measureBarLeft || noteElement.computedMeasureBarLeft;
+    const measureBarLeft = noteElement.measureBarLeft;
 
     const measureBarLeftWidth =
       measureBarLeft != null ? measureBarWidthMap.get(measureBarLeft) : null;
@@ -1444,8 +1442,7 @@ export class LayoutService {
       noteElement.neumeWidth += measureBarLeftWidth;
     }
 
-    const measureBarRight =
-      noteElement.measureBarRight || noteElement.computedMeasureBarRight;
+    const measureBarRight = noteElement.measureBarRight;
 
     const measureBarRightWidth =
       measureBarRight != null ? measureBarWidthMap.get(measureBarRight) : null;
@@ -1744,6 +1741,23 @@ export class LayoutService {
       `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
     );
 
+    const neumeFont = `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`;
+    const melismaMeasureBarWidthMap = new Map<MeasureBar, number>();
+    for (const bar of [
+      MeasureBar.MeasureBarRight,
+      MeasureBar.MeasureBarTop,
+      MeasureBar.MeasureBarDouble,
+      MeasureBar.MeasureBarTheseos,
+      MeasureBar.MeasureBarShortDouble,
+      MeasureBar.MeasureBarShortTheseos,
+    ]) {
+      const mapping = NeumeMappingService.getMapping(bar);
+      melismaMeasureBarWidthMap.set(
+        bar,
+        TextMeasurementService.getTextWidth(mapping.text, neumeFont),
+      );
+    }
+
     let melismaSyllables: MelismaSyllables | null = null;
     let melismaLyricsEnd: number | null = null;
 
@@ -1924,7 +1938,12 @@ export class LayoutService {
               if (nextNoteElement == null) {
                 if (finalElement) {
                   end =
-                    finalElement.x + this.getFinalElementWidth(finalElement);
+                    finalElement.x +
+                    this.getFinalElementWidth(finalElement) -
+                    this.getFinalElementMeasureBarRightWidth(
+                      finalElement,
+                      melismaMeasureBarWidthMap,
+                    );
                 } else {
                   end = element.x + element.neumeWidth;
                 }
@@ -2037,7 +2056,12 @@ export class LayoutService {
                   end = element.x + element.neumeWidth;
                 } else {
                   end =
-                    finalElement.x + this.getFinalElementWidth(finalElement);
+                    finalElement.x +
+                    this.getFinalElementWidth(finalElement) -
+                    this.getFinalElementMeasureBarRightWidth(
+                      finalElement,
+                      melismaMeasureBarWidthMap,
+                    );
                 }
 
                 if (nextNoteElement != null && nextNoteElement.alignLeft) {
@@ -2088,7 +2112,12 @@ export class LayoutService {
               ) {
                 if (finalElement) {
                   end =
-                    finalElement.x + this.getFinalElementWidth(finalElement);
+                    finalElement.x +
+                    this.getFinalElementWidth(finalElement) -
+                    this.getFinalElementMeasureBarRightWidth(
+                      finalElement,
+                      melismaMeasureBarWidthMap,
+                    );
                 } else {
                   end = element.x + element.neumeWidth;
                 }
@@ -2952,6 +2981,26 @@ export class LayoutService {
     } else {
       return (element as TextBoxElement).width;
     }
+  }
+
+  private static getFinalElementMeasureBarRightWidth(
+    element: NoteElement | MartyriaElement | TempoElement | TextBoxElement,
+    measureBarWidthMap: Map<MeasureBar, number>,
+  ) {
+    let measureBarRight: MeasureBar | null = null;
+
+    if (element.elementType === ElementType.Note) {
+      const note = element as NoteElement;
+      measureBarRight = note.measureBarRight;
+    } else if (element.elementType === ElementType.Martyria) {
+      measureBarRight = (element as MartyriaElement).measureBarRight;
+    }
+
+    if (measureBarRight != null) {
+      return measureBarWidthMap.get(measureBarRight) ?? 0;
+    }
+
+    return 0;
   }
 
   private static isPartOfSameMelisma(element: ScoreElement | null) {

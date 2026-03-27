@@ -1,12 +1,19 @@
 import { TempoElement } from './Element';
 import { TempoSign } from './Neumes';
 
+export enum ButtonMenuMode {
+  Click = 'Click',
+  Hold = 'Hold',
+}
+
 export interface IEditorPreferences {
   tempoDefaults: { [key in TempoSign]?: number };
+  buttonMenuMode: ButtonMenuMode;
 }
 
 export class EditorPreferences implements IEditorPreferences {
   tempoDefaults: { [key in TempoSign]?: number };
+  buttonMenuMode = ButtonMenuMode.Hold;
 
   constructor() {
     this.tempoDefaults = {

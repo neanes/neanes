@@ -1,1 +1,108 @@
-{}
+{
+  "common": {
+    "alignLeft": "Aliniere Stânga",
+    "alignCenter": "Aliniere Centru",
+    "alignRight": "Aliniere Dreapta",
+    "bpm": "BPM",
+    "fthoraNote": "Nota Ftorei",
+    "ignoreAttractions": "Ignoră Atracțiile",
+    "insertGorthmikon": "Inserează Gorthmikon",
+    "insertPelastikon": "Inserează Pelastikon",
+    "measureBar": "Bară de Măsură",
+    "outline": "Contur",
+    "sectionName": "Numele Secțiunii",
+    "spaceAfter": "Spațiu După",
+    "tempoSign": "Semn de Tempo",
+    "useDefaultStyle": "Folosește Stilul Implicit",
+    "enharmonicDisabled": "Ftora enarmonică poate fi plasată doar pe Ga, Zo sau Vou",
+    "generalFlatDisabled": "Bemolul general poate fi plasat doar pe Ke",
+    "generalSharpDisabled": "Diezul general poate fi plasat doar pe Ga",
+    "zygosDisabled": "Zygos poate fi plasat doar pe Di",
+    "klitonDisabled": "Kliton poate fi plasat doar pe Di",
+    "spathiDisabled": "Spathi poate fi plasat doar pe Ke sau Ga",
+    "width": "Lățime",
+    "height": "Înălțime",
+    "marginTop": "Spațiu Sus",
+    "marginBottom": "Spațiu Jos",
+    "verticalOffset": "Offset Vertical",
+    "none": "Niciunul",
+    "inline": "În Linie",
+    "neume": "Neumă"
+  },
+  "main": {
+    "auto": "Auto",
+    "insert": "Inserare",
+    "single": "Simplu",
+    "martyria": "Mărturie",
+    "insertDropCapBefore": "Inserează majusculă decorativă înainte",
+    "insertModeKey": "Inserează Mărturie Inițială",
+    "insertTextBox": "Inserează Casetă de Text",
+    "insertTextBoxRich": "Inserează Casetă de Text Formatat",
+    "insertImage": "Inserează imagine",
+    "insertOrRemoveLineBreakAfterSelectedElement": "Inserează sau elimină întrerupere de linie după elementul selectat",
+    "insertOrRemoveJustifiedLineBreakAfterSelectedElement": "Inserează sau elimină întrerupere de linie justificată după elementul selectat",
+    "insertOrRemoveCenteredLineBreakAfterSelectedElement": "Inserează sau elimină întrerupere de linie centrată după elementul selectat",
+    "insertOrRemovePageBreakAfterSelectedElement": "Inserează sau elimină întrerupere de pagină după elementul selectat",
+    "deleteSelectedElement": "Șterge elementul selectat",
+    "fit": "Potrivire",
+    "speed": "Viteză",
+    "pageNumber": "Pagina {{ currentPageNumber }} din {{ pageCount }}",
+    "invalidZoom": "Valoarea trebuie să fie între 50% și 500%."
+  },
+  "dropCap": {
+    "lineSpan": "Linii de coborâre"
+  },
+  "imageBox": {
+    "maintainAspectRatio": "Menține Raportul de Aspect",
+    "width": "Lățime",
+    "height": "Înălțime"
+  },
+  "lyricManager": {
+    "locked": "Blochează Versurile",
+    "assignAcceptsLyrics": "Salvează Melismele Curente"
+  },
+  "martyria": {
+    "auto": "Auto",
+    "note": "Notă",
+    "scale": "Scară muzicală",
+    "rootSignOverride": "Suprascriere Semn de Bază",
+    "tempoLeft": "Adaugă Tempo Stânga",
+    "tempo": "Adaugă Tempo Deasupra",
+    "tempoRight": "Adaugă Tempo Dreapta"
+  },
+  "modeKey": {
+    "size": "Dimensiune",
+    "heightAdjustment": "Ajustare Înălțime",
+    "rightAlignTempo": "Aliniază tempoul la dreapta",
+    "showAmbitus": "Afișează Ambitus",
+    "permanentEnharmonicZo": "Zo Enarmonic Permanent",
+    "changeKey": "Schimbă Mărturia Inițială",
+    "useOptionalDiatonicFthoras": "Afișează Ftorele Diatonice"
+  },
+  "neume": {
+    "neumeSelect": "Selectare Neumă",
+    "positioning": "Poziționare",
+    "yfen": "Yfen",
+    "flat": "Bemol",
+    "sharp": "Diez",
+    "measureNumber": "Număr Măsură",
+    "noteIndicator": "Indicator Notă",
+    "isonIndicator": "Indicator Ison",
+    "acceptsLyrics": "Acceptă Versuri",
+    "acceptsLyricsDefault": "Implicit",
+    "acceptsLyricsYes": "Da",
+    "acceptsLyricsNo": "Nu",
+    "acceptsLyricsMelismaOnly": "Doar Melismă"
+  },
+  "textbox": {
+    "multipanel": "Multipanou",
+    "rtl": "RTL",
+    "scrollable": "Derulabil",
+    "modeChange": "Schimbă Glasul",
+    "virtualNote": "Notă de Paralaje",
+    "centerOnPage": "Centrează pe Pagină",
+    "offsetYTop": "Offset Y Sus",
+    "offsetYBottom": "Offset Y Jos",
+    "fillWidth": "Umple Lățimea"
+  }
+}

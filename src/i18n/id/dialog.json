@@ -199,6 +199,9 @@
   },
   "preferences": {
     "root": "Preferensi",
+    "menuInteraction": "Interaksi Menu",
+    "menuInteractionHold": "Tekan dan tahan untuk memilih",
+    "menuInteractionClick": "Klik untuk membuka menu",
     "tempoDefaults": "Default Tempo",
     "bpm": "BPM"
   }

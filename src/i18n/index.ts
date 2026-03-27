@@ -7,6 +7,6 @@ export const defaultNS = 'model';
 export const resources = {
   el,
   en,
-  ro,
   id,
+  ro,
 } as const;

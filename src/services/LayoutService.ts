@@ -698,73 +698,12 @@ export class LayoutService {
         currentPageHeightPx = 0;
 
         for (const line of page.lines) {
-          let height = 0;
-
-          if (
-            line.elements.some(
-              (x) =>
-                x.elementType === ElementType.TextBox &&
-                !(x as TextBoxElement).inline,
-            )
-          ) {
-            const textbox = line.elements.find(
-              (x) => x.elementType === ElementType.TextBox,
-            ) as TextBoxElement;
-            height = textbox.height;
-
-            // Add the margins
-            height += textbox.marginTop;
-            height += textbox.marginBottom;
-          } else if (
-            line.elements.some(
-              (x) =>
-                x.elementType === ElementType.RichTextBox &&
-                !(x as RichTextBoxElement).inline,
-            )
-          ) {
-            const textbox = line.elements.find(
-              (x) => x.elementType === ElementType.RichTextBox,
-            ) as RichTextBoxElement;
-            height = textbox.height;
-
-            // Add the margins
-            height += textbox.marginTop;
-            height += textbox.marginBottom;
-          } else if (
-            line.elements.some((x) => x.elementType === ElementType.ModeKey)
-          ) {
-            const modekey = line.elements.find(
-              (x) => x.elementType === ElementType.ModeKey,
-            ) as ModeKeyElement;
-            height = modekey.height;
-
-            // Add the margins
-            height += modekey.marginTop;
-            height += modekey.marginBottom;
-          } else if (
-            line.elements.some((x) => x.elementType === ElementType.ImageBox)
-          ) {
-            const imageBox = line.elements.find(
-              (x) => x.elementType === ElementType.ImageBox,
-            ) as ImageBoxElement;
-            height = imageBox.inline
-              ? Math.max(imageBox.imageHeight, neumeHeight)
-              : imageBox.imageHeight;
-          } else if (
-            line.elements.some((x) =>
-              [
-                ElementType.Martyria,
-                ElementType.Note,
-                ElementType.Tempo,
-                ElementType.DropCap,
-                ElementType.Empty,
-              ].includes(x.elementType),
-            )
-          ) {
-            height = neumeLineHeight;
-          } else {
-            height = pageSetup.lineHeight;
-          }
+          const height = LayoutService.getLineHeight(
+            line,
+            pageSetup.lineHeight,
+            neumeLineHeight,
+            neumeHeight,
+          );
 
           currentPageHeightPx += height;
 
@@ -1089,6 +1028,81 @@ export class LayoutService {
     });
 
     return pages;
+  }
+
+  private static getLineHeight(
+    line: Line,
+    defaultLineHeight: number,
+    neumeLineHeight: number,
+    neumeHeight: number,
+  ) {
+    let textBox: TextBoxElement | null = null;
+    let richTextBox: RichTextBoxElement | null = null;
+    let modeKey: ModeKeyElement | null = null;
+    let imageBox: ImageBoxElement | null = null;
+    let hasNeumeContent = false;
+
+    for (const element of line.elements) {
+      switch (element.elementType) {
+        case ElementType.TextBox:
+          if (!(element as TextBoxElement).inline) {
+            textBox = element as TextBoxElement;
+          }
+          break;
+        case ElementType.RichTextBox:
+          if (richTextBox === null && !(element as RichTextBoxElement).inline) {
+            richTextBox = element as RichTextBoxElement;
+          }
+          break;
+        case ElementType.ModeKey:
+          if (modeKey === null) {
+            modeKey = element as ModeKeyElement;
+          }
+          break;
+        case ElementType.ImageBox:
+          if (imageBox === null) {
+            imageBox = element as ImageBoxElement;
+          }
+          break;
+        case ElementType.Martyria:
+        case ElementType.Note:
+        case ElementType.Tempo:
+        case ElementType.DropCap:
+        case ElementType.Empty:
+          hasNeumeContent = true;
+          break;
+      }
+
+      if (textBox !== null) {
+        break;
+      }
+    }
+
+    if (textBox !== null) {
+      return textBox.height + textBox.marginTop + textBox.marginBottom;
+    }
+
+    if (richTextBox !== null) {
+      return (
+        richTextBox.height + richTextBox.marginTop + richTextBox.marginBottom
+      );
+    }
+
+    if (modeKey !== null) {
+      return modeKey.height + modeKey.marginTop + modeKey.marginBottom;
+    }
+
+    if (imageBox !== null) {
+      return imageBox.inline
+        ? Math.max(imageBox.imageHeight, neumeHeight)
+        : imageBox.imageHeight;
+    }
+
+    if (hasNeumeContent) {
+      return neumeLineHeight;
+    }
+
+    return defaultLineHeight;
   }
 
   private static processHeader(

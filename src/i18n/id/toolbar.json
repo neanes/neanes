@@ -1,0 +1,108 @@
+{
+  "common": {
+    "alignLeft": "Rata Kiri",
+    "alignCenter": "Rata Tengah",
+    "alignRight": "Rata Kanan",
+    "bpm": "BPM",
+    "fthoraNote": "Nada Fthora",
+    "ignoreAttractions": "Abaikan Tarikan",
+    "insertGorthmikon": "Sisipkan Gorthmikon",
+    "insertPelastikon": "Sisipkan Pelastikon",
+    "measureBar": "Batang Birama",
+    "outline": "Garis Luar",
+    "sectionName": "Nama Bagian",
+    "spaceAfter": "Ruang Setelah",
+    "tempoSign": "Tanda Tempo",
+    "useDefaultStyle": "Gunakan Gaya Default",
+    "enharmonicDisabled": "Fthora enharmonik hanya dapat ditempatkan pada Ga, Zo, atau Vou",
+    "generalFlatDisabled": "Molus umum hanya dapat ditempatkan pada Ke",
+    "generalSharpDisabled": "Tajam umum hanya dapat ditempatkan pada Ga",
+    "zygosDisabled": "Zygos hanya dapat ditempatkan pada Di",
+    "klitonDisabled": "Kliton hanya dapat ditempatkan pada Di",
+    "spathiDisabled": "Spathi hanya dapat ditempatkan pada Ke atau Ga",
+    "width": "Lebar",
+    "height": "Tinggi",
+    "marginTop": "Celah Atas",
+    "marginBottom": "Celah Bawah",
+    "verticalOffset": "Offset Vertikal",
+    "none": "Tidak Ada",
+    "inline": "Inline",
+    "neume": "Neuma"
+  },
+  "main": {
+    "auto": "Otomatis",
+    "insert": "Sisipkan",
+    "single": "Tunggal",
+    "martyria": "Martyria",
+    "insertDropCapBefore": "Sisipkan huruf awal besar sebelum",
+    "insertModeKey": "Sisipkan Kunci Mode",
+    "insertTextBox": "Sisipkan Kotak Teks",
+    "insertTextBoxRich": "Sisipkan Kotak Teks Kaya",
+    "insertImage": "Sisipkan gambar",
+    "insertOrRemoveLineBreakAfterSelectedElement": "Sisipkan atau hapus jeda baris setelah elemen yang dipilih",
+    "insertOrRemoveJustifiedLineBreakAfterSelectedElement": "Sisipkan atau hapus jeda baris rata setelah elemen yang dipilih",
+    "insertOrRemoveCenteredLineBreakAfterSelectedElement": "Sisipkan atau hapus jeda baris tengah setelah elemen yang dipilih",
+    "insertOrRemovePageBreakAfterSelectedElement": "Sisipkan atau hapus jeda halaman setelah elemen yang dipilih",
+    "deleteSelectedElement": "Hapus elemen yang dipilih",
+    "fit": "Paskan",
+    "speed": "Kecepatan",
+    "pageNumber": "Halaman {{ currentPageNumber }} dari {{ pageCount }}",
+    "invalidZoom": "Nilai harus antara 50% dan 500%."
+  },
+  "dropCap": {
+    "lineSpan": "Baris untuk turun"
+  },
+  "imageBox": {
+    "maintainAspectRatio": "Pertahankan Rasio Aspek",
+    "width": "Lebar",
+    "height": "Tinggi"
+  },
+  "lyricManager": {
+    "locked": "Kunci Lirik",
+    "assignAcceptsLyrics": "Simpan Melisma Saat Ini"
+  },
+  "martyria": {
+    "auto": "Otomatis",
+    "note": "Nada",
+    "scale": "Skala",
+    "rootSignOverride": "Penimpa Tanda Dasar",
+    "tempoLeft": "Tambah Tempo Kiri",
+    "tempo": "Tambah Tempo di Atas",
+    "tempoRight": "Tambah Tempo Kanan"
+  },
+  "modeKey": {
+    "size": "Ukuran",
+    "heightAdjustment": "Penyesuaian Tinggi",
+    "rightAlignTempo": "Rata kanan tempo",
+    "showAmbitus": "Tampilkan Ambitus",
+    "permanentEnharmonicZo": "Zo Enharmonik Permanen",
+    "changeKey": "Ubah Kunci",
+    "useOptionalDiatonicFthoras": "Tampilkan Fthora Diatonik"
+  },
+  "neume": {
+    "neumeSelect": "Pilih Neuma",
+    "positioning": "Penempatan",
+    "yfen": "Yfen",
+    "flat": "Molus",
+    "sharp": "Tajam",
+    "measureNumber": "Nomor Birama",
+    "noteIndicator": "Indikator Nada",
+    "isonIndicator": "Indikator Ison",
+    "acceptsLyrics": "Menerima Lirik",
+    "acceptsLyricsDefault": "Default",
+    "acceptsLyricsYes": "Ya",
+    "acceptsLyricsNo": "Tidak",
+    "acceptsLyricsMelismaOnly": "Hanya Melisma"
+  },
+  "textbox": {
+    "multipanel": "Multipanel",
+    "rtl": "RTL",
+    "scrollable": "Dapat Digulir",
+    "modeChange": "Ubah Mode",
+    "virtualNote": "Nada Parallage",
+    "centerOnPage": "Tengah di Halaman",
+    "offsetYTop": "Offset Y Atas",
+    "offsetYBottom": "Offset Y Bawah",
+    "fillWidth": "Isi Lebar"
+  }
+}

@@ -58,6 +58,14 @@ const textWidthCache = new Map<string, number>();
 const neumeWidthCache = new Map<string, number>();
 const emptyElementWidth = 39;
 
+const tieSet = new Set<VocalExpressionNeume | Tie>([
+  VocalExpressionNeume.HeteronConnecting,
+  VocalExpressionNeume.HeteronConnectingLong,
+  VocalExpressionNeume.HomalonConnecting,
+  Tie.YfenAbove,
+  Tie.YfenBelow,
+]);
+
 interface GetNoteWidthArgs {
   lyricsVerticalOffset: number;
   vareiaWidth: number;
@@ -282,48 +290,8 @@ export class LayoutService {
 
       const currentPageNumber = pages.length;
 
-      let extraHeaderHeightPx = 0;
-      let extraFooterHeightPx = 0;
-
-      if (score.pageSetup.showHeader) {
-        const header = score.getHeaderForPage(currentPageNumber);
-
-        // Currently, headers and footers may only contain a single
-        // text box.
-        let headerHeightPx = (header.elements[0] as TextBoxElement).height;
-
-        if (score.pageSetup.showHeaderHorizontalRule) {
-          headerHeightPx +=
-            score.pageSetup.headerHorizontalRuleMarginBottom +
-            score.pageSetup.headerHorizontalRuleMarginTop +
-            score.pageSetup.headerHorizontalRuleThickness;
-        }
-
-        extraHeaderHeightPx = Math.max(
-          0,
-          headerHeightPx - (pageSetup.topMargin - pageSetup.headerMargin),
-        );
-      }
-
-      if (score.pageSetup.showFooter) {
-        const footer = score.getFooterForPage(currentPageNumber);
-
-        // Currently, headers and footers may only contain a single
-        // text box.
-        let footerHeightPx = (footer.elements[0] as TextBoxElement).height;
-
-        if (score.pageSetup.showFooterHorizontalRule) {
-          footerHeightPx +=
-            score.pageSetup.footerHorizontalRuleMarginBottom +
-            score.pageSetup.footerHorizontalRuleMarginTop +
-            score.pageSetup.footerHorizontalRuleThickness;
-        }
-
-        extraFooterHeightPx = Math.max(
-          0,
-          footerHeightPx - (pageSetup.bottomMargin - pageSetup.footerMargin),
-        );
-      }
+      const { extraHeaderHeightPx, extraFooterHeightPx } =
+        this.getExtraHeaderFooterHeight(score, pageSetup, currentPageNumber);
 
       const innerPageHeight =
         pageSetup.innerPageHeight - extraHeaderHeightPx - extraFooterHeightPx;
@@ -479,19 +447,11 @@ export class LayoutService {
           // Keep note and martyria together
           // and keep two tied notes together
 
-          const ties = [
-            VocalExpressionNeume.HeteronConnecting,
-            VocalExpressionNeume.HeteronConnectingLong,
-            VocalExpressionNeume.HomalonConnecting,
-            Tie.YfenAbove,
-            Tie.YfenBelow,
-          ];
-
           const noteTied =
             !noteElement.pageBreak &&
             !noteElement.lineBreak &&
-            (ties.includes(noteElement.vocalExpressionNeume!) ||
-              ties.includes(noteElement.tie!));
+            (tieSet.has(noteElement.vocalExpressionNeume!) ||
+              tieSet.has(noteElement.tie!));
 
           if (
             nextElement?.elementType === ElementType.Martyria &&
@@ -812,34 +772,12 @@ export class LayoutService {
       element.line = page.lines.length;
       element.page = pages.length;
 
-      // Special logic to adjust drop caps.
-      // This aligns the bottom of the drop cap with
-      // the bottom of the lyrics.
-      if (element.elementType === ElementType.DropCap) {
-        const dropCapElement = element as DropCapElement;
-
-        const distanceFromTopToBottomOfLyrics =
-          (dropCapElement.computedLineSpan - 1) * neumeLineHeight +
-          lyricsVerticalOffset +
-          lyricAscent;
-
-        const fontHeight = TextMeasurementService.getFontHeight(
-          dropCapElement.computedFont,
-        );
-        const fontBoundingBoxAscent =
-          TextMeasurementService.getFontBoundingBoxAscent(
-            dropCapElement.computedFont,
-          );
-        const adjustment =
-          fontBoundingBoxAscent - distanceFromTopToBottomOfLyrics;
-
-        if (dropCapElement.computedLineHeight == null) {
-          dropCapElement.computedLineHeight =
-            fontHeight / dropCapElement.computedFontSize;
-        }
-
-        element.y -= adjustment;
-      }
+      this.adjustDropCapPosition(
+        element,
+        neumeLineHeight,
+        lyricsVerticalOffset,
+        lyricAscent,
+      );
 
       // Special case when lyrics are longer than the neume.
       // This shifts the note element to the right to account for the
@@ -847,31 +785,11 @@ export class LayoutService {
       // Thus, the lyrics start at the (previous) x position instead of the neume.
       if (element.elementType === ElementType.Note) {
         const noteElement = element as NoteElement;
-        noteElement.alignLeft = false;
 
-        const nextElement = i + 1 < elements.length ? elements[i + 1] : null;
-        let nextNoteElement: NoteElement | null = null;
-
-        if (nextElement?.elementType === ElementType.Note) {
-          nextNoteElement = nextElement as NoteElement;
-        }
-
-        // At the start of a melisma, the syllable is aligned to the
-        // left of the neume, but only if the lyrics are wider than the neume.
-        // NOTE: a syllable ending with a hyphen is only considered a melismatic note
-        // if the next note is purely melismatic (i.e. the next note contains only a hyphen),
-        // despite the unfortunate property name "isMelisma" being true.
-        if (
-          noteElement.isMelismaStart &&
-          noteElement.lyricsWidth >
-            noteElement.neumeWidth - noteElement.lyricsHorizontalOffset &&
-          (!noteElement.isHyphen ||
-            (nextNoteElement != null &&
-              nextNoteElement.isMelisma &&
-              !nextNoteElement.isMelismaStart))
-        ) {
-          noteElement.alignLeft = true;
-        }
+        noteElement.alignLeft = this.shouldAlignLeft(
+          noteElement,
+          this.getNoteAt(elements, i + 1),
+        );
 
         let lyricsStart = 0;
 
@@ -953,11 +871,7 @@ export class LayoutService {
         // Ensure that there is at least a small width between other elements
         if (
           element.x <= currentLyricsEndPx + pageSetup.neumeDefaultSpacing &&
-          !(
-            element.elementType === ElementType.RichTextBox &&
-            (element as RichTextBoxElement).inline &&
-            (element as RichTextBoxElement).customWidth == null
-          )
+          !this.isFillWidthElement(element)
         ) {
           const adjustment =
             currentLyricsEndPx - element.x + pageSetup.neumeDefaultSpacing;
@@ -1028,6 +942,139 @@ export class LayoutService {
     });
 
     return pages;
+  }
+
+  private static isFillWidthElement(element: ScoreElement): boolean {
+    return (
+      (element.elementType === ElementType.RichTextBox &&
+        (element as RichTextBoxElement).inline &&
+        (element as RichTextBoxElement).customWidth == null) ||
+      (element.elementType === ElementType.TextBox &&
+        (element as TextBoxElement).inline &&
+        (element as TextBoxElement).fillWidth)
+    );
+  }
+
+  private static shouldAlignLeft(
+    noteElement: NoteElement,
+    nextNoteElement: NoteElement | null,
+  ): boolean {
+    // At the start of a melisma, the syllable is aligned to the
+    // left of the neume, but only if the lyrics are wider than the neume.
+    // NOTE: a syllable ending with a hyphen is only considered a melismatic note
+    // if the next note is purely melismatic (i.e. the next note contains only a hyphen),
+    // despite the unfortunate property name "isMelisma" being true.
+    return (
+      noteElement.isMelismaStart &&
+      noteElement.lyricsWidth >
+        noteElement.neumeWidth - noteElement.lyricsHorizontalOffset &&
+      (!noteElement.isHyphen ||
+        (nextNoteElement != null &&
+          nextNoteElement.isMelisma &&
+          !nextNoteElement.isMelismaStart))
+    );
+  }
+
+  private static getNoteAt(
+    elements: ScoreElement[],
+    index: number,
+  ): NoteElement | null {
+    const element = index < elements.length ? elements[index] : null;
+    return element?.elementType === ElementType.Note
+      ? (element as NoteElement)
+      : null;
+  }
+
+  private static getExtraHeaderFooterHeight(
+    score: {
+      pageSetup: PageSetup;
+      getHeaderForPage: (page: number) => Header;
+      getFooterForPage: (page: number) => Footer;
+    },
+    pageSetup: PageSetup,
+    pageNumber: number,
+  ): { extraHeaderHeightPx: number; extraFooterHeightPx: number } {
+    let extraHeaderHeightPx = 0;
+    let extraFooterHeightPx = 0;
+
+    if (score.pageSetup.showHeader) {
+      const header = score.getHeaderForPage(pageNumber);
+
+      // Currently, headers and footers may only contain a single
+      // text box.
+      let headerHeightPx = (header.elements[0] as TextBoxElement).height;
+
+      if (score.pageSetup.showHeaderHorizontalRule) {
+        headerHeightPx +=
+          score.pageSetup.headerHorizontalRuleMarginBottom +
+          score.pageSetup.headerHorizontalRuleMarginTop +
+          score.pageSetup.headerHorizontalRuleThickness;
+      }
+
+      extraHeaderHeightPx = Math.max(
+        0,
+        headerHeightPx - (pageSetup.topMargin - pageSetup.headerMargin),
+      );
+    }
+
+    if (score.pageSetup.showFooter) {
+      const footer = score.getFooterForPage(pageNumber);
+
+      // Currently, headers and footers may only contain a single
+      // text box.
+      let footerHeightPx = (footer.elements[0] as TextBoxElement).height;
+
+      if (score.pageSetup.showFooterHorizontalRule) {
+        footerHeightPx +=
+          score.pageSetup.footerHorizontalRuleMarginBottom +
+          score.pageSetup.footerHorizontalRuleMarginTop +
+          score.pageSetup.footerHorizontalRuleThickness;
+      }
+
+      extraFooterHeightPx = Math.max(
+        0,
+        footerHeightPx - (pageSetup.bottomMargin - pageSetup.footerMargin),
+      );
+    }
+
+    return { extraHeaderHeightPx, extraFooterHeightPx };
+  }
+
+  private static adjustDropCapPosition(
+    element: ScoreElement,
+    neumeLineHeight: number,
+    lyricsVerticalOffset: number,
+    lyricAscent: number,
+  ) {
+    // Special logic to adjust drop caps.
+    // This aligns the bottom of the drop cap with
+    // the bottom of the lyrics.
+    if (element.elementType !== ElementType.DropCap) {
+      return;
+    }
+
+    const dropCapElement = element as DropCapElement;
+
+    const distanceFromTopToBottomOfLyrics =
+      (dropCapElement.computedLineSpan - 1) * neumeLineHeight +
+      lyricsVerticalOffset +
+      lyricAscent;
+
+    const fontHeight = TextMeasurementService.getFontHeight(
+      dropCapElement.computedFont,
+    );
+    const fontBoundingBoxAscent =
+      TextMeasurementService.getFontBoundingBoxAscent(
+        dropCapElement.computedFont,
+      );
+    const adjustment = fontBoundingBoxAscent - distanceFromTopToBottomOfLyrics;
+
+    if (dropCapElement.computedLineHeight == null) {
+      dropCapElement.computedLineHeight =
+        fontHeight / dropCapElement.computedFontSize;
+    }
+
+    element.y -= adjustment;
   }
 
   private static getLineHeight(

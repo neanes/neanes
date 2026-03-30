@@ -85,7 +85,7 @@
     "vue-tsc": "^3.2.5",
     "vue3-observe-visibility": "^1.0.6",
     "vue3-tabs-chrome": "^0.3.3",
-    "yaml": "^2.8.2"
+    "yaml": "^2.8.3"
   },
   "license": "GPL-3.0",
   "packageManager": "npm@11.5.2"

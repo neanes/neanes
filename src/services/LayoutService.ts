@@ -2429,7 +2429,7 @@ export class LayoutService {
             )!;
             note.tertiaryFthoraCarry = null;
           } else {
-            note.tertiaryFthoraCarry = note.tertiaryFthoraCarry;
+            note.tertiaryFthoraCarry = note.tertiaryFthora;
             note.tertiaryFthora = null;
           }
         }

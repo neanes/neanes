@@ -1,3 +1,4 @@
+---
 name: CI
 
 on:
@@ -5,6 +6,9 @@ on:
     branches: [master]
   pull_request:
     branches: [master]
+
+permissions:
+  contents: read
 
 defaults:
   run:

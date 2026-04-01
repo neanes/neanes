@@ -1,6 +1,10 @@
+---
 name: Rebuild Example PDFs
 
 on: workflow_dispatch
+
+permissions:
+  contents: read
 
 jobs:
   rebuild-example-pdfs:
@@ -17,7 +21,9 @@ jobs:
         run: Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
 
       - name: Get the latest AppImage
-        run: wget -O neanes-cli $(curl -s https://api.github.com/repos/neanes/neanes/releases/latest | jq -r '.assets[] | select(.name | contains("AppImage")) | .browser_download_url')
+        run: gh release download --repo neanes/neanes --pattern '*AppImage*' --output neanes-cli
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Make AppImage Executable
         run: chmod +x neanes-cli

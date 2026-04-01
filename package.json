@@ -53,7 +53,7 @@
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.7.0",
     "ckeditor5": "^47.6.1",
-    "electron": "^41.0.2",
+    "electron": "^41.0.4",
     "electron-builder": "^26.8.1",
     "electron-updater": "^6.8.3",
     "eslint": "^10.0.3",

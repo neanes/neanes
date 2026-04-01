@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD024 MD036 -->
+
 # Changelog
 
 ## 0.5.6 (v0.5.6) — 2025-11-21
@@ -25,6 +27,7 @@ Removed some bundled fonts.
 - chore: bump vitest from 4.0.8 to 4.0.10 (#1828) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump vite-plugin-vue-devtools from 8.0.3 to 8.0.5 (#1829) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump electron from 39.2.0 to 39.2.1 (#1831) @[dependabot[bot]](https://github.com/apps/dependabot)
+
 </details>
 
 ---
@@ -53,6 +56,7 @@ Removed some bundled fonts.
 - chore: bump i18next from 25.6.0 to 25.6.1 (#1813) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump vue from 3.5.22 to 3.5.24 (#1812) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump vite from 7.2.0 to 7.2.1 (#1810) @[dependabot[bot]](https://github.com/apps/dependabot)
+
 </details>
 
 ---
@@ -96,6 +100,7 @@ Removed some bundled fonts.
 - chore: bump vite from 7.1.10 to 7.1.11 (#1774) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump vite-plugin-vue-devtools from 8.0.2 to 8.0.3 (#1771) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump @types/node from 24.8.0 to 24.8.1 (#1770) @[dependabot[bot]](https://github.com/apps/dependabot)
+
 </details>
 
 ---
@@ -131,6 +136,7 @@ Removed some bundled fonts.
 - chore: bump eslint-plugin-vue from 10.5.0 to 10.5.1 (#1764) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump electron from 38.2.2 to 38.3.0 (#1762) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump vue-router from 4.6.0 to 4.6.2 (#1761) @[dependabot[bot]](https://github.com/apps/dependabot)
+
 </details>
 
 ---
@@ -241,6 +247,7 @@ Removed some bundled fonts.
 - chore: bump vite from 7.1.2 to 7.1.3 (#1668) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump ckeditor5 from 46.0.1 to 46.0.2 (#1667) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump electron from 37.3.0 to 37.3.1 (#1666) @[dependabot[bot]](https://github.com/apps/dependabot)
+
 </details>
 
 ---
@@ -275,6 +282,7 @@ Removed some bundled fonts.
 - chore: bump electron from 37.2.5 to 37.2.6 (#1645) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump tmp from 0.2.3 to 0.2.4 (#1644) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump vitepress from 1.6.3 to 1.6.4 (#1643) @[dependabot[bot]](https://github.com/apps/dependabot)
+
 </details>
 
 ---
@@ -303,6 +311,7 @@ Removed some bundled fonts.
 - chore: bump typescript from 5.8.3 to 5.9.2 (#1633) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump vite-plugin-vue-devtools from 7.7.7 to 8.0.0 (#1629) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump @vitejs/plugin-vue from 6.0.0 to 6.0.1 (#1631) @[dependabot[bot]](https://github.com/apps/dependabot)
+
 </details>
 
 ---
@@ -346,6 +355,7 @@ Removed some bundled fonts.
 - chore: bump electron from 37.2.1 to 37.2.3 (#1595) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump @types/node from 24.0.13 to 24.0.14 (#1591) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump eslint from 9.30.1 to 9.31.0 (#1590) @[dependabot[bot]](https://github.com/apps/dependabot)
+
 </details>
 
 ---
@@ -374,6 +384,7 @@ Removed some bundled fonts.
 - chore: bump electron-builder from 26.0.17 to 26.0.18 (#1575) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump @types/node from 24.0.10 to 24.0.11 (#1573) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump vite from 7.0.2 to 7.0.3 (#1572) @[dependabot[bot]](https://github.com/apps/dependabot)
+
 </details>
 
 ---
@@ -423,6 +434,7 @@ Removed some bundled fonts.
 - chore: bump @types/node from 24.0.3 to 24.0.4 (#1524) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump eslint-plugin-prettier from 5.5.0 to 5.5.1 (#1528) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump ckeditor5 from 45.2.0 to 45.2.1 (#1527) @[dependabot[bot]](https://github.com/apps/dependabot)
+
 </details>
 
 ---
@@ -581,6 +593,7 @@ Removed some bundled fonts.
 - chore: bump vitest from 3.2.1 to 3.2.3 (#1482) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump @types/mime-types from 3.0.0 to 3.0.1 (#1481) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump eslint-plugin-vue from 10.1.0 to 10.2.0 (#1477) @[dependabot[bot]](https://github.com/apps/dependabot)
+
 </details>
 
 ---
@@ -616,6 +629,7 @@ Removed some bundled fonts.
 - chore: bump vue from 3.5.14 to 3.5.15 (#1459) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump vue-facing-decorator from 4.0.0 to 4.0.1 (#1458) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump electron from 36.2.1 to 36.3.1 (#1457) @[dependabot[bot]](https://github.com/apps/dependabot)
+
 </details>
 
 ---
@@ -701,6 +715,7 @@ Removed some bundled fonts.
 - chore: bump i18next from 25.0.2 to 25.1.2 (#1435) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump @types/node from 22.15.3 to 22.15.17 (#1434) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump electron from 36.1.0 to 36.2.0 (#1436) @[dependabot[bot]](https://github.com/apps/dependabot)
+
 </details>
 
 ---
@@ -725,6 +740,7 @@ Removed some bundled fonts.
 - chore: bump vitest from 3.1.2 to 3.1.3 (#1426) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump vite from 6.3.4 to 6.3.5 (#1425) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump electron-builder from 26.0.14 to 26.0.15 (#1422) @[dependabot[bot]](https://github.com/apps/dependabot)
+
 </details>
 
 ---
@@ -754,6 +770,7 @@ Removed some bundled fonts.
 - chore: bump i18next-browser-languagedetector from 8.0.5 to 8.1.0 (#1413) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump eslint-plugin-vue from 10.0.1 to 10.1.0 (#1410) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump vite from 6.3.3 to 6.3.4 (#1411) @[dependabot[bot]](https://github.com/apps/dependabot)
+
 </details>
 
 ## ✍ Other changes
@@ -795,6 +812,7 @@ Removed some bundled fonts.
 - chore: bump tone from 15.0.4 to 15.1.22 (#1401) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump vite from 6.3.2 to 6.3.3 (#1390) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump electron from 35.2.0 to 35.2.1 (#1391) @[dependabot[bot]](https://github.com/apps/dependabot)
+
 </details>
 
 ---
@@ -820,6 +838,7 @@ Removed some bundled fonts.
 - chore: bump electron from 35.1.5 to 35.2.0 (#1381) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump i18next-browser-languagedetector from 8.0.4 to 8.0.5 (#1378) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump vite from 6.3.1 to 6.3.2 (#1379) @[dependabot[bot]](https://github.com/apps/dependabot)
+
 </details>
 
 ---
@@ -843,6 +862,7 @@ Removed some bundled fonts.
 - chore: bump vite from 6.2.6 to 6.3.0 (#1374) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump i18next from 24.2.3 to 25.0.0 (#1372) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump @types/node from 22.14.0 to 22.14.1 (#1370) @[dependabot[bot]](https://github.com/apps/dependabot)
+
 </details>
 
 ---
@@ -880,6 +900,7 @@ Removed some bundled fonts.
 - chore: bump electron-updater from 6.3.9 to 6.6.2 (#1338) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump @types/node from 22.13.13 to 22.13.14 (#1340) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump electron-builder from 25.1.8 to 26.0.12 (#1339) @[dependabot[bot]](https://github.com/apps/dependabot)
+
 </details>
 
 ---
@@ -918,6 +939,7 @@ Removed some bundled fonts.
 - chore: bump i18next from 24.2.2 to 24.2.3 (#1322) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump electron from 34.3.2 to 34.3.3 (#1321) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump image-size from 2.0.0 to 2.0.1 (#1320) @[dependabot[bot]](https://github.com/apps/dependabot)
+
 </details>
 
 ---
@@ -989,6 +1011,7 @@ Removed some bundled fonts.
 - chore: bump prettier from 3.5.2 to 3.5.3 (#1301) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump vue-tsc from 2.2.4 to 2.2.8 (#1302) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump typescript from 5.7.3 to 5.8.2 (#1295) @[dependabot[bot]](https://github.com/apps/dependabot)
+
 </details>
 
 ---
@@ -1014,6 +1037,7 @@ Removed some bundled fonts.
 - chore: bump @types/node from 22.13.4 to 22.13.5 (#1284) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump eslint from 9.20.1 to 9.21.0 (#1287) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump vue-component-type-helpers from 2.2.2 to 2.2.4 (#1286) @[dependabot[bot]](https://github.com/apps/dependabot)
+
 </details>
 
 ---
@@ -1073,6 +1097,7 @@ Removed some bundled fonts.
 - chore: bump eslint from 9.19.0 to 9.20.0 (#1256) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump electron from 34.1.0 to 34.1.1 (#1251) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump electron from 34.0.2 to 34.1.0 (#1250) @[dependabot[bot]](https://github.com/apps/dependabot)
+
 </details>
 
 ---
@@ -1096,6 +1121,7 @@ Removed some bundled fonts.
 - chore: bump vitest from 3.0.4 to 3.0.5 (#1240) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump electron from 34.0.1 to 34.0.2 (#1239) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump @types/node from 22.10.10 to 22.12.0 (#1238) @[dependabot[bot]](https://github.com/apps/dependabot)
+
 </details>
 
 ---
@@ -1153,6 +1179,7 @@ Removed some bundled fonts.
 - chore: bump eslint-plugin-prettier from 5.2.2 to 5.2.3 (#1215) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump vitest from 3.0.2 to 3.0.3 (#1221) @[dependabot[bot]](https://github.com/apps/dependabot)
 - chore: bump @vue/eslint-config-prettier from 10.1.0 to 10.2.0 (#1217) @[dependabot[bot]](https://github.com/apps/dependabot)
+
 </details>
 
 ---
@@ -1186,6 +1213,7 @@ Removed some bundled fonts.
 - chore: bump eslint-plugin-prettier from 5.2.1 to 5.2.2 (#1206) @dependabot
 - chore: bump @vue/eslint-config-typescript from 14.2.0 to 14.3.0 (#1203) @dependabot
 - chore: bump electron from 33.3.1 to 34.0.0 (#1202) @dependabot
+
 </details>
 
 ---
@@ -1213,6 +1241,7 @@ Removed some bundled fonts.
 - chore: bump electron from 33.2.1 to 33.3.1 (#1195) @dependabot
 - chore: bump uuid from 11.0.3 to 11.0.4 (#1193) @dependabot
 - chore: bump @types/node from 22.10.4 to 22.10.5 (#1191) @dependabot
+
 </details>
 
 ---
@@ -1261,6 +1290,7 @@ Removed some bundled fonts.
 - chore: bump vue-tsc from 2.1.10 to 2.2.0 (#1177) @dependabot
 - chore: bump vue-component-type-helpers from 2.1.10 to 2.2.0 (#1176) @dependabot
 - chore: bump image-size from 1.1.1 to 1.2.0 (#1175) @dependabot
+
 </details>
 
 ---
@@ -1287,6 +1317,7 @@ Removed some bundled fonts.
 - chore: bump @types/node from 22.10.1 to 22.10.2 (#1162) @dependabot
 - chore: bump i18next from 24.0.5 to 24.1.0 (#1163) @dependabot
 - chore: bump vite-plugin-vue-devtools from 7.6.7 to 7.6.8 (#1161) @dependabot
+
 </details>
 
 ---
@@ -1335,6 +1366,7 @@ Removed some bundled fonts.
 - chore: bump @vitejs/plugin-vue from 5.2.0 to 5.2.1 (#1132) @dependabot
 - chore: bump vitest from 2.1.5 to 2.1.6 (#1133) @dependabot
 - chore: bump prettier from 3.3.3 to 3.4.1 (#1135) @dependabot
+
 </details>
 
 ---
@@ -1434,6 +1466,7 @@ Removed some bundled fonts.
 - chore: bump eslint-plugin-vue from 9.29.1 to 9.30.0 (#1075) @dependabot
 - chore: bump vitest from 2.1.3 to 2.1.4 (#1076) @dependabot
 - chore: bump uuid from 11.0.0 to 11.0.2 (#1077) @dependabot
+
 </details>
 
 ## ✍ Other changes
@@ -1499,6 +1532,7 @@ Removed some bundled fonts.
 - chore: bump vite-plugin-vue-devtools from 7.4.6 to 7.5.2 (#1041) @dependabot
 - chore: bump @vue/eslint-config-typescript from 14.0.1 to 14.1.1 (#1038) @dependabot
 - chore: bump electron from 32.2.0 to 33.0.0 (#1037) @dependabot
+
 </details>
 
 ---
@@ -1522,6 +1556,7 @@ Removed some bundled fonts.
 - chore: bump vitest from 2.1.2 to 2.1.3 (#1032) @dependabot
 - chore: bump i18next from 23.15.2 to 23.16.0 (#1031) @dependabot
 - chore: bump electron-builder from 25.1.7 to 25.1.8 (#1027) @dependabot
+
 </details>
 
 ---
@@ -1560,6 +1595,7 @@ Removed some bundled fonts.
 - chore: bump @babel/preset-typescript from 7.24.7 to 7.25.7 (#1001) @dependabot
 - chore: bump vitest from 2.1.1 to 2.1.2 (#1002) @dependabot
 - chore: bump ckeditor5 from 43.1.1 to 43.2.0 (#1003) @dependabot
+
 </details>
 
 ---
@@ -1692,6 +1728,7 @@ This release focuses on a number of UI and layout improvements.
 - chore: bump vite-plugin-pwa from 0.20.0 to 0.20.1 (#874) @dependabot
 - chore: bump vue-tsc from 2.0.28 to 2.0.29 (#872) @dependabot
 - chore: bump ckeditor5 from 42.0.1 to 42.0.2 (#875) @dependabot
+
 </details>
 
 ---
@@ -1754,6 +1791,7 @@ This release focuses on a number of UI and layout improvements.
 - chore: bump i18next from 23.11.5 to 23.12.1 (#847) @dependabot
 - chore: bump prettier from 3.3.2 to 3.3.3 (#846) @dependabot
 - chore: bump vitepress from 1.3.0 to 1.3.1 (#845) @dependabot
+
 </details>
 
 ---
@@ -1902,6 +1940,7 @@ This release focuses on a number of UI and layout improvements.
 - chore: bump @types/node from 20.14.5 to 20.14.6 (#768) @dependabot
 - chore: bump vite-plugin-vue-devtools from 7.3.1 to 7.3.2 (#769) @dependabot
 - chore: bump electron from 31.0.1 to 31.0.2 (#767) @dependabot
+
 </details>
 
 ---
@@ -1927,6 +1966,7 @@ This release focuses on a number of UI and layout improvements.
 - chore: bump electron from 31.0.0 to 31.0.1 (#754) @dependabot
 - chore: bump vue from 3.4.27 to 3.4.29 (#760) @dependabot
 - chore: bump vite-plugin-vue-devtools from 7.2.1 to 7.3.0 (#759) @dependabot
+
 </details>
 
 ---
@@ -2010,6 +2050,7 @@ It also adds a custom width to drop caps, which makes it easy add consistent spa
 - chore: bump electron-updater from 6.1.8 to 6.2.1 (#732) @dependabot
 - chore: bump @types/node from 20.12.13 to 20.14.0 (#731) @dependabot
 - chore: bump prettier from 3.2.5 to 3.3.0 (#730) @dependabot
+
 </details>
 
 ---
@@ -2057,10 +2098,10 @@ This release fixes a bug introduced in the previous release that caused rich tex
 ## 0.4.32 (v0.4.32) — 2024-05-29
 
 This release adds a new "rich text box". Look for the button with the red "T" in the main toolbar, or go to the file menu and choose `Insert -> Rich Text Box`.
-<img width="23" alt="image" src="https://github.com/neanes/neanes/assets/4132779/e8acec9c-2358-4af1-a146-22b31ebe4783">
+![image](https://github.com/neanes/neanes/assets/4132779/e8acec9c-2358-4af1-a146-22b31ebe4783)
 
 Inside a rich text box, you can use a mix of font styles, colors, and alignments.
-<img width="437" alt="image" src="https://github.com/neanes/neanes/assets/4132779/23d4f3bf-dc88-4b9b-a3a0-69fec2907d94">
+![image](https://github.com/neanes/neanes/assets/4132779/23d4f3bf-dc88-4b9b-a3a0-69fec2907d94)
 
 ## 🚀 Features
 
@@ -2084,10 +2125,10 @@ This release improves the layout by left-aligning a melismatic syllable under it
 An good illustration of the improvement can be seen below.
 
 Consider the word `brought` in the following example.
-<img width="142" alt="image" src="https://github.com/neanes/neanes/assets/4132779/08af4b08-9be2-4f98-a8e4-69f5d0354dfa">
+![image](https://github.com/neanes/neanes/assets/4132779/08af4b08-9be2-4f98-a8e4-69f5d0354dfa)
 
 In this version, the above is rendered as the following.
-<img width="130" alt="image" src="https://github.com/neanes/neanes/assets/4132779/b2a9cdb7-15de-4f0c-b1f5-a3d5ca824080">
+![image](https://github.com/neanes/neanes/assets/4132779/b2a9cdb7-15de-4f0c-b1f5-a3d5ca824080)
 
 Because `brought` is wider than the apostrophos, it is left aligned under the apostrophos and allowed to take up space under the following kentimata.
 
@@ -2103,7 +2144,7 @@ Because `brought` is wider than the apostrophos, it is left aligned under the ap
 
 ## 0.4.30 (v0.4.30) — 2024-05-24
 
-This release introduces the concept of melismata in Greek scores that can be entered by pressing the hyphen or underscore. See the docs [here](https://neanes.github.io/neanes/guide/#greek). This allows [advanced lyrics entry](https://neanes.github.io/neanes/guide/advanced.html#advanced-lyrics-entry) for Greek scores. Existing Greek scores should be fully compatible with this new release. The example file [Greek - Stathis Series - Let My Prayer.byzx](https://github.com/neanes/neanes/blob/master/examples/Greek%20-%20Stathis%20Series%20-%20Let%20My%20Prayer.byzx) demonstrates this new feature.
+This release introduces the concept of melismata in Greek scores that can be entered by pressing the hyphen or underscore. See the [Greek lyrics docs](https://neanes.github.io/neanes/guide/#greek). This allows [advanced lyrics entry](https://neanes.github.io/neanes/guide/advanced.html#advanced-lyrics-entry) for Greek scores. Existing Greek scores should be fully compatible with this new release. The example file [Greek - Stathis Series - Let My Prayer.byzx](https://github.com/neanes/neanes/blob/master/examples/Greek%20-%20Stathis%20Series%20-%20Let%20My%20Prayer.byzx) demonstrates this new feature.
 
 ## 🚀 Features
 
@@ -2153,6 +2194,7 @@ This release introduces the concept of melismata in Greek scores that can be ent
 - chore: Bump i18next from 23.11.2 to 23.11.3 (#675) @dependabot
 - chore: Bump vitest from 1.5.0 to 1.5.2 (#674) @dependabot
 - chore: Bump vite-plugin-electron from 0.28.6 to 0.28.7 (#672) @dependabot
+
 </details>
 
 ---
@@ -2192,10 +2234,10 @@ Fixes a bug where an underscore mistakenly appears at the end of some words in t
 A notable feature in this release is that melismata are now drawn in their proper position, which is at the alphabetic baseline of the lyrics. This matches the conventions found in sheet music publications and scorewriting software.
 
 New
-<img width="619" alt="image" src="https://github.com/neanes/neanes/assets/4132779/021e62c5-6457-46d0-9b72-9319a0360228">
+![image](https://github.com/neanes/neanes/assets/4132779/021e62c5-6457-46d0-9b72-9319a0360228)
 
 Old. Note that the lines are incorrectly drawn below the letters.
-<img width="605" alt="image" src="https://github.com/neanes/neanes/assets/4132779/07577224-63da-411a-95bc-2a8ec2dcf0ce">
+![image](https://github.com/neanes/neanes/assets/4132779/07577224-63da-411a-95bc-2a8ec2dcf0ce)
 
 ## 🚀 Features
 
@@ -3132,7 +3174,7 @@ Added additional mode keys #34
 
 **New**
 
-- Audio Playback. See the guide [here](https://danielgarthur.github.io/neanes/guide/#audio-playback). #41
+- Audio Playback. See the [audio playback guide](https://danielgarthur.github.io/neanes/guide/#audio-playback). #41
 - Tempo signs can now be placed next to mode key signatures #35
 
 **Fixes**
@@ -3577,12 +3619,12 @@ The structure of the BYZ/BYZX files changed slightly. Most files should still op
 
 ## 0.1.0-alpha.28 (v0.1.0-alpha.28) — 2022-03-03
 
-** New **
+**New**
 
 - First build and release using Github Workflow.
 - Includes builds for Windows, macOS, and Linux
 
-** Improvements **
+**Improvements**
 
 - Save uncompressed .byzx files in pretty-printed JSON
 
@@ -3622,14 +3664,14 @@ The structure of the BYZ/BYZX files changed slightly. Most files should still op
 
 ## 0.1.0-alpha.24 (v0.1.0-alpha.24) — 2022-02-06
 
-** Improvements **
+**Improvements**
 
 - Save scroll position for each tab and restore the position when the workspace is selected
 - Improve tab styling
 - Show full path for file when hovering over a tab
 - Scroll tabs into view when new tab is added
 
-** Fixes **
+**Fixes**
 
 - Prevent files from being opened when a dialog is opened
 
@@ -3637,7 +3679,7 @@ The structure of the BYZ/BYZX files changed slightly. Most files should still op
 
 ## 0.1.0-alpha.23 (v0.1.0-alpha.23) — 2022-02-06
 
-** New **
+**New**
 
 - Added a tab interface to allow multiple files to be edited at the same time.
 
@@ -3652,7 +3694,7 @@ The structure of the BYZ/BYZX files changed slightly. Most files should still op
 
 **Fixes**
 
-- Upgraded to the latest version of electron-builder. The installers in some of the previous releases may be falsely identified by Windows Defender as a virus. This was due to a bug in an older version of electron-builder. This new release seems to be working. See https://github.com/electron-userland/electron-builder/issues/4793.
+- Upgraded to the latest version of electron-builder. The installers in some of the previous releases may be falsely identified by Windows Defender as a virus. This was due to a bug in an older version of electron-builder. This new release seems to be working. See <https://github.com/electron-userland/electron-builder/issues/4793>.
 
 ---
 

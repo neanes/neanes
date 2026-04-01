@@ -3,6 +3,9 @@ name: Publish Web
 
 on: workflow_dispatch
 
+permissions:
+  contents: read
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest

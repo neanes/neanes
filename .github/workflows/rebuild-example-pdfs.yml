@@ -24,7 +24,7 @@ jobs:
       - name: Get the latest AppImage
         run: gh release download --repo neanes/neanes --pattern '*AppImage*' --output neanes-cli
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
 
       - name: Make AppImage Executable
         run: chmod +x neanes-cli

@@ -48,7 +48,7 @@ Neumes that are combined with kentimata can take supporting neumes on more than 
 ![Neume Toolbar Neume Select](./images/guide-neume-toolbar-neume-select.png)
 ![Neume Toolbar Neume Select Neume Example](./images/guide-neume-toolbar-neume-select-neume.png)
 
-#### Keyboard Shortcuts
+### Keyboard Shortcuts
 
 Most common neumes have keyboard shortcuts. See [Neume Keyboard](./keyboard.html) for more information.
 
@@ -144,7 +144,7 @@ To insert lyrics, click on the space just below a neume and begin typing.
 - To move from a neume to its lyrics, press `Ctrl + Down Arrow`.
 - To move from the lyrics back to the neume, press `Ctrl + Up Arrow`.
 
-There is a more advanced method of editing lyrics that is described [here](./advanced.html#advanced-lyrics-entry). The advanced method can be used to quickly alter the lyrics for many neumes at once, shift all lyrics left or right, or to create prosomoia.
+There is a more advanced method of editing lyrics that is described in [Advanced Lyrics Entry](./advanced.html#advanced-lyrics-entry). The advanced method can be used to quickly alter the lyrics for many neumes at once, shift all lyrics left or right, or to create prosomoia.
 
 ### Melismas
 
@@ -166,7 +166,7 @@ For example, to add a melisma to the word `των`, type <kbd>τω-</kbd> <kbd>-
 
 > [!IMPORTANT]
 > Although there is no visual distinction between using a hyphen or underscore, the character chosen is used to distinguish between `των` and `τω ων` in the [lyrics toolbar](./advanced.html#advanced-lyrics-entry). For example, the following will be interpreted as two words (`τω ων`) in the lyrics manager: <kbd>τω\_</kbd> <kbd>\_</kbd> <kbd>ων</kbd>.
-
+>
 > [!NOTE]
 > If you do not want the usual behavior for Greek melismata, you can disable it in the Page Setup dialog by checking `Disable Greek Melismata`. If you do this, the melismata will instead work similar to English with hyphens and underscores.
 

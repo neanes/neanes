@@ -10,7 +10,7 @@
 
 First install the project dependencies:
 
-```
+```sh
 corepack enable npm
 npm install
 ```
@@ -19,7 +19,7 @@ npm install
 
 To create a release build, type:
 
-```
+```sh
 npm run build
 ```
 
@@ -29,7 +29,7 @@ The build artifacts are found in `dist/`. For Windows, the installer will be cal
 
 To run the development server, type:
 
-```
+```sh
 npm run dev
 ```
 
@@ -38,7 +38,7 @@ This will launch the application in development mode. As changes are made to the
 The [Vue Devtools](https://devtools-next.vuejs.org/) extension is available in development mode.
 To enable it, add the following to `.env.local` and/or `.env.web.local`:
 
-```
+```sh
 VITE_ENABLE_DEV_TOOLS=true
 ```
 
@@ -48,7 +48,7 @@ Any change that updates `package.json` _must_ include the corresponding update t
 
 To turn on log messages for the audio and playback services, add the following to `.env.local`.
 
-```
+```sh
 VITE_AUDIO_SERVICE_LOGGING_ENABLED=true
 VITE_PLAYBACK_SERVICE_LOGGING_ENABLED=true
 ```
@@ -57,13 +57,13 @@ VITE_PLAYBACK_SERVICE_LOGGING_ENABLED=true
 
 To check that the code is linted, type:
 
-```
+```sh
 npm run lint
 ```
 
 To automatically fix any lint issues, type:
 
-```
+```sh
 npm run lint:fix
 ```
 
@@ -71,7 +71,7 @@ npm run lint:fix
 
 To run tests before committing, type:
 
-```
+```sh
 npm test
 ```
 
@@ -85,7 +85,7 @@ When using [Visual Studio Code](https://github.com/microsoft/vscode), install th
 
 To test localization support, add the following to `.env.local` and/or `.env.web.local`:
 
-```
+```sh
 VITE_PSEUDOLOCALIZATION=true
 ```
 

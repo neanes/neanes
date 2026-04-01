@@ -2,7 +2,7 @@
 
 <style>
 .neume {
-    font-family: Neanes;    
+    font-family: Neanes;
     font-size: 20pt;
 }
 </style>

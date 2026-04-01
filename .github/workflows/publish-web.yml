@@ -31,6 +31,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Lint Markdown
+        uses: DavidAnson/markdownlint-cli2-action@v23
+
       - name: Build for web
         run: npm run web:build -- --base=/neanes-web-app/
 

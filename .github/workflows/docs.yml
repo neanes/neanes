@@ -3,6 +3,9 @@ name: docs
 
 on: workflow_dispatch
 
+permissions:
+  contents: read
+
 jobs:
   docs:
     runs-on: ubuntu-latest
@@ -29,11 +32,25 @@ jobs:
       - name: Build VitePress site
         run: npm run docs:build
 
-      # deploy
-      - name: Deploy to GitHub Pages
-        uses: crazy-max/ghaction-github-pages@v5
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v4
         with:
-          target_branch: gh-pages
-          build_dir: docs/.vitepress/dist
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          path: docs/.vitepress/dist
+
+  deploy:
+    needs: docs
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

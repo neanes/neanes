@@ -1,3 +1,4 @@
+---
 name: docs
 
 on: workflow_dispatch
@@ -7,23 +8,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
+      - name: Check out
+        uses: actions/checkout@v6
         with:
           # fetch all commits to get last updated time or other git log info
           fetch-depth: 0
 
-      - name: Setup Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
-          # choose node.js version to use
-          node-version: '22'
+          node-version: 22
           cache: 'npm'
 
-      - run: corepack enable npm && corepack prepare --activate
+      - name: Enable Corepack
+        run: corepack enable npm
+
       - name: Install dependencies
         run: npm ci
 
-      # run build script
       - name: Build VitePress site
         run: npm run docs:build
 

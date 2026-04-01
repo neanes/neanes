@@ -3,16 +3,17 @@ name: CI
 
 on:
   push:
-    branches: [master]
+    branches:
+      - master
   pull_request:
-    branches: [master]
+    types:
+      - opened
+      - reopened
+      - synchronize
+  workflow_dispatch:
 
 permissions:
   contents: read
-
-defaults:
-  run:
-    shell: bash
 
 jobs:
   build:
@@ -21,20 +22,27 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
-      - uses: actions/checkout@v6
+      - name: Check out
+        uses: actions/checkout@v6
 
-      - name: Use Node.js 22.x
+      - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 22.x
+          node-version: 22
           cache: 'npm'
 
-      - run: corepack enable npm && corepack prepare --activate
+      - name: Enable Corepack
+        run: corepack enable npm
+
       - name: Install dependencies
         run: npm ci
 
-      - run: npm test
-      - run: npm run lint
+      - name: Test
+        run: npm test
+
+      - name: Lint
+        run: npm run lint
+
       - name: Build Windows and Linux
         if: runner.os != 'macOS'
         run: npm run build

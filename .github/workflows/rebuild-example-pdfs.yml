@@ -29,7 +29,7 @@ jobs:
         run: chmod +x neanes-cli
 
       - name: Generate PDFs
-        run: find ./examples -type f -name '*.byzx' -print0 | xargs -0 ./neanes-cli --silent-pdf
+        run: find ./examples -type f -name '*.byzx' -print0 | xargs -0 ./neanes-cli --no-sandbox --silent-pdf
 
       - name: Archive PDFs
         uses: actions/upload-artifact@v7

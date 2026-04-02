@@ -1,4 +1,17 @@
 import {
+  adjustmentRatios,
+  Box,
+  breakLines,
+  forcedBreak,
+  Glue,
+  InputItem,
+  MAX_COST,
+  MaxAdjustmentExceededError,
+  PositionedItem,
+  positionItems,
+} from 'knuth-plass-linebreak';
+
+import {
   DropCapElement,
   ElementType,
   EmptyElement,
@@ -17,6 +30,7 @@ import { Header } from '@/models/Header';
 import { measureBarAboveToLeft } from '@/models/NeumeReplacements';
 import {
   Fthora,
+  GorgonNeume,
   MeasureBar,
   Neume,
   NeumeSelection,
@@ -57,6 +71,10 @@ const fontBoundingBoxDescentCache = new Map<string, number>();
 const textWidthCache = new Map<string, number>();
 const neumeWidthCache = new Map<string, number>();
 const emptyElementWidth = 39;
+const idealMaxAdjustmentRatio = 1;
+const adjustmentRatioCapStep = 0.05;
+const maxAdjustmentRatioSearchLimit = 4096;
+const maxAdjustmentRatioSearchIterations = 24;
 
 const tieSet = new Set<VocalExpressionNeume | Tie>([
   VocalExpressionNeume.HeteronConnecting,
@@ -66,6 +84,105 @@ const tieSet = new Set<VocalExpressionNeume | Tie>([
   Tie.YfenBelow,
 ]);
 
+const kentemataSet = new Set<QuantitativeNeume>([
+  QuantitativeNeume.Kentemata,
+  QuantitativeNeume.KentemataPlusOligon,
+]);
+
+const beatStealingSet = new Set<QuantitativeNeume>([
+  QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
+  QuantitativeNeume.PetastiPlusRunningElaphron,
+  QuantitativeNeume.RunningElaphron,
+]);
+
+const beatStealingWithGorgonSet = new Set<QuantitativeNeume>([
+  QuantitativeNeume.Apostrophos,
+  QuantitativeNeume.DoubleHamili,
+  QuantitativeNeume.DoubleHamiliApostrofos,
+  QuantitativeNeume.DoubleHamiliElafron,
+  QuantitativeNeume.DoubleHamiliElafronApostrofos,
+  QuantitativeNeume.Elaphron,
+  QuantitativeNeume.ElaphronPlusApostrophos,
+  QuantitativeNeume.Hamili,
+  QuantitativeNeume.HamiliPlusApostrophos,
+  QuantitativeNeume.HamiliPlusElaphron,
+  QuantitativeNeume.HamiliPlusElaphronPlusApostrophos,
+  QuantitativeNeume.Hyporoe,
+  QuantitativeNeume.Ison,
+  QuantitativeNeume.Oligon,
+  QuantitativeNeume.OligonKentimaDoubleYpsiliLeft,
+  QuantitativeNeume.OligonKentimaDoubleYpsiliRight,
+  QuantitativeNeume.OligonKentimataDoubleYpsili,
+  QuantitativeNeume.OligonKentimataTripleYpsili,
+  QuantitativeNeume.OligonKentimaTripleYpsili,
+  QuantitativeNeume.OligonPlusApostrophos,
+  QuantitativeNeume.OligonPlusDoubleHypsili,
+  QuantitativeNeume.OligonPlusElaphron,
+  QuantitativeNeume.OligonPlusElaphronPlusApostrophos,
+  QuantitativeNeume.OligonPlusHamili,
+  QuantitativeNeume.OligonPlusHyporoe,
+  QuantitativeNeume.OligonPlusHyporoePlusKentemata,
+  QuantitativeNeume.OligonPlusHypsiliLeft,
+  QuantitativeNeume.OligonPlusHypsiliPlusKentimaHorizontal,
+  QuantitativeNeume.OligonPlusHypsiliPlusKentimaVertical,
+  QuantitativeNeume.OligonPlusHypsiliRight,
+  QuantitativeNeume.OligonPlusIson,
+  QuantitativeNeume.OligonPlusKentima,
+  QuantitativeNeume.OligonPlusKentimaAbove,
+  QuantitativeNeume.OligonPlusKentimaBelow,
+  QuantitativeNeume.OligonTripleYpsili,
+  QuantitativeNeume.Petasti,
+  QuantitativeNeume.PetastiDoubleHamili,
+  QuantitativeNeume.PetastiDoubleHamiliApostrofos,
+  QuantitativeNeume.PetastiHamili,
+  QuantitativeNeume.PetastiHamiliApostrofos,
+  QuantitativeNeume.PetastiHamiliElafron,
+  QuantitativeNeume.PetastiHamiliElafronApostrofos,
+  QuantitativeNeume.PetastiKentimaDoubleYpsiliLeft,
+  QuantitativeNeume.PetastiKentimaDoubleYpsiliRight,
+  QuantitativeNeume.PetastiKentimataDoubleYpsili,
+  QuantitativeNeume.PetastiKentimataTripleYpsili,
+  QuantitativeNeume.PetastiKentimaTripleYpsili,
+  QuantitativeNeume.PetastiPlusApostrophos,
+  QuantitativeNeume.PetastiPlusDoubleHypsili,
+  QuantitativeNeume.PetastiPlusElaphron,
+  QuantitativeNeume.PetastiPlusElaphronPlusApostrophos,
+  QuantitativeNeume.PetastiPlusHyporoe,
+  QuantitativeNeume.PetastiPlusHypsiliLeft,
+  QuantitativeNeume.PetastiPlusHypsiliPlusKentimaHorizontal,
+  QuantitativeNeume.PetastiPlusHypsiliPlusKentimaVertical,
+  QuantitativeNeume.PetastiPlusHypsiliRight,
+  QuantitativeNeume.PetastiPlusKentimaAbove,
+  QuantitativeNeume.PetastiPlusOligon,
+  QuantitativeNeume.PetastiTripleYpsili,
+  QuantitativeNeume.PetastiWithIson,
+  QuantitativeNeume.TripleHamili,
+  QuantitativeNeume.VareiaDotted,
+  QuantitativeNeume.VareiaDotted2,
+  QuantitativeNeume.VareiaDotted3,
+  QuantitativeNeume.VareiaDotted4,
+]);
+
+const gorgonNeumeSet = new Set<GorgonNeume>([
+  GorgonNeume.Argon,
+  GorgonNeume.Diargon,
+  GorgonNeume.Gorgon_Bottom,
+  GorgonNeume.GorgonDottedLeft,
+  GorgonNeume.GorgonDottedRight,
+  GorgonNeume.Gorgon_Top,
+  GorgonNeume.Hemiolion,
+]);
+
+const beatStealingWithSecondaryGorgonSet = new Set<QuantitativeNeume>([
+  QuantitativeNeume.OligonPlusHyporoePlusKentemata,
+]);
+
+const secondaryGorgonNeumeSet = new Set<GorgonNeume>([
+  GorgonNeume.GorgonDottedLeftSecondary,
+  GorgonNeume.GorgonDottedRightSecondary,
+  GorgonNeume.GorgonSecondary,
+]);
+
 interface GetNoteWidthArgs {
   lyricsVerticalOffset: number;
   vareiaWidth: number;
@@ -73,8 +190,77 @@ interface GetNoteWidthArgs {
   runningElaphronWidth: number;
   elaphronWidth: number;
 }
+
+interface ElementBox extends Box {
+  element: ScoreElement;
+}
+
+interface CompletedParagraph {
+  paragraph: InputItem[];
+  positions: PositionedItem[];
+  ratios: number[];
+  dropCapWidthPx: number;
+  dropCapContinuationLines: number;
+}
+
+interface LayoutWorkspace {
+  pageSetup: PageSetup;
+
+  // The paragraph whose construction is currently in progress. Once a paragraph
+  // has been constructed, it is broken into lines and we begin constructing the
+  // next paragraph.
+  pendingParagraph: InputItem[];
+
+  // The next three values are offsets from within an idealized one-line
+  // paragraph of infinite width where no stretching or shrinking has been
+  // applied. They are used to calculate the widths of invisible boxes to
+  // prevent lyrics from being spaced too closely. They apply to the pending
+  // paragraph and are reset when the paragraph ends.
+  neumesEndPx: number;
+  lyricsEndPx: number;
+  melismaLyricsEndPx: number | null;
+
+  // Paragraphs that have been broken into lines and are ready to be placed onto
+  // a page (or multiple pages, if necessary). Once the lines of a paragraph
+  // have been placed onto page(s), that paragraph is removed from this list.
+  completedParagraphs: CompletedParagraph[];
+
+  // Per-line metrics emitted for offline analysis of line-breaking quality.
+  metrics: LineBreakMetric[];
+
+  // Multiline drop cap state for the paragraph currently being built.
+  pendingDropCapWidthPx: number;
+  pendingDropCapContinuationLines: number;
+
+  // debug
+  loggingEnabled: boolean;
+}
+
+interface LyricOverhangs {
+  left: number;
+  right: number;
+}
+
+export interface LineBreakMetric {
+  adjustmentRatio: number;
+  breakPenaltyCost: number;
+  isParagraphFinalLine: boolean;
+}
+
+export interface ProcessPagesResult {
+  pages: Page[];
+  metrics: LineBreakMetric[];
+}
+
+interface LineBreakSolution {
+  breakpoints: number[];
+  ratios: number[];
+  maxPositiveAdjustmentRatio: number;
+  requestedMaxAdjustmentRatio: number | null;
+}
+
 export class LayoutService {
-  public static processPages(workspace: Workspace): Page[] {
+  public static processPages(workspace: Workspace): ProcessPagesResult {
     const score = workspace.score;
     const pageSetup = score.pageSetup;
     const elements = score.staff.elements;
@@ -102,24 +288,29 @@ export class LayoutService {
       elements.push(new EmptyElement());
     }
 
+    const layoutWorkspace: LayoutWorkspace = {
+      pageSetup,
+      pendingParagraph: [],
+      neumesEndPx: 0,
+      lyricsEndPx: -pageSetup.lyricsMinimumSpacing,
+      melismaLyricsEndPx: null,
+      completedParagraphs: [],
+      metrics: [],
+      pendingDropCapWidthPx: 0,
+      pendingDropCapContinuationLines: 0,
+      loggingEnabled: false,
+    };
+
     const pages: Page[] = [];
 
     let page: Page = new Page();
 
-    let line: Line = new Line();
-
-    page.lines.push(line);
     pages.push(page);
 
     let currentPageHeightPx = 0;
-    let currentLineWidthPx = 0;
-
-    let multilineDropCapWidthPx = 0;
-    let multilineDropCapCounter = 0;
 
     let lastLineHeightPx = 0;
 
-    let lastElementWasLineBreak = false;
     let lastElementWasPageBreak = false;
 
     // First, calculate some constants that will
@@ -272,71 +463,85 @@ export class LayoutService {
       this.processFooter(score.footers.firstPage, pageSetup, neumeHeight);
     }
 
-    let currentLyricsEndPx =
-      pageSetup.leftMargin - pageSetup.lyricsMinimumSpacing;
+    const standardGlue: Glue = {
+      type: 'glue',
+      width: pageSetup.neumeDefaultSpacing,
+      stretch: Math.max(pageSetup.neumeDefaultSpacing * 0.5, 0.1),
+      shrink: pageSetup.neumeDefaultSpacing * 0.5,
+    };
 
-    let currentMelismaLyricsEndPx: number | null = null;
+    const martyriaGlue: Glue = {
+      type: 'glue',
+      width: pageSetup.neumeDefaultSpacing,
+      stretch:
+        pageSetup.neumeDefaultSpacing * 0.5 +
+        pageSetup.neumeDefaultFontSize * 0.2,
+      shrink: pageSetup.neumeDefaultSpacing * 0.5,
+    };
 
-    let elementWithTrailingSpace: ScoreElement | null = null;
+    const rightMartyriaGlue: Glue = {
+      type: 'glue',
+      width: pageSetup.neumeDefaultSpacing,
+      stretch: MAX_COST,
+      shrink: pageSetup.neumeDefaultSpacing * 0.5,
+    };
 
+    // Phase 1: Build paragraphs as sequences of boxes, glue, and penalties
     for (let i = 0; i < elements.length; i++) {
-      const element = elements[i];
+      let lineBreak: boolean = elements[i].lineBreak || elements[i].pageBreak;
+      let lineBreakType: LineBreakType =
+        elements[i].lineBreakType || LineBreakType.Left;
 
-      let elementWidthPx = 0;
-      let elementWidthWithLyricsPx = 0;
-      let additionalWidth = 0;
-      let additionalHeight = 0;
-      let marginTop = 0;
-
-      const currentPageNumber = pages.length;
-
-      const { extraHeaderHeightPx, extraFooterHeightPx } =
-        this.getExtraHeaderFooterHeight(score, pageSetup, currentPageNumber);
-
-      const innerPageHeight =
-        pageSetup.innerPageHeight - extraHeaderHeightPx - extraFooterHeightPx;
-
-      switch (element.elementType) {
+      switch (elements[i].elementType) {
         case ElementType.TextBox: {
-          const nextElement = elements[i + 1];
-          let martyriaWidth = 0;
-
-          if (
-            nextElement?.elementType === ElementType.Martyria &&
-            (nextElement as MartyriaElement).alignRight
-          ) {
-            martyriaWidth = this.getMartyriaWidth(
-              nextElement as MartyriaElement,
-              pageSetup,
-            );
-          }
-
-          elementWidthPx = LayoutService.processTextBoxElement(
-            element as TextBoxElement,
+          const textBoxElement = elements[i] as TextBoxElement;
+          const isFillWidthTextBox = this.isFillWidthElement(textBoxElement);
+          const elementWidthPx = LayoutService.processTextBoxElement(
+            textBoxElement,
             pageSetup,
             neumeHeight,
-            currentLineWidthPx,
-            martyriaWidth,
           );
 
-          marginTop = (element as TextBoxElement).marginTop;
+          if (isFillWidthTextBox) {
+            // Phase 1 uses the textbox's intrinsic width as a lower bound.
+            // Phase 2 resolves the actual fill width from the next positioned
+            // item or the line end.
+            this.addLyricBox(elementWidthPx, elements[i], layoutWorkspace);
+            this.addBox(elementWidthPx, textBoxElement, layoutWorkspace);
+            this.addFillWidthGlue(layoutWorkspace);
+          } else {
+            this.addLyricBox(elementWidthPx, elements[i], layoutWorkspace);
+            this.addBox(elementWidthPx, textBoxElement, layoutWorkspace);
+            this.addGlue(standardGlue, layoutWorkspace);
+          }
+
+          if (!textBoxElement.inline && !lineBreak) {
+            lineBreak = true;
+            lineBreakType = LineBreakType.Justify;
+          }
+
+          // A fill-width element must terminate the paragraph so Phase 2 can
+          // resolve its width against the line end. Use Left so the rest of the
+          // line is not justified. Exception: if the next element is a
+          // right-aligned martyria, let the martyria handler terminate the
+          // paragraph instead so the box fills up to that martyria.
+          if (
+            isFillWidthTextBox &&
+            !lineBreak &&
+            this.shouldTerminateAfterFillWidthElement(elements, i)
+          ) {
+            lineBreak = true;
+            lineBreakType = LineBreakType.Left;
+          }
+
           break;
         }
         case ElementType.RichTextBox: {
-          const richTextBoxElement = element as RichTextBoxElement;
+          const richTextBoxElement = elements[i] as RichTextBoxElement;
+          const isFillWidthRichTextBox =
+            this.isFillWidthElement(richTextBoxElement);
 
-          const nextElement = elements[i + 1];
-          let martyriaWidth = 0;
-
-          if (
-            nextElement?.elementType === ElementType.Martyria &&
-            (nextElement as MartyriaElement).alignRight
-          ) {
-            martyriaWidth = this.getMartyriaWidth(
-              nextElement as MartyriaElement,
-              pageSetup,
-            );
-          }
+          let elementWidthPx: number;
 
           if (richTextBoxElement.inline) {
             // TODO Why is the same information being added to each text box element, you might ask?
@@ -354,39 +559,62 @@ export class LayoutService {
 
             richTextBoxElement.oligonMidpoint = oligonMidpoint;
 
-            if (richTextBoxElement.customWidth != null) {
-              elementWidthPx = richTextBoxElement.customWidth;
-            } else {
-              elementWidthPx =
-                pageSetup.innerPageWidth - currentLineWidthPx - martyriaWidth;
-
-              if (elementWidthPx <= 0) {
-                // If there is not enough room for the text box, make it the full page width.
-                // This probably will only happen because of user error and we want to give the user
-                // the change to correct it without making a text box of zero width.
-                elementWidthPx = pageSetup.innerPageWidth;
-              }
-            }
+            elementWidthPx = isFillWidthRichTextBox
+              ? this.getFillWidthPlaceholderWidth(richTextBoxElement, pageSetup)
+              : richTextBoxElement.customWidth!;
             richTextBoxElement.height = neumeHeight;
           } else {
             elementWidthPx = pageSetup.innerPageWidth;
           }
 
-          marginTop = richTextBoxElement.marginTop;
+          this.addLyricBox(elementWidthPx, richTextBoxElement, layoutWorkspace);
+          this.addBox(elementWidthPx, richTextBoxElement, layoutWorkspace);
+          if (isFillWidthRichTextBox) {
+            this.addFillWidthGlue(layoutWorkspace);
+          } else {
+            this.addGlue(standardGlue, layoutWorkspace);
+          }
+
+          if (!richTextBoxElement.inline && !lineBreak) {
+            lineBreak = true;
+            lineBreakType = LineBreakType.Justify;
+          }
+
+          // A fill-width element must terminate the paragraph so Phase 2 can
+          // resolve its width against the line end. Use Left so the rest of the
+          // line is not justified. Exception: if the next element is a
+          // right-aligned martyria, let the martyria handler terminate the
+          // paragraph instead so the box fills up to that martyria.
+          if (
+            isFillWidthRichTextBox &&
+            !lineBreak &&
+            this.shouldTerminateAfterFillWidthElement(elements, i)
+          ) {
+            lineBreak = true;
+            lineBreakType = LineBreakType.Left;
+          }
+
           break;
         }
-        case ElementType.ImageBox:
-          {
-            const imageBox = element as ImageBoxElement;
-            elementWidthPx = imageBox.inline
-              ? imageBox.imageWidth
-              : pageSetup.innerPageWidth;
-          }
-          break;
-        case ElementType.ModeKey: {
-          const modeKeyElement = element as ModeKeyElement;
+        case ElementType.ImageBox: {
+          const imageBoxElement = elements[i] as ImageBoxElement;
 
-          elementWidthPx = pageSetup.innerPageWidth;
+          const elementWidthPx = imageBoxElement.inline
+            ? imageBoxElement.imageWidth
+            : pageSetup.innerPageWidth;
+          this.addLyricBox(elementWidthPx, imageBoxElement, layoutWorkspace);
+          this.addBox(elementWidthPx, imageBoxElement, layoutWorkspace);
+          this.addGlue(standardGlue, layoutWorkspace);
+
+          if (!imageBoxElement.inline && !lineBreak) {
+            lineBreak = true;
+            lineBreakType = LineBreakType.Justify;
+          }
+
+          break;
+        }
+        case ElementType.ModeKey: {
+          const modeKeyElement = elements[i] as ModeKeyElement;
 
           // Compute properties
           modeKeyElement.computedFontFamily = pageSetup.neumeDefaultFontFamily;
@@ -413,17 +641,27 @@ export class LayoutService {
               `${modeKeyElement.computedFontSize}px ${modeKeyElement.computedFontFamily}`,
             ) + modeKeyElement.computedHeightAdjustment;
 
-          marginTop = modeKeyElement.marginTop;
+          this.addBox(
+            pageSetup.innerPageWidth,
+            modeKeyElement,
+            layoutWorkspace,
+          );
+          this.addGlue(standardGlue, layoutWorkspace);
+
+          if (!lineBreak) {
+            lineBreak = true;
+            lineBreakType = LineBreakType.Justify;
+          }
 
           break;
         }
         case ElementType.Note: {
-          const noteElement = element as NoteElement;
+          const noteElement = elements[i] as NoteElement;
 
-          // Reset computed barlines before getNoteWidth so that stale
-          // values from the previous processPages call don't inflate
-          // the width used for line breaking. Page placement will
-          // recompute these based on the new line break positions.
+          // Reset computed barlines before getNoteWidth so that stale values
+          // from the previous processPages call don't inflate the width used
+          // for line breaking. Page placement will recompute these based on the
+          // new line break positions.
           noteElement.computedMeasureBarLeft = null;
           noteElement.computedMeasureBarRight = null;
 
@@ -435,88 +673,255 @@ export class LayoutService {
             pageSetup,
           );
 
-          elementWidthPx = this.getNoteWidth(
+          const elementWidthPx = this.getNoteWidth(
             noteElement,
             pageSetup,
             noteWidthArgs,
           );
 
-          const nextElement = elements[i + 1];
-          const nextNextElement = elements[i + 2];
+          // Determine alignLeft for melisma start lyrics
+          noteElement.alignLeft = this.shouldAlignLeft(
+            noteElement,
+            this.getNoteIfPresentAt(elements, i + 1),
+          );
 
-          // Keep note and martyria together
-          // and keep two tied notes together
+          // Knuth-Plass encoding for notes with lyrics.
+          //
+          // Each note contributes:
+          //
+          //   penalty(inf)         protect the left projection
+          //   glue(L_i, 0, 0)      fixed left projection
+          //   box(B_i)             the neume
+          //   penalty(inf)         protect the neume
+          //   glue(0, s^+, s^-)    stretch that remains at line end
+          //   penalty(cost, w_i)   candidate breakpoint
+          //   glue(m_i, 0, 0)      same-line spacing that vanishes at breaks
+          //
+          // On the same line, each note boundary contributes m_i of width plus
+          // s^+ of stretch for justification.
+          //
+          // At a break, the final glue becomes leading glue on the next line
+          // and is skipped by positionItems, so m_i disappears. The stretch
+          // glue stays on the current line. L_{i+1} then protects the left edge
+          // of the next line, and the penalty width w_i reserves break-only
+          // space for the right projection, melisma overhang, and measure-bar
+          // transfers.
+          //
+          // m_i = s_0 + R_i - T_i^left - T_i^right + ell_i, where R_i is the
+          // right projection, ell_i is the lyric-collision correction, T_i^left
+          // is the absorbed portion of L_{i+1}, and T_i^right is the portion of
+          // R_i that tucks under the next neume. For hyphenated melismas, ell_i
+          // also enforces that the visible lyric gap is wide enough to hold the
+          // hyphen glyph when that hyphen is absorbed inside the current neume
+          // and therefore contributes no overhang. m_i may be negative if a
+          // large left projection is absorbed.
+          //
+          // If a paragraph ends immediately after a note, endParagraph moves
+          // that note's trailing reservation (right projection or melisma
+          // overhang) into the finishing glue, because the trailing glue is
+          // removed. If a martyria replaces that trailing glue, the martyria
+          // path preserves any remaining melisma overhang there instead.
+          // Ordinary note-to-martyria lyric collision still goes through
+          // addLyricBox.
+          const { leftProjection, rightProjection } =
+            LayoutService.getLyricProjections(
+              noteElement,
+              noteElement.alignLeft,
+            );
 
-          const noteTied =
-            !noteElement.pageBreak &&
-            !noteElement.lineBreak &&
-            (tieSet.has(noteElement.vocalExpressionNeume!) ||
-              tieSet.has(noteElement.tie!));
-
-          if (
-            nextElement?.elementType === ElementType.Martyria &&
-            !noteElement.pageBreak &&
-            !noteElement.lineBreak
-          ) {
-            additionalWidth =
-              this.getMartyriaWidth(nextElement as MartyriaElement, pageSetup) +
-              pageSetup.neumeDefaultSpacing;
-          } else if (nextElement?.elementType === ElementType.Note) {
-            const nextNote = nextElement as NoteElement;
-
-            if (noteTied) {
-              additionalWidth =
-                this.getNoteWidth(nextNote, pageSetup, noteWidthArgs) +
-                pageSetup.neumeDefaultSpacing;
-
-              // If the note is tied, we must check to make sure the next note
-              // isn't potentially getting a measure bar added to it.
-              if (nextNextElement?.elementType === ElementType.Note) {
-                const nextNextNote = nextNextElement as NoteElement;
-                if (
-                  nextNextNote.measureBarLeft != null &&
-                  !nextNextNote.measureBarLeft.endsWith('Above')
-                ) {
-                  additionalWidth +=
-                    measureBarWidthMap.get(nextNextNote.measureBarLeft) ?? 0;
-                }
-              }
-            }
-
-            if (
-              !noteElement.pageBreak &&
-              !noteElement.lineBreak &&
-              nextNote.measureBarLeft != null &&
-              !nextNote.measureBarLeft.endsWith('Above')
-            ) {
-              additionalWidth +=
-                measureBarWidthMap.get(nextNote.measureBarLeft) ?? 0;
-            }
+          // Left projection (protected by infinity penalty)
+          if (leftProjection > 0) {
+            this.preventBreak(layoutWorkspace);
+            this.addGlue(this.fixedGlue(leftProjection), layoutWorkspace);
           }
+
+          // Compute lyric and neume end positions in the idealized layout.
+          let lyricsEnd: number;
+
+          if (noteElement.alignLeft) {
+            lyricsEnd =
+              layoutWorkspace.neumesEndPx +
+              noteElement.lyricsHorizontalOffset +
+              noteElement.lyricsWidth;
+          } else {
+            // Otherwise the lyrics are centered under the neume
+            lyricsEnd =
+              layoutWorkspace.neumesEndPx +
+              noteElement.lyricsHorizontalOffset / 2 +
+              noteElement.neumeWidth / 2 +
+              noteElement.lyricsWidth / 2;
+          }
+
+          const neumeEnd =
+            layoutWorkspace.neumesEndPx +
+            noteElement.neumeWidth +
+            pageSetup.neumeDefaultSpacing;
+
+          layoutWorkspace.lyricsEndPx = noteElement.isMelismaStart
+            ? noteElement.spaceAfter + neumeEnd
+            : noteElement.spaceAfter + lyricsEnd;
+
+          const hyphenWidthForThisElement =
+            noteElement.isMelismaStart && noteElement.isHyphen
+              ? noteElement.lyricsUseDefaultStyle
+                ? widthOfHyphen
+                : this.getTextWidthFromCache(
+                    textWidthCache,
+                    noteElement,
+                    pageSetup,
+                    '-',
+                  )
+              : 0;
+          // In the absorbed-hyphen case, the visible gap between syllables must
+          // hold both the hyphen glyph and the ordinary lyric spacing before
+          // the next syllable.
+          const minimumLyricGap =
+            pageSetup.lyricsMinimumSpacing + hyphenWidthForThisElement;
+          if (noteElement.isMelismaStart && noteElement.isHyphen) {
+            layoutWorkspace.melismaLyricsEndPx =
+              noteElement.spaceAfter + lyricsEnd + hyphenWidthForThisElement;
+          } else if (noteElement.isMelismaStart) {
+            layoutWorkspace.melismaLyricsEndPx =
+              noteElement.spaceAfter + lyricsEnd;
+          } else if (!noteElement.isMelisma) {
+            layoutWorkspace.melismaLyricsEndPx = null;
+          }
+
+          // The neume box
+          this.addBox(elementWidthPx, noteElement, layoutWorkspace);
+
+          const nextElement = this.getElementAt(elements, i + 1);
+          const nextNoteElement = this.getNoteIfPresentAt(elements, i + 1);
+          const afterNextNoteElement = this.getNoteIfPresentAt(elements, i + 2);
+
+          const m_i = this.calculateInterNoteSpacing(
+            noteElement,
+            rightProjection,
+            nextNoteElement,
+            afterNextNoteElement,
+            layoutWorkspace,
+            minimumLyricGap,
+            pageSetup,
+            noteWidthArgs,
+          );
+
+          // Compute the break penalty cost for this inter-note space. Penalties
+          // are additive: when multiple conditions apply to the same
+          // breakpoint, their costs are summed.
+          const breakCost = this.getBreakCost(
+            noteElement,
+            nextElement,
+            afterNextNoteElement,
+          );
+
+          // Penalty width is conditional: only counted when a break occurs
+          // here. It reserves space for:
+          // 1. Right projection (lyric extending past the neume).
+          // 2. Melisma lyric overhang past the neume.
+          // 3. Measure bar transfer (the next note's left bar moves to this
+          //    note's right side at a break).
+          // These costs are break-conditional and cannot go in m_i (which
+          // vanishes at breaks via the cancellation glue).
+          const penaltyWidth = this.getBreakPenaltyWidth(
+            rightProjection,
+            layoutWorkspace,
+            nextNoteElement,
+            measureBarWidthMap,
+          );
+
+          // Break opportunity after the neume. The pre-break glue stays on the
+          // current line; the post-break glue becomes leading glue on the next
+          // line and is skipped by positionItems.
+          this.addProtectedBreakpointEncoding(
+            layoutWorkspace,
+            { ...standardGlue, width: 0 },
+            breakCost,
+            penaltyWidth,
+            this.fixedGlue(m_i),
+          );
+
           break;
         }
         case ElementType.Martyria: {
-          const martyriaElement = element as MartyriaElement;
+          const martyriaElement = elements[i] as MartyriaElement;
 
-          elementWidthPx = this.getMartyriaWidth(martyriaElement, pageSetup);
+          if (layoutWorkspace.pendingParagraph.length > 0) {
+            // Replacing the trailing note glue would otherwise drop any melisma
+            // lyric overhang carried in that glue. Preserve only the melisma
+            // overhang here; ordinary lyric collision before a martyria is
+            // handled by addLyricBox below.
+            const trailingNoteReservations =
+              this.getTrailingNoteReservations(layoutWorkspace);
+            const reservation = trailingNoteReservations
+              ? trailingNoteReservations.melismaOverhang
+              : 0;
+            const baseGlue = martyriaElement.alignRight
+              ? rightMartyriaGlue
+              : martyriaGlue;
+            const newGlue = {
+              ...baseGlue,
+              width: baseGlue.width + reservation,
+            };
+            this.removeGlue(layoutWorkspace);
+            this.addGlue(newGlue, layoutWorkspace);
+          } else if (martyriaElement.alignRight) {
+            // A paragraph-start right martyria still needs its leading glue in
+            // the input stream, even though positionItems will skip it at line
+            // start. Phase 2 supplies the explicit flush-right placement.
+            // Cannot use addGlue() here because the paragraph is empty.
+            layoutWorkspace.pendingParagraph.push(rightMartyriaGlue);
+            layoutWorkspace.neumesEndPx += rightMartyriaGlue.width;
+          }
+
+          const elementWidthPx = this.getMartyriaWidth(
+            martyriaElement,
+            pageSetup,
+          );
+          this.addLyricBox(elementWidthPx, martyriaElement, layoutWorkspace);
+          this.addBox(elementWidthPx, martyriaElement, layoutWorkspace);
+
+          // Martyria break opportunity. Keep the full trailing spacing after
+          // the martyria when it stays mid-line, but make both the fixed
+          // padding and the ordinary martyria spacing disappear when a break is
+          // taken here. Only the ordinary martyria spacing remains elastic.
+          this.addProtectedBreakpointEncoding(
+            layoutWorkspace,
+            this.fixedGlue(0),
+            0,
+            0,
+            {
+              ...martyriaGlue,
+              width: martyriaGlue.width + martyriaElement.padding,
+            },
+          );
+
+          if (martyriaElement.alignRight && !lineBreak) {
+            lineBreak = true;
+            lineBreakType = LineBreakType.Justify;
+          }
+
           break;
         }
         case ElementType.Tempo: {
-          const tempoElement = element as TempoElement;
+          const tempoElement = elements[i] as TempoElement;
           const temoMapping = NeumeMappingService.getMapping(
             tempoElement.neume,
           );
 
-          elementWidthPx =
+          const elementWidthPx =
             TextMeasurementService.getTextWidth(
               temoMapping.text,
               `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
             ) + tempoElement.spaceAfter;
           tempoElement.neumeWidth = elementWidthPx;
+          this.addLyricBox(elementWidthPx, tempoElement, layoutWorkspace);
+          this.addBox(elementWidthPx, tempoElement, layoutWorkspace);
+          this.addGlue(standardGlue, layoutWorkspace);
+
           break;
         }
         case ElementType.DropCap: {
-          const dropCapElement = element as DropCapElement;
+          const dropCapElement = elements[i] as DropCapElement;
 
           dropCapElement.computedFontFamily = dropCapElement.useDefaultStyle
             ? pageSetup.dropCapDefaultFontFamily
@@ -548,6 +953,8 @@ export class LayoutService {
 
           dropCapElement.computedLineSpan = 1;
 
+          let elementWidthPx: number;
+
           if (dropCapElement.customWidth != null) {
             elementWidthPx = dropCapElement.customWidth;
           } else {
@@ -559,372 +966,364 @@ export class LayoutService {
 
           dropCapElement.contentWidth = elementWidthPx;
 
-          // Handle the special case of multiline drop caps
-          // when it is the very first element
-          if (i == 0) {
-            multilineDropCapWidthPx =
-              elementWidthPx + pageSetup.neumeDefaultSpacing;
-
+          // A drop cap can only span multiple lines when it starts a paragraph.
+          if (layoutWorkspace.pendingParagraph.length === 0) {
             const lineSpan = dropCapElement.useDefaultStyle
               ? pageSetup.dropCapDefaultLineSpan
               : dropCapElement.lineSpan;
 
-            multilineDropCapCounter = lineSpan - 1;
+            layoutWorkspace.pendingDropCapWidthPx =
+              elementWidthPx + pageSetup.neumeDefaultSpacing;
+            layoutWorkspace.pendingDropCapContinuationLines = Math.max(
+              0,
+              lineSpan - 1,
+            );
             dropCapElement.computedLineSpan = lineSpan;
           }
+
+          this.addLyricBox(elementWidthPx, dropCapElement, layoutWorkspace);
+          this.addBox(elementWidthPx, dropCapElement, layoutWorkspace);
+          this.addGlue(standardGlue, layoutWorkspace);
 
           break;
         }
         case ElementType.Empty: {
-          const emptyElement = element as EmptyElement;
-          elementWidthPx = emptyElementWidth;
+          if (i !== elements.length - 1) {
+            throw new Error('Unexpected empty element at index ' + i);
+          }
+
+          const emptyElement = elements[i] as EmptyElement;
           emptyElement.height = neumeHeight;
+
+          this.addLyricBox(emptyElementWidth, emptyElement, layoutWorkspace);
+          this.addBox(emptyElementWidth, emptyElement, layoutWorkspace);
+          this.addGlue(standardGlue, layoutWorkspace);
+
+          lineBreak = true;
+
           break;
         }
         default:
-          console.warn(
-            `Unhandled element type in layout service: ${element.elementType}`,
+          throw new Error(
+            `Unhandled element type in layout service: ${elements[i].elementType}`,
           );
       }
 
-      if (element.elementType === ElementType.Note) {
-        const noteElement = element as NoteElement;
-
-        elementWidthWithLyricsPx = Math.max(
-          elementWidthPx,
-          noteElement.lyricsWidth,
-        );
-      } else {
-        elementWidthWithLyricsPx = elementWidthPx;
-      }
-
-      // Check if we need a new line
-      if (
-        currentLineWidthPx + elementWidthWithLyricsPx + additionalWidth >
-          pageSetup.innerPageWidth ||
-        lastElementWasLineBreak
-      ) {
-        if (element.elementType === ElementType.Note) {
-          const noteElement = element as NoteElement;
-          const previousElement = elements[i - 1];
-          if (previousElement?.elementType === ElementType.Note) {
-            // If the new line starts with a left measure, apply it to the right
-            // of the previous line
-            const previousNoteElement = previousElement as NoteElement;
-            if (
-              noteElement.measureBarLeft &&
-              !noteElement.measureBarLeft.endsWith('Above')
-            ) {
-              previousNoteElement.computedMeasureBarRight =
-                noteElement.measureBarLeft;
-            }
-          } else if (previousElement?.elementType === ElementType.Martyria) {
-            // If the previous line ends with a martyria with a barline, apply
-            // it to the left of the new line
-            const previousMartyriaElement = previousElement as MartyriaElement;
-            const normalizedMeasureBar =
-              previousMartyriaElement.measureBarLeft?.endsWith('Above')
-                ? measureBarAboveToLeft.get(
-                    previousMartyriaElement.measureBarLeft,
-                  )
-                : previousMartyriaElement.measureBarRight;
-            if (normalizedMeasureBar) {
-              noteElement.computedMeasureBarLeft = normalizedMeasureBar;
-            }
+      // A line break is implied before a block text box, rich-text box, image
+      // box, or mode key element.
+      {
+        const nextElement: ScoreElement | null =
+          i + 1 < elements.length ? elements[i + 1] : null;
+        if (nextElement?.elementType === ElementType.TextBox) {
+          const textBoxElement = nextElement as TextBoxElement;
+          if (!textBoxElement.inline) {
+            lineBreak = true;
           }
-        } else if (element.elementType === ElementType.Martyria) {
-          // If the new line starts with a left measure, apply it to the right
-          // of the previous line
-          const martyriaElement = element as MartyriaElement;
-          const previousElement = elements[i - 1];
-          if (previousElement?.elementType === ElementType.Note) {
-            const previousNoteElement = previousElement as NoteElement;
-            const normalizedMeasureBar =
-              martyriaElement.measureBarLeft?.endsWith('Above')
-                ? measureBarAboveToLeft.get(martyriaElement.measureBarLeft)
-                : martyriaElement.measureBarLeft;
-            if (normalizedMeasureBar) {
-              previousNoteElement.computedMeasureBarRight =
-                normalizedMeasureBar;
-            }
+        } else if (nextElement?.elementType === ElementType.RichTextBox) {
+          const richTextBoxElement = nextElement as RichTextBoxElement;
+          if (!richTextBoxElement.inline) {
+            lineBreak = true;
           }
-        }
-
-        line = new Line();
-
-        page.lines.push(line);
-
-        // Calculate the current page height
-        currentPageHeightPx = 0;
-
-        for (const line of page.lines) {
-          const height = LayoutService.getLineHeight(
-            line,
-            pageSetup.lineHeight,
-            neumeLineHeight,
-            neumeHeight,
-          );
-
-          currentPageHeightPx += height;
-
-          if (page.lines.indexOf(line) === page.lines.length - 1) {
-            lastLineHeightPx = height;
+        } else if (nextElement?.elementType === ElementType.ImageBox) {
+          const imageBoxElement = nextElement as ImageBoxElement;
+          if (!imageBoxElement.inline) {
+            lineBreak = true;
           }
-        }
-
-        currentLineWidthPx = 0;
-        currentLyricsEndPx =
-          pageSetup.leftMargin - pageSetup.lyricsMinimumSpacing;
-        currentMelismaLyricsEndPx = null;
-
-        if (elementWithTrailingSpace != null) {
-          elementWithTrailingSpace.width -= pageSetup.neumeDefaultSpacing;
-          elementWithTrailingSpace = null;
-        }
-
-        // Handle the special case of multiline drop caps
-        if (multilineDropCapCounter > 0) {
-          currentLineWidthPx += multilineDropCapWidthPx;
-          currentLyricsEndPx += multilineDropCapWidthPx;
-          line.indentation = multilineDropCapWidthPx;
-          multilineDropCapCounter--;
-        }
-
-        // A drop cap can only drop multiple lines if
-        // 1) it is the first element on the line, and
-        // 2) no other drop cap is already dropping
-        if (
-          element.elementType === ElementType.DropCap &&
-          multilineDropCapCounter === 0
-        ) {
-          const dropCapElement = element as DropCapElement;
-          multilineDropCapWidthPx =
-            elementWidthPx + pageSetup.neumeDefaultSpacing;
-
-          const lineSpan = dropCapElement.useDefaultStyle
-            ? pageSetup.dropCapDefaultLineSpan
-            : dropCapElement.lineSpan;
-
-          multilineDropCapCounter = lineSpan - 1;
-          dropCapElement.computedLineSpan = lineSpan;
-
-          // Make sure we push the drop cap to the next page if necessary
-          additionalHeight = neumeLineHeight * multilineDropCapCounter;
+        } else if (nextElement?.elementType === ElementType.ModeKey) {
+          // TODO support inline mode keys
+          lineBreak = true;
         }
       }
 
-      // Check if we need a new page
-      if (
-        currentPageHeightPx + additionalHeight > innerPageHeight ||
-        lastElementWasPageBreak
-      ) {
-        // If the line is empty, remove it from the page
-        if (line.elements.length === 0) {
-          page.lines.pop();
-        }
-
-        page = new Page();
-
-        line = new Line();
-
-        page.lines.push(line);
-        pages.push(page);
-
-        currentPageHeightPx = 0;
-        currentLineWidthPx = 0;
-        lastLineHeightPx = 0;
-        currentLyricsEndPx =
-          pageSetup.leftMargin - pageSetup.lyricsMinimumSpacing;
-        currentMelismaLyricsEndPx = null;
-
-        if (elementWithTrailingSpace != null) {
-          elementWithTrailingSpace.width -= pageSetup.neumeDefaultSpacing;
-          elementWithTrailingSpace = null;
-        }
-
-        // Handle the special case of multiline drop caps
-        // A drop cap can only drop multiple lines if
-        // 1) it is the first element on the line, and
-        // 2) no other drop cap is already dropping
-        if (element.elementType === ElementType.DropCap) {
-          const dropCapElement = element as DropCapElement;
-          multilineDropCapWidthPx =
-            elementWidthPx + pageSetup.neumeDefaultSpacing;
-
-          const lineSpan = dropCapElement.useDefaultStyle
-            ? pageSetup.dropCapDefaultLineSpan
-            : dropCapElement.lineSpan;
-
-          multilineDropCapCounter = lineSpan - 1;
-          dropCapElement.computedLineSpan = lineSpan;
-        }
-      }
-
-      element.x = pageSetup.leftMargin + currentLineWidthPx;
-      element.y =
-        pageSetup.topMargin +
-        extraHeaderHeightPx +
-        marginTop +
-        currentPageHeightPx -
-        lastLineHeightPx;
-      element.width = elementWidthPx;
-
-      element.line = page.lines.length;
-      element.page = pages.length;
-
-      this.adjustDropCapPosition(
-        element,
-        neumeLineHeight,
-        lyricsVerticalOffset,
-        lyricAscent,
-      );
-
-      // Special case when lyrics are longer than the neume.
-      // This shifts the note element to the right to account for the
-      // extra length of the lyrics to the left of the neume.
-      // Thus, the lyrics start at the (previous) x position instead of the neume.
-      if (element.elementType === ElementType.Note) {
-        const noteElement = element as NoteElement;
-
-        noteElement.alignLeft = this.shouldAlignLeft(
-          noteElement,
-          this.getNoteAt(elements, i + 1),
-        );
-
-        let lyricsStart = 0;
-
-        if (noteElement.alignLeft) {
-          lyricsStart = noteElement.x + noteElement.lyricsHorizontalOffset;
-        } else {
-          lyricsStart =
-            noteElement.x +
-            noteElement.lyricsHorizontalOffset / 2 +
-            noteElement.neumeWidth / 2 -
-            noteElement.lyricsWidth / 2;
-        }
-
-        const spacing = pageSetup.lyricsMinimumSpacing;
-
-        // Ensure that there is at least a small width between the start of
-        // this notes lyrics and the end of the previous note's lyrics
-        if (
-          currentMelismaLyricsEndPx != null &&
-          (!noteElement.isMelisma || noteElement.isMelismaStart) &&
-          lyricsStart <= currentMelismaLyricsEndPx + spacing
-        ) {
-          const adjustment = currentMelismaLyricsEndPx - lyricsStart + spacing;
-          element.x += adjustment;
-          element.width += adjustment;
-          elementWidthPx += adjustment;
-        } else if (lyricsStart <= currentLyricsEndPx + spacing) {
-          const adjustment = currentLyricsEndPx - lyricsStart + spacing;
-          element.x += adjustment;
-          element.width += adjustment;
-          elementWidthPx += adjustment;
-        }
-
-        let lyricsEnd = 0;
-
-        if (noteElement.alignLeft) {
-          lyricsEnd =
-            noteElement.x +
-            noteElement.lyricsHorizontalOffset +
-            noteElement.lyricsWidth;
-
-          noteElement.alignLeft = true;
-        } else {
-          // Otherwise the lyrics are centered under the neume
-          lyricsEnd =
-            noteElement.x +
-            noteElement.lyricsHorizontalOffset / 2 +
-            noteElement.neumeWidth / 2 +
-            noteElement.lyricsWidth / 2;
-        }
-
-        const neumeEnd =
-          noteElement.x +
-          noteElement.neumeWidth +
-          pageSetup.neumeDefaultSpacing;
-
-        currentLyricsEndPx = noteElement.isMelismaStart
-          ? noteElement.spaceAfter + neumeEnd
-          : noteElement.spaceAfter + lyricsEnd;
-
-        if (noteElement.isMelismaStart && noteElement.isHyphen) {
-          const widthOfHyphenForThisElement = noteElement.lyricsUseDefaultStyle
-            ? widthOfHyphen
-            : this.getTextWidthFromCache(
-                textWidthCache,
-                noteElement,
-                pageSetup,
-                '-',
-              );
-
-          currentMelismaLyricsEndPx =
-            noteElement.spaceAfter + lyricsEnd + widthOfHyphenForThisElement;
-        } else if (noteElement.isMelismaStart) {
-          currentMelismaLyricsEndPx = noteElement.spaceAfter + lyricsEnd;
-        } else if (!noteElement.isMelisma) {
-          currentMelismaLyricsEndPx = null;
-        }
-      } else {
-        // Ensure that there is at least a small width between other elements
-        if (
-          element.x <= currentLyricsEndPx + pageSetup.neumeDefaultSpacing &&
-          !this.isFillWidthElement(element)
-        ) {
-          const adjustment =
-            currentLyricsEndPx - element.x + pageSetup.neumeDefaultSpacing;
-          element.x += adjustment;
-          currentLyricsEndPx =
-            element.x + element.width + pageSetup.neumeDefaultSpacing;
-          element.width += adjustment;
-          elementWidthPx += adjustment;
-        } else {
-          currentLyricsEndPx =
-            element.x + element.width + pageSetup.neumeDefaultSpacing;
-        }
-      }
-
-      currentLineWidthPx += elementWidthPx;
-      // Add extra space between neumes
-      if (
-        [
-          ElementType.Martyria,
-          ElementType.Note,
-          ElementType.Tempo,
-          ElementType.DropCap,
-        ].includes(element.elementType)
-      ) {
-        currentLineWidthPx += pageSetup.neumeDefaultSpacing;
-        element.width += pageSetup.neumeDefaultSpacing;
-        elementWithTrailingSpace = element;
-      } else {
-        elementWithTrailingSpace = null;
-      }
-
-      line.elements.push(element);
-
-      lastElementWasLineBreak = element.lineBreak;
-      lastElementWasPageBreak = element.pageBreak;
-
-      // Handle special case for right-aligned martyria
-      if (
-        element.elementType === ElementType.Martyria &&
-        (element as MartyriaElement).alignRight
-      ) {
-        lastElementWasLineBreak = true;
-
-        // Must not use the element.width because this may include
-        // additional width due to lyrics, neume spacing, etc.
-        element.x =
-          pageSetup.pageWidth -
-          pageSetup.rightMargin -
-          this.getMartyriaWidth(element as MartyriaElement, pageSetup);
+      // Invariant: After processing each element, there should be trailing glue
+      // at the end of the paragraph (for example a note's post-break fixed
+      // glue, martyria spacing glue, or ordinary spacing after another
+      // element), even if the element has an (explicit or implicit) line break
+      // and the paragraph is about to end. In the latter case, endParagraph()
+      // removes that trailing glue and replaces it with finishing glue.
+      if (lineBreak) {
+        this.endParagraph(lineBreakType, layoutWorkspace);
       }
     }
 
-    this.justifyLines(pages, pageSetup);
+    const metrics = layoutWorkspace.metrics;
+
+    // Phase 2: Place completed paragraphs onto pages
+    for (const [
+      completedParagraphIndex,
+      completedParagraph,
+    ] of layoutWorkspace.completedParagraphs.entries()) {
+      const {
+        paragraph,
+        positions,
+        ratios,
+        dropCapWidthPx,
+        dropCapContinuationLines,
+      } = completedParagraph;
+
+      // Tracks the current line index within this completed paragraph.
+      let paragraphLineIndex = -1;
+
+      for (const [posIndex, position] of positions.entries()) {
+        const item = paragraph[position.item];
+        if (item.type !== 'box') {
+          // No need to position glue items
+          continue;
+        }
+
+        // Check if we need a new line
+        if (position.line > paragraphLineIndex) {
+          if (page.lines.length > 0) {
+            const previousLine = page.lines[page.lines.length - 1];
+            const previousLineHeightPx = this.getLineHeight(
+              previousLine,
+              pageSetup.lineHeight,
+              neumeLineHeight,
+              neumeHeight,
+            );
+
+            currentPageHeightPx += previousLineHeightPx - lastLineHeightPx;
+            lastLineHeightPx = previousLineHeightPx;
+          }
+
+          const newLine = new Line();
+          const nextLineIndex = paragraphLineIndex + 1;
+          const adjustmentRatio = ratios[nextLineIndex];
+          if (adjustmentRatio == null) {
+            throw new Error(
+              `Missing adjustment ratio for completed paragraph ${completedParagraphIndex}, line ${nextLineIndex}`,
+            );
+          }
+          newLine.adjustmentRatio = adjustmentRatio;
+          page.lines.push(newLine);
+
+          paragraphLineIndex += 1;
+
+          // New lines start with the default allocation until their content
+          // determines the final line height.
+          lastLineHeightPx = pageSetup.lineHeight;
+          currentPageHeightPx += lastLineHeightPx;
+        }
+
+        // Calculate the height of the headers/footers of the current page
+        let { extraHeaderHeightPx, extraFooterHeightPx } =
+          this.getExtraHeaderFooterHeight(score, pageSetup, pages.length);
+
+        const innerPageHeight =
+          pageSetup.innerPageHeight - extraHeaderHeightPx - extraFooterHeightPx;
+        const additionalHeight =
+          paragraphLineIndex === 0
+            ? neumeLineHeight * dropCapContinuationLines
+            : 0;
+        const requiresNewPage =
+          currentPageHeightPx + additionalHeight > innerPageHeight ||
+          lastElementWasPageBreak;
+
+        // Keep multiline drop caps on the same page as their continuation lines
+        // when possible.
+        if (requiresNewPage) {
+          const lastLine = page.lines.pop()!;
+
+          page = new Page();
+          page.lines.push(lastLine);
+          pages.push(page);
+          currentPageHeightPx = lastLineHeightPx;
+
+          // Recalculate the height of the headers/footers of the new page
+          ({ extraHeaderHeightPx, extraFooterHeightPx } =
+            this.getExtraHeaderFooterHeight(score, pageSetup, pages.length));
+        }
+
+        if (!('element' in item)) {
+          continue;
+        }
+        const element = (item as ElementBox).element;
+
+        const currentLine = page.lines[page.lines.length - 1];
+        const isFirstElementOnLine = currentLine.elements.length === 0;
+
+        // Indent only the continuation lines covered by a multiline drop cap.
+        if (
+          isFirstElementOnLine &&
+          paragraphLineIndex > 0 &&
+          paragraphLineIndex <= dropCapContinuationLines
+        ) {
+          currentLine.indentation = dropCapWidthPx;
+        }
+
+        element.x =
+          pageSetup.leftMargin + position.xOffset + currentLine.indentation;
+
+        // marginTop offsets the element within its line's allocated space
+        // (whose height already includes marginTop + marginBottom).
+        let marginTop = 0;
+        if (element.elementType === ElementType.TextBox) {
+          marginTop = (element as TextBoxElement).marginTop;
+        } else if (element.elementType === ElementType.RichTextBox) {
+          marginTop = (element as RichTextBoxElement).marginTop;
+        } else if (element.elementType === ElementType.ModeKey) {
+          marginTop = (element as ModeKeyElement).marginTop;
+        }
+
+        element.y =
+          pageSetup.topMargin +
+          extraHeaderHeightPx +
+          marginTop +
+          currentPageHeightPx -
+          lastLineHeightPx;
+        element.width = position.width;
+
+        // Fill-width elements were encoded using their intrinsic placeholder
+        // width in Phase 1. Now that line breaking is done, compute their
+        // actual width from the next positioned item or line end.
+        if (this.isFillWidthElement(element)) {
+          let fillWidth: number | null = null;
+          for (
+            let nextIdx = posIndex + 1;
+            nextIdx < positions.length;
+            nextIdx++
+          ) {
+            const nextPos = positions[nextIdx];
+            if (nextPos.line > position.line) break;
+            if (nextPos.line === position.line) {
+              fillWidth = nextPos.xOffset - position.xOffset;
+              break;
+            }
+          }
+          if (fillWidth == null) {
+            const lineWidth =
+              pageSetup.innerPageWidth - currentLine.indentation;
+            fillWidth = lineWidth - position.xOffset;
+          }
+          element.width = fillWidth;
+        }
+
+        element.line = page.lines.length;
+        element.page = pages.length;
+
+        this.adjustDropCapPosition(
+          element,
+          neumeLineHeight,
+          lyricsVerticalOffset,
+          lyricAscent,
+        );
+
+        // Measure bar transfer logic between lines
+        let prevLine =
+          page.lines.length > 1 ? page.lines[page.lines.length - 2] : null;
+        if (prevLine === null && pages.length > 1) {
+          const prevPage = pages[pages.length - 2];
+          prevLine = prevPage.lines[prevPage.lines.length - 1];
+        }
+
+        if (isFirstElementOnLine) {
+          if (element.elementType === ElementType.Note) {
+            const noteElement = element as NoteElement;
+            const previousElement = prevLine
+              ? prevLine.elements[prevLine.elements.length - 1]
+              : null;
+            if (previousElement?.elementType === ElementType.Note) {
+              // If the new line starts with a left measure, apply it to the
+              // right of the previous line
+              const previousNoteElement = previousElement as NoteElement;
+              if (
+                noteElement.measureBarLeft &&
+                !noteElement.measureBarLeft.endsWith('Above')
+              ) {
+                previousNoteElement.computedMeasureBarRight =
+                  noteElement.measureBarLeft;
+              }
+            } else if (previousElement?.elementType === ElementType.Martyria) {
+              // If the previous line ends with a martyria with a barline, apply
+              // it to the left of the new line
+              const previousMartyriaElement =
+                previousElement as MartyriaElement;
+              const normalizedMeasureBar =
+                previousMartyriaElement.measureBarLeft?.endsWith('Above')
+                  ? measureBarAboveToLeft.get(
+                      previousMartyriaElement.measureBarLeft,
+                    )
+                  : previousMartyriaElement.measureBarRight;
+              // Only transfer if the note doesn't already have its own
+              // measureBarLeft: getNoteWidth already accounted for the
+              // explicit one in Phase 1.
+              if (normalizedMeasureBar && !noteElement.measureBarLeft) {
+                noteElement.computedMeasureBarLeft = normalizedMeasureBar;
+                // The line breaker did not account for this barline width.
+                // Adjust neumeWidth and lyricsHorizontalOffset so lyrics center
+                // under the neume body, and shift the element left so the
+                // barline overhangs into the margin rather than pushing content
+                // right and overflowing.
+                const barlineWidth =
+                  measureBarWidthMap.get(normalizedMeasureBar) ?? 0;
+                if (barlineWidth > 0) {
+                  noteElement.neumeWidth += barlineWidth;
+                  noteElement.lyricsHorizontalOffset += barlineWidth;
+                  element.x -= barlineWidth;
+                }
+              }
+            }
+          } else if (element.elementType === ElementType.Martyria) {
+            // If the new line starts with a left measure, apply it to the right
+            // of the previous line
+            const martyriaElement = element as MartyriaElement;
+            const previousElement = prevLine
+              ? prevLine.elements[prevLine.elements.length - 1]
+              : null;
+            if (previousElement?.elementType === ElementType.Note) {
+              const previousNoteElement = previousElement as NoteElement;
+              const normalizedMeasureBar =
+                martyriaElement.measureBarLeft?.endsWith('Above')
+                  ? measureBarAboveToLeft.get(martyriaElement.measureBarLeft)
+                  : martyriaElement.measureBarLeft;
+              if (normalizedMeasureBar) {
+                previousNoteElement.computedMeasureBarRight =
+                  normalizedMeasureBar;
+              }
+            }
+          }
+        }
+
+        currentLine.elements.push(element);
+
+        // Right-aligned martyriae need an explicit placement override when they
+        // start a paragraph: the leading `MAX_COST`-stretch glue used in Phase
+        // 1 is skipped at line start by positionItems, so it cannot push the
+        // martyria to the right edge on its own.
+        if (
+          element.elementType === ElementType.Martyria &&
+          (element as MartyriaElement).alignRight &&
+          currentLine.elements.length === 1
+        ) {
+          element.x =
+            pageSetup.pageWidth -
+            pageSetup.rightMargin -
+            this.getMartyriaWidth(element as MartyriaElement, pageSetup);
+        }
+
+        // Special logic for centered lines
+        if (element.lineBreakType === LineBreakType.Center) {
+          const nextPosition =
+            posIndex + 1 < positions.length ? positions[posIndex + 1] : null;
+          if (nextPosition?.line === position.line) {
+            throw new Error(
+              `Centered element must terminate its line: ${element.id ?? element.index}`,
+            );
+          }
+
+          const centerOffsetPx =
+            (pageSetup.innerPageWidth -
+              currentLine.indentation -
+              (position.xOffset + position.width)) /
+            2;
+          for (const lineElement of currentLine.elements) {
+            lineElement.x += centerOffsetPx;
+          }
+        }
+
+        lastElementWasPageBreak = element.pageBreak;
+      }
+    }
 
     this.addMelismas(pages, pageSetup);
 
@@ -941,7 +1340,7 @@ export class LayoutService {
       this.checkElementState(element);
     });
 
-    return pages;
+    return { pages, metrics };
   }
 
   private static isFillWidthElement(element: ScoreElement): boolean {
@@ -953,6 +1352,216 @@ export class LayoutService {
         (element as TextBoxElement).inline &&
         (element as TextBoxElement).fillWidth)
     );
+  }
+
+  private static addFillWidthGlue(layoutWorkspace: LayoutWorkspace) {
+    // Let the line breaker reserve the remaining line width for the fill-width
+    // element without forcing justification elsewhere on the line.
+    this.addGlue(
+      {
+        type: 'glue',
+        width: 0,
+        stretch: MAX_COST,
+        shrink: 0,
+      },
+      layoutWorkspace,
+    );
+  }
+
+  private static shouldTerminateAfterFillWidthElement(
+    elements: ScoreElement[],
+    index: number,
+  ) {
+    const nextEl = elements[index + 1];
+
+    return !(
+      nextEl?.elementType === ElementType.Martyria &&
+      (nextEl as MartyriaElement).alignRight
+    );
+  }
+
+  private static measurePlainTextWidth(text: string, font: string) {
+    const lines = text.split(/(?:\r\n|\r|\n)/g);
+    let maxWidth = 0;
+
+    for (const line of lines) {
+      const lineWidth = TextMeasurementService.getTextWidth(line, font);
+      if (lineWidth > maxWidth) {
+        maxWidth = lineWidth;
+      }
+    }
+
+    return Math.max(
+      TextMeasurementService.getTextWidth(' ', font),
+      maxWidth,
+      1,
+    );
+  }
+
+  private static measureRichTextWidth(html: string, pageSetup: PageSetup) {
+    const template = document.createElement('template');
+    template.innerHTML = html;
+    const plainText = template.content.textContent ?? '';
+
+    return this.measurePlainTextWidth(plainText, pageSetup.lyricsFont);
+  }
+
+  private static getFillWidthPlaceholderWidth(
+    element: ScoreElement,
+    pageSetup: PageSetup,
+  ) {
+    if (
+      element.elementType === ElementType.TextBox &&
+      (element as TextBoxElement).inline
+    ) {
+      const textBoxElement = element as TextBoxElement;
+      return Math.max(
+        this.measurePlainTextWidth(
+          textBoxElement.content,
+          textBoxElement.computedFont,
+        ),
+        this.measurePlainTextWidth(
+          textBoxElement.contentBottom,
+          textBoxElement.computedFont,
+        ),
+      );
+    }
+
+    if (
+      element.elementType === ElementType.RichTextBox &&
+      (element as RichTextBoxElement).inline
+    ) {
+      const richTextBoxElement = element as RichTextBoxElement;
+      return Math.max(
+        this.measureRichTextWidth(richTextBoxElement.content, pageSetup),
+        this.measureRichTextWidth(richTextBoxElement.contentBottom, pageSetup),
+      );
+    }
+
+    return this.measurePlainTextWidth('', pageSetup.lyricsFont);
+  }
+
+  private static addLyricBox(
+    elementWidthPx: number,
+    element: ScoreElement,
+    workspace: LayoutWorkspace,
+  ) {
+    const { pageSetup } = workspace;
+
+    // Skip lyric collision for non-inline block elements (TextBox, RichTextBox,
+    // ImageBox, ModeKey), which occupy the full line width and have no lyrics
+    // to collide with. Fill-width inline elements still need collision
+    // handling: their width is deferred to Phase 2, but their left edge is
+    // already known in Phase 1.
+    if (this.isBlockElement(element)) {
+      return;
+    }
+
+    const previousLyricsEndPx =
+      workspace.melismaLyricsEndPx == null
+        ? workspace.lyricsEndPx
+        : Math.max(workspace.lyricsEndPx, workspace.melismaLyricsEndPx);
+
+    // Maintain at least neumeDefaultSpacing between the previous lyric end and
+    // the current element.
+    if (
+      workspace.neumesEndPx <=
+      previousLyricsEndPx + pageSetup.neumeDefaultSpacing
+    ) {
+      const adjustment =
+        previousLyricsEndPx -
+        workspace.neumesEndPx +
+        pageSetup.neumeDefaultSpacing;
+      workspace.pendingParagraph.push({
+        type: 'box',
+        width: adjustment,
+      });
+      workspace.neumesEndPx += adjustment;
+      workspace.lyricsEndPx =
+        workspace.neumesEndPx + elementWidthPx + pageSetup.neumeDefaultSpacing;
+    } else {
+      workspace.lyricsEndPx =
+        workspace.neumesEndPx + elementWidthPx + pageSetup.neumeDefaultSpacing;
+    }
+  }
+
+  private static isBlockElement(element: ScoreElement): boolean {
+    return (
+      (element.elementType === ElementType.TextBox &&
+        !(element as TextBoxElement).inline) ||
+      (element.elementType === ElementType.RichTextBox &&
+        !(element as RichTextBoxElement).inline) ||
+      (element.elementType === ElementType.ImageBox &&
+        !(element as ImageBoxElement).inline) ||
+      element.elementType === ElementType.ModeKey
+    );
+  }
+
+  private static addBox(
+    width: number,
+    element: ScoreElement,
+    workspace: LayoutWorkspace,
+  ) {
+    const { pendingParagraph } = workspace;
+
+    const box: ElementBox = {
+      type: 'box',
+      width,
+      element,
+    };
+
+    pendingParagraph.push(box);
+
+    workspace.neumesEndPx += width;
+  }
+
+  private static addGlue(glue: Glue, workspace: LayoutWorkspace) {
+    const { pendingParagraph } = workspace;
+
+    if (pendingParagraph.length === 0) {
+      throw new Error('Cannot add glue to the beginning of a paragraph');
+    }
+
+    pendingParagraph.push(glue);
+
+    workspace.neumesEndPx += glue.width;
+  }
+
+  private static fixedGlue(width: number): Glue {
+    return {
+      type: 'glue',
+      width,
+      stretch: 0,
+      shrink: 0,
+    };
+  }
+
+  private static addPenalty(
+    workspace: LayoutWorkspace,
+    cost: number,
+    width: number,
+  ) {
+    workspace.pendingParagraph.push({
+      type: 'penalty',
+      cost,
+      width,
+      flagged: false,
+    });
+  }
+
+  private static addProtectedBreakpointEncoding(
+    workspace: LayoutWorkspace,
+    preBreakGlue: Glue,
+    breakCost: number,
+    breakWidth: number,
+    postBreakGlue: Glue,
+  ) {
+    // The breakpoint must occur at the penalty, not immediately before the
+    // pre-break glue, so the post-break glue is skipped on the next line.
+    this.preventBreak(workspace);
+    this.addGlue(preBreakGlue, workspace);
+    this.addPenalty(workspace, breakCost, breakWidth);
+    this.addGlue(postBreakGlue, workspace);
   }
 
   private static shouldAlignLeft(
@@ -975,11 +1584,18 @@ export class LayoutService {
     );
   }
 
-  private static getNoteAt(
+  private static getElementAt(
+    elements: ScoreElement[],
+    index: number,
+  ): ScoreElement | null {
+    return index < elements.length ? elements[index] : null;
+  }
+
+  private static getNoteIfPresentAt(
     elements: ScoreElement[],
     index: number,
   ): NoteElement | null {
-    const element = index < elements.length ? elements[index] : null;
+    const element = this.getElementAt(elements, index);
     return element?.elementType === ElementType.Note
       ? (element as NoteElement)
       : null;
@@ -1075,6 +1691,648 @@ export class LayoutService {
     }
 
     element.y -= adjustment;
+  }
+
+  private static getLyricProjections(
+    noteElement: NoteElement,
+    alignLeft: boolean,
+  ) {
+    if (noteElement.lyricsWidth === 0) {
+      return { leftProjection: 0, rightProjection: 0 };
+    }
+
+    const w = noteElement.lyricsWidth;
+    const n = noteElement.neumeWidth;
+    const h = noteElement.lyricsHorizontalOffset;
+
+    if (alignLeft) {
+      // alignLeft is set for melisma starts whose lyric is wider than
+      // the neume. The lyric extends to the right under subsequent
+      // melisma neumes, so rightProjection is 0: those neumes provide
+      // the space. The melisma-to-non-melisma collision check handles
+      // the rare case where the lyric overflows past the melisma.
+      return {
+        leftProjection: Math.max(0, -h),
+        rightProjection: 0,
+      };
+    }
+
+    return {
+      leftProjection: Math.max(0, (w - n - h) / 2),
+      rightProjection: Math.max(0, (w - n + h) / 2),
+    };
+  }
+
+  private static preventBreak(workspace: LayoutWorkspace) {
+    this.addPenalty(workspace, MAX_COST, 0);
+  }
+
+  private static calculateInterNoteSpacing(
+    noteElement: NoteElement,
+    rightProjection: number,
+    nextNoteElement: NoteElement | null,
+    afterNextNoteElement: NoteElement | null,
+    workspace: LayoutWorkspace,
+    minimumLyricGap: number,
+    pageSetup: PageSetup,
+    noteWidthArgs: GetNoteWidthArgs,
+  ) {
+    // Base m_i without the lyric-collision term ell_i. Can be
+    // negative when T_i^left is large, i.e. when the cancellation
+    // glue absorbs much of L_{i+1}. The library supports negative
+    // glue widths.
+    if (nextNoteElement == null) {
+      return workspace.pageSetup.neumeDefaultSpacing + rightProjection;
+    }
+
+    // This helper reads the next note's measured width and lyric fields.
+    // Ensure they are populated here so callers do not need to remember
+    // to precompute them first.
+    this.getNoteWidth(nextNoteElement, pageSetup, noteWidthArgs);
+
+    const nextIsAlignLeft = this.shouldAlignLeft(
+      nextNoteElement,
+      afterNextNoteElement,
+    );
+    const currentOverhangs = this.getNeumeOverhangs(
+      noteElement,
+      noteElement.alignLeft,
+    );
+    const nextOverhangs = this.getNeumeOverhangs(
+      nextNoteElement,
+      nextIsAlignLeft,
+    );
+    const { leftProjection } = this.getLyricProjections(
+      nextNoteElement,
+      nextIsAlignLeft,
+    );
+    // On the same line, T_i^left absorbs whatever left projection the
+    // next note actually has. At a break that width reappears via
+    // glue(L_{i+1}).
+    const leftTuck = leftProjection;
+    const rightTuck = Math.min(rightProjection, nextOverhangs.left);
+    const baseWidth =
+      workspace.pageSetup.neumeDefaultSpacing +
+      rightProjection -
+      leftTuck -
+      rightTuck;
+
+    if (nextNoteElement.lyricsWidth === 0) {
+      return baseWidth;
+    }
+
+    // Lyric collision check: the visual gap between lyrics on the
+    // same line includes the neume overhangs (room inside the neume
+    // that the lyric doesn't occupy). Only add spacing when the
+    // lyrics would actually be too close. For hyphenated melismas,
+    // this same visual gap is also where the hyphen is drawn, so in
+    // the absorbed-hyphen case it must reserve the hyphen width plus
+    // the ordinary lyricsMinimumSpacing.
+    //
+    // Also handles melisma-to-non-melisma transitions: when a
+    // carried melisma lyric from a previous note extends past note i's neume,
+    // extra spacing may be needed before the next syllable.
+    let collisionAdjustment = 0;
+    if (noteElement.lyricsWidth > 0) {
+      const lyricGap =
+        baseWidth +
+        currentOverhangs.right +
+        nextOverhangs.left -
+        rightProjection;
+      if (lyricGap < minimumLyricGap) {
+        collisionAdjustment = minimumLyricGap - lyricGap;
+      }
+    }
+
+    collisionAdjustment = Math.max(
+      collisionAdjustment,
+      this.getMelismaCollisionAdjustment(
+        workspace,
+        nextNoteElement,
+        baseWidth,
+        nextOverhangs.left,
+      ),
+    );
+
+    return baseWidth + collisionAdjustment;
+  }
+
+  private static getMelismaOverhang(
+    workspace: LayoutWorkspace,
+    neumesEndPx: number,
+  ) {
+    return workspace.melismaLyricsEndPx != null
+      ? Math.max(0, workspace.melismaLyricsEndPx - neumesEndPx)
+      : 0;
+  }
+
+  private static getNeumeOverhangs(
+    noteElement: NoteElement,
+    alignLeft: boolean,
+  ): LyricOverhangs {
+    if (alignLeft) {
+      return {
+        left: Math.max(0, noteElement.lyricsHorizontalOffset),
+        right: Math.max(
+          0,
+          noteElement.neumeWidth -
+            noteElement.lyricsHorizontalOffset -
+            noteElement.lyricsWidth,
+        ),
+      };
+    }
+
+    return {
+      left: Math.max(
+        0,
+        (noteElement.neumeWidth +
+          noteElement.lyricsHorizontalOffset -
+          noteElement.lyricsWidth) /
+          2,
+      ),
+      right: Math.max(
+        0,
+        (noteElement.neumeWidth -
+          noteElement.lyricsHorizontalOffset -
+          noteElement.lyricsWidth) /
+          2,
+      ),
+    };
+  }
+
+  private static getMelismaCollisionAdjustment(
+    workspace: LayoutWorkspace,
+    nextNoteElement: NoteElement,
+    baseWidth: number,
+    nextLeftOverhang: number,
+  ) {
+    if (
+      workspace.melismaLyricsEndPx == null ||
+      (nextNoteElement.isMelisma && !nextNoteElement.isMelismaStart)
+    ) {
+      return 0;
+    }
+
+    // A carried melisma can protrude farther than the measured lyric
+    // text, especially when a trailing hyphen extends past the neume.
+    // If the hyphen fits entirely inside the current neume, that case
+    // is handled earlier by the ordinary lyric-gap check via
+    // lyricsMinimumSpacing + hyphenWidth, so melismaOverhang
+    // legitimately remains 0 here.
+    const melismaOverhang = this.getMelismaOverhang(
+      workspace,
+      workspace.neumesEndPx,
+    );
+    if (melismaOverhang <= 0) {
+      return 0;
+    }
+
+    // The final same-line gap between the melisma lyric's right edge
+    // and the next syllable's left edge depends only on baseWidth,
+    // the next note's left overhang, and the carried melisma
+    // overhang: T_i^left and L_{i+1} cancel, so the result is
+    // independent of the next note's left projection.
+    const melismaGap = baseWidth + nextLeftOverhang - melismaOverhang;
+    return Math.max(0, workspace.pageSetup.lyricsMinimumSpacing - melismaGap);
+  }
+
+  private static getBreakCost(
+    noteElement: NoteElement,
+    nextElement: ScoreElement | null,
+    afterNextNoteElement: NoteElement | null,
+  ) {
+    const noteTied =
+      !noteElement.pageBreak &&
+      !noteElement.lineBreak &&
+      (tieSet.has(noteElement.vocalExpressionNeume!) ||
+        tieSet.has(noteElement.tie!));
+
+    // TODO handle digorgon/trigorgon
+
+    // Penalties are additive and clamped at MAX_COST. Some breakpoints
+    // are prohibited outright with MAX_COST; combinations of softer
+    // penalties can also saturate to MAX_COST and become prohibited.
+    // The three 0.15-level penalties can stack to at most 0.45 * MAX_COST,
+    // which stays below the strongly discouraged threshold.
+    let breakCost = 0;
+
+    if (nextElement?.elementType === ElementType.Martyria) {
+      // Prohibit a break before a martyria.
+      breakCost += MAX_COST;
+    } else if (nextElement?.elementType === ElementType.Note) {
+      const nextNoteElement = nextElement as NoteElement;
+      if (noteTied) {
+        // Prohibit a break across a tie (connecting heteron,
+        // homalon, or yfen).
+        breakCost += MAX_COST;
+      }
+      if (noteElement.vareia) {
+        // Strongly discourage break after a vareia, comparable to
+        // TeX's \relpenalty (0.5 * MAX_COST).
+        breakCost += MAX_COST * 0.5;
+      }
+      if (kentemataSet.has(nextNoteElement.quantitativeNeume)) {
+        // Strongly discourage break before a kentimata. The kentimata
+        // are the upbeat associated with the previous neume's
+        // downbeat, so it is awkward to place a break before
+        // them. Comparable to TeX's \relpenalty (0.5 * MAX_COST).
+        breakCost += MAX_COST * 0.5;
+      }
+      if (
+        !noteElement.pageBreak &&
+        !noteElement.lineBreak &&
+        noteElement.isMelismaStart &&
+        nextNoteElement.isMelisma &&
+        !nextNoteElement.isMelismaStart
+      ) {
+        // Discourage break immediately after a melisma start,
+        // before its first continuation neume (between notes 0
+        // and 1 of the melisma, 0-indexed). Comparable to TeX's
+        // \clubpenalty/\widowpenalty, but weighted more heavily
+        // than beat-stealing breaks because it can isolate the
+        // melisma-start syllable and risk lyric overflow.
+        breakCost += MAX_COST * 0.2;
+      }
+      const isPenultimateMelismaNote =
+        afterNextNoteElement == null ||
+        !afterNextNoteElement.isMelisma ||
+        afterNextNoteElement.isMelismaStart;
+      if (
+        noteElement.isMelisma &&
+        nextNoteElement.isMelisma &&
+        !nextNoteElement.isMelismaStart &&
+        isPenultimateMelismaNote
+      ) {
+        // Discourage break between the second-to-last and last notes
+        // of a melisma (between notes n-2 and n-1, 0-indexed).
+        breakCost += MAX_COST * 0.15;
+      }
+      if (
+        beatStealingSet.has(nextNoteElement.quantitativeNeume) ||
+        (beatStealingWithGorgonSet.has(nextNoteElement.quantitativeNeume) &&
+          nextNoteElement.gorgonNeume &&
+          gorgonNeumeSet.has(nextNoteElement.gorgonNeume)) ||
+        (beatStealingWithSecondaryGorgonSet.has(
+          nextNoteElement.quantitativeNeume,
+        ) &&
+          nextNoteElement.secondaryGorgonNeume &&
+          secondaryGorgonNeumeSet.has(nextNoteElement.secondaryGorgonNeume))
+      ) {
+        // Discourage break before a beat-stealing neume (running
+        // elaphron, or a neume with a gorgon). This remains a weak
+        // penalty because such breaks are not uncommon in the
+        // classical sources.
+        breakCost += MAX_COST * 0.1;
+      }
+    }
+
+    return Math.min(breakCost, MAX_COST);
+  }
+
+  private static getBreakPenaltyWidth(
+    rightProjection: number,
+    workspace: LayoutWorkspace,
+    nextNoteElement: NoteElement | null,
+    measureBarWidthMap: Map<MeasureBar, number>,
+  ) {
+    let penaltyWidth = Math.max(
+      rightProjection,
+      this.getMelismaOverhang(workspace, workspace.neumesEndPx),
+    );
+
+    if (
+      nextNoteElement?.measureBarLeft &&
+      !nextNoteElement.measureBarLeft.endsWith('Above')
+    ) {
+      penaltyWidth +=
+        measureBarWidthMap.get(nextNoteElement.measureBarLeft) ?? 0;
+    }
+
+    return penaltyWidth;
+  }
+
+  private static getTrailingNoteReservations(workspace: LayoutWorkspace) {
+    const { pendingParagraph } = workspace;
+
+    let trailingGlueWidth = 0;
+    let i = pendingParagraph.length - 1;
+
+    while (i >= 0 && pendingParagraph[i].type === 'glue') {
+      trailingGlueWidth += (pendingParagraph[i] as Glue).width;
+      i--;
+    }
+
+    for (; i >= 0; i--) {
+      const item = pendingParagraph[i];
+      if (item.type !== 'box' || !('element' in item)) {
+        continue;
+      }
+
+      const element = (item as ElementBox).element;
+
+      if (element.elementType !== ElementType.Note) {
+        return null;
+      }
+
+      const noteElement = element as NoteElement;
+      const { rightProjection } = this.getLyricProjections(
+        noteElement,
+        noteElement.alignLeft,
+      );
+      const neumesEndWithoutTrailingGlue =
+        workspace.neumesEndPx - trailingGlueWidth;
+      const melismaOverhang = this.getMelismaOverhang(
+        workspace,
+        neumesEndWithoutTrailingGlue,
+      );
+
+      return {
+        melismaOverhang,
+        finishingGlueWidth: Math.max(rightProjection, melismaOverhang),
+      };
+    }
+
+    return null;
+  }
+
+  // Remove trailing glue from the paragraph. Only strips consecutive trailing
+  // glue items, such as note cancellation glue, martyria spacing glue, or the
+  // ordinary spacing left by other elements. The note's breakpoint penalty and
+  // vanishing stretch glue are preserved.
+  private static removeGlue(workspace: LayoutWorkspace) {
+    const { pendingParagraph } = workspace;
+
+    if (pendingParagraph.length === 0) {
+      throw new Error('Cannot remove non-existent glue');
+    }
+
+    const lastElement = pendingParagraph[pendingParagraph.length - 1];
+    if (lastElement.type !== 'glue') {
+      throw new Error('Cannot remove non-glue: ' + lastElement.type);
+    }
+
+    while (
+      pendingParagraph.length > 0 &&
+      pendingParagraph[pendingParagraph.length - 1].type === 'glue'
+    ) {
+      const removed = pendingParagraph.pop()!;
+      workspace.neumesEndPx -= (removed as Glue).width;
+    }
+  }
+
+  private static getMaxPositiveAdjustmentRatio(ratios: number[]) {
+    let maxPositiveAdjustmentRatio = 0;
+
+    for (const ratio of ratios) {
+      if (ratio <= 0) {
+        continue;
+      }
+      if (!Number.isFinite(ratio)) {
+        return Number.POSITIVE_INFINITY;
+      }
+      maxPositiveAdjustmentRatio = Math.max(maxPositiveAdjustmentRatio, ratio);
+    }
+
+    return maxPositiveAdjustmentRatio;
+  }
+
+  private static relaxMaxAdjustmentRatioCap(minimalCap: number) {
+    if (minimalCap <= idealMaxAdjustmentRatio) {
+      return idealMaxAdjustmentRatio;
+    }
+
+    return (
+      Math.ceil(minimalCap / adjustmentRatioCapStep) * adjustmentRatioCapStep
+    );
+  }
+
+  private static breakParagraphWithRatioCap(
+    items: InputItem[],
+    lineLengths: number | number[],
+    maxAdjustmentRatio: number | null,
+  ): LineBreakSolution {
+    const breakpoints = breakLines(items, lineLengths, {
+      maxAdjustmentRatio,
+      initialMaxAdjustmentRatio: maxAdjustmentRatio ?? Number.POSITIVE_INFINITY,
+      adjacentLooseTightPenalty: MAX_COST * 0.7,
+    });
+    const ratios = adjustmentRatios(items, lineLengths, breakpoints);
+
+    return {
+      breakpoints,
+      ratios,
+      maxPositiveAdjustmentRatio: this.getMaxPositiveAdjustmentRatio(ratios),
+      requestedMaxAdjustmentRatio: maxAdjustmentRatio,
+    };
+  }
+
+  private static tryBreakParagraphWithRatioCap(
+    items: InputItem[],
+    lineLengths: number | number[],
+    maxAdjustmentRatio: number,
+  ): LineBreakSolution | null {
+    try {
+      const solution = this.breakParagraphWithRatioCap(
+        items,
+        lineLengths,
+        maxAdjustmentRatio,
+      );
+
+      return solution.maxPositiveAdjustmentRatio <= maxAdjustmentRatio
+        ? solution
+        : null;
+    } catch (error) {
+      if (error instanceof MaxAdjustmentExceededError) {
+        return null;
+      }
+      throw error;
+    }
+  }
+
+  private static breakParagraphOptimally(
+    items: InputItem[],
+    lineLengths: number | number[],
+  ): LineBreakSolution {
+    const tightSolution = this.tryBreakParagraphWithRatioCap(
+      items,
+      lineLengths,
+      idealMaxAdjustmentRatio,
+    );
+    if (tightSolution != null) {
+      return tightSolution;
+    }
+
+    let low = idealMaxAdjustmentRatio;
+    let high = 2;
+    let bestSolution = this.tryBreakParagraphWithRatioCap(
+      items,
+      lineLengths,
+      high,
+    );
+
+    while (bestSolution == null && high < maxAdjustmentRatioSearchLimit) {
+      low = high;
+      high *= 2;
+      bestSolution = this.tryBreakParagraphWithRatioCap(
+        items,
+        lineLengths,
+        high,
+      );
+    }
+
+    if (bestSolution == null) {
+      return this.breakParagraphWithRatioCap(items, lineLengths, null);
+    }
+
+    for (let i = 0; i < maxAdjustmentRatioSearchIterations; i++) {
+      const mid = (low + high) / 2;
+      const candidate = this.tryBreakParagraphWithRatioCap(
+        items,
+        lineLengths,
+        mid,
+      );
+
+      if (candidate == null) {
+        low = mid;
+      } else {
+        high = mid;
+        bestSolution = candidate;
+      }
+    }
+
+    const relaxedCap = this.relaxMaxAdjustmentRatioCap(
+      bestSolution.maxPositiveAdjustmentRatio,
+    );
+
+    return this.breakParagraphWithRatioCap(items, lineLengths, relaxedCap);
+  }
+
+  private static endParagraph(
+    lineBreakType: LineBreakType,
+    workspace: LayoutWorkspace,
+  ) {
+    const { pageSetup, pendingParagraph, completedParagraphs } = workspace;
+
+    if (pendingParagraph.length === 0) {
+      throw new Error('Cannot end an empty paragraph');
+    }
+
+    // If the paragraph ends immediately after a note, the trailing
+    // cancellation glue contains that note's right-edge reservation.
+    // removeGlue strips it, so materialize the reservation into the
+    // finishing glue width instead.
+    const trailingNoteReservations =
+      this.getTrailingNoteReservations(workspace);
+    const finishingGlueWidth = trailingNoteReservations
+      ? trailingNoteReservations.finishingGlueWidth
+      : 0;
+
+    // Remove the existing glue so that we can apply finishing glue
+    this.removeGlue(workspace);
+
+    // Prevent break before finishing glue
+    this.preventBreak(workspace);
+
+    // Apply finishing glue. The width reserves space for the last
+    // note's right-edge lyric extent. The stretch absorbs remaining
+    // line slack (0 for justified paragraphs, `MAX_COST` otherwise).
+    const finishingGlueStretch =
+      lineBreakType === LineBreakType.Justify ? 0 : MAX_COST;
+    this.addGlue(
+      {
+        type: 'glue',
+        width: finishingGlueWidth,
+        stretch: finishingGlueStretch,
+        shrink: 0,
+      },
+      workspace,
+    );
+
+    // Force break and end paragraph
+    this.forceBreak(workspace);
+
+    // Compute per-line widths for multiline drop caps
+    let lineLengths: number | number[];
+    if (workspace.pendingDropCapContinuationLines > 0) {
+      const widths = new Array(pendingParagraph.length + 1).fill(
+        pageSetup.innerPageWidth,
+      );
+      const reducedWidth =
+        pageSetup.innerPageWidth - workspace.pendingDropCapWidthPx;
+
+      for (
+        let j = 1;
+        j <= workspace.pendingDropCapContinuationLines && j < widths.length;
+        j++
+      ) {
+        widths[j] = reducedWidth;
+      }
+
+      lineLengths = widths;
+    } else {
+      lineLengths = pageSetup.innerPageWidth;
+    }
+
+    // Run the total-fit algorithm for line breaking
+    if (workspace.loggingEnabled) {
+      console.log('Breaking lines', pendingParagraph);
+    }
+    const solution = this.breakParagraphOptimally(
+      pendingParagraph,
+      lineLengths,
+    );
+    const { breakpoints, ratios } = solution;
+
+    // We have a winner
+    if (workspace.loggingEnabled) {
+      console.log('Breakpoints', breakpoints);
+      console.log(
+        'Requested max adjustment ratio',
+        solution.requestedMaxAdjustmentRatio,
+      );
+    }
+    const positions: PositionedItem[] = positionItems(
+      pendingParagraph,
+      lineLengths,
+      breakpoints,
+    );
+    workspace.metrics.push(
+      ...ratios.map((adjustmentRatio, index) => {
+        const endBreakpoint = breakpoints[index + 1];
+        const endItem = pendingParagraph[endBreakpoint];
+
+        return {
+          adjustmentRatio,
+          breakPenaltyCost: endItem.type === 'penalty' ? endItem.cost : 0,
+          isParagraphFinalLine: index === ratios.length - 1,
+        };
+      }),
+    );
+
+    if (workspace.loggingEnabled) {
+      console.log('Positions', positions);
+      console.log('Adjustment ratios', ratios);
+    }
+    completedParagraphs.push({
+      paragraph: pendingParagraph,
+      positions,
+      ratios,
+      dropCapWidthPx: workspace.pendingDropCapWidthPx,
+      dropCapContinuationLines: workspace.pendingDropCapContinuationLines,
+    });
+
+    // Reset state
+    workspace.pendingParagraph = [];
+    workspace.neumesEndPx = 0;
+    workspace.lyricsEndPx = -workspace.pageSetup.lyricsMinimumSpacing;
+    workspace.melismaLyricsEndPx = null;
+    workspace.pendingDropCapWidthPx = 0;
+    workspace.pendingDropCapContinuationLines = 0;
+  }
+
+  private static forceBreak(workspace: LayoutWorkspace) {
+    const { pendingParagraph } = workspace;
+    pendingParagraph.push(forcedBreak());
   }
 
   private static getLineHeight(
@@ -1212,8 +2470,6 @@ export class LayoutService {
     textBoxElement: TextBoxElement,
     pageSetup: PageSetup,
     neumeHeight: number,
-    currentX: number = 0,
-    martyriaWidth: number = 0,
   ) {
     let elementWidthPx = 0;
 
@@ -1247,33 +2503,20 @@ export class LayoutService {
           : 'normal';
 
       if (textBoxElement.fillWidth) {
-        elementWidthPx = pageSetup.innerPageWidth - currentX - martyriaWidth;
+        // Width is computed in Phase 2 after line breaking. During Phase 1 we
+        // use the textbox's intrinsic no-wrap width so the line breaker can
+        // move it to the next line when the remaining space is too small.
+        elementWidthPx = this.getFillWidthPlaceholderWidth(
+          textBoxElement,
+          pageSetup,
+        );
       } else if (textBoxElement.customWidth != null) {
         elementWidthPx = textBoxElement.customWidth;
       } else {
-        const lines = textBoxElement.content.split(/(?:\r\n|\r|\n)/g);
-
-        let maxWidth = 0;
-
-        for (const line of lines) {
-          const lineWidth = TextMeasurementService.getTextWidth(
-            line,
-            textBoxElement.computedFont,
-          );
-
-          if (lineWidth > maxWidth) {
-            maxWidth = lineWidth;
-          }
-        }
-
-        elementWidthPx = maxWidth;
-
-        const minimumWidth = TextMeasurementService.getTextWidth(
-          ' ',
+        elementWidthPx = this.measurePlainTextWidth(
+          textBoxElement.content,
           textBoxElement.computedFont,
         );
-
-        elementWidthPx = Math.max(elementWidthPx, minimumWidth);
       }
     } else {
       elementWidthPx = pageSetup.innerPageWidth;
@@ -1561,12 +2804,11 @@ export class LayoutService {
         ? NeumeMappingService.getMapping(martyriaElement.quantitativeNeume)
         : null;
 
-    // Add in padding to give some extra space between
-    // the martyria and the next neume
+    // Add fixed trailing padding after the martyria. The breakpoint encoding
+    // merges it into the ordinary martyria spacing on the same line, and drops
+    // the entire trailing spacing when a break is taken after the martyria.
     martyriaElement.padding =
-      martyriaElement.alignRight && !martyriaElement.quantitativeNeume
-        ? 0
-        : pageSetup.neumeDefaultFontSize * pageSetup.spaceAfterMartyriaFactor;
+      pageSetup.neumeDefaultFontSize * pageSetup.spaceAfterMartyriaFactor;
 
     martyriaElement.neumeWidth = this.getNeumeWidthFromCache(
       neumeWidthCache,
@@ -1616,11 +2858,10 @@ export class LayoutService {
 
     return (
       martyriaElement.spaceAfter +
-      (martyriaElement.padding +
-        TextMeasurementService.getTextWidth(
-          mappingNote.text,
-          `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
-        ) +
+      (TextMeasurementService.getTextWidth(
+        mappingNote.text,
+        `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
+      ) +
         TextMeasurementService.getTextWidth(
           mappingRoot.text,
           `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
@@ -1656,118 +2897,6 @@ export class LayoutService {
             )
           : 0))
     );
-  }
-
-  public static justifyLines(pages: Page[], pageSetup: PageSetup) {
-    for (let pageIndex = 0; pageIndex < pages.length; pageIndex++) {
-      const page = pages[pageIndex];
-
-      const nextPage =
-        pageIndex + 1 < pages.length ? pages[pageIndex + 1] : null;
-
-      for (let lineIndex = 0; lineIndex < page.lines.length; lineIndex++) {
-        const line = page.lines[lineIndex];
-
-        let nextLine: Line | null =
-          lineIndex + 1 < page.lines.length ? page.lines[lineIndex + 1] : null;
-
-        if (nextLine == null && nextPage != null && nextPage.lines.length > 0) {
-          nextLine = nextPage.lines[0];
-        }
-
-        if (
-          pages.indexOf(page) === pages.length - 1 &&
-          page.lines.indexOf(line) === page.lines.length - 1
-        ) {
-          continue;
-        }
-
-        if (
-          line.elements.some(
-            (x) =>
-              x.lineBreak == true && x.lineBreakType === LineBreakType.Left,
-          )
-        ) {
-          continue;
-        }
-
-        if (line.elements.some((x) => x.pageBreak == true)) {
-          continue;
-        }
-
-        if (
-          line.elements.some(
-            (x) =>
-              x.elementType === ElementType.Martyria &&
-              (x as MartyriaElement).alignRight == true,
-          )
-        ) {
-          continue;
-        }
-
-        // We treat text boxes and mode keys as paragraph breaks,
-        // so we only justify if there is a justified line break
-        if (
-          !line.elements.some(
-            (x) =>
-              x.lineBreak == true &&
-              (x.lineBreakType === LineBreakType.Justify ||
-                x.lineBreakType === LineBreakType.Center),
-          ) &&
-          nextLine?.elements.some(
-            (x) =>
-              (x.elementType === ElementType.TextBox &&
-                !(x as TextBoxElement).inline) ||
-              (x.elementType === ElementType.RichTextBox &&
-                !(x as RichTextBoxElement).inline) ||
-              x.elementType === ElementType.ModeKey,
-          )
-        ) {
-          continue;
-        }
-
-        if (line.elements.length < 2) {
-          continue;
-        }
-
-        const alignCenter = line.elements.some(
-          (x) =>
-            x.lineBreak == true && x.lineBreakType === LineBreakType.Center,
-        );
-
-        // If the last element is a martyria, we remove any unnecessary padding
-        // to the right of the martyria, so that it does not affect the justification
-        // of the line. This causes the martyria to be aligned flush to the right side of the page.
-        const lastElementOnLine = line.elements[line.elements.length - 1];
-
-        if (lastElementOnLine.elementType === ElementType.Martyria) {
-          const martyriaElement = lastElementOnLine as MartyriaElement;
-
-          if (!martyriaElement.alignRight) {
-            martyriaElement.width -= martyriaElement.padding;
-          }
-        }
-
-        const currentWidthPx = line.elements
-          .map((x) => x.width)
-          .reduce((sum, x) => sum + x, 0);
-
-        const extraSpace =
-          pageSetup.innerPageWidth - currentWidthPx - line.indentation;
-
-        if (alignCenter) {
-          for (let i = 0; i < line.elements.length; i++) {
-            line.elements[i].x += extraSpace / 2;
-          }
-        } else {
-          const spaceToAdd = extraSpace / (line.elements.length - 1);
-
-          for (let i = 1; i < line.elements.length; i++) {
-            line.elements[i].x += spaceToAdd * i;
-          }
-        }
-      }
-    }
   }
 
   public static addMelismas(pages: Page[], pageSetup: PageSetup) {

@@ -73,8 +73,19 @@ interface GetNoteWidthArgs {
   runningElaphronWidth: number;
   elaphronWidth: number;
 }
+
+export interface LineBreakMetric {
+  adjustmentRatio: number;
+  isParagraphFinalLine: boolean;
+}
+
+export interface ProcessPagesResult {
+  pages: Page[];
+  metrics: LineBreakMetric[];
+}
+
 export class LayoutService {
-  public static processPages(workspace: Workspace): Page[] {
+  public static processPages(workspace: Workspace): ProcessPagesResult {
     const score = workspace.score;
     const pageSetup = score.pageSetup;
     const elements = score.staff.elements;
@@ -924,7 +935,7 @@ export class LayoutService {
       }
     }
 
-    this.justifyLines(pages, pageSetup);
+    const metrics = this.justifyLines(pages, pageSetup);
 
     this.addMelismas(pages, pageSetup);
 
@@ -941,7 +952,7 @@ export class LayoutService {
       this.checkElementState(element);
     });
 
-    return pages;
+    return { pages, metrics };
   }
 
   private static isFillWidthElement(element: ScoreElement): boolean {
@@ -1658,7 +1669,12 @@ export class LayoutService {
     );
   }
 
-  public static justifyLines(pages: Page[], pageSetup: PageSetup) {
+  public static justifyLines(
+    pages: Page[],
+    pageSetup: PageSetup,
+  ): LineBreakMetric[] {
+    const metrics: LineBreakMetric[] = [];
+
     for (let pageIndex = 0; pageIndex < pages.length; pageIndex++) {
       const page = pages[pageIndex];
 
@@ -1675,45 +1691,22 @@ export class LayoutService {
           nextLine = nextPage.lines[0];
         }
 
-        if (
-          pages.indexOf(page) === pages.length - 1 &&
-          page.lines.indexOf(line) === page.lines.length - 1
-        ) {
-          continue;
-        }
+        const isLastLineOfScore =
+          pageIndex === pages.length - 1 && lineIndex === page.lines.length - 1;
 
-        if (
-          line.elements.some(
-            (x) =>
-              x.lineBreak == true && x.lineBreakType === LineBreakType.Left,
-          )
-        ) {
-          continue;
-        }
+        const hasLeftLineBreak = line.elements.some(
+          (x) => x.lineBreak == true && x.lineBreakType === LineBreakType.Left,
+        );
 
-        if (line.elements.some((x) => x.pageBreak == true)) {
-          continue;
-        }
+        const hasPageBreak = line.elements.some((x) => x.pageBreak == true);
 
-        if (
-          line.elements.some(
-            (x) =>
-              x.elementType === ElementType.Martyria &&
-              (x as MartyriaElement).alignRight == true,
-          )
-        ) {
-          continue;
-        }
+        const hasAlignRightMartyria = line.elements.some(
+          (x) =>
+            x.elementType === ElementType.Martyria &&
+            (x as MartyriaElement).alignRight == true,
+        );
 
-        // We treat text boxes and mode keys as paragraph breaks,
-        // so we only justify if there is a justified line break
-        if (
-          !line.elements.some(
-            (x) =>
-              x.lineBreak == true &&
-              (x.lineBreakType === LineBreakType.Justify ||
-                x.lineBreakType === LineBreakType.Center),
-          ) &&
+        const nextLineStartsParagraph =
           nextLine?.elements.some(
             (x) =>
               (x.elementType === ElementType.TextBox &&
@@ -1721,12 +1714,74 @@ export class LayoutService {
               (x.elementType === ElementType.RichTextBox &&
                 !(x as RichTextBoxElement).inline) ||
               x.elementType === ElementType.ModeKey,
-          )
-        ) {
-          continue;
+          ) ?? false;
+
+        const hasJustifiedOrCenterBreak = line.elements.some(
+          (x) =>
+            x.lineBreak == true &&
+            (x.lineBreakType === LineBreakType.Justify ||
+              x.lineBreakType === LineBreakType.Center),
+        );
+
+        // Determine if this line is a paragraph final line
+        const isParagraphFinalLine =
+          isLastLineOfScore ||
+          hasLeftLineBreak ||
+          hasPageBreak ||
+          hasAlignRightMartyria ||
+          nextLineStartsParagraph;
+
+        // Determine whether to skip justification
+        const skipJustification =
+          isLastLineOfScore ||
+          hasLeftLineBreak ||
+          hasPageBreak ||
+          hasAlignRightMartyria ||
+          (!hasJustifiedOrCenterBreak && nextLineStartsParagraph) ||
+          line.elements.length < 2;
+
+        // Compute the natural width and adjustment ratio for all lines
+        // (even ones we skip justification for)
+        if (line.elements.length > 0) {
+          // Compute currentWidthPx without modifying martyria padding yet
+          let currentWidthPx = line.elements
+            .map((x) => x.width)
+            .reduce((sum, x) => sum + x, 0);
+
+          const lastElementOnLine = line.elements[line.elements.length - 1];
+          let martyriaPadding = 0;
+
+          if (
+            lastElementOnLine.elementType === ElementType.Martyria &&
+            !(lastElementOnLine as MartyriaElement).alignRight
+          ) {
+            martyriaPadding = (lastElementOnLine as MartyriaElement).padding;
+            currentWidthPx -= martyriaPadding;
+          }
+
+          const lineLength = pageSetup.innerPageWidth - line.indentation;
+          const extraSpace = lineLength - currentWidthPx;
+
+          // Compute adjustment ratio on the same scale as ordinary
+          // Knuth-Plass glue: extraSpace / totalGlueStretch, where each
+          // inter-element gap stretches by standardGlue.stretch.
+          const ordinaryGapStretch = Math.max(
+            pageSetup.neumeDefaultSpacing * 0.5,
+            0.1,
+          );
+          const totalStretch = (line.elements.length - 1) * ordinaryGapStretch;
+          const adjustmentRatio =
+            totalStretch > 0 ? extraSpace / totalStretch : 0;
+
+          line.adjustmentRatio = adjustmentRatio;
+
+          metrics.push({
+            adjustmentRatio,
+            isParagraphFinalLine,
+          });
         }
 
-        if (line.elements.length < 2) {
+        if (skipJustification) {
           continue;
         }
 
@@ -1768,6 +1823,8 @@ export class LayoutService {
         }
       }
     }
+
+    return metrics;
   }
 
   public static addMelismas(pages: Page[], pageSetup: PageSetup) {

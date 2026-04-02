@@ -33,7 +33,7 @@
   },
   "main": "dist-electron/main/index.js",
   "dependencies": {
-    "i18next": "^25.10.9",
+    "i18next": "^25.10.10",
     "i18next-pseudo": "^2.2.1",
     "image-size": "^2.0.2",
     "jszip": "^3.10.1",

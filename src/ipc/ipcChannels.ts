@@ -81,6 +81,8 @@ export enum IpcRendererChannels {
   OpenContextMenuForTab = 'OpenContextMenuForTab',
 
   Paste = 'Paste',
+
+  Log = 'Log',
 }
 
 export interface FileMenuOpenScoreArgs {
@@ -91,6 +93,7 @@ export interface FileMenuOpenScoreArgs {
 
 export interface OpenWorkspaceFromArgvArgs {
   files: FileMenuOpenScoreArgs[];
+  metrics?: boolean;
   silentPdf?: boolean;
   silentHtml?: boolean;
   silentLatex?: boolean;

@@ -53,10 +53,3 @@ jobs:
       - name: Build macOS
         if: runner.os == 'macOS'
         run: npm run build -- --x64 && npm run build -- --arm64
-
-      - name: Publish
-        uses: actions/upload-artifact@v7
-        with:
-          name: Neanes-${{ matrix.os }}
-          path: dist/Neanes*
-          retention-days: 3

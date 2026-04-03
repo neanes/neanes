@@ -2189,6 +2189,14 @@ export class LayoutService {
     }
 
     for (let i = 0; i < maxAdjustmentRatioSearchIterations; i++) {
+      if (
+        high - low <= adjustmentRatioCapStep ||
+        this.relaxMaxAdjustmentRatioCap(low) ===
+          this.relaxMaxAdjustmentRatioCap(high)
+      ) {
+        break;
+      }
+
       const mid = (low + high) / 2;
       const candidate = this.tryBreakParagraphWithRatioCap(
         items,

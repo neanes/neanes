@@ -447,6 +447,8 @@ export class LayoutService {
       elaphronWidth,
     };
 
+    this.precomputeNoteGeometry(elements, pageSetup, noteWidthArgs);
+
     // Process Header and Footers
     // Only a single text box is supported right now
     if (score.pageSetup.showHeader) {
@@ -657,33 +659,8 @@ export class LayoutService {
         }
         case ElementType.Note: {
           const noteElement = elements[i] as NoteElement;
-
-          // Reset computed barlines before getNoteWidth so that stale values
-          // from the previous processPages call don't inflate the width used
-          // for line breaking. Page placement will recompute these based on the
-          // new line break positions.
-          noteElement.computedMeasureBarLeft = null;
-          noteElement.computedMeasureBarRight = null;
-
-          noteElement.computedIsonOffsetY = noteElement.isonOffsetY;
-
-          noteElement.lyricsFontHeight = this.getNoteLyricsFontHeightFromCache(
-            fontHeightCache,
-            noteElement,
-            pageSetup,
-          );
-
-          const elementWidthPx = this.getNoteWidth(
-            noteElement,
-            pageSetup,
-            noteWidthArgs,
-          );
-
-          // Determine alignLeft for melisma start lyrics
-          noteElement.alignLeft = this.shouldAlignLeft(
-            noteElement,
-            this.getNoteIfPresentAt(elements, i + 1),
-          );
+          const elementWidthPx =
+            noteElement.spaceAfter + noteElement.neumeWidth;
 
           // Knuth-Plass encoding for notes with lyrics.
           //
@@ -798,11 +775,8 @@ export class LayoutService {
             noteElement,
             rightProjection,
             nextNoteElement,
-            afterNextNoteElement,
             layoutWorkspace,
             minimumLyricGap,
-            pageSetup,
-            noteWidthArgs,
           );
 
           // Compute the break penalty cost for this inter-note space. Penalties
@@ -1584,6 +1558,48 @@ export class LayoutService {
     );
   }
 
+  private static precomputeNoteGeometry(
+    elements: ScoreElement[],
+    pageSetup: PageSetup,
+    noteWidthArgs: GetNoteWidthArgs,
+  ) {
+    for (const element of elements) {
+      if (element.elementType !== ElementType.Note) {
+        continue;
+      }
+
+      const noteElement = element as NoteElement;
+
+      // Reset computed barlines before Phase 1 width calculation so
+      // stale values from the previous processPages call do not
+      // inflate the width used for line breaking. Phase 2 will
+      // recompute transferred barlines from the chosen breakpoints.
+      noteElement.computedMeasureBarLeft = null;
+      noteElement.computedMeasureBarRight = null;
+
+      noteElement.computedIsonOffsetY = noteElement.isonOffsetY;
+      noteElement.lyricsFontHeight = this.getNoteLyricsFontHeightFromCache(
+        fontHeightCache,
+        noteElement,
+        pageSetup,
+      );
+      this.getNoteWidth(noteElement, pageSetup, noteWidthArgs);
+    }
+
+    for (let i = 0; i < elements.length; i++) {
+      const element = elements[i];
+      if (element.elementType !== ElementType.Note) {
+        continue;
+      }
+
+      const noteElement = element as NoteElement;
+      noteElement.alignLeft = this.shouldAlignLeft(
+        noteElement,
+        this.getNoteIfPresentAt(elements, i + 1),
+      );
+    }
+  }
+
   private static getElementAt(
     elements: ScoreElement[],
     index: number,
@@ -1731,11 +1747,8 @@ export class LayoutService {
     noteElement: NoteElement,
     rightProjection: number,
     nextNoteElement: NoteElement | null,
-    afterNextNoteElement: NoteElement | null,
     workspace: LayoutWorkspace,
     minimumLyricGap: number,
-    pageSetup: PageSetup,
-    noteWidthArgs: GetNoteWidthArgs,
   ) {
     // Base m_i without the lyric-collision term ell_i. Can be
     // negative when T_i^left is large, i.e. when the cancellation
@@ -1745,26 +1758,17 @@ export class LayoutService {
       return workspace.pageSetup.neumeDefaultSpacing + rightProjection;
     }
 
-    // This helper reads the next note's measured width and lyric fields.
-    // Ensure they are populated here so callers do not need to remember
-    // to precompute them first.
-    this.getNoteWidth(nextNoteElement, pageSetup, noteWidthArgs);
-
-    const nextIsAlignLeft = this.shouldAlignLeft(
-      nextNoteElement,
-      afterNextNoteElement,
-    );
     const currentOverhangs = this.getNeumeOverhangs(
       noteElement,
       noteElement.alignLeft,
     );
     const nextOverhangs = this.getNeumeOverhangs(
       nextNoteElement,
-      nextIsAlignLeft,
+      nextNoteElement.alignLeft,
     );
     const { leftProjection } = this.getLyricProjections(
       nextNoteElement,
-      nextIsAlignLeft,
+      nextNoteElement.alignLeft,
     );
     // On the same line, T_i^left absorbs whatever left projection the
     // next note actually has. At a break that width reappears via

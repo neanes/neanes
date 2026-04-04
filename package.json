@@ -37,7 +37,7 @@
     "i18next-pseudo": "^2.2.1",
     "image-size": "^2.0.2",
     "jszip": "^3.10.1",
-    "knuth-plass-linebreak": "^0.9.3",
+    "knuth-plass-linebreak": "^0.9.4",
     "mime-types": "^3.0.2",
     "throttle-debounce": "^5.0.2"
   },

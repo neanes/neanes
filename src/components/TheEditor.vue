@@ -119,7 +119,7 @@ import {
   TimeNeume,
   VocalExpressionNeume,
 } from '@/models/Neumes';
-import { Page } from '@/models/Page';
+import { Line, Page } from '@/models/Page';
 import { PageSetup } from '@/models/PageSetup';
 import { ScaleNote } from '@/models/Scales';
 import { Score } from '@/models/Score';
@@ -145,7 +145,7 @@ import { MusicXmlExporter } from '@/services/integration/MusicXmlExporter';
 import { OcrImporter } from '@/services/integration/OcrImporter';
 import { IIpcService } from '@/services/ipc/IIpcService';
 import { IpcService } from '@/services/ipc/IpcService';
-import { LayoutService } from '@/services/LayoutService';
+import { LayoutService, type LineBreakMetric } from '@/services/LayoutService';
 import { LyricService } from '@/services/LyricService';
 import { NeumeKeyboard } from '@/services/NeumeKeyboard';
 import { IPlatformService } from '@/services/platform/IPlatformService';
@@ -308,6 +308,7 @@ export default defineComponent({
       printMode: false,
 
       showGuides: false,
+      showAdjustmentRatios: false,
 
       workspaces: [] as Workspace[],
       selectedWorkspaceValue: new Workspace(),
@@ -315,6 +316,7 @@ export default defineComponent({
       tabs: [] as Tab[],
 
       pages: [] as Page[],
+      metrics: [] as LineBreakMetric[],
 
       currentPageNumber: 0,
 
@@ -1436,6 +1438,40 @@ export default defineComponent({
         right: this.rtl ? withZoom(element.x) : undefined,
         top: withZoom(element.y),
       } as StyleValue;
+    },
+
+    getAdjustmentRatioStyle(line: Line) {
+      const fontSize = this.score.pageSetup.lyricsDefaultFontSize * 0.8;
+      const gap = fontSize * 0.5;
+      return {
+        position: 'absolute',
+        left: withZoom(
+          this.rtl
+            ? this.score.pageSetup.leftMargin - gap - fontSize * 3
+            : this.score.pageSetup.pageWidth -
+                this.score.pageSetup.rightMargin +
+                gap,
+        ),
+        width: withZoom(fontSize * 3),
+        textAlign: 'right',
+        top: withZoom(
+          line.elements[0].y +
+            this.score.pageSetup.lineHeight / 3 -
+            fontSize / 2,
+        ),
+        fontSize: withZoom(fontSize),
+        fontFamily: this.score.pageSetup.lyricsDefaultFontFamily,
+        color: this.score.pageSetup.gorgonDefaultColor,
+      } as StyleValue;
+    },
+
+    logStructuredMetric(label: string, payload: unknown) {
+      const message = `${label} ${JSON.stringify(payload)}`;
+      if (window.ipcRenderer) {
+        window.ipcRenderer.send(IpcRendererChannels.Log, message);
+      } else {
+        console.log(message);
+      }
     },
 
     getMelismaStyle(element: NoteElement) {
@@ -3446,7 +3482,9 @@ export default defineComponent({
         .map((_, i) => i)
         .filter((i) => this.pages[i].isVisible);
 
-      const pages = LayoutService.processPages(toRaw(this.selectedWorkspace));
+      const { pages, metrics } = LayoutService.processPages(
+        toRaw(this.selectedWorkspace),
+      );
 
       // Set page visibility for the newly processed pages
       pages.forEach((x, index) => (x.isVisible = visiblePages.includes(index)));
@@ -3472,6 +3510,7 @@ export default defineComponent({
         });
 
       this.pages = pages;
+      this.metrics = metrics;
 
       // If using the browser, save the workspace to local storage
       if (this.isBrowser) {
@@ -3545,11 +3584,19 @@ export default defineComponent({
         await this.ipcService.openWorkspaceFromArgv();
 
       if (openWorkspaceResults.silentPdf) {
+        const emitMetrics = openWorkspaceResults.metrics ?? false;
+
         for (const file of openWorkspaceResults.files.filter(
           (x) => x.success,
         )) {
           this.openScore(file);
           await this.onFileMenuExportAsPdf();
+          if (emitMetrics) {
+            this.logStructuredMetric('LINE_BREAK_METRICS_DOCUMENT', {
+              filePath: file.filePath,
+              lines: this.metrics,
+            });
+          }
           this.removeWorkspace(this.selectedWorkspace);
         }
       }
@@ -3632,7 +3679,11 @@ export default defineComponent({
       this.selectedElement =
         this.score.staff.elements[this.score.staff.elements.length - 1];
 
-      this.pages = LayoutService.processPages(this.selectedWorkspace);
+      const { pages, metrics } = LayoutService.processPages(
+        this.selectedWorkspace,
+      );
+      this.pages = pages;
+      this.metrics = metrics;
     },
 
     async saveWorkspace(workspace: Workspace) {
@@ -6840,6 +6891,16 @@ export default defineComponent({
                     />
                   </template>
                 </div>
+                <span
+                  v-if="
+                    showAdjustmentRatios &&
+                    line.adjustmentRatio != null &&
+                    line.elements.length > 0
+                  "
+                  class="adjustment-ratio"
+                  :style="getAdjustmentRatioStyle(line)"
+                  >{{ line.adjustmentRatio.toFixed(2) }}</span
+                >
               </div>
               <template v-if="score.pageSetup.showFooter">
                 <div
@@ -7370,6 +7431,12 @@ export default defineComponent({
 
 .element-box {
   position: absolute;
+}
+
+.adjustment-ratio {
+  pointer-events: none;
+  white-space: nowrap;
+  font-variant-numeric: lining-nums tabular-nums;
 }
 
 .neume-box {

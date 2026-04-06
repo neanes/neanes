@@ -232,6 +232,15 @@ interface LayoutWorkspace {
   pendingDropCapWidthPx: number;
   pendingDropCapContinuationLines: number;
 
+  // When a martyria with a transferable measure bar is followed by a note,
+  // the martyria's post-break glue is reduced by this width and an anonymous
+  // spacer box of the same width is inserted before the note. On the same
+  // line, the reduced glue and the spacer cancel, leaving the note's own
+  // box position unchanged. At a break the post-break glue vanishes; the
+  // spacer remains at the start of the next line and reserves leading space
+  // for the transferred bar.
+  pendingMartyriaBarTransferWidth: number;
+
   // debug
   loggingEnabled: boolean;
 }
@@ -298,6 +307,7 @@ export class LayoutService {
       metrics: [],
       pendingDropCapWidthPx: 0,
       pendingDropCapContinuationLines: 0,
+      pendingMartyriaBarTransferWidth: 0,
       loggingEnabled: false,
     };
 
@@ -678,6 +688,21 @@ export class LayoutService {
           const elementWidthPx =
             noteElement.spaceAfter + noteElement.neumeWidth;
 
+          // Consume any pending martyria bar transfer width.
+          const martyriaBarTransferWidth =
+            layoutWorkspace.pendingMartyriaBarTransferWidth;
+          layoutWorkspace.pendingMartyriaBarTransferWidth = 0;
+
+          // Insert the anonymous spacer box immediately so that neumesEndPx
+          // includes the bar transfer width before any lyric or projection
+          // math. On the same line the spacer cancels the martyria's reduced
+          // post-break glue, leaving the note's position unchanged. At a
+          // break the spacer remains at the start of the next line and
+          // reserves leading space for the transferred bar.
+          if (martyriaBarTransferWidth > 0) {
+            this.addAnonymousBox(martyriaBarTransferWidth, layoutWorkspace);
+          }
+
           // Knuth-Plass encoding for notes with lyrics.
           //
           // Each note contributes:
@@ -780,7 +805,7 @@ export class LayoutService {
             layoutWorkspace.melismaLyricsEndPx = null;
           }
 
-          // The neume box
+          // The neume box (unchanged by the bar transfer).
           this.addBox(elementWidthPx, noteElement, layoutWorkspace);
 
           const nextElement = this.getElementAt(elements, i + 1);
@@ -874,10 +899,34 @@ export class LayoutService {
           );
           this.addBox(elementWidthPx, martyriaElement, layoutWorkspace);
 
+          // Compute the measure bar width that would transfer from this
+          // martyria to the next line's first note. On the same line, the
+          // reduced post-break glue is cancelled by an anonymous spacer box
+          // inserted before the note, so the note's position is unchanged.
+          // At a break, the post-break glue vanishes; the spacer remains at
+          // the start of the next line and reserves leading space for the bar.
+          const nextNoteForBar = this.getNoteIfPresentAt(elements, i + 1);
+          const martyriaTransferBar = martyriaElement.measureBarLeft?.endsWith(
+            'Above',
+          )
+            ? measureBarAboveToLeft.get(martyriaElement.measureBarLeft)
+            : martyriaElement.measureBarRight;
+          const martyriaBarTransferWidth =
+            martyriaTransferBar &&
+            nextNoteForBar &&
+            !nextNoteForBar.measureBarLeft
+              ? (measureBarWidthMap.get(martyriaTransferBar) ?? 0)
+              : 0;
+          layoutWorkspace.pendingMartyriaBarTransferWidth =
+            martyriaBarTransferWidth;
+
           // Martyria break opportunity. Keep the full trailing spacing after
           // the martyria when it stays mid-line, but make both the fixed
           // padding and the ordinary martyria spacing disappear when a break is
           // taken here. Only the ordinary martyria spacing remains elastic.
+          // The bar transfer width is subtracted so that on the same line it
+          // is cancelled by the anonymous spacer box before the note; at a
+          // break it vanishes along with the rest of the post-break glue.
           this.addProtectedBreakpointEncoding(
             layoutWorkspace,
             this.fixedGlue(0),
@@ -885,7 +934,10 @@ export class LayoutService {
             0,
             {
               ...martyriaGlue,
-              width: martyriaGlue.width + martyriaElement.padding,
+              width:
+                martyriaGlue.width +
+                martyriaElement.padding -
+                martyriaBarTransferWidth,
             },
           );
 
@@ -1255,11 +1307,11 @@ export class LayoutService {
               // explicit one in Phase 1.
               if (normalizedMeasureBar && !noteElement.measureBarLeft) {
                 noteElement.computedMeasureBarLeft = normalizedMeasureBar;
-                // The line breaker did not account for this barline width.
-                // Adjust neumeWidth and lyricsHorizontalOffset so lyrics center
-                // under the neume body, and shift the element left so the
-                // barline overhangs into the margin rather than pushing content
-                // right and overflowing.
+                // Phase 1 reserved leading space for this barline via an
+                // anonymous spacer box before the note. Shift the note left
+                // so the rendered barline occupies that reserved space
+                // instead of adding extra width. Adjust neumeWidth and
+                // lyricsHorizontalOffset so lyrics center under the neume body.
                 const barlineWidth =
                   measureBarWidthMap.get(normalizedMeasureBar) ?? 0;
                 if (barlineWidth > 0) {
@@ -1478,11 +1530,7 @@ export class LayoutService {
         previousLyricsEndPx -
         workspace.neumesEndPx +
         pageSetup.neumeDefaultSpacing;
-      workspace.pendingParagraph.push({
-        type: 'box',
-        width: adjustment,
-      });
-      workspace.neumesEndPx += adjustment;
+      this.addAnonymousBox(adjustment, workspace);
       workspace.lyricsEndPx =
         workspace.neumesEndPx + elementWidthPx + pageSetup.neumeDefaultSpacing;
     } else {
@@ -1518,6 +1566,11 @@ export class LayoutService {
 
     pendingParagraph.push(box);
 
+    workspace.neumesEndPx += width;
+  }
+
+  private static addAnonymousBox(width: number, workspace: LayoutWorkspace) {
+    workspace.pendingParagraph.push({ type: 'box', width });
     workspace.neumesEndPx += width;
   }
 
@@ -2372,6 +2425,7 @@ export class LayoutService {
     workspace.melismaLyricsEndPx = null;
     workspace.pendingDropCapWidthPx = 0;
     workspace.pendingDropCapContinuationLines = 0;
+    workspace.pendingMartyriaBarTransferWidth = 0;
   }
 
   private static forceBreak(workspace: LayoutWorkspace) {

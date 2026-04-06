@@ -139,6 +139,12 @@ This lets the martyria absorb extra line slack before the surrounding neumes do,
 After the martyria box, the code inserts a zero-width pre-break glue, then a zero-cost break penalty, and finally a single martyria glue whose preferred width is the ordinary martyria spacing plus the fixed trailing padding.
 As a result, the full trailing spacing appears after the martyria only when it stays mid-line; if a break is taken there, that entire spacing becomes leading glue on the next line and is skipped.
 
+When a martyria has a transferable measure bar and is followed by a note, the bar transfers to the next line's first note at a break.
+To reserve space for this, the martyria's post-break glue is narrowed by the bar width, and an anonymous spacer box of the same width is inserted before the following note's box.
+On the same line the reduced glue and the spacer cancel, leaving the note's own box position unchanged.
+At a break the post-break glue vanishes; the spacer remains at the start of the next line and reserves leading space for the transferred bar.
+In Phase 2, when the break is actually taken, the note element is shifted left by the bar width so that the rendered barline glyph occupies the space reserved by the spacer rather than adding extra width.
+
 When a right-aligned martyria follows existing content, its leading glue is a separate case: the code uses effectively infinite stretch (`MAX_COST`) so that this glue absorbs all remaining line slack.
 If a right-aligned martyria starts a paragraph, that leading glue is still encoded in the input stream, but `positionItems` skips it at line start, so Phase 2 places the martyria flush right explicitly.
 
@@ -189,7 +195,7 @@ $$\text{penalty}(\infty) \quad \text{glue}(L_i, 0, 0) \quad \text{box}(B_i) \qua
 
 Here:
 
-- $B_i$ is the neume width.
+- $B_i$ is the neume width. When the preceding martyria has a transferable bar, an anonymous spacer box of the bar width is inserted before $B_i$ (see above); $B_i$ itself is unchanged.
 - $L_i$ is the left projection, fixed and unbreakable, and omitted when zero.
 - $s_0$ is the default preferred spacing between successive notes.
 - $s^+$ and $s^-$ are the standard stretch and shrink budgets for an inter-note gap.

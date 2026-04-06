@@ -508,11 +508,19 @@ export class LayoutService {
             // Phase 1 uses the textbox's intrinsic width as a lower bound.
             // Phase 2 resolves the actual fill width from the next positioned
             // item or the line end.
-            this.addLyricBox(elementWidthPx, elements[i], layoutWorkspace);
+            this.addLyricReservation(
+              elementWidthPx,
+              elements[i],
+              layoutWorkspace,
+            );
             this.addBox(elementWidthPx, textBoxElement, layoutWorkspace);
             this.addFillWidthGlue(layoutWorkspace);
           } else {
-            this.addLyricBox(elementWidthPx, elements[i], layoutWorkspace);
+            this.addLyricReservation(
+              elementWidthPx,
+              elements[i],
+              layoutWorkspace,
+            );
             this.addBox(elementWidthPx, textBoxElement, layoutWorkspace);
             this.addGlue(standardGlue, layoutWorkspace);
           }
@@ -569,7 +577,11 @@ export class LayoutService {
             elementWidthPx = pageSetup.innerPageWidth;
           }
 
-          this.addLyricBox(elementWidthPx, richTextBoxElement, layoutWorkspace);
+          this.addLyricReservation(
+            elementWidthPx,
+            richTextBoxElement,
+            layoutWorkspace,
+          );
           this.addBox(elementWidthPx, richTextBoxElement, layoutWorkspace);
           if (isFillWidthRichTextBox) {
             this.addFillWidthGlue(layoutWorkspace);
@@ -604,7 +616,11 @@ export class LayoutService {
           const elementWidthPx = imageBoxElement.inline
             ? imageBoxElement.imageWidth
             : pageSetup.innerPageWidth;
-          this.addLyricBox(elementWidthPx, imageBoxElement, layoutWorkspace);
+          this.addLyricReservation(
+            elementWidthPx,
+            imageBoxElement,
+            layoutWorkspace,
+          );
           this.addBox(elementWidthPx, imageBoxElement, layoutWorkspace);
           this.addGlue(standardGlue, layoutWorkspace);
 
@@ -699,7 +715,7 @@ export class LayoutService {
           // removed. If a martyria replaces that trailing glue, the martyria
           // path preserves any remaining melisma overhang there instead.
           // Ordinary note-to-martyria lyric collision still goes through
-          // addLyricBox.
+          // addLyricReservation.
           const { leftProjection, rightProjection } =
             LayoutService.getLyricProjections(
               noteElement,
@@ -823,7 +839,7 @@ export class LayoutService {
             // Replacing the trailing note glue would otherwise drop any melisma
             // lyric overhang carried in that glue. Preserve only the melisma
             // overhang here; ordinary lyric collision before a martyria is
-            // handled by addLyricBox below.
+            // handled by addLyricReservation below.
             const trailingNoteReservations =
               this.getTrailingNoteReservations(layoutWorkspace);
             const reservation = trailingNoteReservations
@@ -851,7 +867,11 @@ export class LayoutService {
             martyriaElement,
             pageSetup,
           );
-          this.addLyricBox(elementWidthPx, martyriaElement, layoutWorkspace);
+          this.addLyricReservation(
+            elementWidthPx,
+            martyriaElement,
+            layoutWorkspace,
+          );
           this.addBox(elementWidthPx, martyriaElement, layoutWorkspace);
 
           // Martyria break opportunity. Keep the full trailing spacing after
@@ -888,7 +908,11 @@ export class LayoutService {
               `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
             ) + tempoElement.spaceAfter;
           tempoElement.neumeWidth = elementWidthPx;
-          this.addLyricBox(elementWidthPx, tempoElement, layoutWorkspace);
+          this.addLyricReservation(
+            elementWidthPx,
+            tempoElement,
+            layoutWorkspace,
+          );
           this.addBox(elementWidthPx, tempoElement, layoutWorkspace);
           this.addGlue(standardGlue, layoutWorkspace);
 
@@ -955,7 +979,11 @@ export class LayoutService {
             dropCapElement.computedLineSpan = lineSpan;
           }
 
-          this.addLyricBox(elementWidthPx, dropCapElement, layoutWorkspace);
+          this.addLyricReservation(
+            elementWidthPx,
+            dropCapElement,
+            layoutWorkspace,
+          );
           this.addBox(elementWidthPx, dropCapElement, layoutWorkspace);
           this.addGlue(standardGlue, layoutWorkspace);
 
@@ -969,7 +997,11 @@ export class LayoutService {
           const emptyElement = elements[i] as EmptyElement;
           emptyElement.height = neumeHeight;
 
-          this.addLyricBox(emptyElementWidth, emptyElement, layoutWorkspace);
+          this.addLyricReservation(
+            emptyElementWidth,
+            emptyElement,
+            layoutWorkspace,
+          );
           this.addBox(emptyElementWidth, emptyElement, layoutWorkspace);
           this.addGlue(standardGlue, layoutWorkspace);
 
@@ -1415,7 +1447,7 @@ export class LayoutService {
     return this.measurePlainTextWidth('', pageSetup.lyricsFont);
   }
 
-  private static addLyricBox(
+  private static addLyricReservation(
     elementWidthPx: number,
     element: ScoreElement,
     workspace: LayoutWorkspace,

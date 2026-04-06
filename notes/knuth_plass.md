@@ -213,7 +213,7 @@ If a paragraph ends immediately after a note, `endParagraph` materializes that n
 It must do this because `removeGlue` strips the trailing cancellation glue, while the forced break itself contributes penalty width 0.
 
 When a martyria follows a note, the martyria path replaces the note's trailing post-break glue with martyria glue: ordinary martyria glue in the usual case, or the infinite-stretch right-martyria glue when the martyria is right-aligned.
-Ordinary note-to-martyria lyric collision is still handled by `addLyricBox`.
+Ordinary note-to-martyria lyric collision is still handled by `addLyricReservation`.
 However, if a melisma lyric overhang extends past the last neume, that remaining overhang is first materialized into the replacement martyria glue width so that it is not lost when the note's cancellation glue is removed.
 
 ### Computing the minimum same-line width

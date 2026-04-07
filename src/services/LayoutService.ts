@@ -1531,12 +1531,10 @@ export class LayoutService {
         workspace.neumesEndPx +
         pageSetup.neumeDefaultSpacing;
       this.addAnonymousBox(adjustment, workspace);
-      workspace.lyricsEndPx =
-        workspace.neumesEndPx + elementWidthPx + pageSetup.neumeDefaultSpacing;
-    } else {
-      workspace.lyricsEndPx =
-        workspace.neumesEndPx + elementWidthPx + pageSetup.neumeDefaultSpacing;
     }
+
+    workspace.lyricsEndPx =
+      workspace.neumesEndPx + elementWidthPx + pageSetup.neumeDefaultSpacing;
   }
 
   private static isBlockElement(element: ScoreElement): boolean {

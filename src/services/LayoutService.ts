@@ -927,6 +927,13 @@ export class LayoutService {
           // The bar transfer width is subtracted so that on the same line it
           // is cancelled by the anonymous spacer box before the note; at a
           // break it vanishes along with the rest of the post-break glue.
+          // When the quantitative neume is present, part of the total martyria
+          // padding is rendered inside the box as marginLeft; only the
+          // remainder goes into trailing glue.
+          const martyriaTrailingPadding =
+            pageSetup.neumeDefaultFontSize *
+              pageSetup.spaceAfterMartyriaFactor -
+            martyriaElement.padding;
           this.addProtectedBreakpointEncoding(
             layoutWorkspace,
             this.fixedGlue(0),
@@ -936,7 +943,7 @@ export class LayoutService {
               ...martyriaGlue,
               width:
                 martyriaGlue.width +
-                martyriaElement.padding -
+                martyriaTrailingPadding -
                 martyriaBarTransferWidth,
             },
           );
@@ -2900,11 +2907,13 @@ export class LayoutService {
         ? NeumeMappingService.getMapping(martyriaElement.quantitativeNeume)
         : null;
 
-    // Add fixed trailing padding after the martyria. The breakpoint encoding
-    // merges it into the ordinary martyria spacing on the same line, and drops
-    // the entire trailing spacing when a break is taken after the martyria.
+    // Split the total padding between inline rendering and trailing glue.
+    // The renderer applies padding as marginLeft on the quantitative neume
+    // in NeumeBoxMartyria.vue, so only that case should keep it inside the box.
     martyriaElement.padding =
-      pageSetup.neumeDefaultFontSize * pageSetup.spaceAfterMartyriaFactor;
+      martyriaElement.alignRight && martyriaElement.quantitativeNeume
+        ? pageSetup.neumeDefaultFontSize * pageSetup.spaceAfterMartyriaFactor
+        : 0;
 
     martyriaElement.neumeWidth = this.getNeumeWidthFromCache(
       neumeWidthCache,
@@ -2954,10 +2963,11 @@ export class LayoutService {
 
     return (
       martyriaElement.spaceAfter +
-      (TextMeasurementService.getTextWidth(
-        mappingNote.text,
-        `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
-      ) +
+      (martyriaElement.padding +
+        TextMeasurementService.getTextWidth(
+          mappingNote.text,
+          `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
+        ) +
         TextMeasurementService.getTextWidth(
           mappingRoot.text,
           `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,

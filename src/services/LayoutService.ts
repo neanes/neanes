@@ -1298,9 +1298,15 @@ export class LayoutService {
                 previousNoteElement.computedMeasureBarRight =
                   noteElement.measureBarLeft;
               }
-            } else if (previousElement?.elementType === ElementType.Martyria) {
+            } else if (
+              previousElement?.elementType === ElementType.Martyria &&
+              paragraphLineIndex > 0
+            ) {
               // If the previous line ends with a martyria with a barline, apply
-              // it to the left of the new line
+              // it to the left of the new line. Only transfer within the same
+              // paragraph (paragraphLineIndex > 0); when a martyria ends a
+              // paragraph (right-aligned or explicit line break), no bar is
+              // transferred to the next paragraph's first note.
               const previousMartyriaElement =
                 previousElement as MartyriaElement;
               const normalizedMeasureBar =

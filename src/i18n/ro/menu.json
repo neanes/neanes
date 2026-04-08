@@ -26,11 +26,12 @@
     "cut": "Taie",
     "copy": "Copiază",
     "copyAsHtml": "Copiază ca HTML",
-    "paste": "Lipire",
-    "pasteWithLyrics": "Lipire cu Versuri",
+    "paste": "Lipește",
+    "pasteWithLyrics": "Lipește cu Versuri",
     "copyFormat": "Copiază Formatul",
-    "pasteFormat": "Lipire Formatul",
+    "pasteFormat": "Lipește Formatul",
     "find": "Căutare",
+    "lyrics": "Versuri",
     "preferences": "Preferințe"
   },
   "insert": {
@@ -39,22 +40,27 @@
     "annotation": "Anotare",
     "dropCapBefore": "Majusculă Înainte",
     "dropCapAfter": "Majusculă După",
-    "textBox": "Caseta de Text",
-    "inlineTextBox": "Caseta de Text în Linie",
-    "modeKey": "Initial Mărturia",
+    "textBox": "Casetă de Text",
+    "richTextBox": "Casetă de Text Formatat",
+    "inlineTextBox": "Casetă de Text în Linie",
+    "modeKey": "Mărturie Inițială",
     "image": "Imagine",
     "headersAndFooters": "Antete și Subsoluri",
     "header": "Antet",
     "footer": "Subsol"
   },
+  "tools": {
+    "root": "Instrumente",
+    "copyElementLink": "Copiază Linkul Elementului"
+  },
   "view": {
     "root": "Vizualizare (Debugare)",
-    "generateTestFiles": "Generare Fișiere de Test (Debugare)"
+    "generateTestFiles": "Generează Fișiere de Test (Debugare)"
   },
   "help": {
     "root": "Ajutor",
     "guide": "Ghid",
-    "requestAFeature": "Solicită o Caracteristică",
+    "requestAFeature": "Solicită o Funcționalitate",
     "reportAnIssue": "Raportează o Problemă",
     "about": "Despre"
   },

@@ -86,7 +86,6 @@ const maxRecentFiles = 20;
 const storeFilePath = path.join(userDataPath, 'settings.json');
 
 const isMac = process.platform === 'darwin';
-const metrics = process.argv.includes('--metrics');
 const silentPdf = process.argv.includes('--silent-pdf');
 const silentHtml = process.argv.includes('--silent-html');
 const silentLatex = process.argv.includes('--silent-latex');
@@ -375,7 +374,6 @@ async function openFileFromArgs(argv: string[]) {
 
   return {
     files: result,
-    metrics,
     silentPdf,
     silentHtml,
     silentLatex,
@@ -1780,10 +1778,6 @@ async function createWindow() {
 app.setAboutPanelOptions({
   applicationName: app.getName(),
   applicationVersion: app.getVersion(),
-});
-
-ipcMain.on(IpcRendererChannels.Log, (_event, ...args: unknown[]) => {
-  console.log(...args);
 });
 
 ipcMain.on(IpcRendererChannels.SetCanUndo, async (event, data) => {

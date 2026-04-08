@@ -323,11 +323,6 @@ Within a fixed cap, the ordinary Knuth-Plass scoring still applies.
 That means breakpoint penalties continue to matter as tie-breakers among layouts whose worst line is equally loose, and `adjacentLooseTightPenalty` still discourages abrupt fitness-class jumps between neighboring lines.
 The `0.05` bucket makes this tie-breaking zone slightly wider on purpose.
 
-This is also why we no longer need a custom `adjustmentRatioPenalty`.
-Under unrestricted optimization, the base badness term $100|r|^3$ alone would let a legal line compete with a strong `0.5 * MAX_COST` penalty until about $r \approx 1.71$, which is later than we want.
-The cap search solves that more directly:
-instead of tuning an extra reward-function term to approximate "too loose", we search for the smallest cap that makes the paragraph feasible and then optimize normally inside that cap.
-
 ## Relaxing $\TeX$'s Restriction 1
 
 The discussion above describes the paragraph encoding itself.

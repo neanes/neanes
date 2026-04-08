@@ -301,7 +301,7 @@ export class LayoutService {
       pageSetup,
       pendingParagraph: [],
       neumesEndPx: 0,
-      lyricsEndPx: -pageSetup.lyricsMinimumSpacing,
+      lyricsEndPx: -pageSetup.neumeDefaultSpacing,
       melismaLyricsEndPx: null,
       completedParagraphs: [],
       metrics: [],
@@ -2432,7 +2432,7 @@ export class LayoutService {
     // Reset state
     workspace.pendingParagraph = [];
     workspace.neumesEndPx = 0;
-    workspace.lyricsEndPx = -workspace.pageSetup.lyricsMinimumSpacing;
+    workspace.lyricsEndPx = -workspace.pageSetup.neumeDefaultSpacing;
     workspace.melismaLyricsEndPx = null;
     workspace.pendingDropCapWidthPx = 0;
     workspace.pendingDropCapContinuationLines = 0;

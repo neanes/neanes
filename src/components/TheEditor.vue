@@ -145,7 +145,7 @@ import { MusicXmlExporter } from '@/services/integration/MusicXmlExporter';
 import { OcrImporter } from '@/services/integration/OcrImporter';
 import { IIpcService } from '@/services/ipc/IIpcService';
 import { IpcService } from '@/services/ipc/IpcService';
-import { LayoutService, type LineBreakMetric } from '@/services/LayoutService';
+import { LayoutService } from '@/services/LayoutService';
 import { LyricService } from '@/services/LyricService';
 import { NeumeKeyboard } from '@/services/NeumeKeyboard';
 import { IPlatformService } from '@/services/platform/IPlatformService';
@@ -316,7 +316,6 @@ export default defineComponent({
       tabs: [] as Tab[],
 
       pages: [] as Page[],
-      metrics: [] as LineBreakMetric[],
 
       currentPageNumber: 0,
 
@@ -1463,15 +1462,6 @@ export default defineComponent({
         fontFamily: this.score.pageSetup.lyricsDefaultFontFamily,
         color: this.score.pageSetup.gorgonDefaultColor,
       } as StyleValue;
-    },
-
-    logStructuredMetric(label: string, payload: unknown) {
-      const message = `${label} ${JSON.stringify(payload)}`;
-      if (window.ipcRenderer) {
-        window.ipcRenderer.send(IpcRendererChannels.Log, message);
-      } else {
-        console.log(message);
-      }
     },
 
     getMelismaStyle(element: NoteElement) {
@@ -3482,9 +3472,7 @@ export default defineComponent({
         .map((_, i) => i)
         .filter((i) => this.pages[i].isVisible);
 
-      const { pages, metrics } = LayoutService.processPages(
-        toRaw(this.selectedWorkspace),
-      );
+      const pages = LayoutService.processPages(toRaw(this.selectedWorkspace));
 
       // Set page visibility for the newly processed pages
       pages.forEach((x, index) => (x.isVisible = visiblePages.includes(index)));
@@ -3510,7 +3498,6 @@ export default defineComponent({
         });
 
       this.pages = pages;
-      this.metrics = metrics;
 
       // If using the browser, save the workspace to local storage
       if (this.isBrowser) {
@@ -3584,19 +3571,11 @@ export default defineComponent({
         await this.ipcService.openWorkspaceFromArgv();
 
       if (openWorkspaceResults.silentPdf) {
-        const emitMetrics = openWorkspaceResults.metrics ?? false;
-
         for (const file of openWorkspaceResults.files.filter(
           (x) => x.success,
         )) {
           this.openScore(file);
           await this.onFileMenuExportAsPdf();
-          if (emitMetrics) {
-            this.logStructuredMetric('LINE_BREAK_METRICS_DOCUMENT', {
-              filePath: file.filePath,
-              lines: this.metrics,
-            });
-          }
           this.removeWorkspace(this.selectedWorkspace);
         }
       }
@@ -3679,11 +3658,7 @@ export default defineComponent({
       this.selectedElement =
         this.score.staff.elements[this.score.staff.elements.length - 1];
 
-      const { pages, metrics } = LayoutService.processPages(
-        this.selectedWorkspace,
-      );
-      this.pages = pages;
-      this.metrics = metrics;
+      this.pages = LayoutService.processPages(this.selectedWorkspace);
     },
 
     async saveWorkspace(workspace: Workspace) {

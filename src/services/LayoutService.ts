@@ -225,9 +225,6 @@ interface LayoutWorkspace {
   // have been placed onto page(s), that paragraph is removed from this list.
   completedParagraphs: CompletedParagraph[];
 
-  // Per-line metrics emitted for offline analysis of line-breaking quality.
-  metrics: LineBreakMetric[];
-
   // Multiline drop cap state for the paragraph currently being built.
   pendingDropCapWidthPx: number;
   pendingDropCapContinuationLines: number;
@@ -250,17 +247,6 @@ interface LyricOverhangs {
   right: number;
 }
 
-export interface LineBreakMetric {
-  adjustmentRatio: number;
-  breakPenaltyCost: number;
-  isParagraphFinalLine: boolean;
-}
-
-export interface ProcessPagesResult {
-  pages: Page[];
-  metrics: LineBreakMetric[];
-}
-
 interface LineBreakSolution {
   breakpoints: number[];
   ratios: number[];
@@ -269,7 +255,7 @@ interface LineBreakSolution {
 }
 
 export class LayoutService {
-  public static processPages(workspace: Workspace): ProcessPagesResult {
+  public static processPages(workspace: Workspace): Page[] {
     const score = workspace.score;
     const pageSetup = score.pageSetup;
     const elements = score.staff.elements;
@@ -304,7 +290,6 @@ export class LayoutService {
       lyricsEndPx: -pageSetup.neumeDefaultSpacing,
       melismaLyricsEndPx: null,
       completedParagraphs: [],
-      metrics: [],
       pendingDropCapWidthPx: 0,
       pendingDropCapContinuationLines: 0,
       pendingMartyriaBarTransferWidth: 0,
@@ -1111,8 +1096,6 @@ export class LayoutService {
       }
     }
 
-    const metrics = layoutWorkspace.metrics;
-
     // Phase 2: Place completed paragraphs onto pages
     for (const [
       completedParagraphIndex,
@@ -1411,7 +1394,7 @@ export class LayoutService {
       this.checkElementState(element);
     });
 
-    return { pages, metrics };
+    return pages;
   }
 
   private static isFillWidthElement(element: ScoreElement): boolean {
@@ -2404,19 +2387,6 @@ export class LayoutService {
       lineLengths,
       breakpoints,
     );
-    workspace.metrics.push(
-      ...ratios.map((adjustmentRatio, index) => {
-        const endBreakpoint = breakpoints[index + 1];
-        const endItem = pendingParagraph[endBreakpoint];
-
-        return {
-          adjustmentRatio,
-          breakPenaltyCost: endItem.type === 'penalty' ? endItem.cost : 0,
-          isParagraphFinalLine: index === ratios.length - 1,
-        };
-      }),
-    );
-
     if (workspace.loggingEnabled) {
       console.log('Positions', positions);
       console.log('Adjustment ratios', ratios);

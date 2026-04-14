@@ -134,7 +134,9 @@ Each neume group, for example a simple oligon or an ison with kentimata over a s
 The space between ordinary neumes is modeled as glue with a user-configurable width that may stretch or shrink by up to one half of its preferred width.
 
 Following several classical 19th-century publications, ordinary martyriae are given extra elasticity.
-When a martyria sits between neighboring elements, the surrounding martyria glues together contribute an additional 2/5 em of stretch, that is, 1/5 em on each side, where 1 em is the neume font size.
+When a martyria sits between neighboring elements, the surrounding martyria glues together contribute additional stretch, that is, _k_ em on each side, where 1 em is the neume font size.
+The factor _k_ ramps linearly with the user-configurable spacing from 0.01em at 0.1 pt to 0.2em at the default spacing (approximately 2.16 pt), clamped to [0.01, 0.2], so that the martyria bonus does not dominate when the base spacing is already small.
+The martyria bonus is zero at r <= 0 and grows steeply on positively adjusted lines: per-side extra over standard glue is r x _k_ em for r >= 0 and 0 for r <= 0.
 This lets the martyria absorb extra line slack before the surrounding neumes do, which helps keep ordinary neume spacing more even from line to line.
 After the martyria box, the code inserts a zero-width pre-break glue, then a zero-cost break penalty, and finally a single martyria glue whose preferred width is the ordinary martyria spacing plus the fixed trailing padding.
 As a result, the full trailing spacing appears after the martyria only when it stays mid-line; if a break is taken there, that entire spacing becomes leading glue on the next line and is skipped.

@@ -467,12 +467,19 @@ export class LayoutService {
       shrink: pageSetup.neumeDefaultSpacing * 0.5,
     };
 
+    // Martyria extra-stretch factor: linear ramp from 0.01em at 0.1pt to
+    // 0.2em at the default spacing, clamped at both ends.
+    const spacingRamp =
+      (pageSetup.neumeDefaultSpacing - Unit.fromPt(0.1)) /
+      (new PageSetup().neumeDefaultSpacing - Unit.fromPt(0.1));
+
     const martyriaGlue: Glue = {
       type: 'glue',
       width: pageSetup.neumeDefaultSpacing,
       stretch:
         pageSetup.neumeDefaultSpacing * 0.5 +
-        pageSetup.neumeDefaultFontSize * 0.2,
+        pageSetup.neumeDefaultFontSize *
+          (0.01 + 0.19 * Math.min(1, Math.max(0, spacingRamp))),
       shrink: pageSetup.neumeDefaultSpacing * 0.5,
     };
 

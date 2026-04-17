@@ -65,7 +65,7 @@
     "i18next-vue": "^5.4.0",
     "jest-matcher-deep-close-to": "^3.0.2",
     "mitt": "^3.0.1",
-    "prettier": "^3.8.1",
+    "prettier": "^3.8.2",
     "register-service-worker": "^1.7.2",
     "tone": "^15.1.22",
     "typescript": "^5.9.3",

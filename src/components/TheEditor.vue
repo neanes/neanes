@@ -119,7 +119,7 @@ import {
   TimeNeume,
   VocalExpressionNeume,
 } from '@/models/Neumes';
-import { Page } from '@/models/Page';
+import { Line, Page } from '@/models/Page';
 import { PageSetup } from '@/models/PageSetup';
 import { ScaleNote } from '@/models/Scales';
 import { Score } from '@/models/Score';
@@ -308,6 +308,7 @@ export default defineComponent({
       printMode: false,
 
       showGuides: false,
+      showAdjustmentRatios: false,
 
       workspaces: [] as Workspace[],
       selectedWorkspaceValue: new Workspace(),
@@ -1435,6 +1436,31 @@ export default defineComponent({
         left: !this.rtl ? withZoom(element.x) : undefined,
         right: this.rtl ? withZoom(element.x) : undefined,
         top: withZoom(element.y),
+      } as StyleValue;
+    },
+
+    getAdjustmentRatioStyle(line: Line) {
+      const fontSize = this.score.pageSetup.lyricsDefaultFontSize * 0.8;
+      const gap = fontSize * 0.5;
+      return {
+        position: 'absolute',
+        left: withZoom(
+          this.rtl
+            ? this.score.pageSetup.leftMargin - gap - fontSize * 3
+            : this.score.pageSetup.pageWidth -
+                this.score.pageSetup.rightMargin +
+                gap,
+        ),
+        width: withZoom(fontSize * 3),
+        textAlign: 'right',
+        top: withZoom(
+          line.elements[0].y +
+            this.score.pageSetup.lineHeight / 3 -
+            fontSize / 2,
+        ),
+        fontSize: withZoom(fontSize),
+        fontFamily: this.score.pageSetup.lyricsDefaultFontFamily,
+        color: this.score.pageSetup.gorgonDefaultColor,
       } as StyleValue;
     },
 
@@ -6840,6 +6866,16 @@ export default defineComponent({
                     />
                   </template>
                 </div>
+                <span
+                  v-if="
+                    showAdjustmentRatios &&
+                    line.adjustmentRatio != null &&
+                    line.elements.length > 0
+                  "
+                  class="adjustment-ratio"
+                  :style="getAdjustmentRatioStyle(line)"
+                  >{{ line.adjustmentRatio.toFixed(2) }}</span
+                >
               </div>
               <template v-if="score.pageSetup.showFooter">
                 <div
@@ -7370,6 +7406,12 @@ export default defineComponent({
 
 .element-box {
   position: absolute;
+}
+
+.adjustment-ratio {
+  pointer-events: none;
+  white-space: nowrap;
+  font-variant-numeric: lining-nums tabular-nums;
 }
 
 .neume-box {

@@ -42,7 +42,7 @@
   },
   "devDependencies": {
     "@babel/preset-typescript": "^7.28.5",
-    "@ckeditor/ckeditor5-vue": "^7.4.0",
+    "@ckeditor/ckeditor5-vue": "^7.4.1",
     "@ckpack/vue-color": "^1.6.0",
     "@types/mime-types": "^3.0.1",
     "@types/node": "^25.6.0",

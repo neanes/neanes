@@ -9,7 +9,7 @@ import {
   MaxAdjustmentExceededError,
   PositionedItem,
   positionItems,
-} from 'knuth-plass-linebreak';
+} from 'tex-linebreak';
 
 import {
   DropCapElement,

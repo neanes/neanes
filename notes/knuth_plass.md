@@ -295,7 +295,7 @@ This is slightly more involved than treating all melisma excess as an ordinary r
 As Knuth & Plass note, pathological cases can arise in which no solution satisfies the stated constraints.
 In such cases, they introduce a tolerance threshold that lets the search back off and retry with looser constraints.
 
-The `knuth-plass-linebreak` library exposes this through `initialMaxAdjustmentRatio` and `maxAdjustmentRatio`.
+The `tex-linebreak` library exposes this through `initialMaxAdjustmentRatio` and `maxAdjustmentRatio`.
 We use those parameters, but not in the library's built-in "try one pass, then relax and accept the first feasible answer" style.
 Since Byzantine notation has no analogue of hyphenation, the candidate note sequence is the same on every pass, so we can search over the ratio cap itself.
 

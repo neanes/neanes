@@ -1,37 +1,37 @@
 <template>
   <div class="neume-toolbar">
-    <div class="row" v-if="secondaryNeume">
+    <div v-if="secondaryNeume" class="row">
       <span>{{ $t('toolbar:neume.neumeSelect') }}</span>
       <span class="space"></span>
       <button
         v-if="tertiaryNeume"
         class="btnNeumeSelect"
-        @click="$emit('update:innerNeume', 'Tertiary')"
         :class="{ selected: innerNeume === 'Tertiary' }"
+        @click="$emit('update:innerNeume', 'Tertiary')"
       >
         <Neume
           :neume="tertiaryNeume"
-          :fontFamily="pageSetup.neumeDefaultFontFamily"
+          :font-family="pageSetup.neumeDefaultFontFamily"
         />
       </button>
       <button
-        @click="$emit('update:innerNeume', 'Secondary')"
         class="btnNeumeSelect"
         :class="{ selected: innerNeume === 'Secondary' }"
+        @click="$emit('update:innerNeume', 'Secondary')"
       >
         <Neume
           :neume="secondaryNeume"
-          :fontFamily="pageSetup.neumeDefaultFontFamily"
+          :font-family="pageSetup.neumeDefaultFontFamily"
         />
       </button>
       <button
-        @click="$emit('update:innerNeume', 'Primary')"
         class="btnNeumeSelect"
         :class="{ selected: innerNeume === 'Primary' }"
+        @click="$emit('update:innerNeume', 'Primary')"
       >
         <Neume
           :neume="primaryNeume!"
-          :fontFamily="pageSetup.neumeDefaultFontFamily"
+          :font-family="pageSetup.neumeDefaultFontFamily"
         />
       </button>
     </div>
@@ -417,8 +417,8 @@
         :max="spaceAfterMax"
         :step="0.5"
         :precision="2"
-        :modelValue="element.spaceAfter"
-        @update:modelValue="$emit('update', { spaceAfter: $event })"
+        :model-value="element.spaceAfter"
+        @update:model-value="$emit('update', { spaceAfter: $event })"
       />
       <span class="space"></span>
 
@@ -992,6 +992,24 @@ function getDisplayName(neume: Neume) {
 
 export default defineComponent({
   components: { InputUnit, ButtonWithMenu, Neume: NeumeVue },
+  props: {
+    element: {
+      type: Object as PropType<NoteElement>,
+      required: true,
+    },
+    pageSetup: {
+      type: Object as PropType<PageSetup>,
+      required: true,
+    },
+    innerNeume: {
+      type: String,
+      required: true,
+    },
+    neumeKeyboard: {
+      type: Object as PropType<NeumeKeyboard>,
+      required: true,
+    },
+  },
   emits: [
     'update',
     'open-syllable-positioning-dialog',
@@ -1013,24 +1031,6 @@ export default defineComponent({
     'update:tie',
     'update:time',
   ],
-  props: {
-    element: {
-      type: Object as PropType<NoteElement>,
-      required: true,
-    },
-    pageSetup: {
-      type: Object as PropType<PageSetup>,
-      required: true,
-    },
-    innerNeume: {
-      type: String,
-      required: true,
-    },
-    neumeKeyboard: {
-      type: Object as PropType<NeumeKeyboard>,
-      required: true,
-    },
-  },
 
   data() {
     return {

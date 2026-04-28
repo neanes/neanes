@@ -7,7 +7,7 @@ export default [
   {
     ignores: ['dist/**/*', 'dist-electron/**/*', '**/.vitepress/cache/**/*'],
   },
-  ...pluginVue.configs['flat/essential'],
+  ...pluginVue.configs['flat/recommended'],
   ...vueTsEslintConfig({
     extends: ['recommended'],
   }),

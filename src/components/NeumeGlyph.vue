@@ -12,15 +12,21 @@ import { withZoom } from '@/utils/withZoom';
 
 export default defineComponent({
   components: {},
-  emits: ['update'],
   props: {
     neume: {
       type: String as PropType<NeumeType>,
       required: true,
     },
-    offset: Object as PropType<ScoreElementOffset>,
-    fontFamily: String,
+    offset: {
+      type: Object as PropType<ScoreElementOffset>,
+      default: undefined,
+    },
+    fontFamily: {
+      type: String,
+      default: undefined,
+    },
   },
+  emits: ['update'],
 
   data() {
     return {};

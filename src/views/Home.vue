@@ -10,7 +10,7 @@ import TheEditor from '@/components/TheEditor.vue';
 
 export default {
   // eslint-disable-next-line vue/multi-word-component-names
-  name: 'home',
+  name: 'Home',
   components: {
     TheEditor,
   },

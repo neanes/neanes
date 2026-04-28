@@ -7,10 +7,10 @@
       <div class="popover" :style="popupStyle">
         <div class="cover" @click="close" />
         <Sketch
-          @update:modelValue="onColorChanged"
-          :modelValue="color"
-          :presetColors="presetColors"
-          :disableAlpha="true"
+          :model-value="color"
+          :preset-colors="presetColors"
+          :disable-alpha="true"
+          @update:model-value="onColorChanged"
         />
       </div>
     </template>
@@ -27,7 +27,6 @@ interface Color {
 
 export default defineComponent({
   components: { Sketch },
-  emits: ['update:modelValue'],
   props: {
     modelValue: {
       type: String,
@@ -38,6 +37,7 @@ export default defineComponent({
       default: 'colorPicker_presetColors',
     },
   },
+  emits: ['update:modelValue'],
 
   data() {
     return {
@@ -51,16 +51,6 @@ export default defineComponent({
 
       color: '#000000',
     };
-  },
-
-  created() {
-    this.color = this.modelValue;
-  },
-
-  watch: {
-    modelValue(newValue: string) {
-      this.color = newValue;
-    },
   },
 
   computed: {
@@ -79,6 +69,16 @@ export default defineComponent({
         top: `${this.popupPositionTop}px`,
       } as StyleValue;
     },
+  },
+
+  watch: {
+    modelValue(newValue: string) {
+      this.color = newValue;
+    },
+  },
+
+  created() {
+    this.color = this.modelValue;
   },
 
   methods: {

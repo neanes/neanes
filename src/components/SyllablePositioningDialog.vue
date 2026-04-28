@@ -9,7 +9,7 @@
               v-if="previousElement.elementType === ElementType.Note"
               class="other-neume"
               :note="previousElement as NoteElement"
-              :pageSetup="pageSetup"
+              :page-setup="pageSetup"
               :style="previousElementStyle"
             />
 
@@ -17,7 +17,7 @@
               v-if="previousElement.elementType === ElementType.Martyria"
               class="other-neume"
               :neume="previousElement as MartyriaElement"
-              :pageSetup="pageSetup"
+              :page-setup="pageSetup"
               :style="previousElementStyle"
             />
 
@@ -25,7 +25,7 @@
               v-if="previousElement.elementType === ElementType.Tempo"
               class="other-neume"
               :neume="previousElement as TempoElement"
-              :pageSetup="pageSetup"
+              :page-setup="pageSetup"
               :style="previousElementStyle"
             />
           </template>
@@ -33,14 +33,14 @@
           <div class="neume-container" :style="mainStyle">
             <NeumeBoxSyllable
               :note="form as NoteElement"
-              :pageSetup="pageSetup"
+              :page-setup="pageSetup"
             />
             <DragHandle
               v-if="hasAccidental"
               :note="form as NoteElement"
               :mark="form.accidental!"
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
-              :fontSize="pageSetup.neumeDefaultFontSize"
+              :font-family="pageSetup.neumeDefaultFontFamily"
+              :font-size="pageSetup.neumeDefaultFontSize"
               :zoom="zoom"
               :x="form.accidentalOffsetX"
               :y="form.accidentalOffsetY"
@@ -50,8 +50,8 @@
               v-if="hasSecondaryAccidental"
               :note="form as NoteElement"
               :mark="form.secondaryAccidental!"
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
-              :fontSize="pageSetup.neumeDefaultFontSize"
+              :font-family="pageSetup.neumeDefaultFontFamily"
+              :font-size="pageSetup.neumeDefaultFontSize"
               :zoom="zoom"
               :x="form.secondaryAccidentalOffsetX"
               :y="form.secondaryAccidentalOffsetY"
@@ -61,8 +61,8 @@
               v-if="hasTertiaryAccidental"
               :note="form as NoteElement"
               :mark="form.tertiaryAccidental!"
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
-              :fontSize="pageSetup.neumeDefaultFontSize"
+              :font-family="pageSetup.neumeDefaultFontFamily"
+              :font-size="pageSetup.neumeDefaultFontSize"
               :zoom="zoom"
               :x="form.tertiaryAccidentalOffsetX"
               :y="form.tertiaryAccidentalOffsetY"
@@ -94,8 +94,8 @@
               v-if="hasFthora"
               :note="form as NoteElement"
               :mark="form.fthora!"
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
-              :fontSize="pageSetup.neumeDefaultFontSize"
+              :font-family="pageSetup.neumeDefaultFontFamily"
+              :font-size="pageSetup.neumeDefaultFontSize"
               :zoom="zoom"
               :x="form.fthoraOffsetX"
               :y="form.fthoraOffsetY"
@@ -105,8 +105,8 @@
               v-if="hasSecondaryFthora"
               :note="form as NoteElement"
               :mark="form.secondaryFthora!"
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
-              :fontSize="pageSetup.neumeDefaultFontSize"
+              :font-family="pageSetup.neumeDefaultFontFamily"
+              :font-size="pageSetup.neumeDefaultFontSize"
               :zoom="zoom"
               :x="form.secondaryFthoraOffsetX"
               :y="form.secondaryFthoraOffsetY"
@@ -116,8 +116,8 @@
               v-if="hasTertiaryFthora"
               :note="form as NoteElement"
               :mark="form.tertiaryFthora!"
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
-              :fontSize="pageSetup.neumeDefaultFontSize"
+              :font-family="pageSetup.neumeDefaultFontFamily"
+              :font-size="pageSetup.neumeDefaultFontSize"
               :zoom="zoom"
               :x="form.tertiaryFthoraOffsetX"
               :y="form.tertiaryFthoraOffsetY"
@@ -127,8 +127,8 @@
               v-if="hasGorgonNeume"
               :note="form as NoteElement"
               :mark="form.gorgonNeume!"
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
-              :fontSize="pageSetup.neumeDefaultFontSize"
+              :font-family="pageSetup.neumeDefaultFontFamily"
+              :font-size="pageSetup.neumeDefaultFontSize"
               :zoom="zoom"
               :x="form.gorgonNeumeOffsetX"
               :y="form.gorgonNeumeOffsetY"
@@ -138,8 +138,8 @@
               v-if="hasSecondaryGorgonNeume"
               :note="form as NoteElement"
               :mark="form.secondaryGorgonNeume!"
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
-              :fontSize="pageSetup.neumeDefaultFontSize"
+              :font-family="pageSetup.neumeDefaultFontFamily"
+              :font-size="pageSetup.neumeDefaultFontSize"
               :zoom="zoom"
               :x="form.secondaryGorgonNeumeOffsetX"
               :y="form.secondaryGorgonNeumeOffsetY"
@@ -149,8 +149,8 @@
               v-if="hasIson"
               :note="form as NoteElement"
               :mark="form.ison!"
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
-              :fontSize="pageSetup.neumeDefaultFontSize"
+              :font-family="pageSetup.neumeDefaultFontFamily"
+              :font-size="pageSetup.neumeDefaultFontSize"
               :zoom="zoom"
               :x="form.isonOffsetX"
               :y="form.isonOffsetY"
@@ -160,8 +160,8 @@
               v-if="form.koronis"
               :note="form as NoteElement"
               :mark="TimeNeume.Koronis"
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
-              :fontSize="pageSetup.neumeDefaultFontSize"
+              :font-family="pageSetup.neumeDefaultFontFamily"
+              :font-size="pageSetup.neumeDefaultFontSize"
               :zoom="zoom"
               :x="form.koronisOffsetX"
               :y="form.koronisOffsetY"
@@ -171,8 +171,8 @@
               v-if="hasMeasureNumber"
               :note="form as NoteElement"
               :mark="form.measureNumber!"
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
-              :fontSize="pageSetup.neumeDefaultFontSize"
+              :font-family="pageSetup.neumeDefaultFontFamily"
+              :font-size="pageSetup.neumeDefaultFontSize"
               :zoom="zoom"
               :x="form.measureNumberOffsetX"
               :y="form.measureNumberOffsetY"
@@ -182,8 +182,8 @@
               v-if="form.noteIndicator"
               :note="form as NoteElement"
               :mark="form.noteIndicatorNeume!"
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
-              :fontSize="pageSetup.neumeDefaultFontSize"
+              :font-family="pageSetup.neumeDefaultFontFamily"
+              :font-size="pageSetup.neumeDefaultFontSize"
               :zoom="zoom"
               :x="form.noteIndicatorOffsetX"
               :y="form.noteIndicatorOffsetY"
@@ -193,8 +193,8 @@
               v-if="form.stavros"
               :note="form as NoteElement"
               :mark="VocalExpressionNeume.Cross_Top"
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
-              :fontSize="pageSetup.neumeDefaultFontSize"
+              :font-family="pageSetup.neumeDefaultFontFamily"
+              :font-size="pageSetup.neumeDefaultFontSize"
               :zoom="zoom"
               :x="form.stavrosOffsetX"
               :y="form.stavrosOffsetY"
@@ -204,8 +204,8 @@
               v-if="hasTie"
               :note="form as NoteElement"
               :mark="form.tie!"
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
-              :fontSize="pageSetup.neumeDefaultFontSize"
+              :font-family="pageSetup.neumeDefaultFontFamily"
+              :font-size="pageSetup.neumeDefaultFontSize"
               :zoom="zoom"
               :x="form.tieOffsetX"
               :y="form.tieOffsetY"
@@ -215,8 +215,8 @@
               v-if="hasTimeNeume"
               :note="form as NoteElement"
               :mark="form.timeNeume!"
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
-              :fontSize="pageSetup.neumeDefaultFontSize"
+              :font-family="pageSetup.neumeDefaultFontFamily"
+              :font-size="pageSetup.neumeDefaultFontSize"
               :zoom="zoom"
               :x="form.timeNeumeOffsetX"
               :y="form.timeNeumeOffsetY"
@@ -237,8 +237,8 @@
               v-if="hasVocalExpressionNeume"
               :note="form as NoteElement"
               :mark="form.vocalExpressionNeume!"
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
-              :fontSize="pageSetup.neumeDefaultFontSize"
+              :font-family="pageSetup.neumeDefaultFontFamily"
+              :font-size="pageSetup.neumeDefaultFontSize"
               :zoom="zoom"
               :x="form.vocalExpressionNeumeOffsetX"
               :y="form.vocalExpressionNeumeOffsetY"
@@ -250,7 +250,7 @@
               v-if="nextElement.elementType === ElementType.Note"
               class="other-neume"
               :note="nextElement as NoteElement"
-              :pageSetup="pageSetup"
+              :page-setup="pageSetup"
               :style="nextElementStyle"
             />
 
@@ -258,7 +258,7 @@
               v-if="nextElement.elementType === ElementType.Martyria"
               class="other-neume"
               :neume="nextElement as MartyriaElement"
-              :pageSetup="pageSetup"
+              :page-setup="pageSetup"
               :style="nextElementStyle"
             />
 
@@ -266,7 +266,7 @@
               v-if="nextElement.elementType === ElementType.Tempo"
               class="other-neume"
               :neume="nextElement as TempoElement"
-              :pageSetup="pageSetup"
+              :page-setup="pageSetup"
               :style="nextElementStyle"
             />
           </template>
@@ -280,362 +280,362 @@
           <div class="form-group">
             <label>{{ $t('dialog:neumePositioning.accidental') }}</label>
             <InputUnit
+              v-model="form.accidentalOffsetX"
               :unit="unit"
               :min="min"
               :max="max"
               :step="stepSize"
               :precision="precision"
-              v-model="form.accidentalOffsetX"
             />
             <InputUnit
+              v-model="form.accidentalOffsetY"
               :unit="unit"
               :min="min"
               :max="max"
               :step="stepSize"
               :precision="precision"
-              v-model="form.accidentalOffsetY"
             />
           </div>
           <div class="form-group">
             <label>{{ $t('dialog:neumePositioning.accidental2') }}</label>
             <InputUnit
+              v-model="form.secondaryAccidentalOffsetX"
               :unit="unit"
               :min="min"
               :max="max"
               :step="stepSize"
               :precision="precision"
-              v-model="form.secondaryAccidentalOffsetX"
             />
             <InputUnit
+              v-model="form.secondaryAccidentalOffsetY"
               :unit="unit"
               :min="min"
               :max="max"
               :step="stepSize"
               :precision="precision"
-              v-model="form.secondaryAccidentalOffsetY"
             />
           </div>
           <div class="form-group">
             <label>{{ $t('dialog:neumePositioning.accidental3') }}</label>
             <InputUnit
+              v-model="form.tertiaryAccidentalOffsetX"
               :unit="unit"
               :min="min"
               :max="max"
               :step="stepSize"
               :precision="precision"
-              v-model="form.tertiaryAccidentalOffsetX"
             />
             <InputUnit
+              v-model="form.tertiaryAccidentalOffsetY"
               :unit="unit"
               :min="min"
               :max="max"
               :step="stepSize"
               :precision="precision"
-              v-model="form.tertiaryAccidentalOffsetY"
             />
           </div>
           <div class="form-group">
             <label>{{ $t('dialog:neumePositioning.barLineL') }}</label>
             <InputUnit
+              v-model="form.measureBarLeftOffsetX"
               :unit="unit"
               :min="min"
               :max="max"
               :step="stepSize"
               :precision="precision"
-              v-model="form.measureBarLeftOffsetX"
             />
             <InputUnit
+              v-model="form.measureBarLeftOffsetY"
               :unit="unit"
               :min="min"
               :max="max"
               :step="stepSize"
               :precision="precision"
-              v-model="form.measureBarLeftOffsetY"
             />
           </div>
           <div class="form-group">
             <label>{{ $t('dialog:neumePositioning.barLineR') }}</label>
             <InputUnit
+              v-model="form.measureBarRightOffsetX"
               :unit="unit"
               :min="min"
               :max="max"
               :step="stepSize"
               :precision="precision"
-              v-model="form.measureBarRightOffsetX"
             />
             <InputUnit
+              v-model="form.measureBarRightOffsetY"
               :unit="unit"
               :min="min"
               :max="max"
               :step="stepSize"
               :precision="precision"
-              v-model="form.measureBarRightOffsetY"
             />
           </div>
           <div class="form-group">
             <label>{{ $t('dialog:neumePositioning.fthora') }}</label>
             <InputUnit
+              v-model="form.fthoraOffsetX"
               :unit="unit"
               :min="min"
               :max="max"
               :step="stepSize"
               :precision="precision"
-              v-model="form.fthoraOffsetX"
             />
             <InputUnit
+              v-model="form.fthoraOffsetY"
               :unit="unit"
               :min="min"
               :max="max"
               :step="stepSize"
               :precision="precision"
-              v-model="form.fthoraOffsetY"
             />
           </div>
           <div class="form-group">
             <label>{{ $t('dialog:neumePositioning.fthora2') }}</label>
             <InputUnit
+              v-model="form.secondaryFthoraOffsetX"
               :unit="unit"
               :min="min"
               :max="max"
               :step="stepSize"
               :precision="precision"
-              v-model="form.secondaryFthoraOffsetX"
             />
             <InputUnit
+              v-model="form.secondaryFthoraOffsetY"
               :unit="unit"
               :min="min"
               :max="max"
               :step="stepSize"
               :precision="precision"
-              v-model="form.secondaryFthoraOffsetY"
             />
           </div>
           <div class="form-group">
             <label>{{ $t('dialog:neumePositioning.fthora3') }}</label>
             <InputUnit
+              v-model="form.tertiaryFthoraOffsetX"
               :unit="unit"
               :min="min"
               :max="max"
               :step="stepSize"
               :precision="precision"
-              v-model="form.tertiaryFthoraOffsetX"
             />
             <InputUnit
+              v-model="form.tertiaryFthoraOffsetY"
               :unit="unit"
               :min="min"
               :max="max"
               :step="stepSize"
               :precision="precision"
-              v-model="form.tertiaryFthoraOffsetY"
             />
           </div>
           <div class="form-group">
             <label>{{ $t('dialog:neumePositioning.gorgon') }}</label>
             <InputUnit
+              v-model="form.gorgonNeumeOffsetX"
               :unit="unit"
               :min="min"
               :max="max"
               :step="stepSize"
               :precision="precision"
-              v-model="form.gorgonNeumeOffsetX"
             />
             <InputUnit
+              v-model="form.gorgonNeumeOffsetY"
               :unit="unit"
               :min="min"
               :max="max"
               :step="stepSize"
               :precision="precision"
-              v-model="form.gorgonNeumeOffsetY"
             />
           </div>
           <div class="form-group">
             <label>{{ $t('dialog:neumePositioning.gorgon2') }}</label>
             <InputUnit
+              v-model="form.secondaryGorgonNeumeOffsetX"
               :unit="unit"
               :min="min"
               :max="max"
               :step="stepSize"
               :precision="precision"
-              v-model="form.secondaryGorgonNeumeOffsetX"
             />
             <InputUnit
+              v-model="form.secondaryGorgonNeumeOffsetY"
               :unit="unit"
               :min="min"
               :max="max"
               :step="stepSize"
               :precision="precision"
-              v-model="form.secondaryGorgonNeumeOffsetY"
             />
           </div>
           <div class="form-group">
             <label>{{ $t('dialog:neumePositioning.ison') }}</label>
             <InputUnit
+              v-model="form.isonOffsetX"
               :unit="unit"
               :min="min"
               :max="max"
               :step="stepSize"
               :precision="precision"
-              v-model="form.isonOffsetX"
             />
             <InputUnit
+              v-model="form.isonOffsetY"
               :unit="unit"
               :min="min"
               :max="max"
               :step="stepSize"
               :precision="precision"
-              v-model="form.isonOffsetY"
             />
           </div>
           <div class="form-group">
             <label>{{ $t('dialog:neumePositioning.koronis') }}</label>
             <InputUnit
+              v-model="form.koronisOffsetX"
               :unit="unit"
               :min="min"
               :max="max"
               :step="stepSize"
               :precision="precision"
-              v-model="form.koronisOffsetX"
             />
             <InputUnit
+              v-model="form.koronisOffsetY"
               :unit="unit"
               :min="min"
               :max="max"
               :step="stepSize"
               :precision="precision"
-              v-model="form.koronisOffsetY"
             />
           </div>
           <div class="form-group">
             <label>{{ $t('dialog:neumePositioning.measureNo') }}</label>
             <InputUnit
+              v-model="form.measureNumberOffsetX"
               :unit="unit"
               :min="min"
               :max="max"
               :step="stepSize"
               :precision="precision"
-              v-model="form.measureNumberOffsetX"
             />
             <InputUnit
+              v-model="form.measureNumberOffsetY"
               :unit="unit"
               :min="min"
               :max="max"
               :step="stepSize"
               :precision="precision"
-              v-model="form.measureNumberOffsetY"
             />
           </div>
           <div class="form-group">
             <label>{{ $t('dialog:neumePositioning.note') }}</label>
             <InputUnit
+              v-model="form.noteIndicatorOffsetX"
               :unit="unit"
               :min="min"
               :max="max"
               :step="stepSize"
               :precision="precision"
-              v-model="form.noteIndicatorOffsetX"
             />
             <InputUnit
+              v-model="form.noteIndicatorOffsetY"
               :unit="unit"
               :min="min"
               :max="max"
               :step="stepSize"
               :precision="precision"
-              v-model="form.noteIndicatorOffsetY"
             />
           </div>
           <div class="form-group">
             <label>{{ $t('dialog:neumePositioning.cross') }}</label>
             <InputUnit
+              v-model="form.stavrosOffsetX"
               :unit="unit"
               :min="min"
               :max="max"
               :step="stepSize"
               :precision="precision"
-              v-model="form.stavrosOffsetX"
             />
             <InputUnit
+              v-model="form.stavrosOffsetY"
               :unit="unit"
               :min="min"
               :max="max"
               :step="stepSize"
               :precision="precision"
-              v-model="form.stavrosOffsetY"
             />
           </div>
           <div class="form-group">
             <label>{{ $t('dialog:neumePositioning.tie') }}</label>
             <InputUnit
+              v-model="form.tieOffsetX"
               :unit="unit"
               :min="min"
               :max="max"
               :step="stepSize"
               :precision="precision"
-              v-model="form.tieOffsetX"
             />
             <InputUnit
+              v-model="form.tieOffsetY"
               :unit="unit"
               :min="min"
               :max="max"
               :step="stepSize"
               :precision="precision"
-              v-model="form.tieOffsetY"
             />
           </div>
           <div class="form-group">
             <label>{{ $t('dialog:neumePositioning.time') }}</label>
             <InputUnit
+              v-model="form.timeNeumeOffsetX"
               :unit="unit"
               :min="min"
               :max="max"
               :step="stepSize"
               :precision="precision"
-              v-model="form.timeNeumeOffsetX"
             />
             <InputUnit
+              v-model="form.timeNeumeOffsetY"
               :unit="unit"
               :min="min"
               :max="max"
               :step="stepSize"
               :precision="precision"
-              v-model="form.timeNeumeOffsetY"
             />
           </div>
           <div class="form-group">
             <label>{{ $t('dialog:neumePositioning.vareia') }}</label>
             <InputUnit
+              v-model="form.vareiaOffsetX"
               :unit="unit"
               :min="min"
               :max="max"
               :step="stepSize"
               :precision="precision"
-              v-model="form.vareiaOffsetX"
             />
             <InputUnit
+              v-model="form.vareiaOffsetY"
               :unit="unit"
               :min="min"
               :max="max"
               :step="stepSize"
               :precision="precision"
-              v-model="form.vareiaOffsetY"
             />
           </div>
           <div class="form-group">
             <label>{{ $t('dialog:neumePositioning.quality') }}</label>
             <InputUnit
+              v-model="form.vocalExpressionNeumeOffsetX"
               :unit="unit"
               :min="min"
               :max="max"
               :step="stepSize"
               :precision="precision"
-              v-model="form.vocalExpressionNeumeOffsetX"
             />
             <InputUnit
+              v-model="form.vocalExpressionNeumeOffsetY"
               :unit="unit"
               :min="min"
               :max="max"
               :step="stepSize"
               :precision="precision"
-              v-model="form.vocalExpressionNeumeOffsetY"
             />
           </div>
         </div>
@@ -682,19 +682,25 @@ export default defineComponent({
     InputUnit,
     DragHandle,
   },
-  emits: ['close', 'update'],
   props: {
     element: {
       type: Object as PropType<NoteElement>,
       required: true,
     },
-    previousElement: Object as PropType<ScoreElement>,
-    nextElement: Object as PropType<ScoreElement>,
+    previousElement: {
+      type: Object as PropType<ScoreElement>,
+      default: undefined,
+    },
+    nextElement: {
+      type: Object as PropType<ScoreElement>,
+      default: undefined,
+    },
     pageSetup: {
       type: Object as PropType<PageSetup>,
       required: true,
     },
   },
+  emits: ['close', 'update'],
 
   data() {
     return {

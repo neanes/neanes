@@ -6,7 +6,7 @@
     @click="$emit('select-single')"
   >
     <span class="handle"></span>
-    <div class="text-box-multipanel-container" v-if="element.multipanel">
+    <div v-if="element.multipanel" class="text-box-multipanel-container">
       <ContentEditable
         ref="textLeft"
         class="text-box multipanel left"
@@ -15,7 +15,7 @@
         :content="contentLeft"
         :editable="editMode"
         @blur="onBlur"
-        @onEditorReady="onEditorReady"
+        @on-editor-ready="onEditorReady"
       ></ContentEditable>
       <ContentEditable
         ref="textCenter"
@@ -25,7 +25,7 @@
         :content="contentCenter"
         :editable="editMode"
         @blur="onBlur"
-        @onEditorReady="onEditorReady"
+        @on-editor-ready="onEditorReady"
       ></ContentEditable>
       <ContentEditable
         ref="textRight"
@@ -35,10 +35,10 @@
         :content="contentRight"
         :editable="editMode"
         @blur="onBlur"
-        @onEditorReady="onEditorReady"
+        @on-editor-ready="onEditorReady"
       ></ContentEditable>
     </div>
-    <div class="inline-container" v-else-if="element.inline">
+    <div v-else-if="element.inline" class="inline-container">
       <ContentEditable
         ref="text"
         class="text-box inline-top"
@@ -67,7 +67,7 @@
       :content="content"
       :editable="editMode"
       @blur="onBlur"
-      @onEditorReady="onEditorReady"
+      @on-editor-ready="onEditorReady"
     ></ContentEditable>
   </div>
 </template>
@@ -85,7 +85,6 @@ import { withZoom } from '@/utils/withZoom';
 
 export default defineComponent({
   components: { ContentEditable },
-  emits: ['update', 'update:height', 'select-single'],
   props: {
     element: {
       type: Object as PropType<TextBoxElement>,
@@ -103,8 +102,12 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
-    metadata: Object as PropType<TokenMetadata>,
+    metadata: {
+      type: Object as PropType<TokenMetadata>,
+      default: undefined,
+    },
   },
+  emits: ['update', 'update:height', 'select-single'],
 
   data() {
     return {
@@ -112,14 +115,6 @@ export default defineComponent({
       unmounting: false,
       setupResizeObserverDebounced: null as (() => void) | null,
     };
-  },
-
-  watch: {
-    'element.customHeight'(newVal) {
-      if (newVal == null) {
-        this.update();
-      }
-    },
   },
 
   computed: {
@@ -234,6 +229,14 @@ export default defineComponent({
       return {
         underline: this.element.underline,
       };
+    },
+  },
+
+  watch: {
+    'element.customHeight'(newVal) {
+      if (newVal == null) {
+        this.update();
+      }
     },
   },
 

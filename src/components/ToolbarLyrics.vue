@@ -30,8 +30,8 @@
       <span class="space"></span>
       <InputFontSize
         class="lyrics-input"
-        :modelValue="element.lyricsFontSize"
-        @update:modelValue="
+        :model-value="element.lyricsFontSize"
+        @update:model-value="
           $emit('update', {
             lyricsFontSize: $event,
           } as Partial<NoteElement>)
@@ -39,8 +39,8 @@
       />
       <span class="space"></span>
       <ColorPicker
-        :modelValue="element.lyricsColor"
-        @update:modelValue="
+        :model-value="element.lyricsColor"
+        @update:model-value="
           $emit('update', {
             lyricsColor: $event,
           } as Partial<NoteElement>)
@@ -83,8 +83,8 @@
       <span class="space"></span>
       <label class="right-space">{{ $t('toolbar:common.outline') }}</label>
       <InputStrokeWidth
-        :modelValue="element.lyricsStrokeWidth"
-        @update:modelValue="
+        :model-value="element.lyricsStrokeWidth"
+        @update:model-value="
           $emit('update', {
             lyricsStrokeWidth: $event,
           } as Partial<NoteElement>)
@@ -156,7 +156,6 @@ const specialCharacters = [
 
 export default defineComponent({
   components: { ColorPicker, InputFontSize, InputStrokeWidth },
-  emits: ['insert:specialCharacter', 'update'],
   props: {
     element: {
       type: Object as PropType<NoteElement>,
@@ -167,6 +166,7 @@ export default defineComponent({
       required: true,
     },
   },
+  emits: ['insert:specialCharacter', 'update'],
 
   data() {
     return {

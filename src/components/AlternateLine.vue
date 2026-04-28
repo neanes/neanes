@@ -9,8 +9,8 @@
         v-if="childElement.elementType === ElementType.Note"
         class="syllable-box"
         :note="childElement as NoteElement"
-        :pageSetup="pageSetup"
-        :alternateLine="true"
+        :page-setup="pageSetup"
+        :alternate-line="true"
       />
     </template>
   </div>
@@ -31,7 +31,6 @@ import NeumeBoxSyllable from './NeumeBoxSyllable.vue';
 
 export default defineComponent({
   components: { NeumeBoxSyllable },
-  emits: ['update'],
   props: {
     element: {
       type: Object as PropType<AlternateLineElement>,
@@ -42,6 +41,7 @@ export default defineComponent({
       required: true,
     },
   },
+  emits: ['update'],
 
   data() {
     return {

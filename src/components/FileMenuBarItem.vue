@@ -5,7 +5,7 @@
     @mouseenter="$emit('mouseenter')"
   >
     {{ label }}
-    <div class="file-menu-item-container" v-if="isOpen">
+    <div v-if="isOpen" class="file-menu-item-container">
       <slot />
     </div>
   </div>
@@ -16,7 +16,6 @@ import { defineComponent } from 'vue';
 
 export default defineComponent({
   components: {},
-  emits: ['click', 'mouseenter'],
   props: {
     label: {
       type: String,
@@ -27,6 +26,7 @@ export default defineComponent({
       required: true,
     },
   },
+  emits: ['click', 'mouseenter'],
 
   data() {
     return {};

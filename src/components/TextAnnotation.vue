@@ -34,7 +34,6 @@ const ANNOTATION_LOCK_ID = 'ANNOTATION_LOCK_ID';
 
 export default defineComponent({
   components: { Ckeditor },
-  emits: ['update', 'delete'],
   props: {
     element: {
       type: Object as PropType<AnnotationElement>,
@@ -50,6 +49,7 @@ export default defineComponent({
     },
     selected: Boolean,
   },
+  emits: ['update', 'delete'],
 
   data() {
     return {
@@ -64,21 +64,6 @@ export default defineComponent({
 
       editor: InlineEditor,
     };
-  },
-
-  mounted() {
-    this.elementX = this.element.x;
-    this.elementY = this.element.y;
-    this.clampingInterval = setInterval(this.clampToPageBounds, 250);
-  },
-
-  beforeUnmount() {
-    document.removeEventListener('mouseup', this.handleMouseUp);
-    document.removeEventListener('mousemove', this.handleMouseMove);
-
-    if (this.clampingInterval != null) {
-      clearInterval(this.clampingInterval);
-    }
   },
 
   computed: {
@@ -161,6 +146,21 @@ export default defineComponent({
         },
       };
     },
+  },
+
+  mounted() {
+    this.elementX = this.element.x;
+    this.elementY = this.element.y;
+    this.clampingInterval = setInterval(this.clampToPageBounds, 250);
+  },
+
+  beforeUnmount() {
+    document.removeEventListener('mouseup', this.handleMouseUp);
+    document.removeEventListener('mousemove', this.handleMouseMove);
+
+    if (this.clampingInterval != null) {
+      clearInterval(this.clampingInterval);
+    }
   },
 
   methods: {

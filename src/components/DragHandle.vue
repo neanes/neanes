@@ -13,7 +13,6 @@ import { withZoom } from '@/utils/withZoom';
 
 export default defineComponent({
   components: {},
-  emits: ['update'],
   props: {
     x: {
       type: [Number, null],
@@ -52,6 +51,7 @@ export default defineComponent({
       required: true,
     },
   },
+  emits: ['update'],
 
   data() {
     return {
@@ -60,15 +60,6 @@ export default defineComponent({
 
       offset: { x: 0, y: 0 } as ScoreElementOffset,
     };
-  },
-
-  created() {
-    this.offset = this.getOffset(this.mark);
-  },
-
-  beforeUnmount() {
-    document.removeEventListener('mouseup', this.handleMouseUp);
-    document.removeEventListener('mousemove', this.handleMouseMove);
   },
 
   computed: {
@@ -85,6 +76,15 @@ export default defineComponent({
         width: withZoom(this.width),
       } as StyleValue;
     },
+  },
+
+  created() {
+    this.offset = this.getOffset(this.mark);
+  },
+
+  beforeUnmount() {
+    document.removeEventListener('mouseup', this.handleMouseUp);
+    document.removeEventListener('mousemove', this.handleMouseMove);
   },
 
   methods: {

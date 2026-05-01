@@ -104,23 +104,23 @@ As you type into the toolbar's text area, lyrics will be automatically assigned 
 > [!TIP]
 > You can quickly shift all lyrics left or right by editing the lyrics in the lyrics toolbar.
 
-#### Example 1
+### Example 1
 
 ![Lyrics Toolbar Example](./images/guide-lyrics-toolbar-1.png)
 
 If the neume with the lyrics `two` in the image above is deleted, the lyrics in the toolbar will change from
 
-```
+```text
 one two three four
 ```
 
 to
 
-```
+```text
 one three four
 ```
 
-#### Example 2
+### Example 2
 
 To leave a neume without any lyrics, use a single underscore.
 
@@ -128,7 +128,7 @@ To leave a neume without any lyrics, use a single underscore.
 
 Lyrics:
 
-```
+```text
 one _ two
 ```
 
@@ -144,7 +144,7 @@ Neumes:
 
 Lyrics:
 
-```
+```text
 one two three four
 ```
 
@@ -175,13 +175,13 @@ The most useful of these options is `Melisma Only`. If the proper neumes are giv
 
 When all the neumes in the image above have `Accepts Lyrics` set to `Default`, the lyrics will be written as the following.
 
-```
+```text
 With___ what fair
 ```
 
 If you change the second and third neumes to `Melisma Only`, then the lyrics will be written as the following.
 
-```
+```text
 With what fair
 ```
 
@@ -199,13 +199,13 @@ Copy the template file and open the copy, so that the original template file is 
 
 Next, type out the lyrics for your prosomoion in a word processor. For this example, we will use the text below.
 
-```
+```text
 With what fair crowns of praise shall we crown the divine and all-laudable hierarch? That clear trumpet sounding theology, the mouth of grace that doth breathe forth fire, the ven'rable vessel of the Spirit, the mighty unshaken pillar of the Church of Christ, the great and exceeding gladness of the world entire, the mighty river of wisdom of God's inspiration, and the lamp of the divine light, the bright and far-shining star that maketh creation radiant.
 ```
 
 Next, either add hyphens yourself, or use a tool such as [Juicio Brennan's Hyphenator](https://juiciobrennan.com/hyphenator/) to add the hyphens. Below is the hyphenated text.
 
-```
+```text
 With what fair crowns of praise shall we crown the di-vine and all-laud-a-ble hier-arch? That clear trum-pet sound-ing the-ol-o-gy, the mouth of grace that doth breathe forth fire, the ven'-ra-ble ves-sel of the Spir-it, the might-y un-shak-en pil-lar of the Church of Christ, the great and ex-ceed-ing glad-ness of the world en-tire, the might-y riv-er of wis-dom of God's in-spi-ra-tion, and the lamp of the di-vine light, the bright and far-shin-ing star that mak-eth cre-a-tion ra-di-ant.
 ```
 

@@ -1,14 +1,19 @@
+---
 name: CI
 
 on:
   push:
-    branches: [master]
+    branches:
+      - master
   pull_request:
-    branches: [master]
+    types:
+      - opened
+      - reopened
+      - synchronize
+  workflow_dispatch:
 
-defaults:
-  run:
-    shell: bash
+permissions:
+  contents: read
 
 jobs:
   build:
@@ -17,27 +22,30 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
-      - uses: actions/checkout@v6
+      - name: Check out
+        uses: actions/checkout@v6
 
-      - name: Use Node.js 22.x
+      - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 22.x
+          node-version: 22
+          cache: 'npm'
 
-      - name: Cache dependencies
-        id: cache
-        uses: actions/cache@v5
-        with:
-          path: ./node_modules
-          key: ${{ runner.os }}-${{ runner.arch }}-modules-${{ hashFiles('package-lock.json') }}
+      - name: Enable Corepack
+        run: corepack enable npm
 
-      - run: corepack enable npm && corepack prepare --activate
       - name: Install dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
         run: npm ci
 
-      - run: npm test
-      - run: npm run lint
+      - name: Test
+        run: npm test
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Lint Markdown
+        uses: DavidAnson/markdownlint-cli2-action@v23
+
       - name: Build Windows and Linux
         if: runner.os != 'macOS'
         run: npm run build
@@ -45,10 +53,3 @@ jobs:
       - name: Build macOS
         if: runner.os == 'macOS'
         run: npm run build -- --x64 && npm run build -- --arm64
-
-      - name: Publish
-        uses: actions/upload-artifact@v7
-        with:
-          name: Neanes-${{ matrix.os }}
-          path: dist/Neanes-*
-          retention-days: 3

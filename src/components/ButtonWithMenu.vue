@@ -1,21 +1,32 @@
 <template>
   <div
     class="menu-container"
-    @mousedown="openMenu"
-    @mouseleave="selectedOption = null"
+    @mousedown="handleMouseDown"
+    @mouseleave="handleMouseLeave"
   >
     <button class="neume-button" :disabled="disabled">
-      <img draggable="false" :src="mainIcon" v-if="mainIcon" />
+      <img
+        draggable="false"
+        :src="mainIcon"
+        v-if="mainIcon"
+        :style="imgStyle"
+      />
       <span :style="textStyle" v-if="mainText">{{ mainText }}</span>
     </button>
-    <div class="menu" v-if="showMenu">
+    <div class="menu" :class="direction" v-if="showMenu">
       <div
         v-for="option in options"
         :key="getKey(option)"
         class="menu-item"
-        @mouseenter="selectedOption = option.neume"
+        @click="handleChoiceClick(option.neume)"
+        @mouseenter="handleMouseEnter(option.neume)"
       >
-        <img draggable="false" :src="option.icon" v-if="option.icon" />
+        <img
+          draggable="false"
+          :src="option.icon"
+          v-if="option.icon"
+          :style="imgStyle"
+        />
         <span :style="textStyle" v-if="option.text">{{ option.text }}</span>
       </div>
     </div>
@@ -25,6 +36,7 @@
 <script lang="ts">
 import { defineComponent, PropType, StyleValue } from 'vue';
 
+import { ButtonMenuMode, EditorPreferences } from '@/models/EditorPreferences';
 import { Neume } from '@/models/Neumes';
 
 export interface ButtonWithMenuOption {
@@ -34,6 +46,7 @@ export interface ButtonWithMenuOption {
 }
 
 export default defineComponent({
+  inject: ['editorPreferences'],
   components: {},
   emits: ['select'],
   props: {
@@ -53,6 +66,10 @@ export default defineComponent({
       type: String,
       default: 'Neanes',
     },
+    imgSize: {
+      type: String,
+      required: false,
+    },
   },
 
   data() {
@@ -62,11 +79,19 @@ export default defineComponent({
     };
   },
 
+  mounted() {
+    window.addEventListener('pointerdown', this.handleGlobalPointerDown);
+  },
+
   beforeUnmount() {
     window.removeEventListener('mouseup', this.onMouseUp);
+    window.removeEventListener('pointerdown', this.handleGlobalPointerDown);
   },
 
   computed: {
+    menuMode() {
+      return (this.editorPreferences as EditorPreferences).buttonMenuMode;
+    },
     mainIcon() {
       return this.direction === 'up'
         ? this.options.at(-1)!.icon
@@ -84,6 +109,13 @@ export default defineComponent({
         fontFamily: this.fontFamily,
       } as StyleValue;
     },
+
+    imgStyle() {
+      return {
+        height: this.imgSize ?? undefined,
+        width: this.imgSize ?? undefined,
+      } as StyleValue;
+    },
   },
 
   methods: {
@@ -91,13 +123,45 @@ export default defineComponent({
       return Array.isArray(option.neume) ? option.neume[0] : option.neume;
     },
 
-    openMenu() {
+    handleMouseDown() {
       if (this.disabled) {
         return;
       }
 
       this.showMenu = true;
-      window.addEventListener('mouseup', this.onMouseUp);
+
+      if (this.menuMode === ButtonMenuMode.Hold) {
+        window.addEventListener('mouseup', this.onMouseUp);
+      }
+    },
+
+    handleMouseEnter(selectedOption: Neume | Neume[]) {
+      if (this.menuMode === ButtonMenuMode.Hold) {
+        this.selectedOption = selectedOption;
+      }
+    },
+
+    handleMouseLeave() {
+      if (this.menuMode === ButtonMenuMode.Hold) {
+        this.selectedOption = null;
+      }
+    },
+
+    handleGlobalPointerDown(e: MouseEvent) {
+      if (
+        this.menuMode === ButtonMenuMode.Click &&
+        !this.$el.contains(e.target)
+      ) {
+        this.showMenu = false;
+      }
+    },
+
+    handleChoiceClick(selectedOption: Neume | Neume[]) {
+      if (this.menuMode === ButtonMenuMode.Click) {
+        this.$emit('select', selectedOption);
+
+        this.showMenu = false;
+      }
     },
 
     onMouseUp() {
@@ -147,13 +211,20 @@ export default defineComponent({
   border: 1px solid black;
   box-sizing: border-box;
   width: var(--btn-size);
+}
+
+.menu.up {
   bottom: 0;
+}
+
+.menu.down {
+  top: 0;
 }
 
 .menu-item {
   height: var(--btn-size);
   width: 100%;
-  padding: 3px 0;
+  padding: 1px 0;
   box-sizing: border-box;
   text-align: center;
   user-select: none;

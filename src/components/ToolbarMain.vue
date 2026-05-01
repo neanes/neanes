@@ -30,67 +30,13 @@
       <img src="@/assets/icons/martyria.svg" />
     </button>
     <span class="space"></span>
-    <div
-      class="tempo-container"
+    <ButtonWithMenu
+      direction="down"
+      :options="tempoOptions"
       :title="tempoTooltip"
-      @mousedown="openTempoMenu"
-      @mouseleave="selectedTempoNeume = null"
-    >
-      <button class="neume-button">
-        <img draggable="false" src="@/assets/icons/agogi-poli-argi.svg" />
-      </button>
-      <div class="tempo-menu" v-if="showTempoMenu">
-        <div
-          class="tempo-menu-item"
-          @mouseenter="selectedTempoNeume = TempoSign.VerySlow"
-        >
-          <img draggable="false" src="@/assets/icons/agogi-poli-argi.svg" />
-        </div>
-        <div
-          class="tempo-menu-item"
-          @mouseenter="selectedTempoNeume = TempoSign.Slower"
-        >
-          <img draggable="false" src="@/assets/icons/agogi-argoteri.svg" />
-        </div>
-        <div
-          class="tempo-menu-item"
-          @mouseenter="selectedTempoNeume = TempoSign.Slow"
-        >
-          <img draggable="false" src="@/assets/icons/agogi-argi.svg" />
-        </div>
-        <div
-          class="tempo-menu-item"
-          @mouseenter="selectedTempoNeume = TempoSign.Moderate"
-        >
-          <img draggable="false" src="@/assets/icons/agogi-metria.svg" />
-        </div>
-        <div
-          class="tempo-menu-item"
-          @mouseenter="selectedTempoNeume = TempoSign.Medium"
-        >
-          <img draggable="false" src="@/assets/icons/agogi-mesi.svg" />
-        </div>
-        <div
-          class="tempo-menu-item"
-          @mouseenter="selectedTempoNeume = TempoSign.Quick"
-        >
-          <img draggable="false" src="@/assets/icons/agogi-gorgi.svg" />
-        </div>
-
-        <div
-          class="tempo-menu-item"
-          @mouseenter="selectedTempoNeume = TempoSign.Quicker"
-        >
-          <img draggable="false" src="@/assets/icons/agogi-gorgoteri.svg" />
-        </div>
-        <div
-          class="tempo-menu-item"
-          @mouseenter="selectedTempoNeume = TempoSign.VeryQuick"
-        >
-          <img draggable="false" src="@/assets/icons/agogi-poli-gorgi.svg" />
-        </div>
-      </div>
-    </div>
+      imgSize="28px"
+      @select="$emit('add-tempo', $event)"
+    />
     <span class="space"></span>
     <button
       :title="$t('toolbar:main.insertDropCapBefore')"
@@ -268,8 +214,45 @@ import { AudioState } from '@/services/audio/AudioService';
 import { PlaybackOptions } from '@/services/audio/PlaybackService';
 import { NeumeKeyboard } from '@/services/NeumeKeyboard';
 
+import ButtonWithMenu, { ButtonWithMenuOption } from './ButtonWithMenu.vue';
+
+const tempoOptions: ButtonWithMenuOption[] = [
+  {
+    neume: TempoSign.VerySlow,
+    icon: new URL('@/assets/icons/agogi-poli-argi.svg', import.meta.url).href,
+  },
+  {
+    neume: TempoSign.Slower,
+    icon: new URL('@/assets/icons/agogi-argoteri.svg', import.meta.url).href,
+  },
+  {
+    neume: TempoSign.Slow,
+    icon: new URL('@/assets/icons/agogi-argi.svg', import.meta.url).href,
+  },
+  {
+    neume: TempoSign.Moderate,
+    icon: new URL('@/assets/icons/agogi-metria.svg', import.meta.url).href,
+  },
+  {
+    neume: TempoSign.Medium,
+    icon: new URL('@/assets/icons/agogi-mesi.svg', import.meta.url).href,
+  },
+  {
+    neume: TempoSign.Quick,
+    icon: new URL('@/assets/icons/agogi-gorgi.svg', import.meta.url).href,
+  },
+  {
+    neume: TempoSign.Quicker,
+    icon: new URL('@/assets/icons/agogi-gorgoteri.svg', import.meta.url).href,
+  },
+  {
+    neume: TempoSign.VeryQuick,
+    icon: new URL('@/assets/icons/agogi-poli-gorgi.svg', import.meta.url).href,
+  },
+];
+
 export default defineComponent({
-  components: { InputUnit },
+  components: { ButtonWithMenu, InputUnit },
   emits: [
     'add-auto-martyria',
     'add-drop-cap',
@@ -340,12 +323,11 @@ export default defineComponent({
       AudioState,
       LineBreakType,
 
-      showTempoMenu: false,
       showZoomMenu: false,
 
-      selectedTempoNeume: null as TempoSign | null,
-
       zoomOptions: ['50', '75', '90', '100', '125', '150', '200', '500'],
+
+      tempoOptions,
     };
   },
 
@@ -390,10 +372,6 @@ export default defineComponent({
     },
   },
 
-  beforeUnmount() {
-    window.removeEventListener('mouseup', this.onTempoMouseUp);
-  },
-
   methods: {
     updateZoom(value: string) {
       this.showZoomMenu = false;
@@ -414,21 +392,6 @@ export default defineComponent({
       this.showZoomMenu = false;
 
       this.$forceUpdate();
-    },
-
-    openTempoMenu() {
-      this.showTempoMenu = true;
-      window.addEventListener('mouseup', this.onTempoMouseUp);
-    },
-
-    onTempoMouseUp() {
-      if (this.selectedTempoNeume) {
-        this.$emit('add-tempo', this.selectedTempoNeume);
-      }
-
-      this.showTempoMenu = false;
-
-      window.removeEventListener('mouseup', this.onTempoMouseUp);
     },
   },
 });
@@ -529,39 +492,6 @@ export default defineComponent({
 
 .zoom-menu-separator {
   border-top: 1px solid #666;
-}
-
-.tempo-container {
-  display: flex;
-}
-
-.tempo-container img {
-  height: 28px;
-  width: 28px;
-}
-
-.tempo-menu {
-  position: absolute;
-  z-index: 999;
-  background-color: white;
-  border: 1px solid black;
-  box-sizing: border-box;
-  width: var(--btn-size);
-}
-
-.tempo-menu-item {
-  height: var(--btn-size);
-  width: 100%;
-  padding: 2px 0;
-  box-sizing: border-box;
-  text-align: center;
-  user-select: none;
-  overflow: hidden;
-  position: relative;
-}
-
-.tempo-menu-item:hover {
-  background-color: aliceblue;
 }
 
 label.right-space {

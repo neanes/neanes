@@ -15,7 +15,9 @@ import {
 import { NEUME_CUSTOM_PROPERTY } from './insertneumeediting';
 import InsertNeumeFormView from './insertneumeformview';
 import {
+  InsertNeumeAttributes,
   InsertNeumeAttributeSet,
+  InsertNeumeDefaultAttributesMartyriaType,
   InsertNeumeDefaultAttributesType,
 } from './insertneumeutil';
 import InsertNeumeView from './insertneumeview';
@@ -107,7 +109,7 @@ export default class InsertNeumeUI extends Plugin {
       view.on('execute', () => {
         const defaultAttributesConfig = editor.config.get(
           'insertNeume.defaultAttributesMartyria',
-        ) as InsertNeumeDefaultAttributesType;
+        ) as InsertNeumeDefaultAttributesMartyriaType;
 
         const neumeFont = editor.config.get<string>(
           'insertNeume.neumeDefaultFontFamily',
@@ -115,7 +117,7 @@ export default class InsertNeumeUI extends Plugin {
 
         const defaultAttributes = defaultAttributesConfig[
           neumeFont
-        ] as InsertNeumeAttributeSet[];
+        ] as Partial<InsertNeumeAttributes>;
 
         editor.execute(INSERT_NEUME_COMMAND, {
           neumeType: 'martyria',

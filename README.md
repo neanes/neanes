@@ -4,7 +4,7 @@
 
 Neanes (pronounced neh-ah-ness) is a free and open source scorewriter for notating Byzantine Chant.
 
-<img src="images/demo.png?raw=true" alt="Demo Screen" width="100%"/>
+![Demo Screen](images/demo.png?raw=true)
 
 ## Features
 
@@ -34,9 +34,9 @@ Example files can be found in the [examples](examples/) folder.
 
 ## How to Download
 
-Download the latest release on the [releases page](https://github.com/neanes/neanes/releases). The latest release can also be found [here](https://neanes.github.io/neanes/download/).
+Download the latest release on the [releases page](https://github.com/neanes/neanes/releases). The latest release can also be found on the [download page](https://neanes.github.io/neanes/download/).
 
-A web version of the app with reduced functionality can be found [here](https://neanes.github.io/neanes/web-app/).
+A web version of the app with reduced functionality can be found on the [web app page](https://neanes.github.io/neanes/web-app/).
 
 ## How-to Guide
 

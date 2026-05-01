@@ -1174,7 +1174,7 @@ export class ByzHtmlExporter {
     map.set('oligonIsonKentimata', 'x-o-i-k');
     map.set('oligonKentimaMiddleKentimata', 'x-o2-m-k');
     map.set('oligonYpsiliRightKentimata', 'x-o4-k');
-    map.set('oligonYpsiliLeftKentimata', 'x-ο5-k');
+    map.set('oligonYpsiliLeftKentimata', 'x-o5-k');
     map.set('oligonApostrofosKentimata', 'x-o-a-k');
     map.set('oligonYporroiKentimata', 'x-o-y-k');
     map.set('oligonElafronKentimata', 'x-o-e-k');

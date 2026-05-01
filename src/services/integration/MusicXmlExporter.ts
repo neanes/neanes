@@ -824,8 +824,8 @@ export class MusicXmlExporter {
   }
 
   fixTiedNoteOrder(measure: MusicXmlMeasure): void {
-    // Compute each note’s offset from the start of the measure. offsets[i] is
-    // the beat‐offset of measure.notes[i]
+    // Compute each note's offset from the start of the measure. offsets[i] is
+    // the beat-offset of measure.notes[i]
     const notes = measure.notes; // only MusicXmlNote entries, in content order
     const offsets: number[] = [];
     let acc = 0;
@@ -834,16 +834,16 @@ export class MusicXmlExporter {
       acc += n.duration;
     }
 
-    // scan for adjacent tie‐start/tie‐stop pairs
+    // scan for adjacent tie-start/tie-stop pairs
     for (let i = 0; i + 1 < notes.length; i++) {
       const n1 = notes[i];
       const n2 = notes[i + 1];
       if (n1.tie?.type === 'start' && n2.tie?.type === 'stop') {
-        // if n1 does NOT begin on a whole‐beat boundary, we flip
+        // if n1 does NOT begin on a whole-beat boundary, we flip
         const frac = offsets[i] - Math.floor(offsets[i]);
         if (frac > this.epsilon) {
           this.swapTiePairInMeasure(measure, n1, n2);
-          // advance past the pair so we don't re‐flip
+          // advance past the pair so we don't re-flip
           i++;
         }
       }
@@ -874,7 +874,7 @@ export class MusicXmlExporter {
     c[idx1] = originalStop;
     c[idx2] = originalStart;
 
-    // now re‐assign ties:
+    // now re-assign ties:
     //   the note now at idx1 (originalStop) becomes the new start,
     //   the note now at idx2 (originalStart) becomes the new stop.
     const newStart = originalStop;
@@ -906,7 +906,7 @@ export class MusicXmlExporter {
       acc += n.duration;
     }
 
-    // scan for adjacent rest‐pairs
+    // scan for adjacent rest-pairs
     for (let i = 0; i + 1 < notes.length; i++) {
       const r1 = notes[i];
       const r2 = notes[i + 1];
@@ -923,7 +923,7 @@ export class MusicXmlExporter {
   }
 
   /**
-   * swap two rest‐notes in measure.contents
+   * swap two rest-notes in measure.contents
    */
   swapRestPairInMeasure(
     measure: MusicXmlMeasure,
@@ -1421,7 +1421,7 @@ export class MusicXmlExporter {
   }
 
   /**
-   * Quantize a list of note‐durations (in quarter‐notes) to the nearest
+   * Quantize a list of note-durations (in quarter-notes) to the nearest
    * sixteenth (step = 0.25), snapping ends upward so that we never go behind
    * the beat, and preserving the streamwise beat structure.
    */

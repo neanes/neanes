@@ -1,0 +1,74 @@
+{
+  "file": {
+    "root": "File",
+    "new": "Baru",
+    "open": "Buka…",
+    "openRecent": "Buka Terbaru",
+    "import": "Impor",
+    "importFromOcr": "Hasil OCR…",
+    "save": "Simpan",
+    "saveAs": "Simpan Sebagai…",
+    "pageSetup": "Pengaturan Halaman",
+    "exportAs": "Ekspor",
+    "exportAsPdf": "Ekspor sebagai PDF…",
+    "exportAsHtml": "Ekspor sebagai HTML…",
+    "exportAsLatex": "Ekspor sebagai LaTeX…",
+    "exportAsMusicXml": "Ekspor sebagai MusicXML…",
+    "exportAsImage": "Ekspor sebagai Gambar…",
+    "print": "Cetak…",
+    "close": "Tutup",
+    "closeOthers": "Tutup Lainnya"
+  },
+  "edit": {
+    "root": "Sunting",
+    "undo": "Urungkan",
+    "redo": "Ulangi",
+    "cut": "Potong",
+    "copy": "Salin",
+    "copyAsHtml": "Salin sebagai HTML",
+    "paste": "Tempel",
+    "pasteWithLyrics": "Tempel dengan Lirik",
+    "copyFormat": "Salin Format",
+    "pasteFormat": "Tempel Format",
+    "find": "Cari",
+    "lyrics": "Lirik",
+    "preferences": "Preferensi"
+  },
+  "insert": {
+    "root": "Sisipkan",
+    "alternateLine": "Baris Alternatif",
+    "annotation": "Anotasi",
+    "dropCapBefore": "Huruf Awal Besar Sebelum",
+    "dropCapAfter": "Huruf Awal Besar Setelah",
+    "textBox": "Kotak Teks",
+    "richTextBox": "Kotak Teks Kaya",
+    "inlineTextBox": "Kotak Teks Inline",
+    "modeKey": "Kunci Mode",
+    "image": "Gambar",
+    "headersAndFooters": "Kepala dan Kaki",
+    "header": "Kepala",
+    "footer": "Kaki"
+  },
+  "tools": {
+    "root": "Alat",
+    "copyElementLink": "Salin Tautan Elemen"
+  },
+  "view": {
+    "root": "Tampilan (Debug)",
+    "generateTestFiles": "Hasilkan File Uji (Debug)"
+  },
+  "help": {
+    "root": "Bantuan",
+    "guide": "Panduan",
+    "requestAFeature": "Minta Fitur",
+    "reportAnIssue": "Laporkan Masalah",
+    "about": "Tentang"
+  },
+  "tab": {
+    "close": "Tutup",
+    "closeOthers": "Tutup Lainnya",
+    "closeToTheLeft": "Tutup ke Kiri",
+    "closeToTheRight": "Tutup ke Kanan"
+  },
+  "warning": "Peringatan: Aplikasi ini bekerja paling baik di browser berbasis Chromium. Anda mungkin mengalami fungsionalitas yang berkurang atau kesalahan di browser non-Chromium."
+}

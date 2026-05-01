@@ -1,10 +1,10 @@
+---
 name: Publish
 
 on: workflow_dispatch
 
-defaults:
-  run:
-    shell: bash
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -13,35 +13,38 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
-      - uses: actions/checkout@v6
+      - name: Check out
+        uses: actions/checkout@v6
 
-      - name: Use Node.js 22.x
+      - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 22.x
+          node-version: 22
+          cache: 'npm'
 
-      - name: Cache dependencies
-        id: cache
-        uses: actions/cache@v5
-        with:
-          path: ./node_modules
-          key: ${{ runner.os }}-${{ runner.arch }}-modules-${{ hashFiles('package-lock.json') }}
+      - name: Enable Corepack
+        run: corepack enable npm
 
-      - run: corepack enable npm && corepack prepare --activate
       - name: Install dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
         run: npm ci
 
-      - run: npm test
-      - run: npm run lint
+      - name: Test
+        run: npm test
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Lint Markdown
+        uses: DavidAnson/markdownlint-cli2-action@v23
+
       - name: Build Windows and Linux
         if: runner.os != 'macOS'
         run: npm run release
         env:
-          GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          GH_TOKEN: ${{ github.token }}
 
       - name: Build macOS
         if: runner.os == 'macOS'
         run: npm run release -- --x64 && npm run release -- --arm64
         env:
-          GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          GH_TOKEN: ${{ github.token }}

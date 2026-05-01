@@ -6,6 +6,8 @@ labels:
   - 'Type: Bug'
 ---
 
+<!-- markdownlint-disable MD036 -->
+
 **This bug was found in**
 
 - [x] Desktop

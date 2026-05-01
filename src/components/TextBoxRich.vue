@@ -94,7 +94,7 @@
 </template>
 
 <script lang="ts">
-import { FontSizeOption } from '@ckeditor/ckeditor5-font/src/fontconfig';
+import { FontSizeOption } from '@ckeditor/ckeditor5-font';
 import { Ckeditor } from '@ckeditor/ckeditor5-vue';
 import { Editor, EditorConfig } from 'ckeditor5';
 import { debounce, throttle } from 'throttle-debounce';

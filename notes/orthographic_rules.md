@@ -22,49 +22,48 @@
 
 These neumes only accept klasma on the bottom.
 
-```
-  QuantitativeNeume.PetastiWithIson,
-  QuantitativeNeume.Petasti,
-  QuantitativeNeume.PetastiPlusOligon,
-  QuantitativeNeume.PetastiPlusKentimaAbove,
-  QuantitativeNeume.PetastiPlusHypsiliRight,
-  QuantitativeNeume.PetastiPlusHypsiliLeft,
-  QuantitativeNeume.PetastiPlusHypsiliPlusKentimaHorizontal,
-  QuantitativeNeume.PetastiPlusHypsiliPlusKentimaVertical,
-  QuantitativeNeume.PetastiPlusDoubleHypsili,
-  QuantitativeNeume.PetastiPlusApostrophos,
-  QuantitativeNeume.PetastiPlusElaphron,
-  QuantitativeNeume.PetastiPlusElaphronPlusApostrophos,
-
-  QuantitativeNeume.OligonPlusDoubleHypsili,
+```text
+QuantitativeNeume.PetastiWithIson,
+QuantitativeNeume.Petasti,
+QuantitativeNeume.PetastiPlusOligon,
+QuantitativeNeume.PetastiPlusKentimaAbove,
+QuantitativeNeume.PetastiPlusHypsiliRight,
+QuantitativeNeume.PetastiPlusHypsiliLeft,
+QuantitativeNeume.PetastiPlusHypsiliPlusKentimaHorizontal,
+QuantitativeNeume.PetastiPlusHypsiliPlusKentimaVertical,
+QuantitativeNeume.PetastiPlusDoubleHypsili,
+QuantitativeNeume.PetastiPlusApostrophos,
+QuantitativeNeume.PetastiPlusElaphron,
+QuantitativeNeume.PetastiPlusElaphronPlusApostrophos,
+QuantitativeNeume.OligonPlusDoubleHypsili,
 ```
 
 ### Top-only
 
 These neumes only accept klasma on the top.
 
-```
-  QuantitativeNeume.Ison,
-  QuantitativeNeume.KentemataPlusOligon,
-  QuantitativeNeume.Oligon,
-  QuantitativeNeume.OligonPlusKentimaBelow,
-  QuantitativeNeume.OligonPlusKentima,
-  QuantitativeNeume.OligonPlusHypsiliRight,
-  QuantitativeNeume.Hamili,
-  QuantitativeNeume.HamiliPlusApostrophos,
-  QuantitativeNeume.HamiliPlusElaphron,
-  QuantitativeNeume.HamiliPlusElaphronPlusApostrophos,
-  QuantitativeNeume.DoubleHamili,
-  QuantitativeNeume.Apostrophos,
-  QuantitativeNeume.Elaphron,
-  QuantitativeNeume.ElaphronPlusApostrophos,
+```text
+QuantitativeNeume.Ison,
+QuantitativeNeume.KentemataPlusOligon,
+QuantitativeNeume.Oligon,
+QuantitativeNeume.OligonPlusKentimaBelow,
+QuantitativeNeume.OligonPlusKentima,
+QuantitativeNeume.OligonPlusHypsiliRight,
+QuantitativeNeume.Hamili,
+QuantitativeNeume.HamiliPlusApostrophos,
+QuantitativeNeume.HamiliPlusElaphron,
+QuantitativeNeume.HamiliPlusElaphronPlusApostrophos,
+QuantitativeNeume.DoubleHamili,
+QuantitativeNeume.Apostrophos,
+QuantitativeNeume.Elaphron,
+QuantitativeNeume.ElaphronPlusApostrophos,
 ```
 
 ### No Klasma Allowed
 
 The following neumes can never take a klasma.
 
-```
+```text
 QuantitativeNeume.Hyporoe,
 QuantitativeNeume.Kentemata,
 QuantitativeNeume.OligonPlusKentemata,
@@ -86,7 +85,7 @@ QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
 
 The following neumes cannot accpet a psefiston.
 
-```
+```text
 QuantitativeNeume.Apostrophos,
 QuantitativeNeume.Kentemata,
 QuantitativeNeume.Hyporoe,

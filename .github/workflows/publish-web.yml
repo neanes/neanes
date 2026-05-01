@@ -1,37 +1,42 @@
+---
 name: Publish Web
 
 on: workflow_dispatch
 
-defaults:
-  run:
-    shell: bash
+permissions:
+  contents: read
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - name: Check out
+        uses: actions/checkout@v6
 
-      - name: Use Node.js 22.x
+      - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 22.x
+          node-version: 22
+          cache: 'npm'
 
-      - name: Cache dependencies
-        id: cache
-        uses: actions/cache@v5
-        with:
-          path: ./node_modules
-          key: ${{ runner.os }}-modules-${{ hashFiles('package-lock.json') }}
+      - name: Enable Corepack
+        run: corepack enable npm
 
-      - run: corepack enable npm && corepack prepare --activate
       - name: Install dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
         run: npm ci
 
-      - run: npm test
-      - run: npm run lint
-      - run: npm run web:build -- --base=/neanes-web-app/
+      - name: Test
+        run: npm test
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Lint Markdown
+        uses: DavidAnson/markdownlint-cli2-action@v23
+
+      - name: Build for web
+        run: npm run web:build -- --base=/neanes-web-app/
+
       - name: Push
         run: |
           cd dist

@@ -881,43 +881,43 @@
     },
     "isonApostrofos": {
       "yfenAbove": [
-        0.639,
+        0.624,
         0.659
       ],
       "yfenBelow": [
-        0.703,
+        0.688,
         -0.468
       ],
       "koronis": [
-        0.579,
+        0.564,
         0.649
       ],
       "apli": [
-        1.35,
+        1.335,
         -0.48
       ],
       "measureNumber": [
-        0.03,
+        0.015,
         0.5
       ],
       "isonIndicator": [
-        0.03,
+        0.015,
         0.7
       ],
       "noteTop": [
-        0.06,
+        0.045,
         0.4
       ],
       "fthoraTop": [
-        0.593,
+        0.578,
         0.275
       ],
       "fthoraBottom": [
-        0.369,
+        0.354,
         -0.079
       ],
       "diesis": [
-        0.349,
+        0.334,
         -0.099
       ]
     },
@@ -969,79 +969,79 @@
     },
     "yporroi": {
       "diesisSecondary": [
-        0.524,
+        0.504,
         0.655
       ],
       "yfesisSecondary": [
-        -0.082,
+        -0.102,
         -0.455
       ],
       "yfesis": [
-        0.245,
+        0.225,
         0.377
       ],
       "barline": [
-        0.223,
+        0.203,
         0.358
       ],
       "yfenAbove": [
-        0.154,
+        0.134,
         0.655
       ],
       "yfenBelow": [
-        0.096,
+        0.076,
         -0.272
       ],
       "koronis": [
-        0.147,
+        0.127,
         0.649
       ],
       "endofonon": [
-        0.129,
+        0.109,
         -0.378
       ],
       "heteronConnecting": [
-        0.52,
+        0.5,
         -0.251
       ],
       "measureNumber": [
-        0.03,
+        0.01,
         0.5
       ],
       "isonIndicator": [
-        0.0,
+        -0.02,
         0.7
       ],
       "heteron": [
-        0.253,
+        0.233,
         -0.318
       ],
       "apli": [
-        0.15,
+        0.13,
         -0.2
       ],
       "antikenoma": [
-        0.15,
+        0.13,
         -0.1
       ],
       "noteTop": [
-        0.06,
+        0.04,
         0.4
       ],
       "fthoraTop": [
-        0.245,
+        0.225,
         0.377
       ],
       "fthoraBottom": [
-        0.085,
+        0.065,
         -0.131
       ],
       "diesis": [
-        0.204,
+        0.184,
         -0.172
       ],
       "gorgonTop": [
-        0.25,
+        0.23,
         0.29
       ]
     },
@@ -7517,9 +7517,9 @@
     "oligonKentimaYpsiliMiddle": 1.298,
     "oligonDoubleYpsili": 1.317,
     "oligonKentimataDoubleYpsili": 1.478,
-    "isonApostrofos": 1.592,
+    "isonApostrofos": 1.348,
     "apostrofosSyndesmos": 1.615,
-    "yporroi": 0.37,
+    "yporroi": 0.34,
     "runningElafron": 2.004,
     "elafron": 1.297,
     "elafronApostrofos": 1.297,
@@ -8024,11 +8024,11 @@
     },
     "isonApostrofos": {
       "bBoxNE": [
-        1.562,
+        1.547,
         0.27
       ],
       "bBoxSW": [
-        0.03,
+        0.015,
         -0.37
       ]
     },
@@ -8044,11 +8044,11 @@
     },
     "yporroi": {
       "bBoxNE": [
-        0.34,
+        0.32,
         0.208
       ],
       "bBoxSW": [
-        0.03,
+        0.01,
         -0.08
       ]
     },

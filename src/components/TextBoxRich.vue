@@ -18,6 +18,7 @@
         :model-value="contentLeft"
         @blur="onBlur"
         :config="editorConfig"
+        :disable-watchdog="true"
       />
       <ckeditor
         ref="editorCenter"
@@ -27,6 +28,7 @@
         @blur="onBlur"
         @ready="onEditorReady"
         :config="editorConfig"
+        :disable-watchdog="true"
       />
       <ckeditor
         ref="editorRight"
@@ -35,6 +37,7 @@
         :model-value="contentRight"
         @blur="onBlur"
         :config="editorConfig"
+        :disable-watchdog="true"
       />
     </div>
     <div class="inline-container" v-else-if="element.inline">
@@ -52,6 +55,7 @@
             @blur="onBlur"
             @ready="onEditorReadyInline"
             :config="editorConfig"
+            :disable-watchdog="true"
           />
         </div>
       </div>
@@ -65,6 +69,7 @@
           @blur="onBlur"
           @ready="onEditorReadyInlineBottom"
           :config="editorConfig"
+          :disable-watchdog="true"
         />
       </div>
     </div>
@@ -77,6 +82,7 @@
       @blur="onBlur"
       @ready="onEditorReady"
       :config="editorConfig"
+      :disable-watchdog="true"
       :style="textBoxStyle"
     />
     <ckeditor
@@ -88,6 +94,7 @@
       @blur="onBlur"
       @ready="onEditorReady"
       :config="editorConfig"
+      :disable-watchdog="true"
       :style="textBoxStyle"
     />
   </div>

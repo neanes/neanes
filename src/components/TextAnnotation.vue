@@ -12,6 +12,7 @@
       :editor="editor"
       :model-value="element.text"
       :config="editorConfig"
+      :disable-watchdog="true"
       @ready="onEditorReady"
     />
   </div>

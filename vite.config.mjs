@@ -1,10 +1,10 @@
 import { rmSync } from 'node:fs';
 
+import eslintPlugin from '@nabla/vite-plugin-eslint';
 import vue from '@vitejs/plugin-vue';
 import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
 import electron from 'vite-plugin-electron';
-import eslintPlugin from 'vite-plugin-eslint';
 import { VitePWA } from 'vite-plugin-pwa';
 import VueDevTools from 'vite-plugin-vue-devtools';
 
@@ -104,7 +104,10 @@ export default defineConfig(({ command, mode }) => {
       vue(),
       process.env.VITE_ENABLE_DEV_TOOLS === 'true' ? VueDevTools() : undefined,
       eslintPlugin({
-        overrideConfigFile: 'eslint.config.mjs',
+        eslintOptions: {
+          cache: false,
+          overrideConfigFile: 'eslint.config.mjs',
+        },
       }),
       !mode.includes('web')
         ? electron([

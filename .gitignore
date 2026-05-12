@@ -26,6 +26,9 @@ yarn-error.log*
 /docs/.vitepress/dist
 /docs/.vitepress/cache
 
+# Vitest coverage output
+/coverage/
+
 #Electron-builder output
 /dist
 /dist-electron

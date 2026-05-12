@@ -4,17 +4,13 @@
     "module": "esnext",
     "strict": true,
     "jsx": "preserve",
-    "importHelpers": true,
     "moduleResolution": "bundler",
-    "experimentalDecorators": true,
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "sourceMap": true,
     "types": [
       "vite/client"
     ],
-    "typeRoots": ["./node_modules/@types/", "./types", "./src/**/types"],
     "paths": {
       "@/*": [
         "./src/*"
@@ -22,15 +18,13 @@
     },
     "lib": [
       "esnext",
-      "dom",
-      "scripthost"
+      "dom"
     ]
   },
   "include": [
     "electron/**/*.ts",
     "src/**/*.ts",
-    "src/**/*.vue",
-    "tests/**/*.ts"
+    "src/**/*.vue"
   ],
   "exclude": [
     "node_modules",

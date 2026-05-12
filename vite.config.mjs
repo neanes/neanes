@@ -168,9 +168,6 @@ export default defineConfig(({ command, mode }) => {
           port: +url.port,
         };
       })(),
-    test: {
-      globals: true,
-    },
     clearScreen: false,
   };
 });

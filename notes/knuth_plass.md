@@ -256,8 +256,9 @@ The collision check is geometry-based.
 When both notes carry lyrics, the code computes the actual visual gap between them from the neume overhangs relative to their lyrics, then adds back only the missing amount.
 This is what makes the two mirror-image cases behave correctly.
 If the hyphen extends past the current neume, it appears in the carried melisma overhang and is handled by the melisma path below; the ordinary `lyricsMinimumSpacing` is then added by that collision rule.
-If the hyphen fits entirely inside a wide current neume, there is no overhang to carry, so the ordinary same-line collision correction must reserve enough visible gap for the hyphen glyph plus the ordinary lyric spacing.
-The same mechanism also handles melisma-to-non-melisma transitions: if a running melisma still extends past the current neume, the next syllable is pushed right only as much as necessary.
+If the hyphen fits entirely inside a wide current neume, there is no positive line-end overhang to reserve, so the same-line collision correction must still reserve enough visible gap for the hyphen glyph plus the ordinary lyric spacing.
+The same mechanism also handles melisma-to-non-melisma transitions.
+For same-line spacing, the carried lyric end is treated as a signed distance from the current cursor, so the next syllable is pushed right only as much as necessary whether the carried lyric ends before or after that cursor.
 
 ### Break-only reservation
 
@@ -285,7 +286,7 @@ Instead:
 
 - the start note uses `alignLeft`, with $R_i = 0$;
 - the running syllable's rightmost extent is tracked in `melismaLyricsEndPx`;
-- same-line spacing to the next real syllable is handled by the ordinary collision correction in $m_i$, with the hyphen width and ordinary lyric spacing enforced there only when the hyphen is absorbed inside the current neume;
+- same-line spacing to the next real syllable is handled by the collision correction in $m_i$, using the carried lyric end as a signed distance from the current cursor and including any trailing hyphen in that carried end;
 - line-end overflow inside the melisma is handled by the break-only reservation $w_i$.
 
 This is slightly more involved than treating all melisma excess as an ordinary right projection, but it matches the visual result better: the lyric may legitimately run under later melisma neumes on the same line while still being protected at line endings.

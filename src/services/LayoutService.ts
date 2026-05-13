@@ -1879,9 +1879,8 @@ export class LayoutService {
     // the absorbed-hyphen case it must reserve the hyphen width plus
     // the ordinary lyricsMinimumSpacing.
     //
-    // Also handles melisma-to-non-melisma transitions: when a
-    // carried melisma lyric from a previous note extends past note i's neume,
-    // extra spacing may be needed before the next syllable.
+    // Also handles melisma-to-non-melisma transitions by measuring
+    // the carried lyric's signed distance from the current cursor.
     let collisionAdjustment = 0;
     if (noteElement.lyricsWidth > 0) {
       const lyricGap =
@@ -1963,26 +1962,15 @@ export class LayoutService {
       return 0;
     }
 
-    // A carried melisma can protrude farther than the measured lyric
-    // text, especially when a trailing hyphen extends past the neume.
-    // If the hyphen fits entirely inside the current neume, that case
-    // is handled earlier by the ordinary lyric-gap check via
-    // lyricsMinimumSpacing + hyphenWidth, so melismaOverhang
-    // legitimately remains 0 here.
-    const melismaOverhang = this.getMelismaOverhang(
-      workspace,
-      workspace.neumesEndPx,
-    );
-    if (melismaOverhang <= 0) {
-      return 0;
-    }
+    // Signed distance from the current cursor to the carried melisma lyric's
+    // right edge. The gap formula is valid whether that edge is before or
+    // after the cursor.
+    const carriedLyricEndFromCursor =
+      workspace.melismaLyricsEndPx - workspace.neumesEndPx;
 
-    // The final same-line gap between the melisma lyric's right edge
-    // and the next syllable's left edge depends only on baseWidth,
-    // the next note's left overhang, and the carried melisma
-    // overhang: T_i^left and L_{i+1} cancel, so the result is
-    // independent of the next note's left projection.
-    const melismaGap = baseWidth + nextLeftOverhang - melismaOverhang;
+    // T_i^left and L_{i+1} cancel, so the same-line gap is independent
+    // of the next note's left projection.
+    const melismaGap = baseWidth + nextLeftOverhang - carriedLyricEndFromCursor;
     return Math.max(0, workspace.pageSetup.lyricsMinimumSpacing - melismaGap);
   }
 

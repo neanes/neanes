@@ -196,8 +196,6 @@ export default defineComponent({
       if (toolbarEl) {
         toolbarEl.style.maxWidth = '400px';
       }
-
-      this.clampingInterval = setInterval(this.clampToPageBounds, 250);
     },
 
     async handleDoubleClick() {

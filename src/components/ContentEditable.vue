@@ -1,6 +1,7 @@
 <template>
   <!-- eslint-disable vue/no-v-html -->
   <span
+    ref="span"
     class="contenteditable"
     :contenteditable="contentEditable"
     :style="style"
@@ -55,7 +56,7 @@ export default defineComponent({
     },
 
     htmlElement() {
-      return this.$el as HTMLElement;
+      return this.$refs.span as HTMLElement;
     },
 
     style() {

@@ -8,25 +8,12 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "sourceMap": true,
-    "types": [
-      "vite/client"
-    ],
+    "types": ["vite/client"],
     "paths": {
-      "@/*": [
-        "./src/*"
-      ]
+      "@/*": ["./src/*"]
     },
-    "lib": [
-      "esnext",
-      "dom"
-    ]
+    "lib": ["esnext", "dom"]
   },
-  "include": [
-    "electron/**/*.ts",
-    "src/**/*.ts",
-    "src/**/*.vue"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+  "include": ["electron/**/*.ts", "src/**/*.ts", "src/**/*.vue"],
+  "exclude": ["node_modules"]
 }

@@ -1,14 +1,9 @@
 {
-  "globs": [
-    "*.md",
-    ".github/**/*.md",
-    "docs/**/*.md",
-    "notes/**/*.md"
-  ],
+  "globs": ["*.md", ".github/**/*.md", "docs/**/*.md", "notes/**/*.md"],
   "config": {
     "MD013": false,
     "MD024": {
-      "siblings_only": true
+      "siblings_only": true,
     },
     "MD033": {
       "allowed_elements": [
@@ -20,8 +15,8 @@
         "source",
         "span",
         "style",
-        "summary"
-      ]
-    }
-  }
+        "summary",
+      ],
+    },
+  },
 }

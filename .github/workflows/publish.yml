@@ -45,6 +45,10 @@ jobs:
 
       - name: Build macOS
         if: runner.os == 'macOS'
-        run: npm run release -- --x64 && npm run release -- --arm64
+        run: npm run release -- --x64 --arm64
         env:
           GH_TOKEN: ${{ github.token }}
+
+      - name: Check macOS update metadata
+        if: runner.os == 'macOS'
+        run: npm run check:mac-update-metadata

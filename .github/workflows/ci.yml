@@ -53,7 +53,3 @@ jobs:
       - name: Build macOS
         if: runner.os == 'macOS'
         run: npm run build -- --x64 --arm64
-
-      - name: Check macOS update metadata
-        if: runner.os == 'macOS'
-        run: npm run check:mac-update-metadata

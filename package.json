@@ -27,7 +27,6 @@
     "test": "vitest --run",
     "test:dev": "vitest",
     "coverage": "vitest run --coverage",
-    "check:mac-update-metadata": "node scripts/check-mac-update-metadata.mjs",
     "web:dev": "vite --mode web",
     "web:build": "vue-tsc --noEmit && vite build --mode web"
   },

@@ -12,13 +12,16 @@ import pkg from './package.json';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command, mode }) => {
-  rmSync('dist-electron', { recursive: true, force: true });
-
   const isServe = command === 'serve';
   const isBuild = command === 'build';
   const sourcemap = isServe || !!process.env.VSCODE_DEBUG;
 
   process.env = { ...process.env, ...loadEnv(mode, process.cwd()) };
+  const isElectron = process.env.VITE_IS_ELECTRON === 'true';
+
+  if (isElectron) {
+    rmSync('dist-electron', { recursive: true, force: true });
+  }
 
   return {
     resolve: {
@@ -27,10 +30,10 @@ export default defineConfig(({ command, mode }) => {
       },
     },
     define: {
-      APP_VERSION: JSON.stringify(process.env.npm_package_version),
+      APP_VERSION: JSON.stringify(pkg.version),
     },
     plugins: [
-      mode === 'web'
+      !isElectron
         ? VitePWA({
             registerType: null, // We'll inject the service worker ourselves
             workbox: {
@@ -109,7 +112,7 @@ export default defineConfig(({ command, mode }) => {
           overrideConfigFile: 'eslint.config.mjs',
         },
       }),
-      !mode.includes('web')
+      isElectron
         ? electron([
             {
               // Main-Process entry file of the Electron App.

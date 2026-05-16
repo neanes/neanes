@@ -16,7 +16,7 @@ export default defineConfig(({ command, mode }) => {
   const isBuild = command === 'build';
   const sourcemap = isServe || !!process.env.VSCODE_DEBUG;
 
-  process.env = { ...process.env, ...loadEnv(mode, process.cwd()) };
+  Object.assign(process.env, loadEnv(mode, process.cwd()));
   const isElectron = process.env.VITE_IS_ELECTRON === 'true';
 
   if (isElectron) {

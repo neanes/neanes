@@ -1,6 +1,7 @@
+.vscode
 dist
 dist-electron
+docs/.vitepress/cache
 node_modules
-.scripts
-.vscode
-.vitepress/cache
+package-lock.json
+src/assets/fonts/*.metadata.json

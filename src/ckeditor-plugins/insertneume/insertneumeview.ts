@@ -18,7 +18,7 @@ import {
 
 export default class InsertNeumeView extends View {
   gridView: View;
-  locale: Locale;
+  override locale: Locale;
   grid: ViewCollection;
   onCharSelect: (args: InsertNeumeCommandParams) => void;
 

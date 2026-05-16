@@ -16,7 +16,7 @@ export default class UpdateNeumeAttributesCommand extends Command {
   width: number | null = null;
   color: string | null = null;
 
-  execute(attributes: Record<string, unknown>) {
+  override execute(attributes: Record<string, unknown>) {
     const model = this.editor.model;
 
     const neumeElement = this._findSelectedNeume();
@@ -38,7 +38,7 @@ export default class UpdateNeumeAttributesCommand extends Command {
     });
   }
 
-  refresh() {
+  override refresh() {
     const neume = this._findSelectedNeume();
 
     this.isEnabled = !!neume;

@@ -4,8 +4,8 @@
       <div class="form-group">
         <label class="right-space">{{ $t('toolbar:common.bpm') }}</label>
         <InputBpm
-          :modelValue="element.bpm"
-          @update:modelValue="
+          :model-value="element.bpm"
+          @update:model-value="
             $emit('update', { bpm: $event } as Partial<TempoElement>)
           "
         />
@@ -21,8 +21,8 @@
           :max="spaceAfterMax"
           :step="0.5"
           :precision="2"
-          :modelValue="element.spaceAfter"
-          @update:modelValue="
+          :model-value="element.spaceAfter"
+          @update:model-value="
             $emit('update', { spaceAfter: $event } as Partial<TempoElement>)
           "
         />
@@ -59,7 +59,6 @@ import InputUnit from './InputUnit.vue';
 
 export default defineComponent({
   components: { InputUnit, InputBpm },
-  emits: ['update', 'update:sectionName'],
   props: {
     element: {
       type: Object as PropType<TempoElement>,
@@ -70,6 +69,7 @@ export default defineComponent({
       required: true,
     },
   },
+  emits: ['update', 'update:sectionName'],
 
   data() {
     return {};

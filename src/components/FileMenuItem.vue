@@ -9,13 +9,13 @@ import { defineComponent } from 'vue';
 
 export default defineComponent({
   components: {},
-  emits: ['click'],
   props: {
     label: {
       type: String,
       required: true,
     },
   },
+  emits: ['click'],
 
   data() {
     return {};

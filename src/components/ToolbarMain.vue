@@ -2,22 +2,22 @@
   <div class="main-toolbar">
     <button
       class="entry-mode-btn"
-      @click="$emit('update:entryMode', EntryMode.Auto)"
       :class="{ on: entryMode === EntryMode.Auto }"
+      @click="$emit('update:entryMode', EntryMode.Auto)"
     >
       {{ $t('toolbar:main.auto') }}
     </button>
     <button
       class="entry-mode-btn"
-      @click="$emit('update:entryMode', EntryMode.Insert)"
       :class="{ on: entryMode === EntryMode.Insert }"
+      @click="$emit('update:entryMode', EntryMode.Insert)"
     >
       {{ $t('toolbar:main.insert') }}
     </button>
     <button
       class="entry-mode-btn"
-      @click="$emit('update:entryMode', EntryMode.Edit)"
       :class="{ on: entryMode === EntryMode.Edit }"
+      @click="$emit('update:entryMode', EntryMode.Edit)"
     >
       {{ $t('toolbar:main.single') }}
     </button>
@@ -34,7 +34,7 @@
       direction="down"
       :options="tempoOptions"
       :title="tempoTooltip"
-      imgSize="28px"
+      img-size="28px"
       @select="$emit('add-tempo', $event)"
     />
     <span class="space"></span>
@@ -115,7 +115,7 @@
       <img src="@/assets/icons/delete.svg" width="24" height="24" />
     </button>
     <span class="space"></span>
-    <div class="zoom-container" @focusout="showZoomMenu = false" tabindex="-1">
+    <div class="zoom-container" tabindex="-1" @focusout="showZoomMenu = false">
       <input
         class="zoom"
         :value="zoomDisplay"
@@ -124,7 +124,7 @@
       <span class="zoom-arrow" @click="showZoomMenu = !showZoomMenu"
         >&#x25BE;</span
       >
-      <div class="zoom-menu" v-if="showZoomMenu">
+      <div v-if="showZoomMenu" class="zoom-menu">
         <div class="zoom-menu-item" @click="updateZoom('Fit')">
           {{ $t('toolbar:main.fit') }}
         </div>
@@ -189,9 +189,9 @@
         :max="300"
         :step="1"
         :precision="0"
-        :modelValue="audioOptions.speed"
+        :model-value="audioOptions.speed"
         :disabled="audioState === AudioState.Playing"
-        @update:modelValue="$emit('update:audioOptionsSpeed', $event)"
+        @update:model-value="$emit('update:audioOptionsSpeed', $event)"
       />
       <span>%</span>
     </div>
@@ -253,24 +253,6 @@ const tempoOptions: ButtonWithMenuOption[] = [
 
 export default defineComponent({
   components: { ButtonWithMenu, InputUnit },
-  emits: [
-    'add-auto-martyria',
-    'add-drop-cap',
-    'add-image',
-    'add-mode-key',
-    'add-tempo',
-    'add-text-box',
-    'add-text-box-rich',
-    'delete-selected-element',
-    'open-playback-settings',
-    'play-audio',
-    'toggle-line-break',
-    'toggle-page-break',
-    'update:audioOptionsSpeed',
-    'update:entryMode',
-    'update:zoom',
-    'update:zoomToFit',
-  ],
   props: {
     entryMode: {
       type: String as PropType<EntryMode>,
@@ -313,6 +295,24 @@ export default defineComponent({
       required: true,
     },
   },
+  emits: [
+    'add-auto-martyria',
+    'add-drop-cap',
+    'add-image',
+    'add-mode-key',
+    'add-tempo',
+    'add-text-box',
+    'add-text-box-rich',
+    'delete-selected-element',
+    'open-playback-settings',
+    'play-audio',
+    'toggle-line-break',
+    'toggle-page-break',
+    'update:audioOptionsSpeed',
+    'update:entryMode',
+    'update:zoom',
+    'update:zoomToFit',
+  ],
 
   data() {
     return {

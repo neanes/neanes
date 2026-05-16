@@ -32,13 +32,13 @@ import { defineComponent } from 'vue';
 
 export default defineComponent({
   components: {},
-  emits: ['close', 'search', 'update:query'],
   props: {
     query: {
       type: String,
       required: true,
     },
   },
+  emits: ['close', 'search', 'update:query'],
 
   data() {
     return {};

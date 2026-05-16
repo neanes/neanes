@@ -1,8 +1,8 @@
 <template>
   <div
     class="drop-cap-container"
-    @click="$emit('select-single')"
     :style="containerStyle"
+    @click="$emit('select-single')"
   >
     <span class="handle"></span>
 
@@ -28,7 +28,6 @@ import { withZoom } from '@/utils/withZoom';
 
 export default defineComponent({
   components: { ContentEditable },
-  emits: ['update:content', 'select-single'],
   props: {
     element: {
       type: Object as PropType<DropCapElement>,
@@ -43,6 +42,7 @@ export default defineComponent({
       required: true,
     },
   },
+  emits: ['update:content', 'select-single'],
 
   data() {
     return {};

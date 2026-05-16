@@ -16,31 +16,31 @@
         class="rich-text-editor multipanel left"
         :editor="editor"
         :model-value="contentLeft"
-        @blur="onBlur"
         :config="editorConfig"
         :disable-watchdog="true"
+        @blur="onBlur"
       />
       <ckeditor
         ref="editorCenter"
         class="rich-text-editor multipanel center"
         :editor="editor"
         :model-value="contentCenter"
-        @blur="onBlur"
-        @ready="onEditorReady"
         :config="editorConfig"
         :disable-watchdog="true"
+        @blur="onBlur"
+        @ready="onEditorReady"
       />
       <ckeditor
         ref="editorRight"
         class="rich-text-editor multipanel right"
         :editor="editor"
         :model-value="contentRight"
-        @blur="onBlur"
         :config="editorConfig"
         :disable-watchdog="true"
+        @blur="onBlur"
       />
     </div>
-    <div class="inline-container" v-else-if="element.inline">
+    <div v-else-if="element.inline" class="inline-container">
       <div class="inline-top-container" :style="textBoxTopContainerStyle">
         <div
           class="inline-top-inner-container"
@@ -52,10 +52,10 @@
             :style="textBoxStyleTop"
             :editor="editor"
             :model-value="content"
-            @blur="onBlur"
-            @ready="onEditorReadyInline"
             :config="editorConfig"
             :disable-watchdog="true"
+            @blur="onBlur"
+            @ready="onEditorReadyInline"
           />
         </div>
       </div>
@@ -66,10 +66,10 @@
           :style="textBoxStyleBottom"
           :editor="editor"
           :model-value="contentBottom"
-          @blur="onBlur"
-          @ready="onEditorReadyInlineBottom"
           :config="editorConfig"
           :disable-watchdog="true"
+          @blur="onBlur"
+          @ready="onEditorReadyInlineBottom"
         />
       </div>
     </div>
@@ -79,11 +79,11 @@
       class="rich-text-editor single scrollable"
       :editor="editor"
       :model-value="content"
-      @blur="onBlur"
-      @ready="onEditorReady"
       :config="editorConfig"
       :disable-watchdog="true"
       :style="textBoxStyle"
+      @blur="onBlur"
+      @ready="onEditorReady"
     />
     <ckeditor
       v-else
@@ -91,11 +91,11 @@
       class="rich-text-editor single"
       :editor="editor"
       :model-value="content"
-      @blur="onBlur"
-      @ready="onEditorReady"
       :config="editorConfig"
       :disable-watchdog="true"
       :style="textBoxStyle"
+      @blur="onBlur"
+      @ready="onEditorReady"
     />
   </div>
 </template>
@@ -117,7 +117,6 @@ import { withZoom } from '@/utils/withZoom';
 
 export default defineComponent({
   components: {},
-  emits: ['update', 'update:height', 'select-single'],
   props: {
     element: {
       type: Object as PropType<RichTextBoxElement>,
@@ -139,12 +138,16 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
-    metadata: Object as PropType<TokenMetadata>,
+    metadata: {
+      type: Object as PropType<TokenMetadata>,
+      default: undefined,
+    },
     recalc: {
       type: Boolean,
       default: false,
     },
   },
+  emits: ['update', 'update:height', 'select-single'],
 
   data() {
     return {
@@ -161,13 +164,6 @@ export default defineComponent({
       inlineTopObserver: null as ResizeObserver | null,
       debouncedPhoneHome: null as ((x: number) => void) | null,
     };
-  },
-
-  watch: {
-    'element.centerOnPage'() {
-      this.setPadding(this.getEditorInstance());
-      this.setPadding(this.getEditorInstanceBottom());
-    },
   },
 
   computed: {
@@ -360,6 +356,13 @@ export default defineComponent({
       };
 
       return style;
+    },
+  },
+
+  watch: {
+    'element.centerOnPage'() {
+      this.setPadding(this.getEditorInstance());
+      this.setPadding(this.getEditorInstanceBottom());
     },
   },
 

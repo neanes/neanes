@@ -113,7 +113,6 @@ import { withZoom } from '@/utils/withZoom';
 
 export default defineComponent({
   components: { Neume: NeumeVue },
-  emits: ['select-single', 'select-range'],
   props: {
     note: {
       type: Object as PropType<NoteElement>,
@@ -128,6 +127,7 @@ export default defineComponent({
       default: false,
     },
   },
+  emits: ['select-single', 'select-range'],
 
   data() {
     return {

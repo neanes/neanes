@@ -22,24 +22,24 @@
           </select>
         </div>
         <template v-if="exportFormatIsImage">
-          <div class="form-group row" v-if="format === ExportFormat.PNG">
+          <div v-if="format === ExportFormat.PNG" class="form-group row">
             <label class="medium">{{ $t('dialog:export.resolution') }}</label>
             <InputUnit
+              v-model="dpi"
               unit="unitless"
               class="dpi"
               :min="32"
               :max="999"
               :step="1"
               :round="round"
-              v-model="dpi"
             />
             <span class="unit-label">{{ $t('dialog:export.dpi') }}</span>
           </div>
-          <div class="form-group row" v-if="format === ExportFormat.PNG">
+          <div v-if="format === ExportFormat.PNG" class="form-group row">
             <input
               id="export-dialog-transparent-bg"
-              type="checkbox"
               v-model="transparentBackground"
+              type="checkbox"
             />
             <label for="export-dialog-transparent-bg">{{
               $t('dialog:export.transparentBackground')
@@ -52,8 +52,8 @@
           <div class="form-group row">
             <input
               id="export-dialog-open-folder"
-              type="checkbox"
               v-model="openFolder"
+              type="checkbox"
             />
             <label for="export-dialog-open-folder">{{
               $t('dialog:export.openDestinationFolderAfterExport')
@@ -64,8 +64,8 @@
           <div class="form-group row">
             <input
               id="export-dialog-calculate-time-signatures"
-              type="checkbox"
               v-model="musicXmlOptions.calculateTimeSignatures"
+              type="checkbox"
             />
             <label for="export-dialog-calculate-time-signatures">{{
               $t('dialog:export.calculateTimeSignatures')
@@ -74,8 +74,8 @@
           <div class="form-group row">
             <input
               id="export-dialog-display-time-signatures"
-              type="checkbox"
               v-model="musicXmlOptions.displayTimeSignatures"
+              type="checkbox"
             />
             <label for="export-dialog-display-time-signatures">{{
               $t('dialog:export.displayTimeSignatures')
@@ -84,8 +84,8 @@
           <div class="form-group row">
             <input
               id="export-dialog-display-measure-subdivisions"
-              type="checkbox"
               v-model="musicXmlOptions.displayMeasureSubdivisions"
+              type="checkbox"
             />
             <label for="export-dialog-display-measure-subdivisions">{{
               $t('dialog:export.displayMeasureSubdivisions')
@@ -97,8 +97,8 @@
           <div class="form-group row">
             <input
               id="export-dialog-open-folder"
-              type="checkbox"
               v-model="openFolder"
+              type="checkbox"
             />
             <label for="export-dialog-open-folder">{{
               $t('dialog:export.openDestinationFolderAfterExport')
@@ -109,8 +109,8 @@
           <div class="form-group row">
             <input
               id="export-dialog-include-mode-keys"
-              type="checkbox"
               v-model="latexOptions.includeModeKeys"
+              type="checkbox"
             />
             <label for="export-dialog-include-mode-keys">{{
               $t('dialog:export.includeModeKeys')
@@ -119,8 +119,8 @@
           <div class="form-group row">
             <input
               id="export-dialog-include-text-boxes"
-              type="checkbox"
               v-model="latexOptions.includeTextBoxes"
+              type="checkbox"
             />
             <label for="export-dialog-include-text-boxes">{{
               $t('dialog:export.includeTextBoxes')
@@ -182,13 +182,6 @@ export interface ExportAsLatexSettings {
 
 export default defineComponent({
   components: { ModalDialog, InputUnit },
-  emits: [
-    'close',
-    'exportAsLatex',
-    'exportAsMusicXml',
-    'exportAsPng',
-    'exportAsSvg',
-  ],
   props: {
     defaultFormat: {
       type: String as PropType<ExportFormat>,
@@ -199,6 +192,13 @@ export default defineComponent({
       required: true,
     },
   },
+  emits: [
+    'close',
+    'exportAsLatex',
+    'exportAsMusicXml',
+    'exportAsPng',
+    'exportAsSvg',
+  ],
 
   data() {
     return {
@@ -214,6 +214,14 @@ export default defineComponent({
     };
   },
 
+  computed: {
+    exportFormatIsImage() {
+      return (
+        this.format === ExportFormat.PNG || this.format === ExportFormat.SVG
+      );
+    },
+  },
+
   mounted() {
     if (this.defaultFormat != null) {
       this.format = this.defaultFormat;
@@ -224,14 +232,6 @@ export default defineComponent({
 
   beforeUnmount() {
     window.removeEventListener('keydown', this.onKeyDown);
-  },
-
-  computed: {
-    exportFormatIsImage() {
-      return (
-        this.format === ExportFormat.PNG || this.format === ExportFormat.SVG
-      );
-    },
   },
 
   methods: {

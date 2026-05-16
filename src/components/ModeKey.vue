@@ -40,7 +40,7 @@
       :style="tempoStyle"
     />
     <span class="right-container">
-      <span class="ambitus" v-if="element.showAmbitus">
+      <span v-if="element.showAmbitus" class="ambitus">
         <span class="ambitus-text">(</span>
         <span class="ambitus-low" :style="ambitusStyle">
           <Neume :neume="element.ambitusLowNote" />
@@ -74,7 +74,6 @@ import { withZoom } from '@/utils/withZoom';
 
 export default defineComponent({
   components: { Neume },
-  emits: ['select-single'],
   props: {
     element: {
       type: Object as PropType<ModeKeyElement>,
@@ -85,6 +84,7 @@ export default defineComponent({
       required: true,
     },
   },
+  emits: ['select-single'],
 
   data() {
     return {

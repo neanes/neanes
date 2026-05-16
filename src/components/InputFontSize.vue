@@ -5,8 +5,8 @@
     :max="max"
     :step="1"
     :round="round"
-    :modelValue="modelValue"
-    @update:modelValue="$emit('update:modelValue', $event)"
+    :model-value="modelValue"
+    @update:model-value="$emit('update:modelValue', $event)"
   />
 </template>
 
@@ -17,7 +17,6 @@ import InputUnit from '@/components/InputUnit.vue';
 
 export default defineComponent({
   components: { InputUnit },
-  emits: ['update:modelValue'],
   props: {
     modelValue: {
       type: Number,
@@ -28,6 +27,7 @@ export default defineComponent({
       default: 100,
     },
   },
+  emits: ['update:modelValue'],
 
   data() {
     return {};

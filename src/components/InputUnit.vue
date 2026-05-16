@@ -1,12 +1,12 @@
 <template>
   <input
     :value="displayValue"
-    @change="onChange(($event.target as HTMLInputElement).value)"
     type="number"
     :min="min"
     :max="max"
     :step="step"
     :disabled="disabled"
+    @change="onChange(($event.target as HTMLInputElement).value)"
   />
 </template>
 
@@ -26,7 +26,6 @@ export type UnitOfMeasure =
 
 export default defineComponent({
   components: {},
-  emits: ['update:modelValue'],
   props: {
     modelValue: {
       type: [Number, null],
@@ -45,28 +44,28 @@ export default defineComponent({
      */
     min: {
       type: Number,
-      required: false,
+      default: undefined,
     },
     /**
      * The maximum value allowed, in display units.
      */
     max: {
       type: Number,
-      required: false,
+      default: undefined,
     },
     /**
      * The step size, in display units.
      */
     step: {
       type: Number,
-      required: false,
+      default: undefined,
     },
     /**
      * The number of decimal places that will be displayed.
      */
     precision: {
       type: Number,
-      required: false,
+      default: undefined,
     },
     /**
      * The default value if the value is cleared
@@ -88,9 +87,10 @@ export default defineComponent({
      */
     round: {
       type: Function as PropType<(x: number) => number>,
-      required: false,
+      default: undefined,
     },
   },
+  emits: ['update:modelValue'],
 
   data() {
     return {};

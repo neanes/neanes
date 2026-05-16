@@ -244,8 +244,8 @@
           element.tempoLeft == null &&
           element.tempoRight == null
         "
-        :modelValue="element.bpm"
-        @update:modelValue="
+        :model-value="element.bpm"
+        @update:model-value="
           $emit('update', {
             bpm: $event,
           } as Partial<MartyriaElement>)
@@ -264,8 +264,8 @@
         :max="spaceAfterMax"
         :step="0.5"
         :precision="2"
-        :modelValue="element.verticalOffset"
-        @update:modelValue="
+        :model-value="element.verticalOffset"
+        @update:model-value="
           $emit('update', {
             verticalOffset: $event,
           } as Partial<MartyriaElement>)
@@ -282,8 +282,8 @@
         :max="spaceAfterMax"
         :step="0.5"
         :precision="2"
-        :modelValue="element.spaceAfter"
-        @update:modelValue="
+        :model-value="element.spaceAfter"
+        @update:model-value="
           $emit('update', {
             spaceAfter: $event,
           } as Partial<MartyriaElement>)
@@ -686,16 +686,6 @@ function getDisplayName(neume: Neume) {
 
 export default defineComponent({
   components: { InputUnit, InputBpm, ButtonWithMenu },
-  emits: [
-    'update',
-    'update:fthora',
-    'update:measureBar',
-    'update:quantitativeNeume',
-    'update:sectionName',
-    'update:tempoLeft',
-    'update:tempo',
-    'update:tempoRight',
-  ],
   props: {
     element: {
       type: Object as PropType<MartyriaElement>,
@@ -710,6 +700,16 @@ export default defineComponent({
       required: true,
     },
   },
+  emits: [
+    'update',
+    'update:fthora',
+    'update:measureBar',
+    'update:quantitativeNeume',
+    'update:sectionName',
+    'update:tempoLeft',
+    'update:tempo',
+    'update:tempoRight',
+  ],
 
   data() {
     return {

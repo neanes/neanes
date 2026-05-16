@@ -1,10 +1,10 @@
 <template>
-  <div class="file-menu-bar" @focusout="isMenuOpen = false" tabindex="-1">
+  <div class="file-menu-bar" tabindex="-1" @focusout="isMenuOpen = false">
     <FileMenuBarItem
       :label="$t('menu:file.root')"
+      :is-open="isMenuOpen && selectedMenu === 'File'"
       @click="toggleMenu"
       @mouseenter="selectedMenu = 'File'"
-      :isOpen="isMenuOpen && selectedMenu === 'File'"
     >
       <FileMenuItem :label="$t('menu:file.new')" @click="onClickNew" />
       <FileMenuItem :label="$t('menu:file.open')" @click="onClickOpen" />
@@ -35,9 +35,9 @@
     </FileMenuBarItem>
     <FileMenuBarItem
       :label="$t('menu:edit.root')"
+      :is-open="isMenuOpen && selectedMenu === 'Edit'"
       @click="toggleMenu"
       @mouseenter="selectedMenu = 'Edit'"
-      :isOpen="isMenuOpen && selectedMenu === 'Edit'"
     >
       <FileMenuItem :label="$t('menu:edit.undo')" @click="onClickUndo" />
       <FileMenuItem :label="$t('menu:edit.redo')" @click="onClickRedo" />
@@ -74,9 +74,9 @@
     </FileMenuBarItem>
     <FileMenuBarItem
       :label="$t('menu:insert.root')"
+      :is-open="isMenuOpen && selectedMenu === 'Insert'"
       @click="toggleMenu"
       @mouseenter="selectedMenu = 'Insert'"
-      :isOpen="isMenuOpen && selectedMenu === 'Insert'"
     >
       <FileMenuItem
         :label="$t('menu:insert.alternateLine')"
@@ -123,9 +123,9 @@
     </FileMenuBarItem>
     <FileMenuBarItem
       :label="$t('menu:help.root')"
+      :is-open="isMenuOpen && selectedMenu === 'Help'"
       @click="toggleMenu"
       @mouseenter="selectedMenu = 'Help'"
-      :isOpen="isMenuOpen && selectedMenu === 'Help'"
     >
       <FileMenuItem :label="$t('menu:help.guide')" @click="onClickGuide" />
       <div class="separator" />
@@ -140,21 +140,21 @@
       <div class="separator" />
       <FileMenuItem :label="$t('menu:help.about')" @click="onClickAbout" />
     </FileMenuBarItem>
-    <div class="browser-warning" v-if="!isChrome">
+    <div v-if="!isChrome" class="browser-warning">
       {{ $t('menu:warning') }}
     </div>
     <input
+      v-show="false"
       ref="file"
       type="file"
       :accept="accept"
-      v-show="false"
       @change="onSelectFile"
     />
     <input
+      v-show="false"
       ref="imagefile"
       type="file"
       :accept="acceptImage"
-      v-show="false"
       @change="onSelectImageFile"
     />
   </div>
@@ -179,8 +179,8 @@ import {
 
 export default defineComponent({
   components: { FileMenuBarItem, FileMenuItem },
-  emits: [],
   props: {},
+  emits: [],
 
   data() {
     return {
@@ -190,6 +190,16 @@ export default defineComponent({
       acceptImage: '.bmp,.jpg,.jpeg,.jpe,.png,.gif,.svg,.webp,.ico',
       isChrome: (window as any).chrome != null,
     };
+  },
+
+  computed: {
+    fileSelector() {
+      return this.$refs.file as HTMLInputElement;
+    },
+
+    imageFileSelector() {
+      return this.$refs.imagefile as HTMLInputElement;
+    },
   },
 
   mounted() {
@@ -203,16 +213,6 @@ export default defineComponent({
   beforeUnmount() {
     window.removeEventListener('keydown', this.onKeyDown);
     EventBus.$off(IpcRendererChannels.OpenImageDialog, this.onClickAddImage);
-  },
-
-  computed: {
-    fileSelector() {
-      return this.$refs.file as HTMLInputElement;
-    },
-
-    imageFileSelector() {
-      return this.$refs.imagefile as HTMLInputElement;
-    },
   },
 
   methods: {

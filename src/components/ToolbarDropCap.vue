@@ -31,8 +31,8 @@
       <InputFontSize
         class="drop-caps-input"
         :max="500"
-        :modelValue="element.fontSize"
-        @update:modelValue="
+        :model-value="element.fontSize"
+        @update:model-value="
           $emit('update', {
             fontSize: $event,
           } as Partial<DropCapElement>)
@@ -45,10 +45,10 @@
         :nullable="true"
         :min="0"
         :step="0.1"
-        :modelValue="element.lineHeight"
+        :model-value="element.lineHeight"
         :precision="2"
         placeholder="auto"
-        @update:modelValue="
+        @update:model-value="
           $emit('update', {
             lineHeight: $event,
           } as Partial<DropCapElement>)
@@ -56,8 +56,8 @@
       />
       <span class="space"></span>
       <ColorPicker
-        :modelValue="element.color"
-        @update:modelValue="
+        :model-value="element.color"
+        @update:model-value="
           $emit('update', {
             color: $event,
           } as Partial<DropCapElement>)
@@ -89,8 +89,8 @@
       <span class="space"></span>
       <label class="right-space">{{ $t('toolbar:common.outline') }}</label>
       <InputStrokeWidth
-        :modelValue="element.strokeWidth"
-        @update:modelValue="
+        :model-value="element.strokeWidth"
+        @update:model-value="
           $emit('update', {
             strokeWidth: $event,
           } as Partial<DropCapElement>)
@@ -104,9 +104,9 @@
         :min="1"
         :max="10"
         :step="1"
-        :modelValue="element.lineSpan"
+        :model-value="element.lineSpan"
         :precision="0"
-        @update:modelValue="
+        @update:model-value="
           $emit('update', {
             lineSpan: $event,
           } as Partial<DropCapElement>)
@@ -122,10 +122,10 @@
       :min="4"
       :max="maxWidth"
       :step="0.5"
-      :modelValue="element.customWidth"
+      :model-value="element.customWidth"
       :precision="1"
       placeholder="auto"
-      @update:modelValue="
+      @update:model-value="
         $emit('update', {
           customWidth: $event,
         } as Partial<DropCapElement>)
@@ -159,7 +159,6 @@ import { Unit } from '@/utils/Unit';
 
 export default defineComponent({
   components: { ColorPicker, InputFontSize, InputStrokeWidth, InputUnit },
-  emits: ['update', 'update:sectionName'],
   props: {
     element: {
       type: Object as PropType<DropCapElement>,
@@ -174,6 +173,7 @@ export default defineComponent({
       required: true,
     },
   },
+  emits: ['update', 'update:sectionName'],
 
   data() {
     return {};

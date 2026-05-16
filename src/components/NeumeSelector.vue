@@ -12,21 +12,21 @@
             <Neume
               class="neume"
               :neume="QuantitativeNeume.VareiaDotted"
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
+              :font-family="pageSetup.neumeDefaultFontFamily"
               :title="tooltip(neume)"
             />
 
-            <div class="menu" v-if="showVareiaDottedMenu">
+            <div v-if="showVareiaDottedMenu" class="menu">
               <div
-                class="menu-item"
                 v-for="menuItem in vareiaDottedMenuItems"
                 :key="menuItem"
+                class="menu-item"
                 @mouseenter="selectedVareiaDotted = menuItem"
               >
                 <Neume
                   class="neume"
                   :neume="menuItem"
-                  :fontFamily="pageSetup.neumeDefaultFontFamily"
+                  :font-family="pageSetup.neumeDefaultFontFamily"
                   :title="tooltip(neume)"
                 />
               </div>
@@ -35,10 +35,10 @@
         </template>
         <template v-else>
           <Neume
-            class="neume"
             :key="`ascendingNeumes-${index}`"
+            class="neume"
             :neume="neume"
-            :fontFamily="pageSetup.neumeDefaultFontFamily"
+            :font-family="pageSetup.neumeDefaultFontFamily"
             :title="tooltip(neume)"
             @click="$emit('select-quantitative-neume', neume)"
           />
@@ -47,22 +47,22 @@
     </div>
     <div class="row">
       <Neume
-        class="neume"
         v-for="(neume, index) in ascendingNeumesWithPetasti"
         :key="`ascendingNeumesWithPetasti-${index}`"
+        class="neume"
         :neume="neume"
-        :fontFamily="pageSetup.neumeDefaultFontFamily"
+        :font-family="pageSetup.neumeDefaultFontFamily"
         :title="tooltip(neume)"
         @click="$emit('select-quantitative-neume', neume)"
       />
     </div>
     <div class="row">
       <Neume
-        class="neume"
         v-for="(neume, index) in descendingNeumes"
         :key="`descendingNeumes-${index}`"
+        class="neume"
         :neume="neume"
-        :fontFamily="pageSetup.neumeDefaultFontFamily"
+        :font-family="pageSetup.neumeDefaultFontFamily"
         :title="tooltip(neume)"
         @click="$emit('select-quantitative-neume', neume)"
       />
@@ -81,29 +81,29 @@
             <Neume
               class="neume"
               :neume="QuantitativeNeume.OligonPlusHyporoePlusKentemata"
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
+              :font-family="pageSetup.neumeDefaultFontFamily"
               :title="tooltip(neume)"
             />
 
-            <div class="menu" v-if="showHyporoeKentemataMenu">
+            <div v-if="showHyporoeKentemataMenu" class="menu">
               <div
-                class="menu-item"
                 v-for="menuItem in secondaryGorgonMenuItems"
                 :key="menuItem.gorgon as string"
+                class="menu-item"
                 @mouseenter="selectedSecondaryGorgon = menuItem"
               >
                 <Neume
                   class="neume"
                   :neume="QuantitativeNeume.OligonPlusHyporoePlusKentemata"
-                  :fontFamily="pageSetup.neumeDefaultFontFamily"
+                  :font-family="pageSetup.neumeDefaultFontFamily"
                   :title="tooltip(neume)"
                 />
                 <Neume
+                  v-if="menuItem.gorgon != null"
                   class="neume"
                   :neume="menuItem.gorgon"
-                  :fontFamily="pageSetup.neumeDefaultFontFamily"
+                  :font-family="pageSetup.neumeDefaultFontFamily"
                   :title="tooltip(neume)"
-                  v-if="menuItem.gorgon != null"
                 />
               </div>
             </div>
@@ -121,29 +121,29 @@
             <Neume
               class="neume"
               :neume="QuantitativeNeume.OligonPlusIsonPlusKentemata"
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
+              :font-family="pageSetup.neumeDefaultFontFamily"
               :title="tooltip(neume)"
             />
 
-            <div class="menu down" v-if="showIsonKentemataMenu">
+            <div v-if="showIsonKentemataMenu" class="menu down">
               <div
-                class="menu-item"
                 v-for="menuItem in secondaryGorgonMenuItemsDown"
                 :key="menuItem.gorgon as string"
+                class="menu-item"
                 @mouseenter="selectedSecondaryGorgon = menuItem"
               >
                 <Neume
                   class="neume"
                   :neume="QuantitativeNeume.OligonPlusIsonPlusKentemata"
-                  :fontFamily="pageSetup.neumeDefaultFontFamily"
+                  :font-family="pageSetup.neumeDefaultFontFamily"
                   :title="tooltip(neume)"
                 />
                 <Neume
+                  v-if="menuItem.gorgon != null"
                   class="neume"
                   :neume="menuItem.gorgon"
-                  :fontFamily="pageSetup.neumeDefaultFontFamily"
+                  :font-family="pageSetup.neumeDefaultFontFamily"
                   :title="tooltip(neume)"
-                  v-if="menuItem.gorgon != null"
                 />
               </div>
             </div>
@@ -163,29 +163,29 @@
             <Neume
               class="neume"
               :neume="QuantitativeNeume.OligonPlusApostrophosPlusKentemata"
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
+              :font-family="pageSetup.neumeDefaultFontFamily"
               :title="tooltip(neume)"
             />
 
-            <div class="menu" v-if="showApostrophosKentemataMenu">
+            <div v-if="showApostrophosKentemataMenu" class="menu">
               <div
-                class="menu-item"
                 v-for="menuItem in secondaryGorgonMenuItems"
                 :key="menuItem.gorgon as string"
+                class="menu-item"
                 @mouseenter="selectedSecondaryGorgon = menuItem"
               >
                 <Neume
                   class="neume"
                   :neume="QuantitativeNeume.OligonPlusApostrophosPlusKentemata"
-                  :fontFamily="pageSetup.neumeDefaultFontFamily"
+                  :font-family="pageSetup.neumeDefaultFontFamily"
                   :title="tooltip(neume)"
                 />
                 <Neume
+                  v-if="menuItem.gorgon != null"
                   class="neume"
                   :neume="menuItem.gorgon"
-                  :fontFamily="pageSetup.neumeDefaultFontFamily"
+                  :font-family="pageSetup.neumeDefaultFontFamily"
                   :title="tooltip(neume)"
-                  v-if="menuItem.gorgon != null"
                 />
               </div>
             </div>
@@ -205,29 +205,29 @@
             <Neume
               class="neume"
               :neume="QuantitativeNeume.OligonPlusElaphronPlusKentemata"
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
+              :font-family="pageSetup.neumeDefaultFontFamily"
               :title="tooltip(neume)"
             />
 
-            <div class="menu" v-if="showElaphronKentemataMenu">
+            <div v-if="showElaphronKentemataMenu" class="menu">
               <div
-                class="menu-item"
                 v-for="menuItem in secondaryGorgonMenuItems"
                 :key="menuItem.gorgon as string"
+                class="menu-item"
                 @mouseenter="selectedSecondaryGorgon = menuItem"
               >
                 <Neume
                   class="neume"
                   :neume="QuantitativeNeume.OligonPlusElaphronPlusKentemata"
-                  :fontFamily="pageSetup.neumeDefaultFontFamily"
+                  :font-family="pageSetup.neumeDefaultFontFamily"
                   :title="tooltip(neume)"
                 />
                 <Neume
+                  v-if="menuItem.gorgon != null"
                   class="neume"
                   :neume="menuItem.gorgon"
-                  :fontFamily="pageSetup.neumeDefaultFontFamily"
+                  :font-family="pageSetup.neumeDefaultFontFamily"
                   :title="tooltip(neume)"
-                  v-if="menuItem.gorgon != null"
                 />
               </div>
             </div>
@@ -250,15 +250,15 @@
               :neume="
                 QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata
               "
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
+              :font-family="pageSetup.neumeDefaultFontFamily"
               :title="tooltip(neume)"
             />
 
-            <div class="menu" v-if="showElaphronApostrophosKentemataMenu">
+            <div v-if="showElaphronApostrophosKentemataMenu" class="menu">
               <div
-                class="menu-item"
                 v-for="menuItem in secondaryGorgonMenuItems"
                 :key="menuItem.gorgon as string"
+                class="menu-item"
                 @mouseenter="selectedSecondaryGorgon = menuItem"
               >
                 <Neume
@@ -266,15 +266,15 @@
                   :neume="
                     QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata
                   "
-                  :fontFamily="pageSetup.neumeDefaultFontFamily"
+                  :font-family="pageSetup.neumeDefaultFontFamily"
                   :title="tooltip(neume)"
                 />
                 <Neume
+                  v-if="menuItem.gorgon != null"
                   class="neume"
                   :neume="menuItem.gorgon"
-                  :fontFamily="pageSetup.neumeDefaultFontFamily"
+                  :font-family="pageSetup.neumeDefaultFontFamily"
                   :title="tooltip(neume)"
-                  v-if="menuItem.gorgon != null"
                 />
               </div>
             </div>
@@ -292,29 +292,29 @@
             <Neume
               class="neume"
               :neume="QuantitativeNeume.OligonPlusHamiliPlusKentemata"
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
+              :font-family="pageSetup.neumeDefaultFontFamily"
               :title="tooltip(neume)"
             />
 
-            <div class="menu" v-if="showHamiliKentemataMenu">
+            <div v-if="showHamiliKentemataMenu" class="menu">
               <div
-                class="menu-item"
                 v-for="menuItem in secondaryGorgonMenuItems"
                 :key="menuItem.gorgon as string"
+                class="menu-item"
                 @mouseenter="selectedSecondaryGorgon = menuItem"
               >
                 <Neume
                   class="neume"
                   :neume="QuantitativeNeume.OligonPlusHamiliPlusKentemata"
-                  :fontFamily="pageSetup.neumeDefaultFontFamily"
+                  :font-family="pageSetup.neumeDefaultFontFamily"
                   :title="tooltip(neume)"
                 />
                 <Neume
+                  v-if="menuItem.gorgon != null"
                   class="neume"
                   :neume="menuItem.gorgon"
-                  :fontFamily="pageSetup.neumeDefaultFontFamily"
+                  :font-family="pageSetup.neumeDefaultFontFamily"
                   :title="tooltip(neume)"
-                  v-if="menuItem.gorgon != null"
                 />
               </div>
             </div>
@@ -334,15 +334,15 @@
             <Neume
               class="neume"
               :neume="QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata"
-              :fontFamily="pageSetup.neumeDefaultFontFamily"
+              :font-family="pageSetup.neumeDefaultFontFamily"
               :title="tooltip(neume)"
             />
 
-            <div class="menu" v-if="showRunningElaphronKentemataMenu">
+            <div v-if="showRunningElaphronKentemataMenu" class="menu">
               <div
-                class="menu-item"
                 v-for="menuItem in secondaryGorgonMenuItems"
                 :key="menuItem.gorgon as string"
+                class="menu-item"
                 @mouseenter="selectedSecondaryGorgon = menuItem"
               >
                 <Neume
@@ -350,15 +350,15 @@
                   :neume="
                     QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata
                   "
-                  :fontFamily="pageSetup.neumeDefaultFontFamily"
+                  :font-family="pageSetup.neumeDefaultFontFamily"
                   :title="tooltip(neume)"
                 />
                 <Neume
+                  v-if="menuItem.gorgon != null"
                   class="neume"
                   :neume="menuItem.gorgon"
-                  :fontFamily="pageSetup.neumeDefaultFontFamily"
+                  :font-family="pageSetup.neumeDefaultFontFamily"
                   :title="tooltip(neume)"
-                  v-if="menuItem.gorgon != null"
                 />
               </div>
             </div>
@@ -366,10 +366,10 @@
         </template>
         <template v-else>
           <Neume
-            class="neume"
             :key="`combinationNeumes-${index}`"
+            class="neume"
             :neume="neume"
-            :fontFamily="pageSetup.neumeDefaultFontFamily"
+            :font-family="pageSetup.neumeDefaultFontFamily"
             :title="tooltip(neume)"
             @click="$emit('select-quantitative-neume', neume)"
           />
@@ -507,7 +507,6 @@ const vareiaDottedMenuItems: QuantitativeNeume[] = [
 
 export default defineComponent({
   components: { Neume },
-  emits: ['select-quantitative-neume'],
   props: {
     pageSetup: {
       type: Object as PropType<PageSetup>,
@@ -518,6 +517,7 @@ export default defineComponent({
       required: true,
     },
   },
+  emits: ['select-quantitative-neume'],
 
   data() {
     return {

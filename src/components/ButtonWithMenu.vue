@@ -6,14 +6,14 @@
   >
     <button class="neume-button" :disabled="disabled">
       <img
+        v-if="mainIcon"
         draggable="false"
         :src="mainIcon"
-        v-if="mainIcon"
         :style="imgStyle"
       />
-      <span :style="textStyle" v-if="mainText">{{ mainText }}</span>
+      <span v-if="mainText" :style="textStyle">{{ mainText }}</span>
     </button>
-    <div class="menu" :class="direction" v-if="showMenu">
+    <div v-if="showMenu" class="menu" :class="direction">
       <div
         v-for="option in options"
         :key="getKey(option)"
@@ -22,12 +22,12 @@
         @mouseenter="handleMouseEnter(option.neume)"
       >
         <img
+          v-if="option.icon"
           draggable="false"
           :src="option.icon"
-          v-if="option.icon"
           :style="imgStyle"
         />
-        <span :style="textStyle" v-if="option.text">{{ option.text }}</span>
+        <span v-if="option.text" :style="textStyle">{{ option.text }}</span>
       </div>
     </div>
   </div>
@@ -46,9 +46,8 @@ export interface ButtonWithMenuOption {
 }
 
 export default defineComponent({
-  inject: ['editorPreferences'],
   components: {},
-  emits: ['select'],
+  inject: ['editorPreferences'],
   props: {
     direction: {
       type: String as PropType<'up' | 'down'>,
@@ -68,24 +67,16 @@ export default defineComponent({
     },
     imgSize: {
       type: String,
-      required: false,
+      default: undefined,
     },
   },
+  emits: ['select'],
 
   data() {
     return {
       showMenu: false,
       selectedOption: null as Neume | Neume[] | null,
     };
-  },
-
-  mounted() {
-    window.addEventListener('pointerdown', this.handleGlobalPointerDown);
-  },
-
-  beforeUnmount() {
-    window.removeEventListener('mouseup', this.onMouseUp);
-    window.removeEventListener('pointerdown', this.handleGlobalPointerDown);
   },
 
   computed: {
@@ -116,6 +107,15 @@ export default defineComponent({
         width: this.imgSize ?? undefined,
       } as StyleValue;
     },
+  },
+
+  mounted() {
+    window.addEventListener('pointerdown', this.handleGlobalPointerDown);
+  },
+
+  beforeUnmount() {
+    window.removeEventListener('mouseup', this.onMouseUp);
+    window.removeEventListener('pointerdown', this.handleGlobalPointerDown);
   },
 
   methods: {

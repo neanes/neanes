@@ -5183,14 +5183,18 @@ export default defineComponent({
         this.audioElement = this.elements[event.elementIndex];
 
         // Scroll the currently playing element into view
-        const lyrics = (this.$refs[`lyrics-${event.elementIndex}`] as any[])[0];
+        const lyrics = (
+          this.$refs[`lyrics-${event.elementIndex}`] as InstanceType<
+            typeof ContentEditable
+          >[]
+        )[0];
 
         const neumeBox = (
           this.$refs[`element-${event.elementIndex}`] as any[]
         )[0];
 
-        if (lyrics?.htmlElement.scrollIntoViewIfNeeded) {
-          lyrics.htmlElement.scrollIntoViewIfNeeded(false);
+        if ((lyrics?.htmlElement as any)?.scrollIntoViewIfNeeded) {
+          (lyrics?.htmlElement as any).scrollIntoViewIfNeeded(false);
         }
 
         if (neumeBox?.scrollIntoViewIfNeeded) {
@@ -6032,7 +6036,7 @@ export default defineComponent({
               this.$refs[
                 `element-${this.selectedElementIndex}`
               ] as InstanceType<typeof DropCap>[]
-            )[0].$el.scrollIntoView();
+            )[0].htmlElement.scrollIntoView();
           } else if (
             this.selectedElement?.elementType === ElementType.TextBox
           ) {
@@ -6040,7 +6044,7 @@ export default defineComponent({
               this.$refs[
                 `element-${this.selectedElementIndex}`
               ] as InstanceType<typeof TextBox>[]
-            )[0].$el.scrollIntoView();
+            )[0].htmlElement.scrollIntoView();
           }
         });
       }

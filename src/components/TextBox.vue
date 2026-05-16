@@ -1,5 +1,6 @@
 <template>
   <div
+    ref="container"
     class="text-box-container"
     :style="containerStyle"
     :class="{ selected: selected }"
@@ -118,6 +119,10 @@ export default defineComponent({
   },
 
   computed: {
+    htmlElement() {
+      return this.$refs.container as HTMLElement;
+    },
+
     content() {
       return this.editMode || this.metadata == null
         ? this.element.content

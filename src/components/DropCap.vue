@@ -1,5 +1,6 @@
 <template>
   <div
+    ref="container"
     class="drop-cap-container"
     :style="containerStyle"
     @click="$emit('select-single')"
@@ -49,6 +50,10 @@ export default defineComponent({
   },
 
   computed: {
+    htmlElement() {
+      return this.$refs.container as HTMLElement;
+    },
+
     textElement() {
       return this.$refs.text as InstanceType<typeof ContentEditable>;
     },

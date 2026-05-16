@@ -1,5 +1,6 @@
 <template>
   <div
+    ref="container"
     class="rich-text-box-container"
     :class="{ selected: selected }"
     :style="containerStyle"
@@ -570,7 +571,9 @@ export default defineComponent({
     },
 
     getHeight() {
-      const element = (this.$el as HTMLElement).querySelector('.ck-content');
+      const element = (this.$refs.container as HTMLElement).querySelector(
+        '.ck-content',
+      );
 
       if (element == null) {
         return null;
@@ -582,7 +585,7 @@ export default defineComponent({
     },
 
     getHeightBottom() {
-      const element = (this.$el as HTMLElement).querySelector(
+      const element = (this.$refs.container as HTMLElement).querySelector(
         '.ck-content.inline-bottom',
       );
 
@@ -596,7 +599,7 @@ export default defineComponent({
     },
 
     getHeightTop() {
-      const element = (this.$el as HTMLElement).querySelector(
+      const element = (this.$refs.container as HTMLElement).querySelector(
         '.ck-content.inline-top',
       );
 

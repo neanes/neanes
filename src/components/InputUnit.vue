@@ -1,5 +1,6 @@
 <template>
   <input
+    ref="input"
     :value="displayValue"
     type="number"
     :min="min"
@@ -98,7 +99,7 @@ export default defineComponent({
 
   computed: {
     htmlElement() {
-      return this.$el as HTMLInputElement;
+      return this.$refs.input as HTMLInputElement;
     },
 
     displayValue() {

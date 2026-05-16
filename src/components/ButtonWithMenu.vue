@@ -1,5 +1,6 @@
 <template>
   <div
+    ref="menu"
     class="menu-container"
     @mousedown="handleMouseDown"
     @mouseleave="handleMouseLeave"
@@ -150,7 +151,7 @@ export default defineComponent({
     handleGlobalPointerDown(e: MouseEvent) {
       if (
         this.menuMode === ButtonMenuMode.Click &&
-        !this.$el.contains(e.target)
+        !(this.$refs.menu as HTMLElement).contains(e.target as Node)
       ) {
         this.showMenu = false;
       }

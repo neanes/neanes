@@ -29,7 +29,7 @@ describe('ByzHtmlExporter', () => {
 
     expect(
       Object.keys(glyphnames)
-        .filter((x) => !exceptions.includes(x))
+        .filter((x) => !exceptions.includes(x as SbmuflGlyphName))
         .every((x) => exporter.getTag(x as SbmuflGlyphName) !== undefined),
     ).toBe(true);
   });

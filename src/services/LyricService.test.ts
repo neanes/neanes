@@ -223,7 +223,7 @@ describe('LyricService (English)', () => {
         .filter((x) =>
           [ElementType.Note, ElementType.DropCap].includes(x.elementType),
         )
-        .map((x: NoteElement | DropCapElement) =>
+        .map((x) =>
           x.elementType === ElementType.Note
             ? {
                 lyrics: (x as NoteElement).lyrics,

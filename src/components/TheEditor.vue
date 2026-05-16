@@ -5189,8 +5189,8 @@ export default defineComponent({
           this.$refs[`element-${event.elementIndex}`] as any[]
         )[0];
 
-        if (lyrics?.$el.scrollIntoViewIfNeeded) {
-          lyrics.$el.scrollIntoViewIfNeeded(false);
+        if (lyrics?.htmlElement.scrollIntoViewIfNeeded) {
+          lyrics.htmlElement.scrollIntoViewIfNeeded(false);
         }
 
         if (neumeBox?.scrollIntoViewIfNeeded) {

@@ -75,6 +75,12 @@ const idealMaxAdjustmentRatio = 1;
 const adjustmentRatioCapStep = 0.05;
 const maxAdjustmentRatioSearchLimit = 4096;
 const maxAdjustmentRatioSearchIterations = 24;
+// A tiny positive epsilon, used to floor the stretch of any glue that is
+// derived from a possibly non-positive `neumeDefaultSpacing`. Keeps the
+// adjustment ratio finite for paragraphs that contain no martyria, while
+// being far below the neume scale so it has no visible effect.
+const minGlueStretch = 0.1;
+const minGlueShrink = 0;
 
 const tieSet = new Set<VocalExpressionNeume | Tie>([
   VocalExpressionNeume.HeteronConnecting,
@@ -460,11 +466,15 @@ export class LayoutService {
       this.processFooter(score.footers.firstPage, pageSetup, neumeHeight);
     }
 
+    // Knuth-Plass requires stretch >= 0 and shrink >= 0. Floor both so a
+    // negative `neumeDefaultSpacing` (which users set to overlap neumes)
+    // doesn't break line breaking. `width` is left untouched so the overlap
+    // itself is preserved.
     const standardGlue: Glue = {
       type: 'glue',
       width: pageSetup.neumeDefaultSpacing,
-      stretch: Math.max(pageSetup.neumeDefaultSpacing * 0.5, 0.1),
-      shrink: pageSetup.neumeDefaultSpacing * 0.5,
+      stretch: Math.max(pageSetup.neumeDefaultSpacing * 0.5, minGlueStretch),
+      shrink: Math.max(pageSetup.neumeDefaultSpacing * 0.5, minGlueShrink),
     };
 
     // Martyria extra-stretch factor: linear ramp from 0.01em at 0.1pt to
@@ -476,18 +486,20 @@ export class LayoutService {
     const martyriaGlue: Glue = {
       type: 'glue',
       width: pageSetup.neumeDefaultSpacing,
-      stretch:
+      stretch: Math.max(
         pageSetup.neumeDefaultSpacing * 0.5 +
-        pageSetup.neumeDefaultFontSize *
-          (0.01 + 0.19 * Math.min(1, Math.max(0, spacingRamp))),
-      shrink: pageSetup.neumeDefaultSpacing * 0.5,
+          pageSetup.neumeDefaultFontSize *
+            (0.01 + 0.19 * Math.min(1, Math.max(0, spacingRamp))),
+        minGlueStretch,
+      ),
+      shrink: Math.max(pageSetup.neumeDefaultSpacing * 0.5, minGlueShrink),
     };
 
     const rightMartyriaGlue: Glue = {
       type: 'glue',
       width: pageSetup.neumeDefaultSpacing,
       stretch: MAX_COST,
-      shrink: pageSetup.neumeDefaultSpacing * 0.5,
+      shrink: Math.max(pageSetup.neumeDefaultSpacing * 0.5, minGlueShrink),
     };
 
     // Phase 1: Build paragraphs as sequences of boxes, glue, and penalties

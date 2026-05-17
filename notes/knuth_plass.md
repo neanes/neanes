@@ -132,6 +132,13 @@ The 19th-century publications also use several techniques to improve the quality
 Consider first a lyricless score of Byzantine music.
 Each neume group, for example a simple oligon or an ison with kentimata over a supporting oligon, and each martyria can be modeled as a box whose width is simply the width of the notated group itself.
 The space between ordinary neumes is modeled as glue with a user-configurable width that may stretch or shrink by up to one half of its preferred width.
+Users may also set the inter-note spacing to a negative value, so that successive neumes visibly overlap and the layout becomes tighter.
+When the configured spacing is negative, the glue keeps its negative natural width so that the overlap remains visible, but the stretch and shrink budgets are floored at small non-negative values: stretch at 0.1 px and shrink at 0.
+The same floors apply uniformly to every glue derived from the configured spacing: the standard glue's stretch and shrink, the martyria glue's stretch (including the martyria-bonus term described below) and shrink, and the right-martyria glue's shrink.
+These floors preserve the Knuth-Plass invariants while keeping the user-chosen overlap intact, because ordinary glues no longer stretch enough to push neumes apart and any line-end slack is absorbed by the right-martyria glue's $\texttt{MAX\_COST}$ stretch instead.
+The 0.1 px stretch floor is a tiny positive epsilon rather than zero so that every line has at least some stretchability, which keeps the adjustment ratio finite and the line-breaking problem well-defined.
+Without this floor, a line that contains no martyria would have a total stretch of zero, and `breakLines` could only treat its natural width as feasible.
+At 0.1 px per glue, the cumulative stretch across a typical line is far below the neume scale and so has no visible effect on the layout.
 
 Following several classical 19th-century publications, ordinary martyriae are given extra elasticity.
 When a martyria sits between neighboring elements, the surrounding martyria glues together contribute additional stretch, that is, _k_ em on each side, where 1 em is the neume font size.

@@ -1,5 +1,6 @@
 <template>
   <div
+    ref="container"
     class="alternate-line-container"
     :style="style"
     @mousedown="handleMouseDown"
@@ -9,8 +10,8 @@
         v-if="childElement.elementType === ElementType.Note"
         class="syllable-box"
         :note="childElement as NoteElement"
-        :pageSetup="pageSetup"
-        :alternateLine="true"
+        :page-setup="pageSetup"
+        :alternate-line="true"
       />
     </template>
   </div>
@@ -31,7 +32,6 @@ import NeumeBoxSyllable from './NeumeBoxSyllable.vue';
 
 export default defineComponent({
   components: { NeumeBoxSyllable },
-  emits: ['update'],
   props: {
     element: {
       type: Object as PropType<AlternateLineElement>,
@@ -42,6 +42,7 @@ export default defineComponent({
       required: true,
     },
   },
+  emits: ['update'],
 
   data() {
     return {
@@ -88,9 +89,13 @@ export default defineComponent({
     handleMouseDown(e: MouseEvent) {
       // We only calculate zoom once when the mouse is pressed down
       // to avoid recalculating it on every mouse move
-      this.zoom = Number(getComputedStyle(this.$el).getPropertyValue('--zoom'));
+      this.zoom = Number(
+        getComputedStyle(this.$refs.container as HTMLElement).getPropertyValue(
+          '--zoom',
+        ),
+      );
 
-      const draggedEl = this.$el as HTMLElement;
+      const draggedEl = this.$refs.container as HTMLElement;
       const rect = draggedEl.getBoundingClientRect();
 
       // Calculate the offset of the mouse click relative to the element
@@ -104,7 +109,7 @@ export default defineComponent({
     handleMouseMove(e: MouseEvent) {
       e.preventDefault();
 
-      const draggedEl = this.$el as HTMLElement;
+      const draggedEl = this.$refs.container as HTMLElement;
       const pageEl = draggedEl.closest('.page') as HTMLElement;
       if (!draggedEl || !pageEl) {
         console.warn('Could not find dragged element or page element');
@@ -150,16 +155,23 @@ export default defineComponent({
     },
 
     clampToPageBounds() {
-      const el = this.$el as HTMLElement;
+      const el = this.$refs.container as HTMLElement;
+
+      if (!el) {
+        return;
+      }
+
       const pageEl = el.closest('.page') as HTMLElement;
       const offsetParent = el.offsetParent as HTMLElement;
 
-      if (!el || !pageEl || !offsetParent) {
+      if (!pageEl || !offsetParent) {
         return;
       }
 
       const zoom = Number(
-        getComputedStyle(this.$el).getPropertyValue('--zoom'),
+        getComputedStyle(this.$refs.container as HTMLElement).getPropertyValue(
+          '--zoom',
+        ),
       );
 
       const elRect = el.getBoundingClientRect();

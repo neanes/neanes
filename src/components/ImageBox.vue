@@ -16,12 +16,12 @@
       :lock-aspect-ratio="element.lockAspectRatio"
       :w="imageWidthZoomed"
       :h="imageHeightZoomed"
-      :minHeight="10"
-      :minWidth="10"
+      :min-height="10"
+      :min-width="10"
       :draggable="false"
       :z="1"
       @resizing="onResize"
-      @resizeStop="onResizeStop"
+      @resize-stop="onResizeStop"
     >
       <img class="image-box" :src="element.data" :style="imageStyle" />
     </vue-draggable-resizable>
@@ -39,7 +39,6 @@ import { withZoom } from '@/utils/withZoom';
 
 export default defineComponent({
   components: { VueDraggableResizable },
-  emits: ['update:size', 'select-single'],
   props: {
     element: {
       type: Object as PropType<ImageBoxElement>,
@@ -54,6 +53,7 @@ export default defineComponent({
       required: true,
     },
   },
+  emits: ['update:size', 'select-single'],
 
   data() {
     return {
@@ -95,11 +95,6 @@ export default defineComponent({
     },
   },
 
-  created() {
-    this.imageWidth = this.element.imageWidth;
-    this.imageHeight = this.element.imageHeight;
-  },
-
   watch: {
     'element.imageWidth'(newValue: number) {
       this.imageWidth = newValue;
@@ -107,6 +102,11 @@ export default defineComponent({
     'element.imageHeight'(newValue: number) {
       this.imageHeight = newValue;
     },
+  },
+
+  created() {
+    this.imageWidth = this.element.imageWidth;
+    this.imageHeight = this.element.imageHeight;
   },
 
   methods: {

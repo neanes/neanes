@@ -7,7 +7,7 @@
   >
     <Neume
       :neume="neume.neume"
-      :fontFamily="pageSetup.neumeDefaultFontFamily"
+      :font-family="pageSetup.neumeDefaultFontFamily"
     />
   </div>
 </template>
@@ -22,7 +22,6 @@ import { withZoom } from '@/utils/withZoom';
 
 export default defineComponent({
   components: { Neume },
-  emits: ['select-single', 'select-range'],
   props: {
     neume: {
       type: Object as PropType<TempoElement>,
@@ -33,6 +32,7 @@ export default defineComponent({
       required: true,
     },
   },
+  emits: ['select-single', 'select-range'],
 
   data() {
     return {};

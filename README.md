@@ -12,6 +12,7 @@ Neanes (pronounced neh-ah-ness) is a free and open source scorewriter for notati
 - Rapid entry of neumes and lyrics
 - Automatic alignment of supporting neumes (i.e. fthoras, accidentals, klasmas, gorgons, et al)
 - Automatic calculation of martyria
+- [Optimal line breaking](notes/knuth_plass.md) for beautifully even spacing across every line, just like TeX and Adobe InDesign
 - Print or export to PDF
 - Export to HTML using [ByzHtml](https://danielgarthur.github.io/byzhtml) web components
 - Export to PNG

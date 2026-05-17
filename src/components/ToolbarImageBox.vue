@@ -39,13 +39,13 @@
     <div style="display: flex; align-items: center">
       <label class="right-space">{{ $t('toolbar:imageBox.width') }}</label>
       <InputUnit
-        :modelValue="element.imageWidth"
-        @update:modelValue="onChangeWidth($event)"
+        :model-value="element.imageWidth"
         unit="unitless"
         :min="10"
         :max="pageSetup.pageWidth"
         :step="1"
         :precision="0"
+        @update:model-value="onChangeWidth($event)"
       />
     </div>
 
@@ -54,13 +54,13 @@
     <div style="display: flex; align-items: center">
       <label class="right-space">{{ $t('toolbar:imageBox.height') }}</label>
       <InputUnit
-        :modelValue="element.imageHeight"
-        @update:modelValue="onChangeHeight($event)"
+        :model-value="element.imageHeight"
         unit="unitless"
         :min="10"
         :max="pageSetup.pageHeight"
         :step="1"
         :precision="0"
+        @update:model-value="onChangeHeight($event)"
       />
     </div>
     <template v-if="!element.inline">
@@ -127,7 +127,6 @@ import InputUnit from './InputUnit.vue';
 
 export default defineComponent({
   components: { InputUnit },
-  emits: ['update'],
   props: {
     element: {
       type: Object as PropType<ImageBoxElement>,
@@ -138,6 +137,7 @@ export default defineComponent({
       required: true,
     },
   },
+  emits: ['update'],
 
   data() {
     return {

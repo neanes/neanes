@@ -1,16 +1,16 @@
 <template>
   <div class="neume-combo-selector-panel">
     <div
-      class="row"
       v-for="(combo, index) in combos"
       :key="index"
+      class="row"
       @click="$emit('select-neume-combo', combo)"
     >
       <SyllableNeumeBox
-        v-for="(neume, index) in combo.elements"
-        :key="index"
+        v-for="(neume, neumeIndex) in combo.elements"
+        :key="neumeIndex"
         :note="neume"
-        :pageSetup="pageSetup"
+        :page-setup="pageSetup"
         class="neume"
       />
     </div>

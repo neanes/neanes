@@ -23,11 +23,11 @@
           <Neume
             class="tempo-neume"
             :neume="tempo"
-            :fontFamily="pageSetup.neumeDefaultFontFamily"
+            :font-family="pageSetup.neumeDefaultFontFamily"
           />
           <InputBpm
-            :modelValue="form.tempoDefaults[tempo]!"
-            @update:modelValue="onTempoChanged(tempo, $event)"
+            :model-value="form.tempoDefaults[tempo]!"
+            @update:model-value="onTempoChanged(tempo, $event)"
           />
           <span class="unit-label">{{ $t('dialog:preferences.bpm') }}</span>
         </div>
@@ -71,7 +71,6 @@ const tempoSigns = [
 
 export default defineComponent({
   components: { ModalDialog, Neume, InputBpm },
-  emits: ['close', 'update'],
   props: {
     options: {
       type: Object as PropType<EditorPreferences>,
@@ -82,6 +81,7 @@ export default defineComponent({
       required: true,
     },
   },
+  emits: ['close', 'update'],
 
   data() {
     return {
@@ -90,6 +90,8 @@ export default defineComponent({
       ButtonMenuMode,
     };
   },
+
+  computed: {},
 
   mounted() {
     this.form = JSON.parse(JSON.stringify(this.options));
@@ -100,8 +102,6 @@ export default defineComponent({
   beforeUnmount() {
     window.removeEventListener('keydown', this.onKeyDown);
   },
-
-  computed: {},
 
   methods: {
     onKeyDown(event: KeyboardEvent) {

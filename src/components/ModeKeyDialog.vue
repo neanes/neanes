@@ -58,15 +58,15 @@
         <div class="right-pane">
           <ul class="mode-list">
             <li
-              @click="selectedTemplateId = template.templateId"
-              @dblclick="updateModeKey"
               v-for="(template, index) in modeKeyTemplatesForSelectedMode"
+              :key="index"
               :class="{
                 selected: selectedTemplateId === template.templateId,
               }"
-              :key="index"
+              @click="selectedTemplateId = template.templateId"
+              @dblclick="updateModeKey"
             >
-              <ModeKey :element="template" :pageSetup="pageSetup" />
+              <ModeKey :element="template" :page-setup="pageSetup" />
               <div class="mode-key-description">
                 {{ $t(template.description) }}
               </div>
@@ -118,7 +118,6 @@ import { TextMeasurementService } from '@/services/TextMeasurementService';
 
 export default defineComponent({
   components: { ModalDialog, ModeKey },
-  emits: ['close', 'update', 'update:useOptionalDiatonicFthoras'],
   props: {
     element: {
       type: Object as PropType<ModeKeyElement>,
@@ -129,6 +128,7 @@ export default defineComponent({
       required: true,
     },
   },
+  emits: ['close', 'update', 'update:useOptionalDiatonicFthoras'],
 
   data() {
     return {

@@ -1,10 +1,10 @@
 import { rmSync } from 'node:fs';
 
+import eslintPlugin from '@nabla/vite-plugin-eslint';
 import vue from '@vitejs/plugin-vue';
 import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
 import electron from 'vite-plugin-electron';
-import eslintPlugin from 'vite-plugin-eslint';
 import { VitePWA } from 'vite-plugin-pwa';
 import VueDevTools from 'vite-plugin-vue-devtools';
 
@@ -12,13 +12,16 @@ import pkg from './package.json';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command, mode }) => {
-  rmSync('dist-electron', { recursive: true, force: true });
-
   const isServe = command === 'serve';
   const isBuild = command === 'build';
   const sourcemap = isServe || !!process.env.VSCODE_DEBUG;
 
-  process.env = { ...process.env, ...loadEnv(mode, process.cwd()) };
+  Object.assign(process.env, loadEnv(mode, process.cwd()));
+  const isElectron = process.env.VITE_IS_ELECTRON === 'true';
+
+  if (isElectron) {
+    rmSync('dist-electron', { recursive: true, force: true });
+  }
 
   return {
     resolve: {
@@ -27,10 +30,10 @@ export default defineConfig(({ command, mode }) => {
       },
     },
     define: {
-      APP_VERSION: JSON.stringify(process.env.npm_package_version),
+      APP_VERSION: JSON.stringify(pkg.version),
     },
     plugins: [
-      mode === 'web'
+      !isElectron
         ? VitePWA({
             registerType: null, // We'll inject the service worker ourselves
             workbox: {
@@ -104,9 +107,12 @@ export default defineConfig(({ command, mode }) => {
       vue(),
       process.env.VITE_ENABLE_DEV_TOOLS === 'true' ? VueDevTools() : undefined,
       eslintPlugin({
-        overrideConfigFile: 'eslint.config.mjs',
+        eslintOptions: {
+          cache: false,
+          overrideConfigFile: 'eslint.config.mjs',
+        },
       }),
-      !mode.includes('web')
+      isElectron
         ? electron([
             {
               // Main-Process entry file of the Electron App.
@@ -125,7 +131,7 @@ export default defineConfig(({ command, mode }) => {
                   sourcemap,
                   minify: isBuild,
                   outDir: 'dist-electron/main',
-                  rollupOptions: {
+                  rolldownOptions: {
                     external: Object.keys(
                       'dependencies' in pkg ? pkg.dependencies : {},
                     ),
@@ -145,7 +151,7 @@ export default defineConfig(({ command, mode }) => {
                   sourcemap: sourcemap ? 'inline' : undefined, // #332
                   minify: isBuild,
                   outDir: 'dist-electron/preload',
-                  rollupOptions: {
+                  rolldownOptions: {
                     external: Object.keys(
                       'dependencies' in pkg ? pkg.dependencies : {},
                     ),
@@ -165,9 +171,6 @@ export default defineConfig(({ command, mode }) => {
           port: +url.port,
         };
       })(),
-    test: {
-      globals: true,
-    },
     clearScreen: false,
   };
 });

@@ -32,11 +32,11 @@
             $t('dialog:playbackSettings.melody')
           }}</span>
           <input
+            v-model="volumeMelody"
             type="range"
             class="volume-slider"
             min="0"
             max="100"
-            v-model="volumeMelody"
           />
           <span class="db-label">{{ options.volumeMelody.toFixed(1) }} dB</span>
         </div>
@@ -46,11 +46,11 @@
             $t('dialog:playbackSettings.ison')
           }}</span>
           <input
+            v-model="volumeIson"
             type="range"
             class="volume-slider"
             min="0"
             max="100"
-            v-model="volumeIson"
           />
           <span class="db-label">{{ options.volumeIson.toFixed(1) }} dB</span>
         </div>
@@ -60,8 +60,8 @@
         <div class="form-group">
           <input
             id="playback-settings-dialog-diatonic-zo"
-            type="checkbox"
             v-model="options.useDefaultAttractionZo"
+            type="checkbox"
           />
           <label for="playback-settings-dialog-diatonic-zo">{{
             $t('dialog:playbackSettings.diatonicZoAttraction')
@@ -94,8 +94,8 @@
         <div class="form-group">
           <input
             id="playback-settings-dialog-legetos"
-            type="checkbox"
             v-model="options.useLegetos"
+            type="checkbox"
           />
           <label for="playback-settings-dialog-legetos">{{
             $t('dialog:playbackSettings.classicLegetos')
@@ -123,9 +123,9 @@
             $t('dialog:playbackSettings.diatonic')
           }}</span>
           <div
-            class="row"
             v-for="(note, index) in ['Ni', 'Pa', 'Vou']"
             :key="index"
+            class="row"
           >
             <span class="interval-label">{{ note }}</span>
             <input
@@ -152,9 +152,9 @@
             $t('dialog:playbackSettings.legetos')
           }}</span>
           <div
-            class="row"
             v-for="(note, index) in ['Pa', 'Vou', 'Ga']"
             :key="index"
+            class="row"
           >
             <span class="interval-label">{{ note }}</span>
             <input
@@ -181,9 +181,9 @@
             $t('dialog:playbackSettings.softChromatic')
           }}</span>
           <div
-            class="row"
             v-for="(note, index) in ['Ni', 'Pa', 'Vou']"
             :key="index"
+            class="row"
           >
             <span class="interval-label">{{ note }}</span>
             <input
@@ -210,9 +210,9 @@
             $t('dialog:playbackSettings.hardChromatic')
           }}</span>
           <div
-            class="row"
             v-for="(note, index) in ['Pa', 'Vou', 'Ga']"
             :key="index"
+            class="row"
           >
             <span class="interval-label">{{ note }}</span>
             <input
@@ -239,9 +239,9 @@
             $t('dialog:playbackSettings.zygos')
           }}</span>
           <div
-            class="row"
             v-for="(note, index) in ['Ni', 'Pa', 'Vou', 'Ga']"
             :key="index"
+            class="row"
           >
             <span class="interval-label">{{ note }}</span>
             <input
@@ -268,9 +268,9 @@
             $t('dialog:playbackSettings.zygosLegetos')
           }}</span>
           <div
-            class="row"
             v-for="(note, index) in ['Ni', 'Pa', 'Vou', 'Ga']"
             :key="index"
+            class="row"
           >
             <span class="interval-label">{{ note }}</span>
             <input
@@ -297,9 +297,9 @@
             $t('dialog:playbackSettings.kliton')
           }}</span>
           <div
-            class="row"
             v-for="(note, index) in ['Pa', 'Vou', 'Ga']"
             :key="index"
+            class="row"
           >
             <span class="interval-label">{{ note }}</span>
             <input
@@ -326,9 +326,9 @@
             $t('dialog:playbackSettings.spathi')
           }}</span>
           <div
-            class="row"
             v-for="(note, index) in ['Ga', 'Di', 'Ke', 'Zo']"
             :key="index"
+            class="row"
           >
             <span class="interval-label">{{ note }}</span>
             <input
@@ -647,13 +647,13 @@ const FREQUENCY_G3 = 196;
 
 export default defineComponent({
   components: { ModalDialog },
-  emits: ['close', 'play-test-tone'],
   props: {
     options: {
       type: Object as PropType<PlaybackOptions>,
       required: true,
     },
   },
+  emits: ['close', 'play-test-tone'],
 
   data() {
     return {

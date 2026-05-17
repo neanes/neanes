@@ -26,10 +26,10 @@
           :min="0.5"
           :max="maxWidth"
           :step="0.5"
-          :modelValue="element.customWidth"
+          :model-value="element.customWidth"
           :precision="1"
           placeholder="fill"
-          @update:modelValue="
+          @update:model-value="
             $emit('update', {
               customWidth: $event,
             } as Partial<RichTextBoxElement>)
@@ -47,9 +47,9 @@
           :min="-maxHeight"
           :max="maxHeight"
           :step="0.5"
-          :modelValue="element.offsetYTop"
+          :model-value="element.offsetYTop"
           :precision="1"
-          @update:modelValue="
+          @update:model-value="
             $emit('update', {
               offsetYTop: $event,
             } as Partial<RichTextBoxElement>)
@@ -67,9 +67,9 @@
           :min="-maxHeight"
           :max="maxHeight"
           :step="0.5"
-          :modelValue="element.offsetYBottom"
+          :model-value="element.offsetYBottom"
           :precision="1"
-          @update:modelValue="
+          @update:model-value="
             $emit('update', {
               offsetYBottom: $event,
             } as Partial<RichTextBoxElement>)
@@ -102,9 +102,9 @@
         :min="0"
         :max="maxHeight"
         :step="0.5"
-        :modelValue="element.marginTop"
+        :model-value="element.marginTop"
         :precision="1"
-        @update:modelValue="
+        @update:model-value="
           $emit('update', { marginTop: $event } as Partial<RichTextBoxElement>)
         "
       />
@@ -118,9 +118,9 @@
         :min="0"
         :max="maxHeight"
         :step="0.5"
-        :modelValue="element.marginBottom"
+        :model-value="element.marginBottom"
         :precision="1"
-        @update:modelValue="
+        @update:model-value="
           $emit('update', {
             marginBottom: $event,
           } as Partial<RichTextBoxElement>)
@@ -199,8 +199,8 @@
       <div class="form-group">
         <label class="right-space">{{ $t('toolbar:common.bpm') }}</label>
         <InputBpm
-          :modelValue="element.modeChangeBpm"
-          @update:modelValue="
+          :model-value="element.modeChangeBpm"
+          @update:model-value="
             $emit('update', {
               modeChangeBpm: $event,
             } as Partial<RichTextBoxElement>)
@@ -389,7 +389,6 @@ function getScaleDisplayName(scale: Scale) {
 
 export default defineComponent({
   components: { InputBpm, InputUnit },
-  emits: ['update', 'update:sectionName'],
   props: {
     element: {
       type: Object as PropType<RichTextBoxElement>,
@@ -400,6 +399,7 @@ export default defineComponent({
       required: true,
     },
   },
+  emits: ['update', 'update:sectionName'],
 
   data() {
     return {

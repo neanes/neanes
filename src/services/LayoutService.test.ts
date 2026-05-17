@@ -3,10 +3,13 @@ import { describe, expect, it, Mock, vi } from 'vitest';
 import {
   MartyriaElement,
   NoteElement,
+  ScoreElement,
   TempoElement,
   TextBoxElement,
 } from '../models/Element';
+import { Ison, QuantitativeNeume } from '../models/Neumes';
 import { Line, Page } from '../models/Page';
+import { PageSetup } from '../models/PageSetup';
 import { fontService } from './FontService';
 import { LayoutService } from './LayoutService';
 import { NeumeMappingService } from './NeumeMappingService';
@@ -14,7 +17,7 @@ import { NeumeMappingService } from './NeumeMappingService';
 vi.mock('./NeumeMappingService');
 vi.mock('./FontService');
 
-const itif = (condition) => (condition ? it : it.skip);
+const itif = (condition: boolean) => (condition ? it : it.skip);
 
 describe.each([true, false])(
   'LayoutService.findFinalAndNextElement',
@@ -29,7 +32,7 @@ describe.each([true, false])(
       expectedFinalElement.isMelisma = true;
 
       const element = melismaStart;
-      const line = { elements: [melismaStart, expectedFinalElement] };
+      const line = getLine(melismaStart, expectedFinalElement);
       const firstElementOnNextLine = null;
 
       const { finalElement, nextElement } =
@@ -58,9 +61,11 @@ describe.each([true, false])(
       expectedNextElement.isMelismaStart = true;
 
       const element = melismaStart;
-      const line = {
-        elements: [melismaStart, expectedFinalElement, expectedNextElement],
-      };
+      const line = getLine(
+        melismaStart,
+        expectedFinalElement,
+        expectedNextElement,
+      );
       const firstElementOnNextLine = null;
 
       const { finalElement, nextElement } =
@@ -91,7 +96,7 @@ describe.each([true, false])(
       const martyria = new MartyriaElement();
 
       const element = melismaStart;
-      const line = { elements: [melismaStart, martyria, expectedFinalElement] };
+      const line = getLine(melismaStart, martyria, expectedFinalElement);
       const firstElementOnNextLine = null;
 
       const { finalElement, nextElement } =
@@ -126,14 +131,12 @@ describe.each([true, false])(
       expectedNextElement.isMelismaStart = true;
 
       const element = melismaStart;
-      const line = {
-        elements: [
-          melismaStart,
-          martyriaElement,
-          expectedFinalElement,
-          expectedNextElement,
-        ],
-      };
+      const line = getLine(
+        melismaStart,
+        martyriaElement,
+        expectedFinalElement,
+        expectedNextElement,
+      );
       const firstElementOnNextLine = null;
 
       const { finalElement, nextElement } =
@@ -171,15 +174,13 @@ describe.each([true, false])(
         expectedNextElement.isMelismaStart = true;
 
         const element = melismaStart;
-        const line = {
-          elements: [
-            melismaStart,
-            martyriaElement,
-            tempoElement,
-            expectedFinalElement,
-            expectedNextElement,
-          ],
-        };
+        const line = getLine(
+          melismaStart,
+          martyriaElement,
+          tempoElement,
+          expectedFinalElement,
+          expectedNextElement,
+        );
         const firstElementOnNextLine = null;
 
         const { finalElement, nextElement } =
@@ -218,15 +219,13 @@ describe.each([true, false])(
         newNote.isMelismaStart = true;
 
         const element = melismaStart;
-        const line = {
-          elements: [
-            melismaStart,
-            expectedFinalElement,
-            expectedNextElement,
-            martyriaNote,
-            newNote,
-          ],
-        };
+        const line = getLine(
+          melismaStart,
+          expectedFinalElement,
+          expectedNextElement,
+          martyriaNote,
+          newNote,
+        );
         const firstElementOnNextLine = null;
 
         const { finalElement, nextElement } =
@@ -256,14 +255,12 @@ describe.each([true, false])(
       expectedFinalElement.isMelisma = true;
 
       const element = melismaStart;
-      const line = {
-        elements: [
-          melismaStart,
-          expectedFinalElement,
-          expectedNextElement,
-          new NoteElement(),
-        ],
-      };
+      const line = getLine(
+        melismaStart,
+        expectedFinalElement,
+        expectedNextElement,
+        new NoteElement(),
+      );
       const firstElementOnNextLine = null;
 
       const { finalElement, nextElement } =
@@ -282,9 +279,7 @@ describe.each([true, false])(
 
 describe('LayoutService.alignIsonIndicators', () => {
   it('should adjust isonOffsetYAdjusted for notes with ison indicators', () => {
-    const mockPageSetup = {
-      neumeDefaultFontFamily: 'MockFont',
-    };
+    const mockPageSetup = getMockPageSetup();
 
     const mockBaseMapping1 = { glyphName: 'baseGlyph1' };
     const mockBaseMapping2 = { glyphName: 'baseGlyph2' };
@@ -294,8 +289,8 @@ describe('LayoutService.alignIsonIndicators', () => {
     const mockOffset2 = { y: 20 };
 
     (NeumeMappingService.getMapping as Mock).mockImplementation((neume) => {
-      if (neume === 'base1') return mockBaseMapping1;
-      if (neume === 'base2') return mockBaseMapping2;
+      if (neume === QuantitativeNeume.Ison) return mockBaseMapping1;
+      if (neume === QuantitativeNeume.Oligon) return mockBaseMapping2;
       return mockMarkMapping;
     });
 
@@ -308,15 +303,14 @@ describe('LayoutService.alignIsonIndicators', () => {
     );
 
     const note1 = new NoteElement();
-    note1.quantitativeNeume = 'base1';
-    note1.ison = 'mark';
+    note1.quantitativeNeume = QuantitativeNeume.Ison;
+    note1.ison = Ison.Unison;
 
     const note2 = new NoteElement();
-    note2.quantitativeNeume = 'base2';
-    note2.ison = 'mark';
+    note2.quantitativeNeume = QuantitativeNeume.Oligon;
+    note2.ison = Ison.Unison;
 
-    const line = new Line();
-    line.elements = [note1, note2];
+    const line = getLine(note1, note2);
 
     const page = new Page();
     page.lines = [line];
@@ -328,9 +322,7 @@ describe('LayoutService.alignIsonIndicators', () => {
   });
 
   it('should adjust isonOffsetYAdjusted for notes with ison indicators and ison offsets', () => {
-    const mockPageSetup = {
-      neumeDefaultFontFamily: 'MockFont',
-    };
+    const mockPageSetup = getMockPageSetup();
 
     const mockBaseMapping1 = { glyphName: 'baseGlyph1' };
     const mockBaseMapping2 = { glyphName: 'baseGlyph2' };
@@ -340,8 +332,8 @@ describe('LayoutService.alignIsonIndicators', () => {
     const mockOffset2 = { y: 20 };
 
     (NeumeMappingService.getMapping as Mock).mockImplementation((neume) => {
-      if (neume === 'base1') return mockBaseMapping1;
-      if (neume === 'base2') return mockBaseMapping2;
+      if (neume === QuantitativeNeume.Ison) return mockBaseMapping1;
+      if (neume === QuantitativeNeume.Oligon) return mockBaseMapping2;
       return mockMarkMapping;
     });
 
@@ -354,17 +346,16 @@ describe('LayoutService.alignIsonIndicators', () => {
     );
 
     const note1 = new NoteElement();
-    note1.quantitativeNeume = 'base1';
-    note1.ison = 'mark';
+    note1.quantitativeNeume = QuantitativeNeume.Ison;
+    note1.ison = Ison.Unison;
     note1.isonOffsetY = -5;
 
     const note2 = new NoteElement();
-    note2.quantitativeNeume = 'base2';
-    note2.ison = 'mark';
+    note2.quantitativeNeume = QuantitativeNeume.Oligon;
+    note2.ison = Ison.Unison;
     note2.isonOffsetY = -25;
 
-    const line = new Line();
-    line.elements = [note1, note2];
+    const line = getLine(note1, note2);
 
     const page = new Page();
     page.lines = [line];
@@ -376,16 +367,13 @@ describe('LayoutService.alignIsonIndicators', () => {
   });
 
   it('should handle cases with no notes having ison indicators', () => {
-    const mockPageSetup = {
-      neumeDefaultFontFamily: 'MockFont',
-    };
+    const mockPageSetup = getMockPageSetup();
 
     const note = new NoteElement();
-    note.quantitativeNeume = 'base';
+    note.quantitativeNeume = QuantitativeNeume.Ison;
     note.ison = null;
 
-    const line = new Line();
-    line.elements = [note];
+    const line = getLine(note);
 
     const page = new Page();
     page.lines = [line];
@@ -396,9 +384,7 @@ describe('LayoutService.alignIsonIndicators', () => {
   });
 
   it('should handle empty pages gracefully', () => {
-    const mockPageSetup = {
-      neumeDefaultFontFamily: 'MockFont',
-    };
+    const mockPageSetup = getMockPageSetup();
 
     const page = new Page();
     page.lines = [];
@@ -413,4 +399,16 @@ function getInlineTextBox() {
   const inlineTextBox = new TextBoxElement();
   inlineTextBox.inline = true;
   return inlineTextBox;
+}
+
+function getLine(...elements: ScoreElement[]) {
+  const line = new Line();
+  line.elements = elements;
+  return line;
+}
+
+function getMockPageSetup() {
+  const pageSetup = new PageSetup();
+  pageSetup.neumeDefaultFontFamily = 'MockFont';
+  return pageSetup;
 }

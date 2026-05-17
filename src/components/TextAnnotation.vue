@@ -1,5 +1,6 @@
 <template>
   <div
+    ref="container"
     class="annotation-container"
     :class="{ selectedAnnotation: selected }"
     :style="style"
@@ -12,6 +13,7 @@
       :editor="editor"
       :model-value="element.text"
       :config="editorConfig"
+      :disable-watchdog="true"
       @ready="onEditorReady"
     />
   </div>
@@ -33,7 +35,6 @@ const ANNOTATION_LOCK_ID = 'ANNOTATION_LOCK_ID';
 
 export default defineComponent({
   components: { Ckeditor },
-  emits: ['update', 'delete'],
   props: {
     element: {
       type: Object as PropType<AnnotationElement>,
@@ -49,6 +50,7 @@ export default defineComponent({
     },
     selected: Boolean,
   },
+  emits: ['update', 'delete'],
 
   data() {
     return {
@@ -63,21 +65,6 @@ export default defineComponent({
 
       editor: InlineEditor,
     };
-  },
-
-  mounted() {
-    this.elementX = this.element.x;
-    this.elementY = this.element.y;
-    this.clampingInterval = setInterval(this.clampToPageBounds, 250);
-  },
-
-  beforeUnmount() {
-    document.removeEventListener('mouseup', this.handleMouseUp);
-    document.removeEventListener('mousemove', this.handleMouseMove);
-
-    if (this.clampingInterval != null) {
-      clearInterval(this.clampingInterval);
-    }
   },
 
   computed: {
@@ -163,6 +150,21 @@ export default defineComponent({
     },
   },
 
+  mounted() {
+    this.elementX = this.element.x;
+    this.elementY = this.element.y;
+    this.clampingInterval = setInterval(this.clampToPageBounds, 250);
+  },
+
+  beforeUnmount() {
+    document.removeEventListener('mouseup', this.handleMouseUp);
+    document.removeEventListener('mousemove', this.handleMouseMove);
+
+    if (this.clampingInterval != null) {
+      clearInterval(this.clampingInterval);
+    }
+  },
+
   methods: {
     getEditorInstance() {
       return (this.$refs.editor as ComponentExposed<typeof Ckeditor>)?.instance;
@@ -196,8 +198,6 @@ export default defineComponent({
       if (toolbarEl) {
         toolbarEl.style.maxWidth = '400px';
       }
-
-      this.clampingInterval = setInterval(this.clampToPageBounds, 250);
     },
 
     async handleDoubleClick() {
@@ -220,9 +220,13 @@ export default defineComponent({
 
       // We only calculate zoom once when the mouse is pressed down
       // to avoid recalculating it on every mouse move
-      this.zoom = Number(getComputedStyle(this.$el).getPropertyValue('--zoom'));
+      this.zoom = Number(
+        getComputedStyle(this.$refs.container as HTMLElement).getPropertyValue(
+          '--zoom',
+        ),
+      );
 
-      const draggedEl = this.$el as HTMLElement;
+      const draggedEl = this.$refs.container as HTMLElement;
       const rect = draggedEl.getBoundingClientRect();
 
       // Calculate the offset of the mouse click relative to the element
@@ -236,7 +240,7 @@ export default defineComponent({
     handleMouseMove(e: MouseEvent) {
       e.preventDefault();
 
-      const draggedEl = this.$el as HTMLElement;
+      const draggedEl = this.$refs.container as HTMLElement;
       const pageEl = draggedEl.closest('.page') as HTMLElement;
       if (!draggedEl || !pageEl) {
         console.warn('Could not find dragged element or page element');
@@ -271,7 +275,9 @@ export default defineComponent({
       const newY = clampedTop - parentRect.top;
 
       const zoom = Number(
-        getComputedStyle(this.$el).getPropertyValue('--zoom'),
+        getComputedStyle(this.$refs.container as HTMLElement).getPropertyValue(
+          '--zoom',
+        ),
       );
 
       this.elementX = newX / zoom;
@@ -279,16 +285,23 @@ export default defineComponent({
     },
 
     clampToPageBounds() {
-      const el = this.$el as HTMLElement;
+      const el = this.$refs.container as HTMLElement;
+
+      if (!el) {
+        return;
+      }
+
       const pageEl = el.closest('.page') as HTMLElement;
       const offsetParent = el.offsetParent as HTMLElement;
 
-      if (!el || !pageEl || !offsetParent) {
+      if (!pageEl || !offsetParent) {
         return;
       }
 
       const zoom = Number(
-        getComputedStyle(this.$el).getPropertyValue('--zoom'),
+        getComputedStyle(this.$refs.container as HTMLElement).getPropertyValue(
+          '--zoom',
+        ),
       );
 
       const elRect = el.getBoundingClientRect();

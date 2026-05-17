@@ -5,8 +5,8 @@
     :max="strokeWidthMax"
     :step="strokeWidthStep"
     :precision="strokeWidthPrecision"
-    :modelValue="modelValue"
-    @update:modelValue="$emit('update:modelValue', $event)"
+    :model-value="modelValue"
+    @update:model-value="$emit('update:modelValue', $event)"
   />
 </template>
 
@@ -21,13 +21,13 @@ const strokeWidthPrecision = 2;
 
 export default defineComponent({
   components: { InputUnit },
-  emits: ['update:modelValue'],
   props: {
     modelValue: {
       type: Number,
       required: true,
     },
   },
+  emits: ['update:modelValue'],
 
   data() {
     return {

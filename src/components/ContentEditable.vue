@@ -1,5 +1,7 @@
 <template>
+  <!-- eslint-disable vue/no-v-html -->
   <span
+    ref="span"
     class="contenteditable"
     :contenteditable="contentEditable"
     :style="style"
@@ -8,6 +10,7 @@
     @click="$emit('click')"
     v-html="content"
   />
+  <!-- eslint-enable vue/no-v-html -->
 </template>
 
 <script lang="ts">
@@ -15,7 +18,6 @@ import { defineComponent, StyleValue } from 'vue';
 
 export default defineComponent({
   components: {},
-  emits: ['click', 'focus', 'blur', 'onEditorReady'],
   props: {
     content: {
       type: String,
@@ -38,13 +40,10 @@ export default defineComponent({
       default: 'break-spaces',
     },
   },
+  emits: ['click', 'focus', 'blur', 'onEditorReady'],
 
   data() {
     return {};
-  },
-
-  mounted() {
-    this.$emit('onEditorReady');
   },
 
   computed: {
@@ -57,7 +56,7 @@ export default defineComponent({
     },
 
     htmlElement() {
-      return this.$el as HTMLElement;
+      return this.$refs.span as HTMLElement;
     },
 
     style() {
@@ -65,6 +64,10 @@ export default defineComponent({
         whiteSpace: this.whiteSpace,
       } as StyleValue;
     },
+  },
+
+  mounted() {
+    this.$emit('onEditorReady');
   },
 
   methods: {

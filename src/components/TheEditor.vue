@@ -119,7 +119,7 @@ import {
   TimeNeume,
   VocalExpressionNeume,
 } from '@/models/Neumes';
-import { Page } from '@/models/Page';
+import { Line, Page } from '@/models/Page';
 import { PageSetup } from '@/models/PageSetup';
 import { ScaleNote } from '@/models/Scales';
 import { Score } from '@/models/Score';
@@ -257,6 +257,12 @@ export default defineComponent({
     Vue3TabsChrome,
     SearchText,
   },
+  provide() {
+    return {
+      editorPreferences: computed(() => this.editorPreferences),
+    };
+  },
+  emits: [],
   setup() {
     return {
       audioService: inject<AudioService>(audioServiceKey, new AudioService()),
@@ -289,7 +295,6 @@ export default defineComponent({
       ipcService: inject<IIpcService>(ipcServiceKey, new IpcService()),
     };
   },
-  emits: [],
   data() {
     return {
       searchTextQuery: '',
@@ -308,6 +313,7 @@ export default defineComponent({
       printMode: false,
 
       showGuides: false,
+      showAdjustmentRatios: false,
 
       workspaces: [] as Workspace[],
       selectedWorkspaceValue: new Workspace(),
@@ -462,11 +468,6 @@ export default defineComponent({
         onScroll: null! as () => void,
       },
       saveDebounced: null! as (markUnsavedChanges?: boolean) => void,
-    };
-  },
-  provide() {
-    return {
-      editorPreferences: computed(() => this.editorPreferences),
     };
   },
   computed: {
@@ -1436,6 +1437,31 @@ export default defineComponent({
         left: !this.rtl ? withZoom(element.x) : undefined,
         right: this.rtl ? withZoom(element.x) : undefined,
         top: withZoom(element.y),
+      } as StyleValue;
+    },
+
+    getAdjustmentRatioStyle(line: Line) {
+      const fontSize = this.score.pageSetup.lyricsDefaultFontSize * 0.8;
+      const gap = fontSize * 0.5;
+      return {
+        position: 'absolute',
+        left: withZoom(
+          this.rtl
+            ? this.score.pageSetup.leftMargin - gap - fontSize * 3
+            : this.score.pageSetup.pageWidth -
+                this.score.pageSetup.rightMargin +
+                gap,
+        ),
+        width: withZoom(fontSize * 3),
+        textAlign: 'right',
+        top: withZoom(
+          line.elements[0].y +
+            this.score.pageSetup.lineHeight / 3 -
+            fontSize / 2,
+        ),
+        fontSize: withZoom(fontSize),
+        fontFamily: this.score.pageSetup.lyricsDefaultFontFamily,
+        color: this.score.pageSetup.gorgonDefaultColor,
       } as StyleValue;
     },
 
@@ -5158,14 +5184,18 @@ export default defineComponent({
         this.audioElement = this.elements[event.elementIndex];
 
         // Scroll the currently playing element into view
-        const lyrics = (this.$refs[`lyrics-${event.elementIndex}`] as any[])[0];
+        const lyrics = (
+          this.$refs[`lyrics-${event.elementIndex}`] as InstanceType<
+            typeof ContentEditable
+          >[]
+        )[0];
 
         const neumeBox = (
           this.$refs[`element-${event.elementIndex}`] as any[]
         )[0];
 
-        if (lyrics?.$el.scrollIntoViewIfNeeded) {
-          lyrics.$el.scrollIntoViewIfNeeded(false);
+        if ((lyrics?.htmlElement as any)?.scrollIntoViewIfNeeded) {
+          (lyrics?.htmlElement as any).scrollIntoViewIfNeeded(false);
         }
 
         if (neumeBox?.scrollIntoViewIfNeeded) {
@@ -6007,7 +6037,7 @@ export default defineComponent({
               this.$refs[
                 `element-${this.selectedElementIndex}`
               ] as InstanceType<typeof DropCap>[]
-            )[0].$el.scrollIntoView();
+            )[0].htmlElement.scrollIntoView();
           } else if (
             this.selectedElement?.elementType === ElementType.TextBox
           ) {
@@ -6015,7 +6045,7 @@ export default defineComponent({
               this.$refs[
                 `element-${this.selectedElementIndex}`
               ] as InstanceType<typeof TextBox>[]
-            )[0].$el.scrollIntoView();
+            )[0].htmlElement.scrollIntoView();
           }
         });
       }
@@ -6200,26 +6230,26 @@ export default defineComponent({
 
 <template>
   <div class="editor">
-    <div class="loading-overlay" v-if="isLoading">
+    <div v-if="isLoading" class="loading-overlay">
       <img src="@/assets/icons/spinner.svg" />
     </div>
     <FileMenuBar v-if="showFileMenuBar" />
     <ToolbarMain
-      :entryMode="entryMode"
+      :entry-mode="entryMode"
       :zoom="zoom"
-      :zoomToFit="zoomToFit"
-      :audioState="audioService.state"
-      :audioOptions="audioOptions"
-      :playbackTime="selectedWorkspace.playbackTime"
-      :playbackBpm="selectedWorkspace.playbackBpm"
-      :currentPageNumber="currentPageNumber"
-      :pageCount="pageCount"
-      :neumeKeyboard="neumeKeyboard"
+      :zoom-to-fit="zoomToFit"
+      :audio-state="audioService.state"
+      :audio-options="audioOptions"
+      :playback-time="selectedWorkspace.playbackTime"
+      :playback-bpm="selectedWorkspace.playbackBpm"
+      :current-page-number="currentPageNumber"
+      :page-count="pageCount"
+      :neume-keyboard="neumeKeyboard"
       @update:zoom="updateZoom"
-      @update:zoomToFit="updateZoomToFit"
-      @update:audioOptionsSpeed="updateAudioOptionsSpeed"
+      @update:zoom-to-fit="updateZoomToFit"
+      @update:audio-options-speed="updateAudioOptionsSpeed"
       @add-auto-martyria="addAutoMartyria"
-      @update:entryMode="updateEntryMode"
+      @update:entry-mode="updateEntryMode"
       @toggle-page-break="togglePageBreak"
       @toggle-line-break="toggleLineBreak($event)"
       @add-tempo="addTempo"
@@ -6237,8 +6267,8 @@ export default defineComponent({
       <div class="left-panel">
         <NeumeSelector
           class="neume-selector"
-          :pageSetup="score.pageSetup"
-          :neumeKeyboard="neumeKeyboard"
+          :page-setup="score.pageSetup"
+          :neume-keyboard="neumeKeyboard"
           @select-quantitative-neume="addQuantitativeNeume"
         />
         <div
@@ -6253,7 +6283,7 @@ export default defineComponent({
         <NeumeComboSelector
           v-if="neumeComboPanelIsExpanded"
           class="neume-combo-selector"
-          :pageSetup="score.pageSetup"
+          :page-setup="score.pageSetup"
           @select-neume-combo="addNeumeCombination"
         />
       </div>
@@ -6261,16 +6291,16 @@ export default defineComponent({
       <div class="page-container">
         <!-- @vue-ignore -->
         <Vue3TabsChrome
-          class="workspace-tab-container"
           ref="tabs"
-          :tabs="tabs"
           v-model="selectedWorkspaceId"
+          class="workspace-tab-container"
+          :tabs="tabs"
           :gap="0"
           :on-close="onTabClosed"
           :render-label="renderTabLabel"
           @contextmenu="openContextMenuForTab"
         >
-          <template v-slot:after>
+          <template #after>
             <button
               class="workspace-tab-new-button"
               @click="onFileMenuNewScore"
@@ -6280,28 +6310,28 @@ export default defineComponent({
           </template></Vue3TabsChrome
         >
         <SearchText
-          ref="searchText"
           v-if="searchTextPanelIsOpen"
+          ref="searchText"
           v-model:query="searchTextQuery"
           @search="onSearchText"
           @close="searchTextPanelIsOpen = false"
         />
         <div
-          class="page-background"
           ref="page-background"
+          class="page-background"
           @scroll="throttled.onScroll"
         >
           <div
-            class="page"
-            :style="pageStyle"
+            v-for="(page, pageIndex) in filteredPages"
+            :key="`page-${pageIndex}`"
+            ref="pages"
             v-observe-visibility="{
               callback: (isVisible: boolean) =>
                 updatePageVisibility(page, isVisible),
               intersection: pageVisibilityIntersection,
             }"
-            v-for="(page, pageIndex) in filteredPages"
-            :key="`page-${pageIndex}`"
-            ref="pages"
+            class="page"
+            :style="pageStyle"
             :class="{ print: printMode }"
           >
             <template v-if="page.isVisible || printMode">
@@ -6316,21 +6346,21 @@ export default defineComponent({
                   v-if="isRichTextBoxElement(getHeaderForPageIndex(pageIndex))"
                 >
                   <TextBoxRich
-                    class="element-box"
                     :key="`element-${selectedWorkspace.id}-${getHeaderForPageIndex(pageIndex).id}-${
                       getHeaderForPageIndex(pageIndex).keyHelper
                     }`"
                     :ref="`header-${pageIndex}`"
+                    class="element-box"
                     :element="
                       getHeaderForPageIndex(pageIndex) as RichTextBoxElement
                     "
-                    :editMode="
+                    :edit-mode="
                       !printMode &&
                       getHeaderForPageIndex(pageIndex) ==
                         selectedHeaderFooterElement
                     "
                     :metadata="getTokenMetadata(pageIndex)"
-                    :pageSetup="score.pageSetup"
+                    :page-setup="score.pageSetup"
                     :fonts="fonts"
                     :selected="
                       getHeaderForPageIndex(pageIndex) ==
@@ -6359,21 +6389,21 @@ export default defineComponent({
                   v-else-if="isTextBoxElement(getHeaderForPageIndex(pageIndex))"
                 >
                   <TextBox
-                    class="element-box"
                     :key="`element-${selectedWorkspace.id}-${getHeaderForPageIndex(pageIndex).id}-${
                       getHeaderForPageIndex(pageIndex).keyHelper
                     }`"
                     :ref="`header-${pageIndex}`"
+                    class="element-box"
                     :element="
                       getHeaderForPageIndex(pageIndex) as TextBoxElement
                     "
-                    :editMode="
+                    :edit-mode="
                       !printMode &&
                       getHeaderForPageIndex(pageIndex) ==
                         selectedHeaderFooterElement
                     "
                     :metadata="getTokenMetadata(pageIndex)"
-                    :pageSetup="score.pageSetup"
+                    :page-setup="score.pageSetup"
                     :selected="
                       getHeaderForPageIndex(pageIndex) ==
                       selectedHeaderFooterElement
@@ -6409,10 +6439,10 @@ export default defineComponent({
                 ></div>
               </template>
               <div
-                class="line"
                 v-for="(line, lineIndex) in page.lines"
                 :key="`line-${pageIndex}-${lineIndex}`"
                 :ref="`line-${lineIndex}`"
+                class="line"
               >
                 <div
                   v-for="element in line.elements"
@@ -6427,17 +6457,17 @@ export default defineComponent({
                       class="neume-box"
                     >
                       <span
-                        class="section-name"
                         v-if="
                           element.sectionName != '' &&
                           element.sectionName != null
                         "
+                        class="section-name"
                         >§</span
                       >
-                      <span class="page-break" v-if="element.pageBreak"
+                      <span v-if="element.pageBreak" class="page-break"
                         ><img src="@/assets/icons/page-break.svg"
                       /></span>
-                      <span class="line-break" v-if="element.lineBreak"
+                      <span v-if="element.lineBreak" class="line-break"
                         ><img
                           v-if="element.lineBreakType === LineBreakType.Justify"
                           src="@/assets/icons/line-break-justify.svg" /><img
@@ -6454,7 +6484,7 @@ export default defineComponent({
                         ).alternateLines"
                         :key="index"
                         :element="alternateLine"
-                        :pageSetup="score.pageSetup"
+                        :page-setup="score.pageSetup"
                         :class="{
                           selectedAlternateLine:
                             selectedWorkspace.selectedAlternateLineElement ===
@@ -6470,7 +6500,7 @@ export default defineComponent({
                           .annotations"
                         :key="index"
                         :element="annotation"
-                        :pageSetup="score.pageSetup"
+                        :page-setup="score.pageSetup"
                         :fonts="fonts"
                         :selected="
                           selectedWorkspace.selectedAnnotationElement ===
@@ -6489,7 +6519,7 @@ export default defineComponent({
                       <SyllableNeumeBox
                         class="syllable-box"
                         :note="element as NoteElement"
-                        :pageSetup="score.pageSetup"
+                        :page-setup="score.pageSetup"
                         :class="[
                           {
                             selected: isSelected(element),
@@ -6505,14 +6535,14 @@ export default defineComponent({
                         :style="getLyricStyle(element as NoteElement)"
                       >
                         <ContentEditable
+                          :ref="`lyrics-${getElementIndex(element)}`"
                           class="lyrics"
                           :class="{
                             selectedLyrics: element === selectedLyrics,
                           }"
                           :content="(element as NoteElement).lyrics"
                           :editable="!lyricsLocked"
-                          whiteSpace="nowrap"
-                          :ref="`lyrics-${getElementIndex(element)}`"
+                          white-space="nowrap"
                           @click="focusLyrics(element.index)"
                           @focus="selectedLyrics = element as NoteElement"
                           @blur="updateLyrics(element as NoteElement, $event)"
@@ -6532,10 +6562,10 @@ export default defineComponent({
                             :style="getMelismaStyle(element as NoteElement)"
                           >
                             <span
-                              class="melisma-hyphen"
                               v-for="(offset, index) in (element as NoteElement)
                                 .hyphenOffsets"
                               :key="index"
+                              class="melisma-hyphen"
                               :style="
                                 getMelismaHyphenStyle(
                                   element as NoteElement,
@@ -6600,12 +6630,12 @@ export default defineComponent({
                         >
                           <span
                             class="melisma-text"
-                            v-text="(element as NoteElement).melismaText"
                             :class="{
                               selectedMelisma: element === selectedLyrics,
                             }"
                             @click="focusLyrics(element.index)"
                             @focus="selectedLyrics = element as NoteElement"
+                            v-text="(element as NoteElement).melismaText"
                           ></span>
                         </template>
                       </div>
@@ -6614,24 +6644,24 @@ export default defineComponent({
                   <template v-else-if="isMartyriaElement(element)">
                     <div class="neume-box">
                       <span
-                        class="section-name"
                         v-if="
                           element.sectionName != '' &&
                           element.sectionName != null
                         "
+                        class="section-name"
                         >§</span
                       >
-                      <span class="page-break" v-if="element.pageBreak">
+                      <span v-if="element.pageBreak" class="page-break">
                         <img src="@/assets/icons/page-break.svg"
                       /></span>
-                      <span class="line-break" v-if="element.lineBreak"
+                      <span v-if="element.lineBreak" class="line-break"
                         ><img src="@/assets/icons/line-break.svg"
                       /></span>
                       <MartyriaNeumeBox
                         :ref="`element-${getElementIndex(element)}`"
                         class="marytria-neume-box"
                         :neume="element as MartyriaElement"
-                        :pageSetup="score.pageSetup"
+                        :page-setup="score.pageSetup"
                         :class="[
                           {
                             selected: isSelected(element),
@@ -6649,23 +6679,23 @@ export default defineComponent({
                       class="neume-box"
                     >
                       <span
-                        class="section-name"
                         v-if="
                           element.sectionName != '' &&
                           element.sectionName != null
                         "
+                        class="section-name"
                         >§</span
                       >
-                      <span class="page-break" v-if="element.pageBreak">
+                      <span v-if="element.pageBreak" class="page-break">
                         <img src="@/assets/icons/page-break.svg"
                       /></span>
-                      <span class="line-break" v-if="element.lineBreak"
+                      <span v-if="element.lineBreak" class="line-break"
                         ><img src="@/assets/icons/line-break.svg"
                       /></span>
                       <TempoNeumeBox
                         class="tempo-neume-box"
                         :neume="element as TempoElement"
-                        :pageSetup="score.pageSetup"
+                        :page-setup="score.pageSetup"
                         :class="[{ selected: isSelected(element) }]"
                         @select-single="selectedElement = element"
                         @select-range="setSelectionRange(element)"
@@ -6679,17 +6709,17 @@ export default defineComponent({
                       class="neume-box"
                     >
                       <span
-                        class="section-name"
                         v-if="
                           element.sectionName != '' &&
                           element.sectionName != null
                         "
+                        class="section-name"
                         >§</span
                       >
-                      <span class="page-break" v-if="element.pageBreak">
+                      <span v-if="element.pageBreak" class="page-break">
                         <img src="@/assets/icons/page-break.svg"
                       /></span>
-                      <span class="line-break" v-if="element.lineBreak"
+                      <span v-if="element.lineBreak" class="line-break"
                         ><img src="@/assets/icons/line-break.svg"
                       /></span>
                       <EmptyNeumeBox
@@ -6703,24 +6733,24 @@ export default defineComponent({
                   </template>
                   <template v-else-if="isTextBoxElement(element)">
                     <span
-                      class="section-name-2"
                       v-if="
                         element.sectionName != '' && element.sectionName != null
                       "
+                      class="section-name-2"
                       >§</span
                     >
-                    <span class="page-break-2" v-if="element.pageBreak"
+                    <span v-if="element.pageBreak" class="page-break-2"
                       ><img src="@/assets/icons/page-break.svg"
                     /></span>
-                    <span class="line-break-2" v-if="element.lineBreak"
+                    <span v-if="element.lineBreak" class="line-break-2"
                       ><img src="@/assets/icons/line-break.svg"
                     /></span>
                     <TextBox
                       :ref="`element-${getElementIndex(element)}`"
                       :element="element as TextBoxElement"
-                      :editMode="true"
+                      :edit-mode="true"
                       :metadata="getTokenMetadata(pageIndex)"
-                      :pageSetup="score.pageSetup"
+                      :page-setup="score.pageSetup"
                       :selected="isSelected(element)"
                       @select-single="selectedElement = element"
                       @update="updateTextBox(element as TextBoxElement, $event)"
@@ -6731,22 +6761,22 @@ export default defineComponent({
                   </template>
                   <template v-else-if="isRichTextBoxElement(element)">
                     <span
-                      class="section-name-2"
                       v-if="
                         element.sectionName != '' && element.sectionName != null
                       "
+                      class="section-name-2"
                       >§</span
                     >
-                    <span class="page-break-2" v-if="element.pageBreak"
+                    <span v-if="element.pageBreak" class="page-break-2"
                       ><img src="@/assets/icons/page-break.svg"
                     /></span>
-                    <span class="line-break-2" v-if="element.lineBreak"
+                    <span v-if="element.lineBreak" class="line-break-2"
                       ><img src="@/assets/icons/line-break.svg"
                     /></span>
                     <TextBoxRich
                       :ref="`element-${getElementIndex(element)}`"
                       :element="element as RichTextBoxElement"
-                      :pageSetup="score.pageSetup"
+                      :page-setup="score.pageSetup"
                       :fonts="fonts"
                       :selected="isSelected(element)"
                       @select-single="selectedElement = element"
@@ -6763,22 +6793,22 @@ export default defineComponent({
                   </template>
                   <template v-else-if="isModeKeyElement(element)">
                     <span
-                      class="section-name-2"
                       v-if="
                         element.sectionName != '' && element.sectionName != null
                       "
+                      class="section-name-2"
                       >§</span
                     >
-                    <span class="page-break-2" v-if="element.pageBreak"
+                    <span v-if="element.pageBreak" class="page-break-2"
                       ><img src="@/assets/icons/page-break.svg"
                     /></span>
-                    <span class="line-break-2" v-if="element.lineBreak"
+                    <span v-if="element.lineBreak" class="line-break-2"
                       ><img src="@/assets/icons/line-break.svg"
                     /></span>
                     <ModeKey
                       :ref="`element-${getElementIndex(element)}`"
                       :element="element as ModeKeyElement"
-                      :pageSetup="score.pageSetup"
+                      :page-setup="score.pageSetup"
                       :class="[
                         {
                           selectedTextbox: isSelected(element),
@@ -6790,22 +6820,22 @@ export default defineComponent({
                   </template>
                   <template v-else-if="isDropCapElement(element)">
                     <span
-                      class="section-name"
                       v-if="
                         element.sectionName != '' && element.sectionName != null
                       "
+                      class="section-name"
                       >§</span
                     >
-                    <span class="page-break" v-if="element.pageBreak"
+                    <span v-if="element.pageBreak" class="page-break"
                       ><img src="@/assets/icons/page-break.svg"
                     /></span>
-                    <span class="line-break" v-if="element.lineBreak"
+                    <span v-if="element.lineBreak" class="line-break"
                       ><img src="@/assets/icons/line-break.svg"
                     /></span>
                     <DropCap
                       :ref="`element-${getElementIndex(element)}`"
                       :element="element as DropCapElement"
-                      :pageSetup="score.pageSetup"
+                      :page-setup="score.pageSetup"
                       :editable="!lyricsLocked"
                       :class="[
                         {
@@ -6819,17 +6849,17 @@ export default defineComponent({
                     />
                   </template>
                   <template v-else-if="isImageBoxElement(element)">
-                    <span class="page-break-2" v-if="element.pageBreak"
+                    <span v-if="element.pageBreak" class="page-break-2"
                       ><img src="@/assets/icons/page-break.svg"
                     /></span>
-                    <span class="line-break-2" v-if="element.lineBreak"
+                    <span v-if="element.lineBreak" class="line-break-2"
                       ><img src="@/assets/icons/line-break.svg"
                     /></span>
                     <ImageBox
                       :ref="`element-${getElementIndex(element)}`"
                       :element="element as ImageBoxElement"
                       :zoom="zoom"
-                      :printMode="printMode"
+                      :print-mode="printMode"
                       :class="[{ selectedImagebox: isSelected(element) }]"
                       @select-single="selectedElement = element"
                       @update:size="
@@ -6841,6 +6871,16 @@ export default defineComponent({
                     />
                   </template>
                 </div>
+                <span
+                  v-if="
+                    showAdjustmentRatios &&
+                    line.adjustmentRatio != null &&
+                    line.elements.length > 0
+                  "
+                  class="adjustment-ratio"
+                  :style="getAdjustmentRatioStyle(line)"
+                  >{{ line.adjustmentRatio.toFixed(2) }}</span
+                >
               </div>
               <template v-if="score.pageSetup.showFooter">
                 <div
@@ -6856,21 +6896,21 @@ export default defineComponent({
                   v-if="isRichTextBoxElement(getFooterForPageIndex(pageIndex))"
                 >
                   <TextBoxRich
-                    class="element-box"
                     :key="`element-${selectedWorkspace.id}-${getFooterForPageIndex(pageIndex).id}-${
                       getFooterForPageIndex(pageIndex).keyHelper
                     }`"
                     :ref="`footer-${pageIndex}`"
+                    class="element-box"
                     :element="
                       getFooterForPageIndex(pageIndex) as RichTextBoxElement
                     "
-                    :editMode="
+                    :edit-mode="
                       !printMode &&
                       getFooterForPageIndex(pageIndex) ==
                         selectedHeaderFooterElement
                     "
                     :metadata="getTokenMetadata(pageIndex)"
-                    :pageSetup="score.pageSetup"
+                    :page-setup="score.pageSetup"
                     :fonts="fonts"
                     :selected="
                       getFooterForPageIndex(pageIndex) ==
@@ -6899,21 +6939,21 @@ export default defineComponent({
                   v-else-if="isTextBoxElement(getHeaderForPageIndex(pageIndex))"
                 >
                   <TextBox
-                    class="element-box"
                     :ref="`footer-${pageIndex}`"
                     :key="`element-${selectedWorkspace.id}-${getFooterForPageIndex(pageIndex).id}-${
                       getFooterForPageIndex(pageIndex).keyHelper
                     }`"
+                    class="element-box"
                     :element="
                       getFooterForPageIndex(pageIndex) as TextBoxElement
                     "
-                    :editMode="
+                    :edit-mode="
                       !printMode &&
                       getFooterForPageIndex(pageIndex) ==
                         selectedHeaderFooterElement
                     "
                     :metadata="getTokenMetadata(pageIndex)"
-                    :pageSetup="score.pageSetup"
+                    :page-setup="score.pageSetup"
                     :selected="
                       getFooterForPageIndex(pageIndex) ==
                       selectedHeaderFooterElement
@@ -6947,9 +6987,9 @@ export default defineComponent({
       <ToolbarTextBox
         :element="selectedTextBoxElement as TextBoxElement"
         :fonts="fonts"
-        :pageSetup="score.pageSetup"
+        :page-setup="score.pageSetup"
         @update="updateTextBox(selectedTextBoxElement, $event)"
-        @update:sectionName="
+        @update:section-name="
           updateScoreElementSectionName(
             selectedElement as TextBoxElement,
             $event,
@@ -6962,9 +7002,9 @@ export default defineComponent({
     <template v-if="selectedRichTextBoxElement != null">
       <ToolbarTextBoxRich
         :element="selectedRichTextBoxElement"
-        :pageSetup="score.pageSetup"
+        :page-setup="score.pageSetup"
         @update="updateRichTextBox(selectedRichTextBoxElement, $event)"
-        @update:sectionName="
+        @update:section-name="
           updateScoreElementSectionName(
             selectedElement as RichTextBoxElement,
             $event,
@@ -6978,9 +7018,9 @@ export default defineComponent({
       <ToolbarDropCap
         :element="selectedElement as DropCapElement"
         :fonts="fonts"
-        :pageSetup="score.pageSetup"
+        :page-setup="score.pageSetup"
         @update="updateDropCap(selectedElement as DropCapElement, $event)"
-        @update:sectionName="
+        @update:section-name="
           updateScoreElementSectionName(
             selectedElement as DropCapElement,
             $event,
@@ -6993,7 +7033,7 @@ export default defineComponent({
     >
       <ToolbarImageBox
         :element="selectedElement as ImageBoxElement"
-        :pageSetup="score.pageSetup"
+        :page-setup="score.pageSetup"
         @update="updateImageBox(selectedElement as ImageBoxElement, $event)"
       />
     </template>
@@ -7002,7 +7042,7 @@ export default defineComponent({
         :element="selectedLyrics"
         :fonts="fonts"
         @update="updateNoteAndSave(selectedLyrics as NoteElement, $event)"
-        @insert:specialCharacter="insertSpecialCharacter"
+        @insert:special-character="insertSpecialCharacter"
       />
     </template>
     <template
@@ -7010,12 +7050,12 @@ export default defineComponent({
     >
       <ToolbarModeKey
         :element="selectedElement as ModeKeyElement"
-        :pageSetup="score.pageSetup"
+        :page-setup="score.pageSetup"
         @update="updateModeKey(selectedElement as ModeKeyElement, $event)"
         @update:tempo="
           setModeKeyTempo(selectedElement as ModeKeyElement, $event)
         "
-        @update:sectionName="
+        @update:section-name="
           updateScoreElementSectionName(
             selectedElement as ModeKeyElement,
             $event,
@@ -7032,28 +7072,28 @@ export default defineComponent({
       "
     >
       <ToolbarNeume
-        :element="selectedElementForNeumeToolbar as NoteElement"
-        :pageSetup="score.pageSetup"
-        :neumeKeyboard="neumeKeyboard"
         :key="`toolbar-neume-${selectedWorkspace.id}-${selectedElement.id}-${selectedElement.keyHelper}`"
-        :innerNeume="toolbarInnerNeume"
+        :element="selectedElementForNeumeToolbar as NoteElement"
+        :page-setup="score.pageSetup"
+        :neume-keyboard="neumeKeyboard"
+        :inner-neume="toolbarInnerNeume"
         @update="
           updateNoteAndSave(
             selectedElementForNeumeToolbar as NoteElement,
             $event,
           )
         "
-        @update:innerNeume="toolbarInnerNeume = $event"
+        @update:inner-neume="toolbarInnerNeume = $event"
         @update:accidental="
           setAccidental(selectedElementForNeumeToolbar as NoteElement, $event)
         "
-        @update:secondaryAccidental="
+        @update:secondary-accidental="
           setSecondaryAccidental(
             selectedElementForNeumeToolbar as NoteElement,
             $event,
           )
         "
-        @update:tertiaryAccidental="
+        @update:tertiary-accidental="
           setTertiaryAccidental(
             selectedElementForNeumeToolbar as NoteElement,
             $event,
@@ -7062,13 +7102,13 @@ export default defineComponent({
         @update:fthora="
           setFthoraNote(selectedElementForNeumeToolbar as NoteElement, $event)
         "
-        @update:secondaryFthora="
+        @update:secondary-fthora="
           setSecondaryFthora(
             selectedElementForNeumeToolbar as NoteElement,
             $event,
           )
         "
-        @update:tertiaryFthora="
+        @update:tertiary-fthora="
           setTertiaryFthora(
             selectedElementForNeumeToolbar as NoteElement,
             $event,
@@ -7077,7 +7117,7 @@ export default defineComponent({
         @update:gorgon="
           setGorgon(selectedElementForNeumeToolbar as NoteElement, $event)
         "
-        @update:secondaryGorgon="
+        @update:secondary-gorgon="
           setSecondaryGorgon(
             selectedElementForNeumeToolbar as NoteElement,
             $event,
@@ -7095,13 +7135,13 @@ export default defineComponent({
             $event,
           )
         "
-        @update:measureBar="
+        @update:measure-bar="
           setMeasureBarNote(
             selectedElementForNeumeToolbar as NoteElement,
             $event,
           )
         "
-        @update:measureNumber="
+        @update:measure-number="
           setMeasureNumber(
             selectedElementForNeumeToolbar as NoteElement,
             $event,
@@ -7113,7 +7153,7 @@ export default defineComponent({
         @update:tie="
           setTie(selectedElementForNeumeToolbar as NoteElement, $event)
         "
-        @update:sectionName="
+        @update:section-name="
           updateScoreElementSectionName(
             selectedElementForNeumeToolbar as NoteElement,
             $event,
@@ -7127,31 +7167,31 @@ export default defineComponent({
     >
       <ToolbarMartyria
         :element="selectedElement as MartyriaElement"
-        :pageSetup="score.pageSetup"
-        :neumeKeyboard="neumeKeyboard"
+        :page-setup="score.pageSetup"
+        :neume-keyboard="neumeKeyboard"
         @update="updateMartyria(selectedElement as MartyriaElement, $event)"
         @update:fthora="
           setFthoraMartyria(selectedElement as MartyriaElement, $event)
         "
-        @update:tempoLeft="
+        @update:tempo-left="
           setMartyriaTempoLeft(selectedElement as MartyriaElement, $event)
         "
         @update:tempo="
           setMartyriaTempo(selectedElement as MartyriaElement, $event)
         "
-        @update:tempoRight="
+        @update:tempo-right="
           setMartyriaTempoRight(selectedElement as MartyriaElement, $event)
         "
-        @update:measureBar="
+        @update:measure-bar="
           setMeasureBarMartyria(selectedElement as MartyriaElement, $event)
         "
-        @update:quantitativeNeume="
+        @update:quantitative-neume="
           setMartyriaQuantitativeNeume(
             selectedElement as MartyriaElement,
             $event,
           )
         "
-        @update:sectionName="
+        @update:section-name="
           updateScoreElementSectionName(
             selectedElement as MartyriaElement,
             $event,
@@ -7162,9 +7202,9 @@ export default defineComponent({
     <template v-if="selectedElement != null && isTempoElement(selectedElement)">
       <ToolbarTempo
         :element="selectedElement as TempoElement"
-        :pageSetup="score.pageSetup"
+        :page-setup="score.pageSetup"
         @update="updateTempo(selectedElement as TempoElement, $event)"
-        @update:sectionName="
+        @update:section-name="
           updateScoreElementSectionName(selectedElement as TempoElement, $event)
         "
       />
@@ -7175,7 +7215,7 @@ export default defineComponent({
       :locked="lyricsLocked"
       @update:locked="updateLyricsLocked"
       @update:lyrics="updateStaffLyrics"
-      @assignAcceptsLyrics="assignAcceptsLyricsFromCurrentLyrics"
+      @assign-accepts-lyrics="assignAcceptsLyricsFromCurrentLyrics"
       @close="closeLyricManager"
       @click="
         selectedElement = null;
@@ -7185,11 +7225,11 @@ export default defineComponent({
     <ModeKeyDialog
       v-if="modeKeyDialogIsOpen"
       :element="selectedElement as ModeKeyElement"
-      :pageSetup="score.pageSetup"
+      :page-setup="score.pageSetup"
       @update="
         updateModeKeyFromTemplate(selectedElement as ModeKeyElement, $event)
       "
-      @update:useOptionalDiatonicFthoras="
+      @update:use-optional-diatonic-fthoras="
         updatePageSetupUseOptionalDiatonicFthoras($event)
       "
       @close="closeModeKeyDialog"
@@ -7197,9 +7237,9 @@ export default defineComponent({
     <SyllablePositioningDialog
       v-if="syllablePositioningDialogIsOpen"
       :element="selectedElement as NoteElement"
-      :previousElement="previousElementOnLine ?? undefined"
-      :nextElement="nextElementOnLine ?? undefined"
-      :pageSetup="score.pageSetup"
+      :previous-element="previousElementOnLine ?? undefined"
+      :next-element="nextElementOnLine ?? undefined"
+      :page-setup="score.pageSetup"
       @update="updateNoteAndSave(selectedElement as NoteElement, $event)"
       @close="closeSyllablePositioningDialog"
     />
@@ -7212,13 +7252,13 @@ export default defineComponent({
     <EditorPreferencesDialog
       v-if="editorPreferencesDialogIsOpen"
       :options="editorPreferences"
-      :pageSetup="score.pageSetup"
+      :page-setup="score.pageSetup"
       @update="updateEditorPreferences"
       @close="closeEditorPreferencesDialog"
     />
     <PageSetupDialog
       v-if="pageSetupDialogIsOpen"
-      :pageSetup="score.pageSetup"
+      :page-setup="score.pageSetup"
       :fonts="fonts"
       @update="updatePageSetup($event)"
       @close="closePageSetupDialog"
@@ -7226,19 +7266,19 @@ export default defineComponent({
     <ExportDialog
       v-if="exportDialogIsOpen"
       :loading="exportInProgress"
-      :defaultFormat="exportFormat"
-      @exportAsPng="exportAsPng"
-      @exportAsMusicXml="exportAsMusicXml"
-      @exportAsLatex="exportAsLatex"
+      :default-format="exportFormat"
+      @export-as-png="exportAsPng"
+      @export-as-music-xml="exportAsMusicXml"
+      @export-as-latex="exportAsLatex"
       @close="closeExportDialog"
     />
     <template v-if="richTextBoxCalculation">
       <TextBoxRich
-        class="richTextBoxCalculation"
         v-for="element in resizableRichTextBoxElements"
         :key="element.id!"
+        class="richTextBoxCalculation"
         :element="element as RichTextBoxElement"
-        :pageSetup="score.pageSetup"
+        :page-setup="score.pageSetup"
         :fonts="fonts"
         :recalc="true"
         @update:height="
@@ -7248,11 +7288,11 @@ export default defineComponent({
     </template>
     <template v-if="textBoxCalculation">
       <TextBox
-        class="textBoxCalculation"
         v-for="element in resizableTextBoxElements"
         :key="element.id!"
+        class="textBoxCalculation"
         :element="element as TextBoxElement"
-        :pageSetup="score.pageSetup"
+        :page-setup="score.pageSetup"
         :fonts="fonts"
         @update:height="updateTextBoxHeight(element as TextBoxElement, $event)"
       />
@@ -7371,6 +7411,12 @@ export default defineComponent({
 
 .element-box {
   position: absolute;
+}
+
+.adjustment-ratio {
+  pointer-events: none;
+  white-space: nowrap;
+  font-variant-numeric: lining-nums tabular-nums;
 }
 
 .neume-box {

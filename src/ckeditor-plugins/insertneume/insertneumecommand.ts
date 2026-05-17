@@ -16,7 +16,7 @@ export interface InsertNeumeCommandParams extends Partial<InsertNeumeAttributes>
 }
 
 export default class InsertNeumeCommand extends Command {
-  execute(attributes: InsertNeumeCommandParams) {
+  override execute(attributes: InsertNeumeCommandParams) {
     const editor = this.editor;
     editor.model.change((writer) => {
       const element = writer.createElement(

@@ -56,7 +56,6 @@ import { withZoom } from '@/utils/withZoom';
 
 export default defineComponent({
   components: { Neume },
-  emits: ['select-single', 'select-range'],
   props: {
     neume: {
       type: Object as PropType<MartyriaElement>,
@@ -67,6 +66,7 @@ export default defineComponent({
       required: true,
     },
   },
+  emits: ['select-single', 'select-range'],
 
   data() {
     return {

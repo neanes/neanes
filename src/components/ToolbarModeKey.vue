@@ -18,15 +18,15 @@
     <template v-if="!element.useDefaultStyle">
       <label class="right-space">{{ $t('toolbar:modeKey.size') }}</label>
       <InputFontSize
-        :modelValue="element.fontSize"
-        @update:modelValue="
+        :model-value="element.fontSize"
+        @update:model-value="
           $emit('update', { fontSize: $event } as Partial<ModeKeyElement>)
         "
       />
       <span class="space"></span>
       <ColorPicker
-        :modelValue="element.color"
-        @update:modelValue="
+        :model-value="element.color"
+        @update:model-value="
           $emit('update', { color: $event } as Partial<ModeKeyElement>)
         "
       />
@@ -87,8 +87,8 @@
     <template v-if="!element.useDefaultStyle">
       <label class="right-space">{{ $t('toolbar:common.outline') }}</label>
       <InputStrokeWidth
-        :modelValue="element.strokeWidth"
-        @update:modelValue="
+        :model-value="element.strokeWidth"
+        @update:model-value="
           $emit('update', { strokeWidth: $event } as Partial<ModeKeyElement>)
         "
       />
@@ -105,8 +105,8 @@
         :max="heightAdjustmentMax"
         :step="0.5"
         :precision="2"
-        :modelValue="element.heightAdjustment"
-        @update:modelValue="
+        :model-value="element.heightAdjustment"
+        @update:model-value="
           $emit('update', {
             heightAdjustment: $event,
           } as Partial<ModeKeyElement>)
@@ -142,8 +142,8 @@
 
     <label class="right-space">{{ $t('toolbar:common.bpm') }}</label>
     <InputBpm
-      :modelValue="element.bpm"
-      @update:modelValue="
+      :model-value="element.bpm"
+      @update:model-value="
         $emit('update', { bpm: $event } as Partial<ModeKeyElement>)
       "
     />
@@ -158,9 +158,9 @@
         :min="0"
         :max="maxHeight"
         :step="0.5"
-        :modelValue="element.marginTop"
+        :model-value="element.marginTop"
         :precision="1"
-        @update:modelValue="
+        @update:model-value="
           $emit('update', { marginTop: $event } as Partial<ModeKeyElement>)
         "
       />
@@ -174,9 +174,9 @@
         :min="0"
         :max="maxHeight"
         :step="0.5"
-        :modelValue="element.marginBottom"
+        :model-value="element.marginBottom"
         :precision="1"
-        @update:modelValue="
+        @update:model-value="
           $emit('update', { marginBottom: $event } as Partial<ModeKeyElement>)
         "
       />
@@ -318,12 +318,6 @@ export default defineComponent({
     InputStrokeWidth,
     ButtonWithMenu,
   },
-  emits: [
-    'open-mode-key-dialog',
-    'update',
-    'update:sectionName',
-    'update:tempo',
-  ],
   props: {
     element: {
       type: Object as PropType<ModeKeyElement>,
@@ -334,6 +328,12 @@ export default defineComponent({
       required: true,
     },
   },
+  emits: [
+    'open-mode-key-dialog',
+    'update',
+    'update:sectionName',
+    'update:tempo',
+  ],
 
   data() {
     return {

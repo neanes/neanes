@@ -1,6 +1,6 @@
 <template>
   <router-view />
-  <div class="update-notification" v-if="updateExists">
+  <div v-if="updateExists" class="update-notification">
     An update is available.
     <button class="ok" @click="refreshApp">Update</button>
     <button class="cancel" @click="updateExists = false">Not now</button>
@@ -12,8 +12,8 @@ import { defineComponent } from 'vue';
 
 export default defineComponent({
   components: {},
-  emits: [],
   props: {},
+  emits: [],
 
   data() {
     return {

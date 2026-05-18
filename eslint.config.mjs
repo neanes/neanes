@@ -5,7 +5,12 @@ import pluginVue from 'eslint-plugin-vue';
 
 export default [
   {
-    ignores: ['dist/**/*', 'dist-electron/**/*', '**/.vitepress/cache/**/*'],
+    ignores: [
+      'dist/**/*',
+      'dist-electron/**/*',
+      'release/**/*',
+      '**/.vitepress/cache/**/*',
+    ],
   },
   ...pluginVue.configs['flat/recommended'],
   ...vueTsEslintConfig({

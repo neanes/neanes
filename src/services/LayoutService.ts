@@ -2811,17 +2811,38 @@ export class LayoutService {
       pageSetup,
     );
 
+    noteElement.lyricsHorizontalOffset = 0;
+
     if (noteElement.lyrics.length > 0) {
       noteElement.lyricsWidth = this.getTextWidthFromCache(
         textWidthCache,
         noteElement,
         pageSetup,
       );
+
+      if (pageSetup.ignorePunctuationWhenPositioningLyrics) {
+        // Adjust for leading punctuation
+        noteElement.lyricsHorizontalOffset -= this.getTextWidthFromCache(
+          textWidthCache,
+          noteElement,
+          pageSetup,
+          null,
+          true,
+        );
+
+        // Adjust for trainling punctuation
+        noteElement.lyricsHorizontalOffset += this.getTextWidthFromCache(
+          textWidthCache,
+          noteElement,
+          pageSetup,
+          null,
+          false,
+          true,
+        );
+      }
     } else {
       noteElement.lyricsWidth = 0;
     }
-
-    noteElement.lyricsHorizontalOffset = 0;
 
     // Handle special case for vareia:
     // Shift the lyrics to the right so that they
@@ -4201,12 +4222,28 @@ export class LayoutService {
     element: NoteElement,
     pageSetup: PageSetup,
     textOverride: string | null = null,
+    trimLeadingPunctuation: boolean = false,
+    trimTrailingPunctuation: boolean = false,
   ) {
     const font = element.lyricsUseDefaultStyle
       ? pageSetup.lyricsFont
       : element.lyricsFont;
 
-    const text = textOverride ?? element.lyrics;
+    let text = textOverride ?? element.lyrics;
+
+    if (trimLeadingPunctuation) {
+      const match = text.match(/^\p{P}+/u);
+      text = match ? match[0] : '';
+    }
+
+    if (trimTrailingPunctuation) {
+      const match = text.match(/\p{P}+$/u);
+      text = match ? match[0] : '';
+    }
+
+    if (text == '') {
+      return 0;
+    }
 
     const key = `${text} | ${font}`;
 

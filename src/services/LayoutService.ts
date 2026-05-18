@@ -1196,9 +1196,7 @@ export class LayoutService {
           pages.push(page);
           currentPageHeightPx = lastLineHeightPx;
 
-          if (lastElementWasPageBreak) {
-            lastElementWasPageBreak = false;
-          }
+          lastElementWasPageBreak = false;
 
           // Recalculate the height of the headers/footers of the new page
           ({ extraHeaderHeightPx, extraFooterHeightPx } =

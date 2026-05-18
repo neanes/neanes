@@ -1196,6 +1196,11 @@ export class LayoutService {
           pages.push(page);
           currentPageHeightPx = lastLineHeightPx;
 
+          // Consume the page-break trigger. Subsequent positioned items
+          // belonging to the same break (glues, penalties without an
+          // associated element) hit the `continue` below and skip the
+          // `lastElementWasPageBreak` update, so without this reset the
+          // flag re-fires this branch and leaves an empty page behind.
           lastElementWasPageBreak = false;
 
           // Recalculate the height of the headers/footers of the new page
@@ -1547,7 +1552,15 @@ export class LayoutService {
         previousLyricsEndPx -
         workspace.neumesEndPx +
         pageSetup.neumeDefaultSpacing;
-      this.addAnonymousBox(adjustment, workspace);
+
+      // A zero-width spacer would only add a box to pendingParagraph without
+      // advancing neumesEndPx. The immediately-following addBox call already
+      // supplies the box that anchors any later glue as a legal breakpoint,
+      // so the spacer is redundant when adjustment is 0. This mirrors the
+      // martyria bar-transfer call site, which is also guarded by > 0.
+      if (adjustment > 0) {
+        this.addAnonymousBox(adjustment, workspace);
+      }
     }
 
     workspace.lyricsEndPx =

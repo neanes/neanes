@@ -961,13 +961,13 @@ export class LayoutService {
         }
         case ElementType.Tempo: {
           const tempoElement = elements[i] as TempoElement;
-          const temoMapping = NeumeMappingService.getMapping(
+          const tempoMapping = NeumeMappingService.getMapping(
             tempoElement.neume,
           );
 
           const elementWidthPx =
             TextMeasurementService.getTextWidth(
-              temoMapping.text,
+              tempoMapping.text,
               `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
             ) + tempoElement.spaceAfter;
           tempoElement.neumeWidth = elementWidthPx;

@@ -14,12 +14,12 @@
     "spaceAfter": "Spațiu După",
     "tempoSign": "Semn de Tempo",
     "useDefaultStyle": "Folosește Stilul Implicit",
-    "enharmonicDisabled": "Ftora enarmonică poate fi plasată doar pe Ga, Zo sau Vou",
+    "enharmonicDisabled": "Ftora enarmonică poate fi plasată doar pe Ga, Zo sau Vu",
     "generalFlatDisabled": "Bemolul general poate fi plasat doar pe Ke",
     "generalSharpDisabled": "Diezul general poate fi plasat doar pe Ga",
-    "zygosDisabled": "Zygos poate fi plasat doar pe Di",
-    "klitonDisabled": "Kliton poate fi plasat doar pe Di",
-    "spathiDisabled": "Spathi poate fi plasat doar pe Ke sau Ga",
+    "zygosDisabled": "Muștar poate fi plasat doar pe Di",
+    "klitonDisabled": "Nisabur poate fi plasat doar pe Di",
+    "spathiDisabled": "Hisar poate fi plasat doar pe Ke sau Ga",
     "width": "Lățime",
     "height": "Înălțime",
     "marginTop": "Spațiu Sus",
@@ -71,13 +71,13 @@
     "tempoRight": "Adaugă Tempo Dreapta"
   },
   "modeKey": {
-    "size": "Dimensiune",
+    "size": "Mărime",
     "heightAdjustment": "Ajustare Înălțime",
     "rightAlignTempo": "Aliniază tempoul la dreapta",
     "showAmbitus": "Afișează Ambitus",
     "permanentEnharmonicZo": "Zo Enarmonic Permanent",
     "changeKey": "Schimbă Mărturia Inițială",
-    "useOptionalDiatonicFthoras": "Afișează Ftorele Diatonice"
+    "useOptionalDiatonicFthoras": "Afișează Ftoralele Diatonice"
   },
   "neume": {
     "neumeSelect": "Selectare Neumă",

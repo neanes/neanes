@@ -1418,7 +1418,9 @@ export default defineComponent({
           ? withZoom(this.score.pageSetup.lyricsDefaultStrokeWidth)
           : withZoom(element.lyricsStrokeWidth),
         lineHeight: withZoom(element.lyricsFontHeight),
-        left: element.alignLeft ? 0 : undefined,
+        left: element.alignLeft
+          ? withZoom(Math.min(0, element.lyricsHorizontalOffset))
+          : undefined,
         textAlign: element.alignLeft ? 'left' : undefined,
       } as StyleValue;
     },

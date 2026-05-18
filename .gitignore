@@ -32,3 +32,4 @@ yarn-error.log*
 #Electron-builder output
 /dist
 /dist-electron
+/release

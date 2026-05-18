@@ -23,7 +23,7 @@ To create a release build, type:
 npm run build
 ```
 
-The build artifacts are found in `dist/`. For Windows, the installer will be called `Neanes Setup [version].exe`. The raw files can be found in `dist/win_unpacked`.
+The build artifacts are found in `release/`. For Windows, the installer will be called `Neanes Setup [version].exe`. The raw files can be found in `release/win-unpacked`.
 
 ### Development
 

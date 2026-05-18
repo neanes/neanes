@@ -199,6 +199,7 @@ export class PageSetup {
   public noFthoraRestrictions: boolean = false;
   public disableGreekMelismata: boolean = false;
   public alignIsonIndicators: boolean = true;
+  public ignorePunctuationWhenPositioningLyrics: boolean = true;
 
   public useOptionalDiatonicFthoras: boolean = false;
 

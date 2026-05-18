@@ -1377,7 +1377,6 @@ export default defineComponent({
 
     getLyricStyle(element: NoteElement) {
       return {
-        direction: this.rtl ? 'rtl' : undefined,
         top: withZoom(element.lyricsVerticalOffset),
         paddingLeft:
           (!element.isFullMelisma ||
@@ -6531,6 +6530,7 @@ export default defineComponent({
                       />
                       <div
                         class="lyrics-container"
+                        dir="auto"
                         :style="getLyricStyle(element as NoteElement)"
                       >
                         <ContentEditable

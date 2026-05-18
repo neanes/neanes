@@ -4,6 +4,7 @@
     class="text-box-container"
     :style="containerStyle"
     :class="{ selected: selected }"
+    dir="auto"
     @click="$emit('select-single')"
   >
     <span class="handle"></span>
@@ -190,7 +191,6 @@ export default defineComponent({
         minHeight: withZoom(this.element.minHeight),
         webkitTextStrokeWidth: withZoom(this.element.computedStrokeWidth),
         lineHeight: `${this.element.computedLineHeight ?? 'normal'}`,
-        direction: this.pageSetup.melkiteRtl ? 'rtl' : undefined,
       } as StyleValue;
 
       return style;

@@ -24,6 +24,7 @@
     <textarea
       :value="lyrics"
       rows="5"
+      dir="auto"
       @input="$emit('update:lyrics', ($event.target as HTMLInputElement).value)"
     ></textarea>
   </div>

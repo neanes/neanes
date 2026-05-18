@@ -163,7 +163,6 @@ export class ByzHtmlExporter {
   exportPageSetup(pageSetup: PageSetup) {
     const orientation = pageSetup.landscape ? 'landscape' : 'portrait';
 
-    const rtlParagraph = pageSetup.melkiteRtl ? 'direction: rtl' : '';
     const lyricOffsetH = pageSetup.melkiteRtl ? '0' : '3.6pt';
 
     const style = `:root {
@@ -324,7 +323,6 @@ export class ByzHtmlExporter {
         flex-wrap: wrap;
         justify-content: space-between;
         margin-bottom: ${Unit.toPt(pageSetup.neumeDefaultFontSize)}pt;
-        ${rtlParagraph}
       }
 
       .${this.config.classNeumeParagraph}:last-child {
@@ -775,7 +773,7 @@ export class ByzHtmlExporter {
       className += ` ${this.config.classTextBoxInline}`;
     }
 
-    return `<div class="${className}"${styleAttribute}>${
+    return `<div dir="auto" class="${className}"${styleAttribute}>${
       element.content
     }</div\n${this.getIndentationString(indentation)}>`;
   }

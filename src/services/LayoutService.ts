@@ -1196,6 +1196,10 @@ export class LayoutService {
           pages.push(page);
           currentPageHeightPx = lastLineHeightPx;
 
+          if (lastElementWasPageBreak) {
+            lastElementWasPageBreak = false;
+          }
+
           // Recalculate the height of the headers/footers of the new page
           ({ extraHeaderHeightPx, extraFooterHeightPx } =
             this.getExtraHeaderFooterHeight(score, pageSetup, pages.length));
@@ -3052,9 +3056,16 @@ export class LayoutService {
 
         let firstElementOnNextLine: ScoreElement | null = null;
 
-        if (lineIndex + 1 < page.lines.length) {
+        if (
+          lineIndex + 1 < page.lines.length &&
+          page.lines[lineIndex + 1].elements.length > 0
+        ) {
           firstElementOnNextLine = page.lines[lineIndex + 1].elements[0];
-        } else if (pageIndex + 1 < pages.length) {
+        } else if (
+          pageIndex + 1 < pages.length &&
+          pages[pageIndex + 1].lines.length > 0 &&
+          pages[pageIndex + 1].lines[0].elements.length > 0
+        ) {
           firstElementOnNextLine = pages[pageIndex + 1].lines[0].elements[0];
         }
 

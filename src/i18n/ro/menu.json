@@ -3,21 +3,21 @@
     "root": "Fișier",
     "new": "Nou",
     "open": "Deschide…",
-    "openRecent": "Deschide Recent",
+    "openRecent": "Deschide recent",
     "import": "Importă",
     "importFromOcr": "Rezultat OCR…",
     "save": "Salvează",
-    "saveAs": "Salvează Ca…",
-    "pageSetup": "Configurare Pagină",
+    "saveAs": "Salvează ca…",
+    "pageSetup": "Configurare pagină",
     "exportAs": "Exportă",
     "exportAsPdf": "Exportă ca PDF…",
     "exportAsHtml": "Exportă ca HTML…",
     "exportAsLatex": "Exportă ca LaTeX…",
     "exportAsMusicXml": "Exportă ca MusicXML…",
-    "exportAsImage": "Exportă ca Imagine…",
+    "exportAsImage": "Exportă ca imagine…",
     "print": "Tipărește…",
     "close": "Închide",
-    "closeOthers": "Închide Celelalte"
+    "closeOthers": "Închide celelalte"
   },
   "edit": {
     "root": "Editare",
@@ -26,43 +26,49 @@
     "cut": "Taie",
     "copy": "Copiază",
     "copyAsHtml": "Copiază ca HTML",
-    "paste": "Lipire",
-    "pasteWithLyrics": "Lipire cu Versuri",
-    "copyFormat": "Copiază Formatul",
-    "pasteFormat": "Lipire Formatul",
+    "paste": "Lipește",
+    "pasteWithLyrics": "Lipește cu versuri",
+    "copyFormat": "Copiază formatul",
+    "pasteFormat": "Lipește formatul",
     "find": "Căutare",
+    "lyrics": "Versuri",
     "preferences": "Preferințe"
   },
   "insert": {
     "root": "Inserare",
-    "alternateLine": "Linie Alternativă",
+    "alternateLine": "Linie alternativă",
     "annotation": "Anotare",
-    "dropCapBefore": "Majusculă Înainte",
-    "dropCapAfter": "Majusculă După",
-    "textBox": "Caseta de Text",
-    "inlineTextBox": "Caseta de Text în Linie",
-    "modeKey": "Initial Mărturia",
+    "dropCapBefore": "Majusculă înainte",
+    "dropCapAfter": "Majusculă după",
+    "textBox": "Casetă de text",
+    "richTextBox": "Casetă de text formatat",
+    "inlineTextBox": "Casetă de text în linie",
+    "modeKey": "Mărturie inițială",
     "image": "Imagine",
-    "headersAndFooters": "Antete și Subsoluri",
+    "headersAndFooters": "Antete și subsoluri",
     "header": "Antet",
     "footer": "Subsol"
   },
+  "tools": {
+    "root": "Unelte",
+    "copyElementLink": "Copiază linkul elementului"
+  },
   "view": {
-    "root": "Vizualizare (Debugare)",
-    "generateTestFiles": "Generare Fișiere de Test (Debugare)"
+    "root": "Vizualizare (debugare)",
+    "generateTestFiles": "Generează fișiere de test (debugare)"
   },
   "help": {
     "root": "Ajutor",
     "guide": "Ghid",
-    "requestAFeature": "Solicită o Caracteristică",
-    "reportAnIssue": "Raportează o Problemă",
+    "requestAFeature": "Solicită o funcționalitate",
+    "reportAnIssue": "Raportează o problemă",
     "about": "Despre"
   },
   "tab": {
     "close": "Închide",
-    "closeOthers": "Închide Celelalte",
-    "closeToTheLeft": "Închide la Stânga",
-    "closeToTheRight": "Închide la Dreapta"
+    "closeOthers": "Închide celelalte",
+    "closeToTheLeft": "Închide la stânga",
+    "closeToTheRight": "Închide la dreapta"
   },
   "warning": "Atenție: Această aplicație funcționează cel mai bine în browsere bazate pe Chromium. S-ar putea să întâmpinați funcționalitate redusă sau erori în browsere care nu sunt bazate pe Chromium."
 }

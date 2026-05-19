@@ -1662,7 +1662,7 @@ export class LayoutService {
     // despite the unfortunate property name "isMelisma" being true.
     return (
       noteElement.isMelismaStart &&
-      noteElement.lyricsWidth - noteElement.lyricsLeadingPunctuationWidth >
+      noteElement.lyricsWidth >
         noteElement.neumeWidth - noteElement.lyricsHorizontalOffset &&
       (!noteElement.isHyphen ||
         (nextNoteElement != null &&
@@ -2822,16 +2822,13 @@ export class LayoutService {
 
       if (pageSetup.ignorePunctuationWhenPositioningLyrics) {
         // Adjust for leading punctuation
-        noteElement.lyricsLeadingPunctuationWidth = this.getTextWidthFromCache(
+        noteElement.lyricsHorizontalOffset -= this.getTextWidthFromCache(
           textWidthCache,
           noteElement,
           pageSetup,
           null,
           true,
         );
-
-        noteElement.lyricsHorizontalOffset -=
-          noteElement.lyricsLeadingPunctuationWidth;
 
         // Adjust for trainling punctuation
         noteElement.lyricsHorizontalOffset += this.getTextWidthFromCache(

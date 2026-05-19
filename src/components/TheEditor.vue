@@ -1382,7 +1382,12 @@ export default defineComponent({
           (!element.isFullMelisma ||
             (element.melismaText && !element.melismaText.endsWith(TATWEEL))) &&
           element.lyricsHorizontalOffset > 0
-            ? withZoom(element.lyricsHorizontalOffset)
+            ? withZoom(
+                element.alignLeft
+                  ? element.lyricsHorizontalOffset -
+                      element.lyricsTrailingPunctuationWidth
+                  : element.lyricsHorizontalOffset,
+              )
             : undefined,
         paddingRight:
           (!element.isFullMelisma ||
@@ -1419,7 +1424,13 @@ export default defineComponent({
           : withZoom(element.lyricsStrokeWidth),
         lineHeight: withZoom(element.lyricsFontHeight),
         left: element.alignLeft
-          ? withZoom(Math.min(0, element.lyricsHorizontalOffset))
+          ? withZoom(
+              Math.min(
+                0,
+                element.lyricsHorizontalOffset -
+                  element.lyricsTrailingPunctuationWidth,
+              ),
+            )
           : undefined,
         textAlign: element.alignLeft ? 'left' : undefined,
       } as StyleValue;

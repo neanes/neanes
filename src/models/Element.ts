@@ -438,6 +438,7 @@ export class NoteElement extends ScoreElement {
   public neumeWidth: number = 0;
   public lyricsWidth: number = 0;
   public lyricsLeadingPunctuationWidth: number = 0;
+  public lyricsTrailingPunctuationWidth: number = 0;
   public alignLeft: boolean = false;
   public noteIndicatorNeume: NoteIndicator | null = null;
   public scaleNotes: ScaleNote[] = [];

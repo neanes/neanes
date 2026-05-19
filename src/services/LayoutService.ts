@@ -1660,10 +1660,18 @@ export class LayoutService {
     // NOTE: a syllable ending with a hyphen is only considered a melismatic note
     // if the next note is purely melismatic (i.e. the next note contains only a hyphen),
     // despite the unfortunate property name "isMelisma" being true.
+
+    const lyricsOffsetWithoutPunctuation =
+      noteElement.lyricsHorizontalOffset -
+      noteElement.lyricsTrailingPunctuationWidth +
+      noteElement.lyricsLeadingPunctuationWidth;
+
     return (
       noteElement.isMelismaStart &&
-      noteElement.lyricsWidth - noteElement.lyricsLeadingPunctuationWidth >
-        noteElement.neumeWidth - noteElement.lyricsHorizontalOffset &&
+      noteElement.lyricsWidth -
+        noteElement.lyricsLeadingPunctuationWidth -
+        noteElement.lyricsTrailingPunctuationWidth >
+        noteElement.neumeWidth - lyricsOffsetWithoutPunctuation &&
       (!noteElement.isHyphen ||
         (nextNoteElement != null &&
           nextNoteElement.isMelisma &&
@@ -1841,7 +1849,10 @@ export class LayoutService {
       // the space. The melisma-to-non-melisma collision check handles
       // the rare case where the lyric overflows past the melisma.
       return {
-        leftProjection: Math.max(0, -h),
+        leftProjection: Math.max(
+          0,
+          -h + noteElement.lyricsTrailingPunctuationWidth,
+        ),
         rightProjection: 0,
       };
     }
@@ -2812,6 +2823,8 @@ export class LayoutService {
     );
 
     noteElement.lyricsHorizontalOffset = 0;
+    noteElement.lyricsTrailingPunctuationWidth = 0;
+    noteElement.lyricsLeadingPunctuationWidth = 0;
 
     if (noteElement.lyrics.length > 0) {
       noteElement.lyricsWidth = this.getTextWidthFromCache(
@@ -2834,7 +2847,7 @@ export class LayoutService {
           noteElement.lyricsLeadingPunctuationWidth;
 
         // Adjust for trainling punctuation
-        noteElement.lyricsHorizontalOffset += this.getTextWidthFromCache(
+        noteElement.lyricsTrailingPunctuationWidth = this.getTextWidthFromCache(
           textWidthCache,
           noteElement,
           pageSetup,
@@ -2842,6 +2855,9 @@ export class LayoutService {
           false,
           true,
         );
+
+        noteElement.lyricsHorizontalOffset +=
+          noteElement.lyricsTrailingPunctuationWidth;
       }
     } else {
       noteElement.lyricsWidth = 0;
@@ -3222,12 +3238,14 @@ export class LayoutService {
               if (!pageSetup.melkiteRtl) {
                 start =
                   element.x +
-                  element.lyricsHorizontalOffset +
+                  element.lyricsHorizontalOffset -
+                  element.lyricsTrailingPunctuationWidth +
                   element.lyricsWidth;
               } else {
                 start =
                   element.x -
                   element.lyricsHorizontalOffset +
+                  element.lyricsTrailingPunctuationWidth +
                   element.lyricsWidth;
               }
             } else if (element.lyricsWidth > element.neumeWidth) {

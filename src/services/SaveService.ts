@@ -855,7 +855,7 @@ export class SaveService {
 
     pageSetup.pageHeightCustom =
       p.pageHeightCustom ?? pageSetup.pageHeightCustom;
-    pageSetup.pageWidthCustom = p.pageWidth ?? pageSetup.pageWidthCustom;
+    pageSetup.pageWidthCustom = p.pageWidthCustom ?? pageSetup.pageWidthCustom;
 
     pageSetup.topMargin = p.topMargin;
     pageSetup.bottomMargin = p.bottomMargin;

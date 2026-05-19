@@ -952,7 +952,7 @@ export class LayoutService {
             },
           );
 
-          if (martyriaElement.alignRight && !lineBreak) {
+          if (martyriaElement.alignRight) {
             lineBreak = true;
             lineBreakType = LineBreakType.Justify;
           }

@@ -1,19 +1,19 @@
 {
   "common": {
-    "alignLeft": "Aliniere Stânga",
-    "alignCenter": "Aliniere Centru",
-    "alignRight": "Aliniere Dreapta",
+    "alignLeft": "Aliniere stânga",
+    "alignCenter": "Aliniere centru",
+    "alignRight": "Aliniere dreapta",
     "bpm": "BPM",
-    "fthoraNote": "Nota Ftoralei",
-    "ignoreAttractions": "Ignoră Atracțiile",
-    "insertGorthmikon": "Inserează Gorthmikon",
-    "insertPelastikon": "Inserează Pelastikon",
-    "measureBar": "Bară de Măsură",
+    "fthoraNote": "Nota ftoralei",
+    "ignoreAttractions": "Ignoră atracțiile",
+    "insertGorthmikon": "Inserează gorthmikon",
+    "insertPelastikon": "Inserează pelastikon",
+    "measureBar": "Bară de măsură",
     "outline": "Contur",
-    "sectionName": "Numele Secțiunii",
-    "spaceAfter": "Spațiu După",
-    "tempoSign": "Semn de Tempo",
-    "useDefaultStyle": "Folosește Stilul Implicit",
+    "sectionName": "Numele secțiunii",
+    "spaceAfter": "Spațiu după",
+    "tempoSign": "Semn de tempo",
+    "useDefaultStyle": "Folosește stilul implicit",
     "enharmonicDisabled": "Ftorala agem poate fi plasată doar pe Ga, Zo sau Vu",
     "generalFlatDisabled": "Bemolul general poate fi plasat doar pe Ke",
     "generalSharpDisabled": "Diezul general poate fi plasat doar pe Ga",
@@ -22,11 +22,11 @@
     "spathiDisabled": "Hisar poate fi plasat doar pe Ke sau Ga",
     "width": "Lățime",
     "height": "Înălțime",
-    "marginTop": "Spațiu Sus",
-    "marginBottom": "Spațiu Jos",
-    "verticalOffset": "Offset Vertical",
+    "marginTop": "Spațiu sus",
+    "marginBottom": "Spațiu jos",
+    "verticalOffset": "Offset vertical",
     "none": "Niciunul",
-    "inline": "În Linie",
+    "inline": "În linie",
     "neume": "Neumă"
   },
   "main": {
@@ -35,9 +35,9 @@
     "single": "Simplu",
     "martyria": "Mărturie",
     "insertDropCapBefore": "Inserează majusculă decorativă înainte",
-    "insertModeKey": "Inserează Mărturie Inițială",
-    "insertTextBox": "Inserează Casetă de Text",
-    "insertTextBoxRich": "Inserează Casetă de Text Formatat",
+    "insertModeKey": "Inserează mărturie inițială",
+    "insertTextBox": "Inserează casetă de text",
+    "insertTextBoxRich": "Inserează casetă de text formatat",
     "insertImage": "Inserează imagine",
     "insertOrRemoveLineBreakAfterSelectedElement": "Inserează sau elimină întrerupere de linie după elementul selectat",
     "insertOrRemoveJustifiedLineBreakAfterSelectedElement": "Inserează sau elimină întrerupere de linie justificată după elementul selectat",
@@ -53,56 +53,56 @@
     "lineSpan": "Linii de coborâre"
   },
   "imageBox": {
-    "maintainAspectRatio": "Menține Raportul de Aspect",
+    "maintainAspectRatio": "Menține raportul de aspect",
     "width": "Lățime",
     "height": "Înălțime"
   },
   "lyricManager": {
-    "locked": "Blochează Versurile",
-    "assignAcceptsLyrics": "Salvează Melismele Curente"
+    "locked": "Blochează versurile",
+    "assignAcceptsLyrics": "Salvează melismele curente"
   },
   "martyria": {
     "auto": "Auto",
     "note": "Notă",
     "scale": "Scară muzicală",
-    "rootSignOverride": "Suprascriere Semn de Bază",
-    "tempoLeft": "Adaugă Tempo Stânga",
-    "tempo": "Adaugă Tempo Deasupra",
-    "tempoRight": "Adaugă Tempo Dreapta"
+    "rootSignOverride": "Suprascriere semn de bază",
+    "tempoLeft": "Adaugă tempo stânga",
+    "tempo": "Adaugă tempo deasupra",
+    "tempoRight": "Adaugă tempo dreapta"
   },
   "modeKey": {
     "size": "Mărime",
-    "heightAdjustment": "Ajustare Înălțime",
+    "heightAdjustment": "Ajustare înălțime",
     "rightAlignTempo": "Aliniază tempoul la dreapta",
-    "showAmbitus": "Afișează Ambitus",
-    "permanentEnharmonicZo": "Zo Enarmonic Permanent",
-    "changeKey": "Schimbă Mărturia Inițială",
-    "useOptionalDiatonicFthoras": "Afișează Ftoralele Diatonice"
+    "showAmbitus": "Afișează ambitus",
+    "permanentEnharmonicZo": "Zo enarmonic permanent",
+    "changeKey": "Schimbă mărturia inițială",
+    "useOptionalDiatonicFthoras": "Afișează ftoralele diatonice"
   },
   "neume": {
-    "neumeSelect": "Selectare Neumă",
+    "neumeSelect": "Selectare neumă",
     "positioning": "Poziționare",
     "yfen": "Ifen",
     "flat": "Ifes",
     "sharp": "Diez",
-    "measureNumber": "Număr Măsură",
-    "noteIndicator": "Indicator Notă",
-    "isonIndicator": "Indicator Ison",
-    "acceptsLyrics": "Acceptă Versuri",
+    "measureNumber": "Număr măsură",
+    "noteIndicator": "Indicator notă",
+    "isonIndicator": "Indicator ison",
+    "acceptsLyrics": "Acceptă versuri",
     "acceptsLyricsDefault": "Implicit",
     "acceptsLyricsYes": "Da",
     "acceptsLyricsNo": "Nu",
-    "acceptsLyricsMelismaOnly": "Doar Melismă"
+    "acceptsLyricsMelismaOnly": "Doar melismă"
   },
   "textbox": {
     "multipanel": "Multipanou",
     "rtl": "RTL",
     "scrollable": "Derulabil",
-    "modeChange": "Schimbă Glasul",
-    "virtualNote": "Notă de Paralaje",
-    "centerOnPage": "Centrează pe Pagină",
-    "offsetYTop": "Offset Y Sus",
-    "offsetYBottom": "Offset Y Jos",
-    "fillWidth": "Umple Lățimea"
+    "modeChange": "Schimbă glasul",
+    "virtualNote": "Notă de paralaje",
+    "centerOnPage": "Centrează pe pagină",
+    "offsetYTop": "Offset Y sus",
+    "offsetYBottom": "Offset Y jos",
+    "fillWidth": "Umple lățimea"
   }
 }

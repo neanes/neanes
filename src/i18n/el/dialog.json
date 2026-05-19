@@ -1,1 +1,6 @@
-{}
+{
+  "preferences": {
+    "language": "Γλώσσα",
+    "languageSystemDefault": "Προεπιλογή συστήματος"
+  }
+}

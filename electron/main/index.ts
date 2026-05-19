@@ -23,7 +23,12 @@ import { debounce } from 'throttle-debounce';
 
 import { PageSize } from '@/models/PageSetup';
 
-import { defaultNS, resources } from '../../src/i18n';
+import {
+  defaultNS,
+  resolveLanguagePreference,
+  resources,
+  supportedLngs,
+} from '../../src/i18n';
 import {
   CloseWorkspacesArgs,
   CloseWorkspacesDisposition,
@@ -119,6 +124,7 @@ interface Store {
   recentFiles: string[];
   windowState: WindowState;
   lastDirectory?: string;
+  language?: string;
 }
 
 const defaultWindowState: WindowState = {
@@ -1780,6 +1786,15 @@ app.setAboutPanelOptions({
   applicationVersion: app.getVersion(),
 });
 
+ipcMain.on(IpcRendererChannels.SetLanguage, async (event, language: string) => {
+  store.language = language || undefined;
+  await saveStore();
+  await i18next.changeLanguage(
+    resolveLanguagePreference(store.language, app.getLocale()),
+  );
+  createMenu();
+});
+
 ipcMain.on(IpcRendererChannels.SetCanUndo, async (event, data) => {
   Menu.getApplicationMenu()!.getMenuItemById('undo')!.enabled = data;
 });
@@ -2083,6 +2098,10 @@ app.on('activate', () => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', async () => {
+  // Load the persisted store first so the user's chosen language (if any)
+  // is honored when we initialize i18next and build the native menu.
+  await loadStore();
+
   i18next
     .use(
       new Pseudo({
@@ -2096,8 +2115,10 @@ app.on('ready', async () => {
       debug:
         'VITE_PSEUDOLOCALIZATION' in import.meta.env &&
         import.meta.env['VITE_PSEUDOLOCALIZATION'] === 'true',
-      lng: app.getLocale(),
+      lng: resolveLanguagePreference(store.language, app.getLocale()),
       fallbackLng: 'en',
+      supportedLngs,
+      nonExplicitSupportedLngs: true,
       ns: Object.keys(resources['en']),
       postProcess: ['pseudo'],
       defaultNS,

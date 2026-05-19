@@ -199,6 +199,8 @@
   },
   "preferences": {
     "root": "Preferințe",
+    "language": "Limbă",
+    "languageSystemDefault": "Implicit (sistem)",
     "menuInteraction": "Interacțiune meniu",
     "menuInteractionHold": "Apasă și menține pentru a selecta",
     "menuInteractionClick": "Click pentru a deschide meniul",

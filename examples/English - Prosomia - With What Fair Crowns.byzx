@@ -67,7 +67,8 @@
     "textBoxDefaultColor": "#000000",
     "textBoxDefaultStrokeWidth": 0,
     "hyphenSpacing": 72,
-    "chrysanthineAccidentals": true
+    "chrysanthineAccidentals": true,
+    "ignorePunctuationWhenPositioningLyrics": true
   },
   "headers": {
     "default": {

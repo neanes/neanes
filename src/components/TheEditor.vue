@@ -4523,7 +4523,7 @@ export default defineComponent({
     },
 
     updateTextBoxHeight(element: TextBoxElement, height: number) {
-      // The height could be updated by many rich text box elements at once
+      // The height could be updated by many text box elements at once
       // (e.g. if PageSetup changes) so we debounce the save.
       element.height = height;
       this.textBoxCalculationCount++;
@@ -5252,7 +5252,7 @@ export default defineComponent({
       }
 
       nextTick(async () => {
-        const expectedCount = this.resizableRichTextBoxElements.length;
+        const expectedCount = this.resizableTextBoxElements.length;
         this.textBoxCalculationCount = 0;
         this.textBoxCalculation = true;
 
@@ -5260,7 +5260,7 @@ export default defineComponent({
         let tries = 1;
         let lastCount = 0;
 
-        // Wait until all rich text boxes have updated
+        // Wait until all text boxes have updated
         const poll = (resolve: (value: unknown) => void) => {
           if (
             this.textBoxCalculationCount === expectedCount ||

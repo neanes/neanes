@@ -797,23 +797,6 @@
                 $t('dialog:pageSetup.disableGreekMelismataDescription')
               }}</label>
             </div>
-            <div class="form-group">
-              <label class="name">{{
-                $t('dialog:pageSetup.lyricsMelismaCutoffWidth')
-              }}</label>
-              <div class="description">
-                {{ $t('dialog:pageSetup.lyricsMelismaCutoffWidthDescription') }}
-              </div>
-              <InputUnit
-                v-model="form.lyricsMelismaCutoffWidth"
-                class="unit-input"
-                unit="pt"
-                :min="0"
-                :step="1"
-                :precision="0"
-              />
-            </div>
-
             <div ref="dropCapsRef" class="subheader">
               {{ $t('dialog:pageSetup.dropCaps') }}
             </div>
@@ -996,6 +979,42 @@
                   class="drop-caps-input"
                 />
               </div>
+            </div>
+            <div class="form-group">
+              <label class="name">{{
+                $t('dialog:pageSetup.lyricsMelismaCutoffWidth')
+              }}</label>
+              <div class="description">
+                {{ $t('dialog:pageSetup.lyricsMelismaCutoffWidthDescription') }}
+              </div>
+              <InputUnit
+                v-model="form.lyricsMelismaCutoffWidth"
+                class="unit-input"
+                unit="pt"
+                :min="0"
+                :step="1"
+                :precision="0"
+              />
+            </div>
+            <div class="form-group">
+              <div class="name">
+                {{
+                  $t('dialog:pageSetup.ignorePunctuationWhenPositioningLyrics')
+                }}
+              </div>
+              <input
+                id="page-setup-dialog-ignore-punctuation-when-positioning-lyrics"
+                v-model="form.ignorePunctuationWhenPositioningLyrics"
+                type="checkbox"
+              />
+              <label
+                for="page-setup-dialog-ignore-punctuation-when-positioning-lyrics"
+                >{{
+                  $t(
+                    'dialog:pageSetup.ignorePunctuationWhenPositioningLyricsDescription',
+                  )
+                }}</label
+              >
             </div>
             <div ref="textBoxesRef" class="subheader">
               {{ $t('dialog:pageSetup.textBoxes') }}

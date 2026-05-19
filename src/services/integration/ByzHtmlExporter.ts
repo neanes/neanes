@@ -197,19 +197,19 @@ export class ByzHtmlExporter {
       }
       
       body {
-        margin: ${Unit.toPt(pageSetup.topMargin)}px ${Unit.toPt(
+        margin: ${Unit.toPt(pageSetup.topMargin)}pt ${Unit.toPt(
           pageSetup.rightMargin,
-        )}px ${Unit.toPt(pageSetup.bottomMargin)}px ${Unit.toPt(
+        )}pt ${Unit.toPt(pageSetup.bottomMargin)}pt ${Unit.toPt(
           pageSetup.leftMargin,
-        )}px;
+        )}pt;
       }
 
       @page {
-        margin: ${Unit.toPt(pageSetup.topMargin)}px ${Unit.toPt(
+        margin: ${Unit.toPt(pageSetup.topMargin)}pt ${Unit.toPt(
           pageSetup.rightMargin,
-        )}px ${Unit.toPt(pageSetup.bottomMargin)}px ${Unit.toPt(
+        )}pt ${Unit.toPt(pageSetup.bottomMargin)}pt ${Unit.toPt(
           pageSetup.leftMargin,
-        )}px;
+        )}pt;
         size: ${pageSetup.pageSize} ${orientation}
       }
 

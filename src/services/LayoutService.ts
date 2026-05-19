@@ -952,7 +952,11 @@ export class LayoutService {
             },
           );
 
-          if (martyriaElement.alignRight && !lineBreak) {
+          // Must run even when lineBreak is already true (from pageBreak or
+          // an explicit lineBreak): endParagraph reads lineBreakType to pick
+          // the finishing-glue stretch, and Left's MAX_COST stretch would
+          // compete with rightMartyriaGlue and strand the martyria mid-line.
+          if (martyriaElement.alignRight) {
             lineBreak = true;
             lineBreakType = LineBreakType.Justify;
           }

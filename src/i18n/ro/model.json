@@ -127,7 +127,7 @@
       "softChromaticGa": "Cromatic Moale Ga",
       "hardChromaticPa": "Cromatic Dur Pa",
       "hardChromaticDi": "Cromatic Dur Di",
-      "enharmonic": "Enarmonic",
+      "enharmonic": "Agem",
       "generalFlat": "Bemol General",
       "generalSharp": "Diez General",
       "zygos": "Muștar",
@@ -195,10 +195,10 @@
     "second": "Glasul al Doilea",
     "third": "Glasul al Treilea",
     "fourth": "Glasul al Patrulea",
-    "plagalFirst": "Plagalul Glasului Întâi",
-    "plagalSecond": "Plagalul Glasului al Doilea",
-    "grave": "Glasul Grav",
-    "plagalFourth": "Plagalul Glasului al Patrulea"
+    "plagalFirst": "Glasul al Cincilea",
+    "plagalSecond": "Glasul al Șaselea",
+    "grave": "Glasul al Șaptelea",
+    "plagalFourth": "Glasul al Optulea"
   },
   "modeKey": {
     "heirmologicAndSticheraric": "Irmologic și Stihiraric",

@@ -6937,7 +6937,7 @@ export default defineComponent({
                   />
                 </template>
                 <template
-                  v-else-if="isTextBoxElement(getHeaderForPageIndex(pageIndex))"
+                  v-else-if="isTextBoxElement(getFooterForPageIndex(pageIndex))"
                 >
                   <TextBox
                     :ref="`footer-${pageIndex}`"

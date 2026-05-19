@@ -75,7 +75,8 @@
     "textBoxDefaultStrokeWidth": 0,
     "hyphenSpacing": 72,
     "martyriaVerticalOffset": 0,
-    "chrysanthineAccidentals": false
+    "chrysanthineAccidentals": false,
+    "ignorePunctuationWhenPositioningLyrics": true
   },
   "headers": {
     "default": {

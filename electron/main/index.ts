@@ -821,8 +821,8 @@ async function exportWorkspaceAsMusicXml(args: ExportWorkspaceAsMusicXmlArgs) {
       // See https://github.com/electron/electron/issues/21935
       let doWrite = true;
 
-      if (!filePath.endsWith(extension)) {
-        filePath += extension;
+      if (!filePath.endsWith(`.${extension}`)) {
+        filePath += `.${extension}`;
 
         doWrite = await showReplaceFileDialog(filePath);
       }
@@ -959,7 +959,7 @@ async function exportWorkspaceAsImage(args: ExportWorkspaceAsImageArgs) {
 
     if (!dialogResult.canceled) {
       let filePath = dialogResult.filePath;
-      if (!filePath.endsWith(args.imageFormat)) {
+      if (!filePath.endsWith(`.${args.imageFormat}`)) {
         filePath += `.${args.imageFormat}`;
       }
 

@@ -113,8 +113,6 @@
     "melkiteRtlDescription": "Displays the score from right to left. Intended for Melkite scores in Arabic. Uses a specialized RTL neume font.",
     "lyricsMelismaCutoffWidth": "Melisma Cutoff",
     "lyricsMelismaCutoffWidthDescription": "Melisma lines shorter than this value will not be displayed. This helps prevent them from being mistaken for punctuation marks, such as periods or commas. To disable melisma lines entirely, set this to a large number.",
-    "ignorePunctuationWhenPositioningLyrics": "Ignore Punctuation When Positioning Lyrics",
-    "ignorePunctuationWhenPositioningLyricsDescription": "When enabled, leading and trailing punctuation marks (such as quotes, commas, and periods) are ignored when positioning lyrics beneath neumes. This improves visual alignment by centering the sung syllable rather than surrounding punctuation.",
     "disableGreekMelismata": "Disable Greek Melismata",
     "disableGreekMelismataDescription": "Prevents automatic use of the Greek melismatic convention, even when Greek text is detected. Useful for languages that use the Greek script but follow different notational conventions.",
     "defaultStyling": "Default Styling",

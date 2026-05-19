@@ -302,8 +302,6 @@ export class SaveService {
     pageSetup.noFthoraRestrictions = p.noFthoraRestrictions || undefined;
     pageSetup.disableGreekMelismata = p.disableGreekMelismata || undefined;
     pageSetup.alignIsonIndicators = p.alignIsonIndicators || undefined;
-    pageSetup.ignorePunctuationWhenPositioningLyrics =
-      p.ignorePunctuationWhenPositioningLyrics || undefined;
     pageSetup.useOptionalDiatonicFthoras =
       p.useOptionalDiatonicFthoras || undefined;
   }
@@ -1062,8 +1060,6 @@ export class SaveService {
     pageSetup.noFthoraRestrictions = p.noFthoraRestrictions === true;
     pageSetup.disableGreekMelismata = p.disableGreekMelismata === true;
     pageSetup.alignIsonIndicators = p.alignIsonIndicators === true;
-    pageSetup.ignorePunctuationWhenPositioningLyrics =
-      p.ignorePunctuationWhenPositioningLyrics === true;
     pageSetup.useOptionalDiatonicFthoras =
       p.useOptionalDiatonicFthoras === true;
 

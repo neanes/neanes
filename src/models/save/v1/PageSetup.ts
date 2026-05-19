@@ -134,8 +134,6 @@ export class PageSetup {
   public noFthoraRestrictions: boolean | undefined = undefined;
   public disableGreekMelismata: boolean | undefined = undefined;
   public alignIsonIndicators: boolean | undefined = undefined;
-  public ignorePunctuationWhenPositioningLyrics: boolean | undefined =
-    undefined;
 
   public useOptionalDiatonicFthoras: boolean | undefined = undefined;
 }

@@ -7003,7 +7003,7 @@ export default defineComponent({
         @update="updateTextBox(selectedTextBoxElement, $event)"
         @update:section-name="
           updateScoreElementSectionName(
-            selectedElement as TextBoxElement,
+            selectedTextBoxElement as TextBoxElement,
             $event,
           )
         "
@@ -7018,7 +7018,7 @@ export default defineComponent({
         @update="updateRichTextBox(selectedRichTextBoxElement, $event)"
         @update:section-name="
           updateScoreElementSectionName(
-            selectedElement as RichTextBoxElement,
+            selectedRichTextBoxElement as RichTextBoxElement,
             $event,
           )
         "

@@ -373,7 +373,7 @@ export default defineComponent({
 
           // Reset the selector so that if the user selects
           // the same file twice, it will load
-          this.fileSelector.value = '';
+          this.imageFileSelector.value = '';
         };
 
         reader.readAsDataURL(file);

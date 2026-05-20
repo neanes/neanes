@@ -42,7 +42,7 @@
       "petastiWithHamili": "Πεταστή με Χαμηλή",
       "petastiWithHamiliAndApostrophos": "Πεταστή με Χαμηλή και Απόστροφο",
       "petastiWithHamiliAndElaphron": "Πεταστή με Χαμηλή και Ελαφρόν",
-      "petastiWithHamiliElaphronAndApostrophos": "Πεταστή με Χαμηλή, Ελαφρόν, και Απόστροφο",
+      "petastiWithHamiliElaphronAndApostrophos": "Πεταστή με Χαμηλή, Ελαφρόν και Απόστροφο",
       "petastiWithDoubleHamili": "Πεταστή με Διπλή Χαμηλή",
       "petastiWithDoubleHamiliAndApostrophos": "Πεταστή με Διπλή Χαμηλή και Απόστροφο",
       "oligonAndKentimata": "Ολίγον και Κεντήματα",
@@ -70,7 +70,7 @@
       "isonAndApostrophos": "Ίσον και Απόστροφος",
       "oligonWithKentimaAndKentimata": "Ολίγον με Κέντημα και Κεντήματα",
       "oligonWithYpsiliAndKentimata": "Ολίγον με Υψηλή και Κεντήματα",
-      "rest": "Σιωπή",
+      "rest": "Παύση",
       "cross": "Σταυρός",
       "breath": "Κόμμα"
     },

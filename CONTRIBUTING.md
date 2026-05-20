@@ -83,6 +83,8 @@ When using [Visual Studio Code](https://github.com/microsoft/vscode), install th
 
 ## Localization
 
+Neanes uses [Crowdin](https://crowdin.com/project/neanes) to manage translations.
+
 To test localization support, add the following to `.env.local` and/or `.env.web.local`:
 
 ```sh

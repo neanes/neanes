@@ -4,8 +4,8 @@
     "alignCenter": "Στοίχιση στο Κέντρο",
     "alignRight": "Στοίχιση Δεξιά",
     "bpm": "BPM",
-    "fthoraNote": "Νότα Φθοράς",
-    "ignoreAttractions": "Αγνόηση Ελκυσμών",
+    "fthoraNote": "Φθόγγος Φθοράς",
+    "ignoreAttractions": "Αγνόηση Έλξεων",
     "insertGorthmikon": "Εισαγωγή Γορθμικόν",
     "insertPelastikon": "Εισαγωγή Πελαστικόν",
     "measureBar": "Γραμμή Μέτρου",
@@ -50,7 +50,7 @@
     "invalidZoom": "Η τιμή πρέπει να είναι μεταξύ 50% και 500%."
   },
   "dropCap": {
-    "lineSpan": "Γραμμές πτώσης"
+    "lineSpan": "Γραμμές Πτώσης"
   },
   "imageBox": {
     "maintainAspectRatio": "Διατήρηση Αναλογίας",
@@ -63,9 +63,9 @@
   },
   "martyria": {
     "auto": "Αυτόματο",
-    "note": "Νότα",
+    "note": "Φθόγγος",
     "scale": "Κλίμακα",
-    "rootSignOverride": "Παράκαμψη Αρκτικής Μαρτυρίας",
+    "rootSignOverride": "Παράκαμψη Μαρτυρικού Σημείου",
     "tempoLeft": "Προσθήκη Αριστερής Αγωγής",
     "tempo": "Προσθήκη Αγωγής Πάνω",
     "tempoRight": "Προσθήκη Δεξιάς Αγωγής"
@@ -99,7 +99,7 @@
     "rtl": "ΔπΑ",
     "scrollable": "Κυλιόμενο",
     "modeChange": "Αλλαγή Ήχου",
-    "virtualNote": "Νότα Παραλλαγής",
+    "virtualNote": "Φθόγγος Παραλλαγής",
     "centerOnPage": "Κεντράρισμα στη Σελίδα",
     "offsetYTop": "Μετατόπιση Y Πάνω",
     "offsetYBottom": "Μετατόπιση Y Κάτω",

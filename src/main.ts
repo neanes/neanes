@@ -3,18 +3,12 @@ import './registerServiceWorker';
 import { CkeditorPlugin } from '@ckeditor/ckeditor5-vue';
 import i18next from 'i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
-import Pseudo from 'i18next-pseudo';
 import I18NextVue from 'i18next-vue';
 import { createApp } from 'vue';
 import VueObserveVisibility from 'vue3-observe-visibility';
 
 import App from './App.vue';
-import {
-  defaultNS,
-  resolveLanguagePreference,
-  resources,
-  supportedLngs,
-} from './i18n';
+import { initializeI18n, resolveLanguagePreference } from './i18n';
 import {
   audioServiceKey,
   ipcServiceKey,
@@ -67,35 +61,13 @@ function readSavedLanguage(): string | undefined {
 
 const savedLanguage = readSavedLanguage();
 
-i18next
-  .use(LanguageDetector)
-  .use(
-    new Pseudo({
-      enabled:
-        'VITE_PSEUDOLOCALIZATION' in import.meta.env &&
-        import.meta.env['VITE_PSEUDOLOCALIZATION'] === 'true',
-      languageToPseudo: 'en-US',
-    }),
-  )
-  .init({
-    debug:
-      'VITE_PSEUDOLOCALIZATION' in import.meta.env &&
-      import.meta.env['VITE_PSEUDOLOCALIZATION'] === 'true',
-    lng: savedLanguage,
-    detection: {
-      order: ['querystring', 'navigator'],
-    },
-    fallbackLng: 'en',
-    supportedLngs,
-    nonExplicitSupportedLngs: true,
-    interpolation: {
-      escapeValue: false,
-    },
-    ns: Object.keys(resources['en']),
-    postProcess: ['pseudo'],
-    defaultNS,
-    resources,
-  });
+initializeI18n({
+  lng: savedLanguage,
+  plugins: [LanguageDetector],
+  detection: {
+    order: ['querystring', 'navigator'],
+  },
+});
 
 const app = createApp(App);
 app.use(VueObserveVisibility);

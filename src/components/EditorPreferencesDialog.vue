@@ -69,6 +69,7 @@ import { defineComponent, PropType } from 'vue';
 
 import ModalDialog from '@/components/ModalDialog.vue';
 import Neume from '@/components/NeumeGlyph.vue';
+import { supportedLocales } from '@/i18n';
 import { ButtonMenuMode, EditorPreferences } from '@/models/EditorPreferences';
 import { TempoSign } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
@@ -84,15 +85,6 @@ const tempoSigns = [
   TempoSign.Quick,
   TempoSign.Quicker,
   TempoSign.VeryQuick,
-];
-
-// Language names are shown in their native script so users can find their
-// language even when the surrounding UI is in a language they don't read.
-const supportedLocales = [
-  { code: 'el', name: 'Ελληνικά' },
-  { code: 'en', name: 'English' },
-  { code: 'id', name: 'Bahasa Indonesia' },
-  { code: 'ro', name: 'Română' },
 ];
 
 export default defineComponent({

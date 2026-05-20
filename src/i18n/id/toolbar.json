@@ -8,7 +8,7 @@
     "ignoreAttractions": "Abaikan Tarikan",
     "insertGorthmikon": "Sisipkan Gorthmikon",
     "insertPelastikon": "Sisipkan Pelastikon",
-    "measureBar": "Batang Birama",
+    "measureBar": "Garis Birama",
     "outline": "Garis Luar",
     "sectionName": "Nama Bagian",
     "spaceAfter": "Ruang Setelah",
@@ -16,7 +16,7 @@
     "useDefaultStyle": "Gunakan Gaya Default",
     "enharmonicDisabled": "Fthora enharmonik hanya dapat ditempatkan pada Ga, Zo, atau Vou",
     "generalFlatDisabled": "Bemol umum hanya dapat ditempatkan pada Ke",
-    "generalSharpDisabled": "Tajam umum hanya dapat ditempatkan pada Ga",
+    "generalSharpDisabled": "Kres umum hanya dapat ditempatkan pada Ga",
     "zygosDisabled": "Zygos hanya dapat ditempatkan pada Di",
     "klitonDisabled": "Kliton hanya dapat ditempatkan pada Di",
     "spathiDisabled": "Spathi hanya dapat ditempatkan pada Ke atau Ga",
@@ -50,7 +50,7 @@
     "invalidZoom": "Nilai harus antara 50% dan 500%."
   },
   "dropCap": {
-    "lineSpan": "Baris untuk turun"
+    "lineSpan": "Baris untuk Turun"
   },
   "imageBox": {
     "maintainAspectRatio": "Pertahankan Rasio Aspek",
@@ -84,7 +84,7 @@
     "positioning": "Penempatan",
     "yfen": "Yfen",
     "flat": "Bemol",
-    "sharp": "Tajam",
+    "sharp": "Kres",
     "measureNumber": "Nomor Birama",
     "noteIndicator": "Indikator Nada",
     "isonIndicator": "Indikator Ison",

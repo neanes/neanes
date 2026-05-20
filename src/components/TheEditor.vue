@@ -2,6 +2,7 @@
 import 'vue3-tabs-chrome/dist/vue3-tabs-chrome.css';
 
 import { getFontEmbedCSS, toPng } from 'html-to-image';
+import i18next from 'i18next';
 import { debounce, throttle } from 'throttle-debounce';
 import {
   computed,
@@ -52,6 +53,7 @@ import ToolbarTempo from '@/components/ToolbarTempo.vue';
 import ToolbarTextBox from '@/components/ToolbarTextBox.vue';
 import ToolbarTextBoxRich from '@/components/ToolbarTextBoxRich.vue';
 import { EventBus } from '@/eventBus';
+import { resolveLanguagePreference } from '@/i18n';
 import {
   audioServiceKey,
   ipcServiceKey,
@@ -1694,9 +1696,19 @@ export default defineComponent({
     },
 
     updateEditorPreferences(form: EditorPreferences) {
+      const languageChanged = this.editorPreferences.language !== form.language;
+
       Object.assign(this.editorPreferences, form);
 
       this.saveEditorPreferences();
+
+      if (languageChanged) {
+        // An empty string means "fall back to the auto-detected locale".
+        i18next.changeLanguage(
+          resolveLanguagePreference(form.language, navigator.language),
+        );
+        EventBus.$emit(IpcRendererChannels.SetLanguage, form.language);
+      }
 
       this.editorPreferencesDialogIsOpen = false;
     },

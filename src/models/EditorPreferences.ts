@@ -9,11 +9,14 @@ export enum ButtonMenuMode {
 export interface IEditorPreferences {
   tempoDefaults: { [key in TempoSign]?: number };
   buttonMenuMode: ButtonMenuMode;
+  // Empty string means "follow the system / browser locale".
+  language: string;
 }
 
 export class EditorPreferences implements IEditorPreferences {
   tempoDefaults: { [key in TempoSign]?: number };
   buttonMenuMode = ButtonMenuMode.Hold;
+  language = '';
 
   constructor() {
     this.tempoDefaults = {

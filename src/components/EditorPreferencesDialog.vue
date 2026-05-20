@@ -4,6 +4,23 @@
       <div class="header">{{ $t('dialog:preferences.root') }}</div>
       <div class="pane-container">
         <div class="subheader">
+          {{ $t('dialog:preferences.language') }}
+        </div>
+        <div class="form-group">
+          <select v-model="form.language">
+            <option value="">
+              {{ $t('dialog:preferences.languageSystemDefault') }}
+            </option>
+            <option
+              v-for="locale in supportedLocales"
+              :key="locale.code"
+              :value="locale.code"
+            >
+              {{ locale.name }}
+            </option>
+          </select>
+        </div>
+        <div class="subheader">
           {{ $t('dialog:preferences.menuInteraction') }}
         </div>
         <div class="form-group">
@@ -69,6 +86,15 @@ const tempoSigns = [
   TempoSign.VeryQuick,
 ];
 
+// Language names are shown in their native script so users can find their
+// language even when the surrounding UI is in a language they don't read.
+const supportedLocales = [
+  { code: 'el', name: 'Ελληνικά' },
+  { code: 'en', name: 'English' },
+  { code: 'id', name: 'Bahasa Indonesia' },
+  { code: 'ro', name: 'Română' },
+];
+
 export default defineComponent({
   components: { ModalDialog, Neume, InputBpm },
   props: {
@@ -87,6 +113,7 @@ export default defineComponent({
     return {
       form: new EditorPreferences(),
       tempoSigns,
+      supportedLocales,
       ButtonMenuMode,
     };
   },

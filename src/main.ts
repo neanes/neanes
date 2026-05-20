@@ -9,7 +9,12 @@ import { createApp } from 'vue';
 import VueObserveVisibility from 'vue3-observe-visibility';
 
 import App from './App.vue';
-import { defaultNS, resources } from './i18n';
+import {
+  defaultNS,
+  resolveLanguagePreference,
+  resources,
+  supportedLngs,
+} from './i18n';
 import {
   audioServiceKey,
   ipcServiceKey,
@@ -45,6 +50,23 @@ if (isElectron()) {
   initalizeBrowserIpcListeners();
 }
 
+// Read the user's saved language override before i18next initializes so we
+// don't render a flash of auto-detected UI before swapping to the chosen one.
+function readSavedLanguage(): string | undefined {
+  try {
+    const raw = localStorage.getItem('editorPreferences');
+    if (raw == null) {
+      return undefined;
+    }
+    const parsed = JSON.parse(raw);
+    return resolveLanguagePreference(parsed?.language);
+  } catch {
+    return undefined;
+  }
+}
+
+const savedLanguage = readSavedLanguage();
+
 i18next
   .use(LanguageDetector)
   .use(
@@ -59,10 +81,13 @@ i18next
     debug:
       'VITE_PSEUDOLOCALIZATION' in import.meta.env &&
       import.meta.env['VITE_PSEUDOLOCALIZATION'] === 'true',
+    lng: savedLanguage,
     detection: {
       order: ['querystring', 'navigator'],
     },
     fallbackLng: 'en',
+    supportedLngs,
+    nonExplicitSupportedLngs: true,
     interpolation: {
       escapeValue: false,
     },

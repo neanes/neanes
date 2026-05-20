@@ -1,0 +1,46 @@
+---
+name: Crowdin
+
+on:
+  push:
+    branches:
+      - master
+  schedule:
+    # Pull new translations every day at 06:00 UTC.
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+# Avoid two syncs racing on the localization branch (e.g. a push that
+# overlaps the scheduled run).
+concurrency:
+  group: crowdin
+  cancel-in-progress: false
+
+jobs:
+  synchronize-with-crowdin:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v6
+
+      - name: Synchronize with Crowdin
+        uses: crowdin/github-action@v2
+        with:
+          # Upload source strings (en/*.json) to Crowdin when they change.
+          upload_sources: true
+          # Translations are authored in Crowdin, never pushed up from the repo.
+          upload_translations: false
+          # Download translations and open a PR with the result.
+          download_translations: true
+          localization_branch_name: l10n_crowdin
+          create_pull_request: true
+          pull_request_title: 'chore: New Crowdin translations'
+          pull_request_base_branch_name: master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
+          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}

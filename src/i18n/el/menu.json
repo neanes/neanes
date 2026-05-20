@@ -1,74 +1,74 @@
 {
   "file": {
-    "root": "Αρχείο",
-    "new": "Δημιουργία",
-    "open": "Άνοιγμα…",
-    "openRecent": "Άνοιγμα Πρόσφατων",
-    "import": "Εισαγωγή",
-    "importFromOcr": "Αποτέλεσμα OCR…",
-    "save": "Αποθήκευση",
-    "saveAs": "Αποθήκευση Ως…",
-    "pageSetup": "Διαμόρφωση Σελίδας",
-    "exportAs": "Εξαγωγή",
-    "exportAsPdf": "Εξαγωγή ως PDF…",
-    "exportAsHtml": "Εξαγωγή ως HTML…",
-    "exportAsLatex": "Εξαγωγή ως LaTeX…",
-    "exportAsMusicXml": "Εξαγωγή ως MusicXML…",
-    "exportAsImage": "Εξαγωγή ως Εικόνα…",
-    "print": "Εκτύπωση…",
-    "close": "Κλείσιμο",
-    "closeOthers": "Κλείσιμο Άλλων"
+    "root": "File",
+    "new": "New",
+    "open": "Open…",
+    "openRecent": "Open Recent",
+    "import": "Import",
+    "importFromOcr": "OCR Result…",
+    "save": "Save",
+    "saveAs": "Save As…",
+    "pageSetup": "Page Setup",
+    "exportAs": "Export",
+    "exportAsPdf": "Export as PDF…",
+    "exportAsHtml": "Export as HTML…",
+    "exportAsLatex": "Export as LaTeX…",
+    "exportAsMusicXml": "Export as MusicXML…",
+    "exportAsImage": "Export as Image…",
+    "print": "Print…",
+    "close": "Close",
+    "closeOthers": "Close Others"
   },
   "edit": {
-    "root": "Επεξεργασία",
-    "undo": "Αναίρεση",
-    "redo": "Επανάληψη",
-    "cut": "Αποκοπή",
-    "copy": "Αντιγραφή",
-    "copyAsHtml": "Αντιγραφή ως HTML",
-    "paste": "Επικόλληση",
-    "pasteWithLyrics": "Επικόλληση με Στίχους",
-    "copyFormat": "Αντιγραφή Μορφής",
-    "pasteFormat": "Επικόλληση Μορφής",
-    "find": "Αναζήτηση",
-    "lyrics": "Στίχοι",
-    "preferences": "Προτιμήσεις"
+    "root": "Edit",
+    "undo": "Undo",
+    "redo": "Redo",
+    "cut": "Cut",
+    "copy": "Copy",
+    "copyAsHtml": "Copy as HTML",
+    "paste": "Paste",
+    "pasteWithLyrics": "Paste with Lyrics",
+    "copyFormat": "Copy Format",
+    "pasteFormat": "Paste Format",
+    "find": "Find",
+    "lyrics": "Lyrics",
+    "preferences": "Preferences"
   },
   "insert": {
-    "root": "Εισαγωγή",
-    "alternateLine": "Επεξήγηση",
-    "annotation": "Επισήμανση",
-    "dropCapBefore": "Αρχίγραμμα Πριν",
-    "dropCapAfter": "Αρχίγραμμα Μετά",
-    "textBox": "Πλαίσιο Κειμένου",
-    "richTextBox": "Πλαίσιο Εμπλουτισμένου Κειμένου",
-    "inlineTextBox": "Πλαίσιο Κειμένου εντός Γραμμής",
-    "modeKey": "Αρκτική Μαρτυρία",
-    "image": "Εικόνα",
-    "headersAndFooters": "Κεφαλίδες και Υποσέλιδα",
-    "header": "Κεφαλίδα",
-    "footer": "Υποσέλιδο"
+    "root": "Insert",
+    "alternateLine": "Alternate Line",
+    "annotation": "Annotation",
+    "dropCapBefore": "Drop Cap Before",
+    "dropCapAfter": "Drop Cap After",
+    "textBox": "Text Box",
+    "richTextBox": "Rich Text Box",
+    "inlineTextBox": "Inline Text Box",
+    "modeKey": "Mode Key",
+    "image": "Image",
+    "headersAndFooters": "Headers and Footers",
+    "header": "Header",
+    "footer": "Footer"
   },
   "tools": {
-    "root": "Εργαλεία",
-    "copyElementLink": "Αντιγραφή Συνδέσμου Στοιχείου"
+    "root": "Tools",
+    "copyElementLink": "Copy Element Link"
   },
   "view": {
-    "root": "Προβολή (Εντοπισμός Σφαλμάτων)",
-    "generateTestFiles": "Δημιουργία Αρχείων Δοκιμής (Εντοπισμός Σφαλμάτων)"
+    "root": "View (Debug)",
+    "generateTestFiles": "Generate Test Files (Debug)"
   },
   "help": {
-    "root": "Βοήθεια",
-    "guide": "Οδηγός",
-    "requestAFeature": "Προτείνετε Νέα Δυνατότητα",
-    "reportAnIssue": "Αναφέρετε Πρόβλημα",
-    "about": "Σχετικά"
+    "root": "Help",
+    "guide": "Guide",
+    "requestAFeature": "Request a Feature",
+    "reportAnIssue": "Report an Issue",
+    "about": "About"
   },
   "tab": {
-    "close": "Κλείσιμο",
-    "closeOthers": "Κλείσιμο Άλλων",
-    "closeToTheLeft": "Κλείσιμο Αριστερά",
-    "closeToTheRight": "Κλείσιμο Δεξιά"
+    "close": "Close",
+    "closeOthers": "Close Others",
+    "closeToTheLeft": "Close to the Left",
+    "closeToTheRight": "Close to the Right"
   },
-  "warning": "Προειδοποίηση: Αυτή η εφαρμογή λειτουργεί καλύτερα σε περιηγητές που βασίζονται σε Chromium. Ενδέχεται να αντιμετωπίσετε μειωμένη λειτουργικότητα ή σφάλματα σε περιηγητές που δεν βασίζονται σε Chromium."
+  "warning": "Warning: This application works best in Chromium-based browsers. You may experience reduced functionality or errors in non-Chromium-based browsers."
 }

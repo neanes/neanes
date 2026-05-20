@@ -1,74 +1,74 @@
 {
   "file": {
-    "root": "Fișier",
-    "new": "Nou",
-    "open": "Deschide…",
-    "openRecent": "Deschide recent",
-    "import": "Importă",
-    "importFromOcr": "Rezultat OCR…",
-    "save": "Salvează",
-    "saveAs": "Salvează ca…",
-    "pageSetup": "Configurare pagină",
-    "exportAs": "Exportă",
-    "exportAsPdf": "Exportă ca PDF…",
-    "exportAsHtml": "Exportă ca HTML…",
-    "exportAsLatex": "Exportă ca LaTeX…",
-    "exportAsMusicXml": "Exportă ca MusicXML…",
-    "exportAsImage": "Exportă ca imagine…",
-    "print": "Tipărește…",
-    "close": "Închide",
-    "closeOthers": "Închide celelalte"
+    "root": "File",
+    "new": "New",
+    "open": "Open…",
+    "openRecent": "Open Recent",
+    "import": "Import",
+    "importFromOcr": "OCR Result…",
+    "save": "Save",
+    "saveAs": "Save As…",
+    "pageSetup": "Page Setup",
+    "exportAs": "Export",
+    "exportAsPdf": "Export as PDF…",
+    "exportAsHtml": "Export as HTML…",
+    "exportAsLatex": "Export as LaTeX…",
+    "exportAsMusicXml": "Export as MusicXML…",
+    "exportAsImage": "Export as Image…",
+    "print": "Print…",
+    "close": "Close",
+    "closeOthers": "Close Others"
   },
   "edit": {
-    "root": "Editare",
-    "undo": "Anulează",
-    "redo": "Refă",
-    "cut": "Taie",
-    "copy": "Copiază",
-    "copyAsHtml": "Copiază ca HTML",
-    "paste": "Lipește",
-    "pasteWithLyrics": "Lipește cu versuri",
-    "copyFormat": "Copiază formatul",
-    "pasteFormat": "Lipește formatul",
-    "find": "Căutare",
-    "lyrics": "Versuri",
-    "preferences": "Preferințe"
+    "root": "Edit",
+    "undo": "Undo",
+    "redo": "Redo",
+    "cut": "Cut",
+    "copy": "Copy",
+    "copyAsHtml": "Copy as HTML",
+    "paste": "Paste",
+    "pasteWithLyrics": "Paste with Lyrics",
+    "copyFormat": "Copy Format",
+    "pasteFormat": "Paste Format",
+    "find": "Find",
+    "lyrics": "Lyrics",
+    "preferences": "Preferences"
   },
   "insert": {
-    "root": "Inserare",
-    "alternateLine": "Linie alternativă",
-    "annotation": "Adnotare",
-    "dropCapBefore": "Majusculă înainte",
-    "dropCapAfter": "Majusculă după",
-    "textBox": "Casetă de text",
-    "richTextBox": "Casetă de text formatat",
-    "inlineTextBox": "Casetă de text în linie",
-    "modeKey": "Mărturie inițială",
-    "image": "Imagine",
-    "headersAndFooters": "Antete și subsoluri",
-    "header": "Antet",
-    "footer": "Subsol"
+    "root": "Insert",
+    "alternateLine": "Alternate Line",
+    "annotation": "Annotation",
+    "dropCapBefore": "Drop Cap Before",
+    "dropCapAfter": "Drop Cap After",
+    "textBox": "Text Box",
+    "richTextBox": "Rich Text Box",
+    "inlineTextBox": "Inline Text Box",
+    "modeKey": "Mode Key",
+    "image": "Image",
+    "headersAndFooters": "Headers and Footers",
+    "header": "Header",
+    "footer": "Footer"
   },
   "tools": {
-    "root": "Unelte",
-    "copyElementLink": "Copiază linkul elementului"
+    "root": "Tools",
+    "copyElementLink": "Copy Element Link"
   },
   "view": {
-    "root": "Vizualizare (debugare)",
-    "generateTestFiles": "Generează fișiere de test (debugare)"
+    "root": "View (Debug)",
+    "generateTestFiles": "Generate Test Files (Debug)"
   },
   "help": {
-    "root": "Ajutor",
-    "guide": "Ghid",
-    "requestAFeature": "Solicită o funcționalitate",
-    "reportAnIssue": "Raportează o problemă",
-    "about": "Despre"
+    "root": "Help",
+    "guide": "Guide",
+    "requestAFeature": "Request a Feature",
+    "reportAnIssue": "Report an Issue",
+    "about": "About"
   },
   "tab": {
-    "close": "Închide",
-    "closeOthers": "Închide celelalte",
-    "closeToTheLeft": "Închide la stânga",
-    "closeToTheRight": "Închide la dreapta"
+    "close": "Close",
+    "closeOthers": "Close Others",
+    "closeToTheLeft": "Close to the Left",
+    "closeToTheRight": "Close to the Right"
   },
-  "warning": "Atenție: Această aplicație funcționează cel mai bine în browsere bazate pe Chromium. S-ar putea să întâmpinați funcționalitate redusă sau erori în browsere care nu sunt bazate pe Chromium."
+  "warning": "Warning: This application works best in Chromium-based browsers. You may experience reduced functionality or errors in non-Chromium-based browsers."
 }

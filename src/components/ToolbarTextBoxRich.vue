@@ -12,13 +12,15 @@
         "
       />
       <label for="toolbar-text-box-inline">{{
-        $t('toolbar:common.inline')
+        $t(($) => $.common.inline, { ns: 'toolbar' })
       }}</label>
     </div>
     <template v-if="element.inline">
       <span class="space" />
       <div class="form-group">
-        <label class="right-space">{{ $t('toolbar:common.width') }}</label>
+        <label class="right-space">{{
+          $t(($) => $.common.width, { ns: 'toolbar' })
+        }}</label>
         <InputUnit
           class="text-box-input-width"
           unit="pt"
@@ -39,7 +41,7 @@
       <span class="space" />
       <div class="form-group">
         <label class="right-space">{{
-          $t('toolbar:textbox.offsetYTop')
+          $t(($) => $.textbox.offsetYTop, { ns: 'toolbar' })
         }}</label>
         <InputUnit
           class="text-box-input-width"
@@ -59,7 +61,7 @@
       <span class="space"></span>
       <div class="form-group">
         <label class="right-space">{{
-          $t('toolbar:textbox.offsetYBottom')
+          $t(($) => $.textbox.offsetYBottom, { ns: 'toolbar' })
         }}</label>
         <InputUnit
           class="text-box-input-width"
@@ -89,13 +91,15 @@
           "
         />
         <label for="toolbar-text-box-center-on-page">{{
-          $t('toolbar:textbox.centerOnPage')
+          $t(($) => $.textbox.centerOnPage, { ns: 'toolbar' })
         }}</label>
       </div>
     </template>
     <span class="divider" />
     <div class="form-group">
-      <label class="right-space">{{ $t('toolbar:common.marginTop') }}</label>
+      <label class="right-space">{{
+        $t(($) => $.common.marginTop, { ns: 'toolbar' })
+      }}</label>
       <InputUnit
         class="text-box-input-width"
         unit="pt"
@@ -111,7 +115,9 @@
     </div>
     <span class="space"></span>
     <div class="form-group">
-      <label class="right-space">{{ $t('toolbar:common.marginBottom') }}</label>
+      <label class="right-space">{{
+        $t(($) => $.common.marginBottom, { ns: 'toolbar' })
+      }}</label>
       <InputUnit
         class="text-box-input-width"
         unit="pt"
@@ -140,13 +146,15 @@
         "
       />
       <label for="toolbar-text-box-mode-change">{{
-        $t('toolbar:textbox.modeChange')
+        $t(($) => $.textbox.modeChange, { ns: 'toolbar' })
       }}</label>
     </div>
     <template v-if="element.modeChange">
       <span class="space"></span>
       <div class="form-group">
-        <label class="right-space">{{ $t('toolbar:martyria.note') }}</label>
+        <label class="right-space">{{
+          $t(($) => $.martyria.note, { ns: 'toolbar' })
+        }}</label>
         <select
           :value="element.modeChangePhysicalNote"
           @change="
@@ -156,13 +164,15 @@
           "
         >
           <option v-for="note in notes" :key="note.key" :value="note.key">
-            {{ $t(note.displayName) }}
+            {{ $t(note.displayName, { ns: 'model' }) }}
           </option>
         </select>
       </div>
       <span class="space"></span>
       <div class="form-group">
-        <label class="right-space">{{ $t('toolbar:martyria.scale') }}</label>
+        <label class="right-space">{{
+          $t(($) => $.martyria.scale, { ns: 'toolbar' })
+        }}</label>
         <select
           :value="element.modeChangeScale"
           @change="
@@ -172,14 +182,14 @@
           "
         >
           <option v-for="scale in scales" :key="scale.key" :value="scale.key">
-            {{ $t(scale.displayName) }}
+            {{ $t(scale.displayName, { ns: 'model' }) }}
           </option>
         </select>
       </div>
       <span class="space"></span>
       <div class="form-group">
         <label class="right-space">{{
-          $t('toolbar:textbox.virtualNote')
+          $t(($) => $.textbox.virtualNote, { ns: 'toolbar' })
         }}</label>
         <select
           :value="element.modeChangeVirtualNote"
@@ -189,15 +199,19 @@
             } as Partial<RichTextBoxElement>)
           "
         >
-          <option value="">{{ $t('toolbar:common.none') }}</option>
+          <option value="">
+            {{ $t(($) => $.common.none, { ns: 'toolbar' }) }}
+          </option>
           <option v-for="note in notes" :key="note.key" :value="note.key">
-            {{ $t(note.displayName) }}
+            {{ $t(note.displayName, { ns: 'model' }) }}
           </option>
         </select>
       </div>
       <span class="space"></span>
       <div class="form-group">
-        <label class="right-space">{{ $t('toolbar:common.bpm') }}</label>
+        <label class="right-space">{{
+          $t(($) => $.common.bpm, { ns: 'toolbar' })
+        }}</label>
         <InputBpm
           :model-value="element.modeChangeBpm"
           @update:model-value="
@@ -221,7 +235,7 @@
           "
         />
         <label for="toolbar-rich-text-box-ignore-attractions">{{
-          $t('toolbar:common.ignoreAttractions')
+          $t(($) => $.common.ignoreAttractions, { ns: 'toolbar' })
         }}</label>
       </div>
       <span class="space"></span>
@@ -239,7 +253,7 @@
           "
         />
         <label for="toolbar-rich-text-box-permanent-enharmonic-zo">{{
-          $t('toolbar:modeKey.permanentEnharmonicZo')
+          $t(($) => $.modeKey.permanentEnharmonicZo, { ns: 'toolbar' })
         }}</label>
       </div>
     </template>
@@ -255,7 +269,9 @@
           } as Partial<RichTextBoxElement>)
         "
       />
-      <label for="toolbar-text-box-rtl">{{ $t('toolbar:textbox.rtl') }}</label>
+      <label for="toolbar-text-box-rtl">{{
+        $t(($) => $.textbox.rtl, { ns: 'toolbar' })
+      }}</label>
     </div>
     <span class="divider"></span>
     <div class="form-group">
@@ -270,12 +286,14 @@
         "
       />
       <label for="toolbar-text-box-scrollable">{{
-        $t('toolbar:textbox.scrollable')
+        $t(($) => $.textbox.scrollable, { ns: 'toolbar' })
       }}</label>
     </div>
     <span class="divider"></span>
     <div class="form-group">
-      <label class="right-space">{{ $t('toolbar:common.sectionName') }}</label>
+      <label class="right-space">{{
+        $t(($) => $.common.sectionName, { ns: 'toolbar' })
+      }}</label>
       <input
         type="text"
         :value="element.sectionName"
@@ -293,99 +311,23 @@ import { defineComponent, PropType } from 'vue';
 import InputBpm from '@/components/InputBpm.vue';
 import InputUnit from '@/components/InputUnit.vue';
 import { RichTextBoxElement } from '@/models/Element';
+import {
+  getNoteLabelSelector,
+  getScaleLabelSelector,
+} from '@/models/NeumeI18nMappings';
 import { PageSetup } from '@/models/PageSetup';
 import { Scale, ScaleNote } from '@/models/Scales';
 import { Unit } from '@/utils/Unit';
 
 const notes = Object.values(ScaleNote).map((x) => ({
   key: x,
-  displayName: getNoteDisplayName(x),
+  displayName: getNoteLabelSelector(x),
 }));
 
 const scales = Object.values(Scale).map((x) => ({
   key: x,
-  displayName: getScaleDisplayName(x),
+  displayName: getScaleLabelSelector(x),
 }));
-
-function getNoteDisplayName(note: ScaleNote) {
-  switch (note) {
-    case ScaleNote.ZoLow:
-      return 'model:note.zoLow';
-    case ScaleNote.NiLow:
-      return 'model:note.niLow';
-    case ScaleNote.PaLow:
-      return 'model:note.paLow';
-    case ScaleNote.VouLow:
-      return 'model:note.vouLow';
-    case ScaleNote.GaLow:
-      return 'model:note.gaLow';
-    case ScaleNote.ThiLow:
-      return 'model:note.diLow';
-    case ScaleNote.KeLow:
-      return 'model:note.keLow';
-    case ScaleNote.Zo:
-      return 'model:note.zo';
-    case ScaleNote.Ni:
-      return 'model:note.ni';
-    case ScaleNote.Pa:
-      return 'model:note.pa';
-    case ScaleNote.Vou:
-      return 'model:note.vou';
-    case ScaleNote.Ga:
-      return 'model:note.ga';
-    case ScaleNote.Thi:
-      return 'model:note.di';
-    case ScaleNote.Ke:
-      return 'model:note.ke';
-    case ScaleNote.ZoHigh:
-      return 'model:note.zoHigh';
-    case ScaleNote.NiHigh:
-      return 'model:note.niHigh';
-    case ScaleNote.PaHigh:
-      return 'model:note.paHigh';
-    case ScaleNote.VouHigh:
-      return 'model:note.vouHigh';
-    case ScaleNote.GaHigh:
-      return 'model:note.gaHigh';
-    case ScaleNote.ThiHigh:
-      return 'model:note.diHigh';
-    case ScaleNote.KeHigh:
-      return 'model:note.keHigh';
-    default:
-      return note;
-  }
-}
-
-function getScaleDisplayName(scale: Scale) {
-  switch (scale) {
-    case Scale.Diatonic:
-      return 'model:scale.diatonic';
-    case Scale.SoftChromatic:
-      return 'model:scale.softChromatic';
-    case Scale.HardChromatic:
-      return 'model:scale.hardChromatic';
-    case Scale.EnharmonicGa:
-      return 'model:scale.enharmonicGa';
-    case Scale.EnharmonicZoHigh:
-      return 'model:scale.enharmonicZoHigh';
-    case Scale.EnharmonicVou:
-      return 'model:scale.enharmonicVou';
-    case Scale.EnharmonicZo:
-      return 'model:scale.enharmonicZo';
-    case Scale.EnharmonicVouHigh:
-      return 'model:scale.enharmonicVouHigh';
-    case Scale.Zygos:
-      return 'model:scale.zygos';
-    case Scale.Spathi:
-      return 'model:scale.spathi';
-    case Scale.SpathiGa:
-      return 'model:scale.spathiGa';
-    case Scale.Kliton:
-      return 'model:scale.kliton';
-    default:
-      return scale;
-  }
-}
 
 export default defineComponent({
   components: { InputBpm, InputUnit },

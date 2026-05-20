@@ -10,13 +10,13 @@
         "
       />
       <label for="toolbar-lyric-manager-locked">{{
-        $t('toolbar:lyricManager.locked')
+        $t(($) => $.lyricManager.locked, { ns: 'toolbar' })
       }}</label>
 
       <span class="separator" />
 
       <button @click="$emit('assignAcceptsLyrics')">
-        {{ $t('toolbar:lyricManager.assignAcceptsLyrics') }}
+        {{ $t(($) => $.lyricManager.assignAcceptsLyrics, { ns: 'toolbar' }) }}
       </button>
 
       <span class="close" @click="$emit('close')">&#x2715;</span>

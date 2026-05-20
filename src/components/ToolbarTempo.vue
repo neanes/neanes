@@ -2,7 +2,9 @@
   <div class="tempo-toolbar">
     <div class="row">
       <div class="form-group">
-        <label class="right-space">{{ $t('toolbar:common.bpm') }}</label>
+        <label class="right-space">{{
+          $t(($) => $.common.bpm, { ns: 'toolbar' })
+        }}</label>
         <InputBpm
           :model-value="element.bpm"
           @update:model-value="
@@ -14,7 +16,9 @@
       <span class="space" />
 
       <div class="form-group">
-        <label class="right-space">{{ $t('toolbar:common.spaceAfter') }}</label>
+        <label class="right-space">{{
+          $t(($) => $.common.spaceAfter, { ns: 'toolbar' })
+        }}</label>
         <InputUnit
           unit="pt"
           :min="-spaceAfterMax"
@@ -30,7 +34,7 @@
       <span class="space"></span>
       <div class="form-group">
         <label class="right-space">{{
-          $t('toolbar:common.sectionName')
+          $t(($) => $.common.sectionName, { ns: 'toolbar' })
         }}</label>
         <input
           type="text"

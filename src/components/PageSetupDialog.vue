@@ -2,7 +2,9 @@
   <ModalDialog>
     <div class="outer-container">
       <div class="container">
-        <div class="header">{{ $t('dialog:pageSetup.root') }}</div>
+        <div class="header">
+          {{ $t(($) => $.pageSetup.root, { ns: 'dialog' }) }}
+        </div>
         <div class="pane-container">
           <div class="left-pane">
             <div
@@ -10,77 +12,77 @@
               :class="{ active: currentSection === 'pageSizeRef' }"
               @click="scrollTo($refs.pageSizeRef as HTMLElement)"
             >
-              {{ $t('dialog:pageSetup.pageSize') }}
+              {{ $t(($) => $.pageSetup.pageSize, { ns: 'dialog' }) }}
             </div>
             <div
               class="nav-item"
               :class="{ active: currentSection === 'marginsRef' }"
               @click="scrollTo($refs.marginsRef as HTMLElement)"
             >
-              {{ $t('dialog:pageSetup.margins') }}
+              {{ $t(($) => $.pageSetup.margins, { ns: 'dialog' }) }}
             </div>
             <div
               class="nav-item"
               :class="{ active: currentSection === 'spacingRef' }"
               @click="scrollTo($refs.spacingRef as HTMLElement)"
             >
-              {{ $t('dialog:pageSetup.spacing') }}
+              {{ $t(($) => $.pageSetup.spacing, { ns: 'dialog' }) }}
             </div>
             <div
               class="nav-item"
               :class="{ active: currentSection === 'headersFootersRef' }"
               @click="scrollTo($refs.headersFootersRef as HTMLElement)"
             >
-              {{ $t('dialog:pageSetup.headersAndFooters') }}
+              {{ $t(($) => $.pageSetup.headersAndFooters, { ns: 'dialog' }) }}
             </div>
             <div
               class="nav-item"
               :class="{ active: currentSection === 'miscellaneousRef' }"
               @click="scrollTo($refs.miscellaneousRef as HTMLElement)"
             >
-              {{ $t('dialog:pageSetup.miscellaneous') }}
+              {{ $t(($) => $.pageSetup.miscellaneous, { ns: 'dialog' }) }}
             </div>
             <div
               class="nav-item"
               :class="{ active: currentSection === 'dropCapsRef' }"
               @click="scrollTo($refs.dropCapsRef as HTMLElement)"
             >
-              {{ $t('dialog:pageSetup.dropCaps') }}
+              {{ $t(($) => $.pageSetup.dropCaps, { ns: 'dialog' }) }}
             </div>
             <div
               class="nav-item"
               :class="{ active: currentSection === 'lyricsRef' }"
               @click="scrollTo($refs.lyricsRef as HTMLElement)"
             >
-              {{ $t('dialog:pageSetup.lyrics') }}
+              {{ $t(($) => $.pageSetup.lyrics, { ns: 'dialog' }) }}
             </div>
             <div
               class="nav-item"
               :class="{ active: currentSection === 'textBoxesRef' }"
               @click="scrollTo($refs.textBoxesRef as HTMLElement)"
             >
-              {{ $t('dialog:pageSetup.textBoxes') }}
+              {{ $t(($) => $.pageSetup.textBoxes, { ns: 'dialog' }) }}
             </div>
             <div
               class="nav-item"
               :class="{ active: currentSection === 'modeKeysRef' }"
               @click="scrollTo($refs.modeKeysRef as HTMLElement)"
             >
-              {{ $t('dialog:pageSetup.modeKeys') }}
+              {{ $t(($) => $.pageSetup.modeKeys, { ns: 'dialog' }) }}
             </div>
             <div
               class="nav-item"
               :class="{ active: currentSection === 'neumesRef' }"
               @click="scrollTo($refs.neumesRef as HTMLElement)"
             >
-              {{ $t('dialog:pageSetup.neumes') }}
+              {{ $t(($) => $.pageSetup.neumes, { ns: 'dialog' }) }}
             </div>
             <div
               class="nav-item"
               :class="{ active: currentSection === 'neumeStylesRef' }"
               @click="scrollTo($refs.neumeStylesRef as HTMLElement)"
             >
-              {{ $t('dialog:pageSetup.neumeStyles') }}
+              {{ $t(($) => $.pageSetup.neumeStyles, { ns: 'dialog' }) }}
             </div>
           </div>
           <div
@@ -89,11 +91,11 @@
             @scroll="updateCurrentSectionThrottled!"
           >
             <div ref="pageSizeRef" class="subheader">
-              {{ $t('dialog:pageSetup.pageSize') }}
+              {{ $t(($) => $.pageSetup.pageSize, { ns: 'dialog' }) }}
             </div>
             <div class="form-group full">
               <div class="name">
-                {{ $t('dialog:pageSetup.paperSize') }}
+                {{ $t(($) => $.pageSetup.paperSize, { ns: 'dialog' }) }}
               </div>
               <select v-model="pageSize" class="standard-select">
                 <!-- TODO localize -->
@@ -105,7 +107,7 @@
             <template v-if="form.pageSize === 'Custom'">
               <div class="form-group">
                 <label class="custom-page-size-label name">{{
-                  $t('dialog:pageSetup.width')
+                  $t(($) => $.pageSetup.width, { ns: 'dialog' })
                 }}</label>
                 <InputUnit
                   v-model="form.pageWidthCustom"
@@ -118,11 +120,13 @@
                   :precision="2"
                   @change="updatePageSize"
                 />
-                <span class="units">{{ $t(marginUnitLabel!) }}</span>
+                <span class="units">{{
+                  $t(marginUnitLabel!, { ns: 'dialog' })
+                }}</span>
               </div>
               <div class="form-group">
                 <label class="custom-page-size-label name">{{
-                  $t('dialog:pageSetup.height')
+                  $t(($) => $.pageSetup.height, { ns: 'dialog' })
                 }}</label>
                 <InputUnit
                   v-model="form.pageHeightCustom"
@@ -135,12 +139,14 @@
                   :precision="2"
                   @change="updatePageSize"
                 />
-                <span class="units">{{ $t(marginUnitLabel!) }}</span>
+                <span class="units">{{
+                  $t(marginUnitLabel!, { ns: 'dialog' })
+                }}</span>
               </div>
             </template>
             <div class="form-group full">
               <div class="name">
-                {{ $t('dialog:pageSetup.orientation') }}
+                {{ $t(($) => $.pageSetup.orientation, { ns: 'dialog' }) }}
               </div>
               <div class="row">
                 <div
@@ -148,46 +154,48 @@
                   :class="{ selected: !landscape }"
                   @click="landscape = false"
                 >
-                  {{ $t('dialog:pageSetup.portrait') }}
+                  {{ $t(($) => $.pageSetup.portrait, { ns: 'dialog' }) }}
                 </div>
                 <div
                   class="radio-button page-orientation-button"
                   :class="{ selected: landscape }"
                   @click="landscape = true"
                 >
-                  {{ $t('dialog:pageSetup.landscape') }}
+                  {{ $t(($) => $.pageSetup.landscape, { ns: 'dialog' }) }}
                 </div>
               </div>
             </div>
             <div class="form-group full">
-              <div class="name">{{ $t('dialog:pageSetup.unit') }}</div>
+              <div class="name">
+                {{ $t(($) => $.pageSetup.unit, { ns: 'dialog' }) }}
+              </div>
               <div class="description">
-                {{ $t('dialog:pageSetup.unitDescription') }}
+                {{ $t(($) => $.pageSetup.unitDescription, { ns: 'dialog' }) }}
               </div>
               <select v-model="form.pageSizeUnit" class="standard-select">
                 <option value="in">
-                  {{ $t('dialog:pageSetup.in') }}
+                  {{ $t(($) => $.pageSetup.in, { ns: 'dialog' }) }}
                 </option>
                 <option value="cm">
-                  {{ $t('dialog:pageSetup.cm') }}
+                  {{ $t(($) => $.pageSetup.cm, { ns: 'dialog' }) }}
                 </option>
                 <option value="mm">
-                  {{ $t('dialog:pageSetup.mm') }}
+                  {{ $t(($) => $.pageSetup.mm, { ns: 'dialog' }) }}
                 </option>
                 <option value="pt">
-                  {{ $t('dialog:pageSetup.pt') }}
+                  {{ $t(($) => $.pageSetup.pt, { ns: 'dialog' }) }}
                 </option>
                 <option value="pc">
-                  {{ $t('dialog:pageSetup.pc') }}
+                  {{ $t(($) => $.pageSetup.pc, { ns: 'dialog' }) }}
                 </option>
               </select>
             </div>
             <div ref="marginsRef" class="subheader">
-              {{ $t('dialog:pageSetup.margins') }}
+              {{ $t(($) => $.pageSetup.margins, { ns: 'dialog' }) }}
             </div>
             <div class="form-group">
               <label class="margin-label name">{{
-                $t('dialog:common.top')
+                $t(($) => $.common.top, { ns: 'dialog' })
               }}</label>
               <input
                 class="margin-input"
@@ -200,11 +208,13 @@
                     Number(($event.target as HTMLInputElement).value),
                   )
                 "
-              /><span class="units">{{ $t(marginUnitLabel!) }}</span>
+              /><span class="units">{{
+                $t(marginUnitLabel!, { ns: 'dialog' })
+              }}</span>
             </div>
             <div class="form-group">
               <label class="margin-label name">{{
-                $t('dialog:common.bottom')
+                $t(($) => $.common.bottom, { ns: 'dialog' })
               }}</label>
               <input
                 class="margin-input"
@@ -217,11 +227,13 @@
                     Number(($event.target as HTMLInputElement).value),
                   )
                 "
-              /><span class="units">{{ $t(marginUnitLabel!) }}</span>
+              /><span class="units">{{
+                $t(marginUnitLabel!, { ns: 'dialog' })
+              }}</span>
             </div>
             <div class="form-group">
               <label class="margin-label name">{{
-                $t('dialog:common.left')
+                $t(($) => $.common.left, { ns: 'dialog' })
               }}</label>
               <input
                 class="margin-input"
@@ -234,11 +246,13 @@
                     Number(($event.target as HTMLInputElement).value),
                   )
                 "
-              /><span class="units">{{ $t(marginUnitLabel!) }}</span>
+              /><span class="units">{{
+                $t(marginUnitLabel!, { ns: 'dialog' })
+              }}</span>
             </div>
             <div class="form-group">
               <label class="margin-label name">{{
-                $t('dialog:common.right')
+                $t(($) => $.common.right, { ns: 'dialog' })
               }}</label>
               <input
                 class="margin-input"
@@ -251,11 +265,13 @@
                     Number(($event.target as HTMLInputElement).value),
                   )
                 "
-              /><span class="units">{{ $t(marginUnitLabel!) }}</span>
+              /><span class="units">{{
+                $t(marginUnitLabel!, { ns: 'dialog' })
+              }}</span>
             </div>
             <div class="form-group">
               <label class="margin-label name">{{
-                $t('dialog:pageSetup.header')
+                $t(($) => $.pageSetup.header, { ns: 'dialog' })
               }}</label>
               <input
                 class="margin-input"
@@ -268,11 +284,13 @@
                     Number(($event.target as HTMLInputElement).value),
                   )
                 "
-              /><span class="units">{{ $t(marginUnitLabel!) }}</span>
+              /><span class="units">{{
+                $t(marginUnitLabel!, { ns: 'dialog' })
+              }}</span>
             </div>
             <div class="form-group">
               <label class="margin-label name">{{
-                $t('dialog:pageSetup.footer')
+                $t(($) => $.pageSetup.footer, { ns: 'dialog' })
               }}</label>
               <input
                 class="margin-input"
@@ -285,17 +303,23 @@
                     Number(($event.target as HTMLInputElement).value),
                   )
                 "
-              /><span class="units">{{ $t(marginUnitLabel!) }}</span>
+              /><span class="units">{{
+                $t(marginUnitLabel!, { ns: 'dialog' })
+              }}</span>
             </div>
             <div ref="spacingRef" class="subheader">
-              {{ $t('dialog:pageSetup.spacing') }}
+              {{ $t(($) => $.pageSetup.spacing, { ns: 'dialog' }) }}
             </div>
             <div class="form-group full">
               <label class="name">{{
-                $t('dialog:pageSetup.neumeSpacing')
+                $t(($) => $.pageSetup.neumeSpacing, { ns: 'dialog' })
               }}</label>
               <div class="description">
-                {{ $t('dialog:pageSetup.neumeSpacingDescription') }}
+                {{
+                  $t(($) => $.pageSetup.neumeSpacingDescription, {
+                    ns: 'dialog',
+                  })
+                }}
               </div>
               <InputUnit
                 v-model="form.neumeDefaultSpacing"
@@ -306,14 +330,20 @@
                 :max="neumeSpacingMax"
                 :step="spacingStep"
                 :precision="3"
-              /><span class="units">{{ $t(marginUnitLabel!) }}</span>
+              /><span class="units">{{
+                $t(marginUnitLabel!, { ns: 'dialog' })
+              }}</span>
             </div>
             <div class="form-group full">
               <label class="name">{{
-                $t('dialog:pageSetup.martyriaVerticalOffset')
+                $t(($) => $.pageSetup.martyriaVerticalOffset, { ns: 'dialog' })
               }}</label>
               <div class="description">
-                {{ $t('dialog:pageSetup.martyriaVerticalOffsetDescription') }}
+                {{
+                  $t(($) => $.pageSetup.martyriaVerticalOffsetDescription, {
+                    ns: 'dialog',
+                  })
+                }}
               </div>
               <InputUnit
                 v-model="form.martyriaVerticalOffset"
@@ -324,12 +354,18 @@
                 :max="neumeSpacingMax"
                 :step="spacingStep"
                 :precision="3"
-              /><span class="units">{{ $t(marginUnitLabel!) }}</span>
+              /><span class="units">{{
+                $t(marginUnitLabel!, { ns: 'dialog' })
+              }}</span>
             </div>
             <div class="form-group full">
-              <label class="name">{{ $t('dialog:pageSetup.lyricsV') }}</label>
+              <label class="name">{{
+                $t(($) => $.pageSetup.lyricsV, { ns: 'dialog' })
+              }}</label>
               <div class="description">
-                {{ $t('dialog:pageSetup.lyricsVDescription') }}
+                {{
+                  $t(($) => $.pageSetup.lyricsVDescription, { ns: 'dialog' })
+                }}
               </div>
               <input
                 class="unit-input"
@@ -341,12 +377,18 @@
                     Number(($event.target as HTMLInputElement).value),
                   )
                 "
-              /><span class="units">{{ $t(marginUnitLabel!) }}</span>
+              /><span class="units">{{
+                $t(marginUnitLabel!, { ns: 'dialog' })
+              }}</span>
             </div>
             <div class="form-group full">
-              <label class="name">{{ $t('dialog:pageSetup.lyricsH') }}</label>
+              <label class="name">{{
+                $t(($) => $.pageSetup.lyricsH, { ns: 'dialog' })
+              }}</label>
               <div class="description">
-                {{ $t('dialog:pageSetup.lyricsHDescription') }}
+                {{
+                  $t(($) => $.pageSetup.lyricsHDescription, { ns: 'dialog' })
+                }}
               </div>
               <input
                 class="unit-input"
@@ -359,12 +401,20 @@
                   )
                 "
               />
-              <span class="units">{{ $t(marginUnitLabel!) }}</span>
+              <span class="units">{{
+                $t(marginUnitLabel!, { ns: 'dialog' })
+              }}</span>
             </div>
             <div class="form-group full">
-              <label class="name">{{ $t('dialog:pageSetup.line') }}</label>
+              <label class="name">{{
+                $t(($) => $.pageSetup.line, { ns: 'dialog' })
+              }}</label>
               <div class="description">
-                {{ $t('dialog:pageSetup.lineSpacingDescription') }}
+                {{
+                  $t(($) => $.pageSetup.lineSpacingDescription, {
+                    ns: 'dialog',
+                  })
+                }}
               </div>
               <input
                 class="unit-input"
@@ -377,12 +427,20 @@
                     Number(($event.target as HTMLInputElement).value),
                   )
                 "
-              /><span class="units">{{ $t(marginUnitLabel!) }}</span>
+              /><span class="units">{{
+                $t(marginUnitLabel!, { ns: 'dialog' })
+              }}</span>
             </div>
             <div class="form-group full">
-              <label class="name">{{ $t('dialog:pageSetup.hyphens') }}</label>
+              <label class="name">{{
+                $t(($) => $.pageSetup.hyphens, { ns: 'dialog' })
+              }}</label>
               <div class="description">
-                {{ $t('dialog:pageSetup.hyphenSpacingDescription') }}
+                {{
+                  $t(($) => $.pageSetup.hyphenSpacingDescription, {
+                    ns: 'dialog',
+                  })
+                }}
               </div>
               <input
                 class="unit-input"
@@ -395,10 +453,12 @@
                     Number(($event.target as HTMLInputElement).value),
                   )
                 "
-              /><span class="units">{{ $t(marginUnitLabel!) }}</span>
+              /><span class="units">{{
+                $t(marginUnitLabel!, { ns: 'dialog' })
+              }}</span>
             </div>
             <div ref="headersFootersRef" class="subheader">
-              {{ $t('dialog:pageSetup.headersAndFooters') }}
+              {{ $t(($) => $.pageSetup.headersAndFooters, { ns: 'dialog' }) }}
             </div>
 
             <div class="form-group">
@@ -408,7 +468,7 @@
                 type="checkbox"
               />
               <label for="page-setup-dialog-show-header">{{
-                $t('dialog:pageSetup.includeHeader')
+                $t(($) => $.pageSetup.includeHeader, { ns: 'dialog' })
               }}</label>
             </div>
 
@@ -419,7 +479,7 @@
                 type="checkbox"
               />
               <label for="page-setup-dialog-show-footer">{{
-                $t('dialog:pageSetup.includeFooter')
+                $t(($) => $.pageSetup.includeFooter, { ns: 'dialog' })
               }}</label>
             </div>
 
@@ -430,7 +490,7 @@
                 type="checkbox"
               />
               <label for="page-setup-dialog-different-first-page">{{
-                $t('dialog:pageSetup.differentFirstPage')
+                $t(($) => $.pageSetup.differentFirstPage, { ns: 'dialog' })
               }}</label>
             </div>
             <div class="form-group">
@@ -440,7 +500,7 @@
                 type="checkbox"
               />
               <label for="page-setup-dialog-different-odd-even">{{
-                $t('dialog:pageSetup.differentOddAndEven')
+                $t(($) => $.pageSetup.differentOddAndEven, { ns: 'dialog' })
               }}</label>
             </div>
             <div class="form-group">
@@ -450,16 +510,20 @@
                 type="checkbox"
               />
               <label for="page-setup-dialog-rich-header-footer">{{
-                $t('dialog:pageSetup.richHeaderFooter')
+                $t(($) => $.pageSetup.richHeaderFooter, { ns: 'dialog' })
               }}</label>
             </div>
 
             <div class="form-group full">
               <label class="name">{{
-                $t('dialog:pageSetup.firstPageNumber')
+                $t(($) => $.pageSetup.firstPageNumber, { ns: 'dialog' })
               }}</label>
               <div class="description">
-                {{ $t('dialog:pageSetup.firstPageNumberDescription') }}
+                {{
+                  $t(($) => $.pageSetup.firstPageNumberDescription, {
+                    ns: 'dialog',
+                  })
+                }}
               </div>
               <InputUnit
                 v-model="form.firstPageNumber"
@@ -473,7 +537,9 @@
 
             <div class="form-group full">
               <div class="name">
-                {{ $t('dialog:pageSetup.headerHorizontalRule') }}
+                {{
+                  $t(($) => $.pageSetup.headerHorizontalRule, { ns: 'dialog' })
+                }}
               </div>
               <input
                 id="page-setup-dialog-header-hr"
@@ -481,13 +547,17 @@
                 type="checkbox"
               />
               <label for="page-setup-dialog-header-hr">
-                {{ $t('dialog:pageSetup.showHeaderHorizontalRuleDescription') }}
+                {{
+                  $t(($) => $.pageSetup.showHeaderHorizontalRuleDescription, {
+                    ns: 'dialog',
+                  })
+                }}
               </label>
 
               <template v-if="form.showHeaderHorizontalRule">
                 <div class="form-group row">
                   <label class="header-rule-label name">{{
-                    $t('dialog:pageSetup.color')
+                    $t(($) => $.pageSetup.color, { ns: 'dialog' })
                   }}</label>
                   <ColorPicker
                     v-model="form.headerHorizontalRuleColor"
@@ -497,7 +567,7 @@
 
                 <div class="form-group">
                   <label class="header-rule-label name">{{
-                    $t('dialog:pageSetup.thickness')
+                    $t(($) => $.pageSetup.thickness, { ns: 'dialog' })
                   }}</label>
                   <InputUnit
                     v-model="form.headerHorizontalRuleThickness"
@@ -512,7 +582,7 @@
 
                 <div class="form-group">
                   <label class="header-rule-label name">{{
-                    $t('dialog:pageSetup.marginTop')
+                    $t(($) => $.pageSetup.marginTop, { ns: 'dialog' })
                   }}</label>
                   <InputUnit
                     v-model="form.headerHorizontalRuleMarginTop"
@@ -527,7 +597,7 @@
 
                 <div class="form-group">
                   <label class="header-rule-label name">{{
-                    $t('dialog:pageSetup.marginBottom')
+                    $t(($) => $.pageSetup.marginBottom, { ns: 'dialog' })
                   }}</label>
                   <InputUnit
                     v-model="form.headerHorizontalRuleMarginBottom"
@@ -553,7 +623,10 @@
                     >
                       {{
                         $t(
-                          'dialog:pageSetup.excludeHorizontalRuleFirstPageDescription',
+                          ($) =>
+                            $.pageSetup
+                              .excludeHorizontalRuleFirstPageDescription,
+                          { ns: 'dialog' },
                         )
                       }}
                     </label>
@@ -572,7 +645,9 @@
                     >
                       {{
                         $t(
-                          'dialog:pageSetup.excludeHorizontalRuleOddPageDescription',
+                          ($) =>
+                            $.pageSetup.excludeHorizontalRuleOddPageDescription,
+                          { ns: 'dialog' },
                         )
                       }}
                     </label>
@@ -589,7 +664,10 @@
                     >
                       {{
                         $t(
-                          'dialog:pageSetup.excludeHorizontalRuleEvenPageDescription',
+                          ($) =>
+                            $.pageSetup
+                              .excludeHorizontalRuleEvenPageDescription,
+                          { ns: 'dialog' },
                         )
                       }}
                     </label>
@@ -600,7 +678,9 @@
 
             <div class="form-group full">
               <div class="name">
-                {{ $t('dialog:pageSetup.footerHorizontalRule') }}
+                {{
+                  $t(($) => $.pageSetup.footerHorizontalRule, { ns: 'dialog' })
+                }}
               </div>
               <input
                 id="page-setup-dialog-footer-hr"
@@ -608,13 +688,15 @@
                 type="checkbox"
               />
               <label for="page-setup-dialog-footer-hr">{{
-                $t('dialog:pageSetup.showFooterHorizontalRuleDescription')
+                $t(($) => $.pageSetup.showFooterHorizontalRuleDescription, {
+                  ns: 'dialog',
+                })
               }}</label>
 
               <template v-if="form.showFooterHorizontalRule">
                 <div class="form-group row">
                   <label class="header-rule-label name">{{
-                    $t('dialog:pageSetup.color')
+                    $t(($) => $.pageSetup.color, { ns: 'dialog' })
                   }}</label>
                   <ColorPicker
                     v-model="form.footerHorizontalRuleColor"
@@ -624,7 +706,7 @@
 
                 <div class="form-group">
                   <label class="header-rule-label name">{{
-                    $t('dialog:pageSetup.thickness')
+                    $t(($) => $.pageSetup.thickness, { ns: 'dialog' })
                   }}</label>
                   <InputUnit
                     v-model="form.footerHorizontalRuleThickness"
@@ -639,7 +721,7 @@
 
                 <div class="form-group">
                   <label class="header-rule-label name">{{
-                    $t('dialog:pageSetup.marginTop')
+                    $t(($) => $.pageSetup.marginTop, { ns: 'dialog' })
                   }}</label>
                   <InputUnit
                     v-model="form.footerHorizontalRuleMarginTop"
@@ -654,7 +736,7 @@
 
                 <div class="form-group">
                   <label class="header-rule-label name">{{
-                    $t('dialog:pageSetup.marginBottom')
+                    $t(($) => $.pageSetup.marginBottom, { ns: 'dialog' })
                   }}</label>
                   <InputUnit
                     v-model="form.footerHorizontalRuleMarginBottom"
@@ -679,7 +761,10 @@
                     >
                       {{
                         $t(
-                          'dialog:pageSetup.excludeHorizontalRuleFirstPageDescription',
+                          ($) =>
+                            $.pageSetup
+                              .excludeHorizontalRuleFirstPageDescription,
+                          { ns: 'dialog' },
                         )
                       }}
                     </label>
@@ -698,7 +783,9 @@
                     >
                       {{
                         $t(
-                          'dialog:pageSetup.excludeHorizontalRuleOddPageDescription',
+                          ($) =>
+                            $.pageSetup.excludeHorizontalRuleOddPageDescription,
+                          { ns: 'dialog' },
                         )
                       }}
                     </label>
@@ -715,7 +802,10 @@
                     >
                       {{
                         $t(
-                          'dialog:pageSetup.excludeHorizontalRuleEvenPageDescription',
+                          ($) =>
+                            $.pageSetup
+                              .excludeHorizontalRuleEvenPageDescription,
+                          { ns: 'dialog' },
                         )
                       }}
                     </label>
@@ -725,12 +815,16 @@
             </div>
 
             <div ref="miscellaneousRef" class="subheader">
-              {{ $t('dialog:pageSetup.miscellaneous') }}
+              {{ $t(($) => $.pageSetup.miscellaneous, { ns: 'dialog' }) }}
             </div>
 
             <div class="form-group">
               <div class="name">
-                {{ $t('dialog:pageSetup.useChrysanthineAccidentals') }}
+                {{
+                  $t(($) => $.pageSetup.useChrysanthineAccidentals, {
+                    ns: 'dialog',
+                  })
+                }}
               </div>
               <input
                 id="page-setup-dialog-chrysanthine-accidentals"
@@ -738,13 +832,19 @@
                 type="checkbox"
               />
               <label for="page-setup-dialog-chrysanthine-accidentals">{{
-                $t('dialog:pageSetup.useChrysanthineAccidentalsDescription')
+                $t(($) => $.pageSetup.useChrysanthineAccidentalsDescription, {
+                  ns: 'dialog',
+                })
               }}</label>
             </div>
 
             <div class="form-group">
               <div class="name">
-                {{ $t('dialog:pageSetup.disableFthoraRestrictions') }}
+                {{
+                  $t(($) => $.pageSetup.disableFthoraRestrictions, {
+                    ns: 'dialog',
+                  })
+                }}
               </div>
               <input
                 id="page-setup-dialog-no-fthora-restrictions"
@@ -752,13 +852,17 @@
                 type="checkbox"
               />
               <label for="page-setup-dialog-no-fthora-restrictions">{{
-                $t('dialog:pageSetup.disableFthoraRestrictionsDescription')
+                $t(($) => $.pageSetup.disableFthoraRestrictionsDescription, {
+                  ns: 'dialog',
+                })
               }}</label>
             </div>
 
             <div class="form-group">
               <div class="name">
-                {{ $t('dialog:pageSetup.alignIsonIndicators') }}
+                {{
+                  $t(($) => $.pageSetup.alignIsonIndicators, { ns: 'dialog' })
+                }}
               </div>
               <input
                 id="page-setup-dialog-align-ison-indicators"
@@ -766,13 +870,15 @@
                 type="checkbox"
               />
               <label for="page-setup-dialog-align-ison-indicators">{{
-                $t('dialog:pageSetup.alignIsonIndicatorsDescription')
+                $t(($) => $.pageSetup.alignIsonIndicatorsDescription, {
+                  ns: 'dialog',
+                })
               }}</label>
             </div>
 
             <div class="form-group">
               <div class="name">
-                {{ $t('dialog:pageSetup.melkiteRtl') }}
+                {{ $t(($) => $.pageSetup.melkiteRtl, { ns: 'dialog' }) }}
               </div>
               <input
                 id="page-setup-dialog-melkite-rtl"
@@ -781,12 +887,14 @@
                 @change="onChangeMelkiteRtl"
               />
               <label for="page-setup-dialog-melkite-rtl">{{
-                $t('dialog:pageSetup.melkiteRtlDescription')
+                $t(($) => $.pageSetup.melkiteRtlDescription, { ns: 'dialog' })
               }}</label>
             </div>
             <div class="form-group">
               <div class="name">
-                {{ $t('dialog:pageSetup.disableGreekMelismata') }}
+                {{
+                  $t(($) => $.pageSetup.disableGreekMelismata, { ns: 'dialog' })
+                }}
               </div>
               <input
                 id="page-setup-dialog-disable-melismata"
@@ -794,29 +902,33 @@
                 type="checkbox"
               />
               <label for="page-setup-dialog-disable-melismata">{{
-                $t('dialog:pageSetup.disableGreekMelismataDescription')
+                $t(($) => $.pageSetup.disableGreekMelismataDescription, {
+                  ns: 'dialog',
+                })
               }}</label>
             </div>
             <div ref="dropCapsRef" class="subheader">
-              {{ $t('dialog:pageSetup.dropCaps') }}
+              {{ $t(($) => $.pageSetup.dropCaps, { ns: 'dialog' }) }}
             </div>
             <div class="form-group">
               <div class="name">
-                {{ $t('dialog:pageSetup.defaultStyling') }}
+                {{ $t(($) => $.pageSetup.defaultStyling, { ns: 'dialog' }) }}
               </div>
               <div class="description">
-                {{ $t('dialog:pageSetup.dropCapsDescription') }}
+                {{
+                  $t(($) => $.pageSetup.dropCapsDescription, { ns: 'dialog' })
+                }}
               </div>
 
               <div class="form-group row">
                 <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.color')
+                  $t(($) => $.pageSetup.color, { ns: 'dialog' })
                 }}</label>
                 <ColorPicker v-model="form.dropCapDefaultColor" />
               </div>
               <div class="form-group">
                 <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.size')
+                  $t(($) => $.pageSetup.size, { ns: 'dialog' })
                 }}</label>
                 <InputFontSize
                   v-model="form.dropCapDefaultFontSize"
@@ -826,7 +938,7 @@
               </div>
               <div class="form-group">
                 <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.lineSpan')
+                  $t(($) => $.pageSetup.lineSpan, { ns: 'dialog' })
                 }}</label>
                 <InputUnit
                   v-model="form.dropCapDefaultLineSpan"
@@ -840,7 +952,7 @@
               </div>
               <div class="form-group">
                 <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.lineHeight')
+                  $t(($) => $.pageSetup.lineHeight, { ns: 'dialog' })
                 }}</label>
                 <InputUnit
                   v-model="form.dropCapDefaultLineHeight"
@@ -855,7 +967,7 @@
               </div>
               <div class="form-group">
                 <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.font')
+                  $t(($) => $.pageSetup.font, { ns: 'dialog' })
                 }}</label>
                 <select
                   v-model="form.dropCapDefaultFontFamily"
@@ -868,7 +980,7 @@
               </div>
               <div class="form-group row">
                 <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.style')
+                  $t(($) => $.pageSetup.style, { ns: 'dialog' })
                 }}</label>
                 <input
                   id="page-setup-dialog-drop-cap-bold"
@@ -878,7 +990,7 @@
                   false-value="400"
                 />
                 <label for="page-setup-dialog-drop-cap-bold">{{
-                  $t('dialog:pageSetup.bold')
+                  $t(($) => $.pageSetup.bold, { ns: 'dialog' })
                 }}</label>
                 <span class="checkbox-spacer"></span>
                 <input
@@ -889,12 +1001,12 @@
                   false-value="normal"
                 />
                 <label for="page-setup-dialog-drop-cap-italic">{{
-                  $t('dialog:pageSetup.italic')
+                  $t(($) => $.pageSetup.italic, { ns: 'dialog' })
                 }}</label>
               </div>
               <div class="form-group">
                 <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.outline')
+                  $t(($) => $.pageSetup.outline, { ns: 'dialog' })
                 }}</label>
 
                 <InputStrokeWidth
@@ -905,24 +1017,24 @@
             </div>
 
             <div ref="lyricsRef" class="subheader">
-              {{ $t('dialog:pageSetup.lyrics') }}
+              {{ $t(($) => $.pageSetup.lyrics, { ns: 'dialog' }) }}
             </div>
             <div class="form-group">
               <div class="name">
-                {{ $t('dialog:pageSetup.defaultStyling') }}
+                {{ $t(($) => $.pageSetup.defaultStyling, { ns: 'dialog' }) }}
               </div>
               <div class="description">
-                {{ $t('dialog:pageSetup.lyricsDescription') }}
+                {{ $t(($) => $.pageSetup.lyricsDescription, { ns: 'dialog' }) }}
               </div>
               <div class="form-group row">
                 <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.color')
+                  $t(($) => $.pageSetup.color, { ns: 'dialog' })
                 }}</label>
                 <ColorPicker v-model="form.lyricsDefaultColor" />
               </div>
               <div class="form-group">
                 <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.size')
+                  $t(($) => $.pageSetup.size, { ns: 'dialog' })
                 }}</label>
                 <InputFontSize
                   v-model="form.lyricsDefaultFontSize"
@@ -932,7 +1044,7 @@
 
               <div class="form-group">
                 <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.font')
+                  $t(($) => $.pageSetup.font, { ns: 'dialog' })
                 }}</label>
                 <select
                   v-model="form.lyricsDefaultFontFamily"
@@ -945,7 +1057,7 @@
               </div>
               <div class="form-group row">
                 <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.style')
+                  $t(($) => $.pageSetup.style, { ns: 'dialog' })
                 }}</label>
                 <input
                   id="page-setup-dialog-lyrics-bold"
@@ -955,7 +1067,7 @@
                   false-value="400"
                 />
                 <label for="page-setup-dialog-lyrics-bold">{{
-                  $t('dialog:pageSetup.bold')
+                  $t(($) => $.pageSetup.bold, { ns: 'dialog' })
                 }}</label>
                 <span class="checkbox-spacer"></span>
 
@@ -967,12 +1079,12 @@
                   false-value="normal"
                 />
                 <label for="page-setup-dialog-lyrics-italic">{{
-                  $t('dialog:pageSetup.italic')
+                  $t(($) => $.pageSetup.italic, { ns: 'dialog' })
                 }}</label>
               </div>
               <div class="form-group">
                 <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.outline')
+                  $t(($) => $.pageSetup.outline, { ns: 'dialog' })
                 }}</label>
                 <InputStrokeWidth
                   v-model="form.lyricsDefaultStrokeWidth"
@@ -982,10 +1094,16 @@
             </div>
             <div class="form-group">
               <label class="name">{{
-                $t('dialog:pageSetup.lyricsMelismaCutoffWidth')
+                $t(($) => $.pageSetup.lyricsMelismaCutoffWidth, {
+                  ns: 'dialog',
+                })
               }}</label>
               <div class="description">
-                {{ $t('dialog:pageSetup.lyricsMelismaCutoffWidthDescription') }}
+                {{
+                  $t(($) => $.pageSetup.lyricsMelismaCutoffWidthDescription, {
+                    ns: 'dialog',
+                  })
+                }}
               </div>
               <InputUnit
                 v-model="form.lyricsMelismaCutoffWidth"
@@ -999,7 +1117,12 @@
             <div class="form-group">
               <div class="name">
                 {{
-                  $t('dialog:pageSetup.ignorePunctuationWhenPositioningLyrics')
+                  $t(
+                    ($) => $.pageSetup.ignorePunctuationWhenPositioningLyrics,
+                    {
+                      ns: 'dialog',
+                    },
+                  )
                 }}
               </div>
               <input
@@ -1011,30 +1134,35 @@
                 for="page-setup-dialog-ignore-punctuation-when-positioning-lyrics"
                 >{{
                   $t(
-                    'dialog:pageSetup.ignorePunctuationWhenPositioningLyricsDescription',
+                    ($) =>
+                      $.pageSetup
+                        .ignorePunctuationWhenPositioningLyricsDescription,
+                    { ns: 'dialog' },
                   )
                 }}</label
               >
             </div>
             <div ref="textBoxesRef" class="subheader">
-              {{ $t('dialog:pageSetup.textBoxes') }}
+              {{ $t(($) => $.pageSetup.textBoxes, { ns: 'dialog' }) }}
             </div>
             <div class="form-group">
               <div class="name">
-                {{ $t('dialog:pageSetup.defaultStyling') }}
+                {{ $t(($) => $.pageSetup.defaultStyling, { ns: 'dialog' }) }}
               </div>
               <div class="description">
-                {{ $t('dialog:pageSetup.textBoxesDescription') }}
+                {{
+                  $t(($) => $.pageSetup.textBoxesDescription, { ns: 'dialog' })
+                }}
               </div>
               <div class="form-group row">
                 <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.color')
+                  $t(($) => $.pageSetup.color, { ns: 'dialog' })
                 }}</label>
                 <ColorPicker v-model="form.textBoxDefaultColor" />
               </div>
               <div class="form-group">
                 <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.size')
+                  $t(($) => $.pageSetup.size, { ns: 'dialog' })
                 }}</label>
                 <InputFontSize
                   v-model="form.textBoxDefaultFontSize"
@@ -1043,7 +1171,7 @@
               </div>
               <div class="form-group">
                 <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.lineHeight')
+                  $t(($) => $.pageSetup.lineHeight, { ns: 'dialog' })
                 }}</label>
                 <InputUnit
                   v-model="form.textBoxDefaultLineHeight"
@@ -1058,7 +1186,7 @@
               </div>
               <div class="form-group">
                 <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.font')
+                  $t(($) => $.pageSetup.font, { ns: 'dialog' })
                 }}</label>
                 <select
                   v-model="form.textBoxDefaultFontFamily"
@@ -1071,7 +1199,7 @@
               </div>
               <div class="form-group row">
                 <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.style')
+                  $t(($) => $.pageSetup.style, { ns: 'dialog' })
                 }}</label>
                 <input
                   id="page-setup-dialog-text-box-bold"
@@ -1081,7 +1209,7 @@
                   false-value="400"
                 />
                 <label for="page-setup-dialog-text-box-bold">{{
-                  $t('dialog:pageSetup.bold')
+                  $t(($) => $.pageSetup.bold, { ns: 'dialog' })
                 }}</label>
                 <span class="checkbox-spacer"></span>
 
@@ -1093,12 +1221,12 @@
                   false-value="normal"
                 />
                 <label for="page-setup-dialog-text-box-italic">{{
-                  $t('dialog:pageSetup.italic')
+                  $t(($) => $.pageSetup.italic, { ns: 'dialog' })
                 }}</label>
               </div>
               <div class="form-group">
                 <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.outline')
+                  $t(($) => $.pageSetup.outline, { ns: 'dialog' })
                 }}</label>
 
                 <InputStrokeWidth
@@ -1109,24 +1237,26 @@
             </div>
 
             <div ref="modeKeysRef" class="subheader">
-              {{ $t('dialog:pageSetup.modeKeys') }}
+              {{ $t(($) => $.pageSetup.modeKeys, { ns: 'dialog' }) }}
             </div>
             <div class="form-group">
               <div class="name">
-                {{ $t('dialog:pageSetup.defaultStyling') }}
+                {{ $t(($) => $.pageSetup.defaultStyling, { ns: 'dialog' }) }}
               </div>
               <div class="description">
-                {{ $t('dialog:pageSetup.modeKeysDescription') }}
+                {{
+                  $t(($) => $.pageSetup.modeKeysDescription, { ns: 'dialog' })
+                }}
               </div>
               <div class="form-group row">
                 <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.color')
+                  $t(($) => $.pageSetup.color, { ns: 'dialog' })
                 }}</label>
                 <ColorPicker v-model="form.modeKeyDefaultColor" />
               </div>
               <div class="form-group">
                 <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.size')
+                  $t(($) => $.pageSetup.size, { ns: 'dialog' })
                 }}</label>
                 <InputFontSize
                   v-model="form.modeKeyDefaultFontSize"
@@ -1135,7 +1265,7 @@
               </div>
               <div class="form-group">
                 <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.outline')
+                  $t(($) => $.pageSetup.outline, { ns: 'dialog' })
                 }}</label>
                 <InputStrokeWidth
                   v-model="form.modeKeyDefaultStrokeWidth"
@@ -1144,7 +1274,7 @@
               </div>
               <div class="form-group">
                 <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.heightAdjust')
+                  $t(($) => $.pageSetup.heightAdjust, { ns: 'dialog' })
                 }}</label>
 
                 <InputUnit
@@ -1159,24 +1289,24 @@
               </div>
             </div>
             <div ref="neumesRef" class="subheader">
-              {{ $t('dialog:pageSetup.neumes') }}
+              {{ $t(($) => $.pageSetup.neumes, { ns: 'dialog' }) }}
             </div>
             <div class="form-group">
               <div class="name">
-                {{ $t('dialog:pageSetup.defaultStyling') }}
+                {{ $t(($) => $.pageSetup.defaultStyling, { ns: 'dialog' }) }}
               </div>
               <div class="description">
-                {{ $t('dialog:pageSetup.neumesDescription') }}
+                {{ $t(($) => $.pageSetup.neumesDescription, { ns: 'dialog' }) }}
               </div>
               <div class="form-group row">
                 <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.color')
+                  $t(($) => $.pageSetup.color, { ns: 'dialog' })
                 }}</label>
                 <ColorPicker v-model="form.neumeDefaultColor" />
               </div>
               <div class="form-group">
                 <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.size')
+                  $t(($) => $.pageSetup.size, { ns: 'dialog' })
                 }}</label>
                 <InputFontSize
                   v-model="form.neumeDefaultFontSize"
@@ -1185,7 +1315,7 @@
               </div>
               <div class="form-group">
                 <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.font')
+                  $t(($) => $.pageSetup.font, { ns: 'dialog' })
                 }}</label>
                 <select
                   v-model="form.neumeDefaultFontFamily"
@@ -1203,7 +1333,7 @@
               </div>
               <div class="form-group">
                 <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.outline')
+                  $t(($) => $.pageSetup.outline, { ns: 'dialog' })
                 }}</label>
                 <InputStrokeWidth
                   v-model="form.neumeDefaultStrokeWidth"
@@ -1214,20 +1344,26 @@
 
             <div class="form-group">
               <div class="name">
-                {{ $t('dialog:pageSetup.alternateLineStyling') }}
+                {{
+                  $t(($) => $.pageSetup.alternateLineStyling, { ns: 'dialog' })
+                }}
               </div>
               <div class="description">
-                {{ $t('dialog:pageSetup.alternateLineDescription') }}
+                {{
+                  $t(($) => $.pageSetup.alternateLineDescription, {
+                    ns: 'dialog',
+                  })
+                }}
               </div>
               <div class="form-group row">
                 <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.color')
+                  $t(($) => $.pageSetup.color, { ns: 'dialog' })
                 }}</label>
                 <ColorPicker v-model="form.alternateLineDefaultColor" />
               </div>
               <div class="form-group">
                 <label class="drop-caps-label name">{{
-                  $t('dialog:pageSetup.size')
+                  $t(($) => $.pageSetup.size, { ns: 'dialog' })
                 }}</label>
                 <InputFontSize
                   v-model="form.alternateLineDefaultFontSize"
@@ -1237,18 +1373,18 @@
             </div>
 
             <div ref="neumeStylesRef" class="subheader">
-              {{ $t('dialog:pageSetup.neumeStyles') }}
+              {{ $t(($) => $.pageSetup.neumeStyles, { ns: 'dialog' }) }}
             </div>
             <div class="form-group row">
               <div class="neume-colors-checkbox-container"></div>
               <label class="neume-colors-label small-header">{{
-                $t('dialog:pageSetup.type')
+                $t(($) => $.pageSetup.type, { ns: 'dialog' })
               }}</label>
               <label class="neume-colors-input small-header">{{
-                $t('dialog:pageSetup.color')
+                $t(($) => $.pageSetup.color, { ns: 'dialog' })
               }}</label>
               <label class="small-header">{{
-                $t('dialog:pageSetup.outline')
+                $t(($) => $.pageSetup.outline, { ns: 'dialog' })
               }}</label>
             </div>
             <div class="form-group row">
@@ -1261,7 +1397,7 @@
                 />
               </div>
               <label class="neume-colors-label">{{
-                $t('dialog:pageSetup.accidentals')
+                $t(($) => $.pageSetup.accidentals, { ns: 'dialog' })
               }}</label>
               <ColorPicker
                 v-model="form.accidentalDefaultColor"
@@ -1282,7 +1418,7 @@
                 />
               </div>
               <label class="neume-colors-label">{{
-                $t('dialog:pageSetup.breath')
+                $t(($) => $.pageSetup.breath, { ns: 'dialog' })
               }}</label>
               <ColorPicker
                 v-model="form.breathDefaultColor"
@@ -1303,7 +1439,7 @@
                 />
               </div>
               <label class="neume-colors-label">{{
-                $t('dialog:pageSetup.cross')
+                $t(($) => $.pageSetup.cross, { ns: 'dialog' })
               }}</label>
               <ColorPicker
                 v-model="form.crossDefaultColor"
@@ -1324,7 +1460,7 @@
                 />
               </div>
               <label class="neume-colors-label">{{
-                $t('dialog:pageSetup.fthoras')
+                $t(($) => $.pageSetup.fthoras, { ns: 'dialog' })
               }}</label>
               <ColorPicker
                 v-model="form.fthoraDefaultColor"
@@ -1345,7 +1481,7 @@
                 />
               </div>
               <label class="neume-colors-label">{{
-                $t('dialog:pageSetup.gorgons')
+                $t(($) => $.pageSetup.gorgons, { ns: 'dialog' })
               }}</label>
               <ColorPicker
                 v-model="form.gorgonDefaultColor"
@@ -1366,7 +1502,7 @@
                 />
               </div>
               <label class="neume-colors-label">{{
-                $t('dialog:pageSetup.heterons')
+                $t(($) => $.pageSetup.heterons, { ns: 'dialog' })
               }}</label>
               <ColorPicker
                 v-model="form.heteronDefaultColor"
@@ -1387,7 +1523,7 @@
                 />
               </div>
               <label class="neume-colors-label">{{
-                $t('dialog:pageSetup.ison')
+                $t(($) => $.pageSetup.ison, { ns: 'dialog' })
               }}</label>
               <ColorPicker
                 v-model="form.isonDefaultColor"
@@ -1408,7 +1544,7 @@
                 />
               </div>
               <label class="neume-colors-label">{{
-                $t('dialog:pageSetup.koronis')
+                $t(($) => $.pageSetup.koronis, { ns: 'dialog' })
               }}</label>
               <ColorPicker
                 v-model="form.koronisDefaultColor"
@@ -1429,7 +1565,7 @@
                 />
               </div>
               <label class="neume-colors-label">{{
-                $t('dialog:pageSetup.martyriae')
+                $t(($) => $.pageSetup.martyriae, { ns: 'dialog' })
               }}</label>
               <ColorPicker
                 v-model="form.martyriaDefaultColor"
@@ -1450,7 +1586,7 @@
                 />
               </div>
               <label class="neume-colors-label">{{
-                $t('dialog:pageSetup.measureBars')
+                $t(($) => $.pageSetup.measureBars, { ns: 'dialog' })
               }}</label>
               <ColorPicker
                 v-model="form.measureBarDefaultColor"
@@ -1471,7 +1607,7 @@
                 />
               </div>
               <label class="neume-colors-label">{{
-                $t('dialog:pageSetup.measureNo')
+                $t(($) => $.pageSetup.measureNo, { ns: 'dialog' })
               }}</label>
               <ColorPicker
                 v-model="form.measureNumberDefaultColor"
@@ -1492,7 +1628,7 @@
                 />
               </div>
               <label class="neume-colors-label">{{
-                $t('dialog:pageSetup.noteIndicators')
+                $t(($) => $.pageSetup.noteIndicators, { ns: 'dialog' })
               }}</label>
               <ColorPicker
                 v-model="form.noteIndicatorDefaultColor"
@@ -1513,7 +1649,7 @@
                 />
               </div>
               <label class="neume-colors-label">{{
-                $t('dialog:pageSetup.tempos')
+                $t(($) => $.pageSetup.tempos, { ns: 'dialog' })
               }}</label>
               <ColorPicker
                 v-model="form.tempoDefaultColor"
@@ -1526,10 +1662,14 @@
             </div>
             <div class="form-group">
               <div class="name">
-                {{ $t('dialog:pageSetup.neumeBulkColor') }}
+                {{ $t(($) => $.pageSetup.neumeBulkColor, { ns: 'dialog' }) }}
               </div>
               <div class="description">
-                {{ $t('dialog:pageSetup.neumeBulkColorDescription') }}
+                {{
+                  $t(($) => $.pageSetup.neumeBulkColorDescription, {
+                    ns: 'dialog',
+                  })
+                }}
               </div>
               <div class="row">
                 <ColorPicker
@@ -1543,7 +1683,9 @@
         </div>
       </div>
       <div class="preview-container">
-        <div class="small-header">{{ $t('dialog:pageSetup.preview') }}</div>
+        <div class="small-header">
+          {{ $t(($) => $.pageSetup.preview, { ns: 'dialog' }) }}
+        </div>
         <div class="preview-elements">
           <template v-for="(element, index) in previewNeumes">
             <template v-if="isSyllableElement(element.elementType)">
@@ -1574,16 +1716,16 @@
         </div>
         <div class="button-container">
           <button class="ok-btn" @click="updatePageSetup">
-            {{ $t('dialog:common.update') }}
+            {{ $t(($) => $.common.update, { ns: 'dialog' }) }}
           </button>
           <button class="reset-btn neutral-btn" @click="saveAsDefault">
-            {{ $t('dialog:common.setAsDefault') }}
+            {{ $t(($) => $.common.setAsDefault, { ns: 'dialog' }) }}
           </button>
           <button class="reset-btn neutral-btn" @click="resetToSystemDefaults">
-            {{ $t('dialog:common.useSystemDefault') }}
+            {{ $t(($) => $.common.useSystemDefault, { ns: 'dialog' }) }}
           </button>
           <button class="cancel-btn" @click="$emit('close')">
-            {{ $t('dialog:common.cancel') }}
+            {{ $t(($) => $.common.cancel, { ns: 'dialog' }) }}
           </button>
         </div>
       </div>
@@ -1592,6 +1734,7 @@
 </template>
 
 <script lang="ts">
+import { SelectorParam } from 'i18next';
 import { throttle } from 'throttle-debounce';
 import { defineComponent, PropType } from 'vue';
 
@@ -1842,21 +1985,21 @@ export default defineComponent({
       },
     },
 
-    marginUnitLabel() {
+    marginUnitLabel(): SelectorParam<'dialog'> | undefined {
       switch (this.form.pageSizeUnit) {
         case 'pc':
-          return 'dialog:pageSetup.pc';
+          return ($) => $.pageSetup.pc;
         case 'pt':
-          return 'dialog:pageSetup.pt';
+          return ($) => $.pageSetup.pt;
         case 'cm':
-          return 'dialog:pageSetup.cm';
+          return ($) => $.pageSetup.cm;
         case 'mm':
-          return 'dialog:pageSetup.mm';
+          return ($) => $.pageSetup.mm;
         case 'in':
-          return 'dialog:pageSetup.in';
+          return ($) => $.pageSetup.in;
         default:
           console.warn(`Unknown page size unit: ${this.form.pageSizeUnit}`);
-          return null;
+          return undefined;
       }
     },
 

@@ -12,7 +12,7 @@
         "
       />
       <label for="toolbar-image-box-inline">{{
-        $t('toolbar:common.inline')
+        $t(($) => $.common.inline, { ns: 'toolbar' })
       }}</label>
     </div>
 
@@ -30,14 +30,16 @@
         "
       />
       <label for="toolbar-image-box-lock-aspect-ratio">{{
-        $t('toolbar:imageBox.maintainAspectRatio')
+        $t(($) => $.imageBox.maintainAspectRatio, { ns: 'toolbar' })
       }}</label>
     </div>
 
     <span class="space" />
 
     <div style="display: flex; align-items: center">
-      <label class="right-space">{{ $t('toolbar:imageBox.width') }}</label>
+      <label class="right-space">{{
+        $t(($) => $.imageBox.width, { ns: 'toolbar' })
+      }}</label>
       <InputUnit
         :model-value="element.imageWidth"
         unit="unitless"
@@ -52,7 +54,9 @@
     <span class="space" />
 
     <div style="display: flex; align-items: center">
-      <label class="right-space">{{ $t('toolbar:imageBox.height') }}</label>
+      <label class="right-space">{{
+        $t(($) => $.imageBox.height, { ns: 'toolbar' })
+      }}</label>
       <InputUnit
         :model-value="element.imageHeight"
         unit="unitless"
@@ -78,7 +82,7 @@
           src="@/assets/icons/alignleft.svg"
           width="32"
           height="32"
-          :title="$t('toolbar:common.alignLeft')"
+          :title="$t(($) => $.common.alignLeft, { ns: 'toolbar' })"
         />
       </button>
       <button
@@ -94,7 +98,7 @@
           src="@/assets/icons/aligncenter.svg"
           width="32"
           height="32"
-          :title="$t('toolbar:common.alignCenter')"
+          :title="$t(($) => $.common.alignCenter, { ns: 'toolbar' })"
         />
       </button>
       <button
@@ -110,7 +114,7 @@
           src="@/assets/icons/alignright.svg"
           width="32"
           height="32"
-          :title="$t('toolbar:common.alignRight')"
+          :title="$t(($) => $.common.alignRight, { ns: 'toolbar' })"
         />
       </button>
     </template>

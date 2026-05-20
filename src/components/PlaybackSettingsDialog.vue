@@ -2,10 +2,14 @@
 <template>
   <ModalDialog>
     <div class="container">
-      <div class="header">{{ $t('dialog:playbackSettings.root') }}</div>
+      <div class="header">
+        {{ $t(($) => $.playbackSettings.root, { ns: 'dialog' }) }}
+      </div>
       <div class="pane-container">
         <div class="form-group row">
-          <label>{{ $t('dialog:playbackSettings.detune') }}</label>
+          <label>{{
+            $t(($) => $.playbackSettings.detune, { ns: 'dialog' })
+          }}</label>
           <input
             type="number"
             class="detune"
@@ -20,16 +24,16 @@
           <span class="unit-label">cents</span>
           <span class="label-g3">Di = G3 = {{ options.frequencyDi }} Hz </span>
           <button class="btnTestTone" @click="$emit('play-test-tone')">
-            {{ $t('dialog:playbackSettings.test') }}
+            {{ $t(($) => $.playbackSettings.test, { ns: 'dialog' }) }}
           </button>
         </div>
 
         <div class="form-group subheader">
-          {{ $t('dialog:playbackSettings.volume') }}
+          {{ $t(($) => $.playbackSettings.volume, { ns: 'dialog' }) }}
         </div>
         <div class="form-group row">
           <span class="volume-label">{{
-            $t('dialog:playbackSettings.melody')
+            $t(($) => $.playbackSettings.melody, { ns: 'dialog' })
           }}</span>
           <input
             v-model="volumeMelody"
@@ -43,7 +47,7 @@
 
         <div class="form-group row">
           <span class="volume-label">{{
-            $t('dialog:playbackSettings.ison')
+            $t(($) => $.playbackSettings.ison, { ns: 'dialog' })
           }}</span>
           <input
             v-model="volumeIson"
@@ -64,12 +68,16 @@
             type="checkbox"
           />
           <label for="playback-settings-dialog-diatonic-zo">{{
-            $t('dialog:playbackSettings.diatonicZoAttraction')
+            $t(($) => $.playbackSettings.diatonicZoAttraction, { ns: 'dialog' })
           }}</label>
           <p>
-            {{ $t('dialog:playbackSettings.diatonicZoAttractionDescription') }}
+            {{
+              $t(($) => $.playbackSettings.diatonicZoAttractionDescription, {
+                ns: 'dialog',
+              })
+            }}
           </p>
-          {{ $t('dialog:playbackSettings.moria') }}
+          {{ $t(($) => $.playbackSettings.moria, { ns: 'dialog' }) }}
           <input
             type="number"
             class="interval"
@@ -87,7 +95,7 @@
             class="btnResetDefaultAttractionZoMoria"
             @click="resetDefaultAttractionZoMoria"
           >
-            {{ $t('dialog:playbackSettings.reset') }}
+            {{ $t(($) => $.playbackSettings.reset, { ns: 'dialog' }) }}
           </button>
         </div>
 
@@ -98,10 +106,14 @@
             type="checkbox"
           />
           <label for="playback-settings-dialog-legetos">{{
-            $t('dialog:playbackSettings.classicLegetos')
+            $t(($) => $.playbackSettings.classicLegetos, { ns: 'dialog' })
           }}</label>
           <p>
-            {{ $t('dialog:playbackSettings.classicLegetosDescription') }}
+            {{
+              $t(($) => $.playbackSettings.classicLegetosDescription, {
+                ns: 'dialog',
+              })
+            }}
           </p>
         </div>
 
@@ -109,10 +121,10 @@
 
         <div class="row">
           <span class="subheader">{{
-            $t('dialog:playbackSettings.intervals')
+            $t(($) => $.playbackSettings.intervals, { ns: 'dialog' })
           }}</span
           ><button class="btnResetIntervals" @click="resetIntervals">
-            {{ $t('dialog:playbackSettings.reset') }}
+            {{ $t(($) => $.playbackSettings.reset, { ns: 'dialog' }) }}
           </button>
         </div>
 
@@ -120,7 +132,7 @@
 
         <div class="form-group row">
           <span class="scale-name">{{
-            $t('dialog:playbackSettings.diatonic')
+            $t(($) => $.playbackSettings.diatonic, { ns: 'dialog' })
           }}</span>
           <div
             v-for="(note, index) in ['Ni', 'Pa', 'Vou']"
@@ -149,7 +161,7 @@
 
         <div v-if="options.useLegetos" class="form-group row">
           <span class="scale-name">{{
-            $t('dialog:playbackSettings.legetos')
+            $t(($) => $.playbackSettings.legetos, { ns: 'dialog' })
           }}</span>
           <div
             v-for="(note, index) in ['Pa', 'Vou', 'Ga']"
@@ -178,7 +190,7 @@
 
         <div class="form-group row">
           <span class="scale-name">{{
-            $t('dialog:playbackSettings.softChromatic')
+            $t(($) => $.playbackSettings.softChromatic, { ns: 'dialog' })
           }}</span>
           <div
             v-for="(note, index) in ['Ni', 'Pa', 'Vou']"
@@ -207,7 +219,7 @@
 
         <div class="form-group row">
           <span class="scale-name">{{
-            $t('dialog:playbackSettings.hardChromatic')
+            $t(($) => $.playbackSettings.hardChromatic, { ns: 'dialog' })
           }}</span>
           <div
             v-for="(note, index) in ['Pa', 'Vou', 'Ga']"
@@ -236,7 +248,7 @@
 
         <div class="form-group row">
           <span class="scale-name">{{
-            $t('dialog:playbackSettings.zygos')
+            $t(($) => $.playbackSettings.zygos, { ns: 'dialog' })
           }}</span>
           <div
             v-for="(note, index) in ['Ni', 'Pa', 'Vou', 'Ga']"
@@ -265,7 +277,7 @@
 
         <div v-if="options.useLegetos" class="form-group row">
           <span class="scale-name">{{
-            $t('dialog:playbackSettings.zygosLegetos')
+            $t(($) => $.playbackSettings.zygosLegetos, { ns: 'dialog' })
           }}</span>
           <div
             v-for="(note, index) in ['Ni', 'Pa', 'Vou', 'Ga']"
@@ -294,7 +306,7 @@
 
         <div class="form-group row">
           <span class="scale-name">{{
-            $t('dialog:playbackSettings.kliton')
+            $t(($) => $.playbackSettings.kliton, { ns: 'dialog' })
           }}</span>
           <div
             v-for="(note, index) in ['Pa', 'Vou', 'Ga']"
@@ -323,7 +335,7 @@
 
         <div class="form-group row">
           <span class="scale-name">{{
-            $t('dialog:playbackSettings.spathi')
+            $t(($) => $.playbackSettings.spathi, { ns: 'dialog' })
           }}</span>
           <div
             v-for="(note, index) in ['Ga', 'Di', 'Ke', 'Zo']"
@@ -354,13 +366,15 @@
 
         <div class="row">
           <span class="subheader">{{
-            $t('dialog:playbackSettings.alterationMultipliersChrysanthine')
+            $t(($) => $.playbackSettings.alterationMultipliersChrysanthine, {
+              ns: 'dialog',
+            })
           }}</span
           ><button
             class="btnResetIntervals"
             @click="resetAlterationMultipliers"
           >
-            {{ $t('dialog:playbackSettings.reset') }}
+            {{ $t(($) => $.playbackSettings.reset, { ns: 'dialog' }) }}
           </button>
         </div>
 
@@ -368,7 +382,7 @@
 
         <div class="form-group row">
           <span class="alteration-name">{{
-            $t('dialog:playbackSettings.zeroCrossbeams')
+            $t(($) => $.playbackSettings.zeroCrossbeams, { ns: 'dialog' })
           }}</span>
           <div class="row">
             <input
@@ -390,7 +404,7 @@
         </div>
         <div class="form-group row">
           <span class="alteration-name">{{
-            $t('dialog:playbackSettings.oneCrossbeam')
+            $t(($) => $.playbackSettings.oneCrossbeam, { ns: 'dialog' })
           }}</span>
           <div class="row">
             <input
@@ -412,7 +426,7 @@
         </div>
         <div class="form-group row">
           <span class="alteration-name">{{
-            $t('dialog:playbackSettings.twoCrossbeams')
+            $t(($) => $.playbackSettings.twoCrossbeams, { ns: 'dialog' })
           }}</span>
           <div class="row">
             <input
@@ -437,7 +451,9 @@
 
         <div class="row">
           <span class="subheader">{{
-            $t('dialog:playbackSettings.alterationMoria1881Committee')
+            $t(($) => $.playbackSettings.alterationMoria1881Committee, {
+              ns: 'dialog',
+            })
           }}</span
           ><button class="btnResetIntervals" @click="resetAlterationMoria">
             Reset
@@ -447,7 +463,9 @@
         <div class="vertical-spacer" />
         <div class="form-group row">
           <span class="alteration-name">{{
-            $t('dialog:playbackSettings.sharpWithZeroCrossbeams')
+            $t(($) => $.playbackSettings.sharpWithZeroCrossbeams, {
+              ns: 'dialog',
+            })
           }}</span>
           <div class="row">
             <input
@@ -469,7 +487,9 @@
         </div>
         <div class="form-group row">
           <span class="alteration-name">{{
-            $t('dialog:playbackSettings.sharpWithOneCrossbeam')
+            $t(($) => $.playbackSettings.sharpWithOneCrossbeam, {
+              ns: 'dialog',
+            })
           }}</span>
           <div class="row">
             <input
@@ -491,7 +511,9 @@
         </div>
         <div class="form-group row">
           <span class="alteration-name">{{
-            $t('dialog:playbackSettings.sharpWithTwoCrossbeams')
+            $t(($) => $.playbackSettings.sharpWithTwoCrossbeams, {
+              ns: 'dialog',
+            })
           }}</span>
           <div class="row">
             <input
@@ -513,7 +535,9 @@
         </div>
         <div class="form-group row">
           <span class="alteration-name">{{
-            $t('dialog:playbackSettings.sharpWithThreeCrossbeams')
+            $t(($) => $.playbackSettings.sharpWithThreeCrossbeams, {
+              ns: 'dialog',
+            })
           }}</span>
           <div class="row">
             <input
@@ -535,7 +559,9 @@
         </div>
         <div class="form-group row">
           <span class="alteration-name">{{
-            $t('dialog:playbackSettings.flatWithZeroCrossbeams')
+            $t(($) => $.playbackSettings.flatWithZeroCrossbeams, {
+              ns: 'dialog',
+            })
           }}</span>
           <div class="row">
             <input
@@ -557,7 +583,7 @@
         </div>
         <div class="form-group row">
           <span class="alteration-name">{{
-            $t('dialog:playbackSettings.flatWithOneCrossbeam')
+            $t(($) => $.playbackSettings.flatWithOneCrossbeam, { ns: 'dialog' })
           }}</span>
           <div class="row">
             <input
@@ -579,7 +605,9 @@
         </div>
         <div class="form-group row">
           <span class="alteration-name">{{
-            $t('dialog:playbackSettings.flatWithTwoCrossbeams')
+            $t(($) => $.playbackSettings.flatWithTwoCrossbeams, {
+              ns: 'dialog',
+            })
           }}</span>
           <div class="row">
             <input
@@ -601,7 +629,9 @@
         </div>
         <div class="form-group row">
           <span class="alteration-name">{{
-            $t('dialog:playbackSettings.flatWithThreeCrossbeams')
+            $t(($) => $.playbackSettings.flatWithThreeCrossbeams, {
+              ns: 'dialog',
+            })
           }}</span>
           <div class="row">
             <input
@@ -625,7 +655,7 @@
       <div class="error">{{ error }}</div>
       <div class="button-container">
         <button class="cancel-btn" @click="close">
-          {{ $t('dialog:playbackSettings.close') }}
+          {{ $t(($) => $.playbackSettings.close, { ns: 'dialog' }) }}
         </button>
       </div>
     </div>

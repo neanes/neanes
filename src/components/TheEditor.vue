@@ -5046,10 +5046,10 @@ export default defineComponent({
           this.ipcService.showMessageBox({
             type: 'error',
             title: 'Range overflow',
-            message: this.$t('toolbar:main.invalidZoom'),
+            message: this.$t(($) => $.main.invalidZoom, { ns: 'toolbar' }),
           });
         } else {
-          alert(this.$t('toolbar:main.invalidZoom'));
+          alert(this.$t(($) => $.main.invalidZoom, { ns: 'toolbar' }));
         }
       } else {
         this.zoom = zoom;
@@ -6288,7 +6288,7 @@ export default defineComponent({
           class="neume-combo-header"
           @click="neumeComboPanelIsExpanded = !neumeComboPanelIsExpanded"
         >
-          {{ $t('editor:common.neumeComboHeader') }}
+          {{ $t(($) => $.common.neumeComboHeader, { ns: 'editor' }) }}
           <span class="neume-combo-expand-collapse">{{
             neumeComboPanelIsExpanded ? '\u2796' : '\u2795'
           }}</span>

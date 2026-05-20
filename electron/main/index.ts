@@ -14,7 +14,6 @@ import {
 import { autoUpdater } from 'electron-updater';
 import { promises as fs } from 'fs';
 import i18next from 'i18next';
-import Pseudo from 'i18next-pseudo';
 import { imageSizeFromFile } from 'image-size/fromFile';
 import JSZip from 'jszip';
 import mimetypes from 'mime-types';
@@ -23,12 +22,7 @@ import { debounce } from 'throttle-debounce';
 
 import { PageSize } from '@/models/PageSetup';
 
-import {
-  defaultNS,
-  resolveLanguagePreference,
-  resources,
-  supportedLngs,
-} from '../../src/i18n';
+import { initializeI18n, resolveLanguagePreference } from '../../src/i18n';
 import {
   CloseWorkspacesArgs,
   CloseWorkspacesDisposition,
@@ -2104,28 +2098,9 @@ app.on('ready', async () => {
   // is honored when we initialize i18next and build the native menu.
   await loadStore();
 
-  i18next
-    .use(
-      new Pseudo({
-        enabled:
-          'VITE_PSEUDOLOCALIZATION' in import.meta.env &&
-          import.meta.env['VITE_PSEUDOLOCALIZATION'] === 'true',
-        languageToPseudo: 'en-US',
-      }),
-    )
-    .init({
-      debug:
-        'VITE_PSEUDOLOCALIZATION' in import.meta.env &&
-        import.meta.env['VITE_PSEUDOLOCALIZATION'] === 'true',
-      lng: resolveLanguagePreference(store.language, app.getLocale()),
-      fallbackLng: 'en',
-      supportedLngs,
-      nonExplicitSupportedLngs: true,
-      ns: Object.keys(resources['en']),
-      postProcess: ['pseudo'],
-      defaultNS,
-      resources,
-    });
+  await initializeI18n({
+    lng: resolveLanguagePreference(store.language, app.getLocale()),
+  });
 
   if (!win) {
     createWindow();

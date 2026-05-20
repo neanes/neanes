@@ -1338,10 +1338,11 @@ export default defineComponent({
       // Make sure we initialized all the throttled methods
       if (this.isDevelopment) {
         for (const [key, val] of Object.entries(this.throttled)) {
-          if (val == null)
+          if (val == null) {
             throw new Error(
               `Missing initialization for throttled method '${key}'`,
             );
+          }
         }
       }
     },

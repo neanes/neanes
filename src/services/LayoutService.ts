@@ -1262,7 +1262,9 @@ export class LayoutService {
             nextIdx++
           ) {
             const nextPos = positions[nextIdx];
-            if (nextPos.line > position.line) break;
+            if (nextPos.line > position.line) {
+              break;
+            }
             if (nextPos.line === position.line) {
               fillWidth = nextPos.xOffset - position.xOffset;
               break;

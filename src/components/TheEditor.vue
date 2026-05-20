@@ -5046,10 +5046,10 @@ export default defineComponent({
           this.ipcService.showMessageBox({
             type: 'error',
             title: 'Range overflow',
-            message: this.$t('toolbar:main:invalidZoom'),
+            message: this.$t('toolbar:main.invalidZoom'),
           });
         } else {
-          alert(this.$t('toolbar:main:invalidZoom'));
+          alert(this.$t('toolbar:main.invalidZoom'));
         }
       } else {
         this.zoom = zoom;

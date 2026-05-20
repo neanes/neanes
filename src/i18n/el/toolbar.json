@@ -76,7 +76,7 @@
     "rightAlignTempo": "Δεξιά στοίχιση αγωγής",
     "showAmbitus": "Εμφάνιση Αμβίτου",
     "permanentEnharmonicZo": "Μόνιμο Εναρμόνιο Ζω",
-    "changeKey": "Αλλαγή Μαρτυρίας",
+    "changeKey": "Αλλαγή Αρκτικής Μαρτυρίας",
     "useOptionalDiatonicFthoras": "Εμφάνιση Διατονικών Φθορών"
   },
   "neume": {
@@ -96,7 +96,7 @@
   },
   "textbox": {
     "multipanel": "Πολλαπλά Πάνελ",
-    "rtl": "ΔπΑ",
+    "rtl": "RTL",
     "scrollable": "Κυλιόμενο",
     "modeChange": "Αλλαγή Ήχου",
     "virtualNote": "Φθόγγος Παραλλαγής",

@@ -93,11 +93,11 @@
     "vocalExpression": {
       "vareia": "Βαρεία",
       "homalon": "Ομαλόν",
-      "connectingHomalon": "Ομαλόν Συνδέσεως",
+      "connectingHomalon": "Ομαλόν Σύνδεσης",
       "antikenoma": "Αντικένωμα",
       "psifiston": "Ψηφιστόν",
       "heteron": "Έτερον",
-      "connectingHeteron": "Έτερον Συνδέσεως",
+      "connectingHeteron": "Έτερον Σύνδεσης",
       "endofonon": "Ενδόφωνον"
     },
     "rootSign": {
@@ -115,14 +115,14 @@
       "neagie": "Νεάγιε"
     },
     "fthora": {
-      "diatonicNiLow": "Διατονικό Νη Χαμηλό",
+      "diatonicNiLow": "Διατονικό Κάτω Νη",
       "diatonicPa": "Διατονικό Πα",
       "diatonicVou": "Διατονικό Βου",
       "diatonicGa": "Διατονικό Γα",
       "diatonicDi": "Διατονικό Δι",
       "diatonicKe": "Διατονικό Κε",
       "diatonicZo": "Διατονικό Ζω",
-      "diatonicNiHigh": "Διατονικό Νη Υψηλό",
+      "diatonicNiHigh": "Διατονικό Άνω Νη",
       "softChromaticDi": "Μαλακό Χρωματικό Δι",
       "softChromaticGa": "Μαλακό Χρωματικό Γα",
       "hardChromaticPa": "Σκληρό Χρωματικό Πα",
@@ -138,19 +138,19 @@
       "right": "Δεξιά",
       "top": "Πάνω",
       "double": "Διπλή",
-      "shortDouble": "Σύντομη Διπλή",
+      "shortDouble": "Μικρή Διπλή",
       "theseos": "Θέσεως",
-      "shortTheseos": "Σύντομη Θέσεως"
+      "shortTheseos": "Μικρή Θέσεως"
     },
     "tempoSign": {
-      "verySlow": "Πολύ Αργό",
-      "slower": "Πιο Αργό",
-      "slow": "Αργό",
-      "medium": "Μεσαίο",
-      "moderate": "Μέτριο",
-      "quick": "Γρήγορο",
-      "quicker": "Πιο Γρήγορο",
-      "veryQuick": "Πολύ Γρήγορο"
+      "verySlow": "Πολύ Αργή",
+      "slower": "Αργότερη",
+      "slow": "Αργή",
+      "medium": "Μέση",
+      "moderate": "Μέτρια",
+      "quick": "Γοργή",
+      "quicker": "Γοργότερη",
+      "veryQuick": "Πολύ Γοργή"
     }
   },
   "note": {
@@ -181,24 +181,24 @@
     "softChromatic": "Μαλακός Χρωματικός",
     "hardChromatic": "Σκληρός Χρωματικός",
     "enharmonicGa": "Εναρμόνιος από Γα",
-    "enharmonicZoHigh": "Εναρμόνιος από Ζω Υψηλό",
+    "enharmonicZoHigh": "Εναρμόνιος από Άνω Ζω",
     "enharmonicVou": "Εναρμόνιος από Βου",
     "enharmonicZo": "Εναρμόνιος από Ζω",
-    "enharmonicVouHigh": "Εναρμόνιος από Βου Υψηλό",
+    "enharmonicVouHigh": "Εναρμόνιος από Άνω Βου",
     "zygos": "Ζυγός",
     "kliton": "Κλιτόν",
     "spathi": "Σπάθη",
     "spathiGa": "Σπάθη από Γα"
   },
   "mode": {
-    "first": "Πρώτος Ήχος",
-    "second": "Δεύτερος Ήχος",
-    "third": "Τρίτος Ήχος",
-    "fourth": "Τέταρτος Ήχος",
-    "plagalFirst": "Πλάγιος Πρώτου",
-    "plagalSecond": "Πλάγιος Δευτέρου",
-    "grave": "Βαρύς Ήχος",
-    "plagalFourth": "Πλάγιος Τετάρτου"
+    "first": "Ήχος Πρώτος",
+    "second": "Ήχος Δεύτερος",
+    "third": "Ήχος Τρίτος",
+    "fourth": "Ήχος Τέταρτος",
+    "plagalFirst": "Ήχος Πλάγιος του Πρώτου",
+    "plagalSecond": "Ήχος Πλάγιος του Δευτέρου",
+    "grave": "Ήχος Βαρύς",
+    "plagalFourth": "Ήχος Πλάγιος του Τετάρτου"
   },
   "modeKey": {
     "heirmologicAndSticheraric": "Ειρμολογικός και Στιχηραρικός",
@@ -225,7 +225,7 @@
     "heirmologic": "Ειρμολογικός",
     "spathi": "Σπάθη",
     "pentaphonic": "Πεντάφωνος",
-    "minorMakamBuselik": "Ελάσσων (Μακάμ Μπουσελίκ)",
+    "minorMakamBuselik": "Μινόρε (Μακάμ Μπουσελίκ)",
     "triphonic": "Τρίφωνος",
     "heirmologicSoftChromaticFromVou": "Ειρμολογικός (Μαλακός Χρωματικός) από Βου",
     "heirmologicSoftChromaticFromDi": "Ειρμολογικός (Μαλακός Χρωματικός) από Δι",

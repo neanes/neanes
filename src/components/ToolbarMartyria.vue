@@ -147,19 +147,19 @@
       <ButtonWithMenu
         class="btnMenuTempoLeft"
         :options="tempoMenuOptions"
-        :title="$t('toolbar:martyria:tempoLeft')"
+        :title="$t('toolbar:martyria.tempoLeft')"
         @select="$emit('update:tempoLeft', $event)"
       />
       <ButtonWithMenu
         class="btnMenuTempoAbove"
         :options="tempoMenuOptionsAbove"
-        :title="$t('toolbar:martyria:tempo')"
+        :title="$t('toolbar:martyria.tempo')"
         @select="$emit('update:tempo', $event)"
       />
       <ButtonWithMenu
         class="btnMenuTempoRight"
         :options="tempoMenuOptions"
-        :title="$t('toolbar:martyria:tempoRight')"
+        :title="$t('toolbar:martyria.tempoRight')"
         @select="$emit('update:tempoRight', $event)"
       />
       <span class="space"></span>
@@ -184,7 +184,7 @@
         <span class="space" />
         <ButtonWithMenu
           :options="quantitativeNeumeOptions"
-          :title="$t('toolbar:common:neume')"
+          :title="$t('toolbar:common.neume')"
           @select="$emit('update:quantitativeNeume', $event)"
         />
       </template>

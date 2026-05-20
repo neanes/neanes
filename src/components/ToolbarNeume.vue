@@ -858,14 +858,6 @@ const isonMenuOptions: ButtonWithMenuOption[] = [
   },
 ];
 
-function getNoteName(note: ScaleNote): ModelSelector | null {
-  if (note == null) {
-    return null;
-  }
-
-  return getNoteLabelSelector(note);
-}
-
 export default defineComponent({
   components: { InputUnit, ButtonWithMenu, Neume: NeumeVue },
   props: {
@@ -1207,10 +1199,7 @@ export default defineComponent({
 
     noteDisplay() {
       return this.element.scaleNotes
-        .map((x) => {
-          const noteName = getNoteName(x);
-          return noteName == null ? '???' : this.$t(noteName, { ns: 'model' });
-        })
+        .map((x) => this.$t(getNoteLabelSelector(x), { ns: 'model' }))
         .join(' - ');
     },
     spaceAfterMax() {

@@ -36,6 +36,10 @@ jobs:
           upload_translations: false
           # Download translations and open a PR with the result.
           download_translations: true
+          # Skip untranslated strings when downloading translations
+          skip_untranslated_strings: true
+          # Skip untranslated files when downloading translations
+          skip_untranslated_files: true
           localization_branch_name: l10n_crowdin
           create_pull_request: true
           pull_request_title: 'chore: New Crowdin translations'

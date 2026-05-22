@@ -521,8 +521,14 @@ import ButtonWithMenu, {
 import InputUnit from '@/components/InputUnit.vue';
 import { AcceptsLyricsOption, NoteElement } from '@/models/Element';
 import {
-  getNeumeLabelSelector,
+  getFthoraLabelSelector,
+  getGorgonNeumeLabelSelector,
+  getIsonLabelSelector,
+  getMeasureBarLabelSelector,
+  getNoteIndicatorLabelSelector,
   getNoteLabelSelector,
+  getTimeNeumeLabelSelector,
+  getVocalExpressionNeumeLabelSelector,
   ModelSelector,
 } from '@/models/NeumeI18nMappings';
 import {
@@ -538,7 +544,6 @@ import {
   Ison,
   MeasureBar,
   MeasureNumber,
-  Neume,
   NoteIndicator,
   QuantitativeNeume,
   restNeumes,
@@ -578,6 +583,34 @@ type ChromaticFthoraNoteOption = {
   label: ModelSelector;
   value: ScaleNote;
 };
+
+type ToolbarNeumeTooltipNeume =
+  | Fthora
+  | TimeNeume
+  | VocalExpressionNeume
+  | GorgonNeume
+  | MeasureBar
+  | NoteIndicator
+  | Ison
+  | Tie.YfenBelow
+  | Accidental.Flat_2_Right
+  | Accidental.Sharp_2_Left
+  | MeasureNumber.Two;
+
+function enumHas<T extends string>(
+  values: readonly T[],
+  value: string,
+): value is T {
+  return values.includes(value as T);
+}
+
+const fthoraValues = Object.values(Fthora);
+const timeNeumeValues = Object.values(TimeNeume);
+const vocalExpressionNeumeValues = Object.values(VocalExpressionNeume);
+const gorgonNeumeValues = Object.values(GorgonNeume);
+const measureBarValues = Object.values(MeasureBar);
+const noteIndicatorValues = Object.values(NoteIndicator);
+const isonValues = Object.values(Ison);
 
 const apliMenuOptions: ButtonWithMenuOption[] = [
   {
@@ -1208,7 +1241,7 @@ export default defineComponent({
   },
 
   methods: {
-    translateNeumeDisplayName(neume: Neume) {
+    translateNeumeDisplayName(neume: ToolbarNeumeTooltipNeume) {
       switch (neume) {
         case Tie.YfenBelow:
           return this.$t(($) => $.neume.yfen, { ns: 'toolbar' });
@@ -1226,10 +1259,40 @@ export default defineComponent({
           return this.$t(($) => $.neume.isonIndicator, { ns: 'toolbar' });
       }
 
-      const displayName = getNeumeLabelSelector(neume);
-      return displayName == null
-        ? String(neume)
-        : this.$t(displayName, { ns: 'model' });
+      if (enumHas(fthoraValues, neume)) {
+        return this.$t(getFthoraLabelSelector(neume), { ns: 'model' });
+      }
+
+      if (enumHas(timeNeumeValues, neume)) {
+        return this.$t(getTimeNeumeLabelSelector(neume), { ns: 'model' });
+      }
+
+      if (enumHas(vocalExpressionNeumeValues, neume)) {
+        return this.$t(getVocalExpressionNeumeLabelSelector(neume), {
+          ns: 'model',
+        });
+      }
+
+      if (enumHas(gorgonNeumeValues, neume)) {
+        return this.$t(getGorgonNeumeLabelSelector(neume), { ns: 'model' });
+      }
+
+      if (enumHas(measureBarValues, neume)) {
+        return this.$t(getMeasureBarLabelSelector(neume), { ns: 'model' });
+      }
+
+      if (enumHas(noteIndicatorValues, neume)) {
+        return this.$t(getNoteIndicatorLabelSelector(neume), { ns: 'model' });
+      }
+
+      if (enumHas(isonValues, neume)) {
+        const displayName = getIsonLabelSelector(neume);
+        return displayName == null
+          ? String(neume)
+          : this.$t(displayName, { ns: 'model' });
+      }
+
+      return String(neume);
     },
 
     updateFthora(args: string[]) {
@@ -1300,7 +1363,7 @@ export default defineComponent({
       }
     },
 
-    tooltip(neume: Neume) {
+    tooltip(neume: ToolbarNeumeTooltipNeume) {
       const label = this.translateNeumeDisplayName(neume);
       const mapping = this.neumeKeyboard.findMappingForNeume(neume);
       if (mapping) {

@@ -6,7 +6,6 @@ import {
   Ison,
   MeasureBar,
   ModeSign,
-  Neume,
   Note,
   NoteIndicator,
   QuantitativeNeume,
@@ -336,11 +335,7 @@ export const ROOT_SIGN_LABEL_SELECTORS: Record<RootSign, ModelSelector> = {
   [RootSign.DeltaLow]: ($) => $.neume.rootSign.neagie,
 };
 
-const NEUME_LABEL_SELECTORS: Partial<Record<string, ModelSelector>> = {
-  ...FTHORA_LABEL_SELECTORS,
-  ...QUANTITATIVE_NEUME_LABEL_SELECTORS,
-  ...NOTE_LABEL_SELECTORS,
-  ...ROOT_SIGN_LABEL_SELECTORS,
+const TIME_NEUME_LABEL_SELECTORS: Record<TimeNeume, ModelSelector> = {
   [TimeNeume.Klasma_Top]: ($) => $.neume.time.klasma,
   [TimeNeume.Klasma_Bottom]: ($) => $.neume.time.klasma,
   [TimeNeume.Hapli]: ($) => $.neume.time.hapli,
@@ -348,7 +343,30 @@ const NEUME_LABEL_SELECTORS: Partial<Record<string, ModelSelector>> = {
   [TimeNeume.Tripli]: ($) => $.neume.time.tripli,
   [TimeNeume.Tetrapli]: ($) => $.neume.time.tetrapli,
   [TimeNeume.Koronis]: ($) => $.neume.time.koronis,
+};
+
+const VOCAL_EXPRESSION_NEUME_LABEL_SELECTORS: Record<
+  VocalExpressionNeume,
+  ModelSelector
+> = {
   [VocalExpressionNeume.Cross_Top]: ($) => $.neume.quantitative.cross,
+  [VocalExpressionNeume.Vareia]: ($) => $.neume.vocalExpression.vareia,
+  [VocalExpressionNeume.Homalon]: ($) => $.neume.vocalExpression.homalon,
+  [VocalExpressionNeume.HomalonConnecting]: ($) =>
+    $.neume.vocalExpression.connectingHomalon,
+  [VocalExpressionNeume.Antikenoma]: ($) => $.neume.vocalExpression.antikenoma,
+  [VocalExpressionNeume.Psifiston]: ($) => $.neume.vocalExpression.psifiston,
+  [VocalExpressionNeume.PsifistonSlanted]: ($) =>
+    $.neume.vocalExpression.psifiston,
+  [VocalExpressionNeume.Heteron]: ($) => $.neume.vocalExpression.heteron,
+  [VocalExpressionNeume.HeteronConnecting]: ($) =>
+    $.neume.vocalExpression.connectingHeteron,
+  [VocalExpressionNeume.HeteronConnectingLong]: ($) =>
+    $.neume.vocalExpression.connectingHeteron,
+  [VocalExpressionNeume.Endofonon]: ($) => $.neume.vocalExpression.endofonon,
+};
+
+const GORGON_NEUME_LABEL_SELECTORS: Record<GorgonNeume, ModelSelector> = {
   [GorgonNeume.Gorgon_Top]: ($) => $.neume.gorgon.gorgon,
   [GorgonNeume.Gorgon_Bottom]: ($) => $.neume.gorgon.gorgon,
   [GorgonNeume.Digorgon]: ($) => $.neume.gorgon.digorgon,
@@ -375,20 +393,9 @@ const NEUME_LABEL_SELECTORS: Partial<Record<string, ModelSelector>> = {
   [GorgonNeume.Argon]: ($) => $.neume.gorgon.argon,
   [GorgonNeume.Hemiolion]: ($) => $.neume.gorgon.hemiolion,
   [GorgonNeume.Diargon]: ($) => $.neume.gorgon.diargon,
-  [VocalExpressionNeume.Vareia]: ($) => $.neume.vocalExpression.vareia,
-  [VocalExpressionNeume.Homalon]: ($) => $.neume.vocalExpression.homalon,
-  [VocalExpressionNeume.HomalonConnecting]: ($) =>
-    $.neume.vocalExpression.connectingHomalon,
-  [VocalExpressionNeume.Antikenoma]: ($) => $.neume.vocalExpression.antikenoma,
-  [VocalExpressionNeume.Psifiston]: ($) => $.neume.vocalExpression.psifiston,
-  [VocalExpressionNeume.PsifistonSlanted]: ($) =>
-    $.neume.vocalExpression.psifiston,
-  [VocalExpressionNeume.Heteron]: ($) => $.neume.vocalExpression.heteron,
-  [VocalExpressionNeume.HeteronConnecting]: ($) =>
-    $.neume.vocalExpression.connectingHeteron,
-  [VocalExpressionNeume.HeteronConnectingLong]: ($) =>
-    $.neume.vocalExpression.connectingHeteron,
-  [VocalExpressionNeume.Endofonon]: ($) => $.neume.vocalExpression.endofonon,
+};
+
+const TEMPO_SIGN_LABEL_SELECTORS: Record<TempoSign, ModelSelector> = {
   [TempoSign.VerySlow]: ($) => $.neume.tempoSign.verySlow,
   [TempoSign.Slower]: ($) => $.neume.tempoSign.slower,
   [TempoSign.Slow]: ($) => $.neume.tempoSign.slow,
@@ -405,6 +412,9 @@ const NEUME_LABEL_SELECTORS: Partial<Record<string, ModelSelector>> = {
   [TempoSign.QuickAbove]: ($) => $.neume.tempoSign.quick,
   [TempoSign.QuickerAbove]: ($) => $.neume.tempoSign.quicker,
   [TempoSign.VeryQuickAbove]: ($) => $.neume.tempoSign.veryQuick,
+};
+
+const MODE_SIGN_LABEL_SELECTORS: Partial<Record<ModeSign, ModelSelector>> = {
   [ModeSign.Ni]: ($) => $.note.ni,
   [ModeSign.Pa]: ($) => $.note.pa,
   [ModeSign.Vou]: ($) => $.note.vou,
@@ -432,6 +442,9 @@ const NEUME_LABEL_SELECTORS: Partial<Record<string, ModelSelector>> = {
   [ModeSign.Elaphron]: ($) => $.neume.quantitative.elaphron,
   [ModeSign.OligonPlusKentima]: ($) => $.neume.quantitative.oligonWithKentima,
   [ModeSign.OligonPlusHypsili]: ($) => $.neume.quantitative.oligonWithYpsili,
+};
+
+const MEASURE_BAR_LABEL_SELECTORS: Record<MeasureBar, ModelSelector> = {
   [MeasureBar.MeasureBarRight]: ($) => $.neume.measureBar.right,
   [MeasureBar.MeasureBarTop]: ($) => $.neume.measureBar.top,
   [MeasureBar.MeasureBarDouble]: ($) => $.neume.measureBar.double,
@@ -446,6 +459,9 @@ const NEUME_LABEL_SELECTORS: Partial<Record<string, ModelSelector>> = {
   [MeasureBar.MeasureBarTheseosAbove]: ($) => $.neume.measureBar.theseos,
   [MeasureBar.MeasureBarShortTheseosAbove]: ($) =>
     $.neume.measureBar.shortTheseos,
+};
+
+const NOTE_INDICATOR_LABEL_SELECTORS: Record<NoteIndicator, ModelSelector> = {
   [NoteIndicator.Ni]: ($) => $.note.ni,
   [NoteIndicator.Pa]: ($) => $.note.pa,
   [NoteIndicator.Vou]: ($) => $.note.vou,
@@ -453,7 +469,9 @@ const NEUME_LABEL_SELECTORS: Partial<Record<string, ModelSelector>> = {
   [NoteIndicator.Thi]: ($) => $.note.di,
   [NoteIndicator.Ke]: ($) => $.note.ke,
   [NoteIndicator.Zo]: ($) => $.note.zo,
-  [Ison.Unison]: ($) => $.neume.quantitative.ison,
+};
+
+const ISON_LABEL_SELECTORS: Partial<Record<Ison, ModelSelector>> = {
   [Ison.ThiLow]: ($) => $.note.diLow,
   [Ison.KeLow]: ($) => $.note.keLow,
   [Ison.Zo]: ($) => $.note.zo,
@@ -466,22 +484,58 @@ const NEUME_LABEL_SELECTORS: Partial<Record<string, ModelSelector>> = {
   [Ison.ZoHigh]: ($) => $.note.zoHigh,
 };
 
-export function getNoteLabelSelector(note: Note | ScaleNote) {
+export function getNoteLabelSelector(note: Note | ScaleNote): ModelSelector {
   return NOTE_LABEL_SELECTORS[note];
 }
 
-export function getScaleLabelSelector(scale: Scale) {
+export function getScaleLabelSelector(scale: Scale): ModelSelector {
   return SCALE_LABEL_SELECTORS[scale];
 }
 
-export function getFthoraLabelSelector(neume: Neume) {
-  return FTHORA_LABEL_SELECTORS[neume as Fthora] ?? null;
+export function getFthoraLabelSelector(fthora: Fthora): ModelSelector {
+  return FTHORA_LABEL_SELECTORS[fthora];
 }
 
-export function getQuantitativeNeumeLabelSelector(neume: QuantitativeNeume) {
+export function getQuantitativeNeumeLabelSelector(
+  neume: QuantitativeNeume,
+): ModelSelector {
   return QUANTITATIVE_NEUME_LABEL_SELECTORS[neume];
 }
 
-export function getNeumeLabelSelector(neume: Neume) {
-  return NEUME_LABEL_SELECTORS[neume] ?? null;
+export function getTimeNeumeLabelSelector(neume: TimeNeume): ModelSelector {
+  return TIME_NEUME_LABEL_SELECTORS[neume];
+}
+
+export function getVocalExpressionNeumeLabelSelector(
+  neume: VocalExpressionNeume,
+): ModelSelector {
+  return VOCAL_EXPRESSION_NEUME_LABEL_SELECTORS[neume];
+}
+
+export function getGorgonNeumeLabelSelector(neume: GorgonNeume): ModelSelector {
+  return GORGON_NEUME_LABEL_SELECTORS[neume];
+}
+
+export function getTempoSignLabelSelector(neume: TempoSign): ModelSelector {
+  return TEMPO_SIGN_LABEL_SELECTORS[neume];
+}
+
+export function getModeSignLabelSelector(
+  neume: ModeSign,
+): ModelSelector | null {
+  return MODE_SIGN_LABEL_SELECTORS[neume] ?? null;
+}
+
+export function getMeasureBarLabelSelector(neume: MeasureBar): ModelSelector {
+  return MEASURE_BAR_LABEL_SELECTORS[neume];
+}
+
+export function getNoteIndicatorLabelSelector(
+  neume: NoteIndicator,
+): ModelSelector {
+  return NOTE_INDICATOR_LABEL_SELECTORS[neume];
+}
+
+export function getIsonLabelSelector(neume: Ison): ModelSelector | null {
+  return ISON_LABEL_SELECTORS[neume] ?? null;
 }

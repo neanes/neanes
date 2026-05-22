@@ -374,7 +374,6 @@ import {
 import {
   Fthora,
   MeasureBar,
-  Neume,
   Note,
   QuantitativeNeume,
   RootSign,
@@ -814,18 +813,15 @@ export default defineComponent({
   },
 
   methods: {
-    translateNeumeDisplayName(neume: Neume) {
+    translateNeumeDisplayName(neume: Fthora | MeasureBar.MeasureBarRight) {
       if (neume === MeasureBar.MeasureBarRight) {
         return this.$t(($) => $.common.measureBar, { ns: 'toolbar' });
       }
 
-      const displayName = getFthoraLabelSelector(neume);
-      return displayName == null
-        ? String(neume)
-        : this.$t(displayName, { ns: 'model' });
+      return this.$t(getFthoraLabelSelector(neume), { ns: 'model' });
     },
 
-    tooltip(neume: Neume) {
+    tooltip(neume: Fthora | MeasureBar.MeasureBarRight) {
       const label = this.translateNeumeDisplayName(neume);
       const mapping = this.neumeKeyboard.findMappingForNeume(neume);
       if (mapping) {

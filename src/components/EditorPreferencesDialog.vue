@@ -26,6 +26,23 @@
             </option>
           </select>
         </div>
+        <div class="form-group">
+          <a
+            class="crowdin-link"
+            href="https://crowdin.com/project/neanes"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span class="crowdin-caption">{{
+              $t(($) => $.dialog.preferences.helpTranslate, { ns: 'dialog' })
+            }}</span>
+            <img
+              class="crowdin-badge"
+              src="@/assets/icons/crowdin-badge.svg"
+              alt="Crowdin"
+            />
+          </a>
+        </div>
         <div class="subheader">
           {{
             $t(($) => $.dialog.preferences.menuInteraction, { ns: 'dialog' })
@@ -227,5 +244,28 @@ export default defineComponent({
   font-size: 1.25rem;
   top: -8px;
   width: 1.5rem;
+}
+
+.crowdin-link {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+}
+
+.crowdin-link:hover {
+  opacity: 0.7;
+}
+
+.crowdin-caption {
+  color: rgb(66, 139, 202);
+  text-decoration: underline;
+}
+
+.crowdin-badge {
+  display: block;
+  height: 38px;
 }
 </style>

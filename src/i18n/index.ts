@@ -114,6 +114,7 @@ export function initializeI18n({
       ns: Object.keys(resources['en']),
       postProcess: ['pseudo'],
       defaultNS,
+      enableSelector: 'strict',
       resources,
     });
 }

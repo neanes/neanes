@@ -1,6 +1,6 @@
 {
   "fontName": "Neanes",
-  "fontVersion": "1.0.3",
+  "fontVersion": "1.0.4",
   "metrics": {
     "winAscent": 1.4,
     "winDescent": 0.466,
@@ -3918,6 +3918,10 @@
       ]
     },
     "apostrofos": {
+      "omalonConnecting": [
+        1.044,
+        0.089
+      ],
       "yfenAbove": [
         0.47,
         0.891

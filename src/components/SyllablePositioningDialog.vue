@@ -2,7 +2,7 @@
   <ModalDialog>
     <div class="container">
       <div class="header">
-        {{ $t(($) => $.neumePositioning.root, { ns: 'dialog' }) }}
+        {{ $t(($) => $.dialog.neumePositioning.root, { ns: 'dialog' }) }}
       </div>
       <div class="pane-container" :style="paneContainerStyle">
         <div class="top-pane" :style="topPaneStyle">
@@ -277,15 +277,15 @@
           <div class="form-group">
             <label />
             <span class="table-header">{{
-              $t(($) => $.common.left, { ns: 'dialog' })
+              $t(($) => $.dialog.common.left, { ns: 'dialog' })
             }}</span>
             <span class="table-header">{{
-              $t(($) => $.common.top, { ns: 'dialog' })
+              $t(($) => $.dialog.common.top, { ns: 'dialog' })
             }}</span>
           </div>
           <div class="form-group">
             <label>{{
-              $t(($) => $.neumePositioning.accidental, { ns: 'dialog' })
+              $t(($) => $.dialog.neumePositioning.accidental, { ns: 'dialog' })
             }}</label>
             <InputUnit
               v-model="form.accidentalOffsetX"
@@ -306,7 +306,7 @@
           </div>
           <div class="form-group">
             <label>{{
-              $t(($) => $.neumePositioning.accidental2, { ns: 'dialog' })
+              $t(($) => $.dialog.neumePositioning.accidental2, { ns: 'dialog' })
             }}</label>
             <InputUnit
               v-model="form.secondaryAccidentalOffsetX"
@@ -327,7 +327,7 @@
           </div>
           <div class="form-group">
             <label>{{
-              $t(($) => $.neumePositioning.accidental3, { ns: 'dialog' })
+              $t(($) => $.dialog.neumePositioning.accidental3, { ns: 'dialog' })
             }}</label>
             <InputUnit
               v-model="form.tertiaryAccidentalOffsetX"
@@ -348,7 +348,7 @@
           </div>
           <div class="form-group">
             <label>{{
-              $t(($) => $.neumePositioning.barLineL, { ns: 'dialog' })
+              $t(($) => $.dialog.neumePositioning.barLineL, { ns: 'dialog' })
             }}</label>
             <InputUnit
               v-model="form.measureBarLeftOffsetX"
@@ -369,7 +369,7 @@
           </div>
           <div class="form-group">
             <label>{{
-              $t(($) => $.neumePositioning.barLineR, { ns: 'dialog' })
+              $t(($) => $.dialog.neumePositioning.barLineR, { ns: 'dialog' })
             }}</label>
             <InputUnit
               v-model="form.measureBarRightOffsetX"
@@ -390,7 +390,7 @@
           </div>
           <div class="form-group">
             <label>{{
-              $t(($) => $.neumePositioning.fthora, { ns: 'dialog' })
+              $t(($) => $.dialog.neumePositioning.fthora, { ns: 'dialog' })
             }}</label>
             <InputUnit
               v-model="form.fthoraOffsetX"
@@ -411,7 +411,7 @@
           </div>
           <div class="form-group">
             <label>{{
-              $t(($) => $.neumePositioning.fthora2, { ns: 'dialog' })
+              $t(($) => $.dialog.neumePositioning.fthora2, { ns: 'dialog' })
             }}</label>
             <InputUnit
               v-model="form.secondaryFthoraOffsetX"
@@ -432,7 +432,7 @@
           </div>
           <div class="form-group">
             <label>{{
-              $t(($) => $.neumePositioning.fthora3, { ns: 'dialog' })
+              $t(($) => $.dialog.neumePositioning.fthora3, { ns: 'dialog' })
             }}</label>
             <InputUnit
               v-model="form.tertiaryFthoraOffsetX"
@@ -453,7 +453,7 @@
           </div>
           <div class="form-group">
             <label>{{
-              $t(($) => $.neumePositioning.gorgon, { ns: 'dialog' })
+              $t(($) => $.dialog.neumePositioning.gorgon, { ns: 'dialog' })
             }}</label>
             <InputUnit
               v-model="form.gorgonNeumeOffsetX"
@@ -474,7 +474,7 @@
           </div>
           <div class="form-group">
             <label>{{
-              $t(($) => $.neumePositioning.gorgon2, { ns: 'dialog' })
+              $t(($) => $.dialog.neumePositioning.gorgon2, { ns: 'dialog' })
             }}</label>
             <InputUnit
               v-model="form.secondaryGorgonNeumeOffsetX"
@@ -495,7 +495,7 @@
           </div>
           <div class="form-group">
             <label>{{
-              $t(($) => $.neumePositioning.ison, { ns: 'dialog' })
+              $t(($) => $.dialog.neumePositioning.ison, { ns: 'dialog' })
             }}</label>
             <InputUnit
               v-model="form.isonOffsetX"
@@ -516,7 +516,7 @@
           </div>
           <div class="form-group">
             <label>{{
-              $t(($) => $.neumePositioning.koronis, { ns: 'dialog' })
+              $t(($) => $.dialog.neumePositioning.koronis, { ns: 'dialog' })
             }}</label>
             <InputUnit
               v-model="form.koronisOffsetX"
@@ -537,7 +537,7 @@
           </div>
           <div class="form-group">
             <label>{{
-              $t(($) => $.neumePositioning.measureNo, { ns: 'dialog' })
+              $t(($) => $.dialog.neumePositioning.measureNo, { ns: 'dialog' })
             }}</label>
             <InputUnit
               v-model="form.measureNumberOffsetX"
@@ -558,7 +558,7 @@
           </div>
           <div class="form-group">
             <label>{{
-              $t(($) => $.neumePositioning.note, { ns: 'dialog' })
+              $t(($) => $.dialog.neumePositioning.note, { ns: 'dialog' })
             }}</label>
             <InputUnit
               v-model="form.noteIndicatorOffsetX"
@@ -579,7 +579,7 @@
           </div>
           <div class="form-group">
             <label>{{
-              $t(($) => $.neumePositioning.cross, { ns: 'dialog' })
+              $t(($) => $.dialog.neumePositioning.cross, { ns: 'dialog' })
             }}</label>
             <InputUnit
               v-model="form.stavrosOffsetX"
@@ -600,7 +600,7 @@
           </div>
           <div class="form-group">
             <label>{{
-              $t(($) => $.neumePositioning.tie, { ns: 'dialog' })
+              $t(($) => $.dialog.neumePositioning.tie, { ns: 'dialog' })
             }}</label>
             <InputUnit
               v-model="form.tieOffsetX"
@@ -621,7 +621,7 @@
           </div>
           <div class="form-group">
             <label>{{
-              $t(($) => $.neumePositioning.time, { ns: 'dialog' })
+              $t(($) => $.dialog.neumePositioning.time, { ns: 'dialog' })
             }}</label>
             <InputUnit
               v-model="form.timeNeumeOffsetX"
@@ -642,7 +642,7 @@
           </div>
           <div class="form-group">
             <label>{{
-              $t(($) => $.neumePositioning.vareia, { ns: 'dialog' })
+              $t(($) => $.dialog.neumePositioning.vareia, { ns: 'dialog' })
             }}</label>
             <InputUnit
               v-model="form.vareiaOffsetX"
@@ -663,7 +663,7 @@
           </div>
           <div class="form-group">
             <label>{{
-              $t(($) => $.neumePositioning.quality, { ns: 'dialog' })
+              $t(($) => $.dialog.neumePositioning.quality, { ns: 'dialog' })
             }}</label>
             <InputUnit
               v-model="form.vocalExpressionNeumeOffsetX"
@@ -686,10 +686,10 @@
       </div>
       <div class="button-container">
         <button class="ok-btn" @click="update">
-          {{ $t(($) => $.common.update, { ns: 'dialog' }) }}
+          {{ $t(($) => $.dialog.common.update, { ns: 'dialog' }) }}
         </button>
         <button class="cancel-btn" @click="$emit('close')">
-          {{ $t(($) => $.common.cancel, { ns: 'dialog' }) }}
+          {{ $t(($) => $.dialog.common.cancel, { ns: 'dialog' }) }}
         </button>
       </div>
     </div>

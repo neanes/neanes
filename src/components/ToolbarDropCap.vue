@@ -11,7 +11,7 @@
       "
     />
     <label for="toolbar-drop-cap-use-default-style">{{
-      $t(($) => $.common.useDefaultStyle, { ns: 'toolbar' })
+      $t(($) => $.toolbar.common.useDefaultStyle, { ns: 'toolbar' })
     }}</label>
     <span class="divider" />
     <template v-if="!element.useDefaultStyle">
@@ -88,7 +88,7 @@
       </button>
       <span class="space"></span>
       <label class="right-space">{{
-        $t(($) => $.common.outline, { ns: 'toolbar' })
+        $t(($) => $.toolbar.common.outline, { ns: 'toolbar' })
       }}</label>
       <InputStrokeWidth
         :model-value="element.strokeWidth"
@@ -100,7 +100,7 @@
       />
       <span class="divider" />
       <label class="right-space">{{
-        $t(($) => $.dropCap.lineSpan, { ns: 'toolbar' })
+        $t(($) => $.toolbar.dropCap.lineSpan, { ns: 'toolbar' })
       }}</label>
       <InputUnit
         class="drop-caps-input-width"
@@ -119,7 +119,7 @@
       <span class="divider" />
     </template>
     <label class="right-space">{{
-      $t(($) => $.common.width, { ns: 'toolbar' })
+      $t(($) => $.toolbar.common.width, { ns: 'toolbar' })
     }}</label>
     <InputUnit
       class="drop-caps-input-width"
@@ -141,7 +141,7 @@
     <span class="space"></span>
     <div class="form-group">
       <label class="right-space">{{
-        $t(($) => $.common.sectionName, { ns: 'toolbar' })
+        $t(($) => $.toolbar.common.sectionName, { ns: 'toolbar' })
       }}</label>
       <input
         type="text"

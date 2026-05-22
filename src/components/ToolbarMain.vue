@@ -5,21 +5,21 @@
       :class="{ on: entryMode === EntryMode.Auto }"
       @click="$emit('update:entryMode', EntryMode.Auto)"
     >
-      {{ $t(($) => $.main.auto, { ns: 'toolbar' }) }}
+      {{ $t(($) => $.toolbar.main.auto, { ns: 'toolbar' }) }}
     </button>
     <button
       class="entry-mode-btn"
       :class="{ on: entryMode === EntryMode.Insert }"
       @click="$emit('update:entryMode', EntryMode.Insert)"
     >
-      {{ $t(($) => $.main.insert, { ns: 'toolbar' }) }}
+      {{ $t(($) => $.toolbar.main.insert, { ns: 'toolbar' }) }}
     </button>
     <button
       class="entry-mode-btn"
       :class="{ on: entryMode === EntryMode.Edit }"
       @click="$emit('update:entryMode', EntryMode.Edit)"
     >
-      {{ $t(($) => $.main.single, { ns: 'toolbar' }) }}
+      {{ $t(($) => $.toolbar.main.single, { ns: 'toolbar' }) }}
     </button>
     <span class="space"></span>
     <button
@@ -39,35 +39,35 @@
     />
     <span class="space"></span>
     <button
-      :title="$t(($) => $.main.insertDropCapBefore, { ns: 'toolbar' })"
+      :title="$t(($) => $.toolbar.main.insertDropCapBefore, { ns: 'toolbar' })"
       class="icon-btn"
       @click="$emit('add-drop-cap')"
     >
       <img src="@/assets/icons/drop-cap.svg" width="24" height="24" />
     </button>
     <button
-      :title="$t(($) => $.main.insertTextBox, { ns: 'toolbar' })"
+      :title="$t(($) => $.toolbar.main.insertTextBox, { ns: 'toolbar' })"
       class="icon-btn"
       @click="$emit('add-text-box')"
     >
       <img src="@/assets/icons/text-box.svg" width="24" height="24" />
     </button>
     <button
-      :title="$t(($) => $.main.insertTextBoxRich, { ns: 'toolbar' })"
+      :title="$t(($) => $.toolbar.main.insertTextBoxRich, { ns: 'toolbar' })"
       class="icon-btn"
       @click="$emit('add-text-box-rich')"
     >
       <img src="@/assets/icons/text-box-rich.svg" width="24" height="24" />
     </button>
     <button
-      :title="$t(($) => $.main.insertModeKey, { ns: 'toolbar' })"
+      :title="$t(($) => $.toolbar.main.insertModeKey, { ns: 'toolbar' })"
       class="icon-btn"
       @click="$emit('add-mode-key')"
     >
       <img src="@/assets/icons/mode-key.svg" width="24" height="24" />
     </button>
     <button
-      :title="$t(($) => $.main.insertImage, { ns: 'toolbar' })"
+      :title="$t(($) => $.toolbar.main.insertImage, { ns: 'toolbar' })"
       class="icon-btn"
       @click="$emit('add-image')"
     >
@@ -77,7 +77,7 @@
     <button
       class="icon-btn line-break-btn"
       :title="
-        $t(($) => $.main.insertOrRemoveLineBreakAfterSelectedElement, {
+        $t(($) => $.toolbar.main.insertOrRemoveLineBreakAfterSelectedElement, {
           ns: 'toolbar',
         })
       "
@@ -88,9 +88,13 @@
     <button
       class="icon-btn line-break-btn"
       :title="
-        $t(($) => $.main.insertOrRemoveJustifiedLineBreakAfterSelectedElement, {
-          ns: 'toolbar',
-        })
+        $t(
+          ($) =>
+            $.toolbar.main.insertOrRemoveJustifiedLineBreakAfterSelectedElement,
+          {
+            ns: 'toolbar',
+          },
+        )
       "
       @click="$emit('toggle-line-break', LineBreakType.Justify)"
     >
@@ -99,9 +103,13 @@
     <button
       class="icon-btn line-break-btn"
       :title="
-        $t(($) => $.main.insertOrRemoveCenteredLineBreakAfterSelectedElement, {
-          ns: 'toolbar',
-        })
+        $t(
+          ($) =>
+            $.toolbar.main.insertOrRemoveCenteredLineBreakAfterSelectedElement,
+          {
+            ns: 'toolbar',
+          },
+        )
       "
       @click="$emit('toggle-line-break', LineBreakType.Center)"
     >
@@ -110,7 +118,7 @@
     <button
       class="icon-btn"
       :title="
-        $t(($) => $.main.insertOrRemovePageBreakAfterSelectedElement, {
+        $t(($) => $.toolbar.main.insertOrRemovePageBreakAfterSelectedElement, {
           ns: 'toolbar',
         })
       "
@@ -121,7 +129,9 @@
     <span class="space"></span>
     <button
       class="red icon-btn"
-      :title="$t(($) => $.main.deleteSelectedElement, { ns: 'toolbar' })"
+      :title="
+        $t(($) => $.toolbar.main.deleteSelectedElement, { ns: 'toolbar' })
+      "
       @click="$emit('delete-selected-element')"
     >
       <img src="@/assets/icons/delete.svg" width="24" height="24" />
@@ -138,7 +148,7 @@
       >
       <div v-if="showZoomMenu" class="zoom-menu">
         <div class="zoom-menu-item" @click="updateZoom('Fit')">
-          {{ $t(($) => $.main.fit, { ns: 'toolbar' }) }}
+          {{ $t(($) => $.toolbar.main.fit, { ns: 'toolbar' }) }}
         </div>
         <div class="zoom-menu-separator"></div>
         <div
@@ -179,7 +189,7 @@
 
       <span class="space" />
       <label class="right-space">{{
-        $t(($) => $.main.speed, { ns: 'toolbar' })
+        $t(($) => $.toolbar.main.speed, { ns: 'toolbar' })
       }}</label>
       <input
         class="audio-speed-slider"
@@ -213,7 +223,7 @@
     <span class="space"></span>
     <div class="page-number-container">
       {{
-        $t(($) => $.main.pageNumber, {
+        $t(($) => $.toolbar.main.pageNumber, {
           ns: 'toolbar',
           currentPageNumber,
           pageCount,
@@ -378,15 +388,11 @@ export default defineComponent({
     },
 
     martyriaTooltip() {
-      return `${this.$t(($) => $.main.martyria, {
-        ns: 'toolbar',
-      })} (${this.neumeKeyboard.getMartyriaKeyTooltip()})`;
+      return `${this.$t(($) => $.toolbar.main.martyria, { ns: 'toolbar' })} (${this.neumeKeyboard.getMartyriaKeyTooltip()})`;
     },
 
     tempoTooltip() {
-      return `${this.$t(($) => $.common.tempoSign, {
-        ns: 'toolbar',
-      })} (${this.neumeKeyboard.generateTooltip(
+      return `${this.$t(($) => $.toolbar.common.tempoSign, { ns: 'toolbar' })} (${this.neumeKeyboard.generateTooltip(
         this.neumeKeyboard.findMappingForNeume(TempoSign.VerySlow)!,
       )})`;
     },

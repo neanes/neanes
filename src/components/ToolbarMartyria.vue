@@ -147,19 +147,19 @@
       <ButtonWithMenu
         class="btnMenuTempoLeft"
         :options="tempoMenuOptions"
-        :title="$t(($) => $.martyria.tempoLeft, { ns: 'toolbar' })"
+        :title="$t(($) => $.toolbar.martyria.tempoLeft, { ns: 'toolbar' })"
         @select="$emit('update:tempoLeft', $event)"
       />
       <ButtonWithMenu
         class="btnMenuTempoAbove"
         :options="tempoMenuOptionsAbove"
-        :title="$t(($) => $.martyria.tempo, { ns: 'toolbar' })"
+        :title="$t(($) => $.toolbar.martyria.tempo, { ns: 'toolbar' })"
         @select="$emit('update:tempo', $event)"
       />
       <ButtonWithMenu
         class="btnMenuTempoRight"
         :options="tempoMenuOptions"
-        :title="$t(($) => $.martyria.tempoRight, { ns: 'toolbar' })"
+        :title="$t(($) => $.toolbar.martyria.tempoRight, { ns: 'toolbar' })"
         @select="$emit('update:tempoRight', $event)"
       />
       <span class="space"></span>
@@ -184,7 +184,7 @@
         <span class="space" />
         <ButtonWithMenu
           :options="quantitativeNeumeOptions"
-          :title="$t(($) => $.common.neume, { ns: 'toolbar' })"
+          :title="$t(($) => $.toolbar.common.neume, { ns: 'toolbar' })"
           @select="$emit('update:quantitativeNeume', $event)"
         />
       </template>
@@ -201,13 +201,13 @@
           "
         />
         <label for="toolbar:martyria-auto">{{
-          $t(($) => $.martyria.auto, { ns: 'toolbar' })
+          $t(($) => $.toolbar.martyria.auto, { ns: 'toolbar' })
         }}</label>
       </div>
       <template v-if="!element.auto">
         <span class="space" />
         <label class="right-space">{{
-          $t(($) => $.martyria.note, { ns: 'toolbar' })
+          $t(($) => $.toolbar.martyria.note, { ns: 'toolbar' })
         }}</label>
         <select
           :value="element.note"
@@ -224,7 +224,7 @@
 
         <span class="space" />
         <label class="right-space">{{
-          $t(($) => $.martyria.scale, { ns: 'toolbar' })
+          $t(($) => $.toolbar.martyria.scale, { ns: 'toolbar' })
         }}</label>
         <select
           :value="element.scale"
@@ -242,7 +242,7 @@
     </div>
     <div class="row">
       <label class="right-space">{{
-        $t(($) => $.common.bpm, { ns: 'toolbar' })
+        $t(($) => $.toolbar.common.bpm, { ns: 'toolbar' })
       }}</label>
       <InputBpm
         :disabled="
@@ -261,7 +261,7 @@
       <span class="space" />
 
       <label class="right-space">{{
-        $t(($) => $.common.verticalOffset, { ns: 'toolbar' })
+        $t(($) => $.toolbar.common.verticalOffset, { ns: 'toolbar' })
       }}</label>
 
       <InputUnit
@@ -281,7 +281,7 @@
       <span class="space" />
 
       <label class="right-space">{{
-        $t(($) => $.common.spaceAfter, { ns: 'toolbar' })
+        $t(($) => $.toolbar.common.spaceAfter, { ns: 'toolbar' })
       }}</label>
 
       <InputUnit
@@ -301,7 +301,7 @@
       <template v-if="showChromaticFthoraNote">
         <span class="space" />
         <label class="right-space">{{
-          $t(($) => $.common.fthoraNote, { ns: 'toolbar' })
+          $t(($) => $.toolbar.common.fthoraNote, { ns: 'toolbar' })
         }}</label>
         <select
           :value="element.chromaticFthoraNote"
@@ -322,7 +322,7 @@
       </template>
       <span class="space" />
       <label class="right-space">{{
-        $t(($) => $.martyria.rootSignOverride, { ns: 'toolbar' })
+        $t(($) => $.toolbar.martyria.rootSignOverride, { ns: 'toolbar' })
       }}</label>
       <select
         :value="element.rootSignOverride"
@@ -333,7 +333,7 @@
         "
       >
         <option value="">
-          {{ $t(($) => $.common.none, { ns: 'toolbar' }) }}
+          {{ $t(($) => $.toolbar.common.none, { ns: 'toolbar' }) }}
         </option>
         <option v-for="sign in rootSigns" :key="sign.value" :value="sign.value">
           {{ $t(sign.name, { ns: 'model' }) }}
@@ -343,7 +343,7 @@
       <span class="space"></span>
       <div class="form-group">
         <label class="right-space">{{
-          $t(($) => $.common.sectionName, { ns: 'toolbar' })
+          $t(($) => $.toolbar.common.sectionName, { ns: 'toolbar' })
         }}</label>
         <input
           type="text"
@@ -639,7 +639,7 @@ export default defineComponent({
 
     spathiTitle() {
       return this.spathiDisabled
-        ? this.$t(($) => $.common.spathiDisabled, { ns: 'toolbar' })
+        ? this.$t(($) => $.toolbar.common.spathiDisabled, { ns: 'toolbar' })
         : this.tooltip(Fthora.Spathi_Top);
     },
 
@@ -651,7 +651,7 @@ export default defineComponent({
 
     klitonTitle() {
       return this.klitonDisabled
-        ? this.$t(($) => $.common.klitonDisabled, { ns: 'toolbar' })
+        ? this.$t(($) => $.toolbar.common.klitonDisabled, { ns: 'toolbar' })
         : this.tooltip(Fthora.Kliton_Top);
     },
 
@@ -663,7 +663,7 @@ export default defineComponent({
 
     zygosTitle() {
       return this.zygosDisabled
-        ? this.$t(($) => $.common.zygosDisabled, { ns: 'toolbar' })
+        ? this.$t(($) => $.toolbar.common.zygosDisabled, { ns: 'toolbar' })
         : this.tooltip(Fthora.Zygos_Top);
     },
 
@@ -680,7 +680,7 @@ export default defineComponent({
 
     enharmonicTitle() {
       return this.enharmonicDisabled
-        ? this.$t(($) => $.common.enharmonicDisabled, { ns: 'toolbar' })
+        ? this.$t(($) => $.toolbar.common.enharmonicDisabled, { ns: 'toolbar' })
         : this.tooltip(Fthora.Enharmonic_Top);
     },
 
@@ -692,7 +692,9 @@ export default defineComponent({
 
     generalFlatTitle() {
       return this.generalFlatDisabled
-        ? this.$t(($) => $.common.generalFlatDisabled, { ns: 'toolbar' })
+        ? this.$t(($) => $.toolbar.common.generalFlatDisabled, {
+            ns: 'toolbar',
+          })
         : this.tooltip(Fthora.GeneralFlat_Top);
     },
 
@@ -704,7 +706,9 @@ export default defineComponent({
 
     generalSharpTitle() {
       return this.generalSharpDisabled
-        ? this.$t(($) => $.common.generalSharpDisabled, { ns: 'toolbar' })
+        ? this.$t(($) => $.toolbar.common.generalSharpDisabled, {
+            ns: 'toolbar',
+          })
         : this.tooltip(Fthora.GeneralSharp_Top);
     },
 
@@ -716,9 +720,7 @@ export default defineComponent({
     },
 
     alignRightTooltip() {
-      return `${this.$t(($) => $.common.alignRight, {
-        ns: 'toolbar',
-      })}(${this.neumeKeyboard.getMaryriaRightAlignTooltip()})`;
+      return `${this.$t(($) => $.toolbar.common.alignRight, { ns: 'toolbar' })}(${this.neumeKeyboard.getMaryriaRightAlignTooltip()})`;
     },
 
     fthoraNotes(): FthoraNoteOption[] {
@@ -815,7 +817,7 @@ export default defineComponent({
   methods: {
     translateNeumeDisplayName(neume: Fthora | MeasureBar.MeasureBarRight) {
       if (neume === MeasureBar.MeasureBarRight) {
-        return this.$t(($) => $.common.measureBar, { ns: 'toolbar' });
+        return this.$t(($) => $.toolbar.common.measureBar, { ns: 'toolbar' });
       }
 
       return this.$t(getFthoraLabelSelector(neume), { ns: 'model' });

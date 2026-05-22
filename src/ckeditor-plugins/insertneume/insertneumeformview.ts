@@ -162,14 +162,12 @@ export default class InsertNeumeFormView extends View {
       ) as RootSign;
 
       const noteOptions = Object.values(Note).map((key) => ({
-        label: i18next.t(NOTE_LABEL_SELECTORS[key], { ns: 'model' }),
+        label: i18next.t(NOTE_LABEL_SELECTORS[key]),
         value: key,
       }));
 
       const martyriaNoteDropdown = this._createGridDropdown(
-        i18next.t(NOTE_LABEL_SELECTORS[martyriaNote], {
-          ns: 'model',
-        }),
+        i18next.t(NOTE_LABEL_SELECTORS[martyriaNote]),
         ['martyria-note-grid'],
         noteOptions,
         (martyriaNote: string) => {

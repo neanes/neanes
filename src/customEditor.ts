@@ -40,6 +40,9 @@ import {
   Underline,
   Undo,
 } from 'ckeditor5';
+import elTranslations from 'ckeditor5/translations/el.js';
+import idTranslations from 'ckeditor5/translations/id.js';
+import roTranslations from 'ckeditor5/translations/ro.js';
 
 import InsertNeume from './ckeditor-plugins/insertneume/insertneume';
 
@@ -129,7 +132,11 @@ InlineEditor.defaultConfig = {
     ],
     shouldNotGroupWhenFull: true,
   },
-  language: 'en',
+  language: {
+    ui: 'en',
+    content: 'en',
+  },
+  translations: [elTranslations, idTranslations, roTranslations],
   image: {
     toolbar: [
       'imageTextAlternative',

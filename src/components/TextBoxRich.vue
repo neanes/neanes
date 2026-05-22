@@ -13,6 +13,7 @@
       :style="multipanelContainerStyle"
     >
       <ckeditor
+        :key="`left-${editorLanguage}`"
         ref="editorLeft"
         class="rich-text-editor multipanel left"
         :editor="editor"
@@ -22,6 +23,7 @@
         @blur="onBlur"
       />
       <ckeditor
+        :key="`center-${editorLanguage}`"
         ref="editorCenter"
         class="rich-text-editor multipanel center"
         :editor="editor"
@@ -32,6 +34,7 @@
         @ready="onEditorReady"
       />
       <ckeditor
+        :key="`right-${editorLanguage}`"
         ref="editorRight"
         class="rich-text-editor multipanel right"
         :editor="editor"
@@ -48,6 +51,7 @@
           :style="textBoxTopInnerContainerStyle"
         >
           <ckeditor
+            :key="`inline-top-${editorLanguage}`"
             ref="editor"
             class="rich-text-editor inline-top"
             :style="textBoxStyleTop"
@@ -62,6 +66,7 @@
       </div>
       <div class="inline-bottom-container" :style="textBoxBottomContainerStyle">
         <ckeditor
+          :key="`inline-bottom-${editorLanguage}`"
           ref="editorBottom"
           class="rich-text-editor inline-bottom"
           :style="textBoxStyleBottom"
@@ -76,6 +81,7 @@
     </div>
     <ckeditor
       v-else-if="element.scrollable"
+      :key="`scrollable-${editorLanguage}`"
       ref="editor"
       class="rich-text-editor single scrollable"
       :editor="editor"
@@ -88,6 +94,7 @@
     />
     <ckeditor
       v-else
+      :key="`single-${editorLanguage}`"
       ref="editor"
       class="rich-text-editor single"
       :editor="editor"
@@ -147,6 +154,10 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
+    editorLanguage: {
+      type: String,
+      default: 'en',
+    },
   },
   emits: ['update', 'update:height', 'select-single'],
 
@@ -201,6 +212,7 @@ export default defineComponent({
           options: ['default', ...fontSizeOptions],
         },
         language: {
+          ui: this.editorLanguage,
           content: this.element.rtl ? 'ar' : 'en',
         },
         licenseKey: 'GPL',
@@ -364,6 +376,12 @@ export default defineComponent({
     'element.centerOnPage'() {
       this.setPadding(this.getEditorInstance());
       this.setPadding(this.getEditorInstanceBottom());
+    },
+    editorLanguage: {
+      handler() {
+        this.update();
+      },
+      flush: 'pre',
     },
   },
 

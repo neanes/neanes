@@ -1,29 +1,33 @@
 <template>
   <ModalDialog>
     <div class="container">
-      <div class="header">{{ $t('dialog:export.root') }}</div>
+      <div class="header">{{ $t(($) => $.export.root, { ns: 'dialog' }) }}</div>
       <div class="pane-container">
         <div class="vertical-spacer" />
         <div class="form-group row">
-          <label class="medium">{{ $t('dialog:export.format') }}</label>
+          <label class="medium">{{
+            $t(($) => $.export.format, { ns: 'dialog' })
+          }}</label>
           <select v-model="format">
             <!-- <option :value="ExportFormat.HTML">HTML file</option>
             <option :value="ExportFormat.PDF">PDF file</option> -->
             <option :value="ExportFormat.PNG">
-              {{ $t('dialog:export.pngImages') }}
+              {{ $t(($) => $.export.pngImages, { ns: 'dialog' }) }}
             </option>
             <option :value="ExportFormat.MusicXml">
-              {{ $t('dialog:export.musicXml') }}
+              {{ $t(($) => $.export.musicXml, { ns: 'dialog' }) }}
             </option>
             <option :value="ExportFormat.Latex">
-              {{ $t('dialog:export.latex') }}
+              {{ $t(($) => $.export.latex, { ns: 'dialog' }) }}
             </option>
             <!-- <option :value="ExportFormat.SVG">SVG images</option> -->
           </select>
         </div>
         <template v-if="exportFormatIsImage">
           <div v-if="format === ExportFormat.PNG" class="form-group row">
-            <label class="medium">{{ $t('dialog:export.resolution') }}</label>
+            <label class="medium">{{
+              $t(($) => $.export.resolution, { ns: 'dialog' })
+            }}</label>
             <InputUnit
               v-model="dpi"
               unit="unitless"
@@ -33,7 +37,9 @@
               :step="1"
               :round="round"
             />
-            <span class="unit-label">{{ $t('dialog:export.dpi') }}</span>
+            <span class="unit-label">{{
+              $t(($) => $.export.dpi, { ns: 'dialog' })
+            }}</span>
           </div>
           <div v-if="format === ExportFormat.PNG" class="form-group row">
             <input
@@ -42,11 +48,11 @@
               type="checkbox"
             />
             <label for="export-dialog-transparent-bg">{{
-              $t('dialog:export.transparentBackground')
+              $t(($) => $.export.transparentBackground, { ns: 'dialog' })
             }}</label>
           </div>
           <div class="form-group row">
-            {{ $t('dialog:export.separateImageFile') }}
+            {{ $t(($) => $.export.separateImageFile, { ns: 'dialog' }) }}
           </div>
           <div class="separator"></div>
           <div class="form-group row">
@@ -56,7 +62,9 @@
               type="checkbox"
             />
             <label for="export-dialog-open-folder">{{
-              $t('dialog:export.openDestinationFolderAfterExport')
+              $t(($) => $.export.openDestinationFolderAfterExport, {
+                ns: 'dialog',
+              })
             }}</label>
           </div>
         </template>
@@ -68,7 +76,7 @@
               type="checkbox"
             />
             <label for="export-dialog-calculate-time-signatures">{{
-              $t('dialog:export.calculateTimeSignatures')
+              $t(($) => $.export.calculateTimeSignatures, { ns: 'dialog' })
             }}</label>
           </div>
           <div class="form-group row">
@@ -78,7 +86,7 @@
               type="checkbox"
             />
             <label for="export-dialog-display-time-signatures">{{
-              $t('dialog:export.displayTimeSignatures')
+              $t(($) => $.export.displayTimeSignatures, { ns: 'dialog' })
             }}</label>
           </div>
           <div class="form-group row">
@@ -88,7 +96,7 @@
               type="checkbox"
             />
             <label for="export-dialog-display-measure-subdivisions">{{
-              $t('dialog:export.displayMeasureSubdivisions')
+              $t(($) => $.export.displayMeasureSubdivisions, { ns: 'dialog' })
             }}</label>
           </div>
 
@@ -101,7 +109,9 @@
               type="checkbox"
             />
             <label for="export-dialog-open-folder">{{
-              $t('dialog:export.openDestinationFolderAfterExport')
+              $t(($) => $.export.openDestinationFolderAfterExport, {
+                ns: 'dialog',
+              })
             }}</label>
           </div>
         </template>
@@ -113,7 +123,7 @@
               type="checkbox"
             />
             <label for="export-dialog-include-mode-keys">{{
-              $t('dialog:export.includeModeKeys')
+              $t(($) => $.export.includeModeKeys, { ns: 'dialog' })
             }}</label>
           </div>
           <div class="form-group row">
@@ -123,7 +133,7 @@
               type="checkbox"
             />
             <label for="export-dialog-include-text-boxes">{{
-              $t('dialog:export.includeTextBoxes')
+              $t(($) => $.export.includeTextBoxes, { ns: 'dialog' })
             }}</label>
           </div>
         </template>
@@ -131,15 +141,15 @@
       <div class="button-container">
         <template v-if="loading">
           <button class="cancel-btn" disabled>
-            {{ $t('dialog:export.exporting') }}
+            {{ $t(($) => $.export.exporting, { ns: 'dialog' }) }}
           </button>
         </template>
         <template v-else>
           <button class="ok-btn" @click="doExport">
-            {{ $t('dialog:export.export') }}
+            {{ $t(($) => $.export.export, { ns: 'dialog' }) }}
           </button>
           <button class="cancel-btn" @click="close">
-            {{ $t('dialog:common.cancel') }}
+            {{ $t(($) => $.common.cancel, { ns: 'dialog' }) }}
           </button>
         </template>
       </div>

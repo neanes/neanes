@@ -18,7 +18,7 @@ import {
 } from 'ckeditor5';
 import i18next from 'i18next';
 
-import { NOTE_LABEL_KEYS } from '@/models/NeumeI18nMappings';
+import { NOTE_LABEL_SELECTORS } from '@/models/NeumeI18nMappings';
 import { Note, RootSign } from '@/models/Neumes';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 
@@ -161,15 +161,15 @@ export default class InsertNeumeFormView extends View {
         'martyriaRootSign',
       ) as RootSign;
 
-      const noteOptions = Object.entries(NOTE_LABEL_KEYS).map(
-        ([key, value]) => ({
-          label: i18next.t(value),
-          value: key,
-        }),
-      );
+      const noteOptions = Object.values(Note).map((key) => ({
+        label: i18next.t(NOTE_LABEL_SELECTORS[key], { ns: 'model' }),
+        value: key,
+      }));
 
       const martyriaNoteDropdown = this._createGridDropdown(
-        i18next.t(martyriaNote),
+        i18next.t(NOTE_LABEL_SELECTORS[martyriaNote], {
+          ns: 'model',
+        }),
         ['martyria-note-grid'],
         noteOptions,
         (martyriaNote: string) => {

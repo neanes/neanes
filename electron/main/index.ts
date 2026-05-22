@@ -1196,10 +1196,10 @@ function createMenu() {
         ] as MenuItemConstructorOptions[])
       : []),
     {
-      label: i18next.t('menu:file.root'),
+      label: i18next.t(($) => $.file.root, { ns: 'menu' }),
       submenu: [
         {
-          label: i18next.t('menu:file.new'),
+          label: i18next.t(($) => $.file.new, { ns: 'menu' }),
           accelerator: 'CmdOrCtrl+N',
           click() {
             if (!win) {
@@ -1210,7 +1210,7 @@ function createMenu() {
           },
         },
         {
-          label: i18next.t('menu:file.open'),
+          label: i18next.t(($) => $.file.open, { ns: 'menu' }),
           accelerator: 'CmdOrCtrl+O',
           async click() {
             const workspaces: FileMenuOpenScoreArgs[] = await openWorkspaces();
@@ -1230,7 +1230,7 @@ function createMenu() {
         },
         {
           id: 'recentfiles',
-          label: i18next.t('menu:file.openRecent'),
+          label: i18next.t(($) => $.file.openRecent, { ns: 'menu' }),
           submenu: store.recentFiles.map((x, index) => ({
             label: `${index + 1}: ${x}`,
             async click() {
@@ -1262,10 +1262,10 @@ function createMenu() {
           })),
         },
         {
-          label: i18next.t('menu:file.import'),
+          label: i18next.t(($) => $.file.import, { ns: 'menu' }),
           submenu: [
             {
-              label: i18next.t('menu:file.importFromOcr'),
+              label: i18next.t(($) => $.file.importFromOcr, { ns: 'menu' }),
               async click() {
                 const data = await openOcrFile();
 
@@ -1280,14 +1280,14 @@ function createMenu() {
           ],
         },
         {
-          label: i18next.t('menu:file.save'),
+          label: i18next.t(($) => $.file.save, { ns: 'menu' }),
           accelerator: 'CmdOrCtrl+S',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuSave);
           },
         },
         {
-          label: i18next.t('menu:file.saveAs'),
+          label: i18next.t(($) => $.file.saveAs, { ns: 'menu' }),
           accelerator: 'CmdOrCtrl+Shift+S',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuSaveAs);
@@ -1295,43 +1295,43 @@ function createMenu() {
         },
         { type: 'separator' },
         {
-          label: i18next.t('menu:file.pageSetup'),
+          label: i18next.t(($) => $.file.pageSetup, { ns: 'menu' }),
           accelerator: 'CmdOrCtrl+Shift+P',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuPageSetup);
           },
         },
         {
-          label: i18next.t('menu:file.exportAsPdf'),
+          label: i18next.t(($) => $.file.exportAsPdf, { ns: 'menu' }),
           accelerator: 'CmdOrCtrl+E',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuExportAsPdf);
           },
         },
         {
-          label: i18next.t('menu:file.exportAs'),
+          label: i18next.t(($) => $.file.exportAs, { ns: 'menu' }),
           submenu: [
             {
-              label: i18next.t('menu:file.exportAsHtml'),
+              label: i18next.t(($) => $.file.exportAsHtml, { ns: 'menu' }),
               accelerator: 'CmdOrCtrl+Shift+E',
               click() {
                 win?.webContents.send(IpcMainChannels.FileMenuExportAsHtml);
               },
             },
             {
-              label: i18next.t('menu:file.exportAsMusicXml'),
+              label: i18next.t(($) => $.file.exportAsMusicXml, { ns: 'menu' }),
               click() {
                 win?.webContents.send(IpcMainChannels.FileMenuExportAsMusicXml);
               },
             },
             {
-              label: i18next.t('menu:file.exportAsLatex'),
+              label: i18next.t(($) => $.file.exportAsLatex, { ns: 'menu' }),
               click() {
                 win?.webContents.send(IpcMainChannels.FileMenuExportAsLatex);
               },
             },
             {
-              label: i18next.t('menu:file.exportAsImage'),
+              label: i18next.t(($) => $.file.exportAsImage, { ns: 'menu' }),
               click() {
                 win?.webContents.send(IpcMainChannels.FileMenuExportAsImage);
               },
@@ -1339,7 +1339,7 @@ function createMenu() {
           ],
         },
         {
-          label: i18next.t('menu:file.print'),
+          label: i18next.t(($) => $.file.print, { ns: 'menu' }),
           accelerator: 'CmdOrCtrl+P',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuPrint);
@@ -1347,7 +1347,7 @@ function createMenu() {
         },
         { type: 'separator' },
         {
-          label: i18next.t('menu:file.close'),
+          label: i18next.t(($) => $.file.close, { ns: 'menu' }),
           accelerator: 'CmdOrCtrl+W',
           click() {
             win?.webContents.send(IpcMainChannels.CloseWorkspaces, {
@@ -1356,7 +1356,7 @@ function createMenu() {
           },
         },
         {
-          label: i18next.t('menu:file.closeOthers'),
+          label: i18next.t(($) => $.file.closeOthers, { ns: 'menu' }),
           click() {
             win?.webContents.send(IpcMainChannels.CloseWorkspaces, {
               disposition: CloseWorkspacesDisposition.OTHERS,
@@ -1368,11 +1368,11 @@ function createMenu() {
       ],
     },
     {
-      label: i18next.t('menu:edit.root'),
+      label: i18next.t(($) => $.edit.root, { ns: 'menu' }),
       submenu: [
         {
           id: 'undo',
-          label: i18next.t('menu:edit.undo'),
+          label: i18next.t(($) => $.edit.undo, { ns: 'menu' }),
           accelerator: 'CmdOrCtrl+Z',
           click(menuItem, browserWindow, event) {
             // The accelerator is handled in the renderer process because of
@@ -1384,7 +1384,7 @@ function createMenu() {
         },
         {
           id: 'redo',
-          label: i18next.t('menu:edit.redo'),
+          label: i18next.t(($) => $.edit.redo, { ns: 'menu' }),
           accelerator: isMac ? 'CmdOrCtrl+Shift+Z' : 'CmdOrCtrl+Y',
           click(menuItem, browserWindow, event) {
             // The accelerator is handled in the renderer process because of
@@ -1396,7 +1396,7 @@ function createMenu() {
         },
         { type: 'separator' },
         {
-          label: i18next.t('menu:edit.cut'),
+          label: i18next.t(($) => $.edit.cut, { ns: 'menu' }),
           accelerator: 'CmdOrCtrl+X',
           click(menuItem, browserWindow, event) {
             if (win?.webContents?.isDevToolsFocused()) {
@@ -1411,7 +1411,7 @@ function createMenu() {
           },
         },
         {
-          label: i18next.t('menu:edit.copy'),
+          label: i18next.t(($) => $.edit.copy, { ns: 'menu' }),
           accelerator: 'CmdOrCtrl+C',
           click(menuItem, browserWindow, event) {
             if (win?.webContents?.isDevToolsFocused()) {
@@ -1425,7 +1425,7 @@ function createMenu() {
           },
         },
         {
-          label: i18next.t('menu:edit.copyAsHtml'),
+          label: i18next.t(($) => $.edit.copyAsHtml, { ns: 'menu' }),
           accelerator: 'CmdOrCtrl+Shift+C',
           click(menuItem, browserWindow, event) {
             // The accelerator is handled in the renderer process because of
@@ -1436,7 +1436,7 @@ function createMenu() {
           },
         },
         {
-          label: i18next.t('menu:edit.paste'),
+          label: i18next.t(($) => $.edit.paste, { ns: 'menu' }),
           accelerator: 'CmdOrCtrl+V',
           click(menuItem, browserWindow, event) {
             if (win?.webContents?.isDevToolsFocused()) {
@@ -1451,7 +1451,7 @@ function createMenu() {
           },
         },
         {
-          label: i18next.t('menu:edit.pasteWithLyrics'),
+          label: i18next.t(($) => $.edit.pasteWithLyrics, { ns: 'menu' }),
           accelerator: 'CmdOrCtrl+Shift+V',
           click(menuItem, browserWindow, event) {
             // The accelerator is handled in the renderer process because of
@@ -1463,14 +1463,14 @@ function createMenu() {
         },
         { type: 'separator' },
         {
-          label: i18next.t('menu:edit.copyFormat'),
+          label: i18next.t(($) => $.edit.copyFormat, { ns: 'menu' }),
           accelerator: 'CmdOrCtrl+Shift+R',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuCopyFormat);
           },
         },
         {
-          label: i18next.t('menu:edit.pasteFormat'),
+          label: i18next.t(($) => $.edit.pasteFormat, { ns: 'menu' }),
           accelerator: 'CmdOrCtrl+R',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuPasteFormat);
@@ -1478,7 +1478,7 @@ function createMenu() {
         },
         { type: 'separator' },
         {
-          label: i18next.t('menu:edit.find'),
+          label: i18next.t(($) => $.edit.find, { ns: 'menu' }),
           accelerator: 'CmdOrCtrl+F',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuFind);
@@ -1486,7 +1486,7 @@ function createMenu() {
         },
         { type: 'separator' },
         {
-          label: i18next.t('menu:edit.lyrics'),
+          label: i18next.t(($) => $.edit.lyrics, { ns: 'menu' }),
           accelerator: 'CmdOrCtrl+L',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuLyrics);
@@ -1494,7 +1494,7 @@ function createMenu() {
         },
         { type: 'separator' },
         {
-          label: i18next.t('menu:edit.preferences'),
+          label: i18next.t(($) => $.edit.preferences, { ns: 'menu' }),
           accelerator: 'CmdOrCtrl+,',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuPreferences);
@@ -1503,36 +1503,36 @@ function createMenu() {
       ],
     },
     {
-      label: i18next.t('menu:insert.root'),
+      label: i18next.t(($) => $.insert.root, { ns: 'menu' }),
       submenu: [
         {
-          label: i18next.t('menu:insert.alternateLine'),
+          label: i18next.t(($) => $.insert.alternateLine, { ns: 'menu' }),
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuInsertAlternateLine);
           },
         },
         {
-          label: i18next.t('menu:insert.annotation'),
+          label: i18next.t(($) => $.insert.annotation, { ns: 'menu' }),
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuInsertAnnotation);
           },
         },
         {
-          label: i18next.t('menu:insert.dropCapBefore'),
+          label: i18next.t(($) => $.insert.dropCapBefore, { ns: 'menu' }),
           accelerator: 'CmdOrCtrl+D',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuInsertDropCapBefore);
           },
         },
         {
-          label: i18next.t('menu:insert.dropCapAfter'),
+          label: i18next.t(($) => $.insert.dropCapAfter, { ns: 'menu' }),
           accelerator: 'CmdOrCtrl+Shift+D',
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuInsertDropCapAfter);
           },
         },
         {
-          label: i18next.t('menu:insert.textBox'),
+          label: i18next.t(($) => $.insert.textBox, { ns: 'menu' }),
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuInsertTextBox, {
               inline: false,
@@ -1540,13 +1540,13 @@ function createMenu() {
           },
         },
         {
-          label: i18next.t('menu:insert.richTextBox'),
+          label: i18next.t(($) => $.insert.richTextBox, { ns: 'menu' }),
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuInsertRichTextBox);
           },
         },
         {
-          label: i18next.t('menu:insert.inlineTextBox'),
+          label: i18next.t(($) => $.insert.inlineTextBox, { ns: 'menu' }),
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuInsertTextBox, {
               inline: true,
@@ -1554,13 +1554,13 @@ function createMenu() {
           },
         },
         {
-          label: i18next.t('menu:insert.modeKey'),
+          label: i18next.t(($) => $.insert.modeKey, { ns: 'menu' }),
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuInsertModeKey);
           },
         },
         {
-          label: i18next.t('menu:insert.image'),
+          label: i18next.t(($) => $.insert.image, { ns: 'menu' }),
           async click() {
             const data = await openImage();
 
@@ -1571,16 +1571,16 @@ function createMenu() {
         },
         { type: 'separator' },
         {
-          label: i18next.t('menu:insert.headersAndFooters'),
+          label: i18next.t(($) => $.insert.headersAndFooters, { ns: 'menu' }),
           submenu: [
             {
-              label: i18next.t('menu:insert.header'),
+              label: i18next.t(($) => $.insert.header, { ns: 'menu' }),
               click() {
                 win?.webContents.send(IpcMainChannels.FileMenuInsertHeader);
               },
             },
             {
-              label: i18next.t('menu:insert.footer'),
+              label: i18next.t(($) => $.insert.footer, { ns: 'menu' }),
               click() {
                 win?.webContents.send(IpcMainChannels.FileMenuInsertFooter);
               },
@@ -1590,10 +1590,10 @@ function createMenu() {
       ],
     },
     {
-      label: i18next.t('menu:tools.root'),
+      label: i18next.t(($) => $.tools.root, { ns: 'menu' }),
       submenu: [
         {
-          label: i18next.t('menu:tools.copyElementLink'),
+          label: i18next.t(($) => $.tools.copyElementLink, { ns: 'menu' }),
           click() {
             win?.webContents.send(IpcMainChannels.FileMenuToolsCopyElementLink);
           },
@@ -1603,7 +1603,7 @@ function createMenu() {
     ...(isDevelopment
       ? [
           {
-            label: i18next.t('menu:view.root'),
+            label: i18next.t(($) => $.view.root, { ns: 'menu' }),
             submenu: [
               { role: 'reload' },
               { role: 'forceReload' },
@@ -1617,7 +1617,7 @@ function createMenu() {
             ],
           } as MenuItemConstructorOptions,
           {
-            label: i18next.t('menu:view.generateTestFiles'),
+            label: i18next.t(($) => $.view.generateTestFiles, { ns: 'menu' }),
             submenu: Object.values(TestFileType).map((testFileType) => ({
               label: testFileType,
               click() {
@@ -1638,20 +1638,20 @@ function createMenu() {
       role: 'help',
       submenu: [
         {
-          label: i18next.t('menu:help.guide'),
+          label: i18next.t(($) => $.help.guide, { ns: 'menu' }),
           click() {
             shell.openExternal(import.meta.env.VITE_GUIDE_URL);
           },
         },
         { type: 'separator' },
         {
-          label: i18next.t('menu:help.requestAFeature'),
+          label: i18next.t(($) => $.help.requestAFeature, { ns: 'menu' }),
           click() {
             shell.openExternal(import.meta.env.VITE_ISSUES_URL);
           },
         },
         {
-          label: i18next.t('menu:help.reportAnIssue'),
+          label: i18next.t(($) => $.help.reportAnIssue, { ns: 'menu' }),
           click() {
             shell.openExternal(import.meta.env.VITE_ISSUES_URL);
           },
@@ -1662,7 +1662,7 @@ function createMenu() {
         ...(!isMac
           ? ([
               {
-                label: i18next.t('menu:help.about'),
+                label: i18next.t(($) => $.help.about, { ns: 'menu' }),
                 click() {
                   let detail = `Version: ${app.getVersion()}\n`;
                   detail += `Electron: ${process.versions.electron}\n`;
@@ -1810,7 +1810,7 @@ ipcMain.on(
   async (event, args: OpenContextMenuForTabArgs) => {
     const menu = Menu.buildFromTemplate([
       {
-        label: i18next.t('menu:tab.close'),
+        label: i18next.t(($) => $.tab.close, { ns: 'menu' }),
         click() {
           win?.webContents.send(IpcMainChannels.CloseWorkspaces, {
             disposition: CloseWorkspacesDisposition.SELF,
@@ -1820,7 +1820,7 @@ ipcMain.on(
       },
 
       {
-        label: i18next.t('menu:tab.closeOthers'),
+        label: i18next.t(($) => $.tab.closeOthers, { ns: 'menu' }),
         click() {
           win?.webContents.send(IpcMainChannels.CloseWorkspaces, {
             disposition: CloseWorkspacesDisposition.OTHERS,
@@ -1830,7 +1830,7 @@ ipcMain.on(
       },
 
       {
-        label: i18next.t('menu:tab.closeToTheLeft'),
+        label: i18next.t(($) => $.tab.closeToTheLeft, { ns: 'menu' }),
         click() {
           win?.webContents.send(IpcMainChannels.CloseWorkspaces, {
             disposition: CloseWorkspacesDisposition.LEFT,
@@ -1839,7 +1839,7 @@ ipcMain.on(
         },
       },
       {
-        label: i18next.t('menu:tab.closeToTheRight'),
+        label: i18next.t(($) => $.tab.closeToTheRight, { ns: 'menu' }),
         click() {
           win?.webContents.send(IpcMainChannels.CloseWorkspaces, {
             disposition: CloseWorkspacesDisposition.RIGHT,

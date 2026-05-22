@@ -11,13 +11,13 @@
       "
     />
     <label for="toolbar-mode-key-use-default-style">{{
-      $t(($) => $.common.useDefaultStyle, { ns: 'toolbar' })
+      $t(($) => $.toolbar.common.useDefaultStyle, { ns: 'toolbar' })
     }}</label>
     <span class="divider" />
 
     <template v-if="!element.useDefaultStyle">
       <label class="right-space">{{
-        $t(($) => $.modeKey.size, { ns: 'toolbar' })
+        $t(($) => $.toolbar.modeKey.size, { ns: 'toolbar' })
       }}</label>
       <InputFontSize
         :model-value="element.fontSize"
@@ -48,7 +48,7 @@
         src="@/assets/icons/alignleft.svg"
         width="32"
         height="32"
-        :title="$t(($) => $.common.alignLeft, { ns: 'toolbar' })"
+        :title="$t(($) => $.toolbar.common.alignLeft, { ns: 'toolbar' })"
       />
     </button>
     <button
@@ -65,7 +65,7 @@
         src="@/assets/icons/aligncenter.svg"
         width="32"
         height="32"
-        :title="$t(($) => $.common.alignCenter, { ns: 'toolbar' })"
+        :title="$t(($) => $.toolbar.common.alignCenter, { ns: 'toolbar' })"
       />
     </button>
     <button
@@ -82,13 +82,13 @@
         src="@/assets/icons/alignright.svg"
         width="32"
         height="32"
-        :title="$t(($) => $.common.alignRight, { ns: 'toolbar' })"
+        :title="$t(($) => $.toolbar.common.alignRight, { ns: 'toolbar' })"
       />
     </button>
     <span class="space" />
     <template v-if="!element.useDefaultStyle">
       <label class="right-space">{{
-        $t(($) => $.common.outline, { ns: 'toolbar' })
+        $t(($) => $.toolbar.common.outline, { ns: 'toolbar' })
       }}</label>
       <InputStrokeWidth
         :model-value="element.strokeWidth"
@@ -99,7 +99,7 @@
       <span class="space" />
 
       <label class="right-space">{{
-        $t(($) => $.modeKey.heightAdjustment, { ns: 'toolbar' })
+        $t(($) => $.toolbar.modeKey.heightAdjustment, { ns: 'toolbar' })
       }}</label>
 
       <InputUnit
@@ -134,7 +134,7 @@
       "
     >
       <img
-        :title="$t(($) => $.modeKey.rightAlignTempo, { ns: 'toolbar' })"
+        :title="$t(($) => $.toolbar.modeKey.rightAlignTempo, { ns: 'toolbar' })"
         src="@/assets/icons/alignright2.svg"
         height="24"
         width="24"
@@ -145,7 +145,7 @@
     <span class="space" />
 
     <label class="right-space">{{
-      $t(($) => $.common.bpm, { ns: 'toolbar' })
+      $t(($) => $.toolbar.common.bpm, { ns: 'toolbar' })
     }}</label>
     <InputBpm
       :model-value="element.bpm"
@@ -158,7 +158,7 @@
 
     <div class="form-group">
       <label class="right-space">{{
-        $t(($) => $.common.marginTop, { ns: 'toolbar' })
+        $t(($) => $.toolbar.common.marginTop, { ns: 'toolbar' })
       }}</label>
       <InputUnit
         class="text-box-input-width"
@@ -176,7 +176,7 @@
     <span class="space"></span>
     <div class="form-group">
       <label class="right-space">{{
-        $t(($) => $.common.marginBottom, { ns: 'toolbar' })
+        $t(($) => $.toolbar.common.marginBottom, { ns: 'toolbar' })
       }}</label>
       <InputUnit
         class="text-box-input-width"
@@ -206,7 +206,7 @@
         "
       />
       <label for="toolbar-mode-key-ignore-attractions">{{
-        $t(($) => $.common.ignoreAttractions, { ns: 'toolbar' })
+        $t(($) => $.toolbar.common.ignoreAttractions, { ns: 'toolbar' })
       }}</label>
     </div>
 
@@ -224,7 +224,7 @@
         "
       />
       <label for="toolbar-mode-key-show-ambitus">{{
-        $t(($) => $.modeKey.showAmbitus, { ns: 'toolbar' })
+        $t(($) => $.toolbar.modeKey.showAmbitus, { ns: 'toolbar' })
       }}</label>
     </div>
 
@@ -245,20 +245,20 @@
         "
       />
       <label for="toolbar-mode-key-permanent-enharmonic-zo">{{
-        $t(($) => $.modeKey.permanentEnharmonicZo, { ns: 'toolbar' })
+        $t(($) => $.toolbar.modeKey.permanentEnharmonicZo, { ns: 'toolbar' })
       }}</label>
     </div>
     <span class="space" />
 
     <button @click="$emit('open-mode-key-dialog')">
-      {{ $t(($) => $.modeKey.changeKey, { ns: 'toolbar' }) }}
+      {{ $t(($) => $.toolbar.modeKey.changeKey, { ns: 'toolbar' }) }}
     </button>
 
     <span class="space" />
 
     <div class="form-group">
       <label class="right-space">{{
-        $t(($) => $.common.sectionName, { ns: 'toolbar' })
+        $t(($) => $.toolbar.common.sectionName, { ns: 'toolbar' })
       }}</label>
       <input
         type="text"

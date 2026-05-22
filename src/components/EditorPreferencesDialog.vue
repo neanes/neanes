@@ -2,17 +2,19 @@
   <ModalDialog>
     <div class="container">
       <div class="header">
-        {{ $t(($) => $.preferences.root, { ns: 'dialog' }) }}
+        {{ $t(($) => $.dialog.preferences.root, { ns: 'dialog' }) }}
       </div>
       <div class="pane-container">
         <div class="subheader">
-          {{ $t(($) => $.preferences.language, { ns: 'dialog' }) }}
+          {{ $t(($) => $.dialog.preferences.language, { ns: 'dialog' }) }}
         </div>
         <div class="form-group">
           <select v-model="form.language">
             <option value="">
               {{
-                $t(($) => $.preferences.languageSystemDefault, { ns: 'dialog' })
+                $t(($) => $.dialog.preferences.languageSystemDefault, {
+                  ns: 'dialog',
+                })
               }}
             </option>
             <option
@@ -25,24 +27,30 @@
           </select>
         </div>
         <div class="subheader">
-          {{ $t(($) => $.preferences.menuInteraction, { ns: 'dialog' }) }}
+          {{
+            $t(($) => $.dialog.preferences.menuInteraction, { ns: 'dialog' })
+          }}
         </div>
         <div class="form-group">
           <select v-model="form.buttonMenuMode">
             <option :value="ButtonMenuMode.Hold">
               {{
-                $t(($) => $.preferences.menuInteractionHold, { ns: 'dialog' })
+                $t(($) => $.dialog.preferences.menuInteractionHold, {
+                  ns: 'dialog',
+                })
               }}
             </option>
             <option :value="ButtonMenuMode.Click">
               {{
-                $t(($) => $.preferences.menuInteractionClick, { ns: 'dialog' })
+                $t(($) => $.dialog.preferences.menuInteractionClick, {
+                  ns: 'dialog',
+                })
               }}
             </option>
           </select>
         </div>
         <div class="subheader">
-          {{ $t(($) => $.preferences.tempoDefaults, { ns: 'dialog' }) }}
+          {{ $t(($) => $.dialog.preferences.tempoDefaults, { ns: 'dialog' }) }}
         </div>
         <div v-for="tempo in tempoSigns" :key="tempo" class="form-group row">
           <Neume
@@ -55,19 +63,19 @@
             @update:model-value="onTempoChanged(tempo, $event)"
           />
           <span class="unit-label">{{
-            $t(($) => $.preferences.bpm, { ns: 'dialog' })
+            $t(($) => $.dialog.preferences.bpm, { ns: 'dialog' })
           }}</span>
         </div>
       </div>
       <div class="button-container">
         <button class="ok-btn" @click="$emit('update', form)">
-          {{ $t(($) => $.common.update, { ns: 'dialog' }) }}
+          {{ $t(($) => $.dialog.common.update, { ns: 'dialog' }) }}
         </button>
         <button class="reset-btn neutral-btn" @click="resetToSystemDefaults">
-          {{ $t(($) => $.common.useSystemDefault, { ns: 'dialog' }) }}
+          {{ $t(($) => $.dialog.common.useSystemDefault, { ns: 'dialog' }) }}
         </button>
         <button class="cancel-btn" @click="$emit('close')">
-          {{ $t(($) => $.common.cancel, { ns: 'dialog' }) }}
+          {{ $t(($) => $.dialog.common.cancel, { ns: 'dialog' }) }}
         </button>
       </div>
     </div>

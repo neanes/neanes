@@ -2,7 +2,7 @@
   <ModalDialog>
     <div class="container">
       <div class="header">
-        {{ $t(($) => $.modeKey.root, { ns: 'dialog' }) }}
+        {{ $t(($) => $.dialog.modeKey.root, { ns: 'dialog' }) }}
       </div>
       <div class="pane-container">
         <div class="left-pane">
@@ -11,49 +11,49 @@
               :class="{ selected: selectedMode === 1 }"
               @click="selectMode(1)"
             >
-              {{ $t(($) => $.mode.first, { ns: 'model' }) }}
+              {{ $t(($) => $.model.mode.first, { ns: 'model' }) }}
             </li>
             <li
               :class="{ selected: selectedMode === 2 }"
               @click="selectMode(2)"
             >
-              {{ $t(($) => $.mode.second, { ns: 'model' }) }}
+              {{ $t(($) => $.model.mode.second, { ns: 'model' }) }}
             </li>
             <li
               :class="{ selected: selectedMode === 3 }"
               @click="selectMode(3)"
             >
-              {{ $t(($) => $.mode.third, { ns: 'model' }) }}
+              {{ $t(($) => $.model.mode.third, { ns: 'model' }) }}
             </li>
             <li
               :class="{ selected: selectedMode === 4 }"
               @click="selectMode(4)"
             >
-              {{ $t(($) => $.mode.fourth, { ns: 'model' }) }}
+              {{ $t(($) => $.model.mode.fourth, { ns: 'model' }) }}
             </li>
             <li
               :class="{ selected: selectedMode === 5 }"
               @click="selectMode(5)"
             >
-              {{ $t(($) => $.mode.plagalFirst, { ns: 'model' }) }}
+              {{ $t(($) => $.model.mode.plagalFirst, { ns: 'model' }) }}
             </li>
             <li
               :class="{ selected: selectedMode === 6 }"
               @click="selectMode(6)"
             >
-              {{ $t(($) => $.mode.plagalSecond, { ns: 'model' }) }}
+              {{ $t(($) => $.model.mode.plagalSecond, { ns: 'model' }) }}
             </li>
             <li
               :class="{ selected: selectedMode === 7 }"
               @click="selectMode(7)"
             >
-              {{ $t(($) => $.mode.grave, { ns: 'model' }) }}
+              {{ $t(($) => $.model.mode.grave, { ns: 'model' }) }}
             </li>
             <li
               :class="{ selected: selectedMode === 8 }"
               @click="selectMode(8)"
             >
-              {{ $t(($) => $.mode.plagalFourth, { ns: 'model' }) }}
+              {{ $t(($) => $.model.mode.plagalFourth, { ns: 'model' }) }}
             </li>
           </ul>
         </div>
@@ -89,7 +89,9 @@
           "
         />
         <label for="mode-key-dialog:use-optional-diatonic-fthoras">{{
-          $t(($) => $.modeKey.useOptionalDiatonicFthoras, { ns: 'toolbar' })
+          $t(($) => $.toolbar.modeKey.useOptionalDiatonicFthoras, {
+            ns: 'toolbar',
+          })
         }}</label>
       </div>
       <div class="button-container">
@@ -98,10 +100,10 @@
           :disabled="selectedTemplateId == null"
           @click="updateModeKey"
         >
-          {{ $t(($) => $.common.update, { ns: 'dialog' }) }}
+          {{ $t(($) => $.dialog.common.update, { ns: 'dialog' }) }}
         </button>
         <button class="cancel-btn" @click="$emit('close')">
-          {{ $t(($) => $.common.cancel, { ns: 'dialog' }) }}
+          {{ $t(($) => $.dialog.common.cancel, { ns: 'dialog' }) }}
         </button>
       </div>
     </div>

@@ -3,7 +3,7 @@
     <div class="row">
       <div class="form-group">
         <label class="right-space">{{
-          $t(($) => $.common.bpm, { ns: 'toolbar' })
+          $t(($) => $.toolbar.common.bpm, { ns: 'toolbar' })
         }}</label>
         <InputBpm
           :model-value="element.bpm"
@@ -17,7 +17,7 @@
 
       <div class="form-group">
         <label class="right-space">{{
-          $t(($) => $.common.spaceAfter, { ns: 'toolbar' })
+          $t(($) => $.toolbar.common.spaceAfter, { ns: 'toolbar' })
         }}</label>
         <InputUnit
           unit="pt"
@@ -34,7 +34,7 @@
       <span class="space"></span>
       <div class="form-group">
         <label class="right-space">{{
-          $t(($) => $.common.sectionName, { ns: 'toolbar' })
+          $t(($) => $.toolbar.common.sectionName, { ns: 'toolbar' })
         }}</label>
         <input
           type="text"

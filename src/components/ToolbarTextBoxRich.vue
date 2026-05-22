@@ -12,14 +12,14 @@
         "
       />
       <label for="toolbar-text-box-inline">{{
-        $t(($) => $.common.inline, { ns: 'toolbar' })
+        $t(($) => $.toolbar.common.inline, { ns: 'toolbar' })
       }}</label>
     </div>
     <template v-if="element.inline">
       <span class="space" />
       <div class="form-group">
         <label class="right-space">{{
-          $t(($) => $.common.width, { ns: 'toolbar' })
+          $t(($) => $.toolbar.common.width, { ns: 'toolbar' })
         }}</label>
         <InputUnit
           class="text-box-input-width"
@@ -41,7 +41,7 @@
       <span class="space" />
       <div class="form-group">
         <label class="right-space">{{
-          $t(($) => $.textbox.offsetYTop, { ns: 'toolbar' })
+          $t(($) => $.toolbar.textbox.offsetYTop, { ns: 'toolbar' })
         }}</label>
         <InputUnit
           class="text-box-input-width"
@@ -61,7 +61,7 @@
       <span class="space"></span>
       <div class="form-group">
         <label class="right-space">{{
-          $t(($) => $.textbox.offsetYBottom, { ns: 'toolbar' })
+          $t(($) => $.toolbar.textbox.offsetYBottom, { ns: 'toolbar' })
         }}</label>
         <InputUnit
           class="text-box-input-width"
@@ -91,14 +91,14 @@
           "
         />
         <label for="toolbar-text-box-center-on-page">{{
-          $t(($) => $.textbox.centerOnPage, { ns: 'toolbar' })
+          $t(($) => $.toolbar.textbox.centerOnPage, { ns: 'toolbar' })
         }}</label>
       </div>
     </template>
     <span class="divider" />
     <div class="form-group">
       <label class="right-space">{{
-        $t(($) => $.common.marginTop, { ns: 'toolbar' })
+        $t(($) => $.toolbar.common.marginTop, { ns: 'toolbar' })
       }}</label>
       <InputUnit
         class="text-box-input-width"
@@ -116,7 +116,7 @@
     <span class="space"></span>
     <div class="form-group">
       <label class="right-space">{{
-        $t(($) => $.common.marginBottom, { ns: 'toolbar' })
+        $t(($) => $.toolbar.common.marginBottom, { ns: 'toolbar' })
       }}</label>
       <InputUnit
         class="text-box-input-width"
@@ -146,14 +146,14 @@
         "
       />
       <label for="toolbar-text-box-mode-change">{{
-        $t(($) => $.textbox.modeChange, { ns: 'toolbar' })
+        $t(($) => $.toolbar.textbox.modeChange, { ns: 'toolbar' })
       }}</label>
     </div>
     <template v-if="element.modeChange">
       <span class="space"></span>
       <div class="form-group">
         <label class="right-space">{{
-          $t(($) => $.martyria.note, { ns: 'toolbar' })
+          $t(($) => $.toolbar.martyria.note, { ns: 'toolbar' })
         }}</label>
         <select
           :value="element.modeChangePhysicalNote"
@@ -171,7 +171,7 @@
       <span class="space"></span>
       <div class="form-group">
         <label class="right-space">{{
-          $t(($) => $.martyria.scale, { ns: 'toolbar' })
+          $t(($) => $.toolbar.martyria.scale, { ns: 'toolbar' })
         }}</label>
         <select
           :value="element.modeChangeScale"
@@ -189,7 +189,7 @@
       <span class="space"></span>
       <div class="form-group">
         <label class="right-space">{{
-          $t(($) => $.textbox.virtualNote, { ns: 'toolbar' })
+          $t(($) => $.toolbar.textbox.virtualNote, { ns: 'toolbar' })
         }}</label>
         <select
           :value="element.modeChangeVirtualNote"
@@ -200,7 +200,7 @@
           "
         >
           <option value="">
-            {{ $t(($) => $.common.none, { ns: 'toolbar' }) }}
+            {{ $t(($) => $.toolbar.common.none, { ns: 'toolbar' }) }}
           </option>
           <option v-for="note in notes" :key="note.key" :value="note.key">
             {{ $t(note.displayName, { ns: 'model' }) }}
@@ -210,7 +210,7 @@
       <span class="space"></span>
       <div class="form-group">
         <label class="right-space">{{
-          $t(($) => $.common.bpm, { ns: 'toolbar' })
+          $t(($) => $.toolbar.common.bpm, { ns: 'toolbar' })
         }}</label>
         <InputBpm
           :model-value="element.modeChangeBpm"
@@ -235,7 +235,7 @@
           "
         />
         <label for="toolbar-rich-text-box-ignore-attractions">{{
-          $t(($) => $.common.ignoreAttractions, { ns: 'toolbar' })
+          $t(($) => $.toolbar.common.ignoreAttractions, { ns: 'toolbar' })
         }}</label>
       </div>
       <span class="space"></span>
@@ -253,7 +253,7 @@
           "
         />
         <label for="toolbar-rich-text-box-permanent-enharmonic-zo">{{
-          $t(($) => $.modeKey.permanentEnharmonicZo, { ns: 'toolbar' })
+          $t(($) => $.toolbar.modeKey.permanentEnharmonicZo, { ns: 'toolbar' })
         }}</label>
       </div>
     </template>
@@ -270,7 +270,7 @@
         "
       />
       <label for="toolbar-text-box-rtl">{{
-        $t(($) => $.textbox.rtl, { ns: 'toolbar' })
+        $t(($) => $.toolbar.textbox.rtl, { ns: 'toolbar' })
       }}</label>
     </div>
     <span class="divider"></span>
@@ -286,13 +286,13 @@
         "
       />
       <label for="toolbar-text-box-scrollable">{{
-        $t(($) => $.textbox.scrollable, { ns: 'toolbar' })
+        $t(($) => $.toolbar.textbox.scrollable, { ns: 'toolbar' })
       }}</label>
     </div>
     <span class="divider"></span>
     <div class="form-group">
       <label class="right-space">{{
-        $t(($) => $.common.sectionName, { ns: 'toolbar' })
+        $t(($) => $.toolbar.common.sectionName, { ns: 'toolbar' })
       }}</label>
       <input
         type="text"

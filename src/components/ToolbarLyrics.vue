@@ -11,7 +11,7 @@
       "
     />
     <label for="toolbar-lyrics-use-default-style">{{
-      $t(($) => $.common.useDefaultStyle, { ns: 'toolbar' })
+      $t(($) => $.toolbar.common.useDefaultStyle, { ns: 'toolbar' })
     }}</label>
     <span class="divider" />
     <template v-if="!element.lyricsUseDefaultStyle">
@@ -82,7 +82,7 @@
       </button>
       <span class="space"></span>
       <label class="right-space">{{
-        $t(($) => $.common.outline, { ns: 'toolbar' })
+        $t(($) => $.toolbar.common.outline, { ns: 'toolbar' })
       }}</label>
       <InputStrokeWidth
         :model-value="element.lyricsStrokeWidth"
@@ -102,7 +102,7 @@
         src="@/assets/icons/letterPelastikon.svg"
         width="32"
         height="32"
-        :title="$t(($) => $.common.insertPelastikon, { ns: 'toolbar' })"
+        :title="$t(($) => $.toolbar.common.insertPelastikon, { ns: 'toolbar' })"
       />
     </button>
     <button
@@ -113,7 +113,7 @@
         src="@/assets/icons/letterGorthmikon.svg"
         width="32"
         height="32"
-        :title="$t(($) => $.common.insertGorthmikon, { ns: 'toolbar' })"
+        :title="$t(($) => $.toolbar.common.insertGorthmikon, { ns: 'toolbar' })"
       />
     </button>
     <span class="space" />

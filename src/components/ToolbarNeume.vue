@@ -1,7 +1,9 @@
 <template>
   <div class="neume-toolbar">
     <div v-if="secondaryNeume" class="row">
-      <span>{{ $t(($) => $.neume.neumeSelect, { ns: 'toolbar' }) }}</span>
+      <span>{{
+        $t(($) => $.toolbar.neume.neumeSelect, { ns: 'toolbar' })
+      }}</span>
       <span class="space"></span>
       <button
         v-if="tertiaryNeume"
@@ -410,7 +412,7 @@
       <span class="separator" />
 
       <label class="right-space">{{
-        $t(($) => $.common.spaceAfter, { ns: 'toolbar' })
+        $t(($) => $.toolbar.common.spaceAfter, { ns: 'toolbar' })
       }}</label>
 
       <InputUnit
@@ -425,7 +427,7 @@
       <span class="space"></span>
 
       <button @click="$emit('open-syllable-positioning-dialog')">
-        {{ $t(($) => $.neume.positioning, { ns: 'toolbar' }) }}
+        {{ $t(($) => $.toolbar.neume.positioning, { ns: 'toolbar' }) }}
       </button>
       <span class="space" />
 
@@ -441,7 +443,7 @@
           "
         />
         <label for="toolbar:neume-ignore-attractions">{{
-          $t(($) => $.common.ignoreAttractions, { ns: 'toolbar' })
+          $t(($) => $.toolbar.common.ignoreAttractions, { ns: 'toolbar' })
         }}</label>
       </div>
 
@@ -449,7 +451,7 @@
 
       <div style="display: flex; align-items: center">
         <label class="right-space" for="toolbar:neume-accepts-lyrics">{{
-          $t(($) => $.neume.acceptsLyrics, { ns: 'toolbar' })
+          $t(($) => $.toolbar.neume.acceptsLyrics, { ns: 'toolbar' })
         }}</label>
         <select
           id="toolbar:neume-accepts-lyrics"
@@ -461,16 +463,22 @@
           "
         >
           <option :value="AcceptsLyricsOption.Default">
-            {{ $t(($) => $.neume.acceptsLyricsDefault, { ns: 'toolbar' }) }}
+            {{
+              $t(($) => $.toolbar.neume.acceptsLyricsDefault, { ns: 'toolbar' })
+            }}
           </option>
           <option :value="AcceptsLyricsOption.Yes">
-            {{ $t(($) => $.neume.acceptsLyricsYes, { ns: 'toolbar' }) }}
+            {{ $t(($) => $.toolbar.neume.acceptsLyricsYes, { ns: 'toolbar' }) }}
           </option>
           <option :value="AcceptsLyricsOption.No">
-            {{ $t(($) => $.neume.acceptsLyricsNo, { ns: 'toolbar' }) }}
+            {{ $t(($) => $.toolbar.neume.acceptsLyricsNo, { ns: 'toolbar' }) }}
           </option>
           <option :value="AcceptsLyricsOption.MelismaOnly">
-            {{ $t(($) => $.neume.acceptsLyricsMelismaOnly, { ns: 'toolbar' }) }}
+            {{
+              $t(($) => $.toolbar.neume.acceptsLyricsMelismaOnly, {
+                ns: 'toolbar',
+              })
+            }}
           </option>
         </select>
       </div>
@@ -478,7 +486,7 @@
       <template v-if="showChromaticFthoraNote">
         <span class="space" />
         <label class="right-space">{{
-          $t(($) => $.common.fthoraNote, { ns: 'toolbar' })
+          $t(($) => $.toolbar.common.fthoraNote, { ns: 'toolbar' })
         }}</label>
         <select
           :value="chromaticFthoraNote"
@@ -495,7 +503,7 @@
       <span class="space"></span>
       <div class="form-group">
         <label class="right-space">{{
-          $t(($) => $.common.sectionName, { ns: 'toolbar' })
+          $t(($) => $.toolbar.common.sectionName, { ns: 'toolbar' })
         }}</label>
         <input
           type="text"
@@ -1147,7 +1155,7 @@ export default defineComponent({
 
     spathiTitle() {
       return this.spathiDisabled
-        ? this.$t(($) => $.common.spathiDisabled, { ns: 'toolbar' })
+        ? this.$t(($) => $.toolbar.common.spathiDisabled, { ns: 'toolbar' })
         : this.tooltip(Fthora.Spathi_Top);
     },
 
@@ -1160,7 +1168,7 @@ export default defineComponent({
 
     klitonTitle() {
       return this.klitonDisabled
-        ? this.$t(($) => $.common.klitonDisabled, { ns: 'toolbar' })
+        ? this.$t(($) => $.toolbar.common.klitonDisabled, { ns: 'toolbar' })
         : this.tooltip(Fthora.Kliton_Top);
     },
 
@@ -1173,7 +1181,7 @@ export default defineComponent({
 
     zygosTitle() {
       return this.zygosDisabled
-        ? this.$t(($) => $.common.zygosDisabled, { ns: 'toolbar' })
+        ? this.$t(($) => $.toolbar.common.zygosDisabled, { ns: 'toolbar' })
         : this.tooltip(Fthora.Zygos_Top);
     },
 
@@ -1190,7 +1198,7 @@ export default defineComponent({
 
     enharmonicTitle() {
       return this.enharmonicDisabled
-        ? this.$t(($) => $.common.enharmonicDisabled, { ns: 'toolbar' })
+        ? this.$t(($) => $.toolbar.common.enharmonicDisabled, { ns: 'toolbar' })
         : this.tooltip(Fthora.Enharmonic_Top);
     },
 
@@ -1203,7 +1211,9 @@ export default defineComponent({
 
     generalFlatTitle() {
       return this.generalFlatDisabled
-        ? this.$t(($) => $.common.generalFlatDisabled, { ns: 'toolbar' })
+        ? this.$t(($) => $.toolbar.common.generalFlatDisabled, {
+            ns: 'toolbar',
+          })
         : this.tooltip(Fthora.GeneralFlat_Top);
     },
 
@@ -1216,7 +1226,9 @@ export default defineComponent({
 
     generalSharpTitle() {
       return this.generalSharpDisabled
-        ? this.$t(($) => $.common.generalSharpDisabled, { ns: 'toolbar' })
+        ? this.$t(($) => $.toolbar.common.generalSharpDisabled, {
+            ns: 'toolbar',
+          })
         : this.tooltip(Fthora.GeneralSharp_Top);
     },
 
@@ -1244,19 +1256,25 @@ export default defineComponent({
     translateNeumeDisplayName(neume: ToolbarNeumeTooltipNeume) {
       switch (neume) {
         case Tie.YfenBelow:
-          return this.$t(($) => $.neume.yfen, { ns: 'toolbar' });
+          return this.$t(($) => $.toolbar.neume.yfen, { ns: 'toolbar' });
         case Accidental.Flat_2_Right:
-          return this.$t(($) => $.neume.flat, { ns: 'toolbar' });
+          return this.$t(($) => $.toolbar.neume.flat, { ns: 'toolbar' });
         case Accidental.Sharp_2_Left:
-          return this.$t(($) => $.neume.sharp, { ns: 'toolbar' });
+          return this.$t(($) => $.toolbar.neume.sharp, { ns: 'toolbar' });
         case MeasureBar.MeasureBarRight:
-          return this.$t(($) => $.common.measureBar, { ns: 'toolbar' });
+          return this.$t(($) => $.toolbar.common.measureBar, { ns: 'toolbar' });
         case MeasureNumber.Two:
-          return this.$t(($) => $.neume.measureNumber, { ns: 'toolbar' });
+          return this.$t(($) => $.toolbar.neume.measureNumber, {
+            ns: 'toolbar',
+          });
         case NoteIndicator.Pa:
-          return this.$t(($) => $.neume.noteIndicator, { ns: 'toolbar' });
+          return this.$t(($) => $.toolbar.neume.noteIndicator, {
+            ns: 'toolbar',
+          });
         case Ison.Unison:
-          return this.$t(($) => $.neume.isonIndicator, { ns: 'toolbar' });
+          return this.$t(($) => $.toolbar.neume.isonIndicator, {
+            ns: 'toolbar',
+          });
       }
 
       if (enumHas(fthoraValues, neume)) {

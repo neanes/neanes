@@ -289,15 +289,23 @@ describe('LayoutService.alignIsonIndicators', () => {
     const mockOffset2 = { y: 20 };
 
     (NeumeMappingService.getMapping as Mock).mockImplementation((neume) => {
-      if (neume === QuantitativeNeume.Ison) return mockBaseMapping1;
-      if (neume === QuantitativeNeume.Oligon) return mockBaseMapping2;
+      if (neume === QuantitativeNeume.Ison) {
+        return mockBaseMapping1;
+      }
+      if (neume === QuantitativeNeume.Oligon) {
+        return mockBaseMapping2;
+      }
       return mockMarkMapping;
     });
 
     (fontService.getMarkAnchorOffset as Mock).mockImplementation(
       (fontFamily, base) => {
-        if (base === 'baseGlyph1') return mockOffset1;
-        if (base === 'baseGlyph2') return mockOffset2;
+        if (base === 'baseGlyph1') {
+          return mockOffset1;
+        }
+        if (base === 'baseGlyph2') {
+          return mockOffset2;
+        }
         return { y: 0 };
       },
     );
@@ -332,15 +340,23 @@ describe('LayoutService.alignIsonIndicators', () => {
     const mockOffset2 = { y: 20 };
 
     (NeumeMappingService.getMapping as Mock).mockImplementation((neume) => {
-      if (neume === QuantitativeNeume.Ison) return mockBaseMapping1;
-      if (neume === QuantitativeNeume.Oligon) return mockBaseMapping2;
+      if (neume === QuantitativeNeume.Ison) {
+        return mockBaseMapping1;
+      }
+      if (neume === QuantitativeNeume.Oligon) {
+        return mockBaseMapping2;
+      }
       return mockMarkMapping;
     });
 
     (fontService.getMarkAnchorOffset as Mock).mockImplementation(
       (fontFamily, base) => {
-        if (base === 'baseGlyph1') return mockOffset1;
-        if (base === 'baseGlyph2') return mockOffset2;
+        if (base === 'baseGlyph1') {
+          return mockOffset1;
+        }
+        if (base === 'baseGlyph2') {
+          return mockOffset2;
+        }
         return { y: 0 };
       },
     );

@@ -2,6 +2,7 @@
 import 'vue3-tabs-chrome/dist/vue3-tabs-chrome.css';
 
 import { getFontEmbedCSS, toPng } from 'html-to-image';
+import i18next from 'i18next';
 import { debounce, throttle } from 'throttle-debounce';
 import {
   computed,
@@ -52,6 +53,7 @@ import ToolbarTempo from '@/components/ToolbarTempo.vue';
 import ToolbarTextBox from '@/components/ToolbarTextBox.vue';
 import ToolbarTextBoxRich from '@/components/ToolbarTextBoxRich.vue';
 import { EventBus } from '@/eventBus';
+import { resolveLanguagePreference } from '@/i18n';
 import {
   audioServiceKey,
   ipcServiceKey,
@@ -1337,10 +1339,11 @@ export default defineComponent({
       // Make sure we initialized all the throttled methods
       if (this.isDevelopment) {
         for (const [key, val] of Object.entries(this.throttled)) {
-          if (val == null)
+          if (val == null) {
             throw new Error(
               `Missing initialization for throttled method '${key}'`,
             );
+          }
         }
       }
     },
@@ -1378,7 +1381,6 @@ export default defineComponent({
 
     getLyricStyle(element: NoteElement) {
       return {
-        direction: this.rtl ? 'rtl' : undefined,
         top: withZoom(element.lyricsVerticalOffset),
         paddingLeft:
           (!element.isFullMelisma ||
@@ -1420,7 +1422,9 @@ export default defineComponent({
           ? withZoom(this.score.pageSetup.lyricsDefaultStrokeWidth)
           : withZoom(element.lyricsStrokeWidth),
         lineHeight: withZoom(element.lyricsFontHeight),
-        left: element.alignLeft ? 0 : undefined,
+        left: element.alignLeft
+          ? withZoom(Math.min(0, element.lyricsHorizontalOffset))
+          : undefined,
         textAlign: element.alignLeft ? 'left' : undefined,
       } as StyleValue;
     },
@@ -1694,9 +1698,19 @@ export default defineComponent({
     },
 
     updateEditorPreferences(form: EditorPreferences) {
+      const languageChanged = this.editorPreferences.language !== form.language;
+
       Object.assign(this.editorPreferences, form);
 
       this.saveEditorPreferences();
+
+      if (languageChanged) {
+        // An empty string means "fall back to the auto-detected locale".
+        i18next.changeLanguage(
+          resolveLanguagePreference(form.language, navigator.language),
+        );
+        EventBus.$emit(IpcRendererChannels.SetLanguage, form.language);
+      }
 
       this.editorPreferencesDialogIsOpen = false;
     },
@@ -4523,7 +4537,7 @@ export default defineComponent({
     },
 
     updateTextBoxHeight(element: TextBoxElement, height: number) {
-      // The height could be updated by many rich text box elements at once
+      // The height could be updated by many text box elements at once
       // (e.g. if PageSetup changes) so we debounce the save.
       element.height = height;
       this.textBoxCalculationCount++;
@@ -5033,10 +5047,12 @@ export default defineComponent({
           this.ipcService.showMessageBox({
             type: 'error',
             title: 'Range overflow',
-            message: this.$t('toolbar:main:invalidZoom'),
+            message: this.$t(($) => $.toolbar.main.invalidZoom, {
+              ns: 'toolbar',
+            }),
           });
         } else {
-          alert(this.$t('toolbar:main:invalidZoom'));
+          alert(this.$t(($) => $.toolbar.main.invalidZoom, { ns: 'toolbar' }));
         }
       } else {
         this.zoom = zoom;
@@ -5252,7 +5268,7 @@ export default defineComponent({
       }
 
       nextTick(async () => {
-        const expectedCount = this.resizableRichTextBoxElements.length;
+        const expectedCount = this.resizableTextBoxElements.length;
         this.textBoxCalculationCount = 0;
         this.textBoxCalculation = true;
 
@@ -5260,7 +5276,7 @@ export default defineComponent({
         let tries = 1;
         let lastCount = 0;
 
-        // Wait until all rich text boxes have updated
+        // Wait until all text boxes have updated
         const poll = (resolve: (value: unknown) => void) => {
           if (
             this.textBoxCalculationCount === expectedCount ||
@@ -6275,7 +6291,7 @@ export default defineComponent({
           class="neume-combo-header"
           @click="neumeComboPanelIsExpanded = !neumeComboPanelIsExpanded"
         >
-          {{ $t('editor:common.neumeComboHeader') }}
+          {{ $t(($) => $.editor.common.neumeComboHeader, { ns: 'editor' }) }}
           <span class="neume-combo-expand-collapse">{{
             neumeComboPanelIsExpanded ? '\u2796' : '\u2795'
           }}</span>
@@ -6532,6 +6548,7 @@ export default defineComponent({
                       />
                       <div
                         class="lyrics-container"
+                        dir="auto"
                         :style="getLyricStyle(element as NoteElement)"
                       >
                         <ContentEditable
@@ -6936,7 +6953,7 @@ export default defineComponent({
                   />
                 </template>
                 <template
-                  v-else-if="isTextBoxElement(getHeaderForPageIndex(pageIndex))"
+                  v-else-if="isTextBoxElement(getFooterForPageIndex(pageIndex))"
                 >
                   <TextBox
                     :ref="`footer-${pageIndex}`"
@@ -6991,7 +7008,7 @@ export default defineComponent({
         @update="updateTextBox(selectedTextBoxElement, $event)"
         @update:section-name="
           updateScoreElementSectionName(
-            selectedElement as TextBoxElement,
+            selectedTextBoxElement as TextBoxElement,
             $event,
           )
         "
@@ -7006,7 +7023,7 @@ export default defineComponent({
         @update="updateRichTextBox(selectedRichTextBoxElement, $event)"
         @update:section-name="
           updateScoreElementSectionName(
-            selectedElement as RichTextBoxElement,
+            selectedRichTextBoxElement as RichTextBoxElement,
             $event,
           )
         "

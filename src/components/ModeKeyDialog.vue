@@ -1,7 +1,9 @@
 <template>
   <ModalDialog>
     <div class="container">
-      <div class="header">{{ $t('dialog:modeKey.root') }}</div>
+      <div class="header">
+        {{ $t(($) => $.dialog.modeKey.root, { ns: 'dialog' }) }}
+      </div>
       <div class="pane-container">
         <div class="left-pane">
           <ul class="mode-list">
@@ -9,49 +11,49 @@
               :class="{ selected: selectedMode === 1 }"
               @click="selectMode(1)"
             >
-              {{ $t('model:mode.first') }}
+              {{ $t(($) => $.model.mode.first, { ns: 'model' }) }}
             </li>
             <li
               :class="{ selected: selectedMode === 2 }"
               @click="selectMode(2)"
             >
-              {{ $t('model:mode.second') }}
+              {{ $t(($) => $.model.mode.second, { ns: 'model' }) }}
             </li>
             <li
               :class="{ selected: selectedMode === 3 }"
               @click="selectMode(3)"
             >
-              {{ $t('model:mode.third') }}
+              {{ $t(($) => $.model.mode.third, { ns: 'model' }) }}
             </li>
             <li
               :class="{ selected: selectedMode === 4 }"
               @click="selectMode(4)"
             >
-              {{ $t('model:mode.fourth') }}
+              {{ $t(($) => $.model.mode.fourth, { ns: 'model' }) }}
             </li>
             <li
               :class="{ selected: selectedMode === 5 }"
               @click="selectMode(5)"
             >
-              {{ $t('model:mode.plagalFirst') }}
+              {{ $t(($) => $.model.mode.plagalFirst, { ns: 'model' }) }}
             </li>
             <li
               :class="{ selected: selectedMode === 6 }"
               @click="selectMode(6)"
             >
-              {{ $t('model:mode.plagalSecond') }}
+              {{ $t(($) => $.model.mode.plagalSecond, { ns: 'model' }) }}
             </li>
             <li
               :class="{ selected: selectedMode === 7 }"
               @click="selectMode(7)"
             >
-              {{ $t('model:mode.grave') }}
+              {{ $t(($) => $.model.mode.grave, { ns: 'model' }) }}
             </li>
             <li
               :class="{ selected: selectedMode === 8 }"
               @click="selectMode(8)"
             >
-              {{ $t('model:mode.plagalFourth') }}
+              {{ $t(($) => $.model.mode.plagalFourth, { ns: 'model' }) }}
             </li>
           </ul>
         </div>
@@ -68,7 +70,7 @@
             >
               <ModeKey :element="template" :page-setup="pageSetup" />
               <div class="mode-key-description">
-                {{ $t(template.description) }}
+                {{ $t(template.descriptionSelector, { ns: 'model' }) }}
               </div>
             </li>
           </ul>
@@ -87,7 +89,9 @@
           "
         />
         <label for="mode-key-dialog:use-optional-diatonic-fthoras">{{
-          $t('toolbar:modeKey.useOptionalDiatonicFthoras')
+          $t(($) => $.toolbar.modeKey.useOptionalDiatonicFthoras, {
+            ns: 'toolbar',
+          })
         }}</label>
       </div>
       <div class="button-container">
@@ -96,10 +100,10 @@
           :disabled="selectedTemplateId == null"
           @click="updateModeKey"
         >
-          {{ $t('dialog:common.update') }}
+          {{ $t(($) => $.dialog.common.update, { ns: 'dialog' }) }}
         </button>
         <button class="cancel-btn" @click="$emit('close')">
-          {{ $t('dialog:common.cancel') }}
+          {{ $t(($) => $.dialog.common.cancel, { ns: 'dialog' }) }}
         </button>
       </div>
     </div>
@@ -142,10 +146,13 @@ export default defineComponent({
       const elements = modeKeyTemplates
         .filter((x) => x.mode === this.selectedMode)
         .map((x) =>
-          ModeKeyElement.createFromTemplate(
-            x,
-            this.pageSetup.useOptionalDiatonicFthoras,
-            TextBoxAlignment.Left,
+          Object.assign(
+            ModeKeyElement.createFromTemplate(
+              x,
+              this.pageSetup.useOptionalDiatonicFthoras,
+              TextBoxAlignment.Left,
+            ),
+            { descriptionSelector: x.description },
           ),
         );
 

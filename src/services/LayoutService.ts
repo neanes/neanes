@@ -75,6 +75,12 @@ const idealMaxAdjustmentRatio = 1;
 const adjustmentRatioCapStep = 0.05;
 const maxAdjustmentRatioSearchLimit = 4096;
 const maxAdjustmentRatioSearchIterations = 24;
+// A tiny positive epsilon, used to floor the stretch of any glue that is
+// derived from a possibly non-positive `neumeDefaultSpacing`. Keeps the
+// adjustment ratio finite for paragraphs that contain no martyria, while
+// being far below the neume scale so it has no visible effect.
+const minGlueStretch = 0.1;
+const minGlueShrink = 0;
 
 const tieSet = new Set<VocalExpressionNeume | Tie>([
   VocalExpressionNeume.HeteronConnecting,
@@ -460,11 +466,15 @@ export class LayoutService {
       this.processFooter(score.footers.firstPage, pageSetup, neumeHeight);
     }
 
+    // Knuth-Plass requires stretch >= 0 and shrink >= 0. Floor both so a
+    // negative `neumeDefaultSpacing` (which users set to overlap neumes)
+    // doesn't break line breaking. `width` is left untouched so the overlap
+    // itself is preserved.
     const standardGlue: Glue = {
       type: 'glue',
       width: pageSetup.neumeDefaultSpacing,
-      stretch: Math.max(pageSetup.neumeDefaultSpacing * 0.5, 0.1),
-      shrink: pageSetup.neumeDefaultSpacing * 0.5,
+      stretch: Math.max(pageSetup.neumeDefaultSpacing * 0.5, minGlueStretch),
+      shrink: Math.max(pageSetup.neumeDefaultSpacing * 0.5, minGlueShrink),
     };
 
     // Martyria extra-stretch factor: linear ramp from 0.01em at 0.1pt to
@@ -476,18 +486,20 @@ export class LayoutService {
     const martyriaGlue: Glue = {
       type: 'glue',
       width: pageSetup.neumeDefaultSpacing,
-      stretch:
+      stretch: Math.max(
         pageSetup.neumeDefaultSpacing * 0.5 +
-        pageSetup.neumeDefaultFontSize *
-          (0.01 + 0.19 * Math.min(1, Math.max(0, spacingRamp))),
-      shrink: pageSetup.neumeDefaultSpacing * 0.5,
+          pageSetup.neumeDefaultFontSize *
+            (0.01 + 0.19 * Math.min(1, Math.max(0, spacingRamp))),
+        minGlueStretch,
+      ),
+      shrink: Math.max(pageSetup.neumeDefaultSpacing * 0.5, minGlueShrink),
     };
 
     const rightMartyriaGlue: Glue = {
       type: 'glue',
       width: pageSetup.neumeDefaultSpacing,
       stretch: MAX_COST,
-      shrink: pageSetup.neumeDefaultSpacing * 0.5,
+      shrink: Math.max(pageSetup.neumeDefaultSpacing * 0.5, minGlueShrink),
     };
 
     // Phase 1: Build paragraphs as sequences of boxes, glue, and penalties
@@ -940,7 +952,11 @@ export class LayoutService {
             },
           );
 
-          if (martyriaElement.alignRight && !lineBreak) {
+          // Must run even when lineBreak is already true (from pageBreak or
+          // an explicit lineBreak): endParagraph reads lineBreakType to pick
+          // the finishing-glue stretch, and Left's MAX_COST stretch would
+          // compete with rightMartyriaGlue and strand the martyria mid-line.
+          if (martyriaElement.alignRight) {
             lineBreak = true;
             lineBreakType = LineBreakType.Justify;
           }
@@ -949,13 +965,13 @@ export class LayoutService {
         }
         case ElementType.Tempo: {
           const tempoElement = elements[i] as TempoElement;
-          const temoMapping = NeumeMappingService.getMapping(
+          const tempoMapping = NeumeMappingService.getMapping(
             tempoElement.neume,
           );
 
           const elementWidthPx =
             TextMeasurementService.getTextWidth(
-              temoMapping.text,
+              tempoMapping.text,
               `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
             ) + tempoElement.spaceAfter;
           tempoElement.neumeWidth = elementWidthPx;
@@ -1184,6 +1200,13 @@ export class LayoutService {
           pages.push(page);
           currentPageHeightPx = lastLineHeightPx;
 
+          // Consume the page-break trigger. Subsequent positioned items
+          // belonging to the same break (glues, penalties without an
+          // associated element) hit the `continue` below and skip the
+          // `lastElementWasPageBreak` update, so without this reset the
+          // flag re-fires this branch and leaves an empty page behind.
+          lastElementWasPageBreak = false;
+
           // Recalculate the height of the headers/footers of the new page
           ({ extraHeaderHeightPx, extraFooterHeightPx } =
             this.getExtraHeaderFooterHeight(score, pageSetup, pages.length));
@@ -1239,7 +1262,9 @@ export class LayoutService {
             nextIdx++
           ) {
             const nextPos = positions[nextIdx];
-            if (nextPos.line > position.line) break;
+            if (nextPos.line > position.line) {
+              break;
+            }
             if (nextPos.line === position.line) {
               fillWidth = nextPos.xOffset - position.xOffset;
               break;
@@ -1533,7 +1558,15 @@ export class LayoutService {
         previousLyricsEndPx -
         workspace.neumesEndPx +
         pageSetup.neumeDefaultSpacing;
-      this.addAnonymousBox(adjustment, workspace);
+
+      // A zero-width spacer would only add a box to pendingParagraph without
+      // advancing neumesEndPx. The immediately-following addBox call already
+      // supplies the box that anchors any later glue as a legal breakpoint,
+      // so the spacer is redundant when adjustment is 0. This mirrors the
+      // martyria bar-transfer call site, which is also guarded by > 0.
+      if (adjustment > 0) {
+        this.addAnonymousBox(adjustment, workspace);
+      }
     }
 
     workspace.lyricsEndPx =
@@ -1633,9 +1666,12 @@ export class LayoutService {
     // NOTE: a syllable ending with a hyphen is only considered a melismatic note
     // if the next note is purely melismatic (i.e. the next note contains only a hyphen),
     // despite the unfortunate property name "isMelisma" being true.
+
     return (
       noteElement.isMelismaStart &&
-      noteElement.lyricsWidth >
+      noteElement.lyricsWidth -
+        noteElement.lyricsLeadingPunctuationWidth -
+        noteElement.lyricsTrailingPunctuationWidth >
         noteElement.neumeWidth - noteElement.lyricsHorizontalOffset &&
       (!noteElement.isHyphen ||
         (nextNoteElement != null &&
@@ -1683,6 +1719,28 @@ export class LayoutService {
         noteElement,
         this.getNoteIfPresentAt(elements, i + 1),
       );
+
+      this.applyPunctuationHorizontalOffset(noteElement, pageSetup);
+    }
+  }
+
+  private static applyPunctuationHorizontalOffset(
+    noteElement: NoteElement,
+    pageSetup: PageSetup,
+  ) {
+    if (
+      noteElement.lyrics.length === 0 ||
+      !pageSetup.ignorePunctuationWhenPositioningLyrics
+    ) {
+      return;
+    }
+
+    noteElement.lyricsHorizontalOffset -=
+      noteElement.lyricsLeadingPunctuationWidth;
+
+    if (!noteElement.alignLeft) {
+      noteElement.lyricsHorizontalOffset +=
+        noteElement.lyricsTrailingPunctuationWidth;
     }
   }
 
@@ -2784,17 +2842,40 @@ export class LayoutService {
       pageSetup,
     );
 
+    noteElement.lyricsHorizontalOffset = 0;
+    noteElement.lyricsTrailingPunctuationWidth = 0;
+    noteElement.lyricsLeadingPunctuationWidth = 0;
+
     if (noteElement.lyrics.length > 0) {
       noteElement.lyricsWidth = this.getTextWidthFromCache(
         textWidthCache,
         noteElement,
         pageSetup,
       );
+
+      if (pageSetup.ignorePunctuationWhenPositioningLyrics) {
+        // Adjust for leading punctuation
+        noteElement.lyricsLeadingPunctuationWidth = this.getTextWidthFromCache(
+          textWidthCache,
+          noteElement,
+          pageSetup,
+          null,
+          true,
+        );
+
+        // Adjust for trailing punctuation
+        noteElement.lyricsTrailingPunctuationWidth = this.getTextWidthFromCache(
+          textWidthCache,
+          noteElement,
+          pageSetup,
+          null,
+          false,
+          true,
+        );
+      }
     } else {
       noteElement.lyricsWidth = 0;
     }
-
-    noteElement.lyricsHorizontalOffset = 0;
 
     // Handle special case for vareia:
     // Shift the lyrics to the right so that they
@@ -3040,9 +3121,16 @@ export class LayoutService {
 
         let firstElementOnNextLine: ScoreElement | null = null;
 
-        if (lineIndex + 1 < page.lines.length) {
+        if (
+          lineIndex + 1 < page.lines.length &&
+          page.lines[lineIndex + 1].elements.length > 0
+        ) {
           firstElementOnNextLine = page.lines[lineIndex + 1].elements[0];
-        } else if (pageIndex + 1 < pages.length) {
+        } else if (
+          pageIndex + 1 < pages.length &&
+          pages[pageIndex + 1].lines.length > 0 &&
+          pages[pageIndex + 1].lines[0].elements.length > 0
+        ) {
           firstElementOnNextLine = pages[pageIndex + 1].lines[0].elements[0];
         }
 
@@ -4167,12 +4255,28 @@ export class LayoutService {
     element: NoteElement,
     pageSetup: PageSetup,
     textOverride: string | null = null,
+    trimLeadingPunctuation: boolean = false,
+    trimTrailingPunctuation: boolean = false,
   ) {
     const font = element.lyricsUseDefaultStyle
       ? pageSetup.lyricsFont
       : element.lyricsFont;
 
-    const text = textOverride ?? element.lyrics;
+    let text = textOverride ?? element.lyrics;
+
+    if (trimLeadingPunctuation) {
+      const match = text.match(/^\p{P}+/u);
+      text = match ? match[0] : '';
+    }
+
+    if (trimTrailingPunctuation) {
+      const match = text.match(/\p{P}+$/u);
+      text = match ? match[0] : '';
+    }
+
+    if (text === '') {
+      return 0;
+    }
 
     const key = `${text} | ${font}`;
 

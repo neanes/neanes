@@ -11,7 +11,7 @@
       "
     />
     <label for="toolbar-text-box-use-default-style">{{
-      $t('toolbar:common.useDefaultStyle')
+      $t(($) => $.toolbar.common.useDefaultStyle, { ns: 'toolbar' })
     }}</label>
     <span class="divider" />
     <template v-if="!element.useDefaultStyle">
@@ -109,7 +109,7 @@
           src="@/assets/icons/alignleft.svg"
           width="32"
           height="32"
-          :title="$t('toolbar:common.alignLeft')"
+          :title="$t(($) => $.toolbar.common.alignLeft, { ns: 'toolbar' })"
         />
       </button>
       <button
@@ -125,7 +125,7 @@
           src="@/assets/icons/aligncenter.svg"
           width="32"
           height="32"
-          :title="$t('toolbar:common.alignCenter')"
+          :title="$t(($) => $.toolbar.common.alignCenter, { ns: 'toolbar' })"
         />
       </button>
       <button
@@ -141,13 +141,15 @@
           src="@/assets/icons/alignright.svg"
           width="32"
           height="32"
-          :title="$t('toolbar:common.alignRight')"
+          :title="$t(($) => $.toolbar.common.alignRight, { ns: 'toolbar' })"
         />
       </button>
     </template>
     <template v-if="!element.useDefaultStyle">
       <span class="space" />
-      <label class="right-space">{{ $t('toolbar:common.outline') }}</label>
+      <label class="right-space">{{
+        $t(($) => $.toolbar.common.outline, { ns: 'toolbar' })
+      }}</label>
       <InputStrokeWidth
         :model-value="element.strokeWidth"
         @update:model-value="
@@ -161,7 +163,7 @@
         src="@/assets/icons/letterPelastikon.svg"
         width="32"
         height="32"
-        :title="$t('toolbar:common.insertPelastikon')"
+        :title="$t(($) => $.toolbar.common.insertPelastikon, { ns: 'toolbar' })"
       />
     </button>
     <button class="icon-btn" @mousedown.prevent="$emit('insert:gorthmikon')">
@@ -169,7 +171,7 @@
         src="@/assets/icons/letterGorthmikon.svg"
         width="32"
         height="32"
-        :title="$t('toolbar:common.insertGorthmikon')"
+        :title="$t(($) => $.toolbar.common.insertGorthmikon, { ns: 'toolbar' })"
       />
     </button>
 
@@ -187,12 +189,14 @@
         "
       />
       <label for="toolbar-text-box-multipanel">{{
-        $t('toolbar:textbox.multipanel')
+        $t(($) => $.toolbar.textbox.multipanel, { ns: 'toolbar' })
       }}</label>
       <span class="divider" />
 
       <template v-if="!element.multipanel">
-        <label class="right-space">{{ $t('toolbar:common.height') }}</label>
+        <label class="right-space">{{
+          $t(($) => $.toolbar.common.height, { ns: 'toolbar' })
+        }}</label>
         <InputUnit
           class="text-box-input-width"
           unit="pt"
@@ -211,7 +215,9 @@
     </template>
     <template v-else>
       <span class="divider" />
-      <label class="right-space">{{ $t('toolbar:common.width') }}</label>
+      <label class="right-space">{{
+        $t(($) => $.toolbar.common.width, { ns: 'toolbar' })
+      }}</label>
       <InputUnit
         class="text-box-input-width"
         unit="pt"
@@ -237,12 +243,14 @@
         "
       />
       <label for="toolbar-text-box-fill-width">{{
-        $t('toolbar:textbox.fillWidth')
+        $t(($) => $.toolbar.textbox.fillWidth, { ns: 'toolbar' })
       }}</label>
     </template>
     <span class="space"></span>
     <div class="form-group">
-      <label class="right-space">{{ $t('toolbar:common.marginTop') }}</label>
+      <label class="right-space">{{
+        $t(($) => $.toolbar.common.marginTop, { ns: 'toolbar' })
+      }}</label>
       <InputUnit
         class="text-box-input-width"
         unit="pt"
@@ -258,7 +266,9 @@
     </div>
     <span class="space"></span>
     <div class="form-group">
-      <label class="right-space">{{ $t('toolbar:common.marginBottom') }}</label>
+      <label class="right-space">{{
+        $t(($) => $.toolbar.common.marginBottom, { ns: 'toolbar' })
+      }}</label>
       <InputUnit
         class="text-box-input-width"
         unit="pt"
@@ -274,7 +284,9 @@
     </div>
     <span class="space"></span>
     <div class="form-group">
-      <label class="right-space">{{ $t('toolbar:common.sectionName') }}</label>
+      <label class="right-space">{{
+        $t(($) => $.toolbar.common.sectionName, { ns: 'toolbar' })
+      }}</label>
       <input
         type="text"
         :value="element.sectionName"

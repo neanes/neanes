@@ -3,7 +3,7 @@
     "root": "Αρχείο",
     "new": "Δημιουργία",
     "open": "Άνοιγμα…",
-    "openRecent": "Ανοίγμα πρόσφατου",
+    "openRecent": "Άνοιγμα Πρόσφατων",
     "import": "Εισαγωγή",
     "importFromOcr": "Αποτέλεσμα OCR…",
     "save": "Αποθήκευση",
@@ -31,21 +31,27 @@
     "copyFormat": "Αντιγραφή Μορφής",
     "pasteFormat": "Επικόλληση Μορφής",
     "find": "Αναζήτηση",
+    "lyrics": "Στίχοι",
     "preferences": "Προτιμήσεις"
   },
   "insert": {
     "root": "Εισαγωγή",
-    "alternateLine": "Εναλλακτική Γραμμή",
+    "alternateLine": "Επεξήγηση",
     "annotation": "Επισήμανση",
-    "dropCapBefore": "Αρχιγράμμα Πριν",
-    "dropCapAfter": "Αρχιγράμμα Μετά",
+    "dropCapBefore": "Αρχίγραμμα Πριν",
+    "dropCapAfter": "Αρχίγραμμα Μετά",
     "textBox": "Πλαίσιο Κειμένου",
-    "inlineTextBox": "Ενσωματωμένο Πλαίσιο Κειμένου",
+    "richTextBox": "Πλαίσιο Εμπλουτισμένου Κειμένου",
+    "inlineTextBox": "Πλαίσιο Κειμένου εντός Γραμμής",
     "modeKey": "Αρκτική Μαρτυρία",
     "image": "Εικόνα",
     "headersAndFooters": "Κεφαλίδες και Υποσέλιδα",
     "header": "Κεφαλίδα",
     "footer": "Υποσέλιδο"
+  },
+  "tools": {
+    "root": "Εργαλεία",
+    "copyElementLink": "Αντιγραφή Συνδέσμου Στοιχείου"
   },
   "view": {
     "root": "Προβολή (Εντοπισμός Σφαλμάτων)",
@@ -54,7 +60,7 @@
   "help": {
     "root": "Βοήθεια",
     "guide": "Οδηγός",
-    "requestAFeature": "Ζήτησε Χαρακτηριστικό",
+    "requestAFeature": "Προτείνετε Νέα Δυνατότητα",
     "reportAnIssue": "Αναφέρετε Πρόβλημα",
     "about": "Σχετικά"
   },

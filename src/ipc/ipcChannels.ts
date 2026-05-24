@@ -81,6 +81,8 @@ export enum IpcRendererChannels {
   OpenContextMenuForTab = 'OpenContextMenuForTab',
 
   Paste = 'Paste',
+
+  SetLanguage = 'SetLanguage',
 }
 
 export interface FileMenuOpenScoreArgs {

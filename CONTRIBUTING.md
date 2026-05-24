@@ -23,7 +23,7 @@ To create a release build, type:
 npm run build
 ```
 
-The build artifacts are found in `dist/`. For Windows, the installer will be called `Neanes Setup [version].exe`. The raw files can be found in `dist/win_unpacked`.
+The build artifacts are found in `release/`. For Windows, the installer will be called `Neanes Setup [version].exe`. The raw files can be found in `release/win-unpacked`.
 
 ### Development
 
@@ -82,6 +82,8 @@ When using [Visual Studio Code](https://github.com/microsoft/vscode), install th
 - [Vue - Official](https://marketplace.visualstudio.com/items?itemName=Vue.volar)
 
 ## Localization
+
+Neanes uses [Crowdin](https://crowdin.com/project/neanes) to manage translations.
 
 To test localization support, add the following to `.env.local` and/or `.env.web.local`:
 

@@ -8,15 +8,15 @@
     "ignoreAttractions": "Abaikan Tarikan",
     "insertGorthmikon": "Sisipkan Gorthmikon",
     "insertPelastikon": "Sisipkan Pelastikon",
-    "measureBar": "Batang Birama",
+    "measureBar": "Garis Birama",
     "outline": "Garis Luar",
     "sectionName": "Nama Bagian",
     "spaceAfter": "Ruang Setelah",
     "tempoSign": "Tanda Tempo",
     "useDefaultStyle": "Gunakan Gaya Default",
     "enharmonicDisabled": "Fthora enharmonik hanya dapat ditempatkan pada Ga, Zo, atau Vou",
-    "generalFlatDisabled": "Molus umum hanya dapat ditempatkan pada Ke",
-    "generalSharpDisabled": "Tajam umum hanya dapat ditempatkan pada Ga",
+    "generalFlatDisabled": "Bemol umum hanya dapat ditempatkan pada Ke",
+    "generalSharpDisabled": "Kres umum hanya dapat ditempatkan pada Ga",
     "zygosDisabled": "Zygos hanya dapat ditempatkan pada Di",
     "klitonDisabled": "Kliton hanya dapat ditempatkan pada Di",
     "spathiDisabled": "Spathi hanya dapat ditempatkan pada Ke atau Ga",
@@ -26,7 +26,7 @@
     "marginBottom": "Celah Bawah",
     "verticalOffset": "Offset Vertikal",
     "none": "Tidak Ada",
-    "inline": "Inline",
+    "inline": "Sebaris",
     "neume": "Neuma"
   },
   "main": {
@@ -41,7 +41,7 @@
     "insertImage": "Sisipkan gambar",
     "insertOrRemoveLineBreakAfterSelectedElement": "Sisipkan atau hapus jeda baris setelah elemen yang dipilih",
     "insertOrRemoveJustifiedLineBreakAfterSelectedElement": "Sisipkan atau hapus jeda baris rata setelah elemen yang dipilih",
-    "insertOrRemoveCenteredLineBreakAfterSelectedElement": "Sisipkan atau hapus jeda baris tengah setelah elemen yang dipilih",
+    "insertOrRemoveCenteredLineBreakAfterSelectedElement": "Sisipkan atau hapus jeda baris terpusat setelah elemen yang dipilih",
     "insertOrRemovePageBreakAfterSelectedElement": "Sisipkan atau hapus jeda halaman setelah elemen yang dipilih",
     "deleteSelectedElement": "Hapus elemen yang dipilih",
     "fit": "Paskan",
@@ -50,7 +50,7 @@
     "invalidZoom": "Nilai harus antara 50% dan 500%."
   },
   "dropCap": {
-    "lineSpan": "Baris untuk turun"
+    "lineSpan": "Baris untuk Turun"
   },
   "imageBox": {
     "maintainAspectRatio": "Pertahankan Rasio Aspek",
@@ -83,8 +83,8 @@
     "neumeSelect": "Pilih Neuma",
     "positioning": "Penempatan",
     "yfen": "Yfen",
-    "flat": "Molus",
-    "sharp": "Tajam",
+    "flat": "Bemol",
+    "sharp": "Kres",
     "measureNumber": "Nomor Birama",
     "noteIndicator": "Indikator Nada",
     "isonIndicator": "Indikator Ison",

@@ -147,19 +147,19 @@
       <ButtonWithMenu
         class="btnMenuTempoLeft"
         :options="tempoMenuOptions"
-        :title="$t('toolbar:martyria:tempoLeft')"
+        :title="$t(($) => $.toolbar.martyria.tempoLeft, { ns: 'toolbar' })"
         @select="$emit('update:tempoLeft', $event)"
       />
       <ButtonWithMenu
         class="btnMenuTempoAbove"
         :options="tempoMenuOptionsAbove"
-        :title="$t('toolbar:martyria:tempo')"
+        :title="$t(($) => $.toolbar.martyria.tempo, { ns: 'toolbar' })"
         @select="$emit('update:tempo', $event)"
       />
       <ButtonWithMenu
         class="btnMenuTempoRight"
         :options="tempoMenuOptions"
-        :title="$t('toolbar:martyria:tempoRight')"
+        :title="$t(($) => $.toolbar.martyria.tempoRight, { ns: 'toolbar' })"
         @select="$emit('update:tempoRight', $event)"
       />
       <span class="space"></span>
@@ -184,7 +184,7 @@
         <span class="space" />
         <ButtonWithMenu
           :options="quantitativeNeumeOptions"
-          :title="$t('toolbar:common:neume')"
+          :title="$t(($) => $.toolbar.common.neume, { ns: 'toolbar' })"
           @select="$emit('update:quantitativeNeume', $event)"
         />
       </template>
@@ -201,12 +201,14 @@
           "
         />
         <label for="toolbar:martyria-auto">{{
-          $t('toolbar:martyria.auto')
+          $t(($) => $.toolbar.martyria.auto, { ns: 'toolbar' })
         }}</label>
       </div>
       <template v-if="!element.auto">
         <span class="space" />
-        <label class="right-space">{{ $t('toolbar:martyria.note') }}</label>
+        <label class="right-space">{{
+          $t(($) => $.toolbar.martyria.note, { ns: 'toolbar' })
+        }}</label>
         <select
           :value="element.note"
           @change="
@@ -216,12 +218,14 @@
           "
         >
           <option v-for="note in notes" :key="note.key" :value="note.key">
-            {{ $t(note.displayName) }}
+            {{ $t(note.displayName, { ns: 'model' }) }}
           </option>
         </select>
 
         <span class="space" />
-        <label class="right-space">{{ $t('toolbar:martyria.scale') }}</label>
+        <label class="right-space">{{
+          $t(($) => $.toolbar.martyria.scale, { ns: 'toolbar' })
+        }}</label>
         <select
           :value="element.scale"
           @change="
@@ -231,13 +235,15 @@
           "
         >
           <option v-for="scale in scales" :key="scale.key" :value="scale.key">
-            {{ $t(scale.displayName) }}
+            {{ $t(scale.displayName, { ns: 'model' }) }}
           </option>
         </select>
       </template>
     </div>
     <div class="row">
-      <label class="right-space">{{ $t('toolbar:common.bpm') }}</label>
+      <label class="right-space">{{
+        $t(($) => $.toolbar.common.bpm, { ns: 'toolbar' })
+      }}</label>
       <InputBpm
         :disabled="
           element.tempo == null &&
@@ -255,7 +261,7 @@
       <span class="space" />
 
       <label class="right-space">{{
-        $t('toolbar:common.verticalOffset')
+        $t(($) => $.toolbar.common.verticalOffset, { ns: 'toolbar' })
       }}</label>
 
       <InputUnit
@@ -274,7 +280,9 @@
 
       <span class="space" />
 
-      <label class="right-space">{{ $t('toolbar:common.spaceAfter') }}</label>
+      <label class="right-space">{{
+        $t(($) => $.toolbar.common.spaceAfter, { ns: 'toolbar' })
+      }}</label>
 
       <InputUnit
         unit="pt"
@@ -292,7 +300,9 @@
 
       <template v-if="showChromaticFthoraNote">
         <span class="space" />
-        <label class="right-space">{{ $t('toolbar:common.fthoraNote') }}</label>
+        <label class="right-space">{{
+          $t(($) => $.toolbar.common.fthoraNote, { ns: 'toolbar' })
+        }}</label>
         <select
           :value="element.chromaticFthoraNote"
           @change="
@@ -306,13 +316,13 @@
             :key="note.value"
             :value="note.value"
           >
-            {{ $t(note.label) }}
+            {{ $t(note.label, { ns: 'model' }) }}
           </option>
         </select>
       </template>
       <span class="space" />
       <label class="right-space">{{
-        $t('toolbar:martyria.rootSignOverride')
+        $t(($) => $.toolbar.martyria.rootSignOverride, { ns: 'toolbar' })
       }}</label>
       <select
         :value="element.rootSignOverride"
@@ -322,16 +332,18 @@
           } as Partial<MartyriaElement>)
         "
       >
-        <option value="">{{ $t('toolbar:common.none') }}</option>
+        <option value="">
+          {{ $t(($) => $.toolbar.common.none, { ns: 'toolbar' }) }}
+        </option>
         <option v-for="sign in rootSigns" :key="sign.value" :value="sign.value">
-          {{ $t(sign.name) }}
+          {{ $t(sign.name, { ns: 'model' }) }}
         </option>
       </select>
 
       <span class="space"></span>
       <div class="form-group">
         <label class="right-space">{{
-          $t('toolbar:common.sectionName')
+          $t(($) => $.toolbar.common.sectionName, { ns: 'toolbar' })
         }}</label>
         <input
           type="text"
@@ -353,9 +365,15 @@ import { defineComponent, PropType } from 'vue';
 
 import { MartyriaElement } from '@/models/Element';
 import {
+  getFthoraLabelSelector,
+  getNoteLabelSelector,
+  getScaleLabelSelector,
+  ModelSelector,
+  ROOT_SIGN_LABEL_SELECTORS,
+} from '@/models/NeumeI18nMappings';
+import {
   Fthora,
   MeasureBar,
-  Neume,
   Note,
   QuantitativeNeume,
   RootSign,
@@ -373,12 +391,12 @@ import InputUnit from './InputUnit.vue';
 
 const notes = Object.values(Note).map((x) => ({
   key: x,
-  displayName: getNoteDisplayName(x),
+  displayName: getNoteLabelSelector(x),
 }));
 
 const scales = Object.values(Scale).map((x) => ({
   key: x,
-  displayName: getScaleDisplayName(x),
+  displayName: getScaleLabelSelector(x),
 }));
 
 const chromaticFthoras = [
@@ -392,53 +410,58 @@ const chromaticFthoras = [
   Fthora.HardChromaticThi_Bottom,
 ];
 
+type FthoraNoteOption = {
+  label: ModelSelector;
+  value: ScaleNote;
+};
+
 const rootSigns = [
   {
-    name: 'model:neume.rootSign.ananes',
+    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.Alpha],
     value: RootSign.Alpha,
   },
   {
-    name: 'model:neume.rootSign.neanes',
+    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.SoftChromaticSquiggle],
     value: RootSign.SoftChromaticSquiggle,
   },
   {
-    name: 'model:neume.rootSign.softChromaticGa',
+    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.SoftChromaticPaRootSign],
     value: RootSign.SoftChromaticPaRootSign,
   },
   {
-    name: 'model:neume.rootSign.nana',
+    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.Nana],
     value: RootSign.Nana,
   },
   {
-    name: 'model:neume.rootSign.legetos',
+    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.Legetos],
     value: RootSign.Legetos,
   },
   {
-    name: 'model:neume.rootSign.agia',
+    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.DeltaDotted],
     value: RootSign.DeltaDotted,
   },
   {
-    name: 'model:neume.rootSign.zygos',
+    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.Zygos],
     value: RootSign.Zygos,
   },
   {
-    name: 'model:neume.rootSign.aneanes',
+    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.AlphaDotted],
     value: RootSign.AlphaDotted,
   },
   {
-    name: 'model:neume.rootSign.necheanes',
+    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.Squiggle],
     value: RootSign.Squiggle,
   },
   {
-    name: 'model:neume.rootSign.nenano',
+    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.Tilt],
     value: RootSign.Tilt,
   },
   {
-    name: 'model:neume.rootSign.varys',
+    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.Zo],
     value: RootSign.Zo,
   },
   {
-    name: 'model:neume.rootSign.neagie',
+    name: ROOT_SIGN_LABEL_SELECTORS[RootSign.Delta],
     value: RootSign.Delta,
   },
 ];
@@ -559,131 +582,6 @@ const barlineMenuOptions: ButtonWithMenuOption[] = [
   },
 ];
 
-function getNoteDisplayName(note: Note) {
-  switch (note) {
-    case Note.ZoLow:
-      return 'model:note.zoLow';
-    case Note.NiLow:
-      return 'model:note.niLow';
-    case Note.PaLow:
-      return 'model:note.paLow';
-    case Note.VouLow:
-      return 'model:note.vouLow';
-    case Note.GaLow:
-      return 'model:note.gaLow';
-    case Note.ThiLow:
-      return 'model:note.diLow';
-    case Note.KeLow:
-      return 'model:note.keLow';
-    case Note.Zo:
-      return 'model:note.zo';
-    case Note.Ni:
-      return 'model:note.ni';
-    case Note.Pa:
-      return 'model:note.pa';
-    case Note.Vou:
-      return 'model:note.vou';
-    case Note.Ga:
-      return 'model:note.ga';
-    case Note.Thi:
-      return 'model:note.di';
-    case Note.Ke:
-      return 'model:note.ke';
-    case Note.ZoHigh:
-      return 'model:note.zoHigh';
-    case Note.NiHigh:
-      return 'model:note.niHigh';
-    case Note.PaHigh:
-      return 'model:note.paHigh';
-    case Note.VouHigh:
-      return 'model:note.vouHigh';
-    case Note.GaHigh:
-      return 'model:note.gaHigh';
-    case Note.ThiHigh:
-      return 'model:note.diHigh';
-    case Note.KeHigh:
-      return 'model:note.keHigh';
-    default:
-      return note;
-  }
-}
-
-function getScaleDisplayName(scale: Scale) {
-  switch (scale) {
-    case Scale.Diatonic:
-      return 'model:scale.diatonic';
-    case Scale.SoftChromatic:
-      return 'model:scale.softChromatic';
-    case Scale.HardChromatic:
-      return 'model:scale.hardChromatic';
-    case Scale.EnharmonicGa:
-      return 'model:scale.enharmonicGa';
-    case Scale.EnharmonicZoHigh:
-      return 'model:scale.enharmonicZoHigh';
-    case Scale.EnharmonicVou:
-      return 'model:scale.enharmonicVou';
-    case Scale.EnharmonicZo:
-      return 'model:scale.enharmonicZo';
-    case Scale.EnharmonicVouHigh:
-      return 'model:scale.enharmonicVouHigh';
-    case Scale.Zygos:
-      return 'model:scale.zygos';
-    case Scale.Spathi:
-      return 'model:scale.spathi';
-    case Scale.SpathiGa:
-      return 'model:scale.spathiGa';
-    case Scale.Kliton:
-      return 'model:scale.kliton';
-    default:
-      return scale;
-  }
-}
-
-function getDisplayName(neume: Neume) {
-  switch (neume) {
-    case Fthora.DiatonicNiLow_Top:
-      return 'model:neume.fthora.diatonicNiLow';
-    case Fthora.DiatonicPa_Top:
-      return 'model:neume.fthora.diatonicPa';
-    case Fthora.DiatonicVou_Top:
-      return 'model:neume.fthora.diatonicVou';
-    case Fthora.DiatonicGa_Top:
-      return 'model:neume.fthora.diatonicGa';
-    case Fthora.DiatonicThi_Top:
-      return 'model:neume.fthora.diatonicDi';
-    case Fthora.DiatonicKe_Top:
-      return 'model:neume.fthora.diatonicKe';
-    case Fthora.DiatonicZo_Top:
-      return 'model:neume.fthora.diatonicZo';
-    case Fthora.DiatonicNiHigh_Top:
-      return 'model:neume.fthora.diatonicNiHigh';
-    case Fthora.SoftChromaticThi_Top:
-      return 'model:neume.fthora.softChromaticDi';
-    case Fthora.SoftChromaticPa_Top:
-      return 'model:neume.fthora.softChromaticGa';
-    case Fthora.HardChromaticPa_Top:
-      return 'model:neume.fthora.hardChromaticPa';
-    case Fthora.HardChromaticThi_Top:
-      return 'model:neume.fthora.hardChromaticDi';
-    case Fthora.Enharmonic_Top:
-      return 'model:neume.fthora.enharmonic';
-    case Fthora.GeneralFlat_Top:
-      return 'model:neume.fthora.generalFlat';
-    case Fthora.GeneralSharp_Top:
-      return 'model:neume.fthora.generalSharp';
-    case Fthora.Zygos_Top:
-      return 'model:neume.fthora.zygos';
-    case Fthora.Kliton_Top:
-      return 'model:neume.fthora.kliton';
-    case Fthora.Spathi_Top:
-      return 'model:neume.fthora.spathi';
-    case MeasureBar.MeasureBarRight:
-      return 'toolbar:common.measureBar';
-    default:
-      return neume;
-  }
-}
-
 export default defineComponent({
   components: { InputUnit, InputBpm, ButtonWithMenu },
   props: {
@@ -741,7 +639,7 @@ export default defineComponent({
 
     spathiTitle() {
       return this.spathiDisabled
-        ? this.$t('toolbar:common.spathiDisabled')
+        ? this.$t(($) => $.toolbar.common.spathiDisabled, { ns: 'toolbar' })
         : this.tooltip(Fthora.Spathi_Top);
     },
 
@@ -753,7 +651,7 @@ export default defineComponent({
 
     klitonTitle() {
       return this.klitonDisabled
-        ? this.$t('toolbar:common.klitonDisabled')
+        ? this.$t(($) => $.toolbar.common.klitonDisabled, { ns: 'toolbar' })
         : this.tooltip(Fthora.Kliton_Top);
     },
 
@@ -765,7 +663,7 @@ export default defineComponent({
 
     zygosTitle() {
       return this.zygosDisabled
-        ? this.$t('toolbar:common.zygosDisabled')
+        ? this.$t(($) => $.toolbar.common.zygosDisabled, { ns: 'toolbar' })
         : this.tooltip(Fthora.Zygos_Top);
     },
 
@@ -782,7 +680,7 @@ export default defineComponent({
 
     enharmonicTitle() {
       return this.enharmonicDisabled
-        ? this.$t('toolbar:common.enharmonicDisabled')
+        ? this.$t(($) => $.toolbar.common.enharmonicDisabled, { ns: 'toolbar' })
         : this.tooltip(Fthora.Enharmonic_Top);
     },
 
@@ -794,7 +692,9 @@ export default defineComponent({
 
     generalFlatTitle() {
       return this.generalFlatDisabled
-        ? this.$t('toolbar:common.generalFlatDisabled')
+        ? this.$t(($) => $.toolbar.common.generalFlatDisabled, {
+            ns: 'toolbar',
+          })
         : this.tooltip(Fthora.GeneralFlat_Top);
     },
 
@@ -806,7 +706,9 @@ export default defineComponent({
 
     generalSharpTitle() {
       return this.generalSharpDisabled
-        ? this.$t('toolbar:common.generalSharpDisabled')
+        ? this.$t(($) => $.toolbar.common.generalSharpDisabled, {
+            ns: 'toolbar',
+          })
         : this.tooltip(Fthora.GeneralSharp_Top);
     },
 
@@ -818,50 +720,93 @@ export default defineComponent({
     },
 
     alignRightTooltip() {
-      return `${this.$t(
-        'toolbar:common.alignRight',
-      )}(${this.neumeKeyboard.getMaryriaRightAlignTooltip()})`;
+      return `${this.$t(($) => $.toolbar.common.alignRight, { ns: 'toolbar' })}(${this.neumeKeyboard.getMaryriaRightAlignTooltip()})`;
     },
 
-    fthoraNotes() {
+    fthoraNotes(): FthoraNoteOption[] {
       if (
         this.element.fthora === Fthora.SoftChromaticThi_Top ||
         this.element.fthora === Fthora.SoftChromaticThi_Bottom
       ) {
         return [
-          { label: 'model:note.zoHigh', value: ScaleNote.ZoHigh },
-          { label: 'model:note.di', value: ScaleNote.Thi },
-          { label: 'model:note.vou', value: ScaleNote.Vou },
-          { label: 'model:note.ni', value: ScaleNote.Ni },
+          {
+            label: getNoteLabelSelector(ScaleNote.ZoHigh),
+            value: ScaleNote.ZoHigh,
+          },
+          {
+            label: getNoteLabelSelector(ScaleNote.Thi),
+            value: ScaleNote.Thi,
+          },
+          {
+            label: getNoteLabelSelector(ScaleNote.Vou),
+            value: ScaleNote.Vou,
+          },
+          {
+            label: getNoteLabelSelector(ScaleNote.Ni),
+            value: ScaleNote.Ni,
+          },
         ];
       } else if (
         this.element.fthora === Fthora.SoftChromaticPa_Top ||
         this.element.fthora === Fthora.SoftChromaticPa_Bottom
       ) {
         return [
-          { label: `model:note.niHigh`, value: ScaleNote.NiHigh },
-          { label: 'model:note.ke', value: ScaleNote.Ke },
-          { label: 'model:note.ga', value: ScaleNote.Ga },
-          { label: 'model:note.pa', value: ScaleNote.Pa },
+          {
+            label: getNoteLabelSelector(ScaleNote.NiHigh),
+            value: ScaleNote.NiHigh,
+          },
+          {
+            label: getNoteLabelSelector(ScaleNote.Ke),
+            value: ScaleNote.Ke,
+          },
+          {
+            label: getNoteLabelSelector(ScaleNote.Ga),
+            value: ScaleNote.Ga,
+          },
+          {
+            label: getNoteLabelSelector(ScaleNote.Pa),
+            value: ScaleNote.Pa,
+          },
         ];
       } else if (
         this.element.fthora === Fthora.HardChromaticThi_Top ||
         this.element.fthora === Fthora.HardChromaticThi_Bottom
       ) {
         return [
-          { label: 'model:note.zoHigh', value: ScaleNote.ZoHigh },
-          { label: 'model:note.di', value: ScaleNote.Thi },
-          { label: 'model:note.vou', value: ScaleNote.Vou },
+          {
+            label: getNoteLabelSelector(ScaleNote.ZoHigh),
+            value: ScaleNote.ZoHigh,
+          },
+          {
+            label: getNoteLabelSelector(ScaleNote.Thi),
+            value: ScaleNote.Thi,
+          },
+          {
+            label: getNoteLabelSelector(ScaleNote.Vou),
+            value: ScaleNote.Vou,
+          },
         ];
       } else if (
         this.element.fthora === Fthora.HardChromaticPa_Top ||
         this.element.fthora === Fthora.HardChromaticPa_Bottom
       ) {
         return [
-          { label: `model:note.niHigh`, value: ScaleNote.NiHigh },
-          { label: 'model:note.ke', value: ScaleNote.Ke },
-          { label: 'model:note.ga', value: ScaleNote.Ga },
-          { label: 'model:note.pa', value: ScaleNote.Pa },
+          {
+            label: getNoteLabelSelector(ScaleNote.NiHigh),
+            value: ScaleNote.NiHigh,
+          },
+          {
+            label: getNoteLabelSelector(ScaleNote.Ke),
+            value: ScaleNote.Ke,
+          },
+          {
+            label: getNoteLabelSelector(ScaleNote.Ga),
+            value: ScaleNote.Ga,
+          },
+          {
+            label: getNoteLabelSelector(ScaleNote.Pa),
+            value: ScaleNote.Pa,
+          },
         ];
       }
 
@@ -870,15 +815,21 @@ export default defineComponent({
   },
 
   methods: {
-    tooltip(neume: Neume) {
-      const displayName = getDisplayName(neume);
+    translateNeumeDisplayName(neume: Fthora | MeasureBar.MeasureBarRight) {
+      if (neume === MeasureBar.MeasureBarRight) {
+        return this.$t(($) => $.toolbar.common.measureBar, { ns: 'toolbar' });
+      }
+
+      return this.$t(getFthoraLabelSelector(neume), { ns: 'model' });
+    },
+
+    tooltip(neume: Fthora | MeasureBar.MeasureBarRight) {
+      const label = this.translateNeumeDisplayName(neume);
       const mapping = this.neumeKeyboard.findMappingForNeume(neume);
       if (mapping) {
-        return `${this.$t(displayName)} (${this.neumeKeyboard.generateTooltip(
-          mapping,
-        )})`;
+        return `${label} (${this.neumeKeyboard.generateTooltip(mapping)})`;
       } else {
-        return `${this.$t(displayName)}`;
+        return label;
       }
     },
   },

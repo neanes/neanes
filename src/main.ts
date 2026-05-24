@@ -3,13 +3,12 @@ import './registerServiceWorker';
 import { CkeditorPlugin } from '@ckeditor/ckeditor5-vue';
 import i18next from 'i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
-import Pseudo from 'i18next-pseudo';
 import I18NextVue from 'i18next-vue';
 import { createApp } from 'vue';
 import VueObserveVisibility from 'vue3-observe-visibility';
 
 import App from './App.vue';
-import { defaultNS, resources } from './i18n';
+import { initializeI18n, resolveLanguagePreference } from './i18n';
 import {
   audioServiceKey,
   ipcServiceKey,
@@ -45,32 +44,30 @@ if (isElectron()) {
   initalizeBrowserIpcListeners();
 }
 
-i18next
-  .use(LanguageDetector)
-  .use(
-    new Pseudo({
-      enabled:
-        'VITE_PSEUDOLOCALIZATION' in import.meta.env &&
-        import.meta.env['VITE_PSEUDOLOCALIZATION'] === 'true',
-      languageToPseudo: 'en-US',
-    }),
-  )
-  .init({
-    debug:
-      'VITE_PSEUDOLOCALIZATION' in import.meta.env &&
-      import.meta.env['VITE_PSEUDOLOCALIZATION'] === 'true',
-    detection: {
-      order: ['querystring', 'navigator'],
-    },
-    fallbackLng: 'en',
-    interpolation: {
-      escapeValue: false,
-    },
-    ns: Object.keys(resources['en']),
-    postProcess: ['pseudo'],
-    defaultNS,
-    resources,
-  });
+// Read the user's saved language override before i18next initializes so we
+// don't render a flash of auto-detected UI before swapping to the chosen one.
+function readSavedLanguage(): string | undefined {
+  try {
+    const raw = localStorage.getItem('editorPreferences');
+    if (raw == null) {
+      return undefined;
+    }
+    const parsed = JSON.parse(raw);
+    return resolveLanguagePreference(parsed?.language);
+  } catch {
+    return undefined;
+  }
+}
+
+const savedLanguage = readSavedLanguage();
+
+initializeI18n({
+  lng: savedLanguage,
+  plugins: [LanguageDetector],
+  detection: {
+    order: ['querystring', 'navigator'],
+  },
+});
 
 const app = createApp(App);
 app.use(VueObserveVisibility);

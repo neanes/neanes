@@ -35,9 +35,9 @@
     "single": "Single",
     "martyria": "Martyria",
     "insertDropCapBefore": "Insert drop cap before",
-    "insertModeKey": "Insert Mode Key",
-    "insertTextBox": "Insert Text Box",
-    "insertTextBoxRich": "Insert Rich Text Box",
+    "insertModeKey": "Insert mode key",
+    "insertTextBox": "Insert text box",
+    "insertTextBoxRich": "Insert rich text box",
     "insertImage": "Insert image",
     "insertOrRemoveLineBreakAfterSelectedElement": "Insert or remove line break after selected element",
     "insertOrRemoveJustifiedLineBreakAfterSelectedElement": "Insert or remove justified line break after selected element",
@@ -50,7 +50,7 @@
     "invalidZoom": "The value must be between 50% and 500%."
   },
   "dropCap": {
-    "lineSpan": "Lines to drop"
+    "lineSpan": "Lines to Drop"
   },
   "imageBox": {
     "maintainAspectRatio": "Maintain Aspect Ratio",

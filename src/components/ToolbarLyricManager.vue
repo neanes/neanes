@@ -10,13 +10,17 @@
         "
       />
       <label for="toolbar-lyric-manager-locked">{{
-        $t('toolbar:lyricManager.locked')
+        $t(($) => $.toolbar.lyricManager.locked, { ns: 'toolbar' })
       }}</label>
 
       <span class="separator" />
 
       <button @click="$emit('assignAcceptsLyrics')">
-        {{ $t('toolbar:lyricManager.assignAcceptsLyrics') }}
+        {{
+          $t(($) => $.toolbar.lyricManager.assignAcceptsLyrics, {
+            ns: 'toolbar',
+          })
+        }}
       </button>
 
       <span class="close" @click="$emit('close')">&#x2715;</span>
@@ -24,6 +28,7 @@
     <textarea
       :value="lyrics"
       rows="5"
+      dir="auto"
       @input="$emit('update:lyrics', ($event.target as HTMLInputElement).value)"
     ></textarea>
   </div>

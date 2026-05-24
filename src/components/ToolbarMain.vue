@@ -5,21 +5,21 @@
       :class="{ on: entryMode === EntryMode.Auto }"
       @click="$emit('update:entryMode', EntryMode.Auto)"
     >
-      {{ $t('toolbar:main.auto') }}
+      {{ $t(($) => $.toolbar.main.auto, { ns: 'toolbar' }) }}
     </button>
     <button
       class="entry-mode-btn"
       :class="{ on: entryMode === EntryMode.Insert }"
       @click="$emit('update:entryMode', EntryMode.Insert)"
     >
-      {{ $t('toolbar:main.insert') }}
+      {{ $t(($) => $.toolbar.main.insert, { ns: 'toolbar' }) }}
     </button>
     <button
       class="entry-mode-btn"
       :class="{ on: entryMode === EntryMode.Edit }"
       @click="$emit('update:entryMode', EntryMode.Edit)"
     >
-      {{ $t('toolbar:main.single') }}
+      {{ $t(($) => $.toolbar.main.single, { ns: 'toolbar' }) }}
     </button>
     <span class="space"></span>
     <button
@@ -39,35 +39,35 @@
     />
     <span class="space"></span>
     <button
-      :title="$t('toolbar:main.insertDropCapBefore')"
+      :title="$t(($) => $.toolbar.main.insertDropCapBefore, { ns: 'toolbar' })"
       class="icon-btn"
       @click="$emit('add-drop-cap')"
     >
       <img src="@/assets/icons/drop-cap.svg" width="24" height="24" />
     </button>
     <button
-      :title="$t('toolbar:main.insertTextBox')"
+      :title="$t(($) => $.toolbar.main.insertTextBox, { ns: 'toolbar' })"
       class="icon-btn"
       @click="$emit('add-text-box')"
     >
       <img src="@/assets/icons/text-box.svg" width="24" height="24" />
     </button>
     <button
-      :title="$t('toolbar:main.insertTextBoxRich')"
+      :title="$t(($) => $.toolbar.main.insertTextBoxRich, { ns: 'toolbar' })"
       class="icon-btn"
       @click="$emit('add-text-box-rich')"
     >
       <img src="@/assets/icons/text-box-rich.svg" width="24" height="24" />
     </button>
     <button
-      :title="$t('toolbar:main.insertModeKey')"
+      :title="$t(($) => $.toolbar.main.insertModeKey, { ns: 'toolbar' })"
       class="icon-btn"
       @click="$emit('add-mode-key')"
     >
       <img src="@/assets/icons/mode-key.svg" width="24" height="24" />
     </button>
     <button
-      :title="$t('toolbar:main.insertImage')"
+      :title="$t(($) => $.toolbar.main.insertImage, { ns: 'toolbar' })"
       class="icon-btn"
       @click="$emit('add-image')"
     >
@@ -76,7 +76,11 @@
     <span class="space"></span>
     <button
       class="icon-btn line-break-btn"
-      :title="$t('toolbar:main.insertOrRemoveLineBreakAfterSelectedElement')"
+      :title="
+        $t(($) => $.toolbar.main.insertOrRemoveLineBreakAfterSelectedElement, {
+          ns: 'toolbar',
+        })
+      "
       @click="$emit('toggle-line-break', LineBreakType.Left)"
     >
       <img src="@/assets/icons/line-break.svg" width="24" height="24" />
@@ -84,7 +88,13 @@
     <button
       class="icon-btn line-break-btn"
       :title="
-        $t('toolbar:main.insertOrRemoveJustifiedLineBreakAfterSelectedElement')
+        $t(
+          ($) =>
+            $.toolbar.main.insertOrRemoveJustifiedLineBreakAfterSelectedElement,
+          {
+            ns: 'toolbar',
+          },
+        )
       "
       @click="$emit('toggle-line-break', LineBreakType.Justify)"
     >
@@ -93,7 +103,13 @@
     <button
       class="icon-btn line-break-btn"
       :title="
-        $t('toolbar:main.insertOrRemoveCenteredLineBreakAfterSelectedElement')
+        $t(
+          ($) =>
+            $.toolbar.main.insertOrRemoveCenteredLineBreakAfterSelectedElement,
+          {
+            ns: 'toolbar',
+          },
+        )
       "
       @click="$emit('toggle-line-break', LineBreakType.Center)"
     >
@@ -101,7 +117,11 @@
     </button>
     <button
       class="icon-btn"
-      :title="$t('toolbar:main.insertOrRemovePageBreakAfterSelectedElement')"
+      :title="
+        $t(($) => $.toolbar.main.insertOrRemovePageBreakAfterSelectedElement, {
+          ns: 'toolbar',
+        })
+      "
       @click="$emit('toggle-page-break')"
     >
       <img src="@/assets/icons/page-break.svg" width="24" height="24" />
@@ -109,7 +129,9 @@
     <span class="space"></span>
     <button
       class="red icon-btn"
-      :title="$t('toolbar:main.deleteSelectedElement')"
+      :title="
+        $t(($) => $.toolbar.main.deleteSelectedElement, { ns: 'toolbar' })
+      "
       @click="$emit('delete-selected-element')"
     >
       <img src="@/assets/icons/delete.svg" width="24" height="24" />
@@ -126,7 +148,7 @@
       >
       <div v-if="showZoomMenu" class="zoom-menu">
         <div class="zoom-menu-item" @click="updateZoom('Fit')">
-          {{ $t('toolbar:main.fit') }}
+          {{ $t(($) => $.toolbar.main.fit, { ns: 'toolbar' }) }}
         </div>
         <div class="zoom-menu-separator"></div>
         <div
@@ -166,7 +188,9 @@
       <span class="label-bpm">BPM = {{ playbackBpmDisplay }}</span>
 
       <span class="space" />
-      <label class="right-space">{{ $t('toolbar:main.speed') }}</label>
+      <label class="right-space">{{
+        $t(($) => $.toolbar.main.speed, { ns: 'toolbar' })
+      }}</label>
       <input
         class="audio-speed-slider"
         type="range"
@@ -198,7 +222,13 @@
     <span class="space"></span>
     <span class="space"></span>
     <div class="page-number-container">
-      {{ $t('toolbar:main.pageNumber', { currentPageNumber, pageCount }) }}
+      {{
+        $t(($) => $.toolbar.main.pageNumber, {
+          ns: 'toolbar',
+          currentPageNumber,
+          pageCount,
+        })
+      }}
     </div>
   </div>
 </template>
@@ -358,15 +388,11 @@ export default defineComponent({
     },
 
     martyriaTooltip() {
-      return `${this.$t(
-        'toolbar:main.martyria',
-      )} (${this.neumeKeyboard.getMartyriaKeyTooltip()})`;
+      return `${this.$t(($) => $.toolbar.main.martyria, { ns: 'toolbar' })} (${this.neumeKeyboard.getMartyriaKeyTooltip()})`;
     },
 
     tempoTooltip() {
-      return `${this.$t(
-        'toolbar:common.tempoSign',
-      )} (${this.neumeKeyboard.generateTooltip(
+      return `${this.$t(($) => $.toolbar.common.tempoSign, { ns: 'toolbar' })} (${this.neumeKeyboard.generateTooltip(
         this.neumeKeyboard.findMappingForNeume(TempoSign.VerySlow)!,
       )})`;
     },

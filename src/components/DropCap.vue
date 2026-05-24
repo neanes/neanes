@@ -2,7 +2,7 @@
   <div
     ref="container"
     class="drop-cap-container"
-    :style="containerStyle"
+    dir="auto"
     @click="$emit('select-single')"
   >
     <span class="handle"></span>
@@ -70,12 +70,6 @@ export default defineComponent({
       } as StyleValue;
 
       return style;
-    },
-
-    containerStyle() {
-      return {
-        direction: this.pageSetup.melkiteRtl ? 'rtl' : undefined,
-      } as StyleValue;
     },
   },
 

@@ -437,6 +437,8 @@ export class NoteElement extends ScoreElement {
   public lyricsHorizontalOffset: number = 0;
   public neumeWidth: number = 0;
   public lyricsWidth: number = 0;
+  public lyricsLeadingPunctuationWidth: number = 0;
+  public lyricsTrailingPunctuationWidth: number = 0;
   public alignLeft: boolean = false;
   public noteIndicatorNeume: NoteIndicator | null = null;
   public scaleNotes: ScaleNote[] = [];
@@ -964,7 +966,6 @@ export class ModeKeyElement extends ScoreElement {
   public scale: Scale = Scale.Diatonic;
   public scaleNote: ScaleNote = ScaleNote.Pa;
   public fthora: Fthora | null = null;
-  public description: string = '';
   public tempo: TempoSign | null = null;
   public tempoAlignRight: boolean = false;
   public martyria: ModeSign = ModeSign.Alpha;
@@ -1027,7 +1028,6 @@ export class ModeKeyElement extends ScoreElement {
     element.scale = template.scale;
     element.scaleNote = template.scaleNote;
     element.fthora = template.fthora ?? null;
-    element.description = template.description;
     element.martyria = template.martyria;
     element.fthoraAboveNote = template.fthoraAboveNote || null;
     element.fthoraAboveNote2 = template.fthoraAboveNote2 || null;

@@ -1,23 +1,56 @@
 <template>
   <ModalDialog>
     <div class="container">
-      <div class="header">{{ $t('dialog:preferences.root') }}</div>
+      <div class="header">
+        {{ $t(($) => $.dialog.preferences.root, { ns: 'dialog' }) }}
+      </div>
       <div class="pane-container">
         <div class="subheader">
-          {{ $t('dialog:preferences.menuInteraction') }}
+          {{ $t(($) => $.dialog.preferences.language, { ns: 'dialog' }) }}
         </div>
         <div class="form-group">
-          <select v-model="form.buttonMenuMode">
-            <option :value="ButtonMenuMode.Hold">
-              {{ $t('dialog:preferences.menuInteractionHold') }}
+          <select v-model="form.language">
+            <option value="">
+              {{
+                $t(($) => $.dialog.preferences.languageSystemDefault, {
+                  ns: 'dialog',
+                })
+              }}
             </option>
-            <option :value="ButtonMenuMode.Click">
-              {{ $t('dialog:preferences.menuInteractionClick') }}
+            <option
+              v-for="locale in supportedLocales"
+              :key="locale.code"
+              :value="locale.code"
+            >
+              {{ locale.name }}
             </option>
           </select>
         </div>
         <div class="subheader">
-          {{ $t('dialog:preferences.tempoDefaults') }}
+          {{
+            $t(($) => $.dialog.preferences.menuInteraction, { ns: 'dialog' })
+          }}
+        </div>
+        <div class="form-group">
+          <select v-model="form.buttonMenuMode">
+            <option :value="ButtonMenuMode.Hold">
+              {{
+                $t(($) => $.dialog.preferences.menuInteractionHold, {
+                  ns: 'dialog',
+                })
+              }}
+            </option>
+            <option :value="ButtonMenuMode.Click">
+              {{
+                $t(($) => $.dialog.preferences.menuInteractionClick, {
+                  ns: 'dialog',
+                })
+              }}
+            </option>
+          </select>
+        </div>
+        <div class="subheader">
+          {{ $t(($) => $.dialog.preferences.tempoDefaults, { ns: 'dialog' }) }}
         </div>
         <div v-for="tempo in tempoSigns" :key="tempo" class="form-group row">
           <Neume
@@ -29,18 +62,20 @@
             :model-value="form.tempoDefaults[tempo]!"
             @update:model-value="onTempoChanged(tempo, $event)"
           />
-          <span class="unit-label">{{ $t('dialog:preferences.bpm') }}</span>
+          <span class="unit-label">{{
+            $t(($) => $.dialog.preferences.bpm, { ns: 'dialog' })
+          }}</span>
         </div>
       </div>
       <div class="button-container">
         <button class="ok-btn" @click="$emit('update', form)">
-          {{ $t('dialog:common.update') }}
+          {{ $t(($) => $.dialog.common.update, { ns: 'dialog' }) }}
         </button>
         <button class="reset-btn neutral-btn" @click="resetToSystemDefaults">
-          {{ $t('dialog:common.useSystemDefault') }}
+          {{ $t(($) => $.dialog.common.useSystemDefault, { ns: 'dialog' }) }}
         </button>
         <button class="cancel-btn" @click="$emit('close')">
-          {{ $t('dialog:common.cancel') }}
+          {{ $t(($) => $.dialog.common.cancel, { ns: 'dialog' }) }}
         </button>
       </div>
     </div>
@@ -52,6 +87,7 @@ import { defineComponent, PropType } from 'vue';
 
 import ModalDialog from '@/components/ModalDialog.vue';
 import Neume from '@/components/NeumeGlyph.vue';
+import { supportedLocales } from '@/i18n';
 import { ButtonMenuMode, EditorPreferences } from '@/models/EditorPreferences';
 import { TempoSign } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
@@ -87,6 +123,7 @@ export default defineComponent({
     return {
       form: new EditorPreferences(),
       tempoSigns,
+      supportedLocales,
       ButtonMenuMode,
     };
   },

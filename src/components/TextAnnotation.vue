@@ -8,6 +8,7 @@
     @dblclick="handleDoubleClick"
   >
     <ckeditor
+      :key="editorLanguage"
       ref="editor"
       class="rich-text-editor"
       :editor="editor"
@@ -47,6 +48,10 @@ export default defineComponent({
     fonts: {
       type: Array as PropType<string[]>,
       required: true,
+    },
+    editorLanguage: {
+      type: String,
+      default: 'en',
     },
     selected: Boolean,
   },
@@ -117,6 +122,9 @@ export default defineComponent({
         // language: {
         //   content: this.element.rtl ? 'ar' : 'en',
         // },
+        language: {
+          ui: this.editorLanguage,
+        },
         licenseKey: 'GPL',
         insertNeume: {
           neumeDefaultFontFamily: this.pageSetup.neumeDefaultFontFamily,
@@ -146,6 +154,15 @@ export default defineComponent({
           shouldNotGroupWhenFull: true,
         },
       };
+    },
+  },
+
+  watch: {
+    editorLanguage: {
+      handler() {
+        this.persistEditorData();
+      },
+      flush: 'pre',
     },
   },
 
@@ -182,20 +199,27 @@ export default defineComponent({
       editor.ui.focusTracker.on('change:isFocused', (evt, name, isFocused) => {
         if (!isFocused) {
           editor.enableReadOnlyMode(ANNOTATION_LOCK_ID);
-
-          const text = editor.getData();
-
-          if (text.trim() === '') {
-            this.$emit('delete');
-          } else if (this.element.text !== text) {
-            this.$emit('update', { text });
-          }
+          this.persistEditorData(editor);
         }
       });
 
       const toolbarEl = editor.ui.view.toolbar.element;
       if (toolbarEl) {
         toolbarEl.style.maxWidth = '400px';
+      }
+    },
+
+    persistEditorData(editor?: InlineEditor) {
+      const text = (editor ?? this.getEditorInstance())?.getData();
+
+      if (text == null) {
+        return;
+      }
+
+      if (text.trim() === '') {
+        this.$emit('delete');
+      } else if (this.element.text !== text) {
+        this.$emit('update', { text });
       }
     },
 

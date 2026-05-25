@@ -489,6 +489,15 @@ export default defineComponent({
       return this.score.pageSetup.melkiteRtl;
     },
 
+    ckeditorLanguage() {
+      return (
+        resolveLanguagePreference(
+          this.editorPreferences.language,
+          navigator.language,
+        ) ?? 'en'
+      );
+    },
+
     selectedWorkspace: {
       get() {
         return this.selectedWorkspaceValue as Workspace;
@@ -6377,6 +6386,7 @@ export default defineComponent({
                     :metadata="getTokenMetadata(pageIndex)"
                     :page-setup="score.pageSetup"
                     :fonts="fonts"
+                    :editor-language="ckeditorLanguage"
                     :selected="
                       getHeaderForPageIndex(pageIndex) ==
                       selectedHeaderFooterElement
@@ -6517,6 +6527,7 @@ export default defineComponent({
                         :element="annotation"
                         :page-setup="score.pageSetup"
                         :fonts="fonts"
+                        :editor-language="ckeditorLanguage"
                         :selected="
                           selectedWorkspace.selectedAnnotationElement ===
                           annotation
@@ -6794,6 +6805,7 @@ export default defineComponent({
                       :element="element as RichTextBoxElement"
                       :page-setup="score.pageSetup"
                       :fonts="fonts"
+                      :editor-language="ckeditorLanguage"
                       :selected="isSelected(element)"
                       @select-single="selectedElement = element"
                       @update="
@@ -6928,6 +6940,7 @@ export default defineComponent({
                     :metadata="getTokenMetadata(pageIndex)"
                     :page-setup="score.pageSetup"
                     :fonts="fonts"
+                    :editor-language="ckeditorLanguage"
                     :selected="
                       getFooterForPageIndex(pageIndex) ==
                       selectedHeaderFooterElement
@@ -7296,6 +7309,7 @@ export default defineComponent({
         :element="element as RichTextBoxElement"
         :page-setup="score.pageSetup"
         :fonts="fonts"
+        :editor-language="ckeditorLanguage"
         :recalc="true"
         @update:height="
           updateRichTextBoxHeight(element as RichTextBoxElement, $event)

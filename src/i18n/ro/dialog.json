@@ -203,6 +203,7 @@
     "root": "Preferințe",
     "language": "Limbă",
     "languageSystemDefault": "Implicit (sistem)",
+    "helpTranslate": "Ajută la traducerea Neanes",
     "menuInteraction": "Interacțiune meniu",
     "menuInteractionHold": "Apasă și menține pentru a selecta",
     "menuInteractionClick": "Click pentru a deschide meniul",

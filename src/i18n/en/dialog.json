@@ -203,6 +203,7 @@
     "root": "Preferences",
     "language": "Language",
     "languageSystemDefault": "System default",
+    "helpTranslate": "Help translate Neanes",
     "menuInteraction": "Menu Interaction",
     "menuInteractionHold": "Press and hold to select",
     "menuInteractionClick": "Click to open menu",

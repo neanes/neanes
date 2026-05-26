@@ -47,7 +47,7 @@
     "@ckpack/vue-color": "^1.6.0",
     "@nabla/vite-plugin-eslint": "^3.0.1",
     "@types/mime-types": "^3.0.1",
-    "@types/node": "^25.9.0",
+    "@types/node": "^25.9.1",
     "@types/semver": "^7.7.1",
     "@types/throttle-debounce": "^5.0.2",
     "@types/webpack-env": "^1.18.8",

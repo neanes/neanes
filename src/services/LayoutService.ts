@@ -2836,9 +2836,17 @@ export class LayoutService {
 
     noteElement.lyricsVerticalOffset = lyricsVerticalOffset;
 
-    noteElement.neumeWidth = this.getNeumeWidthFromCache(
+    // We must make sure the contextual substitutions take place
+    // when measuring the text. Currently the fonts we use only
+    // substitute on vocal expression and gorgon, so we only add
+    // those neumes for now.
+    noteElement.neumeWidth = this.getNeumeWidthsFromCache(
       neumeWidthCache,
-      noteElement.quantitativeNeume,
+      [
+        noteElement.quantitativeNeume,
+        noteElement.vocalExpressionNeume,
+        noteElement.gorgonNeume,
+      ].filter((x) => x != null),
       pageSetup,
     );
 
@@ -4241,6 +4249,31 @@ export class LayoutService {
 
       width = TextMeasurementService.getTextWidth(
         neumeMapping.text,
+        `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
+      );
+
+      cache.set(key, width);
+    }
+
+    return width;
+  }
+
+  private static getNeumeWidthsFromCache(
+    cache: Map<string, number>,
+    neumes: Array<Neume>,
+    pageSetup: PageSetup,
+  ) {
+    const key = `${neumes.join(',')} | ${pageSetup.neumeDefaultFontSize} | ${pageSetup.neumeDefaultFontFamily}`;
+
+    let width = cache.get(key);
+
+    if (width == null) {
+      const text = neumes
+        .map((neume) => NeumeMappingService.getMapping(neume).text)
+        .join('');
+
+      width = TextMeasurementService.getTextWidth(
+        text,
         `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
       );
 

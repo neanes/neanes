@@ -11,10 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out
-        uses: actions/checkout@v6
+        uses: actions/checkout@v6.0.2
 
       - name: Set up Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v6.4.0
         with:
           node-version: 22
           cache: 'npm'
@@ -32,7 +32,7 @@ jobs:
         run: npm run lint
 
       - name: Lint Markdown
-        uses: DavidAnson/markdownlint-cli2-action@v23
+        uses: DavidAnson/markdownlint-cli2-action@v23.2.0
 
       - name: Build for web
         run: npm run web:build -- --base=/neanes-web-app/

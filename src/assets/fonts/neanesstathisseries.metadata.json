@@ -1,6 +1,6 @@
 {
   "fontName": "NeanesStathisSeries",
-  "fontVersion": "1.0.4",
+  "fontVersion": "1.0.5",
   "metrics": {
     "winAscent": 1.4,
     "winDescent": 0.466,
@@ -512,7 +512,7 @@
       ],
       "isonIndicator": [
         0.792,
-        1.203
+        1.03
       ],
       "endofonon": [
         0.802,
@@ -601,8 +601,8 @@
         0.827
       ],
       "isonIndicator": [
-        0.792,
-        1.283
+        1.122,
+        1.033
       ],
       "endofonon": [
         0.802,
@@ -692,7 +692,7 @@
       ],
       "isonIndicator": [
         0.792,
-        1.203
+        1.143
       ],
       "endofonon": [
         0.802,
@@ -782,7 +782,7 @@
       ],
       "isonIndicator": [
         0.792,
-        1.403
+        1.386
       ],
       "koronis": [
         0.275,
@@ -864,7 +864,7 @@
       ],
       "isonIndicator": [
         0.792,
-        1.273
+        1.444
       ],
       "endofonon": [
         0.802,
@@ -946,7 +946,7 @@
       ],
       "isonIndicator": [
         0.792,
-        1.373
+        1.42
       ],
       "endofonon": [
         0.802,
@@ -1028,7 +1028,7 @@
       ],
       "isonIndicator": [
         0.792,
-        1.443
+        1.404
       ],
       "endofonon": [
         0.802,
@@ -1110,7 +1110,7 @@
       ],
       "isonIndicator": [
         0.792,
-        1.443
+        1.405
       ],
       "endofonon": [
         0.802,
@@ -1192,7 +1192,7 @@
       ],
       "isonIndicator": [
         0.792,
-        1.283
+        1.158
       ],
       "endofonon": [
         0.802,
@@ -1274,7 +1274,7 @@
       ],
       "isonIndicator": [
         0.792,
-        1.463
+        1.37
       ],
       "endofonon": [
         0.802,
@@ -1356,7 +1356,7 @@
       ],
       "isonIndicator": [
         0.792,
-        1.463
+        1.347
       ],
       "endofonon": [
         0.802,
@@ -1602,7 +1602,7 @@
       ],
       "isonIndicator": [
         0.792,
-        0.973
+        0.913
       ],
       "endofonon": [
         0.802,
@@ -1688,7 +1688,7 @@
       ],
       "isonIndicator": [
         0.792,
-        1.093
+        0.98
       ],
       "endofonon": [
         0.802,
@@ -1770,7 +1770,7 @@
       ],
       "isonIndicator": [
         0.792,
-        1.093
+        0.984
       ],
       "endofonon": [
         0.802,
@@ -1852,7 +1852,7 @@
       ],
       "isonIndicator": [
         0.792,
-        1.023
+        1.031
       ],
       "endofonon": [
         0.802,
@@ -1898,7 +1898,7 @@
       ],
       "isonIndicator": [
         0.63,
-        0.895
+        0.913
       ],
       "koronis": [
         0.63,
@@ -1968,7 +1968,7 @@
       ],
       "isonIndicator": [
         0.366,
-        0.885
+        0.944
       ],
       "endofonon": [
         0.502,
@@ -2018,7 +2018,7 @@
       ],
       "isonIndicator": [
         0.63,
-        0.895
+        0.913
       ],
       "koronis": [
         0.63,
@@ -2080,7 +2080,7 @@
       ],
       "isonIndicator": [
         0.212,
-        0.885
+        0.913
       ],
       "endofonon": [
         0.192,
@@ -2166,7 +2166,7 @@
       ],
       "isonIndicator": [
         0.528,
-        0.897
+        0.944
       ],
       "endofonon": [
         0.632,
@@ -2236,7 +2236,7 @@
       ],
       "isonIndicator": [
         1.018,
-        0.887
+        0.944
       ],
       "endofonon": [
         1.112,
@@ -2330,7 +2330,7 @@
       ],
       "isonIndicator": [
         0.528,
-        0.897
+        0.944
       ],
       "endofonon": [
         0.632,
@@ -2404,7 +2404,7 @@
       ],
       "isonIndicator": [
         0.528,
-        0.897
+        1.044
       ],
       "endofonon": [
         0.632,
@@ -2474,7 +2474,7 @@
       ],
       "isonIndicator": [
         0.528,
-        0.897
+        1.044
       ],
       "endofonon": [
         0.632,
@@ -2544,7 +2544,7 @@
       ],
       "isonIndicator": [
         0.528,
-        1.227
+        1.374
       ],
       "endofonon": [
         0.632,
@@ -2614,7 +2614,7 @@
       ],
       "isonIndicator": [
         0.528,
-        1.227
+        1.374
       ],
       "endofonon": [
         0.632,
@@ -2684,7 +2684,7 @@
       ],
       "isonIndicator": [
         0.528,
-        1.227
+        1.391
       ],
       "endofonon": [
         0.632,
@@ -2754,7 +2754,7 @@
       ],
       "isonIndicator": [
         0.528,
-        1.227
+        1.411
       ],
       "endofonon": [
         0.632,
@@ -2824,7 +2824,7 @@
       ],
       "isonIndicator": [
         0.528,
-        1.227
+        1.411
       ],
       "endofonon": [
         0.632,
@@ -2894,7 +2894,7 @@
       ],
       "isonIndicator": [
         0.528,
-        1.227
+        1.411
       ],
       "endofonon": [
         0.632,
@@ -2964,7 +2964,7 @@
       ],
       "isonIndicator": [
         0.528,
-        1.317
+        1.561
       ],
       "endofonon": [
         0.632,
@@ -3030,7 +3030,7 @@
       ],
       "isonIndicator": [
         0.714,
-        1.049
+        1.0
       ],
       "endofonon": [
         0.772,
@@ -3096,7 +3096,7 @@
       ],
       "isonIndicator": [
         0.664,
-        1.049
+        0.913
       ],
       "endofonon": [
         0.772,
@@ -3162,7 +3162,7 @@
       ],
       "isonIndicator": [
         0.724,
-        1.049
+        0.913
       ],
       "endofonon": [
         0.772,
@@ -3228,7 +3228,7 @@
       ],
       "isonIndicator": [
         0.664,
-        1.049
+        0.913
       ],
       "endofonon": [
         0.772,
@@ -3294,7 +3294,7 @@
       ],
       "isonIndicator": [
         0.664,
-        1.299
+        1.044
       ],
       "endofonon": [
         0.772,
@@ -3360,7 +3360,7 @@
       ],
       "isonIndicator": [
         0.664,
-        1.299
+        1.174
       ],
       "endofonon": [
         0.772,
@@ -3426,7 +3426,7 @@
       ],
       "isonIndicator": [
         0.664,
-        1.299
+        1.033
       ],
       "endofonon": [
         0.772,
@@ -3492,7 +3492,7 @@
       ],
       "isonIndicator": [
         0.664,
-        1.299
+        1.4
       ],
       "endofonon": [
         0.772,
@@ -3558,7 +3558,7 @@
       ],
       "isonIndicator": [
         0.664,
-        1.299
+        1.146
       ],
       "endofonon": [
         0.772,
@@ -3624,7 +3624,7 @@
       ],
       "isonIndicator": [
         0.664,
-        1.389
+        1.454
       ],
       "endofonon": [
         0.772,
@@ -3690,7 +3690,7 @@
       ],
       "isonIndicator": [
         0.664,
-        1.389
+        1.394
       ],
       "endofonon": [
         0.772,
@@ -3756,7 +3756,7 @@
       ],
       "isonIndicator": [
         0.664,
-        1.389
+        1.405
       ],
       "endofonon": [
         0.772,
@@ -3822,7 +3822,7 @@
       ],
       "isonIndicator": [
         0.664,
-        1.299
+        1.127
       ],
       "endofonon": [
         0.772,
@@ -3888,7 +3888,7 @@
       ],
       "isonIndicator": [
         0.664,
-        1.389
+        1.426
       ],
       "endofonon": [
         0.772,
@@ -3954,7 +3954,7 @@
       ],
       "isonIndicator": [
         0.664,
-        1.389
+        1.391
       ],
       "endofonon": [
         0.772,
@@ -4020,7 +4020,7 @@
       ],
       "isonIndicator": [
         0.664,
-        0.997
+        0.913
       ],
       "endofonon": [
         0.772,
@@ -4090,7 +4090,7 @@
       ],
       "isonIndicator": [
         0.664,
-        0.997
+        1.122
       ],
       "endofonon": [
         0.772,
@@ -4160,7 +4160,7 @@
       ],
       "isonIndicator": [
         0.66,
-        1.049
+        0.988
       ],
       "endofonon": [
         0.772,
@@ -4226,7 +4226,7 @@
       ],
       "isonIndicator": [
         0.832,
-        0.999
+        0.988
       ],
       "endofonon": [
         1.052,
@@ -4308,7 +4308,7 @@
       ],
       "isonIndicator": [
         0.644,
-        1.037
+        0.994
       ],
       "endofonon": [
         0.772,
@@ -4374,7 +4374,7 @@
       ],
       "isonIndicator": [
         0.65,
-        1.133
+        1.159
       ],
       "endofonon": [
         0.772,
@@ -4440,7 +4440,7 @@
       ],
       "isonIndicator": [
         0.65,
-        1.133
+        1.256
       ],
       "endofonon": [
         0.772,
@@ -4506,7 +4506,7 @@
       ],
       "isonIndicator": [
         0.65,
-        1.423
+        1.438
       ],
       "endofonon": [
         0.772,
@@ -4572,7 +4572,7 @@
       ],
       "isonIndicator": [
         0.65,
-        1.423
+        1.442
       ],
       "endofonon": [
         0.772,
@@ -4638,7 +4638,7 @@
       ],
       "isonIndicator": [
         0.65,
-        1.293
+        1.339
       ],
       "endofonon": [
         0.772,
@@ -4704,7 +4704,7 @@
       ],
       "isonIndicator": [
         0.65,
-        1.293
+        1.48
       ],
       "endofonon": [
         0.772,
@@ -4762,7 +4762,7 @@
       ],
       "isonIndicator": [
         0.33,
-        0.877
+        0.913
       ],
       "endofonon": [
         0.452,
@@ -4840,7 +4840,7 @@
       ],
       "isonIndicator": [
         0.71,
-        0.877
+        0.913
       ],
       "endofonon": [
         0.772,
@@ -4918,7 +4918,7 @@
       ],
       "isonIndicator": [
         0.71,
-        1.117
+        1.131
       ],
       "endofonon": [
         0.772,
@@ -4984,7 +4984,7 @@
       ],
       "isonIndicator": [
         0.71,
-        1.157
+        1.124
       ],
       "endofonon": [
         1.102,
@@ -5054,7 +5054,7 @@
       ],
       "isonIndicator": [
         0.71,
-        1.117
+        1.131
       ],
       "endofonon": [
         0.802,
@@ -5112,7 +5112,7 @@
       ],
       "isonIndicator": [
         0.71,
-        1.177
+        1.057
       ],
       "endofonon": [
         0.802,
@@ -5170,7 +5170,7 @@
       ],
       "isonIndicator": [
         0.71,
-        1.207
+        1.091
       ],
       "endofonon": [
         0.802,
@@ -5232,7 +5232,7 @@
       ],
       "isonIndicator": [
         0.707,
-        1.107
+        1.104
       ],
       "endofonon": [
         0.862,
@@ -5306,7 +5306,7 @@
       ],
       "isonIndicator": [
         0.713,
-        1.147
+        1.097
       ],
       "endofonon": [
         0.852,
@@ -5384,7 +5384,7 @@
       ],
       "isonIndicator": [
         0.71,
-        1.057
+        1.097
       ],
       "endofonon": [
         1.142,
@@ -5458,7 +5458,7 @@
       ],
       "isonIndicator": [
         0.71,
-        1.077
+        1.104
       ],
       "endofonon": [
         1.212,
@@ -5548,7 +5548,7 @@
       ],
       "isonIndicator": [
         0.71,
-        1.01
+        1.097
       ],
       "endofonon": [
         1.122,
@@ -5622,7 +5622,7 @@
       ],
       "isonIndicator": [
         0.71,
-        1.01
+        1.104
       ],
       "endofonon": [
         1.112,
@@ -7594,7 +7594,7 @@
       ],
       "isonIndicator": [
         0.71,
-        0.877
+        0.913
       ],
       "endofonon": [
         0.772,
@@ -7653,6 +7653,240 @@
       "psifiston": [
         -0.006,
         0.458
+      ]
+    },
+    "yporroi.gorgon": {
+      "gorgonTop": [
+        0.4,
+        0.527
+      ],
+      "apli": [
+        0.161,
+        0.042
+      ],
+      "yfesis": [
+        0.308,
+        0.609
+      ],
+      "diesis": [
+        0.267,
+        0.06
+      ],
+      "antikenoma": [
+        0.197,
+        0.1
+      ],
+      "heteron": [
+        0.316,
+        -0.086
+      ],
+      "fthoraTop": [
+        0.308,
+        0.609
+      ],
+      "fthoraBottom": [
+        0.148,
+        0.101
+      ],
+      "noteTop": [
+        0.156,
+        0.675
+      ],
+      "heteronConnecting": [
+        0.583,
+        -0.019
+      ],
+      "measureNumber": [
+        0.072,
+        0.483
+      ],
+      "isonIndicator": [
+        0.212,
+        0.913
+      ],
+      "endofonon": [
+        0.192,
+        -0.146
+      ],
+      "koronis": [
+        0.21,
+        0.881
+      ],
+      "yfenAbove": [
+        0.217,
+        0.887
+      ],
+      "yfenBelow": [
+        0.159,
+        -0.04
+      ],
+      "yfesisSecondary": [
+        -0.019,
+        -0.223
+      ],
+      "barline": [
+        0.286,
+        0.59
+      ],
+      "diesisSecondary": [
+        0.587,
+        0.887
+      ]
+    },
+    "yporroi.digorgon": {
+      "gorgonTop": [
+        0.32,
+        0.527
+      ],
+      "apli": [
+        0.161,
+        0.042
+      ],
+      "yfesis": [
+        0.308,
+        0.609
+      ],
+      "diesis": [
+        0.267,
+        0.06
+      ],
+      "antikenoma": [
+        0.197,
+        0.1
+      ],
+      "heteron": [
+        0.316,
+        -0.086
+      ],
+      "fthoraTop": [
+        0.308,
+        0.609
+      ],
+      "fthoraBottom": [
+        0.148,
+        0.101
+      ],
+      "noteTop": [
+        0.156,
+        0.675
+      ],
+      "heteronConnecting": [
+        0.583,
+        -0.019
+      ],
+      "measureNumber": [
+        0.072,
+        0.483
+      ],
+      "isonIndicator": [
+        0.212,
+        0.913
+      ],
+      "endofonon": [
+        0.192,
+        -0.146
+      ],
+      "koronis": [
+        0.21,
+        0.881
+      ],
+      "yfenAbove": [
+        0.217,
+        0.887
+      ],
+      "yfenBelow": [
+        0.159,
+        -0.04
+      ],
+      "yfesisSecondary": [
+        -0.019,
+        -0.223
+      ],
+      "barline": [
+        0.286,
+        0.59
+      ],
+      "diesisSecondary": [
+        0.587,
+        0.887
+      ]
+    },
+    "yporroi.trigorgon": {
+      "gorgonTop": [
+        0.4,
+        0.527
+      ],
+      "apli": [
+        0.161,
+        0.042
+      ],
+      "yfesis": [
+        0.308,
+        0.609
+      ],
+      "diesis": [
+        0.267,
+        0.06
+      ],
+      "antikenoma": [
+        0.197,
+        0.1
+      ],
+      "heteron": [
+        0.316,
+        -0.086
+      ],
+      "fthoraTop": [
+        0.308,
+        0.609
+      ],
+      "fthoraBottom": [
+        0.148,
+        0.101
+      ],
+      "noteTop": [
+        0.156,
+        0.675
+      ],
+      "heteronConnecting": [
+        0.583,
+        -0.019
+      ],
+      "measureNumber": [
+        0.072,
+        0.483
+      ],
+      "isonIndicator": [
+        0.212,
+        0.913
+      ],
+      "endofonon": [
+        0.192,
+        -0.146
+      ],
+      "koronis": [
+        0.21,
+        0.881
+      ],
+      "yfenAbove": [
+        0.217,
+        0.887
+      ],
+      "yfenBelow": [
+        0.159,
+        -0.04
+      ],
+      "yfesisSecondary": [
+        -0.019,
+        -0.223
+      ],
+      "barline": [
+        0.286,
+        0.59
+      ],
+      "diesisSecondary": [
+        0.587,
+        0.887
       ]
     }
   },
@@ -8074,7 +8308,10 @@
     "chroaZygos": 0.632,
     "chroaKliton": 0.664,
     "chroaSpathi": 1.104,
-    "fthoraDiatonicKe": 0.342
+    "fthoraDiatonicKe": 0.342,
+    "yporroi.gorgon": 0.544,
+    "yporroi.digorgon": 0.513,
+    "yporroi.trigorgon": 0.624
   },
   "optionalGlyphs": {
     "oligonKentimataBelow.alt01": {
@@ -8103,6 +8340,15 @@
     },
     "psifiston.alt01": {
       "codepoint": "U+F008"
+    },
+    "yporroi.gorgon": {
+      "codepoint": "U+F009"
+    },
+    "yporroi.digorgon": {
+      "codepoint": "U+F00A"
+    },
+    "yporroi.trigorgon": {
+      "codepoint": "U+F00B"
     }
   },
   "glyphBBoxes": {
@@ -11944,6 +12190,36 @@
       "bBoxSW": [
         0.051,
         0.832
+      ]
+    },
+    "yporroi.gorgon": {
+      "bBoxNE": [
+        0.394,
+        0.44
+      ],
+      "bBoxSW": [
+        0.055,
+        0.176
+      ]
+    },
+    "yporroi.digorgon": {
+      "bBoxNE": [
+        0.394,
+        0.44
+      ],
+      "bBoxSW": [
+        0.055,
+        0.176
+      ]
+    },
+    "yporroi.trigorgon": {
+      "bBoxNE": [
+        0.394,
+        0.44
+      ],
+      "bBoxSW": [
+        0.055,
+        0.176
       ]
     }
   },

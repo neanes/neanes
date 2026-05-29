@@ -48,6 +48,8 @@ export abstract class TestFileGenerator {
         return this.generateTestFile_NoteIndicators();
       case TestFileType.Ison:
         return this.generateTestFile_Isons();
+      case TestFileType.Koronis:
+        return this.generateTestFile_Koronis();
       case TestFileType.ModeKey:
         return this.generateTestFile_ModeKey();
       case TestFileType.Random:
@@ -706,6 +708,20 @@ export abstract class TestFileGenerator {
   }
 
   private static generateTestFile_Isons() {
+    return this.generateTestFile_WithGorgonVariants((note) => {
+      note.ison = Ison.Unison;
+    });
+  }
+
+  private static generateTestFile_Koronis() {
+    return this.generateTestFile_WithGorgonVariants((note) => {
+      note.koronis = true;
+    });
+  }
+
+  private static generateTestFile_WithGorgonVariants(
+    applyNeume: (note: NoteElement) => void,
+  ) {
     const elements: ScoreElement[] = [];
 
     let counter = 1;
@@ -738,7 +754,7 @@ export abstract class TestFileGenerator {
         const note = new NoteElement();
         note.quantitativeNeume = quantitativeNeume;
         note.gorgonNeume = gorgonNeume;
-        note.ison = Ison.Unison;
+        applyNeume(note);
         note.lyrics = (counter++).toString();
         elements.push(note);
       }

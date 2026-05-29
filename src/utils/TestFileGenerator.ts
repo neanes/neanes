@@ -709,6 +709,12 @@ export abstract class TestFileGenerator {
     const elements: ScoreElement[] = [];
 
     let counter = 1;
+    const gorgonVariants = [
+      null,
+      GorgonNeume.Gorgon_Top,
+      GorgonNeume.Digorgon,
+      GorgonNeume.Trigorgon,
+    ];
 
     for (const q in QuantitativeNeume) {
       const quantitativeNeume = q as QuantitativeNeume;
@@ -726,14 +732,34 @@ export abstract class TestFileGenerator {
         continue;
       }
 
-      const note = new NoteElement();
-      note.quantitativeNeume = quantitativeNeume;
-      note.ison = Ison.Unison;
-      note.lyrics = (counter++).toString();
-      elements.push(note);
+      for (const gorgonNeume of gorgonVariants.filter((gorgonNeume) =>
+        this.canDisplayGorgonVariant(quantitativeNeume, gorgonNeume),
+      )) {
+        const note = new NoteElement();
+        note.quantitativeNeume = quantitativeNeume;
+        note.gorgonNeume = gorgonNeume;
+        note.ison = Ison.Unison;
+        note.lyrics = (counter++).toString();
+        elements.push(note);
+      }
     }
 
     return elements;
+  }
+
+  private static canDisplayGorgonVariant(
+    quantitativeNeume: QuantitativeNeume,
+    gorgonNeume: GorgonNeume | null,
+  ) {
+    if (gorgonNeume == null) {
+      return true;
+    }
+
+    const note = new NoteElement();
+    note.quantitativeNeume = quantitativeNeume;
+    note.gorgonNeume = gorgonNeume;
+
+    return note.gorgonNeume === gorgonNeume;
   }
 
   private static generateTestFile_ModeKey() {

@@ -696,8 +696,8 @@
   </ModalDialog>
 </template>
 
-<script lang="ts">
-import { defineComponent, PropType, StyleValue } from 'vue';
+<script setup lang="ts">
+import { computed, onBeforeUnmount, PropType, ref, StyleValue } from 'vue';
 
 import DragHandle from '@/components/DragHandle.vue';
 import InputUnit, { UnitOfMeasure } from '@/components/InputUnit.vue';
@@ -717,278 +717,225 @@ import { TimeNeume, VocalExpressionNeume } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
 
-export default defineComponent({
-  components: {
-    ModalDialog,
-    NeumeBoxSyllable,
-    NeumeBoxMartyria,
-    NeumeBoxTempo,
-    InputUnit,
-    DragHandle,
+const emit = defineEmits(['close', 'update']);
+const props = defineProps({
+  element: {
+    type: Object as PropType<NoteElement>,
+    required: true,
   },
-  props: {
-    element: {
-      type: Object as PropType<NoteElement>,
-      required: true,
-    },
-    previousElement: {
-      type: Object as PropType<ScoreElement>,
-      default: undefined,
-    },
-    nextElement: {
-      type: Object as PropType<ScoreElement>,
-      default: undefined,
-    },
-    pageSetup: {
-      type: Object as PropType<PageSetup>,
-      required: true,
-    },
+  previousElement: {
+    type: Object as PropType<ScoreElement>,
+    default: undefined,
   },
-  emits: ['close', 'update'],
-
-  data() {
-    return {
-      TimeNeume,
-      VocalExpressionNeume,
-      ElementType,
-      TempoElement,
-      MartyriaElement,
-
-      form: new NoteElement(),
-      stepSize: 0.01,
-      min: -10,
-      max: 10,
-      precision: 2,
-      unit: 'unitless' as UnitOfMeasure,
-
-      paneContainerWidthPx: 420,
-
-      zoom: 2,
-    };
+  nextElement: {
+    type: Object as PropType<ScoreElement>,
+    default: undefined,
   },
-
-  computed: {
-    hasVocalExpressionNeume() {
-      return this.form.vocalExpressionNeume != null;
-    },
-
-    hasTimeNeume() {
-      return this.form.timeNeume != null;
-    },
-
-    hasGorgonNeume() {
-      return this.form.gorgonNeume != null;
-    },
-
-    hasSecondaryGorgonNeume() {
-      return this.form.secondaryGorgonNeume != null;
-    },
-
-    hasFthora() {
-      return this.form.fthora != null;
-    },
-
-    hasSecondaryFthora() {
-      return this.form.secondaryFthora != null;
-    },
-
-    hasTertiaryFthora() {
-      return this.form.tertiaryFthora != null;
-    },
-
-    hasAccidental() {
-      return this.form.accidental != null;
-    },
-
-    hasSecondaryAccidental() {
-      return this.form.secondaryAccidental != null;
-    },
-
-    hasTertiaryAccidental() {
-      return this.form.tertiaryAccidental != null;
-    },
-
-    hasMeasureBarLeft() {
-      return this.form.measureBarLeft != null;
-    },
-
-    hasMeasureBarRight() {
-      return this.form.measureBarRight != null;
-    },
-
-    hasMeasureNumber() {
-      return this.form.measureNumber != null;
-    },
-
-    hasIson() {
-      return this.form.ison != null;
-    },
-
-    hasTie() {
-      return this.form.tie != null;
-    },
-
-    centerLeft() {
-      return this.paneContainerWidthPx / 2;
-    },
-
-    previousElementStyle() {
-      return {
-        left: `calc(${this.centerLeft}px - ${
-          this.element.x - this.previousElement!.x
-        }px * var(--zoom, 1))`,
-      } as StyleValue;
-    },
-
-    nextElementStyle() {
-      return {
-        left: `calc(${this.centerLeft}px + ${
-          this.nextElement!.x - this.element.x
-        }px * var(--zoom, 1))`,
-      } as StyleValue;
-    },
-
-    mainStyle() {
-      return {
-        left: this.centerLeft + 'px',
-      } as StyleValue;
-    },
-
-    topPaneStyle() {
-      const neumeHeight = TextMeasurementService.getFontHeight(
-        `${this.pageSetup.neumeDefaultFontSize}px ${this.pageSetup.neumeDefaultFontFamily}`,
-      );
-
-      return {
-        height: neumeHeight * this.zoom + 'px',
-      } as StyleValue;
-    },
-
-    paneContainerStyle() {
-      return {
-        width: this.paneContainerWidthPx + 'px',
-      } as StyleValue;
-    },
-  },
-
-  created() {
-    Object.assign(this.form, this.element);
-
-    window.addEventListener('keydown', this.onKeyDown);
-  },
-
-  beforeUnmount() {
-    window.removeEventListener('keydown', this.onKeyDown);
-  },
-
-  methods: {
-    onKeyDown(event: KeyboardEvent) {
-      if (event.code === 'Escape') {
-        this.$emit('close');
-      }
-    },
-
-    update() {
-      this.$emit('update', this.form);
-      this.$emit('close');
-    },
-
-    updateAccidentalOffset(args: ScoreElementOffset) {
-      this.form.accidentalOffsetX = args.x;
-      this.form.accidentalOffsetY = args.y;
-    },
-
-    updateSecondaryAccidentalOffset(args: ScoreElementOffset) {
-      this.form.secondaryAccidentalOffsetX = args.x;
-      this.form.secondaryAccidentalOffsetY = args.y;
-    },
-
-    updateTertiaryAccidentalOffset(args: ScoreElementOffset) {
-      this.form.tertiaryAccidentalOffsetX = args.x;
-      this.form.tertiaryAccidentalOffsetY = args.y;
-    },
-
-    updateMeasureBarLeftOffset(args: ScoreElementOffset) {
-      this.form.measureBarLeftOffsetX = args.x;
-      this.form.measureBarLeftOffsetY = args.y;
-    },
-
-    updateMeasureBarRightOffset(args: ScoreElementOffset) {
-      this.form.measureBarRightOffsetX = args.x;
-      this.form.measureBarRightOffsetY = args.y;
-    },
-
-    updateFthoraOffset(args: ScoreElementOffset) {
-      this.form.fthoraOffsetX = args.x;
-      this.form.fthoraOffsetY = args.y;
-    },
-
-    updateSecondaryFthoraOffset(args: ScoreElementOffset) {
-      this.form.secondaryFthoraOffsetX = args.x;
-      this.form.secondaryFthoraOffsetY = args.y;
-    },
-
-    updateTertiaryFthoraOffset(args: ScoreElementOffset) {
-      this.form.tertiaryFthoraOffsetX = args.x;
-      this.form.tertiaryFthoraOffsetY = args.y;
-    },
-
-    updateGorgonOffset(args: ScoreElementOffset) {
-      this.form.gorgonNeumeOffsetX = args.x;
-      this.form.gorgonNeumeOffsetY = args.y;
-    },
-
-    updateGorgon2Offset(args: ScoreElementOffset) {
-      this.form.secondaryGorgonNeumeOffsetX = args.x;
-      this.form.secondaryGorgonNeumeOffsetY = args.y;
-    },
-
-    updateIsonOffset(args: ScoreElementOffset) {
-      this.form.isonOffsetX = args.x;
-      this.form.isonOffsetY = args.y;
-    },
-
-    updateKoronisOffset(args: ScoreElementOffset) {
-      this.form.koronisOffsetX = args.x;
-      this.form.koronisOffsetY = args.y;
-    },
-
-    updateMeasureNumberOffset(args: ScoreElementOffset) {
-      this.form.measureNumberOffsetX = args.x;
-      this.form.measureNumberOffsetY = args.y;
-    },
-
-    updateNoteIndicatorOffset(args: ScoreElementOffset) {
-      this.form.noteIndicatorOffsetX = args.x;
-      this.form.noteIndicatorOffsetY = args.y;
-    },
-
-    updateStavrosOffset(args: ScoreElementOffset) {
-      this.form.stavrosOffsetX = args.x;
-      this.form.stavrosOffsetY = args.y;
-    },
-
-    updateTieOffset(args: ScoreElementOffset) {
-      this.form.tieOffsetX = args.x;
-      this.form.tieOffsetY = args.y;
-    },
-
-    updateTimeOffset(args: ScoreElementOffset) {
-      this.form.timeNeumeOffsetX = args.x;
-      this.form.timeNeumeOffsetY = args.y;
-    },
-
-    updateVareiaOffset(args: ScoreElementOffset) {
-      this.form.vareiaOffsetX = args.x;
-      this.form.vareiaOffsetY = args.y;
-    },
-
-    updateQualityOffset(args: ScoreElementOffset) {
-      this.form.vocalExpressionNeumeOffsetX = args.x;
-      this.form.vocalExpressionNeumeOffsetY = args.y;
-    },
+  pageSetup: {
+    type: Object as PropType<PageSetup>,
+    required: true,
   },
 });
+
+const form = ref(new NoteElement());
+const stepSize = 0.01;
+const min = -10;
+const max = 10;
+const precision = 2;
+const unit = 'unitless' as UnitOfMeasure;
+const paneContainerWidthPx = 420;
+const zoom = 2;
+
+const hasVocalExpressionNeume = computed(() => {
+  return form.value.vocalExpressionNeume != null;
+});
+
+const hasTimeNeume = computed(() => {
+  return form.value.timeNeume != null;
+});
+
+const hasGorgonNeume = computed(() => {
+  return form.value.gorgonNeume != null;
+});
+
+const hasSecondaryGorgonNeume = computed(() => {
+  return form.value.secondaryGorgonNeume != null;
+});
+
+const hasFthora = computed(() => {
+  return form.value.fthora != null;
+});
+
+const hasSecondaryFthora = computed(() => {
+  return form.value.secondaryFthora != null;
+});
+
+const hasTertiaryFthora = computed(() => {
+  return form.value.tertiaryFthora != null;
+});
+
+const hasAccidental = computed(() => {
+  return form.value.accidental != null;
+});
+
+const hasSecondaryAccidental = computed(() => {
+  return form.value.secondaryAccidental != null;
+});
+
+const hasTertiaryAccidental = computed(() => {
+  return form.value.tertiaryAccidental != null;
+});
+
+const hasMeasureNumber = computed(() => {
+  return form.value.measureNumber != null;
+});
+
+const hasIson = computed(() => {
+  return form.value.ison != null;
+});
+
+const hasTie = computed(() => {
+  return form.value.tie != null;
+});
+
+const centerLeft = computed(() => paneContainerWidthPx / 2);
+
+const previousElementStyle = computed(() => {
+  return {
+    left: `calc(${centerLeft.value}px - ${
+      props.element.x - props.previousElement!.x
+    }px * var(--zoom, 1))`,
+  } as StyleValue;
+});
+
+const nextElementStyle = computed(() => {
+  return {
+    left: `calc(${centerLeft.value}px + ${
+      props.nextElement!.x - props.element.x
+    }px * var(--zoom, 1))`,
+  } as StyleValue;
+});
+
+const mainStyle = computed(() => {
+  return {
+    left: centerLeft.value + 'px',
+  } as StyleValue;
+});
+
+const topPaneStyle = computed(() => {
+  const neumeHeight = TextMeasurementService.getFontHeight(
+    `${props.pageSetup.neumeDefaultFontSize}px ${props.pageSetup.neumeDefaultFontFamily}`,
+  );
+
+  return {
+    height: neumeHeight * zoom + 'px',
+  } as StyleValue;
+});
+
+const paneContainerStyle = computed(() => {
+  return {
+    width: paneContainerWidthPx + 'px',
+  } as StyleValue;
+});
+
+Object.assign(form.value, props.element);
+
+window.addEventListener('keydown', onKeyDown);
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKeyDown);
+});
+
+function onKeyDown(event: KeyboardEvent) {
+  if (event.code === 'Escape') {
+    emit('close');
+  }
+}
+
+function update() {
+  emit('update', form.value);
+  emit('close');
+}
+
+function updateAccidentalOffset(args: ScoreElementOffset) {
+  form.value.accidentalOffsetX = args.x;
+  form.value.accidentalOffsetY = args.y;
+}
+
+function updateSecondaryAccidentalOffset(args: ScoreElementOffset) {
+  form.value.secondaryAccidentalOffsetX = args.x;
+  form.value.secondaryAccidentalOffsetY = args.y;
+}
+
+function updateTertiaryAccidentalOffset(args: ScoreElementOffset) {
+  form.value.tertiaryAccidentalOffsetX = args.x;
+  form.value.tertiaryAccidentalOffsetY = args.y;
+}
+
+function updateFthoraOffset(args: ScoreElementOffset) {
+  form.value.fthoraOffsetX = args.x;
+  form.value.fthoraOffsetY = args.y;
+}
+
+function updateSecondaryFthoraOffset(args: ScoreElementOffset) {
+  form.value.secondaryFthoraOffsetX = args.x;
+  form.value.secondaryFthoraOffsetY = args.y;
+}
+
+function updateTertiaryFthoraOffset(args: ScoreElementOffset) {
+  form.value.tertiaryFthoraOffsetX = args.x;
+  form.value.tertiaryFthoraOffsetY = args.y;
+}
+
+function updateGorgonOffset(args: ScoreElementOffset) {
+  form.value.gorgonNeumeOffsetX = args.x;
+  form.value.gorgonNeumeOffsetY = args.y;
+}
+
+function updateGorgon2Offset(args: ScoreElementOffset) {
+  form.value.secondaryGorgonNeumeOffsetX = args.x;
+  form.value.secondaryGorgonNeumeOffsetY = args.y;
+}
+
+function updateIsonOffset(args: ScoreElementOffset) {
+  form.value.isonOffsetX = args.x;
+  form.value.isonOffsetY = args.y;
+}
+
+function updateKoronisOffset(args: ScoreElementOffset) {
+  form.value.koronisOffsetX = args.x;
+  form.value.koronisOffsetY = args.y;
+}
+
+function updateMeasureNumberOffset(args: ScoreElementOffset) {
+  form.value.measureNumberOffsetX = args.x;
+  form.value.measureNumberOffsetY = args.y;
+}
+
+function updateNoteIndicatorOffset(args: ScoreElementOffset) {
+  form.value.noteIndicatorOffsetX = args.x;
+  form.value.noteIndicatorOffsetY = args.y;
+}
+
+function updateStavrosOffset(args: ScoreElementOffset) {
+  form.value.stavrosOffsetX = args.x;
+  form.value.stavrosOffsetY = args.y;
+}
+
+function updateTieOffset(args: ScoreElementOffset) {
+  form.value.tieOffsetX = args.x;
+  form.value.tieOffsetY = args.y;
+}
+
+function updateTimeOffset(args: ScoreElementOffset) {
+  form.value.timeNeumeOffsetX = args.x;
+  form.value.timeNeumeOffsetY = args.y;
+}
+
+function updateQualityOffset(args: ScoreElementOffset) {
+  form.value.vocalExpressionNeumeOffsetX = args.x;
+  form.value.vocalExpressionNeumeOffsetY = args.y;
+}
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

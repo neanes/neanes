@@ -4,14 +4,7 @@ import 'vue3-tabs-chrome/dist/vue3-tabs-chrome.css';
 import { getFontEmbedCSS, toPng } from 'html-to-image';
 import i18next from 'i18next';
 import { debounce, throttle } from 'throttle-debounce';
-import {
-  computed,
-  defineComponent,
-  inject,
-  nextTick,
-  StyleValue,
-  toRaw,
-} from 'vue';
+import { computed, defineComponent, nextTick, StyleValue, toRaw } from 'vue';
 import Vue3TabsChrome, { Tab } from 'vue3-tabs-chrome';
 
 import AlternateLine from '@/components/AlternateLine.vue';
@@ -52,20 +45,10 @@ import ToolbarNeume from '@/components/ToolbarNeume.vue';
 import ToolbarTempo from '@/components/ToolbarTempo.vue';
 import ToolbarTextBox from '@/components/ToolbarTextBox.vue';
 import ToolbarTextBoxRich from '@/components/ToolbarTextBoxRich.vue';
+import { useEditorServices } from '@/composables/useEditorServices';
 import { EventBus } from '@/eventBus';
 import { resolveLanguagePreference } from '@/i18n';
-import {
-  audioServiceKey,
-  ipcServiceKey,
-  latexExporterKey,
-  lyricServiceKey,
-  musicXmlExporterKey,
-  neumeKeyboardKey,
-  ocrImporterKey,
-  platformServiceKey,
-  playbackServiceKey,
-  textSearchServiceKey,
-} from '@/injectionKeys';
+import { editorPreferencesKey } from '@/injectionKeys';
 import {
   CloseWorkspacesArgs,
   CloseWorkspacesDisposition,
@@ -128,33 +111,19 @@ import { Score } from '@/models/Score';
 import { ScoreElementSelectionRange } from '@/models/ScoreElementSelectionRange';
 import { Workspace, WorkspaceLocalStorage } from '@/models/Workspace';
 import {
-  AudioService,
   AudioServiceEventNames,
   AudioState,
 } from '@/services/audio/AudioService';
 import {
   PlaybackOptions,
   PlaybackSequenceEvent,
-  PlaybackService,
 } from '@/services/audio/PlaybackService';
 import { Command, CommandFactory } from '@/services/history/CommandService';
 import { ByzHtmlExporter } from '@/services/integration/ByzHtmlExporter';
-import {
-  LatexExporter,
-  LatexExporterOptions,
-} from '@/services/integration/LatexExporter';
-import { MusicXmlExporter } from '@/services/integration/MusicXmlExporter';
-import { OcrImporter } from '@/services/integration/OcrImporter';
-import { IIpcService } from '@/services/ipc/IIpcService';
-import { IpcService } from '@/services/ipc/IpcService';
+import { LatexExporterOptions } from '@/services/integration/LatexExporter';
 import { LayoutService } from '@/services/LayoutService';
-import { LyricService } from '@/services/LyricService';
-import { NeumeKeyboard } from '@/services/NeumeKeyboard';
-import { IPlatformService } from '@/services/platform/IPlatformService';
-import { PlatformService } from '@/services/platform/PlatformService';
 import { SaveService } from '@/services/SaveService';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
-import { TextSearchService } from '@/services/TextSearchService';
 import { GORTHMIKON, PELASTIKON, TATWEEL } from '@/utils/constants';
 import { getCursorPosition } from '@/utils/getCursorPosition';
 import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
@@ -261,41 +230,12 @@ export default defineComponent({
   },
   provide() {
     return {
-      editorPreferences: computed(() => this.editorPreferences),
+      [editorPreferencesKey]: computed(() => this.editorPreferences),
     };
   },
   emits: [],
   setup() {
-    return {
-      audioService: inject<AudioService>(audioServiceKey, new AudioService()),
-      latexExporter: inject<LatexExporter>(
-        latexExporterKey,
-        new LatexExporter(),
-      ),
-      lyricService: inject<LyricService>(lyricServiceKey, new LyricService()),
-      musicXmlExporter: inject<MusicXmlExporter>(
-        musicXmlExporterKey,
-        new MusicXmlExporter(),
-      ),
-      neumeKeyboard: inject<NeumeKeyboard>(
-        neumeKeyboardKey,
-        new NeumeKeyboard(),
-      ),
-      ocrImporter: inject<OcrImporter>(ocrImporterKey, new OcrImporter()),
-      platformService: inject<IPlatformService>(
-        platformServiceKey,
-        new PlatformService(),
-      ),
-      playbackService: inject<PlaybackService>(
-        playbackServiceKey,
-        new PlaybackService(),
-      ),
-      textSearchService: inject<TextSearchService>(
-        textSearchServiceKey,
-        new TextSearchService(),
-      ),
-      ipcService: inject<IIpcService>(ipcServiceKey, new IpcService()),
-    };
+    return useEditorServices();
   },
   data() {
     return {

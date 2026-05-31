@@ -154,8 +154,8 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, PropType } from 'vue';
+<script setup lang="ts">
+import { computed, PropType } from 'vue';
 
 import ColorPicker from '@/components/ColorPicker.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
@@ -165,54 +165,35 @@ import { DropCapElement } from '@/models/Element';
 import { PageSetup } from '@/models/PageSetup';
 import { Unit } from '@/utils/Unit';
 
-export default defineComponent({
-  components: { ColorPicker, InputFontSize, InputStrokeWidth, InputUnit },
-  props: {
-    element: {
-      type: Object as PropType<DropCapElement>,
-      required: true,
-    },
-    pageSetup: {
-      type: Object as PropType<PageSetup>,
-      required: true,
-    },
-    fonts: {
-      type: Array as PropType<string[]>,
-      required: true,
-    },
+const props = defineProps({
+  element: {
+    type: Object as PropType<DropCapElement>,
+    required: true,
   },
-  emits: ['update', 'update:sectionName'],
-
-  data() {
-    return {};
+  pageSetup: {
+    type: Object as PropType<PageSetup>,
+    required: true,
   },
-
-  computed: {
-    bold() {
-      return this.element.fontWeight === '700';
-    },
-
-    italic() {
-      return this.element.fontStyle === 'italic';
-    },
-
-    dropCapFontFamilies() {
-      return [
-        'Source Serif',
-        'GFS Didot',
-        'Noto Naskh Arabic',
-        'Old Standard',
-        ...this.fonts,
-      ];
-    },
-
-    maxWidth() {
-      return Unit.toPt(this.pageSetup.innerPageWidth);
-    },
+  fonts: {
+    type: Array as PropType<string[]>,
+    required: true,
   },
-
-  methods: {},
 });
+
+defineEmits(['update', 'update:sectionName']);
+
+const bold = computed(() => props.element.fontWeight === '700');
+const italic = computed(() => props.element.fontStyle === 'italic');
+
+const dropCapFontFamilies = computed(() => [
+  'Source Serif',
+  'GFS Didot',
+  'Noto Naskh Arabic',
+  'Old Standard',
+  ...props.fonts,
+]);
+
+const maxWidth = computed(() => Unit.toPt(props.pageSetup.innerPageWidth));
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

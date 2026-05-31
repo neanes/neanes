@@ -164,10 +164,6 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType } from 'vue';
-
-import InputUnit from '@/components/InputUnit.vue';
-import ModalDialog from '@/components/ModalDialog.vue';
 import { LatexExporterOptions } from '@/services/integration/LatexExporter';
 import { MusicXmlExporterOptions } from '@/services/integration/MusicXmlExporter';
 
@@ -195,100 +191,91 @@ export interface ExportAsMusicXmlSettings {
 export interface ExportAsLatexSettings {
   options: LatexExporterOptions;
 }
+</script>
 
-export default defineComponent({
-  components: { ModalDialog, InputUnit },
-  props: {
-    defaultFormat: {
-      type: String as PropType<ExportFormat>,
-      required: true,
-    },
-    loading: {
-      type: Boolean,
-      required: true,
-    },
+<script setup lang="ts">
+import { computed, onBeforeUnmount, onMounted, PropType, ref } from 'vue';
+
+import InputUnit from '@/components/InputUnit.vue';
+import ModalDialog from '@/components/ModalDialog.vue';
+
+const emit = defineEmits([
+  'close',
+  'exportAsLatex',
+  'exportAsMusicXml',
+  'exportAsPng',
+  'exportAsSvg',
+]);
+const props = defineProps({
+  defaultFormat: {
+    type: String as PropType<ExportFormat>,
+    required: true,
   },
-  emits: [
-    'close',
-    'exportAsLatex',
-    'exportAsMusicXml',
-    'exportAsPng',
-    'exportAsSvg',
-  ],
-
-  data() {
-    return {
-      format: ExportFormat.PNG,
-      dpi: 300,
-      transparentBackground: false,
-      openFolder: true,
-
-      musicXmlOptions: new MusicXmlExporterOptions(),
-      latexOptions: new LatexExporterOptions(),
-
-      ExportFormat,
-    };
-  },
-
-  computed: {
-    exportFormatIsImage() {
-      return (
-        this.format === ExportFormat.PNG || this.format === ExportFormat.SVG
-      );
-    },
-  },
-
-  mounted() {
-    if (this.defaultFormat != null) {
-      this.format = this.defaultFormat;
-    }
-
-    window.addEventListener('keydown', this.onKeyDown);
-  },
-
-  beforeUnmount() {
-    window.removeEventListener('keydown', this.onKeyDown);
-  },
-
-  methods: {
-    onKeyDown(event: KeyboardEvent) {
-      if (event.code === 'Escape') {
-        this.close();
-      }
-    },
-
-    round(value: number) {
-      return Math.round(value);
-    },
-
-    doExport() {
-      if (this.format === ExportFormat.PNG) {
-        const { dpi, openFolder, transparentBackground } = this;
-        this.$emit('exportAsPng', {
-          dpi,
-          openFolder,
-          transparentBackground,
-        } as ExportAsPngSettings);
-      } else if (this.format === ExportFormat.SVG) {
-        this.$emit('exportAsSvg', this.openFolder);
-      } else if (this.format === ExportFormat.MusicXml) {
-        this.$emit('exportAsMusicXml', {
-          options: this.musicXmlOptions,
-          compressed: false,
-          openFolder: this.openFolder,
-        } as ExportAsMusicXmlSettings);
-      } else if (this.format === ExportFormat.Latex) {
-        this.$emit('exportAsLatex', {
-          options: this.latexOptions,
-        } as ExportAsLatexSettings);
-      }
-    },
-
-    close() {
-      this.$emit('close');
-    },
+  loading: {
+    type: Boolean,
+    required: true,
   },
 });
+
+const format = ref(ExportFormat.PNG);
+const dpi = ref(300);
+const transparentBackground = ref(false);
+const openFolder = ref(true);
+
+const musicXmlOptions = ref(new MusicXmlExporterOptions());
+const latexOptions = ref(new LatexExporterOptions());
+
+const exportFormatIsImage = computed(() => {
+  return format.value === ExportFormat.PNG || format.value === ExportFormat.SVG;
+});
+
+onMounted(() => {
+  if (props.defaultFormat != null) {
+    format.value = props.defaultFormat;
+  }
+
+  window.addEventListener('keydown', onKeyDown);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKeyDown);
+});
+
+function onKeyDown(event: KeyboardEvent) {
+  if (event.code === 'Escape') {
+    close();
+  }
+}
+
+function round(value: number) {
+  return Math.round(value);
+}
+
+function doExport() {
+  if (format.value === ExportFormat.PNG) {
+    emit('exportAsPng', {
+      dpi: dpi.value,
+      openFolder: openFolder.value,
+      transparentBackground: transparentBackground.value,
+    } as ExportAsPngSettings);
+  } else if (format.value === ExportFormat.SVG) {
+    emit('exportAsSvg', openFolder.value);
+  } else if (format.value === ExportFormat.MusicXml) {
+    emit('exportAsMusicXml', {
+      options: musicXmlOptions.value,
+      compressed: false,
+      openFolder: openFolder.value,
+    } as ExportAsMusicXmlSettings);
+  } else if (format.value === ExportFormat.Latex) {
+    emit('exportAsLatex', {
+      options: latexOptions.value,
+    } as ExportAsLatexSettings);
+  }
+}
+
+function close() {
+  emit('close');
+}
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

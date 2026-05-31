@@ -35,147 +35,149 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, StyleValue } from 'vue';
-
-import { ButtonMenuMode, EditorPreferences } from '@/models/EditorPreferences';
-import { Neume } from '@/models/Neumes';
-
 export interface ButtonWithMenuOption {
   icon?: string;
   text?: string;
-  neume: Neume | Neume[];
+  neume: import('@/models/Neumes').Neume | import('@/models/Neumes').Neume[];
 }
+</script>
 
-export default defineComponent({
-  components: {},
-  inject: ['editorPreferences'],
-  props: {
-    direction: {
-      type: String as PropType<'up' | 'down'>,
-      default: 'up',
-    },
-    options: {
-      type: Array as PropType<ButtonWithMenuOption[]>,
-      required: true,
-    },
-    disabled: {
-      type: Boolean,
-      default: false,
-    },
-    fontFamily: {
-      type: String,
-      default: 'Neanes',
-    },
-    imgSize: {
-      type: String,
-      default: undefined,
-    },
+<script setup lang="ts">
+import {
+  computed,
+  inject,
+  onBeforeUnmount,
+  onMounted,
+  PropType,
+  ref,
+  StyleValue,
+  useTemplateRef,
+} from 'vue';
+
+import { editorPreferencesKey } from '@/injectionKeys';
+import { ButtonMenuMode } from '@/models/EditorPreferences';
+import { Neume } from '@/models/Neumes';
+
+const emit = defineEmits(['select']);
+const props = defineProps({
+  direction: {
+    type: String as PropType<'up' | 'down'>,
+    default: 'up',
   },
-  emits: ['select'],
-
-  data() {
-    return {
-      showMenu: false,
-      selectedOption: null as Neume | Neume[] | null,
-    };
+  options: {
+    type: Array as PropType<ButtonWithMenuOption[]>,
+    required: true,
   },
-
-  computed: {
-    menuMode() {
-      return (this.editorPreferences as EditorPreferences).buttonMenuMode;
-    },
-    mainIcon() {
-      return this.direction === 'up'
-        ? this.options.at(-1)!.icon
-        : this.options[0].icon;
-    },
-
-    mainText() {
-      return this.direction === 'up'
-        ? this.options.at(-1)!.text
-        : this.options[0].text;
-    },
-
-    textStyle() {
-      return {
-        fontFamily: this.fontFamily,
-      } as StyleValue;
-    },
-
-    imgStyle() {
-      return {
-        height: this.imgSize ?? undefined,
-        width: this.imgSize ?? undefined,
-      } as StyleValue;
-    },
+  disabled: {
+    type: Boolean,
+    default: false,
   },
-
-  mounted() {
-    window.addEventListener('pointerdown', this.handleGlobalPointerDown);
+  fontFamily: {
+    type: String,
+    default: 'Neanes',
   },
-
-  beforeUnmount() {
-    window.removeEventListener('mouseup', this.onMouseUp);
-    window.removeEventListener('pointerdown', this.handleGlobalPointerDown);
-  },
-
-  methods: {
-    getKey(option: ButtonWithMenuOption) {
-      return Array.isArray(option.neume) ? option.neume[0] : option.neume;
-    },
-
-    handleMouseDown() {
-      if (this.disabled) {
-        return;
-      }
-
-      this.showMenu = true;
-
-      if (this.menuMode === ButtonMenuMode.Hold) {
-        window.addEventListener('mouseup', this.onMouseUp);
-      }
-    },
-
-    handleMouseEnter(selectedOption: Neume | Neume[]) {
-      if (this.menuMode === ButtonMenuMode.Hold) {
-        this.selectedOption = selectedOption;
-      }
-    },
-
-    handleMouseLeave() {
-      if (this.menuMode === ButtonMenuMode.Hold) {
-        this.selectedOption = null;
-      }
-    },
-
-    handleGlobalPointerDown(e: MouseEvent) {
-      if (
-        this.menuMode === ButtonMenuMode.Click &&
-        !(this.$refs.menu as HTMLElement).contains(e.target as Node)
-      ) {
-        this.showMenu = false;
-      }
-    },
-
-    handleChoiceClick(selectedOption: Neume | Neume[]) {
-      if (this.menuMode === ButtonMenuMode.Click) {
-        this.$emit('select', selectedOption);
-
-        this.showMenu = false;
-      }
-    },
-
-    onMouseUp() {
-      if (this.selectedOption) {
-        this.$emit('select', this.selectedOption);
-      }
-
-      this.showMenu = false;
-
-      window.removeEventListener('mouseup', this.onMouseUp);
-    },
+  imgSize: {
+    type: String,
+    default: undefined,
   },
 });
+
+const editorPreferences = inject(editorPreferencesKey)!;
+
+const menu = useTemplateRef<HTMLElement>('menu');
+const showMenu = ref(false);
+const selectedOption = ref<Neume | Neume[] | null>(null);
+
+const menuMode = computed(() => editorPreferences.value.buttonMenuMode);
+
+const mainIcon = computed(() => {
+  return props.direction === 'up'
+    ? props.options.at(-1)!.icon
+    : props.options[0].icon;
+});
+
+const mainText = computed(() => {
+  return props.direction === 'up'
+    ? props.options.at(-1)!.text
+    : props.options[0].text;
+});
+
+const textStyle = computed(() => {
+  return {
+    fontFamily: props.fontFamily,
+  } as StyleValue;
+});
+
+const imgStyle = computed(() => {
+  return {
+    height: props.imgSize ?? undefined,
+    width: props.imgSize ?? undefined,
+  } as StyleValue;
+});
+
+onMounted(() => {
+  window.addEventListener('pointerdown', handleGlobalPointerDown);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('mouseup', onMouseUp);
+  window.removeEventListener('pointerdown', handleGlobalPointerDown);
+});
+
+function getKey(option: ButtonWithMenuOption) {
+  return Array.isArray(option.neume) ? option.neume[0] : option.neume;
+}
+
+function handleMouseDown() {
+  if (props.disabled) {
+    return;
+  }
+
+  showMenu.value = true;
+
+  if (menuMode.value === ButtonMenuMode.Hold) {
+    window.addEventListener('mouseup', onMouseUp);
+  }
+}
+
+function handleMouseEnter(option: Neume | Neume[]) {
+  if (menuMode.value === ButtonMenuMode.Hold) {
+    selectedOption.value = option;
+  }
+}
+
+function handleMouseLeave() {
+  if (menuMode.value === ButtonMenuMode.Hold) {
+    selectedOption.value = null;
+  }
+}
+
+function handleGlobalPointerDown(e: MouseEvent) {
+  if (
+    menuMode.value === ButtonMenuMode.Click &&
+    !menu.value?.contains(e.target as Node)
+  ) {
+    showMenu.value = false;
+  }
+}
+
+function handleChoiceClick(option: Neume | Neume[]) {
+  if (menuMode.value === ButtonMenuMode.Click) {
+    emit('select', option);
+
+    showMenu.value = false;
+  }
+}
+
+function onMouseUp() {
+  if (selectedOption.value) {
+    emit('select', selectedOption.value);
+  }
+
+  showMenu.value = false;
+
+  window.removeEventListener('mouseup', onMouseUp);
+}
 </script>
 
 <style scoped>

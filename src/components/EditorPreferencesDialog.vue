@@ -99,8 +99,8 @@
   </ModalDialog>
 </template>
 
-<script lang="ts">
-import { defineComponent, PropType } from 'vue';
+<script setup lang="ts">
+import { onBeforeUnmount, onMounted, PropType, ref } from 'vue';
 
 import ModalDialog from '@/components/ModalDialog.vue';
 import Neume from '@/components/NeumeGlyph.vue';
@@ -111,6 +111,19 @@ import { PageSetup } from '@/models/PageSetup';
 
 import InputBpm from './InputBpm.vue';
 
+const emit = defineEmits(['close', 'update']);
+const props = defineProps({
+  options: {
+    type: Object as PropType<EditorPreferences>,
+    required: true,
+  },
+  pageSetup: {
+    type: Object as PropType<PageSetup>,
+    required: true,
+  },
+});
+
+const form = ref(new EditorPreferences());
 const tempoSigns = [
   TempoSign.VerySlow,
   TempoSign.Slower,
@@ -122,57 +135,29 @@ const tempoSigns = [
   TempoSign.VeryQuick,
 ];
 
-export default defineComponent({
-  components: { ModalDialog, Neume, InputBpm },
-  props: {
-    options: {
-      type: Object as PropType<EditorPreferences>,
-      required: true,
-    },
-    pageSetup: {
-      type: Object as PropType<PageSetup>,
-      required: true,
-    },
-  },
-  emits: ['close', 'update'],
+onMounted(() => {
+  form.value = JSON.parse(JSON.stringify(props.options));
 
-  data() {
-    return {
-      form: new EditorPreferences(),
-      tempoSigns,
-      supportedLocales,
-      ButtonMenuMode,
-    };
-  },
-
-  computed: {},
-
-  mounted() {
-    this.form = JSON.parse(JSON.stringify(this.options));
-
-    window.addEventListener('keydown', this.onKeyDown);
-  },
-
-  beforeUnmount() {
-    window.removeEventListener('keydown', this.onKeyDown);
-  },
-
-  methods: {
-    onKeyDown(event: KeyboardEvent) {
-      if (event.code === 'Escape') {
-        this.$emit('close');
-      }
-    },
-
-    onTempoChanged(neume: TempoSign, bpm: number) {
-      this.form.tempoDefaults[neume] = bpm;
-    },
-
-    resetToSystemDefaults() {
-      this.form = new EditorPreferences();
-    },
-  },
+  window.addEventListener('keydown', onKeyDown);
 });
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKeyDown);
+});
+
+function onKeyDown(event: KeyboardEvent) {
+  if (event.code === 'Escape') {
+    emit('close');
+  }
+}
+
+function onTempoChanged(neume: TempoSign, bpm: number) {
+  form.value.tempoDefaults[neume] = bpm;
+}
+
+function resetToSystemDefaults() {
+  form.value = new EditorPreferences();
+}
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

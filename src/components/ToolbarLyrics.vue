@@ -129,8 +129,8 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, PropType } from 'vue';
+<script setup lang="ts">
+import { computed, PropType } from 'vue';
 
 import ColorPicker from '@/components/ColorPicker.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
@@ -156,54 +156,32 @@ const specialCharacters = [
   { value: GREEK_OU, language: 'greek' },
 ];
 
-export default defineComponent({
-  components: { ColorPicker, InputFontSize, InputStrokeWidth },
-  props: {
-    element: {
-      type: Object as PropType<NoteElement>,
-      required: true,
-    },
-    fonts: {
-      type: Array as PropType<string[]>,
-      required: true,
-    },
+const props = defineProps({
+  element: {
+    type: Object as PropType<NoteElement>,
+    required: true,
   },
-  emits: ['insert:specialCharacter', 'update'],
-
-  data() {
-    return {
-      GORTHMIKON,
-      PELASTIKON,
-      specialCharacters,
-    };
+  fonts: {
+    type: Array as PropType<string[]>,
+    required: true,
   },
-
-  computed: {
-    bold() {
-      return this.element.lyricsFontWeight === '700';
-    },
-
-    italic() {
-      return this.element.lyricsFontStyle === 'italic';
-    },
-
-    underline() {
-      return this.element.lyricsTextDecoration === 'underline';
-    },
-
-    lyricsFontFamilies() {
-      return [
-        'Source Serif',
-        'GFS Didot',
-        'Noto Naskh Arabic',
-        'Old Standard',
-        ...this.fonts,
-      ];
-    },
-  },
-
-  methods: {},
 });
+
+defineEmits(['insert:specialCharacter', 'update']);
+
+const bold = computed(() => props.element.lyricsFontWeight === '700');
+const italic = computed(() => props.element.lyricsFontStyle === 'italic');
+const underline = computed(
+  () => props.element.lyricsTextDecoration === 'underline',
+);
+
+const lyricsFontFamilies = computed(() => [
+  'Source Serif',
+  'GFS Didot',
+  'Noto Naskh Arabic',
+  'Old Standard',
+  ...props.fonts,
+]);
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

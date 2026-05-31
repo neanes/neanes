@@ -51,8 +51,8 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, PropType } from 'vue';
+<script setup lang="ts">
+import { computed, PropType } from 'vue';
 
 import { TempoElement } from '@/models/Element';
 import { PageSetup } from '@/models/PageSetup';
@@ -61,32 +61,22 @@ import { Unit } from '@/utils/Unit';
 import InputBpm from './InputBpm.vue';
 import InputUnit from './InputUnit.vue';
 
-export default defineComponent({
-  components: { InputUnit, InputBpm },
-  props: {
-    element: {
-      type: Object as PropType<TempoElement>,
-      required: true,
-    },
-    pageSetup: {
-      type: Object as PropType<PageSetup>,
-      required: true,
-    },
+const props = defineProps({
+  element: {
+    type: Object as PropType<TempoElement>,
+    required: true,
   },
-  emits: ['update', 'update:sectionName'],
-
-  data() {
-    return {};
+  pageSetup: {
+    type: Object as PropType<PageSetup>,
+    required: true,
   },
-
-  computed: {
-    spaceAfterMax() {
-      return Math.round(Unit.toPt(this.pageSetup.pageWidth));
-    },
-  },
-
-  methods: {},
 });
+
+defineEmits(['update', 'update:sectionName']);
+
+const spaceAfterMax = computed(() =>
+  Math.round(Unit.toPt(props.pageSetup.pageWidth)),
+);
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

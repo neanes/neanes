@@ -202,9 +202,9 @@
   </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import JSZip from 'jszip';
-import { defineComponent } from 'vue';
+import { onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
 
 import FileMenuBarItem from '@/components/FileMenuBarItem.vue';
 import FileMenuItem from '@/components/FileMenuItem.vue';
@@ -219,349 +219,330 @@ import {
   IpcRendererChannels,
 } from '@/ipc/ipcChannels';
 
-export default defineComponent({
-  components: { FileMenuBarItem, FileMenuItem },
-  props: {},
-  emits: [],
+const fileSelector = useTemplateRef<HTMLInputElement>('file');
+const imageFileSelector = useTemplateRef<HTMLInputElement>('imagefile');
 
-  data() {
-    return {
-      isMenuOpen: false,
-      selectedMenu: '',
-      accept: '.byz,.byzx',
-      acceptImage: '.bmp,.jpg,.jpeg,.jpe,.png,.gif,.svg,.webp,.ico',
-      isChrome: (window as any).chrome != null,
-    };
-  },
+const isMenuOpen = ref(false);
+const selectedMenu = ref('');
+const accept = '.byz,.byzx';
+const acceptImage = '.bmp,.jpg,.jpeg,.jpe,.png,.gif,.svg,.webp,.ico';
+const isChrome = (window as any).chrome != null;
 
-  computed: {
-    fileSelector() {
-      return this.$refs.file as HTMLInputElement;
-    },
+onMounted(() => {
+  // If using the browser, then we need to hook into the key down
+  // to listen for Ctrl+O for open, Ctrl+S for save, etc.
+  window.addEventListener('keydown', onKeyDown);
 
-    imageFileSelector() {
-      return this.$refs.imagefile as HTMLInputElement;
-    },
-  },
-
-  mounted() {
-    // If using the browser, then we need to hook into the key down
-    // to listen for Ctrl+O for oven, Ctrl+S for save, etc.
-    window.addEventListener('keydown', this.onKeyDown);
-
-    EventBus.$on(IpcRendererChannels.OpenImageDialog, this.onClickAddImage);
-  },
-
-  beforeUnmount() {
-    window.removeEventListener('keydown', this.onKeyDown);
-    EventBus.$off(IpcRendererChannels.OpenImageDialog, this.onClickAddImage);
-  },
-
-  methods: {
-    onKeyDown(event: KeyboardEvent) {
-      if (event.ctrlKey || event.metaKey) {
-        if (event.code === 'KeyO') {
-          this.onClickOpen();
-          event.preventDefault();
-          return;
-        } else if (event.code === 'KeyS') {
-          this.onClickSave();
-          event.preventDefault();
-          return;
-        } else if (event.code === 'KeyN') {
-          // Note: this doesn't actually work in Chrome.
-          // Chrome prevents you from capturing Ctrl+N.
-          this.onClickNew();
-          event.preventDefault();
-          return;
-        } else if (event.code === 'KeyD') {
-          if (event.shiftKey) {
-            this.onClickAddDropCapAfter();
-          } else {
-            this.onClickAddDropCapBefore();
-          }
-          event.preventDefault();
-          return;
-        } else if (event.shiftKey && event.code === 'KeyP') {
-          this.onClickPageSetup();
-          event.preventDefault();
-          return;
-        } else if (event.code === 'Comma') {
-          this.onClickPreferences();
-          event.preventDefault();
-          return;
-        }
-      }
-    },
-
-    toggleMenu() {
-      this.isMenuOpen = !this.isMenuOpen;
-    },
-
-    onClickNew() {
-      EventBus.$emit(IpcMainChannels.FileMenuNewScore);
-      this.isMenuOpen = false;
-    },
-
-    onClickOpen() {
-      this.fileSelector.click();
-      this.isMenuOpen = false;
-    },
-
-    onClickSave() {
-      EventBus.$emit(IpcMainChannels.FileMenuSaveAs);
-      this.isMenuOpen = false;
-    },
-
-    onClickExportAsHtml() {
-      EventBus.$emit(IpcMainChannels.FileMenuExportAsHtml);
-      this.isMenuOpen = false;
-    },
-
-    onClickExportAsMusicXml() {
-      EventBus.$emit(IpcMainChannels.FileMenuExportAsMusicXml);
-      this.isMenuOpen = false;
-    },
-
-    onClickExportAsLatex() {
-      EventBus.$emit(IpcMainChannels.FileMenuExportAsLatex);
-      this.isMenuOpen = false;
-    },
-
-    onClickPageSetup() {
-      EventBus.$emit(IpcMainChannels.FileMenuPageSetup);
-      this.isMenuOpen = false;
-    },
-
-    onClickClose() {
-      EventBus.$emit(IpcMainChannels.CloseWorkspaces, {
-        disposition: CloseWorkspacesDisposition.SELF,
-      } as CloseWorkspacesArgs);
-      this.isMenuOpen = false;
-    },
-
-    onClickCloseOthers() {
-      EventBus.$emit(IpcMainChannels.CloseWorkspaces, {
-        disposition: CloseWorkspacesDisposition.OTHERS,
-      } as CloseWorkspacesArgs);
-      this.isMenuOpen = false;
-    },
-
-    async onSelectFile() {
-      const files = this.fileSelector.files!;
-
-      if (files.length > 0) {
-        const file = files[0];
-
-        if (file.name.endsWith('.byz')) {
-          const zip = await JSZip.loadAsync(file);
-          const data = await zip.file(/\.(byzx)$/)[0].async('text');
-
-          EventBus.$emit(IpcMainChannels.FileMenuOpenScore, {
-            data,
-            filePath: file.name,
-            success: true,
-          } as FileMenuOpenScoreArgs);
-
-          // Reset the selector so that if the user selects
-          // the same file twice, it will load
-          this.fileSelector.value = '';
-        } else {
-          const reader = new FileReader();
-
-          reader.onload = () => {
-            EventBus.$emit(IpcMainChannels.FileMenuOpenScore, {
-              data: reader.result as string,
-              filePath: file.name,
-              success: true,
-            } as FileMenuOpenScoreArgs);
-
-            // Reset the selector so that if the user selects
-            // the same file twice, it will load
-            this.fileSelector.value = '';
-          };
-
-          reader.readAsText(file);
-        }
-      }
-    },
-
-    async onSelectImageFile() {
-      const files = this.imageFileSelector.files!;
-
-      if (files.length > 0) {
-        const file = files[0];
-
-        const reader = new FileReader();
-
-        reader.onload = () => {
-          const data = reader.result as string;
-
-          // Create an instance of Image to determine the
-          // original image's height and width
-          const image = new Image();
-
-          image.onload = () => {
-            EventBus.$emit(IpcMainChannels.FileMenuInsertImage, {
-              data,
-              imageHeight: image.height,
-              imageWidth: image.width,
-              filePath: file.name,
-              success: true,
-            } as FileMenuOpenImageArgs);
-          };
-
-          image.src = data;
-
-          // Reset the selector so that if the user selects
-          // the same file twice, it will load
-          this.imageFileSelector.value = '';
-        };
-
-        reader.readAsDataURL(file);
-      }
-    },
-
-    onClickCut() {
-      EventBus.$emit(IpcMainChannels.FileMenuCut);
-      this.isMenuOpen = false;
-    },
-
-    onClickCopy() {
-      EventBus.$emit(IpcMainChannels.FileMenuCopy);
-      this.isMenuOpen = false;
-    },
-
-    onClickCopyAsHtml() {
-      EventBus.$emit(IpcMainChannels.FileMenuCopyAsHtml);
-      this.isMenuOpen = false;
-    },
-
-    onClickCopyFormat() {
-      EventBus.$emit(IpcMainChannels.FileMenuCopyFormat);
-      this.isMenuOpen = false;
-    },
-
-    onClickPaste() {
-      EventBus.$emit(IpcMainChannels.FileMenuPaste);
-      this.isMenuOpen = false;
-    },
-
-    onClickPasteWithLyrics() {
-      EventBus.$emit(IpcMainChannels.FileMenuPasteWithLyrics);
-      this.isMenuOpen = false;
-    },
-
-    onClickPasteFormat() {
-      EventBus.$emit(IpcMainChannels.FileMenuPasteFormat);
-      this.isMenuOpen = false;
-    },
-
-    onClickFind() {
-      EventBus.$emit(IpcMainChannels.FileMenuFind);
-      this.isMenuOpen = false;
-    },
-
-    onClickLyrics() {
-      EventBus.$emit(IpcMainChannels.FileMenuLyrics);
-      this.isMenuOpen = false;
-    },
-
-    onClickPreferences() {
-      EventBus.$emit(IpcMainChannels.FileMenuPreferences);
-      this.isMenuOpen = false;
-    },
-
-    onClickUndo() {
-      EventBus.$emit(IpcMainChannels.FileMenuUndo);
-      this.isMenuOpen = false;
-    },
-
-    onClickRedo() {
-      EventBus.$emit(IpcMainChannels.FileMenuRedo);
-      this.isMenuOpen = false;
-    },
-
-    onClickAddTextBox() {
-      EventBus.$emit(IpcMainChannels.FileMenuInsertTextBox, {
-        inline: false,
-      } as FileMenuInsertTextboxArgs);
-      this.isMenuOpen = false;
-    },
-
-    onClickAddRichTextBox() {
-      EventBus.$emit(IpcMainChannels.FileMenuInsertRichTextBox);
-      this.isMenuOpen = false;
-    },
-
-    onClickAddInlineTextBox() {
-      EventBus.$emit(IpcMainChannels.FileMenuInsertTextBox, {
-        inline: true,
-      } as FileMenuInsertTextboxArgs);
-      this.isMenuOpen = false;
-    },
-
-    onClickAddModeKey() {
-      EventBus.$emit(IpcMainChannels.FileMenuInsertModeKey);
-      this.isMenuOpen = false;
-    },
-
-    onClickAddAlternateLine() {
-      EventBus.$emit(IpcMainChannels.FileMenuInsertAlternateLine);
-      this.isMenuOpen = false;
-    },
-
-    onClickAddAnnotation() {
-      EventBus.$emit(IpcMainChannels.FileMenuInsertAnnotation);
-      this.isMenuOpen = false;
-    },
-
-    onClickAddDropCapBefore() {
-      EventBus.$emit(IpcMainChannels.FileMenuInsertDropCapBefore);
-      this.isMenuOpen = false;
-    },
-
-    onClickAddDropCapAfter() {
-      EventBus.$emit(IpcMainChannels.FileMenuInsertDropCapAfter);
-      this.isMenuOpen = false;
-    },
-
-    onClickAddImage() {
-      this.imageFileSelector.click();
-      this.isMenuOpen = false;
-    },
-
-    onClickAddHeader() {
-      EventBus.$emit(IpcMainChannels.FileMenuInsertHeader);
-      this.isMenuOpen = false;
-    },
-
-    onClickAddFooter() {
-      EventBus.$emit(IpcMainChannels.FileMenuInsertFooter);
-      this.isMenuOpen = false;
-    },
-
-    onClickAbout() {
-      alert(`Neanes\nVersion: ${APP_VERSION}`);
-      this.isMenuOpen = false;
-    },
-
-    onClickGuide() {
-      window.open(import.meta.env.VITE_GUIDE_URL, '_blank');
-      this.isMenuOpen = false;
-    },
-
-    onClickRequestFeature() {
-      window.open(import.meta.env.VITE_ISSUES_URL, '_blank');
-      this.isMenuOpen = false;
-    },
-
-    onClickReportIssue() {
-      window.open(import.meta.env.VITE_ISSUES_URL, '_blank');
-      this.isMenuOpen = false;
-    },
-  },
+  EventBus.$on(IpcRendererChannels.OpenImageDialog, onClickAddImage);
 });
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKeyDown);
+  EventBus.$off(IpcRendererChannels.OpenImageDialog, onClickAddImage);
+});
+
+function onKeyDown(event: KeyboardEvent) {
+  if (event.ctrlKey || event.metaKey) {
+    if (event.code === 'KeyO') {
+      onClickOpen();
+      event.preventDefault();
+      return;
+    } else if (event.code === 'KeyS') {
+      onClickSave();
+      event.preventDefault();
+      return;
+    } else if (event.code === 'KeyN') {
+      // Note: this doesn't actually work in Chrome.
+      // Chrome prevents you from capturing Ctrl+N.
+      onClickNew();
+      event.preventDefault();
+      return;
+    } else if (event.code === 'KeyD') {
+      if (event.shiftKey) {
+        onClickAddDropCapAfter();
+      } else {
+        onClickAddDropCapBefore();
+      }
+      event.preventDefault();
+      return;
+    } else if (event.shiftKey && event.code === 'KeyP') {
+      onClickPageSetup();
+      event.preventDefault();
+      return;
+    } else if (event.code === 'Comma') {
+      onClickPreferences();
+      event.preventDefault();
+      return;
+    }
+  }
+}
+
+function toggleMenu() {
+  isMenuOpen.value = !isMenuOpen.value;
+}
+
+function onClickNew() {
+  EventBus.$emit(IpcMainChannels.FileMenuNewScore);
+  isMenuOpen.value = false;
+}
+
+function onClickOpen() {
+  fileSelector.value!.click();
+  isMenuOpen.value = false;
+}
+
+function onClickSave() {
+  EventBus.$emit(IpcMainChannels.FileMenuSaveAs);
+  isMenuOpen.value = false;
+}
+
+function onClickExportAsHtml() {
+  EventBus.$emit(IpcMainChannels.FileMenuExportAsHtml);
+  isMenuOpen.value = false;
+}
+
+function onClickExportAsMusicXml() {
+  EventBus.$emit(IpcMainChannels.FileMenuExportAsMusicXml);
+  isMenuOpen.value = false;
+}
+
+function onClickExportAsLatex() {
+  EventBus.$emit(IpcMainChannels.FileMenuExportAsLatex);
+  isMenuOpen.value = false;
+}
+
+function onClickPageSetup() {
+  EventBus.$emit(IpcMainChannels.FileMenuPageSetup);
+  isMenuOpen.value = false;
+}
+
+function onClickClose() {
+  EventBus.$emit(IpcMainChannels.CloseWorkspaces, {
+    disposition: CloseWorkspacesDisposition.SELF,
+  } as CloseWorkspacesArgs);
+  isMenuOpen.value = false;
+}
+
+function onClickCloseOthers() {
+  EventBus.$emit(IpcMainChannels.CloseWorkspaces, {
+    disposition: CloseWorkspacesDisposition.OTHERS,
+  } as CloseWorkspacesArgs);
+  isMenuOpen.value = false;
+}
+
+async function onSelectFile() {
+  const files = fileSelector.value!.files!;
+
+  if (files.length > 0) {
+    const file = files[0];
+
+    if (file.name.endsWith('.byz')) {
+      const zip = await JSZip.loadAsync(file);
+      const data = await zip.file(/\.(byzx)$/)[0].async('text');
+
+      EventBus.$emit(IpcMainChannels.FileMenuOpenScore, {
+        data,
+        filePath: file.name,
+        success: true,
+      } as FileMenuOpenScoreArgs);
+
+      // Reset the selector so that if the user selects
+      // the same file twice, it will load
+      fileSelector.value!.value = '';
+    } else {
+      const reader = new FileReader();
+
+      reader.onload = () => {
+        EventBus.$emit(IpcMainChannels.FileMenuOpenScore, {
+          data: reader.result as string,
+          filePath: file.name,
+          success: true,
+        } as FileMenuOpenScoreArgs);
+
+        // Reset the selector so that if the user selects
+        // the same file twice, it will load
+        fileSelector.value!.value = '';
+      };
+
+      reader.readAsText(file);
+    }
+  }
+}
+
+async function onSelectImageFile() {
+  const files = imageFileSelector.value!.files!;
+
+  if (files.length > 0) {
+    const file = files[0];
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const data = reader.result as string;
+
+      // Create an instance of Image to determine the
+      // original image's height and width
+      const image = new Image();
+
+      image.onload = () => {
+        EventBus.$emit(IpcMainChannels.FileMenuInsertImage, {
+          data,
+          imageHeight: image.height,
+          imageWidth: image.width,
+          filePath: file.name,
+          success: true,
+        } as FileMenuOpenImageArgs);
+      };
+
+      image.src = data;
+
+      // Reset the selector so that if the user selects
+      // the same file twice, it will load
+      imageFileSelector.value!.value = '';
+    };
+
+    reader.readAsDataURL(file);
+  }
+}
+
+function onClickCut() {
+  EventBus.$emit(IpcMainChannels.FileMenuCut);
+  isMenuOpen.value = false;
+}
+
+function onClickCopy() {
+  EventBus.$emit(IpcMainChannels.FileMenuCopy);
+  isMenuOpen.value = false;
+}
+
+function onClickCopyAsHtml() {
+  EventBus.$emit(IpcMainChannels.FileMenuCopyAsHtml);
+  isMenuOpen.value = false;
+}
+
+function onClickCopyFormat() {
+  EventBus.$emit(IpcMainChannels.FileMenuCopyFormat);
+  isMenuOpen.value = false;
+}
+
+function onClickPaste() {
+  EventBus.$emit(IpcMainChannels.FileMenuPaste);
+  isMenuOpen.value = false;
+}
+
+function onClickPasteWithLyrics() {
+  EventBus.$emit(IpcMainChannels.FileMenuPasteWithLyrics);
+  isMenuOpen.value = false;
+}
+
+function onClickPasteFormat() {
+  EventBus.$emit(IpcMainChannels.FileMenuPasteFormat);
+  isMenuOpen.value = false;
+}
+
+function onClickFind() {
+  EventBus.$emit(IpcMainChannels.FileMenuFind);
+  isMenuOpen.value = false;
+}
+
+function onClickLyrics() {
+  EventBus.$emit(IpcMainChannels.FileMenuLyrics);
+  isMenuOpen.value = false;
+}
+
+function onClickPreferences() {
+  EventBus.$emit(IpcMainChannels.FileMenuPreferences);
+  isMenuOpen.value = false;
+}
+
+function onClickUndo() {
+  EventBus.$emit(IpcMainChannels.FileMenuUndo);
+  isMenuOpen.value = false;
+}
+
+function onClickRedo() {
+  EventBus.$emit(IpcMainChannels.FileMenuRedo);
+  isMenuOpen.value = false;
+}
+
+function onClickAddTextBox() {
+  EventBus.$emit(IpcMainChannels.FileMenuInsertTextBox, {
+    inline: false,
+  } as FileMenuInsertTextboxArgs);
+  isMenuOpen.value = false;
+}
+
+function onClickAddRichTextBox() {
+  EventBus.$emit(IpcMainChannels.FileMenuInsertRichTextBox);
+  isMenuOpen.value = false;
+}
+
+function onClickAddInlineTextBox() {
+  EventBus.$emit(IpcMainChannels.FileMenuInsertTextBox, {
+    inline: true,
+  } as FileMenuInsertTextboxArgs);
+  isMenuOpen.value = false;
+}
+
+function onClickAddModeKey() {
+  EventBus.$emit(IpcMainChannels.FileMenuInsertModeKey);
+  isMenuOpen.value = false;
+}
+
+function onClickAddAlternateLine() {
+  EventBus.$emit(IpcMainChannels.FileMenuInsertAlternateLine);
+  isMenuOpen.value = false;
+}
+
+function onClickAddAnnotation() {
+  EventBus.$emit(IpcMainChannels.FileMenuInsertAnnotation);
+  isMenuOpen.value = false;
+}
+
+function onClickAddDropCapBefore() {
+  EventBus.$emit(IpcMainChannels.FileMenuInsertDropCapBefore);
+  isMenuOpen.value = false;
+}
+
+function onClickAddDropCapAfter() {
+  EventBus.$emit(IpcMainChannels.FileMenuInsertDropCapAfter);
+  isMenuOpen.value = false;
+}
+
+function onClickAddImage() {
+  imageFileSelector.value!.click();
+  isMenuOpen.value = false;
+}
+
+function onClickAddHeader() {
+  EventBus.$emit(IpcMainChannels.FileMenuInsertHeader);
+  isMenuOpen.value = false;
+}
+
+function onClickAddFooter() {
+  EventBus.$emit(IpcMainChannels.FileMenuInsertFooter);
+  isMenuOpen.value = false;
+}
+
+function onClickAbout() {
+  alert(`Neanes\nVersion: ${APP_VERSION}`);
+  isMenuOpen.value = false;
+}
+
+function onClickGuide() {
+  window.open(import.meta.env.VITE_GUIDE_URL, '_blank');
+  isMenuOpen.value = false;
+}
+
+function onClickRequestFeature() {
+  window.open(import.meta.env.VITE_ISSUES_URL, '_blank');
+  isMenuOpen.value = false;
+}
+
+function onClickReportIssue() {
+  window.open(import.meta.env.VITE_ISSUES_URL, '_blank');
+  isMenuOpen.value = false;
+}
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

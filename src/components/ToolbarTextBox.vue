@@ -298,8 +298,8 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, PropType } from 'vue';
+<script setup lang="ts">
+import { computed, PropType } from 'vue';
 
 import ColorPicker from '@/components/ColorPicker.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
@@ -309,47 +309,30 @@ import { TextBoxAlignment, TextBoxElement } from '@/models/Element';
 import { PageSetup } from '@/models/PageSetup';
 import { Unit } from '@/utils/Unit';
 
-export default defineComponent({
-  components: { ColorPicker, InputFontSize, InputUnit, InputStrokeWidth },
-  props: {
-    element: {
-      type: Object as PropType<TextBoxElement>,
-      required: true,
-    },
-    pageSetup: {
-      type: Object as PropType<PageSetup>,
-      required: true,
-    },
-    fonts: {
-      type: Array as PropType<string[]>,
-      required: true,
-    },
+const props = defineProps({
+  element: {
+    type: Object as PropType<TextBoxElement>,
+    required: true,
   },
-  emits: [
-    'insert:gorthmikon',
-    'insert:pelastikon',
-    'update',
-    'update:sectionName',
-  ],
-
-  data() {
-    return {
-      TextBoxAlignment,
-    };
+  pageSetup: {
+    type: Object as PropType<PageSetup>,
+    required: true,
   },
-
-  computed: {
-    maxWidth() {
-      return Unit.toPt(this.pageSetup.innerPageWidth);
-    },
-
-    maxHeight() {
-      return Unit.toPt(this.pageSetup.innerPageHeight);
-    },
+  fonts: {
+    type: Array as PropType<string[]>,
+    required: true,
   },
-
-  methods: {},
 });
+
+defineEmits([
+  'insert:gorthmikon',
+  'insert:pelastikon',
+  'update',
+  'update:sectionName',
+]);
+
+const maxWidth = computed(() => Unit.toPt(props.pageSetup.innerPageWidth));
+const maxHeight = computed(() => Unit.toPt(props.pageSetup.innerPageHeight));
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

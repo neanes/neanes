@@ -15,7 +15,7 @@
       <ckeditor
         ref="editorLeft"
         class="rich-text-editor multipanel left"
-        :editor="editor"
+        :editor="ckeditorEditor"
         :model-value="contentLeft"
         :config="editorConfig"
         :disable-watchdog="true"
@@ -24,7 +24,7 @@
       <ckeditor
         ref="editorCenter"
         class="rich-text-editor multipanel center"
-        :editor="editor"
+        :editor="ckeditorEditor"
         :model-value="contentCenter"
         :config="editorConfig"
         :disable-watchdog="true"
@@ -34,7 +34,7 @@
       <ckeditor
         ref="editorRight"
         class="rich-text-editor multipanel right"
-        :editor="editor"
+        :editor="ckeditorEditor"
         :model-value="contentRight"
         :config="editorConfig"
         :disable-watchdog="true"
@@ -51,7 +51,7 @@
             ref="editor"
             class="rich-text-editor inline-top"
             :style="textBoxStyleTop"
-            :editor="editor"
+            :editor="ckeditorEditor"
             :model-value="content"
             :config="editorConfig"
             :disable-watchdog="true"
@@ -65,7 +65,7 @@
           ref="editorBottom"
           class="rich-text-editor inline-bottom"
           :style="textBoxStyleBottom"
-          :editor="editor"
+          :editor="ckeditorEditor"
           :model-value="contentBottom"
           :config="editorConfig"
           :disable-watchdog="true"
@@ -78,7 +78,7 @@
       v-else-if="element.scrollable"
       ref="editor"
       class="rich-text-editor single scrollable"
-      :editor="editor"
+      :editor="ckeditorEditor"
       :model-value="content"
       :config="editorConfig"
       :disable-watchdog="true"
@@ -90,7 +90,7 @@
       v-else
       ref="editor"
       class="rich-text-editor single"
-      :editor="editor"
+      :editor="ckeditorEditor"
       :model-value="content"
       :config="editorConfig"
       :disable-watchdog="true"
@@ -101,14 +101,23 @@
   </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { FontSizeOption } from '@ckeditor/ckeditor5-font';
 import { Ckeditor } from '@ckeditor/ckeditor5-vue';
 import { Editor, EditorConfig } from 'ckeditor5';
 import { debounce, throttle } from 'throttle-debounce';
-import { defineComponent, PropType, StyleValue } from 'vue';
-import type { ComponentExposed } from 'vue-component-type-helpers';
+import {
+  computed,
+  onBeforeUnmount,
+  PropType,
+  ref,
+  StyleValue,
+  useTemplateRef,
+  watch,
+} from 'vue';
+import { ComponentExposed } from 'vue-component-type-helpers';
 
+import { useResizeObserver } from '@/composables/useResizeObserver';
 import InlineEditor from '@/customEditor';
 import { RichTextBoxElement, TextBoxAlignment } from '@/models/Element';
 import { PageSetup } from '@/models/PageSetup';
@@ -116,526 +125,499 @@ import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { replaceTokens, TokenMetadata } from '@/utils/replaceTokens';
 import { withZoom } from '@/utils/withZoom';
 
-export default defineComponent({
-  components: {},
-  props: {
-    element: {
-      type: Object as PropType<RichTextBoxElement>,
-      required: true,
-    },
-    pageSetup: {
-      type: Object as PropType<PageSetup>,
-      required: true,
-    },
-    fonts: {
-      type: Array as PropType<string[]>,
-      required: true,
-    },
-    editMode: {
-      type: Boolean,
-      default: true,
-    },
-    selected: {
-      type: Boolean,
-      default: false,
-    },
-    metadata: {
-      type: Object as PropType<TokenMetadata>,
-      default: undefined,
-    },
-    recalc: {
-      type: Boolean,
-      default: false,
-    },
+const emit = defineEmits(['update', 'update:height', 'select-single']);
+const props = defineProps({
+  element: {
+    type: Object as PropType<RichTextBoxElement>,
+    required: true,
   },
-  emits: ['update', 'update:height', 'select-single'],
-
-  data() {
-    return {
-      editor: InlineEditor,
-      editorData: '',
-
-      focusOnReady: false,
-      unmounting: false,
-
-      heightBottom: 0,
-      heightTop: 0,
-      resizeObserver: null as ResizeObserver | null,
-      inlineBottomObserver: null as ResizeObserver | null,
-      inlineTopObserver: null as ResizeObserver | null,
-      debouncedPhoneHome: null as ((x: number) => void) | null,
-    };
+  pageSetup: {
+    type: Object as PropType<PageSetup>,
+    required: true,
   },
+  fonts: {
+    type: Array as PropType<string[]>,
+    required: true,
+  },
+  editMode: {
+    type: Boolean,
+    default: true,
+  },
+  selected: {
+    type: Boolean,
+    default: false,
+  },
+  metadata: {
+    type: Object as PropType<TokenMetadata>,
+    default: undefined,
+  },
+  recalc: {
+    type: Boolean,
+    default: false,
+  },
+});
 
-  computed: {
-    editorConfig(): EditorConfig {
-      const fontSizeOptions: FontSizeOption[] = [];
+const ckeditorEditor = InlineEditor;
 
-      for (let i = 8; i <= 72; i++) {
-        fontSizeOptions.push({
-          title: `${i}`,
-          model: `${i}pt`,
-        });
-      }
+const container = useTemplateRef<HTMLElement>('container');
+const editorRef = useTemplateRef<ComponentExposed<typeof Ckeditor>>('editor');
+const editorBottom =
+  useTemplateRef<ComponentExposed<typeof Ckeditor>>('editorBottom');
+const editorLeft =
+  useTemplateRef<ComponentExposed<typeof Ckeditor>>('editorLeft');
+const editorCenter =
+  useTemplateRef<ComponentExposed<typeof Ckeditor>>('editorCenter');
+const editorRight =
+  useTemplateRef<ComponentExposed<typeof Ckeditor>>('editorRight');
 
-      // Add a fall back font to each font so that neumes "just work"
-      const fonts = this.fonts.map(
-        (x) => x + ',' + this.pageSetup.neumeDefaultFontFamily,
+const focusOnReady = ref(false);
+const unmounting = ref(false);
+const heightBottom = ref(0);
+const heightTop = ref(0);
+const debouncedPhoneHome = debounce(100, phoneHome);
+const { disconnect: disconnectResizeObserver, observe: observeResize } =
+  useResizeObserver();
+const { disconnect: disconnectInlineTopObserver, observe: observeInlineTop } =
+  useResizeObserver();
+const {
+  disconnect: disconnectInlineBottomObserver,
+  observe: observeInlineBottom,
+} = useResizeObserver();
+
+const htmlElement = computed(() => container.value!);
+
+const editorConfig = computed((): EditorConfig => {
+  const fontSizeOptions: FontSizeOption[] = [];
+
+  for (let i = 8; i <= 72; i++) {
+    fontSizeOptions.push({
+      title: `${i}`,
+      model: `${i}pt`,
+    });
+  }
+
+  // Add a fall back font to each font so that neumes "just work"
+  const fonts = props.fonts.map(
+    (x) => x + ',' + props.pageSetup.neumeDefaultFontFamily,
+  );
+
+  return {
+    fontFamily: {
+      options: [
+        'default',
+        'Source Serif' + ',' + props.pageSetup.neumeDefaultFontFamily,
+        'GFS Didot' + ',' + props.pageSetup.neumeDefaultFontFamily,
+        'Noto Naskh Arabic' + ',' + props.pageSetup.neumeDefaultFontFamily,
+        'Old Standard' + ',' + props.pageSetup.neumeDefaultFontFamily,
+        'Neanes',
+        'NeanesStathisSeries',
+        ...fonts,
+      ],
+    },
+    fontSize: {
+      supportAllValues: true,
+      options: ['default', ...fontSizeOptions],
+    },
+    language: {
+      content: props.element.rtl ? 'ar' : 'en',
+    },
+    licenseKey: 'GPL',
+    insertNeume: {
+      neumeDefaultFontFamily: props.pageSetup.neumeDefaultFontFamily,
+      defaultFontSize: props.element.inline
+        ? props.pageSetup.lyricsDefaultFontSize
+        : props.pageSetup.textBoxDefaultFontSize,
+      defaultFontFamily: props.element.inline
+        ? props.pageSetup.lyricsDefaultFontFamily
+        : props.pageSetup.textBoxDefaultFontFamily,
+      fthoraDefaultColor: props.pageSetup.fthoraDefaultColor,
+    },
+  };
+});
+
+const content = computed(() => {
+  return props.editMode || props.metadata == null
+    ? props.element.content
+    : replaceTokens(
+        props.element.content,
+        props.metadata,
+        TextBoxAlignment.Center,
       );
+});
 
-      return {
-        fontFamily: {
-          options: [
-            'default',
-            'Source Serif' + ',' + this.pageSetup.neumeDefaultFontFamily,
-            'GFS Didot' + ',' + this.pageSetup.neumeDefaultFontFamily,
-            'Noto Naskh Arabic' + ',' + this.pageSetup.neumeDefaultFontFamily,
-            'Old Standard' + ',' + this.pageSetup.neumeDefaultFontFamily,
-            'Neanes',
-            'NeanesStathisSeries',
-            ...fonts,
-          ],
-        },
-        fontSize: {
-          supportAllValues: true,
-          options: ['default', ...fontSizeOptions],
-        },
-        language: {
-          content: this.element.rtl ? 'ar' : 'en',
-        },
-        licenseKey: 'GPL',
-        insertNeume: {
-          neumeDefaultFontFamily: this.pageSetup.neumeDefaultFontFamily,
-          defaultFontSize: this.element.inline
-            ? this.pageSetup.lyricsDefaultFontSize
-            : this.pageSetup.textBoxDefaultFontSize,
-          defaultFontFamily: this.element.inline
-            ? this.pageSetup.lyricsDefaultFontFamily
-            : this.pageSetup.textBoxDefaultFontFamily,
-          fthoraDefaultColor: this.pageSetup.fthoraDefaultColor,
-        },
-      };
-    },
+const contentBottom = computed(() => {
+  return props.editMode || props.metadata == null
+    ? props.element.contentBottom
+    : replaceTokens(
+        props.element.contentBottom,
+        props.metadata,
+        TextBoxAlignment.Center,
+      );
+});
 
-    content() {
-      return this.editMode || this.metadata == null
-        ? this.element.content
-        : replaceTokens(
-            this.element.content,
-            this.metadata,
-            TextBoxAlignment.Center,
-          );
-    },
+const contentLeft = computed(() => {
+  return props.editMode || props.metadata == null
+    ? props.element.contentLeft
+    : replaceTokens(
+        props.element.contentLeft,
+        props.metadata,
+        TextBoxAlignment.Left,
+      );
+});
 
-    contentBottom() {
-      return this.editMode || this.metadata == null
-        ? this.element.contentBottom
-        : replaceTokens(
-            this.element.contentBottom,
-            this.metadata,
-            TextBoxAlignment.Center,
-          );
-    },
+const contentCenter = computed(() => {
+  return props.editMode || props.metadata == null
+    ? props.element.contentCenter
+    : replaceTokens(
+        props.element.contentCenter,
+        props.metadata,
+        TextBoxAlignment.Center,
+      );
+});
 
-    contentLeft() {
-      return this.editMode || this.metadata == null
-        ? this.element.contentLeft
-        : replaceTokens(
-            this.element.contentLeft,
-            this.metadata,
-            TextBoxAlignment.Left,
-          );
-    },
+const contentRight = computed(() => {
+  return props.editMode || props.metadata == null
+    ? props.element.contentRight
+    : replaceTokens(
+        props.element.contentRight,
+        props.metadata,
+        TextBoxAlignment.Right,
+      );
+});
 
-    contentCenter() {
-      return this.editMode || this.metadata == null
-        ? this.element.contentCenter
-        : replaceTokens(
-            this.element.contentCenter,
-            this.metadata,
-            TextBoxAlignment.Center,
-          );
-    },
+const containerStyle = computed(() => {
+  const style: StyleValue = {
+    width: withZoom(props.element.width),
+    height: withZoom(props.element.height),
+    '--ck-content-font-family': getFontFamilyWithFallback(
+      props.pageSetup.textBoxDefaultFontFamily,
+      props.pageSetup.neumeDefaultFontFamily,
+    ),
+    '--ck-content-font-size': props.element.inline
+      ? `${props.pageSetup.lyricsDefaultFontSize}px`
+      : `${props.pageSetup.textBoxDefaultFontSize}px`, // no zoom because we will apply zooming on the whole editor
+    '--ck-content-line-height': 'normal',
+  };
 
-    contentRight() {
-      return this.editMode || this.metadata == null
-        ? this.element.contentRight
-        : replaceTokens(
-            this.element.contentRight,
-            this.metadata,
-            TextBoxAlignment.Right,
-          );
-    },
+  return style;
+});
 
-    containerStyle() {
-      const style: StyleValue = {
-        width: withZoom(this.element.width),
-        height: withZoom(this.element.height),
-        '--ck-content-font-family': getFontFamilyWithFallback(
-          this.pageSetup.textBoxDefaultFontFamily,
-          this.pageSetup.neumeDefaultFontFamily,
-        ),
-        '--ck-content-font-size': this.element.inline
-          ? `${this.pageSetup.lyricsDefaultFontSize}px`
-          : `${this.pageSetup.textBoxDefaultFontSize}px`, // no zoom because we will apply zooming on the whole editor
-        '--ck-content-line-height': 'normal',
-      };
+const textBoxStyle = computed(() => {
+  const style: StyleValue = {
+    width: `${props.element.width}px`, // no zoom because we scale with the transform
+    maxHeight: withZoom(
+      props.pageSetup.pageHeight -
+        props.element.y -
+        props.pageSetup.bottomMargin,
+    ),
+  };
 
-      return style;
-    },
+  return style;
+});
 
-    textBoxStyle() {
-      const style: StyleValue = {
-        width: `${this.element.width}px`, // no zoom because we scale with the transform
-        maxHeight: withZoom(
-          this.pageSetup.pageHeight -
-            this.element.y -
-            this.pageSetup.bottomMargin,
-        ),
-      };
+const textBoxTopInnerContainerStyle = computed(() => {
+  // The top text box is aligned such that the middle of the oligon sits in middle of the font.
+  const style: any = {
+    top: withZoom(
+      props.element.defaultNeumeFontAscent -
+        props.pageSetup.neumeDefaultFontSize * props.element.oligonMidpoint -
+        props.element.defaultLyricsFontHeight / 2 -
+        (heightTop.value - props.element.defaultLyricsFontHeight) +
+        props.element.offsetYTop,
+    ),
+    lineHeight: props.element.defaultLyricsFontHeight + 'px',
+  };
 
-      return style;
-    },
+  return style;
+});
 
-    textBoxTopInnerContainerStyle() {
-      // The top text box is aligned such that the middle of the oligon sits in middle of the font.
-      const style: any = {
-        top: withZoom(
-          this.element.defaultNeumeFontAscent -
-            this.pageSetup.neumeDefaultFontSize * this.element.oligonMidpoint -
-            this.element.defaultLyricsFontHeight / 2 -
-            (this.heightTop - this.element.defaultLyricsFontHeight) +
-            this.element.offsetYTop,
-        ),
-        lineHeight: this.element.defaultLyricsFontHeight + 'px',
-      };
+const textBoxStyleTop = computed(() => {
+  const style: any = {
+    width: `${props.element.width}px`, // no zoom because we scale with the transform
+  };
 
-      return style;
-    },
+  return style;
+});
 
-    textBoxStyleTop() {
-      const style: any = {
-        width: `${this.element.width}px`, // no zoom because we scale with the transform
-      };
+const textBoxStyleBottom = computed(() => {
+  const style: any = {
+    width: `${props.element.width}px`, // no zoom because we scale with the transform
+  };
 
-      return style;
-    },
+  return style;
+});
 
-    textBoxStyleBottom() {
-      const style: any = {
-        width: `${this.element.width}px`, // no zoom because we scale with the transform
-      };
+const textBoxTopContainerStyle = computed(() => {
+  const style: any = {
+    height: withZoom(props.element.height),
+  };
 
-      return style;
-    },
+  return style;
+});
 
-    textBoxTopContainerStyle() {
-      const style: any = {
-        height: withZoom(this.element.height),
-      };
+const textBoxBottomContainerStyle = computed(() => {
+  // The bottom text box is aligned so that the baseline of the font is aligned with the lyrics baseline.
+  const style: any = {
+    top: withZoom(
+      props.pageSetup.lyricsVerticalOffset -
+        (heightBottom.value - props.element.defaultLyricsFontHeight) +
+        props.element.offsetYBottom,
+    ),
+    lineHeight: props.element.defaultLyricsFontHeight + 'px',
+  };
 
-      return style;
-    },
+  return style;
+});
 
-    textBoxBottomContainerStyle() {
-      // The bottom text box is aligned so that the baseline of the font is aligned with the lyrics baseline.
-      const style: any = {
-        top: withZoom(
-          this.pageSetup.lyricsVerticalOffset -
-            (this.heightBottom - this.element.defaultLyricsFontHeight) +
-            this.element.offsetYBottom,
-        ),
-        lineHeight: this.element.defaultLyricsFontHeight + 'px',
-      };
+const multipanelContainerStyle = computed(() => {
+  const style: StyleValue = {
+    width: `${props.element.width}px`, // no zoom because we scale with the transform
+  };
 
-      return style;
-    },
+  return style;
+});
 
-    multipanelContainerStyle() {
-      const style: StyleValue = {
-        width: `${this.element.width}px`, // no zoom because we scale with the transform
-      };
-
-      return style;
-    },
+watch(
+  () => props.element.centerOnPage,
+  () => {
+    setPadding(getEditorInstance());
+    setPadding(getEditorInstanceBottom());
   },
+);
 
-  watch: {
-    'element.centerOnPage'() {
-      this.setPadding(this.getEditorInstance());
-      this.setPadding(this.getEditorInstanceBottom());
-    },
-  },
+onBeforeUnmount(() => {
+  unmounting.value = true;
+  update();
+  disconnectInlineTopObserver();
+  disconnectInlineBottomObserver();
+  disconnectResizeObserver();
+});
 
-  created() {
-    this.debouncedPhoneHome = debounce(100, this.phoneHome);
-  },
+function getEditorInstance() {
+  return editorRef.value?.instance;
+}
 
-  beforeUnmount() {
-    this.unmounting = true;
-    this.update();
+function getEditorInstanceBottom() {
+  return editorBottom.value?.instance;
+}
 
-    if (this.inlineTopObserver != null) {
-      this.inlineTopObserver.disconnect();
+function getEditorInstanceLeft() {
+  return editorLeft.value?.instance;
+}
+
+function getEditorInstanceCenter() {
+  return editorCenter.value?.instance;
+}
+
+function getEditorInstanceRight() {
+  return editorRight.value?.instance;
+}
+
+function phoneHome(height: number) {
+  emit('update:height', height);
+}
+
+function onEditorReady(editor: InlineEditor) {
+  if (props.recalc) {
+    const height = getHeight();
+
+    if (height != null && Math.abs(props.element.height - height) > 0.001) {
+      debouncedPhoneHome(height);
     }
+  }
 
-    if (this.inlineBottomObserver != null) {
-      this.inlineBottomObserver.disconnect();
-    }
+  if (focusOnReady.value) {
+    editor.editing.view.focus();
+    focusOnReady.value = false;
+  }
 
-    if (this.resizeObserver != null) {
-      this.resizeObserver.disconnect();
-    }
-  },
+  const element = editor.sourceElement;
 
-  methods: {
-    getEditorInstance() {
-      return (this.$refs.editor as ComponentExposed<typeof Ckeditor>)?.instance;
-    },
-
-    getEditorInstanceBottom() {
-      return (this.$refs.editorBottom as ComponentExposed<typeof Ckeditor>)
-        ?.instance;
-    },
-
-    getEditorInstanceLeft() {
-      return (this.$refs.editorLeft as ComponentExposed<typeof Ckeditor>)
-        ?.instance;
-    },
-
-    getEditorInstanceCenter() {
-      return (this.$refs.editorCenter as ComponentExposed<typeof Ckeditor>)
-        ?.instance;
-    },
-
-    getEditorInstanceRight() {
-      return (this.$refs.editorRight as ComponentExposed<typeof Ckeditor>)
-        ?.instance;
-    },
-
-    phoneHome(height: number) {
-      this.$emit('update:height', height);
-    },
-
-    onEditorReady(editor: InlineEditor) {
-      if (this.recalc) {
-        const height = this.getHeight();
-
-        if (height != null && Math.abs(this.element.height - height) > 0.001) {
-          this.debouncedPhoneHome!(height);
-        }
-      }
-
-      if (this.focusOnReady) {
-        editor.editing.view.focus();
-        this.focusOnReady = false;
-      }
-
-      const element = editor.sourceElement;
-
-      if (this.resizeObserver != null) {
-        this.resizeObserver.disconnect();
-      }
-
-      this.resizeObserver = new ResizeObserver(
-        debounce(100, () => {
-          const resizedHeight = this.getHeight();
-
-          if (
-            resizedHeight != null &&
-            Math.abs(this.element.height - resizedHeight) > 0.001
-          ) {
-            if (this.recalc) {
-              this.debouncedPhoneHome!(resizedHeight);
-            } else {
-              this.$emit('update', { height: resizedHeight });
-            }
-          }
-        }),
-      );
-
-      this.resizeObserver.observe(element!);
-    },
-
-    onEditorReadyInline(editor: InlineEditor) {
-      this.heightTop = this.getHeightTop() ?? 0;
-
-      const element = editor.sourceElement;
-
-      if (this.inlineTopObserver != null) {
-        this.inlineTopObserver.disconnect();
-      }
-
-      this.inlineTopObserver = new ResizeObserver(
-        throttle(100, () => {
-          this.heightTop = this.getHeightTop() ?? 0;
-        }),
-      );
-
-      this.inlineTopObserver.observe(element!);
-
-      this.setPadding(editor);
-    },
-
-    onEditorReadyInlineBottom(editor: InlineEditor) {
-      if (this.focusOnReady) {
-        editor.editing.view.focus();
-        this.focusOnReady = false;
-      }
-
-      this.heightBottom = this.getHeightBottom() ?? 0;
-
-      const element = editor.sourceElement;
-
-      if (this.inlineBottomObserver != null) {
-        this.inlineBottomObserver.disconnect();
-      }
-
-      this.inlineBottomObserver = new ResizeObserver(
-        throttle(100, () => {
-          this.heightBottom = this.getHeightBottom() ?? 0;
-        }),
-      );
-
-      this.inlineBottomObserver.observe(element!);
-
-      this.setPadding(editor);
-    },
-
-    onBlur() {
-      if (!this.unmounting) {
-        this.update();
-      }
-    },
-
-    update() {
-      const updates: Partial<RichTextBoxElement> = {};
-
-      let updated = false;
-
-      const height = this.getHeight();
-
-      const content = this.getEditorInstance()?.getData() ?? '';
-      const contentBottom = this.getEditorInstanceBottom()?.getData() ?? '';
-      const contentLeft = this.getEditorInstanceLeft()?.getData() ?? '';
-      const contentCenter = this.getEditorInstanceCenter()?.getData() ?? '';
-      const contentRight = this.getEditorInstanceRight()?.getData() ?? '';
-
-      // This should never happen, but if it does, we don't want
-      // to save garbage values.
-      if (height == null) {
-        return;
-      }
-
-      if (this.editMode && this.element.content !== content) {
-        updates.content = content;
-        updated = true;
-      }
-
-      if (this.editMode && this.element.contentBottom !== contentBottom) {
-        updates.contentBottom = contentBottom;
-        updated = true;
-      }
-
-      if (this.editMode && this.element.contentLeft !== contentLeft) {
-        updates.contentLeft = contentLeft;
-        updated = true;
-      }
-
-      if (this.editMode && this.element.contentCenter !== contentCenter) {
-        updates.contentCenter = contentCenter;
-        updated = true;
-      }
-
-      if (this.editMode && this.element.contentRight !== contentRight) {
-        updates.contentRight = contentRight;
-        updated = true;
-      }
+  observeResize(
+    element!,
+    debounce(100, () => {
+      const resizedHeight = getHeight();
 
       if (
-        !this.element.inline &&
-        Math.abs(this.element.height - height) > 0.001
+        resizedHeight != null &&
+        Math.abs(props.element.height - resizedHeight) > 0.001
       ) {
-        updates.height = height;
-        updated = true;
-      }
-
-      if (this.element.inline) {
-        this.heightBottom = this.getHeightBottom() ?? 0;
-        this.heightTop = this.getHeightTop() ?? 0;
-      }
-
-      if (updated) {
-        this.$emit('update', updates);
-      }
-    },
-
-    getHeight() {
-      const element = (this.$refs.container as HTMLElement).querySelector(
-        '.ck-content',
-      );
-
-      if (element == null) {
-        return null;
-      }
-
-      const zoom = Number(getComputedStyle(element).getPropertyValue('--zoom'));
-
-      return element.getBoundingClientRect().height / zoom;
-    },
-
-    getHeightBottom() {
-      const element = (this.$refs.container as HTMLElement).querySelector(
-        '.ck-content.inline-bottom',
-      );
-
-      if (element == null) {
-        return null;
-      }
-
-      const zoom = Number(getComputedStyle(element).getPropertyValue('--zoom'));
-
-      return element.getBoundingClientRect().height / zoom;
-    },
-
-    getHeightTop() {
-      const element = (this.$refs.container as HTMLElement).querySelector(
-        '.ck-content.inline-top',
-      );
-
-      if (element == null) {
-        return null;
-      }
-
-      const zoom = Number(getComputedStyle(element).getPropertyValue('--zoom'));
-
-      return element.getBoundingClientRect().height / zoom;
-    },
-
-    setPadding(editor: Editor | undefined) {
-      if (editor == null) {
-        return;
-      }
-
-      editor.editing.view.change((writer) => {
-        const editable = editor.editing.view.document.getRoot();
-
-        if (this.element.centerOnPage) {
-          writer.setStyle(
-            'padding-right',
-            `${this.pageSetup.innerPageWidth - this.element.width}px`,
-            editable!,
-          );
+        if (props.recalc) {
+          debouncedPhoneHome(resizedHeight);
         } else {
-          writer.removeStyle('padding-right', editable!);
+          emit('update', { height: resizedHeight });
         }
-      });
-    },
+      }
+    }),
+  );
+}
 
-    focus() {
-      this.focusOnReady = true;
-    },
-  },
+function onEditorReadyInline(editor: InlineEditor) {
+  heightTop.value = getHeightTop() ?? 0;
+
+  const element = editor.sourceElement;
+
+  observeInlineTop(
+    element!,
+    throttle(100, () => {
+      heightTop.value = getHeightTop() ?? 0;
+    }),
+  );
+
+  setPadding(editor);
+}
+
+function onEditorReadyInlineBottom(editor: InlineEditor) {
+  if (focusOnReady.value) {
+    editor.editing.view.focus();
+    focusOnReady.value = false;
+  }
+
+  heightBottom.value = getHeightBottom() ?? 0;
+
+  const element = editor.sourceElement;
+
+  observeInlineBottom(
+    element!,
+    throttle(100, () => {
+      heightBottom.value = getHeightBottom() ?? 0;
+    }),
+  );
+
+  setPadding(editor);
+}
+
+function onBlur() {
+  if (!unmounting.value) {
+    update();
+  }
+}
+
+function update() {
+  const updates: Partial<RichTextBoxElement> = {};
+
+  let updated = false;
+
+  const height = getHeight();
+
+  const currentContent = getEditorInstance()?.getData() ?? '';
+  const currentContentBottom = getEditorInstanceBottom()?.getData() ?? '';
+  const currentContentLeft = getEditorInstanceLeft()?.getData() ?? '';
+  const currentContentCenter = getEditorInstanceCenter()?.getData() ?? '';
+  const currentContentRight = getEditorInstanceRight()?.getData() ?? '';
+
+  // This should never happen, but if it does, we don't want
+  // to save garbage values.
+  if (height == null) {
+    return;
+  }
+
+  if (props.editMode && props.element.content !== currentContent) {
+    updates.content = currentContent;
+    updated = true;
+  }
+
+  if (props.editMode && props.element.contentBottom !== currentContentBottom) {
+    updates.contentBottom = currentContentBottom;
+    updated = true;
+  }
+
+  if (props.editMode && props.element.contentLeft !== currentContentLeft) {
+    updates.contentLeft = currentContentLeft;
+    updated = true;
+  }
+
+  if (props.editMode && props.element.contentCenter !== currentContentCenter) {
+    updates.contentCenter = currentContentCenter;
+    updated = true;
+  }
+
+  if (props.editMode && props.element.contentRight !== currentContentRight) {
+    updates.contentRight = currentContentRight;
+    updated = true;
+  }
+
+  if (
+    !props.element.inline &&
+    Math.abs(props.element.height - height) > 0.001
+  ) {
+    updates.height = height;
+    updated = true;
+  }
+
+  if (props.element.inline) {
+    heightBottom.value = getHeightBottom() ?? 0;
+    heightTop.value = getHeightTop() ?? 0;
+  }
+
+  if (updated) {
+    emit('update', updates);
+  }
+}
+
+function getHeight() {
+  const element = container.value?.querySelector('.ck-content');
+
+  if (element == null) {
+    return null;
+  }
+
+  const zoom = Number(getComputedStyle(element).getPropertyValue('--zoom'));
+
+  return element.getBoundingClientRect().height / zoom;
+}
+
+function getHeightBottom() {
+  const element = container.value?.querySelector('.ck-content.inline-bottom');
+
+  if (element == null) {
+    return null;
+  }
+
+  const zoom = Number(getComputedStyle(element).getPropertyValue('--zoom'));
+
+  return element.getBoundingClientRect().height / zoom;
+}
+
+function getHeightTop() {
+  const element = container.value?.querySelector('.ck-content.inline-top');
+
+  if (element == null) {
+    return null;
+  }
+
+  const zoom = Number(getComputedStyle(element).getPropertyValue('--zoom'));
+
+  return element.getBoundingClientRect().height / zoom;
+}
+
+function setPadding(editor: Editor | undefined) {
+  if (editor == null) {
+    return;
+  }
+
+  editor.editing.view.change((writer) => {
+    const editable = editor.editing.view.document.getRoot();
+
+    if (props.element.centerOnPage) {
+      writer.setStyle(
+        'padding-right',
+        `${props.pageSetup.innerPageWidth - props.element.width}px`,
+        editable!,
+      );
+    } else {
+      writer.removeStyle('padding-right', editable!);
+    }
+  });
+}
+
+function focus() {
+  focusOnReady.value = true;
+}
+
+defineExpose({
+  focus,
+  htmlElement,
 });
 </script>
 

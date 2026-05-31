@@ -233,13 +233,14 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, PropType } from 'vue';
+<script setup lang="ts">
+import { useTranslation } from 'i18next-vue';
+import { computed, getCurrentInstance, PropType, ref } from 'vue';
 
 import InputUnit from '@/components/InputUnit.vue';
 import { LineBreakType } from '@/models/Element';
 import { EntryMode } from '@/models/EntryMode';
-import { Note, RootSign, TempoSign } from '@/models/Neumes';
+import { TempoSign } from '@/models/Neumes';
 import { AudioState } from '@/services/audio/AudioService';
 import { PlaybackOptions } from '@/services/audio/PlaybackService';
 import { NeumeKeyboard } from '@/services/NeumeKeyboard';
@@ -281,146 +282,124 @@ const tempoOptions: ButtonWithMenuOption[] = [
   },
 ];
 
-export default defineComponent({
-  components: { ButtonWithMenu, InputUnit },
-  props: {
-    entryMode: {
-      type: String as PropType<EntryMode>,
-      required: true,
-    },
-    audioState: {
-      type: String as PropType<AudioState>,
-      required: true,
-    },
-    audioOptions: {
-      type: Object as PropType<PlaybackOptions>,
-      required: true,
-    },
-    neumeKeyboard: {
-      type: Object as PropType<NeumeKeyboard>,
-      required: true,
-    },
-    zoom: {
-      type: Number,
-      required: true,
-    },
-    zoomToFit: {
-      type: Boolean,
-      required: true,
-    },
-    currentPageNumber: {
-      type: Number,
-      required: true,
-    },
-    pageCount: {
-      type: Number,
-      required: true,
-    },
-    playbackTime: {
-      type: Number,
-      required: true,
-    },
-    playbackBpm: {
-      type: Number,
-      required: true,
-    },
+const props = defineProps({
+  entryMode: {
+    type: String as PropType<EntryMode>,
+    required: true,
   },
-  emits: [
-    'add-auto-martyria',
-    'add-drop-cap',
-    'add-image',
-    'add-mode-key',
-    'add-tempo',
-    'add-text-box',
-    'add-text-box-rich',
-    'delete-selected-element',
-    'open-playback-settings',
-    'play-audio',
-    'toggle-line-break',
-    'toggle-page-break',
-    'update:audioOptionsSpeed',
-    'update:entryMode',
-    'update:zoom',
-    'update:zoomToFit',
-  ],
-
-  data() {
-    return {
-      Note,
-      RootSign,
-      TempoSign,
-      EntryMode,
-      AudioState,
-      LineBreakType,
-
-      showZoomMenu: false,
-
-      zoomOptions: ['50', '75', '90', '100', '125', '150', '200', '500'],
-
-      tempoOptions,
-    };
+  audioState: {
+    type: String as PropType<AudioState>,
+    required: true,
   },
-
-  computed: {
-    zoomDisplay() {
-      return this.zoomToFit ? 'Fit' : (this.zoom * 100).toFixed(0) + '%';
-    },
-
-    speedDisplay() {
-      return (this.audioOptions.speed * 100).toFixed(0) + '%';
-    },
-
-    playbackTimeDisplay() {
-      // Round to the nearest tenth to eliminate floating point errors
-      // E.g. 4.999999... should give 0:00:05:0, instead of 0:00:04:0
-      const roundedTime = Math.round(this.playbackTime * 10) / 10;
-
-      const hours = Math.floor(roundedTime / 3600);
-      const minutes = Math.floor((roundedTime % 3600) / 60);
-      const seconds = Math.floor(roundedTime % 60);
-      const tenths = roundedTime.toFixed(1).split('.')[1];
-
-      return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}:${tenths}`;
-    },
-
-    playbackBpmDisplay() {
-      return this.playbackBpm.toFixed(0);
-    },
-
-    martyriaTooltip() {
-      return `${this.$t(($) => $.toolbar.main.martyria, { ns: 'toolbar' })} (${this.neumeKeyboard.getMartyriaKeyTooltip()})`;
-    },
-
-    tempoTooltip() {
-      return `${this.$t(($) => $.toolbar.common.tempoSign, { ns: 'toolbar' })} (${this.neumeKeyboard.generateTooltip(
-        this.neumeKeyboard.findMappingForNeume(TempoSign.VerySlow)!,
-      )})`;
-    },
+  audioOptions: {
+    type: Object as PropType<PlaybackOptions>,
+    required: true,
   },
-
-  methods: {
-    updateZoom(value: string) {
-      this.showZoomMenu = false;
-
-      if (value === 'Fit') {
-        this.$emit('update:zoomToFit', true);
-        return;
-      }
-
-      let valueAsNumber = parseInt(value);
-
-      if (Number.isNaN(valueAsNumber)) {
-        valueAsNumber = 100;
-      }
-
-      this.$emit('update:zoom', valueAsNumber / 100);
-
-      this.showZoomMenu = false;
-
-      this.$forceUpdate();
-    },
+  neumeKeyboard: {
+    type: Object as PropType<NeumeKeyboard>,
+    required: true,
+  },
+  zoom: {
+    type: Number,
+    required: true,
+  },
+  zoomToFit: {
+    type: Boolean,
+    required: true,
+  },
+  currentPageNumber: {
+    type: Number,
+    required: true,
+  },
+  pageCount: {
+    type: Number,
+    required: true,
+  },
+  playbackTime: {
+    type: Number,
+    required: true,
+  },
+  playbackBpm: {
+    type: Number,
+    required: true,
   },
 });
+
+const emit = defineEmits([
+  'add-auto-martyria',
+  'add-drop-cap',
+  'add-image',
+  'add-mode-key',
+  'add-tempo',
+  'add-text-box',
+  'add-text-box-rich',
+  'delete-selected-element',
+  'open-playback-settings',
+  'play-audio',
+  'toggle-line-break',
+  'toggle-page-break',
+  'update:audioOptionsSpeed',
+  'update:entryMode',
+  'update:zoom',
+  'update:zoomToFit',
+]);
+
+const { t } = useTranslation();
+const instance = getCurrentInstance();
+const showZoomMenu = ref(false);
+const zoomOptions = ['50', '75', '90', '100', '125', '150', '200', '500'];
+
+const zoomDisplay = computed(() =>
+  props.zoomToFit ? 'Fit' : (props.zoom * 100).toFixed(0) + '%',
+);
+
+const playbackTimeDisplay = computed(() => {
+  // Round to the nearest tenth to eliminate floating point errors
+  // E.g. 4.999999... should give 0:00:05:0, instead of 0:00:04:0
+  const roundedTime = Math.round(props.playbackTime * 10) / 10;
+
+  const hours = Math.floor(roundedTime / 3600);
+  const minutes = Math.floor((roundedTime % 3600) / 60);
+  const seconds = Math.floor(roundedTime % 60);
+  const tenths = roundedTime.toFixed(1).split('.')[1];
+
+  return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}:${tenths}`;
+});
+
+const playbackBpmDisplay = computed(() => props.playbackBpm.toFixed(0));
+
+const martyriaTooltip = computed(
+  () =>
+    `${t(($) => $.toolbar.main.martyria, { ns: 'toolbar' })} (${props.neumeKeyboard.getMartyriaKeyTooltip()})`,
+);
+
+const tempoTooltip = computed(
+  () =>
+    `${t(($) => $.toolbar.common.tempoSign, { ns: 'toolbar' })} (${props.neumeKeyboard.generateTooltip(
+      props.neumeKeyboard.findMappingForNeume(TempoSign.VerySlow)!,
+    )})`,
+);
+
+function updateZoom(value: string) {
+  showZoomMenu.value = false;
+
+  if (value === 'Fit') {
+    emit('update:zoomToFit', true);
+    return;
+  }
+
+  let valueAsNumber = parseInt(value);
+
+  if (Number.isNaN(valueAsNumber)) {
+    valueAsNumber = 100;
+  }
+
+  emit('update:zoom', valueAsNumber / 100);
+
+  showZoomMenu.value = false;
+
+  instance?.proxy?.$forceUpdate();
+}
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

@@ -98,10 +98,10 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, PropType, StyleValue } from 'vue';
+<script setup lang="ts">
+import { computed, PropType, StyleValue } from 'vue';
 
-import NeumeVue from '@/components/NeumeGlyph.vue';
+import Neume from '@/components/NeumeGlyph.vue';
 import { NoteElement } from '@/models/Element';
 import {
   QuantitativeNeume,
@@ -111,472 +111,316 @@ import {
 import { PageSetup } from '@/models/PageSetup';
 import { withZoom } from '@/utils/withZoom';
 
-export default defineComponent({
-  components: { Neume: NeumeVue },
-  props: {
-    note: {
-      type: Object as PropType<NoteElement>,
-      required: true,
-    },
-    pageSetup: {
-      type: Object as PropType<PageSetup>,
-      required: true,
-    },
-    alternateLine: {
-      type: Boolean,
-      default: false,
-    },
+const props = defineProps({
+  note: {
+    type: Object as PropType<NoteElement>,
+    required: true,
   },
-  emits: ['select-single', 'select-range'],
+  pageSetup: {
+    type: Object as PropType<PageSetup>,
+    required: true,
+  },
+  alternateLine: {
+    type: Boolean,
+    default: false,
+  },
+});
 
-  data() {
+defineEmits(['select-single', 'select-range']);
+
+const hasVocalExpressionNeume = computed(
+  () => props.note.vocalExpressionNeume != null,
+);
+const hasTimeNeume = computed(() => props.note.timeNeume != null);
+const hasGorgonNeume = computed(() => props.note.gorgonNeume != null);
+const hasSecondaryGorgonNeume = computed(
+  () => props.note.secondaryGorgonNeume != null,
+);
+const hasFthora = computed(() => props.note.fthora != null);
+const hasSecondaryFthora = computed(() => props.note.secondaryFthora != null);
+const hasTertiaryFthora = computed(() => props.note.tertiaryFthora != null);
+const hasAccidental = computed(() => props.note.accidental != null);
+const hasSecondaryAccidental = computed(
+  () => props.note.secondaryAccidental != null,
+);
+const hasTertiaryAccidental = computed(
+  () => props.note.tertiaryAccidental != null,
+);
+const hasMeasureBarLeft = computed(
+  () =>
+    props.note.measureBarLeft != null ||
+    props.note.computedMeasureBarLeft != null,
+);
+const hasMeasureBarRight = computed(
+  () =>
+    props.note.measureBarRight != null ||
+    props.note.computedMeasureBarRight != null,
+);
+const getMeasureBarLeft = computed(() =>
+  props.note.measureBarLeft
+    ? props.note.measureBarLeft
+    : props.note.computedMeasureBarLeft,
+);
+const getMeasureBarRight = computed(() =>
+  props.note.measureBarRight
+    ? props.note.measureBarRight
+    : props.note.computedMeasureBarRight,
+);
+const isMeasureBarAbove = computed(() =>
+  (props.note.measureBarLeft
+    ? props.note.measureBarLeft
+    : props.note.computedMeasureBarLeft
+  )?.endsWith('Above'),
+);
+const hasMeasureNumber = computed(() => props.note.measureNumber != null);
+const hasIson = computed(() => props.note.ison != null);
+const hasTie = computed(() => props.note.tie != null);
+
+function offsetStyle(
+  left: number | null | undefined,
+  top: number | null | undefined,
+) {
+  return {
+    left: left != null ? `${left}em` : undefined,
+    top: top != null ? `${top}em` : undefined,
+  };
+}
+
+const style = computed(() => {
+  return {
+    fontFamily: props.pageSetup.neumeDefaultFontFamily,
+    fontSize: props.alternateLine
+      ? withZoom(props.pageSetup.alternateLineDefaultFontSize)
+      : withZoom(props.pageSetup.neumeDefaultFontSize),
+    color: props.alternateLine
+      ? props.pageSetup.alternateLineDefaultColor
+      : props.pageSetup.neumeDefaultColor,
+    webkitTextStrokeWidth: withZoom(props.pageSetup.neumeDefaultStrokeWidth),
+  } as StyleValue;
+});
+
+const gorgonStyle = computed(() => {
+  return {
+    color: props.pageSetup.gorgonDefaultColor,
+    webkitTextStrokeWidth: withZoom(props.pageSetup.gorgonDefaultStrokeWidth),
+    ...offsetStyle(
+      props.note.gorgonNeumeOffsetX,
+      props.note.gorgonNeumeOffsetY,
+    ),
+  } as StyleValue;
+});
+
+const secondaryGorgonStyle = computed(() => {
+  return {
+    color: props.pageSetup.gorgonDefaultColor,
+    webkitTextStrokeWidth: withZoom(props.pageSetup.gorgonDefaultStrokeWidth),
+    ...offsetStyle(
+      props.note.secondaryGorgonNeumeOffsetX,
+      props.note.secondaryGorgonNeumeOffsetY,
+    ),
+  } as StyleValue;
+});
+
+const fthoraStyle = computed(() => {
+  return {
+    color: props.pageSetup.fthoraDefaultColor,
+    webkitTextStrokeWidth: withZoom(props.pageSetup.fthoraDefaultStrokeWidth),
+    ...offsetStyle(props.note.fthoraOffsetX, props.note.fthoraOffsetY),
+  } as StyleValue;
+});
+
+const secondaryFthoraStyle = computed(() => {
+  return {
+    color: props.pageSetup.fthoraDefaultColor,
+    webkitTextStrokeWidth: withZoom(props.pageSetup.fthoraDefaultStrokeWidth),
+    ...offsetStyle(
+      props.note.secondaryFthoraOffsetX,
+      props.note.secondaryFthoraOffsetY,
+    ),
+  } as StyleValue;
+});
+
+const tertiaryFthoraStyle = computed(() => {
+  return {
+    color: props.pageSetup.fthoraDefaultColor,
+    webkitTextStrokeWidth: withZoom(props.pageSetup.fthoraDefaultStrokeWidth),
+    ...offsetStyle(
+      props.note.tertiaryFthoraOffsetX,
+      props.note.tertiaryFthoraOffsetY,
+    ),
+  } as StyleValue;
+});
+
+const accidentalStyle = computed(() => {
+  return {
+    color: props.pageSetup.accidentalDefaultColor,
+    webkitTextStrokeWidth: withZoom(
+      props.pageSetup.accidentalDefaultStrokeWidth,
+    ),
+    ...offsetStyle(props.note.accidentalOffsetX, props.note.accidentalOffsetY),
+  } as StyleValue;
+});
+
+const secondaryAccidentalStyle = computed(() => {
+  return {
+    color: props.pageSetup.accidentalDefaultColor,
+    webkitTextStrokeWidth: withZoom(
+      props.pageSetup.accidentalDefaultStrokeWidth,
+    ),
+    ...offsetStyle(
+      props.note.secondaryAccidentalOffsetX,
+      props.note.secondaryAccidentalOffsetY,
+    ),
+  } as StyleValue;
+});
+
+const tertiaryAccidentalStyle = computed(() => {
+  return {
+    color: props.pageSetup.accidentalDefaultColor,
+    webkitTextStrokeWidth: withZoom(
+      props.pageSetup.accidentalDefaultStrokeWidth,
+    ),
+    ...offsetStyle(
+      props.note.tertiaryAccidentalOffsetX,
+      props.note.tertiaryAccidentalOffsetY,
+    ),
+  } as StyleValue;
+});
+
+const measureBarLeftStyle = computed(() => {
+  return {
+    color: props.pageSetup.measureBarDefaultColor,
+    webkitTextStrokeWidth: withZoom(
+      props.pageSetup.measureBarDefaultStrokeWidth,
+    ),
+    ...offsetStyle(
+      props.note.measureBarLeftOffsetX,
+      props.note.measureBarLeftOffsetY,
+    ),
+  } as StyleValue;
+});
+
+const measureBarRightStyle = computed(() => {
+  return {
+    color: props.pageSetup.measureBarDefaultColor,
+    webkitTextStrokeWidth: withZoom(
+      props.pageSetup.measureBarDefaultStrokeWidth,
+    ),
+    ...offsetStyle(
+      props.note.measureBarRightOffsetX,
+      props.note.measureBarRightOffsetY,
+    ),
+  } as StyleValue;
+});
+
+const measureNumberStyle = computed(() => {
+  return {
+    color: props.pageSetup.measureNumberDefaultColor,
+    webkitTextStrokeWidth: withZoom(
+      props.pageSetup.measureNumberDefaultStrokeWidth,
+    ),
+    ...offsetStyle(
+      props.note.measureNumberOffsetX,
+      props.note.measureNumberOffsetY,
+    ),
+  } as StyleValue;
+});
+
+const noteIndicatorStyle = computed(() => {
+  return {
+    color: props.pageSetup.noteIndicatorDefaultColor,
+    webkitTextStrokeWidth: withZoom(
+      props.pageSetup.noteIndicatorDefaultStrokeWidth,
+    ),
+    ...offsetStyle(
+      props.note.noteIndicatorOffsetX,
+      props.note.noteIndicatorOffsetY,
+    ),
+  } as StyleValue;
+});
+
+const isonStyle = computed(() => {
+  return {
+    color: props.pageSetup.isonDefaultColor,
+    webkitTextStrokeWidth: withZoom(props.pageSetup.isonDefaultStrokeWidth),
+    ...offsetStyle(props.note.isonOffsetX, props.note.computedIsonOffsetY),
+  } as StyleValue;
+});
+
+const timeStyle = computed(() => {
+  return offsetStyle(
+    props.note.timeNeumeOffsetX,
+    props.note.timeNeumeOffsetY,
+  ) as StyleValue;
+});
+
+const neumeStyle = computed(() => {
+  if (props.note.quantitativeNeume == QuantitativeNeume.Cross) {
     return {
-      TimeNeume,
-      VocalExpressionNeume,
-    };
-  },
+      color: props.pageSetup.crossDefaultColor,
+      webkitTextStrokeWidth: withZoom(props.pageSetup.crossDefaultStrokeWidth),
+    } as StyleValue;
+  } else if (props.note.quantitativeNeume == QuantitativeNeume.Breath) {
+    return {
+      color: props.pageSetup.breathDefaultColor,
+      webkitTextStrokeWidth: withZoom(props.pageSetup.breathDefaultStrokeWidth),
+    } as StyleValue;
+  }
 
-  computed: {
-    hasVocalExpressionNeume() {
-      return this.note.vocalExpressionNeume != null;
-    },
+  return {};
+});
 
-    hasTimeNeume() {
-      return this.note.timeNeume != null;
-    },
+const koronisStyle = computed(() => {
+  return {
+    color: props.pageSetup.koronisDefaultColor,
+    webkitTextStrokeWidth: withZoom(props.pageSetup.koronisDefaultStrokeWidth),
+    ...offsetStyle(props.note.koronisOffsetX, props.note.koronisOffsetY),
+  } as StyleValue;
+});
 
-    hasGorgonNeume() {
-      return this.note.gorgonNeume != null;
-    },
+const stavrosStyle = computed(() => {
+  return {
+    color: props.pageSetup.crossDefaultColor,
+    webkitTextStrokeWidth: withZoom(props.pageSetup.crossDefaultStrokeWidth),
+    ...offsetStyle(props.note.stavrosOffsetX, props.note.stavrosOffsetY),
+  } as StyleValue;
+});
 
-    hasSecondaryGorgonNeume() {
-      return this.note.secondaryGorgonNeume != null;
-    },
+const vareiaStyle = computed(() => {
+  return offsetStyle(
+    props.note.vareiaOffsetX,
+    props.note.vareiaOffsetY,
+  ) as StyleValue;
+});
 
-    hasFthora() {
-      return this.note.fthora != null;
-    },
+const vocalExpressionStyle = computed(() => {
+  const style = offsetStyle(
+    props.note.vocalExpressionNeumeOffsetX,
+    props.note.vocalExpressionNeumeOffsetY,
+  ) as Partial<CSSStyleDeclaration>;
 
-    hasSecondaryFthora() {
-      return this.note.secondaryFthora != null;
-    },
+  if (
+    props.note.vocalExpressionNeume === VocalExpressionNeume.Heteron ||
+    props.note.vocalExpressionNeume ===
+      VocalExpressionNeume.HeteronConnecting ||
+    props.note.vocalExpressionNeume ===
+      VocalExpressionNeume.HeteronConnectingLong ||
+    props.note.vocalExpressionNeume === VocalExpressionNeume.Endofonon
+  ) {
+    style.color = props.pageSetup.heteronDefaultColor;
+    style.webkitTextStrokeWidth = withZoom(
+      props.pageSetup.heteronDefaultStrokeWidth,
+    );
+  }
 
-    hasTertiaryFthora() {
-      return this.note.tertiaryFthora != null;
-    },
+  return style;
+});
 
-    hasAccidental() {
-      return this.note.accidental != null;
-    },
-
-    hasSecondaryAccidental() {
-      return this.note.secondaryAccidental != null;
-    },
-
-    hasTertiaryAccidental() {
-      return this.note.tertiaryAccidental != null;
-    },
-
-    hasMeasureBarLeft() {
-      return (
-        this.note.measureBarLeft != null ||
-        this.note.computedMeasureBarLeft != null
-      );
-    },
-
-    hasMeasureBarRight() {
-      return (
-        this.note.measureBarRight != null ||
-        this.note.computedMeasureBarRight != null
-      );
-    },
-
-    getMeasureBarLeft() {
-      return this.note.measureBarLeft
-        ? this.note.measureBarLeft
-        : this.note.computedMeasureBarLeft;
-    },
-
-    getMeasureBarRight() {
-      return this.note.measureBarRight
-        ? this.note.measureBarRight
-        : this.note.computedMeasureBarRight;
-    },
-
-    isMeasureBarAbove() {
-      return (
-        this.note.measureBarLeft
-          ? this.note.measureBarLeft
-          : this.note.computedMeasureBarLeft
-      )?.endsWith('Above');
-    },
-
-    hasMeasureNumber() {
-      return this.note.measureNumber != null;
-    },
-
-    hasIson() {
-      return this.note.ison != null;
-    },
-
-    hasTie() {
-      return this.note.tie != null;
-    },
-
-    style() {
-      return {
-        fontFamily: this.pageSetup.neumeDefaultFontFamily,
-        fontSize: this.alternateLine
-          ? withZoom(this.pageSetup.alternateLineDefaultFontSize)
-          : withZoom(this.pageSetup.neumeDefaultFontSize),
-        color: this.alternateLine
-          ? this.pageSetup.alternateLineDefaultColor
-          : this.pageSetup.neumeDefaultColor,
-        webkitTextStrokeWidth: withZoom(this.pageSetup.neumeDefaultStrokeWidth),
-      } as StyleValue;
-    },
-
-    gorgonStyle() {
-      return {
-        color: this.pageSetup.gorgonDefaultColor,
-        webkitTextStrokeWidth: withZoom(
-          this.pageSetup.gorgonDefaultStrokeWidth,
-        ),
-        left:
-          this.note.gorgonNeumeOffsetX != null
-            ? `${this.note.gorgonNeumeOffsetX}em`
-            : undefined,
-        top:
-          this.note.gorgonNeumeOffsetY != null
-            ? `${this.note.gorgonNeumeOffsetY}em`
-            : undefined,
-      } as StyleValue;
-    },
-
-    secondaryGorgonStyle() {
-      return {
-        color: this.pageSetup.gorgonDefaultColor,
-        webkitTextStrokeWidth: withZoom(
-          this.pageSetup.gorgonDefaultStrokeWidth,
-        ),
-        left:
-          this.note.secondaryGorgonNeumeOffsetX != null
-            ? `${this.note.secondaryGorgonNeumeOffsetX}em`
-            : undefined,
-        top:
-          this.note.secondaryGorgonNeumeOffsetY != null
-            ? `${this.note.secondaryGorgonNeumeOffsetY}em`
-            : undefined,
-      } as StyleValue;
-    },
-
-    fthoraStyle() {
-      return {
-        color: this.pageSetup.fthoraDefaultColor,
-        webkitTextStrokeWidth: withZoom(
-          this.pageSetup.fthoraDefaultStrokeWidth,
-        ),
-        left:
-          this.note.fthoraOffsetX != null
-            ? `${this.note.fthoraOffsetX}em`
-            : undefined,
-        top:
-          this.note.fthoraOffsetY != null
-            ? `${this.note.fthoraOffsetY}em`
-            : undefined,
-      } as StyleValue;
-    },
-
-    secondaryFthoraStyle() {
-      return {
-        color: this.pageSetup.fthoraDefaultColor,
-        webkitTextStrokeWidth: withZoom(
-          this.pageSetup.fthoraDefaultStrokeWidth,
-        ),
-        left:
-          this.note.secondaryFthoraOffsetX != null
-            ? `${this.note.secondaryFthoraOffsetX}em`
-            : undefined,
-        top:
-          this.note.secondaryFthoraOffsetY != null
-            ? `${this.note.secondaryFthoraOffsetY}em`
-            : undefined,
-      } as StyleValue;
-    },
-
-    tertiaryFthoraStyle() {
-      return {
-        color: this.pageSetup.fthoraDefaultColor,
-        webkitTextStrokeWidth: withZoom(
-          this.pageSetup.fthoraDefaultStrokeWidth,
-        ),
-        left:
-          this.note.tertiaryFthoraOffsetX != null
-            ? `${this.note.tertiaryFthoraOffsetX}em`
-            : undefined,
-        top:
-          this.note.tertiaryFthoraOffsetY != null
-            ? `${this.note.tertiaryFthoraOffsetY}em`
-            : undefined,
-      } as StyleValue;
-    },
-
-    accidentalStyle() {
-      return {
-        color: this.pageSetup.accidentalDefaultColor,
-        webkitTextStrokeWidth: withZoom(
-          this.pageSetup.accidentalDefaultStrokeWidth,
-        ),
-        left:
-          this.note.accidentalOffsetX != null
-            ? `${this.note.accidentalOffsetX}em`
-            : undefined,
-        top:
-          this.note.accidentalOffsetY != null
-            ? `${this.note.accidentalOffsetY}em`
-            : undefined,
-      } as StyleValue;
-    },
-
-    secondaryAccidentalStyle() {
-      return {
-        color: this.pageSetup.accidentalDefaultColor,
-        webkitTextStrokeWidth: withZoom(
-          this.pageSetup.accidentalDefaultStrokeWidth,
-        ),
-        left:
-          this.note.secondaryAccidentalOffsetX != null
-            ? `${this.note.secondaryAccidentalOffsetX}em`
-            : undefined,
-        top:
-          this.note.secondaryAccidentalOffsetY != null
-            ? `${this.note.secondaryAccidentalOffsetY}em`
-            : undefined,
-      } as StyleValue;
-    },
-
-    tertiaryAccidentalStyle() {
-      return {
-        color: this.pageSetup.accidentalDefaultColor,
-        webkitTextStrokeWidth: withZoom(
-          this.pageSetup.accidentalDefaultStrokeWidth,
-        ),
-        left:
-          this.note.tertiaryAccidentalOffsetX != null
-            ? `${this.note.tertiaryAccidentalOffsetX}em`
-            : undefined,
-        top:
-          this.note.tertiaryAccidentalOffsetY != null
-            ? `${this.note.tertiaryAccidentalOffsetY}em`
-            : undefined,
-      } as StyleValue;
-    },
-
-    measureBarLeftStyle() {
-      return {
-        color: this.pageSetup.measureBarDefaultColor,
-        webkitTextStrokeWidth: withZoom(
-          this.pageSetup.measureBarDefaultStrokeWidth,
-        ),
-        left:
-          this.note.measureBarLeftOffsetX != null
-            ? `${this.note.measureBarLeftOffsetX}em`
-            : undefined,
-        top:
-          this.note.measureBarLeftOffsetY != null
-            ? `${this.note.measureBarLeftOffsetY}em`
-            : undefined,
-      } as StyleValue;
-    },
-
-    measureBarRightStyle() {
-      return {
-        color: this.pageSetup.measureBarDefaultColor,
-        webkitTextStrokeWidth: withZoom(
-          this.pageSetup.measureBarDefaultStrokeWidth,
-        ),
-        left:
-          this.note.measureBarRightOffsetX != null
-            ? `${this.note.measureBarRightOffsetX}em`
-            : undefined,
-        top:
-          this.note.measureBarRightOffsetY != null
-            ? `${this.note.measureBarRightOffsetY}em`
-            : undefined,
-      } as StyleValue;
-    },
-
-    measureNumberStyle() {
-      return {
-        color: this.pageSetup.measureNumberDefaultColor,
-        webkitTextStrokeWidth: withZoom(
-          this.pageSetup.measureNumberDefaultStrokeWidth,
-        ),
-        left:
-          this.note.measureNumberOffsetX != null
-            ? `${this.note.measureNumberOffsetX}em`
-            : undefined,
-        top:
-          this.note.measureNumberOffsetY != null
-            ? `${this.note.measureNumberOffsetY}em`
-            : undefined,
-      } as StyleValue;
-    },
-
-    noteIndicatorStyle() {
-      return {
-        color: this.pageSetup.noteIndicatorDefaultColor,
-        webkitTextStrokeWidth: withZoom(
-          this.pageSetup.noteIndicatorDefaultStrokeWidth,
-        ),
-        left:
-          this.note.noteIndicatorOffsetX != null
-            ? `${this.note.noteIndicatorOffsetX}em`
-            : undefined,
-        top:
-          this.note.noteIndicatorOffsetY != null
-            ? `${this.note.noteIndicatorOffsetY}em`
-            : undefined,
-      } as StyleValue;
-    },
-
-    isonStyle() {
-      return {
-        color: this.pageSetup.isonDefaultColor,
-        webkitTextStrokeWidth: withZoom(this.pageSetup.isonDefaultStrokeWidth),
-        left:
-          this.note.isonOffsetX != null
-            ? `${this.note.isonOffsetX}em`
-            : undefined,
-        top:
-          this.note.computedIsonOffsetY != null
-            ? `${this.note.computedIsonOffsetY}em`
-            : undefined,
-      } as StyleValue;
-    },
-
-    timeStyle() {
-      return {
-        left:
-          this.note.timeNeumeOffsetX != null
-            ? `${this.note.timeNeumeOffsetX}em`
-            : undefined,
-        top:
-          this.note.timeNeumeOffsetY != null
-            ? `${this.note.timeNeumeOffsetY}em`
-            : undefined,
-      } as StyleValue;
-    },
-
-    neumeStyle() {
-      if (this.note.quantitativeNeume == QuantitativeNeume.Cross) {
-        return {
-          color: this.pageSetup.crossDefaultColor,
-          webkitTextStrokeWidth: withZoom(
-            this.pageSetup.crossDefaultStrokeWidth,
-          ),
-        } as StyleValue;
-      } else if (this.note.quantitativeNeume == QuantitativeNeume.Breath) {
-        return {
-          color: this.pageSetup.breathDefaultColor,
-          webkitTextStrokeWidth: withZoom(
-            this.pageSetup.breathDefaultStrokeWidth,
-          ),
-        } as StyleValue;
-      }
-
-      return {};
-    },
-
-    koronisStyle() {
-      return {
-        color: this.pageSetup.koronisDefaultColor,
-        webkitTextStrokeWidth: withZoom(
-          this.pageSetup.koronisDefaultStrokeWidth,
-        ),
-        left:
-          this.note.koronisOffsetX != null
-            ? `${this.note.koronisOffsetX}em`
-            : undefined,
-        top:
-          this.note.koronisOffsetY != null
-            ? `${this.note.koronisOffsetY}em`
-            : undefined,
-      } as StyleValue;
-    },
-
-    stavrosStyle() {
-      return {
-        color: this.pageSetup.crossDefaultColor,
-        webkitTextStrokeWidth: withZoom(this.pageSetup.crossDefaultStrokeWidth),
-        left:
-          this.note.stavrosOffsetX != null
-            ? `${this.note.stavrosOffsetX}em`
-            : undefined,
-        top:
-          this.note.stavrosOffsetY != null
-            ? `${this.note.stavrosOffsetY}em`
-            : undefined,
-      } as StyleValue;
-    },
-
-    vareiaStyle() {
-      return {
-        left:
-          this.note.vareiaOffsetX != null
-            ? `${this.note.vareiaOffsetX}em`
-            : undefined,
-        top:
-          this.note.vareiaOffsetY != null
-            ? `${this.note.vareiaOffsetY}em`
-            : undefined,
-      } as StyleValue;
-    },
-
-    vocalExpressionStyle() {
-      const style = {
-        left:
-          this.note.vocalExpressionNeumeOffsetX != null
-            ? `${this.note.vocalExpressionNeumeOffsetX}em`
-            : undefined,
-        top:
-          this.note.vocalExpressionNeumeOffsetY != null
-            ? `${this.note.vocalExpressionNeumeOffsetY}em`
-            : undefined,
-      } as Partial<CSSStyleDeclaration>;
-
-      if (
-        this.note.vocalExpressionNeume === VocalExpressionNeume.Heteron ||
-        this.note.vocalExpressionNeume ===
-          VocalExpressionNeume.HeteronConnecting ||
-        this.note.vocalExpressionNeume ===
-          VocalExpressionNeume.HeteronConnectingLong ||
-        this.note.vocalExpressionNeume === VocalExpressionNeume.Endofonon
-      ) {
-        style.color = this.pageSetup.heteronDefaultColor;
-        style.webkitTextStrokeWidth = withZoom(
-          this.pageSetup.heteronDefaultStrokeWidth,
-        );
-      }
-
-      return style;
-    },
-
-    tieStyle() {
-      return {
-        left:
-          this.note.tieOffsetX != null
-            ? `${this.note.tieOffsetX}em`
-            : undefined,
-        top:
-          this.note.tieOffsetY != null
-            ? `${this.note.tieOffsetY}em`
-            : undefined,
-      } as StyleValue;
-    },
-  },
-
-  methods: {},
+const tieStyle = computed(() => {
+  return offsetStyle(
+    props.note.tieOffsetX,
+    props.note.tieOffsetY,
+  ) as StyleValue;
 });
 </script>
 

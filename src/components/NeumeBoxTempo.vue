@@ -12,43 +12,33 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, PropType, StyleValue } from 'vue';
+<script setup lang="ts">
+import { computed, PropType, StyleValue } from 'vue';
 
 import Neume from '@/components/NeumeGlyph.vue';
 import { TempoElement } from '@/models/Element';
 import { PageSetup } from '@/models/PageSetup';
 import { withZoom } from '@/utils/withZoom';
 
-export default defineComponent({
-  components: { Neume },
-  props: {
-    neume: {
-      type: Object as PropType<TempoElement>,
-      required: true,
-    },
-    pageSetup: {
-      type: Object as PropType<PageSetup>,
-      required: true,
-    },
+const props = defineProps({
+  neume: {
+    type: Object as PropType<TempoElement>,
+    required: true,
   },
-  emits: ['select-single', 'select-range'],
-
-  data() {
-    return {};
+  pageSetup: {
+    type: Object as PropType<PageSetup>,
+    required: true,
   },
+});
 
-  computed: {
-    style() {
-      return {
-        color: this.pageSetup.tempoDefaultColor,
-        fontSize: withZoom(this.pageSetup.neumeDefaultFontSize),
-        webkitTextStrokeWidth: withZoom(this.pageSetup.tempoDefaultStrokeWidth),
-      } as StyleValue;
-    },
-  },
+defineEmits(['select-single', 'select-range']);
 
-  methods: {},
+const style = computed(() => {
+  return {
+    color: props.pageSetup.tempoDefaultColor,
+    fontSize: withZoom(props.pageSetup.neumeDefaultFontSize),
+    webkitTextStrokeWidth: withZoom(props.pageSetup.tempoDefaultStrokeWidth),
+  } as StyleValue;
 });
 </script>
 

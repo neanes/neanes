@@ -4,17 +4,14 @@
   </div>
 </template>
 
-<script lang="ts">
+<!-- eslint-disable vue/multi-word-component-names -->
+<script setup lang="ts">
 // @ is an alias to /src
 import TheEditor from '@/components/TheEditor.vue';
 
-export default {
-  // eslint-disable-next-line vue/multi-word-component-names
+defineOptions({
   name: 'Home',
-  components: {
-    TheEditor,
-  },
-};
+});
 </script>
 
 <style scoped>

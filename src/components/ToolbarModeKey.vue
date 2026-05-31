@@ -271,8 +271,8 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, PropType } from 'vue';
+<script setup lang="ts">
+import { computed, PropType } from 'vue';
 
 import ColorPicker from '@/components/ColorPicker.vue';
 import InputBpm from '@/components/InputBpm.vue';
@@ -321,55 +321,33 @@ const tempoMenuOptions: ButtonWithMenuOption[] = [
   },
 ];
 
-export default defineComponent({
-  components: {
-    ColorPicker,
-    InputUnit,
-    InputBpm,
-    InputFontSize,
-    InputStrokeWidth,
-    ButtonWithMenu,
+const props = defineProps({
+  element: {
+    type: Object as PropType<ModeKeyElement>,
+    required: true,
   },
-  props: {
-    element: {
-      type: Object as PropType<ModeKeyElement>,
-      required: true,
-    },
-    pageSetup: {
-      type: Object as PropType<PageSetup>,
-      required: true,
-    },
+  pageSetup: {
+    type: Object as PropType<PageSetup>,
+    required: true,
   },
-  emits: [
-    'open-mode-key-dialog',
-    'update',
-    'update:sectionName',
-    'update:tempo',
-  ],
-
-  data() {
-    return {
-      TextBoxAlignment,
-      tempoMenuOptions,
-    };
-  },
-
-  computed: {
-    heightAdjustmentMin() {
-      return -Math.round(Unit.fromPt(this.element.height));
-    },
-
-    heightAdjustmentMax() {
-      return Unit.toPt(this.pageSetup.pageHeight);
-    },
-
-    maxHeight() {
-      return Unit.toPt(this.pageSetup.innerPageHeight);
-    },
-  },
-
-  methods: {},
 });
+
+defineEmits([
+  'open-mode-key-dialog',
+  'update',
+  'update:sectionName',
+  'update:tempo',
+]);
+
+const heightAdjustmentMin = computed(
+  () => -Math.round(Unit.fromPt(props.element.height)),
+);
+
+const heightAdjustmentMax = computed(() =>
+  Unit.toPt(props.pageSetup.pageHeight),
+);
+
+const maxHeight = computed(() => Unit.toPt(props.pageSetup.innerPageHeight));
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

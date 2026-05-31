@@ -354,7 +354,7 @@ export default defineComponent({
 
       audioElement: null as ScoreElement | null,
       playbackEvents: [] as PlaybackSequenceEvent[],
-      playbackTimeInterval: null as ReturnType<typeof setTimeout> | null,
+      playbackTimeInterval: null as ReturnType<typeof setInterval> | null,
       audioOptions: {
         useLegetos: false,
         useDefaultAttractionZo: true,

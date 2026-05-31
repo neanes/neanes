@@ -10,36 +10,19 @@
   />
 </template>
 
-<script lang="ts">
-import { defineComponent } from 'vue';
-
+<script setup lang="ts">
 import InputUnit from '@/components/InputUnit.vue';
 
 const strokeWidthMax = 5;
 const strokeWidthStep = 0.1;
 const strokeWidthPrecision = 2;
 
-export default defineComponent({
-  components: { InputUnit },
-  props: {
-    modelValue: {
-      type: Number,
-      required: true,
-    },
+defineEmits(['update:modelValue']);
+defineProps({
+  modelValue: {
+    type: Number,
+    required: true,
   },
-  emits: ['update:modelValue'],
-
-  data() {
-    return {
-      strokeWidthMax,
-      strokeWidthStep,
-      strokeWidthPrecision,
-    };
-  },
-
-  computed: {},
-
-  methods: {},
 });
 </script>
 

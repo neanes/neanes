@@ -63,8 +63,8 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, PropType, StyleValue } from 'vue';
+<script setup lang="ts">
+import { computed, PropType, StyleValue } from 'vue';
 
 import Neume from '@/components/NeumeGlyph.vue';
 import { ModeKeyElement } from '@/models/Element';
@@ -72,69 +72,54 @@ import { ModeSign } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
 import { withZoom } from '@/utils/withZoom';
 
-export default defineComponent({
-  components: { Neume },
-  props: {
-    element: {
-      type: Object as PropType<ModeKeyElement>,
-      required: true,
-    },
-    pageSetup: {
-      type: Object as PropType<PageSetup>,
-      required: true,
-    },
+defineEmits(['select-single']);
+const props = defineProps({
+  element: {
+    type: Object as PropType<ModeKeyElement>,
+    required: true,
   },
-  emits: ['select-single'],
-
-  data() {
-    return {
-      ModeSign,
-    };
+  pageSetup: {
+    type: Object as PropType<PageSetup>,
+    required: true,
   },
+});
 
-  computed: {
-    style() {
-      return {
-        color: this.element.computedColor,
-        fontFamily: this.element.computedFontFamily,
-        fontSize: withZoom(this.element.computedFontSize),
-        textAlign: this.element.alignment,
-        width: withZoom(this.element.width),
-        height: withZoom(this.element.height),
-        webkitTextStrokeWidth: withZoom(this.element.computedStrokeWidth),
-      } as StyleValue;
-    },
+const style = computed(() => {
+  return {
+    color: props.element.computedColor,
+    fontFamily: props.element.computedFontFamily,
+    fontSize: withZoom(props.element.computedFontSize),
+    textAlign: props.element.alignment,
+    width: withZoom(props.element.width),
+    height: withZoom(props.element.height),
+    webkitTextStrokeWidth: withZoom(props.element.computedStrokeWidth),
+  } as StyleValue;
+});
 
-    tempoStyle() {
-      // TODO figure out a way to remove the hard-coded -.45em
-      // maybe put it in the font metadata json?
-      const style = {
-        color: this.pageSetup.tempoDefaultColor,
-        webkitTextStrokeWidth: withZoom(this.pageSetup.tempoDefaultStrokeWidth),
-        top: '-0.45em',
-        marginLeft: withZoom(8),
-      } as StyleValue;
+const tempoStyle = computed(() => {
+  // TODO figure out a way to remove the hard-coded -.45em
+  // maybe put it in the font metadata json?
+  const style = {
+    color: props.pageSetup.tempoDefaultColor,
+    webkitTextStrokeWidth: withZoom(props.pageSetup.tempoDefaultStrokeWidth),
+    top: '-0.45em',
+    marginLeft: withZoom(8),
+  } as StyleValue;
 
-      return style;
-    },
+  return style;
+});
 
-    ambitusStyle() {
-      // TODO figure out a way to remove the hard-coded -.45em
-      // maybe put it in the font metadata json?
-      const style = {
-        color: this.pageSetup.martyriaDefaultColor,
-        webkitTextStrokeWidth: withZoom(
-          this.pageSetup.martyriaDefaultStrokeWidth,
-        ),
-        position: 'relative',
-        top: '-0.45em',
-      } as StyleValue;
+const ambitusStyle = computed(() => {
+  // TODO figure out a way to remove the hard-coded -.45em
+  // maybe put it in the font metadata json?
+  const style = {
+    color: props.pageSetup.martyriaDefaultColor,
+    webkitTextStrokeWidth: withZoom(props.pageSetup.martyriaDefaultStrokeWidth),
+    position: 'relative',
+    top: '-0.45em',
+  } as StyleValue;
 
-      return style;
-    },
-  },
-
-  methods: {},
+  return style;
 });
 </script>
 

@@ -11,37 +11,24 @@
   />
 </template>
 
-<script lang="ts">
-import { defineComponent } from 'vue';
-
+<script setup lang="ts">
 import InputUnit from '@/components/InputUnit.vue';
 
-export default defineComponent({
-  components: { InputUnit },
-  props: {
-    modelValue: {
-      type: Number,
-      required: true,
-    },
-    disabled: {
-      type: Boolean,
-      default: false,
-    },
+defineEmits(['update:modelValue']);
+defineProps({
+  modelValue: {
+    type: Number,
+    required: true,
   },
-  emits: ['update:modelValue'],
-
-  data() {
-    return {};
-  },
-
-  computed: {},
-
-  methods: {
-    round(value: number) {
-      return Math.round(value);
-    },
+  disabled: {
+    type: Boolean,
+    default: false,
   },
 });
+
+function round(value: number) {
+  return Math.round(value);
+}
 </script>
 
 <style scoped></style>

@@ -11,20 +11,10 @@
   />
 </template>
 
-<script lang="ts">
-export type UnitOfMeasure =
-  | 'pc'
-  | 'pt'
-  | 'in'
-  | 'cm'
-  | 'mm'
-  | 'percent'
-  | 'unitless';
-</script>
-
 <script setup lang="ts">
 import { computed, PropType, useTemplateRef } from 'vue';
 
+import type { UnitOfMeasure } from '@/components/InputUnit.types';
 import { Unit } from '@/utils/Unit';
 
 const emit = defineEmits(['update:modelValue']);
@@ -115,12 +105,12 @@ function emitValue(v: number | null) {
   }
 }
 
-function onChange(input: string) {
-  if (input.trim() === '' && props.nullable) {
+function onChange(value: string) {
+  if (value.trim() === '' && props.nullable) {
     return emitValue(null);
   }
 
-  let newValue = parseFloat(input);
+  let newValue = parseFloat(value);
 
   if (isNaN(newValue)) {
     newValue = props.defaultValue;

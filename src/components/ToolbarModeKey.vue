@@ -284,7 +284,8 @@ import { TempoSign } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
 import { Unit } from '@/utils/Unit';
 
-import ButtonWithMenu, { ButtonWithMenuOption } from './ButtonWithMenu.vue';
+import type { ButtonWithMenuOption } from './ButtonWithMenu.types';
+import ButtonWithMenu from './ButtonWithMenu.vue';
 
 const tempoMenuOptions: ButtonWithMenuOption[] = [
   {

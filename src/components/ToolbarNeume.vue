@@ -524,9 +524,8 @@
 import { useTranslation } from 'i18next-vue';
 import { computed, PropType } from 'vue';
 
-import ButtonWithMenu, {
-  ButtonWithMenuOption,
-} from '@/components/ButtonWithMenu.vue';
+import type { ButtonWithMenuOption } from '@/components/ButtonWithMenu.types';
+import ButtonWithMenu from '@/components/ButtonWithMenu.vue';
 import InputUnit from '@/components/InputUnit.vue';
 import { AcceptsLyricsOption, NoteElement } from '@/models/Element';
 import {

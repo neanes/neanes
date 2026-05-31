@@ -700,7 +700,8 @@
 import { computed, onBeforeUnmount, PropType, ref, StyleValue } from 'vue';
 
 import DragHandle from '@/components/DragHandle.vue';
-import InputUnit, { UnitOfMeasure } from '@/components/InputUnit.vue';
+import type { UnitOfMeasure } from '@/components/InputUnit.types';
+import InputUnit from '@/components/InputUnit.vue';
 import ModalDialog from '@/components/ModalDialog.vue';
 import NeumeBoxMartyria from '@/components/NeumeBoxMartyria.vue';
 import NeumeBoxSyllable from '@/components/NeumeBoxSyllable.vue';

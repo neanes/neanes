@@ -132,8 +132,7 @@ const textBottom =
   useTemplateRef<ComponentExposed<typeof ContentEditable>>('textBottom');
 
 const unmounting = ref(false);
-const { disconnect: disconnectResizeObserver, observe: observeResize } =
-  useResizeObserver();
+const { observe: observeResize } = useResizeObserver();
 const setupResizeObserverDebounced = debounce(100, setupResizeObserver);
 
 const htmlElement = computed(() => container.value!);
@@ -270,7 +269,8 @@ onMounted(() => {
 onBeforeUnmount(() => {
   unmounting.value = true;
   update();
-  disconnectResizeObserver();
+  // Observer is disconnected automatically by useResizeObserver's own
+  // onBeforeUnmount hook.
 });
 
 function getTextElement() {

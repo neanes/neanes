@@ -1831,10 +1831,10 @@ import { SelectorParam } from 'i18next';
 import { throttle } from 'throttle-debounce';
 import {
   computed,
-  getCurrentInstance,
   onBeforeUnmount,
   PropType,
   ref,
+  triggerRef,
   useTemplateRef,
 } from 'vue';
 
@@ -1950,7 +1950,6 @@ const emit = defineEmits<{
   close: [];
   update: [pageSetup: PageSetup];
 }>();
-const instance = getCurrentInstance();
 
 const props = defineProps({
   pageSetup: {
@@ -2170,8 +2169,8 @@ function toStorageUnit(value: number) {
   }
 }
 
-function forceUpdate() {
-  instance?.proxy?.$forceUpdate();
+function refreshFormInputs() {
+  triggerRef(form);
 }
 
 function updateCurrentSection() {
@@ -2252,7 +2251,7 @@ function updateTopMargin(value: number) {
     form.value.pageHeight - form.value.bottomMargin - Unit.fromInch(0.5),
   );
 
-  forceUpdate();
+  refreshFormInputs();
 }
 
 function updateBottomMargin(value: number) {
@@ -2261,7 +2260,7 @@ function updateBottomMargin(value: number) {
     form.value.pageHeight - form.value.topMargin - Unit.fromInch(0.5),
   );
 
-  forceUpdate();
+  refreshFormInputs();
 }
 
 function updateLeftMargin(value: number) {
@@ -2270,7 +2269,7 @@ function updateLeftMargin(value: number) {
     form.value.pageWidth - form.value.rightMargin - Unit.fromInch(0.5),
   );
 
-  forceUpdate();
+  refreshFormInputs();
 }
 
 function updateRightMargin(value: number) {
@@ -2279,7 +2278,7 @@ function updateRightMargin(value: number) {
     form.value.pageWidth - form.value.leftMargin - Unit.fromInch(0.5),
   );
 
-  forceUpdate();
+  refreshFormInputs();
 }
 
 function updateHeaderMargin(value: number) {
@@ -2288,7 +2287,7 @@ function updateHeaderMargin(value: number) {
     form.value.innerPageHeight,
   );
 
-  forceUpdate();
+  refreshFormInputs();
 }
 
 function updateFooterMargin(value: number) {
@@ -2297,7 +2296,7 @@ function updateFooterMargin(value: number) {
     form.value.innerPageHeight,
   );
 
-  forceUpdate();
+  refreshFormInputs();
 }
 
 function updateLyricsVerticalOffset(value: number) {
@@ -2308,7 +2307,7 @@ function updateLyricsVerticalOffset(value: number) {
       form.value.neumeDefaultFontSize,
   );
 
-  forceUpdate();
+  refreshFormInputs();
 }
 
 function updateLyricsMinimumSpacing(value: number) {
@@ -2317,7 +2316,7 @@ function updateLyricsMinimumSpacing(value: number) {
     form.value.innerPageWidth,
   );
 
-  forceUpdate();
+  refreshFormInputs();
 }
 
 function updateLineHeight(value: number) {
@@ -2326,7 +2325,7 @@ function updateLineHeight(value: number) {
     form.value.innerPageHeight,
   );
 
-  forceUpdate();
+  refreshFormInputs();
 }
 
 function updateHyphenSpacing(value: number) {
@@ -2335,7 +2334,7 @@ function updateHyphenSpacing(value: number) {
     form.value.innerPageWidth,
   );
 
-  forceUpdate();
+  refreshFormInputs();
 }
 
 function onChangeMelkiteRtl() {

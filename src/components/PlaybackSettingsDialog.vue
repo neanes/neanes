@@ -1,7 +1,7 @@
 <!-- eslint-disable vue/no-mutating-props -->
 <template>
   <ModalDialog>
-    <div class="container">
+    <div class="container" :data-render-version="renderVersion">
       <div class="header">
         {{ $t(($) => $.dialog.playbackSettings.root, { ns: 'dialog' }) }}
       </div>
@@ -683,14 +683,7 @@
 // TODO don't rely on this eslint-disable line
 // Instead, make a copy of the options prop (a la Page Setup Dialog)
 // and have TheEditor update the actual options.
-import {
-  computed,
-  getCurrentInstance,
-  onBeforeUnmount,
-  onMounted,
-  PropType,
-  ref,
-} from 'vue';
+import { computed, onBeforeUnmount, onMounted, PropType, ref } from 'vue';
 
 import ModalDialog from '@/components/ModalDialog.vue';
 import { Accidental } from '@/models/Neumes';
@@ -706,10 +699,9 @@ const props = defineProps({
   },
 });
 
-const instance = getCurrentInstance();
-
 const tuning = ref(0);
 const error = ref<string | null>(null);
+const renderVersion = ref(0);
 
 const volumeIson = computed({
   get() {
@@ -756,7 +748,7 @@ function onIntervalChanged(intervals: number[], index: number, value: number) {
 
   validateIntervals();
 
-  forceUpdate();
+  refreshPlaybackInputs();
 }
 
 function validateIntervals() {
@@ -827,7 +819,7 @@ function onDiesisChanged(neume: Accidental, moria: number) {
 
   props.options.alterationMoriaMap[neume] = moria;
 
-  forceUpdate();
+  refreshPlaybackInputs();
 }
 
 function onYfesisChanged(neume: Accidental, moria: number) {
@@ -838,7 +830,7 @@ function onYfesisChanged(neume: Accidental, moria: number) {
 
   props.options.alterationMoriaMap[neume] = moria;
 
-  forceUpdate();
+  refreshPlaybackInputs();
 }
 
 function onDefaultAttractionZoMoriaChanged(value: number) {
@@ -848,7 +840,7 @@ function onDefaultAttractionZoMoriaChanged(value: number) {
 
   props.options.defaultAttractionZoMoria = value;
 
-  forceUpdate();
+  refreshPlaybackInputs();
 }
 
 function onTuningChanged(value: number) {
@@ -859,7 +851,7 @@ function onTuningChanged(value: number) {
     FREQUENCY_G3 * Math.pow(2, tuning.value / 1200)
   ).toFixed(1);
 
-  forceUpdate();
+  refreshPlaybackInputs();
 }
 
 function onAlterationMultiplierChanged(index: number, multiplier: number) {
@@ -868,15 +860,15 @@ function onAlterationMultiplierChanged(index: number, multiplier: number) {
 
   props.options.alterationMultipliers[index] = multiplier;
 
-  forceUpdate();
+  refreshPlaybackInputs();
 }
 
 function close() {
   emit('close');
 }
 
-function forceUpdate() {
-  instance?.proxy?.$forceUpdate();
+function refreshPlaybackInputs() {
+  renderVersion.value += 1;
 }
 </script>
 

@@ -139,6 +139,7 @@
     <span class="space"></span>
     <div class="zoom-container" tabindex="-1" @focusout="showZoomMenu = false">
       <input
+        ref="zoomInput"
         class="zoom"
         :value="zoomDisplay"
         @change="updateZoom(($event.target as HTMLInputElement).value)"
@@ -235,7 +236,7 @@
 
 <script setup lang="ts">
 import { useTranslation } from 'i18next-vue';
-import { computed, getCurrentInstance, PropType, ref } from 'vue';
+import { computed, nextTick, PropType, ref, useTemplateRef } from 'vue';
 
 import InputUnit from '@/components/InputUnit.vue';
 import { LineBreakType } from '@/models/Element';
@@ -245,7 +246,8 @@ import { AudioState } from '@/services/audio/AudioService';
 import { PlaybackOptions } from '@/services/audio/PlaybackService';
 import { NeumeKeyboard } from '@/services/NeumeKeyboard';
 
-import ButtonWithMenu, { ButtonWithMenuOption } from './ButtonWithMenu.vue';
+import type { ButtonWithMenuOption } from './ButtonWithMenu.types';
+import ButtonWithMenu from './ButtonWithMenu.vue';
 
 const tempoOptions: ButtonWithMenuOption[] = [
   {
@@ -345,8 +347,8 @@ const emit = defineEmits([
 ]);
 
 const { t } = useTranslation();
-const instance = getCurrentInstance();
 const showZoomMenu = ref(false);
+const zoomInput = useTemplateRef<HTMLInputElement>('zoomInput');
 const zoomOptions = ['50', '75', '90', '100', '125', '150', '200', '500'];
 
 const zoomDisplay = computed(() =>
@@ -385,6 +387,7 @@ function updateZoom(value: string) {
 
   if (value === 'Fit') {
     emit('update:zoomToFit', true);
+    resetZoomInput();
     return;
   }
 
@@ -397,8 +400,15 @@ function updateZoom(value: string) {
   emit('update:zoom', valueAsNumber / 100);
 
   showZoomMenu.value = false;
+  resetZoomInput();
+}
 
-  instance?.proxy?.$forceUpdate();
+function resetZoomInput() {
+  nextTick(() => {
+    if (zoomInput.value != null) {
+      zoomInput.value.value = zoomDisplay.value;
+    }
+  });
 }
 </script>
 

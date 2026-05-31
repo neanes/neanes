@@ -386,7 +386,8 @@ import { NeumeKeyboard } from '@/services/NeumeKeyboard';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { Unit } from '@/utils/Unit';
 
-import ButtonWithMenu, { ButtonWithMenuOption } from './ButtonWithMenu.vue';
+import type { ButtonWithMenuOption } from './ButtonWithMenu.types';
+import ButtonWithMenu from './ButtonWithMenu.vue';
 import InputBpm from './InputBpm.vue';
 import InputUnit from './InputUnit.vue';
 

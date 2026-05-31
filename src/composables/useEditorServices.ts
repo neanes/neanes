@@ -1,4 +1,4 @@
-import { inject } from 'vue';
+import { inject, InjectionKey } from 'vue';
 
 import {
   audioServiceKey,
@@ -23,17 +23,33 @@ import { NeumeKeyboard } from '@/services/NeumeKeyboard';
 import { PlatformService } from '@/services/platform/PlatformService';
 import { TextSearchService } from '@/services/TextSearchService';
 
+function injectOrCreate<T>(key: InjectionKey<T>, factory: () => T) {
+  return inject(key, factory, true);
+}
+
 export function useEditorServices() {
   return {
-    audioService: inject(audioServiceKey, new AudioService()),
-    ipcService: inject(ipcServiceKey, new IpcService()),
-    latexExporter: inject(latexExporterKey, new LatexExporter()),
-    lyricService: inject(lyricServiceKey, new LyricService()),
-    musicXmlExporter: inject(musicXmlExporterKey, new MusicXmlExporter()),
-    neumeKeyboard: inject(neumeKeyboardKey, new NeumeKeyboard()),
-    ocrImporter: inject(ocrImporterKey, new OcrImporter()),
-    platformService: inject(platformServiceKey, new PlatformService()),
-    playbackService: inject(playbackServiceKey, new PlaybackService()),
-    textSearchService: inject(textSearchServiceKey, new TextSearchService()),
+    audioService: injectOrCreate(audioServiceKey, () => new AudioService()),
+    ipcService: injectOrCreate(ipcServiceKey, () => new IpcService()),
+    latexExporter: injectOrCreate(latexExporterKey, () => new LatexExporter()),
+    lyricService: injectOrCreate(lyricServiceKey, () => new LyricService()),
+    musicXmlExporter: injectOrCreate(
+      musicXmlExporterKey,
+      () => new MusicXmlExporter(),
+    ),
+    neumeKeyboard: injectOrCreate(neumeKeyboardKey, () => new NeumeKeyboard()),
+    ocrImporter: injectOrCreate(ocrImporterKey, () => new OcrImporter()),
+    platformService: injectOrCreate(
+      platformServiceKey,
+      () => new PlatformService(),
+    ),
+    playbackService: injectOrCreate(
+      playbackServiceKey,
+      () => new PlaybackService(),
+    ),
+    textSearchService: injectOrCreate(
+      textSearchServiceKey,
+      () => new TextSearchService(),
+    ),
   };
 }

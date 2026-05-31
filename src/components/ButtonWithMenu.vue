@@ -34,14 +34,6 @@
   </div>
 </template>
 
-<script lang="ts">
-export interface ButtonWithMenuOption {
-  icon?: string;
-  text?: string;
-  neume: import('@/models/Neumes').Neume | import('@/models/Neumes').Neume[];
-}
-</script>
-
 <script setup lang="ts">
 import {
   computed,
@@ -57,6 +49,8 @@ import {
 import { editorPreferencesKey } from '@/injectionKeys';
 import { ButtonMenuMode } from '@/models/EditorPreferences';
 import { Neume } from '@/models/Neumes';
+
+import type { ButtonWithMenuOption } from './ButtonWithMenu.types';
 
 const emit = defineEmits(['select']);
 const props = defineProps({

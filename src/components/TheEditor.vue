@@ -7,7 +7,6 @@ import { useTranslation } from 'i18next-vue';
 import { debounce, throttle } from 'throttle-debounce';
 import {
   computed,
-  getCurrentInstance,
   nextTick,
   onBeforeUnmount,
   onMounted,
@@ -25,12 +24,13 @@ import AlternateLine from '@/components/AlternateLine.vue';
 import ContentEditable from '@/components/ContentEditable.vue';
 import DropCap from '@/components/DropCap.vue';
 import EditorPreferencesDialog from '@/components/EditorPreferencesDialog.vue';
-import ExportDialog, {
-  ExportAsLatexSettings,
-  ExportAsMusicXmlSettings,
-  ExportAsPngSettings,
+import {
+  type ExportAsLatexSettings,
+  type ExportAsMusicXmlSettings,
+  type ExportAsPngSettings,
   ExportFormat,
-} from '@/components/ExportDialog.vue';
+} from '@/components/ExportDialog.types';
+import ExportDialog from '@/components/ExportDialog.vue';
 import FileMenuBar from '@/components/FileMenuBar.vue';
 import ImageBox from '@/components/ImageBox.vue';
 import ModeKey from '@/components/ModeKey.vue';
@@ -204,7 +204,6 @@ const navigableElements = [
 ];
 
 const keydownThrottleIntervalMs = 100;
-const componentInstance = getCurrentInstance();
 const tabsRef = useTemplateRef<Vue3TabsChromeComponent>('tabsRef');
 const searchTextRef =
   useTemplateRef<InstanceType<typeof SearchText>>('searchTextRef');
@@ -224,8 +223,29 @@ const {
 } = useEditorServices();
 const { t } = useTranslation();
 
+const dynamicTemplateRefs = new Map<string, unknown[]>();
+const dynamicTemplateRefSetters = new Map<string, (value: unknown) => void>();
+
 function getTemplateRef<T>(name: string) {
-  return componentInstance?.proxy?.$refs[name] as T;
+  return (dynamicTemplateRefs.get(name) ?? []) as T;
+}
+
+function setTemplateRef(name: string) {
+  let setter = dynamicTemplateRefSetters.get(name);
+
+  if (setter == null) {
+    setter = (value: unknown) => {
+      if (value == null) {
+        dynamicTemplateRefs.delete(name);
+      } else {
+        dynamicTemplateRefs.set(name, [value]);
+      }
+    };
+
+    dynamicTemplateRefSetters.set(name, setter);
+  }
+
+  return setter;
 }
 
 const searchTextQuery = ref('');
@@ -942,9 +962,13 @@ onBeforeUnmount(() => {
 });
 
 async function initialize() {
-  // Attach the editor component to the window variable
-  // so that it can be used for debugging
-  (window as any)._editor = componentInstance?.proxy;
+  // Attach a small debugging surface without relying on the component proxy.
+  (window as any)._editor = {
+    elements,
+    score,
+    selectedWorkspace,
+    workspaces,
+  };
 
   try {
     const fontLoader = (document as any).fonts;
@@ -4271,32 +4295,6 @@ function updateMartyriaTempoRight(
   });
 }
 
-// Retained from the Options API method surface.
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function updateMartyriaBpm(element: MartyriaElement, bpm: number) {
-  updateMartyria(element, { bpm });
-  save();
-}
-
-// Retained from the Options API method surface.
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function updateMartyriaMeasureBar(
-  element: MartyriaElement,
-  {
-    measureBarLeft,
-    measureBarRight,
-  }: {
-    measureBarLeft: MeasureBar | null;
-    measureBarRight: MeasureBar | null;
-  },
-) {
-  updateMartyria(element, {
-    measureBarLeft,
-    measureBarRight,
-  });
-  save();
-}
-
 function updateTempo(element: TempoElement, newValues: Partial<TempoElement>) {
   commandService.value.execute(
     tempoCommandFactory.create('update-properties', {
@@ -5825,7 +5823,7 @@ function renderTabLabel(tab: Tab) {
                     :key="`element-${selectedWorkspace.id}-${getHeaderForPageIndex(pageIndex).id}-${
                       getHeaderForPageIndex(pageIndex).keyHelper
                     }`"
-                    :ref="`header-${pageIndex}`"
+                    :ref="setTemplateRef(`header-${pageIndex}`)"
                     class="element-box"
                     :element="
                       getHeaderForPageIndex(pageIndex) as RichTextBoxElement
@@ -5868,7 +5866,7 @@ function renderTabLabel(tab: Tab) {
                     :key="`element-${selectedWorkspace.id}-${getHeaderForPageIndex(pageIndex).id}-${
                       getHeaderForPageIndex(pageIndex).keyHelper
                     }`"
-                    :ref="`header-${pageIndex}`"
+                    :ref="setTemplateRef(`header-${pageIndex}`)"
                     class="element-box"
                     :element="
                       getHeaderForPageIndex(pageIndex) as TextBoxElement
@@ -5929,7 +5927,9 @@ function renderTabLabel(tab: Tab) {
                 >
                   <template v-if="isSyllableElement(element)">
                     <div
-                      :ref="`element-${getElementIndex(element)}`"
+                      :ref="
+                        setTemplateRef(`element-${getElementIndex(element)}`)
+                      "
                       class="neume-box"
                     >
                       <span
@@ -6012,7 +6012,9 @@ function renderTabLabel(tab: Tab) {
                         :style="getLyricStyle(element as NoteElement)"
                       >
                         <ContentEditable
-                          :ref="`lyrics-${getElementIndex(element)}`"
+                          :ref="
+                            setTemplateRef(`lyrics-${getElementIndex(element)}`)
+                          "
                           class="lyrics"
                           :class="{
                             selectedLyrics: element === selectedLyrics,
@@ -6135,7 +6137,9 @@ function renderTabLabel(tab: Tab) {
                         ><img src="@/assets/icons/line-break.svg"
                       /></span>
                       <MartyriaNeumeBox
-                        :ref="`element-${getElementIndex(element)}`"
+                        :ref="
+                          setTemplateRef(`element-${getElementIndex(element)}`)
+                        "
                         class="marytria-neume-box"
                         :neume="element as MartyriaElement"
                         :page-setup="score.pageSetup"
@@ -6152,7 +6156,9 @@ function renderTabLabel(tab: Tab) {
                   </template>
                   <template v-else-if="isTempoElement(element)">
                     <div
-                      :ref="`element-${getElementIndex(element)}`"
+                      :ref="
+                        setTemplateRef(`element-${getElementIndex(element)}`)
+                      "
                       class="neume-box"
                     >
                       <span
@@ -6182,7 +6188,9 @@ function renderTabLabel(tab: Tab) {
                   </template>
                   <template v-else-if="isEmptyElement(element)">
                     <div
-                      :ref="`element-${getElementIndex(element)}`"
+                      :ref="
+                        setTemplateRef(`element-${getElementIndex(element)}`)
+                      "
                       class="neume-box"
                     >
                       <span
@@ -6223,7 +6231,9 @@ function renderTabLabel(tab: Tab) {
                       ><img src="@/assets/icons/line-break.svg"
                     /></span>
                     <TextBox
-                      :ref="`element-${getElementIndex(element)}`"
+                      :ref="
+                        setTemplateRef(`element-${getElementIndex(element)}`)
+                      "
                       :element="element as TextBoxElement"
                       :edit-mode="true"
                       :metadata="getTokenMetadata(pageIndex)"
@@ -6251,7 +6261,9 @@ function renderTabLabel(tab: Tab) {
                       ><img src="@/assets/icons/line-break.svg"
                     /></span>
                     <TextBoxRich
-                      :ref="`element-${getElementIndex(element)}`"
+                      :ref="
+                        setTemplateRef(`element-${getElementIndex(element)}`)
+                      "
                       :element="element as RichTextBoxElement"
                       :page-setup="score.pageSetup"
                       :fonts="fonts"
@@ -6283,7 +6295,9 @@ function renderTabLabel(tab: Tab) {
                       ><img src="@/assets/icons/line-break.svg"
                     /></span>
                     <ModeKey
-                      :ref="`element-${getElementIndex(element)}`"
+                      :ref="
+                        setTemplateRef(`element-${getElementIndex(element)}`)
+                      "
                       :element="element as ModeKeyElement"
                       :page-setup="score.pageSetup"
                       :class="[
@@ -6310,7 +6324,9 @@ function renderTabLabel(tab: Tab) {
                       ><img src="@/assets/icons/line-break.svg"
                     /></span>
                     <DropCap
-                      :ref="`element-${getElementIndex(element)}`"
+                      :ref="
+                        setTemplateRef(`element-${getElementIndex(element)}`)
+                      "
                       :element="element as DropCapElement"
                       :page-setup="score.pageSetup"
                       :editable="!lyricsLocked"
@@ -6333,7 +6349,9 @@ function renderTabLabel(tab: Tab) {
                       ><img src="@/assets/icons/line-break.svg"
                     /></span>
                     <ImageBox
-                      :ref="`element-${getElementIndex(element)}`"
+                      :ref="
+                        setTemplateRef(`element-${getElementIndex(element)}`)
+                      "
                       :element="element as ImageBoxElement"
                       :zoom="zoom"
                       :print-mode="printMode"
@@ -6376,7 +6394,7 @@ function renderTabLabel(tab: Tab) {
                     :key="`element-${selectedWorkspace.id}-${getFooterForPageIndex(pageIndex).id}-${
                       getFooterForPageIndex(pageIndex).keyHelper
                     }`"
-                    :ref="`footer-${pageIndex}`"
+                    :ref="setTemplateRef(`footer-${pageIndex}`)"
                     class="element-box"
                     :element="
                       getFooterForPageIndex(pageIndex) as RichTextBoxElement
@@ -6416,7 +6434,7 @@ function renderTabLabel(tab: Tab) {
                   v-else-if="isTextBoxElement(getFooterForPageIndex(pageIndex))"
                 >
                   <TextBox
-                    :ref="`footer-${pageIndex}`"
+                    :ref="setTemplateRef(`footer-${pageIndex}`)"
                     :key="`element-${selectedWorkspace.id}-${getFooterForPageIndex(pageIndex).id}-${
                       getFooterForPageIndex(pageIndex).keyHelper
                     }`"

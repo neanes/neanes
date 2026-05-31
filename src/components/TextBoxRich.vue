@@ -175,14 +175,9 @@ const unmounting = ref(false);
 const heightBottom = ref(0);
 const heightTop = ref(0);
 const debouncedPhoneHome = debounce(100, phoneHome);
-const { disconnect: disconnectResizeObserver, observe: observeResize } =
-  useResizeObserver();
-const { disconnect: disconnectInlineTopObserver, observe: observeInlineTop } =
-  useResizeObserver();
-const {
-  disconnect: disconnectInlineBottomObserver,
-  observe: observeInlineBottom,
-} = useResizeObserver();
+const { observe: observeResize } = useResizeObserver();
+const { observe: observeInlineTop } = useResizeObserver();
+const { observe: observeInlineBottom } = useResizeObserver();
 
 const htmlElement = computed(() => container.value!);
 
@@ -388,9 +383,8 @@ watch(
 onBeforeUnmount(() => {
   unmounting.value = true;
   update();
-  disconnectInlineTopObserver();
-  disconnectInlineBottomObserver();
-  disconnectResizeObserver();
+  // Observers are disconnected automatically by useResizeObserver's own
+  // onBeforeUnmount hook.
 });
 
 function getEditorInstance() {

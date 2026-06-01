@@ -45,119 +45,83 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, PropType, StyleValue } from 'vue';
+<script setup lang="ts">
+import { computed, PropType, StyleValue } from 'vue';
 
 import Neume from '@/components/NeumeGlyph.vue';
 import { MartyriaElement } from '@/models/Element';
-import { Note } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
 import { withZoom } from '@/utils/withZoom';
 
-export default defineComponent({
-  components: { Neume },
-  props: {
-    neume: {
-      type: Object as PropType<MartyriaElement>,
-      required: true,
-    },
-    pageSetup: {
-      type: Object as PropType<PageSetup>,
-      required: true,
-    },
+const props = defineProps({
+  neume: {
+    type: Object as PropType<MartyriaElement>,
+    required: true,
   },
-  emits: ['select-single', 'select-range'],
-
-  data() {
-    return {
-      Note,
-    };
+  pageSetup: {
+    type: Object as PropType<PageSetup>,
+    required: true,
   },
+});
 
-  computed: {
-    hasFthora() {
-      return this.neume.fthora != null;
-    },
+defineEmits(['select-single', 'select-range']);
 
-    hasTempoLeft() {
-      return this.neume.tempoLeft != null;
-    },
+const hasFthora = computed(() => props.neume.fthora != null);
+const hasTempoLeft = computed(() => props.neume.tempoLeft != null);
+const hasTempo = computed(() => props.neume.tempo != null);
+const hasTempoRight = computed(() => props.neume.tempoRight != null);
+const hasMeasureBarLeft = computed(() => props.neume.measureBarLeft != null);
+const hasMeasureBarRight = computed(() => props.neume.measureBarRight != null);
+const hasQuantitativeNeume = computed(
+  () => props.neume.quantitativeNeume != null && props.neume.alignRight,
+);
+const isMeasureBarAbove = computed(() =>
+  props.neume.measureBarLeft?.endsWith('Above'),
+);
 
-    hasTempo() {
-      return this.neume.tempo != null;
-    },
+const style = computed(() => {
+  const verticalOffset =
+    props.pageSetup.martyriaVerticalOffset + props.neume.verticalOffset;
 
-    hasTempoRight() {
-      return this.neume.tempoRight != null;
-    },
+  return {
+    color: props.pageSetup.martyriaDefaultColor,
+    fontFamily: props.pageSetup.neumeDefaultFontFamily,
+    fontSize: withZoom(props.pageSetup.neumeDefaultFontSize),
+    webkitTextStrokeWidth: withZoom(props.pageSetup.martyriaDefaultStrokeWidth),
+    position: verticalOffset != 0 ? 'relative' : undefined,
+    top: verticalOffset != 0 ? withZoom(verticalOffset) : undefined,
+  } as StyleValue;
+});
 
-    hasMeasureBarLeft() {
-      return this.neume.measureBarLeft != null;
-    },
+const fthoraStyle = computed(() => {
+  return {
+    color: props.pageSetup.fthoraDefaultColor,
+    webkitTextStrokeWidth: withZoom(props.pageSetup.fthoraDefaultStrokeWidth),
+  } as StyleValue;
+});
 
-    hasMeasureBarRight() {
-      return this.neume.measureBarRight != null;
-    },
+const quantitativeNeumeStyle = computed(() => {
+  return {
+    marginLeft: withZoom(props.neume.padding),
+    color: props.pageSetup.neumeDefaultColor,
+    webkitTextStrokeWidth: withZoom(props.pageSetup.neumeDefaultStrokeWidth),
+  } as StyleValue;
+});
 
-    hasQuantitativeNeume() {
-      return this.neume.quantitativeNeume != null && this.neume.alignRight;
-    },
+const tempoStyle = computed(() => {
+  return {
+    color: props.pageSetup.tempoDefaultColor,
+    webkitTextStrokeWidth: withZoom(props.pageSetup.tempoDefaultStrokeWidth),
+  } as StyleValue;
+});
 
-    isMeasureBarAbove() {
-      return this.neume.measureBarLeft?.endsWith('Above');
-    },
-
-    style() {
-      const verticalOffset =
-        this.pageSetup.martyriaVerticalOffset + this.neume.verticalOffset;
-
-      return {
-        color: this.pageSetup.martyriaDefaultColor,
-        fontFamily: this.pageSetup.neumeDefaultFontFamily,
-        fontSize: withZoom(this.pageSetup.neumeDefaultFontSize),
-        webkitTextStrokeWidth: withZoom(
-          this.pageSetup.martyriaDefaultStrokeWidth,
-        ),
-        position: verticalOffset != 0 ? 'relative' : undefined,
-        top: verticalOffset != 0 ? withZoom(verticalOffset) : undefined,
-      } as StyleValue;
-    },
-
-    fthoraStyle() {
-      return {
-        color: this.pageSetup.fthoraDefaultColor,
-        webkitTextStrokeWidth: withZoom(
-          this.pageSetup.fthoraDefaultStrokeWidth,
-        ),
-      } as StyleValue;
-    },
-
-    quantitativeNeumeStyle() {
-      return {
-        marginLeft: withZoom(this.neume.padding),
-        color: this.pageSetup.neumeDefaultColor,
-        webkitTextStrokeWidth: withZoom(this.pageSetup.neumeDefaultStrokeWidth),
-      } as StyleValue;
-    },
-
-    tempoStyle() {
-      return {
-        color: this.pageSetup.tempoDefaultColor,
-        webkitTextStrokeWidth: withZoom(this.pageSetup.tempoDefaultStrokeWidth),
-      } as StyleValue;
-    },
-
-    measureBarStyle() {
-      return {
-        color: this.pageSetup.measureBarDefaultColor,
-        webkitTextStrokeWidth: withZoom(
-          this.pageSetup.measureBarDefaultStrokeWidth,
-        ),
-      } as StyleValue;
-    },
-  },
-
-  methods: {},
+const measureBarStyle = computed(() => {
+  return {
+    color: props.pageSetup.measureBarDefaultColor,
+    webkitTextStrokeWidth: withZoom(
+      props.pageSetup.measureBarDefaultStrokeWidth,
+    ),
+  } as StyleValue;
 });
 </script>
 

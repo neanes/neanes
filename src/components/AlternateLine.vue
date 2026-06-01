@@ -17,8 +17,15 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, PropType } from 'vue';
+<script setup lang="ts">
+import {
+  computed,
+  onBeforeUnmount,
+  onMounted,
+  PropType,
+  ref,
+  useTemplateRef,
+} from 'vue';
 
 import {
   AlternateLineElement,
@@ -30,173 +37,154 @@ import { withZoom } from '@/utils/withZoom';
 
 import NeumeBoxSyllable from './NeumeBoxSyllable.vue';
 
-export default defineComponent({
-  components: { NeumeBoxSyllable },
-  props: {
-    element: {
-      type: Object as PropType<AlternateLineElement>,
-      required: true,
-    },
-    pageSetup: {
-      type: Object as PropType<PageSetup>,
-      required: true,
-    },
+const emit = defineEmits(['update']);
+const props = defineProps({
+  element: {
+    type: Object as PropType<AlternateLineElement>,
+    required: true,
   },
-  emits: ['update'],
-
-  data() {
-    return {
-      offsetX: 0,
-      offsetY: 0,
-      elementX: 0,
-      elementY: 0,
-
-      zoom: 1,
-      ElementType,
-
-      NoteElement,
-
-      clampingInterval: null as ReturnType<typeof setTimeout> | null,
-    };
-  },
-
-  computed: {
-    style() {
-      return {
-        left: withZoom(this.elementX),
-        top: withZoom(this.elementY),
-        minHeight: withZoom(this.pageSetup.alternateLineDefaultFontSize),
-      };
-    },
-  },
-
-  mounted() {
-    this.elementX = this.element.x;
-    this.elementY = this.element.y;
-    this.clampingInterval = setInterval(this.clampToPageBounds, 250);
-  },
-
-  beforeUnmount() {
-    document.removeEventListener('mouseup', this.handleMouseUp);
-    document.removeEventListener('mousemove', this.handleMouseMove);
-
-    if (this.clampingInterval != null) {
-      clearInterval(this.clampingInterval);
-    }
-  },
-
-  methods: {
-    handleMouseDown(e: MouseEvent) {
-      // We only calculate zoom once when the mouse is pressed down
-      // to avoid recalculating it on every mouse move
-      this.zoom = Number(
-        getComputedStyle(this.$refs.container as HTMLElement).getPropertyValue(
-          '--zoom',
-        ),
-      );
-
-      const draggedEl = this.$refs.container as HTMLElement;
-      const rect = draggedEl.getBoundingClientRect();
-
-      // Calculate the offset of the mouse click relative to the element
-      this.offsetX = e.clientX - rect.left;
-      this.offsetY = e.clientY - rect.top;
-
-      document.addEventListener('mouseup', this.handleMouseUp);
-      document.addEventListener('mousemove', this.handleMouseMove);
-    },
-
-    handleMouseMove(e: MouseEvent) {
-      e.preventDefault();
-
-      const draggedEl = this.$refs.container as HTMLElement;
-      const pageEl = draggedEl.closest('.page') as HTMLElement;
-      if (!draggedEl || !pageEl) {
-        console.warn('Could not find dragged element or page element');
-        return;
-      }
-
-      const elRect = draggedEl.getBoundingClientRect();
-      const pageRect = pageEl.getBoundingClientRect();
-
-      const elWidth = elRect.width;
-      const elHeight = elRect.height;
-
-      // Compute desired top-left corner of element in viewport space
-      const desiredLeft = e.clientX - this.offsetX;
-      const desiredTop = e.clientY - this.offsetY;
-
-      // Clamp those values to page bounds
-      const clampedLeft = Math.max(
-        pageRect.left,
-        Math.min(desiredLeft, pageRect.right - elWidth),
-      );
-      const clampedTop = Math.max(
-        pageRect.top,
-        Math.min(desiredTop, pageRect.bottom - elHeight),
-      );
-
-      // Convert clamped screen coords into coordinates relative to the element's offsetParent
-      const offsetParent = draggedEl.offsetParent as HTMLElement;
-      const parentRect = offsetParent.getBoundingClientRect();
-
-      const newX = clampedLeft - parentRect.left;
-      const newY = clampedTop - parentRect.top;
-
-      this.elementX = newX / this.zoom;
-      this.elementY = newY / this.zoom;
-    },
-
-    handleMouseUp() {
-      this.$emit('update', { x: this.elementX, y: this.elementY });
-
-      document.removeEventListener('mouseup', this.handleMouseUp);
-      document.removeEventListener('mousemove', this.handleMouseMove);
-    },
-
-    clampToPageBounds() {
-      const el = this.$refs.container as HTMLElement;
-
-      if (!el) {
-        return;
-      }
-
-      const pageEl = el.closest('.page') as HTMLElement;
-      const offsetParent = el.offsetParent as HTMLElement;
-
-      if (!pageEl || !offsetParent) {
-        return;
-      }
-
-      const zoom = Number(
-        getComputedStyle(this.$refs.container as HTMLElement).getPropertyValue(
-          '--zoom',
-        ),
-      );
-
-      const elRect = el.getBoundingClientRect();
-      const pageRect = pageEl.getBoundingClientRect();
-      const parentRect = offsetParent.getBoundingClientRect();
-
-      const elWidth = elRect.width;
-      const elHeight = elRect.height;
-
-      // Current position relative to offset parent
-      const currentX = this.elementX * zoom;
-      const currentY = this.elementY * zoom;
-
-      // Convert .page bounds into offsetParent-relative coordinates
-      const minX = pageRect.left - parentRect.left;
-      const minY = pageRect.top - parentRect.top;
-      const maxX = pageRect.right - parentRect.left - elWidth;
-      const maxY = pageRect.bottom - parentRect.top - elHeight;
-
-      // Clamp
-      this.elementX = Math.max(minX, Math.min(currentX, maxX)) / zoom;
-      this.elementY = Math.max(minY, Math.min(currentY, maxY)) / zoom;
-    },
+  pageSetup: {
+    type: Object as PropType<PageSetup>,
+    required: true,
   },
 });
+
+const container = useTemplateRef<HTMLElement>('container');
+const offsetX = ref(0);
+const offsetY = ref(0);
+const elementX = ref(0);
+const elementY = ref(0);
+const zoom = ref(1);
+const clampingInterval = ref<ReturnType<typeof setTimeout> | null>(null);
+
+const style = computed(() => {
+  return {
+    left: withZoom(elementX.value),
+    top: withZoom(elementY.value),
+    minHeight: withZoom(props.pageSetup.alternateLineDefaultFontSize),
+  };
+});
+
+onMounted(() => {
+  elementX.value = props.element.x;
+  elementY.value = props.element.y;
+  clampingInterval.value = setInterval(clampToPageBounds, 250);
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener('mouseup', handleMouseUp);
+  document.removeEventListener('mousemove', handleMouseMove);
+
+  if (clampingInterval.value != null) {
+    clearInterval(clampingInterval.value);
+  }
+});
+
+function handleMouseDown(e: MouseEvent) {
+  // We only calculate zoom once when the mouse is pressed down
+  // to avoid recalculating it on every mouse move
+  zoom.value = Number(
+    getComputedStyle(container.value!).getPropertyValue('--zoom'),
+  );
+
+  const draggedEl = container.value!;
+  const rect = draggedEl.getBoundingClientRect();
+
+  // Calculate the offset of the mouse click relative to the element
+  offsetX.value = e.clientX - rect.left;
+  offsetY.value = e.clientY - rect.top;
+
+  document.addEventListener('mouseup', handleMouseUp);
+  document.addEventListener('mousemove', handleMouseMove);
+}
+
+function handleMouseMove(e: MouseEvent) {
+  e.preventDefault();
+
+  const draggedEl = container.value!;
+  const pageEl = draggedEl.closest('.page') as HTMLElement;
+  if (!draggedEl || !pageEl) {
+    console.warn('Could not find dragged element or page element');
+    return;
+  }
+
+  const elRect = draggedEl.getBoundingClientRect();
+  const pageRect = pageEl.getBoundingClientRect();
+
+  const elWidth = elRect.width;
+  const elHeight = elRect.height;
+
+  // Compute desired top-left corner of element in viewport space
+  const desiredLeft = e.clientX - offsetX.value;
+  const desiredTop = e.clientY - offsetY.value;
+
+  // Clamp those values to page bounds
+  const clampedLeft = Math.max(
+    pageRect.left,
+    Math.min(desiredLeft, pageRect.right - elWidth),
+  );
+  const clampedTop = Math.max(
+    pageRect.top,
+    Math.min(desiredTop, pageRect.bottom - elHeight),
+  );
+
+  // Convert clamped screen coords into coordinates relative to the element's offsetParent
+  const offsetParent = draggedEl.offsetParent as HTMLElement;
+  const parentRect = offsetParent.getBoundingClientRect();
+
+  const newX = clampedLeft - parentRect.left;
+  const newY = clampedTop - parentRect.top;
+
+  elementX.value = newX / zoom.value;
+  elementY.value = newY / zoom.value;
+}
+
+function handleMouseUp() {
+  emit('update', { x: elementX.value, y: elementY.value });
+
+  document.removeEventListener('mouseup', handleMouseUp);
+  document.removeEventListener('mousemove', handleMouseMove);
+}
+
+function clampToPageBounds() {
+  const el = container.value;
+
+  if (!el) {
+    return;
+  }
+
+  const pageEl = el.closest('.page') as HTMLElement;
+  const offsetParent = el.offsetParent as HTMLElement;
+
+  if (!pageEl || !offsetParent) {
+    return;
+  }
+
+  const zoom = Number(
+    getComputedStyle(container.value!).getPropertyValue('--zoom'),
+  );
+
+  const elRect = el.getBoundingClientRect();
+  const pageRect = pageEl.getBoundingClientRect();
+  const parentRect = offsetParent.getBoundingClientRect();
+
+  const elWidth = elRect.width;
+  const elHeight = elRect.height;
+
+  // Current position relative to offset parent
+  const currentX = elementX.value * zoom;
+  const currentY = elementY.value * zoom;
+
+  // Convert .page bounds into offsetParent-relative coordinates
+  const minX = pageRect.left - parentRect.left;
+  const minY = pageRect.top - parentRect.top;
+  const maxX = pageRect.right - parentRect.left - elWidth;
+  const maxY = pageRect.bottom - parentRect.top - elHeight;
+
+  // Clamp
+  elementX.value = Math.max(minX, Math.min(currentX, maxX)) / zoom;
+  elementY.value = Math.max(minY, Math.min(currentY, maxY)) / zoom;
+}
 </script>
 
 <style scoped>

@@ -10,28 +10,28 @@
             <div
               class="nav-item"
               :class="{ active: currentSection === 'pageSizeRef' }"
-              @click="scrollTo($refs.pageSizeRef as HTMLElement)"
+              @click="scrollTo(pageSizeRef)"
             >
               {{ $t(($) => $.dialog.pageSetup.pageSize, { ns: 'dialog' }) }}
             </div>
             <div
               class="nav-item"
               :class="{ active: currentSection === 'marginsRef' }"
-              @click="scrollTo($refs.marginsRef as HTMLElement)"
+              @click="scrollTo(marginsRef)"
             >
               {{ $t(($) => $.dialog.pageSetup.margins, { ns: 'dialog' }) }}
             </div>
             <div
               class="nav-item"
               :class="{ active: currentSection === 'spacingRef' }"
-              @click="scrollTo($refs.spacingRef as HTMLElement)"
+              @click="scrollTo(spacingRef)"
             >
               {{ $t(($) => $.dialog.pageSetup.spacing, { ns: 'dialog' }) }}
             </div>
             <div
               class="nav-item"
               :class="{ active: currentSection === 'headersFootersRef' }"
-              @click="scrollTo($refs.headersFootersRef as HTMLElement)"
+              @click="scrollTo(headersFootersRef)"
             >
               {{
                 $t(($) => $.dialog.pageSetup.headersAndFooters, {
@@ -42,7 +42,7 @@
             <div
               class="nav-item"
               :class="{ active: currentSection === 'miscellaneousRef' }"
-              @click="scrollTo($refs.miscellaneousRef as HTMLElement)"
+              @click="scrollTo(miscellaneousRef)"
             >
               {{
                 $t(($) => $.dialog.pageSetup.miscellaneous, { ns: 'dialog' })
@@ -51,42 +51,42 @@
             <div
               class="nav-item"
               :class="{ active: currentSection === 'dropCapsRef' }"
-              @click="scrollTo($refs.dropCapsRef as HTMLElement)"
+              @click="scrollTo(dropCapsRef)"
             >
               {{ $t(($) => $.dialog.pageSetup.dropCaps, { ns: 'dialog' }) }}
             </div>
             <div
               class="nav-item"
               :class="{ active: currentSection === 'lyricsRef' }"
-              @click="scrollTo($refs.lyricsRef as HTMLElement)"
+              @click="scrollTo(lyricsRef)"
             >
               {{ $t(($) => $.dialog.pageSetup.lyrics, { ns: 'dialog' }) }}
             </div>
             <div
               class="nav-item"
               :class="{ active: currentSection === 'textBoxesRef' }"
-              @click="scrollTo($refs.textBoxesRef as HTMLElement)"
+              @click="scrollTo(textBoxesRef)"
             >
               {{ $t(($) => $.dialog.pageSetup.textBoxes, { ns: 'dialog' }) }}
             </div>
             <div
               class="nav-item"
               :class="{ active: currentSection === 'modeKeysRef' }"
-              @click="scrollTo($refs.modeKeysRef as HTMLElement)"
+              @click="scrollTo(modeKeysRef)"
             >
               {{ $t(($) => $.dialog.pageSetup.modeKeys, { ns: 'dialog' }) }}
             </div>
             <div
               class="nav-item"
               :class="{ active: currentSection === 'neumesRef' }"
-              @click="scrollTo($refs.neumesRef as HTMLElement)"
+              @click="scrollTo(neumesRef)"
             >
               {{ $t(($) => $.dialog.pageSetup.neumes, { ns: 'dialog' }) }}
             </div>
             <div
               class="nav-item"
               :class="{ active: currentSection === 'neumeStylesRef' }"
-              @click="scrollTo($refs.neumeStylesRef as HTMLElement)"
+              @click="scrollTo(neumeStylesRef)"
             >
               {{ $t(($) => $.dialog.pageSetup.neumeStyles, { ns: 'dialog' }) }}
             </div>
@@ -94,7 +94,7 @@
           <div
             ref="rightPaneRef"
             class="right-pane"
-            @scroll="updateCurrentSectionThrottled!"
+            @scroll="updateCurrentSectionThrottled"
           >
             <div ref="pageSizeRef" class="subheader">
               {{ $t(($) => $.dialog.pageSetup.pageSize, { ns: 'dialog' }) }}
@@ -1826,10 +1826,17 @@
   </ModalDialog>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { SelectorParam } from 'i18next';
 import { throttle } from 'throttle-debounce';
-import { defineComponent, PropType } from 'vue';
+import {
+  computed,
+  onBeforeUnmount,
+  PropType,
+  ref,
+  triggerRef,
+  useTemplateRef,
+} from 'vue';
 
 import ColorPicker from '@/components/ColorPicker.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
@@ -1845,7 +1852,6 @@ import {
   NoteElement,
   TempoElement,
 } from '@/models/Element';
-import { Accidental, QuantitativeNeume } from '@/models/Neumes';
 import { PageSetup, PageSize, pageSizes } from '@/models/PageSetup';
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
 import { SaveService } from '@/services/SaveService';
@@ -1924,504 +1930,480 @@ const previewNeumes = [
   },
 ] as any;
 
-export default defineComponent({
-  components: {
-    ModalDialog,
-    ColorPicker,
-    InputUnit,
-    InputStrokeWidth,
-    InputFontSize,
-    NeumeBoxSyllable,
-    NeumeBoxMartyria,
-    NeumeBoxTempo,
+const sectionIds = [
+  'dropCapsRef',
+  'headersFootersRef',
+  'lyricsRef',
+  'marginsRef',
+  'miscellaneousRef',
+  'modeKeysRef',
+  'neumesRef',
+  'neumeStylesRef',
+  'pageSizeRef',
+  'textBoxesRef',
+  'spacingRef',
+] as const;
+
+type SectionRefName = (typeof sectionIds)[number];
+
+const emit = defineEmits<{
+  close: [];
+  update: [pageSetup: PageSetup];
+}>();
+
+const props = defineProps({
+  pageSetup: {
+    type: Object as PropType<PageSetup>,
+    required: true,
   },
-  props: {
-    pageSetup: {
-      type: Object as PropType<PageSetup>,
-      required: true,
-    },
-    fonts: {
-      type: Array as PropType<string[]>,
-      required: true,
-    },
-  },
-  emits: ['close', 'update'],
-
-  data() {
-    return {
-      form: new PageSetup(),
-      currentSection: 'pageSizeRef',
-      neumeBulkColor: '#000000',
-
-      QuantitativeNeume,
-      Accidental,
-      NeumeColorOptions,
-
-      MartyriaElement,
-      NoteElement,
-      TempoElement,
-
-      previewNeumes,
-
-      selectedNeumeColorOptions: [] as NeumeColorOptions[],
-
-      updateCurrentSectionThrottled: null as (() => void) | null,
-    };
-  },
-
-  computed: {
-    topMargin() {
-      return this.toDisplayUnit(this.form.topMargin).toFixed(2);
-    },
-
-    bottomMargin() {
-      return this.toDisplayUnit(this.form.bottomMargin).toFixed(2);
-    },
-
-    leftMargin() {
-      return this.toDisplayUnit(this.form.leftMargin).toFixed(2);
-    },
-
-    rightMargin() {
-      return this.toDisplayUnit(this.form.rightMargin).toFixed(2);
-    },
-
-    headerMargin() {
-      return this.toDisplayUnit(this.form.headerMargin).toFixed(2);
-    },
-
-    footerMargin() {
-      return this.toDisplayUnit(this.form.footerMargin).toFixed(2);
-    },
-
-    lyricsVerticalOffset() {
-      return this.toDisplayUnit(this.form.lyricsVerticalOffset).toFixed(3);
-    },
-
-    lyricsMinimumSpacing() {
-      return this.toDisplayUnit(this.form.lyricsMinimumSpacing).toFixed(3);
-    },
-
-    lineHeight() {
-      return this.toDisplayUnit(this.form.lineHeight).toFixed(3);
-    },
-
-    hyphenSpacing() {
-      return this.toDisplayUnit(this.form.hyphenSpacing).toFixed(3);
-    },
-    dropCapFontFamilies() {
-      return [
-        'Source Serif',
-        'GFS Didot',
-        'Noto Naskh Arabic',
-        'Old Standard',
-        ...this.fonts,
-      ];
-    },
-
-    lyricsFontFamilies() {
-      return [
-        'Source Serif',
-        'GFS Didot',
-        'Noto Naskh Arabic',
-        'Old Standard',
-        ...this.fonts,
-      ];
-    },
-
-    neumeFontFamilies() {
-      if (this.form.melkiteRtl) {
-        return [{ displayName: 'EZ Psaltica RTL', value: 'NeanesRTL' }];
-      } else {
-        return [
-          { displayName: 'EZ Psaltica', value: 'Neanes' },
-          { displayName: 'Stathis Series', value: 'NeanesStathisSeries' },
-        ];
-      }
-    },
-
-    neumeSpacingMax() {
-      return Math.round(this.toDisplayUnit(this.form.pageWidth));
-    },
-
-    heightAdjustmentMin() {
-      return -Math.round(Unit.fromPt(this.pageSetup.pageHeight));
-    },
-
-    heightAdjustmentMax() {
-      return Unit.toPt(this.pageSetup.pageHeight);
-    },
-
-    pageSizes() {
-      return pageSizes;
-    },
-
-    pageSize: {
-      get() {
-        return this.form.pageSize;
-      },
-      set(value: PageSize) {
-        this.form.pageSize = value;
-
-        this.updatePageSize();
-      },
-    },
-
-    landscape: {
-      get() {
-        return this.form.landscape;
-      },
-      set(value: boolean) {
-        this.form.landscape = value;
-
-        this.updatePageSize();
-      },
-    },
-
-    marginUnitLabel(): SelectorParam<'dialog'> | undefined {
-      switch (this.form.pageSizeUnit) {
-        case 'pc':
-          return ($) => $.dialog.pageSetup.pc;
-        case 'pt':
-          return ($) => $.dialog.pageSetup.pt;
-        case 'cm':
-          return ($) => $.dialog.pageSetup.cm;
-        case 'mm':
-          return ($) => $.dialog.pageSetup.mm;
-        case 'in':
-          return ($) => $.dialog.pageSetup.in;
-        default:
-          console.warn(`Unknown page size unit: ${this.form.pageSizeUnit}`);
-          return undefined;
-      }
-    },
-
-    marginStep() {
-      switch (this.form.pageSizeUnit) {
-        case 'pc':
-          return 1;
-        case 'pt':
-          return 1;
-        case 'cm':
-          return 0.1;
-        case 'mm':
-          return 1;
-        case 'in':
-          return 0.1;
-        default:
-          console.warn(`Unknown page size unit: ${this.form.pageSizeUnit}`);
-          return 1;
-      }
-    },
-
-    spacingStep() {
-      switch (this.form.pageSizeUnit) {
-        case 'pc':
-          return 0.05;
-        case 'pt':
-          return 0.5;
-        case 'cm':
-          return 0.01;
-        case 'mm':
-          return 0.1;
-        case 'in':
-          return 0.005;
-        default:
-          console.warn(`Unknown page size unit: ${this.form.pageSizeUnit}`);
-          return 1;
-      }
-    },
-  },
-
-  created() {
-    Object.assign(this.form, this.pageSetup);
-
-    window.addEventListener('keydown', this.onKeyDown);
-
-    this.updateCurrentSectionThrottled = throttle(
-      50,
-      this.updateCurrentSection,
-    );
-  },
-
-  beforeUnmount() {
-    window.removeEventListener('keydown', this.onKeyDown);
-  },
-
-  methods: {
-    toDisplayUnit(value: number) {
-      switch (this.form.pageSizeUnit) {
-        case 'pc':
-          return Unit.toPc(value);
-        case 'pt':
-          return Unit.toPt(value);
-        case 'cm':
-          return Unit.toCm(value);
-        case 'mm':
-          return Unit.toMm(value);
-        case 'in':
-          return Unit.toInch(value);
-        default:
-          console.warn(`Unknown page size unit: ${this.form.pageSizeUnit}`);
-          return 0;
-      }
-    },
-
-    toStorageUnit(value: number) {
-      switch (this.form.pageSizeUnit) {
-        case 'pc':
-          return Unit.fromPc(value);
-        case 'pt':
-          return Unit.fromPt(value);
-        case 'cm':
-          return Unit.fromCm(value);
-        case 'mm':
-          return Unit.fromMm(value);
-        case 'in':
-          return Unit.fromInch(value);
-        default:
-          console.warn(`Unknown page size unit: ${this.form.pageSizeUnit}`);
-          return 0;
-      }
-    },
-    updateCurrentSection() {
-      const scrollParentTop = (
-        this.$refs.rightPaneRef as HTMLElement
-      ).getBoundingClientRect().top;
-
-      let closest: string | null = null;
-      let closestDistance = Infinity;
-
-      const sectionIds = [
-        'dropCapsRef',
-        'headersFootersRef',
-        'lyricsRef',
-        'marginsRef',
-        'miscellaneousRef',
-        'modeKeysRef',
-        'neumesRef',
-        'neumeStylesRef',
-        'pageSizeRef',
-        'textBoxesRef',
-        'spacingRef',
-      ];
-
-      for (const id of sectionIds) {
-        const el = this.$refs[id] as HTMLElement;
-
-        const top = Math.abs(el.getBoundingClientRect().top - scrollParentTop);
-
-        if (top < closestDistance) {
-          closest = id;
-          closestDistance = top;
-        }
-      }
-
-      if (closest !== null) {
-        this.currentSection = closest;
-      }
-    },
-
-    changeNeumeColorInBulk() {
-      for (const neume of this.selectedNeumeColorOptions) {
-        switch (neume) {
-          case NeumeColorOptions.Accidentals:
-            this.form.accidentalDefaultColor = this.neumeBulkColor;
-            break;
-          case NeumeColorOptions.Fthoras:
-            this.form.fthoraDefaultColor = this.neumeBulkColor;
-            break;
-          case NeumeColorOptions.Gorgons:
-            this.form.gorgonDefaultColor = this.neumeBulkColor;
-            break;
-          case NeumeColorOptions.Heterons:
-            this.form.heteronDefaultColor = this.neumeBulkColor;
-            break;
-          case NeumeColorOptions.Ison:
-            this.form.isonDefaultColor = this.neumeBulkColor;
-            break;
-          case NeumeColorOptions.Koronis:
-            this.form.koronisDefaultColor = this.neumeBulkColor;
-            break;
-          case NeumeColorOptions.Martyria:
-            this.form.martyriaDefaultColor = this.neumeBulkColor;
-            break;
-          case NeumeColorOptions.MeasureBars:
-            this.form.measureBarDefaultColor = this.neumeBulkColor;
-            break;
-          case NeumeColorOptions.MeasureNumbers:
-            this.form.accidentalDefaultColor = this.neumeBulkColor;
-            break;
-          case NeumeColorOptions.NoteIndicators:
-            this.form.noteIndicatorDefaultColor = this.neumeBulkColor;
-            break;
-          case NeumeColorOptions.Tempos:
-            this.form.tempoDefaultColor = this.neumeBulkColor;
-            break;
-        }
-      }
-    },
-    updateTopMargin(value: number) {
-      this.form.topMargin = Math.min(
-        Math.max(this.toStorageUnit(value), 0),
-        this.form.pageHeight - this.form.bottomMargin - Unit.fromInch(0.5),
-      );
-
-      this.$forceUpdate();
-    },
-
-    updateBottomMargin(value: number) {
-      this.form.bottomMargin = Math.min(
-        Math.max(this.toStorageUnit(value), 0),
-        this.form.pageHeight - this.form.topMargin - Unit.fromInch(0.5),
-      );
-
-      this.$forceUpdate();
-    },
-
-    updateLeftMargin(value: number) {
-      this.form.leftMargin = Math.min(
-        Math.max(this.toStorageUnit(value), 0),
-        this.form.pageWidth - this.form.rightMargin - Unit.fromInch(0.5),
-      );
-
-      this.$forceUpdate();
-    },
-
-    updateRightMargin(value: number) {
-      this.form.rightMargin = Math.min(
-        Math.max(this.toStorageUnit(value), 0),
-        this.form.pageWidth - this.form.leftMargin - Unit.fromInch(0.5),
-      );
-
-      this.$forceUpdate();
-    },
-
-    updateHeaderMargin(value: number) {
-      this.form.headerMargin = Math.min(
-        Math.max(this.toStorageUnit(value), 0),
-        this.form.innerPageHeight,
-      );
-
-      this.$forceUpdate();
-    },
-
-    updateFooterMargin(value: number) {
-      this.form.footerMargin = Math.min(
-        Math.max(this.toStorageUnit(value), 0),
-        this.form.innerPageHeight,
-      );
-
-      this.$forceUpdate();
-    },
-
-    updateLyricsVerticalOffset(value: number) {
-      this.form.lyricsVerticalOffset = Math.min(
-        this.toStorageUnit(value),
-        this.form.innerPageHeight -
-          this.form.lyricsDefaultFontSize -
-          this.form.neumeDefaultFontSize,
-      );
-
-      this.$forceUpdate();
-    },
-
-    updateLyricsMinimumSpacing(value: number) {
-      this.form.lyricsMinimumSpacing = Math.min(
-        this.toStorageUnit(value),
-        this.form.innerPageWidth,
-      );
-
-      this.$forceUpdate();
-    },
-
-    updateLineHeight(value: number) {
-      this.form.lineHeight = Math.min(
-        Math.max(this.toStorageUnit(value), 0),
-        this.form.innerPageHeight,
-      );
-
-      this.$forceUpdate();
-    },
-
-    updateHyphenSpacing(value: number) {
-      this.form.hyphenSpacing = Math.min(
-        Math.max(this.toStorageUnit(value), 0),
-        this.form.innerPageWidth,
-      );
-
-      this.$forceUpdate();
-    },
-
-    onChangeMelkiteRtl() {
-      this.form.neumeDefaultFontFamily = this.form.melkiteRtl
-        ? 'NeanesRTL'
-        : 'Neanes';
-    },
-
-    isSyllableElement(elementType: ElementType) {
-      return elementType == ElementType.Note;
-    },
-
-    isMartyriaElement(elementType: ElementType) {
-      return elementType == ElementType.Martyria;
-    },
-
-    isTempoElement(elementType: ElementType) {
-      return elementType == ElementType.Tempo;
-    },
-
-    onKeyDown(event: KeyboardEvent) {
-      if (event.code === 'Escape') {
-        this.$emit('close');
-      }
-    },
-
-    updatePageSize() {
-      if (this.form.pageSize === 'Custom') {
-        if (this.form.landscape) {
-          this.form.pageWidth = this.form.pageHeightCustom;
-          this.form.pageHeight = this.form.pageWidthCustom;
-        } else {
-          this.form.pageWidth = this.form.pageWidthCustom;
-          this.form.pageHeight = this.form.pageHeightCustom;
-        }
-        return;
-      }
-
-      const pageSize = pageSizes.find((x) => x.name === this.form.pageSize);
-      if (pageSize) {
-        if (this.form.landscape) {
-          this.form.pageWidth = pageSize.height;
-          this.form.pageHeight = pageSize.width;
-        } else {
-          this.form.pageWidth = pageSize.width;
-          this.form.pageHeight = pageSize.height;
-        }
-      }
-    },
-
-    updatePageSetup() {
-      this.$emit('update', this.form);
-      this.$emit('close');
-    },
-
-    saveAsDefault() {
-      const defaults = new PageSetup_v1();
-      SaveService.SavePageSetup(defaults, this.form);
-
-      localStorage.setItem('pageSetupDefault', JSON.stringify(defaults));
-    },
-
-    resetToSystemDefaults() {
-      this.form = new PageSetup();
-    },
-
-    scrollTo(el: HTMLElement) {
-      el.scrollIntoView({ behavior: 'instant', block: 'start' });
-    },
+  fonts: {
+    type: Array as PropType<string[]>,
+    required: true,
   },
 });
+
+const form = ref(new PageSetup());
+const currentSection = ref<SectionRefName>('pageSizeRef');
+const neumeBulkColor = ref('#000000');
+const selectedNeumeColorOptions = ref<NeumeColorOptions[]>([]);
+
+const rightPaneRef = useTemplateRef<HTMLElement>('rightPaneRef');
+const pageSizeRef = useTemplateRef<HTMLElement>('pageSizeRef');
+const marginsRef = useTemplateRef<HTMLElement>('marginsRef');
+const spacingRef = useTemplateRef<HTMLElement>('spacingRef');
+const headersFootersRef = useTemplateRef<HTMLElement>('headersFootersRef');
+const miscellaneousRef = useTemplateRef<HTMLElement>('miscellaneousRef');
+const dropCapsRef = useTemplateRef<HTMLElement>('dropCapsRef');
+const lyricsRef = useTemplateRef<HTMLElement>('lyricsRef');
+const textBoxesRef = useTemplateRef<HTMLElement>('textBoxesRef');
+const modeKeysRef = useTemplateRef<HTMLElement>('modeKeysRef');
+const neumesRef = useTemplateRef<HTMLElement>('neumesRef');
+const neumeStylesRef = useTemplateRef<HTMLElement>('neumeStylesRef');
+
+const sectionRefs = {
+  dropCapsRef,
+  headersFootersRef,
+  lyricsRef,
+  marginsRef,
+  miscellaneousRef,
+  modeKeysRef,
+  neumesRef,
+  neumeStylesRef,
+  pageSizeRef,
+  textBoxesRef,
+  spacingRef,
+};
+
+const topMargin = computed(() =>
+  toDisplayUnit(form.value.topMargin).toFixed(2),
+);
+const bottomMargin = computed(() =>
+  toDisplayUnit(form.value.bottomMargin).toFixed(2),
+);
+const leftMargin = computed(() =>
+  toDisplayUnit(form.value.leftMargin).toFixed(2),
+);
+const rightMargin = computed(() =>
+  toDisplayUnit(form.value.rightMargin).toFixed(2),
+);
+const headerMargin = computed(() =>
+  toDisplayUnit(form.value.headerMargin).toFixed(2),
+);
+const footerMargin = computed(() =>
+  toDisplayUnit(form.value.footerMargin).toFixed(2),
+);
+const lyricsVerticalOffset = computed(() =>
+  toDisplayUnit(form.value.lyricsVerticalOffset).toFixed(3),
+);
+const lyricsMinimumSpacing = computed(() =>
+  toDisplayUnit(form.value.lyricsMinimumSpacing).toFixed(3),
+);
+const lineHeight = computed(() =>
+  toDisplayUnit(form.value.lineHeight).toFixed(3),
+);
+const hyphenSpacing = computed(() =>
+  toDisplayUnit(form.value.hyphenSpacing).toFixed(3),
+);
+const dropCapFontFamilies = computed(() => [
+  'Source Serif',
+  'GFS Didot',
+  'Noto Naskh Arabic',
+  'Old Standard',
+  ...props.fonts,
+]);
+const lyricsFontFamilies = computed(() => [
+  'Source Serif',
+  'GFS Didot',
+  'Noto Naskh Arabic',
+  'Old Standard',
+  ...props.fonts,
+]);
+const neumeFontFamilies = computed(() => {
+  if (form.value.melkiteRtl) {
+    return [{ displayName: 'EZ Psaltica RTL', value: 'NeanesRTL' }];
+  } else {
+    return [
+      { displayName: 'EZ Psaltica', value: 'Neanes' },
+      { displayName: 'Stathis Series', value: 'NeanesStathisSeries' },
+    ];
+  }
+});
+const neumeSpacingMax = computed(() =>
+  Math.round(toDisplayUnit(form.value.pageWidth)),
+);
+const heightAdjustmentMin = computed(
+  () => -Math.round(Unit.fromPt(props.pageSetup.pageHeight)),
+);
+const heightAdjustmentMax = computed(() =>
+  Unit.toPt(props.pageSetup.pageHeight),
+);
+const pageSize = computed({
+  get: () => form.value.pageSize,
+  set: (value: PageSize) => {
+    form.value.pageSize = value;
+    updatePageSize();
+  },
+});
+const landscape = computed({
+  get: () => form.value.landscape,
+  set: (value: boolean) => {
+    form.value.landscape = value;
+    updatePageSize();
+  },
+});
+const marginUnitLabel = computed<SelectorParam<'dialog'> | undefined>(() => {
+  switch (form.value.pageSizeUnit) {
+    case 'pc':
+      return ($) => $.dialog.pageSetup.pc;
+    case 'pt':
+      return ($) => $.dialog.pageSetup.pt;
+    case 'cm':
+      return ($) => $.dialog.pageSetup.cm;
+    case 'mm':
+      return ($) => $.dialog.pageSetup.mm;
+    case 'in':
+      return ($) => $.dialog.pageSetup.in;
+    default:
+      console.warn(`Unknown page size unit: ${form.value.pageSizeUnit}`);
+      return undefined;
+  }
+});
+const marginStep = computed(() => {
+  switch (form.value.pageSizeUnit) {
+    case 'pc':
+      return 1;
+    case 'pt':
+      return 1;
+    case 'cm':
+      return 0.1;
+    case 'mm':
+      return 1;
+    case 'in':
+      return 0.1;
+    default:
+      console.warn(`Unknown page size unit: ${form.value.pageSizeUnit}`);
+      return 1;
+  }
+});
+const spacingStep = computed(() => {
+  switch (form.value.pageSizeUnit) {
+    case 'pc':
+      return 0.05;
+    case 'pt':
+      return 0.5;
+    case 'cm':
+      return 0.01;
+    case 'mm':
+      return 0.1;
+    case 'in':
+      return 0.005;
+    default:
+      console.warn(`Unknown page size unit: ${form.value.pageSizeUnit}`);
+      return 1;
+  }
+});
+
+Object.assign(form.value, props.pageSetup);
+
+window.addEventListener('keydown', onKeyDown);
+
+const updateCurrentSectionThrottled = throttle(50, updateCurrentSection);
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKeyDown);
+});
+
+function toDisplayUnit(value: number) {
+  switch (form.value.pageSizeUnit) {
+    case 'pc':
+      return Unit.toPc(value);
+    case 'pt':
+      return Unit.toPt(value);
+    case 'cm':
+      return Unit.toCm(value);
+    case 'mm':
+      return Unit.toMm(value);
+    case 'in':
+      return Unit.toInch(value);
+    default:
+      console.warn(`Unknown page size unit: ${form.value.pageSizeUnit}`);
+      return 0;
+  }
+}
+
+function toStorageUnit(value: number) {
+  switch (form.value.pageSizeUnit) {
+    case 'pc':
+      return Unit.fromPc(value);
+    case 'pt':
+      return Unit.fromPt(value);
+    case 'cm':
+      return Unit.fromCm(value);
+    case 'mm':
+      return Unit.fromMm(value);
+    case 'in':
+      return Unit.fromInch(value);
+    default:
+      console.warn(`Unknown page size unit: ${form.value.pageSizeUnit}`);
+      return 0;
+  }
+}
+
+function refreshFormInputs() {
+  triggerRef(form);
+}
+
+function updateCurrentSection() {
+  const rightPane = rightPaneRef.value;
+
+  if (!rightPane) {
+    return;
+  }
+
+  const scrollParentTop = rightPane.getBoundingClientRect().top;
+
+  let closest: SectionRefName | null = null;
+  let closestDistance = Infinity;
+
+  for (const id of sectionIds) {
+    const el = sectionRefs[id].value;
+
+    if (!el) {
+      continue;
+    }
+
+    const top = Math.abs(el.getBoundingClientRect().top - scrollParentTop);
+
+    if (top < closestDistance) {
+      closest = id;
+      closestDistance = top;
+    }
+  }
+
+  if (closest !== null) {
+    currentSection.value = closest;
+  }
+}
+
+function changeNeumeColorInBulk() {
+  for (const neume of selectedNeumeColorOptions.value) {
+    switch (neume) {
+      case NeumeColorOptions.Accidentals:
+        form.value.accidentalDefaultColor = neumeBulkColor.value;
+        break;
+      case NeumeColorOptions.Fthoras:
+        form.value.fthoraDefaultColor = neumeBulkColor.value;
+        break;
+      case NeumeColorOptions.Gorgons:
+        form.value.gorgonDefaultColor = neumeBulkColor.value;
+        break;
+      case NeumeColorOptions.Heterons:
+        form.value.heteronDefaultColor = neumeBulkColor.value;
+        break;
+      case NeumeColorOptions.Ison:
+        form.value.isonDefaultColor = neumeBulkColor.value;
+        break;
+      case NeumeColorOptions.Koronis:
+        form.value.koronisDefaultColor = neumeBulkColor.value;
+        break;
+      case NeumeColorOptions.Martyria:
+        form.value.martyriaDefaultColor = neumeBulkColor.value;
+        break;
+      case NeumeColorOptions.MeasureBars:
+        form.value.measureBarDefaultColor = neumeBulkColor.value;
+        break;
+      case NeumeColorOptions.MeasureNumbers:
+        form.value.accidentalDefaultColor = neumeBulkColor.value;
+        break;
+      case NeumeColorOptions.NoteIndicators:
+        form.value.noteIndicatorDefaultColor = neumeBulkColor.value;
+        break;
+      case NeumeColorOptions.Tempos:
+        form.value.tempoDefaultColor = neumeBulkColor.value;
+        break;
+    }
+  }
+}
+
+function updateTopMargin(value: number) {
+  form.value.topMargin = Math.min(
+    Math.max(toStorageUnit(value), 0),
+    form.value.pageHeight - form.value.bottomMargin - Unit.fromInch(0.5),
+  );
+
+  refreshFormInputs();
+}
+
+function updateBottomMargin(value: number) {
+  form.value.bottomMargin = Math.min(
+    Math.max(toStorageUnit(value), 0),
+    form.value.pageHeight - form.value.topMargin - Unit.fromInch(0.5),
+  );
+
+  refreshFormInputs();
+}
+
+function updateLeftMargin(value: number) {
+  form.value.leftMargin = Math.min(
+    Math.max(toStorageUnit(value), 0),
+    form.value.pageWidth - form.value.rightMargin - Unit.fromInch(0.5),
+  );
+
+  refreshFormInputs();
+}
+
+function updateRightMargin(value: number) {
+  form.value.rightMargin = Math.min(
+    Math.max(toStorageUnit(value), 0),
+    form.value.pageWidth - form.value.leftMargin - Unit.fromInch(0.5),
+  );
+
+  refreshFormInputs();
+}
+
+function updateHeaderMargin(value: number) {
+  form.value.headerMargin = Math.min(
+    Math.max(toStorageUnit(value), 0),
+    form.value.innerPageHeight,
+  );
+
+  refreshFormInputs();
+}
+
+function updateFooterMargin(value: number) {
+  form.value.footerMargin = Math.min(
+    Math.max(toStorageUnit(value), 0),
+    form.value.innerPageHeight,
+  );
+
+  refreshFormInputs();
+}
+
+function updateLyricsVerticalOffset(value: number) {
+  form.value.lyricsVerticalOffset = Math.min(
+    toStorageUnit(value),
+    form.value.innerPageHeight -
+      form.value.lyricsDefaultFontSize -
+      form.value.neumeDefaultFontSize,
+  );
+
+  refreshFormInputs();
+}
+
+function updateLyricsMinimumSpacing(value: number) {
+  form.value.lyricsMinimumSpacing = Math.min(
+    toStorageUnit(value),
+    form.value.innerPageWidth,
+  );
+
+  refreshFormInputs();
+}
+
+function updateLineHeight(value: number) {
+  form.value.lineHeight = Math.min(
+    Math.max(toStorageUnit(value), 0),
+    form.value.innerPageHeight,
+  );
+
+  refreshFormInputs();
+}
+
+function updateHyphenSpacing(value: number) {
+  form.value.hyphenSpacing = Math.min(
+    Math.max(toStorageUnit(value), 0),
+    form.value.innerPageWidth,
+  );
+
+  refreshFormInputs();
+}
+
+function onChangeMelkiteRtl() {
+  form.value.neumeDefaultFontFamily = form.value.melkiteRtl
+    ? 'NeanesRTL'
+    : 'Neanes';
+}
+
+function isSyllableElement(elementType: ElementType) {
+  return elementType == ElementType.Note;
+}
+
+function isMartyriaElement(elementType: ElementType) {
+  return elementType == ElementType.Martyria;
+}
+
+function isTempoElement(elementType: ElementType) {
+  return elementType == ElementType.Tempo;
+}
+
+function onKeyDown(event: KeyboardEvent) {
+  if (event.code === 'Escape') {
+    emit('close');
+  }
+}
+
+function updatePageSize() {
+  if (form.value.pageSize === 'Custom') {
+    if (form.value.landscape) {
+      form.value.pageWidth = form.value.pageHeightCustom;
+      form.value.pageHeight = form.value.pageWidthCustom;
+    } else {
+      form.value.pageWidth = form.value.pageWidthCustom;
+      form.value.pageHeight = form.value.pageHeightCustom;
+    }
+    return;
+  }
+
+  const pageSize = pageSizes.find((x) => x.name === form.value.pageSize);
+  if (pageSize) {
+    if (form.value.landscape) {
+      form.value.pageWidth = pageSize.height;
+      form.value.pageHeight = pageSize.width;
+    } else {
+      form.value.pageWidth = pageSize.width;
+      form.value.pageHeight = pageSize.height;
+    }
+  }
+}
+
+function updatePageSetup() {
+  emit('update', form.value);
+  emit('close');
+}
+
+function saveAsDefault() {
+  const defaults = new PageSetup_v1();
+  SaveService.SavePageSetup(defaults, form.value);
+
+  localStorage.setItem('pageSetupDefault', JSON.stringify(defaults));
+}
+
+function resetToSystemDefaults() {
+  form.value = new PageSetup();
+}
+
+function scrollTo(el: HTMLElement | null) {
+  el?.scrollIntoView({ behavior: 'instant', block: 'start' });
+}
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

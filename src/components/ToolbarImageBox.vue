@@ -121,68 +121,56 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, PropType } from 'vue';
+<script setup lang="ts">
+import { PropType } from 'vue';
 
 import { ImageBoxElement, TextBoxAlignment } from '@/models/Element';
 import { PageSetup } from '@/models/PageSetup';
 
 import InputUnit from './InputUnit.vue';
 
-export default defineComponent({
-  components: { InputUnit },
-  props: {
-    element: {
-      type: Object as PropType<ImageBoxElement>,
-      required: true,
-    },
-    pageSetup: {
-      type: Object as PropType<PageSetup>,
-      required: true,
-    },
+const props = defineProps({
+  element: {
+    type: Object as PropType<ImageBoxElement>,
+    required: true,
   },
-  emits: ['update'],
-
-  data() {
-    return {
-      TextBoxAlignment,
-    };
-  },
-
-  computed: {},
-
-  methods: {
-    onChangeHeight(height: number) {
-      const aspectRatio = this.element.aspectRatio;
-
-      let width = this.element.imageWidth;
-
-      if (this.element.lockAspectRatio) {
-        width = height * aspectRatio;
-      }
-
-      this.$emit('update', {
-        imageWidth: width,
-        imageHeight: height,
-      } as Partial<ImageBoxElement>);
-    },
-
-    onChangeWidth(width: number) {
-      const aspectRatio = this.element.aspectRatio;
-
-      let height = this.element.imageHeight;
-
-      if (this.element.lockAspectRatio) {
-        height = width / aspectRatio;
-      }
-
-      this.$emit('update', {
-        imageWidth: width,
-        imageHeight: height,
-      } as Partial<ImageBoxElement>);
-    },
+  pageSetup: {
+    type: Object as PropType<PageSetup>,
+    required: true,
   },
 });
+
+const emit = defineEmits(['update']);
+
+function onChangeHeight(height: number) {
+  const aspectRatio = props.element.aspectRatio;
+
+  let width = props.element.imageWidth;
+
+  if (props.element.lockAspectRatio) {
+    width = height * aspectRatio;
+  }
+
+  emit('update', {
+    imageWidth: width,
+    imageHeight: height,
+  } as Partial<ImageBoxElement>);
+}
+
+function onChangeWidth(width: number) {
+  const aspectRatio = props.element.aspectRatio;
+
+  let height = props.element.imageHeight;
+
+  if (props.element.lockAspectRatio) {
+    height = width / aspectRatio;
+  }
+
+  emit('update', {
+    imageWidth: width,
+    imageHeight: height,
+  } as Partial<ImageBoxElement>);
+}
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

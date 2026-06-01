@@ -4,26 +4,13 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent } from 'vue';
-
-export default defineComponent({
-  components: {},
-  props: {
-    label: {
-      type: String,
-      required: true,
-    },
+<script setup lang="ts">
+defineEmits(['click']);
+defineProps({
+  label: {
+    type: String,
+    required: true,
   },
-  emits: ['click'],
-
-  data() {
-    return {};
-  },
-
-  computed: {},
-
-  methods: {},
 });
 </script>
 

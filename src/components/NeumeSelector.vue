@@ -379,8 +379,9 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, PropType } from 'vue';
+<script setup lang="ts">
+import { useTranslation } from 'i18next-vue';
+import { PropType, ref } from 'vue';
 
 import Neume from '@/components/NeumeGlyph.vue';
 import { getQuantitativeNeumeLabelSelector } from '@/models/NeumeI18nMappings';
@@ -506,221 +507,190 @@ const vareiaDottedMenuItems: QuantitativeNeume[] = [
   QuantitativeNeume.VareiaDotted,
 ];
 
-export default defineComponent({
-  components: { Neume },
-  props: {
-    pageSetup: {
-      type: Object as PropType<PageSetup>,
-      required: true,
-    },
-    neumeKeyboard: {
-      type: Object as PropType<NeumeKeyboard>,
-      required: true,
-    },
+const props = defineProps({
+  pageSetup: {
+    type: Object as PropType<PageSetup>,
+    required: true,
   },
-  emits: ['select-quantitative-neume'],
-
-  data() {
-    return {
-      QuantitativeNeume,
-
-      ascendingNeumes,
-      descendingNeumes,
-      ascendingNeumesWithPetasti,
-      combinationNeumes,
-      vareiaDottedMenuItems,
-      secondaryGorgonMenuItems,
-      secondaryGorgonMenuItemsDown,
-
-      showHyporoeKentemataMenu: false,
-      showIsonKentemataMenu: false,
-      showApostrophosKentemataMenu: false,
-      showElaphronKentemataMenu: false,
-      showElaphronApostrophosKentemataMenu: false,
-      showRunningElaphronKentemataMenu: false,
-      showHamiliKentemataMenu: false,
-      showVareiaDottedMenu: false,
-      selectedSecondaryGorgon: null as SecondaryGorgonMenuItem | null,
-      selectedVareiaDotted: null as QuantitativeNeume | null,
-    };
-  },
-
-  computed: {},
-
-  methods: {
-    openHyporoeKentemataMenu() {
-      this.showHyporoeKentemataMenu = true;
-      window.addEventListener('mouseup', this.onHyporoeMouseUp);
-    },
-
-    openIsonKentemataMenu() {
-      this.showIsonKentemataMenu = true;
-      window.addEventListener('mouseup', this.onIsonKentemataMouseUp);
-    },
-
-    openApostrophosKentemataMenu() {
-      this.showApostrophosKentemataMenu = true;
-      window.addEventListener('mouseup', this.onApostrophosKentemataMouseUp);
-    },
-
-    openElaphronKentemataMenu() {
-      this.showElaphronKentemataMenu = true;
-      window.addEventListener('mouseup', this.onElaphronKentemataMouseUp);
-    },
-
-    openElaphronApostrophosKentemataMenu() {
-      this.showElaphronApostrophosKentemataMenu = true;
-      window.addEventListener(
-        'mouseup',
-        this.onElaphronApostrophosKentemataMouseUp,
-      );
-    },
-
-    openRunningElaphronKentemataMenu() {
-      this.showRunningElaphronKentemataMenu = true;
-      window.addEventListener(
-        'mouseup',
-        this.onRunningElaphronKentemataMouseUp,
-      );
-    },
-
-    openHamiliKentemataMenu() {
-      this.showHamiliKentemataMenu = true;
-      window.addEventListener('mouseup', this.onHamiliKentemataMouseUp);
-    },
-
-    onHyporoeMouseUp() {
-      if (this.selectedSecondaryGorgon) {
-        this.$emit(
-          'select-quantitative-neume',
-          QuantitativeNeume.OligonPlusHyporoePlusKentemata,
-          this.selectedSecondaryGorgon.gorgon,
-        );
-      }
-
-      this.showHyporoeKentemataMenu = false;
-
-      window.removeEventListener('mouseup', this.onHyporoeMouseUp);
-    },
-
-    onIsonKentemataMouseUp() {
-      if (this.selectedSecondaryGorgon) {
-        this.$emit(
-          'select-quantitative-neume',
-          QuantitativeNeume.OligonPlusIsonPlusKentemata,
-          this.selectedSecondaryGorgon.gorgon,
-        );
-      }
-
-      this.showIsonKentemataMenu = false;
-
-      window.removeEventListener('mouseup', this.onIsonKentemataMouseUp);
-    },
-
-    onApostrophosKentemataMouseUp() {
-      if (this.selectedSecondaryGorgon) {
-        this.$emit(
-          'select-quantitative-neume',
-          QuantitativeNeume.OligonPlusApostrophosPlusKentemata,
-          this.selectedSecondaryGorgon.gorgon,
-        );
-      }
-
-      this.showApostrophosKentemataMenu = false;
-
-      window.removeEventListener('mouseup', this.onApostrophosKentemataMouseUp);
-    },
-
-    onElaphronKentemataMouseUp() {
-      if (this.selectedSecondaryGorgon) {
-        this.$emit(
-          'select-quantitative-neume',
-          QuantitativeNeume.OligonPlusElaphronPlusKentemata,
-          this.selectedSecondaryGorgon.gorgon,
-        );
-      }
-
-      this.showElaphronKentemataMenu = false;
-
-      window.removeEventListener('mouseup', this.onElaphronKentemataMouseUp);
-    },
-
-    onElaphronApostrophosKentemataMouseUp() {
-      if (this.selectedSecondaryGorgon) {
-        this.$emit(
-          'select-quantitative-neume',
-          QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
-          this.selectedSecondaryGorgon.gorgon,
-        );
-      }
-
-      this.showElaphronApostrophosKentemataMenu = false;
-
-      window.removeEventListener(
-        'mouseup',
-        this.onElaphronApostrophosKentemataMouseUp,
-      );
-    },
-
-    onRunningElaphronKentemataMouseUp() {
-      if (this.selectedSecondaryGorgon) {
-        this.$emit(
-          'select-quantitative-neume',
-          QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
-          this.selectedSecondaryGorgon.gorgon,
-        );
-      }
-
-      this.showRunningElaphronKentemataMenu = false;
-
-      window.removeEventListener(
-        'mouseup',
-        this.onRunningElaphronKentemataMouseUp,
-      );
-    },
-
-    onHamiliKentemataMouseUp() {
-      if (this.selectedSecondaryGorgon) {
-        this.$emit(
-          'select-quantitative-neume',
-          QuantitativeNeume.OligonPlusHamiliPlusKentemata,
-          this.selectedSecondaryGorgon.gorgon,
-        );
-      }
-
-      this.showHamiliKentemataMenu = false;
-
-      window.removeEventListener('mouseup', this.onHamiliKentemataMouseUp);
-    },
-
-    openVareiaDottedMenu() {
-      this.showVareiaDottedMenu = true;
-      window.addEventListener('mouseup', this.onVareiaDottedMouseUp);
-    },
-
-    onVareiaDottedMouseUp() {
-      if (this.selectedVareiaDotted) {
-        this.$emit('select-quantitative-neume', this.selectedVareiaDotted);
-      }
-
-      this.showVareiaDottedMenu = false;
-
-      window.removeEventListener('mouseup', this.onVareiaDottedMouseUp);
-    },
-
-    tooltip(neume: QuantitativeNeume) {
-      const displayName = getQuantitativeNeumeLabelSelector(neume);
-      const mapping = this.neumeKeyboard.findMappingForNeume(neume);
-      if (mapping) {
-        return `${this.$t(displayName, { ns: 'model' })} (${this.neumeKeyboard.generateTooltip(
-          mapping,
-        )})`;
-      } else {
-        return `${this.$t(displayName, { ns: 'model' })}`;
-      }
-    },
+  neumeKeyboard: {
+    type: Object as PropType<NeumeKeyboard>,
+    required: true,
   },
 });
+
+const emit = defineEmits(['select-quantitative-neume']);
+const { t } = useTranslation();
+
+const showHyporoeKentemataMenu = ref(false);
+const showIsonKentemataMenu = ref(false);
+const showApostrophosKentemataMenu = ref(false);
+const showElaphronKentemataMenu = ref(false);
+const showElaphronApostrophosKentemataMenu = ref(false);
+const showRunningElaphronKentemataMenu = ref(false);
+const showHamiliKentemataMenu = ref(false);
+const showVareiaDottedMenu = ref(false);
+const selectedSecondaryGorgon = ref<SecondaryGorgonMenuItem | null>(null);
+const selectedVareiaDotted = ref<QuantitativeNeume | null>(null);
+
+function openHyporoeKentemataMenu() {
+  showHyporoeKentemataMenu.value = true;
+  window.addEventListener('mouseup', onHyporoeMouseUp);
+}
+
+function openIsonKentemataMenu() {
+  showIsonKentemataMenu.value = true;
+  window.addEventListener('mouseup', onIsonKentemataMouseUp);
+}
+
+function openApostrophosKentemataMenu() {
+  showApostrophosKentemataMenu.value = true;
+  window.addEventListener('mouseup', onApostrophosKentemataMouseUp);
+}
+
+function openElaphronKentemataMenu() {
+  showElaphronKentemataMenu.value = true;
+  window.addEventListener('mouseup', onElaphronKentemataMouseUp);
+}
+
+function openElaphronApostrophosKentemataMenu() {
+  showElaphronApostrophosKentemataMenu.value = true;
+  window.addEventListener('mouseup', onElaphronApostrophosKentemataMouseUp);
+}
+
+function openRunningElaphronKentemataMenu() {
+  showRunningElaphronKentemataMenu.value = true;
+  window.addEventListener('mouseup', onRunningElaphronKentemataMouseUp);
+}
+
+function openHamiliKentemataMenu() {
+  showHamiliKentemataMenu.value = true;
+  window.addEventListener('mouseup', onHamiliKentemataMouseUp);
+}
+
+function onHyporoeMouseUp() {
+  if (selectedSecondaryGorgon.value) {
+    emit(
+      'select-quantitative-neume',
+      QuantitativeNeume.OligonPlusHyporoePlusKentemata,
+      selectedSecondaryGorgon.value.gorgon,
+    );
+  }
+
+  showHyporoeKentemataMenu.value = false;
+
+  window.removeEventListener('mouseup', onHyporoeMouseUp);
+}
+
+function onIsonKentemataMouseUp() {
+  if (selectedSecondaryGorgon.value) {
+    emit(
+      'select-quantitative-neume',
+      QuantitativeNeume.OligonPlusIsonPlusKentemata,
+      selectedSecondaryGorgon.value.gorgon,
+    );
+  }
+
+  showIsonKentemataMenu.value = false;
+
+  window.removeEventListener('mouseup', onIsonKentemataMouseUp);
+}
+
+function onApostrophosKentemataMouseUp() {
+  if (selectedSecondaryGorgon.value) {
+    emit(
+      'select-quantitative-neume',
+      QuantitativeNeume.OligonPlusApostrophosPlusKentemata,
+      selectedSecondaryGorgon.value.gorgon,
+    );
+  }
+
+  showApostrophosKentemataMenu.value = false;
+
+  window.removeEventListener('mouseup', onApostrophosKentemataMouseUp);
+}
+
+function onElaphronKentemataMouseUp() {
+  if (selectedSecondaryGorgon.value) {
+    emit(
+      'select-quantitative-neume',
+      QuantitativeNeume.OligonPlusElaphronPlusKentemata,
+      selectedSecondaryGorgon.value.gorgon,
+    );
+  }
+
+  showElaphronKentemataMenu.value = false;
+
+  window.removeEventListener('mouseup', onElaphronKentemataMouseUp);
+}
+
+function onElaphronApostrophosKentemataMouseUp() {
+  if (selectedSecondaryGorgon.value) {
+    emit(
+      'select-quantitative-neume',
+      QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
+      selectedSecondaryGorgon.value.gorgon,
+    );
+  }
+
+  showElaphronApostrophosKentemataMenu.value = false;
+
+  window.removeEventListener('mouseup', onElaphronApostrophosKentemataMouseUp);
+}
+
+function onRunningElaphronKentemataMouseUp() {
+  if (selectedSecondaryGorgon.value) {
+    emit(
+      'select-quantitative-neume',
+      QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata,
+      selectedSecondaryGorgon.value.gorgon,
+    );
+  }
+
+  showRunningElaphronKentemataMenu.value = false;
+
+  window.removeEventListener('mouseup', onRunningElaphronKentemataMouseUp);
+}
+
+function onHamiliKentemataMouseUp() {
+  if (selectedSecondaryGorgon.value) {
+    emit(
+      'select-quantitative-neume',
+      QuantitativeNeume.OligonPlusHamiliPlusKentemata,
+      selectedSecondaryGorgon.value.gorgon,
+    );
+  }
+
+  showHamiliKentemataMenu.value = false;
+
+  window.removeEventListener('mouseup', onHamiliKentemataMouseUp);
+}
+
+function openVareiaDottedMenu() {
+  showVareiaDottedMenu.value = true;
+  window.addEventListener('mouseup', onVareiaDottedMouseUp);
+}
+
+function onVareiaDottedMouseUp() {
+  if (selectedVareiaDotted.value) {
+    emit('select-quantitative-neume', selectedVareiaDotted.value);
+  }
+
+  showVareiaDottedMenu.value = false;
+
+  window.removeEventListener('mouseup', onVareiaDottedMouseUp);
+}
+
+function tooltip(neume: QuantitativeNeume) {
+  const displayName = getQuantitativeNeumeLabelSelector(neume);
+  const mapping = props.neumeKeyboard.findMappingForNeume(neume);
+  if (mapping) {
+    return `${t(displayName, { ns: 'model' })} (${props.neumeKeyboard.generateTooltip(
+      mapping,
+    )})`;
+  } else {
+    return `${t(displayName, { ns: 'model' })}`;
+  }
+}
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

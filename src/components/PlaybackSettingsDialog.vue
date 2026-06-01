@@ -1,7 +1,7 @@
 <!-- eslint-disable vue/no-mutating-props -->
 <template>
   <ModalDialog>
-    <div class="container">
+    <div class="container" :data-render-version="renderVersion">
       <div class="header">
         {{ $t(($) => $.dialog.playbackSettings.root, { ns: 'dialog' }) }}
       </div>
@@ -678,12 +678,12 @@
   </ModalDialog>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 /* eslint-disable vue/no-mutating-props */
 // TODO don't rely on this eslint-disable line
 // Instead, make a copy of the options prop (a la Page Setup Dialog)
 // and have TheEditor update the actual options.
-import { defineComponent, PropType } from 'vue';
+import { computed, onBeforeUnmount, onMounted, PropType, ref } from 'vue';
 
 import ModalDialog from '@/components/ModalDialog.vue';
 import { Accidental } from '@/models/Neumes';
@@ -691,194 +691,185 @@ import { PlaybackOptions } from '@/services/audio/PlaybackService';
 
 const FREQUENCY_G3 = 196;
 
-export default defineComponent({
-  components: { ModalDialog },
-  props: {
-    options: {
-      type: Object as PropType<PlaybackOptions>,
-      required: true,
-    },
-  },
-  emits: ['close', 'play-test-tone'],
-
-  data() {
-    return {
-      Accidental,
-
-      tuning: 0,
-
-      error: null as string | null,
-    };
-  },
-
-  computed: {
-    volumeIson: {
-      get() {
-        return 100 * Math.pow(10, this.options.volumeIson / 20);
-      },
-      set(value: number) {
-        this.options.volumeIson = 20 * Math.log10(value / 100);
-      },
-    },
-
-    volumeMelody: {
-      get() {
-        return 100 * Math.pow(10, this.options.volumeMelody / 20);
-      },
-      set(value: number) {
-        this.options.volumeMelody = 20 * Math.log10(value / 100);
-      },
-    },
-  },
-
-  mounted() {
-    window.addEventListener('keydown', this.onKeyDown);
-
-    this.tuning = Math.round(
-      1200 * Math.log2(this.options.frequencyDi / FREQUENCY_G3),
-    );
-  },
-
-  beforeUnmount() {
-    window.removeEventListener('keydown', this.onKeyDown);
-  },
-
-  methods: {
-    onKeyDown(event: KeyboardEvent) {
-      if (event.code === 'Escape') {
-        this.close();
-      }
-    },
-
-    onIntervalChanged(intervals: number[], index: number, value: number) {
-      value = Math.max(1, value);
-      value = Math.min(27, value);
-      value = Math.round(value);
-
-      intervals[index] = value;
-
-      this.validateIntervals();
-
-      this.$forceUpdate();
-    },
-
-    validateIntervals() {
-      this.error = null;
-
-      if (!this.validateTetrachord(this.options.diatonicIntervals)) {
-        this.error = 'The diatonic intervals do not sum to 30.';
-      }
-
-      if (!this.validateTetrachord(this.options.softChromaticIntervals)) {
-        this.error = 'The soft chromatic intervals do not sum to 30.';
-      }
-
-      if (!this.validateTetrachord(this.options.hardChromaticIntervals)) {
-        this.error = 'The hard chromatic intervals do not sum to 30.';
-      }
-
-      if (!this.validateTetrachord(this.options.legetosIntervals)) {
-        this.error = 'The legetos intervals do not sum to 30.';
-      }
-    },
-
-    validateTetrachord(intervals: number[]) {
-      let sum = 0;
-
-      intervals.map((x) => (sum += x));
-
-      return sum === 30;
-    },
-
-    resetIntervals() {
-      this.options.diatonicIntervals = [12, 10, 8];
-      this.options.hardChromaticIntervals = [6, 20, 4];
-      this.options.softChromaticIntervals = [8, 14, 8];
-      this.options.legetosIntervals = [8, 10, 12];
-      this.options.zygosIntervals = [18, 4, 16, 4];
-      this.options.zygosLegetosIntervals = [18, 4, 20, 4];
-      this.options.spathiIntervals = [20, 4, 4, 14];
-      this.options.klitonIntervals = [14, 12, 4];
-    },
-
-    resetAlterationMultipliers() {
-      this.options.alterationMultipliers = [0.5, 0.25, 0.75];
-    },
-
-    resetAlterationMoria() {
-      this.options.alterationMoriaMap = {
-        [Accidental.Flat_2_Right]: -2,
-        [Accidental.Flat_4_Right]: -4,
-        [Accidental.Flat_6_Right]: -6,
-        [Accidental.Flat_8_Right]: -8,
-        [Accidental.Sharp_2_Left]: 2,
-        [Accidental.Sharp_4_Left]: 4,
-        [Accidental.Sharp_6_Left]: 6,
-        [Accidental.Sharp_8_Left]: 8,
-      };
-    },
-
-    resetDefaultAttractionZoMoria() {
-      this.options.defaultAttractionZoMoria = -4;
-    },
-
-    onDiesisChanged(neume: Accidental, moria: number) {
-      moria = Math.round(moria);
-
-      moria = Math.max(0, moria);
-      moria = Math.min(72, moria);
-
-      this.options.alterationMoriaMap[neume] = moria;
-
-      this.$forceUpdate();
-    },
-
-    onYfesisChanged(neume: Accidental, moria: number) {
-      moria = Math.round(moria);
-
-      moria = Math.max(-72, moria);
-      moria = Math.min(0, moria);
-
-      this.options.alterationMoriaMap[neume] = moria;
-
-      this.$forceUpdate();
-    },
-
-    onDefaultAttractionZoMoriaChanged(value: number) {
-      value = Math.max(-72, value);
-      value = Math.min(0, value);
-      value = Math.round(value);
-
-      this.options.defaultAttractionZoMoria = value;
-
-      this.$forceUpdate();
-    },
-
-    onTuningChanged(value: number) {
-      this.tuning = Math.max(-2400, value);
-      this.tuning = Math.min(2400, this.tuning);
-      this.tuning = Math.round(this.tuning);
-      this.options.frequencyDi = +(
-        FREQUENCY_G3 * Math.pow(2, this.tuning / 1200)
-      ).toFixed(1);
-
-      this.$forceUpdate();
-    },
-
-    onAlterationMultiplierChanged(index: number, multiplier: number) {
-      multiplier = Math.max(0, multiplier);
-      multiplier = Math.min(1, multiplier);
-
-      this.options.alterationMultipliers[index] = multiplier;
-
-      this.$forceUpdate();
-    },
-
-    close() {
-      this.$emit('close');
-    },
+const emit = defineEmits(['close', 'play-test-tone']);
+const props = defineProps({
+  options: {
+    type: Object as PropType<PlaybackOptions>,
+    required: true,
   },
 });
+
+const tuning = ref(0);
+const error = ref<string | null>(null);
+const renderVersion = ref(0);
+
+const volumeIson = computed({
+  get() {
+    return 100 * Math.pow(10, props.options.volumeIson / 20);
+  },
+  set(value: number) {
+    props.options.volumeIson = 20 * Math.log10(value / 100);
+  },
+});
+
+const volumeMelody = computed({
+  get() {
+    return 100 * Math.pow(10, props.options.volumeMelody / 20);
+  },
+  set(value: number) {
+    props.options.volumeMelody = 20 * Math.log10(value / 100);
+  },
+});
+
+onMounted(() => {
+  window.addEventListener('keydown', onKeyDown);
+
+  tuning.value = Math.round(
+    1200 * Math.log2(props.options.frequencyDi / FREQUENCY_G3),
+  );
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKeyDown);
+});
+
+function onKeyDown(event: KeyboardEvent) {
+  if (event.code === 'Escape') {
+    close();
+  }
+}
+
+function onIntervalChanged(intervals: number[], index: number, value: number) {
+  value = Math.max(1, value);
+  value = Math.min(27, value);
+  value = Math.round(value);
+
+  intervals[index] = value;
+
+  validateIntervals();
+
+  refreshPlaybackInputs();
+}
+
+function validateIntervals() {
+  error.value = null;
+
+  if (!validateTetrachord(props.options.diatonicIntervals)) {
+    error.value = 'The diatonic intervals do not sum to 30.';
+  }
+
+  if (!validateTetrachord(props.options.softChromaticIntervals)) {
+    error.value = 'The soft chromatic intervals do not sum to 30.';
+  }
+
+  if (!validateTetrachord(props.options.hardChromaticIntervals)) {
+    error.value = 'The hard chromatic intervals do not sum to 30.';
+  }
+
+  if (!validateTetrachord(props.options.legetosIntervals)) {
+    error.value = 'The legetos intervals do not sum to 30.';
+  }
+}
+
+function validateTetrachord(intervals: number[]) {
+  let sum = 0;
+
+  intervals.map((x) => (sum += x));
+
+  return sum === 30;
+}
+
+function resetIntervals() {
+  props.options.diatonicIntervals = [12, 10, 8];
+  props.options.hardChromaticIntervals = [6, 20, 4];
+  props.options.softChromaticIntervals = [8, 14, 8];
+  props.options.legetosIntervals = [8, 10, 12];
+  props.options.zygosIntervals = [18, 4, 16, 4];
+  props.options.zygosLegetosIntervals = [18, 4, 20, 4];
+  props.options.spathiIntervals = [20, 4, 4, 14];
+  props.options.klitonIntervals = [14, 12, 4];
+}
+
+function resetAlterationMultipliers() {
+  props.options.alterationMultipliers = [0.5, 0.25, 0.75];
+}
+
+function resetAlterationMoria() {
+  props.options.alterationMoriaMap = {
+    [Accidental.Flat_2_Right]: -2,
+    [Accidental.Flat_4_Right]: -4,
+    [Accidental.Flat_6_Right]: -6,
+    [Accidental.Flat_8_Right]: -8,
+    [Accidental.Sharp_2_Left]: 2,
+    [Accidental.Sharp_4_Left]: 4,
+    [Accidental.Sharp_6_Left]: 6,
+    [Accidental.Sharp_8_Left]: 8,
+  };
+}
+
+function resetDefaultAttractionZoMoria() {
+  props.options.defaultAttractionZoMoria = -4;
+}
+
+function onDiesisChanged(neume: Accidental, moria: number) {
+  moria = Math.round(moria);
+
+  moria = Math.max(0, moria);
+  moria = Math.min(72, moria);
+
+  props.options.alterationMoriaMap[neume] = moria;
+
+  refreshPlaybackInputs();
+}
+
+function onYfesisChanged(neume: Accidental, moria: number) {
+  moria = Math.round(moria);
+
+  moria = Math.max(-72, moria);
+  moria = Math.min(0, moria);
+
+  props.options.alterationMoriaMap[neume] = moria;
+
+  refreshPlaybackInputs();
+}
+
+function onDefaultAttractionZoMoriaChanged(value: number) {
+  value = Math.max(-72, value);
+  value = Math.min(0, value);
+  value = Math.round(value);
+
+  props.options.defaultAttractionZoMoria = value;
+
+  refreshPlaybackInputs();
+}
+
+function onTuningChanged(value: number) {
+  tuning.value = Math.max(-2400, value);
+  tuning.value = Math.min(2400, tuning.value);
+  tuning.value = Math.round(tuning.value);
+  props.options.frequencyDi = +(
+    FREQUENCY_G3 * Math.pow(2, tuning.value / 1200)
+  ).toFixed(1);
+
+  refreshPlaybackInputs();
+}
+
+function onAlterationMultiplierChanged(index: number, multiplier: number) {
+  multiplier = Math.max(0, multiplier);
+  multiplier = Math.min(1, multiplier);
+
+  props.options.alterationMultipliers[index] = multiplier;
+
+  refreshPlaybackInputs();
+}
+
+function close() {
+  emit('close');
+}
+
+function refreshPlaybackInputs() {
+  renderVersion.value += 1;
+}
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

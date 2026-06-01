@@ -1,5 +1,6 @@
-import { InjectionKey } from 'vue';
+import { ComputedRef, InjectionKey } from 'vue';
 
+import { EditorPreferences } from './models/EditorPreferences';
 import { AudioService } from './services/audio/AudioService';
 import { PlaybackService } from './services/audio/PlaybackService';
 import { LatexExporter } from './services/integration/LatexExporter';
@@ -12,6 +13,9 @@ import { IPlatformService } from './services/platform/IPlatformService';
 import { TextSearchService } from './services/TextSearchService';
 
 export const audioServiceKey: InjectionKey<AudioService> = Symbol();
+export const editorPreferencesKey: InjectionKey<
+  ComputedRef<EditorPreferences>
+> = Symbol();
 export const ipcServiceKey: InjectionKey<IIpcService> = Symbol();
 export const latexExporterKey: InjectionKey<LatexExporter> = Symbol();
 export const lyricServiceKey: InjectionKey<LyricService> = Symbol();

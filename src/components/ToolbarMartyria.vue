@@ -360,8 +360,9 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, PropType } from 'vue';
+<script setup lang="ts">
+import { useTranslation } from 'i18next-vue';
+import { computed, PropType } from 'vue';
 
 import { MartyriaElement } from '@/models/Element';
 import {
@@ -385,7 +386,8 @@ import { NeumeKeyboard } from '@/services/NeumeKeyboard';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { Unit } from '@/utils/Unit';
 
-import ButtonWithMenu, { ButtonWithMenuOption } from './ButtonWithMenu.vue';
+import type { ButtonWithMenuOption } from './ButtonWithMenu.types';
+import ButtonWithMenu from './ButtonWithMenu.vue';
 import InputBpm from './InputBpm.vue';
 import InputUnit from './InputUnit.vue';
 
@@ -582,258 +584,231 @@ const barlineMenuOptions: ButtonWithMenuOption[] = [
   },
 ];
 
-export default defineComponent({
-  components: { InputUnit, InputBpm, ButtonWithMenu },
-  props: {
-    element: {
-      type: Object as PropType<MartyriaElement>,
-      required: true,
-    },
-    pageSetup: {
-      type: Object as PropType<PageSetup>,
-      required: true,
-    },
-    neumeKeyboard: {
-      type: Object as PropType<NeumeKeyboard>,
-      required: true,
-    },
+const props = defineProps({
+  element: {
+    type: Object as PropType<MartyriaElement>,
+    required: true,
   },
-  emits: [
-    'update',
-    'update:fthora',
-    'update:measureBar',
-    'update:quantitativeNeume',
-    'update:sectionName',
-    'update:tempoLeft',
-    'update:tempo',
-    'update:tempoRight',
-  ],
-
-  data() {
-    return {
-      Fthora,
-      MeasureBar,
-      TempoSign,
-      rootSigns,
-      notes,
-      scales,
-      chromaticFthoras,
-      quantitativeNeumeOptions,
-      tempoMenuOptions,
-      tempoMenuOptionsAbove,
-      barlineMenuOptions,
-    };
+  pageSetup: {
+    type: Object as PropType<PageSetup>,
+    required: true,
   },
-
-  computed: {
-    spaceAfterMax() {
-      return Math.round(Unit.toPt(this.pageSetup.pageWidth));
-    },
-    spathiDisabled() {
-      return (
-        !this.pageSetup.noFthoraRestrictions &&
-        this.element.note !== Note.Ke &&
-        this.element.note !== Note.Ga
-      );
-    },
-
-    spathiTitle() {
-      return this.spathiDisabled
-        ? this.$t(($) => $.toolbar.common.spathiDisabled, { ns: 'toolbar' })
-        : this.tooltip(Fthora.Spathi_Top);
-    },
-
-    klitonDisabled() {
-      return (
-        !this.pageSetup.noFthoraRestrictions && this.element.note !== Note.Thi
-      );
-    },
-
-    klitonTitle() {
-      return this.klitonDisabled
-        ? this.$t(($) => $.toolbar.common.klitonDisabled, { ns: 'toolbar' })
-        : this.tooltip(Fthora.Kliton_Top);
-    },
-
-    zygosDisabled() {
-      return (
-        !this.pageSetup.noFthoraRestrictions && this.element.note !== Note.Thi
-      );
-    },
-
-    zygosTitle() {
-      return this.zygosDisabled
-        ? this.$t(($) => $.toolbar.common.zygosDisabled, { ns: 'toolbar' })
-        : this.tooltip(Fthora.Zygos_Top);
-    },
-
-    enharmonicDisabled() {
-      return (
-        !this.pageSetup.noFthoraRestrictions &&
-        this.element.note !== Note.Zo &&
-        this.element.note !== Note.ZoHigh &&
-        this.element.note !== Note.Vou &&
-        this.element.note !== Note.VouHigh &&
-        this.element.note !== Note.Ga
-      );
-    },
-
-    enharmonicTitle() {
-      return this.enharmonicDisabled
-        ? this.$t(($) => $.toolbar.common.enharmonicDisabled, { ns: 'toolbar' })
-        : this.tooltip(Fthora.Enharmonic_Top);
-    },
-
-    generalFlatDisabled() {
-      return (
-        !this.pageSetup.noFthoraRestrictions && this.element.note !== Note.Ke
-      );
-    },
-
-    generalFlatTitle() {
-      return this.generalFlatDisabled
-        ? this.$t(($) => $.toolbar.common.generalFlatDisabled, {
-            ns: 'toolbar',
-          })
-        : this.tooltip(Fthora.GeneralFlat_Top);
-    },
-
-    generalSharpDisabled() {
-      return (
-        !this.pageSetup.noFthoraRestrictions && this.element.note !== Note.Ga
-      );
-    },
-
-    generalSharpTitle() {
-      return this.generalSharpDisabled
-        ? this.$t(($) => $.toolbar.common.generalSharpDisabled, {
-            ns: 'toolbar',
-          })
-        : this.tooltip(Fthora.GeneralSharp_Top);
-    },
-
-    showChromaticFthoraNote() {
-      return (
-        this.element.fthora != null &&
-        this.chromaticFthoras.includes(this.element.fthora)
-      );
-    },
-
-    alignRightTooltip() {
-      return `${this.$t(($) => $.toolbar.common.alignRight, { ns: 'toolbar' })}(${this.neumeKeyboard.getMaryriaRightAlignTooltip()})`;
-    },
-
-    fthoraNotes(): FthoraNoteOption[] {
-      if (
-        this.element.fthora === Fthora.SoftChromaticThi_Top ||
-        this.element.fthora === Fthora.SoftChromaticThi_Bottom
-      ) {
-        return [
-          {
-            label: getNoteLabelSelector(ScaleNote.ZoHigh),
-            value: ScaleNote.ZoHigh,
-          },
-          {
-            label: getNoteLabelSelector(ScaleNote.Thi),
-            value: ScaleNote.Thi,
-          },
-          {
-            label: getNoteLabelSelector(ScaleNote.Vou),
-            value: ScaleNote.Vou,
-          },
-          {
-            label: getNoteLabelSelector(ScaleNote.Ni),
-            value: ScaleNote.Ni,
-          },
-        ];
-      } else if (
-        this.element.fthora === Fthora.SoftChromaticPa_Top ||
-        this.element.fthora === Fthora.SoftChromaticPa_Bottom
-      ) {
-        return [
-          {
-            label: getNoteLabelSelector(ScaleNote.NiHigh),
-            value: ScaleNote.NiHigh,
-          },
-          {
-            label: getNoteLabelSelector(ScaleNote.Ke),
-            value: ScaleNote.Ke,
-          },
-          {
-            label: getNoteLabelSelector(ScaleNote.Ga),
-            value: ScaleNote.Ga,
-          },
-          {
-            label: getNoteLabelSelector(ScaleNote.Pa),
-            value: ScaleNote.Pa,
-          },
-        ];
-      } else if (
-        this.element.fthora === Fthora.HardChromaticThi_Top ||
-        this.element.fthora === Fthora.HardChromaticThi_Bottom
-      ) {
-        return [
-          {
-            label: getNoteLabelSelector(ScaleNote.ZoHigh),
-            value: ScaleNote.ZoHigh,
-          },
-          {
-            label: getNoteLabelSelector(ScaleNote.Thi),
-            value: ScaleNote.Thi,
-          },
-          {
-            label: getNoteLabelSelector(ScaleNote.Vou),
-            value: ScaleNote.Vou,
-          },
-        ];
-      } else if (
-        this.element.fthora === Fthora.HardChromaticPa_Top ||
-        this.element.fthora === Fthora.HardChromaticPa_Bottom
-      ) {
-        return [
-          {
-            label: getNoteLabelSelector(ScaleNote.NiHigh),
-            value: ScaleNote.NiHigh,
-          },
-          {
-            label: getNoteLabelSelector(ScaleNote.Ke),
-            value: ScaleNote.Ke,
-          },
-          {
-            label: getNoteLabelSelector(ScaleNote.Ga),
-            value: ScaleNote.Ga,
-          },
-          {
-            label: getNoteLabelSelector(ScaleNote.Pa),
-            value: ScaleNote.Pa,
-          },
-        ];
-      }
-
-      return [];
-    },
-  },
-
-  methods: {
-    translateNeumeDisplayName(neume: Fthora | MeasureBar.MeasureBarRight) {
-      if (neume === MeasureBar.MeasureBarRight) {
-        return this.$t(($) => $.toolbar.common.measureBar, { ns: 'toolbar' });
-      }
-
-      return this.$t(getFthoraLabelSelector(neume), { ns: 'model' });
-    },
-
-    tooltip(neume: Fthora | MeasureBar.MeasureBarRight) {
-      const label = this.translateNeumeDisplayName(neume);
-      const mapping = this.neumeKeyboard.findMappingForNeume(neume);
-      if (mapping) {
-        return `${label} (${this.neumeKeyboard.generateTooltip(mapping)})`;
-      } else {
-        return label;
-      }
-    },
+  neumeKeyboard: {
+    type: Object as PropType<NeumeKeyboard>,
+    required: true,
   },
 });
+
+defineEmits([
+  'update',
+  'update:fthora',
+  'update:measureBar',
+  'update:quantitativeNeume',
+  'update:sectionName',
+  'update:tempoLeft',
+  'update:tempo',
+  'update:tempoRight',
+]);
+
+const { t } = useTranslation();
+
+const spaceAfterMax = computed(() =>
+  Math.round(Unit.toPt(props.pageSetup.pageWidth)),
+);
+
+const spathiDisabled = computed(
+  () =>
+    !props.pageSetup.noFthoraRestrictions &&
+    props.element.note !== Note.Ke &&
+    props.element.note !== Note.Ga,
+);
+
+const spathiTitle = computed(() =>
+  spathiDisabled.value
+    ? t(($) => $.toolbar.common.spathiDisabled, { ns: 'toolbar' })
+    : tooltip(Fthora.Spathi_Top),
+);
+
+const klitonDisabled = computed(
+  () =>
+    !props.pageSetup.noFthoraRestrictions && props.element.note !== Note.Thi,
+);
+
+const klitonTitle = computed(() =>
+  klitonDisabled.value
+    ? t(($) => $.toolbar.common.klitonDisabled, { ns: 'toolbar' })
+    : tooltip(Fthora.Kliton_Top),
+);
+
+const zygosDisabled = computed(
+  () =>
+    !props.pageSetup.noFthoraRestrictions && props.element.note !== Note.Thi,
+);
+
+const zygosTitle = computed(() =>
+  zygosDisabled.value
+    ? t(($) => $.toolbar.common.zygosDisabled, { ns: 'toolbar' })
+    : tooltip(Fthora.Zygos_Top),
+);
+
+const enharmonicDisabled = computed(
+  () =>
+    !props.pageSetup.noFthoraRestrictions &&
+    props.element.note !== Note.Zo &&
+    props.element.note !== Note.ZoHigh &&
+    props.element.note !== Note.Vou &&
+    props.element.note !== Note.VouHigh &&
+    props.element.note !== Note.Ga,
+);
+
+const enharmonicTitle = computed(() =>
+  enharmonicDisabled.value
+    ? t(($) => $.toolbar.common.enharmonicDisabled, { ns: 'toolbar' })
+    : tooltip(Fthora.Enharmonic_Top),
+);
+
+const generalFlatDisabled = computed(
+  () => !props.pageSetup.noFthoraRestrictions && props.element.note !== Note.Ke,
+);
+
+const generalFlatTitle = computed(() =>
+  generalFlatDisabled.value
+    ? t(($) => $.toolbar.common.generalFlatDisabled, {
+        ns: 'toolbar',
+      })
+    : tooltip(Fthora.GeneralFlat_Top),
+);
+
+const generalSharpDisabled = computed(
+  () => !props.pageSetup.noFthoraRestrictions && props.element.note !== Note.Ga,
+);
+
+const generalSharpTitle = computed(() =>
+  generalSharpDisabled.value
+    ? t(($) => $.toolbar.common.generalSharpDisabled, {
+        ns: 'toolbar',
+      })
+    : tooltip(Fthora.GeneralSharp_Top),
+);
+
+const showChromaticFthoraNote = computed(
+  () =>
+    props.element.fthora != null &&
+    chromaticFthoras.includes(props.element.fthora),
+);
+
+const alignRightTooltip = computed(
+  () =>
+    `${t(($) => $.toolbar.common.alignRight, { ns: 'toolbar' })}(${props.neumeKeyboard.getMaryriaRightAlignTooltip()})`,
+);
+
+const fthoraNotes = computed((): FthoraNoteOption[] => {
+  if (
+    props.element.fthora === Fthora.SoftChromaticThi_Top ||
+    props.element.fthora === Fthora.SoftChromaticThi_Bottom
+  ) {
+    return [
+      {
+        label: getNoteLabelSelector(ScaleNote.ZoHigh),
+        value: ScaleNote.ZoHigh,
+      },
+      {
+        label: getNoteLabelSelector(ScaleNote.Thi),
+        value: ScaleNote.Thi,
+      },
+      {
+        label: getNoteLabelSelector(ScaleNote.Vou),
+        value: ScaleNote.Vou,
+      },
+      {
+        label: getNoteLabelSelector(ScaleNote.Ni),
+        value: ScaleNote.Ni,
+      },
+    ];
+  } else if (
+    props.element.fthora === Fthora.SoftChromaticPa_Top ||
+    props.element.fthora === Fthora.SoftChromaticPa_Bottom
+  ) {
+    return [
+      {
+        label: getNoteLabelSelector(ScaleNote.NiHigh),
+        value: ScaleNote.NiHigh,
+      },
+      {
+        label: getNoteLabelSelector(ScaleNote.Ke),
+        value: ScaleNote.Ke,
+      },
+      {
+        label: getNoteLabelSelector(ScaleNote.Ga),
+        value: ScaleNote.Ga,
+      },
+      {
+        label: getNoteLabelSelector(ScaleNote.Pa),
+        value: ScaleNote.Pa,
+      },
+    ];
+  } else if (
+    props.element.fthora === Fthora.HardChromaticThi_Top ||
+    props.element.fthora === Fthora.HardChromaticThi_Bottom
+  ) {
+    return [
+      {
+        label: getNoteLabelSelector(ScaleNote.ZoHigh),
+        value: ScaleNote.ZoHigh,
+      },
+      {
+        label: getNoteLabelSelector(ScaleNote.Thi),
+        value: ScaleNote.Thi,
+      },
+      {
+        label: getNoteLabelSelector(ScaleNote.Vou),
+        value: ScaleNote.Vou,
+      },
+    ];
+  } else if (
+    props.element.fthora === Fthora.HardChromaticPa_Top ||
+    props.element.fthora === Fthora.HardChromaticPa_Bottom
+  ) {
+    return [
+      {
+        label: getNoteLabelSelector(ScaleNote.NiHigh),
+        value: ScaleNote.NiHigh,
+      },
+      {
+        label: getNoteLabelSelector(ScaleNote.Ke),
+        value: ScaleNote.Ke,
+      },
+      {
+        label: getNoteLabelSelector(ScaleNote.Ga),
+        value: ScaleNote.Ga,
+      },
+      {
+        label: getNoteLabelSelector(ScaleNote.Pa),
+        value: ScaleNote.Pa,
+      },
+    ];
+  }
+
+  return [];
+});
+
+function translateNeumeDisplayName(neume: Fthora | MeasureBar.MeasureBarRight) {
+  if (neume === MeasureBar.MeasureBarRight) {
+    return t(($) => $.toolbar.common.measureBar, { ns: 'toolbar' });
+  }
+
+  return t(getFthoraLabelSelector(neume), { ns: 'model' });
+}
+
+function tooltip(neume: Fthora | MeasureBar.MeasureBarRight) {
+  const label = translateNeumeDisplayName(neume);
+  const mapping = props.neumeKeyboard.findMappingForNeume(neume);
+  if (mapping) {
+    return `${label} (${props.neumeKeyboard.generateTooltip(mapping)})`;
+  } else {
+    return label;
+  }
+}
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

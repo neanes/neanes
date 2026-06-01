@@ -11,30 +11,17 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent } from 'vue';
-
-export default defineComponent({
-  components: {},
-  props: {
-    label: {
-      type: String,
-      required: true,
-    },
-    isOpen: {
-      type: Boolean,
-      required: true,
-    },
+<script setup lang="ts">
+defineEmits(['click', 'mouseenter']);
+defineProps({
+  label: {
+    type: String,
+    required: true,
   },
-  emits: ['click', 'mouseenter'],
-
-  data() {
-    return {};
+  isOpen: {
+    type: Boolean,
+    required: true,
   },
-
-  computed: {},
-
-  methods: {},
 });
 </script>
 

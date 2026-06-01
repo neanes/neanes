@@ -17,113 +17,94 @@
   </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { Sketch } from '@ckpack/vue-color';
-import { defineComponent, StyleValue } from 'vue';
+import { computed, ref, StyleValue, useTemplateRef, watch } from 'vue';
 
 interface Color {
   hex: string;
 }
 
-export default defineComponent({
-  components: { Sketch },
-  props: {
-    modelValue: {
-      type: String,
-      required: true,
-    },
-    historyKey: {
-      type: String,
-      default: 'colorPicker_presetColors',
-    },
+const emit = defineEmits(['update:modelValue']);
+const props = defineProps({
+  modelValue: {
+    type: String,
+    required: true,
   },
-  emits: ['update:modelValue'],
-
-  data() {
-    return {
-      isOpen: false,
-
-      presetColors: [] as string[],
-
-      popupPositionTop: 0,
-
-      maxHistorySize: 8,
-
-      color: '#000000',
-    };
-  },
-
-  computed: {
-    swatch() {
-      return this.$refs.swatch as HTMLElement;
-    },
-
-    colorStyle() {
-      return {
-        backgroundColor: this.color,
-      } as StyleValue;
-    },
-
-    popupStyle() {
-      return {
-        top: `${this.popupPositionTop}px`,
-      } as StyleValue;
-    },
-  },
-
-  watch: {
-    modelValue(newValue: string) {
-      this.color = newValue;
-    },
-  },
-
-  created() {
-    this.color = this.modelValue;
-  },
-
-  methods: {
-    open() {
-      this.presetColors = JSON.parse(
-        localStorage.getItem(this.historyKey)!,
-      ) || ['#000000', '#800000', '#FF0000'];
-
-      // Fist, try to position the popup underneath the swatch
-      this.popupPositionTop =
-        this.swatch.getBoundingClientRect().top + this.swatch.offsetHeight;
-
-      // If the popover goes off the bottom of the screen, position above the swatch
-      const popoverHeightPx = 260;
-
-      if (this.popupPositionTop + popoverHeightPx > window.innerHeight) {
-        this.popupPositionTop -= popoverHeightPx + this.swatch.offsetHeight;
-      }
-
-      this.isOpen = true;
-    },
-
-    onColorChanged(color: Color) {
-      this.color = color.hex;
-    },
-
-    close() {
-      const index = this.presetColors.indexOf(this.color);
-
-      if (index >= 0) {
-        this.presetColors.splice(index, 1);
-      }
-
-      this.presetColors.unshift(this.color);
-      this.presetColors = this.presetColors.slice(0, this.maxHistorySize);
-      localStorage.setItem(this.historyKey, JSON.stringify(this.presetColors));
-
-      this.isOpen = false;
-
-      if (this.color !== this.modelValue) {
-        this.$emit('update:modelValue', this.color);
-      }
-    },
+  historyKey: {
+    type: String,
+    default: 'colorPicker_presetColors',
   },
 });
+
+const swatch = useTemplateRef<HTMLElement>('swatch');
+const isOpen = ref(false);
+const presetColors = ref<string[]>([]);
+const popupPositionTop = ref(0);
+const maxHistorySize = 8;
+const color = ref(props.modelValue);
+
+const colorStyle = computed(() => {
+  return {
+    backgroundColor: color.value,
+  } as StyleValue;
+});
+
+const popupStyle = computed(() => {
+  return {
+    top: `${popupPositionTop.value}px`,
+  } as StyleValue;
+});
+
+watch(
+  () => props.modelValue,
+  (newValue) => {
+    color.value = newValue;
+  },
+);
+
+function open() {
+  presetColors.value = JSON.parse(localStorage.getItem(props.historyKey)!) || [
+    '#000000',
+    '#800000',
+    '#FF0000',
+  ];
+
+  // Fist, try to position the popup underneath the swatch
+  popupPositionTop.value =
+    swatch.value!.getBoundingClientRect().top + swatch.value!.offsetHeight;
+
+  // If the popover goes off the bottom of the screen, position above the swatch
+  const popoverHeightPx = 260;
+
+  if (popupPositionTop.value + popoverHeightPx > window.innerHeight) {
+    popupPositionTop.value -= popoverHeightPx + swatch.value!.offsetHeight;
+  }
+
+  isOpen.value = true;
+}
+
+function onColorChanged(colorValue: Color) {
+  color.value = colorValue.hex;
+}
+
+function close() {
+  const index = presetColors.value.indexOf(color.value);
+
+  if (index >= 0) {
+    presetColors.value.splice(index, 1);
+  }
+
+  presetColors.value.unshift(color.value);
+  presetColors.value = presetColors.value.slice(0, maxHistorySize);
+  localStorage.setItem(props.historyKey, JSON.stringify(presetColors.value));
+
+  isOpen.value = false;
+
+  if (color.value !== props.modelValue) {
+    emit('update:modelValue', color.value);
+  }
+}
 </script>
 
 <style scoped>

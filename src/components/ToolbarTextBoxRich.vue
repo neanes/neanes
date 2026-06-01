@@ -305,8 +305,8 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, PropType } from 'vue';
+<script setup lang="ts">
+import { computed, PropType } from 'vue';
 
 import InputBpm from '@/components/InputBpm.vue';
 import InputUnit from '@/components/InputUnit.vue';
@@ -329,39 +329,21 @@ const scales = Object.values(Scale).map((x) => ({
   displayName: getScaleLabelSelector(x),
 }));
 
-export default defineComponent({
-  components: { InputBpm, InputUnit },
-  props: {
-    element: {
-      type: Object as PropType<RichTextBoxElement>,
-      required: true,
-    },
-    pageSetup: {
-      type: Object as PropType<PageSetup>,
-      required: true,
-    },
+const props = defineProps({
+  element: {
+    type: Object as PropType<RichTextBoxElement>,
+    required: true,
   },
-  emits: ['update', 'update:sectionName'],
-
-  data() {
-    return {
-      notes,
-      scales,
-    };
+  pageSetup: {
+    type: Object as PropType<PageSetup>,
+    required: true,
   },
-
-  computed: {
-    maxWidth() {
-      return Unit.toPt(this.pageSetup.innerPageWidth);
-    },
-
-    maxHeight() {
-      return Unit.toPt(this.pageSetup.innerPageHeight);
-    },
-  },
-
-  methods: {},
 });
+
+defineEmits(['update', 'update:sectionName']);
+
+const maxWidth = computed(() => Unit.toPt(props.pageSetup.innerPageWidth));
+const maxHeight = computed(() => Unit.toPt(props.pageSetup.innerPageHeight));
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

@@ -2,76 +2,63 @@
   <span class="neume" :style="style">{{ text }}</span>
 </template>
 
-<script lang="ts">
-import { defineComponent, PropType, StyleValue } from 'vue';
+<script setup lang="ts">
+import { computed, PropType, StyleValue } from 'vue';
 
 import { ScoreElementOffset } from '@/models/Element';
 import { Neume as NeumeType } from '@/models/Neumes';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { withZoom } from '@/utils/withZoom';
 
-export default defineComponent({
-  components: {},
-  props: {
-    neume: {
-      type: String as PropType<NeumeType>,
-      required: true,
-    },
-    offset: {
-      type: Object as PropType<ScoreElementOffset>,
-      default: undefined,
-    },
-    fontFamily: {
-      type: String,
-      default: undefined,
-    },
+defineEmits(['update']);
+const props = defineProps({
+  neume: {
+    type: String as PropType<NeumeType>,
+    required: true,
   },
-  emits: ['update'],
-
-  data() {
-    return {};
+  offset: {
+    type: Object as PropType<ScoreElementOffset>,
+    default: undefined,
   },
-
-  computed: {
-    mapping() {
-      let mapping = NeumeMappingService.getMapping(this.neume);
-
-      if (!mapping) {
-        console.warn('Could not find mapping for neume ' + this.neume);
-        mapping = {
-          text: '?',
-          glyphName: 'ison',
-        };
-      }
-
-      return mapping;
-    },
-
-    text() {
-      return this.mapping.text;
-    },
-
-    style() {
-      const style = {} as Partial<CSSStyleDeclaration>;
-
-      if (this.fontFamily != null) {
-        style.fontFamily = this.fontFamily;
-      }
-
-      if (this.mapping.salt != null) {
-        style.fontFeatureSettings = `"salt" ${this.mapping.salt}`;
-      }
-
-      if (this.offset) {
-        style.left = withZoom(this.offset.x);
-        style.top = withZoom(this.offset.y);
-      }
-
-      return style as StyleValue;
-    },
+  fontFamily: {
+    type: String,
+    default: undefined,
   },
+});
 
-  methods: {},
+const mapping = computed(() => {
+  let mapping = NeumeMappingService.getMapping(props.neume);
+
+  if (!mapping) {
+    console.warn('Could not find mapping for neume ' + props.neume);
+    mapping = {
+      text: '?',
+      glyphName: 'ison',
+    };
+  }
+
+  return mapping;
+});
+
+const text = computed(() => mapping.value.text);
+
+const style = computed(() => {
+  const style = {} as Partial<CSSStyleDeclaration>;
+
+  if (props.fontFamily != null) {
+    style.fontFamily = props.fontFamily;
+  }
+
+  if (mapping.value.salt != null) {
+    style.fontFeatureSettings = `"salt" ${mapping.value.salt}`;
+  }
+
+  if (props.offset) {
+    style.left = withZoom(props.offset.x);
+    style.top = withZoom(props.offset.y);
+  }
+
+  return style as StyleValue;
 });
 </script>
 

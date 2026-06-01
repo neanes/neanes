@@ -7,58 +7,38 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent } from 'vue';
+<script setup lang="ts">
+import { ref } from 'vue';
 
-export default defineComponent({
-  components: {},
-  props: {},
-  emits: [],
+const registration = ref<ServiceWorkerRegistration | null>(null);
+const updateExists = ref(false);
 
-  data() {
-    return {
-      registration: null as ServiceWorkerRegistration | null,
-      updateExists: false,
-    };
-  },
+if (navigator.serviceWorker) {
+  document.addEventListener('swUpdated', onUpdateAvailable as EventListener, {
+    once: true,
+  });
 
-  computed: {},
+  let refreshing = false;
 
-  created() {
-    if (navigator.serviceWorker) {
-      document.addEventListener(
-        'swUpdated',
-        this.onUpdateAvailable as EventListener,
-        {
-          once: true,
-        },
-      );
-
-      let refreshing = false;
-
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (!refreshing) {
-          window.location.reload();
-          refreshing = true;
-        }
-      });
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!refreshing) {
+      window.location.reload();
+      refreshing = true;
     }
-  },
+  });
+}
 
-  methods: {
-    onUpdateAvailable(event: CustomEvent) {
-      this.registration = event.detail;
-      this.updateExists = true;
-    },
+function onUpdateAvailable(event: CustomEvent) {
+  registration.value = event.detail;
+  updateExists.value = true;
+}
 
-    refreshApp() {
-      this.updateExists = false;
-      if (this.registration && this.registration.waiting) {
-        this.registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-      }
-    },
-  },
-});
+function refreshApp() {
+  updateExists.value = false;
+  if (registration.value?.waiting) {
+    registration.value.waiting.postMessage({ type: 'SKIP_WAITING' });
+  }
+}
 </script>
 
 <style>

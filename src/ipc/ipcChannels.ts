@@ -1,5 +1,5 @@
-import { PageSize } from '@/models/PageSetup';
-import { Score } from '@/models/save/v1/Score';
+import type { PageSize } from '@/models/PageSetup';
+import type { Score } from '@/models/save/v1/Score';
 
 export enum IpcMainChannels {
   FileMenuNewScore = 'FileMenuNewScore',

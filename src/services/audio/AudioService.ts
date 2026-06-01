@@ -2,7 +2,7 @@ import * as Tone from 'tone';
 import { ToneEvent } from 'tone';
 
 import { EventBus } from '@/eventBus';
-import {
+import type {
   PlaybackOptions,
   PlaybackSequenceEvent,
 } from '@/services/audio/PlaybackService';

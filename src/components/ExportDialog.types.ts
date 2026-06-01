@@ -1,5 +1,5 @@
-import { LatexExporterOptions } from '@/services/integration/LatexExporter';
-import { MusicXmlExporterOptions } from '@/services/integration/MusicXmlExporter';
+import type { LatexExporterOptions } from '@/services/integration/LatexExporter';
+import type { MusicXmlExporterOptions } from '@/services/integration/MusicXmlExporter';
 
 export enum ExportFormat {
   HTML = 'HTML',

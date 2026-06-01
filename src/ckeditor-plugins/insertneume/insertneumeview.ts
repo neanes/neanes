@@ -1,20 +1,18 @@
+import type { Locale } from 'ckeditor5';
 import {
   ButtonView,
   createDropdown,
   ListView,
-  Locale,
   View,
   ViewCollection,
 } from 'ckeditor5';
 
-import { Neume } from '@/models/Neumes';
+import type { Neume } from '@/models/Neumes';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 
-import { InsertNeumeCommandParams } from './insertneumecommand';
-import {
-  CharacterBlock,
-  INSERT_NEUME_CHARACTER_BLOCKS,
-} from './insertneumeutil';
+import type { InsertNeumeCommandParams } from './insertneumecommand';
+import type { CharacterBlock } from './insertneumeutil';
+import { INSERT_NEUME_CHARACTER_BLOCKS } from './insertneumeutil';
 
 export default class InsertNeumeView extends View {
   gridView: View;

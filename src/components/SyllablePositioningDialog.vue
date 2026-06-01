@@ -697,7 +697,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, PropType, ref, StyleValue } from 'vue';
+import type { PropType, StyleValue } from 'vue';
+import { computed, onBeforeUnmount, ref } from 'vue';
 
 import DragHandle from '@/components/DragHandle.vue';
 import type { UnitOfMeasure } from '@/components/InputUnit.types';
@@ -706,16 +707,15 @@ import ModalDialog from '@/components/ModalDialog.vue';
 import NeumeBoxMartyria from '@/components/NeumeBoxMartyria.vue';
 import NeumeBoxSyllable from '@/components/NeumeBoxSyllable.vue';
 import NeumeBoxTempo from '@/components/NeumeBoxTempo.vue';
-import {
-  ElementType,
+import type {
   MartyriaElement,
-  NoteElement,
   ScoreElement,
   ScoreElementOffset,
   TempoElement,
 } from '@/models/Element';
+import { ElementType, NoteElement } from '@/models/Element';
 import { TimeNeume, VocalExpressionNeume } from '@/models/Neumes';
-import { PageSetup } from '@/models/PageSetup';
+import type { PageSetup } from '@/models/PageSetup';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
 
 const emit = defineEmits(['close', 'update']);

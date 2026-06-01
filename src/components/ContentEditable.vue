@@ -14,7 +14,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, StyleValue, useTemplateRef } from 'vue';
+import type { StyleValue } from 'vue';
+import { computed, onMounted, useTemplateRef } from 'vue';
 
 const emit = defineEmits(['click', 'focus', 'blur', 'onEditorReady']);
 const props = defineProps({

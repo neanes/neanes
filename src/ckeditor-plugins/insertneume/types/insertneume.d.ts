@@ -1,6 +1,6 @@
 import 'ckeditor5';
 
-import {
+import type {
   InsertNeumeDefaultAttributesMartyriaType,
   InsertNeumeDefaultAttributesType,
 } from '../insertneumeutil';

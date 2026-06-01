@@ -122,10 +122,11 @@
 </template>
 
 <script setup lang="ts">
-import { PropType } from 'vue';
+import type { PropType } from 'vue';
 
-import { ImageBoxElement, TextBoxAlignment } from '@/models/Element';
-import { PageSetup } from '@/models/PageSetup';
+import type { ImageBoxElement } from '@/models/Element';
+import { TextBoxAlignment } from '@/models/Element';
+import type { PageSetup } from '@/models/PageSetup';
 
 import InputUnit from './InputUnit.vue';
 

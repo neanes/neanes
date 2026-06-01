@@ -1,4 +1,4 @@
-import { Command } from '../CommandService';
+import type { Command } from '../CommandService';
 
 export interface RemoveFromCollectionCommandArgs<T> {
   collection: T[];

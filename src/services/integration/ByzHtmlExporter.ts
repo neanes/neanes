@@ -1,8 +1,6 @@
-import {
+import type {
   DropCapElement,
-  ElementType,
   ImageBoxElement,
-  LineBreakType,
   MartyriaElement,
   ModeKeyElement,
   NoteElement,
@@ -11,21 +9,23 @@ import {
   TempoElement,
   TextBoxElement,
 } from '@/models/Element';
+import { ElementType, LineBreakType } from '@/models/Element';
+import type { Neume } from '@/models/Neumes';
 import {
   MeasureBar,
   ModeSign,
-  Neume,
   TimeNeume,
   VocalExpressionNeume,
 } from '@/models/Neumes';
-import { PageSetup } from '@/models/PageSetup';
-import { Score } from '@/models/Score';
+import type { PageSetup } from '@/models/PageSetup';
+import type { Score } from '@/models/Score';
 import { GORTHMIKON, PELASTIKON } from '@/utils/constants';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { Unit } from '@/utils/Unit';
 
 import { MelismaHelperGreek } from '../MelismaHelperGreek';
-import { NeumeMappingService, SbmuflGlyphName } from '../NeumeMappingService';
+import type { SbmuflGlyphName } from '../NeumeMappingService';
+import { NeumeMappingService } from '../NeumeMappingService';
 import { TextMeasurementService } from '../TextMeasurementService';
 
 interface NeumeOffset {

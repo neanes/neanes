@@ -1,4 +1,5 @@
-import { ScoreElement, TextBoxElement } from './Element';
+import type { ScoreElement } from './Element';
+import { TextBoxElement } from './Element';
 
 export class Header {
   public elements: ScoreElement[];

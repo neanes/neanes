@@ -1,22 +1,14 @@
 import { EventBus } from '@/eventBus';
 import { IpcRendererChannels } from '@/ipc/ipcChannels';
 
-import {
-  AddToCollectionCommand,
-  AddToCollectionCommandArgs,
-} from './commands/AddToCollectionCommand';
-import {
-  RemoveFromCollectionCommand,
-  RemoveFromCollectionCommandArgs,
-} from './commands/RemoveFromCollectionCommand';
-import {
-  ReplaceElementInCollectionCommand,
-  ReplaceElementInCollectionCommandArgs,
-} from './commands/ReplaceElementInCollectionCommand';
-import {
-  UpdatePropertiesCommand,
-  UpdatePropertiesCommandArgs,
-} from './commands/UpdatePropertiesCommand';
+import type { AddToCollectionCommandArgs } from './commands/AddToCollectionCommand';
+import { AddToCollectionCommand } from './commands/AddToCollectionCommand';
+import type { RemoveFromCollectionCommandArgs } from './commands/RemoveFromCollectionCommand';
+import { RemoveFromCollectionCommand } from './commands/RemoveFromCollectionCommand';
+import type { ReplaceElementInCollectionCommandArgs } from './commands/ReplaceElementInCollectionCommand';
+import { ReplaceElementInCollectionCommand } from './commands/ReplaceElementInCollectionCommand';
+import type { UpdatePropertiesCommandArgs } from './commands/UpdatePropertiesCommand';
+import { UpdatePropertiesCommand } from './commands/UpdatePropertiesCommand';
 
 export interface Command {
   execute(): void;

@@ -19,7 +19,8 @@
 
 <script setup lang="ts">
 import { Sketch } from '@ckpack/vue-color';
-import { computed, ref, StyleValue, useTemplateRef, watch } from 'vue';
+import type { StyleValue } from 'vue';
+import { computed, ref, useTemplateRef, watch } from 'vue';
 
 interface Color {
   hex: string;

@@ -31,10 +31,11 @@
 <script setup lang="ts">
 import 'vue-draggable-resizable/style.css';
 
-import { computed, PropType, ref, StyleValue, watch } from 'vue';
+import type { PropType, StyleValue } from 'vue';
+import { computed, ref, watch } from 'vue';
 import VueDraggableResizable from 'vue-draggable-resizable';
 
-import { ImageBoxElement } from '@/models/Element';
+import type { ImageBoxElement } from '@/models/Element';
 import { withZoom } from '@/utils/withZoom';
 
 const props = defineProps({

@@ -1,4 +1,4 @@
-import { SelectorParam } from 'i18next';
+import type { SelectorParam } from 'i18next';
 
 import {
   Fthora,
@@ -14,7 +14,8 @@ import {
   TimeNeume,
   VocalExpressionNeume,
 } from './Neumes';
-import { Scale, ScaleNote } from './Scales';
+import type { ScaleNote } from './Scales';
+import { Scale } from './Scales';
 
 export type ModelSelector = SelectorParam<'model'>;
 

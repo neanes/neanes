@@ -272,16 +272,18 @@
 </template>
 
 <script setup lang="ts">
-import { computed, PropType } from 'vue';
+import type { PropType } from 'vue';
+import { computed } from 'vue';
 
 import ColorPicker from '@/components/ColorPicker.vue';
 import InputBpm from '@/components/InputBpm.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import InputUnit from '@/components/InputUnit.vue';
-import { ModeKeyElement, TextBoxAlignment } from '@/models/Element';
+import type { ModeKeyElement } from '@/models/Element';
+import { TextBoxAlignment } from '@/models/Element';
 import { TempoSign } from '@/models/Neumes';
-import { PageSetup } from '@/models/PageSetup';
+import type { PageSetup } from '@/models/PageSetup';
 import { Unit } from '@/utils/Unit';
 
 import type { ButtonWithMenuOption } from './ButtonWithMenu.types';

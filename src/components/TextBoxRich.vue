@@ -102,27 +102,22 @@
 </template>
 
 <script setup lang="ts">
-import { FontSizeOption } from '@ckeditor/ckeditor5-font';
+import type { FontSizeOption } from '@ckeditor/ckeditor5-font';
 import { Ckeditor } from '@ckeditor/ckeditor5-vue';
-import { Editor, EditorConfig } from 'ckeditor5';
+import type { Editor, EditorConfig } from 'ckeditor5';
 import { debounce, throttle } from 'throttle-debounce';
-import {
-  computed,
-  onBeforeUnmount,
-  PropType,
-  ref,
-  StyleValue,
-  useTemplateRef,
-  watch,
-} from 'vue';
-import { ComponentExposed } from 'vue-component-type-helpers';
+import type { PropType, StyleValue } from 'vue';
+import { computed, onBeforeUnmount, ref, useTemplateRef, watch } from 'vue';
+import type { ComponentExposed } from 'vue-component-type-helpers';
 
 import { useResizeObserver } from '@/composables/useResizeObserver';
 import InlineEditor from '@/customEditor';
-import { RichTextBoxElement, TextBoxAlignment } from '@/models/Element';
-import { PageSetup } from '@/models/PageSetup';
+import type { RichTextBoxElement } from '@/models/Element';
+import { TextBoxAlignment } from '@/models/Element';
+import type { PageSetup } from '@/models/PageSetup';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
-import { replaceTokens, TokenMetadata } from '@/utils/replaceTokens';
+import type { TokenMetadata } from '@/utils/replaceTokens';
+import { replaceTokens } from '@/utils/replaceTokens';
 import { withZoom } from '@/utils/withZoom';
 
 const emit = defineEmits(['update', 'update:height', 'select-single']);

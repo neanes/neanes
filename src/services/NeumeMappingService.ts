@@ -1,5 +1,6 @@
 import metadata from '@/assets/fonts/neanes.metadata.json';
 import glyphnames from '@/assets/fonts/sbmufl/glyphnames.json';
+import type { Neume } from '@/models/Neumes';
 import {
   Accidental,
   Fthora,
@@ -9,7 +10,6 @@ import {
   MeasureBar,
   MeasureNumber,
   ModeSign,
-  Neume,
   Note,
   NoteIndicator,
   QuantitativeNeume,

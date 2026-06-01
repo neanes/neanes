@@ -683,11 +683,12 @@
 // TODO don't rely on this eslint-disable line
 // Instead, make a copy of the options prop (a la Page Setup Dialog)
 // and have TheEditor update the actual options.
-import { computed, onBeforeUnmount, onMounted, PropType, ref } from 'vue';
+import type { PropType } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
 import ModalDialog from '@/components/ModalDialog.vue';
 import { Accidental } from '@/models/Neumes';
-import { PlaybackOptions } from '@/services/audio/PlaybackService';
+import type { PlaybackOptions } from '@/services/audio/PlaybackService';
 
 const FREQUENCY_G3 = 196;
 

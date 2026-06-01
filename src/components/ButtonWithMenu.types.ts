@@ -1,4 +1,4 @@
-import { Neume } from '@/models/Neumes';
+import type { Neume } from '@/models/Neumes';
 
 export interface ButtonWithMenuOption {
   icon?: string;

@@ -13,11 +13,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, PropType, StyleValue } from 'vue';
+import type { PropType, StyleValue } from 'vue';
+import { computed } from 'vue';
 
 import Neume from '@/components/NeumeGlyph.vue';
-import { TempoElement } from '@/models/Element';
-import { PageSetup } from '@/models/PageSetup';
+import type { TempoElement } from '@/models/Element';
+import type { PageSetup } from '@/models/PageSetup';
 import { withZoom } from '@/utils/withZoom';
 
 const props = defineProps({

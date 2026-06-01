@@ -111,13 +111,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, PropType, ref } from 'vue';
+import type { PropType } from 'vue';
+import { computed, onBeforeUnmount, ref } from 'vue';
 
 import ModalDialog from '@/components/ModalDialog.vue';
 import ModeKey from '@/components/ModeKey.vue';
 import { ModeKeyElement, TextBoxAlignment } from '@/models/Element';
 import { modeKeyTemplates } from '@/models/ModeKeys';
-import { PageSetup } from '@/models/PageSetup';
+import type { PageSetup } from '@/models/PageSetup';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
 
 const emit = defineEmits([

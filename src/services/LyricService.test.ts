@@ -1,12 +1,11 @@
 import { readFile } from 'fs/promises';
 import { describe, expect, it } from 'vitest';
 
+import type { DropCapElement, ScoreElement } from '../models/Element';
 import {
   AcceptsLyricsOption,
-  DropCapElement,
   ElementType,
   NoteElement,
-  ScoreElement,
 } from '../models/Element';
 import { QuantitativeNeume } from '../models/Neumes';
 import { LyricService } from './LyricService';

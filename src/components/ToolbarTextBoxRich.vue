@@ -306,16 +306,17 @@
 </template>
 
 <script setup lang="ts">
-import { computed, PropType } from 'vue';
+import type { PropType } from 'vue';
+import { computed } from 'vue';
 
 import InputBpm from '@/components/InputBpm.vue';
 import InputUnit from '@/components/InputUnit.vue';
-import { RichTextBoxElement } from '@/models/Element';
+import type { RichTextBoxElement } from '@/models/Element';
 import {
   getNoteLabelSelector,
   getScaleLabelSelector,
 } from '@/models/NeumeI18nMappings';
-import { PageSetup } from '@/models/PageSetup';
+import type { PageSetup } from '@/models/PageSetup';
 import { Scale, ScaleNote } from '@/models/Scales';
 import { Unit } from '@/utils/Unit';
 

@@ -1,5 +1,4 @@
-import {
-  ElementType,
+import type {
   MartyriaElement,
   ModeKeyElement,
   NoteElement,
@@ -7,6 +6,7 @@ import {
   ScoreElement,
   TempoElement,
 } from '@/models/Element';
+import { ElementType } from '@/models/Element';
 import {
   Accidental,
   Fthora,

@@ -1,11 +1,10 @@
-import {
+import type {
   ExportPageAsImageArgs,
   ExportWorkspaceAsHtmlArgs,
   ExportWorkspaceAsImageArgs,
   ExportWorkspaceAsLatexArgs,
   ExportWorkspaceAsMusicXmlArgs,
   ExportWorkspaceAsPdfArgs,
-  IpcRendererChannels,
   OpenContextMenuForTabArgs,
   OpenWorkspaceFromArgvArgs,
   PrintWorkspaceArgs,
@@ -16,12 +15,13 @@ import {
   ShowMessageBoxArgs,
   ShowMessageBoxReplyArgs,
 } from '@/ipc/ipcChannels';
-import { Workspace } from '@/models/Workspace';
+import { IpcRendererChannels } from '@/ipc/ipcChannels';
+import type { Workspace } from '@/models/Workspace';
 import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
 import { Unit } from '@/utils/Unit';
 
 import { SaveService } from '../SaveService';
-import { IIpcService } from './IIpcService';
+import type { IIpcService } from './IIpcService';
 
 export class IpcService implements IIpcService {
   public async saveWorkspace(

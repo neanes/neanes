@@ -3,10 +3,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, PropType, ref, StyleValue } from 'vue';
+import type { PropType, StyleValue } from 'vue';
+import { computed, onBeforeUnmount, ref } from 'vue';
 
-import { NoteElement, ScoreElementOffset } from '@/models/Element';
-import { Neume, VocalExpressionNeume } from '@/models/Neumes';
+import type { NoteElement, ScoreElementOffset } from '@/models/Element';
+import type { Neume } from '@/models/Neumes';
+import { VocalExpressionNeume } from '@/models/Neumes';
 import { fontService } from '@/services/FontService';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { withZoom } from '@/utils/withZoom';

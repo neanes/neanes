@@ -1,8 +1,7 @@
+import type { Fthora, Neume } from '@/models/Neumes';
 import {
-  Fthora,
   GorgonNeume,
   MeasureBar,
-  Neume,
   petastiNeumes,
   QuantitativeNeume,
   TimeNeume,

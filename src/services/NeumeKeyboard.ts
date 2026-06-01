@@ -1,4 +1,5 @@
 import { AcceptsLyricsOption } from '@/models/Element';
+import type { Neume } from '@/models/Neumes';
 import {
   Accidental,
   Fthora,
@@ -6,7 +7,6 @@ import {
   Ison,
   MeasureBar,
   MeasureNumber,
-  Neume,
   Note,
   QuantitativeNeume,
   TempoSign,

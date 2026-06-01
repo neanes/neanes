@@ -1,3 +1,4 @@
+import type { ScoreElement } from '@/models/Element';
 import {
   AcceptsLyricsOption,
   AlternateLineElement,
@@ -11,16 +12,16 @@ import {
   ModeKeyElement,
   NoteElement,
   RichTextBoxElement,
-  ScoreElement,
   TempoElement,
   TextBoxElement,
 } from '@/models/Element';
-import { Footer } from '@/models/Footer';
-import { Header } from '@/models/Header';
+import type { Footer } from '@/models/Footer';
+import type { Header } from '@/models/Header';
 import { LyricSetup } from '@/models/LyricSetup';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import { QuantitativeNeume } from '@/models/Neumes';
 import { PageSetup, pageSizes } from '@/models/PageSetup';
+import type { ScoreElement as ScoreElement_v1 } from '@/models/save/v1/Element';
 import {
   AlternateLineElement as AlternateLineElement_v1,
   AnnotationElement as AnnotationElement_v1,
@@ -32,18 +33,14 @@ import {
   ModeKeyElement as ModeKeyElement_v1,
   NoteElement as NoteElement_v1,
   RichTextBoxElement as RichTextBoxElement_v1,
-  ScoreElement as ScoreElement_v1,
   TempoElement as TempoElement_v1,
   TextBoxElement as TextBoxElement_v1,
 } from '@/models/save/v1/Element';
-import { Footer as Footer_v1 } from '@/models/save/v1/Footer';
-import { Header as Header_v1 } from '@/models/save/v1/Header';
+import type { Footer as Footer_v1 } from '@/models/save/v1/Footer';
+import type { Header as Header_v1 } from '@/models/save/v1/Header';
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
-import {
-  LyricSetup as LyricSetup_v1,
-  Score as Score_v1,
-  Staff as Staff_v1,
-} from '@/models/save/v1/Score';
+import type { LyricSetup as LyricSetup_v1 } from '@/models/save/v1/Score';
+import { Score as Score_v1, Staff as Staff_v1 } from '@/models/save/v1/Score';
 import { Score } from '@/models/Score';
 import { Staff } from '@/models/Staff';
 

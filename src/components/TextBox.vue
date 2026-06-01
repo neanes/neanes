@@ -76,24 +76,25 @@
 
 <script setup lang="ts">
 import { debounce, throttle } from 'throttle-debounce';
+import type { PropType, StyleValue } from 'vue';
 import {
   computed,
   onBeforeUnmount,
   onMounted,
-  PropType,
   ref,
-  StyleValue,
   useTemplateRef,
   watch,
 } from 'vue';
-import { ComponentExposed } from 'vue-component-type-helpers';
+import type { ComponentExposed } from 'vue-component-type-helpers';
 
 import ContentEditable from '@/components/ContentEditable.vue';
 import { useResizeObserver } from '@/composables/useResizeObserver';
-import { TextBoxAlignment, TextBoxElement } from '@/models/Element';
-import { PageSetup } from '@/models/PageSetup';
+import type { TextBoxElement } from '@/models/Element';
+import { TextBoxAlignment } from '@/models/Element';
+import type { PageSetup } from '@/models/PageSetup';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
-import { replaceTokens, TokenMetadata } from '@/utils/replaceTokens';
+import type { TokenMetadata } from '@/utils/replaceTokens';
+import { replaceTokens } from '@/utils/replaceTokens';
 import { withZoom } from '@/utils/withZoom';
 
 const emit = defineEmits(['update', 'update:height', 'select-single']);

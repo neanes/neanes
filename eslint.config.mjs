@@ -25,6 +25,7 @@ export default [
       curly: ['error', 'all'],
       'simple-import-sort/imports': 'error',
       'simple-import-sort/exports': 'error',
+      '@typescript-eslint/consistent-type-imports': 'error',
       '@typescript-eslint/no-explicit-any': 'off',
     },
   },

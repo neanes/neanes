@@ -8,13 +8,11 @@ import {
 import { Note, RootSign } from '@/models/Neumes';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
 
-import {
-  INSERT_NEUME_COMMAND,
-  InsertNeumeCommandParams,
-} from './insertneumecommand';
+import type { InsertNeumeCommandParams } from './insertneumecommand';
+import { INSERT_NEUME_COMMAND } from './insertneumecommand';
 import { NEUME_CUSTOM_PROPERTY } from './insertneumeediting';
 import InsertNeumeFormView from './insertneumeformview';
-import {
+import type {
   InsertNeumeAttributes,
   InsertNeumeAttributeSet,
   InsertNeumeDefaultAttributesMartyriaType,

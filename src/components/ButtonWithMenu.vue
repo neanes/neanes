@@ -35,20 +35,19 @@
 </template>
 
 <script setup lang="ts">
+import type { PropType, StyleValue } from 'vue';
 import {
   computed,
   inject,
   onBeforeUnmount,
   onMounted,
-  PropType,
   ref,
-  StyleValue,
   useTemplateRef,
 } from 'vue';
 
 import { editorPreferencesKey } from '@/injectionKeys';
 import { ButtonMenuMode } from '@/models/EditorPreferences';
-import { Neume } from '@/models/Neumes';
+import type { Neume } from '@/models/Neumes';
 
 import type { ButtonWithMenuOption } from './ButtonWithMenu.types';
 

@@ -21,20 +21,14 @@
 
 <script setup lang="ts">
 import { Ckeditor } from '@ckeditor/ckeditor5-vue';
-import { EditorConfig, FontSizeOption } from 'ckeditor5';
-import {
-  computed,
-  onBeforeUnmount,
-  onMounted,
-  PropType,
-  ref,
-  useTemplateRef,
-} from 'vue';
-import { ComponentExposed } from 'vue-component-type-helpers';
+import type { EditorConfig, FontSizeOption } from 'ckeditor5';
+import type { PropType } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
+import type { ComponentExposed } from 'vue-component-type-helpers';
 
 import InlineEditor from '@/customEditor';
-import { AnnotationElement } from '@/models/Element';
-import { PageSetup } from '@/models/PageSetup';
+import type { AnnotationElement } from '@/models/Element';
+import type { PageSetup } from '@/models/PageSetup';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { withZoom } from '@/utils/withZoom';
 

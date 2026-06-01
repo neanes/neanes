@@ -1,4 +1,4 @@
-import { ScoreElement } from '@/models/Element';
+import type { ScoreElement } from '@/models/Element';
 import { Accidental } from '@/models/Neumes';
 import {
   getScaleNoteFromValue,
@@ -7,17 +7,16 @@ import {
   ScaleNote,
 } from '@/models/Scales';
 
-import {
+import type {
   AnalysisNode,
-  AnalysisService,
   FthoraNode,
   IsonNode,
   ModeKeyNode,
-  NodeType,
   NoteAtomNode,
   RestNode,
   TempoNode,
 } from './AnalysisService';
+import { AnalysisService, NodeType } from './AnalysisService';
 
 export interface PlaybackSequenceEvent {
   frequency?: number;

@@ -1,12 +1,12 @@
 'use strict';
 
+import type { MenuItemConstructorOptions } from 'electron';
 import {
   app,
   BrowserWindow,
   dialog,
   ipcMain,
   Menu,
-  MenuItemConstructorOptions,
   protocol,
   screen,
   shell,
@@ -20,12 +20,11 @@ import mimetypes from 'mime-types';
 import path from 'path';
 import { debounce } from 'throttle-debounce';
 
-import { PageSize } from '@/models/PageSetup';
+import type { PageSize } from '@/models/PageSetup';
 
 import { initializeI18n, resolveLanguagePreference } from '../../src/i18n';
-import {
+import type {
   CloseWorkspacesArgs,
-  CloseWorkspacesDisposition,
   ExportPageAsImageArgs,
   ExportWorkspaceAsHtmlArgs,
   ExportWorkspaceAsImageArgs,
@@ -37,8 +36,6 @@ import {
   FileMenuInsertTextboxArgs,
   FileMenuOpenImageArgs,
   FileMenuOpenScoreArgs,
-  IpcMainChannels,
-  IpcRendererChannels,
   OpenContextMenuForTabArgs,
   OpenWorkspaceFromArgvArgs,
   PrintWorkspaceArgs,
@@ -48,7 +45,12 @@ import {
   SaveWorkspaceReplyArgs,
   ShowMessageBoxArgs,
 } from '../../src/ipc/ipcChannels';
-import { Score } from '../../src/models/save/v1/Score';
+import {
+  CloseWorkspacesDisposition,
+  IpcMainChannels,
+  IpcRendererChannels,
+} from '../../src/ipc/ipcChannels';
+import type { Score } from '../../src/models/save/v1/Score';
 import { getSystemFonts } from '../../src/utils/getSystemFonts';
 import { TestFileType } from '../../src/utils/TestFileType';
 

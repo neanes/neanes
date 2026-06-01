@@ -1,4 +1,4 @@
-import { IPlatformService } from './IPlatformService';
+import type { IPlatformService } from './IPlatformService';
 
 export class BrowserPlatformService implements IPlatformService {
   public isMac = navigator.userAgent.includes('Mac');

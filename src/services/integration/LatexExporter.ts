@@ -1,20 +1,21 @@
-import {
+import type {
   DropCapElement,
-  ElementType,
   MartyriaElement,
   ModeKeyElement,
   NoteElement,
   TempoElement,
-  TextBoxAlignment,
   TextBoxElement,
 } from '@/models/Element';
-import { Neume, TimeNeume, VocalExpressionNeume } from '@/models/Neumes';
-import { Page } from '@/models/Page';
-import { PageSetup } from '@/models/PageSetup';
+import { ElementType, TextBoxAlignment } from '@/models/Element';
+import type { Neume } from '@/models/Neumes';
+import { TimeNeume, VocalExpressionNeume } from '@/models/Neumes';
+import type { Page } from '@/models/Page';
+import type { PageSetup } from '@/models/PageSetup';
 import { Unit } from '@/utils/Unit';
 
 import { fontService } from '../FontService';
-import { NeumeMappingService, SbmuflGlyphName } from '../NeumeMappingService';
+import type { SbmuflGlyphName } from '../NeumeMappingService';
+import { NeumeMappingService } from '../NeumeMappingService';
 import { TextMeasurementService } from '../TextMeasurementService';
 
 const schemaVersion = 2;

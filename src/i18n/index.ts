@@ -1,9 +1,5 @@
-import i18next, {
-  type InitOptions,
-  type Module,
-  type Newable,
-  type NewableModule,
-} from 'i18next';
+import type { InitOptions, Module, Newable, NewableModule } from 'i18next';
+import i18next from 'i18next';
 import Pseudo from 'i18next-pseudo';
 
 import el from './el';

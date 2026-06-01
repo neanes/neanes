@@ -1,23 +1,25 @@
-import {
+import type {
   Accidental,
   Fthora,
   GorgonNeume,
   Ison,
   MeasureBar,
   MeasureNumber,
+  NoteIndicator,
+  Tie,
+  TimeNeume,
+} from '@/models/Neumes';
+import {
   ModeSign,
   Note,
-  NoteIndicator,
   QuantitativeNeume,
   RootSign,
   TempoSign,
-  Tie,
-  TimeNeume,
   VocalExpressionNeume,
 } from '@/models/Neumes';
 import { Unit } from '@/utils/Unit';
 
-import { ModeKeyTemplate } from './ModeKeys';
+import type { ModeKeyTemplate } from './ModeKeys';
 import {
   getFthoraReplacements,
   getGorgonReplacements,

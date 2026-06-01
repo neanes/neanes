@@ -19,12 +19,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, PropType, StyleValue, useTemplateRef } from 'vue';
-import { ComponentExposed } from 'vue-component-type-helpers';
+import type { PropType, StyleValue } from 'vue';
+import { computed, useTemplateRef } from 'vue';
+import type { ComponentExposed } from 'vue-component-type-helpers';
 
 import ContentEditable from '@/components/ContentEditable.vue';
-import { DropCapElement } from '@/models/Element';
-import { PageSetup } from '@/models/PageSetup';
+import type { DropCapElement } from '@/models/Element';
+import type { PageSetup } from '@/models/PageSetup';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { withZoom } from '@/utils/withZoom';
 

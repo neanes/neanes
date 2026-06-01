@@ -3,10 +3,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, PropType, StyleValue } from 'vue';
+import type { PropType, StyleValue } from 'vue';
+import { computed } from 'vue';
 
-import { ScoreElementOffset } from '@/models/Element';
-import { Neume as NeumeType } from '@/models/Neumes';
+import type { ScoreElementOffset } from '@/models/Element';
+import type { Neume as NeumeType } from '@/models/Neumes';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { withZoom } from '@/utils/withZoom';
 

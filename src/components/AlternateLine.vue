@@ -18,21 +18,12 @@
 </template>
 
 <script setup lang="ts">
-import {
-  computed,
-  onBeforeUnmount,
-  onMounted,
-  PropType,
-  ref,
-  useTemplateRef,
-} from 'vue';
+import type { PropType } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
 
-import {
-  AlternateLineElement,
-  ElementType,
-  NoteElement,
-} from '@/models/Element';
-import { PageSetup } from '@/models/PageSetup';
+import type { AlternateLineElement, NoteElement } from '@/models/Element';
+import { ElementType } from '@/models/Element';
+import type { PageSetup } from '@/models/PageSetup';
 import { withZoom } from '@/utils/withZoom';
 
 import NeumeBoxSyllable from './NeumeBoxSyllable.vue';

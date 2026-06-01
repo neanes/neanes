@@ -100,14 +100,15 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, PropType, ref } from 'vue';
+import type { PropType } from 'vue';
+import { onBeforeUnmount, onMounted, ref } from 'vue';
 
 import ModalDialog from '@/components/ModalDialog.vue';
 import Neume from '@/components/NeumeGlyph.vue';
 import { supportedLocales } from '@/i18n';
 import { ButtonMenuMode, EditorPreferences } from '@/models/EditorPreferences';
 import { TempoSign } from '@/models/Neumes';
-import { PageSetup } from '@/models/PageSetup';
+import type { PageSetup } from '@/models/PageSetup';
 
 import InputBpm from './InputBpm.vue';
 

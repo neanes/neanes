@@ -1,4 +1,4 @@
-import {
+import type {
   ExportWorkspaceAsImageReplyArgs,
   OpenContextMenuForTabArgs,
   OpenWorkspaceFromArgvArgs,
@@ -7,7 +7,7 @@ import {
   ShowMessageBoxArgs,
   ShowMessageBoxReplyArgs,
 } from '@/ipc/ipcChannels';
-import { Workspace } from '@/models/Workspace';
+import type { Workspace } from '@/models/Workspace';
 
 export interface IIpcService {
   saveWorkspace(workspace: Workspace): Promise<SaveWorkspaceReplyArgs>;

@@ -164,7 +164,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, PropType, ref } from 'vue';
+import type { PropType } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
 import InputUnit from '@/components/InputUnit.vue';
 import ModalDialog from '@/components/ModalDialog.vue';

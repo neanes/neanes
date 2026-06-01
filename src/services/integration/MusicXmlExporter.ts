@@ -1,6 +1,5 @@
-import {
+import type {
   DropCapElement,
-  ElementType,
   MartyriaElement,
   ModeKeyElement,
   NoteElement,
@@ -8,6 +7,7 @@ import {
   ScoreElement,
   TempoElement,
 } from '@/models/Element';
+import { ElementType } from '@/models/Element';
 import { MeasureBar, QuantitativeNeume } from '@/models/Neumes';
 import {
   getScaleNoteFromValue,
@@ -15,18 +15,18 @@ import {
   Scale,
   ScaleNote,
 } from '@/models/Scales';
-import { Score } from '@/models/Score';
+import type { Score } from '@/models/Score';
 
-import {
+import type {
   AnalysisNode,
-  AnalysisService,
   FthoraNode,
   IsonNode,
   ModeKeyNode,
-  NodeType,
   NoteAtomNode,
   RestNode,
 } from '../audio/AnalysisService';
+import { AnalysisService, NodeType } from '../audio/AnalysisService';
+import type { MusicXmlStepType } from './MusicXmlModel';
 import {
   MusicXmlAlter,
   MusicXmlAttributes,
@@ -58,7 +58,6 @@ import {
   MusicXmlSign,
   MusicXmlSlur,
   MusicXmlSound,
-  MusicXmlStepType,
   MusicXmlSyllabic,
   MusicXmlText,
   MusicXmlTie,

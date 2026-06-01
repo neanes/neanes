@@ -130,12 +130,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, PropType } from 'vue';
+import type { PropType } from 'vue';
+import { computed } from 'vue';
 
 import ColorPicker from '@/components/ColorPicker.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
-import { NoteElement } from '@/models/Element';
+import type { NoteElement } from '@/models/Element';
 import {
   E_MACRON,
   E_MACRON_SMALL,

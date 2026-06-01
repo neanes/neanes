@@ -1,4 +1,5 @@
-import { EmptyElement, ScoreElement } from '@/models/save/v1/Element';
+import type { ScoreElement } from '@/models/save/v1/Element';
+import { EmptyElement } from '@/models/save/v1/Element';
 
 import { Footers } from './Footers';
 import { Headers } from './Headers';

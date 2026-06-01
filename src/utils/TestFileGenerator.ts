@@ -1,12 +1,12 @@
 import { v4 as uuidv4 } from 'uuid';
 
+import type { ScoreElement } from '@/models/Element';
 import {
   DropCapElement,
   LineBreakType,
   MartyriaElement,
   ModeKeyElement,
   NoteElement,
-  ScoreElement,
 } from '@/models/Element';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import {

@@ -1,16 +1,16 @@
-import { ComputedRef, InjectionKey } from 'vue';
+import type { ComputedRef, InjectionKey } from 'vue';
 
-import { EditorPreferences } from './models/EditorPreferences';
-import { AudioService } from './services/audio/AudioService';
-import { PlaybackService } from './services/audio/PlaybackService';
-import { LatexExporter } from './services/integration/LatexExporter';
-import { MusicXmlExporter } from './services/integration/MusicXmlExporter';
-import { OcrImporter } from './services/integration/OcrImporter';
-import { IIpcService } from './services/ipc/IIpcService';
-import { LyricService } from './services/LyricService';
-import { NeumeKeyboard } from './services/NeumeKeyboard';
-import { IPlatformService } from './services/platform/IPlatformService';
-import { TextSearchService } from './services/TextSearchService';
+import type { EditorPreferences } from './models/EditorPreferences';
+import type { AudioService } from './services/audio/AudioService';
+import type { PlaybackService } from './services/audio/PlaybackService';
+import type { LatexExporter } from './services/integration/LatexExporter';
+import type { MusicXmlExporter } from './services/integration/MusicXmlExporter';
+import type { OcrImporter } from './services/integration/OcrImporter';
+import type { IIpcService } from './services/ipc/IIpcService';
+import type { LyricService } from './services/LyricService';
+import type { NeumeKeyboard } from './services/NeumeKeyboard';
+import type { IPlatformService } from './services/platform/IPlatformService';
+import type { TextSearchService } from './services/TextSearchService';
 
 export const audioServiceKey: InjectionKey<AudioService> = Symbol();
 export const editorPreferencesKey: InjectionKey<

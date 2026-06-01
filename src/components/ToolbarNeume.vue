@@ -522,12 +522,15 @@
 
 <script setup lang="ts">
 import { useTranslation } from 'i18next-vue';
-import { computed, PropType } from 'vue';
+import type { PropType } from 'vue';
+import { computed } from 'vue';
 
 import type { ButtonWithMenuOption } from '@/components/ButtonWithMenu.types';
 import ButtonWithMenu from '@/components/ButtonWithMenu.vue';
 import InputUnit from '@/components/InputUnit.vue';
-import { AcceptsLyricsOption, NoteElement } from '@/models/Element';
+import type { NoteElement } from '@/models/Element';
+import { AcceptsLyricsOption } from '@/models/Element';
+import type { ModelSelector } from '@/models/NeumeI18nMappings';
 import {
   getFthoraLabelSelector,
   getGorgonNeumeLabelSelector,
@@ -537,7 +540,6 @@ import {
   getNoteLabelSelector,
   getTimeNeumeLabelSelector,
   getVocalExpressionNeumeLabelSelector,
-  ModelSelector,
 } from '@/models/NeumeI18nMappings';
 import {
   getPrimaryNeume,
@@ -559,9 +561,9 @@ import {
   TimeNeume,
   VocalExpressionNeume,
 } from '@/models/Neumes';
-import { PageSetup } from '@/models/PageSetup';
+import type { PageSetup } from '@/models/PageSetup';
 import { ScaleNote } from '@/models/Scales';
-import { NeumeKeyboard } from '@/services/NeumeKeyboard';
+import type { NeumeKeyboard } from '@/services/NeumeKeyboard';
 import { Unit } from '@/utils/Unit';
 
 import Neume from './NeumeGlyph.vue';

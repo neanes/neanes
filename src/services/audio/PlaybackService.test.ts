@@ -1,11 +1,11 @@
 import { toBeDeepCloseTo, toMatchCloseTo } from 'jest-matcher-deep-close-to';
 import { describe, expect, it } from 'vitest';
 
+import type { ScoreElement } from '../../models/Element';
 import {
   MartyriaElement,
   ModeKeyElement,
   NoteElement,
-  ScoreElement,
   TempoElement,
 } from '../../models/Element';
 import {
@@ -15,7 +15,8 @@ import {
   QuantitativeNeume,
 } from '../../models/Neumes';
 import { Scale, ScaleNote } from '../../models/Scales';
-import { PlaybackOptions, PlaybackService } from './PlaybackService';
+import type { PlaybackOptions } from './PlaybackService';
+import { PlaybackService } from './PlaybackService';
 expect.extend({ toBeDeepCloseTo, toMatchCloseTo });
 
 describe('PlaybackService', () => {

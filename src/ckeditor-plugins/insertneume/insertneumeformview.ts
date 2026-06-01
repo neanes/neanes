@@ -1,17 +1,19 @@
-import {
-  ButtonView,
+import type {
   ColorSelectorColorPickerCancelEvent,
   ColorSelectorExecuteEvent,
-  ColorSelectorView,
   Config,
-  createDropdown,
-  createLabeledInputNumber,
   EditorConfig,
   InputNumberView,
-  LabeledFieldView,
-  ListView,
   Locale,
   ModelElement,
+} from 'ckeditor5';
+import {
+  ButtonView,
+  ColorSelectorView,
+  createDropdown,
+  createLabeledInputNumber,
+  LabeledFieldView,
+  ListView,
   SwitchButtonView,
   View,
   ViewCollection,
@@ -22,7 +24,7 @@ import { NOTE_LABEL_SELECTORS } from '@/models/NeumeI18nMappings';
 import { Note, RootSign } from '@/models/Neumes';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 
-import { InsertNeumeType } from './insertneumeediting';
+import type { InsertNeumeType } from './insertneumeediting';
 
 export default class InsertNeumeFormView extends View {
   public topInput: LabeledFieldView<InputNumberView>;

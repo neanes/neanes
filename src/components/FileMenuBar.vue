@@ -209,12 +209,14 @@ import { onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
 import FileMenuBarItem from '@/components/FileMenuBarItem.vue';
 import FileMenuItem from '@/components/FileMenuItem.vue';
 import { EventBus } from '@/eventBus';
-import {
+import type {
   CloseWorkspacesArgs,
-  CloseWorkspacesDisposition,
   FileMenuInsertTextboxArgs,
   FileMenuOpenImageArgs,
   FileMenuOpenScoreArgs,
+} from '@/ipc/ipcChannels';
+import {
+  CloseWorkspacesDisposition,
   IpcMainChannels,
   IpcRendererChannels,
 } from '@/ipc/ipcChannels';

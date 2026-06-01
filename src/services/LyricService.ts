@@ -1,16 +1,16 @@
-import {
-  AcceptsLyricsOption,
+import type {
   DropCapElement,
-  ElementType,
   MartyriaElement,
   NoteElement,
   RichTextBoxElement,
   ScoreElement,
 } from '@/models/Element';
+import { AcceptsLyricsOption, ElementType } from '@/models/Element';
 import { QuantitativeNeume } from '@/models/Neumes';
 import { TATWEEL } from '@/utils/constants';
 
-import { MelismaHelperGreek, MelismaSyllables } from './MelismaHelperGreek';
+import type { MelismaSyllables } from './MelismaHelperGreek';
+import { MelismaHelperGreek } from './MelismaHelperGreek';
 
 export type UpdateNoteCallback = (
   element: NoteElement,

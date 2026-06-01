@@ -1,4 +1,5 @@
-import { EmptyElement, ScoreElement } from './Element';
+import type { ScoreElement } from './Element';
+import { EmptyElement } from './Element';
 import { LyricSetup } from './LyricSetup';
 
 export class Staff {

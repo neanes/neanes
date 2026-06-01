@@ -362,14 +362,15 @@
 
 <script setup lang="ts">
 import { useTranslation } from 'i18next-vue';
-import { computed, PropType } from 'vue';
+import type { PropType } from 'vue';
+import { computed } from 'vue';
 
-import { MartyriaElement } from '@/models/Element';
+import type { MartyriaElement } from '@/models/Element';
+import type { ModelSelector } from '@/models/NeumeI18nMappings';
 import {
   getFthoraLabelSelector,
   getNoteLabelSelector,
   getScaleLabelSelector,
-  ModelSelector,
   ROOT_SIGN_LABEL_SELECTORS,
 } from '@/models/NeumeI18nMappings';
 import {
@@ -380,9 +381,9 @@ import {
   RootSign,
   TempoSign,
 } from '@/models/Neumes';
-import { PageSetup } from '@/models/PageSetup';
+import type { PageSetup } from '@/models/PageSetup';
 import { Scale, ScaleNote } from '@/models/Scales';
-import { NeumeKeyboard } from '@/services/NeumeKeyboard';
+import type { NeumeKeyboard } from '@/services/NeumeKeyboard';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { Unit } from '@/utils/Unit';
 

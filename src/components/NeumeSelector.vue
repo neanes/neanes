@@ -381,13 +381,14 @@
 
 <script setup lang="ts">
 import { useTranslation } from 'i18next-vue';
-import { PropType, ref } from 'vue';
+import type { PropType } from 'vue';
+import { ref } from 'vue';
 
 import Neume from '@/components/NeumeGlyph.vue';
 import { getQuantitativeNeumeLabelSelector } from '@/models/NeumeI18nMappings';
 import { GorgonNeume, QuantitativeNeume } from '@/models/Neumes';
-import { PageSetup } from '@/models/PageSetup';
-import { NeumeKeyboard } from '@/services/NeumeKeyboard';
+import type { PageSetup } from '@/models/PageSetup';
+import type { NeumeKeyboard } from '@/services/NeumeKeyboard';
 
 interface SecondaryGorgonMenuItem {
   gorgon: GorgonNeume | null;

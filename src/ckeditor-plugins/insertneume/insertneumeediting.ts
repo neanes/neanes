@@ -1,6 +1,7 @@
-import { Plugin, toWidget, ViewNode } from 'ckeditor5';
+import type { ViewNode } from 'ckeditor5';
+import { Plugin, toWidget } from 'ckeditor5';
 
-import { Neume, Note, RootSign } from '@/models/Neumes';
+import type { Neume, Note, RootSign } from '@/models/Neumes';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { normalizeRootSign } from '@/utils/NeumeUtils';
 

@@ -236,15 +236,16 @@
 
 <script setup lang="ts">
 import { useTranslation } from 'i18next-vue';
-import { computed, nextTick, PropType, ref, useTemplateRef } from 'vue';
+import type { PropType } from 'vue';
+import { computed, nextTick, ref, useTemplateRef } from 'vue';
 
 import InputUnit from '@/components/InputUnit.vue';
 import { LineBreakType } from '@/models/Element';
 import { EntryMode } from '@/models/EntryMode';
 import { TempoSign } from '@/models/Neumes';
 import { AudioState } from '@/services/audio/AudioService';
-import { PlaybackOptions } from '@/services/audio/PlaybackService';
-import { NeumeKeyboard } from '@/services/NeumeKeyboard';
+import type { PlaybackOptions } from '@/services/audio/PlaybackService';
+import type { NeumeKeyboard } from '@/services/NeumeKeyboard';
 
 import type { ButtonWithMenuOption } from './ButtonWithMenu.types';
 import ButtonWithMenu from './ButtonWithMenu.vue';

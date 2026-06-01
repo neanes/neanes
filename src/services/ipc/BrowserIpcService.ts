@@ -1,17 +1,17 @@
 import JSZip from 'jszip';
 
-import {
+import type {
   ExportWorkspaceAsImageReplyArgs,
   OpenWorkspaceFromArgvArgs,
   SaveWorkspaceAsReplyArgs,
   SaveWorkspaceReplyArgs,
   ShowMessageBoxReplyArgs,
 } from '@/ipc/ipcChannels';
-import { Workspace } from '@/models/Workspace';
+import type { Workspace } from '@/models/Workspace';
 import { SaveService } from '@/services/SaveService';
 import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
 
-import { IIpcService } from './IIpcService';
+import type { IIpcService } from './IIpcService';
 
 export class BrowserIpcService implements IIpcService {
   public async saveWorkspace(

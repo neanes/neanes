@@ -1,22 +1,16 @@
+import type { Box, Glue, InputItem, PositionedItem } from 'tex-linebreak';
 import {
   adjustmentRatios,
-  Box,
   breakLines,
   forcedBreak,
-  Glue,
-  InputItem,
   MAX_COST,
   MaxAdjustmentExceededError,
-  PositionedItem,
   positionItems,
 } from 'tex-linebreak';
 
-import {
+import type {
   DropCapElement,
-  ElementType,
-  EmptyElement,
   ImageBoxElement,
-  LineBreakType,
   MartyriaElement,
   ModeKeyElement,
   NoteElement,
@@ -25,14 +19,14 @@ import {
   TempoElement,
   TextBoxElement,
 } from '@/models/Element';
-import { Footer } from '@/models/Footer';
-import { Header } from '@/models/Header';
+import { ElementType, EmptyElement, LineBreakType } from '@/models/Element';
+import type { Footer } from '@/models/Footer';
+import type { Header } from '@/models/Header';
 import { measureBarAboveToLeft } from '@/models/NeumeReplacements';
+import type { Fthora, Neume } from '@/models/Neumes';
 import {
-  Fthora,
   GorgonNeume,
   MeasureBar,
-  Neume,
   NeumeSelection,
   Note,
   NoteIndicator,
@@ -57,13 +51,14 @@ import {
   Scale,
   ScaleNote,
 } from '@/models/Scales';
-import { Workspace } from '@/models/Workspace';
+import type { Workspace } from '@/models/Workspace';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { TATWEEL } from '@/utils/constants';
 import { Unit } from '@/utils/Unit';
 
 import { fontService } from './FontService';
-import { MelismaHelperGreek, MelismaSyllables } from './MelismaHelperGreek';
+import type { MelismaSyllables } from './MelismaHelperGreek';
+import { MelismaHelperGreek } from './MelismaHelperGreek';
 import { TextMeasurementService } from './TextMeasurementService';
 
 const fontHeightCache = new Map<string, number>();

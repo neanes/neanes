@@ -1827,12 +1827,12 @@
 </template>
 
 <script setup lang="ts">
-import { SelectorParam } from 'i18next';
+import type { SelectorParam } from 'i18next';
 import { throttle } from 'throttle-debounce';
+import type { PropType } from 'vue';
 import {
   computed,
   onBeforeUnmount,
-  PropType,
   ref,
   triggerRef,
   useTemplateRef,
@@ -1846,13 +1846,14 @@ import ModalDialog from '@/components/ModalDialog.vue';
 import NeumeBoxMartyria from '@/components/NeumeBoxMartyria.vue';
 import NeumeBoxSyllable from '@/components/NeumeBoxSyllable.vue';
 import NeumeBoxTempo from '@/components/NeumeBoxTempo.vue';
-import {
-  ElementType,
+import type {
   MartyriaElement,
   NoteElement,
   TempoElement,
 } from '@/models/Element';
-import { PageSetup, PageSize, pageSizes } from '@/models/PageSetup';
+import { ElementType } from '@/models/Element';
+import type { PageSize } from '@/models/PageSetup';
+import { PageSetup, pageSizes } from '@/models/PageSetup';
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
 import { SaveService } from '@/services/SaveService';
 import { Unit } from '@/utils/Unit';

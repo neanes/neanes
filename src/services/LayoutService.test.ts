@@ -1,9 +1,10 @@
-import { describe, expect, it, Mock, vi } from 'vitest';
+import type { Mock } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
+import type { ScoreElement } from '../models/Element';
 import {
   MartyriaElement,
   NoteElement,
-  ScoreElement,
   TempoElement,
   TextBoxElement,
 } from '../models/Element';

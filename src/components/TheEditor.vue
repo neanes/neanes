@@ -5,6 +5,7 @@ import { getFontEmbedCSS, toPng } from 'html-to-image';
 import i18next from 'i18next';
 import { useTranslation } from 'i18next-vue';
 import { debounce, throttle } from 'throttle-debounce';
+import type { StyleValue } from 'vue';
 import {
   computed,
   nextTick,
@@ -13,23 +14,23 @@ import {
   provide,
   reactive,
   ref,
-  StyleValue,
   toRaw,
   useTemplateRef,
   watch,
 } from 'vue';
-import Vue3TabsChrome, { Tab } from 'vue3-tabs-chrome';
+import type { Tab } from 'vue3-tabs-chrome';
+import Vue3TabsChrome from 'vue3-tabs-chrome';
 
 import AlternateLine from '@/components/AlternateLine.vue';
 import ContentEditable from '@/components/ContentEditable.vue';
 import DropCap from '@/components/DropCap.vue';
 import EditorPreferencesDialog from '@/components/EditorPreferencesDialog.vue';
-import {
-  type ExportAsLatexSettings,
-  type ExportAsMusicXmlSettings,
-  type ExportAsPngSettings,
-  ExportFormat,
+import type {
+  ExportAsLatexSettings,
+  ExportAsMusicXmlSettings,
+  ExportAsPngSettings,
 } from '@/components/ExportDialog.types';
+import { ExportFormat } from '@/components/ExportDialog.types';
 import ExportDialog from '@/components/ExportDialog.vue';
 import FileMenuBar from '@/components/FileMenuBar.vue';
 import ImageBox from '@/components/ImageBox.vue';
@@ -63,39 +64,40 @@ import { useEditorServices } from '@/composables/useEditorServices';
 import { EventBus } from '@/eventBus';
 import { resolveLanguagePreference } from '@/i18n';
 import { editorPreferencesKey } from '@/injectionKeys';
-import {
+import type {
   CloseWorkspacesArgs,
-  CloseWorkspacesDisposition,
   ExportWorkspaceAsImageReplyArgs,
   FileMenuImportOcrArgs,
   FileMenuInsertTextboxArgs,
   FileMenuOpenImageArgs,
   FileMenuOpenScoreArgs,
-  IpcMainChannels,
-  IpcRendererChannels,
   ShowMessageBoxReplyArgs,
 } from '@/ipc/ipcChannels';
+import {
+  CloseWorkspacesDisposition,
+  IpcMainChannels,
+  IpcRendererChannels,
+} from '@/ipc/ipcChannels';
 import { EditorPreferences } from '@/models/EditorPreferences';
+import type { EmptyElement, ScoreElement } from '@/models/Element';
 import {
   AlternateLineElement,
   AnnotationElement,
   DropCapElement,
   ElementType,
-  EmptyElement,
   ImageBoxElement,
   LineBreakType,
   MartyriaElement,
   ModeKeyElement,
   NoteElement,
   RichTextBoxElement,
-  ScoreElement,
   TempoElement,
   TextBoxAlignment,
   TextBoxElement,
 } from '@/models/Element';
 import { EntryMode } from '@/models/EntryMode';
 import { modeKeyTemplates } from '@/models/ModeKeys';
-import { NeumeCombination } from '@/models/NeumeCommonCombinations';
+import type { NeumeCombination } from '@/models/NeumeCommonCombinations';
 import {
   areVocalExpressionsEquivalent,
   getSecondaryNeume,
@@ -104,10 +106,7 @@ import {
   onlyTakesTopGorgon,
   onlyTakesTopKlasma,
 } from '@/models/NeumeReplacements';
-import {
-  Accidental,
-  Fthora,
-  GorgonNeume,
+import type {
   Ison,
   MeasureBar,
   MeasureNumber,
@@ -115,24 +114,31 @@ import {
   QuantitativeNeume,
   TempoSign,
   Tie,
+} from '@/models/Neumes';
+import {
+  Accidental,
+  Fthora,
+  GorgonNeume,
   TimeNeume,
   VocalExpressionNeume,
 } from '@/models/Neumes';
-import { Line, Page } from '@/models/Page';
-import { PageSetup } from '@/models/PageSetup';
+import type { Line, Page } from '@/models/Page';
+import type { PageSetup } from '@/models/PageSetup';
 import { ScaleNote } from '@/models/Scales';
 import { Score } from '@/models/Score';
-import { ScoreElementSelectionRange } from '@/models/ScoreElementSelectionRange';
-import { Workspace, WorkspaceLocalStorage } from '@/models/Workspace';
+import type { ScoreElementSelectionRange } from '@/models/ScoreElementSelectionRange';
+import type { WorkspaceLocalStorage } from '@/models/Workspace';
+import { Workspace } from '@/models/Workspace';
 import {
   AudioServiceEventNames,
   AudioState,
 } from '@/services/audio/AudioService';
-import {
+import type {
   PlaybackOptions,
   PlaybackSequenceEvent,
 } from '@/services/audio/PlaybackService';
-import { Command, CommandFactory } from '@/services/history/CommandService';
+import type { Command } from '@/services/history/CommandService';
+import { CommandFactory } from '@/services/history/CommandService';
 import { ByzHtmlExporter } from '@/services/integration/ByzHtmlExporter';
 import { LatexExporterOptions } from '@/services/integration/LatexExporter';
 import { LayoutService } from '@/services/LayoutService';
@@ -143,7 +149,7 @@ import { getCursorPosition } from '@/utils/getCursorPosition';
 import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { isElectron } from '@/utils/isElectron';
-import { TokenMetadata } from '@/utils/replaceTokens';
+import type { TokenMetadata } from '@/utils/replaceTokens';
 import { shallowEquals } from '@/utils/shallowEquals';
 import { TestFileGenerator } from '@/utils/TestFileGenerator';
 import { TestFileType } from '@/utils/TestFileType';

@@ -1,4 +1,4 @@
-import { IPlatformService } from './IPlatformService';
+import type { IPlatformService } from './IPlatformService';
 
 export class PlatformService implements IPlatformService {
   public isMac = window.platform === 'darwin';

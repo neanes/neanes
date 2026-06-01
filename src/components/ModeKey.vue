@@ -64,12 +64,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, PropType, StyleValue } from 'vue';
+import type { PropType, StyleValue } from 'vue';
+import { computed } from 'vue';
 
 import Neume from '@/components/NeumeGlyph.vue';
-import { ModeKeyElement } from '@/models/Element';
+import type { ModeKeyElement } from '@/models/Element';
 import { ModeSign } from '@/models/Neumes';
-import { PageSetup } from '@/models/PageSetup';
+import type { PageSetup } from '@/models/PageSetup';
 import { withZoom } from '@/utils/withZoom';
 
 defineEmits(['select-single']);

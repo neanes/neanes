@@ -1,18 +1,20 @@
-import {
+import type {
   Accidental,
   Fthora,
   GorgonNeume,
   Ison,
   MeasureBar,
   MeasureNumber,
+  Tie,
+  TimeNeume,
+  VocalExpressionNeume,
+} from '@/models/save/v1/Neumes';
+import {
   ModeSign,
   Note,
   QuantitativeNeume,
   RootSign,
   TempoSign,
-  Tie,
-  TimeNeume,
-  VocalExpressionNeume,
 } from '@/models/save/v1/Neumes';
 import { Unit } from '@/utils/Unit';
 

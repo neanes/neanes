@@ -1,4 +1,5 @@
-import { ElementType, ScoreElement } from '@/models/Element';
+import type { ScoreElement } from '@/models/Element';
+import { ElementType } from '@/models/Element';
 
 export class Page {
   public lines: Line[] = [];

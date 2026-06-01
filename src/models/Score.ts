@@ -1,6 +1,6 @@
-import { Footer } from './Footer';
+import type { Footer } from './Footer';
 import { Footers } from './Footers';
-import { Header } from './Header';
+import type { Header } from './Header';
 import { Headers } from './Headers';
 import { PageSetup } from './PageSetup';
 import { Staff } from './Staff';

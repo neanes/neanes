@@ -12,7 +12,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, PropType, useTemplateRef } from 'vue';
+import type { PropType } from 'vue';
+import { computed, useTemplateRef } from 'vue';
 
 import type { UnitOfMeasure } from '@/components/InputUnit.types';
 import { Unit } from '@/utils/Unit';

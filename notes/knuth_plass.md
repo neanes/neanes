@@ -153,8 +153,10 @@ For a barline between elements $A$ and $B$, the minimum boundary width is
 
 $$\operatorname{trailing}(A) + \operatorname{leading}(\textit{bar}) + \operatorname{trailing}(\textit{bar}) + \operatorname{leading}(B).$$
 
-This minimum is preserved during justification and after lyric tucking.
-When a right barline becomes terminal at a line break, its clearance from the preceding neume is reserved as break-only width.
+The barline is centered in the available space while respecting that minimum.
+The trailing barline-to-$B$ clearance is modeled inside the box for a left-owned barline, so a barline at the start of a line keeps the same minimum clearance.
+The remaining minimum is preserved during justification and after lyric tucking.
+When a right barline becomes terminal at a line break, at a paragraph ending, before an empty element, or before a right-aligned martyria, its clearance from the preceding neume is reserved as terminal width.
 
 Following several classical 19th-century publications, ordinary martyriae are given extra elasticity.
 When a martyria sits between neighboring elements, the surrounding martyria glues together contribute additional stretch, that is, _k_ em on each side, where 1 em is the neume font size.
@@ -165,10 +167,10 @@ After the martyria box, the code inserts a zero-width pre-break glue, then a zer
 As a result, the full trailing spacing appears after the martyria only when it stays mid-line; if a break is taken there, that entire spacing becomes leading glue on the next line and is skipped.
 
 When a martyria has a transferable measure bar and is followed by a note, the bar transfers to the next line's first note at a break.
-To reserve space for this, the martyria's post-break glue is narrowed by the bar width, and an anonymous spacer box of the same width is inserted before the following note's box.
+To reserve space for this, the martyria's post-break glue is narrowed by the bar width plus its leading clearance, and an anonymous spacer box of the same width is inserted before the following note's box.
 On the same line the reduced glue and the spacer cancel, leaving the note's own box position unchanged.
 At a break the post-break glue vanishes; the spacer remains at the start of the next line and reserves leading space for the transferred bar.
-In Phase 2, when the break is actually taken, the note element is shifted left by the bar width so that the rendered barline glyph occupies the space reserved by the spacer rather than adding extra width.
+In Phase 2, when the break is actually taken, the note element is shifted left by the bar width plus its leading clearance so that the rendered barline glyph and spacing occupy the space reserved by the spacer rather than adding extra width.
 
 When a right-aligned martyria follows existing content, its leading glue is a separate case: the code uses effectively infinite stretch (`MAX_COST`) so that this glue absorbs all remaining line slack.
 If a right-aligned martyria starts a paragraph, that leading glue is still encoded in the input stream, but `positionItems` skips it at line start, so Phase 2 places the martyria flush right explicitly.
@@ -247,6 +249,7 @@ It must do this because `removeGlue` strips the trailing cancellation glue, whil
 When a martyria follows a note, the martyria path replaces the note's trailing post-break glue with martyria glue: ordinary martyria glue in the usual case, or the infinite-stretch right-martyria glue when the martyria is right-aligned.
 Ordinary note-to-martyria lyric collision is still handled by `addLyricReservation`.
 However, if a melisma lyric overhang extends past the last neume, that remaining overhang is first materialized into the replacement martyria glue width so that it is not lost when the note's cancellation glue is removed.
+A right-aligned martyria also preserves terminal right-barline clearance when it replaces the note's trailing glue.
 
 ### Computing the minimum same-line width
 

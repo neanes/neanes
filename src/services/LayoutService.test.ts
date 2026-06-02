@@ -14,6 +14,8 @@ import {
   Ison,
   MeasureBar,
   QuantitativeNeume,
+  RootSign,
+  TempoSign,
   VocalExpressionNeume,
 } from '../models/Neumes';
 import { Line, Page } from '../models/Page';
@@ -133,6 +135,121 @@ describe('LayoutService.getGlueWidthBetween', () => {
       'MockFont',
       'oligonGlyph',
     );
+  });
+
+  it('uses the actual leading martyria glyph when a tempo appears first', () => {
+    const pageSetup = getMockPageSetup();
+    pageSetup.neumeDefaultFontSize = 10;
+    pageSetup.neumeDefaultSpacing = 3;
+
+    const left = new NoteElement();
+    left.quantitativeNeume = QuantitativeNeume.Ison;
+
+    const right = new MartyriaElement();
+    right.tempoLeft = TempoSign.Moderate;
+
+    (NeumeMappingService.getMapping as Mock).mockImplementation((neume) => {
+      if (neume === QuantitativeNeume.Ison) {
+        return { glyphName: 'isonGlyph' };
+      }
+      if (neume === TempoSign.Moderate) {
+        return { glyphName: 'tempoGlyph' };
+      }
+      if (neume === right.note) {
+        return { glyphName: 'martyriaGlyph' };
+      }
+      return { glyphName: 'otherGlyph' };
+    });
+
+    (fontService.getTrailingSpace as Mock).mockReturnValue(0.6);
+    (fontService.getLeadingSpace as Mock).mockImplementation((_, glyph) =>
+      glyph === 'tempoGlyph' ? 0.4 : 0.1,
+    );
+
+    expect(LayoutService.getGlueWidthBetween(left, right, pageSetup)).toBe(13);
+    expect(fontService.getLeadingSpace).toHaveBeenCalledWith(
+      'MockFont',
+      'tempoGlyph',
+    );
+  });
+
+  it('uses the actual trailing martyria glyph before a following note', () => {
+    const pageSetup = getMockPageSetup();
+    pageSetup.neumeDefaultFontSize = 10;
+    pageSetup.neumeDefaultSpacing = 3;
+
+    const left = new MartyriaElement();
+    left.rootSign = RootSign.Alpha;
+    left.tempoRight = TempoSign.Moderate;
+
+    const right = new NoteElement();
+    right.quantitativeNeume = QuantitativeNeume.Oligon;
+
+    (NeumeMappingService.getMapping as Mock).mockImplementation((neume) => {
+      if (neume === TempoSign.Moderate) {
+        return { glyphName: 'tempoGlyph' };
+      }
+      if (neume === left.rootSign) {
+        return { glyphName: 'rootGlyph' };
+      }
+      if (neume === QuantitativeNeume.Oligon) {
+        return { glyphName: 'oligonGlyph' };
+      }
+      return { glyphName: 'otherGlyph' };
+    });
+
+    (fontService.getTrailingSpace as Mock).mockImplementation((_, glyph) =>
+      glyph === 'tempoGlyph' ? 0.7 : 0.2,
+    );
+    (fontService.getLeadingSpace as Mock).mockImplementation((_, glyph) =>
+      glyph === 'oligonGlyph' ? 0.4 : 0,
+    );
+
+    expect(LayoutService.getGlueWidthBetween(left, right, pageSetup)).toBe(14);
+    expect(fontService.getTrailingSpace).toHaveBeenCalledWith(
+      'MockFont',
+      'tempoGlyph',
+    );
+  });
+
+  it('does not let a trailing martyria glyph shrink spacing below the martyria note spacing', () => {
+    const pageSetup = getMockPageSetup();
+    pageSetup.neumeDefaultFontSize = 10;
+    pageSetup.neumeDefaultSpacing = 3;
+
+    const left = new MartyriaElement();
+    left.rootSign = RootSign.Alpha;
+
+    const right = new NoteElement();
+    right.quantitativeNeume = QuantitativeNeume.Oligon;
+
+    (NeumeMappingService.getMapping as Mock).mockImplementation((neume) => {
+      if (neume === left.note) {
+        return { glyphName: 'martyriaNoteGlyph' };
+      }
+      if (neume === RootSign.Alpha) {
+        return { glyphName: 'rootGlyph' };
+      }
+      if (neume === QuantitativeNeume.Oligon) {
+        return { glyphName: 'oligonGlyph' };
+      }
+      return { glyphName: 'otherGlyph' };
+    });
+
+    (fontService.getTrailingSpace as Mock).mockImplementation((_, glyph) => {
+      if (glyph === 'martyriaNoteGlyph') {
+        return 0.7;
+      }
+      if (glyph === 'rootGlyph') {
+        return -0.2;
+      }
+      return 0;
+    });
+    (fontService.getLeadingSpace as Mock).mockImplementation((_, glyph) =>
+      glyph === 'oligonGlyph' ? 0.4 : 0,
+    );
+
+    expect(LayoutService.getGlueWidthBetween(left, right, pageSetup)).toBe(14);
   });
 
   it('uses a contextually substituted trailing glyph inside the left note', () => {
@@ -306,6 +423,72 @@ describe('LayoutService.getGlueWidthBetween', () => {
 
     expect(LayoutService.getGlueWidthBetween(left, right, pageSetup)).toBe(18);
   });
+
+  it('keeps left-owned measure bar trailing clearance inside the owner box', () => {
+    const pageSetup = getMockPageSetup();
+    pageSetup.neumeDefaultFontSize = 10;
+    pageSetup.neumeDefaultSpacing = -100;
+
+    const left = new NoteElement();
+    left.quantitativeNeume = QuantitativeNeume.Ison;
+
+    const right = new NoteElement();
+    right.quantitativeNeume = QuantitativeNeume.Oligon;
+    right.measureBarLeft = MeasureBar.MeasureBarRight;
+
+    (NeumeMappingService.getMapping as Mock).mockImplementation((neume) => {
+      if (neume === QuantitativeNeume.Ison) {
+        return { glyphName: 'isonGlyph' };
+      }
+      if (neume === QuantitativeNeume.Oligon) {
+        return { glyphName: 'oligonGlyph' };
+      }
+      if (neume === MeasureBar.MeasureBarRight) {
+        return { glyphName: 'barlineSingle' };
+      }
+      return { glyphName: 'otherGlyph' };
+    });
+
+    (fontService.getTrailingSpace as Mock).mockImplementation((_, glyph) => {
+      if (glyph === 'isonGlyph') {
+        return 0.3;
+      }
+      return glyph === 'barlineSingle' ? 0.5 : 0;
+    });
+    (fontService.getLeadingSpace as Mock).mockImplementation((_, glyph) => {
+      if (glyph === 'barlineSingle') {
+        return 0.4;
+      }
+      return glyph === 'oligonGlyph' ? 0.6 : 0;
+    });
+
+    expect(LayoutService.getGlueWidthBetween(left, right, pageSetup)).toBe(7);
+    expect(
+      (LayoutService as any).getMeasureBarLeftLeadingSpacing(right, pageSetup),
+    ).toBe(11);
+  });
+
+  it('uses the previous neume trailing spacing before an empty element', () => {
+    const pageSetup = getMockPageSetup();
+    pageSetup.neumeDefaultFontSize = 10;
+    pageSetup.neumeDefaultSpacing = 3;
+
+    const note = new NoteElement();
+    note.quantitativeNeume = QuantitativeNeume.Ison;
+    const empty = new EmptyElement();
+
+    (NeumeMappingService.getMapping as Mock).mockImplementation((neume) => {
+      if (neume === QuantitativeNeume.Ison) {
+        return { glyphName: 'isonGlyph' };
+      }
+      return { glyphName: 'otherGlyph' };
+    });
+    (fontService.getTrailingSpace as Mock).mockImplementation((_, glyph) =>
+      glyph === 'isonGlyph' ? 0.4 : 0,
+    );
+
+    expect(LayoutService.getGlueWidthBetween(note, empty, pageSetup)).toBe(7);
+  });
 });
 
 describe('inline element spacing helpers', () => {
@@ -379,6 +562,69 @@ describe('inline element spacing helpers', () => {
     );
 
     expect(width).toBe(5.5);
+  });
+
+  it('uses the previous neume trailing spacing before an empty element after an inline element', () => {
+    const pageSetup = getMockPageSetup();
+    pageSetup.neumeDefaultFontSize = 10;
+    pageSetup.neumeDefaultSpacing = 3;
+
+    const note = new NoteElement();
+    note.quantitativeNeume = QuantitativeNeume.Ison;
+    const textBox = new TextBoxElement();
+    textBox.inline = true;
+    const empty = new EmptyElement();
+
+    (NeumeMappingService.getMapping as Mock).mockImplementation((neume) => {
+      if (neume === QuantitativeNeume.Ison) {
+        return { glyphName: 'isonGlyph' };
+      }
+      return { glyphName: 'otherGlyph' };
+    });
+    (fontService.getTrailingSpace as Mock).mockImplementation((_, glyph) =>
+      glyph === 'isonGlyph' ? 0.4 : 0,
+    );
+
+    const width = (LayoutService as any).getLeadingGlueWidthAfterInlineElement(
+      [note, textBox, empty],
+      1,
+      pageSetup,
+    );
+
+    expect(width).toBe(7);
+  });
+
+  it('preserves barline minimum spacing before an empty element after an inline element', () => {
+    const pageSetup = getMockPageSetup();
+    pageSetup.neumeDefaultFontSize = 10;
+    pageSetup.neumeDefaultSpacing = 3;
+
+    const note = new NoteElement();
+    note.measureBarRight = MeasureBar.MeasureBarRight;
+    const textBox = new TextBoxElement();
+    textBox.inline = true;
+    const empty = new EmptyElement();
+
+    (NeumeMappingService.getMapping as Mock).mockImplementation((neume) => {
+      if (neume === MeasureBar.MeasureBarRight) {
+        return { glyphName: 'barlineSingle' };
+      }
+      return { glyphName: 'otherGlyph' };
+    });
+    (fontService.getTrailingSpace as Mock).mockImplementation((_, glyph) =>
+      glyph === 'barlineSingle' ? 0.6 : 0.1,
+    );
+    (fontService.getLeadingSpace as Mock).mockImplementation((_, glyph) =>
+      glyph === 'barlineSingle' ? 0.5 : 0,
+    );
+
+    const width = (LayoutService as any).getLeadingGlueWidthAfterInlineElement(
+      [note, textBox, empty],
+      1,
+      pageSetup,
+    );
+
+    expect(width).toBe(12);
   });
 
   it('uses pair glue before a martyria after a note', () => {
@@ -995,6 +1241,63 @@ describe('LayoutService.centerMeasureBars', () => {
     }
   });
 
+  it('uses the martyria trailing glyph spacing before a terminal right measure bar', () => {
+    const pageSetup = getMockPageSetup();
+    pageSetup.neumeDefaultFontSize = 10;
+
+    const measureBarWidthMap = new Map<MeasureBar, number>([
+      [MeasureBar.MeasureBarRight, 10],
+    ]);
+
+    (NeumeMappingService.getMapping as Mock).mockImplementation((neume) => {
+      if (neume === RootSign.Alpha) {
+        return { glyphName: 'rootGlyph' };
+      }
+      if (neume === TempoSign.Moderate) {
+        return { glyphName: 'tempoGlyph' };
+      }
+      if (neume === MeasureBar.MeasureBarRight) {
+        return { glyphName: 'barlineSingle' };
+      }
+      return { glyphName: 'otherGlyph' };
+    });
+
+    (fontService.getTrailingSpace as Mock).mockImplementation((_, glyph) => {
+      if (glyph === 'tempoGlyph') {
+        return 0.6;
+      }
+      if (glyph === 'rootGlyph') {
+        return 0.1;
+      }
+      return 0;
+    });
+    (fontService.getLeadingSpace as Mock).mockImplementation((_, glyph) =>
+      glyph === 'barlineSingle' ? 0.4 : 0,
+    );
+
+    const layoutAny = LayoutService as any;
+    const originalGetGlyphWidthFromCache = layoutAny.getGlyphWidthFromCache;
+    layoutAny.getGlyphWidthFromCache = vi.fn(() => 100);
+
+    try {
+      const page = new Page();
+      const line = new Line();
+      const owner = new MartyriaElement();
+      owner.tempoRight = TempoSign.Moderate;
+      owner.measureBarRight = MeasureBar.MeasureBarRight;
+      owner.x = 0;
+      owner.width = 100;
+      line.elements = [owner];
+      page.lines = [line];
+
+      layoutAny.centerMeasureBars([page], pageSetup, measureBarWidthMap);
+
+      expect(owner.computedMeasureBarRightTrailingSpacing).toBe(10);
+    } finally {
+      layoutAny.getGlyphWidthFromCache = originalGetGlyphWidthFromCache;
+    }
+  });
+
   it('adds trailing spacing before a right measure bar followed by an empty element', () => {
     const pageSetup = getMockPageSetup();
     pageSetup.neumeDefaultFontSize = 10;
@@ -1338,7 +1641,8 @@ describe('LayoutService.centerMeasureBars', () => {
 
       layoutAny.centerMeasureBars([page], pageSetup, measureBarWidthMap);
 
-      expect(owner.computedMeasureBarLeftOffsetX).toBe(-22.5);
+      expect(owner.computedMeasureBarLeftLeadingSpacing).toBe(19);
+      expect(owner.computedMeasureBarLeftOffsetX).toBe(-13);
     } finally {
       layoutAny.getGlyphWidthFromCache = originalGetGlyphWidthFromCache;
     }
@@ -1395,6 +1699,7 @@ describe('LayoutService.calculateInterNoteSpacing', () => {
     const spacing = (LayoutService as any).calculateInterNoteSpacing(
       current,
       0,
+      next,
       next,
       workspace,
       0,
@@ -1456,6 +1761,7 @@ describe('LayoutService.calculateInterNoteSpacing', () => {
       current,
       0,
       next,
+      next,
       workspace,
       0,
     );
@@ -1510,11 +1816,98 @@ describe('LayoutService.calculateInterNoteSpacing', () => {
       current,
       0,
       next,
+      next,
       workspace,
       0,
     );
 
     expect(spacing).toBe(18);
+  });
+
+  it('keeps the glyph-aware glue before an empty element', () => {
+    const pageSetup = getMockPageSetup();
+    pageSetup.neumeDefaultFontSize = 10;
+    pageSetup.neumeDefaultSpacing = 3;
+
+    const current = new NoteElement();
+    current.quantitativeNeume = QuantitativeNeume.Ison;
+    current.neumeWidth = 0;
+
+    const empty = new EmptyElement();
+
+    (NeumeMappingService.getMapping as Mock).mockImplementation((neume) => {
+      if (neume === QuantitativeNeume.Ison) {
+        return { glyphName: 'isonGlyph' };
+      }
+      return { glyphName: 'otherGlyph' };
+    });
+    (fontService.getTrailingSpace as Mock).mockImplementation((_, glyph) =>
+      glyph === 'isonGlyph' ? 0.4 : 0,
+    );
+
+    const workspace = {
+      pageSetup,
+      melismaLyricsEndPx: null,
+      neumesEndPx: 0,
+    };
+
+    const spacing = (LayoutService as any).calculateInterNoteSpacing(
+      current,
+      0,
+      empty,
+      null,
+      workspace,
+      0,
+    );
+
+    expect(spacing).toBe(7);
+  });
+
+  it('keeps right-bar minimum spacing before an empty element', () => {
+    const pageSetup = getMockPageSetup();
+    pageSetup.neumeDefaultFontSize = 10;
+
+    const current = new NoteElement();
+    current.quantitativeNeume = QuantitativeNeume.Ison;
+    current.measureBarRight = MeasureBar.MeasureBarRight;
+
+    const empty = new EmptyElement();
+
+    (NeumeMappingService.getMapping as Mock).mockImplementation((neume) => {
+      if (neume === QuantitativeNeume.Ison) {
+        return { glyphName: 'isonGlyph' };
+      }
+      if (neume === MeasureBar.MeasureBarRight) {
+        return { glyphName: 'barlineSingle' };
+      }
+      return { glyphName: 'otherGlyph' };
+    });
+    (fontService.getTrailingSpace as Mock).mockImplementation((_, glyph) => {
+      if (glyph === 'isonGlyph') {
+        return 0.3;
+      }
+      return glyph === 'barlineSingle' ? 0.5 : 0;
+    });
+    (fontService.getLeadingSpace as Mock).mockImplementation((_, glyph) =>
+      glyph === 'barlineSingle' ? 0.4 : 0,
+    );
+
+    const workspace = {
+      pageSetup,
+      melismaLyricsEndPx: null,
+      neumesEndPx: 0,
+    };
+
+    const spacing = (LayoutService as any).calculateInterNoteSpacing(
+      current,
+      0,
+      empty,
+      null,
+      workspace,
+      0,
+    );
+
+    expect(spacing).toBe(12);
   });
 });
 

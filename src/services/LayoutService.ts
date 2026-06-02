@@ -759,20 +759,22 @@ export class LayoutService {
           // transfers.
           //
           // m_i = s_0 + R_i - T_i^left - T_i^right + ell_i, where s_0 is the
-          // ordinary glyph-aware glue between the two notes, R_i is the right
-          // projection, ell_i is the lyric-collision correction, T_i^left is
-          // the absorbed portion of L_{i+1}, and T_i^right is the portion of
-          // R_i that tucks under the next neume. For hyphenated melismas,
+          // glyph-aware boundary glue between the two notes, floored by any
+          // measure-bar sequence minimum. R_i is the right projection, ell_i
+          // is the lyric-collision correction, T_i^left is the absorbed
+          // portion of L_{i+1}, and T_i^right is the portion of R_i that tucks
+          // under the next neume. For hyphenated melismas,
           // ell_i also enforces that the visible lyric gap is wide enough to
           // hold the hyphen glyph when that hyphen is absorbed inside the
           // current neume and therefore contributes no overhang. m_i may be
           // negative if a large left projection is absorbed.
           //
           // If a paragraph ends immediately after a note, endParagraph moves
-          // that note's trailing reservation (right projection or melisma
-          // overhang) into the finishing glue, because the trailing glue is
-          // removed. If a martyria replaces that trailing glue, the martyria
-          // path preserves any remaining melisma overhang there instead.
+          // that note's trailing reservation (right projection, melisma
+          // overhang, or terminal barline clearance) into the finishing glue,
+          // because the trailing glue is removed. If a martyria replaces that
+          // trailing glue, the martyria path preserves any remaining melisma
+          // overhang and required terminal barline clearance there instead.
           // Ordinary note-to-martyria lyric collision still goes through
           // addLyricReservation.
           const { leftProjection, rightProjection } =
@@ -872,6 +874,7 @@ export class LayoutService {
           // These costs are break-conditional and cannot go in m_i (which
           // vanishes at breaks via the cancellation glue).
           const penaltyWidth = this.getBreakPenaltyWidth(
+            noteElement,
             rightProjection,
             layoutWorkspace,
             nextNoteElement,
@@ -941,15 +944,18 @@ export class LayoutService {
             (martyriaElement.alignRight ||
               previousElement?.elementType === ElementType.Note)
           ) {
-            // Replacing the trailing note glue would otherwise drop any melisma
-            // lyric overhang carried in that glue. Preserve only the melisma
-            // overhang here; ordinary lyric collision before a martyria is
+            // Replacing the trailing note glue would otherwise drop any
+            // melisma lyric overhang carried in that glue. Preserve that
+            // overhang and, for a right-aligned martyria, terminal barline
+            // clearance. Ordinary lyric collision before a martyria is
             // handled by addLyricReservation below.
             const trailingNoteReservations =
               this.getTrailingNoteReservations(layoutWorkspace);
-            const reservation = trailingNoteReservations
-              ? trailingNoteReservations.melismaOverhang
-              : 0;
+            const reservation =
+              (trailingNoteReservations?.melismaOverhang ?? 0) +
+              (martyriaElement.alignRight
+                ? (trailingNoteReservations?.terminalMeasureBarSpacing ?? 0)
+                : 0);
             const baseGlue = martyriaElement.alignRight
               ? rightMartyriaGlue
               : this.fixedGlue(0);
@@ -2162,6 +2168,11 @@ export class LayoutService {
     // glue(L_{i+1}).
     const leftTuck = leftProjection;
     const rightTuck = Math.min(rightProjection, nextOverhangs.left);
+    const minimumWidth = this.getMeasureBarMinimumGlueWidth(
+      noteElement,
+      nextNoteElement,
+      workspace.pageSetup,
+    );
     const baseWidth =
       this.getGlueWidthBetween(
         noteElement,
@@ -2173,7 +2184,7 @@ export class LayoutService {
       rightTuck;
 
     if (nextNoteElement.lyricsWidth === 0) {
-      return baseWidth;
+      return Math.max(baseWidth, minimumWidth);
     }
 
     // Lyric collision check: the visual gap between lyrics on the
@@ -2208,7 +2219,7 @@ export class LayoutService {
       ),
     );
 
-    return baseWidth + collisionAdjustment;
+    return Math.max(baseWidth + collisionAdjustment, minimumWidth);
   }
 
   private static getMelismaOverhang(
@@ -2373,6 +2384,7 @@ export class LayoutService {
   }
 
   private static getBreakPenaltyWidth(
+    noteElement: NoteElement,
     rightProjection: number,
     workspace: LayoutWorkspace,
     nextNoteElement: NoteElement | null,
@@ -2383,12 +2395,30 @@ export class LayoutService {
       this.getMelismaOverhang(workspace, workspace.neumesEndPx),
     );
 
+    const measureBarRight = this.getVisibleMeasureBarRight(noteElement);
+    if (measureBarRight != null) {
+      penaltyWidth += this.getTerminalMeasureBarSpacing(
+        noteElement,
+        measureBarRight,
+        'trailing',
+        workspace.pageSetup,
+      );
+    }
+
     if (
       nextNoteElement?.measureBarLeft &&
       !nextNoteElement.measureBarLeft.endsWith('Above')
     ) {
       penaltyWidth +=
         measureBarWidthMap.get(nextNoteElement.measureBarLeft) ?? 0;
+      if (measureBarRight == null) {
+        penaltyWidth += this.getTerminalMeasureBarSpacing(
+          noteElement,
+          nextNoteElement.measureBarLeft,
+          'trailing',
+          workspace.pageSetup,
+        );
+      }
     }
 
     return penaltyWidth;
@@ -2428,10 +2458,17 @@ export class LayoutService {
         workspace,
         neumesEndWithoutTrailingGlue,
       );
+      const terminalMeasureBarSpacing = this.getTerminalMeasureBarRightSpacing(
+        noteElement,
+        workspace,
+      );
 
       return {
         melismaOverhang,
-        finishingGlueWidth: Math.max(rightProjection, melismaOverhang),
+        terminalMeasureBarSpacing,
+        finishingGlueWidth:
+          Math.max(rightProjection, melismaOverhang) +
+          terminalMeasureBarSpacing,
       };
     }
 
@@ -2625,7 +2662,8 @@ export class LayoutService {
     this.preventBreak(workspace);
 
     // Apply finishing glue. The width reserves space for the last
-    // note's right-edge lyric extent. The stretch absorbs remaining
+    // note's right-edge lyric extent and any terminal barline clearance. The
+    // stretch absorbs remaining
     // line slack (0 for justified paragraphs, `MAX_COST` otherwise).
     const finishingGlueStretch =
       lineBreakType === LineBreakType.Justify ? 0 : MAX_COST;
@@ -3159,9 +3197,8 @@ export class LayoutService {
       noteElement.lyricsWidth = 0;
     }
 
-    // Handle special case for vareia:
-    // Shift the lyrics to the right so that they
-    // are centered under the main neume
+    // Handle special case for vareia: shift the lyrics toward the main neume
+    // so that they remain centered beneath it.
     noteElement.vareiaInternalSpacing = 0;
     if (noteElement.vareia) {
       noteElement.vareiaInternalSpacing =
@@ -3177,9 +3214,8 @@ export class LayoutService {
       noteElement.neumeWidth += vareiaPrefixWidth;
     }
 
-    // Handle special case for measure bars:
-    // Shift the lyrics to the right so that they
-    // are centered under the main neume
+    // Handle special case for measure bars: adjust the lyric offset so that
+    // the lyrics remain centered beneath the main neume.
     const measureBarLeft = noteElement.measureBarLeft;
 
     const measureBarLeftWidth =
@@ -3200,9 +3236,8 @@ export class LayoutService {
       noteElement.neumeWidth += measureBarRightWidth;
     }
 
-    // Handle special case for running elaphron:
-    // Shift the lyrics to the right so that they
-    // are centered under the elaphron
+    // Handle special case for running elaphron: shift the lyrics toward the
+    // elaphron so that they remain centered beneath it.
     if (noteElement.quantitativeNeume === QuantitativeNeume.RunningElaphron) {
       // The stand-alone apostrophos is not the same width
       // as the apostrophros in the running elaphron, but
@@ -3863,8 +3898,9 @@ export class LayoutService {
             );
             const barWidth = measureBarWidthMap.get(measureBarLeft) ?? 0;
             if (barWidth > 0) {
+              const ownerLeadingEdge = owner.x + barWidth;
               const centeredLeft =
-                (previousBounds.right + owner.x - barWidth) / 2;
+                (previousBounds.right + ownerLeadingEdge - barWidth) / 2;
               const targetLeft = Math.min(
                 Math.max(
                   centeredLeft,
@@ -3880,7 +3916,8 @@ export class LayoutService {
                       pageSetup,
                     ),
                 ),
-                owner.x -
+                ownerLeadingEdge -
+                  barWidth -
                   this.getMeasureBarSpacing(
                     measureBarLeft,
                     'trailing',
@@ -4075,6 +4112,22 @@ export class LayoutService {
     );
   }
 
+  private static getTerminalMeasureBarRightSpacing(
+    owner: NoteElement | MartyriaElement,
+    workspace: LayoutWorkspace,
+  ) {
+    const measureBar = this.getVisibleMeasureBarRight(owner);
+
+    return measureBar == null
+      ? 0
+      : this.getTerminalMeasureBarSpacing(
+          owner,
+          measureBar,
+          'trailing',
+          workspace.pageSetup,
+        );
+  }
+
   private static getMeasureBarSpacing(
     measureBar: MeasureBar,
     side: 'leading' | 'trailing',
@@ -4125,18 +4178,34 @@ export class LayoutService {
     );
   }
 
+  private static getMeasureBarMinimumGlueWidthNear(
+    elements: ScoreElement[],
+    index: number,
+    direction: -1 | 1,
+    pageSetup: PageSetup,
+  ) {
+    for (let i = index; i >= 0 && i < elements.length; i += direction) {
+      if (this.isMeasureBarOwner(elements[i])) {
+        return direction === -1
+          ? this.getMeasureBarMinimumGlueWidth(elements[i], null, pageSetup)
+          : this.getMeasureBarMinimumGlueWidth(null, elements[i], pageSetup);
+      }
+    }
+
+    return 0;
+  }
+
   private static getMeasureBarMinimumGlueWidthAtOrBefore(
     elements: ScoreElement[],
     index: number,
     pageSetup: PageSetup,
   ) {
-    for (let i = index; i >= 0; i--) {
-      if (this.isMeasureBarOwner(elements[i])) {
-        return this.getMeasureBarMinimumGlueWidth(elements[i], null, pageSetup);
-      }
-    }
-
-    return 0;
+    return this.getMeasureBarMinimumGlueWidthNear(
+      elements,
+      index,
+      -1,
+      pageSetup,
+    );
   }
 
   private static getMeasureBarMinimumGlueWidthAtOrAfter(
@@ -4144,13 +4213,12 @@ export class LayoutService {
     index: number,
     pageSetup: PageSetup,
   ) {
-    for (let i = index; i < elements.length; i++) {
-      if (this.isMeasureBarOwner(elements[i])) {
-        return this.getMeasureBarMinimumGlueWidth(null, elements[i], pageSetup);
-      }
-    }
-
-    return 0;
+    return this.getMeasureBarMinimumGlueWidthNear(
+      elements,
+      index,
+      1,
+      pageSetup,
+    );
   }
 
   private static isMeasureBarOwner(
@@ -4170,6 +4238,7 @@ export class LayoutService {
         ? ((owner as NoteElement).measureBarLeft ??
           (owner as NoteElement).computedMeasureBarLeft)
         : (owner as MartyriaElement).measureBarLeft;
+
     return measureBar != null && !measureBar.endsWith('Above')
       ? measureBar
       : null;
@@ -4356,9 +4425,7 @@ export class LayoutService {
     glyphNames: SbmuflGlyphName[],
     pageSetup: PageSetup,
   ) {
-    const metadata = fontService.getMetadata?.(
-      pageSetup.neumeDefaultFontFamily,
-    );
+    const metadata = fontService.getMetadata(pageSetup.neumeDefaultFontFamily);
     const substitutionRules = metadata?.contextualSubstitutions ?? [];
 
     if (glyphNames.length === 0 || substitutionRules.length === 0) {

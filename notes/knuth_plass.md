@@ -131,7 +131,10 @@ The 19th-century publications also use several techniques to improve the quality
 
 Consider first a lyricless score of Byzantine music.
 Each neume group, for example a simple oligon or an ison with kentimata over a supporting oligon, and each martyria can be modeled as a box whose width is simply the width of the notated group itself.
-The space between ordinary neumes is modeled as glue with a user-configurable width that may stretch or shrink by up to one half of its preferred width.
+The space between ordinary neumes is modeled as glyph-aware glue.
+Each glyph contributes a trailing space and the following glyph contributes a leading space.
+The user-configurable neume spacing is an adjustment added to that boundary width, rather than the complete width of every inter-neume gap.
+The resulting preferred width may stretch or shrink by up to one half.
 Users may also set the inter-note spacing to a negative value, so that successive neumes visibly overlap and the layout becomes tighter.
 When the configured spacing is negative, the glue keeps its negative natural width so that the overlap remains visible, but the stretch and shrink budgets are floored at small non-negative values: stretch at 0.1 px and shrink at 0.
 The same floors apply uniformly to every glue derived from the configured spacing: the standard glue's stretch and shrink, the martyria glue's stretch (including the martyria-bonus term described below) and shrink, and the right-martyria glue's shrink.
@@ -139,6 +142,19 @@ These floors preserve the Knuth-Plass invariants while keeping the user-chosen o
 The 0.1 px stretch floor is a tiny positive epsilon rather than zero so that every line has at least some stretchability, which keeps the adjustment ratio finite and the line-breaking problem well-defined.
 Without this floor, a line that contains no martyria would have a total stretch of zero, and `breakLines` could only treat its natural width as feasible.
 At 0.1 px per glue, the cumulative stretch across a typical line is far below the neume scale and so has no visible effect on the layout.
+
+Glyph spacing is read from the active font's `glyphSpacing` metadata.
+When OpenType contextual substitutions are not available, the font metadata's `contextualSubstitutions` rules are resolved within each note before width and spacing lookup.
+This ensures that substituted glyphs contribute their own leading and trailing spaces.
+A vareia is treated as the leading glyph of its note and contributes an internal space before the main neume; in right-to-left mode the visual order remains vareia followed by the main neume when read from right to left.
+
+Visible barlines also participate in spacing.
+For a barline between elements $A$ and $B$, the minimum boundary width is
+
+$$\operatorname{trailing}(A) + \operatorname{leading}(\textit{bar}) + \operatorname{trailing}(\textit{bar}) + \operatorname{leading}(B).$$
+
+This minimum is preserved during justification and after lyric tucking.
+When a right barline becomes terminal at a line break, its clearance from the preceding neume is reserved as break-only width.
 
 Following several classical 19th-century publications, ordinary martyriae are given extra elasticity.
 When a martyria sits between neighboring elements, the surrounding martyria glues together contribute additional stretch, that is, _k_ em on each side, where 1 em is the neume font size.
@@ -196,7 +212,7 @@ Instead, any part of the running melisma that still extends beyond the current n
 ### Paragraph encoding
 
 Let $B_i$ be the neume width, $c_i$ the break cost, $w_i$ the break-only reservation at breakpoint $i$, and $m_i$ the minimum same-line width between notes $i$ and $i{+}1$.
-Let $s_0$ be the default preferred spacing between successive notes, and let $s^+$ and $s^-$ be the standard stretch and shrink budgets for an inter-note gap.
+Let $s_0$ be the glyph-aware preferred spacing between successive notes, including the user-configurable adjustment and any barline minimum, and let $s^+$ and $s^-$ be the stretch and shrink budgets for an inter-note gap.
 
 Each note is encoded in the paragraph as
 
@@ -206,10 +222,10 @@ Here:
 
 - $B_i$ is the neume width. When the preceding martyria has a transferable bar, an anonymous spacer box of the bar width is inserted before $B_i$ (see above); $B_i$ itself is unchanged.
 - $L_i$ is the left projection, fixed and unbreakable, and omitted when zero.
-- $s_0$ is the default preferred spacing between successive notes.
+- $s_0$ is the glyph-aware preferred spacing between successive notes, including the user-configurable adjustment and any barline minimum.
 - $s^+$ and $s^-$ are the standard stretch and shrink budgets for an inter-note gap.
 - $c_i$ is the break cost: 0 for a normal break, $\infty$ to prohibit a break, or an intermediate value to discourage one.
-- $w_i$ is the penalty width, a conditional width counted only when a break occurs at this point. It reserves space for the current note's right projection, any melisma overhang that would extend past the right margin, and measure-bar transfers, when the next note's left measure bar moves to this note's right side at a line break.
+- $w_i$ is the penalty width, a conditional width counted only when a break occurs at this point. It reserves space for the current note's right projection, any melisma overhang that would extend past the right margin, terminal right-barline clearance, and measure-bar transfers, when the next note's left measure bar moves to this note's right side at a line break.
 - $m_i$ is the minimum same-line width required between notes $i$ and $i{+}1$.
 
 On the same line, each inter-note gap contributes $m_i$ of width plus $s^+$ of stretch for distributed justification.
@@ -222,9 +238,10 @@ At a break, the cancellation glue becomes leading glue on the next line and is s
 The vanishing stretch glue stays on the current line and contributes $s^+$ of stretch at line end.
 The left projection $\text{glue}(L_{i+1}, 0, 0)$ of the next note protects the left edge of the new line.
 The penalty width $w_i$ remains the break-only quantity: it cannot live in the cancellation glue, because that glue disappears at breaks.
-Its job is to reserve space for the right projection, melisma lyric overhang, and measure-bar transfers that matter only at line end.
+Its job is to reserve space for the right projection, melisma lyric overhang, terminal right-barline clearance, and measure-bar transfers that matter only at line end.
 
 If a paragraph ends immediately after a note, `endParagraph` materializes that note's right-edge reservation, the larger of the right projection and the melisma overhang, into the finishing glue width.
+It also reserves the clearance before a terminal right barline.
 It must do this because `removeGlue` strips the trailing cancellation glue, while the forced break itself contributes penalty width 0.
 
 When a martyria follows a note, the martyria path replaces the note's trailing post-break glue with martyria glue: ordinary martyria glue in the usual case, or the infinite-stretch right-martyria glue when the martyria is right-aligned.

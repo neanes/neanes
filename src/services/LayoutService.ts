@@ -888,6 +888,11 @@ export class LayoutService {
             glueWidth,
             minGlueStretch,
             minGlueShrink,
+            this.getMeasureBarMinimumGlueWidth(
+              noteElement,
+              nextElement,
+              pageSetup,
+            ),
           );
 
           // Break opportunity after the neume. The pre-break glue stays on the
@@ -1850,12 +1855,16 @@ export class LayoutService {
     glueWidth: number,
     minGlueStretch: number,
     minGlueShrink: number,
+    minimumWidth: number = 0,
   ): Glue {
     return {
       type: 'glue',
       width: 0,
       stretch: Math.max(glueWidth * 0.5, minGlueStretch),
-      shrink: Math.max(glueWidth * 0.5, minGlueShrink),
+      shrink: Math.min(
+        Math.max(glueWidth * 0.5, minGlueShrink),
+        Math.max(0, glueWidth - minimumWidth),
+      ),
     };
   }
 
@@ -3860,6 +3869,11 @@ export class LayoutService {
                 Math.max(
                   centeredLeft,
                   previousBounds.right +
+                    (this.getElementEdgeSpacing(
+                      previousAnchor,
+                      'trailing',
+                      pageSetup,
+                    ) ?? 0) +
                     this.getMeasureBarSpacing(
                       measureBarLeft,
                       'leading',
@@ -3867,12 +3881,13 @@ export class LayoutService {
                     ),
                 ),
                 owner.x -
-                  barWidth -
                   this.getMeasureBarSpacing(
                     measureBarLeft,
                     'trailing',
                     pageSetup,
-                  ),
+                  ) -
+                  (this.getElementEdgeSpacing(owner, 'leading', pageSetup) ??
+                    0),
               );
               owner.computedMeasureBarLeftOffsetX =
                 direction * (targetLeft - owner.x);
@@ -3906,6 +3921,8 @@ export class LayoutService {
                 Math.max(
                   centeredLeft,
                   ownerBounds.right +
+                    (this.getElementEdgeSpacing(owner, 'trailing', pageSetup) ??
+                      0) +
                     this.getMeasureBarSpacing(
                       measureBarRight,
                       'leading',
@@ -3918,7 +3935,12 @@ export class LayoutService {
                     measureBarRight,
                     'trailing',
                     pageSetup,
-                  ),
+                  ) -
+                  (this.getElementEdgeSpacing(
+                    nextAnchor,
+                    'leading',
+                    pageSetup,
+                  ) ?? 0),
               );
               owner.computedMeasureBarRightOffsetX =
                 direction * (targetLeft - normalLeft);
@@ -4047,9 +4069,9 @@ export class LayoutService {
   ) {
     const measureBarSide = ownerSide === 'leading' ? 'trailing' : 'leading';
 
-    return Math.max(
-      this.getElementEdgeSpacing(owner, ownerSide, pageSetup) ?? 0,
-      this.getMeasureBarSpacing(measureBar, measureBarSide, pageSetup),
+    return (
+      (this.getElementEdgeSpacing(owner, ownerSide, pageSetup) ?? 0) +
+      this.getMeasureBarSpacing(measureBar, measureBarSide, pageSetup)
     );
   }
 
@@ -4086,12 +4108,20 @@ export class LayoutService {
       }
     }
 
-    return measureBars.reduce(
-      (width, measureBar) =>
-        width +
-        this.getMeasureBarSpacing(measureBar, 'leading', pageSetup) +
-        this.getMeasureBarSpacing(measureBar, 'trailing', pageSetup),
-      0,
+    return (
+      (left != null
+        ? (this.getElementEdgeSpacing(left, 'trailing', pageSetup) ?? 0)
+        : 0) +
+      measureBars.reduce(
+        (width, measureBar) =>
+          width +
+          this.getMeasureBarSpacing(measureBar, 'leading', pageSetup) +
+          this.getMeasureBarSpacing(measureBar, 'trailing', pageSetup),
+        0,
+      ) +
+      (right != null
+        ? (this.getElementEdgeSpacing(right, 'leading', pageSetup) ?? 0)
+        : 0)
     );
   }
 

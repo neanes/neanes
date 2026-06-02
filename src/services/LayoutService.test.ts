@@ -304,7 +304,7 @@ describe('LayoutService.getGlueWidthBetween', () => {
       return 0;
     });
 
-    expect(LayoutService.getGlueWidthBetween(left, right, pageSetup)).toBe(11);
+    expect(LayoutService.getGlueWidthBetween(left, right, pageSetup)).toBe(18);
   });
 });
 
@@ -481,7 +481,7 @@ describe('inline element spacing helpers', () => {
       LayoutService as any
     ).getTrailingGlueWidthBeforeInlineElement([note, textBox], 1, pageSetup);
 
-    expect(width).toBe(11);
+    expect(width).toBe(12);
   });
 });
 
@@ -1107,7 +1107,7 @@ describe('LayoutService.centerMeasureBars', () => {
       layoutAny.centerMeasureBars([page], pageSetup, measureBarWidthMap);
 
       expect(owner.computedMeasureBarRightOffsetX).toBe(0);
-      expect(owner.computedMeasureBarRightTrailingSpacing).toBe(4);
+      expect(owner.computedMeasureBarRightTrailingSpacing).toBe(7);
     } finally {
       layoutAny.getGlyphWidthFromCache = originalGetGlyphWidthFromCache;
     }
@@ -1123,9 +1123,12 @@ describe('LayoutService.centerMeasureBars', () => {
     (fontService.getLeadingSpace as Mock).mockImplementation((_, glyph) =>
       glyph === 'barlineSingle' ? 1.5 : 0,
     );
-    (fontService.getTrailingSpace as Mock).mockImplementation((_, glyph) =>
-      glyph === 'barlineSingle' ? 0.2 : 0,
-    );
+    (fontService.getTrailingSpace as Mock).mockImplementation((_, glyph) => {
+      if (glyph === 'isonGlyph') {
+        return 0.4;
+      }
+      return glyph === 'barlineSingle' ? 0.2 : 0;
+    });
 
     const layoutAny = LayoutService as any;
     const originalGetGlyphWidthFromCache = layoutAny.getGlyphWidthFromCache;
@@ -1137,7 +1140,8 @@ describe('LayoutService.centerMeasureBars', () => {
       owner.x = 0;
       owner.neumeWidth = 110;
       const next = new NoteElement();
-      next.x = 130;
+      next.quantitativeNeume = QuantitativeNeume.Oligon;
+      next.x = 135;
       next.neumeWidth = 100;
 
       const page = new Page();
@@ -1145,7 +1149,7 @@ describe('LayoutService.centerMeasureBars', () => {
 
       layoutAny.centerMeasureBars([page], pageSetup, measureBarWidthMap);
 
-      expect(owner.computedMeasureBarRightOffsetX).toBe(15);
+      expect(owner.computedMeasureBarRightOffsetX).toBe(19);
     } finally {
       layoutAny.getGlyphWidthFromCache = originalGetGlyphWidthFromCache;
     }
@@ -1158,9 +1162,12 @@ describe('LayoutService.centerMeasureBars', () => {
       [MeasureBar.MeasureBarRight, 10],
     ]);
 
-    (fontService.getLeadingSpace as Mock).mockImplementation((_, glyph) =>
-      glyph === 'barlineSingle' ? 0.2 : 0,
-    );
+    (fontService.getLeadingSpace as Mock).mockImplementation((_, glyph) => {
+      if (glyph === 'oligonGlyph') {
+        return 0.4;
+      }
+      return glyph === 'barlineSingle' ? 0.2 : 0;
+    });
     (fontService.getTrailingSpace as Mock).mockImplementation((_, glyph) =>
       glyph === 'barlineSingle' ? 1.5 : 0,
     );
@@ -1175,7 +1182,8 @@ describe('LayoutService.centerMeasureBars', () => {
       owner.x = 0;
       owner.neumeWidth = 110;
       const next = new NoteElement();
-      next.x = 130;
+      next.quantitativeNeume = QuantitativeNeume.Oligon;
+      next.x = 135;
       next.neumeWidth = 100;
 
       const page = new Page();
@@ -1183,7 +1191,7 @@ describe('LayoutService.centerMeasureBars', () => {
 
       layoutAny.centerMeasureBars([page], pageSetup, measureBarWidthMap);
 
-      expect(owner.computedMeasureBarRightOffsetX).toBe(5);
+      expect(owner.computedMeasureBarRightOffsetX).toBe(6);
     } finally {
       layoutAny.getGlyphWidthFromCache = originalGetGlyphWidthFromCache;
     }
@@ -1319,6 +1327,12 @@ describe('LayoutService.createNotePreBreakGlue', () => {
       stretch: 6,
       shrink: 6,
     });
+  });
+
+  it('does not shrink below a measure bar minimum width', () => {
+    const glue = (LayoutService as any).createNotePreBreakGlue(18, 2, 3, 17);
+
+    expect(glue.shrink).toBe(1);
   });
 });
 

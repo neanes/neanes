@@ -11,6 +11,7 @@
         v-if="hasMeasureBarLeft && !isMeasureBarAbove"
         :neume="neume.measureBarLeft!"
         :style="measureBarLeftStyle"
+        class="measure-bar"
       />
       <Neume
         v-if="hasTempoLeft"
@@ -40,6 +41,7 @@
         v-if="hasMeasureBarRight"
         :neume="neume.measureBarRight!"
         :style="measureBarRightStyle"
+        class="measure-bar"
       />
     </template>
   </div>
@@ -154,5 +156,9 @@ const measureBarRightStyle = computed(() => {
 .neume {
   cursor: default;
   user-select: none;
+}
+
+.measure-bar {
+  display: inline-block;
 }
 </style>

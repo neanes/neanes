@@ -2,7 +2,6 @@
   <div
     class="neume"
     :style="style"
-    :dir="pageSetup.melkiteRtl ? 'rtl' : 'ltr'"
     @click.exact="$emit('select-single')"
     @click.shift.exact="$emit('select-range')"
   >
@@ -13,7 +12,7 @@
       class="measure-bar"
     />
     <Neume
-      v-if="note.vareia"
+      v-if="note.vareia && !pageSetup.melkiteRtl"
       :neume="VocalExpressionNeume.Vareia"
       :style="vareiaStyle"
     />
@@ -93,6 +92,11 @@
       class="measure-bar"
     />
     <Neume v-if="hasTie" :neume="note.tie!" :style="tieStyle" />
+    <Neume
+      v-if="note.vareia && pageSetup.melkiteRtl"
+      :neume="VocalExpressionNeume.Vareia"
+      :style="vareiaStyle"
+    />
   </div>
 </template>
 

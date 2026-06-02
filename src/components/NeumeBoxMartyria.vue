@@ -2,7 +2,6 @@
   <div
     class="neume"
     :style="style"
-    :dir="pageSetup.melkiteRtl ? 'rtl' : 'ltr'"
     @click.exact="$emit('select-single')"
     @click.shift.exact="$emit('select-range')"
   >

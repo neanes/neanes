@@ -52,7 +52,10 @@ import {
   ScaleNote,
 } from '@/models/Scales';
 import type { Workspace } from '@/models/Workspace';
-import { NeumeMappingService } from '@/services/NeumeMappingService';
+import {
+  NeumeMappingService,
+  type SbmuflGlyphName,
+} from '@/services/NeumeMappingService';
 import { TATWEEL } from '@/utils/constants';
 import { Unit } from '@/utils/Unit';
 
@@ -1569,11 +1572,12 @@ export class LayoutService {
     index: number,
     pageSetup: PageSetup,
   ) {
-    const previousNeume = this.getPrimaryNeumeAtOrBefore(elements, index - 1);
-    const spacing =
-      previousNeume != null
-        ? this.getGlyphSpacing(previousNeume, 'trailing', pageSetup)
-        : 0;
+    const spacing = this.getElementEdgeSpacingAtOrBefore(
+      elements,
+      index - 1,
+      'trailing',
+      pageSetup,
+    );
 
     return spacing + pageSetup.neumeDefaultSpacing;
   }
@@ -1583,11 +1587,12 @@ export class LayoutService {
     index: number,
     pageSetup: PageSetup,
   ) {
-    const nextNeume = this.getPrimaryNeumeAtOrAfter(elements, index + 1);
-    const spacing =
-      nextNeume != null
-        ? this.getGlyphSpacing(nextNeume, 'leading', pageSetup)
-        : 0;
+    const spacing = this.getElementEdgeSpacingAtOrAfter(
+      elements,
+      index + 1,
+      'leading',
+      pageSetup,
+    );
 
     return spacing + pageSetup.neumeDefaultSpacing;
   }
@@ -1626,32 +1631,36 @@ export class LayoutService {
     return pageSetup.neumeDefaultSpacing;
   }
 
-  private static getPrimaryNeumeAtOrBefore(
+  private static getElementEdgeSpacingAtOrBefore(
     elements: ScoreElement[],
     index: number,
+    side: 'leading' | 'trailing',
+    pageSetup: PageSetup,
   ) {
     for (let i = index; i >= 0; i--) {
-      const neume = this.getPrimaryNeume(elements[i]);
-      if (neume != null) {
-        return neume;
+      const spacing = this.getElementEdgeSpacing(elements[i], side, pageSetup);
+      if (spacing != null) {
+        return spacing;
       }
     }
 
-    return null;
+    return 0;
   }
 
-  private static getPrimaryNeumeAtOrAfter(
+  private static getElementEdgeSpacingAtOrAfter(
     elements: ScoreElement[],
     index: number,
+    side: 'leading' | 'trailing',
+    pageSetup: PageSetup,
   ) {
     for (let i = index; i < elements.length; i++) {
-      const neume = this.getPrimaryNeume(elements[i], true);
-      if (neume != null) {
-        return neume;
+      const spacing = this.getElementEdgeSpacing(elements[i], side, pageSetup);
+      if (spacing != null) {
+        return spacing;
       }
     }
 
-    return null;
+    return 0;
   }
 
   private static shouldTerminateAfterFillWidthElement(
@@ -3051,9 +3060,11 @@ export class LayoutService {
 
     noteElement.lyricsVerticalOffset = lyricsVerticalOffset;
 
-    noteElement.neumeWidth = this.getNeumeWidthFromCache(
+    // Measure the glyph run that participates in contextual substitutions
+    // inside the note so width and spacing use the same replacement glyphs.
+    noteElement.neumeWidth = this.getGlyphSequenceWidthFromCache(
       neumeWidthCache,
-      noteElement.quantitativeNeume,
+      this.getResolvedNoteGlyphNames(noteElement, pageSetup),
       pageSetup,
     );
 
@@ -3097,11 +3108,8 @@ export class LayoutService {
     // are centered under the main neume
     noteElement.vareiaInternalSpacing = 0;
     if (noteElement.vareia) {
-      noteElement.vareiaInternalSpacing = this.getInternalGlyphSpacing(
-        VocalExpressionNeume.Vareia,
-        noteElement.quantitativeNeume,
-        pageSetup,
-      );
+      noteElement.vareiaInternalSpacing =
+        this.getContextualVareiaInternalSpacing(noteElement, pageSetup);
       const vareiaPrefixWidth = vareiaWidth + noteElement.vareiaInternalSpacing;
 
       if (pageSetup.melkiteRtl) {
@@ -3802,14 +3810,8 @@ export class LayoutService {
               note.computedMeasureBarLeftOffsetX = targetLeft - note.x;
             }
           } else if (measureBarLeft && i === 0) {
-            const leadingNeume = this.getPrimaryNeume(note, true);
-            if (leadingNeume != null) {
-              note.computedMeasureBarLeftLeadingSpacing = this.getGlyphSpacing(
-                leadingNeume,
-                'leading',
-                pageSetup,
-              );
-            }
+            note.computedMeasureBarLeftLeadingSpacing =
+              this.getElementEdgeSpacing(note, 'leading', pageSetup) ?? 0;
           }
 
           const measureBarRight = this.getVisibleMeasureBarRight(note);
@@ -3829,11 +3831,8 @@ export class LayoutService {
             (nextElement == null ||
               nextElement.elementType === ElementType.Empty)
           ) {
-            note.computedMeasureBarRightTrailingSpacing = this.getGlyphSpacing(
-              note.quantitativeNeume,
-              'trailing',
-              pageSetup,
-            );
+            note.computedMeasureBarRightTrailingSpacing =
+              this.getElementEdgeSpacing(note, 'trailing', pageSetup) ?? 0;
           }
         }
       }
@@ -3937,9 +3936,9 @@ export class LayoutService {
           pageSetup,
         ) + note.vareiaInternalSpacing
       : 0;
-    const bodyWidth = this.getNeumeWidthFromCache(
+    const bodyWidth = this.getGlyphWidthFromCache(
       neumeWidthCache,
-      note.quantitativeNeume,
+      this.getResolvedQuantitativeGlyphName(note, pageSetup),
       pageSetup,
     );
     const left = note.x + measureBarLeftWidth + vareiaPrefixWidth;
@@ -3986,6 +3985,14 @@ export class LayoutService {
   ) {
     const glyphName = NeumeMappingService.getMapping(neume).glyphName;
 
+    return this.getGlyphSpacingForGlyphName(glyphName, side, pageSetup);
+  }
+
+  private static getGlyphSpacingForGlyphName(
+    glyphName: SbmuflGlyphName,
+    side: 'leading' | 'trailing',
+    pageSetup: PageSetup,
+  ) {
     const spacing =
       side === 'leading'
         ? fontService.getLeadingSpace(
@@ -4000,15 +4007,203 @@ export class LayoutService {
     return spacing * pageSetup.neumeDefaultFontSize;
   }
 
-  private static getInternalGlyphSpacing(
-    left: Neume,
-    right: Neume,
+  private static getElementEdgeSpacing(
+    element: ScoreElement,
+    side: 'leading' | 'trailing',
     pageSetup: PageSetup,
   ) {
-    return (
-      this.getGlyphSpacing(left, 'trailing', pageSetup) +
-      this.getGlyphSpacing(right, 'leading', pageSetup)
+    const glyphName = this.getElementEdgeGlyphName(element, side, pageSetup);
+
+    return glyphName != null
+      ? this.getGlyphSpacingForGlyphName(glyphName, side, pageSetup)
+      : null;
+  }
+
+  private static getElementEdgeGlyphName(
+    element: ScoreElement,
+    side: 'leading' | 'trailing',
+    pageSetup: PageSetup,
+  ): SbmuflGlyphName | null {
+    if (element.elementType === ElementType.Note) {
+      return this.getNoteSpacingGlyphName(
+        element as NoteElement,
+        side,
+        pageSetup,
+      );
+    }
+
+    const neume = this.getPrimaryNeume(element, side === 'leading');
+
+    return neume != null
+      ? NeumeMappingService.getMapping(neume).glyphName
+      : null;
+  }
+
+  private static getNoteSpacingGlyphName(
+    noteElement: NoteElement,
+    side: 'leading' | 'trailing',
+    pageSetup: PageSetup,
+  ) {
+    const { glyphNames, vareiaIndex, quantitativeIndex } =
+      this.getResolvedNoteGlyphContext(noteElement, pageSetup, true);
+    const targetIndex =
+      side === 'leading' && vareiaIndex != null
+        ? vareiaIndex
+        : quantitativeIndex;
+
+    return glyphNames[targetIndex];
+  }
+
+  private static getResolvedQuantitativeGlyphName(
+    noteElement: NoteElement,
+    pageSetup: PageSetup,
+  ) {
+    const { glyphNames, quantitativeIndex } = this.getResolvedNoteGlyphContext(
+      noteElement,
+      pageSetup,
+      true,
     );
+
+    return glyphNames[quantitativeIndex];
+  }
+
+  private static getContextualVareiaInternalSpacing(
+    noteElement: NoteElement,
+    pageSetup: PageSetup,
+  ) {
+    const { glyphNames, vareiaIndex, quantitativeIndex } =
+      this.getResolvedNoteGlyphContext(noteElement, pageSetup, true);
+
+    if (vareiaIndex == null) {
+      return 0;
+    }
+
+    return (
+      this.getGlyphSpacingForGlyphName(
+        glyphNames[vareiaIndex],
+        'trailing',
+        pageSetup,
+      ) +
+      this.getGlyphSpacingForGlyphName(
+        glyphNames[quantitativeIndex],
+        'leading',
+        pageSetup,
+      )
+    );
+  }
+
+  private static getResolvedNoteGlyphNames(
+    noteElement: NoteElement,
+    pageSetup: PageSetup,
+  ) {
+    return this.getResolvedNoteGlyphContext(noteElement, pageSetup, false)
+      .glyphNames;
+  }
+
+  private static getResolvedNoteGlyphContext(
+    noteElement: NoteElement,
+    pageSetup: PageSetup,
+    includeVareia: boolean,
+  ) {
+    const glyphNames: SbmuflGlyphName[] = [];
+    let vareiaIndex: number | null = null;
+
+    if (includeVareia && noteElement.vareia) {
+      vareiaIndex = glyphNames.length;
+      glyphNames.push(
+        NeumeMappingService.getMapping(VocalExpressionNeume.Vareia).glyphName,
+      );
+    }
+
+    const quantitativeIndex = glyphNames.length;
+    glyphNames.push(
+      NeumeMappingService.getMapping(noteElement.quantitativeNeume).glyphName,
+    );
+
+    glyphNames.push(
+      ...[
+        noteElement.vocalExpressionNeume,
+        noteElement.timeNeume,
+        noteElement.gorgonNeume,
+        noteElement.secondaryGorgonNeume,
+      ]
+        .filter((neume) => neume != null)
+        .map((neume) => NeumeMappingService.getMapping(neume).glyphName),
+    );
+
+    return {
+      glyphNames: this.applyContextualSubstitutions(glyphNames, pageSetup),
+      vareiaIndex,
+      quantitativeIndex,
+    };
+  }
+
+  private static applyContextualSubstitutions(
+    glyphNames: SbmuflGlyphName[],
+    pageSetup: PageSetup,
+  ) {
+    const metadata = fontService.getMetadata?.(
+      pageSetup.neumeDefaultFontFamily,
+    );
+    const substitutionRules = metadata?.contextualSubstitutions ?? [];
+
+    if (glyphNames.length === 0 || substitutionRules.length === 0) {
+      return glyphNames;
+    }
+
+    const resolvedGlyphNames = [...glyphNames];
+
+    for (let start = 0; start < resolvedGlyphNames.length; start++) {
+      for (const substitutionRule of substitutionRules) {
+        const backtrackLength = substitutionRule.backtrackGlyphs.length;
+        const inputLength = substitutionRule.inputGlyphs.length;
+        const lookaheadLength = substitutionRule.lookaheadGlyphs.length;
+
+        if (
+          start < backtrackLength ||
+          start + inputLength + lookaheadLength > resolvedGlyphNames.length
+        ) {
+          continue;
+        }
+
+        const matchesGlyphClass = (
+          glyphClass: SbmuflGlyphName[],
+          glyphName: SbmuflGlyphName,
+        ) => glyphClass.includes(glyphName);
+
+        const backtrackMatches = substitutionRule.backtrackGlyphs.every(
+          (glyphClass: SbmuflGlyphName[], index: number) =>
+            matchesGlyphClass(
+              glyphClass,
+              resolvedGlyphNames[start - backtrackLength + index],
+            ),
+        );
+        const inputMatches = substitutionRule.inputGlyphs.every(
+          (glyphClass: SbmuflGlyphName[], index: number) =>
+            matchesGlyphClass(glyphClass, resolvedGlyphNames[start + index]),
+        );
+        const lookaheadMatches = substitutionRule.lookaheadGlyphs.every(
+          (glyphClass: SbmuflGlyphName[], index: number) =>
+            matchesGlyphClass(
+              glyphClass,
+              resolvedGlyphNames[start + inputLength + index],
+            ),
+        );
+
+        if (!backtrackMatches || !inputMatches || !lookaheadMatches) {
+          continue;
+        }
+
+        for (const substitution of substitutionRule.substitutions) {
+          const targetIndex = start + substitution.index;
+          if (resolvedGlyphNames[targetIndex] === substitution.from) {
+            resolvedGlyphNames[targetIndex] = substitution.to;
+          }
+        }
+      }
+    }
+
+    return resolvedGlyphNames;
   }
 
   public static getGlueWidthBetween(
@@ -4016,14 +4211,10 @@ export class LayoutService {
     right: ScoreElement | null,
     pageSetup: PageSetup,
   ) {
-    const leftNeume = LayoutService.getPrimaryNeume(left)!;
-    const rightNeume =
-      right != null ? LayoutService.getPrimaryNeume(right, true) : null;
-
-    const space1 = this.getGlyphSpacing(leftNeume, 'trailing', pageSetup);
+    const space1 = this.getElementEdgeSpacing(left, 'trailing', pageSetup) ?? 0;
     const space2 =
-      rightNeume != null
-        ? this.getGlyphSpacing(rightNeume, 'leading', pageSetup)
+      right != null
+        ? (this.getElementEdgeSpacing(right, 'leading', pageSetup) ?? 0)
         : 0;
 
     return space1 + space2 + pageSetup.neumeDefaultSpacing;
@@ -4746,6 +4937,52 @@ export class LayoutService {
 
       width = TextMeasurementService.getTextWidth(
         neumeMapping.text,
+        `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
+      );
+
+      cache.set(key, width);
+    }
+
+    return width;
+  }
+
+  private static getGlyphSequenceWidthFromCache(
+    cache: Map<string, number>,
+    glyphNames: SbmuflGlyphName[],
+    pageSetup: PageSetup,
+  ) {
+    const key = `${glyphNames.join(',')} | ${pageSetup.neumeDefaultFontSize} | ${pageSetup.neumeDefaultFontFamily}`;
+
+    let width = cache.get(key);
+
+    if (width == null) {
+      const text = glyphNames
+        .map((glyphName) => NeumeMappingService.getTextForGlyphName(glyphName))
+        .join('');
+
+      width = TextMeasurementService.getTextWidth(
+        text,
+        `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
+      );
+
+      cache.set(key, width);
+    }
+
+    return width;
+  }
+
+  private static getGlyphWidthFromCache(
+    cache: Map<string, number>,
+    glyphName: SbmuflGlyphName,
+    pageSetup: PageSetup,
+  ) {
+    const key = `${glyphName} | ${pageSetup.neumeDefaultFontSize} | ${pageSetup.neumeDefaultFontFamily}`;
+
+    let width = cache.get(key);
+
+    if (width == null) {
+      width = TextMeasurementService.getTextWidth(
+        NeumeMappingService.getTextForGlyphName(glyphName),
         `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
       );
 

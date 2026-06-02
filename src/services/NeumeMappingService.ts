@@ -656,6 +656,10 @@ export class NeumeMappingService {
     return neumeToSbmuflGlyphMap.get(neume)!;
   }
 
+  public static getTextForGlyphName(glyphName: SbmuflGlyphName): string {
+    return glyphNameToCodepointMap.get(glyphName)!;
+  }
+
   public static getReverseMapping(sbmuflName: SbmuflGlyphName): Neume | null {
     return sbmuflGlyphToNeumeMap.get(sbmuflName) ?? null;
   }

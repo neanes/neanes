@@ -11,6 +11,7 @@ import {
 } from '../models/Element';
 import {
   Ison,
+  GorgonNeume,
   MeasureBar,
   QuantitativeNeume,
   VocalExpressionNeume,
@@ -131,6 +132,134 @@ describe('LayoutService.getGlueWidthBetween', () => {
     expect(fontService.getLeadingSpace).toHaveBeenCalledWith(
       'MockFont',
       'oligonGlyph',
+    );
+  });
+
+  it('uses a contextually substituted trailing glyph inside the left note', () => {
+    const pageSetup = getMockPageSetup();
+    pageSetup.neumeDefaultFontSize = 10;
+    pageSetup.neumeDefaultSpacing = 3;
+
+    const left = new NoteElement();
+    left.quantitativeNeume = QuantitativeNeume.Hyporoe;
+    left.gorgonNeume = GorgonNeume.Gorgon_Top;
+
+    const right = new NoteElement();
+    right.quantitativeNeume = QuantitativeNeume.Oligon;
+
+    (NeumeMappingService.getMapping as Mock).mockImplementation((neume) => {
+      if (neume === QuantitativeNeume.Hyporoe) {
+        return { glyphName: 'yporroi' };
+      }
+      if (neume === GorgonNeume.Gorgon_Top) {
+        return { glyphName: 'gorgonAbove' };
+      }
+      if (neume === QuantitativeNeume.Oligon) {
+        return { glyphName: 'oligonGlyph' };
+      }
+      return { glyphName: 'otherGlyph' };
+    });
+
+    (fontService.getMetadata as Mock).mockReturnValue({
+      contextualSubstitutions: [
+        {
+          inputGlyphs: [['yporroi']],
+          backtrackGlyphs: [],
+          lookaheadGlyphs: [['gorgonAbove']],
+          substitutions: [
+            {
+              index: 0,
+              from: 'yporroi',
+              to: 'yporroi.gorgon',
+            },
+          ],
+        },
+      ],
+    });
+    (fontService.getTrailingSpace as Mock).mockImplementation((_, glyph) => {
+      if (glyph === 'yporroi.gorgon') {
+        return 1.5;
+      }
+      if (glyph === 'yporroi') {
+        return 0.4;
+      }
+      return 0;
+    });
+    (fontService.getLeadingSpace as Mock).mockImplementation((_, glyph) => {
+      if (glyph === 'oligonGlyph') {
+        return 0.2;
+      }
+      return 0;
+    });
+
+    expect(LayoutService.getGlueWidthBetween(left, right, pageSetup)).toBe(20);
+    expect(fontService.getTrailingSpace).toHaveBeenCalledWith(
+      'MockFont',
+      'yporroi.gorgon',
+    );
+  });
+
+  it('uses a contextually substituted leading glyph inside the right note', () => {
+    const pageSetup = getMockPageSetup();
+    pageSetup.neumeDefaultFontSize = 10;
+    pageSetup.neumeDefaultSpacing = 3;
+
+    const left = new NoteElement();
+    left.quantitativeNeume = QuantitativeNeume.Ison;
+
+    const right = new NoteElement();
+    right.quantitativeNeume = QuantitativeNeume.KentemataPlusOligon;
+    right.vocalExpressionNeume = VocalExpressionNeume.Psifiston;
+
+    (NeumeMappingService.getMapping as Mock).mockImplementation((neume) => {
+      if (neume === QuantitativeNeume.Ison) {
+        return { glyphName: 'isonGlyph' };
+      }
+      if (neume === QuantitativeNeume.KentemataPlusOligon) {
+        return { glyphName: 'oligonKentimataBelow' };
+      }
+      if (neume === VocalExpressionNeume.Psifiston) {
+        return { glyphName: 'psifiston' };
+      }
+      return { glyphName: 'otherGlyph' };
+    });
+
+    (fontService.getMetadata as Mock).mockReturnValue({
+      contextualSubstitutions: [
+        {
+          inputGlyphs: [['oligonKentimataBelow'], ['psifiston']],
+          backtrackGlyphs: [],
+          lookaheadGlyphs: [],
+          substitutions: [
+            {
+              index: 0,
+              from: 'oligonKentimataBelow',
+              to: 'oligonKentimataBelow.alt01',
+            },
+          ],
+        },
+      ],
+    });
+    (fontService.getTrailingSpace as Mock).mockImplementation((_, glyph) => {
+      if (glyph === 'isonGlyph') {
+        return 0.6;
+      }
+      return 0;
+    });
+    (fontService.getLeadingSpace as Mock).mockImplementation((_, glyph) => {
+      if (glyph === 'oligonKentimataBelow.alt01') {
+        return 0.8;
+      }
+      if (glyph === 'oligonKentimataBelow') {
+        return 0.1;
+      }
+      return 0;
+    });
+
+    expect(LayoutService.getGlueWidthBetween(left, right, pageSetup)).toBe(17);
+    expect(fontService.getLeadingSpace).toHaveBeenCalledWith(
+      'MockFont',
+      'oligonKentimataBelow.alt01',
     );
   });
 });
@@ -285,6 +414,27 @@ describe('inline element spacing helpers', () => {
 describe('LayoutService.centerMeasureBars', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    (NeumeMappingService.getMapping as Mock).mockImplementation((neume) => {
+      if (neume === QuantitativeNeume.Ison) {
+        return { glyphName: 'isonGlyph' };
+      }
+      if (neume === QuantitativeNeume.Oligon) {
+        return { glyphName: 'oligonGlyph' };
+      }
+      if (neume === QuantitativeNeume.Hyporoe) {
+        return { glyphName: 'yporroi' };
+      }
+      if (neume === VocalExpressionNeume.Vareia) {
+        return { glyphName: 'vareiaGlyph' };
+      }
+      if (neume === GorgonNeume.Gorgon_Top) {
+        return { glyphName: 'gorgonAbove' };
+      }
+      return { glyphName: 'otherGlyph' };
+    });
+    (fontService.getMetadata as Mock).mockReturnValue({
+      contextualSubstitutions: [],
+    });
   });
 
   it('keeps a right-side measure bar centered even when the following note has vareia', () => {
@@ -297,15 +447,23 @@ describe('LayoutService.centerMeasureBars', () => {
 
     const layoutAny = LayoutService as any;
     const originalGetNeumeWidthFromCache = layoutAny.getNeumeWidthFromCache;
+    const originalGetGlyphWidthFromCache = layoutAny.getGlyphWidthFromCache;
     layoutAny.getNeumeWidthFromCache = vi.fn((...args: unknown[]) => {
       const neume = args[1];
       if (neume === VocalExpressionNeume.Vareia) {
         return 20;
       }
-      if (neume === QuantitativeNeume.Ison) {
+      return 0;
+    });
+    layoutAny.getGlyphWidthFromCache = vi.fn((...args: unknown[]) => {
+      const glyphName = args[1];
+      if (glyphName === 'vareiaGlyph') {
+        return 20;
+      }
+      if (glyphName === 'isonGlyph') {
         return 100;
       }
-      if (neume === QuantitativeNeume.Oligon) {
+      if (glyphName === 'oligonGlyph') {
         return 90;
       }
       return 0;
@@ -352,6 +510,7 @@ describe('LayoutService.centerMeasureBars', () => {
       expect(ownerWithVareia.computedMeasureBarRightOffsetX).toBe(45);
     } finally {
       layoutAny.getNeumeWidthFromCache = originalGetNeumeWidthFromCache;
+      layoutAny.getGlyphWidthFromCache = originalGetGlyphWidthFromCache;
     }
   });
 
@@ -364,10 +523,10 @@ describe('LayoutService.centerMeasureBars', () => {
     ]);
 
     const layoutAny = LayoutService as any;
-    const originalGetNeumeWidthFromCache = layoutAny.getNeumeWidthFromCache;
-    layoutAny.getNeumeWidthFromCache = vi.fn((...args: unknown[]) => {
-      const neume = args[1];
-      if (neume === QuantitativeNeume.Ison) {
+    const originalGetGlyphWidthFromCache = layoutAny.getGlyphWidthFromCache;
+    layoutAny.getGlyphWidthFromCache = vi.fn((...args: unknown[]) => {
+      const glyphName = args[1];
+      if (glyphName === 'isonGlyph') {
         return 100;
       }
       return 0;
@@ -392,7 +551,173 @@ describe('LayoutService.centerMeasureBars', () => {
 
       expect(owner.computedMeasureBarRightOffsetX).toBe(45);
     } finally {
-      layoutAny.getNeumeWidthFromCache = originalGetNeumeWidthFromCache;
+      layoutAny.getGlyphWidthFromCache = originalGetGlyphWidthFromCache;
+    }
+  });
+
+  it('centers a right-side measure bar using the substituted body width of the owning note', () => {
+    const pageSetup = getMockPageSetup();
+    pageSetup.melkiteRtl = false;
+    pageSetup.neumeDefaultFontSize = 10;
+    pageSetup.neumeDefaultSpacing = 3;
+
+    const measureBarWidthMap = new Map<MeasureBar, number>([
+      [MeasureBar.MeasureBarRight, 10],
+    ]);
+
+    const owner = new NoteElement();
+    owner.quantitativeNeume = QuantitativeNeume.Hyporoe;
+    owner.gorgonNeume = GorgonNeume.Gorgon_Top;
+    owner.measureBarRight = MeasureBar.MeasureBarRight;
+    owner.x = 0;
+    owner.neumeWidth = 110;
+
+    const next = new NoteElement();
+    next.quantitativeNeume = QuantitativeNeume.Ison;
+    next.x = 200;
+    next.neumeWidth = 100;
+
+    (NeumeMappingService.getMapping as Mock).mockImplementation((neume) => {
+      if (neume === QuantitativeNeume.Hyporoe) {
+        return { glyphName: 'yporroi' };
+      }
+      if (neume === GorgonNeume.Gorgon_Top) {
+        return { glyphName: 'gorgonAbove' };
+      }
+      if (neume === QuantitativeNeume.Ison) {
+        return { glyphName: 'isonGlyph' };
+      }
+      return { glyphName: 'otherGlyph' };
+    });
+
+    (fontService.getMetadata as Mock).mockReturnValue({
+      contextualSubstitutions: [
+        {
+          inputGlyphs: [['yporroi']],
+          backtrackGlyphs: [],
+          lookaheadGlyphs: [['gorgonAbove']],
+          substitutions: [
+            {
+              index: 0,
+              from: 'yporroi',
+              to: 'yporroi.gorgon',
+            },
+          ],
+        },
+      ],
+    });
+
+    const layoutAny = LayoutService as any;
+    const originalGetTextWidth = layoutAny.getGlyphWidthFromCache;
+    layoutAny.getGlyphWidthFromCache = vi.fn(
+      (_cache: unknown, glyphName: string) => {
+        if (glyphName === 'yporroi.gorgon') {
+          return 120;
+        }
+        if (glyphName === 'yporroi') {
+          return 100;
+        }
+        if (glyphName === 'isonGlyph') {
+          return 100;
+        }
+        return 0;
+      },
+    );
+
+    try {
+      const page = new Page();
+      const line = new Line();
+      line.elements = [owner, next];
+      page.lines = [line];
+
+      layoutAny.centerMeasureBars([page], pageSetup, measureBarWidthMap);
+
+      expect(owner.computedMeasureBarRightOffsetX).toBe(55);
+    } finally {
+      layoutAny.getGlyphWidthFromCache = originalGetTextWidth;
+    }
+  });
+
+  it('centers a left-side measure bar using the substituted body width of the previous note', () => {
+    const pageSetup = getMockPageSetup();
+    pageSetup.melkiteRtl = false;
+    pageSetup.neumeDefaultFontSize = 10;
+    pageSetup.neumeDefaultSpacing = 3;
+
+    const measureBarWidthMap = new Map<MeasureBar, number>([
+      [MeasureBar.MeasureBarRight, 10],
+    ]);
+
+    const previous = new NoteElement();
+    previous.quantitativeNeume = QuantitativeNeume.Hyporoe;
+    previous.gorgonNeume = GorgonNeume.Gorgon_Top;
+    previous.x = 0;
+    previous.neumeWidth = 110;
+
+    const owner = new NoteElement();
+    owner.quantitativeNeume = QuantitativeNeume.Ison;
+    owner.measureBarLeft = MeasureBar.MeasureBarRight;
+    owner.x = 200;
+    owner.neumeWidth = 100;
+
+    (NeumeMappingService.getMapping as Mock).mockImplementation((neume) => {
+      if (neume === QuantitativeNeume.Hyporoe) {
+        return { glyphName: 'yporroi' };
+      }
+      if (neume === GorgonNeume.Gorgon_Top) {
+        return { glyphName: 'gorgonAbove' };
+      }
+      if (neume === QuantitativeNeume.Ison) {
+        return { glyphName: 'isonGlyph' };
+      }
+      return { glyphName: 'otherGlyph' };
+    });
+
+    (fontService.getMetadata as Mock).mockReturnValue({
+      contextualSubstitutions: [
+        {
+          inputGlyphs: [['yporroi']],
+          backtrackGlyphs: [],
+          lookaheadGlyphs: [['gorgonAbove']],
+          substitutions: [
+            {
+              index: 0,
+              from: 'yporroi',
+              to: 'yporroi.gorgon',
+            },
+          ],
+        },
+      ],
+    });
+
+    const layoutAny = LayoutService as any;
+    const originalGetTextWidth = layoutAny.getGlyphWidthFromCache;
+    layoutAny.getGlyphWidthFromCache = vi.fn(
+      (_cache: unknown, glyphName: string) => {
+        if (glyphName === 'yporroi.gorgon') {
+          return 120;
+        }
+        if (glyphName === 'yporroi') {
+          return 100;
+        }
+        if (glyphName === 'isonGlyph') {
+          return 100;
+        }
+        return 0;
+      },
+    );
+
+    try {
+      const page = new Page();
+      const line = new Line();
+      line.elements = [previous, owner];
+      page.lines = [line];
+
+      layoutAny.centerMeasureBars([page], pageSetup, measureBarWidthMap);
+
+      expect(owner.computedMeasureBarLeftOffsetX).toBe(-45);
+    } finally {
+      layoutAny.getGlyphWidthFromCache = originalGetTextWidth;
     }
   });
 
@@ -405,10 +730,10 @@ describe('LayoutService.centerMeasureBars', () => {
     ]);
 
     const layoutAny = LayoutService as any;
-    const originalGetNeumeWidthFromCache = layoutAny.getNeumeWidthFromCache;
-    layoutAny.getNeumeWidthFromCache = vi.fn((...args: unknown[]) => {
-      const neume = args[1];
-      if (neume === QuantitativeNeume.Ison) {
+    const originalGetGlyphWidthFromCache = layoutAny.getGlyphWidthFromCache;
+    layoutAny.getGlyphWidthFromCache = vi.fn((...args: unknown[]) => {
+      const glyphName = args[1];
+      if (glyphName === 'isonGlyph') {
         return 100;
       }
       return 0;
@@ -433,7 +758,7 @@ describe('LayoutService.centerMeasureBars', () => {
 
       expect(note.computedMeasureBarLeftOffsetX).toBe(-50);
     } finally {
-      layoutAny.getNeumeWidthFromCache = originalGetNeumeWidthFromCache;
+      layoutAny.getGlyphWidthFromCache = originalGetGlyphWidthFromCache;
     }
   });
 
@@ -461,8 +786,8 @@ describe('LayoutService.centerMeasureBars', () => {
     });
 
     const layoutAny = LayoutService as any;
-    const originalGetNeumeWidthFromCache = layoutAny.getNeumeWidthFromCache;
-    layoutAny.getNeumeWidthFromCache = vi.fn(() => 100);
+    const originalGetGlyphWidthFromCache = layoutAny.getGlyphWidthFromCache;
+    layoutAny.getGlyphWidthFromCache = vi.fn(() => 100);
 
     try {
       const page = new Page();
@@ -480,7 +805,7 @@ describe('LayoutService.centerMeasureBars', () => {
       expect(owner.computedMeasureBarRightTrailingSpacing).toBe(3);
       expect(owner.computedMeasureBarRightOffsetX).toBe(0);
     } finally {
-      layoutAny.getNeumeWidthFromCache = originalGetNeumeWidthFromCache;
+      layoutAny.getGlyphWidthFromCache = originalGetGlyphWidthFromCache;
     }
   });
 
@@ -508,8 +833,8 @@ describe('LayoutService.centerMeasureBars', () => {
     });
 
     const layoutAny = LayoutService as any;
-    const originalGetNeumeWidthFromCache = layoutAny.getNeumeWidthFromCache;
-    layoutAny.getNeumeWidthFromCache = vi.fn(() => 100);
+    const originalGetGlyphWidthFromCache = layoutAny.getGlyphWidthFromCache;
+    layoutAny.getGlyphWidthFromCache = vi.fn(() => 100);
 
     try {
       const page = new Page();
@@ -528,7 +853,7 @@ describe('LayoutService.centerMeasureBars', () => {
       expect(owner.computedMeasureBarRightTrailingSpacing).toBe(3);
       expect(owner.computedMeasureBarRightOffsetX).toBe(0);
     } finally {
-      layoutAny.getNeumeWidthFromCache = originalGetNeumeWidthFromCache;
+      layoutAny.getGlyphWidthFromCache = originalGetGlyphWidthFromCache;
     }
   });
 
@@ -556,8 +881,8 @@ describe('LayoutService.centerMeasureBars', () => {
     });
 
     const layoutAny = LayoutService as any;
-    const originalGetNeumeWidthFromCache = layoutAny.getNeumeWidthFromCache;
-    layoutAny.getNeumeWidthFromCache = vi.fn(() => 100);
+    const originalGetGlyphWidthFromCache = layoutAny.getGlyphWidthFromCache;
+    layoutAny.getGlyphWidthFromCache = vi.fn(() => 100);
 
     try {
       const page = new Page();
@@ -575,7 +900,7 @@ describe('LayoutService.centerMeasureBars', () => {
       expect(note.computedMeasureBarLeftLeadingSpacing).toBe(2.5);
       expect(note.computedMeasureBarLeftOffsetX).toBe(0);
     } finally {
-      layoutAny.getNeumeWidthFromCache = originalGetNeumeWidthFromCache;
+      layoutAny.getGlyphWidthFromCache = originalGetGlyphWidthFromCache;
     }
   });
 });

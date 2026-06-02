@@ -565,6 +565,36 @@ describe('inline element spacing helpers', () => {
     expect(width).toBe(5.5);
   });
 
+  it('uses the following leading glyph spacing as the inline glue shrink floor', () => {
+    const pageSetup = getMockPageSetup();
+    pageSetup.neumeDefaultFontSize = 10;
+
+    const textBox = new TextBoxElement();
+    textBox.inline = true;
+    const note = new NoteElement();
+    note.quantitativeNeume = QuantitativeNeume.Oligon;
+
+    (NeumeMappingService.getMapping as Mock).mockImplementation((neume) => {
+      if (neume === QuantitativeNeume.Oligon) {
+        return { glyphName: 'oligonGlyph' };
+      }
+      return { glyphName: 'otherGlyph' };
+    });
+    (fontService.getLeadingSpace as Mock).mockImplementation((_, glyph) =>
+      glyph === 'oligonGlyph' ? 0.25 : 0,
+    );
+
+    const width = (
+      LayoutService as any
+    ).getMinimumLeadingGlueWidthAfterInlineElement(
+      [textBox, note],
+      0,
+      pageSetup,
+    );
+
+    expect(width).toBe(2.5);
+  });
+
   it('uses the previous neume trailing spacing before an empty element after an inline element', () => {
     const pageSetup = getMockPageSetup();
     pageSetup.neumeDefaultFontSize = 10;
@@ -699,6 +729,43 @@ describe('inline element spacing helpers', () => {
     );
 
     expect(width).toBe(6.5);
+  });
+
+  it('uses a following left barline as the tempo glue shrink floor', () => {
+    const pageSetup = getMockPageSetup();
+    pageSetup.neumeDefaultFontSize = 10;
+
+    const tempo = new TempoElement();
+    const note = new NoteElement();
+    note.quantitativeNeume = QuantitativeNeume.Oligon;
+    note.measureBarLeft = MeasureBar.MeasureBarRight;
+
+    (NeumeMappingService.getMapping as Mock).mockImplementation((neume) => {
+      if (neume === tempo.neume) {
+        return { glyphName: 'tempoGlyph' };
+      }
+      if (neume === QuantitativeNeume.Oligon) {
+        return { glyphName: 'oligonGlyph' };
+      }
+      if (neume === MeasureBar.MeasureBarRight) {
+        return { glyphName: 'barlineSingle' };
+      }
+      return { glyphName: 'otherGlyph' };
+    });
+    (fontService.getTrailingSpace as Mock).mockImplementation((_, glyph) =>
+      glyph === 'tempoGlyph' ? 0.3 : glyph === 'barlineSingle' ? 0.6 : 0,
+    );
+    (fontService.getLeadingSpace as Mock).mockImplementation((_, glyph) =>
+      glyph === 'barlineSingle' || glyph === 'oligonGlyph' ? 0.5 : 0,
+    );
+
+    const width = (LayoutService as any).getMinimumGlueWidthBetween(
+      tempo,
+      note,
+      pageSetup,
+    );
+
+    expect(width).toBe(8);
   });
 
   it('reserves measure bar spacing before an inline element', () => {
@@ -2091,6 +2158,25 @@ describe('LayoutService.createNotePreBreakGlue', () => {
   });
 });
 
+describe('LayoutService.createInlineElementGlue', () => {
+  it('does not shrink below the glyph-aware spacing floor', () => {
+    const glue = (LayoutService as any).createInlineElementGlue(12, 9);
+
+    expect(glue).toEqual({
+      type: 'glue',
+      width: 12,
+      stretch: 6,
+      shrink: 3,
+    });
+  });
+
+  it('does not shrink below a measure-bar spacing floor', () => {
+    const glue = (LayoutService as any).createInlineElementGlue(12, 12);
+
+    expect(glue.shrink).toBe(0);
+  });
+});
+
 describe('LayoutService.createMartyriaLeadingGlue', () => {
   it('preserves glyph-aware pair spacing when ordinary martyria glue replaces trailing note glue', () => {
     const martyria = new MartyriaElement();
@@ -2111,6 +2197,29 @@ describe('LayoutService.createMartyriaLeadingGlue', () => {
       width: 15,
       stretch: 0,
       shrink: 0,
+    });
+  });
+});
+
+describe('LayoutService.createMartyriaPostBreakGlue', () => {
+  it('does not shrink a martyria-to-note boundary below its measure-bar spacing floor', () => {
+    const glue = (LayoutService as any).createMartyriaPostBreakGlue(
+      {
+        type: 'glue',
+        width: 18,
+        stretch: 9,
+        shrink: 9,
+      },
+      2,
+      8,
+      17,
+    );
+
+    expect(glue).toEqual({
+      type: 'glue',
+      width: 12,
+      stretch: 9,
+      shrink: 3,
     });
   });
 });

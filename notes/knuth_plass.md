@@ -137,7 +137,7 @@ The user-configurable neume spacing is an adjustment added to that boundary widt
 The resulting preferred width may stretch or shrink by up to one half.
 Users may also set the inter-note spacing to a negative value, so that successive neumes visibly overlap and the layout becomes tighter.
 When the configured spacing is negative, the glue keeps its negative natural width so that the overlap remains visible, but the stretch and shrink budgets are floored at small non-negative values: stretch at 0.1 px and shrink at 0.
-The same floors apply uniformly to every glue derived from the configured spacing: the standard glue's stretch and shrink, the martyria glue's stretch (including the martyria-bonus term described below) and shrink, and the right-martyria glue's shrink.
+The same floors apply uniformly to every glue derived from the configured spacing: the standard glue's stretch and shrink, inline-element glue's stretch and shrink, the martyria glue's stretch (including the martyria-bonus term described below) and shrink, and the right-martyria glue's shrink.
 These floors preserve the Knuth-Plass invariants while keeping the user-chosen overlap intact, because ordinary glues no longer stretch enough to push neumes apart and any line-end slack is absorbed by the right-martyria glue's `MAX_COST` stretch instead.
 The 0.1 px stretch floor is a tiny positive epsilon rather than zero so that every line has at least some stretchability, which keeps the adjustment ratio finite and the line-breaking problem well-defined.
 Without this floor, a line that contains no martyria would have a total stretch of zero, and `breakLines` could only treat its natural width as feasible.
@@ -169,6 +169,7 @@ As a result, the full trailing spacing appears after the martyria only when it s
 When a martyria has a transferable measure bar and is followed by a note, the bar transfers to the next line's first note at a break.
 To reserve space for this, the martyria's post-break glue is narrowed by the bar width plus its leading clearance, and an anonymous spacer box of the same width is inserted before the following note's box.
 On the same line the reduced glue and the spacer cancel, leaving the note's own box position unchanged.
+The post-break glue's shrink is capped so that justification cannot reduce that same-line boundary below the measure bar's minimum clearances.
 At a break the post-break glue vanishes; the spacer remains at the start of the next line and reserves leading space for the transferred bar.
 In Phase 2, when the break is actually taken, the note element is shifted left by the bar width plus its leading clearance so that the rendered barline glyph and spacing occupy the space reserved by the spacer rather than adding extra width.
 
@@ -222,7 +223,7 @@ $$\text{penalty}(\infty) \quad \text{glue}(L_i, 0, 0) \quad \text{box}(B_i) \qua
 
 Here:
 
-- $B_i$ is the neume width. When the preceding martyria has a transferable bar, an anonymous spacer box of the bar width is inserted before $B_i$ (see above); $B_i$ itself is unchanged.
+- $B_i$ is the neume width. When the preceding martyria has a transferable bar, an anonymous spacer box of the bar width plus its leading clearance is inserted before $B_i$ (see above); $B_i$ itself is unchanged.
 - $L_i$ is the left projection, fixed and unbreakable, and omitted when zero.
 - $s_0$ is the glyph-aware preferred spacing between successive notes, including the user-configurable adjustment and any barline minimum.
 - $s^+$ and $s^-$ are the standard stretch and shrink budgets for an inter-note gap.

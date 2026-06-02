@@ -13,6 +13,7 @@ import {
   GorgonNeume,
   Ison,
   MeasureBar,
+  Note,
   QuantitativeNeume,
   RootSign,
   TempoSign,
@@ -1453,6 +1454,88 @@ describe('LayoutService.centerMeasureBars', () => {
     }
   });
 
+  it('keeps a right-side measure bar visually centered before a following martyria when its spacing floor leaves enough room', () => {
+    const pageSetup = getMockPageSetup();
+    pageSetup.neumeDefaultFontSize = 10;
+    const measureBarWidthMap = new Map<MeasureBar, number>([
+      [MeasureBar.MeasureBarRight, 10],
+    ]);
+
+    (NeumeMappingService.getMapping as Mock).mockImplementation((neume) => {
+      if (neume === Note.Pa) {
+        return { glyphName: 'martyriaNoteGlyph' };
+      }
+      return { glyphName: 'otherGlyph' };
+    });
+    (fontService.getLeadingSpace as Mock).mockImplementation((_, glyph) =>
+      glyph === 'martyriaNoteGlyph' ? 0.4 : 0,
+    );
+
+    const layoutAny = LayoutService as any;
+    const originalGetGlyphWidthFromCache = layoutAny.getGlyphWidthFromCache;
+    layoutAny.getGlyphWidthFromCache = vi.fn(() => 100);
+
+    try {
+      const owner = new NoteElement();
+      owner.measureBarRight = MeasureBar.MeasureBarRight;
+      owner.x = 0;
+      owner.neumeWidth = 110;
+      const next = new MartyriaElement();
+      next.x = 200;
+      next.width = 100;
+
+      const page = new Page();
+      page.lines = [getLine(owner, next)];
+
+      layoutAny.centerMeasureBars([page], pageSetup, measureBarWidthMap);
+
+      expect(owner.computedMeasureBarRightOffsetX).toBe(45);
+    } finally {
+      layoutAny.getGlyphWidthFromCache = originalGetGlyphWidthFromCache;
+    }
+  });
+
+  it('keeps a martyria-owned right-side measure bar visually centered when its spacing floor leaves enough room', () => {
+    const pageSetup = getMockPageSetup();
+    pageSetup.neumeDefaultFontSize = 10;
+    const measureBarWidthMap = new Map<MeasureBar, number>([
+      [MeasureBar.MeasureBarRight, 10],
+    ]);
+
+    (NeumeMappingService.getMapping as Mock).mockImplementation((neume) => {
+      if (neume === Note.Pa) {
+        return { glyphName: 'martyriaNoteGlyph' };
+      }
+      return { glyphName: 'otherGlyph' };
+    });
+    (fontService.getTrailingSpace as Mock).mockImplementation((_, glyph) =>
+      glyph === 'martyriaNoteGlyph' ? 0.6 : 0,
+    );
+
+    const layoutAny = LayoutService as any;
+    const originalGetGlyphWidthFromCache = layoutAny.getGlyphWidthFromCache;
+    layoutAny.getGlyphWidthFromCache = vi.fn(() => 100);
+
+    try {
+      const owner = new MartyriaElement();
+      owner.measureBarRight = MeasureBar.MeasureBarRight;
+      owner.x = 0;
+      owner.width = 100;
+      const next = new NoteElement();
+      next.x = 200;
+      next.neumeWidth = 100;
+
+      const page = new Page();
+      page.lines = [getLine(owner, next)];
+
+      layoutAny.centerMeasureBars([page], pageSetup, measureBarWidthMap);
+
+      expect(owner.computedMeasureBarRightOffsetX).toBe(50);
+    } finally {
+      layoutAny.getGlyphWidthFromCache = originalGetGlyphWidthFromCache;
+    }
+  });
+
   it('mirrors measure-bar translations in RTL mode', () => {
     const pageSetup = getMockPageSetup();
     pageSetup.melkiteRtl = true;
@@ -2005,6 +2088,30 @@ describe('LayoutService.createNotePreBreakGlue', () => {
     const glue = (LayoutService as any).createNotePreBreakGlue(18, 2, 3, 17);
 
     expect(glue.shrink).toBe(1);
+  });
+});
+
+describe('LayoutService.createMartyriaLeadingGlue', () => {
+  it('preserves glyph-aware pair spacing when ordinary martyria glue replaces trailing note glue', () => {
+    const martyria = new MartyriaElement();
+    const glue = (LayoutService as any).createMartyriaLeadingGlue(
+      martyria,
+      12,
+      3,
+      {
+        type: 'glue',
+        width: 100,
+        stretch: 200,
+        shrink: 50,
+      },
+    );
+
+    expect(glue).toEqual({
+      type: 'glue',
+      width: 15,
+      stretch: 0,
+      shrink: 0,
+    });
   });
 });
 

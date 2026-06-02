@@ -947,11 +947,11 @@ export class LayoutService {
             (martyriaElement.alignRight ||
               previousElement?.elementType === ElementType.Note)
           ) {
-            // Replacing the trailing note glue would otherwise drop any
-            // melisma lyric overhang carried in that glue. Preserve that
-            // overhang and, for a right-aligned martyria, terminal barline
-            // clearance. Ordinary lyric collision before a martyria is
-            // handled by addLyricReservation below.
+            // Replacing the trailing note glue would otherwise drop the
+            // glyph-aware boundary spacing and any melisma lyric overhang
+            // carried in that glue. Preserve those widths and, for a
+            // right-aligned martyria, terminal barline clearance. Ordinary
+            // lyric collision before a martyria is handled below.
             const trailingNoteReservations =
               this.getTrailingNoteReservations(layoutWorkspace);
             const reservation =
@@ -959,13 +959,12 @@ export class LayoutService {
               (martyriaElement.alignRight
                 ? (trailingNoteReservations?.terminalMeasureBarSpacing ?? 0)
                 : 0);
-            const baseGlue = martyriaElement.alignRight
-              ? rightMartyriaGlue
-              : this.fixedGlue(0);
-            const newGlue = {
-              ...baseGlue,
-              width: baseGlue.width + reservation,
-            };
+            const newGlue = this.createMartyriaLeadingGlue(
+              martyriaElement,
+              leadingGlueWidth,
+              reservation,
+              rightMartyriaGlue,
+            );
             this.removeGlue(layoutWorkspace);
             this.addGlue(newGlue, layoutWorkspace);
           } else if (martyriaElement.alignRight) {
@@ -1893,6 +1892,22 @@ export class LayoutService {
       width,
       stretch: 0,
       shrink: 0,
+    };
+  }
+
+  private static createMartyriaLeadingGlue(
+    martyriaElement: MartyriaElement,
+    leadingGlueWidth: number,
+    reservation: number,
+    rightMartyriaGlue: Glue,
+  ): Glue {
+    const baseGlue = martyriaElement.alignRight
+      ? rightMartyriaGlue
+      : this.fixedGlue(leadingGlueWidth);
+
+    return {
+      ...baseGlue,
+      width: baseGlue.width + reservation,
     };
   }
 
@@ -4000,14 +4015,18 @@ export class LayoutService {
             if (barWidth > 0) {
               const normalLeft =
                 owner.x + this.getMeasureBarOwnerWidth(owner) - barWidth;
+              const ownerTrailingSpacing =
+                this.getElementEdgeSpacing(owner, 'trailing', pageSetup) ?? 0;
+              const nextLeadingSpacing =
+                this.getElementEdgeSpacing(nextAnchor, 'leading', pageSetup) ??
+                0;
               const centeredLeft =
                 (ownerBounds.right + nextAnchor.x - barWidth) / 2;
               const targetLeft = Math.min(
                 Math.max(
                   centeredLeft,
                   ownerBounds.right +
-                    (this.getElementEdgeSpacing(owner, 'trailing', pageSetup) ??
-                      0) +
+                    ownerTrailingSpacing +
                     this.getMeasureBarSpacing(
                       measureBarRight,
                       'leading',
@@ -4021,11 +4040,7 @@ export class LayoutService {
                     'trailing',
                     pageSetup,
                   ) -
-                  (this.getElementEdgeSpacing(
-                    nextAnchor,
-                    'leading',
-                    pageSetup,
-                  ) ?? 0),
+                  nextLeadingSpacing,
               );
               owner.computedMeasureBarRightOffsetX =
                 direction * (targetLeft - normalLeft);

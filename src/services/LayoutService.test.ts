@@ -10,8 +10,8 @@ import {
   TextBoxElement,
 } from '../models/Element';
 import {
-  Ison,
   GorgonNeume,
+  Ison,
   MeasureBar,
   QuantitativeNeume,
   VocalExpressionNeume,
@@ -262,6 +262,50 @@ describe('LayoutService.getGlueWidthBetween', () => {
       'oligonKentimataBelow.alt01',
     );
   });
+
+  it('reserves at least the measure bar leading and trailing spacing', () => {
+    const pageSetup = getMockPageSetup();
+    pageSetup.neumeDefaultFontSize = 10;
+    pageSetup.neumeDefaultSpacing = 3;
+
+    const left = new NoteElement();
+    left.quantitativeNeume = QuantitativeNeume.Ison;
+    left.measureBarRight = MeasureBar.MeasureBarRight;
+
+    const right = new NoteElement();
+    right.quantitativeNeume = QuantitativeNeume.Oligon;
+
+    (NeumeMappingService.getMapping as Mock).mockImplementation((neume) => {
+      if (neume === QuantitativeNeume.Ison) {
+        return { glyphName: 'isonGlyph' };
+      }
+      if (neume === QuantitativeNeume.Oligon) {
+        return { glyphName: 'oligonGlyph' };
+      }
+      if (neume === MeasureBar.MeasureBarRight) {
+        return { glyphName: 'barlineSingle' };
+      }
+      return { glyphName: 'otherGlyph' };
+    });
+
+    (fontService.getTrailingSpace as Mock).mockImplementation((_, glyph) => {
+      if (glyph === 'isonGlyph' || glyph === 'barlineSingle') {
+        return 0.6;
+      }
+      return 0;
+    });
+    (fontService.getLeadingSpace as Mock).mockImplementation((_, glyph) => {
+      if (glyph === 'oligonGlyph') {
+        return 0.1;
+      }
+      if (glyph === 'barlineSingle') {
+        return 0.5;
+      }
+      return 0;
+    });
+
+    expect(LayoutService.getGlueWidthBetween(left, right, pageSetup)).toBe(11);
+  });
 });
 
 describe('inline element spacing helpers', () => {
@@ -409,6 +453,36 @@ describe('inline element spacing helpers', () => {
 
     expect(width).toBe(6.5);
   });
+
+  it('reserves measure bar spacing before an inline element', () => {
+    const pageSetup = getMockPageSetup();
+    pageSetup.neumeDefaultFontSize = 10;
+    pageSetup.neumeDefaultSpacing = 3;
+
+    const note = new NoteElement();
+    note.measureBarRight = MeasureBar.MeasureBarRight;
+    const textBox = new TextBoxElement();
+    textBox.inline = true;
+
+    (NeumeMappingService.getMapping as Mock).mockImplementation((neume) => {
+      if (neume === MeasureBar.MeasureBarRight) {
+        return { glyphName: 'barlineSingle' };
+      }
+      return { glyphName: 'otherGlyph' };
+    });
+    (fontService.getTrailingSpace as Mock).mockImplementation((_, glyph) =>
+      glyph === 'barlineSingle' ? 0.6 : 0.1,
+    );
+    (fontService.getLeadingSpace as Mock).mockImplementation((_, glyph) =>
+      glyph === 'barlineSingle' ? 0.5 : 0,
+    );
+
+    const width = (
+      LayoutService as any
+    ).getTrailingGlueWidthBeforeInlineElement([note, textBox], 1, pageSetup);
+
+    expect(width).toBe(11);
+  });
 });
 
 describe('LayoutService.centerMeasureBars', () => {
@@ -430,11 +504,16 @@ describe('LayoutService.centerMeasureBars', () => {
       if (neume === GorgonNeume.Gorgon_Top) {
         return { glyphName: 'gorgonAbove' };
       }
+      if (neume === MeasureBar.MeasureBarRight) {
+        return { glyphName: 'barlineSingle' };
+      }
       return { glyphName: 'otherGlyph' };
     });
     (fontService.getMetadata as Mock).mockReturnValue({
       contextualSubstitutions: [],
     });
+    (fontService.getLeadingSpace as Mock).mockReturnValue(0);
+    (fontService.getTrailingSpace as Mock).mockReturnValue(0);
   });
 
   it('keeps a right-side measure bar centered even when the following note has vareia', () => {
@@ -500,7 +579,7 @@ describe('LayoutService.centerMeasureBars', () => {
       lineWithVareia.elements = [ownerWithVareia, nextWithVareia];
       pageWithVareia.lines = [lineWithVareia];
 
-      (layoutAny.centerMeasureBars as Function)(
+      (layoutAny.centerMeasureBars as (...args: unknown[]) => void)(
         [pageWithoutVareia, pageWithVareia],
         pageSetup,
         measureBarWidthMap,
@@ -903,6 +982,212 @@ describe('LayoutService.centerMeasureBars', () => {
       layoutAny.getGlyphWidthFromCache = originalGetGlyphWidthFromCache;
     }
   });
+
+  it.each([
+    ['martyria', new MartyriaElement()],
+    ['tempo', new TempoElement()],
+  ])('centers a right-side measure bar before a following %s', (_, next) => {
+    const pageSetup = getMockPageSetup();
+    const measureBarWidthMap = new Map<MeasureBar, number>([
+      [MeasureBar.MeasureBarRight, 10],
+    ]);
+    const layoutAny = LayoutService as any;
+    const originalGetGlyphWidthFromCache = layoutAny.getGlyphWidthFromCache;
+    layoutAny.getGlyphWidthFromCache = vi.fn(() => 100);
+
+    try {
+      const owner = new NoteElement();
+      owner.measureBarRight = MeasureBar.MeasureBarRight;
+      owner.x = 0;
+      owner.neumeWidth = 110;
+      next.x = 200;
+      next.width = 100;
+
+      const page = new Page();
+      page.lines = [getLine(owner, next)];
+
+      layoutAny.centerMeasureBars([page], pageSetup, measureBarWidthMap);
+
+      expect(owner.computedMeasureBarRightOffsetX).toBe(45);
+    } finally {
+      layoutAny.getGlyphWidthFromCache = originalGetGlyphWidthFromCache;
+    }
+  });
+
+  it('centers a martyria-owned right-side measure bar before a following note', () => {
+    const pageSetup = getMockPageSetup();
+    const measureBarWidthMap = new Map<MeasureBar, number>([
+      [MeasureBar.MeasureBarRight, 10],
+    ]);
+    const layoutAny = LayoutService as any;
+    const originalGetGlyphWidthFromCache = layoutAny.getGlyphWidthFromCache;
+    layoutAny.getGlyphWidthFromCache = vi.fn(() => 100);
+
+    try {
+      const owner = new MartyriaElement();
+      owner.measureBarRight = MeasureBar.MeasureBarRight;
+      owner.x = 0;
+      owner.width = 100;
+      const next = new NoteElement();
+      next.x = 200;
+      next.neumeWidth = 100;
+
+      const page = new Page();
+      page.lines = [getLine(owner, next)];
+
+      layoutAny.centerMeasureBars([page], pageSetup, measureBarWidthMap);
+
+      expect(owner.computedMeasureBarRightOffsetX).toBe(50);
+    } finally {
+      layoutAny.getGlyphWidthFromCache = originalGetGlyphWidthFromCache;
+    }
+  });
+
+  it('mirrors measure-bar translations in RTL mode', () => {
+    const pageSetup = getMockPageSetup();
+    pageSetup.melkiteRtl = true;
+    const measureBarWidthMap = new Map<MeasureBar, number>([
+      [MeasureBar.MeasureBarRight, 10],
+    ]);
+    const layoutAny = LayoutService as any;
+    const originalGetGlyphWidthFromCache = layoutAny.getGlyphWidthFromCache;
+    layoutAny.getGlyphWidthFromCache = vi.fn(() => 100);
+
+    try {
+      const owner = new NoteElement();
+      owner.measureBarRight = MeasureBar.MeasureBarRight;
+      owner.x = 0;
+      owner.neumeWidth = 110;
+      const next = new NoteElement();
+      next.x = 200;
+      next.neumeWidth = 100;
+
+      const page = new Page();
+      page.lines = [getLine(owner, next)];
+
+      layoutAny.centerMeasureBars([page], pageSetup, measureBarWidthMap);
+
+      expect(owner.computedMeasureBarRightOffsetX).toBe(-45);
+    } finally {
+      layoutAny.getGlyphWidthFromCache = originalGetGlyphWidthFromCache;
+    }
+  });
+
+  it('treats a right-side measure bar before a right-aligned martyria as terminal', () => {
+    const pageSetup = getMockPageSetup();
+    pageSetup.neumeDefaultFontSize = 10;
+    const measureBarWidthMap = new Map<MeasureBar, number>([
+      [MeasureBar.MeasureBarRight, 10],
+    ]);
+
+    (fontService.getTrailingSpace as Mock).mockImplementation((_, glyph) =>
+      glyph === 'isonGlyph' ? 0.3 : 0,
+    );
+    (fontService.getLeadingSpace as Mock).mockImplementation((_, glyph) =>
+      glyph === 'barlineSingle' ? 0.4 : 0,
+    );
+
+    const layoutAny = LayoutService as any;
+    const originalGetGlyphWidthFromCache = layoutAny.getGlyphWidthFromCache;
+    layoutAny.getGlyphWidthFromCache = vi.fn(() => 100);
+
+    try {
+      const owner = new NoteElement();
+      owner.measureBarRight = MeasureBar.MeasureBarRight;
+      owner.x = 0;
+      owner.neumeWidth = 110;
+      const martyria = new MartyriaElement();
+      martyria.alignRight = true;
+      martyria.x = 500;
+      martyria.width = 100;
+
+      const page = new Page();
+      page.lines = [getLine(owner, martyria)];
+
+      layoutAny.centerMeasureBars([page], pageSetup, measureBarWidthMap);
+
+      expect(owner.computedMeasureBarRightOffsetX).toBe(0);
+      expect(owner.computedMeasureBarRightTrailingSpacing).toBe(4);
+    } finally {
+      layoutAny.getGlyphWidthFromCache = originalGetGlyphWidthFromCache;
+    }
+  });
+
+  it('keeps a centered right-side measure bar at least its leading space away from the owning neume', () => {
+    const pageSetup = getMockPageSetup();
+    pageSetup.neumeDefaultFontSize = 10;
+    const measureBarWidthMap = new Map<MeasureBar, number>([
+      [MeasureBar.MeasureBarRight, 10],
+    ]);
+
+    (fontService.getLeadingSpace as Mock).mockImplementation((_, glyph) =>
+      glyph === 'barlineSingle' ? 1.5 : 0,
+    );
+    (fontService.getTrailingSpace as Mock).mockImplementation((_, glyph) =>
+      glyph === 'barlineSingle' ? 0.2 : 0,
+    );
+
+    const layoutAny = LayoutService as any;
+    const originalGetGlyphWidthFromCache = layoutAny.getGlyphWidthFromCache;
+    layoutAny.getGlyphWidthFromCache = vi.fn(() => 100);
+
+    try {
+      const owner = new NoteElement();
+      owner.measureBarRight = MeasureBar.MeasureBarRight;
+      owner.x = 0;
+      owner.neumeWidth = 110;
+      const next = new NoteElement();
+      next.x = 130;
+      next.neumeWidth = 100;
+
+      const page = new Page();
+      page.lines = [getLine(owner, next)];
+
+      layoutAny.centerMeasureBars([page], pageSetup, measureBarWidthMap);
+
+      expect(owner.computedMeasureBarRightOffsetX).toBe(15);
+    } finally {
+      layoutAny.getGlyphWidthFromCache = originalGetGlyphWidthFromCache;
+    }
+  });
+
+  it('keeps a centered right-side measure bar at least its trailing space away from the following neume', () => {
+    const pageSetup = getMockPageSetup();
+    pageSetup.neumeDefaultFontSize = 10;
+    const measureBarWidthMap = new Map<MeasureBar, number>([
+      [MeasureBar.MeasureBarRight, 10],
+    ]);
+
+    (fontService.getLeadingSpace as Mock).mockImplementation((_, glyph) =>
+      glyph === 'barlineSingle' ? 0.2 : 0,
+    );
+    (fontService.getTrailingSpace as Mock).mockImplementation((_, glyph) =>
+      glyph === 'barlineSingle' ? 1.5 : 0,
+    );
+
+    const layoutAny = LayoutService as any;
+    const originalGetGlyphWidthFromCache = layoutAny.getGlyphWidthFromCache;
+    layoutAny.getGlyphWidthFromCache = vi.fn(() => 100);
+
+    try {
+      const owner = new NoteElement();
+      owner.measureBarRight = MeasureBar.MeasureBarRight;
+      owner.x = 0;
+      owner.neumeWidth = 110;
+      const next = new NoteElement();
+      next.x = 130;
+      next.neumeWidth = 100;
+
+      const page = new Page();
+      page.lines = [getLine(owner, next)];
+
+      layoutAny.centerMeasureBars([page], pageSetup, measureBarWidthMap);
+
+      expect(owner.computedMeasureBarRightOffsetX).toBe(5);
+    } finally {
+      layoutAny.getGlyphWidthFromCache = originalGetGlyphWidthFromCache;
+    }
+  });
 });
 
 describe('LayoutService.calculateInterNoteSpacing', () => {
@@ -1021,6 +1306,19 @@ describe('LayoutService.calculateInterNoteSpacing', () => {
     );
 
     expect(spacing).toBe(15);
+  });
+});
+
+describe('LayoutService.createNotePreBreakGlue', () => {
+  it('keeps glyph-aware spacing elastic without adding its width twice', () => {
+    const glue = (LayoutService as any).createNotePreBreakGlue(12, 2, 3);
+
+    expect(glue).toEqual({
+      type: 'glue',
+      width: 0,
+      stretch: 6,
+      shrink: 6,
+    });
   });
 });
 

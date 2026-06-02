@@ -2,6 +2,7 @@
   <div
     class="neume"
     :style="style"
+    :dir="pageSetup.melkiteRtl ? 'rtl' : 'ltr'"
     @click.exact="$emit('select-single')"
     @click.shift.exact="$emit('select-range')"
   >
@@ -10,7 +11,7 @@
       <Neume
         v-if="hasMeasureBarLeft && !isMeasureBarAbove"
         :neume="neume.measureBarLeft!"
-        :style="measureBarStyle"
+        :style="measureBarLeftStyle"
       />
       <Neume
         v-if="hasTempoLeft"
@@ -39,7 +40,7 @@
       <Neume
         v-if="hasMeasureBarRight"
         :neume="neume.measureBarRight!"
-        :style="measureBarStyle"
+        :style="measureBarRightStyle"
       />
     </template>
   </div>
@@ -116,11 +117,35 @@ const tempoStyle = computed(() => {
   } as StyleValue;
 });
 
-const measureBarStyle = computed(() => {
+const getMeasureBarStyle = () => {
   return {
     color: props.pageSetup.measureBarDefaultColor,
     webkitTextStrokeWidth: withZoom(
       props.pageSetup.measureBarDefaultStrokeWidth,
+    ),
+  };
+};
+
+const measureBarStyle = computed(() => getMeasureBarStyle() as StyleValue);
+
+const measureBarLeftStyle = computed(() => {
+  return {
+    ...getMeasureBarStyle(),
+    transform: `translateX(${withZoom(
+      props.neume.computedMeasureBarLeftOffsetX,
+    )})`,
+    marginInlineEnd: withZoom(props.neume.computedMeasureBarLeftLeadingSpacing),
+  } as StyleValue;
+});
+
+const measureBarRightStyle = computed(() => {
+  return {
+    ...getMeasureBarStyle(),
+    transform: `translateX(${withZoom(
+      props.neume.computedMeasureBarRightOffsetX,
+    )})`,
+    marginInlineStart: withZoom(
+      props.neume.computedMeasureBarRightTrailingSpacing,
     ),
   } as StyleValue;
 });

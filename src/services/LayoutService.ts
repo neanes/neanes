@@ -884,12 +884,11 @@ export class LayoutService {
             pageSetup,
           );
 
-          const preBreakGlue: Glue = {
-            type: 'glue',
-            width: glueWidth,
-            stretch: Math.max(glueWidth * 0.5, minGlueStretch),
-            shrink: Math.max(glueWidth * 0.5, minGlueShrink),
-          };
+          const preBreakGlue = this.createNotePreBreakGlue(
+            glueWidth,
+            minGlueStretch,
+            minGlueShrink,
+          );
 
           // Break opportunity after the neume. The pre-break glue stays on the
           // current line; the post-break glue becomes leading glue on the next
@@ -1580,7 +1579,14 @@ export class LayoutService {
       pageSetup,
     );
 
-    return spacing + pageSetup.neumeDefaultSpacing;
+    return Math.max(
+      spacing + pageSetup.neumeDefaultSpacing,
+      this.getMeasureBarMinimumGlueWidthAtOrBefore(
+        elements,
+        index - 1,
+        pageSetup,
+      ),
+    );
   }
 
   private static getLeadingGlueWidthAfterInlineElement(
@@ -1595,7 +1601,14 @@ export class LayoutService {
       pageSetup,
     );
 
-    return spacing + pageSetup.neumeDefaultSpacing;
+    return Math.max(
+      spacing + pageSetup.neumeDefaultSpacing,
+      this.getMeasureBarMinimumGlueWidthAtOrAfter(
+        elements,
+        index + 1,
+        pageSetup,
+      ),
+    );
   }
 
   private static getLeadingGlueWidthBeforeElement(
@@ -1830,6 +1843,19 @@ export class LayoutService {
       width,
       stretch: 0,
       shrink: 0,
+    };
+  }
+
+  private static createNotePreBreakGlue(
+    glueWidth: number,
+    minGlueStretch: number,
+    minGlueShrink: number,
+  ): Glue {
+    return {
+      type: 'glue',
+      width: 0,
+      stretch: Math.max(glueWidth * 0.5, minGlueStretch),
+      shrink: Math.max(glueWidth * 0.5, minGlueShrink),
     };
   }
 
@@ -2925,6 +2951,14 @@ export class LayoutService {
       const martyria = element as MartyriaElement;
       martyria.notePrevious = martyria.note;
       martyria.rootSignPrevious = martyria.rootSign;
+      martyria.computedMeasureBarLeftOffsetXPrevious =
+        martyria.computedMeasureBarLeftOffsetX;
+      martyria.computedMeasureBarRightOffsetXPrevious =
+        martyria.computedMeasureBarRightOffsetX;
+      martyria.computedMeasureBarLeftLeadingSpacingPrevious =
+        martyria.computedMeasureBarLeftLeadingSpacing;
+      martyria.computedMeasureBarRightTrailingSpacingPrevious =
+        martyria.computedMeasureBarRightTrailingSpacing;
     } else if (element.elementType === ElementType.Note) {
       const note = element as NoteElement;
       note.fthoraPrevious = note.fthora;
@@ -2976,7 +3010,15 @@ export class LayoutService {
       const martyria = element as MartyriaElement;
       martyria.updated =
         martyria.notePrevious !== martyria.note ||
-        martyria.rootSignPrevious !== martyria.rootSign;
+        martyria.rootSignPrevious !== martyria.rootSign ||
+        martyria.computedMeasureBarLeftOffsetXPrevious !==
+          martyria.computedMeasureBarLeftOffsetX ||
+        martyria.computedMeasureBarRightOffsetXPrevious !==
+          martyria.computedMeasureBarRightOffsetX ||
+        martyria.computedMeasureBarLeftLeadingSpacingPrevious !==
+          martyria.computedMeasureBarLeftLeadingSpacing ||
+        martyria.computedMeasureBarRightTrailingSpacingPrevious !==
+          martyria.computedMeasureBarRightTrailingSpacing;
     }
 
     if (!element.updated && element.elementType === ElementType.Note) {
@@ -3765,24 +3807,25 @@ export class LayoutService {
     pageSetup: PageSetup,
     measureBarWidthMap: Map<MeasureBar, number>,
   ) {
-    if (pageSetup.melkiteRtl) {
-      return;
-    }
+    const direction = pageSetup.melkiteRtl ? -1 : 1;
 
     for (const page of pages) {
       for (const line of page.lines) {
         for (let i = 0; i < line.elements.length; i++) {
           const element = line.elements[i];
 
-          if (element.elementType !== ElementType.Note) {
+          if (
+            element.elementType !== ElementType.Note &&
+            element.elementType !== ElementType.Martyria
+          ) {
             continue;
           }
 
-          const note = element as NoteElement;
-          note.computedMeasureBarLeftOffsetX = 0;
-          note.computedMeasureBarRightOffsetX = 0;
-          note.computedMeasureBarLeftLeadingSpacing = 0;
-          note.computedMeasureBarRightTrailingSpacing = 0;
+          const owner = element as NoteElement | MartyriaElement;
+          owner.computedMeasureBarLeftOffsetX = 0;
+          owner.computedMeasureBarRightOffsetX = 0;
+          owner.computedMeasureBarLeftLeadingSpacing = 0;
+          owner.computedMeasureBarRightTrailingSpacing = 0;
 
           const previousAnchor = this.findAdjacentMeasureBarAnchor(
             line.elements,
@@ -3796,13 +3839,13 @@ export class LayoutService {
           );
           const nextElement =
             i + 1 < line.elements.length ? line.elements[i + 1] : null;
-          const noteBounds = this.getNoteBodyBounds(
-            note,
+          const ownerBounds = this.getMeasureBarAnchorBounds(
+            owner,
             pageSetup,
             measureBarWidthMap,
           );
 
-          const measureBarLeft = this.getVisibleMeasureBarLeft(note);
+          const measureBarLeft = this.getVisibleMeasureBarLeft(owner);
           if (measureBarLeft && previousAnchor) {
             const previousBounds = this.getMeasureBarAnchorBounds(
               previousAnchor,
@@ -3811,59 +3854,92 @@ export class LayoutService {
             );
             const barWidth = measureBarWidthMap.get(measureBarLeft) ?? 0;
             if (barWidth > 0) {
-              const targetLeft = (previousBounds.right + note.x - barWidth) / 2;
-              note.computedMeasureBarLeftOffsetX = targetLeft - note.x;
+              const centeredLeft =
+                (previousBounds.right + owner.x - barWidth) / 2;
+              const targetLeft = Math.min(
+                Math.max(
+                  centeredLeft,
+                  previousBounds.right +
+                    this.getMeasureBarSpacing(
+                      measureBarLeft,
+                      'leading',
+                      pageSetup,
+                    ),
+                ),
+                owner.x -
+                  barWidth -
+                  this.getMeasureBarSpacing(
+                    measureBarLeft,
+                    'trailing',
+                    pageSetup,
+                  ),
+              );
+              owner.computedMeasureBarLeftOffsetX =
+                direction * (targetLeft - owner.x);
             }
           } else if (measureBarLeft && i === 0) {
-            note.computedMeasureBarLeftLeadingSpacing =
-              this.getElementEdgeSpacing(note, 'leading', pageSetup) ?? 0;
+            owner.computedMeasureBarLeftLeadingSpacing =
+              this.getTerminalMeasureBarSpacing(
+                owner,
+                measureBarLeft,
+                'leading',
+                pageSetup,
+              );
           }
 
-          const measureBarRight = this.getVisibleMeasureBarRight(note);
-          if (measureBarRight && nextAnchor) {
+          const measureBarRight = this.getVisibleMeasureBarRight(owner);
+          const followedByRightAlignedMartyria =
+            nextAnchor?.elementType === ElementType.Martyria &&
+            (nextAnchor as MartyriaElement).alignRight;
+          if (
+            measureBarRight &&
+            nextAnchor &&
+            !followedByRightAlignedMartyria
+          ) {
             const barWidth = measureBarWidthMap.get(measureBarRight) ?? 0;
             if (barWidth > 0) {
-              const normalLeft = note.x + note.neumeWidth - barWidth;
-              const targetLeft =
-                (noteBounds.right +
-                  this.getMeasureBarAnchorLeadingEdge(nextAnchor) -
-                  barWidth) /
-                2;
-              note.computedMeasureBarRightOffsetX = targetLeft - normalLeft;
+              const normalLeft =
+                owner.x + this.getMeasureBarOwnerWidth(owner) - barWidth;
+              const centeredLeft =
+                (ownerBounds.right + nextAnchor.x - barWidth) / 2;
+              const targetLeft = Math.min(
+                Math.max(
+                  centeredLeft,
+                  ownerBounds.right +
+                    this.getMeasureBarSpacing(
+                      measureBarRight,
+                      'leading',
+                      pageSetup,
+                    ),
+                ),
+                nextAnchor.x -
+                  barWidth -
+                  this.getMeasureBarSpacing(
+                    measureBarRight,
+                    'trailing',
+                    pageSetup,
+                  ),
+              );
+              owner.computedMeasureBarRightOffsetX =
+                direction * (targetLeft - normalLeft);
             }
           } else if (
             measureBarRight &&
-            (nextElement == null ||
+            (followedByRightAlignedMartyria ||
+              nextElement == null ||
               nextElement.elementType === ElementType.Empty)
           ) {
-            note.computedMeasureBarRightTrailingSpacing =
-              this.getElementEdgeSpacing(note, 'trailing', pageSetup) ?? 0;
+            owner.computedMeasureBarRightTrailingSpacing =
+              this.getTerminalMeasureBarSpacing(
+                owner,
+                measureBarRight,
+                'trailing',
+                pageSetup,
+              );
           }
         }
       }
     }
-  }
-
-  private static findAdjacentNote(
-    elements: ScoreElement[],
-    startIndex: number,
-    direction: -1 | 1,
-  ) {
-    for (
-      let i = startIndex + direction;
-      i >= 0 && i < elements.length;
-      i += direction
-    ) {
-      const element = elements[i];
-      if (element.elementType === ElementType.Note) {
-        return element as NoteElement;
-      }
-      if (!this.isMelismaContinuationElement(element)) {
-        return null;
-      }
-    }
-
-    return null;
   }
 
   private static findAdjacentMeasureBarAnchor(
@@ -3891,6 +3967,8 @@ export class LayoutService {
   private static isMeasureBarAnchorElement(element: ScoreElement) {
     return (
       element.elementType === ElementType.Note ||
+      element.elementType === ElementType.Martyria ||
+      element.elementType === ElementType.Tempo ||
       element.elementType === ElementType.DropCap ||
       (element.elementType === ElementType.TextBox &&
         (element as TextBoxElement).inline) ||
@@ -3906,12 +3984,47 @@ export class LayoutService {
     pageSetup: PageSetup,
     measureBarWidthMap: Map<MeasureBar, number>,
   ) {
-    if (element.elementType === ElementType.Note) {
-      return this.getNoteBodyBounds(
-        element as NoteElement,
-        pageSetup,
-        measureBarWidthMap,
-      );
+    if (
+      element.elementType === ElementType.Note ||
+      element.elementType === ElementType.Martyria
+    ) {
+      const owner = element as NoteElement | MartyriaElement;
+      const measureBarLeft = this.getVisibleMeasureBarLeft(owner);
+      const measureBarRight = this.getVisibleMeasureBarRight(owner);
+      const left =
+        owner.x +
+        (measureBarLeft != null
+          ? (measureBarWidthMap.get(measureBarLeft) ?? 0)
+          : 0);
+      const right =
+        owner.x +
+        this.getMeasureBarOwnerWidth(owner) -
+        (measureBarRight != null
+          ? (measureBarWidthMap.get(measureBarRight) ?? 0)
+          : 0);
+
+      if (element.elementType === ElementType.Note) {
+        const note = element as NoteElement;
+        const vareiaPrefixWidth = note.vareia
+          ? this.getNeumeWidthFromCache(
+              neumeWidthCache,
+              VocalExpressionNeume.Vareia,
+              pageSetup,
+            ) + note.vareiaInternalSpacing
+          : 0;
+        const bodyWidth = this.getGlyphWidthFromCache(
+          neumeWidthCache,
+          this.getResolvedQuantitativeGlyphName(note, pageSetup),
+          pageSetup,
+        );
+
+        return {
+          left: left + vareiaPrefixWidth,
+          right: left + vareiaPrefixWidth + bodyWidth,
+        };
+      }
+
+      return { left, right };
     }
 
     return {
@@ -3920,49 +4033,125 @@ export class LayoutService {
     };
   }
 
-  private static getMeasureBarAnchorLeadingEdge(element: ScoreElement) {
-    return element.x;
+  private static getMeasureBarOwnerWidth(owner: NoteElement | MartyriaElement) {
+    return owner.elementType === ElementType.Note
+      ? owner.neumeWidth
+      : owner.width - owner.spaceAfter;
   }
 
-  private static getNoteBodyBounds(
-    note: NoteElement,
+  private static getTerminalMeasureBarSpacing(
+    owner: NoteElement | MartyriaElement,
+    measureBar: MeasureBar,
+    ownerSide: 'leading' | 'trailing',
     pageSetup: PageSetup,
-    measureBarWidthMap: Map<MeasureBar, number>,
   ) {
-    const measureBarLeft = this.getVisibleMeasureBarLeft(note);
-    const measureBarLeftWidth =
-      measureBarLeft != null
-        ? (measureBarWidthMap.get(measureBarLeft) ?? 0)
-        : 0;
-    const vareiaPrefixWidth = note.vareia
-      ? this.getNeumeWidthFromCache(
-          neumeWidthCache,
-          VocalExpressionNeume.Vareia,
-          pageSetup,
-        ) + note.vareiaInternalSpacing
-      : 0;
-    const bodyWidth = this.getGlyphWidthFromCache(
-      neumeWidthCache,
-      this.getResolvedQuantitativeGlyphName(note, pageSetup),
+    const measureBarSide = ownerSide === 'leading' ? 'trailing' : 'leading';
+
+    return Math.max(
+      this.getElementEdgeSpacing(owner, ownerSide, pageSetup) ?? 0,
+      this.getMeasureBarSpacing(measureBar, measureBarSide, pageSetup),
+    );
+  }
+
+  private static getMeasureBarSpacing(
+    measureBar: MeasureBar,
+    side: 'leading' | 'trailing',
+    pageSetup: PageSetup,
+  ) {
+    return this.getGlyphSpacingForGlyphName(
+      NeumeMappingService.getMapping(measureBar).glyphName,
+      side,
       pageSetup,
     );
-    const left = note.x + measureBarLeftWidth + vareiaPrefixWidth;
-
-    return {
-      left,
-      right: left + bodyWidth,
-    };
   }
 
-  private static getVisibleMeasureBarLeft(note: NoteElement) {
-    const measureBar = note.measureBarLeft ?? note.computedMeasureBarLeft;
+  private static getMeasureBarMinimumGlueWidth(
+    left: ScoreElement | null,
+    right: ScoreElement | null,
+    pageSetup: PageSetup,
+  ) {
+    const measureBars: MeasureBar[] = [];
+
+    if (left != null && this.isMeasureBarOwner(left)) {
+      const measureBar = this.getVisibleMeasureBarRight(left);
+      if (measureBar != null) {
+        measureBars.push(measureBar);
+      }
+    }
+
+    if (right != null && this.isMeasureBarOwner(right)) {
+      const measureBar = this.getVisibleMeasureBarLeft(right);
+      if (measureBar != null) {
+        measureBars.push(measureBar);
+      }
+    }
+
+    return measureBars.reduce(
+      (width, measureBar) =>
+        width +
+        this.getMeasureBarSpacing(measureBar, 'leading', pageSetup) +
+        this.getMeasureBarSpacing(measureBar, 'trailing', pageSetup),
+      0,
+    );
+  }
+
+  private static getMeasureBarMinimumGlueWidthAtOrBefore(
+    elements: ScoreElement[],
+    index: number,
+    pageSetup: PageSetup,
+  ) {
+    for (let i = index; i >= 0; i--) {
+      if (this.isMeasureBarOwner(elements[i])) {
+        return this.getMeasureBarMinimumGlueWidth(elements[i], null, pageSetup);
+      }
+    }
+
+    return 0;
+  }
+
+  private static getMeasureBarMinimumGlueWidthAtOrAfter(
+    elements: ScoreElement[],
+    index: number,
+    pageSetup: PageSetup,
+  ) {
+    for (let i = index; i < elements.length; i++) {
+      if (this.isMeasureBarOwner(elements[i])) {
+        return this.getMeasureBarMinimumGlueWidth(null, elements[i], pageSetup);
+      }
+    }
+
+    return 0;
+  }
+
+  private static isMeasureBarOwner(
+    element: ScoreElement,
+  ): element is NoteElement | MartyriaElement {
+    return (
+      element.elementType === ElementType.Note ||
+      element.elementType === ElementType.Martyria
+    );
+  }
+
+  private static getVisibleMeasureBarLeft(
+    owner: NoteElement | MartyriaElement,
+  ) {
+    const measureBar =
+      owner.elementType === ElementType.Note
+        ? ((owner as NoteElement).measureBarLeft ??
+          (owner as NoteElement).computedMeasureBarLeft)
+        : (owner as MartyriaElement).measureBarLeft;
     return measureBar != null && !measureBar.endsWith('Above')
       ? measureBar
       : null;
   }
 
-  private static getVisibleMeasureBarRight(note: NoteElement) {
-    return note.measureBarRight ?? note.computedMeasureBarRight;
+  private static getVisibleMeasureBarRight(
+    owner: NoteElement | MartyriaElement,
+  ) {
+    return owner.elementType === ElementType.Note
+      ? ((owner as NoteElement).measureBarRight ??
+          (owner as NoteElement).computedMeasureBarRight)
+      : (owner as MartyriaElement).measureBarRight;
   }
 
   public static getPrimaryNeume(
@@ -3981,16 +4170,6 @@ export class LayoutService {
     }
 
     return null;
-  }
-
-  private static getGlyphSpacing(
-    neume: Neume,
-    side: 'leading' | 'trailing',
-    pageSetup: PageSetup,
-  ) {
-    const glyphName = NeumeMappingService.getMapping(neume).glyphName;
-
-    return this.getGlyphSpacingForGlyphName(glyphName, side, pageSetup);
   }
 
   private static getGlyphSpacingForGlyphName(
@@ -4222,7 +4401,10 @@ export class LayoutService {
         ? (this.getElementEdgeSpacing(right, 'leading', pageSetup) ?? 0)
         : 0;
 
-    return space1 + space2 + pageSetup.neumeDefaultSpacing;
+    return Math.max(
+      space1 + space2 + pageSetup.neumeDefaultSpacing,
+      this.getMeasureBarMinimumGlueWidth(left, right, pageSetup),
+    );
   }
 
   public static calculateMartyrias(

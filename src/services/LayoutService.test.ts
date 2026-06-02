@@ -905,6 +905,125 @@ describe('LayoutService.centerMeasureBars', () => {
   });
 });
 
+describe('LayoutService.calculateInterNoteSpacing', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('uses glyph-aware glue as the base same-line spacing between adjacent notes', () => {
+    const pageSetup = getMockPageSetup();
+    pageSetup.neumeDefaultFontSize = 10;
+    pageSetup.neumeDefaultSpacing = 3;
+
+    const current = new NoteElement();
+    current.quantitativeNeume = QuantitativeNeume.Ison;
+    current.neumeWidth = 0;
+
+    const next = new NoteElement();
+    next.quantitativeNeume = QuantitativeNeume.Oligon;
+    next.neumeWidth = 0;
+
+    (NeumeMappingService.getMapping as Mock).mockImplementation((neume) => {
+      if (neume === QuantitativeNeume.Ison) {
+        return { glyphName: 'isonGlyph' };
+      }
+      if (neume === QuantitativeNeume.Oligon) {
+        return { glyphName: 'oligonGlyph' };
+      }
+      return { glyphName: 'otherGlyph' };
+    });
+
+    (fontService.getTrailingSpace as Mock).mockImplementation((_, glyph) => {
+      if (glyph === 'isonGlyph') {
+        return 0.6;
+      }
+      return 0;
+    });
+    (fontService.getLeadingSpace as Mock).mockImplementation((_, glyph) => {
+      if (glyph === 'oligonGlyph') {
+        return 0.4;
+      }
+      return 0;
+    });
+
+    const workspace = {
+      pageSetup,
+      melismaLyricsEndPx: null,
+      neumesEndPx: 0,
+    };
+
+    const spacing = (LayoutService as any).calculateInterNoteSpacing(
+      current,
+      0,
+      next,
+      workspace,
+      0,
+    );
+
+    expect(spacing).toBe(13);
+  });
+
+  it('uses a following vareia glyph in the base same-line spacing term', () => {
+    const pageSetup = getMockPageSetup();
+    pageSetup.neumeDefaultFontSize = 10;
+    pageSetup.neumeDefaultSpacing = 3;
+
+    const current = new NoteElement();
+    current.quantitativeNeume = QuantitativeNeume.Ison;
+    current.neumeWidth = 0;
+
+    const next = new NoteElement();
+    next.quantitativeNeume = QuantitativeNeume.Oligon;
+    next.vareia = true;
+    next.neumeWidth = 0;
+
+    (NeumeMappingService.getMapping as Mock).mockImplementation((neume) => {
+      if (neume === QuantitativeNeume.Ison) {
+        return { glyphName: 'isonGlyph' };
+      }
+      if (neume === VocalExpressionNeume.Vareia) {
+        return { glyphName: 'vareiaGlyph' };
+      }
+      if (neume === QuantitativeNeume.Oligon) {
+        return { glyphName: 'oligonGlyph' };
+      }
+      return { glyphName: 'otherGlyph' };
+    });
+
+    (fontService.getTrailingSpace as Mock).mockImplementation((_, glyph) => {
+      if (glyph === 'isonGlyph') {
+        return 0.5;
+      }
+      return 0;
+    });
+    (fontService.getLeadingSpace as Mock).mockImplementation((_, glyph) => {
+      if (glyph === 'vareiaGlyph') {
+        return 0.7;
+      }
+      if (glyph === 'oligonGlyph') {
+        return 0.1;
+      }
+      return 0;
+    });
+
+    const workspace = {
+      pageSetup,
+      melismaLyricsEndPx: null,
+      neumesEndPx: 0,
+    };
+
+    const spacing = (LayoutService as any).calculateInterNoteSpacing(
+      current,
+      0,
+      next,
+      workspace,
+      0,
+    );
+
+    expect(spacing).toBe(15);
+  });
+});
+
 describe.each([true, false])(
   'LayoutService.findFinalAndNextElement',
   (isHyphen) => {

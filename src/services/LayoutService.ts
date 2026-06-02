@@ -758,14 +758,15 @@ export class LayoutService {
           // space for the right projection, melisma overhang, and measure-bar
           // transfers.
           //
-          // m_i = s_0 + R_i - T_i^left - T_i^right + ell_i, where R_i is the
-          // right projection, ell_i is the lyric-collision correction, T_i^left
-          // is the absorbed portion of L_{i+1}, and T_i^right is the portion of
-          // R_i that tucks under the next neume. For hyphenated melismas, ell_i
-          // also enforces that the visible lyric gap is wide enough to hold the
-          // hyphen glyph when that hyphen is absorbed inside the current neume
-          // and therefore contributes no overhang. m_i may be negative if a
-          // large left projection is absorbed.
+          // m_i = s_0 + R_i - T_i^left - T_i^right + ell_i, where s_0 is the
+          // ordinary glyph-aware glue between the two notes, R_i is the right
+          // projection, ell_i is the lyric-collision correction, T_i^left is
+          // the absorbed portion of L_{i+1}, and T_i^right is the portion of
+          // R_i that tucks under the next neume. For hyphenated melismas,
+          // ell_i also enforces that the visible lyric gap is wide enough to
+          // hold the hyphen glyph when that hyphen is absorbed inside the
+          // current neume and therefore contributes no overhang. m_i may be
+          // negative if a large left projection is absorbed.
           //
           // If a paragraph ends immediately after a note, endParagraph moves
           // that note's trailing reservation (right projection or melisma
@@ -2127,7 +2128,11 @@ export class LayoutService {
     const leftTuck = leftProjection;
     const rightTuck = Math.min(rightProjection, nextOverhangs.left);
     const baseWidth =
-      workspace.pageSetup.neumeDefaultSpacing +
+      this.getGlueWidthBetween(
+        noteElement,
+        nextNoteElement,
+        workspace.pageSetup,
+      ) +
       rightProjection -
       leftTuck -
       rightTuck;

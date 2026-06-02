@@ -2,6 +2,7 @@
   <div
     class="neume"
     :style="style"
+    :dir="pageSetup.melkiteRtl ? 'rtl' : 'ltr'"
     @click.exact="$emit('select-single')"
     @click.shift.exact="$emit('select-range')"
   >
@@ -9,9 +10,10 @@
       v-if="hasMeasureBarLeft && !isMeasureBarAbove"
       :neume="getMeasureBarLeft!"
       :style="measureBarLeftStyle"
+      class="measure-bar"
     />
     <Neume
-      v-if="note.vareia && !pageSetup.melkiteRtl"
+      v-if="note.vareia"
       :neume="VocalExpressionNeume.Vareia"
       :style="vareiaStyle"
     />
@@ -88,13 +90,9 @@
       v-if="hasMeasureBarRight"
       :neume="getMeasureBarRight!"
       :style="measureBarRightStyle"
+      class="measure-bar"
     />
     <Neume v-if="hasTie" :neume="note.tie!" :style="tieStyle" />
-    <Neume
-      v-if="note.vareia && pageSetup.melkiteRtl"
-      :neume="VocalExpressionNeume.Vareia"
-      :style="vareiaStyle"
-    />
   </div>
 </template>
 
@@ -294,6 +292,10 @@ const measureBarLeftStyle = computed(() => {
     webkitTextStrokeWidth: withZoom(
       props.pageSetup.measureBarDefaultStrokeWidth,
     ),
+    transform: `translateX(${withZoom(
+      props.note.computedMeasureBarLeftOffsetX,
+    )})`,
+    marginInlineEnd: withZoom(props.note.computedMeasureBarLeftLeadingSpacing),
     ...offsetStyle(
       props.note.measureBarLeftOffsetX,
       props.note.measureBarLeftOffsetY,
@@ -306,6 +308,12 @@ const measureBarRightStyle = computed(() => {
     color: props.pageSetup.measureBarDefaultColor,
     webkitTextStrokeWidth: withZoom(
       props.pageSetup.measureBarDefaultStrokeWidth,
+    ),
+    transform: `translateX(${withZoom(
+      props.note.computedMeasureBarRightOffsetX,
+    )})`,
+    marginInlineStart: withZoom(
+      props.note.computedMeasureBarRightTrailingSpacing,
     ),
     ...offsetStyle(
       props.note.measureBarRightOffsetX,
@@ -388,10 +396,20 @@ const stavrosStyle = computed(() => {
 });
 
 const vareiaStyle = computed(() => {
-  return offsetStyle(
+  const style = offsetStyle(
     props.note.vareiaOffsetX,
     props.note.vareiaOffsetY,
-  ) as StyleValue;
+  ) as Partial<CSSStyleDeclaration>;
+
+  return {
+    ...style,
+    marginRight: !props.pageSetup.melkiteRtl
+      ? withZoom(props.note.vareiaInternalSpacing)
+      : undefined,
+    marginLeft: props.pageSetup.melkiteRtl
+      ? withZoom(props.note.vareiaInternalSpacing)
+      : undefined,
+  } as StyleValue;
 });
 
 const vocalExpressionStyle = computed(() => {
@@ -430,5 +448,9 @@ const tieStyle = computed(() => {
 .neume {
   cursor: default;
   user-select: none;
+}
+
+.measure-bar {
+  display: inline-block;
 }
 </style>

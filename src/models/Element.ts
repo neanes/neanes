@@ -174,6 +174,10 @@ export class NoteElement extends ScoreElement {
   public tertiaryFthoraPrevious: Fthora | null = null;
   public computedMeasureBarLeftPrevious: MeasureBar | null = null;
   public computedMeasureBarRightPrevious: MeasureBar | null = null;
+  public computedMeasureBarLeftOffsetXPrevious: number = 0;
+  public computedMeasureBarRightOffsetXPrevious: number = 0;
+  public computedMeasureBarLeftLeadingSpacingPrevious: number = 0;
+  public computedMeasureBarRightTrailingSpacingPrevious: number = 0;
   public computedIsonOffsetYPrevious: number | null = null;
 
   // Fthora helper
@@ -442,11 +446,16 @@ export class NoteElement extends ScoreElement {
   public lyricsLeadingPunctuationWidth: number = 0;
   public lyricsTrailingPunctuationWidth: number = 0;
   public alignLeft: boolean = false;
+  public vareiaInternalSpacing: number = 0;
   public noteIndicatorNeume: NoteIndicator | null = null;
   public scaleNotes: ScaleNote[] = [];
   public scaleNotesVirtual: ScaleNote[] = [];
   public computedMeasureBarLeft: MeasureBar | null = null;
   public computedMeasureBarRight: MeasureBar | null = null;
+  public computedMeasureBarLeftOffsetX: number = 0;
+  public computedMeasureBarRightOffsetX: number = 0;
+  public computedMeasureBarLeftLeadingSpacing: number = 0;
+  public computedMeasureBarRightTrailingSpacing: number = 0;
   public computedIsonOffsetY: number | null = null;
   public isonOffsetYBeforeAdjustment: number = 0;
 

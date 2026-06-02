@@ -478,18 +478,6 @@ export class LayoutService {
       (pageSetup.neumeDefaultSpacing - Unit.fromPt(0.1)) /
       (new PageSetup().neumeDefaultSpacing - Unit.fromPt(0.1));
 
-    const martyriaGlue: Glue = {
-      type: 'glue',
-      width: pageSetup.neumeDefaultSpacing,
-      stretch: Math.max(
-        pageSetup.neumeDefaultSpacing * 0.5 +
-          pageSetup.neumeDefaultFontSize *
-            (0.01 + 0.19 * Math.min(1, Math.max(0, spacingRamp))),
-        minGlueStretch,
-      ),
-      shrink: Math.max(pageSetup.neumeDefaultSpacing * 0.5, minGlueShrink),
-    };
-
     const rightMartyriaGlue: Glue = {
       type: 'glue',
       width: pageSetup.neumeDefaultSpacing,
@@ -512,6 +500,16 @@ export class LayoutService {
             pageSetup,
             neumeHeight,
           );
+          const leadingGlueWidth = textBoxElement.inline
+            ? this.getTrailingGlueWidthBeforeInlineElement(
+                elements,
+                i,
+                pageSetup,
+              )
+            : pageSetup.neumeDefaultSpacing;
+          const trailingGlueWidth = textBoxElement.inline
+            ? this.getLeadingGlueWidthAfterInlineElement(elements, i, pageSetup)
+            : pageSetup.neumeDefaultSpacing;
 
           if (isFillWidthTextBox) {
             // Phase 1 uses the textbox's intrinsic width as a lower bound.
@@ -521,6 +519,7 @@ export class LayoutService {
               elementWidthPx,
               elements[i],
               layoutWorkspace,
+              leadingGlueWidth,
             );
             this.addBox(elementWidthPx, textBoxElement, layoutWorkspace);
             this.addFillWidthGlue(layoutWorkspace);
@@ -529,9 +528,13 @@ export class LayoutService {
               elementWidthPx,
               elements[i],
               layoutWorkspace,
+              leadingGlueWidth,
             );
             this.addBox(elementWidthPx, textBoxElement, layoutWorkspace);
-            this.addGlue(standardGlue, layoutWorkspace);
+            this.addGlue(
+              this.createInlineElementGlue(trailingGlueWidth),
+              layoutWorkspace,
+            );
           }
 
           if (!textBoxElement.inline && !lineBreak) {
@@ -559,6 +562,16 @@ export class LayoutService {
           const richTextBoxElement = elements[i] as RichTextBoxElement;
           const isFillWidthRichTextBox =
             this.isFillWidthElement(richTextBoxElement);
+          const leadingGlueWidth = richTextBoxElement.inline
+            ? this.getTrailingGlueWidthBeforeInlineElement(
+                elements,
+                i,
+                pageSetup,
+              )
+            : pageSetup.neumeDefaultSpacing;
+          const trailingGlueWidth = richTextBoxElement.inline
+            ? this.getLeadingGlueWidthAfterInlineElement(elements, i, pageSetup)
+            : pageSetup.neumeDefaultSpacing;
 
           let elementWidthPx: number;
 
@@ -590,12 +603,16 @@ export class LayoutService {
             elementWidthPx,
             richTextBoxElement,
             layoutWorkspace,
+            leadingGlueWidth,
           );
           this.addBox(elementWidthPx, richTextBoxElement, layoutWorkspace);
           if (isFillWidthRichTextBox) {
             this.addFillWidthGlue(layoutWorkspace);
           } else {
-            this.addGlue(standardGlue, layoutWorkspace);
+            this.addGlue(
+              this.createInlineElementGlue(trailingGlueWidth),
+              layoutWorkspace,
+            );
           }
 
           if (!richTextBoxElement.inline && !lineBreak) {
@@ -621,6 +638,16 @@ export class LayoutService {
         }
         case ElementType.ImageBox: {
           const imageBoxElement = elements[i] as ImageBoxElement;
+          const leadingGlueWidth = imageBoxElement.inline
+            ? this.getTrailingGlueWidthBeforeInlineElement(
+                elements,
+                i,
+                pageSetup,
+              )
+            : pageSetup.neumeDefaultSpacing;
+          const trailingGlueWidth = imageBoxElement.inline
+            ? this.getLeadingGlueWidthAfterInlineElement(elements, i, pageSetup)
+            : pageSetup.neumeDefaultSpacing;
 
           const elementWidthPx = imageBoxElement.inline
             ? imageBoxElement.imageWidth
@@ -629,9 +656,13 @@ export class LayoutService {
             elementWidthPx,
             imageBoxElement,
             layoutWorkspace,
+            leadingGlueWidth,
           );
           this.addBox(elementWidthPx, imageBoxElement, layoutWorkspace);
-          this.addGlue(standardGlue, layoutWorkspace);
+          this.addGlue(
+            this.createInlineElementGlue(trailingGlueWidth),
+            layoutWorkspace,
+          );
 
           if (!imageBoxElement.inline && !lineBreak) {
             lineBreak = true;
@@ -843,12 +874,25 @@ export class LayoutService {
             measureBarWidthMap,
           );
 
+          const glueWidth = LayoutService.getGlueWidthBetween(
+            noteElement,
+            nextElement,
+            pageSetup,
+          );
+
+          const preBreakGlue: Glue = {
+            type: 'glue',
+            width: glueWidth,
+            stretch: Math.max(glueWidth * 0.5, minGlueStretch),
+            shrink: Math.max(glueWidth * 0.5, minGlueShrink),
+          };
+
           // Break opportunity after the neume. The pre-break glue stays on the
           // current line; the post-break glue becomes leading glue on the next
           // line and is skipped by positionItems.
           this.addProtectedBreakpointEncoding(
             layoutWorkspace,
-            { ...standardGlue, width: 0 },
+            preBreakGlue,
             breakCost,
             penaltyWidth,
             this.fixedGlue(m_i),
@@ -858,8 +902,37 @@ export class LayoutService {
         }
         case ElementType.Martyria: {
           const martyriaElement = elements[i] as MartyriaElement;
+          const nextElement = this.getElementAt(elements, i + 1);
+          const leadingGlueWidth = this.getLeadingGlueWidthBeforeElement(
+            elements,
+            i,
+            pageSetup,
+          );
 
-          if (layoutWorkspace.pendingParagraph.length > 0) {
+          const glueWidth = LayoutService.getGlueWidthBetween(
+            martyriaElement,
+            nextElement,
+            pageSetup,
+          );
+
+          const martyriaGlueFinal: Glue = {
+            type: 'glue',
+            width: glueWidth,
+            stretch: Math.max(
+              glueWidth * 0.5 +
+                pageSetup.neumeDefaultFontSize *
+                  (0.01 + 0.19 * Math.min(1, Math.max(0, spacingRamp))),
+              minGlueStretch,
+            ),
+            shrink: Math.max(glueWidth * 0.5, minGlueShrink),
+          };
+
+          const previousElement = this.getElementAt(elements, i - 1);
+          if (
+            layoutWorkspace.pendingParagraph.length > 0 &&
+            (martyriaElement.alignRight ||
+              previousElement?.elementType === ElementType.Note)
+          ) {
             // Replacing the trailing note glue would otherwise drop any melisma
             // lyric overhang carried in that glue. Preserve only the melisma
             // overhang here; ordinary lyric collision before a martyria is
@@ -871,7 +944,7 @@ export class LayoutService {
               : 0;
             const baseGlue = martyriaElement.alignRight
               ? rightMartyriaGlue
-              : martyriaGlue;
+              : this.fixedGlue(0);
             const newGlue = {
               ...baseGlue,
               width: baseGlue.width + reservation,
@@ -895,6 +968,7 @@ export class LayoutService {
             elementWidthPx,
             martyriaElement,
             layoutWorkspace,
+            leadingGlueWidth,
           );
           this.addBox(elementWidthPx, martyriaElement, layoutWorkspace);
 
@@ -933,15 +1007,16 @@ export class LayoutService {
             pageSetup.neumeDefaultFontSize *
               pageSetup.spaceAfterMartyriaFactor -
             martyriaElement.padding;
+
           this.addProtectedBreakpointEncoding(
             layoutWorkspace,
             this.fixedGlue(0),
             0,
             0,
             {
-              ...martyriaGlue,
+              ...martyriaGlueFinal,
               width:
-                martyriaGlue.width +
+                martyriaGlueFinal.width +
                 martyriaTrailingPadding -
                 martyriaBarTransferWidth,
             },
@@ -960,6 +1035,12 @@ export class LayoutService {
         }
         case ElementType.Tempo: {
           const tempoElement = elements[i] as TempoElement;
+          const nextElement = this.getElementAt(elements, i + 1);
+          const leadingGlueWidth = this.getLeadingGlueWidthBeforeElement(
+            elements,
+            i,
+            pageSetup,
+          );
           const tempoMapping = NeumeMappingService.getMapping(
             tempoElement.neume,
           );
@@ -974,14 +1055,34 @@ export class LayoutService {
             elementWidthPx,
             tempoElement,
             layoutWorkspace,
+            leadingGlueWidth,
           );
           this.addBox(elementWidthPx, tempoElement, layoutWorkspace);
-          this.addGlue(standardGlue, layoutWorkspace);
+          this.addGlue(
+            this.createInlineElementGlue(
+              LayoutService.getGlueWidthBetween(
+                tempoElement,
+                nextElement,
+                pageSetup,
+              ),
+            ),
+            layoutWorkspace,
+          );
 
           break;
         }
         case ElementType.DropCap: {
           const dropCapElement = elements[i] as DropCapElement;
+          const leadingGlueWidth = this.getTrailingGlueWidthBeforeInlineElement(
+            elements,
+            i,
+            pageSetup,
+          );
+          const trailingGlueWidth = this.getLeadingGlueWidthAfterInlineElement(
+            elements,
+            i,
+            pageSetup,
+          );
 
           dropCapElement.computedFontFamily = dropCapElement.useDefaultStyle
             ? pageSetup.dropCapDefaultFontFamily
@@ -1033,7 +1134,7 @@ export class LayoutService {
               : dropCapElement.lineSpan;
 
             layoutWorkspace.pendingDropCapWidthPx =
-              elementWidthPx + pageSetup.neumeDefaultSpacing;
+              elementWidthPx + trailingGlueWidth;
             layoutWorkspace.pendingDropCapContinuationLines = Math.max(
               0,
               lineSpan - 1,
@@ -1045,9 +1146,13 @@ export class LayoutService {
             elementWidthPx,
             dropCapElement,
             layoutWorkspace,
+            leadingGlueWidth,
           );
           this.addBox(elementWidthPx, dropCapElement, layoutWorkspace);
-          this.addGlue(standardGlue, layoutWorkspace);
+          this.addGlue(
+            this.createInlineElementGlue(trailingGlueWidth),
+            layoutWorkspace,
+          );
 
           break;
         }
@@ -1406,6 +1511,7 @@ export class LayoutService {
       }
     }
 
+    this.centerMeasureBars(pages, pageSetup, measureBarWidthMap);
     this.addMelismas(pages, pageSetup);
 
     if (pageSetup.alignIsonIndicators) {
@@ -1447,6 +1553,105 @@ export class LayoutService {
       },
       layoutWorkspace,
     );
+  }
+
+  private static createInlineElementGlue(width: number): Glue {
+    return {
+      type: 'glue',
+      width,
+      stretch: Math.max(width * 0.5, minGlueStretch),
+      shrink: Math.max(width * 0.5, minGlueShrink),
+    };
+  }
+
+  private static getTrailingGlueWidthBeforeInlineElement(
+    elements: ScoreElement[],
+    index: number,
+    pageSetup: PageSetup,
+  ) {
+    const previousNeume = this.getPrimaryNeumeAtOrBefore(elements, index - 1);
+    const spacing =
+      previousNeume != null
+        ? this.getGlyphSpacing(previousNeume, 'trailing', pageSetup)
+        : 0;
+
+    return spacing + pageSetup.neumeDefaultSpacing;
+  }
+
+  private static getLeadingGlueWidthAfterInlineElement(
+    elements: ScoreElement[],
+    index: number,
+    pageSetup: PageSetup,
+  ) {
+    const nextNeume = this.getPrimaryNeumeAtOrAfter(elements, index + 1);
+    const spacing =
+      nextNeume != null
+        ? this.getGlyphSpacing(nextNeume, 'leading', pageSetup)
+        : 0;
+
+    return spacing + pageSetup.neumeDefaultSpacing;
+  }
+
+  private static getLeadingGlueWidthBeforeElement(
+    elements: ScoreElement[],
+    index: number,
+    pageSetup: PageSetup,
+  ) {
+    const currentElement = this.getElementAt(elements, index);
+    const previousElement = this.getElementAt(elements, index - 1);
+
+    if (currentElement == null || previousElement == null) {
+      return pageSetup.neumeDefaultSpacing;
+    }
+
+    const previousNeume = this.getPrimaryNeume(previousElement);
+    const currentNeume = this.getPrimaryNeume(currentElement, true);
+
+    if (previousNeume != null && currentNeume != null) {
+      return this.getGlueWidthBetween(
+        previousElement,
+        currentElement,
+        pageSetup,
+      );
+    }
+
+    if (currentNeume != null) {
+      return this.getLeadingGlueWidthAfterInlineElement(
+        elements,
+        index - 1,
+        pageSetup,
+      );
+    }
+
+    return pageSetup.neumeDefaultSpacing;
+  }
+
+  private static getPrimaryNeumeAtOrBefore(
+    elements: ScoreElement[],
+    index: number,
+  ) {
+    for (let i = index; i >= 0; i--) {
+      const neume = this.getPrimaryNeume(elements[i]);
+      if (neume != null) {
+        return neume;
+      }
+    }
+
+    return null;
+  }
+
+  private static getPrimaryNeumeAtOrAfter(
+    elements: ScoreElement[],
+    index: number,
+  ) {
+    for (let i = index; i < elements.length; i++) {
+      const neume = this.getPrimaryNeume(elements[i], true);
+      if (neume != null) {
+        return neume;
+      }
+    }
+
+    return null;
   }
 
   private static shouldTerminateAfterFillWidthElement(
@@ -1526,9 +1731,9 @@ export class LayoutService {
     elementWidthPx: number,
     element: ScoreElement,
     workspace: LayoutWorkspace,
+    glueWidth?: number,
   ) {
-    const { pageSetup } = workspace;
-
+    glueWidth = glueWidth ?? workspace.pageSetup.neumeDefaultSpacing;
     // Skip lyric collision for non-inline block elements (TextBox, RichTextBox,
     // ImageBox, ModeKey), which occupy the full line width and have no lyrics
     // to collide with. Fill-width inline elements still need collision
@@ -1543,16 +1748,11 @@ export class LayoutService {
         ? workspace.lyricsEndPx
         : Math.max(workspace.lyricsEndPx, workspace.melismaLyricsEndPx);
 
-    // Maintain at least neumeDefaultSpacing between the previous lyric end and
+    // Maintain at least glueWidth between the previous lyric end and
     // the current element.
-    if (
-      workspace.neumesEndPx <=
-      previousLyricsEndPx + pageSetup.neumeDefaultSpacing
-    ) {
+    if (workspace.neumesEndPx <= previousLyricsEndPx + glueWidth) {
       const adjustment =
-        previousLyricsEndPx -
-        workspace.neumesEndPx +
-        pageSetup.neumeDefaultSpacing;
+        previousLyricsEndPx - workspace.neumesEndPx + glueWidth;
 
       // A zero-width spacer would only add a box to pendingParagraph without
       // advancing neumesEndPx. The immediately-following addBox call already
@@ -1564,8 +1764,7 @@ export class LayoutService {
       }
     }
 
-    workspace.lyricsEndPx =
-      workspace.neumesEndPx + elementWidthPx + pageSetup.neumeDefaultSpacing;
+    workspace.lyricsEndPx = workspace.neumesEndPx + elementWidthPx + glueWidth;
   }
 
   private static isBlockElement(element: ScoreElement): boolean {
@@ -1693,6 +1892,10 @@ export class LayoutService {
       // recompute transferred barlines from the chosen breakpoints.
       noteElement.computedMeasureBarLeft = null;
       noteElement.computedMeasureBarRight = null;
+      noteElement.computedMeasureBarLeftOffsetX = 0;
+      noteElement.computedMeasureBarRightOffsetX = 0;
+      noteElement.computedMeasureBarLeftLeadingSpacing = 0;
+      noteElement.computedMeasureBarRightTrailingSpacing = 0;
 
       noteElement.computedIsonOffsetY = noteElement.isonOffsetY;
       noteElement.lyricsFontHeight = this.getNoteLyricsFontHeightFromCache(
@@ -1894,7 +2097,7 @@ export class LayoutService {
     // glue absorbs much of L_{i+1}. The library supports negative
     // glue widths.
     if (nextNoteElement == null) {
-      return workspace.pageSetup.neumeDefaultSpacing + rightProjection;
+      return rightProjection;
     }
 
     const currentOverhangs = this.getNeumeOverhangs(
@@ -2439,6 +2642,7 @@ export class LayoutService {
       console.log('Positions', positions);
       console.log('Adjustment ratios', ratios);
     }
+
     completedParagraphs.push({
       paragraph: pendingParagraph,
       positions,
@@ -2714,6 +2918,14 @@ export class LayoutService {
       note.tertiaryFthoraPrevious = note.tertiaryFthora;
       note.computedMeasureBarLeftPrevious = note.computedMeasureBarLeft;
       note.computedMeasureBarRightPrevious = note.computedMeasureBarRight;
+      note.computedMeasureBarLeftOffsetXPrevious =
+        note.computedMeasureBarLeftOffsetX;
+      note.computedMeasureBarRightOffsetXPrevious =
+        note.computedMeasureBarRightOffsetX;
+      note.computedMeasureBarLeftLeadingSpacingPrevious =
+        note.computedMeasureBarLeftLeadingSpacing;
+      note.computedMeasureBarRightTrailingSpacingPrevious =
+        note.computedMeasureBarRightTrailingSpacing;
       note.computedIsonOffsetYPrevious = note.computedIsonOffsetY;
     } else if (element.elementType === ElementType.TextBox) {
       const textbox = element as TextBoxElement;
@@ -2765,6 +2977,14 @@ export class LayoutService {
         note.tertiaryFthoraPrevious !== note.tertiaryFthora ||
         note.computedMeasureBarLeftPrevious !== note.computedMeasureBarLeft ||
         note.computedMeasureBarRightPrevious !== note.computedMeasureBarRight ||
+        note.computedMeasureBarLeftOffsetXPrevious !==
+          note.computedMeasureBarLeftOffsetX ||
+        note.computedMeasureBarRightOffsetXPrevious !==
+          note.computedMeasureBarRightOffsetX ||
+        note.computedMeasureBarLeftLeadingSpacingPrevious !==
+          note.computedMeasureBarLeftLeadingSpacing ||
+        note.computedMeasureBarRightTrailingSpacingPrevious !==
+          note.computedMeasureBarRightTrailingSpacing ||
         note.computedIsonOffsetYPrevious !== note.computedIsonOffsetY;
     }
 
@@ -2875,14 +3095,22 @@ export class LayoutService {
     // Handle special case for vareia:
     // Shift the lyrics to the right so that they
     // are centered under the main neume
+    noteElement.vareiaInternalSpacing = 0;
     if (noteElement.vareia) {
+      noteElement.vareiaInternalSpacing = this.getInternalGlyphSpacing(
+        VocalExpressionNeume.Vareia,
+        noteElement.quantitativeNeume,
+        pageSetup,
+      );
+      const vareiaPrefixWidth = vareiaWidth + noteElement.vareiaInternalSpacing;
+
       if (pageSetup.melkiteRtl) {
-        noteElement.lyricsHorizontalOffset -= vareiaWidth;
+        noteElement.lyricsHorizontalOffset -= vareiaPrefixWidth;
       } else {
-        noteElement.lyricsHorizontalOffset += vareiaWidth;
+        noteElement.lyricsHorizontalOffset += vareiaPrefixWidth;
       }
 
-      noteElement.neumeWidth += vareiaWidth;
+      noteElement.neumeWidth += vareiaPrefixWidth;
     }
 
     // Handle special case for measure bars:
@@ -3517,6 +3745,288 @@ export class LayoutService {
         }
       }
     }
+  }
+
+  private static centerMeasureBars(
+    pages: Page[],
+    pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+  ) {
+    if (pageSetup.melkiteRtl) {
+      return;
+    }
+
+    for (const page of pages) {
+      for (const line of page.lines) {
+        for (let i = 0; i < line.elements.length; i++) {
+          const element = line.elements[i];
+
+          if (element.elementType !== ElementType.Note) {
+            continue;
+          }
+
+          const note = element as NoteElement;
+          note.computedMeasureBarLeftOffsetX = 0;
+          note.computedMeasureBarRightOffsetX = 0;
+          note.computedMeasureBarLeftLeadingSpacing = 0;
+          note.computedMeasureBarRightTrailingSpacing = 0;
+
+          const previousAnchor = this.findAdjacentMeasureBarAnchor(
+            line.elements,
+            i,
+            -1,
+          );
+          const nextAnchor = this.findAdjacentMeasureBarAnchor(
+            line.elements,
+            i,
+            1,
+          );
+          const nextElement =
+            i + 1 < line.elements.length ? line.elements[i + 1] : null;
+          const noteBounds = this.getNoteBodyBounds(
+            note,
+            pageSetup,
+            measureBarWidthMap,
+          );
+
+          const measureBarLeft = this.getVisibleMeasureBarLeft(note);
+          if (measureBarLeft && previousAnchor) {
+            const previousBounds = this.getMeasureBarAnchorBounds(
+              previousAnchor,
+              pageSetup,
+              measureBarWidthMap,
+            );
+            const barWidth = measureBarWidthMap.get(measureBarLeft) ?? 0;
+            if (barWidth > 0) {
+              const targetLeft = (previousBounds.right + note.x - barWidth) / 2;
+              note.computedMeasureBarLeftOffsetX = targetLeft - note.x;
+            }
+          } else if (measureBarLeft && i === 0) {
+            const leadingNeume = this.getPrimaryNeume(note, true);
+            if (leadingNeume != null) {
+              note.computedMeasureBarLeftLeadingSpacing = this.getGlyphSpacing(
+                leadingNeume,
+                'leading',
+                pageSetup,
+              );
+            }
+          }
+
+          const measureBarRight = this.getVisibleMeasureBarRight(note);
+          if (measureBarRight && nextAnchor) {
+            const barWidth = measureBarWidthMap.get(measureBarRight) ?? 0;
+            if (barWidth > 0) {
+              const normalLeft = note.x + note.neumeWidth - barWidth;
+              const targetLeft =
+                (noteBounds.right +
+                  this.getMeasureBarAnchorLeadingEdge(nextAnchor) -
+                  barWidth) /
+                2;
+              note.computedMeasureBarRightOffsetX = targetLeft - normalLeft;
+            }
+          } else if (
+            measureBarRight &&
+            (nextElement == null ||
+              nextElement.elementType === ElementType.Empty)
+          ) {
+            note.computedMeasureBarRightTrailingSpacing = this.getGlyphSpacing(
+              note.quantitativeNeume,
+              'trailing',
+              pageSetup,
+            );
+          }
+        }
+      }
+    }
+  }
+
+  private static findAdjacentNote(
+    elements: ScoreElement[],
+    startIndex: number,
+    direction: -1 | 1,
+  ) {
+    for (
+      let i = startIndex + direction;
+      i >= 0 && i < elements.length;
+      i += direction
+    ) {
+      const element = elements[i];
+      if (element.elementType === ElementType.Note) {
+        return element as NoteElement;
+      }
+      if (!this.isMelismaContinuationElement(element)) {
+        return null;
+      }
+    }
+
+    return null;
+  }
+
+  private static findAdjacentMeasureBarAnchor(
+    elements: ScoreElement[],
+    startIndex: number,
+    direction: -1 | 1,
+  ) {
+    for (
+      let i = startIndex + direction;
+      i >= 0 && i < elements.length;
+      i += direction
+    ) {
+      const element = elements[i];
+      if (this.isMeasureBarAnchorElement(element)) {
+        return element;
+      }
+      if (!this.isMelismaContinuationElement(element)) {
+        return null;
+      }
+    }
+
+    return null;
+  }
+
+  private static isMeasureBarAnchorElement(element: ScoreElement) {
+    return (
+      element.elementType === ElementType.Note ||
+      element.elementType === ElementType.DropCap ||
+      (element.elementType === ElementType.TextBox &&
+        (element as TextBoxElement).inline) ||
+      (element.elementType === ElementType.RichTextBox &&
+        (element as RichTextBoxElement).inline) ||
+      (element.elementType === ElementType.ImageBox &&
+        (element as ImageBoxElement).inline)
+    );
+  }
+
+  private static getMeasureBarAnchorBounds(
+    element: ScoreElement,
+    pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+  ) {
+    if (element.elementType === ElementType.Note) {
+      return this.getNoteBodyBounds(
+        element as NoteElement,
+        pageSetup,
+        measureBarWidthMap,
+      );
+    }
+
+    return {
+      left: element.x,
+      right: element.x + element.width,
+    };
+  }
+
+  private static getMeasureBarAnchorLeadingEdge(element: ScoreElement) {
+    return element.x;
+  }
+
+  private static getNoteBodyBounds(
+    note: NoteElement,
+    pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+  ) {
+    const measureBarLeft = this.getVisibleMeasureBarLeft(note);
+    const measureBarLeftWidth =
+      measureBarLeft != null
+        ? (measureBarWidthMap.get(measureBarLeft) ?? 0)
+        : 0;
+    const vareiaPrefixWidth = note.vareia
+      ? this.getNeumeWidthFromCache(
+          neumeWidthCache,
+          VocalExpressionNeume.Vareia,
+          pageSetup,
+        ) + note.vareiaInternalSpacing
+      : 0;
+    const bodyWidth = this.getNeumeWidthFromCache(
+      neumeWidthCache,
+      note.quantitativeNeume,
+      pageSetup,
+    );
+    const left = note.x + measureBarLeftWidth + vareiaPrefixWidth;
+
+    return {
+      left,
+      right: left + bodyWidth,
+    };
+  }
+
+  private static getVisibleMeasureBarLeft(note: NoteElement) {
+    const measureBar = note.measureBarLeft ?? note.computedMeasureBarLeft;
+    return measureBar != null && !measureBar.endsWith('Above')
+      ? measureBar
+      : null;
+  }
+
+  private static getVisibleMeasureBarRight(note: NoteElement) {
+    return note.measureBarRight ?? note.computedMeasureBarRight;
+  }
+
+  public static getPrimaryNeume(
+    element: ScoreElement,
+    leading: boolean = false,
+  ) {
+    if (element.elementType === ElementType.Note) {
+      const noteElement = element as NoteElement;
+      return leading && noteElement.vareia
+        ? VocalExpressionNeume.Vareia
+        : noteElement.quantitativeNeume;
+    } else if (element.elementType === ElementType.Martyria) {
+      return (element as MartyriaElement).note;
+    } else if (element.elementType === ElementType.Tempo) {
+      return (element as TempoElement).neume;
+    }
+
+    return null;
+  }
+
+  private static getGlyphSpacing(
+    neume: Neume,
+    side: 'leading' | 'trailing',
+    pageSetup: PageSetup,
+  ) {
+    const glyphName = NeumeMappingService.getMapping(neume).glyphName;
+
+    const spacing =
+      side === 'leading'
+        ? fontService.getLeadingSpace(
+            pageSetup.neumeDefaultFontFamily,
+            glyphName,
+          )
+        : fontService.getTrailingSpace(
+            pageSetup.neumeDefaultFontFamily,
+            glyphName,
+          );
+
+    return spacing * pageSetup.neumeDefaultFontSize;
+  }
+
+  private static getInternalGlyphSpacing(
+    left: Neume,
+    right: Neume,
+    pageSetup: PageSetup,
+  ) {
+    return (
+      this.getGlyphSpacing(left, 'trailing', pageSetup) +
+      this.getGlyphSpacing(right, 'leading', pageSetup)
+    );
+  }
+
+  public static getGlueWidthBetween(
+    left: ScoreElement,
+    right: ScoreElement | null,
+    pageSetup: PageSetup,
+  ) {
+    const leftNeume = LayoutService.getPrimaryNeume(left)!;
+    const rightNeume =
+      right != null ? LayoutService.getPrimaryNeume(right, true) : null;
+
+    const space1 = this.getGlyphSpacing(leftNeume, 'trailing', pageSetup);
+    const space2 =
+      rightNeume != null
+        ? this.getGlyphSpacing(rightNeume, 'leading', pageSetup)
+        : 0;
+
+    return space1 + space2 + pageSetup.neumeDefaultSpacing;
   }
 
   public static calculateMartyrias(

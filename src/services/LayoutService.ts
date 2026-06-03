@@ -912,11 +912,11 @@ export class LayoutService {
 
           const preBreakGlue =
             nextElement?.elementType === ElementType.Martyria
-              // The martyria handler removes this note's post-break glue and
-              // replaces it with the note-to-martyria boundary glue below. If
-              // we left a shrink/stretch budget here too, the martyria bonus
-              // would be counted twice during justification.
-              ? this.fixedGlue(0)
+              ? // The martyria handler removes this note's post-break glue and
+                // replaces it with the note-to-martyria boundary glue below. If
+                // we left a shrink/stretch budget here too, the martyria bonus
+                // would be counted twice during justification.
+                this.fixedGlue(0)
               : this.createNotePreBreakGlue(
                   glueWidths.preferred,
                   minGlueStretch,

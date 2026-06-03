@@ -7667,32 +7667,32 @@
       ],
       "backtrackGlyphs": [
         [
-          "petastiIson",
           "petasti",
-          "petastiOligon",
-          "petastiKentima",
-          "petastiYpsiliRight",
-          "petastiYpsiliLeft",
-          "petastiKentimaYpsiliRight",
-          "petastiKentimaYpsiliMiddle",
-          "petastiDoubleYpsili",
-          "petastiKentimataDoubleYpsili",
-          "petastiKentimaDoubleYpsiliRight",
-          "petastiKentimaDoubleYpsiliLeft",
-          "petastiTripleYpsili",
-          "petastiKentimataTripleYpsili",
-          "petastiKentimaTripleYpsili",
           "petastiApostrofos",
-          "petastiYporroi",
-          "petastiElafron",
-          "petastiRunningElafron",
-          "petastiElafronApostrofos",
           "petastiChamili",
           "petastiChamiliApostrofos",
           "petastiChamiliElafron",
           "petastiChamiliElafronApostrofos",
           "petastiDoubleChamili",
-          "petastiDoubleChamiliApostrofos"
+          "petastiDoubleChamiliApostrofos",
+          "petastiDoubleYpsili",
+          "petastiElafron",
+          "petastiElafronApostrofos",
+          "petastiIson",
+          "petastiKentima",
+          "petastiKentimaDoubleYpsiliLeft",
+          "petastiKentimaDoubleYpsiliRight",
+          "petastiKentimaTripleYpsili",
+          "petastiKentimaYpsiliMiddle",
+          "petastiKentimaYpsiliRight",
+          "petastiKentimataDoubleYpsili",
+          "petastiKentimataTripleYpsili",
+          "petastiOligon",
+          "petastiRunningElafron",
+          "petastiTripleYpsili",
+          "petastiYporroi",
+          "petastiYpsiliLeft",
+          "petastiYpsiliRight"
         ]
       ],
       "lookaheadGlyphs": [],
@@ -8629,87 +8629,87 @@
     },
     "martyriaNoteZoLow": {
       "leading": 0.356,
-      "trailing": 0.036
+      "trailing": 0.356
     },
     "martyriaNoteNiLow": {
       "leading": 0.395,
-      "trailing": 0.108
+      "trailing": 0.395
     },
     "martyriaNotePaLow": {
       "leading": 0.361,
-      "trailing": 0.067
+      "trailing": 0.361
     },
     "martyriaNoteVouLow": {
       "leading": 0.36,
-      "trailing": 0.119
+      "trailing": 0.36
     },
     "martyriaNoteGaLow": {
       "leading": 0.36,
-      "trailing": 0.033
+      "trailing": 0.36
     },
     "martyriaNoteDiLow": {
       "leading": 0.36,
-      "trailing": 0.035
+      "trailing": 0.36
     },
     "martyriaNoteKeLow": {
       "leading": 0.433,
-      "trailing": 0.018
+      "trailing": 0.433
     },
     "martyriaNoteZo": {
       "leading": 0.356,
-      "trailing": 0.036
+      "trailing": 0.356
     },
     "martyriaNotePa": {
       "leading": 0.361,
-      "trailing": 0.067
+      "trailing": 0.361
     },
     "martyriaNoteNi": {
       "leading": 0.395,
-      "trailing": 0.108
+      "trailing": 0.395
     },
     "martyriaNoteVou": {
       "leading": 0.36,
-      "trailing": 0.119
+      "trailing": 0.36
     },
     "martyriaNoteNiHigh": {
       "leading": 0.395,
-      "trailing": 0.023
+      "trailing": 0.395
     },
     "martyriaNoteGa": {
       "leading": 0.36,
-      "trailing": 0.033
+      "trailing": 0.36
     },
     "martyriaNoteDi": {
       "leading": 0.36,
-      "trailing": 0.035
+      "trailing": 0.36
     },
     "martyriaNoteKe": {
       "leading": 0.385,
-      "trailing": 0.068
+      "trailing": 0.385
     },
     "martyriaNoteZoHigh": {
       "leading": 0.356,
-      "trailing": 0.023
+      "trailing": 0.356
     },
     "martyriaNotePaHigh": {
       "leading": 0.361,
-      "trailing": 0.023
+      "trailing": 0.361
     },
     "martyriaNoteVouHigh": {
       "leading": 0.36,
-      "trailing": 0.023
+      "trailing": 0.36
     },
     "martyriaNoteGaHigh": {
       "leading": 0.36,
-      "trailing": 0.023
+      "trailing": 0.36
     },
     "martyriaNoteDiHigh": {
       "leading": 0.36,
-      "trailing": 0.023
+      "trailing": 0.36
     },
     "martyriaNoteKeHigh": {
       "leading": 0.385,
-      "trailing": 0.023
+      "trailing": 0.385
     },
     "martyriaTick": {
       "leading": 0.027,

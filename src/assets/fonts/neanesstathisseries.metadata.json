@@ -7928,6 +7928,51 @@
     {
       "inputGlyphs": [
         [
+          "antikenoma"
+        ]
+      ],
+      "backtrackGlyphs": [
+        [
+          "petasti",
+          "petastiApostrofos",
+          "petastiChamili",
+          "petastiChamiliApostrofos",
+          "petastiChamiliElafron",
+          "petastiChamiliElafronApostrofos",
+          "petastiDoubleChamili",
+          "petastiDoubleChamiliApostrofos",
+          "petastiDoubleYpsili",
+          "petastiElafron",
+          "petastiElafronApostrofos",
+          "petastiIson",
+          "petastiKentima",
+          "petastiKentimaDoubleYpsiliLeft",
+          "petastiKentimaDoubleYpsiliRight",
+          "petastiKentimaTripleYpsili",
+          "petastiKentimaYpsiliMiddle",
+          "petastiKentimaYpsiliRight",
+          "petastiKentimataDoubleYpsili",
+          "petastiKentimataTripleYpsili",
+          "petastiOligon",
+          "petastiRunningElafron",
+          "petastiTripleYpsili",
+          "petastiYporroi",
+          "petastiYpsiliLeft",
+          "petastiYpsiliRight"
+        ]
+      ],
+      "lookaheadGlyphs": [],
+      "substitutions": [
+        {
+          "index": 0,
+          "from": "antikenoma",
+          "to": "antikenoma.alt01"
+        }
+      ]
+    },
+    {
+      "inputGlyphs": [
+        [
           "yporroi"
         ]
       ],
@@ -7989,51 +8034,6 @@
           "index": 0,
           "from": "yporroi",
           "to": "yporroi.trigorgon"
-        }
-      ]
-    },
-    {
-      "inputGlyphs": [
-        [
-          "antikenoma"
-        ]
-      ],
-      "backtrackGlyphs": [
-        [
-          "petastiIson",
-          "petasti",
-          "petastiOligon",
-          "petastiKentima",
-          "petastiYpsiliRight",
-          "petastiYpsiliLeft",
-          "petastiKentimaYpsiliRight",
-          "petastiKentimaYpsiliMiddle",
-          "petastiDoubleYpsili",
-          "petastiKentimataDoubleYpsili",
-          "petastiKentimaDoubleYpsiliRight",
-          "petastiKentimaDoubleYpsiliLeft",
-          "petastiTripleYpsili",
-          "petastiKentimataTripleYpsili",
-          "petastiKentimaTripleYpsili",
-          "petastiApostrofos",
-          "petastiYporroi",
-          "petastiElafron",
-          "petastiRunningElafron",
-          "petastiElafronApostrofos",
-          "petastiChamili",
-          "petastiChamiliApostrofos",
-          "petastiChamiliElafron",
-          "petastiChamiliElafronApostrofos",
-          "petastiDoubleChamili",
-          "petastiDoubleChamiliApostrofos"
-        ]
-      ],
-      "lookaheadGlyphs": [],
-      "substitutions": [
-        {
-          "index": 0,
-          "from": "antikenoma",
-          "to": "antikenoma.alt01"
         }
       ]
     },
@@ -9181,87 +9181,87 @@
     },
     "martyriaNoteZoLow": {
       "leading": 0.367,
-      "trailing": 0.091
+      "trailing": 0.367
     },
     "martyriaNoteNiLow": {
       "leading": 0.377,
-      "trailing": 0.097
+      "trailing": 0.377
     },
     "martyriaNotePaLow": {
       "leading": 0.337,
-      "trailing": 0.044
+      "trailing": 0.337
     },
     "martyriaNoteVouLow": {
       "leading": 0.36,
-      "trailing": 0.137
+      "trailing": 0.36
     },
     "martyriaNoteGaLow": {
       "leading": 0.388,
-      "trailing": 0.077
+      "trailing": 0.388
     },
     "martyriaNoteDiLow": {
       "leading": 0.375,
-      "trailing": 0.077
+      "trailing": 0.375
     },
     "martyriaNoteKeLow": {
       "leading": 0.44,
-      "trailing": 0.019
+      "trailing": 0.44
     },
     "martyriaNoteZo": {
       "leading": 0.367,
-      "trailing": 0.091
+      "trailing": 0.367
     },
     "martyriaNoteNi": {
       "leading": 0.38,
-      "trailing": 0.094
+      "trailing": 0.38
     },
     "martyriaNotePa": {
       "leading": 0.336,
-      "trailing": 0.045
+      "trailing": 0.336
     },
     "martyriaNoteVou": {
       "leading": 0.36,
-      "trailing": 0.137
+      "trailing": 0.36
     },
     "martyriaNoteGa": {
       "leading": 0.388,
-      "trailing": 0.077
+      "trailing": 0.388
     },
     "martyriaNoteDi": {
       "leading": 0.375,
-      "trailing": 0.077
+      "trailing": 0.375
     },
     "martyriaNoteKe": {
       "leading": 0.402,
-      "trailing": 0.058
+      "trailing": 0.402
     },
     "martyriaNoteZoHigh": {
       "leading": 0.367,
-      "trailing": 0.04
+      "trailing": 0.367
     },
     "martyriaNoteNiHigh": {
       "leading": 0.38,
-      "trailing": 0.017
+      "trailing": 0.38
     },
     "martyriaNotePaHigh": {
       "leading": 0.328,
-      "trailing": 0.023
+      "trailing": 0.328
     },
     "martyriaNoteVouHigh": {
       "leading": 0.36,
-      "trailing": 0.031
+      "trailing": 0.36
     },
     "martyriaNoteGaHigh": {
       "leading": 0.388,
-      "trailing": 0.031
+      "trailing": 0.388
     },
     "martyriaNoteDiHigh": {
       "leading": 0.375,
-      "trailing": 0.024
+      "trailing": 0.375
     },
     "martyriaNoteKeHigh": {
       "leading": 0.403,
-      "trailing": 0.032
+      "trailing": 0.403
     },
     "martyriaTick": {
       "leading": 0.02,

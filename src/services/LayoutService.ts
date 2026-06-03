@@ -1652,6 +1652,7 @@ export class LayoutService {
   ) {
     const spacing = this.getElementEdgeSpacingAtOrBefore(
       elements,
+      index,
       index - 1,
       'trailing',
       pageSetup,
@@ -1661,6 +1662,7 @@ export class LayoutService {
       spacing + pageSetup.neumeDefaultSpacing,
       this.getMeasureBarMinimumGlueWidthAtOrBefore(
         elements,
+        index,
         index - 1,
         pageSetup,
       ),
@@ -1677,12 +1679,14 @@ export class LayoutService {
       nextElement?.elementType === ElementType.Empty
         ? this.getElementEdgeSpacingAtOrBefore(
             elements,
+            index,
             index - 1,
             'trailing',
             pageSetup,
           )
         : this.getElementEdgeSpacingAtOrAfter(
             elements,
+            index,
             index + 1,
             'leading',
             pageSetup,
@@ -1692,11 +1696,13 @@ export class LayoutService {
       nextElement?.elementType === ElementType.Empty
         ? this.getMeasureBarMinimumGlueWidthAtOrBefore(
             elements,
+            index,
             index - 1,
             pageSetup,
           )
         : this.getMeasureBarMinimumGlueWidthAtOrAfter(
             elements,
+            index,
             index + 1,
             pageSetup,
           );
@@ -1714,12 +1720,14 @@ export class LayoutService {
       nextElement?.elementType === ElementType.Empty
         ? this.getElementEdgeSpacingAtOrBefore(
             elements,
+            index,
             index - 1,
             'trailing',
             pageSetup,
           )
         : this.getElementEdgeSpacingAtOrAfter(
             elements,
+            index,
             index + 1,
             'leading',
             pageSetup,
@@ -1729,11 +1737,13 @@ export class LayoutService {
       nextElement?.elementType === ElementType.Empty
         ? this.getMeasureBarMinimumGlueWidthAtOrBefore(
             elements,
+            index,
             index - 1,
             pageSetup,
           )
         : this.getMeasureBarMinimumGlueWidthAtOrAfter(
             elements,
+            index,
             index + 1,
             pageSetup,
           );
@@ -1777,14 +1787,23 @@ export class LayoutService {
 
   private static getElementEdgeSpacingAtOrBefore(
     elements: ScoreElement[],
+    anchorIndex: number,
     index: number,
     side: 'leading' | 'trailing',
     pageSetup: PageSetup,
   ) {
     for (let i = index; i >= 0; i--) {
+      if (i < anchorIndex && this.endsParagraphAfterElement(elements, i)) {
+        break;
+      }
+
       const spacing = this.getElementEdgeSpacing(elements[i], side, pageSetup);
       if (spacing != null) {
         return spacing;
+      }
+
+      if (this.endsParagraphAfterElement(elements, i)) {
+        break;
       }
     }
 
@@ -1793,18 +1812,69 @@ export class LayoutService {
 
   private static getElementEdgeSpacingAtOrAfter(
     elements: ScoreElement[],
+    anchorIndex: number,
     index: number,
     side: 'leading' | 'trailing',
     pageSetup: PageSetup,
   ) {
     for (let i = index; i < elements.length; i++) {
+      if (i > anchorIndex && this.endsParagraphAfterElement(elements, i - 1)) {
+        break;
+      }
+
       const spacing = this.getElementEdgeSpacing(elements[i], side, pageSetup);
       if (spacing != null) {
         return spacing;
       }
+
+      if (this.endsParagraphAfterElement(elements, i)) {
+        break;
+      }
     }
 
     return 0;
+  }
+
+  private static endsParagraphAfterElement(
+    elements: ScoreElement[],
+    index: number,
+  ) {
+    const element = elements[index];
+
+    if (
+      element == null ||
+      element.lineBreak ||
+      element.pageBreak ||
+      element.elementType === ElementType.Empty ||
+      element.elementType === ElementType.ModeKey
+    ) {
+      return true;
+    }
+
+    if (this.isBlockElement(element)) {
+      return true;
+    }
+
+    if (
+      element.elementType === ElementType.Martyria &&
+      (element as MartyriaElement).alignRight
+    ) {
+      return true;
+    }
+
+    if (
+      this.isFillWidthElement(element) &&
+      this.shouldTerminateAfterFillWidthElement(elements, index)
+    ) {
+      return true;
+    }
+
+    const nextElement = elements[index + 1];
+
+    return (
+      this.isBlockElement(nextElement) ||
+      nextElement?.elementType === ElementType.ModeKey
+    );
   }
 
   private static shouldTerminateAfterFillWidthElement(
@@ -4366,15 +4436,31 @@ export class LayoutService {
 
   private static getMeasureBarMinimumGlueWidthNear(
     elements: ScoreElement[],
+    anchorIndex: number,
     index: number,
     direction: -1 | 1,
     pageSetup: PageSetup,
   ) {
     for (let i = index; i >= 0 && i < elements.length; i += direction) {
+      if (
+        (direction === -1 &&
+          i < anchorIndex &&
+          this.endsParagraphAfterElement(elements, i)) ||
+        (direction === 1 &&
+          i > anchorIndex &&
+          this.endsParagraphAfterElement(elements, i - 1))
+      ) {
+        break;
+      }
+
       if (this.isMeasureBarOwner(elements[i])) {
         return direction === -1
           ? this.getMeasureBarMinimumGlueWidth(elements[i], null, pageSetup)
           : this.getMeasureBarMinimumGlueWidth(null, elements[i], pageSetup);
+      }
+
+      if (this.endsParagraphAfterElement(elements, i)) {
+        break;
       }
     }
 
@@ -4383,11 +4469,13 @@ export class LayoutService {
 
   private static getMeasureBarMinimumGlueWidthAtOrBefore(
     elements: ScoreElement[],
+    anchorIndex: number,
     index: number,
     pageSetup: PageSetup,
   ) {
     return this.getMeasureBarMinimumGlueWidthNear(
       elements,
+      anchorIndex,
       index,
       -1,
       pageSetup,
@@ -4396,11 +4484,13 @@ export class LayoutService {
 
   private static getMeasureBarMinimumGlueWidthAtOrAfter(
     elements: ScoreElement[],
+    anchorIndex: number,
     index: number,
     pageSetup: PageSetup,
   ) {
     return this.getMeasureBarMinimumGlueWidthNear(
       elements,
+      anchorIndex,
       index,
       1,
       pageSetup,

@@ -137,7 +137,8 @@ The user-configurable neume spacing is an adjustment added to that boundary widt
 The resulting preferred width may stretch or shrink by up to one half.
 Users may also set the inter-note spacing to a negative value, so that successive neumes visibly overlap and the layout becomes tighter.
 When the configured spacing is negative, the glue keeps its negative natural width so that the overlap remains visible, but the stretch and shrink budgets are floored at small non-negative values: stretch at 0.1 px and shrink at 0.
-The same floors apply uniformly to every glue derived from the configured spacing: the standard glue's stretch and shrink, inline-element glue's stretch and shrink, note pre-break glue's stretch and shrink, martyria glue's stretch and shrink, and the right-martyria glue's shrink.
+The same floors apply uniformly to every glue derived from the configured spacing: the standard glue's stretch and shrink, inline-element glue's stretch and shrink, note pre-break glue's stretch and shrink, and the right-martyria glue's shrink.
+Martyria glue also uses these floors, but its main stretch and shrink budget comes from the martyria bonus described below.
 These floors preserve the Knuth-Plass invariants while keeping the user-chosen overlap intact, because ordinary glues no longer stretch enough to push neumes apart and any line-end slack is absorbed by the right-martyria glue's `MAX_COST` stretch instead.
 The 0.1 px stretch floor is a tiny positive epsilon rather than zero so that every line has at least some stretchability, which keeps the adjustment ratio finite and the line-breaking problem well-defined.
 Without this floor, a line that contains no martyria would have a total stretch of zero, and `breakLines` could only treat its natural width as feasible.
@@ -158,9 +159,14 @@ The trailing barline-to-$B$ clearance is modeled inside the box for a left-owned
 The remaining minimum is preserved during justification and after lyric tucking.
 When a right barline becomes terminal at a line break, at a paragraph ending, before an empty element, or before a right-aligned martyria, its clearance from the preceding neume is reserved as terminal width.
 
-Ordinary martyriae use the same glyph-aware boundary spacing as other neume-bearing elements.
-When a martyria sits between neighboring elements, `getGlueWidthBetween` combines the active glyph spacing, the user-configurable spacing adjustment, and any measure-bar minimum.
-After the martyria box, the code inserts a zero-width pre-break glue, then a zero-cost break penalty, and finally a single martyria glue whose preferred width is that glyph-aware boundary width.
+Ordinary martyriae use the same glyph-aware boundary spacing as other neume-bearing elements, but with one application-level augmentation.
+The font metadata's `glyphSpacing` values are treated as minimum glyph bearings.
+When either side of a boundary is a martyria edge, the layout engine adds a generic martyria spacing bonus, currently `0.2 * neumeDefaultFontSize`, on top of the raw glyph bearings and the user-configurable spacing adjustment.
+The edge glyph is selected directly: leading martyriae use `tempoLeft` when present and otherwise the martyria note; trailing martyriae use `tempoRight` when present, otherwise the quantitative neume for right-aligned martyriae that have one, and otherwise the martyria note.
+The bonus is part of the preferred glue width, not the minimum width.
+During justification, shrink may remove the bonus entirely, leaving the raw glyph bearings and any barline minimum intact; stretch may add a moderate amount of extra martyria space.
+When a martyria sits between neighboring elements, `getGlueWidthBetween` combines the active glyph spacing, this martyria bonus when applicable, the user-configurable spacing adjustment, and any measure-bar minimum.
+After the martyria box, the code inserts a zero-width pre-break glue, then a zero-cost break penalty, and finally a single martyria glue whose preferred width is that augmented boundary width.
 As a result, the full trailing spacing appears after the martyria only when it stays mid-line; if a break is taken there, that spacing becomes leading glue on the next line and is skipped.
 
 When a martyria has a transferable measure bar and is followed by a note, the bar transfers to the next line's first note at a break.
@@ -244,7 +250,7 @@ If a paragraph ends immediately after a note, `endParagraph` materializes that n
 It also reserves the clearance before a terminal right barline.
 It must do this because `removeGlue` strips the trailing cancellation glue, while the forced break itself contributes penalty width 0.
 
-When a martyria follows a note, the martyria path replaces the note's trailing post-break glue while preserving the glyph-aware boundary spacing: fixed pair glue in the usual case, or the infinite-stretch right-martyria glue when the martyria is right-aligned.
+When a martyria follows a note, the martyria path replaces the note's trailing post-break glue while preserving the glyph-aware boundary spacing and the martyria bonus: shrinkable pair glue in the usual case, or the infinite-stretch right-martyria glue when the martyria is right-aligned.
 Ordinary note-to-martyria lyric collision is still handled by `addLyricReservation`.
 However, if a melisma lyric overhang extends past the last neume, that remaining overhang is first materialized into the replacement martyria glue width so that it is not lost when the note's cancellation glue is removed.
 A right-aligned martyria also preserves terminal right-barline clearance when it replaces the note's trailing glue.

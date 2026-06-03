@@ -137,7 +137,7 @@ The user-configurable neume spacing is an adjustment added to that boundary widt
 The resulting preferred width may stretch or shrink by up to one half.
 Users may also set the inter-note spacing to a negative value, so that successive neumes visibly overlap and the layout becomes tighter.
 When the configured spacing is negative, the glue keeps its negative natural width so that the overlap remains visible, but the stretch and shrink budgets are floored at small non-negative values: stretch at 0.1 px and shrink at 0.
-The same floors apply uniformly to every glue derived from the configured spacing: the standard glue's stretch and shrink, inline-element glue's stretch and shrink, the martyria glue's stretch (including the martyria-bonus term described below) and shrink, and the right-martyria glue's shrink.
+The same floors apply uniformly to every glue derived from the configured spacing: the standard glue's stretch and shrink, inline-element glue's stretch and shrink, note pre-break glue's stretch and shrink, martyria glue's stretch and shrink, and the right-martyria glue's shrink.
 These floors preserve the Knuth-Plass invariants while keeping the user-chosen overlap intact, because ordinary glues no longer stretch enough to push neumes apart and any line-end slack is absorbed by the right-martyria glue's `MAX_COST` stretch instead.
 The 0.1 px stretch floor is a tiny positive epsilon rather than zero so that every line has at least some stretchability, which keeps the adjustment ratio finite and the line-breaking problem well-defined.
 Without this floor, a line that contains no martyria would have a total stretch of zero, and `breakLines` could only treat its natural width as feasible.
@@ -158,13 +158,10 @@ The trailing barline-to-$B$ clearance is modeled inside the box for a left-owned
 The remaining minimum is preserved during justification and after lyric tucking.
 When a right barline becomes terminal at a line break, at a paragraph ending, before an empty element, or before a right-aligned martyria, its clearance from the preceding neume is reserved as terminal width.
 
-Following several classical 19th-century publications, ordinary martyriae are given extra elasticity.
-When a martyria sits between neighboring elements, the surrounding martyria glues together contribute additional stretch, that is, _k_ em on each side, where 1 em is the neume font size.
-The factor _k_ ramps linearly with the user-configurable spacing from 0.01em at 0.1 pt to 0.2em at the default spacing (approximately 2.16 pt), clamped to [0.01, 0.2], so that the martyria bonus does not dominate when the base spacing is already small.
-The martyria bonus is zero at r <= 0 and grows steeply on positively adjusted lines: per-side extra over standard glue is r x _k_ em for r >= 0 and 0 for r <= 0.
-This lets the martyria absorb extra line slack before the surrounding neumes do, which helps keep ordinary neume spacing more even from line to line.
-After the martyria box, the code inserts a zero-width pre-break glue, then a zero-cost break penalty, and finally a single martyria glue whose preferred width is the ordinary martyria spacing plus the fixed trailing padding.
-As a result, the full trailing spacing appears after the martyria only when it stays mid-line; if a break is taken there, that entire spacing becomes leading glue on the next line and is skipped.
+Ordinary martyriae use the same glyph-aware boundary spacing as other neume-bearing elements.
+When a martyria sits between neighboring elements, `getGlueWidthBetween` combines the active glyph spacing, the user-configurable spacing adjustment, and any measure-bar minimum.
+After the martyria box, the code inserts a zero-width pre-break glue, then a zero-cost break penalty, and finally a single martyria glue whose preferred width is that glyph-aware boundary width.
+As a result, the full trailing spacing appears after the martyria only when it stays mid-line; if a break is taken there, that spacing becomes leading glue on the next line and is skipped.
 
 When a martyria has a transferable measure bar and is followed by a note, the bar transfers to the next line's first note at a break.
 To reserve space for this, the martyria's post-break glue is narrowed by the bar width plus its leading clearance, and an anonymous spacer box of the same width is inserted before the following note's box.
@@ -291,9 +288,9 @@ For same-line spacing, the carried lyric end is treated as a signed distance fro
 ### Break-only reservation
 
 The break-only reservation is simpler.
-Let $\textit{melismaOverhang}_i$ be the distance by which the current syllable, tracked by `melismaLyricsEndPx`, still extends past the current neume, and let $\textit{measureBarTransfer}_i$ be the width that must be reserved when a left measure bar on the next note transfers to the right side of the current note at a break:
+Let $\textit{melismaOverhang}_i$ be the distance by which the current syllable, tracked by `melismaLyricsEndPx`, still extends past the current neume; let $\textit{terminalBarline}_i$ be the clearance reserved when the current note's right barline remains terminal at a break; and let $\textit{measureBarTransfer}_i$ be the width that must be reserved when a left measure bar on the next note transfers to the right side of the current note at a break:
 
-$$w_i = \max(R_i, \textit{melismaOverhang}_i) + \textit{measureBarTransfer}_i.$$
+$$w_i = \max(R_i, \textit{melismaOverhang}_i) + \textit{terminalBarline}_i + \textit{measureBarTransfer}_i.$$
 
 The melisma-overhang term is what protects line endings inside melismas.
 Same-line melisma-to-syllable transitions are handled separately by the collision correction in $m_i$, not by $w_i$.

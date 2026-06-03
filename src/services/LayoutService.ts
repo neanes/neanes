@@ -1012,16 +1012,14 @@ export class LayoutService {
           layoutWorkspace.pendingMartyriaBarTransferWidth =
             martyriaBarTransferWidth;
 
-          // Martyria break opportunity. Keep the full trailing spacing after
-          // the martyria when it stays mid-line, but make both the fixed
-          // padding and the ordinary martyria spacing disappear when a break is
-          // taken here. Only the ordinary martyria spacing remains elastic.
+          // Martyria break opportunity. Keep the glyph-aware trailing spacing
+          // after the martyria when it stays mid-line, but make that spacing
+          // disappear when a break is taken here.
           // The bar transfer width is subtracted so that on the same line it
           // is cancelled by the anonymous spacer box before the note; at a
           // break it vanishes along with the rest of the post-break glue.
-          // When the quantitative neume is present, part of the total martyria
-          // padding is rendered inside the box as marginLeft; only the
-          // remainder goes into trailing glue.
+          // When the quantitative neume is present, the renderer keeps its
+          // trailing edge spacing inside the box as marginLeft.
           const martyriaMinimumGlueWidth = this.getMeasureBarMinimumGlueWidth(
             martyriaElement,
             nextElement,

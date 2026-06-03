@@ -1002,7 +1002,8 @@ export class LayoutService {
               'trailing',
               pageSetup,
             ) /
-              2;
+              2 -
+            martyriaElement.padding / 2;
           this.addLyricReservation(
             elementWidthPx,
             martyriaElement,
@@ -1048,10 +1049,6 @@ export class LayoutService {
           // When the quantitative neume is present, part of the total martyria
           // padding is rendered inside the box as marginLeft; only the
           // remainder goes into trailing glue.
-          const martyriaTrailingPadding =
-            pageSetup.neumeDefaultFontSize *
-              pageSetup.spaceAfterMartyriaFactor -
-            martyriaElement.padding;
           const martyriaMinimumGlueWidth = this.getMeasureBarMinimumGlueWidth(
             martyriaElement,
             nextElement,
@@ -1065,7 +1062,7 @@ export class LayoutService {
             0,
             this.createMartyriaPostBreakGlue(
               martyriaGlue,
-              martyriaTrailingPadding,
+              0,
               martyriaBarTransferWidth,
               martyriaMinimumGlueWidth,
             ),
@@ -3523,7 +3520,7 @@ export class LayoutService {
     // in NeumeBoxMartyria.vue, so only that case should keep it inside the box.
     martyriaElement.padding =
       martyriaElement.alignRight && martyriaElement.quantitativeNeume
-        ? pageSetup.neumeDefaultFontSize * pageSetup.spaceAfterMartyriaFactor
+        ? this.getMartyriaEdgeSpacing(martyriaElement, 'trailing', pageSetup)
         : 0;
 
     martyriaElement.neumeWidth = this.getNeumeWidthFromCache(

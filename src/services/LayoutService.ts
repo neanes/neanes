@@ -496,6 +496,7 @@ export class LayoutService {
 
       switch (elements[i].elementType) {
         case ElementType.TextBox: {
+          // PROCESS TEXTBOX
           const textBoxElement = elements[i] as TextBoxElement;
           const isFillWidthTextBox = this.isFillWidthElement(textBoxElement);
           const elementWidthPx = LayoutService.processTextBoxElement(
@@ -561,6 +562,7 @@ export class LayoutService {
           break;
         }
         case ElementType.RichTextBox: {
+          // PROCESS RICHTEXTBOX
           const richTextBoxElement = elements[i] as RichTextBoxElement;
           const isFillWidthRichTextBox =
             this.isFillWidthElement(richTextBoxElement);
@@ -638,6 +640,7 @@ export class LayoutService {
           break;
         }
         case ElementType.ImageBox: {
+          // PROCESS IMAGEBOX
           const imageBoxElement = elements[i] as ImageBoxElement;
           const glueWidths = this.getInlineElementGlueWidths(
             elements,
@@ -672,6 +675,7 @@ export class LayoutService {
           break;
         }
         case ElementType.ModeKey: {
+          // PROCESS MODEKEY
           const modeKeyElement = elements[i] as ModeKeyElement;
 
           // Compute properties
@@ -714,6 +718,7 @@ export class LayoutService {
           break;
         }
         case ElementType.Note: {
+          // PROCESS NOTE
           const noteElement = elements[i] as NoteElement;
           const elementWidthPx =
             noteElement.spaceAfter + noteElement.neumeWidth;
@@ -912,6 +917,7 @@ export class LayoutService {
           break;
         }
         case ElementType.Martyria: {
+          // PROCESS MARTYRIA
           const martyriaElement = elements[i] as MartyriaElement;
           const nextElement = this.getElementAt(elements, i + 1);
           const leadingGlueWidth = this.getLeadingGlueWidthBeforeElement(
@@ -1051,6 +1057,7 @@ export class LayoutService {
           break;
         }
         case ElementType.Tempo: {
+          // PROCESS TEMPO
           const tempoElement = elements[i] as TempoElement;
           const nextElement = this.getElementAt(elements, i + 1);
           const leadingGlueWidth = this.getLeadingGlueWidthBeforeElement(
@@ -1095,6 +1102,7 @@ export class LayoutService {
           break;
         }
         case ElementType.DropCap: {
+          // PROCESS DROPCAP
           const dropCapElement = elements[i] as DropCapElement;
           const glueWidths = this.getInlineElementGlueWidths(
             elements,
@@ -4607,33 +4615,18 @@ export class LayoutService {
     side: 'leading' | 'trailing',
     pageSetup: PageSetup,
   ) {
-    const glyphNames = [
-      NeumeMappingService.getMapping(martyriaElement.note).glyphName,
-      ...(side === 'leading'
-        ? martyriaElement.tempoLeft != null
-          ? [
-              NeumeMappingService.getMapping(martyriaElement.tempoLeft)
-                .glyphName,
-            ]
-          : []
-        : [
-            martyriaElement.alignRight
-              ? martyriaElement.quantitativeNeume
-              : null,
-            martyriaElement.tempoRight,
-          ]
-            .filter((neume) => neume != null)
-            .map((neume) => NeumeMappingService.getMapping(neume).glyphName)),
-    ];
+    const neume =
+      side === 'leading'
+        ? (martyriaElement.tempoLeft ?? martyriaElement.note)
+        : (martyriaElement.tempoRight ??
+          (martyriaElement.alignRight &&
+          martyriaElement.quantitativeNeume != null
+            ? martyriaElement.quantitativeNeume
+            : martyriaElement.note));
 
-    return glyphNames.reduce(
-      (maxSpacing, glyphName) =>
-        Math.max(
-          maxSpacing,
-          this.getGlyphSpacingForGlyphName(glyphName, side, pageSetup),
-        ),
-      Number.NEGATIVE_INFINITY,
-    );
+    const glyphName = NeumeMappingService.getMapping(neume).glyphName;
+
+    return this.getGlyphSpacingForGlyphName(glyphName, side, pageSetup);
   }
 
   private static getNoteSpacingGlyphName(

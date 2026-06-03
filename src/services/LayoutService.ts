@@ -974,15 +974,10 @@ export class LayoutService {
             layoutWorkspace.neumesEndPx += rightMartyriaGlue.width;
           }
 
-          const elementWidthPx =
-            this.getMartyriaWidth(martyriaElement, pageSetup) +
-            this.getMartyriaEdgeSpacing(
-              martyriaElement,
-              'trailing',
-              pageSetup,
-            ) /
-              2 -
-            martyriaElement.padding / 2;
+          const elementWidthPx = this.getMartyriaWidth(
+            martyriaElement,
+            pageSetup,
+          );
           this.addLyricReservation(
             elementWidthPx,
             martyriaElement,

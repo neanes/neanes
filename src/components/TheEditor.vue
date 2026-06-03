@@ -6025,6 +6025,7 @@ function renderTabLabel(tab: Tab) {
                           :class="{
                             selectedLyrics: element === selectedLyrics,
                           }"
+                          :style="{ minWidth: withZoom(element.width) }"
                           :content="(element as NoteElement).lyrics"
                           :editable="!lyricsLocked"
                           white-space="nowrap"
@@ -6828,7 +6829,6 @@ function renderTabLabel(tab: Tab) {
 
 .lyrics {
   min-height: 1.6rem;
-  min-width: 1rem;
   text-align: center;
   position: relative;
 }

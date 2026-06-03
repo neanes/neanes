@@ -258,6 +258,12 @@ interface LineBreakSolution {
   requestedMaxAdjustmentRatio: number | null;
 }
 
+interface InlineElementGlueWidths {
+  leading: number;
+  trailing: number;
+  trailingMinimum: number;
+}
+
 export class LayoutService {
   public static processPages(workspace: Workspace): Page[] {
     const score = workspace.score;
@@ -497,23 +503,12 @@ export class LayoutService {
             pageSetup,
             neumeHeight,
           );
-          const leadingGlueWidth = textBoxElement.inline
-            ? this.getTrailingGlueWidthBeforeInlineElement(
-                elements,
-                i,
-                pageSetup,
-              )
-            : pageSetup.neumeDefaultSpacing;
-          const trailingGlueWidth = textBoxElement.inline
-            ? this.getLeadingGlueWidthAfterInlineElement(elements, i, pageSetup)
-            : pageSetup.neumeDefaultSpacing;
-          const trailingGlueMinimumWidth = textBoxElement.inline
-            ? this.getMinimumLeadingGlueWidthAfterInlineElement(
-                elements,
-                i,
-                pageSetup,
-              )
-            : 0;
+          const glueWidths = this.getInlineElementGlueWidths(
+            elements,
+            i,
+            textBoxElement.inline,
+            pageSetup,
+          );
 
           if (isFillWidthTextBox) {
             // Phase 1 uses the textbox's intrinsic width as a lower bound.
@@ -523,7 +518,7 @@ export class LayoutService {
               elementWidthPx,
               elements[i],
               layoutWorkspace,
-              leadingGlueWidth,
+              glueWidths.leading,
             );
             this.addBox(elementWidthPx, textBoxElement, layoutWorkspace);
             this.addFillWidthGlue(layoutWorkspace);
@@ -532,13 +527,13 @@ export class LayoutService {
               elementWidthPx,
               elements[i],
               layoutWorkspace,
-              leadingGlueWidth,
+              glueWidths.leading,
             );
             this.addBox(elementWidthPx, textBoxElement, layoutWorkspace);
             this.addGlue(
               this.createInlineElementGlue(
-                trailingGlueWidth,
-                trailingGlueMinimumWidth,
+                glueWidths.trailing,
+                glueWidths.trailingMinimum,
               ),
               layoutWorkspace,
             );
@@ -569,23 +564,12 @@ export class LayoutService {
           const richTextBoxElement = elements[i] as RichTextBoxElement;
           const isFillWidthRichTextBox =
             this.isFillWidthElement(richTextBoxElement);
-          const leadingGlueWidth = richTextBoxElement.inline
-            ? this.getTrailingGlueWidthBeforeInlineElement(
-                elements,
-                i,
-                pageSetup,
-              )
-            : pageSetup.neumeDefaultSpacing;
-          const trailingGlueWidth = richTextBoxElement.inline
-            ? this.getLeadingGlueWidthAfterInlineElement(elements, i, pageSetup)
-            : pageSetup.neumeDefaultSpacing;
-          const trailingGlueMinimumWidth = richTextBoxElement.inline
-            ? this.getMinimumLeadingGlueWidthAfterInlineElement(
-                elements,
-                i,
-                pageSetup,
-              )
-            : 0;
+          const glueWidths = this.getInlineElementGlueWidths(
+            elements,
+            i,
+            richTextBoxElement.inline,
+            pageSetup,
+          );
 
           let elementWidthPx: number;
 
@@ -617,7 +601,7 @@ export class LayoutService {
             elementWidthPx,
             richTextBoxElement,
             layoutWorkspace,
-            leadingGlueWidth,
+            glueWidths.leading,
           );
           this.addBox(elementWidthPx, richTextBoxElement, layoutWorkspace);
           if (isFillWidthRichTextBox) {
@@ -625,8 +609,8 @@ export class LayoutService {
           } else {
             this.addGlue(
               this.createInlineElementGlue(
-                trailingGlueWidth,
-                trailingGlueMinimumWidth,
+                glueWidths.trailing,
+                glueWidths.trailingMinimum,
               ),
               layoutWorkspace,
             );
@@ -655,23 +639,12 @@ export class LayoutService {
         }
         case ElementType.ImageBox: {
           const imageBoxElement = elements[i] as ImageBoxElement;
-          const leadingGlueWidth = imageBoxElement.inline
-            ? this.getTrailingGlueWidthBeforeInlineElement(
-                elements,
-                i,
-                pageSetup,
-              )
-            : pageSetup.neumeDefaultSpacing;
-          const trailingGlueWidth = imageBoxElement.inline
-            ? this.getLeadingGlueWidthAfterInlineElement(elements, i, pageSetup)
-            : pageSetup.neumeDefaultSpacing;
-          const trailingGlueMinimumWidth = imageBoxElement.inline
-            ? this.getMinimumLeadingGlueWidthAfterInlineElement(
-                elements,
-                i,
-                pageSetup,
-              )
-            : 0;
+          const glueWidths = this.getInlineElementGlueWidths(
+            elements,
+            i,
+            imageBoxElement.inline,
+            pageSetup,
+          );
 
           const elementWidthPx = imageBoxElement.inline
             ? imageBoxElement.imageWidth
@@ -680,13 +653,13 @@ export class LayoutService {
             elementWidthPx,
             imageBoxElement,
             layoutWorkspace,
-            leadingGlueWidth,
+            glueWidths.leading,
           );
           this.addBox(elementWidthPx, imageBoxElement, layoutWorkspace);
           this.addGlue(
             this.createInlineElementGlue(
-              trailingGlueWidth,
-              trailingGlueMinimumWidth,
+              glueWidths.trailing,
+              glueWidths.trailingMinimum,
             ),
             layoutWorkspace,
           );
@@ -1125,22 +1098,12 @@ export class LayoutService {
         }
         case ElementType.DropCap: {
           const dropCapElement = elements[i] as DropCapElement;
-          const leadingGlueWidth = this.getTrailingGlueWidthBeforeInlineElement(
+          const glueWidths = this.getInlineElementGlueWidths(
             elements,
             i,
+            true,
             pageSetup,
           );
-          const trailingGlueWidth = this.getLeadingGlueWidthAfterInlineElement(
-            elements,
-            i,
-            pageSetup,
-          );
-          const trailingGlueMinimumWidth =
-            this.getMinimumLeadingGlueWidthAfterInlineElement(
-              elements,
-              i,
-              pageSetup,
-            );
 
           dropCapElement.computedFontFamily = dropCapElement.useDefaultStyle
             ? pageSetup.dropCapDefaultFontFamily
@@ -1192,7 +1155,7 @@ export class LayoutService {
               : dropCapElement.lineSpan;
 
             layoutWorkspace.pendingDropCapWidthPx =
-              elementWidthPx + trailingGlueWidth;
+              elementWidthPx + glueWidths.trailing;
             layoutWorkspace.pendingDropCapContinuationLines = Math.max(
               0,
               lineSpan - 1,
@@ -1204,13 +1167,13 @@ export class LayoutService {
             elementWidthPx,
             dropCapElement,
             layoutWorkspace,
-            leadingGlueWidth,
+            glueWidths.leading,
           );
           this.addBox(elementWidthPx, dropCapElement, layoutWorkspace);
           this.addGlue(
             this.createInlineElementGlue(
-              trailingGlueWidth,
-              trailingGlueMinimumWidth,
+              glueWidths.trailing,
+              glueWidths.trailingMinimum,
             ),
             layoutWorkspace,
           );
@@ -1644,6 +1607,37 @@ export class LayoutService {
     };
   }
 
+  private static getInlineElementGlueWidths(
+    elements: ScoreElement[],
+    index: number,
+    inline: boolean,
+    pageSetup: PageSetup,
+  ): InlineElementGlueWidths {
+    if (!inline) {
+      return {
+        leading: pageSetup.neumeDefaultSpacing,
+        trailing: pageSetup.neumeDefaultSpacing,
+        trailingMinimum: 0,
+      };
+    }
+
+    const trailing = this.getLeadingGlueWidthsAfterInlineElement(
+      elements,
+      index,
+      pageSetup,
+    );
+
+    return {
+      leading: this.getTrailingGlueWidthBeforeInlineElement(
+        elements,
+        index,
+        pageSetup,
+      ),
+      trailing: trailing.preferred,
+      trailingMinimum: trailing.minimum,
+    };
+  }
+
   private static getTrailingGlueWidthBeforeInlineElement(
     elements: ScoreElement[],
     index: number,
@@ -1668,48 +1662,7 @@ export class LayoutService {
     );
   }
 
-  private static getLeadingGlueWidthAfterInlineElement(
-    elements: ScoreElement[],
-    index: number,
-    pageSetup: PageSetup,
-  ) {
-    const nextElement = this.getElementAt(elements, index + 1);
-    const spacing =
-      nextElement?.elementType === ElementType.Empty
-        ? this.getElementEdgeSpacingAtOrBefore(
-            elements,
-            index,
-            index - 1,
-            'trailing',
-            pageSetup,
-          )
-        : this.getElementEdgeSpacingAtOrAfter(
-            elements,
-            index,
-            index + 1,
-            'leading',
-            pageSetup,
-          );
-
-    const minimumWidth =
-      nextElement?.elementType === ElementType.Empty
-        ? this.getMeasureBarMinimumGlueWidthAtOrBefore(
-            elements,
-            index,
-            index - 1,
-            pageSetup,
-          )
-        : this.getMeasureBarMinimumGlueWidthAtOrAfter(
-            elements,
-            index,
-            index + 1,
-            pageSetup,
-          );
-
-    return Math.max(spacing + pageSetup.neumeDefaultSpacing, minimumWidth);
-  }
-
-  private static getMinimumLeadingGlueWidthAfterInlineElement(
+  private static getLeadingGlueWidthsAfterInlineElement(
     elements: ScoreElement[],
     index: number,
     pageSetup: PageSetup,
@@ -1747,7 +1700,13 @@ export class LayoutService {
             pageSetup,
           );
 
-    return Math.max(spacing, measureBarMinimumWidth);
+    return {
+      preferred: Math.max(
+        spacing + pageSetup.neumeDefaultSpacing,
+        measureBarMinimumWidth,
+      ),
+      minimum: Math.max(spacing, measureBarMinimumWidth),
+    };
   }
 
   private static getLeadingGlueWidthBeforeElement(
@@ -1774,11 +1733,11 @@ export class LayoutService {
     }
 
     if (currentNeume != null) {
-      return this.getLeadingGlueWidthAfterInlineElement(
+      return this.getLeadingGlueWidthsAfterInlineElement(
         elements,
         index - 1,
         pageSetup,
-      );
+      ).preferred;
     }
 
     return pageSetup.neumeDefaultSpacing;

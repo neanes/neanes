@@ -42,7 +42,7 @@
     "throttle-debounce": "^5.0.2"
   },
   "devDependencies": {
-    "@babel/preset-typescript": "^7.28.5",
+    "@babel/preset-typescript": "^7.29.7",
     "@ckeditor/ckeditor5-vue": "^8.0.0",
     "@ckpack/vue-color": "^1.6.0",
     "@nabla/vite-plugin-eslint": "^3.0.1",

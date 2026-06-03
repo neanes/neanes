@@ -995,10 +995,14 @@ export class LayoutService {
             layoutWorkspace.neumesEndPx += rightMartyriaGlue.width;
           }
 
-          const elementWidthPx = this.getMartyriaWidth(
-            martyriaElement,
-            pageSetup,
-          );
+          const elementWidthPx =
+            this.getMartyriaWidth(martyriaElement, pageSetup) +
+            this.getMartyriaEdgeSpacing(
+              martyriaElement,
+              'trailing',
+              pageSetup,
+            ) /
+              2;
           this.addLyricReservation(
             elementWidthPx,
             martyriaElement,
@@ -1557,9 +1561,7 @@ export class LayoutService {
           currentLine.elements.length === 1
         ) {
           element.x =
-            pageSetup.pageWidth -
-            pageSetup.rightMargin -
-            this.getMartyriaWidth(element as MartyriaElement, pageSetup);
+            pageSetup.pageWidth - pageSetup.rightMargin - element.width;
         }
 
         // Special logic for centered lines

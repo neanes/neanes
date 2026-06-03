@@ -41,7 +41,7 @@ import {
   getSpreadIndex,
 } from '@/models/NeumeValues';
 import { Line, Page } from '@/models/Page';
-import { PageSetup } from '@/models/PageSetup';
+import type { PageSetup } from '@/models/PageSetup';
 import {
   getNoteFromValue,
   getNoteValue,
@@ -474,12 +474,6 @@ export class LayoutService {
       stretch: Math.max(pageSetup.neumeDefaultSpacing * 0.5, minGlueStretch),
       shrink: Math.max(pageSetup.neumeDefaultSpacing * 0.5, minGlueShrink),
     };
-
-    // Martyria extra-stretch factor: linear ramp from 0.01em at 0.1pt to
-    // 0.2em at the default spacing, clamped at both ends.
-    const spacingRamp =
-      (pageSetup.neumeDefaultSpacing - Unit.fromPt(0.1)) /
-      (new PageSetup().neumeDefaultSpacing - Unit.fromPt(0.1));
 
     const rightMartyriaGlue: Glue = {
       type: 'glue',
@@ -962,12 +956,7 @@ export class LayoutService {
           const martyriaGlue: Glue = {
             type: 'glue',
             width: glueWidth,
-            stretch: Math.max(
-              glueWidth * 0.5 +
-                pageSetup.neumeDefaultFontSize *
-                  (0.01 + 0.19 * Math.min(1, Math.max(0, spacingRamp))),
-              minGlueStretch,
-            ),
+            stretch: Math.max(glueWidth * 0.5, minGlueStretch),
             shrink: Math.max(glueWidth * 0.5, minGlueShrink),
           };
 

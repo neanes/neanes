@@ -1562,6 +1562,15 @@ export class LayoutService {
       this.checkElementState(element);
     });
 
+    if (layoutWorkspace.loggingEnabled) {
+      console.log(
+        'avg ratio',
+        layoutWorkspace.completedParagraphs
+          .flatMap((p) => p.ratios)
+          .reduce((sum, ratio, _, arr) => sum + ratio / arr.length, 0),
+      );
+    }
+
     return pages;
   }
 
@@ -3185,6 +3194,8 @@ export class LayoutService {
       const martyria = element as MartyriaElement;
       martyria.notePrevious = martyria.note;
       martyria.rootSignPrevious = martyria.rootSign;
+      martyria.tempoLeftSpacingPrevious = martyria.tempoLeftSpacing;
+      martyria.tempoRightSpacingPrevious = martyria.tempoRightSpacing;
       martyria.computedMeasureBarLeftOffsetXPrevious =
         martyria.computedMeasureBarLeftOffsetX;
       martyria.computedMeasureBarRightOffsetXPrevious =
@@ -3245,6 +3256,8 @@ export class LayoutService {
       martyria.updated =
         martyria.notePrevious !== martyria.note ||
         martyria.rootSignPrevious !== martyria.rootSign ||
+        martyria.tempoLeftSpacingPrevious !== martyria.tempoLeftSpacing ||
+        martyria.tempoRightSpacingPrevious !== martyria.tempoRightSpacing ||
         martyria.computedMeasureBarLeftOffsetXPrevious !==
           martyria.computedMeasureBarLeftOffsetX ||
         martyria.computedMeasureBarRightOffsetXPrevious !==
@@ -3479,6 +3492,20 @@ export class LayoutService {
       martyriaElement.alignRight && martyriaElement.quantitativeNeume
         ? this.getMartyriaEdgeSpacing(martyriaElement, 'trailing', pageSetup)
         : 0;
+    martyriaElement.tempoLeftSpacing = mappingTempoLeft
+      ? this.getGlyphPairSpacing(
+          mappingTempoLeft.glyphName,
+          mappingNote.glyphName,
+          pageSetup,
+        )
+      : 0;
+    martyriaElement.tempoRightSpacing = mappingTempoRight
+      ? this.getGlyphPairSpacing(
+          (mappingQuantitativeNeume ?? mappingNote).glyphName,
+          mappingTempoRight.glyphName,
+          pageSetup,
+        )
+      : 0;
 
     martyriaElement.neumeWidth = this.getNeumeWidthFromCache(
       neumeWidthCache,
@@ -3492,9 +3519,11 @@ export class LayoutService {
         martyriaElement.tempoLeft,
         pageSetup,
       );
+      martyriaElement.neumeWidth += martyriaElement.tempoLeftSpacing;
     }
 
     if (martyriaElement.tempoRight) {
+      martyriaElement.neumeWidth += martyriaElement.tempoRightSpacing;
       martyriaElement.neumeWidth += this.getNeumeWidthFromCache(
         neumeWidthCache,
         martyriaElement.tempoRight,
@@ -3557,13 +3586,13 @@ export class LayoutService {
           ? TextMeasurementService.getTextWidth(
               mappingTempoLeft.text,
               `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
-            )
+            ) + martyriaElement.tempoLeftSpacing
           : 0) +
         (mappingTempoRight
           ? TextMeasurementService.getTextWidth(
               mappingTempoRight.text,
               `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
-            )
+            ) + martyriaElement.tempoRightSpacing
           : 0) +
         (mappingQuantitativeNeume
           ? TextMeasurementService.getTextWidth(
@@ -4520,6 +4549,17 @@ export class LayoutService {
           );
 
     return spacing * pageSetup.neumeDefaultFontSize;
+  }
+
+  private static getGlyphPairSpacing(
+    leftGlyphName: SbmuflGlyphName,
+    rightGlyphName: SbmuflGlyphName,
+    pageSetup: PageSetup,
+  ) {
+    return (
+      this.getGlyphSpacingForGlyphName(leftGlyphName, 'trailing', pageSetup) +
+      this.getGlyphSpacingForGlyphName(rightGlyphName, 'leading', pageSetup)
+    );
   }
 
   private static getElementEdgeSpacing(

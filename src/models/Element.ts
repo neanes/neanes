@@ -691,6 +691,8 @@ export class MartyriaElement extends ScoreElement {
   // Used for display
   public neumeWidth: number = 0;
   public padding: number = 0;
+  public tempoLeftSpacing: number = 0;
+  public tempoRightSpacing: number = 0;
   public computedMeasureBarLeftOffsetX: number = 0;
   public computedMeasureBarRightOffsetX: number = 0;
   public computedMeasureBarLeftLeadingSpacing: number = 0;
@@ -720,6 +722,8 @@ export class MartyriaElement extends ScoreElement {
   public rootSignPrevious: RootSign = RootSign.Alpha;
   public computedMeasureBarLeftOffsetXPrevious: number = 0;
   public computedMeasureBarRightOffsetXPrevious: number = 0;
+  public tempoLeftSpacingPrevious: number = 0;
+  public tempoRightSpacingPrevious: number = 0;
   public computedMeasureBarLeftLeadingSpacingPrevious: number = 0;
   public computedMeasureBarRightTrailingSpacingPrevious: number = 0;
 

@@ -16,7 +16,7 @@
       <Neume
         v-if="hasTempoLeft"
         :neume="neume.tempoLeft!"
-        :style="tempoStyle"
+        :style="tempoLeftStyle"
       />
       <Neume :neume="neume.note" />
       <Neume :neume="neume.rootSign" />
@@ -35,7 +35,7 @@
       <Neume
         v-if="hasTempoRight"
         :neume="neume.tempoRight!"
-        :style="tempoStyle"
+        :style="tempoRightStyle"
       />
       <Neume
         v-if="hasMeasureBarRight"
@@ -48,7 +48,7 @@
 </template>
 
 <script setup lang="ts">
-import type { PropType, StyleValue } from 'vue';
+import type { CSSProperties, PropType, StyleValue } from 'vue';
 import { computed } from 'vue';
 
 import Neume from '@/components/NeumeGlyph.vue';
@@ -115,6 +115,20 @@ const tempoStyle = computed(() => {
   return {
     color: props.pageSetup.tempoDefaultColor,
     webkitTextStrokeWidth: withZoom(props.pageSetup.tempoDefaultStrokeWidth),
+  } as CSSProperties;
+});
+
+const tempoLeftStyle = computed(() => {
+  return {
+    ...tempoStyle.value,
+    marginInlineEnd: withZoom(props.neume.tempoLeftSpacing),
+  } as StyleValue;
+});
+
+const tempoRightStyle = computed(() => {
+  return {
+    ...tempoStyle.value,
+    marginInlineStart: withZoom(props.neume.tempoRightSpacing),
   } as StyleValue;
 });
 

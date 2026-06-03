@@ -4620,9 +4620,6 @@ export class LayoutService {
             ]
           : []
         : [
-            martyriaElement.rootSign,
-            martyriaElement.fthora,
-            martyriaElement.tempo,
             martyriaElement.alignRight
               ? martyriaElement.quantitativeNeume
               : null,

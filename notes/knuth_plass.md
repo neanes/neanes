@@ -163,7 +163,9 @@ Ordinary martyriae use fixed inline spacing with one application-level augmentat
 When a boundary is adjacent to a martyria, the layout engine adds a generic martyria spacing bonus, currently `0.2 * neumeDefaultFontSize`, on top of fixed inline spacing.
 The bonus is part of the martyria glue width and gives martyriae more surrounding space than ordinary neumes.
 During justification, stretch and shrink are based on the martyria bonus while the same-line width is still protected by any fixed measure-bar minimum.
-After the martyria box, the code inserts a zero-width pre-break glue, then a zero-cost break penalty, and finally a single martyria glue whose preferred width is fixed inline spacing plus the martyria bonus.
+Tempo-adjacent martyria boundaries are the exception: when a non-right-aligned martyria contains `tempoLeft` or `tempoRight`, or when a standalone tempo sign sits immediately beside a non-right-aligned martyria in the same paragraph, that side uses standard fixed inline glue instead of martyria glue.
+For standalone tempo-to-martyria and martyria-to-tempo boundaries, the lyric-collision spacer is also skipped; the explicit standard glue owns the boundary spacing, while the lyric bookkeeping is still advanced for the current element.
+After the martyria box, the code inserts a zero-width pre-break glue, then a zero-cost break penalty, and finally a single trailing glue whose preferred width is usually fixed inline spacing plus the martyria bonus, or standard fixed inline spacing for the tempo cases above.
 As a result, the full trailing spacing appears after the martyria only when it stays mid-line; if a break is taken there, that spacing becomes leading glue on the next line and is skipped.
 
 When a martyria has a transferable measure bar and is followed by a note, the bar transfers to the next line's first note at a break.
@@ -248,6 +250,7 @@ It also reserves the clearance before a terminal right barline.
 It must do this because `removeGlue` strips the trailing cancellation glue, while the forced break itself contributes penalty width 0.
 
 When a martyria follows a note, the martyria path replaces the note's trailing post-break glue with martyria glue: shrinkable fixed-plus-bonus glue in the usual case, or the infinite-stretch right-martyria glue when the martyria is right-aligned.
+When a non-right-aligned martyria follows a standalone tempo sign, the same replacement path uses standard glue and skips the pre-martyria lyric-collision spacer.
 Ordinary note-to-martyria lyric collision is still handled by `addLyricReservation`.
 However, if a melisma lyric overhang extends past the last neume, that remaining overhang is first materialized into the replacement martyria glue width so that it is not lost when the note's cancellation glue is removed.
 A right-aligned martyria also preserves terminal right-barline clearance when it replaces the note's trailing glue.

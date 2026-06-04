@@ -877,18 +877,34 @@ export class LayoutService {
         case ElementType.Martyria: {
           // PROCESS MARTYRIA
           const martyriaElement = elements[i] as MartyriaElement;
-          const leadingGlueWidth = martyriaGlue.width;
-
           const previousElement = this.getElementAt(elements, i - 1);
+          const nextElement = this.getElementAt(elements, i + 1);
+          const useStandardLeadingGlue =
+            !martyriaElement.alignRight &&
+            (!!martyriaElement.tempoLeft ||
+              previousElement?.elementType === ElementType.Tempo);
+          const useStandardTrailingGlue =
+            !martyriaElement.alignRight &&
+            (!!martyriaElement.tempoRight ||
+              nextElement?.elementType === ElementType.Tempo);
+          const leadingGlueWidth = useStandardLeadingGlue
+            ? standardGlue.width
+            : martyriaGlue.width;
+          const skipLyricCollision =
+            !martyriaElement.alignRight &&
+            layoutWorkspace.pendingParagraph.length > 0 &&
+            previousElement?.elementType === ElementType.Tempo;
           if (
             layoutWorkspace.pendingParagraph.length > 0 &&
             (martyriaElement.alignRight ||
-              previousElement?.elementType === ElementType.Note)
+              previousElement?.elementType === ElementType.Note ||
+              previousElement?.elementType === ElementType.Tempo)
           ) {
-            // Replacing the trailing note glue would otherwise drop any
+            // Replacing a note's trailing glue would otherwise drop any
             // melisma lyric overhang carried in that glue. Preserve that width
             // and, for a right-aligned martyria, terminal barline clearance.
-            // Ordinary lyric collision before a martyria is handled below.
+            // Ordinary lyric collision before a martyria is handled below
+            // unless this is a tempo-to-martyria boundary.
             const trailingNoteReservations =
               this.getTrailingNoteReservations(layoutWorkspace);
             const reservation =
@@ -897,10 +913,12 @@ export class LayoutService {
                 ? (trailingNoteReservations?.terminalMeasureBarSpacing ?? 0)
                 : 0);
             const newGlue = this.createMartyriaLeadingGlue(
-              martyriaElement,
+              martyriaElement.alignRight
+                ? rightMartyriaGlue
+                : useStandardLeadingGlue
+                  ? standardGlue
+                  : martyriaGlue,
               reservation,
-              rightMartyriaGlue.stretch,
-              pageSetup,
             );
             this.removeGlue(layoutWorkspace);
             this.addGlue(newGlue, layoutWorkspace);
@@ -917,12 +935,17 @@ export class LayoutService {
             martyriaElement,
             pageSetup,
           );
-          this.addLyricReservation(
-            elementWidthPx,
-            martyriaElement,
-            layoutWorkspace,
-            leadingGlueWidth,
-          );
+          if (skipLyricCollision) {
+            layoutWorkspace.lyricsEndPx =
+              layoutWorkspace.neumesEndPx + elementWidthPx;
+          } else {
+            this.addLyricReservation(
+              elementWidthPx,
+              martyriaElement,
+              layoutWorkspace,
+              leadingGlueWidth,
+            );
+          }
           this.addBox(elementWidthPx, martyriaElement, layoutWorkspace);
 
           // Compute the measure bar width that would transfer from this
@@ -949,7 +972,8 @@ export class LayoutService {
 
           // Martyria break opportunity. Keep the fixed martyria spacing after
           // the martyria when it stays mid-line, but make that spacing
-          // disappear when a break is taken here.
+          // disappear when a break is taken here. Embedded or standalone tempo
+          // cases can switch that trailing spacing to standard glue.
           // The bar transfer width is subtracted so that on the same line it
           // is cancelled by the anonymous spacer box before the note; at a
           // break it vanishes along with the rest of the post-break glue.
@@ -962,12 +986,12 @@ export class LayoutService {
             0,
             0,
             this.createMartyriaPostBreakGlue(
-              martyriaGlue,
+              useStandardTrailingGlue ? standardGlue : martyriaGlue,
               0,
               martyriaBarTransferWidth,
               this.getMeasureBarMinimumGlueWidth(
                 martyriaElement,
-                this.getElementAt(elements, i + 1),
+                nextElement,
                 pageSetup,
               ),
             ),
@@ -987,6 +1011,7 @@ export class LayoutService {
         case ElementType.Tempo: {
           // PROCESS TEMPO
           const tempoElement = elements[i] as TempoElement;
+          const previousElement = this.getElementAt(elements, i - 1);
           const tempoMapping = NeumeMappingService.getMapping(
             tempoElement.neume,
           );
@@ -997,11 +1022,20 @@ export class LayoutService {
               `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`,
             ) + tempoElement.spaceAfter;
           tempoElement.neumeWidth = elementWidthPx;
-          this.addLyricReservation(
-            elementWidthPx,
-            tempoElement,
-            layoutWorkspace,
-          );
+          const skipLyricCollision =
+            previousElement?.elementType === ElementType.Martyria &&
+            layoutWorkspace.pendingParagraph.length > 0 &&
+            !(previousElement as MartyriaElement).alignRight;
+          if (skipLyricCollision) {
+            layoutWorkspace.lyricsEndPx =
+              layoutWorkspace.neumesEndPx + elementWidthPx;
+          } else {
+            this.addLyricReservation(
+              elementWidthPx,
+              tempoElement,
+              layoutWorkspace,
+            );
+          }
           this.addBox(elementWidthPx, tempoElement, layoutWorkspace);
           this.addGlue(standardGlue, layoutWorkspace);
 
@@ -1700,19 +1734,9 @@ export class LayoutService {
   }
 
   private static createMartyriaLeadingGlue(
-    martyriaElement: MartyriaElement,
+    baseGlue: Glue,
     reservation: number,
-    rightMartyriaStretch: number,
-    pageSetup: PageSetup,
   ): Glue {
-    // Ordinary note-to-martyria leading glue owns the martyria elasticity for
-    // that boundary. Right-aligned martyriae keep MAX_COST stretch so they can
-    // absorb line-end slack.
-    const baseGlue = this.createMartyriaGlue(
-      pageSetup,
-      martyriaElement.alignRight ? rightMartyriaStretch : undefined,
-    );
-
     return {
       ...baseGlue,
       width: baseGlue.width + reservation,
@@ -1720,20 +1744,17 @@ export class LayoutService {
   }
 
   private static createMartyriaPostBreakGlue(
-    martyriaGlue: Glue,
+    baseGlue: Glue,
     trailingPadding: number,
     barTransferWidth: number,
     minimumSameLineWidth: number,
   ): Glue {
     return {
-      ...martyriaGlue,
-      width: martyriaGlue.width + trailingPadding - barTransferWidth,
+      ...baseGlue,
+      width: baseGlue.width + trailingPadding - barTransferWidth,
       shrink: Math.min(
-        martyriaGlue.shrink,
-        Math.max(
-          0,
-          martyriaGlue.width + trailingPadding - minimumSameLineWidth,
-        ),
+        baseGlue.shrink,
+        Math.max(0, baseGlue.width + trailingPadding - minimumSameLineWidth),
       ),
     };
   }

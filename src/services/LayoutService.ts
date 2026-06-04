@@ -851,14 +851,14 @@ export class LayoutService {
             measureBarWidthMap,
           );
 
-          const preBreakGlue =
-            nextElement?.elementType === ElementType.Martyria
-              ? // The martyria handler removes this note's post-break glue and
-                // replaces it with the note-to-martyria boundary glue below. If
-                // we left a shrink/stretch budget here too, the martyria
-                // elasticity would be counted twice during justification.
-                this.fixedGlue(0)
-              : { ...standardGlue, width: 0 };
+          // A following martyria replaces this note's trailing glue with its own
+          // note-to-martyria glue, so the note must not contribute elasticity too.
+          const martyriaOwnsBoundaryGlue =
+            nextElement?.elementType === ElementType.Martyria;
+
+          const preBreakGlue = martyriaOwnsBoundaryGlue
+            ? this.fixedGlue(0)
+            : { ...standardGlue, width: 0 };
 
           // Break opportunity after the neume. The pre-break glue stays on the
           // current line; the post-break glue becomes leading glue on the next
@@ -866,6 +866,7 @@ export class LayoutService {
           this.addProtectedBreakpointEncoding(
             layoutWorkspace,
             preBreakGlue,
+            //{ ...standardGlue, width: 0 },
             breakCost,
             penaltyWidth,
             this.fixedGlue(m_i),

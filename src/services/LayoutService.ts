@@ -469,11 +469,20 @@ export class LayoutService {
     // doesn't break line breaking. `width` is left untouched so the overlap
     // itself is preserved.
     const inlineSpacing = this.getInlineSpacing(pageSetup);
+    const standardGlueDefaults = fontService.getStandardGlue(
+      pageSetup.neumeDefaultFontFamily,
+    );
     const standardGlue: Glue = {
       type: 'glue',
       width: inlineSpacing,
-      stretch: Math.max(inlineSpacing * 0.5, minGlueStretch),
-      shrink: Math.max(inlineSpacing / 3, minGlueShrink),
+      stretch: Math.max(
+        pageSetup.neumeDefaultFontSize * standardGlueDefaults.stretch,
+        minGlueStretch,
+      ),
+      shrink: Math.max(
+        pageSetup.neumeDefaultFontSize * standardGlueDefaults.shrink,
+        minGlueShrink,
+      ),
     };
 
     const martyriaGlue = this.createMartyriaGlue(pageSetup);
@@ -846,8 +855,8 @@ export class LayoutService {
             nextElement?.elementType === ElementType.Martyria
               ? // The martyria handler removes this note's post-break glue and
                 // replaces it with the note-to-martyria boundary glue below. If
-                // we left a shrink/stretch budget here too, the martyria bonus
-                // would be counted twice during justification.
+                // we left a shrink/stretch budget here too, the martyria
+                // elasticity would be counted twice during justification.
                 this.fixedGlue(0)
               : { ...standardGlue, width: 0 };
 
@@ -1481,13 +1490,10 @@ export class LayoutService {
   }
 
   private static getInlineSpacing(pageSetup: PageSetup) {
-    return pageSetup.neumeDefaultFontSize * 0.1 + pageSetup.neumeDefaultSpacing;
-  }
-
-  private static getMartyriaSpacing(pageSetup: PageSetup) {
     return (
-      this.getInlineSpacing(pageSetup) +
-      this.getMartyriaSpacingBonusWidth(pageSetup)
+      pageSetup.neumeDefaultFontSize *
+        fontService.getStandardGlue(pageSetup.neumeDefaultFontFamily).width +
+      pageSetup.neumeDefaultSpacing
     );
   }
 
@@ -1668,15 +1674,27 @@ export class LayoutService {
 
   private static createMartyriaGlue(
     pageSetup: PageSetup,
-    stretch: number = this.getMartyriaBonusStretch(pageSetup),
+    stretch?: number,
   ): Glue {
-    const width = this.getMartyriaSpacing(pageSetup);
+    const martyriaGlue = fontService.getMartyriaGlue(
+      pageSetup.neumeDefaultFontFamily,
+    );
 
     return {
       type: 'glue',
-      width,
-      stretch,
-      shrink: this.getMartyriaBonusShrink(pageSetup),
+      width:
+        pageSetup.neumeDefaultFontSize * martyriaGlue.width +
+        pageSetup.neumeDefaultSpacing,
+      stretch:
+        stretch ??
+        Math.max(
+          pageSetup.neumeDefaultFontSize * martyriaGlue.stretch,
+          minGlueStretch,
+        ),
+      shrink: Math.max(
+        minGlueShrink,
+        pageSetup.neumeDefaultFontSize * martyriaGlue.shrink,
+      ),
     };
   }
 
@@ -1686,14 +1704,12 @@ export class LayoutService {
     rightMartyriaStretch: number,
     pageSetup: PageSetup,
   ): Glue {
-    // Ordinary note-to-martyria leading glue owns the martyria bonus
-    // elasticity for that boundary. Right-aligned martyriae keep MAX_COST
-    // stretch so they can absorb line-end slack.
+    // Ordinary note-to-martyria leading glue owns the martyria elasticity for
+    // that boundary. Right-aligned martyriae keep MAX_COST stretch so they can
+    // absorb line-end slack.
     const baseGlue = this.createMartyriaGlue(
       pageSetup,
-      martyriaElement.alignRight
-        ? rightMartyriaStretch
-        : this.getMartyriaBonusStretch(pageSetup),
+      martyriaElement.alignRight ? rightMartyriaStretch : undefined,
     );
 
     return {
@@ -3038,7 +3054,9 @@ export class LayoutService {
     // so that they remain centered beneath it.
     noteElement.vareiaInternalSpacing = 0;
     if (noteElement.vareia) {
-      noteElement.vareiaInternalSpacing = this.getInlineSpacing(pageSetup);
+      noteElement.vareiaInternalSpacing =
+        pageSetup.neumeDefaultFontSize *
+        fontService.getVareiaGap(pageSetup.neumeDefaultFontFamily);
       const vareiaPrefixWidth = vareiaWidth + noteElement.vareiaInternalSpacing;
 
       if (pageSetup.melkiteRtl) {
@@ -4114,23 +4132,6 @@ export class LayoutService {
     }
 
     return resolvedGlyphNames;
-  }
-
-  private static getMartyriaSpacingBonusWidth(pageSetup: PageSetup) {
-    return pageSetup.neumeDefaultFontSize * 0.2;
-  }
-
-  private static getMartyriaBonusStretch(pageSetup: PageSetup) {
-    const bonus = this.getMartyriaSpacingBonusWidth(pageSetup);
-    return Math.max(bonus * 0.75, minGlueStretch);
-  }
-
-  private static getMartyriaBonusShrink(pageSetup: PageSetup) {
-    return Math.max(
-      minGlueShrink,
-      this.getInlineSpacing(pageSetup) +
-        this.getMartyriaSpacingBonusWidth(pageSetup),
-    );
   }
 
   public static calculateMartyrias(

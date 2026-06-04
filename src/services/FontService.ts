@@ -1,12 +1,30 @@
-import metadata from '@/assets/fonts/neanes.metadata.json';
-import metadataRtl from '@/assets/fonts/neanesrtl.metadata.json';
-import metadataStathis from '@/assets/fonts/neanesstathisseries.metadata.json';
+import metadataLegacy from '@/assets/fonts/neanes.metadata.json';
+import metadata from '@/assets/fonts/neanesengraving.metadata.json';
+import metadataRtlLegacy from '@/assets/fonts/neanesrtl.metadata.json';
+import metadataRtl from '@/assets/fonts/neanesrtlengraving.metadata.json';
+import metadataStathisLegacy from '@/assets/fonts/neanesstathisseries.metadata.json';
+import metadataStathis from '@/assets/fonts/neanesstathisseriesengraving.metadata.json';
 import type { SbmuflGlyphName } from '@/services/NeumeMappingService';
+
+interface EngravingGlue {
+  width: number;
+  stretch: number;
+  shrink: number;
+}
+
+interface EngravingDefaults {
+  martyriaGlue: EngravingGlue;
+  standardGlue: EngravingGlue;
+  vareiaGap: number;
+}
 
 const metadataMap = new Map();
 metadataMap.set('Neanes', metadata);
 metadataMap.set('NeanesRTL', metadataRtl);
 metadataMap.set('NeanesStathisSeries', metadataStathis);
+metadataMap.set('NeanesLegacy', metadataLegacy);
+metadataMap.set('NeanesRTLLegacy', metadataRtlLegacy);
+metadataMap.set('NeanesStathisSeriesLegacy', metadataStathisLegacy);
 
 class FontService {
   getMetadata(fontFamily: string) {
@@ -19,6 +37,22 @@ class FontService {
 
   getAdvanceWidth(fontFamily: string, glyph: SbmuflGlyphName) {
     return this.getMetadata(fontFamily).glyphAdvanceWidths[glyph];
+  }
+
+  getEngravingDefaults(fontFamily: string): EngravingDefaults {
+    return this.getMetadata(fontFamily).engravingDefaults;
+  }
+
+  getStandardGlue(fontFamily: string) {
+    return this.getEngravingDefaults(fontFamily).standardGlue;
+  }
+
+  getMartyriaGlue(fontFamily: string) {
+    return this.getEngravingDefaults(fontFamily).martyriaGlue;
+  }
+
+  getVareiaGap(fontFamily: string) {
+    return this.getEngravingDefaults(fontFamily).vareiaGap;
   }
 
   getMarkOffset(

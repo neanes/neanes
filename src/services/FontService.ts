@@ -21,28 +21,6 @@ class FontService {
     return this.getMetadata(fontFamily).glyphAdvanceWidths[glyph];
   }
 
-  getLeadingSpace(fontFamily: string, glyph: SbmuflGlyphName) {
-    return this.getGlyphSpacing(fontFamily, glyph).leading;
-  }
-
-  getTrailingSpace(fontFamily: string, glyph: SbmuflGlyphName) {
-    return this.getGlyphSpacing(fontFamily, glyph).trailing;
-  }
-
-  private getGlyphSpacing(fontFamily: string, glyph: SbmuflGlyphName) {
-    const metadata = this.getMetadata(fontFamily);
-    const spacing = metadata.glyphSpacing?.[glyph];
-
-    if (spacing == null) {
-      console.warn(
-        `Missing glyph spacing for font: ${fontFamily} glyph: ${glyph}`,
-      );
-      return { leading: 0, trailing: 0 };
-    }
-
-    return spacing;
-  }
-
   getMarkOffset(
     fontFamily: string,
     base: SbmuflGlyphName,

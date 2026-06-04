@@ -258,23 +258,6 @@ interface LineBreakSolution {
   requestedMaxAdjustmentRatio: number | null;
 }
 
-interface InlineSpacingMetrics {
-  leading: BoundarySpacingMetrics;
-  trailing: BoundarySpacingMetrics;
-}
-
-interface BoundarySpacingMetrics {
-  // Natural width used by the line breaker: raw glyph bearings, user spacing,
-  // measure-bar minimums, and any martyria bonus.
-  preferred: number;
-  // The non-negotiable width: raw glyph bearings plus any measure-bar minimum,
-  // excluding user spacing and the martyria bonus.
-  minimum: number;
-  // Application-level martyria augmentation inside preferred. This is not font
-  // metadata; the font only supplies the minimum glyph bearings.
-  bonus: number;
-}
-
 export class LayoutService {
   public static processPages(workspace: Workspace): Page[] {
     const score = workspace.score;
@@ -485,18 +468,21 @@ export class LayoutService {
     // negative `neumeDefaultSpacing` (which users set to overlap neumes)
     // doesn't break line breaking. `width` is left untouched so the overlap
     // itself is preserved.
+    const inlineSpacing = this.getInlineSpacing(pageSetup);
     const standardGlue: Glue = {
       type: 'glue',
-      width: pageSetup.neumeDefaultSpacing,
-      stretch: Math.max(pageSetup.neumeDefaultSpacing * 0.5, minGlueStretch),
-      shrink: Math.max(pageSetup.neumeDefaultSpacing * 0.5, minGlueShrink),
+      width: inlineSpacing,
+      stretch: Math.max(inlineSpacing * 0.5, minGlueStretch),
+      shrink: Math.max(inlineSpacing * 0.5, minGlueShrink),
     };
+
+    const martyriaGlue = this.createMartyriaGlue(pageSetup);
 
     const rightMartyriaGlue: Glue = {
       type: 'glue',
-      width: pageSetup.neumeDefaultSpacing,
+      width: martyriaGlue.width,
       stretch: MAX_COST,
-      shrink: Math.max(pageSetup.neumeDefaultSpacing * 0.5, minGlueShrink),
+      shrink: martyriaGlue.shrink,
     };
 
     // Phase 1: Build paragraphs as sequences of boxes, glue, and penalties
@@ -515,12 +501,6 @@ export class LayoutService {
             pageSetup,
             neumeHeight,
           );
-          const glueWidths = this.getInlineSpacingMetrics(
-            elements,
-            i,
-            textBoxElement.inline,
-            pageSetup,
-          );
 
           if (isFillWidthTextBox) {
             // Phase 1 uses the textbox's intrinsic width as a lower bound.
@@ -530,7 +510,6 @@ export class LayoutService {
               elementWidthPx,
               elements[i],
               layoutWorkspace,
-              glueWidths.leading.preferred,
             );
             this.addBox(elementWidthPx, textBoxElement, layoutWorkspace);
             this.addFillWidthGlue(layoutWorkspace);
@@ -539,17 +518,9 @@ export class LayoutService {
               elementWidthPx,
               elements[i],
               layoutWorkspace,
-              glueWidths.leading.preferred,
             );
             this.addBox(elementWidthPx, textBoxElement, layoutWorkspace);
-            this.addGlue(
-              this.createInlineElementGlue(
-                glueWidths.trailing.preferred,
-                glueWidths.trailing.minimum,
-                glueWidths.trailing.bonus,
-              ),
-              layoutWorkspace,
-            );
+            this.addGlue(standardGlue, layoutWorkspace);
           }
 
           if (!textBoxElement.inline && !lineBreak) {
@@ -578,12 +549,6 @@ export class LayoutService {
           const richTextBoxElement = elements[i] as RichTextBoxElement;
           const isFillWidthRichTextBox =
             this.isFillWidthElement(richTextBoxElement);
-          const glueWidths = this.getInlineSpacingMetrics(
-            elements,
-            i,
-            richTextBoxElement.inline,
-            pageSetup,
-          );
 
           let elementWidthPx: number;
 
@@ -615,20 +580,12 @@ export class LayoutService {
             elementWidthPx,
             richTextBoxElement,
             layoutWorkspace,
-            glueWidths.leading.preferred,
           );
           this.addBox(elementWidthPx, richTextBoxElement, layoutWorkspace);
           if (isFillWidthRichTextBox) {
             this.addFillWidthGlue(layoutWorkspace);
           } else {
-            this.addGlue(
-              this.createInlineElementGlue(
-                glueWidths.trailing.preferred,
-                glueWidths.trailing.minimum,
-                glueWidths.trailing.bonus,
-              ),
-              layoutWorkspace,
-            );
+            this.addGlue(standardGlue, layoutWorkspace);
           }
 
           if (!richTextBoxElement.inline && !lineBreak) {
@@ -655,12 +612,6 @@ export class LayoutService {
         case ElementType.ImageBox: {
           // PROCESS IMAGEBOX
           const imageBoxElement = elements[i] as ImageBoxElement;
-          const glueWidths = this.getInlineSpacingMetrics(
-            elements,
-            i,
-            imageBoxElement.inline,
-            pageSetup,
-          );
 
           const elementWidthPx = imageBoxElement.inline
             ? imageBoxElement.imageWidth
@@ -669,17 +620,9 @@ export class LayoutService {
             elementWidthPx,
             imageBoxElement,
             layoutWorkspace,
-            glueWidths.leading.preferred,
           );
           this.addBox(elementWidthPx, imageBoxElement, layoutWorkspace);
-          this.addGlue(
-            this.createInlineElementGlue(
-              glueWidths.trailing.preferred,
-              glueWidths.trailing.minimum,
-              glueWidths.trailing.bonus,
-            ),
-            layoutWorkspace,
-          );
+          this.addGlue(standardGlue, layoutWorkspace);
 
           if (!imageBoxElement.inline && !lineBreak) {
             lineBreak = true;
@@ -776,11 +719,11 @@ export class LayoutService {
           // the current note's barline remains at line end.
           //
           // m_i = s_0 + R_i - T_i^left - T_i^right + ell_i, where s_0 is the
-          // glyph-aware boundary glue between the two notes, floored by any
-          // measure-bar sequence minimum. R_i is the right projection, ell_i
-          // is the lyric-collision correction, T_i^left is the absorbed
-          // portion of L_{i+1}, and T_i^right is the portion of R_i that tucks
-          // under the next neume. For hyphenated melismas,
+          // fixed inline spacing, floored by any measure-bar sequence minimum.
+          // R_i is the right projection, ell_i is the lyric-collision
+          // correction, T_i^left is the absorbed portion of L_{i+1}, and
+          // T_i^right is the portion of R_i that tucks under the next neume.
+          // For hyphenated melismas,
           // ell_i also enforces that the visible lyric gap is wide enough to
           // hold the hyphen glyph when that hyphen is absorbed inside the
           // current neume and therefore contributes no overhang. m_i may be
@@ -826,7 +769,7 @@ export class LayoutService {
           const neumeEnd =
             layoutWorkspace.neumesEndPx +
             noteElement.neumeWidth +
-            pageSetup.neumeDefaultSpacing;
+            inlineSpacing;
 
           layoutWorkspace.lyricsEndPx = noteElement.isMelismaStart
             ? noteElement.spaceAfter + neumeEnd
@@ -868,7 +811,6 @@ export class LayoutService {
           const m_i = this.calculateInterNoteSpacing(
             noteElement,
             rightProjection,
-            nextElement,
             nextNoteElement,
             layoutWorkspace,
             minimumLyricGap,
@@ -900,13 +842,6 @@ export class LayoutService {
             measureBarWidthMap,
           );
 
-          const boundarySpacingMetrics =
-            LayoutService.getBoundarySpacingMetrics(
-              noteElement,
-              nextElement,
-              pageSetup,
-            );
-
           const preBreakGlue =
             nextElement?.elementType === ElementType.Martyria
               ? // The martyria handler removes this note's post-break glue and
@@ -914,12 +849,7 @@ export class LayoutService {
                 // we left a shrink/stretch budget here too, the martyria bonus
                 // would be counted twice during justification.
                 this.fixedGlue(0)
-              : this.createNotePreBreakGlue(
-                  boundarySpacingMetrics.preferred,
-                  minGlueStretch,
-                  minGlueShrink,
-                  boundarySpacingMetrics.minimum,
-                );
+              : { ...standardGlue, width: 0 };
 
           // Break opportunity after the neume. The pre-break glue stays on the
           // current line; the post-break glue becomes leading glue on the next
@@ -937,24 +867,7 @@ export class LayoutService {
         case ElementType.Martyria: {
           // PROCESS MARTYRIA
           const martyriaElement = elements[i] as MartyriaElement;
-          const nextElement = this.getElementAt(elements, i + 1);
-          const leadingGlueWidth = this.getLeadingGlueWidthBeforeElement(
-            elements,
-            i,
-            pageSetup,
-          );
-
-          const boundarySpacingMetrics =
-            LayoutService.getBoundarySpacingMetrics(
-              martyriaElement,
-              nextElement,
-              pageSetup,
-            );
-
-          const martyriaGlue = this.createMartyriaBonusElasticGlue(
-            boundarySpacingMetrics.preferred,
-            boundarySpacingMetrics,
-          );
+          const leadingGlueWidth = martyriaGlue.width;
 
           const previousElement = this.getElementAt(elements, i - 1);
           if (
@@ -962,11 +875,10 @@ export class LayoutService {
             (martyriaElement.alignRight ||
               previousElement?.elementType === ElementType.Note)
           ) {
-            // Replacing the trailing note glue would otherwise drop the
-            // glyph-aware boundary spacing and any melisma lyric overhang
-            // carried in that glue. Preserve those widths and, for a
-            // right-aligned martyria, terminal barline clearance. Ordinary
-            // lyric collision before a martyria is handled below.
+            // Replacing the trailing note glue would otherwise drop any
+            // melisma lyric overhang carried in that glue. Preserve that width
+            // and, for a right-aligned martyria, terminal barline clearance.
+            // Ordinary lyric collision before a martyria is handled below.
             const trailingNoteReservations =
               this.getTrailingNoteReservations(layoutWorkspace);
             const reservation =
@@ -974,28 +886,11 @@ export class LayoutService {
               (martyriaElement.alignRight
                 ? (trailingNoteReservations?.terminalMeasureBarSpacing ?? 0)
                 : 0);
-            // Leading note-to-martyria spacing replaces the note's trailing
-            // cancellation glue. Carry the boundary metrics through so the new
-            // glue keeps the martyria bonus shrinkable/stretchable while still
-            // preserving melisma and terminal-barline reservations.
-            const leadingBoundarySpacingMetrics =
-              previousElement != null
-                ? this.getBoundarySpacingMetrics(
-                    previousElement,
-                    martyriaElement,
-                    pageSetup,
-                  )
-                : {
-                    preferred: leadingGlueWidth,
-                    minimum: leadingGlueWidth,
-                    bonus: 0,
-                  };
             const newGlue = this.createMartyriaLeadingGlue(
               martyriaElement,
-              leadingGlueWidth,
               reservation,
               rightMartyriaGlue.stretch,
-              leadingBoundarySpacingMetrics,
+              pageSetup,
             );
             this.removeGlue(layoutWorkspace);
             this.addGlue(newGlue, layoutWorkspace);
@@ -1037,29 +932,19 @@ export class LayoutService {
             nextNoteForBar &&
             !nextNoteForBar.measureBarLeft
               ? (measureBarWidthMap.get(martyriaTransferBar) ?? 0) +
-                this.getTerminalMeasureBarSpacing(
-                  nextNoteForBar,
-                  martyriaTransferBar,
-                  'leading',
-                  pageSetup,
-                )
+                this.getTerminalMeasureBarSpacing(pageSetup)
               : 0;
           layoutWorkspace.pendingMartyriaBarTransferWidth =
             martyriaBarTransferWidth;
 
-          // Martyria break opportunity. Keep the glyph-aware trailing spacing
-          // after the martyria when it stays mid-line, but make that spacing
+          // Martyria break opportunity. Keep the fixed martyria spacing after
+          // the martyria when it stays mid-line, but make that spacing
           // disappear when a break is taken here.
           // The bar transfer width is subtracted so that on the same line it
           // is cancelled by the anonymous spacer box before the note; at a
           // break it vanishes along with the rest of the post-break glue.
           // When the quantitative neume is present, the renderer keeps its
-          // trailing edge spacing inside the box as marginLeft.
-          const martyriaMinimumGlueWidth = this.getMeasureBarMinimumGlueWidth(
-            martyriaElement,
-            nextElement,
-            pageSetup,
-          );
+          // fixed spacing inside the box as marginLeft.
 
           this.addProtectedBreakpointEncoding(
             layoutWorkspace,
@@ -1070,9 +955,10 @@ export class LayoutService {
               martyriaGlue,
               0,
               martyriaBarTransferWidth,
-              Math.max(
-                martyriaMinimumGlueWidth,
-                boundarySpacingMetrics.minimum,
+              this.getMeasureBarMinimumGlueWidth(
+                martyriaElement,
+                this.getElementAt(elements, i + 1),
+                pageSetup,
               ),
             ),
           );
@@ -1091,12 +977,6 @@ export class LayoutService {
         case ElementType.Tempo: {
           // PROCESS TEMPO
           const tempoElement = elements[i] as TempoElement;
-          const nextElement = this.getElementAt(elements, i + 1);
-          const leadingGlueWidth = this.getLeadingGlueWidthBeforeElement(
-            elements,
-            i,
-            pageSetup,
-          );
           const tempoMapping = NeumeMappingService.getMapping(
             tempoElement.neume,
           );
@@ -1111,35 +991,15 @@ export class LayoutService {
             elementWidthPx,
             tempoElement,
             layoutWorkspace,
-            leadingGlueWidth,
           );
           this.addBox(elementWidthPx, tempoElement, layoutWorkspace);
-          const trailingBoundarySpacingMetrics =
-            LayoutService.getBoundarySpacingMetrics(
-              tempoElement,
-              nextElement,
-              pageSetup,
-            );
-          this.addGlue(
-            this.createInlineElementGlue(
-              trailingBoundarySpacingMetrics.preferred,
-              trailingBoundarySpacingMetrics.minimum,
-              trailingBoundarySpacingMetrics.bonus,
-            ),
-            layoutWorkspace,
-          );
+          this.addGlue(standardGlue, layoutWorkspace);
 
           break;
         }
         case ElementType.DropCap: {
           // PROCESS DROPCAP
           const dropCapElement = elements[i] as DropCapElement;
-          const glueWidths = this.getInlineSpacingMetrics(
-            elements,
-            i,
-            true,
-            pageSetup,
-          );
 
           dropCapElement.computedFontFamily = dropCapElement.useDefaultStyle
             ? pageSetup.dropCapDefaultFontFamily
@@ -1191,7 +1051,7 @@ export class LayoutService {
               : dropCapElement.lineSpan;
 
             layoutWorkspace.pendingDropCapWidthPx =
-              elementWidthPx + glueWidths.trailing.preferred;
+              elementWidthPx + inlineSpacing;
             layoutWorkspace.pendingDropCapContinuationLines = Math.max(
               0,
               lineSpan - 1,
@@ -1203,17 +1063,9 @@ export class LayoutService {
             elementWidthPx,
             dropCapElement,
             layoutWorkspace,
-            glueWidths.leading.preferred,
           );
           this.addBox(elementWidthPx, dropCapElement, layoutWorkspace);
-          this.addGlue(
-            this.createInlineElementGlue(
-              glueWidths.trailing.preferred,
-              glueWidths.trailing.minimum,
-              glueWidths.trailing.bonus,
-            ),
-            layoutWorkspace,
-          );
+          this.addGlue(standardGlue, layoutWorkspace);
 
           break;
         }
@@ -1224,18 +1076,11 @@ export class LayoutService {
 
           const emptyElement = elements[i] as EmptyElement;
           emptyElement.height = neumeHeight;
-          const leadingGlueWidth =
-            this.getLeadingSpacingMetricsBeforeInlineElement(
-              elements,
-              i,
-              pageSetup,
-            ).preferred;
 
           this.addLyricReservation(
             emptyElementWidth,
             emptyElement,
             layoutWorkspace,
-            leadingGlueWidth,
           );
           this.addBox(emptyElementWidth, emptyElement, layoutWorkspace);
           this.addGlue(standardGlue, layoutWorkspace);
@@ -1511,12 +1356,8 @@ export class LayoutService {
                 const barlineWidth =
                   measureBarWidthMap.get(normalizedMeasureBar) ?? 0;
                 if (barlineWidth > 0) {
-                  const leadingSpacing = this.getTerminalMeasureBarSpacing(
-                    noteElement,
-                    normalizedMeasureBar,
-                    'leading',
-                    pageSetup,
-                  );
+                  const leadingSpacing =
+                    this.getTerminalMeasureBarSpacing(pageSetup);
                   const reservedWidth = barlineWidth + leadingSpacing;
                   noteElement.computedMeasureBarLeftLeadingSpacing =
                     leadingSpacing;
@@ -1639,304 +1480,14 @@ export class LayoutService {
     );
   }
 
-  private static createInlineElementGlue(
-    width: number,
-    minimumWidth: number = 0,
-    bonus: number = 0,
-  ): Glue {
-    if (bonus > 0) {
-      // Martyria-adjacent inline glue should not stretch from the whole
-      // boundary width. Only the application-level martyria bonus is elastic;
-      // the glyph bearings and measure-bar minimum remain protected.
-      return this.createMartyriaBonusElasticGlue(width, {
-        preferred: width,
-        minimum: minimumWidth,
-        bonus,
-      });
-    }
-
-    return {
-      type: 'glue',
-      width,
-      stretch: Math.max(width * 0.5, minGlueStretch),
-      shrink: Math.min(
-        Math.max(width * 0.5, minGlueShrink),
-        Math.max(0, width - minimumWidth),
-      ),
-    };
+  private static getInlineSpacing(pageSetup: PageSetup) {
+    return pageSetup.neumeDefaultFontSize * 0.1 + pageSetup.neumeDefaultSpacing;
   }
 
-  private static getInlineSpacingMetrics(
-    elements: ScoreElement[],
-    index: number,
-    inline: boolean,
-    pageSetup: PageSetup,
-  ): InlineSpacingMetrics {
-    if (!inline) {
-      return {
-        leading: {
-          preferred: pageSetup.neumeDefaultSpacing,
-          minimum: 0,
-          bonus: 0,
-        },
-        trailing: {
-          preferred: pageSetup.neumeDefaultSpacing,
-          minimum: 0,
-          bonus: 0,
-        },
-      };
-    }
-
-    const trailing = this.getLeadingSpacingMetricsAfterInlineElement(
-      elements,
-      index,
-      pageSetup,
-    );
-
-    return {
-      leading: this.getLeadingSpacingMetricsBeforeInlineElement(
-        elements,
-        index,
-        pageSetup,
-      ),
-      trailing,
-    };
-  }
-
-  private static getLeadingSpacingMetricsBeforeInlineElement(
-    elements: ScoreElement[],
-    index: number,
-    pageSetup: PageSetup,
-  ): BoundarySpacingMetrics {
-    return this.getScannedInlineBoundarySpacingMetrics({
-      elements,
-      anchorIndex: index,
-      scanStartIndex: index - 1,
-      scanDirection: 'before',
-      edgeSide: 'trailing',
-      pageSetup,
-    });
-  }
-
-  private static getLeadingSpacingMetricsAfterInlineElement(
-    elements: ScoreElement[],
-    index: number,
-    pageSetup: PageSetup,
-  ): BoundarySpacingMetrics {
-    const nextElement = this.getElementAt(elements, index + 1);
-    return nextElement?.elementType === ElementType.Empty
-      ? this.getScannedInlineBoundarySpacingMetrics({
-          elements,
-          anchorIndex: index,
-          scanStartIndex: index - 1,
-          scanDirection: 'before',
-          edgeSide: 'trailing',
-          pageSetup,
-        })
-      : this.getScannedInlineBoundarySpacingMetrics({
-          elements,
-          anchorIndex: index,
-          scanStartIndex: index + 1,
-          scanDirection: 'after',
-          edgeSide: 'leading',
-          pageSetup,
-        });
-  }
-
-  private static getScannedInlineBoundarySpacingMetrics(args: {
-    elements: ScoreElement[];
-    anchorIndex: number;
-    scanStartIndex: number;
-    scanDirection: 'before' | 'after';
-    edgeSide: 'leading' | 'trailing';
-    pageSetup: PageSetup;
-  }): BoundarySpacingMetrics {
-    // Preferred spacing includes any martyria bonus found by scanning to the
-    // next/previous neume-bearing edge. The minimum scan is repeated without
-    // the bonus so justification can collapse back to raw glyph bearings.
-    const spacing = this.getElementEdgeSpacingInDirection(
-      args.elements,
-      args.anchorIndex,
-      args.scanStartIndex,
-      args.scanDirection,
-      args.edgeSide,
-      args.pageSetup,
-      true,
-    );
-    const minimumSpacing = this.getElementEdgeSpacingInDirection(
-      args.elements,
-      args.anchorIndex,
-      args.scanStartIndex,
-      args.scanDirection,
-      args.edgeSide,
-      args.pageSetup,
-    );
-    const measureBarMinimum =
-      args.scanDirection === 'before'
-        ? this.getMeasureBarMinimumGlueWidthAtOrBefore(
-            args.elements,
-            args.anchorIndex,
-            args.scanStartIndex,
-            args.pageSetup,
-          )
-        : this.getMeasureBarMinimumGlueWidthAtOrAfter(
-            args.elements,
-            args.anchorIndex,
-            args.scanStartIndex,
-            args.pageSetup,
-          );
-
-    return this.createBoundarySpacingMetrics({
-      rawSpacing: minimumSpacing,
-      bonus: Math.max(0, spacing - minimumSpacing),
-      measureBarMinimum,
-      pageSetup: args.pageSetup,
-    });
-  }
-
-  private static getLeadingGlueWidthBeforeElement(
-    elements: ScoreElement[],
-    index: number,
-    pageSetup: PageSetup,
-  ) {
-    const currentElement = this.getElementAt(elements, index);
-    const previousElement = this.getElementAt(elements, index - 1);
-
-    if (currentElement == null || previousElement == null) {
-      return pageSetup.neumeDefaultSpacing;
-    }
-
-    const previousNeume = this.getSpacingEdgeNeume(previousElement);
-    const currentNeume = this.getSpacingEdgeNeume(currentElement, 'leading');
-
-    if (previousNeume != null && currentNeume != null) {
-      return this.getGlueWidthBetween(
-        previousElement,
-        currentElement,
-        pageSetup,
-      );
-    }
-
-    if (currentNeume != null) {
-      return this.getLeadingSpacingMetricsAfterInlineElement(
-        elements,
-        index - 1,
-        pageSetup,
-      ).preferred;
-    }
-
-    return pageSetup.neumeDefaultSpacing;
-  }
-
-  private static getElementEdgeSpacingInDirection(
-    elements: ScoreElement[],
-    anchorIndex: number,
-    index: number,
-    direction: 'before' | 'after',
-    side: 'leading' | 'trailing',
-    pageSetup: PageSetup,
-    includeMartyriaBonus: boolean = false,
-  ) {
+  private static getMartyriaSpacing(pageSetup: PageSetup) {
     return (
-      this.scanParagraphBoundedInDirection({
-        elements,
-        anchorIndex,
-        startIndex: index,
-        direction,
-        find: (element) => {
-          const spacing = this.getElementEdgeSpacing(element, side, pageSetup);
-          if (spacing == null) {
-            return null;
-          }
-
-          return (
-            spacing +
-            (includeMartyriaBonus
-              ? this.getMartyriaSpacingBonusForEdge(element, spacing, pageSetup)
-              : 0)
-          );
-        },
-      }) ?? 0
-    );
-  }
-
-  private static scanParagraphBoundedInDirection(args: {
-    elements: ScoreElement[];
-    anchorIndex: number;
-    startIndex: number;
-    direction: 'before' | 'after';
-    find: (element: ScoreElement, index: number) => number | null;
-  }): number | null {
-    const step = args.direction === 'before' ? -1 : 1;
-
-    for (
-      let i = args.startIndex;
-      i >= 0 && i < args.elements.length;
-      i += step
-    ) {
-      if (
-        (args.direction === 'before' &&
-          i < args.anchorIndex &&
-          this.endsParagraphAfterElement(args.elements, i)) ||
-        (args.direction === 'after' &&
-          i > args.anchorIndex &&
-          this.endsParagraphAfterElement(args.elements, i - 1))
-      ) {
-        break;
-      }
-
-      const match = args.find(args.elements[i], i);
-      if (match != null) {
-        return match;
-      }
-
-      if (this.endsParagraphAfterElement(args.elements, i)) {
-        break;
-      }
-    }
-
-    return null;
-  }
-
-  private static endsParagraphAfterElement(
-    elements: ScoreElement[],
-    index: number,
-  ) {
-    const element = elements[index];
-
-    if (
-      element == null ||
-      element.lineBreak ||
-      element.pageBreak ||
-      element.elementType === ElementType.Empty ||
-      element.elementType === ElementType.ModeKey
-    ) {
-      return true;
-    }
-
-    if (this.isBlockElement(element)) {
-      return true;
-    }
-
-    if (
-      element.elementType === ElementType.Martyria &&
-      (element as MartyriaElement).alignRight
-    ) {
-      return true;
-    }
-
-    if (
-      this.isFillWidthElement(element) &&
-      this.shouldTerminateAfterFillWidthElement(elements, index)
-    ) {
-      return true;
-    }
-
-    const nextElement = elements[index + 1];
-
-    return (
-      this.isBlockElement(nextElement) ||
-      nextElement?.elementType === ElementType.ModeKey
+      this.getInlineSpacing(pageSetup) +
+      this.getMartyriaSpacingBonusWidth(pageSetup)
     );
   }
 
@@ -2019,7 +1570,7 @@ export class LayoutService {
     workspace: LayoutWorkspace,
     glueWidth?: number,
   ) {
-    glueWidth = glueWidth ?? workspace.pageSetup.neumeDefaultSpacing;
+    glueWidth = glueWidth ?? this.getInlineSpacing(workspace.pageSetup);
     // Skip lyric collision for non-inline block elements (TextBox, RichTextBox,
     // ImageBox, ModeKey), which occupy the full line width and have no lyrics
     // to collide with. Fill-width inline elements still need collision
@@ -2034,8 +1585,8 @@ export class LayoutService {
         ? workspace.lyricsEndPx
         : Math.max(workspace.lyricsEndPx, workspace.melismaLyricsEndPx);
 
-    // Maintain at least glueWidth between the previous lyric end and
-    // the current element.
+    // Maintain at least glueWidth between the previous lyric end and the
+    // current element.
     if (workspace.neumesEndPx <= previousLyricsEndPx + glueWidth) {
       const adjustment =
         previousLyricsEndPx - workspace.neumesEndPx + glueWidth;
@@ -2109,36 +1660,34 @@ export class LayoutService {
     };
   }
 
-  private static createMartyriaBonusElasticGlue(
-    width: number,
-    spacingMetrics: BoundarySpacingMetrics,
-    stretch: number = this.getMartyriaBonusStretch(spacingMetrics.bonus),
+  private static createMartyriaGlue(
+    pageSetup: PageSetup,
+    stretch: number = this.getMartyriaBonusStretch(pageSetup),
   ): Glue {
+    const width = this.getMartyriaSpacing(pageSetup);
+
     return {
       type: 'glue',
       width,
       stretch,
-      shrink: this.getMartyriaBonusShrink(spacingMetrics),
+      shrink: this.getMartyriaBonusShrink(pageSetup),
     };
   }
 
   private static createMartyriaLeadingGlue(
     martyriaElement: MartyriaElement,
-    leadingGlueWidth: number,
     reservation: number,
     rightMartyriaStretch: number,
-    leadingSpacingMetrics: BoundarySpacingMetrics,
+    pageSetup: PageSetup,
   ): Glue {
-    // Ordinary note-to-martyria leading glue owns the martyria bonus elasticity
-    // for that boundary. Right-aligned martyriae keep MAX_COST stretch so they
-    // can absorb line-end slack, but still shrink only down to the minimum
-    // boundary width.
-    const baseGlue = this.createMartyriaBonusElasticGlue(
-      leadingGlueWidth,
-      leadingSpacingMetrics,
+    // Ordinary note-to-martyria leading glue owns the martyria bonus
+    // elasticity for that boundary. Right-aligned martyriae keep MAX_COST
+    // stretch so they can absorb line-end slack.
+    const baseGlue = this.createMartyriaGlue(
+      pageSetup,
       martyriaElement.alignRight
         ? rightMartyriaStretch
-        : this.getMartyriaBonusStretch(leadingSpacingMetrics.bonus),
+        : this.getMartyriaBonusStretch(pageSetup),
     );
 
     return {
@@ -2162,23 +1711,6 @@ export class LayoutService {
           0,
           martyriaGlue.width + trailingPadding - minimumSameLineWidth,
         ),
-      ),
-    };
-  }
-
-  private static createNotePreBreakGlue(
-    glueWidth: number,
-    minGlueStretch: number,
-    minGlueShrink: number,
-    minimumWidth: number = 0,
-  ): Glue {
-    return {
-      type: 'glue',
-      width: 0,
-      stretch: Math.max(glueWidth * 0.5, minGlueStretch),
-      shrink: Math.min(
-        Math.max(glueWidth * 0.5, minGlueShrink),
-        Math.max(0, glueWidth - minimumWidth),
       ),
     };
   }
@@ -2448,7 +1980,6 @@ export class LayoutService {
   private static calculateInterNoteSpacing(
     noteElement: NoteElement,
     rightProjection: number,
-    nextElement: ScoreElement | null,
     nextNoteElement: NoteElement | null,
     workspace: LayoutWorkspace,
     minimumLyricGap: number,
@@ -2458,13 +1989,7 @@ export class LayoutService {
     // glue absorbs much of L_{i+1}. The library supports negative
     // glue widths.
     if (nextNoteElement == null) {
-      return (
-        this.getGlueWidthBetween(
-          noteElement,
-          nextElement,
-          workspace.pageSetup,
-        ) + rightProjection
-      );
+      return this.getInlineSpacing(workspace.pageSetup) + rightProjection;
     }
 
     const currentOverhangs = this.getNeumeOverhangs(
@@ -2490,11 +2015,7 @@ export class LayoutService {
       workspace.pageSetup,
     );
     const baseWidth =
-      this.getGlueWidthBetween(
-        noteElement,
-        nextNoteElement,
-        workspace.pageSetup,
-      ) +
+      this.getInlineSpacing(workspace.pageSetup) +
       rightProjection -
       leftTuck -
       rightTuck;
@@ -2713,12 +2234,7 @@ export class LayoutService {
 
     const measureBarRight = this.getVisibleMeasureBarRight(noteElement);
     if (measureBarRight != null) {
-      penaltyWidth += this.getTerminalMeasureBarSpacing(
-        noteElement,
-        measureBarRight,
-        'trailing',
-        workspace.pageSetup,
-      );
+      penaltyWidth += this.getTerminalMeasureBarSpacing(workspace.pageSetup);
     }
 
     if (
@@ -2728,12 +2244,7 @@ export class LayoutService {
       penaltyWidth +=
         measureBarWidthMap.get(nextNoteElement.measureBarLeft) ?? 0;
       if (measureBarRight == null) {
-        penaltyWidth += this.getTerminalMeasureBarSpacing(
-          noteElement,
-          nextNoteElement.measureBarLeft,
-          'trailing',
-          workspace.pageSetup,
-        );
+        penaltyWidth += this.getTerminalMeasureBarSpacing(workspace.pageSetup);
       }
     }
 
@@ -3521,8 +3032,7 @@ export class LayoutService {
     // so that they remain centered beneath it.
     noteElement.vareiaInternalSpacing = 0;
     if (noteElement.vareia) {
-      noteElement.vareiaInternalSpacing =
-        this.getContextualVareiaInternalSpacing(noteElement, pageSetup);
+      noteElement.vareiaInternalSpacing = this.getInlineSpacing(pageSetup);
       const vareiaPrefixWidth = vareiaWidth + noteElement.vareiaInternalSpacing;
 
       if (pageSetup.melkiteRtl) {
@@ -3605,26 +3115,18 @@ export class LayoutService {
         ? NeumeMappingService.getMapping(martyriaElement.quantitativeNeume)
         : null;
 
-    // Split the total padding between inline rendering and trailing glue.
-    // The renderer applies padding as marginLeft on the quantitative neume
-    // in NeumeBoxMartyria.vue, so only that case should keep it inside the box.
+    // The renderer applies padding as marginLeft on the quantitative neume in
+    // NeumeBoxMartyria.vue, so only that case should keep fixed spacing inside
+    // the box.
     martyriaElement.padding =
       martyriaElement.alignRight && martyriaElement.quantitativeNeume
-        ? this.getMartyriaEdgeSpacing(martyriaElement, 'trailing', pageSetup)
+        ? this.getInlineSpacing(pageSetup)
         : 0;
     martyriaElement.tempoLeftSpacing = mappingTempoLeft
-      ? this.getGlyphPairSpacing(
-          mappingTempoLeft.glyphName,
-          mappingNote.glyphName,
-          pageSetup,
-        )
+      ? this.getInlineSpacing(pageSetup)
       : 0;
     martyriaElement.tempoRightSpacing = mappingTempoRight
-      ? this.getGlyphPairSpacing(
-          (mappingQuantitativeNeume ?? mappingNote).glyphName,
-          mappingTempoRight.glyphName,
-          pageSetup,
-        )
+      ? this.getInlineSpacing(pageSetup)
       : 0;
 
     martyriaElement.neumeWidth = this.getNeumeWidthFromCache(
@@ -4247,30 +3749,10 @@ export class LayoutService {
                 owner.x + barWidth + owner.computedMeasureBarLeftLeadingSpacing;
               const centeredLeft =
                 (previousBounds.right + ownerLeadingEdge - barWidth) / 2;
+              const barSpacing = this.getInlineSpacing(pageSetup);
               const targetLeft = Math.min(
-                Math.max(
-                  centeredLeft,
-                  previousBounds.right +
-                    (this.getElementEdgeSpacing(
-                      previousAnchor,
-                      'trailing',
-                      pageSetup,
-                    ) ?? 0) +
-                    this.getMeasureBarSpacing(
-                      measureBarLeft,
-                      'leading',
-                      pageSetup,
-                    ),
-                ),
-                ownerLeadingEdge -
-                  barWidth -
-                  this.getMeasureBarSpacing(
-                    measureBarLeft,
-                    'trailing',
-                    pageSetup,
-                  ) -
-                  (this.getElementEdgeSpacing(owner, 'leading', pageSetup) ??
-                    0),
+                Math.max(centeredLeft, previousBounds.right + barSpacing),
+                ownerLeadingEdge - barWidth - barSpacing,
               );
               owner.computedMeasureBarLeftOffsetX =
                 direction * (targetLeft - owner.x);
@@ -4290,32 +3772,12 @@ export class LayoutService {
             if (barWidth > 0) {
               const normalLeft =
                 owner.x + this.getMeasureBarOwnerWidth(owner) - barWidth;
-              const ownerTrailingSpacing =
-                this.getElementEdgeSpacing(owner, 'trailing', pageSetup) ?? 0;
-              const nextLeadingSpacing =
-                this.getElementEdgeSpacing(nextAnchor, 'leading', pageSetup) ??
-                0;
+              const barSpacing = this.getInlineSpacing(pageSetup);
               const centeredLeft =
                 (ownerBounds.right + nextAnchor.x - barWidth) / 2;
               const targetLeft = Math.min(
-                Math.max(
-                  centeredLeft,
-                  ownerBounds.right +
-                    ownerTrailingSpacing +
-                    this.getMeasureBarSpacing(
-                      measureBarRight,
-                      'leading',
-                      pageSetup,
-                    ),
-                ),
-                nextAnchor.x -
-                  barWidth -
-                  this.getMeasureBarSpacing(
-                    measureBarRight,
-                    'trailing',
-                    pageSetup,
-                  ) -
-                  nextLeadingSpacing,
+                Math.max(centeredLeft, ownerBounds.right + barSpacing),
+                nextAnchor.x - barWidth - barSpacing,
               );
               owner.computedMeasureBarRightOffsetX =
                 direction * (targetLeft - normalLeft);
@@ -4327,12 +3789,7 @@ export class LayoutService {
               nextElement.elementType === ElementType.Empty)
           ) {
             owner.computedMeasureBarRightTrailingSpacing =
-              this.getTerminalMeasureBarSpacing(
-                owner,
-                measureBarRight,
-                'trailing',
-                pageSetup,
-              );
+              this.getTerminalMeasureBarSpacing(pageSetup);
           }
         }
       }
@@ -4437,18 +3894,8 @@ export class LayoutService {
       : owner.width - owner.spaceAfter;
   }
 
-  private static getTerminalMeasureBarSpacing(
-    owner: NoteElement | MartyriaElement,
-    measureBar: MeasureBar,
-    ownerSide: 'leading' | 'trailing',
-    pageSetup: PageSetup,
-  ) {
-    const measureBarSide = ownerSide === 'leading' ? 'trailing' : 'leading';
-
-    return (
-      (this.getElementEdgeSpacing(owner, ownerSide, pageSetup) ?? 0) +
-      this.getMeasureBarSpacing(measureBar, measureBarSide, pageSetup)
-    );
+  private static getTerminalMeasureBarSpacing(pageSetup: PageSetup) {
+    return this.getInlineSpacing(pageSetup);
   }
 
   private static getTerminalMeasureBarRightSpacing(
@@ -4459,12 +3906,7 @@ export class LayoutService {
 
     return measureBar == null
       ? 0
-      : this.getTerminalMeasureBarSpacing(
-          owner,
-          measureBar,
-          'trailing',
-          workspace.pageSetup,
-        );
+      : this.getTerminalMeasureBarSpacing(workspace.pageSetup);
   }
 
   private static getMeasureBarLeftLeadingSpacing(
@@ -4475,24 +3917,7 @@ export class LayoutService {
 
     return measureBar == null
       ? 0
-      : this.getTerminalMeasureBarSpacing(
-          owner,
-          measureBar,
-          'leading',
-          pageSetup,
-        );
-  }
-
-  private static getMeasureBarSpacing(
-    measureBar: MeasureBar,
-    side: 'leading' | 'trailing',
-    pageSetup: PageSetup,
-  ) {
-    return this.getGlyphSpacingForGlyphName(
-      NeumeMappingService.getMapping(measureBar).glyphName,
-      side,
-      pageSetup,
-    );
+      : this.getTerminalMeasureBarSpacing(pageSetup);
   }
 
   private static getMeasureBarMinimumGlueWidth(
@@ -4500,19 +3925,19 @@ export class LayoutService {
     right: ScoreElement | null,
     pageSetup: PageSetup,
   ) {
-    const measureBars: MeasureBar[] = [];
+    let measureBarCount = 0;
 
     if (left != null && this.isMeasureBarOwner(left)) {
       const measureBar = this.getVisibleMeasureBarRight(left);
       if (measureBar != null) {
-        measureBars.push(measureBar);
+        measureBarCount++;
       }
     }
 
     if (right != null && this.isMeasureBarOwner(right)) {
       const measureBar = this.getVisibleMeasureBarLeft(right);
       if (measureBar != null) {
-        measureBars.push(measureBar);
+        measureBarCount++;
       }
     }
 
@@ -4521,77 +3946,10 @@ export class LayoutService {
         ? this.getMeasureBarLeftLeadingSpacing(right, pageSetup)
         : 0;
 
-    return (
-      (left != null
-        ? (this.getElementEdgeSpacing(left, 'trailing', pageSetup) ?? 0)
-        : 0) +
-      measureBars.reduce(
-        (width, measureBar) =>
-          width +
-          this.getMeasureBarSpacing(measureBar, 'leading', pageSetup) +
-          this.getMeasureBarSpacing(measureBar, 'trailing', pageSetup),
-        0,
-      ) +
-      (right != null
-        ? (this.getElementEdgeSpacing(right, 'leading', pageSetup) ?? 0)
-        : 0) -
-      internalLeftBarSpacing
-    );
-  }
-
-  private static getMeasureBarMinimumGlueWidthNear(
-    elements: ScoreElement[],
-    anchorIndex: number,
-    index: number,
-    direction: 'before' | 'after',
-    pageSetup: PageSetup,
-  ) {
-    return (
-      this.scanParagraphBoundedInDirection({
-        elements,
-        anchorIndex,
-        startIndex: index,
-        direction,
-        find: (element) => {
-          if (!this.isMeasureBarOwner(element)) {
-            return null;
-          }
-
-          return direction === 'before'
-            ? this.getMeasureBarMinimumGlueWidth(element, null, pageSetup)
-            : this.getMeasureBarMinimumGlueWidth(null, element, pageSetup);
-        },
-      }) ?? 0
-    );
-  }
-
-  private static getMeasureBarMinimumGlueWidthAtOrBefore(
-    elements: ScoreElement[],
-    anchorIndex: number,
-    index: number,
-    pageSetup: PageSetup,
-  ) {
-    return this.getMeasureBarMinimumGlueWidthNear(
-      elements,
-      anchorIndex,
-      index,
-      'before',
-      pageSetup,
-    );
-  }
-
-  private static getMeasureBarMinimumGlueWidthAtOrAfter(
-    elements: ScoreElement[],
-    anchorIndex: number,
-    index: number,
-    pageSetup: PageSetup,
-  ) {
-    return this.getMeasureBarMinimumGlueWidthNear(
-      elements,
-      anchorIndex,
-      index,
-      'after',
-      pageSetup,
+    return Math.max(
+      0,
+      this.getInlineSpacing(pageSetup) * (measureBarCount > 0 ? 2 : 1) -
+        internalLeftBarSpacing,
     );
   }
 
@@ -4627,128 +3985,6 @@ export class LayoutService {
       : (owner as MartyriaElement).measureBarRight;
   }
 
-  private static getSpacingEdgeNeume(
-    element: ScoreElement,
-    side: 'leading' | 'trailing' = 'trailing',
-  ) {
-    if (element.elementType === ElementType.Note) {
-      const noteElement = element as NoteElement;
-      return side === 'leading' && noteElement.vareia
-        ? VocalExpressionNeume.Vareia
-        : noteElement.quantitativeNeume;
-    } else if (element.elementType === ElementType.Martyria) {
-      return (element as MartyriaElement).note;
-    } else if (element.elementType === ElementType.Tempo) {
-      return (element as TempoElement).neume;
-    }
-
-    return null;
-  }
-
-  private static getGlyphSpacingForGlyphName(
-    glyphName: SbmuflGlyphName,
-    side: 'leading' | 'trailing',
-    pageSetup: PageSetup,
-  ) {
-    const spacing =
-      side === 'leading'
-        ? fontService.getLeadingSpace(
-            pageSetup.neumeDefaultFontFamily,
-            glyphName,
-          )
-        : fontService.getTrailingSpace(
-            pageSetup.neumeDefaultFontFamily,
-            glyphName,
-          );
-
-    return spacing * pageSetup.neumeDefaultFontSize;
-  }
-
-  private static getGlyphPairSpacing(
-    leftGlyphName: SbmuflGlyphName,
-    rightGlyphName: SbmuflGlyphName,
-    pageSetup: PageSetup,
-  ) {
-    return (
-      this.getGlyphSpacingForGlyphName(leftGlyphName, 'trailing', pageSetup) +
-      this.getGlyphSpacingForGlyphName(rightGlyphName, 'leading', pageSetup)
-    );
-  }
-
-  private static getElementEdgeSpacing(
-    element: ScoreElement,
-    side: 'leading' | 'trailing',
-    pageSetup: PageSetup,
-  ) {
-    if (element.elementType === ElementType.Martyria) {
-      return this.getMartyriaEdgeSpacing(
-        element as MartyriaElement,
-        side,
-        pageSetup,
-      );
-    }
-
-    const glyphName = this.getElementEdgeGlyphName(element, side, pageSetup);
-
-    return glyphName != null
-      ? this.getGlyphSpacingForGlyphName(glyphName, side, pageSetup)
-      : null;
-  }
-
-  private static getElementEdgeGlyphName(
-    element: ScoreElement,
-    side: 'leading' | 'trailing',
-    pageSetup: PageSetup,
-  ): SbmuflGlyphName | null {
-    if (element.elementType === ElementType.Note) {
-      return this.getNoteSpacingGlyphName(
-        element as NoteElement,
-        side,
-        pageSetup,
-      );
-    }
-
-    const neume = this.getSpacingEdgeNeume(element, side);
-
-    return neume != null
-      ? NeumeMappingService.getMapping(neume).glyphName
-      : null;
-  }
-
-  private static getMartyriaEdgeSpacing(
-    martyriaElement: MartyriaElement,
-    side: 'leading' | 'trailing',
-    pageSetup: PageSetup,
-  ) {
-    const neume =
-      side === 'leading'
-        ? (martyriaElement.tempoLeft ?? martyriaElement.note)
-        : (martyriaElement.tempoRight ??
-          (martyriaElement.alignRight &&
-          martyriaElement.quantitativeNeume != null
-            ? martyriaElement.quantitativeNeume
-            : martyriaElement.note));
-
-    const glyphName = NeumeMappingService.getMapping(neume).glyphName;
-
-    return this.getGlyphSpacingForGlyphName(glyphName, side, pageSetup);
-  }
-
-  private static getNoteSpacingGlyphName(
-    noteElement: NoteElement,
-    side: 'leading' | 'trailing',
-    pageSetup: PageSetup,
-  ) {
-    const { glyphNames, vareiaIndex, quantitativeIndex } =
-      this.getResolvedNoteGlyphContext(noteElement, pageSetup, true);
-    const targetIndex =
-      side === 'leading' && vareiaIndex != null
-        ? vareiaIndex
-        : quantitativeIndex;
-
-    return glyphNames[targetIndex];
-  }
-
   private static getResolvedQuantitativeGlyphName(
     noteElement: NoteElement,
     pageSetup: PageSetup,
@@ -4760,31 +3996,6 @@ export class LayoutService {
     );
 
     return glyphNames[quantitativeIndex];
-  }
-
-  private static getContextualVareiaInternalSpacing(
-    noteElement: NoteElement,
-    pageSetup: PageSetup,
-  ) {
-    const { glyphNames, vareiaIndex, quantitativeIndex } =
-      this.getResolvedNoteGlyphContext(noteElement, pageSetup, true);
-
-    if (vareiaIndex == null) {
-      return 0;
-    }
-
-    return (
-      this.getGlyphSpacingForGlyphName(
-        glyphNames[vareiaIndex],
-        'trailing',
-        pageSetup,
-      ) +
-      this.getGlyphSpacingForGlyphName(
-        glyphNames[quantitativeIndex],
-        'leading',
-        pageSetup,
-      )
-    );
   }
 
   private static getResolvedNoteGlyphNames(
@@ -4899,92 +4110,20 @@ export class LayoutService {
     return resolvedGlyphNames;
   }
 
-  public static getGlueWidthBetween(
-    left: ScoreElement,
-    right: ScoreElement | null,
-    pageSetup: PageSetup,
-  ) {
-    return this.getBoundarySpacingMetrics(left, right, pageSetup).preferred;
-  }
-
-  private static getBoundarySpacingMetrics(
-    left: ScoreElement,
-    right: ScoreElement | null,
-    pageSetup: PageSetup,
-  ): BoundarySpacingMetrics {
-    // Keep preferred and minimum widths together. Many callers need the natural
-    // width for placement, but their shrink limit must leave the font-provided
-    // glyph bearings and measure-bar clearances intact.
-    const space1 = this.getElementEdgeSpacing(left, 'trailing', pageSetup) ?? 0;
-    const space2 =
-      right != null
-        ? (this.getElementEdgeSpacing(right, 'leading', pageSetup) ?? 0)
-        : 0;
-    const bonus =
-      this.getMartyriaSpacingBonusForEdge(left, space1, pageSetup) +
-      (right != null
-        ? this.getMartyriaSpacingBonusForEdge(right, space2, pageSetup)
-        : 0);
-    return this.createBoundarySpacingMetrics({
-      rawSpacing: space1 + space2,
-      bonus,
-      measureBarMinimum: this.getMeasureBarMinimumGlueWidth(
-        left,
-        right,
-        pageSetup,
-      ),
-      pageSetup,
-    });
-  }
-
-  private static createBoundarySpacingMetrics(args: {
-    rawSpacing: number;
-    bonus: number;
-    measureBarMinimum: number;
-    pageSetup: PageSetup;
-  }): BoundarySpacingMetrics {
-    return {
-      preferred: Math.max(
-        args.rawSpacing + args.pageSetup.neumeDefaultSpacing + args.bonus,
-        args.measureBarMinimum,
-      ),
-      minimum: Math.max(args.rawSpacing, args.measureBarMinimum),
-      bonus: args.bonus,
-    };
-  }
-
-  private static getMartyriaSpacingBonusForEdge(
-    element: ScoreElement,
-    edgeSpacing: number | null,
-    pageSetup: PageSetup,
-  ) {
-    // Only add the bonus when this side actually contributes a spacing glyph.
-    // The edge-glyph selection itself stays in getMartyriaEdgeSpacing.
-    if (edgeSpacing == null) {
-      return 0;
-    }
-
-    return element.elementType === ElementType.Martyria
-      ? this.getMartyriaSpacingBonusWidth(pageSetup)
-      : 0;
-  }
-
   private static getMartyriaSpacingBonusWidth(pageSetup: PageSetup) {
     return pageSetup.neumeDefaultFontSize * 0.2;
   }
 
-  private static getMartyriaBonusStretch(bonus: number) {
+  private static getMartyriaBonusStretch(pageSetup: PageSetup) {
+    const bonus = this.getMartyriaSpacingBonusWidth(pageSetup);
     return Math.max(bonus * 0.75, minGlueStretch);
   }
 
-  private static getMartyriaBonusShrink(
-    spacingMetrics: BoundarySpacingMetrics,
-  ) {
-    // At adjustment ratio -1, the boundary may shed all user spacing and the
-    // martyria bonus, but not the raw bearing/measure-bar minimum.
+  private static getMartyriaBonusShrink(pageSetup: PageSetup) {
     return Math.max(
       minGlueShrink,
-      Math.max(0, spacingMetrics.preferred - spacingMetrics.minimum),
+      this.getInlineSpacing(pageSetup) +
+        this.getMartyriaSpacingBonusWidth(pageSetup),
     );
   }
 

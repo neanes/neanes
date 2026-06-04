@@ -904,11 +904,12 @@ export class LayoutService {
             measureBarWidthMap,
           );
 
-          const glueWidths = LayoutService.getGlueWidthsBetween(
-            noteElement,
-            nextElement,
-            pageSetup,
-          );
+          const boundarySpacingMetrics =
+            LayoutService.getBoundarySpacingMetrics(
+              noteElement,
+              nextElement,
+              pageSetup,
+            );
 
           const preBreakGlue =
             nextElement?.elementType === ElementType.Martyria
@@ -918,10 +919,10 @@ export class LayoutService {
                 // would be counted twice during justification.
                 this.fixedGlue(0)
               : this.createNotePreBreakGlue(
-                  glueWidths.preferred,
+                  boundarySpacingMetrics.preferred,
                   minGlueStretch,
                   minGlueShrink,
-                  glueWidths.minimum,
+                  boundarySpacingMetrics.minimum,
                 );
 
           // Break opportunity after the neume. The pre-break glue stays on the
@@ -947,19 +948,20 @@ export class LayoutService {
             pageSetup,
           );
 
-          const glueWidths = LayoutService.getGlueWidthsBetween(
-            martyriaElement,
-            nextElement,
-            pageSetup,
-          );
+          const boundarySpacingMetrics =
+            LayoutService.getBoundarySpacingMetrics(
+              martyriaElement,
+              nextElement,
+              pageSetup,
+            );
 
           const martyriaGlue: Glue = {
             type: 'glue',
-            width: glueWidths.preferred,
+            width: boundarySpacingMetrics.preferred,
             // Martyria glue is elastic only for the augmenting bonus. The raw
-            // glyph bearings remain protected by glueWidths.minimum.
-            stretch: this.getMartyriaBonusStretch(glueWidths.bonus),
-            shrink: this.getMartyriaBonusShrink(glueWidths),
+            // glyph bearings remain protected by boundarySpacingMetrics.minimum.
+            stretch: this.getMartyriaBonusStretch(boundarySpacingMetrics.bonus),
+            shrink: this.getMartyriaBonusShrink(boundarySpacingMetrics),
           };
 
           const previousElement = this.getElementAt(elements, i - 1);
@@ -984,9 +986,9 @@ export class LayoutService {
             // cancellation glue. Carry the boundary metrics through so the new
             // glue keeps the martyria bonus shrinkable/stretchable while still
             // preserving melisma and terminal-barline reservations.
-            const leadingGlueWidths =
+            const leadingBoundarySpacingMetrics =
               previousElement != null
-                ? this.getGlueWidthsBetween(
+                ? this.getBoundarySpacingMetrics(
                     previousElement,
                     martyriaElement,
                     pageSetup,
@@ -1001,7 +1003,7 @@ export class LayoutService {
               leadingGlueWidth,
               reservation,
               rightMartyriaGlue,
-              leadingGlueWidths,
+              leadingBoundarySpacingMetrics,
             );
             this.removeGlue(layoutWorkspace);
             this.addGlue(newGlue, layoutWorkspace);
@@ -1076,7 +1078,10 @@ export class LayoutService {
               martyriaGlue,
               0,
               martyriaBarTransferWidth,
-              Math.max(martyriaMinimumGlueWidth, glueWidths.minimum),
+              Math.max(
+                martyriaMinimumGlueWidth,
+                boundarySpacingMetrics.minimum,
+              ),
             ),
           );
 
@@ -1117,16 +1122,17 @@ export class LayoutService {
             leadingGlueWidth,
           );
           this.addBox(elementWidthPx, tempoElement, layoutWorkspace);
-          const trailingGlueWidths = LayoutService.getGlueWidthsBetween(
-            tempoElement,
-            nextElement,
-            pageSetup,
-          );
+          const trailingBoundarySpacingMetrics =
+            LayoutService.getBoundarySpacingMetrics(
+              tempoElement,
+              nextElement,
+              pageSetup,
+            );
           this.addGlue(
             this.createInlineElementGlue(
-              trailingGlueWidths.preferred,
-              trailingGlueWidths.minimum,
-              trailingGlueWidths.bonus,
+              trailingBoundarySpacingMetrics.preferred,
+              trailingBoundarySpacingMetrics.minimum,
+              trailingBoundarySpacingMetrics.bonus,
             ),
             layoutWorkspace,
           );
@@ -4900,10 +4906,10 @@ export class LayoutService {
     right: ScoreElement | null,
     pageSetup: PageSetup,
   ) {
-    return this.getGlueWidthsBetween(left, right, pageSetup).preferred;
+    return this.getBoundarySpacingMetrics(left, right, pageSetup).preferred;
   }
 
-  private static getGlueWidthsBetween(
+  private static getBoundarySpacingMetrics(
     left: ScoreElement,
     right: ScoreElement | null,
     pageSetup: PageSetup,
@@ -4935,14 +4941,6 @@ export class LayoutService {
       minimum,
       bonus,
     };
-  }
-
-  private static getMinimumGlueWidthBetween(
-    left: ScoreElement,
-    right: ScoreElement | null,
-    pageSetup: PageSetup,
-  ) {
-    return this.getGlueWidthsBetween(left, right, pageSetup).minimum;
   }
 
   private static getMartyriaSpacingBonus(

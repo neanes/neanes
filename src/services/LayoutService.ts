@@ -473,7 +473,7 @@ export class LayoutService {
       type: 'glue',
       width: inlineSpacing,
       stretch: Math.max(inlineSpacing * 0.5, minGlueStretch),
-      shrink: Math.max(inlineSpacing * 0.5, minGlueShrink),
+      shrink: Math.max(inlineSpacing / 3, minGlueShrink),
     };
 
     const martyriaGlue = this.createMartyriaGlue(pageSetup);

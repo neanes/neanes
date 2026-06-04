@@ -1590,13 +1590,19 @@ export class LayoutService {
     if (workspace.neumesEndPx <= previousLyricsEndPx + glueWidth) {
       const adjustment =
         previousLyricsEndPx - workspace.neumesEndPx + glueWidth;
+      const isParagraphStart = workspace.pendingParagraph.length === 0;
 
       // A zero-width spacer would only add a box to pendingParagraph without
       // advancing neumesEndPx. The immediately-following addBox call already
       // supplies the box that anchors any later glue as a legal breakpoint,
       // so the spacer is redundant when adjustment is 0. This mirrors the
       // martyria bar-transfer call site, which is also guarded by > 0.
-      if (adjustment > 0) {
+      //
+      // Likewise, the first visible inline element in a paragraph should stay
+      // flush with the left margin. Reserve the lyric space in lyricsEndPx, but
+      // let the element's own box be the first paragraph item instead of
+      // prepending an anonymous spacer box that positionItems would place at x=0.
+      if (adjustment > 0 && !isParagraphStart) {
         this.addAnonymousBox(adjustment, workspace);
       }
     }

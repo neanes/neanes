@@ -258,16 +258,16 @@ interface LineBreakSolution {
   requestedMaxAdjustmentRatio: number | null;
 }
 
-interface InlineElementGlueWidths {
+interface InlineSpacingMetrics {
   leading: number;
   trailing: number;
   trailingMinimum: number;
   // Extra preferred spacing contributed by a neighboring martyria edge. This
   // is kept separate so inline glue can shrink back to the raw bearing width.
-  trailingBonus: number;
+  trailingMartyriaBonusSpacing: number;
 }
 
-interface BoundaryGlueWidths {
+interface BoundarySpacingMetrics {
   // Natural width used by the line breaker: raw glyph bearings, user spacing,
   // measure-bar minimums, and any martyria bonus.
   preferred: number;
@@ -550,7 +550,7 @@ export class LayoutService {
               this.createInlineElementGlue(
                 glueWidths.trailing,
                 glueWidths.trailingMinimum,
-                glueWidths.trailingBonus,
+                glueWidths.trailingMartyriaBonusSpacing,
               ),
               layoutWorkspace,
             );
@@ -629,7 +629,7 @@ export class LayoutService {
               this.createInlineElementGlue(
                 glueWidths.trailing,
                 glueWidths.trailingMinimum,
-                glueWidths.trailingBonus,
+                glueWidths.trailingMartyriaBonusSpacing,
               ),
               layoutWorkspace,
             );
@@ -680,7 +680,7 @@ export class LayoutService {
             this.createInlineElementGlue(
               glueWidths.trailing,
               glueWidths.trailingMinimum,
-              glueWidths.trailingBonus,
+              glueWidths.trailingMartyriaBonusSpacing,
             ),
             layoutWorkspace,
           );
@@ -1212,7 +1212,7 @@ export class LayoutService {
             this.createInlineElementGlue(
               glueWidths.trailing,
               glueWidths.trailingMinimum,
-              glueWidths.trailingBonus,
+              glueWidths.trailingMartyriaBonusSpacing,
             ),
             layoutWorkspace,
           );
@@ -1677,13 +1677,13 @@ export class LayoutService {
     index: number,
     inline: boolean,
     pageSetup: PageSetup,
-  ): InlineElementGlueWidths {
+  ): InlineSpacingMetrics {
     if (!inline) {
       return {
         leading: pageSetup.neumeDefaultSpacing,
         trailing: pageSetup.neumeDefaultSpacing,
         trailingMinimum: 0,
-        trailingBonus: 0,
+        trailingMartyriaBonusSpacing: 0,
       };
     }
 
@@ -1701,7 +1701,7 @@ export class LayoutService {
       ),
       trailing: trailing.preferred,
       trailingMinimum: trailing.minimum,
-      trailingBonus: trailing.bonus,
+      trailingMartyriaBonusSpacing: trailing.bonus,
     };
   }
 
@@ -2111,7 +2111,7 @@ export class LayoutService {
     leadingGlueWidth: number,
     reservation: number,
     rightMartyriaGlue: Glue,
-    leadingGlueWidths: BoundaryGlueWidths,
+    leadingSpacingMetrics: BoundarySpacingMetrics,
   ): Glue {
     // Ordinary note-to-martyria leading glue owns the martyria bonus elasticity
     // for that boundary. Right-aligned martyriae keep MAX_COST stretch so they
@@ -2121,13 +2121,13 @@ export class LayoutService {
       ? {
           ...rightMartyriaGlue,
           width: leadingGlueWidth,
-          shrink: this.getMartyriaBonusShrink(leadingGlueWidths),
+          shrink: this.getMartyriaBonusShrink(leadingSpacingMetrics),
         }
       : {
           type: 'glue' as const,
           width: leadingGlueWidth,
-          stretch: this.getMartyriaBonusStretch(leadingGlueWidths.bonus),
-          shrink: this.getMartyriaBonusShrink(leadingGlueWidths),
+          stretch: this.getMartyriaBonusStretch(leadingSpacingMetrics.bonus),
+          shrink: this.getMartyriaBonusShrink(leadingSpacingMetrics),
         };
 
     return {
@@ -4907,7 +4907,7 @@ export class LayoutService {
     left: ScoreElement,
     right: ScoreElement | null,
     pageSetup: PageSetup,
-  ): BoundaryGlueWidths {
+  ): BoundarySpacingMetrics {
     // Keep preferred and minimum widths together. Many callers need the natural
     // width for placement, but their shrink limit must leave the font-provided
     // glyph bearings and measure-bar clearances intact.
@@ -4969,12 +4969,14 @@ export class LayoutService {
     return Math.max(bonus * 0.75, minGlueStretch);
   }
 
-  private static getMartyriaBonusShrink(glueWidths: BoundaryGlueWidths) {
+  private static getMartyriaBonusShrink(
+    spacingMetrics: BoundarySpacingMetrics,
+  ) {
     // At adjustment ratio -1, the boundary may shed all user spacing and the
     // martyria bonus, but not the raw bearing/measure-bar minimum.
     return Math.max(
       minGlueShrink,
-      Math.max(0, glueWidths.preferred - glueWidths.minimum),
+      Math.max(0, spacingMetrics.preferred - spacingMetrics.minimum),
     );
   }
 

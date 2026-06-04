@@ -81,7 +81,7 @@
     "vue": "^3.5.35",
     "vue-component-type-helpers": "^3.3.2",
     "vue-draggable-resizable": "^3.0.0",
-    "vue-router": "^5.0.7",
+    "vue-router": "^5.1.0",
     "vue-tsc": "^3.3.2",
     "vue3-observe-visibility": "^1.0.7",
     "vue3-tabs-chrome": "^0.3.3",

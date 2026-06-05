@@ -18,23 +18,58 @@
             </FieldLabel>
             <Select v-model="languageSelectValue">
               <SelectTrigger id="editor-preferences-language" class="w-full">
-                <SelectValue />
+                <SelectValue>
+                  <span class="flex min-w-0 items-center gap-2">
+                    <span
+                      v-if="selectedLocale"
+                      aria-hidden="true"
+                      class="size-5 shrink-0 text-center"
+                    >
+                      {{ selectedLocale.flag }}
+                    </span>
+                    <span class="truncate">{{ selectedLanguageLabel }}</span>
+                  </span>
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
-                  <SelectItem :value="LANGUAGE_SYSTEM_DEFAULT_VALUE">
-                    {{
+                  <SelectItem
+                    :value="LANGUAGE_SYSTEM_DEFAULT_VALUE"
+                    :text-value="
                       $t(($) => $.dialog.preferences.languageSystemDefault, {
                         ns: 'dialog',
                       })
-                    }}
+                    "
+                  >
+                    <span class="flex items-center gap-2">
+                      <span aria-hidden="true" class="size-5 shrink-0" />
+                      <span>
+                        {{
+                          $t(
+                            ($) => $.dialog.preferences.languageSystemDefault,
+                            {
+                              ns: 'dialog',
+                            },
+                          )
+                        }}
+                      </span>
+                    </span>
                   </SelectItem>
                   <SelectItem
                     v-for="locale in supportedLocales"
                     :key="locale.code"
                     :value="locale.code"
+                    :text-value="locale.name"
                   >
-                    {{ locale.name }}
+                    <span class="flex items-center gap-2">
+                      <span
+                        aria-hidden="true"
+                        class="size-5 shrink-0 text-center"
+                      >
+                        {{ locale.flag }}
+                      </span>
+                      <span>{{ locale.name }}</span>
+                    </span>
                   </SelectItem>
                 </SelectGroup>
               </SelectContent>
@@ -163,6 +198,7 @@
 </template>
 
 <script setup lang="ts">
+import { useTranslation } from 'i18next-vue';
 import type { PropType } from 'vue';
 import { computed, ref } from 'vue';
 
@@ -218,6 +254,7 @@ const open = defineModel<boolean>('open', { required: true });
 
 const form = ref(cloneEditorPreferences(props.options));
 const LANGUAGE_SYSTEM_DEFAULT_VALUE = '__system_default__';
+const { t } = useTranslation();
 const languageSelectValue = computed({
   get() {
     return form.value.language || LANGUAGE_SYSTEM_DEFAULT_VALUE;
@@ -225,6 +262,21 @@ const languageSelectValue = computed({
   set(value: string) {
     form.value.language = value === LANGUAGE_SYSTEM_DEFAULT_VALUE ? '' : value;
   },
+});
+const languageSystemDefaultLabel = computed(() =>
+  t(($) => $.dialog.preferences.languageSystemDefault, {
+    ns: 'dialog',
+  }),
+);
+const selectedLocale = computed(() =>
+  supportedLocales.find((locale) => locale.code === languageSelectValue.value),
+);
+const selectedLanguageLabel = computed(() => {
+  if (languageSelectValue.value === LANGUAGE_SYSTEM_DEFAULT_VALUE) {
+    return languageSystemDefaultLabel.value;
+  }
+
+  return selectedLocale.value?.name ?? languageSelectValue.value;
 });
 const tempoSigns = [
   TempoSign.VerySlow,

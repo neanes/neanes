@@ -148,7 +148,7 @@
     </template>
     <template v-if="!element.useDefaultStyle">
       <span class="space" />
-      <Label for="toolbar-text-box-outline">{{
+      <Label for="toolbar-text-box-outline" class="mr-2">{{
         $t(($) => $.toolbar.common.outline, { ns: 'toolbar' })
       }}</Label>
       <InputStrokeWidth

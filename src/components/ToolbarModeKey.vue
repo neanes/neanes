@@ -91,7 +91,7 @@
     </AppTooltip>
     <span class="space" />
     <template v-if="!element.useDefaultStyle">
-      <Label for="toolbar-mode-key-outline">{{
+      <Label for="toolbar-mode-key-outline" class="mr-2">{{
         $t(($) => $.toolbar.common.outline, { ns: 'toolbar' })
       }}</Label>
       <InputStrokeWidth

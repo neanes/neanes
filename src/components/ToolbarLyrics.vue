@@ -80,7 +80,7 @@
         <u>U</u>
       </button>
       <span class="space"></span>
-      <Label>{{
+      <Label class="mr-2">{{
         $t(($) => $.toolbar.common.outline, { ns: 'toolbar' })
       }}</Label>
       <InputStrokeWidth

@@ -84,7 +84,7 @@
         <i>I</i>
       </button>
       <span class="space"></span>
-      <Label for="toolbar-drop-cap-outline">{{
+      <Label for="toolbar-drop-cap-outline" class="mr-2">{{
         $t(($) => $.toolbar.common.outline, { ns: 'toolbar' })
       }}</Label>
       <InputStrokeWidth

@@ -23,9 +23,10 @@ import { ElementType, EmptyElement, LineBreakType } from '@/models/Element';
 import type { Footer } from '@/models/Footer';
 import type { Header } from '@/models/Header';
 import { measureBarAboveToLeft } from '@/models/NeumeReplacements';
-import type { Fthora, Neume } from '@/models/Neumes';
+import type { Neume } from '@/models/Neumes';
 import {
   Accidental,
+  Fthora,
   GorgonNeume,
   MeasureBar,
   NeumeSelection,
@@ -272,6 +273,46 @@ const noteVisualCollisionPairs: NoteVisualCollisionPair[] = [
   { left: VocalExpressionNeume.Antikenoma, right: Accidental.Sharp_4_Left },
   { left: VocalExpressionNeume.Antikenoma, right: Accidental.Sharp_6_Left },
   { left: VocalExpressionNeume.Antikenoma, right: Accidental.Sharp_8_Left },
+
+  { left: VocalExpressionNeume.Antikenoma, right: Fthora.DiatonicNiLow_Bottom },
+  { left: VocalExpressionNeume.Antikenoma, right: Fthora.DiatonicPa_Bottom },
+  { left: VocalExpressionNeume.Antikenoma, right: Fthora.DiatonicVou_Bottom },
+  { left: VocalExpressionNeume.Antikenoma, right: Fthora.DiatonicGa_Bottom },
+  { left: VocalExpressionNeume.Antikenoma, right: Fthora.DiatonicThi_Bottom },
+  { left: VocalExpressionNeume.Antikenoma, right: Fthora.DiatonicKe_Bottom },
+  { left: VocalExpressionNeume.Antikenoma, right: Fthora.DiatonicZo_Bottom },
+  {
+    left: VocalExpressionNeume.Antikenoma,
+    right: Fthora.DiatonicNiHigh_Bottom,
+  },
+  {
+    left: VocalExpressionNeume.Antikenoma,
+    right: Fthora.HardChromaticPa_Bottom,
+  },
+  {
+    left: VocalExpressionNeume.Antikenoma,
+    right: Fthora.HardChromaticThi_Bottom,
+  },
+  {
+    left: VocalExpressionNeume.Antikenoma,
+    right: Fthora.SoftChromaticPa_Bottom,
+  },
+  {
+    left: VocalExpressionNeume.Antikenoma,
+    right: Fthora.SoftChromaticThi_Bottom,
+  },
+  { left: VocalExpressionNeume.Antikenoma, right: Fthora.Enharmonic_Bottom },
+  { left: VocalExpressionNeume.Antikenoma, right: Fthora.Zygos_Bottom },
+  { left: VocalExpressionNeume.Antikenoma, right: Fthora.Kliton_Bottom },
+  { left: VocalExpressionNeume.Antikenoma, right: Fthora.Spathi_Bottom },
+  {
+    left: VocalExpressionNeume.Antikenoma,
+    right: Fthora.GeneralSharp_Bottom,
+  },
+  {
+    left: VocalExpressionNeume.Antikenoma,
+    right: Fthora.GeneralFlat_Bottom,
+  },
 
   // Using null will check the bounds in all cases.
   // { left: Accidental.Flat_2_Right, right: null },

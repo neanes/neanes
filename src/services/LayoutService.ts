@@ -903,6 +903,10 @@ export class LayoutService {
           const martyriaElement = elements[i] as MartyriaElement;
           const previousElement = this.getElementAt(elements, i - 1);
           const nextElement = this.getElementAt(elements, i + 1);
+          const elementWidthPx = this.getMartyriaWidth(
+            martyriaElement,
+            pageSetup,
+          );
           const useStandardLeadingGlue =
             !martyriaElement.alignRight &&
             (!!martyriaElement.tempoLeft ||
@@ -936,13 +940,23 @@ export class LayoutService {
               (martyriaElement.alignRight
                 ? (trailingNoteReservations?.terminalMeasureBarSpacing ?? 0)
                 : 0);
+            const baseGlue = martyriaElement.alignRight
+              ? rightMartyriaGlue
+              : useStandardLeadingGlue
+                ? standardGlue
+                : martyriaGlue;
+            const visualSpacing = this.getVisualGlueSpacing(
+              previousElement,
+              martyriaElement,
+              baseGlue.width,
+              pageSetup,
+            );
             const newGlue = this.createMartyriaLeadingGlue(
-              martyriaElement.alignRight
-                ? rightMartyriaGlue
-                : useStandardLeadingGlue
-                  ? standardGlue
-                  : martyriaGlue,
-              reservation,
+              baseGlue,
+              Math.max(reservation, visualSpacing.deficit),
+              visualSpacing.requiredWidth > 0
+                ? visualSpacing.requiredWidth
+                : undefined,
             );
             this.removeGlue(layoutWorkspace);
             this.addGlue(newGlue, layoutWorkspace);
@@ -955,10 +969,6 @@ export class LayoutService {
             layoutWorkspace.neumesEndPx += rightMartyriaGlue.width;
           }
 
-          const elementWidthPx = this.getMartyriaWidth(
-            martyriaElement,
-            pageSetup,
-          );
           if (skipLyricCollision) {
             layoutWorkspace.lyricsEndPx =
               layoutWorkspace.neumesEndPx + elementWidthPx;
@@ -1004,19 +1014,31 @@ export class LayoutService {
           // When the quantitative neume is present, the renderer keeps its
           // fixed spacing inside the box as marginLeft.
 
+          const trailingGlue = useStandardTrailingGlue
+            ? standardGlue
+            : martyriaGlue;
+          const visualSpacing = this.getVisualGlueSpacing(
+            martyriaElement,
+            nextElement,
+            trailingGlue.width,
+            pageSetup,
+          );
           this.addProtectedBreakpointEncoding(
             layoutWorkspace,
             this.fixedGlue(0),
             0,
             0,
             this.createMartyriaPostBreakGlue(
-              useStandardTrailingGlue ? standardGlue : martyriaGlue,
-              0,
+              trailingGlue,
+              visualSpacing.deficit,
               martyriaBarTransferWidth,
-              this.getMeasureBarMinimumGlueWidth(
-                martyriaElement,
-                nextElement,
-                pageSetup,
+              Math.max(
+                this.getMeasureBarMinimumGlueWidth(
+                  martyriaElement,
+                  nextElement,
+                  pageSetup,
+                ),
+                visualSpacing.requiredWidth,
               ),
             ),
           );
@@ -1308,6 +1330,18 @@ export class LayoutService {
           paragraphLineIndex <= dropCapContinuationLines
         ) {
           currentLine.indentation = dropCapWidthPx;
+        }
+
+        if (
+          isFirstElementOnLine &&
+          element.elementType === ElementType.Martyria &&
+          !(element as MartyriaElement).alignRight
+        ) {
+          currentLine.indentation += this.getLineStartMartyriaShift(
+            element as MartyriaElement,
+            position.xOffset,
+            pageSetup,
+          );
         }
 
         element.x =
@@ -1760,10 +1794,17 @@ export class LayoutService {
   private static createMartyriaLeadingGlue(
     baseGlue: Glue,
     reservation: number,
+    minimumWidth?: number,
   ): Glue {
+    const width = baseGlue.width + reservation;
+
     return {
       ...baseGlue,
-      width: baseGlue.width + reservation,
+      width,
+      shrink:
+        minimumWidth == null
+          ? baseGlue.shrink
+          : Math.min(baseGlue.shrink, Math.max(0, width - minimumWidth)),
     };
   }
 
@@ -2459,6 +2500,178 @@ export class LayoutService {
       left,
       right: left + bodyWidth,
     };
+  }
+
+  private static getVisualGlueSpacing(
+    left: ScoreElement | null,
+    right: ScoreElement | null,
+    baseGlueWidth: number,
+    pageSetup: PageSetup,
+  ) {
+    if (!this.isVisualCollisionBoundaryElement(left)) {
+      return { deficit: 0, requiredWidth: 0 };
+    }
+
+    if (!this.isVisualCollisionBoundaryElement(right)) {
+      return { deficit: 0, requiredWidth: 0 };
+    }
+
+    const requiredWidth =
+      this.getInlineSpacing(pageSetup) +
+      this.getElementRightInkOverhang(left, pageSetup) +
+      this.getElementLeftInkOverhang(right, pageSetup);
+
+    return {
+      deficit: Math.max(0, requiredWidth - baseGlueWidth),
+      requiredWidth,
+    };
+  }
+
+  private static getLineStartMartyriaShift(
+    martyriaElement: MartyriaElement,
+    lineStartOffset: number,
+    pageSetup: PageSetup,
+  ) {
+    return Math.max(
+      0,
+      this.getMartyriaLeftInkOverhang(martyriaElement, pageSetup) -
+        lineStartOffset,
+    );
+  }
+
+  private static isVisualCollisionBoundaryElement(
+    element: ScoreElement | null,
+  ): element is NoteElement | MartyriaElement | TempoElement {
+    return (
+      element?.elementType === ElementType.Note ||
+      element?.elementType === ElementType.Martyria ||
+      element?.elementType === ElementType.Tempo
+    );
+  }
+
+  private static getElementLeftInkOverhang(
+    element: NoteElement | MartyriaElement | TempoElement,
+    pageSetup: PageSetup,
+  ) {
+    if (element.elementType === ElementType.Note) {
+      return this.getNoteLeftInkOverhang(element as NoteElement, pageSetup);
+    }
+
+    if (element.elementType === ElementType.Tempo) {
+      return this.getSingleNeumeLeftInkOverhang(
+        (element as TempoElement).neume,
+        pageSetup,
+      );
+    }
+
+    return this.getMartyriaLeftInkOverhang(
+      element as MartyriaElement,
+      pageSetup,
+    );
+  }
+
+  private static getElementRightInkOverhang(
+    element: NoteElement | MartyriaElement | TempoElement,
+    pageSetup: PageSetup,
+  ) {
+    if (element.elementType === ElementType.Note) {
+      return this.getNoteInkBoundsFromCache(element as NoteElement, pageSetup)
+        .rightOverhang;
+    }
+
+    if (element.elementType === ElementType.Tempo) {
+      return this.getSingleNeumeRightInkOverhang(
+        (element as TempoElement).neume,
+        pageSetup,
+      );
+    }
+
+    return this.getMartyriaRightInkOverhang(
+      element as MartyriaElement,
+      pageSetup,
+    );
+  }
+
+  private static getMartyriaLeftInkOverhang(
+    martyriaElement: MartyriaElement,
+    pageSetup: PageSetup,
+  ) {
+    const measureBarLeftWidth = this.hasInlineMeasureBarLeft(martyriaElement)
+      ? this.getNeumeWidthFromCache(
+          neumeWidthCache,
+          martyriaElement.measureBarLeft!,
+          pageSetup,
+        )
+      : 0;
+    const measureBarLeftOverhang = this.hasInlineMeasureBarLeft(martyriaElement)
+      ? this.getSingleNeumeLeftInkOverhang(
+          martyriaElement.measureBarLeft!,
+          pageSetup,
+        )
+      : 0;
+    const tempoLeftOverhang = martyriaElement.tempoLeft
+      ? Math.max(
+          0,
+          this.getSingleNeumeLeftInkOverhang(
+            martyriaElement.tempoLeft,
+            pageSetup,
+          ) -
+            measureBarLeftWidth -
+            martyriaElement.computedTempoLeftOffsetX,
+        )
+      : 0;
+
+    if (this.hasInlineMeasureBarLeft(martyriaElement)) {
+      return Math.max(measureBarLeftOverhang, tempoLeftOverhang);
+    }
+
+    if (martyriaElement.tempoLeft) {
+      return tempoLeftOverhang;
+    }
+
+    return this.getMartyriaBodyInkOverhangs(martyriaElement, pageSetup).left;
+  }
+
+  private static getMartyriaRightInkOverhang(
+    martyriaElement: MartyriaElement,
+    pageSetup: PageSetup,
+  ) {
+    const trailingNeume = this.getMartyriaTrailingNeume(martyriaElement);
+
+    if (trailingNeume) {
+      return this.getSingleNeumeRightInkOverhang(trailingNeume, pageSetup);
+    }
+
+    return this.getMartyriaBodyInkOverhangs(martyriaElement, pageSetup).right;
+  }
+
+  private static hasInlineMeasureBarLeft(martyriaElement: MartyriaElement) {
+    return (
+      martyriaElement.measureBarLeft != null &&
+      !martyriaElement.measureBarLeft.endsWith('Above')
+    );
+  }
+
+  private static getMartyriaTrailingNeume(
+    martyriaElement: MartyriaElement,
+  ): Neume | null {
+    if (martyriaElement.measureBarRight) {
+      return martyriaElement.measureBarRight;
+    }
+
+    if (martyriaElement.tempoRight) {
+      return martyriaElement.tempoRight;
+    }
+
+    if (martyriaElement.alignRight && martyriaElement.quantitativeNeume) {
+      return martyriaElement.quantitativeNeume;
+    }
+
+    if (martyriaElement.measureBarLeft?.endsWith('Above')) {
+      return martyriaElement.measureBarLeft;
+    }
+
+    return martyriaElement.tempo ?? null;
   }
 
   private static getBreakCost(
@@ -3159,6 +3372,8 @@ export class LayoutService {
       const martyria = element as MartyriaElement;
       martyria.notePrevious = martyria.note;
       martyria.rootSignPrevious = martyria.rootSign;
+      martyria.computedTempoLeftOffsetXPrevious =
+        martyria.computedTempoLeftOffsetX;
       martyria.tempoLeftSpacingPrevious = martyria.tempoLeftSpacing;
       martyria.tempoRightSpacingPrevious = martyria.tempoRightSpacing;
       martyria.computedMeasureBarLeftOffsetXPrevious =
@@ -3221,6 +3436,8 @@ export class LayoutService {
       martyria.updated =
         martyria.notePrevious !== martyria.note ||
         martyria.rootSignPrevious !== martyria.rootSign ||
+        martyria.computedTempoLeftOffsetXPrevious !==
+          martyria.computedTempoLeftOffsetX ||
         martyria.tempoLeftSpacingPrevious !== martyria.tempoLeftSpacing ||
         martyria.tempoRightSpacingPrevious !== martyria.tempoRightSpacing ||
         martyria.computedMeasureBarLeftOffsetXPrevious !==
@@ -3463,6 +3680,13 @@ export class LayoutService {
       : 0;
     martyriaElement.tempoRightSpacing = mappingTempoRight
       ? this.getInlineSpacing(pageSetup)
+      : 0;
+    if (martyriaElement.tempoRight) {
+      martyriaElement.tempoRightSpacing +=
+        this.getMartyriaTempoRightSpacingDeficit(martyriaElement, pageSetup);
+    }
+    martyriaElement.computedTempoLeftOffsetX = martyriaElement.tempoLeft
+      ? -this.getMartyriaTempoLeftSpacingDeficit(martyriaElement, pageSetup)
       : 0;
 
     martyriaElement.neumeWidth = this.getNeumeWidthFromCache(
@@ -5128,6 +5352,99 @@ export class LayoutService {
     }
 
     return bounds;
+  }
+
+  private static getMartyriaBodyInkOverhangs(
+    martyriaElement: MartyriaElement,
+    pageSetup: PageSetup,
+  ) {
+    const inkBounds = this.getNeumeSequenceInkBoundsFromCache(
+      this.getMartyriaBodyNeumesForInkMeasurement(martyriaElement),
+      pageSetup,
+    );
+    const bodyWidth = this.getNeumeSequenceWidthFromCache(
+      neumeWidthCache,
+      this.getMartyriaBodyNeumesForWidthMeasurement(martyriaElement),
+      pageSetup,
+    );
+
+    return {
+      left: Math.max(0, -inkBounds.inkLeft),
+      right: Math.max(0, inkBounds.inkRight - bodyWidth),
+    };
+  }
+
+  private static getMartyriaTempoLeftSpacingDeficit(
+    martyriaElement: MartyriaElement,
+    pageSetup: PageSetup,
+  ) {
+    if (!martyriaElement.tempoLeft) {
+      return 0;
+    }
+
+    const requiredWidth =
+      this.getInlineSpacing(pageSetup) +
+      this.getSingleNeumeRightInkOverhang(
+        martyriaElement.tempoLeft,
+        pageSetup,
+      ) +
+      this.getMartyriaBodyInkOverhangs(martyriaElement, pageSetup).left;
+
+    return Math.max(0, requiredWidth - martyriaElement.tempoLeftSpacing);
+  }
+
+  private static getMartyriaTempoRightSpacingDeficit(
+    martyriaElement: MartyriaElement,
+    pageSetup: PageSetup,
+  ) {
+    if (!martyriaElement.tempoRight) {
+      return 0;
+    }
+
+    const requiredWidth =
+      this.getInlineSpacing(pageSetup) +
+      this.getMartyriaBodyInkOverhangs(martyriaElement, pageSetup).right +
+      this.getSingleNeumeLeftInkOverhang(martyriaElement.tempoRight, pageSetup);
+
+    return Math.max(0, requiredWidth - martyriaElement.tempoRightSpacing);
+  }
+
+  private static getMartyriaBodyNeumesForInkMeasurement(
+    martyriaElement: MartyriaElement,
+  ) {
+    const neumes =
+      this.getMartyriaBodyNeumesForWidthMeasurement(martyriaElement);
+
+    if (!martyriaElement.error && martyriaElement.fthora != null) {
+      neumes.push(martyriaElement.fthora);
+    }
+
+    return neumes;
+  }
+
+  private static getMartyriaBodyNeumesForWidthMeasurement(
+    martyriaElement: MartyriaElement,
+  ): Neume[] {
+    return [
+      !martyriaElement.error ? martyriaElement.note : Note.Pa,
+      !martyriaElement.error ? martyriaElement.rootSign : RootSign.Alpha,
+    ];
+  }
+
+  private static getSingleNeumeLeftInkOverhang(
+    neume: Neume,
+    pageSetup: PageSetup,
+  ) {
+    return this.getNeumeSequenceInkBoundsFromCache([neume], pageSetup)
+      .leftOverhang;
+  }
+
+  private static getSingleNeumeRightInkOverhang(
+    neume: Neume,
+    pageSetup: PageSetup,
+  ) {
+    return this.getNeumeSequenceInkBoundsFromCache([neume], pageSetup)
+      .rightOverhang;
   }
 
   private static getNoteLeftInkOverhang(

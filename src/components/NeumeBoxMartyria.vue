@@ -121,6 +121,7 @@ const tempoStyle = computed(() => {
 const tempoLeftStyle = computed(() => {
   return {
     ...tempoStyle.value,
+    left: withZoom(props.neume.computedTempoLeftOffsetX),
     marginInlineEnd: withZoom(props.neume.tempoLeftSpacing),
   } as StyleValue;
 });

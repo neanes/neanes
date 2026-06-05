@@ -59,12 +59,16 @@ import { Unit } from '@/utils/Unit';
 import { fontService } from './FontService';
 import type { MelismaSyllables } from './MelismaHelperGreek';
 import { MelismaHelperGreek } from './MelismaHelperGreek';
-import { TextMeasurementService } from './TextMeasurementService';
+import {
+  type InkBounds,
+  TextMeasurementService,
+} from './TextMeasurementService';
 
 const fontHeightCache = new Map<string, number>();
 const fontBoundingBoxDescentCache = new Map<string, number>();
 const textWidthCache = new Map<string, number>();
 const neumeWidthCache = new Map<string, number>();
+const noteInkBoundsCache = new Map<string, InkBounds>();
 const emptyElementWidth = 39;
 const idealMaxAdjustmentRatio = 1;
 const adjustmentRatioCapStep = 0.05;
@@ -2328,7 +2332,7 @@ export class LayoutService {
       );
       const terminalMeasureBarSpacing = this.getTerminalMeasureBarRightSpacing(
         noteElement,
-        workspace,
+        workspace.pageSetup,
       );
 
       return {
@@ -3788,14 +3792,12 @@ export class LayoutService {
             );
             const barWidth = measureBarWidthMap.get(measureBarLeft) ?? 0;
             if (barWidth > 0) {
-              const ownerLeadingEdge =
-                owner.x + barWidth + owner.computedMeasureBarLeftLeadingSpacing;
               const centeredLeft =
-                (previousBounds.right + ownerLeadingEdge - barWidth) / 2;
+                (previousBounds.right + ownerBounds.left - barWidth) / 2;
               const barSpacing = this.getInlineSpacing(pageSetup);
               const targetLeft = Math.min(
                 Math.max(centeredLeft, previousBounds.right + barSpacing),
-                ownerLeadingEdge - barWidth - barSpacing,
+                ownerBounds.left - barWidth - barSpacing,
               );
               owner.computedMeasureBarLeftOffsetX =
                 direction * (targetLeft - owner.x);
@@ -3816,11 +3818,16 @@ export class LayoutService {
               const normalLeft =
                 owner.x + this.getMeasureBarOwnerWidth(owner) - barWidth;
               const barSpacing = this.getInlineSpacing(pageSetup);
+              const nextBounds = this.getMeasureBarAnchorBounds(
+                nextAnchor,
+                pageSetup,
+                measureBarWidthMap,
+              );
               const centeredLeft =
-                (ownerBounds.right + nextAnchor.x - barWidth) / 2;
+                (ownerBounds.right + nextBounds.left - barWidth) / 2;
               const targetLeft = Math.min(
                 Math.max(centeredLeft, ownerBounds.right + barSpacing),
-                nextAnchor.x - barWidth - barSpacing,
+                nextBounds.left - barWidth - barSpacing,
               );
               owner.computedMeasureBarRightOffsetX =
                 direction * (targetLeft - normalLeft);
@@ -3832,7 +3839,7 @@ export class LayoutService {
               nextElement.elementType === ElementType.Empty)
           ) {
             owner.computedMeasureBarRightTrailingSpacing =
-              this.getTerminalMeasureBarSpacing(pageSetup);
+              this.getTerminalMeasureBarRightSpacing(owner, pageSetup);
           }
         }
       }
@@ -3903,22 +3910,20 @@ export class LayoutService {
 
       if (element.elementType === ElementType.Note) {
         const note = element as NoteElement;
-        const vareiaPrefixWidth = note.vareia
-          ? this.getNeumeWidthFromCache(
-              neumeWidthCache,
-              VocalExpressionNeume.Vareia,
-              pageSetup,
-            ) + note.vareiaInternalSpacing
-          : 0;
+        const vareiaPrefixWidth = this.getVareiaPrefixWidth(note, pageSetup);
         const bodyWidth = this.getNeumeSequenceWidthFromCache(
           neumeWidthCache,
           this.getNoteNeumesForMeasurement(note),
           pageSetup,
         );
+        const inkBounds = this.getNoteInkBoundsFromCache(note, pageSetup);
+        const bodyLeft = left + vareiaPrefixWidth;
+        const bodyRight = bodyLeft + bodyWidth;
+        const visualLeft = left - this.getNoteLeftInkOverhang(note, pageSetup);
 
         return {
-          left: left + vareiaPrefixWidth,
-          right: left + vareiaPrefixWidth + bodyWidth,
+          left: visualLeft,
+          right: bodyRight + inkBounds.rightOverhang,
         };
       }
 
@@ -3943,13 +3948,21 @@ export class LayoutService {
 
   private static getTerminalMeasureBarRightSpacing(
     owner: NoteElement | MartyriaElement,
-    workspace: LayoutWorkspace,
+    pageSetup: PageSetup,
   ) {
     const measureBar = this.getVisibleMeasureBarRight(owner);
 
-    return measureBar == null
-      ? 0
-      : this.getTerminalMeasureBarSpacing(workspace.pageSetup);
+    if (measureBar == null) {
+      return 0;
+    }
+
+    const inkOverhang =
+      owner.elementType === ElementType.Note
+        ? this.getNoteInkBoundsFromCache(owner as NoteElement, pageSetup)
+            .rightOverhang
+        : 0;
+
+    return this.getTerminalMeasureBarSpacing(pageSetup) + inkOverhang;
   }
 
   private static getMeasureBarLeftLeadingSpacing(
@@ -3988,11 +4001,22 @@ export class LayoutService {
       right != null && this.isMeasureBarOwner(right)
         ? this.getMeasureBarLeftLeadingSpacing(right, pageSetup)
         : 0;
+    const rightInkOverhang =
+      measureBarCount > 0 && left?.elementType === ElementType.Note
+        ? this.getNoteInkBoundsFromCache(left as NoteElement, pageSetup)
+            .rightOverhang
+        : 0;
+    const leftInkOverhang =
+      measureBarCount > 0 && right?.elementType === ElementType.Note
+        ? this.getNoteLeftInkOverhang(right as NoteElement, pageSetup)
+        : 0;
 
     return Math.max(
       0,
       this.getInlineSpacing(pageSetup) * (measureBarCount > 0 ? 2 : 1) -
-        internalLeftBarSpacing,
+        internalLeftBarSpacing +
+        rightInkOverhang +
+        leftInkOverhang,
     );
   }
 
@@ -4785,6 +4809,54 @@ export class LayoutService {
     }
 
     return width;
+  }
+
+  private static getNoteInkBoundsFromCache(
+    noteElement: NoteElement,
+    pageSetup: PageSetup,
+  ) {
+    const neumes = this.getNoteNeumesForMeasurement(noteElement);
+    const key = `${neumes.join(',')} | ${pageSetup.neumeDefaultFontSize} | ${pageSetup.neumeDefaultFontFamily}`;
+
+    let bounds = noteInkBoundsCache.get(key);
+
+    if (bounds == null) {
+      const text = neumes
+        .map((neume) => NeumeMappingService.getMapping(neume).text)
+        .join('');
+      const font = `${pageSetup.neumeDefaultFontSize}px ${pageSetup.neumeDefaultFontFamily}`;
+
+      bounds = TextMeasurementService.getInkBounds(text, font);
+
+      noteInkBoundsCache.set(key, bounds);
+    }
+
+    return bounds;
+  }
+
+  private static getNoteLeftInkOverhang(
+    noteElement: NoteElement,
+    pageSetup: PageSetup,
+  ) {
+    const inkBounds = this.getNoteInkBoundsFromCache(noteElement, pageSetup);
+    return Math.max(
+      0,
+      inkBounds.leftOverhang -
+        this.getVareiaPrefixWidth(noteElement, pageSetup),
+    );
+  }
+
+  private static getVareiaPrefixWidth(
+    noteElement: NoteElement,
+    pageSetup: PageSetup,
+  ) {
+    return noteElement.vareia
+      ? this.getNeumeWidthFromCache(
+          neumeWidthCache,
+          VocalExpressionNeume.Vareia,
+          pageSetup,
+        ) + noteElement.vareiaInternalSpacing
+      : 0;
   }
 
   private static getTextWidthFromCache(

@@ -94,56 +94,47 @@
       <AppTooltip
         :tooltip="$t(($) => $.toolbar.common.alignLeft, { ns: 'toolbar' })"
       >
-        <template #default="{ ariaLabel }">
-          <button
-            class="icon-btn"
-            :class="{ selected: element.alignment === TextBoxAlignment.Left }"
-            :aria-label="ariaLabel"
-            @click="
-              $emit('update', {
-                alignment: TextBoxAlignment.Left,
-              } as Partial<TextBoxElement>)
-            "
-          >
-            <img src="@/assets/icons/alignleft.svg" />
-          </button>
-        </template>
+        <button
+          class="icon-btn"
+          :class="{ selected: element.alignment === TextBoxAlignment.Left }"
+          @click="
+            $emit('update', {
+              alignment: TextBoxAlignment.Left,
+            } as Partial<TextBoxElement>)
+          "
+        >
+          <img src="@/assets/icons/alignleft.svg" />
+        </button>
       </AppTooltip>
       <AppTooltip
         :tooltip="$t(($) => $.toolbar.common.alignCenter, { ns: 'toolbar' })"
       >
-        <template #default="{ ariaLabel }">
-          <button
-            class="icon-btn"
-            :class="{ selected: element.alignment === TextBoxAlignment.Center }"
-            :aria-label="ariaLabel"
-            @click="
-              $emit('update', {
-                alignment: TextBoxAlignment.Center,
-              } as Partial<TextBoxElement>)
-            "
-          >
-            <img src="@/assets/icons/aligncenter.svg" />
-          </button>
-        </template>
+        <button
+          class="icon-btn"
+          :class="{ selected: element.alignment === TextBoxAlignment.Center }"
+          @click="
+            $emit('update', {
+              alignment: TextBoxAlignment.Center,
+            } as Partial<TextBoxElement>)
+          "
+        >
+          <img src="@/assets/icons/aligncenter.svg" />
+        </button>
       </AppTooltip>
       <AppTooltip
         :tooltip="$t(($) => $.toolbar.common.alignRight, { ns: 'toolbar' })"
       >
-        <template #default="{ ariaLabel }">
-          <button
-            class="icon-btn"
-            :class="{ selected: element.alignment === TextBoxAlignment.Right }"
-            :aria-label="ariaLabel"
-            @click="
-              $emit('update', {
-                alignment: TextBoxAlignment.Right,
-              } as Partial<TextBoxElement>)
-            "
-          >
-            <img src="@/assets/icons/alignright.svg" />
-          </button>
-        </template>
+        <button
+          class="icon-btn"
+          :class="{ selected: element.alignment === TextBoxAlignment.Right }"
+          @click="
+            $emit('update', {
+              alignment: TextBoxAlignment.Right,
+            } as Partial<TextBoxElement>)
+          "
+        >
+          <img src="@/assets/icons/alignright.svg" />
+        </button>
       </AppTooltip>
     </template>
     <template v-if="!element.useDefaultStyle">
@@ -163,28 +154,16 @@
     <AppTooltip
       :tooltip="$t(($) => $.toolbar.common.insertPelastikon, { ns: 'toolbar' })"
     >
-      <template #default="{ ariaLabel }">
-        <button
-          class="icon-btn"
-          :aria-label="ariaLabel"
-          @mousedown.prevent="$emit('insert:pelastikon')"
-        >
-          <img src="@/assets/icons/letterPelastikon.svg" />
-        </button>
-      </template>
+      <button class="icon-btn" @mousedown.prevent="$emit('insert:pelastikon')">
+        <img src="@/assets/icons/letterPelastikon.svg" />
+      </button>
     </AppTooltip>
     <AppTooltip
       :tooltip="$t(($) => $.toolbar.common.insertGorthmikon, { ns: 'toolbar' })"
     >
-      <template #default="{ ariaLabel }">
-        <button
-          class="icon-btn"
-          :aria-label="ariaLabel"
-          @mousedown.prevent="$emit('insert:gorthmikon')"
-        >
-          <img src="@/assets/icons/letterGorthmikon.svg" />
-        </button>
-      </template>
+      <button class="icon-btn" @mousedown.prevent="$emit('insert:gorthmikon')">
+        <img src="@/assets/icons/letterGorthmikon.svg" />
+      </button>
     </AppTooltip>
 
     <template v-if="!element.inline">

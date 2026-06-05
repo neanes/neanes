@@ -17,17 +17,14 @@
     </ToolbarToggleGroup>
     <span class="space"></span>
     <AppTooltip :tooltip="martyriaTooltip">
-      <template #default="{ ariaLabel }">
-        <ToolbarButton
-          variant="secondary"
-          size="icon-sm"
-          class="neume-button"
-          :aria-label="ariaLabel"
-          @click="$emit('add-auto-martyria')"
-        >
-          <img src="@/assets/icons/martyria.svg" />
-        </ToolbarButton>
-      </template>
+      <ToolbarButton
+        variant="secondary"
+        size="icon-sm"
+        class="neume-button"
+        @click="$emit('add-auto-martyria')"
+      >
+        <img src="@/assets/icons/martyria.svg" />
+      </ToolbarButton>
     </AppTooltip>
     <ToolbarSeparator />
     <ButtonWithMenu
@@ -43,77 +40,62 @@
         $t(($) => $.toolbar.main.insertDropCapBefore, { ns: 'toolbar' })
       "
     >
-      <template #default="{ ariaLabel }">
-        <ToolbarButton
-          variant="secondary"
-          size="icon-sm"
-          class="icon-btn"
-          :aria-label="ariaLabel"
-          @click="$emit('add-drop-cap')"
-        >
-          <img src="@/assets/icons/drop-cap.svg" />
-        </ToolbarButton>
-      </template>
+      <ToolbarButton
+        variant="secondary"
+        size="icon-sm"
+        class="icon-btn"
+        @click="$emit('add-drop-cap')"
+      >
+        <img src="@/assets/icons/drop-cap.svg" />
+      </ToolbarButton>
     </AppTooltip>
     <AppTooltip
       :tooltip="$t(($) => $.toolbar.main.insertTextBox, { ns: 'toolbar' })"
     >
-      <template #default="{ ariaLabel }">
-        <ToolbarButton
-          variant="secondary"
-          size="icon-sm"
-          class="icon-btn"
-          :aria-label="ariaLabel"
-          @click="$emit('add-text-box')"
-        >
-          <img src="@/assets/icons/text-box.svg" />
-        </ToolbarButton>
-      </template>
+      <ToolbarButton
+        variant="secondary"
+        size="icon-sm"
+        class="icon-btn"
+        @click="$emit('add-text-box')"
+      >
+        <img src="@/assets/icons/text-box.svg" />
+      </ToolbarButton>
     </AppTooltip>
     <AppTooltip
       :tooltip="$t(($) => $.toolbar.main.insertTextBoxRich, { ns: 'toolbar' })"
     >
-      <template #default="{ ariaLabel }">
-        <ToolbarButton
-          variant="secondary"
-          size="icon-sm"
-          class="icon-btn"
-          :aria-label="ariaLabel"
-          @click="$emit('add-text-box-rich')"
-        >
-          <img src="@/assets/icons/text-box-rich.svg" />
-        </ToolbarButton>
-      </template>
+      <ToolbarButton
+        variant="secondary"
+        size="icon-sm"
+        class="icon-btn"
+        @click="$emit('add-text-box-rich')"
+      >
+        <img src="@/assets/icons/text-box-rich.svg" />
+      </ToolbarButton>
     </AppTooltip>
     <AppTooltip
       :tooltip="$t(($) => $.toolbar.main.insertModeKey, { ns: 'toolbar' })"
     >
-      <template #default="{ ariaLabel }">
-        <ToolbarButton
-          variant="secondary"
-          size="icon-sm"
-          class="icon-btn"
-          :aria-label="ariaLabel"
-          @click="$emit('add-mode-key')"
-        >
-          <img src="@/assets/icons/mode-key.svg" />
-        </ToolbarButton>
-      </template>
+      <ToolbarButton
+        variant="secondary"
+        size="icon-sm"
+        class="icon-btn"
+        @click="$emit('add-mode-key')"
+      >
+        <img src="@/assets/icons/mode-key.svg" />
+      </ToolbarButton>
     </AppTooltip>
     <AppTooltip
       :tooltip="$t(($) => $.toolbar.main.insertImage, { ns: 'toolbar' })"
     >
-      <template #default="{ ariaLabel }">
-        <ToolbarButton
-          variant="secondary"
-          size="icon-sm"
-          class="icon-btn"
-          :aria-label="ariaLabel"
-          @click="$emit('add-image')"
-        >
-          <img src="@/assets/icons/image-add.svg" />
-        </ToolbarButton>
-      </template>
+      <ToolbarButton
+        variant="secondary"
+        size="icon-sm"
+        class="icon-btn"
+        @click="$emit('add-image')"
+      >
+        <img src="@/assets/icons/image-add.svg" />
+      </ToolbarButton>
     </AppTooltip>
     <ToolbarSeparator />
     <AppTooltip
@@ -123,17 +105,14 @@
         })
       "
     >
-      <template #default="{ ariaLabel }">
-        <ToolbarButton
-          variant="secondary"
-          size="icon-sm"
-          class="icon-btn"
-          :aria-label="ariaLabel"
-          @click="$emit('toggle-line-break', LineBreakType.Left)"
-        >
-          <img src="@/assets/icons/line-break.svg" />
-        </ToolbarButton>
-      </template>
+      <ToolbarButton
+        variant="secondary"
+        size="icon-sm"
+        class="icon-btn"
+        @click="$emit('toggle-line-break', LineBreakType.Left)"
+      >
+        <img src="@/assets/icons/line-break.svg" />
+      </ToolbarButton>
     </AppTooltip>
     <AppTooltip
       :tooltip="
@@ -146,17 +125,14 @@
         )
       "
     >
-      <template #default="{ ariaLabel }">
-        <ToolbarButton
-          variant="secondary"
-          size="icon-sm"
-          class="icon-btn"
-          :aria-label="ariaLabel"
-          @click="$emit('toggle-line-break', LineBreakType.Justify)"
-        >
-          <img src="@/assets/icons/line-break-justify.svg" />
-        </ToolbarButton>
-      </template>
+      <ToolbarButton
+        variant="secondary"
+        size="icon-sm"
+        class="icon-btn"
+        @click="$emit('toggle-line-break', LineBreakType.Justify)"
+      >
+        <img src="@/assets/icons/line-break-justify.svg" />
+      </ToolbarButton>
     </AppTooltip>
     <AppTooltip
       :tooltip="
@@ -169,17 +145,14 @@
         )
       "
     >
-      <template #default="{ ariaLabel }">
-        <ToolbarButton
-          variant="secondary"
-          size="icon-sm"
-          class="icon-btn"
-          :aria-label="ariaLabel"
-          @click="$emit('toggle-line-break', LineBreakType.Center)"
-        >
-          <img src="@/assets/icons/line-break-center.svg" />
-        </ToolbarButton>
-      </template>
+      <ToolbarButton
+        variant="secondary"
+        size="icon-sm"
+        class="icon-btn"
+        @click="$emit('toggle-line-break', LineBreakType.Center)"
+      >
+        <img src="@/assets/icons/line-break-center.svg" />
+      </ToolbarButton>
     </AppTooltip>
     <AppTooltip
       :tooltip="
@@ -188,17 +161,14 @@
         })
       "
     >
-      <template #default="{ ariaLabel }">
-        <ToolbarButton
-          variant="secondary"
-          size="icon-sm"
-          class="icon-btn"
-          :aria-label="ariaLabel"
-          @click="$emit('toggle-page-break')"
-        >
-          <img src="@/assets/icons/page-break.svg" />
-        </ToolbarButton>
-      </template>
+      <ToolbarButton
+        variant="secondary"
+        size="icon-sm"
+        class="icon-btn"
+        @click="$emit('toggle-page-break')"
+      >
+        <img src="@/assets/icons/page-break.svg" />
+      </ToolbarButton>
     </AppTooltip>
     <ToolbarSeparator />
     <AppTooltip
@@ -206,17 +176,14 @@
         $t(($) => $.toolbar.main.deleteSelectedElement, { ns: 'toolbar' })
       "
     >
-      <template #default="{ ariaLabel }">
-        <ToolbarButton
-          variant="secondary"
-          size="icon-sm"
-          class="icon-btn"
-          :aria-label="ariaLabel"
-          @click="$emit('delete-selected-element')"
-        >
-          <img src="@/assets/icons/delete.svg" />
-        </ToolbarButton>
-      </template>
+      <ToolbarButton
+        variant="secondary"
+        size="icon-sm"
+        class="icon-btn"
+        @click="$emit('delete-selected-element')"
+      >
+        <img src="@/assets/icons/delete.svg" />
+      </ToolbarButton>
     </AppTooltip>
     <ToolbarSeparator />
     <div class="zoom-container" tabindex="-1" @focusout="showZoomMenu = false">

@@ -70,12 +70,12 @@ function getShortcutKeyDisplayText(key: string) {
 
 <template>
   <Tooltip :disabled="!tooltip">
-    <TooltipTrigger as-child>
+    <TooltipTrigger as-child :aria-label="tooltipDetails?.ariaLabel">
       <!--
         The default slot must have exactly one root element: it is forwarded to
         TooltipTrigger via as-child, which merges trigger props/behavior onto the
-        first element only. Bind the provided ariaLabel to the appropriate
-        element so the visible tooltip text and aria-label stay in sync.
+        first element only. The ariaLabel slot prop is available for wrappers
+        that need to label a nested control.
       -->
       <slot v-bind="{ ariaLabel: tooltipDetails?.ariaLabel }" />
     </TooltipTrigger>

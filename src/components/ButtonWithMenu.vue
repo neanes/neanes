@@ -4,7 +4,6 @@
       <div
         ref="menu"
         class="menu-container"
-        :aria-label="ariaLabel"
         @mousedown="handleMouseDown"
         @mouseleave="handleMouseLeave"
       >

@@ -66,56 +66,47 @@
       <AppTooltip
         :tooltip="$t(($) => $.toolbar.common.alignLeft, { ns: 'toolbar' })"
       >
-        <template #default="{ ariaLabel }">
-          <button
-            class="icon-btn"
-            :class="{ selected: element.alignment === TextBoxAlignment.Left }"
-            :aria-label="ariaLabel"
-            @click="
-              $emit('update', {
-                alignment: TextBoxAlignment.Left,
-              } as Partial<ImageBoxElement>)
-            "
-          >
-            <img src="@/assets/icons/alignleft.svg" />
-          </button>
-        </template>
+        <button
+          class="icon-btn"
+          :class="{ selected: element.alignment === TextBoxAlignment.Left }"
+          @click="
+            $emit('update', {
+              alignment: TextBoxAlignment.Left,
+            } as Partial<ImageBoxElement>)
+          "
+        >
+          <img src="@/assets/icons/alignleft.svg" />
+        </button>
       </AppTooltip>
       <AppTooltip
         :tooltip="$t(($) => $.toolbar.common.alignCenter, { ns: 'toolbar' })"
       >
-        <template #default="{ ariaLabel }">
-          <button
-            class="icon-btn"
-            :class="{ selected: element.alignment === TextBoxAlignment.Center }"
-            :aria-label="ariaLabel"
-            @click="
-              $emit('update', {
-                alignment: TextBoxAlignment.Center,
-              } as Partial<ImageBoxElement>)
-            "
-          >
-            <img src="@/assets/icons/aligncenter.svg" />
-          </button>
-        </template>
+        <button
+          class="icon-btn"
+          :class="{ selected: element.alignment === TextBoxAlignment.Center }"
+          @click="
+            $emit('update', {
+              alignment: TextBoxAlignment.Center,
+            } as Partial<ImageBoxElement>)
+          "
+        >
+          <img src="@/assets/icons/aligncenter.svg" />
+        </button>
       </AppTooltip>
       <AppTooltip
         :tooltip="$t(($) => $.toolbar.common.alignRight, { ns: 'toolbar' })"
       >
-        <template #default="{ ariaLabel }">
-          <button
-            class="icon-btn"
-            :class="{ selected: element.alignment === TextBoxAlignment.Right }"
-            :aria-label="ariaLabel"
-            @click="
-              $emit('update', {
-                alignment: TextBoxAlignment.Right,
-              } as Partial<ImageBoxElement>)
-            "
-          >
-            <img src="@/assets/icons/alignright.svg" />
-          </button>
-        </template>
+        <button
+          class="icon-btn"
+          :class="{ selected: element.alignment === TextBoxAlignment.Right }"
+          @click="
+            $emit('update', {
+              alignment: TextBoxAlignment.Right,
+            } as Partial<ImageBoxElement>)
+          "
+        >
+          <img src="@/assets/icons/alignright.svg" />
+        </button>
       </AppTooltip>
     </template>
   </div>

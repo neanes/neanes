@@ -38,56 +38,47 @@
     <AppTooltip
       :tooltip="$t(($) => $.toolbar.common.alignLeft, { ns: 'toolbar' })"
     >
-      <template #default="{ ariaLabel }">
-        <button
-          class="icon-btn"
-          :class="{ selected: element.alignment === TextBoxAlignment.Left }"
-          :aria-label="ariaLabel"
-          @click="
-            $emit('update', {
-              alignment: TextBoxAlignment.Left,
-            } as Partial<ModeKeyElement>)
-          "
-        >
-          <img src="@/assets/icons/alignleft.svg" />
-        </button>
-      </template>
+      <button
+        class="icon-btn"
+        :class="{ selected: element.alignment === TextBoxAlignment.Left }"
+        @click="
+          $emit('update', {
+            alignment: TextBoxAlignment.Left,
+          } as Partial<ModeKeyElement>)
+        "
+      >
+        <img src="@/assets/icons/alignleft.svg" />
+      </button>
     </AppTooltip>
     <AppTooltip
       :tooltip="$t(($) => $.toolbar.common.alignCenter, { ns: 'toolbar' })"
     >
-      <template #default="{ ariaLabel }">
-        <button
-          class="icon-btn"
-          :class="{ selected: element.alignment === TextBoxAlignment.Center }"
-          :aria-label="ariaLabel"
-          @click="
-            $emit('update', {
-              alignment: TextBoxAlignment.Center,
-            } as Partial<ModeKeyElement>)
-          "
-        >
-          <img src="@/assets/icons/aligncenter.svg" />
-        </button>
-      </template>
+      <button
+        class="icon-btn"
+        :class="{ selected: element.alignment === TextBoxAlignment.Center }"
+        @click="
+          $emit('update', {
+            alignment: TextBoxAlignment.Center,
+          } as Partial<ModeKeyElement>)
+        "
+      >
+        <img src="@/assets/icons/aligncenter.svg" />
+      </button>
     </AppTooltip>
     <AppTooltip
       :tooltip="$t(($) => $.toolbar.common.alignRight, { ns: 'toolbar' })"
     >
-      <template #default="{ ariaLabel }">
-        <button
-          class="icon-btn"
-          :class="{ selected: element.alignment === TextBoxAlignment.Right }"
-          :aria-label="ariaLabel"
-          @click="
-            $emit('update', {
-              alignment: TextBoxAlignment.Right,
-            } as Partial<ModeKeyElement>)
-          "
-        >
-          <img src="@/assets/icons/alignright.svg" />
-        </button>
-      </template>
+      <button
+        class="icon-btn"
+        :class="{ selected: element.alignment === TextBoxAlignment.Right }"
+        @click="
+          $emit('update', {
+            alignment: TextBoxAlignment.Right,
+          } as Partial<ModeKeyElement>)
+        "
+      >
+        <img src="@/assets/icons/alignright.svg" />
+      </button>
     </AppTooltip>
     <span class="space" />
     <template v-if="!element.useDefaultStyle">
@@ -133,20 +124,17 @@
     <AppTooltip
       :tooltip="$t(($) => $.toolbar.modeKey.rightAlignTempo, { ns: 'toolbar' })"
     >
-      <template #default="{ ariaLabel }">
-        <button
-          class="icon-btn icon-btn-small"
-          :class="{ selected: element.tempoAlignRight }"
-          :aria-label="ariaLabel"
-          @click="
-            $emit('update', {
-              tempoAlignRight: !element.tempoAlignRight,
-            } as Partial<ModeKeyElement>)
-          "
-        >
-          <img src="@/assets/icons/alignright2.svg" />
-        </button>
-      </template>
+      <button
+        class="icon-btn icon-btn-small"
+        :class="{ selected: element.tempoAlignRight }"
+        @click="
+          $emit('update', {
+            tempoAlignRight: !element.tempoAlignRight,
+          } as Partial<ModeKeyElement>)
+        "
+      >
+        <img src="@/assets/icons/alignright2.svg" />
+      </button>
     </AppTooltip>
 
     <span class="space" />

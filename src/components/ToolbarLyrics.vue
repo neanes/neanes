@@ -96,28 +96,22 @@
     <AppTooltip
       :tooltip="$t(($) => $.toolbar.common.insertPelastikon, { ns: 'toolbar' })"
     >
-      <template #default="{ ariaLabel }">
-        <button
-          class="icon-btn"
-          :aria-label="ariaLabel"
-          @mousedown.prevent="$emit('insert:specialCharacter', PELASTIKON)"
-        >
-          <img src="@/assets/icons/letterPelastikon.svg" />
-        </button>
-      </template>
+      <button
+        class="icon-btn"
+        @mousedown.prevent="$emit('insert:specialCharacter', PELASTIKON)"
+      >
+        <img src="@/assets/icons/letterPelastikon.svg" />
+      </button>
     </AppTooltip>
     <AppTooltip
       :tooltip="$t(($) => $.toolbar.common.insertGorthmikon, { ns: 'toolbar' })"
     >
-      <template #default="{ ariaLabel }">
-        <button
-          class="icon-btn"
-          :aria-label="ariaLabel"
-          @mousedown.prevent="$emit('insert:specialCharacter', GORTHMIKON)"
-        >
-          <img src="@/assets/icons/letterGorthmikon.svg" />
-        </button>
-      </template>
+      <button
+        class="icon-btn"
+        @mousedown.prevent="$emit('insert:specialCharacter', GORTHMIKON)"
+      >
+        <img src="@/assets/icons/letterGorthmikon.svg" />
+      </button>
     </AppTooltip>
     <span class="space" />
     <template v-for="character in specialCharacters" :key="character.value">

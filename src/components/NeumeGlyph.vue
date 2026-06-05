@@ -3,15 +3,7 @@
     text
   }}</span>
   <AppTooltip v-else :tooltip="tooltip">
-    <template #default="{ ariaLabel }">
-      <span
-        v-bind="$attrs"
-        class="neume"
-        :style="style"
-        :aria-label="ariaLabel"
-        >{{ text }}</span
-      >
-    </template>
+    <span v-bind="$attrs" class="neume" :style="style">{{ text }}</span>
   </AppTooltip>
 </template>
 

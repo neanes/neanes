@@ -2,261 +2,202 @@
   <div class="martyria-toolbar">
     <Toolbar class="row h-auto w-full gap-0 border-0 p-1" loop>
       <AppTooltip :tooltip="tooltip(Fthora.DiatonicNiLow_Top)">
-        <template #default="{ ariaLabel }">
-          <ToolbarButton
-            variant="secondary"
-            size="icon-sm"
-            class="neume-button"
-            :aria-label="ariaLabel"
-            @click="$emit('update:fthora', Fthora.DiatonicNiLow_Top)"
-          >
-            <img src="@/assets/icons/fthora-diatonic-ni-low.svg" />
-          </ToolbarButton>
-        </template>
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          @click="$emit('update:fthora', Fthora.DiatonicNiLow_Top)"
+        >
+          <img src="@/assets/icons/fthora-diatonic-ni-low.svg" />
+        </ToolbarButton>
       </AppTooltip>
       <AppTooltip :tooltip="tooltip(Fthora.DiatonicPa_Top)">
-        <template #default="{ ariaLabel }">
-          <ToolbarButton
-            variant="secondary"
-            size="icon-sm"
-            class="neume-button"
-            :aria-label="ariaLabel"
-            @click="$emit('update:fthora', Fthora.DiatonicPa_Top)"
-          >
-            <img src="@/assets/icons/fthora-diatonic-pa.svg" />
-          </ToolbarButton>
-        </template>
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          @click="$emit('update:fthora', Fthora.DiatonicPa_Top)"
+        >
+          <img src="@/assets/icons/fthora-diatonic-pa.svg" />
+        </ToolbarButton>
       </AppTooltip>
       <AppTooltip :tooltip="tooltip(Fthora.DiatonicVou_Top)">
-        <template #default="{ ariaLabel }">
-          <ToolbarButton
-            variant="secondary"
-            size="icon-sm"
-            class="neume-button"
-            :aria-label="ariaLabel"
-            @click="$emit('update:fthora', Fthora.DiatonicVou_Top)"
-          >
-            <img src="@/assets/icons/fthora-diatonic-vou.svg" />
-          </ToolbarButton>
-        </template>
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          @click="$emit('update:fthora', Fthora.DiatonicVou_Top)"
+        >
+          <img src="@/assets/icons/fthora-diatonic-vou.svg" />
+        </ToolbarButton>
       </AppTooltip>
       <AppTooltip :tooltip="tooltip(Fthora.DiatonicGa_Top)">
-        <template #default="{ ariaLabel }">
-          <ToolbarButton
-            variant="secondary"
-            size="icon-sm"
-            class="neume-button"
-            :aria-label="ariaLabel"
-            @click="$emit('update:fthora', Fthora.DiatonicGa_Top)"
-          >
-            <img src="@/assets/icons/fthora-diatonic-ga.svg" />
-          </ToolbarButton>
-        </template>
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          @click="$emit('update:fthora', Fthora.DiatonicGa_Top)"
+        >
+          <img src="@/assets/icons/fthora-diatonic-ga.svg" />
+        </ToolbarButton>
       </AppTooltip>
       <AppTooltip :tooltip="tooltip(Fthora.DiatonicThi_Top)">
-        <template #default="{ ariaLabel }">
-          <ToolbarButton
-            variant="secondary"
-            size="icon-sm"
-            class="neume-button"
-            :aria-label="ariaLabel"
-            @click="$emit('update:fthora', Fthora.DiatonicThi_Top)"
-          >
-            <img src="@/assets/icons/fthora-diatonic-di.svg" />
-          </ToolbarButton>
-        </template>
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          @click="$emit('update:fthora', Fthora.DiatonicThi_Top)"
+        >
+          <img src="@/assets/icons/fthora-diatonic-di.svg" />
+        </ToolbarButton>
       </AppTooltip>
       <AppTooltip :tooltip="tooltip(Fthora.DiatonicKe_Top)">
-        <template #default="{ ariaLabel }">
-          <ToolbarButton
-            variant="secondary"
-            size="icon-sm"
-            class="neume-button"
-            :aria-label="ariaLabel"
-            @click="$emit('update:fthora', Fthora.DiatonicKe_Top)"
-          >
-            <img src="@/assets/icons/fthora-diatonic-ke.svg" />
-          </ToolbarButton>
-        </template>
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          @click="$emit('update:fthora', Fthora.DiatonicKe_Top)"
+        >
+          <img src="@/assets/icons/fthora-diatonic-ke.svg" />
+        </ToolbarButton>
       </AppTooltip>
       <AppTooltip :tooltip="tooltip(Fthora.DiatonicZo_Top)">
-        <template #default="{ ariaLabel }">
-          <ToolbarButton
-            variant="secondary"
-            size="icon-sm"
-            class="neume-button"
-            :aria-label="ariaLabel"
-            @click="$emit('update:fthora', Fthora.DiatonicZo_Top)"
-          >
-            <img src="@/assets/icons/fthora-diatonic-zo.svg" />
-          </ToolbarButton>
-        </template>
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          @click="$emit('update:fthora', Fthora.DiatonicZo_Top)"
+        >
+          <img src="@/assets/icons/fthora-diatonic-zo.svg" />
+        </ToolbarButton>
       </AppTooltip>
       <AppTooltip :tooltip="tooltip(Fthora.DiatonicNiHigh_Top)">
-        <template #default="{ ariaLabel }">
-          <ToolbarButton
-            variant="secondary"
-            size="icon-sm"
-            class="neume-button"
-            :aria-label="ariaLabel"
-            @click="$emit('update:fthora', Fthora.DiatonicNiHigh_Top)"
-          >
-            <img src="@/assets/icons/fthora-diatonic-ni-high.svg" />
-          </ToolbarButton>
-        </template>
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          @click="$emit('update:fthora', Fthora.DiatonicNiHigh_Top)"
+        >
+          <img src="@/assets/icons/fthora-diatonic-ni-high.svg" />
+        </ToolbarButton>
       </AppTooltip>
       <ToolbarSeparator />
       <AppTooltip :tooltip="tooltip(Fthora.SoftChromaticThi_Top)">
-        <template #default="{ ariaLabel }">
-          <ToolbarButton
-            variant="secondary"
-            size="icon-sm"
-            class="neume-button"
-            :aria-label="ariaLabel"
-            @click="$emit('update:fthora', Fthora.SoftChromaticThi_Top)"
-          >
-            <img src="@/assets/icons/fthora-soft-chromatic-di.svg" />
-          </ToolbarButton>
-        </template>
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          @click="$emit('update:fthora', Fthora.SoftChromaticThi_Top)"
+        >
+          <img src="@/assets/icons/fthora-soft-chromatic-di.svg" />
+        </ToolbarButton>
       </AppTooltip>
       <AppTooltip :tooltip="tooltip(Fthora.SoftChromaticPa_Top)">
-        <template #default="{ ariaLabel }">
-          <ToolbarButton
-            variant="secondary"
-            size="icon-sm"
-            class="neume-button"
-            :aria-label="ariaLabel"
-            @click="$emit('update:fthora', Fthora.SoftChromaticPa_Top)"
-          >
-            <img src="@/assets/icons/fthora-soft-chromatic-ke.svg" />
-          </ToolbarButton>
-        </template>
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          @click="$emit('update:fthora', Fthora.SoftChromaticPa_Top)"
+        >
+          <img src="@/assets/icons/fthora-soft-chromatic-ke.svg" />
+        </ToolbarButton>
       </AppTooltip>
       <ToolbarSeparator />
       <AppTooltip :tooltip="tooltip(Fthora.HardChromaticPa_Top)">
-        <template #default="{ ariaLabel }">
-          <ToolbarButton
-            variant="secondary"
-            size="icon-sm"
-            class="neume-button"
-            :aria-label="ariaLabel"
-            @click="$emit('update:fthora', Fthora.HardChromaticPa_Top)"
-          >
-            <img src="@/assets/icons/fthora-hard-chromatic-pa.svg" />
-          </ToolbarButton>
-        </template>
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          @click="$emit('update:fthora', Fthora.HardChromaticPa_Top)"
+        >
+          <img src="@/assets/icons/fthora-hard-chromatic-pa.svg" />
+        </ToolbarButton>
       </AppTooltip>
       <AppTooltip :tooltip="tooltip(Fthora.HardChromaticThi_Top)">
-        <template #default="{ ariaLabel }">
-          <ToolbarButton
-            variant="secondary"
-            size="icon-sm"
-            class="neume-button"
-            :aria-label="ariaLabel"
-            @click="$emit('update:fthora', Fthora.HardChromaticThi_Top)"
-          >
-            <img src="@/assets/icons/fthora-hard-chromatic-di.svg" />
-          </ToolbarButton>
-        </template>
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          @click="$emit('update:fthora', Fthora.HardChromaticThi_Top)"
+        >
+          <img src="@/assets/icons/fthora-hard-chromatic-di.svg" />
+        </ToolbarButton>
       </AppTooltip>
       <ToolbarSeparator />
       <AppTooltip :tooltip="enharmonicTitle">
-        <template #default="{ ariaLabel }">
-          <ToolbarButton
-            variant="secondary"
-            size="icon-sm"
-            class="neume-button"
-            :aria-disabled="enharmonicDisabled"
-            :aria-label="ariaLabel"
-            @click="
-              !enharmonicDisabled &&
-              $emit('update:fthora', Fthora.Enharmonic_Top)
-            "
-          >
-            <img src="@/assets/icons/fthora-enharmonic.svg" />
-          </ToolbarButton>
-        </template>
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="enharmonicDisabled"
+          @click="
+            !enharmonicDisabled && $emit('update:fthora', Fthora.Enharmonic_Top)
+          "
+        >
+          <img src="@/assets/icons/fthora-enharmonic.svg" />
+        </ToolbarButton>
       </AppTooltip>
       <AppTooltip :tooltip="generalFlatTitle">
-        <template #default="{ ariaLabel }">
-          <ToolbarButton
-            variant="secondary"
-            size="icon-sm"
-            class="neume-button"
-            :aria-disabled="generalFlatDisabled"
-            :aria-label="ariaLabel"
-            @click="
-              !generalFlatDisabled &&
-              $emit('update:fthora', Fthora.GeneralFlat_Top)
-            "
-          >
-            <img src="@/assets/icons/fthora-general-flat.svg" />
-          </ToolbarButton>
-        </template>
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="generalFlatDisabled"
+          @click="
+            !generalFlatDisabled &&
+            $emit('update:fthora', Fthora.GeneralFlat_Top)
+          "
+        >
+          <img src="@/assets/icons/fthora-general-flat.svg" />
+        </ToolbarButton>
       </AppTooltip>
       <AppTooltip :tooltip="generalSharpTitle">
-        <template #default="{ ariaLabel }">
-          <ToolbarButton
-            variant="secondary"
-            size="icon-sm"
-            class="neume-button"
-            :aria-disabled="generalSharpDisabled"
-            :aria-label="ariaLabel"
-            @click="
-              !generalSharpDisabled &&
-              $emit('update:fthora', Fthora.GeneralSharp_Top)
-            "
-          >
-            <img src="@/assets/icons/fthora-general-sharp.svg" />
-          </ToolbarButton>
-        </template>
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="generalSharpDisabled"
+          @click="
+            !generalSharpDisabled &&
+            $emit('update:fthora', Fthora.GeneralSharp_Top)
+          "
+        >
+          <img src="@/assets/icons/fthora-general-sharp.svg" />
+        </ToolbarButton>
       </AppTooltip>
       <ToolbarSeparator />
       <AppTooltip :tooltip="zygosTitle">
-        <template #default="{ ariaLabel }">
-          <ToolbarButton
-            variant="secondary"
-            size="icon-sm"
-            class="neume-button"
-            :aria-disabled="zygosDisabled"
-            :aria-label="ariaLabel"
-            @click="!zygosDisabled && $emit('update:fthora', Fthora.Zygos_Top)"
-          >
-            <img src="@/assets/icons/fthora-zygos.svg" />
-          </ToolbarButton>
-        </template>
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="zygosDisabled"
+          @click="!zygosDisabled && $emit('update:fthora', Fthora.Zygos_Top)"
+        >
+          <img src="@/assets/icons/fthora-zygos.svg" />
+        </ToolbarButton>
       </AppTooltip>
       <AppTooltip :tooltip="klitonTitle">
-        <template #default="{ ariaLabel }">
-          <ToolbarButton
-            variant="secondary"
-            size="icon-sm"
-            class="neume-button"
-            :aria-disabled="klitonDisabled"
-            :aria-label="ariaLabel"
-            @click="
-              !klitonDisabled && $emit('update:fthora', Fthora.Kliton_Top)
-            "
-          >
-            <img src="@/assets/icons/fthora-kliton.svg" />
-          </ToolbarButton>
-        </template>
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="klitonDisabled"
+          @click="!klitonDisabled && $emit('update:fthora', Fthora.Kliton_Top)"
+        >
+          <img src="@/assets/icons/fthora-kliton.svg" />
+        </ToolbarButton>
       </AppTooltip>
       <AppTooltip :tooltip="spathiTitle">
-        <template #default="{ ariaLabel }">
-          <ToolbarButton
-            variant="secondary"
-            size="icon-sm"
-            class="neume-button"
-            :aria-disabled="spathiDisabled"
-            :aria-label="ariaLabel"
-            @click="
-              !spathiDisabled && $emit('update:fthora', Fthora.Spathi_Top)
-            "
-          >
-            <img src="@/assets/icons/fthora-spathi.svg" />
-          </ToolbarButton>
-        </template>
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="neume-button"
+          :aria-disabled="spathiDisabled"
+          @click="!spathiDisabled && $emit('update:fthora', Fthora.Spathi_Top)"
+        >
+          <img src="@/assets/icons/fthora-spathi.svg" />
+        </ToolbarButton>
       </AppTooltip>
       <ToolbarSeparator />
       <ButtonWithMenu
@@ -285,22 +226,19 @@
       />
       <ToolbarSeparator />
       <AppTooltip :tooltip="alignRightTooltip">
-        <template #default="{ ariaLabel }">
-          <ToolbarButton
-            variant="secondary"
-            size="icon-sm"
-            class="icon-btn icon-btn-small"
-            :class="{ selected: element.alignRight }"
-            :aria-label="ariaLabel"
-            @click="
-              $emit('update', {
-                alignRight: !element.alignRight,
-              } as Partial<MartyriaElement>)
-            "
-          >
-            <img src="@/assets/icons/alignright2.svg" />
-          </ToolbarButton>
-        </template>
+        <ToolbarButton
+          variant="secondary"
+          size="icon-sm"
+          class="icon-btn icon-btn-small"
+          :class="{ selected: element.alignRight }"
+          @click="
+            $emit('update', {
+              alignRight: !element.alignRight,
+            } as Partial<MartyriaElement>)
+          "
+        >
+          <img src="@/assets/icons/alignright2.svg" />
+        </ToolbarButton>
       </AppTooltip>
       <template v-if="element.alignRight">
         <ToolbarSeparator />

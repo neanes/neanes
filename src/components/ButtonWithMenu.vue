@@ -252,7 +252,7 @@ function onMouseUp() {
 
 .menu {
   position: absolute;
-  z-index: 999;
+  z-index: 40;
   background-color: var(--color-legacy-chrome-surface);
   border: 1px solid var(--color-legacy-chrome-border);
   box-sizing: border-box;

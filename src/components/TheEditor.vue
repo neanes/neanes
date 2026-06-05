@@ -5820,7 +5820,7 @@ function renderTabLabel(tab: Tab) {
               </template></Vue3TabsChrome
             >
           </ContextMenuTrigger>
-          <ContextMenuContent class="z-[9999] bg-legacy-chrome-menu-surface">
+          <ContextMenuContent class="z-40 bg-legacy-chrome-menu-surface">
             <ContextMenuItem
               @select="
                 closeContextMenuWorkspaces(CloseWorkspacesDisposition.SELF)
@@ -6878,7 +6878,7 @@ function renderTabLabel(tab: Tab) {
 <style scoped>
 .loading-overlay {
   position: absolute;
-  z-index: 9999;
+  z-index: 45;
   top: 0;
   left: 0;
   width: 100%;

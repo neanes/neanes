@@ -11,7 +11,7 @@
         <MenubarTrigger>
           {{ $t(($) => $.menu.file.root, { ns: 'menu' }) }}
         </MenubarTrigger>
-        <MenubarContent class="z-[9999] bg-legacy-chrome-menu-surface">
+        <MenubarContent class="z-40 bg-legacy-chrome-menu-surface">
           <MenubarItem @select="onClickNew">
             {{ $t(($) => $.menu.file.new, { ns: 'menu' }) }}
           </MenubarItem>
@@ -27,7 +27,7 @@
             </MenubarSubTrigger>
             <MenubarSubContent
               v-if="openRecentIsEnabled"
-              class="z-[9999] bg-legacy-chrome-menu-surface"
+              class="z-40 bg-legacy-chrome-menu-surface"
             >
               <MenubarItem
                 v-for="(recentFile, index) in recentFiles"
@@ -42,7 +42,7 @@
             <MenubarSubTrigger>
               {{ $t(($) => $.menu.file.import, { ns: 'menu' }) }}
             </MenubarSubTrigger>
-            <MenubarSubContent class="z-[9999] bg-legacy-chrome-menu-surface">
+            <MenubarSubContent class="z-40 bg-legacy-chrome-menu-surface">
               <MenubarItem @select="onClickImportOcr">
                 {{ $t(($) => $.menu.file.importFromOcr, { ns: 'menu' }) }}
               </MenubarItem>
@@ -62,7 +62,7 @@
             <MenubarSubTrigger>
               {{ $t(($) => $.menu.file.exportAs, { ns: 'menu' }) }}
             </MenubarSubTrigger>
-            <MenubarSubContent class="z-[9999] bg-legacy-chrome-menu-surface">
+            <MenubarSubContent class="z-40 bg-legacy-chrome-menu-surface">
               <MenubarItem @select="onClickExportAsHtml">
                 {{ $t(($) => $.menu.file.exportAsHtml, { ns: 'menu' }) }}
               </MenubarItem>
@@ -94,7 +94,7 @@
         <MenubarTrigger>
           {{ $t(($) => $.menu.edit.root, { ns: 'menu' }) }}
         </MenubarTrigger>
-        <MenubarContent class="z-[9999] bg-legacy-chrome-menu-surface">
+        <MenubarContent class="z-40 bg-legacy-chrome-menu-surface">
           <MenubarItem @select="onClickUndo">
             {{ $t(($) => $.menu.edit.undo, { ns: 'menu' }) }}
           </MenubarItem>
@@ -143,7 +143,7 @@
         <MenubarTrigger>
           {{ $t(($) => $.menu.insert.root, { ns: 'menu' }) }}
         </MenubarTrigger>
-        <MenubarContent class="z-[9999] bg-legacy-chrome-menu-surface">
+        <MenubarContent class="z-40 bg-legacy-chrome-menu-surface">
           <MenubarItem @select="onClickAddAlternateLine">
             {{ $t(($) => $.menu.insert.alternateLine, { ns: 'menu' }) }}
           </MenubarItem>
@@ -176,7 +176,7 @@
             <MenubarSubTrigger>
               {{ $t(($) => $.menu.insert.headersAndFooters, { ns: 'menu' }) }}
             </MenubarSubTrigger>
-            <MenubarSubContent class="z-[9999] bg-legacy-chrome-menu-surface">
+            <MenubarSubContent class="z-40 bg-legacy-chrome-menu-surface">
               <MenubarItem @select="onClickAddHeader">
                 {{ $t(($) => $.menu.insert.header, { ns: 'menu' }) }}
               </MenubarItem>
@@ -192,7 +192,7 @@
         <MenubarTrigger>
           {{ $t(($) => $.menu.tools.root, { ns: 'menu' }) }}
         </MenubarTrigger>
-        <MenubarContent class="z-[9999] bg-legacy-chrome-menu-surface">
+        <MenubarContent class="z-40 bg-legacy-chrome-menu-surface">
           <MenubarItem @select="onClickCopyElementLink">
             {{ $t(($) => $.menu.tools.copyElementLink, { ns: 'menu' }) }}
           </MenubarItem>
@@ -203,7 +203,7 @@
         <MenubarTrigger>
           {{ $t(($) => $.menu.help.root, { ns: 'menu' }) }}
         </MenubarTrigger>
-        <MenubarContent class="z-[9999] bg-legacy-chrome-menu-surface">
+        <MenubarContent class="z-40 bg-legacy-chrome-menu-surface">
           <MenubarItem @select="onClickGuide">
             {{ $t(($) => $.menu.help.guide, { ns: 'menu' }) }}
           </MenubarItem>

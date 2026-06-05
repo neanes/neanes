@@ -1,6 +1,8 @@
 <template>
   <Dialog v-model:open="open">
-    <DialogContent>
+    <DialogContent
+      class="max-h-[calc(100dvh-2rem)] max-w-md grid-rows-[auto_auto_minmax(0,1fr)_auto] overflow-hidden sm:max-w-md"
+    >
       <DialogHeader>
         <DialogTitle>
           {{ $t(($) => $.dialog.neumePositioning.root, { ns: 'dialog' }) }}
@@ -282,7 +284,11 @@
           />
         </template>
       </div>
-      <form id="syllable-positioning-form" @submit.prevent="update">
+      <form
+        id="syllable-positioning-form"
+        class="min-h-0 overflow-y-auto pr-1"
+        @submit.prevent="update"
+      >
         <div
           class="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-x-2 gap-y-1"
         >
@@ -411,7 +417,7 @@ const stepSize = 0.01;
 const min = -10;
 const max = 10;
 const unit = 'unitless' as UnitOfMeasure;
-const paneContainerWidthPx = 420;
+const paneContainerWidthPx = 448;
 const zoom = 2;
 const leftOffsetHeaderId = 'syllable-positioning-left-header';
 const topOffsetHeaderId = 'syllable-positioning-top-header';

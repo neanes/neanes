@@ -13,6 +13,17 @@ import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
 
 import type { IIpcService } from './IIpcService';
 
+function getExportDownloadFileName(
+  sourceFilePath: string | null,
+  tempFileName: string,
+  extension: string,
+) {
+  const baseName =
+    sourceFilePath != null ? getFileNameFromPath(sourceFilePath) : tempFileName;
+
+  return `${baseName}.${extension}`;
+}
+
 export class BrowserIpcService implements IIpcService {
   public async saveWorkspace(
     workspace: Workspace,
@@ -40,10 +51,11 @@ export class BrowserIpcService implements IIpcService {
   public async exportWorkspaceAsHtml(workspace: Workspace, data: string) {
     const file = new Blob([data], { type: 'application/json' });
 
-    const downloadFileName =
-      workspace.filePath != null
-        ? `${getFileNameFromPath(workspace.filePath)}.html`
-        : `${workspace.tempFileName}.html`;
+    const downloadFileName = getExportDownloadFileName(
+      workspace.filePath,
+      workspace.tempFileName,
+      'html',
+    );
 
     const a = document.createElement('a');
     a.href = URL.createObjectURL(file);
@@ -66,10 +78,11 @@ export class BrowserIpcService implements IIpcService {
 
     const file = new Blob([data], { type });
 
-    const downloadFileName =
-      workspace.filePath != null
-        ? `${getFileNameFromPath(workspace.filePath)}.${extension}`
-        : `${workspace.tempFileName}.${extension}`;
+    const downloadFileName = getExportDownloadFileName(
+      workspace.filePath,
+      workspace.tempFileName,
+      extension,
+    );
 
     const a = document.createElement('a');
     a.href = URL.createObjectURL(file);
@@ -80,10 +93,11 @@ export class BrowserIpcService implements IIpcService {
   public async exportWorkspaceAsLatex(workspace: Workspace, data: string) {
     const file = new Blob([data], { type: 'application/json' });
 
-    const downloadFileName =
-      workspace.filePath != null
-        ? `${getFileNameFromPath(workspace.filePath)}.byztex`
-        : `${workspace.tempFileName}.byztex`;
+    const downloadFileName = getExportDownloadFileName(
+      workspace.filePath,
+      workspace.tempFileName,
+      'byztex',
+    );
 
     const a = document.createElement('a');
     a.href = URL.createObjectURL(file);

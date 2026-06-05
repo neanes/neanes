@@ -260,65 +260,86 @@ interface NoteVisualBounds {
   rightOverhang: number;
 }
 
+type NoteVisualCollisionSide = Neume | Neume[];
+type NoteVisualCollisionRightSide = NoteVisualCollisionSide | null;
+
 interface NoteVisualCollisionPair {
-  left: Neume;
-  // Use null when the left mark can collide with the following note body.
-  right: Neume | null;
+  left: NoteVisualCollisionSide;
+  // Use null when the left mark can collide with any following note body.
+  // Use a QuantitativeNeume when the left mark can collide with a specific
+  // following note body.
+  right: NoteVisualCollisionRightSide;
 }
 
 const noteVisualCollisionPairs: NoteVisualCollisionPair[] = [
   // Add dangerous directional pairs here. Examples:
   // Import additional neume enums from '@/models/Neumes' as needed.
-  { left: VocalExpressionNeume.Antikenoma, right: Accidental.Sharp_2_Left },
-  { left: VocalExpressionNeume.Antikenoma, right: Accidental.Sharp_4_Left },
-  { left: VocalExpressionNeume.Antikenoma, right: Accidental.Sharp_6_Left },
-  { left: VocalExpressionNeume.Antikenoma, right: Accidental.Sharp_8_Left },
-
-  { left: VocalExpressionNeume.Antikenoma, right: Fthora.DiatonicNiLow_Bottom },
-  { left: VocalExpressionNeume.Antikenoma, right: Fthora.DiatonicPa_Bottom },
-  { left: VocalExpressionNeume.Antikenoma, right: Fthora.DiatonicVou_Bottom },
-  { left: VocalExpressionNeume.Antikenoma, right: Fthora.DiatonicGa_Bottom },
-  { left: VocalExpressionNeume.Antikenoma, right: Fthora.DiatonicThi_Bottom },
-  { left: VocalExpressionNeume.Antikenoma, right: Fthora.DiatonicKe_Bottom },
-  { left: VocalExpressionNeume.Antikenoma, right: Fthora.DiatonicZo_Bottom },
   {
     left: VocalExpressionNeume.Antikenoma,
-    right: Fthora.DiatonicNiHigh_Bottom,
-  },
-  {
-    left: VocalExpressionNeume.Antikenoma,
-    right: Fthora.HardChromaticPa_Bottom,
-  },
-  {
-    left: VocalExpressionNeume.Antikenoma,
-    right: Fthora.HardChromaticThi_Bottom,
-  },
-  {
-    left: VocalExpressionNeume.Antikenoma,
-    right: Fthora.SoftChromaticPa_Bottom,
-  },
-  {
-    left: VocalExpressionNeume.Antikenoma,
-    right: Fthora.SoftChromaticThi_Bottom,
-  },
-  { left: VocalExpressionNeume.Antikenoma, right: Fthora.Enharmonic_Bottom },
-  { left: VocalExpressionNeume.Antikenoma, right: Fthora.Zygos_Bottom },
-  { left: VocalExpressionNeume.Antikenoma, right: Fthora.Kliton_Bottom },
-  { left: VocalExpressionNeume.Antikenoma, right: Fthora.Spathi_Bottom },
-  {
-    left: VocalExpressionNeume.Antikenoma,
-    right: Fthora.GeneralSharp_Bottom,
-  },
-  {
-    left: VocalExpressionNeume.Antikenoma,
-    right: Fthora.GeneralFlat_Bottom,
+    right: [
+      Accidental.Sharp_2_Left,
+      Accidental.Sharp_4_Left,
+      Accidental.Sharp_6_Left,
+      Accidental.Sharp_8_Left,
+      Fthora.DiatonicNiLow_Bottom,
+      Fthora.DiatonicPa_Bottom,
+      Fthora.DiatonicVou_Bottom,
+      Fthora.DiatonicGa_Bottom,
+      Fthora.DiatonicThi_Bottom,
+      Fthora.DiatonicKe_Bottom,
+      Fthora.DiatonicZo_Bottom,
+      Fthora.DiatonicNiHigh_Bottom,
+      Fthora.HardChromaticPa_Bottom,
+      Fthora.HardChromaticThi_Bottom,
+      Fthora.SoftChromaticPa_Bottom,
+      Fthora.SoftChromaticThi_Bottom,
+      Fthora.Enharmonic_Bottom,
+      Fthora.Zygos_Bottom,
+      Fthora.Kliton_Bottom,
+      Fthora.Spathi_Bottom,
+      Fthora.GeneralSharp_Bottom,
+      Fthora.GeneralFlat_Bottom,
+    ],
   },
 
-  // Using null will check the bounds in all cases.
-  // { left: Accidental.Flat_2_Right, right: null },
-  // { left: Accidental.Flat_4_Right, right: null },
-  // { left: Accidental.Flat_6_Right, right: null },
-  // { left: Accidental.Flat_8_Right, right: null },
+  {
+    left: [
+      Accidental.Flat_2_Right,
+      Accidental.Flat_4_Right,
+      Accidental.Flat_6_Right,
+      Accidental.Flat_8_Right,
+    ],
+    right: [
+      QuantitativeNeume.OligonPlusApostrophosPlusKentemata,
+      QuantitativeNeume.OligonPlusIsonPlusKentemata,
+      QuantitativeNeume.OligonPlusElaphronPlusKentemata,
+      QuantitativeNeume.OligonPlusElaphronPlusApostrophosPlusKentemata,
+      QuantitativeNeume.OligonPlusHamiliPlusKentemata,
+      QuantitativeNeume.OligonPlusElaphron,
+      QuantitativeNeume.OligonPlusElaphronPlusApostrophos,
+      QuantitativeNeume.OligonPlusHamili,
+      QuantitativeNeume.PetastiWithIson,
+      QuantitativeNeume.Hamili,
+      QuantitativeNeume.HamiliPlusApostrophos,
+      QuantitativeNeume.HamiliPlusElaphron,
+      QuantitativeNeume.HamiliPlusElaphronPlusApostrophos,
+      QuantitativeNeume.DoubleHamili,
+      QuantitativeNeume.DoubleHamiliApostrofos,
+      QuantitativeNeume.DoubleHamiliElafron,
+      QuantitativeNeume.DoubleHamiliElafronApostrofos,
+      QuantitativeNeume.TripleHamili,
+      QuantitativeNeume.PetastiPlusApostrophos,
+      QuantitativeNeume.PetastiPlusElaphron,
+      QuantitativeNeume.PetastiPlusElaphronPlusApostrophos,
+      QuantitativeNeume.PetastiHamili,
+      QuantitativeNeume.PetastiHamiliApostrofos,
+      QuantitativeNeume.PetastiHamiliElafron,
+      QuantitativeNeume.PetastiHamiliElafronApostrofos,
+      QuantitativeNeume.PetastiDoubleHamili,
+      QuantitativeNeume.PetastiDoubleHamiliApostrofos,
+      TimeNeume.Klasma_Top,
+    ],
+  },
 ];
 
 interface LineBreakSolution {
@@ -2302,23 +2323,82 @@ export class LayoutService {
       return 0;
     }
 
-    const collisionMarks = this.getNoteVisualCollisionMarks(left, right);
+    return this.getNoteVisualCollisionPairSpacing(
+      left,
+      right,
+      pageSetup,
+      measureBarWidthMap,
+    );
+  }
 
-    if (collisionMarks == null) {
-      return 0;
+  private static getNoteVisualCollisionPairSpacing(
+    left: NoteElement,
+    right: NoteElement,
+    pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+  ) {
+    const leftNeumes = this.getRenderedNoteNeumeSet(left);
+    const rightNeumes = this.getRenderedNoteNeumeSet(right);
+    let spacing = 0;
+
+    for (const pair of noteVisualCollisionPairs) {
+      for (const leftNeume of this.getNoteVisualCollisionSideOptions(
+        pair.left,
+      )) {
+        if (!leftNeumes.has(leftNeume)) {
+          continue;
+        }
+
+        for (const rightNeume of this.getNoteVisualCollisionSideOptions(
+          pair.right,
+        )) {
+          if (rightNeume != null && !rightNeumes.has(rightNeume)) {
+            continue;
+          }
+
+          spacing = Math.max(
+            spacing,
+            this.getNoteVisualCollisionAlternativeSpacing(
+              left,
+              right,
+              pageSetup,
+              measureBarWidthMap,
+              leftNeume,
+              rightNeume,
+            ),
+          );
+        }
+      }
     }
 
+    return spacing;
+  }
+
+  private static getNoteVisualCollisionAlternativeSpacing(
+    left: NoteElement,
+    right: NoteElement,
+    pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+    leftNeume: Neume,
+    rightNeume: Neume | null,
+  ) {
     const leftBounds = this.getNoteVisualBounds(
       left,
       pageSetup,
       measureBarWidthMap,
-      collisionMarks.left,
+      new Set([leftNeume]),
+      true,
     );
+    const rightMarks =
+      rightNeume != null && rightNeume !== right.quantitativeNeume
+        ? new Set([rightNeume])
+        : new Set<Neume>();
     const rightBounds = this.getNoteVisualBounds(
       right,
       pageSetup,
       measureBarWidthMap,
-      collisionMarks.right,
+      rightMarks,
+      rightMarks.size === 0,
     );
 
     return (
@@ -2328,36 +2408,16 @@ export class LayoutService {
     );
   }
 
-  private static getNoteVisualCollisionMarks(
-    left: NoteElement,
-    right: NoteElement,
-  ) {
-    const leftNeumes = this.getRenderedNoteNeumeSet(left);
-    const rightNeumes = this.getRenderedNoteNeumeSet(right);
-    const collisionMarks = {
-      left: new Set<Neume>(),
-      right: new Set<Neume>(),
-    };
-    let hasMatch = false;
-
-    for (const pair of noteVisualCollisionPairs) {
-      if (!leftNeumes.has(pair.left)) {
-        continue;
-      }
-
-      if (pair.right != null && !rightNeumes.has(pair.right)) {
-        continue;
-      }
-
-      hasMatch = true;
-      collisionMarks.left.add(pair.left);
-
-      if (pair.right != null) {
-        collisionMarks.right.add(pair.right);
-      }
-    }
-
-    return hasMatch ? collisionMarks : null;
+  private static getNoteVisualCollisionSideOptions(
+    side: NoteVisualCollisionSide,
+  ): Neume[];
+  private static getNoteVisualCollisionSideOptions(
+    side: NoteVisualCollisionRightSide,
+  ): Array<Neume | null>;
+  private static getNoteVisualCollisionSideOptions(
+    side: NoteVisualCollisionRightSide,
+  ): Array<Neume | null> {
+    return Array.isArray(side) ? side : [side];
   }
 
   private static getNoteVisualBounds(
@@ -2365,16 +2425,19 @@ export class LayoutService {
     pageSetup: PageSetup,
     measureBarWidthMap: Map<MeasureBar, number>,
     collisionMarks: Set<Neume>,
+    bodyOnly: boolean = false,
   ): NoteVisualBounds {
     const bodyBounds = this.getNoteBodyBounds(
       noteElement,
       pageSetup,
       measureBarWidthMap,
     );
-    const bodyInkBounds = this.getNoteInkBoundsFromCache(
-      noteElement,
-      pageSetup,
-    );
+    const bodyInkBounds = bodyOnly
+      ? this.getNeumeSequenceInkBoundsFromCache(
+          [noteElement.quantitativeNeume],
+          pageSetup,
+        )
+      : this.getNoteInkBoundsFromCache(noteElement, pageSetup);
     let visualLeft = bodyBounds.left + bodyInkBounds.inkLeft;
     let visualRight = bodyBounds.left + bodyInkBounds.inkRight;
 
@@ -2432,10 +2495,10 @@ export class LayoutService {
 
     add(noteElement.quantitativeNeume, true);
     add(noteElement.stavros ? VocalExpressionNeume.Cross_Top : null);
-    add(noteElement.vocalExpressionNeume, true);
+    add(noteElement.vocalExpressionNeume);
     add(noteElement.timeNeume);
     add(noteElement.koronis ? TimeNeume.Koronis : null);
-    add(noteElement.gorgonNeume, true);
+    add(noteElement.gorgonNeume);
     add(noteElement.secondaryGorgonNeume);
     add(noteElement.fthora);
     add(noteElement.secondaryFthora);

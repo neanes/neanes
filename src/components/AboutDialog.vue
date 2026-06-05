@@ -20,15 +20,15 @@
 
       <div class="grid gap-4">
         <div class="grid gap-3 sm:grid-cols-3">
-          <Card size="sm">
+          <Card size="sm" class="bg-secondary">
             <CardContent>
               <div class="text-xs font-medium text-muted-foreground">
                 {{ $t(($) => $.dialog.about.version, { ns: 'dialog' }) }}
               </div>
-              <Badge variant="secondary" class="mt-2">v{{ appVersion }}</Badge>
+              <Badge variant="outline" class="mt-2">v{{ appVersion }}</Badge>
             </CardContent>
           </Card>
-          <Card size="sm">
+          <Card size="sm" class="bg-secondary">
             <CardContent>
               <div class="text-xs font-medium text-muted-foreground">
                 {{ $t(($) => $.dialog.about.platform, { ns: 'dialog' }) }}
@@ -42,7 +42,7 @@
               </div>
             </CardContent>
           </Card>
-          <Card size="sm">
+          <Card size="sm" class="bg-secondary">
             <CardContent>
               <div class="text-xs font-medium text-muted-foreground">
                 {{ $t(($) => $.dialog.about.license, { ns: 'dialog' }) }}
@@ -101,7 +101,7 @@
 
       <DialogFooter>
         <DialogClose as-child>
-          <Button type="button">
+          <Button variant="outline" type="button">
             {{ $t(($) => $.dialog.about.close, { ns: 'dialog' }) }}
           </Button>
         </DialogClose>

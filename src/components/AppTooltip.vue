@@ -9,44 +9,62 @@ import {
 } from '@/components/ui/tooltip';
 
 import type { AppTooltipValue } from './AppTooltip.types';
-import { getShortcutKeyDisplayText } from './AppTooltip.utils';
 
 const props = defineProps<{
   tooltip?: AppTooltipValue;
 }>();
 
-const label = computed(() =>
-  props.tooltip == null
-    ? undefined
-    : typeof props.tooltip === 'string'
-      ? props.tooltip
-      : props.tooltip.label,
-);
+const shortcutKeyGlyphs: Record<string, string> = {
+  alt: '⌥',
+  arrowdown: '↓',
+  arrowleft: '←',
+  arrowright: '→',
+  arrowup: '↑',
+  backspace: '⌫',
+  capslock: '⇪',
+  cmd: '⌘',
+  command: '⌘',
+  control: '⌃',
+  ctrl: '⌃',
+  delete: '⌦',
+  del: '⌦',
+  down: '↓',
+  enter: '↵',
+  esc: '⎋',
+  escape: '⎋',
+  left: '←',
+  meta: '⌘',
+  option: '⌥',
+  return: '↵',
+  right: '→',
+  shift: '⇧',
+  tab: '⇥',
+  up: '↑',
+};
 
-const shortcutKeys = computed(() => {
-  if (typeof props.tooltip === 'string' || props.tooltip?.shortcut == null) {
-    return [];
+const tooltipDetails = computed(() => {
+  const tooltip = props.tooltip;
+
+  if (tooltip == null) {
+    return undefined;
   }
 
-  return props.tooltip.shortcut;
+  const label = typeof tooltip === 'string' ? tooltip : tooltip.label;
+  const shortcutKeys =
+    typeof tooltip === 'string' ? [] : (tooltip.shortcut ?? []);
+  const shortcut = shortcutKeys.join(' + ');
+
+  return {
+    label,
+    shortcutDisplayKeys: shortcutKeys.map((key) =>
+      getShortcutKeyDisplayText(key),
+    ),
+    ariaLabel: shortcut ? `${label} (${shortcut})` : label,
+  };
 });
 
-const shortcutDisplayKeys = computed(() =>
-  shortcutKeys.value.map((key) => getShortcutKeyDisplayText(key)),
-);
-
-const ariaLabel = computed(() =>
-  props.tooltip ? getAppTooltipAriaLabel(props.tooltip) : undefined,
-);
-
-function getAppTooltipAriaLabel(tooltip: AppTooltipValue) {
-  if (typeof tooltip === 'string') {
-    return tooltip;
-  }
-
-  const shortcut = tooltip.shortcut?.join(' + ');
-
-  return shortcut ? `${tooltip.label} (${shortcut})` : tooltip.label;
+function getShortcutKeyDisplayText(key: string) {
+  return shortcutKeyGlyphs[key.replace(/\s+/g, '').toLowerCase()] ?? key;
 }
 </script>
 
@@ -59,17 +77,20 @@ function getAppTooltipAriaLabel(tooltip: AppTooltipValue) {
         first element only. Bind the provided ariaLabel to the appropriate
         element so the visible tooltip text and aria-label stay in sync.
       -->
-      <slot v-bind="{ ariaLabel }" />
+      <slot v-bind="{ ariaLabel: tooltipDetails?.ariaLabel }" />
     </TooltipTrigger>
     <TooltipContent
-      v-if="tooltip"
+      v-if="tooltipDetails"
       class="inline-block text-left whitespace-normal"
     >
-      <span>{{ label }}</span>
-      <span v-if="shortcutDisplayKeys.length > 0" class="ml-1">
+      <span>{{ tooltipDetails.label }}</span>
+      <span v-if="tooltipDetails.shortcutDisplayKeys.length > 0" class="ml-1">
         <span>(</span>
         <KbdGroup>
-          <template v-for="(key, index) in shortcutDisplayKeys" :key="index">
+          <template
+            v-for="(key, index) in tooltipDetails.shortcutDisplayKeys"
+            :key="index"
+          >
             <span v-if="index > 0">+</span>
             <Kbd>{{ key }}</Kbd>
           </template>

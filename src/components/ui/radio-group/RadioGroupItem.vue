@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CircleIcon } from '@lucide/vue';
+import { PhCircle } from '@phosphor-icons/vue';
 import { reactiveOmit } from '@vueuse/core';
 import type { RadioGroupItemProps } from 'reka-ui';
 import { RadioGroupIndicator, RadioGroupItem, useForwardProps } from 'reka-ui';
@@ -32,7 +32,7 @@ const forwardedProps = useForwardProps(delegatedProps);
       class="flex size-4 items-center justify-center"
     >
       <slot>
-        <CircleIcon
+        <PhCircle
           class="bg-primary-foreground absolute top-1/2 left-1/2 size-2 -translate-x-1/2 -translate-y-1/2 rounded-full"
         />
       </slot>

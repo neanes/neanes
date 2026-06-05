@@ -16,7 +16,7 @@
           :class="triggerClass"
         >
           <span class="truncate">{{ selectedLabel }}</span>
-          <ChevronsUpDown class="ml-auto size-4 shrink-0 opacity-50" />
+          <PhCaretUpDown class="ml-auto size-4 shrink-0 opacity-50" />
         </Button>
       </ComboboxTrigger>
     </ComboboxAnchor>
@@ -37,7 +37,7 @@
           >
             <span class="truncate">{{ option.label }}</span>
             <ComboboxItemIndicator>
-              <Check class="size-4" />
+              <PhCheck class="size-4" />
             </ComboboxItemIndicator>
           </ComboboxItem>
         </ComboboxGroup>
@@ -47,7 +47,7 @@
 </template>
 
 <script setup lang="ts">
-import { Check, ChevronsUpDown } from '@lucide/vue';
+import { PhCaretUpDown, PhCheck } from '@phosphor-icons/vue';
 import type { HTMLAttributes, PropType } from 'vue';
 import { computed } from 'vue';
 

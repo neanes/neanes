@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ChevronLeftIcon } from '@lucide/vue';
+import { PhCaretLeft } from '@phosphor-icons/vue';
 import { reactiveOmit } from '@vueuse/core';
 import type { RangeCalendarPrevProps } from 'reka-ui';
 import { RangeCalendarPrev, useForwardProps } from 'reka-ui';
@@ -31,7 +31,7 @@ const forwardedProps = useForwardProps(delegatedProps);
     v-bind="forwardedProps"
   >
     <slot>
-      <ChevronLeftIcon class="size-4" />
+      <PhCaretLeft class="size-4" />
     </slot>
   </RangeCalendarPrev>
 </template>

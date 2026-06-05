@@ -53,89 +53,80 @@
           $emit('update', { color: $event } as Partial<TextBoxElement>)
         "
       />
-      <span class="space"></span>
-      <button
-        class="icon-btn"
-        :class="{ selected: element.bold }"
-        aria-label="Bold"
-        @click="
-          $emit('update', { bold: !element.bold } as Partial<TextBoxElement>)
-        "
-      >
-        <b>B</b>
-      </button>
-      <button
-        class="icon-btn"
-        :class="{ selected: element.italic }"
-        aria-label="Italic"
-        @click="
-          $emit('update', {
-            italic: !element.italic,
-          } as Partial<TextBoxElement>)
-        "
-      >
-        <i>I</i>
-      </button>
     </template>
-    <button
-      class="icon-btn"
-      :class="{ selected: element.underline }"
-      aria-label="Underline"
-      @click="
-        $emit('update', {
-          underline: !element.underline,
-        } as Partial<TextBoxElement>)
-      "
+    <span class="space"></span>
+    <ToggleGroup
+      type="multiple"
+      variant="outline"
+      :model-value="styleValues"
+      @update:model-value="onStyleValuesChanged"
     >
-      <u>U</u>
-    </button>
+      <ToggleGroupItem
+        v-if="!element.useDefaultStyle"
+        value="bold"
+        class="icon-btn"
+        aria-label="Toggle bold"
+      >
+        <PhTextB class="h-4 w-4" />
+      </ToggleGroupItem>
+      <ToggleGroupItem
+        v-if="!element.useDefaultStyle"
+        value="italic"
+        class="icon-btn"
+        aria-label="Toggle italic"
+      >
+        <PhTextItalic class="h-4 w-4" />
+      </ToggleGroupItem>
+      <ToggleGroupItem
+        value="underline"
+        class="icon-btn"
+        aria-label="Toggle underline"
+      >
+        <PhTextUnderline class="h-4 w-4" />
+      </ToggleGroupItem>
+    </ToggleGroup>
     <template v-if="!element.multipanel">
       <span class="space"></span>
-      <AppTooltip
-        :tooltip="$t(($) => $.toolbar.common.alignLeft, { ns: 'toolbar' })"
+      <ToggleGroup
+        type="single"
+        variant="outline"
+        :model-value="element.alignment"
+        @update:model-value="onAlignmentChanged"
       >
-        <button
-          class="icon-btn"
-          :class="{ selected: element.alignment === TextBoxAlignment.Left }"
-          @click="
-            $emit('update', {
-              alignment: TextBoxAlignment.Left,
-            } as Partial<TextBoxElement>)
-          "
+        <AppTooltip
+          :tooltip="$t(($) => $.toolbar.common.alignLeft, { ns: 'toolbar' })"
         >
-          <img src="@/assets/icons/alignleft.svg" />
-        </button>
-      </AppTooltip>
-      <AppTooltip
-        :tooltip="$t(($) => $.toolbar.common.alignCenter, { ns: 'toolbar' })"
-      >
-        <button
-          class="icon-btn"
-          :class="{ selected: element.alignment === TextBoxAlignment.Center }"
-          @click="
-            $emit('update', {
-              alignment: TextBoxAlignment.Center,
-            } as Partial<TextBoxElement>)
-          "
+          <ToggleGroupItem
+            :value="TextBoxAlignment.Left"
+            class="icon-btn"
+            :class="{ selected: element.alignment === TextBoxAlignment.Left }"
+          >
+            <PhTextAlignLeft class="h-4 w-4" />
+          </ToggleGroupItem>
+        </AppTooltip>
+        <AppTooltip
+          :tooltip="$t(($) => $.toolbar.common.alignCenter, { ns: 'toolbar' })"
         >
-          <img src="@/assets/icons/aligncenter.svg" />
-        </button>
-      </AppTooltip>
-      <AppTooltip
-        :tooltip="$t(($) => $.toolbar.common.alignRight, { ns: 'toolbar' })"
-      >
-        <button
-          class="icon-btn"
-          :class="{ selected: element.alignment === TextBoxAlignment.Right }"
-          @click="
-            $emit('update', {
-              alignment: TextBoxAlignment.Right,
-            } as Partial<TextBoxElement>)
-          "
+          <ToggleGroupItem
+            :value="TextBoxAlignment.Center"
+            class="icon-btn"
+            :class="{ selected: element.alignment === TextBoxAlignment.Center }"
+          >
+            <PhTextAlignCenter class="h-4 w-4" />
+          </ToggleGroupItem>
+        </AppTooltip>
+        <AppTooltip
+          :tooltip="$t(($) => $.toolbar.common.alignRight, { ns: 'toolbar' })"
         >
-          <img src="@/assets/icons/alignright.svg" />
-        </button>
-      </AppTooltip>
+          <ToggleGroupItem
+            :value="TextBoxAlignment.Right"
+            class="icon-btn"
+            :class="{ selected: element.alignment === TextBoxAlignment.Right }"
+          >
+            <PhTextAlignRight class="h-4 w-4" />
+          </ToggleGroupItem>
+        </AppTooltip>
+      </ToggleGroup>
     </template>
     <template v-if="!element.useDefaultStyle">
       <span class="space" />
@@ -286,6 +277,14 @@
 </template>
 
 <script setup lang="ts">
+import {
+  PhTextAlignCenter,
+  PhTextAlignLeft,
+  PhTextAlignRight,
+  PhTextB,
+  PhTextItalic,
+  PhTextUnderline,
+} from '@phosphor-icons/vue';
 import type { PropType } from 'vue';
 import { computed } from 'vue';
 
@@ -298,6 +297,7 @@ import InputUnit from '@/components/InputUnit.vue';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import type { TextBoxElement } from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';
 import type { PageSetup } from '@/models/PageSetup';
@@ -322,12 +322,44 @@ const props = defineProps({
   },
 });
 
-defineEmits([
+const emit = defineEmits([
   'insert:gorthmikon',
   'insert:pelastikon',
   'update',
   'update:sectionName',
 ]);
+
+const styleValues = computed(() => [
+  ...(!props.element.useDefaultStyle && props.element.bold ? ['bold'] : []),
+  ...(!props.element.useDefaultStyle && props.element.italic ? ['italic'] : []),
+  ...(props.element.underline ? ['underline'] : []),
+]);
+
+function onStyleValuesChanged(value: unknown) {
+  const values = Array.isArray(value) ? value : [];
+  const update: Partial<TextBoxElement> = {
+    underline: values.includes('underline'),
+  };
+
+  if (!props.element.useDefaultStyle) {
+    update.bold = values.includes('bold');
+    update.italic = values.includes('italic');
+  }
+
+  emit('update', update);
+}
+
+function onAlignmentChanged(value: unknown) {
+  if (isTextBoxAlignment(value)) {
+    emit('update', {
+      alignment: value,
+    } as Partial<TextBoxElement>);
+  }
+}
+
+function isTextBoxAlignment(value: unknown): value is TextBoxAlignment {
+  return Object.values(TextBoxAlignment).includes(value as TextBoxAlignment);
+}
 
 const textBoxFontFamilies = computed(() => [
   'Source Serif',
@@ -383,7 +415,8 @@ const maxHeight = computed(() => Unit.toPt(props.pageSetup.innerPageHeight));
   background: revert;
 }
 
-.icon-btn.selected {
+.icon-btn.selected,
+.icon-btn[data-state='on'] {
   background: var(--color-legacy-chrome-selected);
 }
 

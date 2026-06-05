@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronDownIcon } from '@lucide/vue';
+import { PhCaretDown } from '@phosphor-icons/vue';
 import { reactiveOmit } from '@vueuse/core';
 import type { SelectScrollDownButtonProps } from 'reka-ui';
 import { SelectScrollDownButton, useForwardProps } from 'reka-ui';
@@ -28,7 +28,7 @@ const forwardedProps = useForwardProps(delegatedProps);
     "
   >
     <slot>
-      <ChevronDownIcon />
+      <PhCaretDown />
     </slot>
   </SelectScrollDownButton>
 </template>

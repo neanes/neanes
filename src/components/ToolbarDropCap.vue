@@ -61,28 +61,23 @@
         "
       />
       <span class="space"></span>
-      <button
-        class="icon-btn"
-        :class="{ selected: bold }"
-        @click="
-          $emit('update', {
-            fontWeight: !bold ? '700' : '400',
-          } as Partial<DropCapElement>)
-        "
+      <ToggleGroup
+        type="multiple"
+        variant="outline"
+        :model-value="styleValues"
+        @update:model-value="onStyleValuesChanged"
       >
-        <b>B</b>
-      </button>
-      <button
-        class="icon-btn"
-        :class="{ selected: italic }"
-        @click="
-          $emit('update', {
-            fontStyle: !italic ? 'italic' : 'normal',
-          } as Partial<DropCapElement>)
-        "
-      >
-        <i>I</i>
-      </button>
+        <ToggleGroupItem value="bold" class="icon-btn" aria-label="Toggle bold">
+          <PhTextB class="h-4 w-4" />
+        </ToggleGroupItem>
+        <ToggleGroupItem
+          value="italic"
+          class="icon-btn"
+          aria-label="Toggle italic"
+        >
+          <PhTextItalic class="h-4 w-4" />
+        </ToggleGroupItem>
+      </ToggleGroup>
       <span class="space"></span>
       <Label for="toolbar-drop-cap-outline" class="mr-2">{{
         $t(($) => $.toolbar.common.outline, { ns: 'toolbar' })
@@ -153,6 +148,7 @@
 </template>
 
 <script setup lang="ts">
+import { PhTextB, PhTextItalic } from '@phosphor-icons/vue';
 import type { PropType } from 'vue';
 import { computed } from 'vue';
 
@@ -164,6 +160,7 @@ import InputUnit from '@/components/InputUnit.vue';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import type { DropCapElement } from '@/models/Element';
 import type { PageSetup } from '@/models/PageSetup';
 import {
@@ -188,10 +185,14 @@ const props = defineProps({
   },
 });
 
-defineEmits(['update', 'update:sectionName']);
+const emit = defineEmits(['update', 'update:sectionName']);
 
 const bold = computed(() => props.element.fontWeight === '700');
 const italic = computed(() => props.element.fontStyle === 'italic');
+const styleValues = computed(() => [
+  ...(bold.value ? ['bold'] : []),
+  ...(italic.value ? ['italic'] : []),
+]);
 
 const dropCapFontFamilies = computed(() => [
   'Source Serif',
@@ -202,6 +203,15 @@ const dropCapFontFamilies = computed(() => [
 ]);
 
 const maxWidth = computed(() => Unit.toPt(props.pageSetup.innerPageWidth));
+
+function onStyleValuesChanged(value: unknown) {
+  const values = Array.isArray(value) ? value : [];
+
+  emit('update', {
+    fontWeight: values.includes('bold') ? '700' : '400',
+    fontStyle: values.includes('italic') ? 'italic' : 'normal',
+  } as Partial<DropCapElement>);
+}
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
@@ -246,7 +256,8 @@ const maxWidth = computed(() => Unit.toPt(props.pageSetup.innerPageWidth));
   background: revert;
 }
 
-.icon-btn.selected {
+.icon-btn.selected,
+.icon-btn[data-state='on'] {
   background: var(--color-legacy-chrome-selected);
 }
 

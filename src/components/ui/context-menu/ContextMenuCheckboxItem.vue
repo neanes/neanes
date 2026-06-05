@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CheckIcon } from '@lucide/vue';
+import { PhCheck } from '@phosphor-icons/vue';
 import { reactiveOmit } from '@vueuse/core';
 import type {
   ContextMenuCheckboxItemEmits,
@@ -38,7 +38,7 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits);
     <span class="absolute right-2 pointer-events-none">
       <ContextMenuItemIndicator>
         <slot name="indicator-icon">
-          <CheckIcon />
+          <PhCheck />
         </slot>
       </ContextMenuItemIndicator>
     </span>

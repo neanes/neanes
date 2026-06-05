@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronRightIcon } from '@lucide/vue';
+import { PhCaretRight } from '@phosphor-icons/vue';
 import { reactiveOmit } from '@vueuse/core';
 import type { MenubarSubTriggerProps } from 'reka-ui';
 import { MenubarSubTrigger, useForwardProps } from 'reka-ui';
@@ -28,6 +28,6 @@ const forwardedProps = useForwardProps(delegatedProps);
     "
   >
     <slot />
-    <ChevronRightIcon class="cn-rtl-flip ml-auto size-4" />
+    <PhCaretRight class="cn-rtl-flip ml-auto size-4" />
   </MenubarSubTrigger>
 </template>

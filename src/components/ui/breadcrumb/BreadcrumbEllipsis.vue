@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { MoreHorizontalIcon } from '@lucide/vue';
+import { PhDotsThree } from '@phosphor-icons/vue';
 import type { HTMLAttributes } from 'vue';
 
 import { cn } from '@/lib/utils';
@@ -19,7 +19,7 @@ const props = defineProps<{
     "
   >
     <slot>
-      <MoreHorizontalIcon />
+      <PhDotsThree />
     </slot>
     <span class="sr-only">More</span>
   </span>

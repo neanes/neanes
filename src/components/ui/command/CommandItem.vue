@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CheckIcon } from '@lucide/vue';
+import { PhCheck } from '@phosphor-icons/vue';
 import { reactiveOmit, useCurrentElement } from '@vueuse/core';
 import type { ListboxItemEmits, ListboxItemProps } from 'reka-ui';
 import { ListboxItem, useForwardPropsEmits, useId } from 'reka-ui';
@@ -86,7 +86,7 @@ onUnmounted(() => {
     "
   >
     <slot />
-    <CheckIcon
+    <PhCheck
       class="ml-auto opacity-0 group-has-data-[slot=command-shortcut]/command-item:hidden group-data-[checked=true]/command-item:opacity-100"
     />
   </ListboxItem>

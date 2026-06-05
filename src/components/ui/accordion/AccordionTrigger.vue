@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronDownIcon, ChevronUpIcon } from '@lucide/vue';
+import { PhCaretDown, PhCaretUp } from '@phosphor-icons/vue';
 import { reactiveOmit } from '@vueuse/core';
 import type { AccordionTriggerProps } from 'reka-ui';
 import { AccordionHeader, AccordionTrigger } from 'reka-ui';
@@ -28,11 +28,11 @@ const delegatedProps = reactiveOmit(props, 'class');
     >
       <slot />
       <slot name="icon">
-        <ChevronDownIcon
+        <PhCaretDown
           data-slot="accordion-trigger-icon"
           class="pointer-events-none shrink-0 group-aria-expanded/accordion-trigger:hidden"
         />
-        <ChevronUpIcon
+        <PhCaretUp
           data-slot="accordion-trigger-icon"
           class="pointer-events-none hidden shrink-0 group-aria-expanded/accordion-trigger:inline"
         />

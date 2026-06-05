@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronsLeftIcon } from '@lucide/vue';
+import { PhCaretDoubleLeft } from '@phosphor-icons/vue';
 import { reactiveOmit } from '@vueuse/core';
 import type { PaginationFirstProps } from 'reka-ui';
 import { PaginationFirst, useForwardProps } from 'reka-ui';
@@ -32,7 +32,7 @@ const forwarded = useForwardProps(delegatedProps);
     v-bind="forwarded"
   >
     <slot>
-      <ChevronsLeftIcon data-icon="inline-start" />
+      <PhCaretDoubleLeft data-icon="inline-start" />
       <span class="hidden sm:block">First</span>
     </slot>
   </PaginationFirst>

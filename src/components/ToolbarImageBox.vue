@@ -63,61 +63,62 @@
     />
     <template v-if="!element.inline">
       <span class="space" />
-      <AppTooltip
-        :tooltip="$t(($) => $.toolbar.common.alignLeft, { ns: 'toolbar' })"
+      <ToggleGroup
+        type="single"
+        variant="outline"
+        :model-value="element.alignment"
+        @update:model-value="onAlignmentChanged"
       >
-        <button
-          class="icon-btn"
-          :class="{ selected: element.alignment === TextBoxAlignment.Left }"
-          @click="
-            $emit('update', {
-              alignment: TextBoxAlignment.Left,
-            } as Partial<ImageBoxElement>)
-          "
+        <AppTooltip
+          :tooltip="$t(($) => $.toolbar.common.alignLeft, { ns: 'toolbar' })"
         >
-          <img src="@/assets/icons/alignleft.svg" />
-        </button>
-      </AppTooltip>
-      <AppTooltip
-        :tooltip="$t(($) => $.toolbar.common.alignCenter, { ns: 'toolbar' })"
-      >
-        <button
-          class="icon-btn"
-          :class="{ selected: element.alignment === TextBoxAlignment.Center }"
-          @click="
-            $emit('update', {
-              alignment: TextBoxAlignment.Center,
-            } as Partial<ImageBoxElement>)
-          "
+          <ToggleGroupItem
+            :value="TextBoxAlignment.Left"
+            class="icon-btn"
+            :class="{ selected: element.alignment === TextBoxAlignment.Left }"
+          >
+            <PhTextAlignLeft class="h-4 w-4" />
+          </ToggleGroupItem>
+        </AppTooltip>
+        <AppTooltip
+          :tooltip="$t(($) => $.toolbar.common.alignCenter, { ns: 'toolbar' })"
         >
-          <img src="@/assets/icons/aligncenter.svg" />
-        </button>
-      </AppTooltip>
-      <AppTooltip
-        :tooltip="$t(($) => $.toolbar.common.alignRight, { ns: 'toolbar' })"
-      >
-        <button
-          class="icon-btn"
-          :class="{ selected: element.alignment === TextBoxAlignment.Right }"
-          @click="
-            $emit('update', {
-              alignment: TextBoxAlignment.Right,
-            } as Partial<ImageBoxElement>)
-          "
+          <ToggleGroupItem
+            :value="TextBoxAlignment.Center"
+            class="icon-btn"
+            :class="{ selected: element.alignment === TextBoxAlignment.Center }"
+          >
+            <PhTextAlignCenter class="h-4 w-4" />
+          </ToggleGroupItem>
+        </AppTooltip>
+        <AppTooltip
+          :tooltip="$t(($) => $.toolbar.common.alignRight, { ns: 'toolbar' })"
         >
-          <img src="@/assets/icons/alignright.svg" />
-        </button>
-      </AppTooltip>
+          <ToggleGroupItem
+            :value="TextBoxAlignment.Right"
+            class="icon-btn"
+            :class="{ selected: element.alignment === TextBoxAlignment.Right }"
+          >
+            <PhTextAlignRight class="h-4 w-4" />
+          </ToggleGroupItem>
+        </AppTooltip>
+      </ToggleGroup>
     </template>
   </div>
 </template>
 
 <script setup lang="ts">
+import {
+  PhTextAlignCenter,
+  PhTextAlignLeft,
+  PhTextAlignRight,
+} from '@phosphor-icons/vue';
 import type { PropType } from 'vue';
 
 import AppTooltip from '@/components/AppTooltip.vue';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import type { ImageBoxElement } from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';
 import type { PageSetup } from '@/models/PageSetup';
@@ -137,6 +138,18 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update']);
+
+function onAlignmentChanged(value: unknown) {
+  if (isTextBoxAlignment(value)) {
+    emit('update', {
+      alignment: value,
+    } as Partial<ImageBoxElement>);
+  }
+}
+
+function isTextBoxAlignment(value: unknown): value is TextBoxAlignment {
+  return Object.values(TextBoxAlignment).includes(value as TextBoxAlignment);
+}
 
 function onChangeHeight(height: number | null) {
   if (height == null) {
@@ -219,7 +232,8 @@ function onChangeWidth(width: number | null) {
   background: revert;
 }
 
-.icon-btn.selected {
+.icon-btn.selected,
+.icon-btn[data-state='on'] {
   background: var(--color-legacy-chrome-selected);
 }
 

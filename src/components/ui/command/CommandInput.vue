@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { SearchIcon } from '@lucide/vue';
+import { PhMagnifyingGlass } from '@phosphor-icons/vue';
 import { reactiveOmit } from '@vueuse/core';
 import type { ListboxFilterProps } from 'reka-ui';
 import { ListboxFilter, useForwardProps } from 'reka-ui';
@@ -45,7 +45,7 @@ const { filterState } = useCommand();
         "
       />
       <InputGroupAddon>
-        <SearchIcon class="size-4 shrink-0 opacity-50" />
+        <PhMagnifyingGlass class="size-4 shrink-0 opacity-50" />
       </InputGroupAddon>
     </InputGroup>
   </div>

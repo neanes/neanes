@@ -43,42 +43,30 @@
         "
       />
       <span class="space"></span>
-      <button
-        class="icon-btn"
-        :class="{ selected: bold }"
-        aria-label="Bold"
-        @click="
-          $emit('update', {
-            lyricsFontWeight: !bold ? '700' : '400',
-          } as Partial<NoteElement>)
-        "
+      <ToggleGroup
+        type="multiple"
+        variant="outline"
+        :model-value="styleValues"
+        @update:model-value="onStyleValuesChanged"
       >
-        <b>B</b>
-      </button>
-      <button
-        class="icon-btn"
-        :class="{ selected: italic }"
-        aria-label="Italic"
-        @click="
-          $emit('update', {
-            lyricsFontStyle: !italic ? 'italic' : 'normal',
-          } as Partial<NoteElement>)
-        "
-      >
-        <i>I</i>
-      </button>
-      <button
-        class="icon-btn"
-        :class="{ selected: underline }"
-        aria-label="Underline"
-        @click="
-          $emit('update', {
-            lyricsTextDecoration: !underline ? 'underline' : 'none',
-          } as Partial<NoteElement>)
-        "
-      >
-        <u>U</u>
-      </button>
+        <ToggleGroupItem value="bold" class="icon-btn" aria-label="Toggle bold">
+          <PhTextB class="h-4 w-4" />
+        </ToggleGroupItem>
+        <ToggleGroupItem
+          value="italic"
+          class="icon-btn"
+          aria-label="Toggle italic"
+        >
+          <PhTextItalic class="h-4 w-4" />
+        </ToggleGroupItem>
+        <ToggleGroupItem
+          value="underline"
+          class="icon-btn"
+          aria-label="Toggle underline"
+        >
+          <PhTextUnderline class="h-4 w-4" />
+        </ToggleGroupItem>
+      </ToggleGroup>
       <span class="space"></span>
       <Label class="mr-2">{{
         $t(($) => $.toolbar.common.outline, { ns: 'toolbar' })
@@ -128,6 +116,7 @@
 </template>
 
 <script setup lang="ts">
+import { PhTextB, PhTextItalic, PhTextUnderline } from '@phosphor-icons/vue';
 import type { PropType } from 'vue';
 import { computed } from 'vue';
 
@@ -138,6 +127,7 @@ import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import type { NoteElement } from '@/models/Element';
 import {
   E_MACRON,
@@ -170,13 +160,18 @@ const props = defineProps({
   },
 });
 
-defineEmits(['insert:specialCharacter', 'update']);
+const emit = defineEmits(['insert:specialCharacter', 'update']);
 
 const bold = computed(() => props.element.lyricsFontWeight === '700');
 const italic = computed(() => props.element.lyricsFontStyle === 'italic');
 const underline = computed(
   () => props.element.lyricsTextDecoration === 'underline',
 );
+const styleValues = computed(() => [
+  ...(bold.value ? ['bold'] : []),
+  ...(italic.value ? ['italic'] : []),
+  ...(underline.value ? ['underline'] : []),
+]);
 
 const lyricsFontFamilies = computed(() => [
   'Source Serif',
@@ -185,6 +180,16 @@ const lyricsFontFamilies = computed(() => [
   'Old Standard',
   ...props.fonts,
 ]);
+
+function onStyleValuesChanged(value: unknown) {
+  const values = Array.isArray(value) ? value : [];
+
+  emit('update', {
+    lyricsFontWeight: values.includes('bold') ? '700' : '400',
+    lyricsFontStyle: values.includes('italic') ? 'italic' : 'normal',
+    lyricsTextDecoration: values.includes('underline') ? 'underline' : 'none',
+  } as Partial<NoteElement>);
+}
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
@@ -236,7 +241,8 @@ const lyricsFontFamilies = computed(() => [
   margin: 0 0.5rem;
 }
 
-.icon-btn.selected {
+.icon-btn.selected,
+.icon-btn[data-state='on'] {
   background: var(--color-legacy-chrome-selected);
 }
 

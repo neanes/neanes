@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { PlusIcon } from '@lucide/vue';
+import { PhPlus } from '@phosphor-icons/vue';
 import { reactiveOmit } from '@vueuse/core';
 import type { NumberFieldIncrementProps } from 'reka-ui';
 import { NumberFieldIncrement, useForwardProps } from 'reka-ui';
@@ -28,7 +28,7 @@ const forwarded = useForwardProps(delegatedProps);
     "
   >
     <slot>
-      <PlusIcon class="h-4 w-4" />
+      <PhPlus class="h-4 w-4" />
     </slot>
   </NumberFieldIncrement>
 </template>

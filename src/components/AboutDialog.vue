@@ -69,7 +69,7 @@
             type="button"
             @click="openExternal(guideUrl)"
           >
-            <BookOpen />
+            <PhBookOpen />
             {{ $t(($) => $.dialog.about.guide, { ns: 'dialog' }) }}
           </Button>
           <Button
@@ -77,7 +77,7 @@
             type="button"
             @click="openExternal(repoUrl)"
           >
-            <Code2 />
+            <PhCode />
             {{ $t(($) => $.dialog.about.sourceCode, { ns: 'dialog' }) }}
           </Button>
           <Button
@@ -85,7 +85,7 @@
             type="button"
             @click="openExternal(issuesUrl)"
           >
-            <Lightbulb />
+            <PhLightbulb />
             {{ $t(($) => $.dialog.about.requestFeature, { ns: 'dialog' }) }}
           </Button>
           <Button
@@ -93,7 +93,7 @@
             type="button"
             @click="openExternal(issuesUrl)"
           >
-            <Bug />
+            <PhBug />
             {{ $t(($) => $.dialog.about.reportIssue, { ns: 'dialog' }) }}
           </Button>
         </div>
@@ -111,7 +111,7 @@
 </template>
 
 <script setup lang="ts">
-import { BookOpen, Bug, Code2, Lightbulb } from '@lucide/vue';
+import { PhBookOpen, PhBug, PhCode, PhLightbulb } from '@phosphor-icons/vue';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';

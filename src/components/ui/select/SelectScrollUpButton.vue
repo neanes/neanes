@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronUpIcon } from '@lucide/vue';
+import { PhCaretUp } from '@phosphor-icons/vue';
 import { reactiveOmit } from '@vueuse/core';
 import type { SelectScrollUpButtonProps } from 'reka-ui';
 import { SelectScrollUpButton, useForwardProps } from 'reka-ui';
@@ -28,7 +28,7 @@ const forwardedProps = useForwardProps(delegatedProps);
     "
   >
     <slot>
-      <ChevronUpIcon />
+      <PhCaretUp />
     </slot>
   </SelectScrollUpButton>
 </template>

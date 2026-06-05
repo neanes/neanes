@@ -229,7 +229,7 @@
         <ToolbarButton
           variant="secondary"
           size="icon-sm"
-          class="icon-btn icon-btn-small"
+          class="icon-btn"
           :class="{ selected: element.alignRight }"
           @click="
             $emit('update', {
@@ -237,7 +237,7 @@
             } as Partial<MartyriaElement>)
           "
         >
-          <img src="@/assets/icons/alignright2.svg" />
+          <PhAlignRight class="h-4 w-4" weight="duotone" />
         </ToolbarButton>
       </AppTooltip>
       <template v-if="element.alignRight">
@@ -461,6 +461,7 @@
 </template>
 
 <script setup lang="ts">
+import { PhAlignRight } from '@phosphor-icons/vue';
 import { useTranslation } from 'i18next-vue';
 import type { AcceptableValue } from 'reka-ui';
 import type { PropType } from 'vue';
@@ -1010,10 +1011,6 @@ function tooltip(neume: Fthora | MeasureBar.MeasureBarRight): AppTooltipValue {
   height: var(--btn-icon-size, var(--btn-size));
   max-width: none;
   width: var(--btn-icon-size, var(--btn-size));
-}
-
-.icon-btn-small {
-  --btn-icon-size: 24px;
 }
 
 .icon-btn.selected {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { XIcon } from '@lucide/vue';
+import { PhX } from '@phosphor-icons/vue';
 import { reactiveOmit } from '@vueuse/core';
 import type { TagsInputItemDeleteProps } from 'reka-ui';
 import { TagsInputItemDelete, useForwardProps } from 'reka-ui';
@@ -22,7 +22,7 @@ const forwardedProps = useForwardProps(delegatedProps);
     :class="cn('flex rounded bg-transparent mr-1', props.class)"
   >
     <slot>
-      <XIcon class="w-4 h-4" />
+      <PhX class="w-4 h-4" />
     </slot>
   </TagsInputItemDelete>
 </template>

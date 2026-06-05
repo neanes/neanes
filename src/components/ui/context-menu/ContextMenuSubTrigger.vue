@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronRightIcon } from '@lucide/vue';
+import { PhCaretRight } from '@phosphor-icons/vue';
 import { reactiveOmit } from '@vueuse/core';
 import type { ContextMenuSubTriggerProps } from 'reka-ui';
 import { ContextMenuSubTrigger, useForwardProps } from 'reka-ui';
@@ -32,6 +32,6 @@ const forwardedProps = useForwardProps(delegatedProps);
     "
   >
     <slot />
-    <ChevronRightIcon class="cn-rtl-flip ml-auto" />
+    <PhCaretRight class="cn-rtl-flip ml-auto" />
   </ContextMenuSubTrigger>
 </template>

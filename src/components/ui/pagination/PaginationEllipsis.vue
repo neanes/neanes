@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { MoreHorizontalIcon } from '@lucide/vue';
+import { PhDotsThree } from '@phosphor-icons/vue';
 import { reactiveOmit } from '@vueuse/core';
 import type { PaginationEllipsisProps } from 'reka-ui';
 import { PaginationEllipsis } from 'reka-ui';
@@ -26,7 +26,7 @@ const delegatedProps = reactiveOmit(props, 'class');
     "
   >
     <slot>
-      <MoreHorizontalIcon />
+      <PhDotsThree />
       <span class="sr-only">More pages</span>
     </slot>
   </PaginationEllipsis>

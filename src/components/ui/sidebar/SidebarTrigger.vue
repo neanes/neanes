@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { PanelLeftIcon } from '@lucide/vue';
+import { PhSidebarSimple } from '@phosphor-icons/vue';
 import type { HTMLAttributes } from 'vue';
 
 import { Button } from '@/components/ui/button';
@@ -23,7 +23,7 @@ const { toggleSidebar } = useSidebar();
     :class="cn('', props.class)"
     @click="toggleSidebar"
   >
-    <PanelLeftIcon class="cn-rtl-flip" />
+    <PhSidebarSimple class="cn-rtl-flip" />
     <span class="sr-only">Toggle Sidebar</span>
   </Button>
 </template>

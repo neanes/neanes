@@ -94,7 +94,7 @@
         class="icon-btn"
         @click="$emit('add-image')"
       >
-        <img src="@/assets/icons/image-add.svg" />
+        <PhImageSquare weight="fill" />
       </ToolbarButton>
     </AppTooltip>
     <ToolbarSeparator />
@@ -111,7 +111,7 @@
         class="icon-btn"
         @click="$emit('toggle-line-break', LineBreakType.Left)"
       >
-        <img src="@/assets/icons/line-break.svg" />
+        <PhParagraph weight="fill" />
       </ToolbarButton>
     </AppTooltip>
     <AppTooltip
@@ -131,7 +131,14 @@
         class="icon-btn"
         @click="$emit('toggle-line-break', LineBreakType.Justify)"
       >
-        <img src="@/assets/icons/line-break-justify.svg" />
+        <svg viewBox="0 0 24 24">
+          <PhParagraph
+            size="24"
+            weight="fill"
+            transform="matrix(0.75 0 0 1 -2 0)"
+          />
+          <PhTextAlignJustify size="12" x="12" y="12" />
+        </svg>
       </ToolbarButton>
     </AppTooltip>
     <AppTooltip
@@ -151,7 +158,14 @@
         class="icon-btn"
         @click="$emit('toggle-line-break', LineBreakType.Center)"
       >
-        <img src="@/assets/icons/line-break-center.svg" />
+        <svg viewBox="0 0 24 24">
+          <PhParagraph
+            size="24"
+            weight="fill"
+            transform="matrix(0.75 0 0 1 -2 0)"
+          />
+          <PhTextAlignCenter size="12" x="12" y="12" />
+        </svg>
       </ToolbarButton>
     </AppTooltip>
     <AppTooltip
@@ -167,7 +181,7 @@
         class="icon-btn"
         @click="$emit('toggle-page-break')"
       >
-        <img src="@/assets/icons/page-break.svg" />
+        <PhFile />
       </ToolbarButton>
     </AppTooltip>
     <ToolbarSeparator />
@@ -182,7 +196,7 @@
         class="icon-btn"
         @click="$emit('delete-selected-element')"
       >
-        <img src="@/assets/icons/delete.svg" />
+        <PhTrash class="delete-icon" weight="duotone" />
       </ToolbarButton>
     </AppTooltip>
     <ToolbarSeparator />
@@ -221,20 +235,17 @@
         "
         @click="$emit('play-audio')"
       >
-        <img
-          v-if="audioState === AudioState.Playing"
-          src="@/assets/icons/audio-pause.svg"
-        />
-        <img v-else src="@/assets/icons/audio-play.svg" />
+        <PhPause v-if="audioState === AudioState.Playing" weight="fill" />
+        <PhPlay v-else weight="fill" />
       </ToolbarButton>
       <ToolbarButton
         variant="secondary"
         size="icon-sm"
-        class="icon-btn icon-btn-full"
+        class="icon-btn"
         aria-label="Playback settings"
         @click="$emit('open-playback-settings')"
       >
-        <img src="@/assets/icons/config.svg" />
+        <PhGearFine />
       </ToolbarButton>
       <ToolbarSeparator />
 
@@ -283,6 +294,17 @@
 </template>
 
 <script setup lang="ts">
+import {
+  PhFile,
+  PhGearFine,
+  PhImageSquare,
+  PhParagraph,
+  PhPause,
+  PhPlay,
+  PhTextAlignCenter,
+  PhTextAlignJustify,
+  PhTrash,
+} from '@phosphor-icons/vue';
 import { useTranslation } from 'i18next-vue';
 import type { AcceptableValue } from 'reka-ui';
 import type { PropType } from 'vue';
@@ -559,27 +581,30 @@ function resetZoomInput() {
   --btn-icon-size: 24px;
 }
 
-.icon-btn-full {
-  --btn-icon-size: var(--btn-size);
-}
-
 .icon-btn:hover,
 .neume-button:hover,
 :deep(.menu-container > .neume-button:hover) {
   background: revert;
 }
 
-.neume-button img,
-:deep(.menu-container > .neume-button img) {
+.neume-button > img,
+.neume-button > svg,
+:deep(.menu-container > .neume-button > img),
+:deep(.menu-container > .neume-button > svg) {
   height: var(--btn-size);
   max-width: none;
   width: var(--btn-size);
 }
 
-.icon-btn img {
+.icon-btn > img,
+.icon-btn > svg {
   height: var(--btn-icon-size, var(--btn-size));
   max-width: none;
   width: var(--btn-icon-size, var(--btn-size));
+}
+
+.delete-icon {
+  color: red;
 }
 
 .icon-btn[aria-disabled='true'],

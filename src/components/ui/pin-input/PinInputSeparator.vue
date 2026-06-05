@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { MinusIcon } from '@lucide/vue';
+import { PhMinus } from '@phosphor-icons/vue';
 import type { PrimitiveProps } from 'reka-ui';
 import { Primitive, useForwardProps } from 'reka-ui';
 
@@ -10,7 +10,7 @@ const forwardedProps = useForwardProps(props);
 <template>
   <Primitive data-slot="pin-input-separator" v-bind="forwardedProps">
     <slot>
-      <MinusIcon />
+      <PhMinus />
     </slot>
   </Primitive>
 </template>

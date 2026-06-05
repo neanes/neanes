@@ -142,7 +142,7 @@ main() {
 	script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)" || die "failed to resolve script directory"
 	repo_root="$(cd -- "$script_dir/.." && pwd)" || die "failed to resolve repository root"
 	ui_dir="$repo_root/src/components/ui"
-	init_url="https://shadcn-vue.com/init?base=reka&style=lyra&baseColor=mist&theme=mist&iconLibrary=lucide&font=inter&rtl=false&menuAccent=subtle&menuColor=default&radius=default"
+	init_url="https://shadcn-vue.com/init?base=reka&style=lyra&baseColor=mist&theme=mist&iconLibrary=phosphor&font=inter&rtl=false&menuAccent=subtle&menuColor=default&radius=default"
 
 	[[ -f "$repo_root/components.json" ]] || die "components.json was not found at $repo_root"
 

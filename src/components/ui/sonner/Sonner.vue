@@ -1,12 +1,12 @@
 <script lang="ts" setup>
 import {
-  CircleCheckIcon,
-  InfoIcon,
-  Loader2Icon,
-  OctagonXIcon,
-  TriangleAlertIcon,
-  XIcon,
-} from '@lucide/vue';
+  PhCheckCircle,
+  PhCircleNotch,
+  PhInfo,
+  PhWarning,
+  PhX,
+  PhXCircle,
+} from '@phosphor-icons/vue';
 import { computed } from 'vue';
 import type { ToasterProps } from 'vue-sonner';
 import { Toaster as Sonner } from 'vue-sonner';
@@ -59,24 +59,24 @@ const toastOptions = computed<ToasterProps['toastOptions']>(() => ({
     :toast-options="toastOptions"
   >
     <template #success-icon>
-      <CircleCheckIcon class="size-4" />
+      <PhCheckCircle class="size-4" />
     </template>
     <template #info-icon>
-      <InfoIcon class="size-4" />
+      <PhInfo class="size-4" />
     </template>
     <template #warning-icon>
-      <TriangleAlertIcon class="size-4" />
+      <PhWarning class="size-4" />
     </template>
     <template #error-icon>
-      <OctagonXIcon class="size-4" />
+      <PhXCircle class="size-4" />
     </template>
     <template #loading-icon>
       <div>
-        <Loader2Icon class="size-4 animate-spin" />
+        <PhCircleNotch class="size-4 animate-spin" />
       </div>
     </template>
     <template #close-icon>
-      <XIcon class="size-4" />
+      <PhX class="size-4" />
     </template>
   </Sonner>
 </template>

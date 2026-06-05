@@ -35,51 +35,46 @@
       />
       <span class="space"></span>
     </template>
-    <AppTooltip
-      :tooltip="$t(($) => $.toolbar.common.alignLeft, { ns: 'toolbar' })"
+    <ToggleGroup
+      type="single"
+      variant="outline"
+      :model-value="element.alignment"
+      @update:model-value="onAlignmentChanged"
     >
-      <button
-        class="icon-btn"
-        :class="{ selected: element.alignment === TextBoxAlignment.Left }"
-        @click="
-          $emit('update', {
-            alignment: TextBoxAlignment.Left,
-          } as Partial<ModeKeyElement>)
-        "
+      <AppTooltip
+        :tooltip="$t(($) => $.toolbar.common.alignLeft, { ns: 'toolbar' })"
       >
-        <img src="@/assets/icons/alignleft.svg" />
-      </button>
-    </AppTooltip>
-    <AppTooltip
-      :tooltip="$t(($) => $.toolbar.common.alignCenter, { ns: 'toolbar' })"
-    >
-      <button
-        class="icon-btn"
-        :class="{ selected: element.alignment === TextBoxAlignment.Center }"
-        @click="
-          $emit('update', {
-            alignment: TextBoxAlignment.Center,
-          } as Partial<ModeKeyElement>)
-        "
+        <ToggleGroupItem
+          :value="TextBoxAlignment.Left"
+          class="icon-btn"
+          :class="{ selected: element.alignment === TextBoxAlignment.Left }"
+        >
+          <PhTextAlignLeft class="h-4 w-4" />
+        </ToggleGroupItem>
+      </AppTooltip>
+      <AppTooltip
+        :tooltip="$t(($) => $.toolbar.common.alignCenter, { ns: 'toolbar' })"
       >
-        <img src="@/assets/icons/aligncenter.svg" />
-      </button>
-    </AppTooltip>
-    <AppTooltip
-      :tooltip="$t(($) => $.toolbar.common.alignRight, { ns: 'toolbar' })"
-    >
-      <button
-        class="icon-btn"
-        :class="{ selected: element.alignment === TextBoxAlignment.Right }"
-        @click="
-          $emit('update', {
-            alignment: TextBoxAlignment.Right,
-          } as Partial<ModeKeyElement>)
-        "
+        <ToggleGroupItem
+          :value="TextBoxAlignment.Center"
+          class="icon-btn"
+          :class="{ selected: element.alignment === TextBoxAlignment.Center }"
+        >
+          <PhTextAlignCenter class="h-4 w-4" />
+        </ToggleGroupItem>
+      </AppTooltip>
+      <AppTooltip
+        :tooltip="$t(($) => $.toolbar.common.alignRight, { ns: 'toolbar' })"
       >
-        <img src="@/assets/icons/alignright.svg" />
-      </button>
-    </AppTooltip>
+        <ToggleGroupItem
+          :value="TextBoxAlignment.Right"
+          class="icon-btn"
+          :class="{ selected: element.alignment === TextBoxAlignment.Right }"
+        >
+          <PhTextAlignRight class="h-4 w-4" />
+        </ToggleGroupItem>
+      </AppTooltip>
+    </ToggleGroup>
     <span class="space" />
     <template v-if="!element.useDefaultStyle">
       <Label for="toolbar-mode-key-outline" class="mr-2">{{
@@ -125,7 +120,7 @@
       :tooltip="$t(($) => $.toolbar.modeKey.rightAlignTempo, { ns: 'toolbar' })"
     >
       <button
-        class="icon-btn icon-btn-small"
+        class="icon-btn"
         :class="{ selected: element.tempoAlignRight }"
         @click="
           $emit('update', {
@@ -133,7 +128,7 @@
           } as Partial<ModeKeyElement>)
         "
       >
-        <img src="@/assets/icons/alignright2.svg" />
+        <PhAlignRight class="h-4 w-4" weight="duotone" />
       </button>
     </AppTooltip>
 
@@ -261,6 +256,12 @@
 </template>
 
 <script setup lang="ts">
+import {
+  PhAlignRight,
+  PhTextAlignCenter,
+  PhTextAlignLeft,
+  PhTextAlignRight,
+} from '@phosphor-icons/vue';
 import type { PropType } from 'vue';
 import { computed } from 'vue';
 
@@ -274,6 +275,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Toolbar } from '@/components/ui/toolbar';
 import type { ModeKeyElement } from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';
@@ -334,12 +336,24 @@ const props = defineProps({
   },
 });
 
-defineEmits([
+const emit = defineEmits([
   'open-mode-key-dialog',
   'update',
   'update:sectionName',
   'update:tempo',
 ]);
+
+function onAlignmentChanged(value: unknown) {
+  if (isTextBoxAlignment(value)) {
+    emit('update', {
+      alignment: value,
+    } as Partial<ModeKeyElement>);
+  }
+}
+
+function isTextBoxAlignment(value: unknown): value is TextBoxAlignment {
+  return Object.values(TextBoxAlignment).includes(value as TextBoxAlignment);
+}
 
 const heightAdjustmentMin = computed(
   () => -Math.round(Unit.fromPt(props.element.height)),
@@ -396,7 +410,8 @@ const maxHeight = computed(() => Unit.toPt(props.pageSetup.innerPageHeight));
   background: revert;
 }
 
-.icon-btn.selected {
+.icon-btn.selected,
+.icon-btn[data-state='on'] {
   background: var(--color-legacy-chrome-selected);
 }
 
@@ -404,10 +419,6 @@ const maxHeight = computed(() => Unit.toPt(props.pageSetup.innerPageHeight));
   height: var(--btn-icon-size, var(--btn-size));
   max-width: none;
   width: var(--btn-icon-size, var(--btn-size));
-}
-
-.icon-btn-small {
-  --btn-icon-size: 24px;
 }
 
 :deep(.menu-container > .neume-button img) {

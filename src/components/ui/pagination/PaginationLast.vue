@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronsRightIcon } from '@lucide/vue';
+import { PhCaretDoubleRight } from '@phosphor-icons/vue';
 import { reactiveOmit } from '@vueuse/core';
 import type { PaginationLastProps } from 'reka-ui';
 import { PaginationLast, useForwardProps } from 'reka-ui';
@@ -33,7 +33,7 @@ const forwarded = useForwardProps(delegatedProps);
   >
     <slot>
       <span class="hidden sm:block">Last</span>
-      <ChevronsRightIcon data-icon="inline-end" />
+      <PhCaretDoubleRight data-icon="inline-end" />
     </slot>
   </PaginationLast>
 </template>

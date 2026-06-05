@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import 'vue3-tabs-chrome/dist/vue3-tabs-chrome.css';
 
+import {
+  PhFile,
+  PhParagraph,
+  PhTextAlignCenter,
+  PhTextAlignJustify,
+} from '@phosphor-icons/vue';
 import { getFontEmbedCSS, toPng } from 'html-to-image';
 import i18next from 'i18next';
 import { useTranslation } from 'i18next-vue';
@@ -6009,18 +6015,32 @@ function renderTabLabel(tab: Tab) {
                         >§</span
                       >
                       <span v-if="element.pageBreak" class="page-break"
-                        ><img src="@/assets/icons/page-break.svg"
+                        ><PhFile
                       /></span>
                       <span v-if="element.lineBreak" class="line-break"
-                        ><img
+                        ><svg
                           v-if="element.lineBreakType === LineBreakType.Justify"
-                          src="@/assets/icons/line-break-justify.svg" /><img
+                          viewBox="0 0 24 24"
+                        >
+                          <PhParagraph
+                            size="24"
+                            weight="fill"
+                            transform="matrix(0.75 0 0 1 -2 0)"
+                          />
+                          <PhTextAlignJustify size="12" x="12" y="12" /></svg
+                        ><svg
                           v-else-if="
                             element.lineBreakType === LineBreakType.Center
                           "
-                          src="@/assets/icons/line-break-center.svg" /><img
-                          v-else
-                          src="@/assets/icons/line-break.svg"
+                          viewBox="0 0 24 24"
+                        >
+                          <PhParagraph
+                            size="24"
+                            weight="fill"
+                            transform="matrix(0.75 0 0 1 -2 0)"
+                          />
+                          <PhTextAlignCenter size="12" x="12" y="12" /></svg
+                        ><PhParagraph v-else weight="fill"
                       /></span>
                       <AlternateLine
                         v-for="(alternateLine, index) in (
@@ -6199,10 +6219,10 @@ function renderTabLabel(tab: Tab) {
                         >§</span
                       >
                       <span v-if="element.pageBreak" class="page-break">
-                        <img src="@/assets/icons/page-break.svg"
+                        <PhFile
                       /></span>
                       <span v-if="element.lineBreak" class="line-break"
-                        ><img src="@/assets/icons/line-break.svg"
+                        ><PhParagraph weight="fill"
                       /></span>
                       <MartyriaNeumeBox
                         :ref="
@@ -6238,10 +6258,10 @@ function renderTabLabel(tab: Tab) {
                         >§</span
                       >
                       <span v-if="element.pageBreak" class="page-break">
-                        <img src="@/assets/icons/page-break.svg"
+                        <PhFile
                       /></span>
                       <span v-if="element.lineBreak" class="line-break"
-                        ><img src="@/assets/icons/line-break.svg"
+                        ><PhParagraph weight="fill"
                       /></span>
                       <TempoNeumeBox
                         class="tempo-neume-box"
@@ -6270,10 +6290,10 @@ function renderTabLabel(tab: Tab) {
                         >§</span
                       >
                       <span v-if="element.pageBreak" class="page-break">
-                        <img src="@/assets/icons/page-break.svg"
+                        <PhFile
                       /></span>
                       <span v-if="element.lineBreak" class="line-break"
-                        ><img src="@/assets/icons/line-break.svg"
+                        ><PhParagraph weight="fill"
                       /></span>
                       <EmptyNeumeBox
                         class="empty-neume-box"
@@ -6293,10 +6313,10 @@ function renderTabLabel(tab: Tab) {
                       >§</span
                     >
                     <span v-if="element.pageBreak" class="page-break-2"
-                      ><img src="@/assets/icons/page-break.svg"
+                      ><PhFile
                     /></span>
                     <span v-if="element.lineBreak" class="line-break-2"
-                      ><img src="@/assets/icons/line-break.svg"
+                      ><PhParagraph weight="fill"
                     /></span>
                     <TextBox
                       :ref="
@@ -6323,10 +6343,10 @@ function renderTabLabel(tab: Tab) {
                       >§</span
                     >
                     <span v-if="element.pageBreak" class="page-break-2"
-                      ><img src="@/assets/icons/page-break.svg"
+                      ><PhFile
                     /></span>
                     <span v-if="element.lineBreak" class="line-break-2"
-                      ><img src="@/assets/icons/line-break.svg"
+                      ><PhParagraph weight="fill"
                     /></span>
                     <TextBoxRich
                       :ref="
@@ -6357,10 +6377,10 @@ function renderTabLabel(tab: Tab) {
                       >§</span
                     >
                     <span v-if="element.pageBreak" class="page-break-2"
-                      ><img src="@/assets/icons/page-break.svg"
+                      ><PhFile
                     /></span>
                     <span v-if="element.lineBreak" class="line-break-2"
-                      ><img src="@/assets/icons/line-break.svg"
+                      ><PhParagraph weight="fill"
                     /></span>
                     <ModeKey
                       :ref="
@@ -6386,10 +6406,10 @@ function renderTabLabel(tab: Tab) {
                       >§</span
                     >
                     <span v-if="element.pageBreak" class="page-break"
-                      ><img src="@/assets/icons/page-break.svg"
+                      ><PhFile
                     /></span>
                     <span v-if="element.lineBreak" class="line-break"
-                      ><img src="@/assets/icons/line-break.svg"
+                      ><PhParagraph weight="fill"
                     /></span>
                     <DropCap
                       :ref="
@@ -6411,10 +6431,10 @@ function renderTabLabel(tab: Tab) {
                   </template>
                   <template v-else-if="isImageBoxElement(element)">
                     <span v-if="element.pageBreak" class="page-break-2"
-                      ><img src="@/assets/icons/page-break.svg"
+                      ><PhFile
                     /></span>
                     <span v-if="element.lineBreak" class="line-break-2"
-                      ><img src="@/assets/icons/line-break.svg"
+                      ><PhParagraph weight="fill"
                     /></span>
                     <ImageBox
                       :ref="
@@ -7164,7 +7184,7 @@ function renderTabLabel(tab: Tab) {
   top: calc(-10px * var(--zoom, 1));
 }
 
-.page-break img {
+.page-break > svg {
   height: calc(16px * var(--zoom, 1));
   width: calc(16px * var(--zoom, 1));
 }
@@ -7174,7 +7194,7 @@ function renderTabLabel(tab: Tab) {
   top: calc(-10px * var(--zoom, 1));
 }
 
-.line-break img {
+.line-break > svg {
   height: calc(16px * var(--zoom, 1));
   width: calc(16px * var(--zoom, 1));
 }
@@ -7184,7 +7204,7 @@ function renderTabLabel(tab: Tab) {
   top: calc(-16px * var(--zoom, 1));
 }
 
-.page-break-2 img {
+.page-break-2 > svg {
   height: calc(16px * var(--zoom, 1));
   width: calc(16px * var(--zoom, 1));
 }
@@ -7194,7 +7214,7 @@ function renderTabLabel(tab: Tab) {
   top: calc(-18px * var(--zoom, 1));
 }
 
-.line-break-2 img {
+.line-break-2 > svg {
   height: calc(16px * var(--zoom, 1));
   width: calc(16px * var(--zoom, 1));
 }

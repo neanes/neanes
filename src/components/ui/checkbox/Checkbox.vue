@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CheckIcon } from '@lucide/vue';
+import { PhCheck } from '@phosphor-icons/vue';
 import { reactiveOmit } from '@vueuse/core';
 import type { CheckboxRootEmits, CheckboxRootProps } from 'reka-ui';
 import { CheckboxIndicator, CheckboxRoot, useForwardPropsEmits } from 'reka-ui';
@@ -34,7 +34,7 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits);
       class="[&>svg]:size-3.5 grid place-content-center text-current transition-none"
     >
       <slot v-bind="slotProps">
-        <CheckIcon />
+        <PhCheck />
       </slot>
     </CheckboxIndicator>
   </CheckboxRoot>

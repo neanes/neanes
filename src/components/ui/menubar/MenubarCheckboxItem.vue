@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CheckIcon } from '@lucide/vue';
+import { PhCheck } from '@phosphor-icons/vue';
 import { reactiveOmit } from '@vueuse/core';
 import type {
   MenubarCheckboxItemEmits,
@@ -40,7 +40,7 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits);
     >
       <MenubarItemIndicator>
         <slot name="indicator-icon">
-          <CheckIcon />
+          <PhCheck />
         </slot>
       </MenubarItemIndicator>
     </span>

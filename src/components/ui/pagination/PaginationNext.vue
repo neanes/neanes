@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronRightIcon } from '@lucide/vue';
+import { PhCaretRight } from '@phosphor-icons/vue';
 import { reactiveOmit } from '@vueuse/core';
 import type { PaginationNextProps } from 'reka-ui';
 import { PaginationNext, useForwardProps } from 'reka-ui';
@@ -35,7 +35,7 @@ const forwarded = useForwardProps(delegatedProps);
   >
     <slot>
       <span class="hidden sm:block">Next</span>
-      <ChevronRightIcon data-icon="inline-end" class="cn-rtl-flip" />
+      <PhCaretRight data-icon="inline-end" class="cn-rtl-flip" />
     </slot>
   </PaginationNext>
 </template>

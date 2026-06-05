@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { SearchIcon } from '@lucide/vue';
+import { PhMagnifyingGlass } from '@phosphor-icons/vue';
 import { reactiveOmit } from '@vueuse/core';
 import type { ComboboxInputEmits, ComboboxInputProps } from 'reka-ui';
 import { ComboboxInput, useForwardPropsEmits } from 'reka-ui';
@@ -28,7 +28,7 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits);
 <template>
   <InputGroup>
     <InputGroupAddon>
-      <SearchIcon class="size-4 shrink-0 opacity-50" />
+      <PhMagnifyingGlass class="size-4 shrink-0 opacity-50" />
     </InputGroupAddon>
     <ComboboxInput
       data-slot="combobox-input"

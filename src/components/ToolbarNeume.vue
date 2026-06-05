@@ -1615,8 +1615,10 @@ function tooltip(neume: ToolbarNeumeTooltipNeume): AppTooltipValue {
   background: revert;
 }
 
-.neume-button img,
-:deep(.menu-container > .neume-button img) {
+.neume-button > img,
+.neume-button > svg,
+:deep(.menu-container > .neume-button > img),
+:deep(.menu-container > .neume-button > svg) {
   height: var(--btn-size);
   max-width: none;
   width: var(--btn-size);

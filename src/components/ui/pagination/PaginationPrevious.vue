@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronLeftIcon } from '@lucide/vue';
+import { PhCaretLeft } from '@phosphor-icons/vue';
 import { reactiveOmit } from '@vueuse/core';
 import type { PaginationPrevProps } from 'reka-ui';
 import { PaginationPrev, useForwardProps } from 'reka-ui';
@@ -34,7 +34,7 @@ const forwarded = useForwardProps(delegatedProps);
     v-bind="forwarded"
   >
     <slot>
-      <ChevronLeftIcon data-icon="inline-start" class="cn-rtl-flip" />
+      <PhCaretLeft data-icon="inline-start" class="cn-rtl-flip" />
       <span class="hidden sm:block">Previous</span>
     </slot>
   </PaginationPrev>
